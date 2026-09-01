@@ -11,8 +11,9 @@ export IBEX_PYTHON="${IBEX_PYTHON:-/tools_soc/opensrc/python/python-3.12.10/bin/
 source /etc/profile.d/modules.sh 2>/dev/null || true
 # synopsys/vcs has an undeclared prereq on synopsys/licenses; 2.3 is the newest
 # available (of 1.0-2.3) and a superset of older servers, so pick it.
-module load synopsys/licenses/2.3
-module load synopsys/vcs/X-2025.06-SP2
+# This site's module command exits 1 even on a successful load, hence `|| true`.
+module load synopsys/licenses/2.3 2>/dev/null || true
+module load synopsys/vcs/X-2025.06-SP2 2>/dev/null || true
 export VERDI_HOME="${VERDI_HOME:-/tools_vendor/synopsys/verdi/X-2025.06-SP2}"
 
 # dtc is a spike build dep (ci/build-spike.sh); this site's module command
@@ -23,13 +24,25 @@ module load dtc/1.7.2 2>/dev/null || true
 export PATH="/tools_vendor/FOSS/gh/2.53.0/bin:$PATH"
 
 # --- RISC-V toolchain (Task 4 decides which; lowRISC preferred) ---
-export RISCV_TOOLCHAIN="${RISCV_TOOLCHAIN:-$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb}"
+# _IBEX_RV_TC_AUTO caches our own last pick so re-sourcing after installing
+# the lowRISC toolchain picks it up, without clobbering a real user override
+# (RISCV_TOOLCHAIN set to anything other than our own last pick).
+if [ -n "$RISCV_TOOLCHAIN" ] && [ "$RISCV_TOOLCHAIN" != "$_IBEX_RV_TC_AUTO" ]; then
+    _ibex_rv_tc="$RISCV_TOOLCHAIN"
+elif [ -x "$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc" ]; then
+    _ibex_rv_tc="$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb"
+else
+    # Site riscv64 multilib fallback (bitmanip tests unavailable)
+    _ibex_rv_tc=/tools_risc/opensrc/latest/newlib
+fi
+export RISCV_TOOLCHAIN="$_ibex_rv_tc"
+export _IBEX_RV_TC_AUTO="$_ibex_rv_tc"
+unset _ibex_rv_tc
+
 if [ -x "$RISCV_TOOLCHAIN/bin/riscv32-unknown-elf-gcc" ]; then
     export RISCV_GCC="$RISCV_TOOLCHAIN/bin/riscv32-unknown-elf-gcc"
     export RISCV_OBJCOPY="$RISCV_TOOLCHAIN/bin/riscv32-unknown-elf-objcopy"
 else
-    # Site riscv64 multilib fallback (bitmanip tests unavailable)
-    export RISCV_TOOLCHAIN=/tools_risc/opensrc/latest/newlib
     export RISCV_GCC="$RISCV_TOOLCHAIN/bin/riscv64-unknown-elf-gcc"
     export RISCV_OBJCOPY="$RISCV_TOOLCHAIN/bin/riscv64-unknown-elf-objcopy"
 fi
