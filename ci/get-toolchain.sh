@@ -10,7 +10,7 @@ DEST="$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb"
 
 mkdir -p "$IBEX_TOOLS_DIR"
 cd "$IBEX_TOOLS_DIR"
-[ -f "$NAME.tar.xz" ] || curl -fL -o "$NAME.tar.xz" "$URL"
+[ -f "$NAME.tar.xz" ] || { curl -fL -o "$NAME.tar.xz.part" "$URL" && mv "$NAME.tar.xz.part" "$NAME.tar.xz"; }
 tar xf "$NAME.tar.xz"
 rm -rf "$DEST"
 mv "$NAME" "$DEST"
