@@ -18,6 +18,8 @@
 - Tool installs go to `/localdev/fzhang/ws/tools/` (workspace-local, outside the repo). All paths centralized in `ci/env.sh` — no other file hardcodes tool paths.
 - The stock flow's behavior must not change except the documented define-mismatch fix.
 - Work happens on branch `fzhang/auto-dv-setup`. Commit at the end of every task. Never commit `out/`, `.venv/`, or downloaded tarballs.
+- **Path discipline:** run flow commands in a subshell (`( cd dv/uvm/core_ibex && ... )`); reference repo files via `REPO=$(git rev-parse --show-toplevel)` — never `../..` chains. Create destination dirs (`mkdir -p`) before copying evidence.
+- Log-file names (verified): TB compile → `out/build/tb/compile_tb_stdstreams.log`; instruction-generator build → `out/build/instr_gen/build_stdout.log`; test assembly → `out/run/tests/<t>.<s>/compile.riscvdv.log`; sim → `rtl_sim_stdstreams.log`.
 - Long runs (VCS compile, spike build, full sim) can take 10–30 min each — use generous timeouts and run them in the background where sensible.
 
 ## Preflight facts (verified during design; re-verify only if a step contradicts them)
@@ -143,12 +145,22 @@ Expected: exits 0.
 Run: `bash -lc 'source ci/env.sh && python3 -c "import pydantic, typeguard, portalocker, mako, hjson, junit_xml; import svg; print(\"deps ok\")"'`
 Expected: `deps ok`.
 
-- [ ] **Step 5: Add `.venv/` to `.gitignore` and commit**
+- [ ] **Step 5: Smoke-test the flow's actual entry points**
+
+Run: `bash -lc 'source ci/env.sh && python3 vendor/google_riscv-dv/run.py --help >/dev/null && (cd dv/uvm/core_ibex && python3 scripts/metadata.py --help >/dev/null) && echo ENTRYPOINTS-OK'`
+Expected: `ENTRYPOINTS-OK`. (Imports alone don't prove the riscv-dv/metadata scripts run under this Python.)
+
+- [ ] **Step 6: Freeze a lock file for reproducibility**
+
+Run: `bash -lc 'source ci/env.sh && pip freeze > ci/requirements.lock'`
+`ci/setup-venv.sh` stays on `python-requirements.txt` (upstream-shaped); the lock records what was actually validated so regressions are reproducible.
+
+- [ ] **Step 7: Add `.venv/` to `.gitignore` and commit**
 
 Append a line `.venv/` to the repo-root `.gitignore`.
 
 ```bash
-git add ci/setup-venv.sh .gitignore
+git add ci/setup-venv.sh ci/requirements.lock .gitignore
 git commit -m "[ci] Add python venv setup for DV flow"
 ```
 
@@ -194,7 +206,10 @@ git -C "$SRC" checkout "$SPIKE_REV"
 
 mkdir -p "$SRC/build"
 cd "$SRC/build"
-../configure --enable-commitlog --enable-misaligned --prefix="$PREFIX"
+# Static gcc runtimes: the TB's DPI .so must load inside VCS, whose bundled
+# libstdc++ may predate the build compiler's (flake.nix does the same).
+../configure --enable-commitlog --enable-misaligned --prefix="$PREFIX" \
+             LDFLAGS="-static-libstdc++ -static-libgcc"
 make -j"$(nproc)"
 make install
 echo "spike installed to $PREFIX"
@@ -252,14 +267,18 @@ mv "$NAME" "$DEST"
 - [ ] **Step 2: Run it**
 
 Run: `bash -lc 'source ci/env.sh && bash ci/get-toolchain.sh'`
-Expected: prints the gcc version line. If the download fails (network policy), fall back explicitly: verify the site toolchain can target rv32 —
+Expected: prints the gcc version line. If the download fails (network policy), the fallback must be validated against the **exact ISA string the `opentitan` flow emits** — not a generic rv32imc probe. `opentitan` has `RV32B: RV32BOTEarlGrey`, so `scripts/ibex_cmd.get_isas_for_config()` produces a bitmanip `-march` for *every* test (test filtering does not change the compiler ISA). Verify:
 
 ```bash
+source ci/env.sh && cd dv/uvm/core_ibex && \
+python3 -c "
+import scripts.ibex_cmd as ic
+print(ic.get_isas_for_config('opentitan'))"   # capture the exact gen/gcc ISA strings
 echo 'int main(){return 0;}' > /tmp/t.c
-/tools_risc/opensrc/latest/newlib/bin/riscv64-unknown-elf-gcc -march=rv32imc -mabi=ilp32 -o /tmp/t /tmp/t.c && echo RV32-MULTILIB-OK
+"$RISCV_GCC" -march=<the gcc ISA printed above> -mabi=ilp32 -o /tmp/t /tmp/t.c && echo MARCH-OK
 ```
 
-If `RV32-MULTILIB-OK`: proceed on the fallback (env.sh handles it), note in BUILD_AND_SIM.md that bitmanip tests are excluded until the lowRISC toolchain lands. If neither works, stop and report.
+If the fallback gcc rejects that `-march` (likely — upstream GCC lacks the draft-bitmanip `b` naming the lowRISC toolchain was patched for), the fallback **cannot satisfy the WS1 gate on `opentitan`**: stop and report so we either obtain the lowRISC tarball another way or knowingly bring up on a non-bitmanip config first.
 
 - [ ] **Step 3: Verify env.sh picks it up**
 
@@ -284,10 +303,14 @@ git commit -m "[ci] Add lowRISC rv32imcb toolchain fetch script"
 - Consumes: `util/ibex_config.py` emits `+define+IBEX_CFG_<FieldName>` verbatim (CamelCase: `IBEX_CFG_BaseIsa`, `IBEX_CFG_RegFile`) — do NOT change the emitter; `RV32M`/`RV32B` and other consumers depend on the verbatim field-name spelling.
 - Produces: TB honors the emitted spellings; a permanent one-line config banner printed at time 0 that later regressions and skills can grep (`grep "TB-CONFIG"`).
 
-- [ ] **Step 1: Map all consumers of the wrong spellings**
+- [ ] **Step 1: Audit EVERY emitted define against a TB consumer**
 
-Run: `grep -rn "IBEX_CFG_BASE_ISA\|IBEX_CFG_REG_FILE" --include=*.sv --include=*.svh --include=*.f --include=*.py dv/ util/ rtl/`
-Expected: hits only in `dv/uvm/core_ibex/tb/core_ibex_tb_top.sv`. If other files hit, extend Step 3's rename to each of them (same mechanical change) and list them in the commit message.
+Run: `bash -lc 'source ci/env.sh && python3 util/ibex_config.py opentitan vcs_opts --ins_hier_path core_ibex_tb_top --string_define_prefix IBEX_CFG_'` and list each emitted `+define+IBEX_CFG_*`. For each one: `grep -n "<name>" dv/uvm/core_ibex/tb/core_ibex_tb_top.sv`. Known gaps to confirm (do not assume this list is complete):
+- `IBEX_CFG_BaseIsa` — TB guards on `IBEX_CFG_BASE_ISA` (spelling mismatch)
+- `IBEX_CFG_RegFile` — TB guards on `IBEX_CFG_REG_FILE` (spelling mismatch)
+- `IBEX_CFG_RV32ZC` — **no TB parameter at all**: the TB never overrides nor forwards `RV32ZC`, so `small` (wants `RV32Zca`) silently elaborates the `ibex_top_tracing` default (`RV32ZcaZcbZcmp`)
+
+Also run `grep -rn "IBEX_CFG_" --include=*.sv --include=*.svh dv/ rtl/` to catch consumers outside the TB top; extend Step 3 to each hit and list them in the commit message.
 
 - [ ] **Step 2: Record the broken state (red)**
 
@@ -295,23 +318,24 @@ Run (after Tasks 1–4; this compiles the TB only, ~10 min):
 ```bash
 source ci/env.sh && cd dv/uvm/core_ibex && \
 make GOAL=rtl_tb_compile SIMULATOR=vcs IBEX_CONFIG=small OUT=out_definecheck
-grep -o "IBEX_CFG_BaseIsa[^ ]*" out_definecheck/build/tb/compile_tb.log | head -2
-grep -c "IBEX_CFG_BASE_ISA" out_definecheck/build/tb/compile_tb.log || true
+grep -o "IBEX_CFG_BaseIsa[^ ]*" out_definecheck/build/tb/compile_tb_stdstreams.log | head -2
+grep -c "IBEX_CFG_BASE_ISA" out_definecheck/build/tb/compile_tb_stdstreams.log || true
 ```
 Expected: the emitted define `IBEX_CFG_BaseIsa=ibex_pkg::BaseIsaRV32I` appears on the compile command line, while the TB's guard macro `IBEX_CFG_BASE_ISA` never appears — proving the `ifdef` can never take and `small` silently builds the CHERIoT-capable default.
 
 - [ ] **Step 3: Fix the TB spellings and add the banner**
 
-In `core_ibex_tb_top.sv`, change every `IBEX_CFG_BASE_ISA` → `IBEX_CFG_BaseIsa` and `IBEX_CFG_REG_FILE` → `IBEX_CFG_RegFile` (both the `` `ifdef `` and the `` `IBEX_CFG_... `` macro expansions). Then add, next to the existing initial blocks:
+In `core_ibex_tb_top.sv`: (a) change every `IBEX_CFG_BASE_ISA` → `IBEX_CFG_BaseIsa` and `IBEX_CFG_REG_FILE` → `IBEX_CFG_RegFile` (both the `` `ifdef `` and the `` `IBEX_CFG_... `` macro expansions); (b) add an `RV32ZC` parameter with the same ifdef pattern (`` `ifdef IBEX_CFG_RV32ZC``, default = the current `ibex_top_tracing` default `RV32ZcaZcbZcmp`) and **forward it to the `ibex_top_tracing` instantiation** alongside the other parameters; (c) repeat for any additional gaps found in Step 1. Then add, next to the existing initial blocks:
 
 ```systemverilog
   // Printed at time 0 so logs prove which config the DUT was actually built with.
   initial begin
-    $display("TB-CONFIG: BaseIsa=%s RegFile=%s", BaseIsa.name(), RegFile.name());
+    $display("TB-CONFIG: BaseIsa=%s RegFile=%s RV32ZC=%s",
+             BaseIsa.name(), RegFile.name(), RV32ZC.name());
   end
 ```
 
-(If `RegFile`'s parameter identifier differs in the file, match the existing name; the banner must print the two parameters the fixed defines control.)
+(Match the file's existing parameter identifiers; the banner must print every parameter the fixed defines control. If `RV32ZC`'s enum type doesn't support `.name()` on a parameter under VCS, print `%0d`.)
 
 - [ ] **Step 4: Verify the fix (green)**
 
@@ -320,7 +344,7 @@ Run:
 rm -rf out_definecheck && \
 make GOAL=rtl_tb_compile SIMULATOR=vcs IBEX_CONFIG=small OUT=out_definecheck
 ```
-Expected: compile passes. Then confirm the guard now matches the emitted define: `grep -o "IBEX_CFG_BaseIsa[^ ]*" out_definecheck/build/tb/compile_tb.log | head -1` (define still emitted) and `grep -n "IBEX_CFG_BaseIsa" tb/core_ibex_tb_top.sv` (TB now guards on that exact spelling; zero remaining hits for `IBEX_CFG_BASE_ISA`). The banner is runtime evidence and is checked later: Task 6's smoke log must show `TB-CONFIG: BaseIsa=BaseIsaRV32IorCHERIoT ...` (opentitan), and Task 8's `small` run must show `BaseIsa=BaseIsaRV32I` — that pair is the mutation-style proof.
+Expected: compile passes. Then confirm the guard now matches the emitted define: `grep -o "IBEX_CFG_BaseIsa[^ ]*" out_definecheck/build/tb/compile_tb_stdstreams.log | head -1` (define still emitted) and `grep -n "IBEX_CFG_BaseIsa" tb/core_ibex_tb_top.sv` (TB now guards on that exact spelling; zero remaining hits for `IBEX_CFG_BASE_ISA`; same check for `RV32ZC`). The banner is runtime evidence and is checked later: Task 6's smoke log must show `TB-CONFIG: BaseIsa=BaseIsaRV32IorCHERIoT ... RV32ZC=RV32ZcaZcbZcmp` (opentitan), and Task 8's `small` run must show `BaseIsa=BaseIsaRV32I ... RV32ZC=RV32Zca` — those pairs are the mutation-style proof.
 
 - [ ] **Step 5: Clean up and commit**
 
@@ -358,11 +382,11 @@ Background, generous timeout (instr-gen VCS build + TB VCS build + sim ≈ 30–
 - [ ] **Step 2: Triage loop (repeat until green)**
 
 On failure, find the failing stage's log and fix root-cause only:
-- instr gen build: `out/run/instr_gen/build.log` (riscv-dv compiled by VCS)
-- test generation: `out/run/tests/<t>.<s>/gen.log`
-- cross-compile: same dir, `compile.log` — toolchain flag issues surface here
-- TB compile: `out/build/tb/compile_tb.log` — spike pkg-config/link issues surface here
-- sim: `out/run/tests/<t>.<s>/rtl_sim.log` and `rtl_sim_stdstreams.log` — cosim mismatches surface here
+- instr gen build: `out/build/instr_gen/build_stdout.log` (riscv-dv compiled by VCS)
+- test generation: `out/run/tests/<t>.<s>/` gen logs
+- cross-compile: same dir, `compile.riscvdv.log` — toolchain flag issues surface here
+- TB compile: `out/build/tb/compile_tb_stdstreams.log` — spike pkg-config/link issues surface here
+- sim: `out/run/tests/<t>.<s>/rtl_sim_stdstreams.log` — cosim mismatches surface here
 - check: `out/run/tests/<t>.<s>/trr.yaml`
 
 Rules: flow-script or Makefile changes must be minimal, upstream-shaped, and individually committed with the failure they fix quoted in the commit message. If spike API drift breaks `dv/cosim` compilation, re-check the rev against `flake.nix` before patching code — the pinned rev is supposed to match. `COSIM_SIGSEGV_WORKAROUND=1` is available if the documented SIGSEGV issue appears.
@@ -370,7 +394,13 @@ Rules: flow-script or Makefile changes must be minimal, upstream-shaped, and ind
 - [ ] **Step 3: Verify the pass and the banner**
 
 Run: `grep -E "PASS|FAIL" out/run/regr.log && grep "TB-CONFIG" out/run/tests/*/rtl_sim*.log | head -1`
-Expected: the test reports PASSED; banner shows `BaseIsa=BaseIsaRV32IorCHERIoT` (opentitan). Save the evidence: `cp out/run/regr.log ../../docs/dv/evidence/ws1-smoke-regr.log` (create `docs/dv/evidence/`).
+Expected: the test reports PASSED; banner shows `BaseIsa=BaseIsaRV32IorCHERIoT` (opentitan). Save the evidence:
+
+```bash
+REPO=$(git rev-parse --show-toplevel)
+mkdir -p "$REPO/docs/dv/evidence"
+cp out/run/regr.log "$REPO/docs/dv/evidence/ws1-smoke-regr.log"
+```
 
 - [ ] **Step 4: Commit evidence**
 
