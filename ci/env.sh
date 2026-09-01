@@ -5,6 +5,7 @@
 
 IBEX_CI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export IBEX_TOOLS_DIR="${IBEX_TOOLS_DIR:-/localdev/fzhang/ws/tools}"
+export IBEX_PYTHON="${IBEX_PYTHON:-/tools_soc/opensrc/python/python-3.12.10/bin/python3}"
 
 # --- Simulator (VCS must match the Verdi release already on PATH) ---
 source /etc/profile.d/modules.sh 2>/dev/null || true
