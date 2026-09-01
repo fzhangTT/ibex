@@ -50,6 +50,8 @@ Milestones:
 - **A (hello world):** cocotb prints, reads a DUT signal, the UVM test runs to completion — both frameworks visibly active in one log; stock flow (`COCOTB=0`) re-verified unchanged.
 - **B (cocotb as the sequence):** Python drives stimulus through existing UVM TB components — first target the **irq agent** (Python decides when/which interrupts fire) via 1–2 hand-written DPI-exported UVM tasks / `uvm_event` triggers (quasar's mechanism; the mako DPI generator is not ported yet).
 
+**TB contract doc (fence-aware):** `docs/dv/TB_CONTRACT.md` — the *allowed-path* description of everything a generated test may use: cocotb entry points, plusarg conventions, how to start stimulus on TB agents, seeds, and the operational referee statement ("every test runs under an instruction-level architectural cosim referee; architectural mismatches fail the test"). Interfaces visible, internals fenced (see WS7).
+
 **Gate:** Milestone A and B logs + `COCOTB=0` regression identity.
 
 ## Workstream 3 — Skills, cross-model layer, review policy
@@ -65,6 +67,7 @@ Milestones:
 | `mutation-check` | new (inspired by beowulf `meta/mutations`) | inject a bug (RTL or TB), show the new test/checker catches it, revert — required evidence for any generated DV component |
 | `cross-review` | new | see policy below |
 | review rubrics `ci/reviews/` | beowulf Sentinel rubrics | keep: assertion-integrity, magic-numbers, ai-slop-comments, test-overlap, rtl-purity, forces-and-hier-access; model-neutral prompt files run locally |
+| `fence-integrity` rubric | new (WS7) | generated artifacts and their history contain no fenced-path references; test-overlap similarity check runs in Zone B only, findings go to humans, never back to the generator |
 | `sim-debug` | beowulf | retargeted to `out/run/tests/<t>.<s>/` (rtl_sim.log, trr.yaml, cosim trace) |
 | agents `ibex-debug-analyzer`, `ibex-test-generator` | beowulf agents | rewritten for riscv-dv testlist + directed + cocotb test shapes; generator mandates TDD + mutation proof |
 | `simple-english` | beowulf (vendored ASD-STE100) | rescope surfaces to ibex docs |
@@ -90,6 +93,7 @@ Deliberately **not** ported: iis test-scaffolding skills (ibex test creation dif
   - coverage: nightly with `COV=1` + urg merged vdb + report archived
 - **LSF phase 1:** each regression is one LSF job (`bsub -n N` + `make -jN`) — the ibex flow parallelizes per-test stages under make. **Phase 2 (only if needed):** per-test `bsub` fan-out after shared build stages; feasibility vs. the `metadata.pickle` single-writer design assessed and documented during implementation.
 - `Jenkinsfile` (declarative): Build → Smoke/Regress → Coverage; junit ingestion of `regr_junit.xml`; archive `report.html` + coverage report.
+- Additional job: **cleanroom sync** — on every `master` push, run `ci/sync-cleanroom.sh` to refresh the `cleanroom` branch (see WS7).
 - `ci/jenkins/README.md` — Jenkins setup info: repo `https://github.com/fzhangTT/ibex.git`, branch spec, node requirements (LSF submit host, environment-modules, `/tools_vendor` + `/tools_risc` visibility), credentials (gh token or a machine PAT).
 - `docs/dv/tt-regress-assessment.md` — the assessment: reusable YAML/DAG orchestrator skeleton, but build/run backends are Bazel/bzsim-only, scheduling delegated to LSF `bsub -w`, results assume internal Simscope (hard exit on unknown repos); raw-`command:` escape hatch exists but not pursued.
 
@@ -114,11 +118,47 @@ Wave-dump policy stays deliberate: FSDB dumping only on `WAVES=1` runs (the stoc
 
 `npm install -g mex-agent` (user npm-global dir already on PATH; Node 22.14 ≥ 22.5) → `mex setup` → wiki populated from the repo → mex's CLAUDE.md anchor section merged into our canonical `CLAUDE.md` (delegator `AGENTS.md` unchanged). Known limit documented: the code graph parses Python/TS/JS/Rust only — no SystemVerilog — so the graph covers the DV/python side; RTL/TB knowledge is curated wiki pages kept honest by `mex check` in the review cadence.
 
+**Fence interaction (WS7): two mex instances.** The full tree's mex carries `ci/fence.yaml`'s globs in its ignore config **and** a wiki-authoring rule: no page may paraphrase fenced content (a summary of the existing testlist in an allowed page would defeat the fence). The clean-room clone gets its **own** `mex setup` — its graph and wiki are built only from visible files, so fenced knowledge cannot enter by construction.
+
 **Gate:** `mex check` green; one `mex graph scope` query returning sensible context for a DV task.
+
+## Workstream 7 — Knowledge fence (clean-room generation)
+
+**Requirement:** the auto-DV generation phase (testplan, tests, TB components) must not use existing DV collateral — including local modifications to open-source imports. Upstream open-source tools (spike, riscv-dv) and the RTL itself remain fair game. Multiple people will work in this model; the fence must be persistent, pullable, and documented.
+
+**Fenced content** (single source of truth: `ci/fence.yaml`, globs + one-line rationale each; first cut):
+- `dv/uvm/core_ibex/tests/**`, `riscv_dv_extension/**`, `directed_tests/**` — existing test content
+- `dv/uvm/core_ibex/fcov/**` — human coverage model
+- `dv/uvm/core_ibex/env/**`, `common/**` agent internals — interfaces exposed via `docs/dv/TB_CONTRACT.md` instead
+- `doc/03_reference/testplan.rst`, `coverage_plan.rst`, `verification.rst` — human answers
+- `vendor/patches/**`, `dv/cosim/**` — local modifications to open-source imports
+- `docs/dv/COSIM.md` — documents local-mod internals (referee existence is stated in TB_CONTRACT.md instead)
+(Exact list finalized at implementation; the manifest is the auditable artifact.)
+
+**Zone A — clean room (generation).** A published **`cleanroom` branch with orphan snapshot history**: `ci/sync-cleanroom.sh` builds a tree of allowed paths only (from the manifest) and appends it as a snapshot commit (orphan root; no ancestry to `master`), then pushes; it fails if any fenced glob would enter the snapshot. Because no commit in the branch's history ever contained a fenced blob, a clean clone is airtight:
+
+```
+git clone --single-branch --branch cleanroom https://github.com/fzhangTT/ibex.git ibex-cleanroom
+```
+
+`--single-branch` fetches only that branch's objects — fenced blobs are absent from the clone entirely, not merely hidden. Updates are plain `git pull` (append-only snapshots, no force-push). Generation work happens on branches off `cleanroom`; `ci/land-from-cleanroom.sh` lands finished work onto a `master`-based branch (paths are disjoint from fenced ones — mechanical diff apply) for normal PR review. A sparse-checkout script (`ci/make-cleanroom-sparse.sh`) is provided as a *human convenience only*, documented with its caveat: the local object store still contains fenced history, so it is a view, not a boundary.
+
+**Zone B — execution/evaluation (full tree).** Runs generated artifacts on trusted infra; trusted infra is never read by generators.
+- `ci/zoneb-run.sh <cleanroom-branch>` — overlays the Zone A diff onto a full `master` tree, runs the stock flow (VCS + UVM TB + spike cosim stepping every retired instruction).
+- `ci/zoneb-report.sh` — the deterministic result filter; the only channel back to Zone A. Returns: per-test verdicts (`trr.yaml`/`regr.log`), failure signatures (cosim mismatch excerpts quote DUT architectural state — fair game; never DV collateral), and coverage under the **three-scope policy**:
+  1. **Code coverage** (line/toggle/branch/FSM) — feeds back freely; derives from the DUT.
+  2. **Generated functional coverage** (Zone A's own model) — full feedback loop; what the AI closes against.
+  3. **Human fcov model** — evaluation-only blind benchmark, run in Zone B for humans; never returned to Zone A (even bin names would contaminate the generator's coverage-model design).
+
+**Enforcement stack (defense in depth):** (1) physical — the cleanroom clone; (2) tool-level — a `PreToolUse` hook keyed on `IBEX_DV_FENCE=1` blocks Read/Grep/Glob on manifest globs for full-tree sessions that must be fenced (codex equivalent via sandbox config where possible); (3) CI — the sync script's validation plus a `fence-integrity` review rubric (WS3); (4) advisory — CLAUDE.md/AGENTS.md challenge-mode section. **Session hygiene:** generation experiments run in fresh sessions seeded only from Zone A — infra sessions (like this one) are contaminated by design and never do generation; persistent memory stays free of DV-content specifics.
+
+**Docs:** `docs/dv/FENCE.md` — what is fenced and why, the one-command clone, update/branch/land workflows, the Zone B protocol, and the rules for humans and agents.
+
+**Gate:** `cleanroom` branch published and re-synced by CI; a clean clone contains zero manifest-glob files (`git log --all` included); one full round-trip demonstrated — a dummy artifact authored in Zone A, executed via `ci/zoneb-run.sh`, results returned through `ci/zoneb-report.sh`, landed on a `master` branch.
 
 ## Order & verification
 
-WS1 first (everything depends on a working sim). WS2/WS3/WS4/WS5 can proceed in parallel after WS1; WS6 last (wants the final file layout). Every workstream ends with its gate's *evidence* (logs, reports, committed artifacts), not claims. One branch, one commit series per workstream.
+WS1 first (everything depends on a working sim). WS2/WS3/WS4/WS5 can proceed in parallel after WS1; WS7 after WS2/WS3 (needs the TB contract and the rubric/hook homes); WS6 last (wants the final file layout, and the clean-room mex needs WS7's branch). Every workstream ends with its gate's *evidence* (logs, reports, committed artifacts), not claims. One branch, one commit series per workstream.
 
 ## Out of scope (follow-on specs)
 
