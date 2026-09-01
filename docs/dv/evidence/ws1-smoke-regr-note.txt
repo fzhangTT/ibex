@@ -1,9 +1,9 @@
 WS1 gate evidence: companion note to ws1-smoke-regr.log (Task 8, Step 1)
 =========================================================================
 
-ws1-smoke-regr.log (Task 6) proves the opentitan-config smoke test passes.
-This note proves the same flow on a second, non-default config (`small`),
-as a mutation-style check that the IBEX_CFG_* define fix (commit 54e01775)
+ws1-smoke-regr.log proves the opentitan-config smoke test passes.
+This note documents a second run on a non-default config (`small`), as a
+mutation-style check that the IBEX_CFG_* define fix (commit 54e01775)
 actually changes TB elaboration per-config rather than always resolving to
 opentitan's defaults.
 
@@ -11,19 +11,16 @@ Command used:
 
   source ci/env.sh && cd dv/uvm/core_ibex && \
   make SIMULATOR=vcs IBEX_CONFIG=small ISS=spike \
-       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 OUT=out_small
+       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 OUT=out_ws1_small
 
-Result: 100.00% PASS 1 PASSED, 0 FAILED (~78s wall time, fresh OUT tree).
+Raw evidence (rerun at commit 56acf9c8, see ws1-manifest.txt):
 
-Banner (`grep "TB-CONFIG" out_small/run/tests/*/rtl_sim*.log`):
+  ws1-small-regr.log       -- full regr.log, 100.00% PASS
+  ws1-small-tbconfig.txt   -- raw `grep TB-CONFIG` output
 
-  TB-CONFIG: BaseIsa=BaseIsaRV32I RegFile=RegFileFF RV32ZC=RV32Zca
-
-This differs from the opentitan banner (`ws1-smoke-regr.log`'s run):
-
-  TB-CONFIG: BaseIsa=BaseIsaRV32IorCHERIoT RegFile=RegFileFF RV32ZC=RV32ZcaZcbZcmp
-
-Confirms: BaseIsa and RV32ZC both change per-config (RegFile is FF for both
-`small` and `opentitan` in ibex_configs.yaml, so it correctly stays the
-same) -- the define-name mismatch fixed in commit 54e01775 is resolved for
-a config other than the one used in the original Task 6 smoke run.
+Confirms: comparing ws1-small-tbconfig.txt against ws1-smoke-tbconfig.txt
+(the opentitan-config banner), both BaseIsa and RV32ZC change per-config
+(RegFile is FF for both `small` and `opentitan` in ibex_configs.yaml, so it
+correctly stays the same) -- the define-name mismatch fixed in commit
+54e01775 is resolved for a config other than the one used in the original
+Task 6 smoke run.

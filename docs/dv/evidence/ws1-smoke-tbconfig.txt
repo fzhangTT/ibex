@@ -1,0 +1,1 @@
+TB-CONFIG: BaseIsa=BaseIsaRV32IorCHERIoT RegFile=RegFileFF RV32ZC=RV32ZcaZcbZcmp

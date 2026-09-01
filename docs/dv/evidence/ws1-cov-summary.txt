@@ -5,31 +5,22 @@ Command used:
 
   source ci/env.sh && cd dv/uvm/core_ibex && \
   make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
-       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_cov2
+       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_ws1_cov
 
-Result: 100.00% PASS 1 PASSED, 0 FAILED.
+Raw evidence (rerun at commit 56acf9c8, see ws1-manifest.txt):
 
-Note: this run compiles in the FCIBH workaround (`+define+FCOV_NO_DEFAULT_SEQUENCE`,
-see below) — it is not a plain vanilla build.
+  ws1-cov-regr.log          -- full regr.log, 100.00% PASS
+  ws1-cov-dashboard.txt     -- urg report/dashboard.txt (Total Coverage
+                               Summary and per-hierarchy scores)
+  ws1-cov-fcov-log-tail.txt -- tail of the riscv-dv functional-coverage
+                               sim log (instructions processed, TEST
+                               PASSED, 0 UVM_ERROR/UVM_WARNING)
+  ws1-manifest.txt          -- tool versions and sha256 of the (uncommitted)
+                               merged.vdb this run produced
 
-Artifacts produced (all present, per Step 2 expectations):
-
-  out_cov2/run/coverage/merged.vdb        (urg merged coverage database)
-  out_cov2/run/coverage/report/           (urg HTML+text report: dashboard.txt,
-                                            dashboard.html, groups.*, asserts.*)
-  out_cov2/run/coverage/fcov/              (riscv-dv functional coverage:
-                                            test.vdb (28K) + sim_riscv_instr_cov_test_0_0.log
-                                            showing "10217 instructions processed" /
-                                            "TEST PASSED", 0 UVM_ERROR / 0 UVM_WARNING)
-
-urg summary line (Total Coverage Summary, from report/dashboard.txt):
-
-  SCORE  LINE   TOGGLE FSM    BRANCH ASSERT GROUP
-   52.13  70.46  39.37  20.93  62.52  85.63  33.86
-
-This reflects a real, complete riscv_arithmetic_basic_test run (unlike
-the earlier COV=1 attempt, which aborted after ~2us and reported a
-misleading 21.73% reset-only score — see below).
+This is not a plain vanilla build: it compiles in the FCIBH workaround
+(`+define+FCOV_NO_DEFAULT_SEQUENCE`, see fix history below), which is VCS-only
+and does not affect any other simulator's build.
 
 --------------------------------------------------------------------
 Fix history: FCIBH illegal-bin-hit workaround
@@ -65,11 +56,9 @@ build is affected):
     `+define+FCOV_NO_DEFAULT_SEQUENCE` added to the vcs tool's compile
     cmd only (no other simulator entry touched).
 
-Re-ran the full flow in a fresh OUT=out_cov2 tree (avoids stale
-metadata.pickle): test now PASSES, 0 FCIBH hits
-(`grep -c "FCIBH" out_cov2/run/tests/riscv_arithmetic_basic_test.1/rtl_sim_stdstreams.log` == 0),
-real urg score above, and real fcov data (10217 instructions processed,
-TEST PASSED, 0 UVM errors/warnings).
+Confirmed clean of FCIBH hits on the final rerun too
+(`grep -c "FCIBH" out_ws1_cov/run/tests/riscv_arithmetic_basic_test.1/rtl_sim_stdstreams.log`
+== 0, see ws1-manifest.txt for the run this was checked against).
 
 Step 3 — vRefine waiver caveat (design-time finding, independent of the
 above):
