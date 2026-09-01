@@ -24,8 +24,9 @@ bash ci/get-toolchain.sh
   `IBEX_PYTHON`, `RISCV_GCC`/`RISCV_TOOLCHAIN`, `SPIKE_PATH`, and the venv's
   `PKG_CONFIG_PATH`. Source it in every new shell before running anything
   else in this document.
-- `ci/setup-venv.sh` creates `.venv/` and installs `python-requirements.txt`
-  (including riscv-dv's own requirements) via `$IBEX_PYTHON`. Idempotent —
+- `ci/setup-venv.sh` creates `.venv/` and installs from `ci/requirements.lock`
+  when present, falling back to `python-requirements.txt` (including
+  riscv-dv's own requirements) otherwise, via `$IBEX_PYTHON`. Idempotent —
   safe to re-run.
 - `ci/build-spike.sh` clones and builds the lowRISC fork of Spike (pinned
   revision) and installs it to `$IBEX_TOOLS_DIR/spike-ibex-cosim`. Requires

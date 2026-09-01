@@ -2,6 +2,12 @@
 # Environment entry point for ibex auto-DV work. Source, don't execute:
 #   source ci/env.sh
 # Central authority for tool paths — nothing else in the repo hardcodes them.
+#
+# Contract: supported on site hosts that already carry the standard site
+# profile — a login shell (`bash -l`) or any shell that inherits the site
+# environment (Modules init, PATH, etc.) from one. This script loads
+# additional site Modules on top of that; it does not bootstrap a sanitized
+# shell that never sourced the site profile at all.
 
 IBEX_CI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export IBEX_TOOLS_DIR="${IBEX_TOOLS_DIR:-/localdev/fzhang/ws/tools}"
@@ -68,8 +74,11 @@ echo "ibex env: vcs=$(command -v vcs || echo MISSING)" \
      "spike=$([ -d "$SPIKE_INSTALL" ] && echo "$SPIKE_INSTALL" || echo NOT-BUILT)"
 
 # --- Fail loud: load noise above is tolerated, but the tools it was supposed
-# to produce are not optional. ---
+# to produce are not optional. verdi/dtc are only needed for waveform debug
+# and ci/build-spike.sh respectively, so those are WARN-only. ---
 _ibex_env_status=0
+command -v verdi >/dev/null 2>&1 || echo "ibex env WARN: verdi missing — waveform debug (WAVES=1) unavailable" >&2
+command -v dtc >/dev/null 2>&1 || echo "ibex env WARN: dtc missing — ci/build-spike.sh will fail" >&2
 command -v vcs >/dev/null 2>&1 || {
     echo "ibex env ERROR: vcs missing — are you on a site host?" >&2
     _ibex_env_status=1
