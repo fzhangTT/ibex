@@ -15,6 +15,10 @@ module load synopsys/licenses/2.3
 module load synopsys/vcs/X-2025.06-SP2
 export VERDI_HOME="${VERDI_HOME:-/tools_vendor/synopsys/verdi/X-2025.06-SP2}"
 
+# dtc is a spike build dep (ci/build-spike.sh); this site's module command
+# exits 1 even on a successful load, hence the `|| true`.
+module load dtc/1.7.2 2>/dev/null || true
+
 # --- GitHub CLI (auth already configured for fzhangTT) ---
 export PATH="/tools_vendor/FOSS/gh/2.53.0/bin:$PATH"
 

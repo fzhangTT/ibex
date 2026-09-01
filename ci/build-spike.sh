@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the lowRISC spike fork the ibex cosim TB links against.
 # Rev pinned to match this repo's flake.nix; dv/cosim/* is written against it.
+# Requires dtc on PATH — loaded by ci/env.sh.
 set -euo pipefail
 SPIKE_REV=4b97396656485a129119deaec2ba35e5bf354841
 IBEX_TOOLS_DIR="${IBEX_TOOLS_DIR:-/localdev/fzhang/ws/tools}"
@@ -16,8 +17,10 @@ git -C "$SRC" checkout "$SPIKE_REV"
 
 mkdir -p "$SRC/build"
 cd "$SRC/build"
-# Static gcc runtimes: the TB's DPI .so must load inside VCS, whose bundled
-# libstdc++ may predate the build compiler's (flake.nix does the same).
+# Static gcc runtimes for spike's own objects; note DT_NEEDED on libstdc++.so.6
+# remains via shared Boost. Runtime compatibility on this site rests on
+# gcc-toolset-11's DTS model (symbol floor = RHEL8 system libstdc++); the
+# definitive check is the TB DPI link + simv load in the smoke test.
 ../configure --enable-commitlog --enable-misaligned --prefix="$PREFIX" \
              LDFLAGS="-static-libstdc++ -static-libgcc"
 make -j"$(nproc)"
