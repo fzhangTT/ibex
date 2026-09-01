@@ -221,14 +221,16 @@ see `docs/dv/BUILD_AND_SIM.md`). Skimming
 commits for cosim/commitlog behavior (as opposed to plain ISA/decode
 additions) are:
 
-| Commit | Subject | Backs |
+| Commit | Subject (verbatim) | Backs |
 |---|---|---|
 | `394ce314` | Add configurable debug_module address range to the processor type | `dm_start_addr`/`dm_end_addr` ctor args, `set_debug_module_range` |
-| `6d5b6608` | PMP should always allow accesses to the debug_module in debug mode | debug-mode PMP exception used by the above |
-| `39612f93` | Introduce pre_val MIP concept | `set_mip(pre_mip, post_mip)`'s two-value interface |
+| `6d5b6608` | PMP should always allow accesses to the debug_module in debug mode. | debug-mode PMP exception used by the above |
+| `39612f93` | Introduce pre_val MIP concept. | `set_mip(pre_mip, post_mip)`'s two-value interface |
 | `f7c682a5` | DEBUG_ROM_TVEC -> 0x80000008 | matches Ibex's fixed debug ROM entry |
 | `1f89c527` | Remove debug memory access check | lets `backdoor_read_mem`/cosim reach debug-module addresses |
 | `c0926fc3` | Move mmu_t::pmp_ok to public | used directly by `misaligned_pmp_fixup()` |
+| `15fbd568` | Move ebreak* logic from take_trap into instructions. (#1006) | makes ebreak enter debug mode directly (via `dcsr.ebreakm/s/u`) instead of a normal trap — the path `pc_is_debug_ebreak()`/`check_debug_ebreak()` (`spike_cosim.cc:1065-1120`) special-case |
+| `0e306ce7` | Allow hardware triggers to go off without using the mmu tlb | commit message states this explicitly: "For our cosimulation env, the Spike mmu TLB functionality is not used" — without it, hardware triggers (used by the debug-trigger CSR setup in `initial_proc_setup()`) would never fire |
 | `6272327d` | Add Internal NMI field in Spike | `set_nmi_int()` |
 | `ce7a9be2` | Hardcode TDATA1 fields to match implemented ibex features | matches `initial_proc_setup()`'s `TM.tdata1_write` hardcoding |
 | `0dc2de5d` | Disable ZIHPM unpriviledged performance counters (to match Ibex implementation) | Ibex has no U-mode HPM access |
@@ -238,14 +240,21 @@ additions) are:
 | `9b68f2f9` | Add MCONFIGPTR CSR | Ibex exposes this CSR |
 | `2806109f` | Add (M/S)CONTEXT as read-only-0 csr's to match Ibex implementation | Ibex hardwires these to 0 |
 | `eccdcb15` | Unify PMPCFGx behaviour with PMPADDRx where PMP is disabled | matches Ibex PMP-disabled read-back |
-| `c9a893a3`, `a5692fb0` | pmp/CPUCTRL CSR fixes | Ibex-specific CSR field corrections |
-| `2ee11169` | Add CI to build ibex_cosim | build infra, not runtime behavior |
+| `c9a893a3` | Revert "Revert "pmp: mstatus.mprv should be clear if mpp is not M-mode"" | Ibex-specific fix: clears `mstatus.MPRV` on `mret`/`sret` when `mstatus.MPP` isn't M-mode |
+| `a5692fb0` | Fix CPUCTRL CSR | commit message: fixes CPUCTRL (now CPUCTRLSTS) to read the icache/secure-Ibex parameters live off the processor instance rather than a stale copy — needed because `SpikeCosim`'s constructor sets those parameters (`set_ibex_flags`, `spike_cosim.cc:73`) after `processor_t`'s own constructor has already run |
 
-The remaining commits in the sampled 30
+Two more of the 30 are cosim-adjacent but don't back a specific runtime
+check, so they're kept out of the table above: `2ee11169` "Add CI to build
+ibex_cosim" is build infrastructure, not runtime behavior, and `ef10d395`
+"fesvr: fix compilation with gcc 13" is a generic upstream portability fix
+(missing `<cstdint>` include) unrelated to cosim or to any ISA extension.
+
+The remaining 9 of the 30
 (`4b973966`, `69471d63`, `d691e19e`, `0a171692`, `5ab7b312`, `f58aa591`,
 `5643be11`, `bb9a10f8`, `46902f0b`) add Zc*-extension decode/disassembly
-support — they matter for running compressed-extension tests but aren't
-cosim-hook or commitlog changes.
+support (plus the `encoding.h` regeneration and cherry-pick compatibility
+fixes that support it) — they matter for running compressed-extension tests
+but aren't cosim-hook or commitlog changes.
 
 **What this fork added on top, in `dv/cosim`:** the entire `Cosim`/
 `SpikeCosim` DPI adapter (`cosim.h`, `cosim_dpi.{h,cc,svh}`,
