@@ -9,6 +9,9 @@ observed on this host (a 192-core machine), not vendor/upstream estimates.
 
 Run once per checkout (or whenever the tools move):
 
+If you are not fzhang, first `export IBEX_TOOLS_DIR=/path/to/writable/dir` —
+it defaults to `/localdev/fzhang/ws/tools`.
+
 ```bash
 source ci/env.sh
 bash ci/setup-venv.sh
@@ -152,7 +155,7 @@ silently excluded from a `small` or `maxperf` run, not failed.
   (`out/build/instr_gen/`) is its own separate VCS build, distinct from the
   TB build (`out/build/tb/`) — a fresh regression run consumes two VCS
   builds and two VCS licenses, not one.
-- **`site `module` command exits 1 even on success.** This site's Modules
+- **Site `module` command exits 1 even on success.** This site's Modules
   install prints `Module ERROR: invalid command name "module-hide"` Tcl
   noise on every load (harmless) and returns exit status 1 regardless of
   whether the load succeeded. Never `&&`-chain a `module load`;
