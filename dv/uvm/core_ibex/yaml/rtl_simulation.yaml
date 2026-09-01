@@ -31,6 +31,7 @@
           -ntb_opts uvm-1.2
           +define+UVM
           +define+UVM_REGEX_NO_DPI
+          +define+FCOV_NO_DEFAULT_SEQUENCE
           -timescale=1ns/10ps
           -licqueue
           -LDFLAGS '-Wl,--no-as-needed'

@@ -5,66 +5,71 @@ Command used:
 
   source ci/env.sh && cd dv/uvm/core_ibex && \
   make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
-       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_cov
+       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_cov2
+
+Result: 100.00% PASS 1 PASSED, 0 FAILED.
+
+Note: this run compiles in the FCIBH workaround (`+define+FCOV_NO_DEFAULT_SEQUENCE`,
+see below) — it is not a plain vanilla build.
 
 Artifacts produced (all present, per Step 2 expectations):
 
-  out_cov/run/coverage/merged.vdb        (urg merged coverage database)
-  out_cov/run/coverage/report/           (urg HTML+text report: dashboard.txt,
-                                           dashboard.html, groups.*, asserts.*)
-  out_cov/run/coverage/fcov/             (riscv-dv functional coverage build,
-                                           via scripts/get_fcov.py -> vendor cov.py)
+  out_cov2/run/coverage/merged.vdb        (urg merged coverage database)
+  out_cov2/run/coverage/report/           (urg HTML+text report: dashboard.txt,
+                                            dashboard.html, groups.*, asserts.*)
+  out_cov2/run/coverage/fcov/              (riscv-dv functional coverage:
+                                            test.vdb (28K) + sim_riscv_instr_cov_test_0_0.log
+                                            showing "10217 instructions processed" /
+                                            "TEST PASSED", 0 UVM_ERROR / 0 UVM_WARNING)
 
 urg summary line (Total Coverage Summary, from report/dashboard.txt):
 
   SCORE  LINE   TOGGLE FSM    BRANCH ASSERT GROUP
-   21.73  45.17   0.51   0.00  31.47  27.05  26.17
+   52.13  70.46  39.37  20.93  62.52  85.63  33.86
 
-CRITICAL CAVEAT — the underlying test FAILED under COV=1, so the score
-above is NOT representative of real coverage:
+This reflects a real, complete riscv_arithmetic_basic_test run (unlike
+the earlier COV=1 attempt, which aborted after ~2us and reported a
+misleading 21.73% reset-only score — see below).
+
 --------------------------------------------------------------------
-regr.log: "0.00% PASS 0 PASSED, 1 FAILED"
-trr.yaml: failure_mode FILE_ERROR(2), "Logfile trace_core_00000000.log not
-found" (the RTL sim aborted before any trace was written).
-
-Root cause (confirmed in rtl_sim_stdstreams.log): VCS raised a fatal
-coverage "VERIFICATION ERROR" and terminated the simulation after only
-2064350 ps (0.51s CPU time):
+Fix history: FCIBH illegal-bin-hit workaround
+--------------------------------------------------------------------
+The first COV=1 attempt (OUT=out_cov) FAILED the test: VCS raised a
+fatal coverage "VERIFICATION ERROR" and aborted simulation after only
+2064350 ps:
 
   Error-[FCIBH] Illegal bin hit
   dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv, 588 (covergroup core_ibex_fcov_if::uarch_cg)
   Illegal transition bin illegal_transitions of coverpoint cp_controller_fsm
   got hit with transition RESET=>RESET
 
-This is a pre-existing, known VCS incompatibility, not something
-introduced by WS1 bring-up work. The offending covergroup already
-carries an in-source TODO (git blame: commit aee235cfa, 2022-03-24,
-"[dv] Add cover points for memory interface behaviour" era):
+Cause: `illegal_bins illegal_transitions = default sequence;` on
+cp_controller_fsm / cp_controller_fsm_sleep relies on SystemVerilog's
+`default sequence`, which VCS does not implement (the source already
+carried an in-source TODO to this effect since 2022, commit aee235cfa).
+VCS instead treats every unlisted transition — including legal
+self-loops like RESET=>RESET — as an illegal-bin hit, which is fatal.
+This only surfaces once the fcov covergroups are built/sampled, i.e.
+only under COV=1 (Task 6's COV=0 run never enabled +enable_ibex_fcov or
+-cm and so never hit it).
 
-  dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv:606-607 and :612-613
-    // TODO: VCS does not implement default sequence so illegal_bins will be empty
-    illegal_bins illegal_transitions = default sequence;
+Fix (VCS-only, gated by a compile-time macro so no other simulator's
+build is affected):
 
-Because VCS does not implement SystemVerilog's `default sequence` for
-transition bins, EVERY FSM state transition (including legal self-loops
-such as RESET=>RESET during reset) falls into the "illegal" bin, and VCS
-treats that as a fatal error rather than a benign coverage miss. This
-only surfaces when the fcov covergroups are actually built/sampled,
-which only happens under COV=1 (confirmed: Task 6's COV=0 run passed
-+enable_ibex_fcov and -cm are both absent from that run's rtl_cmds in
-out/run/tests/riscv_arithmetic_basic_test.1/trr.yaml). A quick check of
-`vcs -help` found no documented runtime switch to demote FCIBH severity
-from fatal to warning, so this is not a simple flow-level flag fix.
+  dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv
+    Both `illegal_bins illegal_transitions = default sequence;` blocks
+    (cp_controller_fsm, cp_controller_fsm_sleep) wrapped in
+    `` `ifndef FCOV_NO_DEFAULT_SEQUENCE `` / `` `endif ``.
 
-Practical effect: any COV=1 run today aborts within microseconds of
-boot, before executing the test program. The merged.vdb/report/fcov
-artifacts above are structurally well-formed (the merge_cov.py / urg /
-get_fcov.py machinery all function correctly) but reflect essentially a
-reset-only partial run, not real riscv_arithmetic_basic_test coverage.
-This is a design/testbench-side fix (relaxing or restructuring the
-cp_controller_fsm / cp_controller_fsm_sleep illegal_bins under VCS),
-out of scope for this flow-bring-up task; flagged here for the WS1 gate
-owner to decide on follow-up.
+  dv/uvm/core_ibex/yaml/rtl_simulation.yaml
+    `+define+FCOV_NO_DEFAULT_SEQUENCE` added to the vcs tool's compile
+    cmd only (no other simulator entry touched).
+
+Re-ran the full flow in a fresh OUT=out_cov2 tree (avoids stale
+metadata.pickle): test now PASSES, 0 FCIBH hits
+(`grep -c "FCIBH" out_cov2/run/tests/riscv_arithmetic_basic_test.1/rtl_sim_stdstreams.log` == 0),
+real urg score above, and real fcov data (10217 instructions processed,
+TEST PASSED, 0 UVM errors/warnings).
 
 Step 3 — vRefine waiver caveat (design-time finding, independent of the
 above):
