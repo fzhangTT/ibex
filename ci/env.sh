@@ -7,6 +7,12 @@ IBEX_CI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export IBEX_TOOLS_DIR="${IBEX_TOOLS_DIR:-/localdev/fzhang/ws/tools}"
 export IBEX_PYTHON="${IBEX_PYTHON:-/tools_soc/opensrc/python/python-3.12.10/bin/python3}"
 
+# --- Host GCC (vcs/spike DPI compiles need gcc-toolset-11; a non-login shell
+# doesn't pick this up from /etc/profile.d) ---
+if [ -f /opt/rh/gcc-toolset-11/enable ]; then
+    source /opt/rh/gcc-toolset-11/enable
+fi
+
 # --- Simulator (VCS must match the Verdi release already on PATH) ---
 source /etc/profile.d/modules.sh 2>/dev/null || true
 # synopsys/vcs has an undeclared prereq on synopsys/licenses; 2.3 is the newest
@@ -27,7 +33,7 @@ export PATH="/tools_vendor/FOSS/gh/2.53.0/bin:$PATH"
 # _IBEX_RV_TC_AUTO caches our own last pick so re-sourcing after installing
 # the lowRISC toolchain picks it up, without clobbering a real user override
 # (RISCV_TOOLCHAIN set to anything other than our own last pick).
-if [ -n "$RISCV_TOOLCHAIN" ] && [ "$RISCV_TOOLCHAIN" != "$_IBEX_RV_TC_AUTO" ]; then
+if [ -n "${RISCV_TOOLCHAIN:-}" ] && [ "${RISCV_TOOLCHAIN:-}" != "${_IBEX_RV_TC_AUTO:-}" ]; then
     _ibex_rv_tc="$RISCV_TOOLCHAIN"
 elif [ -x "$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc" ]; then
     _ibex_rv_tc="$IBEX_TOOLS_DIR/lowrisc-toolchain-gcc-rv32imcb"
@@ -60,3 +66,24 @@ fi
 echo "ibex env: vcs=$(command -v vcs || echo MISSING)" \
      "gcc=$(command -v "$RISCV_GCC" >/dev/null && echo "$RISCV_GCC" || echo MISSING)" \
      "spike=$([ -d "$SPIKE_INSTALL" ] && echo "$SPIKE_INSTALL" || echo NOT-BUILT)"
+
+# --- Fail loud: load noise above is tolerated, but the tools it was supposed
+# to produce are not optional. ---
+_ibex_env_status=0
+command -v vcs >/dev/null 2>&1 || {
+    echo "ibex env ERROR: vcs missing — are you on a site host?" >&2
+    _ibex_env_status=1
+}
+command -v "$RISCV_GCC" >/dev/null 2>&1 || {
+    echo "ibex env ERROR: RISCV_GCC ($RISCV_GCC) missing — are you on a site host?" >&2
+    _ibex_env_status=1
+}
+command -v python3 >/dev/null 2>&1 || {
+    echo "ibex env ERROR: python3 missing — are you on a site host?" >&2
+    _ibex_env_status=1
+}
+if [ "$_ibex_env_status" -ne 0 ]; then
+    unset _ibex_env_status
+    return 1
+fi
+unset _ibex_env_status
