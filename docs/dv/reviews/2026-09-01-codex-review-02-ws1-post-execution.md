@@ -1,0 +1,8 @@
+Verdict: REQUEST-CHANGES
+
+- [major][ci/env.sh:11] The entry point is not self-contained: in a sanitized non-login environment it exits successfully while `vcs`, `verdi`, and `dtc` remain missing and GCC 8.5 is selected instead of gcc-toolset-11 because site module paths are absent and load failures are suppressed — initialize the site module paths, load GCC 11 explicitly, and fail unless required tool paths/versions resolve correctly.
+- [major][ci/env.sh:30] Sourcing under `set -u` aborts with `RISCV_TOOLCHAIN: unbound variable`, which breaks the expected `set -euo pipefail; source ci/env.sh` CI composition — use nounset-safe expansions for both `RISCV_TOOLCHAIN` and `_IBEX_RV_TC_AUTO`.
+- [major][ci/setup-venv.sh:7] The committed lock is neither enforced nor representative of the executed environment: the script reuses an existing venv, installs unpinned requirements, and leaves extras; the current gate venv still contains `siliconpilot==0.18.1` while `ci/requirements.lock` omits it — atomically create a clean venv from the lock, verify an exact `pip freeze` match, and rerun the gates.
+- [major][docs/dv/evidence/ws1-cov-summary.txt:10] The coverage gate is supported only by a hand-authored summary; the raw coverage `regr.log`, `dashboard.txt`, functional-coverage log, and artifact manifest are absent. The small-config proof at `ws1-smoke-regr-note.txt:16` has the same problem, and both predate final functional changes to `ci/env.sh` — rerun smoke, small, and coverage at final HEAD and commit raw text artifacts plus commit/tool identifiers and hashes for uncommitted binary artifacts.
+
+No independent correctness defect was found in the TB define/RV32ZC forwarding/banner changes or the VCS-only `FCOV_NO_DEFAULT_SEQUENCE` scoping.
