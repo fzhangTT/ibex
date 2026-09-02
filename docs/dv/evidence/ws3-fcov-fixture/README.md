@@ -14,3 +14,12 @@ Verified classifications (ci/check_fcov_expectations.py against the live VDB):
     (trr.yaml: passed False, failure_mode FCOV_EXPECTATION(4); regr.log: 0 PASSED 1 FAILED)
   - manifest {out_of_decode0}                   → exit 0                → test PASSES (restored)
 Mutation MUT-001 (classify `<=0`→`<0`) is caught by `--self-test` (exit 2) and passes on revert.
+
+## TDD deviation (recorded)
+
+The checker was built implementation-first — no pre-implementation failing-check transcript
+exists (a triad rule-1 process violation on the tool itself, caught by the WS3 post-execution
+cross-review). Compensating raw evidence that the check can fail, accepted per that review:
+MUT-001 (the detector FAILs on mutated classification logic, exit 2, passes on revert) and the
+live declared-unhit run (exit 2 → trr FCOV_EXPECTATION(4) → regr.log FAILED). All future
+tests/checkers follow rule 1 as written.

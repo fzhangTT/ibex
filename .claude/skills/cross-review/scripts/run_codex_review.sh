@@ -46,12 +46,13 @@ command codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || { echo
 # Identity: prefer what the run itself reports; fall back to CLI/config probing.
 CLI_VER=$(command codex --version 2>/dev/null | head -1)
 RUN_MODEL=$(grep -m1 -oE 'model[:= ]+[A-Za-z0-9._-]+' "$RAW.err" "$RAW" 2>/dev/null | head -1 || true)
-CFG_MODEL=$(grep -m1 -E '^model' ~/.codex/config.toml 2>/dev/null || true)
+CFG_MODEL=$(grep -m1 -E '^model ' ~/.codex/config.toml 2>/dev/null || true)
+CFG_REASONING=$(grep -m1 -E '^model_reasoning_effort' ~/.codex/config.toml 2>/dev/null || true)
 
 {
   echo "# Cross-model review — ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** ${CLI_VER}; run-reported: ${RUN_MODEL:-n/a}; config: ${CFG_MODEL:-n/a}"
+  echo "**Reviewer:** ${CLI_VER}; run-reported: ${RUN_MODEL:-n/a}; config: ${CFG_MODEL:-n/a}; reasoning: ${CFG_REASONING:-n/a}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC}"
   echo
@@ -60,10 +61,11 @@ CFG_MODEL=$(grep -m1 -E '^model' ~/.codex/config.toml 2>/dev/null || true)
   cat "$RAW"
 } > "$ART"
 
-VERDICT=$(grep -oE 'Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)' "$ART" | tail -1 | sed 's/Final verdict: //')
-[ -n "$VERDICT" ] || { echo "PROTOCOL ERROR: no verdict line in $ART"; exit 1; }
+NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$ART" || true)
+[ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line, found $NV in $ART"; exit 1; }
+VERDICT=$(grep -E '^Final verdict: ' "$ART" | sed 's/Final verdict: //')
 if [ "$MODE" = diff ]; then
-  grep -q "TARGET: ${BASE}..${HEAD_}" "$ART" || { echo "PROTOCOL ERROR: review did not echo the exact target range — cannot trust scope. Artifact: $ART"; exit 1; }
+  grep -Fq "TARGET: ${BASE}..${HEAD_}" "$ART" || { echo "PROTOCOL ERROR: review did not echo the exact target range (fixed-string match) — cannot trust scope. Artifact: $ART"; exit 1; }
 fi
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
