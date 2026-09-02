@@ -34,6 +34,27 @@ echo tok123 > "$T/owned/.ci-out-owner"
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=tok123 ci_reserve_out "$T/owned" ); check_status "reserve: matching owner token accepted" 0 $?
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=other ci_reserve_out "$T/owned" ); check_status "reserve: mismatched owner token rejected" 1 $?
 
+# --- common.sh: _ci_print_cmd quoting (only quote tokens that need it; a
+# quoted token must round-trip through eval back to the identical argv) ---
+pc_out=$( CI_JOB_NAME=selftest; source ./common.sh; _ci_print_cmd echo 'foo "bar baz"' 'span[hosts=1]' 'brace{1,2}' )
+pc_expected=(echo 'foo "bar baz"' 'span[hosts=1]' 'brace{1,2}')
+eval "pc_printed=($pc_out)"
+pc_ok=1
+[ "${#pc_printed[@]}" -eq "${#pc_expected[@]}" ] || pc_ok=0
+if [ "$pc_ok" -eq 1 ]; then
+  for pc_i in "${!pc_expected[@]}"; do
+    [ "${pc_printed[$pc_i]}" = "${pc_expected[$pc_i]}" ] || pc_ok=0
+  done
+fi
+if [ "$pc_ok" -eq 1 ]; then echo "PASS: printcmd: quote+space token round-trips via eval"; else
+  echo "FAIL: printcmd: quote+space token round-trips via eval — printed=[$pc_out]"; FAILURES=$((FAILURES+1))
+fi
+check "printcmd: benign bracket token unquoted" "span[hosts=1]" "$pc_out"
+case "$pc_out" in
+  *'brace{1,2}'*) echo "FAIL: printcmd: brace token must be quoted (found unquoted in output)"; FAILURES=$((FAILURES+1)) ;;
+  *) echo "PASS: printcmd: brace token quoted" ;;
+esac
+
 # --- smoke.sh ---
 out=$(./smoke.sh --dry-run 2>&1); st=$?
 check_status "smoke: dry-run exits 0" 0 $st
