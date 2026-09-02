@@ -1,0 +1,72 @@
+WS4 mcounteren_test cosim mismatch — spike pin re-fix
+======================================================
+
+Triage pointer:
+  .superpowers/sdd/2026-09-02-ws4-jenkins-lsf/mcounteren-triage.md
+  (copied alongside this file as triage.md)
+
+Root cause (per triage): ci/build-spike.sh pinned SPIKE_REV one commit behind
+aadf648d ("Enable ZIHPM unpriviledged performance counters") on the lowRISC
+spike fork's ibex_cosim branch. The stale pin left ZIHPM disabled at the
+decoder level, so spike unconditionally illegal-instructions any U-mode
+hpmcounterN access regardless of mcounteren, diverging from ibex RTL (which
+gates U-mode HPM-counter access purely via mcounteren, per 026e71ea).
+
+SPIKE_REV change (ci/build-spike.sh):
+  old: 4b97396656485a129119deaec2ba35e5bf354841  (Remove Zcmt from Readme)
+  new: aadf648d742de54f0a50eec01ceffd13ed12a1d1  (Enable ZIHPM unpriviledged
+       performance counters)
+
+Spike diff confirmation (in $IBEX_TOOLS_DIR/src/riscv-isa-sim-lowrisc,
+`git diff 4b973966..aadf648d --stat` after `git fetch origin ibex_cosim`):
+  riscv/isa_parser.cc | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
+Full diff: single line flip in isa_parser_t::isa_parser_t —
+  -  extension_table[EXT_ZIHPM] = false; // IBEX does not implement this extension
+  +  extension_table[EXT_ZIHPM] = true;
+Isolated, no other collateral. 4b973966 confirmed an ancestor of aadf648d
+(`git merge-base --is-ancestor` = true). Not BLOCKED.
+
+Rebuild:
+  bash -lc 'source ci/env.sh; bash ci/build-spike.sh'
+  (dtc must be on PATH via ci/env.sh — a bare `bash ci/build-spike.sh` without
+  first sourcing ci/env.sh fails at ./configure with "device-tree-compiler not
+  found"; re-run after sourcing succeeded.)
+  Verified: `source ci/env.sh && pkg-config --modversion riscv-riscv` resolves
+  (prints "git" per riscv-riscv.pc's literal Version field — pkg-config exits
+  0, confirming PKG_CONFIG_PATH wiring, not a build/version regression).
+
+Re-run invocation (same seed as the failing gate run):
+  bash -lc 'source ci/env.sh; ci/jenkins/nightly.sh --test mcounteren_test \
+    --iterations 1 --seed 260902 --out out_ci/gate-mcounteren-refix'
+  Result: 100.00% PASS 1 PASSED, 0 FAILED  (dv/uvm/core_ibex/out_ci/gate-mcounteren-refix/run/regr.log)
+  Wall-clock: 69s
+
+Old vs new:
+  OLD (gate-nightly, SPIKE_REV=4b973966): mcounteren_test FAILED — UVM_FATAL
+    ibex_cosim_scoreboard.sv(172): cosim mismatch, ISS expected a synchronous
+    trap at PC 0x80002400 that the DUT did not report at PC 0x8000037a
+    (U-mode csrrs hpmcounter3, retired cleanly by the DUT).
+  NEW (gate-mcounteren-refix, SPIKE_REV=aadf648d): mcounteren_test PASSED,
+    same seed (260902), fresh OUT (cosim relink picked up automatically).
+
+Auxiliary checks (no regressions expected from a spike-only pin bump):
+  bash -lc 'source ci/env.sh; bash ci/jenkins/check_testlist_knob.sh'
+    -> check_testlist_knob: PASS / make-boundary PASS   (wall-clock: 10s)
+  bash -lc 'source ci/env.sh; bash ci/jenkins/selftest.sh'
+    -> selftest: 0 failure(s), exit 0   (wall-clock: 8s)
+    (the "riscv_arithmetic_basic_test.1 FAILURE: cosim mismatch" line in the
+    selftest output is the framework's own injected mock fixture used to
+    exercise its PASS/FAIL report-parsing path — not a real regression; the
+    overall selftest verdict is 0 failures.)
+
+HEAD SHA at verification time (before this fix's commits):
+  ac7addd9750a61a16a7f70ef5c7e1193109c2d87
+
+Notes:
+  - Spike source checkout: $IBEX_TOOLS_DIR/src/riscv-isa-sim-lowrisc
+    (IBEX_TOOLS_DIR=/localdev/fzhang/ws/tools per this site's ci/env.sh),
+    HEAD now detached at aadf648d742de54f0a50eec01ceffd13ed12a1d1.
+  - Spike rebuild itself was not separately wall-clocked (ran to completion
+    well inside the 2400s bound; the nightly re-run, check_testlist_knob, and
+    selftest wall-clocks above were measured precisely).

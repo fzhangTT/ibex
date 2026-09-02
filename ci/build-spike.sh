@@ -2,8 +2,10 @@
 # Build the lowRISC spike fork the ibex cosim TB links against.
 # Rev pinned to match this repo's flake.nix; dv/cosim/* is written against it.
 # Requires dtc on PATH — loaded by ci/env.sh.
+# Needs ZIHPM enabled (aadf648d) so U-mode HPM-counter access is gated by
+# mcounteren rather than blanket-disabled, matching ibex's mcounteren support.
 set -euo pipefail
-SPIKE_REV=4b97396656485a129119deaec2ba35e5bf354841
+SPIKE_REV=aadf648d742de54f0a50eec01ceffd13ed12a1d1
 IBEX_TOOLS_DIR="${IBEX_TOOLS_DIR:-/localdev/fzhang/ws/tools}"
 PREFIX="${SPIKE_INSTALL:-$IBEX_TOOLS_DIR/spike-ibex-cosim}"
 SRC="$IBEX_TOOLS_DIR/src/riscv-isa-sim-lowrisc"
