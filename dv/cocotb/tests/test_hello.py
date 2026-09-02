@@ -9,7 +9,8 @@ async def test_hello(dut):
     """Signal alive, read hart_id_i, then signal finish."""
     await start(dut)
 
-    hart_id = dut.hart_id_i.value
+    # hart_id_i is a port on the child instance `dut` (ibex_top_tracing in tb_top.sv).
+    hart_id = int(dut.dut.hart_id_i.value)
     cocotb.log.info(f"COCOTB-HELLO: read hart_id_i={hart_id}")
 
     await finish(dut)
