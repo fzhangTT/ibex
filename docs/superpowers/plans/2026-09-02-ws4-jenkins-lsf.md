@@ -17,7 +17,7 @@
 - Verified command shape (BUILD_AND_SIM.md): `make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=<t> [ITERATIONS=n] SEED=<s> [COV=1] [COCOTB=1] OUT=<dir>`, run in `dv/uvm/core_ibex`.
 - **Dual-suite requirement (handoff item 2), plumbed for real:** the Makefile's `RISCV-DV-TESTLIST`/`DIRECTED-TESTLIST` variables are today **vestigial** — `scripts/metadata.py:138,141` hardcodes both stock testlist paths and nothing consumes the variables (verified 2026-09-02). Task 2 adds the plumbing (args-list → metadata fields); the scripts' `--testlist`/`--directed-testlist` map onto those make variables; the nightly gate includes an actual alternate-testlist run.
 - `TEST=all` excludes testlist entries marked `cocotb: 1` when `COCOTB=0` (commit 0498fbea) — expected, not a script bug.
-- Option-value validation in `ci_parse_args`: `--jobs`, `--iterations`, `--seed` must be nonnegative integers; `--lsf-queue` must match `^[A-Za-z0-9_-]+$`; violations ⇒ usage error, exit 2 (Jenkins parameters pass through these, so they are an injection surface).
+- Option-value validation in `ci_parse_args` — two injection surfaces exist: Jenkins parameters enter the scripts, and every make variable is later interpolated into the Makefile's double-quoted `--args-list` recipe (a quote/semicolon breaks out of it; whitespace breaks `shlex.split` pair-splitting). Strict rules: `--jobs` and `--iterations` positive integers (GNU make rejects `-j0`; metadata rejects iterations ≤ 0); `--seed` nonnegative integer; `--lsf-queue` and `--config` match `^[A-Za-z0-9_-]+$`; `--test` matches `^[A-Za-z0-9_,]+$`; `--testlist`/`--directed-testlist` absolute-resolved paths match `^[A-Za-z0-9_/.+-]+$` (no whitespace or shell metacharacters) and must exist at run time (existence not required under `--dry-run`). Violations ⇒ usage error, exit 2. Selftest carries injection and whitespace-path attempts.
 - Error messages in ci scripts are an ASD-STE100 surface (`simple-english` skill scope): short, imperative, unambiguous.
 - Scripts must be `bash`, `set -uo pipefail` (NOT `-e` — result parsing must run after a failed make), executable, and self-contained (compute repo root from `BASH_SOURCE`).
 - Nonzero exit on any failure; a missing `regr.log` is a failure (fail loud, never fake-pass — dv_principles §4).
@@ -152,7 +152,9 @@ source "$REPO_ROOT/ci/env.sh" || { echo "ERROR: environment setup failed. Stop."
 cd "$REPO_ROOT/dv/uvm/core_ibex"
 PYTHONPATH=$(python3 -c 'from scripts.setup_imports import get_pythonpath; get_pythonpath()') \
 python3 - <<'EOF'
-import pathlib, sys, tempfile
+# metadata.py is runtime-typechecked against pathlib3x, not stdlib pathlib.
+import pathlib3x as pathlib
+import sys, tempfile
 sys.path.insert(0, 'scripts')
 from metadata import RegressionMetadata
 with tempfile.TemporaryDirectory() as td:
@@ -199,9 +201,26 @@ DIRECTED-TESTLIST   :=
 ```
 and append to the `--args-list` string: `RISCVDV_TESTLIST=$(RISCV-DV-TESTLIST) DIRECTED_TESTLIST=$(DIRECTED-TESTLIST)`. NOTE: with empty values this yields bare `RISCVDV_TESTLIST=` pairs — verify `arg_list_initializer`'s `pair.split('=', maxsplit=1)` tolerates empty values and the `str` typecast keeps `''` (it does by inspection, but the Step-5 rerun is the proof).
 
-- [ ] **Step 5: Run the check, verify it passes** — `bash ci/jenkins/check_testlist_knob.sh` ⇒ `check_testlist_knob: PASS`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs (make -n; no license).
+- [ ] **Step 5: Add the Make-boundary check** — the unit check alone would pass even if the Makefile plumbing were absent, so `check_testlist_knob.sh` also proves the make → args-list hop (no license; `make -n` prints the recipe without running it):
 
-- [ ] **Step 6: Commit** — tick T2.
+```bash
+recipe=$(make -C "$REPO_ROOT/dv/uvm/core_ibex" -n run \
+           RISCV-DV-TESTLIST=/tmp/alt_testlist.yaml DIRECTED-TESTLIST=/tmp/alt_directed.yaml \
+           TEST=all SEED=1 SIMULATOR=vcs 2>/dev/null)
+case "$recipe" in
+  *"RISCVDV_TESTLIST=/tmp/alt_testlist.yaml"*) : ;;
+  *) echo "FAIL: Makefile does not pass RISCV-DV-TESTLIST into --args-list" >&2; exit 1;;
+esac
+case "$recipe" in
+  *"DIRECTED_TESTLIST=/tmp/alt_directed.yaml"*) : ;;
+  *) echo "FAIL: Makefile does not pass DIRECTED-TESTLIST into --args-list" >&2; exit 1;;
+esac
+echo "check_testlist_knob: make-boundary PASS"
+```
+
+- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash ci/jenkins/check_testlist_knob.sh` ⇒ both PASS lines (unit + make-boundary). Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
+
+- [ ] **Step 7: Commit** — tick T2.
 
 ```bash
 git add dv/uvm/core_ibex/scripts/metadata.py dv/uvm/core_ibex/Makefile ci/jenkins/check_testlist_knob.sh docs/dv/process-logs/ws4/progress.md
@@ -247,6 +266,16 @@ out=$(./smoke.sh --dry-run --jobs banana 2>&1); st=$?
 check_status "smoke: non-integer --jobs exits 2" 2 $st
 out=$(./smoke.sh --dry-run --lsf --lsf-queue 'q; rm -rf /' 2>&1); st=$?
 check_status "smoke: queue token validation exits 2" 2 $st
+out=$(./smoke.sh --dry-run --config 'opentitan"; touch /tmp/pwned; echo "' 2>&1); st=$?
+check_status "smoke: config injection attempt exits 2" 2 $st
+out=$(./smoke.sh --dry-run --test 'a_test;b' 2>&1); st=$?
+check_status "smoke: test-name metacharacter exits 2" 2 $st
+out=$(./smoke.sh --dry-run --testlist '/tmp/has space.yaml' 2>&1); st=$?
+check_status "smoke: whitespace testlist path exits 2" 2 $st
+out=$(./smoke.sh --dry-run --jobs 0 2>&1); st=$?
+check_status "smoke: --jobs 0 exits 2" 2 $st
+out=$(./smoke.sh --dry-run --iterations 0 2>&1); st=$?
+check_status "smoke: --iterations 0 exits 2" 2 $st
 out=$(CI_ENV_SH="$PWD/testdata/env_fail.sh" ./smoke.sh --out "$(mktemp -d)/o" 2>&1); st=$?
 check_status "smoke: failing env.sh stops the run" 1 $st
 check "smoke: env failure message" "environment setup failed" "$out"
@@ -563,7 +592,7 @@ After Task 8: run the `cross-review` skill for the codex post-execution review o
 
 ## Review disposition (codex pre-review round 1 — REQUEST-CHANGES)
 
-Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf.md`, each addressed in this revision:
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-round1.md`, each addressed in rev 2:
 1. **[critical] testlist vars unused** — CONFIRMED against `metadata.py:138,141`; new Task 2 plumbs args-list → metadata fields with a red→green check (`check_testlist_knob.sh`) and Task 4 Step 7 adds the alternate-testlist gate run.
 2. **[high] smoke selection duplication** — explicit policy exemption recorded (Task 3 header + smoke.sh comment + README §Smoke policy).
 3. **[high] Jenkins parameter injection** — parameters now flow through `environment {}` into single-quoted `sh` blocks, quoted at use, suite args built as a bash array; script-side value validation added (Global Constraints + Task 3 selftest checks).
@@ -572,3 +601,11 @@ Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf.
 6. **[high] unchecked env.sh source** — explicit `|| exit 1` with message; fault-injection selftest via `CI_ENV_SH` + `testdata/env_fail.sh`.
 7. **[medium] cron cannot set params** — README documents `parameterizedCron` and the three-job-defaults alternative; neither assumed.
 8. **[medium] LSF workspace visibility** — Task 4 Step 5 probe before the LSF gate; README §Storage requirement.
+
+## Review disposition (codex pre-review round 2 — REQUEST-CHANGES)
+
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-round2.md`, each addressed in this revision:
+1. **[high] second injection boundary in the make `--args-list` recipe** — strict value validation chosen (the offered alternative to structured transport): charset rules for `--config`/`--test`/testlist paths (no whitespace or shell metacharacters), with injection and whitespace-path selftest checks added in Task 3.
+2. **[high] stdlib pathlib vs runtime-typechecked pathlib3x** — the check script now uses `import pathlib3x as pathlib`.
+3. **[medium] unit check bypasses the Make boundary** — Task 2 Step 5 adds a `make -n` recipe check proving both variables reach `--args-list`; the Task 4 alternate-testlist run stays as the end-to-end proof.
+4. **[medium] zero permitted for `--jobs`/`--iterations`** — both now require positive integers (`-j0` rejected by make; iterations ≤ 0 rejected by metadata); `--seed` stays nonnegative; selftest checks added.
