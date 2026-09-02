@@ -61,7 +61,7 @@ for name, command in servers.items():
             if msg.get("id") == 1:
                 init = msg
                 break
-        if init is None or "error" in init:
+        if init is None or "error" in init or not init.get("result"):
             print(json.dumps({"server": name, "stage": "initialize", "response": init,
                                "elapsed_s": round(time.monotonic() - t0, 1),
                                "diagnostics": all_diagnostics[-10:]}))
@@ -85,6 +85,12 @@ for name, command in servers.items():
             exit_status = 1
             continue
         tools_list = listed.get("result", {}).get("tools", [])
+        if not tools_list:
+            print(json.dumps({"server": name, "stage": "tools/list", "error": "empty tools list",
+                               "response": listed, "elapsed_s": round(time.monotonic() - t0, 1),
+                               "diagnostics": all_diagnostics[-10:]}))
+            exit_status = 1
+            continue
         print(json.dumps({
             "server": name,
             "serverInfo": init.get("result", {}).get("serverInfo"),

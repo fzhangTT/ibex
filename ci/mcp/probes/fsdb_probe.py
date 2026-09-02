@@ -102,6 +102,8 @@ def tool_payload(resp):
     return json.loads(text)
 
 
+failure = None  # first mandatory-result validation failure; drives the exit status
+
 try:
     call("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},
                          "clientInfo": {"name": "ws5-fsdb-probe", "version": "0.2"}}, 1, 60)
@@ -126,6 +128,8 @@ try:
         fi = create_payload["data"]["file_info"]
         max_time = fi["max_time"]
         log(f"    [file_info min_time={fi['min_time']} max_time={fi['max_time']} scale_unit={fi['scale_unit']}]")
+    else:
+        failure = failure or "create_fsdb_session: no successful session in payload"
 
     scope_resp = call("tools/call", {"name": "get_child_modules", "arguments": {"scope": "", "max_results": 50}},
                        4, 60)
@@ -133,11 +137,13 @@ try:
     log(f"=== get_child_modules(scope='') payload: {json.dumps(scope_payload)}")
 
     top_scope = None
-    if scope_payload and scope_payload.get("success"):
+    if scope_payload and scope_payload.get("success") and scope_payload["data"].get("child_scopes"):
         for m in scope_payload["data"]["child_scopes"]:
             if m["name"] == "core_ibex_tb_top":
                 top_scope = m["full_path"]
                 break
+    else:
+        failure = failure or "get_child_modules: empty or unsuccessful scope list"
     log(f"    [top_scope={top_scope}]")
 
     sig_resp = call("tools/call", {"name": "get_internal_signals",
@@ -152,6 +158,10 @@ try:
         sigs = sig_payload["data"].get("signals", [])
         if sigs:
             clk_path = sigs[0].get("full_name") or sigs[0].get("full_path") or sigs[0].get("name")
+    else:
+        sigs = []
+    if not sigs:
+        failure = failure or "get_internal_signals: empty or unsuccessful signal list"
     if clk_path is None and top_scope:
         clk_path = f"{top_scope}.clk"
         log(f"    [no match from get_internal_signals; falling back to {clk_path}]")
@@ -167,6 +177,11 @@ try:
                             6, 60)
         sample_payload = tool_payload(sample_resp) if sample_resp else None
         log(f"=== sample_signals_at_time(signal_names=[{clk_path!r}], sample_time={sample_time!r}) payload: {json.dumps(sample_payload)}")
+        if not (sample_payload and sample_payload.get("success")
+                and sample_payload["data"].get(clk_path) not in (None, "")):
+            failure = failure or "sample_signals_at_time: no real sampled value returned"
+    else:
+        failure = failure or "sample_signals_at_time: no clk_path resolved to sample"
 
     if clk_path:
         tr_resp = call("tools/call", {"name": "get_time_range",
@@ -174,6 +189,10 @@ try:
                         8, 60)
         tr_payload = tool_payload(tr_resp) if tr_resp else None
         log(f"=== get_time_range(signal_names=[{clk_path!r}], start_time='0ns', end_time='50ns') payload: {json.dumps(tr_payload)}")
+        if not (tr_payload and tr_payload.get("success") and tr_payload.get("data")):
+            failure = failure or "get_time_range: no waveform data (empty time range) returned"
+    else:
+        failure = failure or "get_time_range: no clk_path resolved to query"
 
     close_resp = call("tools/call", {"name": "close_fsdb_session", "arguments": {}}, 7, 30)
     log(f"=== close_fsdb_session payload: {json.dumps(tool_payload(close_resp) if close_resp else None)}")
@@ -196,3 +215,7 @@ finally:
 
 with open(LOGFILE, "w") as f:
     f.write("\n".join(log_lines) + "\n")
+
+if failure:
+    print(f"FAIL: {failure}", file=sys.stderr)
+    sys.exit(1)
