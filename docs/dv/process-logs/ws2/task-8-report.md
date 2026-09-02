@@ -41,7 +41,7 @@ Added `## cocotb (python) tests` (before `## Gotchas`) with the verified Milesto
 commands, the `SEED=2` deviation note, and a `### Gotchas specific to cocotb` subsection:
 knob-flip caveat (pointer to the generalized metadata gotcha below), `finish_on_completion=0`
 and its post-report assertion window, the watchdog-vs-import-failure distinction (verified
-against `.superpowers/sdd/2026-09-01-ws2-cocotb/task-5-report.md` — a bad `COCOTB_MODULE`
+against `docs/dv/process-logs/ws2/task-5-report.md` — a bad `COCOTB_MODULE`
 is actually caught by cocotb's own regression manager at time 0, not the SV `$fatal`@100ns
 watchdog, which guards a narrower VPI/libpython-load failure class), `timeout_ms` non-scaling,
 log-scan-only pass/fail, and the `results.xml` CWD location.
