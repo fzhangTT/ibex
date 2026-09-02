@@ -87,3 +87,9 @@ PENDING-WS7: gate item 3 (the cleanroom clone demonstrates *no* MCP servers conf
 proven before WS7 exists. WS5 does not close DONE from this plan; end-state stays
 **PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7** until WS7's plan produces that
 evidence and flips this line.
+
+Note: `ci/mcp/probes/fsdb_probe.py` was committed re-runnable but not re-executed in the fix wave —
+the `out_ws5_waves` artifacts it needs were already cleaned; its T4 gate evidence stands in
+`docs/dv/evidence/ws5-fsdb-demo.txt`.
+SDD loop closed: 4 tasks + final review + one fix wave, all reviews clean; codex post-execution
+review of the full range is the workstream-close gate.
