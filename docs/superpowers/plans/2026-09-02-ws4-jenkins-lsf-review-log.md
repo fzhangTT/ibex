@@ -46,3 +46,11 @@ Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-
 2. **[high] `tee` masks the tested command's exit status** — all four transcript commands run under `bash -o pipefail` and echo the real exit status into the transcript.
 3. **[high] blanket `LSB_JOBID` sentinel bypass** — replaced with a random `CI_OWNER_TOKEN` written into the sentinel and exported through bsub; the inner run must present the matching token; match/mismatch selftests added.
 4. **[medium] `@` rejected in Jenkins workspace paths** — out-path charset admits `@`; positive `ws@2` selftest added (concurrent builds stay enabled).
+
+## Round 6 mechanics ruling (controller, 2026-09-02)
+
+codex timed out four consecutive times on the round-6 re-review (60/90/150 min whole-plan; 150 min
+scoped replan mode) — effectively unavailable for this target. Per CLAUDE.md's fallback clause the
+round-6 re-review runs on claude-opus-5 (fresh subagent session; plan author is claude-fable-5),
+scope identical to the replan invocation, identity recorded in the artifact. The `replan` wrapper
+mode (added this session) remains the preferred codex path for future oversized-plan re-reviews.
