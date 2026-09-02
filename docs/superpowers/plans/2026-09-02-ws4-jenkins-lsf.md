@@ -17,7 +17,7 @@
 - Verified command shape (BUILD_AND_SIM.md): `make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=<t> [ITERATIONS=n] SEED=<s> [COV=1] [COCOTB=1] OUT=<dir>`, run in `dv/uvm/core_ibex`.
 - **Dual-suite requirement (handoff item 2), plumbed for real:** the Makefile's `RISCV-DV-TESTLIST`/`DIRECTED-TESTLIST` variables are today **vestigial** — `scripts/metadata.py:138,141` hardcodes both stock testlist paths and nothing consumes the variables (verified 2026-09-02). Task 2 adds the plumbing (args-list → metadata fields); the scripts' `--testlist`/`--directed-testlist` map onto those make variables; the nightly gate includes an actual alternate-testlist run.
 - `TEST=all` excludes testlist entries marked `cocotb: 1` when `COCOTB=0` (commit 0498fbea) — expected, not a script bug.
-- Option-value validation in `ci_parse_args` — two injection surfaces exist: Jenkins parameters enter the scripts, and every make variable is later interpolated into the Makefile's double-quoted `--args-list` recipe (a quote/semicolon breaks out of it; whitespace breaks `shlex.split` pair-splitting). Strict rules: `--jobs` and `--iterations` positive integers (GNU make rejects `-j0`; metadata rejects iterations ≤ 0); `--seed` nonnegative integer; `--lsf-queue` and `--config` match `^[A-Za-z0-9_-]+$`; `--test` matches `^[A-Za-z0-9_,-]+$` (hyphens required — real directed tests are named `lh-misaligned`, `div-01`, …); `--testlist`/`--directed-testlist` AND the resolved `--out` path (`CI_OUT_ABS`) match `^[A-Za-z0-9_/.+-]+$` as absolute paths (no whitespace or shell metacharacters — `OUT` is a recursively expanded make variable, so `$(shell ...)` in it could execute); testlist files must exist at run time (existence not required under `--dry-run`). Make receives `OUT="$CI_OUT_ABS"` (absolute), never the raw user value. Violations ⇒ usage error, exit 2. Selftest carries injection, whitespace-path, and positive hyphenated-test-name checks.
+- Option-value validation in `ci_parse_args` — two injection surfaces exist: Jenkins parameters enter the scripts, and every make variable is later interpolated into the Makefile's double-quoted `--args-list` recipe (a quote/semicolon breaks out of it; whitespace breaks `shlex.split` pair-splitting). Strict rules: `--jobs` and `--iterations` positive integers (GNU make rejects `-j0`; metadata rejects iterations ≤ 0); `--seed` nonnegative integer; `--lsf-queue` and `--config` match `^[A-Za-z0-9_-]+$`; `--test` matches `^[A-Za-z0-9_,-]+$` (hyphens required — real directed tests are named `lh-misaligned`, `div-01`, …); `--testlist`/`--directed-testlist` match `^[A-Za-z0-9_/.+-]+$` and the resolved `--out` path (`CI_OUT_ABS`) matches `^[A-Za-z0-9_/.+@-]+$` (`@` admitted for Jenkins concurrent-workspace suffixes like `ws@2`; it is inert in shell, make, and shlex) as absolute paths (no whitespace or shell metacharacters — `OUT` is a recursively expanded make variable, so `$(shell ...)` in it could execute); testlist files must exist at run time (existence not required under `--dry-run`). Make receives `OUT="$CI_OUT_ABS"` (absolute), never the raw user value. Violations ⇒ usage error, exit 2. Selftest carries injection, whitespace-path, and positive hyphenated-test-name checks.
 - Error messages in ci scripts are an ASD-STE100 surface (`simple-english` skill scope): short, imperative, unambiguous.
 - Scripts must be `bash`, `set -uo pipefail` (NOT `-e` — result parsing must run after a failed make), executable, and self-contained (compute repo root from `BASH_SOURCE`).
 - Nonzero exit on any failure; a missing `regr.log` is a failure (fail loud, never fake-pass — dv_principles §4).
@@ -34,7 +34,7 @@
 **Files:**
 - Create: `ci/jenkins/common.sh`
 - Create: `ci/jenkins/selftest.sh`
-- Create: `ci/jenkins/testdata/regr_pass.log`, `ci/jenkins/testdata/regr_fail.log`, `ci/jenkins/testdata/env_fail.sh`
+- Create: `ci/jenkins/testdata/regr_pass.log`, `ci/jenkins/testdata/regr_fail.log`, `ci/jenkins/testdata/env_fail.sh`, `ci/jenkins/testdata/lsf-stub/{bsub,bkill}` (mocks for the cancellation selftest)
 - Create: `docs/dv/process-logs/ws4/progress.md`
 
 **Interfaces:**
@@ -42,13 +42,13 @@
 - Produces (used by Tasks 3–5):
   - `ci_parse_args "$@"` — parses the shared option set into globals `CI_TEST CI_TESTLIST CI_DIRECTED_TESTLIST CI_ITERATIONS CI_SEED CI_CONFIG CI_OUT CI_JOBS CI_LSF CI_LSF_QUEUE CI_COCOTB CI_COCOTB_MODULE CI_COV CI_DRY_RUN`, applying the validation rules from Global Constraints. Callers preset job-specific defaults (`CI_JOB_NAME`, `CI_TEST`, `CI_SEED`, `CI_ITERATIONS`, `CI_COV`) **before** calling; options override. Unknown option or invalid value ⇒ usage on stderr, exit 2.
   - `ci_main "$@"` — the whole driver: parse args → resolve `CI_OUT` to absolute `CI_OUT_ABS` (pure path math, no env) → **dry-run prints the exact command(s) and exits 0 — before env.sh, so selftest never loads modules** → `source "$CI_ENV_SH" || { echo "ERROR: environment setup failed ($CI_ENV_SH). Stop." >&2; exit 1; }` → `ci_reserve_out "$CI_OUT_ABS"` → LSF resubmission (see below) or run make (capture exit) → always run `ci_report_results` → exit nonzero if make failed OR results failed. `CI_ENV_SH` defaults to `$REPO_ROOT/ci/env.sh`; overridable via environment for selftest fault injection only.
-  - `ci_reserve_out <out_abs_dir>` — rejects a directory containing prior results (`run/`, `build/`, or `metadata/` present ⇒ error naming the offender + "Use a fresh --out.", return 1); then `mkdir -p` and claims ownership by creating `.ci-out-owner` with `noclobber` (existing sentinel ⇒ "owned by another running job" error) — EXCEPT when `LSB_JOBID` is set (the inner LSF invocation runs in the directory the outer submission already reserved; it must not re-claim). Separately callable so selftest can drive it with fixture dirs.
+  - `ci_reserve_out <out_abs_dir>` — rejects a directory containing prior results (`run/`, `build/`, or `metadata/` present ⇒ error naming the offender + "Use a fresh --out.", return 1); then `mkdir -p` and claims ownership by creating `.ci-out-owner` with `noclobber`, writing a fresh random token (`CI_OWNER_TOKEN=$(od -An -N8 -tx8 </dev/urandom | tr -d ' ')`) into it. The inner LSF invocation must not re-claim: the outer submission exports `CI_OWNER_TOKEN` into the bsub environment, and `ci_reserve_out` allows an existing sentinel ONLY when `CI_OWNER_TOKEN` is set AND equals the sentinel's content (a blanket `LSB_JOBID` bypass would let any unrelated LSF-resident script skip ownership). Any other existing sentinel ⇒ "owned by another running job" error. Separately callable so selftest can drive it with fixture dirs (fresh dir; poisoned dir; foreign sentinel; matching token; mismatched token).
   - `ci_report_results <out_abs_dir>` — parses `<out_abs_dir>/run/regr.log`: exit 0 iff the file exists and reports `0 FAILED`; prints the summary line and, on failure, the failing-test detail block. Separately callable for fixtures.
 - Option set (all of Tasks 3–5 expose exactly this):
   `--test LIST --testlist YAML --directed-testlist YAML --iterations N --seed S --config NAME --out DIR --jobs N --lsf --lsf-queue Q --cocotb --cocotb-module MOD --dry-run --help`
   `--cocotb-module` selects the Python test module (repo knob `COCOTB_MODULE`; validated `^[A-Za-z0-9_.]+$`) and implies `--cocotb` — without it, `COCOTB=1` runs the default hello module only, so generated cocotb suites need this knob.
 - Defaults: `CI_CONFIG=opentitan`, `CI_JOBS=4`, `CI_LSF=0`, `CI_LSF_QUEUE=${LSF_QUEUE:-regress}`, `CI_OUT=out_ci/${CI_JOB_NAME}-$(date -u +%Y%m%d-%H%M%S)` (relative to `dv/uvm/core_ibex`; a same-second collision is caught by `ci_reserve_out`, which turns it into a loud error, never silent reuse).
-- LSF mode: after reserving `CI_OUT_ABS` (so the `-o` log's parent exists), `ci_main` re-invokes the calling script under `bsub -K -J "ibex-${CI_JOB_NAME}" -q "$CI_LSF_QUEUE" -n "$CI_JOBS" -R "span[hosts=1]" -o "$CI_OUT_ABS/lsf.log"` with **all values resolved to explicit flags and `--lsf` removed** (so the inner invocation is deterministic and the timestamped OUT is fixed once). `bsub -K` runs as a **background child** whose stdout/stderr tee to `$CI_OUT_ABS/bsub.log`; the wrapper parses the submission line (`Job <NNNN> is submitted`) for the **exact job ID**, arms `trap 'bkill "$jid" 2>/dev/null; exit 143' INT TERM` with that ID (LSF job *names* are not unique — `bkill -J` can kill a concurrent run's job), then `wait`s on the child and propagates its exit status. A Jenkins timeout/abort that signals the script therefore terminates exactly the submitted job (CLAUDE.md watchdog rule). `--dry-run --lsf` prints the full bsub command without submitting.
+- LSF mode: after reserving `CI_OUT_ABS` (so the `-o` log's parent exists), `ci_main` re-invokes the calling script under `bsub -K -J "ibex-${CI_JOB_NAME}" -q "$CI_LSF_QUEUE" -n "$CI_JOBS" -R "span[hosts=1]" -o "$CI_OUT_ABS/lsf.log"` with **all values resolved to explicit flags and `--lsf` removed** (so the inner invocation is deterministic and the timestamped OUT is fixed once). `bsub -K` runs as a **background child** whose stdout/stderr tee to `$CI_OUT_ABS/bsub.log`. Ordering matters — the trap is armed **before** `bsub` launches, so no signal window can orphan an accepted job: the handler kills the child pid if set, then resolves the job ID — from `$jid` if already parsed, else by scanning `bsub.log` at trap time — and `bkill`s it if found (exact ID; LSF job *names* are not unique, so never `bkill -J`), then exits 143. After launching, the wrapper polls `bsub.log` for the submission line (`Job <NNNN> is submitted`) with a **bounded deadline (120s; expiry ⇒ kill child, scan log once more, error out)**, records `$jid`, then `wait`s on the child and propagates its exit status. Selftest covers cancellation with a mocked `bsub`/`bkill` (PATH-prefixed stubs in `testdata/lsf-stub/`: fake bsub prints `Job <42> is submitted.` then sleeps; the test TERMs the script and asserts the stub `bkill` log records job 42). `--dry-run --lsf` prints the full bsub command without submitting.
 - Make command shape (built as an array, printed verbatim by dry-run):
   `make -C "$REPO_ROOT/dv/uvm/core_ibex" -j"$CI_JOBS" SIMULATOR=vcs ISS=spike IBEX_CONFIG="$CI_CONFIG" TEST="$CI_TEST" SEED="$CI_SEED" OUT="$CI_OUT_ABS"` plus, only when set: `ITERATIONS=`, `COV=1`, `COCOTB=1`, `COCOTB_MODULE=`, `RISCV-DV-TESTLIST=`, `DIRECTED-TESTLIST=`.
 
@@ -84,12 +84,14 @@ cp testdata/regr_fail.log "$T/fail/run/regr.log"
 ( CI_JOB_NAME=selftest; source ./common.sh; ci_report_results "$T/empty" ); check_status "report: missing regr.log exits nonzero" 1 $?
 
 # --- common.sh: ci_reserve_out ---
-mkdir -p "$T/poisoned/run" "$T/owned"; touch "$T/owned/.ci-out-owner"
+mkdir -p "$T/poisoned/run" "$T/owned"; echo foreign > "$T/owned/.ci-out-owner"
 ( CI_JOB_NAME=selftest; source ./common.sh; ci_reserve_out "$T/fresh" ); check_status "reserve: fresh dir ok" 0 $?
 [ -f "$T/fresh/.ci-out-owner" ] && echo "PASS: reserve: sentinel created" || { echo "FAIL: reserve: no sentinel"; FAILURES=$((FAILURES+1)); }
 ( CI_JOB_NAME=selftest; source ./common.sh; ci_reserve_out "$T/poisoned" ); check_status "reserve: prior run/ rejected" 1 $?
-( CI_JOB_NAME=selftest; source ./common.sh; unset LSB_JOBID; ci_reserve_out "$T/owned" ); check_status "reserve: foreign sentinel rejected" 1 $?
-( CI_JOB_NAME=selftest; source ./common.sh; LSB_JOBID=12345 ci_reserve_out "$T/owned" ); check_status "reserve: inner LSF run accepts reserved dir" 0 $?
+( CI_JOB_NAME=selftest; source ./common.sh; unset CI_OWNER_TOKEN; ci_reserve_out "$T/owned" ); check_status "reserve: foreign sentinel rejected" 1 $?
+echo tok123 > "$T/owned/.ci-out-owner"
+( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=tok123 ci_reserve_out "$T/owned" ); check_status "reserve: matching owner token accepted" 0 $?
+( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=other ci_reserve_out "$T/owned" ); check_status "reserve: mismatched owner token rejected" 1 $?
 
 rm -rf "$T"
 echo; echo "selftest: $FAILURES failure(s)"
@@ -98,14 +100,14 @@ echo; echo "selftest: $FAILURES failure(s)"
 
 Fixtures (format from `report_lib/text.py`): `testdata/regr_pass.log` first line `100.00% PASS 2 PASSED, 0 FAILED`; `testdata/regr_fail.log` first line `50.00% PASS 1 PASSED, 1 FAILED` followed by a plausible `Details of failing tests` block (copy the box_comment shape from `text.py`). `testdata/env_fail.sh` contains just `return 1` (a sourceable file that fails; used by Task 3's checks).
 
-- [ ] **Step 2: Run selftest, verify it fails** — `bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-red.txt`; expected: FAIL lines (common.sh does not exist), nonzero exit. The transcript is evidence (dv_principles §6 rule 1) — it is committed in Step 5.
+- [ ] **Step 2: Run selftest, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-red.txt'; echo "exit=$?"`; expected: FAIL lines (common.sh does not exist) and `exit=` nonzero — `tee` alone would mask the status. The transcript is evidence (dv_principles §6 rule 1) — it is committed in Step 5.
 
 - [ ] **Step 3: Implement `ci/jenkins/common.sh`** per the Produces contract above. Key requirements beyond the contract:
   - `REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"`; `CI_ENV_SH="${CI_ENV_SH:-$REPO_ROOT/ci/env.sh}"`.
   - `set -uo pipefail` discipline; no `set -e`; every step that can fail is explicitly checked.
   - `ci_report_results`: `head -n1` of regr.log, match with `[[ "$line" =~ %\ PASS\ ([0-9]+)\ PASSED,\ ([0-9]+)\ FAILED ]]`; failure count from `BASH_REMATCH[2]`; on failure also print the section between `# Details of failing tests` and `# Details of passing tests`. Missing/unparsable file ⇒ `echo "ERROR: no regr.log at <path>. The run did not produce results." >&2; return 1`.
 
-- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-green.txt`; expected: all PASS, exit 0. Copy both transcripts to `docs/dv/evidence/ws4-selftest-tdd/t1-red.txt` and `t1-green.txt`.
+- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-green.txt'; echo "exit=$?"`; expected: all PASS, `exit=0`. Copy both transcripts to `docs/dv/evidence/ws4-selftest-tdd/t1-red.txt` and `t1-green.txt`.
 
 - [ ] **Step 5: Create the ledger and commit**
 
@@ -175,7 +177,7 @@ EOF
 ```
 Adjust the `arg_list_initializer` call signature to the real one when writing (read `scripts/metadata.py:176-240` first; if `git_commit` or another parameter differs, follow the source — the assertions are the contract, not the exact constructor line).
 
-- [ ] **Step 2: Run it, verify it fails** — `bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-red.txt`; expected: AssertionError/AttributeError (fields don't exist yet). Committed as `docs/dv/evidence/ws4-selftest-tdd/t2-red.txt` in Step 7.
+- [ ] **Step 2: Run it, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-red.txt'; echo "exit=$?"`; expected: AssertionError/AttributeError (fields don't exist yet), `exit=` nonzero. Committed as `docs/dv/evidence/ws4-selftest-tdd/t2-red.txt` in Step 7.
 
 - [ ] **Step 3: Implement the metadata fields** — in `RegressionMetadata`: add near the other args-list-settable fields
 ```python
@@ -220,7 +222,7 @@ esac
 echo "check_testlist_knob: make-boundary PASS"
 ```
 
-- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-green.txt` ⇒ both PASS lines (unit + make-boundary); copy red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t2-{red,green}.txt`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
+- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-green.txt'; echo "exit=$?"` ⇒ both PASS lines (unit + make-boundary), `exit=0`; copy red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t2-{red,green}.txt`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
 
 - [ ] **Step 7: Commit** — tick T2.
 
@@ -285,6 +287,8 @@ out=$(./smoke.sh --dry-run --out 'out_ci/x$(shell touch /tmp/pwned)' 2>&1); st=$
 check_status "smoke: make-function metacharacters in --out exit 2" 2 $st
 out=$(./smoke.sh --dry-run --out 'out_ci/has space' 2>&1); st=$?
 check_status "smoke: whitespace --out exits 2" 2 $st
+out=$(./smoke.sh --dry-run --out 'out_ci/ws@2/smoke' 2>&1); st=$?
+check_status "smoke: Jenkins @-suffix workspace path accepted" 0 $st
 out=$(./smoke.sh --dry-run --cocotb-module dv.cocotb.gen_irq 2>&1); st=$?
 check_status "smoke: --cocotb-module accepted" 0 $st
 check "smoke: cocotb-module implies COCOTB=1" "COCOTB=1" "$out"
@@ -686,3 +690,11 @@ Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-
 3. **[high] red→green transcripts not committed** — every task saves its failing and passing selftest/check transcripts to `docs/dv/evidence/ws4-selftest-tdd/t<N>-{red,green}.txt`, committed with the task (Global Constraints rule + per-task steps).
 4. **[high] evidence SHA recorded before the code is committed** — Tasks 3–5 now commit the implementation first, run the gate from that immutable commit, record its SHA, and commit evidence separately.
 5. **[medium] `allowEmpty*` lets publication silently no-op** — publication moved into per-stage strict `post { always }` blocks scoped to each stage's OUT glob; the global post keeps only workspace cleanup.
+
+## Review disposition (codex pre-review round 5 — REQUEST-CHANGES)
+
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-round5.md`, each addressed in this revision:
+1. **[high] trap armed after submission parsing (orphan window)** — trap armed before `bsub`; handler kills the child, resolves the job ID from `$jid` or a trap-time `bsub.log` scan, `bkill`s if found; submission-line polling bounded at 120s; mocked-LSF cancellation selftest added (`testdata/lsf-stub/`).
+2. **[high] `tee` masks the tested command's exit status** — all four transcript commands run under `bash -o pipefail` and echo the real exit status into the transcript.
+3. **[high] blanket `LSB_JOBID` sentinel bypass** — replaced with a random `CI_OWNER_TOKEN` written into the sentinel and exported through bsub; the inner run must present the matching token; match/mismatch selftests added.
+4. **[medium] `@` rejected in Jenkins workspace paths** — out-path charset admits `@`; positive `ws@2` selftest added (concurrent builds stay enabled).
