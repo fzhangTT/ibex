@@ -54,3 +54,11 @@ scoped replan mode) — effectively unavailable for this target. Per CLAUDE.md's
 round-6 re-review runs on claude-opus-5 (fresh subagent session; plan author is claude-fable-5),
 scope identical to the replan invocation, identity recorded in the artifact. The `replan` wrapper
 mode (added this session) remains the preferred codex path for future oversized-plan re-reviews.
+
+## Review disposition (round 6 — APPROVE-WITH-CHANGES, opus fallback reviewer)
+
+All four round-5 findings verified ADDRESSED (with live experiments). Four new delta findings folded
+into plan rev 7 before execution: cancellation selftest written into Task 1 Step 1 (+ env_ok.sh stub,
+active from Task 3); `@` admitted in the testlist charset + positive check; exit status tee'd into
+the committed transcripts; set-u hazard note (${jid:-}/${child:-}/${CI_OWNER_TOKEN:-}, init-empty
+before trap). Gate OPEN — execution proceeds per APPROVE-WITH-CHANGES.

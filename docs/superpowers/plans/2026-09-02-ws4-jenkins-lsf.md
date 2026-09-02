@@ -17,7 +17,7 @@
 - Verified command shape (BUILD_AND_SIM.md): `make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=<t> [ITERATIONS=n] SEED=<s> [COV=1] [COCOTB=1] OUT=<dir>`, run in `dv/uvm/core_ibex`.
 - **Dual-suite requirement (handoff item 2), plumbed for real:** the Makefile's `RISCV-DV-TESTLIST`/`DIRECTED-TESTLIST` variables are today **vestigial** — `scripts/metadata.py:138,141` hardcodes both stock testlist paths and nothing consumes the variables (verified 2026-09-02). Task 2 adds the plumbing (args-list → metadata fields); the scripts' `--testlist`/`--directed-testlist` map onto those make variables; the nightly gate includes an actual alternate-testlist run.
 - `TEST=all` excludes testlist entries marked `cocotb: 1` when `COCOTB=0` (commit 0498fbea) — expected, not a script bug.
-- Option-value validation in `ci_parse_args` — two injection surfaces exist: Jenkins parameters enter the scripts, and every make variable is later interpolated into the Makefile's double-quoted `--args-list` recipe (a quote/semicolon breaks out of it; whitespace breaks `shlex.split` pair-splitting). Strict rules: `--jobs` and `--iterations` positive integers (GNU make rejects `-j0`; metadata rejects iterations ≤ 0); `--seed` nonnegative integer; `--lsf-queue` and `--config` match `^[A-Za-z0-9_-]+$`; `--test` matches `^[A-Za-z0-9_,-]+$` (hyphens required — real directed tests are named `lh-misaligned`, `div-01`, …); `--testlist`/`--directed-testlist` match `^[A-Za-z0-9_/.+-]+$` and the resolved `--out` path (`CI_OUT_ABS`) matches `^[A-Za-z0-9_/.+@-]+$` (`@` admitted for Jenkins concurrent-workspace suffixes like `ws@2`; it is inert in shell, make, and shlex) as absolute paths (no whitespace or shell metacharacters — `OUT` is a recursively expanded make variable, so `$(shell ...)` in it could execute); testlist files must exist at run time (existence not required under `--dry-run`). Make receives `OUT="$CI_OUT_ABS"` (absolute), never the raw user value. Violations ⇒ usage error, exit 2. Selftest carries injection, whitespace-path, and positive hyphenated-test-name checks.
+- Option-value validation in `ci_parse_args` — two injection surfaces exist: Jenkins parameters enter the scripts, and every make variable is later interpolated into the Makefile's double-quoted `--args-list` recipe (a quote/semicolon breaks out of it; whitespace breaks `shlex.split` pair-splitting). Strict rules: `--jobs` and `--iterations` positive integers (GNU make rejects `-j0`; metadata rejects iterations ≤ 0); `--seed` nonnegative integer; `--lsf-queue` and `--config` match `^[A-Za-z0-9_-]+$`; `--test` matches `^[A-Za-z0-9_,-]+$` (hyphens required — real directed tests are named `lh-misaligned`, `div-01`, …); `--testlist`/`--directed-testlist` and the resolved `--out` path (`CI_OUT_ABS`) all match `^[A-Za-z0-9_/.+@-]+$` (`@` admitted for Jenkins concurrent-workspace suffixes like `ws@2`; it is inert in shell, make, and shlex) as absolute paths (no whitespace or shell metacharacters — `OUT` is a recursively expanded make variable, so `$(shell ...)` in it could execute); testlist files must exist at run time (existence not required under `--dry-run`). Make receives `OUT="$CI_OUT_ABS"` (absolute), never the raw user value. Violations ⇒ usage error, exit 2. Selftest carries injection, whitespace-path, and positive hyphenated-test-name checks.
 - Error messages in ci scripts are an ASD-STE100 surface (`simple-english` skill scope): short, imperative, unambiguous.
 - Scripts must be `bash`, `set -uo pipefail` (NOT `-e` — result parsing must run after a failed make), executable, and self-contained (compute repo root from `BASH_SOURCE`).
 - Nonzero exit on any failure; a missing `regr.log` is a failure (fail loud, never fake-pass — dv_principles §4).
@@ -34,7 +34,7 @@
 **Files:**
 - Create: `ci/jenkins/common.sh`
 - Create: `ci/jenkins/selftest.sh`
-- Create: `ci/jenkins/testdata/regr_pass.log`, `ci/jenkins/testdata/regr_fail.log`, `ci/jenkins/testdata/env_fail.sh`, `ci/jenkins/testdata/lsf-stub/{bsub,bkill}` (mocks for the cancellation selftest)
+- Create: `ci/jenkins/testdata/regr_pass.log`, `ci/jenkins/testdata/regr_fail.log`, `ci/jenkins/testdata/env_fail.sh`, `ci/jenkins/testdata/env_ok.sh` (no-op success env stub — the real env.sh loads site modules, which selftest forbids), `ci/jenkins/testdata/lsf-stub/{bsub,bkill}` (mocks for the cancellation selftest)
 - Create: `docs/dv/process-logs/ws4/progress.md`
 
 **Interfaces:**
@@ -93,21 +93,37 @@ echo tok123 > "$T/owned/.ci-out-owner"
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=tok123 ci_reserve_out "$T/owned" ); check_status "reserve: matching owner token accepted" 0 $?
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=other ci_reserve_out "$T/owned" ); check_status "reserve: mismatched owner token rejected" 1 $?
 
+# --- LSF cancellation (mocked; proves the trap kills the exact submitted job) ---
+# lsf-stub/bsub prints "Job <42> is submitted." then sleeps 60; lsf-stub/bkill logs its args
+# to $LSF_STUB_LOG. smoke.sh exists from Task 3 on; guard so Task 1's run skips it cleanly.
+if [ -x ./smoke.sh ]; then
+  rm -f "$T/bkill.log"
+  CI_ENV_SH="$PWD/testdata/env_ok.sh" LSF_STUB_LOG="$T/bkill.log" PATH="$PWD/testdata/lsf-stub:$PATH" \
+    ./smoke.sh --lsf --out "$T/lsf-cancel" & SPID=$!
+  sleep 3; kill -TERM "$SPID" 2>/dev/null; wait "$SPID" 2>/dev/null
+  grep -q "42" "$T/bkill.log" 2>/dev/null && echo "PASS: lsf cancel bkills job 42" || { echo "FAIL: lsf cancel did not bkill job 42"; FAILURES=$((FAILURES+1)); }
+else
+  echo "SKIP: lsf cancel (smoke.sh not yet present)"
+fi
+
 rm -rf "$T"
 echo; echo "selftest: $FAILURES failure(s)"
 [[ "$FAILURES" -eq 0 ]]
 ```
 
+`testdata/lsf-stub/bsub`: prints `Job <42> is submitted to queue <regress>.` then `sleep 60`. `testdata/lsf-stub/bkill`: appends its arguments to `$LSF_STUB_LOG`. `testdata/env_ok.sh`: `return 0` with the `IBEX_ENV_TOOLCHECK` note not needed (no tool checks). The cancellation check becomes active from Task 3 (when smoke.sh exists) — Task 3's Step 4 green run is the round-5 finding's regression proof.
+
 Fixtures (format from `report_lib/text.py`): `testdata/regr_pass.log` first line `100.00% PASS 2 PASSED, 0 FAILED`; `testdata/regr_fail.log` first line `50.00% PASS 1 PASSED, 1 FAILED` followed by a plausible `Details of failing tests` block (copy the box_comment shape from `text.py`). `testdata/env_fail.sh` contains just `return 1` (a sourceable file that fails; used by Task 3's checks).
 
-- [ ] **Step 2: Run selftest, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-red.txt'; echo "exit=$?"`; expected: FAIL lines (common.sh does not exist) and `exit=` nonzero — `tee` alone would mask the status. The transcript is evidence (dv_principles §6 rule 1) — it is committed in Step 5.
+- [ ] **Step 2: Run selftest, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-red.txt'; st=$?; echo "exit=$st" | tee -a /tmp/ws4-t1-red.txt`; expected: FAIL lines (common.sh does not exist) and `exit=` nonzero, recorded IN the transcript (it is the committed evidence) — `tee` alone would mask the status. The transcript is evidence (dv_principles §6 rule 1) — it is committed in Step 5.
 
 - [ ] **Step 3: Implement `ci/jenkins/common.sh`** per the Produces contract above. Key requirements beyond the contract:
   - `REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"`; `CI_ENV_SH="${CI_ENV_SH:-$REPO_ROOT/ci/env.sh}"`.
   - `set -uo pipefail` discipline; no `set -e`; every step that can fail is explicitly checked.
+  - `set -u` hazard: the trap handler and `ci_reserve_out` read variables that are legitimately unset (`jid`, the bsub child pid, `CI_OWNER_TOKEN`). Initialize `jid=""` and `child=""` BEFORE arming the trap, and read all three only as `${jid:-}` / `${child:-}` / `${CI_OWNER_TOKEN:-}` — a naive read aborts the handler mid-cancellation and re-orphans the job.
   - `ci_report_results`: `head -n1` of regr.log, match with `[[ "$line" =~ %\ PASS\ ([0-9]+)\ PASSED,\ ([0-9]+)\ FAILED ]]`; failure count from `BASH_REMATCH[2]`; on failure also print the section between `# Details of failing tests` and `# Details of passing tests`. Missing/unparsable file ⇒ `echo "ERROR: no regr.log at <path>. The run did not produce results." >&2; return 1`.
 
-- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-green.txt'; echo "exit=$?"`; expected: all PASS, `exit=0`. Copy both transcripts to `docs/dv/evidence/ws4-selftest-tdd/t1-red.txt` and `t1-green.txt`.
+- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash -o pipefail -c 'bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-green.txt'; st=$?; echo "exit=$st" | tee -a /tmp/ws4-t1-green.txt`; expected: all PASS, `exit=0` in the transcript. Copy both transcripts to `docs/dv/evidence/ws4-selftest-tdd/t1-red.txt` and `t1-green.txt`.
 
 - [ ] **Step 5: Create the ledger and commit**
 
@@ -177,7 +193,7 @@ EOF
 ```
 Adjust the `arg_list_initializer` call signature to the real one when writing (read `scripts/metadata.py:176-240` first; if `git_commit` or another parameter differs, follow the source — the assertions are the contract, not the exact constructor line).
 
-- [ ] **Step 2: Run it, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-red.txt'; echo "exit=$?"`; expected: AssertionError/AttributeError (fields don't exist yet), `exit=` nonzero. Committed as `docs/dv/evidence/ws4-selftest-tdd/t2-red.txt` in Step 7.
+- [ ] **Step 2: Run it, verify it fails** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-red.txt'; st=$?; echo "exit=$st" | tee -a /tmp/ws4-t2-red.txt`; expected: AssertionError/AttributeError (fields don't exist yet), `exit=` nonzero in the transcript. Committed as `docs/dv/evidence/ws4-selftest-tdd/t2-red.txt` in Step 7.
 
 - [ ] **Step 3: Implement the metadata fields** — in `RegressionMetadata`: add near the other args-list-settable fields
 ```python
@@ -222,7 +238,7 @@ esac
 echo "check_testlist_knob: make-boundary PASS"
 ```
 
-- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-green.txt'; echo "exit=$?"` ⇒ both PASS lines (unit + make-boundary), `exit=0`; copy red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t2-{red,green}.txt`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
+- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash -o pipefail -c 'bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-green.txt'; st=$?; echo "exit=$st" | tee -a /tmp/ws4-t2-green.txt` ⇒ both PASS lines (unit + make-boundary), `exit=0` in the transcript; copy red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t2-{red,green}.txt`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
 
 - [ ] **Step 7: Commit** — tick T2.
 
@@ -289,6 +305,8 @@ out=$(./smoke.sh --dry-run --out 'out_ci/has space' 2>&1); st=$?
 check_status "smoke: whitespace --out exits 2" 2 $st
 out=$(./smoke.sh --dry-run --out 'out_ci/ws@2/smoke' 2>&1); st=$?
 check_status "smoke: Jenkins @-suffix workspace path accepted" 0 $st
+out=$(./smoke.sh --dry-run --testlist '/x/ws@2/tl.yaml' 2>&1); st=$?
+check_status "smoke: @-suffix testlist path accepted" 0 $st
 out=$(./smoke.sh --dry-run --cocotb-module dv.cocotb.gen_irq 2>&1); st=$?
 check_status "smoke: --cocotb-module accepted" 0 $st
 check "smoke: cocotb-module implies COCOTB=1" "COCOTB=1" "$out"
