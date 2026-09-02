@@ -19,13 +19,15 @@ RUBRICS=$(cat "$REPO"/ci/reviews/GUIDE.md "$REPO"/ci/reviews/*.md)
 case "$MODE" in
   plan)
     TARGET_DESC="plan/spec file(s): $*"
-    SCOPE_LINE="Review these documents against the spec and repo reality: $*"
+    MANIFEST=""
+    for f in "$@"; do MANIFEST="${MANIFEST}TARGET: $f@$(sha256sum "$f" | cut -c1-8)\n"; done
+    SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:\n${MANIFEST}"
     NAME="plan-$(basename "${1%.*}")"
     ;;
   diff)
     BASE=$(git rev-parse --verify "${1:?base}") ; HEAD_=$(git rev-parse --verify "${2:?head}")
     TARGET_DESC="committed diff ${BASE:0:8}..${HEAD_:0:8}"
-    SCOPE_LINE="Review ONLY the committed diff range ${BASE}..${HEAD_} (use git diff/log yourself). Echo the exact range you reviewed, verbatim, on the first line of your output as: TARGET: ${BASE}..${HEAD_}"
+    SCOPE_LINE="Review ONLY the committed diff range ${BASE}..${HEAD_} (use git diff/log yourself). Your output's FIRST line must be exactly: TARGET: ${BASE}..${HEAD_} — and your LAST line must be the single verdict line, nothing after it."
     NAME="diff-${BASE:0:8}-${HEAD_:0:8}"
     ;;
   *) echo "unknown mode: $MODE" >&2; exit 1;;
@@ -46,13 +48,14 @@ command codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || { echo
 # Identity: prefer what the run itself reports; fall back to CLI/config probing.
 CLI_VER=$(command codex --version 2>/dev/null | head -1)
 RUN_MODEL=$(grep -m1 -oE 'model[:= ]+[A-Za-z0-9._-]+' "$RAW.err" "$RAW" 2>/dev/null | head -1 || true)
-CFG_MODEL=$(grep -m1 -E '^model ' ~/.codex/config.toml 2>/dev/null || true)
-CFG_REASONING=$(grep -m1 -E '^model_reasoning_effort' ~/.codex/config.toml 2>/dev/null || true)
+RUN_REASONING=$(grep -m1 -oiE 'reasoning( effort)?[:= ]+[a-z]+' "$RAW.err" "$RAW" 2>/dev/null | head -1 || true)
+# Fail closed: identity requires the RUN's model and reasoning, not config defaults.
+{ [ -n "$RUN_MODEL" ] && [ -n "$RUN_REASONING" ]; } || { echo "PROTOCOL ERROR: run did not report model/reasoning identity (model='$RUN_MODEL' reasoning='$RUN_REASONING')"; exit 1; }
 
 {
   echo "# Cross-model review — ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** ${CLI_VER}; run-reported: ${RUN_MODEL:-n/a}; config: ${CFG_MODEL:-n/a}; reasoning: ${CFG_REASONING:-n/a}"
+  echo "**Reviewer:** ${CLI_VER}; run-reported: ${RUN_MODEL}; ${RUN_REASONING}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC}"
   echo
@@ -61,11 +64,17 @@ CFG_REASONING=$(grep -m1 -E '^model_reasoning_effort' ~/.codex/config.toml 2>/de
   cat "$RAW"
 } > "$ART"
 
-NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$ART" || true)
-[ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line, found $NV in $ART"; exit 1; }
-VERDICT=$(grep -E '^Final verdict: ' "$ART" | sed 's/Final verdict: //')
+LAST=$(tail -n 1 "$RAW")
+case "$LAST" in
+  "Final verdict: APPROVE"|"Final verdict: APPROVE-WITH-CHANGES"|"Final verdict: REQUEST-CHANGES") VERDICT=${LAST#Final verdict: };;
+  *) echo "PROTOCOL ERROR: last raw-output line is not the sole exact verdict line: '$LAST'"; exit 1;;
+esac
+NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$RAW" || true)
+[ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line in raw output, found $NV"; exit 1; }
 if [ "$MODE" = diff ]; then
-  grep -Fq "TARGET: ${BASE}..${HEAD_}" "$ART" || { echo "PROTOCOL ERROR: review did not echo the exact target range (fixed-string match) — cannot trust scope. Artifact: $ART"; exit 1; }
+  [ "$(head -n 1 "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: first raw-output line is not the exact target echo. Artifact: $ART"; exit 1; }
+else
+  printf '%b' "$MANIFEST" | while IFS= read -r ln; do [ -z "$ln" ] && continue; grep -Fqx "$ln" "$RAW" || { echo "PROTOCOL ERROR: plan target line not echoed exactly: '$ln'"; exit 1; }; done || exit 1
 fi
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2

@@ -26,12 +26,17 @@ human-written or generated:
    always-true sample proves nothing).
 <!-- TRUST-TRIAD-CANONICAL-END -->
 
-The three test shapes and where their interfaces are defined:
-1. riscv-dv random tests — a `riscv_dv_extension/testlist.yaml` entry (gen_opts/rtl_test/
-   rtl_params filtering; study neighboring entries for shape).
-2. Directed tests — `directed_tests/` + its generated testlist.
+Mode check FIRST (fence-dominant): in a GENERATION session (cleanroom / challenge work), the
+only permitted sources are fence-allowed collateral — `docs/dv/TB_CONTRACT.md`,
+`docs/dv/FENCE.md`, `rtl/`, `ibex_pkg`, upstream riscv-dv/spike docs — and every artifact lands
+under `dv/auto_dv/**`; existing testlists, directed tests, and `fcov/` are fenced and must not
+be read or imitated. Only in INFRA sessions (full-tree, non-generation maintenance) may the
+existing shapes be studied:
+1. riscv-dv random tests — a `riscv_dv_extension/testlist.yaml` entry (infra sessions only).
+2. Directed tests — `directed_tests/` + its generated testlist (infra sessions only).
 3. cocotb tests — `dv/cocotb/` per `docs/dv/TB_CONTRACT.md` (once WS2 lands): COCOTB_MODULE
-   selection, `+cocotb_*` plusargs, handshake API, checking obligation.
+   selection, `+cocotb_*` plusargs, handshake API, checking obligation (both modes; the
+   contract is fence-allowed by design).
 
 Method: TDD (write the failing check first — red transcript, then green); conform to
 `docs/dv/dv_principles.md` §1-§5 (boundary stimulus, randomize-don't-walk, fail through a

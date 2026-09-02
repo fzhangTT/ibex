@@ -23,3 +23,8 @@ cross-review). Compensating raw evidence that the check can fail, accepted per t
 MUT-001 (the detector FAILs on mutated classification logic, exit 2, passes on revert) and the
 live declared-unhit run (exit 2 → trr FCOV_EXPECTATION(4) → regr.log FAILED). All future
 tests/checkers follow rule 1 as written.
+
+Controller ruling (WS3 controller, delegated authority, 2026-09-01): the rule-1 deviation on
+this checker is ACCEPTED with the compensating evidence above (MUT-001 + live declared-unhit
+FAIL) — recorded per the cross-model policy's exception path; the triad binds as written for
+all subsequent work. Disagreement with this ruling goes to the human owner.
