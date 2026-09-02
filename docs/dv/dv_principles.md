@@ -6,6 +6,11 @@ checkers, coverage, and the tooling around them. Flow commands live in
 [`BUILD_AND_SIM.md`](BUILD_AND_SIM.md); cosim architecture in [`COSIM.md`](COSIM.md); the
 generated-test interface contract in `TB_CONTRACT.md` (once WS2 lands).
 
+Boundary rules scope to **the chosen DUT** — the module a TB instantiates as its device under
+test. In the core-level TB that is the ibex core (the examples below assume it); a sub-module TB
+applies the same rules at that sub-module's port boundary — realistic drive (§1) and
+interface-boundary checking (§2) are judged against its interface, not the core's.
+
 ## 1. Stimulus & drive
 
 - **Realistic drive at the DUT boundary.** Drive ibex the way a real system does: instructions
