@@ -174,5 +174,28 @@ class core_ibex_vseq extends uvm_sequence;
     irq_drop_seq_h.start(p_sequencer.irq_seqr);
   endtask
 
+`ifdef COCOTB_SIM
+  // Milestone B: raise/drop a single irq line for the cocotb-triggered pulse (see
+  // core_ibex_base_test.sv's cocotb_irq_listener). Uses fresh sequence objects rather than the
+  // cfg.enable_irq_*_seq-gated handles above, since this testlist entry deliberately leaves those
+  // disabled so no stock SV irq stimulus competes with Python's.
+  virtual task start_cocotb_irq_raise();
+    cocotb_irq_raise_seq seq_h;
+    seq_h = cocotb_irq_raise_seq::type_id::create("cocotb_irq_raise_seq_h");
+    seq_h.num_of_iterations = 1;
+    seq_h.max_interval = 0;
+    seq_h.max_delay = 0;
+    seq_h.start(p_sequencer.irq_seqr);
+  endtask
+
+  virtual task start_cocotb_irq_drop();
+    irq_drop_seq seq_h;
+    seq_h = irq_drop_seq::type_id::create("cocotb_irq_drop_seq_h");
+    seq_h.num_of_iterations = 1;
+    seq_h.max_interval = 0;
+    seq_h.max_delay = 0;
+    seq_h.start(p_sequencer.irq_seqr);
+  endtask
+`endif
 
 endclass

@@ -24,18 +24,22 @@ async def start(dut):
     cocotb.log.info(f"COCOTB-HELLO: alive (seed={seed})")
 
 
-async def finish(dut):
-    """Clear active flag, then poll uvm_finished (1us period, 2ms timeout)."""
+async def finish(dut, timeout_ms=2):
+    """Clear active flag, then poll uvm_finished (1us period, timeout_ms timeout).
+
+    Default preserves Milestone A's hello-world budget; heavier programs (e.g. a full
+    +instr_cnt=10000 random-instruction test plus irq handling) need a caller-supplied budget
+    covering how long that program actually takes to reach its own riscv-dv signature handshake.
+    """
     cocotb_if = dut.cocotb_if
     cocotb_if.cocotb_active.value = 0
 
-    # Poll uvm_finished within a 2ms timeout.
-    timeout_cycles = 2000  # 2ms / 1us
+    timeout_cycles = timeout_ms * 1000  # timeout_ms / 1us
     for cycle in range(timeout_cycles):
         if cocotb_if.uvm_finished.value:
             return
         await Timer(1, units="us")
 
     raise TimeoutError(
-        f"uvm_finished did not assert within 2ms timeout (polled {timeout_cycles} times)"
+        f"uvm_finished did not assert within {timeout_ms}ms timeout (polled {timeout_cycles} times)"
     )

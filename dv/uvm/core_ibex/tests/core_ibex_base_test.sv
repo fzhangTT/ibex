@@ -19,6 +19,7 @@ class core_ibex_base_test extends uvm_test;
   core_ibex_vseq                                  vseq;
 `ifdef COCOTB_SIM
   core_ibex_cocotb_monitor                        cocotb_monitor;
+  virtual core_ibex_cocotb_if                     cocotb_vif;
 `endif
   bit                                             discrete_debug_module = 1'b0;
   string                                          binary, bin_main, bin_dm, vmem_main, vmem_dm;
@@ -214,6 +215,9 @@ class core_ibex_base_test extends uvm_test;
 `ifdef COCOTB_SIM
     // Holds a run_phase objection open while cocotb owns stimulus.
     cocotb_monitor = core_ibex_cocotb_monitor::type_id::create("cocotb_monitor", this);
+    if (!uvm_config_db#(virtual core_ibex_cocotb_if)::get(null, "", "cocotb_if", cocotb_vif)) begin
+      `uvm_fatal(`gfn, "Cannot get cocotb_if")
+    end
 `endif
   endfunction
 
@@ -241,6 +245,11 @@ class core_ibex_base_test extends uvm_test;
     dut_vif.dut_cb.fetch_enable <= ibex_pkg::IbexMuBiOn;
 
     fork
+`ifdef COCOTB_SIM
+      // Listed first so its zero-delay arming statements (get the event handle, set uvm_ready)
+      // execute before any other branch has a chance to run — no race with send_stimulus().
+      cocotb_irq_listener();
+`endif
       send_stimulus();
       handle_reset();
     join_none
@@ -262,6 +271,32 @@ class core_ibex_base_test extends uvm_test;
   virtual task send_stimulus();
     vseq.start(env.vseqr);
   endtask
+
+`ifdef COCOTB_SIM
+  // Cycles the raise is held before dropping it again. Long enough for the core to notice and
+  // take the interrupt (handle_irq is re-evaluated every DECODE cycle), short enough to always
+  // drop well before a minimal generated ISR reaches mret — Ibex interrupts are level-sensitive,
+  // so a still-asserted line at mret (MIE re-enable) would immediately retake it.
+  localparam int unsigned CocotbIrqHoldCycles = 100;
+
+  // Armed once, before run stimulus starts: gets the event handle and sets uvm_ready, then
+  // forever waits for a cocotb-triggered raise and drives one full raise/drop pulse through the
+  // irq agent per trigger. Mirrors how send_irq_stimulus_start/end (core_ibex_test_lib.sv) drive
+  // vseq.start_irq_raise_single_seq()/start_irq_drop_seq(), but event-driven instead of
+  // signature-driven, and using the cfg-independent cocotb_* sequence handles (see
+  // core_ibex_vseq.sv).
+  virtual task cocotb_irq_listener();
+    uvm_event raise_ev;
+    raise_ev = uvm_event_pool::get_global("cocotb_irq_raise");
+    cocotb_vif.uvm_ready = 1'b1;
+    forever begin
+      raise_ev.wait_trigger();
+      vseq.start_cocotb_irq_raise();
+      clk_vif.wait_clks(CocotbIrqHoldCycles);
+      vseq.start_cocotb_irq_drop();
+    end
+  endtask
+`endif
 
   virtual task check_perf_stats();
   endtask

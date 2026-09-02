@@ -114,6 +114,9 @@ ${PRJ_DIR}/vendor/google_riscv-dv/src/riscv_signature_pkg.sv
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/irq_agent
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_cosim_agent
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_cocotb
+// core_ibex_cocotb_dpi.svh is `` `include ``d directly into core_ibex_tb_top.sv (not a standalone
+// compile unit), hence tb/ needs to be on the incdir path rather than a file-list entry.
++incdir+${PRJ_DIR}/dv/uvm/core_ibex/tb
 +incdir+${PRJ_DIR}/dv/cosim
 ${PRJ_DIR}/dv/uvm/bus_params_pkg/bus_params_pkg.sv
 ${LOWRISC_IP_DIR}/dv/sv/common_ifs/common_ifs_pkg.sv

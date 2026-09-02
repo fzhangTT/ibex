@@ -18,6 +18,11 @@ interface core_ibex_cocotb_if ();
   // before the first trigger so no event is lost (wired up starting with Milestone B).
   bit uvm_ready = 1'b0;
 
+  // Counts IRQ_TAKEN controller-state entries (see core_ibex_tb_top.sv); the checker Python reads
+  // at finish() to attribute handler entries to its own cocotb_irq_raise triggers. Driven solely
+  // by tb_top's always_ff (no initializer here — VCS treats one as a second driver).
+  int unsigned handler_entry_count;
+
   // Lets Python confirm this snapshot was actually compiled with COCOTB_SIM (quasar pattern),
   // rather than inferring it from whether this interface happens to exist in the hierarchy.
   bit COCOTB_SIM__DEFINED = 1'b1;

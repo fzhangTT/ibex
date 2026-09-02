@@ -166,6 +166,28 @@ class irq_drop_seq extends irq_base_seq;
 
 endclass
 
+`ifdef COCOTB_SIM
+// Milestone B: cocotb-triggered single-shot raise of the external interrupt line only. Fully
+// deterministic (no randomization) so every Python-triggered pulse exercises the same,
+// generically-supported MEIE path instead of risking NMI/fast lines a generated handler may not
+// service.
+class cocotb_irq_raise_seq extends irq_base_seq;
+
+  `uvm_object_utils(cocotb_irq_raise_seq)
+  `uvm_object_new
+
+  virtual function void randomize_item(irq_seq_item irq);
+    `DV_CHECK_RANDOMIZE_WITH_FATAL(irq,
+      irq_external == 1;
+      irq_software == 0;
+      irq_timer    == 0;
+      irq_fast     == '0;
+      irq_nm       == 0;)
+  endfunction
+
+endclass
+`endif
+
 // Simple debug sequence
 // debug_req is just a single bit sideband signal, use the interface to drive it directly
 class debug_seq extends core_base_seq#(irq_seq_item);

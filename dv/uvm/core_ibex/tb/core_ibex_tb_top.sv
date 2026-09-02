@@ -39,6 +39,8 @@ module core_ibex_tb_top;
 `ifdef COCOTB_SIM
   // cocotb coexistence handshake; see core_ibex_cocotb_if.sv.
   core_ibex_cocotb_if cocotb_if();
+  // Exported task Python calls via ctypes + DPI (see core_ibex_cocotb_dpi.svh / uvm_bridge.py).
+  `include "core_ibex_cocotb_dpi.svh"
 `endif
 
   // VCS does not support overriding enum and string parameters via command line. Instead, a
@@ -473,4 +475,18 @@ module core_ibex_tb_top;
       end
     end
   end
+
+`ifdef COCOTB_SIM
+  // Milestone B handler-entry counter: IRQ_TAKEN is the controller's single-cycle-per-entry state
+  // for taking an interrupt (see the WARNING check above), so counting cycles in this state counts
+  // actual trap entries attributable to real interrupts, not raw irq_vif line toggles (which by
+  // themselves don't imply the core ever took the trap, e.g. while globally masked).
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      cocotb_if.handler_entry_count <= '0;
+    end else if (controller_state == ibex_pkg::IRQ_TAKEN) begin
+      cocotb_if.handler_entry_count <= cocotb_if.handler_entry_count + 1;
+    end
+  end
+`endif
 endmodule
