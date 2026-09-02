@@ -82,6 +82,10 @@ def _main() -> int:
             raise RuntimeError(f'The environment variable {var!r} is not set.')
 
     with LockedMetadata(args.dir_metadata, __file__) as md:
+        if md.cocotb and md.simulator != 'vcs':
+            raise RuntimeError(
+                f'COCOTB=1 currently supports SIMULATOR=vcs only (got SIMULATOR={md.simulator!r}).')
+
         md.dir_tb.mkdir(exist_ok=True, parents=True)
         md.tb_build_log = md.dir_tb/'compile_tb.log'
 

@@ -41,7 +41,7 @@ interface core_ibex_cocotb_if ();
     #100ns;
     if (!cctb_alive) begin
       $fatal(1,
-        "cocotb failed to start (cctb_alive still 0 at 100ns) — check python import errors in the sim log");
+        "cocotb failed to start (cctb_alive still 0 at 100ns) -- check python import errors in the sim log");
     end
   end
 

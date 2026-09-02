@@ -312,6 +312,22 @@ class core_ibex_base_test extends uvm_test;
       vseq.start_cocotb_irq_drop();
     end
   endtask
+
+  // Catches a COCOTB_MODULE mismatch (e.g. the default module loaded instead of the irq test's
+  // own): the generated program reaches its own riscv-dv handshake regardless of whether any
+  // interrupt was ever serviced, so a Python side that never triggers "cocotb_irq_raise" would
+  // otherwise pass vacuously. Must be check_phase, not final_phase: core_ibex_report_server
+  // prints the PASS/FAIL banner from report_phase, which runs after check_phase but before
+  // final_phase, so only a check raised by check_phase (or earlier) can flip that banner.
+  virtual function void check_phase(uvm_phase phase);
+    int unsigned demanded_irq_count;
+    super.check_phase(phase);
+    if ($value$plusargs("cocotb_irq_count=%0d", demanded_irq_count) &&
+        (demanded_irq_count > 0) && (cocotb_vif.trigger_received_count == 0)) begin
+      `uvm_error(`gfn,
+        "cocotb_irq_count plusarg demanded triggers but trigger_received_count is 0 -- irq stimulus was never serviced (COCOTB_MODULE mismatch?)")
+    end
+  endfunction
 `endif
 
   virtual task check_perf_stats();

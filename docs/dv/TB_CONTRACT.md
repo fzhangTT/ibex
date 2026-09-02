@@ -51,8 +51,12 @@ undersized budget raises `TimeoutError` on an otherwise-passing run.
 
 ## 3. uvm_bridge API (`dv.cocotb.common.uvm_bridge`)
 
-- `trigger(event_name: str)` — triggers a named global TB event synchronously. No setup
+- `trigger(ev_name: str)` — triggers a named global TB event synchronously. No setup
   or scope handling is required by the caller; the module handles that internally.
+- Available event names:
+  - `"cocotb_irq_raise"` — one `trigger()` call drives one full external-irq raise/drop pulse
+    (the TB side owns both the raise and the drop timing; the caller does not trigger a
+    separate drop event).
 - `cocotb_if.uvm_ready` — a bit set once the TB-side listener for a given event is armed.
   Await it before your first `trigger()` call to close the startup race between your test
   and the TB arming its listener.
