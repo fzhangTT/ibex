@@ -16,6 +16,10 @@ async def start(dut):
 
     # Set cocotb_active to signal stimulus is running.
     cocotb_if.cocotb_active.value = 1
+    # Yield so the write actually commits before any caller-side code (e.g. a test with no
+    # further awaits before finish()) can clear it back to 0 in the same write batch — otherwise
+    # cocotb coalesces the two writes and the SV monitor's `wait (cocotb_active == 1)` never fires.
+    await Timer(1, units="ns")
 
     cocotb.log.info(f"COCOTB-HELLO: alive (seed={seed})")
 
