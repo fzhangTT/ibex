@@ -6,7 +6,7 @@
 
 TB-COMPILE-STAMP = $(METADATA-DIR)/tb.compile.stamp
 rtl_tb_compile: $(METADATA-DIR)/tb.compile.stamp
-rtl-tb-compile-var-deps := SIMULATOR COV WAVES # Rebuild if these change
+rtl-tb-compile-var-deps := SIMULATOR COV WAVES COCOTB # Rebuild if these change
 
 rtl_sim_run: $(rtl-sim-logs)
 
@@ -47,14 +47,25 @@ $(METADATA-DIR)/tb.compile.stamp: \
 
 ###############################################################################
 # Run ibex RTL simulation with random or directed test and uvm stimulus
+#
+# COCOTB/COCOTB_MODULE don't change the compiled simv (COCOTB does that via
+# rtl-tb-compile-var-deps above), but they do change what run_rtl.py hands to
+# simv at run time, so track them here too: otherwise flipping COCOTB_MODULE
+# alone would silently reuse a stale rtl_sim.log.
+rtl-sim-vars-path := $(BUILD-DIR)/.rtl_sim.vars.mk
+-include $(rtl-sim-vars-path)
+rtl-sim-var-deps := COCOTB COCOTB_MODULE # Rebuild if these change
+rtl-sim-vars-prereq = $(call vars-prereq,run,running RTL sim,$(rtl-sim-var-deps))
 
 $(rtl-sim-logs): $(TESTS-DIR)/%/$(rtl-sim-logfile): \
-  $(TB-COMPILE-STAMP) $(TESTS-DIR)/%/test.bin scripts/run_rtl.py
+  $(TB-COMPILE-STAMP) $(TESTS-DIR)/%/test.bin scripts/run_rtl.py \
+  $(rtl-sim-vars-prereq)
 	@echo Running RTL simulation at $(@D)
 	$(verb)env PYTHONPATH=$(PYTHONPATH) \
 	scripts/run_rtl.py \
 	  --dir-metadata $(METADATA-DIR) \
 	  --test-dot-seed $*
+	$(call dump-vars,$(rtl-sim-vars-path),run,$(rtl-sim-var-deps))
 
 ###############################################################################
 # Gather RTL sim results, and parse logs for errors

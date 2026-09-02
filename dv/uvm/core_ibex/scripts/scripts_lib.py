@@ -103,6 +103,37 @@ def run_one(verbose: bool,
             stdstream_dest.close()
 
 
+#: cocotb version pinned by ci/requirements-cocotb.txt; the compile and run
+#: stages each re-derive cocotb-config independently (never trust an
+#: inherited env export), so both check against this constant.
+_COCOTB_PINNED_VERSION = '1.9.2'
+
+
+@typechecked
+def get_cocotb_config_path(ibex_root: pathlib.Path) -> pathlib.Path:
+    """Resolve cocotb-config to the venv's absolute path and verify its version.
+
+    Never falls back to a bare PATH lookup: a stray site cocotb-config could
+    shadow the venv's. Raises RuntimeError (failing loudly, per COCOTB=1's
+    contract) if the venv doesn't have cocotb installed, or has the wrong
+    version.
+    """
+    cocotb_config = ibex_root/'.venv'/'bin'/'cocotb-config'
+    if not cocotb_config.exists():
+        raise RuntimeError(
+            f"COCOTB=1 but cocotb-config was not found at {cocotb_config}. "
+            "Run ci/setup-venv.sh to install cocotb into the venv.")
+
+    version = subprocess.check_output([str(cocotb_config), '--version'],
+                                       universal_newlines=True).strip()
+    if version != _COCOTB_PINNED_VERSION:
+        raise RuntimeError(
+            f"COCOTB=1 requires cocotb {_COCOTB_PINNED_VERSION} in the venv, "
+            f"but {cocotb_config} reports version {version!r}.")
+
+    return cocotb_config
+
+
 @typechecked
 def format_to_cmd(input_arg: Union[str, List[any]]) -> List[str]:
     """Format useful compound-lists into list[str], suitable for subprocess.

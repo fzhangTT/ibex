@@ -59,6 +59,8 @@ class RegressionMetadata(scripts_lib.testdata_cls):
     waves: bool = False
     cov: bool = False
     cosim: bool = True
+    cocotb: bool = False
+    cocotb_module: str = 'dv.cocotb.ibex_cocotb'
     simulator: str = ' '
     iss: str = ' '
     test: str = ' '

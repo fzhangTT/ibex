@@ -30,6 +30,11 @@ SEED                := $(shell echo $$RANDOM)
 WAVES               := 0
 # Enable coverage dump
 COV                 := 0
+# Run cocotb alongside the UVM testbench (opt-in; off leaves the VCS command
+# line free of any cocotb artifacts)
+COCOTB              := 0
+# Dotted Python module cocotb imports at COCOTB=1 (resolved on PYTHONPATH)
+COCOTB_MODULE       := dv.cocotb.ibex_cocotb
 # RTL simulator (xlm, vcs, questa, dsim, )
 SIMULATOR           := xlm
 # ISS (spike, ovpsim)
@@ -76,7 +81,8 @@ run:
 	  SEED=$(SEED) WAVES=$(WAVES) COV=$(COV) SIMULATOR=$(SIMULATOR) \
 	  ISS=$(ISS) TEST=$(TEST) VERBOSE=$(VERBOSE) ITERATIONS=$(ITERATIONS) \
 	  SIGNATURE_ADDR=$(SIGNATURE_ADDR) IBEX_CONFIG=$(IBEX_CONFIG) \
-	  DUT_COV_RTL_PATH=$(DUT_COV_RTL_PATH)"
+	  DUT_COV_RTL_PATH=$(DUT_COV_RTL_PATH) COCOTB=$(COCOTB) \
+	  COCOTB_MODULE=$(COCOTB_MODULE)"
 	@$(MAKE) --file wrapper.mk --environment-overrides --no-print-directory $(GOAL)
 
 ###############################################################################

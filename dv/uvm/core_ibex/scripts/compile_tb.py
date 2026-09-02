@@ -14,7 +14,7 @@ import pathlib3x as pathlib
 
 from metadata import RegressionMetadata, LockedMetadata
 from ibex_cmd import get_compile_opts
-from scripts_lib import run_one
+from scripts_lib import run_one, get_cocotb_config_path
 import riscvdv_interface
 
 import logging
@@ -108,6 +108,19 @@ def _main() -> int:
             {k: _get_iss_pkgconfig_flags(v, spike_iss_pc, md.simulator)
              for k, v in iss_pkgconfig_dict.items()}
 
+        # VCS access for cocotb comes ONLY from this +vpi/-load pair (never
+        # -debug_access flags); resolved at command-construction time so a
+        # stale/missing venv fails loudly instead of a bad simv.
+        cocotb_compile_opts = ''
+        if md.cocotb:
+            cocotb_config = get_cocotb_config_path(md.ibex_root)
+            vpi_so = subprocess.check_output(
+                [str(cocotb_config), '--lib-name-path', 'vpi', 'vcs'],
+                universal_newlines=True).strip()
+            cocotb_pli_tab = (md.ibex_dv_root/'cocotb_pli.tab').resolve()
+            cocotb_compile_opts = (
+                f'+define+COCOTB_SIM +vpi -P {cocotb_pli_tab} -load {vpi_so}')
+
         # Populate the entire set of variables to substitute in the templated
         # compilation command, including the compiler flags for the ISS.
         subst_vars_dict = {
@@ -135,7 +148,8 @@ def _main() -> int:
                 r" +define+DEBUG_MODE_EXCEPTION_ADDR=8000_0008 ",
             'dir_shared_cov': (md.dir_shared_cov if md.cov else ''),
             'xlm_cov_cfg_file': f"{md.ot_xcelium_cov_scripts}/cover.ccf",
-            'dut_cov_rtl_path': md.dut_cov_rtl_path
+            'dut_cov_rtl_path': md.dut_cov_rtl_path,
+            'cocotb_compile_opts': cocotb_compile_opts,
         }
         subst_vars_dict.update(iss_cc_subst_vars_dict)
 

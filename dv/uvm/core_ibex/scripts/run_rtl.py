@@ -12,7 +12,7 @@ import pathlib3x as pathlib
 
 from ibex_cmd import get_sim_opts
 import riscvdv_interface
-from scripts_lib import run_one, format_to_cmd
+from scripts_lib import run_one, format_to_cmd, get_cocotb_config_path
 from test_entry import read_test_dot_seed, get_test_entry
 from metadata import RegressionMetadata
 from test_run_result import TestRunResult, Failure_Modes, TestType
@@ -97,6 +97,30 @@ def _main() -> int:
         trr.rtl_log = trr.rtl_stdout
     trr.export(write_yaml=True)
 
+    # cocotb's own knobs never ride the yaml-substituted command line: build a
+    # concrete env dict here so nothing is a "$VAR" string handed to a
+    # no-shell subprocess. With COCOTB=0 this is None (inherit as before).
+    sim_env = None
+    if md.cocotb:
+        cocotb_config = get_cocotb_config_path(md.ibex_root)
+        libpython_loc = subprocess.check_output(
+            [str(cocotb_config), '--libpython'], universal_newlines=True).strip()
+
+        pythonpath_parts = [str(md.ibex_root)]
+        inherited_pythonpath = os.environ.get('PYTHONPATH')
+        if inherited_pythonpath:
+            pythonpath_parts.append(inherited_pythonpath)
+
+        sim_env = dict(os.environ)
+        sim_env.update({
+            'MODULE': md.cocotb_module,
+            'PYTHONPATH': os.pathsep.join(pythonpath_parts),
+            'LIBPYTHON_LOC': libpython_loc,
+            'RANDOM_SEED': str(trr.seed),
+            'TOPLEVEL': 'core_ibex_tb_top',
+            'TOPLEVEL_LANG': 'verilog',
+        })
+
     # Write all sim_cmd output into a single logfile
     with open(trr.rtl_stdout, 'wb') as sim_fd:
 
@@ -107,7 +131,8 @@ def _main() -> int:
                 run_one(md.verbose, cmd,
                         redirect_stdstreams=sim_fd,
                         timeout_s=md.run_rtl_timeout_s+60,  # Ideally we time-out inside the simulation
-                        reraise=True)  # Allow us to catch timeout exceptions at this level
+                        reraise=True,  # Allow us to catch timeout exceptions at this level
+                        env=sim_env)
         except subprocess.TimeoutExpired:
             trr.failure_mode = Failure_Modes.TIMEOUT
             trr.failure_message = "[FAILURE] Simulation process killed due to timeout " \
