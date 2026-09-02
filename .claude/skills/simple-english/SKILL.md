@@ -2,17 +2,15 @@
 name: simple-english
 disable-model-invocation: false
 user-invocable: true
-description: Rewrite instructional text into ASD-STE100-style Simplified Technical English. In this repo apply ONLY to the Ibex-scope surfaces (docs/dv/BUILD_AND_SIM.md, TB_CONTRACT.md, FENCE.md; ci script error messages; skill descriptions) — never to code comments, review rubrics, or dv_principles.md.
-  Write or rewrite technical text with ASD-STE100 Simplified Technical
-  English rules — clear, unambiguous, slop-free. In this repo, apply it ONLY
-  to the surfaces named in the "Ibex scope" section:
-  .mex/patterns/ runbooks, script error/lint messages, getting-started and
-  Confluence-synced docs, and Jira/MR procedural text. Never apply it to
-  spec-anchored code comments, ROUTER/context scaffold bullets, or Sentinel
-  rubric prompts. Use when the user says "STE", "de-slop", "simplify this
-  doc/runbook/error message", or when writing new text on an in-scope
-  surface.
-last_verified: 2026-08-25
+description: >-
+  Rewrite instructional text into ASD-STE100-style Simplified Technical English —
+  clear, unambiguous, slop-free. In this repo apply ONLY to the Ibex-scope surfaces
+  (docs/dv/BUILD_AND_SIM.md, TB_CONTRACT.md, FENCE.md; error messages in ci
+  scripts; skill description lines) — never to code comments, review rubrics,
+  dv_principles.md, or docs/superpowers documents. Use when the user says "STE",
+  "de-slop", "simplify this doc/error message", or when writing new text on an
+  in-scope surface.
+last_verified: 2026-09-01
 ---
 
 <!--

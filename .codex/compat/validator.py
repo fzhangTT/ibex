@@ -89,13 +89,25 @@ def check_skills(root: Path) -> None:
         if not m:
             err(f"{sk}: missing/malformed frontmatter")
             continue
-        nm = re.search(r"^name:\s*(\S+)\s*$", m.group(1), re.M)
-        if not nm:
-            err(f"{sk}: frontmatter has no name:")
-        elif nm.group(1) != d.name:
-            err(f"{sk}: frontmatter name '{nm.group(1)}' != dir '{d.name}'")
-        if not re.search(r"^description:\s*\S", m.group(1), re.M):
-            err(f"{sk}: frontmatter has no description:")
+        try:
+            import yaml  # from the venv lock; regex fallback below is a warned degradation
+        except ImportError:
+            print(f"WARNING: pyyaml unavailable — {sk} frontmatter checked by regex only")
+            if not re.search(r"^name:\s*\S+", m.group(1), re.M):
+                err(f"{sk}: frontmatter has no name:")
+            continue
+        try:
+            fm = yaml.safe_load(m.group(1))
+        except yaml.YAMLError as e:
+            err(f"{sk}: frontmatter is not valid YAML: {e}")
+            continue
+        if not isinstance(fm, dict):
+            err(f"{sk}: frontmatter did not parse to a mapping")
+            continue
+        if fm.get("name") != d.name:
+            err(f"{sk}: frontmatter name '{fm.get('name')}' != dir '{d.name}'")
+        if not str(fm.get("description") or "").strip():
+            err(f"{sk}: frontmatter has no non-empty description")
 
 
 def check_symlink(root: Path) -> None:

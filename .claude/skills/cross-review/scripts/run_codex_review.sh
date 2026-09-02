@@ -44,10 +44,13 @@ End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-W
 ${RUBRICS}"
 
 RAW=$(mktemp)
-timeout 3600 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err"
-RC=$?
-if [ "$RC" -eq 124 ]; then echo "PROTOCOL ERROR: codex review timed out after 3600s (site watchdog rule) — raw kept at $RAW"; exit 1; fi
-[ "$RC" -eq 0 ] || { echo "codex exec failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1; }
+RC=0
+timeout 3600 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || RC=$?
+if [ "$RC" -eq 124 ]; then
+  echo "PROTOCOL ERROR: codex review timed out after 3600s (site watchdog rule) — raw kept at $RAW"; exit 1
+elif [ "$RC" -ne 0 ]; then
+  echo "codex exec failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1
+fi
 
 # Identity: prefer what the run itself reports; fall back to CLI/config probing.
 CLI_VER=$(command codex --version 2>/dev/null | head -1)
