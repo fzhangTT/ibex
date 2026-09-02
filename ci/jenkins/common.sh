@@ -209,7 +209,9 @@ ci_lsf_run() { # <out_abs_dir> <bsub argv...>
   child=""
   trap _ci_lsf_cancel INT TERM
 
-  "${bsub_cmd[@]}" >"$CI_LSF_BSUB_LOG" 2>&1 &
+  # Process substitution (not a literal pipe) keeps bsub itself as the
+  # backgrounded process, so $! is bsub's own pid, not tee's.
+  "${bsub_cmd[@]}" > >(tee "$CI_LSF_BSUB_LOG") 2>&1 &
   child=$!
 
   local deadline=$((SECONDS + 120))
