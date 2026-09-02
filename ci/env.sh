@@ -28,6 +28,14 @@ module load synopsys/licenses/2.3 2>/dev/null || true
 module load synopsys/vcs/X-2025.06-SP2 2>/dev/null || true
 export VERDI_HOME="${VERDI_HOME:-/tools_vendor/synopsys/verdi/X-2025.06-SP2}"
 
+# --- MCP server installs (WS5; Zone B only — the cleanroom ships no MCP configs) ---
+# Exact pins recorded here; wrappers in ci/mcp/ consume these (dv_principles §5).
+export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/latest/bin/siliconpilot-mcp  # latest -> 0.18.1 (readlink -f 2026-09-02)
+export IBEX_MCP_FSDB_SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh       # pinned 0.2.6
+export IBEX_MCP_VERDI_COV=/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh   # pinned v0.2.2
+# fsdb-mcp needs verdi/waveutils as commands (an alias does not reach subprocesses).
+case ":$PATH:" in *":$VERDI_HOME/bin:"*) ;; *) export PATH="$VERDI_HOME/bin:$PATH";; esac
+
 # dtc is a spike build dep (ci/build-spike.sh); this site's module command
 # exits 1 even on a successful load, hence the `|| true`.
 module load dtc/1.7.2 2>/dev/null || true
