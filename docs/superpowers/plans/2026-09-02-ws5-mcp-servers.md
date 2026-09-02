@@ -109,18 +109,19 @@ git commit -m "[ci] WS5: MCP path exports in env.sh + server wrappers (fsdb 0.2.
 - Consumes: wrapper paths from Task 1.
 - Produces: both clients configured with the same four servers; README documenting zone scoping and the wrapper pattern.
 
-- [ ] **Step 1: Write `.mcp.json`** (project scope — Claude Code launches project MCP servers from the repo root, so repo-relative commands are safe):
+- [ ] **Step 1: Write `.mcp.json`** — Claude Code resolves server commands from the session **launch directory**, not the project root, so a bare repo-relative command breaks when a session starts in a subdirectory. Anchor through the server-runtime `$CLAUDE_PROJECT_DIR`:
 
 ```json
 {
   "mcpServers": {
-    "siliconpilot":    { "command": "ci/mcp/siliconpilot-mcp.sh" },
-    "fsdb-mcp-server": { "command": "ci/mcp/fsdb-mcp.sh" },
-    "verdi-cov-mcp":   { "command": "ci/mcp/verdi-cov-mcp.sh" },
+    "siliconpilot":    { "command": "bash", "args": ["-c", "exec \"$CLAUDE_PROJECT_DIR/ci/mcp/siliconpilot-mcp.sh\""] },
+    "fsdb-mcp-server": { "command": "bash", "args": ["-c", "exec \"$CLAUDE_PROJECT_DIR/ci/mcp/fsdb-mcp.sh\""] },
+    "verdi-cov-mcp":   { "command": "bash", "args": ["-c", "exec \"$CLAUDE_PROJECT_DIR/ci/mcp/verdi-cov-mcp.sh\""] },
     "atlassian":       { "type": "http", "url": "https://mcp.atlassian.com/v1/mcp" }
   }
 }
 ```
+The Task 3 gate must include one Claude session started from a repository **subdirectory** to prove the anchoring works.
 
 - [ ] **Step 2: Append to `.codex/config.toml`** — codex may resolve relative commands against the launch cwd, not the repo root, so anchor via git:
 
@@ -168,7 +169,7 @@ git commit -m "[ci] WS5: declare MCP servers for Claude (.mcp.json) and codex (c
 - Consumes: Tasks 1–2 configs.
 - Produces: the spec-gate evidence that each local server starts and answers a tool-list request from both a Claude Code and a codex session **in this repo**.
 
-- [ ] **Step 1: Claude side** — from the repo root run `claude mcp list` (approves/starts project servers; if it prompts for project-server trust, approve). Then a one-shot session: `claude -p 'For each connected MCP server, list its name and the names of its tools. Output text only.'`. Save both outputs (trimmed to the relevant lines) to `docs/dv/evidence/ws5-mcp-toollist-claude.txt` with the invocation lines. Every local server must appear with ≥1 tool; a server that fails to start is a finding to fix, not to elide.
+- [ ] **Step 1: Claude side** — project-scoped `.mcp.json` servers need approval first, and a non-interactive `claude -p` session cannot grant it. Approve non-interactively by adding `"enableAllProjectMcpServers": true` to `.claude/settings.local.json` (gitignored, machine-local; record the setting in the evidence file) — or, if that knob is unavailable in the installed CLI version, start an interactive `claude` session and approve the servers via `/mcp`. Then run `claude mcp list` (expect every server listed as connected/available) and a one-shot session: `claude -p 'For each connected MCP server, list its name and the names of its tools. Output text only.'` — once from the repo root and once from `dv/uvm/core_ibex/` (proves the `$CLAUDE_PROJECT_DIR` anchoring). Save the outputs (trimmed to the relevant lines) to `docs/dv/evidence/ws5-mcp-toollist-claude.txt` with the invocation lines. Every local server must appear with ≥1 tool; a server that fails to start is a finding to fix, not to elide.
 
 - [ ] **Step 2: codex side** — `codex exec 'For each configured MCP server, list its name and the names of its tools. Output text only.'` from the repo root; save to `docs/dv/evidence/ws5-mcp-toollist-codex.txt`. Watchdog both steps (~10 min each; servers that hang on startup count as failures).
 
@@ -192,7 +193,7 @@ git commit -m "[dv] WS5 gate: MCP tool-list evidence from Claude and codex sessi
 
 - [ ] **Step 1: Produce an FSDB** — `bash -lc 'source ci/env.sh && cd dv/uvm/core_ibex && make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 WAVES=1 OUT=out_ws5_waves'` (fresh OUT; watchdog 45 min). Locate the `.fsdb` under `out_ws5_waves/run/tests/`.
 
-- [ ] **Step 2: Query it through fsdb-mcp** — fsdb-mcp 0.2.6 requires the VCS design database alongside the waveform: `create_fsdb_session(design_db, fsdb_file, ...)`. Locate the run's `simv.daidir` under `out_ws5_waves/build/` (the compiled simv's design DB) and the `.fsdb` under `out_ws5_waves/run/tests/`, then — in a Claude session with the project servers loaded, or via raw JSON-RPC `tools/call` on the wrapper — create the session with BOTH absolute paths, capture the successful session creation, and query top-level scope + a signal value (e.g. the core clock) at a timestamp. Save the session-creation call, its result, and the query + response excerpt to `docs/dv/evidence/ws5-fsdb-demo.txt`. The demo must show real data from OUR fsdb (both paths echoed in the evidence), not just a successful tool registration (dv_principles §4: a mechanism explained but not observed is a guess).
+- [ ] **Step 2: Query it through fsdb-mcp** — fsdb-mcp 0.2.6 requires the VCS design database alongside the waveform: `create_fsdb_session(design_db, fsdb_file, ...)`. Locate the run's design DB at `out_ws5_waves/build/tb/vcs_simv.daidir` (this flow's VCS executable is `vcs_simv` in `build/tb` — `rtl_simulation.yaml`; fallback discovery: `find out_ws5_waves/build -maxdepth 3 -name '*.daidir' -type d`) and the `.fsdb` under `out_ws5_waves/run/tests/`, then — in a Claude session with the project servers loaded, or via raw JSON-RPC `tools/call` on the wrapper — create the session with BOTH absolute paths, capture the successful session creation, and query top-level scope + a signal value (e.g. the core clock) at a timestamp. Save the session-creation call, its result, and the query + response excerpt to `docs/dv/evidence/ws5-fsdb-demo.txt`. The demo must show real data from OUR fsdb (both paths echoed in the evidence), not just a successful tool registration (dv_principles §4: a mechanism explained but not observed is a guess).
 
 - [ ] **Step 3: Commit** — tick T4; mark the WS5 gate line in the ledger (end-state PARTIAL — cleanroom item pending WS7).
 
@@ -209,8 +210,16 @@ Run the `cross-review` skill for the codex post-execution review of the WS5 comm
 
 ## Review disposition (codex pre-review round 1 — REQUEST-CHANGES)
 
-Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers.md`, each addressed in this revision:
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers-round1.md`, each addressed in this revision:
 1. **[major] hardcoded site paths in wrappers** — pinned paths moved to `ci/env.sh` `IBEX_MCP_*` exports (Task 1 Step 1); wrappers consume the variables with `:?` guards and carry no `/tools_*` literals.
 2. **[major] fsdb demo omits the design database** — Task 4 Step 2 now locates `simv.daidir`, passes absolute `design_db` + `fsdb_file` to `create_fsdb_session`, and captures the session creation before the signal query.
 3. **[major] DONE while a spec gate item is deferred** — WS5 end-state changed to PARTIAL pending WS7's cleanroom evidence (Global Constraints + Workstream close); no spec amendment needed.
 4. **[minor] stderr suppressed when sourcing env.sh** — wrappers silence stdout only; stderr preserved for diagnostics.
+
+## Review disposition (codex pre-review round 2 — REQUEST-CHANGES)
+
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers-round2.md`, each addressed in this revision:
+1. **[major] `.mcp.json` relative commands resolve from the launch dir** — commands now anchor through server-runtime `$CLAUDE_PROJECT_DIR` via `bash -c`; the Task 3 gate adds a session launched from `dv/uvm/core_ibex/` to prove it.
+2. **[major] project servers need approval `claude -p` cannot grant** — Task 3 Step 1 now approves via `"enableAllProjectMcpServers": true` in `.claude/settings.local.json` (or interactive `/mcp` if that knob is unavailable), recorded in the evidence.
+3. **[major] wrong daidir path** — corrected to `out_ws5_waves/build/tb/vcs_simv.daidir` with a `find` fallback.
+4. **[minor] stale artifact reference** — round-1 disposition now points at the `-round1.md` filename.
