@@ -39,12 +39,14 @@ ADDR_RE = re.compile(r"(?P<rd>[a-z0-9]+?),"
                      r"(?P<imm>[\-0-9]+?)"
                      r"\((?P<rs1>[a-z0-9]+)\)")
 
-# Matches a Python-style exception report ("SomeException: message"), the shape
-# check_ibex_uvm_log's generic error scan is looking for. Anchoring on the
-# trailing colon avoids false positives on prose that merely mentions an
-# exception class name, e.g. cocotb's own startup banner ("...enable better
-# AssertionError messages").
-PY_EXCEPTION_RE = re.compile(r"\bError\s*:")
+# cocotb's own startup banner (cocotb/regression.py) mentions "AssertionError"
+# in prose, which trips check_ibex_uvm_log's generic 'Error' substring scan
+# even though it isn't a failure. Exclude this exact, known-benign line
+# rather than loosen the scan itself -- the scan also has to keep catching
+# plain "Error" text with no trailing colon, e.g. VCS's own
+# "Error-[FCIBH] Illegal bin hit" (see docs/dv/evidence/ws1-cov-summary.txt).
+COCOTB_BENIGN_ASSERTIONERROR_LINE = \
+    "pytest not found, install it to enable better AssertionError messages"
 
 
 def _process_ibex_sim_log_fd(log_fd, csv_fd, full_trace=True):
@@ -219,7 +221,7 @@ def check_ibex_uvm_log(uvm_log):
         for linenum, line in enumerate(log, 1):
             if ('UVM_ERROR' in line or
                 'UVM_FATAL' in line or
-                PY_EXCEPTION_RE.search(line)) \
+                (COCOTB_BENIGN_ASSERTIONERROR_LINE not in line and 'Error' in line)) \
                     and not test_result_seen:
                 error_linenum = linenum
                 error_line = line
