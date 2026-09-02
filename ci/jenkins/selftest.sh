@@ -86,6 +86,16 @@ out=$(CI_ENV_SH="$PWD/testdata/env_fail.sh" ./smoke.sh --out "$(mktemp -d)/o" 2>
 check_status "smoke: failing env.sh stops the run" 1 $st
 check "smoke: env failure message" "environment setup failed" "$out"
 
+# --- nightly.sh ---
+out=$(./nightly.sh --dry-run 2>&1); st=$?
+check_status "nightly: dry-run exits 0" 0 $st
+check "nightly: default TEST=all" "TEST=all" "$out"
+check "nightly: date seed" "SEED=$(date -u +%y%m%d)" "$out"
+case "$out" in *"ITERATIONS="*) echo "FAIL: nightly: must not override ITERATIONS by default"; FAILURES=$((FAILURES+1));; *) echo "PASS: nightly: testlist iterations";; esac
+out=$(./nightly.sh --dry-run --test riscv_arithmetic_basic_test --iterations 2 2>&1)
+check "nightly: --test override" "TEST=riscv_arithmetic_basic_test" "$out"
+check "nightly: --iterations override" "ITERATIONS=2" "$out"
+
 # --- LSF cancellation (mocked; proves the trap kills the exact submitted job) ---
 # lsf-stub/bsub prints "Job <42> is submitted." then sleeps 60; lsf-stub/bkill logs its args
 # to $LSF_STUB_LOG. smoke.sh exists from Task 3 on; guard so Task 1's run skips it cleanly.
