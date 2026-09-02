@@ -9,8 +9,8 @@
   flagged as a deviation for the parent session.)
 - **codex-side skill exercise (end-to-end)**: codex discovered `dv-principles-check` via
   `.agents/skills/shared`, followed it against `docs/dv/BUILD_AND_SIM.md`, and produced the
-  contracted §-cited output — returning four genuine conformance findings (recorded in the WS3
-  process log for the parent's disposition; BUILD_AND_SIM.md is WS2-shared and not edited here).
+  contracted §-cited output — returning genuine conformance findings (full transcript:
+  `docs/dv/process-logs/ws3/codex-dv-principles-check-exercise.txt`; BUILD_AND_SIM.md is WS2-shared and not edited here).
 - **Cross-review full cycle on one real change (WS3 itself)**: pre-execution artifact
   `2026-09-01-codex-review-03-ws2-ws3-plans.md` (REQUEST-CHANGES → plans amended);
   post-execution reviews of the WS3 range with real gating: round 1 REQUEST-CHANGES (4 findings,
@@ -18,7 +18,9 @@
   controller ruling), final verdict recorded in the last committed review artifact of this range.
 - **Trust triad**: canonical block hash-verified across dv_principles.md, mutation-check,
   fcov-expectation, and the test-generator agent; live proofs in `ws3-fcov-fixture/`
-  (per-test urg isolation, hit/unhit classification, check-stage FAIL wiring, MUT-001).
+  (per-test urg isolation, hit/unhit classification, check-stage FAIL wiring, MUT-001; raw
+  transcripts: `ws3-fcov-fixture/checker-transcript.txt`, `check-stage-transcript.txt`, and
+  `docs/dv/process-logs/ws3/mut-001-transcript.txt`).
 
 ## Final review state (terminal round adjudicated)
 

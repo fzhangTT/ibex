@@ -51,3 +51,4 @@ bin (or an unverifiable query) fails the test with `failure_mode: FCOV_EXPECTATI
 `trr.yaml` and FAILED in `regr.log`. Infra-only references (fenced from generation sessions):
 the evidence fixture `docs/dv/evidence/ws3-fcov-fixture/` and the checker's mechanism notes.
 Note: enforcement needs `COV=1`; a non-coverage run skips the check by design.
+Warning: under parallel regressions (`make -j`), the per-test urg query reads the shared VDB while other tests may still be writing it — treat multi-test parallel enforcement as unvalidated until the WS7 manifest-location/enforcement design lands (parked item).

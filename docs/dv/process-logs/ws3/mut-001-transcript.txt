@@ -1,0 +1,21 @@
+# MUT-001 live-fire transcript (rerun 2026-09-01 23:16)
+# mutation: ci/check_fcov_expectations.py classify(): 'hits.get(b, 0) <= 0' -> '< 0'; expected detector: --self-test
+
+== baseline
+SELF-TEST: PASS
+exit=0
+
+== mutation applied
+def classify(declared: list[str], hits: dict[str, int]) -> list[str]:
+    """The one classification rule: a declared bin with no positive hit count is unhit."""
+    return [b for b in declared if hits.get(b, 0) < 0]
+SELF-TEST: FAIL
+exit=2 (2 = CAUGHT by named detector)
+
+== ablation control: mutation kept, detector neutralized (ok=True forced)
+SELF-TEST: PASS
+exit=0 (0 = mutation SURVIVES undetected -> attribution proven)
+
+== both reverted
+SELF-TEST: PASS
+exit=0

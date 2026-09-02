@@ -20,8 +20,9 @@ case "$MODE" in
   plan)
     TARGET_DESC="plan/spec file(s): $*"
     MANIFEST=""
-    for f in "$@"; do MANIFEST="${MANIFEST}TARGET: $f@$(sha256sum "$f" | cut -c1-8)\n"; done
-    SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:\n${MANIFEST}"
+    NL=$'\n'
+    for f in "$@"; do MANIFEST="${MANIFEST}TARGET: $f@$(sha256sum "$f" | cut -c1-8)${NL}"; done
+    SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:${NL}${MANIFEST}"
     NAME="plan-$(basename "${1%.*}")"
     ;;
   diff)
@@ -43,7 +44,10 @@ End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-W
 ${RUBRICS}"
 
 RAW=$(mktemp)
-command codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || { echo "codex exec failed"; cat "$RAW.err" >&2; exit 1; }
+timeout 3600 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err"
+RC=$?
+if [ "$RC" -eq 124 ]; then echo "PROTOCOL ERROR: codex review timed out after 3600s (site watchdog rule) — raw kept at $RAW"; exit 1; fi
+[ "$RC" -eq 0 ] || { echo "codex exec failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1; }
 
 # Identity: prefer what the run itself reports; fall back to CLI/config probing.
 CLI_VER=$(command codex --version 2>/dev/null | head -1)
@@ -62,8 +66,8 @@ NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' 
 if [ "$MODE" = diff ]; then
   [ "$(head -n 1 "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: first raw-output line is not the exact target echo. Raw kept at $RAW"; exit 1; }
 else
-  NLINES=$(printf '%b' "$MANIFEST" | grep -c .)
-  [ "$(head -n "$NLINES" "$RAW")" = "$(printf '%b' "$MANIFEST" | grep .)" ] || { echo "PROTOCOL ERROR: leading lines do not equal the plan target manifest, in order. Raw kept at $RAW"; exit 1; }
+  NLINES=$(printf '%s' "$MANIFEST" | grep -c .)
+  [ "$(head -n "$NLINES" "$RAW")" = "$(printf '%s' "$MANIFEST" | grep .)" ] || { echo "PROTOCOL ERROR: leading lines do not equal the plan target manifest, in order. Raw kept at $RAW"; exit 1; }
 fi
 # All protocol checks passed — install the artifact atomically.
 {
