@@ -41,8 +41,10 @@ SIMULATOR           := xlm
 ISS                 := spike
 # Test name (default: full regression)
 TEST                := all
-RISCV-DV-TESTLIST   := riscv_dv_extension/testlist.yaml
-DIRECTED-TESTLIST   := directed_tests/directed_testlist.yaml
+# Alternate-suite knobs (dual-suite requirement): set to a testlist yaml path to
+# swap the riscv-dv / directed suite; empty = stock testlists.
+RISCV-DV-TESTLIST   :=
+DIRECTED-TESTLIST   :=
 # Verbose logging
 VERBOSE             := 0
 # Number of iterations for each test, assign a non-empty value to override the
@@ -82,7 +84,8 @@ run:
 	  ISS=$(ISS) TEST=$(TEST) VERBOSE=$(VERBOSE) ITERATIONS=$(ITERATIONS) \
 	  SIGNATURE_ADDR=$(SIGNATURE_ADDR) IBEX_CONFIG=$(IBEX_CONFIG) \
 	  DUT_COV_RTL_PATH=$(DUT_COV_RTL_PATH) COCOTB=$(COCOTB) \
-	  COCOTB_MODULE=$(COCOTB_MODULE)"
+	  COCOTB_MODULE=$(COCOTB_MODULE) \
+	  RISCVDV_TESTLIST=$(RISCV-DV-TESTLIST) DIRECTED_TESTLIST=$(DIRECTED-TESTLIST)"
 	@$(MAKE) --file wrapper.mk --environment-overrides --no-print-directory $(GOAL)
 
 ###############################################################################

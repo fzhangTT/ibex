@@ -69,6 +69,8 @@ class RegressionMetadata(scripts_lib.testdata_cls):
     signature_addr: str = ' '
     ibex_config: str = ' '
     dut_cov_rtl_path: str = ''
+    riscvdv_testlist  : str = ''   # override path for riscv_dv_extension/testlist.yaml ('' = stock)
+    directed_testlist : str = ''   # override path for directed_tests/directed_testlist.yaml ('' = stock)
 
     tests_and_counts: List[Tuple[str, int, TestType]] = field(default_factory=list)
     isa_ibex: Optional[str] = None
@@ -135,10 +137,14 @@ class RegressionMetadata(scripts_lib.testdata_cls):
         self.ot_xcelium_cov_scripts      = self.ot_lowrisc_ip/'dv'/'tools'/'xcelium'
         self.ibex_riscvdv_simulator_yaml = self.ibex_dv_root/'yaml'/'rtl_simulation.yaml'
         self.ibex_riscvdv_customtarget   = self.ibex_dv_root/'riscv_dv_extension'
-        self.ibex_riscvdv_testlist       = self.ibex_riscvdv_customtarget/'testlist.yaml'
+        self.ibex_riscvdv_testlist       = (pathlib.Path(self.riscvdv_testlist).resolve()
+                                            if self.riscvdv_testlist
+                                            else self.ibex_riscvdv_customtarget/'testlist.yaml')
         self.ibex_riscvdv_csr            = self.ibex_riscvdv_customtarget/'csr_description.yaml'
         self.directed_test_dir           = self.ibex_dv_root/'directed_tests'
-        self.directed_test_data          = self.directed_test_dir/'directed_testlist.yaml'
+        self.directed_test_data          = (pathlib.Path(self.directed_testlist).resolve()
+                                            if self.directed_testlist
+                                            else self.directed_test_dir/'directed_testlist.yaml')
 
         self.environment_variables       = dict(os.environ)
 
