@@ -197,3 +197,81 @@ than presenting the timeout-accident run as if it exercised the new check.
 - `dv/uvm/core_ibex/tb/core_ibex_cocotb_if.sv`
 - `dv/uvm/core_ibex/tests/core_ibex_base_test.sv`
 - `dv/uvm/core_ibex/fcov_expectations/cocotb_irq_python_test.fcov.yaml` (new)
+
+## Round 2 (codex post-execution review, `docs/dv/reviews/2026-09-02-codex-review-04-ws2-post-execution.md`)
+
+Also fixed a dangling residual from Round 1: `docs/dv/process-logs/ws2/task-8-report.md:44`
+still cited `.superpowers/sdd/2026-09-01-ws2-cocotb/task-5-report.md`; repointed to
+`docs/dv/process-logs/ws2/task-5-report.md`. Acceptance grep
+(`git grep -n '\.superpowers' -- docs/ dv/`) confirmed only narrative mentions remained.
+
+### 1. [Critical, stock neutrality] `TEST=all COCOTB=0` selecting a cocotb-only test — FIXED
+
+Added `cocotb: 1` to `cocotb_irq_python_test`'s testlist entry and a new
+`ibex_cmd.filter_cocotb_only_tests()` (mirrors `filter_tests_by_config`'s style/logging), wired
+into `metadata.py`'s `get_tests_and_counts()`. An entry marked `cocotb: 1` is dropped when
+`COCOTB=0` UNLESS it was named explicitly in the `TEST=` request (so Hard Rule 5a's uvm_fatal
+still guards deliberate misuse).
+
+Evidence (direct `metadata.py --op create_metadata` + `--op print_field --field riscvdv_tds`,
+no full regression):
+- `TEST=all COCOTB=0`: `WARNING:ibex_cmd:Rejecting test: cocotb_irq_python_test. It requires
+  COCOTB=1 (cocotb: 1 in the testlist) and COCOTB=0 with no explicit selection of this test was
+  given.` — `riscvdv_tds` output contains no `cocotb_irq_python_test` entry.
+- `TEST=cocotb_irq_python_test COCOTB=0` (explicit): no rejection warning; `riscvdv_tds` output
+  is exactly `cocotb_irq_python_test.1`.
+
+### 2. [Critical, triad compliance] MUT-002 mutation-check — FIXED
+
+Full procedure executed per `.claude/skills/mutation-check/SKILL.md`, recorded in
+`dv/auto_dv/mutations/README.md` (MUT-002) with the transcript in
+`docs/dv/process-logs/ws2/mut-002-transcript.txt`:
+- Mutation: `core_ibex_tb_top.sv:487`'s `IRQ_TAKEN` increment condition replaced with `1'b0`
+  (never increments).
+- Caught (fresh OUT, `+disable_cosim=1` added to the testlist entry for this run only): flow
+  FAILED, attributed to `test_irq_from_python.py`'s new equality assert
+  (`AssertionError: COCOTB-IRQ-CHECK: handler_entry_count=0 != triggers_sent=3; ...`).
+- Ablation control (same mutation, both handler-entry asserts commented out): flow PASSED
+  (`100.00% PASS 1 PASSED, 0 FAILED`) with `handler_entry_count=0` logged and unchecked — the
+  mutation survives undetected by anything else, proving the named checker is what catches it.
+- All edits (mutation, ablation, `+disable_cosim=1`) reverted; re-ran green
+  (`handler_entry_count=3 == triggers_sent=3`, `100.00% PASS 1 PASSED, 0 FAILED`).
+- Recorded an explicit `tdd_history_exception` in the MUT-002 record (checker predates this
+  workstream's red-first order; no fabricated red-then-green history claimed) instead of
+  inventing TDD history.
+
+### 3. [Important] Handler-entry over-count and TB_CONTRACT accuracy — FIXED
+
+`dv/cocotb/tests/test_irq_from_python.py`: added `assert count == triggers_sent` alongside the
+existing `count >= max(n, 3)` floor (over-count is now a hard failure, not a warning). Verified
+the `+cocotb_irq_count=0` ablation still fails (equality `0==0` holds; the floor `0>=3` fails —
+matches the review's expectation), and the positive flagship run still passes with both asserts
+satisfied (`3==3`, `3>=3`).
+
+`docs/dv/TB_CONTRACT.md` Section 3: rewrote `handler_entry_count`'s description to the actual
+semantics — counts every primary-core `IRQ_TAKEN` entry regardless of source, resets to 0 on DUT
+reset (unlike `trigger_received_count`, which does not) — and states the intent-derived
+expected-count pattern (compare against your own `triggers_sent`, not an assumed
+per-trigger-handshake guarantee).
+
+### 4+5. [Important] TB_CONTRACT.md self-containedness — FIXED
+
+- Added a generic runnable command block (Section 1) with placeholders for
+  `TEST`/`COCOTB_MODULE`/`SEED`/`OUT`, states the cwd (`dv/uvm/core_ibex`), and shows the `COV=1`
+  variant.
+- Section 7 now inlines the fcov manifest location
+  (`dv/uvm/core_ibex/fcov_expectations/<testname>.fcov.yaml`), the YAML schema, the `COV=1`
+  requirement, per-test/pre-merge behavior, the anti-vacuity rule, and the generated-covergroup
+  namespace rule — the skill file is now a secondary "how enforcement works" pointer, not the
+  only source of the schema.
+
+### Re-verification
+
+- Positive flagship run (fresh `OUT`, equality assertion in place): `100.00% PASS 1 PASSED, 0
+  FAILED`, `triggers_sent=3 triggers_received=3`, `handler_entry_count=3`.
+- MUT-002 transcripts: complete (caught / ablation / reverted-green), see
+  `docs/dv/process-logs/ws2/mut-002-transcript.txt`.
+- Finding 1's two selection evidences: captured above.
+
+All `out_*` scratch directories from this round's verification runs were removed after capture;
+nothing under `out*/` or `results.xml` committed.
