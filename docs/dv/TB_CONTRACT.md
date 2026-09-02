@@ -17,6 +17,29 @@ rules a caller must follow to use it correctly.
   run time. Read them in test code via `cocotb.plusargs.get("name", "default")` — values
   arrive as strings; cast to the type you need.
 
+**Generic runnable command** (cwd is `dv/uvm/core_ibex`; `source ci/env.sh` first from the repo
+root — see `docs/dv/BUILD_AND_SIM.md`'s One-time setup for what that needs already done):
+
+```bash
+make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
+     TEST=<your_testlist_entry> ITERATIONS=1 SEED=<seed> COCOTB=1 \
+     COCOTB_MODULE=<dotted.module.path> OUT=<out_dir>
+```
+
+Add `COV=1` to the same command to also enable functional coverage (required for the
+fcov-expectation duty, Section 7, to be enforced at all) — everything else about the
+command is unchanged:
+
+```bash
+make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
+     TEST=<your_testlist_entry> ITERATIONS=1 SEED=<seed> COV=1 COCOTB=1 \
+     COCOTB_MODULE=<dotted.module.path> OUT=<out_dir>
+```
+
+`SIMULATOR=vcs` is required with `COCOTB=1` (the only simulator this overlay currently
+supports); use a fresh `OUT` whenever you flip `COCOTB`/`COCOTB_MODULE`/`COV` in a directory
+that has already been built once (see BUILD_AND_SIM.md's stale-`metadata.pickle` gotcha).
+
 ## 2. Handshake API (`dv.cocotb.common.handshake`)
 
 - `await start(dut)` — call once, first, in every test. Signals the cocotb process is
@@ -60,12 +83,19 @@ undersized budget raises `TimeoutError` on an otherwise-passing run.
 - `cocotb_if.uvm_ready` — a bit set once the TB-side listener for a given event is armed.
   Await it before your first `trigger()` call to close the startup race between your test
   and the TB arming its listener.
-- Accounting counters exposed on `cocotb_if` (integers, monotonic for the run):
-  `cocotb_if.trigger_received_count` increments once per triggered event the TB side
-  actually observes, and `cocotb_if.handler_entry_count` increments once per unit of
-  stimulus the TB agent actually services. Compare your own triggers-sent count against
-  `trigger_received_count` (equal ⇒ nothing was dropped) and check `handler_entry_count`
-  against what your stimulus should have produced, before calling `finish()`.
+- Accounting counters exposed on `cocotb_if` (integers):
+  - `cocotb_if.trigger_received_count` — monotonic for the whole run; increments once per
+    triggered event the TB side actually observes. Compare your own triggers-sent count against
+    it (equal ⇒ nothing was dropped) before calling `finish()`.
+  - `cocotb_if.handler_entry_count` — increments once per cycle the *primary* core's controller
+    FSM is in the `IRQ_TAKEN` state, i.e. it counts every interrupt actually taken **regardless
+    of source** (not scoped to your own cocotb-triggered stimulus), and it **resets to 0 on DUT
+    reset** (unlike `trigger_received_count`, which does not). It is not a per-trigger handshake
+    counter by construction: on a test where nothing else can drive the core into `IRQ_TAKEN`
+    (no SV irq sequences active, no DUT reset expected), derive your own expected value from
+    your test's intent and compare against that — e.g. `handler_entry_count ==
+    triggers_sent` — rather than assuming the counter's name alone guarantees a 1:1
+    correspondence.
 
 **Hard rule 4 — event triggers are not queued.** A `trigger()` call that arrives while
 the TB-side listener is still mid-response to a previous trigger is silently dropped —
@@ -108,7 +138,30 @@ Verbatim from the design spec's WS2 amendment
 ## 7. Functional-coverage expectation duty
 
 Every new test declares the functional-coverage bins it intends to hit, and a
-declared-but-unhit bin fails the run. This is enforced, not aspirational — see the
-`fcov-expectation` skill (`.claude/skills/fcov-expectation/SKILL.md`) for the manifest
-format, the anti-vacuity review each declared bin's sampling condition must pass, and the
-namespace rule for generated covergroups.
+declared-but-unhit bin fails the run.
+
+- **Manifest location:** `dv/uvm/core_ibex/fcov_expectations/<testname>.fcov.yaml` — the
+  filename must match the testlist entry's `test:` name exactly to activate the check for it.
+- **Schema:**
+  ```yaml
+  bins:
+    - <covergroup>.<coverpoint>.<bin>   # e.g. uarch_cg.cp_controller_fsm.out_of_decode0
+  ```
+  Bin names come from the urg text report (`grpinfo.txt`) of a `COV=1` run over your own
+  covergroups; counts sum across instances of the same covergroup name (the expectation is
+  "hit anywhere in this test").
+- **`COV=1` is required for enforcement.** With no manifest, or `COV=0`, the check is a no-op
+  by design — see the runnable command above for how to add `COV=1`.
+- **Per-test, pre-merge:** verification runs against the per-test slice of the shared coverage
+  database *before* the cross-test urg merge, so one test cannot claim another's bins.
+- **Anti-vacuity rule:** review each declared bin's sampling condition before declaring it — a
+  bin hit by an always-true sample proves nothing; the bin's hit must genuinely evidence the
+  stimulus your test intends to exercise.
+- **Generated-covergroup namespace rule:** covergroups written by a generation session live in
+  their own namespace under `dv/auto_dv/**`-owned covergroup names, never added into an
+  existing human-authored covergroup.
+
+This is enforced, not aspirational — see the `fcov-expectation` skill
+(`.claude/skills/fcov-expectation/SKILL.md`) for the enforcement mechanism
+(`ci/check_fcov_expectations.py`, wired into `scripts/check_logs.py`) if you need to debug why
+a manifest is or isn't taking effect.
