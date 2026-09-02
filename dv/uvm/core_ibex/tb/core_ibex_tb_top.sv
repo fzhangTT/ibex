@@ -36,6 +36,11 @@ module core_ibex_tb_top;
 
   core_ibex_ifetch_pmp_if ifetch_pmp_if(.clk(clk));
 
+`ifdef COCOTB_SIM
+  // cocotb coexistence handshake; see core_ibex_cocotb_if.sv.
+  core_ibex_cocotb_if cocotb_if();
+`endif
+
   // VCS does not support overriding enum and string parameters via command line. Instead, a
   // `define is used that can be set from the command line. If no value has been specified, this
   // gives a default. Other simulators don't take the detour via `define and can override the
@@ -423,6 +428,12 @@ module core_ibex_tb_top;
     uvm_config_db#(bit)::set(null, "*", "CHERIoT",
                              BaseIsa == ibex_pkg::BaseIsaRV32IorCHERIoT);
     uvm_config_db#(bit)::set(null, "*", "ICache", ICache);
+
+`ifdef COCOTB_SIM
+    uvm_config_db#(virtual core_ibex_cocotb_if)::set(null, "*", "cocotb_if", cocotb_if);
+    // cocotb is master and owns $finish; UVM must never end the sim out from under it.
+    uvm_root::get().finish_on_completion = 0;
+`endif
 
     run_test();
   end

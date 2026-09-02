@@ -17,6 +17,9 @@ class core_ibex_base_test extends uvm_test;
   virtual core_ibex_csr_if                        csr_vif;
   mem_model_pkg::mem_model                        mem;
   core_ibex_vseq                                  vseq;
+`ifdef COCOTB_SIM
+  core_ibex_cocotb_monitor                        cocotb_monitor;
+`endif
   bit                                             discrete_debug_module = 1'b0;
   string                                          binary, bin_main, bin_dm, vmem_main, vmem_dm;
   bit                                             enable_irq_seq;
@@ -207,6 +210,11 @@ class core_ibex_base_test extends uvm_test;
     vseq = core_ibex_vseq::type_id::create("vseq");
     vseq.mem = mem;
     vseq.cfg = cfg;
+
+`ifdef COCOTB_SIM
+    // Holds a run_phase objection open while cocotb owns stimulus.
+    cocotb_monitor = core_ibex_cocotb_monitor::type_id::create("cocotb_monitor", this);
+`endif
   endfunction
 
   virtual function void connect_phase(uvm_phase phase);

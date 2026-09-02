@@ -113,6 +113,7 @@ ${PRJ_DIR}/vendor/google_riscv-dv/src/riscv_signature_pkg.sv
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_mem_intf_agent
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/irq_agent
 +incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_cosim_agent
++incdir+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_cocotb
 +incdir+${PRJ_DIR}/dv/cosim
 ${PRJ_DIR}/dv/uvm/bus_params_pkg/bus_params_pkg.sv
 ${LOWRISC_IP_DIR}/dv/sv/common_ifs/common_ifs_pkg.sv
@@ -139,7 +140,9 @@ ${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_mem_intf_agent/ibex_mem_intf_agent_pkg.s
 ${PRJ_DIR}/dv/uvm/core_ibex/env/core_ibex_instr_monitor_if.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/env/core_ibex_dut_probe_if.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/env/core_ibex_csr_if.sv
+${PRJ_DIR}/dv/uvm/core_ibex/tb/core_ibex_cocotb_if.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/env/core_ibex_env_pkg.sv
+${PRJ_DIR}/dv/uvm/core_ibex/common/ibex_cocotb/core_ibex_cocotb_pkg.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/tests/core_ibex_test_pkg.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv
 ${PRJ_DIR}/dv/uvm/core_ibex/fcov/core_ibex_fcov_bind.sv
