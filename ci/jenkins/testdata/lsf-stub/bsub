@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Mock bsub for the LSF-cancellation selftest: submits, then blocks like -K would.
+echo "Job <42> is submitted to queue <regress>."
+sleep 60

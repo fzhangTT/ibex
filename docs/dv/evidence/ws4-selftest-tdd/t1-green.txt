@@ -1,0 +1,31 @@
+100.00% PASS 2 PASSED, 0 FAILED
+PASS: report: pass log exits 0
+50.00% PASS 1 PASSED, 1 FAILED
+# Details of failing tests
+################################################################################
+riscv_arithmetic_basic_test.1
+------------------------------
+binary: riscv_arithmetic_basic_test.1/test.bin
+rtl_log: riscv_arithmetic_basic_test.1/rtl_sim.log
+rtl_trace: riscv_arithmetic_basic_test.1/trace_core_00000000.log
+iss_cosim_trace: riscv_arithmetic_basic_test.1/spike.log
+FAILURE: cosim mismatch at PC 0x8000_0124 (see rtl_trace).
+
+################################################################################
+# Details of passing tests
+PASS: report: fail log exits nonzero
+ERROR: no regr.log at /tmp/tmp.qM8H3Ol8hZ/empty/run/regr.log. The run did not produce results.
+PASS: report: missing regr.log exits nonzero
+PASS: reserve: fresh dir ok
+PASS: reserve: sentinel created
+ERROR: /tmp/tmp.qM8H3Ol8hZ/poisoned already contains run/ from a prior run. Use a fresh --out.
+PASS: reserve: prior run/ rejected
+ERROR: /tmp/tmp.qM8H3Ol8hZ/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: foreign sentinel rejected
+PASS: reserve: matching owner token accepted
+ERROR: /tmp/tmp.qM8H3Ol8hZ/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: mismatched owner token rejected
+SKIP: lsf cancel (smoke.sh not yet present)
+
+selftest: 0 failure(s)
+exit=0
