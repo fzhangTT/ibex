@@ -37,14 +37,16 @@ five points. Verifying each against the code:
 
 1. **"reusable YAML/DAG orchestrator skeleton"** — the YAML half is verified (above). The **DAG**
    half is **not verified — corrected by evidence**: no dependency-graph/`depends_on` concept exists
-   anywhere in the install (`grep -rn "DAG\|depends_on\|dependency" *.py` returns nothing but an
-   unrelated `# Install dependencies` comment). Jobs are independent, flat list entries ordered only
-   by a scalar priority × group-priority product (`README.md:140`); there is no code to express
-   "run B after A finishes." What's reusable is the YAML *config* shape, not a DAG engine.
+   anywhere in the install. Jobs are independent, flat list entries ordered only by a scalar
+   priority × group-priority product (`README.md:140`); there is no code to express "run B after A
+   finishes." What's reusable is the YAML *config* shape, not a DAG engine.
 2. **"build/run backends are Bazel/bzsim-only"** — **partially verified**. The scheduler's own code
-   never mentions Bazel (`grep -rn bazel *.py` — no hits; Bazel appears only in `README.md`'s prose/
-   diagrams describing what `bzsim` itself does downstream, `README.md:196-199`). What *is*
-   bzsim-specific: (a) the schema validator requires `--name`/`--lsf-opt=-qriscv...` only on
+   has no functional Bazel integration — no invocation, import, or command targets Bazel; the one
+   hit is an incidental TODO comment about which "Bazel-generated files are useful to keep"
+   (`job_run.py:351`) in a downstream job's output directory, not anything the scheduler drives.
+   Bazel otherwise appears only in `README.md`'s prose/diagrams describing what `bzsim` itself does
+   downstream (`README.md:196-199`). What *is* bzsim-specific in the scheduler's own code: (a) the
+   schema validator requires `--name`/`--lsf-opt=-qriscv...` only on
    commands shaped like bzsim invocations (`regression_scheduler_config.py:127-140`), and (b) every
    job run gets `BZSIM_LSF_GROUP_NAME`/`BZSIM_LSF_PROJECT_NAME`/`BZSIM_LSF_QUEUE` env vars
    (`job_run.py:85-87`) that only bzsim knows how to consume to bsub its own build/run sub-jobs. A
