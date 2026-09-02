@@ -1,0 +1,12 @@
+Tests
+
+Total Coverage Summary 
+SCORE  LINE   TOGGLE FSM    BRANCH ASSERT GROUP  
+ 52.44  70.46  39.37  20.93  62.52  85.63  35.75 
+
+
+Total tests in report: 1
+-------------------------------------------------------------------------------
+Data from the following tests was used to generate this report
+/localdev/fzhang/ws/ibex-ws3/dv/uvm/core_ibex/out_ws3fix/run/coverage/shared_cov/test/test_riscv_arithmetic_basic_test_1 
+

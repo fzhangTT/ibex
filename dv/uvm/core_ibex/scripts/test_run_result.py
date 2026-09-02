@@ -30,6 +30,7 @@ class Failure_Modes(Enum):
     TIMEOUT = 1  # The simulation process did not complete within the timeout
     FILE_ERROR = 2  # There was a problem attempting to open a logfile
     LOG_ERROR = 3  # The contents of a logfile met a criterion for test failure
+    FCOV_EXPECTATION = 4  # A declared functional-coverage bin was not hit (trust triad rule 3)
 
     def __str__(self):
         """Print enumerated values as e.g. TIMEOUT(1)"""

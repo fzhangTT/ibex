@@ -1,0 +1,39 @@
+Summary for Variable cp_controller_fsm
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 17       12        5       29.41   
+
+
+User Defined Bins for cp_controller_fsm
+
+
+Uncovered bins
+
+NAME                  COUNT AT LEAST NUMBER 
+out_of_sleep          0     1        1      
+out_of_wait_sleep     0     1        1      
+out_of_flush3         0     1        1      
+out_of_flush2         0     1        1      
+out_of_flush1         0     1        1      
+out_of_debug_taken_id 0     1        1      
+out_of_debug_taken_if 0     1        1      
+out_of_irq_taken      0     1        1      
+out_of_decode2        0     1        1      
+out_of_decode1        0     1        1      
+out_of_first_fetch2   0     1        1      
+out_of_first_fetch1   0     1        1      
+
+
+Covered bins
+
+NAME                COUNT AT LEAST 
+out_of_flush0       28    1        
+out_of_decode0      28    1        
+out_of_first_fetch0 1     1        
+out_of_boot_set     1     1        
+out_of_reset        1     1        
+
+
+-------------------------------------------------------------------------------
+
