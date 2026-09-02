@@ -57,11 +57,11 @@ undersized budget raises `TimeoutError` on an otherwise-passing run.
   Await it before your first `trigger()` call to close the startup race between your test
   and the TB arming its listener.
 - Accounting counters exposed on `cocotb_if` (integers, monotonic for the run):
-  a **trigger-received** counter increments once per triggered event the TB side actually
-  observes, and a **handler-entry** counter increments once per unit of stimulus the TB
-  agent actually services. Compare your own triggers-sent count against the
-  trigger-received counter (equal ⇒ nothing was dropped) and check the handler-entry
-  counter against what your stimulus should have produced, before calling `finish()`.
+  `cocotb_if.trigger_received_count` increments once per triggered event the TB side
+  actually observes, and `cocotb_if.handler_entry_count` increments once per unit of
+  stimulus the TB agent actually services. Compare your own triggers-sent count against
+  `trigger_received_count` (equal ⇒ nothing was dropped) and check `handler_entry_count`
+  against what your stimulus should have produced, before calling `finish()`.
 
 **Hard rule 4 — event triggers are not queued.** A `trigger()` call that arrives while
 the TB-side listener is still mid-response to a previous trigger is silently dropped —
