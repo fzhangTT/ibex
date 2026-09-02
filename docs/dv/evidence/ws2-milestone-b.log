@@ -86,7 +86,8 @@ This proves THIS check (not cosim, not a generic UVM_ERROR) fires and fails the 
 stimulus it is supposed to attribute handler entries to never happens. Broken run's artifacts
 (fresh OUT, not committed) removed after capture.
 
-Bug found and fixed along the way (documented in Task 7 report): the assertion message originally
+Bug found and fixed along the way (documented in Task 7 report,
+docs/dv/process-logs/ws2/task-7-report.md): the assertion message originally
 contained an em-dash (U+2014). cocotb's own failure-logging path uses an ASCII-only stream
 encoder; that character crashed the log call with UnicodeEncodeError, which silently swallowed the
 AssertionError text and caused this exact negative control to show a false flow-level PASS on the
@@ -250,7 +251,8 @@ COCOTB_SIM compiled in; a trigger_received_count counter (core_ibex_cocotb_if.sv
 core_ibex_base_test.sv) that Python compares against its own triggers-sent count before finish();
 the handler-entry assertion now requires max(n, 3) (still failing the ablation at n=0) and logs a
 loud WARNING if handler_entry_count exceeds triggers_sent (over-count attribution, non-fatal).
-testlist iterations pinned to 1 (single-seed-tuned timing). Full detail: task-7-report.md.
+testlist iterations pinned to 1 (single-seed-tuned timing). Full detail:
+docs/dv/process-logs/ws2/task-7-report.md.
 
 Re-verified, all fresh OUTs, not committed:
 

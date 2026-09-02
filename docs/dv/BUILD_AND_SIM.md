@@ -178,7 +178,7 @@ make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
 (`NoMemResponseWithoutPendingAccess` in `rtl/ibex_core.sv`) a few ns after the run has
 already legitimately PASSED — a latent testbench characteristic that
 `finish_on_completion=0` (see below) exposes on that one seed, not a cocotb-overlay bug
-(full root-cause in `.superpowers/sdd/2026-09-01-ws2-cocotb/task-5-report.md`).
+(full root-cause in `docs/dv/process-logs/ws2/task-5-report.md`).
 
 ```bash
 make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
@@ -207,7 +207,7 @@ Both: `100.00% PASS 1 PASSED, 0 FAILED`.
   class: total VPI/libpython load failure, where no Python code runs at all (not
   reachable through `COCOTB_MODULE` alone). Either way the run fails loudly — no false
   PASS — but the two failure paths are distinct and log differently
-  (`.superpowers/sdd/2026-09-01-ws2-cocotb/task-5-report.md`).
+  (`docs/dv/process-logs/ws2/task-5-report.md`).
 - **`timeout_ms` does not auto-scale.** `finish(dut, timeout_ms=...)`'s default (2ms)
   only covers a minimal program; a heavier generated program needs a caller-supplied
   budget sized to how long it actually takes to reach its own completion handshake, or it
@@ -228,12 +228,12 @@ Both: `100.00% PASS 1 PASSED, 0 FAILED`.
   `out/metadata/metadata.pickle` already exists from a prior run. Use
   `make clean` or a fresh `OUT=<new_dir>` after such edits. The same
   create-once behavior blocks flipping *any* top-level knob (`COCOTB`,
-  `WAVES`, `COV`, `SIMULATOR`, ...) in a persisted `OUT`: the Makefile's own
+  `COCOTB_MODULE`, `WAVES`, `COV`, `SIMULATOR`, ...) in a persisted `OUT`: the Makefile's own
   dependency tracking still prints a "Repeating ..." rebuild message and
   *looks* like it picked up the new value, but the recompiled command line
   silently keeps the old one. `rm -rf <OUT>/metadata` (not the whole `OUT`
   tree) forces a re-parse while keeping other build artifacts
-  (`.superpowers/sdd/2026-09-01-ws2-cocotb/task-4-report.md`).
+  (`docs/dv/process-logs/ws2/task-4-report.md`).
 - **riscv-dv generator is VCS-compiled too.** The instruction generator
   (`out/build/instr_gen/`) is its own separate VCS build, distinct from the
   TB build (`out/build/tb/`) — a fresh regression run consumes two VCS

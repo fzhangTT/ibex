@@ -24,7 +24,8 @@ SV interface drives nothing on the DUT side (it only reads `hart_id_i` and
 toggles bits in its own private `cocotb_if`), and the assertion is a plain
 clocked SVA with no dependency on UVM phases or cocotb. SEED=2 does not hit
 this scheduling window and passes cleanly, so it is used for this evidence.
-Full transcript of the SEED=1 UVM_ERROR is quoted in the Task 5 report.
+Full transcript of the SEED=1 UVM_ERROR is quoted in the Task 5 report
+(docs/dv/process-logs/ws2/task-5-report.md).
 
 Evidence for the 5 required markers (grep of rtl_sim_stdstreams.log)
 ----------------------------------------------------------------------
