@@ -1,0 +1,160 @@
+WS5 T4 gate — fsdb-mcp demonstrated against a real WAVES=1 FSDB
+=================================================================
+Repo: /localdev/fzhang/ws/ibex  (branch fzhang/auto-dv-setup)
+Date: 2026-09-02
+
+Step 1: produce the FSDB with this repo's verified flow
+--------------------------------------------------------
+  $ bash -lc 'source ci/env.sh && cd dv/uvm/core_ibex && make SIMULATOR=vcs \
+      IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test \
+      ITERATIONS=1 SEED=1 WAVES=1 OUT=out_ws5_waves'
+
+  ...
+  100.00% PASS 1 PASSED, 0 FAILED
+
+Fresh OUT (out_ws5_waves), wall-clock ~1m45s (build cache was warm from a prior identical
+build in this workspace — well inside the 45-minute watchdog either way).
+
+Both absolute paths used for the rest of this evidence:
+  design_db = /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_ws5_waves/build/tb/vcs_simv.daidir
+  fsdb_file = /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_ws5_waves/run/tests/riscv_arithmetic_basic_test.1/waves.fsdb
+
+  $ find dv/uvm/core_ibex/out_ws5_waves -iname '*.fsdb' -o -iname '*.daidir'
+  dv/uvm/core_ibex/out_ws5_waves/run/tests/riscv_arithmetic_basic_test.1/waves.fsdb
+  dv/uvm/core_ibex/out_ws5_waves/build/tb/vcs_simv.daidir
+  dv/uvm/core_ibex/out_ws5_waves/build/instr_gen/vcs_simv.daidir   (generator build; not used)
+
+  $ ls -la <fsdb_file>
+  -rw-rw-r-- 1 fzhang fzhang 22556710 Sep  2 13:30 .../waves.fsdb
+  $ ls -la <design_db>/build_db
+  -rwxrwxr-x 1 fzhang fzhang     2441 Sep  2 13:28 .../vcs_simv.daidir/build_db
+
+Both real, non-trivial artifacts from this build (not stubs).
+
+Step 2: drive fsdb-mcp over raw JSON-RPC via ci/mcp/fsdb-mcp.sh
+------------------------------------------------------------------
+Driver: a small Python script (queue-backed reader thread, requests kept flowing with stdin
+held open for the life of the session, matching Task 1's finding that the wrapper's first
+`tools/list` has ~15-20s lazy-import latency and that stdin must not close early). Invocation:
+
+  $ source ci/env.sh
+  $ python3 fsdb_probe.py ci/mcp/fsdb-mcp.sh <design_db_abs> <fsdb_file_abs> <logfile>
+
+Two protocol quirks found while building the probe, both handled in the final script (neither
+is a wrapper/config defect — both are properties of the fsdb-mcp-server 0.2.6 process itself):
+
+- **Stray non-JSON stdout line.** The underlying fsdb-digger/PyNPI session-open path writes a
+  plain-text diagnostic straight to stdout (`logDir = /tmp/npi_09_02_2026_fzhang_<pid>`),
+  interleaved with the JSON-RPC stream. A probe that assumes every stdout line is a JSON-RPC
+  message will choke on this one; the final probe skips any line that fails `json.loads`.
+- **Concurrent tool calls answer out of send order.** fastmcp processes in-flight `tools/call`
+  requests concurrently: `create_fsdb_session` (real NPI/Verdi session open, ~7-8s) sent before
+  a fast call can have its response arrive *after* the fast call's response, even though it was
+  sent first. A probe that assumes response N matches request N will silently mismatch results
+  onto the wrong call. The final probe matches every response by its `"id"` field, buffering any
+  id that arrives before it's asked for.
+
+tools/list (26 tools) confirms the schema before calling anything, per the brief:
+  create_fsdb_session(design_db: str, fsdb_file: str|None=None, output_dir: str|None=None)
+  — required: ["design_db"]; no session_id round-tripping (server-side singleton session).
+
+### create_fsdb_session — session creation (both absolute paths)
+
+Request:
+  >>> {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name":
+      "create_fsdb_session", "arguments": {
+        "design_db": "/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_ws5_waves/build/tb/vcs_simv.daidir",
+        "fsdb_file": "/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_ws5_waves/run/tests/riscv_arithmetic_basic_test.1/waves.fsdb"
+      }}}
+
+Result (elapsed 7.8s — real NPI/Verdi session open against our files, not a stub):
+  <<< {"success": true, "data": {
+        "session_id": "915e4099-e549-45a2-a374-011e3a55d556",
+        "mode": "waveform",
+        "workspace_info": {
+          "fsdb_file": ".../out_ws5_waves/run/tests/riscv_arithmetic_basic_test.1/waves.fsdb",
+          "design_db": ".../out_ws5_waves/build/tb/vcs_simv.daidir",
+          "workspace_dir": ".../riscv_arithmetic_basic_test.1/.fsdb-digger-20260902-133548"
+        },
+        "file_info": {
+          "name": ".../waves.fsdb",
+          "min_time": 0, "max_time": 164878435, "scale_unit": "10ps"
+        }}}
+
+`mode: "waveform"` (both design_db and fsdb_file accepted), `max_time` (164878435 * 10ps ~=
+1.649ms) matches this being a real, non-empty simulation waveform. A `.fsdb-digger-<TIMESTAMP>/`
+workspace directory was actually created alongside the FSDB in `out_ws5_waves/run/tests/...`
+(gitignored `out*/`, not committed) — filesystem-observable side effect confirming this was a
+live session, not a canned response.
+
+### get_child_modules(scope="") — top-level scope listing
+
+Request: {"name": "get_child_modules", "arguments": {"scope": "", "max_results": 50}}
+
+Result: 23 top-level scopes returned (`total_matched: 23`), including our TB top:
+  {"name": "core_ibex_tb_top", "full_path": "core_ibex_tb_top", "scope_type": "npiModule",
+   "child_count": 18, "signal_count": 8, "definition_name": "core_ibex_tb_top"}
+  ... plus uvm_custom_install_recording, uvm_custom_install_verdi_recording, 18 prim_secded_*
+  encoder/decoder scopes, core_ibex_fcov_bind ...
+
+`core_ibex_tb_top` (18 sub-scopes, 8 own signals) matches `dv/uvm/core_ibex/tb/core_ibex_tb_top.sv`
+exactly — this is our design hierarchy, read from our FSDB/design DB, not placeholder data.
+
+### get_internal_signals(scope="core_ibex_tb_top", signal_patterns=["clk"]) — locate the clock
+
+Request: {"name": "get_internal_signals", "arguments": {"signal_patterns": ["clk"],
+  "scope": "core_ibex_tb_top", "name_regex": ".*clk.*", "max_results": 20}}
+
+Result: 1 match —
+  {"name": "clk", "full_name": "core_ibex_tb_top.clk", "scope": "core_ibex_tb_top",
+   "signal_type": "logic", "direction": "internal", "range_size": 1}
+
+Matches `dv/uvm/core_ibex/tb/core_ibex_tb_top.sv:14` (`wire clk;`) exactly.
+
+### sample_signals_at_time — one signal value at a timestamp
+
+Request: {"name": "sample_signals_at_time", "arguments":
+  {"signal_names": ["core_ibex_tb_top.clk"], "sample_time": "500000ns"}}
+
+Result:
+  {"success": true, "data": {"core_ibex_tb_top.clk": "0"}, "metadata": {
+    "analysis_type": "signal_sampling", "value_format": "default"}}
+
+Real sampled value ("0") at 500000ns, well inside the file's [0, ~1.649ms] time range, read
+back from our FSDB via the design DB's hierarchy lookup for `core_ibex_tb_top.clk`.
+
+### get_time_range — corroborating real waveform content (not required by the brief, added for
+### extra confidence per dv_principles §4: a static single sample could in principle be a fixed
+### stub; a short transition trace cannot be)
+
+Request: {"name": "get_time_range", "arguments": {"signal_names": ["core_ibex_tb_top.clk"],
+  "start_time": "0ns", "end_time": "50ns"}}
+
+Result: 3 real transitions in the first 50ns of simulation —
+  {"time": 0,    "value": "x", "sequence_number": 0},   # pre-reset X
+  {"time": 1676, "value": "0", "sequence_number": 0},   # 16.76ns
+  {"time": 4435, "value": "1", "sequence_number": 0}    # 44.35ns
+
+An X->0->1 clock bring-up trace with real, non-round-number timestamps (1676, 4435 raw 10ps
+ticks) is not something a stub/mocked server would fabricate — this is genuinely parsed FSDB
+content from our simulation run.
+
+### close_fsdb_session
+
+Request: {"name": "close_fsdb_session", "arguments": {}}
+Result: {"success": true, "data": {"message": "Session closed successfully"}}
+
+The requests/results quoted above are verbatim (reformatted for readability) from the driver's
+own JSON-RPC transcript over `ci/mcp/fsdb-mcp.sh`'s stdio — every field shown was echoed back by
+the live server process against our real design_db/fsdb_file, not authored by hand.
+
+Gate verdict
+---------------
+PASS. fsdb-mcp-server 0.2.6, driven through `ci/mcp/fsdb-mcp.sh`, successfully opened a real
+session against an FSDB and design DB produced by this repo's own verified `make ... WAVES=1`
+flow, and returned real hierarchy/signal/waveform data (top-level scope listing matching
+`core_ibex_tb_top`, the `clk` signal at its correct hierarchical path, a real sampled value, and
+a real 3-transition clock bring-up trace) — not just a successful tool registration. Per the
+WS5 plan's workstream-close instructions, this closes gate part 2; the overall WS5 gate stays
+**PARTIAL** — gate item 3 (cleanroom clone, no MCP servers configured) is pending WS7, per
+`docs/dv/process-logs/ws5/progress.md`.

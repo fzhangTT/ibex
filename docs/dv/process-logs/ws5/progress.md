@@ -51,8 +51,28 @@ Pre-execution gate: codex APPROVE round 5 (docs/dv/reviews/2026-09-02-codex-plan
       three local servers, matching the Claude side exactly. Atlassian: configured on both clients,
       not authenticated on either (Claude carries a pre-existing user-level OAuth session and answers
       fully; codex has none) — optional/non-blocking per the brief either way.
-- [ ] T4: Gate part 2 — fsdb-mcp demonstrated against a real `WAVES=1` FSDB.
+- [x] T4: Gate part 2 — fsdb-mcp demonstrated against a real `WAVES=1` FSDB.
+      `docs/dv/evidence/ws5-fsdb-demo.txt`. Produced a fresh FSDB with the verified flow
+      (`make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test
+      ITERATIONS=1 SEED=1 WAVES=1 OUT=out_ws5_waves`, 100% PASS, well inside the 45-min
+      watchdog). Drove `ci/mcp/fsdb-mcp.sh` over raw JSON-RPC stdio with both absolute paths
+      (`out_ws5_waves/build/tb/vcs_simv.daidir`, `out_ws5_waves/run/tests/
+      riscv_arithmetic_basic_test.1/waves.fsdb`): `create_fsdb_session` opened a real session
+      (session_id, `mode: waveform`, correct `file_info.max_time`/`scale_unit`, 7-8s elapsed —
+      a real NPI/Verdi open, not a stub); `get_child_modules(scope="")` returned the real
+      top-level scope listing including `core_ibex_tb_top` (matches
+      `tb/core_ibex_tb_top.sv` exactly); `get_internal_signals` found `core_ibex_tb_top.clk`;
+      `sample_signals_at_time` returned a real value at 500000ns; `get_time_range` over the
+      first 50ns returned 3 real clock-bring-up transitions (x -> 0 @16.76ns -> 1 @44.35ns) as
+      extra non-guessable corroboration. Two protocol findings (not wrapper/config defects,
+      recorded in the evidence file): the fsdb-digger/PyNPI session-open path writes a stray
+      non-JSON diagnostic line straight to stdout (`logDir = ...`), and fastmcp answers
+      concurrent `tools/call` requests out of send order — any raw-JSON-RPC probe must skip
+      non-JSON stdout lines and match responses by their `"id"` field, not by arrival order.
+
+Gate part 1 (T3) and gate part 2 (T4) are both closed. Gate item 3 remains open per below.
 
 PENDING-WS7: gate item 3 (the cleanroom clone demonstrates *no* MCP servers configured) cannot be
 proven before WS7 exists. WS5 does not close DONE from this plan; end-state stays
-**PARTIAL — gate item 3 pending WS7** until WS7's plan produces that evidence and flips this line.
+**PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7** until WS7's plan produces that
+evidence and flips this line.
