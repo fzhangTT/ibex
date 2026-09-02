@@ -5,7 +5,7 @@ servers.
 
 | Server | Version | Purpose |
 |---|---|---|
-| `siliconpilot` | 0.18.1 (`latest` symlink, resolved 2026-09-02) | HW-workflow agent tools |
+| `siliconpilot` | 0.18.1 (pinned) | HW-workflow agent tools |
 | `fsdb-mcp-server` | 0.2.6 (pinned) | wave debug from FSDB |
 | `verdi-cov-mcp` | v0.2.2 (pinned) | coverage DB queries — core tool for the coverage-closure loop |
 | `atlassian` | remote (`https://mcp.atlassian.com/v1/mcp`) | optional, matches siblings |

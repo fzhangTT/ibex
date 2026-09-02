@@ -144,6 +144,8 @@ try:
                 break
     else:
         failure = failure or "get_child_modules: empty or unsuccessful scope list"
+    if top_scope is None:
+        failure = failure or "get_child_modules: core_ibex_tb_top not found among child_scopes"
     log(f"    [top_scope={top_scope}]")
 
     sig_resp = call("tools/call", {"name": "get_internal_signals",
@@ -189,8 +191,10 @@ try:
                         8, 60)
         tr_payload = tool_payload(tr_resp) if tr_resp else None
         log(f"=== get_time_range(signal_names=[{clk_path!r}], start_time='0ns', end_time='50ns') payload: {json.dumps(tr_payload)}")
-        if not (tr_payload and tr_payload.get("success") and tr_payload.get("data")):
-            failure = failure or "get_time_range: no waveform data (empty time range) returned"
+        tr_data = tr_payload["data"] if tr_payload and tr_payload.get("success") else None
+        clk_transitions = tr_data["signals"].get(clk_path, {}).get("transitions") if tr_data else None
+        if not (tr_data and tr_data.get("total_transitions", 0) > 0 and clk_transitions):
+            failure = failure or "get_time_range: no real transitions (total_transitions/clk_path transitions empty)"
     else:
         failure = failure or "get_time_range: no clk_path resolved to query"
 

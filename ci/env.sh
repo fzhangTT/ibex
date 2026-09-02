@@ -30,7 +30,7 @@ export VERDI_HOME="${VERDI_HOME:-/tools_vendor/synopsys/verdi/X-2025.06-SP2}"
 
 # --- MCP server installs (WS5; Zone B only — the cleanroom ships no MCP configs) ---
 # Exact pins recorded here; wrappers in ci/mcp/ consume these (dv_principles §5).
-export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/latest/bin/siliconpilot-mcp  # latest -> 0.18.1 (readlink -f 2026-09-02)
+export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/0.18.1/bin/siliconpilot-mcp  # pinned 0.18.1
 export IBEX_MCP_FSDB_SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh       # pinned 0.2.6
 export IBEX_MCP_VERDI_COV=/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh   # pinned v0.2.2
 # fsdb-mcp needs verdi/waveutils as commands (an alias does not reach subprocesses).
