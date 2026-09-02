@@ -5,8 +5,20 @@ description: Run and summarize ibex regressions (single test, full testlist, cov
 
 # regress
 
-Commands are the verified set in `docs/dv/BUILD_AND_SIM.md` — always `source ci/env.sh` first and
-run from `( cd dv/uvm/core_ibex && ... )`.
+Commands are the verified set in `docs/dv/BUILD_AND_SIM.md` — always `source ci/env.sh` first.
+
+`ci/jenkins/{smoke,nightly,coverage}.sh` are the primary entry points (see
+`docs/dv/BUILD_AND_SIM.md#regression-scripts-ci-jenkins` and `ci/jenkins/README.md` for the full
+option set):
+
+- Quick sanity: `ci/jenkins/smoke.sh`
+- Scoped run: `ci/jenkins/nightly.sh --test <t> --iterations <n> --seed <s>`
+- Coverage: `ci/jenkins/coverage.sh --test <t> --iterations <n> --seed <s>` (add `--out` for a
+  fresh dir; merged vdb + urg report under `<OUT>/run/coverage/`)
+- Generated testlists: `--testlist <yaml>` / `--directed-testlist <yaml>` select an alternate suite
+- LSF: add `--lsf` (`--lsf-queue` to override the default queue)
+
+Direct `make` (from `( cd dv/uvm/core_ibex && ... )`) stays the local fallback:
 
 - Single test: `make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=<t> ITERATIONS=1 SEED=<s>`
 - Full riscv-dv regression: `TEST=all` (testlist iterations); directed: `TEST=all_directed`
@@ -16,7 +28,3 @@ run from `( cd dv/uvm/core_ibex && ... )`.
 Results: `regr.log` (verdicts), `report.html`, `regr_junit.xml`, per-test `trr.yaml`. Summarize:
 pass rate, failure buckets by first-error signature (group identical `failure_message` prefixes),
 and for COV runs the urg dashboard score line. Hand failures to the `sim-debug` skill.
-
-Maintenance note (binding): WS4 delivers `ci/jenkins/{smoke,nightly,coverage}.sh`; when those land
-this skill MUST be updated to wrap them as the primary entry points, keeping direct-make as the
-local fallback.

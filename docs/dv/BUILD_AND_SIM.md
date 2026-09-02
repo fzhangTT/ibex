@@ -100,6 +100,55 @@ iterations, seeds `S, S+1, ..., S+N-1` are used, one per iteration
 Makefile picks a random starting seed (`$RANDOM`) — pin `SEED` explicitly
 for anything you need to reproduce.
 
+## Regression scripts (ci/jenkins)
+
+`ci/jenkins/{smoke,nightly,coverage}.sh` wrap the `make` invocation from the two sections above.
+They are the primary entry points for a regression. Direct `make` stays the fallback for local
+debug. All three source `ci/jenkins/common.sh` for option parsing, `OUT` reservation, and the
+pass/fail verdict from `regr.log`.
+
+```bash
+ci/jenkins/smoke.sh        # two fast tests, one per testlist; the CI sanity gate
+ci/jenkins/nightly.sh      # TEST=all at testlist iterations; SEED pins to the UTC date
+ci/jenkins/coverage.sh     # TEST=all with COV=1; tars merged.vdb to merged_vdb.tgz on a pass
+```
+
+Shared options (all three scripts; run `<script> --help` for the current text):
+
+| Option | Meaning |
+|---|---|
+| `--test LIST` | Comma-separated test name(s) |
+| `--testlist YAML` | Alternate `riscv_dv_extension/testlist.yaml` path (stock if omitted) |
+| `--directed-testlist YAML` | Alternate `directed_tests/directed_testlist.yaml` path (stock if omitted) |
+| `--iterations N` | Iteration count override |
+| `--seed S` | Starting seed |
+| `--config NAME` | `ibex_configs.yaml` config name |
+| `--out DIR` | Output directory |
+| `--jobs N` | `make -jN` / LSF slot count |
+| `--lsf` | Submit under `bsub -K` |
+| `--lsf-queue Q` | LSF queue name |
+| `--cocotb` / `--cocotb-module MOD` | Run the cocotb overlay; a module name implies `--cocotb` |
+| `--dry-run` | Print the command and exit, without running it |
+| `--help` | Print usage and exit |
+
+`--testlist`/`--directed-testlist` map to the `RISCV-DV-TESTLIST`/`DIRECTED-TESTLIST` make knobs
+from "Running a regression" above. Those knobs are now live and reach `metadata.py`. An alternate
+testlist, including a generated one, selects a different suite instead of the stock one.
+
+**LSF.** Add `--lsf` to submit the same command through `bsub -K` instead of running it on the
+local host. The default queue is `regress` (`--lsf-queue` to override). Each submission requests
+`span[hosts=1]`, so the whole build and test run stay on one LSF-allocated host. The flow's single
+build directory and single `metadata.pickle` file are not safe for a multi-host fan-out. The
+Jenkins workspace and the `--out` path must resolve to the same absolute path on the submit host
+and every LSF compute host. This means shared storage, not a directory local to the submit host
+only. `ci/jenkins/README.md` records this environment's storage-visibility probe result.
+
+Results land under `$OUT/run/` exactly as in "Running a single test" and "Coverage" above:
+`regr.log`, `report.html`, `regr_junit.xml`, per-test directories, and (for `coverage.sh`)
+`coverage/report/` plus `coverage/merged_vdb.tgz`.
+
+Jenkins job setup, scheduling, node requirements, and credentials: `ci/jenkins/README.md`.
+
 ## Coverage
 
 ```bash
