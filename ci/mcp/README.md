@@ -18,10 +18,10 @@ so only stderr carries `env.sh` diagnostics — then `exec` the pinned binary. `
 out of the process tree so the client talks directly to the server. Both client configs invoke the
 wrapper through a shell (`bash -c ...exec "$(git rev-parse --show-toplevel)/ci/mcp/*.sh"`) so the
 absolute wrapper path resolves the same regardless of which directory the client session was
-launched from. `$CLAUDE_PROJECT_DIR` is *not* used for this: per Claude Code's own docs it is set
-to the directory the session started in, not to `.mcp.json`'s location, so a session launched from
-a repo subdirectory (e.g. `dv/uvm/core_ibex/`) would otherwise fail all three local servers — a WS5
-T3 gate finding (`docs/dv/evidence/ws5-mcp-toollist-claude.txt`).
+launched from. `$CLAUDE_PROJECT_DIR` is *not* used for this: in the installed Claude Code CLI
+(2.1.258) it resolved to the directory the session started in, not to `.mcp.json`'s location, so
+a session launched from a repo subdirectory (e.g. `dv/uvm/core_ibex/`) failed all three local
+servers — a WS5 T3 gate finding (`docs/dv/evidence/ws5-mcp-toollist-claude.txt`).
 
 ## Zone scoping
 
