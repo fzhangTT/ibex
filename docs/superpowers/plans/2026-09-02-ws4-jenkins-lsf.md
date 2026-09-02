@@ -22,6 +22,7 @@
 - Scripts must be `bash`, `set -uo pipefail` (NOT `-e` — result parsing must run after a failed make), executable, and self-contained (compute repo root from `BASH_SOURCE`).
 - Nonzero exit on any failure; a missing `regr.log` is a failure (fail loud, never fake-pass — dv_principles §4).
 - LSF: queue default `regress` (exists on this site; override `--lsf-queue`), `bsub -K` (block, propagate exit), `-R "span[hosts=1]"` (make -j needs one host). LSF compute hosts must see the workspace at the same absolute path (shared storage); the nightly gate verifies this before submitting, and README documents it.
+- **Red→green transcripts are committed evidence** (dv_principles §6 rule 1): every task that adds selftest checks saves the failing-run and passing-run transcripts to `docs/dv/evidence/ws4-selftest-tdd/t<N>-{red,green}.txt` and commits them with the task.
 - **Gate evidence is raw artifacts, not prose** (dv_principles §6): each gate run commits a directory `docs/dv/evidence/ws4-<gate>/` holding the raw `regr.log`, the raw `lsf.log` for LSF runs, the raw urg `dashboard.txt` for COV runs, and a `summary.txt` with reproducibility metadata — exact invocation, repo commit SHA, VCS version line (from the build log), wall-clock, OUT path, and a `sha256sum` for any binary artifact referenced but not committed (e.g. `merged_vdb.tgz`). Process ledger `docs/dv/process-logs/ws4/progress.md` gets one appended line per completed task.
 - Run `.codex/compat/validator.py` after any edit to CLAUDE.md/skills/docs it validates; must stay PASS.
 - Commit after every task; commit messages follow the branch's `[ci]`/`[dv]`/`[docs]` prefix convention.
@@ -39,16 +40,17 @@
 **Interfaces:**
 - Consumes: Makefile knobs listed in Global Constraints; `regr.log` first-line format `NN.NN% PASS X PASSED, Y FAILED` (writer: `dv/uvm/core_ibex/scripts/report_lib/text.py:gen_summary_line`).
 - Produces (used by Tasks 3–5):
-  - `ci_parse_args "$@"` — parses the shared option set into globals `CI_TEST CI_TESTLIST CI_DIRECTED_TESTLIST CI_ITERATIONS CI_SEED CI_CONFIG CI_OUT CI_JOBS CI_LSF CI_LSF_QUEUE CI_COCOTB CI_COV CI_DRY_RUN`, applying the validation rules from Global Constraints. Callers preset job-specific defaults (`CI_JOB_NAME`, `CI_TEST`, `CI_SEED`, `CI_ITERATIONS`, `CI_COV`) **before** calling; options override. Unknown option or invalid value ⇒ usage on stderr, exit 2.
+  - `ci_parse_args "$@"` — parses the shared option set into globals `CI_TEST CI_TESTLIST CI_DIRECTED_TESTLIST CI_ITERATIONS CI_SEED CI_CONFIG CI_OUT CI_JOBS CI_LSF CI_LSF_QUEUE CI_COCOTB CI_COCOTB_MODULE CI_COV CI_DRY_RUN`, applying the validation rules from Global Constraints. Callers preset job-specific defaults (`CI_JOB_NAME`, `CI_TEST`, `CI_SEED`, `CI_ITERATIONS`, `CI_COV`) **before** calling; options override. Unknown option or invalid value ⇒ usage on stderr, exit 2.
   - `ci_main "$@"` — the whole driver: parse args → resolve `CI_OUT` to absolute `CI_OUT_ABS` (pure path math, no env) → **dry-run prints the exact command(s) and exits 0 — before env.sh, so selftest never loads modules** → `source "$CI_ENV_SH" || { echo "ERROR: environment setup failed ($CI_ENV_SH). Stop." >&2; exit 1; }` → `ci_reserve_out "$CI_OUT_ABS"` → LSF resubmission (see below) or run make (capture exit) → always run `ci_report_results` → exit nonzero if make failed OR results failed. `CI_ENV_SH` defaults to `$REPO_ROOT/ci/env.sh`; overridable via environment for selftest fault injection only.
   - `ci_reserve_out <out_abs_dir>` — rejects a directory containing prior results (`run/`, `build/`, or `metadata/` present ⇒ error naming the offender + "Use a fresh --out.", return 1); then `mkdir -p` and claims ownership by creating `.ci-out-owner` with `noclobber` (existing sentinel ⇒ "owned by another running job" error) — EXCEPT when `LSB_JOBID` is set (the inner LSF invocation runs in the directory the outer submission already reserved; it must not re-claim). Separately callable so selftest can drive it with fixture dirs.
   - `ci_report_results <out_abs_dir>` — parses `<out_abs_dir>/run/regr.log`: exit 0 iff the file exists and reports `0 FAILED`; prints the summary line and, on failure, the failing-test detail block. Separately callable for fixtures.
 - Option set (all of Tasks 3–5 expose exactly this):
-  `--test LIST --testlist YAML --directed-testlist YAML --iterations N --seed S --config NAME --out DIR --jobs N --lsf --lsf-queue Q --cocotb --dry-run --help`
+  `--test LIST --testlist YAML --directed-testlist YAML --iterations N --seed S --config NAME --out DIR --jobs N --lsf --lsf-queue Q --cocotb --cocotb-module MOD --dry-run --help`
+  `--cocotb-module` selects the Python test module (repo knob `COCOTB_MODULE`; validated `^[A-Za-z0-9_.]+$`) and implies `--cocotb` — without it, `COCOTB=1` runs the default hello module only, so generated cocotb suites need this knob.
 - Defaults: `CI_CONFIG=opentitan`, `CI_JOBS=4`, `CI_LSF=0`, `CI_LSF_QUEUE=${LSF_QUEUE:-regress}`, `CI_OUT=out_ci/${CI_JOB_NAME}-$(date -u +%Y%m%d-%H%M%S)` (relative to `dv/uvm/core_ibex`; a same-second collision is caught by `ci_reserve_out`, which turns it into a loud error, never silent reuse).
-- LSF mode: after reserving `CI_OUT_ABS` (so the `-o` log's parent exists), `ci_main` re-invokes the calling script under `bsub -K -J "ibex-${CI_JOB_NAME}" -q "$CI_LSF_QUEUE" -n "$CI_JOBS" -R "span[hosts=1]" -o "$CI_OUT_ABS/lsf.log"` with **all values resolved to explicit flags and `--lsf` removed** (so the inner invocation is deterministic and the timestamped OUT is fixed once). `bsub -K` runs as a foreground **child, not `exec`**, with `trap 'bkill -J "ibex-${CI_JOB_NAME}" 2>/dev/null; exit 143' INT TERM` armed first — a Jenkins timeout/abort that signals the script must also terminate the submitted LSF job, not orphan it (CLAUDE.md watchdog rule). `--dry-run --lsf` prints the full bsub command without submitting.
+- LSF mode: after reserving `CI_OUT_ABS` (so the `-o` log's parent exists), `ci_main` re-invokes the calling script under `bsub -K -J "ibex-${CI_JOB_NAME}" -q "$CI_LSF_QUEUE" -n "$CI_JOBS" -R "span[hosts=1]" -o "$CI_OUT_ABS/lsf.log"` with **all values resolved to explicit flags and `--lsf` removed** (so the inner invocation is deterministic and the timestamped OUT is fixed once). `bsub -K` runs as a **background child** whose stdout/stderr tee to `$CI_OUT_ABS/bsub.log`; the wrapper parses the submission line (`Job <NNNN> is submitted`) for the **exact job ID**, arms `trap 'bkill "$jid" 2>/dev/null; exit 143' INT TERM` with that ID (LSF job *names* are not unique — `bkill -J` can kill a concurrent run's job), then `wait`s on the child and propagates its exit status. A Jenkins timeout/abort that signals the script therefore terminates exactly the submitted job (CLAUDE.md watchdog rule). `--dry-run --lsf` prints the full bsub command without submitting.
 - Make command shape (built as an array, printed verbatim by dry-run):
-  `make -C "$REPO_ROOT/dv/uvm/core_ibex" -j"$CI_JOBS" SIMULATOR=vcs ISS=spike IBEX_CONFIG="$CI_CONFIG" TEST="$CI_TEST" SEED="$CI_SEED" OUT="$CI_OUT_ABS"` plus, only when set: `ITERATIONS=`, `COV=1`, `COCOTB=1`, `RISCV-DV-TESTLIST=`, `DIRECTED-TESTLIST=`.
+  `make -C "$REPO_ROOT/dv/uvm/core_ibex" -j"$CI_JOBS" SIMULATOR=vcs ISS=spike IBEX_CONFIG="$CI_CONFIG" TEST="$CI_TEST" SEED="$CI_SEED" OUT="$CI_OUT_ABS"` plus, only when set: `ITERATIONS=`, `COV=1`, `COCOTB=1`, `COCOTB_MODULE=`, `RISCV-DV-TESTLIST=`, `DIRECTED-TESTLIST=`.
 
 - [ ] **Step 1: Write the failing selftest**
 
@@ -96,14 +98,14 @@ echo; echo "selftest: $FAILURES failure(s)"
 
 Fixtures (format from `report_lib/text.py`): `testdata/regr_pass.log` first line `100.00% PASS 2 PASSED, 0 FAILED`; `testdata/regr_fail.log` first line `50.00% PASS 1 PASSED, 1 FAILED` followed by a plausible `Details of failing tests` block (copy the box_comment shape from `text.py`). `testdata/env_fail.sh` contains just `return 1` (a sourceable file that fails; used by Task 3's checks).
 
-- [ ] **Step 2: Run selftest, verify it fails** — `bash ci/jenkins/selftest.sh`; expected: FAIL lines (common.sh does not exist), nonzero exit.
+- [ ] **Step 2: Run selftest, verify it fails** — `bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-red.txt`; expected: FAIL lines (common.sh does not exist), nonzero exit. The transcript is evidence (dv_principles §6 rule 1) — it is committed in Step 5.
 
 - [ ] **Step 3: Implement `ci/jenkins/common.sh`** per the Produces contract above. Key requirements beyond the contract:
   - `REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"`; `CI_ENV_SH="${CI_ENV_SH:-$REPO_ROOT/ci/env.sh}"`.
   - `set -uo pipefail` discipline; no `set -e`; every step that can fail is explicitly checked.
   - `ci_report_results`: `head -n1` of regr.log, match with `[[ "$line" =~ %\ PASS\ ([0-9]+)\ PASSED,\ ([0-9]+)\ FAILED ]]`; failure count from `BASH_REMATCH[2]`; on failure also print the section between `# Details of failing tests` and `# Details of passing tests`. Missing/unparsable file ⇒ `echo "ERROR: no regr.log at <path>. The run did not produce results." >&2; return 1`.
 
-- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash ci/jenkins/selftest.sh`; expected: all PASS, exit 0.
+- [ ] **Step 4: Run selftest, verify the common.sh checks pass** — `bash ci/jenkins/selftest.sh 2>&1 | tee /tmp/ws4-t1-green.txt`; expected: all PASS, exit 0. Copy both transcripts to `docs/dv/evidence/ws4-selftest-tdd/t1-red.txt` and `t1-green.txt`.
 
 - [ ] **Step 5: Create the ledger and commit**
 
@@ -124,7 +126,7 @@ Plan: docs/superpowers/plans/2026-09-02-ws4-jenkins-lsf.md (codex pre-review rou
 ```
 Tick T1, then:
 ```bash
-git add ci/jenkins docs/dv/process-logs/ws4
+git add ci/jenkins docs/dv/evidence/ws4-selftest-tdd docs/dv/process-logs/ws4
 git commit -m "[ci] WS4: jenkins common.sh + license-free selftest harness"
 ```
 
@@ -173,7 +175,7 @@ EOF
 ```
 Adjust the `arg_list_initializer` call signature to the real one when writing (read `scripts/metadata.py:176-240` first; if `git_commit` or another parameter differs, follow the source — the assertions are the contract, not the exact constructor line).
 
-- [ ] **Step 2: Run it, verify it fails** — `bash ci/jenkins/check_testlist_knob.sh`; expected: AssertionError/AttributeError (fields don't exist yet).
+- [ ] **Step 2: Run it, verify it fails** — `bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-red.txt`; expected: AssertionError/AttributeError (fields don't exist yet). Committed as `docs/dv/evidence/ws4-selftest-tdd/t2-red.txt` in Step 7.
 
 - [ ] **Step 3: Implement the metadata fields** — in `RegressionMetadata`: add near the other args-list-settable fields
 ```python
@@ -218,12 +220,12 @@ esac
 echo "check_testlist_knob: make-boundary PASS"
 ```
 
-- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash ci/jenkins/check_testlist_knob.sh` ⇒ both PASS lines (unit + make-boundary). Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
+- [ ] **Step 6: Run the check, verify it passes end-to-end** — `bash ci/jenkins/check_testlist_knob.sh 2>&1 | tee /tmp/ws4-t2-green.txt` ⇒ both PASS lines (unit + make-boundary); copy red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t2-{red,green}.txt`. Also rerun `bash ci/jenkins/selftest.sh` (no regression) and one stock dry-run sanity: `make -C dv/uvm/core_ibex -n run TEST=riscv_arithmetic_basic_test SEED=1 SIMULATOR=vcs 2>&1 | head` still constructs with empty overrides.
 
 - [ ] **Step 7: Commit** — tick T2.
 
 ```bash
-git add dv/uvm/core_ibex/scripts/metadata.py dv/uvm/core_ibex/Makefile ci/jenkins/check_testlist_knob.sh docs/dv/process-logs/ws4/progress.md
+git add dv/uvm/core_ibex/scripts/metadata.py dv/uvm/core_ibex/Makefile ci/jenkins/check_testlist_knob.sh docs/dv/evidence/ws4-selftest-tdd docs/dv/process-logs/ws4/progress.md
 git commit -m "[dv] WS4: plumb RISCV-DV-TESTLIST/DIRECTED-TESTLIST through metadata (dual-suite knob)"
 ```
 
@@ -283,6 +285,12 @@ out=$(./smoke.sh --dry-run --out 'out_ci/x$(shell touch /tmp/pwned)' 2>&1); st=$
 check_status "smoke: make-function metacharacters in --out exit 2" 2 $st
 out=$(./smoke.sh --dry-run --out 'out_ci/has space' 2>&1); st=$?
 check_status "smoke: whitespace --out exits 2" 2 $st
+out=$(./smoke.sh --dry-run --cocotb-module dv.cocotb.gen_irq 2>&1); st=$?
+check_status "smoke: --cocotb-module accepted" 0 $st
+check "smoke: cocotb-module implies COCOTB=1" "COCOTB=1" "$out"
+check "smoke: COCOTB_MODULE passthrough" "COCOTB_MODULE=dv.cocotb.gen_irq" "$out"
+out=$(./smoke.sh --dry-run --cocotb-module 'bad;module' 2>&1); st=$?
+check_status "smoke: cocotb-module metacharacters exit 2" 2 $st
 out=$(CI_ENV_SH="$PWD/testdata/env_fail.sh" ./smoke.sh --out "$(mktemp -d)/o" 2>&1); st=$?
 check_status "smoke: failing env.sh stops the run" 1 $st
 check "smoke: env failure message" "environment setup failed" "$out"
@@ -306,15 +314,22 @@ CI_SEED=1
 ci_main "$@"
 ```
 
-- [ ] **Step 4: Run selftest, verify it passes.**
+- [ ] **Step 4: Run selftest, verify it passes** — save red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t3-{red,green}.txt`.
 
-- [ ] **Step 5: Real smoke run (gate)** — `bash -lc 'ci/jenkins/smoke.sh'` with a watchdog per CLAUDE.md (poll `$OUT/run/` artifacts; budget 45 min for the fresh build). Expected: exit 0, summary `100.00% PASS 2 PASSED, 0 FAILED`. Record wall-clock; if over the 15 min budget, note actual time in README (Task 6) — do not silently re-scope the test set.
-
-- [ ] **Step 6: Save evidence + commit** — `docs/dv/evidence/ws4-smoke/`: copy the raw `$OUT/run/regr.log`; write `summary.txt` (exact invocation, repo commit SHA, VCS version line from the build log, wall-clock, OUT path). Tick T3 in the ledger.
+- [ ] **Step 5: Commit the implementation** (so the gate run exercises an immutable commit whose SHA the evidence can honestly cite):
 
 ```bash
-git add ci/jenkins docs/dv/evidence/ws4-smoke docs/dv/process-logs/ws4/progress.md
-git commit -m "[ci] WS4: smoke.sh + verified smoke run"
+git add ci/jenkins docs/dv/evidence/ws4-selftest-tdd
+git commit -m "[ci] WS4: smoke.sh"
+```
+
+- [ ] **Step 6: Real smoke run (gate)** — from the clean just-committed tree: `bash -lc 'ci/jenkins/smoke.sh'` with a watchdog per CLAUDE.md (poll `$OUT/run/` artifacts; budget 45 min for the fresh build). Expected: exit 0, summary `100.00% PASS 2 PASSED, 0 FAILED`. Record `git rev-parse HEAD` and wall-clock; if over the 15 min budget, note actual time in README (Task 6) — do not silently re-scope the test set.
+
+- [ ] **Step 7: Save evidence + commit** — `docs/dv/evidence/ws4-smoke/`: copy the raw `$OUT/run/regr.log`; write `summary.txt` (exact invocation, the Step-5 commit SHA the run executed, VCS version line from the build log, wall-clock, OUT path). Tick T3 in the ledger.
+
+```bash
+git add docs/dv/evidence/ws4-smoke docs/dv/process-logs/ws4/progress.md
+git commit -m "[dv] WS4: smoke gate evidence"
 ```
 
 ---
@@ -361,25 +376,32 @@ CI_SEED="$(date -u +%y%m%d)"
 ci_main "$@"
 ```
 
-- [ ] **Step 4: Run selftest, verify it passes.**
+- [ ] **Step 4: Run selftest, verify it passes** — save red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t4-{red,green}.txt`.
 
-- [ ] **Step 5: LSF workspace-visibility probe (pre-gate)** — compute hosts must see this workspace at the same absolute path:
+- [ ] **Step 5: Commit the implementation**:
+
+```bash
+git add ci/jenkins docs/dv/evidence/ws4-selftest-tdd
+git commit -m "[ci] WS4: nightly.sh"
+```
+
+- [ ] **Step 6: LSF workspace-visibility probe (pre-gate)** — compute hosts must see this workspace at the same absolute path:
 `bash -lc 'source ci/env.sh && bsub -K -q regress -o /dev/null "test -d $PWD && test -r $PWD/ci/env.sh && echo VISIBLE"'`
 If it fails, this workspace root (`/localdev/...`) is submit-host-local: record that in README §Storage, and run the Step-6 gate from a clone on shared storage (record which path was used in the evidence file). Do not skip the gate.
 
-- [ ] **Step 6: Reduced nightly run THROUGH LSF (gate)** — proves the bsub path end-to-end:
+- [ ] **Step 7: Reduced nightly run THROUGH LSF (gate)** — from the clean Step-5 commit; proves the bsub path end-to-end:
 `bash -lc 'ci/jenkins/nightly.sh --lsf --test riscv_arithmetic_basic_test,mcounteren_test --iterations 1 --jobs 4'`
 Watchdog: poll `bjobs -J ibex-nightly` AND the OUT dir; budget 60 min. Expected: bsub submits to `regress`, blocks, exits 0, `regr.log` shows `0 FAILED`. If the `regress` queue rejects the job (site policy), fall back `--lsf-queue normal` and record the working default — then change the default in common.sh and re-run selftest.
 
-- [ ] **Step 7: Alternate-testlist run (gate for the dual-suite knob)** — build a one-entry testlist in a temp dir by extracting the `riscv_arithmetic_basic_test` entry from the stock `riscv_dv_extension/testlist.yaml` (copy the YAML entry verbatim into `<tmp>/alt_testlist.yaml`), then:
+- [ ] **Step 8: Alternate-testlist run (gate for the dual-suite knob)** — build a one-entry testlist in a temp dir by extracting the `riscv_arithmetic_basic_test` entry from the stock `riscv_dv_extension/testlist.yaml` (copy the YAML entry verbatim into `<tmp>/alt_testlist.yaml`), then:
 `bash -lc 'ci/jenkins/nightly.sh --test all_riscvdv --testlist <tmp>/alt_testlist.yaml --iterations 1 --seed 1'`
 Expected: exit 0 and `regr.log` lists EXACTLY one test (`riscv_arithmetic_basic_test.1`) — proving the override selected the alternate suite, not the stock one (which would run many tests). Save to `docs/dv/evidence/ws4-alt-testlist/`: the raw `regr.log`, the temp testlist file itself, and `summary.txt` (invocation, commit SHA, wall-clock).
 
-- [ ] **Step 8: Save evidence + commit** — `docs/dv/evidence/ws4-nightly-lsf/`: copy the raw `$OUT/run/regr.log` and `$OUT/lsf.log`; write `summary.txt` (invocation, LSF job id + queue, visibility-probe result, commit SHA, VCS version line, wall-clock). Tick T4.
+- [ ] **Step 9: Save evidence + commit** — `docs/dv/evidence/ws4-nightly-lsf/`: copy the raw `$OUT/run/regr.log` and `$OUT/lsf.log`; write `summary.txt` (invocation, LSF job id + queue, visibility-probe result, the Step-5 commit SHA the runs executed, VCS version line, wall-clock). Tick T4.
 
 ```bash
-git add ci/jenkins docs/dv/evidence/ws4-nightly-lsf docs/dv/evidence/ws4-alt-testlist docs/dv/process-logs/ws4/progress.md
-git commit -m "[ci] WS4: nightly.sh + LSF and alternate-testlist gate runs"
+git add docs/dv/evidence/ws4-nightly-lsf docs/dv/evidence/ws4-alt-testlist docs/dv/process-logs/ws4/progress.md
+git commit -m "[dv] WS4: nightly LSF + alternate-testlist gate evidence"
 ```
 
 ---
@@ -424,15 +446,22 @@ ci_main "$@"
 
 Post-success vdb packaging lives in common.sh's `ci_main` (guarded by `CI_COV=1` and a passing verdict): `tar -C "$CI_OUT_ABS/run/coverage" -czf "$CI_OUT_ABS/run/coverage/merged_vdb.tgz" merged.vdb` — with an existence check that errors loudly if `merged.vdb` or `report/dashboard.txt` is missing after a "passing" COV run (a silent no-coverage pass is a fake pass).
 
-- [ ] **Step 4: Run selftest, verify it passes.**
+- [ ] **Step 4: Run selftest, verify it passes** — save red/green transcripts to `docs/dv/evidence/ws4-selftest-tdd/t5-{red,green}.txt`.
 
-- [ ] **Step 5: Reduced coverage run (gate)** — `bash -lc 'ci/jenkins/coverage.sh --test riscv_arithmetic_basic_test --iterations 1 --seed 1'` (local, no --lsf — LSF already proven in T4). Watchdog 60 min. Expected: exit 0; `merged.vdb`, `report/dashboard.txt`, `merged_vdb.tgz` all present; dashboard score line captured.
-
-- [ ] **Step 6: Save evidence + commit** — `docs/dv/evidence/ws4-coverage/`: copy the raw `$OUT/run/regr.log` and `$OUT/run/coverage/report/dashboard.txt`; write `summary.txt` (invocation, commit SHA, VCS version line, wall-clock, artifact paths, `sha256sum` of `merged_vdb.tgz` — the binary itself is not committed). Tick T5.
+- [ ] **Step 5: Commit the implementation**:
 
 ```bash
-git add ci/jenkins docs/dv/evidence/ws4-coverage docs/dv/process-logs/ws4/progress.md
-git commit -m "[ci] WS4: coverage.sh + verified COV run with archived vdb+report"
+git add ci/jenkins docs/dv/evidence/ws4-selftest-tdd
+git commit -m "[ci] WS4: coverage.sh"
+```
+
+- [ ] **Step 6: Reduced coverage run (gate)** — from the clean Step-5 commit: `bash -lc 'ci/jenkins/coverage.sh --test riscv_arithmetic_basic_test --iterations 1 --seed 1'` (local, no --lsf — LSF already proven in T4). Watchdog 60 min. Expected: exit 0; `merged.vdb`, `report/dashboard.txt`, `merged_vdb.tgz` all present; dashboard score line captured.
+
+- [ ] **Step 7: Save evidence + commit** — `docs/dv/evidence/ws4-coverage/`: copy the raw `$OUT/run/regr.log` and `$OUT/run/coverage/report/dashboard.txt`; write `summary.txt` (invocation, the Step-5 commit SHA the run executed, VCS version line, wall-clock, artifact paths, `sha256sum` of `merged_vdb.tgz` — the binary itself is not committed). Tick T5.
+
+```bash
+git add docs/dv/evidence/ws4-coverage docs/dv/process-logs/ws4/progress.md
+git commit -m "[dv] WS4: coverage gate evidence"
 ```
 
 ---
@@ -463,6 +492,7 @@ pipeline {
         string(name: 'DIRECTED_TESTLIST', defaultValue: '', description: 'directed testlist override (empty = stock)')
         string(name: 'LSF_QUEUE',         defaultValue: 'regress', description: 'LSF queue')
         string(name: 'JOBS',              defaultValue: '8', description: 'LSF slots / make -j')
+        string(name: 'COCOTB_MODULE',     defaultValue: '', description: 'cocotb Python module (empty = no cocotb overlay; non-empty implies COCOTB=1)')
     }
     environment {
         P_CONFIG = "${params.IBEX_CONFIG}"
@@ -470,6 +500,7 @@ pipeline {
         P_DTL    = "${params.DIRECTED_TESTLIST}"
         P_QUEUE  = "${params.LSF_QUEUE}"
         P_JOBS   = "${params.JOBS}"
+        P_COCOTB_MODULE = "${params.COCOTB_MODULE}"
     }
     stages {
         stage('Smoke') {
@@ -481,8 +512,15 @@ pipeline {
                     args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/smoke-b${BUILD_NUMBER}" )
                     [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
                     [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
                     ci/jenkins/smoke.sh "${args[@]}"
                 '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/smoke-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/smoke-b*/run/report.html, dv/uvm/core_ibex/out_ci/smoke-b*/run/regr.log'
+                }
             }
         }
         stage('Nightly') {
@@ -494,8 +532,15 @@ pipeline {
                     args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/nightly-b${BUILD_NUMBER}" )
                     [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
                     [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
                     ci/jenkins/nightly.sh "${args[@]}"
                 '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/nightly-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/nightly-b*/run/report.html, dv/uvm/core_ibex/out_ci/nightly-b*/run/regr.log'
+                }
             }
         }
         stage('Coverage') {
@@ -507,16 +552,21 @@ pipeline {
                     args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/coverage-b${BUILD_NUMBER}" )
                     [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
                     [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
                     ci/jenkins/coverage.sh "${args[@]}"
                 '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/coverage-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/coverage-b*/run/report.html, dv/uvm/core_ibex/out_ci/coverage-b*/run/regr.log, dv/uvm/core_ibex/out_ci/coverage-b*/run/coverage/report/**, dv/uvm/core_ibex/out_ci/coverage-b*/run/coverage/merged_vdb.tgz'
+                }
             }
         }
     }
     post {
-        always {
-            junit allowEmptyResults: true, testResults: 'dv/uvm/core_ibex/out_ci/*/run/regr_junit.xml'
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'dv/uvm/core_ibex/out_ci/*/run/report.html, dv/uvm/core_ibex/out_ci/*/run/regr.log, dv/uvm/core_ibex/out_ci/*/run/coverage/report/**, dv/uvm/core_ibex/out_ci/*/run/coverage/merged_vdb.tgz'
-        }
+        // Publication is per-stage and strict (no allowEmpty): a stage that ran but
+        // produced no junit/report must turn the build red, never stay silently green.
         cleanup { sh 'rm -rf dv/uvm/core_ibex/out_ci' }
     }
 }
@@ -627,3 +677,12 @@ Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-
 2. **[high] `--out` unvalidated (recursive make expansion)** — resolved `CI_OUT_ABS` validated against the safe-path charset, make receives the absolute path only; metacharacter and whitespace rejection selftests added.
 3. **[high] summary-only evidence** — gate evidence is now a directory per gate with raw `regr.log`/`lsf.log`/`dashboard.txt`, reproducibility metadata (commit SHA, VCS version, invocation, wall-clock), and sha256 for uncommitted binaries (dv_principles §6).
 4. **[medium] no pipeline timeouts** — pipeline-level 14h + per-stage 2h/10h/12h timeouts; common.sh LSF mode runs `bsub -K` as a trapped child that `bkill`s the job on INT/TERM so aborts do not orphan LSF work.
+
+## Review disposition (codex pre-review round 4 — REQUEST-CHANGES)
+
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws4-jenkins-lsf-round4.md`, each addressed in this revision:
+1. **[high] no `--cocotb-module`** — option added (implies `--cocotb`, validated `^[A-Za-z0-9_.]+$`, passed as `COCOTB_MODULE=` and through LSF reinvocation), Jenkins `COCOTB_MODULE` parameter wired into all three stages, selftest checks added.
+2. **[high] `bkill -J` on a non-unique name** — the wrapper now parses the exact job ID from bsub's submission line (`Job <NNNN>`) and traps with `bkill "$jid"`; the name stays for observability only.
+3. **[high] red→green transcripts not committed** — every task saves its failing and passing selftest/check transcripts to `docs/dv/evidence/ws4-selftest-tdd/t<N>-{red,green}.txt`, committed with the task (Global Constraints rule + per-task steps).
+4. **[high] evidence SHA recorded before the code is committed** — Tasks 3–5 now commit the implementation first, run the gate from that immutable commit, record its SHA, and commit evidence separately.
+5. **[medium] `allowEmpty*` lets publication silently no-op** — publication moved into per-stage strict `post { always }` blocks scoped to each stage's OUT glob; the global post keeps only workspace cleanup.
