@@ -6,7 +6,7 @@ Plan: docs/superpowers/plans/2026-09-02-ws4-jenkins-lsf.md (codex pre-review rou
 - [x] T2 dual-suite testlist plumbing (metadata.py + Makefile) — gate pending (compressed gate stage)
 - [x] T3 smoke.sh — gate pending (compressed gate stage)
 - [x] T4 nightly.sh — gate pending (compressed gate stage)
-- [ ] T5 coverage.sh (+ reduced COV run)
+- [x] T5 coverage.sh — gate pending (compressed gate stage)
 - [ ] T6 Jenkinsfile + README
 - [ ] T7 tt-regress assessment
 - [ ] T8 docs + regress skill update

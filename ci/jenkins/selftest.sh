@@ -96,6 +96,12 @@ out=$(./nightly.sh --dry-run --test riscv_arithmetic_basic_test --iterations 2 2
 check "nightly: --test override" "TEST=riscv_arithmetic_basic_test" "$out"
 check "nightly: --iterations override" "ITERATIONS=2" "$out"
 
+# --- coverage.sh ---
+out=$(./coverage.sh --dry-run 2>&1); st=$?
+check_status "coverage: dry-run exits 0" 0 $st
+check "coverage: COV=1" "COV=1" "$out"
+check "coverage: default TEST=all" "TEST=all" "$out"
+
 # --- LSF cancellation (mocked; proves the trap kills the exact submitted job) ---
 # lsf-stub/bsub prints "Job <42> is submitted." then sleeps 60; lsf-stub/bkill logs its args
 # to $LSF_STUB_LOG. smoke.sh exists from Task 3 on; guard so Task 1's run skips it cleanly.

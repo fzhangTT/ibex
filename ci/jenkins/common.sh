@@ -254,6 +254,23 @@ ci_lsf_run() { # <out_abs_dir> <bsub argv...>
   return "$status"
 }
 
+ci_cov_package() { # <out_abs_dir> — archive the merged vdb after a passing COV run
+  local out_abs="$1"
+  local vdb="$out_abs/run/coverage/merged.vdb"
+  local dashboard="$out_abs/run/coverage/report/dashboard.txt"
+  # A "passing" COV run with no coverage database is a fake pass: fail loudly
+  # instead of silently skipping the archive.
+  if [ ! -e "$vdb" ]; then
+    echo "ERROR: $vdb is missing after a passing COV run. Check the cov-merge stage before trusting this result." >&2
+    return 1
+  fi
+  if [ ! -f "$dashboard" ]; then
+    echo "ERROR: $dashboard is missing after a passing COV run. Check the urg report stage before trusting this result." >&2
+    return 1
+  fi
+  tar -C "$out_abs/run/coverage" -czf "$out_abs/run/coverage/merged_vdb.tgz" merged.vdb
+}
+
 ci_main() {
   ci_parse_args "$@"
 
@@ -335,5 +352,11 @@ ci_main() {
   ci_report_results "$CI_OUT_ABS"
   report_status=$?
 
-  [ "$make_status" -eq 0 ] && [ "$report_status" -eq 0 ]
+  local cov_status=0
+  if [ "$CI_COV" = "1" ] && [ "$make_status" -eq 0 ] && [ "$report_status" -eq 0 ]; then
+    ci_cov_package "$CI_OUT_ABS"
+    cov_status=$?
+  fi
+
+  [ "$make_status" -eq 0 ] && [ "$report_status" -eq 0 ] && [ "$cov_status" -eq 0 ]
 }
