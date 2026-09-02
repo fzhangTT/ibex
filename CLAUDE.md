@@ -28,6 +28,10 @@ green, and the trust triad — TDD, mutation-proof, fcov-expectation — for eve
   gating: no progress past `REQUEST-CHANGES` without a recorded re-review.
 - Disagreements with a recorded controller ruling go to the human owner, not back into the loop.
 - The `cross-review` skill executes this policy; use it rather than ad-hoc invocations.
+- Reviewer model preference: codex with the `sol`-class model at high reasoning effort when
+  available (`gpt-5.6-sol` today); if codex is unavailable, an equivalent-tier Claude model
+  (Opus-class or above) reviewing from a fresh session is an acceptable substitute — record which
+  was used in the artifact's identity header either way.
 
 ## Critical invariants
 
@@ -46,6 +50,11 @@ green, and the trust triad — TDD, mutation-proof, fcov-expectation — for eve
 - The `module` command exits 1 even on success — never `&&`-chain it (`ci/env.sh` handles loads).
 - Background/completion notifications are unreliable: poll log files and artifacts directly with
   deadlines, and put a watchdog timer on any dispatched work longer than ~5 minutes.
+- **Watchdog rule (mandatory):** every dispatched agent, background shell, or long tool run gets a
+  bounded timer sized to the work (~10 min default; 45-60 min for full sims/regressions). On firing,
+  verify progress from the filesystem/process table — never from agent status alone — then nudge
+  once with concrete state, and reassign against the working-tree state if still dead after one
+  nudge window. An idle agent with finished work is a stall, not a success.
 - Clear `PYTHONPATH` around pip operations (`~/.bashrc` leaks package metadata into `pip freeze`).
 - Stale `metadata.pickle`: use `make clean` or a fresh `OUT=` after editing testlists/configs.
 - Full gotcha list with evidence: `docs/dv/BUILD_AND_SIM.md`.
