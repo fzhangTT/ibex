@@ -41,42 +41,50 @@ async def test_irq_from_python(dut):
     cocotb.log.info(f"COCOTB-IRQ: cocotb_irq_count={n} (seed={seed})")
 
     cocotb_if = dut.cocotb_if
-    # uvm_ready means the SV listener has already armed its event handle, so no trigger from here
-    # on can be lost (see core_ibex_cocotb_if.sv).
+    # uvm_ready closes the startup race only (listener armed vs. the first trigger); it does not
+    # mean a later trigger can never be dropped (see triggers_sent/triggers_received below).
     while not cocotb_if.uvm_ready.value:
         await ClockCycles(dut.clk, 1)
     cocotb.log.info("COCOTB-IRQ: uvm_ready observed")
 
+    triggers_sent = 0
     for i in range(n):
         gap = _BASE_GAP_CYCLES + rng.randrange(0, _JITTER_MAX_CYCLES + 1)
         await ClockCycles(dut.clk, gap)
         cocotb.log.info(f"COCOTB-IRQ: triggering cocotb_irq_raise ({i + 1}/{n}), gap={gap}")
         uvm_bridge.trigger("cocotb_irq_raise")
+        triggers_sent += 1
 
     await ClockCycles(dut.clk, _POST_TRIGGER_SETTLE_CYCLES)
 
-    # Checked here, before finish(), rather than after: the flow's log scanner
-    # (ibex_log_to_trace_csv.check_ibex_uvm_log) stops treating "Error" lines as failures once it
-    # has seen "RISC-V UVM TEST PASSED" in the log, to avoid false positives from the UVM report
-    # summary. That banner only prints once this test's whole generated program reaches its own
-    # riscv-dv signature handshake at natural completion, which happens well after our own irq
-    # activity here — asserting after finish() would land past that point and be silently ignored
-    # by the scanner even on a real failure. Checked here instead, it always lands well before that
-    # banner, so a failure is never in the scanner's ignored window; on a real assertion failure,
-    # cocotb's own uncaught-exception handling $finishes immediately, so the banner never prints at
-    # all in that case, and the checker's own effectiveness is what Step 4's negative control below
-    # is proving.
-    count = int(cocotb_if.handler_entry_count.value)
+    # Checked before finish(): the flow's log scanner ignores "Error" lines once it has seen
+    # "RISC-V UVM TEST PASSED", which only prints after finish() would return (see report/Step 4).
+    triggers_received = int(cocotb_if.trigger_received_count.value)
     cocotb.log.info(
-        f"COCOTB-IRQ: handler_entry_count={count} "
-        f"(triggered={n}, required>={_MIN_EXPECTED_HANDLER_ENTRIES})"
+        f"COCOTB-IRQ: triggers_sent={triggers_sent} triggers_received={triggers_received}"
     )
-    # Plain ASCII only: cocotb's own failure-logging path uses an ASCII-only stream encoder here,
-    # and a non-ASCII character in this message crashes that log call, which swallows the failure
-    # text and leaves the flow's log-scan classifier with nothing to catch (silent false PASS).
-    assert count >= _MIN_EXPECTED_HANDLER_ENTRIES, (
+    # Plain ASCII only in every message below: cocotb's own failure-logging path uses an
+    # ASCII-only stream encoder, and a non-ASCII character crashes that log call, which swallows
+    # the failure text and leaves the flow's log-scan classifier with nothing to catch.
+    assert triggers_sent == triggers_received, (
+        f"COCOTB-IRQ-CHECK: triggers_sent={triggers_sent} != triggers_received={triggers_received}; "
+        "a trigger was dropped (listener was still mid-pulse from a previous trigger)"
+    )
+
+    count = int(cocotb_if.handler_entry_count.value)
+    # _MIN_EXPECTED_HANDLER_ENTRIES is a floor, not tied to n, so the +cocotb_irq_count=0 ablation
+    # (Step 4) still fails; max(n, floor) tightens the check for n > floor instead of always
+    # passing vacuously once n reaches 3.
+    required = max(n, _MIN_EXPECTED_HANDLER_ENTRIES)
+    cocotb.log.info(f"COCOTB-IRQ: handler_entry_count={count} (triggered={n}, required>={required})")
+    if count > triggers_sent:
+        cocotb.log.warning(
+            f"COCOTB-IRQ-CHECK: handler_entry_count={count} exceeds triggers_sent={triggers_sent}; "
+            "extra entries are not attributable to a specific python trigger"
+        )
+    assert count >= required, (
         f"COCOTB-IRQ-CHECK: handler_entry_count={count} is below the required "
-        f"{_MIN_EXPECTED_HANDLER_ENTRIES} (triggered {n} times); irq stimulus was not serviced"
+        f"{required} (triggered {n} times); irq stimulus was not serviced"
     )
 
     # This test's generated program (+instr_cnt=10000, plus 3 irq round-trips) takes noticeably

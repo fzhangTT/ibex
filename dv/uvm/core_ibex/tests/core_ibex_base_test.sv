@@ -218,6 +218,17 @@ class core_ibex_base_test extends uvm_test;
     if (!uvm_config_db#(virtual core_ibex_cocotb_if)::get(null, "", "cocotb_if", cocotb_vif)) begin
       `uvm_fatal(`gfn, "Cannot get cocotb_if")
     end
+`else
+    // Vacuous-pass guard: cocotb_irq_python_test's sim_opts carry +cocotb_irq_count, which only
+    // does anything with COCOTB=1 compiled in; without it this would silently run as a plain
+    // rand-instr test and pass under a name that claims python-irq coverage.
+    begin
+      int unused_cocotb_irq_count;
+      if ($value$plusargs("cocotb_irq_count=%0d", unused_cocotb_irq_count)) begin
+        `uvm_fatal(`gfn,
+          "cocotb_irq_count plusarg seen but COCOTB_SIM not compiled in -- this test requires COCOTB=1")
+      end
+    end
 `endif
   endfunction
 
@@ -291,6 +302,11 @@ class core_ibex_base_test extends uvm_test;
     cocotb_vif.uvm_ready = 1'b1;
     forever begin
       raise_ev.wait_trigger();
+      // uvm_event triggers are not queued: a trigger arriving before this line runs (i.e. while
+      // still inside a previous pulse below) never reaches wait_trigger() and is dropped. Python
+      // compares its own triggers-sent count against this to catch that case (see
+      // core_ibex_cocotb_if.sv).
+      cocotb_vif.trigger_received_count++;
       vseq.start_cocotb_irq_raise();
       clk_vif.wait_clks(CocotbIrqHoldCycles);
       vseq.start_cocotb_irq_drop();
