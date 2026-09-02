@@ -81,8 +81,11 @@ Spike cosim run. Results land under `out/`:
 
 Same `make` invocation, varying `TEST`:
 
-- `TEST=all` (the Makefile default) — every riscv-dv **and** directed test
-  in both testlists.
+- `TEST=all` (the Makefile default) — every riscv-dv **and** directed test in both
+  testlists, except a cocotb-only entry (testlist `cocotb: 1`) when `COCOTB=0` — such an
+  entry needs `COCOTB=1` compiled in and is excluded from this wildcard, not failed
+  (`dv/uvm/core_ibex/scripts/ibex_cmd.py:filter_cocotb_only_tests()`); name it explicitly in
+  `TEST=` to select it anyway.
 - `TEST=all_riscvdv` — only tests from `riscv_dv_extension/testlist.yaml`.
 - `TEST=all_directed` — only tests from
   `directed_tests/directed_testlist.yaml`.

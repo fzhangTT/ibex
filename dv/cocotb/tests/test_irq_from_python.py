@@ -79,8 +79,8 @@ async def test_irq_from_python(dut):
     cocotb.log.info(f"COCOTB-IRQ: handler_entry_count={count} (triggered={n}, required>={required})")
     # handler_entry_count counts every primary-core IRQ_TAKEN entry regardless of source (see
     # TB_CONTRACT.md) -- on this test (no SV irq sequences active, no DUT reset expected) that
-    # should equal triggers_sent exactly. An over-count is now a hard failure, not a warning: it
-    # would otherwise mask an irq entry not attributable to a python trigger.
+    # should equal triggers_sent exactly; a mismatch would mask an irq entry not attributable to
+    # a python trigger, so it must fail the test.
     assert count == triggers_sent, (
         f"COCOTB-IRQ-CHECK: handler_entry_count={count} != triggers_sent={triggers_sent}; an "
         "IRQ_TAKEN entry not attributable to a python trigger occurred, or one was missed"

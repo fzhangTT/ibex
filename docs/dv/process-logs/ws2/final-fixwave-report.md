@@ -275,3 +275,38 @@ per-trigger-handshake guarantee).
 
 All `out_*` scratch directories from this round's verification runs were removed after capture;
 nothing under `out*/` or `results.xml` committed.
+
+## Round 3 (codex re-review: 2 new Critical fence-integrity leaks from Round 2's own fix)
+
+Round 2's MUT-002 record and TB_CONTRACT.md fcov example leaked fenced/real DV collateral into
+generation-visible files. Fixed:
+
+### 1. [Critical] `dv/auto_dv/mutations/README.md` fence leak — FIXED
+
+MUT-002's record named a real TB file (`core_ibex_tb_top.sv`), a real existing test
+(`test_irq_from_python.py`), full execution specifics, and an infra transcript path — all
+inside a generation-accessible file, violating the file's own line-23 no-infra-reference rule.
+Reduced MUT-002 to a bare `id` + date (in the section header) + one abstract `result` line,
+matching MUT-001's closing-sentence pattern of pointing at "the infra-only evidence area...
+never referenced from here" without naming any path. All prior detail remains recoverable from
+`docs/dv/process-logs/ws2/mut-002-transcript.txt`, which the README no longer names.
+
+Post-fix grep (fenced-path leaks): `grep -nE "core_ibex_tb_top|test_irq_from_python|process-logs|mut-002-transcript|dv/uvm/core_ibex/tb" dv/auto_dv/mutations/README.md` — zero hits.
+
+### 2. [Critical] `TB_CONTRACT.md:148` real coverage-bin leak — FIXED
+
+Replaced the fcov schema example `uarch_cg.cp_controller_fsm.out_of_decode0` (a real
+human-authored coverage bin) with a synthetic generated-namespace example
+`gen_myfeature_cg.cp_mymode.bin_active`, consistent with the contract's own generated-covergroup
+namespace rule.
+
+Post-fix grep: `grep -n uarch_cg docs/dv/TB_CONTRACT.md` — zero hits.
+
+### 3. [Ride-along one-liners] — FIXED
+
+- `BUILD_AND_SIM.md`: "`TEST=all` ... every riscv-dv and directed test" corrected to note the
+  cocotb-only exclusion under `COCOTB=0` (excluded, not failed; name it explicitly to select it).
+- `test_irq_from_python.py:82`: dropped the "now a hard failure, not a warning" history
+  narration; the comment states only the current intent.
+
+One commit for this round.

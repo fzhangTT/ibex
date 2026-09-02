@@ -145,7 +145,7 @@ declared-but-unhit bin fails the run.
 - **Schema:**
   ```yaml
   bins:
-    - <covergroup>.<coverpoint>.<bin>   # e.g. uarch_cg.cp_controller_fsm.out_of_decode0
+    - <covergroup>.<coverpoint>.<bin>   # e.g. gen_myfeature_cg.cp_mymode.bin_active
   ```
   Bin names come from the urg text report (`grpinfo.txt`) of a `COV=1` run over your own
   covergroups; counts sum across instances of the same covergroup name (the expectation is
