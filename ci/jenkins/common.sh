@@ -179,10 +179,19 @@ ci_report_results() { # <out_abs_dir>
 }
 
 _ci_print_cmd() { # print an argv array as one shell-quoted command line
-  local out="" tok
+  # Only %q-quote a token that actually needs it (whitespace/quotes/shell
+  # metacharacters); every value here already passed a no-whitespace
+  # validation charset, so comma/bracket-bearing values (test lists,
+  # "span[hosts=1]") are the common case and read better unescaped.
+  local out="" tok qtok
   for tok in "$@"; do
-    printf -v tok '%q' "$tok"
-    out+="$tok "
+    case "$tok" in
+      *' '*|*$'\t'*|*$'\n'*|*"'"*|*'"'*|*'\'*|*'$'*|*'`'*|*';'*|*'&'*|*'|'*|*'('*|*')'*|*'<'*|*'>'*|*'!'*|*'*'*|*'?'*)
+        printf -v qtok '%q' "$tok" ;;
+      *)
+        qtok="$tok" ;;
+    esac
+    out+="$qtok "
   done
   echo "${out% }"
 }
@@ -305,11 +314,11 @@ ci_main() {
   ci_reserve_out "$CI_OUT_ABS" || return 1
 
   if [ -n "${CI_TESTLIST:-}" ] && [ ! -f "$CI_TESTLIST" ]; then
-    echo "ERROR: testlist not found: $CI_TESTLIST" >&2
+    echo "ERROR: testlist not found: $CI_TESTLIST. Provide an existing --testlist path." >&2
     return 1
   fi
   if [ -n "${CI_DIRECTED_TESTLIST:-}" ] && [ ! -f "$CI_DIRECTED_TESTLIST" ]; then
-    echo "ERROR: directed testlist not found: $CI_DIRECTED_TESTLIST" >&2
+    echo "ERROR: directed testlist not found: $CI_DIRECTED_TESTLIST. Provide an existing --directed-testlist path." >&2
     return 1
   fi
 

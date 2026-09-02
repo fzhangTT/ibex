@@ -1,0 +1,75 @@
+100.00% PASS 2 PASSED, 0 FAILED
+PASS: report: pass log exits 0
+50.00% PASS 1 PASSED, 1 FAILED
+# Details of failing tests
+################################################################################
+riscv_arithmetic_basic_test.1
+------------------------------
+binary: riscv_arithmetic_basic_test.1/test.bin
+rtl_log: riscv_arithmetic_basic_test.1/rtl_sim.log
+rtl_trace: riscv_arithmetic_basic_test.1/trace_core_00000000.log
+iss_cosim_trace: riscv_arithmetic_basic_test.1/spike.log
+FAILURE: cosim mismatch at PC 0x8000_0124 (see rtl_trace).
+
+################################################################################
+# Details of passing tests
+PASS: report: fail log exits nonzero
+ERROR: no regr.log at /tmp/tmp.t3vJAcWUhq/empty/run/regr.log. The run did not produce results.
+PASS: report: missing regr.log exits nonzero
+PASS: reserve: fresh dir ok
+PASS: reserve: sentinel created
+ERROR: /tmp/tmp.t3vJAcWUhq/poisoned already contains run/ from a prior run. Use a fresh --out.
+PASS: reserve: prior run/ rejected
+ERROR: /tmp/tmp.t3vJAcWUhq/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: foreign sentinel rejected
+PASS: reserve: matching owner token accepted
+ERROR: /tmp/tmp.t3vJAcWUhq/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: mismatched owner token rejected
+FAIL: smoke: dry-run exits 0 — expected exit 0, got 127
+FAIL: smoke: default TEST — expected to find [TEST=riscv_arithmetic_basic_test,mcounteren_test] in output:
+  | ci/jenkins/selftest.sh: line 38: ./smoke.sh: No such file or directory
+FAIL: smoke: default ITERATIONS — expected to find [ITERATIONS=1] in output:
+  | ci/jenkins/selftest.sh: line 38: ./smoke.sh: No such file or directory
+FAIL: smoke: default SEED — expected to find [SEED=1] in output:
+  | ci/jenkins/selftest.sh: line 38: ./smoke.sh: No such file or directory
+FAIL: smoke: vcs flow — expected to find [SIMULATOR=vcs] in output:
+  | ci/jenkins/selftest.sh: line 38: ./smoke.sh: No such file or directory
+FAIL: smoke: suite knob riscv-dv — expected to find [RISCV-DV-TESTLIST=/x/tl.yaml] in output:
+  | ci/jenkins/selftest.sh: line 44: ./smoke.sh: No such file or directory
+FAIL: smoke: suite knob directed — expected to find [DIRECTED-TESTLIST=/x/dt.yaml] in output:
+  | ci/jenkins/selftest.sh: line 44: ./smoke.sh: No such file or directory
+FAIL: smoke: lsf wraps bsub -K — expected to find [bsub -K] in output:
+  | ci/jenkins/selftest.sh: line 47: ./smoke.sh: No such file or directory
+FAIL: smoke: lsf queue — expected to find [-q normal] in output:
+  | ci/jenkins/selftest.sh: line 47: ./smoke.sh: No such file or directory
+FAIL: smoke: lsf single host — expected to find [span[hosts=1]] in output:
+  | ci/jenkins/selftest.sh: line 47: ./smoke.sh: No such file or directory
+PASS: smoke: inner command drops --lsf
+FAIL: smoke: unknown flag exits 2 — expected exit 2, got 127
+FAIL: smoke: non-integer --jobs exits 2 — expected exit 2, got 127
+FAIL: smoke: queue token validation exits 2 — expected exit 2, got 127
+FAIL: smoke: config injection attempt exits 2 — expected exit 2, got 127
+FAIL: smoke: test-name metacharacter exits 2 — expected exit 2, got 127
+FAIL: smoke: whitespace testlist path exits 2 — expected exit 2, got 127
+FAIL: smoke: --jobs 0 exits 2 — expected exit 2, got 127
+FAIL: smoke: --iterations 0 exits 2 — expected exit 2, got 127
+FAIL: smoke: hyphenated test names accepted — expected exit 0, got 127
+FAIL: smoke: hyphenated TEST passthrough — expected to find [TEST=lh-misaligned,div-01] in output:
+  | ci/jenkins/selftest.sh: line 68: ./smoke.sh: No such file or directory
+FAIL: smoke: make-function metacharacters in --out exit 2 — expected exit 2, got 127
+FAIL: smoke: whitespace --out exits 2 — expected exit 2, got 127
+FAIL: smoke: Jenkins @-suffix workspace path accepted — expected exit 0, got 127
+FAIL: smoke: @-suffix testlist path accepted — expected exit 0, got 127
+FAIL: smoke: --cocotb-module accepted — expected exit 0, got 127
+FAIL: smoke: cocotb-module implies COCOTB=1 — expected to find [COCOTB=1] in output:
+  | ci/jenkins/selftest.sh: line 79: ./smoke.sh: No such file or directory
+FAIL: smoke: COCOTB_MODULE passthrough — expected to find [COCOTB_MODULE=dv.cocotb.gen_irq] in output:
+  | ci/jenkins/selftest.sh: line 79: ./smoke.sh: No such file or directory
+FAIL: smoke: cocotb-module metacharacters exit 2 — expected exit 2, got 127
+FAIL: smoke: failing env.sh stops the run — expected exit 1, got 127
+FAIL: smoke: env failure message — expected to find [environment setup failed] in output:
+  | ci/jenkins/selftest.sh: line 85: ./smoke.sh: No such file or directory
+SKIP: lsf cancel (smoke.sh not yet present)
+
+selftest: 30 failure(s)
+exit=1
