@@ -45,10 +45,10 @@ ${RUBRICS}"
 
 RAW=$(mktemp)
 RC=0
-# 90 min: a full workstream plan at high reasoning effort exceeds 60 (two observed timeouts).
-timeout 5400 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || RC=$?
+# 150 min: the WS4 plan review exceeded 60 and 90 min budgets (three observed timeouts).
+timeout 9000 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || RC=$?
 if [ "$RC" -eq 124 ]; then
-  echo "PROTOCOL ERROR: codex review timed out after 5400s (site watchdog rule) — raw kept at $RAW"; exit 1
+  echo "PROTOCOL ERROR: codex review timed out after 9000s (site watchdog rule) — raw kept at $RAW"; exit 1
 elif [ "$RC" -ne 0 ]; then
   echo "codex exec failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1
 fi
