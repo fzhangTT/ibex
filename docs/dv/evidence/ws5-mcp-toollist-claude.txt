@@ -1,0 +1,146 @@
+WS5 T3 gate — Claude Code MCP tool-list evidence
+=================================================
+claude --version: 2.1.258 (Claude Code)
+Repo: /localdev/fzhang/ws/ibex  (branch fzhang/auto-dv-setup)
+Date: 2026-09-02
+
+Non-interactive approval
+-------------------------
+Project-scoped `.mcp.json` servers need a one-time approval that a non-interactive `claude -p`
+session cannot grant. Approved via the explicit allowlist knob (never
+`enableAllProjectMcpServers`), in the gitignored, machine-local
+`.claude/settings.local.json`:
+
+  { "enabledMcpjsonServers": ["siliconpilot", "fsdb-mcp-server", "verdi-cov-mcp", "atlassian"] }
+
+The knob is supported by the installed CLI (2.1.258); no fallback to interactive `/mcp` was
+needed.
+
+FINDING + FIX: $CLAUDE_PROJECT_DIR does not anchor to the repo root
+---------------------------------------------------------------------
+Task 1/2 anchored `.mcp.json`'s local-server commands through `$CLAUDE_PROJECT_DIR`, on the
+assumption (matching a citation in the round-2 plan review) that this variable resolves to the
+repo root regardless of the directory Claude Code is launched from. Testing that assumption from
+`dv/uvm/core_ibex/` (this task's whole point, per the brief) disproved it:
+
+  $ cd dv/uvm/core_ibex && claude mcp list
+  siliconpilot: ... - Failed to connect - CONNECTION_CLOSED: Connection closed
+  fsdb-mcp-server: ... - Failed to connect - CONNECTION_CLOSED: Connection closed
+  verdi-cov-mcp: ... - Failed to connect - CONNECTION_CLOSED: Connection closed
+
+  --debug-file log: MCP server stderr: bash: /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/ci/mcp/
+  siliconpilot-mcp.sh: No such file or directory
+
+$CLAUDE_PROJECT_DIR had resolved to the *launch* directory (dv/uvm/core_ibex), not to
+`.mcp.json`'s directory. This matches Claude Code's own docs (code.claude.com/docs/en/hooks:
+"the project root where the session started"; code.claude.com/docs/en/debug-your-config:
+"[relative paths] resolve against the directory you launched Claude Code from rather than the
+location of `.mcp.json`" -> "Use absolute paths for local scripts") — $CLAUDE_PROJECT_DIR is a
+session-launch-dir variable, not a `.mcp.json`-location variable, despite the round-2 review's
+citation implying otherwise.
+
+Fix applied to `.mcp.json` (all three local servers): replaced `$CLAUDE_PROJECT_DIR` with
+`$(git rev-parse --show-toplevel)`, matching the mechanism `.codex/config.toml` already used
+successfully — an absolute path resolved by git's own upward directory walk, independent of the
+client's notion of "project dir". Verified fixed from both directories (below). `ci/mcp/README.md`
+updated to match.
+
+claude mcp list (repo root, after the fix)
+-------------------------------------------
+$ (cd /localdev/fzhang/ws/ibex && claude mcp list)
+atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - Connected
+siliconpilot: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh" - Connected
+fsdb-mcp-server: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh" - Connected
+verdi-cov-mcp: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh" - Connected
+(plus unrelated user-level claude.ai/plugin connectors, omitted here)
+
+claude mcp list (dv/uvm/core_ibex/, after the fix)
+---------------------------------------------------
+$ (cd /localdev/fzhang/ws/ibex/dv/uvm/core_ibex && claude mcp list)
+atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - Connected
+siliconpilot: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh" - Connected
+fsdb-mcp-server: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh" - Connected
+verdi-cov-mcp: bash -c exec "$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh" - Connected
+
+One-shot: repo root
+--------------------
+$ timeout 300 claude -p "For each connected MCP server, list its name and the names of its tools. Output text only."
+
+fsdb-mcp-server (26 tools)
+close_fsdb_session, count_event_occurrences, count_signal_transitions, create_fsdb_session,
+get_child_modules, get_fsdb_session_info, get_instances_of_module, get_internal_signals,
+get_port_list, get_signal_connectivity, get_signal_drivers, get_signal_loads,
+get_source_file_of_instance, get_source_file_of_module, get_struct_fields, get_time_range,
+sample_signals_at_time, wavegrep_delete_transactions, wavegrep_find_transactions,
+wavegrep_list_tag_values, wavegrep_list_transactions, wavegrep_list_types,
+wavegrep_query_transactions, wavegrep_register_type, wavegrep_session_info, wavegrep_type_info
+
+siliconpilot (32 tools)
+c_equiv_check, cdc_analysis, code_review, comb_depth, cone_of_influence, design_top, equiv_check,
+extract_interfaces, formal_verify, fsm_extract, fv_parse_assertion, fv_trace_causality,
+hierarchy_resolve, lint, log_add_pattern, log_correlate, log_index, log_peek, log_query,
+log_test_pattern, parameter_resolve, queryWaveform, regression_buckets, regression_health,
+resolve_sources, rtl_analyze, slang_hierarchy, slang_type, slang_xref, trace_signal,
+uvm_analyzer, yosys_analyze
+
+verdi-cov-mcp (6 tools)
+vdb_exclude, vdb_find, vdb_functional, vdb_info, vdb_lines, vdb_toggles
+
+atlassian (31 tools) -- optional, non-blocking; see "Atlassian state" below
+addCommentToJiraIssue, addWorklogToJiraIssue, atlassianUserInfo, createConfluenceFooterComment,
+createConfluenceInlineComment, createConfluencePage, createIssueLink, createJiraIssue,
+editJiraIssue, fetch, getAccessibleAtlassianResources, getConfluenceCommentChildren,
+getConfluencePage, getConfluencePageDescendants, getConfluencePageFooterComments,
+getConfluencePageInlineComments, getConfluenceSpaces, getIssueLinkTypes, getJiraIssue,
+getJiraIssueRemoteIssueLinks, getJiraIssueTypeMetaWithFields, getJiraProjectIssueTypesMetadata,
+getPagesInConfluenceSpace, getTransitionsForJiraIssue, getVisibleJiraProjects,
+lookupJiraAccountId, search, searchConfluenceUsingCql, searchJiraIssuesUsingJql,
+transitionJiraIssue, updateConfluencePage
+
+(also present: glean-gleen, plugin_glean_glean_plugin -- pre-existing user-level connectors,
+unrelated to WS5)
+
+One-shot: dv/uvm/core_ibex/ (proves $(git rev-parse --show-toplevel) anchoring)
+---------------------------------------------------------------------------------
+$ (cd dv/uvm/core_ibex && timeout 300 claude -p "For each connected MCP server, list its name and the names of its tools. Output text only.")
+
+fsdb-mcp-server
+close_fsdb_session, count_event_occurrences, count_signal_transitions, create_fsdb_session,
+get_child_modules, get_fsdb_session_info, get_instances_of_module, get_internal_signals,
+get_port_list, get_signal_connectivity, get_signal_drivers, get_signal_loads,
+get_source_file_of_instance, get_source_file_of_module, get_struct_fields, get_time_range,
+sample_signals_at_time, wavegrep_delete_transactions, wavegrep_find_transactions,
+wavegrep_list_tag_values, wavegrep_list_transactions, wavegrep_list_types,
+wavegrep_query_transactions, wavegrep_register_type, wavegrep_session_info, wavegrep_type_info
+
+siliconpilot
+c_equiv_check, cdc_analysis, code_review, comb_depth, cone_of_influence, design_top, equiv_check,
+extract_interfaces, formal_verify, fsm_extract, fv_parse_assertion, fv_trace_causality,
+hierarchy_resolve, lint, log_add_pattern, log_correlate, log_index, log_peek, log_query,
+log_test_pattern, parameter_resolve, queryWaveform, regression_buckets, regression_health,
+resolve_sources, rtl_analyze, slang_hierarchy, slang_type, slang_xref, trace_signal,
+uvm_analyzer, yosys_analyze
+
+verdi-cov-mcp
+vdb_exclude, vdb_find, vdb_functional, vdb_info, vdb_lines, vdb_toggles
+
+atlassian
+(same 31 tools as above)
+
+Gate verdict (Claude side)
+---------------------------
+All three local servers (siliconpilot, fsdb-mcp-server, verdi-cov-mcp) answered a tool-list
+request with real tool names from BOTH launch directories, after the $CLAUDE_PROJECT_DIR ->
+git-rev-parse fix to `.mcp.json`. fsdb-mcp-server's first tools/list call showed the expected
+~15-20s lazy-import latency (Task 1 finding) but completed well inside the `timeout 300` bound
+in every run; no client-side startup-timeout knob had to be touched for Claude (its default MCP
+connection timeout is 30000ms per-attempt in the debug log, comfortably above the observed
+latency once the process itself starts).
+
+Atlassian state (non-blocking, recorded separately)
+-----------------------------------------------------
+`claude mcp get atlassian`: Scope: Project config (shared via .mcp.json); Type: http;
+Status: Connected. The user-level Claude Code session already carries an OAuth session for
+this Atlassian MCP endpoint (established outside this task), so it answered tools/list with 31
+real tool names in both one-shots above. Per the brief, atlassian is optional/OAuth-gated and
+does not block the gate either way.

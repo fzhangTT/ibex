@@ -2,20 +2,35 @@
 project_doc_fallback_filenames = ["CLAUDE.md"]
 project_doc_max_bytes = 65536
 
+# ci/env.sh's own contract requires a shell that already inherits the full site environment
+# (Modules init, PATH, etc.) — true for both codex's own shell tool and the MCP stdio servers
+# it spawns below, which all `source ci/env.sh`. Codex's default subprocess env policy strips
+# that inheritance (observed: `module load synopsys/vcs/...` silently no-ops, ci/env.sh's own
+# `vcs missing` check then fails closed), so restore full inheritance for this repo.
+[shell_environment_policy]
+inherit = "all"
+
 # MCP servers (WS5). Zone B / full tree ONLY — the WS7 cleanroom snapshot ships a
 # no-MCP variant of this file (spec §WS5 zone scoping). Launch logic lives in
 # ci/mcp/*.sh (single source of truth); entries here only locate those wrappers.
+# startup_timeout_sec raised from the 10s default: the wrapper's `source ci/env.sh` (module
+# loads for vcs/dtc/licenses) plus fsdb-mcp-server's own lazy-import first tools/list
+# (~15-20s, Task 1 finding) both exceed it, which silently drops the server's tools instead
+# of surfacing a visible error.
 [mcp_servers.siliconpilot]
 command = "bash"
 args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh\""]
+startup_timeout_sec = 60
 
 [mcp_servers.fsdb-mcp-server]
 command = "bash"
 args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh\""]
+startup_timeout_sec = 60
 
 [mcp_servers.verdi-cov-mcp]
 command = "bash"
 args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh\""]
+startup_timeout_sec = 60
 
 [mcp_servers.atlassian]
 url = "https://mcp.atlassian.com/v1/mcp"

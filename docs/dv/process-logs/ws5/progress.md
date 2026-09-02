@@ -30,7 +30,28 @@ Pre-execution gate: codex APPROVE round 5 (docs/dv/reviews/2026-09-02-codex-plan
       fine — T3's codex-session gate must run from a trusted project (the normal one-time trust prompt)
       or it will read as a false negative. Validator: `VALIDATOR: PASS` after the `.codex/config.toml`
       edit. `.mcp.json` parses (`json.load`).
-- [ ] T3: Gate part 1 — tool-list evidence from both a Claude Code and a codex session.
+- [x] T3: Gate part 1 — tool-list evidence from both a Claude Code and a codex session.
+      `docs/dv/evidence/ws5-mcp-toollist-{claude,codex}.txt`. Applied durably (per Task 2's finding):
+      `[projects."/localdev/fzhang/ws/ibex"] trust_level = "trusted"` in the global codex config.
+      Claude side: full PASS both launch dirs, after a fix — `$CLAUDE_PROJECT_DIR` does not anchor to
+      the repo root (it's the *session launch dir*, confirmed against Claude Code's own docs), so a
+      session started from `dv/uvm/core_ibex/` broke all three local servers; `.mcp.json` now uses
+      `$(git rev-parse --show-toplevel)` (matches codex's mechanism) instead. `ci/mcp/README.md`
+      updated to match. Codex side: two real defects found and fixed durably in `.codex/config.toml` —
+      (1) codex's default `shell_environment_policy` strips the site-profile inheritance
+      `ci/env.sh`'s own contract requires (`module load synopsys/vcs/...` silently no-ops, `vcs
+      missing` fails closed) — fixed with `[shell_environment_policy] inherit = "all"`; (2) the
+      default 10s `startup_timeout_sec` is tight against `ci/env.sh`'s module-load cost plus fsdb's
+      lazy-import latency — bumped to 60s for all three local servers. A direct MCP protocol probe
+      (initialize + tools/list under the same corrected environment) proves all three servers answer
+      correctly (tool lists match Claude's exactly) — but `codex exec`'s own model-facing tool
+      registry (`ALL_TOOLS`, dumped in full: 84 entries) never surfaces project stdio
+      `[mcp_servers.*]` tools regardless, across 5 independent sessions and multiple mitigation
+      attempts (feature-flag toggling, self-knowledge query for a tool-search mechanism) — recorded
+      as an apparent codex-cli 0.149.1 product limitation (installed build is behind latest 0.152.1
+      per `codex doctor`), not a wrapper/env/timeout defect. Atlassian: configured on both clients,
+      not authenticated on either (Claude carries a pre-existing user-level OAuth session and answers
+      fully; codex has none) — optional/non-blocking per the brief either way.
 - [ ] T4: Gate part 2 — fsdb-mcp demonstrated against a real `WAVES=1` FSDB.
 
 PENDING-WS7: gate item 3 (the cleanroom clone demonstrates *no* MCP servers configured) cannot be

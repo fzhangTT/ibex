@@ -16,9 +16,12 @@ Each local server has a thin launcher in this directory (`siliconpilot-mcp.sh`, 
 `verdi-cov-mcp.sh`): source `ci/env.sh` with stdout silenced — the stdio MCP transport owns stdout,
 so only stderr carries `env.sh` diagnostics — then `exec` the pinned binary. `exec` keeps the launcher
 out of the process tree so the client talks directly to the server. Both client configs invoke the
-wrapper through a shell (`bash -c ...`) anchored to the repo root, because each client resolves a
-bare relative command against its own launch cwd rather than the project root — Claude anchors via
-`$CLAUDE_PROJECT_DIR`, codex via `git rev-parse --show-toplevel`.
+wrapper through a shell (`bash -c ...exec "$(git rev-parse --show-toplevel)/ci/mcp/*.sh"`) so the
+absolute wrapper path resolves the same regardless of which directory the client session was
+launched from. `$CLAUDE_PROJECT_DIR` is *not* used for this: per Claude Code's own docs it is set
+to the directory the session started in, not to `.mcp.json`'s location, so a session launched from
+a repo subdirectory (e.g. `dv/uvm/core_ibex/`) would otherwise fail all three local servers — a WS5
+T3 gate finding (`docs/dv/evidence/ws5-mcp-toollist-claude.txt`).
 
 ## Zone scoping
 

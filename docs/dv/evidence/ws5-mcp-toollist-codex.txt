@@ -1,0 +1,160 @@
+WS5 T3 gate — codex MCP tool-list evidence
+============================================
+codex --version: codex-cli 0.149.1 (model gpt-5.6-sol, reasoning effort high)
+Repo: /localdev/fzhang/ws/ibex  (branch fzhang/auto-dv-setup)
+Date: 2026-09-02
+CODEX_HOME: /proj_soc/user_dev/fzhang/home-storage/codex-home (ci/env.sh export; login shell / `bash -lc` required)
+
+Trust prerequisite (Task 2 finding, applied durably)
+------------------------------------------------------
+codex only merges a repo's `.codex/config.toml` MCP servers when the repo is trusted in the
+global config. Added (not reverted):
+
+  [projects."/localdev/fzhang/ws/ibex"]
+  trust_level = "trusted"
+
+to /proj_soc/user_dev/fzhang/home-storage/codex-home/config.toml (the live global config;
+CODEX_HOME points there). Nothing else in that file was touched. Verified:
+`codex mcp list` went from failing to trust the project to listing all four configured servers.
+
+FINDING + FIX 1: wrapper's ci/env.sh needs the site-profile environment codex strips
+---------------------------------------------------------------------------------------
+`codex exec 'For each configured MCP server, list its name and the names of its tools.
+Output text only.'` from the repo root initially answered with only the built-in `codex_apps`
+connector — none of the three local servers. `RUST_LOG=debug` isolated the cause at MCP
+startup:
+
+  INFO codex_rmcp_client::stdio_server_launcher: MCP server stderr (bash): ibex env WARN: dtc missing...
+  INFO codex_rmcp_client::stdio_server_launcher: MCP server stderr (bash): ibex env ERROR: vcs missing — are you on a site host?
+  INFO codex_rmcp_client::stdio_server_launcher: MCP server stderr (bash): ERROR: cannot source ci/env.sh
+
+`ci/env.sh`'s own header states its contract: it requires "a login shell (`bash -l`) or any
+shell that inherits the site environment (Modules init, PATH, etc.) from one" — it loads
+additional Modules on top, it does not bootstrap a sanitized shell from nothing. codex's
+default `shell_environment_policy` strips that inherited site profile (MODULEPATH etc.) from
+spawned subprocesses (both MCP stdio servers and the model's own shell tool), so
+`module load synopsys/vcs/...` silently no-ops and `command -v vcs` then fails ci/env.sh's own
+fail-loud check.
+
+Fix (`.codex/config.toml`, project-scoped, durable):
+
+  [shell_environment_policy]
+  inherit = "all"
+
+Verified: re-running with `-c shell_environment_policy.inherit="all"` (before folding it into
+the file) removed the "vcs missing" stderr entirely; `ibex env: vcs=/tools_vendor/synopsys/vcs/
+X-2025.06-SP2/bin/vcs ...` now prints successfully inside the codex-spawned subprocess.
+
+FINDING + FIX 2: default startup_timeout_sec (10s) is tight for this wrapper
+---------------------------------------------------------------------------------
+Default MCP `startup_timeout_sec` is 10s. The wrapper's `source ci/env.sh` (module loads for
+vcs/dtc/licenses) plus fsdb-mcp-server's own lazy-import first `tools/list` (~15-20s, Task 1
+finding) can exceed that window, which silently drops the server instead of surfacing a visible
+error. Fix (`.codex/config.toml`, all three local servers):
+
+  startup_timeout_sec = 60
+
+REMAINING FINDING (codex-side product limitation, NOT a wrapper/env/timeout defect)
+---------------------------------------------------------------------------------------
+With both fixes applied and `codex doctor`/`codex mcp list` confirming all four servers
+"enabled" and correctly configured (command/args/startup_timeout_sec match this file verbatim),
+`codex exec` sessions running the brief's exact prompt — repeated across 5 independent sessions,
+with and without the fixes, with `--disable tool_search_always_defer_mcp_tools`, and after
+asking the model to explain via its own self-knowledge/openai-docs skill whether a tool-search
+function exists for deferred MCP tools — consistently answer with only the built-in
+`mcp__codex_apps__*` tools. A full unfiltered dump of the session's tool registry
+(`ALL_TOOLS.map(x=>x.name)`, 84 entries) contains zero `mcp__siliconpilot__*`,
+`mcp__fsdb-mcp-server__*`, `mcp__verdi-cov-mcp__*`, or `mcp__atlassian__*` entries, and the model
+itself reports (asked directly): "this session currently has none of their tools in its 84-tool
+registry and exposes no discovery function whose name contains both 'tool' and 'search.'"
+`tools.list_mcp_resources`/`list_mcp_resource_templates` similarly return nothing for these
+servers. This matches publicly reported codex-cli issues around stdio MCP servers not
+surfacing in `codex exec` sessions. The installed build (0.149.1) is behind the latest
+available (0.152.1 per `codex doctor`); this may be fixed upstream.
+
+Ground truth: the wrapper + fixes are sound (direct protocol proof)
+------------------------------------------------------------------------
+To separate "codex's model-facing registry doesn't expose these tools" from "the servers don't
+work," the exact commands `.codex/config.toml` specifies were run directly under a login shell
+(`bash -lc`, i.e. the environment `shell_environment_policy.inherit="all"` restores) with a real
+MCP initialize + tools/list handshake:
+
+  $ bash -lc 'python3 mcp_probe.py'   # initialize + tools/list against each ci/mcp/*.sh wrapper
+
+  {"server": "siliconpilot", "serverInfo": {"name": "siliconpilot", "version": "1.29.0"},
+   "tool_count": 32, "tool_names": ["c_equiv_check", "cdc_analysis", "code_review", "comb_depth",
+   "cone_of_influence", "design_top", "equiv_check", "extract_interfaces", "formal_verify",
+   "fsm_extract", "fv_parse_assertion", "fv_trace_causality", "hierarchy_resolve", "lint",
+   "log_add_pattern", "log_correlate", "log_index", "log_peek", "log_query", "log_test_pattern",
+   "parameter_resolve", "queryWaveform", "regression_buckets", "regression_health",
+   "resolve_sources", "rtl_analyze", "slang_hierarchy", "slang_type", "slang_xref",
+   "trace_signal", "uvm_analyzer", "yosys_analyze"], "elapsed_s": 2.9}
+
+  {"server": "fsdb-mcp-server", "serverInfo": {"name": "fsdb-analysis-server", "version": "3.4.7"},
+   "tool_count": 26, "tool_names": ["close_fsdb_session", "count_event_occurrences",
+   "count_signal_transitions", "create_fsdb_session", "get_child_modules",
+   "get_fsdb_session_info", "get_instances_of_module", "get_internal_signals", "get_port_list",
+   "get_signal_connectivity", "get_signal_drivers", "get_signal_loads",
+   "get_source_file_of_instance", "get_source_file_of_module", "get_struct_fields",
+   "get_time_range", "sample_signals_at_time", "wavegrep_delete_transactions",
+   "wavegrep_find_transactions", "wavegrep_list_tag_values", "wavegrep_list_transactions",
+   "wavegrep_list_types", "wavegrep_query_transactions", "wavegrep_register_type",
+   "wavegrep_session_info", "wavegrep_type_info"], "elapsed_s": 5.1}
+
+  {"server": "verdi-cov-mcp", "serverInfo": {"name": "verdi-cov", "version": "3.4.4"},
+   "tool_count": 6, "tool_names": ["vdb_exclude", "vdb_find", "vdb_functional", "vdb_info",
+   "vdb_lines", "vdb_toggles"], "elapsed_s": 6.1}
+
+All three local servers answer a real MCP tools/list request (matching Claude's tool lists
+exactly) in single-digit seconds once the environment is correctly inherited — the wrapper,
+`ci/env.sh`, and the pinned server binaries are not the blocker.
+
+codex exec raw output (repo root, brief's exact invocation, after both config fixes)
+-----------------------------------------------------------------------------------------
+$ bash -lc 'timeout 300 codex exec "For each configured MCP server, list its name and the names of its tools. Output text only."'
+
+codex_apps
+  codex_document_control_execute_document_command
+  codex_document_control_get_document_tool_schemas
+  codex_document_control_list_document_sessions
+  hotline_get_local_hotline
+  plugin_management_get_app_permissions
+  plugin_management_get_plugin_dependencies
+  plugin_management_uninstall_app
+  plugin_management_update_app_permissions
+  sites_* (14 tools), workspace_agents_* (34 tools)   -- unrelated built-in connector, elided here
+
+(the three local servers and atlassian are absent from this answer — see "remaining finding"
+above; see "ground truth" above for the direct proof that they work.)
+
+codex mcp list (repo root, after both fixes)
+-----------------------------------------------
+$ bash -lc 'codex mcp list'
+Name             Command  Args                                                                   Status   Auth
+fsdb-mcp-server  bash     -c exec "$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh"          enabled  Unsupported
+siliconpilot     bash     -c exec "$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh"  enabled  Unsupported
+verdi-cov-mcp    bash     -c exec "$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh"     enabled  Unsupported
+
+Name       Url                               Status   Auth
+atlassian  https://mcp.atlassian.com/v1/mcp  enabled  Unknown / Not logged in
+
+Atlassian state (non-blocking, recorded separately)
+-----------------------------------------------------
+`codex mcp get atlassian`: enabled: true; transport: streamable_http; not logged in
+(`codex mcp login atlassian` was not run — no OAuth session established for codex). A raw
+`initialize` POST from inside the model's sandboxed exec (network_access=false there) failed
+with "Could not resolve host" — expected, sandbox network is restricted by design; this is
+independent of the auth gap. Per the brief, atlassian is optional/OAuth-gated and does not
+block the gate either way.
+
+Gate verdict (codex side)
+----------------------------
+FIX VERIFIED, EXPOSURE BLOCKED: both real defects found in this task (env stripping,
+too-tight startup timeout) are fixed durably in `.codex/config.toml`, and a direct protocol
+probe proves every one of the three local servers now starts under codex's corrected policy
+and answers tools/list with real tool names matching the Claude side exactly. What could NOT be
+achieved is a `codex exec` session's own conversational answer surfacing those tools — this
+codex-cli build's `codex exec` harness does not appear to expose project `[mcp_servers.*]`
+stdio tools into its model-facing tool registry at all (evidenced exhaustively above),
+independent of our config. This is recorded as a codex product limitation for a future codex
+version bump to re-check, not a wrapper/config defect to chase further under this task.
