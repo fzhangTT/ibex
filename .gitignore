@@ -8,6 +8,9 @@ build
 tags
 *~
 
+# Per-contributor Claude Code settings (e.g. enabledMcpjsonServers)
+.claude/settings.local.json
+
 # ibex_tracer log file
 trace_core_*.log
 

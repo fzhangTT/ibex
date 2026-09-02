@@ -164,3 +164,71 @@ defect survives from this task's investigation and is fixed durably in `.codex/c
 override from the first pass of this evidence was a no-op (0.149.1's shipped default is
 already `inherit = "all"`) and has been removed. Atlassian remains configured-but-unauthenticated
 for codex, non-blocking per the brief.
+
+post-hardening re-run (WS5 final review fix wave)
+---------------------------------------------------
+Root cause for the "vcs missing" eager-MCP-spawn failure above (left "unexplained by anything
+in this repo's control" in the sections above): each `ci/mcp/*.sh` wrapper does
+`source ci/env.sh >/dev/null || exit 1`, and in codex's stripped MCP-spawn environment (no site
+PATH, module loads no-op) `ci/env.sh`'s fail-loud tail (`command -v vcs || ... return 1`) returns
+1 — killing the wrapper on a prerequisite (vcs) its server never needs. All exports the wrappers
+DO need (`VERDI_HOME`, `IBEX_MCP_*`, the `$VERDI_HOME/bin` PATH prepend) are set before that
+check runs, so the wrapper dies after getting what it needed but before `exec`ing the server.
+
+Fix: `ci/env.sh` now honors `IBEX_ENV_TOOLCHECK=off` to skip the fail-loud tool-check block
+(one stderr note when skipped; default behavior unchanged — see `docs/dv/process-logs/ws5/
+progress.md` and the env.sh diff for the exact verification commands). Each `ci/mcp/*.sh`
+wrapper exports that flag before sourcing `ci/env.sh`, then verifies its own real prerequisites
+itself (`IBEX_MCP_*:?` guard, plus `VERDI_HOME` non-empty in `fsdb-mcp.sh`/`verdi-cov-mcp.sh`).
+
+Confirmed the failure reproduces pre-fix and disappears post-fix, both under a stripped env
+simulating codex's MCP-spawn environment (`env -i PATH=/usr/bin:/bin HOME=... python3
+ci/mcp/probes/mcp_probe.py`): pre-fix, all three wrappers fail at `initialize` with
+`ibex env ERROR: vcs missing` on stderr; post-fix, all three answer `tools/list` correctly
+(same tool counts/names as above) in 1-3s each, with no site PATH or module loads present.
+
+Re-ran the brief's exact invocation, unmodified, from the repo root:
+
+  $ bash -lc 'timeout 600 codex exec "For each configured MCP server, list its name and the names of its tools. Output text only."'
+
+This time the session's own final answer listed real tool names for all three local servers
+directly from the native MCP tool registry — no manual JSON-RPC improvisation, no reading of
+the wrapper scripts, unlike the 0.152.1 re-run above:
+
+fsdb_mcp_server: close_fsdb_session, count_event_occurrences, count_signal_transitions,
+create_fsdb_session, get_child_modules, get_fsdb_session_info, get_instances_of_module,
+get_internal_signals, get_port_list, get_signal_connectivity, get_signal_drivers,
+get_signal_loads, get_source_file_of_instance, get_source_file_of_module, get_struct_fields,
+get_time_range, sample_signals_at_time, wavegrep_delete_transactions,
+wavegrep_find_transactions, wavegrep_list_tag_values, wavegrep_list_transactions,
+wavegrep_list_types, wavegrep_query_transactions, wavegrep_register_type,
+wavegrep_session_info, wavegrep_type_info  (26)
+
+siliconpilot: c_equiv_check, cdc_analysis, code_review, comb_depth, cone_of_influence,
+design_top, equiv_check, extract_interfaces, formal_verify, fsm_extract, fv_parse_assertion,
+fv_trace_causality, hierarchy_resolve, lint, log_add_pattern, log_correlate, log_index,
+log_peek, log_query, log_test_pattern, parameter_resolve, queryWaveform, regression_buckets,
+regression_health, resolve_sources, rtl_analyze, slang_hierarchy, slang_type, slang_xref,
+trace_signal, uvm_analyzer, yosys_analyze  (32)
+
+verdi_cov_mcp: vdb_exclude, vdb_find, vdb_functional, vdb_info, vdb_lines, vdb_toggles  (6)
+
+All three tool counts/names match the earlier evidence exactly. `codex_apps` (built-in) also
+listed. Atlassian: a transport-level `AuthRequired` error appeared in this run's log (OAuth not
+established for codex, same as before) — non-blocking per the brief, and orthogonal to the
+local-server fix. Two unrelated sandbox noise lines appeared (`bwrap: Can't bind mount
+/oldroot/ ... No such file or directory` on a `sed CLAUDE.md` exec attempt) — a pre-existing
+site sandbox quirk, not part of this task's scope, and did not stop the session from answering.
+
+`bash -lc 'timeout 300 claude -p "For each configured MCP server, list its name and the names
+of its tools. Output text only."'` from the repo root: still PASS, same three local servers
+plus glean-gleen/atlassian/plugin_glean_glean_plugin, matching tool names/counts exactly.
+
+Gate verdict (post-hardening)
+---------------------------------
+PASS, and now explained: the eager-MCP-spawn "vcs missing" failure that the earlier sections of
+this file left unexplained is root-caused (env.sh's fail-loud vcs check, killing the wrapper
+before `exec`) and fixed at the wrapper/env.sh level rather than papered over by a codex
+version upgrade. The native tool registry populates directly from a plain, unmodified
+`codex exec` run of the brief's prompt, for all three local servers, with no in-session
+improvisation required.

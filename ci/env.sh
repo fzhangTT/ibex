@@ -86,24 +86,30 @@ echo "ibex env: vcs=$(command -v vcs || echo MISSING)" \
 
 # --- Fail loud: load noise above is tolerated, but the tools it was supposed
 # to produce are not optional. verdi/dtc are only needed for waveform debug
-# and ci/build-spike.sh respectively, so those are WARN-only. ---
-_ibex_env_status=0
-command -v verdi >/dev/null 2>&1 || echo "ibex env WARN: verdi missing — waveform debug (WAVES=1) unavailable" >&2
-command -v dtc >/dev/null 2>&1 || echo "ibex env WARN: dtc missing — ci/build-spike.sh will fail" >&2
-command -v vcs >/dev/null 2>&1 || {
-    echo "ibex env ERROR: vcs missing — are you on a site host?" >&2
-    _ibex_env_status=1
-}
-command -v "$RISCV_GCC" >/dev/null 2>&1 || {
-    echo "ibex env ERROR: RISCV_GCC ($RISCV_GCC) missing — are you on a site host?" >&2
-    _ibex_env_status=1
-}
-command -v python3 >/dev/null 2>&1 || {
-    echo "ibex env ERROR: python3 missing — are you on a site host?" >&2
-    _ibex_env_status=1
-}
-if [ "$_ibex_env_status" -ne 0 ]; then
+# and ci/build-spike.sh respectively, so those are WARN-only.
+# IBEX_ENV_TOOLCHECK=off skips this whole block, for callers (MCP wrappers) that
+# only need the exports above and never invoke vcs/gcc/python3 themselves. ---
+if [ "${IBEX_ENV_TOOLCHECK:-}" = "off" ]; then
+    echo "ibex env: tool check skipped (IBEX_ENV_TOOLCHECK=off)" >&2
+else
+    _ibex_env_status=0
+    command -v verdi >/dev/null 2>&1 || echo "ibex env WARN: verdi missing — waveform debug (WAVES=1) unavailable" >&2
+    command -v dtc >/dev/null 2>&1 || echo "ibex env WARN: dtc missing — ci/build-spike.sh will fail" >&2
+    command -v vcs >/dev/null 2>&1 || {
+        echo "ibex env ERROR: vcs missing — are you on a site host?" >&2
+        _ibex_env_status=1
+    }
+    command -v "$RISCV_GCC" >/dev/null 2>&1 || {
+        echo "ibex env ERROR: RISCV_GCC ($RISCV_GCC) missing — are you on a site host?" >&2
+        _ibex_env_status=1
+    }
+    command -v python3 >/dev/null 2>&1 || {
+        echo "ibex env ERROR: python3 missing — are you on a site host?" >&2
+        _ibex_env_status=1
+    }
+    if [ "$_ibex_env_status" -ne 0 ]; then
+        unset _ibex_env_status
+        return 1
+    fi
     unset _ibex_env_status
-    return 1
 fi
-unset _ibex_env_status

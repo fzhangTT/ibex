@@ -45,7 +45,7 @@ ${RUBRICS}"
 
 RAW=$(mktemp)
 RC=0
-# 150 min: the WS4 plan review exceeded 60 and 90 min budgets (three observed timeouts).
+# 150 min: sized to the observed worst-case codex review duration.
 timeout 9000 codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || RC=$?
 if [ "$RC" -eq 124 ]; then
   echo "PROTOCOL ERROR: codex review timed out after 9000s (site watchdog rule) — raw kept at $RAW"; exit 1

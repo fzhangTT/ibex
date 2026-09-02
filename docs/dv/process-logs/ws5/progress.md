@@ -44,11 +44,22 @@ Pre-execution gate: codex APPROVE round 5 (docs/dv/reviews/2026-09-02-codex-plan
       (`[shell_environment_policy] inherit = "all"`) was a no-op — 0.149.1 already ships that as its
       default (confirmed by removing the block and reproducing the identical `vcs missing` failure
       byte-for-byte) — and has been removed from `.codex/config.toml`. That `vcs missing` failure,
-      specifically in codex's own eager MCP-server-spawn path, remains unexplained by anything in
-      this repo's control on either 0.149.1 or 0.152.1. The literal gate itself now PASSES: per
-      controller ruling, `bash -lc 'codex update'` upgraded 0.149.1 -> 0.152.1, and a plain re-run of
-      the brief's exact `codex exec` prompt (no overrides) answered with real tool names for all
-      three local servers, matching the Claude side exactly. Atlassian: configured on both clients,
+      specifically in codex's own eager MCP-server-spawn path, was **explained and fixed** in the
+      WS5 final-review fix wave: each `ci/mcp/*.sh` wrapper's `source ci/env.sh` runs in codex's
+      stripped MCP-spawn environment (no site PATH, module loads no-op), where `ci/env.sh`'s
+      fail-loud tail (`command -v vcs || ... return 1`) kills the wrapper on a prerequisite (vcs)
+      its server never needs — after the exports the wrapper actually needs (`VERDI_HOME`,
+      `IBEX_MCP_*`, the PATH prepend) are already set. Fix: `ci/env.sh` now honors
+      `IBEX_ENV_TOOLCHECK=off` to skip only that fail-loud block (one stderr note when skipped;
+      default behavior unchanged), and each wrapper sets that flag before sourcing `ci/env.sh` and
+      verifies its own real prerequisites afterward. Root cause confirmed by reproducing the
+      failure pre-fix and its absence post-fix under a stripped env (`ci/mcp/probes/mcp_probe.py`);
+      see `docs/dv/evidence/ws5-mcp-toollist-codex.txt`'s "post-hardening re-run" section. The
+      literal gate itself now PASSES: per controller ruling, `bash -lc 'codex update'` upgraded
+      0.149.1 -> 0.152.1, and a plain re-run of the brief's exact `codex exec` prompt (no
+      overrides) answered with real tool names for all three local servers, matching the Claude
+      side exactly — and after the wrapper hardening, does so directly from the native tool
+      registry with no in-session improvisation. Atlassian: configured on both clients,
       not authenticated on either (Claude carries a pre-existing user-level OAuth session and answers
       fully; codex has none) — optional/non-blocking per the brief either way.
 - [x] T4: Gate part 2 — fsdb-mcp demonstrated against a real `WAVES=1` FSDB.
