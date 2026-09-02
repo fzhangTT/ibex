@@ -127,7 +127,8 @@ Shared options (all three scripts; run `<script> --help` for the current text):
 | `--jobs N` | `make -jN` / LSF slot count |
 | `--lsf` | Submit under `bsub -K` |
 | `--lsf-queue Q` | LSF queue name |
-| `--cocotb` / `--cocotb-module MOD` | Run the cocotb overlay; a module name implies `--cocotb` |
+| `--cocotb` | Run the cocotb overlay |
+| `--cocotb-module MOD` | cocotb Python test module; implies `--cocotb` |
 | `--dry-run` | Print the command and exit, without running it |
 | `--help` | Print usage and exit |
 

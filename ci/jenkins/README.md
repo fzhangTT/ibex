@@ -47,10 +47,10 @@ ci/jenkins/nightly.sh --lsf --lsf-queue regress --jobs 8
 ci/jenkins/coverage.sh --lsf --test riscv_arithmetic_basic_test --iterations 1 --seed 1
 ```
 
-Measured wall-clocks: gate runs for this delivery are recorded in `docs/dv/evidence/ws4-smoke/`,
-`docs/dv/evidence/ws4-nightly-lsf/`, `docs/dv/evidence/ws4-alt-testlist/`, and
-`docs/dv/evidence/ws4-coverage/` — each `summary.txt` is the source of truth for observed timing on
-this host; treat any number here as illustrative only.
+Measured wall-clocks: gate runs for this delivery are recorded in
+`docs/dv/evidence/ws4-nightly-lsf/` and `docs/dv/evidence/ws4-coverage/` — each `summary.txt` is the
+source of truth for observed timing on this host (the smoke gate is subsumed into the
+nightly-reduced run; see §Smoke policy below); treat any number here as illustrative only.
 
 ## Smoke policy
 
@@ -76,9 +76,9 @@ One exclusion carries over unchanged: a testlist entry tagged `cocotb: 1` is ski
 `COCOTB=0` (`filter_cocotb_only_tests()`), regardless of which testlist supplies it; name it
 explicitly in `--test` and pass `--cocotb`/`--cocotb-module` to select it anyway.
 
-Gate evidence for the knob itself: `docs/dv/evidence/ws4-alt-testlist/summary.txt` (one-entry
-alternate testlist run through `nightly.sh`, proving the override selects the alternate suite, not
-the stock one).
+Gate evidence for the knob itself: `docs/dv/evidence/ws4-coverage/summary.txt` — this delivery's
+compressed gate schedule folds the alternate-testlist proof into the coverage gate run, showing the
+override selects the alternate suite, not the stock one.
 
 ## Jenkins job setup
 
