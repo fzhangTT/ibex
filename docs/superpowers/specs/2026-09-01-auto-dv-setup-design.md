@@ -35,7 +35,7 @@ This spec covers the infrastructure setup only — the foundation the auto-DV ex
 **Architecture:** quasar_soc's coexistence pattern (cocotb is master; SV-UVM stays fully active as a service layer) + ws-tensix's debug-access discipline, as a **strictly opt-in overlay**: `COCOTB=1` make knob; stock UVM flow is bit-identical when off.
 
 SV side (all under `` `ifdef COCOTB_SIM``):
-- `core_ibex_cocotb_if.sv` — `cocotb_active`, `uvm_finished`, compile-time-macro flag bits, and a dead-cocotb watchdog: `$finish` at 100ns unless Python sets the alive bit (a Python import error fails in nanoseconds, not a hung LSF slot).
+- `core_ibex_cocotb_if.sv` — `cocotb_active`, `uvm_finished`, `uvm_ready` (listener-armed handshake), compile-time-macro flag bits, and a dead-cocotb watchdog: `$fatal` at 100ns unless Python sets the alive bit (ruling: a lost Python must FAIL the run with nonzero exit — `$finish` would end it cleanly and could masquerade as a pass; supersedes the earlier `$finish` wording).
 - A `uvm_component` objection holder: raises in `run_phase` while `cocotb_active`, drops when Python finishes; `final_phase` sets `uvm_finished`; `finish_on_completion = 0` when cocotb is master. cocotb polls `uvm_finished` before exiting so UVM shutdown completes.
 
 VCS flags added only when `COCOTB=1`:
