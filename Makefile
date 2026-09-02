@@ -59,7 +59,7 @@ run-simple-system: sw-simple-hello | $(Vibex_simple_system)
 # Lint check
 .PHONY: lint-core-tracing
 lint-core-tracing:
-	fusesoc --cores-root . run --target=lint lowrisc:ibex:ibex_core_tracing \
+	fusesoc --cores-root . run --target=lint lowrisc:ibex:ibex_top_tracing \
 		$(FUSESOC_CONFIG_OPTS)
 
 
