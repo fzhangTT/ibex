@@ -4,7 +4,7 @@
 
 **Goal:** Declare the same four MCP servers (siliconpilot, fsdb-mcp-server, verdi-cov-mcp, atlassian) for both Claude Code (`.mcp.json`) and codex (`.codex/config.toml`), launched through pinned repo wrapper scripts, with the spec's gate evidence.
 
-**Architecture:** Launch logic lives once in `ci/mcp/*.sh` wrappers (single source of truth — dv_principles §5); both client configs point at the wrappers. Wrappers pin exact site-install versions and source `ci/env.sh` for environment (VERDI_HOME etc.). The whole server set is **Zone B / full-tree only** (spec WS5 zone-scoping amendment): the WS7 cleanroom snapshot replaces both client configs with no-MCP Zone A variants.
+**Architecture:** Launch logic lives once in `ci/mcp/*.sh` wrappers (single source of truth — dv_principles §5); both client configs point at the wrappers. The pinned site-install paths are **exported by `ci/env.sh`** (`IBEX_MCP_SILICONPILOT`, `IBEX_MCP_FSDB_SERVER`, `IBEX_MCP_VERDI_COV`) — env.sh is the repo's single path authority — and the wrappers consume those variables after sourcing env.sh (which also provides VERDI_HOME). The whole server set is **Zone B / full-tree only** (spec WS5 zone-scoping amendment): the WS7 cleanroom snapshot replaces both client configs with no-MCP Zone A variants.
 
 **Tech Stack:** MCP over stdio (JSON-RPC), bash wrappers, Claude Code `.mcp.json`, codex `config.toml`.
 
@@ -18,11 +18,12 @@
   - verdi-cov-mcp: `/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh` (**pin v0.2.2**; `stable` symlink exists but the spec demands an exact pinned version).
   - atlassian: `https://mcp.atlassian.com/v1/mcp` (http; no wrapper).
 - Spec pinning rule: fsdb and verdi-cov versions are **exact and recorded**; siliconpilot follows the spec's `latest` path with the resolved version recorded.
-- Wrappers: bash, `set -euo pipefail` is fine here (no post-failure reporting needed), compute `REPO_ROOT` from `BASH_SOURCE`, `source "$REPO_ROOT/ci/env.sh"` (never `&&`-chain `module`), then `exec` the site entry point so signals pass through.
+- **Path authority (dv_principles §5):** the pinned install paths live ONLY in `ci/env.sh` as `IBEX_MCP_*` exports (with the pin recorded in the adjacent comment); wrappers reference the variables (`${IBEX_MCP_FSDB_SERVER:?...}`) and never repeat a `/tools_*` literal.
+- Wrappers: bash, `set -euo pipefail` is fine here (no post-failure reporting needed), compute `REPO_ROOT` from `BASH_SOURCE`, `source "$REPO_ROOT/ci/env.sh" >/dev/null` — **stdout only**: the MCP stdio stream owns stdout, but stderr stays visible so env.sh diagnostics surface on startup failures (never `&&`-chain `module`) — then `exec` the site entry point so signals pass through.
 - Zone scoping is recorded wherever a config lives: comment in `.codex/config.toml`, section in `ci/mcp/README.md` (`.mcp.json` is JSON — no comments; README covers it).
 - Error messages in ci scripts are an ASD-STE100 surface: short, imperative, unambiguous.
 - Gate evidence under `docs/dv/evidence/ws5-*`; ledger `docs/dv/process-logs/ws5/progress.md`, one line per task.
-- The gate item "the cleanroom clone demonstrates *no* MCP servers configured" **cannot be proven before WS7** (no cleanroom exists): record it in the ledger as DEFERRED-TO-WS7 with a pointer to spec §WS7; WS7's plan must pick it up.
+- The gate item "the cleanroom clone demonstrates *no* MCP servers configured" **cannot be proven before WS7** (no cleanroom exists): WS5 therefore does NOT close as DONE from this plan. Its ledger end-state is **PARTIAL — gate item 3 pending WS7**; WS7's plan owns producing that evidence, and only then does WS5 flip to DONE (with the pointer recorded). The codex post-execution review at the end of this plan covers the executed scope.
 - Run `.codex/compat/validator.py` after config/docs edits; must stay PASS.
 - Commit after every task (`[ci]`/`[docs]` prefixes).
 
@@ -31,37 +32,50 @@
 ### Task 1: `ci/mcp/` wrapper scripts
 
 **Files:**
+- Modify: `ci/env.sh` (add the `IBEX_MCP_*` exports — the single path authority)
 - Create: `ci/mcp/siliconpilot-mcp.sh`
 - Create: `ci/mcp/fsdb-mcp.sh`
 - Create: `ci/mcp/verdi-cov-mcp.sh`
-- Create: `docs/dv/process-logs/ws5/progress.md` (ledger skeleton mirroring this plan's tasks, plus the DEFERRED-TO-WS7 line for the cleanroom no-MCP gate item)
+- Create: `docs/dv/process-logs/ws5/progress.md` (ledger skeleton mirroring this plan's tasks, plus the PENDING-WS7 line for the cleanroom no-MCP gate item)
 
 **Interfaces:**
 - Consumes: site installs from Global Constraints; `ci/env.sh` (VERDI_HOME export).
-- Produces: three executable wrappers, each launching one MCP server over stdio. Both client configs (Task 2) invoke exactly these paths.
+- Produces: `IBEX_MCP_SILICONPILOT`/`IBEX_MCP_FSDB_SERVER`/`IBEX_MCP_VERDI_COV` exported by `ci/env.sh`; three executable wrappers, each launching one MCP server over stdio. Both client configs (Task 2) invoke exactly these wrapper paths.
 
-- [ ] **Step 1: Write the three wrappers**
+- [ ] **Step 1: Add the pinned exports to `ci/env.sh`** (near the VERDI_HOME export; follow the file's existing comment style):
+
+```bash
+# --- MCP server installs (WS5; Zone B only — the cleanroom ships no MCP configs) ---
+# Exact pins recorded here; wrappers in ci/mcp/ consume these (dv_principles §5).
+export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/latest/bin/siliconpilot-mcp  # latest -> <resolved version: record readlink -f output here>
+export IBEX_MCP_FSDB_SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh       # pinned 0.2.6
+export IBEX_MCP_VERDI_COV=/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh   # pinned v0.2.2
+```
+Run `readlink -f /tools_risc/tt/siliconpilot/latest` and replace the placeholder with the actual resolved version string before committing.
+
+- [ ] **Step 2: Write the three wrappers**
 
 `ci/mcp/fsdb-mcp.sh`:
 ```bash
 #!/usr/bin/env bash
-# fsdb-mcp-server, pinned 0.2.6 (site module fsdb-mcp-server/0.2.6, PATH-only).
+# fsdb-mcp-server launcher; pinned path exported by ci/env.sh (IBEX_MCP_FSDB_SERVER).
 # Needs VERDI_HOME; ci/env.sh exports it. Zone B only — never ship to the cleanroom (spec WS5/WS7).
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-source "$REPO_ROOT/ci/env.sh" >/dev/null 2>&1 || { echo "ERROR: cannot source ci/env.sh" >&2; exit 1; }
-SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh
-[ -x "$SERVER" ] || { echo "ERROR: fsdb-mcp-server 0.2.6 not found at $SERVER" >&2; exit 1; }
+# stdout only: the MCP stdio stream owns stdout; keep stderr for env.sh diagnostics.
+source "$REPO_ROOT/ci/env.sh" >/dev/null || { echo "ERROR: cannot source ci/env.sh" >&2; exit 1; }
+SERVER="${IBEX_MCP_FSDB_SERVER:?ci/env.sh must export IBEX_MCP_FSDB_SERVER}"
+[ -x "$SERVER" ] || { echo "ERROR: fsdb-mcp-server not found at $SERVER" >&2; exit 1; }
 exec "$SERVER"
 ```
 
-`ci/mcp/verdi-cov-mcp.sh` — same skeleton; `SERVER=/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh`; header comment "pinned v0.2.2".
+`ci/mcp/verdi-cov-mcp.sh` — same skeleton; `SERVER="${IBEX_MCP_VERDI_COV:?ci/env.sh must export IBEX_MCP_VERDI_COV}"`.
 
-`ci/mcp/siliconpilot-mcp.sh` — same skeleton; `SERVER=/tools_risc/tt/siliconpilot/latest/bin/siliconpilot-mcp`; launch `exec "$SERVER" --workspace "$REPO_ROOT"`; header comment records the resolved `latest` target (run `readlink -f /tools_risc/tt/siliconpilot/latest` at implementation time and write the version string into the comment).
+`ci/mcp/siliconpilot-mcp.sh` — same skeleton; `SERVER="${IBEX_MCP_SILICONPILOT:?ci/env.sh must export IBEX_MCP_SILICONPILOT}"`; launch `exec "$SERVER" --workspace "$REPO_ROOT"`.
 
-Caveat to preserve: sourcing `ci/env.sh` with stdout silenced is required — MCP stdio protocol owns stdout; env.sh banner lines would corrupt the JSON-RPC stream. Stderr may stay visible.
+Caveat to preserve: sourcing `ci/env.sh` with **stdout** silenced is required — MCP stdio protocol owns stdout; env.sh banner lines would corrupt the JSON-RPC stream. Stderr stays visible so startup failures carry their diagnostics.
 
-- [ ] **Step 2: Startup smoke (failing first, then passing)** — before `chmod +x`, run one wrapper and watch it fail (permission); then `chmod +x ci/mcp/*.sh` and verify each starts and answers a raw JSON-RPC handshake over stdio:
+- [ ] **Step 3: Startup smoke (failing first, then passing)** — before `chmod +x`, run one wrapper and watch it fail (permission); then `chmod +x ci/mcp/*.sh` and verify each starts and answers a raw JSON-RPC handshake over stdio:
 
 ```bash
 for w in ci/mcp/*.sh; do
@@ -75,11 +89,11 @@ done
 ```
 Expected per server: an `initialize` result and a `tools/list` result naming at least one tool. This is the wrapper-level sanity check; the client-level gate is Task 3. If a server needs a one-time `setup.sh`/venv step, STOP and record what it needs in the ledger before proceeding (do not run site-install setup scripts without recording them).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add ci/mcp docs/dv/process-logs/ws5
-git commit -m "[ci] WS5: pinned MCP server wrappers (siliconpilot, fsdb 0.2.6, verdi-cov v0.2.2)"
+git add ci/env.sh ci/mcp docs/dv/process-logs/ws5
+git commit -m "[ci] WS5: MCP path exports in env.sh + server wrappers (fsdb 0.2.6, verdi-cov v0.2.2)"
 ```
 
 ---
@@ -178,9 +192,9 @@ git commit -m "[dv] WS5 gate: MCP tool-list evidence from Claude and codex sessi
 
 - [ ] **Step 1: Produce an FSDB** — `bash -lc 'source ci/env.sh && cd dv/uvm/core_ibex && make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 WAVES=1 OUT=out_ws5_waves'` (fresh OUT; watchdog 45 min). Locate the `.fsdb` under `out_ws5_waves/run/tests/`.
 
-- [ ] **Step 2: Query it through fsdb-mcp** — in a Claude session with the project servers loaded, ask fsdb-mcp to open that FSDB and report top-level scope + a signal value (e.g. the core clock) at a timestamp; alternatively drive the wrapper with raw JSON-RPC `tools/call`. Save the query + response excerpt to `docs/dv/evidence/ws5-fsdb-demo.txt`. The demo must show real data from OUR fsdb (path echoed in the evidence), not just a successful tool registration (dv_principles §4: a mechanism explained but not observed is a guess).
+- [ ] **Step 2: Query it through fsdb-mcp** — fsdb-mcp 0.2.6 requires the VCS design database alongside the waveform: `create_fsdb_session(design_db, fsdb_file, ...)`. Locate the run's `simv.daidir` under `out_ws5_waves/build/` (the compiled simv's design DB) and the `.fsdb` under `out_ws5_waves/run/tests/`, then — in a Claude session with the project servers loaded, or via raw JSON-RPC `tools/call` on the wrapper — create the session with BOTH absolute paths, capture the successful session creation, and query top-level scope + a signal value (e.g. the core clock) at a timestamp. Save the session-creation call, its result, and the query + response excerpt to `docs/dv/evidence/ws5-fsdb-demo.txt`. The demo must show real data from OUR fsdb (both paths echoed in the evidence), not just a successful tool registration (dv_principles §4: a mechanism explained but not observed is a guess).
 
-- [ ] **Step 3: Commit** — tick T4; mark the WS5 gate line in the ledger (with the cleanroom item still DEFERRED-TO-WS7).
+- [ ] **Step 3: Commit** — tick T4; mark the WS5 gate line in the ledger (end-state PARTIAL — cleanroom item pending WS7).
 
 ```bash
 git add docs/dv/evidence/ws5-fsdb-demo.txt docs/dv/process-logs/ws5/progress.md
@@ -191,4 +205,12 @@ git commit -m "[dv] WS5 gate: fsdb-mcp demonstrated against a WAVES=1 FSDB"
 
 ## Workstream close (controller, not a subagent task)
 
-Run the `cross-review` skill for the codex post-execution review of the WS5 commit range; commit the artifact; update the ledger to DONE (cleanroom no-MCP item explicitly handed to WS7's plan). If verdi-cov-mcp tool queries will be exercised heavily in the challenge's coverage-closure loop, note in the ledger that a deeper verdi-cov demo (query against a real merged.vdb from WS4's coverage.sh output) is available as follow-on evidence — not required by the WS5 gate.
+Run the `cross-review` skill for the codex post-execution review of the WS5 commit range; commit the artifact; set the ledger to **PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7**. WS5 flips to DONE only when WS7 commits that evidence; WS7's plan must carry this as an explicit deliverable. If verdi-cov-mcp tool queries will be exercised heavily in the challenge's coverage-closure loop, note in the ledger that a deeper verdi-cov demo (query against a real merged.vdb from WS4's coverage.sh output) is available as follow-on evidence — not required by the WS5 gate.
+
+## Review disposition (codex pre-review round 1 — REQUEST-CHANGES)
+
+Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers.md`, each addressed in this revision:
+1. **[major] hardcoded site paths in wrappers** — pinned paths moved to `ci/env.sh` `IBEX_MCP_*` exports (Task 1 Step 1); wrappers consume the variables with `:?` guards and carry no `/tools_*` literals.
+2. **[major] fsdb demo omits the design database** — Task 4 Step 2 now locates `simv.daidir`, passes absolute `design_db` + `fsdb_file` to `create_fsdb_session`, and captures the session creation before the signal query.
+3. **[major] DONE while a spec gate item is deferred** — WS5 end-state changed to PARTIAL pending WS7's cleanroom evidence (Global Constraints + Workstream close); no spec amendment needed.
+4. **[minor] stderr suppressed when sourcing env.sh** — wrappers silence stdout only; stderr preserved for diagnostics.
