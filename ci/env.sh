@@ -69,6 +69,9 @@ if [ -f "$IBEX_CI_ROOT/.venv/bin/activate" ]; then
     source "$IBEX_CI_ROOT/.venv/bin/activate"
 fi
 
+# --- cocotb (installed by ci/setup-venv.sh; optional until then) ---
+command -v cocotb-config >/dev/null 2>&1 && export LIBPYTHON_LOC="$(cocotb-config --libpython)" || true
+
 echo "ibex env: vcs=$(command -v vcs || echo MISSING)" \
      "gcc=$(command -v "$RISCV_GCC" >/dev/null && echo "$RISCV_GCC" || echo MISSING)" \
      "spike=$([ -d "$SPIKE_INSTALL" ] && echo "$SPIKE_INSTALL" || echo NOT-BUILT)"

@@ -16,6 +16,7 @@ pip install --upgrade pip
 
 if [ -f "$ROOT/ci/requirements.lock" ]; then
     pip install -r "$ROOT/ci/requirements.lock"
+    pip install -r "$ROOT/ci/requirements-cocotb.txt"
 
     # Exact freeze-vs-lock check (pip freeze already excludes pip/setuptools/
     # wheel by default; strip them from both sides too in case that changes).
@@ -28,4 +29,5 @@ if [ -f "$ROOT/ci/requirements.lock" ]; then
     fi
 else
     pip install -U -r "$ROOT/python-requirements.txt"
+    pip install -r "$ROOT/ci/requirements-cocotb.txt"
 fi
