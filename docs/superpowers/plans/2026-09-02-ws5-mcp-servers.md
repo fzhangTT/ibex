@@ -50,8 +50,10 @@
 export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/latest/bin/siliconpilot-mcp  # latest -> <resolved version: record readlink -f output here>
 export IBEX_MCP_FSDB_SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh       # pinned 0.2.6
 export IBEX_MCP_VERDI_COV=/tools_vendor/tt/verdi_cov_npi_mcp/v0.2.2/mcp_env_wrap.sh   # pinned v0.2.2
+# fsdb-mcp needs verdi/waveutils as commands (an alias does not reach subprocesses).
+case ":$PATH:" in *":$VERDI_HOME/bin:"*) ;; *) export PATH="$VERDI_HOME/bin:$PATH";; esac
 ```
-Run `readlink -f /tools_risc/tt/siliconpilot/latest` and replace the placeholder with the actual resolved version string before committing.
+Run `readlink -f /tools_risc/tt/siliconpilot/latest` and replace the placeholder with the actual resolved version string before committing. Place the PATH prepend AFTER the existing `VERDI_HOME` export (`ci/env.sh:29`); the guard keeps re-sourcing idempotent.
 
 - [ ] **Step 2: Write the three wrappers**
 
@@ -88,6 +90,12 @@ for w in ci/mcp/*.sh; do
 done
 ```
 Expected per server: an `initialize` result and a `tools/list` result naming at least one tool. This is the wrapper-level sanity check; the client-level gate is Task 3. If a server needs a one-time `setup.sh`/venv step, STOP and record what it needs in the ledger before proceeding (do not run site-install setup scripts without recording them).
+
+Then prove the fsdb wrapper does not lean on the ambient login PATH (the login shell has Verdi; a Jenkins or MCP-client environment may not): re-run the fsdb probe with the ambient Verdi stripped —
+```bash
+env PATH=/usr/bin:/bin bash -c 'printf "%s\n" "<the three JSON-RPC lines>" | timeout 120 ci/mcp/fsdb-mcp.sh | head -c 2000'
+```
+It must still answer (env.sh's own PATH prepend supplies `verdi`/`waveutils`), and `command -v verdi` inside a fresh `bash -c 'source ci/env.sh >/dev/null; command -v verdi'` must resolve under `$VERDI_HOME/bin`.
 
 - [ ] **Step 4: Commit**
 
@@ -229,3 +237,8 @@ Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers-
 Findings from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers-round3.md`, each addressed in this revision:
 1. **[major] `enableAllProjectMcpServers` over-approves future servers** — replaced with the explicit `enabledMcpjsonServers` four-server allowlist (CLI 2.1.258 supports it), interactive `/mcp` as fallback.
 2. **[minor] atlassian is optional/OAuth-gated** — gate now binds on the three local servers only; atlassian's configured/auth state is recorded separately in both evidence files.
+
+## Review disposition (codex pre-review round 4 — REQUEST-CHANGES)
+
+Finding from `docs/dv/reviews/2026-09-02-codex-plan-2026-09-02-ws5-mcp-servers-round4.md`, addressed in this revision:
+1. **[major] `$VERDI_HOME/bin` never reaches PATH** (env.sh only aliases `verdi`; fsdb-mcp 0.2.6 needs `verdi`/`waveutils` as commands; the login environment masked it) — `ci/env.sh` gains an idempotent `PATH` prepend after the `VERDI_HOME` export, and Task 1's startup smoke re-runs the fsdb probe with the ambient PATH stripped to prove the wrapper stands alone.
