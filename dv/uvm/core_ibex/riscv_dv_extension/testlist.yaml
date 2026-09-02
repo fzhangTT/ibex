@@ -581,6 +581,9 @@
     iterations pinned to 1: this test's timing (gaps, hold cycles, settle) was tuned and verified
     against SEED=1 only; a full 10-seed sweep with +randomize_csr could hit an untuned timing
     corner and false-FAIL.
+  cocotb: 1  # requires COCOTB=1 (see the +cocotb_irq_count vacuous-pass guard below); excluded
+             # from TEST=all/all_riscvdv when COCOTB=0 (ibex_cmd.filter_cocotb_only_tests),
+             # explicit TEST=cocotb_irq_python_test still selects it so that guard still fires.
   iterations: 1
   gen_test: riscv_rand_instr_test
   gen_opts: >

@@ -276,6 +276,13 @@ class RegressionMetadata(scripts_lib.testdata_cls):
         if not (riscvdv_matched_list or directed_matched_list):
             raise RuntimeError("No matching tests found in testlists.")
 
+        # Drop cocotb-only entries pulled in by a wildcard (all/all_riscvdv) when COCOTB=0;
+        # an explicitly-named cocotb-only test is never dropped (see docstring).
+        riscvdv_matched_list = ibex_cmd.filter_cocotb_only_tests(
+            self.cocotb, self.test, riscvdv_matched_list)
+        directed_matched_list = ibex_cmd.filter_cocotb_only_tests(
+            self.cocotb, self.test, directed_matched_list)
+
         # Filter tests by the chosen ibex configuration
         riscvdv_filtered_list = ibex_cmd.filter_tests_by_config(
             ibex_config.parse_config(self.ibex_config, str(self.ibex_configs)),
