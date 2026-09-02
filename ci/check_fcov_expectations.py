@@ -111,7 +111,8 @@ def urg_per_test_report(vdb: Path, cm_name: str, workdir: Path) -> Path:
     tests_txt = (report / "tests.txt").read_text(encoding="utf-8", errors="replace") \
         if (report / "tests.txt").is_file() else ""
     m = re.search(r"Total tests in report: (\d+)", tests_txt)
-    if not m or m.group(1) != "1" or cm_name not in tests_txt:
+    exact = re.search(rf"^\S*/{re.escape(cm_name)}\s*$", tests_txt, re.M)
+    if not m or m.group(1) != "1" or not exact:
         raise RuntimeError(
             f"per-test isolation not confirmed (want exactly 1 test = {cm_name}); "
             f"tests.txt says: {m.group(0) if m else 'unparseable'}")

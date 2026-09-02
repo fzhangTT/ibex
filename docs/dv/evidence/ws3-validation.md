@@ -19,3 +19,16 @@
 - **Trust triad**: canonical block hash-verified across dv_principles.md, mutation-check,
   fcov-expectation, and the test-generator agent; live proofs in `ws3-fcov-fixture/`
   (per-test urg isolation, hit/unhit classification, check-stage FAIL wiring, MUT-001).
+
+## Final review state (terminal round adjudicated)
+
+Five gated post-execution rounds ran (artifacts committed under `docs/dv/reviews/`, ranges all
+`bfd74d7c..<head>`): rounds 1-4 each returned REQUEST-CHANGES with genuinely substantive findings,
+all fixed and committed (6abc69c9, 98020734, fdfc4465, 4dfa25c4 + this commit). The terminal
+round's five findings were adjudicated at the declared cap: two load-bearing items FIXED here
+(exact-identifier per-test match in the fcov checker — a real seed-collision bug; fail-closed
+fence invariant wording), three PARKED with recorded controller rulings for the human owner
+(generation-manifest location vs the `dv/auto_dv` namespace and enforcement path — a WS7 design
+decision; splitting generation-safe vs infra-only skill content — same; stricter validator probe
+assertions). Per policy, no APPROVE is claimed: the branch closes REQUEST-CHANGES-adjudicated,
+with the disagreement surfaced to the human owner rather than looped further.

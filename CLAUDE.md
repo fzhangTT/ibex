@@ -36,8 +36,9 @@ green, and the trust triad — TDD, mutation-proof, fcov-expectation — for eve
    post-execution review by the other model; a `REQUEST-CHANGES` verdict blocks progress until a
    recorded re-review reaches `APPROVE`/`APPROVE-WITH-CHANGES`.
 2. Knowledge-fence: generation sessions must not read fenced DV collateral. Fence rules live in
-   `docs/dv/FENCE.md` once WS7 lands; until then, never read paths matching `ci/fence.yaml` globs
-   in a generation session, and infra sessions never paste fenced content into allowed files.
+   `docs/dv/FENCE.md` once WS7 lands; until a fence authority exists, generation sessions are
+   NOT permitted at all (fail closed), and infra sessions never paste fenced content into
+   allowed files.
 <!-- CRITICAL-INVARIANTS-END -->
 
 ## Site gotchas
