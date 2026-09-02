@@ -122,7 +122,7 @@ def check_invariants(root: Path) -> None:
     # Non-invariant duplication: any common substring run > 120 chars outside the blocks.
     cl_rest = cl.replace(a or "", "")
     ag_rest = ag.replace(b or "", "")
-    for i in range(0, max(0, len(ag_rest) - 121)):
+    for i in range(0, max(0, len(ag_rest) - 120)):
         chunk = ag_rest[i : i + 121]
         if len(chunk) == 121 and chunk in cl_rest:
             err(f"AGENTS.md duplicates >120 chars of CLAUDE.md outside invariants: '{chunk[:60]}…'")

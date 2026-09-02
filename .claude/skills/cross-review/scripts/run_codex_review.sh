@@ -47,11 +47,25 @@ command codex exec --sandbox read-only "$PROMPT" > "$RAW" 2>"$RAW.err" || { echo
 
 # Identity: prefer what the run itself reports; fall back to CLI/config probing.
 CLI_VER=$(command codex --version 2>/dev/null | head -1)
-RUN_MODEL=$(grep -m1 -oE 'model[:= ]+[A-Za-z0-9._-]+' "$RAW.err" "$RAW" 2>/dev/null | head -1 || true)
-RUN_REASONING=$(grep -m1 -oiE 'reasoning( effort)?[:= ]+[a-z]+' "$RAW.err" "$RAW" 2>/dev/null | head -1 || true)
+RUN_MODEL=$(grep -m1 -oE '^model[:= ]+[A-Za-z0-9._-]+' "$RAW.err" 2>/dev/null || true)
+RUN_REASONING=$(grep -m1 -oiE '^reasoning( effort)?[:= ]+[a-z]+' "$RAW.err" 2>/dev/null || true)
 # Fail closed: identity requires the RUN's model and reasoning, not config defaults.
 { [ -n "$RUN_MODEL" ] && [ -n "$RUN_REASONING" ]; } || { echo "PROTOCOL ERROR: run did not report model/reasoning identity (model='$RUN_MODEL' reasoning='$RUN_REASONING')"; exit 1; }
 
+LAST=$(tail -n 1 "$RAW")
+case "$LAST" in
+  "Final verdict: APPROVE"|"Final verdict: APPROVE-WITH-CHANGES"|"Final verdict: REQUEST-CHANGES") VERDICT=${LAST#Final verdict: };;
+  *) echo "PROTOCOL ERROR: last raw-output line is not the sole exact verdict line: '$LAST'"; exit 1;;
+esac
+NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$RAW" || true)
+[ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line in raw output, found $NV"; exit 1; }
+if [ "$MODE" = diff ]; then
+  [ "$(head -n 1 "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: first raw-output line is not the exact target echo. Raw kept at $RAW"; exit 1; }
+else
+  NLINES=$(printf '%b' "$MANIFEST" | grep -c .)
+  [ "$(head -n "$NLINES" "$RAW")" = "$(printf '%b' "$MANIFEST" | grep .)" ] || { echo "PROTOCOL ERROR: leading lines do not equal the plan target manifest, in order. Raw kept at $RAW"; exit 1; }
+fi
+# All protocol checks passed — install the artifact atomically.
 {
   echo "# Cross-model review — ${TARGET_DESC}"
   echo
@@ -62,19 +76,6 @@ RUN_REASONING=$(grep -m1 -oiE 'reasoning( effort)?[:= ]+[a-z]+' "$RAW.err" "$RAW
   echo "---"
   echo
   cat "$RAW"
-} > "$ART"
-
-LAST=$(tail -n 1 "$RAW")
-case "$LAST" in
-  "Final verdict: APPROVE"|"Final verdict: APPROVE-WITH-CHANGES"|"Final verdict: REQUEST-CHANGES") VERDICT=${LAST#Final verdict: };;
-  *) echo "PROTOCOL ERROR: last raw-output line is not the sole exact verdict line: '$LAST'"; exit 1;;
-esac
-NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$RAW" || true)
-[ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line in raw output, found $NV"; exit 1; }
-if [ "$MODE" = diff ]; then
-  [ "$(head -n 1 "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: first raw-output line is not the exact target echo. Artifact: $ART"; exit 1; }
-else
-  printf '%b' "$MANIFEST" | while IFS= read -r ln; do [ -z "$ln" ] && continue; grep -Fqx "$ln" "$RAW" || { echo "PROTOCOL ERROR: plan target line not echoed exactly: '$ln'"; exit 1; }; done || exit 1
-fi
+} > "$ART.tmp" && mv "$ART.tmp" "$ART"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2

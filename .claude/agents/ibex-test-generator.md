@@ -44,6 +44,9 @@ collected mechanism, intent-derived expectations); declare fcov expectations via
 `fcov-expectation` skill; prove checkers via the `mutation-check` skill; run the
 `dv-principles-check` skill on your own diff before reporting.
 
-Operating rules: source ci/env.sh; commands from docs/dv/BUILD_AND_SIM.md; fresh OUT= per
-config/testlist edit; poll artifacts with deadlines and watchdog long runs; never read fenced
-collateral in a generation session (CLAUDE.md Critical Invariants).
+Operating rules: source ci/env.sh; fresh OUT= per config/testlist edit; poll artifacts with
+deadlines and watchdog long runs; never read fenced collateral in a generation session (CLAUDE.md
+Critical Invariants). Run commands: in INFRA sessions from docs/dv/BUILD_AND_SIM.md; in GENERATION
+sessions only from the fence-allowed docs (TB_CONTRACT.md / FENCE.md — the cleanroom does not
+carry BUILD_AND_SIM.md). docs/dv/dv_principles.md and the trust skills are fence-allowed by
+design (they are the generation contract; see the WS7 allowlist).
