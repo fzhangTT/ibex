@@ -2,6 +2,9 @@
 # Run a codex review with the repo rubrics and a validated explicit target.
 # Usage: run_codex_review.sh plan <file> [<file>...]     (pre-execution review)
 #        run_codex_review.sh diff <base_sha> <head_sha>  (post-execution review)
+#        run_codex_review.sh replan <plan> <findings-artifact> <base_rev>
+#          (scoped re-review: verify prior findings + review only the plan's
+#           delta since base_rev — for plans too large to re-review whole)
 # Writes the artifact to docs/dv/reviews/ and prints "VERDICT: <verdict> <artifact>".
 # Exit: 0 on APPROVE/APPROVE-WITH-CHANGES, 2 on REQUEST-CHANGES, 1 on protocol errors.
 #
@@ -24,6 +27,14 @@ case "$MODE" in
     for f in "$@"; do MANIFEST="${MANIFEST}TARGET: $f@$(sha256sum "$f" | cut -c1-8)${NL}"; done
     SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:${NL}${MANIFEST}"
     NAME="plan-$(basename "${1%.*}")"
+    ;;
+  replan)
+    PLAN_F=${1:?plan file}; FIND_F=${2:?findings artifact}; BASEREV=$(git rev-parse --verify "${3:?base rev}")
+    TARGET_DESC="scoped re-review: ${PLAN_F} (delta since ${BASEREV:0:8}) against findings in ${FIND_F}"
+    NL=$'\n'
+    MANIFEST="TARGET: ${PLAN_F}@$(sha256sum "$PLAN_F" | cut -c1-8)${NL}TARGET: ${FIND_F}@$(sha256sum "$FIND_F" | cut -c1-8)${NL}"
+    SCOPE_LINE="Scoped re-review (a recorded re-review per CLAUDE.md's gate): ${PLAN_F} was previously reviewed at commit ${BASEREV} and received the findings in ${FIND_F}. Do exactly two things: (1) verdict EACH finding in that artifact ADDRESSED or NOT ADDRESSED against the current plan text, with line evidence; (2) review ONLY the plan's changes since that commit (run: git diff ${BASEREV} -- ${PLAN_F}) for new defects the remediation introduced. Do NOT re-review unchanged plan content. Echo, verbatim, as the FIRST lines of your output, exactly these lines:${NL}${MANIFEST}"
+    NAME="replan-$(basename "${PLAN_F%.*}")"
     ;;
   diff)
     BASE=$(git rev-parse --verify "${1:?base}") ; HEAD_=$(git rev-parse --verify "${2:?head}")
