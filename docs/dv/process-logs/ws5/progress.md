@@ -93,3 +93,7 @@ the `out_ws5_waves` artifacts it needs were already cleaned; its T4 gate evidenc
 `docs/dv/evidence/ws5-fsdb-demo.txt`.
 SDD loop closed: 4 tasks + final review + one fix wave, all reviews clean; codex post-execution
 review of the full range is the workstream-close gate.
+
+WS5 CLOSED (2026-09-02): codex post-execution APPROVE over d04e5bba..9f2f6c39 after 3 fix rounds
+(docs/dv/reviews/2026-09-02-codex-diff-d04e5bba-9f2f6c39.md; superseded rounds -round1/2/3).
+Workstream end-state: PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7.
