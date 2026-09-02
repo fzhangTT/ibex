@@ -1,0 +1,76 @@
+WS4 gate evidence: nightly-reduced run (Run A) — LSF FALLBACK TO LOCAL
+========================================================================
+
+Verdict: BLOCKED (real test failure, not a script/infra failure — see below).
+This gate covers T4 (nightly.sh) and, by the recorded smoke-subsumption
+ruling, T3 (smoke.sh): both testlists (riscv-dv + directed) are exercised,
+and the script machinery (make invocation, result collection, regr.log
+generation, exit-code propagation) worked correctly. The PASS criterion of
+"0 FAILED for both tests" was NOT met.
+
+Deviation from plan — LSF not used
+-----------------------------------
+The sanctioned pre-probe (see lsf-probe-result.txt for both attempts) FAILED:
+
+  bash -lc 'source ci/env.sh >/dev/null 2>&1 && timeout 300 bsub -K -q regress -o /dev/null \
+    "test -d $PWD && test -r $PWD/ci/env.sh && echo VISIBLE"'
+
+Job <10923560> ran on soc-c-18 and exited 1 (workspace not visible/readable
+from the compute host). Per the recorded fallback rule this workspace is
+submit-host-local, so BOTH Run A and Run B were executed LOCALLY. Run A
+therefore has no bsub job id, no lsf.log, and no bsub.log — bsub was never
+invoked for the actual gate command. This is a deviation from "Run A —
+nightly-reduced through LSF", recorded here prominently as instructed.
+
+Invocation actually run (--lsf dropped)
+-----------------------------------------
+  bash -lc 'ci/jenkins/nightly.sh --test riscv_arithmetic_basic_test,mcounteren_test \
+    --iterations 1 --jobs 4 --out out_ci/gate-nightly'
+
+HEAD SHA at launch: ea5c197436fa132284e4577f45863053c77457f6
+Launched (UTC):      2026-09-02 23:12:57
+regr.log written:    2026-09-02 23:14:13.95 UTC (2026-09-02 19:14:13.95 EDT)
+Wall clock:           ~77 seconds
+VCS version:         Chronologic VCS (TM) Version X-2025.06-SP2_Full64 -- Wed Sep 2 19:13:16 2026
+OUT path:             dv/uvm/core_ibex/out_ci/gate-nightly (not committed; regr.log copied here)
+
+Result (regr.log, copied verbatim as regr.log in this dir)
+-------------------------------------------------------------
+  50.00% PASS 1 PASSED, 1 FAILED
+  riscv_arithmetic_basic_test.260902: PASS
+  mcounteren_test.260902:             FAILED
+
+Failing stage / first error (sim-debug triage pattern)
+----------------------------------------------------------
+Stage: RTL simulation, cosim scoreboard check, mcounteren_test.260902.
+First error (rtl_sim_stdstreams.log, via regr.log's failing-test excerpt):
+
+  1458900: Illegal instruction (hart 0) at PC 0x8000032e: 0xc01022f3
+  1460900: Illegal instruction (hart 0) at PC 0x8000032e: 0xc01022f3
+  UVM_FATAL .../ibex_cosim_agent/ibex_cosim_scoreboard.sv(172) @ 2025900:
+    uvm_test_top.env.cosim_agent.scoreboard Cosim mismatch Synchronous trap
+    was expected at ISS PC: 80002400 but the DUT didn't report one at
+    PC 8000037a
+
+This is a genuine RTL/cosim-reference mismatch on the directed mcounteren_test,
+surfaced by a real VCS simulation — not a CI-script defect. No prior real-sim
+(non-dry-run) evidence of this test exists anywhere in docs/dv/ (checked before
+filing this as a finding), so this is the first real execution of
+mcounteren_test through the CI scripts in this fork. Per the failure-honesty
+rule this run is reported BLOCKED and not retried (no seed/queue knob is
+sanctioned for a test-content failure); the cosim mismatch itself is a
+separate triage item (COSIM.md documents this fork's mcounteren customization
+at dv/cosim, commit 026e71ea, as the likely area to start from).
+
+What the script machinery DID prove (do not read the FAILED verdict as an
+infra failure)
+-----------------------------------------------------------------------------
+- Both testlists exercised in one invocation: riscv_arithmetic_basic_test
+  (riscv-dv/generated) + mcounteren_test (directed).
+- make -jN / SIMULATOR=vcs / ISS=spike / ITERATIONS=1 / SEED plumbing all
+  worked (SEED=260902, the nightly UTC-date default).
+- Result parsing worked correctly: regr.log correctly reports "1 PASSED,
+  1 FAILED", correctly attributes the failure to mcounteren_test with the
+  right log/trace paths, and make propagates a non-zero exit (Error 1 / 2)
+  so a real CI caller would see this as a red build — the failure was
+  neither swallowed nor misreported.

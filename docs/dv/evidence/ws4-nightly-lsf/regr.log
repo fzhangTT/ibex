@@ -1,0 +1,45 @@
+50.00% PASS 1 PASSED, 1 FAILED
+riscv_arithmetic_basic_test.260902: PASS
+mcounteren_test.260902:             FAILED
+
+
+################################################################################
+# Details of failing tests
+################################################################################
+
+mcounteren_test.260902
+----------------------
+binary:          test.bin
+rtl_log:         rtl_sim_stdstreams.log
+rtl_trace:       trace_core_00000000.log
+iss_cosim_trace: spike_cosim_trace_core_00000000.log
+
+[FAILED]: error seen in 'rtl_sim_stdstreams.log'
+---------------*LOG-EXTRACT*----------------
+    33: UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/common/ibex_mem_intf_agent/ibex_mem_intf_response_seq_lib.sv(44) @ 201900: uvm_test_top.env.data_if_response_agent.sequencer@@data_intf_seq [uvm_test_top.env.data_if_response_agent.sequencer.data_intf_seq] is_dmem_seq: 0x1
+    34: UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_new_seq_lib.sv(64) @ 201900: reporter@@fetch_enable_seq_h [fetch_enable_seq_h] Running the "InfiniteRuns" schedule for stimulus generation
+    35: core_ibex_tb_top.dut.u_ibex_tracer.unnamed$$_1.unnamed$$_2: Writing execution trace to /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_ci/gate-nightly/run/tests/mcounteren_test.260902/trace_core_00000000.log
+    36: 1458900: Illegal instruction (hart 0) at PC 0x8000032e: 0xc01022f3
+    37: 1460900: Illegal instruction (hart 0) at PC 0x8000032e: 0xc01022f3
+[E] 38: UVM_FATAL /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/common/ibex_cosim_agent/ibex_cosim_scoreboard.sv(172) @ 2025900: uvm_test_top.env.cosim_agent.scoreboard [uvm_test_top.env.cosim_agent.scoreboard] Cosim mismatch Synchronous trap was expected at ISS PC: 80002400 but the DUT didn't report one at PC 8000037a
+    39: 
+    40: 
+    41: --- RISC-V UVM TEST FAILED ---
+    42: 
+--------------------------------------------
+
+
+
+################################################################################
+# Details of passing tests
+################################################################################
+
+riscv_arithmetic_basic_test.260902
+----------------------------------
+binary:          test.bin
+rtl_log:         rtl_sim_stdstreams.log
+rtl_trace:       trace_core_00000000.log
+iss_cosim_trace: spike_cosim_trace_core_00000000.log
+
+[PASSED]
+
