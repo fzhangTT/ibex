@@ -1,0 +1,5 @@
+# fcov-expectation manifests: <testname>.fcov.yaml declares bins the test must hit.
+# Format + semantics: ci/check_fcov_expectations.py docstring and .claude/skills/fcov-expectation.
+# A manifest here activates the check for that test in every COV=1 run.
+bins:
+  - uarch_cg.cp_controller_fsm.out_of_decode0   # EXAMPLE (file must be named <testname>.fcov.yaml to activate)
