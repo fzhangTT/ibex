@@ -886,3 +886,22 @@ summary or its absence, and the run header naming build, seed and plusargs), lis
 md5 of the excerpt file; full stdout and sim logs are retained for every green run, for every default red, and for
 any red whose verdict a reviewer disputes. The excerpt must carry the line a reviewer needs to reproduce the
 flow's verdict with gen_verdict.decide_lines; an excerpt that does not is treated as unretained.
+
+## LOG-024d - 2026-09-03 - GATE HELD (landing 3d at 7f78c41: cross-model REQUEST-CHANGES on two highs)
+
+The cross-model review of 2696920..7f78c41 (dv/auto_dv/reviews/2026-09-03-claude-diff-26969205-7f78c418.md)
+finds two highs: the mul_div filler fix is ineffective (FILLER_REGS moved to x29..x31 but the filler templates still
+emit x5..x7, which are operand registers; the disjointness assertion checks a set the fillers do not use; the
+CR-B2-L-8 row saying FIXED is false), and the new red_expect self-test rule accepts by method name and prefix, so
+the two boundary signatures it was written to catch still pass it (Runtime's T-151 at 356790d has since committed
+the corrected (?!\d) signatures, but the rule must synthesize the harness line per recorded check name and require
+the regex to match). Mediums: the lint grew by a del check beyond LOG-024c while the API still does not enumerate
+the refused shapes one-to-one with the self-test red list, lists template patching as refused although the
+import-alias form passes, and lacks the guarantee sentence; the transcript says "no rule was missing" while the
+call-site fixpoint added in 3d is the rule that was missing. Rulings: (a) the red-source list at 7f78c41 (including
+the del check) is the frozen set; the API enumerates exactly that list, names the probed passing forms, and states
+the lint is not a guarantee; no further growth. The Critic accepted this enumeration path in its v4 Section 6, so
+no Critic-versus-ruling conflict remains to route to the owner. (b) LOG-024 stays in force: the measured flip, the
+tier promotion and batch-2 acceptance wait for landing 3e and its re-review; the round-0 sequence (T-158) shifts
+behind it. (c) Every response row marked FIXED must be backed by a check the reviewer can rerun; a FIXED row whose
+fix does not touch the failing path is an honesty defect, not a low.
