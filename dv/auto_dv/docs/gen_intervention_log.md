@@ -1470,3 +1470,21 @@ remove) pass. Dry runs confirmed the blocked and passing forms, and the hook too
 own next Bash call was blocked because its heredoc prose mentioned the pattern, which is the intended behaviour. The hook
 applies to every agent of this session. Runtime's flow-side guard (remove_tree_guarded, 705edb8) covers the Python
 removals and is under a held review until its self-test is independent of GEN_DV_SELFTEST_TMP.
+
+## LOG-057 - 2026-09-03 - Critic tb_l2b REQUEST-CHANGES: a doc claim ahead of the build, and the witness protocol gap
+
+The Critic's verdict on landing 2b (gen_critic_tb_l2b.md) is REQUEST-CHANGES on M-3: the scoreboard document's conventions
+row for the suppressed register write (gen_component_api_scoreboard.md:132, added in 2b) says the suppression is accepted
+only with an announced corruption, and line 86 calls integrity-error runs full lock-step compares, while the code accepts
+on the DUT flag alone and the landing's own response file records the gate as owed to 2c (T-183, LOG-051 carve-out). Same
+class as LOG-055: a document describing a state that is not built. Ruling: tb-infra lands a docs-only correction of the two
+sentences now, before slice 2; the Critic re-reviews the delta and the verdict lifts on it. M-1 records an integration gap
+across three roles, recorded as T-226: the witness protocol as built carries arg1 = the issuing test's group (COV_WITNESS
+<index> <group>, docs/gen_component_api_fcov.md Section 7), the plan's C-2 / WP-2 / CG-WIT-001 Sample line has been updated
+(part 4b), but the committed template epilogue sends arg1 = 0 (gen_test_template.py:387), so every group but one would be
+refused GEN_WITNESS_FOREIGN on its first real witness, and Runtime's witness_render (gen_flow_util.py:752-758) dies for any
+testlist entry listing witness_ids; the retained greens bypass that path. Owners: Test Writer (template arg1 = the owner
+group index via GenBridge.cov_witness(tp_item, owner_group), fixture docstring), Runtime (witness_render accepts
+witness_ids and passes the group index), DV Lead (plan text, done). No testlist entry lists witness_ids until all three have
+landed and a real witness run is retained. M-2: four of nine SVA groups (icram, irq, dbg, alert) have no catching mutant;
+the named mutants go to 2c.
