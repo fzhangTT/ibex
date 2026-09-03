@@ -39,17 +39,26 @@ instead of polling; before finishing compare `cmds_consumed` with the sent count
 
 ## 4. Wave-level behaviour
 
-Register map: `alive`, `stim_active`, `cmd_valid`, `cmd_kind[7:0]` (IRQ_SET, IRQ_CLR, NMI_PULSE,
-DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC), `cmd_arg[3:0][31:0]`,
-`cmd_seq[15:0]`, `cmd_ack`, `cmd_ack_seq[15:0]`, `peek_data[31:0]` (memory word answered with the ack of
-a MEM_PEEK whose `cmd_arg[0]` is the word address; the image read-back path, v2 XM-M4), `listener_armed`, `cmds_consumed[15:0]`,
-`evt_retired_target[31:0]` and `evt_cycle_target[31:0]` (Python writes thresholds), `evt_thresh_hit`
-(single-bit toggle SV raises when a threshold is reached; the only thing Python awaits for a
-threshold, A-01), `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` (single-bit toggles),
-`evt_retired_count[31:0]` and `evt_err_count[15:0]` (read once at finish, never awaited),
-`finish_req`, `finish_ack`. `cmd_valid` is a level toggled by Python; SV captures the fields in
-that delta and toggles `cmd_ack` the next cycle; two commands need two edges. No bridge signal is
-a DUT signal.
+AS BUILT (step 1b, `dv/auto_dv/tb/gen_bridge_if.sv`, instance `u_bridge_if` in gen_tb_top; Python
+view `gen_handles.GenHandles(dut).b.<field>`). Python-written: `alive`, `stim_active`, `cmd_valid`
+(level toggled once per command), `cmd_kind[7:0]` (codes `GEN_CMD_*` from gen_tb_knobs.yaml: IRQ_SET,
+IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC),
+`cmd_arg0..3[31:0]` (four scalars, not an unpacked array, for VPI robustness), `cmd_seq[15:0]`,
+`evt_retired_target[31:0]` + `evt_retired_arm` (toggle after writing the target), `evt_cycle_target[31:0]`
++ `evt_cycle_arm`, `finish_req`. SV-written: `listener_armed`, `cmd_ack` (toggles the cycle after the
+command is consumed), `cmd_ack_seq[15:0]`, `cmds_consumed[15:0]`, `peek_data[31:0]` (memory word answered
+with the ack of a MEM_PEEK whose `cmd_arg0` is the word address; the image read-back path, v2 XM-M4;
+a peek without a memory model is a `uvm_error`), `listener_armed`, `cmds_consumed[15:0]`,
+`evt_retired_hit` and `evt_cycle_hit` (v3, N-02: one single-bit toggle PER threshold, raised by the
+interface's own threshold engine the first cycle at or beyond the armed target; the only thing Python
+awaits for a threshold, A-01), `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` (single-bit toggles
+from the monitors, step 2), `evt_retired_count[31:0]` (counted from the boundary `rvfi_valid`),
+`evt_err_count[15:0]` (read once at finish, never awaited), `cycle_count[31:0]` (cycles since reset
+release, read-only), `finish_ack` (toggled in gen_base_test's final_phase, after the UVM report). SV
+captures the command fields in the delta of the `cmd_valid` edge (gen_bridge run_phase), publishes a
+`gen_cmd_item` on `cmd_ap` and toggles `cmd_ack` the next cycle; two commands need two edges. UVM never
+calls `$finish` (`finish_on_completion = 0`): cocotb ends the simulation after `finish_ack`. No bridge
+signal is a DUT signal.
 
 ## 5. Checkers
 
@@ -66,7 +75,10 @@ TB (A-01).
 
 ## 7. Coverage hooks
 
-Command kinds and regime ids sampled into `gen_regime_cg` (layer-3 coverage).
+Command kinds and regime ids sampled into `gen_regime_cg` (layer-3 coverage). Unit test:
+`dv/auto_dv/gen_tb/gen_tests/gen_ut_bridge.py` (start, 6 commands with sequence acks, two cycle
+thresholds, accounting, finish) and `gen_ut_bridge_neg.py` (alive watchdog forced red); local driver
+`dv/auto_dv/tb/gen_tb_local.sh`; TDD transcript `dv/auto_dv/evidence/gen_tdd_bridge.md`.
 
 ## 8. At build
 

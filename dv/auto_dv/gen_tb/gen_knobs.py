@@ -133,9 +133,24 @@ CONSTANTS = {
     "GEN_ICACHE_ECC_WINDOW": 1,
     "GEN_IRQ_ENTRY_BOUND_RECORDS": 17,
     "GEN_DBG_ENTRY_BOUND_RECORDS": 17,
+    "GEN_CLK_PERIOD_NS": 10,
     "GEN_MEM_READBACK_WORDS_DEFAULT": 64,
     "GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT": 100000,
     "GEN_IRQ_FAST_MASK": 2147418112,
+}
+
+CMD = {  # bridge command kinds (cmd_kind codes)
+    "IRQ_SET": 1,
+    "IRQ_CLR": 2,
+    "NMI_PULSE": 3,
+    "DBG_REQ": 4,
+    "REGIME_SET": 5,
+    "KEY_MODE": 6,
+    "MEM_ERR_ARM": 7,
+    "ICACHE_ECC_ARM": 8,
+    "FETCH_EN": 9,
+    "MEM_PEEK": 10,
+    "MISC": 11,
 }
 
 MEMORY_MAP = {

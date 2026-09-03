@@ -127,6 +127,10 @@ plusargs:
   - {name: chk_t022_never, kind: bool, default: 1, desc: rtl-arch T-022 never-arc asserts in the binds home}
   - {name: chk_bridge_accounting, kind: bool, default: 1, desc: TB self-check enable}
 
+# Bridge command kinds (C2): code = 1-based position; 0 is GEN_CMD_NONE. Rendered as GEN_CMD_<K>
+# (8-bit) in gen_tb_pkg.sv, CMD in gen_knobs.py and GEN_CMD_<K> in the shim header.
+bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC]
+
 # Constants: `sv` is the SystemVerilog right-hand side when it must reference ibex_pkg; `value`
 # is the integer for Python and C (both when the value is a literal). Order matters for SV.
 constants:
@@ -140,6 +144,7 @@ constants:
   - {name: GEN_ICACHE_ECC_WINDOW, value: 1, sv_type: int unsigned, desc: "alert_minor_o in the corrupted-rdata cycle (window 1 counted from the lookup request); invalidation write one cycle later (v3 T-051 2.4)"}
   - {name: GEN_IRQ_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)"}
   - {name: GEN_DBG_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)"}
+  - {name: GEN_CLK_PERIOD_NS, value: 10, sv_type: int unsigned, desc: "TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it"}
   - {name: GEN_MEM_READBACK_WORDS_DEFAULT, value: 64, sv_type: int unsigned, desc: "default MEM_PEEK read-back sample size"}
   - {name: GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT, value: 100000, sv_type: int unsigned, desc: "default alive watchdog"}
   - {name: GEN_IRQ_FAST_MASK, value: 2147418112, sv: "((32'h1 << $bits(ibex_pkg::irqs_t) - 3) - 1) << 16", sv_type: "logic [31:0]", desc: "mie/mip fast interrupt bits 16..30 (15 fast lines); the shim installs them in gen_mie_csr_t"}

@@ -21,7 +21,7 @@ AS BUILT (step 1a, 2026-09-03): `dv/auto_dv/tb/gen_tb_knobs.yaml` is the ONE sou
 `constants[]` with name/value/optional `sv` right-hand side/sv_type/desc, in SV elaboration order;
 `memory_map` with boot_addr_default, the MMIO page and its register offsets). `dv/auto_dv/tb/
 gen_knobs_codegen.py` renders it into (1) the `// GEN_KNOBS_BEGIN` .. `// GEN_KNOBS_END` block of
-`dv/auto_dv/tb/gen_tb_pkg.sv` (`PLUSARG_<NAME> = "gen_<name>"`, `GEN_KNOB_<NAME>_VALUES/_DEFAULT`
+`dv/auto_dv/tb/gen_tb_pkg.sv` (`PLUSARG_<NAME> = "gen_<name>"`, `GEN_ENUM_<NAME>_VALUES/_DEFAULT`
 for enums, the constants, `GEN_MM_<KEY>` addresses and the literal twin `GEN_BOOT_ADDR_DEFAULT`), so
 the package stays the one file Runtime's testlist loader and the smoke driver read by regex; (2)
 `dv/auto_dv/gen_tb/gen_knobs.py` (PLUSARGS, CONSTANTS, MEMORY_MAP, ISA_STRING, DEBUG_ONLY, CHECKERS,

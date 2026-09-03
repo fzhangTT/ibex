@@ -48,7 +48,7 @@ def main():
             check(f"enum {p['name']} has >= 2 values", len(p["values"]) >= 2)
             check(f"enum {p['name']} default is a value", p["default"] in p["values"], str(p.get("default")))
             vals = ",".join(p["values"])
-            check(f"pkg carries values of {p['name']}", f'GEN_KNOB_{up}_VALUES = "{vals}"' in pkg)
+            check(f"pkg carries values of {p['name']}", f'GEN_ENUM_{up}_VALUES = "{vals}"' in pkg)
     check("no PLUSARG_ outside the generated region", pkg.count("parameter string PLUSARG_") == len(names))
     dbg_only = [p["name"] for p in src["plusargs"] if p.get("debug_only")]
     check("dbg_csr_probe is debug_only", "dbg_csr_probe" in dbg_only)
@@ -92,6 +92,24 @@ def main():
             check(f"pkg declares constant {c['name']}", re.search(rf"\b{c['name']}\b\s*=", pkg) is not None)
             if "value" in c:
                 check(f"python CONSTANTS[{c['name']}]", m.CONSTANTS.get(c["name"]) == c["value"])
+    # step 1b additions (written before the renderer produced them): bridge command codes and the
+    # rendered env-cfg include with one field and one parse line per plusarg, plus the known-name check
+    CFG_SVH = TB / "gen_env_cfg_knobs.svh"
+    check("yaml has bridge_cmds", isinstance(src.get("bridge_cmds"), list) and len(src["bridge_cmds"]) >= 10)
+    for i, k in enumerate(src.get("bridge_cmds", []), start=1):
+        check(f"pkg declares GEN_CMD_{k} = {i}", re.search(rf"GEN_CMD_{k}\s*=\s*8'd{i}\b", pkg) is not None)
+    if PY_OUT.is_file():
+        check("python CMD codes match", all(m.CMD.get(k) == i for i, k in enumerate(src.get("bridge_cmds", []), start=1)))
+    check("env cfg include exists", CFG_SVH.is_file(), str(CFG_SVH))
+    if CFG_SVH.is_file():
+        svh = CFG_SVH.read_text()
+        for pa in src["plusargs"]:
+            check(f"cfg field for {pa['name']}", re.search(rf"\b{pa['name']}\b\s*(=|;)", svh) is not None)
+            check(f"cfg parses PLUSARG_{pa['name'].upper()}", f"PLUSARG_{pa['name'].upper()}" in svh)
+        check("cfg has parse_plusargs", "function void parse_plusargs" in svh)
+        check("cfg validates enum values", "GEN_ENUM_" in svh and "_VALUES" in svh)
+    check("pkg has gen_is_known_plusarg", "function automatic bit gen_is_known_plusarg" in pkg)
+    check("known-plusarg list covers every name", all(f'"gen_{n}"' in pkg[pkg.find("gen_is_known_plusarg"):] for n in names))
     return finish()
 
 def finish():

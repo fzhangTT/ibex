@@ -30,8 +30,21 @@
 #define GEN_ICACHE_ECC_WINDOW              1u
 #define GEN_IRQ_ENTRY_BOUND_RECORDS        17u
 #define GEN_DBG_ENTRY_BOUND_RECORDS        17u
+#define GEN_CLK_PERIOD_NS                  10u
 #define GEN_MEM_READBACK_WORDS_DEFAULT     64u
 #define GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT   100000u
 #define GEN_IRQ_FAST_MASK                  2147418112u
+
+#define GEN_CMD_IRQ_SET                      1u
+#define GEN_CMD_IRQ_CLR                      2u
+#define GEN_CMD_NMI_PULSE                    3u
+#define GEN_CMD_DBG_REQ                      4u
+#define GEN_CMD_REGIME_SET                   5u
+#define GEN_CMD_KEY_MODE                     6u
+#define GEN_CMD_MEM_ERR_ARM                  7u
+#define GEN_CMD_ICACHE_ECC_ARM               8u
+#define GEN_CMD_FETCH_EN                     9u
+#define GEN_CMD_MEM_PEEK                     10u
+#define GEN_CMD_MISC                         11u
 
 #endif

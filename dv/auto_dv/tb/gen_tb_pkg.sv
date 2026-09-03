@@ -122,50 +122,50 @@ package gen_tb_pkg;
   parameter string PLUSARG_CHK_T022_NEVER = "gen_chk_t022_never";  // bool, default 1: rtl-arch T-022 never-arc asserts in the binds home
   parameter string PLUSARG_CHK_BRIDGE_ACCOUNTING = "gen_chk_bridge_accounting";  // bool, default 1: TB self-check enable
   // Enumerated knob value sets and defaults (DV Lead regime knobs and TB enums).
-  parameter string GEN_KNOB_ICRAM_INIT_VALUES = "zero,random";
-  parameter string GEN_KNOB_ICRAM_INIT_DEFAULT = "random";
-  parameter string GEN_KNOB_DBUS_ERR_HALF_VALUES = "first,second,both,any";
-  parameter string GEN_KNOB_DBUS_ERR_HALF_DEFAULT = "any";
-  parameter string GEN_KNOB_KNOB_IMEM_GNT_DELAY_VALUES = "same_cycle,short,long,random";
-  parameter string GEN_KNOB_KNOB_IMEM_GNT_DELAY_DEFAULT = "short";
-  parameter string GEN_KNOB_KNOB_IMEM_RVALID_DELAY_VALUES = "min1,short,long,random";
-  parameter string GEN_KNOB_KNOB_IMEM_RVALID_DELAY_DEFAULT = "short";
-  parameter string GEN_KNOB_KNOB_IMEM_ERR_RATE_VALUES = "none,rare,frequent";
-  parameter string GEN_KNOB_KNOB_IMEM_ERR_RATE_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_IMEM_INTG_ERR_RATE_VALUES = "none,rare,frequent";
-  parameter string GEN_KNOB_KNOB_IMEM_INTG_ERR_RATE_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_IMEM_OUTSTANDING_CAP_VALUES = "cap1,cap2,cap4,cap8";
-  parameter string GEN_KNOB_KNOB_IMEM_OUTSTANDING_CAP_DEFAULT = "cap8";
-  parameter string GEN_KNOB_KNOB_DMEM_GNT_DELAY_VALUES = "same_cycle,short,long,random";
-  parameter string GEN_KNOB_KNOB_DMEM_GNT_DELAY_DEFAULT = "short";
-  parameter string GEN_KNOB_KNOB_DMEM_RVALID_DELAY_VALUES = "min1,short,long,random";
-  parameter string GEN_KNOB_KNOB_DMEM_RVALID_DELAY_DEFAULT = "short";
-  parameter string GEN_KNOB_KNOB_DMEM_ERR_RATE_VALUES = "none,rare,frequent";
-  parameter string GEN_KNOB_KNOB_DMEM_ERR_RATE_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_DMEM_INTG_ERR_RATE_VALUES = "none,rare,frequent";
-  parameter string GEN_KNOB_KNOB_DMEM_INTG_ERR_RATE_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_IRQ_REGIME_VALUES = "quiet,sparse,storm";
-  parameter string GEN_KNOB_KNOB_IRQ_REGIME_DEFAULT = "quiet";
-  parameter string GEN_KNOB_KNOB_IRQ_LINE_MIX_VALUES = "single,multi,fast_only,with_nmi";
-  parameter string GEN_KNOB_KNOB_IRQ_LINE_MIX_DEFAULT = "single";
-  parameter string GEN_KNOB_KNOB_IRQ_HOLD_VALUES = "until_taken,through_handler,pulse";
-  parameter string GEN_KNOB_KNOB_IRQ_HOLD_DEFAULT = "until_taken";
-  parameter string GEN_KNOB_KNOB_DEBUG_REQ_REGIME_VALUES = "none,sparse,storm";
-  parameter string GEN_KNOB_KNOB_DEBUG_REQ_REGIME_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_SCR_KEY_DELAY_VALUES = "immediate,delayed,withheld_then_valid";
-  parameter string GEN_KNOB_KNOB_SCR_KEY_DELAY_DEFAULT = "immediate";
-  parameter string GEN_KNOB_KNOB_ICACHE_ECC_ERR_RATE_VALUES = "none,rare,frequent";
-  parameter string GEN_KNOB_KNOB_ICACHE_ECC_ERR_RATE_DEFAULT = "none";
-  parameter string GEN_KNOB_KNOB_FETCH_ENABLE_REGIME_VALUES = "always_on,toggling";
-  parameter string GEN_KNOB_KNOB_FETCH_ENABLE_REGIME_DEFAULT = "always_on";
-  parameter string GEN_KNOB_KNOB_MCOUNTEREN_WRITABLE_VALUES = "on,off,invalid";
-  parameter string GEN_KNOB_KNOB_MCOUNTEREN_WRITABLE_DEFAULT = "on";
-  parameter string GEN_KNOB_KNOB_INSTR_MIX_VALUES = "isa_only,m_heavy,compressed_heavy,bitmanip_heavy,csr_heavy,ls_heavy,branch_heavy,mixed";
-  parameter string GEN_KNOB_KNOB_INSTR_MIX_DEFAULT = "mixed";
-  parameter string GEN_KNOB_KNOB_PRIV_REGIME_VALUES = "m_only,u_heavy,alternating";
-  parameter string GEN_KNOB_KNOB_PRIV_REGIME_DEFAULT = "m_only";
-  parameter string GEN_KNOB_KNOB_PMP_REGIME_VALUES = "off,sparse,dense,mml_on";
-  parameter string GEN_KNOB_KNOB_PMP_REGIME_DEFAULT = "off";
+  parameter string GEN_ENUM_ICRAM_INIT_VALUES = "zero,random";
+  parameter string GEN_ENUM_ICRAM_INIT_DEFAULT = "random";
+  parameter string GEN_ENUM_DBUS_ERR_HALF_VALUES = "first,second,both,any";
+  parameter string GEN_ENUM_DBUS_ERR_HALF_DEFAULT = "any";
+  parameter string GEN_ENUM_KNOB_IMEM_GNT_DELAY_VALUES = "same_cycle,short,long,random";
+  parameter string GEN_ENUM_KNOB_IMEM_GNT_DELAY_DEFAULT = "short";
+  parameter string GEN_ENUM_KNOB_IMEM_RVALID_DELAY_VALUES = "min1,short,long,random";
+  parameter string GEN_ENUM_KNOB_IMEM_RVALID_DELAY_DEFAULT = "short";
+  parameter string GEN_ENUM_KNOB_IMEM_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_IMEM_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_IMEM_INTG_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_IMEM_INTG_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_IMEM_OUTSTANDING_CAP_VALUES = "cap1,cap2,cap4,cap8";
+  parameter string GEN_ENUM_KNOB_IMEM_OUTSTANDING_CAP_DEFAULT = "cap8";
+  parameter string GEN_ENUM_KNOB_DMEM_GNT_DELAY_VALUES = "same_cycle,short,long,random";
+  parameter string GEN_ENUM_KNOB_DMEM_GNT_DELAY_DEFAULT = "short";
+  parameter string GEN_ENUM_KNOB_DMEM_RVALID_DELAY_VALUES = "min1,short,long,random";
+  parameter string GEN_ENUM_KNOB_DMEM_RVALID_DELAY_DEFAULT = "short";
+  parameter string GEN_ENUM_KNOB_DMEM_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_DMEM_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_DMEM_INTG_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_DMEM_INTG_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_IRQ_REGIME_VALUES = "quiet,sparse,storm";
+  parameter string GEN_ENUM_KNOB_IRQ_REGIME_DEFAULT = "quiet";
+  parameter string GEN_ENUM_KNOB_IRQ_LINE_MIX_VALUES = "single,multi,fast_only,with_nmi";
+  parameter string GEN_ENUM_KNOB_IRQ_LINE_MIX_DEFAULT = "single";
+  parameter string GEN_ENUM_KNOB_IRQ_HOLD_VALUES = "until_taken,through_handler,pulse";
+  parameter string GEN_ENUM_KNOB_IRQ_HOLD_DEFAULT = "until_taken";
+  parameter string GEN_ENUM_KNOB_DEBUG_REQ_REGIME_VALUES = "none,sparse,storm";
+  parameter string GEN_ENUM_KNOB_DEBUG_REQ_REGIME_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_SCR_KEY_DELAY_VALUES = "immediate,delayed,withheld_then_valid";
+  parameter string GEN_ENUM_KNOB_SCR_KEY_DELAY_DEFAULT = "immediate";
+  parameter string GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_VALUES = "always_on,toggling";
+  parameter string GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_DEFAULT = "always_on";
+  parameter string GEN_ENUM_KNOB_MCOUNTEREN_WRITABLE_VALUES = "on,off,invalid";
+  parameter string GEN_ENUM_KNOB_MCOUNTEREN_WRITABLE_DEFAULT = "on";
+  parameter string GEN_ENUM_KNOB_INSTR_MIX_VALUES = "isa_only,m_heavy,compressed_heavy,bitmanip_heavy,csr_heavy,ls_heavy,branch_heavy,mixed";
+  parameter string GEN_ENUM_KNOB_INSTR_MIX_DEFAULT = "mixed";
+  parameter string GEN_ENUM_KNOB_PRIV_REGIME_VALUES = "m_only,u_heavy,alternating";
+  parameter string GEN_ENUM_KNOB_PRIV_REGIME_DEFAULT = "m_only";
+  parameter string GEN_ENUM_KNOB_PMP_REGIME_VALUES = "off,sparse,dense,mml_on";
+  parameter string GEN_ENUM_KNOB_PMP_REGIME_DEFAULT = "off";
   // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms).
   parameter int unsigned GEN_ICACHE_NUM_FB = 4;  // icache fill buffers, the one re-typed localparam NUM_FB (rtl/ibex_icache.sv:72)
   parameter int unsigned GEN_IBUS_MAX_OUTSTANDING = GEN_ICACHE_NUM_FB * ibex_pkg::IC_LINE_BEATS;  // instruction beats in flight (NUM_FB x IC_LINE_BEATS; rtl-arch T-051 2.3)
@@ -177,6 +177,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_ICACHE_ECC_WINDOW = 1;  // alert_minor_o in the corrupted-rdata cycle (window 1 counted from the lookup request); invalidation write one cycle later (v3 T-051 2.4)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
+  parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
   parameter int unsigned GEN_MEM_READBACK_WORDS_DEFAULT = 64;  // default MEM_PEEK read-back sample size
   parameter int unsigned GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT = 100000;  // default alive watchdog
   parameter logic [31:0] GEN_IRQ_FAST_MASK = ((32'h1 << $bits(ibex_pkg::irqs_t) - 3) - 1) << 16;  // mie/mip fast interrupt bits 16..30 (15 fast lines); the shim installs them in gen_mie_csr_t
@@ -195,6 +196,26 @@ package gen_tb_pkg;
   parameter logic [31:0] GEN_MM_IRQ_ACK_ADDR = 32'h8fff_f100;
   parameter logic [31:0] GEN_MM_EOT_ADDR = 32'h8fff_f104;
   parameter logic [31:0] GEN_MM_PHASE_MARK_ADDR = 32'h8fff_f108;
+  // Bridge command kinds (C2); 0 is NONE.
+  parameter logic [7:0] GEN_CMD_NONE = 8'd0;
+  parameter logic [7:0] GEN_CMD_IRQ_SET = 8'd1;
+  parameter logic [7:0] GEN_CMD_IRQ_CLR = 8'd2;
+  parameter logic [7:0] GEN_CMD_NMI_PULSE = 8'd3;
+  parameter logic [7:0] GEN_CMD_DBG_REQ = 8'd4;
+  parameter logic [7:0] GEN_CMD_REGIME_SET = 8'd5;
+  parameter logic [7:0] GEN_CMD_KEY_MODE = 8'd6;
+  parameter logic [7:0] GEN_CMD_MEM_ERR_ARM = 8'd7;
+  parameter logic [7:0] GEN_CMD_ICACHE_ECC_ARM = 8'd8;
+  parameter logic [7:0] GEN_CMD_FETCH_EN = 8'd9;
+  parameter logic [7:0] GEN_CMD_MEM_PEEK = 8'd10;
+  parameter logic [7:0] GEN_CMD_MISC = 8'd11;
+  // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).
+  function automatic bit gen_is_known_plusarg(string name);
+    case (name)
+      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_key_reset_valid", "gen_isa_string", "gen_isa_log", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      default: return 1'b0;
+    endcase
+  endfunction
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)
   // GEN_KNOBS_END
 
@@ -211,6 +232,18 @@ package gen_tb_pkg;
   parameter int unsigned GEN_IC_NUM_WAYS  = IC_NUM_WAYS;
   parameter int unsigned GEN_IC_NUM_LINES = IC_NUM_LINES;
   parameter int unsigned GEN_IC_INDEX_W   = IC_INDEX_W;
+
+  // Membership of `s` in a comma-separated value list (enum knob validation, gen_env_cfg::validate).
+  function automatic bit gen_str_in_csv(string s, string csv);
+    int start = 0;
+    for (int i = 0; i <= csv.len(); i++) begin
+      if (i == csv.len() || csv[i] == ",") begin
+        if (csv.substr(start, i - 1) == s) return 1'b1;
+        start = i + 1;
+      end
+    end
+    return 1'b0;
+  endfunction
 
   function automatic string gen_mubi_str(ibex_mubi_t v);
     if (v == IbexMuBiOn)  return "On";

@@ -21,6 +21,7 @@ WRAPPER = HERE / "gen_dut_top.sv"
 LD = ROOT / "dv/auto_dv/stim/gen_riscv_dv_target/gen_link.ld"
 PY_OUT = ROOT / "dv/auto_dv/gen_tb/gen_knobs.py"
 H_OUT = ROOT / "dv/auto_dv/isa/gen_isa_shim_map.h"
+CFG_OUT = HERE / "gen_env_cfg_knobs.svh"
 BEGIN = "  // GEN_KNOBS_BEGIN"
 END = "  // GEN_KNOBS_END"
 KINDS = {"string", "int", "hex", "bool", "enum"}
@@ -52,6 +53,9 @@ def load():
     names = [p["name"] for p in src["plusargs"]]
     if len(names) != len(set(names)):
         die("duplicate plusarg names: " + ", ".join(sorted({n for n in names if names.count(n) > 1})))
+    cmds = src.get("bridge_cmds") or []
+    if len(cmds) < 1 or len(cmds) != len(set(cmds)) or any(not re.fullmatch(r"[A-Z][A-Z0-9_]*", k) for k in cmds):
+        die("bridge_cmds must be a non-empty list of unique UPPER_CASE names")
     for p in src["plusargs"]:
         if not re.fullmatch(r"[a-z][a-z0-9_]*", p["name"]):
             die(f"bad plusarg name {p['name']}")
@@ -110,8 +114,8 @@ def render_sv_region(src, mm):
     for p in src["plusargs"]:
         if p["kind"] == "enum":
             up = p["name"].upper()
-            L.append(f'  parameter string GEN_KNOB_{up}_VALUES = "{",".join(p["values"])}";')
-            L.append(f'  parameter string GEN_KNOB_{up}_DEFAULT = "{p["default"]}";')
+            L.append(f'  parameter string GEN_ENUM_{up}_VALUES = "{",".join(p["values"])}";')
+            L.append(f'  parameter string GEN_ENUM_{up}_DEFAULT = "{p["default"]}";')
     L.append("  // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms).")
     for c in src["constants"]:
         rhs = c["sv"] if "sv" in c else str(c["value"])
@@ -119,6 +123,17 @@ def render_sv_region(src, mm):
     L.append("  // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.")
     for k, v in mm.items():
         L.append(f"  parameter logic [31:0] GEN_MM_{k.upper()} = 32'h{v >> 16:04x}_{v & 0xFFFF:04x};")
+    L.append("  // Bridge command kinds (C2); 0 is NONE.")
+    L.append("  parameter logic [7:0] GEN_CMD_NONE = 8'd0;")
+    for i, k in enumerate(src["bridge_cmds"], start=1):
+        L.append(f"  parameter logic [7:0] GEN_CMD_{k} = 8'd{i};")
+    L.append("  // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).")
+    L.append("  function automatic bit gen_is_known_plusarg(string name);")
+    L.append("    case (name)")
+    L.append("      " + ", ".join(f'"gen_{p["name"]}"' for p in src["plusargs"]) + ": return 1'b1;")
+    L.append("      default: return 1'b0;")
+    L.append("    endcase")
+    L.append("  endfunction")
     b = mm["boot_addr_default"]
     L.append(f"  parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h{b >> 16:04x}_{b & 0xFFFF:04x};  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)")
     L.append(END)
@@ -150,6 +165,10 @@ def render_py(src, mm):
     for c in src["constants"]:
         L.append(f'    "{c["name"]}": {int(c["value"])},')
     L.append("}"); L.append("")
+    L.append("CMD = {  # bridge command kinds (cmd_kind codes)")
+    for i, k in enumerate(src["bridge_cmds"], start=1):
+        L.append(f'    "{k}": {i},')
+    L.append("}"); L.append("")
     L.append("MEMORY_MAP = {")
     for k, v in mm.items():
         L.append(f'    "{k}": 0x{v:08x},')
@@ -174,7 +193,62 @@ def render_h(src, mm):
     L.append("")
     for c in src["constants"]:
         L.append(f"#define {c['name']:<34} {int(c['value'])}u")
+    L.append("")
+    for i, k in enumerate(src["bridge_cmds"], start=1):
+        L.append(f"#define GEN_CMD_{k:<28} {i}u")
     L += ["", "#endif"]
+    return "\n".join(L) + "\n"
+
+
+def sv_literal(p):
+    d = p.get("default")
+    if p["kind"] in ("string", "enum"):
+        return f'"{d if d is not None else ""}"'
+    if p["kind"] == "hex":
+        return f"32'h{int(d):08x}" if d is not None else "32'h0"
+    if p["kind"] == "bool":
+        return "1'b1" if d else "1'b0"
+    return str(int(d)) if d is not None else "0"
+
+
+def render_cfg(src):
+    """Include for class gen_env_cfg: one field per plusarg (plus a `_set` flag for optional and enum
+    knobs), parse_plusargs(), validate() for enum values and pinned_count() for the banner."""
+    L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.",
+         "// Included inside class gen_env_cfg (dv/auto_dv/env/gen_env_pkg.sv): fields, parse_plusargs(),",
+         "// validate(), pinned_count(). Types: string/enum -> string, int -> int unsigned, hex -> logic [31:0],",
+         "// bool -> bit. `<name>_set` records that the plusarg was supplied (pinning, optional knobs).", ""]
+    for p in src["plusargs"]:
+        k = p["kind"]; n = p["name"]
+        typ = {"string": "string", "enum": "string", "int": "int unsigned", "hex": "logic [31:0]", "bool": "bit"}[k]
+        L.append(f"  {typ} {n} = {sv_literal(p)};")
+        if k != "bool":
+            L.append(f"  bit {n}_set = 1'b0;")
+    L += ["", "  function void parse_plusargs();", "    string s; int unsigned u; logic [31:0] h;"]
+    for p in src["plusargs"]:
+        k = p["kind"]; n = p["name"]; P = f"PLUSARG_{n.upper()}"
+        if k in ("string", "enum"):
+            L.append(f'    if ($value$plusargs({{{P}, "=%s"}}, s)) begin {n} = s; {n}_set = 1\'b1; end')
+        elif k == "int":
+            L.append(f'    if ($value$plusargs({{{P}, "=%d"}}, u)) begin {n} = u; {n}_set = 1\'b1; end')
+        elif k == "hex":
+            L.append(f'    if ($value$plusargs({{{P}, "=%h"}}, h)) begin {n} = h; {n}_set = 1\'b1; end')
+        else:
+            L.append(f'    if ($value$plusargs({{{P}, "=%d"}}, u)) {n} = (u != 0);')
+    L += ["  endfunction", "",
+          "  // Enumerated knobs must hold one of their yaml values; msg names the first offender.",
+          "  function bit validate(output string msg);"]
+    for p in src["plusargs"]:
+        if p["kind"] == "enum":
+            n = p["name"]; U = n.upper()
+            L.append(f'    if (!gen_str_in_csv({n}, GEN_ENUM_{U}_VALUES)) begin msg = {{"+", PLUSARG_{U}, "=", {n}, " not in ", GEN_ENUM_{U}_VALUES}}; return 1\'b0; end')
+    L += ["    msg = \"\";", "    return 1'b1;", "  endfunction", "",
+          "  // Regime knobs supplied on the command line (pinned), for the banner and CG-REG cp_pinned_count.",
+          "  function int unsigned pinned_count();", "    int unsigned c = 0;"]
+    for p in src["plusargs"]:
+        if p["kind"] == "enum" and p["name"].startswith("knob_"):
+            L.append(f"    if ({p['name']}_set) c++;")
+    L += ["    return c;", "  endfunction", ""]
     return "\n".join(L) + "\n"
 
 
@@ -184,7 +258,8 @@ def main():
     args = ap.parse_args()
     src = load()
     mm = memory_map(src)
-    targets = {PKG: render_pkg(src, mm), PY_OUT: render_py(src, mm), H_OUT: render_h(src, mm)}
+    targets = {PKG: render_pkg(src, mm), PY_OUT: render_py(src, mm), H_OUT: render_h(src, mm),
+               CFG_OUT: render_cfg(src)}
     for path, text in targets.items():
         if any(ord(ch) > 127 for ch in text):
             die(f"non-ASCII output for {path}")

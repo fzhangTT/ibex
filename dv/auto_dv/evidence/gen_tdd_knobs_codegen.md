@@ -78,3 +78,28 @@ run_03_red_intg        plusargs=[+gen_smoke_cycles=3000 +gen_smoke_intg_flip=5] 
 run_04_green           plusargs=[+gen_smoke_cycles=3000] simv_exit=0 token=PASS fatal_lines=0 expected=PASS -> as-expected
 sequence result: ALL-AS-EXPECTED
 ```
+
+## 6. Step 1b extension (bridge command codes, rendered env-cfg include, known-plusarg check)
+
+Test extended first (`gen_ut_knobs_codegen.py`, 1b block), red, then the renderer:
+
+```
+# RED run (step 1b extension): 2026-09-03T07:20:10Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py
+FAIL yaml has bridge_cmds
+FAIL env cfg include exists (/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_env_cfg_knobs.svh)
+FAIL pkg has gen_is_known_plusarg
+FAIL known-plusarg list covers every name
+GEN_UT_KNOBS_CODEGEN FAIL (4 failures)
+exit=1
+# GREEN run (step 1b extension): 2026-09-03T07:21:26Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py
+GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+exit=0
+```
+
+Rendered additions: `GEN_CMD_<KIND>` codes (pkg, `CMD` dict, header), `gen_is_known_plusarg()`
+(pkg; gen_base_test fatals on any other `+gen_*`), `dv/auto_dv/tb/gen_env_cfg_knobs.svh` (one field
+plus `_set` flag per plusarg, `parse_plusargs()`, `validate()` for enum values against
+`GEN_ENUM_<NAME>_VALUES`, `pinned_count()`); hand-written helper `gen_str_in_csv` in gen_tb_pkg.sv.
+After the green run the enum parameter prefix was renamed `GEN_KNOB_` -> `GEN_ENUM_` (the knob
+names already start with `knob_`, so the old prefix doubled the word); renderer and test changed
+together, `--check` and the unit test re-run PASS (509 checks).
