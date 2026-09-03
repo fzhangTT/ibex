@@ -631,3 +631,45 @@ Reproduction (from a clean archive of the landing commit; the images from the fl
         dv.auto_dv.tests.gen_test_bit_ratified <abs path>/prog.vmem
     # the red: the same command with a pyroot whose dv/auto_dv/tests/gen_test_template.py is 9e7c440's (applied 6, missed 5);
     # the mutation red: the pyroot with gen_3h_mutation_M1.diff applied to the fixed template (applied 7, missed 4)
+
+## 13. T-206: gen_test_csr_reset seed 1028791296 ran away in round 0 (a debug request storm on a program without debug handling)
+
+Why: round 0 (Runtime, head mode on 37c7ecb, LOG-046) had one test-side failure, gen_test_csr_reset seed 1028791296: "end-of-test store 1 of 89
+not seen within 16 x 100000 cycles (cycle 1600065, retired 32890) although the core keeps retiring (runaway program)"; the run's layer-2 draw
+was debug_req_regime=storm, imem_gnt_delay=random, imem_rvalid_delay=short, irq_line_mix=single, scr_key_delay=withheld_then_valid, its
+schedule applied a mid-run phase at c19746 (debug_req_regime none, irq_line_mix multi, imem_rvalid_delay long, scr_key_delay delayed), and the
+debug agent logged the storm from cycle 65 (sim.log "[GEN_DBG] knob_debug_req_regime <= storm"). The other two round-0 seeds of the test
+(debug_req_regime none and sparse) passed at cycles 769 and 779. UVM_ERROR was 0 in the failing run: the ISA comparator followed the DUT.
+
+Cause: gen_test_csr_reset declared knob_debug_req_regime schedulable (with irq_line_mix, imem delays and scr_key_delay, the items' Knobs lines)
+while its generated program has no debug handling and the memory model's DM window (GEN_MM_DM_BASE 0x1a110000, halt 0x1a110800, exception
+0x1a110808) carries no program code. A debug request storm drawn at start-up halts the core into that window before the program's first report
+store; it never returns to the program (retirement continued at about 2050 per 100000 cycles, the exception path in the DM window), and the
+storm's end at c19746 did not recover it. A debug request is taken regardless of mstatus.MIE, unlike an interrupt (gen_test_rst_boot's
+irq_regime=storm draw in the same round passed: interrupts stay untaken with MIE=0). Not a DUT defect: the comparator saw no mismatch.
+
+Reproduction and control, out_head8 (export of 9e7c440 with the 3h template, sources sha 156eb9357b79552e), the round-0 image of the seed:
+- t206_csr_reset_1028791296_asis: the committed test as is: the same runaway, store 1 of 89 not seen (excerpt md5 df3e87f00448f28e26bc178ec086c768).
+- t206_csr_reset_1028791296_dbgnone: the same run with +gen_knob_debug_req_regime=none (the knob pinned, so the template leaves it to the
+  command line and draws the rest): PASS, 88 reports, 81 bins (excerpt md5 45be0c9836440179817f8fe483b89e0a). The knob is the whole difference.
+
+Fix (landing 3k): knob_debug_req_regime is removed from the test's schedulable set; the docstring says why and that the items' debug-mode clauses
+stay the not-built clauses already stated. The manifest is unchanged by a --test-module re-render (bins derive from the items, not the knobs);
+the structure self-test PASSes. Re-runs on out_head8 with the fixed test (the three round-0 images, and the pinned red TP-CSR-106 at seed 1):
+
+| Run | Result | GEN_TEST_BINS | UVM_ERROR | reports | retired | EOT cycle | fire_schedule_applied | knobs drawn | md5 (gen_<run>_stdout.log) |
+|---|---|---|---|---|---|---|---|---|---|
+| t206fix_csr_reset_1028791296 | PASS | 81 | 0 | 88 | 243 | 4203 | ok=True reached 4 of 8, applied 4 | imem_gnt_delay=random imem_rvalid_delay=short irq_line_mix=single scr_key_delay=withheld_then_valid | 32b0c2f68f1ba73a42443fc363033d52 |
+| t206fix_csr_reset_1118950644 | PASS | 81 | 0 | 88 | 258 | 768 | ok=True reached 4 of 17, applied 4 | imem_gnt_delay=same_cycle imem_rvalid_delay=min1 irq_line_mix=with_nmi scr_key_delay=immediate | d56dd55e1c9904053e07a817b958b6f6 |
+| t206fix_csr_reset_1228198789 | PASS | 81 | 0 | 88 | 261 | 778 | ok=True reached 4 of 10, applied 4 | imem_gnt_delay=same_cycle imem_rvalid_delay=min1 irq_line_mix=single scr_key_delay=delayed | 2ab43a633df38e57c9008ddb271fd510 |
+| t206fix_csr_reset_red_106_s1 | FAIL 1: fire_tp_csr_106 first (RED-OK) | 81 | no UVM summary | 88 | - | - | - | imem_gnt_delay=same_cycle imem_rvalid_delay=long irq_line_mix=fast_only scr_key_delay=delayed | ab8b50cae4a635420cb23b466d45c22a |
+
+The pinned red's committed retained log (gen_csr_reset_red1_stdout.log, the l8 run of Section 10) keeps its harness line and RED-OK verdict
+under the fixed test (the knob set does not touch the red's deviation); the new red run is retained beside it as gen_t206fix_csr_reset_red_106_s1
+so the fixed test's red is on record too. Logs: gen_t206_* (two excerpts) and gen_t206fix_* (four runs in full), gen_manifest.md.
+
+Lesson for every test (recorded for the Orchestrator and the DV Lead): a program without a debug ROM must not schedule knob_debug_req_regime,
+and a program without an interrupt handler must not schedule knob_irq_regime unless it keeps MIE=0 throughout; the template has no guard for
+this today (the lint's red-source list is frozen, LOG-024d (a)), so the rule lives in the briefs and the reviews until a ruling adds one. The
+declared debug-mode bins of this test (gen_csr_debug_csr_cg.cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok) cannot be hit without a debug entry and
+are a separate question for the manifest (bins_not_hit or a debug-ROM program) before the test is measured for functional coverage.

@@ -1,0 +1,32 @@
+# run t206_csr_reset_1028791296_asis: 2026-09-03T18:00:11Z host=soc-l-11 seed=1028791296 module=dv.auto_dv.tests.gen_test_csr_reset build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8 sources_sha=156eb9357b79552e template_sha=abbe6fcb78e53a27 pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/t206/prog/prog.vmem plusargs=[]
+     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_csr_reset seed=1028791296 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/t206/prog/prog.vmem
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=debug_req_regime=storm imem_gnt_delay=random imem_rvalid_delay=short irq_line_mix=single scr_key_delay=withheld_then_valid
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=2 sched=imem_gnt_delay:random@c0,imem_rvalid_delay:short@c0,irq_line_mix:single@c0,debug_req_regime:storm@c0,scr_key_delay:withheld_then_valid@c0,debug_req_regime:none@c19746,irq_line_mix:multi@c19746,imem_rvalid_delay:long@c19746,scr_key_delay:delayed@c19746
+   655.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=imem_gnt_delay value=random cycle=60
+   665.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=imem_rvalid_delay value=short cycle=61
+   675.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=irq_line_mix value=single cycle=62
+   685.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=debug_req_regime value=storm cycle=63
+   695.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=scr_key_delay value=withheld_then_valid cycle=64
+   705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=65
+197525.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=1 trigger=c19746 knob=debug_req_regime value=none cycle=19747
+197535.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=1 trigger=c19746 knob=irq_line_mix value=multi cycle=19748
+197545.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=1 trigger=c19746 knob=imem_rvalid_delay value=long cycle=19749
+197555.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=1 trigger=c19746 knob=scr_key_delay value=delayed cycle=19750
+1000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 1 x 100000 cycles, cycle 100065, retired 2162 (bus regimes)
+2000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 2 x 100000 cycles, cycle 200065, retired 4218 (bus regimes)
+3000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 3 x 100000 cycles, cycle 300065, retired 6248 (bus regimes)
+4000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 4 x 100000 cycles, cycle 400065, retired 8300 (bus regimes)
+5000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 5 x 100000 cycles, cycle 500065, retired 10348 (bus regimes)
+6000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 6 x 100000 cycles, cycle 600065, retired 12392 (bus regimes)
+7000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 7 x 100000 cycles, cycle 700065, retired 14459 (bus regimes)
+8000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 8 x 100000 cycles, cycle 800065, retired 16523 (bus regimes)
+9000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 9 x 100000 cycles, cycle 900065, retired 18558 (bus regimes)
+10000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 10 x 100000 cycles, cycle 1000065, retired 20592 (bus regimes)
+11000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 11 x 100000 cycles, cycle 1100065, retired 22631 (bus regimes)
+12000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 12 x 100000 cycles, cycle 1200065, retired 24692 (bus regimes)
+13000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 13 x 100000 cycles, cycle 1300065, retired 26745 (bus regimes)
+14000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 14 x 100000 cycles, cycle 1400065, retired 28798 (bus regimes)
+15000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 15 x 100000 cycles, cycle 1500065, retired 30840 (bus regimes)
+                                                          AssertionError: GEN_TEST: end-of-test store 1 of 89 not seen within 16 x 100000 cycles (cycle 1600065, retired 32890) although the core keeps retiring (runaway program)
+                                                          ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                     16000705.01           7.43    2152338.49  **
+# sim.log: no UVM report summary (the failing cocotb test ends the simulation before the report)
