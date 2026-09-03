@@ -495,3 +495,17 @@ Runs on out_head14 (export of 2ea81ac), gen_test_csr_reset seed 1028791296 (mie_
 The first version of the run-time check read pins from self.pinned, which lists only the schedulable knobs, so the storm + with_nmi pins
 passed it (a run of this probe set before the fix); the check now reads pins of every regime knob. Verified from a detached archive of HEAD
 with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_cm80.log names the HEAD).
+
+## 14. The CM85 touch: the helper branch of the lint reaches attribute chains; the API document's residual list corrected
+
+Red first: gen_t2cm85_helper_chain_red_before.log records the lint of 99cba0e accepting a module-level helper `def _h(t): t.bridge.cov_witness = _f`
+called with self from stimulus() while refusing the direct `t.bridge = None` in the same helper. Change: the helper branch of check_test_source
+walks pure attribute chains rooted at a test-bound parameter and refuses one whose first attribute is template-owned, the same reach the
+class-body rule gained in the CM77 touch; the F_HELPER sentence (lib and the API doc bullet, which the self-test compares verbatim) names it,
+and a red source joins the F_HELPER list. The refusal messages of both branches say "an attribute reached through a template-owned name is
+read-only for a test" (they fire for non-methods too), and the F_OVERRIDE sentence separates the method overrides from the attribute rebinding.
+The API document's "Shapes known to pass today" paragraph no longer lists the four attribute-chain writes the lint refuses, names the five
+witness fixtures, and states the frozen-list rule instead of a log id. After the change the same helper source is refused: "helper _h rebinds
+t.bridge.cov_witness at line 5; an attribute reached through a template-owned name is read-only for a test". Verified from a detached archive
+of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_cm85.log names the HEAD); the shared tree's self-test is red
+at this time on gen_test_csr_access's manifest, stale against the DV Lead's in-progress plan edits, not on this touch.

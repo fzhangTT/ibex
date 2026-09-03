@@ -1,0 +1,3 @@
+# TDD red for CM85-M-2, 2026-09-03T20:41:14Z: the library of HEAD 99cba0e (gen_test_lib.py sha256 925c8f43af2d21c4) on a helper that rebinds a template method through an attribute chain
+helper chain rebind: ['T'] (ACCEPTED: the helper branch matches only t.<attr>)
+helper direct t.bridge REFUSED: GEN_TEST_LIB: <cm85b>: helper _h assigns t.bridge at line 5; template-owned names are read-only

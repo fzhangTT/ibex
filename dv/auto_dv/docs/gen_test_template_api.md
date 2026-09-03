@@ -241,8 +241,8 @@ self-test's red list, `lib.REFUSED_FORMS`: at least one refused red source per l
 list and the table differ):
 
 - a template method other than the four hooks overridden in the test class (directly, through an aliased base, an
-  import alias, a mixin, a class-body assignment of the method name, or a rebinding through an attribute chain rooted
-  at self, e.g. self.bridge.cov_witness = f)
+  import alias, a mixin, or a class-body assignment of the method name), or an attribute reached through a
+  template-owned name rebound from a method (an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)
 - check() with a literal outcome
 - fire_check() that records no check
 - fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that
@@ -259,19 +259,19 @@ list and the table differ):
   item-assigned or deleted
 - assignment through self to a template-assigned attribute
 - getattr(), setattr(), vars(), __dict__ or type() on the test object
-- self passed to a module-level helper that touches a template-owned name, directly or through an alias inside the
-  helper
+- self passed to a module-level helper that touches a template-owned name, directly, through an alias inside the
+  helper, or through an attribute chain rooted at the parameter
 - self escaping as a bare name: an alias, a loop target or a keyword argument
 
 Everything else passes; the lint is not a guarantee. The guarantee is architectural: the committed testlist ids, the
 fire-check codes and the SV witness ledger. Shapes known to pass today, each an indirection-free statement or a patch
 outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []`,
-attribute-chain writes through template-owned objects (`self.schedule.phases = []`, `self.h.b.evt_eot_seen.value = 1`,
-`self.bridge.cmd = None`, `self.log.info = print`), template patching through an import alias or the full dotted path,
-string-built names, exec/importlib, objects reached through containers or return values, helpers in other modules. The
-lint does not grow past this list (LOG-024c); those shapes are caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
+template patching through an import alias or the full dotted path, string-built names, exec/importlib, objects reached
+through containers or return values (`b = self.bridge` is refused as an escape, but `b = [self.bridge][0]` or a helper
+returning it is not), helpers in other modules. The refused-form list is frozen: a new refusal is a structural check beside
+the lint, not a new form; those shapes are caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
 `GEN_DV_FLOW_RUN` environment marker (`lib.FLOW_RUN_ENV`, exported by every flow job script); a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
-_noid prove the four epilogue paths with a Python-side fake dispatcher.
+_noid / _othergroup prove the five epilogue paths with a Python-side recorder in place of the bridge's cov_witness.
 
 `run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test
 (fixture gen_ut_drain_probe holds the runner 40 cycles across the end of test).

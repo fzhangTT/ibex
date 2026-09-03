@@ -64,7 +64,7 @@ DEFAULT_DURATION_WEIGHTS = {"short": 6, "medium": 3, "long": 1}
 
 # Statement shapes check_test_source refuses. The API doc lists exactly these (gen_test_template_api.md) and the self-test proves
 # at least one refused red source per entry; anything not listed passes the lint; the list is frozen (a new refusal is a structural check beside it).
-F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, a class-body assignment of the method name, or a rebinding through an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)"
+F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, or a class-body assignment of the method name), or an attribute reached through a template-owned name rebound from a method (an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)"
 F_LITERAL = "check() with a literal outcome"
 F_NOCHECK = "fire_check() that records no check"
 F_ITEMS = ("fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that does not start with "
@@ -79,7 +79,7 @@ F_RECORD = ("the verdict record (_results, results, failures, checks, witness_id
             "aliased, bound by a walrus or tuple target, passed to a callee, captured by a lambda, item-assigned or deleted")
 F_ASSIGN = "assignment through self to a template-assigned attribute"
 F_INTROSPECT = "getattr(), setattr(), vars(), __dict__ or type() on the test object"
-F_HELPER = "self passed to a module-level helper that touches a template-owned name, directly or through an alias inside the helper"
+F_HELPER = "self passed to a module-level helper that touches a template-owned name, directly, through an alias inside the helper, or through an attribute chain rooted at the parameter"
 F_ESCAPE = "self escaping as a bare name: an alias, a loop target or a keyword argument"
 REFUSED_FORMS = (F_OVERRIDE, F_LITERAL, F_NOCHECK, F_ITEMS, F_PATCH, F_NESTED, F_WITNESS, F_CYCLE, F_LAYERS, F_BASE, F_RECORD, F_ASSIGN,
                  F_INTROSPECT, F_HELPER, F_ESCAPE)
@@ -556,6 +556,13 @@ def check_test_source(source, path="<source>", entry_lookup=None):
             for tg in tgts:
                 if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id in params and tg.attr in template_attrs:
                     raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} assigns {tg.value.id}.{tg.attr} at line {c.lineno}; template-owned names are read-only")
+                root, chain = tg, []                    # the same reach as the class-body rule: t.bridge.cov_witness = f inside a helper
+                while isinstance(root, ast.Attribute):
+                    chain.append(root.attr)
+                    root = root.value
+                if len(chain) > 1 and isinstance(root, ast.Name) and root.id in params and chain[-1] in template_attrs:
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} rebinds {root.id}.{'.'.join(reversed(chain))} at line {c.lineno}; "
+                                         f"an attribute reached through a template-owned name is read-only for a test")
             if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute):
                 chain, first = c.func.value, None
                 while isinstance(chain, (ast.Attribute, ast.Subscript)):
@@ -594,7 +601,7 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                             root = root.value
                         if len(chain) > 1 and isinstance(root, ast.Name) and root.id == "self" and owned(chain[-1]):
                             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} rebinds self.{'.'.join(reversed(chain))} at line {c.lineno}; "
-                                                 f"a template method reached through a template-owned attribute is read-only for a test")
+                                                 f"an attribute reached through a template-owned name is read-only for a test")
                 if isinstance(c, ast.Call):
                     f = c.func
                     if isinstance(f, ast.Attribute):
@@ -1048,6 +1055,7 @@ def _self_test():
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.__dict__['failures'] = []\n" + good, "touches self.__dict__"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        type(self).finish = None\n" + good, "uses type(self"),
+                           (F_HELPER, imp + "async def _f(*a):\n    return 0\ndef _h(t):\n    t.bridge.cov_witness = _f\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "rebinds t.bridge.cov_witness"),
                            (F_HELPER, imp + "def _forge(t):\n    t._results.append(1)\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _forge(self)\n" + good, "helper _forge calls into t._results"),
                            (F_HELPER, imp + "def _forge(t):\n    t.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "helper _forge assigns t.failures")):
         accepted = False
