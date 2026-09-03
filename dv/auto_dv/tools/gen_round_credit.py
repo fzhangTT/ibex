@@ -11,7 +11,7 @@ item credit; the per-test table lists every run, reds included. Everything else 
 Usage:
   gen_round_credit.py --regress-manifest <outdir>/manifest.yaml [--plan-dir dv/auto_dv/docs] [--fcov-dir dv/auto_dv/fcov_expectations]
                       [--csv <out.csv>] [--md <out.md>] [--round <n>]
-  gen_round_credit.py --self-test        # synthetic runs: credited / held / unhit / fire-fail / not-run cases
+  gen_round_credit.py --self-test        # synthetic runs: credited / held / unhit / fire-fail / not-run / carve-out cases; load_plan wiring on a synthetic plan set
 """
 import re, csv, sys, argparse, pathlib, collections, hashlib, shlex, yaml
 R = pathlib.Path(__file__).resolve()
@@ -26,7 +26,7 @@ HEADINGS = {  # fixed heading texts by id, so the printed invocation carries the
 
 def plan_inputs_digest(plan_dir):
     """sha256 (first 12) over exactly what this tool reads from the plan set: the item headers with their Test group, Tier and Expected fields, the
-    hold sections, the crediting carve-out sections, gen_trace_tp_bin.csv and gen_trace_witness_ids.csv. Independent of the plan's embedded Section 1.7, so a report reproduces
+    hold sections, the crediting carve-out sections and rows (item, tag, until, reason), gen_trace_tp_bin.csv and gen_trace_witness_ids.csv. Independent of the plan's embedded Section 1.7, so a report reproduces
     from the commit that embeds it."""
     plan = (plan_dir / 'gen_test_plan.md').read_text(); h = hashlib.sha256()
     for m in re.finditer(r'^### (TP-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)', plan, re.M | re.S):
@@ -36,7 +36,7 @@ def plan_inputs_digest(plan_dir):
     for sec, tag in hold_items(plan)[1]: h.update((sec + ' ' + tag + '\n').encode())
     for tid, tags in sorted(hold_items(plan)[0].items()): h.update((tid + ':' + ','.join(tags) + '\n').encode())
     for sec, tag in carveout_items(plan)[1]: h.update(('carve ' + sec + ' ' + tag + '\n').encode())
-    for tid, (tag, until, _) in sorted(carveout_items(plan)[0].items()): h.update(('carve ' + tid + ':' + tag + ':' + until + '\n').encode())
+    for tid, (tag, until, why) in sorted(carveout_items(plan)[0].items()): h.update(('carve ' + tid + ':' + tag + ':' + until + ':' + why + '\n').encode())
     h.update((plan_dir / 'gen_trace_tp_bin.csv').read_bytes()); h.update((plan_dir / 'gen_trace_witness_ids.csv').read_bytes())
     return h.hexdigest()[:12]
 
@@ -210,7 +210,19 @@ def self_test():
     got4 = {r['item']: r['status'].split(' ')[0] for r in rows4}
     ok4 = csec == [('1.8', 'LOG-051')] and carve == {'TP-AA-005': ('UNCREDITED', 'T-183 (2c)', 'rf_wr_suppress undo on the DUT flag'), 'TP-AA-006': ('COUNTED-ONLY', 'T-183 (2c)', 'corrupted-load records')} and got4['TP-AA-005'] == 'UNCREDITED' and got4['TP-AA-006'] == 'COUNTED-ONLY' and got4['TP-AA-001'] == 'CREDITED'
     print('SELF-TEST', 'ok ' if ok4 else 'BAD', 'carve-out record applied (UNCREDITED / COUNTED-ONLY never credit; an untagged item still credits):', {k: got4[k] for k in ('TP-AA-001', 'TP-AA-005', 'TP-AA-006')}, csec)
-    return 0 if ok and ok2 and ok3 and ok4 else 1
+    # wiring: a synthetic plan set on disk through load_plan, plan_inputs_digest and credit (the real record reaches the crediting path)
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        d = pathlib.Path(td)
+        (d / 'gen_test_plan.md').write_text('# plan\n\n## 0 Rules\n\n' + sec + '\n## 2 Items\n\n### TP-AA-005: five\n- Tier: smoke\n- Expected: pass\n- Test group: gen_aa\n\n### TP-AA-001: one\n- Tier: smoke\n- Expected: pass\n- Test group: gen_aa\n')
+        (d / 'gen_trace_tp_bin.csv').write_text('tp_item,covergroup,coverpoint,bin,adopted\nTP-AA-005,CG-AA-001,cp_x,b0,0\nTP-AA-001,CG-AA-001,cp_x,b0,0\n')
+        (d / 'gen_trace_witness_ids.csv').write_text('index,tp_item,bin,test_group,marked\n')
+        it5, ho5, bi5, ma5, ca5 = load_plan(d); dg5 = plan_inputs_digest(d)
+        rows5, _ = credit(it5, ho5, bi5, ma5, runs[:2], lambda t: ({'gen_aa_cg.cp_x.b0'}, set()) if t == 'gen_test_aa' else (set(), set()), lambda r: fires4[(r['test'], r['seed'])], ca5)
+    got5 = {r['item']: r['status'].split(' ')[0] for r in rows5}
+    ok5 = ca5 == carve and it5['TP-AA-005']['group'] == 'gen_aa' and got5 == {'TP-AA-005': 'UNCREDITED', 'TP-AA-001': 'CREDITED'} and len(dg5) == 12 and sum(1 for r in rows5 if r['carve']) == 1
+    print('SELF-TEST', 'ok ' if ok5 else 'BAD', 'load_plan wiring on a synthetic plan set (2 carve-out rows read, 1 hosted):', got5, 'digest', dg5)
+    return 0 if ok and ok2 and ok3 and ok4 and ok5 else 1
 
 def main():
     ap = argparse.ArgumentParser()
@@ -232,7 +244,7 @@ def main():
         return str(q.relative_to(R.resolve())) if q.is_relative_to(R.resolve()) else str(q)
     inv = (f"Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
            + (f" --heading-id {a.heading_id}" if a.heading_id else (f" --heading {shlex.quote(a.heading)}" if a.heading else ''))
-           + (f" --csv {shlex.quote(rel(a.csv))}" if a.csv else '') + (f" --md {shlex.quote(rel(a.md))}" if a.md else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
+           + (f" --csv {shlex.quote(rel(a.csv))}" if a.csv else '') + (f" --md {shlex.quote(rel(a.md))}" if a.md else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; carve-out rows read {len(carveouts)} ({sum(1 for r in rows if r['carve'])} hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
     hdr = round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:

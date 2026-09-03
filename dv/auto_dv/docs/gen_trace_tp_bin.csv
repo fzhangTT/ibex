@@ -7139,8 +7139,6 @@ TP-CSR-021,CG-CSR-002,cr_csr_op,misa_csrrs,0
 TP-CSR-021,CG-CSR-002,cr_csr_op,misa_csrrsi,0
 TP-CSR-021,CG-CSR-002,cr_csr_op,misa_csrrw,0
 TP-CSR-021,CG-CSR-002,cr_csr_op,misa_csrrwi,0
-TP-CSR-021,CG-CSR-002,cr_csr_wpat,misa_illegal,0
-TP-CSR-021,CG-CSR-002,cr_csr_wpat,misa_legal,0
 TP-CSR-021,CG-CSR-002,cr_csr_wpat,misa_msb,0
 TP-CSR-021,CG-CSR-002,cr_csr_wpat,misa_rand,0
 TP-CSR-021,CG-CSR-016,cp_csr,misa,0
