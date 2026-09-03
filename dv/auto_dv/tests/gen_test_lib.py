@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 from dv.auto_dv.gen_tb import gen_knobs as _gk
-from dv.auto_dv.gen_tb.gen_knobs import CMD, CONSTANTS, KNOB_IDS, PLUSARGS, plusarg
+from dv.auto_dv.gen_tb.gen_knobs import CMD, CONSTANTS, KNOB_CONSUMER, KNOB_IDS, PLUSARGS, plusarg
 from dv.auto_dv.flow.gen_flow_const import JOB_ENV_SET as _JOB_ENV_SET
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -681,6 +681,96 @@ def check_test_module(path):
     return check_test_source(Path(path).read_text(), path)
 
 
+# Regime knobs whose consumer drives an event the program must survive: a debug request needs a debug ROM in the program, an
+# interrupt line needs a returning handler unless the program keeps mstatus.MIE at 0 for the whole run (the DM window has no
+# program code; a taken interrupt without a handler never returns). HANDLER_OF names the handler each consumer needs.
+HANDLER_OF = {"dbg": "dbg", "irq": "irq"}
+HANDLERS = tuple(sorted(set(HANDLER_OF.values())))
+
+
+def regime_handler_violations(schedulable, program_handlers, mie_stays_zero):
+    """The knobs of `schedulable` a program with `program_handlers` cannot survive (the LOG-050 rule); [] when none."""
+    bad = []
+    for knob in schedulable:
+        need = HANDLER_OF.get(KNOB_CONSUMER.get(knob, "none"))
+        if need is None or need in program_handlers:
+            continue
+        if need == "irq" and mie_stays_zero:
+            continue
+        bad.append(f"{knob} (consumer {KNOB_CONSUMER[knob]}) needs a {need} handler the program does not declare"
+                   + (" (or mie_stays_zero = True)" if need == "irq" else ""))
+    return bad
+
+
+def check_regime_handlers_source(source, path="<source>"):
+    """Structural form of the LOG-050 rule over a test module (the library self-test runs it on every committed test): every
+    test class's `schedulable` is a literal tuple of knob names or `lib.TIMING_ONLY_KNOBS` / `GenTest.schedulable`,
+    `program_handlers` a literal tuple drawn from HANDLERS and `mie_stays_zero` a literal True/False (the template defaults
+    apply when absent); a schedulable dbg-consumer knob needs "dbg" in program_handlers, an irq-consumer knob "irq" or
+    mie_stays_zero. Returns the checked class names; refuses with the offending class, knob and missing declaration."""
+    import ast
+    tree = ast.parse(source, filename=str(path))
+    from dv.auto_dv.tests import gen_test_template as _tpl
+    consts = {n.targets[0].id: n.value for n in tree.body
+              if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name)}
+
+    def knob_names(node, seen=()):
+        """A literal tuple of knob names, its elements or the whole tuple resolved through module-level constants; None otherwise."""
+        if isinstance(node, ast.Name) and node.id in consts and node.id not in seen:
+            return knob_names(consts[node.id], seen + (node.id,))
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return (node.value,)
+        if isinstance(node, ast.Tuple):
+            parts = [knob_names(e, seen) for e in node.elts]
+            return None if any(p is None for p in parts) else tuple(x for p in parts for x in p)
+        return None
+
+    checked = []
+    for cls in tree.body:
+        if not isinstance(cls, ast.ClassDef):
+            continue
+        attrs = {}
+        for a in cls.body:
+            if isinstance(a, ast.Assign) and len(a.targets) == 1 and isinstance(a.targets[0], ast.Name):
+                attrs[a.targets[0].id] = a.value
+        if "name" not in attrs:
+            continue
+        sched = attrs.get("schedulable")
+        if sched is None:
+            schedulable = tuple(_tpl.GenTest.schedulable)
+        elif knob_names(sched) is not None and not isinstance(sched, ast.Constant):
+            schedulable = knob_names(sched)
+        elif isinstance(sched, ast.Attribute) and sched.attr == "TIMING_ONLY_KNOBS":
+            schedulable = tuple(TIMING_ONLY_KNOBS)
+        elif isinstance(sched, ast.Attribute) and sched.attr == "schedulable":
+            schedulable = tuple(_tpl.GenTest.schedulable)
+        else:
+            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: schedulable must be a literal tuple of knob names, "
+                                 f"lib.TIMING_ONLY_KNOBS or GenTest.schedulable (line {sched.lineno}) so the handler rule can read it")
+        ph = attrs.get("program_handlers")
+        if ph is None:
+            handlers = tuple(_tpl.GenTest.program_handlers)
+        elif isinstance(ph, ast.Tuple) and all(isinstance(e, ast.Constant) and e.value in HANDLERS for e in ph.elts):
+            handlers = tuple(e.value for e in ph.elts)
+        else:
+            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: program_handlers must be a literal tuple drawn from {HANDLERS} (line {ph.lineno})")
+        mz = attrs.get("mie_stays_zero")
+        if mz is None:
+            mie_zero = bool(_tpl.GenTest.mie_stays_zero)
+        elif isinstance(mz, ast.Constant) and isinstance(mz.value, bool):
+            mie_zero = mz.value
+        else:
+            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: mie_stays_zero must be a literal True or False (line {mz.lineno})")
+        bad = regime_handler_violations(schedulable, handlers, mie_zero)
+        assert not bad, f"GEN_TEST_LIB: {path}: class {cls.name} schedules a regime knob its program cannot survive: " + "; ".join(bad)
+        checked.append(cls.name)
+    return checked
+
+
+def check_regime_handlers(path):
+    return check_regime_handlers_source(Path(path).read_text(), path)
+
+
 MMIO_MAP_H = Path(__file__).resolve().parent / "gen_programs" / "gen_mmio_map.h"
 MMIO_MAP_H_KEYS = {"GEN_MM_SIG_ADDR": "sig_addr", "GEN_MM_IRQ_ACK_ADDR": "irq_ack_addr", "GEN_MM_EOT_ADDR": "eot_addr",
                    "GEN_MM_PHASE_MARK_ADDR": "phase_mark_addr", "GEN_MM_DM_HALT": "dm_halt", "GEN_MM_DM_EXCEPTION": "dm_exception"}
@@ -790,6 +880,29 @@ def _self_test():
     tests = [f for f in sorted(here.glob("gen_test_*.py")) if f.name not in ("gen_test_lib.py", "gen_test_template.py")]
     for f in tests:
         assert check_test_module(f), f"{f}: no GenTest subclass found"
+        assert check_regime_handlers(f), f"{f}: no test class for the regime-handler rule"
+    # LOG-050 rule: red sources refused, green sources accepted (the check is structural, outside the frozen REFUSED_FORMS)
+    rh_base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
+    rh_tail = "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n"
+    for red, why in ((rh_base + "    schedulable = ('knob_imem_gnt_delay', 'knob_debug_req_regime')\n" + rh_tail, "needs a dbg handler"),
+                     (rh_base + "    schedulable = ('knob_irq_line_mix',)\n" + rh_tail, "needs a irq handler"),
+                     (rh_base + "    schedulable = ('knob_irq_regime',)\n    mie_stays_zero = False\n" + rh_tail, "needs a irq handler"),
+                     (rh_base + "    schedulable = ('knob_debug_req_regime',)\n    program_handlers = HANDLERS\n" + rh_tail, "program_handlers must be a literal"),
+                     (rh_base + "    schedulable = ('knob_irq_regime',)\n    mie_stays_zero = FLAG\n" + rh_tail, "literal True or False"),
+                     (rh_base + "    schedulable = KNOBS\n" + rh_tail, "schedulable must be a literal"),
+                     (rh_base + rh_tail, "needs a dbg handler")):          # the template default schedules every regime knob
+        try:
+            check_regime_handlers_source(red, "<rh-red>")
+            raise AssertionError(f"regime-handler rule accepted a red source ({why})")
+        except AssertionError as exc:
+            assert why in str(exc), f"regime-handler rule: unexpected message for ({why}): {exc}"
+    for green in (rh_base + "    schedulable = ('knob_irq_regime', 'knob_irq_line_mix')\n    mie_stays_zero = True\n" + rh_tail,
+                  rh_base + "    schedulable = ('knob_debug_req_regime', 'knob_irq_regime')\n    program_handlers = ('dbg', 'irq')\n" + rh_tail,
+                  rh_base + "    schedulable = lib.TIMING_ONLY_KNOBS\n" + rh_tail,
+                  "K = 'knob_scr_key_delay'\nKN = ('knob_imem_gnt_delay', K)\n" + rh_base + "    schedulable = KN\n" + rh_tail,
+                  rh_base + "    program_handlers = ('dbg', 'irq')\n" + rh_tail):
+        assert check_regime_handlers_source(green, "<rh-green>") == ["T"]
+    assert regime_handler_violations(("knob_debug_req_regime",), (), True) and not regime_handler_violations(("knob_irq_hold",), (), True)
     base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
     for form, red, why in ((F_OVERRIDE, base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
                            (F_LITERAL, base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),

@@ -418,3 +418,32 @@ e.g. 86927ab264008433 for gen_ut_witness_ok), the gen_cmp_zcb seed-1 image built
 
 The library self-test PASSes with the new attributes (the F_PATCH red still refuses a test module assigning lib.WITNESS_IDS; the
 fixtures are not test modules). Verified from a detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_t226.log names the HEAD it archived).
+
+## 11. The LOG-050 regime-handler rule (Critic batch-1 v8 L-1): a structural check in the library self-test and a run-time guard
+
+Why: the round-0 runaway (T-206) was a debug request storm drawn for a program without a debug ROM; LOG-050 rules that a test whose program
+has no debug ROM does not schedule knob_debug_req_regime and one without an interrupt handler does not schedule an irq-consumer knob unless
+MIE stays 0, enforced structurally in the library self-test, not as a 16th lint form (LOG-024d keeps REFUSED_FORMS at 15).
+
+Red first: gen_t2guard_structural_red_before.log records the library before the check (HEAD f2b9272 plus T-226) accepting the fixture
+gen_t2guard_red_fixture_dbg_nohandler.py.txt (a test scheduling knob_debug_req_regime with no handler) through check_test_source, and the
+absence of check_regime_handlers.
+
+Change: GenTest gains `program_handlers = ()` ("dbg": a debug ROM in the DM window; "irq": a returning interrupt handler) and
+`mie_stays_zero = False`; gen_test_lib.regime_handler_violations applies the rule from gen_knobs.KNOB_CONSUMER (the yaml's
+regime_set_consumer), check_regime_handlers reads a module's classes by AST (schedulable as a literal tuple, module-level constants,
+lib.TIMING_ONLY_KNOBS or GenTest.schedulable; the two declarations as literals; anything else refused as unreadable) and the self-test runs it on
+every committed test module plus seven red and five green sources (the template default of every regime knob counts as red without both
+handlers); setup() applies the same rule at run time before the first fetch. gen_test_rst_boot and gen_test_csr_reset declare
+mie_stays_zero = True (their docstrings already said MIE stays 0); gen_test_bit_draft's knob tuple became a literal so the rule can read it.
+API document Section 9 and the class-attribute table describe it.
+
+Runs on out_head14 (export of 2ea81ac, sources sha 893384b8eec4e6d5):
+| Run | Designed outcome | Decisive line | Result | md5 of the retained copy |
+|---|---|---|---|---|
+| t2guard_regime_handler_red | red: a fixture (gen_ut_regime_handler_red, gen_test_cmp_zcb's test scheduling knob_debug_req_regime, no handler) fails in setup() before GEN_TEST_RELEASE | `AssertionError: GEN_TEST_FAIL gen_ut_regime_handler_red: schedules a regime knob its program cannot survive: knob_debug_req_regime (consumer dbg) needs a dbg handler the program does not declare` | FAIL as designed, no release, no fetch | 03208734a505949a2bff51576ff12d50 |
+| t2guard_csr_reset_1028791296 | green: the declared test (mie_stays_zero = True, irq_line_mix schedulable) on the guarded template | GEN_TEST_PASS, 88 reports, retired 243, EOT cycle 4203, GEN_TEST_BINS n=68, UVM_ERROR 0 | PASS | 47df188c5bdfb69c0df2fafd40496405 (stdout in full; sim.log a014f59a2644fdb7488a8f919f3d5a21) |
+
+After the change the same structural fixture is refused: "class T schedules a regime knob its program cannot survive: knob_debug_req_regime
+(consumer dbg) needs a dbg handler the program does not declare" (the self-test's first red source is that fixture's body). Verified from a
+detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_guard.log names the HEAD).

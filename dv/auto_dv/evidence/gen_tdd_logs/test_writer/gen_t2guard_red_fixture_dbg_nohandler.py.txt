@@ -1,0 +1,11 @@
+"""LOG-050 red fixture (never a testlist entry): a test scheduling knob_debug_req_regime while its program declares no
+debug handler; the structural check must refuse it."""
+from dv.auto_dv.tests.gen_test_template import GenTest
+
+
+class T(GenTest):
+    name = "gen_test_x"
+    schedulable = ("knob_imem_gnt_delay", "knob_debug_req_regime")
+
+    def fire_check(self):
+        self.check("a", self.retired() > 0, "x")

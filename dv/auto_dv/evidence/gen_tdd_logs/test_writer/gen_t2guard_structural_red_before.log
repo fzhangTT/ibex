@@ -1,0 +1,3 @@
+# TDD red for the LOG-050 structural check, 2026-09-03T20:00:44Z: the library of HEAD f2b9272 plus the T-226 touch (gen_test_lib.py sha256 95b94683d40ffc9b) checks the fixture /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/t2guard/red_fixture_dbg_nohandler.py
+check_test_source: ['T'] (ACCEPTED: no structural check refuses a schedulable dbg-consumer knob without a debug handler)
+has check_regime_handlers: False

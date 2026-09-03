@@ -43,8 +43,10 @@ count) and the planned state is restored without a report afterwards: 013 a lock
 suppression); 014, 015, 018 (second half), 019, 020 the lock-setting write, so the follow-up write lands;
 016, 017, 018 (first half), 021 a write that should land; 112 the RLB clear, so the adjacent locked write
 lands. A site is eligible only where the model says the skipped write changes the read-back (013: a write that
-changes an unlocked lane; a write to an all-locked word or a no-op RMW is never a site), and csr_op asserts it
-for every skip, so no red is vacuous. The red program's retirement floor is the green one.
+changes an unlocked lane; a write to an all-locked word or a no-op RMW is never a site); csr_op asserts it for every
+skip that goes through it, and the two skips that do not (020's lock-setting write, 112's RLB clear) are observable by
+construction (a fresh L=1 on an unlocked entry; RLB 1 -> 0 asserted), so no red is vacuous. The red program's retirement
+floor is the green one.
 
 CLI: python3 gen_pmp_lock_prog.py --seed N --out <file.S> [--red [--red-item TP-PMP-0nn]] [--summary]
      python3 gen_pmp_lock_prog.py --seed N --check-spike <spike_commits.log> --sym <prog.sym.json>

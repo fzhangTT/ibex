@@ -180,8 +180,11 @@ Three green defects of gen_pmp_lock_prog.py found by the touch's sweeps (each a 
   and p6_tor_lock asserts the pmpaddr is writable.
 - seed 17 (found by the green sweep after the two fixes): TP-PMP-015's TOR entry drawn at PMPNumRegions-2 under TP-PMP-018's top-entry lock, which
   may be a TOR; the TOR roles now stay below the top entry.
-The generator at 36e2694 carried the first two (its role draws are unchanged by the fixes up to seed 17's), so the acceptance wave would have
-shown them as green failures at about 3 of 40 seeds.
+What 36e2694's generator carried: the TP-PMP-021 no-op rewrite (its seeds 29 and 35 fail the same way, and seed 36 aborts in plan()) and the
+latent hazard of a TOR lock above the 015/017 entries; that hazard surfaced at seed 7 only after the TP-PMP-112 variant pin shifted every
+post-P2 draw (at 36e2694's seed 7 the P5 episode on entry 11 draws NA4, and over seeds 1..200 it never falls 015 back to A=OFF), and the
+before-fix sweep's r35 red belongs to that intermediate generator too. The acceptance wave on 36e2694 would still have shown the 021 failures
+at about 2 of 40 seeds.
 
 Sweeps on the final generator (sha256 56ef5fe5f695106b), from head_export13 with the touch overlaid:
 - gen_b3_pmp_lock_sweep800.log (md5 74999fde11c68c749b373cd8569f1aac): plan() green and seed-drawn red for seeds 1..400, 200 random
@@ -192,3 +195,7 @@ Sweeps on the final generator (sha256 56ef5fe5f695106b), from head_export13 with
   at seeds 1..40 fails on fire_tp_pmp_013 alone on 40 of 40 seeds (replaced-write
   lock mix: 4 none, 36 some); the green program at seeds 1..40 passes on 40 of 40
   (GEN_TEST_BINS n=50 equal to the manifest, UVM_ERROR 0 on every seed).
+
+Note for the covergroup author (CM72-I-3): rlbclr_then_cfg is a per-seed must-hit bin whose hit assumes the cp_bb pair predicate counts
+consecutive PMP CSR writes (the `li t0` between the mseccfg clear and the pmpcfg write is not a PMP CSR write), the assumption the declared
+lock_then_* bins already make; a predicate on consecutive rvfi_order would miss both.

@@ -122,7 +122,7 @@ class PmpLock(GenTest):
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
-    # bins of built items one run cannot reach (no wrapper reset: one RLB clear per run, MMWP never set), left out of the manifest
+    # bins of built items whose precondition this test does not apply (rule (g)), with the reason; left out of the manifest
     bins_not_hit = {
         "gen_pmp_recfg_cg.cp_bb.rlbclr_then_addr": "the write adjacent to the run's one RLB clear is a pmpcfg write here (RLB stays 0 once a lock exists, so one clear per power-on); the pmpaddr variant is not applied by this test",
         "gen_pmp_mseccfg_cg.cr_state_trans.s101_to_s100": "MML is 0 at the run's one RLB clear: the MML=0 items 013/019/020 follow it",

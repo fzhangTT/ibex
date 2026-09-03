@@ -144,6 +144,7 @@ def _compare(test, p, item):
 class RstBoot(GenTest):
     name = "gen_test_rst_boot"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_regime", KEY_KNOB)
+    mie_stays_zero = True   # no handler: the program never writes mstatus.MIE or mie, so driven lines are never taken (TP-RST-006)
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
     bins_not_hit = {

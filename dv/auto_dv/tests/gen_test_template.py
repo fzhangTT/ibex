@@ -82,6 +82,11 @@ class GenTest:
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
     bins_not_hit = {}       # bins of built items the test cannot hit (precondition not applied), with the reason; left out of the manifest
+    # The handlers the program carries ("dbg": a debug ROM in the DM window, "irq": a returning interrupt handler) and whether it
+    # keeps mstatus.MIE at 0 throughout: a test may schedule a dbg-consumer knob only with "dbg", an irq-consumer knob only with
+    # "irq" or mie_stays_zero (lib.regime_handler_violations; the library self-test checks every test module, setup() every run).
+    program_handlers = ()
+    mie_stays_zero = False
 
     def __init__(self, dut):
         self.dut = dut
@@ -182,6 +187,8 @@ class GenTest:
 
     # ---- fixed phases --------------------------------------------------------------------------
     async def setup(self):
+        bad = lib.regime_handler_violations(self.schedulable, type(self).program_handlers, type(self).mie_stays_zero)
+        assert not bad, f"GEN_TEST_FAIL {self.name}: schedules a regime knob its program cannot survive: " + "; ".join(bad)
         assert lib.plus_int("fetch_en_at_reset", lib.knob_default("fetch_en_at_reset")) == 0, \
             "GEN_TEST: +gen_fetch_en_at_reset=0 is required (read-back and layer 2 precede the first fetch)"
         await self.bridge.start()

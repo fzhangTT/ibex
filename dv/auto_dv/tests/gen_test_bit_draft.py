@@ -38,7 +38,7 @@ from dv.auto_dv.tests import gen_test_lib as lib
 from dv.auto_dv.tests.gen_test_template import GenTest
 from dv.auto_dv.tests.gen_programs import gen_bit_draft_prog as prog
 
-ITEM_KNOBS = tuple(lib.long_knob(k) for k in ("imem_rvalid_delay",))   # TP-BIT-016 Knobs line
+ITEM_KNOBS = ("knob_imem_rvalid_delay",)   # TP-BIT-016 Knobs line, literal so the regime-handler rule can read it
 assert all(k in lib.REGIME_KNOBS for k in ITEM_KNOBS), f"unknown regime knob in {ITEM_KNOBS}"
 
 

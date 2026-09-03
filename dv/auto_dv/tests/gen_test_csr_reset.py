@@ -141,6 +141,7 @@ def _fmt(v):
 class CsrReset(GenTest):
     name = "gen_test_csr_reset"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_line_mix", "knob_scr_key_delay")
+    mie_stays_zero = True   # no handler: the program only reads CSRs, mstatus.MIE stays at its reset value 0
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
     # the debug-mode bins of TP-CSR-108: a built item whose precondition (a debug entry) this program never applies
