@@ -63,5 +63,9 @@ green, and the trust triad — TDD, mutation-proof, fcov-expectation — for eve
 
 Skills live in `.claude/skills/` (codex discovers them via `.agents/skills/shared`). Agents live in
 `.claude/agents/`. Index (updated as skills land): `cross-review`, `sim-debug`, `regress`,
-`lint-check`, `dv-principles-check`, `mutation-check`, `fcov-expectation`, `simple-english`.
+`lint-check`, `dv-principles-check`, `mutation-check`, `fcov-expectation`, `simple-english`,
+`analyze-cov`, `covergroup-authoring`, `coverage-closure`, `coverage-regression-triage`,
+`regression-optimization`, `create-tb`, `uvm-test-generation`,
+`verification-planning-test-generation`, `review-tb-tp`, `vcs-rtl-compat`,
+`waveform-querying`, `wave-rtl-correlate`, `diagram-builder`, `rtl-workspace-exploration`.
 Review rubrics (model-neutral prompt files): `ci/reviews/`.
