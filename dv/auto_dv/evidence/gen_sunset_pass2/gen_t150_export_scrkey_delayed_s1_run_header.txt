@@ -1,0 +1,5 @@
+GEN_RUN_SEED test=gen_ut_export_scrkey_delayed seed=1 ntb_random_seed=1 RANDOM_SEED=1 utc=2026-09-03T15:36:09Z
+GEN_RUN_BUILD gen_tb simv=/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/vcs_simv config=opentitan git=ffa91279d6655d9cbe959d5e13e77caa929a6d8b
+GEN_RUN_CMD /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=2000 +gen_export_file=gen_export.txt +gen_knob_scr_key_delay=delayed +gen_mem_image=/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1/program/prog.vmem +gen_mem_image_crc32=0d384389 +gen_mem_image_words=28943 +gen_boot_addr=80000000 +gen_tohost_addr=800027c0 -l /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1/sim.log
+GEN_RUN_TIMEOUT_S 600 mode=lsf
+GEN_RUN_VERDICT PASS reason=no collected failure mechanism; end marker and config banner present wall_s=6.6 exit_code=0 lsf_job=10941867 host=soc-c-18

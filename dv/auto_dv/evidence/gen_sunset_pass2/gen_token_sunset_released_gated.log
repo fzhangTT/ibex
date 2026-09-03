@@ -1,0 +1,94 @@
+# cycle-clause sunset pass 2 (LOG-038; LOG-028a observed rows; --observed-field export_rows_observed); manifest /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml
+
+## driver (RELEASED / GATED per item)
+manifest /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml: emitted 28 rows; observed 28 rows (manifest key export_rows_observed); never observed among the emitted: []
+WOULD UN-MARK 86 marked items across 36 groups (every row observed); GATED 0 items whose rows are all emitted but include a row never observed
+  RELEASED TP-ISA-040  gen_isa_system  rows: misc core_busy; ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req
+  RELEASED TP-MUL-023  gen_mul_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req
+  RELEASED TP-CMP-057  gen_cmp_zcmp_events  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm
+  RELEASED TP-CMP-058  gen_cmp_zcmp_events  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm
+  RELEASED TP-BIT-036  gen_bit_multicycle  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; dbus rvalid
+  RELEASED TP-BIT-042  gen_bit_random  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req; pin irq_nm; dbus rvalid
+  RELEASED TP-CSR-029  gen_csr_trap_setup  rows: misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-CSR-031  gen_csr_trap_setup_irq  rows: misc irq_pending; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req
+  RELEASED TP-CSR-034  gen_csr_trap_handling  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-CSR-085  gen_csr_cpuctrl  rows: scrkey valid
+  RELEASED TP-PRV-018  gen_prv_wfi  rows: misc core_busy; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-PRV-019  gen_prv_wfi  rows: misc core_busy; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; ibus req
+  RELEASED TP-EXC-070  gen_exc_priority  rows: dbus rvalid; misc irq_pending; ibus req; ibus gnt; ibus rvalid; pin irq_nm; pin debug_req
+  RELEASED TP-IRQ-009  gen_irq_csr  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-011  gen_irq_csr  rows: misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm
+  RELEASED TP-IRQ-015  gen_irq_priority  rows: pin irq_fast
+  RELEASED TP-IRQ-021  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid
+  RELEASED TP-IRQ-022  gen_irq_timing  rows: dbus gnt; dbus rvalid; dbus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid
+  RELEASED TP-IRQ-023  gen_irq_timing  rows: dbus rvalid; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid
+  RELEASED TP-IRQ-024  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid
+  RELEASED TP-IRQ-025  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; dbus req
+  RELEASED TP-IRQ-026  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid; misc irq_pending
+  RELEASED TP-IRQ-027  gen_irq_timing  rows: dbus rvalid; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending; ibus rvalid
+  RELEASED TP-IRQ-030  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending; dbus rvalid
+  RELEASED TP-IRQ-031  gen_irq_priority  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending
+  RELEASED TP-IRQ-038  gen_irq_nmi  rows: pin irq_nm; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-039  gen_irq_nmi  rows: pin irq_nm
+  RELEASED TP-IRQ-041  gen_irq_debug  rows: pin irq_nm; ibus req
+  RELEASED TP-IRQ-045  gen_irq_nmi_int  rows: pin irq_nm; dbus rvalid
+  RELEASED TP-IRQ-049  gen_irq_wfi  rows: ibus req; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-050  gen_irq_wfi  rows: misc core_busy; misc irq_pending; ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-051  gen_irq_wfi  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending; ibus req; misc core_busy; pin irq_nm; pin debug_req
+  RELEASED TP-IRQ-052  gen_irq_wfi  rows: ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req
+  RELEASED TP-IRQ-053  gen_irq_wfi  rows: misc core_busy; pin irq_nm; dbus rvalid
+  RELEASED TP-IRQ-054  gen_irq_wfi  rows: pin debug_req; misc core_busy; ibus req; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-057  gen_irq_wfi  rows: misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-059  gen_irq_reset  rows: ibus req; misc irq_pending; pin irq_nm; pin debug_req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-061  gen_irq_handler  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; dbus rvalid
+  RELEASED TP-IRQ-064  gen_irq_timing  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid; misc irq_pending
+  RELEASED TP-IRQ-066  gen_irq_timing  rows: ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc core_busy
+  RELEASED TP-IRQ-070  gen_irq_csr  rows: misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software
+  RELEASED TP-IRQ-072  gen_irq_regime  rows: dbus rvalid; misc irq_pending; ibus req; ibus rvalid; pin irq_nm
+  RELEASED TP-IRQ-073  gen_irq_regime  rows: pin irq_nm; dbus rvalid; alert alert_major_bus
+  RELEASED TP-IRQ-077  gen_irq_regime  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid
+  RELEASED TP-IRQ-078  gen_irq_debug  rows: misc irq_pending; pin irq_nm; ibus req
+  RELEASED TP-IRQ-079  gen_irq_nmi  rows: ibus req; pin irq_nm
+  RELEASED TP-IRQ-080  gen_irq_debug  rows: ibus req; pin debug_req
+  RELEASED TP-DBG-003  gen_dbg_irq_mask  rows: misc irq_pending; pin irq_nm; ibus req; pin debug_req
+  RELEASED TP-DBG-004  gen_dbg_haltreq  rows: dbus rvalid; pin debug_req; ibus req
+  RELEASED TP-DBG-006  gen_dbg_haltreq  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-007  gen_dbg_haltreq  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-008  gen_dbg_haltreq  rows: pin debug_req; ibus req; misc core_busy
+  RELEASED TP-DBG-009  gen_dbg_haltreq  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-011  gen_dbg_req_shape_info  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-014  gen_dbg_haltreq  rows: misc core_busy; pin debug_req; ibus req
+  RELEASED TP-DBG-021  gen_dbg_irq_mask_xfail  rows: pin irq_nm
+  RELEASED TP-DBG-030  gen_dbg_ebreak  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-046  gen_dbg_step  rows: ibus req; pin debug_req
+  RELEASED TP-DBG-054  gen_dbg_step  rows: pin debug_req; ibus req
+  RELEASED TP-DBG-071  gen_dbg_haltreq  rows: pin debug_req; ibus req; misc core_busy; ibus gnt; ibus rvalid
+  RELEASED TP-TRG-019  gen_trg_fire  rows: ibus req; pin debug_req
+  RELEASED TP-TRG-025  gen_trg_fire  rows: misc irq_pending; ibus req; pin irq_nm
+  RELEASED TP-IMEM-036  gen_imem_regime  rows: ibus gnt; ibus req; regime phase; ibus rvalid
+  RELEASED TP-DMEM-056  gen_dmem_regime  rows: dbus req; dbus gnt; dbus rvalid; regime phase
+  RELEASED TP-FE-026  gen_fe_sleep  rows: ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; misc core_busy
+  RELEASED TP-IC-007  gen_ic_inval  rows: scrkey req; scrkey valid
+  RELEASED TP-REG-001  gen_reg_knob_sweep  rows: ibus gnt; ibus req; regime phase
+  RELEASED TP-REG-002  gen_reg_knob_sweep  rows: ibus rvalid; ibus gnt; regime phase
+  RELEASED TP-REG-005  gen_reg_knob_sweep  rows: dbus gnt; dbus req; regime phase
+  RELEASED TP-REG-006  gen_reg_knob_sweep  rows: dbus rvalid; dbus gnt; regime phase
+  RELEASED TP-REG-008  gen_reg_knob_sweep  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; regime phase
+  RELEASED TP-REG-010  gen_reg_knob_sweep  rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; regime phase
+  RELEASED TP-REG-011  gen_reg_knob_sweep  rows: pin debug_req; regime phase
+  RELEASED TP-REG-012  gen_reg_knob_sweep  rows: pin fetch_enable; ibus req; ibus gnt; ibus rvalid; regime phase
+  RELEASED TP-REG-020  gen_reg_inflight  rows: regime phase; ibus gnt; ibus rvalid; ibus req
+  RELEASED TP-REG-021  gen_reg_inflight  rows: regime phase; dbus gnt; dbus rvalid
+  RELEASED TP-REG-023  gen_reg_inflight  rows: misc core_busy; regime phase; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req
+  RELEASED TP-XIF-001  gen_xif_random  rows: dbus rvalid; ibus gnt; ibus rvalid; misc irq_pending; pin irq_nm; pin debug_req
+  RELEASED TP-XIF-002  gen_xif_random  rows: pin debug_req; dbus gnt; dbus rvalid; ibus req
+  RELEASED TP-XIF-003  gen_xif_random  rows: pin irq_nm; dbus gnt; dbus rvalid; alert alert_major_bus
+  RELEASED TP-XIF-004  gen_xif_random  rows: misc core_busy; ibus gnt; ibus rvalid; dbus gnt; dbus rvalid; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; ibus req
+  RELEASED TP-XIF-009  gen_xif_random  rows: pin debug_req; dbus gnt; dbus rvalid; ibus req
+  RELEASED TP-XIF-011  gen_xif_random  rows: misc irq_pending; pin irq_nm; dbus req
+  RELEASED TP-XIF-012  gen_xif_random  rows: pin debug_req
+  RELEASED TP-XIF-015  gen_xif_random  rows: misc irq_pending; pin irq_nm; pin debug_req
+  RELEASED TP-REG-026  gen_xcut_regime_sweep  rows: dbus rvalid; ibus rvalid; alert alert_major_bus; regime phase
+tokens removed 86
+ACTIVE 705 ALIAS 122 FOLDED 190 TP 1204 CG 208 bins 16045 adopted 49 expfail 30 groups 230 newchk 11
+['cycle-clause marked items 19 (witness bins excluded from manifests while marked, rule (f)); export rows named 63 over 21 distinct rows; no-export-row items 1', 'sunset (C-3): export sources from /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml: emitted 28 rows (export_sources_emitted), rendered 32; observed 28 rows (manifest key export_rows_observed); never observed among the emitted: []; 0 still-marked items have every export row OBSERVED (they must lose the token); 0 still-marked items have every row emitted but a row never observed (LOG-028a, they keep the token); 18 have every row rendered. Sunset count: would un-mark 0 items on the OBSERVED rows (18 have every row rendered, 0 gated by an unobserved row)', 'PASS']

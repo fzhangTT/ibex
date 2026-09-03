@@ -1,0 +1,105 @@
+# cycle-clause sunset pass 2 (LOG-038; LOG-028a observed rows; --observed-field export_rows_observed); manifest /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml
+
+## tool BEFORE (expected FAIL on the released set)
+features 1017 (ACTIVE 705, ALIAS 122, FOLDED 190); TP items 1204; covergroups 207 (plus the ledger CG-WIT-001); bins referenced 15825 (adopted 49, spec-derived 15776; ledger bins 220 counted separately)
+completeness: ACTIVE->TP 705/705, ACTIVE->bin (spec-derived and adopted bins only, CG-WIT-001 excluded) 705/705 (with witness bins counted: 705/705), bins->feature 207/207 covergroups (ledger excluded), ACTIVE named by a covergroup 705/705, CSV bins declared 16045/16045
+witness ledger: 220 CG-WIT-001 bins excluded from the functional gate and from ACTIVE->bin; spec-derived bins 15776, adopted 49; gen_trace_witness_ids.csv 220 rows, marked 105
+cycle-clause marked items 105 (witness bins excluded from manifests while marked, rule (f)); export rows named 452 over 24 distinct rows; no-export-row items 1
+sunset (C-3): export sources from /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml: emitted 28 rows (export_sources_emitted), rendered 32; observed 28 rows (manifest key export_rows_observed); never observed among the emitted: []; 86 still-marked items have every export row OBSERVED (they must lose the token); 0 still-marked items have every row emitted but a row never observed (LOG-028a, they keep the token); 104 have every row rendered. Sunset count: would un-mark 86 items on the OBSERVED rows (104 have every row rendered, 0 gated by an unobserved row)
+coverpoints declared 2279, owned by an item 2205, regression-level (no item) 74 (listed in gen_fcov_plan.md Section 1.1; reported, not failed)
+FAIL: 86 violations (86 sunset, 0 other)
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-ISA-040
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-MUL-023
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CMP-057
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CMP-058
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-BIT-036
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-BIT-042
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CSR-029
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CSR-031
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CSR-034
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-CSR-085
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-PRV-018
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-PRV-019
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-EXC-070
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-009
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-011
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-015
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-021
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-022
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-023
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-024
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-025
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-026
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-027
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-030
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-031
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-038
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-039
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-041
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-045
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-049
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-050
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-051
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-052
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-053
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-054
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-057
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-059
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-061
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-064
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-066
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-070
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-072
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-073
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-077
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-078
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-079
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IRQ-080
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-003
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-004
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-006
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-007
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-008
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-009
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-011
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-014
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-021
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-030
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-046
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-054
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DBG-071
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-TRG-019
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-TRG-025
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IMEM-036
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-DMEM-056
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-FE-026
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-IC-007
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-001
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-002
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-005
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-006
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-008
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-010
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-011
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-012
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-020
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-021
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-023
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-001
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-002
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-003
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-004
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-009
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-011
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-012
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-XIF-015
+  sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0): TP-REG-026
+
+## tool AFTER (expected PASS)
+features 1017 (ACTIVE 705, ALIAS 122, FOLDED 190); TP items 1204; covergroups 207 (plus the ledger CG-WIT-001); bins referenced 15825 (adopted 49, spec-derived 15776; ledger bins 220 counted separately)
+completeness: ACTIVE->TP 705/705, ACTIVE->bin (spec-derived and adopted bins only, CG-WIT-001 excluded) 705/705 (with witness bins counted: 705/705), bins->feature 207/207 covergroups (ledger excluded), ACTIVE named by a covergroup 705/705, CSV bins declared 16045/16045
+witness ledger: 220 CG-WIT-001 bins excluded from the functional gate and from ACTIVE->bin; spec-derived bins 15776, adopted 49; gen_trace_witness_ids.csv 220 rows, marked 19
+cycle-clause marked items 19 (witness bins excluded from manifests while marked, rule (f)); export rows named 63 over 21 distinct rows; no-export-row items 1
+sunset (C-3): export sources from /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml: emitted 28 rows (export_sources_emitted), rendered 32; observed 28 rows (manifest key export_rows_observed); never observed among the emitted: []; 0 still-marked items have every export row OBSERVED (they must lose the token); 0 still-marked items have every row emitted but a row never observed (LOG-028a, they keep the token); 18 have every row rendered. Sunset count: would un-mark 0 items on the OBSERVED rows (18 have every row rendered, 0 gated by an unobserved row)
+coverpoints declared 2279, owned by an item 2205, regression-level (no item) 74 (listed in gen_fcov_plan.md Section 1.1; reported, not failed)
+PASS

@@ -75,6 +75,7 @@ class CsrTrapSetup(GenTest):
         "gen_prv_trap_vector_cg.cp_cause.irq_sw": "irq agent absent: no interrupt is taken in this test",
         "gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast": "irq agent absent: no interrupt is taken in this test",
         "gen_prv_trap_vector_cg.cr_base_cause.low_irq_sw": "irq agent absent: no interrupt is taken in this test",
+        "gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029": "irq agent absent: the irq_pending cycle clause of TP-CSR-029 is not programmed here",
     }
     # every item of the plan group is built (two-sided against the group by the structure check)
     not_built = {}

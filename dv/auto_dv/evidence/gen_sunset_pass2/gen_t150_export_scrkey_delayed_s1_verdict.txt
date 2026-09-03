@@ -1,0 +1,30 @@
+# verdict of gen_ut_export_scrkey_delayed seed 1, regression probe_t150_979350a (head mode pinned 979350aadee1), from result.yaml
+
+test: 'gen_ut_export_scrkey_delayed'
+seed: 1
+verdict: 'PASS'
+reason: 'no collected failure mechanism; end marker and config banner present'
+evidence: ''
+exit_code: 0
+timed_out: False
+wall_s: 6.6
+started_utc: '2026-09-03T15:36:09Z'
+finished_utc: '2026-09-03T15:36:23Z'
+build: 'gen_tb'
+build_config: 'opentitan'
+uvm_counts: {'INFO': 23, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+finish_seen: True
+marker_seen: True
+pass_marker: 'GEN_UT_EXPORT_PASS'
+banner_seen: True
+slow_total: None
+export_header_sources: ['ibus', 'dbus', 'pin', 'alert', 'misc', 'scrkey', 'regime']
+export_file: '/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1/gen_export.txt'
+lsf: {'job_id': '10941867', 'host': 'soc-c-18', 'queue': 'regress', 'slots': 1, 'bsub_rc': 0, 'killed_reason': None, 'pend_s': 7.4, 'wall_s': 6.6, 'cpu_s': 1.61, 'max_mem': None, 'lsf_run_s': 6.0}
+run_dir: '/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1'
+sim_log: '/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1/sim.log'
+run_cmd: '/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/runs/gen_ut_export_scrkey_delayed_1/run_cmd.sh'
+
+# GEN_RUN_VERDICT line of run.log
+GEN_RUN_VERDICT PASS reason=no collected failure mechanism; end marker and config banner present wall_s=6.6 exit_code=0 lsf_job=10941867 host=soc-c-18
