@@ -5,6 +5,7 @@ loading, deterministic seeds, bounded subprocesses and the LSF submit-and-watch 
 from __future__ import annotations
 
 import datetime as _dt
+import fnmatch
 import hashlib
 import os
 import re
@@ -177,6 +178,50 @@ def git_head() -> dict[str, Any]:
     dirty = run(["status", "--porcelain", "--untracked-files=no"])
     return {"head": run(["rev-parse", "HEAD"]), "branch": run(["rev-parse", "--abbrev-ref", "HEAD"]),
             "dirty_tracked_files": bool(dirty)}
+
+
+def _matches_direct(path: str, pattern: str) -> bool:
+    """A glob of the non-input list matches a file directly under the glob's directory, never in a subdirectory
+    (fnmatch alone lets * cross a slash)."""
+    pdir, _, pname = pattern.rpartition("/")
+    fdir, _, fname = path.rpartition("/")
+    return fdir == pdir and fnmatch.fnmatchcase(fname, pname)
+
+
+def is_build_input(path: str) -> bool:
+    """The hold's classifier (dv/auto_dv/docs/gen_build_input_gate_rule.md): a mirrored file is a build input unless it
+    is a listed hand-run tool or a record document directly under dv/auto_dv/docs; an unknown or new file is an input."""
+    p = path.strip()
+    if p in C.BUILD_INPUT_NONINPUT_TOOLS or p in C.BUILD_INPUT_NONINPUT_DOCS:
+        return False
+    return not any(_matches_direct(p, g) for g in C.BUILD_INPUT_NONINPUT_DOC_GLOBS)
+
+
+def classify_delta(names: list[str]) -> tuple[list[str], list[str]]:
+    """Differing file names split into (inputs, noninputs), each sorted without duplicates; inputs decide the hold."""
+    inputs = sorted({n for n in names if is_build_input(n)})
+    noninputs = sorted({n for n in names if not is_build_input(n)})
+    return inputs, noninputs
+
+
+def noninput_list_sha256() -> str:
+    """Digest of the rendered non-input list, recorded so a batch record states which list decided."""
+    rendered = "\n".join([*C.BUILD_INPUT_NONINPUT_TOOLS, *C.BUILD_INPUT_NONINPUT_DOCS, *C.BUILD_INPUT_NONINPUT_DOC_GLOBS]) + "\n"
+    return hashlib.sha256(rendered.encode("utf-8")).hexdigest()
+
+
+def noninput_list_check(repo_root: Path = C.REPO_ROOT) -> list[str]:
+    """Problems of the non-input list against `git ls-files`: a listed file that is not tracked, a glob class that
+    matches no tracked file. Empty when the list cannot have rotted."""
+    r = subprocess.run(["git", "-C", str(repo_root), "ls-files", "--", "dv/auto_dv/tools", "dv/auto_dv/docs"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return [f"git ls-files failed: {r.stderr.strip()[:200]}"]
+    tracked = set(r.stdout.split())
+    problems = [f"not tracked: {n}" for n in (*C.BUILD_INPUT_NONINPUT_TOOLS, *C.BUILD_INPUT_NONINPUT_DOCS) if n not in tracked]
+    problems += [f"glob matches no tracked file: {g}" for g in C.BUILD_INPUT_NONINPUT_DOC_GLOBS
+                 if not any(_matches_direct(f, g) for f in tracked)]
+    return problems
 
 
 def tool_versions() -> dict[str, str]:
@@ -658,6 +703,34 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded (A-002): removes a listed directory under its own root and logs its entry count (1, then an empty one); refuses a path outside the given roots, a root itself, a missing path and a file: {refused}")
     remove_selftest_tree(rg)
+    # Build-input gate (dv/auto_dv/docs/gen_build_input_gate_rule.md): red cases 1-11 on fabricated name lists, 13 on the list.
+    gate_cases = (
+        (["dv/auto_dv/docs/gen_intervention_log.md"], [], ["dv/auto_dv/docs/gen_intervention_log.md"], "1 intervention log alone accepts"),
+        (["dv/auto_dv/tools/gen_covergroup_set.py"], [], ["dv/auto_dv/tools/gen_covergroup_set.py"], "2 hand-run tool alone accepts"),
+        (["dv/auto_dv/docs/gen_test_plan.md"], ["dv/auto_dv/docs/gen_test_plan.md"], [], "3 test plan refuses"),
+        (["dv/auto_dv/flow/gen_testlist.yaml"], ["dv/auto_dv/flow/gen_testlist.yaml"], [], "4 testlist refuses"),
+        (["rtl/ibex_core.sv"], ["rtl/ibex_core.sv"], [], "5 rtl refuses"),
+        (["dv/auto_dv/docs/gen_some_new_doc.md"], ["dv/auto_dv/docs/gen_some_new_doc.md"], [], "6 unknown docs file refuses (default INPUT)"),
+        (["dv/auto_dv/docs/gen_critic_flow_x.md", "dv/auto_dv/tools/gen_round_credit.py"], [],
+         ["dv/auto_dv/docs/gen_critic_flow_x.md", "dv/auto_dv/tools/gen_round_credit.py"], "7 critic doc + credit tool accept"),
+        (["dv/auto_dv/docs/gen_intervention_log.md", "dv/auto_dv/docs/gen_test_plan.md"], ["dv/auto_dv/docs/gen_test_plan.md"],
+         ["dv/auto_dv/docs/gen_intervention_log.md"], "8 mixed list refuses on the plan, lets the log through"),
+        (["dv/auto_dv/tools/gen_trace_check.py"], ["dv/auto_dv/tools/gen_trace_check.py"], [], "9 segmentable rule source refuses"),
+        (["dv/auto_dv/tools/gen_plan_marker.py"], ["dv/auto_dv/tools/gen_plan_marker.py"], [], "10 marker token refuses"),
+        (["dv/auto_dv/toolsx/y.py"], ["dv/auto_dv/toolsx/y.py"], [], "11a prefix boundary: toolsx refuses"),
+        (["dv/auto_dv/docs/sub/gen_critic_x.md"], ["dv/auto_dv/docs/sub/gen_critic_x.md"], [], "11b glob matches directly under docs only"),
+        (["dv/auto_dv/docs/gen_component_api_fcov.md"], [], ["dv/auto_dv/docs/gen_component_api_fcov.md"], "11c component doc accepts"),
+        (["dv/auto_dv/docs/gen_critic_sub/x.md"], ["dv/auto_dv/docs/gen_critic_sub/x.md"], [], "11d a subdirectory named like the glob refuses"),
+    )
+    for names, want_in, want_non, label in gate_cases:
+        got = classify_delta(names)
+        cond = got == (want_in, want_non)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case {label}: {got}")
+    problems = noninput_list_check()
+    cond = problems == [] and len(noninput_list_sha256()) == 64
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file ({problems}); list sha256 {noninput_list_sha256()[:12]}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

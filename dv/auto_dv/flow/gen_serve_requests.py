@@ -368,12 +368,23 @@ def resolve_commit(ref: str) -> str:
     return r.stdout.strip()
 
 
-def build_input_delta(sha_a: str, sha_b: str) -> str:
-    """git diff --stat between two commits over the mirrored subset (M.git_pathspecs, the set a head tree is built
-    from); empty when the two trees agree on every mirrored file."""
-    r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "diff", "--stat", sha_a, sha_b, "--", *M.git_pathspecs()],
-                       capture_output=True, text=True)
-    return r.stdout.strip() if r.returncode == 0 else f"git diff failed: {r.stderr.strip()[:200]}"
+def build_input_delta(sha_a: str, sha_b: str) -> dict[str, Any]:
+    """The hold's decision between two commits over the mirrored subset (M.git_pathspecs, the set a head tree is built
+    from): `delta` is the deciding subset (the build inputs that differ, by name), `noninputs_changed` the differing
+    files the classifier let through, `delta_full` the whole mirrored diff --stat (transparency only); a rename counts
+    under both names; a failed git command refuses with the error as the delta."""
+    base = ["git", "-C", str(C.REPO_ROOT), "diff"]
+    ns = subprocess.run([*base, "--name-status", sha_a, sha_b, "--", *M.git_pathspecs()], capture_output=True, text=True)
+    st = subprocess.run([*base, "--stat=200", sha_a, sha_b, "--", *M.git_pathspecs()], capture_output=True, text=True)
+    rec: dict[str, Any] = {"delta": [], "delta_full": st.stdout.strip() if st.returncode == 0 else f"git diff failed: {st.stderr.strip()[:200]}",
+                           "noninputs_changed": [], "noninput_list_sha256": U.noninput_list_sha256(), "decision": C.CANARY_ACCEPTED}
+    if ns.returncode != 0:
+        rec.update(delta=[f"git diff failed: {ns.stderr.strip()[:200]}"], decision=C.CANARY_REFUSED_DELTA)
+        return rec
+    names = [n for row in ns.stdout.splitlines() if row.strip() for n in row.split("\t")[1:]]
+    inputs, noninputs = U.classify_delta(names)
+    rec.update(delta=inputs, noninputs_changed=noninputs, decision=C.CANARY_REFUSED_DELTA if inputs else C.CANARY_ACCEPTED)
+    return rec
 
 
 def write_batch_record(rec: dict[str, Any]) -> Path:
@@ -462,6 +473,22 @@ def self_test() -> int:
     cond = measured_gate([r2], None, pin) == ([], None, {})
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a batch without a purpose-4 request needs no canary build")
     U.remove_selftest_tree(d)
+    # Build-input gate (dv/auto_dv/docs/gen_build_input_gate_rule.md) cases 12 and 14.
+    same = build_input_delta("HEAD", "HEAD")
+    cond = set(same) == {"delta", "delta_full", "noninputs_changed", "noninput_list_sha256", "decision"} and same["delta"] == [] \
+        and same["noninputs_changed"] == [] and same["decision"] == C.CANARY_ACCEPTED and same["noninput_list_sha256"] == U.noninput_list_sha256()
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 12: build_input_delta returns exactly the five fields; HEAD..HEAD accepts: {same['decision']}")
+    history = (("0a07536", "1dbb8bf", [], ["dv/auto_dv/docs/gen_intervention_log.md"], C.CANARY_ACCEPTED),
+               ("1dbb8bf", "902da1f", ["dv/auto_dv/docs/gen_fcov_plan.md", "dv/auto_dv/docs/gen_feature_list.md", "dv/auto_dv/docs/gen_test_plan.md"],
+                ["dv/auto_dv/docs/gen_bug_log.md", "dv/auto_dv/tools/gen_covergroup_set.py"], C.CANARY_REFUSED_DELTA))
+    for a, b, want_delta, want_non, want_decision in history:
+        present = all(subprocess.run(["git", "-C", str(C.REPO_ROOT), "cat-file", "-e", f"{x}^{{commit}}"], capture_output=True).returncode == 0 for x in (a, b))
+        if not present:
+            print(f"SELF-TEST skip build-input gate case 14 {a}..{b}: a sha is absent from this clone")
+            continue
+        got = build_input_delta(a, b)
+        cond = got["delta"] == want_delta and got["noninputs_changed"] == want_non and got["decision"] == want_decision and got["delta_full"].strip() != ""
+        ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 14 {a}..{b}: {got['decision']} delta={got['delta']} noninputs={got['noninputs_changed']}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -476,21 +503,27 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
     if pinned and not dry_run:
         batch_sha = M.head_sha()
         rec: dict[str, Any] = {"utc": U.now_utc(), "requests": [p.stem for p in pinned], "pinned_sha": batch_sha,
-                               "canary_sha": canary_sha, "delta_pathspecs": M.git_pathspecs(), "delta": "", "decision": None}
+                               "canary_sha": canary_sha, "delta_pathspecs": M.git_pathspecs(), "delta": [], "delta_full": "",
+                               "noninputs_changed": [], "noninput_list_sha256": U.noninput_list_sha256(), "decision": None}
         # The hold is decided before any sync, so a held batch costs one record per pass and never a re-sync.
         if canary_sha is None:
             rec["decision"] = C.CANARY_REFUSED_MISSING
+        elif canary_sha == batch_sha:
+            rec["decision"] = C.CANARY_ACCEPTED
         else:
-            rec["delta"] = build_input_delta(canary_sha, batch_sha) if canary_sha != batch_sha else ""
-            rec["decision"] = C.CANARY_REFUSED_DELTA if rec["delta"] else C.CANARY_ACCEPTED
+            rec.update(build_input_delta(canary_sha, batch_sha))
         rec_path = write_batch_record(rec)
         if rec["decision"] != C.CANARY_ACCEPTED:
             U.log(f"REFUSING the head-mode batch this pass ({rec['decision']}): canary {str(canary_sha)[:12]} vs HEAD "
                   f"{batch_sha[:12]}; {len(pinned)} request(s) stay pending; record {rec_path}"
-                  + (f"\n{rec['delta']}" if rec["delta"] else ""))
+                  + (f"\nbuild inputs changed: {rec['delta']}" if rec["delta"] else "")
+                  + (f"\nnon-inputs let through: {rec['noninputs_changed']}" if rec["noninputs_changed"] else ""))
             for p in rest:
                 serve_one(p, testlist, dry_run, extra_args)
             return len(rest)
+        if rec["noninputs_changed"]:
+            U.log(f"canary {str(canary_sha)[:12]} vs HEAD {batch_sha[:12]} differ in non-inputs only, batch accepted "
+                  f"(list {rec['noninput_list_sha256'][:12]}): {rec['noninputs_changed']}")
         # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
         rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD,
                                              "--head-sha", batch_sha],
@@ -501,7 +534,8 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
                 "pinned_sha": batch_sha, "canary_sha": canary_sha, "canary_decision": rec["decision"],
-                "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in pinned], "batch_record": str(rec_path)}
+                "canary_to_batch_build_input_delta": rec["delta"], "canary_to_batch_noninputs_changed": rec["noninputs_changed"],
+                "batch": [p.stem for p in pinned], "batch_record": str(rec_path)}
         p4, p4_refusal, gate = measured_gate(p234, canary_build, batch_sha)
         if p4:
             sync["measured_dispatch"] = gate

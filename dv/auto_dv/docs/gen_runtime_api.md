@@ -351,15 +351,20 @@ single-test requests turns around in about one request's time. Every head-mode r
 (any purpose, one or many; an elcheck builds nothing and a worktree request is served alone) forms the pass's
 batch, and a batch needs the canary: `--canary-sha C` names the commit the
 gen_boot_zc canary passed on and is mandatory (a batch served without it is refused, not served unvouched).
-Before any sync the server pins S = HEAD and decides the hold: with no canary sha, or when S differs from C in a
-mirrored file (`git diff --stat C S -- <pathspecs>`, the pathspecs being exactly the mirrored set
-`MIRROR_ITEMS` + `MIRROR_GLOB_ITEMS` minus `MIRROR_EXCLUDE_PATHS`, from `gen_mirror.git_pathspecs`), the batch is
-left pending for a new canary; either way one record is written under
+Before any sync the server pins S = HEAD and decides the hold on the build inputs (rule: dv/auto_dv/docs/gen_build_input_gate_rule.md):
+with no canary sha, or when a file that a gen_tb build or a run reads differs between C and S, the batch is left pending for a new
+canary; a difference in non-inputs only (the hand-run tools and the record documents named in `BUILD_INPUT_NONINPUT_TOOLS`,
+`BUILD_INPUT_NONINPUT_DOCS` and `BUILD_INPUT_NONINPUT_DOC_GLOBS`; every other mirrored file, unknown or new, is an input) is let
+through and recorded. The differing files come from `git diff --name-status C S -- <pathspecs>`, the pathspecs being exactly the
+mirrored set `MIRROR_ITEMS` + `MIRROR_GLOB_ITEMS` minus `MIRROR_EXCLUDE_PATHS` (`gen_mirror.git_pathspecs`), classified by
+`gen_flow_util.is_build_input` (`classify_delta`). Either way one record is written under
 `dv/auto_dv/work/runtime/batches/<YYYYMMDDTHHMMSSZ>_<sha12>[_N].yaml` (the UTC stamp without separators, `_N`
 when two decisions fall in one second)
 with `decision` (`accepted`, `refused_build_inputs_changed`, `refused_no_canary_sha`), `canary_sha`, `pinned_sha`,
-`delta_pathspecs`, `delta` (the diff --stat text) and the request names; an accepted record gains the sync
-record, the request manifests and `completed_utc`. An accepted batch syncs
+`delta_pathspecs`, `delta` (the deciding subset: the build inputs that differ, by name; a rename counts under both names; a failed
+git command refuses with the error as the one entry), `delta_full` (the whole mirrored `git diff --stat`, transparency only),
+`noninputs_changed` (the differing files let through), `noninput_list_sha256` (the digest of the non-input list that decided) and
+the request names; an accepted record gains the sync record, the request manifests and `completed_utc`. An accepted batch syncs
 `gen_mirror.py --sync --spike --source head --head-sha S` into the per-sha head tree; S is passed to every
 regression of the batch as `--head-sha`, the batch's scope decisions read that tree's committed testlist, and S,
 C, the decision and the record path are recorded in every request manifest as `server_mirror_sync`

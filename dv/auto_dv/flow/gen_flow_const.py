@@ -73,6 +73,18 @@ MIRROR_EXCLUDE_PATTERNS = (".git", "__pycache__", "*.pyc", ".venv", "out*", "*.v
 CANARY_ACCEPTED = "accepted"
 CANARY_REFUSED_DELTA = "refused_build_inputs_changed"
 CANARY_REFUSED_MISSING = "refused_no_canary_sha"
+# Build-input classifier of the hold (dv/auto_dv/docs/gen_build_input_gate_rule.md): a mirrored file is an INPUT unless
+# named here, and the batch is refused only when an INPUT differs between the canary commit and HEAD. Non-inputs are the
+# hand-run tools nothing imports at build or run time and the record documents directly under dv/auto_dv/docs (a glob
+# never reaches a subdirectory). gen_trace_check.py and gen_plan_marker.py stay INPUT: gen_fcov_manifest.py reads them.
+BUILD_INPUT_NONINPUT_TOOLS = ("dv/auto_dv/tools/gen_covergroup_set.py", "dv/auto_dv/tools/gen_promotion_table.py",
+                              "dv/auto_dv/tools/gen_round_credit.py", "dv/auto_dv/tools/gen_plan_holds.py",
+                              "dv/auto_dv/tools/gen_token_sunset.py", "dv/auto_dv/tools/gen_cross_review.sh",
+                              "dv/auto_dv/tools/gen_launch_check.sh")
+BUILD_INPUT_NONINPUT_DOCS = ("dv/auto_dv/docs/gen_intervention_log.md", "dv/auto_dv/docs/gen_bug_log.md",
+                             "dv/auto_dv/docs/gen_runtime_api.md", "dv/auto_dv/docs/gen_dashboard.md",
+                             "dv/auto_dv/docs/gen_build_input_gate_rule.md")
+BUILD_INPUT_NONINPUT_DOC_GLOBS = ("dv/auto_dv/docs/gen_component_api_*.md", "dv/auto_dv/docs/gen_critic_*.md")
 ENV_SH = REPO_ROOT / "ci" / "env.sh"
 CONFIG_SCRIPT = SOURCE_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = SOURCE_ROOT / "ci" / "check_fcov_expectations.py"
