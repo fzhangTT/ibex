@@ -20,6 +20,7 @@ from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, MEMORY_MAP, PLUSARGS
 PASS_MARKER = "GEN_UT_EXPORT_PASS"
 SETTLE_CYCLES = 40   # a store's RVFI record retires after its bus response (max rvalid regime latency 32) plus the pipeline
 FIRST_FETCH_OFFSET = 0x80   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv)
+MRET_INSN, DRET_INSN = 0x30200073, 0x7B200073   # RISC-V privileged / debug spec encodings: pc_wdata is not the target (plan C-1)
 
 
 def plus(name, default=None):
@@ -39,14 +40,15 @@ def check_records(records, markers, img, eot_count, log):
     assert all(r.mem_wdata == 1 for r in tohost_stores), "GEN_UT_EXPORT: a tohost store carries a value other than 1"
     assert len(tohost_stores) <= eot_count, f"GEN_UT_EXPORT: {len(tohost_stores)} tohost stores exported, the memory model saw {eot_count}"
     # pc continuity: pc_rdata[k+1] == pc_wdata[k] unless an I line (interrupt entry) lies between them, record k is a
-    # debug entry, or record k trapped (this RTL reports pc + 4 as pc_wdata of a trap record, not the handler address:
-    # first green run, riscv-dv seed 7, order 466 ecall; F-RVFI-010); Zcmp micro-op records (ext_exp_valid and not
+    # debug entry, record k trapped (this RTL reports pc + 4 as pc_wdata of a trap record, not the handler address:
+    # first green run, riscv-dv seed 7, order 466 ecall; F-RVFI-010), or record k is mret/dret (pc_wdata is the next
+    # sequential address, plan C-1); Zcmp micro-op records (ext_exp_valid and not
     # ext_exp_last) are skipped pending the RVFI convention recorded at the first green run (addendum 5.1)
     marker_cycles = sorted(m.cycle for m in markers)
     breaks = 0
     for k in range(len(records) - 1):
         a, b = records[k], records[k + 1]
-        if (a.ext_exp_valid and not a.ext_exp_last) or a.trap:
+        if (a.ext_exp_valid and not a.ext_exp_last) or a.trap or a.insn in (MRET_INSN, DRET_INSN):
             continue
         if any(a.cycle < c <= b.cycle for c in marker_cycles) or a.ext_debug_mode != b.ext_debug_mode:
             continue

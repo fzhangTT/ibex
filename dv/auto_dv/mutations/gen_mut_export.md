@@ -8,7 +8,9 @@ build (`dv/auto_dv/work/tb-infra/out_t080_mut_<x>`, vcs exit 0), run on the dire
 referees inert (`+gen_chk_all=0`, so the ISA comparator cannot catch the same defect), then run again with the
 NAMED Python rule disabled by a temporary edit (the ablation control), and every edit reverted (cmp identical,
 "final: sources identical to pre-mutation" in the driver logs). Executed 2026-09-03 (T-080). Retained logs:
-`dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_mut_export_*` (manifest `gen_tdd_logs/gen_manifest.md`).
+`dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_mut_export_*` (manifest `gen_tdd_logs/gen_manifest.md`). The runs
+predate the v4b radix edit (hex marker values then, decimal now); the mutated statements are the same and the line
+numbers below are those of the build each mutation ran on (gen_export_pkg.sv:99 is now :100 after a comment line).
 
     id: MUT-A (exported field corrupted)
     file: dv/auto_dv/env/gen_rvfi_pkg.sv:88 (gen_rvfi_monitor::sample)

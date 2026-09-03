@@ -97,12 +97,14 @@ interrupt entries).
 What the monitor hands to `gen_export_sink` (the one writer of the export file): one `R` line per record, formatted
 by the rendered function `gen_export_record_line(t, cfg.export_counters)` (`dv/auto_dv/env/
 gen_export_record_line.svh`, included inside `gen_rvfi_pkg` after `gen_rvfi_txn`; its argument order is the yaml's
-`export_record_fields`, the 20 counter words follow only when the counters knob is on) through
+`export_record_fields`, 36 fields including `rs3_addr` and `rs3_rdata`, which the txn carries sampled from the
+interface like `rs1`/`rs2`; the CHERIoT capability fields and `mem_is_cap` are not exported; the 20 counter words
+follow only when the counters knob is on) through
 `sink.write_record(line)`, in the same active-region step as `records++` and `ap.write(t)`; and one `I` line per
 marker rising edge, `I <cycle> <ext_pre_mip> <ext_post_mip> <ext_nmi> <ext_nmi_int> <ext_debug_req>
 <ext_debug_mode>` (all hex), through `sink.write_marker(line)` in the same step as `ap_irq.write`. The monitor
 never touches the file, the header, the flush or the end marker, and issues no `$fflush`; the `sink` handle is set by
-`gen_env`, and with `+gen_export_file` absent the sink discards the lines (the `R` line string is still formatted).
+`gen_env`, and with `+gen_export_file` absent no line is formatted or handed over (the calls sit inside the `sink.enabled` guard).
 The file format, the completeness rule of `gen_export.read(path, seq)`, the `EXPORT_FLUSH` command, the event
 channel, the failure ids and the cost are in `dv/auto_dv/docs/gen_component_api_export_sink.md`.
 

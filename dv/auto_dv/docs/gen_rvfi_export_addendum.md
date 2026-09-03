@@ -113,10 +113,10 @@ default line stays about 220 bytes.
   second line of defence. A debug-only knob `+gen_export_flush_every=<n>` (default 0 = off, refused in
   measured runs like every debug-only knob) `$fflush`es every n records for triage of abnormal ends.
 - Cost and retention: with the knob absent the monitor neither formats nor hands over a line (`sink.enabled`
-  guards the call) and the `ap` publishing is unchanged. Measured on the record part (build out_t080): the Zc
-  program's 175 records make a 21144-byte file (121 bytes per record; 28982 bytes = 166 per record with the
-  counters), the seed-7 program's 2002 records 219090 bytes (109 per record); 1e6 records are therefore about
-  110-170 MB. Wall clock (retained runs, build out_t080d): VCS CPU time 0.29 s without and 0.26 s with the knob on the Zc
+  guards the call) and the `ap` publishing is unchanged. Measured on the record part (build out_t080d, 36 fields): the Zc
+  program's 175 records make a 22133-byte file (126 bytes per record; 29971 bytes = 171 per record with the
+  counters), the seed-7 program's 2008 records 232434 bytes (116 per record); 1e6 records are therefore about
+  115-170 MB. Wall clock (retained runs, build out_t080d): VCS CPU time 0.29 s without and 0.26 s with the knob on the Zc
   lock-step run, 0.52 s and 0.54 s on the seed-7 run, i.e. within a few tens of milliseconds at these record counts. Retention: the file lives in the run
   directory next to sim.log. Retention is a flow policy, ruled by Runtime (2026-09-03): the flow never deletes
   inside a run directory during a regression and never prunes silently; the export file is kept on purposes 1 to 3
@@ -135,14 +135,14 @@ default line stays about 220 bytes.
 | knob `export_file` (string, default unset) | gen_tb_knobs.yaml -> PLUSARG_EXPORT_FILE, gen_knobs.py | normal knob (not debug-only), opt-in per testlist entry |
 | knob `export_counters` (bool, default 0) | gen_tb_knobs.yaml -> PLUSARG_EXPORT_COUNTERS | appends the 20 hpm counter words to every R line; the header's `counters=` flag records it |
 | knob `export_flush_every` (int, default 0, debug_only; plusarg `gen_export_flush_every`) | gen_tb_knobs.yaml; Runtime's loader reads the rendered gen_knobs.py table and refuses the testlist unless `debug_only_plusargs` equals it, so the landing that adds this knob carries Runtime's one-line testlist change in the same commit | periodic $fflush for triage of abnormal ends |
-| yaml top-level keys `export_record_fields`, `export_counter_fields`, `export_events` | gen_tb_knobs.yaml; codegen `SCHEMA["top"]` extended; rendered `GEN_EXPORT_RECORD_FIELDS`, `GEN_EXPORT_COUNTER_FIELDS`, the include `env/gen_export_fields.svh` (writer functions) and `EXPORT_RECORD_FIELDS`, `EXPORT_COUNTER_FIELDS`, `EXPORT_EVENTS` in gen_knobs.py; `gen_ut_knobs_codegen.py` asserts the renderings equal the yaml, that every record field is a `gen_rvfi_txn` member and that the include declares one writer function per event row | one origin for the column order |
+| yaml top-level keys `export_record_fields`, `export_counter_fields`, `export_events` | gen_tb_knobs.yaml; codegen `SCHEMA["top"]` extended; rendered `GEN_EXPORT_RECORD_FIELDS`, `GEN_EXPORT_COUNTER_FIELDS`, the include `env/gen_export_record_line.svh` and `env/gen_export_event_lines.svh` (writer functions) and `EXPORT_RECORD_FIELDS`, `EXPORT_COUNTER_FIELDS`, `EXPORT_EVENTS` in gen_knobs.py; `gen_ut_knobs_codegen.py` asserts the renderings equal the yaml, that every record field is a `gen_rvfi_txn` member and that the include declares one writer function per event row | one origin for the column order |
 | knob `export_sources` (string, default `all`) | gen_tb_knobs.yaml -> PLUSARG_EXPORT_SOURCES | comma-separated subset of the event sources of Section 8; a name outside the rendered source list is `uvm_fatal GEN_EXPORT`; records and markers are always written when the file knob is set |
 | `gen_rvfi_txn` extension | env/gen_rvfi_pkg.sv | `ext_mhpmcounters[10]`, `ext_mhpmcountersh[10]` sampled from the interface only when the counters knob is on |
 | bridge command `EXPORT_FLUSH` (appended) | bridge_cmds; gen_cmd_dispatch -> gen_export_sink.flush() | ack implies flushed; flush() never runs from a clocked process |
-| `gen_export_sink` (new env component) | env/gen_env_pkg.sv (or its own gen_export_pkg.sv) | owns the fd: header lines, flush marker with the same-instant counts, `$ferror`, end marker and `$fclose` in extract_phase; `line(kind, text)` for every writer |
+| `gen_export_sink` (new env component) | env/gen_env_pkg.sv (or its own gen_export_pkg.sv) | owns the fd: header lines, flush marker with the same-instant counts, `$ferror`, end marker and `$fclose` in extract_phase; `write_record` / `write_marker` / `write_event` for every writer |
 | `gen_rvfi_monitor` R/I writer | env/gen_rvfi_pkg.sv | one R line per record through the rendered writer function, one I line per rising edge |
 | event writers | gen_agents_pkg (bus drivers, key responder, ctrl driver), the irq/dbg drivers and gen_misc_monitor (step 2b), gen_icache_ram announcements, the regime dispatcher | one call of the rendered writer function per event (Section 8) |
-| `dv/auto_dv/gen_tb/gen_export.py` | Python reader: `read(path) -> (records, markers, events, flush)`; field access by name from `EXPORT_RECORD_FIELDS` and `EXPORT_EVENTS`; enforces Section 3 | ASCII only |
+| `dv/auto_dv/gen_tb/gen_export.py` | Python reader: `read(path, seq, counters=False) -> Export(header, records, markers, events, flush)`; field access by name from `EXPORT_RECORD_FIELDS` and `EXPORT_EVENTS`; enforces Section 3 | ASCII only |
 | `GenBridge.export_flush()` | gen_bridge.py | issues EXPORT_FLUSH and returns the flush sequence number from `peek_data`; the test passes it to `read(path, seq)` |
 | API documents | `gen_component_api_rvfi_monitor.md` Sections 3, 6 and a new Section 8 (record lines); a new `gen_component_api_export_sink.md` (the sink, the event table, the knobs, guarantees, cost); one sentence in each writer's API document naming its event rows | |
 
@@ -196,7 +196,7 @@ default line stays about 220 bytes.
    - MUT-H wrong event cycle: the ctrl driver stamps its `fetch_enable` line with `cycle + 1` -> caught by the
      fixture's correlation check (the `E pin fetch_enable` line and the first `R` record after FETCH_EN relate by
      the bounded number of cycles the plan states).
-   Records in `dv/auto_dv/mutations/` (MUT-009..). The existing `rvfi_order` check is NOT relied on (it is off
+   Records: `dv/auto_dv/mutations/gen_mut_export.md` (ids MUT-A..F, executed; MUT-G/H with the event part). The existing `rvfi_order` check is NOT relied on (it is off
    under `+gen_chk_all=0`); `read()` carries its own order rule.
 3. fcov-expectation: not applicable (check-tier unit test outside the regression, per the standing ruling); the
    Test Writer's tests that consume the file carry their own manifests.
@@ -232,10 +232,10 @@ default line stays about 220 bytes.
 | Requirement | Where |
 |---|---|
 | (1) normal knob naming the file, set per entry to a run-directory path (asked as `+gen_rvfi_export=<file>`; settled in v4 as `+gen_export_file=<file>`, suggested value `gen_export.txt`, because the file also carries event lines) | Sections 1 and 4: string knob, not debug-only, opt-in per entry; a relative path resolves in the run directory |
-| (2) one line per record and per irq marker with every field | Section 2: every `gen_rvfi_txn` field is listed (34 names) with the four CHERIoT-carve-out fields excluded by name; the 20 hpm counter words under `+gen_export_counters=1`; `I` lines carry cycle, mip, NMI and debug flags, one per rising edge |
-| (3) a bridge command that flushes and acks, so the file is complete before the finish handshake | Sections 1 and 3: `RVFI_FLUSH`, flush marker with the same-instant (records, retired) pair, `$fflush` and `$ferror` before `cmd_ack`; `read()` parses the prefix before the last complete marker |
+| (2) one line per record and per irq marker with every field | Section 2: every `gen_rvfi_txn` field is listed (36 names, rs3 included) with the CHERIoT capability fields and mem_is_cap excluded by name; the 20 hpm counter words under `+gen_export_counters=1`; `I` lines carry cycle, mip, NMI and debug flags, one per rising edge |
+| (3) a bridge command that flushes and acks, so the file is complete before the finish handshake | Sections 1 and 3: `EXPORT_FLUSH`, flush marker with the same-instant (records, retired) pair, `$fflush` and `$ferror` before `cmd_ack`; `read()` parses the prefix before the last complete marker |
 | (4) the same knob/command discipline for the bus monitors' per-phase records | Section 8: `E` lines in the same file, same flush rule, regime phase events give the phase boundaries |
-| a `records()` template helper parsing the file into namedtuples | Section 2 fixes the line format; the helper builds its namedtuple from `RVFI_EXPORT_FIELDS` (+ counter fields when the header says `counters=1`) instead of re-typing the columns; `read()` is the enforcing layer the helper wraps |
+| a `records()` template helper parsing the file into namedtuples | Section 2 fixes the line format; the helper builds its namedtuple from `EXPORT_RECORD_FIELDS` (+ counter fields when the header says `counters=1`) instead of re-typing the columns; `read()` is the enforcing layer the helper wraps |
 
 ## 8. Event channel (version 4, DV Lead decision of 2026-09-03)
 
@@ -246,7 +246,7 @@ probe is added. The `cycle` stamp is the one cycle base of Section 3 (the bridge
 `sink.cycle()`) and is what correlates an `E` line with the `R` and `I` records.
 
 Line: `E <cycle> <source> <event> <fields...>`. One writer function per row, rendered into
-`env/gen_export_fields.svh` from the yaml `export_events` table; the header repeats the table (`# events` lines)
+`env/gen_export_record_line.svh` and `env/gen_export_event_lines.svh` from the yaml `export_events` table; the header repeats the table (`# events` lines)
 so `read()` builds one namedtuple type per (source, event). Sources are enabled by `+gen_export_sources`
 (default `all`); a disabled source writes nothing and the header's `sources=` names the enabled set.
 

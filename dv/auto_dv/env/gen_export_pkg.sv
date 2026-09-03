@@ -1,6 +1,7 @@
 // gen_export_pkg: the record and event export (architecture Section 9, T-080). gen_export_sink is the ONE writer of the
 // export file: header, R/I/E lines handed in by the RVFI monitor and the event writers, flush markers carrying the
-// same-instant (records, retired) pair, the end marker in extract_phase. Line text comes from the rendered functions
+// same-instant (records, retired) pair, the end marker in extract_phase. Marker key=value pairs are decimal, every R/I/E value is hex.
+// Line text comes from the rendered functions
 // (gen_export_event_lines.svh here, gen_export_record_line.svh in gen_rvfi_pkg), so the column order is the yaml's.
 package gen_export_pkg;
   import uvm_pkg::*;
@@ -96,7 +97,7 @@ package gen_export_pkg;
       string err;
       if (!enabled) `uvm_fatal("GEN_EXPORT", "EXPORT_FLUSH without +gen_export_file")
       flushes++;
-      $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+      $fwrite(fd, "# flush seq=%0d records=%0d retired=%0d markers=%0d events=%0d cycle=%0d\n", flushes, records,
               bvif.evt_retired_count, markers, events, bvif.cycle_count);
       $fflush(fd);
       if ($ferror(fd, err) != 0) `uvm_error("GEN_EXPORT", {"write error after flush: ", err})
@@ -108,7 +109,7 @@ package gen_export_pkg;
       string err;
       super.extract_phase(phase);
       if (!enabled) return;
-      $fwrite(fd, "# end records=%0h retired=%0h markers=%0h events=%0h\n", records, bvif.evt_retired_count, markers, events);
+      $fwrite(fd, "# end records=%0d retired=%0d markers=%0d events=%0d\n", records, bvif.evt_retired_count, markers, events);
       $fflush(fd);
       if ($ferror(fd, err) != 0) `uvm_error("GEN_EXPORT", {"write error at end: ", err})
       $fclose(fd); fd = 0;

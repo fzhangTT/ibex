@@ -4,8 +4,9 @@ enforces the format rules: header field list equal to the rendered EXPORT_RECORD
 when the header says counters=1), one `# events` row per (source, event) of the enabled sources, `records ==
 retired` in the marker, R-line count == records, E-line count == events, order strictly +1 across R lines,
 non-decreasing cycle across all lines, field count per line equal to its header row, hex-only tokens. Every
-violation is an AssertionError (the only Python-side failure mechanism). No simulator access; pure file parsing;
-ASCII only."""
+violation is an AssertionError (the only Python-side failure mechanism). Radix: every R/I/E value is hex without
+prefix; every marker key=value pair (flush, end) and the header's seed= and counters= are decimal. No simulator
+access; pure file parsing; ASCII only."""
 from collections import namedtuple
 from pathlib import Path
 
@@ -61,12 +62,12 @@ def read(path, seq, counters=False):
     for i in range(n, len(lines)):
         if seq is None and lines[i].startswith("# end "):
             marker_idx = i; break
-        if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == f"{seq:x}":
+        if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == str(seq):
             marker_idx = i; break
     assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}"
     mk = _kv(lines[marker_idx], "# flush " if seq is not None else "# end ", f"line {marker_idx + 1}")
-    flush = Flush(int(mk.get("seq", "0"), 16), int(mk["records"], 16), int(mk["retired"], 16), int(mk["markers"], 16),
-                  int(mk["events"], 16), int(mk.get("cycle", "0"), 16))
+    flush = Flush(int(mk.get("seq", "0")), int(mk["records"]), int(mk["retired"]), int(mk["markers"]),
+                  int(mk["events"]), int(mk.get("cycle", "0")))   # marker key=value pairs are decimal
     assert flush.records == flush.retired, f"GEN_EXPORT: marker records {flush.records} != retired {flush.retired} (the sink and the bridge disagree)"
     Record = namedtuple("Record", fields)
     records, markers, events = [], [], []

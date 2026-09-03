@@ -46,9 +46,10 @@ were lost when the mutation runner recompiled with FORCE=1 into the same `out_t0
 lines are quoted from the driver output of that session; rule adopted: a build directory holding retained runs is
 never recompiled in place). Attempt 1: a TEST defect, `await` inside a generator expression
 (`TypeError: 'async_generator' object is not iterable`). Attempt 2: the test asserted
-that the last store record is the tohost store; false for the Zc program, which pushes a stack frame after it
-(`last store is 0x8000039c <= 0x8000025e`), so the rule became "every store to the tohost address carries 1 and their
-count does not exceed the memory model's end-of-test count". Attempt 3: two RVFI facts
+that the last store record is the tohost store and failed with `last store is 0x8000039c <= 0x8000025e`; my first
+reading (a stack push after the tohost store) was WRONG: the flushed prefix ended before the tohost record (attempt 3
+below), and the Zc program spins after its store. The rule became "every store to the tohost address carries 1 and
+their count does not exceed the memory model's end-of-test count", which is program-independent either way. Attempt 3: two RVFI facts
 recorded, not export defects: (a) the tohost store's record (order 170) retired a few cycles after the memory model
 saw the bus store, so it landed AFTER the flush marker taken 4 cycles after the end-of-test edge (marker
 `records=a9 retired=a9`, record 170 written next), and `read()` correctly excluded it as trailing bytes, which is the
@@ -100,3 +101,16 @@ includes checked, and Runtime's `debug_only_plusargs` line for `gen_export_flush
 Event lines (Section 8 of the addendum): no writer registers yet, `events=0` everywhere; build step (2) adds the bus,
 ctrl, scrkey and icram writers with the bridge grant counters and MUT-G/MUT-H; step (3) the step-2b sources. The
 Zcmp micro-op pc convention is recorded, not asserted (micro-op records are skipped by the continuity rule).
+
+## 9. Version 4b follow-up (v4a replan review rows that touch the record part)
+
+Changes: `rs3_addr` / `rs3_rdata` added to `gen_rvfi_txn` and to the R line (36 fields; the yaml comment names the
+carve-out basis of the excluded capability fields); flush and end marker key=value pairs written decimal (R/I/E
+values stay hex) with `gen_export.read()` parsing them so; the pc-continuity rule of the test excludes mret and dret
+records (plan C-1) besides trap records. Announced to Runtime as an edit pass; fresh compile into
+`dv/auto_dv/work/tb-infra/out_t080d` (`gen_compile_t080d.log`, vcs exit 0): canary boot_zc, lockstep_zc, lockstep_s7,
+ut_bridge_green PASS; export_zc, export_zc_counters, export_s7 PASS (`gen_export_*_t080d_*`; the seed-7 run exercises the
+mret/dret exclusion on a program with a trap); lockstep zc/s7 with the knob PASS (`gen_runs_summary_t080d.txt`). Wall
+clock on this build: 0.29 s vs 0.26 s (Zc), 0.52 s vs 0.54 s (seed 7) without vs with the knob. The Section 4 runs
+(`*_twoflush_t080_*`) remain retained as the hex-marker version. The red-window canary of 10:49Z that closed Runtime's
+LOG-017 report is retained as `gen_canary_*_t080_*` (boot_zc, lockstep_zc, export_zc PASS on the pre-v4b tree).
