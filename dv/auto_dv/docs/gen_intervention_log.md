@@ -1332,3 +1332,21 @@ noticed within a minute, killed that review, removed only its run directory, re-
 (python3 dv/auto_dv/tools/gen_promotion_table.py --plan-sha 43b47da) from a detached checkout of 79ef3fa (rc 0, table
 byte-identical), and relaunched with the verified text. No artifact from the first launch exists. Rule restated (LOG-040
 class): a focus claim is written from a reproduction's exit code and output, never from a derived count.
+
+## LOG-051 - 2026-09-03 - T-136 lifted; T-137 lifted for bus-error arming; LOG-044 crediting gate lifted
+
+Landing 1c (9e912bb) has passed both reviewers: cross-model APPROVE-WITH-CHANGES (two comment-level lows) and the Critic's
+gen_critic_tb_l1c.md APPROVE with six lows. The Critic read the retained evidence first-hand: entry state is published once
+inside the fold block and two unconditional report-time referees fail a stepped-but-unseen entry (pre-fix red, green 15/15,
+mutant RC1 caught); the vectored cause is checked for every entry through the pending-and-enabled set; one announcement is one
+cycle-stamped event with take() consuming the oldest entry of each word and the bus_err_leftover referee (RM-L1 red, 61/61
+green); the mutation batch re-ran from the final sources with per-mutant build shas equal to the committed blobs. Rulings:
+T-136 (LOG-025) is LIFTED: interrupt-enabled results are credited under the plan's crediting rule. T-137 (LOG-026a) is
+LIFTED for bus-error arming; integrity-corruption results that rest on a suppressed register write stay uncredited until
+T-183 (rf_wr_suppress gated on an announced corruption) lands and passes review, and the pre-empted rule stays counted only
+until its t.intr fix lands (both owed to tb-infra's 2c per gen_critic_response_fu2a.md). The DV Lead applies the lifts in
+plan v2r part 4 with the T-183 carve-out named item by item. Plan witness v10 (ce21d32 with e93c880) is APPROVE with two
+adopted lows already closed in parts 2 and 3, so the LOG-044 crediting gate is lifted; crediting still yields nothing until
+a clean measured round exists (LOG-046). The Critic's six 1c lows (unretained figures, the asserted drain window, the
+grant-cycle comment, the intg slot outside the leftover referee, the shim's tval-0 gap, MUT-K's without-export run, the
+stale gen_rvfi_pkg.sv:338 comment) go to tb-infra's 2c with the CM33 lows.
