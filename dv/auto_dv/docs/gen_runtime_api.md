@@ -484,8 +484,11 @@ pinned-red log when one exists (review of e83614c): the loader looks under the s
 constants) and refuses the entry when the log's `GEN_TEST_FAIL` harness line does not match `red_expect` (a
 check id with a suffix defeats a `\b`-anchored id, for example). The full verdict of that log is reported beside it
 (`gen_flow_util.py --check-red-signatures [testlist]`): a log that predates a TB fix can carry UVM errors ahead of
-the harness line and shows as STALE, not refused, because the live run decides that; head trees carry no evidence
-and skip the check, so the clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
+the harness line and shows as STALE, not refused, because the live run decides that (ruling 2026-09-03: two-level
+rule). T-153 switch: once the Test Writer has re-retained the stale logs at HEAD (rst_boot, csr_reset, csr_trap_setup,
+pmp_csr_warl with landing 3d; isa_cti and cmp_zca after tb-infra's R10/R11 comparator rows), the literal verdict
+criterion becomes the enforced rule: the retained log must come out RED-OK, STALE is refused too. Head trees carry no
+evidence and skip the check, so the clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
 Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
 resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
 `index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated

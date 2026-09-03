@@ -449,13 +449,9 @@ def self_test() -> int:
         import importlib as _il
         _tl = _il.import_module("dv.auto_dv.tests.gen_test_lib")
         cond, note = _tl.STAGED_ENTRIES_ENV in C.JOB_ENV_UNSET, f"gen_test_lib.STAGED_ENTRIES_ENV={_tl.STAGED_ENTRIES_ENV!r}"
-        # The flow-run marker the template's guard reads (gen_test_lib.FLOW_RUN_ENV, lands with the Test Writer's 3d):
-        # once present it must be the variable the job script exports.
-        flow_env = getattr(_tl, "FLOW_RUN_ENV", None)
-        if flow_env is None:
-            marker_ok, marker_note = True, "gen_test_lib.FLOW_RUN_ENV not landed yet; the check engages when it exists"
-        else:
-            marker_ok, marker_note = flow_env in C.JOB_ENV_SET, f"gen_test_lib.FLOW_RUN_ENV={flow_env!r} vs JOB_ENV_SET {sorted(C.JOB_ENV_SET)}"
+        # The flow-run marker the template's guard reads must be the variable the job script exports (a rename on
+        # either side is a BAD, as for the staged-entries variable).
+        marker_ok, marker_note = _tl.FLOW_RUN_ENV in C.JOB_ENV_SET, f"gen_test_lib.FLOW_RUN_ENV={_tl.FLOW_RUN_ENV!r} vs JOB_ENV_SET {sorted(C.JOB_ENV_SET)}"
     except Exception as e:  # noqa: BLE001 - the harness module is the Test Writer's; report, do not crash
         cond, note = False, f"gen_test_lib not importable: {e}"
         marker_ok, marker_note = False, note
@@ -797,7 +793,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                     and C.RED_EXPECT_FIRE_TOKEN not in rx:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} matches the {C.RED_EXPECT_HARNESS_PREFIX} harness line but names no "
                     f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
-            # The signature must match the fixture's own retained pinned-red log when one exists (review of e83614c).
+            # The signature must match the fixture's own retained pinned-red log when one exists.
             chk = red_signature_check(t)
             if chk and chk["refuse"]:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} refused: {chk['refuse']} ({Path(chk['log']).name}: "
@@ -1098,9 +1094,10 @@ def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX, settle_s: float = C.LSF_STATUS
 if __name__ == "__main__":
     if "--check-red-signatures" in sys.argv:
         # Every red fixture of a testlist against its retained pinned-red log; exit 2 when any checked entry is not RED-OK.
-        tl = Path(sys.argv[sys.argv.index("--check-red-signatures") + 1]) if len(sys.argv) > sys.argv.index("--check-red-signatures") + 1 else C.TESTLIST_YAML
+        nxt = sys.argv[sys.argv.index("--check-red-signatures") + 1:][:1]
+        tl = Path(nxt[0]) if nxt and not nxt[0].startswith("--") else C.TESTLIST_YAML   # a following flag is not a path
         data = load_yaml(tl)
-        bad = 0
+        bad = stale = 0
         for t in data.get("tests", []):
             if not t.get("red_fixture"):
                 continue
@@ -1110,12 +1107,15 @@ if __name__ == "__main__":
                 continue
             ok_ = chk["refuse"] is None
             bad += 0 if ok_ else 1
+            stale += 1 if (ok_ and chk["stale_evidence"]) else 0
             tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
             print(f"RED-CHECK {tag} {t['name']}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
                   + (f"; {chk['refuse']}" if chk["refuse"] else "")
                   + ("; stale evidence: the verdict's first collected line is not the harness line (log predates a TB fix)" if chk["stale_evidence"] else ""))
-        print("RED-CHECK:", "PASS" if not bad else f"FAIL ({bad} signature(s) do not match their retained log's harness line)")
-        sys.exit(0 if not bad else 2)
+        verdict = (f"FAIL ({bad} signature(s) do not match their retained log's harness line)" if bad
+                   else (f"PASS ({stale} stale retained log(s): the literal verdict criterion is not met yet)" if stale else "PASS"))
+        print("RED-CHECK:", verdict)
+        sys.exit(2 if bad else (C.RED_CHECK_EXIT_STALE if stale else 0))
     if "--dump-testlist" in sys.argv:
         # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
         import json
