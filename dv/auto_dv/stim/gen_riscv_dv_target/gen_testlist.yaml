@@ -25,6 +25,6 @@
   rtl_test: gen_none
 # Debug ROM budget: gen_link.ld places the relocated riscv-dv debug ROM in the DM window
 # (DmHaltAddr .. DmBaseAddr+DmAddrMask, 0x800 bytes; gen_program.py checks the linked size). A
-# seed-7 ROM with +gen_debug_section=1 and one sub-program is already 0x726 bytes: keep
+# seed-7 ROM with +gen_debug_section=1 +num_debug_sub_program=1 measured 0x6d4 bytes (1748) in the T-036 re-proof: keep
 # +num_debug_sub_program at 0 or 1 and do not raise the debug program length knobs above their
 # defaults for generated tests; larger debug programs are directed tests.

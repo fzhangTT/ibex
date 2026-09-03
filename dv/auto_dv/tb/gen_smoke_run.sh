@@ -14,6 +14,10 @@ OUT="${OUT:-$ROOT/dv/auto_dv/work/tb-infra/out_smoke}"
 SEED="${SEED:-1}"
 CYCLES="${CYCLES:-3000}"
 FLIP_BIT="${FLIP_BIT:-5}"
+case "$OUT" in
+  "$ROOT"/*) ;;                       # only ever wipe a directory inside the clone
+  *) echo "gen_smoke_run.sh: OUT must be a non-empty path inside $ROOT (got '$OUT')" >&2; exit 2 ;;
+esac
 rm -rf "$OUT"; mkdir -p "$OUT"
 SUMMARY="$OUT/runs_summary.txt"
 : > "$SUMMARY"

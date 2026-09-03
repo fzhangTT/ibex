@@ -27,7 +27,7 @@ puts it in `uvm_config_db`, builds `gen_env`; tests differ by Python, not by UVM
 
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
-| `+gen_regime_sched=<agent>:<regime>@r<N>|c<N>,...` | `PLUSARG_REGIME_SCHED` | layer-3 schedule derived by Python from RANDOM_SEED, echoed for the log; Python issues REGIME_SET at the triggers | derived |
+| `+gen_regime_sched=<agent>:<regime>@r<N>|c<N>,...` | `PLUSARG_REGIME_SCHED` | layer-3 schedule: derived by Python from RANDOM_SEED and echoed in the banner when absent; when supplied it is CONSUMED as the schedule, overriding the seed-derived one (v2, XM-L5); Python issues REGIME_SET at the triggers | derived |
 | `+gen_regime_pin=<agent>:<regime>[,...]` | `PLUSARG_REGIME_PIN` | pins regimes for the whole run (reproduction, directed tests); overrides the schedule | unset |
 | `+gen_chk_all=0|1` | `PLUSARG_CHK_ALL` | master checker enable; with 0 and one `+gen_chk_<id>=1` a single checker is isolated | 1 |
 | `+gen_dbg_<component>=1` | `PLUSARG_DBG_*` | debug prints per component | 0 |

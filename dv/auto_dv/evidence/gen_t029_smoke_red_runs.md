@@ -11,7 +11,7 @@ Driver (committed): `dv/auto_dv/tb/gen_smoke_run.sh`. It compiles once and then 
 sequence GREEN, RED (no retirement), RED (integrity flip), GREEN, each into its own directory
 `run_01_green/`, `run_02_red_noretire/`, `run_03_red_intg/`, `run_04_green/` with its own
 `sim.log`, `stdout.log` and per-run exit status, and writes `runs_summary.txt` (one line per run:
-plusargs, simv exit status, verdict token found, number of VCS "Fatal:" lines, expected token,
+plusargs, simv exit status (the `simv_exit` field is the only record of the exit status; sim.log does not carry it), verdict token found, number of VCS "Fatal:" lines, expected token,
 as-expected or MISMATCH). Invocation used here:
 
 ```
@@ -65,7 +65,7 @@ run_04_green           plusargs=[+gen_smoke_cycles=3000] simv_exit=0 token=PASS 
 sequence result: ALL-AS-EXPECTED
 ```
 
-Log timestamps (creation order proves the sequence):
+Log timestamps (creation order proves the sequence; `ls --time-style` host-local EDT = UTC-4, so 02:22 local is 06:22 UTC, matching the header):
 
 ```
 2026-09-03_02:22:19 dv/auto_dv/work/tb-infra/out_t036/smoke/run_01_green/sim.log

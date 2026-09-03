@@ -44,7 +44,7 @@ model exists.
 | Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
 |---|---|---|---|
 | `ctr_mcycle` | `rvfi_ext_mcycle` equals the model's mcycle at `record_cycle - GEN_RVFI_ID_EXIT_OFFSET` (sampled at ID exit, rtl/ibex_core.sv:2102); class windowed(`GEN_RVFI_ID_EXIT_OFFSET`); mcycle(h) read-backs use the same offset | counter primitive (`rtl/ibex_counter.sv`), inhibit gating | `+gen_chk_ctr_mcycle=0` |
-| `ctr_minstret` | exact with dummies off; `>=` with dummies on unless P1 | perf_instr_ret (`rtl/ibex_wb_stage.sv:206-210`), `incr[2]` (`rtl/ibex_cs_registers.sv:1588`) | `+gen_chk_ctr_minstret=0` |
+| `ctr_minstret` | (v2, XM-L4) exact while the modelled `cpuctrlsts.dummy_instr_en` is 0; a BOUND check (`model <= observed <= model + cycles elapsed`) whenever it is 1; no dependence on probe P1 (coverage-only plus the BUG-02 quantification reproducer) | perf_instr_ret (`rtl/ibex_wb_stage.sv:206-210`), `incr[2]` (`rtl/ibex_cs_registers.sv:1588`) | `+gen_chk_ctr_minstret=0` |
 | `ctr_hpm_exact` | counters 5..10 exact | event ORs in id/wb stage | `+gen_chk_ctr_hpm_exact=0` |
 | `ctr_hpm_bound` | counters 3, 4, 11, 12 within `[0, cycles elapsed]` and monotonic; `mcountinhibit` stops them | inhibit/event wiring | `+gen_chk_ctr_hpm_bound=0` |
 

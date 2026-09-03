@@ -12,7 +12,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 ## 1. Purpose
 
 Predicts interrupt and NMI entry from the driven pins, the modelled `mie`/`mstatus`/priv state
-and debug/NMI mode; checks `irq_pending_o` cycle-exactly and the entry vector, cause and timing on
+and debug/NMI mode; checks `irq_pending_o` every cycle under the settle-window rule (class windowed, v2 XM-M5) and the entry vector, cause and timing on
 the RVFI stream; checks the internal NMI from injected LSU integrity errors.
 
 ## 2. Files (planned) and how to call it
@@ -32,8 +32,14 @@ Called by the scoreboard per RVFI event and per cycle for `irq_pending_o`.
 
 ## 4. Wave-level behaviour
 
-`irq_pending_o = |(pins & mie_q)` is combinational (rtl-arch CTRL-07); `mie_q` updates the cycle
-after the CSR write retires. `mip` reads the raw pins (CTRL-08).
+`irq_pending_o = |(pins & mie_q)` is combinational (rtl-arch CTRL-07), and `mie_q` is written when
+the CSR instruction executes in ID/EX, at least two cycles before its RVFI record, so the compare
+is class windowed (v2, XM-M5): a settle window of `GEN_CSR_COMMIT_TO_RVFI_OFFSET` cycles opens at
+each retired `mie` write record, the compare is suspended inside it and re-armed with the new
+value; pin edges need no window (pins are visible). Entry checks: vector = mtvec base + 4 * cause
+(vectored mode is fixed), cause per Ibex's priority (NMI > fast lowest id > ext > sw > timer),
+mepc = pc of the first un-retired instruction, taken within `GEN_IRQ_ENTRY_BOUND_RECORDS`
+records (class bound).
 
 ## 5. Checkers
 

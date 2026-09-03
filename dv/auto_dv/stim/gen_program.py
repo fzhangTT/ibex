@@ -53,7 +53,27 @@ SPIKE = Path(os.environ.get("GEN_SPIKE_BIN", str(ROOT / "tools/spike/bin/spike")
 # extensions of RV32IMC + Zba/Zbb/Zbc/Zbs + Zca/Zcb/Zcmp, counters, misaligned support.
 SPIKE_ISA = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
 # Memory windows are derived from the SV parameters and gen_link.ld at run time (spike_mem_opts()).
-SPIKE_OPTS = ["--priv=mu", "--pmpregions=16", "--pmpgranularity=4", "--triggers=1"]
+CONFIG_NAME = "opentitan"   # the build configuration (DV_prompt Section 2); stated in every report
+
+
+def config_params() -> dict:
+    """-pvalue+ parameters of the build configuration from util/ibex_config.py (the single source
+    of the opentitan values; the wrapper's own defaults are not the build's values)."""
+    out = subprocess.run([sys.executable, str(ROOT / "util" / "ibex_config.py"), CONFIG_NAME, "vcs_opts"],
+                         check=True, capture_output=True, text=True).stdout
+    return {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", out)}
+
+
+def spike_cfg_opts() -> list:
+    """Spike options derived from the build configuration and the wrapper defaults it does not name:
+    PMP region count, PMP granularity (Ibex G -> 2^(G+2) bytes), trigger count (DbgHwBreakNum when
+    DbgTriggerEn)."""
+    cfg = config_params()
+    regions = cfg.get("PMPNumRegions", sv_param(SV_WRAPPER, "PMPNumRegions"))
+    gran = cfg.get("PMPGranularity", sv_param(SV_WRAPPER, "PMPGranularity"))
+    trig_en = cfg.get("DbgTriggerEn", sv_param(SV_WRAPPER, "DbgTriggerEn"))
+    triggers = sv_param(SV_WRAPPER, "DbgHwBreakNum") if trig_en else 0
+    return ["--priv=mu", f"--pmpregions={regions}", f"--pmpgranularity={4 << gran}", f"--triggers={triggers}"]
 GCC_ISA = "rv32imcb"   # lowRISC gcc 10.2: draft-B march, accepts the ratified Zb* mnemonics
 GCC_ABI = "ilp32"
 
@@ -95,11 +115,15 @@ def materialize_target(dest: Path) -> Path:
 
 
 def sv_param(path: Path, name: str) -> int:
-    """Read a 32'h... default of a parameter from an SV file (single source of the memory map)."""
-    m = re.search(rf"\b{name}\b\s*=\s*32'h([0-9a-fA-F_]+)", path.read_text())
+    """Read a parameter default (32'h..., 1'b., or decimal) from an SV file."""
+    text = path.read_text()
+    m = re.search(rf"\b{name}\b\s*=\s*32'h([0-9a-fA-F_]+)", text)
+    if m:
+        return int(m.group(1).replace("_", ""), 16)
+    m = re.search(rf"\b{name}\b\s*=\s*(?:1'b)?(\d+)\s*[,)]", text)
     if not m:
         sys.exit(f"cannot find parameter {name} in {path}")
-    return int(m.group(1).replace("_", ""), 16)
+    return int(m.group(1))
 
 
 def ld_regions(ld: Path) -> dict:
@@ -253,6 +277,7 @@ def main() -> int:
     # Step 2: assemble + link (after checking the linker script against the SV memory map)
     mm = check_link_constants(TARGET_SRC / "gen_link.ld")
     sidecar_extra["memory_map"] = {k: f"0x{v:x}" for k, v in mm.items()}
+    sidecar_extra["spike_opts"] = spike_cfg_opts()
     inc_dir = materialize_target(out / "target") / "user_extension"
     elf = out / "prog.elf"
     # A program that carries its own .debug_rom (relocated riscv-dv ROM or a directed one) must
@@ -292,7 +317,7 @@ def main() -> int:
         if not SPIKE.exists():
             sys.exit(f"{SPIKE} missing; build it per docs/dv/SIM_RECIPE.md Section 11 or set GEN_SPIKE_BIN")
         entry = meta["entry"]
-        cmd = ["timeout", str(args.spike_timeout), str(SPIKE), f"--isa={args.spike_isa}", *SPIKE_OPTS,
+        cmd = ["timeout", str(args.spike_timeout), str(SPIKE), f"--isa={args.spike_isa}", *spike_cfg_opts(),
                spike_mem_opts(mm), f"--pc={entry}", "--log-commits",
                f"--log={out / 'spike_commits.log'}", str(elf)]
         rc = run(cmd, out / "spike_stdout.log")

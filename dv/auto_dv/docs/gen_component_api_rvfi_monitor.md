@@ -13,7 +13,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 Turns every `rvfi_valid` cycle into a `gen_rvfi_txn` and every `rvfi_ext_irq_valid` pulse
 without a retirement into a `gen_rvfi_irq_txn`; the scoreboard's primary input and the source of
-the `evt_retired`, `evt_irq_taken`, `evt_dbg_entered` bridge events.
+the bridge events (v2, A-01): the retirement count behind `evt_retired_target` / `evt_thresh_hit` / `evt_retired_count`, plus `evt_irq_taken`, `evt_dbg_entered`.
 
 ## 2. Files (planned) and how to call it
 

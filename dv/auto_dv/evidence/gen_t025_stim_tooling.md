@@ -216,10 +216,11 @@ from real artifacts produced by the now-committed driver `dv/auto_dv/tb/gen_smok
 | minor: re-typed Spike windows and tool path | `-m` windows derived from `DmBaseAddr`, `DmAddrMask`, `GEN_BOOT_ADDR_DEFAULT` and the ld `PROG LENGTH` (`spike_mem_opts`), recorded in the sidecar as `memory_map`; Spike path overridable with `GEN_SPIKE_BIN`; one ISA string (now with `zca_zcb_zcmp`) used for every standalone run and destined for the shim's generated header |
 | minor: encodings table provenance | rtl-arch promoted it to `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md`; the T-023 evidence and `gen_zb_encoding_check.py` cite that path |
 | info: pre-CRC digest in Section 1 | marked as the pre-CRC run |
+| T-036 review minor: hand-coded `--pmpregions/--pmpgranularity/--triggers` | `spike_cfg_opts()` derives them from `util/ibex_config.py opentitan vcs_opts` (PMPNumRegions, PMPGranularity as 2^(G+2) bytes, DbgTriggerEn) and the wrapper default DbgHwBreakNum; recorded in the sidecar as `spike_opts`; re-proved on the directed Zc program (`out_minors/zc2`, Spike exit 0) |
 
 Re-proof (`out_t036/stim/`): seed 7 debug program (`+gen_debug_section=1 +num_debug_sub_program=1`):
 seed_used 7, debug ROM 1748 bytes of the 0x800 budget, 29375 words,
 crc32 0x5c209be0, Spike exit 0 (14464 commit lines); seed 8 same test:
-seed_used 8, a different program (29007 words, crc32 0xceb54a21), Spike exit
+seed_used 8 from its own `gen_run/seed.yaml`, and a program that differs from seed 7's (29007 words, crc32 0xceb54a21), Spike exit
 0; directed Zc program: crc32 0xcf0cb3b8, Spike exit 0. Each run's `gen_run/seed.yaml`
-holds its own seed; memory map recorded as {'boot_page': '0x80000000', 'prog_size': '0x100000', 'dm_base': '0x1a110000', 'dm_size': '0x1000', 'dm_halt': '0x1a110800', 'dm_budget': '0x800'}.
+holds its own seed. The seed-binding proof rests on the seed.yaml cross-check alone: the s7/s8 program difference is confounded by different plusargs (s8 has no debug section), so it is not evidence by itself. Memory map recorded as {'boot_page': '0x80000000', 'prog_size': '0x100000', 'dm_base': '0x1a110000', 'dm_size': '0x1000', 'dm_halt': '0x1a110800', 'dm_budget': '0x800'}.

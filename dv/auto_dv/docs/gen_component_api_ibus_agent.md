@@ -76,10 +76,10 @@ in-order queue overflows (a protocol-impossible state). Debug prints behind `+ge
 ## 7. Coverage hooks
 
 Samples for `gen_ibus_cg` (in gen_fcov_pkg) on every grant/response: latency bins, outstanding
-depth at grant (including 8), error/integrity injection, address window, regime id; the
+depth at grant (including `GEN_IBUS_MAX_OUTSTANDING`), error/integrity injection, address window, regime id; the
 transition covergroup samples REGIME_SET commands.
 
 ## 8. At build
 
-Confirm the outstanding bound of 8 with a slow-rvalid/fast-gnt regime after a branch; measure the
+Confirm the outstanding bound `GEN_IBUS_MAX_OUTSTANDING` with a slow-rvalid/fast-gnt regime after a branch; measure the
 latency needed for `GEN_IRQ_ENTRY_BOUND_RECORDS`; fill in file names once created.

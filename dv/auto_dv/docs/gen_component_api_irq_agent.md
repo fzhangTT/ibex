@@ -17,7 +17,7 @@ as levels with randomized timing and hold policies; the source of every interrup
 ## 2. Files (planned) and how to call it
 
 `dv/auto_dv/tb/gen_irq_if.sv`, `dv/auto_dv/env/gen_irq_pkg.sv` (`gen_irq_cfg`, `gen_irq_item`
-{line mask (15 fast + ext + sw + timer), nmi, assert_delay, hold_policy = CYCLES(n) | UNTIL_ACK |
+{line mask (`$bits(ibex_pkg::irqs_t)` bits: `$bits(irqs_t.irq_fast)` fast + ext + sw + timer), nmi, assert_delay, hold_policy = CYCLES(n) | UNTIL_ACK |
 UNTIL_TAKEN | STICKY, release_delay}, driver, monitor, sequencer, agent).
 
 Items come from the bridge (IRQ_SET, IRQ_CLR, NMI_PULSE) or from regime-driven random

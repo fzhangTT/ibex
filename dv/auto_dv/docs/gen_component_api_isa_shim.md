@@ -52,16 +52,29 @@ matching Ibex, so no priority emulation exists; `mip` is set to the raw `pre_mip
 `backdoor_write_with_mask`, and the model's `mcause` after the entry step is compared with the DUT's.
 Step rule (XM-M2): a step that takes an interrupt, a trigger or a synchronous trap retires 0
 instructions, so interrupt and debug entries take an entry step plus a step for the handler's first
-instruction; `gen_isa_step` returns the retired count. Memory (A-15): with `addr_to_mem` NULL
-every access reaches `mmio_load/store/fetch` as one full-length call (mmu.cc:355-400), so the shim
-implements Ibex's per-word rule for misaligned accesses itself (perform permitted words, fault denied
-ones, `mtval` per MEM-10/13). Legalization (component sections C5.3a, RTL-defined rows): reset values
+instruction; `gen_isa_step` returns the retired count. Debug entry (link test 2): `enter_debug_mode`
+is private, so the shim sets `halt_request = HR_REGULAR` and steps; the step enters debug mode, then
+fetches the Spike ROM entry 0x800, which is unbacked, so the fetch fault inside debug mode parks pc at
+DEBUG_ROM_TVEC (0x808) with nothing retired and no mcause/mepc change; the shim then sets pc =
+DmHaltAddr and clears `halt_request` (Spike never clears it). A trigger entry likewise retires 0 and
+needs the same pc override. Memory (A-15, corrected by link test 2): with `addr_to_mem` NULL a
+naturally aligned access reaches `mmio_load/store/fetch` as ONE full-length call, but `mmu_t::mmio`
+(mmu.cc:168-184) splits a misaligned access into single-byte calls in address order and stops at the
+first failing byte. The shim therefore implements Ibex's per-word rule per byte (a byte belongs to
+word `addr & ~3`; a byte of a denied word fails), which performs exactly the permitted first word and
+faults on the second (BS MEM-13); Spike then reports `mtval` = the original EA for both halves, so for
+a second-word fault the shim overrides `mtval` to the aligned second word after the step from its own
+record of the failing byte (`put_csr(CSR_MTVAL)` accepted). Legalization (component sections C5.3a, RTL-defined rows): reset values
 (mstatus 0x80, prv M, PMP all OFF, mtvec = boot page | 1, pc = boot + 0x80); mip raw; mtvec MODE 01
 and BASE[7:2] = 0; misa read-only; mstatus MPP 01/10 -> U; mcounteren 13 bits gated by
 mcounteren_writable_i; counters excluded from the ISS compare; NMI and internal NMI emulated (cause
 0x8000001F / 0xFFFFFFE0, vector base + 0x7C, mstack); debug entry pc override to DmHaltAddr /
 DmExceptionAddr; one trigger; zicclsm; cpuctrlsts/secureseed as own `csr_t` subclasses provided through
-`extension_t::get_csrs` (tools/spike/include/riscv/extension.h:16, XM-I1) into `state.csrmap`; time(h) entries replaced by a trapping `csr_t` (A-17); WFI in_wfi handling. NOT
+`extension_t::get_csrs` (tools/spike/include/riscv/extension.h:16, XM-I1) into `state.csrmap`: the extension is
+named `genibex` (ISA-string extension names cannot contain underscores: the parser splits on `_`, disasm/
+isa_parser.cc:331-336) and the CSRs enter `csrmap` only in the `reset()` that `gen_isa_reset` calls after
+construction (the constructor's own reset runs before extensions are registered, processor.cc:80-85), so
+`gen_mie_csr_t` is installed after that reset; time(h) entries replaced by a trapping `csr_t` (A-17); WFI in_wfi handling. NOT
 legalized (C5.3b spec-violation rows, model follows the spec, tests expected_fail): B1 dret MPRV,
 B2/BUG-01 MPRV in debug with mprven = 0, BUG-03 dcsr.ebreaks (Spike forces 0, csrs.cc:1625), B3
 tdata3/mcontext/scontext trapping, B5 dcsr.nmip.
@@ -82,8 +95,9 @@ None directly (the scoreboard samples compare outcomes).
 
 ## 8. At build
 
-Second link test before coding (A-16): halt_request entry and dret, in_wfi wake through
-`clear_waiting_for_interrupt`, a custom `csr_t` through `extension_t::get_csrs`, the `gen_mie_csr_t`
-override taking a fast interrupt (retired count 0, then 1), one cm.push step with `log_mem_write`, a
-misaligned `mmio_store` fault; verify grevi/gorci non-alias decode; write the C5.3a/C5.3b tables into
-this document as rows with an RTL cite and a test each (R-2).
+Second link test (A-16) DONE: `dv/auto_dv/work/tb-infra/gen_spike_linktest2.cc`, 98/98 checks
+(`dv/auto_dv/work/tb-infra/out_linktest2/linktest2.log`; evidence `dv/auto_dv/evidence/gen_t046_spike_linktest2.md`): fast interrupt through `gen_mie_csr_t` with Ibex's priority and
+retired counts 0 then 1, custom CSRs through `extension_t::get_csrs`, wfi/in_wfi, halt_request entry,
+tdata1 from debug mode + dret + execute trigger, cm.push with one `log_mem_write`, aligned and
+misaligned `mmio_store` (byte split, mtval override). Still before coding: verify grevi/gorci non-alias
+decode; write the C5.3a/C5.3b tables into this document as rows with an RTL cite and a test each (R-2).

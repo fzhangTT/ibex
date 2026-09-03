@@ -42,7 +42,7 @@ None: this component carries no pass/fail check (test equipment or infrastructur
 
 ## 6. Failure path and diagnostics
 
-Codegen `--check` failure fails the build; unknown plusarg warning at time 0.
+Codegen `--check` failure fails the build; an unknown `+gen_*` plusarg is `uvm_fatal GEN_UNKNOWN_PLUSARG` at time 0 (A-23).
 
 ## 7. Coverage hooks
 
