@@ -1,7 +1,7 @@
 # DV feature list - Ibex core, opentitan configuration
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
-verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
+verdict v1, dv/auto_dv/docs/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
 Owner: dv-lead. Generated 2026-09-03 09:39 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded

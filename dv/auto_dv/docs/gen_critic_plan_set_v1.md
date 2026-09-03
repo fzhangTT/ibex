@@ -17,8 +17,8 @@ Artifacts under review (committed under dv/auto_dv/docs/ unless stated; sha256 f
 Date: 2026-09-03 (UTC)
 Role: Critic (reviewer other than the author: traceability confirmation, checker-direction and anti-vacuity approvals,
 DV_prompt.txt Section 4 and dv_principles.md Section 6)
-Supersedes: dv/auto_dv/work/critic/gen_critic_feature_list_v1.md (T-007 part 1, REQUEST-CHANGES) and folds in the
-advisory dv/auto_dv/work/critic/gen_critic_fcov_drafts_prereview_v1.md (T-034).
+Supersedes: dv/auto_dv/docs/gen_critic_feature_list_v1.md (T-007 part 1, REQUEST-CHANGES) and folds in the
+advisory dv/auto_dv/docs/gen_critic_fcov_drafts_prereview_v1.md (T-034).
 
 CRITIC VERDICT: REQUEST-CHANGES
 

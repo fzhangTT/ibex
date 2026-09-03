@@ -398,7 +398,7 @@ fixture that fails by design; a FAIL whose evidence line matches the regex is re
 other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, exclusive with
 `expected_fail`; kept out of the pass rate and of coverage).
 
-## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)
+## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md)
 
 | Rule | Where the flow enforces it |
 |---|---|

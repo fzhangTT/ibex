@@ -8,7 +8,7 @@
   dv/auto_dv/evidence/gen_t010_compile_path.md.
 - Standard: docs/dv/dv_principles.md (re-read for this check), per the dv-principles-check skill:
   conformance only, section citations, not a general code review. Related Critic rulings applied:
-  dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md R-5 (flow rules for exclusions).
+  dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md R-5 (flow rules for exclusions).
 - Date (UTC): 2026-09-03 05:50
 - Reviewer role: critic (Claude Fable 5.1). Verified on this host: `gen_verdict.py --self-test`
   (12/12 PASS), `gen_flow_const.py --check` (PASS), the on-disk artifacts under the shared out

@@ -2,7 +2,7 @@
 
 Owner: rtl-arch (T-069, 2026-09-03; revised 09:22Z after the cross-model review of dca91fd,
 dv/auto_dv/reviews/2026-09-03-claude-diff-42e6f28d-dca91fd2.md, and the Critic's REQUEST-CHANGES on it,
-dv/auto_dv/work/critic/gen_critic_exclusions_v1.md; answers in dv/auto_dv/evidence/gen_critic_response_exclusions.md). Build configuration: opentitan; DUT gen_dut_top
+dv/auto_dv/docs/gen_critic_exclusions_v1.md; answers in dv/auto_dv/evidence/gen_critic_response_exclusions.md). Build configuration: opentitan; DUT gen_dut_top
 with the gated coverage trees u_dut.u_ibex_core and u_dut.u_register_file (Q-014 / R-001).
 
 Authority chain (every path below is committed; what each contributes):

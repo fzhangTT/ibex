@@ -1,6 +1,6 @@
 # Response to the Critic's review and the cross-model plan review of the component architecture (v1 -> v2)
 
-Owner: tb-infra. Review: `dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`
+Owner: tb-infra. Review: `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`
 (REQUEST-CHANGES; medium 4, low 13, info 8, C8 rulings). Revised document:
 `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 2 (every change marked
 "(v2, A-nn)" in the text). Probe register updated to the rulings:

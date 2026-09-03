@@ -215,7 +215,7 @@ found`. Every regression manifest records `lsf_jobs_left` (jobs of that regressi
 
 ## 8. Critic ruling R-5 folded into the flow (validated 05:46 to 05:47 UTC)
 
-Rules from `dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md` item R-5, relayed by the
+Rules from `dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md` item R-5, relayed by the
 Orchestrator; mechanism in `dv/auto_dv/docs/gen_runtime_api.md` Section 7a. Validation regressions
 (all smoke tier, base seed 1, out root as above):
 

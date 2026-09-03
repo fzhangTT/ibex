@@ -42,7 +42,7 @@ Counts: T 28 + P 5 + D 6 + R 4 = 43 arcs; 39 arcs have an unbounded structural a
 
 ## 1a. Critic evidence classes (EC-1..EC-6) and where each stands
 
-The Critic's rulings (dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md, evidence-class
+The Critic's rulings (dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md, evidence-class
 definitions and the per-class table at its end) name six classes. The Orchestrator ruled that the
 passing k-induction results are EC-1 evidence (static structural). Status per class today:
 

@@ -1,6 +1,6 @@
 # Response file: reviews of the exclusion set (commit dca91fd, dv/auto_dv/excl/**)
 
-Owner: rtl-arch. Created 2026-09-03 09:05Z ahead of the findings; rows filled 09:16Z for the cross-model review of dca91fd, 09:22Z for the Critic's REQUEST-CHANGES on dca91fd (dv/auto_dv/work/critic/gen_critic_exclusions_v1.md) and the low from the review of 13c0dfd (dv/auto_dv/reviews/2026-09-03-claude-diff-ece187a3-13c0dfd0.md). One file for both reviewers. Reviews expected: post-execution
+Owner: rtl-arch. Created 2026-09-03 09:05Z ahead of the findings; rows filled 09:16Z for the cross-model review of dca91fd, 09:22Z for the Critic's REQUEST-CHANGES on dca91fd (dv/auto_dv/docs/gen_critic_exclusions_v1.md) and the low from the review of 13c0dfd (dv/auto_dv/reviews/2026-09-03-claude-diff-ece187a3-13c0dfd0.md). One file for both reviewers. Reviews expected: post-execution
 cross-model review (target 42e6f28..dca91fd) and the Critic's check of the same commit. Rule: every
 finding gets one row below with ADDRESSED or DISPUTED and the evidence; gen_exclusions.el is never
 edited silently: a change to the file is a regeneration by dv/auto_dv/excl/gen_excl_select.py with

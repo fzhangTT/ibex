@@ -3,7 +3,7 @@
 Artifacts: dv/auto_dv/docs/gen_feature_list.md (v2a), gen_test_plan.md (v2a), gen_fcov_plan.md (v2a), gen_bug_log.md (v1c),
 gen_trace_feature_tp.csv, gen_trace_tp_bin.csv, dv/auto_dv/tools/gen_trace_check.py (extended). Date: 2026-09-03.
 Reviews answered: (XM) dv/auto_dv/reviews/2026-09-03-claude-plan-gen_feature_list.md (REQUEST-CHANGES: 3 high, 8 medium,
-5 low, 1 info); (T-034) dv/auto_dv/work/critic/gen_critic_fcov_drafts_prereview_v1.md (advisory M-01..M-05, S-1..S-14);
+5 low, 1 info); (T-034) dv/auto_dv/docs/gen_critic_fcov_drafts_prereview_v1.md (advisory M-01..M-05, S-1..S-14);
 (P2) dv/auto_dv/docs/gen_critic_plan_set_v1.md (REQUEST-CHANGES: H-1, H-2, M-1..M-12, L-1..L-8, I-1..I-4). Nothing is
 disputed; two items are answered with a recorded decision instead of the literal recommendation (marked "decided").
 Revision v2b (2026-09-03 09:31 UTC) adds Section 4 (cross-model round 2, dv/auto_dv/reviews/2026-09-03-claude-plan-gen_feature_list-r2.md)

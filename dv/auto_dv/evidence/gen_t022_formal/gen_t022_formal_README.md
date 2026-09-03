@@ -2,7 +2,7 @@
 
 Compact, reproducible subset of the SymbiYosys k-induction proofs that carry evidence class EC-1
 for the exclusion draft (dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md, Critic approval
-dv/auto_dv/work/critic/gen_critic_exclusions_draft_v2.md, finding N-1 and final-file condition
+dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md, finding N-1 and final-file condition
 F-2). The analysis these artefacts back is dv/auto_dv/work/rtl-arch/gen_unreachability_evidence.md
 (sections 2, 4 and 8). Build configuration: `opentitan` (ibex_configs.yaml); DUT wrapper
 dv/auto_dv/tb/gen_dut_top.sv with cheriot_enable_i tied to IbexMuBiOff. The RTL was not modified:

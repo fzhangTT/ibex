@@ -2,7 +2,7 @@
 
 - Artifact: dv/auto_dv/docs/gen_probe_register.md (sha256 first 16: 0559da90b551d449), committed at
   d449af7 (T-031), version 2.
-- Rulings it transcribes: dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md C8 (P1..P6)
+- Rulings it transcribes: dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md C8 (P1..P6)
   and A-16 (RVFI is a boundary interface, not a probe); A-01 (no per-cycle Python polling).
 - Date (UTC): 2026-09-03 06:56
 - Reviewer role: critic. Probe-register entries are the Critic's approval duty (DV_prompt.txt

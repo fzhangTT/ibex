@@ -1,7 +1,7 @@
 # Coverage exclusions: draft content, justification and mechanism (opentitan configuration) -- v2
 
 Owner: rtl-arch (T-015 v1, revised to v2 under T-022 after the Critic's REQUEST-CHANGES,
-dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md). STATUS: DRAFT v2, 2026-09-03. Nothing here
+dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md). STATUS: DRAFT v2, 2026-09-03. Nothing here
 is applied. The final, machine-generated exclusion file (gen_ prefix, under dv/auto_dv/) is what the
 Critic approves, against the evidence in dv/auto_dv/work/rtl-arch/gen_unreachability_evidence.md
 (evidence classes EC-1..EC-6 as the Critic defined them). Point-by-point response to the rulings:

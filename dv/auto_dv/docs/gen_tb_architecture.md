@@ -10,7 +10,7 @@
 | Component sections owner | TB Infra (Section 6, `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 3 at its T-068 revision, sha256 prefix 84e5a2ad09e250a2; Section 9, `dv/auto_dv/work/tb-infra/gen_rvfi_export_addendum.md` v2, sha256 prefix f428486b6084aa3f) |
 | Status | adopted by DV Lead 2026-09-03 09:41 UTC (v1e: Section 9 re-embedded from TB Infra's addendum version 2a (I lines once per rising edge of rvfi_ext_irq_valid); v1d re-embedded the sections at their current revision (T-068 knob and ECC-window edits plus the C3.4/C4.2 expected-alert feed), sha256 prefix de5bc9573c84255b; new Section 9 "RVFI record export" embeds the accepted T-080 addendum v2a, sha256 prefix f17d0e7897773549, pending the Orchestrator's cross-model replan review of that addendum; v1b folded the lows of the cross-model re-review dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md (APPROVE-WITH-CHANGES) and of the Critic's part 2 (dv/auto_dv/docs/gen_critic_tb_architecture_v2.md, APPROVE)). Document APPROVED by both reviewers (LOG-012); responses: dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md |
 | Governing documents | `DV_prompt.txt`, `docs/dv/FENCE.md` (wins), `docs/dv/SIM_RECIPE.md`, `docs/dv/TB_CONTRACT.md`, `docs/dv/dv_principles.md`; flow contract for testlist entries, expected_fail, tiers, fcov manifests and run requests: `dv/auto_dv/docs/gen_runtime_api.md` |
-| Inputs | `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (Phase 0 step 3, superseded passages marked inline), `dv/auto_dv/work/rtl-arch/gen_answers_tb_infra.md`, `dv/auto_dv/docs/gen_probe_register.md` v2, `dv/auto_dv/docs/gen_intervention_log.md`, `dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`, `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md` (APPROVE with conditions), `dv/auto_dv/docs/gen_critic_tb_architecture_v2.md`, `dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md`, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_sections.md` |
+| Inputs | `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (Phase 0 step 3, superseded passages marked inline), `dv/auto_dv/work/rtl-arch/gen_answers_tb_infra.md`, `dv/auto_dv/docs/gen_probe_register.md` v2, `dv/auto_dv/docs/gen_intervention_log.md`, `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`, `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md` (APPROVE with conditions), `dv/auto_dv/docs/gen_critic_tb_architecture_v2.md`, `dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md`, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_sections.md` |
 
 Conventions: every generated file carries the `gen_` prefix and lives under `dv/auto_dv/`; DV never
 edits `rtl/` or `vendor/`; ASCII only; one run seed; pass/fail comes from collected failure
@@ -278,7 +278,7 @@ Critic v2 APPROVE with conditions: `dv/auto_dv/evidence/gen_critic_tb_arch_compo
 ### TB architecture: component sections (tb-infra, T-018) - version 3
 
 Version 2, 2026-09-03: revised after the Critic's REQUEST-CHANGES
-(`dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`, A-01..A-25 and the C8 rulings), the
+(`dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`, A-01..A-25 and the C8 rulings), the
 cross-model pre-execution review (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_
 sections.md`, five mediums and the lows, marked "(v2, XM-n)") and rtl-arch's T-022 inputs
 (`gen_cover_props_draft.sv`, `gen_unreachability_evidence.md` 5.2). The per-finding disposition of

@@ -1,7 +1,7 @@
 # Probe register (DV_prompt.txt Section 7 and deliverable 5)
 
 Owner: tb-infra (entries), Critic (approval). Version 3, 2026-09-03 (P-MD proposed): statuses set to the Critic's
-binding rulings in `dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md` C8. Every
+binding rulings in `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md` C8. Every
 internal probe the TB may read is listed here BEFORE it is used; the Critic may reject any entry.
 Rule (DV_prompt Section 7): models consume only the inputs the TB drives; probing internal state is
 allowed only where the starting state is genuinely unknowable from intent. No checker depends on
