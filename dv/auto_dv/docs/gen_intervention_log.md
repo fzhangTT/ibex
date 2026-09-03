@@ -976,3 +976,13 @@ gen_csr_trap_setup_irq, and the test's not_built is empty. Verified by the Orche
 e420c7e with no environment variable: GEN_TEST_LIB self-test PASS; gen_trace_check.py against the retained pass-1
 manifest PASS with 105 marked. The red window on the committed structure gate ran from 5f530a8 (14:49Z) to e420c7e
 (15:46Z). Rules of LOG-036 stand.
+
+## LOG-039 - 2026-09-03 - RULING (measured runs declare their functional coverage; gen_ut_lockstep measured: false)
+
+Runtime's promotion landing sets fcov_manifest_required_tiers: [smoke, targeted], which the flow enforces at merge
+time: a measured run on a required tier without an fcov_expectation_file fails. gen_ut_lockstep (tb-infra's
+lock-step check, tier smoke, measured: true, no plan items, no manifest) would fail the first measured merge.
+Ruling: a measured run must declare its expected functional coverage; gen_ut_lockstep becomes measured: false in
+the same landing; tb-infra may re-promote it with a manifest if it wants its coverage counted. The 15 promoted
+tests (14 smoke, gen_test_bit_draft targeted; gen_test_boot_retire stays check / measured: false) carry their
+per-item manifests per the DV Lead's tier table.
