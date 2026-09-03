@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: gen_fail_marker at stdout.log:2641
+evidence:                                                         AssertionError: GEN_TEST_FAIL gen_test_cmp_zcmp_basic: 3 fire-check failure(s): fire_tp_cmp_039: 51 scenarios, 826 report words checked, 1 mismatches; cm.push over 48/48 (rlist, spimm); expected frame words == the predicted registers, poison sl
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

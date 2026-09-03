@@ -23,6 +23,10 @@ run). Programs: `dv/auto_dv/work/test-writer/prog_s{1,2,3}/` (riscv-dv `gen_rand
 `seed_used` cross-checked by gen_program.py) and `prog_red/` (the red fixture; its `--spike-check`
 reports `*** FAILED *** (tohost = 1)`, exit 1, by construction). The host clock is UTC-4.
 
+Committed copies of every run cited in Sections 6, 7 and 8 (stdout.log and sim.log, byte-identical, md5 per file):
+dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_manifest.md; the fixture sources live under
+dv/auto_dv/tests/gen_fixtures/ (gen_run_fixture.sh reproduces any row against a gen_tb build).
+
 ## 1. Host self-test of the library (first)
 
 ```
@@ -258,3 +262,28 @@ from that SHA on.
   not_applied`). The three-layer randomization of the boot test is therefore proven on the step-2b
   build only; it is re-proven on the landed tree by re-running the three seeds when
   `gen_test_lib.SCHEDULABLE_KNOBS` is restored.
+
+## 8. Retention landing and third fix set (cross-model AWC of 566a601; Critic v2 N-1/N-2/N-3 and v3 L-1..L-3)
+
+Same build out_head, seed 1, run 11:19-11:22 UTC through dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh after the code
+changes of this landing (structure-check rewrite, parser, layers_required rule, witness epilogue, drain log, skip-assert
+message). Every line below is in the committed copy gen_tdd_logs/test_writer/gen_<run>_stdout.log.
+
+| Run | Purpose | Decisive line (stdout.log line no.) | Result | md5 |
+|---|---|---|---|---|
+| ret_drain_probe | drain probe, first attempt: c0 phase shifted the program by the 40-cycle stub, so the c1924 apply ended exactly at the shifted EOT and the drain waited 0 cycles (coincidence, recorded) | 50: `19695.00ns INFO cocotb.gen_tb_top GEN_TEST_DRAIN waited cycles=0 for the runner's last boundary` | PASS, path not exercised | d32fdcc00872dfd4dc600fba8f8555af |
+| ret2_drain_probe | drain probe (cross-model low, R2-4 fix b): single boundary at the EOT cycle 1924, 40-cycle stub apply; run() waited for the runner | 49: `19690.00ns INFO cocotb.gen_tb_top GEN_TEST_DRAIN waited cycles=40 for the runner's last boundary` | PASS, waited 40 cycles, applied 1 of 1 | 08123949ccf8585a76cd3bf42cfabe4d |
+| ret_report_skip | red for the skip assert (Critic N-2 / v3 L-3), observer faulted once; message re-read the count | 54: `AssertionError: GEN_TEST: report channel skipped a store (0 -> 1); the program stores faster than one edge per store` | FAIL as designed | 4c155658b27c4d13c85e5a42ffa1a87a |
+| ret2_report_skip | same red after the message reads the count once | 54: `AssertionError: GEN_TEST: report channel skipped a store (0 -> 2); the program stores faster than one edge per store` | FAIL as designed (0 -> 2) | b16a771fca22cd1fc8ae96ac60c542ce |
+| ret2_report_s1 | report channel green after the message change | 68: `870.00ns INFO cocotb.gen_tb_top gen_ut_report_channel GEN_TEST_PASS` | PASS | e454769caaecd2261bc2edbabad397b5 |
+| ret_boot_green_s1 | regression: gen_test_boot_retire seed 1 with the new check()/finish() | 62: `19290.00ns INFO cocotb.gen_tb_top gen_test_boot_retire GEN_TEST_PASS` | PASS | 3afe46bef59a8931e378e460d41c93b6 |
+| ret_cmp_zcb_s1 | regression: gen_test_cmp_zcb seed 1 (declare_bins default, witness epilogue idle) | 183: `21240.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcb GEN_TEST_PASS` | PASS | 906bbd6533e08ec96f57e772773672bf |
+| ret_sched_vacuous | kept red: the vacuous runner still fails the schedule check | 60: `AssertionError: GEN_TEST_FAIL gen_ut_sched_vacuous: 1 fire-check failure(s): fire_schedule_applied: reached 2 of 2 scheduled entries by EOT (cycle 1924, retired 550), app` | FAIL as designed | d2a1186e94feea3cced64c7d6541795e |
+
+Host side (11:19 UTC): `python3 dv/auto_dv/tests/gen_test_lib.py --self-test` PASS over the nine committed tests with the new
+refused sources (alias base override, module-level `T.finish = _f`, `setattr`, class inside a function, direct COV_WITNESS,
+`cycle_clause_true` outside a fire_* method, `layers_required = False` on a measured or unknown entry) and the parser fixture
+with `function automatic void apply_knob` and commented-out tests; `check_manifest_matches` verified for every committed manifest.
+No batch-1 item carries the cycle-clause marker, so no test issues a COV_WITNESS today; the epilogue's fail-loud paths (foreign id,
+missing table or command) are asserted in code and documented in the API Section 9, not yet exercised in a run (needs TB Infra's
+rendered WITNESS_IDS and the dispatcher row).

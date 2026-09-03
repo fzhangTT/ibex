@@ -15,7 +15,9 @@ Run order (fixed; a test changes it only by overriding a hook):
   4. fire_check(): per-seed asserted observables; every failure is collected and raised in one
      AssertionError (the fire-check is the test's own failure mechanism, DV_prompt Section 5).
   5. declare_bins() is logged (GEN_TEST_BINS) and must equal the fcov manifest when the test declares bins.
-  6. finish: checks first, then the finish handshake (TB_CONTRACT Section 2), then PASS_MARKER.
+  6. finish: checks first, then the witness epilogue (COV_WITNESS for the passed fire_tp_* checks whose
+     cycle-level clause was TRUE, ids from the entry's witness_ids), then the finish handshake
+     (TB_CONTRACT Section 2), then PASS_MARKER.
 
 Skeleton of a real test (copy into dv/auto_dv/tests/gen_test_<area>_<topic>.py):
 
@@ -39,6 +41,7 @@ Skeleton of a real test (copy into dv/auto_dv/tests/gen_test_<area>_<topic>.py):
 MODULE=dv.auto_dv.tests.gen_test_<area>_<topic>, TOPLEVEL=gen_tb_top, RANDOM_SEED=+ntb_random_seed.
 """
 import os
+from collections import namedtuple
 
 import cocotb
 from cocotb.triggers import Edge, Event, First, Lock, with_timeout
@@ -48,6 +51,8 @@ from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
 from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS
 from dv.auto_dv.tests import gen_test_lib as lib
+
+CheckResult = namedtuple("CheckResult", "what ok detail cycle_clause_true")
 
 
 class GenTest:
@@ -99,6 +104,8 @@ class GenTest:
         self.eot_retired = None
         self.checks = 0            # check() calls; finish() refuses a run with none (silent-pass guard)
         self.failures = []
+        self.results = []          # CheckResult per check(); the witness epilogue reads cycle_clause_true from them
+        self.witness_ids = lib.witness_ids_of(self.name)
         self._cmd_lock = Lock()
         self.log.info("GEN_TEST_SEED test=%s seed=%d image=%s", self.name, self.seed, image_path)
 
@@ -245,9 +252,10 @@ class GenTest:
             except Exception as exc:
                 raise AssertionError(f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
                                      f"{self.program_budget_cycles} cycles ({type(exc).__name__})") from None
-            assert self.eot_count() == seen_before + 1, \
-                f"GEN_TEST: report channel skipped a store ({seen_before} -> {self.eot_count()}); the program stores faster than one edge per store"
-            if self.eot_count() < final:
+            now = self.eot_count()   # read once: the assert and its message describe the same observation
+            assert now == seen_before + 1, \
+                f"GEN_TEST: report channel skipped a store ({seen_before} -> {now}); the program stores faster than one edge per store"
+            if now < final:
                 self.reports.append(int(b.evt_eot_code.value))
                 self.log.info("GEN_TEST_REPORT idx=%d value=0x%08x cycle=%d", len(self.reports) - 1, self.reports[-1], self.cycle())
         self.eot_seen = True
@@ -256,12 +264,17 @@ class GenTest:
         self.log.info("GEN_TEST_EOT code=0x%08x stores=%d reports=%d retired=%d cycle=%d", int(b.evt_eot_code.value),
                       self.eot_count(), len(self.reports), self.eot_retired, self.eot_cycle)
 
-    def check(self, what, ok, detail):
-        """Record one fire-check result; failures are raised together by run()."""
+    def check(self, what, ok, detail, cycle_clause_true=False):
+        """Record one fire-check result (failures are raised together by finish()). A fire_tp_* method passes
+        cycle_clause_true=True only on the TRUE branch of its cycle-level clause, checked against the export;
+        the finish() epilogue witnesses exactly those that also passed."""
+        r = CheckResult(what, bool(ok), detail, bool(cycle_clause_true))
         self.checks += 1
-        self.log.info("GEN_TEST_FIRE %s ok=%s %s", what, bool(ok), detail)
-        if not ok:
+        self.results.append(r)
+        self.log.info("GEN_TEST_FIRE %s ok=%s %s%s", what, r.ok, detail, " cycle_clause_true" if r.cycle_clause_true else "")
+        if not r.ok:
             self.failures.append(f"{what}: {detail}")
+        return r
 
     def info(self, ident, detail):
         """Record an observation that is reported, never gated: the RTL outcome of an _xfail item
@@ -319,8 +332,25 @@ class GenTest:
         if self.failures:
             tag = f"GEN_TEST_XFAIL {self.xfail_bug} " if self.xfail_bug else "GEN_TEST_FAIL "
             raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))
+        await self.witness_epilogue()
         await self.bridge.finish(timeout_cycles=self.finish_timeout_cycles)
         self.log.info("%s %s", self.name, lib.PASS_MARKER)
+
+    async def witness_epilogue(self):
+        """COV_WITNESS <id> for exactly the passed fire_tp_* checks whose cycle-level clause was TRUE (plan v2f
+        witness protocol, Critic C-1): ids must be in the entry's witness_ids, codes come from the rendered
+        WITNESS_IDS table; a foreign id, a missing table or a missing command fails loud. Tests never issue it."""
+        due = [r for r in self.results if r.ok and r.cycle_clause_true]
+        if not due:
+            return
+        ids = [lib.tp_id_of(r.what) for r in due]
+        foreign = [i for i in ids if i not in self.witness_ids]
+        assert not foreign, f"GEN_TEST_FAIL {self.name}: witness for {foreign} outside the entry's witness_ids {list(self.witness_ids)}"
+        assert "COV_WITNESS" in lib.CMD and lib.WITNESS_IDS, \
+            f"GEN_TEST_FAIL {self.name}: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while {ids} are due"
+        for tp in ids:
+            await self.cmd("COV_WITNESS", (lib.WITNESS_IDS[tp], 0, 0, 0))
+            self.log.info("GEN_TEST_WITNESS id=%s code=%d", tp, lib.WITNESS_IDS[tp])
 
     async def run(self):
         await self.setup()
@@ -332,10 +362,12 @@ class GenTest:
         except Exception as exc:
             raise AssertionError(f"GEN_TEST: stimulus() did not finish after the end of test ({type(exc).__name__})") from None
         if self._applying:   # a boundary reached in the end-of-test cycle is still being applied
+            t0 = self.cycle()
             try:
                 await with_timeout(self._drained.wait(), self.program_budget_cycles * self.period_ns, "ns")
             except Exception as exc:
                 raise AssertionError(f"GEN_TEST: the schedule runner did not finish its last boundary ({type(exc).__name__})") from None
+            self.log.info("GEN_TEST_DRAIN waited cycles=%d for the runner's last boundary", self.cycle() - t0)
         sched_task.kill()
         self.schedule_check()
         self.fire_check()

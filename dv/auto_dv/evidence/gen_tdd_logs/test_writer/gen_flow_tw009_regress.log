@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_build.py", line 356, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_build.py", line 307, in main
+    argv, groups = compose_command(build, outdir, a)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_build.py", line 140, in compose_command
+    lib, a.mirror_record = cocotb_lib(a)
+                           ^^^^^^^^^^^^^
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_build.py", line 53, in cocotb_lib
+    st = M.status(root)
+         ^^^^^^^^^^^^^^
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_mirror.py", line 215, in status
+    clone_hash, clone_n = tree_hash(stage)
+                          ^^^^^^^^^^^^^^^^
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_mirror.py", line 127, in tree_hash
+    h.update(f.read_bytes())
+             ^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1019, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/head_stage_status/dv/auto_dv/excl/gen_excl_select.py'

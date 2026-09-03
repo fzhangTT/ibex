@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: gen_fail_marker at stdout.log:851
+evidence:                                                         AssertionError: GEN_TEST_FAIL gen_test_pmp_csr_warl: 1 fire-check failure(s): fire_tp_pmp_001: 124 words compared, 1 mismatches (first: idx 132 [w2 readback pmpcfg3] expected 0x191f0908 got 0x191f0900); pmpcfg CSRs written [0, 1, 2, 3]; byte la
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

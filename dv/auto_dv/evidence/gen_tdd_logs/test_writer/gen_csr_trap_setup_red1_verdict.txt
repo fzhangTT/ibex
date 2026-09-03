@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:30
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 704500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000404 dut=80004268 (order=212 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=699)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

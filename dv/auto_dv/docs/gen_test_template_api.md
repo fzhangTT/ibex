@@ -140,7 +140,7 @@ export TB Infra is asked for (plan Section 6 item 5).
 `python3 dv/auto_dv/tests/gen_test_lib.py --self-test` works when `ci/env.sh` has put the clone
 root on `PYTHONPATH`): schedule determinism and seed dependence,
 text round trip, REGIME_SET argument mapping, knob draw domain, mixed-trigger-kind refusal, riscv-dv
-`+instr_cnt` lookup, the mixed-trigger-kind refusal, the consumed-knob derivation from the dispatcher source (fixture and negative case), ASCII scan of every test source and program, and the test-module structure check `lib.check_test_module` over every `gen_test_*.py`: a GenTest subclass overrides only `stimulus`, `fire_check`, `declare_bins` and `fire_*` methods (never `run`, `finish`, `check`, `setup` or any other template method), calls `self.check` at least once, and never passes a literal as the `ok` argument (three red sources are refused in the self-test). `python3 -m py_compile` on each
+`+instr_cnt` lookup, the consumed-knob derivation from the dispatcher source (fixture with the `automatic` form and commented-out tests, and the negative case), ASCII scan of every test source and program, and the test-module structure check `lib.check_test_module` over every `gen_test_*.py`: a GenTest subclass overrides only `stimulus`, `fire_check`, `declare_bins` and `fire_*` methods (never `run`, `finish`, `check`, `setup` or any other template method), calls `self.check` at least once, and never passes a literal as the `ok` argument (three red sources are refused in the self-test). `python3 -m py_compile` on each
 test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/tests/gen_fcov_manifest.py
 --group <group> --test <test> [--write]` renders the test's manifest from the plan's traceability CSV
 (`--self-test` checks it on gen_reg_schedule); `lib.check_manifest_matches` compares it with
@@ -164,3 +164,30 @@ test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/t
 - Bridge argument codes (IRQ hold policies, line-mask bits, DBG_REQ policies, MEM_ERR_ARM kinds) are
   not in the library: `gen_knobs_codegen.py` is asked to render them (plan Section 6 item 1); until
   then no committed test issues IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ or MEM_ERR_ARM.
+
+## 9. Structure rules and the witness epilogue
+
+`lib.check_test_source` (Section 7) enforces, over every `GenTest` subclass with bases resolved through
+module-level aliases (`Base = GenTest`): test classes are module-level (a class inside a function is
+refused); module-level writes to a test class (`T.finish = f`, `setattr`) are refused; only the four hooks
+and `fire_*` methods are defined; at least one `self.check` with a non-literal ok; `layers_required =
+False` is accepted only when the class's `name` has a testlist entry with `measured: false` (committed
+`gen_testlist.yaml`, then the Test Writer's staged entries) or the class is in
+`lib.LAYERS_OPTOUT_ALLOWLIST` with a reason (empty today); the token `COV_WITNESS` never appears in a
+test; `cycle_clause_true=` is a keyword of `self.check` inside a `fire_*` method only. Each rule has a
+refused red source in the self-test.
+
+Witness protocol (plan v2f, Critic condition C-1): `self.check(what, ok, detail, cycle_clause_true=False)`
+returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_true=True` only on the TRUE
+branch of its cycle-level clause after that clause passed against the export (False on the RVFI-only
+fallback or a failed clause). `finish()` runs the epilogue AFTER the failure raise and BEFORE the finish
+handshake: for exactly the passed results with `cycle_clause_true`, it maps `fire_tp_x_nnn` to `TP-X-nnn`
+(`lib.tp_id_of`), requires each id in the entry's `witness_ids` (`lib.witness_ids_of(name)`), and issues
+`COV_WITNESS <code>` awaited, code from the rendered `gen_knobs.WITNESS_IDS` table; a foreign id, a
+missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness ...`), and a test that
+never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n>`. No batch-1
+item carries the cycle-clause marker, so no test issues a witness today; the SV side (dispatcher row,
+`GEN_WITNESS_FOREIGN`) is TB Infra's.
+
+`run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test
+(fixture gen_ut_drain_probe holds the runner 40 cycles across the end of test).

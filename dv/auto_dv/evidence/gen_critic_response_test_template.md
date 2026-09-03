@@ -6,7 +6,9 @@ Review: `dv/auto_dv/reviews/2026-09-03-claude-diff-22d564b6-746af6f0.md` (REQUES
 `gen_fcov_manifest.py`, `gen_test_boot_retire.py`, `dv/auto_dv/docs/gen_test_template_api.md`,
 `dv/auto_dv/evidence/gen_tdd_test_template.md` (Section 6 holds the runs cited below), the
 testlist description in `dv/auto_dv/work/test-writer/gen_testlist_entries.yaml` (Runtime copies).
-The Critic's independent check may add rows; they are answered in this file.
+The Critic's independent check may add rows; they are answered in this file. Row prefixes: CM- cross-model review rows,
+CR- Critic rows (verdicts under dv/auto_dv/docs/gen_critic_test_template_v<n>.md). Retention landing (fixtures under
+dv/auto_dv/tests/gen_fixtures/, logs under dv/auto_dv/evidence/gen_tdd_logs/test_writer/) answers CM3-*, CR2-* and CR3-*.
 
 | # | Severity | Finding (file:line) | Disposition | Change and evidence |
 |---|---|---|---|---|
@@ -28,7 +30,7 @@ PASS; every changed file ASCII-only.
 
 ## Round 2: cross-model re-review of 984b99d + 98c2ade (APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-df83749f-98c2ade6.md`)
 
-Fix set of this round (uncommitted at writing, lands next): `gen_test_template.py`, `gen_test_lib.py`,
+Fix set of this round landed as commit 566a601 (both self-tests PASS at that HEAD, manifest generator inputs clean): `gen_test_template.py`, `gen_test_lib.py`,
 `gen_test_boot_retire.py`, `gen_fcov_manifest.py` (docstring), the API doc, the evidence (Section 7).
 
 | # | Severity | Finding | Disposition | Change and evidence |
@@ -40,14 +42,14 @@ Fix set of this round (uncommitted at writing, lands next): `gen_test_template.p
 | R2-5 | low | API doc Section 7 lists "IRQ mask bits" after irq_mask() was removed | FIXED | Replaced by "mixed-trigger-kind refusal"; Section 7 also lists the new structure check. |
 | R2-R | medium/low | gen_verdict.py red-fixture signature, gen_run.py RED-OK exit code and `--red-fixture` CLI, gen_flow_const.py KNOB_PLUSARG_PREFIX | NOT MINE | Runtime's rows; the Test Writer will fill `red_expect` on its red entries when the field exists. |
 
-## Critic v1 on 746af6f (REQUEST-CHANGES, `dv/auto_dv/work/critic/gen_critic_test_template_v1.md`)
+## Critic v1 on 746af6f (REQUEST-CHANGES, `dv/auto_dv/docs/gen_critic_test_template_v1.md`)
 
 | # | Severity | Finding | Disposition | Change and evidence |
 |---|---|---|---|---|
 | M-1 | medium | fire_schedule_applied vacuous | FIXED in 98c2ade (row 2 above), tightened this round (R2-4) | `reached` from `eot_cycle`/`eot_retired`; red fixture `gen_ut_sched_vacuous` seen PASSing pre-fix and FAILing post-fix; green `gen_ut_sched_sound`; the EOT-cycle race probe (R2-4). The SV-side phase count compare follows TB Infra's ask 2. |
 | M-2 | medium | a test recording no check passes | FIXED in 98c2ade (row 3 above) plus R2-3 | count guard in `finish()` (red `gen_ut_zero_check`) and the host AST check (overrides, literals, no-call). "One result per item of the group" is enforced by the plan's acceptance step (fire_<tp_id> per item) until the group map exists in code. |
 | M-3 | medium | layer gating is two hand-typed tuples; a lag runs every test with layers off and green; API Section 3 contradicts Section 8 | FIXED (derived set, loud failure, doc aligned) | (a) `lib.CONSUMED_KNOBS` is derived: the rendered `gen_knobs.REGIME_SET_CONSUMED` when the codegen provides it (asked of TB Infra 09:50 UTC), else parsed from `gen_cmd_dispatch::apply_knob` in `gen_env_pkg.sv` (prefix and exact-name tests); the self-test proves the parse on a fixture and the empty result on a file without `apply_knob`. TB Infra confirmed (09:53 UTC) that `REGIME_SET_CONSUMED` will be rendered from `gen_tb_knobs.yaml` in the same commit as the re-landed dispatcher, whose guard uses the same rendering, so the SV parser is the pre-codegen fallback only and is not consulted once the constant exists. (b) `GenTest.schedulable` is now what a test DECLARES (default all 20 knobs); a declared knob without a consumer FAILS setup (`GEN_TEST_FAIL <name>: declared regime knobs ... have no REGIME_SET consumer in this build (layers_required)`) unless the test is a bring-up test with `layers_required = False` (logs `GEN_TEST_LAYERS not_applied`); red fixture `gen_ut_layers_required` FAILs at setup on out_head; `gen_test_boot_retire` opts out with the reason in its source (tier check, measured false). (c) API doc Section 3 row and Section 8 rewritten to the derived set; no hand-typed consumer list remains. |
-| M-4 | medium | manifest generator depends on uncommitted files; nested-def mining; "expands" wording; count not reproducible | PARTLY FIXED, rest PENDING | Named `GEN_FCOV_MANIFEST_INPUT_VERSION` exits (98c2ade); the AST loader fails loud on a rename too (0 or 2 matches exit with the file name); the docstring now says the generator VALIDATES the CSV's expanded cross bins and expands nothing, and that the excluded-coverpoint count depends on the plan version (86 on the 09:47 working tree, 122 earlier, recorded with the SHA at landing). Landing order: the generator produces nothing until the DV Lead's plan-set commit; row 1 records that SHA and the self-test output at it. A module-level `segmentable` is the DV Lead's file to change; asked through this row. |
+| M-4 | medium | manifest generator depends on uncommitted files; nested-def mining; "expands" wording; count not reproducible | FIXED at bc9dba9 (Critic v3: CLOSED); the committed tree yields 86 excluded coverpoints (self-test line; the plan's earlier 122 was a working-tree figure, corrected in gen_test_writer_plan.md Section 2) | Named `GEN_FCOV_MANIFEST_INPUT_VERSION` exits (98c2ade); the AST loader fails loud on a rename too (0 or 2 matches exit with the file name); the docstring now says the generator VALIDATES the CSV's expanded cross bins and expands nothing, and that the excluded-coverpoint count depends on the plan version (86 on the 09:47 working tree, 122 earlier, recorded with the SHA at landing). Landing order: the generator produces nothing until the DV Lead's plan-set commit; row 1 records that SHA and the self-test output at it. A module-level `segmentable` is the DV Lead's file to change; asked through this row. |
 | M-5 | medium | bridge encodings re-typed under a false safety claim; irq_mask re-types 15 | FIXED in 98c2ade (row 8 above): removed | `git show 98c2ade:dv/auto_dv/tests/gen_test_lib.py` has no `IRQ_LINE_BIT`, `IRQ_FAST_BIT0`, `IRQ_HOLD`, `DBG_HOLD`, `MEM_ERR_BUS`, `MEM_ERR_KIND` or `irq_mask` (lines 24-27 carry the note pointing at the codegen ask); no committed test issues IRQ_SET/IRQ_CLR/NMI_PULSE/DBG_REQ/MEM_ERR_ARM. When rendered, the fast-line width comes from `CONSTANTS["GEN_IRQ_FAST_W"]`. |
 | L-1 | low | forked-coroutine failure path unproven | FIXED (red run) | Fixture `gen_ut_stim_raises` (stimulus() raises after 100 cycles): cocotb aborts the test, `AssertionError: GEN_TEST_FAIL gen_ut_stim_raises: deliberate failure inside the forked stimulus()`, TESTS=1 PASS=0 FAIL=1 (evidence Section 7). |
 | L-2 | low | `EOT_PASS_CODE = 1` re-typed | FIXED | `lib.TOHOST_PASS` / `lib.TOHOST_FAIL` defined once (citing gen_program.py and gen_zc_directed.S), imported by the test. |
@@ -55,3 +57,38 @@ Fix set of this round (uncommitted at writing, lands next): `gen_test_template.p
 | L-4 | low | quotes come from stdout.log, not sim.log | FIXED (stated) | Evidence header now says every quoted GEN_TEST line lives in `stdout.log` (`sim_stdout.log` in Runtime's out-trees); sim.log carries the UVM lines and the md5/mtime identity. |
 | L-5 | low | Runtime's result.yaml reason text | NOT MINE | Runtime's row. |
 | L-6 | low | wait_* return False silently | FIXED (API) | API doc Section 4: a False return is information for the stimulus body, never a fire-check; "did it fire" is asserted in `fire_check()` from an observable. |
+
+## Cross-model review of 566a601 (APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-9ebf2d95-9f521c61.md`)
+
+Seven lows, answered in the retention landing. Evidence: gen_tdd_test_template.md Section 8; committed copies in gen_tdd_logs/test_writer/.
+
+| # | Severity | Finding (file:line) | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM3-1 | low | gen_test_lib.py:34 fallback parser misses `function automatic void`, counts a knob named in a comment, reads the source tree | FIXED | `consumed_knobs_from_sv` accepts the `automatic` form and strips `//` and `/* */` comments before matching (self-test fixture: automatic form, a commented-out exact test and a block-comment test yield only `knob_imem_gnt_delay`); docstring and API Section 8 state the rendered `REGIME_SET_CONSUMED` is the sole trusted source once rendered and the parser is the pre-codegen fallback. Reading the compiled build is not possible from Python; the source tree is the build's input. |
+| CM3-2 | low | gen_test_template.py:59 `layers_required = False` unchecked; a measured test can opt out | FIXED | `check_test_source` refuses `layers_required = False` unless the class's `name` has a testlist entry with `measured: false` (committed gen_testlist.yaml, then the staged entries) or the class is in `lib.LAYERS_OPTOUT_ALLOWLIST` with a reason (empty). Red sources: measured entry, unknown entry (both refused); green: measured false. All nine committed tests pass because their entries are `measured: false`. Runtime's alternative (treat `GEN_TEST_LAYERS not_applied` as a bad verdict on measured runs) is not implemented here; suggested to Runtime as belt-and-braces. |
+| CM3-3 | low | gen_test_lib.py:264 structure check bypassed by `Base = GenTest`, `T.finish = _f`, class inside a function | FIXED | Bases resolved through module-level aliases; every ClassDef in the tree is examined and a test class outside module scope is refused; module-level Assign/AugAssign/AnnAssign to `<TestClass>.<attr>` and `setattr`/`delattr` at module level are refused. Four red sources in the self-test (alias override, `T.finish = _f`, `setattr`, nested class). |
+| CM3-4 | low | gen_test_template.py:326 R2-4 fix (b) unexercised (stub apply has no wait) | FIXED (probe) | Fixture gen_ut_drain_probe: apply_phase holds 40 cycles with a Timer (wait_cycles would abandon at EOT); schedule `imem_gnt_delay:short@c1924` at the boot program's EOT cycle. Run ret2_drain_probe: `GEN_TEST_EOT ... cycle=1924`, `GEN_TEST_DRAIN waited cycles=40`, phase applied at cycle 1964, `fire_schedule_applied ok=True ... applied 1`, PASS. The first attempt (ret_drain_probe, with a c0 phase) waited 0 cycles because the c0 stub shifted the program by exactly the apply length; recorded in Section 8, not hidden. |
+| CM3-5 | low | gen_test_boot_retire.py:6 docstring says TIMING_ONLY_KNOBS is empty | FIXED | Docstring now: CONSUMED_KNOBS is empty at HEAD, so none of the six TIMING_ONLY_KNOBS is drawn. |
+| CM3-6 | low | Section 7 fixtures and postfix2_* logs only under untracked work/ | FIXED (retention) | Same as CR2-N-1 below. |
+| CM3-7 | low | API :140-141 "mixed-trigger-kind refusal" listed twice | FIXED | Second mention removed (Section 7). |
+
+## Critic v2 on 98c2ade (REQUEST-CHANGES, `dv/auto_dv/docs/gen_critic_test_template_v2.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR2-N-1 | medium | fixture sources and Section 6 logs only under gitignored work/ | FIXED (retention landing) | Sources committed under dv/auto_dv/tests/gen_fixtures/ (gen_ut_sched_vacuous.py with SchedSound, gen_ut_sched_sound.py, gen_ut_zero_check.py, gen_ut_layers_required.py, gen_ut_stim_raises.py, gen_ut_report_channel.py, gen_ut_report_channel_red.py, gen_report_channel.S, gen_report_fixture_map.h, gen_run_fixture.sh; plus the later gen_ut_manifest_missing/stale, gen_ut_drain_probe, gen_ut_report_skip). Byte copies of stdout.log and sim.log of every cited run (prefix_*, postfix_*, postfix2_*, green_s1, red_s1, report_s1, report_red_s1, the 30 batch-1 runs, the retention runs) under dv/auto_dv/evidence/gen_tdd_logs/test_writer/ with gen_manifest.md (path, source, bytes, md5; 150+ rows), verified byte-identical at copy time. The evidence files point at the copies. |
+| CR2-N-2 | low | report-channel red uncited; no red for the skip path | FIXED | Red cited (Section 3c/7: report_red_s1, fixture gen_ut_report_channel_red). New red gen_ut_report_skip: the observer is faulted once (eot_count() reports one extra store after the first edge), run ret2_report_skip: `AssertionError: GEN_TEST: report channel skipped a store (0 -> 2)`, FAIL. The assert now reads the count once so the message describes the asserted observation (the first attempt printed `0 -> 1` from a second read; ret_report_skip retained). The per-store timeout has no separate red: it is the same with_timeout path proven by the end-of-test timeout in Section 2. |
+| CR2-N-3 | low | single-trigger-kind restriction not stated in the +gen_regime_sched syntax section | FIXED earlier (v3: CLOSED) | API Section 7 names the mixed-trigger-kind refusal. |
+
+## Critic v3 on 566a601 (REQUEST-CHANGES on N-1 only, `dv/auto_dv/docs/gen_critic_test_template_v3.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR3-N-1 | medium | retention (as v2 N-1) | FIXED (this landing) | See CR2-N-1; md5 of every committed copy in gen_manifest.md; the fixture sources carry the module names used by the runs (MODULE=gen_ut_<x>). |
+| CR3-L-1 | low | `layers_required = False` unrestricted | FIXED | See CM3-2 (host-side refusal unless the entry is `measured: false` or an allowlist reason exists). |
+| CR3-L-2 | low | keep the regex-fallback fixture case when REGIME_SET_CONSUMED lands | KEPT | The self-test keeps both parser fixtures (original and `automatic` form) unconditionally; when the constant exists it additionally checks the rendered set names only known knobs. A rendered-vs-parsed equality assertion is deliberately absent: TB Infra stated the new dispatcher idiom differs from the parked one. |
+| CR3-L-3 | low | skip-path red (N-2) | FIXED | See CR2-N-2 (gen_ut_report_skip). |
+
+## Witness protocol (plan v2f, Orchestrator and DV Lead rulings of 2026-09-03 11:0x UTC)
+
+Implemented in this landing, no test issues a witness yet: `check(..., cycle_clause_true=False)` returns a `CheckResult`; `finish()` runs `witness_epilogue()` after the failure raise and before the handshake, issuing `COV_WITNESS <code>` for exactly the passed fire_tp_* checks whose clause was TRUE, ids restricted to the entry's `witness_ids`, codes from the rendered `gen_knobs.WITNESS_IDS`; foreign id, missing table or missing command fail loud. `check_test_source` refuses `COV_WITNESS` anywhere in a test and `cycle_clause_true=` outside a fire_* method's `self.check` (two red sources). API Section 9. TB Infra's side: the `COV_WITNESS` command, the rendered `WITNESS_IDS` table and `GEN_WITNESS_FOREIGN`.

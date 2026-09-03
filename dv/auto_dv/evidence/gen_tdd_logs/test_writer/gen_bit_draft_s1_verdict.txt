@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: end-of-test marker 'GEN_TEST_BIT_DRAFT_PASS' not found
+evidence: 
+uvm_counts: {'INFO': 14, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

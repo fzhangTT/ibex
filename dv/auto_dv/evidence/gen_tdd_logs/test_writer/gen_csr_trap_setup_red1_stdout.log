@@ -1,0 +1,1266 @@
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 06:32 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.tests.gen_test_csr_trap_setup.gen_test_csr_trap_setup
+     0.00ns INFO     cocotb.regression                  running gen_test_csr_trap_setup (1/1)
+     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_csr_trap_setup seed=1 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_trap_setup/red1/prog/prog.vmem
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_trap_setup/red1/prog/prog.vmem tohost=0x800045c0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(127) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_trap_setup/red1/prog/prog.vmem: 4441 words, crc32 0xc03ef73f verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(151) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=1..3(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(152) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=1..3(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(167) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_READBACK ok words=64
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no REGIME_SET consumer for declared knobs imem_gnt_delay,imem_rvalid_delay (layers_required=False, bring-up only)
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=-
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=0 sched=-
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(406) @ 64500: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+   655.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=60
+   920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=0 value=0x00000000 cycle=87
+UVM_INFO @ 92000: reporter [GEN_EOT] end-of-test store 0x00000000 at 0x8ffff104 (store 1)
+  1060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=1 value=0x80004201 cycle=101
+  1300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=2 value=0x00000000 cycle=125
+  1440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=3 value=0x00000000 cycle=139
+  1540.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=4 value=0x00000000 cycle=149
+  1640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=5 value=0x00000000 cycle=159
+  1840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=6 value=0x00000000 cycle=179
+  1990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=7 value=0x00000000 cycle=194
+  2130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=8 value=0x00000000 cycle=208
+  2270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=9 value=0x00000000 cycle=222
+  2440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=10 value=0x00000000 cycle=239
+  2840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=11 value=0x00000000 cycle=279
+  3260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=12 value=0x00000000 cycle=321
+  3350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=13 value=0x00000000 cycle=330
+  3430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=14 value=0x00000000 cycle=338
+  3640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=15 value=0x00000000 cycle=359
+  3790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=16 value=0x00000000 cycle=374
+  3930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=17 value=0x00000000 cycle=388
+  4100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=18 value=0x00000000 cycle=405
+  4210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=19 value=0x00000000 cycle=416
+  4330.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=20 value=0x00000000 cycle=428
+  4440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=21 value=0x00000000 cycle=439
+  4560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=22 value=0x00000000 cycle=451
+  4710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=23 value=0x00000000 cycle=466
+  5220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=24 value=0x00000000 cycle=517
+  5420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=25 value=0x00000000 cycle=537
+  5560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=26 value=0x00000000 cycle=551
+  5690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=27 value=0x00000000 cycle=564
+  5920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=28 value=0x00000000 cycle=587
+  6020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=29 value=0x00000000 cycle=597
+  6200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=30 value=0x00000000 cycle=615
+  6340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=31 value=0x00000000 cycle=629
+  6410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=32 value=0x00000000 cycle=636
+  6510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=33 value=0x80004201 cycle=646
+  6840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=34 value=0xe8f8d4c1 cycle=679
+  6910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=35 value=0x0000000b cycle=686
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 704500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000404 dut=80004268 (order=212 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=699)
+  7260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=36 value=0x80004201 cycle=721
+  7520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=37 value=0xe8f8d4c1 cycle=747
+  7590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=38 value=0x0000000b cycle=754
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 774500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000420 dut=80004268 (order=233 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=769)
+  7950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=39 value=0x80004201 cycle=790
+  8260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=40 value=0xe8f8d4c1 cycle=821
+  8320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=41 value=0x0000000b cycle=827
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 846500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000043c dut=80004268 (order=254 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=841)
+  8700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=42 value=0x80004401 cycle=865
+  8950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=43 value=0x8ab5ab79 cycle=890
+  9020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=44 value=0x0000000b cycle=897
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 917500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000045c dut=80004468 (order=276 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=912)
+  9360.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=45 value=0x80004401 cycle=931
+  9620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=46 value=0x8ab5ab79 cycle=957
+  9660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=47 value=0x0000000b cycle=961
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 982500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000478 dut=80004468 (order=297 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=977)
+  9940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=48 value=0x00000001 cycle=989
+ 10150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=49 value=0x80004201 cycle=1010
+ 10460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=50 value=0xe8f8d4c1 cycle=1041
+ 10510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=51 value=0x0000000b cycle=1046
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1067500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800004a4 dut=80004268 (order=322 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1062)
+ 10850.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=52 value=0x80004201 cycle=1080
+ 11160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=53 value=0xe8f8d4c1 cycle=1111
+ 11210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=54 value=0x0000000b cycle=1116
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1133500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800004c0 dut=80004268 (order=343 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1128)
+ 11560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=55 value=0x80004301 cycle=1151
+ 11840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=56 value=0xb7ad8529 cycle=1179
+ 11880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=57 value=0x0000000b cycle=1183
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1204500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800004dc dut=80004368 (order=364 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1199)
+ 12260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=58 value=0x00000001 cycle=1221
+ 12670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=59 value=0x80004501 cycle=1262
+ 12980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=60 value=0xbabf1f23 cycle=1293
+ 13040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=61 value=0x0000000b cycle=1299
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1321500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000538 dut=80004568 (order=401 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1316)
+ 13420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=62 value=0x80004201 cycle=1337
+ 13690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=63 value=0xe8f8d4c1 cycle=1364
+ 13740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=64 value=0x0000000b cycle=1369
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1391500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000550 dut=80004268 (order=421 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1386)
+ 14020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=65 value=0x00000001 cycle=1397
+ 14150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=66 value=0x80004501 cycle=1410
+ 14470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=67 value=0xbabf1f23 cycle=1442
+ 14560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=68 value=0x0000000b cycle=1451
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1470500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000574 dut=80004568 (order=444 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1465)
+ 14890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=69 value=0x80004201 cycle=1484
+ 15170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=70 value=0xe8f8d4c1 cycle=1512
+ 15230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=71 value=0x0000000b cycle=1518
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1536500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000058c dut=80004268 (order=464 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1531)
+ 15550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=72 value=0x80004301 cycle=1550
+ 15820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=73 value=0xb7ad8529 cycle=1577
+ 15890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=74 value=0x0000000b cycle=1584
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1603500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800005a8 dut=80004368 (order=485 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1598)
+ 16280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=75 value=0x80004301 cycle=1623
+ 16600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=76 value=0xb7ad8529 cycle=1655
+ 16640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=77 value=0x0000000b cycle=1659
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1678500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800005c8 dut=80004368 (order=507 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1673)
+ 16940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=78 value=0x00000001 cycle=1689
+ 17520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=79 value=0x80004201 cycle=1747
+ 17880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=80 value=0xe8f8d4c1 cycle=1783
+ 17930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=81 value=0x0000000b cycle=1788
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1809500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000624 dut=80004268 (order=544 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1804)
+ 18280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=82 value=0x80004201 cycle=1823
+ 18580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=83 value=0xe8f8d4c1 cycle=1853
+ 18650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=84 value=0x0000000b cycle=1860
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1879500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000063c dut=80004268 (order=564 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1874)
+ 18960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=85 value=0x80004201 cycle=1891
+ 19290.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=86 value=0xe8f8d4c1 cycle=1924
+ 19370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=87 value=0x0000000b cycle=1932
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 1951500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000654 dut=80004268 (order=584 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=1946)
+ 19830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=88 value=0x80004201 cycle=1978
+ 20080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=89 value=0xe8f8d4c1 cycle=2003
+ 20150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=90 value=0x0000000b cycle=2010
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2028500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000676 dut=80004268 (order=607 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2023)
+ 20610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=91 value=0x80004401 cycle=2056
+ 20910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=92 value=0x8ab5ab79 cycle=2086
+ 20990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=93 value=0x0000000b cycle=2094
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2113500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800006a2 dut=80004468 (order=632 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2108)
+ 21560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=94 value=0x80004401 cycle=2151
+ 21840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=95 value=0x8ab5ab79 cycle=2179
+ 21900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=96 value=0x0000000b cycle=2185
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2204500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800006d2 dut=80004468 (order=658 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2199)
+ 22390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=97 value=0x80004301 cycle=2234
+ 22680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=98 value=0xb7ad8529 cycle=2263
+ 22730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=99 value=0x0000000b cycle=2268
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2288500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800006fe dut=80004368 (order=683 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2283)
+ 23080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=100 value=0x80004301 cycle=2303
+ 23360.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=101 value=0xb7ad8529 cycle=2331
+ 23400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=102 value=0x0000000b cycle=2335
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2357500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000712 dut=80004368 (order=702 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2352)
+ 23830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=103 value=0x80004301 cycle=2378
+ 24150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=104 value=0xb7ad8529 cycle=2410
+ 24210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=105 value=0x0000000b cycle=2416
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2436500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000732 dut=80004368 (order=724 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2431)
+ 24660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=106 value=0x80004201 cycle=2461
+ 24910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=107 value=0xe8f8d4c1 cycle=2486
+ 24950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=108 value=0x0000000b cycle=2490
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2509500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000756 dut=80004268 (order=747 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2504)
+ 25370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=109 value=0x80004301 cycle=2532
+ 25680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=110 value=0xb7ad8529 cycle=2563
+ 25750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=111 value=0x0000000b cycle=2570
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2587500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000772 dut=80004368 (order=768 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2582)
+ 26170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=112 value=0x80004301 cycle=2612
+ 26480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=113 value=0xb7ad8529 cycle=2643
+ 26560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=114 value=0x0000000b cycle=2651
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2670500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000792 dut=80004368 (order=790 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2665)
+ 26870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=115 value=0x00000001 cycle=2682
+ 27090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=116 value=0x80004501 cycle=2704
+ 27380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=117 value=0xbabf1f23 cycle=2733
+ 27460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=118 value=0x0000000b cycle=2741
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2760500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800007c6 dut=80004568 (order=817 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2755)
+ 27890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=119 value=0x00000001 cycle=2784
+ 28130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=120 value=0x80004501 cycle=2808
+ 28420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=121 value=0xbabf1f23 cycle=2837
+ 28490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=122 value=0x0000000b cycle=2844
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2863500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000802 dut=80004568 (order=846 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2858)
+ 28900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=123 value=0x80004501 cycle=2885
+ 29240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=124 value=0xbabf1f23 cycle=2919
+ 29310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=125 value=0x0000000b cycle=2926
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 2952500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000081e dut=80004568 (order=867 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=2947)
+ 29840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=126 value=0x80004201 cycle=2979
+ 30140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=127 value=0xe8f8d4c1 cycle=3009
+ 30190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=128 value=0x0000000b cycle=3014
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3036500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000083e dut=80004268 (order=889 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3031)
+ 30590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=129 value=0x80004201 cycle=3054
+ 30900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=130 value=0xe8f8d4c1 cycle=3085
+ 30930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=131 value=0x0000000b cycle=3088
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3108500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000085a dut=80004268 (order=910 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3103)
+ 31390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=132 value=0x80004201 cycle=3134
+ 31710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=133 value=0xe8f8d4c1 cycle=3166
+ 31770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=134 value=0x0000000b cycle=3172
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3195500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000087a dut=80004268 (order=932 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3190)
+ 32250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=135 value=0x80004401 cycle=3220
+ 32470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=136 value=0x8ab5ab79 cycle=3242
+ 32560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=137 value=0x0000000b cycle=3251
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3271500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000089e dut=80004468 (order=955 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3266)
+ 32890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=138 value=0x80004401 cycle=3284
+ 33160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=139 value=0x8ab5ab79 cycle=3311
+ 33240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=140 value=0x0000000b cycle=3319
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3336500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800008b2 dut=80004468 (order=974 pc=80004464 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3331)
+ 33620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=141 value=0x80004201 cycle=3357
+ 33930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=142 value=0xe8f8d4c1 cycle=3388
+ 33960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=143 value=0x0000000b cycle=3391
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3416500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800008d2 dut=80004268 (order=996 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3411)
+ 34670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=144 value=0x80004501 cycle=3462
+ 34920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=145 value=0xbabf1f23 cycle=3487
+ 34980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=146 value=0x0000000b cycle=3493
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3516500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000906 dut=80004568 (order=1023 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3511)
+ 35340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=147 value=0x80004501 cycle=3529
+ 35600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=148 value=0xbabf1f23 cycle=3555
+ 35700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=149 value=0x0000000b cycle=3565
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3584500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000091a dut=80004568 (order=1042 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3579)
+ 35990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=150 value=0x00000001 cycle=3594
+ 36220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=151 value=0x80004301 cycle=3617
+ 36490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=152 value=0xb7ad8529 cycle=3644
+ 36560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=153 value=0x0000000b cycle=3651
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3669500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000094e dut=80004368 (order=1069 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3664)
+ 37080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=154 value=0x80004301 cycle=3703
+ 37370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=155 value=0xb7ad8529 cycle=3732
+ 37420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=156 value=0x0000000b cycle=3737
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3758500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000976 dut=80004368 (order=1093 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3753)
+ 37840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=157 value=0x00000001 cycle=3779
+ 38050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=158 value=0x80004501 cycle=3800
+ 38370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=159 value=0xbabf1f23 cycle=3832
+ 38430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=160 value=0x0000000b cycle=3838
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3860500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800009b6 dut=80004568 (order=1123 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=3855)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3879500: uvm_test_top.env.sb [isa_rd] rd model=x13/80239888 dut=x13/00221888 (order=1127 pc=800009c2 insn=300026f3 trap=0 intr=0 rd=x13/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3874)
+ 38800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=161 value=0x00221888 cycle=3875
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3882500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1128 pc=800009c6 insn=00dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3877)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3887500: uvm_test_top.env.sb [isa_rd] rd model=x28/80239888 dut=x28/00221888 (order=1130 pc=800009ce insn=30072e73 trap=0 intr=0 rd=x28/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3882)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3890500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=1131 pc=800009d2 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3885)
+ 38930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=162 value=0x00221888 cycle=3888
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3896500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1132 pc=800009d6 insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3891)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3900500: uvm_test_top.env.sb [isa_rd] rd model=x12/80239888 dut=x12/00221888 (order=1134 pc=800009de insn=300b3673 trap=0 intr=0 rd=x12/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3895)
+ 39060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=163 value=0x00000000 cycle=3901
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3916500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=1139 pc=800009f2 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3911)
+ 39180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=164 value=0x00221888 cycle=3913
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3922500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1140 pc=800009f6 insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3917)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3926500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=1142 pc=800009fe insn=3008bf73 trap=0 intr=0 rd=x30/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3921)
+ 39300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=165 value=0x00000000 cycle=3925
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3940500: uvm_test_top.env.sb [isa_rd] rd model=x10/80239888 dut=x10/00221888 (order=1147 pc=80000a12 insn=30002573 trap=0 intr=0 rd=x10/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3935)
+ 39450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=166 value=0x00221888 cycle=3940
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3947500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1148 pc=80000a16 insn=00ada023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3942)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3953500: uvm_test_top.env.sb [isa_rd] rd model=x20/80239888 dut=x20/00221888 (order=1150 pc=80000a1e insn=3002aa73 trap=0 intr=0 rd=x20/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3948)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3958500: uvm_test_top.env.sb [isa_rd] rd model=x13/80239888 dut=x13/00221888 (order=1152 pc=80000a26 insn=300026f3 trap=0 intr=0 rd=x13/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3953)
+ 39610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=167 value=0x00221888 cycle=3956
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3965500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1153 pc=80000a2a insn=00dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3960)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3969500: uvm_test_top.env.sb [isa_rd] rd model=x28/80239888 dut=x28/00221888 (order=1155 pc=80000a32 insn=30059e73 trap=0 intr=0 rd=x28/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3964)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3972500: uvm_test_top.env.sb [isa_rd] rd model=x20/80239888 dut=x20/00221888 (order=1156 pc=80000a36 insn=30002a73 trap=0 intr=0 rd=x20/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=3967)
+ 39750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=168 value=0x00221888 cycle=3970
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3977500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1157 pc=80000a3a insn=014da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=3972)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 3980500: uvm_test_top.env.sb [isa_rd] rd model=x17/80239888 dut=x17/00221888 (order=1159 pc=80000a42 insn=300438f3 trap=0 intr=0 rd=x17/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=3975)
+ 39860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=169 value=0x00000000 cycle=3981
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4007500: uvm_test_top.env.sb [isa_rd] rd model=x29/80239888 dut=x29/00221888 (order=1168 pc=80000a66 insn=01389eb3 trap=0 intr=0 rd=x29/00221888 mem=00221888 w0000 r1111 mode=3 cyc=4002)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4020500: uvm_test_top.env.sb [isa_rd] rd model=x6/80239888 dut=x6/00221888 (order=1173 pc=80000a7a insn=30002373 trap=0 intr=0 rd=x6/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4015)
+ 40250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=170 value=0x00221888 cycle=4020
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4027500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1174 pc=80000a7e insn=006da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4022)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4029500: uvm_test_top.env.sb [isa_rd] rd model=x18/80239888 dut=x18/00221888 (order=1176 pc=80000a86 insn=300ab973 trap=0 intr=0 rd=x18/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4024)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4041500: uvm_test_top.env.sb [isa_rd] rd model=x7/80239888 dut=x7/00221888 (order=1181 pc=80000a9a insn=004643b3 trap=0 intr=0 rd=x7/00221888 mem=00221888 w0000 r1111 mode=3 cyc=4036)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4050500: uvm_test_top.env.sb [isa_rd] rd model=x30/02008e62 dut=x30/00008862 (order=1184 pc=80000aa6 insn=00665f13 trap=0 intr=0 rd=x30/00008862 mem=0022188e w0000 r1111 mode=3 cyc=4045)
+ 40600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=171 value=0x00000000 cycle=4055
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4069500: uvm_test_top.env.sb [isa_rd] rd model=x13/80239888 dut=x13/00221888 (order=1190 pc=80000abe insn=300026f3 trap=0 intr=0 rd=x13/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4064)
+ 40720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=172 value=0x00221888 cycle=4067
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4074500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1191 pc=80000ac2 insn=00dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4069)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4081500: uvm_test_top.env.sb [isa_rd] rd model=x19/80239888 dut=x19/00221888 (order=1193 pc=80000aca insn=3000b9f3 trap=0 intr=0 rd=x19/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4076)
+ 40860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=173 value=0x00000000 cycle=4081
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4098500: uvm_test_top.env.sb [isa_rd] rd model=x21/80239888 dut=x21/00221888 (order=1199 pc=80000ae2 insn=30002af3 trap=0 intr=0 rd=x21/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4093)
+ 41010.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=174 value=0x00221888 cycle=4096
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4104500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1200 pc=80000ae6 insn=015da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4099)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4114500: uvm_test_top.env.sb [isa_rd] rd model=x11/80239888 dut=x11/00221888 (order=1203 pc=80000af2 insn=300025f3 trap=0 intr=0 rd=x11/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4109)
+ 41160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=175 value=0x00221888 cycle=4111
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4119500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1204 pc=80000af6 insn=00bda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4114)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4124500: uvm_test_top.env.sb [isa_rd] rd model=x8/80239888 dut=x8/00221888 (order=1206 pc=80000afe insn=30079473 trap=0 intr=0 rd=x8/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4119)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4127500: uvm_test_top.env.sb [isa_rd] rd model=x29/80239888 dut=x29/00221888 (order=1207 pc=80000b02 insn=30002ef3 trap=0 intr=0 rd=x29/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4122)
+ 41300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=176 value=0x00221888 cycle=4125
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4132500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1208 pc=80000b06 insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4127)
+ 41440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=177 value=0x00000000 cycle=4139
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4155500: uvm_test_top.env.sb [isa_rd] rd model=x6/00010047 dut=x6/00000044 (order=1216 pc=80000b26 insn=00f6d313 trap=0 intr=0 rd=x6/00000044 mem=00221897 w0000 r1111 mode=3 cyc=4150)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4165500: uvm_test_top.env.sb [isa_rd] rd model=x12/02009224 dut=x12/00008c24 (order=1219 pc=80000b32 insn=3c2f0613 trap=0 intr=0 rd=x12/00008c24 mem=00008c24 w0000 r1111 mode=3 cyc=4160)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4175500: uvm_test_top.env.sb [isa_rd] rd model=x2/fe008e62 dut=x2/00008862 (order=1223 pc=80000b42 insn=406ad113 trap=0 intr=0 rd=x2/00008862 mem=00221c8e w0000 r1111 mode=3 cyc=4170)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4179500: uvm_test_top.env.sb [isa_rd] rd model=x1/80239888 dut=x1/00221888 (order=1225 pc=80000b4a insn=300020f3 trap=0 intr=0 rd=x1/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4174)
+ 41820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=178 value=0x00221888 cycle=4177
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4186500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1226 pc=80000b4e insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4181)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4188500: uvm_test_top.env.sb [isa_rd] rd model=x29/80239888 dut=x29/00221888 (order=1228 pc=80000b56 insn=30011ef3 trap=0 intr=0 rd=x29/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4183)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4191500: uvm_test_top.env.sb [isa_rd] rd model=x30/38000000 dut=x30/20000000 (order=1229 pc=80000b5a insn=01b31f13 trap=0 intr=0 rd=x30/20000000 mem=0000005f w0000 r1111 mode=3 cyc=4186)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4193500: uvm_test_top.env.sb [isa_rd] rd model=x1/80239888 dut=x1/00221888 (order=1230 pc=80000b5e insn=300020f3 trap=0 intr=0 rd=x1/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4188)
+ 41970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=179 value=0x00221888 cycle=4192
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4200500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1231 pc=80000b62 insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4195)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4202500: uvm_test_top.env.sb [isa_rd] rd model=x14/80239888 dut=x14/00221888 (order=1233 pc=80000b6a insn=3004a773 trap=0 intr=0 rd=x14/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4197)
+ 42060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=180 value=0x00221888 cycle=4201
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4206500: uvm_test_top.env.sb [isa_rd] rd model=x6/80239888 dut=x6/00221888 (order=1235 pc=80000b72 insn=30002373 trap=0 intr=0 rd=x6/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4201)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4210500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1236 pc=80000b76 insn=006da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4205)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4213500: uvm_test_top.env.sb [isa_rd] rd model=x31/80239888 dut=x31/00221888 (order=1238 pc=80000b7e insn=3003bff3 trap=0 intr=0 rd=x31/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4208)
+ 42200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=181 value=0x00000000 cycle=4215
+ 42460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=182 value=0x00000000 cycle=4241
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4256500: uvm_test_top.env.sb [isa_rd] rd model=x11/80239888 dut=x11/00221888 (order=1251 pc=80000bb2 insn=300025f3 trap=0 intr=0 rd=x11/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4251)
+ 42620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=183 value=0x00221888 cycle=4257
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4264500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1252 pc=80000bb6 insn=00bda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4259)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4267500: uvm_test_top.env.sb [isa_rd] rd model=x21/80239888 dut=x21/00221888 (order=1254 pc=80000bbe insn=3009aaf3 trap=0 intr=0 rd=x21/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4262)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4277500: uvm_test_top.env.sb [isa_rd] rd model=x18/8023934b dut=x18/0022134b (order=1257 pc=80000bca insn=ac388913 trap=0 intr=0 rd=x18/0022134b mem=0022134b w0000 r1111 mode=3 cyc=4272)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4280500: uvm_test_top.env.sb [isa_rd] rd model=x3/80239888 dut=x3/00221888 (order=1259 pc=80000bd2 insn=300021f3 trap=0 intr=0 rd=x3/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4275)
+ 42820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=184 value=0x00221888 cycle=4277
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4285500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1260 pc=80000bd6 insn=003da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4280)
+ 42910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=185 value=0x00221888 cycle=4286
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4291500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=1263 pc=80000be2 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4286)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4293500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1264 pc=80000be6 insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4288)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4297500: uvm_test_top.env.sb [isa_rd] rd model=x7/80239888 dut=x7/00221888 (order=1266 pc=80000bee insn=300f33f3 trap=0 intr=0 rd=x7/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4292)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4305500: uvm_test_top.env.sb [isa_rd] rd model=x1/7fdc6777 dut=x1/ffdde777 (order=1269 pc=80000bfa insn=414980b3 trap=0 intr=0 rd=x1/ffdde777 mem=ffdde777 w0000 r1111 mode=3 cyc=4300)
+ 43140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=186 value=0x00000000 cycle=4309
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4328500: uvm_test_top.env.sb [isa_rd] rd model=x6/80239888 dut=x6/00221888 (order=1277 pc=80000c1a insn=008a1333 trap=0 intr=0 rd=x6/00221888 mem=00221888 w0000 r1111 mode=3 cyc=4323)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4334500: uvm_test_top.env.sb [isa_rd] rd model=x31/80239888 dut=x31/00221888 (order=1279 pc=80000c22 insn=30002ff3 trap=0 intr=0 rd=x31/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4329)
+ 43370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=187 value=0x00221888 cycle=4332
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4339500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1280 pc=80000c26 insn=01fda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4334)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4345500: uvm_test_top.env.sb [isa_rd] rd model=x3/80239888 dut=x3/00221888 (order=1282 pc=80000c2e insn=300531f3 trap=0 intr=0 rd=x3/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4340)
+ 43500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=188 value=0x00000000 cycle=4345
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4361500: uvm_test_top.env.sb [isa_rd] rd model=x7/80239888 dut=x7/00221888 (order=1287 pc=80000c42 insn=300023f3 trap=0 intr=0 rd=x7/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4356)
+ 43650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=189 value=0x00221888 cycle=4360
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4367500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1288 pc=80000c46 insn=007da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4362)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4370500: uvm_test_top.env.sb [isa_rd] rd model=x18/80239888 dut=x18/00221888 (order=1290 pc=80000c4e insn=3003a973 trap=0 intr=0 rd=x18/00221888 mem=fffffcff w0000 r1111 mode=3 cyc=4365)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4383500: uvm_test_top.env.sb [isa_rd] rd model=x3/ffffc011 dut=x3/00000011 (order=1294 pc=80000c5e insn=411ad193 trap=0 intr=0 rd=x3/00000011 mem=00221c99 w0000 r1111 mode=3 cyc=4378)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4385500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=1295 pc=80000c62 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=4380)
+ 43880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=190 value=0x00221888 cycle=4383
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4392500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=1296 pc=80000c66 insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=4387)
+ 44000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=191 value=0x00000000 cycle=4395
+ 44080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=192 value=0x00000000 cycle=4403
+ 44280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=193 value=0x00000000 cycle=4423
+ 44500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=194 value=0x00000000 cycle=4445
+ 44650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=195 value=0x00000000 cycle=4460
+ 44770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=196 value=0x00000000 cycle=4472
+ 45020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=197 value=0x00000000 cycle=4497
+ 45160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=198 value=0x00000000 cycle=4511
+ 45340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=199 value=0x00000000 cycle=4529
+ 45460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=200 value=0x00000000 cycle=4541
+ 45650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=201 value=0x00000000 cycle=4560
+ 45780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=202 value=0x00000000 cycle=4573
+ 46300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=203 value=0x00000000 cycle=4625
+ 46460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=204 value=0x00000000 cycle=4641
+ 46680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=205 value=0x00000000 cycle=4663
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 4677500: uvm_test_top.env.sb [isa_rd] rd model=x13/8023969f dut=x13/0022169f (order=1391 pc=80000dd8 insn=e1770693 trap=0 intr=0 rd=x13/0022169f mem=0022169f w0000 r1111 mode=3 cyc=4672)
+ 46830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=206 value=0x00000000 cycle=4678
+ 46950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=207 value=0x00000000 cycle=4690
+ 47100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=208 value=0x00000000 cycle=4705
+ 47230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=209 value=0x00000000 cycle=4718
+ 47370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=210 value=0x00000000 cycle=4732
+ 47470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=211 value=0x00000000 cycle=4742
+ 47630.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=212 value=0x00000000 cycle=4758
+ 47780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=213 value=0x00000000 cycle=4773
+ 47910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=214 value=0x00000000 cycle=4786
+ 48100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=215 value=0x00000000 cycle=4805
+ 48320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=216 value=0x00000000 cycle=4827
+ 48460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=217 value=0x00000000 cycle=4841
+ 48520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=218 value=0x00000000 cycle=4847
+ 48660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=219 value=0x00000000 cycle=4861
+ 48840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=220 value=0x00000000 cycle=4879
+ 48980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=221 value=0x00000000 cycle=4893
+ 49060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=222 value=0x00000000 cycle=4901
+ 49220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=223 value=0x00000000 cycle=4917
+ 49340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=224 value=0x00000000 cycle=4929
+ 49430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=225 value=0x00000000 cycle=4938
+ 49570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=226 value=0x00000000 cycle=4952
+ 49740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=227 value=0x00000000 cycle=4969
+ 49870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=228 value=0x00000000 cycle=4982
+ 49970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=229 value=0x00000000 cycle=4992
+ 50080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=230 value=0x00000000 cycle=5003
+ 50210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=231 value=0x00000000 cycle=5016
+ 50400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=232 value=0x00000000 cycle=5035
+ 50720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=233 value=0x00000000 cycle=5067
+ 50800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=234 value=0x00000000 cycle=5075
+ 50940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=235 value=0x00000000 cycle=5089
+ 51090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=236 value=0x00000000 cycle=5104
+ 51210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=237 value=0x00000000 cycle=5116
+ 51330.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=238 value=0x00000000 cycle=5128
+ 51530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=239 value=0x00000000 cycle=5148
+ 51650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=240 value=0x00000000 cycle=5160
+ 51770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=241 value=0x00000000 cycle=5172
+ 52160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=242 value=0x00000000 cycle=5211
+ 52250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=243 value=0x00000000 cycle=5220
+ 52410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=244 value=0x00000000 cycle=5236
+ 52530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=245 value=0x00000000 cycle=5248
+ 52660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=246 value=0x00000000 cycle=5261
+ 52810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=247 value=0x00000000 cycle=5276
+ 53000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=248 value=0x00000000 cycle=5295
+ 53090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=249 value=0x00000000 cycle=5304
+ 53170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=250 value=0x00000000 cycle=5312
+ 53210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=251 value=0x00000000 cycle=5316
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5330500: uvm_test_top.env.sb [isa_rd] rd model=x8/80239888 dut=x8/00221888 (order=1614 pc=8000114c insn=30099473 trap=0 intr=0 rd=x8/00221888 mem=fffffd80 w0000 r1111 mode=3 cyc=5325)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5355500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1624 pc=80001172 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5350)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5363500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1625 pc=80001176 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5358)
+ 53900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=252 value=0xbabf1f23 cycle=5385
+ 53960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=253 value=0x00000008 cycle=5391
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5414500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000117a dut=80004568 (order=1641 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5409)
+ 54250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=254 value=0x00000088 cycle=5420
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5459500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1652 pc=800011a2 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5454)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5466500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1653 pc=800011a6 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5461)
+ 54940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=255 value=0xbabf1f23 cycle=5489
+ 55020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=256 value=0x00000008 cycle=5497
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5521500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800011aa dut=80004568 (order=1669 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5516)
+ 55310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=257 value=0x00200080 cycle=5526
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5556500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1678 pc=800011ca insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5551)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5566500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1679 pc=800011ce insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5561)
+ 55960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=258 value=0xbabf1f23 cycle=5591
+ 56010.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=259 value=0x00000008 cycle=5596
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5621500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800011d2 dut=80004568 (order=1695 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5616)
+ 56320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=260 value=0x00200000 cycle=5627
+ 56890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=261 value=0xbabf1f23 cycle=5684
+ 56950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=262 value=0x0000000b cycle=5690
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5707500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800011fe dut=80004568 (order=1720 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5702)
+ 57230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=263 value=0x00021880 cycle=5718
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5752500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1734 pc=80001230 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5747)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5759500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1735 pc=80001234 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5754)
+ 57910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=264 value=0xbabf1f23 cycle=5786
+ 57950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=265 value=0x00000008 cycle=5790
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5811500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001238 dut=80004568 (order=1751 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5806)
+ 58180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=266 value=0x00200088 cycle=5813
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5843500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1760 pc=80001258 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5838)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5849500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1761 pc=8000125c insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5844)
+ 58770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=267 value=0xbabf1f23 cycle=5872
+ 58830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=268 value=0x00000008 cycle=5878
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5900500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001260 dut=80004568 (order=1777 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5895)
+ 59060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=269 value=0x00220000 cycle=5901
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5945500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1790 pc=80001290 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=5940)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 5954500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1791 pc=80001294 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=5949)
+ 59880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=270 value=0xbabf1f23 cycle=5983
+ 59970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=271 value=0x00000008 cycle=5992
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6011500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001298 dut=80004568 (order=1807 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6006)
+ 60180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=272 value=0x00220088 cycle=6013
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6045500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1819 pc=800012be insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6040)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6056500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1820 pc=800012c2 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6051)
+ 60910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=273 value=0xbabf1f23 cycle=6086
+ 60960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=274 value=0x00000008 cycle=6091
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6112500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800012c6 dut=80004568 (order=1836 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6107)
+ 61190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=275 value=0x00020008 cycle=6114
+ 61860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=276 value=0xbabf1f23 cycle=6181
+ 61920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=277 value=0x0000000b cycle=6187
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6205500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800012f6 dut=80004568 (order=1862 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6200)
+ 62110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=278 value=0x00201880 cycle=6206
+ 63080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=279 value=0xbabf1f23 cycle=6303
+ 63130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=280 value=0x0000000b cycle=6308
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6329500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000134a dut=80004568 (order=1898 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6324)
+ 63370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=281 value=0x00001800 cycle=6332
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6363500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1909 pc=80001370 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6358)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6369500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1910 pc=80001374 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6364)
+ 64020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=282 value=0xbabf1f23 cycle=6397
+ 64060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=283 value=0x00000008 cycle=6401
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6425500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001378 dut=80004568 (order=1926 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6420)
+ 64320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=284 value=0x00000000 cycle=6427
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6461500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1937 pc=8000139c insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6456)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6468500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1938 pc=800013a0 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6463)
+ 64980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=285 value=0xbabf1f23 cycle=6493
+ 65050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=286 value=0x00000008 cycle=6500
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6519500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800013a4 dut=80004568 (order=1954 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6514)
+ 65250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=287 value=0x00200008 cycle=6520
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6571500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1969 pc=800013da insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6566)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6583500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1970 pc=800013de insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6578)
+ 66120.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=288 value=0xbabf1f23 cycle=6607
+ 66190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=289 value=0x00000008 cycle=6614
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6635500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800013e2 dut=80004568 (order=1986 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6630)
+ 66450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=290 value=0x00220088 cycle=6640
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6673500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=1997 pc=80001408 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6668)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6681500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=1998 pc=8000140c insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6676)
+ 67100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=291 value=0xbabf1f23 cycle=6705
+ 67180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=292 value=0x00000008 cycle=6713
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6734500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001410 dut=80004568 (order=2014 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6729)
+ 67410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=293 value=0x00200080 cycle=6736
+ 68060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=294 value=0xbabf1f23 cycle=6801
+ 68110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=295 value=0x0000000b cycle=6806
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6829500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001440 dut=80004568 (order=2040 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6824)
+ 68360.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=296 value=0x00201880 cycle=6831
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6856500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2049 pc=80001460 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6851)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6861500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2050 pc=80001464 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6856)
+ 68890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=297 value=0xbabf1f23 cycle=6884
+ 68970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=298 value=0x00000008 cycle=6892
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6909500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001468 dut=80004568 (order=2066 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6904)
+ 69170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=299 value=0x00000080 cycle=6912
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6943500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2075 pc=80001488 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6938)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 6950500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2076 pc=8000148c insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=6945)
+ 69820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=300 value=0xbabf1f23 cycle=6977
+ 69870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=301 value=0x00000008 cycle=6982
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7001500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001490 dut=80004568 (order=2092 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=6996)
+ 70080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=302 value=0x00000088 cycle=7003
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7032500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2101 pc=800014ae insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7027)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7043500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2102 pc=800014b2 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7038)
+ 70750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=303 value=0xbabf1f23 cycle=7070
+ 70800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=304 value=0x00000008 cycle=7075
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7096500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800014b6 dut=80004568 (order=2118 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7091)
+ 71040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=305 value=0x00220008 cycle=7099
+ 71530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=306 value=0xbabf1f23 cycle=7148
+ 71580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=307 value=0x0000000b cycle=7153
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7173500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800014dc dut=80004568 (order=2142 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7168)
+ 71820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=308 value=0x00001880 cycle=7177
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7220500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2155 pc=8000150a insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7215)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7231500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2156 pc=8000150e insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7226)
+ 72570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=309 value=0xbabf1f23 cycle=7252
+ 72650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=310 value=0x00000008 cycle=7260
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7282500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001512 dut=80004568 (order=2172 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7277)
+ 72880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=311 value=0x00200088 cycle=7283
+ 73620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=312 value=0xbabf1f23 cycle=7357
+ 73680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=313 value=0x0000000b cycle=7363
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7384500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001546 dut=80004568 (order=2199 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7379)
+ 73960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=314 value=0x00201808 cycle=7391
+ 74870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=315 value=0xbabf1f23 cycle=7482
+ 74920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=316 value=0x0000000b cycle=7487
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7510500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001596 dut=80004568 (order=2233 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7505)
+ 75240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=317 value=0x00021800 cycle=7519
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7599500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2262 pc=80001602 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7594)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7606500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2263 pc=80001606 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7601)
+ 76370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=318 value=0xbabf1f23 cycle=7632
+ 76430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=319 value=0x00000008 cycle=7638
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7661500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000160a dut=80004568 (order=2279 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7656)
+ 76720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=320 value=0x00220088 cycle=7667
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7706500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2292 pc=80001638 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7701)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7712500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2293 pc=8000163c insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7707)
+ 77430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=321 value=0xbabf1f23 cycle=7738
+ 77470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=322 value=0x00000008 cycle=7742
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7766500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001640 dut=80004568 (order=2309 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7761)
+ 77750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=323 value=0x00000080 cycle=7770
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7810500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2322 pc=80001670 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7805)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7819500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2323 pc=80001674 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7814)
+ 78480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=324 value=0xbabf1f23 cycle=7843
+ 78530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=325 value=0x00000008 cycle=7848
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7867500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001678 dut=80004568 (order=2339 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7862)
+ 78740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=326 value=0x00220008 cycle=7869
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7899500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2349 pc=8000169a insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7894)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7908500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2350 pc=8000169e insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7903)
+ 79370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=327 value=0xbabf1f23 cycle=7932
+ 79430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=328 value=0x00000008 cycle=7938
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7959500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800016a2 dut=80004568 (order=2366 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7954)
+ 79670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=329 value=0x00000088 cycle=7962
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 7991500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2374 pc=800016be insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=7986)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8003500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2375 pc=800016c2 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=7998)
+ 80370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=330 value=0xbabf1f23 cycle=8032
+ 80430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=331 value=0x00000008 cycle=8038
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8059500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800016c6 dut=80004568 (order=2391 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8054)
+ 80700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=332 value=0x00220000 cycle=8065
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8096500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2402 pc=800016ec insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8091)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8104500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2403 pc=800016f0 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=8099)
+ 81350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=333 value=0xbabf1f23 cycle=8130
+ 81420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=334 value=0x00000008 cycle=8137
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8158500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800016f4 dut=80004568 (order=2419 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8153)
+ 81650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=335 value=0x00000088 cycle=8160
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8221500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2438 pc=8000173a insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8216)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8229500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2439 pc=8000173e insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=8224)
+ 82530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=336 value=0xbabf1f23 cycle=8248
+ 82620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=337 value=0x00000008 cycle=8257
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8277500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001742 dut=80004568 (order=2455 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8272)
+ 82860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=338 value=0x00220008 cycle=8281
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8313500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=2466 pc=8000176a insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8308)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8326500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=2467 pc=8000176e insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=8321)
+ 83590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=339 value=0xbabf1f23 cycle=8354
+ 83650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=340 value=0x00000008 cycle=8360
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 8378500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80001772 dut=80004568 (order=2483 pc=80004564 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=8373)
+ 83870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=341 value=0x00220080 cycle=8382
+ 84050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=342 value=0x00000101 cycle=8400
+ 84310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=343 value=0x12345601 cycle=8426
+ 84440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=344 value=0x5fb75701 cycle=8439
+ 84720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=345 value=0xdfbf7701 cycle=8467
+ 84890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=346 value=0x00000001 cycle=8484
+ 85030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=347 value=0x00000001 cycle=8498
+ 85670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=348 value=0xd1babc01 cycle=8562
+ 85840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=349 value=0x51183c01 cycle=8579
+ 86040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=350 value=0xf5187d01 cycle=8599
+ 86130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=351 value=0x00000001 cycle=8608
+ 86250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=352 value=0x244c5801 cycle=8620
+ 86350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=353 value=0x244c5801 cycle=8630
+ 86520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=354 value=0x51a80d01 cycle=8647
+ 86690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=355 value=0x51a80c01 cycle=8664
+ 86780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=356 value=0x80000001 cycle=8673
+ 87020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=357 value=0xdfe93b01 cycle=8697
+ 87110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=358 value=0x00000001 cycle=8706
+ 87250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=359 value=0x9bd36a01 cycle=8720
+ 87350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=360 value=0xffdbfe01 cycle=8730
+ 87440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=361 value=0xffdbfe01 cycle=8739
+ 87540.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=362 value=0xffdbfe01 cycle=8749
+ 87770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=363 value=0xfffbfe01 cycle=8772
+ 87990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=364 value=0x88644401 cycle=8794
+ 88170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=365 value=0x65534601 cycle=8812
+ 88280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=366 value=0x65534601 cycle=8823
+ 88490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=367 value=0x65534601 cycle=8844
+ 88580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=368 value=0x00000001 cycle=8853
+ 88680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=369 value=0xc576da01 cycle=8863
+ 88790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=370 value=0xdff7fe01 cycle=8874
+ 88960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=371 value=0x00000001 cycle=8891
+ 89210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=372 value=0xb4deea01 cycle=8916
+ 89490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=373 value=0x30c80801 cycle=8944
+ 89670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=374 value=0xfec87c01 cycle=8962
+ 89820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=375 value=0x00000001 cycle=8977
+ 89990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=376 value=0x2c453201 cycle=8994
+ 90470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=377 value=0x2c443201 cycle=9042
+ 90650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=378 value=0x2c443201 cycle=9060
+ 90830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=379 value=0x37765201 cycle=9078
+ 91250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=380 value=0xfd850201 cycle=9120
+ 91370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=381 value=0xffffff01 cycle=9132
+ 91510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=382 value=0x80004301 cycle=9146
+ 91660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=383 value=0x00000000 cycle=9161
+ 91780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=384 value=0x00000000 cycle=9173
+ 91880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=385 value=0x00000000 cycle=9183
+ 92010.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=386 value=0x00000000 cycle=9196
+ 92190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=387 value=0x00000800 cycle=9214
+ 92310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=388 value=0x1c180808 cycle=9226
+ 92390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=389 value=0x00000000 cycle=9234
+ 92940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=390 value=0x00000000 cycle=9289
+ 93080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=391 value=0x4fa80880 cycle=9303
+ 93310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=392 value=0x0f710880 cycle=9326
+ 93430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=393 value=0x0f710800 cycle=9338
+ 93570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=394 value=0x24310000 cycle=9352
+ 93710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=395 value=0x74ff0080 cycle=9366
+ 93780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=396 value=0x74ff0080 cycle=9373
+ 93990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=397 value=0x7fff0888 cycle=9394
+ 94140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=398 value=0x00000000 cycle=9409
+ 94280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=399 value=0x00000000 cycle=9423
+ 94460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=400 value=0x65180088 cycle=9441
+ 94590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=401 value=0x65180088 cycle=9454
+ 94760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=402 value=0x65180088 cycle=9471
+ 95000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=403 value=0x65180088 cycle=9495
+ 95110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=404 value=0x00000888 cycle=9506
+ 95240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=405 value=0x1c020888 cycle=9519
+ 95490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=406 value=0x00000000 cycle=9544
+ 95650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=407 value=0x00000000 cycle=9560
+ 95880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=408 value=0x00000008 cycle=9583
+ 96130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=409 value=0x40000000 cycle=9608
+ 96280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=410 value=0x40000000 cycle=9623
+ 96400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=411 value=0x40000000 cycle=9635
+ 96550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=412 value=0x00000000 cycle=9650
+ 96670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=413 value=0x710a0000 cycle=9662
+ 96830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=414 value=0x00000000 cycle=9678
+ 96960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=415 value=0x00000008 cycle=9691
+ 97130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=416 value=0x00000080 cycle=9708
+ 97640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=417 value=0x00000008 cycle=9759
+ 97790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=418 value=0x00000008 cycle=9774
+ 97940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=419 value=0x6bb90080 cycle=9789
+ 98110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=420 value=0x6ba00080 cycle=9806
+ 98240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=421 value=0x6fe20080 cycle=9819
+ 98440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=422 value=0x47620080 cycle=9839
+ 98590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=423 value=0x2bf60008 cycle=9854
+ 98810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=424 value=0x00000000 cycle=9876
+ 98950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=425 value=0x00000000 cycle=9890
+ 99070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=426 value=0x00000000 cycle=9902
+ 99160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=427 value=0x00000008 cycle=9911
+ 99370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=428 value=0x00000800 cycle=9932
+ 99490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=429 value=0x00000800 cycle=9944
+ 99640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=430 value=0x00000800 cycle=9959
+ 99800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=431 value=0x00000080 cycle=9975
+ 99970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=432 value=0x00000080 cycle=9992
+100120.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=433 value=0x00000000 cycle=10007
+100240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=434 value=0x00000000 cycle=10019
+100410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=435 value=0x00000000 cycle=10036
+100510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=436 value=0x00000008 cycle=10046
+100720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=437 value=0x00000808 cycle=10067
+100900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=438 value=0x00000000 cycle=10085
+101450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=439 value=0x53860008 cycle=10140
+101630.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=440 value=0x53860008 cycle=10158
+102050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=441 value=0x77b70808 cycle=10200
+102230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=442 value=0x23260000 cycle=10218
+102380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=443 value=0x16620000 cycle=10233
+102570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=444 value=0x16620008 cycle=10252
+102680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=445 value=0x16620008 cycle=10263
+102870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=446 value=0x16620008 cycle=10282
+102990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=447 value=0x00000000 cycle=10294
+103200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=448 value=0x00000000 cycle=10315
+103360.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=449 value=0x49790008 cycle=10331
+103490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=450 value=0x49790008 cycle=10344
+103610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=451 value=0x7bfb0088 cycle=10356
+103780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=452 value=0x7ffb0088 cycle=10373
+103930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=453 value=0x00000008 cycle=10388
+104070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=454 value=0x00000000 cycle=10402
+104160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=455 value=0x00000000 cycle=10411
+104240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=456 value=0x00000000 cycle=10419
+104390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=457 value=0x00000000 cycle=10434
+104600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=458 value=0x00000808 cycle=10455
+104770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=459 value=0x00000800 cycle=10472
+104870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=460 value=0x00000800 cycle=10482
+105010.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=461 value=0x00000880 cycle=10496
+105480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=462 value=0x00000080 cycle=10543
+105620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=463 value=0x306b0000 cycle=10557
+105740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=464 value=0x7fff0000 cycle=10569
+105880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=465 value=0x6a9f0000 cycle=10583
+106260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=466 value=0x00000008 cycle=10621
+106430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=467 value=0x00000008 cycle=10638
+106980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=468 value=0x00000008 cycle=10693
+107250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=469 value=0x78900000 cycle=10720
+107340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=470 value=0x00000008 cycle=10729
+107450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=471 value=0x770c0000 cycle=10740
+107570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=472 value=0x770c0000 cycle=10752
+107730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=473 value=0x771d0888 cycle=10768
+107870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=474 value=0x061d0088 cycle=10782
+108060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=475 value=0x00000000 cycle=10801
+108180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=476 value=0x00000000 cycle=10813
+108400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=477 value=0x00000008 cycle=10835
+108570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=478 value=0x64160000 cycle=10852
+108770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=479 value=0x64160000 cycle=10872
+108950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=480 value=0x00000000 cycle=10890
+109070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=481 value=0x00000000 cycle=10902
+109160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=482 value=0x00000008 cycle=10911
+109270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=483 value=0x00000000 cycle=10922
+109400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=484 value=0x00000000 cycle=10935
+109930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=485 value=0x00000000 cycle=10988
+110120.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=486 value=0x7a4d0008 cycle=11007
+110270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=487 value=0x7a4d0008 cycle=11022
+110460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=488 value=0x7a4d0008 cycle=11041
+110540.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=489 value=0x00000000 cycle=11049
+110660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=490 value=0x00000000 cycle=11061
+110800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=491 value=0x00000808 cycle=11075
+110890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=492 value=0x00000808 cycle=11084
+111080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=493 value=0x45a70008 cycle=11103
+111270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=494 value=0x71b20800 cycle=11122
+111460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=495 value=0x00000000 cycle=11141
+111730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=496 value=0x00000000 cycle=11168
+111810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=497 value=0x00000008 cycle=11176
+112030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=498 value=0x00000800 cycle=11198
+112130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=499 value=0x00080800 cycle=11208
+112270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=500 value=0x00080888 cycle=11222
+112450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=501 value=0x00000000 cycle=11240
+112560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=502 value=0x00000000 cycle=11251
+112920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=503 value=0x3dae0080 cycle=11287
+113490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=504 value=0x19a40080 cycle=11344
+113660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=505 value=0x59a40888 cycle=11361
+113750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=506 value=0x59a40888 cycle=11370
+113910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=507 value=0x22e60800 cycle=11386
+114520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=508 value=0x7bff0800 cycle=11447
+114690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=509 value=0x7bff0800 cycle=11464
+114800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=510 value=0x7bff0800 cycle=11475
+115280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=511 value=0x7fff0800 cycle=11523
+115380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=512 value=0x00000008 cycle=11533
+115600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=513 value=0x00000008 cycle=11555
+115770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=514 value=0x00000800 cycle=11572
+115930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=515 value=0x00000008 cycle=11588
+116090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=516 value=0x00000008 cycle=11604
+116260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=517 value=0x39c30800 cycle=11621
+116380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=518 value=0x00000000 cycle=11633
+116490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=519 value=0x7fff0000 cycle=11644
+116650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=520 value=0x7fff0888 cycle=11660
+116750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=521 value=0x7fff0888 cycle=11670
+116860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=522 value=0x7fff0888 cycle=11681
+117480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=523 value=0x37c30088 cycle=11743
+117870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=524 value=0x00000008 cycle=11782
+117990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=525 value=0x34970008 cycle=11794
+118290.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=526 value=0x34970888 cycle=11824
+118390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=527 value=0x00000000 cycle=11834
+118950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=528 value=0x30d80000 cycle=11890
+119180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=529 value=0x00000088 cycle=11913
+119470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=530 value=0x00000000 cycle=11942
+119640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=531 value=0x00000008 cycle=11959
+120060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=532 value=0x7fff0000 cycle=12001
+120320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=533 value=0x00220088 cycle=12027
+120420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=534 value=0x00200080 cycle=12037
+120570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=535 value=0x00000000 cycle=12052
+120690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=536 value=0x00000000 cycle=12064
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12087500: uvm_test_top.env.sb [isa_rd] rd model=x11/00008000 dut=x11/00000000 (order=3733 pc=80002aaa insn=300025f3 trap=0 intr=0 rd=x11/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=12082)
+120920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=537 value=0x00000000 cycle=12087
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12096500: uvm_test_top.env.sb [isa_mem] store data model=00008000 dut=00000000 (order=3734 pc=80002aae insn=00bda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12091)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12097500: uvm_test_top.env.sb [isa_rd] rd model=x5/00008000 dut=x5/00000000 (order=3735 pc=80002ab2 insn=300452f3 trap=0 intr=0 rd=x5/00000000 mem=fffffd08 w0000 r1111 mode=3 cyc=12092)
+121000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=538 value=0x00000008 cycle=12095
+121140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=539 value=0x00000000 cycle=12109
+121340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=540 value=0x00000000 cycle=12129
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12148500: uvm_test_top.env.sb [isa_rd] rd model=x29/00210000 dut=x29/00200000 (order=3753 pc=80002af8 insn=30002ef3 trap=0 intr=0 rd=x29/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=12143)
+121520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=541 value=0x00200000 cycle=12147
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12154500: uvm_test_top.env.sb [isa_mem] store data model=00210000 dut=00200000 (order=3754 pc=80002afc insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12149)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12155500: uvm_test_top.env.sb [isa_rd] rd model=x6/00210000 dut=x6/00200000 (order=3755 pc=80002b00 insn=30046373 trap=0 intr=0 rd=x6/00200000 mem=fffffd08 w0000 r1111 mode=3 cyc=12150)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12162500: uvm_test_top.env.sb [isa_rd] rd model=x4/00210008 dut=x4/00200008 (order=3757 pc=80002b08 insn=30002273 trap=0 intr=0 rd=x4/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=12157)
+121630.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=542 value=0x00200008 cycle=12158
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12167500: uvm_test_top.env.sb [isa_mem] store data model=00210008 dut=00200008 (order=3758 pc=80002b0c insn=004da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12162)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12170500: uvm_test_top.env.sb [isa_rd] rd model=x10/00210008 dut=x10/00200008 (order=3760 pc=80002b14 insn=30031573 trap=0 intr=0 rd=x10/00200008 mem=fffffcff w0000 r1111 mode=3 cyc=12165)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12176500: uvm_test_top.env.sb [isa_rd] rd model=x15/80239888 dut=x15/00221888 (order=3762 pc=80002b1c insn=300027f3 trap=0 intr=0 rd=x15/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12171)
+121820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=543 value=0x00221888 cycle=12177
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12186500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3763 pc=80002b20 insn=00fda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12181)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12187500: uvm_test_top.env.sb [isa_rd] rd model=x18/80239888 dut=x18/00221888 (order=3764 pc=80002b24 insn=300d5973 trap=0 intr=0 rd=x18/00221888 mem=fffffd1a w0000 r1111 mode=3 cyc=12182)
+121900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=544 value=0x00000008 cycle=12185
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12197500: uvm_test_top.env.sb [isa_rd] rd model=x11/80239888 dut=x11/00221888 (order=3768 pc=80002b34 insn=012485b3 trap=0 intr=0 rd=x11/00221888 mem=00221888 w0000 r1111 mode=3 cyc=12192)
+121980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=545 value=0x00000000 cycle=12193
+122070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=546 value=0x00000000 cycle=12202
+122160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=547 value=0x00000000 cycle=12211
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12227500: uvm_test_top.env.sb [isa_rd] rd model=x17/00000004 dut=x17/00000000 (order=3780 pc=80002b64 insn=01d7d893 trap=0 intr=0 rd=x17/00000000 mem=002218a5 w0000 r1111 mode=3 cyc=12222)
+122340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=548 value=0x00000000 cycle=12229
+122480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=549 value=0x00000000 cycle=12243
+123000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=550 value=0x00000000 cycle=12295
+123180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=551 value=0x00220008 cycle=12313
+123440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=552 value=0x00201808 cycle=12339
+123580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=553 value=0x00000000 cycle=12353
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12373500: uvm_test_top.env.sb [isa_rd] rd model=x17/80239808 dut=x17/00221808 (order=3830 pc=80002c28 insn=300028f3 trap=0 intr=0 rd=x17/00221808 mem=fffffd00 w0000 r1111 mode=3 cyc=12368)
+123750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=554 value=0x00221808 cycle=12370
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12377500: uvm_test_top.env.sb [isa_mem] store data model=80239808 dut=00221808 (order=3831 pc=80002c2c insn=011da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12372)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12384500: uvm_test_top.env.sb [isa_rd] rd model=x22/80239808 dut=x22/00221808 (order=3834 pc=80002c36 insn=30092b73 trap=0 intr=0 rd=x22/00221808 mem=00000d80 w0000 r1111 mode=3 cyc=12379)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12388500: uvm_test_top.env.sb [isa_rd] rd model=x1/80239888 dut=x1/00221888 (order=3835 pc=80002c3a insn=300020f3 trap=0 intr=0 rd=x1/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12383)
+123900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=555 value=0x00221888 cycle=12385
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12394500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3836 pc=80002c3e insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12389)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12398500: uvm_test_top.env.sb [isa_rd] rd model=x20/80239888 dut=x20/00221888 (order=3839 pc=80002c4a insn=300b2a73 trap=0 intr=0 rd=x20/00221888 mem=eaa138aa w0000 r1111 mode=3 cyc=12393)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12402500: uvm_test_top.env.sb [isa_rd] rd model=x9/80239888 dut=x9/00221888 (order=3841 pc=80002c52 insn=300024f3 trap=0 intr=0 rd=x9/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12397)
+124070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=556 value=0x00221888 cycle=12402
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12410500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3842 pc=80002c56 insn=009da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12405)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12411500: uvm_test_top.env.sb [isa_rd] rd model=x17/80239888 dut=x17/00221888 (order=3843 pc=80002c5a insn=300068f3 trap=0 intr=0 rd=x17/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12406)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12417500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=3846 pc=80002c66 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12412)
+124200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=557 value=0x00221888 cycle=12415
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12422500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3847 pc=80002c6a insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12417)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12425500: uvm_test_top.env.sb [isa_rd] rd model=x19/80239888 dut=x19/00221888 (order=3848 pc=80002c6e insn=3000f9f3 trap=0 intr=0 rd=x19/00221888 mem=fffffd01 w0000 r1111 mode=3 cyc=12420)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12438500: uvm_test_top.env.sb [isa_rd] rd model=x1/80239888 dut=x1/00221888 (order=3852 pc=80002c7e insn=300020f3 trap=0 intr=0 rd=x1/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12433)
+124420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=558 value=0x00221888 cycle=12437
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12444500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3853 pc=80002c82 insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12439)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12446500: uvm_test_top.env.sb [isa_rd] rd model=x4/80239888 dut=x4/00221888 (order=3855 pc=80002c88 insn=300e1273 trap=0 intr=0 rd=x4/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12441)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12449500: uvm_test_top.env.sb [isa_rd] rd model=x8/00802398 dut=x8/00002218 (order=3856 pc=80002c8c insn=00425433 trap=0 intr=0 rd=x8/00002218 mem=00443110 w0000 r1111 mode=3 cyc=12444)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12454500: uvm_test_top.env.sb [isa_rd] rd model=x30/cdf39888 dut=x30/cdf29888 (order=3858 pc=80002c94 insn=004aef33 trap=0 intr=0 rd=x30/cdf29888 mem=cdf29888 w0000 r1111 mode=3 cyc=12449)
+124610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=559 value=0x00000000 cycle=12456
+124890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=560 value=0x00000000 cycle=12484
+125210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=561 value=0x00020008 cycle=12516
+125520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=562 value=0x00000008 cycle=12547
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12570500: uvm_test_top.env.sb [isa_rd] rd model=x29/80238088 dut=x29/00220088 (order=3897 pc=80002d2c insn=30002ef3 trap=0 intr=0 rd=x29/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=12565)
+125810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=563 value=0x00220088 cycle=12576
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12583500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=3900 pc=80002d38 insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12578)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12588500: uvm_test_top.env.sb [isa_rd] rd model=x10/80218088 dut=x10/00200088 (order=3903 pc=80002d42 insn=30019573 trap=0 intr=0 rd=x10/00200088 mem=00000500 w0000 r1111 mode=3 cyc=12583)
+125940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=564 value=0x00000000 cycle=12589
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12610500: uvm_test_top.env.sb [isa_rd] rd model=x18/ff004701 dut=x18/00004401 (order=3910 pc=80002d5e insn=407ed913 trap=0 intr=0 rd=x18/00004401 mem=0022048f w0000 r1111 mode=3 cyc=12605)
+126140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=565 value=0x00000000 cycle=12609
+126300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=566 value=0x00000000 cycle=12625
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12645500: uvm_test_top.env.sb [isa_rd] rd model=x31/08021808 dut=x31/00020008 (order=3922 pc=80002d8e insn=00455f93 trap=0 intr=0 rd=x31/00020008 mem=0020008c w0000 r1111 mode=3 cyc=12640)
+126490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=567 value=0x00000000 cycle=12644
+126620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=568 value=0x00000008 cycle=12657
+126730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=569 value=0x00000000 cycle=12668
+126970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=570 value=0x00020000 cycle=12692
+127130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=571 value=0x00200000 cycle=12708
+127280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=572 value=0x00200000 cycle=12723
+127380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=573 value=0x00000008 cycle=12733
+127470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=574 value=0x00000008 cycle=12742
+127590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=575 value=0x00000008 cycle=12754
+127670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=576 value=0x00000008 cycle=12762
+128050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=577 value=0x00000000 cycle=12800
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12818500: uvm_test_top.env.sb [isa_rd] rd model=x30/00230008 dut=x30/00220008 (order=3979 pc=80002e70 insn=30002f73 trap=0 intr=0 rd=x30/00220008 mem=fffffd00 w0000 r1111 mode=3 cyc=12813)
+128280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=578 value=0x00220008 cycle=12823
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12831500: uvm_test_top.env.sb [isa_mem] store data model=00230008 dut=00220008 (order=3982 pc=80002e7c insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12826)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12832500: uvm_test_top.env.sb [isa_rd] rd model=x7/00210008 dut=x7/00200008 (order=3983 pc=80002e80 insn=300473f3 trap=0 intr=0 rd=x7/00200008 mem=fffffd08 w0000 r1111 mode=3 cyc=12827)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12838500: uvm_test_top.env.sb [isa_rd] rd model=x28/00210000 dut=x28/00200000 (order=3985 pc=80002e88 insn=30002e73 trap=0 intr=0 rd=x28/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=12833)
+128420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=579 value=0x00200000 cycle=12837
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12845500: uvm_test_top.env.sb [isa_mem] store data model=00210000 dut=00200000 (order=3986 pc=80002e8c insn=01cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12840)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12847500: uvm_test_top.env.sb [isa_rd] rd model=x16/00210000 dut=x16/00200000 (order=3988 pc=80002e94 insn=300fa873 trap=0 intr=0 rd=x16/00200000 mem=fffffcff w0000 r1111 mode=3 cyc=12842)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12854500: uvm_test_top.env.sb [isa_rd] rd model=x2/80239888 dut=x2/00221888 (order=3990 pc=80002e9c insn=30002173 trap=0 intr=0 rd=x2/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12849)
+128590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=580 value=0x00221888 cycle=12854
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12863500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=3991 pc=80002ea0 insn=002da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12858)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12866500: uvm_test_top.env.sb [isa_rd] rd model=x20/80239888 dut=x20/00221888 (order=3994 pc=80002eac insn=300eba73 trap=0 intr=0 rd=x20/00221888 mem=203f257e w0000 r1111 mode=3 cyc=12861)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12882500: uvm_test_top.env.sb [isa_rd] rd model=x20/002102c7 dut=x20/002002c7 (order=3998 pc=80002ebc insn=2c786a13 trap=0 intr=0 rd=x20/002002c7 mem=002002c7 w0000 r1111 mode=3 cyc=12877)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12883500: uvm_test_top.env.sb [isa_rd] rd model=x28/00008080 dut=x28/00000080 (order=3999 pc=80002ec0 insn=30002e73 trap=0 intr=0 rd=x28/00000080 mem=fffffd00 w0000 r1111 mode=3 cyc=12878)
+128880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=581 value=0x00000080 cycle=12883
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12891500: uvm_test_top.env.sb [isa_mem] store data model=00008080 dut=00000080 (order=4000 pc=80002ec4 insn=01cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12886)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12900500: uvm_test_top.env.sb [isa_rd] rd model=x11/80018000 dut=x11/00000000 (order=4005 pc=80002ed8 insn=300025f3 trap=0 intr=0 rd=x11/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=12895)
+129020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=582 value=0x00000000 cycle=12897
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12906500: uvm_test_top.env.sb [isa_mem] store data model=80018000 dut=00000000 (order=4006 pc=80002edc insn=00bda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12901)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12913500: uvm_test_top.env.sb [isa_rd] rd model=x31/80018000 dut=x31/00000000 (order=4009 pc=80002ee8 insn=300a3ff3 trap=0 intr=0 rd=x31/00000000 mem=50680254 w0000 r1111 mode=3 cyc=12908)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12920500: uvm_test_top.env.sb [isa_rd] rd model=x9/80018000 dut=x9/00000000 (order=4011 pc=80002ef0 insn=300024f3 trap=0 intr=0 rd=x9/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=12915)
+129210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=583 value=0x00000000 cycle=12916
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12924500: uvm_test_top.env.sb [isa_mem] store data model=80018000 dut=00000000 (order=4012 pc=80002ef4 insn=009da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12919)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12928500: uvm_test_top.env.sb [isa_rd] rd model=x29/80018000 dut=x29/00000000 (order=4015 pc=80002efe insn=300f1ef3 trap=0 intr=0 rd=x29/00000000 mem=00000500 w0000 r1111 mode=3 cyc=12923)
+129560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=584 value=0x00000000 cycle=12951
+129650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=585 value=0x00000000 cycle=12960
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12976500: uvm_test_top.env.sb [isa_rd] rd model=x29/80239888 dut=x29/00221888 (order=4032 pc=80002f40 insn=30002ef3 trap=0 intr=0 rd=x29/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12971)
+129820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=586 value=0x00221888 cycle=12977
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12984500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=4033 pc=80002f44 insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12979)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12989500: uvm_test_top.env.sb [isa_rd] rd model=x3/80239888 dut=x3/00221888 (order=4036 pc=80002f50 insn=300331f3 trap=0 intr=0 rd=x3/00221888 mem=d3d00011 w0000 r1111 mode=3 cyc=12984)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12992500: uvm_test_top.env.sb [isa_rd] rd model=x20/80239888 dut=x20/00221888 (order=4037 pc=80002f54 insn=30002a73 trap=0 intr=0 rd=x20/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=12987)
+129930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=587 value=0x00221888 cycle=12988
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 12996500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=4038 pc=80002f58 insn=014da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=12991)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13002500: uvm_test_top.env.sb [isa_rd] rd model=x21/80239888 dut=x21/00221888 (order=4041 pc=80002f64 insn=30059af3 trap=0 intr=0 rd=x21/00221888 mem=00220d88 w0000 r1111 mode=3 cyc=12997)
+130190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=588 value=0x00220088 cycle=13014
+130430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=589 value=0x00220088 cycle=13038
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13055500: uvm_test_top.env.sb [isa_rd] rd model=x3/80039880 dut=x3/00021880 (order=4060 pc=80002fae insn=300021f3 trap=0 intr=0 rd=x3/00021880 mem=fffffd00 w0000 r1111 mode=3 cyc=13050)
+130580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=590 value=0x00021880 cycle=13053
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13060500: uvm_test_top.env.sb [isa_mem] store data model=80039880 dut=00021880 (order=4061 pc=80002fb2 insn=003da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13055)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13061500: uvm_test_top.env.sb [isa_rd] rd model=x22/80039880 dut=x22/00021880 (order=4062 pc=80002fb6 insn=3001eb73 trap=0 intr=0 rd=x22/00021880 mem=fffffd03 w0000 r1111 mode=3 cyc=13056)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13076500: uvm_test_top.env.sb [isa_rd] rd model=x18/00008400 dut=x18/00008000 (order=4066 pc=80002fc6 insn=0063d913 trap=0 intr=0 rd=x18/00008000 mem=0020000e w0000 r1111 mode=3 cyc=13071)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13079500: uvm_test_top.env.sb [isa_rd] rd model=x1/80039880 dut=x1/00021880 (order=4067 pc=80002fca insn=300020f3 trap=0 intr=0 rd=x1/00021880 mem=fffffd00 w0000 r1111 mode=3 cyc=13074)
+130830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=591 value=0x00021880 cycle=13078
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13087500: uvm_test_top.env.sb [isa_mem] store data model=80039880 dut=00021880 (order=4068 pc=80002fce insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13082)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13089500: uvm_test_top.env.sb [isa_rd] rd model=x17/80039880 dut=x17/00021880 (order=4070 pc=80002fd6 insn=300518f3 trap=0 intr=0 rd=x17/00021880 mem=7ffffd00 w0000 r1111 mode=3 cyc=13084)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13092500: uvm_test_top.env.sb [isa_rd] rd model=x4/08104e1f dut=x4/08104a1f (order=4071 pc=80002fda insn=01240233 trap=0 intr=0 rd=x4/08104a1f mem=08104a1f w0000 r1111 mode=3 cyc=13087)
+131010.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=592 value=0x00000000 cycle=13096
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13131500: uvm_test_top.env.sb [isa_rd] rd model=x21/fffff000 dut=x21/00000000 (order=4082 pc=80003006 insn=413fda93 trap=0 intr=0 rd=x21/00000000 mem=00000413 w0000 r1111 mode=3 cyc=13126)
+131360.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=593 value=0x00000000 cycle=13131
+131460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=594 value=0x00000008 cycle=13141
+131580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=595 value=0x00000000 cycle=13153
+131800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=596 value=0x00000000 cycle=13175
+131870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=597 value=0x00000000 cycle=13182
+131980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=598 value=0x00000000 cycle=13193
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13245500: uvm_test_top.env.sb [isa_rd] rd model=x20/00208008 dut=x20/00200008 (order=4125 pc=800030b0 insn=30002a73 trap=0 intr=0 rd=x20/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=13240)
+132490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=599 value=0x00200008 cycle=13244
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13251500: uvm_test_top.env.sb [isa_mem] store data model=00208008 dut=00200008 (order=4126 pc=800030b4 insn=014da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13246)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13253500: uvm_test_top.env.sb [isa_rd] rd model=x14/00208008 dut=x14/00200008 (order=4127 pc=800030b8 insn=30045773 trap=0 intr=0 rd=x14/00200008 mem=fffffd08 w0000 r1111 mode=3 cyc=13248)
+132660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=600 value=0x00000008 cycle=13261
+132760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=601 value=0x00000008 cycle=13271
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13285500: uvm_test_top.env.sb [isa_rd] rd model=x2/00228008 dut=x2/00220008 (order=4140 pc=800030ec insn=30002173 trap=0 intr=0 rd=x2/00220008 mem=fffffd00 w0000 r1111 mode=3 cyc=13280)
+132920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=602 value=0x00220008 cycle=13287
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13296500: uvm_test_top.env.sb [isa_mem] store data model=00228008 dut=00220008 (order=4143 pc=800030f8 insn=002da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13291)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13297500: uvm_test_top.env.sb [isa_rd] rd model=x28/00208008 dut=x28/00200008 (order=4144 pc=800030fc insn=30006e73 trap=0 intr=0 rd=x28/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=13292)
+132990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=603 value=0x00200008 cycle=13294
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13299500: uvm_test_top.env.sb [isa_rd] rd model=x17/00208008 dut=x17/00200008 (order=4145 pc=80003100 insn=300028f3 trap=0 intr=0 rd=x17/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=13294)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13302500: uvm_test_top.env.sb [isa_mem] store data model=00208008 dut=00200008 (order=4146 pc=80003104 insn=011da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13297)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13306500: uvm_test_top.env.sb [isa_rd] rd model=x30/00208008 dut=x30/00200008 (order=4147 pc=80003108 insn=30087f73 trap=0 intr=0 rd=x30/00200008 mem=fffffd10 w0000 r1111 mode=3 cyc=13301)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13317500: uvm_test_top.env.sb [isa_rd] rd model=x16/00208008 dut=x16/00200008 (order=4152 pc=8000311c insn=30002873 trap=0 intr=0 rd=x16/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=13312)
+133180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=604 value=0x00200008 cycle=13313
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13320500: uvm_test_top.env.sb [isa_mem] store data model=00208008 dut=00200008 (order=4153 pc=80003120 insn=010da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13315)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13330500: uvm_test_top.env.sb [isa_rd] rd model=x2/002085a4 dut=x2/002005a4 (order=4157 pc=80003130 insn=5acf4113 trap=0 intr=0 rd=x2/002005a4 mem=002005b4 w0000 r1111 mode=3 cyc=13325)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13336500: uvm_test_top.env.sb [isa_rd] rd model=x6/00008000 dut=x6/00000000 (order=4160 pc=8000313c insn=30002373 trap=0 intr=0 rd=x6/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=13331)
+133410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=605 value=0x00000000 cycle=13336
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13344500: uvm_test_top.env.sb [isa_mem] store data model=00008000 dut=00000000 (order=4161 pc=80003140 insn=006da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13339)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13347500: uvm_test_top.env.sb [isa_rd] rd model=x11/00008000 dut=x11/00000000 (order=4163 pc=80003148 insn=300935f3 trap=0 intr=0 rd=x11/00000000 mem=fffffcff w0000 r1111 mode=3 cyc=13342)
+133550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=606 value=0x00000000 cycle=13350
+133680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=607 value=0x00000000 cycle=13363
+133780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=608 value=0x00000000 cycle=13373
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13397500: uvm_test_top.env.sb [isa_rd] rd model=x12/00000000 dut=x12/00000001 (order=4177 pc=80003180 insn=0095b633 trap=0 intr=0 rd=x12/00000001 mem=fffffff8 w0000 r1111 mode=3 cyc=13392)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13404500: uvm_test_top.env.sb [isa_rd] rd model=x13/00002080 dut=x13/00002000 (order=4179 pc=80003188 insn=40875693 trap=0 intr=0 rd=x13/00002000 mem=00200410 w0000 r1111 mode=3 cyc=13399)
+134170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=609 value=0x00000000 cycle=13412
+134330.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=610 value=0x00000000 cycle=13428
+134430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=611 value=0x00000000 cycle=13438
+134580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=612 value=0x00000008 cycle=13453
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13468500: uvm_test_top.env.sb [isa_rd] rd model=x30/80239888 dut=x30/00221888 (order=4201 pc=800031e0 insn=30002f73 trap=0 intr=0 rd=x30/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=13463)
+134690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=613 value=0x00221888 cycle=13464
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13472500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=4202 pc=800031e4 insn=01eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13467)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13480500: uvm_test_top.env.sb [isa_rd] rd model=x4/80239888 dut=x4/00221888 (order=4205 pc=800031f0 insn=300b3273 trap=0 intr=0 rd=x4/00221888 mem=85737807 w0000 r1111 mode=3 cyc=13475)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13497500: uvm_test_top.env.sb [isa_rd] rd model=x31/00008088 dut=x31/00000088 (order=4210 pc=80003202 insn=30002ff3 trap=0 intr=0 rd=x31/00000088 mem=fffffd00 w0000 r1111 mode=3 cyc=13492)
+134990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=614 value=0x00000088 cycle=13494
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13502500: uvm_test_top.env.sb [isa_mem] store data model=00008088 dut=00000088 (order=4211 pc=80003206 insn=01fda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13497)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13506500: uvm_test_top.env.sb [isa_rd] rd model=x15/00008088 dut=x15/00000088 (order=4214 pc=80003212 insn=300397f3 trap=0 intr=0 rd=x15/00000088 mem=00401500 w0000 r1111 mode=3 cyc=13501)
+135110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=615 value=0x00001800 cycle=13506
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13526500: uvm_test_top.env.sb [isa_rd] rd model=x22/00011800 dut=x22/00001800 (order=4221 pc=8000322e insn=30002b73 trap=0 intr=0 rd=x22/00001800 mem=fffffd00 w0000 r1111 mode=3 cyc=13521)
+135280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=616 value=0x00001800 cycle=13523
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13531500: uvm_test_top.env.sb [isa_mem] store data model=00011800 dut=00001800 (order=4222 pc=80003232 insn=016da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13526)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13540500: uvm_test_top.env.sb [isa_rd] rd model=x17/00011800 dut=x17/00001800 (order=4225 pc=8000323e insn=300fb8f3 trap=0 intr=0 rd=x17/00001800 mem=b3053e27 w0000 r1111 mode=3 cyc=13535)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13543500: uvm_test_top.env.sb [isa_rd] rd model=x31/00011800 dut=x31/00001801 (order=4226 pc=80003242 insn=00cb6fb3 trap=0 intr=0 rd=x31/00001801 mem=00001801 w0000 r1111 mode=3 cyc=13538)
+135510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=617 value=0x00001800 cycle=13546
+135670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=618 value=0x00000000 cycle=13562
+135800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=619 value=0x00000000 cycle=13575
+135990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=620 value=0x00000000 cycle=13594
+136110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=621 value=0x00000000 cycle=13606
+136270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=622 value=0x00000000 cycle=13622
+136510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=623 value=0x00000000 cycle=13646
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13666500: uvm_test_top.env.sb [isa_rd] rd model=x17/80019808 dut=x17/00001808 (order=4268 pc=800032e4 insn=300028f3 trap=0 intr=0 rd=x17/00001808 mem=fffffd00 w0000 r1111 mode=3 cyc=13661)
+136710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=624 value=0x00001808 cycle=13666
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13673500: uvm_test_top.env.sb [isa_mem] store data model=80019808 dut=00001808 (order=4269 pc=800032e8 insn=011da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13668)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13676500: uvm_test_top.env.sb [isa_rd] rd model=x29/80019808 dut=x29/00001808 (order=4271 pc=800032f0 insn=30002ef3 trap=0 intr=0 rd=x29/00001808 mem=fffffd00 w0000 r1111 mode=3 cyc=13671)
+136790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=625 value=0x00001808 cycle=13674
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13681500: uvm_test_top.env.sb [isa_mem] store data model=80019808 dut=00001808 (order=4272 pc=800032f4 insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13676)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13684500: uvm_test_top.env.sb [isa_rd] rd model=x12/80019808 dut=x12/00001808 (order=4274 pc=800032fa insn=3009a673 trap=0 intr=0 rd=x12/00001808 mem=fffffd00 w0000 r1111 mode=3 cyc=13679)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13688500: uvm_test_top.env.sb [isa_rd] rd model=x4/80019808 dut=x4/00001808 (order=4276 pc=80003302 insn=30002273 trap=0 intr=0 rd=x4/00001808 mem=fffffd00 w0000 r1111 mode=3 cyc=13683)
+136910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=626 value=0x00001808 cycle=13686
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13693500: uvm_test_top.env.sb [isa_mem] store data model=80019808 dut=00001808 (order=4277 pc=80003306 insn=004da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13688)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13696500: uvm_test_top.env.sb [isa_rd] rd model=x20/80019808 dut=x20/00001808 (order=4280 pc=80003310 insn=30083a73 trap=0 intr=0 rd=x20/00001808 mem=00001508 w0000 r1111 mode=3 cyc=13691)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13700500: uvm_test_top.env.sb [isa_rd] rd model=x2/80018000 dut=x2/00000000 (order=4281 pc=80003314 insn=30002173 trap=0 intr=0 rd=x2/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=13695)
+137030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=627 value=0x00000000 cycle=13698
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13705500: uvm_test_top.env.sb [isa_mem] store data model=80018000 dut=00000000 (order=4282 pc=80003318 insn=002da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13700)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13714500: uvm_test_top.env.sb [isa_rd] rd model=x14/80018000 dut=x14/00000000 (order=4285 pc=80003324 insn=30019773 trap=0 intr=0 rd=x14/00000000 mem=14c83fbe w0000 r1111 mode=3 cyc=13709)
+137200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=628 value=0x00000088 cycle=13715
+137420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=629 value=0x00000000 cycle=13737
+137580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=630 value=0x00200000 cycle=13753
+137780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=631 value=0x00000088 cycle=13773
+137890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=632 value=0x00000000 cycle=13784
+138100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=633 value=0x00020008 cycle=13805
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13841500: uvm_test_top.env.sb [isa_rd] rd model=x28/00008008 dut=x28/00000008 (order=4329 pc=800033d2 insn=30002e73 trap=0 intr=0 rd=x28/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=13836)
+138460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=634 value=0x00000008 cycle=13841
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13849500: uvm_test_top.env.sb [isa_mem] store data model=00008008 dut=00000008 (order=4330 pc=800033d6 insn=01cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13844)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13850500: uvm_test_top.env.sb [isa_rd] rd model=x5/00008008 dut=x5/00000008 (order=4331 pc=800033da insn=300bd2f3 trap=0 intr=0 rd=x5/00000008 mem=fffffd17 w0000 r1111 mode=3 cyc=13845)
+138530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=635 value=0x00000000 cycle=13848
+138710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=636 value=0x00000000 cycle=13866
+138830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=637 value=0x00000008 cycle=13878
+138900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=638 value=0x00000008 cycle=13885
+139020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=639 value=0x00000000 cycle=13897
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13936500: uvm_test_top.env.sb [isa_rd] rd model=x9/80238088 dut=x9/00220088 (order=4361 pc=80003452 insn=300024f3 trap=0 intr=0 rd=x9/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=13931)
+139480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=640 value=0x00220088 cycle=13943
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13952500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=4364 pc=8000345e insn=009da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13947)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13956500: uvm_test_top.env.sb [isa_rd] rd model=x2/80218088 dut=x2/00200088 (order=4367 pc=8000346a insn=30041173 trap=0 intr=0 rd=x2/00200088 mem=ed4f791a w0000 r1111 mode=3 cyc=13951)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13963500: uvm_test_top.env.sb [isa_rd] rd model=x29/00031808 dut=x29/00021808 (order=4369 pc=80003472 insn=30002ef3 trap=0 intr=0 rd=x29/00021808 mem=fffffd00 w0000 r1111 mode=3 cyc=13958)
+139650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=641 value=0x00021808 cycle=13960
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13969500: uvm_test_top.env.sb [isa_mem] store data model=00031808 dut=00021808 (order=4370 pc=80003476 insn=01dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=13964)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13970500: uvm_test_top.env.sb [isa_rd] rd model=x9/00031808 dut=x9/00021808 (order=4371 pc=8000347a insn=300bd4f3 trap=0 intr=0 rd=x9/00021808 mem=fffffd17 w0000 r1111 mode=3 cyc=13965)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 13973500: uvm_test_top.env.sb [isa_rd] rd model=x12/00008008 dut=x12/00000008 (order=4372 pc=8000347e insn=00e2d633 trap=0 intr=0 rd=x12/00000008 mem=00000008 w0000 r1111 mode=3 cyc=13968)
+139830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=642 value=0x00000000 cycle=13978
+139990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=643 value=0x00220008 cycle=13994
+140130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=644 value=0x00200008 cycle=14008
+140280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=645 value=0x00200008 cycle=14023
+140570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=646 value=0x00000008 cycle=14052
+140670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=647 value=0x00000008 cycle=14062
+140800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=648 value=0x00000008 cycle=14075
+141320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=649 value=0x00000008 cycle=14127
+141430.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=650 value=0x00000008 cycle=14138
+141510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=651 value=0x00000008 cycle=14146
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14165500: uvm_test_top.env.sb [isa_rd] rd model=x10/00228008 dut=x10/00220008 (order=4441 pc=8000358c insn=30002573 trap=0 intr=0 rd=x10/00220008 mem=fffffd00 w0000 r1111 mode=3 cyc=14160)
+141740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=652 value=0x00220008 cycle=14169
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14177500: uvm_test_top.env.sb [isa_mem] store data model=00228008 dut=00220008 (order=4444 pc=80003598 insn=00ada023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14172)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14181500: uvm_test_top.env.sb [isa_rd] rd model=x3/00208008 dut=x3/00200008 (order=4446 pc=800035a0 insn=300621f3 trap=0 intr=0 rd=x3/00200008 mem=02000d00 w0000 r1111 mode=3 cyc=14176)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14195500: uvm_test_top.env.sb [isa_rd] rd model=x18/00208008 dut=x18/00200008 (order=4450 pc=800035b0 insn=30002973 trap=0 intr=0 rd=x18/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=14190)
+141980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=653 value=0x00200008 cycle=14193
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14201500: uvm_test_top.env.sb [isa_mem] store data model=00208008 dut=00200008 (order=4451 pc=800035b4 insn=012da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14196)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14202500: uvm_test_top.env.sb [isa_rd] rd model=x4/00208008 dut=x4/00200008 (order=4452 pc=800035b8 insn=30045273 trap=0 intr=0 rd=x4/00200008 mem=fffffd08 w0000 r1111 mode=3 cyc=14197)
+142080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=654 value=0x00000008 cycle=14203
+142190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=655 value=0x00000008 cycle=14214
+142390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=656 value=0x00220008 cycle=14234
+142560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=657 value=0x00200000 cycle=14251
+142640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=658 value=0x00000000 cycle=14259
+142810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=659 value=0x00000000 cycle=14276
+143310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=660 value=0x00000000 cycle=14326
+143550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=661 value=0x00000000 cycle=14350
+143730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=662 value=0x00000000 cycle=14368
+143980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=663 value=0x00000000 cycle=14393
+144160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=664 value=0x00000000 cycle=14411
+144230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=665 value=0x00000000 cycle=14418
+144330.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=666 value=0x00000000 cycle=14428
+144560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=667 value=0x00000008 cycle=14451
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14472500: uvm_test_top.env.sb [isa_rd] rd model=x22/80018008 dut=x22/00000008 (order=4543 pc=8000371e insn=30002b73 trap=0 intr=0 rd=x22/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=14467)
+144740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=668 value=0x00000008 cycle=14469
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14478500: uvm_test_top.env.sb [isa_mem] store data model=80018008 dut=00000008 (order=4544 pc=80003722 insn=016da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14473)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14483500: uvm_test_top.env.sb [isa_rd] rd model=x29/80018008 dut=x29/00000008 (order=4547 pc=8000372a insn=3003bef3 trap=0 intr=0 rd=x29/00000008 mem=ffffecff w0000 r1111 mode=3 cyc=14478)
+144870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=669 value=0x00000000 cycle=14482
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14505500: uvm_test_top.env.sb [isa_rd] rd model=x4/00208088 dut=x4/00200088 (order=4554 pc=80003746 insn=30002273 trap=0 intr=0 rd=x4/00200088 mem=fffffd00 w0000 r1111 mode=3 cyc=14500)
+145110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=670 value=0x00200088 cycle=14506
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14513500: uvm_test_top.env.sb [isa_mem] store data model=00208088 dut=00200088 (order=4555 pc=8000374a insn=004da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14508)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14518500: uvm_test_top.env.sb [isa_rd] rd model=x16/00208088 dut=x16/00200088 (order=4558 pc=80003754 insn=3004a873 trap=0 intr=0 rd=x16/00200088 mem=ffffe4ff w0000 r1111 mode=3 cyc=14513)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14555500: uvm_test_top.env.sb [isa_rd] rd model=x28/00041011 dut=x28/00040011 (order=4571 pc=80003788 insn=40385e13 trap=0 intr=0 rd=x28/00040011 mem=0020048b w0000 r1111 mode=3 cyc=14550)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14566500: uvm_test_top.env.sb [isa_rd] rd model=x28/80238088 dut=x28/00220088 (order=4575 pc=80003798 insn=30002e73 trap=0 intr=0 rd=x28/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=14561)
+145760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=671 value=0x00220088 cycle=14571
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14579500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=4578 pc=800037a4 insn=01cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14574)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14585500: uvm_test_top.env.sb [isa_rd] rd model=x8/7ffe7fd2 dut=x8/ffffffd2 (order=4581 pc=800037b0 insn=fdaec413 trap=0 intr=0 rd=x8/ffffffd2 mem=ffffffe2 w0000 r1111 mode=3 cyc=14580)
+145920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=672 value=0x00200000 cycle=14587
+146100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=673 value=0x00201800 cycle=14605
+146320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=674 value=0x00000000 cycle=14627
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14643500: uvm_test_top.env.sb [isa_rd] rd model=x3/80238088 dut=x3/00220088 (order=4601 pc=800037fc insn=300021f3 trap=0 intr=0 rd=x3/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=14638)
+146530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=675 value=0x00220088 cycle=14648
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14656500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=4604 pc=80003808 insn=003da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14651)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14659500: uvm_test_top.env.sb [isa_rd] rd model=x17/80218088 dut=x17/00200088 (order=4606 pc=80003810 insn=300f38f3 trap=0 intr=0 rd=x17/00200088 mem=fffffcff w0000 r1111 mode=3 cyc=14654)
+146660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=676 value=0x00000000 cycle=14661
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14684500: uvm_test_top.env.sb [isa_rd] rd model=x29/80218088 dut=x29/00200088 (order=4614 pc=80003830 insn=40c88eb3 trap=0 intr=0 rd=x29/00200088 mem=00200088 w0000 r1111 mode=3 cyc=14679)
+146910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=677 value=0x00000000 cycle=14686
+147040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=678 value=0x00000000 cycle=14699
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14734500: uvm_test_top.env.sb [isa_rd] rd model=x2/00000001 dut=x2/00000000 (order=4631 pc=80003874 insn=011b3133 trap=0 intr=0 rd=x2/00000000 mem=26f5c6ef w0000 r1111 mode=3 cyc=14729)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14737500: uvm_test_top.env.sb [isa_rd] rd model=x28/80218087 dut=x28/00200087 (order=4632 pc=80003878 insn=011f0e33 trap=0 intr=0 rd=x28/00200087 mem=00200087 w0000 r1111 mode=3 cyc=14732)
+147610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=679 value=0x00000008 cycle=14756
+147760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=680 value=0x00000000 cycle=14771
+147890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=681 value=0x00000000 cycle=14784
+148050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=682 value=0x00000000 cycle=14800
+148330.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=683 value=0x00000008 cycle=14828
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14849500: uvm_test_top.env.sb [isa_rd] rd model=x7/80018008 dut=x7/00000008 (order=4669 pc=8000390a insn=300023f3 trap=0 intr=0 rd=x7/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=14844)
+148510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=684 value=0x00000008 cycle=14846
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14854500: uvm_test_top.env.sb [isa_mem] store data model=80018008 dut=00000008 (order=4670 pc=8000390e insn=007da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14849)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14856500: uvm_test_top.env.sb [isa_rd] rd model=x8/80018008 dut=x8/00000008 (order=4672 pc=80003914 insn=300f3473 trap=0 intr=0 rd=x8/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=14851)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14859500: uvm_test_top.env.sb [isa_rd] rd model=x5/80018008 dut=x5/00000008 (order=4673 pc=80003918 insn=300022f3 trap=0 intr=0 rd=x5/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=14854)
+148620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=685 value=0x00000008 cycle=14857
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14865500: uvm_test_top.env.sb [isa_mem] store data model=80018008 dut=00000008 (order=4674 pc=8000391c insn=005da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14860)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14869500: uvm_test_top.env.sb [isa_rd] rd model=x21/80018008 dut=x21/00000008 (order=4676 pc=80003924 insn=30002af3 trap=0 intr=0 rd=x21/00000008 mem=fffffd00 w0000 r1111 mode=3 cyc=14864)
+148710.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=686 value=0x00000008 cycle=14866
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14874500: uvm_test_top.env.sb [isa_mem] store data model=80018008 dut=00000008 (order=4677 pc=80003928 insn=015da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14869)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14876500: uvm_test_top.env.sb [isa_rd] rd model=x28/80018008 dut=x28/00000008 (order=4679 pc=80003930 insn=300a1e73 trap=0 intr=0 rd=x28/00000008 mem=7ffffd00 w0000 r1111 mode=3 cyc=14871)
+148860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=687 value=0x00000000 cycle=14881
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14901500: uvm_test_top.env.sb [isa_rd] rd model=x14/80219880 dut=x14/00201880 (order=4687 pc=80003950 insn=30002773 trap=0 intr=0 rd=x14/00201880 mem=fffffd00 w0000 r1111 mode=3 cyc=14896)
+149040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=688 value=0x00201880 cycle=14899
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14907500: uvm_test_top.env.sb [isa_mem] store data model=80219880 dut=00201880 (order=4688 pc=80003954 insn=00eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14902)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14908500: uvm_test_top.env.sb [isa_rd] rd model=x11/80219880 dut=x11/00201880 (order=4689 pc=80003958 insn=300ff5f3 trap=0 intr=0 rd=x11/00201880 mem=fffffd1f w0000 r1111 mode=3 cyc=14903)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14911500: uvm_test_top.env.sb [isa_rd] rd model=x9/00010003 dut=x9/00000000 (order=4690 pc=8000395c insn=01f3d4b3 trap=0 intr=0 rd=x9/00000000 mem=2a73f117 w0000 r1111 mode=3 cyc=14906)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14913500: uvm_test_top.env.sb [isa_rd] rd model=x21/80219880 dut=x21/00201880 (order=4692 pc=80003964 insn=30002af3 trap=0 intr=0 rd=x21/00201880 mem=fffffd00 w0000 r1111 mode=3 cyc=14908)
+149150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=689 value=0x00201880 cycle=14910
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14919500: uvm_test_top.env.sb [isa_mem] store data model=80219880 dut=00201880 (order=4693 pc=80003968 insn=015da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14914)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14920500: uvm_test_top.env.sb [isa_rd] rd model=x1/80219880 dut=x1/00201880 (order=4694 pc=8000396c insn=300f60f3 trap=0 intr=0 rd=x1/00201880 mem=fffffd1e w0000 r1111 mode=3 cyc=14915)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14944500: uvm_test_top.env.sb [isa_rd] rd model=x18/80219888 dut=x18/00201888 (order=4703 pc=80003990 insn=30002973 trap=0 intr=0 rd=x18/00201888 mem=fffffd00 w0000 r1111 mode=3 cyc=14939)
+149460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=690 value=0x00201888 cycle=14941
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14949500: uvm_test_top.env.sb [isa_mem] store data model=80219888 dut=00201888 (order=4704 pc=80003994 insn=012da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14944)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14956500: uvm_test_top.env.sb [isa_rd] rd model=x6/80219888 dut=x6/00201888 (order=4707 pc=800039a0 insn=300aa373 trap=0 intr=0 rd=x6/00201888 mem=e4d550e8 w0000 r1111 mode=3 cyc=14951)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14959500: uvm_test_top.env.sb [isa_rd] rd model=x2/80219888 dut=x2/00201888 (order=4708 pc=800039a4 insn=30002173 trap=0 intr=0 rd=x2/00201888 mem=fffffd00 w0000 r1111 mode=3 cyc=14954)
+149630.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=691 value=0x00201888 cycle=14958
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14965500: uvm_test_top.env.sb [isa_mem] store data model=80219888 dut=00201888 (order=4709 pc=800039a8 insn=002da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14960)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14966500: uvm_test_top.env.sb [isa_rd] rd model=x13/80219888 dut=x13/00201888 (order=4710 pc=800039ac insn=300466f3 trap=0 intr=0 rd=x13/00201888 mem=fffffd08 w0000 r1111 mode=3 cyc=14961)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14969500: uvm_test_top.env.sb [isa_rd] rd model=x8/80219880 dut=x8/00201880 (order=4711 pc=800039b0 insn=00264433 trap=0 intr=0 rd=x8/00201880 mem=00201890 w0000 r1111 mode=3 cyc=14964)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14970500: uvm_test_top.env.sb [isa_rd] rd model=x8/fffffff8 dut=x8/00000000 (order=4712 pc=800039b4 insn=00008471 trap=0 intr=0 rd=x8/00000000 mem=00201c9c w0000 r1111 mode=3 cyc=14965)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14971500: uvm_test_top.env.sb [isa_rd] rd model=x28/80219888 dut=x28/00201888 (order=4713 pc=800039b6 insn=30002e73 trap=0 intr=0 rd=x28/00201888 mem=fffffd00 w0000 r1111 mode=3 cyc=14966)
+149750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=692 value=0x00201888 cycle=14970
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 14979500: uvm_test_top.env.sb [isa_mem] store data model=80219888 dut=00201888 (order=4714 pc=800039ba insn=01cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=14974)
+150000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=693 value=0x00000000 cycle=14995
+150190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=694 value=0x00000008 cycle=15014
+150350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=695 value=0x00000008 cycle=15030
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15043500: uvm_test_top.env.sb [isa_rd] rd model=x5/80219f96 dut=x5/00201f96 (order=4737 pc=80003a14 insn=71658293 trap=0 intr=0 rd=x5/00201f96 mem=00201f96 w0000 r1111 mode=3 cyc=15038)
+150520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=696 value=0x00000008 cycle=15047
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15062500: uvm_test_top.env.sb [isa_rd] rd model=x29/fffffd87 dut=x29/fffffd85 (order=4742 pc=80003a26 insn=d854ee93 trap=0 intr=0 rd=x29/fffffd85 mem=fffffd85 w0000 r1111 mode=3 cyc=15057)
+150650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=697 value=0x00000000 cycle=15060
+150880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=698 value=0x00000000 cycle=15083
+150980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=699 value=0x00000000 cycle=15093
+151220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=700 value=0x00020000 cycle=15117
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15137500: uvm_test_top.env.sb [isa_rd] rd model=x18/00010000 dut=x18/00000000 (order=4765 pc=80003a82 insn=30002973 trap=0 intr=0 rd=x18/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15132)
+151410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=701 value=0x00000000 cycle=15136
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15144500: uvm_test_top.env.sb [isa_mem] store data model=00010000 dut=00000000 (order=4766 pc=80003a86 insn=012da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15139)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15149500: uvm_test_top.env.sb [isa_rd] rd model=x18/00010000 dut=x18/00000000 (order=4769 pc=80003a92 insn=30089973 trap=0 intr=0 rd=x18/00000000 mem=553a94d9 w0000 r1111 mode=3 cyc=15144)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15158500: uvm_test_top.env.sb [isa_rd] rd model=x31/00228088 dut=x31/00220088 (order=4771 pc=80003a9a insn=30002ff3 trap=0 intr=0 rd=x31/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=15153)
+151650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=702 value=0x00220088 cycle=15160
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15168500: uvm_test_top.env.sb [isa_mem] store data model=00228088 dut=00220088 (order=4774 pc=80003aa6 insn=01fda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15163)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15176500: uvm_test_top.env.sb [isa_rd] rd model=x16/00208088 dut=x16/00200088 (order=4777 pc=80003ab2 insn=30081873 trap=0 intr=0 rd=x16/00200088 mem=0001fd80 w0000 r1111 mode=3 cyc=15171)
+151900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=703 value=0x00020080 cycle=15185
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15199500: uvm_test_top.env.sb [isa_rd] rd model=x21/00248088 dut=x21/00240088 (order=4784 pc=80003ace insn=014f8ab3 trap=0 intr=0 rd=x21/00240088 mem=00240088 w0000 r1111 mode=3 cyc=15194)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15212500: uvm_test_top.env.sb [isa_rd] rd model=x8/80239888 dut=x8/00221888 (order=4788 pc=80003ade insn=30002473 trap=0 intr=0 rd=x8/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=15207)
+152160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=704 value=0x00221888 cycle=15211
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15220500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=4789 pc=80003ae2 insn=008da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15215)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15227500: uvm_test_top.env.sb [isa_rd] rd model=x4/80239888 dut=x4/00221888 (order=4792 pc=80003aee insn=30049273 trap=0 intr=0 rd=x4/00221888 mem=ade9d117 w0000 r1111 mode=3 cyc=15222)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15233500: uvm_test_top.env.sb [isa_rd] rd model=x1/80218000 dut=x1/00200000 (order=4794 pc=80003af6 insn=300020f3 trap=0 intr=0 rd=x1/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=15228)
+152350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=705 value=0x00200000 cycle=15230
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15239500: uvm_test_top.env.sb [isa_mem] store data model=80218000 dut=00200000 (order=4795 pc=80003afa insn=001da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15234)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15242500: uvm_test_top.env.sb [isa_rd] rd model=x22/80218000 dut=x22/00200000 (order=4797 pc=80003b02 insn=30073b73 trap=0 intr=0 rd=x22/00200000 mem=7ffffd00 w0000 r1111 mode=3 cyc=15237)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15248500: uvm_test_top.env.sb [isa_rd] rd model=x12/80218000 dut=x12/00200000 (order=4799 pc=80003b0a insn=30002673 trap=0 intr=0 rd=x12/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=15243)
+152490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=706 value=0x00200000 cycle=15244
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15253500: uvm_test_top.env.sb [isa_mem] store data model=80218000 dut=00200000 (order=4800 pc=80003b0e insn=00cda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15248)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15255500: uvm_test_top.env.sb [isa_rd] rd model=x13/80218000 dut=x13/00200000 (order=4802 pc=80003b14 insn=300fa6f3 trap=0 intr=0 rd=x13/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=15250)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15264500: uvm_test_top.env.sb [isa_rd] rd model=x20/80218000 dut=x20/00200000 (order=4806 pc=80003b24 insn=30002a73 trap=0 intr=0 rd=x20/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=15259)
+152660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=707 value=0x00200000 cycle=15261
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15270500: uvm_test_top.env.sb [isa_mem] store data model=80218000 dut=00200000 (order=4807 pc=80003b28 insn=014da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15265)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15272500: uvm_test_top.env.sb [isa_rd] rd model=x28/80218000 dut=x28/00200000 (order=4809 pc=80003b2e insn=30071e73 trap=0 intr=0 rd=x28/00200000 mem=fffffd00 w0000 r1111 mode=3 cyc=15267)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15276500: uvm_test_top.env.sb [isa_rd] rd model=x22/0020851a dut=x22/0020051a (order=4811 pc=80003b36 insn=49280b13 trap=0 intr=0 rd=x22/0020051a mem=0020051a w0000 r1111 mode=3 cyc=15271)
+152840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=708 value=0x00000000 cycle=15279
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15302500: uvm_test_top.env.sb [isa_rd] rd model=x17/00010000 dut=x17/00000000 (order=4819 pc=80003b56 insn=300028f3 trap=0 intr=0 rd=x17/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15297)
+153060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=709 value=0x00000000 cycle=15301
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15308500: uvm_test_top.env.sb [isa_mem] store data model=00010000 dut=00000000 (order=4820 pc=80003b5a insn=011da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15303)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15309500: uvm_test_top.env.sb [isa_rd] rd model=x15/00010000 dut=x15/00000000 (order=4821 pc=80003b5e insn=300457f3 trap=0 intr=0 rd=x15/00000000 mem=fffffd08 w0000 r1111 mode=3 cyc=15304)
+153180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=710 value=0x00000008 cycle=15313
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15361500: uvm_test_top.env.sb [isa_rd] rd model=x17/00208008 dut=x17/00200008 (order=4837 pc=80003b9e insn=300028f3 trap=0 intr=0 rd=x17/00200008 mem=fffffd00 w0000 r1111 mode=3 cyc=15356)
+153630.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=711 value=0x00200008 cycle=15358
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15367500: uvm_test_top.env.sb [isa_mem] store data model=00208008 dut=00200008 (order=4838 pc=80003ba2 insn=011da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15362)
+153810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=712 value=0x00000000 cycle=15376
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15394500: uvm_test_top.env.sb [isa_rd] rd model=x21/00010000 dut=x21/00000000 (order=4848 pc=80003bca insn=30002af3 trap=0 intr=0 rd=x21/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15389)
+153990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=713 value=0x00000000 cycle=15394
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15402500: uvm_test_top.env.sb [isa_mem] store data model=00010000 dut=00000000 (order=4849 pc=80003bce insn=015da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15397)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15403500: uvm_test_top.env.sb [isa_rd] rd model=x12/00010000 dut=x12/00000000 (order=4850 pc=80003bd2 insn=3000d673 trap=0 intr=0 rd=x12/00000000 mem=fffffd01 w0000 r1111 mode=3 cyc=15398)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15416500: uvm_test_top.env.sb [isa_rd] rd model=x17/00010000 dut=x17/00000000 (order=4854 pc=80003be2 insn=014af8b3 trap=0 intr=0 rd=x17/00000000 mem=00200000 w0000 r1111 mode=3 cyc=15411)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15428500: uvm_test_top.env.sb [isa_rd] rd model=x28/08214680 dut=x28/08014680 (order=4859 pc=80003bf6 insn=006b1e13 trap=0 intr=0 rd=x28/08014680 mem=00200520 w0000 r1111 mode=3 cyc=15423)
+154350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=714 value=0x00000000 cycle=15430
+154500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=715 value=0x00000000 cycle=15445
+154790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=716 value=0x00220088 cycle=15474
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15492500: uvm_test_top.env.sb [isa_rd] rd model=x12/00010000 dut=x12/00000000 (order=4880 pc=80003c4a insn=01150633 trap=0 intr=0 rd=x12/00000000 mem=00000000 w0000 r1111 mode=3 cyc=15487)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15501500: uvm_test_top.env.sb [isa_rd] rd model=x15/80238088 dut=x15/00220088 (order=4882 pc=80003c52 insn=300027f3 trap=0 intr=0 rd=x15/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=15496)
+155060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=717 value=0x00220088 cycle=15501
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15508500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=4885 pc=80003c5e insn=00fda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15509500: uvm_test_top.env.sb [isa_rd] rd model=x2/80218088 dut=x2/00200088 (order=4886 pc=80003c62 insn=300d5173 trap=0 intr=0 rd=x2/00200088 mem=fffffd1a w0000 r1111 mode=3 cyc=15504)
+155200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=718 value=0x00000008 cycle=15515
+155590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=719 value=0x00220088 cycle=15554
+155760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=720 value=0x00000000 cycle=15571
+155850.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=721 value=0x00000000 cycle=15580
+155950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=722 value=0x00000008 cycle=15590
+156180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=723 value=0x00220008 cycle=15613
+156280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=724 value=0x00200000 cycle=15623
+156400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=725 value=0x00200000 cycle=15635
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15701500: uvm_test_top.env.sb [isa_rd] rd model=x5/00211800 dut=x5/00201800 (order=4948 pc=80003d54 insn=300022f3 trap=0 intr=0 rd=x5/00201800 mem=fffffd00 w0000 r1111 mode=3 cyc=15696)
+157050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=726 value=0x00201800 cycle=15700
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15708500: uvm_test_top.env.sb [isa_mem] store data model=00211800 dut=00201800 (order=4949 pc=80003d58 insn=005da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15703)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15712500: uvm_test_top.env.sb [isa_rd] rd model=x10/00211800 dut=x10/00201800 (order=4951 pc=80003d60 insn=300a9573 trap=0 intr=0 rd=x10/00201800 mem=fffffcff w0000 r1111 mode=3 cyc=15707)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15715500: uvm_test_top.env.sb [isa_rd] rd model=x13/80239888 dut=x13/00221888 (order=4952 pc=80003d64 insn=300026f3 trap=0 intr=0 rd=x13/00221888 mem=fffffd00 w0000 r1111 mode=3 cyc=15710)
+157180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=727 value=0x00221888 cycle=15713
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15722500: uvm_test_top.env.sb [isa_mem] store data model=80239888 dut=00221888 (order=4953 pc=80003d68 insn=00dda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15717)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15726500: uvm_test_top.env.sb [isa_rd] rd model=x15/80239888 dut=x15/00221888 (order=4956 pc=80003d74 insn=300397f3 trap=0 intr=0 rd=x15/00221888 mem=4411c331 w0000 r1111 mode=3 cyc=15721)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15734500: uvm_test_top.env.sb [isa_rd] rd model=x5/66330800 dut=x5/66340800 (order=4959 pc=80003d80 insn=405382b3 trap=0 intr=0 rd=x5/66340800 mem=66340800 w0000 r1111 mode=3 cyc=15729)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15738500: uvm_test_top.env.sb [isa_rd] rd model=x16/80018000 dut=x16/00000000 (order=4960 pc=80003d84 insn=30002873 trap=0 intr=0 rd=x16/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15733)
+157410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=728 value=0x00000000 cycle=15736
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15745500: uvm_test_top.env.sb [isa_mem] store data model=80018000 dut=00000000 (order=4961 pc=80003d88 insn=010da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15740)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15749500: uvm_test_top.env.sb [isa_rd] rd model=x3/80018000 dut=x3/00000000 (order=4964 pc=80003d92 insn=300691f3 trap=0 intr=0 rd=x3/00000000 mem=2d993d03 w0000 r1111 mode=3 cyc=15744)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15754500: uvm_test_top.env.sb [isa_rd] rd model=x4/00010000 dut=x4/00000000 (order=4965 pc=80003d96 insn=30002273 trap=0 intr=0 rd=x4/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15749)
+157590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=729 value=0x00000000 cycle=15754
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15762500: uvm_test_top.env.sb [isa_mem] store data model=00010000 dut=00000000 (order=4966 pc=80003d9a insn=004da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15757)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15767500: uvm_test_top.env.sb [isa_rd] rd model=x10/00010000 dut=x10/00000000 (order=4969 pc=80003da6 insn=300a3573 trap=0 intr=0 rd=x10/00000000 mem=0808ad48 w0000 r1111 mode=3 cyc=15762)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15773500: uvm_test_top.env.sb [isa_rd] rd model=x14/00010000 dut=x14/00000000 (order=4971 pc=80003dae insn=30002773 trap=0 intr=0 rd=x14/00000000 mem=fffffd00 w0000 r1111 mode=3 cyc=15768)
+157750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=730 value=0x00000000 cycle=15770
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15778500: uvm_test_top.env.sb [isa_mem] store data model=00010000 dut=00000000 (order=4972 pc=80003db2 insn=00eda023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15773)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15781500: uvm_test_top.env.sb [isa_rd] rd model=x31/00010000 dut=x31/00000000 (order=4975 pc=80003dbc insn=30022ff3 trap=0 intr=0 rd=x31/00000000 mem=fffff4ff w0000 r1111 mode=3 cyc=15776)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15787500: uvm_test_top.env.sb [isa_rd] rd model=x18/80238088 dut=x18/00220088 (order=4977 pc=80003dc4 insn=30002973 trap=0 intr=0 rd=x18/00220088 mem=fffffd00 w0000 r1111 mode=3 cyc=15782)
+157970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=731 value=0x00220088 cycle=15792
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15801500: uvm_test_top.env.sb [isa_mem] store data model=80238088 dut=00220088 (order=4980 pc=80003dd0 insn=012da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=15796)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15806500: uvm_test_top.env.sb [isa_rd] rd model=x6/80218088 dut=x6/00200088 (order=4983 pc=80003ddc insn=30021373 trap=0 intr=0 rd=x6/00200088 mem=00201500 w0000 r1111 mode=3 cyc=15801)
+158110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=732 value=0x00201800 cycle=15806
+158250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=733 value=0x7fff0888 cycle=15820
+158350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=734 value=0x00000000 cycle=15830
+158480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=735 value=0x00000000 cycle=15843
+158570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=736 value=0x7fff0888 cycle=15852
+158760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=737 value=0x7fff0888 cycle=15871
+158930.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=738 value=0x7fff0888 cycle=15888
+159030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=739 value=0x00000000 cycle=15898
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15912500: uvm_test_top.env.sb [isa_rd] rd model=x28/00000001 dut=x28/00000000 (order=5018 pc=80003e68 insn=01ff3e33 trap=0 intr=0 rd=x28/00000000 mem=00000000 w0000 r1111 mode=3 cyc=15907)
+159150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=740 value=0x00000000 cycle=15910
+159340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=741 value=0x00000000 cycle=15929
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 15942500: uvm_test_top.env.sb [isa_rd] rd model=x20/00080000 dut=x20/00000000 (order=5029 pc=80003e94 insn=013e1a13 trap=0 intr=0 rd=x20/00000000 mem=00000013 w0000 r1111 mode=3 cyc=15937)
+159490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=742 value=0x00000000 cycle=15944
+159660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=743 value=0x7fff0888 cycle=15961
+159820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=744 value=0x7fff0888 cycle=15977
+159940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=745 value=0x00000000 cycle=15989
+160140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=746 value=0x00000000 cycle=16009
+160250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=747 value=0x7fff0888 cycle=16020
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 16034500: uvm_test_top.env.sb [isa_rd] rd model=x21/99ccf2a7 dut=x21/99cbf2a7 (order=5059 pc=80003f0c insn=aa72ca93 trap=0 intr=0 rd=x21/99cbf2a7 mem=663402a7 w0000 r1111 mode=3 cyc=16029)
+160420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=748 value=0x7fff0888 cycle=16037
+160610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=749 value=0x7fff0888 cycle=16056
+160700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=750 value=0x7fff0888 cycle=16065
+160820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=751 value=0x00000000 cycle=16077
+160920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=752 value=0x00000000 cycle=16087
+161080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=753 value=0x7fff0888 cycle=16103
+161300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=754 value=0x7fff0888 cycle=16125
+161410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=755 value=0x00000000 cycle=16136
+161730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=756 value=0x00000000 cycle=16168
+161870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=757 value=0x7fff0888 cycle=16182
+161990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=758 value=0x00000000 cycle=16194
+162080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=759 value=0x00000000 cycle=16203
+162160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=760 value=0x7fff0888 cycle=16211
+162310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=761 value=0x00000000 cycle=16226
+162420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=762 value=0x7fff0888 cycle=16237
+162520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=763 value=0x7fff0888 cycle=16247
+162670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=764 value=0x00000000 cycle=16262
+162770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=765 value=0x00000000 cycle=16272
+162910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=766 value=0x00000000 cycle=16286
+163180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=767 value=0x7fff0888 cycle=16313
+163350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=768 value=0x7fff0888 cycle=16330
+163810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=769 value=0x00000000 cycle=16376
+163900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=770 value=0x7fff0888 cycle=16385
+164020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=771 value=0x7fff0888 cycle=16397
+164130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=772 value=0x00000000 cycle=16408
+164180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=773 value=0x00000000 cycle=16413
+164230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=774 value=0x00000000 cycle=16418
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_EOT code=0x00000001 stores=776 reports=775 retired=5189 cycle=16435
+/localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
+  ret = outcomes.Value(await trigger)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no consumable knob varied (declared=imem_gnt_delay,imem_rvalid_delay, consumed=-)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_023 ok=True 200 mstatus read-backs vs WARL model (mask 0x00221888, MPP 01/10 -> 00): 0 mismatch(es); MPP values written [0, 1, 2, 3], TW written True, MPRV written True
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_024 ok=True 90 MPP rounds (handler marker, ecall mcause 8 = U / 11 = M, mstatus read-back with MPP legalised): 0 mismatch(es); 30 rounds, 23 entered U-mode, MPP values written [0, 1, 2, 3]
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_025 ok=True 30 mstatus read-backs after csrrw/csrrs -1 (expect 0x00221888) and csrrc -1 (expect 0): 0 mismatch(es)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_027 ok=True 32 mstatush read-backs (expect 0; last word = unexpected-trap count after the pairs, expect 0): 0 mismatch(es)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_028 ok=True 61 menvcfg/menvcfgh read-backs (expect 0; last word = unexpected-trap count after the pairs, expect 0): 0 mismatch(es)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_029 ok=True 150 mie read-backs vs MIE_MASK 0x7fff0888 model: 0 mismatch(es); fast bits written alone 15 of 15, op x class combinations 27
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_030 ok=True 40 mie read-backs after csrrw/csrrs -1 (expect MIE_MASK 0x7fff0888) and csrrc -1 / csrrw x0 (expect 0): 0 mismatch(es)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_035 ok=True 129 mtvec read-backs (BASE | 1) and ecall landings (handler copy marker at BASE, mcause 11): 0 mismatch(es); handler copies used [0, 1, 2, 3] of 4, ops ['csrrc', 'csrrci', 'csrrs', 'csrrsi', 'csrrw', 'csrrwi']
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_csr_036 ok=False 41 mtvec read-backs vs (w & 0xFFFFFF00) | 1 for MODE 00/01/10/11 x bits 7:2 zero/nonzero and the clear attempts: 1 mismatch(es); first [342] pair 0 csrrw mtvec operand 0x00000000: expected 0x00000001 got 0x00000101
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_integrity ok=True 2 program words (unexpected-trap count, last unexpected mcause; expect 0, 0): 0 mismatch(es); retired 5189 (floor 4721); tohost code 0x00000001 (pass = 1)
+164400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_BINS n=0 -
+164400.01ns INFO     cocotb.regression                  gen_test_csr_trap_setup failed
+                                                        Traceback (most recent call last):
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_csr_trap_setup.py", line 150, in gen_test_csr_trap_setup
+                                                            await CsrTrapSetup(dut).run()
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 339, in run
+                                                            await self.finish()
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 318, in finish
+                                                            raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))
+                                                        AssertionError: GEN_TEST_FAIL gen_test_csr_trap_setup: 1 fire-check failure(s): fire_tp_csr_036: 41 mtvec read-backs vs (w & 0xFFFFFF00) | 1 for MODE 00/01/10/11 x bits 7:2 zero/nonzero and the clear attempts: 1 mismatch(es); first [342] pair 0 csrrw mtvec operand 0x00000000: expected 0x00000001 got 0x00000101
+164400.01ns INFO     cocotb.regression                  **************************************************************************************************************************
+                                                        ** TEST                                                              STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************************
+                                                        ** dv.auto_dv.tests.gen_test_csr_trap_setup.gen_test_csr_trap_setup   FAIL      164400.01           0.86     191392.58  **
+                                                        **************************************************************************************************************************
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                                 164400.01           0.88     186498.07  **
+                                                        **************************************************************************************************************************
+                                                        
+$finish at simulation time             16440001
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 16440 attempts, 775 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 16440 attempts, 5450 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 164400010 ps
+CPU Time:      1.100 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 06:32:30 2026
