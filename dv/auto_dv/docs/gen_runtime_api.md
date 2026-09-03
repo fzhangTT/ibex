@@ -304,7 +304,8 @@ Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per requ
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
 single-test requests turns around in about one request's time. A batch is head-mode: before it the server syncs
-the mirror once from committed HEAD (`gen_mirror.py --sync --spike --source head`, recorded in every batch manifest as
+the mirror once from committed HEAD (`gen_mirror.py --sync --spike --source head`; its `head_sha` is passed to every
+regression of the batch as `--head-sha` and recorded in every batch manifest as
 `server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
 regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
@@ -438,7 +439,9 @@ gen_mirror.py --status
   mirrored but not hashed (they are compiled on the submit host and churn constantly).
   `gen_regress.py --source head|worktree` chooses the tree a regression builds and runs from. Head mode (the
   default for purpose 4, a tier, or more than one test; a request's `source` field otherwise) syncs a
-  head-mode mirror, requires its manifest to name the current HEAD, then re-executes gen_regress with
+  head-mode mirror, requires its manifest to name the pinned commit (`--head-sha`: the batch's synced sha, else
+  the sha this run just synced, else HEAD now; a commit landing during a batch never changes the tree a batch
+  runs from), then re-executes gen_regress with
   `GEN_DV_SOURCE_ROOT` set to the mirror so filelists, RTL, TB sources, the testlist, the knob table, the
   program tool and every generator resolve from committed HEAD; the manifest records `source {mode,
   source_root, head_sha, worktree_dirty}` and every build manifest `source_root`, `source_mode`, `head_sha`.
@@ -465,8 +468,11 @@ Source modes (standing policy after intervention log LOG-014/LOG-017): `--source
 HEAD subset with `git archive` (tracked files of the mirrored items; no checkout, no fetch, the working
 tree untouched) into a private staging directory under `dv/auto_dv/work/runtime/` and syncs the mirror
 from it; `--source worktree` syncs the shared working tree. The manifest records `source` and `head_sha`;
-`--status` computes the source hash from a fresh HEAD export for a head-mode mirror, so a new commit makes
-it stale. tools/spike is a build product outside git and is mirrored from the clone in both modes.
+`--status` computes the source hash from a fresh HEAD export (into a unique temporary staging directory) for
+a head-mode mirror, so a new commit makes it stale; a pinned consumer (a build or run carrying `GEN_DV_HEAD_SHA`)
+instead asks the manifest whether the mirror is the mirror of that sha, without re-exporting, so concurrent
+builds never share a staging directory. tools/spike is a build product outside git and is mirrored from the
+clone in both modes.
 `gen_mirror.py --self-test` proves the export: a tracked file that differs in the working tree is exported
 at its committed bytes.
 
