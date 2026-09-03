@@ -1032,3 +1032,13 @@ worktree of the v2m review (4e60cc7..d0e6a71) that was still executing; its wrap
 (rc=1)" and no verdict. No artifact was written and nothing was committed from it. The v2m review is relaunched with
 the same focus (this note is stated in it). Rule: housekeeping after a kill removes only the killed run's directory
 (by its pid file), never review_tmp/run.* wholesale, while any other review is running.
+
+## LOG-024f - 2026-09-03 - PROMOTION LANDED (3e6f1b2): the 15 built tests are measured
+
+Runtime's promotion landing 3e6f1b2 moves the 15 built tests to their plan tiers (14 smoke, gen_test_bit_draft
+targeted) with measured: true and their per-item manifests wired, sets gen_ut_lockstep to measured: false (LOG-039)
+and the header fcov_manifest_required_tiers: [smoke, targeted]; gen_test_boot_retire stays check / measured: false.
+Verified by the Orchestrator: loader PASS, red-signature check PASS exit 0, util self-test 58 ok; the testlist deltas
+are exactly the 15 tier/measured/manifest triples, the one gen_ut_lockstep field and the header. Runtime now serves
+the batch-2 acceptance wave test-writer-049..064 (check tier, head mode, pinned to HEAD) and the DV Lead files the
+round-0 request (T-158). Results of items under the T-136/T-137 holds are recorded, not credited.
