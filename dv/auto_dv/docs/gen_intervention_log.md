@@ -1446,3 +1446,16 @@ stop doing remove with variables. Effective for the Orchestrator and every teamm
 built from a shell variable; delete only literal paths that were listed first, or move files into a scratch trash directory
 and leave them; cleanup of review run directories and worktrees goes through git worktree remove on a listed path. The
 Orchestrator's own scripts are amended (LOG-040 and LOG-048 cleanups used variable paths); teammates are told in writing.
+
+## LOG-055a - 2026-09-03 - RESOLVED (part 4c re-review APPROVE-WITH-CHANGES; LOG-054a: the derived-report retitle)
+
+The re-review of plan v2r part 4c (f6b42ea) is APPROVE-WITH-CHANGES (reviews/2026-09-03-claude-diff-7f36cd94-f6b42ea6.md),
+so the LOG-055 gate lifts: the T-136 and T-137 LIFTED records with their carve-outs stand reviewed, the csr_reset decision is
+recorded as pending T-222, and generated evidence carries digests of what it read. Its rows go to the next plan touch with
+the Critic's v11. LOG-054a: Runtime's T-215 (b82b29f) went beyond the ruling's letter in one disclosed point: the derived
+report also retitles urg's all-covered "Bins" table to "Covered bins" in variable sections, because the ci checker never
+reads a table titled "Bins" and a fully hit coverpoint would otherwise fail as MISSING-FROM-REPORT (40 of a probe's 289
+cross bins were missing for that reason alone). Accepted: the retitle changes a table's title, not its rows or counts; the
+original report is retained untouched beside the derived one and both paths are recorded per run; the cross-model review of
+b82b29f judges it. The fixture for the required assertion (gen_mul_ops_cg.cr_op_rd_x0.mul_no HIT) was cut by Runtime from
+its own head-mode probe of gen_test_mul_mul on the six landed covergroups, so tb-infra's sample is no longer on the path.
