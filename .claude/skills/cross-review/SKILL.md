@@ -9,7 +9,7 @@ Executes CLAUDE.md's "Cross-model review policy". The executing model never self
 
 ## When Claude executed (codex reviews)
 
-- Pre-execution (plan/spec): `bash .claude/skills/cross-review/scripts/run_codex_review.sh plan <file> [...]`
+- Pre-execution (plan/spec): `bash .claude/skills/cross-review/scripts/run_codex_review.sh plan <file> (the file must be committed at HEAD: the reviewer reads the HEAD blob in a detached checkout, never the working tree) [...]`
 - Post-execution (diff): `bash .claude/skills/cross-review/scripts/run_codex_review.sh diff <base_sha> <head_sha>`
 - Optional: `REVIEW_FOCUS="<one sentence>"` in the environment adds an owner focus line to the
   prompt (rubrics and verdict contract still apply unchanged).

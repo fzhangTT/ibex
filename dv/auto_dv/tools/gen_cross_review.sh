@@ -17,10 +17,15 @@ if [ -z "${GEN_XR_RELOCATED:-}" ]; then
   _xr_root=$(git rev-parse --show-toplevel)/dv/auto_dv/work/orchestrator/review_self; mkdir -p "$_xr_root"; _self_copy=$(mktemp "$_xr_root/self.XXXXXX.sh"); cp "$0" "$_self_copy"
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
-TREE=""
-cleanup_all() { [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; rm -f "$GEN_XR_RELOCATED"; }
+TREE=""; ART=""
+cleanup_all() { [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
 trap cleanup_all EXIT
 REPO=$(git rev-parse --show-toplevel); cd "$REPO"; git worktree prune >/dev/null 2>&1 || true
+# A killed run leaves review_tmp/run.*/tree on disk with a live registration: sweep run dirs no process owns.
+for _d in "$REPO"/dv/auto_dv/work/orchestrator/review_tmp/run.*; do
+  [ -d "$_d" ] || continue; pgrep -f "$_d" >/dev/null 2>&1 && continue
+  git worktree remove --force "$_d/tree" >/dev/null 2>&1 || true; rm -rf "$_d"
+done; git worktree prune >/dev/null 2>&1 || true
 MODE=${1:?plan|diff|replan}; shift
 DATE=$(date +%Y-%m-%d)
 WRAP=.claude/skills/cross-review/scripts/run_codex_review.sh
@@ -51,14 +56,14 @@ MANIFEST=""
 case "$MODE" in
   plan)
     TARGET_DESC="plan/spec file(s): $*"
-    for f in "$@"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (plan reviews target committed files)"; exit 1; }; MANIFEST="${MANIFEST}TARGET: $f@$(git show "HEAD:$f" | sha256sum | cut -c1-8)${NL}"; done
+    for f in "$@"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (plan reviews target committed files)"; exit 1; }; git diff --quiet HEAD -- "$f" || echo "NOTE: $f differs from HEAD in the working tree; the review reads the HEAD blob" >&2; MANIFEST="${MANIFEST}TARGET: $f@$(git show "HEAD:$f" | sha256sum | cut -c1-8)${NL}"; done
     TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:${NL}${MANIFEST}"
     TARGET_DESC="${TARGET_DESC} at commit ${TGT_REV:0:8}"; NAME="plan-$(basename "${1%.*}")" ;;
   replan)
     PLAN_F=${1:?plan file}; FIND_F=${2:?findings artifact}; BASEREV=$(git rev-parse --verify "${3:?base rev}")
     TARGET_DESC="scoped re-review: ${PLAN_F} (delta since ${BASEREV:0:8}) against findings in ${FIND_F}"
-    for f in "$PLAN_F" "$FIND_F"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (replan reviews target committed files)"; exit 1; }; done
+    for f in "$PLAN_F" "$FIND_F"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (replan reviews target committed files)"; exit 1; }; git diff --quiet HEAD -- "$f" || echo "NOTE: $f differs from HEAD in the working tree; the review reads the HEAD blob" >&2; done
     MANIFEST="TARGET: ${PLAN_F}@$(git show "HEAD:$PLAN_F" | sha256sum | cut -c1-8)${NL}TARGET: ${FIND_F}@$(git show "HEAD:$FIND_F" | sha256sum | cut -c1-8)${NL}"
     TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Scoped re-review (a recorded re-review per CLAUDE.md's gate): ${PLAN_F} was previously reviewed at commit ${BASEREV} and received the findings in ${FIND_F}. Do exactly two things: (1) verdict EACH finding in that artifact ADDRESSED or NOT ADDRESSED against the current plan text, with line evidence; (2) review ONLY the plan's changes since that commit (run: git diff ${BASEREV} -- ${PLAN_F}) for new defects the remediation introduced. Do NOT re-review unchanged plan content. Echo, verbatim, as the FIRST lines of your output, exactly these lines:${NL}${MANIFEST}"
@@ -82,7 +87,8 @@ mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$R
 # teammate editing a reviewed file during the run cannot reach the artifact.
 TREE="$XR_TMP/tree"
 git worktree add --detach "$TREE" "$TGT_REV" >/dev/null 2>"$XR_TMP/worktree.err" || { echo "PROTOCOL ERROR: cannot create a worktree of $TGT_REV: $(cat "$XR_TMP/worktree.err")"; exit 1; }
-WRAP_HASH=$(git hash-object "$GEN_XR_RELOCATED" | cut -c1-8)
+WRAP_HASH=$(git hash-object "$GEN_XR_RELOCATED" | cut -c1-8); WRAP_AT_TGT=$(git rev-parse "$TGT_REV:dv/auto_dv/tools/gen_cross_review.sh" 2>/dev/null | cut -c1-8 || true)
+[ "$WRAP_HASH" = "$WRAP_AT_TGT" ] && WRAP_NOTE="equals the wrapper committed at the reviewed commit" || WRAP_NOTE="differs from the wrapper committed at the reviewed commit (${WRAP_AT_TGT:-none})"
 # Same positive-list rubric assertion as the codex wrapper (a missing or extra rubric fails loud), read from the reviewed commit, not the live tree.
 ZONE_A_RUBRICS="ai-slop-comments.md forces-and-hier-access.md magic-numbers.md rtl-purity.md assertion-integrity.md"
 EXPECTED=$(printf '%s\n' GUIDE.md $ZONE_A_RUBRICS | LC_ALL=C sort)
@@ -157,7 +163,7 @@ fi
   echo
   echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap, working directory = detached read-only checkout of commit ${TGT_REV} (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
-  echo "**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob ${WRAP_HASH} (the copy executed); reviewed commit ${TGT_REV}"
+  echo "**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob ${WRAP_HASH} (the copy executed; ${WRAP_NOTE}); reviewed commit ${TGT_REV}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
   echo
