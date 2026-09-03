@@ -9,6 +9,8 @@ package gen_tb_pkg;
   // Smoke red-run knob: flip this bit of the TB-side SECDED-encoded NOP word so the core sees an
   // integrity error (proves the smoke's alert check fires). Absent = no corruption.
   parameter string PLUSARG_SMOKE_INTG_FLIP = "gen_smoke_intg_flip";
+  // Debug-only probe P6 (docs/gen_probe_register.md): never in a measured run; Runtime refuses it there.
+  parameter string PLUSARG_DBG_CSR_PROBE = "gen_dbg_csr_probe";
 
   // Every time-0 banner line starts with this tag so a log scanner can grep one token.
   parameter string GEN_BANNER_TAG = "GEN_CONFIG_BANNER";

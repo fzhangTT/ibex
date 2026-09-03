@@ -65,6 +65,14 @@ run_04_green           plusargs=[+gen_smoke_cycles=3000] simv_exit=0 token=PASS 
 sequence result: ALL-AS-EXPECTED
 ```
 
+Driver changes after this evidence was recorded (Critic v3 findings D-01/D-02, applied 2026-09-03
+06:55 UTC): the driver refuses an existing OUT unless `FORCE=1` is given explicitly, refuses an OUT
+outside the clone, and reads the plusarg names from `gen_tb_pkg.sv` and the verdict tokens from
+`gen_smoke_tb_top.sv` instead of re-typing them (echoed into `<OUT>/names.txt`). Re-proof of the
+changed driver: `dv/auto_dv/work/tb-infra/out_d0102/` (fresh directory), same four verdict lines,
+sequence result ALL-AS-EXPECTED, compile 0 errors, driver exit 0. The artifacts cited above in
+`out_t036/smoke/` are unchanged.
+
 Log timestamps (creation order proves the sequence; `ls --time-style` host-local EDT = UTC-4, so 02:22 local is 06:22 UTC, matching the header):
 
 ```
