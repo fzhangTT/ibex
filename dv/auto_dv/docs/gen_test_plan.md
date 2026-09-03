@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 10:26 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 10:27 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -40,9 +40,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   schedule derives from the run seed and is reproducible or overridable with
   +gen_regime_sched=<knob>:<value>@r<N>|c<N>,...; there is no separate schedule seed); one run seed
   drives every source of randomness.
-- Expected-fail tests host items of exactly ONE bug id: an `_xfail` test's single xfail_bug attribute must name the
-  candidate whose fix turns it green, so two candidates never share a test (gen_prv_debug_b1_xfail / _b2_xfail);
-  items of the same bug id may share (the B15 pair).
+- Every expected-fail item is its own `_xfail` test (one item, one bug id per test): the test's single xfail_bug
+  attribute names the candidate whose fix turns it green and its one fire-check attributes the failure; no two
+  expected-fail items share a group (gen_prv_debug_b1_xfail / _b2_xfail; gen_csr_debug_csr_b15a_xfail / _b15b_xfail).
 - Cycle-level fire-checks (bus or pin cycle facts: the rvalid cycle of an alert, ibus grant versus retirement,
   driver rise/fall cycles, dbus timestamps) depend on the bus/pin EVENT export: the `E <cycle> <source> <event> <fields>` lines of the ONE export file (`+gen_export_file=<path>`,
   suggested gen_export.txt; `+gen_export_sources=<csv>` selects sources; bridge command EXPORT_FLUSH flushes it; reader
@@ -119,7 +119,7 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | Expected-fail items (bug candidates) | 29 |
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
 | Items outside the Phase 1 pass gate (expected-fail + informational) of 1203 | 40 |
-| Test groups | 227 |
+| Test groups | 228 |
 | Covergroups / distinct bins referenced / adopted bins | 207 / 15825 / 49 |
 
 ## 1.1 Expected-fail items per bug candidate
@@ -221,7 +221,8 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | gen_csr_trap_handling | 15 | TP-CSR-032..TP-CSR-114 |
 | gen_csr_reset | 6 | TP-CSR-037..TP-CSR-109 |
 | gen_csr_counters | 20 | TP-CSR-050..TP-CSR-113 |
-| gen_csr_debug_csr_xfail | 2 | TP-CSR-075..TP-CSR-076 |
+| gen_csr_debug_csr_b15a_xfail | 1 | TP-CSR-075..TP-CSR-075 |
+| gen_csr_debug_csr_b15b_xfail | 1 | TP-CSR-076..TP-CSR-076 |
 | gen_csr_trigger_csr | 4 | TP-CSR-080..TP-CSR-084 |
 | gen_csr_trigger_csr_xfail | 1 | TP-CSR-083..TP-CSR-083 |
 | gen_csr_cpuctrl | 10 | TP-CSR-085..TP-CSR-094 |
@@ -5084,7 +5085,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: the all-ones write and set pairs retire in debug mode (rvfi_ext_debug_mode = 1, rvfi_trap = 0) with the read-back pairs closed and cause matching the entry stimulus; prv == 11 (M) after all-ones; bit 3 (nmip) excluded from the compare (B5, owner TP-DBG-021).
 - Pass criteria: gen_chk_csr_readback predicting 0x4000_9007 | (cause << 6) (bit 13 = 0 per core_registers.xml:163-172) - fails on current RTL, which returns 0x4000_B007 | (cause << 6) (rtl/ibex_cs_registers.sv:810-836); the all-ones legalisation of every other field is guarded by TP-CSR-074 (patterns with bit 13 cleared), so this expected-fail masks no other regression; gen_chk_debug (cause) - passes
 - Expected: expected-fail (B15)
-- Test group: gen_csr_debug_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_csr_debug_csr_b15a_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CSR-007.cr_csr_wpat_dbg.dcsr_all1, CG-CSR-007.cr_dcsr_bits.all1, CG-CSR-007.cr_prv_w_op.prv_m_csrrw, CG-PRV-007.cp_cause.haltreq, CG-PRV-007.cp_cause.ebreak, CG-PRV-007.cp_cause.step, CG-PRV-007.cp_cause.trigger
 
 ### TP-CSR-076: dcsr.ebreaks (bit 13) must read 0 without S-mode; current RTL stores it (B15)
@@ -5098,7 +5099,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: RVFI shows the bit-13 set/clear/write pairs retiring in debug mode (rvfi_ext_debug_mode = 1, rvfi_trap = 0) with the read-back pairs closed; the following ebreak outside debug traps (rvfi_trap = 1, mcause 3) or enters debug (rvfi_trap = 0, next fetch == DmHaltAddr, S-2) according to ebreakm/ebreaku only.
 - Pass criteria: gen_chk_csr_readback with the B15 spec expectation (tools/specs/riscv-debug-spec/xml/core_registers.xml:163-172: ebreaks is hardwired to 0 when the hart has no S-mode, so read-back bit 13 == 0 after every write) - fails on current RTL, which stores the bit (rtl/ibex_cs_registers.sv:811-835); gen_chk_debug (ebreak behaviour independent of bit 13; functional impact nil, rtl/ibex_controller.sv:481-483) - passes
 - Expected: expected-fail (B15)
-- Test group: gen_csr_debug_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_csr_debug_csr_b15b_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CSR-007.cr_dcsr_bits.ebreaks_only, CG-CSR-007.cp_dcsr_ebreaks_w.b1, CG-CSR-007.cp_dcsr_ebreaks_w.b0, CG-CSR-007.cr_csr_op_dbg.dcsr_csrrs, CG-CSR-007.cr_csr_op_dbg.dcsr_csrrc
 
 ### TP-CSR-077: dcsr.prv WARL: 01 and 10 legalise to 00 (U); dret then resumes in U
@@ -6278,7 +6279,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_csr_counters | TP-CSR-050, 051, 052, 058, 059, 060, 061, 062, 063, 064, 065, 066, 067, 068, 069, 070, 071, 072, 073, 113 | 1 | smoke/targeted | medium |
 | gen_csr_umode | TP-CSR-015, 053, 054, 055, 056, 057, TP-PRV-033 | 1 | smoke/targeted | short |
 | gen_csr_debug_csr | TP-CSR-017, 018, 074, 077, 078, 079 | 1 | targeted | medium |
-| gen_csr_debug_csr_xfail | TP-CSR-075, 076 | 1 | targeted | medium |
+| gen_csr_debug_csr_b15a_xfail (TP-CSR-075, B15 mask) and gen_csr_debug_csr_b15b_xfail (TP-CSR-076, B15 ebreaks) | TP-CSR-075, 076 | 1 | targeted | medium |
 | gen_csr_trigger_csr | TP-CSR-080, 081, 082, 084 | 1 | smoke/targeted | short |
 | gen_csr_trigger_csr_xfail | TP-CSR-083 | 1 | targeted | short |
 | gen_csr_cpuctrl | TP-CSR-085, 086, 087, 088, 089, 090, 091, 092, 093, 094 | 1 | smoke/targeted | medium |

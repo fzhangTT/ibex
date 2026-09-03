@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:26 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:27 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -116,9 +116,9 @@ the count.
 | CG-CSR-013 | cr_carry | gen_csr_counters, gen_csr_storm, gen_csr_trap_handling |
 | CG-CSR-017 | cp_alert_int | gen_csr_storm |
 | CG-CSR-017 | cr_alert_density | gen_csr_storm |
-| CG-PRV-007 | cp_mst_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
-| CG-PRV-007 | cp_mst_after_exc | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
-| CG-PRV-007 | cr_entry_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
+| CG-PRV-007 | cp_mst_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_b15a_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
+| CG-PRV-007 | cp_mst_after_exc | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_b15a_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
+| CG-PRV-007 | cr_entry_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_b15a_xfail, gen_prv_debug, gen_prv_debug_b1_xfail, gen_prv_storm |
 | CG-PRV-008 | cr_fast_id | gen_csr_illegal, gen_csr_reset, gen_csr_trap_handling, gen_csr_trap_setup, gen_prv_debug, gen_prv_illegal, gen_prv_irq, gen_prv_modes, gen_prv_mret, gen_prv_storm |
 | CG-EXC-001 | cp_pc_align | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_lsu_fault, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state |
 | CG-EXC-001 | cr_cause_pcalign | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_lsu_fault, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state |
