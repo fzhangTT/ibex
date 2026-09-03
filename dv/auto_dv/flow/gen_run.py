@@ -65,7 +65,7 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
                                         "waves_fsdb": C.WAVES_FSDB, "waves_vpd": C.WAVES_VPD}), encoding="utf-8")
         argv += ["-ucli", "-do", str(tcl)]
     env: dict[str, str] = {"SIM_DIR": str(run_dir), C.ENV_RANDOM_SEED: str(seed)}
-    lib_dirs = [d for d in (build.get("runtime_lib_dirs") or []) if "MIRROR_UNSET" not in d]
+    lib_dirs = list(build.get("runtime_lib_dirs") or [])
     if lib_dirs:
         # Shared libraries the simv or its DPI shim load at run time (shim next to the simv, the mirror's
         # spike); a compute host cannot follow an rpath into the clone, LD_LIBRARY_PATH can.
@@ -120,7 +120,7 @@ def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: di
         f"cd {shlex.quote(str(run_dir))} || exit 97",
         *[f"export {k}={v}" if k == "LD_LIBRARY_PATH" else f"export {k}={shlex.quote(v)}" for k, v in env.items()],
         f"echo \"{C.SEED_RECORD_TAG} {C.PLUSARG_NTB_SEED}=${C.ENV_RANDOM_SEED} {C.ENV_RANDOM_SEED}=${C.ENV_RANDOM_SEED} host=$(hostname) utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)\"",
-        f"timeout -k {C.TIMEOUT_GRACE_S} {timeout_s} \\",
+        f"{C.JOB_TIMEOUT_CMD} -k {C.TIMEOUT_GRACE_S} {timeout_s} \\",
         "    " + " \\\n    ".join(shlex.quote(x) for x in argv) + " \\",
         f"    > {shlex.quote(str(run_dir / C.SIM_STDOUT_LOG))} 2>&1",
         "rc=$?",

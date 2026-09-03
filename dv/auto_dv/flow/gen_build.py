@@ -114,8 +114,9 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["defines"] = [f"+define+{d}" for d in list(build.get("defines") or []) + list(a.define or [])]
     groups["config"] = config_opts()
     groups["common"] = list(C.VCS_COMMON_FLAGS)
-    # One -LDFLAGS string: the SIM_RECIPE base plus the build entry's extra_ldflags ({outdir} rendered).
-    ldflags = [C.LDFLAGS_BASE] + [x.format(outdir=str(outdir)) for x in (build.get("extra_ldflags") or [])]
+    # One -LDFLAGS string: the SIM_RECIPE base plus the build entry's extra_ldflags (placeholders rendered).
+    ldflags = [C.LDFLAGS_BASE] + [render_build_field("extra_ldflags", x, build_fields(a, outdir))
+                                  for x in (build.get("extra_ldflags") or [])]
     groups["ldflags"] = ["-LDFLAGS", " ".join(ldflags)]
     groups["output"] = [f"-Mdir={outdir / C.SIMV_CSRC_NAME}", "-o", str(outdir / C.SIMV_NAME)]
     groups["debug"] = list(C.VCS_DEBUG_WAVES_FLAGS if a.waves else C.VCS_DEBUG_PP_FLAGS)
@@ -173,12 +174,34 @@ def info_scopes(build: dict[str, Any]) -> list[str]:
     return [f"{build['tb_top']}.{t}" for t in info_trees(build)]
 
 
-def run_pre_build(build: dict[str, Any], outdir: Path, timeout_s: int) -> list[dict[str, Any]]:
+def build_fields(a: argparse.Namespace, outdir: Path) -> dict[str, str]:
+    """Placeholders a build entry may use: {outdir}, and {mirror} = the tree the runs execute from
+    (the shared mirror; the clone for --local-cocotb builds, whose runs stay on the submit host)."""
+    fields = {"outdir": str(outdir)}
+    run_root = C.REPO_ROOT if a.local_cocotb else M.mirror_root()
+    if run_root:
+        fields["mirror"] = str(run_root)
+    return fields
+
+
+def render_build_field(kind: str, tmpl: str, fields: dict[str, str]) -> str:
+    """Token replacement; a brace token left over fails the build (a silent drop or KeyError would hide it)."""
+    text = tmpl
+    for k, v in fields.items():
+        text = text.replace("{" + k + "}", v)
+    left = re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", text)
+    if left:
+        U.die(f"build entry {kind} {tmpl!r}: placeholder(s) {left} not renderable (known: {sorted(fields)}; "
+              "{mirror} needs mirror_root in gen_site.yaml unless --local-cocotb)")
+    return text
+
+
+def run_pre_build(build: dict[str, Any], outdir: Path, timeout_s: int, fields: dict[str, str]) -> list[dict[str, Any]]:
     """The build entry's pre_build commands (e.g. the ISA shim library), in order, clone root as cwd,
     the sourced environment inherited; any failure stops the build. Products under <outdir> are digested."""
     records: list[dict[str, Any]] = []
     for i, tmpl in enumerate(build.get("pre_build") or []):
-        cmd = tmpl.format(outdir=str(outdir))
+        cmd = render_build_field("pre_build", tmpl, fields)
         log = outdir / f"pre_build_{i}.log"
         rc, wall, timed_out = U.run_bounded(["bash", "-c", cmd], cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s)
         rec = {"command": cmd, "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "log": str(log)}
@@ -192,10 +215,8 @@ def run_pre_build(build: dict[str, Any], outdir: Path, timeout_s: int) -> list[d
     return records
 
 
-def runtime_lib_dirs(build: dict[str, Any], outdir: Path) -> list[str]:
-    mirror = M.mirror_root()
-    return [x.format(outdir=str(outdir), mirror=str(mirror) if mirror else "MIRROR_UNSET")
-            for x in (build.get("runtime_lib_dirs") or [])]
+def runtime_lib_dirs(build: dict[str, Any], fields: dict[str, str]) -> list[str]:
+    return [render_build_field("runtime_lib_dirs", x, fields) for x in (build.get("runtime_lib_dirs") or [])]
 
 
 def summarize_compile_log(log: Path) -> dict[str, Any]:
@@ -283,7 +304,7 @@ def main() -> int:
 
     U.require_env("vcs")
     a.mirror_record = None
-    pre_build = run_pre_build(build, outdir, a.timeout_s)
+    pre_build = run_pre_build(build, outdir, a.timeout_s, build_fields(a, outdir))
     argv, groups = compose_command(build, outdir, a)
     # Staged copy of the environment entry point: run jobs source it from the (shared) outdir.
     shutil.copyfile(C.ENV_SH, outdir / C.STAGED_ENV_SH)
@@ -304,7 +325,7 @@ def main() -> int:
         "rtl_substitutions": a.rtl_substitutions,
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,
         "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
-        "pre_build": pre_build, "ldflags": groups["ldflags"][1], "runtime_lib_dirs": runtime_lib_dirs(build, outdir),
+        "pre_build": pre_build, "ldflags": groups["ldflags"][1], "runtime_lib_dirs": runtime_lib_dirs(build, build_fields(a, outdir)),
         "dropped_cm_args_no_coverage": a.dropped_cm_args,
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,

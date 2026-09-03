@@ -66,6 +66,14 @@ def site_value(key: str) -> str | None:
 STAGED_ENV_SH = "env.sh"
 ENV_TOOLCHECK_VAR = "IBEX_ENV_TOOLCHECK"
 SELFTEST_TMP = WORK_DIR / "selftest_tmp"   # scratch parent of every flow self-test (never the shared /tmp, F-001)
+
+
+def selftest_tmp() -> str:
+    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
+    SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
+    return str(SELFTEST_TMP)
+
+
 REQUESTS_DIR = WORK_DIR / "requests"
 RUNNING_DIR = WORK_DIR / "running"
 DONE_DIR = WORK_DIR / "done"
@@ -166,6 +174,7 @@ WAVES_VPD = "waves.vpd"
 DUMP_TCL = "dump.tcl"
 DEFAULT_TIMEOUT_S = 1800
 TIMEOUT_GRACE_S = 20
+JOB_TIMEOUT_CMD = "timeout"   # first word of the job script's simv line; bash's kill report quotes it first
 
 # --- LSF (SIM_RECIPE Section 7; exclusive to the runtime role) -------------------------------
 LSF_QUEUE = "regress"
@@ -202,10 +211,8 @@ PROGRAM_SEED_RUN = "run"
 PROGRAM_DIRNAME = "program"
 PROGRAM_VMEM = "prog.vmem"
 PROGRAM_SIDECAR = "prog.sym.json"
-# gen_tb_pkg.sv identifiers of the image plusargs (TB Infra's mem-model API); the string values
-# are read from the package, never typed here.
-SV_PLUSARG_MEM_IMAGE = "PLUSARG_MEM_IMAGE"
-SV_PLUSARG_MEM_IMAGE_CRC32 = "PLUSARG_MEM_IMAGE_CRC32"
+# TB Infra's image helper: the run's image plusargs come from GenImage.plusargs(), never re-typed here.
+IMAGE_HELPER_MODULE = "dv.auto_dv.gen_tb.gen_image"
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
 # cov_trees: the gated coverage roots below tb_top (single source of the -cm_hier scope; ruled:
 # the two inner instances, never nested).
@@ -270,7 +277,8 @@ EXIT_CODES_CLEAN = (0, 124)
 # for local runs), never free text. An ISS/TB log line such as "Illegal instruction (hart 0) at PC"
 # must not match (real false positive on gen_ut_bridge, tb-infra-002).
 CRASH_RE = re.compile(r"(^|: )(\d+ )?(Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated)"
-                      r"(\s+\(core dumped\))?\s*(\S*simv\S*|bash|$)|\(core dumped\)|timeout: sending signal")
+                      r"(\s+\(core dumped\))?\s*(" + re.escape(JOB_TIMEOUT_CMD) + r"( |$)|\S*simv\S*|bash|$)"
+                      r"|\(core dumped\)|timeout: sending signal")
 # ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).
 FCOV_EXIT_CODES = {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}
 FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 usage/protocol error")

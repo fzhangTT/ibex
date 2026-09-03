@@ -135,9 +135,11 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   off; the banner block is copied into result.yaml); FAIL when the marker is present but neither `$finish` was seen nor the exit code is
   0, or the exit code is neither 0 nor 124 ("unexplained exit code": one more collected mechanism,
   never the only one); FAIL on the shell's process-termination report in lsf.err or run.log (the job
-  script's stderr: `<pid> Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated`,
-  `(core dumped)`, `timeout: sending signal`; TB or ISS log text such as "Illegal instruction (hart 0)"
-  never matches); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
+  script's stderr: `<pid> Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated`
+  followed by the job's command text, which starts with the script's `timeout` word (bash quotes
+  the whole simple command), `(core dumped)`, `timeout: sending signal`; TB or ISS log text such as
+  "Illegal instruction (hart 0)" never matches; the two real-shaped reports are pinned in
+  `gen_verdict.py --self-test`); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
   The process exit code is recorded, never decisive.
 - `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
   declared-but-unhit bin or an unverifiable query turns a PASS into FAIL with the reason `fcov
@@ -304,7 +306,11 @@ machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
 ## 6a. Build mechanics beyond vcs: pre_build, extra_ldflags, runtime_lib_dirs
 
-A build entry may declare, with `{outdir}` (and `{mirror}`) rendered by the flow:
+A build entry may declare the fields below. One placeholder set is rendered in all of them:
+`{outdir}` (the build directory) and `{mirror}` (the tree the runs execute from: the shared mirror
+root from `gen_site.yaml`, or the clone root for a `--local-cocotb` build, whose runs stay on the
+submit host). Any other brace token, or `{mirror}` without a mirror root, fails the build with the
+known set named; nothing is dropped silently.
 
 - `pre_build`: commands run in order before vcs, clone root as cwd, the sourced environment
   inherited (for example TB Infra's `bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib`,
@@ -317,7 +323,9 @@ A build entry may declare, with `{outdir}` (and `{mirror}`) rendered by the flow
 - `runtime_lib_dirs`: directories exported as `LD_LIBRARY_PATH` by every run of the build (for
   example `{outdir}/lib` and `{mirror}/tools/spike/lib`): a shared library whose own rpath points into
   the clone cannot be resolved on a compute host, LD_LIBRARY_PATH can; recorded in
-  `build_manifest.runtime_lib_dirs` and visible in each run's `run_cmd.sh`.
+  `build_manifest.runtime_lib_dirs` and visible in each run's `run_cmd.sh`. `gen_regress.py` syncs the
+  mirror with `--sync --spike` before a cocotb build, so `{mirror}/tools/spike/lib` is current for
+  every regression; a standalone `gen_build.py` / `gen_run.py --lsf` relies on the last sync.
 The values live in the build entry only (TB Infra owns the mechanics, the flow never re-types them).
 
 ## 7. gen_testlist.yaml (schema)
@@ -377,7 +385,7 @@ gen_mirror.py --status
 - The freshness hash covers the files a compute host consumes at run time (`dv/auto_dv/**/*.py`,
   `ci/env.sh`, `ci/setup-venv.sh`, the two requirements files); RTL, TB sources and documents are
   mirrored but not hashed (they are compiled on the submit host and churn constantly).
-  `gen_regress.py` re-syncs the mirror before a cocotb build (`--no-sync-mirror` to skip), so the
+  `gen_regress.py` re-syncs the mirror (`gen_mirror.py --sync --spike`) before a cocotb build (`--no-sync-mirror` to skip), so the
   build records the revision its runs import.
 - Staleness fails loud: `gen_build.py` refuses a cocotb build unless the mirror is `fresh`
   (`--allow-stale-mirror` for experiments only) and records the mirror's root, tree hash and git

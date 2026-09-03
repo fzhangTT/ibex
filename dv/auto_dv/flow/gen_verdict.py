@@ -174,10 +174,10 @@ REAL_COCOTB = [
 ]
 
 
-def selftest_tmp():
-    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
-    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    return str(C.SELFTEST_TMP)
+# Real-shaped kill reports: bash 4.4.20 on soc-l-11 (2026-09-03 08:35Z) running the run_cmd.sh form
+# (timeout -k 20 900 <simv> ...) with a stand-in vcs_simv that raised the signal on itself; verbatim.
+REAL_SHAPE_SEGV = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_SEGV.sh: line 7: 2853260 Segmentation fault      timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_SEGV +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_SEGV.log 2>&1'
+REAL_SHAPE_KILL = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_KILL.sh: line 7: 2853999 Killed                  timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_KILL +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_KILL.log 2>&1'
 
 
 def self_test() -> int:
@@ -193,8 +193,10 @@ def self_test() -> int:
         ("fabricated: marker but no $finish and rc 0 (P-02: rc 0 counts as clean end)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_PASS),
         ("fabricated: marker but no $finish and no rc (P-02 flipped case 12)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", None, False, [], True, C.VERDICT_FAIL),
         ("fabricated: marker, $finish, rc 139 (P-02 unexplained exit code)", B + REAL_GREEN, "GEN_SMOKE_PASS", 139, False, [], True, C.VERDICT_FAIL),
-        ("fabricated: clean log, crash signature in stderr (P-02)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["bash: line 1: 12345 Segmentation fault      (core dumped) vcs_simv"], True, C.VERDICT_FAIL),
-        ("fabricated: bare shell kill report", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["12345 Killed                  vcs_simv +vcs+lic+wait"], True, C.VERDICT_FAIL),
+        ("fabricated: direct simv invocation shape with (core dumped), not the job script's form (P-02)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["bash: line 1: 12345 Segmentation fault      (core dumped) vcs_simv"], True, C.VERDICT_FAIL),
+        ("fabricated: bare shell kill report, direct simv shape", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["12345 Killed                  vcs_simv +vcs+lic+wait"], True, C.VERDICT_FAIL),
+        ("real-shaped: job-script SIGSEGV report (timeout-wrapped simv), clean log, rc 0", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [REAL_SHAPE_SEGV], True, C.VERDICT_FAIL),
+        ("real-shaped: job-script SIGKILL report (timeout-wrapped simv), clean log, rc 0", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [REAL_SHAPE_KILL], True, C.VERDICT_FAIL),
         ("real (tb-infra-002, job 10932403): ISS log line with 'Illegal instruction' is NOT a crash", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False,
          ["               12000: Illegal instruction (hart 0) at PC 0x80000080: 0x00000000"], True, C.VERDICT_PASS),
         ("fabricated: marker quoted inside a message is not the marker (P-02)", B + ["waiting for GEN_SMOKE_PASS marker", "$finish called"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
@@ -215,9 +217,17 @@ def self_test() -> int:
         flag = "ok " if got == want else "BAD"
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+    # The crash regex alone: the job script's report shape for every signal word, and the ISS line that stays clean.
+    for sig in ("Segmentation fault", "Bus error", "Aborted", "Illegal instruction", "Killed", "Terminated"):
+        cond = bool(C.CRASH_RE.search(REAL_SHAPE_SEGV.replace("Segmentation fault", sig)))
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} crash regex matches the job-script report with {sig!r}")
+    cond = not C.CRASH_RE.search("               12000: Illegal instruction (hart 0) at PC 0x80000080: 0x00000000")
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} crash regex leaves the ISS 'Illegal instruction (hart 0)' line clean")
     # File-based decide(): the path gen_run.py takes (sim.log, stdout capture, stderr logs on disk).
     import tempfile
-    with tempfile.TemporaryDirectory(prefix="gen_verdict_selftest_", dir=selftest_tmp()) as td:
+    with tempfile.TemporaryDirectory(prefix="gen_verdict_selftest_", dir=C.selftest_tmp()) as td:
         d = Path(td)
         (d / "sim.log").write_text("\n".join(B + REAL_GREEN) + "\n", encoding="utf-8")
         (d / "sim_stdout.log").write_text("", encoding="utf-8")
@@ -251,7 +261,8 @@ def self_test() -> int:
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: banner rule not skippable (empty build_config raises)")
     print("SELF-TEST: cases named 'real ...' are verbatim excerpts of runs on this site (LSF job ids given); "
-          "cases named 'fabricated ...' pin a rule on synthetic text until a real run exists")
+          "'real-shaped ...' are bash kill reports captured from the job-script form with a stand-in simv; "
+          "'fabricated ...' pin a rule on synthetic text until a real run exists")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

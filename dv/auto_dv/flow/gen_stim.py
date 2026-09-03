@@ -30,16 +30,6 @@ import gen_flow_const as C
 import gen_flow_util as U
 
 
-def image_plusarg_names() -> tuple[str, str]:
-    """The two image plusarg strings, read from the SV constants home; fail loud if not declared."""
-    by_ident = {ident: name for name, ident in C.sv_plusarg_names().items()}
-    missing = [i for i in (C.SV_PLUSARG_MEM_IMAGE, C.SV_PLUSARG_MEM_IMAGE_CRC32) if i not in by_ident]
-    if missing:
-        U.die(f"{C.TB_PKG_SV.name} does not declare {missing}; the memory model's image plusargs must land before a "
-              "program-driven test can run")
-    return by_ident[C.SV_PLUSARG_MEM_IMAGE], by_ident[C.SV_PLUSARG_MEM_IMAGE_CRC32]
-
-
 def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, timeout_s: int = 1800) -> dict[str, Any]:
     """Run gen_program.py; return the record for result.yaml (paths, digests, seed used)."""
     if not C.PROGRAM_TOOL.is_file():
@@ -80,22 +70,21 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
 def image_plusargs(rec: dict[str, Any]) -> list[str]:
     """The image plusarg set the TB expects, produced by TB Infra's own helper
     dv/auto_dv/gen_tb/gen_image.py (GenImage(<vmem>).plusargs(): image, crc32, word count, boot address,
-    tohost address; names from gen_tb_knobs.yaml) so the keys are never re-typed here. The flow's
-    two-plusarg composition from gen_tb_pkg.sv identifiers is the fallback when that helper is absent."""
+    tohost address; names from gen_tb_knobs.yaml) so the keys are never re-typed here. No fallback: the
+    TB rejects any other composition, so a missing helper fails here by name; a missing dependency
+    inside the helper propagates unchanged."""
     import importlib
     if str(C.REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(C.REPO_ROOT))
     try:
-        mod = importlib.import_module("dv.auto_dv.gen_tb.gen_image")
-        args = list(mod.GenImage(rec["vmem"]).plusargs())
-        rec["image_plusargs_source"] = "dv/auto_dv/gen_tb/gen_image.py GenImage.plusargs()"
-        return args
-    except ModuleNotFoundError:
-        img, crc = image_plusarg_names()
-        crc_val = rec["crc32"]
-        crc_txt = crc_val if isinstance(crc_val, str) else f"0x{int(crc_val):08x}"
-        rec["image_plusargs_source"] = f"flow fallback from {C.TB_PKG_SV.name} identifiers"
-        return [f"+{img}={rec['vmem']}", f"+{crc}={crc_txt}"]
+        mod = importlib.import_module(C.IMAGE_HELPER_MODULE)
+    except ModuleNotFoundError as e:
+        if e.name and (C.IMAGE_HELPER_MODULE == e.name or C.IMAGE_HELPER_MODULE.startswith(e.name + ".")):
+            U.die(f"{C.IMAGE_HELPER_MODULE} is not importable ({e}); TB Infra's image helper must be present")
+        raise
+    args = list(mod.GenImage(rec["vmem"]).plusargs())
+    rec["image_plusargs_source"] = f"{C.IMAGE_HELPER_MODULE} GenImage.plusargs()"
+    return args
 
 
 def main() -> int:

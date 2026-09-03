@@ -186,17 +186,11 @@ def fabricate_report(dst: Path, cg: str, cp: str, hits: dict[str, int]) -> None:
     (dst / "grpinfo.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def selftest_tmp():
-    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
-    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    return str(C.SELFTEST_TMP)
-
-
 def self_test() -> int:
     """Fabricate a manifest and a urg report dir; drive the REAL checker (--report-dir) and this
     module's parsing; the vdb slice selection (`urg -tests`) is not exercised here."""
     ok = True
-    with tempfile.TemporaryDirectory(prefix="gen_fcov_selftest_", dir=selftest_tmp()) as td:
+    with tempfile.TemporaryDirectory(prefix="gen_fcov_selftest_", dir=C.selftest_tmp()) as td:
         d = Path(td)
         cg, cp = "gen_selftest_cg", "cp_mode"
         good = d / "gen_selftest_ok.fcov.yaml"

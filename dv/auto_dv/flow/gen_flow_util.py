@@ -195,12 +195,6 @@ def render_fields(text: str, fields: dict[str, str], comment_prefixes: tuple[str
     return body + "\n"
 
 
-def selftest_tmp():
-    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
-    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    return str(C.SELFTEST_TMP)
-
-
 def self_test() -> int:
     """Render both checked-in templates and check the Tcl braces survive (review finding, T-010)."""
     ok = True
@@ -234,7 +228,7 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD", f"nested gated trees detected, siblings and prefix-only names accepted: {n1} {n2} {n3}")
     import tempfile
     import yaml as _y
-    with tempfile.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=selftest_tmp()) as td:
+    with tempfile.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=C.selftest_tmp()) as td:
         t = load_yaml(C.TESTLIST_YAML)
         t["builds"]["gen_smoke"]["cov_trees"] = ["u_dut.u_ibex_core", "u_dut.u_ibex_core.cs_registers_i"]
         bad = Path(td) / "testlist_nested.yaml"
