@@ -101,7 +101,7 @@ module present and the manifest equals a --test-module re-render (50 bins, four 
 export's gen_run_fixture.sh against out_head14 (export of 2ea81ac, HEAD when the export was made; TB paths unchanged through d4b5933: no path under dv/auto_dv/env, tb, isa, gen_tb, tests, fcov_expectations, stim or rtl/ changed; sources sha 893384b8eec4e6d5; template
 sha abbe6fcb78e53a27 in the run headers) with the export as the one Python root carrying the touch's files, no GEN_TEST_STAGED_ENTRIES; the library
 self-test with GEN_TEST_STAGED_ENTRIES naming the staged entries PASSes (the red entry's red_expect against the retained pinned red through the
-flow's red_signature_check). Generator sweep: Section 5 (seeds 1..400, 200 random and 200 flow-derived seeds, every red item at seeds 1..60,
+flow's red_signature_check). Generator sweep: Section 5 (seeds 1..400, 200 draws meant as random seeds that were one seed (CM99-M-1, re-swept in Section 8) and 200 flow-derived seeds, every red item at seeds 1..60,
 retained as gen_b3_pmp_lock_sweep800.log).
 
 bins_not_hit (rule (g), from the module; the precondition each names is one this test does not apply):
@@ -187,8 +187,10 @@ before-fix sweep's r35 red belongs to that intermediate generator too. The accep
 at about 2 of 40 seeds.
 
 Sweeps on the final generator (sha256 56ef5fe5f695106b), from head_export13 with the touch overlaid:
-- gen_b3_pmp_lock_sweep800.log (md5 74999fde11c68c749b373cd8569f1aac): plan() green and seed-drawn red for seeds 1..400, 200 random
-  31-bit seeds and 200 flow-derived seeds, every --red-item at seeds 1..60: 2200 runs, 0 failures (the observability
+- gen_b3_pmp_lock_sweep800.log (md5 74999fde11c68c749b373cd8569f1aac): plan() green and seed-drawn red for seeds 1..400, 200 draws meant as
+  random 31-bit seeds (in fact the single seed 255808012 repeated, the script re-seeding random.Random(2026) per draw; CM99-M-1, the random
+  part re-swept over 200 distinct seeds in Section 8) and 200 flow-derived seeds, every --red-item at seeds 1..60: 2200 runs over 601 distinct
+  seeds, 0 failures (the observability
   assertion included); 013 red sites over seeds 1..60 (lock mix of the replaced write): 8 none, 52 some.
 - Simulation sweeps on out_head14 (gen_b3_pmp_lock_h13_run_summary.log, md5 8585166c074f75a00580b32cb9d55cc0, one DONE line per
   run; per-run decisive-line excerpts gen_b3_pmp_lock_r013_s<N>_stdout_excerpt.log and gen_b3_pmp_lock_g<N>_stdout_excerpt.log): the TP-PMP-013 red
@@ -274,10 +276,32 @@ draft_18_54Z/) until the shim lands, when the group is re-verified and staged wi
 
 The two intermediate generators of the batch-3 touch (never committed) are reconstructed from the committed gen_pmp_lock_prog.py by reverting
 the later edits, and their sha256 prefixes equal the ones the retained logs name: 7fead94e4693c62a (the before-fix sweep's header) and
-429fa9897e7236fa (the h13 second-pass build header); both are retained as text. gen_b3_pmp_lock_intermediate_reproduction.log (md5
+429fa9897e7236fa (the header of the second-pass sweep that ran beside the h13 second-pass build, retained as
+gen_cm99_pmp_lock_h13_prefix2_sweep_header.log); both are retained as text, and gen_cm99_pmp_lock_attribution_crc.log ties each to its
+build by image checksum: the 7fead94e text rebuilds seeds 7, 29 and 35 to the words and crc32 of the images the pre-fix greens loaded, and
+the 429fa989 text rebuilds seeds 1..6 to those of the second-pass build log (CM99-L-3). gen_b3_pmp_lock_intermediate_reproduction.log (md5
 1331eb924a455d3586db666ee9ce2e59) runs them from a detached archive: 7fead94e asserts "red TP-PMP-021 rlb1 rewrite cfg
 csrrs: the skipped write changes nothing" at --seed 35 --red (the before-fix sweep's one failure) and builds seeds 7, 17 and 29; 429fa989 aborts
 at seed 17 with "TP-PMP-015: pmpaddr14 is frozen by a locked TOR above it" and builds the others. The pre-fix green failures of seeds 7, 29 and
 35 (out_head13, the 7fead94e generator) are retained as gen_b3_pmp_lock_prefix_green_s7/s29/s35_stdout_excerpt.log (fire_tp_pmp_015 at seed 7,
 fire_tp_pmp_021 at 29 and 35, one ok=False line each), with the first-pass run summary gen_b3_pmp_lock_prefix_run_summary.log. The 800 seeds of
-the sweep are gen_b3_pmp_lock_sweep800_seeds.txt (md5 39d6e98749ba6b847d7ca762c8bd7694).
+the sweep are gen_b3_pmp_lock_sweep800_seeds.txt (md5 39d6e98749ba6b847d7ca762c8bd7694), whose random_31bit line is the single seed
+255808012 repeated 200 times (CM99-M-1): the two 800-seed sweeps covered 601 distinct seeds, and Section 8 re-sweeps the random part.
+
+## 8. The closure-touch review (CM99): the random part of the 800-seed sweeps re-run, the intermediate generators tied to their builds
+
+CM99-M-1: sweep_lock_800.sh built its 200 "random 31-bit seeds" as `random.Random(2026).getrandbits(31)` inside the comprehension, a new
+generator per draw, so every draw was 255808012; the retained seed list shows it, and both 800-seed sweeps (the before-fix one and the final
+one) covered 601 distinct seeds (400 sequential, 1 random, 200 flow-derived). The random part is re-swept here, generator-only as before:
+gen_cm99_pmp_lock_random200_seeds.txt (md5 e49d726a7760c3902bcf71eae8b84b8c) holds 200 distinct seeds from one random.Random(2026)
+instance (the old single value is not among them), and gen_cm99_pmp_lock_random200_sweep.log (md5 e8ae9adb30e8b15e950ee757459a2ca3)
+runs plan() green and seed-drawn red for each on HEAD's gen_pmp_lock_prog.py (sha256 862ad214f482a2e6, the committed sweeps' 56ef5fe5f695106b
+with the docstring 674d026 edited) from a detached archive: 400 runs, 0 failures. The retained sweep logs and seed list are not edited; their
+manifest rows and the Section 5 sentences name the defect.
+CM99-L-3: the attribution of the pre-fix greens to 7fead94e and of the h13 second-pass build to 429fa989 rested on run timing and on a
+sweep header that lived under work/. gen_cm99_pmp_lock_h13_prefix2_sweep_header.log (md5 77e10c7ea0a3678afb6f4de651ab1fdd)
+retains that header, and gen_cm99_pmp_lock_attribution_crc.log (md5 f3371c3dffd0fb024d030ebe52c847cb) makes the attribution
+mechanical: rebuilt from a detached archive, the 7fead94e text reproduces the images the pre-fix greens of seeds 7, 29 and 35 loaded
+(words 589 / 557 / 557, crc32 0x66b42d50 / 0x90aa26f5 / 0x420b00bd, equal to probe_greens/g<N>/build.log), and the 429fa989 text reproduces
+the second-pass build's seeds 1..6 (equal to build_all_prefix2.log); the final generator's images of the same seeds differ, so the checksums
+discriminate.

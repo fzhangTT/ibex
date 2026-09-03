@@ -1,0 +1,28 @@
+# CR-T226v2 / CM99-L-2 probes on HEAD's gen_test_lib.py (sha256 e886cad46a3e), 2026-09-03T21:39:05Z
+CR-T226v2-M-1 self.cmd = _f: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CR-T226v2-M-1 self.witness_epilogue = _f: REFUSED: class T rebinds the template method self.witness_epilogue on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CR-T226v2-M-1 alias b = self.bridge; b.cov_witness = _f: ACCEPTED
+CR-T226v2-M-1 decorated helper given self: REFUSED: class T.stimulus: the test object escapes as a bare name at line 10 (bound, packed, returned, captured or passed outside a module-level help
+CR-T226v2-M-1 helper given self.bridge: ACCEPTED
+CM99-L-2 self.cmd, x = _f, 1: ACCEPTED
+CM99-L-2 for self.cmd in (_f,): pass: ACCEPTED
+CM99-L-2 with open(p) as self.cmd: pass: ACCEPTED
+CM99-L-2 *self.cmd, = (_f,): ACCEPTED
+CM99-L-2 helper: t.cmd, x = _f, 1: ACCEPTED
+CM99-L-2 helper: for t.cmd in (_f,): ACCEPTED
+CM99-L-1 metaclass on a nameless base: check_regime_handlers_source ACCEPTED ['T']
+# after the change (tree gen_test_lib.py sha256 1bc50d415275), 2026-09-03T21:45:08Z
+CR-T226v2-M-1 self.cmd = _f: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CR-T226v2-M-1 self.witness_epilogue = _f: REFUSED: class T rebinds the template method self.witness_epilogue on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CR-T226v2-M-1 alias b = self.bridge; b.cov_witness = _f (listed as passing): ACCEPTED
+CR-T226v2-M-1 decorated helper given self: REFUSED: class T.stimulus: the test object escapes as a bare name at line 10 (bound, packed, returned, captured or passed outside a module-level help
+CR-T226v2-M-1 helper given self.bridge (listed as passing): ACCEPTED
+CM99-L-2 self.cmd, x = _f, 1: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CM99-L-2 for self.cmd in (_f,): pass: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CM99-L-2 with open(p) as self.cmd: pass: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CM99-L-2 *self.cmd, = (_f,): REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CM99-L-2 [0 for self.cmd in (_f,)]: REFUSED: class T rebinds the template method self.cmd on the instance at line 7; a template method is overridden by no test (F_OVERRIDE)
+CM99-L-2 helper: t.cmd, x = _f, 1: REFUSED: helper _h rebinds the template method t.cmd on the instance at line 5; a template method is overridden by no test
+CM99-L-2 helper: for t.cmd in (_f,): REFUSED: helper _h rebinds the template method t.cmd on the instance at line 5; a template method is overridden by no test
+control: for self.failures in ([],) (verdict attribute, listed as passing): ACCEPTED
+CM99-L-1 metaclass on a nameless base: REFUSED: GEN_TEST_LIB: <probe>: class B carries a class keyword (line 3; a metaclass may rewrite schedulable, program_handlers, mie_stays_zero behind the regime-handler 

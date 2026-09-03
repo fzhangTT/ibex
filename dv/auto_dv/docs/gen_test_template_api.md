@@ -202,10 +202,11 @@ scramble key and the program-side markers need nothing. `mie_stays_zero = True` 
 driven: knob_irq_regime (events) and knob_irq_line_mix (`with_nmi` drives irq_nm, which MIE does not mask) may not both be in
 play with active values. `lib.check_regime_handlers(path)` is the structural form: it reads every test class's `schedulable`
 (a literal tuple with module-level constants resolved, `lib.TIMING_ONLY_KNOBS` or `GenTest.schedulable`), `program_handlers`
-(a literal tuple drawn from `lib.HANDLERS`) and `mie_stays_zero` (a literal); an annotated or tuple-target assignment of those
-names, a decorated test class and any other value form are refused as unreadable; absent attributes take the GenTest defaults,
+(a literal tuple drawn from `lib.HANDLERS`) and `mie_stays_zero` (a literal); an annotated, tuple-target or augmented assignment
+of those names, a decorated test class, a class keyword on any GenTest-derived class (a metaclass could rewrite them, so a
+nameless base carries none either) and any other value form are refused as unreadable; absent attributes take the GenTest defaults,
 not a base class's own value (a conservative refusal at worst). The library self-test runs it over every committed test module
-with fifteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and
+with sixteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and
 before the first fetch: the knobs in play are the class's `schedulable`, the pinned knobs (`+gen_knob_<name>=`), every knob of
 the schedule (derived, or supplied through `+gen_regime_sched`) and, for the four per-mille fault plusargs the bus agents honour
 outside the regime knobs (`+gen_ibus_err_rate`, `+gen_ibus_intg_err_rate`, `+gen_dbus_err_rate`, `+gen_dbus_intg_err_rate`), the
@@ -271,7 +272,9 @@ list and the table differ):
 
 Everything else passes; the lint is not a guarantee. The guarantee is architectural: the committed testlist ids, the
 fire-check codes and the SV witness ledger. Shapes known to pass today, each an indirection-free statement or a patch
-outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []`; an alias of a
+outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []` (the same target
+forms naming a template method are refused: the instance-rebinding check reaches tuple, starred, for, with and comprehension
+targets in methods and helpers); an alias of a
 template-owned attribute and a write through it (`b = self.bridge` then `b.cov_witness = None`; the escape rule covers the bare test
 object and the verdict record, not `bridge`), the same one transformation away in a helper (`_h(self.bridge)` with `def _h(b):
 b.cov_witness = f`, `b = t.bridge` inside a helper, `setattr(t.bridge, 'cov_witness', f)` inside a helper), a dunder call

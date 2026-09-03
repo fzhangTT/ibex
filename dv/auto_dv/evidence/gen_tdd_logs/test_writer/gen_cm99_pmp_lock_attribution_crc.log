@@ -1,0 +1,30 @@
+# CM99-L-3 attribution by image checksum, 2026-09-03T21:45:08Z: the two reconstructed generators (retained as gen_b3_pmp_lock_prog_intermediate_7fead94e4693c62a.py.txt, sha256 7fead94e4693c62a, and ..._429fa9897e7236fa.py.txt, 429fa9897e7236fa) rebuilt from a detached archive of HEAD with gen_program.py; words= and crc32= are gen_program.py's image checksum line
+## the first-pass greens of seeds 7, 29, 35 (work/test-writer/batch3/gen_pmp_lock/h13/probe_greens/g<N>/build.log, the images the retained gen_b3_pmp_lock_prefix_green_s<N> runs loaded):
+  g7: words=589 crc32=0x66b42d50
+  g29: words=557 crc32=0x90aa26f5
+  g35: words=557 crc32=0x420b00bd
+## rebuilt with the 7fead94e generator:
+  s7: words=589 crc32=0x66b42d50
+  s29: words=557 crc32=0x90aa26f5
+  s35: words=557 crc32=0x420b00bd
+## the h13 second-pass build (work/test-writer/batch3/gen_pmp_lock/h13/build_all_prefix2.log, whose companion sweep header names 429fa9897e7236fa):
+  BUILT s1 words=589 crc32=0x6289b497
+  BUILT s2 words=589 crc32=0x4772e238
+  BUILT s3 words=589 crc32=0x6a0137e7
+  BUILT g4 words=605 crc32=0xcbe3aa06
+  BUILT g5 words=589 crc32=0xf3bede83
+  BUILT g6 words=589 crc32=0x8bb9e513
+## rebuilt with the 429fa989 generator:
+  s1: words=589 crc32=0x6289b497
+  s2: words=589 crc32=0x4772e238
+  s3: words=589 crc32=0x6a0137e7
+  s4: words=605 crc32=0xcbe3aa06
+  s5: words=589 crc32=0xf3bede83
+  s6: words=589 crc32=0x8bb9e513
+## the final build (build_all.log, generator 56ef5fe5f695106b) of the same seeds, for contrast:
+  BUILT s3 words=589 crc32=0x9a1921a6
+  BUILT s2 words=589 crc32=0x4772e238
+  BUILT s1 words=637 crc32=0x822fbdfe
+  BUILT g7 words=621 crc32=0x5e7d51af
+  BUILT g29 words=621 crc32=0xf7443234
+  BUILT g35 words=525 crc32=0x241a3cba

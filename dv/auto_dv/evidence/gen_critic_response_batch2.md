@@ -23,3 +23,14 @@ Author: test-writer, 2026-09-03 14:4x UTC. Landing 3d (follow-up) carries the ro
 |---|---|---|---|---|
 | TB-R10 | dependency | shim mtval after c.ebreak (model pc, DUT 0): cmp_zca FAILed through isa_rd/isa_mem uvm_errors | CLOSED (3e) | l9_cmp_zca_s1 PASS with UVM_ERROR 0 and the pinned red RED-OK on out_head6 (gen_tdd_batch2.md Section 2b); docstring updated; staged red entry reads (RED-OK). |
 | TB-R11 | dependency | isa_pc_next bit 0 on odd jalr/c.jr/c.jalr (B13): isa_cti FAILed through uvm_error | CLOSED (3e) | l9_isa_cti_s1 PASS with UVM_ERROR 0 and the pinned red RED-OK on out_head6 (Section 2b); the comparator counts the exception, B13's xfail item owns the bug. |
+
+## Cross-model review of 65b7228..aa13338 (the isa_alu touch, APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/` artifact d430aa1; relay ids CM106-*)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM106-L-1 | low | the cm92_* family prose placed the greens on out_head15 while the rows and gen_tdd_batch2.md place them on out_head16, and gen_cm92_isa_alu_wrap_sites.log reported the out_head15 draft runs | FIXED (this touch) | The family prose reads out_head16; the wrap-sites log is regenerated from the out_head16 runs (verdicts and sites from those runs and the rebuilt, byte-identical images), and Section 5 says its first version reported the draft runs. |
+| CM106-L-2 | low | the seed-1 full green lacked the run header line | FIXED (this touch) | gen_cm92_isa_alu_s1_stdout.log carries its run header line first (sources_sha, template_sha, test_sha), as the excerpts do; the red and the three greens were re-run on out_head16 with the corrected test so the headers name the committed test_sha. |
+| CM106-L-3 | low | the layout assert hand-encoded 0x80001000 beside a MEMORY_MAP-derived base | FIXED (this touch) | The assert states the invariant itself: base + o.off + (0x7FFFF << 12) >= 1 << 32; the placement-invariant probe re-run on this form fires for seeds 1..3 with the sites forced to the start. |
+| CM106-L-4 | low | the space units were tagged wrap = False although they carry out of the 32-bit add, so check_coverage counted them toward the no-carry combos | FIXED (this touch) | The tag reads imm20 bit 19 or the space unit, with the comment corrected; the combos assert still holds (the no-carry combos come from the capped random case). |
+| CM106-L-5 | low | the space predicate detects only the upward wrap; the downward wrap becomes reachable with WP-9's low page | FIXED (this touch) | The fire check's comment names the downward wrap and WP-9 as the point where the floor widens; the predicate is unchanged until then. |
+| CM106-L-6 | low | the commit subject's "473 declared bins" (the manifest has 602) | NO CHANGE | The Orchestrator's, recorded in the log. |

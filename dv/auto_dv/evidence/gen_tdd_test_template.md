@@ -541,3 +541,20 @@ the first fetch (knob_dmem_intg_err_rate needs a irq handler), with +gen_dbus_in
 +gen_knob_irq_regime=quiet pinned it passes with the banner naming the pin, pinned=knob_irq_regime, a knob outside the test's schedulable
 (the t2cm88_csr_reset_* excerpts). Verified from a detached archive of HEAD with the touch overlaid
 (dv/auto_dv/work/test-writer/head_final_selftest_closure.log names the HEAD).
+
+## 17. The closure-touch review (CM99-L-1, L-2) and the Critic's T-226 v2 shapes: rebinding through any target form, class keywords on bases
+
+gen_t226v2_lint_probes.log (md5 2db4ec668fd054d97c909e1c9a0707f3) runs the reviewers' shapes on HEAD's library before and after the change. Before: `self.cmd, x = _f, 1`,
+`*self.cmd, = (_f,)`, `for self.cmd in (_f,):`, `with open(p) as self.cmd:` and `[0 for self.cmd in (_f,)]` were accepted in a method, as were
+`t.cmd, x = _f, 1` and `for t.cmd in (_f,):` in a helper (the rebinding checks read bare Assign / AugAssign / AnnAssign targets only); a
+metaclass on a nameless module-local base (`class B(GenTest, metaclass=ABCMeta): pass` then `class T(B): name = ...`) passed
+check_regime_handlers_source because the keyword check ran after the nameless-class skip. Change (gen_test_lib.py 1bc50d415275): rebind_targets()
+flattens every assignment target of a statement or clause (Assign targets, AugAssign / AnnAssign / for / comprehension targets, with items,
+and the elements of tuple, list and starred targets) and both rebinding checks walk it, reporting the target's line; the class-keyword refusal
+moves before the name check so every GenTest-derived class is covered; five F_OVERRIDE, two F_HELPER and one structural red source join the
+self-test, and the helper given self.bridge joins the alias as a shape asserted accepted (both listed as passing in the API doc, CR-T226v2-M-1).
+After the change every probed rebinding and the base-class keyword are refused, `for self.failures in ([],)` (a verdict attribute) stays
+accepted as listed, and the alias and the helper given self.bridge stay accepted. The API doc's structural count reads sixteen, its
+check_regime_handlers paragraph names the class keyword on any GenTest-derived class, and the residual paragraph says the same target forms
+naming a template method are refused. Verified from a detached archive of HEAD with the touch overlaid
+(dv/auto_dv/work/test-writer/head_final_selftest_rows.log names the HEAD).

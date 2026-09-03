@@ -599,7 +599,7 @@ def build_u_ext_units(rng):
         ops.append(u_unit(rng, I006, "auipc", rng.choice((0, rng.randint(0x80000, 0xFFFFF), rng.randint(1, 0x7FFFF))), rd=pick(rng)))
     for o in ops:
         if o.op == "auipc":
-            o.tags["wrap"] = o.imm >= 0x80000     # pc >= 0x80000000 in the program window: carry out iff imm20 bit 19
+            o.tags["wrap"] = o.imm >= 0x80000 or bool(o.tags.get("space"))   # carry out of the 32-bit add: imm20 bit 19 anywhere in the window, or the space unit from pc >= 0x80001000
     return ops
 
 
@@ -1192,7 +1192,7 @@ def plan(seed, red=False, red_item=None):
     base = MEMORY_MAP["boot_page"]
     red_note = apply_red(rng, ops, red_item, lambda o: base + o.off) if red else ""
     body, sites, insns = render(ops, filler_init)
-    assert all(base + o.off >= 0x80001000 for o in ops if o.tags.get("space")), "TP-ISA-006 address-space wrap site inside the first 4 KiB"
+    assert all(base + o.off + (0x7FFFF << 12) >= 1 << 32 for o in ops if o.tags.get("space")), "TP-ISA-006 address-space wrap site: the 33-bit sum stays inside the space"
     kinds = [o.kind for o in ops]
     summary = {"imm": kinds.count("imm"), "slt_i": kinds.count("slt_i"), "hint_pairs": kinds.count("hint_pair"),
                "hint_blocks": kinds.count("hint_block"), "u": kinds.count("u"), "reg": kinds.count("reg"),
