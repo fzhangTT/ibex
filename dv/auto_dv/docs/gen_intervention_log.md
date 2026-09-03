@@ -1438,3 +1438,11 @@ communication rules that failed twice today (background subagents only, answer w
 minutes from date -u). All of the predecessor's uncommitted work stays on disk and belongs to the new instance. Same class
 as LOG-043; the remedy is the same, the pattern (a foreground fan-out during which the inbox is unread) is now the leading
 cause of lost time on this team.
+
+## A-002 - 2026-09-03 - Owner ruling: no rm on variable-built paths
+
+The owner reports repeated harness warnings of the form "rm operation on possibly-empty variable path: $S/$prog" and rules:
+stop doing remove with variables. Effective for the Orchestrator and every teammate: no rm (or rm -rf) whose target is
+built from a shell variable; delete only literal paths that were listed first, or move files into a scratch trash directory
+and leave them; cleanup of review run directories and worktrees goes through git worktree remove on a listed path. The
+Orchestrator's own scripts are amended (LOG-040 and LOG-048 cleanups used variable paths); teammates are told in writing.
