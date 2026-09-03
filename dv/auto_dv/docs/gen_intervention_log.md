@@ -911,3 +911,19 @@ fix does not touch the failing path is an honesty defect, not a low.
 The DV Lead's batch-2 ruling that TP-CMP-001's ">= 5000 instructions" floor becomes >= 3000 retired per seed with
 the per-form floors governing (the template's single-program budget caps a seed near 3800; batch-2 evidence in
 dv/auto_dv/evidence/gen_tdd_batch2.md) is confirmed. The plan cites this entry, not a time of day.
+
+## LOG-036 - 2026-09-03 - GATE + RULE (plan v2k broke the committed library self-test; joint landings for group changes)
+
+The Critic's revised v6 (dv/auto_dv/docs/gen_critic_plan_witness_v6.md) finds, and the Orchestrator reproduced
+from a detached checkout of HEAD with no environment variable, that the library self-test is red since 5f530a8:
+plan v2k moved TP-CSR-026, TP-CSR-029 and TP-CSR-031 out of gen_csr_trap_setup while the committed
+gen_test_csr_trap_setup declares them, and the two-sided not_built guard reads the plan's groups, so it fails with
+"outside the group". The Orchestrator's detached-checkout verification covered the Test Writer landing (7f78c41)
+but was not repeated after the plan landing, although the guard couples the two. Rules: (1) a plan change that
+moves or removes an item a committed test builds or declares lands in the same commit as the Test Writer's matching
+test and manifest change (joint landing), never alone; (2) the committer runs the library self-test from a detached
+checkout after every landing that touches gen_test_plan.md, the trace CSVs or dv/auto_dv/tests. Resolution: v2l
+(TP-CSR-029 back in gen_csr_trap_setup; only 026 and 031 move) and the Test Writer's gen_test_csr_trap_setup change
+(026 and 031 removed from its not_built, manifest re-rendered) land as one joint commit. T-153 re-retain scope is
+four logs (rst_boot, csr_reset, csr_trap_setup, pmp_csr_warl); isa_cti and cmp_zca stay STALE for a different cause
+(comparator rows pending T-144 and the R10 shim row) and the check must label the cause.
