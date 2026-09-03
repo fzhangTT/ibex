@@ -1,0 +1,29 @@
+ci/jenkins/selftest.sh: line 23: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 23: ci_report_results: command not found
+FAIL: report: pass log exits 0 — expected exit 0, got 127
+ci/jenkins/selftest.sh: line 24: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 24: ci_report_results: command not found
+FAIL: report: fail log exits nonzero — expected exit 1, got 127
+ci/jenkins/selftest.sh: line 25: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 25: ci_report_results: command not found
+FAIL: report: missing regr.log exits nonzero — expected exit 1, got 127
+ci/jenkins/selftest.sh: line 29: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 29: ci_reserve_out: command not found
+FAIL: reserve: fresh dir ok — expected exit 0, got 127
+FAIL: reserve: no sentinel
+ci/jenkins/selftest.sh: line 31: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 31: ci_reserve_out: command not found
+FAIL: reserve: prior run/ rejected — expected exit 1, got 127
+ci/jenkins/selftest.sh: line 32: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 32: ci_reserve_out: command not found
+FAIL: reserve: foreign sentinel rejected — expected exit 1, got 127
+ci/jenkins/selftest.sh: line 34: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 34: ci_reserve_out: command not found
+FAIL: reserve: matching owner token accepted — expected exit 0, got 127
+ci/jenkins/selftest.sh: line 35: ./common.sh: No such file or directory
+ci/jenkins/selftest.sh: line 35: ci_reserve_out: command not found
+FAIL: reserve: mismatched owner token rejected — expected exit 1, got 127
+SKIP: lsf cancel (smoke.sh not yet present)
+
+selftest: 9 failure(s)
+exit=1

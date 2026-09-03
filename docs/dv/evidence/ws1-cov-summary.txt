@@ -1,0 +1,72 @@
+WS1 gate evidence: COV=1 coverage run (Task 7)
+================================================
+
+Command used:
+
+  source ci/env.sh && cd dv/uvm/core_ibex && \
+  make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
+       TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_ws1_cov
+
+Raw evidence (rerun at commit 56acf9c8, see ws1-manifest.txt):
+
+  ws1-cov-regr.log          -- full regr.log, 100.00% PASS
+  ws1-cov-dashboard.txt     -- urg report/dashboard.txt (Total Coverage
+                               Summary and per-hierarchy scores)
+  ws1-cov-fcov-log-tail.txt -- tail of the riscv-dv functional-coverage
+                               sim log (instructions processed, TEST
+                               PASSED, 0 UVM_ERROR/UVM_WARNING)
+  ws1-manifest.txt          -- tool versions and sha256 of the (uncommitted)
+                               merged.vdb this run produced
+
+This is not a plain vanilla build: it compiles in the FCIBH workaround
+(`+define+FCOV_NO_DEFAULT_SEQUENCE`, see fix history below), which is VCS-only
+and does not affect any other simulator's build.
+
+--------------------------------------------------------------------
+Fix history: FCIBH illegal-bin-hit workaround
+--------------------------------------------------------------------
+The first COV=1 attempt (OUT=out_cov) FAILED the test: VCS raised a
+fatal coverage "VERIFICATION ERROR" and aborted simulation after only
+2064350 ps:
+
+  Error-[FCIBH] Illegal bin hit
+  dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv, 588 (covergroup core_ibex_fcov_if::uarch_cg)
+  Illegal transition bin illegal_transitions of coverpoint cp_controller_fsm
+  got hit with transition RESET=>RESET
+
+Cause: `illegal_bins illegal_transitions = default sequence;` on
+cp_controller_fsm / cp_controller_fsm_sleep relies on SystemVerilog's
+`default sequence`, which VCS does not implement (the source already
+carried an in-source TODO to this effect since 2022, commit aee235cfa).
+VCS instead treats every unlisted transition — including legal
+self-loops like RESET=>RESET — as an illegal-bin hit, which is fatal.
+This only surfaces once the fcov covergroups are built/sampled, i.e.
+only under COV=1 (Task 6's COV=0 run never enabled +enable_ibex_fcov or
+-cm and so never hit it).
+
+Fix (VCS-only, gated by a compile-time macro so no other simulator's
+build is affected):
+
+  dv/uvm/core_ibex/fcov/core_ibex_fcov_if.sv
+    Both `illegal_bins illegal_transitions = default sequence;` blocks
+    (cp_controller_fsm, cp_controller_fsm_sleep) wrapped in
+    `` `ifndef FCOV_NO_DEFAULT_SEQUENCE `` / `` `endif ``.
+
+  dv/uvm/core_ibex/yaml/rtl_simulation.yaml
+    `+define+FCOV_NO_DEFAULT_SEQUENCE` added to the vcs tool's compile
+    cmd only (no other simulator entry touched).
+
+Confirmed clean of FCIBH hits on the final rerun too
+(`grep -c "FCIBH" out_ws1_cov/run/tests/riscv_arithmetic_basic_test.1/rtl_sim_stdstreams.log`
+== 0, see ws1-manifest.txt for the run this was checked against).
+
+Step 3 — vRefine waiver caveat (design-time finding, independent of the
+above):
+
+  $ grep -rn vRefine dv/uvm/core_ibex/scripts/ || echo NOT-APPLIED
+  NOT-APPLIED
+
+dv/uvm/core_ibex/waivers/aux_code.vRefine and .../unr.vRefine exist but
+are not referenced anywhere in scripts/merge_cov.py (or any other
+script) — the coverage waivers are not applied to the urg merge. Record
+for BUILD_AND_SIM.md gotchas.

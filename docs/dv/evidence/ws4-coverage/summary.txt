@@ -1,0 +1,48 @@
+WS4 gate evidence: coverage-reduced run (Run B) — alternate testlist
+=======================================================================
+
+Verdict: PASS. Proves T5 (coverage.sh COV=1 artifacts) and the dual-suite
+knob (--testlist override selects the alternate one-entry suite instead of
+the stock all_riscvdv list).
+
+Invocation
+------------
+  bash -lc 'timeout 3600 ci/jenkins/coverage.sh --testlist /tmp/ws4-alt-testlist.yaml \
+    --test all_riscvdv --iterations 1 --seed 1 --out out_ci/gate-cov'
+
+Alt testlist (alt-testlist.yaml in this dir) is the riscv_arithmetic_basic_test
+entry copied VERBATIM from dv/uvm/core_ibex/riscv_dv_extension/testlist.yaml
+lines 5-17 (diff-checked identical against the source at run time).
+
+HEAD SHA at launch: ea5c197436fa132284e4577f45863053c77457f6
+Launched (UTC):      2026-09-02 23:13:28
+regr.log written:    2026-09-02 23:15:12.12 UTC (2026-09-02 19:15:12.12 EDT)
+Wall clock:           ~104 seconds
+VCS version:         Chronologic VCS (TM) Version X-2025.06-SP2_Full64 -- Wed Sep 2 19:13:44 2026
+OUT path:             dv/uvm/core_ibex/out_ci/gate-cov (not committed; regr.log/dashboard.txt copied here)
+
+Result (regr.log, copied verbatim as regr.log in this dir)
+-------------------------------------------------------------
+  100.00% PASS 1 PASSED, 0 FAILED
+  riscv_arithmetic_basic_test.1: PASS
+
+Exactly 1 test ran — dual-suite knob proven. The stock all_riscvdv testlist
+has many entries; regr.log lists only riscv_arithmetic_basic_test.1, so the
+--testlist override, not the --test all_riscvdv default, is what selected the
+suite actually executed.
+
+Dashboard score line (dashboard.txt, copied verbatim in this dir)
+----------------------------------------------------------------------
+  Total Coverage Summary
+  SCORE  LINE   TOGGLE FSM    BRANCH ASSERT GROUP
+   52.13  70.46  39.37  20.93  62.52  85.63  33.86
+
+Artifacts confirmed present (OUT=dv/uvm/core_ibex/out_ci/gate-cov, not
+committed — binaries stay out-of-tree per dv_principles):
+  run/coverage/merged.vdb              -- present
+  run/coverage/report/dashboard.txt    -- present (copied here)
+  run/coverage/merged_vdb.tgz          -- present
+
+sha256sum of merged_vdb.tgz (NOT committed — binary; hash recorded for
+repro/verification only):
+  ab1722cd453440f82d43120c02951933ec94d6094d0a1f16c00be091149a59b8  merged_vdb.tgz

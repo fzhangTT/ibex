@@ -1,0 +1,15 @@
+VERDICT: REQUEST-CHANGES
+
+Findings:
+
+- [CRITICAL][testlist.yaml:572] The cocotb-only test is included unconditionally in the default `TEST=all` regression, while its `+cocotb_irq_count=3` causes the non-cocotb path to `uvm_fatal` at [core_ibex_base_test.sv:227](/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_base_test.sv:227). Thus the default `COCOTB=0` regression necessarily fails, violating stock-flow neutrality. The identity evidence only runs one explicitly selected arithmetic test and misses this. — Exclude cocotb-only entries from `TEST=all` when `COCOTB=0`, while retaining the fatal for explicit misuse; add default-regression evidence.
+
+- [CRITICAL][ws2-milestone-b.log:48] The claimed mutation proof is not trust-triad compliant. Changing the stimulus count to zero tests the checker, but there is no named mutation record, no `+disable_cosim=1` hidden-referee control, and no checker-ablation run where the assertion is disabled and the same mutation survives. The report also records the positive run before this negative experiment, so no committed TDD red→green evidence exists. — Perform and record the prescribed mutation/ablation sequence; supply genuine historical TDD evidence or record an explicit approved exception rather than claiming the full triad.
+
+- [IMPORTANT][test_irq_from_python.py:80] Handler-entry accounting still permits a broken 1:1 relationship: `count > triggers_sent` emits only a warning, while `count >= required` passes. Moreover, [core_ibex_tb_top.sv:487](/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tb/core_ibex_tb_top.sv:487) counts every primary-core `IRQ_TAKEN` entry, regardless of source, and resets on DUT reset. This contradicts [TB_CONTRACT.md:63](/localdev/fzhang/ws/ibex/docs/dv/TB_CONTRACT.md:63), which describes a monotonic counter advancing once per serviced stimulus. — Fail unexpected over-counts and use source-isolated accounting, or document the counter’s actual broad/reset semantics and require an intent-derived expected-count model.
+
+- [IMPORTANT][TB_CONTRACT.md:108] The coverage duty says enforcement is unconditional, but the implementation skips manifests unless `COV=1`; the document supplies neither the manifest path/schema nor that required knob, instead referring elsewhere. An author reading only this binding contract cannot create or enforce a compliant manifest. — Inline the manifest location and YAML schema, `COV=1` requirement, per-test/pre-merge behavior, anti-vacuity rule, and generated-covergroup namespace rule.
+
+- [IMPORTANT][TB_CONTRACT.md:8] The binding interface has no runnable command despite the WS2 plan requiring “how to run.” From this document alone, an author cannot determine the working directory or required `make` parameters such as `SIMULATOR`, `TEST`, `COCOTB_MODULE`, seed, `OUT`, and coverage mode. — Add a generic end-to-end command using placeholders for the author’s test and module.
+
+The committed fcov manifest names real, non-vacuous interrupt-taken bins, and the process report records a successful isolated `COV=1` query. All cited WS2 process-log references and commit IDs resolve. No files were modified.

@@ -1,0 +1,43 @@
+Running new bashrc
+
+mex-agent@0.8.0 | MIT | deps: 18 | versions: 13
+Persistent project memory and deterministic local code graphs for AI coding agents
+https://github.com/mex-memory/mex#readme
+
+keywords: ai, agents, scaffold, drift-detection, documentation, code-graph, tree-sitter, sqlite, cli, claude, cursor, copilot
+
+bin: mex
+
+dist
+.tarball: https://registry.npmjs.org/mex-agent/-/mex-agent-0.8.0.tgz
+.shasum: 820d6ab32afe063b1ef713706f44f744b9a6cbc9
+.integrity: sha512-++P+2rXa21/duGwjV6cEtIAzMhrImdor1E0/+FZaD4PiD1n5W23j3IAey3S1hZAy4PMTrSC2d4YMHU/FRQuIjw==
+.unpackedSize: 20.0 MB
+
+dependencies:
+@hono/node-server: ^1.19.17
+chalk: ^5.4.1
+commander: ^13.1.0
+cross-spawn: ^7.0.6
+glob: ^13.0.6
+hono: ^4.13.3
+ink: ^7.0.3
+posthog-node: ^5.21.2
+react: ^19.2.6
+remark-frontmatter: ^5.0.0
+remark-parse: ^11.0.0
+simple-git: ^3.27.0
+typescript: 5.9.3
+unified: ^11.0.5
+unist-util-visit: ^5.0.0
+web-tree-sitter: ^0.25.10
+yaml: ^2.7.0
+zod: ^3.25.76
+
+maintainers:
+- daksh_jaitly <thedakshjaitly@gmail.com>
+
+dist-tags:
+latest: 0.8.0
+
+published 8 hours ago by daksh_jaitly <thedakshjaitly@gmail.com>

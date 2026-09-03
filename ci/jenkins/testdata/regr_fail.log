@@ -1,0 +1,25 @@
+50.00% PASS 1 PASSED, 1 FAILED
+test_summary:
+  riscv_arithmetic_basic_test.1: FAILED
+  mcounteren_test.1: PASSED
+
+################################################################################
+# Details of failing tests
+################################################################################
+riscv_arithmetic_basic_test.1
+------------------------------
+binary: riscv_arithmetic_basic_test.1/test.bin
+rtl_log: riscv_arithmetic_basic_test.1/rtl_sim.log
+rtl_trace: riscv_arithmetic_basic_test.1/trace_core_00000000.log
+iss_cosim_trace: riscv_arithmetic_basic_test.1/spike.log
+FAILURE: cosim mismatch at PC 0x8000_0124 (see rtl_trace).
+
+################################################################################
+# Details of passing tests
+################################################################################
+mcounteren_test.1
+-----------------
+binary: mcounteren_test.1/test.bin
+rtl_log: mcounteren_test.1/rtl_sim.log
+rtl_trace: mcounteren_test.1/trace_core_00000000.log
+iss_cosim_trace: mcounteren_test.1/spike.log

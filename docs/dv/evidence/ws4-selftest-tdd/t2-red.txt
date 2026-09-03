@@ -1,0 +1,5 @@
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc spike=/localdev/fzhang/ws/tools/spike-ibex-cosim
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+AssertionError: /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/riscv_dv_extension/testlist.yaml
+exit=1

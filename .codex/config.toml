@@ -1,0 +1,26 @@
+# Codex client config for the ibex auto-dv fork (full tree). MCP servers below (WS5).
+project_doc_fallback_filenames = ["CLAUDE.md"]
+project_doc_max_bytes = 65536
+
+# MCP servers (WS5). The cleanroom ships the three local servers via its own Zone A
+# variant of this file (no atlassian); see docs/dv/FENCE.md. Launch logic lives in
+# ci/mcp/*.sh (single source of truth); entries here only locate those wrappers.
+# startup_timeout_sec raised from the 10s default: covers ci/env.sh's module-load cost and
+# fsdb-mcp-server's lazy-import first tools/list (~15-20s, Task 1 finding).
+[mcp_servers.siliconpilot]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh\""]
+startup_timeout_sec = 60
+
+[mcp_servers.fsdb-mcp-server]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh\""]
+startup_timeout_sec = 60
+
+[mcp_servers.verdi-cov-mcp]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh\""]
+startup_timeout_sec = 60
+
+[mcp_servers.atlassian]
+url = "https://mcp.atlassian.com/v1/mcp"

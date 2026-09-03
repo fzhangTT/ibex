@@ -1,0 +1,6 @@
+Running new bashrc
+
+changed 121 packages in 12s
+
+75 packages are looking for funding
+  run `npm fund` for details

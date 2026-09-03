@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Mock bkill: records its arguments so the selftest can inspect which job id it got.
+echo "$@" >> "${LSF_STUB_LOG:?LSF_STUB_LOG must be set}"

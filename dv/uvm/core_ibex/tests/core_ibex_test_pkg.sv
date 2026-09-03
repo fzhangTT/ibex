@@ -16,6 +16,9 @@ package core_ibex_test_pkg;
   import ibex_pkg::*;
   import ibex_cosim_agent_pkg::*;
   import push_pull_agent_pkg::*;
+`ifdef COCOTB_SIM
+  import core_ibex_cocotb_pkg::*;
+`endif
 
   typedef struct {
     ibex_pkg::opcode_e  opcode;

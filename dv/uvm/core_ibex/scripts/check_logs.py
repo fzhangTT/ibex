@@ -10,9 +10,11 @@ Pass/fail criteria is determined by any errors found.
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
+import subprocess
 import sys
 import pathlib3x as pathlib
 
+from metadata import RegressionMetadata
 from test_entry import read_test_dot_seed
 from test_run_result import TestRunResult, Failure_Modes
 
@@ -81,6 +83,35 @@ def compare_test_run(trr: TestRunResult) -> TestRunResult:
     return trr
 
 
+def check_fcov_expectations(md: RegressionMetadata, trr: TestRunResult) -> TestRunResult:
+    """Enforce the test's declared-coverage manifest (dv_principles.md §6, triad rule 3).
+
+    A manifest at fcov_expectations/<testname>.fcov.yaml declares bins the test must
+    hit; a declared-but-unhit bin (or an unverifiable query) fails the test with the
+    distinct FCOV_EXPECTATION mode. No manifest, or COV disabled, is a no-op.
+    """
+    manifest = md.ibex_dv_root / 'fcov_expectations' / f'{trr.testname}.fcov.yaml'
+    if not md.cov or not manifest.is_file():
+        return trr
+    checker = md.ibex_dv_root.parents[2] / 'ci' / 'check_fcov_expectations.py'
+    cp = subprocess.run(
+        [sys.executable, str(checker),
+         '--manifest', str(manifest),
+         '--vdb', str(md.dir_shared_cov / 'test.vdb'),
+         '--cm-name', f'test_{trr.testname}_{trr.seed}'],
+        capture_output=True, text=True)
+    if cp.returncode != 0:
+        trr.passed = False
+        trr.failure_mode = Failure_Modes.FCOV_EXPECTATION
+        trr.failure_message = ("[FAILED]: declared functional-coverage expectation not met\n"
+                               + cp.stdout + cp.stderr)
+    elif trr.failure_mode == Failure_Modes.FCOV_EXPECTATION:
+        # A rerun reloads the previous trr.yaml; clear a stale verdict we now supersede.
+        trr.failure_mode = Failure_Modes.NONE
+        trr.failure_message = None
+    return trr
+
+
 def _main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir-metadata',
@@ -94,6 +125,9 @@ def _main() -> int:
     trr = TestRunResult.construct_from_metadata_dir(args.dir_metadata, f"{tds[0]}.{tds[1]}")
 
     trr = compare_test_run(trr)
+    if trr.passed:
+        md = RegressionMetadata.construct_from_metadata_dir(args.dir_metadata)
+        trr = check_fcov_expectations(md, trr)
     trr.export(write_yaml=True)
 
     # Always return 0 (success), even if the test failed. We've successfully

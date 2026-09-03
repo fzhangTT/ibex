@@ -1,0 +1,37 @@
+Command: /localdev/fzhang/ws/ibex-cleanroom/dv/auto_dv/out_gate/vcs_simv +vcs+lic+wait +ntb_random_seed=1 -l dv/auto_dv/out_gate/run1/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  2 21:56 2026
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_root.svh(407) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2.Synopsys
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+GEN_SMOKE: seed = 1
+GEN_SMOKE: fetch enabled at 29500
+GEN_SMOKE: magic store observed with expected value 0x000005a5 at 33500
+GEN_SMOKE: check evaluated 1 time(s), fail_count = 0
+GEN_SMOKE: TEST PASSED
+$finish called from file "dv/auto_dv/gen_smoke_tb.sv", line 215.
+$finish at simulation time                53500
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 535000 ps
+CPU Time:      0.150 seconds;       Data structure size:   0.6Mb
+Wed Sep  2 21:56:52 2026

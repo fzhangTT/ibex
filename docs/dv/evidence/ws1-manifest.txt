@@ -1,0 +1,55 @@
+WS1 gate evidence: run manifest
+================================
+
+All three gates below (smoke, small, coverage) were executed at this commit,
+from a fresh shell (`bash -c 'set -euo pipefail; cd <repo> && source ci/env.sh && ...'`),
+each with a fresh OUT tree:
+
+Commit SHA: 56acf9c806ce260c87f6c1f6994005c5dbb2f23b
+  ([ci] Make env.sh nounset-safe, load gcc-toolset-11, and fail loud)
+
+Tool versions (as resolved by ci/env.sh on this host):
+
+  $ vcs -full64 -ID | head -1
+  vcs script version : X-2025.06
+
+  $ gcc --version | head -1
+  gcc (GCC) 11.2.1 20220127 (Red Hat 11.2.1-9)
+
+  $ "$RISCV_GCC" --version | head -1
+  riscv32-unknown-elf-gcc (crosstool-NG 1.24.0.498_5075e1f) 10.2.0
+
+  $ spike --help 2>&1 | head -1
+  Spike RISC-V ISA Simulator 1.1.1-dev
+
+  $ python3 --version
+  Python 3.12.10
+
+merged.vdb (uncommitted binary artifact, VCS coverage database directory):
+
+  Location: dv/uvm/core_ibex/out_ws1_cov/run/coverage/merged.vdb (deleted
+  after evidence capture, per cleanup policy; not tracked in git)
+
+  Hash method: sha256 of each file under merged.vdb (sorted by relative
+  path), then sha256 of that sorted file-hash list — avoids hashing
+  directory-entry order/mtimes, which VDBs don't guarantee are stable.
+
+    $ find merged.vdb -type f -print0 | sort -z | xargs -0 sha256sum \
+        | sha256sum
+
+  merged.vdb aggregate sha256: 2e601286998f779b8cc3b9f9bd9d3147f7ba11167e4cb3abb3b6ec211ffd42d7
+  (44 files hashed)
+
+Gate commands run (fresh OUT= each):
+
+  smoke:    make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 OUT=out_ws1_smoke
+  small:    make SIMULATOR=vcs IBEX_CONFIG=small     ISS=spike TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 OUT=out_ws1_small
+  coverage: make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike TEST=riscv_arithmetic_basic_test ITERATIONS=1 SEED=1 COV=1 OUT=out_ws1_cov
+
+Raw evidence committed alongside this manifest:
+  ws1-smoke-regr.log, ws1-smoke-tbconfig.txt
+  ws1-small-regr.log, ws1-small-tbconfig.txt
+  ws1-cov-regr.log, ws1-cov-dashboard.txt, ws1-cov-fcov-log-tail.txt
+
+All three OUT trees (out_ws1_smoke, out_ws1_small, out_ws1_cov) were removed
+after the evidence above was extracted; out*/ is gitignored regardless.

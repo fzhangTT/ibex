@@ -1,0 +1,92 @@
+// Declarative pipeline for the ibex auto-DV fork. Job setup: ci/jenkins/README.md.
+pipeline {
+    agent { label 'lsf-submit' }
+    // Global bound must cover the worst case of all stages running serially (2 + 10 + 12 = 24h).
+    options { timestamps(); buildDiscarder(logRotator(numToKeepStr: '30')); timeout(time: 24, unit: 'HOURS') }
+    parameters {
+        booleanParam(name: 'RUN_SMOKE',    defaultValue: true,  description: 'Run the smoke regression')
+        booleanParam(name: 'RUN_NIGHTLY',  defaultValue: false, description: 'Run TEST=all at testlist iterations')
+        booleanParam(name: 'RUN_COVERAGE', defaultValue: false, description: 'Run TEST=all with COV=1')
+        string(name: 'IBEX_CONFIG',       defaultValue: 'opentitan', description: 'ibex_configs.yaml config name')
+        string(name: 'TESTLIST',          defaultValue: '', description: 'riscv-dv testlist override (suite knob; empty = stock)')
+        string(name: 'DIRECTED_TESTLIST', defaultValue: '', description: 'directed testlist override (empty = stock)')
+        string(name: 'LSF_QUEUE',         defaultValue: 'regress', description: 'LSF queue')
+        string(name: 'JOBS',              defaultValue: '8', description: 'LSF slots / make -j')
+        string(name: 'COCOTB_MODULE',     defaultValue: '', description: 'cocotb Python module (empty = no cocotb overlay; non-empty implies COCOTB=1)')
+    }
+    environment {
+        P_CONFIG = "${params.IBEX_CONFIG}"
+        P_TL     = "${params.TESTLIST}"
+        P_DTL    = "${params.DIRECTED_TESTLIST}"
+        P_QUEUE  = "${params.LSF_QUEUE}"
+        P_JOBS   = "${params.JOBS}"
+        P_COCOTB_MODULE = "${params.COCOTB_MODULE}"
+    }
+    stages {
+        stage('Smoke') {
+            when { expression { params.RUN_SMOKE } }
+            options { timeout(time: 2, unit: 'HOURS') }
+            steps {
+                sh '''
+                    set -u
+                    args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/smoke-b${BUILD_NUMBER}" )
+                    [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
+                    [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
+                    ci/jenkins/smoke.sh "${args[@]}"
+                '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/smoke-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/smoke-b*/run/report.html, dv/uvm/core_ibex/out_ci/smoke-b*/run/regr.log'
+                }
+            }
+        }
+        stage('Nightly') {
+            when { expression { params.RUN_NIGHTLY } }
+            options { timeout(time: 10, unit: 'HOURS') }
+            steps {
+                sh '''
+                    set -u
+                    args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/nightly-b${BUILD_NUMBER}" )
+                    [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
+                    [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
+                    ci/jenkins/nightly.sh "${args[@]}"
+                '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/nightly-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/nightly-b*/run/report.html, dv/uvm/core_ibex/out_ci/nightly-b*/run/regr.log'
+                }
+            }
+        }
+        stage('Coverage') {
+            when { expression { params.RUN_COVERAGE } }
+            options { timeout(time: 12, unit: 'HOURS') }
+            steps {
+                sh '''
+                    set -u
+                    args=( --lsf --lsf-queue "$P_QUEUE" --jobs "$P_JOBS" --config "$P_CONFIG" --out "out_ci/coverage-b${BUILD_NUMBER}" )
+                    [ -n "$P_TL" ]  && args+=( --testlist "$P_TL" )
+                    [ -n "$P_DTL" ] && args+=( --directed-testlist "$P_DTL" )
+                    [ -n "$P_COCOTB_MODULE" ] && args+=( --cocotb --cocotb-module "$P_COCOTB_MODULE" )
+                    ci/jenkins/coverage.sh "${args[@]}"
+                '''
+            }
+            post {
+                always {
+                    junit testResults: 'dv/uvm/core_ibex/out_ci/coverage-b*/run/regr_junit.xml'
+                    archiveArtifacts artifacts: 'dv/uvm/core_ibex/out_ci/coverage-b*/run/report.html, dv/uvm/core_ibex/out_ci/coverage-b*/run/regr.log, dv/uvm/core_ibex/out_ci/coverage-b*/run/coverage/report/**, dv/uvm/core_ibex/out_ci/coverage-b*/run/coverage/merged_vdb.tgz'
+                }
+            }
+        }
+    }
+    post {
+        // Publication is per-stage and strict (no allowEmpty): a stage that ran but
+        // produced no junit/report must turn the build red, never stay silently green.
+        cleanup { sh 'rm -rf dv/uvm/core_ibex/out_ci' }
+    }
+}

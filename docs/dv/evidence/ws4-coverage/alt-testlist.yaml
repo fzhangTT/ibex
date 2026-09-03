@@ -1,0 +1,13 @@
+- test: riscv_arithmetic_basic_test
+  description: >
+    Arithmetic instruction test, no load/store/branch instructions
+  gen_opts: >
+    +instr_cnt=10000
+    +num_of_sub_program=0
+    +no_fence=1
+    +no_data_page=1
+    +no_branch_jump=1
+    +boot_mode=m
+  iterations: 10
+  gen_test: riscv_instr_base_test
+  rtl_test: core_ibex_base_test

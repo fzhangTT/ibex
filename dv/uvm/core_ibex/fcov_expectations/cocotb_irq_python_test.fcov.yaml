@@ -1,0 +1,8 @@
+# fcov-expectation manifest for cocotb_irq_python_test (WS2 Milestone B).
+# Format + semantics: ci/check_fcov_expectations.py docstring and .claude/skills/fcov-expectation.
+# Both bins require the controller to actually take an interrupt (not just see one pending), so
+# a run where cocotb's irq triggers were never serviced (e.g. a COCOTB_MODULE mismatch) scores 0
+# on both -- not an always-true sample.
+bins:
+  - uarch_cg.cp_interrupt_taken.irq_external   # cocotb_irq_raise_seq randomizes irq_external==1 exclusively
+  - uarch_cg.cp_controller_fsm.out_of_decode2  # DECODE => IRQ_TAKEN transition

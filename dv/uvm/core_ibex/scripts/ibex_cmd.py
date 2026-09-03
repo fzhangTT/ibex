@@ -187,3 +187,31 @@ def filter_tests_by_config(cfg: ibex_config.Config,
                 filtered_test_list.append(test)
 
     return filtered_test_list
+
+
+@typechecked
+def filter_cocotb_only_tests(cocotb_enabled: bool, requested_test: str,
+                             test_list: _TestEntries) -> _TestEntries:
+    """Filter out cocotb-only tests from a wildcard selection when COCOTB=0.
+
+    A testlist entry marked `cocotb: 1` needs the cocotb overlay compiled in (its sim_opts
+    carry a +cocotb_* plusarg that the rtl_test uvm_fatals on without COCOTB_SIM, per
+    TB_CONTRACT.md's vacuous-pass guard). Pulling such an entry into a stock (COCOTB=0)
+    'all'/'all_riscvdv' regression would fail that regression outright, so it is excluded
+    when selected only via a wildcard. An entry named explicitly in `requested_test` is
+    never filtered, so the uvm_fatal still guards deliberate COCOTB=0 misuse.
+    """
+    if cocotb_enabled:
+        return test_list
+
+    requested_names = requested_test.split(',')
+    filtered_test_list = []
+    for test in test_list:
+        if test.get('cocotb') and test['test'] not in requested_names:
+            logger.warning(
+                f"Rejecting test: {test['test']}. It requires COCOTB=1 (cocotb: 1 in the "
+                f"testlist) and COCOTB=0 with no explicit selection of this test was given.")
+            continue
+        filtered_test_list.append(test)
+
+    return filtered_test_list

@@ -17,6 +17,10 @@ class core_ibex_base_test extends uvm_test;
   virtual core_ibex_csr_if                        csr_vif;
   mem_model_pkg::mem_model                        mem;
   core_ibex_vseq                                  vseq;
+`ifdef COCOTB_SIM
+  core_ibex_cocotb_monitor                        cocotb_monitor;
+  virtual core_ibex_cocotb_if                     cocotb_vif;
+`endif
   bit                                             discrete_debug_module = 1'b0;
   string                                          binary, bin_main, bin_dm, vmem_main, vmem_dm;
   bit                                             enable_irq_seq;
@@ -207,6 +211,25 @@ class core_ibex_base_test extends uvm_test;
     vseq = core_ibex_vseq::type_id::create("vseq");
     vseq.mem = mem;
     vseq.cfg = cfg;
+
+`ifdef COCOTB_SIM
+    // Holds a run_phase objection open while cocotb owns stimulus.
+    cocotb_monitor = core_ibex_cocotb_monitor::type_id::create("cocotb_monitor", this);
+    if (!uvm_config_db#(virtual core_ibex_cocotb_if)::get(null, "", "cocotb_if", cocotb_vif)) begin
+      `uvm_fatal(`gfn, "Cannot get cocotb_if")
+    end
+`else
+    // Vacuous-pass guard: cocotb_irq_python_test's sim_opts carry +cocotb_irq_count, which only
+    // does anything with COCOTB=1 compiled in; without it this would silently run as a plain
+    // rand-instr test and pass under a name that claims python-irq coverage.
+    begin
+      int unused_cocotb_irq_count;
+      if ($value$plusargs("cocotb_irq_count=%0d", unused_cocotb_irq_count)) begin
+        `uvm_fatal(`gfn,
+          "cocotb_irq_count plusarg seen but COCOTB_SIM not compiled in -- this test requires COCOTB=1")
+      end
+    end
+`endif
   endfunction
 
   virtual function void connect_phase(uvm_phase phase);
@@ -233,6 +256,11 @@ class core_ibex_base_test extends uvm_test;
     dut_vif.dut_cb.fetch_enable <= ibex_pkg::IbexMuBiOn;
 
     fork
+`ifdef COCOTB_SIM
+      // Listed first so its zero-delay arming statements (get the event handle, set uvm_ready)
+      // execute before any other branch has a chance to run — no race with send_stimulus().
+      cocotb_irq_listener();
+`endif
       send_stimulus();
       handle_reset();
     join_none
@@ -254,6 +282,53 @@ class core_ibex_base_test extends uvm_test;
   virtual task send_stimulus();
     vseq.start(env.vseqr);
   endtask
+
+`ifdef COCOTB_SIM
+  // Cycles the raise is held before dropping it again. Long enough for the core to notice and
+  // take the interrupt (handle_irq is re-evaluated every DECODE cycle), short enough to always
+  // drop well before a minimal generated ISR reaches mret — Ibex interrupts are level-sensitive,
+  // so a still-asserted line at mret (MIE re-enable) would immediately retake it.
+  localparam int unsigned CocotbIrqHoldCycles = 100;
+
+  // Armed once, before run stimulus starts: gets the event handle and sets uvm_ready, then
+  // forever waits for a cocotb-triggered raise and drives one full raise/drop pulse through the
+  // irq agent per trigger. Mirrors how send_irq_stimulus_start/end (core_ibex_test_lib.sv) drive
+  // vseq.start_irq_raise_single_seq()/start_irq_drop_seq(), but event-driven instead of
+  // signature-driven, and using the cfg-independent cocotb_* sequence handles (see
+  // core_ibex_vseq.sv).
+  virtual task cocotb_irq_listener();
+    uvm_event raise_ev;
+    raise_ev = uvm_event_pool::get_global("cocotb_irq_raise");
+    cocotb_vif.uvm_ready = 1'b1;
+    forever begin
+      raise_ev.wait_trigger();
+      // uvm_event triggers are not queued: a trigger arriving before this line runs (i.e. while
+      // still inside a previous pulse below) never reaches wait_trigger() and is dropped. Python
+      // compares its own triggers-sent count against this to catch that case (see
+      // core_ibex_cocotb_if.sv).
+      cocotb_vif.trigger_received_count++;
+      vseq.start_cocotb_irq_raise();
+      clk_vif.wait_clks(CocotbIrqHoldCycles);
+      vseq.start_cocotb_irq_drop();
+    end
+  endtask
+
+  // Catches a COCOTB_MODULE mismatch (e.g. the default module loaded instead of the irq test's
+  // own): the generated program reaches its own riscv-dv handshake regardless of whether any
+  // interrupt was ever serviced, so a Python side that never triggers "cocotb_irq_raise" would
+  // otherwise pass vacuously. Must be check_phase, not final_phase: core_ibex_report_server
+  // prints the PASS/FAIL banner from report_phase, which runs after check_phase but before
+  // final_phase, so only a check raised by check_phase (or earlier) can flip that banner.
+  virtual function void check_phase(uvm_phase phase);
+    int unsigned demanded_irq_count;
+    super.check_phase(phase);
+    if ($value$plusargs("cocotb_irq_count=%0d", demanded_irq_count) &&
+        (demanded_irq_count > 0) && (cocotb_vif.trigger_received_count == 0)) begin
+      `uvm_error(`gfn,
+        "cocotb_irq_count plusarg demanded triggers but trigger_received_count is 0 -- irq stimulus was never serviced (COCOTB_MODULE mismatch?)")
+    end
+  endfunction
+`endif
 
   virtual task check_perf_stats();
   endtask

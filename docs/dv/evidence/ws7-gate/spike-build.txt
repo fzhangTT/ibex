@@ -1,0 +1,22 @@
+== Spike build (Step 2b) ==
+upstream: https://github.com/riscv/riscv-isa-sim.git
+SHA: 4ffd6ba860f4190ceac2716fa3c2cf139e85538f
+configure: ../configure --prefix=/localdev/fzhang/ws/ibex-cleanroom/tools/spike --with-boost=no --with-boost-asio=no --with-boost-regex=no
+(first attempt with default configure FAILED: system boost 1.66 incompatible with gcc-11 C++17 — boost/regex/v4/match_results.hpp:60 'no type named const_reference'; retry with boost disabled succeeded, wall 125s)
+
+-- make.log tail --
+g++ -L. -Wl,--export-dynamic   -Wl,-rpath,/localdev/fzhang/ws/ibex-cleanroom/tools/spike/lib  extension.o -o spike spike.o  libspike_main.a  libriscv.a  libdisasm.a  libsoftfloat.a  libfesvr.a  libfdt.a -ldl -lpthread   
+g++ -L. -Wl,--export-dynamic   -Wl,-rpath,/localdev/fzhang/ws/ibex-cleanroom/tools/spike/lib  extension.o -o spike-log-parser spike-log-parser.o  libspike_main.a  libriscv.a  libdisasm.a  libsoftfloat.a  libfesvr.a  libfdt.a -ldl -lpthread   
+g++ -L. -Wl,--export-dynamic   -Wl,-rpath,/localdev/fzhang/ws/ibex-cleanroom/tools/spike/lib  extension.o -o xspike xspike.o  libspike_main.a  libriscv.a  libdisasm.a  libsoftfloat.a  libfesvr.a  libfdt.a -ldl -lpthread   
+g++ -L. -Wl,--export-dynamic   -Wl,-rpath,/localdev/fzhang/ws/ibex-cleanroom/tools/spike/lib  extension.o -o termios-xspike termios-xspike.o  libspike_main.a  libriscv.a  libdisasm.a  libsoftfloat.a  libfesvr.a  libfdt.a -ldl -lpthread   
+g++ -L. -Wl,--export-dynamic   -Wl,-rpath,/localdev/fzhang/ws/ibex-cleanroom/tools/spike/lib   -o spike-dasm spike-dasm.o  libspike_dasm.a  libriscv.a  libsoftfloat.a  libdisasm.a -ldl -lpthread   
+
+-- installed --
+elf2hex
+spike
+spike-dasm
+spike-log-parser
+termios-xspike
+xspike
+Spike RISC-V ISA Simulator 1.1.1-dev
+

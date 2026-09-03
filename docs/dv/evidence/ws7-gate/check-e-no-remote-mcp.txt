@@ -1,0 +1,12 @@
+== check (e) citation: export client configs, captured 2026-09-02 21:43 EDT ==
+-- jq -cS '(.mcpServers // {}) | keys' .mcp.json --
+["fsdb-mcp-server","siliconpilot","verdi-cov-mcp"]
+-- remote (http/url) entries in .mcp.json --
+(none)
+-- [mcp_servers.*] sections in .codex/config.toml --
+[mcp_servers.siliconpilot]
+[mcp_servers.fsdb-mcp-server]
+[mcp_servers.verdi-cov-mcp]
+-- url=/http entries in .codex/config.toml --
+0
+0 (none)

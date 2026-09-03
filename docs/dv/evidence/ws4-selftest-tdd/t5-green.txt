@@ -1,0 +1,73 @@
+100.00% PASS 2 PASSED, 0 FAILED
+PASS: report: pass log exits 0
+50.00% PASS 1 PASSED, 1 FAILED
+# Details of failing tests
+################################################################################
+riscv_arithmetic_basic_test.1
+------------------------------
+binary: riscv_arithmetic_basic_test.1/test.bin
+rtl_log: riscv_arithmetic_basic_test.1/rtl_sim.log
+rtl_trace: riscv_arithmetic_basic_test.1/trace_core_00000000.log
+iss_cosim_trace: riscv_arithmetic_basic_test.1/spike.log
+FAILURE: cosim mismatch at PC 0x8000_0124 (see rtl_trace).
+
+################################################################################
+# Details of passing tests
+PASS: report: fail log exits nonzero
+ERROR: no regr.log at /tmp/tmp.WLqjjRZwUK/empty/run/regr.log. The run did not produce results.
+PASS: report: missing regr.log exits nonzero
+PASS: reserve: fresh dir ok
+PASS: reserve: sentinel created
+ERROR: /tmp/tmp.WLqjjRZwUK/poisoned already contains run/ from a prior run. Use a fresh --out.
+PASS: reserve: prior run/ rejected
+ERROR: /tmp/tmp.WLqjjRZwUK/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: foreign sentinel rejected
+PASS: reserve: matching owner token accepted
+ERROR: /tmp/tmp.WLqjjRZwUK/owned is owned by another running job. Use a fresh --out.
+PASS: reserve: mismatched owner token rejected
+PASS: smoke: dry-run exits 0
+PASS: smoke: default TEST
+PASS: smoke: default ITERATIONS
+PASS: smoke: default SEED
+PASS: smoke: vcs flow
+PASS: smoke: suite knob riscv-dv
+PASS: smoke: suite knob directed
+PASS: smoke: lsf wraps bsub -K
+PASS: smoke: lsf queue
+PASS: smoke: lsf single host
+PASS: smoke: inner command drops --lsf
+PASS: smoke: unknown flag exits 2
+PASS: smoke: non-integer --jobs exits 2
+PASS: smoke: queue token validation exits 2
+PASS: smoke: config injection attempt exits 2
+PASS: smoke: test-name metacharacter exits 2
+PASS: smoke: whitespace testlist path exits 2
+PASS: smoke: --jobs 0 exits 2
+PASS: smoke: --iterations 0 exits 2
+PASS: smoke: hyphenated test names accepted
+PASS: smoke: hyphenated TEST passthrough
+PASS: smoke: make-function metacharacters in --out exit 2
+PASS: smoke: whitespace --out exits 2
+PASS: smoke: Jenkins @-suffix workspace path accepted
+PASS: smoke: @-suffix testlist path accepted
+PASS: smoke: --cocotb-module accepted
+PASS: smoke: cocotb-module implies COCOTB=1
+PASS: smoke: COCOTB_MODULE passthrough
+PASS: smoke: cocotb-module metacharacters exit 2
+PASS: smoke: failing env.sh stops the run
+PASS: smoke: env failure message
+PASS: nightly: dry-run exits 0
+PASS: nightly: default TEST=all
+PASS: nightly: date seed
+PASS: nightly: testlist iterations
+PASS: nightly: --test override
+PASS: nightly: --iterations override
+PASS: coverage: dry-run exits 0
+PASS: coverage: COV=1
+PASS: coverage: default TEST=all
+Job <42> is submitted to queue <regress>.
+./common.sh: line 199: 832653 Terminated              "${bsub_cmd[@]}" > >(tee "$CI_LSF_BSUB_LOG") 2>&1
+PASS: lsf cancel bkills job 42
+
+selftest: 0 failure(s)
+exit=0

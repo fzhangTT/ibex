@@ -1,0 +1,49 @@
+WS7 gate — red→green proof that gen_smoke_tb's assertion is discriminating
+==========================================================================
+House rule: a new check must be shown to fail before it is trusted (dv_principles §2/§6).
+Toggle target: the STIMULUS (ROM instruction immediate), never the checker.
+
+Checker under proof: gen_smoke_tb.a_gen_magic_store_value —
+  every accepted store to MagicAddr (0x40) must carry MagicVal (0x5A5) with be==0xF.
+
+GREEN baseline (invocation 1: compile exit 0, sim exit 0, seed 1)
+-----------------------------------------------------------------
+GEN_SMOKE: seed = 1
+GEN_SMOKE: fetch enabled at 29500
+GEN_SMOKE: magic store observed with expected value 0x000005a5 at 33500
+GEN_SMOKE: check evaluated 1 time(s), fail_count = 0
+GEN_SMOKE: TEST PASSED
+
+RED toggle (stimulus edit only)
+-------------------------------
+dv/auto_dv/gen_smoke_tb.sv:
+-  localparam logic [31:0] InsnAddiX1Magic = 32'h5A50_0093;  // addi x1, x0, 0x5A5
++  localparam logic [31:0] InsnAddiX1Magic = 32'h2A50_0093;  // RED-TOGGLE addi x1, x0, 0x2A5
+Fresh outdir (out_gate_red), rebuild + rerun, seed 1. Compile exit 0, sim exit 0.
+
+Captured failing lines (final red run, with $sampled values):
+  Error: "dv/auto_dv/gen_smoke_tb.sv", 177: gen_smoke_tb.a_gen_magic_store_value: at time 335000 ps
+  GEN_SMOKE_CHECK_FAIL: store to 0x00000040 carried wdata=0x000002a5 be=0xf, expected wdata=0x000005a5 be=0xf
+  GEN_SMOKE: check evaluated 1 time(s), fail_count = 1
+  GEN_SMOKE: TEST FAILED
+
+Debug note (honest record): the FIRST red run reported the mismatch with a misleading
+message value (wdata=0x00000000): the SVA action block printed current (post-edge) signal
+values rather than the values the property sampled. A temporary hierarchical probe run
+confirmed the store really carried 0x2A5 and the property sampled it correctly (the check
+itself was always right — only the report text lagged). Fixed by printing
+$sampled(data_wdata)/$sampled(data_be) in the action block; probe removed. The red capture
+above is the corrected rerun.
+
+GREEN restore
+-------------
+Stimulus restored to 32'h5A50_0093; fresh outdir (out_gate) rebuild + rerun, seed 1:
+  GEN_SMOKE: seed = 1
+  GEN_SMOKE: fetch enabled at 29500
+  GEN_SMOKE: magic store observed with expected value 0x000005a5 at 33500
+  GEN_SMOKE: check evaluated 1 time(s), fail_count = 0
+  GEN_SMOKE: TEST PASSED
+Compile exit 0 (wall 13s), sim exit 0 (wall 2s).
+
+Verdict: red→green proven; the assertion is exercised (1 evaluation per run) and
+discriminates on the stored value.

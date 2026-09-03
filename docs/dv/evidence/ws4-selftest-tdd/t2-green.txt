@@ -1,0 +1,4 @@
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc spike=/localdev/fzhang/ws/tools/spike-ibex-cosim
+check_testlist_knob: PASS
+check_testlist_knob: make-boundary PASS
+exit=0

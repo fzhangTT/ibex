@@ -1,0 +1,15 @@
+# raw check-stage wiring transcript (rerun 2026-09-01): manifest present -> FAIL; removed -> PASS
+== with mixed manifest (declares unhit irq_taken)
+passed:                   False
+failure_mode:             FCOV_EXPECTATION(4)
+Warning: Not generating coverage summary, unsupported simulator vcs
+0.00% PASS 0 PASSED, 1 FAILED
+0.00% PASS 0 PASSED, 1 FAILED
+riscv_arithmetic_basic_test.1: FAILED
+[FAILED]: declared functional-coverage expectation not met
+== manifest removed
+Warning: Not generating coverage summary, unsupported simulator vcs
+100.00% PASS 1 PASSED, 0 FAILED
+passed:                   True
+failure_mode:             FCOV_EXPECTATION(4)
+100.00% PASS 1 PASSED, 0 FAILED

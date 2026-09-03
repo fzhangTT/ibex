@@ -1,0 +1,67 @@
+WS7 close-fixwave re-verify — DV_prompt.txt Section 12 launch preconditions, items 1-11, run
+against the post-close-fix export at /localdev/fzhang/ws/ibex-cleanroom (export SHA 0231dbe6,
+source b2c08682). Run date: 2026-09-02 23:20 EDT. Supersedes the prior run recorded at this path
+(export 32084c74, source ebf47c1a), retired after the WS7+WS6 close review's fixes (riscv-dv
+precondition-6 checks hoisted out of the cold-cache branch so they run on every export incl. this
+one; CI_ALLOWED enforcement added; see docs/dv/reviews/2026-09-02-claude-diff-ws7-ws6-close.md).
+Only item 6's sub-checks changed text (new stamp-file line, below); every item's PASS/BLOCKED
+outcome is unchanged from the prior run — same 10 PASS, 1 BLOCKED. Items 1 and 8 read
+DV_prompt.txt at the full-tree root (owner-delivered, untracked). Verbatim transcription of items
+2-9 text: section12-checklist.txt.
+
+== Item 1: no proposed-ruling marker in DV_prompt.txt ==
+  grep -c '^- PROPOSED RULING' => 0
+  => PASS
+== Item 2: docs/dv/FENCE.md exists with ci/ allowlist naming the six entries ==
+  names: ci/env.sh
+  names: ci/setup-venv.sh
+  names: ci/get-toolchain.sh
+  names: ci/check_fcov_expectations.py
+  names: ci/mcp/
+  names: ci/reviews/
+  => PASS
+== Item 3: SIM_RECIPE.md carries four dated marker lines ==
+  found: executed-on: (dated)
+  found: submission-command: (dated)
+  found: spike-built-on: (dated)
+  found: fence-integrity: (dated)
+  => PASS
+== Item 4: TB_CONTRACT.md Zone A variant (item-9 clean + dated fence-integrity) ==
+  => PASS
+== Item 5: CLAUDE.md/AGENTS.md Zone A markers; dv_principles Zone A scoping ==
+  dv_principles Section 6 carries the Zone A scoping phrase
+  => PASS
+== Item 6: vendor hygiene + riscv-dv-verified-on attestation in FENCE.md ==
+  no vendor/riscv?isa?sim* path
+  vendor/patches absent
+  lock rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6
+  dated riscv-dv-verified-on line names the lock rev
+  states the empty tree diff against upstream
+  0 files contain 'Ibex Specific' under vendor/google_riscv-dv/
+  vendor/google_riscv-dv.verified: "71666ebacd69266b1abb7cdbad5e1897ce5884e6 verified 2026-09-02"
+    (matches the lock rev; stamped by this export's own build, not carried over from a prior one —
+    the rev-identity check that produces it now re-runs against the cache on every export, per the
+    close-fixwave fix, instead of only the first time the rev is fetched)
+  => PASS
+== Item 7: dv/auto_dv/.gitignore ignores work/ ==
+  => PASS
+== Item 8: seed prompt self-checks (N, G numeric; two Section-2 rulings; signed sign-off) ==
+  G stated (0.5)
+  N stated (5)
+  2 'Owner ruling (' bullets
+  sign-off line: Owner sign-off: (name, YYYY-MM-DD)
+  => BLOCKED — owner sign-off line is still the unsigned template (owner action before launch)
+== Item 9: identifier scan over the named file set; ci/reviews six-file set; run_codex_review.sh ==
+  ci/reviews/ holds 6 files
+  => PASS
+== Item 10: .mcp.json + .codex/config.toml list exactly the three local servers, no remote ==
+  .mcp.json servers: ["fsdb-mcp-server","siliconpilot","verdi-cov-mcp"]
+  config.toml mcp_servers sections: 3
+  => PASS
+== Item 11: positive-list ls checks ==
+  dv/: auto_dv
+  docs/: dv
+  docs/dv/: FENCE.md SIM_RECIPE.md TB_CONTRACT.md dv_principles.md 
+  => PASS
+
+TALLY: 10 PASS, 1 BLOCKED, 0 FAIL

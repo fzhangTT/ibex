@@ -1,0 +1,26 @@
+100.00% PASS 2 PASSED, 0 FAILED
+test_summary:
+  riscv_arithmetic_basic_test.1: PASSED
+  mcounteren_test.1: PASSED
+
+################################################################################
+# Details of failing tests
+################################################################################
+No failing tests. Nice job!
+
+################################################################################
+# Details of passing tests
+################################################################################
+riscv_arithmetic_basic_test.1
+------------------------------
+binary: riscv_arithmetic_basic_test.1/test.bin
+rtl_log: riscv_arithmetic_basic_test.1/rtl_sim.log
+rtl_trace: riscv_arithmetic_basic_test.1/trace_core_00000000.log
+iss_cosim_trace: riscv_arithmetic_basic_test.1/spike.log
+
+mcounteren_test.1
+-----------------
+binary: mcounteren_test.1/test.bin
+rtl_log: mcounteren_test.1/rtl_sim.log
+rtl_trace: mcounteren_test.1/trace_core_00000000.log
+iss_cosim_trace: mcounteren_test.1/spike.log

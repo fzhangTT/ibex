@@ -1,0 +1,10 @@
+# raw checker classifications (rerun 2026-09-01 ) against out_ws3fix shared VDB, cm_name test_riscv_arithmetic_basic_test_1
+== mixed manifest (decode0 + irq_taken)
+FCOV-EXPECTATION: uarch_cg.cp_controller_fsm.out_of_decode0 = HIT (count=112)
+FCOV-EXPECTATION: uarch_cg.cp_controller_fsm.out_of_irq_taken = UNHIT (count=0)
+FCOV-EXPECTATION: FAIL — 1 declared bin(s) not hit: uarch_cg.cp_controller_fsm.out_of_irq_taken
+exit=2
+== hit-only manifest (decode0)
+FCOV-EXPECTATION: uarch_cg.cp_controller_fsm.out_of_decode0 = HIT (count=112)
+FCOV-EXPECTATION: PASS — all 1 declared bins hit
+exit=0

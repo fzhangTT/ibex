@@ -1,0 +1,74 @@
+MUT-002 transcript: dv/auto_dv/mutations/README.md's MUT-002 record
+=====================================================================
+
+Mutation: dv/uvm/core_ibex/tb/core_ibex_tb_top.sv:487
+  original: end else if (controller_state == ibex_pkg::IRQ_TAKEN) begin
+  mutated:  end else if (1'b0) begin
+Ablation-only edit: both handler-entry asserts commented out in
+  dv/cocotb/tests/test_irq_from_python.py (count == triggers_sent; count >= max(n, 3)).
+Hidden-referee-inert edit: dv/uvm/core_ibex/riscv_dv_extension/testlist.yaml's
+  cocotb_irq_python_test sim_opts temporarily gained +disable_cosim=1 for these three runs.
+All three edits reverted after capture; not committed in the mutated/ablated state.
+
+Command for all three runs (fresh OUT each time):
+  ( cd dv/uvm/core_ibex && make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
+    TEST=cocotb_irq_python_test ITERATIONS=1 SEED=1 COCOTB=1 \
+    COCOTB_MODULE=dv.cocotb.tests.test_irq_from_python OUT=<out_dir> )
+
+1) CAUGHT run (mutation applied, checker active, +disable_cosim=1)
+--------------------------------------------------------------------
+regr.log:
+  0.00% PASS 0 PASSED, 1 FAILED
+  cocotb_irq_python_test.1: FAILED
+
+  [FAILED]: error seen in 'rtl_sim_stdstreams.log'
+  ---------------*LOG-EXTRACT*----------------
+      65: 255544.36ns INFO     cocotb.regression                  test_irq_from_python failed
+      66: Traceback (most recent call last):
+      67: File "/localdev/fzhang/ws/ibex/dv/cocotb/tests/test_irq_from_python.py", line 84, in test_irq_from_python
+      68: assert count == triggers_sent, (
+      69: ^^^^^^^^^^^^^^^^^^^^^^
+      [E] 70: AssertionError: COCOTB-IRQ-CHECK: handler_entry_count=0 != triggers_sent=3; an IRQ_TAKEN entry not attributable to a python trigger occurred, or one was missed
+      71: 255544.36ns INFO     cocotb.regression                  ***...
+      74: ** dv.cocotb.tests.test_irq_from_python.test_irq_from_python   FAIL      255544.36 ...
+  --------------------------------------------
+
+trr.yaml: failure_mode: LOG_ERROR(3); sim_opts confirmed carrying
+  +require_signature_addr=1 +cocotb_irq_count=3 +disable_cosim=1 for this run.
+
+Attribution: the failure signature is the named equality assert in
+test_irq_from_python.py line 84, not a cosim mismatch or any other UVM_ERROR -- confirming
+the NAMED detector caught the mutation with the hidden referee (cosim) inert.
+
+2) ABLATION CONTROL (same mutation, checker disabled)
+--------------------------------------------------------------------
+rtl_sim_stdstreams.log:
+  63: 255544.35ns INFO     cocotb    COCOTB-IRQ: triggers_sent=3 triggers_received=3
+  64: 255544.35ns INFO     cocotb    COCOTB-IRQ: handler_entry_count=0 (triggered=3, required>=3)
+
+regr.log:
+  100.00% PASS 1 PASSED, 0 FAILED
+  cocotb_irq_python_test.1: PASS
+
+handler_entry_count is logged as 0 (the mutation's effect is visibly present) but nothing
+asserts on it with the checker disabled, and no other mechanism in the flow (cosim, UVM_ERROR,
+etc.) catches it -- the mutation SURVIVES undetected, proving the named checker is what catches
+it in run (1).
+
+3) REVERTED run (mutation, ablation, and +disable_cosim=1 all reverted; sanity re-check)
+--------------------------------------------------------------------
+rtl_sim_stdstreams.log:
+  63: 255544.35ns INFO     cocotb    COCOTB-IRQ: triggers_sent=3 triggers_received=3
+  64: 255544.35ns INFO     cocotb    COCOTB-IRQ: handler_entry_count=3 (triggered=3, required>=3)
+
+regr.log:
+  100.00% PASS 1 PASSED, 0 FAILED
+  cocotb_irq_python_test.1: PASS
+
+git diff after all three runs showed zero residual changes to core_ibex_tb_top.sv or
+testlist.yaml's sim_opts; test_irq_from_python.py's diff is only the intended finding-3
+equality-assert addition (see docs/dv/process-logs/ws2/final-fixwave-report.md, Round 2
+section).
+
+All three OUT directories (out_mut002_caught, out_mut002_ablation, out_mut002_reverted) were
+removed after capture; never committed.

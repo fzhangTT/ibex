@@ -603,15 +603,19 @@ interface core_ibex_fcov_if import ibex_pkg::*; (
       bins out_of_flush3 = (FLUSH => DBG_TAKEN_IF);
       bins out_of_wait_sleep = (WAIT_SLEEP => SLEEP);
       bins out_of_sleep = (SLEEP => FIRST_FETCH);
-      // TODO: VCS does not implement default sequence so illegal_bins will be empty
+`ifndef FCOV_NO_DEFAULT_SEQUENCE
+      // FCOV_NO_DEFAULT_SEQUENCE: VCS half-implements 'default sequence' and fatals on legal self-loops (FCIBH)
       illegal_bins illegal_transitions = default sequence;
+`endif
     }
 
     cp_controller_fsm_sleep: coverpoint id_stage_i.controller_i.ctrl_fsm_cs {
       bins out_of_sleep = (SLEEP => FIRST_FETCH);
       bins enter_sleep = (WAIT_SLEEP => SLEEP);
-      // TODO: VCS does not implement default sequence so illegal_bins will be empty
+`ifndef FCOV_NO_DEFAULT_SEQUENCE
+      // FCOV_NO_DEFAULT_SEQUENCE: VCS half-implements 'default sequence' and fatals on legal self-loops (FCIBH)
       illegal_bins illegal_transitions = default sequence;
+`endif
     }
 
     // This will only be seen when specific interrupt is disabled by MIE CSR

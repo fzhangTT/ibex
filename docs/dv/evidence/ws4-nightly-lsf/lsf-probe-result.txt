@@ -1,0 +1,32 @@
+WS4 gate stage — LSF workspace-visibility pre-probe (sanctioned command)
+=========================================================================
+
+Command (as specified):
+
+  bash -lc 'source ci/env.sh >/dev/null 2>&1 && timeout 300 bsub -K -q regress -o /dev/null \
+    "test -d $PWD && test -r $PWD/ci/env.sh && echo VISIBLE"'
+
+Result: exit 1 (job <10923560> dispatched to soc-c-18, ran, and finished with a
+non-zero exit — the `test -d/-r/echo` chain did not print VISIBLE, i.e. either
+the workspace directory or ci/env.sh was not visible/readable from the compute
+host). -o was /dev/null per the sanctioned command, so the job's own stdout
+was discarded; the exit code is what falls the probe.
+
+Diagnostic follow-up (not part of the sanctioned probe, run to characterize
+the failure before falling back): resubmitted the same probe shape with
+-o /tmp/probe.log instead of /dev/null:
+
+  bash -lc 'source ci/env.sh >/dev/null 2>&1 && timeout 120 bsub -K -q regress -o /tmp/probe.log \
+    "echo PWD=$PWD; test -d $PWD && echo DIR_OK || echo DIR_FAIL; \
+     test -r $PWD/ci/env.sh && echo READ_OK || echo READ_FAIL; hostname"'
+
+Job <10923565> also dispatched to soc-c-18 and finished with exit 1, and
+/tmp/probe.log never materialized on the submit host (checked immediately and
+after a 5s delay) — consistent with the workspace (including /tmp as seen by
+this session) not being shared with the LSF compute host.
+
+Conclusion: per the recorded fallback rule, this workspace is submit-host-local.
+Both Run A and Run B were executed LOCALLY (--lsf dropped for Run A; Run B was
+never given --lsf). This is a deviation from the "Run A through LSF" plan,
+recorded here prominently. No bsub job id, lsf.log, or bsub.log exist for
+Run A's actual gate execution because bsub was never invoked for it.

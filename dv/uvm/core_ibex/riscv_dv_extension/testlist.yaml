@@ -569,6 +569,34 @@
   compare_opts:
     compare_final_value_only: 1
 
+- test: cocotb_irq_python_test
+  description: >
+    WS2 Milestone B: cocotb (Python) drives all irq timing for this test via the DPI-exported
+    cocotb_trigger_uvm_event, not the stock SV irq_raise/irq_drop sequences. rtl_test is left as
+    the plain core_ibex_base_test and no +enable_irq_*_seq sim_opts are set below, so the only
+    irq stimulus the DUT ever sees is cocotb's uvm_bridge.trigger("cocotb_irq_raise") calls (see
+    dv/cocotb/tests/test_irq_from_python.py). The generated software must still be
+    interrupt-capable (mtvec/mie/mstatus set up, a working trap handler) for those triggers to be
+    serviced at all, hence +enable_interrupt=1 below, following the existing irq-test entries.
+    iterations pinned to 1: this test's timing (gaps, hold cycles, settle) was tuned and verified
+    against SEED=1 only; a full 10-seed sweep with +randomize_csr could hit an untuned timing
+    corner and false-FAIL.
+  cocotb: 1  # requires COCOTB=1 (see the +cocotb_irq_count vacuous-pass guard below); excluded
+             # from TEST=all/all_riscvdv when COCOTB=0 (ibex_cmd.filter_cocotb_only_tests),
+             # explicit TEST=cocotb_irq_python_test still selects it so that guard still fires.
+  iterations: 1
+  gen_test: riscv_rand_instr_test
+  gen_opts: >
+    +instr_cnt=10000
+    +require_signature_addr=1
+    +enable_interrupt=1
+    +enable_timer_irq=1
+    +randomize_csr=1
+  rtl_test: core_ibex_base_test
+  sim_opts: >
+    +require_signature_addr=1
+    +cocotb_irq_count=3
+
 - test: riscv_csr_test
   description: >
     Test all CSR instructions on all implemented CSR registers

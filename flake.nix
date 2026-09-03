@@ -117,6 +117,9 @@
         # Built via pkgsCompat (nixos-20.09, GCC 9.3 / glibc 2.32) so the resulting
         # shared libraries carry a low symbol-version floor compatible with older
         # bundled toolchains.
+        # NOTE: this nix path is not maintained in lockstep with ci/build-spike.sh
+        # (the pin of record for spike, currently at aadf648d) — the rev/sha256
+        # below are stale; re-verify before relying on this derivation.
         spike = pkgsCompat.spike.overrideAttrs (prev: {
           pname = "spike-ibex-cosim";
           version = "0.5-dev";

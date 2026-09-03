@@ -1,0 +1,285 @@
+WS2 Milestone B: python-driven irq stimulus through the UVM irq agent
+=======================================================================
+
+Command (Task 7 brief's Step 3, run as committed):
+
+  ( cd dv/uvm/core_ibex && make SIMULATOR=vcs IBEX_CONFIG=opentitan ISS=spike \
+    TEST=cocotb_irq_python_test ITERATIONS=1 SEED=1 COCOTB=1 \
+    COCOTB_MODULE=dv.cocotb.tests.test_irq_from_python OUT=out_mb )
+
+Design summary
+--------------
+- rtl_test stays core_ibex_base_test; no +enable_irq_*_seq sim_opts are set, so the stock SV irq
+  sequences never start. All irq timing comes from cocotb's uvm_bridge.trigger("cocotb_irq_raise")
+  DPI calls, turned into a raise-then-drop pulse by an armed uvm_event listener
+  (core_ibex_base_test.sv's cocotb_irq_listener, forked first in run_phase so it arms before
+  send_stimulus() starts) driving fresh cocotb_irq_raise_seq/irq_drop_seq objects through the real
+  irq_agent sequencer (core_ibex_vseq.sv).
+- Handler-entry counter (cocotb_if.handler_entry_count, core_ibex_tb_top.sv) increments on cycles
+  where controller_state == ibex_pkg::IRQ_TAKEN -- the controller's single-cycle-per-entry state
+  for taking an interrupt (already used by a pre-existing WARNING check in the same file), not raw
+  irq_vif line toggles, so it counts actual trap entries, not stimulus edges that may never be
+  serviced (e.g. while globally masked).
+- Checked BEFORE finish(), not after: the flow's log scanner
+  (ibex_log_to_trace_csv.check_ibex_uvm_log) stops treating "Error" lines as failures once it has
+  seen "RISC-V UVM TEST PASSED" in the log. That banner only appears once the whole generated
+  program (+instr_cnt=10000) reaches its own riscv-dv signature handshake at natural completion,
+  well after our own irq activity finishes -- asserting after finish() would silently land past
+  that point and never be able to fail the flow. Checked right after the trigger loop (plus a
+  short settle wait) instead, the check always lands before that banner.
+
+Evidence for the required markers (grep of rtl_sim_stdstreams.log)
+--------------------------------------------------------------------
+40:     2.00ns INFO     cocotb                             COCOTB-IRQ: cocotb_irq_count=3 (seed=1)
+46:  2044.35ns INFO     cocotb                             COCOTB-IRQ: uvm_ready observed
+48: 67544.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (1/3), gap=3275
+53:150844.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (2/3), gap=4165
+58:245544.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (3/3), gap=4735
+63:255544.35ns INFO     cocotb                             COCOTB-IRQ: handler_entry_count=3 (triggered=3, required>=3)
+67:UVM_INFO .../ibex_cosim_scoreboard.sv(346) @ 282290400: ... Co-simulation matched      14833 instructions
+69:--- RISC-V UVM TEST PASSED ---
+89:UVM_ERROR :    0
+90:UVM_FATAL :    0
+104:2823544.36ns INFO     cocotb.regression                  test_irq_from_python passed
+Zero "WARNING: Controller in IRQ_TAKEN" lines (the pre-existing tb_top sanity check on the same
+IRQ_TAKEN state used for the counter) -- all three raise/drop pulses were clean single-cycle
+entries with stable irq lines, no spurious/missed retrigger.
+
+Negative control (Step 4, mutation-style named-checker ablation)
+--------------------------------------------------------------------
+Same command, fresh OUT, with the ONE line
+`dv/uvm/core_ibex/riscv_dv_extension/testlist.yaml`'s cocotb_irq_python_test sim_opts temporarily
+edited from `+cocotb_irq_count=3` to `+cocotb_irq_count=0` (reverted after capture; never
+committed in that state) -- i.e. cocotb sends zero irq triggers while
+_MIN_EXPECTED_HANDLER_ENTRIES stays fixed at 3 in test_irq_from_python.py (deliberately NOT tied
+to the plusarg, so this ablation actually exercises the checker instead of trivially passing
+`0 >= 0`). Result: `handler_entry_count=0`, the assertion fires, and -- because it fires before
+finish() -- cocotb's own uncaught-exception handling $finishes immediately, so
+"RISC-V UVM TEST PASSED" never has a chance to print at all this run:
+
+  2.00ns INFO     cocotb    COCOTB-IRQ: cocotb_irq_count=0 (seed=1)
+  2044.35ns INFO  cocotb    COCOTB-IRQ: uvm_ready observed
+  12044.36ns INFO cocotb    COCOTB-IRQ: handler_entry_count=0 (triggered=0, required>=3)
+  12044.36ns INFO cocotb.regression   test_irq_from_python failed
+  Traceback (most recent call last):
+    File ".../dv/cocotb/tests/test_irq_from_python.py", line 77, in test_irq_from_python
+      assert count >= _MIN_EXPECTED_HANDLER_ENTRIES, (
+  AssertionError: COCOTB-IRQ-CHECK: handler_entry_count=0 is below the required 3
+  (triggered 0 times); irq stimulus was not serviced
+  ** dv.cocotb.tests.test_irq_from_python.test_irq_from_python   FAIL   12044.36 ...
+  $finish at simulation time              1204436
+
+Flow-level verdict (regr.log / trr.yaml), proving this is a real flow FAIL, not just a cocotb-side
+one:
+
+  0.00% PASS 0 PASSED, 1 FAILED
+  cocotb_irq_python_test.1: FAILED
+  [FAILED]: error seen in 'rtl_sim_stdstreams.log'
+  ---------------*LOG-EXTRACT*----------------
+  [E] 54: AssertionError: COCOTB-IRQ-CHECK: handler_entry_count=0 is below the required 3
+      (triggered 0 times); irq stimulus was not serviced
+  --------------------------------------------
+  trr.yaml: failure_mode: LOG_ERROR(3)
+  make exit code: 2
+
+This proves THIS check (not cosim, not a generic UVM_ERROR) fires and fails the test when the irq
+stimulus it is supposed to attribute handler entries to never happens. Broken run's artifacts
+(fresh OUT, not committed) removed after capture.
+
+Bug found and fixed along the way (documented in Task 7 report,
+docs/dv/process-logs/ws2/task-7-report.md): the assertion message originally
+contained an em-dash (U+2014). cocotb's own failure-logging path uses an ASCII-only stream
+encoder; that character crashed the log call with UnicodeEncodeError, which silently swallowed the
+AssertionError text and caused this exact negative control to show a false flow-level PASS on the
+first attempt, despite cocotb itself correctly scoring the test FAIL. Fixed by keeping all
+runtime-logged/raised strings in dv/cocotb/ plain ASCII; re-ran and confirmed the FAIL above.
+
+Full sim log: rtl_sim_stdstreams.log
+(out_mb/run/tests/cocotb_irq_python_test.1/rtl_sim_stdstreams.log)
+--------------------------------------------------------------------------------
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  1 23:45 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_root.svh(407) @ 0: reporter [UVM/RELNOTES]
+----------------------------------------------------------------
+UVM-1.2.Synopsys
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.cocotb.tests.test_irq_from_python.test_irq_from_python
+     0.00ns INFO     cocotb.regression                  running test_irq_from_python (1/1)
+                                                          Trigger N cocotb-driven irq pulses through the UVM irq agent; check handler entries.
+TB-CONFIG: BaseIsa=BaseIsaRV32IorCHERIoT RegFile=RegFileFF RV32ZC=RV32ZcaZcbZcmp
+UVM_INFO @ 0: reporter [RNTST] Running test core_ibex_base_test...
+     2.00ns INFO     cocotb                             COCOTB-HELLO: alive (seed=1)
+     2.00ns INFO     cocotb                             COCOTB-IRQ: cocotb_irq_count=3 (seed=1)
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_base_test.sv(308) @ 202400: uvm_test_top [uvm_test_top] Loading single test binary into memory now.
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_base_test.sv(411) @ 202400: uvm_test_top [uvm_test_top] Test wall-clock timeout is set to : 1800s
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/common/ibex_mem_intf_agent/ibex_mem_intf_response_seq_lib.sv(44) @ 202400: uvm_test_top.env.instr_if_response_agent.sequencer@@instr_intf_seq [uvm_test_top.env.instr_if_response_agent.sequencer.instr_intf_seq] is_dmem_seq: 0x0
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/common/ibex_mem_intf_agent/ibex_mem_intf_response_seq_lib.sv(44) @ 202400: uvm_test_top.env.data_if_response_agent.sequencer@@data_intf_seq [uvm_test_top.env.data_if_response_agent.sequencer.data_intf_seq] is_dmem_seq: 0x1
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_new_seq_lib.sv(64) @ 202400: reporter@@fetch_enable_seq_h [fetch_enable_seq_h] Running the "InfiniteRuns" schedule for stimulus generation
+  2044.35ns INFO     cocotb                             COCOTB-IRQ: uvm_ready observed
+core_ibex_tb_top.dut.u_ibex_tracer.unnamed$$_1.unnamed$$_2: Writing execution trace to /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1/trace_core_00000000.log
+ 67544.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (1/3), gap=3275
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 6754400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 6755400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Exiting sequence
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 6954400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 6955400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Exiting sequence
+150844.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (2/3), gap=4165
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 15084400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 15085400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Exiting sequence
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 15284400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 15285400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Exiting sequence
+245544.35ns INFO     cocotb                             COCOTB-IRQ: triggering cocotb_irq_raise (3/3), gap=4735
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 24554400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 24555400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_raise_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h] Exiting sequence
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(46) @ 24754400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Starting sequence...
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_seq_lib.sv(58) @ 24755400: uvm_test_top.env.irq_agent.sequencer@@cocotb_irq_drop_seq_h [uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h] Exiting sequence
+255544.35ns INFO     cocotb                             COCOTB-IRQ: handler_entry_count=3 (triggered=3, required>=3)
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/tests/core_ibex_base_test.sv(381) @ 276170400: uvm_test_top [uvm_test_top] Test done due to RISCV-DV handshake (payload=TEST_PASS)
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 282190400: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 282290400: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/common/ibex_cosim_agent/ibex_cosim_scoreboard.sv(346) @ 282290400: uvm_test_top.env.cosim_agent.scoreboard [uvm_test_top.env.cosim_agent.scoreboard] Co-simulation matched      14833 instructions
+
+--- RISC-V UVM TEST PASSED ---
+
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_catcher.svh(705) @ 282290400: reporter [UVM/REPORT/CATCHER]
+--- UVM Report catcher Summary ---
+
+
+Number of demoted UVM_FATAL reports  :    0
+Number of demoted UVM_ERROR reports  :    0
+Number of demoted UVM_WARNING reports:    0
+Number of caught UVM_FATAL reports   :    0
+Number of caught UVM_ERROR reports   :    0
+Number of caught UVM_WARNING reports :    0
+
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 282290400: reporter [UVM/REPORT/SERVER]
+--- UVM Report Summary ---
+
+Quit count :     0 of     1
+** Report counts by severity
+UVM_INFO :   24
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[RNTST]     1
+[TEST_DONE]     2
+[UVM/RELNOTES]     1
+[UVM/REPORT/CATCHER]     1
+[fetch_enable_seq_h]     1
+[uvm_test_top]     3
+[uvm_test_top.env.cosim_agent.scoreboard]     1
+[uvm_test_top.env.data_if_response_agent.sequencer.data_intf_seq]     1
+[uvm_test_top.env.instr_if_response_agent.sequencer.instr_intf_seq]     1
+[uvm_test_top.env.irq_agent.sequencer.cocotb_irq_drop_seq_h]     6
+[uvm_test_top.env.irq_agent.sequencer.cocotb_irq_raise_seq_h]     6
+
+2823544.36ns INFO     cocotb.regression                  test_irq_from_python passed
+2823544.36ns INFO     cocotb.regression                  *******************************************************************************************************************
+                                                         ** TEST                                                       STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         *******************************************************************************************************************
+                                                         ** dv.cocotb.tests.test_irq_from_python.test_irq_from_python   PASS     2823544.36          14.07     200635.71  **
+                                                         *******************************************************************************************************************
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                         2823544.36          14.07     200609.82  **
+                                                         *******************************************************************************************************************
+
+$finish at simulation time            282354436
+           V C S   S i m u l a t i o n   R e p o r t
+Time: 2823544360 ps
+CPU Time:     14.240 seconds;       Data structure size:   9.7Mb
+Tue Sep  1 23:45:20 2026
+Running run-rtl command :
+env SIM_DIR=/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1 /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/build/tb/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=core_ibex_base_test +UVM_VERBOSITY=UVM_LOW +bin=/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1/test.bin +ibex_tracer_file_base=/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1/trace_core +cosim_log_file=/localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1/spike_cosim_trace_core_00000000.log -l /localdev/fzhang/ws/ibex/dv/uvm/core_ibex/out_mb_final/run/tests/cocotb_irq_python_test.1/rtl_sim.log +signature_addr=8ffffffc +test_timeout_s=1800 +require_signature_addr=1 +cocotb_irq_count=3
+
+regr.log
+--------------------------------------------------------------------------------
+100.00% PASS 1 PASSED, 0 FAILED
+cocotb_irq_python_test.1: PASS
+
+
+################################################################################
+# Details of failing tests
+################################################################################
+No failing tests. Nice job!
+
+################################################################################
+# Details of passing tests
+################################################################################
+
+cocotb_irq_python_test.1
+------------------------
+binary:          test.bin
+rtl_log:         rtl_sim_stdstreams.log
+rtl_trace:       trace_core_00000000.log
+iss_cosim_trace: spike_cosim_trace_core_00000000.log
+
+[PASSED]
+
+Fix round 1 (review response) -- re-verification
+=================================================
+Review found 3 Important findings: a vacuous-pass hazard when COCOTB=0, an overstated
+"no lost triggers" claim (uvm_event.trigger() is not queued -- a trigger arriving while the
+listener is still mid-pulse is dropped), and an unenforced 1:1 correspondence between triggers
+and handler entries. Fixes: a build_phase uvm_fatal when +cocotb_irq_count is seen without
+COCOTB_SIM compiled in; a trigger_received_count counter (core_ibex_cocotb_if.sv/
+core_ibex_base_test.sv) that Python compares against its own triggers-sent count before finish();
+the handler-entry assertion now requires max(n, 3) (still failing the ablation at n=0) and logs a
+loud WARNING if handler_entry_count exceeds triggers_sent (over-count attribution, non-fatal).
+testlist iterations pinned to 1 (single-seed-tuned timing). Full detail:
+docs/dv/process-logs/ws2/task-7-report.md.
+
+Re-verified, all fresh OUTs, not committed:
+
+Positive run (SEED=1, +cocotb_irq_count=3, committed state) -- PASS, exact 1:1 accounting:
+  40:     2.00ns INFO     cocotb    COCOTB-IRQ: cocotb_irq_count=3 (seed=1)
+  63:255544.35ns INFO     cocotb    COCOTB-IRQ: triggers_sent=3 triggers_received=3
+  64:255544.35ns INFO     cocotb    COCOTB-IRQ: handler_entry_count=3 (triggered=3, required>=3)
+  105:2823544.36ns INFO   cocotb.regression   test_irq_from_python passed
+  regr.log: 100.00% PASS 1 PASSED, 0 FAILED / cocotb_irq_python_test.1: PASS
+  Zero "WARNING: Controller in IRQ_TAKEN", zero UVM_ERROR/UVM_FATAL, no over-count WARNING (as
+  expected: count == triggers_sent).
+
+Negative control (SEED=1, +cocotb_irq_count=0, still failed as expected) -- the trigger-accounting
+check itself correctly stays green (0 sent, 0 received) while the fixed handler-entry floor still
+catches the ablation:
+  40:     2.00ns INFO     cocotb    COCOTB-IRQ: cocotb_irq_count=0 (seed=1)
+  48: 12044.35ns INFO     cocotb    COCOTB-IRQ: triggers_sent=0 triggers_received=0
+  49: 12044.35ns INFO     cocotb    COCOTB-IRQ: handler_entry_count=0 (triggered=0, required>=3)
+  50: 12044.36ns INFO     cocotb.regression   test_irq_from_python failed
+  AssertionError: COCOTB-IRQ-CHECK: handler_entry_count=0 is below the required 3
+  (triggered 0 times); irq stimulus was not serviced
+  trr.yaml: failure_mode: LOG_ERROR(3) / regr.log: 0.00% PASS 0 PASSED, 1 FAILED / FAILED
+
+New vacuous-pass guard (SEED=1, COCOTB=0, same testlist entry) -- fires immediately at time 0,
+before any generated code runs, proving the entry can no longer silently pass as a plain
+rand-instr test without the cocotb overlay compiled in:
+  UVM_FATAL core_ibex_base_test.sv(228) @ 0: uvm_test_top [uvm_test_top] cocotb_irq_count
+  plusarg seen but COCOTB_SIM not compiled in -- this test requires COCOTB=1
+  regr.log: 0.00% PASS 0 PASSED, 1 FAILED / cocotb_irq_python_test.1: FAILED
+  make exit code: 2
