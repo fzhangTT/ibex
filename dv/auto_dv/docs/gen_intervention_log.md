@@ -851,3 +851,16 @@ until the RTL owner fixes it, tb-infra encodes the comparator convention (mask b
 record, or compare the next record's pc_rdata) as a documented, counted exception with a red where the mask is
 removed (T-144); the plan describes that convention as owed to tb-infra until the commit lands, never as built.
 R10 (mtval = 0 on a breakpoint exception, spec-legal) is a shim convention, not a bug.
+
+## LOG-027a - 2026-09-03 - HOLD LIFTED (round-0 measured regression may be collected)
+
+The cross-model review of b8332f9..73af457 (dv/auto_dv/reviews/2026-09-03-claude-diff-b8332f92-73af4570.md) is
+APPROVE-WITH-CHANGES: the round evidence names have one home consumed by gen_round.py and both exclusion tools,
+the serialized fallback pins the accepted batch sha, the rebaseline rename is real, C.selftest_tmp() is used
+throughout, T-140's observed-row fields exist. One medium remains for Runtime's next landing (T-151): a request
+carrying an empty elcheck key is treated as report-only by the server but as a simulation by validate, so it
+would build unvouched outside the pinned set; plus four lows (URG_DUMP_MODULE_PREFIX cross-import makes
+gen_excl_f1_pass.py crash when started outside the clone root, hoist it to gen_flow_const; ROUND_EC3_ASSERTS_RE
+derived from EVIDENCE_DIR; T-131 row wording; response counts). The LOG-027 hold on the first measured round is
+lifted: Runtime may collect round 0 once the DV Lead requests it, rtl-arch's F-1 pass follows it, and no request
+with an elcheck key of any kind is served in head mode until CM13-M-1 lands.
