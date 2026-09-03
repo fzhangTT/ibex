@@ -28,7 +28,32 @@ a text change to the design, validated by the reviewer's re-read, not by a run.
 | [low] "the tohost store is the last R line" is false (the program spins after the store) | FIXED (text) | Section 5.1: assert on the last `R` line with a non-zero `mem_wmask` at the tohost address. |
 | [low] MUT-A's catch mechanism missing from the 5.1 assert list; rule across Zcmp folded records and traps | FIXED (text) | Section 5.1: `pc_rdata[k+1] == pc_wdata[k]` for consecutive `R` lines with no `I` line between them and record k not a debug entry; Zcmp applied at sequence boundaries with the micro-op-internal convention recorded at the first green run before it is asserted; traps unchanged (pc_wdata is the vector). |
 
-Version 4 (DV Lead decision, plan round 3 medium 2: the bus/pin EVENT channel, Section 8; knob family renamed to
-`+gen_export_*`) awaits its own replan review; its rows will be added here. Version 4b (2026-09-03) aligns the text
-with the record part as built (rendered include and method names, `read(path, seq, counters)`, the generic `<name>`
-event rows, measured sizes and wall clock); the build evidence is `dv/auto_dv/evidence/gen_tdd_export.md`.
+The record part is built (`dv/auto_dv/evidence/gen_tdd_export.md`); the event part (Section 8) and the witness command
+(Section 9) are text only until the v4b re-review.
+
+## Complete status of BOTH replan artifacts against version 4b (`dv/auto_dv/docs/gen_rvfi_export_addendum.md`)
+
+Row prefixes: R1- = `2026-09-03-claude-replan-gen_rvfi_export_addendum.md` (review of v3a, APPROVE-WITH-CHANGES);
+R2- = `2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md` (review of v4a, REQUEST-CHANGES). Status words:
+ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with the reason).
+
+| Row | Finding | Status | Where |
+|---|---|---|---|
+| R1-M1 | `read()` not bound to the flush just issued; stale marker passes; MUT-D cannot fire on a stale marker | ADDRESSED | Section 2 marker `seq=`, Section 3 completeness rule, 5.2 MUT-F; code: `flush_export()` returns the sequence in `peek_data`, `read(path, seq)` accepts only that marker; MUT-F caught and ablated (`gen_mut_export.md`). |
+| R1-L1 | "the tohost store is the last R line" is false | ADDRESSED | 5.1: every tohost store carries 1 and their count is bounded by the memory model's end-of-test count; implemented in gen_ut_export (R2 accepted the form). |
+| R1-L2 | MUT-A's catch mechanism (pc continuity) missing from 5.1; rule across Zcmp and traps | ADDRESSED (R2 found the trap/mret/dret defect, fixed below) | 5.1 continuity rule: excludes Zcmp micro-op records, debug-entry boundaries, `I`-line boundaries, trap records and mret/dret records. |
+| R1 prior 1..9 (v3 rows: completeness from the marker, read() owns the rules, drop/swap/contradiction mutations, all txn fields listed, abnormal ends, $ferror, same-instant constraint, opt-in knob and retention, image line / X-Z / codegen schema, extract_phase) | judged ADDRESSED by R1 | ADDRESSED | unchanged in v4b; the R1 radix and rs3 and Section-8 items are the R2 rows below. |
+| R2-M1 | no `irq_pending_o` row; grant row carries no request cycle (23 + 15 marked fire-check lines) | ADDRESSED | Section 8 table: `misc irq_pending` (value, every change) and new `ibus/dbus req` rows (addr, we, be at the request rise) plus `req_cycle` on the gnt rows; yaml `export_events` and the rendered writer functions carry the rows now (`gen_export_line_ibus_req`, `..._gnt` with `req_cycle`); writers arrive with the event part. |
+| R2-M2 | MUT-G's catch reads `evt_ibus_grants` from Python after the ack (not same-instant) | ADDRESSED | Section 2 flush marker gains `ibus_grants= dbus_grants=` sampled in `flush()`; 5.2 MUT-G is caught by `read()` against the marker's counts; the bridge fields arrive with the event part (Section 8 says so). |
+| R2-M3 | response table must carry one row per finding of both artifacts incl. NOT ADDRESSED | ADDRESSED | this table. |
+| R2-L1 | "the interface cycle counter every writer already has" is false; define one cycle base | ADDRESSED | Section 3 "One cycle base": the bridge's `cycle_count` through `sink.cycle()` for every writer; the bus driver's negedge counter is never a stamp; ctrl and scrkey interfaces need no counter. Code with the event part. |
+| R2-L2 | continuity must exclude mret and dret records (plan C-1) | ADDRESSED | 5.1 text; code: gen_ut_export excludes `MRET_INSN`/`DRET_INSN` records (spec encodings, commented); re-run retained (`gen_export_s7_t080d_*` includes the seed-7 program). |
+| R2-L3 | bind I lines to `markers=` as R to records and E to events | ADDRESSED | Section 2 binding rule; `read()` already asserted `len(markers) == flush.markers` (stated now). |
+| R2-L4 | state every R/I/E value as %h and every marker key=value as decimal | ADDRESSED | Section 2 radix rule; code: the sink writes the flush and end markers with `%0d`, `read()` parses marker values as decimal and compares `seq` as decimal; header `seed=`/`counters=` were decimal already; re-run retained (`*_t080d_*`). |
+| R2-L5 | rs3_addr/rs3_rdata need an exclusion basis or get exported; yaml comment | ADDRESSED | Exported: `gen_rvfi_txn` gained `rs3_addr`, `rs3_rdata` (sampled from the interface), the field list is 36 names, the yaml comment states the basis (rs3 feeds the draft-B ternary ops; the CHERIoT capability fields and mem_is_cap are the carve-out exclusion); re-run retained. |
+| R2-L6 | the Zc program spins after its tohost store, it does not push a stack frame | ADDRESSED | 5.1 corrected: the "last store 0x8000039c" of attempt 2 was the flushed prefix ending before the tohost record (the flush came 4 cycles after the bus store, the record retired later), not a push after tohost; the transcript carries the same correction. |
+| R2 prior: radix low | was NOT ADDRESSED in v4a | ADDRESSED | R2-L4. |
+| R2 prior: Section 8 collision (API doc) | was fixed only in the uncommitted API doc | ADDRESSED | gen_component_api_rvfi_monitor.md: old Section 8 renumbered 9, new Section 8 "Record export"; in the landing set. |
+| R2 prior: rs3 basis | was NOT ADDRESSED in v4a | ADDRESSED | R2-L5. |
+| R2 prior: response section answered three of six while the v4a header claimed all folded | ADDRESSED | this table replaces the partial section; the v4b header names what it folds. |
+| DV Lead round 4 (not a review row) | irq_pending_o and bus request events; COV_WITNESS command and CG-WIT-001 | ADDRESSED (text) | Section 8 rows (R2-M1); new Section 9 (COV_WITNESS, bins rendered from gen_trace_tp_bin.csv CG-WIT-001 rows, coverage only, build step 3). |

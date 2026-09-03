@@ -1,6 +1,6 @@
 # Record and event export (T-080 design addendum, for gen_tb_architecture.md Section 9)
 
-Author: tb-infra, 2026-09-03. Version 4b (as-built alignment after the record part landed: rendered include and method names, read() signature, the generic <name> event rows, measured sizes and wall-clock). Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
+Author: tb-infra, 2026-09-03. Version 4b: answers the v4a replan review (`dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md`, REQUEST-CHANGES: irq_pending and bus request events, grant counters sampled into the flush marker, one cycle base, mret/dret excluded from continuity, I lines bound to markers=, hex/decimal radix rule, rs3 exported, the Zc statement corrected) and the DV Lead's round-4 asks (COV_WITNESS, Section 9), plus the as-built alignment after the record part landed (rendered include and method names, read() signature, the generic <name> event rows, measured sizes and wall clock); the response table in `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md` carries one row per finding of both replan artifacts. Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
 (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_rvfi_export_addendum.md`, APPROVE-WITH-CHANGES; rows answered in
 `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md`). Status: text for the DV Lead's re-embed and the
 Orchestrator's approval; no SV or Python exists yet. Consumer: Test Writer (fire-checks over per-record RVFI facts
@@ -34,17 +34,21 @@ agree with the caller, enforces the format rules of Section 3 (including the I-l
 R <field values in header order, hex without prefix, flags 0/1>            one line per retired record
 I <cycle> <ext_pre_mip> <ext_post_mip> <ext_nmi> <ext_nmi_int> <ext_debug_req> <ext_debug_mode>   one line per RISING EDGE of rvfi_ext_irq_valid, at the rise cycle
 E <cycle> <source> <event> <field values in the row's order>                   one line per boundary event (Section 8)
-# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> cycle=<c>       written by EXPORT_FLUSH; s = the flush sequence number the command returns; r = the bridge's evt_retired_count read in the same call
+# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h> cycle=<c>   written by EXPORT_FLUSH; s = the flush sequence number the command returns; r, g, h = the bridge's evt_retired_count / evt_ibus_grants / evt_dbus_grants read in the same call (the grant fields arrive with the event part)
 # end records=<n> retired=<r> markers=<m> events=<e>                           written in extract_phase (Section 3)
 ```
 
-`fields` (every `gen_rvfi_txn` field, in this order): `order, pc_rdata, pc_wdata, insn, trap, halt, intr, mode,
-ixl, rs1_addr, rs1_rdata, rs2_addr, rs2_rdata, rd_addr, rd_wdata, mem_addr, mem_rmask, mem_wmask, mem_rdata,
-mem_wdata, ext_pre_mip, ext_post_mip, ext_nmi, ext_nmi_int, ext_debug_req, ext_debug_mode, ext_rf_wr_suppress,
-ext_ic_scr_key_valid, ext_irq_valid, ext_exp_valid, ext_exp_insn, ext_exp_last, ext_mcycle, cycle`; with
-`counters=1` the 20 names `mhpmcounter3..mhpmcounter12, mhpmcounter3h..mhpmcounter12h` follow. Not exported:
-`rs3_addr`, `rs3_rdata`, the `*_rcap` capability fields and `mem_is_cap` (CHERIoT carve-out, constant in this
-configuration; the `rvfi_cap_quiet` check owns them). The field lists have one origin: yaml keys
+`fields` (every `gen_rvfi_txn` field, 36 names in this order): `order, pc_rdata, pc_wdata, insn, trap, halt, intr,
+mode, ixl, rs1_addr, rs1_rdata, rs2_addr, rs2_rdata, rs3_addr, rs3_rdata, rd_addr, rd_wdata, mem_addr, mem_rmask,
+mem_wmask, mem_rdata, mem_wdata, ext_pre_mip, ext_post_mip, ext_nmi, ext_nmi_int, ext_debug_req, ext_debug_mode,
+ext_rf_wr_suppress, ext_ic_scr_key_valid, ext_irq_valid, ext_exp_valid, ext_exp_insn, ext_exp_last, ext_mcycle,
+cycle`; with `counters=1` the 20 names `mhpmcounter3..mhpmcounter12, mhpmcounter3h..mhpmcounter12h` follow. `rs3`
+is exported because the draft-B ternary ops (Zbt cmov/cmix/fsl/fsr) read a third operand and the plan's ISA items
+name it. Not exported, with the basis: the `*_rcap` capability fields and `mem_is_cap` are the CHERIoT carve-out
+("cheriot-out-of-scope", DV_prompt Section 2), constant in this configuration and owned by the `rvfi_cap_quiet`
+check. Radix rule: every value of an `R`, `I` or `E` line is hex without prefix (`%0h`); every `key=value` pair of
+the header, the flush marker and the end marker is decimal. Binding rule: the flush marker binds `I` lines to
+`markers=` exactly as `R` lines to `records=` and `E` lines to `events=`, and `read()` checks all three counts. The field lists have one origin: yaml keys
 `export_record_fields`, `export_counter_fields` and the `export_events` table in `gen_tb_knobs.yaml`, rendered as
 `GEN_EXPORT_RECORD_FIELDS` / `GEN_EXPORT_COUNTER_FIELDS` and two includes, `dv/auto_dv/env/gen_export_record_line.svh`
 (the `R` writer function `gen_export_record_line(t, counters)`, included in gen_rvfi_pkg) and
@@ -70,6 +74,11 @@ default line stays about 220 bytes.
 
 - Open: `$fopen` in `start_of_simulation_phase`; failure is `uvm_fatal GEN_EXPORT` (never a silent run
   without a file). The two header lines are written before the first record.
+- One cycle base for every line: the stamp is the bridge's `cycle_count` (gen_bridge_if, counted at the posedge),
+  read through `sink.cycle()` at write time by every writer; a driver acting at the negedge therefore stamps the
+  cycle whose posedge just passed, the same base as the monitor's record cycle. The bus driver's local negedge
+  counter (one ahead of the posedge counters) is never used for a stamp; gen_ctrl_if and gen_scrkey_if have no
+  counter of their own and need none.
 - Flush and the same-instant pair: `EXPORT_FLUSH` is routed by `gen_cmd_dispatch` to `gen_export_sink::flush()`,
   which reads the sink's record, marker and event counts and the bridge's `evt_retired_count`, writes the flush
   marker with all of them, calls `$fflush`, then checks `$ferror(fd)` (a non-zero code is `uvm_error GEN_EXPORT`). Design constraint
@@ -107,8 +116,8 @@ default line stays about 220 bytes.
   guards the call) and the `ap` publishing is unchanged. Measured on the record part (build out_t080): the Zc
   program's 175 records make a 21144-byte file (121 bytes per record; 28982 bytes = 166 per record with the
   counters), the seed-7 program's 2002 records 219090 bytes (109 per record); 1e6 records are therefore about
-  110-170 MB. Wall clock (retained runs): VCS CPU time 0.27 s without and 0.33 s with the knob on the Zc lock-step run,
-  0.54 s and 0.55 s on the seed-7 run, i.e. a few tens of milliseconds at these record counts. Retention: the file lives in the run
+  110-170 MB. Wall clock (retained runs, build out_t080d): VCS CPU time 0.29 s without and 0.26 s with the knob on the Zc
+  lock-step run, 0.52 s and 0.54 s on the seed-7 run, i.e. within a few tens of milliseconds at these record counts. Retention: the file lives in the run
   directory next to sim.log. Retention is a flow policy, ruled by Runtime (2026-09-03): the flow never deletes
   inside a run directory during a regression and never prunes silently; the export file is kept on purposes 1 to 3
   (bring-up, component change, reproduction) and on any non-PASS verdict; on purpose-4 full regressions it is
@@ -147,10 +156,12 @@ default line stays about 220 bytes.
    not derivable from the image without a decoder, so the tohost-store rule below carries the program-derived
    content check), and the tohost stores: every `R` line storing to the tohost
    address carries the value 1 and their count does not exceed the memory model's independent end-of-test count
-   (the bridge's `evt_eot_count`), which is the program-independent form ("last store" is not: the Zc program
-   pushes a stack frame after its tohost store, the riscv-dv programs store tohost repeatedly), plus the pc-continuity rule that MUT-A's catch depends
-   on: for consecutive `R` lines k and k+1 with no `I` line between them and record k not a debug entry,
-   `pc_rdata[k+1] == pc_wdata[k]`; across a Zcmp sequence the rule is applied to the sequence's boundary records
+   (the bridge's `evt_eot_count`), which is the program-independent form ("last store" is not: the riscv-dv programs
+   store tohost repeatedly, and the Zc program spins after its store while a flush taken too early ends the prefix
+   before the store's record, which is what the first green attempt saw), plus the pc-continuity rule that MUT-A's catch depends
+   on: for consecutive `R` lines k and k+1 with no `I` line between them, record k not a debug entry, not a
+   trap record and not an mret or dret record (their `pc_wdata` is the next sequential address, plan convention
+   C-1, not the return target), `pc_rdata[k+1] == pc_wdata[k]`; across a Zcmp sequence the rule is applied to the sequence's boundary records
    (the record before the first micro-op, the last micro-op, the record after) and the micro-op-internal pc
    convention of RVFI is recorded at the first green run before it is asserted; TRAP records are excluded: the
    first green run showed that this RTL reports `pc_wdata = pc + 4` on a trap record (riscv-dv seed 7, order 466,
@@ -179,7 +190,9 @@ default line stays about 220 bytes.
      caught by `read(path, seq=2)`: no complete marker with `seq=2` (the earlier `seq=1` marker present does not
      satisfy it).
    - MUT-G dropped event: the ibus driver skips one `gnt` line while its `grants` counter still increments ->
-     caught by the fixture's independent count check (E-line grant count == the bridge's `evt_ibus_grants`).
+     caught by `read()`: the E-line `ibus gnt` count differs from the marker's `ibus_grants=`, which `flush()` samples
+     from the bridge in the same call as the other counts (same-instant; a Python-side read after the ack is NOT
+     used, since fetches continue in the spin loop after EOT).
    - MUT-H wrong event cycle: the ctrl driver stamps its `fetch_enable` line with `cycle + 1` -> caught by the
      fixture's correlation check (the `E pin fetch_enable` line and the first `R` record after FETCH_EN relate by
      the bounded number of cycles the plan states).
@@ -194,6 +207,11 @@ default line stays about 220 bytes.
 - Test Writer (2026-09-03, v2): `I` lines carry `ext_debug_req` and `ext_debug_mode`; counters behind
   `+gen_export_counters=1`; the flush marker carries the bridge's retired count sampled at the same instant;
   the header names seed and image.
+- Cross-model replan review of v4a (2026-09-03, REQUEST-CHANGES, v4b): irq_pending and bus request events; grant
+  counters sampled into the flush marker (MUT-G); the complete two-artifact response table; one cycle base; mret/dret
+  excluded from continuity; I lines bound to markers=; radix rule; rs3 exported with its basis; the Zc statement
+  corrected; the API-document section collision resolved in the committed document (old Section 8 renumbered 9).
+- DV Lead round 4 (2026-09-03, v4b): irq_pending_o and bus request rows confirmed; COV_WITNESS and CG-WIT-001 in Section 9.
 - Cross-model replan review of v3a (2026-09-03, APPROVE-WITH-CHANGES, v4a): `read()` bound to the flush sequence
   just issued (MUT-F stale marker); last-store assertion by `mem_wmask`, not by line position; the pc-continuity
   rule stated for MUT-A.
@@ -224,8 +242,8 @@ default line stays about 220 bytes.
 Why: about 130 Phase-1 fire-checks assert bus or pin cycle facts (the rvalid cycle of an alert, an ibus grant
 against a retirement, a driver's rise and fall cycles, dbus timestamps) that the record lines cannot carry.
 Every event below is already known to an agent, driver or monitor; no new DUT observation is involved and no
-probe is added. The `cycle` stamp (the interface cycle counter every writer already has) is what correlates an
-`E` line with the `R` and `I` records.
+probe is added. The `cycle` stamp is the one cycle base of Section 3 (the bridge's `cycle_count` through
+`sink.cycle()`) and is what correlates an `E` line with the `R` and `I` records.
 
 Line: `E <cycle> <source> <event> <fields...>`. One writer function per row, rendered into
 `env/gen_export_fields.svh` from the yaml `export_events` table; the header repeats the table (`# events` lines)
@@ -234,12 +252,13 @@ so `read()` builds one namedtuple type per (source, event). Sources are enabled 
 
 | source | event | fields | writer | when |
 |---|---|---|---|---|
-| ibus, dbus | gnt | addr, we, be, outstanding_after | gen_bus_driver | the cycle the grant is driven (one per beat) |
+| ibus, dbus | req | addr, we, be | gen_bus_driver | the first cycle a request is seen (its rise); with the following gnt line's `req_cycle` this gives the cycles the request was held with gnt withheld, and its absence is the "no request" fact (TP-PMP-082 class) |
+| ibus, dbus | gnt | addr, we, be, req_cycle, outstanding_after | gen_bus_driver | the cycle the grant is driven (one per beat); `req_cycle` is the cycle of the matching req line |
 | ibus, dbus | rvalid | addr, we, err, intg_injected, outstanding_after | gen_bus_driver | the cycle the response is driven (one per beat) |
 | pin | irq_software, irq_timer, irq_external, irq_fast<n>, irq_nm, debug_req | value | irq / dbg drivers (step 2b) | every value change (rise and fall) |
 | pin | fetch_enable, mcounteren_writable | value (MuBi encoding) | gen_ctrl_driver | every value change |
 | alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
-| misc | <name> (core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr) | value | gen_misc_monitor | every value change (core_busy as the MuBi encoding) |
+| misc | <name> (irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr) | value | gen_misc_monitor | every value change (irq_pending_o is the DUT output pin, 26 marked items assert it in a named cycle; core_busy as the MuBi encoding) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
 | regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
@@ -262,3 +281,17 @@ Build order inside T-080: (1) sink, header, R/I lines, flush and end markers, `r
 reviewed v3a part); (2) bus, ctrl, scrkey and icram events (writers exist today), red then green; (3) the step-2b
 sources (pin, alert, misc, regime) land with their components in the step-2b re-application, each with its own
 red. The plan's RVFI-only fallback rule applies to items whose source arrives in step (3).
+
+## 9. Witness command for the plan's sunset (DV Lead round 4, version 4b)
+
+A test whose cycle-level clause passed against the export records the fact for coverage: bridge command
+`COV_WITNESS` (appended to `bridge_cmds`; arg0 = the rendered index of the marked test-plan item) routed by
+`gen_cmd_dispatch` to one covergroup, `gen_cg_wit_cycle_clause` (plan id CG-WIT-001, in `gen_fcov_pkg`, build step
+3), whose single coverpoint `cp_clause` has one bin per marked item. The bin list has one origin: the codegen reads
+the rows of `dv/auto_dv/docs/gen_trace_tp_bin.csv` whose covergroup column is `CG-WIT-001` (a new codegen input,
+read like `gen_dut_top.sv` and `gen_link.ld`) and renders `GEN_WIT_IDS` (SV: the item id per index, the bin list)
+and `WIT_IDS` (gen_knobs.py: item id -> index for the Test Writer's template). An index outside the list is a
+collected `uvm_error GEN_CMD_DISPATCH`. Coverage only: no checker reads it. The bins are excluded from manifests
+while the item carries the plan's marker token and become must-hit when the token is removed (gen_test_plan.md
+Section 0, sunset); the C7 covergroup strategy applies (isolated namespace, anti-vacuity: the sample is the
+command, which a test issues only after its own clause passed, so the bin cannot be hit by an always-true event).
