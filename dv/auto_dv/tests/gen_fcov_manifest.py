@@ -89,7 +89,9 @@ def load_segmentable():
     from that file's AST and compiled here, so the manifest and the plan cannot drift apart."""
     tree = ast.parse(TRACE_CHECK.read_text())
     fns = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "segmentable"]
-    assert len(fns) == 1, f"{TRACE_CHECK}: expected one segmentable(); found {len(fns)}"
+    if len(fns) != 1:
+        raise SystemExit(f"GEN_FCOV_MANIFEST_INPUT_VERSION: {TRACE_CHECK} defines {len(fns)} segmentable() functions; this "
+                         "generator needs the DV Lead's plan-set version with exactly one (the cross-bin rule). Wrong tree version.")
     code = compile(ast.Module(body=[fns[0]], type_ignores=[]), str(TRACE_CHECK), "exec")
 
     def make(words):
@@ -122,9 +124,14 @@ def excluded_coverpoints(blocks):
     # rule (e): Section 1.1 table rows `| CG-... | cp_... | owners |`
     text = FCOV_PLAN.read_text()
     sec = re.search(r"^# 1\.1 .*?(?=^# 2\.)", text, re.M | re.S)
-    if sec:
-        for m in re.finditer(r"^\| (CG-[A-Z]+-\d{3}) \| (c[pr]_[a-z0-9_]+) \|", sec.group(0), re.M):
-            cps.add((m.group(1), m.group(2)))
+    if not sec:
+        raise SystemExit(f"GEN_FCOV_MANIFEST_INPUT_VERSION: {FCOV_PLAN} has no Section 1.1 (regression-level coverpoints); this "
+                         "generator needs the DV Lead's plan-set version that lists them. Wrong tree version.")
+    rows = re.findall(r"^\| (CG-[A-Z]+-\d{3}) \| (c[pr]_[a-z0-9_]+) \|", sec.group(0), re.M)
+    if not rows:
+        raise SystemExit(f"GEN_FCOV_MANIFEST_INPUT_VERSION: {FCOV_PLAN} Section 1.1 has no coverpoint rows. Wrong tree version.")
+    for cg, cp in rows:
+        cps.add((cg, cp))
     return cps, bins
 
 
@@ -226,6 +233,11 @@ def main():
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
     if a.self_test:
+        import subprocess
+        head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--short", "--", str(TRACE_CHECK), str(FCOV_PLAN), str(TEST_PLAN), str(TP_BIN_CSV)],
+                               cwd=REPO_ROOT, capture_output=True, text=True).stdout.strip().splitlines()
+        print(f"GEN_FCOV_MANIFEST inputs at git HEAD {head}; working-tree modified inputs: {[d.split()[-1] for d in dirty] or 'none'}")
         tps = tp_blocks()
         items = items_of_group("gen_reg_schedule", tps)
         assert "TP-REG-018" in items and "TP-REG-019" in items, items

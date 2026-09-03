@@ -2,9 +2,11 @@
 
 Program: the riscv-dv entry gen_rand_smoke at the run seed (testlist `program: {riscv_dv_test:
 gen_rand_smoke, seed: run}`), or a directed program for the red run. Layers: the timing-only regime
-knobs (bus latencies, outstanding cap, scramble-key delay) are drawn and scheduled by the template;
-error-injection and event knobs stay at their yaml defaults because this program carries no
-expectation for them (later groups own those). Fire-check per seed: (1) the end-of-test store carries
+knobs (bus latencies, outstanding cap, scramble-key delay) are drawn and scheduled by the template
+when the build has a REGIME_SET consumer (gen_test_lib.TIMING_ONLY_KNOBS is empty at HEAD, where
+step 2b is parked, so nothing is drawn and the run logs GEN_TEST_LAYERS not_applied); error-injection
+and event knobs stay at their yaml defaults because this program carries no expectation for them
+(later groups own those). Fire-check per seed: (1) the end-of-test store carries
 code 1 (the program's own pass verdict); (2) the retirement count after that store is at least the
 program's retirement floor (riscv-dv +instr_cnt of the entry, or the directed program's
 gen_min_retired word); (3) every scheduled regime phase whose trigger was reached was applied

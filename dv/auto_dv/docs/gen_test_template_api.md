@@ -47,8 +47,8 @@ Testlist entry: `cocotb_module: dv.auto_dv.tests.gen_test_<area>_<topic>`, `uvm_
 | 2 | `apply_layers()` | layer 2: the knobs in `schedulable` that are not pinned on the command line are drawn from the seed (`lib.draw_knobs`); layer 3: `lib.Schedule.derive` builds K phases (phase 0 at `c0` carries the layer-2 values; phases 1..K-1 at cycle boundaries drawn from the CG-REG-007 duration classes, each changing a random non-empty subset of the knobs). `+gen_regime_sched=<text>` replaces both (consumed, source `supplied`); a supplied schedule naming a pinned knob is an assert. Phase-0 entries are applied through REGIME_SET before the first fetch. Logs `GEN_TEST_KNOBS`, `GEN_TEST_SCHED`, one `GEN_TEST_PHASE` per applied entry | REGIME_SET of a knob without a consumer is a collected `uvm_error GEN_CMD_DISPATCH` (fails the run) |
 | 3 | `run_schedule()` (forked) + `stimulus()` (forked) | the schedule runner arms the bridge cycle or retirement threshold of the next boundary and applies its entries when reached; it stops when the program ends first. `stimulus()` is the test's body and shares the bridge through `self.cmd()` (a lock serializes the two coroutines) | timeouts are asserts naming the awaited edge |
 | 4 | `wait_eot()` | awaits the `evt_eot_seen` edge (tohost or the EOT MMIO register) within `program_budget_cycles`; then waits for `stimulus()` to return and kills the schedule runner | assert on timeout |
-| 5 | `schedule_check()` then `fire_check()` | `self.check(name, ok, detail)` logs `GEN_TEST_FIRE <name> ok=<bool> <detail>` and collects failures | one `AssertionError` with every failure: `GEN_TEST_FAIL <name>: n fire-check failure(s): ...` (or `GEN_TEST_XFAIL <bug> ...` when `xfail_bug` is set) |
-| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; raises the collected failures BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | bridge accounting assert |
+| 5 | `schedule_check()` then `fire_check()` | `self.check(name, ok, detail)` counts the check, logs `GEN_TEST_FIRE <name> ok=<bool> <detail>` and collects failures. `schedule_check()` computes the reached phases from the bridge counts at the end-of-test store (`eot_cycle`, `eot_retired`: a phase is reached when its `c`/`r` boundary is at or below them), and fails when a reached phase is missing from the applied list, when a phase was applied before its boundary, or when the counts differ; with no schedulable knob it logs `GEN_TEST_LAYERS not_applied` and records no check | one `AssertionError` with every failure: `GEN_TEST_FAIL <name>: n fire-check failure(s): ...` (or `GEN_TEST_XFAIL <bug> ...` when `xfail_bug` is set) |
+| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; refuses a run whose `fire_check()` recorded no check (`GEN_TEST_FAIL <name>: fire_check() recorded no check`); cross-checks the declared bins against the test's manifest file when either exists (`lib.check_manifest_matches`); raises the collected failures BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | asserts as named |
 
 Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the library self-test).
 
@@ -57,12 +57,13 @@ Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the l
 | Attribute | Default | Meaning |
 |---|---|---|
 | `name` | `gen_test_template` | test name; equals the testlist entry and the manifest stem |
-| `schedulable` | `lib.SCHEDULABLE_KNOBS` (imem/dmem/irq knobs, `debug_req_regime`, `scr_key_delay`: the knobs with a REGIME_SET consumer today) | knobs layers 2 and 3 may vary; `lib.TIMING_ONLY_KNOBS` for a program that has no handler for injected errors or events |
+| `schedulable` | `lib.SCHEDULABLE_KNOBS`: the regime knobs the build's REGIME_SET dispatcher consumes, EMPTY at HEAD (step 2b parked; Section 8); with step 2b landed the imem/dmem/irq knobs, `debug_req_regime` and `scr_key_delay` | knobs layers 2 and 3 may vary; `lib.TIMING_ONLY_KNOBS` (the timing-only subset of the schedulable set, also empty at HEAD) for a program that has no handler for injected errors or events |
 | `k_range` | `(1, 5)` | inclusive range of the schedule phase count K (CG-REG-007 `cp_phase_count`) |
 | `duration_weights` | `lib.DEFAULT_DURATION_WEIGHTS` (short 6, medium 3, long 1) | class weights of the phase lengths (`lib.DURATION_CLASSES`) |
 | `program_budget_cycles` | `GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT` | cycles the program may take to its end-of-test store; also the threshold-wait budget |
 | `finish_timeout_cycles` | `None` (bridge default) | finish-handshake budget |
 | `xfail_bug` | `None` | bug id (`gen_bug_log.md`) of an `_xfail` test; the failing line then starts `GEN_TEST_XFAIL <id>` so the flow's XFAIL is attributable |
+| `expected_reports` | `0` | program report channel: the number of result words the directed program stores to the EOT MMIO register (`MEMORY_MAP["eot_addr"]`, `GEN_MM_EOT_ADDR`) before its final tohost store; each store toggles `evt_eot_seen` and leaves its value in `evt_eot_code`, so `wait_eot()` collects them edge by edge into `self.reports` (logged `GEN_TEST_REPORT idx=<i> value=<hex>`), asserts that no store was skipped (the store counter advances by one per awaited edge) and treats store number `expected_reports + 1` as the end of test. 0 = tohost only (riscv-dv programs) |
 
 ## 4. Instance helpers for the hooks
 
@@ -90,9 +91,9 @@ and FOLDED IDs resolved through `gen_feature_list.md` Section 3), so traceabilit
 from the test file.
 
 Library functions: `lib.plus(name, default)` / `lib.plus_int` (plusargs by rendered name),
-`lib.knob_is_pinned`, `lib.knob_values`, `lib.irq_mask(lines, fast)` (IRQ_SET/IRQ_CLR masks),
-`lib.IRQ_HOLD` / `lib.DBG_HOLD` / `lib.MEM_ERR_BUS` / `lib.MEM_ERR_KIND` (bridge argument codes,
-mirrored from the SV dispatcher until the codegen renders them), `lib.program_min_retired(image)`
+`lib.knob_is_pinned`, `lib.knob_values` (the bridge argument codes for IRQ_SET/IRQ_CLR/DBG_REQ/
+MEM_ERR_ARM are NOT in the library: their authority is the step-2b dispatcher, not in the tree, and
+the codegen is asked to render them into `gen_knobs.py`; tests that need them wait), `lib.program_min_retired(image)`
 (riscv-dv `+instr_cnt` of the entry, or the directed program's `gen_min_retired` word),
 `lib.program_symbol_word(image, symbol)`, `lib.riscv_dv_instr_cnt(test)`,
 `lib.load_manifest_bins(test)`, `lib.check_manifest_matches(test, declared)`.
@@ -101,7 +102,9 @@ mirrored from the SV dispatcher until the codegen renders them), `lib.program_mi
 
 `<knob>:<value>@c<N>` (cycle count) or `@r<N>` (retirement count), comma-separated; `<knob>` is the
 plan-side name (`imem_gnt_delay`, ...; the yaml name with `knob_` is accepted); `<value>` is one of
-the knob's yaml values. Entries at `c0` are the layer-2 values. The derived text is logged at
+the knob's yaml values. One schedule uses ONE trigger kind (all `c` or all `r`; a mix is refused by
+`lib.Schedule`), so the runner applies boundaries in count order, which is time order. Entries at
+`c0` are the layer-2 values. The derived text is logged at
 `GEN_TEST_SCHED source=derived k=<K> sched=<text>`; passing that text back as
 `+gen_regime_sched=<text>` reproduces the schedule (source `supplied`), and `+gen_knob_<name>=<v>`
 pins a knob for the run (it is then excluded from the draw and refused in a supplied schedule).
@@ -118,9 +121,21 @@ defines the word `gen_min_retired` (its retirement floor) so `lib.program_min_re
 program-derived value; `gen_boot_retire_red.S` is the TDD red fixture (tohost 3, unreachable
 floor).
 
+Program report channel (the one Python-visible data path from a program today): a directed program
+stores its result words (read-back values, computed checks, markers) to the EOT MMIO register and
+ends with the tohost store; the test sets `expected_reports` and asserts `self.reports[i]` in
+`fire_check()`. The register address comes from the rendered memory map (a program includes a
+header rendered from `gen_knobs.MEMORY_MAP["eot_addr"]`, never a re-typed address). Words are 32
+bits; a program that needs more reports stores more words. The channel carries what the program
+knows architecturally; RVFI-derived facts (per-record opcode, operands, trap flags) need the RVFI
+export TB Infra is asked for (plan Section 6 item 5).
+
 ## 7. Host-side checks
 
-`python3 dv/auto_dv/tests/gen_test_lib.py --self-test`: schedule determinism and seed dependence,
+`python3 -m dv.auto_dv.tests.gen_test_lib --self-test` from the clone root (the module imports
+`dv.auto_dv.gen_tb.gen_knobs`, so the clone root must be on `sys.path`; the script form
+`python3 dv/auto_dv/tests/gen_test_lib.py --self-test` works when `ci/env.sh` has put the clone
+root on `PYTHONPATH`): schedule determinism and seed dependence,
 text round trip, REGIME_SET argument mapping, knob draw domain, IRQ mask bits, riscv-dv
 `+instr_cnt` lookup, ASCII scan of every test source and program. `python3 -m py_compile` on each
 test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/tests/gen_fcov_manifest.py
@@ -142,4 +157,5 @@ test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/t
 - No covergroup exists yet: `declare_bins()` returns `[]` and entries carry
   `fcov_expectation_file: null`; the manifests are wired when `gen_fcov_pkg` lands.
 - Bridge argument codes (IRQ hold policies, line-mask bits, DBG_REQ policies, MEM_ERR_ARM kinds) are
-  mirrored in `gen_test_lib.py` until `gen_knobs_codegen.py` renders them.
+  not in the library: `gen_knobs_codegen.py` is asked to render them (plan Section 6 item 1); until
+  then no committed test issues IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ or MEM_ERR_ARM.

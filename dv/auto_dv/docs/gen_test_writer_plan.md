@@ -29,7 +29,7 @@ Rule (one test per group, `gen_test_plan.md` Section 0 "Test groups"):
 | items of a group | one fire-check per item inside the group's test, named `fire_<tp_id_lower>` (for example `fire_tp_isa_001`), called from `fire_check()`; each asserts a per-seed observable through `GenTest.check`, and every item's result is collected before the finish handshake |
 | bins of a group | `dv/auto_dv/fcov_expectations/gen_test_<area>_<topic>.fcov.yaml`, rendered by the generator (Section 2) from the group's items after the manifest rule |
 | docstring of a test | names the group, the TP items, the canonical feature IDs those items cover (ALIAS and FOLDED IDs resolved through `gen_feature_list.md` Section 3), the program, the knobs it pins (normally none) and the checkers it relies on, so the Critic's traceability sampling can start from the test file |
-| testlist entry | written by me to `dv/auto_dv/work/test-writer/gen_testlist_entries.yaml`, copied into `dv/auto_dv/flow/gen_testlist.yaml` by Runtime (one owner per file); a test's red run is its own entry (a request cannot swap a program) |
+| testlist entry | written by me to `dv/auto_dv/work/test-writer/gen_testlist_entries.yaml`, copied into `dv/auto_dv/flow/gen_testlist.yaml` by Runtime (one owner per file); a test's red run is its own entry (a request cannot swap a program) with `red_fixture: true`, `measured: false`, tier `check`: the flow reports its designed FAIL as RED-OK and an unexpected PASS as FAIL (gen_runtime_api.md Sections 2 and 7) |
 
 Tier, phase and `feature_groups`: the item's Tier becomes the test's `tier` (lowest tier over its
 items); `feature_groups` carries the area (`isa`, `mul`, ...), the group name and `mutation` for
@@ -176,6 +176,23 @@ Items the Test Writer needs from TB Infra (queued by the Orchestrator after T-06
    a per-phase record file written by the SV side that the test parses after `finish_ack`. Without
    one of these the REG group cannot be written to its fire-checks and would degrade to schedule
    accounting only, which the plan forbids.
+5. An RVFI record export readable by Python in measured runs (asked 09:12 UTC, highest priority):
+   the monitor writes one ASCII line per `gen_rvfi_txn` (and per irq marker) to the path of a normal
+   knob `+gen_rvfi_export=<file>` set by the flow to `<run dir>/gen_rvfi_records.txt`; a bridge
+   command (MISC sub-op or a new kind RVFI_FLUSH) makes SV `$fflush` and ack, so a test reads the
+   complete file inside `fire_check()` after the end-of-test edge and before the finish handshake.
+   Reason: almost every Phase 1 fire-check reads per-record RVFI facts (opcode, operand classes,
+   `rvfi_trap`, `rvfi_ext_*`), `+gen_rvfi_trace` is debug-only uvm_info, and per-cycle polling is
+   forbidden (A-01). Until it lands, only tohost/count-based checks and the program report channel
+   (template attribute `expected_reports`: K result words a directed program stores to the EOT MMIO
+   register before tohost, collected edge by edge) are available, and batch 1 is limited to the
+   directed self-checking groups listed in `dv/auto_dv/work/test-writer/batch1/README.md`.
+   Status: TB Infra's T-080 design addendum (`dv/auto_dv/work/tb-infra/gen_rvfi_export_addendum.md`,
+   09:29 UTC) meets the requirements; Test Writer comments (09:31 UTC): the per-record
+   `ext_mhpmcounters` are needed in v1 behind `+gen_rvfi_export_counters=1` (PMC/DIT/BTALU
+   fire-checks read them), the flush marker must carry the bridge retirement count sampled at the
+   same instant, and the `I` lines carry `ext_debug_req`/`ext_debug_mode`. When it lands, `GenTest`
+   issues the flush after the end-of-test edge and exposes `self.records`.
 
 ## 7. First real test and the template proof (this task)
 

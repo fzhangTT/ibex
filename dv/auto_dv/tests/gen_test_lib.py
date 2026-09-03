@@ -36,15 +36,9 @@ TIMING_ONLY_CANDIDATES = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob
                           "knob_dmem_gnt_delay", "knob_dmem_rvalid_delay", "knob_scr_key_delay")
 TIMING_ONLY_KNOBS = tuple(n for n in TIMING_ONLY_CANDIDATES if n in SCHEDULABLE_KNOBS)
 
-# Bridge argument encodings of gen_env_pkg::gen_cmd_dispatch / gen_agents_pkg (step 2b). Mirror
-# kept here until gen_knobs_codegen.py renders them into gen_knobs.py (asked of TB Infra, plan
-# Section 6 item 1); a drift shows up as a collected GEN_CMD_DISPATCH error, never silently.
-IRQ_LINE_BIT = {"software": 0, "timer": 1, "external": 2, "nm": 18}
-IRQ_FAST_BIT0 = 3
-IRQ_HOLD = {"cycles": 0, "until_ack": 1, "until_taken": 2, "sticky": 3}
-DBG_HOLD = {"cycles": 0, "until_debug_mode": 1, "sticky": 2}
-MEM_ERR_BUS = {"ibus": 0, "dbus": 1}
-MEM_ERR_KIND = {"err": 1, "intg": 2}
+# Bridge argument encodings (IRQ line-mask bits, IRQ/DBG hold-policy codes, MEM_ERR_ARM kinds) are
+# NOT mirrored here: their authority is the step-2b SV dispatcher, which is not in the tree, and the
+# codegen is asked to render them into gen_knobs.py (plan Section 6 item 1). Tests that need them wait.
 
 # CG-REG-007 duration classes (gen_fcov_plan.md Section 3.8): TB-side phase length in cycles.
 DURATION_CLASSES = {"short": (500, 2000), "medium": (2001, 20000), "long": (20001, 100000)}
@@ -138,6 +132,8 @@ class Schedule:
     def __init__(self, phases, source):
         self.phases = list(phases)
         self.source = source   # "derived" or "supplied"
+        kinds = {p.kind for p in self.phases}
+        assert len(kinds) <= 1, f"GEN_TEST_LIB: a schedule uses one trigger kind (c or r), got {sorted(kinds)}"
 
     @property
     def k(self):
@@ -197,17 +193,6 @@ class Schedule:
     def regime_set_args(self, phase):
         """REGIME_SET command arguments: arg0 knob id, arg1 value index (gen_cmd_dispatch::apply_knob)."""
         return (KNOB_IDS[phase.knob], knob_values(phase.knob).index(phase.value), 0, 0)
-
-
-def irq_mask(lines=(), fast=()):
-    """IRQ_SET/IRQ_CLR line mask: named lines (software, timer, external, nm) plus fast ids 0..14."""
-    m = 0
-    for name in lines:
-        m |= 1 << IRQ_LINE_BIT[name]
-    for i in fast:
-        assert 0 <= i < 15, f"GEN_TEST_LIB: fast interrupt id {i} out of range"
-        m |= 1 << (IRQ_FAST_BIT0 + i)
-    return m
 
 
 def riscv_dv_instr_cnt(test_name):
@@ -279,7 +264,11 @@ def _self_test():
         assert a[0] == KNOB_IDS[ph.knob] and knob_values(ph.knob)[a[1]] == ph.value
     d = draw_knobs(seed, names)
     assert set(d) == set(names) and all(d[n] in knob_values(n) for n in names)
-    assert irq_mask(["software", "nm"], [0, 14]) == (1 << 0) | (1 << 18) | (1 << 3) | (1 << 17)
+    try:
+        Schedule.parse("imem_gnt_delay:long@c0,imem_gnt_delay:short@r50")
+        raise AssertionError("mixed trigger kinds accepted")
+    except AssertionError as exc:
+        assert "one trigger kind" in str(exc), exc
     assert riscv_dv_instr_cnt("gen_rand_smoke") == 300
     assert CMD["REGIME_SET"] and CONSTANTS["GEN_CLK_PERIOD_NS"] > 0 and plusarg("regime_sched", "x").startswith("+gen_")
     here = Path(__file__).resolve().parent

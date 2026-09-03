@@ -63,6 +63,11 @@ class GenTest:
     finish_timeout_cycles = None   # None = the rendered default of GenBridge.finish
     # Expected-fail tests name their bug id so the failing line carries it (plan Section 4 item 5).
     xfail_bug = None
+    # Program report channel: a directed program stores this many result words to the EOT MMIO
+    # register (GEN_MM_EOT_ADDR) before its final tohost store; each store toggles evt_eot_seen and
+    # leaves its value in evt_eot_code, so Python collects them edge by edge into self.reports and
+    # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
+    expected_reports = 0
 
     def __init__(self, dut):
         self.dut = dut
@@ -81,7 +86,11 @@ class GenTest:
         self.knobs = {}
         self.schedule = None
         self.applied = []          # Phase objects applied through REGIME_SET, in order
+        self.reports = []          # program report words (EOT-register stores before the final code)
         self.eot_seen = False
+        self.eot_cycle = None      # bridge counts at the end-of-test store (the schedule check's reference)
+        self.eot_retired = None
+        self.checks = 0            # check() calls; finish() refuses a run with none (silent-pass guard)
         self.failures = []
         self._cmd_lock = Lock()
         self.log.info("GEN_TEST_SEED test=%s seed=%d image=%s", self.name, self.seed, image_path)
@@ -187,7 +196,7 @@ class GenTest:
     async def run_schedule(self):
         """Apply the phases after phase 0 at their triggers, in trigger order, until the program ends."""
         pending = [p for p in self.schedule.phases if not (p.kind == "c" and p.count == 0)]
-        pending.sort(key=lambda p: (p.kind, p.count, p.idx))
+        pending.sort(key=lambda p: (p.count, p.idx))   # one trigger kind per schedule (lib.Schedule), so count order is time order
         i = 0
         while i < len(pending) and not self.eot_seen:
             p = pending[i]
@@ -206,18 +215,31 @@ class GenTest:
         return None
 
     async def wait_eot(self):
+        """Collect expected_reports report words (one EOT-register store each), then the end-of-test
+        store; every store is one awaited edge, and the store counter proves none was missed."""
         b = self.h.b
-        if self.eot_count() == 0:
+        final = self.expected_reports + 1
+        while self.eot_count() < final:
+            seen_before = self.eot_count()
             try:
                 await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
             except Exception as exc:
-                raise AssertionError(f"GEN_TEST: no end-of-test store within {self.program_budget_cycles} cycles ({type(exc).__name__})") from None
+                raise AssertionError(f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
+                                     f"{self.program_budget_cycles} cycles ({type(exc).__name__})") from None
+            assert self.eot_count() == seen_before + 1, \
+                f"GEN_TEST: report channel skipped a store ({seen_before} -> {self.eot_count()}); the program stores faster than one edge per store"
+            if self.eot_count() < final:
+                self.reports.append(int(b.evt_eot_code.value))
+                self.log.info("GEN_TEST_REPORT idx=%d value=0x%08x cycle=%d", len(self.reports) - 1, self.reports[-1], self.cycle())
         self.eot_seen = True
-        self.log.info("GEN_TEST_EOT code=0x%08x stores=%d retired=%d cycle=%d", int(b.evt_eot_code.value),
-                      self.eot_count(), self.retired(), self.cycle())
+        self.eot_cycle = self.cycle()
+        self.eot_retired = self.retired()
+        self.log.info("GEN_TEST_EOT code=0x%08x stores=%d reports=%d retired=%d cycle=%d", int(b.evt_eot_code.value),
+                      self.eot_count(), len(self.reports), self.eot_retired, self.eot_cycle)
 
     def check(self, what, ok, detail):
         """Record one fire-check result; failures are raised together by run()."""
+        self.checks += 1
         self.log.info("GEN_TEST_FIRE %s ok=%s %s", what, bool(ok), detail)
         if not ok:
             self.failures.append(f"{what}: {detail}")
@@ -236,22 +258,37 @@ class GenTest:
         """Hook: the bins the test intends to hit (same tokens as its fcov manifest); [] before covergroups exist."""
         return []
 
+    def phase_reached(self, p):
+        """A phase's trigger passed when the bridge count it names reached the boundary by the end of test."""
+        return (p.kind == "c" and p.count <= self.eot_cycle) or (p.kind == "r" and p.count <= self.eot_retired)
+
     def schedule_check(self):
-        """Every phase whose trigger was reached was applied, and nothing else was. With no
-        schedulable knob (no REGIME_SET consumer in the build, gen_test_lib.SCHEDULABLE_KNOBS) the
-        layers are recorded as not applied and the check is a logged no-op, never a silent pass."""
+        """Every phase whose trigger boundary passed by the end of test was applied, and no phase was
+        applied before its trigger. `reached` comes from the bridge counts at EOT, never from the
+        runner's own bookkeeping, so a runner that stalls or dies leaves a reached-but-unapplied
+        phase and the check fails. With no schedulable knob the layers are recorded as not applied
+        and the check is a logged no-op, never a silent pass."""
         if not self.schedule.phases:
             self.log.info("GEN_TEST_LAYERS not_applied reason=no schedulable knob for this test (schedulable=%s)",
                           ",".join(lib.short_knob(n) for n in self.schedulable) or "-")
             return
-        reached = [p for p in self.schedule.phases if p.applied_cycle is not None]
-        self.check("fire_schedule_applied", len(reached) == len(self.applied) and len(self.applied) >= 1,
-                   f"applied {len(self.applied)} of {len(self.schedule.phases)} scheduled entries "
-                   f"(k={self.schedule.k}, source={self.schedule.source})")
+        reached = [p for p in self.schedule.phases if self.phase_reached(p)]
+        applied = set(id(p) for p in self.applied)
+        missed = [p.text() for p in reached if id(p) not in applied]
+        early = [p.text() for p in self.applied if p.applied_cycle is not None and p.kind == "c" and p.applied_cycle < p.count]
+        self.check("fire_schedule_applied", not missed and not early and len(self.applied) == len(reached),
+                   f"reached {len(reached)} of {len(self.schedule.phases)} scheduled entries by EOT (cycle {self.eot_cycle}, "
+                   f"retired {self.eot_retired}), applied {len(self.applied)}"
+                   + (f", missed {missed}" if missed else "") + (f", early {early}" if early else "")
+                   + f" (k={self.schedule.k}, source={self.schedule.source})")
 
     async def finish(self):
         bins = self.declare_bins()
         self.log.info("GEN_TEST_BINS n=%d %s", len(bins), " ".join(bins) if bins else "-")
+        if self.checks == 0:
+            raise AssertionError(f"GEN_TEST_FAIL {self.name}: fire_check() recorded no check (a test must assert that its scenario fired)")
+        if bins or lib.load_manifest_bins(self.name) is not None:
+            lib.check_manifest_matches(self.name, bins)
         if self.failures:
             tag = f"GEN_TEST_XFAIL {self.xfail_bug} " if self.xfail_bug else "GEN_TEST_FAIL "
             raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))

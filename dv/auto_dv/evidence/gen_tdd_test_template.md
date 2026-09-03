@@ -1,4 +1,13 @@
-# TDD transcript: the test template proven on gen_test_boot_retire (red first, then green)
+# Transcript: the test template proven on gen_test_boot_retire (red and green fire proofs; review fixes in Section 6)
+
+Ordering statement (cross-model review of 746af6f, medium): the template and gen_test_boot_retire
+were written first and then run on both programs as fire proofs; the local green_s1 run finished
+27 s before red_s1 (Section 3 and Section 2 mtimes), so Sections 2-3 are NOT a failing-check-before-
+implementation transcript. They prove that both fire-checks fail when their intent is violated and
+pass when it holds. The fixes of Section 6 (schedule check, zero-check guard) were done in TDD order:
+the red fixtures were run against the defective template first (recorded PASS = the defect), then
+the template was fixed, then the same fixtures were re-run (FAIL as intended) with their green
+counterparts.
 
 Owner: test-writer. Date: 2026-09-03 (08:21-08:31 UTC local bring-up; Runtime runs appended in
 Section 4 when their manifests land). Build configuration `opentitan`, DUT `gen_dut_top`
@@ -21,7 +30,7 @@ $ python3 dv/auto_dv/tests/gen_test_lib.py --self-test
 GEN_TEST_LIB self-test PASS (schedule k=4: imem_gnt_delay:same_cycle@c0,imem_rvalid_delay:short@c0,imem_outstanding_cap:cap2@c0,dmem_gnt_delay:random@c0,dmem_rvalid_delay:min1@c0,scr_key_delay:withheld_then_valid@c0,imem_rvalid_delay:min1@c1930,scr_key_delay:delayed@c20592,imem_rvalid_delay:long@c20592,dmem_gnt_delay:same_cycle@c20592,dmem_rvalid_delay:long@c21490,dmem_gnt_delay:random@c21490)
 ```
 
-## 2. Red: the fire-check on the red fixture program (seed 1)
+## 2. Red fire proof: the fire-check on the red fixture program (seed 1; run after the implementation, 27 s after green_s1)
 
 Fixture `gen_programs/gen_boot_retire_red.S`: nine instructions, then `tohost <- 3` (the FAIL code),
 and a declared floor `gen_min_retired = 1000` it never reaches, so both halves of the fire-check
@@ -107,6 +116,26 @@ Read: with all knobs at their yaml defaults (short/short/cap8, key immediate) th
 finishes at cycle 1924 instead of 4240 (Section 3, seed 1 with long rvalid latency and cap4 drawn),
 which is the timing regime doing its work. The fire-check verdicts are unchanged.
 
+## 3c. Program report channel (template feature added after the landing of 746af6f)
+
+`GenTest.expected_reports`: a directed program stores K result words to the EOT MMIO register
+before its tohost store; `wait_eot()` collects them edge by edge into `self.reports` and asserts
+the store counter advanced by exactly one per awaited edge. Fixture (working files, not committed):
+`dv/auto_dv/work/test-writer/fixtures/gen_report_channel.S` (three words: a sum 0x6bba, a shift
+0x600d0, a marker 0xc0de0003, then tohost 1; the EOT address comes from a header rendered from
+`gen_knobs.MEMORY_MAP["eot_addr"]`), program `work/test-writer/prog_report/` (Spike check: 3 stores
+to 0x8ffff104, exit 0), test modules `fixtures/gen_ut_report_channel.py` (green) and
+`gen_ut_report_channel_red.py` (report 1 expected wrong on purpose). Build `out_head/`, seed 1:
+
+| Run | sim.log mtime (local) | md5 | lines | cocotb |
+|---|---|---|---|---|
+| out_head/report_s1 | 05:14:32.14 | ca4ef0511a039624f31ae6e58a3dc073 | `GEN_TEST_REPORT idx=0 value=0x00006bba cycle=55`, `idx=1 value=0x000600d0 cycle=62`, `idx=2 value=0xc0de0003 cycle=70`, `GEN_TEST_EOT code=0x00000001 stores=4 reports=3 retired=17 cycle=82`, `fire_report_0/1/2 ok=True`, `fire_report_count ok=True reports 3 (expected 3)`, `fire_retired_floor ok=True retired 17 (floor 12)`, `gen_ut_report_channel GEN_TEST_PASS` | PASS (870.01 ns), UVM_ERROR 0 |
+| out_head/report_red_s1 | 05:15:08.81 | b65e0334293c07634512d3c40cfb7b26 | `GEN_TEST_FIRE fire_report_1 ok=False report 1 0x000600d0 (expected 0x000c01a0)`, `AssertionError: GEN_TEST_FAIL gen_ut_report_channel_red: 1 fire-check failure(s): fire_report_1: ...` | FAIL (870.01 ns) |
+
+Read: the channel delivers every word in order with its cycle, and a wrong expectation fails
+through the test's own assert. It carries what the program knows architecturally; RVFI-derived
+facts still need TB Infra's RVFI export (plan Section 6 item 5).
+
 ## 4. Runtime runs (purpose 1, LSF through the flow)
 
 Requests `test-writer-001.yaml` (red) and `test-writer-002.yaml` (green) filed 08:30 UTC were
@@ -142,6 +171,36 @@ so these runs prove the fire-checks and the flow's verdict path, not the layers.
 `<out-tree>/runs/<test>_<seed>/{sim.log, sim_stdout.log, result.yaml, run_cmd.sh}`; the seeds are
 the flow's derived seeds for `seeds: 3` (`scope.base_seed` in the regression manifest reproduces
 them).
+
+## 6. Review fixes of 746af6f (cross-model REQUEST-CHANGES; response rows in gen_critic_response_test_template.md)
+
+Build `out_head/` (HEAD 0475b94 working tree, no REGIME_SET consumer), riscv-dv seed-1 program
+(`prog_s1`), fixtures under `dv/auto_dv/work/test-writer/fixtures/` (working files):
+`gen_ut_sched_vacuous.py` (the schedule runner returns at once, so the c200 boundary passes
+unapplied; `apply_phase` is stubbed to record without a bridge command because no consumer exists at
+HEAD), `gen_ut_sched_sound.py` (same stub, normal runner), `gen_ut_zero_check.py` (`fire_check()`
+records nothing). Schedule supplied as `+gen_regime_sched=imem_gnt_delay:long@c0,imem_gnt_delay:short@c200`.
+TDD order: the fixtures ran against the defective template FIRST, then the template was fixed, then
+the same fixtures and the template's tests were re-run.
+
+| Step | Run | sim.log mtime (local) | md5 | Decisive lines | cocotb |
+|---|---|---|---|---|---|
+| pre-fix (defect shown) | prefix_sched_vacuous | 05:21:35.18 | 8f4f7bf198bcfd4982accbaaa0ebd767 | `GEN_TEST_FIRE fire_schedule_applied ok=True applied 1 of 2 scheduled entries (k=2, source=supplied)` although EOT was at cycle 1924 and c200 had passed | PASS (vacuous) |
+| pre-fix (defect shown) | prefix_zero_check | 05:21:37.10 | c7b630c61b2099c5f10f8f7e5f7caab4 | no `GEN_TEST_FIRE` line at all; `gen_ut_zero_check GEN_TEST_PASS` | PASS (silent) |
+| post-fix red | postfix_sched_vacuous | 05:23:06.83 | 6cf265c2cc3ce8bdf5d4eee9d16a5f7b | `fire_schedule_applied ok=False reached 2 of 2 scheduled entries by EOT (cycle 1924, retired 550), applied 1, missed ['imem_gnt_delay:short@c200']`; `AssertionError: GEN_TEST_FAIL gen_ut_sched_vacuous: 1 fire-check failure(s): ...` | FAIL |
+| post-fix green | postfix_sched_sound | 05:23:10.29 | 4168f472a6da0863e0610d10d9d722e1 | `GEN_TEST_PHASE idx=1 trigger=c200 ... cycle=201 (stub, no bridge command)`; `fire_schedule_applied ok=True reached 2 of 2 ... applied 2`; `GEN_TEST_PASS` | PASS |
+| post-fix red | postfix_zero_check | 05:23:13.66 | 90f37742d12c0315b97cbb139468d8dd | `AssertionError: GEN_TEST_FAIL gen_ut_zero_check: fire_check() recorded no check (a test must assert that its scenario fired)` | FAIL |
+| regression | postfix_boot_green_s1 | 05:23:15.69 | 543ef81d3f16f105afea8e42c9a00e99 | `fire_eot_pass_code ok=True`, `fire_retired_floor ok=True retired 550 (floor 300 ...)`, `gen_test_boot_retire GEN_TEST_PASS` | PASS |
+| regression | postfix_boot_red_s1 | 05:23:17.40 | 93f0b109146c389f1c62842b4bde3410 | `AssertionError: GEN_TEST_FAIL gen_test_boot_retire: 2 fire-check failure(s): fire_eot_pass_code ... \| fire_retired_floor ...` | FAIL |
+| regression | postfix_report_s1 | 05:23:19.79 | 277468e63af9cbfae27b9e9b57524a21 | `GEN_TEST_EOT code=0x00000001 stores=4 reports=3`, `fire_report_0/1/2 ok=True`, `GEN_TEST_PASS` | PASS |
+
+Manifest generator: `python3 dv/auto_dv/tests/gen_fcov_manifest.py --self-test` now prints the tree
+it ran against (`inputs at git HEAD 0475b94; working-tree modified inputs: [gen_fcov_plan.md,
+gen_test_plan.md, gen_trace_tp_bin.csv, gen_trace_check.py]`, PASS) and, pointed at the committed
+versions of `gen_trace_check.py` and `gen_fcov_plan.md` (extracted with `git show HEAD:`), exits with
+the named messages `GEN_FCOV_MANIFEST_INPUT_VERSION: ... defines 0 segmentable() functions ...` and
+`... has no Section 1.1 ...` (fixtures/head_inputs, run 09:23 UTC). The DV Lead's plan-set landing SHA
+is recorded in the response file when it lands.
 
 ## 5. Limitations recorded
 
