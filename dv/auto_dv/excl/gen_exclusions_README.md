@@ -277,12 +277,14 @@ same list under "live:" / "carve-back:". None carries a Class T annotation any m
 Inputs, per the Runtime flow (dv/auto_dv/docs/gen_runtime_api.md, gen_round.py): a measured round writes
 its URG report to `<out_root>/regress_round_<n>/cov/report/` (out_root from dv/auto_dv/work/runtime/
 gen_site.yaml, today /proj_soc/user_dev/fzhang/ibex_dv_out) and records `coverage.report_dir` in
-`dv/auto_dv/evidence/gen_round_<n>/regress_manifest.yaml`; the evidence directory copies dashboard.txt,
-hierarchy.txt, tests.txt, groups.txt, grpinfo.txt and, from the first measured round on, asserts.txt
+`dv/auto_dv/evidence/gen_round_<n>/gen_regress_manifest.yaml`; the evidence directory copies the URG report files under the
+gen_ landing prefix (gen_dashboard.txt, gen_hierarchy.txt, gen_tests.txt, ...) and, from the first measured round on, gen_asserts.txt
 (Runtime change of 2026-09-03 09:3xZ, gen_runtime_api.md 7d; earlier round directories are not
-re-collected), so the fill cites the committed copy dv/auto_dv/evidence/gen_round_<n>/asserts.txt.
+re-collected), so the fill cites the committed copy dv/auto_dv/evidence/gen_round_<n>/gen_asserts.txt. The file names
+are constants of dv/auto_dv/flow/gen_flow_const.py (EVIDENCE_FILE_PREFIX, ROUND_EV_ASSERTS, ROUND_EV_REGRESS_MANIFEST, ROUND_EC3_ASSERTS_RE), imported by gen_excl_select.py and
+gen_excl_f1_pass.py; this README spells them out for the reader only.
 
-Fields read: in asserts.txt (the committed copy, or `<report_dir>/asserts.txt`), section "Detail Report for Assertions", the rows whose
+Fields read: in gen_asserts.txt (the committed copy of the report's asserts.txt), section "Detail Report for Assertions", the rows whose
 name ends in IbexCtrlStateValid (rtl/ibex_controller.sv:1104-1106), IbexLsuStateValid
 (rtl/ibex_load_store_unit.sv:821-824), IbexMultDivStateValid (rtl/ibex_multdiv_fast.sv:532-533); the
 columns are `ASSERTIONS CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE`; EC-3 requires
@@ -294,14 +296,14 @@ Command (the only way the three class-D spare-encoding groups enter the file):
 python3 dv/auto_dv/excl/gen_excl_select.py --dump <report_dir>/../full_exclusions \
   --out dv/auto_dv/excl/gen_exclusions.el --report dv/auto_dv/excl/gen_exclusions_select_report.md \
   --attempts <the strict-load attempts logs in force> \
-  --ec3-asserts <report_dir>/asserts.txt --ec3-round round_<n>
+  --ec3-asserts dv/auto_dv/evidence/gen_round_<n>/gen_asserts.txt --ec3-round round_<n>
 ```
 
-The generator accepts only `dv/auto_dv/evidence/gen_round_<n>/asserts.txt` whose sibling
-regress_manifest.yaml records a measured merge (coverage.dashboard_txt set), and records that relative
+The generator accepts only `dv/auto_dv/evidence/gen_round_<n>/gen_asserts.txt` whose sibling
+gen_regress_manifest.yaml records a measured merge (coverage.dashboard_txt set), and records that relative
 path in the annotations and the .el header; it refuses the fill (exit non-zero, names the reason) when
 the path is anywhere else, the round is unmeasured, a row is missing, ATTEMPTS is 0 or FAILURES is not 0; when it fills, each of the three annotations reads "attempts A, failures 0 in
-round_<n> (asserts.txt)" and the .el header line states the source. Then: strict load of the new file
+round_<n> (gen_asserts.txt)" and the .el header line states the source. Then: strict load of the new file
 against that round's merged vdb (F-1/EC-5), the round's `-dump full_exclusions` and constfile.txt
 copied beside the .el (B.7 rule 3), Critic re-review of the file.
 

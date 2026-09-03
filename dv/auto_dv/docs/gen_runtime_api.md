@@ -107,18 +107,27 @@ plusargs with their compiled defaults) and `export_record_fields`; the regressio
 `export_sources` and `export_knobs` under `builds.<name>`. The table is read from the source root (the
 committed tree in head mode), never re-typed. `gen_flow_util.export_facts` is the reader.
 
-Two fields, two meanings (ruling 2026-09-03): `export_sources` is what the codegen RENDERED (every row of
-the table, the codegen cross-check); `export_sources_emitted` is what the build's writers EMIT, the plan's
-sunset input: the rows whose source is in the codegen-rendered active-source list (`EXPORT_ACTIVE_SOURCES`
-in the knob table, provided by TB Infra); until that list exists the field is an empty list, never a copy of
-the rendered table (`export_sources_emitted_origin` says which). A run that wrote an export file re-checks
-it: the `sources=` set of the file's first header line must equal the manifest's emitted source set, else the
-run FAILs (`export sources emitted mismatch ...`); when the run narrowed the sources knob (`+gen_export_sources`
-other than `all`) the header may be a subset of the emitted set, never a source the build cannot emit. A run
-whose entry names `+gen_export_file` and that ends PASS or RED-OK without the file, or with a file that has no
-`# gen_export` header, FAILs (`export file <name> absent or without a gen_export header`): not writing the file
-cannot dodge the check. result.yaml records `export_header_sources` and the manifest's
-`export_sources_emitted`. The DV Lead's sunset tool fails only on emitted rows.
+Three fields, three meanings (rulings 2026-09-03 and LOG-028a): `export_sources` is what the codegen RENDERED
+(every row of the table, the codegen cross-check); `export_sources_declared` is what the codegen says the build's
+writers can emit, the rows whose source is in the rendered active-source list (`EXPORT_ACTIVE_SOURCES` in the knob
+table, provided by TB Infra; until that list exists the field is an empty list, never a copy of the rendered
+table, `export_sources_declared_origin` says which); `export_sources_emitted` is what the sink actually WROTE,
+the plan's sunset input, and is never taken from the yaml: a fresh build carries an empty list with the origin
+"no export file observed yet ...", and after the runs `gen_regress.py` (`observe_exports`, before retention can
+prune anything) rewrites the build manifest with the rendered rows whose source appears in the `sources=` header
+of the build's export files (`export_sources_emitted_origin` names the files) and with `export_rows_observed`,
+the per-row first-seen list over those files: one entry `{row: "<source> <event>", first_run, first_line}` per
+distinct E-line row, the first run and the first line that showed it (`gen_flow_util.export_observe`). The
+regression manifest mirrors all three fields under `builds.<name>` and summarizes them in `export_observed`.
+A run that wrote an export file re-checks the sink against the codegen: the `sources=` set of the file's first
+header line must equal the manifest's DECLARED source set, else the run FAILs (`export sources emitted mismatch
+...`); when the run narrowed the sources knob (`+gen_export_sources` other than `all`) the header may be a
+subset of the declared set, never a source the build cannot emit. A run whose entry names `+gen_export_file` and
+that ends PASS or RED-OK without the file, or with a file that has no `# gen_export` header, FAILs (`export file
+<name> absent or without a gen_export header`): not writing the file cannot dodge the check. result.yaml records
+`export_header_sources`, `export_file` and the manifest's `export_sources_declared`. The DV Lead's sunset tool
+fails only on emitted (observed) rows; the reference build manifest for it is one whose regression ran a test
+that writes the export file (gen_ut_export).
 
 ## 2. gen_run.py (one test, one seed)
 
@@ -197,17 +206,21 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
   --self-test` renders both templates and checks them.
 - Products per run dir: `run_cmd.sh` (exact reproduction: `bash run_cmd.sh`), `run.log`, `sim.log`
-- Job environment: `run_cmd.sh` sources the staged (or the mirror's) `ci/env.sh`, then unsets `JOB_ENV_UNSET` (PYTHONPATH,
-  GEN_TEST_STAGED_ENTRIES: LSF hands the job the submitter's environment and the site shell leaks PYTHONPATH, a developer
-  shell may export the harness's staged-entries pointer) and exports the flow's own values (SIM_DIR, RANDOM_SEED, the
-  cocotb variables with PYTHONPATH set to exactly the source root). The same two variables are removed from the
-  program-generator environment (Section 7e).
   (VCS `-l`), `sim_stdout.log` (simv stdout and stderr: cocotb's Python logging and its result
   table bypass `-l`, so the verdict scans both files), `exit_code`, `result.yaml`, and with `--lsf`
   `bsub_cmd.txt`, `lsf.out` (LSF job report: CPU time, run time, host), `lsf.err`.
+- Job environment: `run_cmd.sh` sources the staged (or the mirror's) `ci/env.sh`, then unsets `JOB_ENV_UNSET` (PYTHONPATH,
+  GEN_TEST_STAGED_ENTRIES: LSF hands the job the submitter's environment and the site shell leaks PYTHONPATH, a developer
+  shell may export the harness's staged-entries pointer) and exports the flow's own values (SIM_DIR, RANDOM_SEED, the
+  cocotb variables with PYTHONPATH set to exactly the source root); right after the unsets it exports the flow-run
+  marker `GEN_DV_FLOW_RUN=1` (`JOB_ENV_SET`), on which the harness refuses developer-only inputs such as the
+  staged-entries pointer. The same two variables are removed from the program-generator environment (Section 7e).
 - `result.yaml`: test, seed, verdict, reason, evidence (first failing line), exit_code, timed_out,
   wall_s, started/finished UTC, build, build_dir, build_config, run_dir, sim_log, run_log, run_cmd,
-  vdb, cm_name, waves, uvm_counts, cocotb_summary, finish_seen, marker_seen, expected_fail, owner,
+  vdb, cm_name, waves, uvm_counts, cocotb_summary, slow_total (`{rounds, budget_cycles}` from the harness's
+  `GEN_TEST_SLOW_TOTAL` line, LOG-030: rounds > 0 means report stores lagged that many program budgets while the
+  core kept retiring, a slow but green run; null without the line; mirrored into the request manifest's runs),
+  finish_seen, marker_seen, expected_fail, owner,
   fcov_expectation_file, fcov_check, lsf {job_id, host, queue, slots, bsub_rc, killed_reason,
   pend_s, wall_s, cpu_s, max_mem, lsf_run_s}.
 
@@ -328,13 +341,16 @@ next sequence number. `--only <name>` (repeatable) serves only the named pending
 Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per request, but independent
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
-single-test requests turns around in about one request's time. Every head-mode purpose-1 request of a pass
-(one or many) forms the pass's batch, and a batch needs the canary: `--canary-sha C` names the commit the
+single-test requests turns around in about one request's time. Every head-mode request of a pass that builds
+(any purpose, one or many; an elcheck builds nothing and a worktree request is served alone) forms the pass's
+batch, and a batch needs the canary: `--canary-sha C` names the commit the
 gen_boot_zc canary passed on and is mandatory (a batch served without it is refused, not served unvouched).
 Before any sync the server pins S = HEAD and decides the hold: with no canary sha, or when S differs from C in a
 mirrored file (`git diff --stat C S -- <pathspecs>`, the pathspecs being exactly the mirrored set
 `MIRROR_ITEMS` + `MIRROR_GLOB_ITEMS` minus `MIRROR_EXCLUDE_PATHS`, from `gen_mirror.git_pathspecs`), the batch is
-left pending for a new canary; either way one record is written under `dv/auto_dv/work/runtime/batches/<utc>_<sha12>.yaml`
+left pending for a new canary; either way one record is written under
+`dv/auto_dv/work/runtime/batches/<YYYYMMDDTHHMMSSZ>_<sha12>[_N].yaml` (the UTC stamp without separators, `_N`
+when two decisions fall in one second)
 with `decision` (`accepted`, `refused_build_inputs_changed`, `refused_no_canary_sha`), `canary_sha`, `pinned_sha`,
 `delta_pathspecs`, `delta` (the diff --stat text) and the request names; an accepted record gains the sync
 record, the request manifests and `completed_utc`. An accepted batch syncs
@@ -343,8 +359,10 @@ regression of the batch as `--head-sha`, the batch's scope decisions read that t
 C, the decision and the record path are recorded in every request manifest as `server_mirror_sync`
 (`pinned_sha`, `canary_sha`, `canary_decision`, `batch_record`). The server passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
-regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
-request and purposes 2 to 4 are served one at a time in file order, each syncing for itself. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
+regression still pinned to S (`--head-sha S`) and syncing that commit for itself (`server_mirror_sync.batch_serialized`
+says so). Within an accepted batch the purpose-1 requests run concurrently and purposes 2 to 4 (instrumentation
+trials, repros, a purpose-4 measured round) follow one at a time on the same pinned tree under the same hold and
+record. Outside the hold, in file order and each syncing for itself: worktree-source requests and elcheck requests. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
 values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
 they are recorded in the manifest as `operator_extra_args`. Only the runtime role runs this
 script (LSF is exclusive to it).
@@ -625,15 +643,17 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
 
 - One round = `gen_regress.py --tier full --purpose 4 --dump-exclusions [--elfile ...]` (coverage with
   cond, every `-elfile` loaded with `-excl_strict`, a strict violation fails the regression), then the
-  evidence directory `dv/auto_dv/evidence/gen_round_<n>/` (never overwritten): `dashboard.txt`,
-  `hierarchy.txt`, `tests.txt`, `hierarchy_dut_rows.txt` (the DUT-scope rows), `groups.txt` and
-  `grpinfo.txt` when covergroups exist (else `groups_summary.txt` stating n/a),
-  `asserts.txt` (per-assertion ATTEMPTS / REAL SUCCESSES / FAILURES: the EC-3 evidence rtl-arch's
-  `gen_excl_select.py --ec3-asserts` reads from the committed copy),
-  `full_exclusions/fullexclude.<metric>.gz` (the URG dump of this merge, gzip-compressed; a dry
-  run copies no dump, its out-tree keeps it), `merge.log` and
-  `merge_log_warnings.txt` (counts per Warning/Error/Note class), `build_manifest_<build>.yaml`,
-  `testlist_snapshot.yaml` (with its sha256 in the index), `regress_manifest.yaml`, `elfiles/`, and
+  evidence directory `dv/auto_dv/evidence/gen_round_<n>/` (never overwritten). Every file carries the landing
+  rule's prefix and its name has one home, the `ROUND_EV_*` constants of `gen_flow_const.py`
+  (`round_evidence_name()`), which the exclusion tools consume too: `gen_dashboard.txt`,
+  `gen_hierarchy.txt`, `gen_tests.txt`, `gen_hierarchy_dut_rows.txt` (the DUT-scope rows), `gen_groups.txt` and
+  `gen_grpinfo.txt` when covergroups exist (else `gen_groups_summary.txt` stating n/a),
+  `gen_asserts.txt` (per-assertion ATTEMPTS / REAL SUCCESSES / FAILURES: the EC-3 evidence rtl-arch's
+  `gen_excl_select.py --ec3-asserts` reads from the committed copy, `ROUND_EV_ASSERTS`, path rule `ROUND_EC3_ASSERTS_RE`),
+  `full_exclusions/gen_fullexclude.<metric>.gz` (the URG dump of this merge, gzip-compressed; a dry
+  run copies no dump, its out-tree keeps it), `gen_merge.log` and
+  `gen_merge_log_warnings.txt` (counts per Warning/Error/Note class), `gen_build_manifest_<build>.yaml`,
+  `gen_testlist_snapshot.yaml` (with its sha256 in the index), `gen_regress_manifest.yaml` (`ROUND_EV_REGRESS_MANIFEST`), `elfiles/`, and
   `gen_round_summary.md` (the human-readable page: metrics table, gate status, deltas, gain verdict,
   streak).
 - Round index `dv/auto_dv/evidence/gen_rounds.yaml`: G, N, gate percent, then one entry per round

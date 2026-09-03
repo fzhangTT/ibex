@@ -248,7 +248,9 @@ def self_test() -> int:
             and clone_relative_file(str(C.REPO_ROOT / "ci" / "env.sh")) is None and clone_relative_file("dv/auto_dv/flow/gen_missing.py") is None
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "clone_relative_file: accepts a clone file, refuses .., absolute and missing paths")
-        for label, mutate in (
+        import contextlib
+        import io
+        for label, mutate, *want in (
                 ("red_fixture with expected_fail", lambda d: d["tests"][0].update(red_fixture=True, expected_fail=True, measured=False)),
                 ("red_fixture with measured true", lambda d: d["tests"][0].update(red_fixture=True, measured=True, tier="smoke")),
                 ("red_fixture without red_expect", lambda d: d["tests"][0].update(red_fixture=True, measured=False)),
@@ -267,7 +269,8 @@ def self_test() -> int:
                     d["tests"][0].update(red_fixture=True, measured=False, red_expect="GEN_TEST_FAIL gen_smoke: [0-9]+ fire-check failure"))),
                 ("an unknown red_expect_policy token", lambda d: d.__setitem__("red_expect_policy", ["bogus"])),
                 ("a generic harness signature hidden behind a leading .* (policy fire_id)",
-                 lambda d: [t.update(red_expect=r".*GEN_TEST_FAIL x: [0-9]+ fire-check failure") for t in d["tests"] if t.get("red_fixture")][:1]),
+                 lambda d: next(t for t in d["tests"] if t.get("red_fixture")).update(red_expect=r".*GEN_TEST_FAIL x: [0-9]+ fire-check failure"),
+                 "names no fire_ id"),
                 ("witness_ids naming a TP id absent from the CSV", lambda d: d["tests"][0].update(witness_ids=["TP-NOPE-999"])),
                 ("witness_ids as a bare string", lambda d: d["tests"][0].update(witness_ids="TP-BIT-036")),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
@@ -275,13 +278,15 @@ def self_test() -> int:
             mutate(t2)
             f = Path(td) / "testlist_bad.yaml"
             f.write_text(_y.safe_dump(t2, sort_keys=False), encoding="utf-8")
+            err = io.StringIO()
             try:
-                load_testlist(f)
+                with contextlib.redirect_stderr(err):
+                    load_testlist(f)
                 cond = False
             except SystemExit:
-                cond = True
+                cond = not want or want[0] in err.getvalue()   # the refusal names the rule, not just any exit
             ok &= cond
-            print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}")
+            print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}" + (f" (message names {want[0]!r})" if want else ""))
         # The positive side of the policy: a fire_ id in the signature is accepted.
         t3 = load_yaml(C.TESTLIST_YAML); t3["red_expect_policy"] = ["fire_id"]
         for t in t3["tests"]:
@@ -316,10 +321,31 @@ def self_test() -> int:
         and "gen_export_file" in ef["export_knobs"]
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"export_facts from the rendered table: {len(ef['export_sources'])} exact rows over sources {ef['export_source_names']}, knobs {sorted(ef['export_knobs'])}")
-    # Emitted rows: empty until an active-source list is rendered (never the rendered table); header parse and check.
-    cond = isinstance(ef["export_sources_emitted"], list) and (ef["export_sources_emitted"] == [] or "EXPORT_ACTIVE_SOURCES" in ef["export_sources_emitted_origin"])
+    # Declared rows: empty until an active-source list is rendered (never the rendered table); the emitted set is
+    # never declared at build time (LOG-028a): empty with the unobserved origin until export files are observed.
+    cond = isinstance(ef["export_sources_declared"], list) and (ef["export_sources_declared"] == [] or "EXPORT_ACTIVE_SOURCES" in ef["export_sources_declared_origin"]) \
+        and ef["export_sources_emitted"] == [] and ef["export_sources_emitted_origin"] == C.EXPORT_EMITTED_UNOBSERVED and ef["export_rows_observed"] == []
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"export_sources_emitted: {len(ef['export_sources_emitted'])} rows ({ef['export_sources_emitted_origin'][:60]})")
+    print("SELF-TEST", "ok " if cond else "BAD", f"export_sources_declared: {len(ef['export_sources_declared'])} rows ({ef['export_sources_declared_origin'][:60]}); emitted empty until observed")
+    import tempfile as _tf0
+    with _tf0.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=C.selftest_tmp()) as td0:
+        # Fixture export files of one build: two runs, overlapping rows; the first run wins the first-seen slot.
+        fa, fb, fc = Path(td0) / "a.txt", Path(td0) / "b.txt", Path(td0) / "c.txt"
+        fa.write_text("# gen_export v2 seed=1 sources=ibus,pin fields=order\n# events ibus req addr\nE 0 pin fetch_enable a\nE 5 ibus req 80000000 0 f\nR 1 x\nE 7 ibus req 80000004 0 f\n", encoding="utf-8")
+        fb.write_text("# gen_export v2 seed=2 sources=ibus,dbus fields=order\nE 0 ibus req 80000000 0 f\nE 3 dbus gnt 10000000 1 f\n", encoding="utf-8")
+        fc.write_text("no header here\nE 0 misc bogus 1\n", encoding="utf-8")
+        obs = export_observe([("run_a", fa), ("run_b", fb), ("run_c", fc)])
+        rows = {r["row"]: r for r in obs["rows"]}
+        cond = obs["sources"] == ["dbus", "ibus", "pin"] and obs["files"] == 2 and set(rows) == {"pin fetch_enable", "ibus req", "dbus gnt"} \
+            and rows["ibus req"]["first_run"] == "run_a" and rows["ibus req"]["first_line"] == "E 5 ibus req 80000000 0 f" \
+            and rows["dbus gnt"]["first_run"] == "run_b" and "misc bogus" not in rows
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"export_observe: sources union {obs['sources']} from 2 headed files, {len(rows)} first-seen rows, first run wins, a headerless file is skipped")
+        rendered = [{"source": "ibus", "event": "req", "fields": []}, {"source": "dbus", "event": "gnt", "fields": []}, {"source": "icram", "event": "x", "fields": []}]
+        em = emitted_from_observed(rendered, obs["sources"])
+        cond = [r["source"] for r in em] == ["ibus", "dbus"]
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"emitted_from_observed: rendered rows kept only for header-named sources ({[r['source'] for r in em]})")
     import tempfile as _tf
     with _tf.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=C.selftest_tmp()) as td2:
         hp = Path(td2) / "gen_export.txt"
@@ -340,7 +366,7 @@ def self_test() -> int:
         and "only in header ['pin']" in (emitted_check(rows_id, ["pin"], subset_ok=True) or "")
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "emitted_check: with the sources knob narrowed a header subset passes, a source the build cannot emit still fails; unnarrowed needs equality")
-    with tempfile.TemporaryDirectory(dir=C.SELFTEST_TMP) as td3:
+    with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td3:
         dup = Path(td3) / "dup.csv"
         dup.write_text("index,tp_item\n0,TP-X-001\n1,TP-X-002\n2,TP-X-001\n", encoding="utf-8")
         saved, C.WITNESS_CSV = C.WITNESS_CSV, dup
@@ -356,16 +382,24 @@ def self_test() -> int:
     # Job and generator environments: the submitting shell's PYTHONPATH and staged-entries pointer never reach a run.
     import gen_run as _R
     import gen_stim as _S
-    with tempfile.TemporaryDirectory(dir=C.SELFTEST_TMP) as td4:
+    with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td4:
         js = Path(td4) / "run_cmd.sh"
         _R.write_job_script(js, {"outdir": td4, "build": "x"}, ["simv"], {"SIM_DIR": td4, "PYTHONPATH": "/root"}, 10, Path(td4))
         lines = js.read_text(encoding="utf-8").splitlines()
         unset_at = [i for i, l in enumerate(lines) if l.startswith("unset ")]
         export_at = [i for i, l in enumerate(lines) if l.startswith("export ") and not l.startswith(f"export {C.ENV_TOOLCHECK_VAR}=")]
+        marker_at = [i for i, l in enumerate(lines) if any(l == f"export {k}={v}" for k, v in C.JOB_ENV_SET.items())]
         cond = {l.split()[1] for l in lines if l.startswith("unset ")} == set(C.JOB_ENV_UNSET) and bool(unset_at) and bool(export_at) \
-            and max(unset_at) < min(export_at) and any(l.startswith("export PYTHONPATH=") for l in lines)
+            and max(unset_at) < min(export_at) and any(l.startswith("export PYTHONPATH=") for l in lines) \
+            and len(marker_at) == len(C.JOB_ENV_SET) and max(unset_at) < min(marker_at)
+        slow_log = Path(td4) / "sim_stdout.log"
+        slow_log.write_text("noise\nGEN_TEST_SLOW_TOTAL rounds=2 budget_cycles=300000\n$finish\n", encoding="utf-8")
+        st = slow_total([Path(td4) / "missing.log", slow_log])
+        cond_slow = st == {"rounds": 2, "budget_cycles": 300000} and slow_total([Path(td4) / "missing.log"]) is None
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"job script unsets {list(C.JOB_ENV_UNSET)} after cd and before the flow's own exports (PYTHONPATH re-exported for cocotb)")
+    print("SELF-TEST", "ok " if cond else "BAD", f"job script unsets {list(C.JOB_ENV_UNSET)} after cd, exports the flow-run marker {C.JOB_ENV_SET} and then the flow's own values (PYTHONPATH re-exported for cocotb)")
+    ok &= cond_slow
+    print("SELF-TEST", "ok " if cond_slow else "BAD", f"slow_total: parsed from the first log carrying the line ({st}); None without it")
     saved = {k: os.environ.get(k) for k in C.JOB_ENV_UNSET}
     try:
         for k in C.JOB_ENV_UNSET:
@@ -461,17 +495,67 @@ def export_facts() -> dict[str, Any]:
     # PLUSARGS is keyed by knob name; the plusarg string sits in each row.
     knobs = {p["plusarg"]: p.get("default") for p in getattr(k, "PLUSARGS", {}).values()
              if isinstance(p, dict) and str(p.get("plusarg", "")).startswith("gen_export")}
-    # Emitted rows (ruling 2026-09-03): only the rows whose writer is instanced in the build, taken from a
-    # codegen-rendered active-source list; until TB Infra renders it the list is EMPTY, never the rendered table.
+    # Declared rows (ruling 2026-09-03): the rows whose writer the codegen says is instanced (EXPORT_ACTIVE_SOURCES);
+    # until TB Infra renders that list it is EMPTY, never the rendered table. The EMITTED set is not declared at all:
+    # it is observed after the runs from the export files' headers (LOG-028a, export_observe), so a fresh build
+    # carries an empty emitted set with the unobserved origin.
     active = getattr(k, "EXPORT_ACTIVE_SOURCES", None)
     if active is None:
-        emitted, origin = [], "no rendered active-source list yet (EXPORT_ACTIVE_SOURCES absent): empty by ruling"
+        declared, origin = [], "no rendered active-source list yet (EXPORT_ACTIVE_SOURCES absent): empty by ruling"
     else:
         active_set = {str(a) for a in active}
-        emitted, origin = [r for r in rows if r["source"] in active_set], "rows of EXPORT_EVENTS whose source is in EXPORT_ACTIVE_SOURCES"
+        declared, origin = [r for r in rows if r["source"] in active_set], "rows of EXPORT_EVENTS whose source is in EXPORT_ACTIVE_SOURCES"
     return {"export_sources": rows, "export_source_names": sorted({r["source"] for r in rows}),
-            "export_sources_emitted": emitted, "export_sources_emitted_origin": origin,
+            "export_sources_declared": declared, "export_sources_declared_origin": origin,
+            "export_sources_emitted": [], "export_sources_emitted_origin": C.EXPORT_EMITTED_UNOBSERVED, "export_rows_observed": [],
             "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
+
+
+def slow_total(logs: list[Path]) -> dict[str, int] | None:
+    """The harness's GEN_TEST_SLOW_TOTAL line of a run (rounds, budget_cycles) from the first log that carries it; None
+    when no log does (a template without the line, or a run that never reached its end)."""
+    rx = re.compile(C.SLOW_TOTAL_RE)
+    for p in logs:
+        if not Path(p).is_file():
+            continue
+        with open(p, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                m = rx.search(line)
+                if m:
+                    return {"rounds": int(m.group(1)), "budget_cycles": int(m.group(2))}
+    return None
+
+
+def export_observe(files: list[tuple[str, Path]]) -> dict[str, Any]:
+    """What the sink actually wrote (LOG-028a) over the export files of one build, in the order given: the union of
+    the headers' sources= sets, and the per-row first-seen list (row "<source> <event>" of an E line, the run that
+    first showed it, that first line). Files without a gen_export header are skipped and not counted."""
+    sources: set[str] = set()
+    rows: dict[str, dict[str, Any]] = {}
+    used = 0
+    for run_id, path in files:
+        header = export_header_sources(Path(path))
+        if header is None:
+            continue
+        used += 1
+        sources.update(header)
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if not line.startswith(C.EXPORT_EVENT_LINE_PREFIX):
+                    continue
+                tok = line.split()
+                if len(tok) < 4:
+                    continue
+                key = f"{tok[2]} {tok[3]}"
+                if key not in rows:
+                    rows[key] = {"row": key, "first_run": run_id, "first_line": line.rstrip()[:C.EXPORT_FIRST_LINE_MAX]}
+    return {"sources": sorted(sources), "files": used, "rows": [rows[k] for k in sorted(rows)]}
+
+
+def emitted_from_observed(rendered_rows: list[dict[str, Any]], sources: list[str]) -> list[dict[str, Any]]:
+    """The rendered rows whose source the sink's headers actually named."""
+    s = set(sources or [])
+    return [r for r in rendered_rows or [] if r["source"] in s]
 
 
 def export_header_sources(path: Path) -> list[str] | None:

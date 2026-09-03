@@ -132,6 +132,7 @@ def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: di
         f"cd {shlex.quote(str(run_dir))} || exit 97",
         # LSF hands the job the submitter's environment; the leaks go before the flow's own exports.
         *[f"unset {k}" for k in C.JOB_ENV_UNSET],
+        *[f"export {k}={shlex.quote(v)}" for k, v in C.JOB_ENV_SET.items()],
         *[f"export {k}={v}" if k == "LD_LIBRARY_PATH" else f"export {k}={shlex.quote(v)}" for k, v in env.items()],
         f"echo \"{C.SEED_RECORD_TAG} {C.PLUSARG_NTB_SEED}=${C.ENV_RANDOM_SEED} {C.ENV_RANDOM_SEED}=${C.ENV_RANDOM_SEED} host=$(hostname) utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)\"",
         f"{C.JOB_TIMEOUT_CMD} -k {C.TIMEOUT_GRACE_S} {timeout_s} \\",
@@ -156,42 +157,43 @@ def apply_fcov_check(result: dict[str, Any], test: dict[str, Any], vdb: Path, se
         result["reason"] = fc["reason"]
 
 
-def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], run_dir: Path) -> list[str] | None:
+def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], run_dir: Path) -> tuple[list[str] | None, Path | None]:
     """Export header cross-check (ruling 2026-09-03) on a decided verdict: a run whose argv names an export file must
-    have written it with a header whose sources= set equals the build manifest's emitted set (a subset when the
-    sources knob is narrowed); a PASS/RED-OK that did not is FAIL. Returns the header's sources (None when absent)."""
+    have written it with a header whose sources= set equals the build manifest's DECLARED set (the codegen's active
+    list; a subset when the sources knob is narrowed); a PASS/RED-OK that did not is FAIL. Returns the header's
+    sources (None when absent) and the export file path (None when the run names none)."""
     by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
 
     def plusarg_of(name: str | None) -> str | None:
         return next((U.plusarg_value(pa) for pa in argv if pa.startswith("+") and U.plusarg_name(pa) == name), None) if name else None
     export_val = plusarg_of(by_ident.get(C.SV_PLUSARG_EXPORT_FILE))
     if not export_val:
-        return None
-    header = U.export_header_sources(run_dir / export_val)
+        return None, None
+    path = run_dir / export_val
+    header = U.export_header_sources(path)
     if res["verdict"] not in (C.VERDICT_PASS, C.VERDICT_RED_OK):
-        return header
+        return header, path
     if header is None:
-        # Naming an export file and writing none (or no header) would dodge the one check on emitted sources.
+        # Naming an export file and writing none (or no header) would dodge the one check on the sources.
         res.update(verdict=C.VERDICT_FAIL, reason=f"export file {export_val} absent or without a gen_export header")
-        return None
+        return None, path
     narrowed = plusarg_of(by_ident.get(C.SV_PLUSARG_EXPORT_SOURCES))
-    err = U.emitted_check(build.get("export_sources_emitted") or [], header,
+    err = U.emitted_check(build.get("export_sources_declared") or [], header,
                           subset_ok=bool(narrowed) and narrowed != C.EXPORT_SOURCES_ALL)
     if err:
         res.update(verdict=C.VERDICT_FAIL, reason=err)
-    return header
+    return header, path
 
 
 def self_test() -> int:
     """export_check against fabricated run directories: absent file, equal sets, mismatch, narrowed subset."""
     import tempfile
     ok = True
-    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    root = Path(tempfile.mkdtemp(prefix="gen_run_selftest_", dir=C.SELFTEST_TMP))
+    root = Path(tempfile.mkdtemp(prefix="gen_run_selftest_", dir=C.selftest_tmp()))
     by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
     efile, esrc = by_ident[C.SV_PLUSARG_EXPORT_FILE], by_ident[C.SV_PLUSARG_EXPORT_SOURCES]
     emitted = [{"source": "ibus", "event": "x", "fields": []}, {"source": "dbus", "event": "y", "fields": []}]
-    build = {"export_sources_emitted": emitted}
+    build = {"export_sources_declared": emitted}
 
     def case(label: str, argv: list[str], header_line: str | None, expect_verdict: str, expect_reason_has: str = "", verdict: str = C.VERDICT_PASS) -> None:
         nonlocal ok
@@ -349,8 +351,8 @@ def main() -> int:
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
     # Export header cross-check (ruling 2026-09-03): a run that wrote an export file must agree with the build
-    # manifest on which sources emitted; a mismatch fails the run (the canary at that build catches it).
-    export_header = export_check(res, build, argv, run_dir)
+    # manifest's declared sources; a mismatch fails the run. The file path feeds the regression's observed rows.
+    export_header, export_file = export_check(res, build, argv, run_dir)
     result: dict[str, Any] = {
         "test": test["name"], "seed": seed, "verdict": res["verdict"], "reason": res["reason"],
         "evidence": res["evidence"], "exit_code": rc, "timed_out": timed_out,
@@ -362,12 +364,14 @@ def main() -> int:
         "waves": str(run_dir / C.WAVES_FSDB) if (run_dir / C.WAVES_FSDB).exists()
         else (str(run_dir / C.WAVES_VPD) if (run_dir / C.WAVES_VPD).exists() else None),
         "uvm_counts": res["uvm_counts"], "cocotb_summary": res["cocotb_summary"],
+        "slow_total": U.slow_total([run_dir / C.SIM_STDOUT_LOG, sim_log]),
         "finish_seen": res["finish_seen"], "marker_seen": res["marker_seen"], "pass_marker": pass_marker,
         "banner_seen": res["banner_seen"], "banner": res["banner"], "crash_signature": res.get("crash_signature"),
         "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")),
         "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": witness,
-        "export_header_sources": export_header, "export_sources_emitted": build.get("export_sources_emitted"),
+        "export_header_sources": export_header, "export_file": str(export_file) if export_file else None,
+        "export_sources_declared": build.get("export_sources_declared"),
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},

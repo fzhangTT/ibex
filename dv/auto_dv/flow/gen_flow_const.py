@@ -25,6 +25,11 @@ ENV_HEAD_SHA = "GEN_DV_HEAD_SHA"
 # the site shell leaks PYTHONPATH (a cocotb run gets exactly the source root back), and a developer shell's
 # staged-entries pointer (gen_test_lib.STAGED_ENTRIES_ENV) must never reach a flow run.
 JOB_ENV_UNSET = ("PYTHONPATH", "GEN_TEST_STAGED_ENTRIES")
+# Exported in every simulation job after the unsets: the harness refuses developer-only inputs when it sees this marker.
+JOB_ENV_SET = {"GEN_DV_FLOW_RUN": "1"}
+# The harness ends every run with this line (LOG-030): n > 0 report stores lagged n program budgets while the core
+# kept retiring (slow bus regimes), so a run can be slow but green; recorded per run so slowness is visible.
+SLOW_TOTAL_RE = r"GEN_TEST_SLOW_TOTAL rounds=(\d+) budget_cycles=(\d+)"
 SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"
@@ -191,6 +196,7 @@ URG_EXCL_BANNED = ("-excl_propagation", "-excl_bypass_checks")
 URG_DUMP_EXCLUSIONS = ["-dump", "full_exclusions"]
 URG_DUMP_DIRNAME = "full_exclusions"
 URG_DUMP_GLOB = "fullexclude*"
+URG_DUMP_METRIC_GLOB = "fullexclude.*"   # the per-metric dump files a round copies (the _module variants stay in the out-tree)
 # merge.log signatures that make a strict merge FAIL (a covered or stale object was excluded).
 URG_EXCL_VIOLATION_RE = re.compile(r"Warning-\[UCAPI-ILOAD\]|Illegal exclusion attempt|Error-\[UCAPI")
 UNMEASURED_COV_DIRNAME = "cov_unmeasured"
@@ -263,6 +269,13 @@ SV_PLUSARG_WITNESS_IDS = "PLUSARG_WITNESS_IDS"
 # file must lie inside the run directory. The plusarg name comes from the SV constants home.
 # The identifier of the export-file plusarg in gen_tb_pkg.sv (the string value is read there, never re-typed).
 SV_PLUSARG_EXPORT_FILE = "PLUSARG_EXPORT_FILE"
+SV_PLUSARG_EXPORT_SOURCES = "PLUSARG_EXPORT_SOURCES"   # the sources knob; its "all" value keeps the header/manifest equality rule
+EXPORT_SOURCES_ALL = "all"
+# Observed export rows (LOG-028a): the sunset trusts what the sink wrote, so a build's emitted set comes from the
+# header sources= of its runs' export files and the per-row first-seen list from their E lines, never from the yaml.
+EXPORT_EVENT_LINE_PREFIX = "E "
+EXPORT_FIRST_LINE_MAX = 200
+EXPORT_EMITTED_UNOBSERVED = "no export file observed yet: a run of this build that writes an export file fills it (LOG-028a)"
 RETENTION_PRUNE_PURPOSES = (4,)
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = SOURCE_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
@@ -394,6 +407,34 @@ ROUND_NO_GAIN_N = 5
 EVIDENCE_DIR = REPO_ROOT / "dv" / "auto_dv" / "evidence"
 ROUND_INDEX = EVIDENCE_DIR / "gen_rounds.yaml"
 ROUND_DIR_PREFIX = "gen_round_"
+# Round evidence files: gen_round.py writes them and the exclusion tools under dv/auto_dv/excl read them (EC-3 fill,
+# F1 pass), so the names have this one home and every file carries the landing rule's prefix.
+EVIDENCE_FILE_PREFIX = "gen_"
+
+
+def round_evidence_name(name: str) -> str:
+    """Evidence file name of a URG or flow product: the prefix added once (a gen_ name stays as it is)."""
+    return name if name.startswith(EVIDENCE_FILE_PREFIX) else EVIDENCE_FILE_PREFIX + name
+
+
+ROUND_URG_FILES = ("dashboard.txt", "hierarchy.txt", "tests.txt", "groups.txt", "grpinfo.txt", "asserts.txt")   # copied when present
+ROUND_EV_DASHBOARD = round_evidence_name("dashboard.txt")
+ROUND_EV_HIERARCHY = round_evidence_name("hierarchy.txt")
+ROUND_EV_TESTS = round_evidence_name("tests.txt")
+ROUND_EV_GROUPS = round_evidence_name("groups.txt")
+ROUND_EV_GRPINFO = round_evidence_name("grpinfo.txt")
+ROUND_EV_ASSERTS = round_evidence_name("asserts.txt")                     # EC-3 evidence (gen_excl_select.py --ec3-asserts)
+ROUND_EV_REGRESS_MANIFEST = round_evidence_name("regress_manifest.yaml")   # read beside it by both exclusion tools
+ROUND_EV_HIERARCHY_DUT_ROWS = round_evidence_name("hierarchy_dut_rows.txt")
+ROUND_EV_GROUPS_SUMMARY = round_evidence_name("groups_summary.txt")
+ROUND_EV_MERGE_LOG = round_evidence_name("merge.log")
+ROUND_EV_MERGE_LOG_WARNINGS = round_evidence_name("merge_log_warnings.txt")
+ROUND_EV_TESTLIST_SNAPSHOT = round_evidence_name("testlist_snapshot.yaml")
+ROUND_EV_BUILD_MANIFEST_FMT = EVIDENCE_FILE_PREFIX + "build_manifest_{build}.yaml"
+ROUND_EV_FULL_EXCL_DIR = URG_DUMP_DIRNAME   # holds round_evidence_name(fullexclude.<metric>) + .gz
+ROUND_EV_ELFILES_DIR = "elfiles"
+ROUND_EV_SUMMARY = "gen_round_summary.md"
+ROUND_EC3_ASSERTS_RE = rf"^dv/auto_dv/evidence/{ROUND_DIR_PREFIX}[^/]+/{re.escape(ROUND_EV_ASSERTS)}$"   # the EC-3 input the selector accepts
 
 
 def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:
@@ -443,6 +484,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-SV_PLUSARG_EXPORT_SOURCES = "PLUSARG_EXPORT_SOURCES"   # the sources knob; its "all" value keeps the header/manifest equality rule
-EXPORT_SOURCES_ALL = "all"

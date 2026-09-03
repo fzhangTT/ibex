@@ -332,7 +332,7 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
                   builds=reg.get("builds"), summary=reg.get("summary"), lsf_cost=reg.get("lsf_cost"),
                   coverage=reg.get("coverage"), finished_utc=U.now_utc(),
                   runs=[{k: r.get(k) for k in ("test", "seed", "verdict", "reason", "sim_log", "run_log",
-                                                "run_cmd", "vdb", "cm_name", "waves", "wall_s", "owner",
+                                                "run_cmd", "vdb", "cm_name", "waves", "wall_s", "owner", "slow_total",
                                                 "fcov_check")}
                         | {"lsf_job_id": (r.get("lsf") or {}).get("job_id")} for r in reg.get("runs", [])])
     U.dump_yaml(record, manifest_path)
@@ -399,18 +399,28 @@ def pinned_testlist(head_tree: Path) -> dict[str, Any]:
     return json.loads(r.stdout)
 
 
+def request_is_elcheck(path: Path) -> bool:
+    """A report-only exclusion check builds nothing, so it stays outside the canary hold."""
+    try:
+        raw = U.load_yaml(path)
+        return isinstance(raw, dict) and "elcheck" in raw
+    except (yaml.YAMLError, TypeError, ValueError):
+        return False
+
+
 def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
                max_concurrent: int, canary_sha: str | None = None) -> int:
-    """One pass over the queue. The head-mode purpose-1 requests form the pass's batch: one canary hold, one
-    pinned mirror sync, concurrent regressions (each its own outdir, manifest and LSF accounting); everything
-    else is served in file order, each regression syncing for itself."""
-    p1_all = [p for p in pending if request_purpose(p) == 1]
-    # Only head-mode purpose-1 requests share the batch (one head-mode mirror); a worktree request is served alone.
-    p1 = [p for p in p1_all if request_source(p) == C.SOURCE_MODE_HEAD]
-    rest = [p for p in pending if p not in p1]
-    if p1 and not dry_run:
+    """One pass over the queue. Every head-mode request that builds (any purpose; a worktree request is served
+    alone, an elcheck builds nothing) is pinned to one commit behind the canary hold: the purpose-1 requests
+    run concurrently, purposes 2 to 4 follow one at a time on the same pinned tree (a measured round on an
+    unvouched HEAD is exactly what the hold exists for); everything else is served in file order."""
+    pinned = [p for p in pending if request_source(p) == C.SOURCE_MODE_HEAD and not request_is_elcheck(p)]
+    p1 = [p for p in pinned if request_purpose(p) == 1]
+    p234 = [p for p in pinned if p not in p1]
+    rest = [p for p in pending if p not in pinned]
+    if pinned and not dry_run:
         batch_sha = M.head_sha()
-        rec: dict[str, Any] = {"utc": U.now_utc(), "requests": [p.stem for p in p1], "pinned_sha": batch_sha,
+        rec: dict[str, Any] = {"utc": U.now_utc(), "requests": [p.stem for p in pinned], "pinned_sha": batch_sha,
                                "canary_sha": canary_sha, "delta_pathspecs": M.git_pathspecs(), "delta": "", "decision": None}
         # The hold is decided before any sync, so a held batch costs one record per pass and never a re-sync.
         if canary_sha is None:
@@ -421,7 +431,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
         rec_path = write_batch_record(rec)
         if rec["decision"] != C.CANARY_ACCEPTED:
             U.log(f"REFUSING the head-mode batch this pass ({rec['decision']}): canary {str(canary_sha)[:12]} vs HEAD "
-                  f"{batch_sha[:12]}; {len(p1)} request(s) stay pending; record {rec_path}"
+                  f"{batch_sha[:12]}; {len(pinned)} request(s) stay pending; record {rec_path}"
                   + (f"\n{rec['delta']}" if rec["delta"] else ""))
             for p in rest:
                 serve_one(p, testlist, dry_run, extra_args)
@@ -436,31 +446,35 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
                 "pinned_sha": batch_sha, "canary_sha": canary_sha, "canary_decision": rec["decision"],
-                "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in p1], "batch_record": str(rec_path)}
+                "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in pinned], "batch_record": str(rec_path)}
         manifests: list[Path] = []
         if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
-            U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s), pinned to {batch_sha[:12]}")
+            U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(pinned)} head-mode request(s) ({len(p1)} purpose-1), pinned to {batch_sha[:12]}")
             # Scope decisions for the batch come from the pinned tree's committed testlist, validated by a process
             # bound to that tree (not by this server, whose source root is the clone).
             head_testlist = pinned_testlist(head_tree)
-            batch_lease = M.lease_head_tree(head_tree, "batch_" + "_".join(p.stem for p in p1)[:60])
+            batch_lease = M.lease_head_tree(head_tree, "batch_" + "_".join(p.stem for p in pinned)[:60])
             # Every regression of the batch is pinned to the commit the batch was synced from.
             batch_args = list(extra_args) + ["--no-sync-mirror", "--head-sha", str(sync["head_sha"])]
             try:
                 with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
                     manifests = list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
+                # Purposes 2 to 4 (trials, repros, measured rounds): one at a time on the same pinned tree.
+                manifests += [serve_one(p, head_testlist, dry_run, batch_args, sync) for p in p234]
             finally:
                 M.release_lease(batch_lease)
         else:
-            # Without one good shared sync the batch must not fan out: each regression syncs for itself, in turn.
-            sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing itself"
-            U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(p1)} purpose-1 request(s)")
-            manifests = [serve_one(p, testlist, dry_run, extra_args, sync) for p in p1]
+            # Without one good shared sync the batch must not fan out: each regression syncs the PINNED commit for
+            # itself, in turn, so the record's pinned_sha stays true (HEAD may have moved meanwhile).
+            sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing the pinned commit itself"
+            U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(pinned)} head-mode request(s) pinned to {batch_sha[:12]}")
+            pin_args = list(extra_args) + ["--head-sha", batch_sha]
+            manifests = [serve_one(p, testlist, dry_run, pin_args, sync) for p in [*p1, *p234]]
         rec.update(sync=sync, manifests=[str(m) for m in manifests], completed_utc=U.now_utc())
         U.dump_yaml(rec, rec_path)
-    elif p1:
+    elif pinned:
         # Dry run: scope decisions only, no sync and no hold.
-        for p in p1:
+        for p in pinned:
             serve_one(p, testlist, dry_run, extra_args)
     for p in rest:
         serve_one(p, testlist, dry_run, extra_args)

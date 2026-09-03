@@ -3,12 +3,13 @@
 
 Usage, from the clone root with the tools of ci/env.sh:
     bash -lc 'source ci/env.sh && python3 dv/auto_dv/excl/gen_excl_f1_pass.py --round-dir dv/auto_dv/evidence/gen_round_1'
+    (file names inside the round directory come from dv/auto_dv/flow/gen_flow_const.py ROUND_EV_*)
     ... --dry-run    rehearsal or unmeasured round: outputs only under the work dir, no EC-3 fill
     ... --self-test  dry run on gen_round_0_rebaseline; checks entry-set identity with the current file,
                      a clean strict load and a fully resolved Block join
 
 Steps: round manifest -> merged vdb and its module dump (out-tree, the _module files are not copied
-into evidence) -> gen_excl_select.py with the EC-3 fill from the round's asserts.txt -> strict load
+into evidence) -> gen_excl_select.py with the EC-3 fill from the round's asserts evidence copy -> strict load
 with urg, any attempts.log fed back as a refutation input (bounded loop) -> plain load -> gated rows
 without/with the file -> Block no-op join against the plain report (CM-3 / Critic L-3) -> constfile
 copies (B.7 rule 3) -> README delta text and a summary YAML under dv/auto_dv/work/rtl-arch/gen_excl_f1_<tag>/.
@@ -29,6 +30,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "dv/auto_dv/flow"))
+sys.path.insert(0, str(ROOT / "dv/auto_dv/excl"))
+import gen_flow_const as C          # round-evidence file names: one home, no literals here
+from gen_excl_select import URG_DUMP_MODULE_PREFIX   # URG's out-tree module dump names, defined once by their parser
 EXCL = ROOT / "dv/auto_dv/excl"
 GEN = EXCL / "gen_excl_select.py"
 EL = EXCL / "gen_exclusions.el"
@@ -78,7 +83,7 @@ def load_yaml(p):
 
 def round_inputs(round_dir, dry_run):
     """The merged vdb, its report dir, the module dump dir and the gated leaves of the round."""
-    man = round_dir / "regress_manifest.yaml"
+    man = round_dir / C.ROUND_EV_REGRESS_MANIFEST
     if not man.is_file():
         die(f"{man} missing")
     m = load_yaml(man)
@@ -94,15 +99,15 @@ def round_inputs(round_dir, dry_run):
         die(f"merged vdb not found: {vdb!r} (manifest {man})")
     dump = None
     for d in cov.get("full_exclusions_dump") or []:
-        if Path(d).name.startswith("fullexclude_module."):
+        if Path(d).name.startswith(URG_DUMP_MODULE_PREFIX):
             dump = Path(d).parent
             break
     if dump is None and report_dir:
-        cand = Path(report_dir).parent / "full_exclusions"
-        if (cand / "fullexclude_module.line").is_file():
+        cand = Path(report_dir).parent / C.URG_DUMP_DIRNAME
+        if (cand / f"{URG_DUMP_MODULE_PREFIX}line").is_file():
             dump = cand
-    if dump is None or not (dump / "fullexclude_module.line").is_file():
-        die(f"module dump (fullexclude_module.*) not found beside {report_dir}; the round must run with -dump full_exclusions (purpose 4)")
+    if dump is None or not (dump / f"{URG_DUMP_MODULE_PREFIX}line").is_file():
+        die(f"module dump ({URG_DUMP_MODULE_PREFIX}*) not found beside {report_dir}; the round must run with -dump {C.URG_DUMP_DIRNAME} (purpose 4)")
     leaves = tuple(k.split(".")[-1] for k in (cov.get("dut_scope") or {}).keys()) or DEFAULT_LEAVES
     return {"manifest": str(man), "measured": measured, "vdb": vdb, "report_dir": report_dir, "dump": str(dump),
             "leaves": leaves, "git_head": m.get("git", {}).get("head") if isinstance(m.get("git"), dict) else None}
@@ -280,15 +285,17 @@ def block_join(el_path, dump_dir, plain_modinfo):
 def constfiles(round_dir, work):
     """constfile.txt of every build of the round, copied beside the pass outputs with its sha256."""
     out = []
-    for bm in sorted(round_dir.glob("build_manifest_*.yaml")):
+    bm_pre, bm_suf = C.ROUND_EV_BUILD_MANIFEST_FMT.split("{build}")
+    for bm in sorted(round_dir.glob(C.ROUND_EV_BUILD_MANIFEST_FMT.format(build="*"))):
+        build = bm.name[len(bm_pre):-len(bm_suf)]
         b = load_yaml(bm)
         cf = b.get("constfile")
         if cf and Path(cf).is_file():
-            dst = work / f"gen_constfile_{bm.stem.replace('build_manifest_', '')}.txt"
+            dst = work / f"gen_constfile_{build}.txt"
             shutil.copyfile(cf, dst)
-            out.append({"build": bm.stem.replace("build_manifest_", ""), "source": cf, "copy": str(dst), "sha256": sha256(dst)})
+            out.append({"build": build, "source": cf, "copy": str(dst), "sha256": sha256(dst)})
         else:
-            out.append({"build": bm.stem.replace("build_manifest_", ""), "source": cf, "copy": None, "sha256": None})
+            out.append({"build": build, "source": cf, "copy": None, "sha256": None})
     return out
 
 
@@ -350,7 +357,7 @@ def write_delta(work, tag, S):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--round-dir", help="dv/auto_dv/evidence/gen_round_<n>")
+    ap.add_argument("--round-dir", help=f"{C.EVIDENCE_DIR.relative_to(C.REPO_ROOT)}/{C.ROUND_DIR_PREFIX}<n>")
     ap.add_argument("--tag", help="round tag written into the EC-3 fields and file names (default: from the directory name)")
     ap.add_argument("--pass-label", default="<pass>", help="pass number for the README row")
     ap.add_argument("--work-dir", help="default dv/auto_dv/work/rtl-arch/gen_excl_f1_<tag>")
@@ -362,7 +369,7 @@ def main():
     if shutil.which("urg") is None:
         die("urg not on PATH: run through bash -lc 'source ci/env.sh && ...'")
     if a.self_test:
-        a.round_dir, a.dry_run = "dv/auto_dv/evidence/gen_round_0_rebaseline", True
+        a.round_dir, a.dry_run = str((C.EVIDENCE_DIR / (C.ROUND_DIR_PREFIX + "0_rebaseline")).relative_to(C.REPO_ROOT)), True
     if not a.round_dir:
         die("--round-dir is required")
     round_dir = (ROOT / a.round_dir).resolve()
@@ -380,9 +387,9 @@ def main():
         el, rep, readme = EL, REPORT, README
     before = {"el_md5": md5(EL), "el_sha256": sha256(EL), "entries": entry_set(EL)}
 
-    asserts = round_dir / "asserts.txt"
+    asserts = round_dir / C.ROUND_EV_ASSERTS
     ec3_asserts = asserts if (inputs["measured"] and not a.dry_run and asserts.is_file()) else None
-    ec3 = {"summary": "not filled (dry run)" if a.dry_run else ("not filled: asserts.txt missing in the round evidence" if inputs["measured"] and not asserts.is_file() else "not filled"),
+    ec3 = {"summary": "not filled (dry run)" if a.dry_run else (f"not filled: {C.ROUND_EV_ASSERTS} missing in the round evidence" if inputs["measured"] and not asserts.is_file() else "not filled"),
            "detail": "EC-3 not attempted." if not ec3_asserts else ""}
     attempts = [p for p in SEED_ATTEMPTS if p.is_file()]
     strict = None

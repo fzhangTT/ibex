@@ -86,8 +86,11 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
             "info_scopes": man.get("info_scopes") or [], "glitch_filter": man.get("glitch_filter"), "vdb": None,
             "mutation_id": man.get("mutation_id"), "rtl_root_override": man.get("rtl_root_override"),
             "export_sources": man.get("export_sources"), "export_knobs": man.get("export_knobs"),
+            "export_sources_declared": man.get("export_sources_declared"),
+            "export_sources_declared_origin": man.get("export_sources_declared_origin"),
             "export_sources_emitted": man.get("export_sources_emitted"),
             "export_sources_emitted_origin": man.get("export_sources_emitted_origin"),
+            "export_rows_observed": man.get("export_rows_observed"),
             "source_mode": man.get("source_mode"), "head_sha": man.get("head_sha"),
             "rtl_substitutions": man.get("rtl_substitutions"),
             "unmeasured_vdb": str(unmeasured_vdb) if unmeasured_vdb else None}
@@ -179,6 +182,32 @@ def fcov_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
               "unmet": sum(e["unmet"] for e in per_test.values()),
               "unverifiable": sum(e["unverifiable"] for e in per_test.values())}
     return {"totals": totals, "per_test": per_test}
+
+
+def observe_exports(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
+    """LOG-028a: after the runs each build's manifest gains what its export files actually carried, the emitted source
+    set from the headers' sources= and the per-row first-seen list from the E lines; the regression's build record
+    mirrors both. A build none of whose runs wrote an export file keeps an empty set with the unobserved origin."""
+    out: dict[str, Any] = {}
+    for bname, b in builds.items():
+        files = [(Path(r["run_dir"]).name if r.get("run_dir") else f"{r.get('test')}_{r.get('seed')}", Path(r["export_file"]))
+                 for r in runs if r.get("build") == bname and r.get("export_file") and Path(r["export_file"]).is_file()]
+        obs = U.export_observe(files)
+        man_path = Path(b.get("manifest") or "")
+        man = U.load_yaml(man_path) if man_path.is_file() else {}
+        if obs["files"]:
+            emitted = U.emitted_from_observed(man.get("export_sources") or [], obs["sources"])
+            names = [f for f, _ in files]
+            origin = f"header sources= of {obs['files']} export file(s) of this build (runs {names[:6]}{'...' if len(names) > 6 else ''})"
+        else:
+            emitted, origin = [], C.EXPORT_EMITTED_UNOBSERVED
+        upd = {"export_sources_emitted": emitted, "export_sources_emitted_origin": origin, "export_rows_observed": obs["rows"]}
+        if man:
+            man.update(upd)
+            U.dump_yaml(man, man_path)
+        b.update(upd)
+        out[bname] = {"files": obs["files"], "sources": obs["sources"], "rows_observed": len(obs["rows"])}
+    return out
 
 
 def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -614,6 +643,8 @@ def main() -> int:
             U.log(f"URG dashboard: {cov['dashboard_txt']} totals={cov['totals']}")
         if cov.get("exclusion_violations"):
             U.log(f"EXCLUSION VIOLATION (strict): {cov['exclusion_violations'][:3]} -> merge FAILED")
+    # LOG-028a: what the sink wrote, per build, before retention can prune any export file.
+    manifest["export_observed"] = observe_exports(builds, runs)
     manifest.update(runs=runs, summary=summarize(runs), lsf_cost=lsf_cost(builds, runs),
                     finished_utc=U.now_utc(), wall_s=round(time.time() - start, 1), status="done",
                     lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])

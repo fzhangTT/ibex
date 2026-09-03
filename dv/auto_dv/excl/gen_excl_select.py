@@ -12,6 +12,12 @@ Usage: gen_excl_select.py --dump <dir with fullexclude_module.*> --out gen_exclu
 import argparse, re, subprocess, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "flow"))
+import gen_flow_const as C   # round-evidence file names: one home (dv/auto_dv/flow/gen_flow_const.py), no literals here
+
+# URG's own out-tree module dump names (`urg -dump full_exclusions`); this parser is their one home in dv/auto_dv/excl.
+URG_DUMP_MODULE_PREFIX = "fullexclude_module."
+
 METRICS = ["line", "branch", "cond", "tgl", "fsm", "assert"]
 RE_MOD = re.compile(r'^// ANNOTATION: "ModuleName: (\S+)"')
 RE_MODULE = re.compile(r'^// MODULE: (\S+)')
@@ -34,7 +40,7 @@ class Entry:
 def parse(dump_dir):
     entries = []
     for metric in METRICS:
-        p = Path(dump_dir) / f"fullexclude_module.{metric}"
+        p = Path(dump_dir) / f"{URG_DUMP_MODULE_PREFIX}{metric}"
         if not p.exists():
             continue
         mod = chk = f = None
@@ -855,7 +861,7 @@ def main():
     ap.add_argument("--attempts", action="append", default=[], help="URG attempts.log of a strict load; listed objects are refuted and dropped")
     ap.add_argument("--allow-unfilled-ec3", action="store_true",
                     help="emit the three class-D spare-encoding default arms although their EC-3 attempts/failures are not filled (F-3 open)")
-    ap.add_argument("--ec3-asserts", help="URG asserts.txt of a MEASURED regression (<outdir>/cov/report/asserts.txt): fills the "
+    ap.add_argument("--ec3-asserts", help=f"the committed round-evidence copy {C.ROUND_EV_ASSERTS} of a MEASURED regression's URG asserts report: fills the "
                     "EC-3 fields of the class-D spare-encoding groups from its ATTEMPTS / FAILURES columns and emits them (F-3)")
     ap.add_argument("--ec3-round", default="<round>", help="round tag written into the filled EC-3 fields (e.g. round_1)")
     ap.add_argument("--readme", help="README whose COUNTS block (between <!-- COUNTS-BEGIN --> and <!-- COUNTS-END -->) is rewritten from this run")
@@ -874,9 +880,10 @@ def main():
             ec3_rel = str(ap_.relative_to(root))
         except ValueError:
             sys.exit(f"gen_excl_select: EC-3 fill refused: {a.ec3_asserts} is outside the clone")
-        if not re.match(r"^dv/auto_dv/evidence/gen_round_[^/]+/asserts\.txt$", ec3_rel):
-            sys.exit(f"gen_excl_select: EC-3 fill refused: {ec3_rel} is not dv/auto_dv/evidence/gen_round_<n>/asserts.txt")
-        man = ap_.parent / "regress_manifest.yaml"
+        if not re.match(C.ROUND_EC3_ASSERTS_RE, ec3_rel):
+            sys.exit(f"gen_excl_select: EC-3 fill refused: {ec3_rel} is not "
+                     f"{C.EVIDENCE_DIR.relative_to(C.REPO_ROOT)}/{C.ROUND_DIR_PREFIX}<n>/{C.ROUND_EV_ASSERTS}")
+        man = ap_.parent / C.ROUND_EV_REGRESS_MANIFEST
         try:
             import yaml
             cov = (yaml.safe_load(man.read_text()) or {}).get("coverage") or {}
