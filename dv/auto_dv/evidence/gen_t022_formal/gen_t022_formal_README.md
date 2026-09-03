@@ -27,8 +27,8 @@ directory holds the subset that lets a reader check every claim and regenerate t
 | sources/gen_t022_assertions_extract.txt | sources/t022_assertions_extract.txt | every inserted T022_* assert/assume/cover with file:line (117 lines) |
 | sources/gen_t022_formal*.patch (10) | sources/t022_formal*.v (10, about 630 KB each) | unified diff of each assertion-bearing formal copy against t022_all.v; `patch` recreates the copy byte for byte |
 | logs/gen_t022_sby_summaries.txt | logs/t022_sby_summaries.txt, logs/t022_sby_*.out | the summary and DONE lines of every run with their SBY stamps (tool local clock, UTC-4) |
-| logs/gen_t022_core5_rerun.out | (new, 2026-09-03 07:32Z) | full sby stdout of the regeneration re-run of t022_core5 from this clone (section 4) |
-| runs/<job>/gen_status, gen_PASS or gen_FAIL or gen_UNKNOWN, gen_config.sby, gen_implicit_declarations.txt, gen_smt2_assert_count.txt | runs/<job>/ plus logfile*.txt and every trace.vcd / trace.yw | per-run status marker, the implicit-declaration grep count and the SMT2 assert count |
+| logs/gen_t022_core5_rerun.out | (new, 2026-09-03 08:52Z, SBY stamp 4:52:03 local) | full sby stdout of the latest regeneration re-run of t022_core5 from this clone with the renamed, parameter-checked files (section 4) |
+| runs/<job>/gen_status (`<STATUS> <rc> <seconds>` as sby writes it: `PASS 0 10` = PASS, exit code 0, 10 s wall clock; matches the `DONE (PASS, rc=0)` line), gen_PASS or gen_FAIL or gen_UNKNOWN (the empty marker file sby names after the status; absent for the three timed-out jobs), gen_config.sby, gen_implicit_declarations.txt, gen_smt2_assert_count.txt | runs/<job>/ plus logfile*.txt and every trace.vcd / trace.yw | per-run status marker, the implicit-declaration grep count and the SMT2 assert count |
 | runs/t022_core5/gen_logfile.txt, gen_logfile_basecase.txt, gen_logfile_induction.txt | same | the full log of the evidence-bearing whole-core run |
 | runs/t022_sem/gen_sem.v, gen_sem.sby, gen_sem.out | same | the step-semantics experiment (section 2.2 of the evidence document) |
 | gen_t022_regen.sh | - | the exact regeneration commands (section 3) |
@@ -57,6 +57,11 @@ bash dv/auto_dv/evidence/gen_t022_formal/gen_t022_regen.sh <outdir> [job ...]   
 
 The script performs, in order:
 
+0. Parameter guard: the scratch top re-types the fourteen opentitan integer parameters; the script
+   parses `util/ibex_config.py opentitan vcs_opts` (-pvalue+NAME=VALUE) and stops with the mismatch
+   named if any value differs (checked 2026-09-03: 14 equal; negative control with PMPNumRegions 16 -> 4
+   in a scratch copy fails as intended). A configuration change can therefore not invalidate the proofs
+   silently.
 1. `sv2v -DSYNTHESIS -DDV_FCOV_DISABLE -DBaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT
    -DRV32M=ibex_pkg::RV32MSingleCycle -DRV32B=ibex_pkg::RV32BOTEarlGrey
    -DRV32ZC=ibex_pkg::RV32ZcaZcbZcmp -DRegFile=ibex_pkg::RegFileFF
@@ -76,9 +81,13 @@ The script performs, in order:
    evidence checks: `grep -c 'implicitly declared' <job>/model/design.log` must print 0 and
    `grep -c assert <job>/model/design_smt2.smt2` must match runs/<job>/gen_smt2_assert_count.txt.
 
-## 4. Reproduction check performed for this subset (2026-09-03, 07:32Z, this clone at commit
-7d91448 with the tb-infra working-tree edits of the time; rtl/ and vendor/lowrisc_ip/ unchanged
-since the export commit 1908ddd)
+## 4. Reproduction checks performed for this subset (2026-09-03; rtl/ and vendor/lowrisc_ip/
+unchanged since the export commit 1908ddd)
+
+Three runs of gen_t022_regen.sh from this clone: 07:32Z (original file names, clone at commit
+7d91448), 08:16Z (after every file received the gen_ prefix), 08:52Z (after the step-0 parameter
+guard was added; this is the committed logs/gen_t022_core5_rerun.out, SBY stamp 4:52:03 local).
+All three gave the same results:
 
 - Step 1+2 output is byte-identical to the retained model/t022_all.v (md5
   e2f97cc101f3cc835d6f7277b9cdddd8).
@@ -90,8 +99,9 @@ since the export commit 1908ddd)
   cited in gen_unreachability_evidence.md section 4.3 are at the same lines (93368
   `nt_branch_mispredict 1'0`, 93394 `instr_bp_taken_id 1'0`).
 - Step 5 for t022_core5: `summary: successful proof by k-induction`, `DONE (PASS, rc=0)`,
-  0 implicit declarations, 46 SMT2 asserts (logs/gen_t022_core5_rerun.out; original run
-  runs/t022_core5/gen_logfile.txt with SBY stamp 1:54:04). Wall time about 24 s for steps 1-5.
+  0 implicit declarations, 46 SMT2 asserts (logs/gen_t022_core5_rerun.out from the 08:52Z run;
+  original run runs/t022_core5/gen_logfile.txt with SBY stamp 1:54:04). Wall time about 25-30 s
+  for steps 0-5.
 
 ## 5. Job to exclusion-draft class mapping
 

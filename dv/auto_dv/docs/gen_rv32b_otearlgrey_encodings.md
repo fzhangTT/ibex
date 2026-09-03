@@ -8,13 +8,10 @@ rtl/ibex_compressed_decoder.sv:462-519. This file is the reference that the TB I
 and the Spike shim's draft-B path use; when the working copy changes, this copy is re-promoted.
 Owner: rtl-arch. ASCII only.
 
-
-Owner: rtl-arch. Answers tb-infra Q-8 item 6. Source of truth: the legality case statements in
-rtl/ibex_decoder.sv (OP-IMM :488-586, OP :588-651, ternary :592-593) and the ALU-operator /
-multicycle selection (:1100-1352); Zcb expansions rtl/ibex_compressed_decoder.sv:462-519. Read
-in full on 2026-09-03. Doc reference: doc/03_reference/instruction_decode_execute.rst:67-102
-(OTEarlGrey = all sub-extensions except Zbe; Zba/Zbb/Zbc/Zbs at ratified 1.0.0, Zbe/Zbf/Zbp/
-Zbr/Zbt at draft 0.93). RV32B = RV32BOTEarlGrey, RV32M = RV32MSingleCycle.
+Answers tb-infra Q-8 item 6; RTL read in full on 2026-09-03. Doc reference:
+doc/03_reference/instruction_decode_execute.rst:67-102 (OTEarlGrey = all sub-extensions except Zbe;
+Zba/Zbb/Zbc/Zbs at ratified 1.0.0, Zbe/Zbf/Zbp/Zbr/Zbt at draft 0.93). RV32B = RV32BOTEarlGrey,
+RV32M = RV32MSingleCycle.
 
 Notation: opcode OP-IMM = 0010011, OP = 0110011; f3 = instr[14:12]; f7 = instr[31:25];
 hi5 = instr[31:27]; "any" = the decoder does not check those bits (lenient: reserved encodings

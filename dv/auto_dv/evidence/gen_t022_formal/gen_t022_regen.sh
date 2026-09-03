@@ -11,6 +11,28 @@ OUT=${1:?outdir required}; shift || true
 JOBS=("$@"); [ ${#JOBS[@]} -eq 0 ] && JOBS=(t022_core5)
 mkdir -p "$OUT"; cd "$ROOT"
 
+# 0. The scratch top re-types the opentitan integer parameters (model/gen_t022_top.sv). Fail loud if
+#    they differ from `util/ibex_config.py opentitan vcs_opts` (-pvalue+NAME=VALUE): a config change
+#    would otherwise silently invalidate every proof below.
+python3 - "$E/model/gen_t022_top.sv" <<'PYCHK'
+import re, subprocess, sys
+top = open(sys.argv[1]).read()
+cfg = subprocess.run([sys.executable, "util/ibex_config.py", "opentitan", "vcs_opts"],
+                     check=True, capture_output=True, text=True).stdout
+want = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
+blk = top[top.index("gen_dut_top #("):top.index(") u_dut")]
+def val(v):
+    v = v.strip(); m = re.match(r"^\d+'[bhd]([0-9a-fA-F]+)$", v)
+    return int(m.group(1), {"b": 2, "h": 16, "d": 10}[v.split("'")[1][0]]) if m else int(v)
+have = {m.group(1): val(m.group(2)) for m in re.finditer(r"\.(\w+)\(([^)]*)\)", blk)}
+bad = [f"{k}: top={have.get(k)} config={want[k]}" for k in want if have.get(k) != want[k]]
+extra = sorted(set(have) - set(want))
+if bad or extra:
+    sys.exit("gen_t022_regen: scratch-top parameters disagree with util/ibex_config.py opentitan: "
+             + "; ".join(bad) + (" ; not in config: " + ", ".join(extra) if extra else ""))
+print(f"gen_t022_regen: {len(want)} scratch-top parameters equal util/ibex_config.py opentitan vcs_opts")
+PYCHK
+
 # 1. SystemVerilog -> Verilog-2005. Defines: SYNTHESIS + DV_FCOV_DISABLE drop the DV macros; the
 #    five enum defines are `util/ibex_config.py opentitan vcs_opts` (+define+ terms). The -pvalue+
 #    integers of that config are set on the scratch top (model/gen_t022_top.sv), not here.

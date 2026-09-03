@@ -68,21 +68,36 @@ urg X-2025.06-SP2, `-dir regress_round_0_rebaseline/cov_unmeasured/merged.vdb -e
 | 5-7 | refutation feedback | an empty MODULE scope in the file made URG mis-scope the following entries (143 UCAPI-EXCOV errors on unrelated conditions); fixed by never emitting an empty scope |
 | 8 | final | 0 warnings, 0 errors, no attempts.log (gen_precheck/gen_precheck_urg_pass8.log, gen_precheck_dashboard_pass8.txt) |
 
-DUT-scope totals of the round-0 re-baseline with and without the file (numerators identical, only
-denominators move; the file removes nothing that the smoke covered):
+Gated-row totals (u_dut.u_ibex_core + u_dut.u_register_file, the R-001 scope) of the round-0
+re-baseline with and without the file, as the flow computes them (Runtime pre-flight runtime-007,
+below; numerators identical, only denominators move: the file removes nothing that the smoke covered):
 
-| Metric | without (gen_round_0_rebaseline) | with gen_exclusions.el (pass 8) | objects removed |
+| Metric | without (gen_round_0_rebaseline) | with gen_exclusions.el | objects removed |
 |---|---|---|---|
 | LINE | 1694/4351 | 1694/4057 | 294 |
 | COND | 2547/9566 | 2547/9220 | 346 |
-| TOGGLE | 1994/26958 | 1994/23016 | 3942 |
+| TOGGLE | 1682/24538 | 1682/20596 | 3942 |
 | FSM | 6/86 | 6/74 | 12 |
 | BRANCH | 798/2418 | 798/2320 | 98 |
-| ASSERT | 143/178 | 143/178 | 0 (see section 5, item 4) |
+| ASSERT | 143/178 | 143/175 | 3 |
 
-Run request dv/auto_dv/work/runtime/requests/rtl-arch-003.yaml asks the Runtime Manager to repeat the
-load through the flow (purpose 2, report-time only) and record merge.log; the outcome is appended
-here when the manifest arrives.
+(The author pre-check dashboards under gen_precheck/ show URG's "Total Coverage Summary" row, which is
+the informational u_dut scope: TOGGLE 1994/26958 -> 1994/23016 there includes the wrapper's own port
+toggles, and its ASSERT figure 143/178 does not move because that summary already nets out
+no-attempt assertions; the gated rows above are the numbers that matter and they move for every
+metric, ASSERT included.)
+
+Flow record (Runtime Manager, purpose-2 elcheck): dv/auto_dv/work/runtime/results/runtime-007/manifest.yaml
+(pre-flight of the server path, 2026-09-03 08:52Z; out-tree regress_req_runtime-007, cov_elcheck with
+the file, cov_plain without): elfile sha256 4a2a6c817d8a8c4da9d4e03e336bfe4fe9b5a839a36f0087eea9321eef162145,
+urg rc 0, exclusion_violations 0, merge.log without any Warning-[ or Error-[ line, full_exclusions dump
+written (12 files). rtl-arch-003 was refused in writing (the queue had no report-only request kind at
+08:50Z); the re-file with the `elcheck` field, rtl-arch-004, was served at 09:0xZ:
+dv/auto_dv/work/runtime/results/rtl-arch-004/manifest.yaml (out-tree regress_req_rtl-arch-004,
+cov_elcheck with the file and its full_exclusions dump, cov_plain without): verdict ok, urg rc 0 on
+both merges, exclusion_violations 0, merge_warnings empty, elfile sha256 recorded in full, gated rows
+and excluded counts identical to runtime-007 (the table above). This manifest is the formal
+strict-load record for the draft file (F-1 in draft form).
 
 ## 4. Refuted entries (covered in the round-0 re-baseline; dropped, kept in coverage)
 
@@ -124,10 +139,11 @@ are the reason F-1 requires the strict load on the measured regression itself.
    file as A.4 vectors and loaded strictly under the -cm_glitch 0 build (R-002 recorded); the
    fetch_enable_i ones (rtl/ibex_core.sv:648, :649, :1414) were smoke-top ties only: in the real TB
    fetch_enable_i is a driven pin (Q-007), so they are NOT excluded.
-4. The three assertion entries (MODULE ibex_register_file_ff, g_cheriot_rf.Cheriot*MSBClear) load
-   without a warning but the ASSERT denominator stayed 178 in the pre-check. Either URG needs the
-   INSTANCE scope for assertion exclusions or the three are already outside the gated total; Runtime's
-   run and the first measured regression decide; the generator switches the scope if needed.
+4. The three assertion entries (MODULE ibex_register_file_ff, g_cheriot_rf.Cheriot*MSBClear) ARE
+   honoured: the pass-8 asserts.txt marks all three "Excluded" (Summary: Excluded 3), the
+   u_register_file hierarchy row moves from ASSERT 1/5 to 1/2 and the flow's gated row from 143/178
+   to 143/175 (runtime-007). Only URG's top "Total Coverage Summary" ASSERT figure stays 143/178
+   (its denominator already nets out assertions without attempts). Resolved 2026-09-03 08:58Z.
 5. The class-D default-arm Blocks are in; URG emits no separate case-default branch vector for these
    case statements in this dump (the `default,` vector rule matched nothing), so the arm Blocks carry
    the class-D entries.
