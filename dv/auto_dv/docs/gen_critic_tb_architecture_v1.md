@@ -103,16 +103,45 @@ re-review the v3 fold: the five checker rows it corrects come to me with their S
 
 L-4 Section 4.2 knob names (see Section 4 above); align with the codegen names at re-adoption.
 
-L-5 Header and citations. The status field says the component sections' "v2 re-review is in progress" (it is APPROVED,
-06:59Z) and the 6.0 preamble cites dv/auto_dv/work/tb-infra/gen_critic_response_tb_arch_v1.md (gitignored); cite the
-committed dv/auto_dv/evidence/gen_critic_response_tb_arch.md and, for the feature-list response,
-dv/auto_dv/evidence/gen_critic_response_feature_list_v1.md (standing rule).
+L-5 Header, citations and log references. The status field says the component sections' "v2 re-review is in progress"
+(it is APPROVED, 06:59Z) and the 6.0 preamble cites dv/auto_dv/work/tb-infra/gen_critic_response_tb_arch_v1.md
+(gitignored); cite the committed dv/auto_dv/evidence/gen_critic_response_tb_arch.md and, for the feature-list response,
+dv/auto_dv/evidence/gen_critic_response_feature_list_v1.md (standing rule). Section 5 and 8.1 should cite the
+intervention-log entries that now record the rulings (Q-014 owner-visible question, R-002 ruling); at adoption time
+neither ruling was in the log, which the cross-model delta review rightly flagged.
 
-L-6 Section 5 promises the wrapper's objects "reported informationally (a third +tree in a separate, non-gated
-report)"; gen_testlist.yaml carries only the two measured trees. Runtime adds the informational tree or the sentence is
-softened to "available on request"; either way the DUT-scope numbers are unaffected.
+L-7 Section 7 ("as they stand in the intervention log") lists Q-002 (revised) and Q-008..Q-013 but omits Q-001,
+Q-003..Q-007 and F-001, all present in dv/auto_dv/docs/gen_intervention_log.md (lines 23-134, 323). Either list them
+with their defaults or retitle the section as the TB-relevant subset. (Cross-model delta review medium: agree.)
 
-## 8. Method and fence record
+L-8 8.2 says GEN_ICACHE_ECC_WINDOW is "1 from the corrupted-rdata cycle" while the 6.13 table and rtl-arch 2.4 put the
+alert at 0 from that cycle and 1 from the lookup request; TB Infra's yaml (step 1a) and v3 carry "window 1 counted from
+the lookup request". Align 8.2 to the 6.13 wording. (Cross-model delta review low: agree.)
+
+L-6 (resolved at HEAD 7d91448) Section 5 promises the wrapper's objects "reported informationally (a third +tree in a
+separate, non-gated report)". At review time the testlist carried only the two measured trees; Runtime's T-062 landing
+(7d91448) added `info_trees` to the build schema (gen_flow_const.py BUILD_OPTIONAL_KEYS, gen_build.py info_trees(),
+gen_flow_util refusing a tree that is both gated and informational, gen_cov_report.combine_rows for the gate row) and
+gen_testlist.yaml now lists `info_trees: [u_dut]` for both builds. The document's mechanism statement is executable as
+written.
+
+## 8. Relation to the cross-model delta review (dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_architecture.md, REQUEST-CHANGES)
+
+| Cross-model finding | My position |
+|---|---|
+| High: the coverage-scope ruling is not executable as written (flow refuses two scopes until T-057) | Agree that it was not executable at adoption time; at HEAD 7d91448 the flow implements the list of gated trees with a combining rule and informational trees (L-6), so the mechanism the document describes now exists. I keep APPROVE: the ruling is what the document must record, and executability is the flow's deliverable, now landed. The document should cite 7d91448 or the API doc for the mechanism |
+| Medium: neither ruling was in the intervention log | Agree; recorded since as Q-014 and R-002; the document must cite them (L-5) |
+| Medium: identifier drift (+gen_chk_bus_rvalid_legal vs +gen_chk_sva_rvalid_legal; one vs per-threshold edge bits) | Agree; covered by L-3/L-4 (TB Infra's v3 and the step-1a yaml already use chk_sva_rvalid_legal and the two evt_*_hit bits); re-adoption with v3 embedded resolves it |
+| Medium: Section 7 omits Q-001, Q-003..Q-007, F-001 | Agree; added as L-7 |
+| Low: status and inputs stale at adoption | Agree (L-5) |
+| Low: 8.2 vs 6.13 on GEN_ICACHE_ECC_WINDOW | Agree; added as L-8 |
+| Low: `seed_used` exists only for riscv-dv programs | Agree, informational; the one-seed statement in 4.2 should say "seed (and seed_used for generated programs)" |
+| Info: 8.3 item 4 knob count wording | Agree, informational |
+
+Severity difference: the delta review blocks on the scope mechanism; I do not, for the reason above. Both lists go to the
+DV Lead's v1a together, as the Orchestrator arranged.
+
+## 9. Method and fence record
 
 Fidelity was checked by reconstruction and hash, not by eye: the reviewed v2 text exists only in my saved review copy
 because TB Infra's file has since moved to v3, and the reconstruction hashes to the recorded v2 sha256. The rulings were
