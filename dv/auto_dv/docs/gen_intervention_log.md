@@ -1530,3 +1530,16 @@ testlist, the plan and CSVs, the response files, the knobs and fcov yaml): write
 the file's own validator on it (the testlist loader, the trace check, py_compile, the codegen --check), and only then
 replace the shared copy in one move; never edit such a file in place and validate afterwards. Runtime already adopted the
 parse-before-write rule; this entry makes it the team's.
+
+## LOG-060 - 2026-09-03 - Second unverified focus claim (LOG-048 repeated); review killed and relaunched
+
+The Orchestrator launched the cross-model review of plan touch v2t (5e6186c..8bd254c) with a REVIEW_FOCUS stating,
+in a parenthetical, that the credit tool's bare header invocation prints the report md to stdout identically to the
+committed file. The check that would have supported it (cmp of the captured stdout against the md) ran in the same
+command and had already printed a difference: the bare invocation prints a two-line summary, and only the run with --md
+and --csv regenerates the three files byte-identical, which is the claim that holds. The review was killed about two
+minutes in, its run directory and failed raw copy removed, and the review relaunched with the corrected statement; the
+DV Lead received a correction of the same sentence and a row (O-1) to make the printed invocation carry the output
+arguments. Rule restated from LOG-048 with the missing half: every clause of a focus statement, including asides in
+parentheses, is a claim the artifact will carry, so each one comes from a check that printed the expected result, and a
+check that printed a difference is read before the launch command in the same shell is allowed to run.
