@@ -1255,3 +1255,15 @@ applied, so a mid-run bin can stay unhit on a PASS and the fcov gate is where th
 unbuilt groups, so the lift credits none of them today; Runtime's head-mode wave on 9500268 (13 of 13 PASS, 17:22Z) is
 the record LOG-042 asked for and preceded the round-0 dispatch. Lows to the Test Writer's next touch: an edit-ablation
 control for mutation 3h-M1 on the same seed; CR6 rows for the v6 lows; the Section 10 testlist citation (CM30-L-1).
+
+## LOG-045 - 2026-09-03 - RTL mutants found applied in the shared working tree (reverted)
+
+At 17:37Z the Orchestrator's committer boundary check found rtl/ibex_core.sv and rtl/ibex_load_store_unit.sv modified in the
+shared working tree (mtimes 17:36:54Z and 17:37:17Z): three mutants whose own comments read "RM1/RM2/RM3 (out-of-tree RTL
+mutant)" (core_busy_o forced to 1'b0; rvfi_halt tied to rvfi_valid; data_tag_o driven high). DV never modifies RTL in this
+clone and no shared-tree window had been announced. The Orchestrator saved the diff and restored both files from HEAD at
+17:38Z (git status of rtl/ clean at 17:39Z). Runtime's head-mode round 0 (git archive of 37c7ecb) and the Test Writer's
+HEAD-export runs cannot have seen the mutants; the presumed owner is tb-infra's landing-2b protocol-bind mutation work, whose
+mutant edits belong in its out-of-tree copy. tb-infra is asked to name the script that wrote into the shared tree and any
+build that compiled it inside the window; results of such a build are discarded. Rule restated: every mutant edit and build
+happens in an out-of-tree copy; the shared tree carries committed RTL only.
