@@ -583,3 +583,18 @@ was committed. Caveat recorded by the Orchestrator: the sandboxed reviewer reads
 committed blobs, so the round-7 artifact (started 11:38 UTC) is checked on arrival for text that exists
 only in v2h (the operational token-removal rule, the unforgeability sentence); if found, round 7 is
 re-run against the committed v2g. Disclosed by the DV Lead unprompted.
+
+## LOG-018a - 2026-09-03 - NOTE (T-102 landed: comparator and shim conventions fixed; four batch-1 tests unblocked)
+
+11:52 UTC: tb-infra landed T-102 (d0c0d15). The four batch-1 tests that failed the flow verdict on the
+lock-step comparator (LOG-018) now pass with 0 mismatches on a fresh build (119 / 282 / 5189 / 7965
+compared records). Fixes: isa_prv compares the pre-step privilege (rvfi_mode is the executing
+privilege); the model is synced from the record before each step (mcycle through a repaired
+gen_isa_set_time, the hpm counters, ic_scr_key_valid); Ibex views for marchid, mhpmevent, tdata1 and
+mstatus XS/SD in the shim; the draft-B reference covers the remaining C5.5 ops; constants derived from
+ibex_pkg and the yaml with guards (Critic D-2). Evidence: shim unit test red (41 FAIL) then green
+(150 OK), mutations P1..P9 (`dv/auto_dv/mutations/gen_mut_t102.md`), closing canary green, RTL facts
+confirmed by rtl-arch (`dv/auto_dv/evidence/gen_t102_rtl_facts.md`). One gap carried as a follow-up:
+isa_pc_next is skipped on mret and dret records instead of comparing pc_wdata with pc + insn_length
+and verifying the redirect through the next record; the Orchestrator ordered the compare form. Reviews
+(cross-model T-118, Critic) are running on the commit.
