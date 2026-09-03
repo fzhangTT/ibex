@@ -73,9 +73,9 @@ dry_runs:
     Warning-[UCAPI-CSM]: 14
   testlist_sha256: eb9e0ff3b00100c37d9fe21845bacb9e41582a441993a6017ef6e2ac7b2bcb16
   copied:
-  - dashboard.txt
-  - hierarchy.txt
-  - tests.txt
+  - gen_dashboard.txt
+  - gen_hierarchy.txt
+  - gen_tests.txt
   full_exclusions_files:
   - fullexclude.assert
   - fullexclude.branch
@@ -199,8 +199,8 @@ dry_runs:
     sha256: 92f70be11f4cbf32f5652a1e935bad204b208a2bd6d185b96265c579d88b1b04
   testlist_sha256: 92f70be11f4cbf32f5652a1e935bad204b208a2bd6d185b96265c579d88b1b04
   copied:
-  - dashboard.txt
-  - hierarchy.txt
-  - tests.txt
+  - gen_dashboard.txt
+  - gen_hierarchy.txt
+  - gen_tests.txt
   full_exclusions_files: []
   full_exclusions_note: 'dry run: dump not copied (stays in the out-tree)'
