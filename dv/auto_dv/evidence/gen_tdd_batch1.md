@@ -468,7 +468,7 @@ source hash, plusargs, seed-derived schedule and testbench revision reach the sa
 progress-based (template transcript Section 9.2): the failing seed then PASSes at 968492 cycles and the red FAILs on its designed
 item. Recorded by the Orchestrator as LOG-030 (a template defect found by acceptance under live layers). Wave 5 re-files against 3c.
 
-## 10. Landing 3e: pinned reds re-run on the HEAD-equal build, csr_trap_setup at plan v2k, the fixed self-test from a clean archive
+## 10. Landing 3e: pinned reds re-run on the build out_head5 (TB sources equal to b95d6d2's), csr_trap_setup at plan v2k, the fixed self-test from a clean archive
 
 Why: Runtime's loader applies every red entry's red_expect to its retained pinned-red log with gen_verdict.decide_lines (the
 reviewer's method, CM11). The retained reds of rst_boot, csr_reset, csr_trap_setup and pmp_csr_warl predated the T-102 comparator
@@ -498,8 +498,8 @@ green reuses the seed-1 image of Section 8 (generator unchanged).
 | l8_csr_trap_setup_s1 | gen_l8_csr_trap_setup_s1_stdout.log, _sim.log | PASS | 168 | 0 | PASS | 5ad7d0d6de50cda9393627b90f481b68 |
 
 Each run's verdict.txt is retained beside its log (gen_<name>_verdict.txt). `python3 dv/auto_dv/flow/gen_flow_util.py
---check-red-signatures dv/auto_dv/work/test-writer/gen_testlist_entries.yaml` reads PASS with two STALE rows left (cmp_zca, isa_cti:
-their first collected line is the comparator's uvm_error until TB Infra's rows land; T-153 then enforces RED-OK). The T-102-era copies
+--check-red-signatures dv/auto_dv/work/test-writer/gen_testlist_entries.yaml` reads PASS with every row RED-OK and no STALE row (16 red entries; the cmp_zca and isa_cti reds
+were replaced by the l9_* runs on out_head6, UVM_ERROR-free; re-run at landing 3h from an export of HEAD). The T-102-era copies
 were removed under the retention rule (LOG-024; the manifest header names them); the per-item red excerpts now start with the run
 header line (LOG-034), and the md5 cells of gen_tdd_batch2.md follow the excerpt copies.
 
@@ -519,7 +519,8 @@ targeted; gen_test_boot_retire stays check) with measured: true, seeds 3 and fco
 manifest; the red entries stay check / measured: false. The bring-up opt-out `layers_required = False` (class attribute, its comment and the
 docstring sentence) is removed from all 16 built tests, so a declared knob without a REGIME_SET consumer now fails setup as the template
 default demands. Proof that no test trips it: every test at seed 1 on out_head6 (export of ce33b4f) with the modules of this tree and the
-layers applied (GEN_TEST_LAYERS applied, schedule phases logged):
+layers applied (one GEN_TEST_PHASE idx=0 line per drawn knob and fire_schedule_applied ok=True in every log; no log carries a
+GEN_TEST_LAYERS applied marker):
 
 | Run (out_head6) | Result | GEN_TEST_BINS | UVM_ERROR | EOT cycle | phases applied / fire_schedule_applied | SLOW rounds | md5 (gen_<run>_stdout.log) | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -540,7 +541,9 @@ layers applied (GEN_TEST_LAYERS applied, schedule phases logged):
 | l9g_mul_mul | PASS | 338 | 0 | 11191 | 6 / yes | 0 | 58d44699bf138d61b6f866df722d34f0 |  |
 | l9g_mul_div | PASS | 224 | 0 | 11076 | 6 / yes | 0 | 9d5f7807b837a09bd2c0c7db44562b20 | v3 image (filler fix) |
 
-All 16 PASS with every declared knob consumed (phase 0 applies each drawn knob; fire_schedule_applied ok). Two findings from the sweep,
+All 16 PASS with every declared knob consumed (phase 0 applies each drawn knob; fire_schedule_applied ok). This proof covers the
+initial phase only: every schedule here had its mid-run triggers unapplied by the runner defect of Section 12, and the check passed
+because no trigger fell before the end of test at seed 1 (LOG-042a). Two findings from the sweep,
 both fixed in this landing: gen_test_csr_access declared knob_instr_mix, a program-side knob (gen_tb_knobs.yaml: regime_set_consumer
 program) the TB cannot schedule, so the template's consumer check failed it once the opt-out was gone; the knob is no longer declared
 (the docstring says why). Three seed-1 images built at 07:5x UTC (pmp_csr_warl, cmp_zcb, bit_draft) predate the image layout change of
@@ -548,3 +551,79 @@ the program builder and ran away or lacked symbols under the current image loade
 (cmp_zcb: the same 132 stores / 862 retired / cycle 6424 as the l4 run). The flow builds every image fresh per run, so this is a
 local-harness artefact: the older images under batch1/<group>/s1 are not evidence any more. Logs retained as gen_l9g_<group>_stdout.log
 and _sim.log (LOG-034: greens in full).
+
+## 12. Landing 3h: the schedule runner applies mid-run phases (LOG-042a)
+
+Why: the batch-2 acceptance wave (Runtime test-writer-049..055, head mode at d3c6ca8) failed 13 of its 21 greens on
+fire_schedule_applied alone ("reached N of M scheduled entries by EOT ..., applied 6, missed [...]"; no other ok=False line in any
+of the 13 logs), and Runtime's bisect probes at 7ef16a0 and d3c6ca8 (probe_t181_bit_ratified_7ef16a0 / _d3c6ca8, gen_test_bit_ratified
+seed 288888690) are identical: six GEN_TEST_PHASE idx=0 lines at cycles 60-65 and none with idx>0.
+
+Cause, in the template and not in the TB: GenTest._edge_or_eot, the wait behind wait_cycles / wait_retired / wait_event, abandoned
+its wait at the first EOT-register store: it returned False as soon as evt_eot_count was above zero and on any edge of evt_eot_seen.
+The bridge toggles evt_eot_seen on every store to the EOT register (gen_bridge_if.sv), and the report channel stores its words through
+that register, so in every test with report words the runner's wait for the first mid-run trigger ended at report 0: in the probe,
+report 0 lands at cycle 289 and the first mid-run trigger is c709, run_schedule took the False return for the end of the program and
+returned, and the six idx=0 phases stayed the only ones. The dispatcher was never called for the later entries: the probe log carries
+exactly six "[GEN_PHASE] phase N" dispatch lines (gen_env_pkg.sv) and no REGIME_SET after cycle 65, so this is not a silent refusal
+and nothing is open on the TB side. The wave's 11 greens are the seeds whose mid-run triggers all fall after the end of test
+(reached 6 = applied 6). The same False return would have ended any stimulus-body wait after the first report store; no committed test
+calls wait_cycles / wait_retired / wait_event outside the template.
+
+Fix: _edge_or_eot ends a wait only at the final store (store number expected_reports + 1, the rule wait_eot already applies); a
+report-store edge re-arms the wait within the remaining budget, and a hit landing in the same cycle as a store is not lost (the
+awaited signal is sampled before and after the edge). The docstring, the run-order comment and gen_test_template_api.md (step 3 and the
+wait_* row) state the rule. gen_run_fixture.sh's run header now carries the sources sha the compile step records (`sources_sha=`), so a
+retained run names its build.
+
+Runs: build out_head8, the export of HEAD 9e7c440 with the fixed template (sources sha 156eb9357b79552e; the TB sources equal d3c6ca8's,
+the wave's tree: `git diff --stat d3c6ca8 HEAD -- dv/auto_dv/tb dv/auto_dv/env` is empty). The images are the wave's own prog.vmem files
+(one per failing seed, crc32 as in the wave's run_cmd.sh), and the HEAD generators reproduce them byte for byte (bit_ratified seed
+288888690 regenerated from dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py + gen_program.py: sha256 b9a697debab0 both).
+
+- 3h_red_prefix_bit_ratified_288888690: HEAD's template before this landing (pyroot head_export7, an archive of 9e7c440) on out_head8:
+  FAIL fire_schedule_applied, applied 6, missed 5, the probe's numbers; GEN_TEST_FAIL harness line (RED-OK). The failing path a reviewer
+  re-runs: the same fixture command with a pyroot whose gen_test_template.py is 9e7c440's.
+- 3h_red_mut_bit_ratified_288888690: the fixed template with mutation 3h-M1 (run_schedule skips the idx=1 entries of a reached boundary;
+  gen_3h_mutation_M1.diff, 3 lines): GEN_TEST_PHASE idx=2 at cycle 11564 (the runner now reaches later boundaries), fire_schedule_applied
+  ok=False applied 7, missed 4 (the four c709 entries), GEN_TEST_FAIL harness line (RED-OK): a reached but unapplied c-triggered entry
+  fails loud after the fix.
+- 3h_acc_*: the 13 seeds that failed the wave, all PASS, 1 to 17 idx>0 phases each, every reached entry applied (ok=True, applied ==
+  reached), GEN_TEST_BINS equal to the committed manifests, UVM_ERROR 0. The end-of-test cycles differ from the wave's because the mid-run
+  regimes now change the bus delays (bit_ratified 288888690: 66382 in the wave, 35276 here).
+
+| Run (out_head8) | Result | GEN_TEST_BINS | UVM_ERROR | EOT cycle (wave) | EOT cycle | fire_schedule_applied | phases idx=0 + idx>0 (max idx) | md5 (gen_<run>_stdout.log) |
+|---|---|---|---|---|---|---|---|---|
+| 3h_red_prefix_bit_ratified_288888690 | FAIL: fire_schedule_applied | 830 | no UVM summary (the failing cocotb test ends the sim before the report) | 66382 (probe) | 66382 | ok=False reached 11 of 14, applied 6, missed 5 entries | 6 + 0 (max idx 0) | d90f869a6eb917853de7fc8513f6a7f3 |
+| 3h_red_mut_bit_ratified_288888690 | FAIL: fire_schedule_applied | 830 | no UVM summary (the failing cocotb test ends the sim before the report) | 66382 (probe) | 66382 | ok=False reached 11 of 14, applied 7, missed 4 entries | 6 + 1 (max idx 2) | ce12abf01274daf0649678703814b969 |
+| 3h_acc_bit_ratified_1400867381 | PASS | 830 | 0 | 16293 | 16699 | ok=True reached 10 of 10, applied 10 | 6 + 4 (max idx 1) | b05b7f9073e5b988b5dd8458c107dd16 |
+| 3h_acc_bit_ratified_288888690 | PASS | 830 | 0 | 66382 | 35276 | ok=True reached 11 of 14, applied 11 | 6 + 5 (max idx 2) | ab200817357725d0b046b6320031ae3d |
+| 3h_acc_bit_ratified_555087581 | PASS | 830 | 0 | 17215 | 16934 | ok=True reached 7 of 20, applied 7 | 6 + 1 (max idx 1) | bb3af561a42dd172deedb1dc4d5d7f7e |
+| 3h_acc_cmp_zca_1539293166 | PASS | 337 | 0 | 63784 | 8641 | ok=True reached 15 of 16, applied 15 | 6 + 9 (max idx 2) | a2b8be0655e9dcd38a017c4d7e0a2de9 |
+| 3h_acc_cmp_zca_2115402665 | PASS | 337 | 0 | 29520 | 25546 | ok=True reached 13 of 13, applied 13 | 6 + 7 (max idx 2) | 6f5d63f8d16beda5134015423406f346 |
+| 3h_acc_isa_alu_1711178164 | PASS | 602 | 0 | 319829 | 546858 | ok=True reached 12 of 12, applied 12 | 6 + 6 (max idx 2) | 547fa8250a8f9d00c7ad61a492060f3d |
+| 3h_acc_isa_alu_1730556152 | PASS | 602 | 0 | 277317 | 606317 | ok=True reached 16 of 16, applied 16 | 6 + 10 (max idx 2) | a1504c1c955f662b2c5b287d931c21ad |
+| 3h_acc_isa_cti_1038415940 | PASS | 200 | 0 | 372800 | 679451 | ok=True reached 23 of 23, applied 23 | 6 + 17 (max idx 4) | 777e1b7ee5fa86102b1889e2dce3a33e |
+| 3h_acc_isa_cti_777966141 | PASS | 200 | 0 | 319530 | 880839 | ok=True reached 16 of 16, applied 16 | 6 + 10 (max idx 3) | 3a5834cb5d8384feee35da7e3cb4e8c1 |
+| 3h_acc_isa_shift_1401504676 | PASS | 120 | 0 | 28022 | 25006 | ok=True reached 17 of 17, applied 17 | 6 + 11 (max idx 3) | ceb1cda45ace9524eb1f55b58ecf07c9 |
+| 3h_acc_mul_div_1465513474 | PASS | 224 | 0 | 9901 | 9511 | ok=True reached 13 of 13, applied 13 | 6 + 7 (max idx 2) | 2ece980cd4c168804fe919c06888f580 |
+| 3h_acc_mul_div_1640919798 | PASS | 224 | 0 | 17761 | 11603 | ok=True reached 13 of 13, applied 13 | 6 + 7 (max idx 2) | e2c804510a284214c39b789b80eef6c8 |
+| 3h_acc_mul_div_754956299 | PASS | 224 | 0 | 21200 | 9000 | ok=True reached 14 of 14, applied 14 | 6 + 8 (max idx 3) | 63d829bacebff833e525c80b13a78c51 |
+
+Logs retained in full (stdout.log with the run header prepended, and sim.log) for the two template reds and the 13 greens, plus the
+mutation diff, as gen_3h_<run>_stdout.log / _sim.log and gen_3h_mutation_M1.diff (gen_manifest.md, LOG-034: greens and the landing's
+decisive reds in full). The red runs' sim.log carries no UVM summary: the failing cocotb test ends the simulation before the report,
+and the harness line is in stdout.log (the flow's gen_fail_marker).
+
+Scope correction for Section 11 (LOG-042a): the l9g proof "the layers are live" exercised the idx=0 batch only, each drawn knob applied
+once at start-up before FETCH_EN; no mid-run phase had run in any test before this landing, so that proof supports the promotion (the
+declared knobs are consumed) and nothing about mid-run regime changes; plan items whose stimulus needs one are held by LOG-042b until
+this landing is reviewed.
+
+Reproduction (from a clean archive of the landing commit; the images from the flow's run directories or regenerated as above):
+
+    bash -lc 'source ci/env.sh && FORCE=1 bash dv/auto_dv/tb/gen_tb_local.sh compile <OUT>'
+    GEN_TB_PYROOT=<archive> SEED=288888690 bash dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh <OUT> 3h_acc_bit_ratified_288888690 \
+        dv.auto_dv.tests.gen_test_bit_ratified <abs path>/prog.vmem
+    # the red: the same command with a pyroot whose dv/auto_dv/tests/gen_test_template.py is 9e7c440's (applied 6, missed 5);
+    # the mutation red: the pyroot with gen_3h_mutation_M1.diff applied to the fixed template (applied 7, missed 4)

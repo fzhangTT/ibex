@@ -138,19 +138,26 @@ class GenTest:
         return int(self.h.b.evt_eot_count.value)
 
     async def _edge_or_eot(self, sig, cycles, what):
-        """Await one edge on `sig`, abandoning it when the program ends first; returns True on the edge."""
+        """Await one edge on `sig` within `cycles`, abandoning it when the program's final store lands first;
+        True on the edge. Report words store through the same EOT register (evt_eot_seen toggles per store),
+        so a store ends the wait only when the count reaches the final store; earlier ones keep it waiting."""
         b = self.h.b
-        if self.eot_count() > 0:
-            self.eot_seen = True
-            return False
-        try:
-            fired = await with_timeout(First(Edge(sig), Edge(b.evt_eot_seen)), cycles * self.period_ns, "ns")
-        except Exception as exc:  # cocotb SimTimeoutError
-            raise AssertionError(f"GEN_TEST: no edge on {what} within {cycles} cycles ({type(exc).__name__})") from None
-        if getattr(fired, "signal", None) is b.evt_eot_seen:
-            self.eot_seen = True
-            return False
-        return True
+        final = self.report_count() + 1
+        deadline = self.cycle() + cycles
+        while True:
+            if self.eot_count() >= final:
+                self.eot_seen = True
+                return False
+            left = deadline - self.cycle()
+            if left <= 0:
+                raise AssertionError(f"GEN_TEST: no edge on {what} within {cycles} cycles (deadline passed during report stores)")
+            was = int(sig.value)
+            try:
+                fired = await with_timeout(First(Edge(sig), Edge(b.evt_eot_seen)), left * self.period_ns, "ns")
+            except Exception as exc:  # cocotb SimTimeoutError
+                raise AssertionError(f"GEN_TEST: no edge on {what} within {cycles} cycles ({type(exc).__name__})") from None
+            if getattr(fired, "signal", None) is not b.evt_eot_seen or int(sig.value) != was:
+                return True   # the awaited edge (a store in the same cycle does not hide it)
 
     async def wait_cycles(self, count, timeout_cycles=None):
         """Arm the bridge cycle threshold at the absolute cycle `count`; False if the program ended first."""

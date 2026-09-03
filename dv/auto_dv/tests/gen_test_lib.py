@@ -894,7 +894,7 @@ def _self_test():
             assert (r["marked"] == "1") == (_gm.CYCLE_CLAUSE_TOKEN in tps[r["tp_item"]]), f"witness CSV disagrees with the marker on {r['tp_item']}"
     # every program generator runs as a script with no PYTHONPATH from the clone root, as the flow runs it
     import os, subprocess
-    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    env = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", STAGED_ENTRIES_ENV)}
     with tempfile.TemporaryDirectory() as td:
         for gen in sorted((here / "gen_programs").glob("gen_*_prog.py")):
             r = subprocess.run([sys.executable, str(gen), "--seed", "1", "--out", f"{td}/{gen.stem}.S"], cwd=REPO_ROOT, env=env,
@@ -985,7 +985,7 @@ def _self_test():
             check_manifest_matches("gen_test_boot_retire", declared); raise AssertionError("missing-manifest case accepted")
         except AssertionError as exc:
             assert why in str(exc), exc
-    # the manifest renderer's own self-test runs here too, so the two cannot go red apart (it was red alone for one plan landing)
+    # the manifest renderer's own self-test runs here too, so the two cannot go red apart
     r = subprocess.run([sys.executable, str(here / "gen_fcov_manifest.py"), "--self-test"], cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=600)
     assert r.returncode == 0, f"gen_fcov_manifest.py --self-test failed: {(r.stderr.strip().splitlines() or ['?'])[-1][:200]}"
     print(f"GEN_TEST_LIB self-test PASS (consumed knobs now: {list(CONSUMED_KNOBS) or 'none'}; checked tests: {[f.name for f in tests]}; schedule k={s1.k}: {s1.text()})")

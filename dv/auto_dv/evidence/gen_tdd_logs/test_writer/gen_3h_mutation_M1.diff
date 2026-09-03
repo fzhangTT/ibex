@@ -1,0 +1,12 @@
+--- dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/tests/gen_test_template.py	2026-09-03 13:02:53.816664394 -0400
++++ dv/auto_dv/work/test-writer/pyroot_mut8/dv/auto_dv/tests/gen_test_template.py	2026-09-03 13:03:12.077784654 -0400
+@@ -248,6 +248,9 @@
+             self._applying = True
+             self._drained.clear()
+             while i < len(pending) and (pending[i].kind, pending[i].count) == (p.kind, p.count):
++                if pending[i].idx == 1:   # MUTATION 3h-M1: the first mid-run boundary is reached but never applied
++                    i += 1
++                    continue
+                 await self.apply_phase(pending[i])
+                 i += 1
+             self._applying = False
