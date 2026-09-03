@@ -165,6 +165,40 @@ def derive_seeds(test_name: str, count: int, base_seed: int) -> list[int]:
     return seeds
 
 
+# --- Templates ------------------------------------------------------------------------------
+def render_fields(text: str, fields: dict[str, str], comment_prefixes: tuple[str, ...] = ("//", "#")) -> str:
+    """Replace {name} tokens for the given names only, leaving every other brace (Tcl, SV) intact;
+    a leftover token of a known name or an unknown {token} fails loud."""
+    body = "\n".join(l for l in text.splitlines() if not l.lstrip().startswith(comment_prefixes))
+    for k, v in fields.items():
+        body = body.replace("{" + k + "}", str(v))
+    leftover = re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", body)
+    bad = [t for t in leftover if t in fields]
+    if bad:
+        raise ValueError(f"template still holds unrendered fields {bad}")
+    return body + "\n"
+
+
+def self_test() -> int:
+    """Render both checked-in templates and check the Tcl braces survive (review finding, T-010)."""
+    ok = True
+    hier = render_fields(C.CM_HIER_TEMPLATE.read_text(encoding="utf-8"), {"tb_top": "top_x", "dut_instance": "u_y"})
+    ok &= hier.strip() == "+tree top_x.u_y"
+    print("SELF-TEST", "ok " if hier.strip() == "+tree top_x.u_y" else "BAD", "cm_hier render:", hier.strip())
+    tcl = render_fields(C.DUMP_TCL_TEMPLATE.read_text(encoding="utf-8"),
+                        {"tb_top": "top_x", "dut_instance": "u_y", "waves_fsdb": "w.fsdb", "waves_vpd": "w.vpd"})
+    checks = {"tcl keeps if-braces": "if { [info exists ::env(VERDI_HOME)] } {" in tcl,
+              "tcl renders fsdb line": 'fsdbDumpfile "$::env(SIM_DIR)/w.fsdb"' in tcl,
+              "tcl renders sva scope": "fsdbDumpSVA 0 top_x.u_y" in tcl,
+              "tcl renders dump -add braces": "dump -add { top_x } -depth 0" in tcl,
+              "tcl has no unrendered field": "{tb_top}" not in tcl and "{waves_vpd}" not in tcl}
+    for name, res in checks.items():
+        ok &= res
+        print("SELF-TEST", "ok " if res else "BAD", name)
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 # --- Testlist -------------------------------------------------------------------------------
 def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
     data = load_yaml(path)
@@ -202,6 +236,9 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: test {t['name']} seeds must be a count or a list")
         if not isinstance(t["plusargs"], list):
             die(f"{path}: test {t['name']} plusargs must be a list")
+        uvm = t.get("uvm_test")
+        if uvm is not None and not (isinstance(uvm, str) and re.match(r"^[A-Za-z_]\w*$", uvm)):
+            die(f"{path}: test {t['name']} uvm_test must be null or a class identifier, got {uvm!r}")
     return data
 
 
@@ -362,12 +399,21 @@ class LsfJob:
         return rep
 
 
+def lsf_job_name(tag: str, leaf: str) -> str:
+    """gen_dv_<tag>_<leaf>: the tag scopes the cleanup check to one regression."""
+    return f"{C.LSF_JOB_PREFIX}_{tag}_{leaf}" if tag else f"{C.LSF_JOB_PREFIX}_{leaf}"
+
+
 def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX) -> list[str]:
     """Job ids of this user's LSF jobs whose name starts with prefix (cleanup check)."""
     r = subprocess.run(["bjobs", "-noheader", "-o", "jobid job_name stat"], capture_output=True, text=True)
     out = []
     for line in r.stdout.splitlines():
         parts = line.split()
-        if len(parts) >= 2 and parts[1].startswith(prefix):
+        if len(parts) >= 3 and parts[1].startswith(prefix) and parts[2] in C.LSF_ACTIVE_STATES:
             out.append(parts[0])
     return out
+
+
+if __name__ == "__main__":
+    sys.exit(self_test() if "--self-test" in sys.argv else 0)

@@ -265,3 +265,11 @@ the claim. Handling: TB Infra performs the green re-run for real and re-cites it
 re-verifies from the on-disk artifacts (v3) and records how the claim passed its check. No
 human repair was needed; the second reviewer caught it. Counted for the closure report as a
 generated-evidence defect found by review.
+
+## LOG-006 - 2026-09-03 - NOTE (site document finding for the owner)
+
+`docs/dv/SIM_RECIPE.md` Section 6 says to compile wave-dumping builds with `-debug_access+all
+-ucli`; VCS X-2025.06-SP2 on this host rejects compile-time `-ucli` (Error-[DBG_UCLI_DEP]). The
+flow uses `-debug_access+all` at compile time and `-ucli -do <tcl>` at run time; a waves run on
+LSF produced `waves.fsdb` (evidence `dv/auto_dv/evidence/gen_t010_compile_path.md` Section 8a).
+The team does not edit `docs/dv/`; the owner may update the recipe wording.

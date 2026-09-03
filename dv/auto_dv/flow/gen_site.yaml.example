@@ -1,0 +1,9 @@
+# Site pointer of the runtime flow. Copy to dv/auto_dv/work/runtime/gen_site.yaml (a working
+# file, not committed) and edit. gen_flow_const.py reads it; the GEN_DV_OUT_ROOT environment
+# variable overrides out_root.
+# out_root: shared storage visible from every LSF compute host (SIM_RECIPE Section 7). Required
+#           whenever the clone itself is on a filesystem local to the submit host.
+# mirror_root: shared-storage mirror of the clone (gen_mirror.py) for runs that need the clone's
+#           files on the compute host (cocotb: venv VPI library, Python test modules; spike).
+out_root: /proj_soc/user_dev/<user>/ibex_dv_out
+mirror_root: /proj_soc/user_dev/<user>/ibex_dv_mirror

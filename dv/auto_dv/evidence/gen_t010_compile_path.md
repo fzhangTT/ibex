@@ -160,6 +160,19 @@ CHERIoT-only logic (decode of `instr_is_cheriot`, the cheriot_ex data path) need
 confirmed for the exclusion file: `gen_smoke_tb_top.u_dut.u_ibex_core`,
 `gen_smoke_tb_top.u_dut.u_register_file`; the real TB top will substitute its own top name.
 
+EC-2 verdict (Critic evidence class, asked by the Orchestrator): -cm_seqnoconst does recognise the
+cheriot_enable_i constant tie and propagates it into the core (constfile.txt entries above), but it
+marks only the directly dependent objects Unreachable, not the whole CHERIoT cone; rtl-arch's
+expectation holds only partially. Related URG finding, same merges: `Warning-[UCAPI-CSM] Coverage
+status mismatch` on seven condition objects "marked as unreachable at compile time in base
+database, but covered in simulation": `(cheriot_enable_i != IbexMuBiOn)` at
+`rtl/ibex_cheriot_ex.sv:970`, `rtl/ibex_cs_registers.sv:377` and `:1020`, `(cheriot_enable_i ==
+...)` at `rtl/ibex_core.sv:1343`, and `(fetch_enable_i == ...)` at `rtl/ibex_core.sv:648`, `:649`,
+`:1414` (fetch_enable_i is tied On by the smoke top only), with `Note-[UCAPI-RCGLTCH] A Probable
+Coverage Glitch ... Compiling the design with -cm_glitch 0 might help`. The tie cannot change, so
+the "covered" event is a time-zero evaluation glitch; `gen_regress.py --build-vcs-arg "-cm_glitch
+0"` is the trial knob when rtl-arch wants it (`merge.log` of every regression carries the list).
+
 ## 6. Run-request queue served end to end
 
 Three self-test requests written to `dv/auto_dv/work/runtime/requests/` and served by
@@ -179,10 +192,42 @@ results under `dv/auto_dv/work/runtime/results/<name>/manifest.yaml`:
 
 Jobs of this task: 10930240, 10930304, 10930309 (probes), 10930291 (failed: local-disk clone),
 10930316 (gen_run trial), 10930323 (t010_smoke), 10930325 and 10930326 (runtime-001), 10930333
-(runtime-003). `bjobs -w` at the end: `No unfinished job found`. Every regression manifest records
-`lsf_jobs_left: []`.
+(runtime-003), 10930356 to 10930359 (R-5 validation). `bjobs -w` at the end: `No unfinished job
+found`. Every regression manifest records `lsf_jobs_left` (jobs of that regression's tag still in
+`bjobs`), empty in all of them.
 
-## 8. Acceptance (task statement)
+## 8. Critic ruling R-5 folded into the flow (validated 05:46 to 05:47 UTC)
+
+Rules from `dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md` item R-5, relayed by the
+Orchestrator; mechanism in `dv/auto_dv/docs/gen_runtime_api.md` Section 7a. Validation regressions
+(all smoke tier, base seed 1, out root as above):
+
+| Tag | Knobs | Expected | Observed |
+|---|---|---|---|
+| regress_t010_r5_ok | `--dump-exclusions --elfile selftest/uncovered.el` (excludes the uncovered line block `rf_rdata_ng_a = fwd_wdata_i;`, rtl/ibex_cheriot_ex.sv:211, in instance gen_smoke_tb_top.u_dut.u_ibex_core.g_cheriot_ex.u_ibex_cheriot_ex) | strict load accepted, denominator shrinks, dump collected | `coverage.status: ok`, `excl_strict: true`, LINE 2397/4349 (was 2397/4351), `cov/full_exclusions/` holds 12 files (`fullexclude.<metric>` and `fullexclude_module.<metric>` for assert, branch, cond, fsm, line, tgl), `build/gen_smoke/constfile.txt` present, `coverage.build_defines: {gen_smoke: [+define+RVFI]}`; LSF job 10930356; exit 0 |
+| regress_t010_r5_violation | `--elfile eltest/covered.el` (excludes the covered block `rf_rdata_ng_a = rf_rdata_a_i;`, rtl/ibex_cheriot_ex.sv:214) | strict load refuses; regression fails | merge.log `Warning-[UCAPI-ILOAD] Illegal exclusion attempt / Exclude file contains some object for Line metric which is covered.`; score unchanged (2397/4351); `coverage.status: exclusion_violation`; `gen_regress.py` exit 3 although the test passed; LSF job 10930357 |
+| regress_t010_r5_split | temporary testlist with a `measured: false` twin of gen_smoke | non-measured runs never enter the measured vdb | measured merge: `input_vdbs: [build/gen_smoke/build.vdb]`, 1 test in report; unmeasured merge: `cov_unmeasured/gen_smoke.vdb` (seeded copy of the compile-time vdb), 1 test, own report under `cov_unmeasured/report`; LSF jobs 10930359 and 10930358 |
+
+Standing behaviour: `-excl_strict` is added whenever an `--elfile` is given; `-excl_propagation`
+and `-excl_bypass_checks` are refused; `--purpose 4` implies the full-exclusions dump; every
+coverage build writes `constfile.txt`; test entries carry `measured` (default true). The exclusion
+author copies `full_exclusions/` and `constfile.txt` of the measured merge beside the annotated
+`.el` file as the committed evidence (R-5.3); the flow keeps them in the out-tree of every measured
+regression.
+
+## 8a. Post-execution review fixes (dv/auto_dv/reviews/2026-09-03-claude-diff-0b8d60b4-8fa6b7a0.md)
+
+| Finding | Fix | Validation |
+|---|---|---|
+| major: `gen_dump.tcl` rendered with `str.format` crashed on Tcl braces | `gen_flow_util.render_fields` (token replacement); `python3 gen_flow_util.py --self-test` renders both templates and checks the braces | `gen_regress.py --repro gen_smoke 330815564 --waves --tag t027_waves`: LSF job 10930446 on soc-c-20, PASS, `runs/gen_smoke_330815564/waves.fsdb` written (161985 bytes, `novas_dump.log` present). First attempt failed at compile: VCS X-2025.06-SP2 rejects compile-time `-ucli` (`Error-[DBG_UCLI_DEP] Option -ucli/-gui is deprecated ... only with -R and -debug*`), so the waves build uses `-debug_access+all` only and `-ucli -do dump.tcl` at run time (deviation from SIM_RECIPE Section 6 wording, recorded in `gen_flow_const.py`) |
+| minor: nonzero simv exit on a clean log passed | `gen_verdict.decide`: rc not in {0, 124} on a would-be PASS is FAIL "nonzero exit with clean log" | self-test plus the smoke reruns |
+| minor: `uvm_test: none` emitted `+UVM_TESTNAME=none` | testlist uses `null`; `load_testlist` rejects non-null non-identifier values | testlist loads |
+| minor: hyphenated VCS codes missed | `Error-\[([\w-]+)\]` | the DBG_UCLI_DEP error above was classified (`error_classes: ['DBG_UCLI_DEP']`, build status failed although vcs returned 0) |
+| minor: functional-coverage source for the DUT row | dashboard takes the six code metrics from the DUT row and Group from the grand total (covergroups are TB-side gen_ instances) | documented in gen_runtime_api.md Section 5 |
+| minor: side-file sweep could take a concurrent compile's files | vcs runs with the outdir as cwd over absolute-path copies of the filelists; no sweep | t027 builds: `constfile.txt`, `ucli.key` in the outdir, clone root clean |
+| info: double coverage assignment; out-root setup step | removed; `gen_site.yaml.example` checked in, Section 0 setup step | - |
+
+## 9. Acceptance (task statement)
 
 - Green compile with coverage instrumentation scoped to the gen_dut_top instance: yes (Section 2).
 - LSF run through gen_run.py with one seed, per-test vdb, URG report: yes (Sections 3 and 4).

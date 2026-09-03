@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Shared-storage mirror of the clone for LSF jobs that need the clone's files on the compute
+host (intervention log Q-012 default): rsync of the source subset, a Python venv built ON shared
+storage with ci/setup-venv.sh semantics, the spike install, and a manifest (git HEAD, content
+hash of the run-time-consumed files) so a stale mirror fails loud at build and run time.
+
+The submit-host compile keeps using the clone; only runtime artefacts come from the mirror: the
+cocotb VPI library and libpython of the mirror venv, the Python test modules (PYTHONPATH), spike.
+
+Usage:
+    gen_mirror.py --sync [--venv] [--spike]      # rsync (+ venv, + tools/spike), write the manifest
+    gen_mirror.py --check                        # mirror vs clone: fresh or stale (exit 1 if stale)
+    gen_mirror.py --status                       # print the manifest
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+import gen_flow_const as C
+import gen_flow_util as U
+
+# Clone subset the compute host needs; paths are clone-root relative (rsync --relative keeps them).
+MIRROR_ITEMS = ["rtl", "vendor/lowrisc_ip", "vendor/google_riscv-dv", "util", "ci", "dv/auto_dv",
+                "ibex_configs.yaml", "python-requirements.txt"]
+MIRROR_GLOB_ITEMS = ["*.core"]
+MIRROR_EXCLUDES = [".git", "__pycache__", "*.pyc", "dv/auto_dv/work", ".venv", "out*", "*.vdb", "*.fsdb"]
+SPIKE_ITEM = "tools/spike"
+MANIFEST_NAME = "gen_mirror_manifest.yaml"
+# The freshness hash covers only what a compute host CONSUMES at run time: the Python modules
+# (cocotb tests, flow helpers) and the environment scripts. RTL and TB sources are compiled on the
+# submit host from the clone, and documents churn constantly, so they are mirrored but not hashed.
+RUNTIME_HASH_GLOBS = ["dv/auto_dv/**/*.py", "ci/env.sh", "ci/setup-venv.sh", "ci/requirements.lock",
+                      "ci/requirements-cocotb.txt"]
+HASH_SKIP_DIRS = {".venv", "tools", "__pycache__", "work"}
+
+
+def mirror_root() -> Path | None:
+    """mirror_root: of the site pointer file (dv/auto_dv/work/runtime/gen_site.yaml)."""
+    v = os.environ.get("GEN_DV_MIRROR_ROOT")
+    if v:
+        return Path(v)
+    if C.SITE_YAML.is_file():
+        for line in C.SITE_YAML.read_text(encoding="utf-8").splitlines():
+            if line.startswith("mirror_root:"):
+                return Path(line.split(":", 1)[1].strip())
+    return None
+
+
+def mirrored_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for item in MIRROR_ITEMS:
+        p = root / item
+        if p.is_file():
+            files.append(p)
+        elif p.is_dir():
+            for f in sorted(p.rglob("*")):
+                rel = f.relative_to(root)
+                if f.is_file() and not any(part in HASH_SKIP_DIRS or part.endswith(".pyc") for part in rel.parts) \
+                        and "dv/auto_dv/work" not in rel.as_posix():
+                    files.append(f)
+    for g in MIRROR_GLOB_ITEMS:
+        files += sorted(root.glob(g))
+    return sorted(set(files))
+
+
+def runtime_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for g in RUNTIME_HASH_GLOBS:
+        for f in root.glob(g):
+            rel = f.relative_to(root)
+            if f.is_file() and not any(part in HASH_SKIP_DIRS for part in rel.parts):
+                files.append(f)
+    return sorted(set(files))
+
+
+def tree_hash(root: Path) -> tuple[str, int]:
+    """sha256 over (relative path, content) of every run-time-consumed file (RUNTIME_HASH_GLOBS)."""
+    h = hashlib.sha256()
+    files = runtime_files(root)
+    for f in files:
+        h.update(f.relative_to(root).as_posix().encode())
+        h.update(b"\0")
+        h.update(f.read_bytes())
+        h.update(b"\0")
+    return h.hexdigest(), len(files)
+
+
+def rsync(root: Path, dst: Path, log: Path) -> None:
+    dst.mkdir(parents=True, exist_ok=True)
+    argv = ["rsync", "-a", "--delete", "--delete-excluded", "--relative"]
+    for e in MIRROR_EXCLUDES:
+        argv += ["--exclude", e]
+    srcs = [f"{root}/./{item}" for item in MIRROR_ITEMS if (root / item).exists()]
+    srcs += [f"{root}/./{p.name}" for g in MIRROR_GLOB_ITEMS for p in sorted(root.glob(g))]
+    argv += srcs + [str(dst) + "/"]
+    rc, wall, timed_out = U.run_bounded(argv, cwd=root, log_path=log, timeout_s=1800)
+    if rc != 0 or timed_out:
+        U.die(f"rsync failed (rc={rc}, timed_out={timed_out}); see {log}")
+    U.log(f"rsync done in {wall:.0f}s -> {dst}")
+
+
+def rsync_spike(root: Path, dst: Path, log: Path) -> bool:
+    src = root / SPIKE_ITEM
+    if not src.is_dir():
+        U.log(f"no {SPIKE_ITEM} in the clone; skipped")
+        return False
+    argv = ["rsync", "-a", "--delete", "--relative", f"{root}/./{SPIKE_ITEM}", str(dst) + "/"]
+    rc, wall, timed_out = U.run_bounded(argv, cwd=root, log_path=log, timeout_s=3600)
+    if rc != 0 or timed_out:
+        U.die(f"rsync of {SPIKE_ITEM} failed (rc={rc}); see {log}")
+    U.log(f"spike install mirrored in {wall:.0f}s")
+    return True
+
+
+def build_venv(dst: Path, log: Path) -> dict[str, Any]:
+    """ci/setup-venv.sh of the MIRROR: its .venv gets shared absolute paths; PYTHONPATH cleared."""
+    script = dst / "ci" / "setup-venv.sh"
+    if not script.is_file():
+        U.die(f"{script} missing; --sync first")
+    inner = (f"source {C.ENV_SH} >/dev/null 2>&1; unset PYTHONPATH; deactivate 2>/dev/null; "
+             f"cd {dst} && bash ci/setup-venv.sh")
+    rc, wall, timed_out = U.run_bounded(["bash", "-lc", inner], cwd=dst, log_path=log, timeout_s=3600)
+    info = venv_info(dst)
+    info.update(rc=rc, wall_s=round(wall, 1), timed_out=timed_out, log=str(log))
+    if rc != 0 or timed_out or not info.get("cocotb_vpi_lib"):
+        U.die(f"mirror venv build failed (rc={rc}); see {log}")
+    U.log(f"mirror venv built in {wall:.0f}s: cocotb vpi lib {info['cocotb_vpi_lib']}")
+    return info
+
+
+def venv_info(dst: Path) -> dict[str, Any]:
+    cc = dst / ".venv" / "bin" / "cocotb-config"
+    info: dict[str, Any] = {"venv": str(dst / ".venv"), "cocotb_config": str(cc) if cc.is_file() else None,
+                            "cocotb_vpi_lib": None, "libpython": None, "python": None}
+    if cc.is_file():
+        r = subprocess.run([str(cc), "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
+        lib = r.stdout.strip()
+        info["cocotb_vpi_lib"] = lib if r.returncode == 0 and Path(lib).is_file() and str(dst) in lib else None
+        r = subprocess.run([str(cc), "--libpython"], capture_output=True, text=True)
+        info["libpython"] = r.stdout.strip() if r.returncode == 0 else None
+        r = subprocess.run([str(dst / ".venv" / "bin" / "python3"), "--version"], capture_output=True, text=True)
+        info["python"] = r.stdout.strip() if r.returncode == 0 else None
+    return info
+
+
+def load_manifest(dst: Path) -> dict[str, Any] | None:
+    p = dst / MANIFEST_NAME
+    return U.load_yaml(p) if p.is_file() else None
+
+
+def status(dst: Path) -> dict[str, Any]:
+    """fresh: mirror manifest hash == clone hash now == mirror tree hash now; else stale/missing."""
+    man = load_manifest(dst)
+    if not man:
+        return {"state": "missing", "mirror_root": str(dst)}
+    clone_hash, clone_n = tree_hash(C.REPO_ROOT)
+    mirror_hash, mirror_n = tree_hash(dst)
+    state = "fresh" if (clone_hash == man["tree_sha256"] == mirror_hash) else "stale"
+    return {"state": state, "mirror_root": str(dst), "manifest_sha256": man["tree_sha256"],
+            "clone_sha256_now": clone_hash, "mirror_sha256_now": mirror_hash, "clone_runtime_files": clone_n,
+            "mirror_runtime_files": mirror_n, "mirror_files": man.get("file_count"),
+            "git_head": man.get("git", {}).get("head"), "synced_utc": man.get("synced_utc"),
+            "venv_ok": bool((man.get("venv") or {}).get("cocotb_vpi_lib")), "spike": man.get("spike_present")}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--mirror-root", type=Path, default=mirror_root())
+    ap.add_argument("--sync", action="store_true")
+    ap.add_argument("--venv", action="store_true", help="(re)build the mirror venv after --sync")
+    ap.add_argument("--spike", action="store_true", help="mirror tools/spike after --sync")
+    ap.add_argument("--check", action="store_true")
+    ap.add_argument("--status", action="store_true")
+    a = ap.parse_args()
+    if a.mirror_root is None:
+        U.die(f"no mirror root: set mirror_root in {C.SITE_YAML} or GEN_DV_MIRROR_ROOT")
+    dst = a.mirror_root.resolve()
+    if a.sync:
+        U.require_env("rsync")
+        if not U.path_is_shared(dst):
+            U.log(f"WARNING: {dst} is on a local filesystem; LSF hosts will not see it")
+        logs = dst.parent / (dst.name + "_logs")
+        logs.mkdir(parents=True, exist_ok=True)
+        rsync(C.REPO_ROOT, dst, logs / "rsync.log")
+        prev = load_manifest(dst) or {}
+        man: dict[str, Any] = {"mirror_root": str(dst), "clone": str(C.REPO_ROOT), "synced_utc": U.now_utc(),
+                               "git": U.git_head(), "items": MIRROR_ITEMS + MIRROR_GLOB_ITEMS,
+                               "excludes": MIRROR_EXCLUDES}
+        man["tree_sha256"], man["runtime_file_count"] = tree_hash(dst)
+        man["file_count"] = len(mirrored_files(dst))
+        man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
+        man["spike_present"] = rsync_spike(C.REPO_ROOT, dst, logs / "rsync_spike.log") if a.spike \
+            else (dst / SPIKE_ITEM / "bin" / "spike").is_file()
+        man["venv"] = build_venv(dst, logs / "venv.log") if a.venv else (venv_info(dst) if (dst / ".venv").is_dir()
+                                                                        else prev.get("venv"))
+        U.dump_yaml(man, dst / MANIFEST_NAME)
+        U.log(f"mirror manifest {dst / MANIFEST_NAME}: {man['file_count']} files, sha256 {man['tree_sha256'][:16]}..., "
+              f"git {man['git']['head'][:12]}, venv {'ok' if (man.get('venv') or {}).get('cocotb_vpi_lib') else 'MISSING'}, "
+              f"spike {man['spike_present']}")
+    if a.check or a.status:
+        st = status(dst)
+        for k, v in st.items():
+            print(f"{k}: {v}")
+        if a.check and st["state"] != "fresh":
+            return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

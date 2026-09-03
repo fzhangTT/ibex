@@ -19,13 +19,16 @@ DV_prompt.txt Section 11 is this directory plus `gen_testlist.yaml`. Evidence th
   (`out_root:`), overridable by the environment variable `GEN_DV_OUT_ROOT`. Current value:
   `/proj_soc/user_dev/fzhang/ibex_dv_out`. Without either, the root is `dv/auto_dv/work/runtime/out`
   (correct only when the clone itself is on shared storage).
+- **Setup step (once per site).** Copy `dv/auto_dv/flow/gen_site.yaml.example` to
+  `dv/auto_dv/work/runtime/gen_site.yaml` and set `out_root` (and `mirror_root`, Section 10) to
+  shared, writable paths; `python3 gen_flow_const.py` prints the resolved paths.
 - **Compile on the submit host, simulate on LSF.** `vcs` needs the sources, so the compile runs
   where the clone is; the simulation job is a self-contained bash script that sources a copy of
   `ci/env.sh` staged into the build outdir and runs the simv from the shared out-tree. `--build-lsf`
   and `--lsf` on the build exist for a clone on shared storage.
-- **cocotb runs on LSF are blocked until the clone is on shared storage**: the VPI library and the
-  Python test modules live in the clone's `.venv` and tree. Pure-SV runs are unaffected. A
-  cocotb build is possible today (`--cocotb`) and a cocotb run works in `--local` mode.
+- **cocotb runs on LSF go through the shared mirror** (Section 7b, `gen_mirror.py`): the compute
+  host loads the VPI library from the mirror venv and imports the Python test modules from the
+  mirror copy of the clone. Re-sync the mirror after changing anything a cocotb run imports.
 - **LSF paths are absolute** and the job gets `-cwd <run dir>` (the site default CWD is `/tmp`).
 - **Constants home.** Paths, plusarg names, log markers, LSF defaults and schema keys live in
   `gen_flow_const.py` only. `python3 gen_flow_const.py --check` proves the plusarg names shared with
@@ -50,11 +53,18 @@ gen_build.py --build <name> [--coverage] [--cond] [--diag-noconst] [--cocotb] [-
 - `--cond`: adds condition coverage (`-cm line+cond+tgl+assert+fsm+branch`). Trial result (T-010):
   VCS compiles it and URG reports it for this DUT (COND 37.41 percent, 3579/9566 in the first
   smoke report). `gen_regress.py` uses it by default (`--no-cond` drops it).
-- `--diag-noconst`: adds `-diag noconst` (constant-analysis diagnostics for the exclusion work).
+- `-diag noconst` is added to every coverage build (`--no-diag-noconst` drops it): VCS writes
+  `constfile.txt`, the list of every signal it treats as constant and why; the flow moves it from the
+  vcs cwd into the outdir (with the other cwd side files, `.fsm.sch.verilog.xml` and `ucli.key`).
+- `--vcs-arg ARG` (repeatable): extra vcs argument for trials.
 - `--cocotb`: Section 4 triple `+define+COCOTB_SIM +vpi -P <outdir>/gen_pli.tab -load $(cocotb-config
   --lib-name-path vpi vcs)`; also implied by `cocotb: true` on the build entry.
 - Outdir: `<out root>/<build>-<utc stamp>` unless `--outdir`; an existing dir is refused unless
   `--force` (fresh outdir per knob change, Section 9). `<out root>/<build>.latest` names the newest.
+- vcs runs with the outdir as its cwd: the filelists are copied there with absolute paths
+  (`<outdir>/gen_rtl.f` and friends), so `compile_cmd.sh` is self-contained and every vcs side file
+  (`constfile.txt`, `ucli.key`, the FSM schematic xml) lands in the outdir even under concurrent
+  compiles. `compile_summary` classifies `Error-[...]`/`Warning-[...]` codes including hyphenated ones.
 - Products: `vcs_simv`, `vcs_simv.daidir/`, `compile.log`, `compile_cmd.sh` (exact command),
   `cm_hier.cfg`, `build.vdb` (compile-time coverage data), `env.sh` (staged copy of `ci/env.sh`),
   `build_manifest.yaml`.
@@ -93,16 +103,20 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `UVM_FATAL`/`UVM_ERROR` message line, `Fatal:`/`$fatal`/`GEN_*_FAIL`, `Error-[...]`/`Error:`, cocotb
   `CRITICAL` or a `** TESTS=... FAIL=n` summary with n > 0 or PASS=0, `Assertion ... failed`/`Offending`);
   FAIL when the end-of-test marker is missing (the test's `pass_marker`, or `$finish` when null);
-  otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
+  FAIL when the simv exit code is neither 0 nor 124 although the log is clean ("nonzero exit with
+  clean log": the exit code is one more collected mechanism, never the only one); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
   The process exit code is recorded, never decisive.
 - `--fcov-check`: runs `ci/check_fcov_expectations.py --manifest <fcov_expectation_file> --vdb <vdb>
   --cm-name test_<name>_<seed>` right away (single writer); exit 2 (unhit) or 1 (protocol error)
   turns a PASS into FAIL. In a regression the check runs after every writer finished (Section 3).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
-  `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`.
-- Products per run dir: `run_cmd.sh` (exact reproduction: `bash run_cmd.sh`), `run.log`, `sim.log`,
-  `exit_code`, `result.yaml`, and with `--lsf` `bsub_cmd.txt`, `lsf.out` (LSF job report: CPU time,
-  run time, host), `lsf.err`.
+  `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
+  `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
+  --self-test` renders both templates and checks them.
+- Products per run dir: `run_cmd.sh` (exact reproduction: `bash run_cmd.sh`), `run.log`, `sim.log`
+  (VCS `-l`), `sim_stdout.log` (simv stdout and stderr: cocotb's Python logging and its result
+  table bypass `-l`, so the verdict scans both files), `exit_code`, `result.yaml`, and with `--lsf`
+  `bsub_cmd.txt`, `lsf.out` (LSF job report: CPU time, run time, host), `lsf.err`.
 - `result.yaml`: test, seed, verdict, reason, evidence (first failing line), exit_code, timed_out,
   wall_s, started/finished UTC, build, build_dir, build_config, run_dir, sim_log, run_log, run_cmd,
   vdb, cm_name, waves, uvm_counts, cocotb_summary, finish_seen, marker_seen, expected_fail, owner,
@@ -134,7 +148,10 @@ gen_regress.py --repro <test> <seed> [--waves]
   URG merge (`urg -full64 -format both -dbname cov/merged.vdb -report cov/report -log cov/merge.log
   -show ratios -dir <each build vdb> [-elfile ...]`); `manifest.yaml`; a one-line summary. Exit 0
   only when no run is FAIL, TIMEOUT or NOT_RUN.
-- `--elfile`: URG exclusion files (the exclusion deliverable) applied at merge time.
+- `--elfile`: URG exclusion files (the exclusion deliverable) applied at the measured merge with
+  `-excl_strict` (Section 7a). `--dump-exclusions` (implied by `--purpose 4`) writes the
+  full-exclusions dump. `--build-vcs-arg` passes an extra vcs argument to every build (trials such
+  as `-cm_glitch 0`).
 - `manifest.yaml` (also the results manifest of a run request): kind, tag, request, requester,
   purpose, build_config, scope {tier, tests, group, repro, seeds_override, seed_list, base_seed,
   coverage, cond, waves, local, max_parallel}, planned_runs, builds {name: dir, manifest, status,
@@ -168,6 +185,8 @@ seq = integer. Fields:
 | component (optional) | string | purpose 2: the TB component that changed (matches `component:` of tests) |
 | waves (optional) | yes/no | purposes 1 to 3: dump waves (debug only) |
 | group (optional) | string | tier targeted: feature-group filter |
+| build_vcs_args (optional) | list of strings | purpose 2 only: extra vcs arguments for an instrumentation trial (for example `["-cm_glitch 0"]`); refused under any other purpose because a measurement never changes the flag set |
+| dump_exclusions (optional) | yes/no | add `urg -dump full_exclusions` to the merge (purpose 4 does it anyway) |
 
 Purpose and the scope it allows (a larger scope is refused in writing, in the manifest):
 
@@ -184,7 +203,10 @@ Life cycle: `requests/` -> `running/` -> `done/`; results in
 runs (test, seed, verdict, reason, sim_log, run_log, run_cmd, vdb, cm_name, waves, wall_s,
 lsf_job_id), builds, coverage (report_dir, dashboard_txt, totals, dut_scope), summary, lsf_cost.
 The requester is told the manifest path by message. `--once` (default) serves what is pending and
-exits; `--watch` polls. Only the runtime role runs this script (LSF is exclusive to it).
+exits; `--watch` polls. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
+values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
+they are recorded in the manifest as `operator_extra_args`. Only the runtime role runs this
+script (LSF is exclusive to it).
 
 ## 5. gen_dashboard.py (results dashboard)
 
@@ -197,6 +219,9 @@ Reads every `regress_*/manifest.yaml` under the out root plus every results mani
 coverage, the gain versus the previous round and the LSF cost; coverage per regression; pass/fail
 and runtime per test (latest run per test+seed and per-test history); LSF cost per regression;
 run requests served. ASCII only. Re-run after every regression; the Orchestrator commits it.
+Functional coverage (Group) comes from the URG grand total: the gen_ covergroups are TB-side
+instances that never sit under the DUT instance row, and the gen_ namespace is the whole
+functional set by the contract; the six code metrics come from the DUT row.
 
 ## 6. gen_cov_report.py (merge and read URG)
 
@@ -216,12 +241,62 @@ machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 `schema_version: 1`. `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
 in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`. `tests[]`: `name` (gen_
 prefix, unique), `description`, `tier`, `build`, `uvm_test` (null for a top without a UVM test
-class), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
+class; otherwise a class identifier, anything else is rejected), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
 (`dv/auto_dv/fcov_expectations/<name>.fcov.yaml` or null), `timeout_s`, `owner` (role slug),
 optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `component`, `notes`.
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
 owners. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
+
+## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)
+
+| Rule | Where the flow enforces it |
+|---|---|
+| R-5.1 exclusion files load with `-elfile` and `-excl_strict` | `gen_cov_report.merge` adds `-excl_strict` whenever an `--elfile` is given; a `Warning-[UCAPI-ILOAD] Illegal exclusion attempt` (or any `Error-[UCAPI...]`) in merge.log sets `coverage.status: exclusion_violation` and `gen_regress.py` exits 3 (the regression FAILS; the report is kept for triage). Verified on this host: excluding a covered line block produces UCAPI-ILOAD and leaves the score unchanged; excluding an uncovered block is accepted and removes it from the denominator. |
+| R-5.2 never `-excl_propagation` | the flow never adds it; `--urg-arg -excl_propagation` (and `-excl_bypass_checks`) is refused. |
+| R-5.3 commit the auto-Unreachable dump of the measured merge | `gen_regress.py --purpose 4` (or `--dump-exclusions`) adds `urg -dump full_exclusions`; the `fullexclude.<metric>` and `fullexclude_module.<metric>` files land in `<outdir>/cov/full_exclusions/` and are listed in `coverage.full_exclusions_dump`. Every coverage build also writes the constant-analysis diagnostics (`-diag noconst`, `constfile.txt` in the build outdir, `coverage.constfiles`), which is VCS's record of what it auto-excluded and why. The exclusion author copies both beside the annotated `.el` file as evidence. |
+| R-5.4 annotations that depend on `+define+RVFI` say so | `coverage.build_defines` records the defines of every build in the merge, so a reviewer can check the annotation against the build. |
+| R-5.5 only legal-stimulus tiers enter a measured merge | test entries carry `measured: true|false` (default true). Non-measured tests (mutation-evidence, forced-error, bring-up) run into a separate tree `<outdir>/cov_unmeasured/<build>.vdb` (a copy of the compile-time vdb, so the design data is present) and get their own informational report under `cov_unmeasured/`; the measured merge lists only `build/<name>/build.vdb`. Purpose 1 to 3 requests always get their own outdir and vdb, so they never touch a measured tree. |
+| R-5.6 instance names follow T-005 | the coverage scope is `<tb_top>.<dut_instance>` from the build entry; inside it the instances are `u_ibex_core` and `u_register_file` (gen_dut_top). Exclusion files address `INSTANCE: <tb_top>.u_dut.u_ibex_core...` or `MODULE: <module>`. |
+
+## 7b. gen_mirror.py (shared-storage mirror for cocotb on LSF; intervention log Q-012 default)
+
+```
+gen_mirror.py --sync [--venv] [--spike]     # rsync the clone subset; build the venv ON shared storage; copy tools/spike
+gen_mirror.py --check                       # fresh (exit 0) or stale (exit 1): clone hash == manifest == mirror tree
+gen_mirror.py --status
+```
+
+- Root: `mirror_root:` of `dv/auto_dv/work/runtime/gen_site.yaml` (env override `GEN_DV_MIRROR_ROOT`).
+- Content: `rtl/`, `vendor/lowrisc_ip/`, `vendor/google_riscv-dv/`, `util/`, `ci/`, `dv/auto_dv/`
+  (without `work/`), `ibex_configs.yaml`, `python-requirements.txt`, `*.core`; excluded `.git`,
+  `__pycache__`, out-trees, vdb and fsdb files; `--spike` adds the `tools/spike` install tree.
+- Venv: `--venv` runs the MIRROR's `ci/setup-venv.sh` (PYTHONPATH cleared, lock-file check
+  included), so `<mirror>/.venv` carries shared absolute paths; the manifest records the venv's
+  `cocotb-config --lib-name-path vpi vcs` result, `--libpython`, and the Python version.
+- Manifest `<mirror>/gen_mirror_manifest.yaml`: clone path, git HEAD and dirty flag at sync time,
+  sync UTC, `tree_sha256` over (relative path, content) of every mirrored source file, file count,
+  venv facts, spike presence. Logs under `<mirror>_logs/`.
+- The freshness hash covers the files a compute host consumes at run time (`dv/auto_dv/**/*.py`,
+  `ci/env.sh`, `ci/setup-venv.sh`, the two requirements files); RTL, TB sources and documents are
+  mirrored but not hashed (they are compiled on the submit host and churn constantly).
+  `gen_regress.py` re-syncs the mirror before a cocotb build (`--no-sync-mirror` to skip), so the
+  build records the revision its runs import.
+- Staleness fails loud: `gen_build.py` refuses a cocotb build unless the mirror is `fresh`
+  (`--allow-stale-mirror` for experiments only) and records the mirror's root, tree hash and git
+  HEAD in `build_manifest.yaml`; `gen_run.py` refuses a cocotb run whose mirror manifest hash
+  differs from the build's record. Re-sync after every change to files a cocotb run imports
+  (`gen_mirror.py --sync`, seconds; the venv and spike are kept).
+- How a cocotb run uses it: the simv is compiled on the submit host with `-load <mirror
+  venv>/.../libcocotbvpi_vcs.so`; the LSF job script sources `<mirror>/ci/env.sh` (which activates
+  the mirror venv and exports `LIBPYTHON_LOC`) and exports `MODULE=<cocotb_module>`,
+  `PYTHONPATH=<mirror>`, `TOPLEVEL=<tb_top>`, `TOPLEVEL_LANG=verilog`, `RANDOM_SEED=<seed>`
+  (SIM_RECIPE Section 4). Python test modules therefore import from the mirror copy of
+  `dv/auto_dv/`, never from the clone. `--local-cocotb` builds against the clone venv for
+  `gen_regress.py --local` runs on the submit host.
+- Probe: test `gen_cocotb_probe` (build `gen_smoke_cocotb`, module
+  `dv.auto_dv.flow.gen_cocotb_probe`, `measured: false`) proves the path end to end; evidence
+  `dv/auto_dv/evidence/gen_t027_cocotb_lsf.md`.
 
 ## 8. Reproduction recipe
 
@@ -231,6 +306,6 @@ the current host (sources the staged env.sh). Through the flow: `gen_regress.py 
 
 ## 9. Cleanup rule
 
-Every regression manifest records `lsf_jobs_left` (this user's `gen_dv_*` jobs still in `bjobs`);
-it must be empty. `gen_flow_util.lsf_jobs_left()` is the check; the runtime role runs `bjobs`
+Every regression manifest records `lsf_jobs_left` (this regression's `gen_dv_<tag>_*` jobs still
+active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check; the runtime role runs `bjobs`
 at the end of every task.

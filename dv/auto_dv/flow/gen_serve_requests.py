@@ -71,9 +71,15 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
     if not isinstance(seeds, (int, list)):
         return None, "seeds must be a count or an explicit list"
     norm = dict(req)
+    bva = req.get("build_vcs_args") or []
+    if isinstance(bva, str):
+        bva = [bva]
+    if not isinstance(bva, list) or not all(isinstance(x, str) for x in bva):
+        return None, "build_vcs_args must be a list of strings"
     norm.update(purpose=purpose, tests=tests, seeds=seeds, coverage=parse_bool(req["coverage"]),
                 waves=parse_bool(req.get("waves", False)), group=req.get("group"),
-                component=req.get("component"), notes=str(req.get("notes") or ""))
+                component=req.get("component"), notes=str(req.get("notes") or ""),
+                build_vcs_args=bva, dump_exclusions=parse_bool(req.get("dump_exclusions", False)))
     return norm, None
 
 
@@ -141,10 +147,20 @@ def scope_for(req: dict[str, Any], testlist: dict[str, Any]) -> tuple[list[str] 
             args.append("--waves")
         if req.get("group") and tier == "targeted":
             args += ["--group", str(req["group"])]
+    # Instrumentation trials (purpose 2 only): a purpose-4 measurement never changes the flag set.
+    if req.get("build_vcs_args"):
+        if p != 2:
+            return None, "build_vcs_args (instrumentation trial) is allowed under purpose 2 only", scope
+        for x in req["build_vcs_args"]:
+            args += ["--build-vcs-arg", x]
+        scope["build_vcs_args"] = req["build_vcs_args"]
+    if req.get("dump_exclusions") and p != 3:
+        args.append("--dump-exclusions")
+        scope["dump_exclusions"] = True
     return args, None, scope
 
 
-def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool) -> Path:
+def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: list[str] | None = None) -> Path:
     name = path.stem
     C.RUNNING_DIR.mkdir(parents=True, exist_ok=True)
     C.DONE_DIR.mkdir(parents=True, exist_ok=True)
@@ -173,9 +189,10 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool) -> Path:
         U.log(f"{name}: REFUSED ({refusal})")
         return manifest_path
     outdir = C.OUT_DIR / f"regress_req_{name}"
-    argv = [sys.executable, str(C.FLOW_DIR / "gen_regress.py"), *args, "--outdir", str(outdir), "--force",
-            "--request", name, "--requester", req["requester"], "--purpose", str(req["purpose"])]
-    record.update(scope_decision="accepted", regress_cmd=" ".join(argv), regress_outdir=str(outdir))
+    argv = [sys.executable, str(C.FLOW_DIR / "gen_regress.py"), *args, *(extra_args or []), "--outdir", str(outdir),
+            "--force", "--request", name, "--requester", req["requester"], "--purpose", str(req["purpose"])]
+    record.update(scope_decision="accepted", regress_cmd=" ".join(argv), regress_outdir=str(outdir),
+                  operator_extra_args=list(extra_args or []))
     if dry_run:
         U.log(f"{name}: ACCEPT -> {' '.join(args)}")
         return manifest_path
@@ -211,6 +228,9 @@ def main() -> int:
     ap.add_argument("--interval", type=int, default=30)
     ap.add_argument("--duration", type=int, default=3600)
     ap.add_argument("--testlist", type=Path, default=C.TESTLIST_YAML)
+    ap.add_argument("--extra-arg", action="append", default=[],
+                    help="gen_regress.py argument the runtime operator adds to every request served in this call "
+                         "(recorded in the manifest as operator_extra_args); for knobs a request asked for in notes")
     a = ap.parse_args()
     if not a.dry_run:
         U.require_env("vcs", "urg", "bsub")
@@ -219,7 +239,7 @@ def main() -> int:
     served = 0
     while True:
         for p in pending_requests():
-            serve_one(p, testlist, a.dry_run)
+            serve_one(p, testlist, a.dry_run, a.extra_arg)
             served += 1
         if not a.watch or time.time() >= deadline:
             break

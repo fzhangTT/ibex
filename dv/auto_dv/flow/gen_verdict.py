@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pass/fail authority of the flow: decide a run's verdict from collected failure mechanisms
-in the simulation log, never from the simulator exit code alone (SIM_RECIPE Section 5).
+in the simulation log, never from the simulator exit code alone (SIM_RECIPE Section 5); a
+nonzero exit code on an otherwise clean log is one more collected mechanism (FAIL), not a pass.
 
 Rules, in order: a timed-out run is TIMEOUT; any collected failure mechanism (UVM_FATAL or
 UVM_ERROR count > 0, an SV $fatal, a VCS runtime error, a cocotb CRITICAL or failing test, an
@@ -66,16 +67,22 @@ def scan_log(lines: list[str], pass_marker: str | None) -> dict[str, Any]:
 
 
 def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fail: bool = False,
-           rc: int | None = None) -> dict[str, Any]:
+           rc: int | None = None, extra_logs: list[Path] | None = None) -> dict[str, Any]:
+    """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l)."""
     if not sim_log.is_file():
         return {"verdict": C.VERDICT_FAIL, "reason": "sim.log missing", "evidence": "",
                 "uvm_counts": {}, "cocotb_summary": None, "finish_seen": False,
                 "marker_seen": False, "failure_hits": 0, "exit_code": rc}
     lines = sim_log.read_text(encoding="utf-8", errors="replace").splitlines()
+    for extra in extra_logs or []:
+        if extra.is_file():
+            lines += extra.read_text(encoding="utf-8", errors="replace").splitlines()
     res = scan_log(lines, pass_marker)
     res["exit_code"] = rc
     if timed_out:
         res.update(verdict=C.VERDICT_TIMEOUT, reason="per-run timeout expired; process group killed")
+    elif res["verdict"] == C.VERDICT_PASS and rc not in C.EXIT_CODES_CLEAN:
+        res.update(verdict=C.VERDICT_FAIL, reason=f"nonzero exit ({rc}) with clean log")
     if expected_fail:
         if res["verdict"] == C.VERDICT_FAIL:
             res.update(verdict=C.VERDICT_XFAIL, reason="expected-fail: " + res["reason"])

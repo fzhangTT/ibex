@@ -25,6 +25,8 @@
 #   cocotb_module          dotted Python module for cocotb-driven tests (null = pure SV)
 #   expected_fail          true = an RTL-vs-intent bug candidate; FAIL is reported as XFAIL
 #   component              TB component this test exercises (purpose-2 selection)
+#   measured               default true; false = mutation-evidence or forced-error test that never
+#                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
 schema_version: 1
 
 builds:
@@ -38,13 +40,23 @@ builds:
     defines:
       - RVFI
     cocotb: false
+  gen_smoke_cocotb:
+    description: gen_smoke_tb_top with the SIM_RECIPE Section 4 cocotb triple (VPI library from the shared mirror venv)
+    tb_top: gen_smoke_tb_top
+    dut_instance: u_dut
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_smoke_tb.f
+    defines:
+      - RVFI
+    cocotb: true
 
 tests:
   - name: gen_smoke
     description: NOP program through the icache for a bounded cycle count; checks retirement and no alert
     tier: smoke
     build: gen_smoke
-    uvm_test: none
+    uvm_test: null
     plusargs:
       - +gen_smoke_cycles=3000
     seeds: 1
@@ -56,3 +68,21 @@ tests:
     cocotb_module: null
     expected_fail: false
     component: gen_dut_top
+
+  - name: gen_cocotb_probe
+    description: flow probe; cocotb loads on the LSF host from the shared mirror, observes RVFI retirements from Python
+    tier: targeted
+    build: gen_smoke_cocotb
+    uvm_test: null
+    plusargs:
+      - +gen_smoke_cycles=3000
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: runtime
+    pass_marker: GEN_COCOTB_PROBE_PASS
+    feature_groups: [flow, cocotb]
+    cocotb_module: dv.auto_dv.flow.gen_cocotb_probe
+    expected_fail: false
+    component: flow
+    measured: false

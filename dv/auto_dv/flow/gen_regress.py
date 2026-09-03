@@ -10,7 +10,10 @@ Usage:
     gen_regress.py --tests gen_a,gen_b [--seeds N | --seed-list 1,2,3]
     gen_regress.py --repro gen_a 12345 [--waves]
 Common knobs: --outdir DIR | --tag T, --no-coverage, --no-cond, --max-parallel N, --local,
-              --build-lsf, --waves, --purpose P, --request NAME, --requester ROLE
+              --build-lsf, --waves, --purpose P, --request NAME, --requester ROLE,
+              --elfile F (strict), --dump-exclusions, --build-vcs-arg ARG
+Tests with `measured: false` (mutation-evidence, forced-error) run into a separate vdb tree and
+never enter the measured merge (Critic ruling R-5.5).
 """
 
 from __future__ import annotations
@@ -57,6 +60,8 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
             argv.append("--cond")
     if a.waves:
         argv.append("--waves")
+    for x in a.build_vcs_arg or []:
+        argv += ["--vcs-arg", x]
     if a.build_lsf and not a.local:
         argv.append("--lsf")
     U.log(f"build {name}: {' '.join(argv[2:])}")
@@ -64,9 +69,17 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
                                         timeout_s=a.build_timeout_s)
     man_path = bdir / C.BUILD_MANIFEST
     man = U.load_yaml(man_path) if man_path.is_file() else {}
+    unmeasured_vdb = None
+    if coverage and man.get("status") == "ok" and man.get("build_vdb"):
+        # Separate -cm_dir tree for non-measured tests (R-5.5), seeded with the compile-time design data.
+        unmeasured_vdb = outdir / C.UNMEASURED_COV_DIRNAME / f"{name}.vdb"
+        unmeasured_vdb.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(man["build_vdb"], unmeasured_vdb)
     return {"dir": str(bdir), "manifest": str(man_path), "status": man.get("status", "failed"),
             "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "lsf": man.get("lsf"),
-            "cov_metrics": man.get("cov_metrics"), "vdb": None}
+            "cov_metrics": man.get("cov_metrics"), "defines": man.get("defines"), "constfile": man.get("constfile"),
+            "cov_scope": man.get("cov_scope"), "vdb": None,
+            "unmeasured_vdb": str(unmeasured_vdb) if unmeasured_vdb else None}
 
 
 def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a: argparse.Namespace,
@@ -74,10 +87,11 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
     """One test+seed through gen_run.py (which submits its own bsub -K job unless --local)."""
     run_dir = outdir / "runs" / f"{t['name']}_{seed}"
     run_dir.mkdir(parents=True, exist_ok=True)
-    cov_vdb = Path(build["dir"]) / C.BUILD_VDB_NAME
+    measured = bool(t.get("measured", True))
+    cov_vdb = Path(build["dir"]) / C.BUILD_VDB_NAME if measured else Path(build["unmeasured_vdb"] or "")
     argv = [sys.executable, str(C.FLOW_DIR / "gen_run.py"), "--build-dir", build["dir"], "--test", t["name"],
             "--seed", str(seed), "--run-dir", str(run_dir), "--testlist", str(a.testlist),
-            "--pend-allowance-s", str(a.pend_allowance_s)]
+            "--pend-allowance-s", str(a.pend_allowance_s), "--job-tag", outdir.name]
     if coverage:
         argv += ["--cov-dir", str(cov_vdb)]
     else:
@@ -99,6 +113,7 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
                "cm_name": None, "waves": None, "wall_s": None, "owner": t["owner"], "lsf": None}
     res["result_yaml"] = str(res_path)
     res["run_dir"] = str(run_dir)
+    res["measured"] = measured
     lsf = res.get("lsf")
     U.log(f"{t['name']} seed={seed}: {res['verdict']} ({res.get('reason')})"
           + (f" [LSF {lsf['job_id']} on {lsf['host']}]" if lsf else ""))
@@ -181,7 +196,13 @@ def main() -> int:
     ap.add_argument("--purpose", type=int, choices=sorted(C.PURPOSES))
     ap.add_argument("--request", help="run-request name this regression serves")
     ap.add_argument("--requester", help="role slug of the requester")
-    ap.add_argument("--elfile", type=Path, action="append", help="URG exclusion file(s) for the merge")
+    ap.add_argument("--elfile", type=Path, action="append",
+                    help="URG exclusion file(s) for the measured merge (loaded with -excl_strict)")
+    ap.add_argument("--dump-exclusions", action="store_true",
+                    help="urg -dump full_exclusions at the measured merge (implied by --purpose 4)")
+    ap.add_argument("--build-vcs-arg", action="append", help="extra vcs argument for every build (trials)")
+    ap.add_argument("--no-sync-mirror", action="store_true",
+                    help="do not re-sync the shared mirror before cocotb builds (default: sync)")
     ap.add_argument("--force", action="store_true", help="delete an existing outdir")
     a = ap.parse_args()
     if not (a.tier or a.tests or a.repro):
@@ -196,8 +217,6 @@ def main() -> int:
     if a.base_seed is None:
         a.base_seed = int(start) & 0x7FFFFFFF
     coverage = not a.no_coverage and not a.repro
-    if a.repro and not a.no_coverage:
-        coverage = False
     plan = plan_runs(testlist, a)
     if not plan:
         U.die("no test selected")
@@ -223,6 +242,16 @@ def main() -> int:
     U.log(f"regression {outdir.name}: {len(plan)} runs, coverage={coverage}, base_seed={a.base_seed}")
 
     builds: dict[str, Any] = {}
+    needs_mirror = any(testlist["builds"][b].get("cocotb") for b in {t["build"] for t, _ in plan})
+    if needs_mirror and not a.no_sync_mirror and not a.local:
+        # cocotb builds load the VPI library from the mirror venv and runs import from the mirror:
+        # sync it first so the build records the revision the runs will see.
+        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync"], cwd=C.REPO_ROOT,
+                                    log_path=outdir / "regress.log", timeout_s=1800)
+        manifest["mirror_sync"] = {"rc": rc, "wall_s": round(wall, 1)}
+        U.log(f"mirror sync rc={rc} in {wall:.0f}s")
+        if rc != 0:
+            U.die(f"gen_mirror.py --sync failed; see {outdir / 'regress.log'}")
     for bname in sorted({t["build"] for t, _ in plan}):
         builds[bname] = compile_build(bname, outdir, a, coverage)
         manifest["builds"] = builds
@@ -249,28 +278,46 @@ def main() -> int:
             U.dump_yaml(manifest, outdir / "manifest.yaml")
     runs.sort(key=lambda r: (r["test"], r["seed"]))
 
+    cov_status = "not_requested"
     if coverage:
         post_fcov_checks(runs, testlist, outdir)
-        vdbs = sorted({Path(r["vdb"]) for r in runs if r.get("vdb") and Path(r["vdb"]).is_dir()})
-        for b in builds.values():
+        measured_vdbs: list[Path] = []
+        unmeasured_vdbs: list[Path] = []
+        for bname, b in builds.items():
             cand = Path(b["dir"]) / C.BUILD_VDB_NAME
             b["vdb"] = str(cand) if cand.is_dir() else None
-            if b["vdb"] and any(r.get("vdb") for r in runs if r.get("build") == Path(b["dir"]).name):
-                vdbs.append(cand)
-        vdbs = sorted(set(vdbs))
-        if vdbs:
-            U.log(f"urg merge of {len(vdbs)} vdb(s)")
-            dut_scopes = sorted({U.load_yaml(Path(b["manifest"]))["cov_scope"] for b in builds.values()
-                                 if b["status"] == "ok" and Path(b["manifest"]).is_file()})
-            cov = R.merge(outdir / "cov", vdbs, a.elfile, dut_scopes=dut_scopes)
+            if b["vdb"] and any(r.get("vdb") and r.get("measured", True) for r in runs if r.get("build") == bname):
+                measured_vdbs.append(cand)
+            if b.get("unmeasured_vdb") and any(r.get("vdb") and not r.get("measured", True) for r in runs
+                                               if r.get("build") == bname):
+                unmeasured_vdbs.append(Path(b["unmeasured_vdb"]))
+        dut_scopes = sorted({b["cov_scope"] for b in builds.values() if b.get("cov_scope")})
+        dump = a.dump_exclusions or a.purpose == 4
+        if measured_vdbs:
+            U.log(f"urg merge (measured) of {len(measured_vdbs)} vdb(s)" + (" with exclusion dump" if dump else ""))
+            cov = R.merge(outdir / "cov", sorted(measured_vdbs), a.elfile, dut_scopes=dut_scopes, dump_exclusions=dump)
+            cov["build_defines"] = {n: b.get("defines") for n, b in builds.items()}
+            cov["constfiles"] = {n: b.get("constfile") for n, b in builds.items()}
+            cov["measured_tests"] = sorted({r["test"] for r in runs if r.get("measured", True)})
+        elif not any(r.get("measured", True) for r in runs):
+            cov = {"status": "ok_no_measured_tests", "urg_rc": None, "totals": {}, "dut_scope": {},
+                   "note": "every selected test is measured: false; no measured merge"}
         else:
-            cov = {"urg_rc": None, "totals": {}, "note": "no vdb produced"}
+            cov = {"status": "no_vdb", "urg_rc": None, "totals": {}, "dut_scope": {}, "note": "no measured vdb produced"}
+        cov_status = cov["status"]
+        if unmeasured_vdbs:
+            U.log(f"urg merge (unmeasured, informational) of {len(unmeasured_vdbs)} vdb(s)")
+            cov["unmeasured"] = R.merge(outdir / C.UNMEASURED_COV_DIRNAME, sorted(unmeasured_vdbs), None,
+                                        dut_scopes=dut_scopes)
+            cov["unmeasured"]["tests"] = sorted({r["test"] for r in runs if not r.get("measured", True)})
         manifest["coverage"] = cov
         if cov.get("dashboard_txt"):
             U.log(f"URG dashboard: {cov['dashboard_txt']} totals={cov['totals']}")
+        if cov.get("exclusion_violations"):
+            U.log(f"EXCLUSION VIOLATION (strict): {cov['exclusion_violations'][:3]} -> merge FAILED")
     manifest.update(runs=runs, summary=summarize(runs), lsf_cost=lsf_cost(builds, runs),
                     finished_utc=U.now_utc(), wall_s=round(time.time() - start, 1), status="done",
-                    lsf_jobs_left=U.lsf_jobs_left() if not a.local else [])
+                    lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])
     U.dump_yaml(manifest, outdir / "manifest.yaml")
     s = manifest["summary"]
     U.log(f"done: {s['pass']} pass, {s['fail']} fail, {s['xfail']} xfail, {s['timeout']} timeout, "
@@ -278,6 +325,9 @@ def main() -> int:
     if manifest["lsf_jobs_left"]:
         U.log(f"WARNING: LSF jobs still present with prefix {C.LSF_JOB_PREFIX}: {manifest['lsf_jobs_left']}")
     bad = s["fail"] + s["timeout"] + s["not_run"]
+    if coverage and cov_status not in ("ok", "ok_no_measured_tests"):
+        U.log(f"coverage merge status {cov_status!r}: regression FAILED")
+        return 3
     return 0 if bad == 0 else 2
 
 

@@ -9,7 +9,7 @@ Two rows are read: the grand total of report/dashboard.txt and the row of the DU
 
 Usage:
     gen_cov_report.py merge --cov-dir DIR --vdb A.vdb [--vdb B.vdb ...] [--elfile F ...]
-                            [--dut-scope gen_smoke_tb_top.u_dut ...]
+                            [--dut-scope gen_smoke_tb_top.u_dut ...] [--dump-exclusions]
     gen_cov_report.py parse --report-dir DIR [--dut-scope SCOPE]
     gen_cov_report.py unreachable --report-dir DIR --module ibex_cheriot_ex
 """
@@ -31,9 +31,15 @@ RATIO_RE = re.compile(r"^\d+/\d+$")
 
 
 def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
-          extra: list[str] | None = None, dut_scopes: list[str] | None = None) -> dict[str, Any]:
+          extra: list[str] | None = None, dut_scopes: list[str] | None = None,
+          dump_exclusions: bool = False) -> dict[str, Any]:
+    """SIM_RECIPE Section 8 merge. Exclusion files load with -excl_strict (Critic R-5.1): an entry
+    that hides a covered or stale object makes the merge FAIL instead of silently dropping it."""
     cov_dir.mkdir(parents=True, exist_ok=True)
     report = cov_dir / C.URG_REPORT_DIRNAME
+    banned = [x for x in (extra or []) if x in C.URG_EXCL_BANNED]
+    if banned:
+        U.die(f"urg options {banned} are banned by the exclusion policy (R-5.2)")
     argv = ["urg", "-full64", "-format", "both", "-dbname", str(cov_dir / C.MERGED_VDB_NAME),
             "-report", str(report), "-log", str(cov_dir / C.URG_MERGE_LOG), "-show", "ratios"]
     for v in vdbs:
@@ -41,21 +47,44 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
             U.die(f"vdb missing: {v}")
         argv += ["-dir", str(v)]
     for e in elfiles or []:
+        if not e.is_file():
+            U.die(f"exclusion file missing: {e}")
         argv += ["-elfile", str(e)]
+    if elfiles:
+        argv += list(C.URG_EXCL_STRICT)
+    if dump_exclusions:
+        argv += list(C.URG_DUMP_EXCLUSIONS)
     argv += list(extra or [])
-    (cov_dir / "urg_cmd.sh").write_text("#!/usr/bin/env bash\n" + " ".join(argv) + "\n", encoding="utf-8")
+    (cov_dir / "urg_cmd.sh").write_text("#!/usr/bin/env bash\ncd " + str(cov_dir) + "\n" + " ".join(argv) + "\n",
+                                        encoding="utf-8")
     rc, wall, timed_out = U.run_bounded(argv, cwd=cov_dir, log_path=cov_dir / "urg_stdout.log", timeout_s=3600)
     dash = report / C.URG_DASHBOARD_TXT
-    res: dict[str, Any] = {"merged_vdb": str(cov_dir / C.MERGED_VDB_NAME), "report_dir": str(report),
-                           "dashboard_txt": str(dash) if dash.is_file() else None,
+    log_text = (cov_dir / C.URG_MERGE_LOG).read_text(encoding="utf-8", errors="replace") \
+        if (cov_dir / C.URG_MERGE_LOG).is_file() else ""
+    violations = [l.strip() for l in log_text.splitlines() if C.URG_EXCL_VIOLATION_RE.search(l)]
+    dump_dir = cov_dir / C.URG_DUMP_DIRNAME
+    dumped: list[str] = []
+    if dump_exclusions:
+        dump_dir.mkdir(exist_ok=True)
+        for f in sorted(cov_dir.glob(C.URG_DUMP_GLOB)):
+            f.replace(dump_dir / f.name)
+            dumped.append(str(dump_dir / f.name))
+    status = "ok"
+    if rc != 0 or timed_out or not dash.is_file():
+        status = "urg_failed"
+    elif violations:
+        status = "exclusion_violation"
+    res: dict[str, Any] = {"status": status, "merged_vdb": str(cov_dir / C.MERGED_VDB_NAME),
+                           "report_dir": str(report), "dashboard_txt": str(dash) if dash.is_file() else None,
                            "merge_log": str(cov_dir / C.URG_MERGE_LOG), "urg_rc": rc,
                            "urg_wall_s": round(wall, 1), "urg_timed_out": timed_out, "urg_cmd": " ".join(argv),
-                           "input_vdbs": [str(v) for v in vdbs], "totals": {}, "dut_scope": {}}
+                           "input_vdbs": [str(v) for v in vdbs], "elfiles": [str(e) for e in (elfiles or [])],
+                           "excl_strict": bool(elfiles), "exclusion_violations": violations,
+                           "full_exclusions_dump": dumped, "totals": {}, "dut_scope": {}}
     if dash.is_file():
         res["totals"] = parse_dashboard(dash)
         res["dut_scope"] = {s: parse_hierarchy_row(report / "hierarchy.txt", s) for s in (dut_scopes or [])}
-        res["limited_design"] = "Limited design loaded" in (cov_dir / C.URG_MERGE_LOG).read_text(
-            encoding="utf-8", errors="replace")
+        res["limited_design"] = "Limited design loaded" in log_text
     return res
 
 
@@ -168,6 +197,7 @@ def main() -> int:
     m.add_argument("--elfile", type=Path, action="append")
     m.add_argument("--dut-scope", action="append", default=[])
     m.add_argument("--urg-arg", action="append", default=[])
+    m.add_argument("--dump-exclusions", action="store_true", help="urg -dump full_exclusions into <cov-dir>/full_exclusions")
     p = sub.add_parser("parse")
     p.add_argument("--report-dir", type=Path, required=True)
     p.add_argument("--dut-scope", action="append", default=[])
@@ -177,10 +207,12 @@ def main() -> int:
     a = ap.parse_args()
     if a.cmd == "merge":
         U.require_env("urg")
-        res = merge(a.cov_dir.resolve(), [v.resolve() for v in a.vdb], a.elfile, a.urg_arg, a.dut_scope)
+        res = merge(a.cov_dir.resolve(), [v.resolve() for v in a.vdb], a.elfile, a.urg_arg, a.dut_scope,
+                    a.dump_exclusions)
         U.dump_yaml(res, a.cov_dir.resolve() / "coverage.yaml")
-        print(f"urg rc={res['urg_rc']} totals={res['totals']} dut_scope={res['dut_scope']}")
-        return 0 if res["urg_rc"] == 0 else 1
+        print(f"status={res['status']} urg rc={res['urg_rc']} violations={len(res['exclusion_violations'])} "
+              f"totals={res['totals']} dut_scope={res['dut_scope']}")
+        return 0 if res["status"] == "ok" else 1
     if a.cmd == "parse":
         print("totals:", parse_dashboard(a.report_dir / C.URG_DASHBOARD_TXT))
         for s in a.dut_scope:

@@ -5,8 +5,8 @@ Section 4 cocotb triple and the Section 6 wave access, into a fresh outdir, and 
 manifest (command, flag groups, filelist digests, git HEAD, tool versions, compile-log summary).
 
 Usage (from a login shell with ci/env.sh sourced, or through --lsf):
-    gen_build.py --build gen_smoke --coverage [--cond] [--cocotb] [--waves] [--diag-noconst]
-                 [--outdir DIR] [--lsf] [--define NAME ...]
+    gen_build.py --build gen_smoke --coverage [--cond] [--cocotb] [--waves] [--no-diag-noconst]
+                 [--outdir DIR] [--lsf] [--define NAME ...] [--vcs-arg ARG ...]
 """
 
 from __future__ import annotations
@@ -17,12 +17,12 @@ import shlex
 import shutil
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import Any
 
 import gen_flow_const as C
 import gen_flow_util as U
+import gen_mirror as M
 
 
 def config_opts() -> list[str]:
@@ -33,21 +33,51 @@ def config_opts() -> list[str]:
     return shlex.split(r.stdout.strip())
 
 
-def cocotb_lib() -> str:
-    cc = shutil.which("cocotb-config")
-    if not cc:
-        U.die("cocotb-config not on PATH; the venv is not active (ci/env.sh)")
-    r = subprocess.run([cc, "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
-    lib = r.stdout.strip()
-    if r.returncode != 0 or not Path(lib).is_file():
-        U.die(f"cocotb VPI library not found: {lib!r}")
-    return lib
+def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
+    """VPI library the simv loads at run time. LSF hosts see only the shared mirror, so the
+    default is the mirror venv (fresh mirror required); --local-cocotb takes the clone venv."""
+    if a.local_cocotb:
+        cc = shutil.which("cocotb-config")
+        if not cc:
+            U.die("cocotb-config not on PATH; the venv is not active (ci/env.sh)")
+        r = subprocess.run([cc, "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
+        lib = r.stdout.strip()
+        if r.returncode != 0 or not Path(lib).is_file():
+            U.die(f"cocotb VPI library not found: {lib!r}")
+        return lib, None
+    root = M.mirror_root()
+    if root is None:
+        U.die("cocotb build needs the shared mirror (gen_mirror.py --sync --venv) or --local-cocotb")
+    st = M.status(root)
+    if st["state"] != "fresh" and not a.allow_stale_mirror:
+        U.die(f"mirror {root} is {st['state']} (clone {st.get('clone_sha256_now', '')[:12]} vs mirror "
+              f"{st.get('mirror_sha256_now', '')[:12]}); run gen_mirror.py --sync, or --allow-stale-mirror")
+    man = M.load_manifest(root) or {}
+    lib = (man.get("venv") or {}).get("cocotb_vpi_lib")
+    if not lib or not Path(lib).is_file():
+        U.die(f"mirror venv has no cocotb VPI library; run gen_mirror.py --sync --venv")
+    rec = {"root": str(root), "tree_sha256": man.get("tree_sha256"), "git_head": (man.get("git") or {}).get("head"),
+           "synced_utc": man.get("synced_utc"), "venv": man.get("venv"), "env_sh": str(root / "ci" / "env.sh"),
+           "state_at_build": st["state"]}
+    return lib, rec
 
 
-def render_template(src: Path, dst: Path, **fields: str) -> None:
-    text = src.read_text(encoding="utf-8")
-    body = "\n".join(l for l in text.splitlines() if not l.lstrip().startswith(("//", "#")))
-    dst.write_text(body.format(**fields) + "\n", encoding="utf-8")
+def absolutize_filelist(src: Path, dst: Path) -> None:
+    """Copy a clone-root-relative VCS -f file into the outdir with absolute paths, so vcs can run
+    with the outdir as cwd (its side files then land there, never in the clone root)."""
+    out: list[str] = []
+    for raw in src.read_text(encoding="utf-8").splitlines():
+        code, _, comment = raw.partition("//")
+        entry = code.strip()
+        if not entry:
+            out.append(raw)
+            continue
+        if entry.startswith("+incdir+"):
+            entry = "+incdir+" + str((C.REPO_ROOT / entry[len("+incdir+"):]).resolve())
+        elif not entry.startswith(("+", "-")):
+            entry = str((C.REPO_ROOT / entry).resolve())
+        out.append(entry + ((" //" + comment) if comment else ""))
+    dst.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
 def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) -> tuple[list[str], dict[str, list[str]]]:
@@ -55,7 +85,9 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["base"] = list(C.VCS_BASE_FLAGS)
     groups["filelists"] = []
     for fl in build["filelists"]:
-        groups["filelists"] += ["-f", fl]
+        dst = outdir / Path(fl).name
+        absolutize_filelist(C.REPO_ROOT / fl, dst)
+        groups["filelists"] += ["-f", str(dst)]
     groups["top"] = ["-top", build["tb_top"]]
     groups["uvm"] = list(C.VCS_UVM_FLAGS)
     groups["defines"] = [f"+define+{d}" for d in list(build.get("defines") or []) + list(a.define or [])]
@@ -65,17 +97,21 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["debug"] = list(C.VCS_DEBUG_WAVES_FLAGS if a.waves else C.VCS_DEBUG_PP_FLAGS)
     if a.coverage:
         hier = outdir / "cm_hier.cfg"
-        render_template(C.CM_HIER_TEMPLATE, hier, tb_top=build["tb_top"], dut_instance=build["dut_instance"])
+        hier.write_text(U.render_fields(C.CM_HIER_TEMPLATE.read_text(encoding="utf-8"),
+                                        {"tb_top": build["tb_top"], "dut_instance": build["dut_instance"]}),
+                        encoding="utf-8")
         metrics = C.COV_METRICS_WITH_COND if a.cond else C.COV_METRICS_VERIFIED
         groups["coverage"] = ["-cm", metrics, *C.COV_COMPILE_EXTRA,
                               "-cm_dir", str(outdir / C.BUILD_VDB_NAME), "-cm_hier", str(hier)]
-        if a.diag_noconst:
+        # Constant-analysis diagnostics (constfile.txt) are the auto-Unreachable evidence (R-5.3).
+        if not a.no_diag_noconst:
             groups["coverage"] += list(C.COV_DIAG_NOCONST)
     if a.cocotb or build.get("cocotb"):
         tab = outdir / C.PLI_TAB.name
         shutil.copyfile(C.PLI_TAB, tab)
-        groups["cocotb"] = [C.COCOTB_DEFINE, "+vpi", "-P", str(tab), "-load", cocotb_lib()]
-    groups["extra"] = list(build.get("extra_vcs_args") or [])
+        lib, a.mirror_record = cocotb_lib(a)
+        groups["cocotb"] = [C.COCOTB_DEFINE, "+vpi", "-P", str(tab), "-load", lib]
+    groups["extra"] = list(build.get("extra_vcs_args") or []) + list(a.vcs_arg or [])
     groups["log"] = ["-l", str(outdir / C.COMPILE_LOG)]
     argv = ["vcs"]
     for g in ("base", "filelists", "top", "uvm", "defines", "config", "common", "output", "debug",
@@ -84,22 +120,10 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     return argv, groups
 
 
-def sweep_side_files(outdir: Path, since: float) -> list[str]:
-    """vcs writes a few side files into its cwd (the clone root, needed for relative filelists);
-    move the ones this compile produced into the outdir so the clone stays clean."""
-    moved = []
-    for name in C.VCS_CWD_SIDE_FILES:
-        f = C.REPO_ROOT / name
-        if f.is_file() and f.stat().st_mtime >= since - 1:
-            shutil.move(str(f), str(outdir / name.lstrip(".")))
-            moved.append(name)
-    return moved
-
-
 def summarize_compile_log(log: Path) -> dict[str, Any]:
     text = log.read_text(encoding="utf-8", errors="replace") if log.is_file() else ""
-    errors = re.findall(r"^Error-\[(\w+)\]", text, re.M)
-    warnings = re.findall(r"^Warning-\[(\w+)\]", text, re.M)
+    errors = re.findall(r"^Error-\[([\w-]+)\]", text, re.M)
+    warnings = re.findall(r"^Warning-\[([\w-]+)\]", text, re.M)
     wcount: dict[str, int] = {}
     for w in warnings:
         wcount[w] = wcount.get(w, 0) + 1
@@ -118,8 +142,13 @@ def main() -> int:
     ap.add_argument("--outdir", type=Path, help="default: work/runtime/out/<build>-<utc stamp>")
     ap.add_argument("--coverage", action="store_true", help="SIM_RECIPE Section 3 instrumentation")
     ap.add_argument("--cond", action="store_true", help="add condition coverage to the metric set")
-    ap.add_argument("--diag-noconst", action="store_true", help="write constfile.txt of detected constants")
+    ap.add_argument("--no-diag-noconst", action="store_true",
+                    help="drop -diag noconst (constfile.txt is written by default on coverage builds)")
+    ap.add_argument("--vcs-arg", action="append", help="extra vcs argument for trials (repeatable)")
     ap.add_argument("--cocotb", action="store_true", help="force the Section 4 cocotb triple")
+    ap.add_argument("--local-cocotb", action="store_true",
+                    help="cocotb library from the clone venv (local runs only; LSF hosts cannot see it)")
+    ap.add_argument("--allow-stale-mirror", action="store_true", help="build against a stale mirror (not for evidence)")
     ap.add_argument("--waves", action="store_true", help="compile with -debug_access+all -ucli")
     ap.add_argument("--define", action="append", help="extra +define+ name (repeatable)")
     ap.add_argument("--lsf", action="store_true",
@@ -144,11 +173,13 @@ def main() -> int:
         # Re-invoke this script on a compute host with the same knobs minus --lsf.
         inner = [sys.executable, str(Path(__file__).resolve()), "--build", a.build, "--outdir", str(outdir),
                  "--testlist", str(a.testlist), "--force", "--timeout-s", str(a.timeout_s)]
-        for flag in ("coverage", "cond", "diag_noconst", "cocotb", "waves"):
+        for flag in ("coverage", "cond", "no_diag_noconst", "cocotb", "waves", "local_cocotb", "allow_stale_mirror"):
             if getattr(a, flag):
                 inner.append("--" + flag.replace("_", "-"))
         for d in a.define or []:
             inner += ["--define", d]
+        for x in a.vcs_arg or []:
+            inner += ["--vcs-arg", x]
         job = U.LsfJob(U.env_wrapped_command(inner, C.REPO_ROOT), cwd=outdir,
                        job_name=f"{C.LSF_JOB_PREFIX}_build_{a.build}", slots=a.lsf_slots,
                        out_file=outdir / C.LSF_OUT, err_file=outdir / C.LSF_ERR, run_timeout_s=a.timeout_s)
@@ -165,12 +196,13 @@ def main() -> int:
         U.die(f"LSF build produced no manifest; see {outdir / C.LSF_OUT}")
 
     U.require_env("vcs")
+    a.mirror_record = None
     argv, groups = compose_command(build, outdir, a)
     # Staged copy of the environment entry point: run jobs source it from the (shared) outdir.
     shutil.copyfile(C.ENV_SH, outdir / C.STAGED_ENV_SH)
     (outdir / "compile_cmd.sh").write_text(
-        "#!/usr/bin/env bash\n# Exact compile command (run from the clone root with ci/env.sh sourced).\n"
-        f"cd {shlex.quote(str(C.REPO_ROOT))}\n" + " \\\n    ".join(shlex.quote(x) for x in argv) + "\n",
+        "#!/usr/bin/env bash\n# Exact compile command (ci/env.sh sourced; filelists are absolute copies).\n"
+        f"cd {shlex.quote(str(outdir))}\n" + " \\\n    ".join(shlex.quote(x) for x in argv) + "\n",
         encoding="utf-8")
     manifest: dict[str, Any] = {
         "build": a.build, "description": build.get("description"), "tb_top": build["tb_top"],
@@ -179,7 +211,8 @@ def main() -> int:
         "coverage": bool(a.coverage), "cov_metrics": (groups.get("coverage") or [None, None])[1],
         "cov_scope": f"{build['tb_top']}.{build['dut_instance']}" if a.coverage else None,
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,
-        "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves),
+        "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
+        "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.REPO_ROOT / f for f in build["filelists"]]),
         "staged_env_sh": {"path": str(outdir / C.STAGED_ENV_SH), "sha256": U.sha256_file(C.ENV_SH)},
@@ -187,15 +220,14 @@ def main() -> int:
     }
     U.dump_yaml(manifest, outdir / C.BUILD_MANIFEST)
     U.log(f"compiling {a.build} -> {outdir}")
-    t0 = time.time()
-    rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=outdir / "vcs_stdout.log",
+    # cwd = outdir: filelists are absolute, so every vcs side file (constfile.txt, ucli.key, the
+    # FSM schematic xml) lands here and never in the clone root, even with concurrent compiles.
+    rc, wall, timed_out = U.run_bounded(argv, cwd=outdir, log_path=outdir / "vcs_stdout.log",
                                         timeout_s=a.timeout_s)
-    swept = sweep_side_files(outdir, t0)
     summary = summarize_compile_log(outdir / C.COMPILE_LOG)
     simv_ok = (outdir / C.SIMV_NAME).is_file()
     status = "ok" if (rc == 0 and simv_ok and summary["error_count"] == 0 and not timed_out) else "failed"
     manifest.update(vcs_rc=rc, wall_s=round(wall, 1), timed_out=timed_out, compile_summary=summary,
-                    swept_side_files=swept,
                     status=status, finished_utc=U.now_utc())
     U.dump_yaml(manifest, outdir / C.BUILD_MANIFEST)
     (C.OUT_DIR / f"{a.build}{C.BUILD_LATEST_SUFFIX}").write_text(str(outdir) + "\n", encoding="utf-8")

@@ -23,7 +23,7 @@ import gen_flow_const as C
 import gen_flow_util as U
 
 
-def load_manifests(out_root: Path, results_dir: Path) -> list[dict[str, Any]]:
+def load_manifests(out_root: Path, results_dir: Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
     """Every finished regression manifest, deduplicated by outdir, oldest first."""
     seen: dict[str, dict[str, Any]] = {}
     for p in sorted(out_root.glob("regress_*/manifest.yaml")):
@@ -65,13 +65,25 @@ def metric_cell(cov: dict[str, Any], key: str) -> str:
 
 
 def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
+    """Code metrics from the DUT instance row of hierarchy.txt; functional coverage (GROUP) from
+    the grand total, because covergroups are TB-side gen_ instances that never appear under the
+    DUT instance (the Test Writer's gen_ namespace is the whole functional set)."""
     cov = m.get("coverage") or {}
+    totals = cov.get("totals") or {}
     scopes = cov.get("dut_scope") or {}
+    row: dict[str, Any] = {}
     if scopes:
         first = next(iter(scopes.values()))
         if isinstance(first, dict) and "parse_error" not in first:
-            return first
-    return cov.get("totals") or {}
+            row = dict(first)
+    if not row:
+        return totals
+    row["group"] = totals.get("group", C.NOT_APPLICABLE)
+    ratios = dict(row.get("ratios") or {})
+    if (totals.get("ratios") or {}).get("group"):
+        ratios["group"] = totals["ratios"]["group"]
+    row["ratios"] = ratios
+    return row
 
 
 def delta(cur: Any, prev: Any) -> str:
@@ -87,7 +99,8 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     L.append(f"Generated (UTC): {U.now_utc()}. Build configuration: `{C.BUILD_CONFIG}`. Out root: `{out_root}`.")
     L.append(f"Sources: {len(regs)} regression manifest(s), {len(requests)} run-request result(s). "
-             "Coverage numbers are the URG DUT-scope row (`<tb_top>.<dut_instance>` in hierarchy.txt); "
+             "Code-coverage numbers are the URG DUT-scope row (`<tb_top>.<dut_instance>` in hierarchy.txt); "
+             "functional coverage (Group) is the grand total, the gen_ covergroups being TB-side; "
              "`n/a` means URG did not report the metric (never 0 or 100, DV_prompt Section 4). "
              "Ratios are covered/total objects.")
     L.append("")

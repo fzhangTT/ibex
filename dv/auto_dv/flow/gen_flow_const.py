@@ -98,7 +98,9 @@ VCS_COMMON_FLAGS = [
     "-lca", "-kdb",
 ]
 VCS_DEBUG_PP_FLAGS = ["-debug_access+pp"]
-VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all", "-ucli"]
+# SIM_RECIPE Section 6 lists -ucli at compile time too; VCS X-2025.06-SP2 rejects that
+# (Error-[DBG_UCLI_DEP]), so -ucli goes on the simv command line only (gen_run.py --waves).
+VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all"]
 # Verified set from SIM_RECIPE Section 3; cond is the T-010 trial metric (see gen_runtime_api.md).
 COV_METRICS_VERIFIED = "line+tgl+assert+fsm+branch"
 COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
@@ -106,13 +108,26 @@ COV_COMPILE_EXTRA = ["-cm_tgl", "portsonly", "-cm_tgl", "structarr", "-cm_report
                      "-cm_seqnoconst"]
 COV_RUNTIME_EXTRA = ["-cm_log", "/dev/null", "-assert", "nopostproc"]
 COV_DIAG_NOCONST = ["-diag", "noconst"]
-# Side files vcs drops into its cwd; gen_build.py moves them into the outdir after the compile.
-VCS_CWD_SIDE_FILES = ("constfile.txt", ".fsm.sch.verilog.xml", "ucli.key", "vcs.key")
 COCOTB_DEFINE = "+define+COCOTB_SIM"
+COCOTB_ENV_MODULE = "MODULE"
+COCOTB_ENV_TOPLEVEL = "TOPLEVEL"
+COCOTB_ENV_TOPLEVEL_LANG = "TOPLEVEL_LANG"
+COCOTB_TOPLEVEL_LANG = "verilog"
+COCOTB_ENV_LIBPYTHON = "LIBPYTHON_LOC"
 CM_NAME_PREFIX = "test_"
 BUILD_VDB_NAME = "build.vdb"
 MERGED_VDB_NAME = "merged.vdb"
 URG_REPORT_DIRNAME = "report"
+# Exclusion policy (Critic ruling R-5): strict loading is mandatory, propagation is banned, the
+# full-exclusions dump of a measured merge is kept beside the annotated exclusion file.
+URG_EXCL_STRICT = ["-excl_strict"]
+URG_EXCL_BANNED = ("-excl_propagation", "-excl_bypass_checks")
+URG_DUMP_EXCLUSIONS = ["-dump", "full_exclusions"]
+URG_DUMP_DIRNAME = "full_exclusions"
+URG_DUMP_GLOB = "fullexclude*"
+# merge.log signatures that make a strict merge FAIL (a covered or stale object was excluded).
+URG_EXCL_VIOLATION_RE = re.compile(r"Warning-\[UCAPI-ILOAD\]|Illegal exclusion attempt|Error-\[UCAPI")
+UNMEASURED_COV_DIRNAME = "cov_unmeasured"
 URG_DASHBOARD_TXT = "dashboard.txt"
 URG_MERGE_LOG = "merge.log"
 
@@ -123,6 +138,10 @@ COMPILE_LOG = "compile.log"
 BUILD_MANIFEST = "build_manifest.yaml"
 BUILD_LATEST_SUFFIX = ".latest"
 SIM_LOG = "sim.log"
+# simv stdout+stderr: cocotb's Python logging bypasses the VCS -l log, so the job captures it too
+# and the verdict scans both files.
+SIM_STDOUT_LOG = "sim_stdout.log"
+LSF_ACTIVE_STATES = ("PEND", "RUN", "PSUSP", "USUSP", "SSUSP", "WAIT", "PROV")
 RUN_LOG = "run.log"
 RUN_CMD_SH = "run_cmd.sh"
 RESULT_YAML = "result.yaml"
@@ -157,7 +176,7 @@ TIER_RANK = {t: i for i, t in enumerate(TIERS)}
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
-                      "expected_fail", "component", "notes")
+                      "expected_fail", "component", "notes", "measured")
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
 BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args")
 OWNER_ROLES = ("orchestrator", "dv-lead", "rtl-arch", "tb-infra", "test-writer", "runtime",
@@ -185,6 +204,8 @@ VERDICT_TIMEOUT = "TIMEOUT"
 VERDICT_NOT_RUN = "NOT_RUN"
 VERDICT_XFAIL = "XFAIL"
 END_MARKER_DEFAULT = "$finish"
+# simv exit codes that do not by themselves fail a clean-log run (0; 124 = coreutils timeout, TIMEOUT).
+EXIT_CODES_CLEAN = (0, 124)
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (
     ("uvm_fatal", re.compile(r"^UVM_FATAL\s+(?!:\s*0\b)")),
