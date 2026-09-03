@@ -483,3 +483,11 @@ bus or pin cycle facts with no Python-readable channel) do not touch the batch-1
 assigned (T-092: DV Lead with tb-infra decide between extending the RVFI export with event lines
 and reformulating the items). Test template: cross-model REQUEST-CHANGES (746af6f) answered in
 98c2ade and 566a601, re-reviews APPROVE-WITH-CHANGES; the Critic's template v2 verdict is pending.
+
+## LOG-016a - 2026-09-03 - NOTE (Phase 1 gate met on both reviewers)
+
+10:35 UTC: the Critic's T-007 re-review of plan set v2d (`dv/auto_dv/docs/gen_critic_plan_set_v4.md`,
+commit 0dcd796; 0d27718 adds only the B15 pair split the Critic had accepted as a low variant) is
+APPROVE. With cross-model round 3 (APPROVE-WITH-CHANGES, 96b1ece) and the scoped round 4 on v2c
+running, the plan set is now past both gates; the batch-1 opening recorded in LOG-016 is confirmed
+after the fact and later batches need no further plan gate unless round 4 returns REQUEST-CHANGES.
