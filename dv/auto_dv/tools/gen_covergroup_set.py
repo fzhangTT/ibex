@@ -43,9 +43,10 @@ def main():
     entries = [e for e in tl['tests'] if e.get('fcov_expectation_file')]
     per_cg = collections.defaultdict(lambda: {'bins': set(), 'cps': collections.defaultdict(set), 'manifests': collections.Counter()})
     per_man = {}; declarers = collections.defaultdict(set)   # bin token -> manifests declaring it
+    try: home_rel = pathlib.Path(FCOV_HOME).resolve().relative_to(R.resolve())
+    except ValueError: sys.exit(f'manifest home {FCOV_HOME} is outside the clone root {R}')
     for e in sorted(entries, key=lambda e: e['name']):
         rel = pathlib.Path(e['fcov_expectation_file'])
-        home_rel = pathlib.Path(FCOV_HOME).resolve().relative_to(R.resolve())
         if rel.parent != home_rel: sys.exit(f'{e["name"]}: manifest {rel} is not under {home_rel}, --fcov-dir cannot stand in for it')
         p = pathlib.Path(a.fcov_dir) / rel.name   # named manifests are read from --fcov-dir too, so a rehearsal dir stands in for the tree
         if not p.exists(): sys.exit(f'{e["name"]}: manifest {p} missing')
