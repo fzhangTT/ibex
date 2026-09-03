@@ -1056,3 +1056,17 @@ serialisation; the red-check CLI's line and summary builders become functions co
 (request round_0, filed 16:10Z) is HELD until that landing is committed and re-reviewed; the batch-2 acceptance wave
 (check tier) is unaffected and continues. The Orchestrator's error: ruling on a described enforcement without a
 grep of the enforcing code.
+
+## LOG-036b - 2026-09-03 - GATE (the manifest generator's self-test is red since d0e6a71; committer check extended)
+
+The relaunched cross-model review of the pass-2 landing (dv/auto_dv/reviews/2026-09-03-claude-diff-4e60cc70-d0e6a719.md,
+APPROVE-WITH-CHANGES) finds gen_fcov_manifest.py --self-test red at d0e6a71 and green at its parent: its rule (f)
+case asserts the cycle-clause token on TP-CSR-029, the item pass 2 released. The Orchestrator reproduced it from a
+detached checkout of HEAD. The committer check ran only the library self-test; from now on both
+`python3 -m dv.auto_dv.tests.gen_test_lib --self-test` and `python3 dv/auto_dv/tests/gen_fcov_manifest.py
+--self-test` run from a detached checkout after every landing touching the plan, the trace CSVs or dv/auto_dv/tests.
+Fix: the Test Writer retargets the rule (f) case to a row that stays marked (TP-REG-018, or the first marked = 1 row
+of gen_trace_witness_ids.csv selected at run time) as landing 3g. Also recorded from the same review: TP-REG-018 is an
+icram-gated item (row icram inject), not a no-export-row item, so the "19 marked" reads 18 icram-dependent plus
+TP-PMC-001; and gen_wit_cycle_clause_cg (CG-WIT-001) has no SystemVerilog implementation yet, so the released witness
+bins are must-hit in the plan but not scored by any covergroup until tb-infra implements it (T-179).
