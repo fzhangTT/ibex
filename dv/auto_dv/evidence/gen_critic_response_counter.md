@@ -1,4 +1,4 @@
-# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, and the CM78/CM79 touch on 04cf523)
+# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, and 1bccc58)
 
 Owner: rtl-arch. Created 2026-09-03T20:07Z. Rows answer the cross-model review of f2b9272 (113 lines, sha256 daf32811888d;
 verdict APPROVE-WITH-CHANGES, artifact committed d5ddbe2) and any later round on the same note. Rule: every finding gets
@@ -8,7 +8,7 @@ RTL evidence.
 
 ## 1. Findings
 
-Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES).
+Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES); CM86-n = on 1bccc58 (3d68bb055400; artifact committed eca309c, APPROVE-WITH-CHANGES).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -23,7 +23,9 @@ Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n 
 | CM83-L-1 | cross-model touch-on-04cf523 [low] section 2 (reviewed copy line 33; fixed copy line 33) and section 10 (reviewed copy line 121; fixed copy lines 121, 122) | minstreth write described as reading back V + 1 | ADDRESSED at 3d68bb055400 | Both places now: csrw minstreth, V loads {V, old low word} (rtl/ibex_counter.sv:38-41), the writer's increment lands in the low word, so minstreth reads V and minstret moves by one; the carry case (old low word 0xFFFFFFFF, minstreth reads V + 1) stated in one clause; the minstret case unchanged (V + 1 when mcountinhibit[2] = 0). |
 | CM83-I-1 | cross-model touch-on-04cf523 [info] section 2 (fixed copy line 33) | Spike anchors cite an untracked tree | ADDRESSED at 3d68bb055400 | The bump body (csrs.cc:1321-1330) and the step call (execute.cc:353) are quoted verbatim in the row, so the convention is reproducible from the commit alone; the untracked-tree note stays. |
 | CM83-I-2 | cross-model touch-on-04cf523 [info] this file, title | title named only f2b9272 | ADDRESSED (this file) | Title lists f2b9272, 0c189eb and the CM78/CM79 touch; legend extended with the CM83 prefix. |
+| CM86-L-1 | cross-model 1bccc58 [low] section 10 (reviewed copy lines 121-122; fixed copy lines 121, 122) | minstret bullet narrowed its action; minstreth bullet had no shim action and no mcountinhibit[2] qualifier | ADDRESSED at 3c9295ccbce7 | Both bullets now state the Ibex value for mcountinhibit[2] = 0 and = 1, the Spike value, and a shim action: minstret write, add one to the low word (carry from 0xFFFFFFFF) when not inhibited, nothing when inhibited; minstreth write, high half as written, low word plus one (carry from 0xFFFFFFFF) when not inhibited, nothing moves when inhibited. |
+| CM86-I-1 | cross-model 1bccc58 [info] section 2 (fixed copy line 33) | bump body cited as :1321-1333 twice and :1321-1330 for the quote; quote called verbatim with two elisions | ADDRESSED at 3c9295ccbce7 | One range (csrs.cc:1321-1333) everywhere; the excerpt is labelled "Excerpted (elisions marked ...)". |
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 3d68bb055400: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10.
+- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 3c9295ccbce7: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10; CM86 touches sections 2 and 10.
