@@ -1043,3 +1043,122 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+
+  - name: gen_ut_export_irq_storm
+    description: export under an interrupt storm (multi-line, UNTIL_TAKEN) on the vectored-mret interrupt program; observes pin irq_software / irq_timer / irq_external / irq_fast, misc irq_pending and the I markers (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2500
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_irq_regime=storm
+      - +gen_knob_irq_line_mix=multi
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_irq_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_dbg_storm
+    description: export under a debug-request storm (mean 200 cycles) on the riscv-dv seed-7 program; observes pin debug_req assert and release (77 lines, 107 debug entries in the rehearsal) and scrkey req / valid (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2000
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_debug_req_regime=storm
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_scrkey_delayed
+    description: export with the scramble-key responder in the delayed regime on the riscv-dv seed-7 program (10 key requests); observes scrkey req and valid with the delayed valid (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2000
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_scr_key_delay=delayed
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_rows_nmi
+    description: two REGIME_SET phases and one NMI_PULSE through the bridge, export read back; observes regime phase and pin irq_nm 1 then 0 (the isa rows are silenced, the model has no NMI emulation; an export observation only) (TB Infra T-150 / CM8-M-3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_export_file=gen_export.txt
+      - +gen_ut_rows_set=regime_nmi
+      - +gen_chk_all=0
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_irq_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_ROWS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export_rows
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_rows_dbg
+    description: two REGIME_SET phases and one DBG_REQ assert-and-release through the bridge, export read back with every checker on; observes regime phase and pin debug_req 1 then 0 (TB Infra T-150 / CM8-M-3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_export_file=gen_export.txt
+      - +gen_ut_rows_set=regime_dbg
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_ROWS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export_rows
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
