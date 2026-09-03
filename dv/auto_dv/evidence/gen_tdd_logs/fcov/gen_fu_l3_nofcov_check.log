@@ -1,0 +1,4 @@
+=== red: covergroups off on a fresh vdb ===
+lockstep_muldiv_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config 
+urg exit 0 grpinfo: ABSENT
+FCOV-EXPECTATION PROTOCOL ERROR: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/urg_nofcov/grpinfo.txt: missing

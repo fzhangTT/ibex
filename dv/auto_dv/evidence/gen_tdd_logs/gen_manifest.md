@@ -1678,3 +1678,42 @@ Each file is a verbatim copy of the run artifact named in the source column (wor
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l2b_final_compile.log | dv/auto_dv/work/tb-infra/out_l2b_final/compile.log | 71100 | 12b97a5983bba9393ad361124e9941ca |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l2b_shared_driver.log | dv/auto_dv/work/tb-infra/out_l2b_driver.log (copy-in canary set, codegen check, unit tests) | 39955 | d7d150bbdd434882e24a1c5f442bcd6a |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l2b_final_driver.log | dv/auto_dv/work/tb-infra/out_l2b_final_driver.log (the landed tree's canary set, codegen check, shim unit test) | 39762 | e486e0ecc1d8988b97dd61e226c7d9dc |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_compile_g.log | scratch wit_root dv/auto_dv/work/tb-infra/wit/g/compile.log | 72161 | 1d2432a2f4b5cf4d005ebe237d392693 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_g_driver.log | scratch wit_root work/tb-infra/wit/g_driver.log (driver output) | 376 | bf1cdb25cdd91cea9236d412193071a4 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_compile_h.log | scratch wit_root dv/auto_dv/work/tb-infra/wit/h/compile.log | 72161 | 09ef92d230311da48a11afd11ef5c5eb |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_h_driver.log | scratch wit_root work/tb-infra/wit/h_driver.log (driver output) | 235 | ab5fd360bedf9f8d662611cfb6cb5e12 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_muldiv_run_header.txt | scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_muldiv/run_header.txt | 458 | 3f47088d45f5b49af78ab8bd0945b730 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_muldiv_verdict.txt | scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_muldiv/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_muldiv_stdout_excerpt.log | excerpt: scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_muldiv/stdout.log | 5843 | 5b591a3505b74ca0eb9331c634909a3a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_alu_run_header.txt | scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_alu/run_header.txt | 453 | 54900529d836715076b52346859b9621 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_alu_verdict.txt | scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_alu/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_lockstep_alu_stdout_excerpt.log | excerpt: scratch wit_root dv/auto_dv/work/tb-infra/wit/h/lockstep_alu/stdout.log | 5839 | 9d8a67611f4dd0baa8398aa39ab582bd |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1a_grpinfo.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1a/grpinfo.txt (urg -format text report) | 168979 | d6da49edc7fb064684e94314cc9c5c4e |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1a_dashboard.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1a/dashboard.txt (urg -format text report) | 752 | 72169220f62602c132ca9ffd0a66f941 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1a_tests.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1a/tests.txt (urg -format text report) | 393 | 216eddeb196000856fed6087a1c75eba |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1b_grpinfo.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1b/grpinfo.txt (urg -format text report) | 129565 | e576924cb8ab1c67aae4c4f719752ad5 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1b_dashboard.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1b/dashboard.txt (urg -format text report) | 752 | 4ff09b1f6fe169008059d7132ce9c30d |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1b_tests.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1b/tests.txt (urg -format text report) | 393 | 367b0e07886eb709adc0c5d9ed7954fc |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1_nofcov_grpinfo.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1_nofcov/grpinfo.txt (urg -format text report) | 115786 | ceff5be313b8754ede7d9d45c1bc2cec |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1_nofcov_dashboard.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1_nofcov/dashboard.txt (urg -format text report) | 1112 | 6fed21f3ee1444f5e7939b0983f91845 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_urg_slice1_nofcov_tests.txt | scratch wit_root work/tb-infra/wit/fcov/urg_slice1_nofcov/tests.txt (urg -format text report) | 407 | 21566ada2a101039d5d778670519272f |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_slice1_check.log | ci/check_fcov_expectations.py on gen_fcov_proof_slice1.fcov.yaml against urg_slice1a | 9115 | 4629d71ff7c3a78f452c7a6a5ea0ac64 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_slice1b_check.log | ci/check_fcov_expectations.py on gen_fcov_proof_slice1b.fcov.yaml against urg_slice1b | 9111 | 609425c46309e35fcd87f5e0b891bd91 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_slice1_check_build_g.log | the first green check on build g (three groups) | 9115 | 4629d71ff7c3a78f452c7a6a5ea0ac64 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_ut_knobs_codegen.log | scratch wit_root dv/auto_dv/work/tb-infra/wit/ut_codegen.log | 44674 | 8a27be7bd661edd46a10f4525dad842f |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_nofcov_check.log | scratch fcov_red_fm1.log, first part: the +gen_fcov_en=0 run on a fresh vdb, urg without grpinfo.txt, the checker's missing-report failure | 343 | 8f8b8c9dcfe9db469af85b7cfeefe6b7 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_check.log | scratch fcov_red_fm1.log, second part: mutant FM1 build, run and the checker naming cp_op.c_mul unhit | 596 | b8a5206f00eaf6b020a7135ccc970933 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_oot_compile.log | scratch mut_root/FM1/compile.launch.log | 71141 | acef3a4edeffcce16823b76ee860a948 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_build_compile.log | scratch mut_root/FM1/out/compile.log (the mutant build's sources sha256) | 71916 | 618ed901f1194acbaf504c6b8feada65 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_catch_muldiv_run_header.txt | scratch mut_root/FM1/out/FM1_catch_muldiv/run_header.txt | 459 | 7d0795e86828104f1d3f78842a55013a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_catch_muldiv_verdict.txt | scratch mut_root/FM1/out/FM1_catch_muldiv/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_FM1_catch_muldiv_stdout_excerpt.log | excerpt: scratch mut_root/FM1/out/FM1_catch_muldiv/stdout.log | 5795 | b32bd8956cdd6431081c69c106daf6f4 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_ut_fcov_codegen.log | dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py run on the copy | 530 | d6f13b7ae5560c3e3bdd91aca5534000 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_compile.log | dv/auto_dv/work/tb-infra/out_l3/compile.log (the shared tree after the slice-1 copy-in, sources sha256 8452b39617094289) | 71130 | 8df94c13fcbc61199427b77180792028 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_driver.log | dv/auto_dv/work/tb-infra/out_l3_driver.log (canary set, checks, and the isolated fcov proofs on the landed tree) | 49075 | b5e38404007d7fd51cfe18bada1bcb86 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_lockstep_muldiv_run_header.txt | dv/auto_dv/work/tb-infra/out_l3/lockstep_muldiv/run_header.txt | 458 | 87f62d2281843770a923b0e2b2a9c815 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_lockstep_muldiv_verdict.txt | dv/auto_dv/work/tb-infra/out_l3/lockstep_muldiv/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_lockstep_alu_run_header.txt | dv/auto_dv/work/tb-infra/out_l3/lockstep_alu/run_header.txt | 453 | 88c237f7581f2cba6cc559e9136315ee |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_lockstep_alu_verdict.txt | dv/auto_dv/work/tb-infra/out_l3/lockstep_alu/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_slice1_check.log | checker on gen_fcov_proof_slice1.fcov.yaml against the landed tree's isolated muldiv run | 51 | 0b8cc6e441fe350ce7c5780874a95063 |
+| dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l3_shared_slice1b_check.log | checker on gen_fcov_proof_slice1b.fcov.yaml against the landed tree's isolated alu run | 51 | e234c4a3722f423b8cb893578447a90a |

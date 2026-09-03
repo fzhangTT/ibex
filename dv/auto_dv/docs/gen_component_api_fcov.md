@@ -68,3 +68,51 @@ token is released; the Test Writer's template issues the command from its finish
 `COV_WITNESS` carries the issuing test's group as arg1 because the dispatcher cannot otherwise know the running test; the
 group name is the CSV's `test_group` column (`WITNESS_GROUP_OF[tp_item]` for the item's owner, `WITNESS_GROUPS` for the
 index). A test that witnesses an item of another group fails, so the epilogue must pass its own group.
+
+## 8. The plan's covergroups (T-205)
+
+Files: `dv/auto_dv/tb/gen_fcov_codegen.py` renders `dv/auto_dv/env/gen_fcov_groups.svh` from two inputs and nothing else:
+`dv/auto_dv/docs/gen_trace_tp_bin.csv` (every bin a plan covergroup declares, cross bins included and already reduced by the
+plan's ignore rules) and `dv/auto_dv/docs/gen_fcov_plan.md` (the SV name from the header `### CG-X-nnn: gen_cg_<name>` ->
+`gen_<name>_cg`, each coverpoint's bin ORDER from its `bins a{..}, b{..}` list, each cross's component coverpoints from
+`cr_x = cp_a x cp_b [x cp_c]` and its explicitly named tuples such as `div_intmin_m1{div, int_min, all_ones}`). Per group:
+`covergroup gen_<name>_cg with function sample(int v_<cp>, ...)` in the plan's coverpoint order, type-based
+(`option.per_instance = 0`, so urg reports `gen_<name>_cg.<cp>.<bin>`), one `bins <name> = {i}` per plan bin on consecutive
+indices with a `localparam int GEN_FC_<NAME>_<CP>_<BIN>` per bin, `ignore_bins na = {-1}` (a not-applicable sample), and one
+`bins <csv name> = binsof(cp_a.x) && binsof(cp_b.y)` per cross bin (the name is the components joined by `_`; the renderer splits
+it by longest match with backtracking or takes the plan's explicit tuple). Bin names that are SystemVerilog keywords (`xor`,
+`or`, `and`, ...) render as escaped identifiers; urg prints them plainly, so the manifests keep the plan's names. Refusals:
+plan bins differing from the CSV bins of a coverpoint, a cross bin that does not split into its components, a cross without a
+plan line, a group without a plan header (unit test `dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py`); `--check` fails on a stale
+include. `IMPLEMENTED` in the renderer lists the groups whose samplers exist; a group renders only when it is sampled.
+
+Sampler: `gen_isa_cov` (this package), a subscriber of the RVFI monitor beside the scoreboard, samples on every record with
+`rvfi_trap == 0` whose encoding the plan's condition names; RVFI reports a compressed instruction in its 16-bit form, so
+c.mul is decoded from it (a decoder that only knows the 32-bit word never sees it: mutant FM1). Classifiers are partitions of
+the record fields (rs1_rdata, rs2_rdata, rd_wdata, the register indices, the immediate) with the plan's bins in the plan's
+order; where two plan bins can hold at once the precedence is stated in the code and here: overflow before carry / borrow
+(cp_wrap), the named boundary cases before `eq` before `other` (cp_slt_case), the listed values before the relations to the
+dividend before the sign classes (cp_divisor), the listed values before the byte / half-word sign classes before the sign
+(CG-BIT-001 cp_rs1_class), exact values before "upper bits clear" before other (cp_rs2_upper). `rd_wdata` is forced to 0 on an
+rd = x0 record (rtl/ibex_core.sv:2344-2346), so its result class is `zero`; the wrap bins are recomputed from the operands (the
+ALU's carry never leaves it, rtl/ibex_alu.sv:105-107; rtl-arch gen_cg_sampling_anchors.md). `+gen_fcov_en=0` instantiates
+nothing and the report line says so (`GEN_FCOV isa samples: ... (covergroups off)`).
+
+| group (plan id) | sample condition (plan) | coverpoint bins / cross bins rendered | proof run |
+|---|---|---|---|
+| gen_mul_ops_cg (CG-MUL-001) | OP funct7 0000001 funct3 000..011, or c.mul (16-bit `100111 rsd' 10 rs2' 01`) | 46 / 390 | gen_muldiv_directed.S |
+| gen_div_ops_cg (CG-MUL-003) | OP funct7 0000001 funct3 100..111 | 36 / 140 | gen_muldiv_directed.S |
+| gen_isa_alu_reg_cg (CG-ISA-002) | OP funct7 0000000 / 0100000 (sub), funct3 not a shift; Zb funct7 values excluded | 46 / 294 | gen_muldiv_directed.S |
+| gen_bit_zba_zbb_ops_cg (CG-BIT-001) | the decoder arms rtl/ibex_decoder.sv:609-624 (sh1add..packh) and OP-IMM sext.b / sext.h (:1106-1107); zext_h = pack with rs2 = x0 | 51 / 380 | gen_alu_directed.S |
+| gen_isa_alu_imm_cg (CG-ISA-001) | OP-IMM funct3 not 001 / 101 | 40 / 105 | gen_alu_directed.S |
+| gen_isa_shift_cg (CG-ISA-003) | OP-IMM / OP funct3 001 / 101 with funct7 0000000 / 0100000 (the Zb shift space excluded) | 31 / 101 | gen_alu_directed.S |
+
+Evidence (dv/auto_dv/evidence/gen_tdd_fcov.md): each proof run is a lock-step run of the named operand-walk program (every
+result also compared against the model), urg on its own vdb, and `ci/check_fcov_expectations.py --report-dir` on a manifest of
+every coverpoint bin of the groups (`gen_fcov_proof_slice1.fcov.yaml`, `gen_fcov_proof_slice1b.fcov.yaml`: PASS, 128 and 122
+bins); red: the same manifest against a run with `+gen_fcov_en=0` (no covergroup, urg writes no grpinfo.txt, the checker fails
+on the missing report, round 0's failure shape) and mutant FM1 (the checker names `gen_mul_ops_cg.cp_op.c_mul` unhit). Every
+bin the promoted manifests reference for these six groups (1500) exists by name in the rendered include. Known gap, not this
+component's: the checker parses only `Summary for Variable` sections of urg's text report and never a `Summary for Cross`
+section, whose covered rows are component tuples (LOG-054: Runtime derives the variable form); until then the proof manifests
+declare coverpoint bins and the cross coverage is read from urg's per-cross `User Defined Cross Bins` summary.

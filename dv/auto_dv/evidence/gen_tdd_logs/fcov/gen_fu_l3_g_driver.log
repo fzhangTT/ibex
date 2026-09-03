@@ -1,0 +1,4 @@
+start 18:20:04Z sources sha256: e39aa0e0c5bb99bf
+lockstep_muldiv: verdict: FAIL reason: cocotb_summary at stdout.log:52  uvm_err=0
+lockstep_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_muldiv_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1

@@ -1,0 +1,7 @@
+=== FM1 mutant ===
+FM1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM1/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 612da58342b73445
+FM1_catch_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM1: build sources sha256: a65d88c23c734972; source tree untouched: 7927a36ea2e6e470
+FCOV-EXPECTATION: gen_mul_ops_cg.cp_op.c_mul = UNHIT (count=0)
+FCOV-EXPECTATION: FAIL -- 1 declared bin(s) not hit: gen_mul_ops_cg.cp_op.c_mul
+done 18:26:27Z

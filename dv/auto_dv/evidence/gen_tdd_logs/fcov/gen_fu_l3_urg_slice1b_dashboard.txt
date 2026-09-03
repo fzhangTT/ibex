@@ -1,0 +1,22 @@
+Dashboard
+
+Date: Thu Sep  3 14:29:51 2026
+
+User: fzhang
+
+Version: X-2025.06-SP2
+Command line: urg -full64 -dir /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/work/tb-infra/wit/h/vcs_simv.vdb -format text -report /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/work/tb-infra/wit/fcov/urg_slice1b 
+
+Number of tests: 1
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE  GROUP  
+ 39.40  39.40 
+
+
+-------------------------------------------------------------------------------
+Total Groups Coverage Summary 
+SCORE  WEIGHT 
+ 39.40 1      
+

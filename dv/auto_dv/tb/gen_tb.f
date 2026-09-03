@@ -16,11 +16,11 @@ dv/auto_dv/tb/gen_dbg_if.sv
 dv/auto_dv/tb/gen_misc_if.sv
 dv/auto_dv/env/gen_cfg_pkg.sv
 dv/auto_dv/env/gen_export_pkg.sv
-dv/auto_dv/env/gen_fcov_pkg.sv
 dv/auto_dv/env/gen_mem_pkg.sv
 dv/auto_dv/env/gen_agents_pkg.sv
 dv/auto_dv/isa/gen_isa_dpi_pkg.sv
 dv/auto_dv/env/gen_rvfi_pkg.sv
+dv/auto_dv/env/gen_fcov_pkg.sv
 dv/auto_dv/env/gen_checkers_pkg.sv
 dv/auto_dv/env/gen_env_pkg.sv
 dv/auto_dv/tb/gen_tb_top.sv

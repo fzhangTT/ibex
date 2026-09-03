@@ -1,0 +1,4354 @@
+Group : gen_fcov_pkg::gen_wit_cycle_clause_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_wit_cycle_clause_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+  0.00 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_pkg.sv
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_wit_cycle_clause_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 220      220       0       0.00    
+
+
+Variables for Group  gen_fcov_pkg::gen_wit_cycle_clause_cg
+
+
+VARIABLE  EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_clause 220      220       0       0.00    100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_clause
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 220      220       0       0.00    
+
+
+User Defined Bins for cp_clause
+
+
+Uncovered bins
+
+NAME           COUNT AT LEAST NUMBER 
+w_tp_xif_017   0     1        1      
+w_tp_xif_016   0     1        1      
+w_tp_xif_015   0     1        1      
+w_tp_xif_014   0     1        1      
+w_tp_xif_012   0     1        1      
+w_tp_xif_011   0     1        1      
+w_tp_xif_010   0     1        1      
+w_tp_xif_009   0     1        1      
+w_tp_xif_008   0     1        1      
+w_tp_xif_004   0     1        1      
+w_tp_xif_003   0     1        1      
+w_tp_xif_002   0     1        1      
+w_tp_xif_001   0     1        1      
+w_tp_trg_027   0     1        1      
+w_tp_trg_026   0     1        1      
+w_tp_trg_025   0     1        1      
+w_tp_trg_023   0     1        1      
+w_tp_trg_019   0     1        1      
+w_tp_reg_027   0     1        1      
+w_tp_reg_026   0     1        1      
+w_tp_reg_023   0     1        1      
+w_tp_reg_021   0     1        1      
+w_tp_reg_020   0     1        1      
+w_tp_reg_018   0     1        1      
+w_tp_reg_012   0     1        1      
+w_tp_reg_011   0     1        1      
+w_tp_reg_010   0     1        1      
+w_tp_reg_008   0     1        1      
+w_tp_reg_006   0     1        1      
+w_tp_reg_005   0     1        1      
+w_tp_reg_002   0     1        1      
+w_tp_reg_001   0     1        1      
+w_tp_prv_019   0     1        1      
+w_tp_prv_018   0     1        1      
+w_tp_pmp_105   0     1        1      
+w_tp_pmp_091   0     1        1      
+w_tp_pmp_082   0     1        1      
+w_tp_pmp_077   0     1        1      
+w_tp_pmp_053   0     1        1      
+w_tp_pmc_060   0     1        1      
+w_tp_pmc_059   0     1        1      
+w_tp_pmc_058   0     1        1      
+w_tp_pmc_047   0     1        1      
+w_tp_pmc_034   0     1        1      
+w_tp_pmc_028   0     1        1      
+w_tp_pmc_024   0     1        1      
+w_tp_pmc_016   0     1        1      
+w_tp_pmc_013   0     1        1      
+w_tp_pmc_011   0     1        1      
+w_tp_pmc_002   0     1        1      
+w_tp_pmc_001   0     1        1      
+w_tp_mul_024   0     1        1      
+w_tp_mul_023   0     1        1      
+w_tp_mul_011   0     1        1      
+w_tp_isa_051   0     1        1      
+w_tp_isa_040   0     1        1      
+w_tp_isa_024   0     1        1      
+w_tp_irq_080   0     1        1      
+w_tp_irq_079   0     1        1      
+w_tp_irq_078   0     1        1      
+w_tp_irq_077   0     1        1      
+w_tp_irq_073   0     1        1      
+w_tp_irq_072   0     1        1      
+w_tp_irq_070   0     1        1      
+w_tp_irq_068   0     1        1      
+w_tp_irq_066   0     1        1      
+w_tp_irq_064   0     1        1      
+w_tp_irq_061   0     1        1      
+w_tp_irq_059   0     1        1      
+w_tp_irq_057   0     1        1      
+w_tp_irq_055   0     1        1      
+w_tp_irq_054   0     1        1      
+w_tp_irq_053   0     1        1      
+w_tp_irq_052   0     1        1      
+w_tp_irq_051   0     1        1      
+w_tp_irq_050   0     1        1      
+w_tp_irq_049   0     1        1      
+w_tp_irq_045   0     1        1      
+w_tp_irq_044   0     1        1      
+w_tp_irq_041   0     1        1      
+w_tp_irq_039   0     1        1      
+w_tp_irq_038   0     1        1      
+w_tp_irq_031   0     1        1      
+w_tp_irq_030   0     1        1      
+w_tp_irq_027   0     1        1      
+w_tp_irq_026   0     1        1      
+w_tp_irq_025   0     1        1      
+w_tp_irq_024   0     1        1      
+w_tp_irq_023   0     1        1      
+w_tp_irq_022   0     1        1      
+w_tp_irq_021   0     1        1      
+w_tp_irq_015   0     1        1      
+w_tp_irq_011   0     1        1      
+w_tp_irq_009   0     1        1      
+w_tp_imem_040  0     1        1      
+w_tp_imem_039  0     1        1      
+w_tp_imem_037  0     1        1      
+w_tp_imem_036  0     1        1      
+w_tp_imem_033  0     1        1      
+w_tp_imem_027  0     1        1      
+w_tp_imem_025  0     1        1      
+w_tp_imem_023  0     1        1      
+w_tp_imem_022  0     1        1      
+w_tp_imem_018  0     1        1      
+w_tp_imem_017  0     1        1      
+w_tp_imem_016  0     1        1      
+w_tp_imem_014  0     1        1      
+w_tp_imem_010  0     1        1      
+w_tp_imem_008  0     1        1      
+w_tp_imem_007  0     1        1      
+w_tp_imem_006  0     1        1      
+w_tp_imem_005  0     1        1      
+w_tp_imem_004  0     1        1      
+w_tp_imem_003  0     1        1      
+w_tp_imem_001  0     1        1      
+w_tp_ic_057    0     1        1      
+w_tp_ic_053    0     1        1      
+w_tp_ic_052    0     1        1      
+w_tp_ic_051    0     1        1      
+w_tp_ic_046    0     1        1      
+w_tp_ic_045    0     1        1      
+w_tp_ic_037    0     1        1      
+w_tp_ic_036    0     1        1      
+w_tp_ic_035    0     1        1      
+w_tp_ic_031    0     1        1      
+w_tp_ic_030    0     1        1      
+w_tp_ic_024    0     1        1      
+w_tp_ic_023    0     1        1      
+w_tp_ic_020    0     1        1      
+w_tp_ic_019    0     1        1      
+w_tp_ic_015    0     1        1      
+w_tp_ic_011    0     1        1      
+w_tp_ic_008    0     1        1      
+w_tp_ic_007    0     1        1      
+w_tp_ic_005    0     1        1      
+w_tp_ic_004    0     1        1      
+w_tp_ic_003    0     1        1      
+w_tp_ic_002    0     1        1      
+w_tp_fe_026    0     1        1      
+w_tp_fe_022    0     1        1      
+w_tp_fe_017    0     1        1      
+w_tp_fe_016    0     1        1      
+w_tp_fe_014    0     1        1      
+w_tp_fe_013    0     1        1      
+w_tp_fe_012    0     1        1      
+w_tp_fe_008    0     1        1      
+w_tp_exc_072   0     1        1      
+w_tp_exc_070   0     1        1      
+w_tp_exc_065   0     1        1      
+w_tp_exc_062   0     1        1      
+w_tp_exc_057   0     1        1      
+w_tp_exc_055   0     1        1      
+w_tp_exc_054   0     1        1      
+w_tp_exc_050   0     1        1      
+w_tp_exc_040   0     1        1      
+w_tp_exc_038   0     1        1      
+w_tp_exc_037   0     1        1      
+w_tp_exc_036   0     1        1      
+w_tp_exc_035   0     1        1      
+w_tp_exc_034   0     1        1      
+w_tp_exc_015   0     1        1      
+w_tp_dmem_064  0     1        1      
+w_tp_dmem_063  0     1        1      
+w_tp_dmem_062  0     1        1      
+w_tp_dmem_061  0     1        1      
+w_tp_dmem_059  0     1        1      
+w_tp_dmem_058  0     1        1      
+w_tp_dmem_057  0     1        1      
+w_tp_dmem_056  0     1        1      
+w_tp_dmem_051  0     1        1      
+w_tp_dmem_049  0     1        1      
+w_tp_dmem_047  0     1        1      
+w_tp_dmem_046  0     1        1      
+w_tp_dmem_044  0     1        1      
+w_tp_dmem_039  0     1        1      
+w_tp_dmem_037  0     1        1      
+w_tp_dmem_034  0     1        1      
+w_tp_dmem_027  0     1        1      
+w_tp_dmem_022  0     1        1      
+w_tp_dmem_021  0     1        1      
+w_tp_dmem_020  0     1        1      
+w_tp_dmem_019  0     1        1      
+w_tp_dmem_008  0     1        1      
+w_tp_dmem_007  0     1        1      
+w_tp_dmem_006  0     1        1      
+w_tp_dmem_005  0     1        1      
+w_tp_dmem_004  0     1        1      
+w_tp_dmem_002  0     1        1      
+w_tp_dbg_071   0     1        1      
+w_tp_dbg_063   0     1        1      
+w_tp_dbg_061   0     1        1      
+w_tp_dbg_054   0     1        1      
+w_tp_dbg_051   0     1        1      
+w_tp_dbg_049   0     1        1      
+w_tp_dbg_046   0     1        1      
+w_tp_dbg_030   0     1        1      
+w_tp_dbg_021   0     1        1      
+w_tp_dbg_014   0     1        1      
+w_tp_dbg_011   0     1        1      
+w_tp_dbg_009   0     1        1      
+w_tp_dbg_008   0     1        1      
+w_tp_dbg_007   0     1        1      
+w_tp_dbg_006   0     1        1      
+w_tp_dbg_005   0     1        1      
+w_tp_dbg_004   0     1        1      
+w_tp_dbg_003   0     1        1      
+w_tp_csr_100   0     1        1      
+w_tp_csr_090   0     1        1      
+w_tp_csr_085   0     1        1      
+w_tp_csr_034   0     1        1      
+w_tp_csr_031   0     1        1      
+w_tp_csr_029   0     1        1      
+w_tp_cmp_058   0     1        1      
+w_tp_cmp_057   0     1        1      
+w_tp_btalu_018 0     1        1      
+w_tp_btalu_012 0     1        1      
+w_tp_btalu_001 0     1        1      
+w_tp_bit_043   0     1        1      
+w_tp_bit_042   0     1        1      
+w_tp_bit_036   0     1        1      
+
+
+Group : gen_fcov_pkg::gen_isa_alu_reg_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_isa_alu_reg_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+  0.00 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_isa_alu_reg_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 46       46        0       0.00    
+Crosses   574      574       0       0.00    
+
+
+Variables for Group  gen_fcov_pkg::gen_isa_alu_reg_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           7        7         0       0.00    100  1      1        0                    
+cp_rs1_class    7        7         0       0.00    100  1      1        0                    
+cp_rs2_class    7        7         0       0.00    100  1      1        0                    
+cp_sign_pair    4        4         0       0.00    100  1      1        0                    
+cp_eq_operands  2        2         0       0.00    100  1      1        0                    
+cp_same_regs    5        5         0       0.00    100  1      1        0                    
+cp_rd_x0        2        2         0       0.00    100  1      1        0                    
+cp_result_class 6        6         0       0.00    100  1      1        0                    
+cp_wrap         6        6         0       0.00    100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_isa_alu_reg_cg
+
+
+CROSS           EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_eq        14       14        0       0.00    100  1      1        0                     
+cr_op_rd_x0     14       14        0       0.00    100  1      1        0                     
+cr_op_rs1       49       49        0       0.00    100  1      1        0                     
+cr_op_rs2       49       49        0       0.00    100  1      1        0                     
+cr_op_same      35       35        0       0.00    100  1      1        0                     
+cr_op_sign      28       28        0       0.00    100  1      1        0                     
+cr_wrap         42       42        0       0.00    100  1      1        0                     
+cr_slt_boundary 343      343       0       0.00    100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        7         0       0.00    
+
+
+User Defined Bins for cp_op
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+and  0     1        1      
+or   0     1        1      
+xor  0     1        1      
+sltu 0     1        1      
+slt  0     1        1      
+sub  0     1        1      
+add  0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs1_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        7         0       0.00    
+
+
+User Defined Bins for cp_rs1_class
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+neg_rand 0     1        1      
+pos_rand 0     1        1      
+one      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs2_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        7         0       0.00    
+
+
+User Defined Bins for cp_rs2_class
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+neg_rand 0     1        1      
+pos_rand 0     1        1      
+one      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_sign_pair
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_sign_pair
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+nn   0     1        1      
+np   0     1        1      
+pn   0     1        1      
+pp   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_eq_operands
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        2         0       0.00    
+
+
+User Defined Bins for cp_eq_operands
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+yes  0     1        1      
+no   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_same_regs
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        5         0       0.00    
+
+
+User Defined Bins for cp_same_regs
+
+
+Uncovered bins
+
+NAME       COUNT AT LEAST NUMBER 
+distinct   0     1        1      
+rs2_eq_rd  0     1        1      
+rs1_eq_rd  0     1        1      
+all_same   0     1        1      
+rs1_eq_rs2 0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        2         0       0.00    
+
+
+User Defined Bins for cp_rd_x0
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+yes  0     1        1      
+no   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        6         0       0.00    
+
+
+User Defined Bins for cp_result_class
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+other    0     1        1      
+one      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_wrap
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        6         0       0.00    
+
+
+User Defined Bins for cp_wrap
+
+
+Uncovered bins
+
+NAME        COUNT AT LEAST NUMBER 
+none        0     1        1      
+sub_ovf     0     1        1      
+sub_borrow  0     1        1      
+add_neg_ovf 0     1        1      
+add_pos_ovf 0     1        1      
+add_carry   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_eq
+
+
+Samples crossed: cp_op cp_eq_operands
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 14       14        0       0.00            
+
+
+User Defined Cross Bins for cr_op_eq
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+add_no   0     1        1      
+and_no   0     1        1      
+or_no    0     1        1      
+slt_no   0     1        1      
+sltu_no  0     1        1      
+sub_no   0     1        1      
+xor_no   0     1        1      
+add_yes  0     1        1      
+and_yes  0     1        1      
+or_yes   0     1        1      
+slt_yes  0     1        1      
+sltu_yes 0     1        1      
+sub_yes  0     1        1      
+xor_yes  0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 14       14        0       0.00            
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+add_no   0     1        1      
+add_yes  0     1        1      
+and_no   0     1        1      
+and_yes  0     1        1      
+or_no    0     1        1      
+or_yes   0     1        1      
+slt_no   0     1        1      
+slt_yes  0     1        1      
+sltu_no  0     1        1      
+sltu_yes 0     1        1      
+sub_no   0     1        1      
+sub_yes  0     1        1      
+xor_no   0     1        1      
+xor_yes  0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs1
+
+
+Samples crossed: cp_op cp_rs1_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 49       49        0       0.00            
+
+
+User Defined Cross Bins for cr_op_rs1
+
+
+Uncovered bins
+
+NAME          COUNT AT LEAST NUMBER 
+add_all_ones  0     1        1      
+add_int_max   0     1        1      
+add_int_min   0     1        1      
+add_neg_rand  0     1        1      
+add_one       0     1        1      
+add_pos_rand  0     1        1      
+add_zero      0     1        1      
+and_all_ones  0     1        1      
+and_int_max   0     1        1      
+and_int_min   0     1        1      
+and_neg_rand  0     1        1      
+and_one       0     1        1      
+and_pos_rand  0     1        1      
+and_zero      0     1        1      
+or_all_ones   0     1        1      
+or_int_max    0     1        1      
+or_int_min    0     1        1      
+or_neg_rand   0     1        1      
+or_one        0     1        1      
+or_pos_rand   0     1        1      
+or_zero       0     1        1      
+slt_all_ones  0     1        1      
+slt_int_max   0     1        1      
+slt_int_min   0     1        1      
+slt_neg_rand  0     1        1      
+slt_one       0     1        1      
+slt_pos_rand  0     1        1      
+slt_zero      0     1        1      
+sltu_all_ones 0     1        1      
+sltu_int_max  0     1        1      
+sltu_int_min  0     1        1      
+sltu_neg_rand 0     1        1      
+sltu_one      0     1        1      
+sltu_pos_rand 0     1        1      
+sltu_zero     0     1        1      
+sub_all_ones  0     1        1      
+sub_int_max   0     1        1      
+sub_int_min   0     1        1      
+sub_neg_rand  0     1        1      
+sub_one       0     1        1      
+sub_pos_rand  0     1        1      
+sub_zero      0     1        1      
+xor_all_ones  0     1        1      
+xor_int_max   0     1        1      
+xor_int_min   0     1        1      
+xor_neg_rand  0     1        1      
+xor_one       0     1        1      
+xor_pos_rand  0     1        1      
+xor_zero      0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs2
+
+
+Samples crossed: cp_op cp_rs2_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 49       49        0       0.00            
+
+
+User Defined Cross Bins for cr_op_rs2
+
+
+Uncovered bins
+
+NAME          COUNT AT LEAST NUMBER 
+add_all_ones  0     1        1      
+add_int_max   0     1        1      
+add_int_min   0     1        1      
+add_neg_rand  0     1        1      
+add_one       0     1        1      
+add_pos_rand  0     1        1      
+add_zero      0     1        1      
+and_all_ones  0     1        1      
+and_int_max   0     1        1      
+and_int_min   0     1        1      
+and_neg_rand  0     1        1      
+and_one       0     1        1      
+and_pos_rand  0     1        1      
+and_zero      0     1        1      
+or_all_ones   0     1        1      
+or_int_max    0     1        1      
+or_int_min    0     1        1      
+or_neg_rand   0     1        1      
+or_one        0     1        1      
+or_pos_rand   0     1        1      
+or_zero       0     1        1      
+slt_all_ones  0     1        1      
+slt_int_max   0     1        1      
+slt_int_min   0     1        1      
+slt_neg_rand  0     1        1      
+slt_one       0     1        1      
+slt_pos_rand  0     1        1      
+slt_zero      0     1        1      
+sltu_all_ones 0     1        1      
+sltu_int_max  0     1        1      
+sltu_int_min  0     1        1      
+sltu_neg_rand 0     1        1      
+sltu_one      0     1        1      
+sltu_pos_rand 0     1        1      
+sltu_zero     0     1        1      
+sub_all_ones  0     1        1      
+sub_int_max   0     1        1      
+sub_int_min   0     1        1      
+sub_neg_rand  0     1        1      
+sub_one       0     1        1      
+sub_pos_rand  0     1        1      
+sub_zero      0     1        1      
+xor_all_ones  0     1        1      
+xor_int_max   0     1        1      
+xor_int_min   0     1        1      
+xor_neg_rand  0     1        1      
+xor_one       0     1        1      
+xor_pos_rand  0     1        1      
+xor_zero      0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_same
+
+
+Samples crossed: cp_op cp_same_regs
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 35       35        0       0.00            
+
+
+User Defined Cross Bins for cr_op_same
+
+
+Uncovered bins
+
+NAME            COUNT AT LEAST NUMBER 
+add_all_same    0     1        1      
+add_distinct    0     1        1      
+add_rs1_eq_rd   0     1        1      
+add_rs1_eq_rs2  0     1        1      
+add_rs2_eq_rd   0     1        1      
+and_all_same    0     1        1      
+and_distinct    0     1        1      
+and_rs1_eq_rd   0     1        1      
+and_rs1_eq_rs2  0     1        1      
+and_rs2_eq_rd   0     1        1      
+or_all_same     0     1        1      
+or_distinct     0     1        1      
+or_rs1_eq_rd    0     1        1      
+or_rs1_eq_rs2   0     1        1      
+or_rs2_eq_rd    0     1        1      
+slt_all_same    0     1        1      
+slt_distinct    0     1        1      
+slt_rs1_eq_rd   0     1        1      
+slt_rs1_eq_rs2  0     1        1      
+slt_rs2_eq_rd   0     1        1      
+sltu_all_same   0     1        1      
+sltu_distinct   0     1        1      
+sltu_rs1_eq_rd  0     1        1      
+sltu_rs1_eq_rs2 0     1        1      
+sltu_rs2_eq_rd  0     1        1      
+sub_all_same    0     1        1      
+sub_distinct    0     1        1      
+sub_rs1_eq_rd   0     1        1      
+sub_rs1_eq_rs2  0     1        1      
+sub_rs2_eq_rd   0     1        1      
+xor_all_same    0     1        1      
+xor_distinct    0     1        1      
+xor_rs1_eq_rd   0     1        1      
+xor_rs1_eq_rs2  0     1        1      
+xor_rs2_eq_rd   0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_sign
+
+
+Samples crossed: cp_op cp_sign_pair
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 28       28        0       0.00            
+
+
+User Defined Cross Bins for cr_op_sign
+
+
+Uncovered bins
+
+NAME    COUNT AT LEAST NUMBER 
+add_nn  0     1        1      
+add_np  0     1        1      
+add_pn  0     1        1      
+add_pp  0     1        1      
+and_nn  0     1        1      
+and_np  0     1        1      
+and_pn  0     1        1      
+and_pp  0     1        1      
+or_nn   0     1        1      
+or_np   0     1        1      
+or_pn   0     1        1      
+or_pp   0     1        1      
+slt_nn  0     1        1      
+slt_np  0     1        1      
+slt_pn  0     1        1      
+slt_pp  0     1        1      
+sltu_nn 0     1        1      
+sltu_np 0     1        1      
+sltu_pn 0     1        1      
+sltu_pp 0     1        1      
+sub_nn  0     1        1      
+sub_np  0     1        1      
+sub_pn  0     1        1      
+sub_pp  0     1        1      
+xor_nn  0     1        1      
+xor_np  0     1        1      
+xor_pn  0     1        1      
+xor_pp  0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_wrap
+
+
+Samples crossed: cp_op cp_wrap
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              42       42        0       0.00    35      
+Automatically Generated Cross Bins 35       35        0       0.00    35      
+User Defined Cross Bins            7        7         0       0.00            
+
+
+Automatically Generated Cross Bins for cr_wrap
+
+
+Element holes
+
+cp_op                         cp_wrap COUNT AT LEAST NUMBER 
+[and , or , xor , sltu , slt] *       --    --       30     
+
+
+Uncovered bins
+
+cp_op cp_wrap                                 COUNT AT LEAST NUMBER 
+[sub] [add_neg_ovf , add_pos_ovf , add_carry] --    --       3      
+[add] [sub_ovf , sub_borrow]                  --    --       2      
+
+
+User Defined Cross Bins for cr_wrap
+
+
+Uncovered bins
+
+NAME            COUNT AT LEAST NUMBER 
+add_none        0     1        1      
+sub_none        0     1        1      
+add_add_carry   0     1        1      
+add_add_neg_ovf 0     1        1      
+add_add_pos_ovf 0     1        1      
+sub_sub_borrow  0     1        1      
+sub_sub_ovf     0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_slt_boundary
+
+
+Samples crossed: cp_op cp_rs1_class cp_rs2_class
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              343      343       0       0.00    245     
+Automatically Generated Cross Bins 245      245       0       0.00    245     
+User Defined Cross Bins            98       98        0       0.00            
+
+
+Automatically Generated Cross Bins for cr_slt_boundary
+
+
+Element holes
+
+cp_op            cp_rs1_class cp_rs2_class COUNT AT LEAST NUMBER 
+[and , or , xor] *            *            --    --       147    
+[sub , add]      *            *            --    --       98     
+
+
+User Defined Cross Bins for cr_slt_boundary
+
+
+Uncovered bins
+
+NAME                   COUNT AT LEAST NUMBER 
+slt_all_ones_all_ones  0     1        1      
+slt_all_ones_int_max   0     1        1      
+slt_all_ones_int_min   0     1        1      
+slt_all_ones_neg_rand  0     1        1      
+slt_all_ones_one       0     1        1      
+slt_all_ones_pos_rand  0     1        1      
+slt_all_ones_zero      0     1        1      
+slt_int_max_all_ones   0     1        1      
+slt_int_max_int_max    0     1        1      
+slt_int_max_int_min    0     1        1      
+slt_int_max_neg_rand   0     1        1      
+slt_int_max_one        0     1        1      
+slt_int_max_pos_rand   0     1        1      
+slt_int_max_zero       0     1        1      
+slt_int_min_all_ones   0     1        1      
+slt_int_min_int_max    0     1        1      
+slt_int_min_int_min    0     1        1      
+slt_int_min_neg_rand   0     1        1      
+slt_int_min_one        0     1        1      
+slt_int_min_pos_rand   0     1        1      
+slt_int_min_zero       0     1        1      
+slt_neg_rand_all_ones  0     1        1      
+slt_neg_rand_int_max   0     1        1      
+slt_neg_rand_int_min   0     1        1      
+slt_neg_rand_neg_rand  0     1        1      
+slt_neg_rand_one       0     1        1      
+slt_neg_rand_pos_rand  0     1        1      
+slt_neg_rand_zero      0     1        1      
+slt_one_all_ones       0     1        1      
+slt_one_int_max        0     1        1      
+slt_one_int_min        0     1        1      
+slt_one_neg_rand       0     1        1      
+slt_one_one            0     1        1      
+slt_one_pos_rand       0     1        1      
+slt_one_zero           0     1        1      
+slt_pos_rand_all_ones  0     1        1      
+slt_pos_rand_int_max   0     1        1      
+slt_pos_rand_int_min   0     1        1      
+slt_pos_rand_neg_rand  0     1        1      
+slt_pos_rand_one       0     1        1      
+slt_pos_rand_pos_rand  0     1        1      
+slt_pos_rand_zero      0     1        1      
+slt_zero_all_ones      0     1        1      
+slt_zero_int_max       0     1        1      
+slt_zero_int_min       0     1        1      
+slt_zero_neg_rand      0     1        1      
+slt_zero_one           0     1        1      
+slt_zero_pos_rand      0     1        1      
+slt_zero_zero          0     1        1      
+sltu_all_ones_all_ones 0     1        1      
+sltu_all_ones_int_max  0     1        1      
+sltu_all_ones_int_min  0     1        1      
+sltu_all_ones_neg_rand 0     1        1      
+sltu_all_ones_one      0     1        1      
+sltu_all_ones_pos_rand 0     1        1      
+sltu_all_ones_zero     0     1        1      
+sltu_int_max_all_ones  0     1        1      
+sltu_int_max_int_max   0     1        1      
+sltu_int_max_int_min   0     1        1      
+sltu_int_max_neg_rand  0     1        1      
+sltu_int_max_one       0     1        1      
+sltu_int_max_pos_rand  0     1        1      
+sltu_int_max_zero      0     1        1      
+sltu_int_min_all_ones  0     1        1      
+sltu_int_min_int_max   0     1        1      
+sltu_int_min_int_min   0     1        1      
+sltu_int_min_neg_rand  0     1        1      
+sltu_int_min_one       0     1        1      
+sltu_int_min_pos_rand  0     1        1      
+sltu_int_min_zero      0     1        1      
+sltu_neg_rand_all_ones 0     1        1      
+sltu_neg_rand_int_max  0     1        1      
+sltu_neg_rand_int_min  0     1        1      
+sltu_neg_rand_neg_rand 0     1        1      
+sltu_neg_rand_one      0     1        1      
+sltu_neg_rand_pos_rand 0     1        1      
+sltu_neg_rand_zero     0     1        1      
+sltu_one_all_ones      0     1        1      
+sltu_one_int_max       0     1        1      
+sltu_one_int_min       0     1        1      
+sltu_one_neg_rand      0     1        1      
+sltu_one_one           0     1        1      
+sltu_one_pos_rand      0     1        1      
+sltu_one_zero          0     1        1      
+sltu_pos_rand_all_ones 0     1        1      
+sltu_pos_rand_int_max  0     1        1      
+sltu_pos_rand_int_min  0     1        1      
+sltu_pos_rand_neg_rand 0     1        1      
+sltu_pos_rand_one      0     1        1      
+sltu_pos_rand_pos_rand 0     1        1      
+sltu_pos_rand_zero     0     1        1      
+sltu_zero_all_ones     0     1        1      
+sltu_zero_int_max      0     1        1      
+sltu_zero_int_min      0     1        1      
+sltu_zero_neg_rand     0     1        1      
+sltu_zero_one          0     1        1      
+sltu_zero_pos_rand     0     1        1      
+sltu_zero_zero         0     1        1      
+
+
+Group : gen_fcov_pkg::gen_div_ops_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_div_ops_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+  0.00 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_div_ops_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 36       36        0       0.00    
+Crosses   820      820       0       0.00    
+
+
+Variables for Group  gen_fcov_pkg::gen_div_ops_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           4        4         0       0.00    100  1      1        0                    
+cp_dividend     9        9         0       0.00    100  1      1        0                    
+cp_divisor      10       10        0       0.00    100  1      1        0                    
+cp_sign_pair    4        4         0       0.00    100  1      1        0                    
+cp_rd_x0        2        2         0       0.00    100  1      1        0                    
+cp_result_class 7        7         0       0.00    100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_div_ops_cg
+
+
+CROSS          EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_dividend 36       36        0       0.00    100  1      1        0                     
+cr_op_sign     16       16        0       0.00    100  1      1        0                     
+cr_op_divisor  40       40        0       0.00    100  1      1        0                     
+cr_div0        360      360       0       0.00    100  1      1        0                     
+cr_overflow    360      360       0       0.00    100  1      1        0                     
+cr_op_rd_x0    8        8         0       0.00    100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_op
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+remu 0     1        1      
+rem  0     1        1      
+divu 0     1        1      
+div  0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_dividend
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 9        9         0       0.00    
+
+
+User Defined Bins for cp_dividend
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+pos_rand 0     1        1      
+neg_rand 0     1        1      
+seven    0     1        1      
+two      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+one      0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_divisor
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 10       10        0       0.00    
+
+
+User Defined Bins for cp_divisor
+
+
+Uncovered bins
+
+NAME            COUNT AT LEAST NUMBER 
+pos_rand        0     1        1      
+neg_rand        0     1        1      
+abs_gt_dividend 0     1        1      
+eq_dividend     0     1        1      
+minus_two       0     1        1      
+two             0     1        1      
+int_min         0     1        1      
+all_ones        0     1        1      
+one             0     1        1      
+zero            0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_sign_pair
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_sign_pair
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+nn   0     1        1      
+np   0     1        1      
+pn   0     1        1      
+pp   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        2         0       0.00    
+
+
+User Defined Bins for cp_rd_x0
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+yes  0     1        1      
+no   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        7         0       0.00    
+
+
+User Defined Bins for cp_result_class
+
+
+Uncovered bins
+
+NAME        COUNT AT LEAST NUMBER 
+other       0     1        1      
+eq_dividend 0     1        1      
+int_max     0     1        1      
+int_min     0     1        1      
+all_ones    0     1        1      
+one         0     1        1      
+zero        0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_dividend
+
+
+Samples crossed: cp_op cp_dividend
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 36       36        0       0.00            
+
+
+User Defined Cross Bins for cr_op_dividend
+
+
+Uncovered bins
+
+NAME          COUNT AT LEAST NUMBER 
+div_all_ones  0     1        1      
+div_int_max   0     1        1      
+div_int_min   0     1        1      
+div_neg_rand  0     1        1      
+div_one       0     1        1      
+div_pos_rand  0     1        1      
+div_seven     0     1        1      
+div_two       0     1        1      
+div_zero      0     1        1      
+divu_all_ones 0     1        1      
+divu_int_max  0     1        1      
+divu_int_min  0     1        1      
+divu_neg_rand 0     1        1      
+divu_one      0     1        1      
+divu_pos_rand 0     1        1      
+divu_seven    0     1        1      
+divu_two      0     1        1      
+divu_zero     0     1        1      
+rem_all_ones  0     1        1      
+rem_int_max   0     1        1      
+rem_int_min   0     1        1      
+rem_neg_rand  0     1        1      
+rem_one       0     1        1      
+rem_pos_rand  0     1        1      
+rem_seven     0     1        1      
+rem_two       0     1        1      
+rem_zero      0     1        1      
+remu_all_ones 0     1        1      
+remu_int_max  0     1        1      
+remu_int_min  0     1        1      
+remu_neg_rand 0     1        1      
+remu_one      0     1        1      
+remu_pos_rand 0     1        1      
+remu_seven    0     1        1      
+remu_two      0     1        1      
+remu_zero     0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_sign
+
+
+Samples crossed: cp_op cp_sign_pair
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 16       16        0       0.00            
+
+
+User Defined Cross Bins for cr_op_sign
+
+
+Uncovered bins
+
+NAME    COUNT AT LEAST NUMBER 
+div_nn  0     1        1      
+div_np  0     1        1      
+div_pn  0     1        1      
+div_pp  0     1        1      
+rem_nn  0     1        1      
+rem_np  0     1        1      
+rem_pn  0     1        1      
+rem_pp  0     1        1      
+divu_nn 0     1        1      
+divu_np 0     1        1      
+divu_pn 0     1        1      
+divu_pp 0     1        1      
+remu_nn 0     1        1      
+remu_np 0     1        1      
+remu_pn 0     1        1      
+remu_pp 0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_divisor
+
+
+Samples crossed: cp_op cp_divisor
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 40       40        0       0.00            
+
+
+User Defined Cross Bins for cr_op_divisor
+
+
+Uncovered bins
+
+NAME                 COUNT AT LEAST NUMBER 
+divu_abs_gt_dividend 0     1        1      
+divu_all_ones        0     1        1      
+divu_eq_dividend     0     1        1      
+divu_int_min         0     1        1      
+divu_minus_two       0     1        1      
+divu_neg_rand        0     1        1      
+divu_one             0     1        1      
+divu_pos_rand        0     1        1      
+divu_two             0     1        1      
+divu_zero            0     1        1      
+remu_abs_gt_dividend 0     1        1      
+remu_all_ones        0     1        1      
+remu_eq_dividend     0     1        1      
+remu_int_min         0     1        1      
+remu_minus_two       0     1        1      
+remu_neg_rand        0     1        1      
+remu_one             0     1        1      
+remu_pos_rand        0     1        1      
+remu_two             0     1        1      
+remu_zero            0     1        1      
+div_abs_gt_dividend  0     1        1      
+div_all_ones         0     1        1      
+div_eq_dividend      0     1        1      
+div_int_min          0     1        1      
+div_minus_two        0     1        1      
+div_neg_rand         0     1        1      
+div_one              0     1        1      
+div_pos_rand         0     1        1      
+div_two              0     1        1      
+div_zero             0     1        1      
+rem_abs_gt_dividend  0     1        1      
+rem_all_ones         0     1        1      
+rem_eq_dividend      0     1        1      
+rem_int_min          0     1        1      
+rem_minus_two        0     1        1      
+rem_neg_rand         0     1        1      
+rem_one              0     1        1      
+rem_pos_rand         0     1        1      
+rem_two              0     1        1      
+rem_zero             0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_div0
+
+
+Samples crossed: cp_op cp_divisor cp_dividend
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              360      360       0       0.00    324     
+Automatically Generated Cross Bins 324      324       0       0.00    324     
+User Defined Cross Bins            36       36        0       0.00            
+
+
+Automatically Generated Cross Bins for cr_div0
+
+
+Element holes
+
+cp_op cp_divisor                                                                                         cp_dividend COUNT AT LEAST NUMBER 
+*     [pos_rand , neg_rand , abs_gt_dividend , eq_dividend , minus_two , two , int_min , all_ones , one] *           --    --       324    
+
+
+User Defined Cross Bins for cr_div0
+
+
+Uncovered bins
+
+NAME               COUNT AT LEAST NUMBER 
+div_zero_all_ones  0     1        1      
+div_zero_int_max   0     1        1      
+div_zero_int_min   0     1        1      
+div_zero_neg_rand  0     1        1      
+div_zero_one       0     1        1      
+div_zero_pos_rand  0     1        1      
+div_zero_seven     0     1        1      
+div_zero_two       0     1        1      
+div_zero_zero      0     1        1      
+divu_zero_all_ones 0     1        1      
+divu_zero_int_max  0     1        1      
+divu_zero_int_min  0     1        1      
+divu_zero_neg_rand 0     1        1      
+divu_zero_one      0     1        1      
+divu_zero_pos_rand 0     1        1      
+divu_zero_seven    0     1        1      
+divu_zero_two      0     1        1      
+divu_zero_zero     0     1        1      
+rem_zero_all_ones  0     1        1      
+rem_zero_int_max   0     1        1      
+rem_zero_int_min   0     1        1      
+rem_zero_neg_rand  0     1        1      
+rem_zero_one       0     1        1      
+rem_zero_pos_rand  0     1        1      
+rem_zero_seven     0     1        1      
+rem_zero_two       0     1        1      
+rem_zero_zero      0     1        1      
+remu_zero_all_ones 0     1        1      
+remu_zero_int_max  0     1        1      
+remu_zero_int_min  0     1        1      
+remu_zero_neg_rand 0     1        1      
+remu_zero_one      0     1        1      
+remu_zero_pos_rand 0     1        1      
+remu_zero_seven    0     1        1      
+remu_zero_two      0     1        1      
+remu_zero_zero     0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_overflow
+
+
+Samples crossed: cp_op cp_dividend cp_divisor
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              360      360       0       0.00    356     
+Automatically Generated Cross Bins 356      356       0       0.00    356     
+User Defined Cross Bins            4        4         0       0.00            
+
+
+Automatically Generated Cross Bins for cr_overflow
+
+
+Element holes
+
+cp_op cp_dividend                                   cp_divisor                                                                        COUNT AT LEAST NUMBER 
+*     [pos_rand , neg_rand , seven , two , int_max] *                                                                                 --    --       200    
+*     [int_min]                                     [pos_rand , neg_rand , abs_gt_dividend , eq_dividend , minus_two , two , int_min] --    --       28     
+*     [int_min]                                     [one , zero]                                                                      --    --       8      
+*     [all_ones , one , zero]                       *                                                                                 --    --       120    
+
+
+User Defined Cross Bins for cr_overflow
+
+
+Uncovered bins
+
+NAME           COUNT AT LEAST NUMBER 
+div_intmin_m1  0     1        1      
+divu_intmin_m1 0     1        1      
+rem_intmin_m1  0     1        1      
+remu_intmin_m1 0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 8        8         0       0.00            
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+div_no   0     1        1      
+div_yes  0     1        1      
+divu_no  0     1        1      
+divu_yes 0     1        1      
+rem_no   0     1        1      
+rem_yes  0     1        1      
+remu_no  0     1        1      
+remu_yes 0     1        1      
+
+
+Group : gen_fcov_pkg::gen_mul_ops_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_mul_ops_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+  0.00 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_mul_ops_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 46       46        0       0.00    
+Crosses   553      553       0       0.00    
+
+
+Variables for Group  gen_fcov_pkg::gen_mul_ops_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           5        5         0       0.00    100  1      1        0                    
+cp_rs1_class    9        9         0       0.00    100  1      1        0                    
+cp_rs2_class    9        9         0       0.00    100  1      1        0                    
+cp_sign_pair    4        4         0       0.00    100  1      1        0                    
+cp_same_regs    4        4         0       0.00    100  1      1        0                    
+cp_rd_x0        2        2         0       0.00    100  1      1        0                    
+cp_result_class 9        9         0       0.00    100  1      1        0                    
+cp_funct3       4        4         0       0.00    100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_mul_ops_cg
+
+
+CROSS           EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_rs1       45       45        0       0.00    100  1      1        0                     
+cr_op_same      20       20        0       0.00    100  1      1        0                     
+cr_op_rs2       45       45        0       0.00    100  1      1        0                     
+cr_op_sign      20       20        0       0.00    100  1      1        0                     
+cr_extremes     405      405       0       0.00    100  1      1        0                     
+cr_funct3_rd_x0 8        8         0       0.00    100  1      1        0                     
+cr_op_rd_x0     10       10        0       0.00    100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        5         0       0.00    
+
+
+User Defined Bins for cp_op
+
+
+Uncovered bins
+
+NAME   COUNT AT LEAST NUMBER 
+c_mul  0     1        1      
+mulhu  0     1        1      
+mulhsu 0     1        1      
+mulh   0     1        1      
+mul    0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs1_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 9        9         0       0.00    
+
+
+User Defined Bins for cp_rs1_class
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+pos_rand 0     1        1      
+neg_rand 0     1        1      
+two      0     1        1      
+p16      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+one      0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs2_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 9        9         0       0.00    
+
+
+User Defined Bins for cp_rs2_class
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+pos_rand 0     1        1      
+neg_rand 0     1        1      
+two      0     1        1      
+p16      0     1        1      
+int_max  0     1        1      
+int_min  0     1        1      
+all_ones 0     1        1      
+one      0     1        1      
+zero     0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_sign_pair
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_sign_pair
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+nn   0     1        1      
+np   0     1        1      
+pn   0     1        1      
+pp   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_same_regs
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_same_regs
+
+
+Uncovered bins
+
+NAME       COUNT AT LEAST NUMBER 
+distinct   0     1        1      
+rs_eq_rd   0     1        1      
+all_same   0     1        1      
+rs1_eq_rs2 0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        2         0       0.00    
+
+
+User Defined Bins for cp_rd_x0
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+yes  0     1        1      
+no   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 9        9         0       0.00    
+
+
+User Defined Bins for cp_result_class
+
+
+Uncovered bins
+
+NAME      COUNT AT LEAST NUMBER 
+other     0     1        1      
+r40000000 0     1        1      
+r3fffffff 0     1        1      
+fffffffe  0     1        1      
+int_max   0     1        1      
+int_min   0     1        1      
+all_ones  0     1        1      
+one       0     1        1      
+zero      0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_funct3
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        4         0       0.00    
+
+
+User Defined Bins for cp_funct3
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+f3   0     1        1      
+f2   0     1        1      
+f1   0     1        1      
+f0   0     1        1      
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs1
+
+
+Samples crossed: cp_op cp_rs1_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 45       45        0       0.00            
+
+
+User Defined Cross Bins for cr_op_rs1
+
+
+Uncovered bins
+
+NAME            COUNT AT LEAST NUMBER 
+c_mul_all_ones  0     1        1      
+c_mul_int_max   0     1        1      
+c_mul_int_min   0     1        1      
+c_mul_neg_rand  0     1        1      
+c_mul_one       0     1        1      
+c_mul_p16       0     1        1      
+c_mul_pos_rand  0     1        1      
+c_mul_two       0     1        1      
+c_mul_zero      0     1        1      
+mul_all_ones    0     1        1      
+mul_int_max     0     1        1      
+mul_int_min     0     1        1      
+mul_neg_rand    0     1        1      
+mul_one         0     1        1      
+mul_p16         0     1        1      
+mul_pos_rand    0     1        1      
+mul_two         0     1        1      
+mul_zero        0     1        1      
+mulh_all_ones   0     1        1      
+mulh_int_max    0     1        1      
+mulh_int_min    0     1        1      
+mulh_neg_rand   0     1        1      
+mulh_one        0     1        1      
+mulh_p16        0     1        1      
+mulh_pos_rand   0     1        1      
+mulh_two        0     1        1      
+mulh_zero       0     1        1      
+mulhsu_all_ones 0     1        1      
+mulhsu_int_max  0     1        1      
+mulhsu_int_min  0     1        1      
+mulhsu_neg_rand 0     1        1      
+mulhsu_one      0     1        1      
+mulhsu_p16      0     1        1      
+mulhsu_pos_rand 0     1        1      
+mulhsu_two      0     1        1      
+mulhsu_zero     0     1        1      
+mulhu_all_ones  0     1        1      
+mulhu_int_max   0     1        1      
+mulhu_int_min   0     1        1      
+mulhu_neg_rand  0     1        1      
+mulhu_one       0     1        1      
+mulhu_p16       0     1        1      
+mulhu_pos_rand  0     1        1      
+mulhu_two       0     1        1      
+mulhu_zero      0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_same
+
+
+Samples crossed: cp_op cp_same_regs
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              20       20        0       0.00    2       
+Automatically Generated Cross Bins 2        2         0       0.00    2       
+User Defined Cross Bins            18       18        0       0.00            
+
+
+Automatically Generated Cross Bins for cr_op_same
+
+
+Uncovered bins
+
+cp_op   cp_same_regs COUNT AT LEAST NUMBER 
+[c_mul] [distinct]   0     1        1      
+[c_mul] [rs1_eq_rs2] 0     1        1      
+
+
+User Defined Cross Bins for cr_op_same
+
+
+Uncovered bins
+
+NAME              COUNT AT LEAST NUMBER 
+c_mul_all_same    0     1        1      
+c_mul_rs_eq_rd    0     1        1      
+mul_all_same      0     1        1      
+mul_distinct      0     1        1      
+mul_rs1_eq_rs2    0     1        1      
+mul_rs_eq_rd      0     1        1      
+mulh_all_same     0     1        1      
+mulh_distinct     0     1        1      
+mulh_rs1_eq_rs2   0     1        1      
+mulh_rs_eq_rd     0     1        1      
+mulhsu_all_same   0     1        1      
+mulhsu_distinct   0     1        1      
+mulhsu_rs1_eq_rs2 0     1        1      
+mulhsu_rs_eq_rd   0     1        1      
+mulhu_all_same    0     1        1      
+mulhu_distinct    0     1        1      
+mulhu_rs1_eq_rs2  0     1        1      
+mulhu_rs_eq_rd    0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs2
+
+
+Samples crossed: cp_op cp_rs2_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 45       45        0       0.00            
+
+
+User Defined Cross Bins for cr_op_rs2
+
+
+Uncovered bins
+
+NAME            COUNT AT LEAST NUMBER 
+mul_all_ones    0     1        1      
+mul_int_max     0     1        1      
+mul_int_min     0     1        1      
+mul_neg_rand    0     1        1      
+mul_one         0     1        1      
+mul_p16         0     1        1      
+mul_pos_rand    0     1        1      
+mul_two         0     1        1      
+mul_zero        0     1        1      
+c_mul_all_ones  0     1        1      
+c_mul_int_max   0     1        1      
+c_mul_int_min   0     1        1      
+c_mul_neg_rand  0     1        1      
+c_mul_one       0     1        1      
+c_mul_p16       0     1        1      
+c_mul_pos_rand  0     1        1      
+c_mul_two       0     1        1      
+c_mul_zero      0     1        1      
+mulh_all_ones   0     1        1      
+mulh_int_max    0     1        1      
+mulh_int_min    0     1        1      
+mulh_neg_rand   0     1        1      
+mulh_one        0     1        1      
+mulh_p16        0     1        1      
+mulh_pos_rand   0     1        1      
+mulh_two        0     1        1      
+mulh_zero       0     1        1      
+mulhsu_all_ones 0     1        1      
+mulhsu_int_max  0     1        1      
+mulhsu_int_min  0     1        1      
+mulhsu_neg_rand 0     1        1      
+mulhsu_one      0     1        1      
+mulhsu_p16      0     1        1      
+mulhsu_pos_rand 0     1        1      
+mulhsu_two      0     1        1      
+mulhsu_zero     0     1        1      
+mulhu_all_ones  0     1        1      
+mulhu_int_max   0     1        1      
+mulhu_int_min   0     1        1      
+mulhu_neg_rand  0     1        1      
+mulhu_one       0     1        1      
+mulhu_p16       0     1        1      
+mulhu_pos_rand  0     1        1      
+mulhu_two       0     1        1      
+mulhu_zero      0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_sign
+
+
+Samples crossed: cp_op cp_sign_pair
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 20       20        0       0.00            
+
+
+User Defined Cross Bins for cr_op_sign
+
+
+Uncovered bins
+
+NAME      COUNT AT LEAST NUMBER 
+mul_nn    0     1        1      
+mul_np    0     1        1      
+mul_pn    0     1        1      
+mul_pp    0     1        1      
+c_mul_nn  0     1        1      
+c_mul_np  0     1        1      
+c_mul_pn  0     1        1      
+c_mul_pp  0     1        1      
+mulh_nn   0     1        1      
+mulh_np   0     1        1      
+mulh_pn   0     1        1      
+mulh_pp   0     1        1      
+mulhsu_nn 0     1        1      
+mulhsu_np 0     1        1      
+mulhsu_pn 0     1        1      
+mulhsu_pp 0     1        1      
+mulhu_nn  0     1        1      
+mulhu_np  0     1        1      
+mulhu_pn  0     1        1      
+mulhu_pp  0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_extremes
+
+
+Samples crossed: cp_op cp_rs1_class cp_rs2_class
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              405      405       0       0.00    160     
+Automatically Generated Cross Bins 160      160       0       0.00    160     
+User Defined Cross Bins            245      245       0       0.00            
+
+
+Automatically Generated Cross Bins for cr_extremes
+
+
+Element holes
+
+cp_op cp_rs1_class                                            cp_rs2_class          COUNT AT LEAST NUMBER 
+*     [pos_rand , neg_rand]                                   *                     --    --       90     
+*     [two , p16 , int_max , int_min , all_ones , one , zero] [pos_rand , neg_rand] --    --       70     
+
+
+User Defined Cross Bins for cr_extremes
+
+
+Uncovered bins
+
+NAME                     COUNT AT LEAST NUMBER 
+c_mul_all_ones_all_ones  0     1        1      
+c_mul_all_ones_int_max   0     1        1      
+c_mul_all_ones_int_min   0     1        1      
+c_mul_all_ones_one       0     1        1      
+c_mul_all_ones_p16       0     1        1      
+c_mul_all_ones_two       0     1        1      
+c_mul_all_ones_zero      0     1        1      
+c_mul_int_max_all_ones   0     1        1      
+c_mul_int_max_int_max    0     1        1      
+c_mul_int_max_int_min    0     1        1      
+c_mul_int_max_one        0     1        1      
+c_mul_int_max_p16        0     1        1      
+c_mul_int_max_two        0     1        1      
+c_mul_int_max_zero       0     1        1      
+c_mul_int_min_all_ones   0     1        1      
+c_mul_int_min_int_max    0     1        1      
+c_mul_int_min_int_min    0     1        1      
+c_mul_int_min_one        0     1        1      
+c_mul_int_min_p16        0     1        1      
+c_mul_int_min_two        0     1        1      
+c_mul_int_min_zero       0     1        1      
+c_mul_one_all_ones       0     1        1      
+c_mul_one_int_max        0     1        1      
+c_mul_one_int_min        0     1        1      
+c_mul_one_one            0     1        1      
+c_mul_one_p16            0     1        1      
+c_mul_one_two            0     1        1      
+c_mul_one_zero           0     1        1      
+c_mul_p16_all_ones       0     1        1      
+c_mul_p16_int_max        0     1        1      
+c_mul_p16_int_min        0     1        1      
+c_mul_p16_one            0     1        1      
+c_mul_p16_p16            0     1        1      
+c_mul_p16_two            0     1        1      
+c_mul_p16_zero           0     1        1      
+c_mul_two_all_ones       0     1        1      
+c_mul_two_int_max        0     1        1      
+c_mul_two_int_min        0     1        1      
+c_mul_two_one            0     1        1      
+c_mul_two_p16            0     1        1      
+c_mul_two_two            0     1        1      
+c_mul_two_zero           0     1        1      
+c_mul_zero_all_ones      0     1        1      
+c_mul_zero_int_max       0     1        1      
+c_mul_zero_int_min       0     1        1      
+c_mul_zero_one           0     1        1      
+c_mul_zero_p16           0     1        1      
+c_mul_zero_two           0     1        1      
+c_mul_zero_zero          0     1        1      
+mul_all_ones_all_ones    0     1        1      
+mul_all_ones_int_max     0     1        1      
+mul_all_ones_int_min     0     1        1      
+mul_all_ones_one         0     1        1      
+mul_all_ones_p16         0     1        1      
+mul_all_ones_two         0     1        1      
+mul_all_ones_zero        0     1        1      
+mul_int_max_all_ones     0     1        1      
+mul_int_max_int_max      0     1        1      
+mul_int_max_int_min      0     1        1      
+mul_int_max_one          0     1        1      
+mul_int_max_p16          0     1        1      
+mul_int_max_two          0     1        1      
+mul_int_max_zero         0     1        1      
+mul_int_min_all_ones     0     1        1      
+mul_int_min_int_max      0     1        1      
+mul_int_min_int_min      0     1        1      
+mul_int_min_one          0     1        1      
+mul_int_min_p16          0     1        1      
+mul_int_min_two          0     1        1      
+mul_int_min_zero         0     1        1      
+mul_one_all_ones         0     1        1      
+mul_one_int_max          0     1        1      
+mul_one_int_min          0     1        1      
+mul_one_one              0     1        1      
+mul_one_p16              0     1        1      
+mul_one_two              0     1        1      
+mul_one_zero             0     1        1      
+mul_p16_all_ones         0     1        1      
+mul_p16_int_max          0     1        1      
+mul_p16_int_min          0     1        1      
+mul_p16_one              0     1        1      
+mul_p16_p16              0     1        1      
+mul_p16_two              0     1        1      
+mul_p16_zero             0     1        1      
+mul_two_all_ones         0     1        1      
+mul_two_int_max          0     1        1      
+mul_two_int_min          0     1        1      
+mul_two_one              0     1        1      
+mul_two_p16              0     1        1      
+mul_two_two              0     1        1      
+mul_two_zero             0     1        1      
+mul_zero_all_ones        0     1        1      
+mul_zero_int_max         0     1        1      
+mul_zero_int_min         0     1        1      
+mul_zero_one             0     1        1      
+mul_zero_p16             0     1        1      
+mul_zero_two             0     1        1      
+mul_zero_zero            0     1        1      
+mulh_all_ones_all_ones   0     1        1      
+mulh_all_ones_int_max    0     1        1      
+mulh_all_ones_int_min    0     1        1      
+mulh_all_ones_one        0     1        1      
+mulh_all_ones_p16        0     1        1      
+mulh_all_ones_two        0     1        1      
+mulh_all_ones_zero       0     1        1      
+mulh_int_max_all_ones    0     1        1      
+mulh_int_max_int_max     0     1        1      
+mulh_int_max_int_min     0     1        1      
+mulh_int_max_one         0     1        1      
+mulh_int_max_p16         0     1        1      
+mulh_int_max_two         0     1        1      
+mulh_int_max_zero        0     1        1      
+mulh_int_min_all_ones    0     1        1      
+mulh_int_min_int_max     0     1        1      
+mulh_int_min_int_min     0     1        1      
+mulh_int_min_one         0     1        1      
+mulh_int_min_p16         0     1        1      
+mulh_int_min_two         0     1        1      
+mulh_int_min_zero        0     1        1      
+mulh_one_all_ones        0     1        1      
+mulh_one_int_max         0     1        1      
+mulh_one_int_min         0     1        1      
+mulh_one_one             0     1        1      
+mulh_one_p16             0     1        1      
+mulh_one_two             0     1        1      
+mulh_one_zero            0     1        1      
+mulh_p16_all_ones        0     1        1      
+mulh_p16_int_max         0     1        1      
+mulh_p16_int_min         0     1        1      
+mulh_p16_one             0     1        1      
+mulh_p16_p16             0     1        1      
+mulh_p16_two             0     1        1      
+mulh_p16_zero            0     1        1      
+mulh_two_all_ones        0     1        1      
+mulh_two_int_max         0     1        1      
+mulh_two_int_min         0     1        1      
+mulh_two_one             0     1        1      
+mulh_two_p16             0     1        1      
+mulh_two_two             0     1        1      
+mulh_two_zero            0     1        1      
+mulh_zero_all_ones       0     1        1      
+mulh_zero_int_max        0     1        1      
+mulh_zero_int_min        0     1        1      
+mulh_zero_one            0     1        1      
+mulh_zero_p16            0     1        1      
+mulh_zero_two            0     1        1      
+mulh_zero_zero           0     1        1      
+mulhsu_all_ones_all_ones 0     1        1      
+mulhsu_all_ones_int_max  0     1        1      
+mulhsu_all_ones_int_min  0     1        1      
+mulhsu_all_ones_one      0     1        1      
+mulhsu_all_ones_p16      0     1        1      
+mulhsu_all_ones_two      0     1        1      
+mulhsu_all_ones_zero     0     1        1      
+mulhsu_int_max_all_ones  0     1        1      
+mulhsu_int_max_int_max   0     1        1      
+mulhsu_int_max_int_min   0     1        1      
+mulhsu_int_max_one       0     1        1      
+mulhsu_int_max_p16       0     1        1      
+mulhsu_int_max_two       0     1        1      
+mulhsu_int_max_zero      0     1        1      
+mulhsu_int_min_all_ones  0     1        1      
+mulhsu_int_min_int_max   0     1        1      
+mulhsu_int_min_int_min   0     1        1      
+mulhsu_int_min_one       0     1        1      
+mulhsu_int_min_p16       0     1        1      
+mulhsu_int_min_two       0     1        1      
+mulhsu_int_min_zero      0     1        1      
+mulhsu_one_all_ones      0     1        1      
+mulhsu_one_int_max       0     1        1      
+mulhsu_one_int_min       0     1        1      
+mulhsu_one_one           0     1        1      
+mulhsu_one_p16           0     1        1      
+mulhsu_one_two           0     1        1      
+mulhsu_one_zero          0     1        1      
+mulhsu_p16_all_ones      0     1        1      
+mulhsu_p16_int_max       0     1        1      
+mulhsu_p16_int_min       0     1        1      
+mulhsu_p16_one           0     1        1      
+mulhsu_p16_p16           0     1        1      
+mulhsu_p16_two           0     1        1      
+mulhsu_p16_zero          0     1        1      
+mulhsu_two_all_ones      0     1        1      
+mulhsu_two_int_max       0     1        1      
+mulhsu_two_int_min       0     1        1      
+mulhsu_two_one           0     1        1      
+mulhsu_two_p16           0     1        1      
+mulhsu_two_two           0     1        1      
+mulhsu_two_zero          0     1        1      
+mulhsu_zero_all_ones     0     1        1      
+mulhsu_zero_int_max      0     1        1      
+mulhsu_zero_int_min      0     1        1      
+mulhsu_zero_one          0     1        1      
+mulhsu_zero_p16          0     1        1      
+mulhsu_zero_two          0     1        1      
+mulhsu_zero_zero         0     1        1      
+mulhu_all_ones_all_ones  0     1        1      
+mulhu_all_ones_int_max   0     1        1      
+mulhu_all_ones_int_min   0     1        1      
+mulhu_all_ones_one       0     1        1      
+mulhu_all_ones_p16       0     1        1      
+mulhu_all_ones_two       0     1        1      
+mulhu_all_ones_zero      0     1        1      
+mulhu_int_max_all_ones   0     1        1      
+mulhu_int_max_int_max    0     1        1      
+mulhu_int_max_int_min    0     1        1      
+mulhu_int_max_one        0     1        1      
+mulhu_int_max_p16        0     1        1      
+mulhu_int_max_two        0     1        1      
+mulhu_int_max_zero       0     1        1      
+mulhu_int_min_all_ones   0     1        1      
+mulhu_int_min_int_max    0     1        1      
+mulhu_int_min_int_min    0     1        1      
+mulhu_int_min_one        0     1        1      
+mulhu_int_min_p16        0     1        1      
+mulhu_int_min_two        0     1        1      
+mulhu_int_min_zero       0     1        1      
+mulhu_one_all_ones       0     1        1      
+mulhu_one_int_max        0     1        1      
+mulhu_one_int_min        0     1        1      
+mulhu_one_one            0     1        1      
+mulhu_one_p16            0     1        1      
+mulhu_one_two            0     1        1      
+mulhu_one_zero           0     1        1      
+mulhu_p16_all_ones       0     1        1      
+mulhu_p16_int_max        0     1        1      
+mulhu_p16_int_min        0     1        1      
+mulhu_p16_one            0     1        1      
+mulhu_p16_p16            0     1        1      
+mulhu_p16_two            0     1        1      
+mulhu_p16_zero           0     1        1      
+mulhu_two_all_ones       0     1        1      
+mulhu_two_int_max        0     1        1      
+mulhu_two_int_min        0     1        1      
+mulhu_two_one            0     1        1      
+mulhu_two_p16            0     1        1      
+mulhu_two_two            0     1        1      
+mulhu_two_zero           0     1        1      
+mulhu_zero_all_ones      0     1        1      
+mulhu_zero_int_max       0     1        1      
+mulhu_zero_int_min       0     1        1      
+mulhu_zero_one           0     1        1      
+mulhu_zero_p16           0     1        1      
+mulhu_zero_two           0     1        1      
+mulhu_zero_zero          0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_funct3_rd_x0
+
+
+Samples crossed: cp_funct3 cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 8        8         0       0.00            
+
+
+User Defined Cross Bins for cr_funct3_rd_x0
+
+
+Uncovered bins
+
+NAME   COUNT AT LEAST NUMBER 
+f0_no  0     1        1      
+f0_yes 0     1        1      
+f1_no  0     1        1      
+f1_yes 0     1        1      
+f2_no  0     1        1      
+f2_yes 0     1        1      
+f3_no  0     1        1      
+f3_yes 0     1        1      
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              10       10        0       0.00    1       
+Automatically Generated Cross Bins 1        1         0       0.00    1       
+User Defined Cross Bins            9        9         0       0.00            
+
+
+Automatically Generated Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+cp_op   cp_rd_x0 COUNT AT LEAST NUMBER 
+[c_mul] [yes]    0     1        1      
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+NAME       COUNT AT LEAST NUMBER 
+c_mul_no   0     1        1      
+mul_no     0     1        1      
+mul_yes    0     1        1      
+mulh_no    0     1        1      
+mulh_yes   0     1        1      
+mulhsu_no  0     1        1      
+mulhsu_yes 0     1        1      
+mulhu_no   0     1        1      
+mulhu_yes  0     1        1      
+
+
+Group : gen_fcov_pkg::gen_bit_zba_zbb_ops_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_bit_zba_zbb_ops_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+ 87.67 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_bit_zba_zbb_ops_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 51       0         51      100.00  
+Crosses   480      88        392     71.81   
+
+
+Variables for Group  gen_fcov_pkg::gen_bit_zba_zbb_ops_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           16       0         16      100.00  100  1      1        0                    
+cp_rs1_class    10       0         10      100.00  100  1      1        0                    
+cp_rs2_class    7        0         7       100.00  100  1      1        0                    
+cp_eq_operands  2        0         2       100.00  100  1      1        0                    
+cp_same_regs    3        0         3       100.00  100  1      1        0                    
+cp_rd_x0        2        0         2       100.00  100  1      1        0                    
+cp_sign_pair    4        0         4       100.00  100  1      1        0                    
+cp_result_class 5        0         5       100.00  100  1      1        0                    
+cp_wrap         2        0         2       100.00  100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_bit_zba_zbb_ops_cg
+
+
+CROSS          EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_rs1      160      0         160     100.00  100  1      1        0                     
+cr_op_rs2      112      18        94      83.93   100  1      1        0                     
+cr_op_eq       32       0         32      100.00  100  1      1        0                     
+cr_op_same     48       27        21      43.75   100  1      1        0                     
+cr_shadd_wrap  32       26        6       18.75   100  1      1        0                     
+cr_minmax_sign 64       6         58      90.62   100  1      1        0                     
+cr_op_rd_x0    32       11        21      65.62   100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 16       0         16      100.00  
+
+
+User Defined Bins for cp_op
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME   COUNT AT LEAST 
+packh  392   1        
+packu  196   1        
+pack   392   1        
+zext_h 196   1        
+sext_h 196   1        
+sext_b 392   1        
+maxu   196   1        
+minu   392   1        
+max    392   1        
+min    392   1        
+xnor   392   1        
+orn    196   1        
+andn   392   1        
+sh3add 196   1        
+sh2add 196   1        
+sh1add 588   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs1_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 10       0         10      100.00  
+
+
+User Defined Bins for cp_rs1_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+neg_rand 728   1        
+pos_rand 1456  1        
+half_msb 364   1        
+byte_msb 364   1        
+e0000000 364   1        
+one      364   1        
+int_max  364   1        
+int_min  364   1        
+all_ones 364   1        
+zero     364   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs2_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_rs2_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+neg_rand 924   1        
+pos_rand 1848  1        
+one      308   1        
+int_max  308   1        
+int_min  308   1        
+all_ones 308   1        
+zero     1092  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_eq_operands
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_eq_operands
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  1274  1        
+no   3822  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_same_regs
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 3        0         3       100.00  
+
+
+User Defined Bins for cp_same_regs
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME       COUNT AT LEAST 
+distinct   4116  1        
+all_same   196   1        
+rs1_eq_rs2 784   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_rd_x0
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  980   1        
+no   4116  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_sign_pair
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        0         4       100.00  
+
+
+User Defined Bins for cp_sign_pair
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+nn   775   1        
+np   1045  1        
+pn   765   1        
+pp   2511  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        0         5       100.00  
+
+
+User Defined Bins for cp_result_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+other    2995  1        
+int_max  114   1        
+int_min  136   1        
+all_ones 428   1        
+zero     1423  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_wrap
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_wrap
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  271   1        
+no   709   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs1
+
+
+Samples crossed: cp_op cp_rs1_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 160      0         160     100.00          
+
+
+User Defined Cross Bins for cr_op_rs1
+
+
+Bins
+
+NAME            COUNT AT LEAST 
+sh1add_all_ones 42    1        
+sh1add_byte_msb 42    1        
+sh1add_e0000000 42    1        
+sh1add_half_msb 42    1        
+sh1add_int_max  42    1        
+sh1add_int_min  42    1        
+sh1add_neg_rand 84    1        
+sh1add_one      42    1        
+sh1add_pos_rand 168   1        
+sh1add_zero     42    1        
+sh2add_all_ones 14    1        
+sh2add_byte_msb 14    1        
+sh2add_e0000000 14    1        
+sh2add_half_msb 14    1        
+sh2add_int_max  14    1        
+sh2add_int_min  14    1        
+sh2add_neg_rand 28    1        
+sh2add_one      14    1        
+sh2add_pos_rand 56    1        
+sh2add_zero     14    1        
+sh3add_all_ones 14    1        
+sh3add_byte_msb 14    1        
+sh3add_e0000000 14    1        
+sh3add_half_msb 14    1        
+sh3add_int_max  14    1        
+sh3add_int_min  14    1        
+sh3add_neg_rand 28    1        
+sh3add_one      14    1        
+sh3add_pos_rand 56    1        
+sh3add_zero     14    1        
+andn_all_ones   28    1        
+andn_byte_msb   28    1        
+andn_e0000000   28    1        
+andn_half_msb   28    1        
+andn_int_max    28    1        
+andn_int_min    28    1        
+andn_neg_rand   56    1        
+andn_one        28    1        
+andn_pos_rand   112   1        
+andn_zero       28    1        
+orn_all_ones    14    1        
+orn_byte_msb    14    1        
+orn_e0000000    14    1        
+orn_half_msb    14    1        
+orn_int_max     14    1        
+orn_int_min     14    1        
+orn_neg_rand    28    1        
+orn_one         14    1        
+orn_pos_rand    56    1        
+orn_zero        14    1        
+xnor_all_ones   28    1        
+xnor_byte_msb   28    1        
+xnor_e0000000   28    1        
+xnor_half_msb   28    1        
+xnor_int_max    28    1        
+xnor_int_min    28    1        
+xnor_neg_rand   56    1        
+xnor_one        28    1        
+xnor_pos_rand   112   1        
+xnor_zero       28    1        
+max_all_ones    28    1        
+max_byte_msb    28    1        
+max_e0000000    28    1        
+max_half_msb    28    1        
+max_int_max     28    1        
+max_int_min     28    1        
+max_neg_rand    56    1        
+max_one         28    1        
+max_pos_rand    112   1        
+max_zero        28    1        
+maxu_all_ones   14    1        
+maxu_byte_msb   14    1        
+maxu_e0000000   14    1        
+maxu_half_msb   14    1        
+maxu_int_max    14    1        
+maxu_int_min    14    1        
+maxu_neg_rand   28    1        
+maxu_one        14    1        
+maxu_pos_rand   56    1        
+maxu_zero       14    1        
+min_all_ones    28    1        
+min_byte_msb    28    1        
+min_e0000000    28    1        
+min_half_msb    28    1        
+min_int_max     28    1        
+min_int_min     28    1        
+min_neg_rand    56    1        
+min_one         28    1        
+min_pos_rand    112   1        
+min_zero        28    1        
+minu_all_ones   28    1        
+minu_byte_msb   28    1        
+minu_e0000000   28    1        
+minu_half_msb   28    1        
+minu_int_max    28    1        
+minu_int_min    28    1        
+minu_neg_rand   56    1        
+minu_one        28    1        
+minu_pos_rand   112   1        
+minu_zero       28    1        
+zext_h_all_ones 14    1        
+zext_h_byte_msb 14    1        
+zext_h_e0000000 14    1        
+zext_h_half_msb 14    1        
+zext_h_int_max  14    1        
+zext_h_int_min  14    1        
+zext_h_neg_rand 28    1        
+zext_h_one      14    1        
+zext_h_pos_rand 56    1        
+zext_h_zero     14    1        
+pack_all_ones   28    1        
+pack_byte_msb   28    1        
+pack_e0000000   28    1        
+pack_half_msb   28    1        
+pack_int_max    28    1        
+pack_int_min    28    1        
+pack_neg_rand   56    1        
+pack_one        28    1        
+pack_pos_rand   112   1        
+pack_zero       28    1        
+packh_all_ones  28    1        
+packh_byte_msb  28    1        
+packh_e0000000  28    1        
+packh_half_msb  28    1        
+packh_int_max   28    1        
+packh_int_min   28    1        
+packh_neg_rand  56    1        
+packh_one       28    1        
+packh_pos_rand  112   1        
+packh_zero      28    1        
+packu_all_ones  14    1        
+packu_byte_msb  14    1        
+packu_e0000000  14    1        
+packu_half_msb  14    1        
+packu_int_max   14    1        
+packu_int_min   14    1        
+packu_neg_rand  28    1        
+packu_one       14    1        
+packu_pos_rand  56    1        
+packu_zero      14    1        
+sext_b_all_ones 28    1        
+sext_b_byte_msb 28    1        
+sext_b_e0000000 28    1        
+sext_b_half_msb 28    1        
+sext_b_int_max  28    1        
+sext_b_int_min  28    1        
+sext_b_neg_rand 56    1        
+sext_b_one      28    1        
+sext_b_pos_rand 112   1        
+sext_b_zero     28    1        
+sext_h_all_ones 14    1        
+sext_h_byte_msb 14    1        
+sext_h_e0000000 14    1        
+sext_h_half_msb 14    1        
+sext_h_int_max  14    1        
+sext_h_int_min  14    1        
+sext_h_neg_rand 28    1        
+sext_h_one      14    1        
+sext_h_pos_rand 56    1        
+sext_h_zero     14    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs2
+
+
+Samples crossed: cp_op cp_rs2_class
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              112      18        94      83.93   18      
+Automatically Generated Cross Bins 21       18        3       14.29   18      
+User Defined Cross Bins            91       0         91      100.00          
+
+
+Automatically Generated Cross Bins for cr_op_rs2
+
+
+Uncovered bins
+
+cp_op                      cp_rs2_class                                               COUNT AT LEAST NUMBER 
+[zext_h , sext_h , sext_b] [neg_rand , pos_rand , one , int_max , int_min , all_ones] --    --       18     
+
+
+Covered bins
+
+cp_op  cp_rs2_class COUNT AT LEAST 
+zext_h zero         196   1        
+sext_h zero         196   1        
+sext_b zero         392   1        
+
+
+User Defined Cross Bins for cr_op_rs2
+
+
+Bins
+
+NAME            COUNT AT LEAST 
+sh1add_all_ones 42    1        
+sh1add_int_max  42    1        
+sh1add_int_min  42    1        
+sh1add_neg_rand 126   1        
+sh1add_one      42    1        
+sh1add_pos_rand 252   1        
+sh1add_zero     42    1        
+sh2add_all_ones 14    1        
+sh2add_int_max  14    1        
+sh2add_int_min  14    1        
+sh2add_neg_rand 42    1        
+sh2add_one      14    1        
+sh2add_pos_rand 84    1        
+sh2add_zero     14    1        
+sh3add_all_ones 14    1        
+sh3add_int_max  14    1        
+sh3add_int_min  14    1        
+sh3add_neg_rand 42    1        
+sh3add_one      14    1        
+sh3add_pos_rand 84    1        
+sh3add_zero     14    1        
+andn_all_ones   28    1        
+andn_int_max    28    1        
+andn_int_min    28    1        
+andn_neg_rand   84    1        
+andn_one        28    1        
+andn_pos_rand   168   1        
+andn_zero       28    1        
+orn_all_ones    14    1        
+orn_int_max     14    1        
+orn_int_min     14    1        
+orn_neg_rand    42    1        
+orn_one         14    1        
+orn_pos_rand    84    1        
+orn_zero        14    1        
+xnor_all_ones   28    1        
+xnor_int_max    28    1        
+xnor_int_min    28    1        
+xnor_neg_rand   84    1        
+xnor_one        28    1        
+xnor_pos_rand   168   1        
+xnor_zero       28    1        
+max_all_ones    28    1        
+max_int_max     28    1        
+max_int_min     28    1        
+max_neg_rand    84    1        
+max_one         28    1        
+max_pos_rand    168   1        
+max_zero        28    1        
+maxu_all_ones   14    1        
+maxu_int_max    14    1        
+maxu_int_min    14    1        
+maxu_neg_rand   42    1        
+maxu_one        14    1        
+maxu_pos_rand   84    1        
+maxu_zero       14    1        
+min_all_ones    28    1        
+min_int_max     28    1        
+min_int_min     28    1        
+min_neg_rand    84    1        
+min_one         28    1        
+min_pos_rand    168   1        
+min_zero        28    1        
+minu_all_ones   28    1        
+minu_int_max    28    1        
+minu_int_min    28    1        
+minu_neg_rand   84    1        
+minu_one        28    1        
+minu_pos_rand   168   1        
+minu_zero       28    1        
+pack_all_ones   28    1        
+pack_int_max    28    1        
+pack_int_min    28    1        
+pack_neg_rand   84    1        
+pack_one        28    1        
+pack_pos_rand   168   1        
+pack_zero       28    1        
+packh_all_ones  28    1        
+packh_int_max   28    1        
+packh_int_min   28    1        
+packh_neg_rand  84    1        
+packh_one       28    1        
+packh_pos_rand  168   1        
+packh_zero      28    1        
+packu_all_ones  14    1        
+packu_int_max   14    1        
+packu_int_min   14    1        
+packu_neg_rand  42    1        
+packu_one       14    1        
+packu_pos_rand  84    1        
+packu_zero      14    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_eq
+
+
+Samples crossed: cp_op cp_eq_operands
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              32       0         32      100.00          
+Automatically Generated Cross Bins 6        0         6       100.00          
+User Defined Cross Bins            26       0         26      100.00          
+
+
+Automatically Generated Cross Bins for cr_op_eq
+
+
+Bins
+
+cp_op  cp_eq_operands COUNT AT LEAST 
+zext_h no             182   1        
+zext_h yes            14    1        
+sext_h no             182   1        
+sext_h yes            14    1        
+sext_b no             364   1        
+sext_b yes            28    1        
+
+
+User Defined Cross Bins for cr_op_eq
+
+
+Bins
+
+NAME       COUNT AT LEAST 
+andn_no    364   1        
+andn_yes   28    1        
+max_no     182   1        
+max_yes    210   1        
+maxu_no    182   1        
+maxu_yes   14    1        
+min_no     364   1        
+min_yes    28    1        
+minu_no    182   1        
+minu_yes   210   1        
+orn_no     182   1        
+orn_yes    14    1        
+pack_no    364   1        
+pack_yes   28    1        
+packh_no   182   1        
+packh_yes  210   1        
+packu_no   182   1        
+packu_yes  14    1        
+sh1add_no  364   1        
+sh1add_yes 224   1        
+sh2add_no  182   1        
+sh2add_yes 14    1        
+sh3add_no  182   1        
+sh3add_yes 14    1        
+xnor_no    182   1        
+xnor_yes   210   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_same
+
+
+Samples crossed: cp_op cp_same_regs
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              48       27        21      43.75   6       
+Automatically Generated Cross Bins 6        6         0       0.00    6       
+User Defined Cross Bins            42       21        21      50.00           
+
+
+Automatically Generated Cross Bins for cr_op_same
+
+
+Uncovered bins
+
+cp_op                      cp_same_regs            COUNT AT LEAST NUMBER 
+[zext_h , sext_h , sext_b] [all_same , rs1_eq_rs2] --    --       6      
+
+
+User Defined Cross Bins for cr_op_same
+
+
+Uncovered bins
+
+NAME              COUNT AT LEAST NUMBER 
+andn_all_same     0     1        1      
+andn_rs1_eq_rs2   0     1        1      
+max_all_same      0     1        1      
+maxu_all_same     0     1        1      
+maxu_rs1_eq_rs2   0     1        1      
+min_all_same      0     1        1      
+min_rs1_eq_rs2    0     1        1      
+minu_rs1_eq_rs2   0     1        1      
+orn_all_same      0     1        1      
+orn_rs1_eq_rs2    0     1        1      
+pack_all_same     0     1        1      
+pack_rs1_eq_rs2   0     1        1      
+packh_all_same    0     1        1      
+packu_all_same    0     1        1      
+packu_rs1_eq_rs2  0     1        1      
+sh1add_all_same   0     1        1      
+sh2add_all_same   0     1        1      
+sh2add_rs1_eq_rs2 0     1        1      
+sh3add_all_same   0     1        1      
+sh3add_rs1_eq_rs2 0     1        1      
+xnor_all_same     0     1        1      
+
+
+Covered bins
+
+NAME              COUNT AT LEAST 
+andn_distinct     392   1        
+max_distinct      196   1        
+max_rs1_eq_rs2    196   1        
+maxu_distinct     196   1        
+min_distinct      392   1        
+minu_all_same     196   1        
+minu_distinct     196   1        
+orn_distinct      196   1        
+pack_distinct     392   1        
+packh_distinct    196   1        
+packh_rs1_eq_rs2  196   1        
+packu_distinct    196   1        
+sext_b_distinct   392   1        
+sext_h_distinct   196   1        
+sh1add_distinct   392   1        
+sh1add_rs1_eq_rs2 196   1        
+sh2add_distinct   196   1        
+sh3add_distinct   196   1        
+xnor_distinct     196   1        
+xnor_rs1_eq_rs2   196   1        
+zext_h_distinct   196   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_shadd_wrap
+
+
+Samples crossed: cp_op cp_wrap
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              32       26        6       18.75   26      
+Automatically Generated Cross Bins 26       26        0       0.00    26      
+User Defined Cross Bins            6        0         6       100.00          
+
+
+Automatically Generated Cross Bins for cr_shadd_wrap
+
+
+Element holes
+
+cp_op                                                                                           cp_wrap COUNT AT LEAST NUMBER 
+[packh , packu , pack , zext_h , sext_h , sext_b , maxu , minu , max , min , xnor , orn , andn] *       --    --       26     
+
+
+User Defined Cross Bins for cr_shadd_wrap
+
+
+Bins
+
+NAME       COUNT AT LEAST 
+sh1add_no  422   1        
+sh1add_yes 166   1        
+sh2add_no  143   1        
+sh2add_yes 53    1        
+sh3add_no  144   1        
+sh3add_yes 52    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_minmax_sign
+
+
+Samples crossed: cp_op cp_sign_pair
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              64       6         58      90.62   6       
+Automatically Generated Cross Bins 48       6         42      87.50   6       
+User Defined Cross Bins            16       0         16      100.00          
+
+
+Automatically Generated Cross Bins for cr_minmax_sign
+
+
+Uncovered bins
+
+cp_op                      cp_sign_pair COUNT AT LEAST NUMBER 
+[zext_h , sext_h , sext_b] [nn]         --    --       3      
+[zext_h , sext_h , sext_b] [pn]         --    --       3      
+
+
+Covered bins
+
+cp_op  cp_sign_pair COUNT AT LEAST 
+packh  np           45    1        
+packh  nn           95    1        
+packh  pn           45    1        
+packh  pp           207   1        
+packu  nn           25    1        
+packu  np           45    1        
+packu  pn           45    1        
+packu  pp           81    1        
+pack   nn           50    1        
+pack   np           90    1        
+pack   pn           90    1        
+pack   pp           162   1        
+zext_h np           70    1        
+zext_h pp           126   1        
+sext_h np           70    1        
+sext_h pp           126   1        
+sext_b np           140   1        
+sext_b pp           252   1        
+xnor   np           45    1        
+xnor   nn           95    1        
+xnor   pn           45    1        
+xnor   pp           207   1        
+orn    nn           25    1        
+orn    np           45    1        
+orn    pn           45    1        
+orn    pp           81    1        
+andn   nn           50    1        
+andn   np           90    1        
+andn   pn           90    1        
+andn   pp           162   1        
+sh3add nn           25    1        
+sh3add np           45    1        
+sh3add pn           45    1        
+sh3add pp           81    1        
+sh2add nn           25    1        
+sh2add np           45    1        
+sh2add pn           45    1        
+sh2add pp           81    1        
+sh1add nn           120   1        
+sh1add np           90    1        
+sh1add pn           90    1        
+sh1add pp           288   1        
+
+
+User Defined Cross Bins for cr_minmax_sign
+
+
+Bins
+
+NAME    COUNT AT LEAST 
+max_nn  95    1        
+max_np  45    1        
+max_pn  45    1        
+max_pp  207   1        
+maxu_nn 25    1        
+maxu_np 45    1        
+maxu_pn 45    1        
+maxu_pp 81    1        
+min_nn  50    1        
+min_np  90    1        
+min_pn  90    1        
+min_pp  162   1        
+minu_nn 95    1        
+minu_np 45    1        
+minu_pn 45    1        
+minu_pp 207   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 32       11        21      65.62           
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+NAME       COUNT AT LEAST NUMBER 
+max_yes    0     1        1      
+maxu_yes   0     1        1      
+minu_yes   0     1        1      
+orn_yes    0     1        1      
+packh_yes  0     1        1      
+packu_yes  0     1        1      
+sext_h_yes 0     1        1      
+sh2add_yes 0     1        1      
+sh3add_yes 0     1        1      
+xnor_yes   0     1        1      
+zext_h_yes 0     1        1      
+
+
+Covered bins
+
+NAME       COUNT AT LEAST 
+andn_no    196   1        
+andn_yes   196   1        
+max_no     392   1        
+maxu_no    196   1        
+min_no     196   1        
+min_yes    196   1        
+minu_no    392   1        
+orn_no     196   1        
+pack_no    196   1        
+pack_yes   196   1        
+packh_no   392   1        
+packu_no   196   1        
+sext_b_no  196   1        
+sext_b_yes 196   1        
+sext_h_no  196   1        
+sh1add_no  392   1        
+sh1add_yes 196   1        
+sh2add_no  196   1        
+sh3add_no  196   1        
+xnor_no    392   1        
+zext_h_no  196   1        
+
+
+Group : gen_fcov_pkg::gen_isa_alu_imm_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_isa_alu_imm_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+ 93.45 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_isa_alu_imm_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 40       0         40      100.00  
+Crosses   138      33        105     80.36   
+
+
+Variables for Group  gen_fcov_pkg::gen_isa_alu_imm_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           6        0         6       100.00  100  1      1        0                    
+cp_rs1_class    7        0         7       100.00  100  1      1        0                    
+cp_imm_class    7        0         7       100.00  100  1      1        0                    
+cp_rd_x0        2        0         2       100.00  100  1      1        0                    
+cp_rs1_eq_rd    2        0         2       100.00  100  1      1        0                    
+cp_result_class 6        0         6       100.00  100  1      1        0                    
+cp_addi_wrap    3        0         3       100.00  100  1      1        0                    
+cp_slt_case     7        0         7       100.00  100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_isa_alu_imm_cg
+
+
+CROSS       EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_imm   42       0         42      100.00  100  1      1        0                     
+cr_op_rd_x0 12       0         12      100.00  100  1      1        0                     
+cr_op_rs1   42       0         42      100.00  100  1      1        0                     
+cr_slt      42       33        9       21.43   100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        0         6       100.00  
+
+
+User Defined Bins for cp_op
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME  COUNT AT LEAST 
+andi  1764  1        
+ori   1764  1        
+xori  1764  1        
+sltiu 1764  1        
+slti  1764  1        
+addi  1766  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs1_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_rs1_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+neg_rand 2270  1        
+pos_rand 4536  1        
+one      756   1        
+int_max  756   1        
+int_min  756   1        
+all_ones 756   1        
+zero     756   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_imm_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_imm_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+neg_rand 1176  1        
+pos_rand 1178  1        
+min_neg  1372  1        
+max_pos  1372  1        
+minus1   1568  1        
+plus1    2744  1        
+zero     1176  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_rd_x0
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  1176  1        
+no   9410  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs1_eq_rd
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_rs1_eq_rd
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  1178  1        
+no   9408  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        0         6       100.00  
+
+
+User Defined Bins for cp_result_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+other    4454  1        
+one      1554  1        
+int_max  154   1        
+int_min  154   1        
+all_ones 434   1        
+zero     3836  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_addi_wrap
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 3        0         3       100.00  
+
+
+User Defined Bins for cp_addi_wrap
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+none     1668  1        
+neg_wrap 42    1        
+pos_wrap 56    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_slt_case
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_slt_case
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME          COUNT AT LEAST 
+other         2506  1        
+sltiu_ones_m1 14    1        
+sltiu_seqz    588   1        
+sltiu_imm_m1  182   1        
+slti_0_neg    56    1        
+slti_intmin_0 14    1        
+eq            168   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_imm
+
+
+Samples crossed: cp_op cp_imm_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 42       0         42      100.00          
+
+
+User Defined Cross Bins for cr_op_imm
+
+
+Bins
+
+NAME           COUNT AT LEAST 
+addi_max_pos   196   1        
+addi_min_neg   196   1        
+addi_minus1    196   1        
+addi_neg_rand  196   1        
+addi_plus1     588   1        
+addi_pos_rand  198   1        
+addi_zero      196   1        
+andi_max_pos   196   1        
+andi_min_neg   392   1        
+andi_minus1    196   1        
+andi_neg_rand  196   1        
+andi_plus1     392   1        
+andi_pos_rand  196   1        
+andi_zero      196   1        
+ori_max_pos    392   1        
+ori_min_neg    196   1        
+ori_minus1     196   1        
+ori_neg_rand   196   1        
+ori_plus1      392   1        
+ori_pos_rand   196   1        
+ori_zero       196   1        
+slti_max_pos   196   1        
+slti_min_neg   196   1        
+slti_minus1    392   1        
+slti_neg_rand  196   1        
+slti_plus1     392   1        
+slti_pos_rand  196   1        
+slti_zero      196   1        
+sltiu_max_pos  196   1        
+sltiu_min_neg  196   1        
+sltiu_minus1   196   1        
+sltiu_neg_rand 196   1        
+sltiu_plus1    588   1        
+sltiu_pos_rand 196   1        
+sltiu_zero     196   1        
+xori_max_pos   196   1        
+xori_min_neg   196   1        
+xori_minus1    392   1        
+xori_neg_rand  196   1        
+xori_plus1     392   1        
+xori_pos_rand  196   1        
+xori_zero      196   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 12       0         12      100.00          
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Bins
+
+NAME      COUNT AT LEAST 
+addi_no   1570  1        
+addi_yes  196   1        
+andi_no   1568  1        
+andi_yes  196   1        
+ori_no    1568  1        
+ori_yes   196   1        
+slti_no   1568  1        
+slti_yes  196   1        
+sltiu_no  1568  1        
+sltiu_yes 196   1        
+xori_no   1568  1        
+xori_yes  196   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rs1
+
+
+Samples crossed: cp_op cp_rs1_class
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 42       0         42      100.00          
+
+
+User Defined Cross Bins for cr_op_rs1
+
+
+Bins
+
+NAME           COUNT AT LEAST 
+addi_all_ones  126   1        
+addi_int_max   126   1        
+addi_int_min   126   1        
+addi_neg_rand  380   1        
+addi_one       126   1        
+addi_pos_rand  756   1        
+addi_zero      126   1        
+andi_all_ones  126   1        
+andi_int_max   126   1        
+andi_int_min   126   1        
+andi_neg_rand  378   1        
+andi_one       126   1        
+andi_pos_rand  756   1        
+andi_zero      126   1        
+ori_all_ones   126   1        
+ori_int_max    126   1        
+ori_int_min    126   1        
+ori_neg_rand   378   1        
+ori_one        126   1        
+ori_pos_rand   756   1        
+ori_zero       126   1        
+slti_all_ones  126   1        
+slti_int_max   126   1        
+slti_int_min   126   1        
+slti_neg_rand  378   1        
+slti_one       126   1        
+slti_pos_rand  756   1        
+slti_zero      126   1        
+sltiu_all_ones 126   1        
+sltiu_int_max  126   1        
+sltiu_int_min  126   1        
+sltiu_neg_rand 378   1        
+sltiu_one      126   1        
+sltiu_pos_rand 756   1        
+sltiu_zero     126   1        
+xori_all_ones  126   1        
+xori_int_max   126   1        
+xori_int_min   126   1        
+xori_neg_rand  378   1        
+xori_one       126   1        
+xori_pos_rand  756   1        
+xori_zero      126   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_slt
+
+
+Samples crossed: cp_op cp_slt_case
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              42       33        9       21.43   33      
+Automatically Generated Cross Bins 33       33        0       0.00    33      
+User Defined Cross Bins            9        0         9       100.00          
+
+
+Automatically Generated Cross Bins for cr_slt
+
+
+Element holes
+
+cp_op               cp_slt_case COUNT AT LEAST NUMBER 
+[andi , ori , xori] *           --    --       21     
+[addi]              *           --    --       7      
+
+
+Uncovered bins
+
+cp_op   cp_slt_case                                 COUNT AT LEAST NUMBER 
+[sltiu] [slti_0_neg , slti_intmin_0]                --    --       2      
+[slti]  [sltiu_ones_m1 , sltiu_seqz , sltiu_imm_m1] --    --       3      
+
+
+User Defined Cross Bins for cr_slt
+
+
+Bins
+
+NAME                COUNT AT LEAST 
+slti_other          1596  1        
+sltiu_other         910   1        
+slti_eq             98    1        
+slti_slti_0_neg     56    1        
+slti_slti_intmin_0  14    1        
+sltiu_eq            70    1        
+sltiu_sltiu_imm_m1  182   1        
+sltiu_sltiu_ones_m1 14    1        
+sltiu_sltiu_seqz    588   1        
+
+
+Group : gen_fcov_pkg::gen_isa_shift_cg
+
+===============================================================================
+Group : gen_fcov_pkg::gen_isa_shift_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+ 94.70 1      100    1        64           64            
+
+
+Source File(s) : 
+
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/env/gen_fcov_groups.svh
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   gen_fcov_pkg::gen_isa_shift_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 31       0         31      100.00  
+Crosses   258      22        236     88.33   
+
+
+Variables for Group  gen_fcov_pkg::gen_isa_shift_cg
+
+
+VARIABLE        EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op           6        0         6       100.00  100  1      1        0                    
+cp_shamt        4        0         4       100.00  100  1      1        0                    
+cp_rs2_upper    7        0         7       100.00  100  1      1        0                    
+cp_operand      6        0         6       100.00  100  1      1        0                    
+cp_rd_x0        2        0         2       100.00  100  1      1        0                    
+cp_result_class 6        0         6       100.00  100  1      1        0                    
+
+
+Crosses for Group  gen_fcov_pkg::gen_isa_shift_cg
+
+
+CROSS         EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cr_op_operand 36       0         36      100.00  100  1      1        0                     
+cr_op_rd_x0   12       1         11      91.67   100  1      1        0                     
+cr_op_shamt   24       0         24      100.00  100  1      1        0                     
+cr_sra_sign   144      0         144     100.00  100  1      1        0                     
+cr_reg_upper  42       21        21      50.00   100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        0         6       100.00  
+
+
+User Defined Bins for cp_op
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+sra  392   1        
+srl  392   1        
+sll  392   1        
+srai 980   1        
+srli 784   1        
+slli 1372  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_shamt
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        0         4       100.00  
+
+
+User Defined Bins for cp_shamt
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+s31  1148  1        
+mid  1232  1        
+s1   756   1        
+s0   1176  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rs2_upper
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_rs2_upper
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME          COUNT AT LEAST 
+other_nonzero 504   1        
+ffffffe0      84    1        
+msb_only      84    1        
+all_ones      84    1        
+is33          84    1        
+is32          84    1        
+zero          252   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_operand
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        0         6       100.00  
+
+
+User Defined Bins for cp_operand
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+pos_rand 2296  1        
+neg_rand 840   1        
+lsb_only 308   1        
+msb_only 280   1        
+all_ones 280   1        
+zero     308   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_rd_x0
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_rd_x0
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+yes  980   1        
+no   3332  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_result_class
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 6        0         6       100.00  
+
+
+User Defined Bins for cp_result_class
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+na   0     Excluded 
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+other    1915  1        
+c0000000 32    1        
+one      203   1        
+msb_only 130   1        
+all_ones 192   1        
+zero     1840  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_operand
+
+
+Samples crossed: cp_op cp_operand
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 36       0         36      100.00          
+
+
+User Defined Cross Bins for cr_op_operand
+
+
+Bins
+
+NAME          COUNT AT LEAST 
+slli_all_ones 70    1        
+slli_lsb_only 98    1        
+slli_msb_only 70    1        
+slli_neg_rand 210   1        
+slli_pos_rand 826   1        
+slli_zero     98    1        
+srai_all_ones 70    1        
+srai_lsb_only 70    1        
+srai_msb_only 70    1        
+srai_neg_rand 210   1        
+srai_pos_rand 490   1        
+srai_zero     70    1        
+srli_all_ones 56    1        
+srli_lsb_only 56    1        
+srli_msb_only 56    1        
+srli_neg_rand 168   1        
+srli_pos_rand 392   1        
+srli_zero     56    1        
+sll_all_ones  28    1        
+sll_lsb_only  28    1        
+sll_msb_only  28    1        
+sll_neg_rand  84    1        
+sll_pos_rand  196   1        
+sll_zero      28    1        
+sra_all_ones  28    1        
+sra_lsb_only  28    1        
+sra_msb_only  28    1        
+sra_neg_rand  84    1        
+sra_pos_rand  196   1        
+sra_zero      28    1        
+srl_all_ones  28    1        
+srl_lsb_only  28    1        
+srl_msb_only  28    1        
+srl_neg_rand  84    1        
+srl_pos_rand  196   1        
+srl_zero      28    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_rd_x0
+
+
+Samples crossed: cp_op cp_rd_x0
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 12       1         11      91.67           
+
+
+User Defined Cross Bins for cr_op_rd_x0
+
+
+Uncovered bins
+
+NAME     COUNT AT LEAST NUMBER 
+srli_yes 0     1        1      
+
+
+Covered bins
+
+NAME     COUNT AT LEAST 
+slli_no  1176  1        
+slli_yes 196   1        
+srai_no  784   1        
+srai_yes 196   1        
+srli_no  784   1        
+sll_no   196   1        
+sll_yes  196   1        
+sra_no   196   1        
+sra_yes  196   1        
+srl_no   196   1        
+srl_yes  196   1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_op_shamt
+
+
+Samples crossed: cp_op cp_shamt
+CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING 
+User Defined Cross Bins 24       0         24      100.00          
+
+
+User Defined Cross Bins for cr_op_shamt
+
+
+Bins
+
+NAME     COUNT AT LEAST 
+slli_mid 588   1        
+slli_s0  196   1        
+slli_s1  196   1        
+slli_s31 392   1        
+srai_mid 196   1        
+srai_s0  196   1        
+srai_s1  196   1        
+srai_s31 392   1        
+srli_mid 196   1        
+srli_s0  196   1        
+srli_s1  196   1        
+srli_s31 196   1        
+sll_mid  84    1        
+sll_s0   196   1        
+sll_s1   56    1        
+sll_s31  56    1        
+sra_mid  84    1        
+sra_s0   196   1        
+sra_s1   56    1        
+sra_s31  56    1        
+srl_mid  84    1        
+srl_s0   196   1        
+srl_s1   56    1        
+srl_s31  56    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_sra_sign
+
+
+Samples crossed: cp_op cp_operand cp_shamt
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              144      0         144     100.00          
+Automatically Generated Cross Bins 136      0         136     100.00          
+User Defined Cross Bins            8        0         8       100.00          
+
+
+Automatically Generated Cross Bins for cr_sra_sign
+
+
+Bins
+
+cp_op cp_operand cp_shamt COUNT AT LEAST 
+sra   pos_rand   mid      42    1        
+sra   pos_rand   s0       98    1        
+sra   pos_rand   s1       28    1        
+sra   neg_rand   mid      18    1        
+sra   neg_rand   s0       42    1        
+sra   neg_rand   s1       12    1        
+sra   lsb_only   mid      6     1        
+sra   lsb_only   s31      4     1        
+sra   lsb_only   s0       14    1        
+sra   lsb_only   s1       4     1        
+sra   msb_only   mid      6     1        
+sra   msb_only   s31      4     1        
+sra   msb_only   s0       14    1        
+sra   all_ones   mid      6     1        
+sra   all_ones   s31      4     1        
+sra   all_ones   s0       14    1        
+sra   all_ones   s1       4     1        
+sra   zero       mid      6     1        
+sra   zero       s31      4     1        
+sra   zero       s0       14    1        
+sra   zero       s1       4     1        
+srl   pos_rand   mid      42    1        
+srl   pos_rand   s31      28    1        
+srl   pos_rand   s0       98    1        
+srl   pos_rand   s1       28    1        
+srl   neg_rand   mid      18    1        
+srl   neg_rand   s31      12    1        
+srl   neg_rand   s0       42    1        
+srl   neg_rand   s1       12    1        
+srl   lsb_only   mid      6     1        
+srl   lsb_only   s31      4     1        
+srl   lsb_only   s0       14    1        
+srl   lsb_only   s1       4     1        
+srl   msb_only   mid      6     1        
+srl   msb_only   s31      4     1        
+srl   msb_only   s0       14    1        
+srl   msb_only   s1       4     1        
+srl   all_ones   mid      6     1        
+srl   all_ones   s31      4     1        
+srl   all_ones   s0       14    1        
+srl   all_ones   s1       4     1        
+srl   zero       mid      6     1        
+srl   zero       s31      4     1        
+srl   zero       s0       14    1        
+srl   zero       s1       4     1        
+sll   pos_rand   mid      42    1        
+sll   pos_rand   s31      28    1        
+sll   pos_rand   s0       98    1        
+sll   pos_rand   s1       28    1        
+sll   neg_rand   mid      18    1        
+sll   neg_rand   s31      12    1        
+sll   neg_rand   s0       42    1        
+sll   neg_rand   s1       12    1        
+sll   lsb_only   mid      6     1        
+sll   lsb_only   s31      4     1        
+sll   lsb_only   s0       14    1        
+sll   lsb_only   s1       4     1        
+sll   msb_only   mid      6     1        
+sll   msb_only   s31      4     1        
+sll   msb_only   s0       14    1        
+sll   msb_only   s1       4     1        
+sll   all_ones   mid      6     1        
+sll   all_ones   s31      4     1        
+sll   all_ones   s0       14    1        
+sll   all_ones   s1       4     1        
+sll   zero       mid      6     1        
+sll   zero       s31      4     1        
+sll   zero       s0       14    1        
+sll   zero       s1       4     1        
+srai  pos_rand   mid      98    1        
+srai  pos_rand   s0       98    1        
+srai  pos_rand   s1       98    1        
+srai  neg_rand   mid      42    1        
+srai  neg_rand   s0       42    1        
+srai  neg_rand   s1       42    1        
+srai  lsb_only   s31      28    1        
+srai  lsb_only   mid      14    1        
+srai  lsb_only   s0       14    1        
+srai  lsb_only   s1       14    1        
+srai  msb_only   s31      28    1        
+srai  msb_only   mid      14    1        
+srai  msb_only   s0       14    1        
+srai  all_ones   s31      28    1        
+srai  all_ones   mid      14    1        
+srai  all_ones   s0       14    1        
+srai  all_ones   s1       14    1        
+srai  zero       s31      28    1        
+srai  zero       mid      14    1        
+srai  zero       s0       14    1        
+srai  zero       s1       14    1        
+srli  pos_rand   s31      98    1        
+srli  pos_rand   mid      98    1        
+srli  pos_rand   s0       98    1        
+srli  pos_rand   s1       98    1        
+srli  neg_rand   s31      42    1        
+srli  neg_rand   mid      42    1        
+srli  neg_rand   s0       42    1        
+srli  neg_rand   s1       42    1        
+srli  lsb_only   s31      14    1        
+srli  lsb_only   mid      14    1        
+srli  lsb_only   s0       14    1        
+srli  lsb_only   s1       14    1        
+srli  msb_only   mid      14    1        
+srli  msb_only   s0       14    1        
+srli  msb_only   s1       14    1        
+srli  all_ones   s31      14    1        
+srli  all_ones   mid      14    1        
+srli  all_ones   s0       14    1        
+srli  all_ones   s1       14    1        
+srli  zero       s31      14    1        
+srli  zero       mid      14    1        
+srli  zero       s0       14    1        
+srli  zero       s1       14    1        
+slli  pos_rand   s31      196   1        
+slli  pos_rand   s0       98    1        
+slli  pos_rand   mid      434   1        
+slli  pos_rand   s1       98    1        
+slli  neg_rand   s31      84    1        
+slli  neg_rand   mid      42    1        
+slli  neg_rand   s0       42    1        
+slli  neg_rand   s1       42    1        
+slli  lsb_only   s0       14    1        
+slli  lsb_only   mid      42    1        
+slli  lsb_only   s1       14    1        
+slli  msb_only   s31      28    1        
+slli  msb_only   mid      14    1        
+slli  msb_only   s0       14    1        
+slli  msb_only   s1       14    1        
+slli  all_ones   s31      28    1        
+slli  all_ones   mid      14    1        
+slli  all_ones   s0       14    1        
+slli  all_ones   s1       14    1        
+slli  zero       s31      28    1        
+slli  zero       s0       14    1        
+slli  zero       mid      42    1        
+slli  zero       s1       14    1        
+
+
+User Defined Cross Bins for cr_sra_sign
+
+
+Bins
+
+NAME        COUNT AT LEAST 
+slli_lsb_31 28    1        
+sra_msb_1   4     1        
+sra_neg_31  12    1        
+sra_pos_31  28    1        
+srai_msb_1  14    1        
+srai_neg_31 84    1        
+srai_pos_31 196   1        
+srli_msb_31 14    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cr_reg_upper
+
+
+Samples crossed: cp_op cp_rs2_upper
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              42       21        21      50.00   21      
+Automatically Generated Cross Bins 21       21        0       0.00    21      
+User Defined Cross Bins            21       0         21      100.00          
+
+
+Automatically Generated Cross Bins for cr_reg_upper
+
+
+Element holes
+
+cp_op                cp_rs2_upper COUNT AT LEAST NUMBER 
+[srai , srli , slli] *            --    --       21     
+
+
+User Defined Cross Bins for cr_reg_upper
+
+
+Bins
+
+NAME              COUNT AT LEAST 
+sll_zero          84    1        
+sra_zero          84    1        
+srl_zero          84    1        
+sll_all_ones      28    1        
+sll_ffffffe0      28    1        
+sll_is32          28    1        
+sll_is33          28    1        
+sll_msb_only      28    1        
+sll_other_nonzero 168   1        
+sra_all_ones      28    1        
+sra_ffffffe0      28    1        
+sra_is32          28    1        
+sra_is33          28    1        
+sra_msb_only      28    1        
+sra_other_nonzero 168   1        
+srl_all_ones      28    1        
+srl_ffffffe0      28    1        
+srl_is32          28    1        
+srl_is33          28    1        
+srl_msb_only      28    1        
+srl_other_nonzero 168   1        
+
+

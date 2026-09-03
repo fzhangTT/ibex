@@ -1,0 +1,12 @@
+Tests
+
+Total Coverage Summary 
+SCORE  ASSERT GROUP  
+ 47.29  22.73  71.85 
+
+
+Total tests in report: 1
+-------------------------------------------------------------------------------
+Data from the following tests was used to generate this report
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wit_root/dv/auto_dv/work/tb-infra/wit/g/vcs_simv/test 
+
