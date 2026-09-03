@@ -23,9 +23,10 @@ keep_raw() {
   # Copy the model's raw output out of the (swept) run dir when the run ends without a written artifact.
   [ -n "${RAW:-}" ] && [ -e "$RAW.json" ] || return 0
   local dst="$REPO/dv/auto_dv/work/orchestrator/review_failed"; mkdir -p "$dst" || return 0
-  cp -f "$RAW.json" "$dst/$(basename "$XR_TMP").raw.json" 2>/dev/null || true
-  [ -e "$RAW.err" ] && cp -f "$RAW.err" "$dst/$(basename "$XR_TMP").raw.err" 2>/dev/null || true
-  echo "raw copied to dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" >&2
+  if cp -f "$RAW.json" "$dst/$(basename "$XR_TMP").raw.json" 2>/dev/null; then
+    [ -e "$RAW.err" ] && cp -f "$RAW.err" "$dst/$(basename "$XR_TMP").raw.err" 2>/dev/null || true
+    echo "raw copied to dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" >&2
+  else echo "raw copy FAILED; raw stays at $RAW.json until the sweep" >&2; fi
   return 0
 }
 cleanup_all() { [ -z "$ART_WRITTEN" ] && keep_raw; [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
@@ -98,7 +99,7 @@ ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
 # Never overwrite an earlier round (plan/replan targets keep their basename across rounds); the name is
 # reserved atomically (noclobber) so two concurrent runs of one target cannot pick the same file.
 _r=2; until ( set -C; : >"$ART" ) 2>/dev/null; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
-mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"; echo $$ >"$XR_TMP/pid"
+mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"; echo $$ >"$XR_TMP/pid.tmp" && mv -f "$XR_TMP/pid.tmp" "$XR_TMP/pid"
 # The reviewer reads a detached checkout of the target commit, never the live working tree, so a
 # teammate editing a reviewed file during the run cannot reach the artifact.
 TREE="$XR_TMP/tree"
@@ -186,7 +187,7 @@ fi
   echo "---"
   echo
   cat "$RAW"
-} >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART" && ART_WRITTEN=1
+} >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART" && ART_WRITTEN=1 || { echo "PROTOCOL ERROR: could not write the artifact $ART (raw kept)"; exit 1; }
 cleanup_all; trap - EXIT; rm -rf "$XR_TMP"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
