@@ -66,6 +66,7 @@ RED_RNG_TAG = "red"
 RED_SITE_TAG = "red:site"                 # red-only choices draw here so the green and red plans share every draw
 ITEMS = ("TP-PMP-011", "TP-PMP-012", "TP-PMP-022", "TP-PMP-023", "TP-PMP-024", "TP-PMP-025", "TP-PMP-026",
          "TP-PMP-027", "TP-PMP-028", "TP-PMP-029", "TP-PMP-030", "TP-PMP-031", "TP-PMP-108")
+RED_ITEMS = tuple(i for i in ITEMS if i != "TP-PMP-108")   # the seed-drawn red targets a built item; an explicit --red-item TP-PMP-108 is caught by fire_program_verdict
 REG_FORMS = ("csrrw", "csrrs", "csrrc")
 ALL_FORMS = REG_FORMS + UIMM_FORMS
 MSEC_MASK = MSECCFG_MML | MSECCFG_MMWP | MSECCFG_RLB
@@ -76,6 +77,7 @@ NOTRAP_MARK = 0x4E0007A9                  # register marker left in place when t
 LOAD_SENT = 0x5E170A00                    # sentinel the probe register keeps when the load is denied
 MMIO_NAPOT_ONES = (MEMORY_MAP["mmio_size"].bit_length() - 1) - 3
 DATA_ALIGN_BITS = 10                      # .data lives in one 1 KiB NAPOT (asserted against the emitted size)
+PH_DATA = warl.PH_POOL - 0x400            # .data placeholder base until the symbol table resolves it (distinct from the warl placeholders)
 DATA_NAPOT_ONES = DATA_ALIGN_BITS - 3
 assert MEMORY_MAP["mmio_size"] == 1 << (MMIO_NAPOT_ONES + 3) and MEMORY_MAP["mmio_base"] % MEMORY_MAP["mmio_size"] == 0
 
@@ -274,7 +276,7 @@ class Gen(warl.Gen):
         if mask:
             self.emit(f"  ori  t0, t0, 0x{mask:x}")
         self.emit(f"  csrw pmpaddr{e}, t0")
-        ph = {"pool": warl.PH_POOL, "ucode": warl.PH_UCODE, "text_end": warl.PH_TEXT_END, "data": warl.PH_POOL - 0x400}[base_sym]
+        ph = {"pool": warl.PH_POOL, "ucode": warl.PH_UCODE, "text_end": warl.PH_TEXT_END, "data": PH_DATA}[base_sym]
         self.m.write_addr(e, ((ph + off) >> 2) | mask)
         self.addr_rel[e] = (base_sym, off, mask)
         self.emit(f"  csrr t1, pmpaddr{e}")
@@ -925,7 +927,7 @@ def plan(seed, red=False, red_item=None):
     if not red:
         return green
     rng = random.Random(f"{int(seed)}:{RED_RNG_TAG}")
-    item = red_item or rng.choice(ITEMS)
+    item = red_item or rng.choice(RED_ITEMS)
     assert item in ITEMS, f"red: unknown item {item}"
     sites = green.red_sites[item]
     assert sites, f"red: no deviation site for {item} at seed {seed}"

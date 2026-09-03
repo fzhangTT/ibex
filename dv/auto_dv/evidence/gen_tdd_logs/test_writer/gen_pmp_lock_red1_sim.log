@@ -1,7 +1,7 @@
-Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/red_011/prog/prog.vmem +gen_mem_image_crc32=38166dbb +gen_mem_image_words=1271 +gen_boot_addr=80000000 +gen_tohost_addr=80001400 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/b3_mseccfg_red_011/sim.log
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem +gen_mem_image_crc32=00381a03 +gen_mem_image_words=541 +gen_boot_addr=80000000 +gen_tohost_addr=80000880 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/b3_pmplock_red_013/sim.log
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:45 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:36 2026
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -19,10 +19,10 @@ UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
 GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
 GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
 GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
-GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/red_011/prog/prog.vmem tohost=0x80001400
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem tohost=0x80000880
 GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
 GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(181) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/red_011/prog/prog.vmem: 1271 words, crc32 0x38166dbb verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(181) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem: 541 words, crc32 0x00381a03 verified
 UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(211) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
 UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(212) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(370) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
@@ -36,13 +36,11 @@ UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 68500: uvm_test_top.env.dispatch [
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(410) @ 69500: uvm_test_top.env.scrkey [GEN_SCRKEY] key regime <= withheld_then_valid
 UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 69500: uvm_test_top.env.dispatch [GEN_PHASE] phase 6 knob=knob_scr_key_delay value=withheld_then_valid cycle=64
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 71000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
-UVM_INFO @ 198000: reporter [GEN_EOT] end-of-test store 0x80001440 at 0x8ffff104 (store 1)
-UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(452) @ 4032500: uvm_test_top.env.sb [GEN_SB]  load trap at 80001440 (order 550) without a TB-injected error: the model decides
-UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(452) @ 4537500: uvm_test_top.env.sb [GEN_SB]  load trap at 80001444 (order 608) without a TB-injected error: the model decides
-$finish at simulation time              6159001
-"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 6159 attempts, 177 match
-"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 6159 attempts, 892 match
+UVM_INFO @ 179000: reporter [GEN_EOT] end-of-test store 0x800008c0 at 0x8ffff104 (store 1)
+$finish at simulation time              2914001
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 2914 attempts, 85 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 2914 attempts, 429 match
            V C S   S i m u l a t i o n   R e p o r t 
-Time: 61590010 ps
-CPU Time:      0.580 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 13:45:11 2026
+Time: 29140010 ps
+CPU Time:      0.500 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 13:36:39 2026

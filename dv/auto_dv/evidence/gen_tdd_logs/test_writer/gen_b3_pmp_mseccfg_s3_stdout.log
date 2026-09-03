@@ -1,9 +1,9 @@
-# run b3_mseccfg_s3: 2026-09-03T17:23:34Z host=soc-l-11 seed=3 module=dv.auto_dv.tests.gen_test_pmp_mseccfg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8 sources_sha=156eb9357b79552e pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/s3/prog/prog.vmem plusargs=[]
+# run b3_mseccfg_s3: 2026-09-03T17:45:06Z host=soc-l-11 seed=3 module=dv.auto_dv.tests.gen_test_pmp_mseccfg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8 sources_sha=156eb9357b79552e template_sha=abbe6fcb78e53a27 pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/s3/prog/prog.vmem plusargs=[]
 Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
 Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:23 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:45 2026
      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
@@ -269,7 +269,7 @@ UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(452) @ 8004500: uvm_test_top.env.sb [GEN
 /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
   ret = outcomes.Value(await trigger)
  97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_schedule_applied ok=True reached 12 of 12 scheduled entries by EOT (cycle 9709, retired 930), applied 12 (k=3, source=derived)
- 97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_verdict ok=True tohost code 0x00000001 (pass = 1); retired 930 (floor 717); reports 191 (k 191); path mmwp_first; 8 words compared, 0 mismatches; entry 0 cleared, survival table L=0 part
+ 97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_verdict ok=True tohost code 0x00000001 (pass = 1); retired 930 (floor 717); reports 191 (k 191); path mmwp_first; 35 words compared, 0 mismatches; entry 0 cleared, survival table L=0 part, TP-PMP-108 walk read-backs (uncredited integrity)
  97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_layout ok=True 4 words compared, 0 mismatches; symbols: ucode 0x80001000 text_end 0x80001200 data 0x80001400 pool 0x80001440 (window 0x80000000..0x80100000, U code NAPOT 512, .data NAPOT 1024)
  97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_pmp_011 ok=True 11 words compared, 0 mismatches; 11 mseccfg writes (hi classes ['nonzero', 'zero'], forms ['csrrc', 'csrrs', 'csrrw'], pre RLB [0, 1], written RLB [0, 1]); bits 31:3 read zero in every read-back: True
  97140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_pmp_012 ok=True 18 words compared, 0 mismatches; 9 mseccfgh writes over forms ['csrrc', 'csrrci', 'csrrs', 'csrrsi', 'csrrw', 'csrrwi']; mseccfgh read zero after each: True; mseccfg read back unchanged after each (compared)
@@ -331,9 +331,9 @@ UVM_FATAL :    0
  97140.01ns INFO     cocotb.regression                  ********************************************************************************************************************
                                                         ** TEST                                                        STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         ********************************************************************************************************************
-                                                        ** dv.auto_dv.tests.gen_test_pmp_mseccfg.gen_test_pmp_mseccfg   PASS       97140.01           0.38     253396.67  **
+                                                        ** dv.auto_dv.tests.gen_test_pmp_mseccfg.gen_test_pmp_mseccfg   PASS       97140.01           0.37     262162.75  **
                                                         ********************************************************************************************************************
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            97140.01           0.43     224859.44  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            97140.01           0.42     230994.59  **
                                                         ********************************************************************************************************************
                                                         
 $finish at simulation time              9714001
@@ -341,5 +341,5 @@ $finish at simulation time              9714001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 9714 attempts, 948 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 97140010 ps
-CPU Time:      0.640 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 13:23:36 2026
+CPU Time:      0.630 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 13:45:09 2026

@@ -74,6 +74,11 @@ timeout. No `GEN_TEST_PASS` line. Driver line: `red_s1 ... cocotb_pass=0 cocotb_
 | green_s2 | 04:30:14.65 | 9e3c9afef63ab1883650b38166c0be09 | 2 | k=3; boundaries c18754, c20349 not reached before the end of test | code 1, retired 533, cycle 4728 | schedule 6/15 entries applied = every reached one; eot ok; 533 >= 300 | PASS (47330.01 ns, CPU 0.560 s) |
 | green_s3 | 04:30:17.38 | 59ba6e8af53b653b7f29dfac7be1c3b4 | 3 | k=3; boundaries c1969 (4 knobs) and c3442 (2 knobs) applied at cycles 1970-1973 and 3443-3444 | code 1, retired 516, cycle 6787 | schedule 12/12 applied; eot ok; 516 >= 300 | PASS (67920.01 ns, CPU 0.530 s) |
 
+Retention note (Critic batch-1 v6 I-1): the md5 cells of red_s1 (Section 2) and green_s1..s3 (this table) are those of the 04:29-04:30
+UTC sim.log files of the first template build; the copies retained under gen_tdd_logs/test_writer/ (gen_manifest.md rows green_s1 /
+green_s2 / green_s3 / red_s1) come from the later out_head build (the 08:40 UTC working-tree build named in the manifest header) and
+carry their own md5, so these four tokens match no retained blob. The rows stay as the record of the runs made; the retained copies are the evidence.
+
 Identifying lines of green_s3 (the run that exercised layer 3 at run time):
 
 ```

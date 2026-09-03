@@ -1,0 +1,21 @@
+--- /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/tests/gen_test_template.py	2026-09-03 13:12:51.623625605 -0400
++++ /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/pyroot_mut8_abl/dv/auto_dv/tests/gen_test_template.py	2026-09-03 13:41:00.766182706 -0400
+@@ -248,6 +248,9 @@
+             self._applying = True
+             self._drained.clear()
+             while i < len(pending) and (pending[i].kind, pending[i].count) == (p.kind, p.count):
++                if pending[i].idx == 1:   # MUTATION 3h-M1: the first mid-run boundary is reached but never applied
++                    i += 1
++                    continue
+                 await self.apply_phase(pending[i])
+                 i += 1
+             self._applying = False
+@@ -346,7 +349,7 @@
+         applied = set(id(p) for p in self.applied)
+         missed = [p.text() for p in reached if id(p) not in applied]
+         early = [p.text() for p in self.applied if p.applied_cycle is not None and p.kind == "c" and p.applied_cycle < p.count]
+-        self.check("fire_schedule_applied", not missed and not early and len(self.applied) == len(reached),
++        self.check("fire_schedule_applied", True,   # ABLATION 3h-A1: the schedule check is neutralized (control for mutation 3h-M1)
+                    f"reached {len(reached)} of {len(self.schedule.phases)} scheduled entries by EOT (cycle {self.eot_cycle}, "
+                    f"retired {self.eot_retired}), applied {len(self.applied)}"
+                    + (f", missed {missed}" if missed else "") + (f", early {early}" if early else "")

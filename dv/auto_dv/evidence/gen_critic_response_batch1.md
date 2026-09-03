@@ -231,3 +231,26 @@ Author: test-writer, 2026-09-03 15:3x UTC. Landing 3e carries the rows marked FI
 |---|---|---|---|---|
 | CM30-L-1 | low | gen_tdd_batch1.md Section 10's reproduction sentence cites work/test-writer/gen_testlist_entries.yaml, a git-ignored file a reviewer cannot run from a clean checkout | FIXED (3i) | The sentence cites the committed dv/auto_dv/flow/gen_testlist.yaml as well, with the result of the same command from a detached archive of 8fff875: RED-CHECK PASS, 16 rows RED-OK, no STALE row. Rerun: `python3 dv/auto_dv/flow/gen_flow_util.py --check-red-signatures dv/auto_dv/flow/gen_testlist.yaml`. |
 | CM30-I-1 | info | the pre-fix red's head_export7 pyroot is an out-of-tree archive identified only indirectly | FIXED (3i) | gen_run_fixture.sh's run header now carries `template_sha=` (sha256 prefix of the pyroot's dv/auto_dv/tests/gen_test_template.py) beside `sources_sha=`, so every retained run names the template it ran; gen_tdd_batch1.md Section 12 records the 3h pre-fix template's sha (9e7c440's, 16 hex) for the retained red. |
+
+## Critic batch-1 v6 (`dv/auto_dv/docs/gen_critic_batch1_v6.md`, on 7ef16a0; rows CR6-*, recorded here at the Critic's v7 L-2 request)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR6-M-1 | medium | the rewritten red_expect rule had no committed red case | FIXED (3f) | The self-test carries the red (CM3e-M-1 row): the boundary form matches no synthesized line, the (?!\d) form matches both suffixed names, a longer id is rejected. |
+| CR6-L-1 | low | Section 10 called out_head5 "the HEAD-equal build", true for b95d6d2 only | FIXED (3h) | The heading names out_head5 with TB sources equal to b95d6d2's. |
+| CR6-L-2 | low | Section 11 cited a GEN_TEST_LAYERS applied marker no log carries | FIXED (3h) | Section 11 cites the GEN_TEST_PHASE idx=0 lines and fire_schedule_applied ok=True, and states that the l9g proof covered the initial phase only. |
+| CR6-L-3 | low | Section 10's two-STALE sentence described a state superseded in the same commit | FIXED (3h) | Replaced by the re-run result: RED-CHECK PASS, 16 rows RED-OK, no STALE row; 3i adds the committed testlist as the cited input. |
+| CR6-L-4 | low | no run header carried a build identity | FIXED (3h, 3i) | gen_run_fixture.sh writes sources_sha= (the compile step's sources sha) into every run header since 3h, and template_sha= (the python root's gen_test_template.py) since 3i. |
+| CR6-L-5 | low | gen_test_cmp_zca docstring narrated history | FIXED (3f) | The CM3e-L-1 row. |
+| CR6-I-1 | info | gen_tdd_test_template.md carried four md5 tokens matching no retained blob | STATED (3j) | A retention note under the Section 3 table says the cells are the 04:29-04:30 UTC sim.log md5s of the first template build and the retained copies come from the later out_head build. |
+| CR6-I-2 | info | HEAD 18f9ee0 already carried the promotion in the committed testlist | STATED | Recorded; the lift was read against the committed list. |
+| CR6-I-3 | info | the working-tree response record differed from the committed copy | STATED | The committer's boundary; the renumbering landed with 3g and was corrected in 3h (CM27-M-1). |
+
+## Critic batch-1 v7 (`dv/auto_dv/docs/gen_critic_batch1_v7.md`, light check of landing 3h at 9500268; rows CR-3H-*)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR-3H-L-1 | low | mutation 3h-M1 had the catch but no ablation control | FIXED (3j) | Ablation 3h-A1: the fixed template with 3h-M1 and the schedule check's ok forced True (gen_3h_mutation_M1_plus_ablation_A1.diff), same seed 288888690, same build out_head8: GEN_TEST_PASS with "fire_schedule_applied ok=True ... applied 7, missed [the four c709 entries]" in the detail, so the mutation survives only when the check is off; retained as gen_3h_abl_mut_bit_ratified_288888690_stdout_excerpt.log (run header with sources_sha and template_sha b6375acd0effe7a4, the ablated template). Rerun: the fixture command of gen_tdd_batch1.md Section 12 with a pyroot carrying both diffs. |
+| CR-3H-L-2 | low | no CR6- rows recorded the v6 lows; the CM27 / MF-1 ids were absent from the file | FIXED (3i, 3j) | The CR6-* table above; the CM27-* rows and the CM24 medium (MF-1) row landed in 3i. |
+| CR-3H-I-1 | info | Runtime's head-mode wave on 9500268 is the LOG-042 record and should be read for runtime-class shifts | STATED (3i) | gen_tdd_batch2.md Section 4 retains the 13 re-run seeds (test-writer-065..070, pinned 9500268, canary accepted): all PASS, idx>0 phases 1 to 17, GEN_TEST_SLOW_TOTAL rounds 0; the end-of-test cycles moved with the applied regimes (bit_ratified 288888690: 66382 to 35276 locally) and every run stayed inside its timeout. |
+| CR-3H-I-2 | info | (adopted from the cross-model L-3 / info) the pre-fix red's pyroot identified only indirectly | FIXED (3i) | The CM30-I-1 row: template_sha= in every run header. |

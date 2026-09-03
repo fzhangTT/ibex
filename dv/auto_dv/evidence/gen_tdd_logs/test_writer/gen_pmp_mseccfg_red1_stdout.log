@@ -1,9 +1,9 @@
-# run b3_mseccfg_red_011: 2026-09-03T17:23:36Z host=soc-l-11 seed=1 module=dv.auto_dv.tests.gen_test_pmp_mseccfg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8 sources_sha=156eb9357b79552e pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/red_011/prog/prog.vmem plusargs=[]
+# run b3_mseccfg_red_011: 2026-09-03T17:45:09Z host=soc-l-11 seed=1 module=dv.auto_dv.tests.gen_test_pmp_mseccfg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8 sources_sha=156eb9357b79552e template_sha=abbe6fcb78e53a27 pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_mseccfg/h8/red_011/prog/prog.vmem plusargs=[]
 Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
 Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:23 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:45 2026
      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
@@ -240,7 +240,7 @@ UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(452) @ 4537500: uvm_test_top.env.sb [GEN
 /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
   ret = outcomes.Value(await trigger)
  61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_schedule_applied ok=True reached 6 of 6 scheduled entries by EOT (cycle 6154, retired 842), applied 6 (k=1, source=derived)
- 61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_verdict ok=True tohost code 0x00000001 (pass = 1); retired 842 (floor 642); reports 175 (k 175); path mml_first_rlb; 8 words compared, 0 mismatches; entry 0 cleared, survival table L=0 part
+ 61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_verdict ok=True tohost code 0x00000001 (pass = 1); retired 842 (floor 642); reports 175 (k 175); path mml_first_rlb; 31 words compared, 0 mismatches; entry 0 cleared, survival table L=0 part, TP-PMP-108 walk read-backs (uncredited integrity)
  61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_program_layout ok=True 4 words compared, 0 mismatches; symbols: ucode 0x80001000 text_end 0x80001200 data 0x80001400 pool 0x80001440 (window 0x80000000..0x80100000, U code NAPOT 512, .data NAPOT 1024)
  61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_pmp_011 ok=False 7 words compared, 1 mismatches (first: idx 38 [w1 nonzero readback 0x747] expected 0x00000000 got 0x00000004); 7 mseccfg writes (hi classes ['nonzero', 'zero'], forms ['csrrc', 'csrrs', 'csrrw'], pre RLB [0, 1], written RLB [0, 1]); bits 31:3 read zero in every read-back: True
  61590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_pmp_012 ok=True 14 words compared, 0 mismatches; 7 mseccfgh writes over forms ['csrrc', 'csrrci', 'csrrs', 'csrrsi', 'csrrw', 'csrrwi']; mseccfgh read zero after each: True; mseccfg read back unchanged after each (compared)
@@ -267,9 +267,9 @@ UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(452) @ 4537500: uvm_test_top.env.sb [GEN
  61590.01ns INFO     cocotb.regression                  ********************************************************************************************************************
                                                         ** TEST                                                        STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         ********************************************************************************************************************
-                                                        ** dv.auto_dv.tests.gen_test_pmp_mseccfg.gen_test_pmp_mseccfg   FAIL       61590.01           0.34     179710.40  **
+                                                        ** dv.auto_dv.tests.gen_test_pmp_mseccfg.gen_test_pmp_mseccfg   FAIL       61590.01           0.34     180464.03  **
                                                         ********************************************************************************************************************
-                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            61590.01           0.38     163628.84  **
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            61590.01           0.38     162914.43  **
                                                         ********************************************************************************************************************
                                                         
 $finish at simulation time              6159001
@@ -277,5 +277,5 @@ $finish at simulation time              6159001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 6159 attempts, 892 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 61590010 ps
-CPU Time:      0.590 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 13:23:38 2026
+CPU Time:      0.580 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 13:45:11 2026

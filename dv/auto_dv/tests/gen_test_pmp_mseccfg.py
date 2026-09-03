@@ -23,8 +23,8 @@ M-mode program needs a locked M-exec rule before MML=1 and that lock pins RLB at
 s001->s110, s010->s110, s011->s110 enter MML=1 with RLB=0, which leaves no (1,x,1) state for TP-PMP-030 in the same
 power-on. The item stays not_built until a mid-run reset command exists (TB ask filed by the Test Writer); its CG-PMP-003
 cr_state_trans / cp_pre / cp_post bins are not declared. The program keeps the per-seed walk as stimulus (path drawn by the
-seed: mmwp_first, mml_first_rlb or mml_first_late; every read-back is checked in lock-step by gen_isa_compare), not credited
-to the item.
+seed: mmwp_first, mml_first_rlb or mml_first_late); its read-backs are compared with the PmpModel prediction by
+fire_program_verdict as program integrity (and checked in lock-step by gen_isa_compare), credited to no item.
 Other stated deviations: TP-PMP-023's MML=0 precondition is a safety precondition (MMWP must not fault the program);
 in the mml_first paths MMWP is set under MML=1 over the complete M-mode table (code, MMIO page and .data covered by
 L=1 rules), so the walk reaches s10x. TP-PMP-026's set/lock happen under MML=0 and its clear/attempt under MML=1
@@ -135,10 +135,10 @@ class PmpMseccfg(GenTest):
         floor = lib.program_min_retired(self.image)
         got = self.retired()
         plan = prog.plan(self.seed)
-        n, bad = compare(plan, self.reports, bases_of(self), plan.item_indices("setup"))
+        n, bad = compare(plan, self.reports, bases_of(self), list(plan.item_indices("setup")) + list(plan.item_indices("TP-PMP-108")))
         self.check("fire_program_verdict", code == lib.TOHOST_PASS and got >= floor and not bad and len(self.reports) == plan.k,
                    f"tohost code 0x{code:08x} (pass = {lib.TOHOST_PASS}); retired {got} (floor {floor}); "
-                   f"reports {len(self.reports)} (k {plan.k}); path {plan.path}; " + summary(n, bad, "entry 0 cleared, survival table L=0 part"))
+                   f"reports {len(self.reports)} (k {plan.k}); path {plan.path}; " + summary(n, bad, "entry 0 cleared, survival table L=0 part, TP-PMP-108 walk read-backs (uncredited integrity)"))
 
     def fire_program_layout(self):
         """The layout the model relies on, from the symbol table: U code area NAPOT-aligned inside .text, the pool inside
