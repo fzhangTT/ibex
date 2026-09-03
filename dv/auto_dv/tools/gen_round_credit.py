@@ -211,8 +211,12 @@ def main():
     for r in runs: by_test[r['test']].append(r)
     tests = [(t, len(rs), '/'.join(sorted({str(r.get('verdict')) for r in rs})), '; '.join(sorted({(r.get('reason') or '-')[:60] for r in rs}))) for t, rs in sorted(by_test.items())]
     if a.heading_id: a.heading = HEADINGS[a.heading_id]
+    def rel(p):  # the invocation names the files it wrote, clone-relative when they live in the clone
+        q = pathlib.Path(p).resolve()
+        return str(q.relative_to(R.resolve())) if q.is_relative_to(R.resolve()) else str(q)
     inv = (f"Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
-           + (f" --heading-id {a.heading_id}" if a.heading_id else (f" --heading {shlex.quote(a.heading)}" if a.heading else '')) + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
+           + (f" --heading-id {a.heading_id}" if a.heading_id else (f" --heading {shlex.quote(a.heading)}" if a.heading else ''))
+           + (f" --csv {shlex.quote(rel(a.csv))}" if a.csv else '') + (f" --md {shlex.quote(rel(a.md))}" if a.md else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
     hdr = round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:

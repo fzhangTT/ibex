@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 19:42 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 20:08 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -742,7 +742,7 @@ Conventions
   - cp_uop_count_ok = two micro-ops, first tagged COMMIT-equivalent (no interrupt between them observed): bins yes{1}
 - Crosses:
   - cr_insn_r1_r2 = cp_insn x cp_r1s x cp_r2s: bins auto{all combinations}; ignore cm_mvsa01 with r1s == r2s: reserved encoding (zcmp.adoc norm:cm-mvsa01_res, bug candidate B4), owned by cr_insn_equal.cm_mvsa01_yes (cm.mva01s has no such constraint)
-  - cr_insn_equal = cp_insn x cp_equal: bins auto{all combinations}
+  - cr_insn_equal = cp_insn x cp_equal: bins auto{all combinations}; cm_mvsa01_yes is B4's witness bin (ruling B4-R1): only the reserved encoding hits it, the ISA model traps it (illegal instruction, tval 0xac22) while Ibex executes both moves, so it is TP-CMP-051's alone (expected-fail, own test) and belongs in no pass test's manifest; its TP-CMP-053 CSV row and its line in gen_test_cmp_zcmp_basic's manifest leave together with the Test Writer's re-render (joint landing, LOG-036b)
   - cr_insn_hazard = cp_insn x cp_hazard_src: bins auto{all combinations}
   - cr_insn_b2b = cp_insn x cp_b2b: bins auto{all combinations}; ignore none: not a corner
 - Adopted (riscv-dv): none
