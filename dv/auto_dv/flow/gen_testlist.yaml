@@ -283,15 +283,13 @@ tests:
 
   # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)
   - name: gen_test_boot_retire
-    description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; the timing-only regime knobs are drawn and scheduled from the seed only when the build has a REGIME_SET consumer (none at HEAD, logged GEN_TEST_LAYERS not_applied) (Test Writer)
+    description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; the timing-only regime knobs are drawn and scheduled from the
+      seed only when the build has a REGIME_SET consumer (none at HEAD, logged GEN_TEST_LAYERS not_applied) (Test Writer)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-      - +gen_fetch_en_at_reset=0
-    program:
-      riscv_dv_test: gen_rand_smoke
-      seed: run
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program: {riscv_dv_test: gen_rand_smoke, seed: run}
     seeds: 3
     fcov_expectation_file: null
     timeout_s: 900
@@ -307,7 +305,7 @@ tests:
     description: TDD red fixture of gen_test_boot_retire; the directed program ends with tohost 3 and declares an unreachable retirement floor, so the fire-check must FAIL (verdict RED-OK; evidence dv/auto_dv/evidence/gen_tdd_test_template.md);
       never a regression test; the red program ends with tohost 3, so fire_eot_pass_code is the designed first failure (fire_retired_floor follows)
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\): fire_eot_pass_code'
+    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\):.*\bfire_eot_pass_code\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -353,7 +351,7 @@ tests:
     description: 'TDD red fixture of gen_test_rst_boot, pinned to TP-RST-006 (generator --red --red-item TP-RST-006): the stored mstatus reset read-back carries MPIE toggled, so exactly fire_tp_rst_006 FAILs
       by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\): fire_tp_rst_006'
+    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\):.*\bfire_tp_rst_006\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -401,7 +399,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_reset, pinned to TP-CSR-106 (generator --red --red-item TP-CSR-106): one TP-CSR-106 read is re-targeted to a CSR whose reset value differs, so exactly fire_tp_csr_106
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\): fire_tp_csr_106'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_106\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -449,7 +447,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_access, pinned to TP-CSR-001 (generator --red --red-item TP-CSR-001): one writable operand bit of a TP-CSR-001 sequence is flipped in the program only, so
       exactly fire_tp_csr_001 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\): fire_tp_csr_001'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_001\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -497,7 +495,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_trap_setup, pinned to TP-CSR-036 (generator --red --red-item TP-CSR-036): one TP-CSR-036 mtvec operand is written with bit 8 flipped, so exactly fire_tp_csr_036
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\): fire_tp_csr_036'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_036\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -545,7 +543,7 @@ tests:
     description: 'TDD red fixture of gen_test_cmp_zcb, pinned to TP-CMP-036 (generator --red --red-item TP-CMP-036): one Zcb ALU form is emitted as a different form, so exactly fire_tp_cmp_036 FAILs by design
       (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\): fire_tp_cmp_036'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_036\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -593,7 +591,7 @@ tests:
     description: 'TDD red fixture of gen_test_cmp_zcmp_basic, pinned to TP-CMP-039 (generator --red --red-item TP-CMP-039): one plain cm.push is emitted with the other spimm bit (sp_new off by 16; the frame
       checks 042/043 also trip), so exactly fire_tp_cmp_039 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\): fire_tp_cmp_039'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_039\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -641,7 +639,7 @@ tests:
     description: 'TDD red fixture of gen_test_bit_draft, pinned to TP-BIT-016 (generator --red --red-item TP-BIT-016): one gorci immediate deviates while the plan keeps the true expectation, so exactly fire_tp_bit_016
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\): fire_tp_bit_016'
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_016\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -689,7 +687,7 @@ tests:
     description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\): fire_tp_pmp_001'
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_001\b'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -706,6 +704,341 @@ tests:
     pass_marker: GEN_TEST_PASS
     feature_groups: [pmp, gen_pmp_csr_warl, red]
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_div_red
+    description: 'TDD red fixture of gen_test_mul_div, pinned to TP-MUL-014 (generator --red --red-item TP-MUL-014): one div/rem pair''s dividend bit 0 is flipped in the program only, so fire_tp_mul_014 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_div: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_014\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_div_prog.py
+      generator_args: [--red, --red-item, TP-MUL-014]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_div, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_div
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_div
+    description: 'Phase 1 batch 2: RV32M divide (TP-MUL-013..021, 026 built; 012, 022 not built: latency clauses): div/divu/rem/remu, explicit divide-by-zero and INT_MIN/-1 checks in signed and unsigned forms,
+      decode forms; per-seed program gen_mul_div_prog.py; fire_tp_mul_013..026'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_div_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_div]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_div
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_mul_red
+    description: 'TDD red fixture of gen_test_mul_mul, pinned to TP-MUL-002 (generator --red --red-item TP-MUL-002): one mul is emitted as mulhsu, so fire_tp_mul_002 FAILs by design (RED-OK); every other
+      item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_mul: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_002\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_mul_prog.py
+      generator_args: [--red, --red-item, TP-MUL-002]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_mul, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_mul
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_mul
+    description: 'Phase 1 batch 2: RV32M multiply (TP-MUL-001, 002, 004..008, 027 built; 003 not built: latency clause): mul/mulh/mulhu/mulhsu products over sign and extreme classes, c.mul; per-seed program
+      gen_mul_mul_prog.py; fire_tp_mul_001..027'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_mul_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_mul]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_mul
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_cti_red
+    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design (RED-OK); every
+      other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_cti: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_017\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_cti_prog.py
+      generator_args: [--red, --red-item, TP-ISA-017]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_cti, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_cti
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_cti
+    description: 'Phase 1 batch 2: RV32I control transfer (TP-ISA-015, 017, 018, 019, 020, 023, 027, 053 built; 016, 022, 026 not built: memory map; 024 not built: timing): landing markers, link values, branch
+      outcome vectors, misaligned-address exception never raised; per-seed program gen_isa_cti_prog.py; fire_tp_isa_015..053'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_cti_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_cti]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_cti
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_shift_red
+    description: 'TDD red fixture of gen_test_isa_shift, pinned to TP-ISA-010 (generator --red --red-item TP-ISA-010): one shift-immediate op is emitted as another op of its form, so fire_tp_isa_010 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_shift: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_010\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_shift_prog.py
+      generator_args: [--red, --red-item, TP-ISA-010]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_shift, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_shift
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_shift
+    description: 'Phase 1 batch 2: RV32I shifts (TP-ISA-010, 011, 013, 014, all built): every op x every amount, sign propagation, rs2 upper bits ignored; per-seed program gen_isa_shift_prog.py; fire_tp_isa_010..014'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_shift_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_shift]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_shift
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_alu_red
+    description: 'TDD red fixture of gen_test_isa_alu, pinned to TP-ISA-002 (generator --red --red-item TP-ISA-002): the wrap addi is emitted with immediate 0 (no wrap), so fire_tp_isa_002 FAILs by design
+      (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_alu: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_002\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_alu_prog.py
+      generator_args: [--red, --red-item, TP-ISA-002]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_alu, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_alu
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_alu
+    description: 'Phase 1 batch 2: RV32I ALU (TP-ISA-001..009, 052, all 10 built): I-type and R-type ops over operand classes, overflow wrap, comparison boundaries, lui/auipc extremes, HINT no-ops, writes
+      to x0 discarded; per-seed program gen_isa_alu_prog.py; fire_tp_isa_001..052'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_alu_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_alu]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_alu
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_bit_ratified_red
+    description: 'TDD red fixture of gen_test_bit_ratified, pinned to TP-BIT-014 (generator --red --red-item TP-BIT-014): one orc.b source value is loaded so its reference differs, so fire_tp_bit_014 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_ratified: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_014\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
+      generator_args: [--red, --red-item, TP-BIT-014]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_ratified, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_ratified
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_bit_ratified
+    description: 'Phase 1 batch 2: ratified bitmanip Zba/Zbb/Zbs/Zbc (TP-BIT-002..021, 038, 040 built; TP-BIT-001 not built: RVFI record fact): Python references from zb.adoc, exhaustive control floors, vacuous
+      compares counted apart; per-seed program gen_bit_ratified_prog.py; fire_tp_bit_002..040'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_ratified]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_ratified
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_cmp_zca_red
+    description: 'TDD red fixture of gen_test_cmp_zca, pinned to TP-CMP-005 (generator --red --red-item TP-CMP-005): one c.swsp immediate is moved so the read-back sees stale data, so fire_tp_cmp_005 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zca: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_005\b'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zca_prog.py
+      generator_args: [--red, --red-item, TP-CMP-005]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zca, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zca
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_cmp_zca
+    description: 'Phase 1 batch 2: Zca compressed forms versus their 32-bit forms (TP-CMP-001..033, all 21 items built): register and memory results, sp handling, jump and branch outcomes, link values, c.ebreak
+      and illegal c.addi16sp through a returning handler; per-seed program gen_cmp_zca_prog.py; fire_tp_cmp_001..033'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zca_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zca]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zca
     expected_fail: false
     component: gen_tb_top
     measured: false
