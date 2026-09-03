@@ -1,3 +1,4 @@
+# not_built TP-MUL-003: latency clause: RVFI cycle / bus records, event export
 test: gen_test_mul_mul
 owner: test-writer
 bins:
@@ -313,11 +314,6 @@ bins:
   - gen_mul_ops_cg.cr_extremes.mulhu_zero_p16
   - gen_mul_ops_cg.cr_extremes.mulhu_zero_two
   - gen_mul_ops_cg.cr_extremes.mulhu_zero_zero
-  - gen_mul_timing_cg.cp_delta.d2
-  - gen_mul_timing_cg.cp_fetch_stall.no
-  - gen_mul_timing_cg.cp_op.mulh
-  - gen_mul_timing_cg.cp_wb_busy.no
-  - gen_mul_timing_cg.cr_op_delta_clean.mulh_d2
   - gen_mul_ops_cg.cr_op_sign.c_mul_nn
   - gen_mul_ops_cg.cr_op_sign.c_mul_np
   - gen_mul_ops_cg.cr_op_sign.c_mul_pn
@@ -334,7 +330,10 @@ bins:
   - gen_mul_ops_cg.cr_op_sign.mulhu_np
   - gen_mul_ops_cg.cr_op_sign.mulhu_pn
   - gen_mul_ops_cg.cr_op_sign.mulhu_pp
+  - gen_mul_timing_cg.cp_delta.d2
+  - gen_mul_timing_cg.cp_fetch_stall.no
   - gen_mul_timing_cg.cp_op.mulhu
+  - gen_mul_timing_cg.cp_wb_busy.no
   - gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2
   - gen_mul_timing_cg.cp_op.mulhsu
   - gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2
@@ -654,11 +653,6 @@ anti_vacuity:
   gen_mul_ops_cg.cr_extremes.mulhu_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_extremes.mulhu_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_extremes.mulhu_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_timing_cg.cp_delta.d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cp_fetch_stall.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cp_op.mulh: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cp_wb_busy.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cr_op_delta_clean.mulh_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_ops_cg.cr_op_sign.c_mul_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_sign.c_mul_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_sign.c_mul_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
@@ -675,7 +669,10 @@ anti_vacuity:
   gen_mul_ops_cg.cr_op_sign.mulhu_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_sign.mulhu_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_sign.mulhu_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_timing_cg.cp_delta.d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_fetch_stall.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cp_op.mulhu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_wb_busy.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cp_op.mulhsu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"

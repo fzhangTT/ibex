@@ -1,3 +1,5 @@
+# not_hit gen_isa_lui_auipc_cg.cp_pc_region.high: needs WP-9: no executable code in the top page
+# not_hit gen_isa_lui_auipc_cg.cp_pc_region.low: needs WP-9: no executable code below 0x1000
 test: gen_test_isa_alu
 owner: test-writer
 bins:
@@ -200,8 +202,6 @@ bins:
   - gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_yes
   - gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_no
   - gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_yes
-  - gen_isa_lui_auipc_cg.cp_pc_region.high
-  - gen_isa_lui_auipc_cg.cp_pc_region.low
   - gen_isa_lui_auipc_cg.cp_wrap.no
   - gen_isa_lui_auipc_cg.cp_wrap.yes
   - gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_nowrap
@@ -805,8 +805,6 @@ anti_vacuity:
   gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
   gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
   gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
-  gen_isa_lui_auipc_cg.cp_pc_region.high: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
-  gen_isa_lui_auipc_cg.cp_pc_region.low: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
   gen_isa_lui_auipc_cg.cp_wrap.no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
   gen_isa_lui_auipc_cg.cp_wrap.yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
   gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_nowrap: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"

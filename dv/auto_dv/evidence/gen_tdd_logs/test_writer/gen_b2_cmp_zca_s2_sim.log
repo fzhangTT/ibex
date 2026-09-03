@@ -1,0 +1,80 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3/vcs_simv +vcs+lic+wait +ntb_random_seed=2 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/cmp_zca/s2/prog/prog.vmem +gen_mem_image_crc32=7dae6d47 +gen_mem_image_words=6601 +gen_boot_addr=80000000 +gen_tohost_addr=80006480 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3/b2_cmp_zca_s2/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 09:36 2026
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=2 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/cmp_zca/s2/prog/prog.vmem tohost=0x80006480
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(132) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/cmp_zca/s2/prog/prog.vmem: 6601 words, crc32 0x7dae6d47 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(157) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(158) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(310) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(310) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(186) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(407) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_INFO @ 127000: reporter [GEN_EOT] end-of-test store 0x0000000a at 0x8ffff104 (store 1)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 160500: uvm_test_top.env.sb [isa_rd] rd model=x29/8000014e dut=x29/00000000 (order=26 pc=80006408 insn=34302ef3 trap=0 intr=0 rd=x29/00000000 mem=fffffcbd w0000 r1111 mode=3 cyc=155)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 165500: uvm_test_top.env.sb [isa_mem] store data model=8000014e dut=00000000 (order=27 pc=8000640c insn=01de2023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=160)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 1297500: uvm_test_top.env.sb [isa_rd] rd model=x29/800008b2 dut=x29/00000000 (order=386 pc=80006408 insn=34302ef3 trap=0 intr=0 rd=x29/00000000 mem=fffffcbd w0000 r1111 mode=3 cyc=1292)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 1305500: uvm_test_top.env.sb [isa_mem] store data model=800008b2 dut=00000000 (order=387 pc=8000640c insn=01de2023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=1300)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 5508500: uvm_test_top.env.sb [isa_rd] rd model=x29/800032c0 dut=x29/00000000 (order=1812 pc=80006408 insn=34302ef3 trap=0 intr=0 rd=x29/00000000 mem=fffffcbd w0000 r1111 mode=3 cyc=5503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 5514500: uvm_test_top.env.sb [isa_mem] store data model=800032c0 dut=00000000 (order=1813 pc=8000640c insn=01de2023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=5509)
+             5556000: Illegal instruction (hart 0) at PC 0x800032e4: 0x00006101
+             5557000: Illegal instruction (hart 0) at PC 0x800032e4: 0x00006101
+             5558000: Illegal instruction (hart 0) at PC 0x800032e4: 0x00006101
+             5559000: Illegal instruction (hart 0) at PC 0x800032e4: 0x00006101
+             6562000: Illegal instruction (hart 0) at PC 0x80003c9e: 0x00006101
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 9634500: uvm_test_top.env.sb [isa_rd] rd model=x29/80005164 dut=x29/00000000 (order=3193 pc=80006408 insn=34302ef3 trap=0 intr=0 rd=x29/00000000 mem=fffffcbd w0000 r1111 mode=3 cyc=9629)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 9640500: uvm_test_top.env.sb [isa_mem] store data model=80005164 dut=00000000 (order=3194 pc=8000640c insn=01de2023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=9635)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(265) @ 11802000: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 11797, commands consumed 65, retired 3880
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 11802000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 11802000: uvm_test_top.env.dbus_agent [gen_bus_agent] dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1: grants=836 responses=835 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 11802000: uvm_test_top.env.ibus_agent [gen_bus_agent] ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1: grants=3882 responses=3881 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(136) @ 11802000: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=3880 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(398) @ 11802000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=3880 mismatches=8 folded=0 draft_b=0 traps=6 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=3039
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(175) @ 11802000: uvm_test_top.env [GEN_ENV] mem: 6601 words, 765 mmio writes, 0 unmapped accesses; eot stores 766 (last code 0x00000001); sig writes 0; key requests 0; commands routed 65 ignored 0
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 11802000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   16
+UVM_WARNING :    0
+UVM_ERROR :    8
+UVM_FATAL :    0
+** Report counts by id
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[MEM_LOAD]     1
+[RNTST]     1
+[TEST_DONE]     1
+[gen_bus_agent]     4
+[isa_mem]     4
+[isa_rd]     4
+
+$finish at simulation time             11802001
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 11802 attempts, 835 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 11802 attempts, 3881 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 118020010 ps
+CPU Time:      1.020 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 09:37:00 2026

@@ -1,0 +1,130 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/isa_cti/s1/prog/prog.vmem +gen_mem_image_crc32=f9878226 +gen_mem_image_words=89706 +gen_boot_addr=80000000 +gen_tohost_addr=80057a00 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3/b2_isa_cti_s1/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 09:18 2026
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/isa_cti/s1/prog/prog.vmem tohost=0x80057a00
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(132) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/isa_cti/s1/prog/prog.vmem: 89706 words, crc32 0xf9878226 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(157) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(158) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(310) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(310) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(186) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(407) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_INFO @ 166000: reporter [GEN_EOT] end-of-test store 0x40901104 at 0x8ffff104 (store 1)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 829500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800008d2 dut=800008d3 (order=171 pc=800008c6 insn=d5788267 trap=0 intr=0 rd=x4/800008ca mem=800008ca w0000 r1111 mode=3 cyc=824)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 7972500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800057ea dut=800057eb (order=1617 pc=800057b4 insn=00009b82 trap=0 intr=0 rd=x1/800057b6 mem=800057b6 w0000 r1111 mode=3 cyc=7967)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 8037500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000580e dut=8000580f (order=1629 pc=8000581e insn=800b8a67 trap=0 intr=0 rd=x20/80005822 mem=80005822 w0000 r1111 mode=3 cyc=8032)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 8526500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80005b2a dut=80005b2b (order=1729 pc=80005b5a insn=00008202 trap=0 intr=0 rd=x0/00000000 mem=80005b5c w0000 r1111 mode=3 cyc=8521)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 11371500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800073b4 dut=800073b5 (order=2308 pc=800073d8 insn=00009982 trap=0 intr=0 rd=x1/800073da mem=800073da w0000 r1111 mode=3 cyc=11366)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 11843500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80007742 dut=80007743 (order=2408 pc=80007752 insn=c0028967 trap=0 intr=0 rd=x18/80007756 mem=80007756 w0000 r1111 mode=3 cyc=11838)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 13182500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000831c dut=8000831d (order=2686 pc=8000833a insn=00008882 trap=0 intr=0 rd=x0/00000000 mem=8000833c w0000 r1111 mode=3 cyc=13177)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 15173500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80009fa8 dut=80009fa9 (order=3078 pc=80009f8c insn=00008102 trap=0 intr=0 rd=x0/00000000 mem=80009f8e w0000 r1111 mode=3 cyc=15168)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 15338500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000a062 dut=8000a063 (order=3110 pc=8000a084 insn=5c318267 trap=0 intr=0 rd=x4/8000a088 mem=8000a088 w0000 r1111 mode=3 cyc=15333)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 15581500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000a3a8 dut=8000a3a9 (order=3162 pc=8000a376 insn=00009a82 trap=0 intr=0 rd=x1/8000a378 mem=8000a378 w0000 r1111 mode=3 cyc=15576)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 16729500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000b1aa dut=8000b1ab (order=3401 pc=8000b1bc insn=4d1300e7 trap=0 intr=0 rd=x1/8000b1c0 mem=8000b1c0 w0000 r1111 mode=3 cyc=16724)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 18321500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000be06 dut=8000be07 (order=3721 pc=8000be3e insn=00008802 trap=0 intr=0 rd=x0/00000000 mem=8000be40 w0000 r1111 mode=3 cyc=18316)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 21917500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000e77a dut=8000e77b (order=4455 pc=8000e76c insn=00008b82 trap=0 intr=0 rd=x0/00000000 mem=8000e76e w0000 r1111 mode=3 cyc=21912)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 25885500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80010f88 dut=80010f89 (order=5291 pc=80010f7a insn=221208e7 trap=0 intr=0 rd=x17/80010f7e mem=80010f7e w0000 r1111 mode=3 cyc=25880)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 26055500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80011098 dut=80011099 (order=5325 pc=800110c4 insn=419a0867 trap=0 intr=0 rd=x16/800110c8 mem=800110c8 w0000 r1111 mode=3 cyc=26050)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 28356500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80012428 dut=80012429 (order=5796 pc=800123de insn=00008202 trap=0 intr=0 rd=x0/00000000 mem=800123e0 w0000 r1111 mode=3 cyc=28351)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 29127500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80012c04 dut=80012c05 (order=5946 pc=80012bf6 insn=6d5202e7 trap=0 intr=0 rd=x5/80012bfa mem=80012bfa w0000 r1111 mode=3 cyc=29122)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 30370500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001387c dut=8001387d (order=6204 pc=8001389c insn=00008a02 trap=0 intr=0 rd=x0/00000000 mem=8001389e w0000 r1111 mode=3 cyc=30365)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 31602500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001419c dut=8001419d (order=6450 pc=800141ae insn=c8d30367 trap=0 intr=0 rd=x6/800141b2 mem=800141b2 w0000 r1111 mode=3 cyc=31597)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 32226500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80014abc dut=80014abd (order=6586 pc=80014b3c insn=da0b8867 trap=0 intr=0 rd=x16/80014b40 mem=80014b40 w0000 r1111 mode=3 cyc=32221)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 33218500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001534a dut=8001534b (order=6792 pc=80015360 insn=00008282 trap=0 intr=0 rd=x0/00000000 mem=80015362 w0000 r1111 mode=3 cyc=33213)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 34026500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80015768 dut=80015769 (order=6954 pc=80015786 insn=00008282 trap=0 intr=0 rd=x0/00000000 mem=80015788 w0000 r1111 mode=3 cyc=34021)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 35032500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800160ee dut=800160ef (order=7175 pc=800160d4 insn=800183e7 trap=0 intr=0 rd=x7/800160d8 mem=800160d8 w0000 r1111 mode=3 cyc=35027)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 37508500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001869c dut=8001869d (order=7706 pc=8001866c insn=a99a0a67 trap=0 intr=0 rd=x20/80018670 mem=80018670 w0000 r1111 mode=3 cyc=37503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 43057500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001cf28 dut=8001cf29 (order=8834 pc=8001cf1c insn=187a8267 trap=0 intr=0 rd=x4/8001cf20 mem=8001cf20 w0000 r1111 mode=3 cyc=43052)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 44882500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001e30a dut=8001e30b (order=9214 pc=8001e320 insn=00009282 trap=0 intr=0 rd=x1/8001e322 mem=8001e322 w0000 r1111 mode=3 cyc=44877)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 46128500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8001f2d2 dut=8001f2d3 (order=9470 pc=8001f2c4 insn=2d7a09e7 trap=0 intr=0 rd=x19/8001f2c8 mem=8001f2c8 w0000 r1111 mode=3 cyc=46123)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 47231500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800203d4 dut=800203d5 (order=9690 pc=80020406 insn=00009082 trap=0 intr=0 rd=x1/80020408 mem=80020408 w0000 r1111 mode=3 cyc=47226)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 50142500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80021db6 dut=80021db7 (order=10278 pc=80021cf0 insn=80020167 trap=0 intr=0 rd=x2/80021cf4 mem=80021cf4 w0000 r1111 mode=3 cyc=50137)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 55969500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80025d5c dut=80025d5d (order=11497 pc=80025d38 insn=00008382 trap=0 intr=0 rd=x0/00000000 mem=80025d3a w0000 r1111 mode=3 cyc=55964)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 59059500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800281dc dut=800281dd (order=12127 pc=800281fe insn=00008202 trap=0 intr=0 rd=x0/00000000 mem=80028200 w0000 r1111 mode=3 cyc=59054)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 59985500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8002892e dut=8002892f (order=12317 pc=8002893e insn=7b988867 trap=0 intr=0 rd=x16/80028942 mem=80028942 w0000 r1111 mode=3 cyc=59980)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 60236500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80028cae dut=80028caf (order=12372 pc=80028c88 insn=000b0b67 trap=0 intr=0 rd=x22/80028c8c mem=80028c8c w0000 r1111 mode=3 cyc=60231)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 62651500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8002b1de dut=8002b1df (order=12863 pc=8002b1ee insn=24418a67 trap=0 intr=0 rd=x20/8002b1f2 mem=8002b1f2 w0000 r1111 mode=3 cyc=62646)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 66618500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8002d56c dut=8002d56d (order=13678 pc=8002d550 insn=00008a02 trap=0 intr=0 rd=x0/00000000 mem=8002d552 w0000 r1111 mode=3 cyc=66613)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 67198500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8002dc7e dut=8002dc7f (order=13800 pc=8002dbb8 insn=800288e7 trap=0 intr=0 rd=x17/8002dbbc mem=8002dbbc w0000 r1111 mode=3 cyc=67193)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 67638500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8002deb0 dut=8002deb1 (order=13883 pc=8002de94 insn=57b281e7 trap=0 intr=0 rd=x3/8002de98 mem=8002de98 w0000 r1111 mode=3 cyc=67633)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 70404500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80030f94 dut=80030f95 (order=14462 pc=80030f56 insn=00008102 trap=0 intr=0 rd=x0/00000000 mem=80030f58 w0000 r1111 mode=3 cyc=70399)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 78224500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80036052 dut=80036053 (order=16105 pc=80036030 insn=00009882 trap=0 intr=0 rd=x1/80036032 mem=80036032 w0000 r1111 mode=3 cyc=78219)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 79271500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80036d40 dut=80036d41 (order=16316 pc=80036d38 insn=4ddb8067 trap=0 intr=0 rd=x0/00000000 mem=80036d3c w0000 r1111 mode=3 cyc=79266)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 80067500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80037654 dut=80037655 (order=16483 pc=80037622 insn=00008182 trap=0 intr=0 rd=x0/00000000 mem=80037624 w0000 r1111 mode=3 cyc=80062)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 81875500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003872a dut=8003872b (order=16853 pc=80038768 insn=00009a82 trap=0 intr=0 rd=x1/8003876a mem=8003876a w0000 r1111 mode=3 cyc=81870)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 86248500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003b38c dut=8003b38d (order=17761 pc=8003b37e insn=ecd30a67 trap=0 intr=0 rd=x20/8003b382 mem=8003b382 w0000 r1111 mode=3 cyc=86243)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 87434500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003c380 dut=8003c381 (order=18014 pc=8003c346 insn=00009302 trap=0 intr=0 rd=x1/8003c348 mem=8003c348 w0000 r1111 mode=3 cyc=87429)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 87916500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003c832 dut=8003c833 (order=18118 pc=8003c862 insn=00008082 trap=0 intr=0 rd=x0/00000000 mem=8003c864 w0000 r1111 mode=3 cyc=87911)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 87953500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003c87e dut=8003c87f (order=18127 pc=8003c872 insn=b88808e7 trap=0 intr=0 rd=x17/8003c876 mem=8003c876 w0000 r1111 mode=3 cyc=87948)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 90830500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003e87c dut=8003e87d (order=18745 pc=8003e866 insn=00009182 trap=0 intr=0 rd=x1/8003e868 mem=8003e868 w0000 r1111 mode=3 cyc=90825)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 91645500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8003f28c dut=8003f28d (order=18907 pc=8003f2a4 insn=28e18be7 trap=0 intr=0 rd=x23/8003f2a8 mem=8003f2a8 w0000 r1111 mode=3 cyc=91640)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 94049500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80041ad4 dut=80041ad5 (order=19397 pc=80041a32 insn=467989e7 trap=0 intr=0 rd=x19/80041a36 mem=80041a36 w0000 r1111 mode=3 cyc=94044)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 106119500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004a69a dut=8004a69b (order=21848 pc=8004a668 insn=00008982 trap=0 intr=0 rd=x0/00000000 mem=8004a66a w0000 r1111 mode=3 cyc=106114)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 109447500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004cfe4 dut=8004cfe5 (order=22529 pc=8004cfa4 insn=00008202 trap=0 intr=0 rd=x0/00000000 mem=8004cfa6 w0000 r1111 mode=3 cyc=109442)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 110318500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004d7d0 dut=8004d7d1 (order=22713 pc=8004d7e0 insn=277b8167 trap=0 intr=0 rd=x2/8004d7e4 mem=8004d7e4 w0000 r1111 mode=3 cyc=110313)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 110981500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004e3d6 dut=8004e3d7 (order=22848 pc=8004e38e insn=00008902 trap=0 intr=0 rd=x0/00000000 mem=8004e390 w0000 r1111 mode=3 cyc=110976)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 111428500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004e754 dut=8004e755 (order=22938 pc=8004e768 insn=00009b02 trap=0 intr=0 rd=x1/8004e76a mem=8004e76a w0000 r1111 mode=3 cyc=111423)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 111940500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004eb12 dut=8004eb13 (order=23040 pc=8004eac8 insn=00009102 trap=0 intr=0 rd=x1/8004eaca mem=8004eaca w0000 r1111 mode=3 cyc=111935)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 112515500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004ef70 dut=8004ef71 (order=23153 pc=8004ef98 insn=00008902 trap=0 intr=0 rd=x0/00000000 mem=8004ef9a w0000 r1111 mode=3 cyc=112510)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 113272500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004f8f0 dut=8004f8f1 (order=23306 pc=8004f90e insn=cc9309e7 trap=0 intr=0 rd=x19/8004f912 mem=8004f912 w0000 r1111 mode=3 cyc=113267)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 113523500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004fce6 dut=8004fce7 (order=23361 pc=8004fcda insn=800a88e7 trap=0 intr=0 rd=x17/8004fcde mem=8004fcde w0000 r1111 mode=3 cyc=113518)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 113699500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8004fe08 dut=8004fe09 (order=23401 pc=8004fdfc insn=87088267 trap=0 intr=0 rd=x4/8004fe00 mem=8004fe00 w0000 r1111 mode=3 cyc=113694)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 118805500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8005334e dut=8005334f (order=24449 pc=80053340 insn=09b18167 trap=0 intr=0 rd=x2/80053344 mem=80053344 w0000 r1111 mode=3 cyc=118800)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 120964500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80054808 dut=80054809 (order=24880 pc=800547dc insn=00009302 trap=0 intr=0 rd=x1/800547de mem=800547de w0000 r1111 mode=3 cyc=120959)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 124973500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80056f66 dut=80056f67 (order=25706 pc=80056f98 insn=00008102 trap=0 intr=0 rd=x0/00000000 mem=80056f9a w0000 r1111 mode=3 cyc=124968)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 125474500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800574b0 dut=800574b1 (order=25808 pc=8005749c insn=000a8be7 trap=0 intr=0 rd=x23/800574a0 mem=800574a0 w0000 r1111 mode=3 cyc=125469)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 125733500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8005764e dut=8005764f (order=25864 pc=8005761e insn=00008982 trap=0 intr=0 rd=x0/00000000 mem=80057620 w0000 r1111 mode=3 cyc=125728)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(265) @ 126024000: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 126019, commands consumed 65, retired 25922
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 126024000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 126024000: uvm_test_top.env.dbus_agent [gen_bus_agent] dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1: grants=2921 responses=2920 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 126024000: uvm_test_top.env.ibus_agent [gen_bus_agent] ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1: grants=41877 responses=41876 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(136) @ 126024000: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=25922 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(398) @ 126024000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=25922 mismatches=64 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=23002
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(175) @ 126024000: uvm_test_top.env [GEN_ENV] mem: 89706 words, 2626 mmio writes, 0 unmapped accesses; eot stores 2627 (last code 0x00000001); sig writes 0; key requests 12; commands routed 65 ignored 0
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 126024000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   16
+UVM_WARNING :    0
+UVM_ERROR :   64
+UVM_FATAL :    0
+** Report counts by id
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[MEM_LOAD]     1
+[RNTST]     1
+[TEST_DONE]     1
+[gen_bus_agent]     4
+[isa_pc_next]    64
+
+$finish at simulation time            126024001
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 126024 attempts, 2920 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 126024 attempts, 41876 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 1260240010 ps
+CPU Time:      4.720 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 09:18:54 2026
