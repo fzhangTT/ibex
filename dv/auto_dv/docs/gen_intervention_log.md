@@ -1670,3 +1670,13 @@ and the tree holds Runtime's files as it left them. Runtime re-hands the gate to
 the rows of that touch, or hands the fix touch with it as a second commit. Rule for the committer: every step of the
 pre-commit chain aborts on failure (a check's exit status is gated, not printed), and the hash re-check runs as the last
 step immediately before git add, with no step between.
+
+## LOG-071 - 2026-09-03 - Commit subject of aa13338 misstates the isa_alu manifest bin count
+
+The commit subject of the Test Writer's isa_alu touch (aa13338) says "the manifest is unchanged (473 declared bins, none
+parked)". The manifest is unchanged, but gen_test_isa_alu.fcov.yaml declares 602 bins (the runs report GEN_TEST_BINS
+n=602 and gen_tdd_batch2.md says 602); 473 was the pre-B4 count of a different manifest (gen_test_cmp_zcmp_basic) carried
+over by the Orchestrator when composing the subject. The hand-off note gave no count; the number was the committer's
+addition. The artifacts are right; this entry is the correction of record, since commit messages are not rewritten.
+Rule restated from LOG-065: a commit subject carries only facts from the hand-off note or from a check the committer ran
+on the diff; a number that came from neither does not go in.
