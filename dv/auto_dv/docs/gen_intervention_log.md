@@ -1694,3 +1694,15 @@ exact while the pin is run-static) stands. Rule: a reviewer's factual claim abou
 is checked with a grep or a git show before it is relayed as a row; the Orchestrator relays findings, not premises, and
 a premise it cannot verify is marked as the reviewer's claim. The DV Lead corrects the plan text in v3b; tb-infra answers
 CM98-M-3 on the mechanism only.
+
+## LOG-073 - 2026-09-03 - A second ungated hash re-check; the commit undone; every check gated explicitly
+
+Committing the DV Lead's v3b, the Orchestrator's hash re-check printed MISMATCH for gen_critic_response_plan_set_v1.md
+(the tree copy, 0d4366feaad8, already carried the DV Lead's CM109 edits in progress; the handed hash was 8fa94a333fac),
+and the chain, which relied on the shell's set -e rather than an explicit exit gate after the check, committed the file in
+that intermediate state (dc70dfd) and launched its review. The output was read a minute later; the review was killed and
+its run directory removed, and the commit was undone (git reset, nothing pushed); HEAD is 71e7920 and the tree holds the
+DV Lead's files as it left them. This repeats LOG-070 in a different form. Rule made mechanical: every check in the
+committer's chain is followed by an explicit exit gate on its own status (rc=$?; [ $rc = 0 ] || exit 1); set -e is not
+relied upon; the hash re-check is the last gated step before git add. The DV Lead finishes the CM109 folds and hands one
+superseding list.
