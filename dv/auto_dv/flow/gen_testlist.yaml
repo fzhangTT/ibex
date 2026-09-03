@@ -42,8 +42,9 @@
 schema_version: 1
 
 # Policies (flow-enforced):
-#   fcov_manifest_required_tiers: tiers whose tests must carry an fcov_expectation_file once the
-#     first covergroup exists (a null manifest there FAILs the run; Critic P-07). Empty until then.
+#   fcov_manifest_required_tiers: tiers whose MEASURED tests must carry an fcov_expectation_file (a null
+#     manifest there FAILs the run at merge time; Critic P-07); an entry with measured: false contributes no
+#     coverage and is exempt, as is tier check.
 #   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: probe
 #     P6, the CSR debug compare); a measured run enabling one is refused in writing (NOT_RUN).
 #     The one origin of the property and of the names is TB Infra's rendered knob table
@@ -330,22 +331,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_rst_boot.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - rst
-    - gen_rst_boot
+    feature_groups: [rst, gen_rst_boot]
     cocotb_module: dv.auto_dv.tests.gen_test_rst_boot
     expected_fail: false
     component: gen_tb_top
@@ -382,22 +379,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_reset.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - csr
-    - gen_csr_reset
+    feature_groups: [csr, gen_csr_reset]
     cocotb_module: dv.auto_dv.tests.gen_test_csr_reset
     expected_fail: false
     component: gen_tb_top
@@ -434,22 +427,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_access_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_access.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - csr
-    - gen_csr_access
+    feature_groups: [csr, gen_csr_access]
     cocotb_module: dv.auto_dv.tests.gen_test_csr_access
     expected_fail: false
     component: gen_tb_top
@@ -486,22 +475,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_trap_setup.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - csr
-    - gen_csr_trap_setup
+    feature_groups: [csr, gen_csr_trap_setup]
     cocotb_module: dv.auto_dv.tests.gen_test_csr_trap_setup
     expected_fail: false
     component: gen_tb_top
@@ -538,22 +523,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcb_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcb.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - cmp
-    - gen_cmp_zcb
+    feature_groups: [cmp, gen_cmp_zcb]
     cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcb
     expected_fail: false
     component: gen_tb_top
@@ -590,22 +571,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcmp_basic.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - cmp
-    - gen_cmp_zcmp_basic
+    feature_groups: [cmp, gen_cmp_zcmp_basic]
     cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcmp_basic
     expected_fail: false
     component: gen_tb_top
@@ -642,22 +619,18 @@ tests:
     tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_bit_draft_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_bit_draft.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - bit
-    - gen_bit_draft
+    feature_groups: [bit, gen_bit_draft]
     cocotb_module: dv.auto_dv.tests.gen_test_bit_draft
     expected_fail: false
     component: gen_tb_top
@@ -694,22 +667,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_pmp_csr_warl_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_pmp_csr_warl.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - pmp
-    - gen_pmp_csr_warl
+    feature_groups: [pmp, gen_pmp_csr_warl]
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
     expected_fail: false
     component: gen_tb_top
@@ -771,22 +740,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_mul_div_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_mul_div.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - mul
-    - gen_mul_div
+    feature_groups: [mul, gen_mul_div]
     cocotb_module: dv.auto_dv.tests.gen_test_mul_div
     expected_fail: false
     component: gen_tb_top
@@ -823,22 +788,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_mul_mul_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_mul_mul.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - mul
-    - gen_mul_mul
+    feature_groups: [mul, gen_mul_mul]
     cocotb_module: dv.auto_dv.tests.gen_test_mul_mul
     expected_fail: false
     component: gen_tb_top
@@ -874,22 +835,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_isa_cti_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_cti.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - isa
-    - gen_isa_cti
+    feature_groups: [isa, gen_isa_cti]
     cocotb_module: dv.auto_dv.tests.gen_test_isa_cti
     expected_fail: false
     component: gen_tb_top
@@ -925,22 +882,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_isa_shift_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_shift.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - isa
-    - gen_isa_shift
+    feature_groups: [isa, gen_isa_shift]
     cocotb_module: dv.auto_dv.tests.gen_test_isa_shift
     expected_fail: false
     component: gen_tb_top
@@ -977,22 +930,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_isa_alu_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_alu.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - isa
-    - gen_isa_alu
+    feature_groups: [isa, gen_isa_alu]
     cocotb_module: dv.auto_dv.tests.gen_test_isa_alu
     expected_fail: false
     component: gen_tb_top
@@ -1029,22 +978,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - bit
-    - gen_bit_ratified
+    feature_groups: [bit, gen_bit_ratified]
     cocotb_module: dv.auto_dv.tests.gen_test_bit_ratified
     expected_fail: false
     component: gen_tb_top
@@ -1082,22 +1027,18 @@ tests:
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs:
-    - +gen_fetch_en_at_reset=0
+    plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_cmp_zca_prog.py
       generator_args: []
       seed: run
-      extra_args:
-      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
     fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
-    feature_groups:
-    - cmp
-    - gen_cmp_zca
+    feature_groups: [cmp, gen_cmp_zca]
     cocotb_module: dv.auto_dv.tests.gen_test_cmp_zca
     expected_fail: false
     component: gen_tb_top

@@ -434,6 +434,19 @@ def self_test() -> int:
             and stale_allowed and stale_allowed["refuse"] is None and stale_allowed["stale_cause"] == C.RED_STALE_TEXT.format(task="T-XXX")
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "red_signature_check: matching harness line passes (RED-OK), a \\b-anchored id defeated by a suffix is refused, no log -> None, a UVM error ahead of a matching harness line is refused (literal criterion) unless the entry is allowlisted, then stale with its task")
+    # CLI builders: a refused entry prints its refusal alone, an allowlisted stale entry its cause; the summary and exit code follow the counts.
+    base = {"log": "/x/gen_q_red1_stdout.log", "harness_match": True, "verdict": C.VERDICT_FAIL, "refuse": None, "stale_evidence": False, "stale_cause": None}
+    l_ok = red_check_line("gen_q_red", dict(base, verdict=C.VERDICT_RED_OK))
+    l_ref = red_check_line("gen_q_red", dict(base, refuse=C.RED_STALE_REFUSE, stale_evidence=True))
+    l_mis = red_check_line("gen_q_red", dict(base, harness_match=False, refuse="red_expect does not match the retained log's harness line"))
+    l_stale = red_check_line("gen_q_red", dict(base, stale_evidence=True, stale_cause=C.RED_STALE_TEXT.format(task="T-1")))
+    s_ok = red_check_summary({}, {}); s_stale = red_check_summary({}, {C.RED_STALE_TEXT.format(task="T-1"): 2}); s_ref = red_check_summary({"harness-line mismatch": 1, "retained log not RED-OK": 2}, {})
+    cond = l_ok.startswith("RED-CHECK ok  ") and "None" not in l_ref and l_ref.startswith("RED-CHECK FAIL") and C.RED_STALE_REFUSE in l_ref and "first collected" not in l_ref \
+        and l_mis.startswith("RED-CHECK FAIL") and l_stale.startswith("RED-CHECK STALE") and "(T-1)" in l_stale \
+        and s_ok == ("PASS", 0) and s_stale[1] == C.RED_CHECK_EXIT_STALE and s_stale[0].startswith("PASS (2 stale") \
+        and s_ref[1] == C.RED_CHECK_EXIT_REFUSE and s_ref[0] == "FAIL (3 red entry(ies) refused: 1 harness-line mismatch; 2 retained log not RED-OK)"
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "red check CLI builders: refused line without a stale suffix, stale line with its task, summary text and exit code per counts")
     # Request server partition: a head-mode request that merely carries an empty elcheck key builds and is pinned.
     import gen_serve_requests as _SR
     with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td6:
@@ -609,6 +622,31 @@ def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
             "evidence": str(res.get("evidence") or "")[:200], "harness_line": (harness or "")[:200], "harness_match": match,
             "refuse": refuse, "stale_evidence": stale,
             "stale_cause": C.RED_STALE_TEXT.format(task=allow[0]) if (stale and allow is not None) else None}
+
+
+def red_check_line(name: str, chk: dict[str, Any]) -> str:
+    """One --check-red-signatures line: the tag (ok / STALE / FAIL), the log, the harness match, the verdict, then the
+    refusal text or the stale cause (a refused entry never carries a stale suffix)."""
+    ok_ = chk["refuse"] is None
+    tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
+    line = f"RED-CHECK {tag} {name}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
+    if chk["refuse"]:
+        line += f"; {chk['refuse']}"
+    elif chk["stale_cause"]:
+        line += f"; {chk['stale_cause']} (the verdict's first collected line is not the harness line)"
+    return line
+
+
+def red_check_summary(refused: dict[str, int], causes: dict[str, int]) -> tuple[str, int]:
+    """The --check-red-signatures summary and exit code: refusals (by kind) -> RED_CHECK_EXIT_REFUSE, only allowlisted
+    stale logs (by task) -> RED_CHECK_EXIT_STALE, else PASS and 0."""
+    bad, stale = sum(refused.values()), sum(causes.values())
+    if bad:
+        return f"FAIL ({bad} red entry(ies) refused: " + "; ".join(f"{n} {k}" for k, n in sorted(refused.items())) + ")", C.RED_CHECK_EXIT_REFUSE
+    if stale:
+        return (f"PASS ({stale} stale retained log(s), the literal verdict criterion is not met yet: "
+                + "; ".join(f"{n} {c}" for c, n in sorted(causes.items())) + ")"), C.RED_CHECK_EXIT_STALE
+    return "PASS", 0
 
 
 def slow_total(logs: list[Path]) -> dict[str, int] | None:
@@ -1122,7 +1160,6 @@ if __name__ == "__main__":
         nxt = sys.argv[sys.argv.index("--check-red-signatures") + 1:][:1]
         tl = Path(nxt[0]) if nxt and not nxt[0].startswith("--") else C.TESTLIST_YAML   # a following flag is not a path
         data = load_yaml(tl)
-        bad = stale = 0
         causes: dict[str, int] = {}
         refused: dict[str, int] = {}
         for t in data.get("tests", []):
@@ -1132,23 +1169,15 @@ if __name__ == "__main__":
             if chk is None:
                 print(f"RED-CHECK skip  {t['name']}: no retained pinned-red log")
                 continue
-            ok_ = chk["refuse"] is None
-            if not ok_:
-                bad += 1
+            if chk["refuse"]:
                 kind = "harness-line mismatch" if chk["refuse"] != C.RED_STALE_REFUSE else "retained log not RED-OK"
                 refused[kind] = refused.get(kind, 0) + 1
-            if ok_ and chk["stale_evidence"]:
-                stale += 1
+            elif chk["stale_cause"]:
                 causes[chk["stale_cause"]] = causes.get(chk["stale_cause"], 0) + 1
-            tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
-            print(f"RED-CHECK {tag} {t['name']}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
-                  + (f"; {chk['refuse']}" if chk["refuse"] else "")
-                  + (f"; {chk['stale_cause']} (the verdict's first collected line is not the harness line)" if chk["stale_cause"] else ""))
-        verdict = (f"FAIL ({bad} red entry(ies) refused: " + "; ".join(f"{n} {k}" for k, n in sorted(refused.items())) + ")" if bad
-                   else (f"PASS ({stale} stale retained log(s), the literal verdict criterion is not met yet: "
-                         + "; ".join(f"{n} {c}" for c, n in sorted(causes.items())) + ")" if stale else "PASS"))
+            print(red_check_line(t["name"], chk))
+        verdict, code = red_check_summary(refused, causes)
         print("RED-CHECK:", verdict)
-        sys.exit(C.RED_CHECK_EXIT_REFUSE if bad else (C.RED_CHECK_EXIT_STALE if stale else 0))
+        sys.exit(code)
     if "--dump-testlist" in sys.argv:
         # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
         import json

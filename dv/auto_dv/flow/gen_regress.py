@@ -231,15 +231,16 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any], covergroups_exist: bool) -> None:
-    """A null manifest is a missing trust-triad artefact on (a) every tier the testlist header names
-    and (b) every measured tier as soon as any covergroup exists in the merged report (the policy
-    becomes live with the first covergroup; tier check stays exempt)."""
+    """A null manifest is a missing trust-triad artefact for a MEASURED test on (a) every tier the testlist
+    header names and (b) every tier as soon as any covergroup exists in the merged report (the policy becomes
+    live with the first covergroup). An unmeasured entry (measured: false) contributes no coverage and is exempt,
+    as is tier check."""
     required = set(testlist.get("fcov_manifest_required_tiers") or [])
     if covergroups_exist:
         required |= set(C.TIERS)
     for r in runs:
         t = U.test_by_name(testlist, r["test"])
-        if t["tier"] in required and not t.get("fcov_expectation_file") and r["verdict"] == C.VERDICT_PASS:
+        if t["tier"] in required and t.get("measured", True) and not t.get("fcov_expectation_file") and r["verdict"] == C.VERDICT_PASS:
             r["verdict"] = C.VERDICT_FAIL
             r["reason"] = (f"no fcov_expectation_file on tier {t['tier']} while covergroups exist "
                            "(trust triad rule 3)" if covergroups_exist and t["tier"] not in
@@ -337,10 +338,13 @@ def self_test() -> int:
     """fcov_policy_failures and fcov_summary on fabricated run records (no simulation)."""
     tl = {"tests": [{"name": "gen_a", "tier": "smoke", "fcov_expectation_file": None},
                     {"name": "gen_b", "tier": "check", "fcov_expectation_file": None},
-                    {"name": "gen_c", "tier": "targeted", "fcov_expectation_file": "x.fcov.yaml"}],
+                    {"name": "gen_c", "tier": "targeted", "fcov_expectation_file": "x.fcov.yaml"},
+                    {"name": "gen_d", "tier": "smoke", "measured": False, "fcov_expectation_file": None}],
           "fcov_manifest_required_tiers": []}
     def runs():
         return [{"test": "gen_a", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
+                 "fcov_expectation_file": None},
+                {"test": "gen_d", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
                  "fcov_expectation_file": None},
                 {"test": "gen_b", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
                  "fcov_expectation_file": None},
@@ -349,21 +353,21 @@ def self_test() -> int:
                  "fcov_check": {"status": "UNHIT", "declared": 3, "hit": 2, "unmet_bins": ["gen_x_cg.cp.b"]}}]
     ok = True
     r = runs(); fcov_policy_failures(r, tl, covergroups_exist=False)
-    cond = [x["verdict"] for x in r] == [C.VERDICT_PASS] * 3
+    cond = [x["verdict"] for x in r] == [C.VERDICT_PASS] * 4
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "no covergroup yet: null manifests pass")
     r = runs(); fcov_policy_failures(r, tl, covergroups_exist=True)
-    cond = r[0]["verdict"] == C.VERDICT_FAIL and "covergroups exist" in r[0]["reason"] and r[1]["verdict"] == C.VERDICT_PASS
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "covergroups exist: smoke null manifest FAILs, tier check exempt")
+    cond = r[0]["verdict"] == C.VERDICT_FAIL and "covergroups exist" in r[0]["reason"] and r[2]["verdict"] == C.VERDICT_PASS and r[1]["verdict"] == C.VERDICT_PASS
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "covergroups exist: measured smoke null manifest FAILs, tier check exempt, an unmeasured smoke entry exempt")
     tl2 = dict(tl, fcov_manifest_required_tiers=["smoke"])
     r = runs(); fcov_policy_failures(r, tl2, covergroups_exist=False)
-    cond = r[0]["verdict"] == C.VERDICT_FAIL and "fcov_manifest_required_tiers" in r[0]["reason"]
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "header policy: named tier FAILs without a manifest")
+    cond = r[0]["verdict"] == C.VERDICT_FAIL and "fcov_manifest_required_tiers" in r[0]["reason"] and r[1]["verdict"] == C.VERDICT_PASS
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "header policy: a measured test on a named tier FAILs without a manifest, an unmeasured one on that tier stays PASS")
     fs = fcov_summary(runs())
     cond = fs["totals"] == {"checked": 1, "pass": 0, "unmet": 1, "unverifiable": 0} and \
         fs["per_test"]["gen_c"]["unmet_bins"] == ["gen_x_cg.cp.b"] and fs["per_test"]["gen_a"]["checked"] == 0
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"fcov_summary totals/per_test: {fs['totals']}")
     sm = summarize(runs())
-    cond = sm["runs_without_fcov_manifest"] == 2 and sm["tests_without_fcov_manifest"] == ["gen_a", "gen_b"]
+    cond = sm["runs_without_fcov_manifest"] == 3 and sm["tests_without_fcov_manifest"] == ["gen_a", "gen_b", "gen_d"]
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "summarize counts runs without a manifest")
     sm = summarize([{"test": "gen_red", "verdict": C.VERDICT_RED_OK}, {"test": "gen_p", "verdict": C.VERDICT_PASS},
                     {"test": "gen_f", "verdict": C.VERDICT_FAIL}])

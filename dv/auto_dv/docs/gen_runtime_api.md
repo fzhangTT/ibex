@@ -259,7 +259,8 @@ gen_regress.py --repro <test> <seed> [--waves]
   `--purpose 4` is refused. DV never edits `rtl/` in place.
 - **Summary accounting (Critic P-07).** `summary.runs_without_fcov_manifest` and
   `tests_without_fcov_manifest` list every run without a declared-bins manifest; the testlist header
-  `fcov_manifest_required_tiers` turns a null manifest into a FAIL on the named tiers once the first
+  `fcov_manifest_required_tiers` turns a null manifest into a FAIL for measured tests on the named tiers (an entry with
+  `measured: false` contributes no coverage and is exempt) once the first
   covergroup exists.
 - **Out root (Critic P-10).** A non-local regression refuses an out root on a local filesystem
   (`--allow-local-out-root` for single-host debugging); every manifest records `out_root`,
@@ -644,7 +645,7 @@ uncommitted working file. The regression manifest carries `fcov.totals` (checked
 `fcov.per_test`; the dashboard shows the per-test status and the per-regression triple.
 
 Manifest-required policy: a run without a manifest is counted (`summary.runs_without_fcov_manifest`);
-it FAILs on the tiers named in the testlist header `fcov_manifest_required_tiers`, and on every
+it FAILs, for measured tests only, on the tiers named in the testlist header `fcov_manifest_required_tiers`, and on every
 measured tier (smoke, targeted, full) as soon as URG reports a GROUP total in any merge of the
 regression (`fcov.covergroups_exist`), so the policy becomes live with the first covergroup. Tier
 check stays exempt.
