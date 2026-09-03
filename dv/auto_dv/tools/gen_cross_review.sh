@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Cross-model review entry point (CLAUDE.md policy). Prefers codex through the fence-provided
 # wrapper; when codex is unavailable (spend cap, outage) falls back to a fresh
-# `claude -p --model fable` session (owner ruling A-001) with the identical rubric set, target
+# `claude -p --model fable` session (owner ruling A-001, recorded in dv/auto_dv/docs/gen_intervention_log.md) with the identical rubric set, target
 # echo, and verdict contract, and records why codex was unavailable in the artifact header.
 # Usage: gen_cross_review.sh plan <file> [...] | diff <base> <head> | replan <plan> <findings> <base_rev>
 #        plan/replan files must be committed at HEAD: the reviewer reads a detached checkout of the

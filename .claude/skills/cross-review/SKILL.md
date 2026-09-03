@@ -50,4 +50,4 @@ commit it.
   trust-evidence trail.
 - Disagreement with a recorded controller ruling goes to the human owner, not back into the loop.
 
-Fallback reviewer (owner ruling A-001): when codex is unavailable, `dv/auto_dv/tools/gen_cross_review.sh plan|diff|replan ...` runs a fresh Claude session in a bubblewrap sandbox whose working directory is a detached read-only checkout of the reviewed commit (HEAD for plan/replan, `<head>` for diff); plan and replan files must therefore be committed at HEAD, and a working-tree edit to a reviewed file cannot reach the artifact.
+Fallback reviewer (owner ruling A-001, recorded in dv/auto_dv/docs/gen_intervention_log.md): when codex is unavailable, `dv/auto_dv/tools/gen_cross_review.sh plan|diff|replan ...` runs a fresh Claude session in a bubblewrap sandbox whose working directory is a detached read-only checkout of the reviewed commit (HEAD for plan/replan, `<head>` for diff); plan and replan files must therefore be committed at HEAD, and a working-tree edit to a reviewed file cannot reach the artifact.
