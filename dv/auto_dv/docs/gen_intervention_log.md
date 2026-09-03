@@ -939,3 +939,19 @@ UNTIL_TAKEN releasing untaken lines; landing 2 narrows it to the taken line). (2
 integrity errors are legitimised by the driver's announcement (rtl/ibex_controller.sv:391-430), never by the DUT's
 own rvfi_ext_nmi_int. (3) The shim has no NMI emulation, so NMI-enabled results stay consistency-only for the model
 until landing 2. T-136's LOG-025 hold and T-137's LOG-026a hold lift only when both reviewers pass this landing.
+
+## LOG-037a - 2026-09-03 - HOLDS STAY (tb-infra follow-up landing 1 at ce33b4f: cross-model REQUEST-CHANGES)
+
+The cross-model review of 4cbb4be..ce33b4f (dv/auto_dv/reviews/2026-09-03-claude-diff-4cbb4bee-ce33b4f3.md)
+finds one high: T-136 is blind to every interrupt entry whose handler's first record is a non-last Zcmp micro-op,
+because the fold returns before the state is published, so the irq checker never sees the entry (the landing's own
+retained green shows irq_entries=5 in the scoreboard against entries=0 in the irq checker, the UNTIL_TAKEN releases
+hiding the loss); the "every intr record" claims in the API document, LOG-037 and the CR5-M-1 rows are false for
+exactly the case gen_zcmp_irq_directed.S exercises. Mediums: a stale bus-error announcement (one word left over from a
+misaligned access with both halves erroring) can legitimise an unrelated later DUT trap; the MB3/MB6/MB7/MUT-I/J/K
+mutations ran on a pre-landing tree while the response row says the landed tree. Ruling: the LOG-025 (T-136) and
+LOG-026a (T-137) holds stay in force; tb-infra lands a fix (1c) with: an entry state published or carried to the fold
+record so the irq checker evaluates it, a report-time referee irq_chk.entries_seen == sb.irq_entries that fails on
+mismatch, both words of a spanning access consumed by take() and announced minus taken reported as an error when
+non-zero, the mutation record carrying the build sha per mutant with MB3/MB6/MB7/MUT-I/J/K re-run on the landed tree
+or labelled as earlier-tree evidence. LOG-037's "every intr record" sentence is corrected by this entry.
