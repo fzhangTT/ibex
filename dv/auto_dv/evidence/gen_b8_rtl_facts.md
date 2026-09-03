@@ -36,7 +36,7 @@ and the extra records correspond to micro-ops that happened twice.
   the moves), i.e. it drops the top register from cm_rlist, moves cm_sp_offset and changes cm_state, while the
   micro-op it had on instr_o (:634, :660, :675, :702, :725, :740-742, :758, :766) is discarded by the mux at :526.
 - The dummy-insertion decision itself has no knowledge of the expansion: insert_dummy_instr =
-  `dummy_instr_en_i & (dummy_cnt_q == dummy_cnt_threshold)` (rtl/ibex_dummy_instr.sv:112), and the counter
+  `dummy_instr_en_i & (dummy_cnt_q == dummy_cnt_threshold)` (rtl/ibex_dummy_instr.sv:115), and the counter
   advances once per accepted instruction including every micro-op (dummy_cnt_en :103-104 uses id_in_ready_i and
   fetch_valid_i), so with dummy_instr_en set a dummy lands inside an expansion whenever the threshold falls on one
   of its micro-ops. The IF stage's own PC-sequence assertion excludes exactly this combination (prev_instr_seq_d
@@ -80,11 +80,13 @@ cm.pop / cm.popret / cm.popretz (:686-774):
   x18 = 800003ff / 00000000 instead of 33333333 is this case), then sp is incremented a second time and the ret
   executes. This is the only path that corrupts registers that were loaded correctly the first time.
 
-cm.mvsa01 / cm.mva01s (:777-830): the first move is lost in CmIdle (:791 / :819 advance to CmMvSecondReg) or
-the second is lost in CmMvSecondReg (:798 / :826 return to idle, no restart because the second move is the LAST
-micro-op and the FSM is idle while the buffer still holds the instruction: the whole pair is replayed, which is
-benign for cm.mva01s and, for cm.mvsa01 with the first move lost, leaves one sreg unwritten until the replay
-writes both). Not part of the B8 reproduction; listed for completeness of the mechanism.
+cm.mvsa01 / cm.mva01s (:777-830): a dummy in CmIdle (:791 / :819) loses the FIRST move; the FSM proceeds to
+CmMvSecondReg, the second move executes with the LAST tag, the FSM idles and fetch_ready releases the buffer, so
+there is no replay: the first destination (r1s' for cm.mvsa01, a0 for cm.mva01s) stays permanently unwritten, an
+architectural error. A dummy in CmMvSecondReg (:798 / :826) loses the SECOND move; the FSM returns to idle while
+the buffer still holds the halfword (LAST is set in the same cycle as the stall), so the pair is replayed from the
+first move: benign for both instructions, the first move repeats with the same operands and the second then
+executes. Not part of the B8 reproduction; listed because the same mechanism applies.
 
 ## 4. Register-file write versus RVFI record
 
@@ -94,9 +96,12 @@ writes both). Not part of the B8 reproduction; listed for completeness of the me
 - The dummy instruction itself writes x0 (its rd field is 5'h00, rtl/ibex_dummy_instr.sv:144); with
   DummyInstructions the register file keeps a real x0 flop for it (rtl/ibex_register_file_ff.sv:159, :162, :173
   and :282-294) that reads as zero for real instructions. The dummy therefore changes no architectural register;
-  it is excluded from RVFI (rtl/ibex_core.sv:1864, order held :1905) and from the retired-instruction counters
-  (rtl/ibex_id_stage.sv:1218-1220 excludes expanded non-last micro-ops; the dummy is excluded through
-  dummy_instr_id in cs_registers). The damage is entirely the discarded micro-op.
+  it is excluded from RVFI (rtl/ibex_core.sv:1864, order held :1905) but NOT from minstret: instr_perf_count_id_o
+  (rtl/ibex_id_stage.sv:1218-1220) has no dummy term, the WB stage latches it unconditionally into wb_count_q
+  (rtl/ibex_wb_stage.sv:150, :169) and perf_instr_ret_wb (:208-209) drives instr_ret_i into mhpmcounter_incr[2]
+  (rtl/ibex_core.sv:1549, rtl/ibex_cs_registers.sv:1588), so every dummy increments minstret while rvfi_order
+  stands still; a lock-step model must expect minstret minus rvfi_order to grow by one per dummy. The damage to
+  the program is entirely the discarded micro-op.
 - The replayed micro-ops are real: each repeated store or load is issued on the data bus and produces an RVFI
   record with the expansion tags of its position (rtl/ibex_core.sv:2275-2280: expanded_insn_valid on every
   micro-op, expanded_insn_last on the LAST one). The duplicated records are therefore faithful too; a lock-step
@@ -104,23 +109,32 @@ writes both). Not part of the B8 reproduction; listed for completeness of the me
 
 ## 5. Secondary exposure created by the same mechanism (not reproduced; stated from the RTL)
 
-- The dummy in ID carries the INSTR_NOT_EXPANDED tag (rtl/ibex_if_stage.sv:528). The controller's interrupt and
-  debug gates only hold an expansion together while the ID instruction is tagged EXPANDED or COMMIT
-  (rtl/ibex_controller.sv:474-477, :498-500), so an interrupt or debug request can be taken on the dummy in the
-  middle of a cm.* sequence. The entry flushes the FSM (flush_expanded, section 2), mepc/dpc point at the cm.*
-  PC, and after the return the expansion restarts from the beginning with whatever stores/loads/sp updates had
-  already executed. For a pop whose sp increment had executed this is the same corrupting replay as the
-  CmPopRetRa case above.
+- The dummy in ID carries the INSTR_NOT_EXPANDED tag (rtl/ibex_if_stage.sv:528). The controller's debug gates hold an
+  expansion together while the ID instruction is tagged EXPANDED or COMMIT (rtl/ibex_controller.sv:474-477), but
+  handle_irq is gated only on the COMMIT tag (:498-500): by design an interrupt may be taken between any two
+  micro-ops except after the COMMIT-tagged sp increment (CmPopIncrSp) or li a0, 0 (CmPopZeroA0); the entry
+  flushes the FSM (flush_expanded, section 2) with mepc at the cm.* PC and the expansion restarts from scratch
+  after mret, which is idempotent because the sp update is the last micro-op (push) or COMMIT-protected (pop).
+  The dummy changes two things. For interrupts the new exposure is only the COMMIT window: a dummy that displaces
+  the micro-op following a COMMIT-tagged one (the ret of cm.popret; li a0, 0 or the ret of cm.popretz) sits in ID
+  with NOT_EXPANDED, so an interrupt can be taken exactly where the tag was meant to forbid it, with sp already
+  incremented; after mret the expansion restarts and repeats the loads from above the frame, the same corruption
+  as the CmPopRetRa replay in section 3. For debug requests the exposure is at every micro-op position: the
+  dummy's NOT_EXPANDED tag opens the debug gates (:474-477) that otherwise block entry for the whole expansion,
+  dpc points at the cm.* PC, and the expansion restarts after dret with whatever stores, loads and sp updates had
+  already executed.
 - Both effects disappear with dummy_instr_en = 0 because insert_dummy_instr is then 0 (rtl/ibex_dummy_instr.sv
-  :112) and the decoder's id_in_ready_i port equals the ID stage's readiness.
+  :115) and the decoder's id_in_ready_i port equals the ID stage's readiness.
 
 ## 6. What the reproducer should observe (RTL-level signature)
 
 - Cycle of insertion: if_stage insert_dummy_instr = 1 with compressed decoder cm_state_q != CmIdle or a cm.*
-  halfword at its input, and cm_state_d != cm_state_q or cm_rlist_d != cm_rlist_q in that cycle (the FSM moves
+  halfword at its input, and cm_state_d != cm_state_q, cm_rlist_d != cm_rlist_q or cm_sp_offset_d != cm_sp_offset_q in that cycle (the FSM moves
   while instr_rdata_id loads the dummy).
-- Assertion opportunity for the DV side (no RTL change): "insert_dummy_instr |-> cm_state_d == cm_state_q &&
-  cm_rlist_d == cm_rlist_q" fails on every B8 event; the existing IbexPushPopFSMStable (rtl/ibex_compressed_decoder.sv
+- Assertion opportunity for the DV side (no RTL change): "if_id_pipe_reg_we && insert_dummy_instr |-> cm_state_d == cm_state_q &&
+  cm_rlist_d == cm_rlist_q && cm_sp_offset_d == cm_sp_offset_q" (the qualifier matters: insert_dummy_instr does
+  not depend on fetch_valid, and the CmIdle branch computes cm_rlist_d from instr_i even when nothing valid is
+  there; at the decoder the equivalent qualifier is valid_i && id_in_ready_i) fails on every B8 event; the existing IbexPushPopFSMStable (rtl/ibex_compressed_decoder.sv
   :937) does not catch it because valid_i is high during the insertion.
 
 ## 7. Anchors table
@@ -132,7 +146,7 @@ writes both). Not part of the B8 reproduction; listed for completeness of the me
 | Prefetch buffer held during insertion and expansion | rtl/ibex_if_stage.sv:535, :791-793, :808-809 |
 | FSM advance points | rtl/ibex_compressed_decoder.sv:641, :653, :661, :676, :709, :718, :726, :745, :761, :767, :791, :798, :819, :826 |
 | FSM reset only on PC_EXC | rtl/ibex_if_stage.sv:483; rtl/ibex_compressed_decoder.sv:885-889 |
-| Insertion decision and per-micro-op counting | rtl/ibex_dummy_instr.sv:103-104, :112 |
+| Insertion decision and per-micro-op counting | rtl/ibex_dummy_instr.sv:103-104, :115 |
 | Dummy writes x0 only | rtl/ibex_dummy_instr.sv:144; rtl/ibex_register_file_ff.sv:159-173, :282-294 |
 | Dummy excluded from RVFI | rtl/ibex_core.sv:1864, :1905 |
 | Micro-op tags on RVFI | rtl/ibex_core.sv:2264-2280 |
