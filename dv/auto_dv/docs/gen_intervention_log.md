@@ -293,3 +293,12 @@ reproduce the T-010 baseline numerators exactly (LINE 2397/4351, COND 3579/9566,
 with the 14 coverage-status-mismatch warnings back. The `-cm_glitch 0` numerator drop in LOG-007
 is therefore the filter, not the seeds. The DV Lead's run-scope ruling on adopting the flag is
 now unblocked. Manifest: `dv/auto_dv/work/runtime/results/rtl-arch-002/manifest.yaml`.
+
+## LOG-008a - 2026-09-03 - CORRECTION to LOG-008
+
+The LOG-008 numerators (LINE 2397/4351, COND 3579/9566, BRANCH 992/2418) come from the
+informational unmeasured merge report of run request rtl-arch-002 (`gen_smoke` is a check-tier,
+`measured: false` entry since T-038, so that regression has no measured merge and is absent from
+the dashboard's measured rounds). Source: `<out root>/regress_rtl-arch-002/cov_unmeasured/report`
+as recorded in `dv/auto_dv/work/runtime/results/rtl-arch-002/manifest.yaml`. The comparison and
+conclusion stand; only the provenance was under-stated. Found by the T-038 post-execution review.
