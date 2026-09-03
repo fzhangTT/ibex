@@ -62,6 +62,10 @@ DENY=(
   "doc/03_reference/images/tb*.svg"               # existing TB diagrams
   ".mex/"                                          # full-tree mex graph/wiki; WS6 is full-tree only, may embed fenced content
   ".github"                                        # Zone B CI: re-discloses cosim build/run + directed test names (workflows/actions); Zone A owns its own regression scripts
+  "ci/vars.env"                                    # discloses the cosim referee: IBEX_COSIM_VERSION / SPIKE_IBEX_VERSION pins for the Zone B spike build
+  "ci/install-build-deps.sh"                       # discloses the cosim referee: fetches ibex-cosim release tarballs by IBEX_COSIM_VERSION
+  "flake.nix"                                      # discloses the cosim referee: packages the lowRISC spike fork as a "cosimulation model for Ibex Verification" with its exact rev (caught by the ibex-cosim scan strings; same class as ci/build-spike.sh)
+  "ci/lint-commits.sh"                             # full-tree process helper (commit-lint against origin/master); no Zone A use
   # cleanroom-builder tooling class: these build/verify OTHER clones (this repo's tree,
   # or a landing branch on the full-tree receiving repo) and are never needed to exist
   # *inside* a Zone A clone itself.
@@ -69,6 +73,7 @@ DENY=(
   "ci/check-landing.sh"                            # gates a dv/auto_dv/** landing diff on the FULL-TREE receiving repo, not inside a Zone A clone
   "ci/cleanroom-selftest.sh"                        # tests make-cleanroom.sh; not needed inside a Zone A clone
   "ci/cleanroom-inventory.txt"                      # the builder's own manifest; not needed inside a Zone A clone
+  "ci/cleanroom-overlay"                            # the builder's own overlay source tree; its files ship at their destination paths, never as this staging copy
 )
 
 # DV_prompt.txt Section 12 item 9: exact string set, scoped to its exact file list.
@@ -89,6 +94,7 @@ ITEM9_STRINGS=(
 # the right scope for that one).
 WHOLE_EXPORT_IDENTIFIERS=(
   "core_ibex" "riscv_arithmetic_basic_test" "mcounteren_test" "spike_cosim"
+  "ibex-cosim" "ibex_cosim"                       # the cosim referee's package/agent identifiers (owner final-check fix set)
 )
 
 # ---- shared check functions; reused by ci/cleanroom-selftest.sh --------------------
