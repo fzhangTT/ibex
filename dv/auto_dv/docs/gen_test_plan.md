@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:43 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:59 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -205,6 +205,21 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   regime schedule, cross-cutting schedule, gen_regime_sched, regimes scheduled, a knob value in some / most / >= 1 / at least one / every
   / all phase(s), per phase, each phase, phase_idx, knob transition, regime switch or change; never "schedule" alone, program-region
   phases, micro-op phases or mid-run resets); union 82 items in 16 groups at the lift.
+- Round 0 not yet run clean; probe of 37c7ecb refused (no covergroup in the TB; one runaway-program red in gen_test_csr_reset seed
+  1028791296 under triage); nothing credited (LOG-046; Runtime's probe record dv/auto_dv/evidence/gen_round_0_probe/). The probe
+  (LOG-042d dispatch, HEAD 37c7ecb, plan of record fd632aa) ran regress_round_0 with 47 runs, 2 PASS (gen_boot_zc,
+  gen_ut_lockstep, which host no items) and 45 FAIL: 44 on "fcov expectation unverifiable: per-test urg report has no grpinfo.txt (no
+  covergroup in this vdb)" and one runaway program (gen_test_csr_reset seed 1028791296). The TB carries no SystemVerilog covergroup, so
+  every promoted manifest declares bins no covergroup implements; gen_round.py's clean-regression rule refuses the round, and by the
+  crediting rule below every hosted item is recorded, none credited (Section 1.7, dv/auto_dv/evidence/gen_round0_credit/); round 0 is
+  re-declared on the first HEAD whose TB implements the referenced covergroup set (dv/auto_dv/evidence/gen_round0_covergroup_set.md, T-204 / T-205). The functional
+  half of the Phase 1 gate is unmeasurable until TB Infra implements the plan's covergroups (T-179 for the ledger; the plan covergroups
+  alongside); the uncredited regimes (interrupt-enabled, PMP-denial / bus-error, integrity-error, mid-run regime) stay consistency-only.
+- Crediting rule for a measured round (applied by dv/auto_dv/tools/gen_round_credit.py): an item of a group hosted by a test in the round
+  is CREDITED when every seed of that test passed (verdict PASS; XFAIL for an expected-fail item), its fire check fired in every seed
+  (GEN_TEST_FIRE fire_tp_<area>_<nnn>[_suffix] ok=True), every bin of the item was reported HIT by a seed's fcov check (a bins_not_hit
+  bin and an undeclared bin count as unhit, rule (g)) and it is under no measurement hold (Sections 1.4 / 1.5); a round without per-bin
+  fcov results credits nothing (UNVERIFIED); witness bins are listed, never credited, until CG-WIT-001 exists (T-179).
 - `Expected: informational` means: the item is outside the Phase 1 pass gate; it is its own `_info` test with
   `measured: false`; its checkers stay ON and their verdicts are recorded, not gated; the test asserts only that the
   scenario fired and logs the observation as GEN_TEST_INFO <id>. Reason classes: a downgraded or record-only bug
@@ -761,6 +776,48 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | TP-XIF-020 | gen_xif_random | Pass criteria name gen_chk_pmp |
 | TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
 | TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
+
+## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
+
+Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+
+| Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
+|---|---|---|---|---|---|---|---|---|
+| BIT | 33 | 0 | 0 | 0 | 0 | 0 | 33 | 0 |
+| CMP | 42 | 0 | 0 | 0 | 0 | 0 | 42 | 0 |
+| CSR | 21 | 0 | 0 | 0 | 0 | 0 | 21 | 0 |
+| ISA | 26 | 0 | 0 | 0 | 0 | 0 | 26 | 0 |
+| MUL | 21 | 0 | 0 | 0 | 0 | 0 | 21 | 0 |
+| PMP | 8 | 0 | 0 | 0 | 0 | 0 | 8 | 0 |
+| RST | 9 | 0 | 0 | 0 | 0 | 0 | 9 | 0 |
+| RVFI | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| SEC | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+
+Total: 162 items hosted; credited 0; held 0; unhit 0; fire-fail 0; not fired 0; not run clean 162; unverified 0.
+Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
+
+| Test | Seeds | Verdicts | Distinct reasons |
+|---|---|---|---|
+| gen_boot_zc | 1 | PASS | no collected failure mechanism; end marker and config banner |
+| gen_test_bit_draft | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_bit_ratified | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_cmp_zca | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_cmp_zcb | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_cmp_zcmp_basic | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_csr_access | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_csr_reset | 3 | FAIL | cocotb_summary at sim_stdout.log:112; fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_csr_trap_setup | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_isa_alu | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_isa_cti | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_isa_shift | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_mul_div | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_mul_mul | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_pmp_csr_warl | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_test_rst_boot | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
+| gen_ut_lockstep | 1 | PASS | no collected failure mechanism; end marker and config banner |
+
+|---|---|---|---|---|---|---|---|---|---|
+
 
 
 # 2. New checkers requested from TB Infra (beyond the inventory)
@@ -11012,7 +11069,7 @@ Conventions used below:
 - Knobs: knob:instr_mix csr_heavy, knob:pmp_regime dense, knob:pmp_regime mml_on
 - Fire-check: RVFI, per seed: at least 100 PMP CSR writes retire with their readback compared; the phase's (locked, RLB, MML) state is shown by csrr; at least one write per seed is ignored by a lock and, in the mml_on phases, at least one L=1 executable row is suppressed, each proven by an unchanged readback.
 - Pass criteria: gen_chk_csr_readback (predicted WARL-legalised value vs csrr readback on rvfi_rd_wdata); gen_isa_compare (rd value and trap agreement); gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement)
-- Notes: bin ownership (Test Writer batch 3 at e7a0941, gen_tdd_batch3.md Section 3): this item keeps the 24 CG-PMP-003.cr_state_trans arcs reachable in one power-on; the nine reset-only arcs (s000_to_s101, s000_to_s111, s010_to_s111, s000_to_s100, s000_to_s110, s001_to_s100, s001_to_s110, s010_to_s110, s011_to_s110) are TP-PMP-108's alone, because MML and MMWP are sticky, a locked M-exec rule pins RLB at 0 while MML is set, and a random regime never revisits a lower state without the wrapper reset that TP-PMP-108's walk restarts from; no test of this group declares those nine until the mid-run reset command exists (TB ask filed with tb-infra for after 2b).
+- Notes: bin ownership (Test Writer batch 3 at e7a0941, gen_tdd_batch3.md Section 3): this item keeps the 24 CG-PMP-003.cr_state_trans arcs reachable in one power-on; nine arcs are TP-PMP-108's alone: three (s000_to_s101, s000_to_s111, s010_to_s111) need MML set while RLB goes 0->1, which an M-mode program cannot do because its locked M-exec rule pins RLB at 0; six (s000_to_s100, s000_to_s110, s001_to_s100, s001_to_s110, s010_to_s110, s011_to_s110) enter MML=1 with RLB=0 and are reachable from M-mode code in one power-on, but they strand the run in a (1,x,0) state that leaves no (1,x,1) state for TP-PMP-030 in the same power-on (MML and MMWP are sticky); both classes need the wrapper reset TP-PMP-108's walk restarts from (Test Writer, gen_tdd_batch3.md Section 3, gen_test_pmp_mseccfg.py docstring); no test of this group declares those nine until the mid-run reset command exists (TB ask filed with tb-infra for after 2b).
 - Expected: pass
 - Test group: gen_pmp_random_regime
 - Bins: CG-PMP-001.cr_mode_lrwx.*, CG-PMP-001.cr_lock_outcome.*, CG-PMP-001.cr_mml_exec_suppress.*, CG-PMP-002.cr_idx_op.*, CG-PMP-002.cr_tor_lock.*, CG-PMP-003.cr_state_trans.s000_to_s000, CG-PMP-003.cr_state_trans.s000_to_s001, CG-PMP-003.cr_state_trans.s000_to_s010, CG-PMP-003.cr_state_trans.s000_to_s011, CG-PMP-003.cr_state_trans.s001_to_s000, CG-PMP-003.cr_state_trans.s001_to_s001, CG-PMP-003.cr_state_trans.s001_to_s010, CG-PMP-003.cr_state_trans.s001_to_s011, CG-PMP-003.cr_state_trans.s001_to_s101, CG-PMP-003.cr_state_trans.s001_to_s111, CG-PMP-003.cr_state_trans.s010_to_s010, CG-PMP-003.cr_state_trans.s010_to_s011, CG-PMP-003.cr_state_trans.s011_to_s010, CG-PMP-003.cr_state_trans.s011_to_s011, CG-PMP-003.cr_state_trans.s011_to_s111, CG-PMP-003.cr_state_trans.s100_to_s100, CG-PMP-003.cr_state_trans.s100_to_s110, CG-PMP-003.cr_state_trans.s101_to_s100, CG-PMP-003.cr_state_trans.s101_to_s101, CG-PMP-003.cr_state_trans.s101_to_s110, CG-PMP-003.cr_state_trans.s101_to_s111, CG-PMP-003.cr_state_trans.s110_to_s110, CG-PMP-003.cr_state_trans.s111_to_s110, CG-PMP-003.cr_state_trans.s111_to_s111, CG-PMP-011.cp_csr.*, CG-PMP-011.cp_bb.lock_then_addr, CG-PMP-011.cp_bb.lock_then_cfg, CG-PMP-011.cp_bb.lock_then_rlb
