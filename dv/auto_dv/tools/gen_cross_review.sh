@@ -70,7 +70,7 @@ PROMPT_F=$(mktemp)
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.
 ${SCOPE_LINE}
-Apply every rubric below to what you review; read-only, modify nothing. Deliver the whole review as ONE final message with no questions to the user.
+Apply every rubric below to what you review; read-only, modify nothing. Deliver the whole review as ONE final message with no questions to the user. Write NOTHING before the TARGET line(s): no preamble, no status sentence; the TARGET line is the first character of your message.
 End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-WITH-CHANGES' or 'Final verdict: REQUEST-CHANGES', preceded by findings as [severity][file:line] issue - recommendation.
 
 === RUBRICS ===
@@ -104,11 +104,15 @@ case "$LAST" in
 esac
 NV=$(grep -cE '^Final verdict: (APPROVE-WITH-CHANGES|APPROVE|REQUEST-CHANGES)$' "$RAW" || true)
 [ "$NV" -eq 1 ] || { echo "PROTOCOL ERROR: expected exactly one verdict line, found $NV. Raw kept at $RAW"; exit 1; }
+# Target echo: the exact line(s) must appear as the first non-empty line(s), allowing at most two
+# preamble lines (the compensating control is the exact echo, not its row number); the offset is recorded.
+ECHO_OFF=$(grep -n -m1 '^TARGET: ' "$RAW" | cut -d: -f1); ECHO_OFF=${ECHO_OFF:-0}
+[ "$ECHO_OFF" -ge 1 ] && [ "$ECHO_OFF" -le 3 ] || { echo "PROTOCOL ERROR: no TARGET echo within the first three lines. Raw kept at $RAW"; exit 1; }
 if [ "$MODE" = diff ]; then
-  [ "$(head -n 1 "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: first line is not the exact target echo. Raw kept at $RAW"; exit 1; }
+  [ "$(sed -n "${ECHO_OFF}p" "$RAW")" = "TARGET: ${BASE}..${HEAD_}" ] || { echo "PROTOCOL ERROR: TARGET line is not the exact target echo. Raw kept at $RAW"; exit 1; }
 else
   NLINES=$(printf '%s' "$MANIFEST" | grep -c .)
-  [ "$(head -n "$NLINES" "$RAW")" = "$(printf '%s' "$MANIFEST" | grep .)" ] || { echo "PROTOCOL ERROR: leading lines do not equal the target manifest. Raw kept at $RAW"; exit 1; }
+  [ "$(sed -n "${ECHO_OFF},$((ECHO_OFF+NLINES-1))p" "$RAW")" = "$(printf '%s' "$MANIFEST" | grep .)" ] || { echo "PROTOCOL ERROR: TARGET lines do not equal the target manifest, in order. Raw kept at $RAW"; exit 1; }
 fi
 {
   echo "# Cross-model review - ${TARGET_DESC}"
@@ -116,7 +120,7 @@ fi
   echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; effort: ${EFFORT}; fresh session ${SESSION} (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
   echo "**Date:** ${DATE}"
-  echo "**Target:** ${TARGET_DESC}"
+  echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
   echo
   echo "---"
   echo
