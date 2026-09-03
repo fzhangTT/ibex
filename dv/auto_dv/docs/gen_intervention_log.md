@@ -1618,3 +1618,18 @@ header. Rules: (1) a verdict file is frozen the moment its hash is sent; every l
 file (v2, v3) with its own header and verdict line; (2) when a committed artifact turns up modified in the shared tree,
 the Orchestrator preserves the modification in the author's work dir and restores the committed bytes, then tells the
 author; the shared tree never carries an edited review artifact while other roles verify against HEAD.
+
+## LOG-067 - 2026-09-03 - Ruling: a probe bind into DUT internals for the B8 assertion, as a recorded C10 exception
+
+The B8 dummy-in-expansion assertion (insert_dummy_instr qualified by if_id_pipe_reg_we implies the Zcmp expansion state,
+rlist and stack offset unchanged) reads DUT internals (rtl/ibex_compressed_decoder.sv cm_state, cm_rlist, cm_sp_offset with
+valid_i and id_in_ready_i; rtl/ibex_if_stage.sv insert_dummy_instr with if_id_pipe_reg_we). The protocol SVA layer's rule
+C10 binds TB-owned signals only and keeps properties over internals in the unbound probe register, so the assertion could
+not fire in a run. tb-infra asked for a ruling in landing 2c. Ruling: option (a), a separate probe bind in gen_binds.sv
+into the decoder and the IF stage, gated by a new knob chk_sva_probe that defaults off and is turned on only in the B8
+evidence runs (the retained red on gen_zcmp_dummy_directed.S and the popret variant), recorded in the SVA layer header as
+the C10 exception with this log id. Conditions: the knob stays off in every measured or credited run and the flow refuses
+a measured entry that sets it (Runtime adds the refusal with its red in the same landing or the next flow touch); the
+probe bind adds no checker verdict to a run, only the assertion's own failure; the exception is reviewed like any landing.
+The lock-step red (27 comparator rows) remains the primary B8 evidence; the assertion run is the mechanism-level witness
+the owner asked to see.
