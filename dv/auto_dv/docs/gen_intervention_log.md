@@ -1706,3 +1706,17 @@ DV Lead's files as it left them. This repeats LOG-070 in a different form. Rule 
 committer's chain is followed by an explicit exit gate on its own status (rc=$?; [ $rc = 0 ] || exit 1); set -e is not
 relied upon; the hash re-check is the last gated step before git add. The DV Lead finishes the CM109 folds and hands one
 superseding list.
+
+## LOG-074 - 2026-09-03 - Ruling: the T-183 crediting carve-out is lifted
+
+Plan Section 1.8 (landed in v3c at a1fd231) carries the twelve T-183 items UNCREDITED and TP-IRQ-073 / TP-IRQ-075
+COUNTED-ONLY "until T-183 passes review". Landing 2c (cbadb7f) built the T-183 suppressed-write gate. Its cross-model
+review (dv/auto_dv/reviews/2026-09-03-claude-diff-bd75f161-cbadb7f8.md, committed 6133c77) is APPROVE-WITH-CHANGES with
+one medium on the gate: it looks up only the record's word, so a spanning load whose corrupted response is the second
+half raises a false isa_rd miss. The Critic's tb_l7 (dv/auto_dv/docs/gen_critic_tb_l7.md, committed 17969e6) is APPROVE
+on 2c and carries the same gap as a low. Both defects make the gate stricter, not more permissive: they can fail a clean
+run, they cannot accept a lying suppression, so the evidence that the integrity runs compare fully again stands. Ruling:
+the lift condition is met; the DV Lead removes the twelve UNCREDITED rows and the two COUNTED-ONLY-until-T-183 rows from
+Section 1.8 and rewrites the LIFTED record to cite the two verdicts; the spanning-load fix (CM117-M-1) and its evidence
+remain owed by tb-infra in its next landing and are recorded in the LIFTED record as an open strictness gap. The
+TP-IRQ-079 / TP-SEC-025 COUNTED-ONLY rows stay until the NMI-pre-empted rule fix lands.
