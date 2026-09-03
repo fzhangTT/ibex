@@ -11,10 +11,9 @@ complete.
 
 Usage: gen_covergroup_set.py [--testlist F] [--fcov-dir D] [--fcov-plan F] [--md OUT.md] [--csv OUT.csv] [--plan-sha SHA]
 
---fcov-dir D redirects every manifest the tool reads: the testlist-named ones by basename and the extra scan (before plan v2v it
-redirected only the extra scan while the named manifests were read under the clone root, so a rehearsal directory could not stand in for
-the tree, CM87-L-2); a named manifest whose testlist path is outside dv/auto_dv/fcov_expectations refuses. The header names the override
-directory and the printed regeneration command carries it.
+--fcov-dir D redirects every manifest the tool reads, the testlist-named ones by basename and the extra scan, so a rehearsal directory
+stands in for the tree; a named manifest whose testlist path is outside the manifest home (FCOV_HOME) refuses. The header names the
+override directory and the printed regeneration command carries it.
 """
 import re, csv, sys, argparse, pathlib, collections, hashlib, yaml
 R = pathlib.Path(__file__).resolve()
@@ -46,7 +45,8 @@ def main():
     per_man = {}; declarers = collections.defaultdict(set)   # bin token -> manifests declaring it
     for e in sorted(entries, key=lambda e: e['name']):
         rel = pathlib.Path(e['fcov_expectation_file'])
-        if str(rel.parent) != 'dv/auto_dv/fcov_expectations': sys.exit(f'{e["name"]}: manifest {rel} is not under dv/auto_dv/fcov_expectations, --fcov-dir cannot stand in for it')
+        home_rel = pathlib.Path(FCOV_HOME).resolve().relative_to(R.resolve())
+        if rel.parent != home_rel: sys.exit(f'{e["name"]}: manifest {rel} is not under {home_rel}, --fcov-dir cannot stand in for it')
         p = pathlib.Path(a.fcov_dir) / rel.name   # named manifests are read from --fcov-dir too, so a rehearsal dir stands in for the tree
         if not p.exists(): sys.exit(f'{e["name"]}: manifest {p} missing')
         txt = p.read_text(); nh = set(re.findall(r'^# not_hit (\S+):', txt, re.M)); dig.update(txt.encode())
