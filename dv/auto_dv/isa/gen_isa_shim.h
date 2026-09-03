@@ -72,7 +72,8 @@ void     gen_isa_arm_async(uint32_t pre_mip, uint32_t nmi_mtval, int32_t nmi, in
 void     gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size, uint32_t tval);   // tval: the mtval the DUT reports for it
 void     gen_isa_set_time(uint64_t mcycle);                          // mcycle from the record's rvfi_ext_mcycle, before its step
 void     gen_isa_set_hpm(int32_t idx, uint32_t lo, uint32_t hi);      // mhpmcounter(3+idx) from the record's counter words, before its step
-void     gen_isa_set_status(int32_t ic_scr_key_valid);               // cpuctrlsts bit 8 from the record's rvfi_ext_ic_scr_key_valid
+void     gen_isa_set_status(int32_t ic_scr_key_valid);
+void     gen_isa_set_retire_gap(int32_t gap);                         // cycles from the previous record's retirement to this one's (T-235 write corners)               // cpuctrlsts bit 8 from the record's rvfi_ext_ic_scr_key_valid
 void     gen_isa_note_memory_write(uint32_t addr, uint32_t data, uint8_t be);
 
 #ifdef __cplusplus

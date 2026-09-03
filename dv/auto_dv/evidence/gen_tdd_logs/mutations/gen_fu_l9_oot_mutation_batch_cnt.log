@@ -1,0 +1,4 @@
+MUTCNT applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTCNT/dv/auto_dv/isa/gen_isa_shim.cc; original sha256 34559ec691021abd
+MUTCNT_catch_pmc_s1: verdict: FAIL reason: uvm_error at sim.log:92   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(259) @ 7198500: uvm_test_top.env.sb [isa_rd] rd model=x6/000007f7 dut=x6/000007cf (order=2108 pc=80005110 insn=c0202373 trap=0 intr=0 rd=x6/000007cf mem=000003fe w0000 r1111 mode=
+MUTCNT_ablate_pmc_s1: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTCNT: build sources sha256: b3adc13808d94d15; source tree untouched: ae982e87b02d192a

@@ -154,3 +154,31 @@ mret (the first mret) restores that context and ends NMI mode while jumping to t
 handler's own mret is then a plain one. Unit test section 12b holds the case (red on the entry-only push: 6 failures,
 gen_fu_l7_ut_isa_shim_red_nested.log; green gen_fu_l7_ut_isa_shim.log). The irq checker exits NMI mode by depth, which is lenient
 toward the bound and does not enter the compare.
+
+## Counter CSRs (T-235): Ibex's mcountinhibit, minstret and the unimplemented counters
+
+Authority: dv/auto_dv/evidence/gen_counter_csr_anchors.md section 10. Two parts: Runtime's holders (gen_isa_shim_counters.h / .cc,
+installed by `gen_install_counter_holders` in legalize_after_reset) and tb-infra's minstret proxy and step-loop rules (gen_isa_shim.cc).
+- `gen_mcountinhibit_csr_t` replaces mcountinhibit in Spike's csrmap: bits 0 and 2..12 writable, bit 1 and 31:13 read 0, reset 0
+  (rtl/ibex_cs_registers.sv:1554-1561, :1714). Spike's OWN mcountinhibit is never touched, so Spike's minstret keeps counting every
+  retirement and `retired` (the minstret delta of a step) stays derivable under IR = 1: a step under the inhibit retires, it is not a
+  synthesized trap any more (the Test Writer's gen_pmc_ctrl blocker).
+- `gen_zero_csr_t` for mhpmcounter13..31, mhpmcounter13h..31h and mhpmevent13..31: read 0, writes ignored, no trap in M
+  (:1699-1700, :1716-1717, :1615-1618).
+- `gen_minstret_proxy_t` (CSR_MINSTRET / MINSTRETH through Spike's rv32 low / high wrappers, CSR_INSTRET / INSTRETH through its
+  counter proxies, so the U-mode aliases stay legal iff mcounteren.IR): Ibex's value = Spike's counter minus `g_inh`, the retirements
+  Ibex did not count. The step loop adds a step's retirement to `g_inh` when the holder's IR bit is set AFTER the step: an instruction retires
+  under the inhibit state it leaves behind, so the csrw that sets IR is itself not counted and the csrw that clears it is (:1627;
+  measured on the Test Writer's gen_pmc_ctrl program, whose first form of the rule, the state as the step began, read one less
+  than the DUT after every IR clear: the retained red gen_fu_l9_lockstep_pmc_s1_on_red_*). An explicit write defines the value (`g_inh` = 0; the writer itself is not counted,
+  Spike's written flag) with the two corners of an instruction retiring in the write cycle, decided by the retirement gap the scoreboard
+  passes before every step (`gen_isa_set_retire_gap(t.cycle - previous record's cycle)`; 1 = back to back): a low-word write while
+  Spike's low word had just wrapped loses the carry Ibex never took (`g_inh` = 2^32; rtl/ibex_counter.sv:36-37, :44-47), a high-word
+  write reloads the low word with its pre-increment value (`g_inh` = 1; :40, :44-47). A TB-side write (gen_isa_write_csr) clears
+  Spike's written flag with `bump(0)` so it does not eat the next retirement's increment. mcycle needs none of this: the TB syncs it
+  from the record before every step.
+- Not modelled: the hazard variant of the high-word corner (a csrw with a register hazard against a load in WB defers the write one
+  cycle to an empty WB, :1059-1062, :1120): the gap rule sees the retirement gap, not the hazard, so a program with that pattern
+  reads one more than Ibex; the DUT's own dummy instructions count in Ibex and not in the model (the counters knob keeps such runs
+  consistency-only). Unit test sections 14 (Runtime's holders, 23 rows) and 15 (the proxy, 21 rows): red on the pre-integration shim
+  (8 failures, gen_fu_l9_ut_isa_shim_red_t235.log), green gen_fu_l9_ut_isa_shim.log.

@@ -16,16 +16,16 @@ SPIKE=tools/spike
 CXX=g++
 FLAGS=(-std=c++2a -O1 -Wall -Wno-unused-parameter -fPIC -I "$SPIKE/include" -I dv/auto_dv/isa)
 LIBS=(-L "$SPIKE/lib" -lriscv -lsoftfloat)
-SRC=dv/auto_dv/isa/gen_isa_shim.cc
-[ -f "$SRC" ] || { echo "gen_isa_shim_build.sh: $SRC does not exist" >&2; exit 3; }
+SRC=(dv/auto_dv/isa/gen_isa_shim.cc dv/auto_dv/isa/gen_isa_shim_counters.cc)
+for f in "${SRC[@]}"; do [ -f "$f" ] || { echo "gen_isa_shim_build.sh: $f does not exist" >&2; exit 3; }; done
 case "$MODE" in
   lib)
-    "$CXX" "${FLAGS[@]}" -shared "$SRC" "${LIBS[@]}" -o "$OUT/libgen_isa_shim.so" && echo "built $OUT/libgen_isa_shim.so" ;;
+    "$CXX" "${FLAGS[@]}" -shared "${SRC[@]}" "${LIBS[@]}" -o "$OUT/libgen_isa_shim.so" && echo "built $OUT/libgen_isa_shim.so" ;;
   test)
     VMEM="${3:?prog.vmem}"
-    "$CXX" "${FLAGS[@]}" dv/auto_dv/isa/gen_ut_isa_shim.cc "$SRC" "${LIBS[@]}" -o "$OUT/gen_ut_isa_shim" || exit $?
+    "$CXX" "${FLAGS[@]}" dv/auto_dv/isa/gen_ut_isa_shim.cc "${SRC[@]}" "${LIBS[@]}" -o "$OUT/gen_ut_isa_shim" || exit $?
     export LD_LIBRARY_PATH="$ROOT/$SPIKE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    echo "# gen_ut_isa_shim $(date -u +%Y-%m-%dT%H:%M:%SZ) shim sha256 $(sha256sum "$SRC" | cut -c1-16) test sha256 $(sha256sum dv/auto_dv/isa/gen_ut_isa_shim.cc | cut -c1-16) image $VMEM"
+    echo "# gen_ut_isa_shim $(date -u +%Y-%m-%dT%H:%M:%SZ) shim sha256 $(sha256sum "${SRC[0]}" | cut -c1-16) counters sha256 $(sha256sum "${SRC[1]}" | cut -c1-16) test sha256 $(sha256sum dv/auto_dv/isa/gen_ut_isa_shim.cc | cut -c1-16) image $VMEM"
     "$OUT/gen_ut_isa_shim" "$VMEM" ;;
   *) echo "usage: lib|test" >&2; exit 2 ;;
 esac

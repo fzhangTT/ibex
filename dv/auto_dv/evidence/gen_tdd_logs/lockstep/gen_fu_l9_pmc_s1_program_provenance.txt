@@ -1,0 +1,5 @@
+# the gen_pmc_ctrl measurement image (seed 1) used by the gen_fu_l9_lockstep_pmc_s1_* runs
+generator /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/verified_h14/gen_pmc_ctrl_prog.py sha256 e7893d97218c421ecde245a4e687a662f1044da73a483d12a4c9c70bf7ca6797
+generated source gen_source.S (4363 lines) sha256 ab710ce8a54ed4c0c3c5139850e21f08cf9872379b6599a5ba1b2c90054d9a0c
+image prog.vmem sha256 5931779cc07f4787dd57a09aa53e18553ac6840e15f8cbb506858c2c992a6947
+assembled by dv/auto_dv/stim/gen_program.py --seed 1 --directed gen_source.S --gcc-opts=-Wa,-I<dv/auto_dv/tests/gen_programs> (the .include of gen_mmio_map.h)

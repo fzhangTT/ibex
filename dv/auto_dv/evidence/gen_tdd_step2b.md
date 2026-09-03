@@ -431,3 +431,28 @@ build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every
   _ut_isa_cov_zc_*, _ut_fetch_en_*, all PASS; codegen `--check` up to date for the knobs and the fcov renderer.
 - Not built: the NMI-pre-empt red (above), the B8 assertion (ruling), an icram ECC injection (CM43-M-1's red impossible without it),
   the in-run mcounteren_writable command (WP-10, dv-lead).
+
+## 12. T-235: the model's counter CSRs (Runtime's holders, tb-infra's minstret proxy and inhibit rule)
+
+Build z e845572967179ff0 (wit_root; sources list gen_fu_l9_sources_sha256_z.txt). Runtime's part R taken as delivered (their hashes
+gen_fu_l9_gen_t235_hashes.txt): gen_isa_shim_counters.h / .cc (mcountinhibit with Ibex's mask, zero holders for mhpmcounter13..31 and
+mhpmevent13..31) and unit-test section 14 (23 rows). Mine: the minstret proxy (Spike's counter minus what Ibex did not count), the U-mode
+instret aliases through Spike's counter proxies, the retirement derivation fixed for minstret writes, the retirement-gap DPI fed by the
+scoreboard, unit-test section 15 (28 rows), gen_component_api_isa_shim.md's counter section.
+- Red first: sections 14 and 15 on the pre-integration shim, 8 failures (gen_fu_l9_ut_isa_shim_red_t235.log: the mask rows, a step
+  under IR = 1 synthesized as a trap, the writer counted, the h-write corner, the TB write eating the next increment); green 271 OK
+  (gen_fu_l9_ut_isa_shim.log).
+- Measurement (the Orchestrator's item): the Test Writer's gen_pmc_ctrl seed-1 image (provenance gen_fu_l9_pmc_s1_program_provenance.txt),
+  which no build could follow (every record under IR = 1 an isa_trap mismatch). First form of the inhibit rule (the IR state as the
+  step began, Spike's reading): no isa_trap left, but 47 isa_rd (29 csrr minstret, 2 csrr instret, the rest their consequences), every
+  one DUT = model + 1, all after an IR clear and none under IR = 1 (retained red gen_fu_l9_lockstep_pmc_s1_on_red_*, _off_red_*). The
+  export trace decided the rule: an instruction retires under the inhibit state it leaves behind, so the csrw that sets IR is itself not
+  counted and the csrw that clears IR is (the Test Writer's docstring semantics; rtl/ibex_cs_registers.sv:1627 with the write landing
+  before the writer's own retirement). With that rule build z runs the image to its end: 8000 records, 0 mismatches, pin on and off
+  (gen_fu_l9_lockstep_pmc_s1_on_*, _off_*), and every earlier lock-step run stays green (gen_fu_l9_lockstep_s7_*, _csrwarl_*,
+  _intg_s7_allchk_*, _irq_storm_*, _s7_dbg_storm_*, _zcmp_mv_*, _muldiv_*, boot_zc, lockstep_zc, ut_isa_cov_zc, ut_witness).
+- Mutant MUT-CNT (gen_mut_step2b.md): the inhibit accounting removed; 91 isa_rd misses on the same image, ablation `+gen_chk_isa_rd=0`
+  PASS.
+- Not modelled, stated in the shim document: the hazard variant of the high-word corner; the DUT's dummy instructions (counters knob).
+- Consequence for the Test Writer: gen_pmc_ctrl's dependency sentence ("gen_isa_compare cannot follow this program yet") no longer holds
+  on this shim; the group can be re-verified and its testlist entry staged.

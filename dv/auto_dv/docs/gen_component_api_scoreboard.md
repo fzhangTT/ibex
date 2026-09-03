@@ -58,7 +58,7 @@ pairs and `gen_isa_set_status(t.ext_ic_scr_key_valid)`. RVFI samples these when 
 (rtl/ibex_core.sv:2102-2120), the cycle in which a CSR read of `cycle`, `mhpmcounterN` or `cpuctrlsts` takes its value,
 so the model's read equals the DUT's exactly; the monitor therefore samples the counter words on every record.
 These reads under `isa_rd` are CONSISTENCY compares (record value == read value), not independent checks of the DUT
-(Critic T-102 M-1): mcycle, minstret and the HPM counters belong to the counter checkers `ctr_mcycle`, `ctr_minstret`,
+(Critic T-102 M-1): mcycle and the HPM counters (record-synced) belong to the counter checkers; minstret / instret are the exception since T-235: the model computes them itself (Ibex's inhibit and write rules in gen_component_api_isa_shim.md, fed the retirement gap of every record through `gen_isa_set_retire_gap`), so their read-backs under isa_rd are independent checks (the gen_pmc_ctrl seed-1 image: 8000 records, 0 mismatches, both pin values); the other counters still belong to the counter checkers `ctr_mcycle`, `ctr_minstret`,
 `ctr_hpm_exact` and `ctr_hpm_bound` (step 2d, not built at 4c4b9b8), and cpuctrlsts bit 8 to the scramble-key
 responder's `scrkey_proto` status row (record bit 8 versus the driven value at the ID-exit sample, not built); until
 those land, a csrr of these CSRs passing `isa_rd` says nothing about counter or status correctness. Bit 8 in particular

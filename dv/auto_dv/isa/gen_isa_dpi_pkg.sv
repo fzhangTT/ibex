@@ -44,6 +44,7 @@ package gen_isa_dpi_pkg;
   import "DPI-C" context function void gen_isa_set_time(input longint unsigned mcycle);
   import "DPI-C" context function void gen_isa_set_hpm(input int idx, input int unsigned lo, input int unsigned hi);
   import "DPI-C" context function void gen_isa_set_status(input int ic_scr_key_valid);
+  import "DPI-C" context function void gen_isa_set_retire_gap(input int gap);
   import "DPI-C" context function void gen_isa_note_memory_write(input int unsigned addr, input int unsigned data,
                                                                  input byte unsigned be);
 endpackage

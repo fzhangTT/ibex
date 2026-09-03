@@ -453,6 +453,126 @@ int main(int argc, char** argv) {
     check("and reads the spanning bytes", gen_isa_read_gpr(12), 0x33332222u);
   }
 
+
+  std::puts("-- 14. T-235 part R: Ibex's counter CSR holders (gen_counter_csr_anchors.md section 10: mcountinhibit mask, mhpmcounter13..31 zero)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  const uint32_t kInhibitMask = 1u | ((((uint32_t)1 << (GEN_MHPM_COUNTER_NUM + 1)) - 1u) << 2);
+  check("mcountinhibit mask from GEN_MHPM_COUNTER_NUM = 0x1FFD", kInhibitMask, 0x1FFDu);
+  check("mcountinhibit reset value 0", gen_isa_read_csr(CSR_MCOUNTINHIBIT), 0);
+  gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0xffffffffu);
+  check("mcountinhibit write all-ones reads back the mask", gen_isa_read_csr(CSR_MCOUNTINHIBIT), kInhibitMask);
+  gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0x2u);
+  check("mcountinhibit write 0x2 reads 0 (bit 1 reads 0)", gen_isa_read_csr(CSR_MCOUNTINHIBIT), 0);
+  gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0x00002004u);
+  check("mcountinhibit write 0x2004 reads 0x4 (bit 13 dropped)", gen_isa_read_csr(CSR_MCOUNTINHIBIT), 0x4u);
+  gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0);
+  { const uint32_t prog14[] = {0x12345337u, 0x67830313u,   // lui x6,0x12345 ; addi x6,x6,0x678 -> 0x12345678
+                               0xb0d31073u,                 // csrw mhpmcounter13 (0xB0D), x6
+                               0xb1f31073u,                 // csrw mhpmcounter31 (0xB1F), x6
+                               0x00000013u};
+    for (unsigned i = 0; i < sizeof(prog14) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog14[i]);
+    gen_isa_set_pc(scratch);
+    gen_isa_step(&st); gen_isa_step(&st); gen_isa_step(&st);
+    check("csrw mhpmcounter13 retires (no trap)", st.retired, 1);
+    check("csrw mhpmcounter13 trap = 0", st.trap, 0);
+    check("mhpmcounter13 reads 0 after the write", gen_isa_read_csr(CSR_MHPMCOUNTER13), 0);
+    gen_isa_step(&st);
+    check("csrw mhpmcounter31 retires (no trap)", st.retired, 1);
+    check("mhpmcounter31 reads 0 after the write", gen_isa_read_csr(CSR_MHPMCOUNTER31), 0); }
+  gen_isa_write_csr(CSR_MHPMCOUNTER13H, 0x12345678u); check("mhpmcounter13h write reads 0", gen_isa_read_csr(CSR_MHPMCOUNTER13H), 0);
+  gen_isa_write_csr(CSR_MHPMCOUNTER31H, 0x12345678u); check("mhpmcounter31h write reads 0", gen_isa_read_csr(CSR_MHPMCOUNTER31H), 0);
+  gen_isa_write_csr(CSR_MHPMEVENT13, 0x12345678u);    check("mhpmevent13 (0x32D) write reads 0", gen_isa_read_csr(CSR_MHPMEVENT13), 0);
+  gen_isa_write_csr(CSR_MHPMEVENT31, 0x12345678u);    check("mhpmevent31 (0x33F) write reads 0", gen_isa_read_csr(CSR_MHPMEVENT31), 0);
+  check("hpmcounter13 alias reads 0 in M", gen_isa_read_csr(CSR_HPMCOUNTER13), 0);
+  gen_isa_write_csr(CSR_MHPMCOUNTER5, 0x1234u);
+  check("mhpmcounter5 (3..12) still the TB-synced holder", gen_isa_read_csr(CSR_MHPMCOUNTER5), 0x1234u);
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15[] = {GEN_INSN_MRET, 0xc0d02373u};   // mret ; csrr x6, hpmcounter13 (0xC0D) in U
+    for (unsigned i = 0; i < sizeof(prog15) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog15[i]);
+    gen_isa_write_csr(CSR_MEPC, scratch + 4u);   // mepc -> the csrr; mstatus.MPP is U after reset
+    gen_isa_write_csr(CSR_PMPADDR0, 0xffffffffu); gen_isa_write_csr(CSR_PMPCFG0, 0x0fu);
+    gen_isa_step(&st);
+    check("mret to U retires", st.retired, 1);
+    check("prv U", st.prv, 0);
+    gen_isa_step(&st);
+    check("hpmcounter13 read in U traps", st.trap, 1);
+    check("hpmcounter13 read in U cause illegal (2)", st.trap_cause, 2);
+    check("hpmcounter13 read in U mtval = insn", st.trap_tval, 0xc0d02373u); }
+
+  std::puts("-- 15. T-235: Ibex's minstret as the program reads it: held under mcountinhibit.IR, the writer not counted, the two write corners (gen_counter_csr_anchors.md section 10)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { uint32_t m0, m1;
+    gen_isa_write_word(scratch, 0x00000013u); gen_isa_write_word(scratch + 4u, 0x00000013u); gen_isa_write_word(scratch + 8u, 0x00000013u);
+    gen_isa_write_word(scratch + 12u, 0x00000013u); gen_isa_write_word(scratch + 16u, 0x00000013u);
+    gen_isa_set_retire_gap(0);
+    m0 = gen_isa_read_csr(CSR_MINSTRET);
+    gen_isa_step(&st); gen_isa_step(&st);
+    check("two retirements under IR = 0 count two", gen_isa_read_csr(CSR_MINSTRET), m0 + 2u);
+    gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0x4u);
+    m1 = gen_isa_read_csr(CSR_MINSTRET);
+    gen_isa_step(&st);
+    check("a step under IR = 1 still retires", st.retired, 1);
+    gen_isa_step(&st);
+    check("two retirements under IR = 1 count nothing", gen_isa_read_csr(CSR_MINSTRET), m1);
+    gen_isa_write_csr(CSR_MCOUNTINHIBIT, 0);
+    gen_isa_step(&st);
+    check("counting resumes when IR clears", gen_isa_read_csr(CSR_MINSTRET), m1 + 1u); }
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15b[] = {0x12345337u, 0x67830313u,   // lui x6, 0x12345 ; addi x6, x6, 0x678
+                                0x00500393u,                 // addi x7, x0, 5
+                                0xb0231073u,                 // csrw minstret, x6
+                                0x00000013u,                 // nop
+                                0xb8231073u,                 // csrw minstreth, x6 (gap 1: the nop retired in the write cycle)
+                                0xb8239073u,                 // csrw minstreth, x7 (gap 0)
+                                0x00000013u,                 // nop (after the TB set the low word to 0xFFFFFFFF: it wraps)
+                                0xb0239073u};                // csrw minstret, x7 (gap 1: the nop's carry is Spike's, not Ibex's)
+    for (unsigned i = 0; i < sizeof(prog15b) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog15b[i]);
+    gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+    gen_isa_step(&st); gen_isa_step(&st); gen_isa_step(&st);
+    gen_isa_step(&st);
+    check("csrw minstret retires as one", st.retired, 1);
+    check("csrw minstret V reads V (the writer not counted)", gen_isa_read_csr(CSR_MINSTRET), 0x12345678u);
+    gen_isa_step(&st);
+    check("the next retirement counts", gen_isa_read_csr(CSR_MINSTRET), 0x12345679u);
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstreth in the retirement cycle: high word written", gen_isa_read_csr(CSR_MINSTRETH), 0x12345678u);
+    check("csrw minstreth in the retirement cycle: the low word lost the increment due", gen_isa_read_csr(CSR_MINSTRET), 0x12345678u);
+    gen_isa_set_retire_gap(0);
+    gen_isa_step(&st);
+    check("csrw minstreth with a bubble: high word written", gen_isa_read_csr(CSR_MINSTRETH), 5u);
+    check("csrw minstreth with a bubble: low word kept", gen_isa_read_csr(CSR_MINSTRET), 0x12345678u);
+    gen_isa_write_csr(CSR_MINSTRET, 0xffffffffu);
+    gen_isa_step(&st);
+    check("the low word wraps on the retirement", gen_isa_read_csr(CSR_MINSTRET), 0u);
+    check("and carries into the high word", gen_isa_read_csr(CSR_MINSTRETH), 6u);
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstret in the carry cycle: low word written", gen_isa_read_csr(CSR_MINSTRET), 5u);
+    check("csrw minstret in the carry cycle: Ibex's high word did not take the carry", gen_isa_read_csr(CSR_MINSTRETH), 5u);
+    gen_isa_set_retire_gap(0); }
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15c[] = {0x00400413u,   // addi x8, x0, 4
+                                0x32041073u,   // csrw mcountinhibit, x8 (sets IR: this writer retires under IR = 1, not counted)
+                                0x00000013u,   // nop under IR = 1
+                                0x32001073u,   // csrw mcountinhibit, x0 (clears IR: this writer retires under IR = 0, counted)
+                                0x00000013u};  // nop under IR = 0
+    uint32_t m0;
+    for (unsigned i = 0; i < sizeof(prog15c) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog15c[i]);
+    gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+    m0 = gen_isa_read_csr(CSR_MINSTRET);
+    gen_isa_step(&st);
+    check("the addi counts", gen_isa_read_csr(CSR_MINSTRET), m0 + 1u);
+    gen_isa_step(&st);
+    check("the csrw that sets IR retires under the new state: not counted", gen_isa_read_csr(CSR_MINSTRET), m0 + 1u);
+    check("mcountinhibit.IR set by the program", gen_isa_read_csr(CSR_MCOUNTINHIBIT), 0x4u);
+    gen_isa_step(&st);
+    check("a nop under IR = 1 is not counted", gen_isa_read_csr(CSR_MINSTRET), m0 + 1u);
+    gen_isa_step(&st);
+    check("the csrw that clears IR retires under the new state: counted", gen_isa_read_csr(CSR_MINSTRET), m0 + 2u);
+    gen_isa_step(&st);
+    check("a nop under IR = 0 counts", gen_isa_read_csr(CSR_MINSTRET), m0 + 3u); }
+
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;
 }

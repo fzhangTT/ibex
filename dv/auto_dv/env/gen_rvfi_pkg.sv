@@ -183,6 +183,7 @@ package gen_rvfi_pkg;
     bit          model_ready = 0;
     bit          in_seq = 0;
     gen_rvfi_txn seq_first;
+    int unsigned last_cycle = 0;
     int unsigned seq_len = 0, seq_splits = 0, faults_armed = 0, faults_unannounced = 0, breakpoints = 0, b13_odd_jalr = 0, rf_wr_suppressed = 0;
     int          entry_cause = -1;   // the current record's vector-derived interrupt cause, published with the model state
     bit          after_nmi_entry = 0;   // the previous record was an NMI entry: a vector-address record without intr is a pre-empted entry
@@ -449,6 +450,7 @@ package gen_rvfi_pkg;
       //      CONSISTENCY compare (record value == read value), not an independent check (Critic T-102 M-1): the counters
       //      belong to the counter checkers (ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound; step 2d) and bit 8
       //      to the scramble-key responder's scrkey_proto status row
+      gen_isa_set_retire_gap(int'(t.cycle - last_cycle)); last_cycle = t.cycle;   // T-235: the minstret write corners need the retirement gap
       gen_isa_set_time(t.ext_mcycle);
       for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
       gen_isa_set_status(t.ext_ic_scr_key_valid);

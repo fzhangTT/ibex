@@ -8,6 +8,7 @@
 // collected report). Build: dv/auto_dv/isa/gen_isa_shim_build.sh. ASCII only.
 #include "gen_isa_shim.h"
 #include "gen_isa_shim_map.h"
+#include "gen_isa_shim_counters.h"
 
 #include <riscv/cfg.h>
 #include <riscv/simif.h>
@@ -205,6 +206,12 @@ std::vector<std::pair<uint32_t, uint32_t>> g_reg_writes;   // (idx, value) of th
 struct mem_access_t { uint32_t addr, data, size; };
 std::vector<mem_access_t> g_mem_writes, g_mem_reads;       // data accesses of the last step, log order
 std::shared_ptr<gen_masked_csr_t> g_hpm_lo[GEN_MHPM_COUNTER_NUM], g_hpm_hi[GEN_MHPM_COUNTER_NUM];   // mhpmcounter3.. synced from RVFI
+std::shared_ptr<gen_mcountinhibit_csr_t> g_mcountinhibit;   // Ibex's mcountinhibit (T-235); Spike's own stays 0 so its minstret keeps counting
+uint64_t g_inh = 0;              // retirements Spike counted that Ibex's minstret did not (IR held; the two write corners)
+int32_t  g_gap = 0;              // cycles between this record's retirement and the previous one's (1 = an instruction retired in the write cycle)
+bool     g_ir_at_step = false;   // mcountinhibit.IR as the step began (Spike reads it there; Ibex's own count follows the state after the step)
+bool     g_minstret_written = false;
+bool     g_in_step = false;      // a write from the TB (not an instruction) must not eat the next retirement's increment
 uint32_t g_boot = 0;
 uint32_t g_mcounteren_writable = 1;
 uint32_t g_mcounteren_prev = 0;
@@ -218,6 +225,32 @@ uint32_t fetch_word(uint32_t pc) {
   if ((lo & 3) != 3) return lo;                       // compressed: 16-bit encoding zero-extended
   return lo | (mem_rd8(pc + 2) << 16) | (mem_rd8(pc + 3) << 24);
 }
+
+// Ibex's minstret as the program reads it (T-235, gen_counter_csr_anchors.md section 10): Spike's counter minus what Ibex did not
+// count. An explicit write defines the value; the two corners of an instruction retiring in the write cycle (g_gap == 1, IR clear):
+// a low-word write loses the carry that Spike's high word already took (rtl/ibex_counter.sv:36-37, :44-47), a high-word write reloads
+// the low word with its pre-increment value (rtl/ibex_counter.sv:40, :44-47). The writer itself is never counted (Spike's written flag).
+class gen_minstret_proxy_t : public csr_t {
+ public:
+  gen_minstret_proxy_t(processor_t* proc, wide_counter_csr_t_p spike) : csr_t(proc, CSR_MINSTRET), spike_(spike) {}
+  reg_t read() const noexcept override { return spike_->read() - g_inh; }
+ protected:
+  bool unlogged_write(reg_t val) noexcept override {
+    const uint64_t cur = read(), pre = spike_->read();
+    const bool high_write = ((val ^ cur) >> 32) != 0;
+    g_inh = 0;
+    if (!(g_mcountinhibit && g_mcountinhibit->ir_inhibited()) && g_gap == 1) {   // IR as the write happens
+      if (high_write) g_inh = 1;
+      else if ((pre & 0xFFFFFFFFu) == 0) g_inh = (uint64_t)1 << 32;
+    }
+    spike_->write((reg_t)val);
+    if (!g_in_step) spike_->bump(0);   // Spike skips the increment after a write, meant for the writing instruction: not for a TB write
+    g_minstret_written = true;
+    return true;
+  }
+ private:
+  wide_counter_csr_t_p spike_;
+};
 
 void legalize_after_reset() {
   state_t* s = st();
@@ -240,6 +273,16 @@ void legalize_after_reset() {
     s->csrmap[CSR_MHPMCOUNTER3H + i] = g_hpm_hi[i];
     s->csrmap[CSR_HPMCOUNTER3 + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3 + i, g_hpm_lo[i]);
     s->csrmap[CSR_HPMCOUNTER3H + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3H + i, g_hpm_hi[i]);
+  }
+  gen_install_counter_holders(g_proc.get(), s, g_mcountinhibit);   // T-235 part R: mcountinhibit, mhpmcounter13..31, mhpmevent13..31
+  {
+    auto proxy = std::make_shared<gen_minstret_proxy_t>(g_proc.get(), s->minstret);
+    auto lo = std::make_shared<rv32_low_csr_t>(g_proc.get(), CSR_MINSTRET, proxy);
+    auto hi = std::make_shared<rv32_high_csr_t>(g_proc.get(), CSR_MINSTRETH, proxy);
+    s->csrmap[CSR_MINSTRET] = lo; s->csrmap[CSR_MINSTRETH] = hi;
+    s->csrmap[CSR_INSTRET] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_INSTRET, lo);     // U-mode aliases: legal iff mcounteren.IR
+    s->csrmap[CSR_INSTRETH] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_INSTRETH, hi);
+    g_inh = 0; g_gap = 0; g_ir_at_step = false; g_minstret_written = false;
   }
   s->csrmap[CSR_MSTATUS] = std::make_shared<gen_mstatus_view_t>(g_proc.get(), s->mstatus);
   s->csrmap[CSR_TDATA1] = std::make_shared<gen_trigger_view_t>(g_proc.get(), CSR_TDATA1, s->csrmap[CSR_TDATA1]);
@@ -457,18 +500,24 @@ int gen_isa_step(gen_isa_step_t* out) {
   // nested inside the NMI handler is what the closing mret restores
   uint32_t mst_pre = csr(CSR_MSTATUS);
   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+  g_ir_at_step = g_mcountinhibit && g_mcountinhibit->ir_inhibited();
+  g_minstret_written = false; g_in_step = true;
   try {
     g_proc->step(1);
   } catch (std::exception& e) {
+    g_in_step = false;
     set_err(std::string("gen_isa_step: ") + e.what());
     return -1;
   }
+  g_in_step = false;
   // the fault's mtval is the DUT's convention (rtl/ibex_load_store_unit.sv:258: the last bus transaction's address), not
   // Spike's effective address; the scoreboard supplies it and the model's CSR takes it before anything reads it
   if (g_fault.hit && g_fault.tval != 0) g_proc->put_csr(CSR_MTVAL, g_fault.tval);
   g_fault.armed = false; g_fault.hit = false;   // an armed bus fault applies to one step
   uint64_t minstret1 = g_proc->get_csr(CSR_MINSTRET) | ((uint64_t)g_proc->get_csr(CSR_MINSTRETH) << 32);
   out->retired = (int32_t)(minstret1 - minstret0);
+  if (g_minstret_written) out->retired = 1;                  // the writer retired; Spike's delta is the written value, not a count
+  else if (g_mcountinhibit && g_mcountinhibit->ir_inhibited()) g_inh += (uint64_t)out->retired;   // an instruction retires under the inhibit state it leaves behind: the writer of mcountinhibit counts under the value it wrote (rtl/ibex_cs_registers.sv:1627; measured on gen_pmc_ctrl)
   // debug entry: Spike parks pc in its own ROM (0x800/0x808); Ibex enters at DmHaltAddr (C5.2)
   if (!was_debug && s->debug_mode) {
     s->pc = GEN_MM_DM_HALT;
@@ -649,6 +698,7 @@ void gen_isa_set_hpm(int32_t idx, uint32_t lo, uint32_t hi) {
   g_hpm_hi[idx]->set(hi);
 }
 void gen_isa_set_status(int32_t ic_scr_key_valid) { g_ic_scr_key_valid = ic_scr_key_valid != 0; }
+void gen_isa_set_retire_gap(int32_t gap) { g_gap = gap; }
 void gen_isa_note_memory_write(uint32_t addr, uint32_t data, uint8_t be) {
   for (int k = 0; k < 4; k++) if (be & (1 << k)) mem_wr8(addr + k, (uint8_t)(data >> (8 * k)));
 }
