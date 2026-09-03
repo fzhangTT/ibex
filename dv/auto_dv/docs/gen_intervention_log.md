@@ -1680,3 +1680,17 @@ over by the Orchestrator when composing the subject. The hand-off note gave no c
 addition. The artifacts are right; this entry is the correction of record, since commit messages are not rewritten.
 Rule restated from LOG-065: a commit subject carries only facts from the hand-off note or from a check the committer ran
 on the diff; a number that came from neither does not go in.
+
+## LOG-072 - 2026-09-03 - A reviewer's false code-existence claim was relayed into the plan unverified
+
+The cross-model review of tb-infra's landing 6 (artifact 4947718, CM98-M-3) stated that GEN_CSR_WRITE_TO_RVFI_OFFSET, the
+constant the fcov API document names for the mcounteren-gate sample point, "exists in no SV, yaml or Python in the tree
+(docs only)". The Orchestrator relayed the claim to tb-infra and the DV Lead as a row, and the DV Lead's v3a (07abaa9)
+wrote it into the plan, the WP-10 row and a response row. The review of v3a (artifact e9fcc1d) found it false, and a grep
+confirms: the constant is declared in dv/auto_dv/tb/gen_tb_knobs.yaml:192 (value 2), rendered to gen_tb_pkg.sv:232,
+gen_knobs.py:151 and gen_isa_shim_map.h:32, and used by gen_checkers_pkg.sv:90 and :230, at HEAD and before landing 6.
+The mechanism half of the finding (the sampler reads the pin when the RVFI record arrives, not in the W-DEC window,
+exact while the pin is run-static) stands. Rule: a reviewer's factual claim about whether something exists in the tree
+is checked with a grep or a git show before it is relayed as a row; the Orchestrator relays findings, not premises, and
+a premise it cannot verify is marked as the reviewer's claim. The DV Lead corrects the plan text in v3b; tb-infra answers
+CM98-M-3 on the mechanism only.
