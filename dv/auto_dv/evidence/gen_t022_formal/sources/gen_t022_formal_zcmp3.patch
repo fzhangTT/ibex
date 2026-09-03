@@ -1,0 +1,78 @@
+--- t022_all.v
++++ t022_formal_zcmp3.v
+@@ -7627,6 +7627,14 @@
+ 		end
+ 	endgenerate
+ 	initial _sv2v_0 = 0;
++	reg [31:0] t022_instr_prev; reg t022_prev_valid;
++	always @(posedge clk_i) begin t022_instr_prev <= instr_i; t022_prev_valid <= rst_ni; end
++	reg [15:0] t022_seq_instr; always @(posedge clk_i) t022_seq_instr <= (cm_state_q == 3'd0) ? instr_i[15:0] : t022_seq_instr;
++	wire t022_is_zcmp = (instr_i[1:0] == 2'b10) && (instr_i[15:13] == 3'b101) && ((instr_i[12:10] == 3'b011) || (instr_i[12:8] == 5'b11000) || (instr_i[12:8] == 5'b11010) || (instr_i[12:8] == 5'b11100) || (instr_i[12:8] == 5'b11110));
++	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || !valid_i || (instr_i[15:0] == t022_instr_prev[15:0])); // T022_ZCMP_INSTR_STABLE16V: mid-sequence and valid -> same compressed halfword as last cycle
++	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || !valid_i || (instr_i[15:0] == t022_seq_instr)); // T022_ZCMP_SEQ_INSTR: mid-sequence and valid -> the instruction that started the sequence
++	always @(posedge clk_i) if (rst_ni && t022_prev_valid) cover((cm_state_q != 3'd0) && t022_is_zcmp && (instr_i[15:0] != t022_seq_instr)); // T022_COVER_ZCMP_CLASS_MISMATCH: a different Zcmp encoding presented mid-sequence (the R-class default arms)
++
+ endmodule
+ module ibex_controller (
+ 	clk_i,
+@@ -8412,6 +8420,11 @@
+ 	wire unused_cheriot_ctrl_inputs;
+ 	assign unused_cheriot_ctrl_inputs = ^{cheriot_ex_valid_i, cheriot_ex_err_info_i[11], cheriot_wb_err_info_i[15:13], cheriot_branch_target_i};
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
++		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
++	end
++
+ endmodule
+ module ibex_cs_registers (
+ 	clk_i,
+@@ -14248,6 +14261,13 @@
+ 	assign lsu_err_is_cheriot_o = (cheriot_enable_i == ibex_pkg_IbexMuBiOn) & cheriot_err_q;
+ 	assign busy_o = ls_fsm_cs != 4'd0;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
++		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
++		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
++		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
++	end
++
+ endmodule
+ module ibex_multdiv_fast (
+ 	clk_i,
+@@ -14650,6 +14670,8 @@
+ 	wire unused_sva_mul_fsm_idle;
+ 	assign unused_sva_mul_fsm_idle = sva_mul_fsm_idle;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
++
+ endmodule
+ module ibex_multdiv_slow (
+ 	clk_i,
+@@ -16953,6 +16975,8 @@
+ 	assign unused_instr_done_wb = instr_done_wb;
+ 	assign unused_instr_expanded_id = ^instr_expanded_id;
+ 	assign unused_instr_gets_expanded_id = ^instr_gets_expanded_id;
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
++
+ endmodule
+ module ibex_register_file_ff (
+ 	clk_i,
+@@ -17638,4 +17662,16 @@
+ 		.alert_major_bus_o(alert_major_bus_o),
+ 		.core_busy_o(core_busy_o)
+ 	);
++	initial assume(!rst_ni);
++	reg [4:0] t022_ibus_out; reg [2:0] t022_dbus_out;
++	always @(posedge clk_i or negedge rst_ni) if (!rst_ni) begin t022_ibus_out <= 5'd0; t022_dbus_out <= 3'd0; end
++	  else begin t022_ibus_out <= t022_ibus_out + {4'd0, (instr_req_o & instr_gnt_i)} - {4'd0, instr_rvalid_i};
++	             t022_dbus_out <= t022_dbus_out + {2'd0, (data_req_o & data_gnt_i)} - {2'd0, data_rvalid_i}; end
++	always @* begin
++	  assume(!instr_gnt_i || instr_req_o);          // T022_ASSUME_IBUS_GNT: grant only with a request
++	  assume(!instr_rvalid_i || (t022_ibus_out != 5'd0)); // T022_ASSUME_IBUS_RVALID: response only for an outstanding request (never in its own grant cycle)
++	  assume(!data_gnt_i || data_req_o);            // T022_ASSUME_DBUS_GNT
++	  assume(!data_rvalid_i || (t022_dbus_out != 3'd0)); // T022_ASSUME_DBUS_RVALID
++	end
++
+ endmodule

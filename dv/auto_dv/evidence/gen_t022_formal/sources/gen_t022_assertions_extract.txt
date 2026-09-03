@@ -1,0 +1,118 @@
+# T022 inserted assertions/assumes/covers, extracted from the formal copies (file:line: text). Source of the copies: sv2v output t022_all.v; the RTL was not modified.
+t022_formal_core2.v:8416:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_core2.v:8417:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_core2.v:8420:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_ex_err_prio && !cheriot_wb_err_prio && !cheriot_asr_err_prio); // T022_CTRL_PRIO0
+t022_formal_core2.v:10345:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_fatal_err_q && !mshwm_en && !mshwmb_en && !cdbg_ctrl_en && !cheriot_fatal_err_o); // T022_CSR_CHERI0
+t022_formal_core2.v:11635:	always @(posedge clk_i) if (rst_ni) assert(!illegal_reg_16 && !instr_is_legal_cheriot && cheriot_data_req_o == 1'b0 && instr_is_cheriot_o == 1'b0); // T022_DEC_CHERI0
+t022_formal_core2.v:12886:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_lsu_req_dec && !cheriot_exec_id_o); // T022_ID_CHERI0
+t022_formal_core2.v:13551:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_acc_vio && !cheriot_bound_vio && !cheriot_force_uc); // T022_IF_CHERI0
+t022_formal_core2.v:14267:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_core2.v:14268:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_core2.v:14269:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_core2.v:14270:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_core2.v:14675:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_core2.v:15552:	always @(posedge clk_i) if (rst_ni) assert(!wb_is_cheriot_q && !wb_cheriot_load_q && !wb_cheriot_store_q && !cheriot_rf_we_q); // T022_WB_CHERI0
+t022_formal_core2.v:16982:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_core2.v:16985:		assert(!cheriot_branch_req_spec && !cheriot_load_id && !cheriot_store_id && !cheriot_rf_we && !cheriot_csr_op_en && !cheriot_csr_set_mie && !cheriot_csr_clr_mie && !csr_mshwm_set && !csr_dbg_tclr_fault && !instr_fetch_cheriot_acc_vio && !instr_fetch_cheriot_bound_vio && !csr_mepcc_clrtag); // T022_CORE_CHERI0_B
+t022_formal_core2.v:16986:		assert(!instr_bp_taken_id && !nt_branch_mispredict); // T022_CORE_BP0 (P-class)
+t022_formal_core2.v:17200:	always @(posedge clk_i) if (rst_ni) assert(rcap_a_o == 0 && rcap_b_o == 0); // T022_RF_CAP0
+t022_formal_core3.v:8416:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_core3.v:8417:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_core3.v:8420:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_ex_err_prio && !cheriot_wb_err_prio && !cheriot_asr_err_prio); // T022_CTRL_PRIO0
+t022_formal_core3.v:10345:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_fatal_err_q && !mshwm_en && !mshwmb_en && !cdbg_ctrl_en && !cheriot_fatal_err_o); // T022_CSR_CHERI0
+t022_formal_core3.v:11635:	always @(posedge clk_i) if (rst_ni) assert(!illegal_reg_16 && !instr_is_legal_cheriot && cheriot_data_req_o == 1'b0 && instr_is_cheriot_o == 1'b0); // T022_DEC_CHERI0
+t022_formal_core3.v:12886:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_lsu_req_dec && !cheriot_exec_id_o); // T022_ID_CHERI0
+t022_formal_core3.v:13551:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_acc_vio && !cheriot_bound_vio && !cheriot_force_uc); // T022_IF_CHERI0
+t022_formal_core3.v:14267:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_core3.v:14268:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_core3.v:14269:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_core3.v:14270:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_core3.v:14675:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_core3.v:15552:	always @(posedge clk_i) if (rst_ni) assert(!wb_valid_q || (!wb_is_cheriot_q && !wb_cheriot_load_q && !wb_cheriot_store_q && !cheriot_rf_we_q)); // T022_WB_CHERI0 (qualified by wb_valid_q: the flops are only consumed when WB holds an instruction)
+t022_formal_core3.v:16982:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_core3.v:16985:		assert(!cheriot_branch_req_spec && !cheriot_load_id && !cheriot_store_id && !cheriot_rf_we && !cheriot_csr_op_en && !cheriot_csr_set_mie && !cheriot_csr_clr_mie && !csr_mshwm_set && !csr_dbg_tclr_fault && !instr_fetch_cheriot_acc_vio && !instr_fetch_cheriot_bound_vio && !csr_mepcc_clrtag); // T022_CORE_CHERI0_B
+t022_formal_core3.v:16986:		assert(!instr_bp_taken_id && !nt_branch_mispredict); // T022_CORE_BP0 (P-class)
+t022_formal_core3.v:17200:	always @(posedge clk_i) if (rst_ni) assert(rcap_a_o == 0 && rcap_b_o == 0); // T022_RF_CAP0
+t022_formal_core4.v:8416:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_core4.v:8417:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_core4.v:8420:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_ex_err_prio && !cheriot_wb_err_prio && !cheriot_asr_err_prio); // T022_CTRL_PRIO0
+t022_formal_core4.v:10345:	always @(posedge clk_i) if (rst_ni) assert(!mshwm_en && !mshwmb_en && !cdbg_ctrl_en && !cheriot_fatal_err_o); // T022_CSR_CHERI0
+t022_formal_core4.v:11635:	always @(posedge clk_i) if (rst_ni) assert(!illegal_reg_16 && !instr_is_legal_cheriot && cheriot_data_req_o == 1'b0 && instr_is_cheriot_o == 1'b0); // T022_DEC_CHERI0
+t022_formal_core4.v:12886:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_lsu_req_dec && !cheriot_exec_id_o); // T022_ID_CHERI0
+t022_formal_core4.v:13551:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_acc_vio && !cheriot_bound_vio && !cheriot_force_uc); // T022_IF_CHERI0
+t022_formal_core4.v:14267:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_core4.v:14268:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_core4.v:14269:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_core4.v:14270:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_core4.v:14675:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_core4.v:15514:			always @(posedge clk_i) if (rst_ni) assert(!wb_valid_q || (!wb_is_cheriot_q && !wb_cheriot_load_q && !wb_cheriot_store_q && !cheriot_rf_we_q)); // T022_WB_CHERI0 (inside g_writeback_stage scope)
+t022_formal_core4.v:16982:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_core4.v:16985:		assert(!cheriot_branch_req_spec && !cheriot_load_id && !cheriot_store_id && !cheriot_rf_we && !cheriot_csr_op_en && !cheriot_csr_set_mie && !cheriot_csr_clr_mie && !csr_mshwm_set && !csr_dbg_tclr_fault && !instr_fetch_cheriot_acc_vio && !instr_fetch_cheriot_bound_vio && !csr_mepcc_clrtag); // T022_CORE_CHERI0_B
+t022_formal_core4.v:16986:		assert(!instr_bp_taken_id && !nt_branch_mispredict); // T022_CORE_BP0 (P-class)
+t022_formal_core4.v:17200:	always @(posedge clk_i) if (rst_ni) assert(rcap_a_o == 0 && rcap_b_o == 0); // T022_RF_CAP0
+t022_formal_core5.v:8416:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_core5.v:8417:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_core5.v:8420:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_ex_err_prio && !cheriot_wb_err_prio && !cheriot_asr_err_prio); // T022_CTRL_PRIO0
+t022_formal_core5.v:10345:	always @(posedge clk_i) if (rst_ni) assert(!mshwm_en && !mshwmb_en && !cdbg_ctrl_en && !cheriot_fatal_err_o); // T022_CSR_CHERI0
+t022_formal_core5.v:10346:	always @(posedge clk_i) if (rst_ni) assert((mshwm_q == 32'd0) && (mshwmb_q == 32'd0) && !mshwm_en_combi && !mshwmb_en); // T022_CSR_MSHWM0: stack high-water-mark CSRs stay at reset with CHERIoT off (makes csr_mshwm_set inductive)
+t022_formal_core5.v:11636:	always @(posedge clk_i) if (rst_ni) assert(!illegal_reg_16 && !instr_is_legal_cheriot && cheriot_data_req_o == 1'b0 && instr_is_cheriot_o == 1'b0); // T022_DEC_CHERI0
+t022_formal_core5.v:12887:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_lsu_req_dec && !cheriot_exec_id_o); // T022_ID_CHERI0
+t022_formal_core5.v:13552:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_acc_vio && !cheriot_bound_vio && !cheriot_force_uc); // T022_IF_CHERI0
+t022_formal_core5.v:14268:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_core5.v:14269:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_core5.v:14270:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_core5.v:14271:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_core5.v:14676:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_core5.v:15515:			always @(posedge clk_i) if (rst_ni) assert(!wb_valid_q || (!wb_is_cheriot_q && !wb_cheriot_load_q && !wb_cheriot_store_q && !cheriot_rf_we_q)); // T022_WB_CHERI0 (inside g_writeback_stage scope)
+t022_formal_core5.v:16983:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_core5.v:16986:		assert(!cheriot_branch_req_spec && !cheriot_load_id && !cheriot_store_id && !cheriot_rf_we && !cheriot_csr_op_en && !cheriot_csr_set_mie && !cheriot_csr_clr_mie && !csr_mshwm_set && !csr_dbg_tclr_fault && !instr_fetch_cheriot_acc_vio && !instr_fetch_cheriot_bound_vio && !csr_mepcc_clrtag); // T022_CORE_CHERI0_B
+t022_formal_core5.v:16987:		assert(!instr_bp_taken_id && !nt_branch_mispredict); // T022_CORE_BP0 (P-class)
+t022_formal_core5.v:17201:	always @(posedge clk_i) if (rst_ni) assert(rcap_a_o == 0 && rcap_b_o == 0); // T022_RF_CAP0
+t022_formal_core.v:8416:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_core.v:8417:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_core.v:14257:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_core.v:14258:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_core.v:14259:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_core.v:14260:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_core.v:14665:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_core.v:16970:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_lsu2.v:8420:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_lsu2.v:8421:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_lsu2.v:14265:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_lsu2.v:14266:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_lsu2.v:14267:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_lsu2.v:14268:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_lsu2.v:14678:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_zcmp2.v:7632:	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || (instr_i[15:0] == t022_instr_prev[15:0])); // T022_ZCMP_INSTR_STABLE16 (only the compressed halfword decides the Zcmp class; the icache back-fills [31:16] of a compressed instruction while valid && !ready)
+t022_formal_zcmp2.v:8420:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_zcmp2.v:8421:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_zcmp2.v:14261:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_zcmp2.v:14262:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_zcmp2.v:14263:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_zcmp2.v:14264:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_zcmp2.v:14669:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_zcmp2.v:16974:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_zcmp3.v:7634:	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || !valid_i || (instr_i[15:0] == t022_instr_prev[15:0])); // T022_ZCMP_INSTR_STABLE16V: mid-sequence and valid -> same compressed halfword as last cycle
+t022_formal_zcmp3.v:7635:	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || !valid_i || (instr_i[15:0] == t022_seq_instr)); // T022_ZCMP_SEQ_INSTR: mid-sequence and valid -> the instruction that started the sequence
+t022_formal_zcmp3.v:7636:	always @(posedge clk_i) if (rst_ni && t022_prev_valid) cover((cm_state_q != 3'd0) && t022_is_zcmp && (instr_i[15:0] != t022_seq_instr)); // T022_COVER_ZCMP_CLASS_MISMATCH: a different Zcmp encoding presented mid-sequence (the R-class default arms)
+t022_formal_zcmp3.v:8424:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_zcmp3.v:8425:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_zcmp3.v:14265:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_zcmp3.v:14266:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_zcmp3.v:14267:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_zcmp3.v:14268:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_zcmp3.v:14673:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_zcmp3.v:16978:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
+t022_formal_zcmp3.v:17671:	  assume(!instr_gnt_i || instr_req_o);          // T022_ASSUME_IBUS_GNT: grant only with a request
+t022_formal_zcmp3.v:17672:	  assume(!instr_rvalid_i || (t022_ibus_out != 5'd0)); // T022_ASSUME_IBUS_RVALID: response only for an outstanding request (never in its own grant cycle)
+t022_formal_zcmp3.v:17673:	  assume(!data_gnt_i || data_req_o);            // T022_ASSUME_DBUS_GNT
+t022_formal_zcmp3.v:17674:	  assume(!data_rvalid_i || (t022_dbus_out != 3'd0)); // T022_ASSUME_DBUS_RVALID
+t022_formal_zcmp.v:7632:	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || (instr_i == t022_instr_prev)); // T022_ZCMP_INSTR_STABLE
+t022_formal_zcmp.v:8420:		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
+t022_formal_zcmp.v:8421:		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
+t022_formal_zcmp.v:14261:		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
+t022_formal_zcmp.v:14262:		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
+t022_formal_zcmp.v:14263:		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
+t022_formal_zcmp.v:14264:		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
+t022_formal_zcmp.v:14669:	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
+t022_formal_zcmp.v:16974:	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0

@@ -1,0 +1,1 @@
+grep -c 'implicitly declared' t022_zcmp3b/model/design.log = 0

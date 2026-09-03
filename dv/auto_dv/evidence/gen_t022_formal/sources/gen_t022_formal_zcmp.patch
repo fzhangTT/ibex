@@ -1,0 +1,64 @@
+--- t022_all.v
++++ t022_formal_zcmp.v
+@@ -7627,6 +7627,10 @@
+ 		end
+ 	endgenerate
+ 	initial _sv2v_0 = 0;
++	reg [31:0] t022_instr_prev; reg t022_prev_valid;
++	always @(posedge clk_i) begin t022_instr_prev <= instr_i; t022_prev_valid <= rst_ni; end
++	always @(posedge clk_i) if (rst_ni && t022_prev_valid) assert((cm_state_q == 3'd0) || (instr_i == t022_instr_prev)); // T022_ZCMP_INSTR_STABLE
++
+ endmodule
+ module ibex_controller (
+ 	clk_i,
+@@ -8412,6 +8416,11 @@
+ 	wire unused_cheriot_ctrl_inputs;
+ 	assign unused_cheriot_ctrl_inputs = ^{cheriot_ex_valid_i, cheriot_ex_err_info_i[11], cheriot_wb_err_info_i[15:13], cheriot_branch_target_i};
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
++		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
++	end
++
+ endmodule
+ module ibex_cs_registers (
+ 	clk_i,
+@@ -14248,6 +14257,13 @@
+ 	assign lsu_err_is_cheriot_o = (cheriot_enable_i == ibex_pkg_IbexMuBiOn) & cheriot_err_q;
+ 	assign busy_o = ls_fsm_cs != 4'd0;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
++		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
++		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
++		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
++	end
++
+ endmodule
+ module ibex_multdiv_fast (
+ 	clk_i,
+@@ -14650,6 +14666,8 @@
+ 	wire unused_sva_mul_fsm_idle;
+ 	assign unused_sva_mul_fsm_idle = sva_mul_fsm_idle;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
++
+ endmodule
+ module ibex_multdiv_slow (
+ 	clk_i,
+@@ -16953,6 +16971,8 @@
+ 	assign unused_instr_done_wb = instr_done_wb;
+ 	assign unused_instr_expanded_id = ^instr_expanded_id;
+ 	assign unused_instr_gets_expanded_id = ^instr_gets_expanded_id;
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
++
+ endmodule
+ module ibex_register_file_ff (
+ 	clk_i,
+@@ -17638,4 +17658,6 @@
+ 		.alert_major_bus_o(alert_major_bus_o),
+ 		.core_busy_o(core_busy_o)
+ 	);
++	initial assume(!rst_ni);
++
+ endmodule

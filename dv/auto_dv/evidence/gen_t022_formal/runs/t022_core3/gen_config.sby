@@ -1,0 +1,11 @@
+[options]
+mode prove
+depth 5
+[engines]
+smtbmc yices
+[script]
+read -formal -sv t022_formal_core3.v
+prep -top gen_t022_top
+async2sync
+[files]
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/t022_formal_core3.v

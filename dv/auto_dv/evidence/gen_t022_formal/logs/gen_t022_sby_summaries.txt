@@ -1,0 +1,47 @@
+## t022_core (t022_sby_core.out)
+SBY  1:29:50 [t022_core] summary: successful proof by k-induction.
+SBY  1:29:50 [t022_core] DONE (PASS, rc=0)
+## t022_core5 (t022_sby_core5.out)
+SBY  1:54:04 [t022_core5] summary: successful proof by k-induction.
+SBY  1:54:04 [t022_core5] DONE (PASS, rc=0)
+## t022_zcmp (t022_sby_zcmp.out)
+SBY  1:31:46 [t022_zcmp] engine_0.induction: terminating process
+SBY  1:31:46 [t022_zcmp] summary: counterexample trace [basecase]: t022_zcmp/engine_0/trace.vcd
+SBY  1:31:46 [t022_zcmp] summary:   failed assertion gen_t022_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i._witness_.assert_assert_t022_formal_zcmp_v_7632_12421 at t022_formal_zcmp.v:7632.57-7632.117 step 6
+SBY  1:31:46 [t022_zcmp] DONE (FAIL, rc=2)
+## t022_zcmp2 (t022_sby_zcmp2.out)
+SBY  1:38:43 [t022_zcmp2] engine_0.induction: terminating process
+SBY  1:38:43 [t022_zcmp2] summary: counterexample trace [basecase]: t022_zcmp2/engine_0/trace.vcd
+SBY  1:38:43 [t022_zcmp2] summary:   failed assertion gen_t022_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i._witness_.assert_assert_t022_formal_zcmp2_v_7632_12421 at t022_formal_zcmp2.v:7632.57-7632.129 step 7
+SBY  1:38:43 [t022_zcmp2] DONE (FAIL, rc=2)
+## t022_zcmp3 (t022_sby_zcmp3.out)
+SBY  1:47:55 [t022_zcmp3] summary: counterexample trace [induction]: t022_zcmp3/engine_0/trace_induct.vcd
+SBY  1:47:55 [t022_zcmp3] summary:   failed assertion gen_t022_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i._witness_.assert_assert_t022_formal_zcmp3_v_7634_12460 at t022_formal_zcmp3.v:7634.57-7634.141
+SBY  1:47:55 [t022_zcmp3] summary:   failed assertion gen_t022_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i._witness_.assert_assert_t022_formal_zcmp3_v_7635_12468 at t022_formal_zcmp3.v:7635.57-7635.134
+SBY  1:47:55 [t022_zcmp3] DONE (UNKNOWN, rc=4)
+## t022_zcmp3c (t022_sby_zcmp3c.out)
+SBY  1:49:29 [t022_zcmp3c] summary: unreached cover statements:
+SBY  1:49:29 [t022_zcmp3c] summary:   gen_t022_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i._witness_.cover_cover_t022_formal_zcmp3_v_7636_12476 at t022_formal_zcmp3.v:7636.57-7636.137
+SBY  1:49:29 [t022_zcmp3c] DONE (FAIL, rc=2)
+## t022_zcmp3b (t022_sby_zcmp3b.out)
+SBY  2:15:30 [t022_zcmp3b] engine_0: terminating process
+## t022_zcmp3p (t022_sby_zcmp3p.out)
+SBY  2:15:30 [t022_zcmp3p] engine_0.basecase: terminating process
+## t022_zcmp3c20 (t022_sby_zcmp3c20.out)
+SBY  2:40:30 [t022_zcmp3c20] engine_0: terminating process
+## t022_lsu2 (t022_sby_lsu2.out)
+SBY  1:31:33 [t022_lsu2] summary: successful proof by k-induction.
+SBY  1:31:33 [t022_lsu2] DONE (PASS, rc=0)
+## t022_ibex_controller (t022_sby_ibex_controller.out)
+SBY  1:28:17 [t022_ibex_controller] summary: successful proof by k-induction.
+SBY  1:28:17 [t022_ibex_controller] DONE (PASS, rc=0)
+## t022_ibex_multdiv_fast (t022_sby_ibex_multdiv_fast.out)
+SBY  1:28:16 [t022_ibex_multdiv_fast] summary: successful proof by k-induction.
+SBY  1:28:16 [t022_ibex_multdiv_fast] DONE (PASS, rc=0)
+## t022_ibex_load_store_unit (t022_sby_ibex_load_store_unit.out)
+SBY  1:28:15 [t022_ibex_load_store_unit] engine_0.induction: terminating process
+SBY  1:28:15 [t022_ibex_load_store_unit] summary: counterexample trace [basecase]: t022_ibex_load_store_unit/engine_0/trace.vcd
+SBY  1:28:15 [t022_ibex_load_store_unit] summary:   failed assertion ibex_load_store_unit._witness_.assert_assert_t022_formal_v_14268_216 at t022_formal.v:14268.3-14268.80 step 3
+SBY  1:28:15 [t022_ibex_load_store_unit] summary: counterexample trace [induction]: t022_ibex_load_store_unit/engine_0/trace_induct.vcd
+SBY  1:28:15 [t022_ibex_load_store_unit] summary:   failed assertion ibex_load_store_unit._witness_.assert_assert_t022_formal_v_14268_216 at t022_formal.v:14268.3-14268.80
+SBY  1:28:15 [t022_ibex_load_store_unit] DONE (FAIL, rc=2)

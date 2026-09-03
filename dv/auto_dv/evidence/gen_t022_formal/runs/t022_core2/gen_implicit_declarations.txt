@@ -1,0 +1,6 @@
+grep -c 'implicitly declared' t022_core2/model/design.log = 6
+t022_formal_core2.v:10345: Warning: Identifier `\cheriot_fatal_err_q' is implicitly declared.
+t022_formal_core2.v:15552: Warning: Identifier `\cheriot_rf_we_q' is implicitly declared.
+t022_formal_core2.v:15552: Warning: Identifier `\wb_cheriot_load_q' is implicitly declared.
+t022_formal_core2.v:15552: Warning: Identifier `\wb_cheriot_store_q' is implicitly declared.
+t022_formal_core2.v:15552: Warning: Identifier `\wb_is_cheriot_q' is implicitly declared.

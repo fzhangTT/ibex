@@ -1,0 +1,8 @@
+read_verilog -sv /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/t022_all.v
+hierarchy -check -top gen_t022_top
+proc
+flatten
+async2sync
+opt -full
+stat
+write_rtlil /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/t022_flat.il

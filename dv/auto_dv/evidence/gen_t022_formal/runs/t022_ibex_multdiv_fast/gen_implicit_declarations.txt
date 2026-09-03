@@ -1,0 +1,1 @@
+grep -c 'implicitly declared' t022_ibex_multdiv_fast/model/design.log = 0

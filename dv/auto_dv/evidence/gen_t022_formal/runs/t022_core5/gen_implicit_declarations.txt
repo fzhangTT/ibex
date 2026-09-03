@@ -1,0 +1,1 @@
+grep -c 'implicitly declared' t022_core5/model/design.log = 0

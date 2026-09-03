@@ -1,0 +1,122 @@
+--- t022_all.v
++++ t022_formal_core5.v
+@@ -8412,6 +8412,13 @@
+ 	wire unused_cheriot_ctrl_inputs;
+ 	assign unused_cheriot_ctrl_inputs = ^{cheriot_ex_valid_i, cheriot_ex_err_info_i[11], cheriot_wb_err_info_i[15:13], cheriot_branch_target_i};
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(ctrl_fsm_cs <= 4'd9); // T022_CTRL_NAMED
++		assert(!cheriot_ex_err_q && !cheriot_wb_err_q && !cheriot_asr_err_q && !lsu_err_is_cheriot_q); // T022_CTRL_CHERI0
++	end
++
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_ex_err_prio && !cheriot_wb_err_prio && !cheriot_asr_err_prio); // T022_CTRL_PRIO0
++
+ endmodule
+ module ibex_cs_registers (
+ 	clk_i,
+@@ -10335,6 +10342,9 @@
+ 	wire unused_cheriot_csr_inputs;
+ 	assign unused_cheriot_csr_inputs = ^{cheriot_csr_access_i, cheriot_branch_target_i};
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(!mshwm_en && !mshwmb_en && !cdbg_ctrl_en && !cheriot_fatal_err_o); // T022_CSR_CHERI0
++	always @(posedge clk_i) if (rst_ni) assert((mshwm_q == 32'd0) && (mshwmb_q == 32'd0) && !mshwm_en_combi && !mshwmb_en); // T022_CSR_MSHWM0: stack high-water-mark CSRs stay at reset with CHERIoT off (makes csr_mshwm_set inductive)
++
+ endmodule
+ module ibex_csr (
+ 	clk_i,
+@@ -11623,6 +11633,8 @@
+ 		end
+ 	endgenerate
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(!illegal_reg_16 && !instr_is_legal_cheriot && cheriot_data_req_o == 1'b0 && instr_is_cheriot_o == 1'b0); // T022_DEC_CHERI0
++
+ endmodule
+ module ibex_ex_block (
+ 	clk_i,
+@@ -12872,6 +12884,8 @@
+ 	assign perf_mul_wait_o = stall_multdiv & mult_en_dec;
+ 	assign perf_div_wait_o = stall_multdiv & div_en_dec;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_lsu_req_dec && !cheriot_exec_id_o); // T022_ID_CHERI0
++
+ endmodule
+ module ibex_if_stage (
+ 	clk_i,
+@@ -13535,6 +13549,8 @@
+ 		end
+ 	endgenerate
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_acc_vio && !cheriot_bound_vio && !cheriot_force_uc); // T022_IF_CHERI0
++
+ endmodule
+ module ibex_load_store_unit (
+ 	clk_i,
+@@ -14248,6 +14264,13 @@
+ 	assign lsu_err_is_cheriot_o = (cheriot_enable_i == ibex_pkg_IbexMuBiOn) & cheriot_err_q;
+ 	assign busy_o = ls_fsm_cs != 4'd0;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(!(ls_fsm_cs == 4'd5 || ls_fsm_cs == 4'd6 || ls_fsm_cs == 4'd7)); // T022_LSU_NO_CTX
++		assert(ls_fsm_cs <= 4'd7); // T022_LSU_NAMED
++		assert(cap_rx_fsm_q == 3'd0); // T022_CRX_IDLE
++		assert(!cheriot_err_q && !resp_is_cap_q && !lsu_go_goodcap && !cpu_req_erred); // T022_LSU_CHERI0
++	end
++
+ endmodule
+ module ibex_multdiv_fast (
+ 	clk_i,
+@@ -14650,6 +14673,8 @@
+ 	wire unused_sva_mul_fsm_idle;
+ 	assign unused_sva_mul_fsm_idle = sva_mul_fsm_idle;
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(md_state_q != 3'd7); // T022_MD_NAMED
++
+ endmodule
+ module ibex_multdiv_slow (
+ 	clk_i,
+@@ -15487,6 +15512,7 @@
+ 				assign unused_dummy_instr_id = dummy_instr_id_i;
+ 				assign dummy_instr_wb_o = 1'b0;
+ 			end
++			always @(posedge clk_i) if (rst_ni) assert(!wb_valid_q || (!wb_is_cheriot_q && !wb_cheriot_load_q && !wb_cheriot_store_q && !cheriot_rf_we_q)); // T022_WB_CHERI0 (inside g_writeback_stage scope)
+ 		end
+ 		else begin : g_bypass_wb
+ 			assign rf_waddr_wb_o = rf_waddr_id_i;
+@@ -15525,6 +15551,7 @@
+ 	assign rf_wdata_wb_o = ({32 {rf_wdata_wb_mux_we[0]}} & rf_wdata_wb_mux[0]) | ({32 {rf_wdata_wb_mux_we[1]}} & rf_wdata_wb_mux[1]);
+ 	assign rf_we_wb_o = |rf_wdata_wb_mux_we;
+ 	assign rf_wcap_wb_o = (rf_wdata_wb_mux_we[0] ? rf_wcap_wb : (rf_wdata_wb_mux_we[1] ? rf_wcap_lsu_i : ibex_cheriot_pkg_NULL_CAP));
++
+ endmodule
+ module ibex_dummy_instr (
+ 	clk_i,
+@@ -16953,6 +16980,13 @@
+ 	assign unused_instr_done_wb = instr_done_wb;
+ 	assign unused_instr_expanded_id = ^instr_expanded_id;
+ 	assign unused_instr_gets_expanded_id = ^instr_gets_expanded_id;
++	always @(posedge clk_i) if (rst_ni) assert(!cheriot_enable_mubi_err && !cheriot_exec_id && !instr_is_cheriot_id && !lsu_is_cap && !lsu_cheriot_err && !cheriot_wb_err && !cheriot_ex_err && !cheriot_branch_req && !lsu_err_is_cheriot && !cheriot_fatal_err && !data_tag_o); // T022_CORE_CHERI0
++
++	always @(posedge clk_i) if (rst_ni) begin
++		assert(!cheriot_branch_req_spec && !cheriot_load_id && !cheriot_store_id && !cheriot_rf_we && !cheriot_csr_op_en && !cheriot_csr_set_mie && !cheriot_csr_clr_mie && !csr_mshwm_set && !csr_dbg_tclr_fault && !instr_fetch_cheriot_acc_vio && !instr_fetch_cheriot_bound_vio && !csr_mepcc_clrtag); // T022_CORE_CHERI0_B
++		assert(!instr_bp_taken_id && !nt_branch_mispredict); // T022_CORE_BP0 (P-class)
++	end
++
+ endmodule
+ module ibex_register_file_ff (
+ 	clk_i,
+@@ -17164,6 +17198,8 @@
+ 		end
+ 	endgenerate
+ 	initial _sv2v_0 = 0;
++	always @(posedge clk_i) if (rst_ni) assert(rcap_a_o == 0 && rcap_b_o == 0); // T022_RF_CAP0
++
+ endmodule
+ module gen_dut_top (
+ 	clk_i,
+@@ -17638,4 +17674,6 @@
+ 		.alert_major_bus_o(alert_major_bus_o),
+ 		.core_busy_o(core_busy_o)
+ 	);
++	initial assume(!rst_ni);
++
+ endmodule
