@@ -618,8 +618,9 @@ effect.
 
 Q-016 (B20 / rtl-arch D-NUMJUMPS-FENCEI; same shape as Q-004/Q-005). NumJumps (mhpmcounter7) counts
 FENCE.I because the RTL implements it as a jump to pc + 4 to flush the prefetch buffer and the
-instruction cache (rtl/ibex_decoder.sv:704-720; the decoder's end-of-decode override at :905-918 does
-not touch it because FENCE.I is legal); `doc/03_reference/performance_counters.rst:39` lists j, jal, jr
+instruction cache (rtl/ibex_decoder.sv:704-720, rtl/ibex_id_stage.sv:941, rtl/ibex_controller.sv:687; the
+decoder's end-of-decode override at :905-918 does not touch it because FENCE.I is legal; DV Lead wording
+in dv/auto_dv/work/dv-lead/gen_q016_numjumps_fencei_wording.md); `doc/03_reference/performance_counters.rst:39` lists j, jal, jr
 and jalr only. rtl-arch's reading (`dv/auto_dv/evidence/gen_hpm_event_defs.md` section 3): an
 implementation artifact sharing the jump path, severity low, RTL fix a one-term gate on perf_jump;
 recommended direction: follow the documentation. The DV Lead files it as bug candidate B20 by the bug
