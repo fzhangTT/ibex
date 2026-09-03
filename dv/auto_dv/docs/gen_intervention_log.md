@@ -491,3 +491,18 @@ commit 0dcd796; 0d27718 adds only the B15 pair split the Critic had accepted as 
 APPROVE. With cross-model round 3 (APPROVE-WITH-CHANGES, 96b1ece) and the scoped round 4 on v2c
 running, the plan set is now past both gates; the batch-1 opening recorded in LOG-016 is confirmed
 after the fact and later batches need no further plan gate unless round 4 returns REQUEST-CHANGES.
+
+## LOG-017 - 2026-09-03 - NOTE (second red window in the shared tree; canary-before-batch rule)
+
+10:39 UTC: Runtime's end-to-end re-proof compiled the shared working tree during tb-infra's T-080
+record-part build and `gen_boot_zc` FAILed on the lock-step comparator at the first retirement (model
+PC 80000080 vs DUT 80000084, `gen_rvfi_pkg.sv:190`); the same case PASSed at 10:19 UTC with an
+identical shim library, so a TB source edit in that window changed the first record or the model's
+start. No committed state was affected (HEAD's TB is the T-068 remediation, canary green on LSF at
+09:02 UTC). Rules set by the Orchestrator: (1) Runtime serves a test batch only after a green
+`gen_boot_zc` canary on the then-current tree (standing, all purposes); (2) a TB edit that can change
+observed records is followed by the lock-step canary before the tree is left in that state, with
+Runtime told before and after (extends LOG-014). tb-infra was told to restore green before any other
+work; Runtime holds the Test Writer's batch 1 until then. Counted for the closure report as process
+friction caught by the flow, not as a defect in generated TB code, unless the root cause turns out to
+be a committed change.
