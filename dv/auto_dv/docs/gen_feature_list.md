@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 10:22 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 10:26 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -13344,7 +13344,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Source: RTL-defined: rtl/ibex_core.sv:67,1339-1347; rtl/ibex_pkg.sv:36-39,84-85,378-379,
   626-628,728,759-760; dv/auto_dv/excl/gen_exclusions.el as committed at 9ebf2d9 (pass 13; the
   exclusion deliverable, rtl-arch T-069; entry set identical to 4125c36; Critic approval of the file
-  pending, it changes no row) with dv/auto_dv/excl/gen_exclusions_README.md (section 2 content
+  pending, it changes no row) with dv/auto_dv/excl/gen_exclusions_README (md5 9b642ef57393d8b3af8de9485a8f6f88; Critic verdict APPROVE in draft form, dv/auto_dv/docs/gen_critic_exclusions_v3.md line 15, F-1 and F-3 open until the first measured regression; rtl-arch sends the delta).md (section 2 content
   table, section 4 refuted entries, section 5 notes, 5a soundness, 5b in-range objects kept live,
   6 Critic conditions, 7 EC-3 fill procedure) and dv/auto_dv/excl/gen_exclusions_select_report.md
   of the same run; dv/auto_dv/evidence/gen_exclusions_draft_v2.md (the source the file is generated

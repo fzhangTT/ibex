@@ -193,3 +193,19 @@ Row prefixes: CM- = cross-model reviewer, CR- = Critic (the two reviewers number
 | CM-r3-L8 | C-15 "checkers run in record mode" vs TP-ISA-057 keeping checkers on | fixed | C-15 reworded in the plan Section 0 and in 13 places across the parts (checkers stay ON, verdicts recorded, not gated; measured: false); every informational item's Pass criteria name its checkers as ON |
 | CM-r3-I1 | gen_trace_check.py bin-existence match is word-level over the block | noted | to be scoped to the coverpoint when the tool is next touched (recorded in the tool's header comment at that time) |
 | CM-r3-I2 | rubrics PASS | noted | no change |
+
+## 7. Critic T-007 re-review (CR-v3; dv/auto_dv/docs/gen_critic_plan_set_v3.md, REQUEST-CHANGES on bc9dba9); answered by v2c
+| Row | Finding | Status | Where / how in v2c |
+|---|---|---|---|
+| CR-v3-M1 | gen_prv_debug_xfail hosts TP-PRV-014 (B1) and TP-PRV-035 (B2): two bug candidates in one _xfail test | fixed | groups split: gen_prv_debug_b1_xfail (TP-PRV-014) and gen_prv_debug_b2_xfail (TP-PRV-035); Section 0 rule "an _xfail test hosts items of exactly one bug id" (items of the same bug id may share: the B15 pair TP-CSR-075/076 stays in gen_csr_debug_csr_xfail); group counts regenerated (227); response row corrected |
+| CR-v3-L1 | Section 1 must state the 11 informational items and their split | fixed | Section 1 row: 11 informational (5 for a downgraded or record-only bug candidate: B9 x1, B14 x4; 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) plus Section 1.2 table |
+| CR-v3 (confirmed) | every other T-007 / T-034 answer confirmed fixed; six of sixteen conventions checked against the RTL and hold; trace check reproduces from a clean archive | noted | no change |
+
+Addenda to Section 6 rows: CM-r3-M1: the exclusion set is now APPROVED in draft form (dv/auto_dv/docs/gen_critic_exclusions_v3.md line 15;
+F-1 and F-3 open until the first measured regression); the F-CHERI-001 authority statement cites 9ebf2d9 with md5
+9b642ef57393d8b3af8de9485a8f6f88 and that verdict. CM-r3-M2: TB Infra's addendum version 4 settles the names the plan's
+Section 0 now uses (one export file `+gen_export_file`, `R`/`I`/`E` lines, EXPORT_FLUSH, gen_export.py, `+gen_export_sources`);
+TB Infra's option B (internal-instant clauses cannot use the channel) is recorded: 40 marked items anchor on ID entry or the
+FLUSH / IRQ_TAKEN / DBG_TAKEN windows and are tagged class B in v2d (reformulated to boundary facts or coverage-only).
+The Test Writer's plan's "122 excluded coverpoints" figure (its manifest-generator self-test) is the Test Writer's to correct
+to the committed tree's 86; the difference is the segmentation rule moving into gen_trace_check.py (one implementation).
