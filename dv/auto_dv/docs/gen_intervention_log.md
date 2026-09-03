@@ -1566,3 +1566,18 @@ before a hand-off, run git diff HEAD -- <file> for each file in the list and con
 change of this touch; a file edited from a copy older than HEAD is re-based first. The Orchestrator adds the same check
 to the committer's pre-commit pass: for each modified file, the diff against HEAD must contain no hunk that reverses a
 hunk of a commit since the teammate's declared base. The Test Writer restores the T-226 text in its next touch.
+
+## LOG-063 - 2026-09-03 - A blocker filed against a component without reading the component
+
+The Test Writer reported gen_pmc_ctrl blocked because the ISA model lacked Ibex's counter CSR set (mcounteren.TM
+hardwired 0, time/timeh illegal, the mcounteren_writable pin), and the Orchestrator routed that ask to tb-infra as T-235
+and to rtl-arch as T-236 on the Test Writer's word. The cross-model review of the record touch (04cf523, REQUEST-CHANGES)
+read the committed shim: dv/auto_dv/isa/gen_isa_shim.cc already masks mcounteren, traps time/timeh in every mode and gates
+mcounteren writes on the pin; the tree records only the mcountinhibit mask as deferred. The comparator mismatches the Test
+Writer measured are real, but their cause was asserted from the upstream model's documentation rather than diagnosed
+against the shim that actually ran, and the ask was filed against a component nobody had read. Rules: (1) a blocker
+against another role's component cites that component's committed source (what it does and does not do, with lines)
+before the ask is filed, and classifies the observed failures against it; (2) the Orchestrator routes such an ask to the
+component's owner as a question first ("what does the shim do here") and as a task only after the owner confirms the gap.
+rtl-arch's anchors note stands: it records what Ibex does, which the shim must match regardless of who asked. The Test
+Writer re-diagnoses per record class; tb-infra sizes T-235 from the shim as committed.
