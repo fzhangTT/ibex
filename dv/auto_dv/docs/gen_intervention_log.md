@@ -1079,3 +1079,12 @@ output kept under work/orchestrator/review_failed/run.ifkgjD.raw.json for the re
 /login at 16:2xZ ("Login successful"). The Orchestrator relaunched the 2a review with the same focus and re-pointed
 each teammate at its pending task. Nothing in the tree changed as a result; no landing was lost. The acceptance wave
 Runtime had restarted under a 6 h wrapper at 16:15Z may have been interrupted and is re-checked by Runtime.
+
+## LOG-041a - 2026-09-03 - RECOVERED (all six teammates resumed after the owner's /login)
+
+By 16:34Z every teammate had resumed on its pending task after the re-pointer messages: critic, rtl-arch, runtime
+and tb-infra refreshed STATUS; dv-lead and test-writer resumed writing (plan parts, batch-3 sweeps). No respawn was
+needed. The relaunched 2a review is running. rtl-arch reports that the times it wrote into STATUS and messages today
+were estimates that drifted hours ahead of the clock (the file mtimes were on cadence); from 16:29Z its stamps come
+from date -u. The same drift was reported earlier by tb-infra (LOG-031 period). Rule for all roles: stamps come from
+the clock, never from an estimate; the watchdog reads mtimes and is unaffected.
