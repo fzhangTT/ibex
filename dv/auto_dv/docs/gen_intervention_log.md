@@ -1189,3 +1189,21 @@ intent and a rule that flags a never-taken raised line at end of run, in 1c or e
 decidable-only crediting condition of LOG-037b. The promotion check (docs/gen_critic_flow_promotion.md) upholds LOG-039
 and the lowest-tier rule; its high is closed by Runtime's T-178 (7a468ec), and its lows ask that the tier table be a
 committed file and that the two unmeasured smoke entries carry a one-line reason.
+
+## LOG-042c - 2026-09-03 - ROOT CAUSE (schedule runner: the EOT wait ended at the first report-word store)
+
+The respawned Test Writer found the T-181 root cause from Runtime's bisect probe log: GenTest._edge_or_eot in
+gen_test_template.py treated the first store to the EOT register as the end of test, while report words store
+through the same register (gen_bridge_if.sv toggles evt_eot_seen on every store), so the schedule runner exited at
+report 0 (cycle 289) before the first mid-run trigger (c709); the dispatcher was never called for idx>0 (exactly six
+[GEN_PHASE] dispatch lines, no REGIME_SET after cycle 65). Consistent with the wave: all 13 failures carry only
+fire_schedule_applied, and the 11 passes are seeds whose mid-run triggers fell after the program's end. Fix in landing
+3h: the wait ends only when the store count reaches the final store; red, mutation red, green with idx>0 phases and the
+13 acceptance seeds re-run on a HEAD export follow. tb-infra is clear of T-181.
+
+## LOG-036c - 2026-09-03 - RESOLVED (manifest self-test green again at 5816601)
+
+Landing 3g (5816601) retargets the manifest generator's rule (f) case to any still-marked item with a CG-WIT-001 bin
+and makes the library self-test run the manifest self-test as a subprocess. Verified by the Orchestrator from a
+detached checkout with no environment variable: both self-tests PASS. The red window on the manifest self-test ran
+from d0e6a71 (15:58Z) to 5816601 (17:05Z).
