@@ -1207,3 +1207,16 @@ Landing 3g (5816601) retargets the manifest generator's rule (f) case to any sti
 and makes the library self-test run the manifest self-test as a subprocess. Verified by the Orchestrator from a
 detached checkout with no environment variable: both self-tests PASS. The red window on the manifest self-test ran
 from d0e6a71 (15:58Z) to 5816601 (17:05Z).
+
+## LOG-037e - 2026-09-03 - Priority-item credit rule and L-7 (Critic fu2a Section 6 adopted)
+
+The Critic's answers to the two fu2a questions (gen_critic_tb_fu2a.md Section 6, committed 35e74c6) are adopted as
+rulings. (1) The NMI emulation and the nmi_internal rule are intent-derived for their semantics from
+doc/03_reference/exception_interrupts.rst, with the controller's pending-bit mechanics as the permissible internal
+anchor; the latency bound of 4 records and the counting of debug-mode records are DUT-tuned, not intent-derived, and
+must be anchored to a document statement or declared as TB-side bounds with their origin stated (L-7, tb-infra,
+T-189). (2) Interrupt-priority items are credited only from directed or sparse cases in which the contending lines do
+not move inside the checker's decision window; the storm test never credits a priority item (448 undecidable claims);
+the checker publishes per-entry decidability so a priority item's fire check can assert its own entry was decidable;
+the cause of the decidable share rising from 40 to 78 percent is stated in the TB doc. The plan's credit rule carries
+the same sentence (DV Lead, T-190). The LOG-037b condition on T-137 is unchanged.
