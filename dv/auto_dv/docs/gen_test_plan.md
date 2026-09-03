@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:22 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:35 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -197,8 +197,11 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   not depend on it (their items run at the start-up knobs). Until the Test Writer's 3h lands (runner fix with a red and a green
   showing idx > 0 phases applied, the 13 acceptance seeds re-run) and passes review, NO item whose stimulus is a mid-run regime
   change is credited: runs may execute and record, nothing enters the Phase 1 numbers. Rule (generated, Section 1.6): an item is
-  under the hold when its Test group is a regime or layer-schedule group (gen_reg_*, *regime*); 82 items in
-  16 test groups today, none of them a promoted round-0 group. Lifted by removing this bullet and Section 1.6 in
+  under the hold when its Test group matches the Python pattern ^gen_reg_|regime (group rule: 71 items) or when its Stimulus
+  and Preconditions match the text rule stated exactly in Section 1.6 (its Python pattern and phrase list; in short: regime schedule,
+  cross-cutting schedule, gen_regime_sched, regimes scheduled, a knob value in some / most / every phase, per phase, knob transition,
+  regime switch; text rule: 37 items); union 82 items in 16 test groups today, none of them a
+  promoted round-0 group. Lifted by removing this bullet and Section 1.6 in
   the revision that cites the reviewed 3h commit.
 - `Expected: informational` means: the item is outside the Phase 1 pass gate; it is its own `_info` test with
   `measured: false`; its checkers stay ON and their verdicts are recorded, not gated; the test asserts only that the
@@ -761,90 +764,99 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 
 Groups (items held): gen_reg_knob_sweep (17), gen_pmp_random_regime (10), gen_ic_regime (8), gen_irq_regime (7), gen_xif_random (7), gen_dmem_regime (6), gen_imem_regime (6), gen_reg_inflight (6), gen_exc_regime (4), gen_fe_regime (4), gen_reg_schedule (2), gen_isa_random (1), gen_mul_random (1), gen_xcut_regime_sweep (1), gen_xif_fetch_enable (1), gen_xif_reset (1). Ruling: Section 0 (LOG-042a; root cause LOG-042c).
 
+Rules, stated so that a reader regenerates the list (Critic v9 CR9-M-2): (a) group rule: the item's Test group matches the Python
+pattern `^gen_reg_|regime` (re.search); (b) text rule: the item's Stimulus and Preconditions field texts, joined by one space,
+match the Python pattern `regime schedule|cross-cutting (regime )?schedule|gen_regime_sched|regimes? scheduled|in (some|most|>= ?1|at least one|every|all) phases?|per phase|each phase|phase_idx|knob transition|regime (switch|change)` under re.search with re.IGNORECASE. In words, the text rule fires on any of:
+"regime schedule", "cross-cutting schedule" or "cross-cutting regime schedule", "gen_regime_sched", "regime scheduled" or
+"regimes scheduled", "in some / most / >= 1 / at least one / every / all phase(s)", "per phase", "each phase", "phase_idx",
+"knob transition", "regime switch" or "regime change"; it does not fire on "schedule" alone, on program-region phases (U-mode
+phases, DIT alternating phases), on micro-op phases or on mid-run resets. An item is held when either rule fires; the Why held
+column names the rule(s). Counts: group rule 71 items, text rule 37 items, union 82 items.
+
 | Item | Group | Why held |
 |---|---|---|
-| TP-ISA-054 | gen_isa_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-MUL-028 | gen_mul_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-EXC-071 | gen_exc_regime | regime / layer-schedule group |
-| TP-EXC-072 | gen_exc_regime | regime / layer-schedule group |
-| TP-EXC-073 | gen_exc_regime | regime / layer-schedule group |
-| TP-EXC-074 | gen_exc_regime | regime / layer-schedule group |
-| TP-IRQ-071 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-072 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-073 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-074 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-075 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-076 | gen_irq_regime | regime / layer-schedule group |
-| TP-IRQ-077 | gen_irq_regime | regime / layer-schedule group |
-| TP-PMP-100 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-101 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-102 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-103 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-104 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-105 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-106 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-107 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-PMP-109 | gen_pmp_random_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-PMP-110 | gen_pmp_random_regime | regime / layer-schedule group |
-| TP-IMEM-031 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IMEM-034 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IMEM-035 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IMEM-036 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IMEM-037 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IMEM-038 | gen_imem_regime | regime / layer-schedule group |
-| TP-DMEM-023 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-DMEM-029 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-DMEM-038 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-DMEM-054 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-DMEM-055 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-DMEM-056 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-FE-015 | gen_fe_regime | regime / layer-schedule group |
-| TP-FE-024 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-FE-025 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-FE-028 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-040 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-041 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-047 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-048 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-049 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-054 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-055 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-IC-056 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-REG-001 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-002 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-003 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-004 | gen_reg_knob_sweep | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-REG-005 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-006 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-007 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-008 | gen_reg_knob_sweep | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-REG-009 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-010 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-011 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-012 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-013 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-014 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-015 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-016 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-017 | gen_reg_knob_sweep | regime / layer-schedule group |
-| TP-REG-018 | gen_reg_schedule | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
-| TP-REG-019 | gen_reg_schedule | regime / layer-schedule group |
-| TP-REG-020 | gen_reg_inflight | regime / layer-schedule group |
-| TP-REG-021 | gen_reg_inflight | regime / layer-schedule group |
-| TP-REG-022 | gen_reg_inflight | regime / layer-schedule group |
-| TP-REG-023 | gen_reg_inflight | regime / layer-schedule group |
-| TP-REG-024 | gen_reg_inflight | regime / layer-schedule group |
-| TP-REG-025 | gen_reg_inflight | regime / layer-schedule group |
-| TP-XIF-001 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-004 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-007 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-008 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-009 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-011 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-016 | gen_xif_fetch_enable | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-XIF-018 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
-| TP-REG-026 | gen_xcut_regime_sweep | regime / layer-schedule group |
-| TP-REG-028 | gen_xif_reset | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-ISA-054 | gen_isa_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-MUL-028 | gen_mul_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-EXC-071 | gen_exc_regime | group rule: regime / layer-schedule group |
+| TP-EXC-072 | gen_exc_regime | group rule: regime / layer-schedule group |
+| TP-EXC-073 | gen_exc_regime | group rule: regime / layer-schedule group |
+| TP-EXC-074 | gen_exc_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-071 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-072 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-073 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-074 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-075 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-076 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-IRQ-077 | gen_irq_regime | group rule: regime / layer-schedule group |
+| TP-PMP-100 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-101 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-102 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-103 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-104 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-105 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-106 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-107 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-PMP-109 | gen_pmp_random_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-PMP-110 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
+| TP-IMEM-031 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IMEM-034 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IMEM-035 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IMEM-036 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IMEM-037 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IMEM-038 | gen_imem_regime | group rule: regime / layer-schedule group |
+| TP-DMEM-023 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-DMEM-029 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-DMEM-038 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-DMEM-054 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-DMEM-055 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-DMEM-056 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-FE-015 | gen_fe_regime | group rule: regime / layer-schedule group |
+| TP-FE-024 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-FE-025 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-FE-028 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-040 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-041 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-047 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-048 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-049 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-054 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-055 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-IC-056 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-REG-001 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-002 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-003 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-004 | gen_reg_knob_sweep | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-REG-005 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-006 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-007 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-008 | gen_reg_knob_sweep | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-REG-009 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-010 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-011 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-012 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-013 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-014 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-015 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-016 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-017 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
+| TP-REG-018 | gen_reg_schedule | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-REG-019 | gen_reg_schedule | group rule: regime / layer-schedule group |
+| TP-REG-020 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-REG-021 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-REG-022 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-REG-023 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-REG-024 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-REG-025 | gen_reg_inflight | group rule: regime / layer-schedule group |
+| TP-XIF-001 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-004 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-007 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-008 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-009 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-011 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-016 | gen_xif_fetch_enable | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-XIF-018 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
+| TP-REG-026 | gen_xcut_regime_sweep | group rule: regime / layer-schedule group |
+| TP-REG-028 | gen_xif_reset | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
 
 # 2. New checkers requested from TB Infra (beyond the inventory)
 
