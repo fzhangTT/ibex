@@ -246,7 +246,8 @@ execute it and validator-checked — §6 above).
    evidence, not an assertion that it was done (`docs/dv/dv_principles.md` §6.1).
 2. **Mutation-proof, with inert referees and an ablation control.** Declare the mutation first (id,
    file:line, original, mutated, expected detector); apply it; run the covering test with hidden
-   referees inert (`+disable_cosim=1` so cosim mismatches become informational, not fatal) and
+   referees inert (this repo: `+disable_cosim=1`, a full-tree-TB plusarg — each repo names its own
+  demote-the-referee mechanism) and
    confirm the failure signature belongs to the *named* checker, not something else silently
    catching it; then disable the named checker and rerun — the mutation must *survive* (an
    ablation where the mutation is still caught with the checker off voids the whole proof); revert
@@ -300,7 +301,8 @@ execute it and validator-checked — §6 above).
   re-review dispatched, haiku" pattern repeated per task; "CORRECTION: fix wave = 3 commits ...
   re-review redirected to full package review" when the fix wave grew).
 - **Bounded watchdogs on everything dispatched** — background notifications are unreliable; size a
-  timer to the work (~10 min default; 45–60 min for full sims/regressions) and verify progress from
+  timer to the work (this repo: ~10 min default; 45–60 min for full sims/regressions — size to the
+  new repo's own runtimes) and verify progress from
   the filesystem/process table on firing, never from agent status alone (`CLAUDE.md` Site gotchas,
   Watchdog rule; exercised repeatedly, e.g. `docs/dv/process-logs/ws1/progress.md` Task 5:
   "Implementer stalled on lost notification again; nudged with poll-the-log instruction").
