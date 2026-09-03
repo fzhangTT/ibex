@@ -9,8 +9,10 @@ Exits 1 on any violation. Deterministic.
 Options (export_sources entries may be "<source> <event>" strings or {source, event} maps):
   --knobs <path>           export event table (default dv/auto_dv/tb/gen_tb_knobs.yaml); a row whose event is
                            "<name>" is a wildcard and counts as ABSENT (gen_test_plan.md Section 0)
-  --build-manifest <path>  a build's build_manifest.yaml; its export_sources list ("<source> <event>" strings) decides
-                           the cycle-clause sunset (C-3): a still-marked item whose export rows are all present FAILS.
+  --build-manifest <path>  a build's build_manifest.yaml; its export_sources_emitted list (the rows the build's registered writers
+                           emit; "<source> <event>" strings or {source, event} maps) decides the cycle-clause sunset (C-3): a
+                           still-marked item whose export rows are all EMITTED fails; export_sources (the rendered table) only
+                           reports how many marked items are renderable.
                            Without it the tool reports the sunset input as unknown and does not fail on it.
 """
 import re, csv, sys, argparse, collections, pathlib
@@ -98,12 +100,9 @@ def split_rows(txt):
         else: cur += ch
     if cur.strip(): out.append(cur.strip())
     return out
-VOCAB = {f'{s} {e}' for s, es in {
-    'ibus': ['req', 'gnt', 'rvalid'], 'dbus': ['req', 'gnt', 'rvalid'],
-    'pin': ['irq_software', 'irq_timer', 'irq_external', 'irq_fast', 'irq_nm', 'debug_req', 'fetch_enable', 'mcounteren_writable'],
-    'alert': ['alert_minor', 'alert_major_bus', 'alert_major_internal', 'double_fault_seen'],
-    'misc': ['irq_pending', 'core_busy', 'crash_dump_current_pc', 'crash_dump_next_pc', 'crash_dump_last_data_addr', 'crash_dump_exception_pc', 'crash_dump_exception_addr'],
-    'icram': ['inject', 'lookup', 'tag_write', 'fill_write'], 'scrkey': ['req', 'valid'], 'regime': ['phase']}.items() for e in es}
+PLAN_DEMANDED_ROWS = {'icram lookup', 'icram tag_write', 'icram fill_write'}  # gen_test_plan.md Section 0, WP-8
+WILDCARD_TOKENS = {'pin irq_fast'}  # stands for any irq_fast<n> row
+tok_check = []
 marked = {}; wit_errors = []
 for tid, b in tps.items():
     if TOKEN not in b: continue
@@ -111,8 +110,7 @@ for tid, b in tps.items():
     if not m: wit_errors.append(f'{tid}: marked item without [export-rows: ...]'); marked[tid] = []; continue
     rows = split_rows(m.group(1))
     for tok in rows:
-        if not (tok.startswith('none (') or tok in VOCAB):
-            wit_errors.append(f'{tid}: export row "{tok}" is not in the Section 0 vocabulary (or "none (<why>)")')
+        if not tok.startswith('none ('): tok_check.append((tid, tok))
     marked[tid] = [t for t in rows if not t.startswith('none')]
 witness_csv = list(csv.DictReader(open(D/'gen_trace_witness_ids.csv')))
 if [(r['tp_item'], r['bin']) for r in witness_csv] != wit_order:
@@ -142,6 +140,9 @@ yaml_rows = set(); wildcard_rows = set()
 for row in knobs.get('export_events', []):
     src = row['source']; ev = str(row['event'])
     (wildcard_rows if '<' in ev else yaml_rows).add(f'{src} {ev}')
+VOCAB = yaml_rows | PLAN_DEMANDED_ROWS | WILDCARD_TOKENS  # a yaml row cannot drift from the list: the list is the yaml
+for tid, tok in tok_check:
+    if tok not in VOCAB: wit_errors.append(f'{tid}: export row "{tok}" is neither a rendered yaml row nor a plan-demanded row (gen_test_plan.md Section 0)')
 def present(tok, rows):
     if tok == 'pin irq_fast': return any(re.fullmatch(r'pin irq_fast\d*', r) for r in rows)
     return tok in rows
@@ -149,14 +150,23 @@ in_yaml = [tid for tid, rows in marked.items() if rows and all(present(t, yaml_r
 sunset_fail = []; export_sources = None; sunset_note = ''
 if args.build_manifest and not pathlib.Path(args.build_manifest).exists():
     sunset_note = f'export sources unknown: {args.build_manifest} not found'
+    wit_errors.append(f'build manifest given but not found: {args.build_manifest} (an explicit path must exist; omit the option for the unknown note)')
 elif args.build_manifest:
     man = yaml.safe_load(open(args.build_manifest)) or {}
-    if 'export_sources' not in man:
-        sunset_note = f'export sources unknown: {args.build_manifest} has no export_sources field (Runtime request, gen_test_plan.md Section 2a WP-6)'
-    else:
-        export_sources = {f"{x['source']} {x['event']}" if isinstance(x, dict) else str(x) for x in (man['export_sources'] or [])}
+    rowset = lambda v: {f"{x['source']} {x['event']}" if isinstance(x, dict) else str(x) for x in (v or [])}
+    rendered = rowset(man.get('export_sources')) if 'export_sources' in man else None
+    if 'export_sources_emitted' in man:  # the rows the build's registered writers emit (Runtime, from the canary export header sources=)
+        export_sources = rowset(man['export_sources_emitted'])
         sunset_fail = [tid for tid, rows in marked.items() if rows and all(present(t, export_sources) for t in rows)]
-        sunset_note = f'export sources from {args.build_manifest}: {len(export_sources)} rows; {len(sunset_fail)} still-marked items have every export row present'
+        renderable = len([tid for tid, rows in marked.items() if rows and rendered is not None and all(present(t, rendered) for t in rows)])
+        sunset_note = f'export sources from {args.build_manifest}: emitted {len(export_sources)} rows (export_sources_emitted), rendered {len(rendered) if rendered is not None else "n/a"}; {len(sunset_fail)} still-marked items have every export row EMITTED (they must lose the token); {renderable} have every row rendered'
+        would_rendered = len([tid for tid, rows in marked.items() if rows and rendered is not None and all(present(t, rendered) for t in rows)])
+        sunset_note += f'. Sunset count: would un-mark {len(sunset_fail)} items on the EMITTED set (a rendered-table trigger would have un-marked {would_rendered}; the difference is items whose rows include a rendered-but-unemitted source)'
+    elif rendered is not None:
+        renderable = [tid for tid, rows in marked.items() if rows and all(present(t, rendered) for t in rows)]
+        sunset_note = f'export sources unknown: {args.build_manifest} carries export_sources (the rendered table, {len(rendered)} rows; {len(renderable)} marked items renderable) but no export_sources_emitted field, the rows the build\'s writers emit (Runtime request, gen_test_plan.md Section 2a WP-6); no item sunsets on rendered rows alone'
+    else:
+        sunset_note = f'export sources unknown: {args.build_manifest} has neither export_sources_emitted nor export_sources (Runtime request, gen_test_plan.md Section 2a WP-6)'
 else:
     sunset_note = f'export sources unknown: no --build-manifest given; {args.knobs} renders {len(yaml_rows)} exact rows and {len(wildcard_rows)} wildcard rows (absent); {len(in_yaml)} of {len(marked)} marked items have every export row rendered in the yaml and would be checked against a build'
 for lst, msg in [(no_tp, 'ACTIVE feature without TP item'), (no_bin, 'ACTIVE feature without bin'), (tp_no_bin, 'TP item without bins'), (tp_no_feat, 'TP item without feature'), (cg_bad, 'covergroup mapping'), (unnamed, 'ACTIVE feature named by no non-ledger covergroup (condition 2 reverse, Critic W-4)'), (bin_missing, 'CSV bin not declared in the plan'), (adopted_bad, 'adopted=1 bin in a covergroup without an Adopted source'), (wit_errors, 'witness ledger'), (sunset_fail, 'sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0)')]:

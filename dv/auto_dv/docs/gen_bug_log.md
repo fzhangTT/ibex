@@ -123,16 +123,16 @@ convention for misaligned accesses). The checker follows the RTL for a D and the
 - Intended reproducer: data_ind_timing=1; 100 never-taken branches; mhpmcounter9 delta: doc 0, RTL 100. Control: data_ind_timing=0.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
-### B13: rvfi_pc_wdata keeps bit 0 for jalr to an odd target while the fetch clears it
-- Status: candidate, reproducer pending
-- rtl-arch alias: -
+### B13: rvfi_pc_wdata keeps bit 0 for jalr to an odd target while the fetch clears it (RVFI-only class, like BUG-10)
+- Status: candidate, reproducer spec available and observed (rtl-arch R11, dv/auto_dv/evidence/gen_t102_rtl_facts.md; Test Writer batch 2: gen_test_isa_cti reports 64 of 64 comparator rows per seed of isa_pc_next dut == model | 1 on jalr / c.jr / c.jalr with an odd rs1 + imm, dv/auto_dv/evidence/gen_tdd_batch2.md; Orchestrator ruling 13:5x UTC)
+- rtl-arch alias: R11 (gen_t102_rtl_facts.md)
 - Features: F-BTALU-008 (canonical); cross-ref F-RVFI-013
 - Expected-fail TP items: TP-BTALU-008, TP-RVFI-013
-- RTL: rtl/ibex_core.sv:2084 (rvfi_pc_wdata = raw branch_target_ex when pc_set)
-- Specification / intent: RVFI: pc_wdata is the address of the next instruction (riscv-formal docs/source/rvfi.rst Program counter)
-- Notes: RVFI cosmetic; comparator masks bit 0 until fixed
-- Intended reproducer: jalr to rs1 = odd address: rvfi_pc_wdata[0] = 1 while the next rvfi_pc_rdata[0] = 0.
-- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
+- RTL: the branch-target ALU adds rs1 and the immediate without masking (rtl/ibex_ex_block.sv:95-101), so branch_target_ex carries bit 0; the fetch drops it (rtl/ibex_if_stage.sv:244, :288 prefetch_addr = {fetch_addr_n[31:1], 1'b0}, :416; rtl/ibex_fetch_fifo.sv:62-63) and pc_if / pc_id are even; the jalr record's rvfi_pc_wdata = pc_set ? branch_target_ex : pc_if (rtl/ibex_core.sv:2084) takes the RAW target, so RVFI reports an odd next-pc while no architectural register or fetch address ever shows bit 0
+- Specification / intent: RVFI (riscv-formal docs/source/rvfi.rst, Program counter): pc_wdata is the address of the next instruction; the ISA execution is per spec (JALR clears the target LSB), the RVFI definition is violated
+- Notes: RVFI-only class (like BUG-10 / B18): no architectural effect. One-line fix the RTL owner would make: mask bit 0 at rtl/ibex_core.sv:2084 ({branch_target_ex[31:1], 1'b0} when pc_set). Comparator convention until fixed (TB Infra encodes it, counted in the GEN_SB report): isa_pc_next masks bit 0 of rvfi_pc_wdata on jump-class records, or compares the NEXT record's rvfi_pc_rdata; TP-ISA-019's assumption is confirmed; the expected-fail test gen_btalu_hazard_xfail (TP-BTALU-008) alone runs the unmasked rule and records the bit
+- Intended reproducer: jalr to rs1 + imm odd: rvfi_pc_wdata[0] = 1 while the next rvfi_pc_rdata[0] = 0 (observed in batch 2, 64 rows per seed)
+- Evidence: dv/auto_dv/evidence/gen_tdd_batch2.md (gen_test_isa_cti comparator rows); rtl-arch R11
 
 ### B14: RVFI drops the ID-stage trap record when a WB load/store error coincides
 - Status: downgraded to an RVFI convention note pending the confirmation simulation (rtl-arch T-041, fact-check row 48): the WB error has priority in FLUSH, the killed ID instruction re-executes after the handler and then produces its own record, so suppressing its record is correct; the confirmation program must show two trap records in order; one record re-opens it
@@ -197,6 +197,17 @@ convention for misaligned accesses). The checker follows the RTL for a D and the
 - Specification / intent: rvfi.rst: rvfi_trap must be set for an instruction that cannot be decoded as legal
 - Notes: no architectural effect; the comparator treats the record per the decoded illegal-instruction class
 - Intended reproducer: dcsr.ebreakm = 1 (or ebreaku in U-mode); execute .word 0x00100173 (ebreak encoding with rd = x2): RTL shows rvfi_trap = 0 on the record while mcause reads 2 and execution continues at mtvec; with the dcsr bit clear rvfi_trap = 1 (rvfi.rst: rvfi_trap must be set for an illegal instruction). Comparator rule: derive the trap from the pc flow for ebreak encodings with rs1/rd != 0 when ebreakm/u is set (TB Infra: not built yet; a run hitting it shows the known B19 isa_trap signature).
+- Evidence: (none yet)
+
+### B20: fence.i increments mhpmcounter7 (NumJumps), which the doc defines as unconditional jumps only
+- Status: candidate, reproducer spec available (rtl-arch reading, dv/auto_dv/evidence/gen_hpm_event_defs.md section 3, D-NUMJUMPS-FENCEI; no run yet)
+- rtl-arch alias: D-NUMJUMPS-FENCEI (gen_hpm_event_defs.md); rtl-arch recommends following the doc
+- Features: F-PMC-038 (NumJumps); item TP-PMC-061 (expected-fail); TP-PMC-040 keeps fence.i out of its windows
+- Expected-fail TP items: TP-PMC-061 (gen_pmc_hpm_b20_fencei_xfail)
+- RTL: rtl/ibex_decoder.sv:704-720 implements FENCE.I as a jump to the next PC (jump_in_dec_o, and jump_set_o in the first cycle, to flush the prefetch buffer and the icache); rtl/ibex_id_stage.sv:941 and rtl/ibex_controller.sv:687 count jump_set as perf_jump, so NumJumps moves by one per fence.i
+- Specification / intent: performance_counters.rst:39 "NumJumps: Number of unconditional jumps (j, jal, jr, jalr)"; the privileged spec leaves hpm events implementation-defined, so the Ibex doc is the only definition of this counter; B by the B-versus-D criterion because the counter records an event the doc excludes (the B11 class: a wrong event, not a mis-stated convention like D6/D20)
+- Notes: severity low (one count per fence.i, no functional effect); the RTL fix is a one-term gate on perf_jump or a separate flush request; the owner may instead accept the RTL and re-document, in which case B20 becomes a doc defect and TP-PMC-061 a pass item (owner question to be filed by the Orchestrator, as for Q-004/Q-005); the independent counter model follows the doc and treats fence.i windows as the B20 witness (CG-PMC-003.cr_variant_rel.fencei_gt)
+- Intended reproducer: csrr t0, mhpmcounter7; fence.i; csrr t1, mhpmcounter7 with mcountinhibit[7] = 0: doc predicts t1 - t0 = 0, RTL gives 1
 - Evidence: (none yet)
 
 ## 1b. Retained IDs that are not bug candidates (kept so plan and review references resolve)
@@ -285,3 +296,5 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 - v1b (2026-09-03): expected-fail item lists refreshed from the plan parts after the Critic pre-review fold-in (B6/B12/B14 carry no expected-fail items; B15 items TP-CSR-075, TP-DBG-018).
 - v1a (2026-09-03): folded rtl-arch T-017 (BUG-06 = B1, BUG-07 = B8 confirmed reachable, B9 out-of-spec stimulus, B10/B11 confirmed) and T-041 (BUG-04/B14 downgraded pending sim); B12 reclassified as documented behaviour with a design note (Critic pre-review S-1).
 - v1 (2026-09-03): opened with B1..B15 (B6 reclassified per Critic C-20; B15 added per C-21; B5 re-cited per C-22), S1..S3, D1..D19 (D5 retired).
+- v1i (2026-09-03 12:43 UTC): B20 added from rtl-arch's HPM event definitions (fence.i counted by NumJumps; doc followed, expected-fail TP-PMC-061); rtl-arch's second candidate (illegal branch/JALR encodings counted before the trap) was withdrawn by rtl-arch (rtl/ibex_decoder.sv:905-918 clears jump/branch on illegal_insn) and gets no row; the counter model's expected deviations are D6, B7, B11, B17 and B20.
+- v1j (2026-09-03 13:59 UTC): B13 promoted from RVFI-cosmetic note to a DUT bug candidate of the RVFI-only class per rtl-arch R11 and the batch-2 observation (64 of 64 rows per seed); one-line fix at rtl/ibex_core.sv:2084 and the comparator convention recorded (Orchestrator ruling). R10 (mtval = 0 on a breakpoint exception is spec-legal; the pc arm is CHERIoT-only) is a shim convention, not a bug: cited in the plan where the cause-3 mtval expectation is stated.

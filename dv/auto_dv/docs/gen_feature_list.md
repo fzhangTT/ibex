@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 11:56 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 14:09 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -792,7 +792,7 @@ Conventions used below:
   RTL-defined: rtl/ibex_decoder.sv:738-740, rtl/ibex_controller.sv:874-899, rtl/ibex_compressed_decoder.sv:603-605
 - Edge: no
 - Status: ACTIVE
-- Notes: Ibex writes mtval=0 for ebreak (csr_mtval_o default) which the spec permits.
+- Notes: Ibex writes mtval=0 for ebreak (csr_mtval_o default) which the spec permits; rtl-arch R10 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): the pc-writing breakpoint arm is CHERIoT-only (rtl/ibex_controller.sv:894-897), c.ebreak expands to ebreak 0x00100073 and takes the same arm; the shim models mtval = 0 for cause 3 (convention, not a bug).
 
 ### F-ISA-035: ebreak enters debug mode when dcsr.ebreakm/ebreaku set
 - What: Alias of F-DBG-017: ISA-decode perspective of ebreak entering debug mode; see the canonical
@@ -9184,11 +9184,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Edge: yes, of F-PMC-034
 - Status: FOLDED into F-PMC-034 (bin CG-PMC-003.cp_variant.straddle_pmp, CG-PMC-003.cr_variant_rel.straddle_eq)
 
-### F-PMC-038: mhpmcounter7 (NumJumps) counts jal/jalr (including c.j, c.jal, c.jr, c.jalr, cm.popret's return jump) and fence.i
+### F-PMC-038: mhpmcounter7 (NumJumps) counts jal/jalr (including c.j, c.jal, c.jr, c.jalr, cm.popret's return jump); the RTL also counts fence.i against the doc (B20)
 - What: perf_jump pulses once per jump when the controller sets the PC (jump_set, deduped by
   branch_jump_set_done_q, rtl/ibex_id_stage.sv:806-815), in DECODE. fence.i is implemented as a jump
-  to pc + 4 (jump_in_dec_o / jump_set_o, rtl/ibex_decoder.sv:711-720) and increments NumJumps
-  (fact-check X-23 / TP-PMC-040).
+  to pc + 4 (jump_in_dec_o / jump_set_o, rtl/ibex_decoder.sv:704-720) and therefore increments NumJumps
+  (fact-check X-23), which the doc's definition (performance_counters.rst:39: j, jal, jr, jalr) excludes:
+  bug candidate B20 (TP-PMC-061, expected-fail; the checker follows the doc; TP-PMC-040 keeps fence.i
+  out of its windows).
 - Observable at: csrr read-back of mhpmcounter7 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[4]) equals
   the number of retired jal/jalr-class instructions.
 - Config: mcountinhibit[7]=0.
@@ -9196,7 +9198,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_cs_registers.sv:1593
 - Edge: no
 - Status: ACTIVE
-- Notes: mret/dret and exception redirects are not jumps for this counter (pc_set via other paths).
+- Notes: mret/dret and exception redirects are not jumps for this counter (pc_set via other paths). An illegal JALR encoding (funct3 != 0) does NOT count: the decoder's end-of-decode override clears jump_set_o for every illegal encoding (rtl/ibex_decoder.sv:905-918; rtl-arch withdrew its D-COUNT-ILLEGAL-ENC candidate).
 
 ### F-PMC-039: mhpmcounter8 (NumBranches) counts every conditional branch, taken or not
 - What: perf_branch asserts in the FIRST_CYCLE arm of the ID FSM while the branch is the valid
@@ -9215,7 +9217,8 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Edge: no
 - Status: ACTIVE
 - Notes: the waiting class is carried by F-PMC-053 (expected-fail B17, TP-PMC-058); TP-PMC-041 is
-  the exact-class pass item.
+  the exact-class pass item. An illegal conditional-branch encoding (funct3 010/011) does NOT count: the decoder's
+  end-of-decode override clears branch_in_dec_o for every illegal encoding (rtl/ibex_decoder.sv:905-918).
 
 ### F-PMC-040: mhpmcounter9 (NumBranchesTaken) counts taken conditional branches (data_ind_timing=0)
 - What: perf_tbranch = branch_set_i in the controller; with data-independent timing off, branch_set
@@ -12988,7 +12991,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   value is pc_if (next sequential fetch address) and is compared as such (TP-RVFI-012); the
   comparator observes the target on the following record (TB Infra convention C-1). Related:
   B13 (jalr to an odd target keeps bit 0 in pc_wdata, rtl/ibex_core.sv:2084 with the raw
-  branch_target_ex) stands. Evidence (TB Infra first green export run, dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (b)): the seed-7 program's single trap record (order 466, ecall at 0x80002164) has pc_wdata 0x80002168 = pc + 4, not the handler 0x80001700, confirming the RTL-defined rule above and convention C-1; the export test's pc-continuity rule excludes trap, mret and dret records (gen_ut_export.py); rtl-arch T-102 fact R1 (dv/auto_dv/evidence/gen_t102_rtl_facts.md) confirms mret/dret pc_wdata = pc_if (+4 for a 32-bit instruction, +2 for c.ebreak) from rtl/ibex_core.sv:2084.
+  branch_target_ex) stands. Evidence (TB Infra first green export run, dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (b)): the seed-7 program's single trap record (order 466, ecall at 0x80002164) has pc_wdata 0x80002168 = pc + 4, not the handler 0x80001700, confirming the RTL-defined rule above and convention C-1; the export test's pc-continuity rule excludes trap, mret and dret records (gen_ut_export.py); rtl-arch T-102 fact R1 (dv/auto_dv/evidence/gen_t102_rtl_facts.md) confirms mret/dret pc_wdata = pc_if (+4 for a 32-bit instruction, +2 for c.ebreak) from rtl/ibex_core.sv:2084. Zcmp precision (rtl-arch R9, dv/auto_dv/evidence/gen_t102_rtl_facts.md, confirmed by tb-infra run red_zcmp_trap): a trapping non-last cm.* micro-op record, and an illegal cm.* encoding, report pc_wdata == pc_rdata == the cm.* pc (offset 0), because expansion holds the fetch (rtl/ibex_if_stage.sv:809-810) and pc_if stays at the cm.* pc for every micro-op except the last; the whole sequence restarts from micro-op 0 after mret (flush_expanded, rtl/ibex_if_stage.sv:482-483); the export continuity rule excludes trap and micro-op records; the comparator rule is TB Infra's T-102c (T-134).
 ### F-RVFI-011: mem_addr / rmask / wmask for loads and stores (single record, unshifted mask)
 - What: rvfi_mem_addr = lsu_addr captured in the first ID cycle (the effective, possibly
   misaligned, byte address). rmask/wmask are derived from lsu_type only: word 4'b1111, half

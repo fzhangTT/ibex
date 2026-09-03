@@ -18810,7 +18810,6 @@ TP-PMC-040,CG-PMC-003,cp_variant,c_j,0
 TP-PMC-040,CG-PMC-003,cp_variant,c_jal,0
 TP-PMC-040,CG-PMC-003,cp_variant,c_jalr,0
 TP-PMC-040,CG-PMC-003,cp_variant,c_jr,0
-TP-PMC-040,CG-PMC-003,cp_variant,fence_i,0
 TP-PMC-040,CG-PMC-003,cp_variant,jal,0
 TP-PMC-040,CG-PMC-003,cp_variant,jalr,0
 TP-PMC-040,CG-PMC-003,cp_variant,popret,0
@@ -18823,7 +18822,6 @@ TP-PMC-040,CG-PMC-003,cr_variant_rel,cj_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,cjal_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,cjalr_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,cjr_eq,0
-TP-PMC-040,CG-PMC-003,cr_variant_rel,fencei_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,jal_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,jalr_eq,0
 TP-PMC-040,CG-PMC-003,cr_variant_rel,popret_eq,0
@@ -19182,6 +19180,8 @@ TP-PMC-060,CG-PMC-003,cp_delta_rel,gt,0
 TP-PMC-060,CG-PMC-003,cp_variant,div_wb_wait,0
 TP-PMC-060,CG-PMC-003,cr_variant_rel,divwait_gt,0
 TP-PMC-060,CG-WIT-001,cp_clause,w_tp_pmc_060,0
+TP-PMC-061,CG-PMC-003,cp_variant,fence_i,0
+TP-PMC-061,CG-PMC-003,cr_variant_rel,fencei_gt,0
 TP-PMP-001,CG-PMP-001,cp_entry,e0,0
 TP-PMP-001,CG-PMP-001,cp_entry,e1,0
 TP-PMP-001,CG-PMP-001,cp_entry,e10,0
