@@ -9,6 +9,12 @@
 # Prints "VERDICT: <verdict> <artifact>". Exit 0 on APPROVE/APPROVE-WITH-CHANGES, 2 on
 # REQUEST-CHANGES, 1 on protocol errors.
 set -euo pipefail
+# Run from a private copy: bash reads scripts incrementally, so an edit to this file while a
+# review is in flight would otherwise be executed at a stale offset.
+if [ -z "${GEN_XR_RELOCATED:-}" ]; then
+  _self_copy=$(mktemp /tmp/gen_cross_review.XXXXXX.sh); cp "$0" "$_self_copy"
+  GEN_XR_RELOCATED=1 GEN_XR_ORIG="$0" exec bash "$_self_copy" "$@"
+fi
 REPO=$(git rev-parse --show-toplevel); cd "$REPO"
 MODE=${1:?plan|diff|replan}; shift
 DATE=$(date +%Y-%m-%d)
