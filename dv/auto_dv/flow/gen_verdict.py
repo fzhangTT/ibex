@@ -27,7 +27,7 @@ def marker_matches(line: str, marker: str) -> bool:
 
 
 def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
-             banner_lines: list[str] | None = None) -> dict[str, Any]:
+             banner_lines: list[str] | None = None, origins: list[tuple[str, int]] | None = None) -> dict[str, Any]:
     """Return {verdict, reason, evidence, uvm_counts, cocotb_summary, finish_seen, marker_seen,
     banner_seen, banner}. PASS requires: no collected failure mechanism, the end marker, and the
     time-zero config banner naming the expected build configuration (P-09; never skippable). The
@@ -76,7 +76,10 @@ def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
                            "banner_seen": banner_seen, "banner": banner, "failure_hits": len(hits)}
     if hits:
         name, idx, line = hits[0]
-        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at log line {idx}", evidence=line[:300])
+        # origins names the file and its own line for every scanned line (sim.log then the stdout capture);
+        # without it the index into the scanned text is all there is.
+        where = f"{origins[idx - 1][0]}:{origins[idx - 1][1]}" if origins and idx <= len(origins) else f"log line {idx}"
+        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}", evidence=line[:300])
         return out
     marker_ok = marker_seen if pass_marker else finish_seen
     if not marker_ok:
@@ -103,13 +106,14 @@ def crash_signature(paths: list[Path]) -> str | None:
 def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc: int | None,
                  build_config: str, stderr_lines: list[str], sim_log_present: bool = True,
                  expected_fail: bool = False, banner_lines: list[str] | None = None,
-                 red_fixture: bool = False) -> dict[str, Any]:
+                 red_fixture: bool = False, red_expect: str | None = None,
+                 origins: list[tuple[str, int]] | None = None) -> dict[str, Any]:
     """The verdict rules on in-memory text (the self-test drives this with real log excerpts)."""
     if not sim_log_present and not timed_out:
         return {"verdict": C.VERDICT_FAIL, "reason": "sim.log missing", "evidence": "",
                 "uvm_counts": {}, "cocotb_summary": None, "finish_seen": False, "marker_seen": False,
                 "banner_seen": False, "banner": [], "failure_hits": 0, "exit_code": rc, "crash_signature": None}
-    res = scan_log(lines, pass_marker, build_config, banner_lines)
+    res = scan_log(lines, pass_marker, build_config, banner_lines, origins)
     res["exit_code"] = rc
     crash = next((l.strip()[:200] for l in stderr_lines if C.CRASH_RE.search(l)), None)
     res["crash_signature"] = crash
@@ -128,10 +132,16 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
         elif res["verdict"] == C.VERDICT_PASS:
             res.update(verdict=C.VERDICT_FAIL, reason="unexpected PASS of an expected-fail test")
     if red_fixture:
-        # A fixture exists to show a failure: FAIL is the designed outcome (RED-OK), PASS means the
-        # checker it proves is dead (FAIL); a TIMEOUT is not the designed failure and stays TIMEOUT.
+        # A fixture exists to show one declared failure: only a FAIL whose collected evidence line matches
+        # red_expect is the designed outcome (RED-OK); any other FAIL is a broken fixture or environment;
+        # PASS means the checker it proves is dead; a TIMEOUT is not the designed failure and stays TIMEOUT.
         if res["verdict"] == C.VERDICT_FAIL:
-            res.update(verdict=C.VERDICT_RED_OK, reason="red fixture failed as designed: " + res["reason"])
+            evidence = res.get("evidence") or ""
+            if red_expect and re.search(red_expect, evidence):
+                res.update(verdict=C.VERDICT_RED_OK, reason=f"red fixture failed as designed (red_expect matched): {res['reason']}")
+            else:
+                res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
+                           f"red_expect {red_expect!r} does not match the evidence {evidence[:80]!r}")
         elif res["verdict"] == C.VERDICT_PASS:
             res.update(verdict=C.VERDICT_FAIL, reason="red fixture passed unexpectedly: the failure it exists to show did not occur")
     return res
@@ -139,21 +149,26 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
 
 def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fail: bool = False,
            rc: int | None = None, extra_logs: list[Path] | None = None, build_config: str = C.BUILD_CONFIG,
-           stderr_logs: list[Path] | None = None, red_fixture: bool = False) -> dict[str, Any]:
+           stderr_logs: list[Path] | None = None, red_fixture: bool = False,
+           red_expect: str | None = None) -> dict[str, Any]:
     """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l); the
     config banner is taken from sim.log alone; crash signatures from lsf.err/run.log; PASS needs
     marker AND ($finish seen OR exit code 0) (P-02)."""
     sim_lines = sim_log.read_text(encoding="utf-8", errors="replace").splitlines() if sim_log.is_file() else []
     lines = list(sim_lines)
+    origins = [(sim_log.name, i) for i in range(1, len(sim_lines) + 1)]
     for extra in extra_logs or []:
         if extra.is_file():
-            lines += extra.read_text(encoding="utf-8", errors="replace").splitlines()
+            more = extra.read_text(encoding="utf-8", errors="replace").splitlines()
+            lines += more
+            origins += [(extra.name, i) for i in range(1, len(more) + 1)]
     stderr_lines: list[str] = []
     for p in stderr_logs or []:
         if p.is_file():
             stderr_lines += p.read_text(encoding="utf-8", errors="replace").splitlines()
     return decide_lines(lines, pass_marker, timed_out, rc, build_config, stderr_lines, sim_log.is_file(),
-                        expected_fail, banner_lines=sim_lines, red_fixture=red_fixture)
+                        expected_fail, banner_lines=sim_lines, red_fixture=red_fixture, red_expect=red_expect,
+                        origins=origins)
 
 
 BANNER = "GEN_CONFIG_BANNER build_config=opentitan"
@@ -234,10 +249,18 @@ def self_test() -> int:
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
     # Red fixtures (testlist red_fixture: true): FAIL is the designed outcome, PASS is a dead checker.
-    red_fail = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True)
-    red_pass = decide_lines(B + REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True)
-    red_to = decide_lines([], "GEN_SMOKE_PASS", True, 124, "opentitan", [], False, red_fixture=True)
-    for name, got, want, needle in (("red fixture: real $fatal log is RED-OK", red_fail, C.VERDICT_RED_OK, "failed as designed"),
+    # red_expect is matched against the FIRST collected evidence line (here the Fatal: line, not GEN_SMOKE_FAIL).
+    red_fail = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,
+                            red_expect=r"^Fatal: .*gen_smoke_tb_top")
+    red_other = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,
+                             red_expect=r"GEN_TEST_FAIL gen_test_boot_retire")
+    red_none = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True)
+    red_pass = decide_lines(B + REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,
+                            red_expect=r"GEN_SMOKE_FAIL")
+    red_to = decide_lines([], "GEN_SMOKE_PASS", True, 124, "opentitan", [], False, red_fixture=True, red_expect=r"x")
+    for name, got, want, needle in (("red fixture: real $fatal log whose evidence matches red_expect is RED-OK", red_fail, C.VERDICT_RED_OK, "red_expect matched"),
+                                    ("red fixture: real $fatal log whose red_expect names a LATER line (GEN_TEST_FAIL) is FAIL (undeclared reason)", red_other, C.VERDICT_FAIL, "undeclared reason"),
+                                    ("red fixture: no red_expect at all is FAIL (undeclared reason)", red_none, C.VERDICT_FAIL, "undeclared reason"),
                                     ("red fixture: real green log is FAIL (dead checker)", red_pass, C.VERDICT_FAIL, "passed unexpectedly"),
                                     ("red fixture: timeout stays TIMEOUT", red_to, C.VERDICT_TIMEOUT, "timeout")):
         cond = got["verdict"] == want and needle in got["reason"]
@@ -273,6 +296,16 @@ def self_test() -> int:
             flag = "ok " if got == want else "BAD"
             ok &= got == want
             print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+        # Locator: a failure in the stdout capture is named by that file and its own line, never by an
+        # index into the concatenated text (Critic: test-writer-005 said 'log line 100' for sim_stdout.log:62).
+        (d / "sim_stdout.log").write_text("\n".join(["cocotb line"] * 4 + ["AssertionError: GEN_TEST_FAIL gen_x: 1 fire-check failure(s)"]) + "\n", encoding="utf-8")
+        (d / "lsf.err").write_text("", encoding="utf-8")
+        got = decide(d / "sim.log", "GEN_SMOKE_PASS", False, False, 0, extra_logs=[d / "sim_stdout.log"],
+                     build_config="opentitan", stderr_logs=[d / "lsf.err"])
+        cond = got["verdict"] == C.VERDICT_FAIL and got["reason"].endswith("at sim_stdout.log:5")
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated file: failure in the stdout capture is located as sim_stdout.log:5: {got['reason']}")
+        (d / "sim_stdout.log").write_text("", encoding="utf-8")
         (d / "sim.log").unlink()
         got = decide(d / "sim.log", "GEN_SMOKE_PASS", True, False, 124, build_config="opentitan")["verdict"]
         ok &= got == C.VERDICT_TIMEOUT
@@ -309,16 +342,18 @@ def main() -> int:
     ap.add_argument("--stderr-log", type=Path, action="append", default=[],
                     help="job-script stderr scanned for crash signatures (repeatable; lsf.err, run.log)")
     ap.add_argument("--build-config", default=C.BUILD_CONFIG)
+    ap.add_argument("--red-fixture", action="store_true", help="testlist red_fixture: FAIL matching --red-expect is RED-OK")
+    ap.add_argument("--red-expect", default=None, help="regex the collected evidence line must match for RED-OK")
     a = ap.parse_args()
     if a.self_test:
         return self_test()
     if not a.sim_log:
         ap.error("--sim-log required")
     res = decide(a.sim_log, a.pass_marker, a.timed_out, a.expected_fail, rc=a.exit_code, extra_logs=a.extra_log,
-                 build_config=a.build_config, stderr_logs=a.stderr_log)
+                 build_config=a.build_config, stderr_logs=a.stderr_log, red_fixture=a.red_fixture, red_expect=a.red_expect)
     for k, v in res.items():
         print(f"{k}: {v}")
-    return 0 if res["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL) else 2
+    return 0 if res["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL, C.VERDICT_RED_OK) else 2
 
 
 if __name__ == "__main__":

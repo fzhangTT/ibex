@@ -26,9 +26,11 @@
 #   feature_groups         tags for the targeted tier (--group)
 #   cocotb_module          dotted Python module for cocotb-driven tests (null = pure SV)
 #   expected_fail          true = an RTL-vs-intent bug candidate; FAIL is reported as XFAIL
-#   red_fixture            true = a TDD red fixture that fails by design; FAIL is reported as RED-OK,
-#                          an unexpected PASS as FAIL; kept out of the pass rate and of coverage
-#                          (must be measured: false; exclusive with expected_fail)
+#   red_fixture            true = a TDD red fixture that fails by design; a FAIL whose collected evidence
+#                          line matches red_expect is reported as RED-OK, any other FAIL stays FAIL
+#                          (undeclared reason), an unexpected PASS is FAIL; kept out of the pass rate
+#                          and of coverage (must be measured: false; exclusive with expected_fail)
+#   red_expect             regex of the designed failure's evidence line (required with red_fixture)
 #   component              TB component this test exercises (purpose-2 selection)
 #   measured               default true; false = mutation-evidence or forced-error test that never
 #                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
@@ -39,8 +41,9 @@ schema_version: 1
 #     first covergroup exists (a null manifest there FAILs the run; Critic P-07). Empty until then.
 #   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: probe
 #     P6, the CSR debug compare); a measured run enabling one is refused in writing (NOT_RUN).
-#     The one origin of the property is dv/auto_dv/tb/gen_tb_knobs.yaml (debug_only: true);
-#     load_testlist refuses this list unless it equals that set (plusarg = gen_<knob name>).
+#     The one origin of the property and of the names is TB Infra's rendered knob table
+#     dv/auto_dv/gen_tb/gen_knobs.py (PLUSARGS[...]['debug_only']); load_testlist refuses this
+#     list unless it equals that set.
 fcov_manifest_required_tiers: []
 debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace]
 
@@ -217,6 +220,7 @@ tests:
     cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
     expected_fail: false
     red_fixture: true
+    red_expect: 'UVM_ERROR .*\[isa_[a-z_]+\]'
     component: gen_isa_shim
     measured: false
 
@@ -261,5 +265,6 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
     expected_fail: false
     red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure'
     component: gen_tb_top
     measured: false

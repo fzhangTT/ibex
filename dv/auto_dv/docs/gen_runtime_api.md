@@ -140,15 +140,23 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   the whole simple command), `(core dumped)`, `timeout: sending signal`; TB or ISS log text such as
   "Illegal instruction (hart 0)" never matches; the two real-shaped reports are pinned in
   `gen_verdict.py --self-test`); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
-  `red_fixture: true` (a TDD fixture that fails by design, never an RTL-bug candidate) turns FAIL into
-  RED-OK and PASS into FAIL ("red fixture passed unexpectedly": the checker it proves is dead); a
-  TIMEOUT stays TIMEOUT. RED-OK is never a regression failure and never coverage: the loader requires
-  `measured: false` on such an entry and refuses `expected_fail` beside it.
+  `red_fixture: true` (a TDD fixture that fails by design, never an RTL-bug candidate) with its
+  `red_expect` regex: a FAIL whose collected evidence line matches `red_expect` becomes RED-OK ("red
+  fixture failed as designed (red_expect matched)"; the regex is tried against the FIRST collected
+  evidence line, so it must name the earliest line of the designed failure), any other FAIL stays FAIL ("red fixture failed for
+  an undeclared reason": a broken fixture or environment is not the designed failure), PASS becomes
+  FAIL ("red fixture passed unexpectedly": the checker it proves is dead); a TIMEOUT stays TIMEOUT.
+  RED-OK is never a regression failure and never coverage: the loader requires `measured: false` and a
+  valid `red_expect` on such an entry and refuses `expected_fail` beside it. Failure reasons locate the
+  evidence line as `<mechanism> at <file>:<line>` in the file that holds it (sim.log or the stdout
+  capture), never as an index into the concatenated text; the mechanism `gen_fail_marker` names a
+  `GEN_*_FAIL` line (a cocotb assertion message included), `sv_fatal` a `Fatal:` / `$fatal` line.
   The process exit code is recorded, never decisive.
   The same decision is available from the command line for scripts: `gen_verdict.py --sim-log <sim.log>
   --pass-marker <marker> --exit-code <simv rc> [--extra-log sim_stdout.log] [--stderr-log lsf.err]
-  [--timed-out] [--expected-fail] [--build-config opentitan]`; without `--exit-code` a clean log is FAIL
-  (unexplained exit code None), exactly as inside the flow.
+  [--timed-out] [--expected-fail] [--red-fixture --red-expect <regex>] [--build-config opentitan]`;
+  without `--exit-code` a clean log is FAIL (unexplained exit code None), exactly as inside the flow;
+  the CLI and `gen_run.py` exit 0 for PASS, XFAIL and RED-OK.
 - `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
   declared-but-unhit bin or an unverifiable query turns a PASS into FAIL with the reason `fcov
   expectation unmet` or `fcov expectation unverifiable`. In a regression the check runs after every
@@ -382,11 +390,13 @@ owners, a tier-check test that is not `measured: false`, and any plusarg whose n
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
 `gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
-`debug_only_plusargs` has one origin: the knobs `dv/auto_dv/tb/gen_tb_knobs.yaml` marks `debug_only: true`
-(plusarg `gen_<knob name>`, the codegen's rule); `load_testlist` refuses the testlist unless its list equals
-that set. Test entry flags: `expected_fail` (an RTL-vs-intent bug candidate; FAIL reported as XFAIL) and
-`red_fixture` (a TDD fixture that fails by design; FAIL reported as RED-OK, an unexpected PASS as FAIL;
-requires `measured: false`, exclusive with `expected_fail`; kept out of the pass rate and of coverage).
+`debug_only_plusargs` has one origin: TB Infra's rendered knob table `dv/auto_dv/gen_tb/gen_knobs.py`
+(`PLUSARGS[<plusarg>]['debug_only']`, names included, no naming rule re-encoded in the flow);
+`load_testlist` refuses the testlist unless its list equals that set. Test entry flags: `expected_fail`
+(an RTL-vs-intent bug candidate; FAIL reported as XFAIL) and `red_fixture` with `red_expect` (a TDD
+fixture that fails by design; a FAIL whose evidence line matches the regex is reported as RED-OK, any
+other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, exclusive with
+`expected_fail`; kept out of the pass rate and of coverage).
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)
 

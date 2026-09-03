@@ -243,6 +243,9 @@ def self_test() -> int:
         for label, mutate in (
                 ("red_fixture with expected_fail", lambda d: d["tests"][0].update(red_fixture=True, expected_fail=True, measured=False)),
                 ("red_fixture with measured true", lambda d: d["tests"][0].update(red_fixture=True, measured=True, tier="smoke")),
+                ("red_fixture without red_expect", lambda d: d["tests"][0].update(red_fixture=True, measured=False)),
+                ("red_fixture with an invalid red_expect regex", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="(")),
+                ("red_expect without red_fixture", lambda d: d["tests"][0].update(red_expect="x")),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -269,12 +272,16 @@ def self_test() -> int:
 
 # --- Testlist -------------------------------------------------------------------------------
 def debug_only_from_knobs() -> set[str]:
-    """Plusarg names of the knobs gen_tb_knobs.yaml marks debug_only: TB Infra's one origin of the property;
-    the codegen names each plusarg gen_<knob name>."""
-    if not C.TB_KNOBS_YAML.is_file():
-        die(f"{C.TB_KNOBS_YAML}: missing (the debug_only origin)")
-    src = load_yaml(C.TB_KNOBS_YAML)
-    return {C.KNOB_PLUSARG_PREFIX + str(p["name"]) for p in (src.get("plusargs") or []) if p.get("debug_only")}
+    """Plusarg names marked debug_only in TB Infra's rendered knob table (gen_knobs.PLUSARGS): the one
+    origin of the property and of the names themselves, so no naming rule is re-encoded here."""
+    import importlib
+    if str(C.REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.REPO_ROOT))
+    try:
+        knobs = importlib.import_module(C.KNOBS_MODULE)
+    except ModuleNotFoundError as e:
+        die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered knob table is the debug_only origin")
+    return {p["plusarg"] for p in knobs.PLUSARGS.values() if p.get("debug_only")}
 
 
 def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
@@ -340,6 +347,15 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")
             if t.get("measured", True):
                 die(f"{path}: test {t['name']}: a red_fixture must be measured: false (never counted as coverage)")
+            rx = t.get("red_expect")
+            if not isinstance(rx, str) or not rx:
+                die(f"{path}: test {t['name']}: a red_fixture must declare red_expect (regex the collected evidence line of its designed failure matches)")
+            try:
+                re.compile(rx)
+            except re.error as e:
+                die(f"{path}: test {t['name']}: red_expect {rx!r} is not a valid regex ({e})")
+        elif t.get("red_expect") is not None:
+            die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:
             die(f"{path}: test {t['name']} names unknown build {t['build']!r}")
         if t["owner"] not in C.OWNER_ROLES:
@@ -376,7 +392,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
     from_knobs = debug_only_from_knobs()
     if declared != from_knobs:
         die(f"{path}: debug_only_plusargs {sorted(declared)} disagrees with the knobs marked debug_only in "
-            f"{C.TB_KNOBS_YAML.name} {sorted(from_knobs)}; gen_tb_knobs.yaml is the one origin")
+            f"{C.KNOBS_MODULE} {sorted(from_knobs)}; the rendered knob table is the one origin")
     return data
 
 

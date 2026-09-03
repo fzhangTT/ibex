@@ -20,9 +20,8 @@ CONFIG_SCRIPT = REPO_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = REPO_ROOT / "ci" / "check_fcov_expectations.py"
 TB_DIR = REPO_ROOT / "dv" / "auto_dv" / "tb"
 TB_PKG_SV = TB_DIR / "gen_tb_pkg.sv"
-# TB Infra's knob table (one origin of the debug_only property); its codegen names the plusarg gen_<knob name>.
-TB_KNOBS_YAML = REPO_ROOT / "dv" / "auto_dv" / "tb" / "gen_tb_knobs.yaml"
-KNOB_PLUSARG_PREFIX = "gen_"
+# TB Infra's rendered knob table (one origin of the debug_only property and of every plusarg name).
+KNOBS_MODULE = "dv.auto_dv.gen_tb.gen_knobs"
 FCOV_EXPECT_DIR = REPO_ROOT / "dv" / "auto_dv" / "fcov_expectations"
 DOCS_DIR = REPO_ROOT / "dv" / "auto_dv" / "docs"
 DASHBOARD_MD = DOCS_DIR / "gen_dashboard.md"
@@ -212,7 +211,7 @@ ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
-                      "expected_fail", "component", "notes", "measured", "program", "red_fixture")
+                      "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect")
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
 PROGRAM_KEYS = ("riscv_dv_test", "directed", "seed", "extra_args", "spike_check")
@@ -302,7 +301,8 @@ FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 
 FAIL_PATTERNS = (
     ("uvm_fatal", re.compile(r"^UVM_FATAL\s+(?!:\s*0\b)")),
     ("uvm_error", re.compile(r"^UVM_ERROR\s+(?!:\s*0\b)")),
-    ("sv_fatal", re.compile(r"^Fatal:|\$fatal|GEN_\w*_FAIL")),
+    ("gen_fail_marker", re.compile(r"GEN_\w*_FAIL")),
+    ("sv_fatal", re.compile(r"^Fatal:|\$fatal")),
     ("vcs_runtime_error", re.compile(r"^Error-\[|^Error:")),
     ("cocotb_critical", re.compile(r"\bCRITICAL\b")),
     ("cocotb_test_fail", re.compile(r"\*\*\s+TESTS=\d+\s+PASS=\d+\s+FAIL=(?!0\b)\d+")),
