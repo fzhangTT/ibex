@@ -13,7 +13,10 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 The single object cocotb touches besides the alive/finish bits: a register-like SV interface
 through which Python hands commands (interrupt, debug, regime, key mode, error arming) to the UVM
-sequencers and receives event flags, without per-cycle polling on either side.
+sequencers and receives event flags, without per-cycle polling on either side. C2's top-level items that are not the bridge (gen_tb_top instantiation of gen_dut_top,
+clock and reset generation, plusarg parsing and the time-0 banner, the alive watchdog) are covered by
+`dv/auto_dv/docs/gen_component_api_dut_top.md` (Sections 5 and 5a) until `gen_component_api_tb_top.md`
+lands together with gen_tb_top in build step 2.
 
 ## 2. Files (planned) and how to call it
 

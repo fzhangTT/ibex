@@ -30,14 +30,15 @@ reference for counters (CPI = 1 model, const-0 hpm counters).
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
 | `+gen_chk_ctr_mcycle / _ctr_minstret / _ctr_hpm_exact / _ctr_hpm_bound` | `PLUSARG_CHK_*` | checker enables | 1 |
-| `+gen_ctr_dummy_mode=exact|ge` | `PLUSARG_CTR_DUMMY_MODE` | with dummies enabled: `exact` needs probe P1, `ge` checks >= | ge |
 
 ## 4. Wave-level behaviour
 
-Exactness class per counter: mcycle exact; minstret exact with dummies off (else `>=` or P1);
-counters 5..10 (loads, stores, jumps, branches, taken, compressed retired) exact; counters 3, 4,
-11, 12 (LSU-cycle, IF-wait, mul wait, div wait) checked as bounds and monotonic unless a boundary
-model exists.
+Exactness class per counter (v2, A-09, XM-L4): mcycle windowed by `GEN_RVFI_ID_EXIT_OFFSET`
+(sample point at ID exit, rtl/ibex_core.sv:2102); minstret exact while the modelled
+`cpuctrlsts.dummy_instr_en` is 0 and a BOUND check (`model <= observed <= model + cycles elapsed`)
+while it is 1, with no probe dependence; mhpmcounter events with an RVFI-visible model are exact
+(a misaligned load or store counts ONE, rtl-arch T-051 correction 2), the others are bound checks.
+All counter reads come from the CSR read blocks of C6.
 
 ## 5. Checkers
 

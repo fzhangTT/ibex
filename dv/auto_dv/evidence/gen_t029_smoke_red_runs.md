@@ -73,7 +73,7 @@ changed driver: `dv/auto_dv/work/tb-infra/out_d0102/` (fresh directory), same fo
 sequence result ALL-AS-EXPECTED, compile 0 errors, driver exit 0. The artifacts cited above in
 `out_t036/smoke/` are unchanged.
 
-Log timestamps (creation order proves the sequence; `ls --time-style` host-local EDT = UTC-4, so 02:22 local is 06:22 UTC, matching the header):
+sim.log mtime, local time (UTC-4), creation order proving the sequence (02:22 local = 06:22 UTC, matching the header):
 
 ```
 2026-09-03_02:22:19 dv/auto_dv/work/tb-infra/out_t036/smoke/run_01_green/sim.log
@@ -82,7 +82,40 @@ Log timestamps (creation order proves the sequence; `ls --time-style` host-local
 2026-09-03_02:22:38 dv/auto_dv/work/tb-infra/out_t036/smoke/run_04_green/sim.log
 ```
 
-### 3.1 run_01_green (`out_t036/smoke/run_01_green/sim.log`)
+### 3.0 Identifying lines of each log (LOG-005a rule: one excerpt per run that only that run can produce)
+
+The `Command:` line carries the run's own `-l <run dir>/sim.log` path, so it differs per run; the
+VCS runtime stamp (minute granularity) and the CPU-time line are quoted for completeness even where
+they coincide or are absent (a `$fatal` run ends without the summary lines). Read directly from the
+four logs:
+
+```
+run_01_green:
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=none +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_smoke_cycles=3000 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/run_01_green/sim.log
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 02:22 2026
+Time: 30045000 ps
+CPU Time:      0.180 seconds;       Data structure size:   0.6Mb
+
+run_02_red_noretire:
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=none +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_smoke_cycles=1 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/run_02_red_noretire/sim.log
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 02:22 2026
+Time: 55000 ps
+(CPU Time line absent in this log)
+
+run_03_red_intg:
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=none +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_smoke_cycles=3000 +gen_smoke_intg_flip=5 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/run_03_red_intg/sim.log
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 02:22 2026
+Time: 30045000 ps
+(CPU Time line absent in this log)
+
+run_04_green:
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=none +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_smoke_cycles=3000 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/smoke/run_04_green/sim.log
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 02:22 2026
+Time: 30045000 ps
+CPU Time:      0.180 seconds;       Data structure size:   0.6Mb
+```
+
+### 3.1 run_01_green (`out_t036/smoke/run_01_green/sim.log`; identifying lines in 3.0)
 
 ```
 GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed

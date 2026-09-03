@@ -45,7 +45,7 @@ checkers).
 | `+gen_ibus_intg_err_rate=<per_mille>` | `PLUSARG_IBUS_INTG_ERR_RATE` | probability of corrupting rdata integrity bits | 0 |
 | `+gen_ibus_intg_bits=1|2` | `PLUSARG_IBUS_INTG_BITS` | bits flipped per corrupted response | 1 |
 | `+gen_ibus_regime=<name>` | `PLUSARG_IBUS_REGIME` | named distribution set: fast, slow, bursty, stall, err_heavy, intg_err | fast |
-| `+gen_chk_ibus_proto / gen_chk_ibus_outstanding / gen_chk_bus_rvalid_legal` | `PLUSARG_CHK_*` | checker enables (grant-order consistency is an agent-internal `assert`, not a checker row, v2 XM-L3) | 1 |
+| `+gen_chk_ibus_proto / gen_chk_ibus_outstanding / gen_chk_sva_rvalid_legal` | `PLUSARG_CHK_*` | checker enables (grant-order consistency is an agent-internal `assert`, not a checker row, v2 XM-L3) | 1 |
 
 ## 4. Wave-level behaviour
 
@@ -66,7 +66,7 @@ any other; the agent does not know what the core will execute.
 |---|---|---|---|
 | `ibus_proto` | `req & ~gnt` => `req` and `addr` unchanged next cycle; `addr[1:0] == 0`; no X on `req` | icache request hold / arbitration (`rtl/ibex_icache.sv:756-775, 842`), address mux (`:1030-1037`) | `+gen_chk_ibus_proto=0` |
 | `ibus_outstanding` | granted-unanswered `<= GEN_IBUS_MAX_OUTSTANDING`; `core_busy_o != Off` while > 0 (exact) | fill-buffer counters (`rtl/ibex_icache.sv:759-784`), `busy_o` (`:1304`) | `+gen_chk_ibus_outstanding=0` |
-| `bus_rvalid_legal` | TB stimulus legality: `rvalid` only while a grant is outstanding and never in the grant cycle | TB self-check (not a DUT checker; not counted in the trust-triad evidence) | `+gen_chk_bus_rvalid_legal=0` |
+| `sva_rvalid_legal` | TB stimulus legality: `rvalid` only while a grant is outstanding and never in the grant cycle (one id and one knob `+gen_chk_sva_rvalid_legal` everywhere: this row, the dbus agent, the binds home) | TB self-check (not a DUT checker; not counted in the trust-triad evidence) | `+gen_chk_sva_rvalid_legal=0` |
 
 ## 6. Failure path and diagnostics
 

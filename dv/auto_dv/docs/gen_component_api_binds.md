@@ -44,7 +44,7 @@ coverage.
 
 | Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
 |---|---|---|---|
-| `sva_ibus_hold / sva_dbus_hold / sva_rvalid_once / sva_scrkey_pulse` | SVA twins of the agent checkers (same rules) | same loci as the corresponding agent checker rows | `+gen_chk_sva_ibus_hold / sva_dbus_hold / sva_rvalid_once / sva_scrkey_pulse=0` |
+| `(no separate ids) SVA forms of `ibus_proto`, `dbus_proto`, `scrkey_handshake`` | an SVA form of an agent checker carries the SAME checker id and the SAME `+gen_chk_<id>` knob as the agent row; the binds home never introduces a second name for one rule | the loci of the agent checker rows | `+gen_chk_(no separate ids) SVA forms of `ibus_proto`, `dbus_proto`, `scrkey_handshake`=0` |
 | `sva_rvalid_legal` | TB stimulus legality: `instr_rvalid_i`/`data_rvalid_i` only while a grant is outstanding and never in the grant cycle (rtl-arch T-022 evidence 5.2) | TB self-check, not a DUT checker | `+gen_chk_sva_rvalid_legal=0` |
 | `T022_NEVER_*` | rtl-arch exclusion-evidence never-taken properties (`gen_cover_props.sv`, promoted from `dv/auto_dv/work/rtl-arch/gen_cover_props_draft.sv`): a hit means the exclusion candidate is reachable; `assert ... else $error`, collected, reported by Runtime as an exclusion-evidence failure, fails the run until rtl-arch withdraws the exclusion | exclusion evidence, not a DUT checker; knob `+gen_chk_t022_never` (default on in every tier); `T022_COVER_*` are cover-only | `+gen_chk_T022_NEVER_*=0` |
 
