@@ -313,3 +313,9 @@ Not a flow defect, exposed by head mode as intended: test-writer-011 (gen_test_c
 | 6 | The T-110 table omitted the prior Minor on the eight T-102-blocked entries and over-claimed row 3 | Minor | Row 3 now reads PARTLY OPEN (enforcement present, committed testlist still generic until the Test Writer's ids); row 9 added for the eight blocked entries | this file | text |
 | 7 | head_testlist was validated by the server process (source root = the clone) | Info | `pinned_testlist`: a subprocess bound to the pinned tree (`gen_flow_util.py --dump-testlist`) validates and returns the committed testlist | gen_serve_requests.py, gen_flow_util.py | live: 24 entries from the pinned tree of 7fa42628 |
 | 8 | source_facts never compared the manifest head_sha with GEN_DV_HEAD_SHA | Info | One equality check with die | gen_build.py source_facts | code path |
+
+## Ruling follow-up: ledger keyed on the SV covergroup name (DV Lead risk, Orchestrator ruling 2026-09-03 11:5xZ)
+
+| Item | Response | Where | Proof |
+|---|---|---|---|
+| LEDGER_COVERGROUPS carried the plan name gen_cg_wit_cycle_clause while URG reports the SV name gen_wit_cycle_clause_cg (C7: gen_cg_<area>_<name> -> gen_<name>_cg; the committed manifests render the SV name), so the exclusion would have dropped nothing | Keyed on the SV name first (plan-name alias kept only until TB Infra confirms the SV name in v4c Section 9); the report line names the plan id ("witnessed clauses: N of M (CG-WIT-001)"); LEDGER_REQUIRED already fails a report with covergroups but no ledger row | gen_flow_const.py, gen_cov_report.py ledger_summary, self-test excerpts, gen_runtime_api.md Section 6 | cov_report self-test on the SV-named fabricated rows: score unchanged with the ledger row present, ledger_excluded = [gen_wit_cycle_clause_cg], "witnessed clauses: 2 of 3 (CG-WIT-001)" |

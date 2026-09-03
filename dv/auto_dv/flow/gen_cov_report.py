@@ -260,8 +260,9 @@ def ledger_summary(grpinfo_text: str, ledger: tuple[str, ...]) -> dict[str, Any]
         if b and section:
             total += 1
             hit += 1 if int(b.group(2)) > 0 else 0
-    return {"covergroups": list(ledger), "witnessed": hit, "clauses": total,
-            "text": f"witnessed clauses: {hit} of {total}" if total else "witnessed clauses: none in report"}
+    ids = "/".join(C.LEDGER_PLAN_IDS)
+    return {"covergroups": list(ledger), "plan_ids": list(C.LEDGER_PLAN_IDS), "witnessed": hit, "clauses": total,
+            "text": f"witnessed clauses: {hit} of {total} ({ids})" if total else f"witnessed clauses: none in report ({ids})"}
 
 
 def parse_hierarchy_rows(text: str, scope: str) -> dict[str, Any]:
@@ -359,9 +360,9 @@ def self_test() -> int:
     # Witness ledger exclusion (ruling 2026-09-03): fabricated groups.txt rows until a covergroup exists on this site.
     plain_rows = parse_groups("Total groups coverage summary\nSCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n 60.00       1  gen_irq_cg\n")
     ledger_rows = parse_groups("Total groups coverage summary\nSCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n 60.00       1  gen_irq_cg\n"
-                              "  5.00       1  gen_tb_top.u_env.u_cov::gen_cg_wit_cycle_clause\n")
+                              "  5.00       1  gen_tb_top.u_env.u_cov::gen_wit_cycle_clause_cg\n")
     a, b = group_score_excluding(plain_rows, C.LEDGER_COVERGROUPS), group_score_excluding(ledger_rows, C.LEDGER_COVERGROUPS)
-    cond = a["score"] == b["score"] == 50.0 and b["ledger_excluded"] == ["gen_cg_wit_cycle_clause"] and a["ledger_excluded"] == []
+    cond = a["score"] == b["score"] == 50.0 and b["ledger_excluded"] == ["gen_wit_cycle_clause_cg"] and a["ledger_excluded"] == []
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated groups.txt: the score with the ledger group present equals the score without it ({a['score']} vs {b['score']}), ledger excluded by name")
     # The per-group blocks that follow URG's summary table must not be ingested as rows (fabricated block shape:
@@ -376,11 +377,11 @@ def self_test() -> int:
     cond = group_score_excluding(pid_rows, C.LEDGER_COVERGROUPS)["ledger_excluded"] == ["CG-WIT-001_ledger"]
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} a covergroup carrying the plan id CG-WIT-001 is matched as ledger too")
-    grp = ("Group : gen_tb_top.u_env.u_cov::gen_cg_wit_cycle_clause\n\nSummary for Variable cp_clause\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\n"
+    grp = ("Group : gen_tb_top.u_env.u_cov::gen_wit_cycle_clause_cg\n\nSummary for Variable cp_clause\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\n"
            "w_tp_bit_036 3 1 1\nw_tp_bit_042 1 1 1\n\nUncovered bins\n\nNAME COUNT AT_LEAST NUMBER\nw_tp_bit_043 0 1 1\n\n----------\n"
            "Group : gen_tb_top.u_env.u_cov::gen_regime_cg\n\nSummary for Variable cp_regime\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\nbin_fast 9 1 1\n")
     led = ledger_summary(grp, C.LEDGER_COVERGROUPS)
-    cond = led["witnessed"] == 2 and led["clauses"] == 3 and led["text"] == "witnessed clauses: 2 of 3"
+    cond = led["witnessed"] == 2 and led["clauses"] == 3 and led["text"] == "witnessed clauses: 2 of 3 (CG-WIT-001)"
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated grpinfo.txt: ledger bins counted only from the ledger covergroup: {led['text']}")
     print("SELF-TEST: rows named 'real ...' are verbatim hierarchy.txt excerpts of regress_req_runtime-004; the ledger cases are fabricated until a covergroup exists")

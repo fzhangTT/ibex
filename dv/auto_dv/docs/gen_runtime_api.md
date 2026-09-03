@@ -346,7 +346,8 @@ in one module's section of `modinfo.txt`, per line rows, condition vectors and t
 machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
 Witness ledger (ruling 2026-09-03): the covergroups named in `gen_flow_const.LEDGER_COVERGROUPS` (the fcov
-plan's CG-WIT-001, rendered as gen_cg_wit_cycle_clause) are a ledger of fire-check results, not DUT
+plan's CG-WIT-001, SV name gen_wit_cycle_clause_cg per architecture rule C7, the name URG reports; the plan
+name gen_cg_wit_cycle_clause stays as an alias only until TB Infra confirms the SV name) are a ledger of fire-check results, not DUT
 coverage. The combining rule excludes them by name from the functional-group score: `gen_cov_report.merge`
 recomputes URG's weight-averaged covergroup score from groups.txt without the ledger rows
 (`group_score` with `ledger_excluded`), the gate row's GROUP takes that value whenever a ledger row was

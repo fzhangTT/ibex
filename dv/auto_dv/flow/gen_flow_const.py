@@ -358,7 +358,10 @@ URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
 # results, not DUT coverage. Ruling 2026-09-03: excluded by name from the functional-group score in the flow's
 # combining rule (the mechanism of record; TB Infra's option.weight = 0 is defence in depth) and reported
 # beside the score as "witnessed clauses: N of M".
-LEDGER_COVERGROUPS = ("gen_cg_wit_cycle_clause",)
+# Keyed on the SV covergroup name URG reports (architecture rule C7: plan gen_cg_<area>_<name> -> implementation
+# gen_<name>_cg; the committed fcov manifests render gen_wit_cycle_clause_cg). The plan-name alias stays only until
+# TB Infra confirms the SV name in the export addendum v4c Section 9.
+LEDGER_COVERGROUPS = ("gen_wit_cycle_clause_cg", "gen_cg_wit_cycle_clause")
 LEDGER_PLAN_IDS = ("CG-WIT-001",)
 LEDGER_REQUIRED = True   # a merge that reports covergroups but no ledger row fails loud (the plan says the ledger exists)
 NOT_APPLICABLE = "n/a"
