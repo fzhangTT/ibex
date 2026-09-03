@@ -197,7 +197,7 @@ class IsaAlu(GenTest):
         vac = sum(1 for o in allv if o.rd == 0)
         deg = sum(1 for o in obs if prog.degenerate(o))
         self.check("fire_tp_isa_001_floor", not miss and len(allv) >= prog.N_IMM_MIN,
-                   f"{len(allv)} I-type ops (floor {prog.N_IMM_MIN}), {len(obs)} observed, {vac} rd=x0 vacuous and {deg} degenerate counted apart"
+                   f"{len(allv)} I-type ops (floor {prog.N_IMM_MIN} over every plan op), {len(obs)} observed; {vac} rd=x0 vacuous and {deg} degenerate ops are inside the floor but excluded from the value compare"
                    + (f"; {miss}" if miss else "; every op x rs1 class, op x imm class, rs1==rd and result class seen"))
 
     def fire_tp_isa_002(self):
@@ -250,7 +250,7 @@ class IsaAlu(GenTest):
         n = {op: sum(1 for o in p.ops if o.item == prog.I005 and o.op == op) for op in ("lui", "auipc")}
         vac = sum(1 for o in p.ops if o.item == prog.I005 and o.rd == 0)
         self.check("fire_tp_isa_005_floor", not miss and all(v >= prog.N_U_MIN for v in n.values()),
-                   f"lui {n['lui']}, auipc {n['auipc']} (floor {prog.N_U_MIN} each), {len(obs)} observed, {vac} rd=x0 vacuous counted apart"
+                   f"lui {n['lui']}, auipc {n['auipc']} (floor {prog.N_U_MIN} each over every plan op), {len(obs)} observed; {vac} rd=x0 vacuous ops are inside the floor but excluded from the value compare"
                    + (f"; {miss}" if miss else "; both alignments and every imm20 class per op seen"))
 
     def fire_tp_isa_006(self):
@@ -286,7 +286,7 @@ class IsaAlu(GenTest):
         vac = sum(1 for o in allv if o.rd == 0)
         deg = sum(1 for o in obs if prog.degenerate(o))
         self.check("fire_tp_isa_007_floor", not miss and len(allv) >= prog.N_REG_MIN,
-                   f"{len(allv)} R-type ops (floor {prog.N_REG_MIN}), {len(obs)} observed, {vac} rd=x0 vacuous and {deg} degenerate counted apart"
+                   f"{len(allv)} R-type ops (floor {prog.N_REG_MIN} over every plan op), {len(obs)} observed; {vac} rd=x0 vacuous and {deg} degenerate ops are inside the floor but excluded from the value compare"
                    + (f"; {miss}" if miss else "; every op x sign pair, x operand class, x relation, equal operands and result class seen"))
 
     def fire_tp_isa_008(self):

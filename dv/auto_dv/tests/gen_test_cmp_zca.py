@@ -216,7 +216,7 @@ class CmpZca(GenTest):
         self.fire_item(prog.I026, "c.mv every rd (both groups), rd == rs2")
 
     def fire_tp_cmp_028(self):
-        self.fire_item(prog.I028, "c.jr every rs1 in x1..x31, odd targets, both alignments, x1 not written")
+        self.fire_item(prog.I028, "c.jr every rs1 in x1..x31, both alignments, x1 not written (odd targets not drawn: B13)")
 
     def fire_tp_cmp_030(self):
         self.fire_item(prog.I030, "c.add every rd (both groups), wrap, rd == rs2")

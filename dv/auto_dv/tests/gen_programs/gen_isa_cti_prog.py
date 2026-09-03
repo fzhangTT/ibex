@@ -44,7 +44,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from dv.auto_dv.tests.gen_programs.gen_prog_const import MISA_VALUE, TOHOST_PASS, csr_hex  # noqa: E402
+from dv.auto_dv.tests.gen_programs.gen_prog_const import CAUSE_ECALL_M, MISA_VALUE, MSTATUS_MPP_M, TOHOST_PASS, csr_hex  # noqa: E402
 
 RNG_TAG = "program:isa_cti"
 LAYOUT_TAG = "program:isa_cti:layout"
@@ -65,14 +65,13 @@ P_ZERO, P_ONES, P_MIN, P_MAX = 8, 9, 10, 11                      # fixed pool va
 P_NEG = (12, 13)                                                 # negative random pool values
 P_POS = (14, 15)                                                 # positive random pool values
 POOL_FIXED = {P_ZERO: 0, P_ONES: MASK32, P_MIN: 0x80000000, P_MAX: 0x7FFFFFFF}
-MPP_M = 0x1800                   # mstatus.MPP = 11 before mret (privileged spec 3.1.6.1)
 LASTC_SENTINEL = 0x5A5A00FF      # never a legal mcause: the handler overwrites it on the first trap
-CAUSE_ECALL_M = 11
 FLOOR_MARGIN = 8                 # retirements still in flight at the end-of-test store
 JAL_MIN, JAL_MAX = 500, 540      # TP-ISA-015 stimulus floor
 JALR_MIN, JALR_MAX = 500, 540    # TP-ISA-018
 N017_MIN, N017_MAX = 120, 140
-ODD_MIN, ODD_MAX = 60, 72        # TP-ISA-019 odd sums (>= 50 asked)
+ODD_PLAN_MIN = 50                # TP-ISA-019 asks >= 50 odd rs1 + imm sums
+ODD_MIN, ODD_MAX = 60, 72        # drawn count, above the plan floor
 CTRL_019 = 10                    # even-sum controls of TP-ISA-019
 N020_MIN, N020_MAX = 40, 48
 N053_MRET, N053_FENCEI, N053_CJ = 12, 12, 30
@@ -554,7 +553,7 @@ class Program:
         elif u.form == "mret":
             self.la(R_HS0, f"gen_t{u.n}")
             self.ins(f"csrrw x0, {csr_hex('mepc')}, x{R_HS0}")
-            self.li(R_HS1, MPP_M)
+            self.li(R_HS1, MSTATUS_MPP_M)
             self.ins(f"csrrs x0, {csr_hex('mstatus')}, x{R_HS1}")
 
     def jump_site(self, u):
@@ -743,7 +742,7 @@ def check_coverage(p):
     assert len(j018) >= JALR_MIN and {(u.imm_class, u.rd_class) for u in j018} >= {(c, r) for c in W6_JALR_IMM for r in W4_RD_JALR}
     assert {u.from_load for u in j018} == {True, False}
     j019 = [u for u in U if u.item == I019 and not u.control]
-    assert len(j019) >= 50 and all(u.odd == 1 for u in j019) and {u.form for u in j019} == {"jalr", "c_jr", "c_jalr"}
+    assert len(j019) >= ODD_PLAN_MIN and all(u.odd == 1 for u in j019) and {u.form for u in j019} == {"jalr", "c_jr", "c_jalr"}
     assert {odd_construction(u) for u in j019 if u.form == "jalr"} == {"odd_rs1", "odd_imm"}, "TP-ISA-019 both odd-sum constructions"
     ctrl = [u for u in U if u.item == I019 and u.control]
     assert len(ctrl) == CTRL_019 and all(u.odd == 0 and u.imm % 2 == 1 for u in ctrl)
@@ -846,7 +845,7 @@ def handler_lines():
             f"  addi x{R_HS0}, x{R_HS0}, 2",
             "gen_h_step:",
             f"  csrrw x0, {csr_hex('mepc')}, x{R_HS0}",
-            f"  li   x{R_HS1}, 0x{MPP_M:x}",
+            f"  li   x{R_HS1}, 0x{MSTATUS_MPP_M:x}",
             f"  csrrs x0, {csr_hex('mstatus')}, x{R_HS1}",
             "  mret"]
 

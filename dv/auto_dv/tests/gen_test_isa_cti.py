@@ -45,14 +45,18 @@ protocol checkers. Knobs (items' lines: imem gnt/rvalid, dmem_rvalid): schedulab
 pinned; layers_required = False (no REGIME_SET consumer at HEAD; staged entry measured: false). declare_bins() is
 not overridden: the template declares the plan bins of the eight built items (manifest rendered from this module).
 MODULE=dv.auto_dv.tests.gen_test_isa_cti.
+
+Substitution: TP-ISA-019's fire-check is written on RVFI (rvfi_pc_rdata of the next record == (rs1 + imm) & ~1); this test
+proves the landing through program-visible markers on the even target instead (RVFI record export pending), so the item counts as
+built on a substitute observable, listed here as such.
 """
 import cocotb
 
 from dv.auto_dv.tests import gen_test_lib as lib
 from dv.auto_dv.tests.gen_programs import gen_isa_cti_prog as prog
+from dv.auto_dv.tests.gen_programs.gen_prog_const import MISA_C_BIT
 from dv.auto_dv.tests.gen_test_template import GenTest
 
-MISA_C_BIT = 2
 TRANSFER_KINDS = {"branch", "jal", "jalr", "c_j", "c_jal", "c_jr", "c_jalr", "mret", "fencei"}
 
 
@@ -186,7 +190,7 @@ class IsaCti(GenTest):
         bad = _mismatches(self, p.items[prog.I019])
         forms = {u.form for u in odd}
         cons = {prog.odd_construction(u) for u in odd if u.form == "jalr"}
-        ok = not bad and len(odd) >= 50 and forms == {"jalr", "c_jr", "c_jalr"} and cons == {"odd_rs1", "odd_imm"} and len(U) > len(odd)
+        ok = not bad and len(odd) >= prog.ODD_PLAN_MIN and forms == {"jalr", "c_jr", "c_jalr"} and cons == {"odd_rs1", "odd_imm"} and len(U) > len(odd)
         self.check("fire_tp_isa_019", ok, f"{len(odd)} odd sums (>= 50) over {sorted(forms)}, constructions {sorted(cons)}, "
                    f"{len(U) - len(odd)} even-sum controls, every landing on the even target; {_words(self, prog.I019, bad)}")
 

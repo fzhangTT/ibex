@@ -244,6 +244,7 @@ def program_min_retired(image):
 
 FLOW_TESTLIST = REPO_ROOT / "dv/auto_dv/flow/gen_testlist.yaml"
 STAGED_ENTRIES_ENV = "GEN_TEST_STAGED_ENTRIES"   # developer runs only: path of a staged-entries file (the flow never sets it)
+FLOW_RUN_ENV = "GEN_DV_FLOW_RUN"                # the flow exports it in every job script; a run carrying it refuses the developer variable
 # COV_WITNESS codes per TP id, rendered by TB Infra with the SV table (plan v2f witness protocol); {} until then.
 WITNESS_IDS = dict(getattr(_gk, "WITNESS_IDS", None) or {})
 # class name -> reason: the only other way than a `measured: false` entry to set layers_required = False.
@@ -433,6 +434,13 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                     raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is captured by a lambda at line {node.lineno}")
                 if isinstance(par, (ast.NamedExpr, ast.Tuple, ast.List, ast.Return, ast.Yield)) or (isinstance(par, ast.Assign) and node is par.value):
                     raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is bound to a name at line {node.lineno}")
+            if isinstance(node, ast.Delete):
+                for tg in node.targets:
+                    root = tg
+                    while isinstance(root, (ast.Subscript, ast.Attribute)) and not (isinstance(root, ast.Attribute) and isinstance(root.value, ast.Name) and root.value.id in obj_names):
+                        root = root.value
+                    if isinstance(root, ast.Attribute) and isinstance(root.value, ast.Name) and root.value.id in obj_names and root.attr in template_attrs:
+                        raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: del over {root.value.id}.{root.attr} at line {node.lineno}; template-owned names are read-only")
             if isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
                 for tg in (node.targets if isinstance(node, ast.Assign) else [node.target]):
                     root = tg
@@ -458,11 +466,28 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                 methods += local_methods(top[name], seen + (name,))
         return methods
 
-    for fn in [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and not n.decorator_list]:   # module-level helpers (the decorated cocotb entry takes the dut, not the test)
-        params = {a.arg for a in fn.args.args + fn.args.kwonlyargs}
-        # the parameters that stand for the test object: named test/self, or read through a template-owned attribute
-        params = {a for a in params if a in ("test", "self") or any(isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == a
-                                                                    and n.attr in template_attrs for n in ast.walk(fn))}
+    helper_defs = {n.name: n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and not n.decorator_list}   # the decorated cocotb entry takes the dut
+    # parameters that stand for the test object: named test/self, read through a template-owned attribute, or bound to the
+    # test object at a call site (helper(self, ...) from a method, helper(t) from another helper), to a fixpoint
+    test_params = {name: {a.arg for a in fn.args.args + fn.args.kwonlyargs if a.arg in ("test", "self")
+                          or any(isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == a.arg and n.attr in template_attrs for n in ast.walk(fn))}
+                   for name, fn in helper_defs.items()}
+    changed = True
+    while changed:
+        changed = False
+        for scope, names in [(m, {"self"}) for cls in tests for m in cls.body if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))] + \
+                            [(fn, test_params[name]) for name, fn in helper_defs.items()]:
+            for c in ast.walk(scope):
+                if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in helper_defs:
+                    callee = helper_defs[c.func.id]; pos = [a.arg for a in callee.args.args]
+                    for i, a in enumerate(c.args):
+                        if isinstance(a, ast.Name) and a.id in names and i < len(pos) and pos[i] not in test_params[c.func.id]:
+                            test_params[c.func.id].add(pos[i]); changed = True
+                    for k in c.keywords:
+                        if isinstance(k.value, ast.Name) and k.value.id in names and k.arg and k.arg not in test_params[c.func.id]:
+                            test_params[c.func.id].add(k.arg); changed = True
+    for name, fn in helper_defs.items():
+        params = test_params[name]
         check_escapes(fn, params, f"helper {fn.name}")
         for c in ast.walk(fn):
             tgts = (c.targets if isinstance(c, ast.Assign) else [c.target] if isinstance(c, (ast.AugAssign, ast.AnnAssign)) else [])
@@ -705,11 +730,13 @@ def _self_test():
     for red, why in ((base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
                      (base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),
                      (base + "    def fire_check(self):\n        pass\n", "never calls")):
+        accepted = False
         try:
             check_test_source(red, "<red>")
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
-            assert why in str(exc), exc
+            assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     assert check_test_source(base + "    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x')\n") == ["T"]
     # parser: the automatic form is read and a commented-out test names no knob
     with tempfile.NamedTemporaryFile("w", suffix=".sv", delete=False) as tf:
@@ -732,11 +759,13 @@ def _self_test():
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.check('b', self.retired() > 0, 'x', cycle_clause_true=True)\n" + good, "cycle_clause_true outside"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_m'\n    layers_required = False\n" + good, "measured: false"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_none'\n    layers_required = False\n" + good, "measured: false")):
+        accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required = False\n" + good, "<green>", entry_lookup=look) == ["T"]
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n"
                              "    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x', cycle_clause_true=self.retired() > 1)\n", "<green>") == ["T"]
@@ -753,11 +782,13 @@ def _self_test():
                      (imp + "from dv.auto_dv.tests import gen_test_lib as lib\nlib.WITNESS_IDS = {}\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "module-level assignment to lib.WITNESS_IDS"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        setattr(self, 'checks', 9)\n" + good, "setattr"),
                      (imp + "FLAG = False\nclass T(GenTest):\n    name = 'gen_test_x'\n    layers_required = FLAG\n" + good, "literal True or False")):
+        accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     for red, why in ((imp + "def _ok(self):\n    pass\nclass T(GenTest):\n    name = 'gen_test_x'\n    finish = _ok\n" + good, "assigns method name finish"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs = self._results\n" + good, "aliases self._results"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
@@ -765,11 +796,13 @@ def _self_test():
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        type(self).finish = None\n" + good, "uses type(self"),
                      (imp + "def _forge(t):\n    t._results.append(1)\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _forge(self)\n" + good, "helper _forge calls into t._results"),
                      (imp + "def _forge(t):\n    t.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "helper _forge assigns t.failures")):
+        accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     for red, why in ((imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        s = self\n" + good, "escapes as a bare name"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        for s in (self,):\n            pass\n" + good, "escapes as a bare name"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        (rs := self._results).clear()\n" + good, "bound to a name"),
@@ -777,13 +810,16 @@ def _self_test():
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        list.append(self._results, 1)\n" + good, "passed to a callee"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        f = lambda: self._results\n" + good, "captured by a lambda"),
                      (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.failures[:] = []\n" + good, "item assignment into self.failures"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        del self.failures[:]\n" + good, "del over self.failures"),
                      (imp + "import x\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        x.forge(t=self)\n" + good, "escapes as a bare name"),
                      (imp + "def _h(t):\n    u = t\n    u.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "escapes as a bare name")):
+        accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     assert check_test_source(imp + "def _cmp(t, k):\n    return len(t.reports) > k\nclass T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', _cmp(self, 0), 'x')\n", "<green>") == ["T"]
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required: bool = False\n" + good, "<green>", entry_lookup=look) == ["T"]
     assert check_test_source(imp + "class Mix:\n    def fire_tp_x_002(self):\n        self.check('fire_tp_x_002', self.retired() > 1, 'y')\nclass T(Mix, GenTest):\n    name = 'gen_test_x'\n" + good.replace("self.fire_tp_x_001()", "self.fire_tp_x_001(); self.fire_tp_x_002()"), "<green>") == ["T"]
@@ -804,6 +840,26 @@ def _self_test():
             r = subprocess.run([sys.executable, str(gen), "--seed", "1", "--out", f"{td}/{gen.stem}.S"], cwd=REPO_ROOT, env=env,
                                capture_output=True, text=True, timeout=120)
             assert r.returncode == 0, f"{gen.name} fails as a flow-style script: {(r.stderr.strip().splitlines() or ['?'])[-1][:160]}"
+    # every red entry's signature names a fire id that its test module really records (a check-name prefix or a fire_* method)
+    import yaml as _yaml
+    entries = (_yaml.safe_load(FLOW_TESTLIST.read_text()) or {}).get("tests") or []
+    staged = os.environ.get(STAGED_ENTRIES_ENV)
+    if staged and Path(staged).is_file():
+        entries += (_yaml.safe_load(Path(staged).read_text()) or {}).get("tests") or []
+    for e in entries:
+        rx = e.get("red_expect") or ""
+        m = re.search(r"\\bfire_([a-z0-9_]+)", rx) or re.search(r"(fire_[a-z0-9_]+)", rx)
+        if not e.get("red_fixture") or not m:
+            continue
+        fid = m.group(0).lstrip("\\b") if m.group(0).startswith("\\b") else m.group(0)
+        fid = fid[2:] if fid.startswith("\\b") else fid
+        mod = here / (e["cocotb_module"].split(".")[-1] + ".py")
+        if not mod.exists():
+            continue
+        src = mod.read_text()
+        names = set(re.findall(r"self\.check\(\s*['\"](fire_[a-z0-9_]+)['\"]", src)) | set(re.findall(r"def (fire_[a-z0-9_]+)\(", src))
+        assert any(n == fid or n.startswith(fid + "_") for n in names), \
+            f"red entry {e['name']}: red_expect names {fid}, which no check name or fire_* method of {mod.name} carries"
     # the fixture header re-types the EOT address: it must equal the rendered map too
     assert check_mmio_map_header(here / "gen_fixtures" / "gen_report_fixture_map.h", {"GEN_EOT_ADDR": "eot_addr"})
     # manifest cross-check: declared == rendered for every committed manifest; stale and missing fail loud
@@ -827,11 +883,13 @@ def _self_test():
                      (imp + good_items.replace("def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038'", "def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_036'"), "does not name its item"),
                      (imp + good_items.replace("    not_built = {}\n", "    not_built = {'TP-CMP-038': 'x'}\n"), "overlap"),
                      (imp + good_items.replace("self.fire_tp_cmp_038()", "pass").replace("    def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038', self.retired() > 0, 'x')\n", ""), "unaccounted")):
+        accepted = False
         try:
             check_test_source(red, "<red>")
-            raise AssertionError(f"red source ({why}) accepted")
+            accepted = True
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+        assert not accepted, f"red source ({why}) accepted"
     for declared, why in ((["x.y.z"], "no manifest"),):
         try:
             check_manifest_matches("gen_test_boot_retire", declared); raise AssertionError("missing-manifest case accepted")

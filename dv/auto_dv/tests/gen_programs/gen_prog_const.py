@@ -63,6 +63,9 @@ MHPMEVENT_BASE = 0x320     # mcountinhibit at 0x320, mhpmevent3..31 at 0x323..0x
 
 MSTATUS_RESET = 0x0000_0080
 MARCHID_IBEX = 22            # RISC-V marchid registry entry of lowRISC Ibex (gen_feature_list.md Section 4.2)
+MISA_C_BIT = 2               # misa extension bit of C (privileged spec 3.1.1)
+MSTATUS_MPP_M = 0x1800       # mstatus.MPP = 11 (privileged spec 3.1.6.1)
+CAUSE_ECALL_M = 11           # mcause of an environment call from M-mode (privileged spec table 3.6)
 MISA_VALUE = 0x4090_1104
 MCONFIGPTR_VALUE = 0
 

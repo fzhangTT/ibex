@@ -113,7 +113,7 @@ class GenTest:
         self._slow_rounds = 0      # budgets a report store lagged while the core retired; reported by finish()
         self._cmd_lock = Lock()
         staged = os.environ.get(lib.STAGED_ENTRIES_ENV)
-        in_flow = "/runs/" in os.environ.get("SIM_DIR", "") or bool(os.environ.get("GEN_DV_FLOW_RUN"))
+        in_flow = "/runs/" in os.environ.get("SIM_DIR", "") or bool(os.environ.get(lib.FLOW_RUN_ENV))
         assert not (staged and in_flow), f"GEN_TEST: {lib.STAGED_ENTRIES_ENV} is set inside a flow run; the variable is for developer runs only"
         if staged:
             self.log.info("GEN_TEST_DEV staged entries in use: %s", staged)

@@ -210,11 +210,14 @@ fails with the GEN_TEST_FAIL prefix), and `check_test_source` is defense in dept
 forgeries (assignment to template-assigned names through `self`, calls into or aliases of the verdict record, `getattr`/`setattr`/
 `vars`/`__dict__`/`type(self)` on the test object, class-body assignment to a template method, module-level functions
 that receive the test object and touch its template-owned names, `lib`/template patching, the COV_WITNESS token). It is
-not airtight: any indirection of `self` or of the record defeats it (string-built names, exec/importlib, dunder tricks,
-objects reached through containers or return values, helpers in other modules); that is the named residual, caught only by
-the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
-`GEN_DV_FLOW_RUN` environment marker; a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
+not airtight: it enumerates statement shapes and refuses those; any statement over the record it does not enumerate passes
+(string-built names, exec/importlib, dunder tricks, objects reached through containers or return values, helpers in other
+modules, and shapes nobody has listed yet); that is the residual, caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
+`GEN_DV_FLOW_RUN` environment marker (`lib.FLOW_RUN_ENV`, exported by every flow job script); a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
 _noid prove the four epilogue paths with a Python-side fake dispatcher.
 
 `run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test
 (fixture gen_ut_drain_probe holds the runner 40 cycles across the end of test).
+- The schedule runner's cycle triggers are absolute cycle counts and unaffected by slow bus regimes; a retirement-trigger
+  schedule would need the same progress rule as the end-of-test wait and is not emitted today (schedules carry one trigger
+  kind, `c`).

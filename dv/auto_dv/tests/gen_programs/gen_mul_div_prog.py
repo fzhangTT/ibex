@@ -40,8 +40,9 @@ INT_MAX = 0x7FFFFFFF
 ALL_ONES = MASK32
 MINUS_TWO = 0xFFFFFFFE
 EOT_REG = 28                      # holds GEN_MM_EOT_ADDR for every report store
-FILLER_REGS = (5, 6, 7)           # the unrelated instructions between units work on these
-OP_REGS = tuple(r for r in range(1, 32) if r != EOT_REG)   # rd/rs1/rs2 draws; x0 only through the W4 rules
+FILLER_REGS = (29, 30, 31)        # the unrelated instructions between units work on these, never on operand registers
+OP_REGS = tuple(r for r in range(1, 32) if r != EOT_REG and r not in FILLER_REGS)   # rd/rs1/rs2 draws; x0 only through the W4 rules
+assert not set(FILLER_REGS) & set(OP_REGS) and EOT_REG not in FILLER_REGS
 
 MUL_OPS = ("mul", "mulh", "mulhsu", "mulhu")     # funct3 000..011 under funct7 0000001
 DIV_OPS = ("div", "divu", "rem", "remu")         # funct3 100..111

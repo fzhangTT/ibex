@@ -339,16 +339,24 @@ build out_head4 (layers live) and, for the flow's failing seed, also on the curr
 
 | Run | Purpose | Decisive line (line no.) | Result | UVM_ERROR | md5 (stdout.log) |
 |---|---|---|---|---|---|
-| l5_eot_stall | red: frozen retirement, a store that never comes (fail within one budget) | 68: `assert now_retired > last_retired, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen and no retirement "` | FAIL as designed | - | 956b1ed588b0ca4208a3f4fa11327399 |
+| l5_eot_stall | red: frozen retirement, a store that never comes (fail within one budget) | 70: `assert now_retired > last_retired, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen and no retirement "` | FAIL as designed | - | 956b1ed588b0ca4208a3f4fa11327399 |
 | l5_eot_runaway | red: the program self-loops after tohost and keeps retiring, a store never comes (fail after the cap) | 72: `AssertionError: GEN_TEST: end-of-test store 5 of 5 not seen within 3 x 5000 cycles (cycle 15084, retired 2150) although the core keeps retiring (runaway program)` | FAIL as designed | - | c152f8ca554c7a81ed5303fa1b1ba0a5 |
 | l5_report_s1 | green: report channel unchanged | 77: `890.00ns INFO cocotb.gen_tb_top gen_ut_report_channel GEN_TEST_PASS` | PASS | 0 | ee9eb5a44eb7ee7e18869dd4796e358f |
 | l5_boot_green_s1 | green: boot_retire with layers applied | 83: `42680.00ns INFO cocotb.gen_tb_top gen_test_boot_retire GEN_TEST_PASS` | PASS | 0 | ccf93bbde2d4beb9d996f066c1000504 |
 | l5_combo_zcmp | cmp_zcmp_basic seed 1 under the wave-5 red's regime combination (first store at cycle 326778) | 4224: `7552340.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 702f627f8d5a4e6551d0ea0a2f92bcf4 |
 | l5_flowred_zcmp | the wave-5 red program (seed 1, --red-item TP-CMP-039) with its schedule: EOT at cycle 756518, then the designed fire-check failure | 4218: `AssertionError: GEN_TEST_FAIL gen_test_cmp_zcmp_basic: 3 fire-check failure(s): fire_tp_cmp_039: 147 scenarios, 2394 report words checked, 1 mismatches; cm.push over 48/4` | FAIL on fire_tp_cmp_039 (RED-OK shape) | - | 7bd45da093a5ae32a5db4d10273880ce |
-| l5_flowseed_zcmp | the wave-5 failing green seed 421987159 with its derived schedule: three GEN_TEST_SLOW budgets, first store at cycle 430153, EOT at 968492 | 4245: `9684970.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 5ca82f317356721c9d8e5a4db1a77fed |
+| l5_flowseed_zcmp | the wave-5 failing green seed 421987159 with its derived schedule: four GEN_TEST_SLOW budgets, first store at cycle 430153, EOT at 968492 | 4245: `9684970.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 5ca82f317356721c9d8e5a4db1a77fed |
 | l6_flowseed_zcmp | the same seed on the current-HEAD build | 4245: `9684970.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 4d54efe30299110ed5fa50ff4ae27312 |
 
 The two failing wave-5 runs and the local reproductions share the program source hash, the plusargs, the seed-derived schedule
 and the testbench revision; the first report store of that seed's program arrives at cycle 430153 under its drawn regimes, past the
 old fixed 300000-cycle budget, and the run then completes normally. The stall red and the runaway red name the cycle and retirement
 counts in their failure lines.
+
+### 9.3 Correction: the self-test's red-source loops were vacuous until landing 3d
+
+From the fix set of 98c2ade to landing 3c the loops that were meant to prove the structure check refuses forged test sources
+raised the "accepted" error inside the try block, where the following except clause caught it and matched it by the same
+`why` word; they could not fail. Landing 3d records acceptance outside the except clause and asserts it afterwards. Every
+red source listed in the response files is refused by the check as it stands now (self-test PASS with the working loops), so
+no rule was missing, but the claims made between those commits were not proven when they were made.

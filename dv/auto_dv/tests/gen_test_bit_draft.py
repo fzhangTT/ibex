@@ -51,19 +51,19 @@ class BitDraft(GenTest):
     layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {
-        "TP-BIT-011": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-022": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-023": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-024": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-025": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-026": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-027": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-028": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-029": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-030": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-031": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-032": "draft-B reference op beyond grev/gorc: not built in this test yet",
-        "TP-BIT-033": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-011": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-022": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-023": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-024": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-025": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-026": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-027": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-028": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-029": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-030": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-031": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-032": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
+        "TP-BIT-033": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",
     }
 
     def report_count(self):
