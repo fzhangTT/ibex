@@ -1,0 +1,54 @@
+# Positive inventory of top-level paths allowed in a WS7 cleanroom export.
+# ci/make-cleanroom.sh fails loud if the export contains a top-level path not listed
+# here (a new top-level addition to the repo needs triage: deny it, overlay it, or add
+# it here deliberately) -- see docs/superpowers/specs/2026-09-02-zone-a-fence-scope-amendment.md
+# and the WS7 plan pre-review (docs/dv/reviews/2026-09-02-claude-plan-ws7-export-path.md,
+# Major finding "deferred list is incomplete", spec:139 unclassifiable-path property).
+# One entry per line; blank lines and '#' comments are ignored. Regenerate with:
+#   git ls-tree HEAD --name-only | grep -vE '^(formal|\.github)$' | sort
+.agents
+AGENTS.md
+AI_Transformation_Assigments.md
+check_tool_requirements.core
+CLA.md
+.clang-format
+.claude
+CLAUDE.md
+.codex
+ci
+CONTRIBUTING.md
+CREDITS.md
+doc
+docs
+dv
+examples
+flake.lock
+flake.nix
+.gitattributes
+.gitignore
+ibex_configs.yaml
+ibex_core.core
+ibex_icache.core
+ibex_multdiv.core
+ibex_pkg.core
+ibex_top.core
+ibex_top_tracing.core
+ibex_tracer.core
+__init__.py
+LICENSE
+lint
+Makefile
+.mcp.json
+nix
+NOTICE
+python-requirements.txt
+README.md
+.readthedocs.yml
+rtl
+SECURITY.md
+shared
+src_files.yml
+.svlint.toml
+syn
+util
+vendor
