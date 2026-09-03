@@ -345,3 +345,27 @@ while that review instance was still executing; bash reads scripts incrementally
 the modified file at a stale offset. No artifact was installed for that run; the review was
 re-run. Fix: the script now executes from a private copy of itself. Recorded because it is a
 process defect in generated tooling caught by the operator, not by review.
+
+## Q-014 - 2026-09-03 - QUESTION (to owner; run-scope ruling by the DV Lead, owner-visible because it touches the DUT-scope measurement rule)
+
+DV Lead ruling (dv/auto_dv/docs/gen_tb_architecture.md Section 5, adopted 07:04 UTC): code
+coverage is measured on the two instances inside the wrapper, `u_dut.u_ibex_core` and
+`u_dut.u_register_file`; the wrapper `gen_dut_top` itself (DV-authored pure wiring) is reported
+informationally in a separate non-gated tree. Reason given: the wrapper's 312 duplicate
+port-toggle objects include control ports (req, gnt, irq, debug_req) that cannot be justified as
+data-path exclusions, so measuring the wrapper would either inflate the toggle denominator or
+force unjustifiable exclusions. `DV_prompt.txt` Section 2 names `gen_dut_top` as the DUT and
+Section 4 says the scope is "the DUT hierarchy only"; the ruling measures that hierarchy minus
+the wrapper's own wires. Question: does the owner accept this reading of "DUT hierarchy only"?
+Default applied while pending: yes; the flow's `cov_trees` carries the two roots and the round
+report combines them per metric by summing numerators and denominators (rule stated in
+`dv/auto_dv/docs/gen_runtime_api.md`); the wrapper tree is reported beside the gate numbers.
+Recorded as R-001 in the team's terms. Status: pending.
+
+## R-002 - 2026-09-03 - RULING (DV Lead run scope; informs LOG-007/LOG-008)
+
+`-cm_glitch 0` is adopted for every measured build (glitch-only hits are not exercised logic);
+the round-0 baseline is re-measured under it so round-over-round gains compare like with like;
+every URG report header states the flag; FSM coverage is recorded as not glitch-filtered (VCS
+states the flag does not apply to FSM). The Critic ruled the adoption acceptable and recommended
+(T-040 N-2). Recorded from dv/auto_dv/docs/gen_tb_architecture.md Section 5.
