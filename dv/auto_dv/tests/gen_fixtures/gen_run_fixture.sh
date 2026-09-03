@@ -16,7 +16,9 @@ LIBPY=$(cocotb-config --libpython)
 export LD_LIBRARY_PATH="$OUT/lib:$ROOT/tools/spike/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 # the build identity is the sources sha the compile step recorded (gen_tb_local.sh compile); a run header without one names an unknown build
 SRC_SHA=$(sed -n 's/^sources sha256 ([^)]*): //p' $OUT/config_opts.txt 2>/dev/null | head -1)
-echo "# run $NAME: $(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname) seed=${SEED:-1} module=$MODULE build=$OUT sources_sha=${SRC_SHA:-unknown} pyroot=${GEN_TB_PYROOT:-$ROOT} vmem=$VMEM plusargs=[$*]" > $dir/run_header.txt
+# the template the run executes comes from the first python root; its hash identifies an out-of-tree pyroot directly
+TPL_SHA=$(sha256sum "${GEN_TB_PYROOT:-$ROOT}/dv/auto_dv/tests/gen_test_template.py" 2>/dev/null | cut -c1-16)
+echo "# run $NAME: $(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname) seed=${SEED:-1} module=$MODULE build=$OUT sources_sha=${SRC_SHA:-unknown} template_sha=${TPL_SHA:-unknown} pyroot=${GEN_TB_PYROOT:-$ROOT} vmem=$VMEM plusargs=[$*]" > $dir/run_header.txt
 ( cd $dir && env SIM_DIR=$dir MODULE=$MODULE PYTHONPATH="$PYROOTS:$ROOT/dv/auto_dv/tests/gen_fixtures" LIBPYTHON_LOC=$LIBPY RANDOM_SEED=${SEED:-1} TOPLEVEL=gen_tb_top TOPLEVEL_LANG=verilog \
   $OUT/vcs_simv +vcs+lic+wait +ntb_random_seed=${SEED:-1} +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan $ARGS +gen_fetch_en_at_reset=0 "$@" -l $dir/sim.log > $dir/stdout.log 2>&1 )
 echo "$NAME simv_exit=$?"

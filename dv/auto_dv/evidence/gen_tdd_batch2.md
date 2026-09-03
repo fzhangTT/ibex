@@ -192,3 +192,39 @@ B13's xfail item owns the bug; the model reports mtval 0 after c.ebreak like the
   per-form floors governing.
 - DV Lead: B13 ruling for the comparator; TP-ISA-016/022/026 need text near address 0 and in the top 2 KiB (gen_link.ld PROG window) and IRQ_SET codes; TP-ISA-006's cp_pc_region.high/low bins are unreachable in the memory map; TP-CMP-001's floor is >= 3000 retired per seed (about 3800 seen), the per-form floors governing.
 - Subagent fence slips, recorded: the mul_mul subagent ran one read-only `git log -1` and a `find` that listed path names under dv/auto_dv/work/orchestrator and work/runtime (nothing read); the mul_div subagent listed the shared OUT directory and read 3 lines of a sibling run's sim.log (Test Writer work files).
+
+## 4. Acceptance wave, batch 2 complete (T-195): the 13 first-wave failures re-run on 9500268
+
+The first acceptance wave (Runtime test-writer-049..055, head mode at d3c6ca8, Section 7 of gen_tdd_batch1.md for the mechanics) passed 11
+greens and 8 reds and failed 13 greens on fire_schedule_applied alone: the 3e template's schedule runner never applied a mid-run phase
+(gen_tdd_batch1.md Section 12, LOG-042a/042c). After landing 3h (9500268) the Test Writer re-filed the 13 seeds as six purpose-1 requests
+(test-writer-065..070, explicit seed lists, one per test), which Runtime served as one head-mode pass pinned to 9500268 behind a fresh canary
+(canary_sha 9500268b5275, canary_decision accepted), finished 17:21Z. All 13 PASS: UVM_ERROR 0 on each, GEN_TEST_BINS equal to the committed
+manifests (337, 830, 602, 120, 200, 224), fire_schedule_applied ok=True with every reached entry applied and 1 to 17 idx>0 GEN_TEST_PHASE
+lines per seed, GEN_TEST_SLOW_TOTAL rounds 0. With the 11 greens and 8 RED-OK of the d3c6ca8 wave this closes the batch-2 acceptance (T-195).
+
+Retained as decisive-line excerpts (LOG-034), header first with the request id, the pinned and canary shas, the run directory and Runtime's
+GEN_RUN_SEED echo, then the GEN_TEST_* lines (SEED, KNOBS, SCHED, every PHASE, EOT, every FIRE, BINS, SLOW_TOTAL, PASS), the cocotb summary and
+the UVM_ERROR line: gen_tdd_logs/test_writer/gen_acc2_<test>_<seed>_stdout_excerpt.log (md5 in gen_manifest.md). No new simulation was run
+for this section; the sources are Runtime's run directories under /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-0NN/runs/
+and the manifests dv/auto_dv/work/runtime/results/test-writer-065..070/manifest.yaml.
+
+| Request | Test | Seed | Result | GEN_TEST_BINS | UVM_ERROR | fire_schedule_applied | idx>0 phases | SLOW rounds | md5 (excerpt) |
+|---|---|---|---|---|---|---|---|---|---|
+| test-writer-065 | gen_test_cmp_zca | 1539293166 | PASS | 337 | 0 | fire_schedule_applied ok=True reached 15 of 16 applied 15 | 9 | 0 | 065e2a678e672f4023af9c0fbc556b82 |
+| test-writer-065 | gen_test_cmp_zca | 2115402665 | PASS | 337 | 0 | fire_schedule_applied ok=True reached 13 of 13 applied 13 | 7 | 0 | 22e7ee1e2e7695a393b8cd60d9d24737 |
+| test-writer-066 | gen_test_bit_ratified | 1400867381 | PASS | 830 | 0 | fire_schedule_applied ok=True reached 10 of 10 applied 10 | 4 | 0 | 0498cacc440cd745596e4ef3de04d1dc |
+| test-writer-066 | gen_test_bit_ratified | 288888690 | PASS | 830 | 0 | fire_schedule_applied ok=True reached 11 of 14 applied 11 | 5 | 0 | c34643229aaad1f5d5eab9b76a6fb20d |
+| test-writer-066 | gen_test_bit_ratified | 555087581 | PASS | 830 | 0 | fire_schedule_applied ok=True reached 7 of 20 applied 7 | 1 | 0 | a5b14b5ea802fd4dc5837b9703a9b950 |
+| test-writer-067 | gen_test_isa_alu | 1711178164 | PASS | 602 | 0 | fire_schedule_applied ok=True reached 12 of 12 applied 12 | 6 | 0 | e89711ebe398cda94747d18aeb77f0dc |
+| test-writer-067 | gen_test_isa_alu | 1730556152 | PASS | 602 | 0 | fire_schedule_applied ok=True reached 16 of 16 applied 16 | 10 | 0 | 33cd8b2218f6042050bfb139cd5e0aa1 |
+| test-writer-068 | gen_test_isa_shift | 1401504676 | PASS | 120 | 0 | fire_schedule_applied ok=True reached 17 of 17 applied 17 | 11 | 0 | 521b5fc6abadb6d8a84fc80b1b12e96c |
+| test-writer-069 | gen_test_isa_cti | 1038415940 | PASS | 200 | 0 | fire_schedule_applied ok=True reached 23 of 23 applied 23 | 17 | 0 | 3b951925c348b535466c22bbc2ede129 |
+| test-writer-069 | gen_test_isa_cti | 777966141 | PASS | 200 | 0 | fire_schedule_applied ok=True reached 16 of 16 applied 16 | 10 | 0 | ce1d01e5b5ffdc4a10dce10ff20f0628 |
+| test-writer-070 | gen_test_mul_div | 1465513474 | PASS | 224 | 0 | fire_schedule_applied ok=True reached 13 of 13 applied 13 | 7 | 0 | d4255a776d50bd99cc7f71f6de02194b |
+| test-writer-070 | gen_test_mul_div | 1640919798 | PASS | 224 | 0 | fire_schedule_applied ok=True reached 13 of 13 applied 13 | 7 | 0 | 14da5a2bff30de49dffe80b3fa4c1077 |
+| test-writer-070 | gen_test_mul_div | 754956299 | PASS | 224 | 0 | fire_schedule_applied ok=True reached 14 of 14 applied 14 | 8 | 0 | 1b85ad99727c92c778c56b12b5f6a930 |
+
+The local re-run of the same 13 seeds on out_head8 before the landing (gen_tdd_batch1.md Section 12, gen_3h_acc_*) agrees seed by seed on the
+reached / applied counts and the idx>0 phase counts (the wave's images are byte-identical to the HEAD generators' output); the flow's runs
+are the acceptance evidence, the local ones the landing's proof.

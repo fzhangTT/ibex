@@ -499,7 +499,9 @@ green reuses the seed-1 image of Section 8 (generator unchanged).
 
 Each run's verdict.txt is retained beside its log (gen_<name>_verdict.txt). `python3 dv/auto_dv/flow/gen_flow_util.py
 --check-red-signatures dv/auto_dv/work/test-writer/gen_testlist_entries.yaml` reads PASS with every row RED-OK and no STALE row (16 red entries; the cmp_zca and isa_cti reds
-were replaced by the l9_* runs on out_head6, UVM_ERROR-free; re-run at landing 3h from an export of HEAD). The T-102-era copies
+were replaced by the l9_* runs on out_head6, UVM_ERROR-free; re-run at landing 3h from an export of HEAD). The same command against
+the committed testlist, `--check-red-signatures dv/auto_dv/flow/gen_testlist.yaml`, from a detached archive of 8fff875 reads the same:
+RED-CHECK PASS, 16 rows RED-OK, no STALE row (the staged file is git-ignored; the committed one is what a reviewer runs). The T-102-era copies
 were removed under the retention rule (LOG-024; the manifest header names them); the per-item red excerpts now start with the run
 header line (LOG-034), and the md5 cells of gen_tdd_batch2.md follow the excerpt copies.
 
@@ -574,14 +576,16 @@ Fix: _edge_or_eot ends a wait only at the final store (store number expected_rep
 report-store edge re-arms the wait within the remaining budget, and a hit landing in the same cycle as a store is not lost (the
 awaited signal is sampled before and after the edge). The docstring, the run-order comment and gen_test_template_api.md (step 3 and the
 wait_* row) state the rule. gen_run_fixture.sh's run header now carries the sources sha the compile step records (`sources_sha=`), so a
-retained run names its build.
+retained run names its build; since landing 3i it also carries `template_sha=`, the sha256 prefix of the python root's gen_test_template.py,
+so a run from an out-of-tree pyroot names the template it executed (CM30-I-1).
 
 Runs: build out_head8, the export of HEAD 9e7c440 with the fixed template (sources sha 156eb9357b79552e; the TB sources equal d3c6ca8's,
 the wave's tree: `git diff --stat d3c6ca8 HEAD -- dv/auto_dv/tb dv/auto_dv/env` is empty). The images are the wave's own prog.vmem files
 (one per failing seed, crc32 as in the wave's run_cmd.sh), and the HEAD generators reproduce them byte for byte (bit_ratified seed
 288888690 regenerated from dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py + gen_program.py: sha256 b9a697debab0 both).
 
-- 3h_red_prefix_bit_ratified_288888690: HEAD's template before this landing (pyroot head_export7, an archive of 9e7c440) on out_head8:
+- 3h_red_prefix_bit_ratified_288888690: HEAD's template before this landing (pyroot head_export7, an archive of 9e7c440; that template's
+  sha256 prefix 89fc45e20f827180, the fixed template's abbe6fcb78e53a27) on out_head8:
   FAIL fire_schedule_applied, applied 6, missed 5, the probe's numbers; GEN_TEST_FAIL harness line (RED-OK). The failing path a reviewer
   re-runs: the same fixture command with a pyroot whose gen_test_template.py is 9e7c440's.
 - 3h_red_mut_bit_ratified_288888690: the fixed template with mutation 3h-M1 (run_schedule skips the idx=1 entries of a reached boundary;
