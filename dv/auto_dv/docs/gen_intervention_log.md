@@ -1174,3 +1174,18 @@ tree with the working-tree manifest self-test passing; batch-3 gen_pmp_mseccfg f
 and the work order: 3g hand-over, then 3h (the schedule-runner fix, LOG-042a, the critical path for round 0), the CR6-L
 lows, the acceptance re-file, then batch 3. Fourth respawn of the day; the pattern is again a long foreground fan-out
 with the inbox unread.
+
+## LOG-037d - 2026-09-03 - HOLD CONDITIONS REFINED (Critic fu2a on landing 2a)
+
+The Critic's check of landing 2a (dv/auto_dv/docs/gen_critic_tb_fu2a.md, REQUEST-CHANGES on one high and five mediums)
+reaches the same two hold answers as the cross-model artifact and refines the T-137 condition: T-136 does NOT lift
+(the fold still returns before publish_state; the landed build's own green shows irq_entries=15 against cause checked=0);
+T-137 lifts with the one-line take() change (both words of a spanning access consumed), its announced-minus-taken referee
+and a red, because P13 (the model losing pmpaddr0 -> isa_trap, 20 catches, ablation 0) is accepted as the committed-tree
+proof of the LOG-026a arming form; the MB6 re-run on the committed sha then closes the record, not the hold. One new
+owed item with conditions: the irq_entry bound now restarts at every entry, so under a storm a raised line that is never
+taken is never flagged while priority is undecidable for 448 of 573 entries (Critic M-5); tb-infra states the bound's
+intent and a rule that flags a never-taken raised line at end of run, in 1c or explicitly owed to 2b with the
+decidable-only crediting condition of LOG-037b. The promotion check (docs/gen_critic_flow_promotion.md) upholds LOG-039
+and the lowest-tier rule; its high is closed by Runtime's T-178 (7a468ec), and its lows ask that the tier table be a
+committed file and that the two unmeasured smoke entries carry a one-line reason.
