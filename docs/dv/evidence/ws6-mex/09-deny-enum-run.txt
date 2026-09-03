@@ -1,0 +1,75 @@
+=== Mechanical deny-set enumeration: run ci/make-cleanroom.sh's ACTUAL logic ===
+    (sourced -- per the script's own header comment, sourcing does not run main --
+    against a faithful shadow of the live git-tracked tree; not a hand-reconstruction.)
+
+-- building empty-file shadow of every git-tracked path (git ls-tree -r HEAD) --
+shadow file count: 3983
+4488 /tmp/claude-1211405897/-localdev-fzhang-ws-ibex/d72fc555-c008-4308-af1f-6523e86e7bde/scratchpad/before-listing.txt
+
+-- sourcing ci/make-cleanroom.sh and invoking its real _cleanroom_apply_deny_with_allow --
+(function returned 0 -- no error)
+2993 /tmp/claude-1211405897/-localdev-fzhang-ws-ibex/d72fc555-c008-4308-af1f-6523e86e7bde/scratchpad/after-listing.txt
+
+-- dv/** effective allow after the real run (should be exactly dv/auto_dv) --
+dv/auto_dv
+
+-- docs/dv/** effective allow after the real run (should be empty here: the
+   overlay, not this function, restores FENCE.md/SIM_RECIPE.md/TB_CONTRACT.md/
+   dv_principles.md -- see ci/make-cleanroom.sh's _cleanroom_apply_overlay and
+   cleanroom_build_stage; this function alone only does dv/auto_dv in-place) --
+(none)
+
+-- dv/** entries actually removed by the run (top-level) --
+dv/cocotb
+dv/cosim
+dv/cs_registers
+dv/formal
+dv/riscv_compliance
+dv/uvm
+dv/verilator
+
+-- docs/dv/** entries actually removed by the run (top-level) --
+docs/dv/BUILD_AND_SIM.md
+docs/dv/COSIM.md
+docs/dv/dv_principles.md
+docs/dv/evidence
+docs/dv/known-followups.md
+docs/dv/process-logs
+docs/dv/reviews
+docs/dv/TB_CONTRACT.md
+docs/dv/tt-regress-assessment.md
+
+-- spot-check: ci/reviews/ kept exactly the 6 non-Zone-B rubrics --
+ci/reviews/ai-slop-comments.md
+ci/reviews/assertion-integrity.md
+ci/reviews/forces-and-hier-access.md
+ci/reviews/GUIDE.md
+ci/reviews/magic-numbers.md
+ci/reviews/rtl-purity.md
+
+-- spot-check: doc/03_reference/*.rst kept (verification RSTs removed) --
+doc/03_reference/cs_registers.rst
+doc/03_reference/debug.rst
+doc/03_reference/exception_interrupts.rst
+doc/03_reference/history.rst
+doc/03_reference/icache.rst
+doc/03_reference/index.rst
+doc/03_reference/instruction_decode_execute.rst
+doc/03_reference/instruction_fetch.rst
+doc/03_reference/load_store_unit.rst
+doc/03_reference/performance_counters.rst
+doc/03_reference/pipeline_details.rst
+doc/03_reference/pmp.rst
+doc/03_reference/register_file.rst
+doc/03_reference/rvfi.rst
+doc/03_reference/security.rst
+doc/03_reference/tracer.rst
+
+-- spot-check: vendor/riscv?isa?sim* glob matches actually removed (top-level only) --
+vendor/riscv-isa-sim
+vendor/riscv_isa_sim.lock.hjson
+vendor/riscv_isa_sim.vendor.hjson
+
+-- spot-check: .github/ removed wholesale --
+(none left -- fully removed, as expected)
+EXIT=0

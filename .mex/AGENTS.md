@@ -34,17 +34,40 @@ is procedural, not mechanical:
 - **Wiki-authoring rule:** no page under `.mex/context/`, `.mex/patterns/`, or
   `.mex/ROUTER.md` may paraphrase content from a fenced path. Describe that a
   fenced thing exists and where, never what it says.
-- **Deny list** (single source of truth: the `DENY=(...)` array in
-  `ci/make-cleanroom.sh`; mirror it there, do not hand-copy elsewhere):
-  `dv/uvm`, `dv/cosim`, `dv/verilator`, `dv/formal`, `dv/riscv_compliance`,
-  `formal`, `vendor/riscv-isa-sim`, `vendor/patches`, `vendor/google_riscv-dv`,
-  `docs/dv/BUILD_AND_SIM.md`, `docs/dv/COSIM.md`, `docs/dv/evidence`,
-  `docs/dv/reviews`, `docs/dv/process-logs`, `docs/superpowers`, `ci/jenkins`,
-  `ci/build-spike.sh`, `ci/setup-cosim.sh`, `ci/run-cosim-test.sh`,
-  `ci/reviews/fence-integrity.md`, `ci/reviews/test-overlap.md`, the six
-  verification RSTs under `doc/` (`doc/01_overview/verification_overview.rst`,
-  `doc/03_reference/{cosim,coverage_plan,testplan,verification,verification_stages}.rst`),
-  `doc/03_reference/images/tb*.svg`, and `.mex/` itself from any future export.
+- **Authority is DEFAULT-DENY, not an enumerated list** (single source of
+  truth: `ci/make-cleanroom.sh`; this section is a mirror snapshot, not a
+  substitute — the rule below governs even a `dv/*` or `docs/dv/*` entry added
+  after this file was last updated, before anyone remembers to touch this
+  file):
+  - `dv/**` — every subdirectory is fenced **except** `dv/auto_dv`. Fenced
+    today (a snapshot, mechanically enumerated from the live tree against
+    `ci/make-cleanroom.sh`'s actual `ALLOW`/deny logic, not hand-transcribed —
+    see `docs/dv/evidence/ws6-mex/05-deny-list-consistency.txt`): `dv/cocotb`,
+    `dv/cosim`, `dv/cs_registers`, `dv/formal`, `dv/riscv_compliance`,
+    `dv/uvm`, `dv/verilator`.
+  - `docs/dv/**` — every entry is fenced **except**
+    `{FENCE.md, SIM_RECIPE.md, TB_CONTRACT.md, dv_principles.md}`. Fenced
+    today (same method): `docs/dv/BUILD_AND_SIM.md`, `docs/dv/COSIM.md`,
+    `docs/dv/evidence`, `docs/dv/known-followups.md`, `docs/dv/process-logs`,
+    `docs/dv/reviews`, `docs/dv/tt-regress-assessment.md`. (`FENCE.md` and
+    `SIM_RECIPE.md` do not exist yet at time of writing — the allowlist covers
+    them in advance, supplied by the WS7 overlay once it lands.)
+  - **Plain deny** (unconditional, no allowlist; mirrors `ci/make-cleanroom.sh`'s
+    `DENY=(...)` array verbatim): `formal` (repo-root), `vendor/riscv?isa?sim*`
+    (matches `vendor/riscv-isa-sim`, `vendor/riscv_isa_sim.lock.hjson`,
+    `vendor/riscv_isa_sim.vendor.hjson`), `vendor/patches`, `docs/superpowers`,
+    `ci/jenkins`, `ci/build-spike.sh`, `ci/setup-cosim.sh`,
+    `ci/run-cosim-test.sh`, `ci/reviews/fence-integrity.md`,
+    `ci/reviews/test-overlap.md`, the six verification RSTs under `doc/`
+    (`doc/01_overview/verification_overview.rst`,
+    `doc/03_reference/{cosim,coverage_plan,testplan,verification,verification_stages}.rst`),
+    `doc/03_reference/images/tb*.svg`, `.mex/` itself from any future export,
+    and `.github` (re-discloses cosim build/run + directed-test names via its
+    workflows). `vendor/google_riscv-dv` is not plain-denied — the cleanroom
+    export replaces the checked-in (locally patched) tree with a pristine
+    upstream fetch at the locked revision instead, a different mechanism from
+    deletion, but the same fence intent: never describe the checked-in
+    patches.
 - **Known limit (structural, not just procedural):** the code graph's
   supported-language allowlist is TypeScript/JavaScript/Python/Rust —
   SystemVerilog is never parsed, so RTL/TB source cannot enter the graph

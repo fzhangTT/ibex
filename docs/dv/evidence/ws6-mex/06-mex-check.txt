@@ -9,7 +9,7 @@ Loading:   git version 2.26.2
 Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
 Loading:   Python version 3.9
 Loading:   Perl version perl-5.36.0
-Code graph refreshed: 0 nodes, 0 edges across 0 files in 2903ms; status fresh.
+Code graph refreshed: 4998 nodes, 6114 edges across 220 files in 10126ms; status fresh.
 Drift score: 90/100 — 1 errors, 0 warnings, 0 info
 16 files checked
 

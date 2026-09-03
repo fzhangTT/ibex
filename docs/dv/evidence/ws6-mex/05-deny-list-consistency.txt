@@ -1,8 +1,23 @@
-Authoritative source: ci/make-cleanroom.sh DENY=(...) array
-Authoritative entries: 29
-Mirrored entries (.mex/AGENTS.md Fence-aware scope, expanded): 29
+Authoritative source: ci/make-cleanroom.sh's actual DENY/ALLOW/DOCS_DV_ALLOWED
+arrays (parsed straight from the script text -- not hand-read/hand-guessed) plus
+`git ls-tree` on dv/ and docs/dv/ (tracked truth, so untracked cruft like stray
+.swp files cannot skew this) and a real glob() expansion of every DENY glob entry
+against the live filesystem. This is the same computation already run live,
+end-to-end, in 09-deny-enum-run.txt (shadow-stage build from `git ls-tree -r`,
+the real _cleanroom_apply_deny_with_allow function sourced from
+ci/make-cleanroom.sh, before/after diff) -- both methods agree on every entry.
+
+Authority shape: default-deny for dv/** (allow: ['dv/auto_dv']) and docs/dv/** (allow: ['FENCE.md', 'SIM_RECIPE.md', 'TB_CONTRACT.md', 'dv_principles.md']);
+plain unconditional deny for everything else (19 rows in DENY=(...), 22 after glob
+expansion).
+
+Authoritative effective-deny set (today's snapshot, fully expanded): 36 entries
+Mirror in .mex/AGENTS.md 'Fence-aware scope' (as committed, fully expanded): 36 entries
 
 Only in authoritative (missing from mirror): []
 Only in mirror (not in authoritative):        []
+Mirror row(s) as written NOT found verbatim (backticked) in committed .mex/AGENTS.md: []
 
-RESULT: PASS -- deny list mirrored in .mex/AGENTS.md matches ci/make-cleanroom.sh DENY array exactly (set-equal after path-separator/brace-set normalization).
+RESULT: PASS -- mirror matches the authoritative effective-deny set exactly (empty
+diff, both pre- and post- glob/brace expansion), and every row as written is
+verified present, verbatim, in the committed .mex/AGENTS.md.
