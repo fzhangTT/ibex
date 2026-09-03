@@ -240,6 +240,21 @@ def self_test() -> int:
             cond = True
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist refuses a testlist whose gated trees nest")
+        for label, mutate in (
+                ("red_fixture with expected_fail", lambda d: d["tests"][0].update(red_fixture=True, expected_fail=True, measured=False)),
+                ("red_fixture with measured true", lambda d: d["tests"][0].update(red_fixture=True, measured=True, tier="smoke")),
+                ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
+            t2 = load_yaml(C.TESTLIST_YAML)
+            mutate(t2)
+            f = Path(td) / "testlist_bad.yaml"
+            f.write_text(_y.safe_dump(t2, sort_keys=False), encoding="utf-8")
+            try:
+                load_testlist(f)
+                cond = False
+            except SystemExit:
+                cond = True
+            ok &= cond
+            print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -253,6 +268,15 @@ def self_test() -> int:
 
 
 # --- Testlist -------------------------------------------------------------------------------
+def debug_only_from_knobs() -> set[str]:
+    """Plusarg names of the knobs gen_tb_knobs.yaml marks debug_only: TB Infra's one origin of the property;
+    the codegen names each plusarg gen_<knob name>."""
+    if not C.TB_KNOBS_YAML.is_file():
+        die(f"{C.TB_KNOBS_YAML}: missing (the debug_only origin)")
+    src = load_yaml(C.TB_KNOBS_YAML)
+    return {C.KNOB_PLUSARG_PREFIX + str(p["name"]) for p in (src.get("plusargs") or []) if p.get("debug_only")}
+
+
 def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
     data = load_yaml(path)
     if not isinstance(data, dict) or data.get("schema_version") != C.TESTLIST_SCHEMA_VERSION:
@@ -311,6 +335,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: test {t['name']} tier {t['tier']!r} not in {C.ALL_TIERS}")
         if t["tier"] == C.CHECK_TIER and t.get("measured", True):
             die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false (Critic R-01)")
+        if t.get("red_fixture"):
+            if t.get("expected_fail"):
+                die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")
+            if t.get("measured", True):
+                die(f"{path}: test {t['name']}: a red_fixture must be measured: false (never counted as coverage)")
         if t["build"] not in builds:
             die(f"{path}: test {t['name']} names unknown build {t['build']!r}")
         if t["owner"] not in C.OWNER_ROLES:
@@ -343,6 +372,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             if name not in known_plusargs and not name.startswith(C.VCS_PLUSARG_PREFIX):
                 die(f"{path}: test {t['name']} plusarg {pa!r}: name {name!r} is neither a PLUSARG_* of "
                     f"{C.TB_PKG_SV.name} nor a simulator/UVM plusarg (P-06 single source)")
+    declared = set(data.get("debug_only_plusargs") or [])
+    from_knobs = debug_only_from_knobs()
+    if declared != from_knobs:
+        die(f"{path}: debug_only_plusargs {sorted(declared)} disagrees with the knobs marked debug_only in "
+            f"{C.TB_KNOBS_YAML.name} {sorted(from_knobs)}; gen_tb_knobs.yaml is the one origin")
     return data
 
 

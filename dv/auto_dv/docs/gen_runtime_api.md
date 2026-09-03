@@ -140,7 +140,15 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   the whole simple command), `(core dumped)`, `timeout: sending signal`; TB or ISS log text such as
   "Illegal instruction (hart 0)" never matches; the two real-shaped reports are pinned in
   `gen_verdict.py --self-test`); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
+  `red_fixture: true` (a TDD fixture that fails by design, never an RTL-bug candidate) turns FAIL into
+  RED-OK and PASS into FAIL ("red fixture passed unexpectedly": the checker it proves is dead); a
+  TIMEOUT stays TIMEOUT. RED-OK is never a regression failure and never coverage: the loader requires
+  `measured: false` on such an entry and refuses `expected_fail` beside it.
   The process exit code is recorded, never decisive.
+  The same decision is available from the command line for scripts: `gen_verdict.py --sim-log <sim.log>
+  --pass-marker <marker> --exit-code <simv rc> [--extra-log sim_stdout.log] [--stderr-log lsf.err]
+  [--timed-out] [--expected-fail] [--build-config opentitan]`; without `--exit-code` a clean log is FAIL
+  (unexplained exit code None), exactly as inside the flow.
 - `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
   declared-but-unhit bin or an unverifiable query turns a PASS into FAIL with the reason `fcov
   expectation unmet` or `fcov expectation unverifiable`. In a regression the check runs after every
@@ -214,7 +222,7 @@ gen_regress.py --repro <test> <seed> [--waves]
   coverage, cond, waves, local, max_parallel}, planned_runs, builds {name: dir, manifest, status,
   wall_s, vdb, lsf}, runs [result.yaml content + result_yaml + run_dir], coverage {merged_vdb,
   report_dir, dashboard_txt, merge_log, urg_rc, urg_cmd, input_vdbs, totals, dut_scope,
-  limited_design}, summary {planned, pass, fail, xfail, timeout, not_run, pass_rate_pct}, lsf_cost
+  limited_design}, summary {planned, pass, fail, xfail, timeout, not_run, red_ok, pass_rate_pct (red fixtures excluded)}, lsf_cost
   {jobs, cpu_s, wall_s, pend_s, slot_s, cpu_unknown_jobs}, lsf_jobs_left, git, tools, timing,
   testlist {path, sha256} (also in every result.yaml and round index entry, so a temporary testlist
   used for a self-test is identifiable even when the file itself is not retained).
@@ -374,6 +382,11 @@ owners, a tier-check test that is not `measured: false`, and any plusarg whose n
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
 `gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
+`debug_only_plusargs` has one origin: the knobs `dv/auto_dv/tb/gen_tb_knobs.yaml` marks `debug_only: true`
+(plusarg `gen_<knob name>`, the codegen's rule); `load_testlist` refuses the testlist unless its list equals
+that set. Test entry flags: `expected_fail` (an RTL-vs-intent bug candidate; FAIL reported as XFAIL) and
+`red_fixture` (a TDD fixture that fails by design; FAIL reported as RED-OK, an unexpected PASS as FAIL;
+requires `measured: false`, exclusive with `expected_fail`; kept out of the pass rate and of coverage).
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)
 

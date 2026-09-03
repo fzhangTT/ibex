@@ -155,7 +155,7 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append(f"Purpose-4 full regressions with coverage in the out root: **{len(rounds)}**.")
     L.append("")
     if rounds:
-        L.append("| Round | Tag / request | Started (UTC) | Runs pass/fail/total | Line | Cond | Toggle | FSM | Branch | Assert | Group | Gain vs prev (max pp) | LSF jobs | LSF CPU s | LSF slot s |")
+        L.append("| Round | Tag / request | Started (UTC) | Runs pass/fail/red-ok/total | Line | Cond | Toggle | FSM | Branch | Assert | Group | Gain vs prev (max pp) | LSF jobs | LSF CPU s | LSF slot s |")
         L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         prev: dict[str, Any] | None = None
         for i, m in enumerate(rounds, start=1):
@@ -168,7 +168,7 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
                       if isinstance(cov.get(k), float) and isinstance(prev.get(k), float)]
                 gain = f"{max(ds):+.2f}" if ds else "-"
             L.append(f"| {i} | {m.get('tag') or m.get('request') or '-'} | {m.get('started_utc')} | "
-                     f"{s.get('pass', 0)}/{s.get('fail', 0) + s.get('timeout', 0) + s.get('not_run', 0)}/{s.get('planned', 0)} | "
+                     f"{s.get('pass', 0)}/{s.get('fail', 0) + s.get('timeout', 0) + s.get('not_run', 0)}/{s.get('red_ok', 0)}/{s.get('planned', 0)} | "
                      + " | ".join(metric_cell(cov, k) for k in C.URG_METRICS)
                      + f" | {gain} | {cost.get('jobs', '-')} | {fmt(cost.get('cpu_s'))} | {fmt(cost.get('slot_s'))} |")
             prev = cov
@@ -200,10 +200,12 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
         for r in m.get("runs") or []:
             key = (r["test"], int(r["seed"]))
             latest[key] = dict(r, _reg=m.get("tag") or Path(m.get("outdir", "")).name)
-            h = history.setdefault(r["test"], {"runs": 0, "pass": 0, "wall": []})
+            h = history.setdefault(r["test"], {"runs": 0, "pass": 0, "red_ok": 0, "wall": []})
             h["runs"] += 1
             if r.get("verdict") in (C.VERDICT_PASS, C.VERDICT_XFAIL):
                 h["pass"] += 1
+            elif r.get("verdict") == C.VERDICT_RED_OK:
+                h["red_ok"] += 1
             if isinstance(r.get("wall_s"), (int, float)):
                 h["wall"].append(float(r["wall_s"]))
     if latest:
@@ -221,20 +223,20 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
             L.append(f"| {t} | {s} | {r.get('verdict')} | {str(r.get('reason') or '')[:80]} | {fcov} | {fmt(r.get('wall_s'))} | "
                      f"{lsf.get('job_id') or r.get('lsf_job_id') or '-'} | {r.get('owner') or '-'} | {r['_reg']} | `{r.get('sim_log')}` |")
         L.append("")
-        L.append("| Test | Runs | Passing runs | Pass rate % | Mean wall s | Max wall s |")
-        L.append("|---|---|---|---|---|---|")
+        L.append("| Test | Runs | Passing runs | Red-ok runs (fixtures) | Designed-outcome rate % | Mean wall s | Max wall s |")
+        L.append("|---|---|---|---|---|---|---|")
         for t, h in sorted(history.items()):
             mean = sum(h["wall"]) / len(h["wall"]) if h["wall"] else None
             mx = max(h["wall"]) if h["wall"] else None
-            rate = 100.0 * h["pass"] / h["runs"] if h["runs"] else None
-            L.append(f"| {t} | {h['runs']} | {h['pass']} | {fmt(rate)} | {fmt(mean)} | {fmt(mx)} |")
+            rate = 100.0 * (h["pass"] + h["red_ok"]) / h["runs"] if h["runs"] else None
+            L.append(f"| {t} | {h['runs']} | {h['pass']} | {h['red_ok']} | {fmt(rate)} | {fmt(mean)} | {fmt(mx)} |")
     else:
         L.append("No run recorded yet.")
     L.append("")
     L.append("## 4. LSF cost per regression")
     L.append("")
-    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | fcov checked/unmet/unverifiable | Runs w/o fcov manifest | Status |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | Runs pass/fail/red-ok/planned | fcov checked/unmet/unverifiable | Runs w/o fcov manifest | Status |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for m in regs:
         cost = m.get("lsf_cost") or {}
         sm = m.get("summary") or {}
@@ -242,7 +244,9 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
         fcov = f"{ft.get('checked', 0)}/{ft.get('unmet', 0)}/{ft.get('unverifiable', 0)}" if ft else "-"
         L.append(f"| {m.get('tag') or Path(m.get('outdir', '')).name} | {m.get('purpose') or '-'} | {m.get('requester') or '-'} | "
                  f"{cost.get('jobs', '-')} | {fmt(cost.get('cpu_s'))} | {fmt(cost.get('wall_s'))} | {fmt(cost.get('slot_s'))} | "
-                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | {fcov} | {sm.get('runs_without_fcov_manifest', '-')} | {m.get('status')} |")
+                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | "
+                 f"{sm.get('pass', 0)}/{sm.get('fail', 0) + sm.get('timeout', 0) + sm.get('not_run', 0)}/{sm.get('red_ok', 0)}/{sm.get('planned', 0)} | "
+                 f"{fcov} | {sm.get('runs_without_fcov_manifest', '-')} | {m.get('status')} |")
     L.append("")
     L.append("## 5. Run requests served")
     L.append("")

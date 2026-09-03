@@ -268,7 +268,7 @@ def main() -> int:
     sim_log = run_dir / C.SIM_LOG
     res = V.decide(sim_log, pass_marker, timed_out, bool(test.get("expected_fail")), rc,
                    extra_logs=[run_dir / C.SIM_STDOUT_LOG], build_config=build["build_config"],
-                   stderr_logs=[run_dir / C.LSF_ERR, run_log])
+                   stderr_logs=[run_dir / C.LSF_ERR, run_log], red_fixture=bool(test.get("red_fixture")))
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
     result: dict[str, Any] = {
@@ -285,7 +285,7 @@ def main() -> int:
         "finish_seen": res["finish_seen"], "marker_seen": res["marker_seen"], "pass_marker": pass_marker,
         "banner_seen": res["banner_seen"], "banner": res["banner"], "crash_signature": res.get("crash_signature"),
         "measured": measured, "mutation_id": build.get("mutation_id"),
-        "expected_fail": bool(test.get("expected_fail")), "owner": test["owner"],
+        "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")), "owner": test["owner"],
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},

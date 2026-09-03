@@ -102,7 +102,8 @@ def crash_signature(paths: list[Path]) -> str | None:
 
 def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc: int | None,
                  build_config: str, stderr_lines: list[str], sim_log_present: bool = True,
-                 expected_fail: bool = False, banner_lines: list[str] | None = None) -> dict[str, Any]:
+                 expected_fail: bool = False, banner_lines: list[str] | None = None,
+                 red_fixture: bool = False) -> dict[str, Any]:
     """The verdict rules on in-memory text (the self-test drives this with real log excerpts)."""
     if not sim_log_present and not timed_out:
         return {"verdict": C.VERDICT_FAIL, "reason": "sim.log missing", "evidence": "",
@@ -126,12 +127,19 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
             res.update(verdict=C.VERDICT_XFAIL, reason="expected-fail: " + res["reason"])
         elif res["verdict"] == C.VERDICT_PASS:
             res.update(verdict=C.VERDICT_FAIL, reason="unexpected PASS of an expected-fail test")
+    if red_fixture:
+        # A fixture exists to show a failure: FAIL is the designed outcome (RED-OK), PASS means the
+        # checker it proves is dead (FAIL); a TIMEOUT is not the designed failure and stays TIMEOUT.
+        if res["verdict"] == C.VERDICT_FAIL:
+            res.update(verdict=C.VERDICT_RED_OK, reason="red fixture failed as designed: " + res["reason"])
+        elif res["verdict"] == C.VERDICT_PASS:
+            res.update(verdict=C.VERDICT_FAIL, reason="red fixture passed unexpectedly: the failure it exists to show did not occur")
     return res
 
 
 def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fail: bool = False,
            rc: int | None = None, extra_logs: list[Path] | None = None, build_config: str = C.BUILD_CONFIG,
-           stderr_logs: list[Path] | None = None) -> dict[str, Any]:
+           stderr_logs: list[Path] | None = None, red_fixture: bool = False) -> dict[str, Any]:
     """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l); the
     config banner is taken from sim.log alone; crash signatures from lsf.err/run.log; PASS needs
     marker AND ($finish seen OR exit code 0) (P-02)."""
@@ -145,7 +153,7 @@ def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fai
         if p.is_file():
             stderr_lines += p.read_text(encoding="utf-8", errors="replace").splitlines()
     return decide_lines(lines, pass_marker, timed_out, rc, build_config, stderr_lines, sim_log.is_file(),
-                        expected_fail, banner_lines=sim_lines)
+                        expected_fail, banner_lines=sim_lines, red_fixture=red_fixture)
 
 
 BANNER = "GEN_CONFIG_BANNER build_config=opentitan"
@@ -225,6 +233,16 @@ def self_test() -> int:
         flag = "ok " if got == want else "BAD"
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+    # Red fixtures (testlist red_fixture: true): FAIL is the designed outcome, PASS is a dead checker.
+    red_fail = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True)
+    red_pass = decide_lines(B + REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True)
+    red_to = decide_lines([], "GEN_SMOKE_PASS", True, 124, "opentitan", [], False, red_fixture=True)
+    for name, got, want, needle in (("red fixture: real $fatal log is RED-OK", red_fail, C.VERDICT_RED_OK, "failed as designed"),
+                                    ("red fixture: real green log is FAIL (dead checker)", red_pass, C.VERDICT_FAIL, "passed unexpectedly"),
+                                    ("red fixture: timeout stays TIMEOUT", red_to, C.VERDICT_TIMEOUT, "timeout")):
+        cond = got["verdict"] == want and needle in got["reason"]
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} {name}: want {want} got {got['verdict']} ({got['reason'][:60]})")
     # The crash regex alone: the job script's report shape for every signal word, and the ISS line that stays clean.
     for width, fixture, word in (("7-digit PID", REAL_SHAPE_SEGV, "Segmentation fault"), ("3-digit PID", SHORT_PID_SEGV, "Segmentation fault"),
                                  ("1-digit PID", SHORT_PID_KILL, "Killed")):
@@ -284,12 +302,20 @@ def main() -> int:
     ap.add_argument("--pass-marker", default=None)
     ap.add_argument("--timed-out", action="store_true")
     ap.add_argument("--expected-fail", action="store_true")
+    ap.add_argument("--exit-code", type=int, default=None,
+                    help="simv exit code; without it a clean log is FAIL (unexplained exit code None), as in the flow")
+    ap.add_argument("--extra-log", type=Path, action="append", default=[],
+                    help="stdout capture scanned with sim.log (repeatable; gen_run.py passes sim_stdout.log)")
+    ap.add_argument("--stderr-log", type=Path, action="append", default=[],
+                    help="job-script stderr scanned for crash signatures (repeatable; lsf.err, run.log)")
+    ap.add_argument("--build-config", default=C.BUILD_CONFIG)
     a = ap.parse_args()
     if a.self_test:
         return self_test()
     if not a.sim_log:
         ap.error("--sim-log required")
-    res = decide(a.sim_log, a.pass_marker, a.timed_out, a.expected_fail, build_config=C.BUILD_CONFIG)
+    res = decide(a.sim_log, a.pass_marker, a.timed_out, a.expected_fail, rc=a.exit_code, extra_logs=a.extra_log,
+                 build_config=a.build_config, stderr_logs=a.stderr_log)
     for k, v in res.items():
         print(f"{k}: {v}")
     return 0 if res["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL) else 2

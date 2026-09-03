@@ -20,6 +20,9 @@ CONFIG_SCRIPT = REPO_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = REPO_ROOT / "ci" / "check_fcov_expectations.py"
 TB_DIR = REPO_ROOT / "dv" / "auto_dv" / "tb"
 TB_PKG_SV = TB_DIR / "gen_tb_pkg.sv"
+# TB Infra's knob table (one origin of the debug_only property); its codegen names the plusarg gen_<knob name>.
+TB_KNOBS_YAML = REPO_ROOT / "dv" / "auto_dv" / "tb" / "gen_tb_knobs.yaml"
+KNOB_PLUSARG_PREFIX = "gen_"
 FCOV_EXPECT_DIR = REPO_ROOT / "dv" / "auto_dv" / "fcov_expectations"
 DOCS_DIR = REPO_ROOT / "dv" / "auto_dv" / "docs"
 DASHBOARD_MD = DOCS_DIR / "gen_dashboard.md"
@@ -209,7 +212,7 @@ ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
-                      "expected_fail", "component", "notes", "measured", "program")
+                      "expected_fail", "component", "notes", "measured", "program", "red_fixture")
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
 PROGRAM_KEYS = ("riscv_dv_test", "directed", "seed", "extra_args", "spike_check")
@@ -281,6 +284,7 @@ VERDICT_FAIL = "FAIL"
 VERDICT_TIMEOUT = "TIMEOUT"
 VERDICT_NOT_RUN = "NOT_RUN"
 VERDICT_XFAIL = "XFAIL"
+VERDICT_RED_OK = "RED-OK"   # a red fixture failed as designed (never a regression failure, never coverage)
 END_MARKER_DEFAULT = "$finish"
 # simv exit codes that do not by themselves fail a clean-log run (0; 124 = coreutils timeout, TIMEOUT).
 EXIT_CODES_CLEAN = (0, 124)

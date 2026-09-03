@@ -26,6 +26,9 @@
 #   feature_groups         tags for the targeted tier (--group)
 #   cocotb_module          dotted Python module for cocotb-driven tests (null = pure SV)
 #   expected_fail          true = an RTL-vs-intent bug candidate; FAIL is reported as XFAIL
+#   red_fixture            true = a TDD red fixture that fails by design; FAIL is reported as RED-OK,
+#                          an unexpected PASS as FAIL; kept out of the pass rate and of coverage
+#                          (must be measured: false; exclusive with expected_fail)
 #   component              TB component this test exercises (purpose-2 selection)
 #   measured               default true; false = mutation-evidence or forced-error test that never
 #                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
@@ -36,8 +39,8 @@ schema_version: 1
 #     first covergroup exists (a null manifest there FAILs the run; Critic P-07). Empty until then.
 #   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: probe
 #     P6, the CSR debug compare); a measured run enabling one is refused in writing (NOT_RUN).
-#     Every name must be a PLUSARG_* of dv/auto_dv/tb/gen_tb_pkg.sv (the one origin; here
-#     PLUSARG_DBG_CSR_PROBE); load_testlist refuses an undeclared name.
+#     The one origin of the property is dv/auto_dv/tb/gen_tb_knobs.yaml (debug_only: true);
+#     load_testlist refuses this list unless it equals that set (plusarg = gen_<knob name>).
 fcov_manifest_required_tiers: []
 debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace]
 
@@ -89,8 +92,8 @@ builds:
     pre_build:
       - bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib
     extra_ldflags: ["-L{outdir}/lib", "-lgen_isa_shim", "-Wl,-rpath,{outdir}/lib", "-Wl,-rpath-link,{mirror}/tools/spike/lib"]
-    # Run-time library search path of every run: the shim beside the simv and the mirror's spike (the
-    # shim carries no rpath; -rpath-link above resolves its Spike dependencies at link time only).
+    # Run-time library search path of every run: the shim beside the simv and the mirror's spike
+    # (-rpath-link above serves the link step only; LSF hosts see the mirror, never the clone).
     runtime_lib_dirs: ["{outdir}/lib", "{mirror}/tools/spike/lib"]
 
 tests:
@@ -193,6 +196,30 @@ tests:
     component: gen_isa_shim
     measured: true
 
+  - name: gen_ut_lockstep_forced_red
+    description: forced red of the lock-step comparator (TB Infra T-068) with the model ISA string overridden to plain rv32imc, so every Zc retirement mismatches; a red fixture, recorded RED-OK (an unexpected PASS is FAIL); never in a measured tier
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_isa_string=rv32imc_zicsr_zifencei
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: [bringup, isa_model, red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    red_fixture: true
+    component: gen_isa_shim
+    measured: false
+
   # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)
   - name: gen_test_boot_retire
     description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; timing-only regime knobs drawn and scheduled from the seed (Test Writer)
@@ -233,5 +260,6 @@ tests:
     feature_groups: [bringup, template, red]
     cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
     expected_fail: false
+    red_fixture: true
     component: gen_tb_top
     measured: false

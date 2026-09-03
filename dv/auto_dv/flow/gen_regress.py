@@ -172,13 +172,18 @@ def fcov_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
-    counts = {v: 0 for v in (C.VERDICT_PASS, C.VERDICT_FAIL, C.VERDICT_XFAIL, C.VERDICT_TIMEOUT, C.VERDICT_NOT_RUN)}
+    counts = {v: 0 for v in (C.VERDICT_PASS, C.VERDICT_FAIL, C.VERDICT_XFAIL, C.VERDICT_TIMEOUT, C.VERDICT_NOT_RUN,
+                             C.VERDICT_RED_OK)}
     for r in runs:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
     n = len(runs)
+    red_ok = counts.pop(C.VERDICT_RED_OK)
+    # Red fixtures are outside the pass rate: RED-OK is their designed outcome, an unexpected PASS is
+    # already a FAIL in counts.
+    regular = n - red_ok
     good = counts[C.VERDICT_PASS] + counts[C.VERDICT_XFAIL]
-    out = {"planned": n, **{k.lower(): v for k, v in counts.items()},
-           "pass_rate_pct": round(100.0 * good / n, 2) if n else None}
+    out = {"planned": n, **{k.lower(): v for k, v in counts.items()}, "red_ok": red_ok,
+           "pass_rate_pct": round(100.0 * good / regular, 2) if regular else None}
     # Trust-triad rule 3 accounting (P-07): runs without a declared-bins manifest are listed, never silent.
     exempt = sorted({r["test"] for r in runs if not r.get("fcov_expectation_file")})
     out["runs_without_fcov_manifest"] = sum(1 for r in runs if not r.get("fcov_expectation_file"))
@@ -260,6 +265,10 @@ def self_test() -> int:
     sm = summarize(runs())
     cond = sm["runs_without_fcov_manifest"] == 2 and sm["tests_without_fcov_manifest"] == ["gen_a", "gen_b"]
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "summarize counts runs without a manifest")
+    sm = summarize([{"test": "gen_red", "verdict": C.VERDICT_RED_OK}, {"test": "gen_p", "verdict": C.VERDICT_PASS},
+                    {"test": "gen_f", "verdict": C.VERDICT_FAIL}])
+    cond = sm["red_ok"] == 1 and sm["pass"] == 1 and sm["fail"] == 1 and sm["pass_rate_pct"] == 50.0 and sm["planned"] == 3
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"summarize keeps RED-OK out of the pass rate: {sm['red_ok']} red_ok, rate {sm['pass_rate_pct']}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -444,7 +453,7 @@ def main() -> int:
     U.dump_yaml(manifest, outdir / "manifest.yaml")
     s = manifest["summary"]
     ft = (manifest.get("fcov") or {}).get("totals") or {}
-    U.log(f"done: {s['pass']} pass, {s['fail']} fail, {s['xfail']} xfail, {s['timeout']} timeout, "
+    U.log(f"done: {s['pass']} pass, {s['fail']} fail, {s['xfail']} xfail, {s['red_ok']} red_ok, {s['timeout']} timeout, "
           f"{s['not_run']} not_run of {s['planned']}; fcov expectations checked {ft.get('checked', 0)} "
           f"(unmet {ft.get('unmet', 0)}, unverifiable {ft.get('unverifiable', 0)}); {s['runs_without_fcov_manifest']} "
           f"run(s) without an fcov manifest {s['tests_without_fcov_manifest']}; manifest {outdir / 'manifest.yaml'}")
