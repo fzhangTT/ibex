@@ -12,7 +12,8 @@ Manifest schema (`<test>.fcov.yaml`, file stem == test name):
       - gen_regime_cg.cp_regime.bin_fast
     anti_vacuity:                         # one note per declared bin: why a hit evidences the stimulus
       gen_regime_cg.cp_regime.bin_fast: "regime knob sampled once per phase; fast only when the schedule selects it"
-The checker reads only `bins:`; the flow reads the rest (notes are carried, never interpreted).
+The checker reads only `bins:` (raw `- token` lines, so bins are written bare, never quoted); the
+flow reads the rest (anti-vacuity notes are carried, never interpreted). No other keys.
 
 Usage:
     gen_fcov.py --validate <manifest.fcov.yaml> [...]     # schema check (exit 1 on a violation)
@@ -24,6 +25,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -33,7 +35,8 @@ from typing import Any
 import gen_flow_const as C
 import gen_flow_util as U
 
-BIN_RE = re.compile(r"^(gen_\w+)\.([A-Za-z_]\w*)\.(\S+)$")
+BIN_RE = re.compile(r"^(gen_\w+)\.([A-Za-z_]\w*)\.([^.\s]+)$")
+QUOTED_BIN_LINE_RE = re.compile(r"""^\s*-\s*["']""")
 RESULT_LINE_RE = re.compile(r"^FCOV-EXPECTATION: (\S+) = (HIT|UNHIT|MISSING-FROM-REPORT) \(count=(\S+)\)")
 STATUS_BY_EXIT = C.FCOV_EXIT_CODES
 REASON_UNMET = "fcov expectation unmet"
@@ -80,15 +83,27 @@ def validate_manifest(path: Path, test_name: str | None = None) -> tuple[dict[st
             problems.append(f"bin {b!r}: anti_vacuity note missing")
     for extra in set(notes) - set(bins):
         problems.append(f"anti_vacuity note for undeclared bin {extra!r}")
-    unknown = set(data) - {"test", "owner", "bins", "anti_vacuity", "notes"}
+    unknown = set(data) - {"test", "owner", "bins", "anti_vacuity"}
     if unknown:
         problems.append(f"unknown keys {sorted(unknown)}")
+    # The checker reads the raw `- <token>` lines: a quoted YAML entry would reach it with its quotes.
+    in_bins = False
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if re.match(r"^bins:\s*$", line):
+            in_bins = True
+            continue
+        if line and not line.startswith(" ") and not line.startswith("-"):
+            in_bins = False
+        if in_bins and QUOTED_BIN_LINE_RE.match(line):
+            problems.append(f"quoted bin line {line.strip()!r}: write the bin bare (the checker reads the raw token)")
     return data, problems
 
 
 def run_checker(manifest: Path, vdb: Path | None, cm_name: str | None, log_path: Path,
-                report_dir: Path | None = None) -> dict[str, Any]:
-    """ci/check_fcov_expectations.py on one test slice; the per-bin lines are parsed, not judged."""
+                report_dir: Path | None = None, declared_bins: list[str] | None = None) -> dict[str, Any]:
+    """ci/check_fcov_expectations.py on one test slice; the per-bin lines are parsed, not judged.
+    `declared` counts the manifest's bins (validated), never the lines the checker managed to print."""
     argv = [sys.executable, str(C.FCOV_CHECKER), "--manifest", str(manifest)]
     if report_dir is not None:
         argv += ["--report-dir", str(report_dir)]
@@ -108,11 +123,31 @@ def run_checker(manifest: Path, vdb: Path | None, cm_name: str | None, log_path:
             bins[m.group(1)] = {"state": m.group(2), "count": m.group(3)}
     status = STATUS_BY_EXIT.get(r.returncode, "UNKNOWN")
     unmet = sorted(b for b, v in bins.items() if v["state"] != "HIT")
+    declared = len(declared_bins) if declared_bins is not None else len(bins)
+    cause = protocol_cause(r.stdout + r.stderr, log_path.parent) if status == "PROTOCOL_ERROR" else None
     return {"exit_code": r.returncode, "status": status, "log": str(log_path), "bins": bins,
-            "unmet_bins": unmet, "declared": len(bins), "hit": sum(1 for v in bins.values() if v["state"] == "HIT"),
+            "unmet_bins": unmet, "declared": declared, "hit": sum(1 for v in bins.values() if v["state"] == "HIT"),
+            "cause": cause,
             "reason": None if status == "PASS" else
             (f"{REASON_UNMET}: {len(unmet)} declared bin(s) not hit {unmet[:5]}" if status == "UNHIT"
-             else f"{REASON_UNVERIFIABLE}: checker exit {r.returncode} (see {log_path.name})")}
+             else f"{REASON_UNVERIFIABLE}: {cause or f'checker exit {r.returncode}'} (see {log_path.name})")}
+
+
+def protocol_cause(checker_output: str, run_dir: Path) -> str:
+    """Name the cause of a checker protocol error from what is on disk (the checker's own message
+    quotes urg's tail, which does not say what was missing)."""
+    if "urg per-test report failed" in checker_output:
+        reports = sorted(run_dir.glob("fcovexp_*/urgReport"))
+        if reports and not (reports[-1] / "grpinfo.txt").is_file():
+            return "per-test urg report has no grpinfo.txt (no covergroup in this vdb)"
+        return "per-test urg report failed"
+    if "per-test isolation not confirmed" in checker_output:
+        return "per-test isolation not confirmed by the checker"
+    if "no covergroup bin rows parsed" in checker_output:
+        return "grpinfo.txt holds no covergroup bin rows"
+    if "no bins declared" in checker_output:
+        return "manifest declares no bins"
+    return "checker protocol error"
 
 
 def check_test(test: dict[str, Any], vdb: Path, cm_name: str, run_dir: Path) -> dict[str, Any]:
@@ -128,8 +163,12 @@ def check_test(test: dict[str, Any], vdb: Path, cm_name: str, run_dir: Path) -> 
         return {"status": "PROTOCOL_ERROR", "exit_code": None, "log": str(log), "bins": {}, "unmet_bins": [],
                 "declared": 0, "hit": 0, "manifest": str(mpath),
                 "reason": f"{REASON_UNVERIFIABLE}: manifest schema violation ({problems[0]})"}
-    res = run_checker(mpath, vdb, cm_name, run_dir / "fcov_check.log")
+    # Retain the manifest as used beside the run: the proof never rests on an uncommitted working file.
+    shutil.copyfile(mpath, run_dir / "fcov_manifest_used.yaml")
+    res = run_checker(mpath, vdb, cm_name, run_dir / "fcov_check.log", declared_bins=list((data or {}).get("bins", [])))
     res["manifest"] = str(mpath)
+    res["manifest_copy"] = str(run_dir / "fcov_manifest_used.yaml")
+    res["manifest_sha256"] = U.sha256_file(mpath)
     res["anti_vacuity"] = {b: (data or {}).get("anti_vacuity", {}).get(b) for b in (data or {}).get("bins", [])}
     res["owner"] = (data or {}).get("owner")
     return res
@@ -169,6 +208,13 @@ def self_test() -> int:
         got = all(any(w in p for p in problems) for w in want)
         ok &= got
         print("SELF-TEST", "ok " if got else "BAD", f"fabricated manifest: schema rejects stem/owner/namespace/note violations ({len(problems)} problems)")
+        quoted = d / "gen_selftest_quoted.fcov.yaml"
+        quoted.write_text(f"test: gen_selftest_quoted\nowner: runtime\nbins:\n  - \"{cg}.{cp}.bin_a\"\n  - {cg}.{cp}.bin.extra\n"
+                          f"anti_vacuity:\n  {cg}.{cp}.bin_a: x\n  {cg}.{cp}.bin.extra: x\n", encoding="utf-8")
+        _, problems = validate_manifest(quoted)
+        got = any("quoted bin line" in p_ for p_ in problems) and any("gen_ namespace" in p_ for p_ in problems)
+        ok &= got
+        print("SELF-TEST", "ok " if got else "BAD", f"fabricated manifest: quoted bin line and a fourth dotted part are rejected ({len(problems)} problems)")
         rep_hit = d / "report_hit"
         fabricate_report(rep_hit, cg, cp, {"bin_a": 3, "bin_b": 1})
         res = run_checker(good, None, None, d / "hit.log", report_dir=rep_hit)
@@ -187,10 +233,11 @@ def self_test() -> int:
         cond = res["status"] == "UNHIT" and res["bins"].get(f"{cg}.{cp}.bin_b", {}).get("state") == "MISSING-FROM-REPORT"
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: a declared bin absent from the report counts as unmet: {res['bins'].get(f'{cg}.{cp}.bin_b')}")
-        res = run_checker(good, None, None, d / "noreport.log", report_dir=d / "does_not_exist")
-        cond = res["status"] == "PROTOCOL_ERROR" and res["reason"].startswith(REASON_UNVERIFIABLE)
+        res = run_checker(good, None, None, d / "noreport.log", report_dir=d / "does_not_exist",
+                          declared_bins=[f"{cg}.{cp}.bin_a", f"{cg}.{cp}.bin_b"])
+        cond = res["status"] == "PROTOCOL_ERROR" and res["reason"].startswith(REASON_UNVERIFIABLE) and res["declared"] == 2
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: unverifiable query is not a pass: {res['status']}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: unverifiable query is not a pass and keeps declared=2: {res['status']} declared={res['declared']}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

@@ -203,8 +203,12 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
         for (t, s), r in sorted(latest.items()):
             lsf = r.get("lsf") or {}
             fc = r.get("fcov_check") or {}
-            fcov = "no manifest" if not fc or fc.get("status") == "NO_MANIFEST" else \
-                f"{fc.get('status')} {fc.get('hit', 0)}/{fc.get('declared', 0)} bins"
+            if not r.get("fcov_expectation_file"):
+                fcov = "no manifest"
+            elif not fc or fc.get("status") == "NO_MANIFEST":
+                fcov = f"not checked (verdict {r.get('verdict')})"
+            else:
+                fcov = f"{fc.get('status')} {fc.get('hit', 0)}/{fc.get('declared', 0)} bins"
             L.append(f"| {t} | {s} | {r.get('verdict')} | {str(r.get('reason') or '')[:80]} | {fcov} | {fmt(r.get('wall_s'))} | "
                      f"{lsf.get('job_id') or r.get('lsf_job_id') or '-'} | {r.get('owner') or '-'} | {r['_reg']} | `{r.get('sim_log')}` |")
         L.append("")

@@ -355,8 +355,9 @@ anti_vacuity:                           # one note per declared bin, carried int
 ```
 
 `gen_fcov.validate_manifest` enforces: stem == `test` == testlist entry, owner is a role slug,
-bins non-empty, unique, in the `gen_` namespace with three dot-separated parts, one non-empty
-anti-vacuity note per bin, no note for an undeclared bin. `python3 gen_fcov.py --validate` checks
+bins non-empty, unique, in the `gen_` namespace with exactly three dot-separated parts, written bare
+(a quoted `- "..."` line is rejected because the checker reads the raw token), one non-empty
+anti-vacuity note per bin, no note for an undeclared bin, no other keys. `python3 gen_fcov.py --validate` checks
 every manifest under the home. The checker itself reads only `bins:` (its parser stops at the next
 top-level key), keyed `<cg>.<cp>.<bin>` from URG's grpinfo.txt with counts summed across instances
 of the same covergroup (TB Infra's C7 naming: `gen_<feature>_cg`).
@@ -369,8 +370,12 @@ writer to the shared vdb has finished; a standalone `gen_run.py --fcov-check` ru
 (single writer). Result: `result.yaml: fcov_check` with status (PASS, UNHIT, PROTOCOL_ERROR,
 NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts, `unmet_bins`, the notes, the
 checker log. A PASS/XFAIL run becomes FAIL with the distinct reason `fcov expectation unmet: ...`
-(declared but unhit) or `fcov expectation unverifiable: ...` (protocol error: unverifiable is not a
-pass). The regression manifest carries `fcov.totals` (checked, pass, unmet, unverifiable) and
+(declared but unhit) or `fcov expectation unverifiable: <cause>` (protocol error: unverifiable is not
+a pass; the flow names the cause from what is on disk, for example `per-test urg report has no
+grpinfo.txt (no covergroup in this vdb)`). `declared` counts the validated manifest's bins even when
+the checker printed nothing. The manifest as used is copied to `runs/<run>/fcov_manifest_used.yaml`,
+and every regression copies its testlist to `<outdir>/testlist_used.yaml`, so no proof rests on an
+uncommitted working file. The regression manifest carries `fcov.totals` (checked, pass, unmet, unverifiable) and
 `fcov.per_test`; the dashboard shows the per-test status and the per-regression triple.
 
 Manifest-required policy: a run without a manifest is counted (`summary.runs_without_fcov_manifest`);
