@@ -613,3 +613,29 @@ the export header's sources= at the canary; empty today), export_sources stays t
 the codegen cross-check, and the tool fails only on emitted rows. Rides plan v2i; no scoped round.
 Counted for the closure report as a mechanism defect caught by the team's own review before it took
 effect.
+
+## Q-016 - 2026-09-03 - QUESTION (to owner; NumJumps semantic, bug candidate B20; wording by the DV Lead)
+
+Q-016 (B20 / rtl-arch D-NUMJUMPS-FENCEI; same shape as Q-004/Q-005). NumJumps (mhpmcounter7) counts
+FENCE.I because the RTL implements it as a jump to pc + 4 to flush the prefetch buffer and the
+instruction cache (rtl/ibex_decoder.sv:704-720; the decoder's end-of-decode override at :905-918 does
+not touch it because FENCE.I is legal); `doc/03_reference/performance_counters.rst:39` lists j, jal, jr
+and jalr only. rtl-arch's reading (`dv/auto_dv/evidence/gen_hpm_event_defs.md` section 3): an
+implementation artifact sharing the jump path, severity low, RTL fix a one-term gate on perf_jump;
+recommended direction: follow the documentation. The DV Lead files it as bug candidate B20 by the bug
+log's own B-versus-D criterion (an event the doc excludes is the B11 class, not a mis-stated
+convention). Decision blocked: fix the RTL, or accept and re-document? Default applied while pending:
+the counter checker follows the doc, TP-PMC-061 is an expected-fail item in its own group
+(gen_pmc_hpm_b20_fencei_xfail, witness bin CG-PMC-003.cr_variant_rel.fencei_gt), TP-PMC-040 keeps
+fence.i out of its windows, not excluded from the gate without a recorded ruling. The withdrawn
+companion candidate (illegal branch/JALR encodings counted before the trap) is refuted in the plan
+itself, citing rtl/ibex_decoder.sv:905-918.
+
+## LOG-021a - 2026-09-03 - NOTE (DV Lead work-directory files emptied by a redirect; restored from a minutes-old copy)
+
+About 12:20 UTC the DV Lead ran `git show HEAD:<part> > <part>` on five part files under
+dv/auto_dv/work/dv-lead/ while reverting the withdrawn candidate; work/ is git-ignored, so git failed
+and the redirect had already emptied the files. All five were restored byte-for-byte from a scratchpad
+copy taken minutes earlier (whole parts tree compared identical), a fresh snapshot taken, and the
+DV Lead's memory updated. Nothing under docs/ or tools/ was touched; nothing to commit. Disclosed
+unprompted.
