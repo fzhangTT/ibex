@@ -20,7 +20,7 @@ from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, MEMORY_MAP, PLUSARGS
 PASS_MARKER = "GEN_UT_EXPORT_PASS"
 SETTLE_CYCLES = 40   # a store's RVFI record retires after its bus response (max rvalid regime latency 32) plus the pipeline
 FIRST_FETCH_OFFSET = 0x80   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv)
-MRET_INSN, DRET_INSN = 0x30200073, 0x7B200073   # RISC-V privileged / debug spec encodings: pc_wdata is not the target (plan C-1)
+MRET_INSN, DRET_INSN = CONSTANTS["GEN_INSN_MRET"], CONSTANTS["GEN_INSN_DRET"]   # their pc_wdata is not the target (plan C-1)
 
 
 def plus(name, default=None):

@@ -148,6 +148,13 @@ CONSTANTS = {
     "GEN_FINISH_TIMEOUT_CYCLES_DEFAULT": 20000,
     "GEN_IRQ_FAST_W": 15,
     "GEN_IRQ_FAST_MASK": 2147418112,
+    "GEN_CSR_MARCHID_VALUE": 22,
+    "GEN_CSR_CPUCTRLSTS": 1984,
+    "GEN_CSR_SECURESEED": 1985,
+    "GEN_MHPM_COUNTER_NUM": 10,
+    "GEN_INSN_MRET": 807403635,
+    "GEN_INSN_DRET": 2065694835,
+    "GEN_TDATA1_IBEX_RDATA": 671092808,
 }
 
 REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)
@@ -198,18 +205,35 @@ CMD = {  # bridge command kinds (cmd_kind codes)
 EXPORT_RECORD_FIELDS = ('order', 'pc_rdata', 'pc_wdata', 'insn', 'trap', 'halt', 'intr', 'mode', 'ixl', 'rs1_addr', 'rs1_rdata', 'rs2_addr', 'rs2_rdata', 'rs3_addr', 'rs3_rdata', 'rd_addr', 'rd_wdata', 'mem_addr', 'mem_rmask', 'mem_wmask', 'mem_rdata', 'mem_wdata', 'ext_pre_mip', 'ext_post_mip', 'ext_nmi', 'ext_nmi_int', 'ext_debug_req', 'ext_debug_mode', 'ext_rf_wr_suppress', 'ext_ic_scr_key_valid', 'ext_irq_valid', 'ext_exp_valid', 'ext_exp_insn', 'ext_exp_last', 'ext_mcycle', 'cycle')
 EXPORT_COUNTER_FIELDS = ('mhpmcounter3', 'mhpmcounter4', 'mhpmcounter5', 'mhpmcounter6', 'mhpmcounter7', 'mhpmcounter8', 'mhpmcounter9', 'mhpmcounter10', 'mhpmcounter11', 'mhpmcounter12', 'mhpmcounter3h', 'mhpmcounter4h', 'mhpmcounter5h', 'mhpmcounter6h', 'mhpmcounter7h', 'mhpmcounter8h', 'mhpmcounter9h', 'mhpmcounter10h', 'mhpmcounter11h', 'mhpmcounter12h')
 EXPORT_SOURCES = ('ibus', 'dbus', 'pin', 'alert', 'misc', 'icram', 'scrkey', 'regime')
-EXPORT_EVENTS = (  # (source, event or '<name>', fields)
+EXPORT_EVENTS = (  # (source, event, fields); one exact event per row
     ('ibus', 'req', ('addr', 'we', 'be')),
     ('ibus', 'gnt', ('addr', 'we', 'be', 'req_cycle', 'outstanding_after')),
     ('ibus', 'rvalid', ('addr', 'we', 'err', 'intg_injected', 'outstanding_after')),
     ('dbus', 'req', ('addr', 'we', 'be')),
     ('dbus', 'gnt', ('addr', 'we', 'be', 'req_cycle', 'outstanding_after')),
     ('dbus', 'rvalid', ('addr', 'we', 'err', 'intg_injected', 'outstanding_after')),
-    ('pin', '<name>', ('value',)),
-    ('alert', '<name>', ('value',)),
-    ('misc', '<name>', ('value',)),
+    ('pin', 'irq_software', ('value',)),
+    ('pin', 'irq_timer', ('value',)),
+    ('pin', 'irq_external', ('value',)),
+    ('pin', 'irq_fast', ('idx', 'value')),
+    ('pin', 'irq_nm', ('value',)),
+    ('pin', 'debug_req', ('value',)),
+    ('pin', 'fetch_enable', ('value',)),
+    ('pin', 'mcounteren_writable', ('value',)),
+    ('alert', 'alert_minor', ('value',)),
+    ('alert', 'alert_major_bus', ('value',)),
+    ('alert', 'alert_major_internal', ('value',)),
+    ('alert', 'double_fault_seen', ('value',)),
+    ('misc', 'irq_pending', ('value',)),
+    ('misc', 'core_busy', ('value',)),
+    ('misc', 'crash_dump_current_pc', ('value',)),
+    ('misc', 'crash_dump_next_pc', ('value',)),
+    ('misc', 'crash_dump_last_data_addr', ('value',)),
+    ('misc', 'crash_dump_exception_pc', ('value',)),
+    ('misc', 'crash_dump_exception_addr', ('value',)),
     ('icram', 'inject', ('way', 'index')),
-    ('scrkey', '<name>', ('value',)),
+    ('scrkey', 'req', ('value',)),
+    ('scrkey', 'valid', ('value',)),
     ('regime', 'phase', ('knob_id', 'value_idx', 'phase_idx')),
 )
 

@@ -1,0 +1,28 @@
+# RED evidence (T-102): comparator lines of the Test Writer's batch-1 run dv/auto_dv/work/test-writer/out_head/rst_boot_s1/stdout.log (tree at d58bdeb, 2026-09-03; green fire-checks, comparator UVM_ERRORs); filtered copy, banner + [isa_*] lines
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/rst_boot/s1/prog/prog.vmem tohost=0x80000440
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 136500: uvm_test_top.env.sb [isa_rd] rd model=x23/00000000 dut=x23/00000100 (order=20 pc=80000148 insn=7c006bf3 trap=0 intr=0 rd=x23/00000100 mem=fffff840 w0000 r1111 mode=3 cyc=131)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 143500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000100 (order=21 pc=8000014c insn=017fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=138)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 281500: uvm_test_top.env.sb [isa_rd] rd model=x19/f0000000 dut=x19/28001048 (order=68 pc=80000208 insn=7a1079f3 trap=0 intr=0 rd=x19/28001048 mem=fffff85f w0000 r1111 mode=3 cyc=276)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 286500: uvm_test_top.env.sb [isa_mem] store data model=f0000000 dut=28001048 (order=69 pc=8000020c insn=013fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=281)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 344500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000027c dut=80000264 (order=90 pc=80000260 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=339)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 344500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=90 pc=80000260 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=339)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 366500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=96 pc=80000290 insn=30002673 trap=1 intr=0 rd=x0/00000000 mem=fffffd00 w0000 r1111 mode=0 cyc=361)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 420500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000294 dut=800003c0 (order=113 pc=800003bc insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=415)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(292) @ 447000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=119 mismatches=8 folded=0 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=80

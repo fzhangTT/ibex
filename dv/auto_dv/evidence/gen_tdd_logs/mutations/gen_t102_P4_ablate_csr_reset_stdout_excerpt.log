@@ -1,0 +1,7 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102/mut/P4/P4_ablate_csr_reset/stdout.log (config banner, first three comparator lines, ISA compare summary, UVM report counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(383) @ 1107000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=282 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=
+ 11070.00ns INFO     cocotb.gen_tb_top                  gen_test_csr_reset GEN_TEST_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                        11070.01           0.27      40441.59  **

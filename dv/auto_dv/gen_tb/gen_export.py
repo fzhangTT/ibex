@@ -57,6 +57,8 @@ def read(path, seq, counters=False):
     for key, flds in rows.items():
         assert key in known and known[key] == flds, f"GEN_EXPORT: event header row {key} differs from the rendered EXPORT_EVENTS"
         assert key[0] in enabled, f"GEN_EXPORT: header row for a source not in sources= ({key[0]})"
+    for key in known:
+        assert key[0] not in enabled or key in rows, f"GEN_EXPORT: enabled source {key[0]} lacks its rendered header row {key}"
     # locate the marker: the flush with the requested seq, else the end marker
     marker_idx = None
     for i in range(n, len(lines)):
@@ -95,7 +97,7 @@ def read(path, seq, counters=False):
             assert len(toks) >= 4, f"GEN_EXPORT: short E line ({where})"
             cyc = _hex(toks[1], where)
             src, ev = toks[2], toks[3]
-            key = (src, ev) if (src, ev) in rows else (src, "<name>")
+            key = (src, ev)
             assert key in rows, f"GEN_EXPORT: E line for an unknown (source, event) {src}/{ev} ({where})"
             assert len(toks) == 4 + len(rows[key]), f"GEN_EXPORT: E {src} {ev} with {len(toks) - 4} fields, header row has {len(rows[key])} ({where})"
             events.append(Event(cyc, src, ev, tuple(_hex(x, where) for x in toks[4:])))

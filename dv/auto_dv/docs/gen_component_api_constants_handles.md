@@ -36,7 +36,10 @@ default_from, values, debug_only, desc; constants: name, value, derive, sv, sv_t
 boot_addr_default, boot_page_mask, mmio_base, mmio_size, registers{offset,size}; top level: schema_version,
 isa_string, plusargs, bridge_cmds, constants, memory_map, regime_windows); derived constants (`derive:`)
 take their Python/C literal from a parse of rtl/ibex_pkg.sv and render a `_PY` mirror the TB top checks
-against the SV expression at time 0; `default_from:` resolves a plusarg default from a constant or
+against the SV expression at time 0; T-102 added the derivations `csr_marchid_value`, `csr_addr_cpuctrlsts` and `csr_addr_secureseed`
+(ibex_pkg `CSR_MARCHID_VALUE`, `CSR_CPUCTRLSTS`, `CSR_SECURESEED`, guarded in gen_tb_top like the irq width) and the
+literals `GEN_MHPM_COUNTER_NUM` (gen_tb_top fatals when `u_dut.MHPMCounterNum` differs), `GEN_INSN_MRET`, `GEN_INSN_DRET`
+and `GEN_TDATA1_IBEX_RDATA` (RTL citation in the yaml desc), so the shim and the export unit test re-type none of them; `default_from:` resolves a plusarg default from a constant or
 memory-map key; `--src` and `--root` let the unit test run refused-fixture and stale-target mutations
 against a scratch copy; new knob `+gen_hart_id`; `+gen_ut_lockstep_min_ratio_pct` removed (the lock-step
 test asserts an exact count).

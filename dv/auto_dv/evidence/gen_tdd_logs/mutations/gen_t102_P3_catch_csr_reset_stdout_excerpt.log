@@ -1,0 +1,8 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102/mut/base/P3_catch_csr_reset/stdout.log (config banner, first three comparator lines, ISA compare summary, UVM report counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(189) @ 289500: uvm_test_top.env.sb [isa_rd] rd model=x8/00000005 dut=x8/00000016 (order=57 pc=80000160 insn=f1202473 trap=0 intr=0 rd=x8/00000016 mem=000000ee w0000 r1111 mode=3 cyc=284)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(384) @ 1107000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=282 mismatches=1 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=
+ 11070.00ns INFO     cocotb.gen_tb_top                  gen_test_csr_reset GEN_TEST_PASS
+UVM_ERROR :    1
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                        11070.01           0.28      39835.67  **

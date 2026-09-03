@@ -13,7 +13,23 @@ static int fails = 0;
 static void check(const char* what, unsigned long long got, unsigned long long exp) {
   bool ok = got == exp;
   std::printf("%-44s got 0x%llx exp 0x%llx %s\n", what, got, exp, ok ? "OK" : "FAIL");
+  std::fflush(stdout);
   if (!ok) fails++;
+}
+
+// Instruction encoders for the reference checks (RTL encodings: rtl/ibex_decoder.sv OPCODE_OP / OPCODE_OP_IMM tables).
+static uint32_t enc_r(uint32_t f7, uint32_t f3, uint32_t rs1, uint32_t rs2, uint32_t rd) {
+  return (f7 << 25) | (rs2 << 20) | (rs1 << 15) | (f3 << 12) | (rd << 7) | 0x33u;
+}
+static uint32_t enc_r4(uint32_t rs3, uint32_t f2, uint32_t f3, uint32_t rs1, uint32_t rs2, uint32_t rd) {
+  return (rs3 << 27) | (f2 << 25) | (rs2 << 20) | (rs1 << 15) | (f3 << 12) | (rd << 7) | 0x33u;
+}
+static uint32_t enc_i(uint32_t imm12, uint32_t f3, uint32_t rs1, uint32_t rd) {
+  return (imm12 << 20) | (rs1 << 15) | (f3 << 12) | (rd << 7) | 0x13u;
+}
+static bool ref(uint32_t insn, uint32_t rs1, uint32_t rs2, uint32_t rs3, uint32_t exp) {
+  uint32_t rd = 0;
+  return gen_isa_exec_reference(insn, rs1, rs2, rs3, &rd) == 0 && rd == exp;
 }
 
 int main(int argc, char** argv) {
@@ -186,6 +202,93 @@ int main(int argc, char** argv) {
   check("cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO", gen_isa_read_csr(0x7c0), 0xffu);
   check("gpr write/read", (gen_isa_write_gpr(10, 0xdeadbeefu), gen_isa_read_gpr(10)), 0xdeadbeefu);
   check("set_pc/get_pc", (gen_isa_set_pc(0x80000100u), gen_isa_get_pc()), 0x80000100u);
+
+  std::puts("-- 5. T-102: Ibex conventions the model must show (reset values, WARL, counters, draft-B references)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  check("marchid = ibex_pkg CSR_MARCHID_VALUE", gen_isa_read_csr(0xF12), GEN_CSR_MARCHID_VALUE);
+  check("mhpmevent3 = 1 (event bit i-3)", gen_isa_read_csr(0x323), 1);
+  check("mhpmevent(3+N-1) = 1 << (N-1)", gen_isa_read_csr(0x323 + GEN_MHPM_COUNTER_NUM - 1), 1u << (GEN_MHPM_COUNTER_NUM - 1));
+  check("mhpmevent(3+N) = 0 beyond MHPMCounterNum", gen_isa_read_csr(0x323 + GEN_MHPM_COUNTER_NUM), 0);
+  check("mhpmevent31 = 0", gen_isa_read_csr(0x33F), 0);
+  check("tdata1 = Ibex mcontrol view", gen_isa_read_csr(0x7A1), GEN_TDATA1_IBEX_RDATA);
+  gen_isa_write_csr(0x7A1, 0xffffffffu);
+  check("tdata1 write outside debug mode ignored", gen_isa_read_csr(0x7A1), GEN_TDATA1_IBEX_RDATA);
+  gen_isa_write_csr(0x7A2, 0x80000004u);
+  check("tdata2 write outside debug mode ignored", gen_isa_read_csr(0x7A2), 0);
+  gen_isa_write_csr(0x300, 0xffffffffu);
+  check("mstatus all-ones write: XS and SD stay 0", gen_isa_read_csr(0x300) & 0x80018000u, 0);
+  check("pack",  ref(enc_r(0x04, 4, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0xdef05678u), 1);
+  check("packu", ref(enc_r(0x24, 4, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0x9abc1234u), 1);
+  check("packh", ref(enc_r(0x04, 7, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0x0000f078u), 1);
+  check("slo 4",  ref(enc_r(0x10, 1, 1, 2, 3), 0x0000000fu, 4, 0, 0xffu), 1);
+  check("slo rs2 = 32 acts as 0", ref(enc_r(0x10, 1, 1, 2, 3), 0x12345678u, 32, 0, 0x12345678u), 1);
+  check("sloi 31 of 0 = 0x7fffffff", ref(enc_i(0x200u | 31, 1, 1, 3), 0, 0, 0, 0x7fffffffu), 1);
+  check("sro 4",  ref(enc_r(0x10, 5, 1, 2, 3), 0xf0000000u, 4, 0, 0xff000000u), 1);
+  check("sro 1 of 0 = 0x80000000", ref(enc_r(0x10, 5, 1, 2, 3), 0, 1, 0, 0x80000000u), 1);
+  check("sroi 31 of 0 = 0xfffffffe", ref(enc_i(0x200u | 31, 5, 1, 3), 0, 0, 0, 0xfffffffeu), 1);
+  check("shfl 15 (zip)", ref(enc_r(0x04, 1, 1, 2, 3), 0x0000ffffu, 15, 0, 0x55555555u), 1);
+  check("unshfl 15 (unzip)", ref(enc_r(0x04, 5, 1, 2, 3), 0x55555555u, 15, 0, 0x0000ffffu), 1);
+  check("shfli 15", ref(enc_i(0x080u | 15, 1, 1, 3), 0x0000ffffu, 0, 0, 0x55555555u), 1);
+  check("unshfli 15", ref(enc_i(0x080u | 15, 5, 1, 3), 0x55555555u, 0, 0, 0x0000ffffu), 1);
+  check("xperm.n", ref(enc_r(0x14, 2, 1, 2, 3), 0x76543210u, 0x01234567u, 0, 0x01234567u), 1);
+  check("xperm.b", ref(enc_r(0x14, 4, 1, 2, 3), 0x44332211u, 0x00010203u, 0, 0x11223344u), 1);
+  check("xperm.b out-of-range lanes read 0", ref(enc_r(0x14, 4, 1, 2, 3), 0x44332211u, 0x04040404u, 0, 0), 1);
+  check("xperm.h", ref(enc_r(0x14, 6, 1, 2, 3), 0xbbbbaaaau, 0x00000001u, 0, 0xaaaabbbbu), 1);
+  check("cmov rs2 = 0 selects rs3", ref(enc_r4(4, 3, 5, 1, 2, 3), 0x11111111u, 0, 0x33333333u, 0x33333333u), 1);
+  check("cmov rs2 != 0 selects rs1", ref(enc_r4(4, 3, 5, 1, 2, 3), 0x11111111u, 5, 0x33333333u, 0x11111111u), 1);
+  check("cmix", ref(enc_r4(4, 3, 1, 1, 2, 3), 0xff00ff00u, 0x0000ffffu, 0x12345678u, 0x1234ff00u), 1);
+  check("fsl 1",  ref(enc_r4(4, 2, 1, 1, 2, 3), 1, 1, 0x80000000u, 3), 1);
+  check("fsl 31", ref(enc_r4(4, 2, 1, 1, 2, 3), 1, 31, 0x80000000u, 0xc0000000u), 1);
+  check("fsl 32 = rs3", ref(enc_r4(4, 2, 1, 1, 2, 3), 1, 32, 0x80000000u, 0x80000000u), 1);
+  check("fsl 64 acts as 0 = rs1", ref(enc_r4(4, 2, 1, 1, 2, 3), 1, 64, 0x80000000u, 1), 1);
+  check("fsr 1",  ref(enc_r4(4, 2, 5, 1, 2, 3), 0x80000000u, 1, 1, 0xc0000000u), 1);
+  check("fsri 1", ref((4u << 27) | (1u << 26) | (1u << 20) | (1u << 15) | (5u << 12) | (3u << 7) | 0x13u, 0x80000000u, 0, 1, 0xc0000000u), 1);
+  check("bfp len 8 off 8", ref(enc_r(0x24, 7, 1, 2, 3), 0, (8u << 24) | (8u << 16) | 0xabu, 0, 0x0000ab00u), 1);
+  check("bfp len 0 places 16 bits", ref(enc_r(0x24, 7, 1, 2, 3), 0xffffffffu, 0x1234u, 0, 0xffff1234u), 1);
+  check("crc32.b(1)", ref(enc_i(0x610, 1, 1, 3), 1, 0, 0, 0x77073096u), 1);
+  check("crc32.b(2)", ref(enc_i(0x610, 1, 1, 3), 2, 0, 0, 0xee0e612cu), 1);
+  check("crc32c.b(1)", ref(enc_i(0x618, 1, 1, 3), 1, 0, 0, 0xf26b8303u), 1);
+  check("crc32.w(0) = 0", ref(enc_i(0x612, 1, 1, 3), 0, 0, 0, 0), 1);
+  check("crc32c.w(0) = 0", ref(enc_i(0x61a, 1, 1, 3), 0, 0, 0, 0), 1);
+  { uint32_t h = 0, b1 = 0, b2 = 0;
+    gen_isa_exec_reference(enc_i(0x611, 1, 1, 3), 0x12345678u, 0, 0, &h);
+    gen_isa_exec_reference(enc_i(0x610, 1, 1, 3), 0x12345678u, 0, 0, &b1);
+    gen_isa_exec_reference(enc_i(0x610, 1, 1, 3), b1, 0, 0, &b2);
+    check("crc32.h = crc32.b applied twice", h, b2); }
+  check("reference rejects rori (ratified)", gen_isa_exec_reference(enc_i(0x601, 5, 1, 3), 0, 0, 0, &rd), 1);
+  check("reference rejects clz (ratified)", gen_isa_exec_reference(enc_i(0x600, 1, 1, 3), 0, 0, 0, &rd), 1);
+  check("is_draft_b(pack) = 1", gen_isa_is_draft_b(enc_r(0x04, 4, 1, 2, 3)), 1);
+  check("is_draft_b(rori) = 0", gen_isa_is_draft_b(enc_i(0x601, 5, 1, 3)), 0);
+  gen_isa_set_time(1000);
+  check("cycle CSR follows set_time", gen_isa_read_csr(0xC00), 1000);
+  check("mcycle follows set_time", gen_isa_read_csr(0xB00), 1000);
+  gen_isa_set_hpm(2, 0x1234u, 1u);
+  check("mhpmcounter5 follows set_hpm (lo)", gen_isa_read_csr(0xB05), 0x1234u);
+  check("mhpmcounter5h follows set_hpm (hi)", gen_isa_read_csr(0xB85), 1u);
+  check("hpmcounter5 alias follows", gen_isa_read_csr(0xC05), 0x1234u);
+  gen_isa_set_status(1);
+  check("cpuctrlsts bit 8 follows ic_scr_key_valid", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS), 0x100u);
+  gen_isa_write_csr(GEN_CSR_CPUCTRLSTS, 0x1ffu);
+  check("cpuctrlsts write: control bits taken, bit 8 is status", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS), 0x1ffu);
+  gen_isa_set_status(0);
+  check("cpuctrlsts bit 8 cleared by status", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS), 0xffu);
+
+  std::puts("-- 6. T-102: prv_before is the privilege the instruction executed in (rvfi_mode's meaning)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog3[] = {GEN_INSN_MRET, 0x00000013u, 0x00000013u, 0x00000013u, 0x00000073u};   // mret ; nops ; ecall in U
+    for (unsigned i = 0; i < sizeof(prog3) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog3[i]);
+    gen_isa_write_csr(0x341, scratch + 16u);   // mepc -> the ecall; mstatus.MPP is U after reset
+    gen_isa_write_csr(0x3B0, 0xffffffffu); gen_isa_write_csr(0x3A0, 0x0fu);   // pmp0 TOR RWX over everything: U-mode fetch and ecall, not an access fault (plan C-2)
+    gen_isa_step(&st);
+    check("mret retires", st.retired, 1);
+    check("mret prv_before = M", st.prv_before, 3);
+    check("mret prv (after) = U", st.prv, 0);
+    check("mret pc_after = mepc", st.pc_after, scratch + 16u);
+    gen_isa_step(&st);
+    check("ecall from U traps", st.trap, 1);
+    check("ecall cause 8 (U)", st.trap_cause, 8);
+    check("ecall prv_before = U", st.prv_before, 0);
+    check("ecall prv (after) = M", st.prv, 3); }
 
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;

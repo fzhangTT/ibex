@@ -52,7 +52,8 @@ WINDOW_KNOBS = {
     "outstanding_cap": ("knob_imem_outstanding_cap",),
 }
 RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
-DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask"}
+DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask", "csr_marchid_value", "csr_addr_cpuctrlsts",
+               "csr_addr_secureseed"}
 
 
 def die(msg):
@@ -70,6 +71,22 @@ def sv_int_param(path, name):
     m = re.search(rf"parameter\s+int\s+unsigned\s+{name}\s*=\s*(\d+)\s*;", path.read_text())
     if not m:
         die(f"integer parameter {name} not found in {path}")
+    return int(m.group(1))
+
+
+def sv_enum_hex12(path, name):
+    """CSR address of an ibex_pkg csr_num_e member (`NAME = 12'hXXX`)."""
+    m = re.search(rf"\b{name}\s*=\s*12'h([0-9a-fA-F_]+)", path.read_text())
+    if not m:
+        die(f"CSR address {name} not found in {path}")
+    return int(m.group(1).replace("_", ""), 16)
+
+
+def sv_marchid_value(path):
+    """ibex_pkg CSR_MARCHID_VALUE = {1'b0, 31'dN}."""
+    m = re.search(r"CSR_MARCHID_VALUE\s*=\s*\{1'b0,\s*31'd(\d+)\}", path.read_text())
+    if not m:
+        die(f"CSR_MARCHID_VALUE not found in {path}")
     return int(m.group(1))
 
 
@@ -190,8 +207,8 @@ def load(src_path=SRC):
                 die(f"export_events row: missing {req}")
         if not re.fullmatch(r"[a-z][a-z0-9_]*", row["source"]):
             die(f"export_events: bad source {row['source']}")
-        if row["event"] != "<name>" and not re.fullmatch(r"[a-z][a-z0-9_]*", row["event"]):
-            die(f"export_events: bad event {row['event']} (a fixed lower_case word or <name>)")
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", row["event"]):
+            die(f"export_events: bad event {row['event']} (one exact lower_case event name per row; no wildcard rows)")
         if (row["source"], row["event"]) in seen:
             die(f"export_events: duplicate row {row['source']}/{row['event']}")
         seen.add((row["source"], row["event"]))
@@ -209,7 +226,7 @@ def export_sources(src):
 
 
 def event_fn_name(row):
-    return f"gen_export_line_{row['source']}_" + ("any" if row["event"] == "<name>" else row["event"])
+    return f"gen_export_line_{row['source']}_{row['event']}"
 
 
 def render_record_line(src):
@@ -234,9 +251,9 @@ def render_event_lines(src):
     L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml (export_events); do not edit.",
          "// Included inside gen_export_pkg: the E line of one boundary event, `E <cycle> <source> <event> <fields...>` (all hex)."]
     for row in src["export_events"]:
-        args = ["int unsigned cycle"] + (["string name"] if row["event"] == "<name>" else []) + [f"int unsigned {f}" for f in row["fields"]]
-        ev = "%s" if row["event"] == "<name>" else row["event"]
-        vals = ["cycle"] + (["name"] if row["event"] == "<name>" else []) + list(row["fields"])
+        args = ["int unsigned cycle"] + [f"int unsigned {f}" for f in row["fields"]]
+        ev = row["event"]
+        vals = ["cycle"] + list(row["fields"])
         L.append(f"function automatic string {event_fn_name(row)}({', '.join(args)});")
         L.append(f'  return $sformatf("E %0h {row["source"]} {ev} ' + " ".join("%0h" for _ in row["fields"]) + '", ' + ", ".join(vals) + ");")
         L.append("endfunction")
@@ -264,6 +281,12 @@ def derive_values(src):
             out[c["name"]] = fast_w
         elif d == "irq_fast_mask":
             out[c["name"]] = ((1 << fast_w) - 1) << 16
+        elif d == "csr_marchid_value":
+            out[c["name"]] = sv_marchid_value(IBEX_PKG)
+        elif d == "csr_addr_cpuctrlsts":
+            out[c["name"]] = sv_enum_hex12(IBEX_PKG, "CSR_CPUCTRLSTS")
+        elif d == "csr_addr_secureseed":
+            out[c["name"]] = sv_enum_hex12(IBEX_PKG, "CSR_SECURESEED")
     return out
 
 
@@ -474,7 +497,7 @@ def render_py(src, mm, cvals):
     L.append(f"EXPORT_RECORD_FIELDS = {tuple(src['export_record_fields'])!r}")
     L.append(f"EXPORT_COUNTER_FIELDS = {tuple(src['export_counter_fields'])!r}")
     L.append(f"EXPORT_SOURCES = {tuple(export_sources(src))!r}")
-    L.append("EXPORT_EVENTS = (  # (source, event or '<name>', fields)")
+    L.append("EXPORT_EVENTS = (  # (source, event, fields); one exact event per row")
     for row in src["export_events"]:
         L.append(f"    ({row['source']!r}, {row['event']!r}, {tuple(row['fields'])!r}),")
     L.append(")"); L.append("")

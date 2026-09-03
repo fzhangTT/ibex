@@ -107,10 +107,12 @@ class gen_mie_csr_t : public mie_csr_t {   // Ibex's writable mie set (unlogged_
  private:
   reg_t write_mask() const noexcept override { return kIbexMieMask; }
 };
-class gen_masked_csr_t : public csr_t {    // cpuctrlsts (masked) and secureseed (reads 0)
+bool g_ic_scr_key_valid = false;   // cpuctrlsts bit 8, DUT status fed by the TB from the record (gen_isa_set_status)
+class gen_masked_csr_t : public csr_t {    // secureseed (reads 0) and the mhpmcounter holders the TB syncs
  public:
   gen_masked_csr_t(processor_t* proc, reg_t addr, reg_t mask) : csr_t(proc, addr), mask_(mask) {}
   reg_t read() const noexcept override { return val_; }
+  void set(reg_t v) { val_ = v; }
  protected:
   bool unlogged_write(reg_t val) noexcept override { val_ = val & mask_; return true; }
  private:
@@ -134,13 +136,45 @@ class gen_trap_csr_t : public csr_t {      // time / timeh: Ibex has no such CSR
  protected:
   bool unlogged_write(reg_t) noexcept override { return false; }
 };
+class gen_cpuctrl_csr_t : public csr_t {   // cpuctrlsts: masked control bits; bit 8 is the DUT's ic_scr_key_valid status the TB feeds
+ public:
+  gen_cpuctrl_csr_t(processor_t* proc, reg_t addr, reg_t mask) : csr_t(proc, addr), mask_(mask) {}
+  reg_t read() const noexcept override { return val_ | (g_ic_scr_key_valid ? 0x100u : 0u); }
+ protected:
+  bool unlogged_write(reg_t val) noexcept override { val_ = val & mask_; return true; }
+ private:
+  reg_t mask_;
+  reg_t val_ = 0;
+};
+class gen_mstatus_view_t : public proxy_csr_t {   // Ibex has no XS or SD (Spike sets XS for a custom extension); the inner object stays the privilege state
+ public:
+  gen_mstatus_view_t(processor_t* proc, csr_t_p inner) : proxy_csr_t(proc, CSR_MSTATUS, inner) {}
+  reg_t read() const noexcept override { return proxy_csr_t::read() & ~(reg_t)(SSTATUS_XS | SSTATUS32_SD); }
+ protected:
+  bool unlogged_write(reg_t val) noexcept override { return proxy_csr_t::unlogged_write(val & ~(reg_t)(SSTATUS_XS | SSTATUS32_SD)); }
+};
+class gen_trigger_view_t : public proxy_csr_t {   // tdata1/tdata2 written in debug mode only; tdata1 reads Ibex's fixed mcontrol view plus the execute bit
+ public:
+  gen_trigger_view_t(processor_t* proc, reg_t addr, csr_t_p inner) : proxy_csr_t(proc, addr, inner) {}
+  reg_t read() const noexcept override {
+    if (address != CSR_TDATA1) return proxy_csr_t::read();
+    const reg_t v = proxy_csr_t::read();
+    return GEN_TDATA1_IBEX_RDATA | ((((v >> 28) & 0xF) == 2) ? (v & 0x4u) : 0u);
+  }
+ protected:
+  bool unlogged_write(reg_t val) noexcept override {
+    if (!state->debug_mode) return false;
+    if (address == CSR_TDATA1) val = (GEN_TDATA1_IBEX_RDATA & ~(reg_t)0x4u) | (val & 0x4u);
+    return proxy_csr_t::unlogged_write(val);
+  }
+};
 class gen_ibex_ext_t : public extension_t {
  public:
   std::vector<insn_desc_t> get_instructions(const processor_t&) override { return {}; }
   std::vector<disasm_insn_t*> get_disasms(const processor_t* = nullptr) override { return {}; }
   std::vector<csr_t_p> get_csrs(processor_t& p) const override {
-    return {std::make_shared<gen_masked_csr_t>(&p, 0x7C0, kCpuctrlWmask),
-            std::make_shared<gen_masked_csr_t>(&p, 0x7C1, 0)};
+    return {std::make_shared<gen_cpuctrl_csr_t>(&p, GEN_CSR_CPUCTRLSTS, kCpuctrlWmask),
+            std::make_shared<gen_masked_csr_t>(&p, GEN_CSR_SECURESEED, 0)};
   }
   const char* name() const override { return "genibex"; }   // no underscore: the ISA parser splits on it
 };
@@ -156,6 +190,7 @@ std::vector<std::pair<uint32_t, uint32_t>> g_csr_writes;
 std::vector<std::pair<uint32_t, uint32_t>> g_reg_writes;   // (idx, value) of the last step, x0 excluded, ascending register index (commit_log_reg_t is a std::map)
 struct mem_access_t { uint32_t addr, data, size; };
 std::vector<mem_access_t> g_mem_writes, g_mem_reads;       // data accesses of the last step, log order
+std::shared_ptr<gen_masked_csr_t> g_hpm_lo[GEN_MHPM_COUNTER_NUM], g_hpm_hi[GEN_MHPM_COUNTER_NUM];   // mhpmcounter3.. synced from RVFI
 uint32_t g_boot = 0;
 uint32_t g_mcounteren_writable = 1;
 uint32_t g_mcounteren_prev = 0;
@@ -179,6 +214,23 @@ void legalize_after_reset() {
   s->csrmap[CSR_MISA] = std::make_shared<gen_const_csr_t>(g_proc.get(), CSR_MISA, kIbexMisa);
   s->csrmap[CSR_TIME]  = std::make_shared<gen_trap_csr_t>(g_proc.get(), CSR_TIME);
   s->csrmap[CSR_TIMEH] = std::make_shared<gen_trap_csr_t>(g_proc.get(), CSR_TIMEH);
+  // Ibex read values (T-102): marchid; mhpmevent bit i-3 for the implemented counters and 0 beyond; counters the TB syncs
+  // from RVFI (writable holders plus the U-mode aliases); mstatus without XS/SD; trigger CSRs written in debug mode only
+  s->csrmap[CSR_MARCHID] = std::make_shared<gen_const_csr_t>(g_proc.get(), CSR_MARCHID, GEN_CSR_MARCHID_VALUE);
+  for (unsigned i = 0; i < N_HPMCOUNTERS; i++)
+    s->csrmap[CSR_MHPMEVENT3 + i] = std::make_shared<gen_const_csr_t>(g_proc.get(), CSR_MHPMEVENT3 + i, i < GEN_MHPM_COUNTER_NUM ? (1u << i) : 0u);
+  for (unsigned i = 0; i < GEN_MHPM_COUNTER_NUM; i++) {
+    g_hpm_lo[i] = std::make_shared<gen_masked_csr_t>(g_proc.get(), CSR_MHPMCOUNTER3 + i, 0xFFFFFFFFu);
+    g_hpm_hi[i] = std::make_shared<gen_masked_csr_t>(g_proc.get(), CSR_MHPMCOUNTER3H + i, 0xFFFFFFFFu);
+    s->csrmap[CSR_MHPMCOUNTER3 + i] = g_hpm_lo[i];
+    s->csrmap[CSR_MHPMCOUNTER3H + i] = g_hpm_hi[i];
+    s->csrmap[CSR_HPMCOUNTER3 + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3 + i, g_hpm_lo[i]);
+    s->csrmap[CSR_HPMCOUNTER3H + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3H + i, g_hpm_hi[i]);
+  }
+  s->csrmap[CSR_MSTATUS] = std::make_shared<gen_mstatus_view_t>(g_proc.get(), s->mstatus);
+  s->csrmap[CSR_TDATA1] = std::make_shared<gen_trigger_view_t>(g_proc.get(), CSR_TDATA1, s->csrmap[CSR_TDATA1]);
+  s->csrmap[CSR_TDATA2] = std::make_shared<gen_trigger_view_t>(g_proc.get(), CSR_TDATA2, s->csrmap[CSR_TDATA2]);
+  g_ic_scr_key_valid = false;
   // reset values (C5.3a Reset row)
   uint32_t page = g_boot & GEN_MM_BOOT_PAGE_MASK;
   s->pc = page | 0x80u;
@@ -231,6 +283,59 @@ uint32_t gorc32(uint32_t x, uint32_t k) {
   if (k & 4)  x |= ((x & 0x0F0F0F0Fu) << 4)  | ((x & 0xF0F0F0F0u) >> 4);
   if (k & 8)  x |= ((x & 0x00FF00FFu) << 8)  | ((x & 0xFF00FF00u) >> 8);
   if (k & 16) x |= ((x & 0x0000FFFFu) << 16) | ((x & 0xFFFF0000u) >> 16);
+  return x;
+}
+
+// ---- draft-B references beyond grev/gorc (C5.5): slo/sro, shfl/unshfl, xperm, cmov/cmix, fsl/fsr, bfp, crc32 ---------
+uint32_t slo32(uint32_t x, uint32_t k) { return ~((~x) << k); }
+uint32_t sro32(uint32_t x, uint32_t k) { return ~((~x) >> k); }
+uint32_t shuffle_stage(uint32_t x, uint32_t ml, uint32_t mr, unsigned n) {
+  return (x & ~(ml | mr)) | ((x << n) & ml) | ((x >> n) & mr);
+}
+uint32_t shfl32(uint32_t x, uint32_t c) {
+  if (c & 8) x = shuffle_stage(x, 0x00ff0000u, 0x0000ff00u, 8);
+  if (c & 4) x = shuffle_stage(x, 0x0f000f00u, 0x00f000f0u, 4);
+  if (c & 2) x = shuffle_stage(x, 0x30303030u, 0x0c0c0c0cu, 2);
+  if (c & 1) x = shuffle_stage(x, 0x44444444u, 0x22222222u, 1);
+  return x;
+}
+uint32_t unshfl32(uint32_t x, uint32_t c) {
+  if (c & 1) x = shuffle_stage(x, 0x44444444u, 0x22222222u, 1);
+  if (c & 2) x = shuffle_stage(x, 0x30303030u, 0x0c0c0c0cu, 2);
+  if (c & 4) x = shuffle_stage(x, 0x0f000f00u, 0x00f000f0u, 4);
+  if (c & 8) x = shuffle_stage(x, 0x00ff0000u, 0x0000ff00u, 8);
+  return x;
+}
+uint32_t xperm32(uint32_t rs1, uint32_t rs2, unsigned log2sz) {   // an index past the register reads as zero
+  const unsigned sz = 1u << log2sz;
+  const uint32_t mask = (1u << sz) - 1u;
+  uint32_t r = 0;
+  for (unsigned i = 0; i < 32; i += sz) {
+    const uint32_t pos = ((rs2 >> i) & mask) << log2sz;
+    if (pos < 32) r |= ((rs1 >> pos) & mask) << i;
+  }
+  return r;
+}
+uint32_t fsl32(uint32_t a, uint32_t b, uint32_t sh) {   // {a, b} rotated left by sh (6 bits); 32 selects b
+  sh &= 63;
+  if (sh >= 32) { const uint32_t t = a; a = b; b = t; sh -= 32; }
+  return sh ? (a << sh) | (b >> (32 - sh)) : a;
+}
+uint32_t fsr32(uint32_t a, uint32_t b, uint32_t sh) {
+  sh &= 63;
+  if (sh >= 32) { const uint32_t t = a; a = b; b = t; sh -= 32; }
+  return sh ? (a >> sh) | (b << (32 - sh)) : a;
+}
+uint32_t bfp32(uint32_t rs1, uint32_t rs2) {   // len 0 places 16 bits; the field truncates at bit 31
+  const uint32_t cfg = rs2 >> 16;
+  uint32_t len = (cfg >> 8) & 15u;
+  const uint32_t off = cfg & 31u;
+  if (len == 0) len = 16;
+  const uint32_t mask = slo32(0, len) << off;
+  return ((rs2 << off) & mask) | (rs1 & ~mask);
+}
+uint32_t crc32n(uint32_t x, unsigned n, uint32_t poly) {   // n right shifts with the reflected polynomial
+  for (unsigned i = 0; i < n; i++) x = (x >> 1) ^ (poly & ~((x & 1u) - 1u));
   return x;
 }
 
@@ -315,6 +420,7 @@ int gen_isa_step(gen_isa_step_t* out) {
   s->log_reg_write.clear();
   s->log_mem_read.clear();
   s->log_mem_write.clear();
+  out->prv_before = (uint32_t)s->prv;
   bool was_debug = s->debug_mode;
   try {
     g_proc->step(1);
@@ -413,17 +519,56 @@ void gen_isa_set_pc(uint32_t pc) { st()->pc = (sreg_t)(int32_t)pc; }
 uint32_t gen_isa_get_prv(void) { return (uint32_t)st()->prv; }
 
 int gen_isa_exec_reference(uint32_t insn, uint32_t rs1, uint32_t rs2, uint32_t rs3, uint32_t* rd) {
-  uint32_t opcode = insn & 0x7F, f3 = (insn >> 12) & 7, f7 = (insn >> 25) & 0x7F, hi5 = (insn >> 27) & 0x1F;
-  uint32_t shamt = (insn >> 20) & 0x1F;
-  if (opcode == 0x13 && f3 == 5 && ((insn >> 26) & 1) == 0) {
-    if (hi5 == 0x0D) { *rd = grev32(rs1, shamt); return 0; }       // grevi (rev8 = 24)
-    if (hi5 == 0x05) { *rd = gorc32(rs1, shamt); return 0; }       // gorci (orc.b = 7)
+  const uint32_t opcode = insn & 0x7F, f3 = (insn >> 12) & 7, f7 = (insn >> 25) & 0x7F, hi5 = (insn >> 27) & 0x1F;
+  const uint32_t shamt = (insn >> 20) & 0x1F, b26 = (insn >> 26) & 1, b25 = (insn >> 25) & 1;
+  if (opcode == 0x13 && f3 == 1 && !b26) {                                       // OP-IMM funct3 001
+    if (hi5 == 0x04) { *rd = slo32(rs1, shamt); return 0; }                      // sloi
+    if (hi5 == 0x01) { *rd = shfl32(rs1, shamt & 15); return 0; }                // shfli, control imm[3:0]
+    if (hi5 == 0x0C && !b25 && (shamt & 0x10)) {                                 // crc32 family, imm[11:0] 0x610..0x61a
+      switch (shamt & 0xF) {
+        case 0x0: *rd = crc32n(rs1, 8, 0xEDB88320u); return 0;
+        case 0x1: *rd = crc32n(rs1, 16, 0xEDB88320u); return 0;
+        case 0x2: *rd = crc32n(rs1, 32, 0xEDB88320u); return 0;
+        case 0x8: *rd = crc32n(rs1, 8, 0x82F63B78u); return 0;
+        case 0x9: *rd = crc32n(rs1, 16, 0x82F63B78u); return 0;
+        case 0xA: *rd = crc32n(rs1, 32, 0x82F63B78u); return 0;
+        default: break;
+      }
+    }
   }
-  if (opcode == 0x33 && f3 == 5) {
-    if (f7 == 0x34) { *rd = grev32(rs1, rs2 & 31); return 0; }     // grev
-    if (f7 == 0x14) { *rd = gorc32(rs1, rs2 & 31); return 0; }     // gorc
+  if (opcode == 0x13 && f3 == 5) {                                               // OP-IMM funct3 101
+    if (b26) { *rd = fsr32(rs1, rs3, (insn >> 20) & 0x3F); return 0; }          // fsri: rs3 = insn[31:27], imm[5:0]
+    if (hi5 == 0x0D) { *rd = grev32(rs1, shamt); return 0; }                     // grevi (rev8 = 24)
+    if (hi5 == 0x05) { *rd = gorc32(rs1, shamt); return 0; }                     // gorci (orc.b = 7)
+    if (hi5 == 0x04) { *rd = sro32(rs1, shamt); return 0; }                      // sroi
+    if (hi5 == 0x01) { *rd = unshfl32(rs1, shamt & 15); return 0; }              // unshfli
   }
-  (void)rs3;
+  if (opcode == 0x33 && b26) {                                                   // R4 forms, rs3 = insn[31:27]
+    const uint32_t f2 = (insn >> 25) & 3;
+    if (f2 == 3 && f3 == 1) { *rd = (rs1 & rs2) | (rs3 & ~rs2); return 0; }     // cmix
+    if (f2 == 3 && f3 == 5) { *rd = rs2 ? rs1 : rs3; return 0; }                 // cmov
+    if (f2 == 2 && f3 == 1) { *rd = fsl32(rs1, rs3, rs2); return 0; }            // fsl
+    if (f2 == 2 && f3 == 5) { *rd = fsr32(rs1, rs3, rs2); return 0; }            // fsr
+    return 1;
+  }
+  if (opcode == 0x33) {
+    switch ((f7 << 3) | f3) {
+      case (0x04u << 3) | 4: *rd = (rs1 & 0xFFFFu) | (rs2 << 16); return 0;          // pack
+      case (0x24u << 3) | 4: *rd = (rs1 >> 16) | (rs2 & 0xFFFF0000u); return 0;      // packu
+      case (0x04u << 3) | 7: *rd = (rs1 & 0xFFu) | ((rs2 & 0xFFu) << 8); return 0;   // packh
+      case (0x24u << 3) | 7: *rd = bfp32(rs1, rs2); return 0;                        // bfp
+      case (0x04u << 3) | 1: *rd = shfl32(rs1, rs2 & 15); return 0;                  // shfl
+      case (0x04u << 3) | 5: *rd = unshfl32(rs1, rs2 & 15); return 0;                // unshfl
+      case (0x14u << 3) | 2: *rd = xperm32(rs1, rs2, 2); return 0;                   // xperm.n
+      case (0x14u << 3) | 4: *rd = xperm32(rs1, rs2, 3); return 0;                   // xperm.b
+      case (0x14u << 3) | 6: *rd = xperm32(rs1, rs2, 4); return 0;                   // xperm.h
+      case (0x10u << 3) | 1: *rd = slo32(rs1, rs2 & 31); return 0;                   // slo
+      case (0x10u << 3) | 5: *rd = sro32(rs1, rs2 & 31); return 0;                   // sro
+      case (0x34u << 3) | 5: *rd = grev32(rs1, rs2 & 31); return 0;                  // grev
+      case (0x14u << 3) | 5: *rd = gorc32(rs1, rs2 & 31); return 0;                  // gorc
+      default: break;
+    }
+  }
   return 1;
 }
 
@@ -435,9 +580,14 @@ void gen_isa_arm_async(uint32_t pre_mip, uint32_t, int32_t, int32_t, int32_t deb
 void gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size) { g_fault = {kind, addr, size, true}; }
 void gen_isa_set_time(uint64_t mcycle) {
   if (!g_proc) return;
-  g_proc->put_csr(CSR_MCYCLE, (uint32_t)mcycle);
-  g_proc->put_csr(CSR_MCYCLEH, (uint32_t)(mcycle >> 32));
+  st()->mcycle->write((reg_t)mcycle);   // one 64-bit write: Spike asserts on a second counter write before a step
 }
+void gen_isa_set_hpm(int32_t idx, uint32_t lo, uint32_t hi) {
+  if (!g_proc || idx < 0 || idx >= (int32_t)GEN_MHPM_COUNTER_NUM) return;
+  g_hpm_lo[idx]->set(lo);
+  g_hpm_hi[idx]->set(hi);
+}
+void gen_isa_set_status(int32_t ic_scr_key_valid) { g_ic_scr_key_valid = ic_scr_key_valid != 0; }
 void gen_isa_note_memory_write(uint32_t addr, uint32_t data, uint8_t be) {
   for (int k = 0; k < 4; k++) if (be & (1 << k)) mem_wr8(addr + k, (uint8_t)(data >> (8 * k)));
 }
@@ -456,25 +606,27 @@ int gen_isa_reset_dpi(uint32_t boot_addr, uint32_t hart_id, const char* isa_over
 int gen_isa_step_dpi(uint32_t* pc_before, uint32_t* pc_after, uint32_t* insn, int32_t* retired, int32_t* trap,
                      uint32_t* trap_cause, uint32_t* trap_tval, int32_t* rd_we, uint32_t* rd_addr, uint32_t* rd_wdata,
                      int32_t* mem_reads, int32_t* mem_writes, uint32_t* mem_addr, uint32_t* mem_wdata,
-                     uint32_t* mem_rdata, uint32_t* mem_size, uint32_t* prv, int32_t* csr_writes,
+                     uint32_t* mem_rdata, uint32_t* mem_size, uint32_t* prv, uint32_t* prv_before, int32_t* csr_writes,
                      int32_t* reg_writes) {
   gen_isa_step_t o;
   int rc = gen_isa_step(&o);
   *pc_before = o.pc_before; *pc_after = o.pc_after; *insn = o.insn; *retired = o.retired; *trap = o.trap;
   *trap_cause = o.trap_cause; *trap_tval = o.trap_tval; *rd_we = o.rd_we; *rd_addr = o.rd_addr; *rd_wdata = o.rd_wdata;
   *mem_reads = o.mem_reads; *mem_writes = o.mem_writes; *mem_addr = o.mem_addr; *mem_wdata = o.mem_wdata;
-  *mem_rdata = o.mem_rdata; *mem_size = o.mem_size; *prv = o.prv; *csr_writes = o.csr_writes;
+  *mem_rdata = o.mem_rdata; *mem_size = o.mem_size; *prv = o.prv; *prv_before = o.prv_before; *csr_writes = o.csr_writes;
   *reg_writes = o.reg_writes;
   return rc;
 }
 // 1 when the instruction is a draft-B op the model cannot execute (served by gen_isa_exec_reference)
 int gen_isa_is_draft_b(uint32_t insn) {
   uint32_t rd = 0;
-  uint32_t opcode = insn & 0x7F, f3 = (insn >> 12) & 7, hi5 = (insn >> 27) & 0x1F, shamt = (insn >> 20) & 0x1F;
-  if (opcode == 0x13 && f3 == 5 && ((insn >> 26) & 1) == 0) {
+  const uint32_t opcode = insn & 0x7F, f3 = (insn >> 12) & 7, f7 = (insn >> 25) & 0x7F, hi5 = (insn >> 27) & 0x1F;
+  const uint32_t shamt = (insn >> 20) & 0x1F, b26 = (insn >> 26) & 1;
+  if (opcode == 0x13 && f3 == 5 && !b26) {
     if (hi5 == 0x0D && shamt == 24) return 0;   // rev8: ratified alias, the model executes it
     if (hi5 == 0x05 && shamt == 7)  return 0;   // orc.b
   }
+  if (opcode == 0x33 && f7 == 0x04 && f3 == 4 && shamt == 0) return 0;   // zext.h (pack rd, rs1, x0): ratified alias
   return gen_isa_exec_reference(insn, 0, 0, 0, &rd) == 0 ? 1 : 0;
 }
 }

@@ -27,8 +27,8 @@ DPI exports: `gen_isa_reset(cfg)`, `gen_isa_arm_async(pre_mip, taken_cause, nmi,
 irq_valid)`, `gen_isa_arm_fault(kind, addr, size)`, `gen_isa_note_memory_write(addr, data, be)`,
 `gen_isa_step(txn_in, txn_out)` (returns the number of instructions the model retired in that step: 0 for a
 step that only took an interrupt, trigger or synchronous trap, 1 otherwise; the scoreboard asserts it per
-record class, C5.2, v2 XM-M2), `gen_isa_exec_reference(insn, rs1, rs2, rd_out)` (draft-B ops),
-`gen_isa_read_csr(addr)`, `gen_isa_write_csr(addr, val)`, `gen_isa_set_time(mcycle)`; GPR and pc
+record class, C5.2, v2 XM-M2), `gen_isa_exec_reference(insn, rs1, rs2, rs3, rd_out)` (draft-B ops: grev/gorc, slo/sro, shfl/unshfl, xperm, cmov/cmix, fsl/fsr/fsri, bfp, crc32 and crc32c, pack/packu/packh; T-102),
+`gen_isa_read_csr(addr)`, `gen_isa_write_csr(addr, val)`, `gen_isa_set_time(mcycle)` (one 64-bit counter write; a second write before a step trips Spike's assert), `gen_isa_set_hpm(idx, lo, hi)` and `gen_isa_set_status(ic_scr_key_valid)` (T-102 syncs from the record); the step record carries `prv_before` (the privilege the instruction executed in) beside `prv`; GPR and pc
 accessors `gen_isa_read_gpr(idx)`, `gen_isa_write_gpr(idx, val)`, `gen_isa_get_pc()`, `gen_isa_set_pc(pc)`,
 `gen_isa_is_draft_b(insn)`; per-step log accessors (T-068) `gen_isa_reg_write(i, idx, val)` (the i-th
 integer register write of the last step), `gen_isa_mem_write(i, addr, data, size)`,
@@ -99,9 +99,16 @@ tdata3/mcontext/scontext trapping, B5 dcsr.nmip.
 | mip injection from pre_mip | BUILT | `gen_isa_arm_async` |
 | smepmp (mseccfg) | BUILT | via the ISA string |
 | mstatus MPP legalization (01/10 -> U) | DEFERRED | - |
-| mcountinhibit/mhpmevent masks | DEFERRED | - |
+| mhpmevent3..31 read-only Ibex values (event bit i-3 for the `GEN_MHPM_COUNTER_NUM` implemented counters, 0 beyond) | BUILT (T-102) | `legalize_after_reset`, `gen_const_csr_t` |
+| mcountinhibit mask | DEFERRED | - |
+| marchid = `GEN_CSR_MARCHID_VALUE` (ibex_pkg) | BUILT (T-102) | `legalize_after_reset`, `gen_const_csr_t` |
+| mhpmcounter3..(3+N-1) and the hpmcounter aliases synced from RVFI (`gen_isa_set_hpm`) | BUILT (T-102) | `gen_masked_csr_t` holders, `counter_proxy_csr_t` aliases |
+| mcycle synced from RVFI (`gen_isa_set_time`, one 64-bit write) | BUILT (T-102; the two-write form asserted in Spike and was never called before) | `gen_isa_set_time` |
+| mstatus without XS/SD (Spike sets XS for a custom extension; Ibex has none) | BUILT (T-102) | `gen_mstatus_view_t` on the csrmap entry, the inner object stays the privilege state |
+| cpuctrlsts bit 8 = ic_scr_key_valid from RVFI (`gen_isa_set_status`) | BUILT (T-102) | `gen_cpuctrl_csr_t` |
 | NMI and internal-NMI emulation (cause 0x8000001F/0xFFFFFFE0, vector base+0x7C, mstack) | DEFERRED | - |
-| dcsr/tdata legalization and trigger entry pc override | DEFERRED | - |
+| tdata1/tdata2 written in debug mode only; tdata1 reads Ibex's fixed mcontrol view `GEN_TDATA1_IBEX_RDATA` plus the execute bit (rtl/ibex_cs_registers.sv:1848-1864) | BUILT (T-102) | `gen_trigger_view_t` |
+| dcsr legalization and trigger entry pc override | DEFERRED | - |
 | WFI in_wfi clearing | DEFERRED | - |
 | B5 nmip direction | DEFERRED | pinned Spike has no nmip: the model equals the RTL by absence, not by design |
 | C5.4 per-word misaligned rule and mtval override | DEFERRED | owed with the misaligned-access directed test (Section 4) |

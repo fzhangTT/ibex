@@ -1,0 +1,62 @@
+# RED evidence (T-102): comparator lines of the Test Writer's batch-1 run dv/auto_dv/work/test-writer/out_head/csr_reset_s1/stdout.log (tree at d58bdeb, 2026-09-03; green fire-checks, comparator UVM_ERRORs); filtered copy, banner + [isa_*] lines
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_reset/s1/prog/prog.vmem tohost=0x80000500
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 113500: uvm_test_top.env.sb [isa_rd] rd model=x20/00000000 dut=x20/00000100 (order=12 pc=800000ac insn=7c002a73 trap=0 intr=0 rd=x20/00000100 mem=fffff840 w0000 r1111 mode=3 cyc=108)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 125500: uvm_test_top.env.sb [isa_rd] rd model=x18/00000000 dut=x18/00000004 (order=16 pc=800000bc insn=32502973 trap=0 intr=0 rd=x18/00000004 mem=fffffcdb w0000 r1111 mode=3 cyc=120)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 166500: uvm_test_top.env.sb [isa_rd] rd model=x15/00000000 dut=x15/00000200 (order=30 pc=800000f4 insn=32c027f3 trap=0 intr=0 rd=x15/00000200 mem=fffffcd4 w0000 r1111 mode=3 cyc=161)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 181500: uvm_test_top.env.sb [isa_rd] rd model=x23/00000000 dut=x23/00000048 (order=35 pc=80000108 insn=b0402bf3 trap=0 intr=0 rd=x23/00000048 mem=000004fc w0000 r1111 mode=3 cyc=176)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 198500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000100 (order=38 pc=80000114 insn=014fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=193)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 213500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000004 (order=41 pc=80000120 insn=012fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=208)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 260500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000200 (order=50 pc=80000144 insn=00ffa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=255)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 266500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000048 (order=51 pc=80000148 insn=017fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=261)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 267500: uvm_test_top.env.sb [isa_rd] rd model=x17/00000000 dut=x17/00000010 (order=52 pc=8000014c insn=b06028f3 trap=0 intr=0 rd=x17/00000010 mem=000004fa w0000 r1111 mode=3 cyc=262)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 272500: uvm_test_top.env.sb [isa_rd] rd model=x8/00000005 dut=x8/00000016 (order=57 pc=80000160 insn=f1202473 trap=0 intr=0 rd=x8/00000016 mem=000000ee w0000 r1111 mode=3 cyc=267)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 313500: uvm_test_top.env.sb [isa_rd] rd model=x13/00000000 dut=x13/00000002 (order=71 pc=80000198 insn=324026f3 trap=0 intr=0 rd=x13/00000002 mem=fffffcdc w0000 r1111 mode=3 cyc=308)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 316500: uvm_test_top.env.sb [isa_rd] rd model=x2/00000000 dut=x2/00000020 (order=72 pc=8000019c insn=32802173 trap=0 intr=0 rd=x2/00000020 mem=fffffcd8 w0000 r1111 mode=3 cyc=311)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 319500: uvm_test_top.env.sb [isa_rd] rd model=x1/00000000 dut=x1/00000001 (order=73 pc=800001a0 insn=b07020f3 trap=0 intr=0 rd=x1/00000001 mem=000004f9 w0000 r1111 mode=3 cyc=314)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 335500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000010 (order=76 pc=800001ac insn=011fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=330)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 352500: uvm_test_top.env.sb [isa_mem] store data model=00000005 dut=00000016 (order=79 pc=800001b8 insn=008fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=347)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 390500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000002 (order=86 pc=800001d4 insn=00dfa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=385)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 393500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000020 (order=87 pc=800001d8 insn=002fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=388)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 398500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000001 (order=88 pc=800001dc insn=001fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=393)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 413500: uvm_test_top.env.sb [isa_rd] rd model=x15/f0000000 dut=x15/28001048 (order=96 pc=800001fc insn=7a1027f3 trap=0 intr=0 rd=x15/28001048 mem=fffff85f w0000 r1111 mode=3 cyc=408)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 429500: uvm_test_top.env.sb [isa_rd] rd model=x14/00000000 dut=x14/00000002 (order=102 pc=80000214 insn=b0502773 trap=0 intr=0 rd=x14/00000002 mem=000004fb w0000 r1111 mode=3 cyc=424)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 440500: uvm_test_top.env.sb [isa_rd] rd model=x9/00000069 dut=x9/000001b1 (order=106 pc=80000224 insn=b00024f3 trap=0 intr=0 rd=x9/000001b1 mem=00000500 w0000 r1111 mode=3 cyc=435)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 488500: uvm_test_top.env.sb [isa_mem] store data model=f0000000 dut=28001048 (order=118 pc=80000254 insn=00ffa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=483)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 503500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000002 (order=121 pc=80000260 insn=00efa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=498)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 514500: uvm_test_top.env.sb [isa_mem] store data model=00000069 dut=000001b1 (order=123 pc=80000268 insn=009fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=509)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 555500: uvm_test_top.env.sb [isa_rd] rd model=x4/00000000 dut=x4/00000080 (order=138 pc=800002a4 insn=32a02273 trap=0 intr=0 rd=x4/00000080 mem=fffffcd6 w0000 r1111 mode=3 cyc=550)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 632500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000080 (order=160 pc=800002fc insn=004fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=627)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 657500: uvm_test_top.env.sb [isa_rd] rd model=x23/00000000 dut=x23/00000040 (order=166 pc=80000314 insn=32902bf3 trap=0 intr=0 rd=x23/00000040 mem=fffffcd7 w0000 r1111 mode=3 cyc=652)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 706500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000040 (order=185 pc=80000360 insn=017fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=701)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 735500: uvm_test_top.env.sb [isa_rd] rd model=x14/000000bf dut=x14/000002d8 (order=192 pc=8000037c insn=c0002773 trap=0 intr=0 rd=x14/000002d8 mem=00000400 w0000 r1111 mode=3 cyc=730)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 746500: uvm_test_top.env.sb [isa_rd] rd model=x9/00000000 dut=x9/00000008 (order=198 pc=80000394 insn=326024f3 trap=0 intr=0 rd=x9/00000008 mem=fffffcda w0000 r1111 mode=3 cyc=741)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 759500: uvm_test_top.env.sb [isa_rd] rd model=x17/00000000 dut=x17/00000004 (order=202 pc=800003a4 insn=b08028f3 trap=0 intr=0 rd=x17/00000004 mem=000004f8 w0000 r1111 mode=3 cyc=754)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 764500: uvm_test_top.env.sb [isa_rd] rd model=x18/00000000 dut=x18/00000100 (order=204 pc=800003ac insn=32b02973 trap=0 intr=0 rd=x18/00000100 mem=fffffcd5 w0000 r1111 mode=3 cyc=759)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 775500: uvm_test_top.env.sb [isa_mem] store data model=000000bf dut=000002d8 (order=206 pc=800003b4 insn=00efa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=770)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 783500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000008 (order=208 pc=800003bc insn=009fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=778)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 787500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000004 (order=209 pc=800003c0 insn=011fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=782)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 793500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000100 (order=210 pc=800003c4 insn=012fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=788)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 807500: uvm_test_top.env.sb [isa_rd] rd model=x7/00000000 dut=x7/00000001 (order=219 pc=800003e8 insn=323023f3 trap=0 intr=0 rd=x7/00000001 mem=fffffcdd w0000 r1111 mode=3 cyc=802)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 817500: uvm_test_top.env.sb [isa_rd] rd model=x17/00000000 dut=x17/00000010 (order=224 pc=800003fc insn=327028f3 trap=0 intr=0 rd=x17/00000010 mem=fffffcd9 w0000 r1111 mode=3 cyc=812)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 918500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000001 (order=253 pc=80000470 insn=007fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=913)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 924500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000010 (order=254 pc=80000474 insn=011fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=919)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 979500: uvm_test_top.env.sb [isa_rd] rd model=x21/00000000 dut=x21/00000053 (order=267 pc=800004a8 insn=b0302af3 trap=0 intr=0 rd=x21/00000053 mem=000004fd w0000 r1111 mode=3 cyc=974)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 988500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000053 (order=273 pc=800004c0 insn=015fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=983)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(292) @ 1021000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=283 mismatches=42 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=186

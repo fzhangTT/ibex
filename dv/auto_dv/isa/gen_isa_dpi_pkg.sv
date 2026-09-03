@@ -17,7 +17,8 @@ package gen_isa_dpi_pkg;
                                                        output int mem_writes, output int unsigned mem_addr,
                                                        output int unsigned mem_wdata, output int unsigned mem_rdata,
                                                        output int unsigned mem_size, output int unsigned prv,
-                                                       output int csr_writes, output int reg_writes);
+                                                       output int unsigned prv_before, output int csr_writes,
+                                                       output int reg_writes);
   import "DPI-C" context function int gen_isa_csr_write(input int i, output int unsigned addr, output int unsigned val);
   import "DPI-C" context function int gen_isa_reg_write(input int i, output int unsigned idx, output int unsigned val);
   import "DPI-C" context function int gen_isa_mem_write(input int i, output int unsigned addr, output int unsigned data,
@@ -41,6 +42,8 @@ package gen_isa_dpi_pkg;
                                                          input int irq_valid);
   import "DPI-C" context function void gen_isa_arm_fault(input int kind, input int unsigned addr, input int unsigned size);
   import "DPI-C" context function void gen_isa_set_time(input longint unsigned mcycle);
+  import "DPI-C" context function void gen_isa_set_hpm(input int idx, input int unsigned lo, input int unsigned hi);
+  import "DPI-C" context function void gen_isa_set_status(input int ic_scr_key_valid);
   import "DPI-C" context function void gen_isa_note_memory_write(input int unsigned addr, input int unsigned data,
                                                                  input byte unsigned be);
 endpackage

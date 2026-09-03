@@ -114,3 +114,19 @@ mret/dret exclusion on a program with a trap); lockstep zc/s7 with the knob PASS
 clock on this build: 0.29 s vs 0.26 s (Zc), 0.52 s vs 0.54 s (seed 7) without vs with the knob. The Section 4 runs
 (`*_twoflush_t080_*`) remain retained as the hex-marker version. The red-window canary of 10:49Z that closed Runtime's
 LOG-017 report is retained as `gen_canary_*_t080_*` (boot_zc, lockstep_zc, export_zc PASS on the pre-v4b tree).
+
+## 10. Final v4b text (r4 replan REQUEST-CHANGES): exact event rows
+
+The r4 replan review (of 6d16d9c) required exact event rows (the plan's sunset input (2)). Change: gen_tb_knobs.yaml renders
+29 rows over 8 sources (pin irq_software/irq_timer/irq_external/irq_nm/debug_req/fetch_enable/mcounteren_writable with
+`value`, pin irq_fast with `idx, value`, alert x4, misc x7, scrkey req/valid, the bus/icram/regime rows unchanged);
+gen_knobs_codegen.py refuses an event token `<name>`; gen_export.py drops the wildcard fallback (an `E` token that is not
+a header row fails) and requires every rendered row of every source named in `sources=`; gen_ut_knobs_codegen.py gains
+the refused-wildcard fixture and checks the exact function names; codegen unit test PASS (0 failures). The reader change
+was checked against the retained t080d files: gen_export_s7_t080d_gen_export.txt (2008 records) and
+gen_export_zc_counters_t080d_gen_export.txt (175 records) read OK; the pre-rs3 twoflush file fails on the field list as it
+should (34-field header). No writer exists yet, so no run's header changes; the export_zc / export_zc_counters /
+export_s7 runs on the T-102 build (gen_tdd_logs/export/gen_export_*_t102_*) PASS with the new reader and the
+re-rendered gen_tb_pkg.sv. Documents: addendum v4b final (stale text swept, MUT-H relation, Section 9 owner set and
+standing, icram to step (3)), sink API document Section 2, response tables R3 and R4 in
+gen_critic_response_rvfi_export.md.

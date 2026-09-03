@@ -106,10 +106,10 @@ hex without prefix and without leading zeros (`%0h`; a flag is `0` or `1`); ever
 `fields=` are names, not numbers). A value with X or Z renders as `x`/`z` characters and `read()` fails on the
 non-hex token.
 `R` lines are in retirement order (`order` ascending). The `# image` line is rest-of-line, so a path with spaces
-cannot break the tokeniser. A generic event row renders the literal token `<name>` in its header row (for example
-`# events pin <name> value`) and the event's own name in the `E` line. The `# events` rows are written only for
-registered and enabled sources; the addendum shows one row per rendered table row, as built a file of this landing
-has none.
+cannot break the tokeniser. Every event row names one exact event (no wildcard rows; the codegen refuses `<name>`):
+the header carries one `# events <source> <event> <fields>` row per rendered row of every registered and enabled
+source, and `read()` requires all rows of every source named in `sources=`. As built a file of this landing has no
+event rows: no writer has registered a source yet.
 
 ### 2b. Completeness rule of read(path, seq), as implemented
 
@@ -131,8 +131,8 @@ has none.
 6. Every line between the header and the marker is parsed: empty lines and earlier `# flush ` markers of the same run
    are skipped; an `R` line must have exactly 1 + (field count) tokens, all hex, and its `order` must be the previous
    record's `order` + 1; an `I` line must have exactly 7 value tokens, all hex; an `E` line must have at least four
-   tokens, its (source, event) must be a header row, or the source's generic `<name>` row, and its value count must
-   equal that row's field count; any other first token is `unknown line kind`. The cycle of each line (the `cycle`
+   tokens, its (source, event) must be a header row (an unlisted or misspelled event token is a failure), and its value
+   count must equal that row's field count; any other first token is `unknown line kind`. The cycle of each line (the `cycle`
    field of an `R` line, the first value of an `I` or `E` line) must be non-decreasing across all three kinds;
    nothing is required about the order of lines inside one cycle.
 7. The parsed counts must equal the marker: `R` lines == `records`, `I` lines == `markers`, `E` lines == `events`
@@ -158,19 +158,19 @@ not in `gen_bridge_if` yet.
 | ibus, dbus | req | addr, we, be | gen_bus_driver | the first cycle a request is seen (its rise); with the following gnt line's `req_cycle` this gives the cycles the request was held with gnt withheld, and its absence is the "no request" fact |
 | ibus, dbus | gnt | addr, we, be, req_cycle, outstanding_after | gen_bus_driver | the cycle the grant is driven (one per beat); `req_cycle` is the cycle of the matching req line |
 | ibus, dbus | rvalid | addr, we, err, intg_injected, outstanding_after | gen_bus_driver | the cycle the response is driven (one per beat) |
-| pin | irq_software, irq_timer, irq_external, irq_fast<n>, irq_nm, debug_req | value | irq / dbg drivers (step 2b) | every value change (rise and fall) |
+| pin | irq_software, irq_timer, irq_external, irq_nm, debug_req | value | irq / dbg drivers (step 2b) | every value change (rise and fall) |
+| pin | irq_fast | idx, value | irq driver (step 2b) | every value change of one fast line; `idx` is the line index, so the line count is not re-typed in the table |
 | pin | fetch_enable, mcounteren_writable | value (MuBi encoding) | gen_ctrl_driver | every value change |
 | alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
-| misc | <name> (irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr) | value | gen_misc_monitor (step 2b) | every value change (irq_pending_o is the DUT output pin that 26 marked items assert in a named cycle; core_busy as the MuBi encoding; one line per changed crash_dump_o field) |
+| misc | irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr (one row each) | value | gen_misc_monitor (step 2b) | every value change (irq_pending_o is the DUT output pin that 26 marked items assert in a named cycle; core_busy as the MuBi encoding; one line per changed crash_dump_o field) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
 | regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
 
-As rendered, the yaml carries the `ibus`/`dbus` `req`, `gnt` and `rvalid` rows, `icram inject` and `regime phase`
-as fixed rows, and ONE generic `<name>` row with the single field `value` for each of `pin`, `alert`, `misc` and
-`scrkey` (functions `gen_export_line_pin_any(cycle, name, value)` and so on, the event token passed as a string), so
-the per-event rows of the table above are the names those writers pass; the yaml and the addendum's version-4b table
-agree row for row.
+As rendered, the yaml carries every row of the table above as its own exact row (29 rows over 8 sources), one writer
+function per row named `gen_export_line_<source>_<event>` with the fields as named arguments; the yaml, the rendered
+include, `EXPORT_EVENTS` in gen_knobs.py and the addendum's final version-4b table agree row for row (the codegen unit
+test checks the first three).
 
 ## 3. Knobs
 

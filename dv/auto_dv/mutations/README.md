@@ -39,3 +39,4 @@ One block per mutation, kept as evidence next to the checker it proves (mutation
 - `gen_mut_sva_rvalid_legal.md`: MUT-003, the bus-interface stimulus-legality self-check (T-068).
 - `gen_mut_isa_fields.md`: MUT-004..MUT-007, per-field discrimination and ablation of the ISA comparator ids (T-068).
 - `gen_mut_export.md`: MUT-A..MUT-F, the record export's consumer checks (read() rules and the test's content checks) against producer mutations (T-080).
+- `gen_mut_t102.md`: P1..P9, the comparator conventions and shim legalization of T-102 (pre-step privilege, mret/dret pc_next, counter and status syncs, Ibex CSR views, one draft-B reference) caught by the named isa_* row with hidden referees inert, each with its ablation.

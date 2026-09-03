@@ -30,7 +30,7 @@ package gen_rvfi_pkg;
     bit          ext_exp_valid, ext_exp_last;
     logic [15:0] ext_exp_insn;
     int unsigned cycle;
-    logic [31:0] ext_mhpmcounters [10], ext_mhpmcountersh [10];   // sampled only for the export's counters knob
+    logic [31:0] ext_mhpmcounters [10], ext_mhpmcountersh [10];   // every record: the comparator syncs the model from them; exported under the counters knob
     `uvm_object_utils_begin(gen_rvfi_txn)
       `uvm_field_int(order, UVM_ALL_ON)
       `uvm_field_int(insn, UVM_ALL_ON)
@@ -97,10 +97,8 @@ package gen_rvfi_pkg;
       t.ext_exp_valid = vif.ext_expanded_insn_valid; t.ext_exp_last = vif.ext_expanded_insn_last;
       t.ext_exp_insn = vif.ext_expanded_insn;
       t.cycle = vif.cycle;
-      if (cfg.export_counters) begin
-        t.ext_mhpmcounters = vif.ext_mhpmcounters;
-        t.ext_mhpmcountersh = vif.ext_mhpmcountersh;
-      end
+      t.ext_mhpmcounters = vif.ext_mhpmcounters;
+      t.ext_mhpmcountersh = vif.ext_mhpmcountersh;
       return t;
     endfunction
     task run_phase(uvm_phase phase);
@@ -196,9 +194,9 @@ package gen_rvfi_pkg;
                       output int trap, output int unsigned cause, output int unsigned tval, output int rd_we,
                       output int unsigned rd_addr, output int unsigned rd_wdata, output int mem_r, output int mem_w,
                       output int unsigned mem_addr, output int unsigned mem_wdata, output int unsigned mem_rdata,
-                      output int unsigned mem_size, output int unsigned prv, output int csr_n, output int reg_n);
+                      output int unsigned mem_size, output int unsigned prv, output int unsigned prv_b, output int csr_n, output int reg_n);
       int rc = gen_isa_step_dpi(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata,
-                                mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n);
+                                mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n);
       if (rc != 0) begin
         `uvm_error("isa_step", {"model step failed: ", gen_isa_last_error()})
         return 0;
@@ -248,7 +246,7 @@ package gen_rvfi_pkg;
     endfunction
 
     function void write(gen_rvfi_txn t);
-      int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv;
+      int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect;
       bit is_seq = 0;
@@ -275,9 +273,9 @@ package gen_rvfi_pkg;
       // ---- draft-B op the model cannot execute (C5.5): every expectation comes from the MODEL (pc, fetched
       //      instruction, operands); the reference result and pc + 4 are written back into the model
       if (!t.trap && gen_isa_is_draft_b(t.insn)) begin
-        int unsigned ref_rd, model_pc, model_insn, rs1_v, rs2_v;
-        logic [4:0] rs1_i, rs2_i, rd_i;
-        bit r_type;
+        int unsigned ref_rd, model_pc, model_insn, rs1_v, rs2_v, rs3_v;
+        logic [4:0] rs1_i, rs2_i, rs3_i, rd_i;
+        bit r_type, uses_rs3;
         model_pc = gen_isa_get_pc();
         model_insn = gen_isa_fetch_insn(model_pc);
         draft_b++; compared++;
@@ -293,9 +291,14 @@ package gen_rvfi_pkg;
         rs1_i = model_insn[19:15]; rs2_i = model_insn[24:20]; rd_i = model_insn[11:7];
         r_type = (model_insn[6:0] == ibex_pkg::OPCODE_OP);
         rs1_v = gen_isa_read_gpr(rs1_i); rs2_v = r_type ? gen_isa_read_gpr(rs2_i) : 32'h0;
+        // R4 forms (cmov/cmix/fsl/fsr and fsri) read rs3 = insn[31:27]
+        uses_rs3 = model_insn[26] && (r_type || (model_insn[6:0] == ibex_pkg::OPCODE_OP_IMM && model_insn[14:12] == 3'b101));
+        rs3_i = model_insn[31:27]; rs3_v = uses_rs3 ? gen_isa_read_gpr(rs3_i) : 32'h0;
         if (t.rs1_rdata != rs1_v || (r_type && t.rs2_rdata != rs2_v))
           miss("isa_rd", $sformatf("draft-B operands model rs1=%08h rs2=%08h dut rs1=%08h rs2=%08h", rs1_v, rs2_v, t.rs1_rdata, t.rs2_rdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
-        void'(gen_isa_exec_reference(model_insn, rs1_v, rs2_v, 32'h0, ref_rd));
+        if (uses_rs3 && (t.rs3_addr != rs3_i || t.rs3_rdata != rs3_v))
+          miss("isa_rd", $sformatf("draft-B rs3 model=x%0d/%08h dut=x%0d/%08h", rs3_i, rs3_v, t.rs3_addr, t.rs3_rdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        void'(gen_isa_exec_reference(model_insn, rs1_v, rs2_v, rs3_v, ref_rd));
         if (rd_i != t.rd_addr || (rd_i != 0 && ref_rd != t.rd_wdata))
           miss("isa_rd", $sformatf("draft-B rd model=x%0d/%08h dut=x%0d/%08h", rd_i, ref_rd, t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         if (model_pc + 4 != t.pc_wdata)
@@ -307,7 +310,7 @@ package gen_rvfi_pkg;
       // ---- asynchronous entries before this record (C5.2): interrupt marker / debug request
       if (t.intr) begin
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
         irq_entries++;
         if (retired != 0 || !cause[31])
           miss("isa_trap", $sformatf("interrupt entry expected, model retired %0d cause %08h", retired, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
@@ -315,7 +318,7 @@ package gen_rvfi_pkg;
           miss("isa_pc", $sformatf("interrupt vector model=%08h dut=%08h", pc_a, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
       end else if (t.ext_debug_mode && !dbg_q && t.pc_rdata == GEN_MM_DM_HALT) begin
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b1, 1'b0);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
         dbg_entries++;
         if (retired != 0 || pc_a != GEN_MM_DM_HALT)
           miss("isa_pc", $sformatf("debug entry expected at DmHaltAddr, model retired %0d pc=%08h", retired, pc_a), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
@@ -323,8 +326,12 @@ package gen_rvfi_pkg;
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b0, 1'b0);
       end
       dbg_q = t.ext_debug_mode;
-      // ---- the record itself
-      if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
+      // ---- the record itself: the model's counters and status follow the record's sampled values (ID-exit sample point,
+      //      the cycle a CSR read sees), so csrr of cycle / mhpmcounterN / cpuctrlsts compares exactly
+      gen_isa_set_time(t.ext_mcycle);
+      for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
+      gen_isa_set_status(t.ext_ic_scr_key_valid);
+      if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
       compared++;
       bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
       if (pc_b != pc_expect)
@@ -363,12 +370,13 @@ package gen_rvfi_pkg;
               miss("isa_mem", $sformatf("store data model=%08h dut=%08h", mem_wdata, t.mem_wdata), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
           end
         end
-        if (pc_a != t.pc_wdata)
+        // mret/dret: rvfi_pc_wdata is the next sequential address, not the target (plan C-1); the target shows on the next record's isa_pc
+        if (t.insn != GEN_INSN_MRET && t.insn != GEN_INSN_DRET && pc_a != t.pc_wdata)
           miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end
-      // both sides carry the RISC-V privilege encoding (rvfi_mode is ibex_pkg::priv_lvl_e; Spike prv PRV_M/PRV_U)
-      if (prv[1:0] != t.mode)
-        miss("isa_prv", $sformatf("priv model=%0d dut mode=%0d", prv, t.mode), t, fld(cfg.chk_isa_prv, cfg.chk_isa_prv_set));
+      // rvfi_mode is the privilege the instruction executed in, so the model's pre-step privilege is compared (both RISC-V encoded)
+      if (prv_b[1:0] != t.mode)
+        miss("isa_prv", $sformatf("priv model=%0d (before the step) dut mode=%0d", prv_b, t.mode), t, fld(cfg.chk_isa_prv, cfg.chk_isa_prv_set));
       if (cfg.sb_trace) `uvm_info("GEN_SB", $sformatf("%s | model pc=%08h->%08h retired=%0d trap=%0d", t.brief(), pc_b, pc_a, retired, trap), UVM_LOW)
     endfunction
 

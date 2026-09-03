@@ -41,6 +41,13 @@
 #define GEN_FINISH_TIMEOUT_CYCLES_DEFAULT  20000u
 #define GEN_IRQ_FAST_W                     15u
 #define GEN_IRQ_FAST_MASK                  2147418112u
+#define GEN_CSR_MARCHID_VALUE              22u
+#define GEN_CSR_CPUCTRLSTS                 1984u
+#define GEN_CSR_SECURESEED                 1985u
+#define GEN_MHPM_COUNTER_NUM               10u
+#define GEN_INSN_MRET                      807403635u
+#define GEN_INSN_DRET                      2065694835u
+#define GEN_TDATA1_IBEX_RDATA              671092808u
 
 #define GEN_CMD_IRQ_SET                      1u
 #define GEN_CMD_IRQ_CLR                      2u

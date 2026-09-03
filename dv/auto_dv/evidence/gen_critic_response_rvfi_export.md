@@ -34,7 +34,10 @@ The record part is built (`dv/auto_dv/evidence/gen_tdd_export.md`); the event pa
 ## Complete status of BOTH replan artifacts against version 4b (`dv/auto_dv/docs/gen_rvfi_export_addendum.md`)
 
 Row prefixes: R1- = `2026-09-03-claude-replan-gen_rvfi_export_addendum.md` (review of v3a, APPROVE-WITH-CHANGES);
-R2- = `2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md` (review of v4a, REQUEST-CHANGES). Status words:
+R2- = `2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md` (review of v4a, REQUEST-CHANGES).
+Every code or retained-run claim in the R1/R2 rows below is at commit 6b3301d (T-080 landing 1a), which carries the
+rs3 fields, the decimal markers, the mret/dret exclusion, the sink cycle base and the out_t080d runs; "this commit" in
+the R3/R4 tables means the landing that carries this file version (the final v4b text and the exact event rows). Status words:
 ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with the reason).
 
 | Row | Finding | Status | Where |
@@ -57,3 +60,41 @@ ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with th
 | R2 prior: rs3 basis | was NOT ADDRESSED in v4a | ADDRESSED | R2-L5. |
 | R2 prior: response section answered three of six while the v4a header claimed all folded | ADDRESSED | this table replaces the partial section; the v4b header names what it folds. |
 | DV Lead round 4 (not a review row) | irq_pending_o and bus request events; COV_WITNESS command and CG-WIT-001 | ADDRESSED (text) | Section 8 rows (R2-M1); new Section 9 (COV_WITNESS, bins rendered from gen_trace_tp_bin.csv CG-WIT-001 rows, coverage only, build step 3). |
+
+## Replan review r3 (`2026-09-03-claude-replan-gen_rvfi_export_addendum-r3.md`, of the text at 1f8186e, REQUEST-CHANGES)
+
+| Row | Finding | Status | Where |
+|---|---|---|---|
+| R3-M1 | no `irq_pending_o` row, no request cycle on gnt (carried from r2) | ADDRESSED | Section 8 rows `misc irq_pending`, `ibus/dbus req`, `req_cycle` on gnt; yaml rows rendered at 6b3301d; writers with build step (2)/(3). |
+| R3-M2 | MUT-G catch not same-instant (carried from r2) | ADDRESSED (text; code with step (2)) | Section 2 marker `ibus_grants= dbus_grants=`, Section 3 flush text and rule list, 5.2 MUT-G. |
+| R3-M3 | no row per r2 finding; tohost row wrong | ADDRESSED | the R1/R2 table above (at 6d16d9c) and this section. |
+| R3-L1 | radix: plan `%h`/`%0d` vs build | ADDRESSED | Section 2 radix rule (this commit corrects the header sentence: `seed=`, `counters=` decimal); code at 6b3301d: `%0d` markers, decimal reader. |
+| R3-L2 | no single cycle base | ADDRESSED | Section 3 "One cycle base": `sink.cycle()` for event writers; the monitor's `gen_rvfi_if.cycle` is the same count by construction (both counters cited); `sink.cycle()` at 6b3301d. |
+| R3-L3 | continuity must exclude mret/dret (C-1) | ADDRESSED | 5.1 text; gen_ut_export.py excludes the two encodings; run retained at 6b3301d. |
+| R3-L4 | rule list omits the I-line count | ADDRESSED | Section 3 rule list names `I` lines == `markers` (this commit); `read()` has asserted it since 1f8186e. |
+| R3-L5 | rs3 attributed to the CHERIoT carve-out | ADDRESSED | rs3 exported (36 fields) at 6b3301d; Section 2 states the basis. |
+| R3-L6 | "pushes a stack frame" is false | ADDRESSED | 5.1: the Zc program spins after its tohost store. |
+| R3-L7 | MUT-H names no bound | ADDRESSED (text) | 5.2 MUT-H: exact relation (line cycle == `cycle_count` at the FETCH_EN ack minus one; first `R` after it; gap recorded then asserted). |
+| R3-L8 | icram under step (2) while gen_icache_ram.sv defers the hooks | ADDRESSED (text) | Section 8 build order: icram moved to step (3). |
+| R3-L9 | `<name>` rows: header token and reader rule unstated; a misspelled token passes | ADDRESSED (text and code, this commit) | yaml: 29 exact rows (irq_fast with an `idx` field); codegen refuses `<name>`; `read()` refuses an `E` token that is not a header row; Section 8 rules; sink API document Section 2. |
+| R3-L10 (N1) | stale pre-build names and "no SV or Python exists yet" | ADDRESSED | Sections 4, 7 and 8 at 6b3301d; line 6 status, `flush_export()`, header/marker residue this commit. |
+| R3-L11 (N2) | measured sizes match no retained file | ADDRESSED | Section 3 restated from the out_t080d files (22133 / 29971 / 232434 bytes; 2008 records), retained at 6b3301d. |
+| R3-L12 (N4) | "require the event header lines" overstates `read()` | ADDRESSED (text and code, this commit) | `read()` now requires every rendered row of every source in `sources=`; Section 3 rule list states it as built. |
+| R3-N5 | API document says the R line is still formatted with the knob absent | ADDRESSED | gen_component_api_rvfi_monitor.md corrected at 6b3301d. |
+
+## Replan review r4 (`2026-09-03-claude-replan-gen_rvfi_export_addendum-r4.md`, of 6d16d9c, REQUEST-CHANGES)
+
+| Row | Finding | Status | Where |
+|---|---|---|---|
+| R4-M1 | wildcard `<name>` rows against the plan's exact-row sunset input | ADDRESSED (this commit) | as R3-L9: exact rows in the yaml, codegen and reader; Section 8 rules. |
+| R4-M2 | COV_WITNESS accepts any index; C-2 owner-only acceptance unstated | ADDRESSED (text; knob and checks with build step 3) | Section 9: `+gen_witness_ids` rendered per test from the entry's `witness_ids`; foreign id `uvm_error GEN_WITNESS_FOREIGN`; index outside the global list stays `GEN_CMD_DISPATCH`. |
+| R4-M3 | six r3 findings without a row; code claims cite uncommitted runs | ADDRESSED | R3 table above (every r3 finding); the R1/R2 preamble names 6b3301d for every code and run claim. |
+| R4-L1 | MUT-H bound still unnamed | ADDRESSED (text) | as R3-L7. |
+| R4-L2 | Section 3 flush text lacks the grant counters and the `E gnt` rule; who increments the bridge fields | ADDRESSED (text) | Section 3 flush paragraph and rule list; Section 8 trust-triad paragraph: the bus drivers increment them in the grant beat, independent of the line writer. |
+| R4-L3 | `sink.cycle()` "by every writer" is not what the R/I writer does | ADDRESSED (text) | Section 3: the monitor's `gen_rvfi_if.cycle` is the same count by construction (gen_rvfi_if.sv:24-25, gen_bridge_if.sv:48-54). |
+| R4-L4 | stale pre-build text (line 6, `flush()`, residue, `%h`/`%0d`, I count) | ADDRESSED | this commit: status sentence, `flush_export()` everywhere, sink writes the marker, header wording, radix sentence, I count in the rule list. |
+| R4-L5 | measured sizes match no retained file | ADDRESSED | as R3-L11; the runs are committed at 6b3301d. |
+| R4-L6 | icram under step (2) | ADDRESSED (text) | as R3-L8. |
+| R4-L7 | Section 9 omits the group's standing and the anti-vacuity basis | ADDRESSED (text) | Section 9: weight 0, "witnessed clauses: N of M", anti-vacuity by `check_test_source` (C-1), not the TB. |
+| R4-L8 | header "every key=value is decimal" is false; header-row rule overstated | ADDRESSED (text and code, this commit) | Section 2 radix rule names `seed=` and `counters=`; `read()` per-source row requirement (R3-L12). |
+| R4-L9 | lag: markers `%0h` etc. at 6d16d9c, working tree uncommitted | ADDRESSED | landed at 6b3301d (T-080 landing 1a). |

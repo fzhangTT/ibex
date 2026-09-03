@@ -29,7 +29,8 @@ gen_misc_monitor, coverage.
 
 AS BUILT: the monitor is class `gen_rvfi_monitor` in `dv/auto_dv/env/gen_rvfi_pkg.sv` (no separate
 `gen_rvfi_monitor.sv`); `ext_mhpmcounters[10]` and `ext_mhpmcountersh[10]` are sampled from the interface into the
-txn only under `+gen_export_counters=1` (Section 8); the export hand-off is the `sink` handle that `gen_env` sets in
+txn on every record (the comparator syncs the model's counters from them, T-102) and appended to the `R` line only
+under `+gen_export_counters=1` (Section 8); the export hand-off is the `sink` handle that `gen_env` sets in
 `connect_phase`.
 
 ## 3. Knobs
@@ -39,7 +40,7 @@ txn only under `+gen_export_counters=1` (Section 8); the export hand-off is the 
 | `+gen_rvfi_trace=1` | `PLUSARG_RVFI_TRACE` | write an ASCII trace file (debug only) | 0 |
 | `+gen_chk_rvfi_order / _pc_cont / _cap_quiet` | `PLUSARG_CHK_*` | checker enables | 1 |
 | `+gen_export_file=<path>` | `PLUSARG_EXPORT_FILE` | consumed through the `sink` handle: every record and marker is handed to `gen_export_sink`, which writes them only when this knob names a file (gen_component_api_export_sink.md Section 3) | unset |
-| `+gen_export_counters=1` | `PLUSARG_EXPORT_COUNTERS` | sample `ext_mhpmcounters` / `ext_mhpmcountersh` from the interface into the txn and append the 20 words to the `R` line | 0 |
+| `+gen_export_counters=1` | `PLUSARG_EXPORT_COUNTERS` | append the 20 counter words (sampled into the txn on every record) to the `R` line | 0 |
 | `+gen_export_sources=<csv>`, `+gen_export_flush_every=<n>` | `PLUSARG_EXPORT_SOURCES`, `PLUSARG_EXPORT_FLUSH_EVERY` | sink knobs, not read by the monitor: gen_component_api_export_sink.md Section 3 | `all`, 0 |
 
 ## 4. Wave-level behaviour

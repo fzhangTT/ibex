@@ -47,9 +47,17 @@ association is by order with the response preceding the record.
 | `isa_trap` | model trap <=> `rvfi_trap`; cause per handler read-back | controller exception cause select (`rtl/ibex_controller.sv:299-337, 900-927`), decoder illegal detection | `+gen_chk_isa_trap=0` |
 | `isa_rd` | GPR write (index, value) == `rvfi_rd_addr/rd_wdata` | ALU operator select (`rtl/ibex_alu.sv`), multiplier/divider (`rtl/ibex_multdiv_fast.sv`), decoder rd/we (`rtl/ibex_decoder.sv`), WB mux (`rtl/ibex_wb_stage.sv`) | `+gen_chk_isa_rd=0` |
 | `isa_mem` | memory access address, size, store data == `rvfi_mem_*` | LSU address/data rotation and byte enables (`rtl/ibex_load_store_unit.sv:138-221`) | `+gen_chk_isa_mem=0` |
-| `isa_prv` | `last_inst_priv == rvfi_mode` | privilege update on trap/mret (`rtl/ibex_cs_registers.sv:953-993`) | `+gen_chk_isa_prv=0` |
-| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata` (not on F-RVFI-010 records) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
+| `isa_prv` | the model's privilege BEFORE the step (`prv_before`) == `rvfi_mode`: rvfi_mode is the mode the instruction executed in, so the post-step privilege is not compared (T-102; the pre-T-102 compare fired on every mret and every U-mode trap) | privilege update on trap/mret (`rtl/ibex_cs_registers.sv:953-993`) | `+gen_chk_isa_prv=0` |
+| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata`; not on trap records (F-RVFI-010) and not on mret/dret records (plan C-1: their `pc_wdata` is pc + 4; the target is checked by the next record's `isa_pc`) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
 | `isa_csr` | every model CSR write (commit log type 4) == the legalized expectation (C5.3a) or the SPEC value (C5.3b rows); read-backs per C6 | CSR legalization and read mux (`rtl/ibex_cs_registers.sv`) | `+gen_chk_isa_csr=0` |
+
+Model synchronisation before every record step (T-102): the scoreboard hands the record's sampled values to the model
+before stepping it, `gen_isa_set_time(t.ext_mcycle)`, `gen_isa_set_hpm(k, ...)` for the `GEN_MHPM_COUNTER_NUM` counter
+pairs and `gen_isa_set_status(t.ext_ic_scr_key_valid)`. RVFI samples these when the instruction leaves ID
+(rtl/ibex_core.sv:2102-2120), the cycle in which a CSR read of `cycle`, `mhpmcounterN` or `cpuctrlsts` takes its value,
+so the model's read equals the DUT's exactly; the monitor therefore samples the counter words on every record. Draft-B
+records (C5.5): the R4 forms (cmov, cmix, fsl, fsr, fsri) read rs3 = insn[31:27] from the model's register file; the
+record's `rvfi_rs3_addr/rdata` are compared with it under `isa_rd` and the value feeds the reference.
 
 ### 5a. Mutation classes per id
 

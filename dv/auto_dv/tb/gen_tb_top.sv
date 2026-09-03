@@ -70,6 +70,12 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
       $fatal(1, "GEN_WIDTH_GUARD: MemDataWidth %0d != DUT instr_rdata_i width %0d", MemDataWidth, $bits(u_dut.instr_rdata_i));
     if (GEN_IBUS_MAX_OUTSTANDING != GEN_IBUS_MAX_OUTSTANDING_PY)
       $fatal(1, "GEN_WIDTH_GUARD: GEN_IBUS_MAX_OUTSTANDING sv %0d != rendered %0d", GEN_IBUS_MAX_OUTSTANDING, GEN_IBUS_MAX_OUTSTANDING_PY);
+    if (GEN_CSR_MARCHID_VALUE != GEN_CSR_MARCHID_VALUE_PY || GEN_CSR_CPUCTRLSTS != GEN_CSR_CPUCTRLSTS_PY ||
+        GEN_CSR_SECURESEED != GEN_CSR_SECURESEED_PY)
+      $fatal(1, "GEN_WIDTH_GUARD: CSR constants sv %08h/%03h/%03h != rendered %08h/%03h/%03h", GEN_CSR_MARCHID_VALUE,
+             GEN_CSR_CPUCTRLSTS, GEN_CSR_SECURESEED, GEN_CSR_MARCHID_VALUE_PY, GEN_CSR_CPUCTRLSTS_PY, GEN_CSR_SECURESEED_PY);
+    if (GEN_MHPM_COUNTER_NUM != u_dut.MHPMCounterNum)
+      $fatal(1, "GEN_WIDTH_GUARD: GEN_MHPM_COUNTER_NUM %0d != DUT MHPMCounterNum %0d", GEN_MHPM_COUNTER_NUM, u_dut.MHPMCounterNum);
     if (GEN_IRQ_FAST_W != GEN_IRQ_FAST_W_PY || GEN_IRQ_FAST_MASK != GEN_IRQ_FAST_MASK_PY)
       $fatal(1, "GEN_WIDTH_GUARD: GEN_IRQ_FAST_W/MASK sv %0d/%08h != rendered %0d/%08h", GEN_IRQ_FAST_W, GEN_IRQ_FAST_MASK, GEN_IRQ_FAST_W_PY, GEN_IRQ_FAST_MASK_PY);
   end

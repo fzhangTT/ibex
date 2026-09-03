@@ -1,0 +1,156 @@
+# RED (T-102 stage 1): 2026-09-03T11:36:17Z host=soc-l-11 cmd: bash dv/auto_dv/isa/gen_isa_shim_build.sh test <clone>/dv/auto_dv/work/tb-infra/out_t102/ut <scratch>/zc/prog.vmem (Zc image from dv/auto_dv/stim/gen_directed/gen_zc_directed.S seed 1, 204 words crc32 0xcf0cb3b8); shim logic of 6b3301d with gen_isa_is_draft_b declared and the T-102 constants rendered; the run ends in Spike's wide_counter_csr_t assert on the second write of gen_isa_set_time (never called by the comparator before T-102); rc=134
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+-- 1. reset legalization (C5.3a Reset row)
+gen_isa_reset                                got 0x1 exp 0x1 OK
+pc = boot page + 0x80                        got 0x80000080 exp 0x80000080 OK
+mtvec = boot page | 1                        got 0x80000001 exp 0x80000001 OK
+mstatus = 0x80 (MPIE, MPP U)                 got 0x80 exp 0x80 OK
+prv M                                        got 0x3 exp 0x3 OK
+misa RV32IMCU + X (MisaXBit = 1 for BaseIsaRV32IorCHERIoT) got 0x40901104 exp 0x40901104 OK
+pmpcfg0 all OFF                              got 0x0 exp 0x0 OK
+pmpaddr0 zero                                got 0x0 exp 0x0 OK
+mie zero                                     got 0x0 exp 0x0 OK
+mcause zero                                  got 0x0 exp 0x0 OK
+-- 2. the Zc image runs to its tohost store
+image words                                  got 0x1 exp 0x1 OK
+entry word j _start                          got 0x40006f exp 0x40006f OK
+step 1 ok                                    got 0x1 exp 0x1 OK
+step 1 pc_before                             got 0x80000080 exp 0x80000080 OK
+step 1 insn                                  got 0x40006f exp 0x40006f OK
+step 1 retired                               got 0x1 exp 0x1 OK
+step 1 pc_after = _start (jal +4)            got 0x80000084 exp 0x80000084 OK
+step 1 no trap                               got 0x0 exp 0x0 OK
+step 1 fetch_insn(pc_before) = insn          got 0x40006f exp 0x40006f OK
+step 1 (j) logs no x-register write          got 0x0 exp 0x0 OK
+step 1 reg_write(0) -> -1                    got 0x1 exp 0x1 OK
+   (multi-store step: pc 0x800000ae insn 0xb872, 4 writes)
+cm.push mem_write(0) addr = mem_addr         got 0x8000039c exp 0x8000039c OK
+cm.push mem_write(0) data = mem_wdata        got 0x44444444 exp 0x44444444 OK
+cm.push mem_write(i) rc 0 for every i        got 0x0 exp 0x0 OK
+cm.push store addresses 4-byte aligned       got 0x0 exp 0x0 OK
+cm.push store sizes 4                        got 0x0 exp 0x0 OK
+cm.push consecutive stores descend by 4      got 0x0 exp 0x0 OK
+cm.push mem_write(mem_writes) -> -1          got 0x1 exp 0x1 OK
+cm.push logs no loads                        got 0x0 exp 0x0 OK
+cm.push mem_read(0) -> -1                    got 0x1 exp 0x1 OK
+   (multi-register-write step: pc 0x800000da insn 0xba72, 5 writes, 4 reads)
+cm.pop reg_write(i) rc 0 for every i         got 0x0 exp 0x0 OK
+cm.pop reg_write never reports x0            got 0x0 exp 0x0 OK
+cm.pop register indices strictly ascending (Spike log order) got 0x0 exp 0x0 OK
+cm.pop reg_write(reg_writes) -> -1           got 0x1 exp 0x1 OK
+cm.pop logs >= 2 loads                       got 0x1 exp 0x1 OK
+cm.pop mem_read(i) rc 0 for every i          got 0x0 exp 0x0 OK
+cm.pop load addresses 4-byte aligned         got 0x0 exp 0x0 OK
+cm.pop load sizes 4                          got 0x0 exp 0x0 OK
+cm.pop mem_read(mem_reads) -> -1             got 0x1 exp 0x1 OK
+cm.pop logs no stores                        got 0x0 exp 0x0 OK
+tohost store reached                         got 0x1 exp 0x1 OK
+tohost value 1 (pass)                        got 0x1 exp 0x1 OK
+steps to tohost within 400                   got 0x1 exp 0x1 OK
+   (149 steps)
+fetch_insn(pc_before) = insn on every step   got 0x0 exp 0x0 OK
+rd_we agrees with reg_writes on every step   got 0x0 exp 0x0 OK
+a multi-store step (cm.push) was found       got 0x1 exp 0x1 OK
+a multi-register-write step (cm.pop) was found got 0x1 exp 0x1 OK
+fetch_insn(unmapped) = 0                     got 0x0 exp 0x0 OK
+-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them
+re-reset                                     got 0x1 exp 0x1 OK
+x2 = 0x12345678                              got 0x12345678 exp 0x12345678 OK
+rev8 retires                                 got 0x1 exp 0x1 OK
+rev8 rd                                      got 0x1 exp 0x1 OK
+rev8 value                                   got 0x78563412 exp 0x78563412 OK
+rev8 reg_writes = 1                          got 0x1 exp 0x1 OK
+rev8 reg_write(0) rc                         got 0x0 exp 0x0 OK
+rev8 reg_write(0) idx = rd_addr              got 0x1 exp 0x1 OK
+rev8 reg_write(0) val = rd_wdata             got 0x78563412 exp 0x78563412 OK
+rev8 reg_write(1) -> -1                      got 0x1 exp 0x1 OK
+orc.b retires                                got 0x1 exp 0x1 OK
+orc.b value                                  got 0xffffffff exp 0xffffffff OK
+   (last shim note: csr 0x34b logged but not readable (cause 2))
+grevi imm 1 traps                            got 0x1 exp 0x1 OK
+grevi imm 1 cause illegal (2)                got 0x2 exp 0x2 OK
+grevi imm 1 mtval = insn                     got 0x68115213 exp 0x68115213 OK
+grevi imm 1 retires 0                        got 0x0 exp 0x0 OK
+grevi imm 1 fetch_insn(pc_before) = insn     got 0x68115213 exp 0x68115213 OK
+grevi imm 1 logs no x-register write         got 0x0 exp 0x0 OK
+trap pc = mtvec base                         got 0x80000000 exp 0x80000000 OK
+reference handles grevi imm 1                got 0x0 exp 0x0 OK
+grev(x,1)                                    got 0x2138a9b4 exp 0x2138a9b4 OK
+reference handles gorci imm 1                got 0x0 exp 0x0 OK
+gorc(x,1)                                    got 0x333cfffc exp 0x333cfffc OK
+reference grev 31 (rev)                      got 0x1 exp 0x1 OK
+reference gorc 16                            got 0x1 exp 0x1 OK
+reference rejects a plain addi               got 0x1 exp 0x1 OK
+-- 4. CSR legalization after retired writes
+re-reset                                     got 0x1 exp 0x1 OK
+csrw mtvec retires                           got 0x1 exp 0x1 OK
+mtvec legalized: BASE[7:2] = 0, MODE 1       got 0x80001201 exp 0x80001201 OK
+csr write list has mtvec                     got 0x1 exp 0x1 OK
+csr write 0 is mtvec                         got 0x305 exp 0x305 OK
+csr write 0 value legalized                  got 0x80001201 exp 0x80001201 OK
+mie fast bit 16 sticks                       got 0x10000 exp 0x10000 OK
+csrw cpuctrlsts retires (no trap)            got 0x1 exp 0x1 OK
+cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO got 0xff exp 0xff OK
+gpr write/read                               got 0xdeadbeef exp 0xdeadbeef OK
+set_pc/get_pc                                got 0x80000100 exp 0x80000100 OK
+-- 5. T-102: Ibex conventions the model must show (reset values, WARL, counters, draft-B references)
+re-reset                                     got 0x1 exp 0x1 OK
+marchid = ibex_pkg CSR_MARCHID_VALUE         got 0x5 exp 0x16 FAIL
+mhpmevent3 = 1 (event bit i-3)               got 0x0 exp 0x1 FAIL
+mhpmevent(3+N-1) = 1 << (N-1)                got 0x0 exp 0x200 FAIL
+mhpmevent(3+N) = 0 beyond MHPMCounterNum     got 0x0 exp 0x0 OK
+mhpmevent31 = 0                              got 0x0 exp 0x0 OK
+tdata1 = Ibex mcontrol view                  got 0xf0000000 exp 0x28001048 FAIL
+tdata1 write outside debug mode ignored      got 0xf0000000 exp 0x28001048 FAIL
+tdata2 write outside debug mode ignored      got 0x80000004 exp 0x0 FAIL
+mstatus all-ones write: XS and SD stay 0     got 0x80018000 exp 0x0 FAIL
+pack                                         got 0x0 exp 0x1 FAIL
+packu                                        got 0x0 exp 0x1 FAIL
+packh                                        got 0x0 exp 0x1 FAIL
+slo 4                                        got 0x0 exp 0x1 FAIL
+slo rs2 = 32 acts as 0                       got 0x0 exp 0x1 FAIL
+sloi 31 of 0 = 0x7fffffff                    got 0x0 exp 0x1 FAIL
+sro 4                                        got 0x0 exp 0x1 FAIL
+sro 1 of 0 = 0x80000000                      got 0x0 exp 0x1 FAIL
+sroi 31 of 0 = 0xfffffffe                    got 0x0 exp 0x1 FAIL
+shfl 15 (zip)                                got 0x0 exp 0x1 FAIL
+unshfl 15 (unzip)                            got 0x0 exp 0x1 FAIL
+shfli 15                                     got 0x0 exp 0x1 FAIL
+unshfli 15                                   got 0x0 exp 0x1 FAIL
+xperm.n                                      got 0x0 exp 0x1 FAIL
+xperm.b                                      got 0x0 exp 0x1 FAIL
+xperm.b out-of-range lanes read 0            got 0x0 exp 0x1 FAIL
+xperm.h                                      got 0x0 exp 0x1 FAIL
+cmov rs2 = 0 selects rs3                     got 0x0 exp 0x1 FAIL
+cmov rs2 != 0 selects rs1                    got 0x0 exp 0x1 FAIL
+cmix                                         got 0x0 exp 0x1 FAIL
+fsl 1                                        got 0x0 exp 0x1 FAIL
+fsl 31                                       got 0x0 exp 0x1 FAIL
+fsl 32 = rs3                                 got 0x0 exp 0x1 FAIL
+fsl 64 acts as 0 = rs1                       got 0x0 exp 0x1 FAIL
+fsr 1                                        got 0x0 exp 0x1 FAIL
+fsri 1                                       got 0x0 exp 0x1 FAIL
+bfp len 8 off 8                              got 0x0 exp 0x1 FAIL
+bfp len 0 places 16 bits                     got 0x0 exp 0x1 FAIL
+crc32.b(1)                                   got 0x0 exp 0x1 FAIL
+crc32.b(2)                                   got 0x0 exp 0x1 FAIL
+crc32c.b(1)                                  got 0x0 exp 0x1 FAIL
+crc32.w(0) = 0                               got 0x0 exp 0x1 FAIL
+crc32c.w(0) = 0                              got 0x0 exp 0x1 FAIL
+crc32.h = crc32.b applied twice              got 0x0 exp 0x0 OK
+reference rejects rori (ratified)            got 0x1 exp 0x1 OK
+reference rejects clz (ratified)             got 0x1 exp 0x1 OK
+is_draft_b(pack) = 1                         got 0x0 exp 0x1 FAIL
+is_draft_b(rori) = 0                         got 0x0 exp 0x0 OK
+gen_ut_isa_shim: ../riscv/csrs.cc:1340: virtual bool wide_counter_csr_t::unlogged_write(reg_t): Assertion `!written' failed.
+dv/auto_dv/isa/gen_isa_shim_build.sh: line 21: 713989 Aborted                 (core dumped) "$OUT/gen_ut_isa_shim" "$VMEM"

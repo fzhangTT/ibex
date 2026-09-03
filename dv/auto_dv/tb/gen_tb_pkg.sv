@@ -223,6 +223,16 @@ package gen_tb_pkg;
   parameter int unsigned GEN_IRQ_FAST_W_PY = 15;  // rendered from rtl/ibex_pkg.sv (irq_fast_w)
   parameter logic [31:0] GEN_IRQ_FAST_MASK = ((32'h1 << GEN_IRQ_FAST_W) - 1) << 16;  // mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t
   parameter logic [31:0] GEN_IRQ_FAST_MASK_PY = 2147418112;  // rendered from rtl/ibex_pkg.sv (irq_fast_mask)
+  parameter logic [31:0] GEN_CSR_MARCHID_VALUE = ibex_pkg::CSR_MARCHID_VALUE;  // marchid the DUT reports (rtl/ibex_pkg.sv CSR_MARCHID_VALUE); the shim installs it as a read-only CSR
+  parameter logic [31:0] GEN_CSR_MARCHID_VALUE_PY = 22;  // rendered from rtl/ibex_pkg.sv (csr_marchid_value)
+  parameter logic [11:0] GEN_CSR_CPUCTRLSTS = ibex_pkg::CSR_CPUCTRLSTS;  // custom CSR address cpuctrlsts (rtl/ibex_pkg.sv); the shim's masked CSR with the ic_scr_key_valid status bit
+  parameter logic [11:0] GEN_CSR_CPUCTRLSTS_PY = 1984;  // rendered from rtl/ibex_pkg.sv (csr_addr_cpuctrlsts)
+  parameter logic [11:0] GEN_CSR_SECURESEED = ibex_pkg::CSR_SECURESEED;  // custom CSR address secureseed (rtl/ibex_pkg.sv); reads 0 in the shim
+  parameter logic [11:0] GEN_CSR_SECURESEED_PY = 1985;  // rendered from rtl/ibex_pkg.sv (csr_addr_secureseed)
+  parameter int unsigned GEN_MHPM_COUNTER_NUM = 10;  // MHPMCounterNum of the build (Runtime's -pvalue; gen_tb_top fatals when u_dut.MHPMCounterNum differs); the shim's mhpmevent values and the counter sync use it
+  parameter logic [31:0] GEN_INSN_MRET = 807403635;  // mret encoding (privileged spec); plan C-1: its RVFI pc_wdata is pc + 4, so isa_pc_next and the export continuity rule skip it
+  parameter logic [31:0] GEN_INSN_DRET = 2065694835;  // dret encoding (debug spec); plan C-1 as for mret
+  parameter logic [31:0] GEN_TDATA1_IBEX_RDATA = 671092808;  // tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag
   // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.
   parameter logic [31:0] GEN_MM_BOOT_ADDR_DEFAULT = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_BOOT_PAGE_MASK = 32'hffff_ff00;
@@ -360,11 +370,11 @@ package gen_tb_pkg;
     case (source)
       "ibus": return "# events ibus req addr,we,be\n# events ibus gnt addr,we,be,req_cycle,outstanding_after\n# events ibus rvalid addr,we,err,intg_injected,outstanding_after\n";
       "dbus": return "# events dbus req addr,we,be\n# events dbus gnt addr,we,be,req_cycle,outstanding_after\n# events dbus rvalid addr,we,err,intg_injected,outstanding_after\n";
-      "pin": return "# events pin <name> value\n";
-      "alert": return "# events alert <name> value\n";
-      "misc": return "# events misc <name> value\n";
+      "pin": return "# events pin irq_software value\n# events pin irq_timer value\n# events pin irq_external value\n# events pin irq_fast idx,value\n# events pin irq_nm value\n# events pin debug_req value\n# events pin fetch_enable value\n# events pin mcounteren_writable value\n";
+      "alert": return "# events alert alert_minor value\n# events alert alert_major_bus value\n# events alert alert_major_internal value\n# events alert double_fault_seen value\n";
+      "misc": return "# events misc irq_pending value\n# events misc core_busy value\n# events misc crash_dump_current_pc value\n# events misc crash_dump_next_pc value\n# events misc crash_dump_last_data_addr value\n# events misc crash_dump_exception_pc value\n# events misc crash_dump_exception_addr value\n";
       "icram": return "# events icram inject way,index\n";
-      "scrkey": return "# events scrkey <name> value\n";
+      "scrkey": return "# events scrkey req value\n# events scrkey valid value\n";
       "regime": return "# events regime phase knob_id,value_idx,phase_idx\n";
       default: return "";
     endcase

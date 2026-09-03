@@ -79,6 +79,8 @@ def refused_fixtures(text):
     yield ("unknown derivation", text.replace("derive: irq_fast_w,", "derive: irq_fast_width,", 1), "unknown derivation")
     yield ("export event row with an unknown key", text.replace("{source: icram, event: inject, fields: [way, index]}",
                                                                    "{source: icram, event: inject, feilds: [way, index]}", 1), "unknown key(s) feilds")
+    yield ("export event wildcard row refused", text.replace("{source: icram, event: inject, fields: [way, index]}",
+                                                              '{source: icram, event: "<name>", fields: [way, index]}', 1), "no wildcard rows")
     yield ("default and default_from together", text.replace("{name: hart_id, kind: hex, default: 0,",
                                                              "{name: hart_id, kind: hex, default: 0, default_from: GEN_CLK_PERIOD_NS,", 1),
            "exactly one of default / default_from")
@@ -211,7 +213,7 @@ def main():
     check("record-line include lists every field in order", ", ".join(f"t.{f}" for f in rf) in rline)
     eline = (ROOT / "dv/auto_dv/env/gen_export_event_lines.svh").read_text()
     for row in ev:
-        fn = f"gen_export_line_{row['source']}_" + ("any" if row["event"] == "<name>" else row["event"])
+        fn = f"gen_export_line_{row['source']}_{row['event']}"
         check(f"event include defines {fn}", f"function automatic string {fn}(" in eline)
         check(f"pkg event header names {row['source']}/{row['event']}", f"# events {row['source']} {row['event']} {','.join(row['fields'])}" in pkg)
     if PY_OUT.is_file():

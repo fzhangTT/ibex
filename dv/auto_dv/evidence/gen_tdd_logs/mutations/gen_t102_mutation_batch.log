@@ -1,0 +1,50 @@
+# T-102 mutation batch driver output (scratch scripts mut_t102.py / mut_run_t102.sh; apply, build, catch, ablate, revert, sha256 after each revert)
+11:45:07Z
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+mutation base compile
+base compiled
+P3 applied to dv/auto_dv/isa/gen_isa_shim.cc; original sha256 8b7e1a24522d7ddc
+P3_catch_csr_reset: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+P3_ablate_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P3 reverted; dv/auto_dv/isa/gen_isa_shim.cc sha256 8b7e1a24522d7ddc
+P3: lib restored
+P7 applied to dv/auto_dv/isa/gen_isa_shim.cc; original sha256 8b7e1a24522d7ddc
+P7_catch_csr_trap_setup: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=207
+P7_ablate_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P7 reverted; dv/auto_dv/isa/gen_isa_shim.cc sha256 8b7e1a24522d7ddc
+P7: lib restored
+P9 applied to dv/auto_dv/isa/gen_isa_shim.cc; original sha256 8b7e1a24522d7ddc
+P9_catch_rst_boot: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+P9_ablate_rst_boot: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P9 reverted; dv/auto_dv/isa/gen_isa_shim.cc sha256 8b7e1a24522d7ddc
+P9: lib restored
+P1 applied to dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 d43ccf8d9a562c78
+P1_catch_pmp_csr_warl: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=315
+P1_ablate_pmp_csr_warl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P1 reverted; dv/auto_dv/env/gen_rvfi_pkg.sv sha256 d43ccf8d9a562c78
+P2 applied to dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 d43ccf8d9a562c78
+P2_catch_csr_trap_setup: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=71
+P2_ablate_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P2 reverted; dv/auto_dv/env/gen_rvfi_pkg.sv sha256 d43ccf8d9a562c78
+P4 applied to dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 d43ccf8d9a562c78
+P4_catch_csr_reset: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=3
+P4_ablate_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P4 reverted; dv/auto_dv/env/gen_rvfi_pkg.sv sha256 d43ccf8d9a562c78
+P5 applied to dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 d43ccf8d9a562c78
+P5_catch_csr_reset: verdict: FAIL reason: uvm_error at sim.log:31  uvm_err=7
+P5_ablate_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P5 reverted; dv/auto_dv/env/gen_rvfi_pkg.sv sha256 d43ccf8d9a562c78
+P6 applied to dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 d43ccf8d9a562c78
+P6_catch_rst_boot: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+P6_ablate_rst_boot: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+P6 reverted; dv/auto_dv/env/gen_rvfi_pkg.sv sha256 d43ccf8d9a562c78
+P8 (reference mutation; consumer = the shim unit test)
+P8 applied to dv/auto_dv/isa/gen_isa_shim.cc; original sha256 8b7e1a24522d7ddc
+P8 ut rc=1 fails=1
+cmix                                         got 0x0 exp 0x1 FAIL
+P8 reverted; dv/auto_dv/isa/gen_isa_shim.cc sha256 8b7e1a24522d7ddc
+d43ccf8d9a562c7844ef0  dv/auto_dv/env/gen_rvfi_pkg.sv
+8b7e1a24522d7ddc99352  dv/auto_dv/isa/gen_isa_shim.cc
+11:48:11Z
+[exited with code 0]

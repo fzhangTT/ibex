@@ -175,6 +175,13 @@ constants:
   - {name: GEN_FINISH_TIMEOUT_CYCLES_DEFAULT, value: 20000, sv_type: int unsigned, desc: "default finish-handshake budget (+gen_finish_timeout)"}
   - {name: GEN_IRQ_FAST_W, derive: irq_fast_w, sv: "$bits(GEN_IRQS_ZERO.irq_fast)", sv_type: int unsigned, desc: "fast interrupt lines (width of ibex_pkg::irqs_t.irq_fast)"}
   - {name: GEN_IRQ_FAST_MASK, derive: irq_fast_mask, sv: "((32'h1 << GEN_IRQ_FAST_W) - 1) << 16", sv_type: "logic [31:0]", desc: "mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t"}
+  - {name: GEN_CSR_MARCHID_VALUE, derive: csr_marchid_value, sv: "ibex_pkg::CSR_MARCHID_VALUE", sv_type: "logic [31:0]", desc: "marchid the DUT reports (rtl/ibex_pkg.sv CSR_MARCHID_VALUE); the shim installs it as a read-only CSR"}
+  - {name: GEN_CSR_CPUCTRLSTS, derive: csr_addr_cpuctrlsts, sv: "ibex_pkg::CSR_CPUCTRLSTS", sv_type: "logic [11:0]", desc: "custom CSR address cpuctrlsts (rtl/ibex_pkg.sv); the shim's masked CSR with the ic_scr_key_valid status bit"}
+  - {name: GEN_CSR_SECURESEED, derive: csr_addr_secureseed, sv: "ibex_pkg::CSR_SECURESEED", sv_type: "logic [11:0]", desc: "custom CSR address secureseed (rtl/ibex_pkg.sv); reads 0 in the shim"}
+  - {name: GEN_MHPM_COUNTER_NUM, value: 10, sv_type: int unsigned, desc: "MHPMCounterNum of the build (Runtime's -pvalue; gen_tb_top fatals when u_dut.MHPMCounterNum differs); the shim's mhpmevent values and the counter sync use it"}
+  - {name: GEN_INSN_MRET, value: 0x30200073, sv_type: "logic [31:0]", desc: "mret encoding (privileged spec); plan C-1: its RVFI pc_wdata is pc + 4, so isa_pc_next and the export continuity rule skip it"}
+  - {name: GEN_INSN_DRET, value: 0x7B200073, sv_type: "logic [31:0]", desc: "dret encoding (debug spec); plan C-1 as for mret"}
+  - {name: GEN_TDATA1_IBEX_RDATA, value: 0x28001048, sv_type: "logic [31:0]", desc: "tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag"}
 
 # TB memory map (test equipment). DM windows are read from gen_dut_top.sv parameters and the
 # program window from gen_riscv_dv_target/gen_link.ld at generation time; the MMIO page and its
@@ -194,8 +201,8 @@ memory_map:
 # Record and event export (architecture Section 9): the R-line field order (every gen_rvfi_txn field; the CHERIoT
 # capability fields and mem_is_cap are excluded as the carve-out, rs3 is exported because the draft-B ternary ops use
 # it), the counter words appended under +gen_export_counters, and the event table (one
-# writer function per row rendered into dv/auto_dv/env/gen_export_event_lines.svh; an event of "<name>" takes the
-# event token as an argument). Rendered as GEN_EXPORT_* in gen_tb_pkg.sv and EXPORT_* in gen_knobs.py.
+# writer function per row rendered into dv/auto_dv/env/gen_export_event_lines.svh; every row names one exact
+# event, no wildcard rows: the plan's sunset matches marked items on rendered rows). Rendered as GEN_EXPORT_* in gen_tb_pkg.sv and EXPORT_* in gen_knobs.py.
 export_record_fields: [order, pc_rdata, pc_wdata, insn, trap, halt, intr, mode, ixl, rs1_addr, rs1_rdata, rs2_addr, rs2_rdata, rs3_addr, rs3_rdata,
                        rd_addr, rd_wdata, mem_addr, mem_rmask, mem_wmask, mem_rdata, mem_wdata, ext_pre_mip, ext_post_mip,
                        ext_nmi, ext_nmi_int, ext_debug_req, ext_debug_mode, ext_rf_wr_suppress, ext_ic_scr_key_valid,
@@ -211,9 +218,26 @@ export_events:
   - {source: dbus, event: req, fields: [addr, we, be]}
   - {source: dbus, event: gnt, fields: [addr, we, be, req_cycle, outstanding_after]}
   - {source: dbus, event: rvalid, fields: [addr, we, err, intg_injected, outstanding_after]}
-  - {source: pin, event: "<name>", fields: [value]}
-  - {source: alert, event: "<name>", fields: [value]}
-  - {source: misc, event: "<name>", fields: [value]}
+  - {source: pin, event: irq_software, fields: [value]}
+  - {source: pin, event: irq_timer, fields: [value]}
+  - {source: pin, event: irq_external, fields: [value]}
+  - {source: pin, event: irq_fast, fields: [idx, value]}
+  - {source: pin, event: irq_nm, fields: [value]}
+  - {source: pin, event: debug_req, fields: [value]}
+  - {source: pin, event: fetch_enable, fields: [value]}
+  - {source: pin, event: mcounteren_writable, fields: [value]}
+  - {source: alert, event: alert_minor, fields: [value]}
+  - {source: alert, event: alert_major_bus, fields: [value]}
+  - {source: alert, event: alert_major_internal, fields: [value]}
+  - {source: alert, event: double_fault_seen, fields: [value]}
+  - {source: misc, event: irq_pending, fields: [value]}
+  - {source: misc, event: core_busy, fields: [value]}
+  - {source: misc, event: crash_dump_current_pc, fields: [value]}
+  - {source: misc, event: crash_dump_next_pc, fields: [value]}
+  - {source: misc, event: crash_dump_last_data_addr, fields: [value]}
+  - {source: misc, event: crash_dump_exception_pc, fields: [value]}
+  - {source: misc, event: crash_dump_exception_addr, fields: [value]}
   - {source: icram, event: inject, fields: [way, index]}
-  - {source: scrkey, event: "<name>", fields: [value]}
+  - {source: scrkey, event: req, fields: [value]}
+  - {source: scrkey, event: valid, fields: [value]}
   - {source: regime, event: phase, fields: [knob_id, value_idx, phase_idx]}
