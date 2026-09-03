@@ -73,6 +73,8 @@ esac
 
 mkdir -p dv/auto_dv/reviews
 ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
+# Never overwrite an earlier round: plan and replan targets keep their basename across rounds.
+_r=2; while [ -e "$ART" ]; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
 PROMPT_F=$(mktemp)
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.

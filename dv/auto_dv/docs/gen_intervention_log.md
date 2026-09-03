@@ -391,3 +391,14 @@ checking beyond the TB mechanics yet (the RVFI monitor, Spike shim and scoreboar
 step 2). Evidence: `dv/auto_dv/evidence/gen_tdd_boot_agents.md` (red run on the tied-off top
 first); commit 7678f78. Open at this point: the Critic's REQUEST-CHANGES on build steps 1a and 1b
 await a remediation commit, which the Orchestrator has made a gate for step 2.
+
+## LOG-012 - 2026-09-03 - NOTE (TB architecture document approved; Test Writer spawned)
+
+`dv/auto_dv/docs/gen_tb_architecture.md` v1a (commit da2a482) passed both reviews: Critic APPROVE
+(`dv/auto_dv/docs/gen_critic_tb_architecture_v2.md`) and the cross-model scoped re-review
+APPROVE-WITH-CHANGES (`dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md`; one
+medium: the component API documents still carry three retired knob names, assigned to TB Infra;
+lows to the DV Lead). Per `agent_team_prompt.txt` Section 4 step 4 the Test Writer is spawned at
+08:14 UTC. Phase 1 test writing against the plan stays blocked until the plan set passes its
+cross-model re-review (round 2 REQUEST-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_feature_list-r2.md`);
+the Test Writer starts with its plan, the template, and the boots-and-retires infrastructure.
