@@ -414,10 +414,12 @@ e.g. 86927ab264008433 for gen_ut_witness_ok), the gen_cmp_zcb seed-1 image built
 | t226_witness_noid | red: the table lacks the id | `AssertionError: GEN_TEST_FAIL gen_ut_witness_noid: the rendered WITNESS_IDS table lacks TP-CMP-036` | FAIL as designed | 5bd474e8968dcc3d04eb1ae80e7da18d |
 | t226_witness_notable | red: no table, no command | `AssertionError: GEN_TEST_FAIL gen_ut_witness_notable: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while ['TP-CMP-036'] are due` | FAIL as designed | 554b3d1228bbcfffc3353ae034cf5913 |
 | t226_witness_othergroup | red (new): the rendered owner of TP-CMP-036 is gen_cmp_zcmp_events | `AssertionError: GEN_TEST_FAIL gen_ut_witness_othergroup: witness for TP-CMP-036 owned by gen_cmp_zcmp_events, issued by gen_cmp_zcb: a test witnesses only its own group's items` | FAIL as designed, nothing issued | c0155e3473b39c3d753c9f29ffe37847 |
-| t226_witness_othergroup_unguarded | TDD red of the check: the same fixture on the export's template with the owner assertion removed (gen_t226_unguarded_template.diff) | GEN_TEST_PASS with the foreign owner witnessed | PASS (the check is the difference) | c1797b9b984fa8cf506ed25deafc5b0e |
+| t226_witness_othergroup_unguarded | TDD red of the check: the same fixture on the export's template with the owner assertion removed (gen_t226_unguarded_template.diff) | the template printed GEN_TEST_PASS after witnessing the foreign-owned item; the fixture's own guard then failed the run (TESTS=1 PASS=0 FAIL=1) | epilogue passed, run FAILed on the fixture guard: the check is the difference | c1797b9b984fa8cf506ed25deafc5b0e |
 
-The library self-test PASSes with the new attributes (the F_PATCH red still refuses a test module assigning lib.WITNESS_IDS; the
-fixtures are not test modules). Verified from a detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_t226.log names the HEAD it archived).
+These fixtures prove the Python side only: the recorder returns 0, so `bins=0` in the green's GEN_TEST_WITNESS line is the recorder's value,
+and its sim.log shows the witness ledger untouched (GEN_WIT witnesses=0, as expected); the SV round trip of a real witness rests on
+tb-infra's gen_ut_witness entries until the first real witness green. The library self-test PASSes with the new attributes (the F_PATCH
+red still refuses a test module assigning lib.WITNESS_IDS; the fixtures are not test modules). Verified from a detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_t226.log names the HEAD it archived).
 
 ## 11. The LOG-050 regime-handler rule (Critic batch-1 v8 L-1): a structural check in the library self-test and a run-time guard
 
@@ -447,3 +449,18 @@ Runs on out_head14 (export of 2ea81ac, sources sha 893384b8eec4e6d5):
 After the change the same structural fixture is refused: "class T schedules a regime knob its program cannot survive: knob_debug_req_regime
 (consumer dbg) needs a dbg handler the program does not declare" (the self-test's first red source is that fixture's body). Verified from a
 detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_guard.log names the HEAD).
+
+## 12. The CM77 touch: the lint reaches attribute chains rooted at self; Section 10 and API-doc wording; a self-found doc regression
+
+Red first: gen_t2cm77_lint_red_before.log (the lint of 04cf523 accepting a test class whose stimulus() assigns self.bridge.cov_witness = fake,
+and self.bridge.cmd = fake). Change: in check_test_source's class-method walk an assignment whose target is a pure attribute chain rooted at
+self with a template-owned first attribute is refused as F_OVERRIDE reaching further (the fifteen refused forms stay fifteen; the F_OVERRIDE
+sentence in lib and the API doc bullet name the new reach); a subscript anywhere in the target stays the item-assignment rule's case, which
+the existing red sources still exercise. Two red sources join the self-test's F_OVERRIDE list (self.bridge.cov_witness = _f in stimulus(),
+self.bridge.h.b = _f); the fixture base is not a test module, so its recorder stays legal. After the change the same source is refused:
+"class T rebinds self.bridge.cov_witness at line 7; a template method reached through a template-owned attribute is read-only for a test".
+Also in this touch: Section 10's control row and bins=0 sentence (CM77-m-2 / m-3), the fixture base docstring (CM77-i-1), the API document's
+two witness paragraphs (CM77-i-2 / i-3), and the id-free wording of the library's comments (the frozen-list and regime-handler comments state
+the rule, not the log entry). Self-found while applying CM77-i-2: the LOG-050 touch's API document came from the head_export14 staging root
+(an archive of 2ea81ac, before T-226) and so 674d026 dropped T-226's rewritten Section 9 witness paragraph; restored here (row SF-TT-1).
+Rule for the staging root: re-archive HEAD after every commit before copying a staged file over the tree.

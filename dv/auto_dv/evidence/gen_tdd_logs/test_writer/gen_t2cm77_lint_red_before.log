@@ -1,0 +1,3 @@
+# TDD red for CM77-m-1, 2026-09-03T20:18:45Z: the library of HEAD 04cf523 (gen_test_lib.py sha256 bff3eab2e917750e) checks a test class that rebinds self.bridge.cov_witness inside a hook
+check_test_source: ['T'] (ACCEPTED: the attribute-chain assignment self.bridge.cov_witness = fake is not refused)
+self.bridge.cmd = fake: ['T'] (ACCEPTED)

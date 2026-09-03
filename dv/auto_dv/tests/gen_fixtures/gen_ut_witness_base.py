@@ -1,6 +1,6 @@
 """Shared base of the witness-epilogue fixtures (never testlist entries): gen_test_cmp_zcb's test with one fire-check
 claiming a TRUE cycle clause, the bridge's cov_witness replaced by a recorder (the SV dispatcher routes COV_WITNESS to the
-witness covergroup since landing 2b; the fixtures' fake codes must never reach its table), and the library tables patched
+witness covergroup; the fixtures' fake codes must never reach its table), and the library tables patched
 per fixture (WITNESS_IDS, WITNESS_GROUP_OF, WITNESS_GROUPS, the test's group, CMD, the entry's witness_ids). Program: the
 gen_cmp_zcb seed-1 image."""
 from pathlib import Path

@@ -63,8 +63,8 @@ DURATION_CLASSES = {"short": (500, 2000), "medium": (2001, 20000), "long": (2000
 DEFAULT_DURATION_WEIGHTS = {"short": 6, "medium": 3, "long": 1}
 
 # Statement shapes check_test_source refuses. The API doc lists exactly these (gen_test_template_api.md) and the self-test proves
-# at least one refused red source per entry; anything not listed passes the lint (LOG-024c: the list does not grow).
-F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, or a class-body assignment of the method name)"
+# at least one refused red source per entry; anything not listed passes the lint; the list is frozen (a new refusal is a structural check beside it).
+F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, a class-body assignment of the method name, or a rebinding through an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)"
 F_LITERAL = "check() with a literal outcome"
 F_NOCHECK = "fire_check() that records no check"
 F_ITEMS = ("fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that does not start with "
@@ -587,6 +587,14 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} assigns self.{tg.attr} at line {c.lineno}; template-owned names are read-only for a test")
                         if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and resolve(tg.value.id) in guarded_modules:
                             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} patches {tg.value.id}.{tg.attr} at line {c.lineno}")
+                        # an attribute chain rooted at self (self.bridge.cov_witness = f) rebinds a template method behind a template-owned name
+                        root, chain = tg, []
+                        while isinstance(root, ast.Attribute):          # a subscript anywhere is the item-assignment rule's case
+                            chain.append(root.attr)
+                            root = root.value
+                        if len(chain) > 1 and isinstance(root, ast.Name) and root.id == "self" and owned(chain[-1]):
+                            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} rebinds self.{'.'.join(reversed(chain))} at line {c.lineno}; "
+                                                 f"a template method reached through a template-owned attribute is read-only for a test")
                 if isinstance(c, ast.Call):
                     f = c.func
                     if isinstance(f, ast.Attribute):
@@ -689,7 +697,7 @@ HANDLERS = tuple(sorted(set(HANDLER_OF.values())))
 
 
 def regime_handler_violations(schedulable, program_handlers, mie_stays_zero):
-    """The knobs of `schedulable` a program with `program_handlers` cannot survive (the LOG-050 rule); [] when none."""
+    """The knobs of `schedulable` a program with `program_handlers` cannot survive (the regime-handler rule); [] when none."""
     bad = []
     for knob in schedulable:
         need = HANDLER_OF.get(KNOB_CONSUMER.get(knob, "none"))
@@ -703,7 +711,7 @@ def regime_handler_violations(schedulable, program_handlers, mie_stays_zero):
 
 
 def check_regime_handlers_source(source, path="<source>"):
-    """Structural form of the LOG-050 rule over a test module (the library self-test runs it on every committed test): every
+    """Structural form of the regime-handler rule over a test module (the library self-test runs it on every committed test): every
     test class's `schedulable` is a literal tuple of knob names or `lib.TIMING_ONLY_KNOBS` / `GenTest.schedulable`,
     `program_handlers` a literal tuple drawn from HANDLERS and `mie_stays_zero` a literal True/False (the template defaults
     apply when absent); a schedulable dbg-consumer knob needs "dbg" in program_handlers, an irq-consumer knob "irq" or
@@ -881,7 +889,7 @@ def _self_test():
     for f in tests:
         assert check_test_module(f), f"{f}: no GenTest subclass found"
         assert check_regime_handlers(f), f"{f}: no test class for the regime-handler rule"
-    # LOG-050 rule: red sources refused, green sources accepted (the check is structural, outside the frozen REFUSED_FORMS)
+    # regime-handler rule: red sources refused, green sources accepted (the check is structural, outside the frozen REFUSED_FORMS)
     rh_base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
     rh_tail = "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n"
     for red, why in ((rh_base + "    schedulable = ('knob_imem_gnt_delay', 'knob_debug_req_regime')\n" + rh_tail, "needs a dbg handler"),
@@ -970,6 +978,8 @@ def _self_test():
         assert not accepted, f"red source ({why}) accepted"
         proved.add(form)
     for form, red, why in ((F_OVERRIDE, imp + "def _ok(self):\n    pass\nclass T(GenTest):\n    name = 'gen_test_x'\n    finish = _ok\n" + good, "assigns method name finish"),
+                           (F_OVERRIDE, imp + "async def _f(tp, g, timeout_cycles=200):\n    return 0\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.bridge.cov_witness = _f\n" + good, "rebinds self.bridge.cov_witness"),
+                           (F_OVERRIDE, imp + "async def _f(*a):\n    return 0\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.bridge.h.b = _f\n" + good, "rebinds self.bridge.h.b"),
                            (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs = self._results\n" + good, "aliases self._results"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.__dict__['failures'] = []\n" + good, "touches self.__dict__"),

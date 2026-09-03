@@ -210,23 +210,29 @@ returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_tr
 branch of its cycle-level clause after that clause passed against the export (False on the RVFI-only
 fallback or a failed clause). `finish()` runs the epilogue AFTER the failure raise and BEFORE the finish
 handshake: for exactly the passed results with `cycle_clause_true`, it maps `fire_tp_x_nnn` to `TP-X-nnn`
-(`lib.tp_id_of`), requires each id in the entry's `witness_ids` (`lib.witness_ids_of(name)`), and issues
-`COV_WITNESS <code>` awaited, code from the rendered `gen_knobs.WITNESS_IDS` table; a foreign id, a
-missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness ...`), and a test that
-never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n>`. No batch-1
-item carries the cycle-clause marker, so no test issues a witness today; the SV side (dispatcher row,
-`GEN_WITNESS_FOREIGN`) is TB Infra's.
+(`lib.tp_id_of`), requires each id in the entry's `witness_ids` (`lib.witness_ids_of(name)`) and each id's
+owner (`lib.WITNESS_GROUP_OF`) to be the test's own plan group (`lib.test_group(name)`), and issues
+`COV_WITNESS <item index> <group index>` awaited through `GenBridge.cov_witness(tp, own group)` (indices from the
+rendered `gen_knobs.WITNESS_IDS` / `WITNESS_GROUPS` tables; the dispatcher refuses an item of another group with
+`GEN_WITNESS_FOREIGN`, so the epilogue passes the issuing test's group, never the item's); a foreign id, an item
+another group owns, a missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness ...`), and a
+test that never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n> group=<g>
+group_idx=<i> bins=<count>` (the count is the peek word: distinct witness bins the covergroup holds). No test issues a
+witness until an entry lists `witness_ids` through Runtime's witness_render; the SV side (dispatcher row, the CG-WIT-001
+covergroup, `GEN_WITNESS_FOREIGN`) is built (gen_fcov_pkg).
 
-What the witness guarantee rests on, truthfully: the fact of record is the SV witness ledger, which samples on export
-events with ids from the committed testlist entry and codes from the fire-check outcome; a Python test cannot produce
-that record by itself. The Python side keeps the record template-private (`_results`, filled by `check()`; allowed ids
+What the witness guarantee rests on, truthfully: the fact of record is the SV witness ledger (gen_fcov_pkg), which samples
+only on a `COV_WITNESS <item index> <group index>` command the template's epilogue issues for a passed fire-check whose
+cycle clause held, with the item allowed by the committed testlist entry and the group the issuing test's own; a Python
+test cannot produce that record by itself. The Python side keeps the record template-private (`_results`, filled by `check()`; allowed ids
 read in the epilogue from the committed entry of the class's name; codes from the rendered table; an id the table lacks
 fails with the GEN_TEST_FAIL prefix), and `check_test_source` is defense in depth, a source lint that refuses exactly these statement shapes (the library
 self-test's red list, `lib.REFUSED_FORMS`: at least one refused red source per line, and the self-test fails when this
 list and the table differ):
 
 - a template method other than the four hooks overridden in the test class (directly, through an aliased base, an
-  import alias, a mixin, or a class-body assignment of the method name)
+  import alias, a mixin, a class-body assignment of the method name, or a rebinding through an attribute chain rooted
+  at self, e.g. self.bridge.cov_witness = f)
 - check() with a literal outcome
 - fire_check() that records no check
 - fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that
