@@ -86,6 +86,8 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
             "info_scopes": man.get("info_scopes") or [], "glitch_filter": man.get("glitch_filter"), "vdb": None,
             "mutation_id": man.get("mutation_id"), "rtl_root_override": man.get("rtl_root_override"),
             "export_sources": man.get("export_sources"), "export_knobs": man.get("export_knobs"),
+            "export_sources_emitted": man.get("export_sources_emitted"),
+            "export_sources_emitted_origin": man.get("export_sources_emitted_origin"),
             "source_mode": man.get("source_mode"), "head_sha": man.get("head_sha"),
             "rtl_substitutions": man.get("rtl_substitutions"),
             "unmeasured_vdb": str(unmeasured_vdb) if unmeasured_vdb else None}
