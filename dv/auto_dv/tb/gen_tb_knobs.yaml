@@ -41,6 +41,8 @@ plusargs:
   - {name: export_flush_every, kind: int, default: 0, debug_only: true, desc: "flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)"}
   # ---- TB unit-test knobs (gen_tests/*) ----
   - {name: ut_boot_retire, kind: int, default: 200, desc: "retirements the boots-and-retires test waits for"}
+  - {name: ut_fcov_query, kind: int, default: -1, desc: "gen_ut_isa_cov: the sampler counter index to compare (FCOV_QUERY), -1 for none"}
+  - {name: ut_fcov_expect, kind: int, default: 0, desc: "gen_ut_isa_cov: the value the program is known to produce for that counter"}
   - {name: ut_rows_set, kind: enum, values: [regime_nmi, regime_dbg], default: regime_nmi, desc: "gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
@@ -155,7 +157,9 @@ plusargs:
 
 # Bridge command kinds (C2): code = 1-based position; 0 is GEN_CMD_NONE. Rendered as GEN_CMD_<K>
 # (8-bit) plus gen_cmd_name() in gen_tb_pkg.sv, CMD in gen_knobs.py and GEN_CMD_<K> in the shim header.
-bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH, COV_WITNESS]
+bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH, COV_WITNESS, FCOV_SELFTEST, FCOV_QUERY]
+# FCOV_SELFTEST: gen_isa_cov runs its classifier vector table (LOG-058); the peek word is the failure count. FCOV_QUERY arg0 selects a
+# sampler counter (gen_component_api_fcov.md Section 9); the peek word is its value.
 # CG-WIT-001: the witness bins, one per marked test-plan item, rendered from this CSV (index, tp_item, bin, test_group, marked)
 # into gen_wit_bins.svh (gen_fcov_pkg) and the WITNESS_* tables of gen_knobs.py; COV_WITNESS arg0 = index, arg1 = the issuing
 # test's group index.
@@ -209,9 +213,10 @@ constants:
   - {name: GEN_TDATA1_IBEX_RDATA, value: 0x28001048, sv_type: "logic [31:0]", desc: "tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render"}
   - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
   - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
+  - {name: GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT, value: 2, sv_type: int unsigned, desc: "cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model"}
   - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}
   - {name: GEN_BUS_ERR_LOG_DEPTH, value: 256, sv_type: int unsigned, desc: "TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property"}
-  - {name: GEN_BUS_ERR_DRAIN_CYCLES, value: 64, sv_type: int unsigned, desc: "cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it: 2 x 32, the two in-order transactions of a split access each waiting the longest rvalid window (regime_windows.rvalid_delay long / random upper bound 32; a longer window must raise it) (response to WB retirement plus the record lag)"}
+  - {name: GEN_BUS_ERR_DRAIN_CYCLES, value: 96, sv_type: int unsigned, desc: "cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it: the announcement is stamped at the first transaction's grant, the second half of a split access then waits its own grant window (at most 32, regime_windows.gnt_delay), its response the rvalid window (at most 32), and 32 more cover the response-to-record lag with margin; a longer window must raise it"}
   - {name: GEN_NMI_INT_ENTRY_BOUND_RECORDS, value: 4, sv_type: int unsigned, desc: "records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)"}
   - {name: GEN_MEM_ERR_ARM_KIND_INTG, value: 2, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response"}
   - {name: GEN_ISA_FAULT_KIND_FETCH, value: 0, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: instruction fetch (shim fault_hits)"}

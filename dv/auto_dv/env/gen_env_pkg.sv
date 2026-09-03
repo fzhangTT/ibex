@@ -77,6 +77,7 @@ package gen_env_pkg;
     gen_ctrl_driver   ctrl;
     gen_export_sink   sink;
     gen_wit_cov       wit;
+    gen_isa_cov       isa_cov;   // FCOV_SELFTEST / FCOV_QUERY
     gen_irq_driver    irq;
     gen_dbg_driver    dbg;
     gen_scrkey_driver scrkey;
@@ -119,6 +120,8 @@ package gen_env_pkg;
         GEN_CMD_FETCH_EN:     begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
         GEN_CMD_EXPORT_FLUSH: begin bvif.peek_data = sink.flush_export(); routed++; end   // the seq rides back like a MEM_PEEK word
         GEN_CMD_COV_WITNESS:  begin bvif.peek_data = wit.witness(t.arg[0], t.arg[1]); routed++; end   // arg0 item index, arg1 the issuing test's group
+        GEN_CMD_FCOV_SELFTEST: begin bvif.peek_data = isa_cov.self_test(); routed++; end   // the classifier vector table: failures
+        GEN_CMD_FCOV_QUERY:   begin bvif.peek_data = isa_cov.query(t.arg[0]); routed++; end    // arg0 = a sampler counter index
         GEN_CMD_IRQ_SET:      begin irq.cmd_set(t.arg[0][18:0], gen_irq_hold_e'(t.arg[1]), t.arg[2], 1'b0); routed++; end
         GEN_CMD_IRQ_CLR:      begin irq.cmd_clr(t.arg[0][18:0]); routed++; end
         GEN_CMD_NMI_PULSE:    begin irq.cmd_set(19'h40000, GEN_IRQ_HOLD_CYCLES, t.arg[0] == 0 ? 1 : t.arg[0], 1'b0); routed++; end
@@ -226,7 +229,7 @@ package gen_env_pkg;
       bridge.mem = mem;
       dispatch.ctrl = ctrl;
       dispatch.sink = sink;
-      dispatch.wit = wit;
+      dispatch.wit = wit; dispatch.isa_cov = isa_cov;
       dispatch.bvif = bvif;
       dispatch.irq = irq; dispatch.dbg = dbg; dispatch.scrkey = scrkey;
       dispatch.ibus = ibus_agent; dispatch.dbus = dbus_agent;
@@ -239,6 +242,7 @@ package gen_env_pkg;
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
       rvfi_mon.ap.connect(isa_cov.analysis_export);
+      dbus_agent.ap.connect(isa_cov.dbus_imp);   // completed data-bus transactions: the Zcmp collector's observed latency class
       sb.ap_state.connect(irq_chk.imp_state);
       sb.ap_state.connect(dbg_chk.imp_state);
       sb.ap_state.connect(misc_mon.imp_state);

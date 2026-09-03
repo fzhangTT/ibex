@@ -1,0 +1,96 @@
+# gen_fcov_proof_slice2b_fm2_ablation.fcov.yaml: the ablation control of mutant FM2 (gen_mut_fcov.md): gen_fcov_proof_slice2b.fcov.yaml without gen_cmp_zca_cg.cp_next_len.n32; it must PASS on the mutant run's report while the full manifest fails there.
+test: gen_fcov_proof_slice2b_fm2_ablation
+owner: tb-infra
+bins:
+  - gen_cmp_zca_cg.cp_insn.c_jalr
+  - gen_cmp_zca_cg.cp_insn.c_add
+  - gen_cmp_zca_cg.cp_insn.c_jr
+  - gen_cmp_zca_cg.cp_insn.c_mv
+  - gen_cmp_zca_cg.cp_insn.c_slli
+  - gen_cmp_zca_cg.cp_insn.c_bnez
+  - gen_cmp_zca_cg.cp_insn.c_beqz
+  - gen_cmp_zca_cg.cp_insn.c_and
+  - gen_cmp_zca_cg.cp_insn.c_or
+  - gen_cmp_zca_cg.cp_insn.c_xor
+  - gen_cmp_zca_cg.cp_insn.c_sub
+  - gen_cmp_zca_cg.cp_insn.c_andi
+  - gen_cmp_zca_cg.cp_insn.c_srai
+  - gen_cmp_zca_cg.cp_insn.c_srli
+  - gen_cmp_zca_cg.cp_insn.c_addi16sp
+  - gen_cmp_zca_cg.cp_insn.c_lui
+  - gen_cmp_zca_cg.cp_insn.c_li
+  - gen_cmp_zca_cg.cp_insn.c_j
+  - gen_cmp_zca_cg.cp_insn.c_jal
+  - gen_cmp_zca_cg.cp_insn.c_nop
+  - gen_cmp_zca_cg.cp_insn.c_addi
+  - gen_cmp_zca_cg.cp_insn.c_swsp
+  - gen_cmp_zca_cg.cp_insn.c_lwsp
+  - gen_cmp_zca_cg.cp_insn.c_sw
+  - gen_cmp_zca_cg.cp_insn.c_lw
+  - gen_cmp_zca_cg.cp_insn.c_addi4spn
+  - gen_cmp_zca_cg.cp_pc_align.half
+  - gen_cmp_zca_cg.cp_pc_align.word
+  - gen_cmp_zca_cg.cp_next_len.n16
+  - gen_cmp_zca_cg.cp_pc_inc.two
+  - gen_cmp_zca_cg.cp_insn32_straddle.yes
+  - gen_cmp_zca_cg.cp_insn32_straddle.no
+  - gen_cmp_zca_cg.cp_reg3.r15
+  - gen_cmp_zca_cg.cp_reg3.r14
+  - gen_cmp_zca_cg.cp_reg3.r13
+  - gen_cmp_zca_cg.cp_reg3.r12
+  - gen_cmp_zca_cg.cp_reg3.r11
+  - gen_cmp_zca_cg.cp_reg3.r10
+  - gen_cmp_zca_cg.cp_reg3.r9
+  - gen_cmp_zca_cg.cp_reg3.r8
+  - gen_cmp_zca_cg.cp_rd_full.x3_7
+  - gen_cmp_zca_cg.cp_rd_full.x16_31
+  - gen_cmp_zca_cg.cp_rd_full.x8_15
+  - gen_cmp_zca_cg.cp_rd_full.x2
+  - gen_cmp_zca_cg.cp_rd_full.x1
+anti_vacuity:
+  gen_cmp_zca_cg.cp_insn.c_jalr: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_add: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_jr: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_mv: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_slli: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_bnez: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_beqz: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_and: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_or: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_xor: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_sub: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_andi: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_srai: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_srli: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_addi16sp: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_lui: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_li: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_j: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_jal: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_nop: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_addi: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_swsp: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_lwsp: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_sw: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_lw: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn.c_addi4spn: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_pc_align.half: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_pc_align.word: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_next_len.n32: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_next_len.n16: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_pc_inc.two: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn32_straddle.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_insn32_straddle.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r15: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r14: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r13: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r12: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r11: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r10: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r9: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_reg3.r8: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_rd_full.x3_7: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_rd_full.x16_31: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_rd_full.x8_15: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_rd_full.x2: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_cmp_zca_cg.cp_rd_full.x1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"

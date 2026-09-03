@@ -83,8 +83,7 @@ Section 1), evaluated on every intr record from the previous record's `post_mip`
 driver's events. An NMI-vector entry (cause 31) is emulated by the model (landing 2a): the record's `ext_nmi` sample
 decides external (mcause 0x8000001F) against internal (0xFFFFFFE0, mtval = the announced corruption's address from
 `gen_bus_err_log::take_intg()`), and the shim performs the entry and the mstack restore on the closing mret
-(gen_component_api_isa_shim.md), so NMI-enabled runs are full lock-step compares (LOG-051); integrity-error runs stay consistency-only until the suppressed-write gate lands (T-183, landing 2c), no longer
-consistency-only. An interrupt entry the NMI pre-empted before its handler retired anything leaves no record of its own:
+(gen_component_api_isa_shim.md), so NMI-enabled runs are full lock-step compares (LOG-051); integrity-error runs stay consistency-only until the suppressed-write gate lands (T-183, landing 2c). An interrupt entry the NMI pre-empted before its handler retired anything leaves no record of its own:
 the record after the NMI entry then sits at a vector address without `rvfi_intr`, and the model takes that interrupt at
 that record (`nmi_preempted` in the report; 2 in the with-NMI storm). The entry's vector cause is also written to the
 bridge (`evt_irq_taken_cause`) for the irq driver's release rule. A load whose response carried an integrity error retires
@@ -143,7 +142,7 @@ had no error (:520, :540); the scoreboard derives it from the words `take()` con
 first word was announced, else the second word) and hands it to the shim (`gen_isa_arm_fault(kind, addr, size, tval)`),
 which writes mtval after the faulting step (Spike's own tval is the effective address; shim unit test section 13,
 mutant RS1). (c) Announced-never-trapped: the report-time referee `bus_err_leftover` fails the run when an announcement
-older than GEN_BUS_ERR_DRAIN_CYCLES (64 = 2 x 32: the two in-order transactions of a split access each waiting the longest rvalid window the yaml allows; a longer window must raise it) was never consumed by a trap record (an injected error the DUT did not trap on, or
+older than GEN_BUS_ERR_DRAIN_CYCLES (96 = 32 + 32 + 32: the announcement is stamped at the first transaction's grant; the second half of a split access waits its own grant window, at most 32, then its response the rvalid window, at most 32, and 32 more cover the response-to-record lag with margin; a longer regime window must raise it) was never consumed by a trap record (an injected error the DUT did not trap on, or
 one the TB announced without driving it: mutant RM-L1). (d) Limitation: a faulted store's memory side effect is the
 driver's (`err_store_perform`) on the DUT side and none on the model's; a program that reads such a word back before a
 successful retry diverges. (e) The riscv-dv seed-7 program is not a vehicle for injected data faults: its handler skips

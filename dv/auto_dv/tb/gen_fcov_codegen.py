@@ -25,7 +25,7 @@ REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
 IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
-               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007")
+               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005")
 
 
 def die(msg):
@@ -64,9 +64,11 @@ def load_plan(root):
             continue
         m = re.match(r"^\s+- (cp_[a-z0-9_]+) = .*?: bins (.*)$", line)
         if m:
-            names = re.findall(r"([a-z0-9_]+)\{", m.group(2))
-            if names:
-                cur["cps"][m.group(1)] = names
+            pairs = re.findall(r"([a-z0-9_]+)\{((?:[^{}]|\{[^{}]*\})*)\}", m.group(2))   # a value may hold one brace level: low{{mtvec[31:8], 8'b0} < 32'h1000}
+            if pairs:
+                cur["cps"][m.group(1)] = [n for n, v in pairs]
+                cur.setdefault("values", {})[m.group(1)] = {v.strip(): n for n, v in pairs if v.strip()}
+                if "[operand-only:" in line: cur.setdefault("operand_only", set()).add(m.group(1))   # counted in an adopted group, no CSV rows
             continue
         m = re.match(r"^\s+- (cr_[a-z0-9_]+) = ((?:cp_[a-z0-9_]+\s*x\s*)+cp_[a-z0-9_]+)\s*:\s*bins (.*)$", line)
         if m:
@@ -75,11 +77,22 @@ def load_plan(root):
             # all_ones}`, `mstatus_csrrw{mstatus csrrw}`; `auto{...}` names none
             explicit = {}
             for name, inside in re.findall(r"([a-z0-9_]+)\{([^}]*)\}", m.group(3)):
-                parts = [x for x in re.split(r"[,\s]+", inside.strip()) if x]
-                if name != "auto" and len(parts) == len(comps) and all(re.fullmatch(r"[a-z0-9_]+", x) for x in parts):
+                raw = [x.strip() for x in inside.split(",")] if "," in inside else inside.split()
+                parts = []
+                for x in raw:
+                    x = re.sub(r"\s*\(.*\)\s*$", "", x.split(":")[0]).strip()   # `written (including ...)`, `mml0: the write ...`
+                    parts.append(None if x.startswith("any ") or x == "any" else [t.strip() for t in x.split(" or ")])
+                if name != "auto" and len(parts) == len(comps) and all(p is None or all(re.fullmatch(r"[A-Za-z0-9_=<>.\- ]+", t) for t in p) for p in parts):
                     explicit[name] = parts
             cur["crosses"][m.group(1)] = {"comps": comps, "explicit": explicit}
     return groups
+
+
+def resolve_bin(g, cp, token, bins):
+    """a cross tuple part names a bin, a 1-bit value (`0` -> b0) or the coverpoint's value text (`PMP_MODE_OFF` -> off)."""
+    if token in bins: return token
+    if f"b{token}" in bins: return f"b{token}"
+    return g.get("values", {}).get(cp, {}).get(token)
 
 
 def split_cross_bin(name, comp_bins):
@@ -138,6 +151,8 @@ def render(root):
         for cp in cps:
             if cp in cb and set(g["cps"][cp]) != set(cb[cp]):
                 die(f"{cg}.{cp}: plan bins {sorted(set(g['cps'][cp]))} differ from CSV bins {sorted(set(cb[cp]))}")
+            if cp not in cb and cp not in g.get("operand_only", set()):
+                die(f"{cg}.{cp}: no CSV rows and no [operand-only:] marker on the plan line")
             order[cp] = g["cps"][cp]
         L.append("")
         L.append(f"  // {cg} ({sv}), {sum(len(order[x]) for x in cps)} coverpoint bins, {sum(len(cb[x]) for x in crs)} cross bins")
@@ -160,13 +175,20 @@ def render(root):
                     die(f"{cg}.{cr}: component {c} is not a coverpoint of the group")
             L.append(f"    {cr}: cross {', '.join(comps)} {{")
             for b in cb[cr]:
-                parts = explicit.get(b) or split_cross_bin(b, [order[c] for c in comps])
-                # a tuple may name a 1-bit coverpoint's value (`all0{0 0 0 0}`): the bin of value v is b<v>
-                if parts is not None:
-                    parts = [p if p in order[c] or f"b{p}" not in order[c] else f"b{p}" for c, p in zip(comps, parts)]
-                if parts is None or any(p not in order[c] for c, p in zip(comps, parts)):
+                parts = explicit.get(b)
+                if parts is None:
+                    sp = split_cross_bin(b, [order[c] for c in comps])
+                    parts = None if sp is None else [[p] for p in sp]
+                sel = []
+                for c, p in zip(comps, parts or []):
+                    if p is None: continue   # `any <cp>`: the component is unconstrained
+                    names = [resolve_bin(g, c, t, order[c]) for t in p]
+                    if any(n is None for n in names): parts = None; break
+                    terms = [f"binsof({c}.{sv_bin(n)})" for n in names]
+                    sel.append(terms[0] if len(terms) == 1 else "(" + " || ".join(terms) + ")")
+                if parts is None or not sel:
                     die(f"{cg}.{cr}.{b}: does not split into bins of {comps}")
-                L.append(f"      bins {sv_bin(b)}= " + " && ".join(f"binsof({c}.{sv_bin(p)})" for c, p in zip(comps, parts)) + ";")
+                L.append(f"      bins {sv_bin(b)}= " + " && ".join(sel) + ";")
             L.append("    }")
         L.append("  endgroup")
     return "\n".join(L) + "\n"
@@ -189,7 +211,7 @@ def main():
         print("gen_fcov_codegen --check: up to date")
         return 0
     out.write_text(text)
-    n_cp = sum(len(re.findall(r"bins \\?\w+ ?=", l)) for l in text.splitlines() if ": coverpoint " in l)
+    n_cp = sum(len(re.findall(r"(?<![a-z_])bins \\?\w+ ?=", l)) for l in text.splitlines() if ": coverpoint " in l)   # named bins, not ignore_bins
     n_cr = sum(1 for l in text.splitlines() if l.strip().startswith("bins "))
     print(f"gen_fcov_codegen: rendered {REL_OUT} ({len(IMPLEMENTED)} covergroups, {n_cp} coverpoint bins, {n_cr} cross bins)")
     return 0

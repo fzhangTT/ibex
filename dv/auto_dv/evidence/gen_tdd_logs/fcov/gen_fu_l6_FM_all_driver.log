@@ -1,0 +1,47 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+FM1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM1/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM1_catch_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM1: build sources sha256: 9d7aa2572f05bb09; source tree untouched: 7927a36ea2e6e470
+FM1: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_mul_ops_cg.cp_op.c_mul
+FM4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM4/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM4_catch_alu: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM4: build sources sha256: 6df309833d045c69; source tree untouched: 7927a36ea2e6e470
+FM4: checker FCOV-EXPECTATION: PASS - all 122 declared bins hit
+FM2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM2/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM2_catch_zca: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM2: build sources sha256: 9e4835e38cc92d68; source tree untouched: 7927a36ea2e6e470
+FM2: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_zca_cg.cp_next_len.n32
+FM3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM3/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM3_catch_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM3: build sources sha256: bacda7f424609ede; source tree untouched: 7927a36ea2e6e470
+FM3: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop
+FM5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM5/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM5_catch_branch: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM5: build sources sha256: 74bafee34ddf4fa7; source tree untouched: 7927a36ea2e6e470
+FM5: checker FCOV-EXPECTATION: FAIL - 2 declared bin(s) not hit: gen_isa_branch_cg.cp_op.c_bnez, gen_isa_branch_cg.cp_wrap.yes
+FM6 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM6/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM6_catch_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM6: build sources sha256: a272e110e99e5882; source tree untouched: 7927a36ea2e6e470
+FM6: checker FCOV-EXPECTATION: FAIL - 2 declared bin(s) not hit: gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev, gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev
+FM7 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM7/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM7_catch_csrwarl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM7: build sources sha256: f48ec640b218605b; source tree untouched: 7927a36ea2e6e470
+FM7: checker FCOV-EXPECTATION: FAIL - 3 declared bin(s) not hit: gen_csr_trap_setup_warl_cg.cp_op.csrrci, gen_csr_trap_setup_warl_cg.cp_op.csrrsi, gen_csr_trap_setup_warl_cg.cp_op.csrrwi
+FM8 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM8/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM8_catch_sbit: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM8: build sources sha256: 0773ecdfa6139873; source tree untouched: 7927a36ea2e6e470
+FM8: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_bit_sbit_cg.cp_op.bext
+FM9 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM9/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 68ba3dfd8d3c4205
+FM9_catch_zcb: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM9: build sources sha256: 5c9cb67d711e7500; source tree untouched: 7927a36ea2e6e470
+FM9: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_zcb_cg.cp_insn.c_lh

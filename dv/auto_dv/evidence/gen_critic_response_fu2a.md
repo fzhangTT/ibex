@@ -41,3 +41,6 @@ to landing 2c with the red it will carry. Evidence: gen_tdd_step2b.md Sections 9
 | CM43-L-5 | RM1..RM3 share the build sha because the RTL copy is outside the sources hash | OWED to 2c (record) | the mutated RTL file's sha per RM row. |
 | CM43-L-6 | gen_protocol_props.sv header cites untracked draft paths and a landing tag | OWED to 2c | the deviation list kept, the untracked provenance and the tag dropped (rtl-arch's tracked anchor file). |
 | CM43-L-7 | gen_ut_witness_foreign.py shares its basename with a Test Writer fixture | OWED to 2c | renamed gen_ut_cov_witness_foreign (module path stated in the manifest rows). |
+
+| CR-2B-L-16 | gen_component_api_scoreboard.md:86-87 kept a dangling ", no longer consistency-only" after the corrected clause | FIXED (landing 6) | the tail is deleted; the sentence ends at "(T-183, landing 2c)". |
+| CR-2B-L-17 | GEN_BUS_ERR_DRAIN_CYCLES = 64 derived as 2 x 32 while the announcement is stamped at the first transaction's grant, so a split fault in flight in the last ~65 cycles could raise a false bus_err_leftover red | FIXED (landing 6) | the constant is 96 = grant window max (32) + rvalid window max (32) + response-to-record lag with margin (32), derived in the yaml desc and in the scoreboard doc; the ann_t comment already names the grant stamp. |

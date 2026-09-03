@@ -1,57 +1,109 @@
 # gen_fcov_proof_slice2a.fcov.yaml: fcov-expectation proof of T-205 slice 2 (gen_bit_count_cg): every coverpoint bin, hit by one lock-step run of
-# gen_bitcnt_directed.S and checked by ci/check_fcov_expectations.py on the run's urg report (gen_tdd_logs/fcov/gen_fu_l4_*).
 test: gen_fcov_proof_slice2a
 owner: tb-infra
 bins:
-  - gen_bit_count_cg.cp_op.clz
-  - gen_bit_count_cg.cp_op.ctz
   - gen_bit_count_cg.cp_op.cpop
-  - gen_bit_count_cg.cp_operand.zero
-  - gen_bit_count_cg.cp_operand.all_ones
-  - gen_bit_count_cg.cp_operand.msb_only
-  - gen_bit_count_cg.cp_operand.lsb_only
-  - gen_bit_count_cg.cp_operand.single_other
-  - gen_bit_count_cg.cp_operand.alt_5
-  - gen_bit_count_cg.cp_operand.alt_a
-  - gen_bit_count_cg.cp_operand.int_max
+  - gen_bit_count_cg.cp_op.ctz
+  - gen_bit_count_cg.cp_op.clz
   - gen_bit_count_cg.cp_operand.rand
-  - gen_bit_count_cg.cp_single_pos.p0
-  - gen_bit_count_cg.cp_single_pos.p1
-  - gen_bit_count_cg.cp_single_pos.p2
-  - gen_bit_count_cg.cp_single_pos.p3
-  - gen_bit_count_cg.cp_single_pos.p4
-  - gen_bit_count_cg.cp_single_pos.p5
-  - gen_bit_count_cg.cp_single_pos.p6
-  - gen_bit_count_cg.cp_single_pos.p7
-  - gen_bit_count_cg.cp_single_pos.p8
-  - gen_bit_count_cg.cp_single_pos.p9
-  - gen_bit_count_cg.cp_single_pos.p10
-  - gen_bit_count_cg.cp_single_pos.p11
-  - gen_bit_count_cg.cp_single_pos.p12
-  - gen_bit_count_cg.cp_single_pos.p13
-  - gen_bit_count_cg.cp_single_pos.p14
-  - gen_bit_count_cg.cp_single_pos.p15
-  - gen_bit_count_cg.cp_single_pos.p16
-  - gen_bit_count_cg.cp_single_pos.p17
-  - gen_bit_count_cg.cp_single_pos.p18
-  - gen_bit_count_cg.cp_single_pos.p19
-  - gen_bit_count_cg.cp_single_pos.p20
-  - gen_bit_count_cg.cp_single_pos.p21
-  - gen_bit_count_cg.cp_single_pos.p22
-  - gen_bit_count_cg.cp_single_pos.p23
-  - gen_bit_count_cg.cp_single_pos.p24
-  - gen_bit_count_cg.cp_single_pos.p25
-  - gen_bit_count_cg.cp_single_pos.p26
-  - gen_bit_count_cg.cp_single_pos.p27
-  - gen_bit_count_cg.cp_single_pos.p28
-  - gen_bit_count_cg.cp_single_pos.p29
-  - gen_bit_count_cg.cp_single_pos.p30
+  - gen_bit_count_cg.cp_operand.int_max
+  - gen_bit_count_cg.cp_operand.alt_a
+  - gen_bit_count_cg.cp_operand.alt_5
+  - gen_bit_count_cg.cp_operand.single_other
+  - gen_bit_count_cg.cp_operand.lsb_only
+  - gen_bit_count_cg.cp_operand.msb_only
+  - gen_bit_count_cg.cp_operand.all_ones
+  - gen_bit_count_cg.cp_operand.zero
   - gen_bit_count_cg.cp_single_pos.p31
-  - gen_bit_count_cg.cp_result.r0
-  - gen_bit_count_cg.cp_result.r1
-  - gen_bit_count_cg.cp_result.r16
-  - gen_bit_count_cg.cp_result.r31
-  - gen_bit_count_cg.cp_result.r32
+  - gen_bit_count_cg.cp_single_pos.p30
+  - gen_bit_count_cg.cp_single_pos.p29
+  - gen_bit_count_cg.cp_single_pos.p28
+  - gen_bit_count_cg.cp_single_pos.p27
+  - gen_bit_count_cg.cp_single_pos.p26
+  - gen_bit_count_cg.cp_single_pos.p25
+  - gen_bit_count_cg.cp_single_pos.p24
+  - gen_bit_count_cg.cp_single_pos.p23
+  - gen_bit_count_cg.cp_single_pos.p22
+  - gen_bit_count_cg.cp_single_pos.p21
+  - gen_bit_count_cg.cp_single_pos.p20
+  - gen_bit_count_cg.cp_single_pos.p19
+  - gen_bit_count_cg.cp_single_pos.p18
+  - gen_bit_count_cg.cp_single_pos.p17
+  - gen_bit_count_cg.cp_single_pos.p16
+  - gen_bit_count_cg.cp_single_pos.p15
+  - gen_bit_count_cg.cp_single_pos.p14
+  - gen_bit_count_cg.cp_single_pos.p13
+  - gen_bit_count_cg.cp_single_pos.p12
+  - gen_bit_count_cg.cp_single_pos.p11
+  - gen_bit_count_cg.cp_single_pos.p10
+  - gen_bit_count_cg.cp_single_pos.p9
+  - gen_bit_count_cg.cp_single_pos.p8
+  - gen_bit_count_cg.cp_single_pos.p7
+  - gen_bit_count_cg.cp_single_pos.p6
+  - gen_bit_count_cg.cp_single_pos.p5
+  - gen_bit_count_cg.cp_single_pos.p4
+  - gen_bit_count_cg.cp_single_pos.p3
+  - gen_bit_count_cg.cp_single_pos.p2
+  - gen_bit_count_cg.cp_single_pos.p1
+  - gen_bit_count_cg.cp_single_pos.p0
   - gen_bit_count_cg.cp_result.other
-  - gen_bit_count_cg.cp_rd_x0.no
+  - gen_bit_count_cg.cp_result.r32
+  - gen_bit_count_cg.cp_result.r31
+  - gen_bit_count_cg.cp_result.r16
+  - gen_bit_count_cg.cp_result.r1
+  - gen_bit_count_cg.cp_result.r0
   - gen_bit_count_cg.cp_rd_x0.yes
+  - gen_bit_count_cg.cp_rd_x0.no
+anti_vacuity:
+  gen_bit_count_cg.cp_op.cpop: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_op.ctz: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_op.clz: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.alt_a: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.alt_5: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.single_other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.lsb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.msb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_operand.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p31: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p30: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p29: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p28: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p27: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p26: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p25: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p24: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p23: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p22: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p21: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p20: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p19: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p18: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p17: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p16: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p15: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p14: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p13: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p12: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p11: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p10: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p9: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p8: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p7: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p6: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p5: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p4: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p3: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p2: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_single_pos.p0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.r32: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.r31: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.r16: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.r1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_result.r0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_rd_x0.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_count_cg.cp_rd_x0.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"

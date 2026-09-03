@@ -276,6 +276,7 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.dbus_agent*", "vif", u_dbus_if);
     uvm_config_db#(virtual gen_scrkey_if)::set(null, "uvm_test_top.env.scrkey*", "vif", u_scrkey_if);
     uvm_config_db#(virtual gen_ctrl_if)::set(null, "uvm_test_top.env.ctrl*", "vif", u_ctrl_if);
+    uvm_config_db#(virtual gen_ctrl_if)::set(null, "uvm_test_top.env.isa_cov", "vif", u_ctrl_if);   // cp_mcen_gate reads the pin at the write
     uvm_config_db#(virtual gen_rvfi_if)::set(null, "uvm_test_top.env.rvfi_mon*", "vif", u_rvfi_if);
     uvm_config_db#(virtual gen_irq_if)::set(null, "uvm_test_top.env.irq*", "vif", u_irq_if);
     uvm_config_db#(virtual gen_dbg_if)::set(null, "uvm_test_top.env.dbg*", "vif", u_dbg_if);

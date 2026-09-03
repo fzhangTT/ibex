@@ -73,6 +73,14 @@ class GenBridge:
         bins hit so far as the covergroup counts them."""
         return await self.cmd("COV_WITNESS", (WITNESS_IDS[tp_item], WITNESS_GROUPS[owner_group], 0, 0), timeout_cycles)
 
+    async def fcov_selftest(self, timeout_cycles=2000):
+        """FCOV_SELFTEST (LOG-058): gen_isa_cov runs its classifier vector table; returns the failure count."""
+        return await self.cmd("FCOV_SELFTEST", (0, 0, 0, 0), timeout_cycles)
+
+    async def fcov_query(self, index, timeout_cycles=200):
+        """FCOV_QUERY: one sampler counter by index (gen_component_api_fcov.md Section 9); returns its value."""
+        return await self.cmd("FCOV_QUERY", (index, 0, 0, 0), timeout_cycles)
+
     async def wait_cycles_until(self, target_cycle, timeout_cycles=None):
         """Arm the cycle threshold and await its single hit edge."""
         b = self.h.b

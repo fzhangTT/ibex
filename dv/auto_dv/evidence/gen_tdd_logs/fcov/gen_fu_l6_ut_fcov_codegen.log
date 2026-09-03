@@ -1,0 +1,19 @@
+OK   --check passes on the tree
+OK   every rendered covergroup is type-based
+OK   keyword bin names are escaped identifiers
+OK   no auto cross bins: every cross bin is named from the CSV
+OK   a tuple naming 1-bit values renders the b<v> bins
+OK   a space-separated tuple renders its components
+OK   the rendered coverpoint lines carry one ignore_bins na each and the named bins are counted apart
+OK   fixture differs (nested-brace value)
+OK   a coverpoint value with an inner brace pair still parses (the bins are unchanged, the include is up to date)
+OK   fixture differs (operand-only marker removed)
+OK   refuses a plan coverpoint without CSV rows unless marked operand-only
+OK   fixture differs (plan bins)
+OK   refuses a coverpoint whose plan bins differ from the CSV
+OK   fixture differs (cross bin)
+OK   refuses a cross bin that does not split into its components
+OK   fixture differs (cross line)
+OK   refuses a cross without a plan line
+OK   --check catches a stale include
+GEN_UT_FCOV_CODEGEN PASS (0 failures)

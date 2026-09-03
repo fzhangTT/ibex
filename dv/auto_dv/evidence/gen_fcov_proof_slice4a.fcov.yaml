@@ -1,0 +1,49 @@
+# gen_fcov_proof_slice4a.fcov.yaml: fcov-expectation proof of T-205 slice 4 (gen_bit_sbit_cg): every coverpoint bin, hit by one lock-step run of gen_sbit_directed.S and checked by ci/check_fcov_expectations.py on the run's urg report (gen_tdd_logs/fcov/gen_fu_l6_*).
+test: gen_fcov_proof_slice4a
+owner: tb-infra
+bins:
+  - gen_bit_sbit_cg.cp_op.bexti
+  - gen_bit_sbit_cg.cp_op.binvi
+  - gen_bit_sbit_cg.cp_op.bseti
+  - gen_bit_sbit_cg.cp_op.bclri
+  - gen_bit_sbit_cg.cp_op.bext
+  - gen_bit_sbit_cg.cp_op.binv
+  - gen_bit_sbit_cg.cp_op.bset
+  - gen_bit_sbit_cg.cp_op.bclr
+  - gen_bit_sbit_cg.cp_index.i31
+  - gen_bit_sbit_cg.cp_index.mid
+  - gen_bit_sbit_cg.cp_index.i0
+  - gen_bit_sbit_cg.cp_rs2_upper.other_nonzero
+  - gen_bit_sbit_cg.cp_rs2_upper.all_ones
+  - gen_bit_sbit_cg.cp_rs2_upper.zero
+  - gen_bit_sbit_cg.cp_prior_bit.set
+  - gen_bit_sbit_cg.cp_prior_bit.clear
+  - gen_bit_sbit_cg.cp_operand.rand
+  - gen_bit_sbit_cg.cp_operand.all_ones
+  - gen_bit_sbit_cg.cp_operand.zero
+  - gen_bit_sbit_cg.cp_rd_x0.yes
+  - gen_bit_sbit_cg.cp_rd_x0.no
+  - gen_bit_sbit_cg.cp_binv_twice.yes
+anti_vacuity:
+  gen_bit_sbit_cg.cp_op.bexti: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.binvi: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.bseti: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.bclri: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.bext: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.binv: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.bset: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_op.bclr: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_index.i31: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_index.mid: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_index.i0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_rs2_upper.other_nonzero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_rs2_upper.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_rs2_upper.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_prior_bit.set: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_prior_bit.clear: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_operand.rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_operand.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_operand.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_rd_x0.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_rd_x0.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_sbit_cg.cp_binv_twice.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"

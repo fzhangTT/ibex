@@ -34,6 +34,8 @@ PLUSARGS = {
     "export_sources": {"plusarg": "gen_export_sources", "kind": "string", "default": 'all', "values": None, "debug_only": False, "desc": 'comma-separated event sources written to the export (all = every source with a registered writer)'},
     "export_flush_every": {"plusarg": "gen_export_flush_every", "kind": "int", "default": 0, "values": None, "debug_only": True, "desc": 'flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)'},
     "ut_boot_retire": {"plusarg": "gen_ut_boot_retire", "kind": "int", "default": 200, "values": None, "debug_only": False, "desc": 'retirements the boots-and-retires test waits for'},
+    "ut_fcov_query": {"plusarg": "gen_ut_fcov_query", "kind": "int", "default": -1, "values": None, "debug_only": False, "desc": 'gen_ut_isa_cov: the sampler counter index to compare (FCOV_QUERY), -1 for none'},
+    "ut_fcov_expect": {"plusarg": "gen_ut_fcov_expect", "kind": "int", "default": 0, "values": None, "debug_only": False, "desc": 'gen_ut_isa_cov: the value the program is known to produce for that counter'},
     "ut_rows_set": {"plusarg": "gen_ut_rows_set", "kind": "enum", "default": 'regime_nmi', "values": ['regime_nmi', 'regime_dbg'], "debug_only": False, "desc": 'gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)'},
     "ibus_gnt_min": {"plusarg": "gen_ibus_gnt_min", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency low bound (cycles)'},
     "ibus_gnt_max": {"plusarg": "gen_ibus_gnt_max", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency high bound'},
@@ -170,9 +172,10 @@ CONSTANTS = {
     "GEN_TDATA1_IBEX_RDATA": 671092808,
     "GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT": 6,
     "GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT": 7,
+    "GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT": 2,
     "GEN_MEM_ERR_ARM_KIND_ERR": 1,
     "GEN_BUS_ERR_LOG_DEPTH": 256,
-    "GEN_BUS_ERR_DRAIN_CYCLES": 64,
+    "GEN_BUS_ERR_DRAIN_CYCLES": 96,
     "GEN_NMI_INT_ENTRY_BOUND_RECORDS": 4,
     "GEN_MEM_ERR_ARM_KIND_INTG": 2,
     "GEN_ISA_FAULT_KIND_FETCH": 0,
@@ -252,6 +255,8 @@ CMD = {  # bridge command kinds (cmd_kind codes)
     "MISC": 11,
     "EXPORT_FLUSH": 12,
     "COV_WITNESS": 13,
+    "FCOV_SELFTEST": 14,
+    "FCOV_QUERY": 15,
 }
 
 EXPORT_RECORD_FIELDS = ('order', 'pc_rdata', 'pc_wdata', 'insn', 'trap', 'halt', 'intr', 'mode', 'ixl', 'rs1_addr', 'rs1_rdata', 'rs2_addr', 'rs2_rdata', 'rs3_addr', 'rs3_rdata', 'rd_addr', 'rd_wdata', 'mem_addr', 'mem_rmask', 'mem_wmask', 'mem_rdata', 'mem_wdata', 'ext_pre_mip', 'ext_post_mip', 'ext_nmi', 'ext_nmi_int', 'ext_debug_req', 'ext_debug_mode', 'ext_rf_wr_suppress', 'ext_ic_scr_key_valid', 'ext_irq_valid', 'ext_exp_valid', 'ext_exp_insn', 'ext_exp_last', 'ext_mcycle', 'cycle')

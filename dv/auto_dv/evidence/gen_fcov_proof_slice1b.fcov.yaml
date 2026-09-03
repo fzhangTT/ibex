@@ -1,127 +1,249 @@
 # gen_fcov_proof_slice1b.fcov.yaml: fcov-expectation proof of T-205 slice 1, second program (gen_alu_directed.S): every coverpoint bin
-# of gen_bit_zba_zbb_ops_cg, gen_isa_alu_imm_cg and gen_isa_shift_cg, checked by ci/check_fcov_expectations.py on the run's urg report.
 test: gen_fcov_proof_slice1b
 owner: tb-infra
 bins:
-  - gen_bit_zba_zbb_ops_cg.cp_eq_operands.no
-  - gen_bit_zba_zbb_ops_cg.cp_eq_operands.yes
-  - gen_bit_zba_zbb_ops_cg.cp_op.andn
-  - gen_bit_zba_zbb_ops_cg.cp_op.max
-  - gen_bit_zba_zbb_ops_cg.cp_op.maxu
-  - gen_bit_zba_zbb_ops_cg.cp_op.min
-  - gen_bit_zba_zbb_ops_cg.cp_op.minu
-  - gen_bit_zba_zbb_ops_cg.cp_op.orn
-  - gen_bit_zba_zbb_ops_cg.cp_op.pack
   - gen_bit_zba_zbb_ops_cg.cp_op.packh
   - gen_bit_zba_zbb_ops_cg.cp_op.packu
-  - gen_bit_zba_zbb_ops_cg.cp_op.sext_b
-  - gen_bit_zba_zbb_ops_cg.cp_op.sext_h
-  - gen_bit_zba_zbb_ops_cg.cp_op.sh1add
-  - gen_bit_zba_zbb_ops_cg.cp_op.sh2add
-  - gen_bit_zba_zbb_ops_cg.cp_op.sh3add
-  - gen_bit_zba_zbb_ops_cg.cp_op.xnor
+  - gen_bit_zba_zbb_ops_cg.cp_op.pack
   - gen_bit_zba_zbb_ops_cg.cp_op.zext_h
-  - gen_bit_zba_zbb_ops_cg.cp_rd_x0.no
-  - gen_bit_zba_zbb_ops_cg.cp_rd_x0.yes
-  - gen_bit_zba_zbb_ops_cg.cp_result_class.all_ones
-  - gen_bit_zba_zbb_ops_cg.cp_result_class.int_max
-  - gen_bit_zba_zbb_ops_cg.cp_result_class.int_min
-  - gen_bit_zba_zbb_ops_cg.cp_result_class.other
-  - gen_bit_zba_zbb_ops_cg.cp_result_class.zero
-  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.all_ones
+  - gen_bit_zba_zbb_ops_cg.cp_op.sext_h
+  - gen_bit_zba_zbb_ops_cg.cp_op.sext_b
+  - gen_bit_zba_zbb_ops_cg.cp_op.maxu
+  - gen_bit_zba_zbb_ops_cg.cp_op.minu
+  - gen_bit_zba_zbb_ops_cg.cp_op.max
+  - gen_bit_zba_zbb_ops_cg.cp_op.min
+  - gen_bit_zba_zbb_ops_cg.cp_op.xnor
+  - gen_bit_zba_zbb_ops_cg.cp_op.orn
+  - gen_bit_zba_zbb_ops_cg.cp_op.andn
+  - gen_bit_zba_zbb_ops_cg.cp_op.sh3add
+  - gen_bit_zba_zbb_ops_cg.cp_op.sh2add
+  - gen_bit_zba_zbb_ops_cg.cp_op.sh1add
+  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.neg_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.pos_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.half_msb
   - gen_bit_zba_zbb_ops_cg.cp_rs1_class.byte_msb
   - gen_bit_zba_zbb_ops_cg.cp_rs1_class.e0000000
-  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.half_msb
+  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.one
   - gen_bit_zba_zbb_ops_cg.cp_rs1_class.int_max
   - gen_bit_zba_zbb_ops_cg.cp_rs1_class.int_min
-  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.neg_rand
-  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.one
-  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.pos_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs1_class.all_ones
   - gen_bit_zba_zbb_ops_cg.cp_rs1_class.zero
-  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.all_ones
+  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.neg_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.pos_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.one
   - gen_bit_zba_zbb_ops_cg.cp_rs2_class.int_max
   - gen_bit_zba_zbb_ops_cg.cp_rs2_class.int_min
-  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.neg_rand
-  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.one
-  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.pos_rand
+  - gen_bit_zba_zbb_ops_cg.cp_rs2_class.all_ones
   - gen_bit_zba_zbb_ops_cg.cp_rs2_class.zero
-  - gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same
+  - gen_bit_zba_zbb_ops_cg.cp_eq_operands.yes
+  - gen_bit_zba_zbb_ops_cg.cp_eq_operands.no
   - gen_bit_zba_zbb_ops_cg.cp_same_regs.distinct
+  - gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same
   - gen_bit_zba_zbb_ops_cg.cp_same_regs.rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cp_rd_x0.yes
+  - gen_bit_zba_zbb_ops_cg.cp_rd_x0.no
   - gen_bit_zba_zbb_ops_cg.cp_sign_pair.nn
   - gen_bit_zba_zbb_ops_cg.cp_sign_pair.np
   - gen_bit_zba_zbb_ops_cg.cp_sign_pair.pn
   - gen_bit_zba_zbb_ops_cg.cp_sign_pair.pp
-  - gen_bit_zba_zbb_ops_cg.cp_wrap.no
+  - gen_bit_zba_zbb_ops_cg.cp_result_class.other
+  - gen_bit_zba_zbb_ops_cg.cp_result_class.int_max
+  - gen_bit_zba_zbb_ops_cg.cp_result_class.int_min
+  - gen_bit_zba_zbb_ops_cg.cp_result_class.all_ones
+  - gen_bit_zba_zbb_ops_cg.cp_result_class.zero
   - gen_bit_zba_zbb_ops_cg.cp_wrap.yes
-  - gen_isa_alu_imm_cg.cp_addi_wrap.neg_wrap
-  - gen_isa_alu_imm_cg.cp_addi_wrap.none
-  - gen_isa_alu_imm_cg.cp_addi_wrap.pos_wrap
-  - gen_isa_alu_imm_cg.cp_imm_class.max_pos
-  - gen_isa_alu_imm_cg.cp_imm_class.min_neg
-  - gen_isa_alu_imm_cg.cp_imm_class.minus1
-  - gen_isa_alu_imm_cg.cp_imm_class.neg_rand
-  - gen_isa_alu_imm_cg.cp_imm_class.plus1
-  - gen_isa_alu_imm_cg.cp_imm_class.pos_rand
-  - gen_isa_alu_imm_cg.cp_imm_class.zero
-  - gen_isa_alu_imm_cg.cp_op.addi
-  - gen_isa_alu_imm_cg.cp_op.andi
-  - gen_isa_alu_imm_cg.cp_op.ori
-  - gen_isa_alu_imm_cg.cp_op.slti
-  - gen_isa_alu_imm_cg.cp_op.sltiu
-  - gen_isa_alu_imm_cg.cp_op.xori
-  - gen_isa_alu_imm_cg.cp_rd_x0.no
-  - gen_isa_alu_imm_cg.cp_rd_x0.yes
-  - gen_isa_alu_imm_cg.cp_result_class.all_ones
-  - gen_isa_alu_imm_cg.cp_result_class.int_max
-  - gen_isa_alu_imm_cg.cp_result_class.int_min
-  - gen_isa_alu_imm_cg.cp_result_class.one
-  - gen_isa_alu_imm_cg.cp_result_class.other
-  - gen_isa_alu_imm_cg.cp_result_class.zero
-  - gen_isa_alu_imm_cg.cp_rs1_class.all_ones
-  - gen_isa_alu_imm_cg.cp_rs1_class.int_max
-  - gen_isa_alu_imm_cg.cp_rs1_class.int_min
-  - gen_isa_alu_imm_cg.cp_rs1_class.neg_rand
-  - gen_isa_alu_imm_cg.cp_rs1_class.one
-  - gen_isa_alu_imm_cg.cp_rs1_class.pos_rand
-  - gen_isa_alu_imm_cg.cp_rs1_class.zero
-  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.no
-  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.yes
-  - gen_isa_alu_imm_cg.cp_slt_case.eq
-  - gen_isa_alu_imm_cg.cp_slt_case.other
-  - gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg
-  - gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0
-  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1
-  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1
-  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz
-  - gen_isa_shift_cg.cp_op.sll
-  - gen_isa_shift_cg.cp_op.slli
+  - gen_bit_zba_zbb_ops_cg.cp_wrap.no
   - gen_isa_shift_cg.cp_op.sra
-  - gen_isa_shift_cg.cp_op.srai
   - gen_isa_shift_cg.cp_op.srl
+  - gen_isa_shift_cg.cp_op.sll
+  - gen_isa_shift_cg.cp_op.srai
   - gen_isa_shift_cg.cp_op.srli
-  - gen_isa_shift_cg.cp_operand.all_ones
+  - gen_isa_shift_cg.cp_op.slli
+  - gen_isa_shift_cg.cp_shamt.s31
+  - gen_isa_shift_cg.cp_shamt.mid
+  - gen_isa_shift_cg.cp_shamt.s1
+  - gen_isa_shift_cg.cp_shamt.s0
+  - gen_isa_shift_cg.cp_rs2_upper.other_nonzero
+  - gen_isa_shift_cg.cp_rs2_upper.ffffffe0
+  - gen_isa_shift_cg.cp_rs2_upper.msb_only
+  - gen_isa_shift_cg.cp_rs2_upper.all_ones
+  - gen_isa_shift_cg.cp_rs2_upper.is33
+  - gen_isa_shift_cg.cp_rs2_upper.is32
+  - gen_isa_shift_cg.cp_rs2_upper.zero
+  - gen_isa_shift_cg.cp_operand.pos_rand
+  - gen_isa_shift_cg.cp_operand.neg_rand
   - gen_isa_shift_cg.cp_operand.lsb_only
   - gen_isa_shift_cg.cp_operand.msb_only
-  - gen_isa_shift_cg.cp_operand.neg_rand
-  - gen_isa_shift_cg.cp_operand.pos_rand
+  - gen_isa_shift_cg.cp_operand.all_ones
   - gen_isa_shift_cg.cp_operand.zero
-  - gen_isa_shift_cg.cp_rd_x0.no
   - gen_isa_shift_cg.cp_rd_x0.yes
-  - gen_isa_shift_cg.cp_result_class.all_ones
-  - gen_isa_shift_cg.cp_result_class.c0000000
-  - gen_isa_shift_cg.cp_result_class.msb_only
-  - gen_isa_shift_cg.cp_result_class.one
+  - gen_isa_shift_cg.cp_rd_x0.no
   - gen_isa_shift_cg.cp_result_class.other
+  - gen_isa_shift_cg.cp_result_class.c0000000
+  - gen_isa_shift_cg.cp_result_class.one
+  - gen_isa_shift_cg.cp_result_class.msb_only
+  - gen_isa_shift_cg.cp_result_class.all_ones
   - gen_isa_shift_cg.cp_result_class.zero
-  - gen_isa_shift_cg.cp_rs2_upper.all_ones
-  - gen_isa_shift_cg.cp_rs2_upper.ffffffe0
-  - gen_isa_shift_cg.cp_rs2_upper.is32
-  - gen_isa_shift_cg.cp_rs2_upper.is33
-  - gen_isa_shift_cg.cp_rs2_upper.msb_only
-  - gen_isa_shift_cg.cp_rs2_upper.other_nonzero
-  - gen_isa_shift_cg.cp_rs2_upper.zero
-  - gen_isa_shift_cg.cp_shamt.mid
-  - gen_isa_shift_cg.cp_shamt.s0
-  - gen_isa_shift_cg.cp_shamt.s1
-  - gen_isa_shift_cg.cp_shamt.s31
+  - gen_isa_alu_imm_cg.cp_op.andi
+  - gen_isa_alu_imm_cg.cp_op.ori
+  - gen_isa_alu_imm_cg.cp_op.xori
+  - gen_isa_alu_imm_cg.cp_op.sltiu
+  - gen_isa_alu_imm_cg.cp_op.slti
+  - gen_isa_alu_imm_cg.cp_op.addi
+  - gen_isa_alu_imm_cg.cp_rs1_class.neg_rand
+  - gen_isa_alu_imm_cg.cp_rs1_class.pos_rand
+  - gen_isa_alu_imm_cg.cp_rs1_class.one
+  - gen_isa_alu_imm_cg.cp_rs1_class.int_max
+  - gen_isa_alu_imm_cg.cp_rs1_class.int_min
+  - gen_isa_alu_imm_cg.cp_rs1_class.all_ones
+  - gen_isa_alu_imm_cg.cp_rs1_class.zero
+  - gen_isa_alu_imm_cg.cp_imm_class.neg_rand
+  - gen_isa_alu_imm_cg.cp_imm_class.pos_rand
+  - gen_isa_alu_imm_cg.cp_imm_class.min_neg
+  - gen_isa_alu_imm_cg.cp_imm_class.max_pos
+  - gen_isa_alu_imm_cg.cp_imm_class.minus1
+  - gen_isa_alu_imm_cg.cp_imm_class.plus1
+  - gen_isa_alu_imm_cg.cp_imm_class.zero
+  - gen_isa_alu_imm_cg.cp_rd_x0.yes
+  - gen_isa_alu_imm_cg.cp_rd_x0.no
+  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.yes
+  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.no
+  - gen_isa_alu_imm_cg.cp_result_class.other
+  - gen_isa_alu_imm_cg.cp_result_class.one
+  - gen_isa_alu_imm_cg.cp_result_class.int_max
+  - gen_isa_alu_imm_cg.cp_result_class.int_min
+  - gen_isa_alu_imm_cg.cp_result_class.all_ones
+  - gen_isa_alu_imm_cg.cp_result_class.zero
+  - gen_isa_alu_imm_cg.cp_addi_wrap.none
+  - gen_isa_alu_imm_cg.cp_addi_wrap.neg_wrap
+  - gen_isa_alu_imm_cg.cp_addi_wrap.pos_wrap
+  - gen_isa_alu_imm_cg.cp_slt_case.other
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1
+  - gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg
+  - gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0
+  - gen_isa_alu_imm_cg.cp_slt_case.eq
+anti_vacuity:
+  gen_bit_zba_zbb_ops_cg.cp_op.packh: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.packu: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.pack: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.zext_h: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.sext_h: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.sext_b: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.maxu: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.minu: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.xnor: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.orn: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.andn: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.sh3add: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.sh2add: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_op.sh1add: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.neg_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.pos_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.half_msb: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.byte_msb: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.e0000000: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.one: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.int_min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs1_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.neg_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.pos_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.one: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.int_min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rs2_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_eq_operands.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_eq_operands.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_same_regs.distinct: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_same_regs.rs1_eq_rs2: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rd_x0.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_rd_x0.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_sign_pair.nn: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_sign_pair.np: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_sign_pair.pn: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_sign_pair.pp: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_result_class.other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_result_class.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_result_class.int_min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_result_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_result_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_wrap.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_bit_zba_zbb_ops_cg.cp_wrap.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.sra: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.srl: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.sll: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.srai: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.srli: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_op.slli: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_shamt.s31: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_shamt.mid: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_shamt.s1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_shamt.s0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.other_nonzero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.ffffffe0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.msb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.is33: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.is32: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rs2_upper.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.pos_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.neg_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.lsb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.msb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_operand.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rd_x0.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_rd_x0.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.c0000000: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.one: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.msb_only: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_shift_cg.cp_result_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.andi: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.ori: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.xori: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.sltiu: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.slti: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_op.addi: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.neg_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.pos_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.one: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.int_min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.neg_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.pos_rand: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.min_neg: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.max_pos: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.minus1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.plus1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_imm_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rd_x0.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rd_x0.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_eq_rd.yes: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_rs1_eq_rd.no: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.one: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.int_max: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.int_min: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.all_ones: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_result_class.zero: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_addi_wrap.none: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_addi_wrap.neg_wrap: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_addi_wrap.pos_wrap: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.other: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"
+  gen_isa_alu_imm_cg.cp_slt_case.eq: "a lock-step run: every result of the program is compared against the ISA model, so a hit is an instruction the program executed with the sampled operands"

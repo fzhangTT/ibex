@@ -132,3 +132,15 @@ Exact edits:
 | RM1 | `rtl/ibex_core.sv` (copy) | `assign core_busy_o[i] =  \|busy_bits_buf[i*NumBusySignals +: NumBusySignals];` | `assign core_busy_o[i] =  1'b0;` |
 | RM2 | `rtl/ibex_core.sv` (copy) | `assign rvfi_halt       = rvfi_stage_halt      [RVFI_STAGES-1];` | `assign rvfi_halt       = rvfi_valid;` |
 | RM3 | `rtl/ibex_load_store_unit.sv` (copy) | `assign data_tag_o = data_wdata_tag;` | `assign data_tag_o = 1'b1;` |
+
+## SVA groups proven and owed (the Critic's landing-2b lift condition 3, CM60-L-3)
+
+Proven with a named mutant each in the landing-2b batch: st (MB-ST), ibus (MB-IBUS), dbus (MB-DBUS), scrkey (MB-SCRKEY) and rvfi
+(MB-RVFI) through the rows above. Owed to landing 2c, one named mutant per group, each a TB-side change at the bind or the agent so
+the group's assertion fires with every other referee inert and the ablation (the mutant with `+gen_chk_sva_<group>=0`) passes:
+- icram: MS-ICRAM, the bind of `sva_icram_tag_write_implies_req` feeds `ic_tag_write_o` with `ic_tag_req_o` forced to 0 for the
+  allocation write (gen_binds.sv), so the assertion `ic_tag_write_o |-> |ic_tag_req_o` fails on the first allocation.
+- irq: MS-IRQ, the irq agent drives `irq_timer_i` to X for one cycle after reset (gen_agents_pkg.sv), so `sva_irq_pins_known` fails.
+- dbg: MS-DBG, the debug agent drives `debug_req_i` to X for one cycle (gen_agents_pkg.sv), so `sva_dbg_req_known` fails.
+- alert: MS-ALERT, the bind's `alert_major_bus_o` term of `sva_alert_bus_iff_intg` inverted (gen_binds.sv), so the equality fails on
+  the first clean response.

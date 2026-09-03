@@ -3330,3 +3330,264 @@
       bins c_bnez_yes_rand= binsof(cp_op.c_bnez) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
     }
   endgroup
+
+  // CG-BIT-006 (gen_bit_sbit_cg), 22 coverpoint bins, 100 cross bins
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BCLR = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BSET = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BINV = 2;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BEXT = 3;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BCLRI = 4;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BSETI = 5;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BINVI = 6;
+  localparam int GEN_FC_BIT_SBIT_CP_OP_BEXTI = 7;
+  localparam int GEN_FC_BIT_SBIT_CP_INDEX_I0 = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_INDEX_MID = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_INDEX_I31 = 2;
+  localparam int GEN_FC_BIT_SBIT_CP_RS2_UPPER_ZERO = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_RS2_UPPER_ALL_ONES = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_RS2_UPPER_OTHER_NONZERO = 2;
+  localparam int GEN_FC_BIT_SBIT_CP_PRIOR_BIT_CLEAR = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_PRIOR_BIT_SET = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_OPERAND_ZERO = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_OPERAND_ALL_ONES = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_OPERAND_RAND = 2;
+  localparam int GEN_FC_BIT_SBIT_CP_RD_X0_NO = 0;
+  localparam int GEN_FC_BIT_SBIT_CP_RD_X0_YES = 1;
+  localparam int GEN_FC_BIT_SBIT_CP_BINV_TWICE_YES = 0;
+  covergroup gen_bit_sbit_cg with function sample(int v_cp_op, int v_cp_index, int v_cp_rs2_upper, int v_cp_prior_bit, int v_cp_operand, int v_cp_rd_x0, int v_cp_binv_twice);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_op: coverpoint v_cp_op { bins bclr= {0}; bins bset= {1}; bins binv= {2}; bins bext= {3}; bins bclri= {4}; bins bseti= {5}; bins binvi= {6}; bins bexti= {7}; ignore_bins na = {-1}; }
+    cp_index: coverpoint v_cp_index { bins i0= {0}; bins mid= {1}; bins i31= {2}; ignore_bins na = {-1}; }
+    cp_rs2_upper: coverpoint v_cp_rs2_upper { bins zero= {0}; bins all_ones= {1}; bins other_nonzero= {2}; ignore_bins na = {-1}; }
+    cp_prior_bit: coverpoint v_cp_prior_bit { bins clear= {0}; bins set= {1}; ignore_bins na = {-1}; }
+    cp_operand: coverpoint v_cp_operand { bins zero= {0}; bins all_ones= {1}; bins \rand = {2}; ignore_bins na = {-1}; }
+    cp_rd_x0: coverpoint v_cp_rd_x0 { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_binv_twice: coverpoint v_cp_binv_twice { bins yes= {0}; ignore_bins na = {-1}; }
+    cr_op_index_prior: cross cp_op, cp_index, cp_prior_bit {
+      bins bclr_i0_clear= binsof(cp_op.bclr) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bclr_i0_set= binsof(cp_op.bclr) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bclr_i31_clear= binsof(cp_op.bclr) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bclr_i31_set= binsof(cp_op.bclr) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bclr_mid_clear= binsof(cp_op.bclr) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bclr_mid_set= binsof(cp_op.bclr) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins bext_i0_clear= binsof(cp_op.bext) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bext_i0_set= binsof(cp_op.bext) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bext_i31_clear= binsof(cp_op.bext) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bext_i31_set= binsof(cp_op.bext) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bext_mid_clear= binsof(cp_op.bext) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bext_mid_set= binsof(cp_op.bext) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins binv_i0_clear= binsof(cp_op.binv) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins binv_i0_set= binsof(cp_op.binv) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins binv_i31_clear= binsof(cp_op.binv) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins binv_i31_set= binsof(cp_op.binv) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins binv_mid_clear= binsof(cp_op.binv) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins binv_mid_set= binsof(cp_op.binv) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins bset_i0_clear= binsof(cp_op.bset) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bset_i0_set= binsof(cp_op.bset) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bset_i31_clear= binsof(cp_op.bset) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bset_i31_set= binsof(cp_op.bset) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bset_mid_clear= binsof(cp_op.bset) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bset_mid_set= binsof(cp_op.bset) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins bclri_i0_clear= binsof(cp_op.bclri) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bclri_i0_set= binsof(cp_op.bclri) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bclri_i31_clear= binsof(cp_op.bclri) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bclri_i31_set= binsof(cp_op.bclri) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bclri_mid_clear= binsof(cp_op.bclri) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bclri_mid_set= binsof(cp_op.bclri) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins bexti_i0_clear= binsof(cp_op.bexti) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bexti_i0_set= binsof(cp_op.bexti) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bexti_i31_clear= binsof(cp_op.bexti) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bexti_i31_set= binsof(cp_op.bexti) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bexti_mid_clear= binsof(cp_op.bexti) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bexti_mid_set= binsof(cp_op.bexti) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins binvi_i0_clear= binsof(cp_op.binvi) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins binvi_i0_set= binsof(cp_op.binvi) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins binvi_i31_clear= binsof(cp_op.binvi) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins binvi_i31_set= binsof(cp_op.binvi) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins binvi_mid_clear= binsof(cp_op.binvi) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins binvi_mid_set= binsof(cp_op.binvi) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+      bins bseti_i0_clear= binsof(cp_op.bseti) && binsof(cp_index.i0) && binsof(cp_prior_bit.clear);
+      bins bseti_i0_set= binsof(cp_op.bseti) && binsof(cp_index.i0) && binsof(cp_prior_bit.set);
+      bins bseti_i31_clear= binsof(cp_op.bseti) && binsof(cp_index.i31) && binsof(cp_prior_bit.clear);
+      bins bseti_i31_set= binsof(cp_op.bseti) && binsof(cp_index.i31) && binsof(cp_prior_bit.set);
+      bins bseti_mid_clear= binsof(cp_op.bseti) && binsof(cp_index.mid) && binsof(cp_prior_bit.clear);
+      bins bseti_mid_set= binsof(cp_op.bseti) && binsof(cp_index.mid) && binsof(cp_prior_bit.set);
+    }
+    cr_op_operand: cross cp_op, cp_operand {
+      bins bclri_all_ones= binsof(cp_op.bclri) && binsof(cp_operand.all_ones);
+      bins bclri_rand= binsof(cp_op.bclri) && binsof(cp_operand.\rand );
+      bins bclri_zero= binsof(cp_op.bclri) && binsof(cp_operand.zero);
+      bins bexti_all_ones= binsof(cp_op.bexti) && binsof(cp_operand.all_ones);
+      bins bexti_rand= binsof(cp_op.bexti) && binsof(cp_operand.\rand );
+      bins bexti_zero= binsof(cp_op.bexti) && binsof(cp_operand.zero);
+      bins binvi_all_ones= binsof(cp_op.binvi) && binsof(cp_operand.all_ones);
+      bins binvi_rand= binsof(cp_op.binvi) && binsof(cp_operand.\rand );
+      bins binvi_zero= binsof(cp_op.binvi) && binsof(cp_operand.zero);
+      bins bseti_all_ones= binsof(cp_op.bseti) && binsof(cp_operand.all_ones);
+      bins bseti_rand= binsof(cp_op.bseti) && binsof(cp_operand.\rand );
+      bins bseti_zero= binsof(cp_op.bseti) && binsof(cp_operand.zero);
+      bins bclr_all_ones= binsof(cp_op.bclr) && binsof(cp_operand.all_ones);
+      bins bclr_rand= binsof(cp_op.bclr) && binsof(cp_operand.\rand );
+      bins bclr_zero= binsof(cp_op.bclr) && binsof(cp_operand.zero);
+      bins bext_all_ones= binsof(cp_op.bext) && binsof(cp_operand.all_ones);
+      bins bext_rand= binsof(cp_op.bext) && binsof(cp_operand.\rand );
+      bins bext_zero= binsof(cp_op.bext) && binsof(cp_operand.zero);
+      bins binv_all_ones= binsof(cp_op.binv) && binsof(cp_operand.all_ones);
+      bins binv_rand= binsof(cp_op.binv) && binsof(cp_operand.\rand );
+      bins binv_zero= binsof(cp_op.binv) && binsof(cp_operand.zero);
+      bins bset_all_ones= binsof(cp_op.bset) && binsof(cp_operand.all_ones);
+      bins bset_rand= binsof(cp_op.bset) && binsof(cp_operand.\rand );
+      bins bset_zero= binsof(cp_op.bset) && binsof(cp_operand.zero);
+    }
+    cr_reg_upper: cross cp_op, cp_rs2_upper {
+      bins bclr_all_ones= binsof(cp_op.bclr) && binsof(cp_rs2_upper.all_ones);
+      bins bext_all_ones= binsof(cp_op.bext) && binsof(cp_rs2_upper.all_ones);
+      bins binv_all_ones= binsof(cp_op.binv) && binsof(cp_rs2_upper.all_ones);
+      bins bset_all_ones= binsof(cp_op.bset) && binsof(cp_rs2_upper.all_ones);
+      bins bclr_other_nonzero= binsof(cp_op.bclr) && binsof(cp_rs2_upper.other_nonzero);
+      bins bclr_zero= binsof(cp_op.bclr) && binsof(cp_rs2_upper.zero);
+      bins bext_other_nonzero= binsof(cp_op.bext) && binsof(cp_rs2_upper.other_nonzero);
+      bins bext_zero= binsof(cp_op.bext) && binsof(cp_rs2_upper.zero);
+      bins binv_other_nonzero= binsof(cp_op.binv) && binsof(cp_rs2_upper.other_nonzero);
+      bins binv_zero= binsof(cp_op.binv) && binsof(cp_rs2_upper.zero);
+      bins bset_other_nonzero= binsof(cp_op.bset) && binsof(cp_rs2_upper.other_nonzero);
+      bins bset_zero= binsof(cp_op.bset) && binsof(cp_rs2_upper.zero);
+    }
+    cr_op_rd_x0: cross cp_op, cp_rd_x0 {
+      bins bclr_no= binsof(cp_op.bclr) && binsof(cp_rd_x0.no);
+      bins bclr_yes= binsof(cp_op.bclr) && binsof(cp_rd_x0.yes);
+      bins bclri_no= binsof(cp_op.bclri) && binsof(cp_rd_x0.no);
+      bins bclri_yes= binsof(cp_op.bclri) && binsof(cp_rd_x0.yes);
+      bins bext_no= binsof(cp_op.bext) && binsof(cp_rd_x0.no);
+      bins bext_yes= binsof(cp_op.bext) && binsof(cp_rd_x0.yes);
+      bins bexti_no= binsof(cp_op.bexti) && binsof(cp_rd_x0.no);
+      bins bexti_yes= binsof(cp_op.bexti) && binsof(cp_rd_x0.yes);
+      bins binv_no= binsof(cp_op.binv) && binsof(cp_rd_x0.no);
+      bins binv_yes= binsof(cp_op.binv) && binsof(cp_rd_x0.yes);
+      bins binvi_no= binsof(cp_op.binvi) && binsof(cp_rd_x0.no);
+      bins binvi_yes= binsof(cp_op.binvi) && binsof(cp_rd_x0.yes);
+      bins bset_no= binsof(cp_op.bset) && binsof(cp_rd_x0.no);
+      bins bset_yes= binsof(cp_op.bset) && binsof(cp_rd_x0.yes);
+      bins bseti_no= binsof(cp_op.bseti) && binsof(cp_rd_x0.no);
+      bins bseti_yes= binsof(cp_op.bseti) && binsof(cp_rd_x0.yes);
+    }
+  endgroup
+
+  // CG-CMP-005 (gen_cmp_zcb_cg), 30 coverpoint bins, 65 cross bins
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_LBU = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_LHU = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_LH = 2;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_SB = 3;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_SH = 4;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_ZEXT_B = 5;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_SEXT_B = 6;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_ZEXT_H = 7;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_SEXT_H = 8;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_NOT = 9;
+  localparam int GEN_FC_CMP_ZCB_CP_INSN_C_MUL = 10;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_B_U0 = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_B_U1 = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_B_U2 = 2;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_B_U3 = 3;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_H_U0 = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_UIMM_H_U2 = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_DATA_SIGN_POS = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_DATA_SIGN_NEG = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_BIT7_SET = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_BIT7_CLEAR = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_BIT15_SET = 2;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_ZERO = 3;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_ALL_ONES = 4;
+  localparam int GEN_FC_CMP_ZCB_CP_ALU_OPERAND_RAND = 5;
+  localparam int GEN_FC_CMP_ZCB_CP_ADDR_ALIGN_ALIGNED = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_ADDR_ALIGN_MIS1 = 1;
+  localparam int GEN_FC_CMP_ZCB_CP_ADDR_ALIGN_MIS3 = 2;
+  localparam int GEN_FC_CMP_ZCB_CP_REGS_SAME = 0;
+  localparam int GEN_FC_CMP_ZCB_CP_REGS_DISTINCT = 1;
+  covergroup gen_cmp_zcb_cg with function sample(int v_cp_insn, int v_cp_uimm_b, int v_cp_uimm_h, int v_cp_data_sign, int v_cp_alu_operand, int v_cp_addr_align, int v_cp_regs);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_insn: coverpoint v_cp_insn { bins c_lbu= {0}; bins c_lhu= {1}; bins c_lh= {2}; bins c_sb= {3}; bins c_sh= {4}; bins c_zext_b= {5}; bins c_sext_b= {6}; bins c_zext_h= {7}; bins c_sext_h= {8}; bins c_not= {9}; bins c_mul= {10}; ignore_bins na = {-1}; }
+    cp_uimm_b: coverpoint v_cp_uimm_b { bins u0= {0}; bins u1= {1}; bins u2= {2}; bins u3= {3}; ignore_bins na = {-1}; }
+    cp_uimm_h: coverpoint v_cp_uimm_h { bins u0= {0}; bins u2= {1}; ignore_bins na = {-1}; }
+    cp_data_sign: coverpoint v_cp_data_sign { bins pos= {0}; bins neg= {1}; ignore_bins na = {-1}; }
+    cp_alu_operand: coverpoint v_cp_alu_operand { bins bit7_set= {0}; bins bit7_clear= {1}; bins bit15_set= {2}; bins zero= {3}; bins all_ones= {4}; bins \rand = {5}; ignore_bins na = {-1}; }
+    cp_addr_align: coverpoint v_cp_addr_align { bins aligned= {0}; bins mis1= {1}; bins mis3= {2}; ignore_bins na = {-1}; }
+    cp_regs: coverpoint v_cp_regs { bins same= {0}; bins distinct= {1}; ignore_bins na = {-1}; }
+    cr_half_misaligned: cross cp_insn, cp_addr_align {
+      bins c_lh_aligned= binsof(cp_insn.c_lh) && binsof(cp_addr_align.aligned);
+      bins c_lh_mis1= binsof(cp_insn.c_lh) && binsof(cp_addr_align.mis1);
+      bins c_lh_mis3= binsof(cp_insn.c_lh) && binsof(cp_addr_align.mis3);
+      bins c_lhu_aligned= binsof(cp_insn.c_lhu) && binsof(cp_addr_align.aligned);
+      bins c_lhu_mis1= binsof(cp_insn.c_lhu) && binsof(cp_addr_align.mis1);
+      bins c_lhu_mis3= binsof(cp_insn.c_lhu) && binsof(cp_addr_align.mis3);
+      bins c_sh_aligned= binsof(cp_insn.c_sh) && binsof(cp_addr_align.aligned);
+      bins c_sh_mis1= binsof(cp_insn.c_sh) && binsof(cp_addr_align.mis1);
+      bins c_sh_mis3= binsof(cp_insn.c_sh) && binsof(cp_addr_align.mis3);
+    }
+    cr_load_sign: cross cp_insn, cp_data_sign {
+      bins c_lbu_neg= binsof(cp_insn.c_lbu) && binsof(cp_data_sign.neg);
+      bins c_lbu_pos= binsof(cp_insn.c_lbu) && binsof(cp_data_sign.pos);
+      bins c_lh_neg= binsof(cp_insn.c_lh) && binsof(cp_data_sign.neg);
+      bins c_lh_pos= binsof(cp_insn.c_lh) && binsof(cp_data_sign.pos);
+      bins c_lhu_neg= binsof(cp_insn.c_lhu) && binsof(cp_data_sign.neg);
+      bins c_lhu_pos= binsof(cp_insn.c_lhu) && binsof(cp_data_sign.pos);
+    }
+    cr_ls_b: cross cp_insn, cp_uimm_b {
+      bins c_lbu_u0= binsof(cp_insn.c_lbu) && binsof(cp_uimm_b.u0);
+      bins c_lbu_u1= binsof(cp_insn.c_lbu) && binsof(cp_uimm_b.u1);
+      bins c_lbu_u2= binsof(cp_insn.c_lbu) && binsof(cp_uimm_b.u2);
+      bins c_lbu_u3= binsof(cp_insn.c_lbu) && binsof(cp_uimm_b.u3);
+      bins c_sb_u0= binsof(cp_insn.c_sb) && binsof(cp_uimm_b.u0);
+      bins c_sb_u1= binsof(cp_insn.c_sb) && binsof(cp_uimm_b.u1);
+      bins c_sb_u2= binsof(cp_insn.c_sb) && binsof(cp_uimm_b.u2);
+      bins c_sb_u3= binsof(cp_insn.c_sb) && binsof(cp_uimm_b.u3);
+    }
+    cr_ls_h: cross cp_insn, cp_uimm_h {
+      bins c_lh_u0= binsof(cp_insn.c_lh) && binsof(cp_uimm_h.u0);
+      bins c_lh_u2= binsof(cp_insn.c_lh) && binsof(cp_uimm_h.u2);
+      bins c_lhu_u0= binsof(cp_insn.c_lhu) && binsof(cp_uimm_h.u0);
+      bins c_lhu_u2= binsof(cp_insn.c_lhu) && binsof(cp_uimm_h.u2);
+      bins c_sh_u0= binsof(cp_insn.c_sh) && binsof(cp_uimm_h.u0);
+      bins c_sh_u2= binsof(cp_insn.c_sh) && binsof(cp_uimm_h.u2);
+    }
+    cr_alu_operand: cross cp_insn, cp_alu_operand {
+      bins c_not_all_ones= binsof(cp_insn.c_not) && binsof(cp_alu_operand.all_ones);
+      bins c_not_bit15_set= binsof(cp_insn.c_not) && binsof(cp_alu_operand.bit15_set);
+      bins c_not_bit7_clear= binsof(cp_insn.c_not) && binsof(cp_alu_operand.bit7_clear);
+      bins c_not_bit7_set= binsof(cp_insn.c_not) && binsof(cp_alu_operand.bit7_set);
+      bins c_not_rand= binsof(cp_insn.c_not) && binsof(cp_alu_operand.\rand );
+      bins c_not_zero= binsof(cp_insn.c_not) && binsof(cp_alu_operand.zero);
+      bins c_sext_b_all_ones= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.all_ones);
+      bins c_sext_b_bit15_set= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.bit15_set);
+      bins c_sext_b_bit7_clear= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.bit7_clear);
+      bins c_sext_b_bit7_set= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.bit7_set);
+      bins c_sext_b_rand= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.\rand );
+      bins c_sext_b_zero= binsof(cp_insn.c_sext_b) && binsof(cp_alu_operand.zero);
+      bins c_sext_h_all_ones= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.all_ones);
+      bins c_sext_h_bit15_set= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.bit15_set);
+      bins c_sext_h_bit7_clear= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.bit7_clear);
+      bins c_sext_h_bit7_set= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.bit7_set);
+      bins c_sext_h_rand= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.\rand );
+      bins c_sext_h_zero= binsof(cp_insn.c_sext_h) && binsof(cp_alu_operand.zero);
+      bins c_zext_b_all_ones= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.all_ones);
+      bins c_zext_b_bit15_set= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.bit15_set);
+      bins c_zext_b_bit7_clear= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.bit7_clear);
+      bins c_zext_b_bit7_set= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.bit7_set);
+      bins c_zext_b_rand= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.\rand );
+      bins c_zext_b_zero= binsof(cp_insn.c_zext_b) && binsof(cp_alu_operand.zero);
+      bins c_zext_h_all_ones= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.all_ones);
+      bins c_zext_h_bit15_set= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.bit15_set);
+      bins c_zext_h_bit7_clear= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.bit7_clear);
+      bins c_zext_h_bit7_set= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.bit7_set);
+      bins c_zext_h_rand= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.\rand );
+      bins c_zext_h_zero= binsof(cp_insn.c_zext_h) && binsof(cp_alu_operand.zero);
+      bins c_mul_all_ones= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.all_ones);
+      bins c_mul_bit15_set= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.bit15_set);
+      bins c_mul_bit7_clear= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.bit7_clear);
+      bins c_mul_bit7_set= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.bit7_set);
+      bins c_mul_rand= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.\rand );
+      bins c_mul_zero= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.zero);
+    }
+  endgroup
