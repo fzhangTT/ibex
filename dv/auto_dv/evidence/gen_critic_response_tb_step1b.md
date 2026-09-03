@@ -26,7 +26,7 @@ Responder: tb-infra (respawned instance), 2026-09-03. Reviews answered: Critic
 | Finding | Status | Location / validating run |
 |---|---|---|
 | [medium] codegen extended while its REQUEST-CHANGES stood; response file and re-review missing | FIXED | P-01/P-03 closed (step-1a response); this file and its siblings exist; the re-review is the Orchestrator's T-068 gate. |
-| [medium] `+gen_finish_timeout` has no consumer | FIXED | `GenBridge.finish()` takes the plusarg when the caller passes no budget (`finish_timeout_cycles()`); the SV default is the new constant `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT` through `default_from`; the API document row says so. |
+| [medium] `+gen_finish_timeout` has no consumer | FIXED (exercised in the df83749 follow-up) | `GenBridge.finish()` takes the plusarg when the caller passes no budget (`finish_timeout_cycles()`) and logs the budget and its source; the SV default is the constant `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT` through `default_from`. `gen_ut_bridge` passes no budget, so the plusarg path runs: `dv/auto_dv/evidence/gen_tdd_logs/bridge/gen_ut_bridge_green_plusarg_budget_t068b_stdout.log` (`GEN_BRIDGE finish budget 20000 cycles (+gen_finish_timeout or its default)`, PASS), `gen_ut_bridge_green_finish_timeout_50_t068b_*` (`finish budget 50 cycles`, PASS), `gen_neg_finish_timeout_1_t068b_*` (`finish budget 1 cycles`): the finish handshake completes within one cycle of `finish_req`, so no budget trips it and that run PASSES; the timeout mechanism itself is the `_edge` helper proven red by the step-1b bridge red run (`no edge on listener_armed within 2000 cycles`). |
 | [low] clock delay in the compile timescale | FIXED | `forever #(ClkHalfPeriodNs * 1ns) clk = ~clk;` |
 | [low] VCS flags re-typed from `gen_flow_const.py` | FIXED | `gen_tb_local.sh` reads `VCS_BASE_FLAGS + VCS_UVM_FLAGS + VCS_COMMON_FLAGS + VCS_DEBUG_PP_FLAGS + COCOTB_DEFINE` from the module (NUL-separated) and records them in `config_opts.txt` (`gen_config_opts_t068.txt`). |
 | [low] `gen_ut_bridge_neg.py` `dut.clk` and 20000 `ClockCycles` | FIXED | As Critic L-2. |
@@ -37,3 +37,10 @@ Responder: tb-infra (respawned instance), 2026-09-03. Reviews answered: Critic
 | [info] two compile defects unretained | labelled | Transcript Section 5 labels them UNRETAINED. |
 | [info] `peek_fn_t` unused | FIXED | Removed in 7678f78 (verified by the step-1c review). |
 | [info] vacuous-pass guard owed | FIXED | `gen_base_test::build_phase` fatals `GEN_NO_COCOTB` unless `COCOTB_SIM` is defined; proven on a pure-SV build (`gen_neg_no_cocotb_t068_sim.log`: `UVM_FATAL ... [GEN_NO_COCOTB] ...` at time 0). |
+
+## Post-execution review of df83749 (`dv/auto_dv/reviews/2026-09-03-claude-diff-0475b949-df83749f.md`, APPROVE-WITH-CHANGES)
+
+| Row | Status | Location / validating run |
+|---|---|---|
+| [low] step1b.md:29 `+gen_finish_timeout` consumer never exercised (every test passed `timeout_cycles=5000`) | FIXED | See the amended medium row above: `gen_ut_bridge` now passes no budget; three retained runs show budgets 20000 (default), 50 and 1 taken from the plusarg path; no budget can trip because the ack arrives within the same cycle (stated, not hidden). |
+| [low] gen_ut_bridge_neg.py:11 `BUDGET_CYCLES = 20000` literal | FIXED | The wait is `BUDGET_MULTIPLE (2) x` the alive timeout read from `+gen_alive_timeout` (or its rendered default), with the intent comment (the watchdog must decide, not the test); run `dv/auto_dv/evidence/gen_tdd_logs/bridge/gen_neg_noalive_derived_t068b_*`: `GEN_ALIVE_TIMEOUT: Python never set the alive bit within 3000 cycles`, verdict FAIL sv_fatal. |

@@ -260,20 +260,26 @@ package gen_rvfi_pkg;
       //      instruction, operands); the reference result and pc + 4 are written back into the model
       if (!t.trap && gen_isa_is_draft_b(t.insn)) begin
         int unsigned ref_rd, model_pc, model_insn, rs1_v, rs2_v;
-        logic [4:0] rs1_i = t.insn[19:15], rs2_i = t.insn[24:20], rd_i = t.insn[11:7];
-        bit r_type = (t.insn[6:0] == ibex_pkg::OPCODE_OP);
+        logic [4:0] rs1_i, rs2_i, rd_i;
+        bit r_type;
         model_pc = gen_isa_get_pc();
         model_insn = gen_isa_fetch_insn(model_pc);
-        rs1_v = gen_isa_read_gpr(rs1_i); rs2_v = r_type ? gen_isa_read_gpr(rs2_i) : 32'h0;
         draft_b++; compared++;
         bvif.evt_isa_records = compared + folded;
         if (model_pc != t.pc_rdata)
           miss("isa_pc", $sformatf("draft-B pc model=%08h dut=%08h", model_pc, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
-        if (model_insn != t.insn)
+        if (model_insn != t.insn) begin
+          // the model did not fetch this instruction: no reference result, no write-back, no pc advance
           miss("isa_insn", $sformatf("draft-B insn model=%08h dut=%08h", model_insn, t.insn), t, fld(cfg.chk_isa_insn, cfg.chk_isa_insn_set));
+          return;
+        end
+        // every operand of the reference comes from the model's own instruction word and registers
+        rs1_i = model_insn[19:15]; rs2_i = model_insn[24:20]; rd_i = model_insn[11:7];
+        r_type = (model_insn[6:0] == ibex_pkg::OPCODE_OP);
+        rs1_v = gen_isa_read_gpr(rs1_i); rs2_v = r_type ? gen_isa_read_gpr(rs2_i) : 32'h0;
         if (t.rs1_rdata != rs1_v || (r_type && t.rs2_rdata != rs2_v))
           miss("isa_rd", $sformatf("draft-B operands model rs1=%08h rs2=%08h dut rs1=%08h rs2=%08h", rs1_v, rs2_v, t.rs1_rdata, t.rs2_rdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
-        void'(gen_isa_exec_reference(t.insn, rs1_v, rs2_v, 32'h0, ref_rd));
+        void'(gen_isa_exec_reference(model_insn, rs1_v, rs2_v, 32'h0, ref_rd));
         if (rd_i != t.rd_addr || (rd_i != 0 && ref_rd != t.rd_wdata))
           miss("isa_rd", $sformatf("draft-B rd model=x%0d/%08h dut=x%0d/%08h", rd_i, ref_rd, t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         if (model_pc + 4 != t.pc_wdata)

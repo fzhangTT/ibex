@@ -84,6 +84,8 @@ class GenBridge:
         assert consumed == self.sent, f"GEN_BRIDGE: cmds_consumed {consumed} != sent {self.sent}"
         b.stim_active.value = 0
         budget = timeout_cycles if timeout_cycles is not None else finish_timeout_cycles()
+        self.log.info("GEN_BRIDGE finish budget %d cycles (%s)", budget,
+                      "caller" if timeout_cycles is not None else f"+{PLUSARGS['finish_timeout']['plusarg']} or its default")
         b.finish_req.value = 1
         await self._edge(b.finish_ack, budget, "finish_ack")
         self.log.info("GEN_BRIDGE finished: %d commands sent and consumed, %d retirements counted",

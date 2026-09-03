@@ -20,7 +20,7 @@ Status words: FIXED (change made, validating run named), DISPUTED (reason given)
 | P-05 debug-only knobs without the flag | FIXED | `debug_only: true` on `rvfi_trace`, `isa_string`, `isa_log`, `sb_trace`; Runtime extended `debug_only_plusargs` to the five names (gen_testlist.yaml:42); unit test `OK <n> is debug_only` x5 and `OK Runtime debug_only_plusargs lists gen_<n>` x5. |
 | P-06 GEN_KNOB_KNOB_ prefix; "509 checks" re-run unretained | FIXED (prefix, in efe2a3e) / labelled | The re-run is labelled UNRETAINED in transcript Section 7; the T-068 run (674 OK) covers the current tree. |
 | P-07 A-23 needs the argument list from outside SV | n/a | Withdrawn by the Critic (step-1b verdict Section 5); `uvm_cmdline_processor::get_args` enumerates the arguments; proven red again in T-068 (`gen_neg_unknown_plusarg_t068_sim.log`). |
-| L-1 no exit-status line in the zc Spike log | labelled | Section 5's Spike exit status is labelled UNRETAINED; every new log ends with `exit=<rc>` (the T-068 logs do). |
+| L-1 no exit-status line in the zc Spike log | labelled | Section 5's Spike exit status is labelled UNRETAINED; unit-test logs end with `exit=<rc>` (the T-068 codegen and shim logs do); simulation runs record the simv exit code in their `verdict.txt` (`exit_code:`), their `stdout.log` ends with the VCS timestamp. |
 | L-2 gen_program.py:52 stale comment; unit-test docstring narrates history | FIXED | Comment replaced by one line stating the ISA string and MMIO page come from the rendered mirror; the docstring keeps the transcript pointer and no "written before" clause. |
 
 ## Cross-model findings
@@ -39,3 +39,9 @@ Status words: FIXED (change made, validating run named), DISPUTED (reason given)
 | [info] retained logs live under gitignored `work/` | FIXED | Verbatim copies under `dv/auto_dv/evidence/gen_tdd_logs/<component>/` with a manifest (path, source, bytes, md5); the transcripts name them. |
 | [info] test plan names `+gen_regime_seed` | ROUTED | DV Lead informed (2026-09-03 message); not a TB Infra file. |
 | [info] `gen_flow_const.py` literal plusarg copies | ROUTED | Runtime's file; its `--check` guards the copies against the package. |
+
+## Post-execution review of df83749 (`dv/auto_dv/reviews/2026-09-03-claude-diff-0475b949-df83749f.md`, APPROVE-WITH-CHANGES)
+
+| Row | Status | Location / validating run |
+|---|---|---|
+| [low] step1a.md:23 "every new log ends with exit=<rc>" is true of unit-test logs only | FIXED | The L-1 row above now distinguishes unit-test logs (`exit=<rc>`) from simulation runs (`exit_code` in `verdict.txt`, `stdout.log` ending with the VCS timestamp). |

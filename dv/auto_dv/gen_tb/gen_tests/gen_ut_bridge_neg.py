@@ -6,14 +6,16 @@ import cocotb
 from cocotb.triggers import Timer
 
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
-from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
 
-BUDGET_CYCLES = 20000
+BUDGET_MULTIPLE = 2   # the wait must outlast the alive timeout in force, so the watchdog decides, not this test
 
 
 @cocotb.test()
 async def gen_ut_bridge_noalive(dut):
     h = GenHandles(dut)
-    dut._log.info("GEN_UT_BRIDGE_NEG: not setting alive on %s; expecting GEN_ALIVE_TIMEOUT", h.b.alive._path)
-    await Timer(BUDGET_CYCLES * CONSTANTS["GEN_CLK_PERIOD_NS"], "ns")
+    p = PLUSARGS["alive_timeout"]
+    alive_cycles = int(cocotb.plusargs.get(p["plusarg"], p["default"]))
+    dut._log.info("GEN_UT_BRIDGE_NEG: not setting alive on %s; expecting GEN_ALIVE_TIMEOUT within %d cycles", h.b.alive._path, alive_cycles)
+    await Timer(BUDGET_MULTIPLE * alive_cycles * CONSTANTS["GEN_CLK_PERIOD_NS"], "ns")
     assert False, "GEN_UT_BRIDGE_NEG: the alive watchdog did not fire"

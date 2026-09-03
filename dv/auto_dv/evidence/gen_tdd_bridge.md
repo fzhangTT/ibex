@@ -150,3 +150,15 @@ rendered `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT`); the banner prints `boot_addr` and
 (`GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 ...`);
 `gen_cmd_item::kind_name()` uses the rendered `gen_cmd_name()`; the clock half period is written in explicit ns.
 Each local run now writes `run_header.txt` (UTC stamp, host, seed, module, plusargs) and `verdict.txt`.
+
+### 5.4 df83749 review follow-up: the +gen_finish_timeout path exercised, the negative test's budget derived
+
+`gen_ut_bridge` passes no finish budget, so `GenBridge.finish()` takes `+gen_finish_timeout` or its rendered default
+and logs the source. Retained (`gen_tdd_logs/bridge/*_t068b_*`, build `gen_compile_t068b.log`, vcs exit 0):
+`gen_ut_bridge_green_plusarg_budget`: `GEN_BRIDGE finish budget 20000 cycles (+gen_finish_timeout or its default)`,
+PASS; `gen_ut_bridge_green_finish_timeout_50`: `finish budget 50 cycles`, PASS; `gen_neg_finish_timeout_1`:
+`finish budget 1 cycles`, and the run PASSES: the finish handshake (objection drop, UVM report, `finish_ack` in
+final_phase) completes within one cycle of `finish_req`, so no budget can trip it on this TB; the timeout path is
+the `_edge` helper that the step-1b bridge red run proved (`no edge on listener_armed within 2000 cycles`). The
+negative module derives its wait from the alive timeout in force (`2 x +gen_alive_timeout`):
+`gen_neg_noalive_derived`: `GEN_ALIVE_TIMEOUT: Python never set the alive bit within 3000 cycles`, verdict FAIL sv_fatal.

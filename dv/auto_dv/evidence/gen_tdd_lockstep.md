@@ -174,8 +174,8 @@ ids: isa_insn 135, isa_mem 11, isa_pc 135, isa_pc_next 136, isa_rd 123, isa_trap
 ```
 This run proves the collected path and the model dependence, not per-field discrimination; that evidence is
 Section 5.3. `gen_ut_lockstep` is registered in Runtime's testlist (commit 280b4e9); `gen_ut_lockstep_forced_red` landed
-there with `red_fixture: true` (its FAIL is recorded as RED-OK, kept out of the pass rate and coverage; Runtime's
-check-tier proof `dv/auto_dv/work/runtime/out/t_red_fixture_check_0925/manifest.yaml`, reason `uvm_error at log line 31`).
+there in Runtime's commit 984b99d with `red_fixture: true` (its FAIL is recorded as RED-OK, kept out of the pass rate
+and coverage); the RED-OK run is Runtime's evidence in its out-tree, not a committed artifact of this transcript.
 
 ### 5.3 Per-field discrimination and ablation (MUT-004..MUT-007)
 
@@ -185,3 +185,13 @@ Zc program (isolated with every other check off, default, ablation with the fiel
 bytes) dut 8000039c<=44444445` is the union compare firing); isa_trap 148 / 0; isa_pc_next 148 / 0. Every
 default run shows no other id, every ablation run has verdict PASS. Logs `gen_tdd_logs/mutations/mut00[4-7]_*`.
 isa_pc and isa_insn fire in the forced red; isa_prv has never fired (no privilege change in either program).
+
+### 5.4 df83749 review follow-up: draft-B from the model's instruction; port-level mutation
+
+The draft-B path now decodes rs1/rs2/rd and executes the reference from `model_insn` (the word the model fetched at
+its own pc) and returns after the `isa_insn` miss with no write-back and no pc advance when `model_insn != t.insn`;
+green re-run `gen_tdd_logs/lockstep/gen_lockstep_zc_draftb_model_t068b_*` (consumed 169 of 169, 0 mismatches,
+draft_b=0: the path remains UNEXERCISED until a directed grevi/gorci program exists). MUT-008
+(`dv/auto_dv/mutations/gen_mut_isa_fields.md`) corrupts `rd_wdata` at the RVFI bundle assignment in gen_tb_top,
+i.e. before the monitor samples it: 124 `[isa_rd]` errors and no other id, 0 with `+gen_chk_isa_rd=0`, so the
+monitor's port sampling is inside the proven cone (`gen_tdd_logs/mutations/gen_mut008_*`).

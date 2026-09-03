@@ -66,6 +66,16 @@ and the knob forms. Isolation: `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_<id>=
 | `isa_prv` | wrong privilege after mret or trap | `+gen_chk_isa_prv=0` | `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_prv=1` |
 | `isa_pc_next` | wrong next pc on branch, jump, trap or mret | `+gen_chk_isa_pc_next=0` | `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc_next=1` |
 
+Proof status per id (Critic ruling D-3, dv/auto_dv/docs/gen_critic_tb_t068.md): the TB-side half of trust triad
+rule 2 is done for isa_rd, isa_mem, isa_trap and isa_pc_next (MUT-004..008 in dv/auto_dv/mutations/gen_mut_isa_fields.md:
+the named id fires alone, its knob silences exactly it, the flow collects the failure); the RTL-level half (a
+mutation of the DUT per id, caught by the named id with hidden referees inert, Test Writer purpose-2 runs) is
+OWED for every id before any isa_* id counts as mutation-proof in a measured regression. isa_pc and isa_insn have
+only the forced-red evidence (a model perturbation, not per-field); isa_prv has never fired; their per-field
+proofs are owed with the first U-mode program. Status words per id: isa_pc TB-side partial (forced red) / RTL owed;
+isa_insn TB-side partial / RTL owed; isa_trap TB-side done / RTL owed; isa_rd TB-side done (incl. port-level
+MUT-008) / RTL owed; isa_mem TB-side done / RTL owed; isa_prv none / RTL owed; isa_pc_next TB-side done / RTL owed.
+
 ## 6. Failure path and diagnostics
 
 `uvm_error` with id, record order, pc, expected-versus-actual; `uvm_fatal SB_DESYNC` when the

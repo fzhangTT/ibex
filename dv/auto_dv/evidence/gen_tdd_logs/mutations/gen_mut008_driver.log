@@ -1,0 +1,9 @@
+MUT-008: dv/auto_dv/tb/gen_tb_top.sv:223 original: assign u_rvfi_if.rd_wdata = rvfi_rd_wdata; | mutated: assign u_rvfi_if.rd_wdata = rvfi_rd_wdata ^ 32'h1;   // MUT-008: port-level corruption of the RVFI bundle
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut008_isolated          module=dv.auto__exit=0 uvm_errors=124 verdict: verdict: FAIL reason: uvm_error at sim.log:31 
+mut008_default           module=dv.auto__exit=0 uvm_errors=124 verdict: verdict: FAIL reason: uvm_error at sim.log:31 
+mut008_ablation          module=dv.auto__exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut008_ablation: ids 
+  mut008_default: ids     124 [isa_rd] 
+  mut008_isolated: ids     124 [isa_rd] 

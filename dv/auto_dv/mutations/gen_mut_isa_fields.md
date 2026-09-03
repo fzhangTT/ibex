@@ -6,7 +6,11 @@ the scoreboard, standing in for a DUT that gets exactly that field wrong. They p
 id fires and no other id does (discrimination), and (b) that `+gen_chk_isa_<field>=0` silences exactly it
 (ablation). They do not replace the RTL-level bug-injection evidence per checker that the Test Writer owns
 (agent_team_prompt.txt, Test Writer role); the classes of RTL defect each id catches are listed in
-`dv/auto_dv/docs/gen_component_api_scoreboard.md` Section 5a.
+`dv/auto_dv/docs/gen_component_api_scoreboard.md` Section 5a. Proven cone: MUT-004..007 corrupt the transaction
+AFTER `sample()` read the interface, so they prove the comparator (discrimination and knob ablation) but not the
+monitor's own port sampling (gen_rvfi_pkg.sv sample(), the `t.<field> = vif.<field>` lines) nor the wiring of the
+RVFI bundle in gen_tb_top; MUT-008 below covers that wiring at the port level, and the Test Writer's RTL mutations
+are scoped to the DUT side of the RVFI ports.
 Executed 2026-09-03 (T-068); module `dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep` on the directed Zc program
 (`out_codegen/zc/prog.vmem`, 169 retirements, 10 cm.* sequences), seed 1, opentitan; one build per mutation
 (`dv/auto_dv/work/tb-infra/out_t068_mut00N`, vcs exit 0, 0 errors). Runs per mutation: `isolated`
@@ -52,3 +56,12 @@ pre-mutation", gen_mutations_driver_t068.log).
 Not covered here: isa_pc, isa_insn, isa_prv (the forced-red run `lockstep_forced_red`, model without Zc/Zb,
 shows isa_pc and isa_insn firing; isa_prv has never fired: no privilege change exists in either program).
 Their per-field mutations follow with the first U-mode program.
+
+    id: MUT-008 (port-level, added after the df83749 review; executed 2026-09-03, build out_t068_mut008)
+    file: dv/auto_dv/tb/gen_tb_top.sv:223 (the RVFI bundle assignment into gen_rvfi_if)
+    original: assign u_rvfi_if.rd_wdata = rvfi_rd_wdata;
+    mutated:  assign u_rvfi_if.rd_wdata = rvfi_rd_wdata ^ 32'h1;
+    expected_detector: isa_rd (+gen_chk_isa_rd), through the monitor's port sampling and the comparator
+    result: CAUGHT: isolated (+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_rd=1) 124 UVM_ERROR all [isa_rd]; default 124
+      all [isa_rd] (no other id); verdict FAIL (uvm_error). ablation_control: +gen_chk_isa_rd=0 -> 0 errors, verdict
+      PASS (SURVIVED). Reverted, cmp identical. Logs: dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_mut008_*.

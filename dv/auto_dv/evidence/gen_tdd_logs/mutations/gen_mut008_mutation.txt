@@ -1,0 +1,1 @@
+MUT-008: dv/auto_dv/tb/gen_tb_top.sv:223 original: assign u_rvfi_if.rd_wdata = rvfi_rd_wdata; | mutated: assign u_rvfi_if.rd_wdata = rvfi_rd_wdata ^ 32'h1;   // MUT-008: port-level corruption of the RVFI bundle

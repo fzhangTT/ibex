@@ -153,7 +153,7 @@ std::unique_ptr<gen_simif_t> g_sim;
 std::unique_ptr<processor_t> g_proc;
 FILE* g_logf = nullptr;
 std::vector<std::pair<uint32_t, uint32_t>> g_csr_writes;
-std::vector<std::pair<uint32_t, uint32_t>> g_reg_writes;   // (idx, value) of the last step, x0 excluded, log order
+std::vector<std::pair<uint32_t, uint32_t>> g_reg_writes;   // (idx, value) of the last step, x0 excluded, ascending register index (commit_log_reg_t is a std::map)
 struct mem_access_t { uint32_t addr, data, size; };
 std::vector<mem_access_t> g_mem_writes, g_mem_reads;       // data accesses of the last step, log order
 uint32_t g_boot = 0;

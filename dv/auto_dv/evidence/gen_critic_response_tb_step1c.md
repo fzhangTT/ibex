@@ -22,3 +22,7 @@ and `gen_tdd_logs/mutations/` (manifest `gen_tdd_logs/gen_manifest.md`); transcr
 
 Standing step-1a and step-1b items listed in this review's status section are answered in
 `gen_critic_response_tb_step1a.md` and `gen_critic_response_tb_step1b.md`.
+
+## Post-execution review of df83749 (`dv/auto_dv/reviews/2026-09-03-claude-diff-0475b949-df83749f.md`, APPROVE-WITH-CHANGES)
+
+No row of that review concerns the step-1c items; MUT-003 and the knob wiring stand as recorded above.

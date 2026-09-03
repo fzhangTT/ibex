@@ -1,0 +1,1 @@
+# run ut_bridge_green_finish_timeout_50: 2026-09-03T09:45:31Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_finish_timeout=50]

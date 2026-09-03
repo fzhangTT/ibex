@@ -50,6 +50,18 @@ handler only; Zcmp micro-ops produce one record each with `ext_expanded_insn_val
 | `rvfi_pc_cont` | non-trap, non-redirect record: next `pc_rdata == pc_wdata`; on trap/mret/dret/fence.i records `pc_wdata` is not checked until F-RVFI-010 is ruled; `pc_rdata` continuity is | pc_wdata mux (`rtl/ibex_core.sv:2095`), pc_id capture | `+gen_chk_rvfi_pc_cont=0` |
 | `rvfi_cap_quiet` | `*_rcap == NULL_CAP`, `mem_is_cap == 0` | carve-out sanity | `+gen_chk_rvfi_cap_quiet=0` |
 
+Known RVFI observations that are NOT DUT failures (gen_bug_log.md v1e, cited so neither `rvfi_proto` nor the
+comparator flags them): B18 (rtl-arch BUG-10; the lock-step observation of step 2a): `rvfi_mem_rmask` is
+`4'b1111` and `rvfi_mem_addr` equals the ALU result on every non-store record, so the mask rules apply only to
+records the comparator classifies as loads or stores from the model's own access (`gen_scoreboard`: a DUT
+read is inferred from the model, `rvfi_mem_wmask` is compared directly, the observation is counted as
+`rvfi_rmask_on_nonload`); `rvfi_proto` never checks `rmask` on its own. B19 (pending rtl-arch confirmation;
+rtl/ibex_core.sv:1885-1886): `rvfi_trap` is masked on an illegal ebreak variant while `dcsr.ebreakm/u` is set;
+the plan's rule is that the comparator classifies that record by the `mcause` read-back rather than by
+`rvfi_trap`. Status (T-068): B18 handling is built; the B19 classification is NOT built yet, so until it
+lands a program that hits B19 reports an `isa_trap` mismatch, which a test must treat as the known B19
+signature, not as a new DUT failure. Both rows are the DV Lead's plan v2b alignment items.
+
 ## 6. Failure path and diagnostics
 
 `uvm_error` per id with order, pc, expected-versus-actual.

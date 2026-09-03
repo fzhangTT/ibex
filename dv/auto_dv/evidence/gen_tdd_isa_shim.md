@@ -79,6 +79,6 @@ GEN_UT_ISA_SHIM PASS (0 failures)
 85 OK lines (51 before): the new checks cover a cm.push step (4 stores, descending 4-byte-aligned addresses,
 `mem_write(0)` equals the first-access fields, -1 past the end), a cm.pop step (5 register writes in ascending
 index order, 4 loads), a single-write step, `fetch_insn(pc_before) == insn` on every step and 0 on an unmapped
-pc. `readelf -d` on the built library shows no RPATH/RUNPATH; a library build into Runtime's shared out root
+pc. `readelf -d` on the built library shows no RPATH/RUNPATH (retained: `dv/auto_dv/evidence/gen_tdd_logs/isa_shim/gen_readelf_libgen_isa_shim_t068.txt`, NEEDED entries only, `grep -ci rpath: 0`); a library build into Runtime's shared out root
 (`/proj_soc/user_dev/fzhang/ibex_dv_out/t068_shim_outdir_check/lib`) succeeded. The 2a logs are retained as
 `gen_isa_shim_red.log`, `gen_isa_shim_green.log`, `gen_ut_green_2a.log`.

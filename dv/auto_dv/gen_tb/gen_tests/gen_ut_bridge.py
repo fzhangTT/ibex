@@ -28,5 +28,5 @@ async def gen_ut_bridge(dut):
     consumed = int(h.b.cmds_consumed.value)
     assert consumed == 6, f"cmds_consumed {consumed} != 6"
     log.info("GEN_UT_BRIDGE cycles %d -> %d -> %d, consumed %d", c0, c1, c2, consumed)
-    await b.finish(timeout_cycles=5000)
+    await b.finish()   # budget from +gen_finish_timeout (or its rendered default): the plusarg path runs here
     log.info(PASS_MARKER)
