@@ -1107,3 +1107,24 @@ template's check, the schedule draw or a layer driver is wrong; a fix lands as t
 landing with a red); round 0 stays held until both the T-178 review and this triage conclude, because a measured
 round whose smoke tier fails on a TB-side schedule check would not be a Phase 1 gate baseline. LOG-024 remains lifted;
 the wave counts as batch-2 acceptance evidence for the 11 greens and 8 reds only.
+
+## LOG-037c - 2026-09-03 - HOLDS STAY + NEW HOLD (tb-infra landing 2a at 4d48d84: cross-model REQUEST-CHANGES)
+
+The relaunched cross-model review of 99ddf39..4d48d84 (dv/auto_dv/reviews/2026-09-03-claude-diff-99ddf39f-4d48d844.md)
+confirms what tb-infra had stated item by item: none of the LOG-037a/b fixes are in 2a (the two highs: the interrupt
+entry whose handler starts with a non-last Zcmp micro-op is still folded before publish_state, retained landed-tree
+green irq_entries=15 versus irq checker entries=0; take() still consumes one word and the announced-minus-taken referee
+is absent), so the T-136 and T-137 holds stay for landing 1c. Two new mediums of the DUT-driven-acceptance class: the
+NMI-pre-empted rule writes t.intr = 1 into the shared monitor transaction, so the observation-only export R line and
+every later subscriber see intr=1 where the DUT drove 0, and no retained green exercises the path (nmi_preempted=0
+everywhere) while the scoreboard doc claims 2; and rf_wr_suppress acceptance rests on the DUT's flag alone (the model's
+write is undone and the rd compare skipped whenever the DUT asserts it, with no check that a corruption was announced
+for that load), so a DUT that spuriously drops a load's register write is accepted. Rulings: (1) 1c carries both
+LOG-037a/b fixes, the t.intr mutation replaced by a local flag with a retained green showing nmi_preempted > 0, the
+rf_wr_suppress undo gated on an announced corruption for that load with the DUT's rd fields compared against no write
+(T-183), MB6 re-run on the committed sha with a per-mutant build-sha column, and a response table for every fu1 and 2a
+row; (2) until 1c passes both reviewers, integrity-error runs stay consistency-only for the model (the "full lock-step
+compares" sentence in the scoreboard doc is withdrawn) and NMI-enabled results stay under LOG-025; (3) the plan's
+Section 0a must not describe rf_wr_suppress handling or the NMI-pre-empted convention as built checks. Third instance
+today of a comparator rule that takes a DUT-side field as its reason to skip or undo a compare (F3 vectored cause,
+fault arming, now rf_wr_suppress): any such rule must be gated on an independent TB-side fact before it counts.
