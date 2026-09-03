@@ -369,3 +369,12 @@ the round-0 baseline is re-measured under it so round-over-round gains compare l
 every URG report header states the flag; FSM coverage is recorded as not glitch-filtered (VCS
 states the flag does not apply to FSM). The Critic ruled the adoption acceptable and recommended
 (T-040 N-2). Recorded from dv/auto_dv/docs/gen_tb_architecture.md Section 5.
+
+## LOG-010 - 2026-09-03 - NOTE (teammate reassignment by the watchdog rule)
+
+The `rtl-arch` teammate produced no file after 06:52 UTC while holding two assignments (formal
+evidence subset promotion; T-053 test-plan fact-check), stayed silent through the 07:12 UTC
+nudge window, and was stopped at 07:25 UTC and respawned under the same name against the
+working-tree state (agent_team_prompt.txt Section 2, Orchestrator watchdog). All of its files
+under `dv/auto_dv/work/rtl-arch/` are intact and the respawn continues from them. Not a session
+restart; no other role affected.
