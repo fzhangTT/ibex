@@ -3,8 +3,8 @@
 Program: the riscv-dv entry gen_rand_smoke at the run seed (testlist `program: {riscv_dv_test:
 gen_rand_smoke, seed: run}`), or a directed program for the red run. Layers: the timing-only regime
 knobs (bus latencies, outstanding cap, scramble-key delay) are drawn and scheduled by the template
-when the build has a REGIME_SET consumer (gen_test_lib.CONSUMED_KNOBS is empty at HEAD, where step 2b
-is parked, so none of the six TIMING_ONLY_KNOBS is drawn and the run logs GEN_TEST_LAYERS not_applied); error-injection
+when the build has a REGIME_SET consumer (gen_test_lib.CONSUMED_KNOBS, rendered by TB Infra; with none
+the run logs GEN_TEST_LAYERS not_applied, with the step-2b consumers the six TIMING_ONLY_KNOBS are drawn and applied); error-injection
 and event knobs stay at their yaml defaults because this program carries no expectation for them
 (later groups own those). Fire-check per seed: (1) the end-of-test store carries
 code 1 (the program's own pass verdict); (2) the retirement count after that store is at least the
@@ -25,8 +25,7 @@ from dv.auto_dv.tests.gen_test_template import GenTest
 class BootRetire(GenTest):
     name = "gen_test_boot_retire"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up test (tier check, measured false): it may run with the layers off while the build has no
-    # REGIME_SET consumer; flips to the default (required) when TB Infra's step 2b lands.
+    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
 
     def fire_check(self):

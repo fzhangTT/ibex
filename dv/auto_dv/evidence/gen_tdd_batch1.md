@@ -405,3 +405,50 @@ rem_manifest_stale runs of 11:37 UTC failed on a stale image (old generator) and
     SEED=1 dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh <OUT> <name> dv.auto_dv.tests.gen_test_<g> <w>/prog/prog.vmem
 
 Flow: the red entries in gen_testlist_entries.yaml pin one item each; acceptance wave 3 re-runs the four comparator-clean tests.
+
+## 9. Acceptance wave 3 (2d72b4a), the T-102 build, and landing 3
+
+Wave 3 (test-writer-031..038, head mode at 2d72b4a, 12:2x UTC): gen_test_csr_access, gen_test_cmp_zcb and gen_test_bit_draft PASS on all
+three seeds (UVM_ERROR 0); their pinned reds -035/-036/-038 RED-OK on the named fire id. gen_test_cmp_zcmp_basic (-033, -037) NOT_RUN:
+its generator imported gen_prog_const without the sys.path guard the flow's script invocation needs (`ModuleNotFoundError: No module
+named 'dv'`, program/generator.log); the guard is added (seed-1 source byte-identical) and the library self-test now runs every
+generator as a flow-style script, so this class of defect is caught before a commit. Re-filed as test-writer-047/048 after landing 3.
+
+TB Infra's T-102 (d0c0d15, 50256f0) on a build of HEAD 20a66cf (out_head3, see the template transcript Section 9): the four tests
+that failed the flow verdict on comparator rows now PASS with UVM_ERROR 0 and their per-item manifests:
+
+| Run (out_head3/<dir>) | Result | GEN_TEST_BINS | UVM_ERROR | md5 (stdout.log) |
+|---|---|---|---|---|
+| l3_rst_boot_s1 | PASS | 9 | 0 | 2f08de3777a44b7c42d84445c8afcc89 |
+| l3_csr_reset_s1 | PASS | 81 | 0 | 424ab59b6f0f750e12ccf618fca3abd2 |
+| l3_csr_trap_setup_s1 | PASS | 172 | 0 | c9d7fd261c83d32286fe34953405df18 |
+| l3_pmp_csr_warl_s1 | PASS | 266 | 0 | b977c9904e5901f35716216cc5df990b |
+
+Wave 4 (test-writer-039..046) requests those four tests and their pinned reds from Runtime. Landing 3 also labels the irq-agent
+preconditions not applied (TP-CSR-023/029, TP-RST-006: docstring and GEN_TEST_INFO), replaces the T-102 wording with the status
+citing d0c0d15/50256f0 and the consistency-compare caveat, and deduplicates the layers_required explanation.
+
+### 9.1 Acceptance wave 4 (test-writer-039..046, head mode, the four tests T-102 held back)
+
+| Request | Test | Seed | Verdict | Reason | head_sha |
+|---|---|---|---|---|---|
+| test-writer-039 | gen_test_rst_boot | 161973274 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-039 | gen_test_rst_boot | 227699301 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-039 | gen_test_rst_boot | 767411510 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-040 | gen_test_csr_reset | 356330330 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-040 | gen_test_csr_reset | 1901869263 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-040 | gen_test_csr_reset | 2106622326 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-041 | gen_test_csr_trap_setup | 75672323 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-041 | gen_test_csr_trap_setup | 256705059 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-041 | gen_test_csr_trap_setup | 1306446864 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-042 | gen_test_pmp_csr_warl | 670590772 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-042 | gen_test_pmp_csr_warl | 1428092103 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-042 | gen_test_pmp_csr_warl | 1532037239 | PASS | no collected failure mechanism; end marker and config banner present | d22ac19103b4 |
+| test-writer-043 | gen_test_rst_boot_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:103 | d22ac19103b4 |
+| test-writer-044 | gen_test_csr_reset_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:158 | d22ac19103b4 |
+| test-writer-045 | gen_test_csr_trap_setup_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:847 | d22ac19103b4 |
+| test-writer-046 | gen_test_pmp_csr_warl_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:853 | d22ac19103b4 |
+
+Totals: {'PASS': 12, 'RED-OK': 4}. With waves 3 and 4, seven of the eight batch-1 tests PASS in the flow on three seeds each with UVM_ERROR 0 and their
+pinned red fixtures reach RED-OK on the named fire id; gen_test_cmp_zcmp_basic follows as wave 3b (test-writer-047/048) once the
+import-guard fix is committed.

@@ -27,7 +27,7 @@ Rule (one test per group, `gen_test_plan.md` Section 0 "Test groups"):
 | directed program of a test | `dv/auto_dv/tests/gen_programs/gen_<area>_<topic>[_<n>].S` (Test Writer tree; `gen_program.py --directed` accepts any clone-relative path); Zc encodings through `dv/auto_dv/stim/gen_zc_insn.h`; end of test = tohost store 1 pass / 3 fail (riscv-dv convention); every directed program defines the word `gen_min_retired` |
 | riscv-dv program of a test | a `gen_<name>` entry in `dv/auto_dv/stim/gen_riscv_dv_target/gen_testlist.yaml` (TB Infra's file: entries requested through the Orchestrator) or the existing `gen_rand_smoke`; `program.seed: run` |
 | items of a group | one fire-check per item inside the group's test, named `fire_<tp_id_lower>` (for example `fire_tp_isa_001`), called from `fire_check()`; each asserts a per-seed observable through `GenTest.check`, and every item's result is collected before the finish handshake |
-| bins of a group | `dv/auto_dv/fcov_expectations/gen_test_<area>_<topic>.fcov.yaml`, rendered by the generator (Section 2) from the group's items after the manifest rule |
+| bins of a test | `dv/auto_dv/fcov_expectations/gen_test_<area>_<topic>.fcov.yaml`, rendered by the generator (Section 2) from the items the test's fire_tp_* methods name (built items only; blocked items contribute no bin) after the manifest rule |
 | docstring of a test | names the group, the TP items, the canonical feature IDs those items cover (ALIAS and FOLDED IDs resolved through `gen_feature_list.md` Section 3), the program, the knobs it pins (normally none) and the checkers it relies on, so the Critic's traceability sampling can start from the test file |
 | testlist entry | written by me to `dv/auto_dv/work/test-writer/gen_testlist_entries.yaml`, copied into `dv/auto_dv/flow/gen_testlist.yaml` by Runtime (one owner per file); a test's red run is its own entry (a request cannot swap a program) with `red_fixture: true`, `measured: false`, tier `check`: the flow reports its designed FAIL as RED-OK and an unexpected PASS as FAIL (gen_runtime_api.md Sections 2 and 7) |
 
@@ -73,9 +73,12 @@ the table named by its items; the tables are transcribed once into `gen_test_lib
   informational items, witness bins, and the Section 1.1 regression-level coverpoints, now 74).
   Before that landing the generator exited with `GEN_FCOV_MANIFEST_INPUT_VERSION`; nothing was
   produced from it.
-- The Python test declares the same list through `GenTest.declare_bins()` and logs it
-  (`GEN_TEST_BINS n=<count>`); `gen_test_lib.check_manifest_matches` is the host-side unit check
-  that the test and its manifest agree.
+- The Python test declares its bins through `GenTest.declare_bins()` and logs them (`GEN_TEST_BINS n=<count>`).
+  Default: the plan's bins of exactly the items the class's `fire_tp_<area>_<nnn>` methods name, produced by the
+  same generator code that renders the manifest (`gen_fcov_manifest.py --test-module`), so finish()'s cross-check
+  (`gen_test_lib.check_manifest_matches`) proves the committed manifest current against the plan and covering only
+  built items; a stale or missing manifest fails the run. A test that must narrow or extend the set overrides
+  `declare_bins()` with the reason in its docstring, and the cross-check then compares that override.
 - Until the first covergroup exists (`gen_fcov_pkg` is TB Infra build step 3), testlist entries
   carry `fcov_expectation_file: null` and the manifests are rendered but not wired; the flow's
   `fcov_manifest_required_tiers` policy switches them on. A test accepted before covergroups exist is

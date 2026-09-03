@@ -25,8 +25,7 @@ the bus record export (ASK 4). Until those land the clauses rest on the always-o
 the flow collects: the ISA comparator (isa_insn, isa_rd, isa_mem, isa_pc, isa_trap), rvfi_proto and the bus
 protocol checkers (dbus_proto, dbus_split, ibus_proto).
 Knobs (the items' Knobs lines): knob_dmem_rvalid_delay, knob_dmem_gnt_delay (TP-CMP-034),
-knob_imem_rvalid_delay (TP-CMP-036/038); nothing is pinned. layers_required = False: the TB has no
-REGIME_SET consumer at HEAD, so the template logs the layers not_applied (staged entry measured: false).
+knob_imem_rvalid_delay (TP-CMP-036/038); nothing is pinned. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb).
 declare_bins() is not overridden: the template declares the plan bins of the three items the fire_tp_cmp_*
 methods name (the manifest is rendered from this module). MODULE=dv.auto_dv.tests.gen_test_cmp_zcb.
 """
@@ -63,7 +62,7 @@ def _compare(test, item, detail):
 class CmpZcb(GenTest):
     name = "gen_test_cmp_zcb"
     schedulable = ("knob_dmem_rvalid_delay", "knob_dmem_gnt_delay", "knob_imem_rvalid_delay")
-    # No REGIME_SET consumer at HEAD: the template logs the layers not_applied (staged entry measured: false).
+    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
 
     def report_count(self):

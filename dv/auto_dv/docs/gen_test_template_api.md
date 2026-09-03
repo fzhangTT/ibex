@@ -148,6 +148,17 @@ items the test's fire_tp_* methods name, the acceptance form; `--group` for a wh
 gen_reg_schedule, TP-CSR-029 and gen_test_cmp_zcb.py); `lib.check_manifest_matches` compares it with
 `declare_bins()`.
 
+
+The structure check is lint: it runs in the library self-test (and before a test is offered to Runtime), never inside
+the flow or the simulation; its guarantees are those of a source check (a hook cannot forge a witness record or
+patch the library WITHOUT the self-test refusing the module), not a runtime sandbox. `lib.testlist_entry(name)` reads
+the committed `dv/auto_dv/flow/gen_testlist.yaml` only; a developer run may name a staged-entries file through the
+environment variable `GEN_TEST_STAGED_ENTRIES` (announced on stderr, never set by the flow). Every program generator
+must run as a script with no PYTHONPATH from the clone root (the flow's form); the self-test runs each one so.
+`dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh <OUT> <name> <module> <abs vmem> [plusargs]` runs one fixture or
+test against a local build; `GEN_TB_PYROOT=<tree>` puts a tree whose `dv/auto_dv/gen_tb` matches the build (an export
+of HEAD without `dv/auto_dv/tests`) before the clone on PYTHONPATH.
+
 ## 8. Known limits (this version)
 
 - `lib.CONSUMED_KNOBS` (the knobs the build's REGIME_SET dispatcher consumes) is derived, never
@@ -177,7 +188,7 @@ False` is accepted only when the class's `name` has a testlist entry with `measu
 `gen_testlist.yaml`, then the Test Writer's staged entries) or the class is in
 `lib.LAYERS_OPTOUT_ALLOWLIST` with a reason (empty today); the token `COV_WITNESS` never appears in a
 test; `cycle_clause_true=` is a keyword of `self.check` inside a `fire_*` method only. Each rule has a
-refused red source in the self-test.
+refused red source in the self-test (three sets of red sources today; the self-test output lists them).
 
 Witness protocol (plan v2f, Critic condition C-1): `self.check(what, ok, detail, cycle_clause_true=False)`
 returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_true=True` only on the TRUE
@@ -190,6 +201,12 @@ missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness
 never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n>`. No batch-1
 item carries the cycle-clause marker, so no test issues a witness today; the SV side (dispatcher row,
 `GEN_WITNESS_FOREIGN`) is TB Infra's.
+
+The witness record cannot be forged from a test under the structure check: `check()` appends to the template-private
+`_results` (test code assigning to or calling into any template-assigned instance name, `lib.*` or the template is
+refused), the allowed ids are read in the epilogue from the committed entry of the class's `name` (never an instance
+attribute), and the codes from the rendered table; an id the table lacks fails with the GEN_TEST_FAIL prefix. Fixtures
+gen_ut_witness_ok / _foreign / _notable / _noid prove the four epilogue paths with a Python-side fake dispatcher.
 
 `run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test
 (fixture gen_ut_drain_probe holds the runner 40 cycles across the end of test).

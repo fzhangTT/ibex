@@ -46,15 +46,15 @@ the flow verdict is FAIL while the cocotb marker is GEN_TEST_PASS, and the progr
 Knobs: the items name program-side region markers (knob:instr_mix csr_heavy, knob:pmp_regime off / mml_on,
 knob:priv_regime alternating / u_heavy) that describe this generated program; they are not scheduled here.
 schedulable = the timing-only regime knobs (bus latencies, outstanding cap, scramble-key delay), which the
-program tolerates. layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b parked), so
-the layers are logged not_applied; the flag returns to the default when step 2b lands. Tier check,
-measured: false until then.
+program tolerates. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb).
 
 Always-on checkers relied on: the ISA comparator (isa_csr and the other C4.7 rows; the shim runs Spike with
 PMPNumRegions 16, PMPGranularity 0 (4-byte grain, NA4 selectable) and Smepmp, PMP CSRs zeroed at reset),
 rvfi_proto, and the bus protocol checkers. declare_bins() takes the template default (the plan's bins for
 the group, checked against the rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg
 lands). MODULE=dv.auto_dv.tests.gen_test_pmp_csr_warl, TOPLEVEL=gen_tb_top.
+
+T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the isa_pc_next (mret, trap) and isa_prv rows, so the flow verdict is expected PASS from acceptance wave 4 on; nothing in the program was shaped around the earlier rows.
 """
 import cocotb
 
@@ -95,7 +95,7 @@ def lane_byte(word, lane):
 class PmpCsrWarl(GenTest):
     name = "gen_test_pmp_csr_warl"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up flag: no REGIME_SET consumer in the build at HEAD; flips to the default when step 2b lands.
+    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
 
     def report_count(self):

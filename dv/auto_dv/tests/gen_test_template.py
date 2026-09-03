@@ -103,8 +103,7 @@ class GenTest:
         self.eot_retired = None
         self.checks = 0            # check() calls; finish() refuses a run with none (silent-pass guard)
         self.failures = []
-        self.results = []          # CheckResult per check(); the witness epilogue reads cycle_clause_true from them
-        self.witness_ids = lib.witness_ids_of(self.name)
+        self._results = []         # CheckResult per check(); template-owned (the structure check refuses test code touching it)
         self._cmd_lock = Lock()
         self.log.info("GEN_TEST_SEED test=%s seed=%d image=%s", self.name, self.seed, image_path)
 
@@ -269,7 +268,7 @@ class GenTest:
         the finish() epilogue witnesses exactly those that also passed."""
         r = CheckResult(what, bool(ok), detail, bool(cycle_clause_true))
         self.checks += 1
-        self.results.append(r)
+        self._results.append(r)
         self.log.info("GEN_TEST_FIRE %s ok=%s %s%s", what, r.ok, detail, " cycle_clause_true" if r.cycle_clause_true else "")
         if not r.ok:
             self.failures.append(f"{what}: {detail}")
@@ -337,20 +336,25 @@ class GenTest:
         self.log.info("%s %s", self.name, lib.PASS_MARKER)
 
     async def witness_epilogue(self):
-        """COV_WITNESS <id> for exactly the passed fire_tp_* checks whose cycle-level clause was TRUE (plan v2f
-        witness protocol, Critic C-1): ids must be in the entry's witness_ids, codes come from the rendered
-        WITNESS_IDS table; a foreign id, a missing table or a missing command fails loud. Tests never issue it."""
-        due = [r for r in self.results if r.ok and r.cycle_clause_true]
+        """COV_WITNESS <code> for exactly the passed fire_tp_* checks whose cycle-level clause was TRUE (plan v2h
+        witness protocol, Critic C-1). The allowed ids come from the committed testlist entry of the CLASS's name
+        (read here, never from an instance attribute), the records from the template-private list check() fills,
+        the codes from the rendered WITNESS_IDS table; a foreign id, a missing table or command, or an id the
+        table lacks fails loud with the GEN_TEST_FAIL prefix. Tests never issue the command."""
+        due = [r for r in self._results if r.ok and r.cycle_clause_true]
         if not due:
             return
-        ids = [lib.tp_id_of(r.what) for r in due]
-        foreign = [i for i in ids if i not in self.witness_ids]
-        assert not foreign, f"GEN_TEST_FAIL {self.name}: witness for {foreign} outside the entry's witness_ids {list(self.witness_ids)}"
+        ids = sorted({lib.tp_id_of(r.what) for r in due})
+        allowed = lib.witness_ids_of(type(self).name)
+        foreign = [i for i in ids if i not in allowed]
+        assert not foreign, f"GEN_TEST_FAIL {self.name}: witness for {foreign} outside the entry's witness_ids {list(allowed)}"
         assert "COV_WITNESS" in lib.CMD and lib.WITNESS_IDS, \
             f"GEN_TEST_FAIL {self.name}: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while {ids} are due"
         for tp in ids:
-            await self.cmd("COV_WITNESS", (lib.WITNESS_IDS[tp], 0, 0, 0))
-            self.log.info("GEN_TEST_WITNESS id=%s code=%d", tp, lib.WITNESS_IDS[tp])
+            code = lib.WITNESS_IDS.get(tp)
+            assert code is not None, f"GEN_TEST_FAIL {self.name}: the rendered WITNESS_IDS table lacks {tp}"
+            await self.cmd("COV_WITNESS", (code, 0, 0, 0))
+            self.log.info("GEN_TEST_WITNESS id=%s code=%d", tp, code)
 
     async def run(self):
         await self.setup()

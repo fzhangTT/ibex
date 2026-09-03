@@ -92,3 +92,23 @@ Seven lows, answered in the retention landing. Evidence: gen_tdd_test_template.m
 ## Witness protocol (plan v2f, Orchestrator and DV Lead rulings of 2026-09-03 11:0x UTC)
 
 Implemented in this landing, no test issues a witness yet: `check(..., cycle_clause_true=False)` returns a `CheckResult`; `finish()` runs `witness_epilogue()` after the failure raise and before the handshake, issuing `COV_WITNESS <code>` for exactly the passed fire_tp_* checks whose clause was TRUE, ids restricted to the entry's `witness_ids`, codes from the rendered `gen_knobs.WITNESS_IDS`; foreign id, missing table or missing command fail loud. `check_test_source` refuses `COV_WITNESS` anywhere in a test and `cycle_clause_true=` outside a fire_* method's `self.check` (two red sources). API Section 9. TB Infra's side: the `COV_WITNESS` command, the rendered `WITNESS_IDS` table and `GEN_WITNESS_FOREIGN`.
+
+## Critic v4 on b0d6a3f (APPROVE, `dv/auto_dv/docs/gen_critic_test_template_v4.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR4-L-4 | low | the epilogue's fail-loud paths have no run | FIXED (landing 3) | Fixtures gen_ut_witness_foreign (id outside the entry's witness_ids), gen_ut_witness_notable (no table, no command), gen_ut_witness_noid (table lacks the id: GEN_TEST_FAIL prefix, no bare KeyError) plus the green gen_ut_witness_ok (one COV_WITNESS 7 recorded by a Python-side fake dispatcher), run on the HEAD build (gen_tdd_test_template.md Section 9). |
+| CR4-L-5 | low | testlist_entry() falls back to the gitignored staged file | FIXED | The committed gen_testlist.yaml is the only source; a developer run names a staged file through GEN_TEST_STAGED_ENTRIES (stderr notice); the flow never sets it. |
+
+## Cross-model review of b0d6a3f (APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-c5b5bc0f-b0d6a3f1.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM4-M-1 | medium | structure-check bypass: `from ... import GenTest as G`, dynamic base | FIXED | Import aliases of GenTest resolve; a base expression (call, subscript) or an imported/unknown base name is an error; module-local mixins' methods are checked with the class; red sources in the self-test (alias override, `class T(mk())`, imported Mixin base, mixin defining finish). |
+| CM4-M-2 | medium | witness record forgeable by a hook (self.witness_ids, appended CheckResult) | FIXED | Records live in the template-private `_results`; allowed ids are read in the epilogue from the committed entry of the class's name (no instance attribute); the structure check refuses assignment to or calls into any template-assigned instance name (derived from the template's own `self.<name> =` statements, plus the retired names results/witness_ids), `setattr`, and patches of `lib`/the template; red sources for each. Stated honestly as lint, not a sandbox (API Section 7). |
+| CM4-M-3 | medium | no reds for the epilogue's three fail-loud paths; bare KeyError | FIXED | See CR4-L-4; `WITNESS_IDS.get()` with a GEN_TEST_FAIL assertion replaces the KeyError. |
+| CM4-L-1 | low | AnnAssign and non-literal layers_required | FIXED | `layers_required: bool = False` handled; a non-literal value is refused (red source). The rule is indeed vacuous for the nine tests while all are measured: false; it bites at the tier flip. |
+| CM4-L-2 | low | gen_run_fixture.sh hard-coded clone path | FIXED | ROOT derived from the script location; absolute vmem path enforced; LD_LIBRARY_PATH exported like gen_tb_local.sh; run header written. |
+| CM4-L-3 | low | gen_report_fixture_map.h re-types 0x8ffff104 | FIXED | The self-test checks the fixture header against the rendered MEMORY_MAP (check_mmio_map_header with the header's key map). |
+| CM4-L-4 | low | stale fixture docstrings | FIXED | gen_report_channel.S, gen_ut_report_channel_red.py (its own purpose), gen_ut_drain_probe.py (documents the decisive single-boundary run and why a c0 phase hides the overlap). |
+| CM4-L-5 | low | API Section 7 counts three red sources; lint-only not stated | FIXED | Section 7 states the check is lint run by the self-test, never by the flow, and points at the self-test's list of red sources. |

@@ -46,6 +46,11 @@ import random
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[4]   # the flow runs generators as scripts: the clone root must be importable
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from dv.auto_dv.tests.gen_programs.gen_prog_const import CONFIG_NAME, TOHOST_PASS, csr_hex
 from dv.auto_dv.tests.gen_test_lib import Weighted
 

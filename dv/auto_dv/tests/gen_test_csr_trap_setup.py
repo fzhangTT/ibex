@@ -30,8 +30,7 @@ are resolved from the image sidecar). Red fixtures: `--red --red-item TP-CSR-0nn
 item's intent (the seed draws the item without --red-item); exactly that fire_tp method fails. Knobs:
 knob_imem_gnt_delay and knob_imem_rvalid_delay (the fetch-latency regimes the built items name); the irq knobs
 the items also name (irq_regime, irq_line_mix, irq_hold) are excluded because the program has no interrupt
-handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False: the TB
-has no REGIME_SET consumer, so the layers are logged not_applied (testlist entry measured: false).
+handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb).
 declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked
 against the rendered manifest in finish()).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
@@ -39,6 +38,8 @@ isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol
 mret target and privilege rows, the shim's mstatus XS mask) is TB Infra's: the flow verdict FAILs through
 uvm_error on this program until it lands, and no program clause is bent around it.
 MODULE=dv.auto_dv.tests.gen_test_csr_trap_setup, TOPLEVEL=gen_tb_top.
+
+T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the mret target and privilege rows and the shim's mstatus XS mask, so the flow verdict is expected PASS from acceptance wave 4 on. Precondition not applied: irq agent absent (step 2b): TP-CSR-023's one-pending-disabled-irq case (20 percent of seeds) and TP-CSR-029's irq-pins-high case (30 percent of seeds) are not programmed; both items count as built for their register clauses only and log GEN_TEST_INFO with that label.
 """
 import cocotb
 
@@ -68,7 +69,7 @@ def _detail(n, bad, what):
 class CsrTrapSetup(GenTest):
     name = "gen_test_csr_trap_setup"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
-    # No REGIME_SET consumer exists in the build (testlist entry measured: false).
+    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
 
     def report_count(self):
@@ -93,6 +94,7 @@ class CsrTrapSetup(GenTest):
         self.check("fire_tp_csr_023", n > 0 and not bad and corners,
                    _detail(n, bad, f"mstatus read-backs vs WARL model (mask 0x{prog.MST_MASK:08x}, MPP 01/10 -> 00)")
                    + f"; MPP values written {sorted(f['mpp_written'])}, TW written {f['tw_written']}, MPRV written {f['mprv_written']}")
+        self.info("TP-CSR-023", "precondition not applied: irq agent absent (step 2b); the pending-disabled-irq case is not programmed")
 
     def fire_tp_csr_024(self):
         bad, n = _compare(self, "TP-CSR-024")
@@ -123,6 +125,7 @@ class CsrTrapSetup(GenTest):
         self.check("fire_tp_csr_029", n > 0 and not bad and all_fast,
                    _detail(n, bad, f"mie read-backs vs MIE_MASK 0x{prog.MIE_MASK:08x} model")
                    + f"; fast bits written alone {len(f['fast_bits'])} of {prog.MIE_FAST_W}, op x class combinations {len(f['op_class'])}")
+        self.info("TP-CSR-029", "precondition not applied: irq agent absent (step 2b); the irq-pins-high case is not programmed")
 
     def fire_tp_csr_030(self):
         bad, n = _compare(self, "TP-CSR-030")

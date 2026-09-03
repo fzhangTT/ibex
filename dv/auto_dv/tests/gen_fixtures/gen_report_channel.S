@@ -1,4 +1,4 @@
-# gen_report_channel.S: local fixture for the template's program report channel (not committed).
+# gen_report_channel.S: local fixture for the template's program report channel (committed fixture, never a testlist entry).
 # Stores three report words to the EOT MMIO register (each toggles evt_eot_seen), then tohost 1.
 # The report words are architectural facts the program computed itself (a sum, a shifted value, a
 # retirement marker), so Python can assert them.

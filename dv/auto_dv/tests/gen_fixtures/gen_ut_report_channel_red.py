@@ -1,7 +1,6 @@
-"""Local proof of the template's program report channel (committed fixture, never a testlist entry): the fixture
-program gen_report_channel.S stores three words to the EOT register, then tohost 1. The test expects
-the three words and asserts their architectural values. MODULE=gen_ut_report_channel (PYTHONPATH must
-hold the clone root and this directory), TOPLEVEL=gen_tb_top."""
+"""Red counterpart of gen_ut_report_channel (committed fixture, never a testlist entry): the same program and channel,
+but the expected value of report word 1 is deliberately wrong, so fire_report_1 must FAIL (the fixture proves the report
+words are compared, not merely counted). MODULE=gen_ut_report_channel_red, TOPLEVEL=gen_tb_top."""
 import cocotb
 
 from dv.auto_dv.tests import gen_test_lib as lib

@@ -172,8 +172,9 @@ def item_excluded(blk):
     return None
 
 
-def bins_of_items(items, tps, blocks, make_segmentable):
-    """[(cg_id, coverpoint, bin, adopted)] after the manifest rule; drift stops the generator."""
+def bins_of_items(items, tps, blocks, make_segmentable, required=True):
+    """[(cg_id, coverpoint, bin, adopted)] after the manifest rule; drift stops the generator; an item set that the
+    rules exclude entirely is an error when a manifest is rendered (required) and an empty list otherwise."""
     want = {}
     dropped = []
     marked = set()
@@ -214,7 +215,7 @@ def bins_of_items(items, tps, blocks, make_segmentable):
                 assert make_segmentable(words_of[cg])(b), \
                     f"plan drift: cross bin {cg}.{cp}.{b} (item {r['tp_item']}) does not segment into declared bins of {cg}"
             rows.append((cg, cp, b, r["adopted"] == "1"))
-    assert rows, f"no manifest bins left for {sorted(want)}"
+    assert rows or not required, f"no manifest bins left for {sorted(want)}"
     return rows, dropped
 
 
@@ -249,7 +250,9 @@ def plan_bins(test, items):
     tps = tp_blocks()
     unknown = [t for t in items if t not in tps]
     assert not unknown, f"fire_tp methods name items absent from the test plan: {unknown}"
-    rows, _dropped = bins_of_items(items, tps, cg_blocks(), load_segmentable())
+    rows, dropped = bins_of_items(items, tps, cg_blocks(), load_segmentable(), required=False)
+    if not rows:
+        print(f"GEN_FCOV_MANIFEST: {test}: no manifest bins for {items} (excluded: {sorted({d[3] for d in dropped})})", file=sys.stderr)
     return bin_tokens(rows, plan_cg_names())
 
 

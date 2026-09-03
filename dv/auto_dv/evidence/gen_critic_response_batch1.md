@@ -39,3 +39,38 @@ logs `dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_manifest.md`. Row prefixe
 
 The four comparator-blocked tests still FAIL the flow verdict through uvm_error until TB Infra's T-102; nothing in them
 avoids the observation. The per-item red runs are local (retained with md5); the flow carries one pinned red entry per test.
+
+## Cross-model review of 38d1262 (APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-8ad2d627-38d12626.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM-T109-M-1 | medium | plan_bins raises for a group whose items rules (a)/(b) exclude entirely | FIXED | gen_fcov_manifest.plan_bins returns [] with a stderr line naming the exclusions (bins_of_items required=False); rendering a manifest with zero bins stays an error. |
+| CM-T109-M-2 | medium | default declaration is the whole group including blocked items | FIXED (2d72b4a) | Declared bins are the plan bins of exactly the items the class's fire_tp_* methods name; manifests rendered with --test-module; blocked items contribute no bin and are listed in the docstring. |
+| CM-T109-L-1 | low | gen_test_cmp_zcb.py docstring says declare_bins() returns [] | FIXED (2d72b4a) | Docstring rewritten by the remediation. |
+| CM-T109-L-2 | low | plan and API must state the new semantics and the override-with-reason rule | FIXED (landing 3) | gen_test_writer_plan.md Section 1 row "bins of a test" and Section 2 bullet; API Sections 2, 3, 7, 9. |
+| CM-T109-L-3 | low | gen_ut_manifest_stale.fcov.yaml is a static copy that drifts | FIXED (landing 3) | The fixture derives its stale manifest at import from the current gen_test_cmp_zcb manifest minus its last bin; the static file is deleted. |
+| CM-T109-I-1 | info | a test whose name does not match a plan group declares [] and skips the check | STATED | Now moot: the declaration keys on fire_tp_* items, not on the name; a test with no fire_tp_* method declares nothing (bring-up tests, fixtures) and the entry's fcov_manifest_required_tiers gate is Runtime's. |
+| CM-T109-I-2 | info | set-difference compare misses a doubly-declared bin | NO ACTION | As the reviewer said. |
+
+## Cross-model review of cb3d7eb (batch 1, `dv/auto_dv/reviews/2026-09-03-claude-diff-d5afa0fd-cb3d7eb0.md`), status after 2d72b4a and landing 3
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM-B1-H | high | committing the manifests wired them into finish() at once | FIXED (38d1262 + 2d72b4a) | Answered by the declare_bins mechanism (CR-H-1): the default declaration comes from the same code that renders the manifest, so a committed manifest can only fail a run when it is stale against the plan or covers items the test does not check. |
+| CM-B1-M-1 | medium | manifests rendered for the whole group | FIXED (2d72b4a) | Per built item set (CR-M-1). |
+| CM-B1-M-2 | medium | CSR addresses re-typed in five generators | FIXED (2d72b4a) | gen_programs/gen_prog_const.py (CR-L-2); a rendered table from the shim's CSR map can replace its literals when TB Infra renders one. |
+| CM-B1-L-1 | low | irq-agent preconditions silently reduced (TP-CSR-023/029, TP-RST-006) | FIXED (landing 3) | Docstrings carry "Precondition not applied: irq agent absent (step 2b)" per item, and the fire-checks log GEN_TEST_INFO with the same label so the item is not counted as fully built. |
+| CM-B1-L-2 | low | docstrings cite entries and a transcript outside the reviewed range | FIXED (landing 3) | The layers line cites d58bdeb (entries); the T-102 status cites d0c0d15 and 50256f0. |
+| CM-B1-L-3 | low | layers_required block pasted into eight docstrings | FIXED (landing 3) | One line per test pointing at API Section 3; one standard class-level comment. |
+
+## Critic verdict on T-102 (`dv/auto_dv/docs/gen_critic_tb_t102.md`), Test Writer caveat
+
+| # | Finding | Disposition | Change and evidence |
+|---|---|---|---|
+| CR-T102-1 | revert the M-4 dodges; counter and cpuctrlsts reads are consistency compares until ctr_*/scrkey_proto exist | FIXED (landing 3) | gen_test_csr_access restores the marchid/cycle/hpm reads with rd != x0 and labels them "checked for consistency; value verification pending ctr_*/scrkey_proto"; gen_test_pmp_csr_warl programs LRWX = 1111 (2d72b4a); csr_reset, rst_boot state the same caveat for their counter and cpuctrlsts bit 8 read-backs. The four tests' "blocked on T-102" wording is replaced by the T-102 status citing d0c0d15/50256f0. |
+
+## Acceptance wave 3 (2d72b4a) and the generator import defect
+
+| # | Finding | Disposition | Change and evidence |
+|---|---|---|---|
+| TW-W3-1 | test-writer-033/037 NOT_RUN: gen_cmp_zcmp_basic_prog.py imports gen_prog_const without the sys.path guard, so the flow's script invocation dies with ModuleNotFoundError | FIXED (landing 3) | Guard added (seed-1 source byte-identical); the library self-test now runs every generator as a script with no PYTHONPATH from the clone root, the flow's form, so the class of defect is caught before a commit. Re-filed as wave 3b after the landing. |

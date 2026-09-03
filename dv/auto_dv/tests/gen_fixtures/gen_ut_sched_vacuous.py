@@ -9,6 +9,9 @@ import cocotb
 from dv.auto_dv.tests import gen_test_lib as lib
 from dv.auto_dv.tests.gen_test_template import GenTest
 
+# the stub apply consumes the knob itself: the schedule must not be gated by the build's rendered consumed set
+lib.CONSUMED_KNOBS = lib.SCHEDULABLE_KNOBS = ("knob_imem_gnt_delay",)
+
 
 class StubApply:
     async def apply_phase(self, p):

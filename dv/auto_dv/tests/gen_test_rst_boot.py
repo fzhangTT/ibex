@@ -41,13 +41,14 @@ one item's intent so exactly fire_tp_rst_003 / 006 / 007 fails (generator docstr
 
 Knobs (the built items' Knobs lines): knob_imem_gnt_delay, knob_imem_rvalid_delay (TP-RST-003),
 knob_irq_regime (TP-RST-006: lines may be driven, mie stays 0, nothing may be taken),
-knob_scr_key_delay (TP-RST-007). layers_required = False: the TB has no REGIME_SET consumer at HEAD
-(testlist entry measured: false), so the layers are logged not_applied. declare_bins() is the template
+knob_scr_key_delay (TP-RST-007). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb). declare_bins() is the template
 default (the plan's bins of the three fire_tp items, checked against the rendered manifest in finish()).
 Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
 gen_chk_csr_readback, gen_chk_ibus_proto / gen_chk_dbus_proto, gen_chk_irq (irq_pending_o = 0 with
 mie = 0), gen_chk_rvfi_proto.
 MODULE=dv.auto_dv.tests.gen_test_rst_boot, TOPLEVEL=gen_tb_top.
+
+T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the comparator conventions (mret/dret and trap pc_wdata, isa_prv) and the shim's CSR legalization (cpuctrlsts bit 8, tdata1, marchid), so the flow verdict is expected PASS from acceptance wave 4 on; the cpuctrlsts bit 8 read is a consistency compare against DUT-synchronised model state until the scrkey_proto checker exists (Critic gen_critic_tb_t102.md). Precondition not applied: irq agent absent (step 2b): TP-RST-006's interrupt-line-held clause is not programmed, the item counts as built for its register clauses only.
 """
 import cocotb
 
@@ -143,7 +144,7 @@ def _compare(test, p, item):
 class RstBoot(GenTest):
     name = "gen_test_rst_boot"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_regime", KEY_KNOB)
-    # No REGIME_SET consumer at HEAD (testlist entry measured: false); the layers are logged not_applied.
+    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
 
     def report_count(self):
@@ -166,6 +167,7 @@ class RstBoot(GenTest):
     def fire_tp_rst_006(self):
         ok, detail = _compare(self, prog.plan(self.seed), "TP-RST-006")
         self.check("fire_tp_rst_006", ok, detail)
+        self.info("TP-RST-006", "precondition not applied: irq agent absent (step 2b); the interrupt-line-held clause is not programmed")
 
     def fire_tp_rst_007(self):
         p = prog.plan(self.seed)

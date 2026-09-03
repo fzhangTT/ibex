@@ -287,3 +287,31 @@ with `function automatic void apply_knob` and commented-out tests; `check_manife
 No batch-1 item carries the cycle-clause marker, so no test issues a COV_WITNESS today; the epilogue's fail-loud paths (foreign id,
 missing table or command) are asserted in code and documented in the API Section 9, not yet exercised in a run (needs TB Infra's
 rendered WITNESS_IDS and the dispatcher row).
+
+## 9. Landing 3: structure-check hardening, unforgeable witness record, epilogue reds (retention review of b0d6a3f, Critic v4)
+
+Build: dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3, compiled 12:24 UTC from a `git archive` export of HEAD
+20a66cf (T-102 comparator fixes in, step 2b not yet), run with GEN_TB_PYROOT pointing at that export so the rendered knobs match the
+simv while the tests come from the working tree (the clone's gen_knobs.py is mid-edit by TB Infra). Fixture manifests are derived
+into the run directory (fixture_manifests/), never into the repository. Every line is in the committed copy gen_tdd_logs/test_writer/gen_<run>_stdout.log.
+
+| Run (out_head3/<dir>) | Purpose | Decisive line (line no.) | Result | md5 (stdout.log) |
+|---|---|---|---|---|
+| l3c_witness_ok | green: TP-CMP-036 allowed, code 7 in the table, command present; fake dispatcher records the code | 190: `23470.00ns INFO cocotb.gen_tb_top GEN_TEST_WITNESS id=TP-CMP-036 code=7` | PASS, one COV_WITNESS 7 | cc3c7e6939828917333005a4a347b67d |
+| l3c_witness_foreign | red: entry allows TP-CMP-034 only | 198: `assert not foreign, f"GEN_TEST_FAIL {self.name}: witness for {foreign} outside the entry's witness_ids {list(allowed)}"` | FAIL as designed | 199dc0e2c8b5a748a86203701508f7d9 |
+| l3c_witness_notable | red: no WITNESS_IDS table, no COV_WITNESS command | 200: `AssertionError: GEN_TEST_FAIL gen_ut_witness_notable: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while ['TP-CMP-036'] are due` | FAIL as designed | c23d746fdba65f8ddb0ef1da10eee50b |
+| l3c_witness_noid | red: table lacks the id (GEN_TEST_FAIL prefix, no bare KeyError) | 198: `assert code is not None, f"GEN_TEST_FAIL {self.name}: the rendered WITNESS_IDS table lacks {tp}"` | FAIL as designed | 2aeda7bb94a00952fa6b18b8cd8614f6 |
+| l3c_manifest_stale | red: stale manifest derived at import from the current file minus one bin | 199: `AssertionError: GEN_TEST_LIB: manifest of gen_ut_manifest_stale differs from declare_bins(): 109 in the manifest, 110 declared; not in the manifest ['gen_mul_op` | FAIL as designed | b2898ec962d67be175862ef191dc889b |
+| l3c_manifest_missing | red: declared bins, no manifest | 197: `assert not declared, (f"GEN_TEST_LIB: {test_name} declares {len(declared)} bins but has no manifest "` | FAIL as designed | 7756dddfc5df36b4227034f2abb3b4c9 |
+| l3c_drain_probe | drain probe anchored to the end-of-test edge: runner mid-apply at EOT on any build | 51: `20570.00ns INFO cocotb.gen_tb_top GEN_TEST_DRAIN waited cycles=40 for the runner's last boundary` | PASS, waited 40 cycles | 584341fc8ac72d22646ef965574834d1 |
+| l3b_sched_vacuous | kept red: the vacuous runner (consumed set pinned in the fixture) | 62: `AssertionError: GEN_TEST_FAIL gen_ut_sched_vacuous: 1 fire-check failure(s): fire_schedule_applied: reached 2 of 2 scheduled entries by EOT (cycle 2012, retired` | FAIL as designed | 30b3ae76ff23f88c1a2ef4c4278fec58 |
+| l3b_sched_sound | green counterpart | 64: `20170.00ns INFO cocotb.gen_tb_top gen_ut_sched_sound GEN_TEST_PASS` | PASS | 33db71ce7fcf12cf410c7718ed64b051 |
+| l3_report_skip | kept red: skip assert | 56: `AssertionError: GEN_TEST: report channel skipped a store (0 -> 2); the program stores faster than one edge per store` | FAIL as designed | a2e622698995e5e6f785dda93fb0ce2b |
+| l3_boot_green_s1 | regression: gen_test_boot_retire seed 1 on the HEAD build | 64: `20170.00ns INFO cocotb.gen_tb_top gen_test_boot_retire GEN_TEST_PASS` | PASS | 63ba67200fcb27097e0d00b950dbb2af |
+
+Host side: `gen_test_lib.py --self-test` PASS with the third set of refused sources (import alias of GenTest, base expression,
+imported base, mixin overriding finish, `self.results.append`, `self._results = []`, `self.witness_ids = ...`, `lib.WITNESS_IDS = {}`,
+`setattr(self, ...)`, non-literal layers_required) and the accepted ones (AnnAssign layers_required with a measured: false entry; a
+module-local mixin adding a fire_tp method); the witness CSV agrees with the marker token row by row; the fixture header equals the
+rendered map; every program generator runs as a flow-style script with no PYTHONPATH. Not exercised in a run: the aliased-base
+and patch refusals are lint (the self-test refuses the module); a runtime sandbox is not claimed (API Section 7).

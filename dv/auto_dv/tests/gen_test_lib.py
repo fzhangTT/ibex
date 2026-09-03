@@ -242,7 +242,7 @@ def program_min_retired(image):
 
 
 FLOW_TESTLIST = REPO_ROOT / "dv/auto_dv/flow/gen_testlist.yaml"
-STAGED_ENTRIES = REPO_ROOT / "dv/auto_dv/work/test-writer/gen_testlist_entries.yaml"
+STAGED_ENTRIES_ENV = "GEN_TEST_STAGED_ENTRIES"   # developer runs only: path of a staged-entries file (the flow never sets it)
 # COV_WITNESS codes per TP id, rendered by TB Infra with the SV table (plan v2f witness protocol); {} until then.
 WITNESS_IDS = dict(getattr(_gk, "WITNESS_IDS", None) or {})
 # class name -> reason: the only other way than a `measured: false` entry to set layers_required = False.
@@ -250,13 +250,18 @@ LAYERS_OPTOUT_ALLOWLIST = {}
 
 
 def testlist_entry(test_name):
-    """The test's testlist entry: the committed flow testlist first, the Test Writer's staged entries second (a
-    test in bring-up before Runtime copied its entry); None when neither names it."""
+    """The test's entry in the committed flow testlist; None when it has none. A developer run may name a staged
+    file through GEN_TEST_STAGED_ENTRIES (consulted only when the committed testlist has no entry, announced on
+    stderr); a committed test never reads uncommitted testlist facts otherwise."""
+    import os
     import yaml
-    for path in (FLOW_TESTLIST, STAGED_ENTRIES):
+    staged = os.environ.get(STAGED_ENTRIES_ENV)
+    for path in [FLOW_TESTLIST] + ([Path(staged)] if staged else []):
         if path.is_file():
             for e in (yaml.safe_load(path.read_text()) or {}).get("tests") or []:
                 if e.get("name") == test_name:
+                    if path != FLOW_TESTLIST:
+                        print(f"GEN_TEST_LIB: {test_name}: entry taken from the staged file {path} (developer run)", file=sys.stderr)
                     return e
     return None
 
@@ -287,23 +292,53 @@ def _template_methods():
     raise AssertionError(f"GEN_TEST_LIB: no class GenTest in {TEMPLATE_PY}")
 
 
+TEMPLATE_MODULE = "dv.auto_dv.tests.gen_test_template"
+
+
+def _template_attrs():
+    """Instance names GenTest assigns (self.<name> = ...): template-owned, read-only for a test (a test's own
+    self._cache is not among them)."""
+    import ast
+    tree = ast.parse(TEMPLATE_PY.read_text())
+    cls = next(n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "GenTest")
+    names = set()
+    for n in ast.walk(cls):
+        targets = n.targets if isinstance(n, ast.Assign) else [n.target] if isinstance(n, (ast.AugAssign, ast.AnnAssign)) else []
+        for tg in targets:
+            if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id == "self":
+                names.add(tg.attr)
+    return frozenset(names | {"results", "witness_ids"})   # retired names stay refused so a stale test cannot revive them
+
+
 def check_test_source(source, path="<source>", entry_lookup=None):
-    """Host-side structure check of a test module. Every GenTest subclass (bases resolved through module-level
-    aliases; nested classes are refused) overrides only the hooks (stimulus, fire_check, declare_bins,
-    report_count) and per-item fire_* methods, never run/finish/check/setup or another template method;
-    module-level writes to a test class (T.finish = f, setattr) are refused; at least one self.check(...) exists
-    and none passes a literal ok; COV_WITNESS never appears (the template's finish() epilogue owns it) and
-    `cycle_clause_true=` is a keyword of self.check inside a fire_* method only; `layers_required = False`
-    needs a testlist entry with `measured: false` for the class's `name` or an allowlisted reason. Returns
-    the checked class names; raises AssertionError on a violation."""
+    """Host-side structure check of a test module (lint, run by the library self-test, not by the flow). Every test
+    class (a class whose bases resolve to GenTest through module-level aliases, import aliases or module-local
+    classes; any other base, a base expression, or a nested class is an error) overrides only the hooks (stimulus,
+    fire_check, declare_bins, report_count) and per-item fire_* methods, in its own body and in its module-local
+    mixins, never run/finish/check/setup or another template method; module-level writes to a test class, to the
+    library or to the template (T.finish = f, setattr, lib.X = ...) are refused; test code never assigns to or
+    calls into the instance names the template assigns (_template_attrs, e.g. _results, checks, failures); at least one self.check
+    exists and none passes a literal ok; COV_WITNESS never appears; `cycle_clause_true=` is a keyword of
+    self.check inside a fire_* method only; `layers_required` is a literal True/False, and False needs a testlist
+    entry with `measured: false` for the class's `name` or an allowlisted reason. Returns the checked class names."""
     import ast
     tree = ast.parse(source, filename=str(path))
     protected = _template_methods() - set(TEST_HOOKS)
     lookup = entry_lookup or testlist_entry
     top = {n.name: n for n in tree.body if isinstance(n, ast.ClassDef)}
+    gentest_names = {"GenTest"}
+    imported = set()
     aliases = {}
     for n in tree.body:
-        if isinstance(n, ast.Assign) and isinstance(n.value, ast.Name):
+        if isinstance(n, ast.ImportFrom):
+            for a in n.names:
+                local = a.asname or a.name
+                imported.add(local)
+                if n.module == TEMPLATE_MODULE and a.name == "GenTest":
+                    gentest_names.add(local)
+        elif isinstance(n, ast.Import):
+            imported.update((a.asname or a.name).split(".")[0] for a in n.names)
+        elif isinstance(n, ast.Assign) and isinstance(n.value, ast.Name):
             aliases.update({tg.id: n.value.id for tg in n.targets if isinstance(tg, ast.Name)})
 
     def resolve(name, seen=()):
@@ -311,27 +346,39 @@ def check_test_source(source, path="<source>", entry_lookup=None):
             seen, name = seen + (name,), aliases[name]
         return name
 
-    def base_name(b):
-        return b.id if isinstance(b, ast.Name) else (b.attr if isinstance(b, ast.Attribute) else "")
+    def base_name(cls, b):
+        if isinstance(b, ast.Name):
+            return resolve(b.id)
+        if isinstance(b, ast.Attribute):
+            return resolve(b.attr)
+        raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} has an unresolvable base expression at line {b.lineno}")
 
     def is_gentest(cls, seen=()):
+        found = False
         for b in cls.bases:
-            name = resolve(base_name(b))
-            if name == "GenTest":
-                return True
-            if name in top and name not in seen and is_gentest(top[name], seen + (name,)):
-                return True
-        return False
+            name = base_name(cls, b)
+            if name in gentest_names:
+                found = True
+            elif name in top:
+                found = found or (name not in seen and is_gentest(top[name], seen + (name,)))
+            elif name in ("object",):
+                continue
+            else:
+                raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} has an unknown or imported base {name} at line {b.lineno}; "
+                                     f"only GenTest and module-local classes are allowed")
+        return found
 
-    tests = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef) and c.name != "GenTest" and is_gentest(c)]
+    tests = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef) and c.name not in gentest_names and is_gentest(c)]
     nested = [c.name for c in tests if c not in tree.body]
     assert not nested, f"GEN_TEST_LIB: {path}: test class(es) {nested} defined inside a function or class; test classes are module-level"
     test_names = {c.name for c in tests}
+    guarded_modules = {"lib", "gen_test_lib", "gen_test_template"} | gentest_names | test_names
     for n in tree.body:
         targets = n.targets if isinstance(n, ast.Assign) else [n.target] if isinstance(n, (ast.AugAssign, ast.AnnAssign)) else []
         for tg in targets:
-            if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and resolve(tg.value.id) in test_names:
-                raise AssertionError(f"GEN_TEST_LIB: {path}: module-level assignment to {tg.value.id}.{tg.attr} at line {n.lineno}; a test class takes methods in its body only")
+            if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and resolve(tg.value.id) in guarded_modules:
+                raise AssertionError(f"GEN_TEST_LIB: {path}: module-level assignment to {tg.value.id}.{tg.attr} at line {n.lineno}; "
+                                     f"test classes, the library and the template are not patched from test code")
         call = n.value if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call) else None
         if call is not None and isinstance(call.func, ast.Name) and call.func.id in ("setattr", "delattr"):
             raise AssertionError(f"GEN_TEST_LIB: {path}: {call.func.id}() at module level (line {n.lineno}) is refused")
@@ -342,9 +389,28 @@ def check_test_source(source, path="<source>", entry_lookup=None):
     def is_self_check(c):
         return isinstance(c.func, ast.Attribute) and c.func.attr == "check" and isinstance(c.func.value, ast.Name) and c.func.value.id == "self"
 
+    def self_attr(node):
+        """Name of `self.<name>` at the root of an attribute or call chain, else None."""
+        while isinstance(node, (ast.Attribute, ast.Call, ast.Subscript)):
+            node = node.func if isinstance(node, ast.Call) else node.value
+        return None
+
+    template_attrs = _template_attrs()
+
+    def owned(name):
+        return name in template_attrs
+
+    def local_methods(cls, seen=()):
+        methods = [n for n in cls.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        for b in cls.bases:
+            name = base_name(cls, b)
+            if name in top and name not in gentest_names and name not in seen:
+                methods += local_methods(top[name], seen + (name,))
+        return methods
+
     checked = []
     for cls in tests:
-        methods = [n for n in cls.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        methods = local_methods(cls)
         bad = [m.name for m in methods if m.name in protected]
         assert not bad, f"GEN_TEST_LIB: {path}: class {cls.name} overrides template method(s) {bad}; only {TEST_HOOKS} and fire_* are hooks"
         extra = [m.name for m in methods if m.name not in TEST_HOOKS and not m.name.startswith("fire_")]
@@ -360,8 +426,37 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                 if isinstance(c, ast.Call) and any(k.arg == "cycle_clause_true" for k in c.keywords):
                     assert m.name.startswith("fire_") and is_self_check(c), \
                         f"GEN_TEST_LIB: {path}: class {cls.name}: cycle_clause_true outside a fire_* method's self.check at line {c.lineno}"
-        attrs = {tg.id: a.value for a in cls.body if isinstance(a, ast.Assign) for tg in a.targets if isinstance(tg, ast.Name)}
+                if isinstance(c, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                    for tg in (c.targets if isinstance(c, ast.Assign) else [c.target]):
+                        if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id == "self" and owned(tg.attr):
+                            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} assigns self.{tg.attr} at line {c.lineno}; template-owned names are read-only for a test")
+                        if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and resolve(tg.value.id) in guarded_modules:
+                            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} patches {tg.value.id}.{tg.attr} at line {c.lineno}")
+                if isinstance(c, ast.Call):
+                    f = c.func
+                    if isinstance(f, ast.Attribute):
+                        root = f.value
+                        while isinstance(root, (ast.Attribute, ast.Subscript)):
+                            root = root.value
+                        chain = f.value
+                        first = None
+                        while isinstance(chain, (ast.Attribute, ast.Subscript)):
+                            first = chain.attr if isinstance(chain, ast.Attribute) else first
+                            chain = chain.value
+                        if isinstance(chain, ast.Name) and chain.id == "self" and first is not None and owned(first) and first not in ("log", "h"):
+                            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} calls into self.{first} at line {c.lineno}; template-owned names are read-only for a test")
+                    if isinstance(f, ast.Name) and f.id in ("setattr", "delattr"):
+                        raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} uses {f.id}() at line {c.lineno}")
+        attrs = {}
+        for a in cls.body:
+            if isinstance(a, ast.Assign):
+                attrs.update({tg.id: a.value for tg in a.targets if isinstance(tg, ast.Name)})
+            elif isinstance(a, ast.AnnAssign) and isinstance(a.target, ast.Name) and a.value is not None:
+                attrs[a.target.id] = a.value
         lr = attrs.get("layers_required")
+        if lr is not None:
+            assert isinstance(lr, ast.Constant) and lr.value in (True, False), \
+                f"GEN_TEST_LIB: {path}: class {cls.name}: layers_required must be a literal True or False (line {lr.lineno})"
         if isinstance(lr, ast.Constant) and lr.value is False:
             nm = attrs.get("name")
             test_name = nm.value if isinstance(nm, ast.Constant) else None
@@ -382,14 +477,16 @@ MMIO_MAP_H_KEYS = {"GEN_MM_SIG_ADDR": "sig_addr", "GEN_MM_IRQ_ACK_ADDR": "irq_ac
                    "GEN_MM_PHASE_MARK_ADDR": "phase_mark_addr", "GEN_MM_DM_HALT": "dm_halt", "GEN_MM_DM_EXCEPTION": "dm_exception"}
 
 
-def check_mmio_map_header(path=MMIO_MAP_H):
-    """The assembler header the directed programs include carries exactly the rendered MEMORY_MAP values."""
+def check_mmio_map_header(path=MMIO_MAP_H, keys=None):
+    """An assembler header carries exactly the rendered MEMORY_MAP values it names (keys: symbol -> MEMORY_MAP key;
+    default the directed programs' gen_mmio_map.h)."""
     from dv.auto_dv.gen_tb.gen_knobs import MEMORY_MAP
-    got = dict(re.findall(r"^\.set (GEN_MM_\w+), 0x([0-9a-fA-F]+)$", Path(path).read_text(), re.M))
-    for sym, key in MMIO_MAP_H_KEYS.items():
+    keys = keys or MMIO_MAP_H_KEYS
+    got = dict(re.findall(r"^\.set (GEN_\w+), 0x([0-9a-fA-F]+)$", Path(path).read_text(), re.M))
+    for sym, key in keys.items():
         assert sym in got, f"GEN_TEST_LIB: {path} lacks {sym}"
         assert int(got[sym], 16) == MEMORY_MAP[key], f"GEN_TEST_LIB: {path} {sym} = 0x{got[sym]} != MEMORY_MAP[{key}] 0x{MEMORY_MAP[key]:08x}"
-    assert set(got) == set(MMIO_MAP_H_KEYS), f"GEN_TEST_LIB: {path} carries unexpected symbols {sorted(set(got) - set(MMIO_MAP_H_KEYS))}"
+    assert set(got) == set(keys), f"GEN_TEST_LIB: {path} carries unexpected symbols {sorted(set(got) - set(keys))}"
     return True
 
 
@@ -522,6 +619,44 @@ def _self_test():
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n"
                              "    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x', cycle_clause_true=self.retired() > 1)\n", "<green>") == ["T"]
     assert tp_id_of("fire_tp_csr_001") == "TP-CSR-001" and tp_id_of("fire_tp_bit_016_gorci") == "TP-BIT-016"
+    # structure check, third set (retention review): import alias, base expression, imported base, mixin bypass,
+    # writes to template-owned names, patching the library, non-literal layers_required
+    for red, why in ((f"from {TEMPLATE_MODULE} import GenTest as G\nclass T(G):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
+                     (imp + "def mk():\n    return GenTest\nclass T(mk()):\n    name = 'gen_test_x'\n" + good, "unresolvable base"),
+                     (imp + "from somewhere import Mixin\nclass T(Mixin, GenTest):\n    name = 'gen_test_x'\n" + good, "unknown or imported base"),
+                     (imp + "class M:\n    async def finish(self):\n        pass\nclass T(M, GenTest):\n    name = 'gen_test_x'\n" + good, "overrides"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.results.append(None)\n" + good, "calls into self.results"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self._results = []\n" + good, "assigns self._results"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.witness_ids = ('TP-X-001',)\n" + good, "assigns self.witness_ids"),
+                     (imp + "from dv.auto_dv.tests import gen_test_lib as lib\nlib.WITNESS_IDS = {}\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "module-level assignment to lib.WITNESS_IDS"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        setattr(self, 'checks', 9)\n" + good, "setattr"),
+                     (imp + "FLAG = False\nclass T(GenTest):\n    name = 'gen_test_x'\n    layers_required = FLAG\n" + good, "literal True or False")):
+        try:
+            check_test_source(red, "<red>", entry_lookup=look)
+            raise AssertionError(f"red source ({why}) accepted")
+        except AssertionError as exc:
+            assert why in str(exc), (why, exc)
+    assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required: bool = False\n" + good, "<green>", entry_lookup=look) == ["T"]
+    assert check_test_source(imp + "class Mix:\n    def fire_tp_x_002(self):\n        self.check('b', self.retired() > 1, 'y')\nclass T(Mix, GenTest):\n    name = 'gen_test_x'\n" + good, "<green>") == ["T"]
+    # rule (f) keys on the marker token; the plan's witness CSV must agree row by row
+    import csv
+    tps = _gm.tp_blocks()
+    with open(_gm.DOCS / "gen_trace_witness_ids.csv", newline="") as f:
+        wrows = list(csv.DictReader(f))
+    assert wrows, "witness CSV empty"
+    for r in wrows:
+        if r["tp_item"] in tps:
+            assert (r["marked"] == "1") == (_gm.CYCLE_CLAUSE_TOKEN in tps[r["tp_item"]]), f"witness CSV disagrees with the marker on {r['tp_item']}"
+    # every program generator runs as a script with no PYTHONPATH from the clone root, as the flow runs it
+    import os, subprocess
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    with tempfile.TemporaryDirectory() as td:
+        for gen in sorted((here / "gen_programs").glob("gen_*_prog.py")):
+            r = subprocess.run([sys.executable, str(gen), "--seed", "1", "--out", f"{td}/{gen.stem}.S"], cwd=REPO_ROOT, env=env,
+                               capture_output=True, text=True, timeout=120)
+            assert r.returncode == 0, f"{gen.name} fails as a flow-style script: {(r.stderr.strip().splitlines() or ['?'])[-1][:160]}"
+    # the fixture header re-types the EOT address: it must equal the rendered map too
+    assert check_mmio_map_header(here / "gen_fixtures" / "gen_report_fixture_map.h", {"GEN_EOT_ADDR": "eot_addr"})
     # manifest cross-check: declared == rendered for every committed manifest; stale and missing fail loud
     for f in tests:   # every committed test's fire_tp_* items render exactly its committed manifest (or it has none)
         tn = f.stem
