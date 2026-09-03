@@ -24,4 +24,5 @@ Row ids: CM59-n = cross-model review findings on 1eb2ede.
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at 0eab3c5fb895abc2: 156 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
+- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at 6283d7c2b1edec3e: 173 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
+- Non-review change at 6283d7c2b1edec3e: tb-infra's row mapping of the retained reproducer (27 rows, all in section-3 cases) corrected the x18 = 00000000 attribution (a lost s2 store at push rl8 read back faithfully by pop rl8, not the CmPopRetRa replay; 800003ff stays with its source named) and is summarised in section 6; the verdict is unchanged.

@@ -52,7 +52,8 @@ cm.push (rtl/ibex_compressed_decoder.sv:623-683):
   :634) is lost; cm_rlist is already decremented and cm_sp_offset set to 2 (:647-650, :653-655). The remaining
   stores and the sp decrement execute. Result: one register is not saved; sp and the other saves are correct.
 - CmPushStoreReg (:659-671): the store of the register at the top of cm_rlist_q (:660) is lost when :661 fires; rlist and
-  offset move on (:663-665). One register not saved.
+  offset move on (:663-665). One register not saved; a later pop of that slot loads the stale word faithfully, so the
+  wrong register value surfaces at the pop although the loss happened at the push.
 - CmPushDecrSp (:673-681): the `addi sp, sp, -adj` micro-op (:675) is lost and the FSM returns to CmIdle
   (:679). The buffer still holds the cm.push (section 2), so the next cycle restarts the expansion at :627: every
   store is issued a second time at the same addresses (sp has not moved), then the sp decrement executes. Result:
@@ -76,8 +77,10 @@ cm.pop / cm.popret / cm.popretz (:686-774):
 - CmPopRetRa (:765-771): the `ret` (:766) is lost, the FSM returns to CmIdle
   (:770) and the expansion restarts
   at :693 while sp has ALREADY been incremented by the executed CmPopIncrSp: every load is repeated from
-  sp + adj + offset, i.e. from above the frame, and the registers receive whatever lies there (the reproduction's
-  x18 = 800003ff / 00000000 instead of 33333333 is this case), then sp is incremented a second time and the ret
+  sp + adj + offset, i.e. from above the frame, and the registers receive whatever lies there (the x18 = 800003ff seen in an earlier, unretained run of
+  gen_zcmp_directed.S with dummy insertion enabled, whose cm.popret tail at pc 0x8000040a hit this case, is a
+  return-address-like value read from above the frame; the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
+  run is NOT this case, that program has no popret, see section 6), then sp is incremented a second time and the ret
   executes. This is the only path that corrupts registers that were loaded correctly the first time.
 
 cm.mvsa01 / cm.mva01s (:777-830): a dummy in CmIdle (:791 / :819) loses the FIRST move; the FSM proceeds to
@@ -138,6 +141,20 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   not depend on fetch_valid, and the CmIdle branch computes cm_rlist_d from instr_i even when nothing valid is
   there; at the decoder the equivalent qualifier is valid_i && id_in_ready_i) fails on every B8 event; the existing IbexPushPopFSMStable (rtl/ibex_compressed_decoder.sv
   :937) does not catch it because valid_i is high during the insertion.
+
+- Reproduction status (tb-infra's row mapping of the retained run of dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S,
+  four cm.push / cm.pop pairs with rlist 4 / 8 / 12 / 15, plain cm.pop only, dummy_instr_mask 0, reported 2026-09-03;
+  the mapping file gen_b8_row_mapping.md lands under dv/auto_dv/evidence/ with tb-infra's next landing): all 27
+  divergent rows map to a section-3 case. Tally: CmIdle first store lost 2, CmPushStoreReg store lost 11,
+  CmPushDecrSp addi lost with full replay 2, CmIdle first load lost 2, CmPopLoadReg load lost 13, CmPopIncrSp addi
+  lost on a plain cm.pop with full replay 3; no popret / popretz / move case in that program. Every wrong register
+  value in that run is a lost store leaving a slot stale and a faithful later load of it, or a lost load leaving the
+  register unwritten (x18 = 00000000: push rl8 lost its s2 store in CmPushStoreReg in both passes, slot 0x80000228
+  stayed stale, pop rl8 loaded it faithfully); no load in that run reads above the frame. Consecutive losses occur
+  (pop rl12 lost s0, ra and the addi back to back) because the threshold is lfsr.cnt masked by {dummy_instr_mask,
+  ones} (rtl/ibex_dummy_instr.sv:97), so with mask 0 a threshold of 0 right after an insertion inserts again. The
+  CmPopRetRa replay (x18 = 800003ff) is retained only in the earlier run named in section 3; a popret / popretz
+  variant of the reproducer is owed by tb-infra.
 
 ## 7. Anchors table
 
