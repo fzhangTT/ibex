@@ -39,7 +39,7 @@ schema_version: 1
 #     Every name must be a PLUSARG_* of dv/auto_dv/tb/gen_tb_pkg.sv (the one origin; here
 #     PLUSARG_DBG_CSR_PROBE); load_testlist refuses an undeclared name.
 fcov_manifest_required_tiers: []
-debug_only_plusargs: [gen_dbg_csr_probe]
+debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace]
 
 builds:
   gen_smoke:
@@ -88,9 +88,9 @@ builds:
     # ISA shim (Spike behind DPI) as a shared library next to the simv (TB Infra, dv/auto_dv/isa).
     pre_build:
       - bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib
-    extra_ldflags: ["-L{outdir}/lib", "-lgen_isa_shim", "-Wl,-rpath,{outdir}/lib"]
+    extra_ldflags: ["-L{outdir}/lib", "-lgen_isa_shim", "-Wl,-rpath,{outdir}/lib", "-Wl,-rpath-link,{mirror}/tools/spike/lib"]
     # Run-time library search path of every run: the shim beside the simv and the mirror's spike (the
-    # shim's own rpath points into the clone's tools/spike, which LSF hosts cannot see).
+    # shim carries no rpath; -rpath-link above resolves its Spike dependencies at link time only).
     runtime_lib_dirs: ["{outdir}/lib", "{mirror}/tools/spike/lib"]
 
 tests:
@@ -192,3 +192,46 @@ tests:
     expected_fail: false
     component: gen_isa_shim
     measured: true
+
+  # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)
+  - name: gen_test_boot_retire
+    description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; timing-only regime knobs drawn and scheduled from the seed (Test Writer)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+    program:
+      riscv_dv_test: gen_rand_smoke
+      seed: run
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bringup, template]
+    cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_boot_retire_red
+    description: TDD red fixture of gen_test_boot_retire; the directed program ends with tohost 3 and declares an unreachable retirement floor, so the fire-check must FAIL (evidence dv/auto_dv/evidence/gen_tdd_test_template.md); never a regression test
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+    program:
+      directed: [dv/auto_dv/tests/gen_programs/gen_boot_retire_red.S]
+      seed: run
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bringup, template, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
