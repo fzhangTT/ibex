@@ -529,3 +529,18 @@ lock-step canary before the tree is reported green. tb-infra records this as its
 defect of the day (the in-place FORCE recompile that destroyed retained runs was the first; both are
 labelled in its transcript). Counted for the closure report as process friction, caught by the flow's
 canary rule.
+
+## LOG-018 - 2026-09-03 - NOTE (Phase 1 batch 1 delivered; lock-step comparator conventions found wrong by the first tests)
+
+10:53 UTC: the Test Writer delivered batch 1 (eight directed self-checking tests with per-seed program
+generators and red fixtures; committed cb3d7eb). Every test's program-level expectations match the DUT on
+seeds 1 and 2 with the red fixture red. Four tests (gen_rst_boot, gen_csr_reset, gen_csr_trap_setup,
+gen_pmp_csr_warl) FAIL the flow verdict on the lock-step comparator, not on the DUT: the comparator
+expects the mret target as pc_wdata where the RTL and plan convention C-1 give pc + 4; isa_prv compares
+the model's post-step privilege with rvfi_mode (the executing privilege); the Spike shim lacks CSR
+legalization for mstatus XS bits, cpuctrlsts bit 8, tdata1 reset, marchid, mcycle/cycle sync, the HPM
+counters and mhpmevent; C5.5 references exist only for grev/gorc. These are generated-TB defects
+caught by the first feature tests (counted for the closure report under "generated infrastructure
+requiring review or repair") and are assigned to tb-infra as T-102 ahead of the export event writers
+and the step-2b re-application. The four green tests proceed to acceptance runs; the four blocked
+tests' requests wait for T-102.
