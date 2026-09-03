@@ -1243,3 +1243,15 @@ not to measurement. Round 0 dispatches as released in LOG-042d and its results a
 credited from round 0 until the DV Lead lands the held column generated from Sections 1.4 and 1.5 and the stated text-rule
 vocabulary that reproduces exactly the 37 rows, and the Critic's re-review reaches APPROVE or APPROVE-WITH-CHANGES. The
 crediting revision (v2r) carries both fixes and the CR9 rows.
+
+## LOG-042e - 2026-09-03 - T-181 measurement hold may lift (landing 3h passed both reviews)
+
+Landing 3h (9500268) is APPROVE from the cross-model reviewer and APPROVE with three lows from the Critic
+(gen_critic_batch1_v7.md): the fix is at the cause, the final-store count is a TB-side fact (the program plan's report
+count), both reds are verified from the retained logs on one build, and the 13 seeds pass with applied equal to reached.
+Ruling: the T-181 hold (LOG-042b, Section 1.6) may lift; the DV Lead lands the lift in v2r part 1 with the Critic's
+caveats stated beside it: a seed whose mid-run triggers all fall after the end of test passes with no mid-run phase
+applied, so a mid-run bin can stay unhit on a PASS and the fcov gate is where that shows; the 82 held items are in
+unbuilt groups, so the lift credits none of them today; Runtime's head-mode wave on 9500268 (13 of 13 PASS, 17:22Z) is
+the record LOG-042 asked for and preceded the round-0 dispatch. Lows to the Test Writer's next touch: an edit-ablation
+control for mutation 3h-M1 on the same seed; CR6 rows for the v6 lows; the Section 10 testlist citation (CM30-L-1).
