@@ -1381,3 +1381,14 @@ move the work to its out-of-tree copy, restore every touched shared-tree file to
 announce CLOSE to Runtime and report the restored list. Rule restated (LOG-014, LOG-017, LOG-045a, LOG-052): TB edits happen
 in out-of-tree copies; the shared tree receives them only as an announced file-list copy-in immediately followed by the
 hand-off. A further unannounced shared-tree edit is recorded as a fence-class process violation in the closure report.
+
+## LOG-053a - 2026-09-03 - WITHDRAWN: the shared-tree TB files were landing 2b inside its announced window
+
+Runtime corrects its 18:12Z report: tb-infra's landing-2b window was announced (OPEN, CLOSE at 18:07Z with the canary green),
+and the files Runtime saw in the shared tree at 18:08-18:11Z (the new gen_fcov_pkg.sv, the modified gen_tb.f and env/tb
+files) were landing 2b's own content, handed to the Orchestrator at 18:07Z and committed at d752fb3 at 18:14Z; Runtime's
+18:08:51Z worktree-source probe compiled the finished, canaried landing after the CLOSE, and it does not cite that build.
+LOG-053 is withdrawn: tb-infra committed no violation. The Orchestrator erred by recording a violation before checking the
+reported file set against the pending landing list it already held; rule for the Orchestrator: a shared-tree finding is
+compared with every open hand-off before it is logged. The interval between a window's CLOSE and the Orchestrator's commit
+is part of the window; teammates treat the shared tree as read-only for builds until the commit announcement.
