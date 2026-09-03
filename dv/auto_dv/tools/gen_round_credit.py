@@ -21,6 +21,20 @@ while not (R / 'dv/auto_dv/contract').is_dir():
 sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold_items  # one home for the hold-section discovery
 WIT_CG_PLAN = 'CG-WIT-001'
 
+def plan_inputs_digest(plan_dir):
+    """sha256 (first 12) over exactly what this tool reads from the plan set: the item headers with their Test group, Tier and Expected fields, the
+    hold sections, gen_trace_tp_bin.csv and gen_trace_witness_ids.csv. Independent of the plan's embedded Section 1.7, so a report reproduces
+    from the commit that embeds it."""
+    plan = (plan_dir / 'gen_test_plan.md').read_text(); h = hashlib.sha256()
+    for m in re.finditer(r'^### (TP-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)', plan, re.M | re.S):
+        b = m.group(2)
+        for f in ('Test group', 'Tier', 'Expected'):
+            fm = re.search(r'^- ' + f + r': ([^\n]*)', b, re.M); h.update((m.group(1) + '|' + f + '|' + (fm.group(1).strip() if fm else '') + '\n').encode())
+    for sec, tag in hold_items(plan)[1]: h.update((sec + ' ' + tag + '\n').encode())
+    for tid, tags in sorted(hold_items(plan)[0].items()): h.update((tid + ':' + ','.join(tags) + '\n').encode())
+    h.update((plan_dir / 'gen_trace_tp_bin.csv').read_bytes()); h.update((plan_dir / 'gen_trace_witness_ids.csv').read_bytes())
+    return h.hexdigest()[:12]
+
 def load_plan(plan_dir):
     plan = (plan_dir / 'gen_test_plan.md').read_text()
     items = {}
@@ -182,7 +196,7 @@ def self_test():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--regress-manifest'); ap.add_argument('--plan-dir', default=str(R / 'dv/auto_dv/docs')); ap.add_argument('--fcov-dir', default=str(R / 'dv/auto_dv/fcov_expectations'))
-    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--plan-sha', default='working tree', help='the plan commit the crediting read (printed in the report header)'); ap.add_argument('--heading', default=None, help='section title override, e.g. "Round-0 probe crediting (probe of 37c7ecb, LOG-046)"'); ap.add_argument('--self-test', action='store_true')
+    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the report header; not a claim about which commit was read (the header prints the input digest)'); ap.add_argument('--heading', default=None, help='section title override, e.g. "Round-0 probe crediting (probe of 37c7ecb, LOG-046)"'); ap.add_argument('--self-test', action='store_true')
     a = ap.parse_args()
     if a.self_test: sys.exit(self_test())
     if not a.regress_manifest: sys.exit('usage: --regress-manifest <manifest.yaml> or --self-test')
@@ -194,7 +208,7 @@ def main():
     for r in runs: by_test[r['test']].append(r)
     tests = [(t, len(rs), '/'.join(sorted({str(r.get('verdict')) for r in rs})), '; '.join(sorted({(r.get('reason') or '-')[:60] for r in rs}))) for t, rs in sorted(by_test.items())]
     inv = (f"Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
-           + (f" --heading {shlex.quote(a.heading)}" if a.heading else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan (gen_test_plan.md) at {a.plan_sha}. ")
+           + (f" --heading {shlex.quote(a.heading)}" if a.heading else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
     hdr = round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:

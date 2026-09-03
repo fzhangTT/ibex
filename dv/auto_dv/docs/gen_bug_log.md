@@ -267,7 +267,7 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 | D1 | mip reads the raw irq pins, not qualified by mie | cs_registers.rst:246 | rtl/ibex_cs_registers.sv:408-412,495-501 | F-CSR-032 |
 | D2 | Illegal mstatus.MPP value (01/10) legalises to U; doc says M | cs_registers.rst:138 | rtl/ibex_cs_registers.sv:783-786 | F-CSR-024 (BUG-05 alias) |
 | D3 | mcause is software-writable; doc marks the fields read-only | cs_registers.rst:213-217 | rtl/ibex_cs_registers.sv:730-733,803 | F-CSR-046 |
-| D4 | tdata1 reset/constant value is 0x2800_1048 (m=1,u=1), doc says 0x2800_1000 | cs_registers.rst:360 | rtl/ibex_cs_registers.sv:1848-1866 | F-TRG-003 / F-CSR-081 |
+| D4 | tdata1 reset/constant value is 0x2800_1048 (m=1,u=1), doc says 0x2800_1000 | cs_registers.rst:360 | rtl/ibex_cs_registers.sv:1848-1866 | F-TRG-003 / F-CSR-081; the doc's own field table at cs_registers.rst:362-400 (m = 1 at bit 6, u = 1 at bit 3) already yields 0x2800_1048; RTL composition rtl/ibex_cs_registers.sv:1848-1864 with execute = tmatch_control_q reset 0 at :1806-1812 (rtl-arch R5, gen_t102_rtl_facts.md); read as 28001048 in the Test Writer's rst_boot_s1 log; reproducer csrr t0, tdata1 in M-mode after reset |
 | D5 | RETIRED: dcsr.ebreaks writable is bug candidate B15 | - | - | - |
 | D6 | NumLoads/NumStores count a misaligned access once; doc says twice | performance_counters.rst | rtl/ibex_load_store_unit.sv:468-475 | F-PMC-034/036 |
 | D7 | Divide latency: RTL 37 cycles total (36 stall); docs say 37 (instruction_decode_execute.rst) and 37 stall (pipeline_details.rst:63) | instruction_decode_execute.rst, pipeline_details.rst:63 | rtl/ibex_multdiv_fast.sv:412-526 | F-MUL-012 |
