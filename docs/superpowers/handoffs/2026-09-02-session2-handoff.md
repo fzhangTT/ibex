@@ -9,9 +9,33 @@ is authoritative between updates).
 |---|---|---|
 | Handoff items 3, 4.1, 5 | VERIFIED (were done in session 1) | CLAUDE.md; `.claude/settings.json` |
 | Handoff item 4.2 (dv_principles DUT scoping) | **DONE** | 208a84aa; codex APPROVE `docs/dv/reviews/2026-09-02-codex-diff-c77f02da-208a84aa.md` |
-| WS5 MCP servers | **CLOSED — PARTIAL pending WS7** | `docs/dv/process-logs/ws5/progress.md`; codex APPROVE `...codex-diff-d04e5bba-9f2f6c39.md` (3 fix rounds, superseded artifacts suffixed) |
-| WS4 Jenkins+LSF | plan rev 6 in codex pre-review (round 6; rounds 1–5 all REQUEST-CHANGES, all findings real) | plan + `...ws4-jenkins-lsf-review-log.md`; artifacts `-round1..5` |
-| WS7 / WS6 / playbook | not started | order per session-1 handoff |
+| WS5 MCP servers | **DONE** (gate item 3 closed against the amendment's replacement criterion in WS7 T4) | `docs/dv/process-logs/ws5/progress.md`; `ws7-gate/check-e-no-remote-mcp.txt` |
+| WS4 Jenkins+LSF | **DONE** (closed after review rounds) | 248cdb83; `...ws4-jenkins-lsf-review-log.md` |
+| WS7 / WS6 | **COMPLETE** (T1–T5; mex on both trees; invariant 2 lifted) | `docs/dv/process-logs/ws7/progress.md`; `docs/dv/evidence/ws7-gate/`, `ws6-mex/` |
+| playbook | done earlier this session | 1e3d4f47, 625eff54 |
+
+## WS7+WS6 close-out (end of session 2)
+
+- **Generation sessions are now PERMITTED** — Critical Invariant 2 lifted in CLAUDE.md/AGENTS.md:
+  permitted ONLY inside a verified cleanroom export (`ci/make-cleanroom.sh`, self-verify green);
+  `docs/dv/FENCE.md` is the fence rulebook (full tree) with a Zone A variant shipped by the
+  overlay. Infra sessions stay contaminated-by-design and never do generation.
+- **The single remaining launch blocker is the owner signature**: `DV_prompt.txt`'s
+  `Owner sign-off:` line is still the unsigned template (Section 12 item 8). Everything else
+  passes: final Section-12 run vs export SHA `32084c74` = 10 PASS / 1 BLOCKED / 0 FAIL
+  (`docs/dv/evidence/ws7-gate/section12-final.txt`).
+- **Export path decision** (owner directive 2026-09-02, plan v2): re-exports instead of the v1
+  snapshot branch. Deferred machinery is listed with authorities in `docs/dv/FENCE.md`
+  §"Deferred machinery" (snapshot branch + sync, fence.yaml, escape harness, zoneb-run referee
+  attachment, Zone A permission rules, full spec:139 triage-on-add); v1 design at 86eba26e.
+- **Post-T5 fence state:** owner final-check fix set folded (deny `ci/vars.env`,
+  `ci/install-build-deps.sh`, `ci/cleanroom-overlay`, `ci/lint-commits.sh`; `ibex-cosim`/
+  `ibex_cosim` scan strings; consequential `flake.nix` deny). Full-mode selftest green
+  (`ws7-selftest-tdd/t5-fixes-green.txt`). Live export at `/localdev/fzhang/ws/ibex-cleanroom`
+  (source `ebf47c1a`); its spike needs a rebuild per SIM_RECIPE (the --force rebuild discarded
+  the T4 build; the site attestation stands).
+- Remaining process step: WS7+WS6 post-execution cross-model review (controller; opus fallback if
+  codex is still capped), then ledgers to DONE and SDD workspace cleanup.
 
 ## Infra events this session (owner aware; durable arrangements)
 

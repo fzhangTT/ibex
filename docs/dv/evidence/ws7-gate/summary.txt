@@ -63,3 +63,17 @@ Files in this bundle
 - spike-build.txt                Step 2b build record (incl. the boost gotcha)
 - section12-checklist.txt        Step 2c transcription + executed results
 - cleanroom-mex-check.txt        Step 3 `mex check` output from the export's own instance
+
+T5 final re-verify (2026-09-02, after the fence fixes + FENCE.md)
+-----------------------------------------------------------------
+The T4 export above (cc114e05, source f9ac6933) is SUPERSEDED gate evidence: its artifacts are
+committed in this bundle, and the directory was rebuilt with --force after T5's fence fixes
+(new DENY entries incl. flake.nix; ibex-cosim/ibex_cosim scan strings) and the FENCE.md overlay
+variant landed. Final export: source ebf47c1a, export SHA 32084c74, verify PASS. Note the
+--force rebuild discarded the T4 export's built spike under tools/ — a generation team rebuilds
+it per SIM_RECIPE (the spike-built-on: site attestation stands, from spike-build.txt).
+
+- export-verify-final.txt        T5 raw `ci/make-cleanroom.sh --force` output (verify PASS)
+- section12-final.txt            Section 12 items 1-11 vs the fresh export:
+                                 10 PASS, 1 BLOCKED (item 8 owner sign-off — the sole
+                                 remaining launch blocker), 0 FAIL

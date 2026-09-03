@@ -19,7 +19,10 @@ folded per the plan pre-review `docs/dv/reviews/2026-09-02-claude-plan-ws7-expor
 - [x] **T3** — mex (WS6), full tree — landed (commit `b23f4725`), concurrent with T1/T2.
 - [x] **T4** — GATE: export, verify, compile+run, cleanroom mex (serial, after 1–3). Results
       in the "T4 gate results" section below; evidence: `docs/dv/evidence/ws7-gate/`.
-- [ ] **T5** — `docs/dv/FENCE.md` + supersessions + close-out docs.
+- [x] **T5** — `docs/dv/FENCE.md` + supersessions + close-out docs. Fence-fix set folded,
+      FENCE.md landed (full-tree rulebook + Zone A overlay variant), supersessions applied,
+      Critical Invariant 2 lifted (validator PASS), final export re-verified and Section-12
+      run 10 PASS / 1 BLOCKED (item 8 owner sign-off) / 0 FAIL — see "T5 results" below.
 
 ## T4 gate results (2026-09-02)
 
@@ -61,6 +64,42 @@ folded per the plan pre-review `docs/dv/reviews/2026-09-02-claude-plan-ws7-expor
   re-verified clean after mex's anchor append.
 - **Step 4 (WS5 closure):** gate item 3 closed against the amendment's replacement criterion,
   citing check (e) + `ws7-gate/check-e-no-remote-mcp.txt`; WS5 ledger flipped PARTIAL → DONE.
+
+## T5 results (2026-09-02)
+
+- **Fence-fix set (owner final-check, commit 1):** `DENY` gained `ci/vars.env` +
+  `ci/install-build-deps.sh` (cosim-referee version pins / tarball fetches), `ci/cleanroom-overlay`
+  (builder tooling class), `ci/lint-commits.sh` (full-tree process helper); the whole-export scan
+  gained `ibex-cosim` + `ibex_cosim`. **Consequential triage the new strings forced:** `flake.nix`
+  was shipping and packages the lowRISC spike fork as a "cosimulation model for Ibex Verification"
+  with its exact rev — same disclosure class as `ci/build-spike.sh`; added to `DENY`,
+  `ci/cleanroom-inventory.txt` updated (entry removed; regenerate command's exclusion set synced).
+  `flake.lock` and `nix/` were checked for the scan strings and are clean (they stay). The
+  selftest's deny expectations flow from the sourced `DENY` array — no selftest edit was needed.
+  Full-mode selftest green: `docs/dv/evidence/ws7-selftest-tdd/t5-fixes-green.txt` (a–h, all four
+  canaries, all four landing sub-cases, 0 failures).
+- **FENCE.md (commit 2):** full-tree rulebook at `docs/dv/FENCE.md` (STE; globs-never-titles; deny
+  authority = the `DENY` array + default-deny roots; `ci/` allowlist of the 8 shipped entries; dated
+  `riscv-dv-verified-on:` line naming lock rev `71666eba…` with the empty-tree-diff statement per
+  T1's SHA-verified fetch; export/update/landing workflows; Zone B single-run protocol; honor
+  rules; URL-denied collateral; deferred-machinery list with authority sections; gate-wrapper
+  smoke-scope note). Zone A variant at `ci/cleanroom-overlay/docs/dv/FENCE.md` — closes the open
+  item in T1 fold 3 above; scan-verified clean of all six whole-export identifiers and all ten
+  item-9 strings.
+- **Supersessions + invariant lift (commit 2):** the amendment's supersession list applied
+  (`ci/mcp/README.md` §Zone scoping, three wrapper headers, `.codex/config.toml` header,
+  `ci/env.sh` MCP-block comment → "the cleanroom ships the three local servers; see
+  docs/dv/FENCE.md"; spec §WS5 zone-scoping paragraph + gate item and §WS7 enforcement-stack
+  item 2 + "query an MCP" escape case → bracketed strike-and-point annotations). CLAUDE.md +
+  AGENTS.md Critical Invariant 2 lifted in the same commit (byte-identical blocks): generation
+  sessions permitted ONLY inside a verified cleanroom export; FENCE.md is the rule file; infra
+  sessions stay contaminated-by-design. Validator PASS.
+- **Final gate proof (commit 3):** re-export with `--force` over the T4 export (superseded gate
+  evidence; its artifacts were already committed) — source `ebf47c1a`, export SHA `32084c74`,
+  verify PASS (`ws7-gate/export-verify-final.txt`). Section-12 items 1–11 run against the fresh
+  export (`ws7-gate/section12-final.txt`): **10 PASS, 1 BLOCKED, 0 FAIL** — the single blocker is
+  item 8's owner sign-off line in `DV_prompt.txt` (owner action; the sole remaining launch
+  blocker). Items 2 and 6, BLOCKED in T4 on FENCE.md, now PASS.
 
 ## Carried rulings (from the plan / pre-flight conflict scan)
 
