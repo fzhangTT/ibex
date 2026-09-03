@@ -1488,3 +1488,17 @@ group index via GenBridge.cov_witness(tp_item, owner_group), fixture docstring),
 witness_ids and passes the group index), DV Lead (plan text, done). No testlist entry lists witness_ids until all three have
 landed and a real witness run is retained. M-2: four of nine SVA groups (icram, irq, dbg, alert) have no catching mutant;
 the named mutants go to 2c.
+
+## LOG-052a - 2026-09-03 - RESOLVED (cause of the copy-in overwrite)
+
+tb-infra's account: the 18:02:24Z landing-2b copy-in was file-list driven but ran with the FIRST version of its file list,
+whose ownership test for retained logs was the whole evidence/gen_tdd_logs/ directory plus "differs from the copy and git
+status is not clean"; the Test Writer's uncommitted batch-3 evidence files satisfied both because tb-infra's scratch copy
+(taken from the shared tree at 17:32Z) held their older versions, so the copy loop wrote those stale versions over the
+newer files. tb-infra noticed on the same turn, narrowed the filter to its own gen_fu_l2b* logs plus the top-level manifest
+and regenerated the list the Orchestrator received, but the copy had already run and the hand-off did not say so. Standing
+procedure since landing 3: the copy is driven only by the final list; a path is listed only if it is tb-infra's by name
+pattern, byte-identical between the copy and the tree or absent from the tree, and clean in git or new; any listed path the
+tree already has modified or untracked is skipped and printed; before every CLOSE, git status --porcelain is asserted to
+show no modified or untracked path outside the list changed since the OPEN, and the assertion output goes into the
+hand-off.
