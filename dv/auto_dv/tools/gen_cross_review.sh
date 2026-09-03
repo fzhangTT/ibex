@@ -18,15 +18,24 @@ if [ -z "${GEN_XR_RELOCATED:-}" ]; then
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
 TREE=""; ART=""
-keep_raw() { [ -n "${RAW:-}" ] && [ -e "$RAW.json" ] && { mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_failed"; cp -f "$RAW.json" "$RAW.err" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP")-" 2>/dev/null; cp -f "$RAW.json" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" 2>/dev/null; cp -f "$RAW.err" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.err" 2>/dev/null; echo "raw copied to dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" >&2; }; return 0; }
-cleanup_all() { [ -z "${VERDICT:-}" ] && keep_raw; [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
+ART_WRITTEN=""
+keep_raw() {
+  # Copy the model's raw output out of the (swept) run dir when the run ends without a written artifact.
+  [ -n "${RAW:-}" ] && [ -e "$RAW.json" ] || return 0
+  local dst="$REPO/dv/auto_dv/work/orchestrator/review_failed"; mkdir -p "$dst" || return 0
+  cp -f "$RAW.json" "$dst/$(basename "$XR_TMP").raw.json" 2>/dev/null || true
+  [ -e "$RAW.err" ] && cp -f "$RAW.err" "$dst/$(basename "$XR_TMP").raw.err" 2>/dev/null || true
+  echo "raw copied to dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" >&2
+  return 0
+}
+cleanup_all() { [ -z "$ART_WRITTEN" ] && keep_raw; [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
 trap cleanup_all EXIT
 REPO=$(git rev-parse --show-toplevel); cd "$REPO"; git worktree prune >/dev/null 2>&1 || true
 # A killed run leaves review_tmp/run.*/tree on disk with a live registration: sweep run dirs no process owns.
 for _d in "$REPO"/dv/auto_dv/work/orchestrator/review_tmp/run.*; do
   [ -d "$_d" ] || continue
   if [ -f "$_d/pid" ] && kill -0 "$(cat "$_d/pid")" 2>/dev/null; then continue; fi
-  [ -f "$_d/pid" ] || { [ "$(( $(date +%s) - $(stat -c %Y "$_d") ))" -gt 120 ] || continue; }
+  [ -f "$_d/pid" ] || { [ "$(( $(date +%s) - $(stat -c %Y "$_d") ))" -gt 7200 ] || continue; }
   git worktree remove --force "$_d/tree" >/dev/null 2>&1 || true; rm -rf "$_d"
 done; git worktree prune >/dev/null 2>&1 || true
 for _c in "$REPO"/dv/auto_dv/work/orchestrator/review_self/self.*.sh; do
@@ -177,7 +186,7 @@ fi
   echo "---"
   echo
   cat "$RAW"
-} >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART"
+} >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART" && ART_WRITTEN=1
 cleanup_all; trap - EXIT; rm -rf "$XR_TMP"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
