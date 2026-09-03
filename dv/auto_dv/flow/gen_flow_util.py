@@ -211,6 +211,14 @@ def self_test() -> int:
     for name, res in checks.items():
         ok &= res
         print("SELF-TEST", "ok " if res else "BAD", name)
+    # P6 helper: a debug-only knob counts as enabled with no value or a non-zero value.
+    p6 = {"+gen_chk_x": True, "+gen_chk_x=1": True, "+gen_chk_x=0": False, "+other=1": False, "+gen_chk_x=": False}
+    for pa, want in p6.items():
+        got = plusarg_enabled([pa], "gen_chk_x")
+        ok &= got == want
+        print("SELF-TEST", "ok " if got == want else "BAD", f"plusarg_enabled({pa!r}) == {want}")
+    ok &= plusarg_name("+vcs+finish+1000") == "vcs+finish+1000"
+    print("SELF-TEST", "ok " if plusarg_name("+vcs+finish+1000") == "vcs+finish+1000" else "BAD", "plusarg_name keeps + inside vcs+ names")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -274,7 +282,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             name = plusarg_name(pa)
             if name is None:
                 die(f"{path}: test {t['name']} plusarg {pa!r} is not of the form +name or +name=value")
-            if name not in known_plusargs:
+            if name not in known_plusargs and not name.startswith(C.VCS_PLUSARG_PREFIX):
                 die(f"{path}: test {t['name']} plusarg {pa!r}: name {name!r} is neither a PLUSARG_* of "
                     f"{C.TB_PKG_SV.name} nor a simulator/UVM plusarg (P-06 single source)")
     return data

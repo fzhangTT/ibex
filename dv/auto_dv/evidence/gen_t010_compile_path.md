@@ -33,7 +33,8 @@ Out-trees (not committed) live under the shared out root `/proj_soc/user_dev/fzh
 Command (from `gen_regress.py --tier smoke --tag t010_smoke --base-seed 1`, recorded in
 `<out root>/regress_t010_smoke/build/gen_smoke/compile_cmd.sh`; identical flag set to the
 standalone trial `gen_build.py --build gen_smoke --coverage --cond --diag-noconst --outdir <out
-root>/t010_smoke_cov`, which added `-diag noconst`):
+root>/t010_smoke_cov`, which added `-diag noconst`; the flag was later made the default and the
+knob renamed `--no-diag-noconst`):
 
 ```
 vcs -full64 -sverilog -f dv/auto_dv/tb/gen_rtl.f -f dv/auto_dv/tb/gen_smoke_tb.f \
@@ -231,7 +232,7 @@ regression.
 | Finding | Fix | Validation |
 |---|---|---|
 | major: `gen_dump.tcl` rendered with `str.format` crashed on Tcl braces | `gen_flow_util.render_fields` (token replacement); `python3 gen_flow_util.py --self-test` renders both templates and checks the braces | `gen_regress.py --repro gen_smoke 330815564 --waves --tag t027_waves`: LSF job 10930446 on soc-c-20, PASS, `runs/gen_smoke_330815564/waves.fsdb` written (161985 bytes, `novas_dump.log` present). First attempt failed at compile: VCS X-2025.06-SP2 rejects compile-time `-ucli` (`Error-[DBG_UCLI_DEP] Option -ucli/-gui is deprecated ... only with -R and -debug*`), so the waves build uses `-debug_access+all` only and `-ucli -do dump.tcl` at run time (deviation from SIM_RECIPE Section 6 wording, recorded in `gen_flow_const.py`). The first attempt's outdir was later replaced (`--force`), so the artifact was re-created in a fresh, retained outdir: `<out root>/t038_evidence_ucli/` (`gen_build.py --build gen_smoke --waves --vcs-arg=-ucli`, 06:26 UTC, `compile.log` carries the DBG_UCLI_DEP error, `build_manifest.yaml` status failed with `error_classes: ['DBG_UCLI_DEP']` and vcs rc 0). Outdirs that evidence cites are never reused from here on |
-| minor: nonzero simv exit on a clean log passed | `gen_verdict.decide`: rc not in {0, 124} on a would-be PASS is FAIL "nonzero exit with clean log" | self-test plus the smoke reruns |
+| minor: nonzero simv exit on a clean log passed | `gen_verdict.decide`: rc not in {0, 124} on a would-be PASS is FAIL; the reason string is now "unexplained exit code <rc> ..." (P-02 wording, T-038) | self-test plus the smoke reruns |
 | minor: `uvm_test: none` emitted `+UVM_TESTNAME=none` | testlist uses `null`; `load_testlist` rejects non-null non-identifier values | testlist loads |
 | minor: hyphenated VCS codes missed | `Error-\[([\w-]+)\]` | the DBG_UCLI_DEP error above was classified (`error_classes: ['DBG_UCLI_DEP']`, build status failed although vcs returned 0) |
 | minor: functional-coverage source for the DUT row | dashboard takes the six code metrics from the DUT row and Group from the grand total (covergroups are TB-side gen_ instances) | documented in gen_runtime_api.md Section 5 |

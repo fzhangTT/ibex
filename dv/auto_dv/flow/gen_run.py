@@ -194,6 +194,9 @@ def main() -> int:
                 cov_vdb.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(build_vdb, cov_vdb)
         cov_vdb.parent.mkdir(parents=True, exist_ok=True)
+    if a.pass_marker and measured:
+        U.die("--pass-marker overrides the testlist marker for red-run evidence only; refused on a measured run "
+              "(use --measured no or --no-coverage)")
     pass_marker = a.pass_marker or test.get("pass_marker")
     # Debug-only knobs (tb-arch P6) never run in a measured coverage run: refuse in writing.
     debug_only = [n for n in (testlist.get("debug_only_plusargs") or [])

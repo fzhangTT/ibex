@@ -100,8 +100,15 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
         dst = outdir / Path(fl).name
         a.rtl_substitutions += absolutize_filelist(C.REPO_ROOT / fl, dst, a.rtl_root)
         groups["filelists"] += ["-f", str(dst)]
-    if a.rtl_root is not None and not a.rtl_substitutions:
-        U.die(f"--rtl-root {a.rtl_root}: no listed source exists there; nothing would be mutated")
+    if a.rtl_root is not None:
+        used = {sub["file"] for sub in a.rtl_substitutions}
+        present = {f.relative_to(a.rtl_root).as_posix() for f in a.rtl_root.rglob("*") if f.is_file()}
+        leftovers = sorted(present - used)
+        if not a.rtl_substitutions:
+            U.die(f"--rtl-root {a.rtl_root}: no listed source exists there; nothing would be mutated")
+        if leftovers:
+            U.die(f"--rtl-root {a.rtl_root}: {len(leftovers)} file(s) match no filelist entry (typo or wrong layout): "
+                  f"{leftovers[:10]}")
     groups["top"] = ["-top", build["tb_top"]]
     groups["uvm"] = list(C.VCS_UVM_FLAGS)
     groups["defines"] = [f"+define+{d}" for d in list(build.get("defines") or []) + list(a.define or [])]

@@ -78,6 +78,10 @@ prove first when the real TB lands; the self-test carries the expected formats (
 
 ## 5. LSF accounting
 
-Jobs 10930761 to 10930765 (this file) plus 10930755 (first attempt, discarded: the operator plusarg
-did not override; the verdict module was missing an import and the run crashed before writing a
-result; both fixed before the runs above). `bjobs -w` after the runs: no unfinished job.
+Jobs 10930761 to 10930765 (this file). First attempt, discarded (LOG-005 standard: their out-tree
+`t038_red/` was overwritten by the second attempt, so no artifact of theirs is retained): LSF jobs
+10930753, 10930754, 10930755 and 10930756 (all `gen_dv_t038_red_gen_smoke_7`, fatal / timeout /
+nomarker / green); the operator plusarg did not override the testlist value and the verdict module
+lacked an import, so three of the four crashed before writing a result and the timeout run was
+recorded as FAIL "sim.log missing". Both defects were fixed before the runs above. `bjobs -w` after
+the runs: no unfinished job.

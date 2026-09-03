@@ -30,6 +30,12 @@ DV_prompt.txt Section 11 is this directory plus `gen_testlist.yaml`. Evidence th
   host loads the VPI library from the mirror venv and imports the Python test modules from the
   mirror copy of the clone. Re-sync the mirror after changing anything a cocotb run imports.
 - **LSF paths are absolute** and the job gets `-cwd <run dir>` (the site default CWD is `/tmp`).
+- **Temporary locations (intervention log F-001).** The flow never reads or lists shared temporary
+  locations (`/tmp`, `/var/tmp`) beyond paths it created and named itself; every temporary directory
+  the flow or the fcov checker creates lives under the run's out directory (`TMPDIR` is pinned to
+  the run dir for the checker). Any accidental listing of a path outside this clone, the shared out
+  root or the mirror is a reportable event: record it in STATUS.md and report it to the Orchestrator
+  for the intervention log, without the content.
 - **Constants home.** Paths, plusarg names, log markers, LSF defaults and schema keys live in
   `gen_flow_const.py` only. `python3 gen_flow_const.py --check` proves the plusarg names shared with
   the SV constants home `dv/auto_dv/tb/gen_tb_pkg.sv` are identical.
@@ -107,8 +113,8 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `CRITICAL` or a `** TESTS=... FAIL=n` summary with n > 0 or PASS=0, `Assertion ... failed`/`Offending`);
   FAIL when the end-of-test marker is missing (the test's `pass_marker`, matched as the last whole
   token of a line, or `$finish` when null); FAIL when the time-zero banner line
-  `GEN_CONFIG_BANNER build_config=opentitan` is missing (the banner block is copied into
-  result.yaml); FAIL when the marker is present but neither `$finish` was seen nor the exit code is
+  `GEN_CONFIG_BANNER build_config=opentitan` is missing from sim.log (the rule cannot be switched
+  off; the banner block is copied into result.yaml); FAIL when the marker is present but neither `$finish` was seen nor the exit code is
   0, or the exit code is neither 0 nor 124 ("unexplained exit code": one more collected mechanism,
   never the only one); FAIL on a crash signature (`Segmentation fault|Killed|core dumped|Aborted|Bus
   error|Illegal instruction`) in lsf.err, run.log or sim_stdout.log; otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
@@ -121,8 +127,8 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `measured` flag; a mutation build forces no). A measured coverage run whose plusargs enable a knob
   listed under the testlist header `debug_only_plusargs` is refused in writing (result.yaml NOT_RUN,
   no job): tb-arch ruling P6, the CSR-flop debug compare never enters a measurement.
-- `--pass-marker`: overrides the testlist marker (red-run evidence only). An operator `--plusarg`
-  replaces a same-name testlist plusarg (VCS honours the first occurrence).
+- `--pass-marker`: overrides the testlist marker (red-run evidence only; refused on a measured run).
+  An operator `--plusarg` replaces a same-name testlist plusarg (VCS honours the first occurrence).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
@@ -166,8 +172,9 @@ gen_regress.py --repro <test> <seed> [--waves]
   only when no run is FAIL, TIMEOUT or NOT_RUN.
 - **Mutation builds (Critic A-24).** `--rtl-root DIR --mutation-id ID` compiles from a mutated copy:
   any listed source that exists under DIR (clone-relative layout, e.g. `DIR/rtl/ibex_alu.sv`) replaces
-  the clone's file; the build manifest records `rtl_root_override`, `mutation_id` and every
-  substitution with both sha256 digests; every run is `measured: false` (unmeasured vdb tree);
+  the clone's file; every regular file under DIR must match a filelist entry, otherwise the build dies
+  naming the leftovers (a typo never silently compiles the unmutated clone); the build manifest
+  records `rtl_root_override`, `mutation_id` and every substitution with both sha256 digests; every run is `measured: false` (unmeasured vdb tree);
   `--purpose 4` is refused. DV never edits `rtl/` in place.
 - **Summary accounting (Critic P-07).** `summary.runs_without_fcov_manifest` and
   `tests_without_fcov_manifest` list every run without a declared-bins manifest; the testlist header
@@ -278,7 +285,7 @@ optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `com
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
 owners, a tier-check test that is not `measured: false`, and any plusarg whose name is neither a
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
-Every flow step first runs `gen_flow_util.require_sv_constants()` (the SV/Python constants check). The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
+`gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)

@@ -170,7 +170,7 @@ def fcov_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
     return {"totals": totals, "per_test": per_test}
 
 
-def summarize(runs: list[dict[str, Any]], testlist: dict[str, Any] | None = None) -> dict[str, Any]:
+def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     counts = {v: 0 for v in (C.VERDICT_PASS, C.VERDICT_FAIL, C.VERDICT_XFAIL, C.VERDICT_TIMEOUT, C.VERDICT_NOT_RUN)}
     for r in runs:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
@@ -200,6 +200,12 @@ def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any], c
                            "(trust triad rule 3)" if covergroups_exist and t["tier"] not in
                            set(testlist.get("fcov_manifest_required_tiers") or []) else
                            f"no fcov_expectation_file on tier {t['tier']} (fcov_manifest_required_tiers)")
+            res_path = Path(r["result_yaml"]) if r.get("result_yaml") else None
+            if res_path and res_path.is_file():
+                stored = U.load_yaml(res_path)
+                stored["verdict"] = r["verdict"]
+                stored["reason"] = r["reason"]
+                U.dump_yaml(stored, res_path)
 
 
 def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -221,7 +227,45 @@ def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, An
     return cost
 
 
+def self_test() -> int:
+    """fcov_policy_failures and fcov_summary on fabricated run records (no simulation)."""
+    tl = {"tests": [{"name": "gen_a", "tier": "smoke", "fcov_expectation_file": None},
+                    {"name": "gen_b", "tier": "check", "fcov_expectation_file": None},
+                    {"name": "gen_c", "tier": "targeted", "fcov_expectation_file": "x.fcov.yaml"}],
+          "fcov_manifest_required_tiers": []}
+    def runs():
+        return [{"test": "gen_a", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
+                 "fcov_expectation_file": None},
+                {"test": "gen_b", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
+                 "fcov_expectation_file": None},
+                {"test": "gen_c", "seed": 1, "verdict": C.VERDICT_PASS, "reason": "", "result_yaml": None,
+                 "fcov_expectation_file": "x.fcov.yaml",
+                 "fcov_check": {"status": "UNHIT", "declared": 3, "hit": 2, "unmet_bins": ["gen_x_cg.cp.b"]}}]
+    ok = True
+    r = runs(); fcov_policy_failures(r, tl, covergroups_exist=False)
+    cond = [x["verdict"] for x in r] == [C.VERDICT_PASS] * 3
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "no covergroup yet: null manifests pass")
+    r = runs(); fcov_policy_failures(r, tl, covergroups_exist=True)
+    cond = r[0]["verdict"] == C.VERDICT_FAIL and "covergroups exist" in r[0]["reason"] and r[1]["verdict"] == C.VERDICT_PASS
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "covergroups exist: smoke null manifest FAILs, tier check exempt")
+    tl2 = dict(tl, fcov_manifest_required_tiers=["smoke"])
+    r = runs(); fcov_policy_failures(r, tl2, covergroups_exist=False)
+    cond = r[0]["verdict"] == C.VERDICT_FAIL and "fcov_manifest_required_tiers" in r[0]["reason"]
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "header policy: named tier FAILs without a manifest")
+    fs = fcov_summary(runs())
+    cond = fs["totals"] == {"checked": 1, "pass": 0, "unmet": 1, "unverifiable": 0} and \
+        fs["per_test"]["gen_c"]["unmet_bins"] == ["gen_x_cg.cp.b"] and fs["per_test"]["gen_a"]["checked"] == 0
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"fcov_summary totals/per_test: {fs['totals']}")
+    sm = summarize(runs())
+    cond = sm["runs_without_fcov_manifest"] == 2 and sm["tests_without_fcov_manifest"] == ["gen_a", "gen_b"]
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "summarize counts runs without a manifest")
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 def main() -> int:
+    if "--self-test" in sys.argv:
+        return self_test()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sel = ap.add_mutually_exclusive_group()
     sel.add_argument("--tier", choices=C.ALL_TIERS)
@@ -335,7 +379,7 @@ def main() -> int:
         for f in cf.as_completed(futs):
             runs.append(f.result())
             manifest["runs"] = sorted(runs, key=lambda r: (r["test"], r["seed"]))
-            manifest["summary"] = summarize(runs, testlist)
+            manifest["summary"] = summarize(runs)
             U.dump_yaml(manifest, outdir / "manifest.yaml")
     runs.sort(key=lambda r: (r["test"], r["seed"]))
 
@@ -383,7 +427,7 @@ def main() -> int:
             U.log(f"URG dashboard: {cov['dashboard_txt']} totals={cov['totals']}")
         if cov.get("exclusion_violations"):
             U.log(f"EXCLUSION VIOLATION (strict): {cov['exclusion_violations'][:3]} -> merge FAILED")
-    manifest.update(runs=runs, summary=summarize(runs, testlist), lsf_cost=lsf_cost(builds, runs),
+    manifest.update(runs=runs, summary=summarize(runs), lsf_cost=lsf_cost(builds, runs),
                     finished_utc=U.now_utc(), wall_s=round(time.time() - start, 1), status="done",
                     lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])
     U.dump_yaml(manifest, outdir / "manifest.yaml")

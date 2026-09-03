@@ -26,24 +26,30 @@ def marker_matches(line: str, marker: str) -> bool:
     return re.search(r"(^|\s)" + re.escape(marker) + r"\s*$", line) is not None
 
 
-def scan_log(lines: list[str], pass_marker: str | None, build_config: str | None = None) -> dict[str, Any]:
+def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
+             banner_lines: list[str] | None = None) -> dict[str, Any]:
     """Return {verdict, reason, evidence, uvm_counts, cocotb_summary, finish_seen, marker_seen,
     banner_seen, banner}. PASS requires: no collected failure mechanism, the end marker, and the
-    time-zero config banner naming the expected build configuration (P-09)."""
+    time-zero config banner naming the expected build configuration (P-09; never skippable). The
+    banner is collected from `banner_lines` (sim.log only) when given, else from `lines`."""
+    if not build_config:
+        raise ValueError("scan_log: build_config is required (the banner rule is not skippable)")
     uvm_counts: dict[str, int] = {}
     cocotb: dict[str, int] | None = None
     finish_seen = False
     marker_seen = False
-    banner_seen = build_config is None
+    banner_seen = False
     banner: list[str] = []
     hits: list[tuple[str, int, str]] = []
-    banner_line = f"{C.BANNER_TAG} build_config={build_config}" if build_config else None
-    for idx, raw in enumerate(lines, start=1):
+    banner_line = f"{C.BANNER_TAG} build_config={build_config}"
+    for raw in (banner_lines if banner_lines is not None else lines):
         line = raw.rstrip("\n")
         if line.startswith(C.BANNER_TAG):
             banner.append(line)
-            if banner_line and line.strip() == banner_line:
+            if line.strip() == banner_line:
                 banner_seen = True
+    for idx, raw in enumerate(lines, start=1):
+        line = raw.rstrip("\n")
         m = C.UVM_SUMMARY_RE.match(line)
         if m:
             uvm_counts[m.group(1)] = int(m.group(2))
@@ -95,14 +101,14 @@ def crash_signature(paths: list[Path]) -> str | None:
 
 
 def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc: int | None,
-                 build_config: str | None, stderr_lines: list[str], sim_log_present: bool = True,
-                 expected_fail: bool = False) -> dict[str, Any]:
+                 build_config: str, stderr_lines: list[str], sim_log_present: bool = True,
+                 expected_fail: bool = False, banner_lines: list[str] | None = None) -> dict[str, Any]:
     """The verdict rules on in-memory text (the self-test drives this with real log excerpts)."""
     if not sim_log_present and not timed_out:
         return {"verdict": C.VERDICT_FAIL, "reason": "sim.log missing", "evidence": "",
                 "uvm_counts": {}, "cocotb_summary": None, "finish_seen": False, "marker_seen": False,
                 "banner_seen": False, "banner": [], "failure_hits": 0, "exit_code": rc, "crash_signature": None}
-    res = scan_log(lines, pass_marker, build_config)
+    res = scan_log(lines, pass_marker, build_config, banner_lines)
     res["exit_code"] = rc
     crash = next((l.strip()[:200] for l in stderr_lines if C.CRASH_RE.search(l)), None)
     res["crash_signature"] = crash
@@ -124,11 +130,13 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
 
 
 def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fail: bool = False,
-           rc: int | None = None, extra_logs: list[Path] | None = None, build_config: str | None = None,
+           rc: int | None = None, extra_logs: list[Path] | None = None, build_config: str = C.BUILD_CONFIG,
            stderr_logs: list[Path] | None = None) -> dict[str, Any]:
-    """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l); crash
-    signatures from lsf.err/run.log; PASS needs marker AND ($finish seen OR exit code 0) (P-02)."""
-    lines = sim_log.read_text(encoding="utf-8", errors="replace").splitlines() if sim_log.is_file() else []
+    """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l); the
+    config banner is taken from sim.log alone; crash signatures from lsf.err/run.log; PASS needs
+    marker AND ($finish seen OR exit code 0) (P-02)."""
+    sim_lines = sim_log.read_text(encoding="utf-8", errors="replace").splitlines() if sim_log.is_file() else []
+    lines = list(sim_lines)
     for extra in extra_logs or []:
         if extra.is_file():
             lines += extra.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -136,7 +144,8 @@ def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fai
     for p in stderr_logs or []:
         if p.is_file():
             stderr_lines += p.read_text(encoding="utf-8", errors="replace").splitlines()
-    return decide_lines(lines, pass_marker, timed_out, rc, build_config, stderr_lines, sim_log.is_file(), expected_fail)
+    return decide_lines(lines, pass_marker, timed_out, rc, build_config, stderr_lines, sim_log.is_file(),
+                        expected_fail, banner_lines=sim_lines)
 
 
 BANNER = "GEN_CONFIG_BANNER build_config=opentitan"
@@ -221,6 +230,17 @@ def self_test() -> int:
         got = decide(d / "sim.log", "GEN_SMOKE_PASS", True, False, 124, build_config="opentitan")["verdict"]
         ok &= got == C.VERDICT_TIMEOUT
         print(f"SELF-TEST {'ok ' if got == C.VERDICT_TIMEOUT else 'BAD'} decide(): no sim.log + timed_out: want TIMEOUT got {got}")
+    got = decide_lines(REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, banner_lines=REAL_GREEN)
+    cond = got["verdict"] == C.VERDICT_FAIL and "banner" in got["reason"]
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} banner in the stdout capture only does not count (sim.log has none): {got['verdict']}")
+    try:
+        scan_log(B + REAL_GREEN, "GEN_SMOKE_PASS", "")
+        cond = False
+    except ValueError:
+        cond = True
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} banner rule not skippable (empty build_config raises)")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

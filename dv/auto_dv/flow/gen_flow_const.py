@@ -193,7 +193,9 @@ BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "co
 TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs")
 # Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).
 SIMULATOR_PLUSARGS = ("ntb_random_seed", "UVM_TESTNAME", "UVM_VERBOSITY", "UVM_NO_RELNOTES", "UVM_TIMEOUT",
-                      "UVM_MAX_QUIT_COUNT", "vcs+lic+wait", "vcs+finish", "vcs+stop")
+                      "UVM_MAX_QUIT_COUNT")
+# VCS runtime plusargs carry their value inside the name (+vcs+finish+<time>, +vcs+lic+wait): prefix match.
+VCS_PLUSARG_PREFIX = "vcs+"
 OWNER_ROLES = ("orchestrator", "dv-lead", "rtl-arch", "tb-infra", "test-writer", "runtime",
                "critic")
 

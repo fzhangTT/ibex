@@ -37,6 +37,23 @@ intervention log. Mitigation in the flow: `gen_fcov.run_checker` sets `TMPDIR` t
 so every per-test report is retained beside its run (`<run dir>/fcovexp_*/urgReport/`) and never
 shares `/tmp` with other workspaces.
 
-## 4. LSF accounting
+## 4. Addendum: retained P6 refusal run and self-tests (T-038 review minors)
 
-Jobs 10931237 (t045_fcov_wiring, first pass) and 10931279 (t045_fcov_wiring2, the cited pass). `bjobs -w` after the runs: no unfinished job.
+- `regress_t045_p6_refusal` (06:42 UTC): a temporary testlist declares `debug_only_plusargs:
+  [gen_smoke_intg_flip]` and a measured smoke-tier twin of gen_smoke with `+gen_smoke_intg_flip=5`.
+  `gen_run.py` refused the run before any LSF submission: `result.yaml` `verdict: NOT_RUN`, reason
+  `debug-only plusarg(s) ['gen_smoke_intg_flip'] enabled in a measured coverage run (P6); run it
+  unmeasured (measured: false or --measured no)`, `lsf: null`; the regression records 1 not_run and
+  exits 3 (`coverage merge status 'no_vdb'`). Out-tree
+  `<out root>/regress_t045_p6_refusal/runs/gen_p6_probe_323273637/result.yaml`.
+- `python3 gen_regress.py --self-test`: fcov_policy_failures (no covergroup: null manifests pass;
+  covergroups exist: smoke null manifest FAILs, tier check exempt; header tier FAILs), fcov_summary
+  totals and per-test, summarize counts. `python3 gen_flow_util.py --self-test`: plusarg_enabled
+  (`+k`, `+k=1` enabled; `+k=0`, `+k=` not), vcs+ names keep their inner `+`.
+- `regress_t045_check3` (06:42 UTC, after the banner-from-sim.log and mandatory-banner edits):
+  gen_smoke (LSF 10931376) and gen_cocotb_probe (10931375) PASS with `banner_seen: true`,
+  `out_root_fs: wekafs`.
+
+## 5. LSF accounting
+
+Jobs 10931237 (t045_fcov_wiring, first pass), 10931279 (t045_fcov_wiring2, the cited pass), 10931375 and 10931376 (t045_check3); the P6 refusal submitted none. `bjobs -w` after the runs: no unfinished job.
