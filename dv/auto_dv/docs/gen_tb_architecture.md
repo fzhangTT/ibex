@@ -7,9 +7,9 @@
 | Build configuration | `opentitan` (`util/ibex_config.py opentitan vcs_opts`; every report states it) |
 | DUT | `gen_dut_top` = `ibex_core` + `ibex_register_file_ff` per the DV_prompt Section 2 ruling and Q-002 (revised); instances `u_ibex_core`, `u_register_file`; `cheriot_enable_i` tied `IbexMuBiOff`, register-file `test_en_i` tied 0; bus data ports literal 39 bits (integrity in [38:32]); `+define+RVFI` |
 | Document owner | DV Lead (adopts, edits, rules, signs off) |
-| Component sections owner | TB Infra (Section 6, `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` v2) |
-| Status | adopted by DV Lead 2026-09-03 07:04 UTC (T-006e / T-011); TB Infra draft T-048 taken as-is, Section 5 rulings filled and Section 8 DV Lead notes added by the DV Lead. Section 6 has passed the Critic's v1 review with changes applied and the cross-model pre-execution review (APPROVE-WITH-CHANGES, changes applied); its v2 re-review is in progress. Document as a whole: pending Critic T-007 part 2 and the cross-model delta review |
-| Governing documents | `DV_prompt.txt`, `docs/dv/FENCE.md` (wins), `docs/dv/SIM_RECIPE.md`, `docs/dv/TB_CONTRACT.md`, `docs/dv/dv_principles.md` |
+| Component sections owner | TB Infra (Section 6, `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 3, sha256 prefix b9a3cc16eccec313) |
+| Status | adopted by DV Lead 2026-09-03 08:04 UTC (v1a). Component sections: TB Infra version 3 embedded verbatim (sha256 prefix b9a3cc16eccec313 of dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md; the Critic's v2 APPROVE dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md holds with its conditions: the five T-051-corrected checker rows are coded only after the fold, residuals N-01..N-05 tracked, no re-review of the v3 fold required). Document as a whole: Critic part 2 APPROVE with lows (dv/auto_dv/docs/gen_critic_tb_architecture_v1.md, folded here); cross-model delta review REQUEST-CHANGES (dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_architecture.md) addressed in this v1a, per-finding response dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md; scoped re-review pending |
+| Governing documents | `DV_prompt.txt`, `docs/dv/FENCE.md` (wins), `docs/dv/SIM_RECIPE.md`, `docs/dv/TB_CONTRACT.md`, `docs/dv/dv_principles.md`; flow contract for testlist entries, expected_fail, tiers, fcov manifests and run requests: `dv/auto_dv/docs/gen_runtime_api.md` |
 | Inputs | `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (Phase 0 step 3, superseded passages marked inline), `dv/auto_dv/work/rtl-arch/gen_answers_tb_infra.md`, `dv/auto_dv/docs/gen_probe_register.md` v2, `dv/auto_dv/docs/gen_intervention_log.md`, `dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_sections.md` |
 
 Conventions: every generated file carries the `gen_` prefix and lives under `dv/auto_dv/`; DV never
@@ -50,9 +50,9 @@ Synchronous RAM models as test equipment (`ICache=1`, `ICacheECC=1`, `ICacheScra
 in the request cycle, read data the next cycle, ECC bits stored as written; ECC error injection
 by flipping stored bits (`ICACHE_ECC_ARM`); initial contents random by default. Section C3.4.
 
-**Scramble-key responder (`ic_scr_key_req_o` -> `ic_scr_key_valid_i`, `scramble_key_i`,
-`scramble_nonce_i`).** `ic_scr_key_req_o` is a one-cycle pulse; the responder answers after a
-randomized latency with a fresh key and nonce and drops `valid` per the request-response rule;
+**Scramble-key responder (`ic_scr_key_req_o` -> `ic_scr_key_valid_i`).** `ic_scr_key_req_o` is a
+one-cycle pulse; the responder answers after a randomized latency by raising `valid` and drops it per
+the request-response rule (key and nonce material lives in ibex_top's RAM scrambling, outside this DUT);
 key modes (fixed, random, delayed) are a regime. Section C3.5.
 
 **Interrupts (`irq_software_i`, `irq_timer_i`, `irq_external_i`, `irq_fast_i[14:0]`, `irq_nm_i`).**
@@ -67,7 +67,7 @@ lands in the image-linked debug ROM at `DmHaltAddr` 0x1A110800 (exception entry 
 
 **Static and slow controls.** `fetch_enable_i` (MuBi, FETCH_EN command, Q-009 default: RTL behaviour
 as-is), `boot_addr_i` (must match the image entry page, checked at time 0), `hart_id_i`,
-`ram_cfg_i`, `cheriot_enable_i` (tied Off), `test_en_i` (tied 0), `rst_ni` (reset sequence from
+`cheriot_enable_i` (tied Off), `test_en_i` (tied 0), `rst_ni` (reset sequence from
 the TB top, ResetAll = 1). Sections C1 and C9.
 
 **Observed outputs.** `alert_minor_o`, `alert_major_internal_o`, `alert_major_bus_o`, `crash_dump_o`,
@@ -128,7 +128,7 @@ and entry latency (`irq_pending`, `irq_entry`), alerts and their timing (`alert_
 source, `alert_internal`, `alert_minor`, `icache_ecc`), bus protocol and outstanding rules
 (`ibus_proto`, `ibus_outstanding`, `dbus_*`), PMP effects on the bus (`pmp_data`, `pmp_fetch`),
 counters (`ctr_mcycle` windowed, `ctr_minstret` exact or bound, `ctr_hpm_*`), `crash_dump`,
-`core_busy` (including the WAIT_SLEEP one-cycle dip), `double_fault_seen`, the internal NMI
+`core_busy` (port rule: in WAIT_SLEEP `core_busy_o` is Off only when no instruction-bus beat is outstanding, no icache invalidation is active and the LSU is idle; the `ctrl_busy` dip is otherwise hidden by `if_busy`/`lsu_busy`), `double_fault_seen`, the internal NMI
 (`nmi_internal`), the scramble-key handshake (`scrkey_*`), debug entry and ROM behaviour
 (`dbg_*`), and the CSR observability plan (Section C6). Dummy instructions never reach RVFI and
 leave residue only in the counters.
@@ -164,8 +164,8 @@ with dummies on).
   `-LDFLAGS`; C++20 headers from `tools/spike/include` only).
 - **The bridge** (Section C2) is a small register block in the TB top: Python writes a command
   (`cmd_kind`, `cmd_arg[3:0]`, `cmd_seq`) and toggles `cmd_valid`; SV acks by an edge the next
-  cycle; events (`evt_thresh_hit`, `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen`) are single-bit
-  toggles Python awaits by edge; thresholds are written (`evt_retired_target`, `evt_cycle_target`)
+  cycle; events (`evt_retired_hit`, `evt_cycle_hit`, `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen`) are
+  single-bit toggles Python awaits by edge (one toggle per threshold, Critic N-02); thresholds are written (`evt_retired_target`, `evt_cycle_target`)
   and the counts are read once at finish. **No per-cycle Python polling exists anywhere in the TB**
   (Critic A-01); MEM_PEEK is the only data-return command (image read-back).
 
@@ -190,71 +190,105 @@ CRC-32, seed, memory map, ROM size), and sanity-runs the ELF on standalone Spike
 
 1. **Layer 1, SV per transaction**: latencies, error and integrity decisions, key delays, drawn from
    the active regime's distributions by each agent's driver (constraints in `gen_<agent>_item`).
-2. **Layer 2, Python per test**: the regime per agent (`+gen_<agent>_regime=<name>`, pinnable with
-   `+gen_regime_pin`), the program and its knobs, the interrupt and debug scenario.
+2. **Layer 2, Python per test**: the regime knobs (`+gen_knob_<name>=<value>`; the 20 regime knobs and
+   their value sets are defined once in `dv/auto_dv/tb/gen_tb_knobs.yaml` and rendered by
+   `gen_knobs_codegen.py` into `gen_tb_pkg.sv`, `gen_knobs.py` and the shim header; supplying a knob on
+   the command line pins it for the run and the banner counts pinned knobs; absent knobs are drawn by
+   Python from the run seed), the program and its knobs, the interrupt and debug scenario.
 3. **Layer 3, Python schedule**: regime changes at retirement or cycle thresholds
-   (`+gen_regime_sched=<agent>:<regime>@r<N>|c<N>,...`), derived from the seed and echoed in the
+   (`+gen_regime_sched=<knob>:<value>@r<N>|c<N>,...`), derived from the run seed and echoed in the
    banner, or consumed as input when supplied on the command line so a specific schedule is
-   reproducible; each trigger is one written threshold and one awaited `evt_thresh_hit` edge.
+   reproducible (there is no separate schedule seed: one run seed, DV_prompt Section 6); each
+   trigger is one written threshold (`evt_retired_target` / `evt_cycle_target`) and one awaited
+   per-threshold edge (`evt_retired_hit` / `evt_cycle_hit`). Every applied phase is published as a
+   phase-log record {phase_idx, knob, applied_value, start_cycle, start_rvfi_order, pinned} for the
+   REG covergroups; program-side knobs publish theirs through the phase-marker MMIO register.
 
 One seed drives everything: `+ntb_random_seed` (SV), `RANDOM_SEED` (Python) and the program seed
-are the same value, recorded in the log and in the image sidecar (`seed_used`), so every failure
-reproduces from test name plus seed (SIM_RECIPE Section 5). Section C9.
+are the same value, recorded in the log and in the image sidecar (`seed`; for riscv-dv-generated programs
+also `seed_used`, cross-checked against riscv-dv's seed.yaml), so every failure reproduces from test
+name plus seed (SIM_RECIPE Section 5). Section C9.
 
 ## 5. Coverage architecture
 
-- **Code coverage scope (`-cm_hier`)**: the tree under `gen_tb_top.<dut instance>` so TB and test
-  equipment stay out of the numbers. DV Lead ruling P-04/A-21 (run scope, 2026-09-03 07:04 UTC): the measured code-coverage scope is the
-  two instances inside the wrapper, `gen_tb_top.u_dut.u_ibex_core` and `gen_tb_top.u_dut.u_register_file`
-  (two `+tree` lines in `gen_cm_hier.cfg`). Reason: `gen_dut_top` is DV-authored pure wiring whose every
-  coverage object duplicates an `ibex_core` port (312 of 2420 wrapper toggle objects, about 9 percent of
-  the toggle denominator); counting them would either inflate the denominator with duplicates or force
-  about 312 exclusions of ports that carry control (req, gnt, irq, debug_req) and therefore cannot be
-  justified as data-path exclusions under DV_prompt Section 4. The DV_prompt Section 2 ruling fixes the
-  wrapper as the DUT boundary for stimulus and checking, which is unchanged; the RTL under test is
-  exactly `ibex_core` plus `ibex_register_file_ff`, so the two-instance scope measures the whole DUT
-  logic and nothing else. The wrapper's own objects are reported informationally (a third `+tree` in a
-  separate, non-gated report) so a wiring defect stays visible. Runtime applies this as the single
-  `cov_trees` source; the coverage plan (gen_fcov_plan.md Section 0) references this ruling. Both candidate scopes differ only by wrapper wiring (C7).
-- **Glitch and metric flags (`-cm_glitch`, condition coverage)**: DV Lead ruling LOG-007/008 (2026-09-03 07:04 UTC): every
-  measured build uses `-cm_glitch 0`. Reason: the same-seed control (rtl-arch-002) showed the
-  numerator drop of the trial (LINE 55.09 to 38.93, COND 37.41 to 26.63, BRANCH 41.03 to 33.00 on the
-  NOP smoke) is the glitch filter removing zero-time hits, not a seed effect; hits recorded only through
-  zero-time glitch events are not exercised logic (DV_prompt Section 10 honesty), and the flag removes
-  every coverage-status-mismatch warning from the URG merge. Consequences: Runtime makes it the default
-  in `gen_flow_const.py`; the round-0 baseline is re-measured under the flag so round-over-round gains
-  compare like with like; every URG report header states `-cm_glitch 0`; FSM coverage is not
-  glitch-filtered (VCS warning VCM-OPTIGN) and is recorded as such in the closure report. Condition
-  coverage (`cond`) is a gated metric and is included in the measured `-cm` set (Runtime T-010 proved
-  it). Compile and run flags otherwise per SIM_RECIPE Section 3 (`line+tgl+assert+fsm+branch`,
-  `-cm_name test_<test>_<seed>` per run).
+- **Code-coverage scope (DV Lead ruling P-04/A-21, intervention log Q-014, default applied while the
+  owner question is pending).** The gated scope is the two instances inside the wrapper,
+  `u_dut.u_ibex_core` and `u_dut.u_register_file`; the wrapper `gen_dut_top` itself is instrumented and
+  reported informationally, never gated. Mechanism (implemented and committed by Runtime, T-057/T-062;
+  rule text in `dv/auto_dv/docs/gen_runtime_api.md` Sections 3 and 7d): every build entry in
+  `dv/auto_dv/flow/gen_testlist.yaml` carries `cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]`
+  (gated, disjoint, non-nested; the loader refuses nested or gated-and-informational trees) and
+  `info_trees: [u_dut]`; `gen_build.py` renders `gen_cm_hier.cfg` from them; the merge reads URG's
+  per-scope rows (`-show ratios`, covered/total per metric) and forms `coverage.gate_row` by summing
+  covered and total objects over the gated rows per metric, percent = 100 x covered / total; a metric no
+  gated row reports stays `n/a` and is excluded from the gate; the wrapper row is reported beside the
+  gate row in every manifest, dashboard header and round summary. Admissibility under DV_prompt Section
+  4: the per-scope numbers are URG's own; because the two trees are disjoint and together contain every
+  object of the RTL under test, their object sums equal the totals URG would report for a build that
+  instruments exactly those two trees, so the gate row is the DUT-scope total and nothing else counts.
+  Reason for the ruling: `gen_dut_top` is DV-authored pure wiring whose every coverage object duplicates an
+  `ibex_core` port (312 of 2420 wrapper toggle objects, about 9 percent of the toggle denominator, the
+  only difference between the rows: TOGGLE 6.85 gated versus 7.40 wrapper in the re-baselined round 0);
+  those ports carry control (req, gnt, irq, debug_req) and could not be justified as data-path
+  exclusions, so measuring the wrapper would either inflate the denominator with duplicates or force
+  unjustifiable exclusions. The DV_prompt Section 2 ruling (the wrapper is the DUT boundary for stimulus
+  and checking) is unchanged; the RTL under test is exactly `ibex_core` plus `ibex_register_file_ff`.
+  The coverage plan (gen_fcov_plan.md Section 0) cites this ruling for the code-coverage gate.
+- **Glitch filter (DV Lead ruling, intervention log R-002; LOG-007/LOG-008 evidence).** Every measured
+  build uses `-cm_glitch 0`, carried as `extra_vcs_args: ["-cm_glitch", "0"]` on both build entries of
+  `gen_testlist.yaml` (the testlist is the single source; not a flow constant); manifests record
+  `coverage.glitch_filter[<build>]` and the rulings; every URG report header states the flag. Reason:
+  the same-seed control (rtl-arch-002, LOG-008) showed the trial's numerator drop is the filter removing
+  zero-time glitch hits, which are not exercised logic (DV_prompt Section 10); the filter also removes
+  every coverage-status-mismatch warning from the URG merge. FSM coverage is not glitch-filtered (VCS
+  VCM-OPTIGN) and the closure report records it. Re-baselined round 0 under both rulings
+  (`dv/auto_dv/evidence/gen_round_0_rebaseline/`, unmeasured check tier, NOP smoke): gate row LINE 38.93,
+  COND 26.63, TOGGLE 6.85, FSM 6.98, BRANCH 33.00, ASSERT 80.34, functional n/a; wrapper info row
+  differs only in TOGGLE 7.40; merge.log carries zero UCAPI-CSM warnings. Condition coverage (`cond`) is
+  a gated metric and is included in the measured `-cm` set (Runtime T-010 proved it). Compile and run
+  flags otherwise per SIM_RECIPE Section 3 (`line+tgl+assert+fsm+branch+cond`, `-cm_name
+  test_<test>_<seed>` per run).
 - **Covergroup namespace**: every group is `gen_<feature>_cg` in `gen_fcov_pkg.sv`, class-based and
   sampled by the scoreboard and monitors on named events (`gen_smp_<name>`), never on a free-running
   clock; bound signal-level coverage modules live in `gen_*_cov.sv` via `gen_binds.sv`; bin ranges
   derive from `ibex_pkg` parameters; `gen_regime_cg` covers layer 3; `gen_csr_cg` carries the CSR
-  observability bins (C6, C7). No RTL covergroups exist to collide with.
+  observability bins (C6, C7). The coverage plan's covergroup IDs (`CG-<AREA>-<nnn>`, plan names
+  `gen_cg_<area>_<name>`) map one-to-one onto the implementation names `gen_<name>_cg`; the mapping
+  column lives in gen_fcov_plan.md and the plan's IDs are what manifests and the trace check use. No RTL
+  covergroups exist to collide with.
 - **fcov-expectation duty**: each test declares the bins it intends to hit in
   `dv/auto_dv/fcov_expectations/<test>.fcov.yaml`; `ci/check_fcov_expectations.py --vdb <vdb>
   --cm-name test_<test>_<seed>` fails the run on declared-but-unhit bins; Runtime wires the check
-  into the regression flow (T-045).
-- **Reporting**: URG merge per SIM_RECIPE Section 8; `dashboard.txt` is the number.
+  into the regression flow (T-045). Probe-gated, informational and witness bins are excluded from
+  manifests per gen_fcov_plan.md Section 0.
+- **Reporting**: URG merge per SIM_RECIPE Section 8; the gate row (above) is the number; the
+  dashboard (`dv/auto_dv/docs/gen_dashboard.md`) lists it with the wrapper row as informational.
 
-## 6. Component API sections (TB Infra, v2, included verbatim)
+## 6. Component API sections (TB Infra, version 3, included verbatim)
 
-The text below is `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` (version 2) in
-full; only the heading depth is shifted by one level to nest under this section. Per-finding
-dispositions of the Critic's review and the cross-model review are in
-`dv/auto_dv/work/tb-infra/gen_critic_response_tb_arch_v1.md`.
+The text below is `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 3 in full
+(sha256 prefix b9a3cc16eccec313); only the heading depth is shifted by one level to nest under this
+section (two levels, so its title nests under this heading); a diff with headings flattened shows no other difference. Version 3 folds rtl-arch's
+RTL fact-check (T-051, marks "(v3, T-051-n)"), the Critic's v2 residuals N-01/N-02/N-04 and the
+link-test-2 corrections; the earlier subsection 6.13 (fact-check table) is therefore retired.
+Per-finding dispositions: Critic v1 and cross-model review of the sections in
+`dv/auto_dv/evidence/gen_critic_response_tb_arch.md`; Critic v2 APPROVE with conditions in
+`dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md`. Known leftovers in v3 for TB Infra's next
+revision (DV Lead note 8.3 item 4): three mentions of the retired names `+gen_<agent>_regime`,
+`+gen_regime_pin` and `+gen_regime_seed` in C9; the codegen names in Section 4.2 are authoritative.
 
-### 6.0 Embedded document: TB architecture component sections (tb-infra, T-018), version 2
+### TB architecture: component sections (tb-infra, T-018) - version 3
 
 Version 2, 2026-09-03: revised after the Critic's REQUEST-CHANGES
 (`dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`, A-01..A-25 and the C8 rulings), the
 cross-model pre-execution review (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_
 sections.md`, five mediums and the lows, marked "(v2, XM-n)") and rtl-arch's T-022 inputs
 (`gen_cover_props_draft.sv`, `gen_unreachability_evidence.md` 5.2). The per-finding disposition of
-both reviews is `dv/auto_dv/work/tb-infra/gen_critic_response_tb_arch_v1.md`. Changes against v1
-are marked "(v2)" in the text.
+both reviews is `dv/auto_dv/evidence/gen_critic_response_tb_arch.md`. Changes against v1 are
+marked "(v2)" in the text. Version 3 (2026-09-03, after the Critic's v2 APPROVE, no re-review
+required by the Orchestrator) folds rtl-arch's RTL fact-check `dv/auto_dv/work/rtl-arch/
+gen_arch_v2_rtl_factcheck.md` Section 4 (marks "(v3, T-051-n)") and the Critic's v2 residuals
+N-01, N-02, N-04, plus the second link test (`gen_t046_spike_linktest2.md`, marks "(link test 2)").
 
 For the DV Lead to fold into `dv/auto_dv/docs/gen_tb_architecture.md` (DV Lead owns the document;
 tb-infra owns these sections). Written for the Critic and the cross-model reviewer to judge
@@ -308,7 +342,7 @@ monitors and checkers; C5 ISA-model integration, shim and comparator policy; C6 
 plan; C7 covergroup implementation strategy; C8 probe register candidates; C9 environment
 configuration, knobs and regimes; C10 binds home; C11 constants home and Python handles module.
 
-### C1. DUT wrapper gen_dut_top as built (RR ask 1)
+#### C1. DUT wrapper gen_dut_top as built (RR ask 1)
 
 Compiled, elaborated and smoke-run 2026-09-03 (evidence `dv/auto_dv/evidence/
 gen_t005_compile_log_excerpt.md`; commit accepted; diff review APPROVE).
@@ -345,7 +379,7 @@ ports only): `scan_rst_ni`, `ram_cfg_icache_*`, `scramble_key_i/nonce_i/req_o`, 
 Q4), `ic_scr_key_valid_i` (responder), `debug_req_i`, `irq_*` (drivers). Instance names for
 `-cm_hier`: `u_ibex_core`, `u_register_file`.
 
-### C2. TB top, language split and the cocotb/UVM bridge
+#### C2. TB top, language split and the cocotb/UVM bridge
 
 `gen_tb_top` (SV, the VCS `-top` and cocotb `TOPLEVEL`) declares the 19 config parameters and
 forwards them to `gen_dut_top u_dut`; instantiates the clock/reset generator, the six interface
@@ -375,7 +409,7 @@ Bridge (`gen_bridge_if`, SV interface; `gen_bridge` UVM component; `gen_tb/gen_b
 | `listener_armed` | read | Python awaits it before the first command (TB_CONTRACT Section 5) |
 | `cmds_consumed[15:0]` | read | compared with Python's sent count before finish |
 | `evt_retired_target[31:0]`, `evt_cycle_target[31:0]` | write | (v2, A-01) thresholds: Python writes a retirement count or a cycle count it wants to be woken at |
-| `evt_thresh_hit` | read (edge-awaited) | (v2, A-01) single-bit toggle raised by SV when `retired_count >= evt_retired_target` or `cycle >= evt_cycle_target`; Python awaits this ONE edge per threshold, never a counter |
+| `evt_retired_hit`, `evt_cycle_hit` | read (edge-awaited) | (v2, A-01; v3, N-02) one single-bit toggle PER threshold: SV toggles `evt_retired_hit` when `retired_count >= evt_retired_target` and `evt_cycle_hit` when `cycle >= evt_cycle_target`, so two armed thresholds cannot share one edge; Python awaits exactly one edge per armed threshold, never a counter |
 | `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` | read (edge-awaited) | single-bit toggles raised by monitors on the named event |
 | `evt_retired_count[31:0]`, `evt_err_count[15:0]` | read at finish only | values Python reads once for its end-of-test report; never awaited or polled |
 | `finish_req`, `finish_ack` | write / read | end-of-test handshake with a caller-sized timeout |
@@ -385,13 +419,13 @@ captures `cmd_kind/arg/seq` in that delta and hands a `gen_cmd_item` to the addr
 through `uvm_config_db` handles; `cmd_ack` toggles in the next cycle. Two commands need two edges;
 Python waits for the ack of one before raising the next. No signal in the bridge is a DUT signal.
 (v2, A-01) Per-cycle Python polling exists nowhere in the TB: every wait on the Python side is a
-cocotb edge trigger on a single-bit SV event (`cmd_ack`, `evt_thresh_hit`, `evt_irq_taken`,
+cocotb edge trigger on a single-bit SV event (`cmd_ack`, `evt_retired_hit`, `evt_cycle_hit`, `evt_irq_taken`,
 `evt_dbg_entered`, `evt_eot_seen`, `finish_ack`, `listener_armed`), and the SV side evaluates the
 thresholds. No polling waiver is requested.
 
-### C3. Interface agents and test-equipment models
+#### C3. Interface agents and test-equipment models
 
-#### C3.1 gen_ibus_agent (instruction memory agent)
+##### C3.1 gen_ibus_agent (instruction memory agent)
 
 Purpose: the only driver of `instr_gnt_i`, `instr_rvalid_i`, `instr_rdata_i[38:0]`,
 `instr_err_i`; a reactive slave serving the shared memory model. API: UVM agent
@@ -408,8 +442,8 @@ Config object `gen_ibus_cfg` (also settable by REGIME_SET through the bridge).
 | `+gen_ibus_err_rate` | per-transaction probability (per mille) of `instr_err_i` | 0 |
 | `+gen_ibus_err_window=lo:hi` | address window where errors apply (any if unset) | unset |
 | `+gen_ibus_intg_err_rate`, `+gen_ibus_intg_bits=1|2` | integrity corruption probability and flip count | 0 / 1 |
-| `+gen_ibus_regime` | named distribution set: fast, slow, bursty, stall, err_heavy, intg_err | fast |
-| `+gen_chk_ibus_proto`, `+gen_chk_ibus_outstanding`, `+gen_chk_bus_rvalid_legal` | checker enables | 1 |
+| `+gen_knob_imem_gnt_delay`, `+gen_knob_imem_rvalid_delay`, `+gen_knob_imem_err_rate`, `+gen_knob_imem_intg_err_rate`, `+gen_knob_imem_outstanding_cap` | (v3, DV Lead alignment) the layer-2 regime knobs of gen_fcov_plan.md Section REG with their value sets (same_cycle/short/long/random; min1/short/long/random; none/rare/frequent; none/rare/frequent; cap1/cap2/cap4/cap8); each value maps to the numeric windows above unless a numeric knob overrides it; the agent publishes a phase-log record per applied value for CG-REG-001. Replaces `+gen_ibus_regime` | short / short / none / none / cap8 |
+| `+gen_chk_ibus_proto`, `+gen_chk_ibus_outstanding`, `+gen_chk_sva_rvalid_legal` | checker enables (v3: one id and one knob for the rvalid self-check everywhere) | 1 |
 
 Wave-level behaviour: `gnt` is combinational from `req` when the chosen delay is 0 (legal, LSU doc
 89) or a flop-driven pulse otherwise; the driver never asserts `gnt` without `req` (BS MEM-17).
@@ -431,9 +465,9 @@ will execute.
 | `ibus_proto` | `req & ~gnt` => `req` and `addr` unchanged next cycle; `addr[1:0] == 0`; no `req` X | icache request hold / arbitration (`rtl/ibex_icache.sv:756-775, 842`), address mux (`:1030-1037`) | `+gen_chk_ibus_proto` |
 | (agent-internal) `ibus_order` | (v2, XM-L3) responses consumed in grant order: an agent-internal `assert` inside gen_ibus_driver, not a checker row; no `+gen_chk_` knob and no trust-triad entry | TB self-check | none |
 | `ibus_outstanding` | granted-unanswered `<= GEN_IBUS_MAX_OUTSTANDING`, and `core_busy_o != Off` while > 0 (exact) | fill-buffer counters (`rtl/ibex_icache.sv:759-784`), `busy_o` (`:1304`) | `+gen_chk_ibus_outstanding` |
-| `sva_rvalid_legal` | (v2) TB stimulus legality: `instr_rvalid_i`/`data_rvalid_i` only while a grant is outstanding and never in the grant cycle | TB self-check (not a DUT checker) | `+gen_chk_bus_rvalid_legal` |
+| `sva_rvalid_legal` | (v2) TB stimulus legality: `instr_rvalid_i`/`data_rvalid_i` only while a grant is outstanding and never in the grant cycle | TB self-check (not a DUT checker) | `+gen_chk_sva_rvalid_legal` |
 
-#### C3.2 gen_dbus_agent (data memory agent)
+##### C3.2 gen_dbus_agent (data memory agent)
 
 Purpose: driver of `data_gnt_i`, `data_rvalid_i`, `data_rdata_i[38:0]`, `data_err_i`; consumer of
 `data_req_o/we/be/addr/wdata[38:0]/tag_o`; performs stores into the memory model (enabled lanes
@@ -445,7 +479,7 @@ with prefix `gen_dbus_`, plus:
 | `+gen_dbus_max_outstanding` | hard cap `GEN_DBUS_MAX_OUTSTANDING` (v2, A-04: `gen_tb_pkg` constant = 2, the two halves of one split access per the LSU split rule rtl/ibex_load_store_unit.sv:403-405 and rtl/ibex_top.sv:229-233; cited there) | GEN_DBUS_MAX_OUTSTANDING |
 | `+gen_dbus_err_half=first|second|both|any` | for split accesses, which half an injected error hits | any |
 | `+gen_dbus_err_store_perform=0|1` | whether an errored store still updates the memory model (default: yes, the memory received it; the DUT ignores nothing on stores) | 1 |
-| `+gen_dbus_regime` | fast, slow, bursty, stall, err_heavy, intg_err, mis_err_first, mis_err_second | fast |
+| `+gen_knob_dmem_gnt_delay`, `+gen_knob_dmem_rvalid_delay`, `+gen_knob_dmem_err_rate`, `+gen_knob_dmem_intg_err_rate` | (v3, DV Lead alignment) the layer-2 regime knobs of Section REG (CG-REG-002), value sets as the instruction agent; the split-half error placement stays `+gen_dbus_err_half`. Replaces `+gen_dbus_regime` | short / short / none / none |
 
 Wave-level behaviour: as C3.1; response registers only, because the LSU may issue the next request
 in the response cycle (AN s5). For an errored response `rdata` is still integrity-valid unless an
@@ -462,7 +496,7 @@ arms one.
 | `dbus_split` | split predicate `(word & off!=0) | (half & off==3)`; second address = first word + 4; be/lane table of BS MEM-08; second half issued after a first-half error (BS MEM-10) | split logic (`:403-405`), be generation (`:138-191`), wdata rotation (`:199-208`), WAIT_RVALID_MIS path (`:503-531`) | `+gen_chk_dbus_split` |
 | `dbus_store_intg` | STORES only (`req & gnt & we`): `wdata[38:32]` decodes with zero syndrome over the full 32-bit rotated word including disabled lanes (BS MEM-08/15); on LOADS `wdata` is architecturally don't-care (F-DMEM-035) and is never an error: the checker is X-tolerant there and only records whether the RTL-defined always-valid encoding (BS MEM-15) held, as a coverage observation `gen_dbus_cg.cp_load_wdata_intg_valid` | encoder wiring (`rtl/ibex_load_store_unit.sv:731-735`) | `+gen_chk_dbus_store_intg` |
 
-#### C3.3 gen_mem_model (shared memory, MMIO windows, image load)
+##### C3.3 gen_mem_model (shared memory, MMIO windows, image load)
 
 Purpose: one sparse word-addressed memory behind both agents, test-equipment only. API: SV class
 `gen_mem_model` with `load_vmem(path)`, `read32/write_masked(addr, data, be)`, `checksum()`,
@@ -495,7 +529,7 @@ Failure path: `uvm_fatal` on image/checksum mismatch or a write to an unmapped M
 `+gen_mem_unmapped_ok=1` (then the agent returns an error response, which is how bus-error
 stimulus by address works).
 
-#### C3.4 gen_icache_ram_model (tag and data RAM models) and ECC injection
+##### C3.4 gen_icache_ram_model (tag and data RAM models) and ECC injection
 
 Purpose: transparent synchronous single-port RAMs for the core's `ic_tag_*` / `ic_data_*` ports,
 one instance per way, with fault injection and RAM-side checks. API: SV module `gen_icache_ram`
@@ -517,15 +551,16 @@ handling, `rtl/ibex_icache.sv:585-644`).
 | Checker id | Rule | Mutation classes (locus) | Knob |
 |---|---|---|---|
 | `icram_write_ecc` | every written tag/data word, un-tweaked with the model's copy of the address-derived tweak (AN s9), decodes with zero syndrome | tag/data encoders and tweak application (`rtl/ibex_icache.sv:290-310, 321-454`) | `+gen_chk_icram_write_ecc` |
-| `icram_inval_sweep` | after reset release and after every retired fence.i (RVFI), all 256 tag indices of every way are written invalid before any allocation write | invalidation FSM (`:1204-1268`) | `+gen_chk_icram_inval_sweep` |
+| `icram_inval_sweep` | after reset release and after every retired fence.i (RVFI), all 256 tag indices of every way are written invalid before any allocation write. (v3, T-051-8) Anchor: with `+gen_key_reset_valid=0` the sweep starts only after the responder raises `ic_scr_key_valid_i`, so the post-reset sweep is anchored at the key-valid edge, not at reset release | invalidation FSM (`:1204-1268`) | `+gen_chk_icram_inval_sweep` |
 | `icram_ecc_response` | an injected error at (way, index) is followed within `GEN_ICACHE_ECC_WINDOW` cycles by exactly one `alert_minor_o` pulse and an invalidation write to that index; a miss fill follows | ECC check and correction-write path (`:538-644`), `alert_minor_o` (`rtl/ibex_core.sv:1337`) | `+gen_chk_icram_ecc_response` |
 
-#### C3.5 gen_scrkey_responder (scramble-key handshake)
+##### C3.5 gen_scrkey_responder (scramble-key handshake)
 
 Purpose: answers `ic_scr_key_req_o` pulses on `ic_scr_key_valid_i`. API: UVM driver on
 `gen_scrkey_if` with sequence items {delay_cycles, reset_valid}; bridge command KEY_MODE.
 Knobs: `+gen_key_reset_valid=0|1` (default 1, ibex_top behaviour), `+gen_key_delay_min/max`
-(default 1/20), `+gen_key_regime=immediate|short|long|never_window`, `+gen_key_never_cycles`.
+(default 1/20), `+gen_knob_scr_key_delay=immediate|delayed|withheld_then_valid` (v3, DV Lead
+alignment; replaces `+gen_key_regime`), `+gen_key_never_cycles` (the withheld duration).
 Wave-level: on the one-cycle `req` pulse (II s5), drop `valid` the next cycle, hold low for the
 drawn delay, raise and hold until the next pulse; with `reset_valid = 0` the core requests out of
 reset. During `AWAIT_SCRAMBLE_KEY` fence.i produces no new pulse (AN s9), so the responder never
@@ -535,13 +570,15 @@ sees back-to-back pulses.
 |---|---|---|---|
 | `scrkey_proto` | `req` is a single-cycle pulse; no `req` while a request is pending and `valid` is still 0; software-visible `cpuctrlsts.ic_scr_key_valid` (via RVFI CSR reads and `rvfi_ext_ic_scr_key_valid`) equals the pin registered by one cycle | inval FSM request logic (`rtl/ibex_icache.sv:1220-1264`), cs_registers key-valid flop (`rtl/ibex_cs_registers.sv:1938-1949`) | `+gen_chk_scrkey_proto` |
 
-#### C3.6 gen_irq_agent (interrupt driver)
+##### C3.6 gen_irq_agent (interrupt driver)
 
 Purpose: drives `irq_software_i`, `irq_timer_i`, `irq_external_i`, `irq_fast_i[14:0]`,
 `irq_nm_i` as levels. API: UVM agent on `gen_irq_if`; sequence item `gen_irq_item` {line mask
 (`$bits(ibex_pkg::irqs_t)` bits: the 15 fast lines plus ext, sw, timer, v2 A-04), nmi, assert_delay, hold_policy = CYCLES(n) | UNTIL_ACK |
 UNTIL_TAKEN | STICKY, release_delay}; bridge commands IRQ_SET/IRQ_CLR/NMI_PULSE. Knobs:
-`+gen_irq_regime=quiet|sparse|storm|nested|nmi_mix`, `+gen_irq_min_gap`, `+gen_irq_hold_min/max`,
+`+gen_knob_irq_regime=quiet|sparse|storm`, `+gen_knob_irq_line_mix=single|multi|fast_only|with_nmi`,
+`+gen_knob_irq_hold=until_taken|through_handler|pulse` (v3, DV Lead alignment; replace
+`+gen_irq_regime`), `+gen_irq_min_gap`, `+gen_irq_hold_min/max`,
 `+gen_irq_ack_addr` (shared with C3.3). Wave-level: lines change on the clock edge after the
 command; UNTIL_ACK releases the line on the cycle after the handler's store to the ack register
 (riscv-dv handler tail through our user-extension `gen_plic_section`, SN d); UNTIL_TAKEN releases
@@ -549,11 +586,11 @@ after `rvfi_intr` of the matching cause; a one-cycle pulse is a deliberate "may 
 stimulus (II s11). The agent publishes every edge with its cycle on `ap` for the checkers.
 No checker inside the agent (checks live in C4.4).
 
-#### C3.7 gen_dbg_agent (debug request driver)
+##### C3.7 gen_dbg_agent (debug request driver)
 
 Purpose: drives `debug_req_i`. API: agent on `gen_dbg_if`; item {assert_delay, hold_policy =
-UNTIL_DEBUG_MODE | CYCLES(n) | STICKY}; bridge command DBG_REQ. Knobs: `+gen_dbg_regime=none|
-sparse|dense|step_mix`, `+gen_dbg_hold_min/max`. Wave-level: level; UNTIL_DEBUG_MODE drops the
+UNTIL_DEBUG_MODE | CYCLES(n) | STICKY}; bridge command DBG_REQ. Knobs: `+gen_knob_debug_req_regime=none|sparse|storm` (v3, DV Lead alignment; replaces
+`+gen_dbg_regime`), `+gen_dbg_hold_min/max`. Wave-level: level; UNTIL_DEBUG_MODE drops the
 line the cycle after `rvfi_ext_debug_mode` rises on a retired record (or after the
 `evt_dbg_entered` monitor event). The debug program is the image's `.debug_rom` section linked at
 `DmHaltAddr` (gen_link.ld; default `dret` stub when a program defines none; riscv-dv-generated
@@ -562,9 +599,9 @@ debug ROMs are relocated there by `dv/auto_dv/stim/gen_relocate_debug_rom.py`, r
 (riscv-dv INITIALIZED signature or a retirement threshold) because the generated ROM uses the
 program's kernel stack pointer. No checker inside the agent (C4.5).
 
-### C4. Monitors and checkers
+#### C4. Monitors and checkers
 
-#### C4.1 gen_rvfi_monitor
+##### C4.1 gen_rvfi_monitor
 
 Purpose: turns each `rvfi_valid` cycle into `gen_rvfi_txn` {order, insn, trap, halt, intr, mode,
 ixl, rs1/rs2/rs3 addr+data, rd addr+data, pc_rdata, pc_wdata, mem addr/rmask/wmask/rdata/wdata,
@@ -572,7 +609,7 @@ ext_pre_mip, ext_post_mip, ext_nmi, ext_nmi_int, ext_debug_req, ext_debug_mode,
 ext_rf_wr_suppress, ext_mcycle, ext_mhpmcounters[10] (+h), ext_ic_scr_key_valid, ext_irq_valid,
 ext_expanded_insn_valid/insn/last, cycle}; also a separate `gen_rvfi_irq_txn` on
 `rvfi_ext_irq_valid` without `rvfi_valid`. Analysis ports `ap` and `ap_irq`; raises
-the bridge events (v2, A-01): the retirement count that feeds `evt_retired_target` / `evt_thresh_hit` and `evt_retired_count`, plus `evt_irq_taken`, `evt_dbg_entered`. Knob: `+gen_rvfi_trace=1` writes an ASCII
+the bridge events (v2, A-01; v3, N-02): the retirement count that feeds `evt_retired_target` / `evt_retired_hit` and `evt_retired_count`, plus `evt_irq_taken`, `evt_dbg_entered`. Knob: `+gen_rvfi_trace=1` writes an ASCII
 trace file (debug only). Wave-level: sampled on the posedge where `rvfi_valid` is 1; outputs are
 flops in the core (SN a.4), so no combinational race. Checks (self-consistency of the trace):
 
@@ -582,7 +619,7 @@ flops in the core (SN a.4), so no combinational race. Checks (self-consistency o
 | `rvfi_pc_cont` | non-trap, non-redirect record: next record's `pc_rdata == pc_wdata`; traps/mret/dret/fence.i: `pc_wdata` not checked until F-RVFI-010 is ruled; `pc_rdata` continuity is checked instead | pc_wdata mux (`:2095`), pc_id capture | `+gen_chk_rvfi_pc_cont` |
 | `rvfi_cap_quiet` | `*_rcap == NULL_CAP`, `mem_is_cap == 0` | carve-out sanity | `+gen_chk_rvfi_cap_quiet` |
 
-#### C4.2 gen_misc_monitor: alerts, crash_dump_o, double_fault_seen_o, core_busy_o, data_tag_o
+##### C4.2 gen_misc_monitor: alerts, crash_dump_o, double_fault_seen_o, core_busy_o, data_tag_o
 
 Purpose: samples the misc outputs every cycle into `gen_misc_txn` and runs the checkers below;
 it owns the "expected injection" bookkeeping it receives from the agents' `ap` (injected
@@ -591,15 +628,15 @@ integrity and cache ECC errors) and from the scoreboard (retired traps, mret, CS
 | Checker id | Rule | Mutation classes (locus) | Knob |
 |---|---|---|---|
 | `alert_minor` | `alert_minor_o` pulses only in the response window of an injected cache ECC error; each injection produces exactly one pulse | icache ECC error OR (`rtl/ibex_icache.sv:585`), `alert_minor_o` wiring (`rtl/ibex_core.sv:1337`) | `+gen_chk_alert_minor` |
-| `alert_bus` | (v2, XM-L1) split by source: FETCH: `alert_major_bus_o` asserts in the `instr_rvalid_i` cycle of an injected corrupted beat whether or not the word is ever consumed (`instr_intg_err_o = instr_intg_err & instr_rvalid_i`, rtl/ibex_if_stage.sv:282; speculative and PMP-denied fetches included); DATA: asserts at the data response cycle of an injected corrupted load or store response (LSU registration to be verified at bring-up, `GEN_ALERT_BUS_WINDOW`); never otherwise. Class: exact (fetch), windowed (data) | integrity decoders (`rtl/ibex_load_store_unit.sv:385-393`, `rtl/ibex_if_stage.sv:276-282`), OR at `rtl/ibex_core.sv:1353` | `+gen_chk_alert_bus` |
+| `alert_bus` | (v2, XM-L1) split by source: FETCH: `alert_major_bus_o` asserts in the `instr_rvalid_i` cycle of an injected corrupted beat whether or not the word is ever consumed (`instr_intg_err_o = instr_intg_err & instr_rvalid_i`, rtl/ibex_if_stage.sv:282; speculative and PMP-denied fetches included); DATA: (v3, T-051-3) `load/store_resp_intg_err_o = data_intg_err & data_rvalid_i & (~/)data_we_q` is combinational on the decoded response (rtl/ibex_load_store_unit.sv:756-757), so the alert is high in the `data_rvalid_i` cycle of an injected corrupted load or store response and only then; never otherwise. Class: exact for BOTH sources; `GEN_ALERT_BUS_WINDOW` is removed | integrity decoders (`rtl/ibex_load_store_unit.sv:385-393, 756-757`, `rtl/ibex_if_stage.sv:276-282`), OR at `rtl/ibex_core.sv:1353` | `+gen_chk_alert_bus` |
 | `alert_internal` | `alert_major_internal_o == 0` always (RegFileECC = 0: only `pc_mismatch_alert` remains, AN s9) | PC increment check (`rtl/ibex_if_stage.sv:658-692`), OR at `rtl/ibex_core.sv:1350` | `+gen_chk_alert_internal` |
-| `crash_dump` | `exception_pc == model mepc` and `exception_addr == model mtval`, compared from `GEN_CSR_COMMIT_TO_RVFI_OFFSET` cycles before each retired CSR-write/trap record onward (class windowed, v2 A-09); `last_data_addr` == last granted data address (aligned rules of BS MEM-06, exact per grant); `current_pc/next_pc` compared only while `core_busy_o == Off` (pipe empty) | crash_dump assigns (`rtl/ibex_core.sv:1325-1330`), lsu_addr_last (`rtl/ibex_load_store_unit.sv:743`) | `+gen_chk_crash_dump` |
+| `crash_dump` | `exception_pc == model mepc` and `exception_addr == model mtval`, compared from `GEN_CSR_WRITE_TO_RVFI_OFFSET` (= 2) cycles before each retired CSR-write record and from `GEN_TRAP_TO_RVFI_OFFSET` (= 1) cycles before each trap/mret/dret record onward (class windowed, v2 A-09; v3, T-051-4: two constants, neither widens under WB stalls because commit and record move together); `last_data_addr` == last granted data address (aligned rules of BS MEM-06, exact per grant); `current_pc/next_pc` compared only while `core_busy_o == Off` (pipe empty) | crash_dump assigns (`rtl/ibex_core.sv:1325-1330`), lsu_addr_last (`rtl/ibex_load_store_unit.sv:743`) | `+gen_chk_crash_dump` |
 | `double_fault` | `double_fault_seen_o` pulses exactly when a synchronous trap record follows a previous synchronous trap record with no retired `mret` in between (model of `sync_exc_seen`, BS CTRL-23); `cpuctrlsts` bits 6/7 read back per model | set/clear/pulse logic (`rtl/ibex_cs_registers.sv:890-965`) | `+gen_chk_double_fault` |
-| `core_busy` | `core_busy_o` is always exactly On or Off (mubi). (v2, A-10) After every retired WFI it is Off for exactly one cycle (WAIT_SLEEP, `ctrl_busy_o = 0` unconditionally, rtl/ibex_controller.sv:598-604) even when a wake condition is already true; it stays Off beyond that cycle only while no wake term (irq pending, NMI, debug request, single step, debug mode) is present and no bus beat is outstanding (SLEEP, :606-621); it returns to On the same cycle a wake input asserts (BS CTRL-06); no `instr_req_o`/`data_req_o` while Off. Class: exact | busy generation (`rtl/ibex_core.sv:496-522`), controller WAIT_SLEEP/SLEEP (`rtl/ibex_controller.sv:598-621`) | `+gen_chk_core_busy` |
+| `core_busy` | `core_busy_o` is always exactly On or Off (mubi). (v2, A-10; v3, T-051-1) The one-cycle Off dip after a retired WFI is a `ctrl_busy` fact (WAIT_SLEEP, `ctrl_busy_o = 0` unconditionally, rtl/ibex_controller.sv:598-604); `core_busy_o` also carries `if_busy` (outstanding fetch beats, icache invalidation) and `lsu_busy` (rtl/ibex_core.sv:496-522). Rule: in WAIT_SLEEP `core_busy_o == Off` iff no instruction-bus beat is outstanding (agent count), no invalidation sweep is active (icram model) and the LSU is idle (no data beat outstanding); otherwise the dip is invisible and Off is not expected. A WFI within the first 256 cycles after reset (sweep active) shows NO dip. Beyond WAIT_SLEEP it stays Off only while no wake term (irq pending, NMI, debug request, single step, debug mode) is present and no bus beat is outstanding (SLEEP, :606-621); it returns to On the same cycle a wake input asserts (BS CTRL-06); no `instr_req_o`/`data_req_o` while Off. Class: exact with the qualifier | busy generation (`rtl/ibex_core.sv:496-522`), controller WAIT_SLEEP/SLEEP (`rtl/ibex_controller.sv:598-621`) | `+gen_chk_core_busy` |
 | `data_tag_quiet` | `data_tag_o == 0` | carve-out sanity | `+gen_chk_data_tag_quiet` |
 | `fetch_en` | while `fetch_enable_i != IbexMuBiOn`: no new `instr_req_o` except beats already owned by fill buffers (BS MEM-16), no new RVFI record whose `pc_rdata` differs from the pc at disable, trap-state changes allowed (Q-DL-8 default) | fetch gate (`rtl/ibex_core.sv:644-656`), controller halt_if (`rtl/ibex_controller.sv:996-999`) | `+gen_chk_fetch_en` |
 
-#### C4.3 gen_pmp_model (fetch and data PMP checker)
+##### C4.3 gen_pmp_model (fetch and data PMP checker)
 
 Purpose: an intent-derived Smepmp model (16 regions, G = 0, TOR/NA4/NAPOT, L bit, mseccfg
 MML/MMWP/RLB, priv = `mstatus.MPRV ? MPP : prv` for data, current prv for fetch, debug-mode
@@ -613,12 +650,12 @@ crossing a word, `pc_rdata + 2`; data address/size). Predicts per word half (AN 
 | `pmp_data` | predicted denial of a word half <=> no bus transaction for that word (dbus monitor) and a trap record with cause 5/7; `mtval` = original EA for a first-half fault, aligned second word for a second-half fault (BS MEM-13); the permitted other half still appears on the bus (RTL-defined, Q-DL-7 default). (v2, A-08) Privilege for the check follows the SPEC on the debug-mode case: with `dcsr.mprven = 0` the model ignores `mstatus.MPRV` in debug mode (B2/BUG-01 row of C5.3b), so tests that load/store in debug mode with MPRV set carry `expected_fail: true` until the bug is ruled | PMP_D channel and request gating (`rtl/ibex_core.sv:1063`), LSU pmp_err path (`rtl/ibex_load_store_unit.sv:472-531`) | `+gen_chk_pmp_data` |
 | `pmp_csr_warl` | pmpcfg/pmpaddr/mseccfg read-backs equal the model's legalized values (locked regions, TOR ordering, G masking, RLB/MML rules) | CSR write legalization in cs_registers | `+gen_chk_pmp_csr_warl` |
 
-#### C4.4 gen_irq_checker (interrupt and NMI entry)
+##### C4.4 gen_irq_checker (interrupt and NMI entry)
 
 | Checker id | Rule | Mutation classes (locus) | Knob |
 |---|---|---|---|
-| `irq_pending` | `irq_pending_o == |({sw, timer, ext, fast[14:0]} & mie_q)` every cycle, not gated by MIE/debug/nmi (BS CTRL-07). (v2, A-09) Class: windowed(`GEN_CSR_COMMIT_TO_RVFI_OFFSET`): the RTL commits `mie_q` at the CSR-write commit edge (rtl/ibex_cs_registers.sv:790, :1103-1106) while the record of the `csrw` appears after WB, so the model's `mie` value used for cycle t is the one committed by the record whose cycle is `t + GEN_CSR_COMMIT_TO_RVFI_OFFSET`; equivalently a settle window of `GEN_CSR_COMMIT_TO_RVFI_OFFSET` cycles (at least 2: the write commits in ID/EX, the record follows WB by one cycle, more when WB stalls, XM-M5) opens at each retired `mie` write record, the compare is suspended inside it and re-armed with the new value; pin edges need no window (pins are visible). The constant is measured at bring-up and pinned by a directed test | `irqs_o`/`irq_pending_o` (`rtl/ibex_cs_registers.sv:1044-1045`), mip wiring (`:408-412`) | `+gen_chk_irq_pending` |
-| `irq_entry` | when enable conditions hold (`mstatus.MIE` or U-mode, not debug, not nmi_mode) and a line is pending, the next RVFI event is an interrupt entry: `rvfi_ext_irq_valid` or a record with `rvfi_intr = 1`, `pc_rdata == mtvec_base + 4*id`, id = highest priority pending (NMI > fast lowest-id > ext > sw > timer, BS CTRL-10), within `GEN_IRQ_ENTRY_BOUND` records/cycles after the current instruction completes; `pre_mip` of that record contains the taken id | controller handle_irq / IRQ_TAKEN (`rtl/ibex_controller.sv:498-511, 725-758`), priority select | `+gen_chk_irq_entry` |
+| `irq_pending` | `irq_pending_o == |({sw, timer, ext, fast[14:0]} & mie_q)` every cycle, not gated by MIE/debug/nmi (BS CTRL-07). (v2, A-09; v3, T-051-4) Class: windowed(`GEN_CSR_WRITE_TO_RVFI_OFFSET`): the RTL commits `mie_q` at the edge ending the cycle in which the `csrw` leaves ID (`csr_op_en` = `csr_access & instr_executing & instr_id_done_o`, rtl/ibex_id_stage.sv:747-749; rtl/ibex_cs_registers.sv:790, :1020) and the record appears exactly two cycles later (stage 0 at N+1, output at N+2, rtl/ibex_core.sv:1864-1868), so the offset is a FIXED 2 and does not widen under WB stalls (a stall delays `instr_id_done_o`, moving commit and record together); the model's `mie` value used for cycle t is the one committed by the record whose cycle is `t + 2`; equivalently a settle window of 2 cycles opens at each retired `mie` write record, the compare is suspended inside it and re-armed with the new value; pin edges need no window (pins are visible, `irq_pending_o` combinational). Predicted 2, confirmed at bring-up by the directed `csrw mie` then `csrr` test (record two cycles after `mie_q` changes) | `irqs_o`/`irq_pending_o` (`rtl/ibex_cs_registers.sv:1044-1045`), mip wiring (`:408-412`) | `+gen_chk_irq_pending` |
+| `irq_entry` | when enable conditions hold (`mstatus.MIE` or U-mode, not debug, not nmi_mode) and a line is pending, the next RVFI event is an interrupt entry: `rvfi_ext_irq_valid` or a record with `rvfi_intr = 1`, `pc_rdata == mtvec_base + 4*id`, id = highest priority pending (NMI > fast lowest-id > ext > sw > timer, BS CTRL-10), within `GEN_IRQ_ENTRY_BOUND_RECORDS` records after the pin edge (v3, T-051-5: the instruction in WB, the instruction in ID and, if that is a Zcmp sequence, every remaining micro-op record: cm.push 14, cm.pop 14, cm.popret 15, cm.popretz 16; nominal 2, worst case 17; the WFI path adds 3 cycles and no record); `pre_mip` of that record contains the taken id | controller handle_irq / IRQ_TAKEN (`rtl/ibex_controller.sv:498-511, 725-758`), priority select | `+gen_chk_irq_entry` |
 | `irq_masked` | no interrupt entry while `mstatus.MIE == 0` in M-mode, in debug mode, or during NMI handling; a one-cycle pulse that is not sampled produces no entry | same | `+gen_chk_irq_masked` |
 | `nmi_entry` | `irq_nm_i` => entry within bound regardless of MIE/mie, `mcause == 0x8000001F`, `pc_rdata == mtvec_base + 0x7C`, nested NMI ignored; `mret` from the NMI handler restores mstatus.MPP/MPIE, mepc, mcause from the mstack model (BS CTRL-11/13) | NMI path (`rtl/ibex_controller.sv:736-745`), mstack (`rtl/ibex_cs_registers.sv` mstack) | `+gen_chk_nmi_entry` |
 | `nmi_internal` | an injected LSU response integrity error => `alert_major_bus_o`, `rvfi_ext_rf_wr_suppress` on the load, internal NMI with `mcause 0xFFFFFFE0` and `mtval` = the faulting address, taken at most one instruction later (BS CTRL-12); fetch-side integrity errors raise no NMI (AN s9) | mem_resp_intg_err path (`rtl/ibex_controller.sv:436-438`) | `+gen_chk_nmi_internal` |
@@ -627,24 +664,26 @@ Failure path: `uvm_error` with the id; the bound is a constant in `gen_tb_pkg`
 (`GEN_IRQ_ENTRY_BOUND_RECORDS`, derived from the longest instruction the pipeline can hold:
 a 37-cycle divide plus a two-half memory access plus bus latency; measured in bring-up).
 
-#### C4.5 gen_debug_checker
+##### C4.5 gen_debug_checker
 
 | Checker id | Rule | Mutation classes (locus) | Knob |
 |---|---|---|---|
-| `dbg_entry` | `debug_req_i` (not in debug mode) => within bound a record with `rvfi_ext_debug_mode = 1` and `pc_rdata == DmHaltAddr`; `dcsr.cause` (read in the debug ROM, C6) = 3 for haltreq, 1 ebreak, 2 trigger, 4 step; `dpc` = pc_if for haltreq/step/trigger, the ebreak pc for ebreak (BS CTRL-24..26) | controller debug entry (`rtl/ibex_controller.sv:451-476, 764-800`), dcsr cause priority | `+gen_chk_dbg_entry` |
+| `dbg_entry` | `debug_req_i` (not in debug mode) => within `GEN_DBG_ENTRY_BOUND_RECORDS` records (v3, T-051-5: same derivation as `irq_entry`, worst case 17 with a cm.popretz in ID; cycle form for the T-044 SVA `17 * (gnt_max + rvalid_max + 2) + 40` from the agent knobs) a record with `rvfi_ext_debug_mode = 1` and `pc_rdata == DmHaltAddr`; `dcsr.cause` (read in the debug ROM, C6) = 3 for haltreq, 1 ebreak, 2 trigger, 4 step; `dpc` = pc_if for haltreq/step/trigger, the ebreak pc for ebreak (BS CTRL-24..26) | controller debug entry (`rtl/ibex_controller.sv:451-476, 764-800`), dcsr cause priority | `+gen_chk_dbg_entry` |
 | `dbg_exc` | exception while in debug mode => `pc_rdata == DmExceptionAddr`, no CSR trap side effects (mepc/mcause unchanged) | debug exception vector (`EXC_PC_DBG_EXC`) | `+gen_chk_dbg_exc` |
 | `dbg_masked` | no interrupt or NMI entry while `rvfi_ext_debug_mode = 1`; `debug_req_i` held during a Zcmp sequence enters only after `_last` (BS CTRL-31/39) | `handle_irq` gating | `+gen_chk_dbg_masked` |
-| `dbg_dret` | `dret` returns to `dpc` with privilege `dcsr.prv`; single-step (`dcsr.step`) re-enters debug after exactly one retired instruction. (v2, A-08) SPEC direction on B1: `dret` into U clears `mstatus.MPRV` (Sdext); the model clears it and the checker expects it, so tests that `dret` into U with MPRV set carry `expected_fail: true` against the current RTL (B1 row of C5.3b) | dret path (`rtl/ibex_controller.sv`), mstatus restore in `rtl/ibex_cs_registers.sv` | `+gen_chk_dbg_dret` |
+| `dbg_dret` | `dret` returns to `dpc` with privilege `dcsr.prv`; single-step (`dcsr.step`) re-enters debug after exactly one retired instruction. (v2, A-08; v3, N-04) SPEC direction on B1 / BUG-06: `dret` into U clears `mstatus.MPRV` (Sdext); the model clears it and the checker expects it, so tests that `dret` into U with MPRV set carry `expected_fail: true` against the current RTL (B1 / BUG-06 row of C5.3b) | dret path (`rtl/ibex_controller.sv`), mstatus restore in `rtl/ibex_cs_registers.sv` | `+gen_chk_dbg_dret` |
 | `dbg_trigger` | `tdata1/tdata2` execute-address match (one trigger) enters debug before the matching instruction retires; M-mode writes to tdata1/2 ignored | trigger compare in cs_registers | `+gen_chk_dbg_trigger` |
 
-#### C4.6 gen_counter_model
+##### C4.6 gen_counter_model
 
 Purpose: predicts `mcycle`, `minstret`, `mhpmcounter3..12` from the boundary. `mcycle` = cycles
 since reset release minus inhibited cycles plus software writes (no clock gate: sleep cycles
 count, AN s9); `minstret` per BS CSR-20 (not counted: ebreak, ecall, illegal, fetch fault,
 errored loads/stores, CSR writes to minstret(h); Zcmp counts once at `_last`; dummy instructions
-DO count: exact only with dummies off or with probe P1); events 3..12: LSU-cycle, IF-wait,
-loads (misaligned = 2), stores (= 2), jumps, branches, taken branches, compressed retired, mul
+DO count: exact while the modelled `cpuctrlsts.dummy_instr_en` is 0, a bound check while it is 1,
+no probe dependence, v3 N-01 / XM-L4); events 3..12: LSU-cycle, IF-wait,
+loads (a misaligned load counts ONE: `perf_load_o` only in the IDLE arm, v3 T-051-2), stores (one
+per instruction likewise), jumps, branches, taken branches, compressed retired, mul
 wait, div wait. Cycle-class events (3, 4, 11, 12) are modelled from the bus and RVFI timing
 where a boundary derivation exists and otherwise checked as bounds (`0 <= delta <= cycles
 elapsed`) and monotonic; the exactness class of each counter is stated in the API document.
@@ -653,10 +692,10 @@ elapsed`) and monotonic; the exactness class of each counter is stated in the AP
 |---|---|---|---|
 | `ctr_mcycle` | `rvfi_ext_mcycle` equals the model's mcycle at `record_cycle - GEN_RVFI_ID_EXIT_OFFSET` (v2, A-09: the field is sampled when the instruction leaves ID, rtl/ibex_core.sv:2102, not at retirement; class windowed(`GEN_RVFI_ID_EXIT_OFFSET`)); mcycle(h) CSR read-backs equal the model at the read's own ID-exit cycle (same offset) | counter primitive (`rtl/ibex_counter.sv`), inhibit gating | `+gen_chk_ctr_mcycle` |
 | `ctr_minstret` | (v2, XM-L4) exact while `cpuctrlsts.dummy_instr_en` (modelled) is 0; a BOUND check (`model <= observed <= model + cycles elapsed`) whenever it is 1; no dependence on probe P1, which stays coverage-only plus the BUG-02 quantification reproducer | perf_instr_ret (`rtl/ibex_wb_stage.sv:206-210`), `incr[2]` (`rtl/ibex_cs_registers.sv:1588`) | `+gen_chk_ctr_minstret` |
-| `ctr_hpm_exact` | counters 5..10 (loads, stores, jumps, branches, taken, compressed) exact | event ORs in id/wb stage | `+gen_chk_ctr_hpm_exact` |
+| `ctr_hpm_exact` | counters 5..10 (loads, stores, jumps, branches, taken, compressed) exact; (v3, T-051-2) a misaligned load or store increments its counter by ONE, not two (`perf_load_o`/`perf_store_o` asserted only in the LSU IDLE arm) | event ORs in id/wb stage, LSU perf outputs | `+gen_chk_ctr_hpm_exact` |
 | `ctr_hpm_bound` | counters 3, 4, 11, 12 within bounds and monotonic; `mcountinhibit` stops them | inhibit/event wiring | `+gen_chk_ctr_hpm_bound` |
 
-#### C4.7 gen_scoreboard
+##### C4.7 gen_scoreboard
 
 Purpose: the hub. Subscribes to `gen_rvfi_monitor`, both bus monitors, the irq/dbg agents'
 `ap`, and `gen_misc_monitor`; owns the CSR model of record (C6), the counter model (C4.6), the
@@ -684,20 +723,21 @@ produce isolated mutation evidence per field:
 | `isa_pc_next` | model pc after the step == `rvfi_pc_wdata` (not on the F-RVFI-010 records) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next` |
 | `isa_csr` | every model CSR write (commit log type 4) == the legalized expectation; read-backs per C6 | CSR legalization and read mux (`rtl/ibex_cs_registers.sv`) | `+gen_chk_isa_csr` |
 
-#### C4.8 Exactness classes and their constants (v2, A-09)
+##### C4.8 Exactness classes and their constants (v2, A-09)
 
 | Checker | Class | Constant (gen_tb_pkg) and how it is set |
 |---|---|---|
-| `irq_pending` | windowed | `GEN_CSR_COMMIT_TO_RVFI_OFFSET`: cycles between the CSR commit edge and the RVFI record of the writing instruction; measured in bring-up, pinned by a directed `csrw mie` test |
-| `crash_dump` (exception_pc/addr) | windowed | same constant |
-| `ctr_mcycle` | windowed | `GEN_RVFI_ID_EXIT_OFFSET`: cycles between ID exit (sample point of `rvfi_ext_mcycle`) and the record; same method |
+| `irq_pending` | windowed | `GEN_CSR_WRITE_TO_RVFI_OFFSET`: cycles between the CSR commit edge and the RVFI record of the writing instruction; (v3, T-051) predicted 2, fixed (no widening under WB stalls); confirmed in bring-up by the directed `csrw mie` test |
+| `crash_dump` (exception_pc/addr) | windowed | `GEN_CSR_WRITE_TO_RVFI_OFFSET` (= 2) for CSR-write records; `GEN_TRAP_TO_RVFI_OFFSET` for trap/mret/dret records: (v3, T-051) predicted 1 (`csr_save_cause_o` in FLUSH, rtl/ibex_controller.sv:845, record at N+2); the interrupt marker `rvfi_ext_irq_valid` follows its commit by 2 |
+| `ctr_mcycle` | windowed | `GEN_RVFI_ID_EXIT_OFFSET`: cycles between ID exit (sample point of `rvfi_ext_mcycle`, rtl/ibex_core.sv:2102) and the record; (v3, T-051) predicted 2 for non-load/store instructions and traps, 2 + W for loads and stores where W is the WB wait for the response (bounded by `gnt_max + rvalid_max`, twice for a split access); confirmed by a nop stream (2) and a load under `+gen_dbus_rvalid_min/max=4` (2 + 3) |
 | `ctr_minstret`, `ctr_hpm_exact` | exact per record; `ctr_minstret` becomes bound while dummy instructions are enabled (XM-L4) | none |
 | `ctr_hpm_bound` | bound | none |
-| `alert_minor`, `alert_bus` | windowed | `GEN_ICACHE_ECC_WINDOW` (injection to alert), `GEN_ALERT_BUS_WINDOW` (response consumption cycle from the bus monitor to the alert) |
-| `irq_entry`, `nmi_entry`, `dbg_entry` | windowed (bound on latency) | `GEN_IRQ_ENTRY_BOUND_RECORDS`, `GEN_DBG_ENTRY_BOUND_RECORDS` |
-| `core_busy`, `ibus_*`, `dbus_*`, `scrkey_proto`, `icram_*`, `double_fault`, `fetch_en`, `data_tag_quiet`, `rvfi_*`, `pmp_*`, `isa_*` | exact | none |
+| `alert_minor`, `icram_ecc_response` | windowed | `GEN_ICACHE_ECC_WINDOW`: (v3, T-051) predicted: `alert_minor_o` in the cycle the corrupted RAM read data is presented (0 from the corrupted-rdata cycle, 1 from the lookup request; `ecc_err_ic1` combinational, rtl/ibex_icache.sv:585, rtl/ibex_core.sv:1337), the invalidation write one cycle later (`ecc_write_req`, :640-642); constant value 1 counted from the corrupted-rdata cycle; T-044 `sva_alert_minor_window` tightened to exactly 1 |
+| `alert_bus` | exact (v3, T-051-3; `GEN_ALERT_BUS_WINDOW` removed) | none: fetch alert in the `instr_rvalid_i` cycle, data alert in the `data_rvalid_i` cycle of the corrupted beat |
+| `irq_entry`, `nmi_entry`, `dbg_entry` | windowed (bound on latency) | `GEN_IRQ_ENTRY_BOUND_RECORDS`, `GEN_DBG_ENTRY_BOUND_RECORDS`: (v3, T-051-5) predicted 17 worst case (WB instruction + ID instruction + up to 16 Zcmp micro-op records), 2 nominal; the WFI path adds 3 cycles and no record; cycle form for the T-044 SVA derived from the agent knobs |
+| `core_busy` (with the WAIT_SLEEP qualifier of C4.2, v3 T-051-1), `ibus_*`, `dbus_*`, `scrkey_proto`, `icram_write_ecc`, `icram_inval_sweep`, `double_fault`, `fetch_en`, `data_tag_quiet`, `rvfi_*`, `pmp_*`, `isa_*` | exact | none (`GEN_IBUS_MAX_OUTSTANDING` = 8 and `GEN_DBUS_MAX_OUTSTANDING` = 2 confirmed by T-051 2.3) |
 
-### C5. ISA-model integration: gen_isa_shim and comparator policy (RR ask 3)
+#### C5. ISA-model integration: gen_isa_shim and comparator policy (RR ask 3)
 
 Model: upstream Spike pinned at 4ffd6ba860f4190ceac2716fa3c2cf139e85538f, built 2026-09-03 into
 `tools/spike` (`libriscv.so`, `libsoftfloat.so`, `libfesvr.a`, headers under
@@ -718,7 +758,7 @@ implements Ibex's order NMI-slot > fast lowest-id > external > software > timer,
 emulation is needed. `mip_or_mie_csr_t::write_with_mask` (csrs.cc:946-949) is public and applies
 only the caller's mask (used for pin injection into `mip`).
 
-#### C5.1 gen_isa_shim API (C++20, built as `libgen_isa_shim.so`, loaded with `-LDFLAGS`)
+##### C5.1 gen_isa_shim API (C++20, built as `libgen_isa_shim.so`, loaded with `-LDFLAGS`)
 
 Build: `g++ -std=c++2a -fPIC -shared -I tools/spike/include gen_isa_shim.cc -L tools/spike/lib
 -lriscv -Wl,-rpath,<abs>/tools/spike/lib`; only `<prefix>/include` on the include path (adding
@@ -764,7 +804,7 @@ Failure path: the shim never fails on its own; it returns status codes and the s
 `uvm_error ISA_<field>` with expected-versus-actual per field; a model-side abort (unknown ISA
 string, bad cfg) is caught at `gen_isa_reset` and reported as `uvm_fatal ISA_INIT`.
 
-#### C5.2 Comparison unit and Zcmp folding
+##### C5.2 Comparison unit and Zcmp folding
 
 One RVFI record = one retirement or one trapping instruction. (v2, XM-M2) `processor_t::step`
 takes a pending interrupt (and a trigger action) INSIDE its try block and then retires zero
@@ -790,7 +830,7 @@ Zcmp (F-RVFI-022/023): each micro-op completes ID individually (`instr_gets_expa
 INSTR_EXPANDED -> INSTR_EXPANDED_COMMIT -> INSTR_EXPANDED_LAST) and produces its own record with
 `rvfi_insn` = the 32-bit micro-op, `rvfi_ext_expanded_insn_valid = 1`, `rvfi_ext_expanded_insn` =
 the 16-bit cm.* encoding, `_last` on the final one (`rtl/ibex_core.sv:2263-2280`); `rvfi_order`
-advances per record (UNVERIFIED). Policy: fold records from the first `expanded_insn_valid` to
+advances per micro-op record (v3, T-051-6: static agreement, rtl-arch row 44; the sim confirms). Policy: fold records from the first `expanded_insn_valid` to
 `_last` into one architectural instruction and compare against ONE model step of cm.*: the union
 of the records' GPR writes == the model's `log_reg_write` set; the ordered list of memory accesses
 == the model's `log_mem_write/read` list; `pc_wdata` of the last record == model pc after the
@@ -800,7 +840,7 @@ performed by micro-ops 1..k-1 are compared with the stores the model performed b
 COMMIT micro-ops (BS CTRL-39), consistent with the model taking interrupts between instructions;
 `minstret` counts once per cm.* (BS CSR-20), consistent with the model.
 
-#### C5.3 Legalization layer (Ibex WARL and platform rules the model lacks)
+##### C5.3 Legalization layer (Ibex WARL and platform rules the model lacks)
 
 (v2, A-08) The table is split. C5.3a holds RTL-DEFINED rows: behaviour the specification leaves to
 the implementation or that the Ibex documentation and RTL define; the model follows the RTL under
@@ -810,7 +850,7 @@ RISC-V specification; the model and the checkers follow the SPECIFICATION, the t
 them carry `expected_fail: true` in the testlist with the bug id, and the shim must NOT legalize
 the RTL behaviour away.
 
-##### C5.3a RTL-defined rows (model follows the RTL)
+###### C5.3a RTL-defined rows (model follows the RTL)
 
 | Item | Ibex rule (source) | Shim action |
 |---|---|---|
@@ -832,11 +872,11 @@ the RTL behaviour away.
 | time(h) | traps in Ibex (cs_registers.rst:596-599); Spike implements `time` as a readable CSR | (v2, A-17) replace the csrmap entries 0xC01/0xC81 with a trapping `csr_t` (`verify_permissions` throws illegal-instruction) |
 | WFI | Ibex retires WFI and sleeps; model `step()` idles in `in_wfi` | clear `in_wfi` (public `clear_waiting_for_interrupt`, processor.h:364) when the DUT retires the next instruction without an interrupt; inject the wake interrupt otherwise |
 
-##### C5.3b Spec-violation rows (model and checkers follow the specification; tests expected_fail)
+###### C5.3b Spec-violation rows (model and checkers follow the specification; tests expected_fail)
 
 | Bug id | RTL behaviour (source) | Specification | Model / checker direction | Affected checkers and tests |
 |---|---|---|---|---|
-| B1 | `dret` returning to U leaves `mstatus.MPRV` set (rtl/ibex_cs_registers.sv dret path; rtl-arch to re-verify, gen_t003_acceptance follow-up 1) | Sdext: `dret` clears MPRV when the new privilege is below M (Sdext.adoc:202) | model clears MPRV; `dbg_dret` expects it cleared | `dbg_dret`, `isa_csr`; debug tests that `dret` to U with MPRV = 1: `expected_fail: true` (B1) |
+| B1 / BUG-06 | `dret` returning to U leaves `mstatus.MPRV` set (rtl/ibex_cs_registers.sv dret path; rtl-arch to re-verify, gen_t003_acceptance follow-up 1) | Sdext: `dret` clears MPRV when the new privilege is below M (Sdext.adoc:202) | model clears MPRV; `dbg_dret` expects it cleared | `dbg_dret`, `isa_csr`; debug tests that `dret` to U with MPRV = 1: `expected_fail: true` (BUG-06; v3 N-04: the bug log id is BUG-06, B1 is the acceptance-list id) |
 | B2 / BUG-01 | `mstatus.MPRV` honoured for data accesses in debug mode although `dcsr.mprven = 0` (BS CTRL-33) | Sdext: with `mprven = 0`, MPRV is ignored in debug mode | model uses `prv` for debug-mode accesses; `pmp_data` predicts accordingly | `pmp_data`, `isa_mem`; debug-mode load/store tests with MPRV set: `expected_fail: true` (BUG-01) |
 | BUG-03 | `dcsr.ebreaks` writable without S-mode (Critic C-21) | Sdext: `ebreaks` is 0 when S-mode is absent; the pinned Spike forces it to 0 (csrs.cc:1625) | model NOT legalized (Spike's behaviour is the spec); `isa_csr` flags the DUT's writable bit on read-back | `isa_csr`; dcsr write/read tests: `expected_fail: true` (BUG-03) |
 | B3 | `tdata3`, `mcontext`, `scontext` read 0 and ignore writes (cs_registers.rst:423-454) | Sdtrig: unimplemented trigger CSRs raise illegal-instruction (Sdtrig.adoc:370) | model traps on access; comparator expects `rvfi_trap` | `isa_trap`, `isa_csr`; CSR sweep entries for these three: `expected_fail: true` (B3) |
@@ -844,7 +884,7 @@ the RTL behaviour away.
 
 Rows move from C5.3b to C5.3a only through an owner ruling recorded in the intervention log.
 
-#### C5.4 Dummy instructions and half-performed misaligned stores
+##### C5.4 Dummy instructions and half-performed misaligned stores
 
 Dummy instructions never reach RVFI (`rvfi_stage_valid_d[0] = rvfi_id_done & ~dummy_instr_id`,
 order not advanced): the comparator never sees them; their only residue is in the counters
@@ -870,7 +910,7 @@ The event hits the bins `pmp_fault x {mis_first, mis_second, mis_both} x {load, 
 bus-error equivalents. Whether case (a) is a defect is owner question Q-DL-7; the comparator models
 the RTL behaviour by default (RTL-defined row of C5.3a).
 
-#### C5.5 Draft bitmanip and trap-record policy
+##### C5.5 Draft bitmanip and trap-record policy
 
 Draft-B (ENC s5, R-3): the riscv-dv target's `supported_isa` enables RV32ZBA/ZBB/ZBC/ZBS only
 (no RV32B draft group), so random programs never emit Zbp/Zbr/Zbt/Zbf ops. The RTL's draft ops
@@ -894,9 +934,9 @@ faulted. Policy: the comparator expects exactly one trap per model trap; the WB 
 that trap (the model faults on the same access through `gen_simif_t`) and the following ID
 instruction never executed on either side. Asynchronous injection follows SN c.2 with raw `mip`;
 `pre_mip` is ignored on a record coinciding with `rvfi_ext_irq_valid` until F-RVFI-032 is
-confirmed.
+confirmed. (v3, T-051-7) Comparator policy: when a WB load/store error coincides with an ID-stage trap, expect the WB error's trap record NOW and the ID instruction's own record LATER (the controller re-executes it after the flush); the shim steps the model for the WB trap first and does not model a "lost" record; a genuinely missing record stays a `rvfi_proto` finding.
 
-#### C5.6 Standalone fallback
+##### C5.6 Standalone fallback
 
 `tools/spike/bin/spike --isa=<GEN_ISA_STRING> --priv=mu --pmpregions=16 --pmpgranularity=4
 --triggers=1 -m<DM base:size>,<program base:size> --pc=<entry> --log-commits <elf>` produces a
@@ -909,7 +949,7 @@ windows come from the same header (DmBaseAddr/DmAddrMask, boot page, ld PROG LEN
 (pc, insn, GPR/CSR writes, memory addresses) used only for bring-up of deterministic directed
 programs and as a second opinion when the lock-step compare disagrees.
 
-### C6. CSR observability plan (RR ask 2)
+#### C6. CSR observability plan (RR ask 2)
 
 Facts: `ibex_core` has no `rvfi_csr_*` ports. RVFI does expose the value returned by every CSR
 READ as `rvfi_rd_wdata` (rd != x0), `rvfi_ext_mcycle`, `rvfi_ext_mhpmcounters[3..12]`, raw `mip`
@@ -950,7 +990,7 @@ the new value after a CSR write and the trap side effects at the moment they hap
 Probe proposal for CSR state: none for checking; one debug-only candidate P6 in C8, off by
 default, no checker depends on it.
 
-### C7. Covergroup implementation strategy
+#### C7. Covergroup implementation strategy
 
 - Homes: `gen_fcov_pkg` (class-based covergroups sampled by the scoreboard/monitors with
   transaction arguments) and `gen_<x>_cov` modules bound through `gen_binds.sv` for signal-level
@@ -972,7 +1012,7 @@ default, no checker depends on it.
   differ only by the wrapper's wiring, which holds no logic). `cond` is added by Runtime (R-8). No
   RTL covergroups exist to collide with.
 
-### C8. Probe register candidates and the Critic's rulings (v2)
+#### C8. Probe register candidates and the Critic's rulings (v2)
 
 Rulings recorded from `gen_critic_tb_arch_components_v1.md` C8 (binding); the register itself is
 `dv/auto_dv/docs/gen_probe_register.md`.
@@ -990,32 +1030,38 @@ Rulings recorded from `gen_critic_tb_arch_components_v1.md` C8 (binding); the re
 No checker depends on any probe; no per-cycle Python polling exists (A-01) and no waiver is
 requested or granted.
 
-### C9. Environment configuration, knobs and the three randomization layers
+#### C9. Environment configuration, knobs and the three randomization layers
 
 - `gen_env_cfg` (uvm_object): one field per plusarg in the tables above plus `seed`, `regime_sched`,
-  `regime_pin`, `checker enables`, `build_config`. Built once in `gen_base_test::build_phase`
+  the pinned knob set, `checker enables`, `build_config`. Built once in `gen_base_test::build_phase`
   from plusargs whose names come from `gen_tb_pkg::PLUSARG_*`; a mistyped plusarg name is
   impossible at the call site (strings are parameters) and an unknown `+gen_*` plusarg on the
   command line is a `uvm_fatal GEN_UNKNOWN_PLUSARG` at time 0 (v2, A-23: a warning is collected by
   nothing).
 - Layer 1 (per transaction): `rand` fields with `dist` weights inside the agents' items (latency,
   error, integrity, hold policy), constrained by the current regime's ranges.
-- Layer 2 (regimes): named sets of ranges/weights per agent (C3 tables), selected by
-  `+gen_<agent>_regime=<name>` or by the bridge command REGIME_SET at run time.
+- Layer 2 (regimes): (v3, DV Lead alignment) the 20 enumerated regime knobs of gen_fcov_plan.md
+  Section REG, `+gen_knob_<name>=<value>` with the value sets of `gen_tb_knobs.yaml` (each value
+  maps to ranges/weights inside the agent, C3 tables); supplying a knob PINS it for the run (the
+  banner counts pinned knobs), absent knobs are drawn by Python from `RANDOM_SEED`, and the bridge
+  command REGIME_SET changes a knob at run time. Every applied phase is published as a phase-log
+  record {phase_idx, knob, applied_value, start_cycle, start_rvfi_order, pinned} for CG-REG-*;
+  program-side knobs (instr_mix, priv_regime, pmp_regime) record theirs at the region marker
+  store to `GEN_MM_PHASE_MARK_ADDR`. `+gen_<agent>_regime` and `+gen_regime_pin` are retired; the
+  DV Lead's `+gen_regime_seed` is not adopted (one seed, DV_prompt Section 6).
 - Layer 3 (schedule): Python derives a schedule from `RANDOM_SEED` (`gen_tb/gen_regimes.py`):
-  a list of (trigger, agent, regime) where trigger is a retirement count or a cycle count; passed
-  as `+gen_regime_sched=<agent>:<regime>@r<N>|c<N>,...` and reproduced by the Python side issuing
+  a list of (trigger, knob, value) where trigger is a retirement count or a cycle count; passed
+  as `+gen_regime_sched=<knob>:<value>@r<N>|c<N>,...` and reproduced by the Python side issuing
   REGIME_SET at the triggers: for each trigger Python writes `evt_retired_target` or
-  `evt_cycle_target` and awaits the single `evt_thresh_hit` edge (v2, A-01; no counter is awaited).
+  `evt_cycle_target` and awaits the single `evt_retired_hit` or `evt_cycle_hit` edge (v2, A-01; v3, N-02: one edge bit per threshold; no counter is awaited).
   (v2, XM-L5) When `+gen_regime_sched` is supplied on the command line, Python CONSUMES it as the
   schedule (overriding the seed-derived one), so a specific schedule, not only a fixed regime, is
   reproducible; the banner echoes whether the schedule was derived or supplied.
-  `+gen_regime_pin=<agent>:<regime>[,...]` pins regimes for the whole run (reproduction and
-  directed tests), overriding the schedule; both strings are echoed in the time-0 banner.
+  (v3) `+gen_knob_<name>=<value>` pins a regime knob for the whole run (reproduction and directed tests) and overrides the schedule for that knob; the banner lists the pinned set.
 - Error injection and event stimulus are also regime-driven (rates) with directed overrides
   (bridge commands MEM_ERR_ARM, ICACHE_ECC_ARM, IRQ_*, DBG_REQ).
 
-### C10. Binds home: gen_binds.sv
+#### C10. Binds home: gen_binds.sv
 
 All `bind` statements live here and nowhere else: protocol SVAs bound to `gen_dut_top` ports
 (`gen_ibus_sva`, `gen_dbus_sva`, `gen_scrkey_sva`: the same rules as the C3 checkers, for
@@ -1029,7 +1075,7 @@ Runtime's build needs an RTL-root or filelist override for that copy (A-24, rela
 (v2) Stimulus-legality assertion `sva_rvalid_legal` (rtl-arch T-022 evidence 5.2): bound to the
 wrapper's bus ports, it asserts that `instr_rvalid_i` and `data_rvalid_i` are high only while the
 agent has an outstanding grant and never in a grant cycle; a failure is a TB defect
-(`uvm_error sva_rvalid_legal`, knob `+gen_chk_bus_rvalid_legal`), not a DUT checker.
+(`uvm_error sva_rvalid_legal`, knob `+gen_chk_sva_rvalid_legal` (v3: one id, one knob)), not a DUT checker.
 
 (v2) rtl-arch's exclusion-evidence properties (`dv/auto_dv/work/rtl-arch/gen_cover_props_draft.sv`,
 to be promoted as `dv/auto_dv/tb/gen_cover_props.sv`) are bound here when component code opens:
@@ -1046,7 +1092,7 @@ gives if VCS rejects them; the wb_stage and multdiv paths are taken through thei
 step of that integration. (4) `DV_FCOV_DISABLE` is never defined in the TB build (the RTL `fcov_*`
 nets used by P4 depend on it); the build documents this in gen_component_api_binds.md.
 
-### C11. Constants home and Python handles module
+#### C11. Constants home and Python handles module
 
 `gen_tb_pkg` (as built): plusarg names, banner tag, memory-map constants, NOP composed from
 `ibex_pkg::OPCODE_OP_IMM`, mubi helper; grows with the knob names of C3-C9 and the bounds
@@ -1059,9 +1105,8 @@ bridge, alive/finish and memory-sample handles from `TOPLEVEL` and fails loudly 
 handle at start-up. Filesystem paths are clone-root-relative or from `ci/env.sh` exports.
 The T-005 diff-review findings were applied in T-029 (generate-scope RegFile guard, unused
 constants dropped, `gen_rtl.f` header); the T-029 approval left three residuals for the next touch
-of the T-005 files: R-01 gen_smoke's tier status must agree between this document (compile proof,
-not a measured tier) and Runtime's `gen_testlist.yaml` (currently `tier: smoke`), to be settled
-with Runtime before the first measured regression (preferred: unmeasured build check); R-02 the
+of the T-005 files: R-01 SETTLED (v3, N-01): gen_smoke and gen_cocotb_probe are in Runtime's tier `check`
+(`measured: false`), agreed with Runtime on 2026-09-03; R-02 the
 two new guards (`ifndef RVFI`, RegFile != RegFileFF) compiled red once each and recorded; R-03 a
 range `$fatal` for `+gen_smoke_intg_flip >= MemDataWidth`.
 
@@ -1072,123 +1117,49 @@ execute with `--local` on the submit host while pure-SV runs fan out on LSF; the
 must not assume LSF fan-out for cocotb tests until Q-012 is resolved (Runtime's shared-storage
 mirror is the applied default).
 
-### Open items and UNVERIFIED list
+#### Open items and UNVERIFIED list
 
 - Q-DL-1 (RegFileECC/ResetAll/RVFI): wrapper defaults are the proposal; one-line change.
 - Q-DL-7 (half-performed misaligned stores): comparator mirrors the RTL behaviour by default.
-- Q-DL-10 / Q-011 (Spike patch): not needed for the `mie` fast bits (A-14: `write_with_mask` shadow);
+- Q-DL-10 / Q-011 (Spike patch): not needed for the `mie` fast bits (v3, N-01: the final A-14 route is the `gen_mie_csr_t` `write_mask()` override proven by link test 2, not the v2-draft `write_with_mask` shadow);
   kept open only for divergences found later.
 - Q-1/Q-2: wrapper literal per the pre-review; `GEN_DUT_SPLIT_INTG` implements "split" if wanted.
 - Bring-up confirmations owed: Zcmp record count and `rvfi_order` stepping; model decode of
   grevi/gorci non-alias immediates (shim first unit test; link test 2 did not cover them); the constants of C4.8
-  (`GEN_CSR_COMMIT_TO_RVFI_OFFSET`, `GEN_RVFI_ID_EXIT_OFFSET`, `GEN_IRQ_ENTRY_BOUND_RECORDS`,
-  `GEN_DBG_ENTRY_BOUND_RECORDS`, `GEN_ICACHE_ECC_WINDOW`, `GEN_ALERT_BUS_WINDOW`) measured and
+  (`GEN_CSR_WRITE_TO_RVFI_OFFSET`, `GEN_TRAP_TO_RVFI_OFFSET`, `GEN_RVFI_ID_EXIT_OFFSET`, `GEN_IRQ_ENTRY_BOUND_RECORDS`,
+  `GEN_DBG_ENTRY_BOUND_RECORDS`, `GEN_ICACHE_ECC_WINDOW`) predicted by rtl-arch T-051 (v3), confirmed and
   pinned by directed tests; F-RVFI-010 and F-RVFI-032 rulings from rtl-arch; B1 re-verification by
   rtl-arch. Removed from this list in v2: model byte order on misaligned store faults (A-15) and the
   `mie` write mask (A-14), both now decided by verified facts.
 - Second link test (A-16): DONE (`gen_spike_linktest2.cc`, 98/98); grevi/gorci non-alias decode
   remains to be checked in the shim's first unit test.
 
-### 6.12 Per-component API documents
+## 7. Open questions and rulings as they stand in `dv/auto_dv/docs/gen_intervention_log.md`
 
-Skeletons generated from the sections (`dv/auto_dv/work/tb-infra/t031/gen_apidocs_a.py`,
-`gen_apidocs_b.py`); each carries purpose, files, construction, knobs, wave-level behaviour,
-checker rows, failure paths, coverage hooks and open items:
+Every entry the TB depends on; defaults apply while an answer is pending (DV_prompt Section 10).
 
-- `dv/auto_dv/docs/gen_component_api_binds.md`
-- `dv/auto_dv/docs/gen_component_api_bridge.md`
-- `dv/auto_dv/docs/gen_component_api_constants_handles.md`
-- `dv/auto_dv/docs/gen_component_api_counter_model.md`
-- `dv/auto_dv/docs/gen_component_api_coverage.md`
-- `dv/auto_dv/docs/gen_component_api_dbg_agent.md`
-- `dv/auto_dv/docs/gen_component_api_dbus_agent.md`
-- `dv/auto_dv/docs/gen_component_api_debug_checker.md`
-- `dv/auto_dv/docs/gen_component_api_dut_top.md`
-- `dv/auto_dv/docs/gen_component_api_env_knobs.md`
-- `dv/auto_dv/docs/gen_component_api_ibus_agent.md`
-- `dv/auto_dv/docs/gen_component_api_icache_ram_model.md`
-- `dv/auto_dv/docs/gen_component_api_irq_agent.md`
-- `dv/auto_dv/docs/gen_component_api_irq_checker.md`
-- `dv/auto_dv/docs/gen_component_api_isa_shim.md`
-- `dv/auto_dv/docs/gen_component_api_mem_model.md`
-- `dv/auto_dv/docs/gen_component_api_misc_monitor.md`
-- `dv/auto_dv/docs/gen_component_api_pmp_model.md`
-- `dv/auto_dv/docs/gen_component_api_rvfi_monitor.md`
-- `dv/auto_dv/docs/gen_component_api_scoreboard.md`
-- `dv/auto_dv/docs/gen_component_api_scrkey_responder.md`
-
-### 6.13 RTL fact-check of the v2 sections (rtl-arch T-051): corrections and expected values for bring-up
-
-Source: `dv/auto_dv/work/rtl-arch/gen_arch_v2_rtl_factcheck.md` (52 statement rows with file:line;
-Section 2 derives every C4.8 constant; Section 4 lists eight corrections). TB Infra accepts all
-eight. They are NOT yet in the embedded v2 text above because the Critic's re-review of that file
-is in flight; they land there as a v3 amendment listed in the response file (or with the requested
-changes if the verdict is REQUEST-CHANGES). Until then this subsection is the binding wording.
-
-Corrections to the checker rules:
-
-1. `core_busy` (C4.2): the one-cycle Off dip after WFI is a `ctrl_busy` fact; `core_busy_o` also
-   carries `if_busy` (outstanding fetch beats, icache invalidation) and `lsu_busy`. Rule: in
-   WAIT_SLEEP `core_busy_o == Off` iff no instruction-bus beat is outstanding, no invalidation is
-   active and the LSU is idle; otherwise the dip is invisible. A WFI within the first 256 cycles
-   after reset (invalidation sweep active) shows no dip. Class stays exact with this qualifier.
-2. Counters (C4.6, `ctr_hpm_exact` events 5/6): a misaligned load or store counts ONE (perf_load_o /
-   perf_store_o only in the IDLE arm), not two.
-3. `alert_bus` DATA source (C4.2): `load/store_resp_intg_err_o` is combinational on the decoded
-   response (`rtl/ibex_load_store_unit.sv:756-757`), so the alert is high in the `data_rvalid_i`
-   cycle of the corrupted beat and only then: class exact for both sources; `GEN_ALERT_BUS_WINDOW`
-   is 0 and is removed from C4.8; the T-044 property `sva_alert_bus_iff_intg` asserts the equality
-   every cycle.
-4. `irq_pending` and `crash_dump` offsets (C4.4, C4.2): `GEN_CSR_COMMIT_TO_RVFI_OFFSET` splits into
-   two constants: `GEN_CSR_WRITE_TO_RVFI_OFFSET` = 2 cycles for CSR-write records (the commit edge to
-   the record; a WB stall delays commit and record together, so it does NOT widen) and
-   `GEN_TRAP_TO_RVFI_OFFSET` = 1 cycle for trap, mret and dret records; the interrupt marker
-   (`rvfi_ext_irq_valid`) follows its commit by 2. Pin edges need no offset (combinational).
-5. `irq_entry` and `dbg_entry` bounds (C4.4, C4.5): records that may retire between the pin or
-   request edge and the entry: the instruction in WB (1), the instruction in ID (1) and, if the ID
-   instruction is a Zcmp sequence, every remaining micro-op (cm.push 14, cm.pop 14, cm.popret 15,
-   cm.popretz 16 records). `GEN_IRQ_ENTRY_BOUND_RECORDS` = `GEN_DBG_ENTRY_BOUND_RECORDS` = 17 worst
-   case, 2 nominal; the WFI path adds 3 cycles and no record. Cycle form for the T-044 SVA:
-   `17 * (gnt_max + rvalid_max + 2) + 40` derived from the agent knobs instead of the 4096 placeholder.
-6. Zcmp records (C4.1): `rvfi_order` advances per micro-op record (static agreement; sim confirms).
-7. BUG-04 policy (C4.7, C5.2): when a WB load/store error coincides with an ID-stage trap, expect
-   the WB error's trap record now and the ID instruction's own record later (it re-executes); no
-   "lost" record is modelled.
-8. `icram_inval_sweep` anchor (C3.4): with `+gen_key_reset_valid=0` the 256 invalidation writes start
-   only after the responder raises `ic_scr_key_valid_i`; the sweep is anchored at the key-valid edge,
-   not at reset release.
-
-Predicted C4.8 values (bring-up confirms these instead of measuring blind; each is pinned by the
-directed test the fact-check names):
-
-| Constant | Predicted | Derivation anchor | Directed confirmation |
+| Id | Question / ruling (condensed) | Default applied while pending | Status |
 |---|---|---|---|
-| `GEN_CSR_WRITE_TO_RVFI_OFFSET` | 2 cycles | `csr_op_en` at `instr_id_done` (`rtl/ibex_id_stage.sv:747-749`), record at N+2 | csrw mie then csrr; record two cycles after `mie_q` changes |
-| `GEN_TRAP_TO_RVFI_OFFSET` | 1 cycle | `csr_save_cause_o` in FLUSH (`rtl/ibex_controller.sv:845`), record at N+2 | any synchronous trap; crash_dump fields one cycle before the record |
-| interrupt marker offset | 2 cycles | IRQ_TAKEN in N+1, marker output in N+3 | pin edge with the pipe empty |
-| `GEN_RVFI_ID_EXIT_OFFSET` | 2 cycles; 2 + W for loads and stores (W = WB wait for the response, bounded by `gnt_max + rvalid_max`, twice for a split access) | `rvfi_ext_stage_mcycle[0]` sampled at the stage-0 load (`rtl/ibex_core.sv:2102`) | nop stream gives 2; a load under `+gen_dbus_rvalid_min/max=4` gives 2 + 3 |
-| `GEN_IBUS_MAX_OUTSTANDING` / `GEN_DBUS_MAX_OUTSTANDING` | 8 / 2 | NUM_FB 4 x IC_LINE_BEATS 2; LSU split rule | slow-rvalid / fast-gnt regime after a branch |
-| `GEN_ICACHE_ECC_WINDOW` | alert in the corrupted-rdata cycle (0 from rdata, 1 from the lookup request); invalidation write one cycle later | `ecc_err_ic1` combinational (`rtl/ibex_icache.sv:585`), `alert_minor_o` (`rtl/ibex_core.sv:1337`) | one injected tag error, one data error on the hitting way; T-044 `sva_alert_minor_window` tightened to exactly 1 |
-| `GEN_ALERT_BUS_WINDOW` | 0 (removed; exact) | `rtl/ibex_if_stage.sv:282`, `rtl/ibex_load_store_unit.sv:756-757` | injected fetch and data corruption |
-| `GEN_IRQ_ENTRY_BOUND_RECORDS`, `GEN_DBG_ENTRY_BOUND_RECORDS` | 17 worst case, 2 nominal | controller entry conditions (`rtl/ibex_controller.sv:704-720`), Zcmp expansion | interrupt raised with cm.popretz {ra, s0-s11} in ID; WFI wake |
-| `GEN_ICACHE_NUM_FB` | 4 (the one re-typed localparam, `rtl/ibex_icache.sv:72`; not exported, so no static assert) | - | - |
-
-## 7. Open questions with defaults (as they stand in `dv/auto_dv/docs/gen_intervention_log.md`)
-
-| Id | Question (condensed) | Default applied while pending | Status |
-|---|---|---|---|
-| Q-002 (revised) | `gen_dut_top` build choices that fix the DUT boundary: RegFileECC = 0 with RegFileDataWidth = 32 (lockstep-only ECC outside the DUT), ResetAll = 1, `+define+RVFI`, MemECC = 1 (39-bit bus data), DummyInstructions = 1, ICacheTweakInfection = 1, DbgHwBreakNum = 1, Dm* defaults, CsrMvendorId = CsrMimpId = 0, PMP reset values from `ibex_pkg` | exactly the proposal; the config banner prints every value; LOG-004 keeps the 39-bit ports literal (split is TB-side, `GEN_DUT_SPLIT_INTG` opt-in) and no clock gate | pending |
-| Q-008 (Q-DL-7, MEM-13) | after a PMP fault on the first half of a misaligned access Ibex still performs the permitted second half on the bus | model it as RTL-defined; cover `pmp_fault x {aligned, mis_first, mis_second, mis_both} x {load, store}`; bug log carries a security/integration note, not a bug | pending |
-| Q-009 (Q-DL-8, CTRL-04) | with `fetch_enable_i` not exactly On, interrupt and debug entry still update mepc/mcause/dpc and the pc; invalid MuBi encodings act as Off with no alert | check the RTL behaviour as-is, cover both cases, record both as design notes, no bug filed | pending |
-| Q-010 (Q-DL-9, MEM-05/19) | neither bus defends against an unsolicited `rvalid` or one in the grant cycle | passing tests never violate the protocol (agents enforce, `sva_rvalid_legal` checks); one directed informational test per bus, excluded from the pass gate | pending |
-| Q-011 (Q-DL-10) | may a local patch file against the pinned Spike be carried when a legalization cannot live in the shim | allowed as a justified patch file under `dv/auto_dv/tools/`, never a fork; the shim remains first choice. Retired for the `mie` fast-bit item: `gen_mie_csr_t` needs no patch (link test 2). B14/BUG-04 (`rvfi_id_done` suppressing a trap record) noted for the comparator | pending |
-| Q-012 | the clone lives on local NVMe of the submit host; LSF compute hosts cannot see it | out-trees under the shared `GEN_DV_OUT_ROOT`; the team builds a shared-storage mirror (rsync without .git and out-trees, venv from `ci/requirements.lock`) for LSF jobs; cocotb runs use `--local` until then | pending |
-| Q-013 | tool-mandated fixed filenames versus the `gen_` prefix landing rule | committed sources carry the `gen_` prefix; `gen_program.py` materializes the fixed-name riscv-dv target out of tree at flow time | pending |
+| Q-001 | file naming: every team file carries the `gen_` prefix; review-wrapper artifacts keep the wrapper's naming | as stated | pending |
+| Q-002 (revised) | `gen_dut_top` build choices: RegFileECC=0 (RegFileDataWidth=32), ResetAll=1, `+define+RVFI`, MemECC=1 (39-bit bus data), DummyInstructions=1, ICacheTweakInfection=1, DbgHwBreakNum=1, Dm* defaults, CsrMvendorId=CsrMimpId=0, PMP resets from `ibex_pkg` | exactly the proposal; banner prints every value; LOG-004 keeps the 39-bit ports literal (split TB-side, `GEN_DUT_SPLIT_INTG` opt-in); no clock gate | pending |
+| Q-003 | fence confirmation for riscv-bitmanip v0.93 (draft-B semantics, C5.5) and riscv-formal `rvfi.rst` (RVFI field semantics) | treated as allowed; both cloned with recorded SHAs (reading report 6b) | pending; executed |
+| Q-004 | B1 (dret to U leaves MPRV set) and B2 (MPRV honoured in debug mode with mprven=0) | checkers and the ISA model follow the debug spec (C5.3b); carrying items `expected-fail`; logged as bug candidates; not excluded from the gate without a ruling | pending |
+| Q-005 | B7 dummy instructions counted in minstret and hpm11/12 | exact-count checks run with dummy_instr_en=0; `ctr_minstret` is a bound check while dummies are on; one directed test documents the RTL count | pending |
+| Q-006 | standing checker-direction policy for doc-vs-RTL mismatches where the RTL is spec-legal (D1..D19) | checker follows the RTL (C5.3a); doc defect logged | pending |
+| Q-007 | run-scope defaults for static inputs: mcounteren_writable_i On (directed Off/invalid), hart_id_i random per test, fetch_enable_i On after reset (directed Off/invalid; invalid = Off, no alert), debug_req_i level held until entry plus one pulse-drop test (B9), boot_addr_i random and stable through reset | as stated (C1, C3.6, C3.7, C9) | pending |
+| Q-008 | MEM-13: the permitted second half of a misaligned access is issued after a first-half PMP fault | modelled as RTL-defined; covered; security/integration note | pending |
+| Q-009 | CTRL-04: trap/debug entry updates CSRs and PC while fetch_enable_i is not On; invalid MuBi acts as Off with no alert | checked as-is; design notes | pending |
+| Q-010 | MEM-05/19: no defence against unsolicited or grant-cycle rvalid | passing tests never violate the protocol (agents enforce, `sva_rvalid_legal` checks); one informational test per bus | pending |
+| Q-011 | local patch file against pinned Spike when a legalization cannot live in the shim | allowed as a justified patch file, never a fork; retired for the `mie` fast-bit item (link test 2) | pending |
+| Q-012 | clone on local NVMe invisible to LSF hosts | shared-storage mirror (`gen_mirror.py`); cocotb runs `--local` until then | pending |
+| Q-013 | tool-mandated fixed filenames versus the `gen_` prefix | committed sources carry `gen_`; the riscv-dv target is materialized out of tree at flow time | pending |
+| Q-014 | coverage scope = the two inner instances; wrapper informational (Section 5) | applied: `cov_trees` two roots, `info_trees: [u_dut]`, gate row by the summing rule | pending (owner-visible) |
+| R-002 | `-cm_glitch 0` on every measured build; round 0 re-baselined; FSM not glitch-filtered | applied in `gen_testlist.yaml` `extra_vcs_args` | ruled (DV Lead) |
+| F-001 | fence exposure event (Runtime listed a shared `/tmp/fcovexp_*` directory of another workspace; one summary line and one test name seen, not used) | mitigation in the flow (`TMPDIR` per run); work continues | owner decision requested |
 
 TB-Infra-level defaults recorded in the scoping notes and not escalated: Q-2 no clock gate in the
-wrapper (`core_busy_o` exposed); Q-4 debug program linked at the real `DmHaltAddr` (no alias
-needed since T-025); Q-5 RVFI classified as a boundary interface (ruled); Q-6 riscv-dv user
-extension emits the MMIO interrupt acknowledge store.
+wrapper (`core_busy_o` exposed); Q-4 debug program linked at the real `DmHaltAddr`; Q-5 RVFI classified
+as a boundary interface (ruled); Q-6 riscv-dv user extension emits the MMIO interrupt acknowledge store.
 
 ## 8. DV Lead notes
 
@@ -1197,13 +1168,19 @@ additions, rulings and disagreements. Each names the section it qualifies; TB In
 component sections file, not this document, and the DV Lead re-adopts.
 
 ### 8.1 Rulings recorded in this document
-1. Coverage scope (Section 5): two inner instances measured; wrapper reported informationally.
-2. `-cm_glitch 0` (Section 5): adopted for every measured build; baseline re-measured.
+1. Coverage scope (Section 5; intervention log Q-014): two inner instances gated through `cov_trees`,
+   wrapper reported informationally through `info_trees`; gate row by the per-metric summing rule.
+2. `-cm_glitch 0` (Section 5; intervention log R-002): every measured build, via `extra_vcs_args`;
+   round 0 re-baselined (`dv/auto_dv/evidence/gen_round_0_rebaseline/`).
 3. Wrapper ports stay literal to the DV_prompt Section 2 ruling (LOG-004): `instr_rdata_i`,
    `data_rdata_i`, `data_wdata_o` are the 39-bit ports of `ibex_core` with integrity in bits [38:32];
    the `*_intg` split lives in the TB bus interface (`GEN_DUT_SPLIT_INTG` opt-in). This amends the DV
    Lead's reading-report note 6a (which had decided a split at the wrapper); observability is unchanged.
 4. No clock gate in the wrapper; `core_busy_o` is the sleep observable (tb-infra Q-2, unchanged).
+6. `SIMULATION` stays undefined in every build (Runtime confirmed the effective define set; recorded in
+   gen_runtime_api.md Section 1): the dummy-instruction LFSR starts from `RndCnstLfsrSeed` in every run,
+   which keeps one run seed the only source of randomness and makes F-DIT-025 deterministic; the
+   `secureseed` CSR write is the only reseed path the tests exercise. The banner states the define state.
 5. Checker direction for bug candidates follows dv/auto_dv/docs/gen_bug_log.md: spec-violation rows
    (B1/BUG-06, B2/BUG-01, B3, B5, B15/BUG-03) with the ISA model and checkers following the specification
    and the carrying test-plan items `expected-fail`; RTL-defined rows (B6 reclassified, B9 under
@@ -1225,9 +1202,9 @@ component sections file, not this document, and the DV Lead re-adopts.
    instruction (feature list D6, F-PMC-034/036 agree).
 3. `alert_bus` data source (row 26, Section 2.5): same-cycle, exact; `GEN_ALERT_BUS_WINDOW` = 0 or
    removed.
-4. Commit-to-record offsets (rows 28, 35, Section 2.1): `GEN_CSR_COMMIT_TO_RVFI_OFFSET` is a fixed 2
-   for CSR-write records and does not widen under WB stalls; trap/mret/dret records use 1; the
-   interrupt marker 2. Two constants or a per-class table; the crash_dump compare uses the same
+4. Commit-to-record offsets (rows 28, 35, Section 2.1): the v3 names are `GEN_CSR_WRITE_TO_RVFI_OFFSET`
+   = 2 for CSR-write records (it does not widen under WB stalls) and `GEN_TRAP_TO_RVFI_OFFSET` = 1 for
+   trap/mret/dret records; the interrupt marker offset is 2; the crash_dump compare uses the same
    per-class values.
 5. Entry bounds (row 36, Section 2.6): nominal 2 records, worst case 17 (a Zcmp sequence of up to 16
    micro-op records plus the WB instruction); the WFI path adds 3 cycles and no record. The test plan's
@@ -1236,10 +1213,12 @@ component sections file, not this document, and the DV Lead re-adopts.
 7. BUG-04 policy (row 48): see 8.1 item 5.
 8. Invalidation sweep anchor (row 17): with `+gen_key_reset_valid=0` the 256 writes start at the
    key-valid edge, not at reset release.
-Predicted constants for bring-up (fact-check Section 2): `GEN_CSR_COMMIT_TO_RVFI_OFFSET` 2 / 1 per
+Predicted constants for bring-up (fact-check Section 2): `GEN_CSR_WRITE_TO_RVFI_OFFSET` 2 and `GEN_TRAP_TO_RVFI_OFFSET` 1 per
 class, `GEN_RVFI_ID_EXIT_OFFSET` 2 (+ W for loads/stores), `GEN_IBUS_MAX_OUTSTANDING` 8,
-`GEN_DBUS_MAX_OUTSTANDING` 2, `GEN_ICACHE_ECC_WINDOW` 1 from the corrupted-rdata cycle,
-`GEN_ALERT_BUS_WINDOW` 0, entry bound 17 records. T-044 property changes: derive
+`GEN_DBUS_MAX_OUTSTANDING` 2, `GEN_ICACHE_ECC_WINDOW` 1 counted from the lookup request (the
+`alert_minor_o` pulse alone is 0 from the corrupted-rdata cycle; `icram_ecc_response`, alert plus
+invalidation write, completes 1 cycle later, so the window the constant bounds is the lookup-to-alert
+distance), `GEN_ALERT_BUS_WINDOW` 0, entry bound 17 records. T-044 property changes: derive
 `DBG_ENTRY_BOUND_CYCLES` from the agent knobs (17 x (gnt_max + rvalid_max + 2) + 40) or use the
 record-based checker; tighten `sva_alert_minor_window` to exactly 1; mark `alert_bus` exact.
 
@@ -1262,10 +1241,12 @@ record-based checker; tighten `sva_alert_minor_window` to exactly 1; mark `alert
    gen_sva_multdiv (F-MUL-028), gen_sva_csr_excl. TB Infra maps each onto an existing checker id or adds
    a row with mutation classes and a disable knob; the DV Lead accepts the mapping in the next
    re-adoption.
-4. Regime knobs: gen_fcov_plan.md Section REG names 19 knobs (`+gen_knob_<name>`); Section 4.2 here
-   uses `+gen_<agent>_regime=<name>` with `+gen_regime_pin` and `+gen_regime_sched`. These are the same
-   layer-2/3 controls; TB Infra's `gen_knobs.py` codegen is the single source and the coverage plan's
-   knob names are mapped onto it (name mapping recorded in gen_component_api_env_knobs.md).
+4. Regime knobs: the single knob source is `dv/auto_dv/tb/gen_tb_knobs.yaml` (20 regime knobs plus the
+   TB knobs, rendered by `gen_knobs_codegen.py`); the command-line form is `+gen_knob_<name>=<value>` and
+   the layer-3 schedule is `+gen_regime_sched`; there is no `+gen_regime_seed` (one run seed). The
+   coverage plan's REG section and knob-name table use these names; v3's C9 still carries three
+   mentions of the retired forms (`+gen_<agent>_regime`, `+gen_regime_pin`, `+gen_regime_seed`) that TB
+   Infra removes in its next revision.
 5. Probe register: the coverage plan's probe candidates P1..P7 map onto the register's entries (P1
    accepted coverage-only, P2/P3/P5 rejected, P4 conditional, P6 off); P7 (dummy_instr_seed_en/_o, CSR
    part) needs an entry or a rejection. Test-plan items whose bins are P1-gated do not list those bins
@@ -1277,6 +1258,16 @@ record-based checker; tighten `sva_alert_minor_window` to exactly 1; mark `alert
    directed stimulus.
 7. Cross-model finding on the T-005 plan (dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_scoping_notes.md
    finding 1) is applied by 8.1 item 3.
+
+### 8.3a Names a Test Writer copies (single list; the API documents and Section 6 are authoritative)
+| Kind | Name(s) |
+|---|---|
+| Checker enable knobs | `+gen_chk_<id>=0` disables one checker; `+gen_chk_all=0 +gen_chk_<id>=1` isolates one (mutation evidence); ids per Section 6 (e.g. `dbus_store_intg`, `irq_pending`, `irq_entry`, `pmp_data`, `pmp_fetch`, `ctr_minstret`, `alert_bus`, `alert_internal`, `alert_minor`, `icache_ecc`, `dbg_entry`, `dbg_masked`, `dbg_trigger`); the TB self-check knob is `+gen_chk_sva_rvalid_legal`. The test plan's coarse ids (`gen_chk_pmp`, `gen_chk_irq`, `gen_chk_debug`, ...) map onto these fine ids through the concordance table in gen_test_plan.md Section 0a |
+| Regime knobs | `+gen_knob_<name>=<value>` (20 regime knobs, `gen_tb_knobs.yaml`); schedule `+gen_regime_sched=<knob>:<value>@r<N>|c<N>,...`; no separate schedule seed |
+| Bridge fields | commands `cmd_kind`, `cmd_arg[3:0]`, `cmd_seq`, `cmd_valid`; thresholds `evt_retired_target`, `evt_cycle_target`; edges `evt_retired_hit`, `evt_cycle_hit`, `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen`; counts `evt_retired_count`, `evt_err_count` |
+| Exactness constants | `GEN_CSR_WRITE_TO_RVFI_OFFSET` (2), `GEN_TRAP_TO_RVFI_OFFSET` (1), `GEN_RVFI_ID_EXIT_OFFSET` (2, +W for loads/stores), `GEN_IBUS_MAX_OUTSTANDING` (8), `GEN_DBUS_MAX_OUTSTANDING` (2), `GEN_ICACHE_ECC_WINDOW` (1 from the lookup request), `GEN_ALERT_BUS_WINDOW` (0), `GEN_IRQ_ENTRY_BOUND_RECORDS` / `GEN_DBG_ENTRY_BOUND_RECORDS` (17 worst case) |
+| Bug ids | spec-violation rows: B1 (= BUG-06), B2 (= BUG-01), B3, B5, B15 (= BUG-03); B4, B7 (= BUG-02), B8 (= BUG-07), B9, B10, B11, B13 carry expected-fail items checked by test-level compares named in the test plan; B6, B12, B14 (= BUG-04) carry none (gen_bug_log.md) |
+| Seeds | `+ntb_random_seed` = `RANDOM_SEED` = program seed; sidecar `seed` (plus `seed_used` for riscv-dv programs) |
 
 ### 8.4 Open items the DV Lead carries
 - Q-002 (wrapper parameters) confirmation; Q-008..Q-011 defaults in force; Q-012 storage mirror.
