@@ -1,4 +1,7 @@
-# fcov summary of the round-0 probe of 37c7ecb (byte source: gen_manifest.yaml keys summary, fcov, coverage)
+# fcov summary of the round-0 probe of 37c7ecb. The keys summary and fcov reproduce the manifest keys of the same name
+# (re-serialized from gen_manifest.yaml, content-equal, not byte copies). coverage_status_derived is DERIVED: its first
+# block quotes the manifest's coverage block (status urg_failed, urg_rc 1); the URG-OFR cause is read from cov/merge.log,
+# retained beside this file as gen_merge_log_excerpt.log.
 regression: round_0
 outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0
 pinned_sha: 37c7ecb6dbe023e6f6b098e932367e339a24735a
@@ -159,8 +162,15 @@ fcov:
       declared_bins: 0
       unmet_bins: []
   covergroups_exist: false
-coverage_status:
-  measured_merge: 'failed: urg Error-[URG-OFR], the relative -elfile path was not resolved (cov/merge.log)'
-  elfiles_as_passed:
-  - dv/auto_dv/excl/gen_exclusions.el
-  dashboard_txt: null
+coverage_status_derived:
+  from_manifest_coverage:
+    status: urg_failed
+    urg_rc: 1
+    urg_timed_out: false
+    elfiles_as_passed:
+    - dv/auto_dv/excl/gen_exclusions.el
+    excl_strict: true
+    dashboard_txt: null
+    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log
+  from_merge_log: 'Error-[URG-OFR] Failed to open file ''dv/auto_dv/excl/gen_exclusions.el'': the relative -elfile path reached
+    urg unresolved with the cov dir as cwd (retained here as gen_merge_log_excerpt.log; a flow defect, fixed by T-208 B)'

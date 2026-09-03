@@ -1,0 +1,13 @@
+# Complete copy of the measured merge log of the round-0 probe (regress_round_0, pinned 37c7ecb6dbe0)
+# source: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log (10 lines, all retained); sha256 of the source file: 4e4403a60396bd26aa56eab1b27f1a368c28a4dfb408af41c6141fd303ed52e5
+# what it shows: urg received the relative '-elfile dv/auto_dv/excl/gen_exclusions.el' with the cov dir as cwd and failed (Error-[URG-OFR]); a flow defect, fixed by T-208 B (gen_regress.resolve_elfile)
+#
+Command: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merged.vdb -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/build/gen_tb/build.vdb -elfile dv/auto_dv/excl/gen_exclusions.el -excl_strict -dump full_exclusions
+Date: Thu Sep  3 13:40:35 2026
+
+URG Version X-2025.06-SP2 Copyright (c) 1991-2025 by Synopsys Inc.
+
+Error-[URG-OFR] Failed to open file
+  The file 'dv/auto_dv/excl/gen_exclusions.el' given to the -elfile option 
+  could not be opened for reading: No such file or directory.
+  Please verify that the file exists and has read permission.
