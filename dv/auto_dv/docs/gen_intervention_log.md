@@ -805,3 +805,16 @@ runs predate the 602-bin manifest) and three lows fold into landing 3c together 
 and bit_draft. LOG-024 stays in force until 3c is committed and re-reviewed. Orchestrator note: holding bit_draft
 out of a landing whose guard covers every test module created the red; a held-back file must be checked against
 the new lint before the commit.
+
+## LOG-031 - 2026-09-03 - WATCHDOG (tb-infra instance stopped and respawned)
+
+tb-infra's STATUS.md stayed at 13:28Z, its last file (out_fu_mut_driver.log) at 13:36Z and its last shared-tree
+edit (gen_rvfi_pkg.sv) at 13:32Z; the follow-up build out_fu/a had finished green at 13:29:54Z (vcs exit 0), no
+simulator process remained, and the agent showed "running" with no output for 45 minutes. Nudged at 14:05Z
+(watchdog rule: one nudge), still silent at 14:15Z: stopped at 14:19Z and respawned under the same name with
+the common briefing, the role section, the inherited shared-tree edits (T-134, T-136, T-137, CM5/CM6 items,
+codegen fixtures, README rename), the binding rulings (LOG-025, LOG-026a, LOG-028a), the open review rows
+(CM5/CM6/CM8, CR5/CR6, Critic Section 7) and the RTL facts to encode (R9, R10, R11). Work order: verify the
+inherited edits by rebuilding, finish the checker holes first, split into two landings if needed, close the
+window with the canary. Third respawn of the day (rtl-arch LOG-010, tb-infra earlier); the pattern is a long
+foreground turn with no filesystem output, which the STATUS rule is meant to expose.
