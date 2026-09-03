@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 11:34 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 11:56 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -12988,8 +12988,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   value is pc_if (next sequential fetch address) and is compared as such (TP-RVFI-012); the
   comparator observes the target on the following record (TB Infra convention C-1). Related:
   B13 (jalr to an odd target keeps bit 0 in pc_wdata, rtl/ibex_core.sv:2084 with the raw
-  branch_target_ex) stands.
-
+  branch_target_ex) stands. Evidence (TB Infra first green export run, dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (b)): the seed-7 program's single trap record (order 466, ecall at 0x80002164) has pc_wdata 0x80002168 = pc + 4, not the handler 0x80001700, confirming the RTL-defined rule above and convention C-1; the export test's pc-continuity rule excludes trap, mret and dret records (gen_ut_export.py); rtl-arch T-102 fact R1 (dv/auto_dv/evidence/gen_t102_rtl_facts.md) confirms mret/dret pc_wdata = pc_if (+4 for a 32-bit instruction, +2 for c.ebreak) from rtl/ibex_core.sv:2084.
 ### F-RVFI-011: mem_addr / rmask / wmask for loads and stores (single record, unshifted mask)
 - What: rvfi_mem_addr = lsu_addr captured in the first ID cycle (the effective, possibly
   misaligned, byte address). rmask/wmask are derived from lsu_type only: word 4'b1111, half
@@ -13011,8 +13010,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   nonzero only for memory operations and addr to hold the accessed location. Masks are zeroed
   only for WB-trap records (:2156-2157). Consequence: the mask / address rules of
   gen_chk_rvfi_proto and the comparator apply only to records DECODED as loads or stores
-  (TP-RVFI-014 checker caveat; TP-RVFI-029 for ID-trap records); no expected-fail item.
-
+  (TP-RVFI-014 checker caveat; TP-RVFI-029 for ID-trap records); no expected-fail item. Evidence (dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (a)): a store's RVFI record retires a few cycles after the memory model sees the bus store (WB waits for the response; the tohost store, order 170, landed after a flush marker taken 4 cycles after the end-of-test edge), confirming the record-versus-dbus timing anchors (S21, C-3) used by the TP-DMEM store-timing items.
 ### F-RVFI-012: mem_rdata and mem_wdata contents
 - What: rvfi_mem_rdata is the LSU result (rf_wdata_lsu) captured when lsu_resp_valid: already
   byte-selected and sign/zero-extended, and for a misaligned load the merged value of both

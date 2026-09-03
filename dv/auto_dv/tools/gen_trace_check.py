@@ -6,7 +6,7 @@ gen_trace_feature_tp.csv, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv; the r
 dv/auto_dv/tb/gen_tb_knobs.yaml (export_events) and, optionally, one build's build_manifest.yaml.
 Exits 1 on any violation. Deterministic.
 
-Options:
+Options (export_sources entries may be "<source> <event>" strings or {source, event} maps):
   --knobs <path>           export event table (default dv/auto_dv/tb/gen_tb_knobs.yaml); a row whose event is
                            "<name>" is a wildcard and counts as ABSENT (gen_test_plan.md Section 0)
   --build-manifest <path>  a build's build_manifest.yaml; its export_sources list ("<source> <event>" strings) decides
@@ -98,6 +98,12 @@ def split_rows(txt):
         else: cur += ch
     if cur.strip(): out.append(cur.strip())
     return out
+VOCAB = {f'{s} {e}' for s, es in {
+    'ibus': ['req', 'gnt', 'rvalid'], 'dbus': ['req', 'gnt', 'rvalid'],
+    'pin': ['irq_software', 'irq_timer', 'irq_external', 'irq_fast', 'irq_nm', 'debug_req', 'fetch_enable', 'mcounteren_writable'],
+    'alert': ['alert_minor', 'alert_major_bus', 'alert_major_internal', 'double_fault_seen'],
+    'misc': ['irq_pending', 'core_busy', 'crash_dump_current_pc', 'crash_dump_next_pc', 'crash_dump_last_data_addr', 'crash_dump_exception_pc', 'crash_dump_exception_addr'],
+    'icram': ['inject', 'lookup', 'tag_write', 'fill_write'], 'scrkey': ['req', 'valid'], 'regime': ['phase']}.items() for e in es}
 marked = {}; wit_errors = []
 for tid, b in tps.items():
     if TOKEN not in b: continue
@@ -105,8 +111,8 @@ for tid, b in tps.items():
     if not m: wit_errors.append(f'{tid}: marked item without [export-rows: ...]'); marked[tid] = []; continue
     rows = split_rows(m.group(1))
     for tok in rows:
-        if not (tok.startswith('none (') or re.fullmatch(r'(ibus|dbus|pin|alert|misc|icram|scrkey|regime) [a-z_0-9<>]+', tok)):
-            wit_errors.append(f'{tid}: export row "{tok}" is not "<source> <event>" or "none (<why>)"')
+        if not (tok.startswith('none (') or tok in VOCAB):
+            wit_errors.append(f'{tid}: export row "{tok}" is not in the Section 0 vocabulary (or "none (<why>)")')
     marked[tid] = [t for t in rows if not t.startswith('none')]
 witness_csv = list(csv.DictReader(open(D/'gen_trace_witness_ids.csv')))
 if [(r['tp_item'], r['bin']) for r in witness_csv] != wit_order:
@@ -118,6 +124,17 @@ for i, r in enumerate(witness_csv):
     if not g or g.group(1) != r['test_group']: wit_errors.append(f'gen_trace_witness_ids.csv: test_group {r["test_group"]} disagrees with the item for {r["tp_item"]}')
 for tid in marked:
     if tid not in {r['tp_item'] for r in witness_csv}: wit_errors.append(f'{tid}: marked item without a CG-WIT-001 row')
+# the rendered witness table (TB Infra codegen) equals the CSV whenever it exists (round 7 L3; digest guard is WP-8)
+gk = R / 'gen_tb' / 'gen_knobs.py'
+if gk.exists() and re.search(r'^WITNESS_IDS\s*=', gk.read_text(), re.M):
+    ns = {}
+    try:
+        exec(compile(re.search(r'^WITNESS_IDS\s*=.*?(?=^\w|\Z)', gk.read_text(), re.M | re.S).group(0), str(gk), 'exec'), ns)
+        rendered = {str(k): int(v) for k, v in (ns.get('WITNESS_IDS') or {}).items()}
+        expected = {r['tp_item']: int(r['index']) for r in witness_csv}
+        if rendered != expected: wit_errors.append(f'gen_knobs.py WITNESS_IDS differs from gen_trace_witness_ids.csv ({len(rendered)} vs {len(expected)} entries)')
+    except Exception as exc:  # a table that cannot be read is a violation, not a skip
+        wit_errors.append(f'gen_knobs.py WITNESS_IDS unreadable: {exc}')
 # rendered export rows: the yaml table minus wildcard rows
 import yaml
 knobs = yaml.safe_load(open(args.knobs))
@@ -130,12 +147,14 @@ def present(tok, rows):
     return tok in rows
 in_yaml = [tid for tid, rows in marked.items() if rows and all(present(t, yaml_rows) for t in rows)]
 sunset_fail = []; export_sources = None; sunset_note = ''
-if args.build_manifest:
+if args.build_manifest and not pathlib.Path(args.build_manifest).exists():
+    sunset_note = f'export sources unknown: {args.build_manifest} not found'
+elif args.build_manifest:
     man = yaml.safe_load(open(args.build_manifest)) or {}
     if 'export_sources' not in man:
         sunset_note = f'export sources unknown: {args.build_manifest} has no export_sources field (Runtime request, gen_test_plan.md Section 2a WP-6)'
     else:
-        export_sources = {str(x) for x in (man['export_sources'] or [])}
+        export_sources = {f"{x['source']} {x['event']}" if isinstance(x, dict) else str(x) for x in (man['export_sources'] or [])}
         sunset_fail = [tid for tid, rows in marked.items() if rows and all(present(t, export_sources) for t in rows)]
         sunset_note = f'export sources from {args.build_manifest}: {len(export_sources)} rows; {len(sunset_fail)} still-marked items have every export row present'
 else:
@@ -151,5 +170,9 @@ print(f'cycle-clause marked items {len(marked)} (witness bins excluded from mani
 print(f'sunset (C-3): {sunset_note}')
 print(f'coverpoints declared {sum(len(v) for v in cg_cps.values())}, owned by an item {len(owned_cps)}, regression-level (no item) {len(unowned)} (listed in gen_fcov_plan.md Section 1.1; reported, not failed)')
 if errors:
-    print(f'FAIL: {len(errors)} violations'); [print('  ' + e) for e in errors[:60]]; sys.exit(1)
+    sunset_msgs = [e for e in errors if e.startswith('sunset:')]; other = [e for e in errors if not e.startswith('sunset:')]
+    print(f'FAIL: {len(errors)} violations ({len(sunset_msgs)} sunset, {len(other)} other)'); [print('  ' + e) for e in other[:60]]
+    if len(other) > 60: print(f'  ... {len(other) - 60} more')
+    [print('  ' + e) for e in sunset_msgs]  # the operator removes these tokens: print all of them
+    sys.exit(1)
 print('PASS')

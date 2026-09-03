@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 11:34 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 11:56 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -51,37 +51,48 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   the addendum's Section 8 table rendered EXACTLY (one `# events` row and one writer per event name): ibus/dbus req, gnt,
   rvalid; pin irq_software, irq_timer, irq_external, irq_fast<n>, irq_nm, debug_req, fetch_enable, mcounteren_writable;
   alert alert_minor, alert_major_bus, alert_major_internal, double_fault_seen; misc irq_pending, core_busy,
-  crash_dump_<field>; icram inject; scrkey req, valid; regime phase. A yaml row whose event is `<name>` (a wildcard) is
-  NOT a rendered row for this plan (gen_trace_check.py treats it as absent); at HEAD the pin, alert, misc and scrkey rows
-  are wildcards, so no pin, alert, misc or scrkey item can sunset yet (cross-model r4 finding N1 on the addendum asks TB
-  Infra for exact rows).
+  crash_dump_<field>; icram inject; scrkey req, valid; regime phase; plus three rows this plan DEMANDS beyond the addendum
+  table (cross-model round 7 M2; Section 2a WP-8): icram lookup, icram tag_write, icram fill_write (the icache RAM model
+  announcing a lookup read, a tag write and a fill write with way and index), needed by 17 TP-IC items whose clauses compare
+  RAM-port cycles that no bus, alert or scrkey row carries; until TB Infra lands them those items stay marked and the E
+  lines remain the ONLY path by which a boundary fact reaches a test. A yaml row whose event is `<name>` (a wildcard) is
+  NOT a rendered row for this plan (gen_trace_check.py treats it as absent); since TB Infra's commit d0c0d15 the yaml
+  renders all 29 rows exactly (no wildcards), so the sunset waits only on Runtime's export_sources field (WP-6) and, for
+  the 17 TP-IC items, on the icram rows (WP-8).
   Marker and export rows: a marked item carries the exact token `[CYCLE-CLAUSE coverage-only until the event export lands]`
   in its Fire-check, followed by `[export-rows: <source> <event>; ...]` naming EVERY export row its cycle-level clause
   compares (or `[export-rows: none (<why>)]` when no row carries the fact) and a parenthesis naming the source and its
   RVFI-only fallback (or stating that no fallback is claimed). The rows were assigned per item from the Fire-check text and
   the item's stimulus (182 items name the signal or event, 38 are inferred from the group and stimulus; Section 1.3 column
   Export rows); `pin irq_fast` stands for any irq_fast<n> row. The clause source class (Section 1.3 column Class source)
-  is GENERATED from the first export row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 5 no export row, 3 scrkey, 3 regime phase (220 items). 5 items have no export row
-  (TP-PMC-001, TP-IC-003, TP-IC-005, TP-IC-045, TP-IC-046): their clause stays coverage-only until the item is reformulated to a boundary fact or the export gains a
+  is GENERATED from the first export row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 4 icram inject, 3 scrkey, 3 regime phase, 1 no export row (220 items). 1 items have no export row
+  (TP-PMC-001): their clause stays coverage-only until the item is reformulated to a boundary fact or the export gains a
   row; they can never sunset by the tool.
   The witness group is a LEDGER of fire-check results, never DUT coverage (Critic gen_critic_plan_witness_v1.md;
   cross-model round 5): it is outside the functional-coverage score, outside the bin total (the plan reports
   spec-derived + adopted bins and, separately, "witnessed clauses: N of M marked items"), and outside traceability
   condition 2 (its bins map to items, not to DUT features; gen_trace_check.py excludes CG-WIT-001 from bins->feature and
   from ACTIVE->bin and prints the ledger line separately).
-  Witness protocol (agreed form for the Test Writer's template; cross-model round 6): the test TEMPLATE owns the
-  dispatch. run() calls the test's fire_check() hook as today and then every method named fire_tp_<id> by reflection in
-  name order; each returns a result record (tp_id, cycle_clause_true) whose cycle_clause_true is set only on the clause's
-  TRUE branch; the template keeps the records; the finish() epilogue, BEFORE the finish handshake, issues one bridge
-  command COV_WITNESS <index> for every record with cycle_clause_true whose index is in the test's rendered set. index =
-  the row of the item in gen_trace_witness_ids.csv (generated with this plan: columns index, tp_item, bin, test_group,
-  marked; the CG-WIT-001 rows of gen_trace_tp_bin.csv in file order); TB Infra's codegen renders GEN_WIT_IDS (SV) and
-  WIT_IDS (gen_knobs.py) from that file (addendum Section 9). The host structure check (check_test_source) refuses a direct
-  call of a fire_tp_* method from test code and any COV_WITNESS outside the template (C-1); the SV dispatcher receives the
-  running test's rendered set (the testlist entry's witness_ids, the indices of the group's rows, rendered into one
-  plusarg named by TB Infra in addendum v4c) and raises uvm_error GEN_WITNESS_FOREIGN for an index outside it and
-  GEN_CMD_DISPATCH for an index outside the global list (C-2). A test that never reaches the epilogue (fatal, timeout)
-  witnesses nothing. The request rows with acceptance rules and owners are Section 2a.
+  Witness protocol (the Test Writer's template as committed, gen_test_template_api.md Section 9; cross-model round 6,
+  Critic v3): a fire_tp_<area>_<nnn> method stays synchronous and calls self.check(what, ok, detail,
+  cycle_clause_true=True) only on the TRUE branch of its cycle-level clause; check() returns a CheckResult that the
+  template records; the finish() epilogue runs after the failure raise and BEFORE the finish handshake and issues one
+  awaited bridge command COV_WITNESS <code> for exactly the passed results with cycle_clause_true set, mapping the method
+  name to TP-<AREA>-<nnn> (lib.tp_id_of), requiring each id in the testlist entry's witness_ids (a list of TP ids) and
+  taking the code from the rendered WITNESS_IDS table (gen_knobs.py). code = index = the row of the item in
+  gen_trace_witness_ids.csv (generated with this plan: columns index, tp_item, bin, test_group, marked; the CG-WIT-001
+  rows of gen_trace_tp_bin.csv in file order); TB Infra's codegen renders GEN_WIT_IDS (SV) and WITNESS_IDS (Python) from
+  that file, equal by gen_trace_check.py's rule to the CG-WIT-001 rows of gen_trace_tp_bin.csv that the addendum Section 9
+  names (v4c aligns the file name, the table name WITNESS_IDS and the epilogue issue point, WP-1). Host rules (C-1): check_test_source refuses the token COV_WITNESS in any test and the
+  keyword cycle_clause_true outside a fire_* method's self.check; a foreign id, a missing table or a missing command
+  fails the run (GEN_TEST_FAIL <name>: witness ...); a test that never reaches the epilogue witnesses nothing. Condition
+  from the retention review (Orchestrator, 11:5x UTC): the record is UNFORGEABLE by a test hook: ids come only from the
+  rendered table keyed by the test class, and the results are collected into a structure the hooks cannot reach (Test
+  Writer commit pending (Test Writer landing)). SV rule
+  (C-2): the dispatcher receives the running test's index set through the plusarg +gen_witness_ids=<comma-separated
+  indices> (Runtime's gen_run converts the entry's TP ids to indices with gen_trace_witness_ids.csv at the pinned commit and records both forms plus the CSV's sha in result.yaml (Orchestrator ruling 11:5x UTC), Section 2a WP-2) and raises uvm_error GEN_WITNESS_FOREIGN for an index outside it and
+  GEN_CMD_DISPATCH for an index outside the global list. The request rows with acceptance rules and owners are
+  Section 2a.
   Sunset and enforcement: every marked item owns a witness bin CG-WIT-001.cp_clause.w_<id> that only its cycle-level
   clause can hit; while the token is present the bin is excluded from the owning test's manifest (gen_fcov_plan.md
   Section 0 manifest rule (f), read from column marked of gen_trace_witness_ids.csv) and the item runs on its fallback.
@@ -96,6 +107,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   clause fails its fcov-expectation check and acceptance item 5. Phase 1 sign-off requires that no item whose rows are
   present still carries the token, and lists the export-blocked items (no RVFI-only fallback) and the no-export-row items
   of Section 1.3 as blocked until the export or a reformulation lands.
+  Operational rule for the first export landing (Critic v3 note, Orchestrator 11:5x UTC): the failure list will be long
+  (two ibus rows alone un-mark about 20 items), so the DV Lead removes the tokens of every item whose rows the build
+  manifest's export_sources lists IN THE SAME CHANGE as Runtime's export_sources landing, regenerating the plan and the
+  witness CSV (marked = 0 for those rows) and the Test Writer regenerating the affected manifests; a failing run of
+  gen_trace_check.py between the two landings is the expected signal that the removal is due, not a defect. Token removal
+  is the DV Lead's, decided from the build manifest, never from the yaml alone.
   Items whose cycle clause anchors on an INTERNAL pipeline instant (ID entry, the FLUSH / IRQ_TAKEN / DBG_TAKEN
   windows, the interrupt decision cycle) cannot use the channel (TB Infra option B): they are reformulated to boundary
   facts (an RVFI record's cycle versus a pin or bus event's cycle) or stay coverage-only through P4-class sampling; the
@@ -186,9 +203,9 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 ## 1.3 Items whose Fire-check carries the cycle-clause marker (generated; 220 items; witness bins excluded from manifests while marked)
 
 Export rows (generated from each item's `[export-rows: ...]` annotation; the sunset input of gen_trace_check.py) and the
-clause source class generated from the first row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 5 no export row, 3 scrkey, 3 regime phase. No-export-row items (5; coverage-only until
-reformulated or until the export gains a row): TP-PMC-001, TP-IC-003, TP-IC-005, TP-IC-045, TP-IC-046. Row demand (items naming the row anywhere in their list, TB
-Infra's landing priority): ibus req 82, dbus rvalid 75, ibus rvalid 66, ibus gnt 46, pin irq_fast 42, pin irq_external 41, pin irq_software 41, pin irq_timer 41, dbus gnt 37, pin debug_req 35, pin irq_nm 34, misc irq_pending 27, misc core_busy 26, dbus req 25, regime phase 15, alert alert_major_bus 11, pin fetch_enable 6, alert double_fault_seen 4, icram inject 4, scrkey valid 4, alert alert_minor 3, pin mcounteren_writable 2, scrkey req 2, alert alert_major_internal 1, misc crash_dump_last_data_addr 1. Export-blocked items (no RVFI-only fallback; their Fire-check is
+clause source class generated from the first row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 4 icram inject, 3 scrkey, 3 regime phase, 1 no export row. No-export-row items (1; coverage-only until
+reformulated or until the export gains a row): TP-PMC-001. Row demand (items naming the row anywhere in their list, TB
+Infra's landing priority): ibus req 82, dbus rvalid 75, ibus rvalid 66, ibus gnt 46, pin irq_fast 42, pin irq_external 41, pin irq_software 41, pin irq_timer 41, dbus gnt 37, pin debug_req 35, pin irq_nm 34, misc irq_pending 27, misc core_busy 26, dbus req 25, regime phase 15, alert alert_major_bus 11, icram fill_write 9, icram tag_write 7, icram lookup 6, pin fetch_enable 6, alert double_fault_seen 4, icram inject 4, scrkey valid 4, alert alert_minor 3, pin mcounteren_writable 2, scrkey req 2, alert alert_major_internal 1, misc crash_dump_last_data_addr 1. Export-blocked items (no RVFI-only fallback; their Fire-check is
 entirely coverage-only while marked, so Phase 1 sign-off needs the export or a reformulation): 8
 (TP-CSR-100, TP-PMP-077, TP-IMEM-006, TP-IMEM-039, TP-DMEM-007, TP-DMEM-051, TP-IC-003, TP-IC-045). Class-B items (internal-instant anchors): 40.
 
@@ -364,29 +381,29 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-FE-017 | gen_fe_backpressure | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
 | TP-FE-022 | gen_fe_fault | ibus req | bus request | RVFI-only fallback stated | - |
 | TP-FE-026 | gen_fe_sleep | ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; misc core_busy | bus request | RVFI-only fallback stated | - |
-| TP-IC-002 | gen_ic_ram | ibus req | bus request | RVFI-only fallback stated | - |
-| TP-IC-003 | gen_ic_ram | none (icache RAM data-port read, RAM model only) | no export row | none: export-blocked for Phase 1 sign-off | - |
-| TP-IC-004 | gen_ic_ram | ibus req | bus request | RVFI-only fallback stated | - |
-| TP-IC-005 | gen_ic_ram | none (icache RAM fill-write port, RAM model only) | no export row | RVFI-only fallback stated | - |
+| TP-IC-002 | gen_ic_ram | ibus req; icram lookup | bus request | RVFI-only fallback stated | - |
+| TP-IC-003 | gen_ic_ram | icram lookup | icram inject | none: export-blocked for Phase 1 sign-off | - |
+| TP-IC-004 | gen_ic_ram | ibus req; icram lookup; icram tag_write | bus request | RVFI-only fallback stated | - |
+| TP-IC-005 | gen_ic_ram | icram fill_write | icram inject | RVFI-only fallback stated | - |
 | TP-IC-007 | gen_ic_inval | scrkey req; scrkey valid | scrkey | RVFI-only fallback stated | - |
-| TP-IC-008 | gen_ic_inval | scrkey req; scrkey valid | scrkey | RVFI-only fallback stated | - |
-| TP-IC-011 | gen_ic_inval | ibus req; scrkey valid | bus request | RVFI-only fallback stated | - |
-| TP-IC-015 | gen_ic_inval | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
+| TP-IC-008 | gen_ic_inval | scrkey req; scrkey valid; icram tag_write | scrkey | RVFI-only fallback stated | - |
+| TP-IC-011 | gen_ic_inval | ibus req; scrkey valid; icram tag_write | bus request | RVFI-only fallback stated | - |
+| TP-IC-015 | gen_ic_inval | ibus req; ibus gnt; ibus rvalid; icram fill_write | bus request | RVFI-only fallback stated | - |
 | TP-IC-019 | gen_ic_enable | ibus req | bus request | RVFI-only fallback stated | - |
 | TP-IC-020 | gen_ic_enable | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IC-023 | gen_ic_fill | ibus rvalid; ibus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IC-024 | gen_ic_fill | ibus gnt; ibus rvalid; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IC-030 | gen_ic_enable | ibus req | bus request | RVFI-only fallback stated | - |
-| TP-IC-031 | gen_ic_enable | ibus rvalid; ibus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IC-035 | gen_ic_ecc | alert alert_minor; icram inject; ibus req | alert | RVFI-only fallback stated | - |
-| TP-IC-036 | gen_ic_ecc | alert alert_minor; icram inject; ibus req | alert | RVFI-only fallback stated | - |
-| TP-IC-037 | gen_ic_ecc | alert alert_minor; icram inject | alert | RVFI-only fallback stated | - |
-| TP-IC-045 | gen_ic_ram | none (icache RAM port arbitration, RAM model only) | no export row | none: export-blocked for Phase 1 sign-off | - |
-| TP-IC-046 | gen_ic_ram | none (icache RAM data-port write payload, RAM model only) | no export row | RVFI-only fallback stated | - |
+| TP-IC-023 | gen_ic_fill | ibus rvalid; ibus gnt; icram fill_write | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
+| TP-IC-024 | gen_ic_fill | ibus gnt; ibus rvalid; ibus req; icram fill_write | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
+| TP-IC-030 | gen_ic_enable | ibus req; icram lookup; icram fill_write | bus request | RVFI-only fallback stated | - |
+| TP-IC-031 | gen_ic_enable | ibus rvalid; ibus gnt; icram fill_write | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
+| TP-IC-035 | gen_ic_ecc | alert alert_minor; icram inject; ibus req; icram tag_write | alert | RVFI-only fallback stated | - |
+| TP-IC-036 | gen_ic_ecc | alert alert_minor; icram inject; ibus req; icram tag_write | alert | RVFI-only fallback stated | - |
+| TP-IC-037 | gen_ic_ecc | alert alert_minor; icram inject; icram tag_write; icram lookup | alert | RVFI-only fallback stated | - |
+| TP-IC-045 | gen_ic_ram | icram lookup; icram fill_write | icram inject | none: export-blocked for Phase 1 sign-off | - |
+| TP-IC-046 | gen_ic_ram | icram fill_write | icram inject | RVFI-only fallback stated | - |
 | TP-IC-051 | gen_ic_busy | ibus gnt; dbus gnt; dbus rvalid; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IC-052 | gen_ic_busy | ibus req; ibus rvalid | bus request | RVFI-only fallback stated | - |
 | TP-IC-053 | gen_ic_busy | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-IC-057 | gen_ic_enable | ibus req | bus request | RVFI-only fallback stated | - |
+| TP-IC-057 | gen_ic_enable | ibus req; icram fill_write; icram tag_write | bus request | RVFI-only fallback stated | - |
 | TP-REG-001 | gen_reg_knob_sweep | ibus gnt; ibus req; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-REG-002 | gen_reg_knob_sweep | ibus rvalid; ibus gnt; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-REG-005 | gen_reg_knob_sweep | dbus gnt; dbus req; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
@@ -451,12 +468,13 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | Row | Owner | Request | Acceptance rule |
 |---|---|---|---|
 | WP-1 | TB Infra (addendum Section 9, v4c) | bridge command COV_WITNESS, arg0 = index | index = the row of gen_trace_witness_ids.csv; GEN_WIT_IDS rendered from that file in order; an index outside the global list is uvm_error GEN_CMD_DISPATCH; the command samples gen_wit_cycle_clause_cg.cp_clause and nothing else (no checker reads it) |
-| WP-2 | TB Infra (v4c) and Runtime (flow) | the running test's rendered set reaches SV | the testlist entry's witness_ids (indices of the group's rows in gen_trace_witness_ids.csv) rendered into one plusarg named in v4c (DV Lead proposal +gen_witness_ids=<indices>); the dispatcher raises uvm_error GEN_WITNESS_FOREIGN for an index outside the set (C-2); a testlist entry of a group with marked items and no witness_ids is a loader error |
-| WP-3 | Test Writer (gen_test_template.py) | template-owned dispatch and epilogue | run() calls fire_check() and then every fire_tp_<id> method by reflection in name order; each returns (tp_id, cycle_clause_true); finish() issues COV_WITNESS <index> for the TRUE records in the rendered set before bridge.finish; a test that never reaches the epilogue witnesses nothing |
-| WP-4 | Test Writer (gen_test_lib.check_test_source) | structure-check rules (C-1) | refuses a direct call of a fire_tp_* method from test code and any self.cmd("COV_WITNESS", ...) outside the template; a fire_tp_<id> method whose id is not an item of the test's group is refused |
-| WP-5 | Test Writer (gen_fcov_manifest.py) | manifest rule (f) | CG-WIT-001 bins whose row in gen_trace_witness_ids.csv has marked = 1 are excluded from the owning test's manifest and marked = 0 rows are must-hit; the generator reads the CSV, never the item text; the committed gen_test_csr_trap_setup manifest (w_tp_csr_029, w_tp_csr_031 must-hit today) is regenerated |
+| WP-2 | Runtime (flow; Orchestrator ruling 11:5x UTC) and TB Infra (v4c) | the running test's index set reaches SV | gen_run reads the testlist entry's witness_ids (TP ids) and gen_trace_witness_ids.csv at the pinned commit, converts them to the index list of +gen_witness_ids=<comma-separated indices> and records both forms plus the CSV's sha in result.yaml; the template uses WITNESS_IDS only to issue COV_WITNESS <index> for the ids whose clause returned TRUE; the dispatcher raises uvm_error GEN_WITNESS_FOREIGN for an index outside the set (C-2); a testlist entry of a group with marked items and no witness_ids is a loader error |
+| WP-3 | Test Writer (gen_test_template.py, committed) | check() result record and epilogue | self.check(..., cycle_clause_true=) returns a CheckResult the template records; finish() issues COV_WITNESS <code> for the passed records with the field set, ids restricted to the entry's witness_ids, codes from WITNESS_IDS, before bridge.finish; a test that never reaches the epilogue witnesses nothing (gen_test_template_api.md Section 9) |
+| WP-4 | Test Writer (gen_test_lib.check_test_source, committed) | structure-check rules (C-1) | refuses the token COV_WITNESS in any test and the keyword cycle_clause_true outside a fire_* method's self.check; a fire_tp_<id> method whose id is not an item of the test's group is a foreign id and fails the run |
+| WP-5 | Test Writer (gen_fcov_manifest.py) | manifest rule (f) | CG-WIT-001 bins of a marked item are excluded from the owning test's manifest and become must-hit when the token is removed; the generator keys on the marker token in the item's Fire-check or on column marked of gen_trace_witness_ids.csv (equal by construction, gen_trace_check.py validates the two agree); the committed gen_test_csr_trap_setup manifest (w_tp_csr_029, w_tp_csr_031 must-hit today) is regenerated (Critic batch-1 M-2 = round-6 M2) |
 | WP-6 | Runtime (build_manifest.yaml) | export_sources field | list of exact `<source> <event>` strings the build's writers emit (rendered rows only, no wildcards); read by gen_trace_check.py --build-manifest for the sunset (C-3) |
-| WP-7 | TB Infra or Runtime | ledger weight 0 | the mechanism (option.weight = 0 in the rendered covergroup, or the merge/report step) named in the addendum or gen_runtime_api.md; gen_fcov_plan.md Section 1 cites it once answered |
+| WP-7 | Runtime (mechanism of record) and TB Infra (secondary) | ledger weight 0 | gen_flow_const.py LEDGER_COVERGROUPS names the ledger covergroup by its SystemVerilog name (gen_wit_cycle_clause_cg (pending v4c confirmation); authoritative for the exclusion, ruled 11:5x UTC) and LEDGER_PLAN_IDS keeps CG-WIT-001 for the report line; gen_cov_report.py group_score_excluding recomputes the weight-averaged group score without it and ledger_summary reports witnessed clauses: N of M (CG-WIT-001) (c5b5bc0, SV-name keying 5506f23, ledger_missing fails the merge e30b693); TB Infra states the SV name in v4c Section 9 and renders option.weight = 0 |
+| WP-8 | TB Infra (icache RAM model, event part) and TB Infra + Runtime + Test Writer (digest) | icram lookup / tag_write / fill_write rows; witness-table digest guard | three exact export rows `icram lookup`, `icram tag_write`, `icram fill_write` (fields way, index; the lookup row also the port: tag/data) announced by gen_icache_ram like `icram inject`; until they land the 17 TP-IC items stay marked. Digest guard (round 7 L3): every rendering of gen_trace_witness_ids.csv (GEN_WIT_IDS in SV, WITNESS_IDS in gen_knobs.py, the testlist witness_ids) carries the CSV's sha256 prefix; the flow passes it as +gen_witness_digest and the dispatcher refuses a mismatch with uvm_error GEN_WITNESS_DIGEST, so a stale SV rendering used with a newer testlist fails instead of sampling the wrong bin; gen_trace_check.py compares WITNESS_IDS to the CSV whenever gen_knobs.py defines it |
 
 # 3. Test groups (proposed tests)
 
@@ -3308,6 +3326,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-001.cp_op.pack, CG-BIT-001.cp_op.packh, CG-BIT-001.cp_op.packu, CG-BIT-001.cr_op_rs1.auto, CG-BIT-001.cr_op_rs2.auto, CG-BIT-001.cr_op_same.auto
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-012: Zbb rol / ror / rori and their two-cycle occupancy
 - Features: F-BIT-012
@@ -3462,6 +3481,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-003.cp_op.slo, CG-BIT-003.cp_op.sro, CG-BIT-003.cp_op.sloi, CG-BIT-003.cp_op.sroi, CG-BIT-003.cr_op_amount.auto, CG-BIT-003.cr_op_operand.auto, CG-BIT-003.cp_sloi_bits.b00, CG-BIT-003.cp_sroi_bit25.b0
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-023: slo/sro by 0 and 31, register amount masking
 - Features: F-BIT-023
@@ -3476,6 +3496,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-003.cp_amount.a0, CG-BIT-003.cp_amount.a31, CG-BIT-003.cr_reg_upper.auto, CG-BIT-003.cp_operand.zero
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-024: Draft Zbp shfl / unshfl / shfli / unshfli (zip / unzip)
 - Features: F-BIT-024
@@ -3490,6 +3511,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-004.cr_shfl_ctrl.auto, CG-BIT-004.cp_op.shfl, CG-BIT-004.cp_op.unshfl, CG-BIT-004.cp_op.shfli, CG-BIT-004.cp_op.unshfli, CG-BIT-004.cp_shfl_ctrl.c15, CG-BIT-011.cp_illegal_class.shfli_bit26
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-025: Draft Zbp xperm.n / xperm.b / xperm.h
 - Features: F-BIT-025
@@ -3504,6 +3526,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-005.cp_op.xperm_n, CG-BIT-005.cp_op.xperm_b, CG-BIT-005.cp_op.xperm_h, CG-BIT-005.cr_op_pattern.auto, CG-BIT-005.cr_op_rs1.auto
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-026: xperm out-of-range index gives zero
 - Features: F-BIT-026
@@ -3518,6 +3541,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-005.cr_op_oob.auto, CG-BIT-005.cp_index_pattern.all_oob, CG-BIT-005.cp_index_pattern.mixed_oob, CG-BIT-005.cp_rs1_class.all_ones
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-027: Draft Zbt cmov / cmix (two-cycle, rs3)
 - Features: F-BIT-027
@@ -3532,6 +3556,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-008.cp_op.cmov, CG-BIT-008.cp_op.cmix, CG-BIT-008.cp_cmov_ctrl.zero, CG-BIT-008.cp_cmov_ctrl.one, CG-BIT-008.cp_cmov_ctrl.msb_only, CG-BIT-008.cp_cmov_ctrl.nonzero_rand, CG-BIT-008.cp_cmix_mask.zero, CG-BIT-008.cp_cmix_mask.all_ones, CG-BIT-008.cp_cmix_mask.alt, CG-BIT-008.cp_cmix_mask.rand, CG-BIT-008.cr_op_rs3.auto, CG-BIT-010.cr_op_delta_clean.cmov_d2, CG-BIT-010.cr_op_delta_clean.cmix_d2, CG-BIT-010.cr_class_delta_clean.ternary_d2, CG-BIT-008.cp_op.cmov, CG-BIT-008.cp_op.cmix, CG-BIT-008.cr_op_rs13.auto
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-028: Draft Zbt fsl / fsr / fsri (two-cycle funnel shifts)
 - Features: F-BIT-028
@@ -3546,6 +3571,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-008.cp_op.fsl, CG-BIT-008.cp_op.fsr, CG-BIT-008.cp_op.fsri, CG-BIT-008.cr_funnel_amt.auto, CG-BIT-008.cr_op_rs13.auto, CG-BIT-008.cr_op_rs3.auto, CG-BIT-010.cr_op_delta_clean.fsl_d2, CG-BIT-010.cr_op_delta_clean.fsr_d2, CG-BIT-010.cr_op_delta_clean.fsri_d2, CG-BIT-008.cp_rs2_upper6.zero
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-029: Funnel shift amounts 0, 31, 32, 33, 63 and rs2 bits above [5]
 - Features: F-BIT-029
@@ -3560,6 +3586,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-008.cp_funnel_amt.a0, CG-BIT-008.cp_funnel_amt.a32, CG-BIT-008.cp_funnel_amt.a31, CG-BIT-008.cp_funnel_amt.a33, CG-BIT-008.cp_funnel_amt.a63, CG-BIT-008.cr_funnel_upper.fsl_nonzero, CG-BIT-008.cr_funnel_upper.fsr_nonzero, CG-BIT-008.cp_fsri_hi5.other
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-030: Draft Zbf bfp (bit-field place), single cycle
 - Features: F-BIT-030
@@ -3574,6 +3601,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass (doc mismatch D8)
 - Test group: gen_bit_draft
 - Bins: CG-BIT-009.cr_len_off.auto, CG-BIT-009.cr_data_rs1.auto, CG-BIT-009.cp_delta.d1, CG-BIT-009.cp_ctrl_upper.zero, CG-BIT-009.cp_ctrl_upper.nonzero, CG-BIT-011.cp_legal_insn.bfp, CG-BIT-009.cp_overflow.no, CG-BIT-009.cp_rd_x0.no
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-031: bfp len = 0 and field overflow
 - Features: F-BIT-031
@@ -3588,6 +3616,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-009.cp_len.l0, CG-BIT-009.cp_off.o31, CG-BIT-009.cp_off.o16, CG-BIT-009.cr_overflow_len.auto, CG-BIT-009.cp_overflow.yes, CG-BIT-009.cp_data_class.above_len_set, CG-BIT-009.cp_len.l15, CG-BIT-009.cp_len.mid
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-032: Draft Zbr crc32.b/h/w and crc32c.b/h/w (two-cycle)
 - Features: F-BIT-032
@@ -3602,6 +3631,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-007.cp_op.crc32_b, CG-BIT-007.cp_op.crc32_h, CG-BIT-007.cp_op.crc32_w, CG-BIT-007.cp_op.crc32c_b, CG-BIT-007.cp_op.crc32c_h, CG-BIT-007.cp_op.crc32c_w, CG-BIT-007.cr_op_rs1.auto, CG-BIT-010.cr_op_delta_clean.crc32_b_d2, CG-BIT-010.cr_op_delta_clean.crc32_h_d2, CG-BIT-010.cr_op_delta_clean.crc32_w_d2, CG-BIT-010.cr_op_delta_clean.crc32c_b_d2, CG-BIT-010.cr_op_delta_clean.crc32c_h_d2, CG-BIT-010.cr_op_delta_clean.crc32c_w_d2, CG-BIT-010.cr_class_delta_clean.crc_d2
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-033: crc32 corner inputs
 - Features: F-BIT-033
@@ -3616,6 +3646,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_bit_draft
 - Bins: CG-BIT-007.cp_rs1_class.zero, CG-BIT-007.cp_rs1_class.all_ones, CG-BIT-007.cp_rs1_class.high_only, CG-BIT-007.cp_rs1_class.low_only, CG-BIT-007.cp_rs1_class.single_bit
+- Notes: blocked on the shim's draft-B reference set (T-102 item 4: pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c* missing from gen_isa_exec_reference); TP-BIT-016 (grev/gorc, rev8/orc.b/brev8) is built in gen_test_bit_draft.
 
 ### TP-BIT-034: Zbe bcompress / bdecompress are illegal in OTEarlGrey
 - Features: F-BIT-034
@@ -17120,7 +17151,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: loop, latencies
 - Knobs: knob:imem_rvalid_delay (random)
 - Fire-check: >= 100 lookups where a hit (no bus record) followed a tag read one cycle earlier.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: warm-loop records with rvfi_insn == memory image at the minimum rvfi_ext_mcycle gap)
+  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; icram lookup] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: warm-loop records with rvfi_insn == memory image at the minimum rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_icache (hit iff model tag matched), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_ram
@@ -17135,7 +17166,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: as TP-IC-002
 - Knobs: knob:imem_rvalid_delay (random)
 - Fire-check: >= 100 hits whose rvfi_insn equals the model's data word of the hitting way read one
-  cycle after ic_data_req_o. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: none (icache RAM data-port read, RAM model only)] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  cycle after ic_data_req_o. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: icram lookup] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_isa_compare, gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_ram
@@ -17155,7 +17186,7 @@ draw weights of the agent / program generator per transaction.
   for the same word; >= 1 complete sweep per seed during which NO lookup read occurred: every
   tag-port and data-port cycle of INVAL_CACHE is a write at the inval index (tag_write_ic0 =
   fill_grant | inval_write_req | ecc_write_req, data_write_ic0 = tag_write_ic0, index muxed to
-  inval_index_q, rtl/ibex_icache.sv:269-283, 1244). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records retired during the sweep with rvfi_insn == memory image and the cpuctrlsts read-back bit 0)
+  inval_index_q, rtl/ibex_icache.sv:269-283, 1244). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; icram lookup; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records retired during the sweep with rvfi_insn == memory image and the cpuctrlsts read-back bit 0)
 - Pass criteria: gen_chk_icache (reads legal when disabled; no allocation; no lookup read during a
   sweep), gen_chk_ibus_proto
 - Expected: pass
@@ -17171,7 +17202,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, latencies
 - Knobs: knob:imem_rvalid_delay (random)
 - Fire-check: >= 100 fill writes where ic_tag_req_o is one-hot, ic_tag_write_o and ic_data_write_o
-  are both high in the same cycle with the same index, for each way. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: none (icache RAM fill-write port, RAM model only)] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first-pass records of each line retire with rvfi_insn == memory image)
+  are both high in the same cycle with the same index, for each way. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first-pass records of each line retire with rvfi_insn == memory image)
 - Pass criteria: gen_chk_icache (fill write shape), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_ram
@@ -17240,7 +17271,7 @@ draw weights of the agent / program generator per transaction.
   in cycle 2 (counting convention: reset release = cycle 0 = OUT_OF_RESET, cycle 1 =
   AWAIT_SCRAMBLE_KEY with valid = 1 -> INVAL_CACHE, cycle 2 = first write; the last write, index
   IC_NUM_LINES-1, in cycle IC_NUM_LINES+1; first INVAL_IDLE cycle = IC_NUM_LINES+2, TP-IC-011;
-  rtl/ibex_icache.sv:1221-1246, 1274-1280). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: scrkey req; scrkey valid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_ext_mcycle (boot after the IC_NUM_LINES + 2 sweep bound))
+  rtl/ibex_icache.sv:1221-1246, 1274-1280). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: scrkey req; scrkey valid; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_ext_mcycle (boot after the IC_NUM_LINES + 2 sweep bound))
 - Pass criteria: gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_inval
@@ -17297,7 +17328,7 @@ draw weights of the agent / program generator per transaction.
   the sweep, all with bus records; the first fill write occurs >= 5 cycles after the last inval
   write (the first allocating lookup needs INVAL_IDLE: inval_block_cache clears only there,
   rtl/ibex_icache.sv:1218, 1265; then IC1 miss, two grants and two rvalids, and a fill_ram_req cycle
-  without a lookup, :249, 262-266, 815-819, 843-844) and never in the sweep. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; scrkey valid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_ext_mcycle and >= 50 records inside the sweep window with rvfi_insn == memory image)
+  without a lookup, :249, 262-266, 815-819, 843-844) and never in the sweep. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; scrkey valid; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_ext_mcycle and >= 50 records inside the sweep window with rvfi_insn == memory image)
 - Pass criteria: gen_chk_icache (sweep completeness and timing per the convention; no allocation
   during the sweep; first fill write >= 5 cycles after the last inval write), gen_isa_compare
 - Expected: pass
@@ -17371,7 +17402,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: >= 10 fence.i with >= 1 open line (agent count); those lines' already-granted or held
   beats were answered and their un-issued beats cancelled (the lines are stale and non-caching from
   the next cycle, rtl/ibex_icache.sv:771-775), and no fill write for them appeared (ram model), only
-  sweep writes. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the fence.i record followed by the pc + 4 record (rvfi_pc_wdata == pc + 4) with rvfi_insn == the updated memory image)
+  sweep writes. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the fence.i record followed by the pc + 4 record (rvfi_pc_wdata == pc + 4) with rvfi_insn == the updated memory image)
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_inval
@@ -17510,7 +17541,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: entry word, delays
 - Knobs: knob:imem_rvalid_delay (random)
 - Fire-check: >= 100 fills: the fill write is in a cycle after the second beat's rvalid (never
-  before), both grants precede it; >= 20 per entry word. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the line words retire with rvfi_insn == memory image on the first pass and again at gap 1 on the warm pass)
+  before), both grants precede it; >= 20 per entry word. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; ibus gnt; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the line words retire with rvfi_insn == memory image on the first pass and again at gap 1 on the warm pass)
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_fill
@@ -17537,7 +17568,7 @@ draw weights of the agent / program generator per transaction.
   lines whose lookup preceded the branch with NO grant yet at the redirect that still fetched both
   beats and were written (never cancelled); >= 10 non-caching lines (icache_enable = 0 or sweep
   active) cancelled before any grant with no bus traffic (un-issued beats stop; held or granted ones
-  complete). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record and, later, the line words retiring with rvfi_insn == memory image at warm-pass gaps)
+  complete). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid; ibus req; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record and, later, the line words retiring with rvfi_insn == memory image at warm-pass gaps)
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto, gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_fill
@@ -17659,7 +17690,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: all debug-mode retirements have bus records; the ram model shows lookup reads but no
   fill write after the entry cycle (at most one in the icache_enable drop cycle, TP-IC-031); after
   dret >= 10 hits on the pre-debug lines, the depc line excluded (fetched pass-through in the dret
-  cycle, TP-FE-022). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record and the post-dret warm-loop records at gap 1, the depc line excluded)
+  cycle, TP-FE-022). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; icram lookup; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record and the post-dret warm-loop records at gap 1, the depc line excluded)
 - Pass criteria: gen_chk_icache, gen_chk_debug
 - Expected: pass
 - Test group: gen_ic_enable
@@ -17679,7 +17710,7 @@ draw weights of the agent / program generator per transaction.
   from the cycle after the enable drop (a fill whose both beats had already been received may still
   win the RAM port in the drop cycle itself: fill_ram_req checks fill_cache_q, which clears one
   cycle later, rtl/ibex_icache.sv:744-746, 815-819; at most one fill write in that cycle is legal
-  and the checker starts one cycle later). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write record (read-back bit 0 == 0) and the subsequent records with rvfi_insn == memory image)
+  and the checker starts one cycle later). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; ibus gnt; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write record (read-back bit 0 == 0) and the subsequent records with rvfi_insn == memory image)
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_enable
@@ -17746,7 +17777,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:icache_ecc_err_rate (rare)
 - Fire-check: >= 20 injections per way: alert_minor_o pulsed once in IC1; next cycle a tag write
   with both way bits and valid=0 at that index; the instruction fetched from the bus.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image (corrected fetch) and the gen_chk_alerts expected-alert count per injection)
+  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject; ibus req; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image (corrected fetch) and the gen_chk_alerts expected-alert count per injection)
 - Pass criteria: gen_chk_icache, gen_chk_alerts (alert_minor_o only after an injection),
   gen_isa_compare
 - Expected: pass
@@ -17767,7 +17798,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: way, beat, bits
 - Knobs: knob:icache_ecc_err_rate (rare)
 - Fire-check: >= 20 injections per (way, beat): one alert pulse, next-cycle tag write for that way
-  only, bus refetch. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image and the gen_chk_alerts expected-alert count per injection)
+  only, bus refetch. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject; ibus req; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image and the gen_chk_alerts expected-alert count per injection)
 - Pass criteria: gen_chk_icache, gen_chk_alerts, gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_ecc
@@ -17789,7 +17820,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: >= 20 injections where the cycle after the alert carries a tag write and no lookup
   read on any port (the data port may carry a WRITE of ECC(0) to the ECC index/ways in that cycle,
   data_req_ic0 = lookup_req_ic0 | fill_req_ic0 with fill_ram_arb 0, rtl/ibex_icache.sv:280,
-  1000-1011; the ram model does not flag it), then lookups resume. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image and the gen_chk_alerts expected-alert count per injection)
+  1000-1011; the ram model does not flag it), then lookups resume. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_minor; icram inject; icram tag_write; icram lookup] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the instruction record with rvfi_insn == memory image and the gen_chk_alerts expected-alert count per injection)
 - Pass criteria: gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_ecc
@@ -17924,7 +17955,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:icache_ecc_err_rate (rare), knob:scr_key_delay (immediate)
 - Fire-check: >= 5000 port-active cycles observed including >= 100 cycles where a fill write was
   eligible while a lookup occurred (fill deferred >= 1 cycle, >= 20 of them deferred >= 2 cycles);
-  never a read and a write on one port in one cycle (gen_chk_icache check). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: none (icache RAM port arbitration, RAM model only)] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  never a read and a write on one port in one cycle (gen_chk_icache check). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: icram lookup; icram fill_write] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_chk_icache (req with write is either all read or all write per port, never a
   concurrent read of the same port), gen_isa_compare
 - Expected: pass
@@ -17942,7 +17973,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:scr_key_delay (immediate)
 - Fire-check: >= 100 cycles with ic_data_req_o & ic_data_write_o during a sweep with wdata decoding
   to ECC-encoded zeros at the inval index (Q-DL default: legal); >= 500 cycles with changing payload
-  and req low. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: none (icache RAM data-port write payload, RAM model only)] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records retired during the sweep with rvfi_insn == memory image)
+  and req low. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: icram fill_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records retired during the sweep with rvfi_insn == memory image)
 - Pass criteria: gen_chk_icache (models the inval data write as legal), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_ram
@@ -18143,7 +18174,7 @@ draw weights of the agent / program generator per transaction.
   rtl/ibex_controller.sv:287; lookups made before the enable rose, up to 3 lines ahead, are
   pass-through and have bus records, so the first ~3 lines after the csrw are exempt) and its first
   pass produces no instr_req_o for its words (except the branch-target speculative word, F-IC-037)
-  while RVFI retires them. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write record (read-back) and the warm loop records at gap 1 after the re-enable)
+  while RVFI retires them. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; icram fill_write; icram tag_write] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write record (read-back) and the warm loop records at gap 1 after the re-enable)
 - Pass criteria: gen_chk_icache (no invalidation or allocation while disabled; hits after
   re-enable), gen_isa_compare
 - Expected: pass

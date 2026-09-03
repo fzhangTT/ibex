@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 11:34 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 11:56 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -77,7 +77,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 The functional-coverage gate is: the URG functional-group score over the spec-derived and adopted covergroups (equal group
 weights, computed after ignore_bins, cross bins counted per expanded bin) is at or above 80 percent AND the traceability
 conditions below hold; both totals must pass. The cycle-clause witness group CG-WIT-001 (gen_cg_wit_cycle_clause) is
-EXCLUDED from that number without exception (Runtime gives it weight 0 in the gate computation) and is reported beside it
+EXCLUDED from that number without exception: the mechanism of record is Runtime's combining rule (dv/auto_dv/flow/gen_flow_const.py LEDGER_COVERGROUPS / LEDGER_PLAN_IDS and gen_cov_report.py group_score_excluding, keyed on the covergroup's SystemVerilog name gen_wit_cycle_clause_cg (pending v4c confirmation), which is authoritative for the exclusion while the plan id CG-WIT-001 names the report line; a report whose groups.txt lacks an expected ledger covergroup fails the merge with ledger_missing; c5b5bc0, keyed on the SV name since 5506f23 with the plan name as alias, ledger_missing from e30b693; Orchestrator ruling 11:5x UTC), with TB Infra's rendered option.weight = 0 as defence in depth; it is reported beside the score by gen_cov_report.py ledger_summary
 as "witnessed clauses: N of M marked items", the way adopted bins are counted separately; its bins stay in the per-test
 manifests after the sunset (Critic gen_critic_plan_witness_v1.md conditions C-4 and W-1).
 
