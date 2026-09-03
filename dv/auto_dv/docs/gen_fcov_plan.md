@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 22:00 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 22:05 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -1235,7 +1235,7 @@ Conventions
 - TP items: TP-CSR-003, TP-CSR-004, TP-CSR-021, TP-CSR-022, TP-CSR-023, TP-CSR-024, TP-CSR-025, TP-CSR-026, TP-CSR-027, TP-CSR-028, TP-CSR-029, TP-CSR-030, TP-CSR-031, TP-CSR-035, TP-CSR-036, TP-CSR-050, TP-CSR-051, TP-CSR-052, TP-CSR-099, TP-CSR-101, TP-CSR-116, TP-PRV-034
 ### CG-CSR-003: gen_cg_csr_trap_handling_warl
 - Features: F-CSR-038, F-CSR-039, F-CSR-040, F-CSR-042, F-CSR-043, F-CSR-044, F-CSR-045, F-CSR-046, F-CSR-047, F-CSR-032, F-CSR-033
-- Sample: gen_chk_csr_readback pair completion for mscratch, mepc, mcause, mtval, mip; condition: pair closed; anti-vacuity: as CG-CSR-002; for mip the "pair" is a write op followed by a read with the irq pins held, so a hit proves the write-ignored prediction was compared.
+- Sample: a write / read-back pair of mscratch, mepc, mcause, mtval or mip closed by the sampler's own tracker over RVFI records (the CG-CSR-002 rule); condition: pair closed; anti-vacuity: pairs exist only when the program writes then reads the same CSR, so a hit proves a read-back record exists for that write pattern; for mip the pair is a write op followed by a read with the irq pins held, so the hit proves the read-back of a write-ignored register was observed; the prediction comparison is the lock-step comparator's isa_rd row on the read-back record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = pair address: bins mscratch{0x340}, mepc{0x341}, mcause{0x342}, mtval{0x343}, mip{0x344}
   - cp_op = write op: bins csrrw{001}, csrrs{010}, csrrc{011}, csrrwi{101}, csrrsi{110}, csrrci{111}
@@ -1256,7 +1256,7 @@ Conventions
 - TP items: TP-CSR-001, TP-CSR-003, TP-CSR-032, TP-CSR-033, TP-CSR-038, TP-CSR-039, TP-CSR-040, TP-CSR-042, TP-CSR-043, TP-CSR-044, TP-CSR-045, TP-CSR-046, TP-CSR-047, TP-CSR-101, TP-CSR-116
 ### CG-CSR-004: gen_cg_csr_counter_warl
 - Features: F-CSR-058, F-CSR-059, F-CSR-060, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-070, F-CSR-071, F-CSR-073, F-PMC-020
-- Sample: gen_chk_csr_readback pair completion for a counter-family CSR (0xB00..0xB9F, 0x320, 0x323..0x33F); condition: pair closed; anti-vacuity: as CG-CSR-002; for running counters the prediction includes the elapsed-cycle / retired-instruction delta from gen_chk_counters, so a hit proves both models agreed on that write.
+- Sample: a write / read-back pair of a counter-family CSR (0xB00..0xB9F, 0x320, 0x323..0x33F) closed by the sampler's own tracker over RVFI records (the CG-CSR-002 rule); condition: pair closed; anti-vacuity: pairs exist only when the program writes then reads the same CSR, so a hit proves a read-back record exists for that write pattern; for running counters the read-back includes the elapsed-cycle / retired-instruction delta, which gen_chk_counters models (UNBUILT at 0a); the write-value comparison is the lock-step comparator's isa_rd row on the read-back record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = pair address: bins mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm3{0xB03}, hpm4{0xB04}, hpm5{0xB05}, hpm6{0xB06}, hpm7{0xB07}, hpm8{0xB08}, hpm9{0xB09}, hpm10{0xB0A}, hpm11{0xB0B}, hpm12{0xB0C}, hpm3h{0xB83}, hpm4h{0xB84}, hpm5h{0xB85}, hpm6h{0xB86}, hpm7h{0xB87}, hpm8h{0xB88}, hpm9h{0xB89}, hpm10h{0xB8A}, hpm11h{0xB8B}, hpm12h{0xB8C}, hpm_unimpl{0xB03+MHPMCounterNum..0xB1F}, hpm_unimpl_h{0xB83+MHPMCounterNum..0xB9F}, mcountinhibit{0x320}, mhpmevent_impl{0x323..0x322+MHPMCounterNum}, mhpmevent_unimpl{0x323+MHPMCounterNum..0x33F}
   - cp_fam = counter family of cp_csr: bins cycle64{mcycle mcycleh}, instret64{minstret minstreth}, hpm32{hpm3..hpm12}, hpm32h{hpm3h..hpm12h}, hpm_unimpl{3+MHPMCounterNum..31 and h}, mcinh{mcountinhibit}, mhpmev{mhpmevent3..31}
@@ -1313,7 +1313,7 @@ Conventions
 ### CG-CSR-007: gen_cg_csr_debug_csr
 - Features: F-CSR-017, F-CSR-018, F-CSR-074, F-CSR-075, F-CSR-076, F-CSR-077, F-CSR-078, F-CSR-079,
   F-DBG-012 (parent of folded bins hosted here)
-- Sample: rvfi_valid with a CSR instruction to 0x7B0..0x7BF (trapped or not) plus, for write pairs in debug mode, the gen_chk_csr_readback pair closure; condition: rvfi_valid && is_csr_insn && addr[11:4] == 0x7B; anti-vacuity: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked.
+- Sample: rvfi_valid with a CSR instruction to 0x7B0..0x7BF (trapped or not) plus, for write pairs in debug mode, the sampler's own write / read-back pair closure over RVFI records (the CG-CSR-002 rule); condition: rvfi_valid && is_csr_insn && addr[11:4] == 0x7B; anti-vacuity: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state and, for pairs, that the read-back record exists; the trap / no-trap outcome is the record's rvfi_trap and the WARL comparison is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = addr: bins dcsr{0x7B0}, dpc{0x7B1}, dscratch0{0x7B2}, dscratch1{0x7B3}, hole{0x7B4..0x7BF}
   - cp_dbg = rvfi_ext_debug_mode: bins nondbg{0}, dbg{1}
@@ -1368,7 +1368,7 @@ Conventions
 ### CG-CSR-009: gen_cg_csr_cpuctrlsts
 - Features: F-CSR-085, F-CSR-086, F-CSR-087, F-CSR-088, F-CSR-089, F-CSR-090, F-CSR-091, F-SEC-022
   (parent of folded bins hosted here)
-- Sample: (a) rvfi_valid with a CSR instruction to 0x7C0, (b) a synchronous trap retirement (rvfi_trap with a non-interrupt cause) outside debug mode, (c) an mret retirement, (d) a double_fault_seen_o pulse, (e) an interrupt/NMI/debug entry observed on RVFI; condition: any of a..e; anti-vacuity: each event class is distinct and the sync_exc_seen / double_fault_seen model state is sampled with it, so a hit proves the model saw that transition and gen_chk_double_fault / gen_chk_csr_readback compared the resulting bits.
+- Sample: (a) rvfi_valid with a CSR instruction to 0x7C0, (b) a synchronous trap retirement (rvfi_trap with a non-interrupt cause) outside debug mode, (c) an mret retirement, (d) a double_fault_seen_o pulse, (e) an interrupt/NMI/debug entry observed on RVFI; condition: any of a..e; anti-vacuity: each event class is distinct and the sync_exc_seen / double_fault_seen model state is sampled with it, so a hit proves the model saw that transition; the resulting bits are checked by gen_chk_double_fault (built, the double_fault_seen_o pulse rule) and, for the CSR read-back, by the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_event = event class: bins sw_rd{CSR read of 0x7C0}, sw_wr{CSR write op to 0x7C0}, hw_sync_set{sync exception taken outside debug}, hw_mret_clr{mret retired}, hw_dbl_pulse{double_fault_seen_o pulse}, hw_irq{interrupt or NMI entry}, hw_dbg{debug entry or exception in debug mode}
   - cp_op = rvfi_insn[14:12] iff (cp_event inside {sw_rd, sw_wr}): bins csrrw{001}, csrrs{010}, csrrc{011}, csrrwi{101}, csrrsi{110}, csrrci{111}
@@ -1425,7 +1425,7 @@ Conventions
 - TP items: TP-CSR-002, TP-CSR-092, TP-CSR-093, TP-CSR-109, TP-CSR-110
 ### CG-CSR-011: gen_cg_csr_pmp_warl
 - Features: F-CSR-094, F-CSR-095, F-CSR-096, F-CSR-098
-- Sample: gen_chk_csr_readback pair completion for pmpcfg0..3, pmpaddr0..15, mseccfg, mseccfgh, sampled once per 8-bit pmpcfg entry for the entry coverpoints; condition: pair closed; anti-vacuity: as CG-CSR-002; the entry class is computed from the pre-write PMP state so a hit proves the WARL rule of that class was exercised and compared (PMP semantics themselves belong to the PMP area).
+- Sample: a write / read-back pair of pmpcfg0..3, pmpaddr0..15, mseccfg or mseccfgh closed by the sampler's own tracker over RVFI records (the CG-CSR-002 rule), sampled once per 8-bit pmpcfg entry for the entry coverpoints; condition: pair closed; anti-vacuity: pairs exist only when the program writes then reads the same CSR, and the entry class is computed from the pre-write PMP state the sampler tracks, so a hit proves a write of that class retired and its read-back record exists (PMP semantics themselves belong to the PMP area); the WARL comparison is the lock-step comparator's isa_rd row on the read-back record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = pair address: bins cfg0{0x3A0}, cfg1{0x3A1}, cfg2{0x3A2}, cfg3{0x3A3}, addr0{0x3B0}, addr1{0x3B1}, addr2{0x3B2}, addr3{0x3B3}, addr4{0x3B4}, addr5{0x3B5}, addr6{0x3B6}, addr7{0x3B7}, addr8{0x3B8}, addr9{0x3B9}, addr10{0x3BA}, addr11{0x3BB}, addr12{0x3BC}, addr13{0x3BD}, addr14{0x3BE}, addr15{0x3BF}, mseccfg{0x747}, mseccfgh{0x757}
   - cp_fam = family of cp_csr: bins cfg{pmpcfg0..3}, addr{pmpaddr0..15}, mseccfg{0x747}, mseccfgh{0x757}
@@ -1514,7 +1514,7 @@ Conventions
 - TP items: TP-CSR-008, TP-CSR-102, TP-CSR-103, TP-CSR-104
 ### CG-CSR-016: gen_cg_csr_reset_read
 - Features: F-CSR-019, F-CSR-020, F-CSR-021, F-CSR-023, F-CSR-029, F-CSR-032, F-CSR-035, F-CSR-037, F-CSR-038, F-CSR-039, F-CSR-042, F-CSR-047, F-CSR-050, F-CSR-058, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-074, F-CSR-078, F-CSR-079, F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-085, F-CSR-092, F-CSR-094, F-CSR-096, F-CSR-098, F-CSR-071
-- Sample: the first CSR read of an address after reset, before any software write to that address (TB tracks per-address first-write); condition: rvfi_valid && is_csr_insn && !rvfi_trap && first_read_before_write(addr); anti-vacuity: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value.
+- Sample: the first CSR read of an address after reset, before any software write to that address (TB tracks per-address first-write); condition: rvfi_valid && is_csr_insn && !rvfi_trap && first_read_before_write(addr); anti-vacuity: at most one sample per address per reset; a hit proves the reset value of that CSR was read back on RVFI before any write; the comparison against the ibex_pkg / parameter reset value is the lock-step comparator's isa_rd row on that record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = address class: bins mstatus{0x300}, misa{0x301}, mie{0x304}, mtvec{0x305}, mcounteren{0x306}, mstatush{0x310}, menvcfg{0x30A}, menvcfgh{0x31A}, mcountinhibit{0x320}, mhpmevent{0x323..0x322+MHPMCounterNum}, mhpmevent_unimpl{0x323+MHPMCounterNum..0x33F}, mscratch{0x340}, mepc{0x341}, mcause{0x342}, mtval{0x343}, mip{0x344}, pmpcfg{0x3A0..0x3A3}, pmpaddr{0x3B0..0x3BF}, scontext{0x5A8}, mseccfg{0x747}, mseccfgh{0x757}, tselect{0x7A0}, tdata1{0x7A1}, tdata2{0x7A2}, tdata3{0x7A3}, mcontext{0x7A8}, mscontext{0x7AA}, dcsr{0x7B0}, dpc{0x7B1}, dscratch0{0x7B2}, dscratch1{0x7B3}, cpuctrlsts{0x7C0}, secureseed{0x7C1}, mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm{0xB03..0xB02+MHPMCounterNum}, hpmh{0xB83..0xB82+MHPMCounterNum}, hpm_unimpl{0xB03+MHPMCounterNum..0xB1F 0xB83+MHPMCounterNum..0xB9F}, cycle_alias{0xC00 0xC80}, instret_alias{0xC02 0xC82}, hpm_alias{0xC03..0xC02+MHPMCounterNum 0xC83..0xC82+MHPMCounterNum}, mvendorid{0xF11}, marchid{0xF12}, mimpid{0xF13}, mhartid{0xF14}, mconfigptr{0xF15}
   - cp_when = position of the read after reset: bins first_insn{first retired instruction}, early{retirement index 2..16}, later{>16}
@@ -2066,7 +2066,7 @@ Conventions
 ### CG-EXC-012: gen_cg_exc_trap_csrs
 - Features: F-EXC-001, F-EXC-042, F-EXC-049, F-EXC-063, F-EXC-065, F-EXC-066, F-EXC-050 (parent of
   folded bins hosted here)
-- Sample: completion of the handler read-back set for one trap (gen_chk_csr_readback matches the retired csrr mepc/mcause/mtval/mstatus to the trap), with crash_dump_o and the minstret read-back sampled at that point; condition: read-back set complete; anti-vacuity: samples once per trap whose handler reads the CSRs, so a hit proves the written values were observed and compared.
+- Sample: completion of the handler read-back set for one trap (the sampler matches the retired csrr mepc / mcause / mtval / mstatus records to the trap record), with crash_dump_o and the minstret read-back sampled at that point; condition: read-back set complete; anti-vacuity: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_kind = trap kind (sync exception / interrupt / NMI): bins sync, irq, nmi_ext, nmi_int
   - cp_old_mie = mstatus.MIE before the trap: bins mie0, mie1
@@ -2400,7 +2400,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 
 ### CG-PMP-001: gen_cg_pmp_cfg_write
 - Features: F-PMP-001, F-PMP-003, F-PMP-004, F-PMP-005, F-PMP-006, F-PMP-007, F-PMP-013, F-PMP-018, F-PMP-019, F-PMP-020, F-PMP-028, F-PMP-029, F-PMP-030, F-PMP-031, F-PMP-032, F-PMP-100
-- Sample: RVFI retire of a CSR write instruction (csrrw/csrrs/csrrc and immediate forms) whose csr field is CSR_PMPCFG0..CSR_PMPCFG(PMPNumRegions/4-1); one sample per entry byte i = 4*idx + b (four samples per write); condition: rvfi_trap == 0 and the write is not read-only (rs1 != x0 / uimm != 0 for set/clear forms); anti-vacuity: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr
+- Sample: RVFI retire of a CSR write instruction (csrrw/csrrs/csrrc and immediate forms) whose csr field is CSR_PMPCFG0..CSR_PMPCFG(PMPNumRegions/4-1); one sample per entry byte i = 4*idx + b (four samples per write); condition: rvfi_trap == 0 and the write is not read-only (rs1 != x0 / uimm != 0 for set/clear forms); anti-vacuity: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)
 - Coverpoints:
   - cp_entry = i = 4*idx + b (0..PMPNumRegions-1): bins e0{0}, e1{1}, e2{2}, e3{3}, e4{4}, e5{5}, e6{6}, e7{7}, e8{8}, e9{9}, e10{10}, e11{11}, e12{12}, e13{13}, e14{14}, e15{15}
   - cp_op = csr op class: bins csrrw{csrrw or csrrwi}, csrrs{csrrs or csrrsi}, csrrc{csrrc or csrrci}
