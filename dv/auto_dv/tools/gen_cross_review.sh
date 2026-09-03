@@ -18,14 +18,21 @@ if [ -z "${GEN_XR_RELOCATED:-}" ]; then
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
 TREE=""; ART=""
-cleanup_all() { [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
+keep_raw() { [ -n "${RAW:-}" ] && [ -e "$RAW.json" ] && { mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_failed"; cp -f "$RAW.json" "$RAW.err" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP")-" 2>/dev/null; cp -f "$RAW.json" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" 2>/dev/null; cp -f "$RAW.err" "$REPO/dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.err" 2>/dev/null; echo "raw copied to dv/auto_dv/work/orchestrator/review_failed/$(basename "$XR_TMP").raw.json" >&2; }; return 0; }
+cleanup_all() { [ -z "${VERDICT:-}" ] && keep_raw; [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; [ -n "$ART" ] && [ -e "$ART" ] && [ ! -s "$ART" ] && rm -f "$ART"; rm -f "$GEN_XR_RELOCATED"; return 0; }
 trap cleanup_all EXIT
 REPO=$(git rev-parse --show-toplevel); cd "$REPO"; git worktree prune >/dev/null 2>&1 || true
 # A killed run leaves review_tmp/run.*/tree on disk with a live registration: sweep run dirs no process owns.
 for _d in "$REPO"/dv/auto_dv/work/orchestrator/review_tmp/run.*; do
-  [ -d "$_d" ] || continue; pgrep -f "$_d" >/dev/null 2>&1 && continue
+  [ -d "$_d" ] || continue
+  if [ -f "$_d/pid" ] && kill -0 "$(cat "$_d/pid")" 2>/dev/null; then continue; fi
+  [ -f "$_d/pid" ] || { [ "$(( $(date +%s) - $(stat -c %Y "$_d") ))" -gt 120 ] || continue; }
   git worktree remove --force "$_d/tree" >/dev/null 2>&1 || true; rm -rf "$_d"
 done; git worktree prune >/dev/null 2>&1 || true
+for _c in "$REPO"/dv/auto_dv/work/orchestrator/review_self/self.*.sh; do
+  [ -f "$_c" ] || continue; [ "$_c" = "$GEN_XR_RELOCATED" ] && continue
+  pgrep -f "$_c" >/dev/null 2>&1 || rm -f "$_c"
+done
 MODE=${1:?plan|diff|replan}; shift
 DATE=$(date +%Y-%m-%d)
 WRAP=.claude/skills/cross-review/scripts/run_codex_review.sh
@@ -82,7 +89,7 @@ ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
 # Never overwrite an earlier round (plan/replan targets keep their basename across rounds); the name is
 # reserved atomically (noclobber) so two concurrent runs of one target cannot pick the same file.
 _r=2; until ( set -C; : >"$ART" ) 2>/dev/null; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
-mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"
+mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"; echo $$ >"$XR_TMP/pid"
 # The reviewer reads a detached checkout of the target commit, never the live working tree, so a
 # teammate editing a reviewed file during the run cannot reach the artifact.
 TREE="$XR_TMP/tree"

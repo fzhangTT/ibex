@@ -9,7 +9,7 @@ Executes CLAUDE.md's "Cross-model review policy". The executing model never self
 
 ## When Claude executed (codex reviews)
 
-- Pre-execution (plan/spec): `bash .claude/skills/cross-review/scripts/run_codex_review.sh plan <file> (the file must be committed at HEAD: the reviewer reads the HEAD blob in a detached checkout, never the working tree) [...]`
+- Pre-execution (plan/spec): `bash .claude/skills/cross-review/scripts/run_codex_review.sh plan <file> [...]`
 - Post-execution (diff): `bash .claude/skills/cross-review/scripts/run_codex_review.sh diff <base_sha> <head_sha>`
 - Optional: `REVIEW_FOCUS="<one sentence>"` in the environment adds an owner focus line to the
   prompt (rubrics and verdict contract still apply unchanged).
@@ -49,3 +49,5 @@ commit it.
 - Commit the artifact(s) — including superseded rounds — under `dv/auto_dv/reviews/`; they are the
   trust-evidence trail.
 - Disagreement with a recorded controller ruling goes to the human owner, not back into the loop.
+
+Fallback reviewer (owner ruling A-001): when codex is unavailable, `dv/auto_dv/tools/gen_cross_review.sh plan|diff|replan ...` runs a fresh Claude session in a bubblewrap sandbox whose working directory is a detached read-only checkout of the reviewed commit (HEAD for plan/replan, `<head>` for diff); plan and replan files must therefore be committed at HEAD, and a working-tree edit to a reviewed file cannot reach the artifact.
