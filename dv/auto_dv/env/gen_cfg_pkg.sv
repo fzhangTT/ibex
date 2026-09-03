@@ -29,20 +29,7 @@ package gen_cfg_pkg;
       super.new(name);
     endfunction
     function string kind_name();
-      case (kind)
-        GEN_CMD_IRQ_SET:        return "IRQ_SET";
-        GEN_CMD_IRQ_CLR:        return "IRQ_CLR";
-        GEN_CMD_NMI_PULSE:      return "NMI_PULSE";
-        GEN_CMD_DBG_REQ:        return "DBG_REQ";
-        GEN_CMD_REGIME_SET:     return "REGIME_SET";
-        GEN_CMD_KEY_MODE:       return "KEY_MODE";
-        GEN_CMD_MEM_ERR_ARM:    return "MEM_ERR_ARM";
-        GEN_CMD_ICACHE_ECC_ARM: return "ICACHE_ECC_ARM";
-        GEN_CMD_FETCH_EN:       return "FETCH_EN";
-        GEN_CMD_MEM_PEEK:       return "MEM_PEEK";
-        GEN_CMD_MISC:           return "MISC";
-        default:                return $sformatf("UNKNOWN(%0d)", kind);
-      endcase
+      return gen_cmd_name(kind);   // rendered from the yaml bridge_cmds list
     endfunction
   endclass
 endpackage

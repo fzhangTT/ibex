@@ -1,0 +1,1 @@
+# run neg_no_cocotb: 2026-09-03T09:03:41Z host=soc-l-11 pure-SV build (no +define+COCOTB_SIM, no cocotb triple), simv run directly

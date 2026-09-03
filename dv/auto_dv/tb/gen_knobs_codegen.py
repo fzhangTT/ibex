@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Render dv/auto_dv/tb/gen_tb_knobs.yaml (the single constants source, architecture C11) into:
   - the GEN_KNOBS_BEGIN/END region of dv/auto_dv/tb/gen_tb_pkg.sv (plusarg names, knob value
-    sets, TB constants, memory map) -- the file Runtime's testlist loader and the smoke driver read;
+    sets, regime windows, TB constants, memory map, command codes and names);
+  - dv/auto_dv/tb/gen_env_cfg_knobs.svh (the gen_env_cfg fields and plusarg parsing);
   - dv/auto_dv/gen_tb/gen_knobs.py (the Python mirror for cocotb tests and gen_program.py);
   - dv/auto_dv/isa/gen_isa_shim_map.h (memory map, ISA string and constants for the Spike shim).
-`--check` renders in memory and fails (exit 1) when any target differs. Output is deterministic
-(no timestamps). Run from anywhere; paths are clone-root relative internally."""
+load() refuses any key outside the schema, so a misspelled key fails loud instead of rendering a
+wrong default. Derived constants take their Python/C literal from rtl/ibex_pkg.sv and render a
+`<NAME>_PY` mirror the TB top checks against the SV expression at time 0. `--check` renders in
+memory and fails (exit 1) naming every stale target. `--src` and `--root` point the renderer at
+another source / target tree (unit-test fixtures and stale-target mutations). Output is
+deterministic (no timestamps) and ASCII."""
 import argparse
 import re
 import sys
@@ -16,15 +21,34 @@ import yaml
 HERE = Path(__file__).resolve().parent            # dv/auto_dv/tb
 ROOT = HERE.parents[2]
 SRC = HERE / "gen_tb_knobs.yaml"
-PKG = HERE / "gen_tb_pkg.sv"
 WRAPPER = HERE / "gen_dut_top.sv"
+IBEX_PKG = ROOT / "rtl/ibex_pkg.sv"
 LD = ROOT / "dv/auto_dv/stim/gen_riscv_dv_target/gen_link.ld"
-PY_OUT = ROOT / "dv/auto_dv/gen_tb/gen_knobs.py"
-H_OUT = ROOT / "dv/auto_dv/isa/gen_isa_shim_map.h"
-CFG_OUT = HERE / "gen_env_cfg_knobs.svh"
+# rendered targets, clone-root relative (relocated under --root)
+REL_PKG = "dv/auto_dv/tb/gen_tb_pkg.sv"
+REL_CFG = "dv/auto_dv/tb/gen_env_cfg_knobs.svh"
+REL_PY = "dv/auto_dv/gen_tb/gen_knobs.py"
+REL_H = "dv/auto_dv/isa/gen_isa_shim_map.h"
 BEGIN = "  // GEN_KNOBS_BEGIN"
 END = "  // GEN_KNOBS_END"
 KINDS = {"string", "int", "hex", "bool", "enum"}
+SCHEMA = {
+    "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map"},
+    "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc"},
+    "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
+    "memory_map": {"boot_addr_default", "boot_page_mask", "mmio_base", "mmio_size", "registers"},
+    "register": {"offset", "size"},
+    "regime_windows": {"gnt_delay", "rvalid_delay", "rate_per_mille", "outstanding_cap"},
+}
+# regime window group -> the enum knobs whose value set must equal the group's keys
+WINDOW_KNOBS = {
+    "gnt_delay": ("knob_imem_gnt_delay", "knob_dmem_gnt_delay"),
+    "rvalid_delay": ("knob_imem_rvalid_delay", "knob_dmem_rvalid_delay"),
+    "rate_per_mille": ("knob_imem_err_rate", "knob_imem_intg_err_rate", "knob_dmem_err_rate", "knob_dmem_intg_err_rate"),
+    "outstanding_cap": ("knob_imem_outstanding_cap",),
+}
+RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
+DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask"}
 
 
 def die(msg):
@@ -38,6 +62,20 @@ def sv_param(path, name):
     return int(m.group(1).replace("_", ""), 16)
 
 
+def sv_int_param(path, name):
+    m = re.search(rf"parameter\s+int\s+unsigned\s+{name}\s*=\s*(\d+)\s*;", path.read_text())
+    if not m:
+        die(f"integer parameter {name} not found in {path}")
+    return int(m.group(1))
+
+
+def sv_irq_fast_width(path):
+    m = re.search(r"logic\s*\[\s*(\d+)\s*:\s*0\s*\]\s*irq_fast\s*;", path.read_text())
+    if not m:
+        die(f"irq_fast width not found in {path}")
+    return int(m.group(1)) + 1
+
+
 def ld_prog_length(path):
     m = re.search(r"^\s*PROG\s*\(\w+\)\s*:\s*ORIGIN\s*=\s*0x([0-9A-Fa-f]+)\s*,\s*LENGTH\s*=\s*0x([0-9A-Fa-f]+)",
                   path.read_text(), re.M)
@@ -46,52 +84,170 @@ def ld_prog_length(path):
     return int(m.group(1), 16), int(m.group(2), 16)
 
 
-def load():
-    src = yaml.safe_load(SRC.read_text())
+def check_keys(mapping, allowed, where):
+    if not isinstance(mapping, dict):
+        die(f"{where}: expected a mapping")
+    bad = sorted(k for k in mapping if k not in allowed)
+    if bad:
+        die(f"{where}: unknown key(s) {', '.join(str(b) for b in bad)} (allowed: {', '.join(sorted(allowed))})")
+
+
+def load(src_path=SRC):
+    src = yaml.safe_load(src_path.read_text())
+    check_keys(src, SCHEMA["top"], "top level")
     if src.get("schema_version") != 1:
         die("unsupported schema_version")
-    names = [p["name"] for p in src["plusargs"]]
+    for section in ("isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map"):
+        if section not in src:
+            die(f"missing section {section}")
+    names = [p.get("name") for p in src["plusargs"]]
     if len(names) != len(set(names)):
-        die("duplicate plusarg names: " + ", ".join(sorted({n for n in names if names.count(n) > 1})))
-    cmds = src.get("bridge_cmds") or []
-    if len(cmds) < 1 or len(cmds) != len(set(cmds)) or any(not re.fullmatch(r"[A-Z][A-Z0-9_]*", k) for k in cmds):
+        die("duplicate plusarg names: " + ", ".join(sorted({str(n) for n in names if names.count(n) > 1})))
+    cmds = src["bridge_cmds"]
+    if not isinstance(cmds, list) or len(cmds) < 1 or len(cmds) != len(set(cmds)) \
+            or any(not re.fullmatch(r"[A-Z][A-Z0-9_]*", str(k)) for k in cmds):
         die("bridge_cmds must be a non-empty list of unique UPPER_CASE names")
     for p in src["plusargs"]:
+        where = f"plusarg {p.get('name', '?')}"
+        check_keys(p, SCHEMA["plusarg"], where)
+        for req in ("name", "kind", "desc"):
+            if req not in p:
+                die(f"{where}: missing {req}")
         if not re.fullmatch(r"[a-z][a-z0-9_]*", p["name"]):
             die(f"bad plusarg name {p['name']}")
         if p["kind"] not in KINDS:
             die(f"bad kind for {p['name']}")
+        if not isinstance(p["desc"], str):
+            die(f"{where}: desc must be a string")
+        if ("default" in p) == ("default_from" in p):
+            die(f"{where}: exactly one of default / default_from is required")
         if p["kind"] == "enum":
+            if "values" not in p:
+                die(f"{where}: enum needs values")
             vals = [str(v) for v in p["values"]]
             if len(vals) < 2 or len(vals) != len(set(vals)):
                 die(f"enum {p['name']} needs >= 2 distinct values")
-            if str(p["default"]) not in vals:
+            if str(p.get("default")) not in vals:
                 die(f"enum {p['name']} default not in values")
             p["values"] = vals
             p["default"] = str(p["default"])
+        elif "values" in p:
+            die(f"{where}: values only on enum knobs")
+    for c in src["constants"]:
+        where = f"constant {c.get('name', '?')}"
+        check_keys(c, SCHEMA["constant"], where)
+        for req in ("name", "sv_type", "desc"):
+            if req not in c:
+                die(f"{where}: missing {req}")
+        if ("value" in c) == ("derive" in c):
+            die(f"{where}: exactly one of value / derive is required")
+        if "derive" in c and c["derive"] not in DERIVATIONS:
+            die(f"{where}: unknown derivation {c['derive']} (known: {', '.join(sorted(DERIVATIONS))})")
+        if "derive" in c and "sv" not in c:
+            die(f"{where}: a derived constant needs its sv expression")
+    mm = src["memory_map"]
+    check_keys(mm, SCHEMA["memory_map"], "memory_map")
+    for req in SCHEMA["memory_map"]:
+        if req not in mm:
+            die(f"memory_map: missing {req}")
+    for k, r in mm["registers"].items():
+        check_keys(r, SCHEMA["register"], f"memory_map.registers.{k}")
+        if "offset" not in r or "size" not in r or not str(k).endswith("_addr"):
+            die(f"memory_map.registers.{k}: needs offset and size; the key ends in _addr")
+    rw = src["regime_windows"]
+    check_keys(rw, SCHEMA["regime_windows"], "regime_windows")
+    enums = {p["name"]: p for p in src["plusargs"] if p["kind"] == "enum"}
+    for group, knobs in WINDOW_KNOBS.items():
+        if group not in rw:
+            die(f"regime_windows: missing group {group}")
+        keys = [str(k) for k in rw[group]]
+        for kn in knobs:
+            if kn not in enums:
+                die(f"regime_windows.{group}: knob {kn} is not an enum plusarg")
+            if sorted(keys) != sorted(enums[kn]["values"]):
+                die(f"regime_windows.{group}: keys {keys} differ from the values of {kn} {enums[kn]['values']}")
+        for k, v in rw[group].items():
+            if group in RANGE_GROUPS:
+                if not (isinstance(v, list) and len(v) == 2 and all(isinstance(x, int) for x in v) and 0 <= v[0] <= v[1]):
+                    die(f"regime_windows.{group}.{k}: expected [lo, hi] with 0 <= lo <= hi")
+            elif not isinstance(v, int) or v < 0:
+                die(f"regime_windows.{group}.{k}: expected a non-negative integer")
     return src
+
+
+def derive_values(src):
+    """Python/C literals of the derived constants, from rtl/ibex_pkg.sv and the literal constants."""
+    lits = {c["name"]: int(c["value"]) for c in src["constants"] if "value" in c}
+    bus_bytes = sv_int_param(IBEX_PKG, "BUS_SIZE") // 8
+    line_bytes = sv_int_param(IBEX_PKG, "IC_LINE_SIZE") // 8
+    beats = line_bytes // bus_bytes
+    fast_w = sv_irq_fast_width(IBEX_PKG)
+    out = {}
+    for c in src["constants"]:
+        if "derive" not in c:
+            continue
+        d = c["derive"]
+        if d == "ibus_max_outstanding":
+            if "GEN_ICACHE_NUM_FB" not in lits:
+                die("ibus_max_outstanding needs the literal GEN_ICACHE_NUM_FB")
+            out[c["name"]] = lits["GEN_ICACHE_NUM_FB"] * beats
+        elif d == "irq_fast_w":
+            out[c["name"]] = fast_w
+        elif d == "irq_fast_mask":
+            out[c["name"]] = ((1 << fast_w) - 1) << 16
+    return out
+
+
+def const_values(src):
+    vals = derive_values(src)
+    for c in src["constants"]:
+        if "value" in c:
+            vals[c["name"]] = int(c["value"])
+    return vals
 
 
 def memory_map(src):
     mm = src["memory_map"]
     boot = int(mm["boot_addr_default"])
+    mask = int(mm["boot_page_mask"])
     prog_origin, prog_len = ld_prog_length(LD)
-    boot_page = boot & 0xFFFFFF00
+    boot_page = boot & mask
     if prog_origin != (boot_page | 0x80):
         die(f"gen_link.ld PROG origin 0x{prog_origin:08x} != first fetch 0x{boot_page | 0x80:08x}")
     dm_base = sv_param(WRAPPER, "DmBaseAddr")
     dm_mask = sv_param(WRAPPER, "DmAddrMask")
     dm_halt = sv_param(WRAPPER, "DmHaltAddr")
     dm_exc = sv_param(WRAPPER, "DmExceptionAddr")
-    out = {"boot_addr_default": boot, "boot_page": boot_page, "prog_size": 0x80 + prog_len,
+    out = {"boot_addr_default": boot, "boot_page_mask": mask, "boot_page": boot_page, "prog_size": 0x80 + prog_len,
            "dm_base": dm_base, "dm_size": dm_mask + 1, "dm_halt": dm_halt, "dm_exception": dm_exc,
            "dm_budget": dm_base + dm_mask + 1 - dm_halt,
            "mmio_base": int(mm["mmio_base"]), "mmio_size": int(mm["mmio_size"])}
-    for k, off in mm["registers"].items():
-        if int(off) >= out["mmio_size"]:
+    for k, r in mm["registers"].items():
+        off, size = int(r["offset"]), int(r["size"])
+        if off + size > out["mmio_size"]:
             die(f"register {k} outside the MMIO page")
-        out[k] = out["mmio_base"] + int(off)
+        out[k] = out["mmio_base"] + off
+        out[k[:-len("_addr")] + "_size"] = size
     return out
+
+
+def resolve_defaults(src, mm, cvals):
+    """Fill `default` of every default_from plusarg from a constant or a memory-map key."""
+    for p in src["plusargs"]:
+        if "default_from" not in p:
+            continue
+        ref = p["default_from"]
+        if ref.startswith("memory_map."):
+            key = ref[len("memory_map."):]
+            if key not in mm:
+                die(f"plusarg {p['name']}: default_from {ref} is not a memory-map key")
+            p["default"] = mm[key]
+        elif ref in cvals:
+            p["default"] = cvals[ref]
+        else:
+            die(f"plusarg {p['name']}: default_from {ref} names no constant or memory-map key")
+        if p["kind"] not in ("int", "hex"):
+            die(f"plusarg {p['name']}: default_from is for int/hex knobs")
 
 
 def sv_default(p):
@@ -103,7 +259,7 @@ def sv_default(p):
     return str(d)
 
 
-def render_sv_region(src, mm):
+def render_sv_region(src, mm, cvals):
     L = [BEGIN + " (rendered by dv/auto_dv/tb/gen_knobs_codegen.py from gen_tb_knobs.yaml; edit the yaml, not this block)",
          "  // Plusarg names: +gen_<name>=<value>; declared once here, never as string literals elsewhere."]
     for p in src["plusargs"]:
@@ -116,10 +272,28 @@ def render_sv_region(src, mm):
             up = p["name"].upper()
             L.append(f'  parameter string GEN_ENUM_{up}_VALUES = "{",".join(p["values"])}";')
             L.append(f'  parameter string GEN_ENUM_{up}_DEFAULT = "{p["default"]}";')
-    L.append("  // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms).")
+    L.append("  // Numeric meaning of the latency/rate/cap regimes (yaml regime_windows); 0 = unknown group or value.")
+    L.append("  function automatic bit gen_regime_window(string group, string value, output int unsigned lo, output int unsigned hi);")
+    L.append("    lo = 0; hi = 0;")
+    for group in sorted(RANGE_GROUPS):
+        for k, v in src["regime_windows"][group].items():
+            L.append(f'    if (group == "{group}" && value == "{k}") begin lo = {v[0]}; hi = {v[1]}; return 1\'b1; end')
+    L.append("    return 1'b0;")
+    L.append("  endfunction")
+    L.append("  function automatic bit gen_regime_scalar(string group, string value, output int unsigned v);")
+    L.append("    v = 0;")
+    for group in sorted(SCHEMA["regime_windows"] - RANGE_GROUPS):
+        for k, val in src["regime_windows"][group].items():
+            L.append(f'    if (group == "{group}" && value == "{k}") begin v = {val}; return 1\'b1; end')
+    L.append("    return 1'b0;")
+    L.append("  endfunction")
+    L.append("  // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms). A derived constant")
+    L.append("  // keeps its SV expression; its _PY twin is the literal Python and C use (gen_tb_top fatals when they differ).")
     for c in src["constants"]:
         rhs = c["sv"] if "sv" in c else str(c["value"])
         L.append(f'  parameter {c["sv_type"]} {c["name"]} = {rhs};  // {c["desc"]}')
+        if "derive" in c:
+            L.append(f'  parameter {c["sv_type"]} {c["name"]}_PY = {cvals[c["name"]]};  // rendered from rtl/ibex_pkg.sv ({c["derive"]})')
     L.append("  // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.")
     for k, v in mm.items():
         L.append(f"  parameter logic [31:0] GEN_MM_{k.upper()} = 32'h{v >> 16:04x}_{v & 0xFFFF:04x};")
@@ -127,6 +301,13 @@ def render_sv_region(src, mm):
     L.append("  parameter logic [7:0] GEN_CMD_NONE = 8'd0;")
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f"  parameter logic [7:0] GEN_CMD_{k} = 8'd{i};")
+    L.append("  function automatic string gen_cmd_name(logic [7:0] kind);")
+    L.append("    case (kind)")
+    for i, k in enumerate(src["bridge_cmds"], start=1):
+        L.append(f'      8\'d{i}: return "{k}";')
+    L.append('      default: return $sformatf("UNKNOWN(%0d)", kind);')
+    L.append("    endcase")
+    L.append("  endfunction")
     knobs = [p for p in src["plusargs"] if p["kind"] == "enum" and p["name"].startswith("knob_")]
     L.append("  // Regime knob ids and value lookup (bridge command REGIME_SET: arg0 = knob id, arg1 = value index).")
     for i, p in enumerate(knobs):
@@ -152,25 +333,32 @@ def render_sv_region(src, mm):
     L.append("      default: return 1'b0;")
     L.append("    endcase")
     L.append("  endfunction")
+    L.append("  // A bool knob needs an explicit =0/=1 (a bare +gen_<bool> would otherwise be a silent no-op).")
+    L.append("  function automatic bit gen_is_bool_plusarg(string name);")
+    L.append("    case (name)")
+    L.append("      " + ", ".join(f'"gen_{p["name"]}"' for p in src["plusargs"] if p["kind"] == "bool") + ": return 1'b1;")
+    L.append("      default: return 1'b0;")
+    L.append("    endcase")
+    L.append("  endfunction")
     b = mm["boot_addr_default"]
     L.append(f"  parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h{b >> 16:04x}_{b & 0xFFFF:04x};  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)")
     L.append(END)
     return "\n".join(L) + "\n"
 
 
-def render_pkg(src, mm):
-    text = PKG.read_text()
+def render_pkg(src, mm, cvals, pkg_path):
+    text = pkg_path.read_text()
     i = text.find(BEGIN); j = text.find(END)
     if i < 0 or j < 0:
-        die("gen_tb_pkg.sv lacks the GEN_KNOBS_BEGIN/END markers")
+        die(f"{pkg_path} lacks the GEN_KNOBS_BEGIN/END markers")
     j = text.index("\n", j) + 1
-    return text[:i] + render_sv_region(src, mm) + text[j:]
+    return text[:i] + render_sv_region(src, mm, cvals) + text[j:]
 
 
-def render_py(src, mm):
+def render_py(src, mm, cvals):
     L = ['"""Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.',
-         'Python mirror of gen_tb_pkg.sv: plusarg names and defaults, regime knob value sets, TB constants,',
-         'the memory map and the ISA string (one origin, architecture C11)."""', "",
+         'Python mirror of gen_tb_pkg.sv: plusarg names and defaults, regime knob value sets and windows, TB',
+         'constants, the memory map and the ISA string (one origin, architecture C11)."""', "",
          f'ISA_STRING = "{src["isa_string"]}"', "", "PLUSARGS = {"]
     for p in src["plusargs"]:
         d = p.get("default")
@@ -181,11 +369,13 @@ def render_py(src, mm):
     L.append("}"); L.append("")
     L.append("CONSTANTS = {")
     for c in src["constants"]:
-        L.append(f'    "{c["name"]}": {int(c["value"])},')
+        L.append(f'    "{c["name"]}": {cvals[c["name"]]},')
+    L.append("}"); L.append("")
+    L.append("REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)")
+    for group in sorted(SCHEMA["regime_windows"]):
+        L.append(f'    "{group}": {{' + ", ".join(f'"{k}": {v!r}' for k, v in src["regime_windows"][group].items()) + "},")
     L.append("}"); L.append("")
     L.append("KNOB_IDS = {  # regime knob -> REGIME_SET arg0; value index = position in PLUSARGS[name]['values']")
-    for i, p in enumerate(src["plusargs"]):
-        pass
     for i, p in enumerate([q for q in src["plusargs"] if q["kind"] == "enum" and q["name"].startswith("knob_")]):
         L.append(f'    "{p["name"]}": {i},')
     L.append("}"); L.append("")
@@ -207,7 +397,7 @@ def render_py(src, mm):
     return "\n".join(L) + "\n"
 
 
-def render_h(src, mm):
+def render_h(src, mm, cvals):
     L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.",
          "// Memory map, ISA string and TB constants for the Spike DPI shim (architecture C5.1, C11).",
          "#ifndef GEN_ISA_SHIM_MAP_H", "#define GEN_ISA_SHIM_MAP_H", "",
@@ -216,7 +406,7 @@ def render_h(src, mm):
         L.append(f"#define GEN_MM_{k.upper():<22} 0x{v:08x}u")
     L.append("")
     for c in src["constants"]:
-        L.append(f"#define {c['name']:<34} {int(c['value'])}u")
+        L.append(f"#define {c['name']:<34} {cvals[c['name']]}u")
     L.append("")
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f"#define GEN_CMD_{k:<28} {i}u")
@@ -236,8 +426,8 @@ def sv_literal(p):
 
 
 def render_cfg(src):
-    """Include for class gen_env_cfg: one field per plusarg (plus a `_set` flag for optional and enum
-    knobs), parse_plusargs(), validate() for enum values and pinned_count() for the banner."""
+    """Include for class gen_env_cfg: one field per plusarg (plus a `_set` flag), parse_plusargs(),
+    validate() for enum values and pinned_count() for the banner."""
     L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.",
          "// Included inside class gen_env_cfg (dv/auto_dv/env/gen_env_pkg.sv): fields, parse_plusargs(),",
          "// validate(), pinned_count(). Types: string/enum -> string, int -> int unsigned, hex -> logic [31:0],",
@@ -246,7 +436,7 @@ def render_cfg(src):
         k = p["kind"]; n = p["name"]
         typ = {"string": "string", "enum": "string", "int": "int unsigned", "hex": "logic [31:0]", "bool": "bit"}[k]
         L.append(f"  {typ} {n} = {sv_literal(p)};")
-        L.append(f"  bit {n}_set = 1'b0;")   # every knob records whether it was supplied (isolation mode needs it for bools)
+        L.append(f"  bit {n}_set = 1'b0;")
     L += ["", "  function void parse_plusargs();", "    string s; int unsigned u; logic [31:0] h;"]
     for p in src["plusargs"]:
         k = p["kind"]; n = p["name"]; P = f"PLUSARG_{n.upper()}"
@@ -275,18 +465,28 @@ def render_cfg(src):
     return "\n".join(L) + "\n"
 
 
+def render_all(src_path, root):
+    src = load(src_path)
+    cvals = const_values(src)
+    mm = memory_map(src)
+    resolve_defaults(src, mm, cvals)
+    pkg = root / REL_PKG
+    return {pkg: render_pkg(src, mm, cvals, pkg), root / REL_PY: render_py(src, mm, cvals),
+            root / REL_H: render_h(src, mm, cvals), root / REL_CFG: render_cfg(src)}, src, mm
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="fail when any rendered file is stale")
+    ap.add_argument("--src", type=Path, default=SRC, help="yaml source (default: the one source)")
+    ap.add_argument("--root", type=Path, default=ROOT, help="tree that holds the rendered targets (default: the clone)")
     args = ap.parse_args()
-    src = load()
-    mm = memory_map(src)
-    targets = {PKG: render_pkg(src, mm), PY_OUT: render_py(src, mm), H_OUT: render_h(src, mm),
-               CFG_OUT: render_cfg(src)}
+    root = args.root.resolve()
+    targets, src, mm = render_all(args.src.resolve(), root)
     for path, text in targets.items():
         if any(ord(ch) > 127 for ch in text):
             die(f"non-ASCII output for {path}")
-    stale = [str(p.relative_to(ROOT)) for p, t in targets.items() if not p.is_file() or p.read_text() != t]
+    stale = [str(p.relative_to(root)) for p, t in targets.items() if not p.is_file() or p.read_text() != t]
     if args.check:
         if stale:
             print("gen_knobs_codegen --check: STALE " + " ".join(stale))
@@ -296,7 +496,7 @@ def main():
     for p, t in targets.items():
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(t)
-    print("gen_knobs_codegen: rendered " + " ".join(str(p.relative_to(ROOT)) for p in targets)
+    print("gen_knobs_codegen: rendered " + " ".join(str(p.relative_to(root)) for p in targets)
           + f" ({len(src['plusargs'])} plusargs, {len(src['constants'])} constants, {len(mm)} map entries)")
     return 0
 

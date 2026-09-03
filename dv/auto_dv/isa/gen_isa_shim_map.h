@@ -6,6 +6,7 @@
 #define GEN_ISA_STRING "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp"
 
 #define GEN_MM_BOOT_ADDR_DEFAULT      0x80000000u
+#define GEN_MM_BOOT_PAGE_MASK         0xffffff00u
 #define GEN_MM_BOOT_PAGE              0x80000000u
 #define GEN_MM_PROG_SIZE              0x00100000u
 #define GEN_MM_DM_BASE                0x1a110000u
@@ -16,9 +17,13 @@
 #define GEN_MM_MMIO_BASE              0x8ffff000u
 #define GEN_MM_MMIO_SIZE              0x00001000u
 #define GEN_MM_SIG_ADDR               0x8ffff000u
+#define GEN_MM_SIG_SIZE               0x00000100u
 #define GEN_MM_IRQ_ACK_ADDR           0x8ffff100u
+#define GEN_MM_IRQ_ACK_SIZE           0x00000004u
 #define GEN_MM_EOT_ADDR               0x8ffff104u
+#define GEN_MM_EOT_SIZE               0x00000004u
 #define GEN_MM_PHASE_MARK_ADDR        0x8ffff108u
+#define GEN_MM_PHASE_MARK_SIZE        0x00000004u
 
 #define GEN_ICACHE_NUM_FB                  4u
 #define GEN_IBUS_MAX_OUTSTANDING           8u
@@ -33,6 +38,8 @@
 #define GEN_CLK_PERIOD_NS                  10u
 #define GEN_MEM_READBACK_WORDS_DEFAULT     64u
 #define GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT   100000u
+#define GEN_FINISH_TIMEOUT_CYCLES_DEFAULT  20000u
+#define GEN_IRQ_FAST_W                     15u
 #define GEN_IRQ_FAST_MASK                  2147418112u
 
 #define GEN_CMD_IRQ_SET                      1u

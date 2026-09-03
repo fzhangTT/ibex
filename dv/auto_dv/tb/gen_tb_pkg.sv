@@ -4,31 +4,34 @@
 package gen_tb_pkg;
   import ibex_pkg::*;
 
+  // Zero irqs_t so the rendered GEN_IRQ_FAST_W can take the fast-line count from the struct member's width.
+  localparam ibex_pkg::irqs_t GEN_IRQS_ZERO = '0;
+
   // GEN_KNOBS_BEGIN (rendered by dv/auto_dv/tb/gen_knobs_codegen.py from gen_tb_knobs.yaml; edit the yaml, not this block)
   // Plusarg names: +gen_<name>=<value>; declared once here, never as string literals elsewhere.
   parameter string PLUSARG_BUILD_CONFIG = "gen_build_config";  // string, default opentitan: build configuration name echoed in the banner (must match the compile)
   parameter string PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles";  // int, default 3000: bounded run length of gen_smoke_tb_top
-  parameter string PLUSARG_SMOKE_INTG_FLIP = "gen_smoke_intg_flip";  // int, default unset: smoke red-run knob
-  parameter string PLUSARG_DBG_CSR_PROBE = "gen_dbg_csr_probe";  // bool, default 0 [debug-only]: probe P6 (docs/gen_probe_register.md)
+  parameter string PLUSARG_SMOKE_INTG_FLIP = "gen_smoke_intg_flip";  // int, default unset: smoke red-run knob, bit of the SECDED-encoded NOP word to flip (absent = no corruption)
+  parameter string PLUSARG_DBG_CSR_PROBE = "gen_dbg_csr_probe";  // bool, default 0 [debug-only]: probe P6 (docs/gen_probe_register.md), debug only, never in a measured run
   parameter string PLUSARG_MEM_IMAGE = "gen_mem_image";  // string, default unset: program image (.vmem) loaded once at time 0
-  parameter string PLUSARG_MEM_IMAGE_CRC32 = "gen_mem_image_crc32";  // hex, default unset: CRC-32 over (index
+  parameter string PLUSARG_MEM_IMAGE_CRC32 = "gen_mem_image_crc32";  // hex, default unset: CRC-32 over (index, word) pairs from the .sym.json sidecar, recomputed after load
   parameter string PLUSARG_MEM_IMAGE_WORDS = "gen_mem_image_words";  // int, default unset: word count from the sidecar
   parameter string PLUSARG_MEM_READBACK_WORDS = "gen_mem_readback_words";  // int, default 64: words Python reads back through MEM_PEEK and compares with the .vmem
   parameter string PLUSARG_TOHOST_ADDR = "gen_tohost_addr";  // hex, default unset: address of the program tohost word (sidecar symbol); a store there ends the test with the stored code
   parameter string PLUSARG_MEM_UNMAPPED_OK = "gen_mem_unmapped_ok";  // bool, default 0: unmapped bus access returns an error response instead of a TB error
   parameter string PLUSARG_BOOT_ADDR = "gen_boot_addr";  // hex, default 0x80000000: boot_addr_i (must match the image entry page)
+  parameter string PLUSARG_HART_ID = "gen_hart_id";  // hex, default 0x0: hart_id_i (architecture C1)
   parameter string PLUSARG_ALIVE_TIMEOUT = "gen_alive_timeout";  // int, default 100000: cycles before the SV alive watchdog fatals (TB_CONTRACT Section 2)
-  parameter string PLUSARG_FINISH_TIMEOUT = "gen_finish_timeout";  // int, default 20000: default finish-handshake budget in cycles (Python overrides per test)
-  parameter string PLUSARG_REGIME_SCHED = "gen_regime_sched";  // string, default unset: layer-3 schedule knob:value@r<N>|c<N>
-  parameter string PLUSARG_RVFI_TRACE = "gen_rvfi_trace";  // bool, default 0: write an ASCII RVFI trace file (debug only)
+  parameter string PLUSARG_FINISH_TIMEOUT = "gen_finish_timeout";  // int, default 20000: finish-handshake budget in cycles used by GenBridge.finish() when the test passes none
+  parameter string PLUSARG_REGIME_SCHED = "gen_regime_sched";  // string, default unset: layer-3 schedule knob:value@r<N>|c<N>,... (consumed when supplied, else derived from RANDOM_SEED and echoed)
+  parameter string PLUSARG_RVFI_TRACE = "gen_rvfi_trace";  // bool, default 0 [debug-only]: print every RVFI record (debug only)
   parameter string PLUSARG_FCOV_EN = "gen_fcov_en";  // bool, default 1: instantiate covergroups
   parameter string PLUSARG_ICRAM_INIT = "gen_icram_init";  // enum, default random: initial contents of the icache tag/data RAM models
   parameter string PLUSARG_FETCH_EN_AT_RESET = "gen_fetch_en_at_reset";  // bool, default 1: fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)
   parameter string PLUSARG_KEY_RESET_VALID = "gen_key_reset_valid";  // bool, default 1: ic_scr_key_valid_i high out of reset (ibex_top behaviour)
-  parameter string PLUSARG_SB_TRACE = "gen_sb_trace";  // bool, default 0: scoreboard per-record trace (debug only)
-  parameter string PLUSARG_UT_LOCKSTEP_MIN_RATIO_PCT = "gen_ut_lockstep_min_ratio_pct";  // int, default 90: lock-step test
-  parameter string PLUSARG_ISA_STRING = "gen_isa_string";  // string, default unset: model ISA string override (debug only; the default is GEN_ISA_STRING)
-  parameter string PLUSARG_ISA_LOG = "gen_isa_log";  // string, default unset: model commit log path for debug
+  parameter string PLUSARG_SB_TRACE = "gen_sb_trace";  // bool, default 0 [debug-only]: scoreboard per-record trace (debug only)
+  parameter string PLUSARG_ISA_STRING = "gen_isa_string";  // string, default unset [debug-only]: model ISA string override (debug only; the default is GEN_ISA_STRING)
+  parameter string PLUSARG_ISA_LOG = "gen_isa_log";  // string, default unset [debug-only]: model commit log path (debug only)
   parameter string PLUSARG_UT_BOOT_RETIRE = "gen_ut_boot_retire";  // int, default 200: retirements the boots-and-retires test waits for
   parameter string PLUSARG_IBUS_GNT_MIN = "gen_ibus_gnt_min";  // int, default unset: instruction bus grant latency low bound (cycles)
   parameter string PLUSARG_IBUS_GNT_MAX = "gen_ibus_gnt_max";  // int, default unset: instruction bus grant latency high bound
@@ -58,15 +61,15 @@ package gen_tb_pkg;
   parameter string PLUSARG_IRQ_HOLD_MAX = "gen_irq_hold_max";  // int, default 50: interrupt line hold high bound
   parameter string PLUSARG_DBG_HOLD_MIN = "gen_dbg_hold_min";  // int, default 1: debug_req_i hold low bound
   parameter string PLUSARG_DBG_HOLD_MAX = "gen_dbg_hold_max";  // int, default 50: debug_req_i hold high bound
-  parameter string PLUSARG_KNOB_IMEM_GNT_DELAY = "gen_knob_imem_gnt_delay";  // enum, default short: instruction grant latency regime
-  parameter string PLUSARG_KNOB_IMEM_RVALID_DELAY = "gen_knob_imem_rvalid_delay";  // enum, default short: instruction response latency regime
-  parameter string PLUSARG_KNOB_IMEM_ERR_RATE = "gen_knob_imem_err_rate";  // enum, default none: instr_err_i injection regime
-  parameter string PLUSARG_KNOB_IMEM_INTG_ERR_RATE = "gen_knob_imem_intg_err_rate";  // enum, default none: instruction integrity corruption regime
-  parameter string PLUSARG_KNOB_IMEM_OUTSTANDING_CAP = "gen_knob_imem_outstanding_cap";  // enum, default cap8: instruction grants in flight cap
-  parameter string PLUSARG_KNOB_DMEM_GNT_DELAY = "gen_knob_dmem_gnt_delay";  // enum, default short: data grant latency regime
-  parameter string PLUSARG_KNOB_DMEM_RVALID_DELAY = "gen_knob_dmem_rvalid_delay";  // enum, default short: data response latency regime
-  parameter string PLUSARG_KNOB_DMEM_ERR_RATE = "gen_knob_dmem_err_rate";  // enum, default none: data_err_i injection regime
-  parameter string PLUSARG_KNOB_DMEM_INTG_ERR_RATE = "gen_knob_dmem_intg_err_rate";  // enum, default none: data integrity corruption regime
+  parameter string PLUSARG_KNOB_IMEM_GNT_DELAY = "gen_knob_imem_gnt_delay";  // enum, default short: instruction grant latency regime (windows: regime_windows.gnt_delay)
+  parameter string PLUSARG_KNOB_IMEM_RVALID_DELAY = "gen_knob_imem_rvalid_delay";  // enum, default short: instruction response latency regime (windows: regime_windows.rvalid_delay)
+  parameter string PLUSARG_KNOB_IMEM_ERR_RATE = "gen_knob_imem_err_rate";  // enum, default none: instr_err_i injection regime (rates: regime_windows.rate_per_mille)
+  parameter string PLUSARG_KNOB_IMEM_INTG_ERR_RATE = "gen_knob_imem_intg_err_rate";  // enum, default none: instruction integrity corruption regime (rates: regime_windows.rate_per_mille)
+  parameter string PLUSARG_KNOB_IMEM_OUTSTANDING_CAP = "gen_knob_imem_outstanding_cap";  // enum, default cap8: instruction grants in flight cap (regime_windows.outstanding_cap)
+  parameter string PLUSARG_KNOB_DMEM_GNT_DELAY = "gen_knob_dmem_gnt_delay";  // enum, default short: data grant latency regime (windows: regime_windows.gnt_delay)
+  parameter string PLUSARG_KNOB_DMEM_RVALID_DELAY = "gen_knob_dmem_rvalid_delay";  // enum, default short: data response latency regime (windows: regime_windows.rvalid_delay)
+  parameter string PLUSARG_KNOB_DMEM_ERR_RATE = "gen_knob_dmem_err_rate";  // enum, default none: data_err_i injection regime (rates: regime_windows.rate_per_mille)
+  parameter string PLUSARG_KNOB_DMEM_INTG_ERR_RATE = "gen_knob_dmem_intg_err_rate";  // enum, default none: data integrity corruption regime (rates: regime_windows.rate_per_mille)
   parameter string PLUSARG_KNOB_IRQ_REGIME = "gen_knob_irq_regime";  // enum, default quiet: interrupt event rate
   parameter string PLUSARG_KNOB_IRQ_LINE_MIX = "gen_knob_irq_line_mix";  // enum, default single: lines per interrupt event
   parameter string PLUSARG_KNOB_IRQ_HOLD = "gen_knob_irq_hold";  // enum, default until_taken: interrupt line release policy
@@ -171,23 +174,54 @@ package gen_tb_pkg;
   parameter string GEN_ENUM_KNOB_PRIV_REGIME_DEFAULT = "m_only";
   parameter string GEN_ENUM_KNOB_PMP_REGIME_VALUES = "off,sparse,dense,mml_on";
   parameter string GEN_ENUM_KNOB_PMP_REGIME_DEFAULT = "off";
-  // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms).
+  // Numeric meaning of the latency/rate/cap regimes (yaml regime_windows); 0 = unknown group or value.
+  function automatic bit gen_regime_window(string group, string value, output int unsigned lo, output int unsigned hi);
+    lo = 0; hi = 0;
+    if (group == "gnt_delay" && value == "same_cycle") begin lo = 0; hi = 0; return 1'b1; end
+    if (group == "gnt_delay" && value == "short") begin lo = 1; hi = 3; return 1'b1; end
+    if (group == "gnt_delay" && value == "long") begin lo = 4; hi = 32; return 1'b1; end
+    if (group == "gnt_delay" && value == "random") begin lo = 0; hi = 32; return 1'b1; end
+    if (group == "rvalid_delay" && value == "min1") begin lo = 1; hi = 1; return 1'b1; end
+    if (group == "rvalid_delay" && value == "short") begin lo = 2; hi = 4; return 1'b1; end
+    if (group == "rvalid_delay" && value == "long") begin lo = 5; hi = 32; return 1'b1; end
+    if (group == "rvalid_delay" && value == "random") begin lo = 1; hi = 32; return 1'b1; end
+    return 1'b0;
+  endfunction
+  function automatic bit gen_regime_scalar(string group, string value, output int unsigned v);
+    v = 0;
+    if (group == "outstanding_cap" && value == "cap1") begin v = 1; return 1'b1; end
+    if (group == "outstanding_cap" && value == "cap2") begin v = 2; return 1'b1; end
+    if (group == "outstanding_cap" && value == "cap4") begin v = 4; return 1'b1; end
+    if (group == "outstanding_cap" && value == "cap8") begin v = 8; return 1'b1; end
+    if (group == "rate_per_mille" && value == "none") begin v = 0; return 1'b1; end
+    if (group == "rate_per_mille" && value == "rare") begin v = 2; return 1'b1; end
+    if (group == "rate_per_mille" && value == "frequent") begin v = 50; return 1'b1; end
+    return 1'b0;
+  endfunction
+  // TB constants (values predicted by rtl-arch T-051 where noted; bring-up confirms). A derived constant
+  // keeps its SV expression; its _PY twin is the literal Python and C use (gen_tb_top fatals when they differ).
   parameter int unsigned GEN_ICACHE_NUM_FB = 4;  // icache fill buffers, the one re-typed localparam NUM_FB (rtl/ibex_icache.sv:72)
   parameter int unsigned GEN_IBUS_MAX_OUTSTANDING = GEN_ICACHE_NUM_FB * ibex_pkg::IC_LINE_BEATS;  // instruction beats in flight (NUM_FB x IC_LINE_BEATS; rtl-arch T-051 2.3)
+  parameter int unsigned GEN_IBUS_MAX_OUTSTANDING_PY = 8;  // rendered from rtl/ibex_pkg.sv (ibus_max_outstanding)
   parameter int unsigned GEN_DBUS_MAX_OUTSTANDING = 2;  // data beats in flight, the two halves of one split access (rtl/ibex_load_store_unit.sv:403-405)
   parameter int unsigned GEN_CSR_WRITE_TO_RVFI_OFFSET = 2;  // cycles from a CSR-write commit edge to its RVFI record (v3 T-051 2.1, predicted, pinned by a directed test)
   parameter int unsigned GEN_TRAP_TO_RVFI_OFFSET = 1;  // cycles from a trap/mret/dret commit edge to its RVFI record (v3 T-051 2.1)
   parameter int unsigned GEN_IRQ_MARKER_TO_RVFI_OFFSET = 2;  // cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
-  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 1;  // alert_minor_o in the corrupted-rdata cycle (window 1 counted from the lookup request); invalidation write one cycle later (v3 T-051 2.4)
+  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 1;  // alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
   parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
-  parameter int unsigned GEN_MEM_READBACK_WORDS_DEFAULT = 64;  // default MEM_PEEK read-back sample size
-  parameter int unsigned GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT = 100000;  // default alive watchdog
-  parameter logic [31:0] GEN_IRQ_FAST_MASK = ((32'h1 << $bits(ibex_pkg::irqs_t) - 3) - 1) << 16;  // mie/mip fast interrupt bits 16..30 (15 fast lines); the shim installs them in gen_mie_csr_t
+  parameter int unsigned GEN_MEM_READBACK_WORDS_DEFAULT = 64;  // default MEM_PEEK read-back sample size (+gen_mem_readback_words)
+  parameter int unsigned GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT = 100000;  // default alive watchdog (+gen_alive_timeout)
+  parameter int unsigned GEN_FINISH_TIMEOUT_CYCLES_DEFAULT = 20000;  // default finish-handshake budget (+gen_finish_timeout)
+  parameter int unsigned GEN_IRQ_FAST_W = $bits(GEN_IRQS_ZERO.irq_fast);  // fast interrupt lines (width of ibex_pkg::irqs_t.irq_fast)
+  parameter int unsigned GEN_IRQ_FAST_W_PY = 15;  // rendered from rtl/ibex_pkg.sv (irq_fast_w)
+  parameter logic [31:0] GEN_IRQ_FAST_MASK = ((32'h1 << GEN_IRQ_FAST_W) - 1) << 16;  // mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t
+  parameter logic [31:0] GEN_IRQ_FAST_MASK_PY = 2147418112;  // rendered from rtl/ibex_pkg.sv (irq_fast_mask)
   // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.
   parameter logic [31:0] GEN_MM_BOOT_ADDR_DEFAULT = 32'h8000_0000;
+  parameter logic [31:0] GEN_MM_BOOT_PAGE_MASK = 32'hffff_ff00;
   parameter logic [31:0] GEN_MM_BOOT_PAGE = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_PROG_SIZE = 32'h0010_0000;
   parameter logic [31:0] GEN_MM_DM_BASE = 32'h1a11_0000;
@@ -198,9 +232,13 @@ package gen_tb_pkg;
   parameter logic [31:0] GEN_MM_MMIO_BASE = 32'h8fff_f000;
   parameter logic [31:0] GEN_MM_MMIO_SIZE = 32'h0000_1000;
   parameter logic [31:0] GEN_MM_SIG_ADDR = 32'h8fff_f000;
+  parameter logic [31:0] GEN_MM_SIG_SIZE = 32'h0000_0100;
   parameter logic [31:0] GEN_MM_IRQ_ACK_ADDR = 32'h8fff_f100;
+  parameter logic [31:0] GEN_MM_IRQ_ACK_SIZE = 32'h0000_0004;
   parameter logic [31:0] GEN_MM_EOT_ADDR = 32'h8fff_f104;
+  parameter logic [31:0] GEN_MM_EOT_SIZE = 32'h0000_0004;
   parameter logic [31:0] GEN_MM_PHASE_MARK_ADDR = 32'h8fff_f108;
+  parameter logic [31:0] GEN_MM_PHASE_MARK_SIZE = 32'h0000_0004;
   // Bridge command kinds (C2); 0 is NONE.
   parameter logic [7:0] GEN_CMD_NONE = 8'd0;
   parameter logic [7:0] GEN_CMD_IRQ_SET = 8'd1;
@@ -214,6 +252,22 @@ package gen_tb_pkg;
   parameter logic [7:0] GEN_CMD_FETCH_EN = 8'd9;
   parameter logic [7:0] GEN_CMD_MEM_PEEK = 8'd10;
   parameter logic [7:0] GEN_CMD_MISC = 8'd11;
+  function automatic string gen_cmd_name(logic [7:0] kind);
+    case (kind)
+      8'd1: return "IRQ_SET";
+      8'd2: return "IRQ_CLR";
+      8'd3: return "NMI_PULSE";
+      8'd4: return "DBG_REQ";
+      8'd5: return "REGIME_SET";
+      8'd6: return "KEY_MODE";
+      8'd7: return "MEM_ERR_ARM";
+      8'd8: return "ICACHE_ECC_ARM";
+      8'd9: return "FETCH_EN";
+      8'd10: return "MEM_PEEK";
+      8'd11: return "MISC";
+      default: return $sformatf("UNKNOWN(%0d)", kind);
+    endcase
+  endfunction
   // Regime knob ids and value lookup (bridge command REGIME_SET: arg0 = knob id, arg1 = value index).
   parameter int GEN_KNOB_ID_IMEM_GNT_DELAY = 0;
   parameter int GEN_KNOB_ID_IMEM_RVALID_DELAY = 1;
@@ -288,7 +342,14 @@ package gen_tb_pkg;
   // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).
   function automatic bit gen_is_known_plusarg(string name);
     case (name)
-      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_ut_lockstep_min_ratio_pct", "gen_isa_string", "gen_isa_log", "gen_ut_boot_retire", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_hart_id", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_string", "gen_isa_log", "gen_ut_boot_retire", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      default: return 1'b0;
+    endcase
+  endfunction
+  // A bool knob needs an explicit =0/=1 (a bare +gen_<bool> would otherwise be a silent no-op).
+  function automatic bit gen_is_bool_plusarg(string name);
+    case (name)
+      "gen_dbg_csr_probe", "gen_mem_unmapped_ok", "gen_rvfi_trace", "gen_fcov_en", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_dbus_err_store_perform", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
       default: return 1'b0;
     endcase
   endfunction

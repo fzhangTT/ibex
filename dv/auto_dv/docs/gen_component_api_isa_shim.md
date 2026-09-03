@@ -28,8 +28,12 @@ irq_valid)`, `gen_isa_arm_fault(kind, addr, size)`, `gen_isa_note_memory_write(a
 `gen_isa_step(txn_in, txn_out)` (returns the number of instructions the model retired in that step: 0 for a
 step that only took an interrupt, trigger or synchronous trap, 1 otherwise; the scoreboard asserts it per
 record class, C5.2, v2 XM-M2), `gen_isa_exec_reference(insn, rs1, rs2, rd_out)` (draft-B ops),
-`gen_isa_read_csr(addr)`, `gen_isa_read_gpr(idx)`, `gen_isa_write_csr(addr, val)`,
-`gen_isa_set_time(mcycle)`. Called only by gen_scoreboard.
+`gen_isa_read_csr(addr)`, `gen_isa_write_csr(addr, val)`, `gen_isa_set_time(mcycle)`; GPR and pc
+accessors `gen_isa_read_gpr(idx)`, `gen_isa_write_gpr(idx, val)`, `gen_isa_get_pc()`, `gen_isa_set_pc(pc)`,
+`gen_isa_is_draft_b(insn)`; per-step log accessors (T-068) `gen_isa_reg_write(i, idx, val)` (the i-th
+integer register write of the last step), `gen_isa_mem_write(i, addr, data, size)`,
+`gen_isa_mem_read(i, addr, data, size)` and `gen_isa_fetch_insn(pc)` (the instruction the model fetches at
+pc). Called only by gen_scoreboard.
 
 ## 3. Knobs
 
@@ -57,14 +61,15 @@ is private, so the shim sets `halt_request = HR_REGULAR` and steps; the step ent
 fetches the Spike ROM entry 0x800, which is unbacked, so the fetch fault inside debug mode parks pc at
 DEBUG_ROM_TVEC (0x808) with nothing retired and no mcause/mepc change; the shim then sets pc =
 DmHaltAddr and clears `halt_request` (Spike never clears it). A trigger entry likewise retires 0 and
-needs the same pc override. Memory (A-15, corrected by link test 2): with `addr_to_mem` NULL a
-naturally aligned access reaches `mmio_load/store/fetch` as ONE full-length call, but `mmu_t::mmio`
-(mmu.cc:168-184) splits a misaligned access into single-byte calls in address order and stops at the
-first failing byte. The shim therefore implements Ibex's per-word rule per byte (a byte belongs to
-word `addr & ~3`; a byte of a denied word fails), which performs exactly the permitted first word and
-faults on the second (BS MEM-13); Spike then reports `mtval` = the original EA for both halves, so for
-a second-word fault the shim overrides `mtval` to the aligned second word after the step from its own
-record of the failing byte (`put_csr(CSR_MTVAL)` accepted). Legalization (component sections C5.3a, RTL-defined rows): reset values
+needs the same pc override. Memory (A-15, corrected by link test 2): with `addr_to_mem` NULL
+every access is served byte-wise through `mmio_fetch/load/store` over the shim's sparse memory (an
+aligned access arrives as one full-length call, a misaligned one as single-byte calls in address order
+that stop at the first failing byte, `mmu_t::mmio`, mmu.cc:168-184; the shim serves each call byte by
+byte from its word map), and an armed bus fault (`gen_isa_arm_fault`) applies to the bytes it covers.
+NOT implemented (T-068): the per-word PMP rule (perform the permitted first word, fault the second, BS
+MEM-13) and the mtval override to the aligned second word; both are owed with the misaligned-access
+directed test (C5.4 pending). Legalization (component sections C5.3a, RTL-defined rows; the per-row
+built or deferred status is Section 4a): reset values
 (mstatus 0x80, prv M, PMP all OFF, mtvec = boot page | 1, pc = boot + 0x80); mip raw; mtvec MODE 01
 and BASE[7:2] = 0; misa read-only; mstatus MPP 01/10 -> U; mcounteren 13 bits gated by
 mcounteren_writable_i; counters excluded from the ISS compare; NMI and internal NMI emulated (cause
@@ -79,9 +84,34 @@ legalized (C5.3b spec-violation rows, model follows the spec, tests expected_fai
 B2/BUG-01 MPRV in debug with mprven = 0, BUG-03 dcsr.ebreaks (Spike forces 0, csrs.cc:1625), B3
 tdata3/mcontext/scontext trapping, B5 dcsr.nmip.
 
+## 4a. C5.3a / C5.4 rows: built or deferred (T-068)
+
+| Row | Status | Where / note |
+|---|---|---|
+| reset values (pc, mtvec, mstatus 0x80, prv M, PMP off, mie/mcause/mepc/mtval/mscratch 0) | BUILT | `legalize_after_reset` |
+| mie fast bits 16..30 | BUILT | `gen_mie_csr_t` |
+| misa read-only Ibex value | BUILT | `gen_const_csr_t` |
+| time/timeh trapping | BUILT | `gen_trap_csr_t` |
+| mtvec BASE[7:2] = 0, MODE = 1 | BUILT | `legalize_csr_write` |
+| mcounteren 13 bits gated by mcounteren_writable | BUILT | `legalize_csr_write` |
+| cpuctrlsts 8 writable bits and secureseed | BUILT | `genibex` extension |
+| debug entry parked at DmHaltAddr | BUILT | `gen_isa_step` |
+| mip injection from pre_mip | BUILT | `gen_isa_arm_async` |
+| smepmp (mseccfg) | BUILT | via the ISA string |
+| mstatus MPP legalization (01/10 -> U) | DEFERRED | - |
+| mcountinhibit/mhpmevent masks | DEFERRED | - |
+| NMI and internal-NMI emulation (cause 0x8000001F/0xFFFFFFE0, vector base+0x7C, mstack) | DEFERRED | - |
+| dcsr/tdata legalization and trigger entry pc override | DEFERRED | - |
+| WFI in_wfi clearing | DEFERRED | - |
+| B5 nmip direction | DEFERRED | pinned Spike has no nmip: the model equals the RTL by absence, not by design |
+| C5.4 per-word misaligned rule and mtval override | DEFERRED | owed with the misaligned-access directed test (Section 4) |
+| CSR-state compare (isa_csr) | DEFERRED | declared knob, no compare yet |
+
 ## 5. Checkers
 
-None: this component carries no pass/fail check (test equipment or infrastructure).
+None: this component carries no pass/fail check (test equipment or infrastructure). Mutation classes:
+the shim carries no checker; the comparator's ids and mutation classes are in
+gen_component_api_scoreboard.md.
 
 ## 6. Failure path and diagnostics
 
@@ -99,5 +129,6 @@ Second link test (A-16) DONE: `dv/auto_dv/work/tb-infra/gen_spike_linktest2.cc`,
 (`dv/auto_dv/work/tb-infra/out_linktest2/linktest2.log`; evidence `dv/auto_dv/evidence/gen_t046_spike_linktest2.md`): fast interrupt through `gen_mie_csr_t` with Ibex's priority and
 retired counts 0 then 1, custom CSRs through `extension_t::get_csrs`, wfi/in_wfi, halt_request entry,
 tdata1 from debug mode + dret + execute trigger, cm.push with one `log_mem_write`, aligned and
-misaligned `mmio_store` (byte split, mtval override). Still before coding: verify grevi/gorci non-alias
+misaligned `mmio_store` (byte split, mtval override; the shim itself does not yet implement the rule,
+Section 4a). Still before coding: verify grevi/gorci non-alias
 decode; write the C5.3a/C5.3b tables into this document as rows with an RTL cite and a test each (R-2).

@@ -1,0 +1,14 @@
+# GREEN compile+run: 2026-09-03T07:33:31Z host=soc-l-11
+vcs exit=0
+0
+simv exit=0
+FAIL mmio store did not land in RAM words got 0xcc exp 0xce
+GEN_UT_MEM_MODEL FAIL (1 failures)
+24
+# GREEN run 2 (test expectation corrected: the written words already existed in the image): 2026-09-03T07:34:17Z host=soc-l-11
+vcs exit=0
+simv exit=0
+GEN_UT_MEM_MODEL PASS (0 failures)
+OK lines: 25
+Time: 00 ps
+CPU Time:      0.150 seconds;       Data structure size:   0.1Mb

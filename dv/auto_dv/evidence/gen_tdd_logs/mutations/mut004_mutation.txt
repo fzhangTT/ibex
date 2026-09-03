@@ -1,0 +1,1 @@
+MUT-004: dv/auto_dv/env/gen_rvfi_pkg.sv:82 original: t.rs1_rdata = vif.rs1_rdata; t.rs2_rdata = vif.rs2_rdata; t.rd_wdata = vif.rd_wdata; | mutated: t.rs1_rdata = vif.rs1_rdata; t.rs2_rdata = vif.rs2_rdata; t.rd_wdata = vif.rd_wdata ^ 32'h1;   // MUT-004

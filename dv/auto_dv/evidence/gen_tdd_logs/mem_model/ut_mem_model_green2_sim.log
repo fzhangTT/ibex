@@ -1,0 +1,36 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_ut_mem/./green2_simv +vcs+lic+wait +UVM_NO_RELNOTES +gen_ut_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem +gen_ut_crc32=cf0cb3b8 +gen_ut_words=204 +gen_ut_entry=80000080 +gen_ut_entry_word=0040006f -l sim2.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 03:34 2026
+OK   load_vmem word count got 0xcc exp 0xcc
+OK   crc32_index_word got 0xcf0cb3b8 exp 0xcf0cb3b8
+OK   verify_digest ok got 0x1 exp 0x1
+OK   verify_digest rejects a wrong crc got 0x0 exp 0x0
+OK   verify_digest rejects a wrong count got 0x0 exp 0x0
+OK   read32 entry word got 0x40006f exp 0x40006f
+OK   entry is mapped got 0x1 exp 0x1
+OK   write_masked low half got 0x3344 exp 0x3344
+OK   write_masked full word got 0xaabbccdd exp 0xaabbccdd
+OK   misaligned read is word aligned got 0xaabbccdd exp 0xaabbccdd
+OK   read of never-written mapped word is 0 got 0x0 exp 0x0
+OK   DM window mapped got 0x1 exp 0x1
+OK   MMIO page mapped got 0x1 exp 0x1
+OK   hole below program unmapped got 0x0 exp 0x0
+OK   address 0 unmapped got 0x0 exp 0x0
+OK   mmio handler saw the store got 0x1 exp 0x1
+OK   mmio handler addr got 0x8ffff004 exp 0x8ffff004
+OK   mmio handler data got 0xdead0001 exp 0xdead0001
+OK   mmio read comes from the handler got 0xc0def004 exp 0xc0def004
+OK   mmio store did not land in RAM words got 0xcc exp 0xcc
+OK   unmapped read returns 0 got 0x0 exp 0x0
+OK   unmapped access counted got 0x1 exp 0x1
+OK   peek_word entry got 0x40006f exp 0x40006f
+OK   peek_word unmapped is 0 without counting got 0x0 exp 0x0
+OK   unmapped count unchanged by peek got 0x1 exp 0x1
+GEN_UT_MEM_MODEL PASS (0 failures)
+$finish called from file "dv/auto_dv/tb/unit/gen_ut_mem_model_top.sv", line 85.
+$finish at simulation time                    0
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 00 ps
+CPU Time:      0.150 seconds;       Data structure size:   0.1Mb
+Thu Sep  3 03:34:26 2026

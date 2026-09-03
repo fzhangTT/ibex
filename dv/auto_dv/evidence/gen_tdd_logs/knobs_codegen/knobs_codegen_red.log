@@ -1,0 +1,5 @@
+# RED run: 2026-09-03T07:10:54Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py
+FAIL yaml source exists (/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_tb_knobs.yaml)
+FAIL codegen exists (/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_knobs_codegen.py)
+GEN_UT_KNOBS_CODEGEN FAIL (2 failures)
+exit=1

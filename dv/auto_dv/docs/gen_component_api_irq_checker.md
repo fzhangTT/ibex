@@ -34,7 +34,7 @@ Called by the scoreboard per RVFI event and per cycle for `irq_pending_o`.
 
 `irq_pending_o = |(pins & mie_q)` is combinational (rtl-arch CTRL-07), and `mie_q` is written when
 the CSR instruction executes in ID/EX, at least two cycles before its RVFI record, so the compare
-is class windowed (v2, XM-M5): a settle window of `GEN_CSR_COMMIT_TO_RVFI_OFFSET` cycles opens at
+is class windowed (v2, XM-M5): a settle window of `GEN_CSR_WRITE_TO_RVFI_OFFSET` cycles opens at
 each retired `mie` write record, the compare is suspended inside it and re-armed with the new
 value; pin edges need no window (pins are visible). Entry checks: vector = mtvec base + 4 * cause
 (vectored mode is fixed), cause per Ibex's priority (NMI > fast lowest id > ext > sw > timer),
@@ -45,7 +45,7 @@ records (class bound).
 
 | Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
 |---|---|---|---|
-| `irq_pending` | `irq_pending_o == |({sw, timer, ext, fast[14:0]} & mie_q)` every cycle, not gated by MIE/debug/nmi; class windowed(`GEN_CSR_COMMIT_TO_RVFI_OFFSET`): the RTL commits `mie_q` at the CSR-write commit edge while the RVFI record follows WB, so the compare uses the value committed by the record `GEN_CSR_COMMIT_TO_RVFI_OFFSET` cycles later (measured in bring-up, pinned by a directed `csrw mie` test) | `irqs_o`/`irq_pending_o` (`rtl/ibex_cs_registers.sv:1044-1045`), mip wiring (`:408-412`) | `+gen_chk_irq_pending=0` |
+| `irq_pending` | `irq_pending_o == |({sw, timer, ext, fast[14:0]} & mie_q)` every cycle, not gated by MIE/debug/nmi; class windowed(`GEN_CSR_WRITE_TO_RVFI_OFFSET`): the RTL commits `mie_q` at the CSR-write commit edge while the RVFI record follows WB, so the compare uses the value committed by the record `GEN_CSR_WRITE_TO_RVFI_OFFSET` cycles later (measured in bring-up, pinned by a directed `csrw mie` test) | `irqs_o`/`irq_pending_o` (`rtl/ibex_cs_registers.sv:1044-1045`), mip wiring (`:408-412`) | `+gen_chk_irq_pending=0` |
 | `irq_entry` | when enable conditions hold and a line is pending, the next RVFI event is an interrupt entry (`rvfi_ext_irq_valid` or a record with `rvfi_intr`, `pc_rdata == mtvec_base + 4*id`, id = highest priority pending: NMI > fast lowest-id > ext > sw > timer) within `GEN_IRQ_ENTRY_BOUND_RECORDS`; `pre_mip` of that record contains the taken id | controller handle_irq / IRQ_TAKEN (`rtl/ibex_controller.sv:498-511, 725-758`), priority select | `+gen_chk_irq_entry=0` |
 | `irq_masked` | no interrupt entry while `mstatus.MIE == 0` in M-mode, in debug mode, or during NMI handling; an unsampled one-cycle pulse produces no entry | same | `+gen_chk_irq_masked=0` |
 | `nmi_entry` | `irq_nm_i` => entry within bound regardless of MIE/mie, `mcause == 0x8000001F`, `pc_rdata == mtvec_base + 0x7C`, nested NMI ignored; `mret` restores mstatus.MPP/MPIE, mepc, mcause from the mstack model | NMI path (`rtl/ibex_controller.sv:736-745`), mstack (`rtl/ibex_cs_registers.sv`) | `+gen_chk_nmi_entry=0` |

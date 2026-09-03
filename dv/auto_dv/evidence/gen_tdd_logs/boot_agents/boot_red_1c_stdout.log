@@ -1,0 +1,157 @@
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 03:39 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_boot.gen_ut_boot
+     0.00ns INFO     cocotb.regression                  running gen_ut_boot (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x1a110800 without a memory model
+    15.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x1a110800: sv 0x00000000 vmem 0x00c0006f
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 1500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x1a110808 without a memory model
+    25.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x1a110808: sv 0x00000000 vmem 0x7b200073
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 2500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000084 without a memory model
+    35.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000084: sv 0x00000000 vmem 0x00000117
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 3500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000088 without a memory model
+    45.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000088: sv 0x00000000 vmem 0x31c10113
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 4500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000008c without a memory model
+    55.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000008c: sv 0x00000000 vmem 0x10b7828a
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 5500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000b0 without a memory model
+    65.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000b0: sv 0x00000000 vmem 0x40228333
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 6500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d0 without a memory model
+    75.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000d0: sv 0x00000000 vmem 0x4081181e
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 7500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d4 without a memory model
+    85.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000d4: sv 0x00000000 vmem 0x44814401
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 8500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d8 without a memory model
+    95.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000d8: sv 0x00000000 vmem 0xba724901
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 9500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000e8 without a memory model
+   105.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000e8: sv 0x00000000 vmem 0x19c09063
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 10500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000f8 without a memory model
+   115.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000f8: sv 0x00000000 vmem 0x33333e37
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 11500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000012c without a memory model
+   125.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000012c: sv 0x00000000 vmem 0x12511e63
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 12500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000130 without a memory model
+   135.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000130: sv 0x00000000 vmem 0xa0a0a537
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 13500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000144 without a memory model
+   145.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000144: sv 0x00000000 vmem 0x0e13a0a0
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 14500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000014c without a memory model
+   155.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000014c: sv 0x00000000 vmem 0xae3711c4
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 15500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000150 without a memory model
+   165.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000150: sv 0x00000000 vmem 0x0e13a1a1
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 16500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000158 without a memory model
+   175.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000158: sv 0x00000000 vmem 0x593711c4
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 17500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000015c without a memory model
+   185.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000015c: sv 0x00000000 vmem 0x09135252
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 18500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000174 without a memory model
+   195.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000174: sv 0x00000000 vmem 0x252e0e13
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 19500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000180 without a memory model
+   205.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000180: sv 0x00000000 vmem 0x353e0e13
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 20500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000190 without a memory model
+   215.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000190: sv 0x00000000 vmem 0xf8500493
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 21500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000198 without a memory model
+   225.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000198: sv 0x00000000 vmem 0x23448493
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 22500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000019c without a memory model
+   235.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000019c: sv 0x00000000 vmem 0x80488c24
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 23500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001a4 without a memory model
+   245.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001a4: sv 0x00000000 vmem 0x0dc51263
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 24500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001b4 without a memory model
+   255.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001b4: sv 0x00000000 vmem 0x048574e1
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 25500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001c4 without a memory model
+   265.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001c4: sv 0x00000000 vmem 0x12345637
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 26500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001d0 without a memory model
+   275.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001d0: sv 0x00000000 vmem 0x1b630780
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 27500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001f4 without a memory model
+   285.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001f4: sv 0x00000000 vmem 0xbcde0e13
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 28500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001fc without a memory model
+   295.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800001fc: sv 0x00000000 vmem 0x1234b637
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 29500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000218 without a memory model
+   305.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000218: sv 0x00000000 vmem 0xfe379e75
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 30500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000220 without a memory model
+   315.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000220: sv 0x00000000 vmem 0x13630f0e
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 31500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000228 without a memory model
+   325.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000228: sv 0x00000000 vmem 0x9e5556e9
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 32500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000230 without a memory model
+   335.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000230: sv 0x00000000 vmem 0x03c61c63
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 33500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000238 without a memory model
+   345.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000238: sv 0x00000000 vmem 0x01008093
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 34500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000023c without a memory model
+   355.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000023c: sv 0x00000000 vmem 0x4081b842
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 35500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000244 without a memory model
+   365.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000244: sv 0x00000000 vmem 0x02511263
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 36500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000250 without a memory model
+   375.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000250: sv 0x00000000 vmem 0x6537b842
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 37500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000260 without a memory model
+   385.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000260: sv 0x00000000 vmem 0x00511463
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 38500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000268 without a memory model
+   395.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000268: sv 0x00000000 vmem 0x0f17418d
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 39500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000026c without a memory model
+   405.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000026c: sv 0x00000000 vmem 0x0f130000
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 40500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000270 without a memory model
+   415.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000270: sv 0x00000000 vmem 0x2023016f
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 41500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000274 without a memory model
+   425.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000274: sv 0x00000000 vmem 0xa001003f
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 42500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000028c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 43500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000298 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 44500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002a4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 45500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002a8 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 46500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002b4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 47500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002cc without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 48500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002dc without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 49500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002f4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 50500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000304 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 51500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000308 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 52500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000310 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 53500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000032c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 54500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000330 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 55500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000338 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 56500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000360 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 57500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000370 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 58500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000374 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 59500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000378 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 60500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000037c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 61500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000384 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 62500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000388 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 63500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000398 without a memory model
+   645.01ns INFO     cocotb.regression                  gen_ut_boot failed
+                                                        Traceback (most recent call last):
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/gen_tb/gen_tests/gen_ut_boot.py", line 44, in gen_ut_boot
+                                                            assert mismatches == 0, f"GEN_UT_BOOT: {mismatches} read-back mismatches of {n_rb} words"
+                                                                   ^^^^^^^^^^^^^^^
+                                                        AssertionError: GEN_UT_BOOT: 42 read-back mismatches of 64 words
+   645.01ns INFO     cocotb.regression                  *************************************************************************************************************
+                                                        ** TEST                                                 STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *************************************************************************************************************
+                                                        ** dv.auto_dv.gen_tb.gen_tests.gen_ut_boot.gen_ut_boot   FAIL         645.01           0.03      19849.65  **
+                                                        *************************************************************************************************************
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                       645.01           0.05      13593.31  **
+                                                        *************************************************************************************************************
+                                                        
+$finish at simulation time                64501
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 645010 ps
+CPU Time:      0.310 seconds;       Data structure size:   8.7Mb
+Thu Sep  3 03:39:46 2026

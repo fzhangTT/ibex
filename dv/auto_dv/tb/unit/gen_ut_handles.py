@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unit test for dv/auto_dv/gen_tb/gen_handles.py (architecture C11: the only Python file that spells
-hierarchical paths). Written before the module existed; plain asserts, exit 1 on failure."""
+hierarchical paths). Plain asserts, exit 1 on failure; TDD transcript dv/auto_dv/evidence/gen_tdd_bridge.md."""
 import importlib.util
 import sys
 from pathlib import Path

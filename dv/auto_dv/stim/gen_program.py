@@ -48,9 +48,7 @@ SV_TB_PKG = ROOT / "dv/auto_dv/tb/gen_tb_pkg.sv"
 RISCV_DV = ROOT / "vendor/google_riscv-dv"
 # Spike binary: tools/spike from SIM_RECIPE Section 11, overridable for a differently placed build.
 SPIKE = Path(os.environ.get("GEN_SPIKE_BIN", str(ROOT / "tools/spike/bin/spike")))
-# The one ISA string for the model (lock-step shim and standalone runs alike; the knobs codegen will
-# emit it into gen_isa_shim_map.h, until then this is the single definition): the ratified
-# extensions of RV32IMC + Zba/Zbb/Zbc/Zbs + Zca/Zcb/Zcmp, counters, misaligned support.
+# The ISA string and the MMIO page come from the rendered constants mirror (one origin: gen_tb_knobs.yaml).
 def _gen_knobs():
     """The rendered constants mirror (dv/auto_dv/gen_tb/gen_knobs.py): ISA string and MMIO page."""
     import importlib.util

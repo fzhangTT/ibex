@@ -1,0 +1,11 @@
+# RED run (stubbed bridge): compile out_1b_red vcs exit 0; run ut_bridge_red
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_1b_red/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build
+Time: 20000010 ps
+CPU Time:      0.270 seconds;       Data structure size:   8.7Mb
+0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+raise AssertionError(f"GEN_BRIDGE: no edge on {what} within {cycles} cycles ({type(exc).__name__})") from None
+AssertionError: GEN_BRIDGE: no edge on listener_armed within 2000 cycles (SimTimeoutError)
+** dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge.gen_ut_bridge   FAIL       20000.01           0.05     366199.81  **
+** TESTS=1 PASS=0 FAIL=1 SKIP=0                                         20000.01           0.07     300944.32  **
+Time: 20000010 ps
+CPU Time:      0.270 seconds;       Data structure size:   8.7Mb

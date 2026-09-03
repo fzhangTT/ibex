@@ -5,7 +5,7 @@ import json
 import random
 from pathlib import Path
 
-from dv.auto_dv.gen_tb.gen_knobs import plusarg
+from dv.auto_dv.gen_tb.gen_knobs import MEMORY_MAP, plusarg
 
 
 def parse_vmem(path):
@@ -38,14 +38,22 @@ class GenImage:
 
     def plusargs(self):
         args = [plusarg("mem_image", str(self.vmem)), plusarg("mem_image_crc32", f"{self.crc32:08x}"),
-                plusarg("mem_image_words", self.count), plusarg("boot_addr", f"{self.entry & 0xFFFFFF00:08x}")]
+                plusarg("mem_image_words", self.count),
+                plusarg("boot_addr", f"{self.entry & MEMORY_MAP['boot_page_mask']:08x}")]
         if self.tohost is not None:
             args.append(plusarg("tohost_addr", f"{self.tohost:08x}"))
         return args
 
     def sample(self, n, seed):
-        """n (index, word) pairs drawn from the image with the run seed (the read-back set)."""
+        """n (index, word) pairs drawn from the image with the run seed (the read-back set); non-zero
+        words first so an empty or zero-filled model cannot pass the read-back by matching zeros."""
         rng = random.Random(seed)
-        keys = sorted(self.words)
-        picks = keys if n >= len(keys) else rng.sample(keys, n)
+        nonzero = sorted(k for k, w in self.words.items() if w != 0)
+        zero = sorted(k for k, w in self.words.items() if w == 0)
+        if n >= len(self.words):
+            picks = nonzero + zero
+        elif n <= len(nonzero):
+            picks = rng.sample(nonzero, n)
+        else:
+            picks = nonzero + rng.sample(zero, n - len(nonzero))
         return [(k, self.words[k]) for k in sorted(picks)]

@@ -72,42 +72,20 @@ package gen_agents_pkg;
 
     function void apply_gnt_regime(string v);
       gnt_regime = v;
-      case (v)
-        "same_cycle": begin gnt_min = 0;  gnt_max = 0;  end
-        "short":      begin gnt_min = 1;  gnt_max = 3;  end
-        "long":       begin gnt_min = 4;  gnt_max = 32; end
-        "random":     begin gnt_min = 0;  gnt_max = 32; end
-        default: `uvm_fatal("GEN_BUS_CFG", {"bad gnt regime ", v})
-      endcase
+      if (!gen_regime_window("gnt_delay", v, gnt_min, gnt_max)) `uvm_fatal("GEN_BUS_CFG", {"bad gnt regime ", v})
     endfunction
     function void apply_rvalid_regime(string v);
       rvalid_regime = v;
-      case (v)
-        "min1":   begin rvalid_min = 1; rvalid_max = 1;  end
-        "short":  begin rvalid_min = 1; rvalid_max = 3;  end
-        "long":   begin rvalid_min = 4; rvalid_max = 32; end
-        "random": begin rvalid_min = 1; rvalid_max = 32; end
-        default: `uvm_fatal("GEN_BUS_CFG", {"bad rvalid regime ", v})
-      endcase
+      if (!gen_regime_window("rvalid_delay", v, rvalid_min, rvalid_max)) `uvm_fatal("GEN_BUS_CFG", {"bad rvalid regime ", v})
     endfunction
     function int unsigned rate_of(string v);
-      case (v)
-        "none":     return 0;
-        "rare":     return 2;     // about 1/512
-        "frequent": return 50;    // about 1/20
-        default: `uvm_fatal("GEN_BUS_CFG", {"bad rate regime ", v})
-      endcase
-      return 0;
+      int unsigned r;
+      if (!gen_regime_scalar("rate_per_mille", v, r)) `uvm_fatal("GEN_BUS_CFG", {"bad rate regime ", v})
+      return r;
     endfunction
     function void apply_cap_regime(string v);
       cap_regime = v;
-      case (v)
-        "cap1": max_outstanding = 1;
-        "cap2": max_outstanding = 2;
-        "cap4": max_outstanding = 4;
-        "cap8": max_outstanding = 8;
-        default: `uvm_fatal("GEN_BUS_CFG", {"bad cap regime ", v})
-      endcase
+      if (!gen_regime_scalar("outstanding_cap", v, max_outstanding)) `uvm_fatal("GEN_BUS_CFG", {"bad cap regime ", v})
       if (!is_data && max_outstanding > GEN_IBUS_MAX_OUTSTANDING) max_outstanding = GEN_IBUS_MAX_OUTSTANDING;
       if (is_data  && max_outstanding > GEN_DBUS_MAX_OUTSTANDING) max_outstanding = GEN_DBUS_MAX_OUTSTANDING;
     endfunction
@@ -212,10 +190,22 @@ package gen_agents_pkg;
       return prim_secded_pkg::prim_secded_inv_39_32_enc(w);
     endfunction
 
+    // The SECDED encoder above is the 39/32 inv code; a bus of another width would truncate {intg, word}
+    // silently, so the mismatch is a build-time fatal instead.
+    function void build_phase(uvm_phase phase);
+      super.build_phase(phase);
+      if (!uvm_config_db#(virtual gen_bus_if)::get(this, "", "vif", vif))
+        `uvm_fatal("GEN_BUS_DRIVER", {get_full_name(), ": vif not in uvm_config_db"})
+      if ($bits(vif.rdata) != $bits(logic [38:0]))
+        `uvm_fatal("GEN_BUS_DRIVER", $sformatf("%s: bus data width %0d, the driver encodes %0d bits", get_full_name(), $bits(vif.rdata), $bits(logic [38:0])))
+    endfunction
+
     task run_phase(uvm_phase phase);
       int unsigned gnt_wait = 0;
       bit          gnt_armed = 0;
+      int unsigned req_cycle = 0;     // first cycle the pending request was seen
       int unsigned last_due = 0;
+      int unsigned data_w = $bits(vif.rdata);
       vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0;
       forever begin
         @(negedge vif.clk);
@@ -246,6 +236,7 @@ package gen_agents_pkg;
         if (vif.req) begin
           if (!gnt_armed) begin
             gnt_armed = 1;
+            req_cycle = cycle;
             gnt_wait = $urandom_range(cfg.gnt_max, cfg.gnt_min);
           end
           if (gnt_wait == 0 && pend.size() < cfg.max_outstanding) begin
@@ -253,7 +244,7 @@ package gen_agents_pkg;
             logic [38:0] enc;
             p.addr = vif.addr; p.we = cfg.is_data ? vif.we : 1'b0; p.be = cfg.is_data ? vif.be : 4'hF;
             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
-            p.gnt_delay = 0; p.cycle_req = cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size();
+            p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size();
             p.err = 0; p.injected = 0;
             if (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate)) begin
               p.err = 1; p.injected = 1; injected_err++;
@@ -268,11 +259,11 @@ package gen_agents_pkg;
             if (p.we) p.word = 32'h0;
             p.intg = enc[38:32];
             if (cfg.intg_err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.intg_err_rate)) begin
-              int b1 = $urandom_range(38, 0);
+              int b1 = $urandom_range(data_w - 1, 0);
               logic [38:0] flipped = {p.intg, p.word};
               flipped[b1] = ~flipped[b1];
               if (cfg.intg_bits > 1) begin
-                int b2 = (b1 + 1 + $urandom_range(37, 0)) % 39;
+                int b2 = (b1 + 1 + $urandom_range(data_w - 2, 0)) % data_w;
                 flipped[b2] = ~flipped[b2];
               end
               p.intg = flipped[38:32]; p.word = flipped[31:0];
@@ -306,12 +297,18 @@ package gen_agents_pkg;
       ap = new("ap", this);
     endfunction
     function void build_phase(uvm_phase phase);
+      gen_env_cfg ecfg;
       super.build_phase(phase);
       driver = gen_bus_driver::type_id::create("driver", this);
       driver.cfg = cfg;
       if (!uvm_config_db#(virtual gen_bus_if)::get(this, "", "vif", driver.vif))
         `uvm_fatal("GEN_BUS_AGENT", {get_full_name(), ": vif not in uvm_config_db"})
-      driver.vif.chk_rvalid_legal_en = 1'b1;
+      if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", ecfg))
+        `uvm_fatal("GEN_BUS_AGENT", {get_full_name(), ": cfg not in uvm_config_db"})
+      driver.vif.chk_rvalid_legal_en = ecfg.chk_all ? ecfg.chk_sva_rvalid_legal
+                                                    : (ecfg.chk_sva_rvalid_legal_set && ecfg.chk_sva_rvalid_legal);
+      if (driver.vif.chk_rvalid_legal_en) `uvm_info(get_type_name(), {get_full_name(), ": sva_rvalid_legal armed"}, UVM_LOW)
+      else `uvm_info(get_type_name(), {get_full_name(), ": sva_rvalid_legal disabled by knob"}, UVM_LOW)
     endfunction
     function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
@@ -379,6 +376,7 @@ package gen_agents_pkg;
     virtual gen_ctrl_if vif;
     gen_env_cfg cfg;
     int unsigned fetch_en_changes = 0;
+    logic [31:0] fetch_en_q [$];   // FETCH_EN arguments waiting for the next falling edge
     function new(string name, uvm_component parent);
       super.new(name, parent);
     endfunction
@@ -396,6 +394,9 @@ package gen_agents_pkg;
         default: `uvm_fatal("GEN_CTRL", {"bad knob_mcounteren_writable ", cfg.knob_mcounteren_writable})
       endcase
     endfunction
+    function void queue_fetch_en(logic [31:0] v);
+      fetch_en_q.push_back(v);
+    endfunction
     function void set_fetch_en(logic [31:0] v);
       case (v)
         32'd0:   vif.fetch_enable = ibex_pkg::IbexMuBiOff;
@@ -405,6 +406,12 @@ package gen_agents_pkg;
       fetch_en_changes++;
       `uvm_info("GEN_CTRL", $sformatf("fetch_enable_i <= %s (FETCH_EN arg %0d)", gen_mubi_str(vif.fetch_enable), v), UVM_LOW)
     endfunction
+    task run_phase(uvm_phase phase);
+      forever begin
+        @(negedge vif.clk);
+        if (vif.rst_n && fetch_en_q.size() > 0) set_fetch_en(fetch_en_q.pop_front());
+      end
+    endtask
   endclass
 
   // ------------------------------------------------------------------------------------------

@@ -46,7 +46,7 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
   logic rst_n;
   initial begin
     clk = 1'b0;
-    forever #(ClkHalfPeriodNs) clk = ~clk;
+    forever #(ClkHalfPeriodNs * 1ns) clk = ~clk;   // explicit unit: Python converts cycles with GEN_CLK_PERIOD_NS
   end
   initial begin
     rst_n = 1'b0;
@@ -54,11 +54,24 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     rst_n = 1'b1;
   end
 
-  // boot_addr_i from +gen_boot_addr (name from gen_tb_pkg); default GEN_BOOT_ADDR_DEFAULT.
+  // boot_addr_i and hart_id_i from their plusargs (names from gen_tb_pkg); defaults from the rendered map.
   logic [31:0] boot_addr = GEN_BOOT_ADDR_DEFAULT;
+  logic [31:0] hart_id = '0;
   initial begin
     logic [31:0] h;
     if ($value$plusargs({PLUSARG_BOOT_ADDR, "=%h"}, h)) boot_addr = h;
+    if ($value$plusargs({PLUSARG_HART_ID, "=%h"}, h)) hart_id = h;
+  end
+
+  // Time-0 guards: the mirrored MemDataWidth equals the DUT port width, and every derived constant's
+  // Python/C literal (_PY, rendered from rtl/ibex_pkg.sv) equals its SV expression.
+  initial begin
+    if (MemDataWidth != $bits(u_dut.instr_rdata_i))
+      $fatal(1, "GEN_WIDTH_GUARD: MemDataWidth %0d != DUT instr_rdata_i width %0d", MemDataWidth, $bits(u_dut.instr_rdata_i));
+    if (GEN_IBUS_MAX_OUTSTANDING != GEN_IBUS_MAX_OUTSTANDING_PY)
+      $fatal(1, "GEN_WIDTH_GUARD: GEN_IBUS_MAX_OUTSTANDING sv %0d != rendered %0d", GEN_IBUS_MAX_OUTSTANDING, GEN_IBUS_MAX_OUTSTANDING_PY);
+    if (GEN_IRQ_FAST_W != GEN_IRQ_FAST_W_PY || GEN_IRQ_FAST_MASK != GEN_IRQ_FAST_MASK_PY)
+      $fatal(1, "GEN_WIDTH_GUARD: GEN_IRQ_FAST_W/MASK sv %0d/%08h != rendered %0d/%08h", GEN_IRQ_FAST_W, GEN_IRQ_FAST_MASK, GEN_IRQ_FAST_W_PY, GEN_IRQ_FAST_MASK_PY);
   end
 
   // ---- DUT boundary signals (agents drive the *_i side from step 1c; tied idle here) ----------
@@ -78,7 +91,7 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
   logic [LineSizeECC-1:0]     ic_data_rdata [IC_NUM_WAYS];
   logic                       ic_scr_key_valid, ic_scr_key_req;
   logic                       irq_software, irq_timer, irq_external, irq_nm, irq_pending;
-  logic [14:0]                irq_fast;
+  logic [GEN_IRQ_FAST_W-1:0]  irq_fast;
   logic                       debug_req;
   crash_dump_t                crash_dump;
   logic                       double_fault_seen;
@@ -163,7 +176,7 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     .ICacheECC(ICacheECC), .ICacheScramble(ICacheScramble), .BranchPredictor(BranchPredictor),
     .DbgTriggerEn(DbgTriggerEn), .SecureIbex(SecureIbex)
   ) u_dut (
-    .clk_i(clk), .rst_ni(rst_n), .hart_id_i(32'd0), .boot_addr_i(boot_addr),
+    .clk_i(clk), .rst_ni(rst_n), .hart_id_i(hart_id), .boot_addr_i(boot_addr),
     .instr_req_o(instr_req), .instr_gnt_i(instr_gnt), .instr_rvalid_i(instr_rvalid),
     .instr_addr_o(instr_addr), .instr_rdata_i(instr_rdata), .instr_err_i(instr_err),
     .data_req_o(data_req), .data_gnt_i(data_gnt), .data_rvalid_i(data_rvalid), .data_we_o(data_we),

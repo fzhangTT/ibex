@@ -1,9 +1,10 @@
 // gen_rvfi_pkg: the RVFI monitor (architecture C4.1) and the scoreboard with the ISA-model comparator
 // (C4.7, C5.2): one record in, one model step out, field-by-field compare with a checker id per field
 // (isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next) and a knob per id; Zcmp micro-op
-// records folded to their last record; draft-B ops served by the shim's reference (C5.5); interrupt and
-// debug entries stepped per the C5.2 record classes. Counters and PMP models, the CSR observability plan
-// and the misc checkers join in later landings.
+// records folded to their last record with the union of GPR writes and the ordered store/load lists
+// compared against the model's logged accesses; draft-B ops checked against the model's pc, fetched
+// instruction and operands with the shim's reference result (C5.5); interrupt and debug entries stepped
+// per the C5.2 record classes. Counters and PMP models, the CSR compare and the misc checkers are later landings.
 package gen_rvfi_pkg;
   import uvm_pkg::*;
   import gen_tb_pkg::*;
@@ -164,7 +165,7 @@ package gen_rvfi_pkg;
         if (n != cfg.mem_image_words) `uvm_fatal("ISA_INIT", $sformatf("model loaded %0d words, sidecar says %0d", n, cfg.mem_image_words))
       end
       model_ready = 1;
-      `uvm_info("GEN_SB", $sformatf("ISA model ready: pc=%08h mtvec=%08h", gen_isa_get_pc(), gen_isa_read_csr(32'h305)), UVM_LOW)
+      `uvm_info("GEN_SB", $sformatf("ISA model ready: pc=%08h mtvec=%08h", gen_isa_get_pc(), gen_isa_read_csr(ibex_pkg::CSR_MTVEC)), UVM_LOW)
     endfunction
 
     function void miss(string id, string msg, gen_rvfi_txn t, bit en);
@@ -179,9 +180,9 @@ package gen_rvfi_pkg;
                       output int trap, output int unsigned cause, output int unsigned tval, output int rd_we,
                       output int unsigned rd_addr, output int unsigned rd_wdata, output int mem_r, output int mem_w,
                       output int unsigned mem_addr, output int unsigned mem_wdata, output int unsigned mem_rdata,
-                      output int unsigned mem_size, output int unsigned prv, output int csr_n);
+                      output int unsigned mem_size, output int unsigned prv, output int csr_n, output int reg_n);
       int rc = gen_isa_step_dpi(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata,
-                                mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n);
+                                mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n);
       if (rc != 0) begin
         `uvm_error("isa_step", {"model step failed: ", gen_isa_last_error()})
         return 0;
@@ -189,15 +190,57 @@ package gen_rvfi_pkg;
       return 1;
     endfunction
 
+    // Zcmp sequence bookkeeping: the union of the micro-op records' GPR writes, the ordered store list
+    // and the ordered load addresses, compared with the model's logged writes/accesses on the last record.
+    logic [31:0] seq_rd [int unsigned];
+    logic [31:0] seq_st_addr [$], seq_st_data [$], seq_ld_addr [$];
+    function void seq_note(gen_rvfi_txn t);
+      if (t.rd_addr != 0 && !t.ext_rf_wr_suppress) seq_rd[t.rd_addr] = t.rd_wdata;
+      if (t.mem_wmask != 0) begin seq_st_addr.push_back(t.mem_addr); seq_st_data.push_back(t.mem_wdata); end
+      if (t.insn[6:0] == ibex_pkg::OPCODE_LOAD) seq_ld_addr.push_back(t.mem_addr);
+    endfunction
+    function void seq_reset(gen_rvfi_txn t);
+      in_seq = 1; seq_first = t; seq_rd.delete(); seq_st_addr.delete(); seq_st_data.delete(); seq_ld_addr.delete();
+    endfunction
+    // C5.2 union compare after the model stepped the whole cm.* instruction (ids isa_rd, isa_mem)
+    function void compare_seq_union(gen_rvfi_txn t, int reg_writes, int mem_w, int mem_r);
+      int unsigned idx, val, addr, data, size;
+      logic [31:0] model_rd [int unsigned];
+      for (int i = 0; i < reg_writes; i++) if (gen_isa_reg_write(i, idx, val) == 0) model_rd[idx] = val;
+      if (model_rd.size() != seq_rd.size())
+        miss("isa_rd", $sformatf("Zcmp union: model wrote %0d registers, dut %0d", model_rd.size(), seq_rd.size()), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+      foreach (model_rd[r]) begin
+        if (!seq_rd.exists(r))
+          miss("isa_rd", $sformatf("Zcmp union: model wrote x%0d/%08h, dut did not", r, model_rd[r]), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        else if (seq_rd[r] != model_rd[r])
+          miss("isa_rd", $sformatf("Zcmp union: x%0d model=%08h dut=%08h", r, model_rd[r], seq_rd[r]), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+      end
+      foreach (seq_rd[r]) if (!model_rd.exists(r))
+        miss("isa_rd", $sformatf("Zcmp union: dut wrote x%0d/%08h, model did not", r, seq_rd[r]), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+      if (mem_w != seq_st_addr.size())
+        miss("isa_mem", $sformatf("Zcmp stores: model %0d, dut %0d", mem_w, seq_st_addr.size()), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+      else for (int i = 0; i < mem_w; i++) if (gen_isa_mem_write(i, addr, data, size) == 0) begin
+        if (addr != seq_st_addr[i] || data != seq_st_data[i] || size != 4)
+          miss("isa_mem", $sformatf("Zcmp store %0d: model %08h<=%08h (%0d bytes) dut %08h<=%08h", i, addr, data, size, seq_st_addr[i], seq_st_data[i]), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+      end
+      if (mem_r != seq_ld_addr.size())
+        miss("isa_mem", $sformatf("Zcmp loads: model %0d, dut %0d", mem_r, seq_ld_addr.size()), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+      else for (int i = 0; i < mem_r; i++) if (gen_isa_mem_read(i, addr, data, size) == 0) begin
+        if (addr != seq_ld_addr[i])
+          miss("isa_mem", $sformatf("Zcmp load %0d: model addr %08h dut %08h", i, addr, seq_ld_addr[i]), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+      end
+    endfunction
+
     function void write(gen_rvfi_txn t);
       int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv;
-      int retired, trap, rd_we, mem_r, mem_w, csr_n;
+      int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect;
-      bit compare_rd = 1, compare_mem = 1;
+      bit is_seq = 0;
       if (!model_ready) return;
-      // ---- Zcmp: micro-op records fold to the last one (C5.1/C5.2); the union compare is pc-only for now
+      // ---- Zcmp: micro-op records fold to the last one (C5.1/C5.2); the unions are compared on that record
       if (t.ext_exp_valid && !t.ext_exp_last) begin
-        if (!in_seq) begin in_seq = 1; seq_first = t; end
+        if (!in_seq) seq_reset(t);
+        seq_note(t);
         folded++;
         bvif.evt_isa_records = compared + folded;
         return;
@@ -206,27 +249,43 @@ package gen_rvfi_pkg;
       if (t.ext_exp_valid && t.ext_exp_last) begin
         // the micro-op records carry the expanded 32-bit instruction in rvfi_insn; the Zcmp encoding the
         // model executes as ONE instruction is rvfi_ext_expanded_insn (16 bits) of the sequence
-        if (in_seq) pc_expect = seq_first.pc_rdata;
+        if (!in_seq) seq_reset(t);
+        seq_note(t);
+        pc_expect = seq_first.pc_rdata;
         insn_expect = {16'h0, t.ext_exp_insn};
         in_seq = 0;   // the last micro-op record is the compared one; only the earlier ones count as folded
-        compare_rd = 0; compare_mem = 0;   // the sequence's registers and stores are the union of its micro-ops
+        is_seq = 1;
       end
-      // ---- draft-B op the model cannot execute: reference result, then sync rd and pc (C5.5)
+      // ---- draft-B op the model cannot execute (C5.5): every expectation comes from the MODEL (pc, fetched
+      //      instruction, operands); the reference result and pc + 4 are written back into the model
       if (!t.trap && gen_isa_is_draft_b(t.insn)) begin
-        int unsigned ref_rd;
-        void'(gen_isa_exec_reference(t.insn, t.rs1_rdata, t.rs2_rdata, 32'h0, ref_rd));
+        int unsigned ref_rd, model_pc, model_insn, rs1_v, rs2_v;
+        logic [4:0] rs1_i = t.insn[19:15], rs2_i = t.insn[24:20], rd_i = t.insn[11:7];
+        bit r_type = (t.insn[6:0] == ibex_pkg::OPCODE_OP);
+        model_pc = gen_isa_get_pc();
+        model_insn = gen_isa_fetch_insn(model_pc);
+        rs1_v = gen_isa_read_gpr(rs1_i); rs2_v = r_type ? gen_isa_read_gpr(rs2_i) : 32'h0;
         draft_b++; compared++;
-        if (t.rd_addr != 0 && ref_rd != t.rd_wdata)
-          miss("isa_rd", $sformatf("draft-B reference rd=%08h dut=%08h", ref_rd, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
-        if (t.rd_addr != 0) gen_isa_write_gpr(t.rd_addr, t.rd_wdata);
-        gen_isa_set_pc(t.pc_wdata);
-        bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
+        bvif.evt_isa_records = compared + folded;
+        if (model_pc != t.pc_rdata)
+          miss("isa_pc", $sformatf("draft-B pc model=%08h dut=%08h", model_pc, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
+        if (model_insn != t.insn)
+          miss("isa_insn", $sformatf("draft-B insn model=%08h dut=%08h", model_insn, t.insn), t, fld(cfg.chk_isa_insn, cfg.chk_isa_insn_set));
+        if (t.rs1_rdata != rs1_v || (r_type && t.rs2_rdata != rs2_v))
+          miss("isa_rd", $sformatf("draft-B operands model rs1=%08h rs2=%08h dut rs1=%08h rs2=%08h", rs1_v, rs2_v, t.rs1_rdata, t.rs2_rdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        void'(gen_isa_exec_reference(t.insn, rs1_v, rs2_v, 32'h0, ref_rd));
+        if (rd_i != t.rd_addr || (rd_i != 0 && ref_rd != t.rd_wdata))
+          miss("isa_rd", $sformatf("draft-B rd model=x%0d/%08h dut=x%0d/%08h", rd_i, ref_rd, t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        if (model_pc + 4 != t.pc_wdata)
+          miss("isa_pc_next", $sformatf("draft-B pc_next model=%08h dut=%08h", model_pc + 4, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
+        if (rd_i != 0) gen_isa_write_gpr(rd_i, ref_rd);
+        gen_isa_set_pc(model_pc + 4);
         return;
       end
       // ---- asynchronous entries before this record (C5.2): interrupt marker / debug request
       if (t.intr) begin
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n)) return;
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
         irq_entries++;
         if (retired != 0 || !cause[31])
           miss("isa_trap", $sformatf("interrupt entry expected, model retired %0d cause %08h", retired, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
@@ -234,7 +293,7 @@ package gen_rvfi_pkg;
           miss("isa_pc", $sformatf("interrupt vector model=%08h dut=%08h", pc_a, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
       end else if (t.ext_debug_mode && !dbg_q && t.pc_rdata == GEN_MM_DM_HALT) begin
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b1, 1'b0);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n)) return;
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
         dbg_entries++;
         if (retired != 0 || pc_a != GEN_MM_DM_HALT)
           miss("isa_pc", $sformatf("debug entry expected at DmHaltAddr, model retired %0d pc=%08h", retired, pc_a), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
@@ -243,7 +302,7 @@ package gen_rvfi_pkg;
       end
       dbg_q = t.ext_debug_mode;
       // ---- the record itself
-      if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n)) return;
+      if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, csr_n, reg_n)) return;
       compared++;
       bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
       if (pc_b != pc_expect)
@@ -257,33 +316,36 @@ package gen_rvfi_pkg;
       end else begin
         if (retired != 1 || trap)
           miss("isa_trap", $sformatf("dut retired, model retired %0d trap=%0d cause=%08h tval=%08h", retired, trap, cause, tval), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
-        if (compare_rd) begin
+        if (is_seq) begin
+          compare_seq_union(t, reg_n, mem_w, mem_r);
+        end else begin
           if (rd_we) begin
             if (rd_addr != t.rd_addr || rd_wdata != t.rd_wdata)
               miss("isa_rd", $sformatf("rd model=x%0d/%08h dut=x%0d/%08h", rd_addr, rd_wdata, t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
           end else if (t.rd_addr != 0 && !t.ext_rf_wr_suppress) begin
             miss("isa_rd", $sformatf("dut wrote x%0d/%08h, model wrote nothing", t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
           end
-        end
-        if (compare_mem) begin
-          // rvfi_mem_rmask is NOT gated by a load in this RTL (rvfi_mem_mask_int follows the data type on
-          // every instruction, rtl/ibex_core.sv), so a DUT read is inferred from the model's access;
-          // rvfi_mem_wmask is gated (data_we) and is compared directly. Counted as an RVFI observation.
-          bit dut_wr  = (t.mem_wmask != 0);
-          bit mdl_mem = (mem_r + mem_w) > 0;
-          bit dut_mem = dut_wr || (mdl_mem && mem_w == 0);
-          if (t.mem_rmask != 0 && !mdl_mem) rmask_nonload++;
-          if (dut_wr != (mem_w > 0))
-            miss("isa_mem", $sformatf("store model=%0d dut wmask=%b", mem_w > 0, t.mem_wmask), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
-          else if (dut_mem && mem_addr != t.mem_addr)
-            miss("isa_mem", $sformatf("mem addr model=%08h dut=%08h", mem_addr, t.mem_addr), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
-          else if (dut_mem && t.mem_wmask == 4'hF && mem_w > 0 && mem_size == 4 && mem_wdata != t.mem_wdata)
-            miss("isa_mem", $sformatf("store data model=%08h dut=%08h", mem_wdata, t.mem_wdata), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+          begin
+            // rvfi_mem_rmask is NOT gated by a load in this RTL (rvfi_mem_mask_int follows the data type on
+            // every instruction, rtl/ibex_core.sv), so a DUT read is inferred from the model's access;
+            // rvfi_mem_wmask is gated (data_we) and is compared directly. Counted as an RVFI observation.
+            bit dut_wr  = (t.mem_wmask != 0);
+            bit mdl_mem = (mem_r + mem_w) > 0;
+            bit dut_mem = dut_wr || (mdl_mem && mem_w == 0);
+            if (t.mem_rmask != 0 && !mdl_mem) rmask_nonload++;
+            if (dut_wr != (mem_w > 0))
+              miss("isa_mem", $sformatf("store model=%0d dut wmask=%b", mem_w > 0, t.mem_wmask), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+            else if (dut_mem && mem_addr != t.mem_addr)
+              miss("isa_mem", $sformatf("mem addr model=%08h dut=%08h", mem_addr, t.mem_addr), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+            else if (dut_mem && t.mem_wmask == 4'hF && mem_w > 0 && mem_size == 4 && mem_wdata != t.mem_wdata)
+              miss("isa_mem", $sformatf("store data model=%08h dut=%08h", mem_wdata, t.mem_wdata), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
+          end
         end
         if (pc_a != t.pc_wdata)
           miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end
-      if (prv != ((t.mode == 2'b11) ? 3 : 0))
+      // both sides carry the RISC-V privilege encoding (rvfi_mode is ibex_pkg::priv_lvl_e; Spike prv PRV_M/PRV_U)
+      if (prv[1:0] != t.mode)
         miss("isa_prv", $sformatf("priv model=%0d dut mode=%0d", prv, t.mode), t, fld(cfg.chk_isa_prv, cfg.chk_isa_prv_set));
       if (cfg.sb_trace) `uvm_info("GEN_SB", $sformatf("%s | model pc=%08h->%08h retired=%0d trap=%0d", t.brief(), pc_b, pc_a, retired, trap), UVM_LOW)
     endfunction

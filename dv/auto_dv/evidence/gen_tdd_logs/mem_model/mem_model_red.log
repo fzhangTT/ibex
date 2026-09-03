@@ -1,0 +1,5 @@
+# RED compile: 2026-09-03T07:31:10Z host=soc-l-11 (gen_mem_pkg.sv absent)
+Error-[SFCOR] Source file cannot be opened
+  Source file "dv/auto_dv/env/gen_mem_pkg.sv" cannot be opened for reading due
+1 error
+vcs exit=255

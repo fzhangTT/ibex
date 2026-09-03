@@ -33,6 +33,8 @@ async def gen_ut_boot(dut):
     img = GenImage(image_path)
     seed = int(os.environ.get("RANDOM_SEED", "1"))
     retire_target = int(plus("ut_boot_retire", PLUSARGS["ut_boot_retire"]["default"]))
+    # precondition: the core must be held until the read-back is done (dv_principles Section 1)
+    assert plus("fetch_en_at_reset") == "0", "GEN_UT_BOOT: run with +gen_fetch_en_at_reset=0 (the read-back precedes execution)"
     await b.start()
     # 1. read-back of seeded words through MEM_PEEK (Python compares against its own parse of the .vmem)
     n_rb = int(plus("mem_readback_words", CONSTANTS["GEN_MEM_READBACK_WORDS_DEFAULT"]))

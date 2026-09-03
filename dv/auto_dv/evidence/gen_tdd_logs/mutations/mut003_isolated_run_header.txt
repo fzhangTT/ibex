@@ -1,0 +1,1 @@
+# run mut003_isolated: 2026-09-03T09:11:30Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_chk_all=0 +gen_chk_sva_rvalid_legal=1]

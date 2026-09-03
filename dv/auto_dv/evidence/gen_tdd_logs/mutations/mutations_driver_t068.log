@@ -1,0 +1,54 @@
+== MUT-003 2026-09-03T09:11:12Z
+MUT-003: dv/auto_dv/env/gen_agents_pkg.sv:277 original: vif.gnt = 1'b1;
+            grants++; | mutated: vif.gnt = 1'b1; vif.rvalid = 1'b1;   // MUT-003: a response asserted in the grant cycle
+            grants++;
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut003_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[..] simv_exit=0 uvm_errors=2 verdict: verdict: FAIL reason: assertion_failure at log line 31 
+mut003_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[..] simv_exit=0 uvm_errors=2 verdict: verdict: FAIL reason: assertion_failure at log line 31 
+mut003_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[..] simv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut003_ablation: ids 
+  mut003_default: ids       2 [sva_rvalid_legal] 
+  mut003_isolated: ids       2 [sva_rvalid_legal] 
+== MUT-004 2026-09-03T09:11:36Z
+MUT-004: dv/auto_dv/env/gen_rvfi_pkg.sv:82 original: t.rs1_rdata = vif.rs1_rdata; t.rs2_rdata = vif.rs2_rdata; t.rd_wdata = vif.rd_wdata; | mutated: t.rs1_rdata = vif.rs1_rdata; t.rs2_rdata = vif.rs2_rdata; t.rd_wdata = vif.rd_wdata ^ 32'h1;   // MUT-004
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut004_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=124 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut004_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=124 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut004_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut004_ablation: ids 
+  mut004_default: ids     124 [isa_rd] 
+  mut004_isolated: ids     124 [isa_rd] 
+== MUT-005 2026-09-03T09:12:02Z
+MUT-005: dv/auto_dv/env/gen_rvfi_pkg.sv:84 original: t.mem_addr = vif.mem_addr; t.mem_rdata = vif.mem_rdata; t.mem_wdata = vif.mem_wdata; | mutated: t.mem_addr = vif.mem_addr; t.mem_rdata = vif.mem_rdata; t.mem_wdata = vif.mem_wdata ^ 32'h1;   // MUT-005
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut005_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=8 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut005_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=8 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut005_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut005_ablation: ids 
+  mut005_default: ids       8 [isa_mem] 
+  mut005_isolated: ids       8 [isa_mem] 
+== MUT-006 2026-09-03T09:12:30Z
+MUT-006: dv/auto_dv/env/gen_rvfi_pkg.sv:79 original: t.order = vif.order; t.insn = vif.insn; t.trap = vif.trap; t.halt = vif.halt; t.intr = vif.intr; | mutated: t.order = vif.order; t.insn = vif.insn; t.trap = ~vif.trap; t.halt = vif.halt; t.intr = vif.intr;   // MUT-006
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut006_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=148 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut006_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=148 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut006_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut006_ablation: ids 
+  mut006_default: ids     148 [isa_trap] 
+  mut006_isolated: ids     148 [isa_trap] 
+== MUT-007 2026-09-03T09:12:58Z
+MUT-007: dv/auto_dv/env/gen_rvfi_pkg.sv:83 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata + 32'h2;   // MUT-007
+compile: vcs exit: 0 errors=0
+reverted: identical
+mut007_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=148 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut007_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=148 verdict: verdict: FAIL reason: uvm_error at log line 31 
+mut007_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep plusargs=[..] simv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  mut007_ablation: ids 
+  mut007_default: ids     148 [isa_pc_next] 
+  mut007_isolated: ids     148 [isa_pc_next] 
+final diff vs pre-mutation copies:
+sources identical to pre-mutation

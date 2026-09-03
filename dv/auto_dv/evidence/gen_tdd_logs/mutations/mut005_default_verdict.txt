@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at log line 31
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(175) @ 142500: uvm_test_top.env.sb [isa_mem] Zcmp store 0: model 8000039c<=44444444 (4 bytes) dut 8000039c<=44444445 (order=17 pc=800000ae insn=ff010113 trap=0 intr=0 rd=x2/80000390 mem=80000390 w0000 r1111 mode=3 cyc=137)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

@@ -14,7 +14,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 The top of the generated TB: declares the 19 opentitan configuration parameters and forwards them
 to `gen_dut_top u_dut`, generates clock and reset, hosts the cocotb bridge, the interface instances
 and (from step 1c) the agents and RAM models, runs the single UVM test `gen_base_test` and owns the
-alive watchdog. Python (cocotb) owns the end of simulation. AS BUILT (step 1c): interfaces `u_ibus_if`, `u_dbus_if` (gen_bus_if), `u_scrkey_if`, `u_ctrl_if` (fetch_enable_i, mcounteren_writable_i), the four `gen_icache_ram` instances and the bridge `u_bridge_if`; only the interrupt and debug pins stay tied idle. Milestone: `dv/auto_dv/evidence/gen_tdd_boot_agents.md` (boots and retires on the directed Zc program and a riscv-dv program).
+alive watchdog. Python (cocotb) owns the end of simulation. AS BUILT (step 1c): interfaces `u_ibus_if`, `u_dbus_if` (gen_bus_if), `u_scrkey_if`, `u_ctrl_if` (fetch_enable_i, mcounteren_writable_i), the four `gen_icache_ram` instances and the bridge `u_bridge_if`; only the interrupt and debug pins stay tied idle. (T-068) `hart_id_i` from `+gen_hart_id` (default 0), `boot_addr_i` from `+gen_boot_addr`; the clock half period is written in explicit ns (`* 1ns`); `irq_fast` width derives from `ibex_pkg::irqs_t`. Milestone: `dv/auto_dv/evidence/gen_tdd_boot_agents.md` (boots and retires on the directed Zc program and a riscv-dv program).
 
 ## 2. Files (planned) and how to call it
 
@@ -36,6 +36,7 @@ agents will drive to their idle values (no grant, no response, key valid, no eve
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
 | `+gen_boot_addr=<hex>` | `PLUSARG_BOOT_ADDR` | boot_addr_i (default GEN_BOOT_ADDR_DEFAULT; must match the image entry page) | GEN_BOOT_ADDR_DEFAULT |
+| `+gen_hart_id=<n>` | `PLUSARG_HART_ID` | hart_id_i (T-068) | 0 |
 | `+gen_alive_timeout=<cycles>` | `PLUSARG_ALIVE_TIMEOUT` | alive watchdog budget: `$fatal GEN_ALIVE_TIMEOUT` if Python has not set `alive` (TB_CONTRACT Section 2) | GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT |
 | `+gen_build_config=<name>` | `PLUSARG_BUILD_CONFIG` | echoed in the banner | opentitan |
 | `+ntb_random_seed=<n>` | `(VCS)` | the one run seed; Python's RANDOM_SEED must equal it (both echoed at time 0) | - |
@@ -50,9 +51,9 @@ state, alive/finish budgets, image path). `ifndef RVFI` is a compile-time `$fata
 
 ## 5. Checkers
 
-| Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
-|---|---|---|---|
-| `(none)` | TB self-checks only: the alive watchdog and the UVM objection held until `finish_req` | TB self-check | `+gen_chk_(none)=0` |
+No checkers. TB self-checks: the alive watchdog (`$fatal GEN_ALIVE_TIMEOUT`), the objection held until
+`finish_req`, the time-0 refusal of a non-cocotb build (`uvm_fatal GEN_NO_COCOTB`, T-068), and the time-0
+width guards on MemDataWidth and the derived-constant mirrors (`$fatal`, T-068). None has a disable knob.
 
 ## 6. Failure path and diagnostics
 

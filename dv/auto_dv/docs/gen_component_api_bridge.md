@@ -35,7 +35,7 @@ instead of polling; before finishing compare `cmds_consumed` with the sent count
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
 | `+gen_alive_timeout=<cycles>` | `PLUSARG_ALIVE_TIMEOUT` | SV `$fatal` if `alive` is still 0 after this many cycles (TB_CONTRACT Section 2) | GEN_ALIVE_TIMEOUT_CYCLES |
-| `+gen_finish_timeout=<cycles>` | `PLUSARG_FINISH_TIMEOUT` | default finish-handshake budget (Python overrides per test) | gen_tb_pkg constant |
+| `+gen_finish_timeout=<cycles>` | `PLUSARG_FINISH_TIMEOUT` | default finish-handshake budget (Python overrides per test). (T-068) consumed by Python: `GenBridge.finish()` uses the plusarg value when the test passes no budget; the SV default is `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT` | `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT` |
 
 ## 4. Wave-level behaviour
 
@@ -48,7 +48,7 @@ IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, 
 + `evt_cycle_arm`, `finish_req`. SV-written: `listener_armed`, `cmd_ack` (toggles the cycle after the
 command is consumed), `cmd_ack_seq[15:0]`, `cmds_consumed[15:0]`, `peek_data[31:0]` (memory word answered
 with the ack of a MEM_PEEK whose `cmd_arg0` is the word address; the image read-back path, v2 XM-M4;
-a peek without a memory model is a `uvm_error`), `listener_armed`, `cmds_consumed[15:0]`,
+a peek without a memory model is a `uvm_error`),
 `evt_retired_hit` and `evt_cycle_hit` (v3, N-02: one single-bit toggle PER threshold, raised by the
 interface's own threshold engine the first cycle at or beyond the armed target; the only thing Python
 awaits for a threshold, A-01), `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` (single-bit toggles
@@ -71,7 +71,8 @@ signal is a DUT signal.
 `$fatal` alive watchdog; `uvm_error bridge_accounting`; Python `assert` on ack timeout (fails the
 cocotb test). Every Python-side string that may be logged or raised is pure ASCII (TB_CONTRACT
 Section 4); the gen_tests template enforces it. No per-cycle Python polling exists anywhere in the
-TB (A-01).
+TB (A-01). (T-068) `finish()` asserts the command accounting first, then drops `stim_active`, then
+raises `finish_req` (TB_CONTRACT Section 2 ordering).
 
 ## 7. Coverage hooks
 

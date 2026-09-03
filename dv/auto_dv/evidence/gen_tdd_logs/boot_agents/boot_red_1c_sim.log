@@ -1,0 +1,91 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_1c_red/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem +gen_mem_image_crc32=cf0cb3b8 +gen_mem_image_words=204 +gen_boot_addr=80000000 +gen_tohost_addr=80000280 +gen_ut_boot_retire=100 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_1c_red/boot_red/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 03:39 2026
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x1a110800 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 1500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x1a110808 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 2500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000084 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 3500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000088 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 4500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000008c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 5500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000b0 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 6500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d0 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 7500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 8500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000d8 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 9500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000e8 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 10500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800000f8 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 11500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000012c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 12500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000130 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 13500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000144 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 14500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000014c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 15500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000150 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 16500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000158 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 17500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000015c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 18500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000174 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 19500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000180 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 20500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000190 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 21500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000198 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 22500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000019c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 23500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001a4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 24500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001b4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 25500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001c4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 26500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001d0 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 27500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001f4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 28500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800001fc without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 29500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000218 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 30500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000220 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 31500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000228 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 32500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000230 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 33500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000238 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 34500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000023c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 35500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000244 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 36500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000250 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 37500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000260 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 38500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000268 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 39500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000026c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 40500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000270 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 41500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000274 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 42500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000028c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 43500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000298 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 44500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002a4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 45500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002a8 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 46500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002b4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 47500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002cc without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 48500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002dc without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 49500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x800002f4 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 50500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000304 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 51500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000308 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 52500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000310 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 53500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000032c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 54500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000330 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 55500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000338 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 56500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000360 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 57500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000370 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 58500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000374 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 59500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000378 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 60500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x8000037c without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 61500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000384 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 62500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000388 without a memory model
+UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(76) @ 63500: uvm_test_top.env.bridge [GEN_BRIDGE] MEM_PEEK 0x80000398 without a memory model
+$finish at simulation time                64501
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 645010 ps
+CPU Time:      0.310 seconds;       Data structure size:   8.7Mb
+Thu Sep  3 03:39:46 2026

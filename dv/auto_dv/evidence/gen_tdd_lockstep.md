@@ -112,3 +112,76 @@ next compile): the report showed `folded=31` for the Zc program although only 21
 their sequences' last records; the last record of each of the 10 sequences was counted both as compared
 and as folded, so `evt_isa_records` read 179 for 169 retirements (the ratio check passed on `>=`). The
 fold counter now excludes the last record; the compare itself was unaffected.
+
+## 5. T-068 (2026-09-03): corrections, the committed comparator's green runs, per-field evidence
+
+Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/lockstep/` (manifest `gen_tdd_logs/gen_manifest.md`).
+
+Corrections to Sections 2-4 (cross-model 2a mediums 2-4, low 1):
+
+- Attempt 1 (136 collected errors) and attempt 2 (8516 mismatches) have no retained artifact: UNRETAINED.
+- The Section 4 green logs were produced by the pre-fix fold counter (`folded=31`, `compared 179` of 169
+  retirements); they are retained for the record as `lockstep_zc_2a_prefix_sim.log`,
+  `lockstep_s7_2a_prefix_sim.log`, `lockstep_forced_red_2a_prefix_sim.log` and are NOT the green run of the
+  committed comparator. The ratio check `compared * 100 >= retired * min_ratio` passed on that over-count; the
+  test now asserts `consumed == retired` exactly and the knob `+gen_ut_lockstep_min_ratio_pct` is gone.
+- "What green proves" (Section 4) claimed that rd and memory matched for every retired record. At 3be5a34 the
+  Zcmp fold compared pc and the 16-bit encoding only; the 31 micro-op records of the 10 cm.* sequences had no
+  rd or memory compare. That sentence was wrong for those records. T-068 implements the C5.2 union compare:
+  the set of GPR writes over the sequence against the model's logged register writes (`gen_isa_reg_write`),
+  the ordered store list (address, data) against the model's logged data writes (`gen_isa_mem_write`), the
+  ordered load addresses against the model's logged reads (`gen_isa_mem_read`); ids isa_rd / isa_mem.
+- The forced red of Section 3/4 listed four ids; six fired (isa_trap and isa_mem were omitted). The T-068
+  forced red below lists all of them.
+- The draft-B path took its operands (`rs1_rdata`, `rs2_rdata`) and the next pc from the DUT record. It now
+  takes pc, the fetched instruction and the operands from the MODEL (`gen_isa_get_pc`, `gen_isa_fetch_insn`,
+  `gen_isa_read_gpr` at the indices decoded from the instruction), compares `pc_rdata`, `insn`, the operands,
+  `rd` and `pc_wdata` (= model pc + 4) and writes the reference result and pc + 4 into the model. Both retained
+  programs have `draft_b=0`, so this path is implemented but UNEXERCISED; its first exercise is owed with a
+  directed grevi/gorci program. The model's minstret does not advance on a draft-B op (known limitation until
+  the counter model lands).
+- `32'h305` and `2'b11` are gone (`ibex_pkg::CSR_MTVEC`; the privilege compare uses the RISC-V encoding on both
+  sides).
+
+### 5.1 Green runs of the committed comparator (build `compile_t068.log`, vcs exit 0)
+
+```
+lockstep_zc (lockstep_zc_t068_*; run header 2026-09-03T09:11:00Z, seed 1):
+UVM_INFO ... [GEN_RVFI_MON] records=169 irq_markers=0
+UVM_INFO ... [GEN_SB] ISA compare: records=148 mismatches=0 folded=21 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=126
+GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001
+GEN_UT_LOCKSTEP_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
+
+lockstep_s7 (lockstep_s7_t068_*; 2026-09-03T09:11:08Z, riscv-dv seed-7 program, 29375 words):
+UVM_INFO ... [GEN_RVFI_MON] records=2002 irq_markers=0
+UVM_INFO ... [GEN_SB] ISA compare: records=2002 mismatches=0 folded=0 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=1453
+GEN_UT_LOCKSTEP retired 2002 consumed 2002 mismatches 0 tohost 0x00000001
+GEN_UT_LOCKSTEP_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
+```
+148 compared + 21 folded = 169 = every retirement of the Zc program; the union compare ran on its 10 cm.*
+sequences with 0 mismatches (MUT-005 below shows the store part of that compare firing). The s7 program
+retires 2002 records by the time the test samples (four settle cycles after the retirement threshold and the
+tohost store), all consumed.
+
+### 5.2 Forced red (model without Zc/Zb) with the flow's verdict
+
+```
+lockstep_forced_red (lockstep_forced_red_t068_*; +gen_isa_string=rv32imc_zicsr_zifencei):
+GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 676 tohost 0x00000001
+AssertionError: GEN_UT_LOCKSTEP: 676 ISA mismatches | TESTS=1 PASS=0 FAIL=1
+verdict: FAIL | reason: uvm_error at log line 31
+ids: isa_insn 135, isa_mem 11, isa_pc 135, isa_pc_next 136, isa_rd 123, isa_trap 136 (isa_prv: never)
+```
+This run proves the collected path and the model dependence, not per-field discrimination; that evidence is
+Section 5.3. `gen_ut_lockstep` is registered in Runtime's testlist (commit 280b4e9); `gen_ut_lockstep_forced_red` landed
+there with `red_fixture: true` (its FAIL is recorded as RED-OK, kept out of the pass rate and coverage; Runtime's
+check-tier proof `dv/auto_dv/work/runtime/out/t_red_fixture_check_0925/manifest.yaml`, reason `uvm_error at log line 31`).
+
+### 5.3 Per-field discrimination and ablation (MUT-004..MUT-007)
+
+`dv/auto_dv/mutations/gen_mut_isa_fields.md`: one monitor-side mutation per field, each run three ways on the
+Zc program (isolated with every other check off, default, ablation with the field knob off). isa_rd 124 errors
+(only that id) and 0 with `+gen_chk_isa_rd=0`; isa_mem 8 / 0 (`Zcmp store 0: model 8000039c<=44444444 (4
+bytes) dut 8000039c<=44444445` is the union compare firing); isa_trap 148 / 0; isa_pc_next 148 / 0. Every
+default run shows no other id, every ablation run has verdict PASS. Logs `gen_tdd_logs/mutations/mut00[4-7]_*`.
+isa_pc and isa_insn fire in the forced red; isa_prv has never fired (no privilege change in either program).

@@ -1,6 +1,7 @@
 // gen_isa_shim.cc: the Spike-backed ISA model behind the DPI (architecture C5.1-C5.5). One processor_t
-// over gen_simif_t (sparse word memory loaded from the same .vmem as the TB; every access is MMIO from
-// Spike's point of view, so PMP and the byte-split misaligned path behave as measured in link test 2),
+// over gen_simif_t, a sparse word memory loaded from the same .vmem as the TB and served byte-wise through
+// mmio_fetch/load/store (addr_to_mem is NULL: every access is MMIO to Spike); an armed bus fault fails the
+// access it covers. Per-word PMP splitting of misaligned accesses and the mtval override are NOT implemented.
 // Ibex legalization on reset and after each step (C5.3a), fast interrupt bits through gen_mie_csr_t,
 // cpuctrlsts/secureseed through the genibex extension, time(h) trapping, misa fixed to Ibex's value.
 // Failures never abort: functions return < 0 and gen_isa_last_error() explains (the SV side raises the
@@ -152,6 +153,9 @@ std::unique_ptr<gen_simif_t> g_sim;
 std::unique_ptr<processor_t> g_proc;
 FILE* g_logf = nullptr;
 std::vector<std::pair<uint32_t, uint32_t>> g_csr_writes;
+std::vector<std::pair<uint32_t, uint32_t>> g_reg_writes;   // (idx, value) of the last step, x0 excluded, log order
+struct mem_access_t { uint32_t addr, data, size; };
+std::vector<mem_access_t> g_mem_writes, g_mem_reads;       // data accesses of the last step, log order
 uint32_t g_boot = 0;
 uint32_t g_mcounteren_writable = 1;
 uint32_t g_mcounteren_prev = 0;
@@ -176,7 +180,7 @@ void legalize_after_reset() {
   s->csrmap[CSR_TIME]  = std::make_shared<gen_trap_csr_t>(g_proc.get(), CSR_TIME);
   s->csrmap[CSR_TIMEH] = std::make_shared<gen_trap_csr_t>(g_proc.get(), CSR_TIMEH);
   // reset values (C5.3a Reset row)
-  uint32_t page = g_boot & 0xFFFFFF00u;
+  uint32_t page = g_boot & GEN_MM_BOOT_PAGE_MASK;
   s->pc = page | 0x80u;
   g_proc->put_csr(CSR_MTVEC, page | kResetMtvecMode);
   g_proc->put_csr(CSR_MSTATUS, kMstatusReset);
@@ -258,11 +262,13 @@ int gen_isa_reset(const gen_isa_cfg_t* cfg) {
     g_proc = std::make_unique<processor_t>(g_cfg.isa, g_cfg.priv, &g_cfg, g_sim.get(), cfg->hart_id, false, g_logf, std::cerr);
     g_sim->add_hart(g_proc.get());
     g_proc->reset();                       // the constructor's reset ran before genibex was registered
-    if (logging) g_proc->enable_log_commits();
-    else g_proc->enable_log_commits();     // the step bookkeeping needs log_reg_write / log_mem_* filled
+    g_proc->enable_log_commits();          // the step bookkeeping needs the commit log even when not written out
     legalize_after_reset();
     g_fault.armed = false;
     g_csr_writes.clear();
+    g_reg_writes.clear();
+    g_mem_writes.clear();
+    g_mem_reads.clear();
     return 0;
   } catch (std::exception& e) {
     set_err(std::string("gen_isa_reset: ") + e.what());
@@ -298,6 +304,10 @@ uint32_t gen_isa_read_word(uint32_t addr) {
 int gen_isa_step(gen_isa_step_t* out) {
   if (!g_proc) { set_err("gen_isa_step before gen_isa_reset"); return -1; }
   std::memset(out, 0, sizeof(*out));
+  g_csr_writes.clear();
+  g_reg_writes.clear();
+  g_mem_writes.clear();
+  g_mem_reads.clear();
   state_t* s = st();
   uint64_t minstret0 = g_proc->get_csr(CSR_MINSTRET) | ((uint64_t)g_proc->get_csr(CSR_MINSTRETH) << 32);
   out->pc_before = (uint32_t)s->pc;
@@ -326,13 +336,15 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap_cause = csr(CSR_MCAUSE);
     out->trap_tval = csr(CSR_MTVAL);
   }
-  g_csr_writes.clear();
   for (auto& kv : s->log_reg_write) {
     reg_t key = kv.first;
     int type = key & 0xF;
     reg_t idx = key >> 4;
     if (type == 0) {                                   // integer register
-      if (idx != 0) { out->rd_we = 1; out->rd_addr = (uint32_t)idx; out->rd_wdata = (uint32_t)kv.second.v[0]; }
+      if (idx != 0) {
+        out->rd_we = 1; out->rd_addr = (uint32_t)idx; out->rd_wdata = (uint32_t)kv.second.v[0];
+        g_reg_writes.emplace_back((uint32_t)idx, (uint32_t)kv.second.v[0]);
+      }
     } else if (type == 4) {                            // CSR
       uint32_t a = (uint32_t)idx;
       try {
@@ -347,6 +359,9 @@ int gen_isa_step(gen_isa_step_t* out) {
     }
   }
   out->csr_writes = (int32_t)g_csr_writes.size();
+  out->reg_writes = (int32_t)g_reg_writes.size();
+  for (auto& m : s->log_mem_write) g_mem_writes.push_back({(uint32_t)std::get<0>(m), (uint32_t)std::get<1>(m), std::get<2>(m)});
+  for (auto& m : s->log_mem_read)  g_mem_reads.push_back({(uint32_t)std::get<0>(m), (uint32_t)std::get<1>(m), std::get<2>(m)});
   out->mem_reads = (int32_t)s->log_mem_read.size();
   out->mem_writes = (int32_t)s->log_mem_write.size();
   if (!s->log_mem_write.empty()) {
@@ -367,6 +382,23 @@ int gen_isa_csr_write(int32_t i, uint32_t* addr, uint32_t* val) {
   *val = g_csr_writes[i].second;
   return 0;
 }
+int gen_isa_reg_write(int32_t i, uint32_t* idx, uint32_t* val) {
+  if (i < 0 || (size_t)i >= g_reg_writes.size()) return -1;
+  *idx = g_reg_writes[i].first;
+  *val = g_reg_writes[i].second;
+  return 0;
+}
+int gen_isa_mem_write(int32_t i, uint32_t* addr, uint32_t* data, uint32_t* size) {
+  if (i < 0 || (size_t)i >= g_mem_writes.size()) return -1;
+  *addr = g_mem_writes[i].addr; *data = g_mem_writes[i].data; *size = g_mem_writes[i].size;
+  return 0;
+}
+int gen_isa_mem_read(int32_t i, uint32_t* addr, uint32_t* data, uint32_t* size) {
+  if (i < 0 || (size_t)i >= g_mem_reads.size()) return -1;
+  *addr = g_mem_reads[i].addr; *data = g_mem_reads[i].data; *size = g_mem_reads[i].size;
+  return 0;
+}
+uint32_t gen_isa_fetch_insn(uint32_t pc) { return mapped(pc) ? fetch_word(pc) : 0u; }
 
 uint32_t gen_isa_read_csr(uint32_t addr) {
   try { return (uint32_t)g_proc->get_csr((int)addr); } catch (...) { return 0xFFFFFFFFu; }
@@ -424,13 +456,15 @@ int gen_isa_reset_dpi(uint32_t boot_addr, uint32_t hart_id, const char* isa_over
 int gen_isa_step_dpi(uint32_t* pc_before, uint32_t* pc_after, uint32_t* insn, int32_t* retired, int32_t* trap,
                      uint32_t* trap_cause, uint32_t* trap_tval, int32_t* rd_we, uint32_t* rd_addr, uint32_t* rd_wdata,
                      int32_t* mem_reads, int32_t* mem_writes, uint32_t* mem_addr, uint32_t* mem_wdata,
-                     uint32_t* mem_rdata, uint32_t* mem_size, uint32_t* prv, int32_t* csr_writes) {
+                     uint32_t* mem_rdata, uint32_t* mem_size, uint32_t* prv, int32_t* csr_writes,
+                     int32_t* reg_writes) {
   gen_isa_step_t o;
   int rc = gen_isa_step(&o);
   *pc_before = o.pc_before; *pc_after = o.pc_after; *insn = o.insn; *retired = o.retired; *trap = o.trap;
   *trap_cause = o.trap_cause; *trap_tval = o.trap_tval; *rd_we = o.rd_we; *rd_addr = o.rd_addr; *rd_wdata = o.rd_wdata;
   *mem_reads = o.mem_reads; *mem_writes = o.mem_writes; *mem_addr = o.mem_addr; *mem_wdata = o.mem_wdata;
   *mem_rdata = o.mem_rdata; *mem_size = o.mem_size; *prv = o.prv; *csr_writes = o.csr_writes;
+  *reg_writes = o.reg_writes;
   return rc;
 }
 // 1 when the instruction is a draft-B op the model cannot execute (served by gen_isa_exec_reference)

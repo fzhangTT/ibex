@@ -1,0 +1,495 @@
+# GREEN run: 2026-09-03T07:13:46Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py
+OK   yaml source exists
+OK   codegen exists
+OK   codegen --check passes
+OK   plusarg names unique
+OK   pkg declares PLUSARG_BUILD_CONFIG once
+OK   pkg declares PLUSARG_SMOKE_CYCLES once
+OK   pkg declares PLUSARG_SMOKE_INTG_FLIP once
+OK   pkg declares PLUSARG_DBG_CSR_PROBE once
+OK   pkg declares PLUSARG_MEM_IMAGE once
+OK   pkg declares PLUSARG_MEM_IMAGE_CRC32 once
+OK   pkg declares PLUSARG_MEM_IMAGE_WORDS once
+OK   pkg declares PLUSARG_MEM_READBACK_WORDS once
+OK   pkg declares PLUSARG_MEM_UNMAPPED_OK once
+OK   pkg declares PLUSARG_BOOT_ADDR once
+OK   pkg declares PLUSARG_ALIVE_TIMEOUT once
+OK   pkg declares PLUSARG_FINISH_TIMEOUT once
+OK   pkg declares PLUSARG_REGIME_SCHED once
+OK   pkg declares PLUSARG_RVFI_TRACE once
+OK   pkg declares PLUSARG_FCOV_EN once
+OK   pkg declares PLUSARG_ICRAM_INIT once
+OK   enum icram_init has >= 2 values
+OK   enum icram_init default is a value
+OK   pkg carries values of icram_init
+OK   pkg declares PLUSARG_KEY_RESET_VALID once
+OK   pkg declares PLUSARG_ISA_STRING once
+OK   pkg declares PLUSARG_ISA_LOG once
+OK   pkg declares PLUSARG_IBUS_GNT_MIN once
+OK   pkg declares PLUSARG_IBUS_GNT_MAX once
+OK   pkg declares PLUSARG_IBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_IBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_IBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_IBUS_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_BITS once
+OK   pkg declares PLUSARG_IBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_GNT_MIN once
+OK   pkg declares PLUSARG_DBUS_GNT_MAX once
+OK   pkg declares PLUSARG_DBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_DBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_DBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_DBUS_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_BITS once
+OK   pkg declares PLUSARG_DBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_ERR_HALF once
+OK   enum dbus_err_half has >= 2 values
+OK   enum dbus_err_half default is a value
+OK   pkg carries values of dbus_err_half
+OK   pkg declares PLUSARG_DBUS_ERR_STORE_PERFORM once
+OK   pkg declares PLUSARG_KEY_DELAY_MIN once
+OK   pkg declares PLUSARG_KEY_DELAY_MAX once
+OK   pkg declares PLUSARG_KEY_NEVER_CYCLES once
+OK   pkg declares PLUSARG_IRQ_MIN_GAP once
+OK   pkg declares PLUSARG_IRQ_HOLD_MIN once
+OK   pkg declares PLUSARG_IRQ_HOLD_MAX once
+OK   pkg declares PLUSARG_DBG_HOLD_MIN once
+OK   pkg declares PLUSARG_DBG_HOLD_MAX once
+OK   pkg declares PLUSARG_KNOB_IMEM_GNT_DELAY once
+OK   enum knob_imem_gnt_delay has >= 2 values
+OK   enum knob_imem_gnt_delay default is a value
+OK   pkg carries values of knob_imem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_RVALID_DELAY once
+OK   enum knob_imem_rvalid_delay has >= 2 values
+OK   enum knob_imem_rvalid_delay default is a value
+OK   pkg carries values of knob_imem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_ERR_RATE once
+OK   enum knob_imem_err_rate has >= 2 values
+OK   enum knob_imem_err_rate default is a value
+OK   pkg carries values of knob_imem_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_INTG_ERR_RATE once
+OK   enum knob_imem_intg_err_rate has >= 2 values
+OK   enum knob_imem_intg_err_rate default is a value
+OK   pkg carries values of knob_imem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_OUTSTANDING_CAP once
+OK   enum knob_imem_outstanding_cap has >= 2 values
+OK   enum knob_imem_outstanding_cap default is a value
+OK   pkg carries values of knob_imem_outstanding_cap
+OK   pkg declares PLUSARG_KNOB_DMEM_GNT_DELAY once
+OK   enum knob_dmem_gnt_delay has >= 2 values
+OK   enum knob_dmem_gnt_delay default is a value
+OK   pkg carries values of knob_dmem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_RVALID_DELAY once
+OK   enum knob_dmem_rvalid_delay has >= 2 values
+OK   enum knob_dmem_rvalid_delay default is a value
+OK   pkg carries values of knob_dmem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_ERR_RATE once
+OK   enum knob_dmem_err_rate has >= 2 values
+OK   enum knob_dmem_err_rate default is a value
+OK   pkg carries values of knob_dmem_err_rate
+OK   pkg declares PLUSARG_KNOB_DMEM_INTG_ERR_RATE once
+OK   enum knob_dmem_intg_err_rate has >= 2 values
+OK   enum knob_dmem_intg_err_rate default is a value
+OK   pkg carries values of knob_dmem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IRQ_REGIME once
+OK   enum knob_irq_regime has >= 2 values
+OK   enum knob_irq_regime default is a value
+OK   pkg carries values of knob_irq_regime
+OK   pkg declares PLUSARG_KNOB_IRQ_LINE_MIX once
+OK   enum knob_irq_line_mix has >= 2 values
+OK   enum knob_irq_line_mix default is a value
+OK   pkg carries values of knob_irq_line_mix
+OK   pkg declares PLUSARG_KNOB_IRQ_HOLD once
+OK   enum knob_irq_hold has >= 2 values
+OK   enum knob_irq_hold default is a value
+OK   pkg carries values of knob_irq_hold
+OK   pkg declares PLUSARG_KNOB_DEBUG_REQ_REGIME once
+OK   enum knob_debug_req_regime has >= 2 values
+OK   enum knob_debug_req_regime default is a value
+OK   pkg carries values of knob_debug_req_regime
+OK   pkg declares PLUSARG_KNOB_SCR_KEY_DELAY once
+OK   enum knob_scr_key_delay has >= 2 values
+OK   enum knob_scr_key_delay default is a value
+OK   pkg carries values of knob_scr_key_delay
+OK   pkg declares PLUSARG_KNOB_ICACHE_ECC_ERR_RATE once
+OK   enum knob_icache_ecc_err_rate has >= 2 values
+OK   enum knob_icache_ecc_err_rate default is a value
+OK   pkg carries values of knob_icache_ecc_err_rate
+OK   pkg declares PLUSARG_KNOB_FETCH_ENABLE_REGIME once
+OK   enum knob_fetch_enable_regime has >= 2 values
+OK   enum knob_fetch_enable_regime default is a value
+OK   pkg carries values of knob_fetch_enable_regime
+OK   pkg declares PLUSARG_KNOB_MCOUNTEREN_WRITABLE once
+OK   enum knob_mcounteren_writable has >= 2 values
+OK   enum knob_mcounteren_writable default is a value
+OK   pkg carries values of knob_mcounteren_writable
+OK   pkg declares PLUSARG_KNOB_INSTR_MIX once
+OK   enum knob_instr_mix has >= 2 values
+OK   enum knob_instr_mix default is a value
+OK   pkg carries values of knob_instr_mix
+OK   pkg declares PLUSARG_KNOB_PRIV_REGIME once
+OK   enum knob_priv_regime has >= 2 values
+OK   enum knob_priv_regime default is a value
+OK   pkg carries values of knob_priv_regime
+OK   pkg declares PLUSARG_KNOB_PMP_REGIME once
+OK   enum knob_pmp_regime has >= 2 values
+OK   enum knob_pmp_regime default is a value
+OK   pkg carries values of knob_pmp_regime
+OK   pkg declares PLUSARG_CHK_ALL once
+OK   pkg declares PLUSARG_CHK_IBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_IBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_SVA_RVALID_LEGAL once
+OK   pkg declares PLUSARG_CHK_DBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_DBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_DBUS_SPLIT once
+OK   pkg declares PLUSARG_CHK_DBUS_STORE_INTG once
+OK   pkg declares PLUSARG_CHK_ICRAM_WRITE_ECC once
+OK   pkg declares PLUSARG_CHK_ICRAM_INVAL_SWEEP once
+OK   pkg declares PLUSARG_CHK_ICRAM_ECC_RESPONSE once
+OK   pkg declares PLUSARG_CHK_SCRKEY_PROTO once
+OK   pkg declares PLUSARG_CHK_ALERT_MINOR once
+OK   pkg declares PLUSARG_CHK_ALERT_BUS once
+OK   pkg declares PLUSARG_CHK_ALERT_INTERNAL once
+OK   pkg declares PLUSARG_CHK_CRASH_DUMP once
+OK   pkg declares PLUSARG_CHK_DOUBLE_FAULT once
+OK   pkg declares PLUSARG_CHK_CORE_BUSY once
+OK   pkg declares PLUSARG_CHK_DATA_TAG_QUIET once
+OK   pkg declares PLUSARG_CHK_FETCH_EN once
+OK   pkg declares PLUSARG_CHK_IRQ_PENDING once
+OK   pkg declares PLUSARG_CHK_IRQ_ENTRY once
+OK   pkg declares PLUSARG_CHK_IRQ_MASKED once
+OK   pkg declares PLUSARG_CHK_NMI_ENTRY once
+OK   pkg declares PLUSARG_CHK_NMI_INTERNAL once
+OK   pkg declares PLUSARG_CHK_DBG_ENTRY once
+OK   pkg declares PLUSARG_CHK_DBG_EXC once
+OK   pkg declares PLUSARG_CHK_DBG_MASKED once
+OK   pkg declares PLUSARG_CHK_DBG_DRET once
+OK   pkg declares PLUSARG_CHK_DBG_TRIGGER once
+OK   pkg declares PLUSARG_CHK_CTR_MCYCLE once
+OK   pkg declares PLUSARG_CHK_CTR_MINSTRET once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_EXACT once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_BOUND once
+OK   pkg declares PLUSARG_CHK_PMP_DATA once
+OK   pkg declares PLUSARG_CHK_PMP_FETCH once
+OK   pkg declares PLUSARG_CHK_ISA once
+OK   pkg declares PLUSARG_CHK_ISA_PC once
+OK   pkg declares PLUSARG_CHK_ISA_INSN once
+OK   pkg declares PLUSARG_CHK_ISA_TRAP once
+OK   pkg declares PLUSARG_CHK_ISA_RD once
+OK   pkg declares PLUSARG_CHK_ISA_MEM once
+OK   pkg declares PLUSARG_CHK_ISA_PRV once
+OK   pkg declares PLUSARG_CHK_ISA_PC_NEXT once
+OK   pkg declares PLUSARG_CHK_ISA_CSR once
+OK   pkg declares PLUSARG_CHK_RVFI_PROTO once
+OK   pkg declares PLUSARG_CHK_T022_NEVER once
+OK   pkg declares PLUSARG_CHK_BRIDGE_ACCOUNTING once
+OK   no PLUSARG_ outside the generated region
+OK   dbg_csr_probe is debug_only
+OK   Runtime debug_only_plusargs lists gen_dbg_csr_probe
+OK   regime knob knob_imem_gnt_delay present as enum
+OK   regime knob knob_imem_rvalid_delay present as enum
+OK   regime knob knob_imem_err_rate present as enum
+OK   regime knob knob_imem_intg_err_rate present as enum
+OK   regime knob knob_imem_outstanding_cap present as enum
+OK   regime knob knob_dmem_gnt_delay present as enum
+OK   regime knob knob_dmem_rvalid_delay present as enum
+OK   regime knob knob_dmem_err_rate present as enum
+OK   regime knob knob_dmem_intg_err_rate present as enum
+OK   regime knob knob_irq_regime present as enum
+OK   regime knob knob_irq_line_mix present as enum
+OK   regime knob knob_irq_hold present as enum
+OK   regime knob knob_debug_req_regime present as enum
+OK   regime knob knob_scr_key_delay present as enum
+OK   regime knob knob_icache_ecc_err_rate present as enum
+OK   regime knob knob_fetch_enable_regime present as enum
+OK   regime knob knob_mcounteren_writable present as enum
+OK   regime knob knob_instr_mix present as enum
+OK   regime knob knob_priv_regime present as enum
+OK   regime knob knob_pmp_regime present as enum
+OK   gen_knobs.py exists
+OK   python PLUSARGS has every name
+OK   python ISA_STRING equals yaml
+OK   python knob values match yaml
+OK   header exists
+OK   header ISA string equals yaml
+OK   header carries boot_addr_default
+OK   header carries boot_page
+OK   header carries prog_size
+OK   header carries dm_base
+OK   header carries dm_size
+OK   header carries dm_halt
+OK   header carries dm_exception
+OK   header carries dm_budget
+OK   header carries mmio_base
+OK   header carries mmio_size
+OK   header carries sig_addr
+OK   header carries irq_ack_addr
+OK   header carries eot_addr
+OK   header carries phase_mark_addr
+cannot find parameter GEN_BOOT_ADDR_DEFAULT in /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_tb_pkg.sv
+exit=1
+# GREEN run 2: 2026-09-03T07:14:43Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py (after fixing the GEN_BOOT_ADDR_DEFAULT alias that green run 1 exposed)
+OK   yaml source exists
+OK   codegen exists
+OK   codegen --check passes
+OK   plusarg names unique
+OK   pkg declares PLUSARG_BUILD_CONFIG once
+OK   pkg declares PLUSARG_SMOKE_CYCLES once
+OK   pkg declares PLUSARG_SMOKE_INTG_FLIP once
+OK   pkg declares PLUSARG_DBG_CSR_PROBE once
+OK   pkg declares PLUSARG_MEM_IMAGE once
+OK   pkg declares PLUSARG_MEM_IMAGE_CRC32 once
+OK   pkg declares PLUSARG_MEM_IMAGE_WORDS once
+OK   pkg declares PLUSARG_MEM_READBACK_WORDS once
+OK   pkg declares PLUSARG_MEM_UNMAPPED_OK once
+OK   pkg declares PLUSARG_BOOT_ADDR once
+OK   pkg declares PLUSARG_ALIVE_TIMEOUT once
+OK   pkg declares PLUSARG_FINISH_TIMEOUT once
+OK   pkg declares PLUSARG_REGIME_SCHED once
+OK   pkg declares PLUSARG_RVFI_TRACE once
+OK   pkg declares PLUSARG_FCOV_EN once
+OK   pkg declares PLUSARG_ICRAM_INIT once
+OK   enum icram_init has >= 2 values
+OK   enum icram_init default is a value
+OK   pkg carries values of icram_init
+OK   pkg declares PLUSARG_KEY_RESET_VALID once
+OK   pkg declares PLUSARG_ISA_STRING once
+OK   pkg declares PLUSARG_ISA_LOG once
+OK   pkg declares PLUSARG_IBUS_GNT_MIN once
+OK   pkg declares PLUSARG_IBUS_GNT_MAX once
+OK   pkg declares PLUSARG_IBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_IBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_IBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_IBUS_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_BITS once
+OK   pkg declares PLUSARG_IBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_GNT_MIN once
+OK   pkg declares PLUSARG_DBUS_GNT_MAX once
+OK   pkg declares PLUSARG_DBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_DBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_DBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_DBUS_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_BITS once
+OK   pkg declares PLUSARG_DBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_ERR_HALF once
+OK   enum dbus_err_half has >= 2 values
+OK   enum dbus_err_half default is a value
+OK   pkg carries values of dbus_err_half
+OK   pkg declares PLUSARG_DBUS_ERR_STORE_PERFORM once
+OK   pkg declares PLUSARG_KEY_DELAY_MIN once
+OK   pkg declares PLUSARG_KEY_DELAY_MAX once
+OK   pkg declares PLUSARG_KEY_NEVER_CYCLES once
+OK   pkg declares PLUSARG_IRQ_MIN_GAP once
+OK   pkg declares PLUSARG_IRQ_HOLD_MIN once
+OK   pkg declares PLUSARG_IRQ_HOLD_MAX once
+OK   pkg declares PLUSARG_DBG_HOLD_MIN once
+OK   pkg declares PLUSARG_DBG_HOLD_MAX once
+OK   pkg declares PLUSARG_KNOB_IMEM_GNT_DELAY once
+OK   enum knob_imem_gnt_delay has >= 2 values
+OK   enum knob_imem_gnt_delay default is a value
+OK   pkg carries values of knob_imem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_RVALID_DELAY once
+OK   enum knob_imem_rvalid_delay has >= 2 values
+OK   enum knob_imem_rvalid_delay default is a value
+OK   pkg carries values of knob_imem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_ERR_RATE once
+OK   enum knob_imem_err_rate has >= 2 values
+OK   enum knob_imem_err_rate default is a value
+OK   pkg carries values of knob_imem_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_INTG_ERR_RATE once
+OK   enum knob_imem_intg_err_rate has >= 2 values
+OK   enum knob_imem_intg_err_rate default is a value
+OK   pkg carries values of knob_imem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_OUTSTANDING_CAP once
+OK   enum knob_imem_outstanding_cap has >= 2 values
+OK   enum knob_imem_outstanding_cap default is a value
+OK   pkg carries values of knob_imem_outstanding_cap
+OK   pkg declares PLUSARG_KNOB_DMEM_GNT_DELAY once
+OK   enum knob_dmem_gnt_delay has >= 2 values
+OK   enum knob_dmem_gnt_delay default is a value
+OK   pkg carries values of knob_dmem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_RVALID_DELAY once
+OK   enum knob_dmem_rvalid_delay has >= 2 values
+OK   enum knob_dmem_rvalid_delay default is a value
+OK   pkg carries values of knob_dmem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_ERR_RATE once
+OK   enum knob_dmem_err_rate has >= 2 values
+OK   enum knob_dmem_err_rate default is a value
+OK   pkg carries values of knob_dmem_err_rate
+OK   pkg declares PLUSARG_KNOB_DMEM_INTG_ERR_RATE once
+OK   enum knob_dmem_intg_err_rate has >= 2 values
+OK   enum knob_dmem_intg_err_rate default is a value
+OK   pkg carries values of knob_dmem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IRQ_REGIME once
+OK   enum knob_irq_regime has >= 2 values
+OK   enum knob_irq_regime default is a value
+OK   pkg carries values of knob_irq_regime
+OK   pkg declares PLUSARG_KNOB_IRQ_LINE_MIX once
+OK   enum knob_irq_line_mix has >= 2 values
+OK   enum knob_irq_line_mix default is a value
+OK   pkg carries values of knob_irq_line_mix
+OK   pkg declares PLUSARG_KNOB_IRQ_HOLD once
+OK   enum knob_irq_hold has >= 2 values
+OK   enum knob_irq_hold default is a value
+OK   pkg carries values of knob_irq_hold
+OK   pkg declares PLUSARG_KNOB_DEBUG_REQ_REGIME once
+OK   enum knob_debug_req_regime has >= 2 values
+OK   enum knob_debug_req_regime default is a value
+OK   pkg carries values of knob_debug_req_regime
+OK   pkg declares PLUSARG_KNOB_SCR_KEY_DELAY once
+OK   enum knob_scr_key_delay has >= 2 values
+OK   enum knob_scr_key_delay default is a value
+OK   pkg carries values of knob_scr_key_delay
+OK   pkg declares PLUSARG_KNOB_ICACHE_ECC_ERR_RATE once
+OK   enum knob_icache_ecc_err_rate has >= 2 values
+OK   enum knob_icache_ecc_err_rate default is a value
+OK   pkg carries values of knob_icache_ecc_err_rate
+OK   pkg declares PLUSARG_KNOB_FETCH_ENABLE_REGIME once
+OK   enum knob_fetch_enable_regime has >= 2 values
+OK   enum knob_fetch_enable_regime default is a value
+OK   pkg carries values of knob_fetch_enable_regime
+OK   pkg declares PLUSARG_KNOB_MCOUNTEREN_WRITABLE once
+OK   enum knob_mcounteren_writable has >= 2 values
+OK   enum knob_mcounteren_writable default is a value
+OK   pkg carries values of knob_mcounteren_writable
+OK   pkg declares PLUSARG_KNOB_INSTR_MIX once
+OK   enum knob_instr_mix has >= 2 values
+OK   enum knob_instr_mix default is a value
+OK   pkg carries values of knob_instr_mix
+OK   pkg declares PLUSARG_KNOB_PRIV_REGIME once
+OK   enum knob_priv_regime has >= 2 values
+OK   enum knob_priv_regime default is a value
+OK   pkg carries values of knob_priv_regime
+OK   pkg declares PLUSARG_KNOB_PMP_REGIME once
+OK   enum knob_pmp_regime has >= 2 values
+OK   enum knob_pmp_regime default is a value
+OK   pkg carries values of knob_pmp_regime
+OK   pkg declares PLUSARG_CHK_ALL once
+OK   pkg declares PLUSARG_CHK_IBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_IBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_SVA_RVALID_LEGAL once
+OK   pkg declares PLUSARG_CHK_DBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_DBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_DBUS_SPLIT once
+OK   pkg declares PLUSARG_CHK_DBUS_STORE_INTG once
+OK   pkg declares PLUSARG_CHK_ICRAM_WRITE_ECC once
+OK   pkg declares PLUSARG_CHK_ICRAM_INVAL_SWEEP once
+OK   pkg declares PLUSARG_CHK_ICRAM_ECC_RESPONSE once
+OK   pkg declares PLUSARG_CHK_SCRKEY_PROTO once
+OK   pkg declares PLUSARG_CHK_ALERT_MINOR once
+OK   pkg declares PLUSARG_CHK_ALERT_BUS once
+OK   pkg declares PLUSARG_CHK_ALERT_INTERNAL once
+OK   pkg declares PLUSARG_CHK_CRASH_DUMP once
+OK   pkg declares PLUSARG_CHK_DOUBLE_FAULT once
+OK   pkg declares PLUSARG_CHK_CORE_BUSY once
+OK   pkg declares PLUSARG_CHK_DATA_TAG_QUIET once
+OK   pkg declares PLUSARG_CHK_FETCH_EN once
+OK   pkg declares PLUSARG_CHK_IRQ_PENDING once
+OK   pkg declares PLUSARG_CHK_IRQ_ENTRY once
+OK   pkg declares PLUSARG_CHK_IRQ_MASKED once
+OK   pkg declares PLUSARG_CHK_NMI_ENTRY once
+OK   pkg declares PLUSARG_CHK_NMI_INTERNAL once
+OK   pkg declares PLUSARG_CHK_DBG_ENTRY once
+OK   pkg declares PLUSARG_CHK_DBG_EXC once
+OK   pkg declares PLUSARG_CHK_DBG_MASKED once
+OK   pkg declares PLUSARG_CHK_DBG_DRET once
+OK   pkg declares PLUSARG_CHK_DBG_TRIGGER once
+OK   pkg declares PLUSARG_CHK_CTR_MCYCLE once
+OK   pkg declares PLUSARG_CHK_CTR_MINSTRET once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_EXACT once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_BOUND once
+OK   pkg declares PLUSARG_CHK_PMP_DATA once
+OK   pkg declares PLUSARG_CHK_PMP_FETCH once
+OK   pkg declares PLUSARG_CHK_ISA once
+OK   pkg declares PLUSARG_CHK_ISA_PC once
+OK   pkg declares PLUSARG_CHK_ISA_INSN once
+OK   pkg declares PLUSARG_CHK_ISA_TRAP once
+OK   pkg declares PLUSARG_CHK_ISA_RD once
+OK   pkg declares PLUSARG_CHK_ISA_MEM once
+OK   pkg declares PLUSARG_CHK_ISA_PRV once
+OK   pkg declares PLUSARG_CHK_ISA_PC_NEXT once
+OK   pkg declares PLUSARG_CHK_ISA_CSR once
+OK   pkg declares PLUSARG_CHK_RVFI_PROTO once
+OK   pkg declares PLUSARG_CHK_T022_NEVER once
+OK   pkg declares PLUSARG_CHK_BRIDGE_ACCOUNTING once
+OK   no PLUSARG_ outside the generated region
+OK   dbg_csr_probe is debug_only
+OK   Runtime debug_only_plusargs lists gen_dbg_csr_probe
+OK   regime knob knob_imem_gnt_delay present as enum
+OK   regime knob knob_imem_rvalid_delay present as enum
+OK   regime knob knob_imem_err_rate present as enum
+OK   regime knob knob_imem_intg_err_rate present as enum
+OK   regime knob knob_imem_outstanding_cap present as enum
+OK   regime knob knob_dmem_gnt_delay present as enum
+OK   regime knob knob_dmem_rvalid_delay present as enum
+OK   regime knob knob_dmem_err_rate present as enum
+OK   regime knob knob_dmem_intg_err_rate present as enum
+OK   regime knob knob_irq_regime present as enum
+OK   regime knob knob_irq_line_mix present as enum
+OK   regime knob knob_irq_hold present as enum
+OK   regime knob knob_debug_req_regime present as enum
+OK   regime knob knob_scr_key_delay present as enum
+OK   regime knob knob_icache_ecc_err_rate present as enum
+OK   regime knob knob_fetch_enable_regime present as enum
+OK   regime knob knob_mcounteren_writable present as enum
+OK   regime knob knob_instr_mix present as enum
+OK   regime knob knob_priv_regime present as enum
+OK   regime knob knob_pmp_regime present as enum
+OK   gen_knobs.py exists
+OK   python PLUSARGS has every name
+OK   python ISA_STRING equals yaml
+OK   python knob values match yaml
+OK   header exists
+OK   header ISA string equals yaml
+OK   header carries boot_addr_default
+OK   header carries boot_page
+OK   header carries prog_size
+OK   header carries dm_base
+OK   header carries dm_size
+OK   header carries dm_halt
+OK   header carries dm_exception
+OK   header carries dm_budget
+OK   header carries mmio_base
+OK   header carries mmio_size
+OK   header carries sig_addr
+OK   header carries irq_ack_addr
+OK   header carries eot_addr
+OK   header carries phase_mark_addr
+OK   memory map dm_base agrees with gen_program
+OK   memory map dm_size agrees with gen_program
+OK   memory map dm_halt agrees with gen_program
+OK   memory map boot_page agrees with gen_program
+OK   memory map prog_size agrees with gen_program
+OK   gen_program ISA string equals yaml
+OK   MMIO page outside program and DM windows
+OK   pkg declares constant GEN_ICACHE_NUM_FB
+OK   python CONSTANTS[GEN_ICACHE_NUM_FB]
+OK   pkg declares constant GEN_IBUS_MAX_OUTSTANDING
+OK   python CONSTANTS[GEN_IBUS_MAX_OUTSTANDING]
+OK   pkg declares constant GEN_DBUS_MAX_OUTSTANDING
+OK   python CONSTANTS[GEN_DBUS_MAX_OUTSTANDING]
+OK   pkg declares constant GEN_CSR_WRITE_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_CSR_WRITE_TO_RVFI_OFFSET]
+OK   pkg declares constant GEN_TRAP_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_TRAP_TO_RVFI_OFFSET]
+OK   pkg declares constant GEN_IRQ_MARKER_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_IRQ_MARKER_TO_RVFI_OFFSET]
+OK   pkg declares constant GEN_RVFI_ID_EXIT_OFFSET
+OK   python CONSTANTS[GEN_RVFI_ID_EXIT_OFFSET]
+OK   pkg declares constant GEN_ICACHE_ECC_WINDOW
+OK   python CONSTANTS[GEN_ICACHE_ECC_WINDOW]
+OK   pkg declares constant GEN_IRQ_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_IRQ_ENTRY_BOUND_RECORDS]
+OK   pkg declares constant GEN_DBG_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_DBG_ENTRY_BOUND_RECORDS]
+OK   pkg declares constant GEN_MEM_READBACK_WORDS_DEFAULT
+OK   python CONSTANTS[GEN_MEM_READBACK_WORDS_DEFAULT]
+OK   pkg declares constant GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   python CONSTANTS[GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT]
+OK   pkg declares constant GEN_IRQ_FAST_MASK
+OK   python CONSTANTS[GEN_IRQ_FAST_MASK]
+GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+exit=0

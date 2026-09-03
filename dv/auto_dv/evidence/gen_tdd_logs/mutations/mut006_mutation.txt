@@ -1,0 +1,1 @@
+MUT-006: dv/auto_dv/env/gen_rvfi_pkg.sv:79 original: t.order = vif.order; t.insn = vif.insn; t.trap = vif.trap; t.halt = vif.halt; t.intr = vif.intr; | mutated: t.order = vif.order; t.insn = vif.insn; t.trap = ~vif.trap; t.halt = vif.halt; t.intr = vif.intr;   // MUT-006

@@ -1,0 +1,4 @@
+# RED run: 2026-09-03T07:26:25Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_handles.py
+FAIL module exists (/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/gen_tb/gen_handles.py)
+GEN_UT_HANDLES FAIL (1 failures)
+exit=1

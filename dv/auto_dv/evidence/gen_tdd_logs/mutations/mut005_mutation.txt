@@ -1,0 +1,1 @@
+MUT-005: dv/auto_dv/env/gen_rvfi_pkg.sv:84 original: t.mem_addr = vif.mem_addr; t.mem_rdata = vif.mem_rdata; t.mem_wdata = vif.mem_wdata; | mutated: t.mem_addr = vif.mem_addr; t.mem_rdata = vif.mem_rdata; t.mem_wdata = vif.mem_wdata ^ 32'h1;   // MUT-005

@@ -25,6 +25,8 @@
   bit mem_unmapped_ok_set = 1'b0;
   logic [31:0] boot_addr = 32'h80000000;
   bit boot_addr_set = 1'b0;
+  logic [31:0] hart_id = 32'h00000000;
+  bit hart_id_set = 1'b0;
   int unsigned alive_timeout = 100000;
   bit alive_timeout_set = 1'b0;
   int unsigned finish_timeout = 20000;
@@ -43,8 +45,6 @@
   bit key_reset_valid_set = 1'b0;
   bit sb_trace = 1'b0;
   bit sb_trace_set = 1'b0;
-  int unsigned ut_lockstep_min_ratio_pct = 90;
-  bit ut_lockstep_min_ratio_pct_set = 1'b0;
   string isa_string = "";
   bit isa_string_set = 1'b0;
   string isa_log = "";
@@ -257,6 +257,7 @@
     if ($value$plusargs({PLUSARG_TOHOST_ADDR, "=%h"}, h)) begin tohost_addr = h; tohost_addr_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_UNMAPPED_OK, "=%d"}, u)) begin mem_unmapped_ok = (u != 0); mem_unmapped_ok_set = 1'b1; end
     if ($value$plusargs({PLUSARG_BOOT_ADDR, "=%h"}, h)) begin boot_addr = h; boot_addr_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_HART_ID, "=%h"}, h)) begin hart_id = h; hart_id_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ALIVE_TIMEOUT, "=%d"}, u)) begin alive_timeout = u; alive_timeout_set = 1'b1; end
     if ($value$plusargs({PLUSARG_FINISH_TIMEOUT, "=%d"}, u)) begin finish_timeout = u; finish_timeout_set = 1'b1; end
     if ($value$plusargs({PLUSARG_REGIME_SCHED, "=%s"}, s)) begin regime_sched = s; regime_sched_set = 1'b1; end
@@ -266,7 +267,6 @@
     if ($value$plusargs({PLUSARG_FETCH_EN_AT_RESET, "=%d"}, u)) begin fetch_en_at_reset = (u != 0); fetch_en_at_reset_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KEY_RESET_VALID, "=%d"}, u)) begin key_reset_valid = (u != 0); key_reset_valid_set = 1'b1; end
     if ($value$plusargs({PLUSARG_SB_TRACE, "=%d"}, u)) begin sb_trace = (u != 0); sb_trace_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_UT_LOCKSTEP_MIN_RATIO_PCT, "=%d"}, u)) begin ut_lockstep_min_ratio_pct = u; ut_lockstep_min_ratio_pct_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_STRING, "=%s"}, s)) begin isa_string = s; isa_string_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_LOG, "=%s"}, s)) begin isa_log = s; isa_log_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_BOOT_RETIRE, "=%d"}, u)) begin ut_boot_retire = u; ut_boot_retire_set = 1'b1; end

@@ -28,7 +28,7 @@ generated ROM uses the program's kernel stack pointer (T-025 evidence Section 4)
 
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
-| `+gen_dbg_regime=none|sparse|dense|step_mix` | `PLUSARG_DBG_REGIME` | distribution set | none |
+| `+gen_knob_debug_req_regime=none|sparse|storm` | `PLUSARG_KNOB_DEBUG_REQ_REGIME` | debug_req_i event rate (layer-2 regime knob, gen_tb_knobs.yaml) | none |
 | `+gen_dbg_hold_min/max=<n>` | `PLUSARG_DBG_HOLD_MIN/MAX` | hold length for CYCLES policy | 1 / 100 |
 | `+gen_dbg_min_retired=<n>` | `PLUSARG_DBG_MIN_RETIRED` | earliest retirement count for a random request | 200 |
 

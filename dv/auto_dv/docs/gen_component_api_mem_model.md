@@ -17,6 +17,16 @@ acknowledge, end-of-test). The image already holds the boot entry at `{boot_addr
 and the `.debug_rom` section at DmHaltAddr (dv/auto_dv/stim/gen_riscv_dv_target/gen_link.ld), so
 no separate boot stub or DmHaltAddr alias exists.
 
+AS BUILT (step 1c; T-068 doc): package `gen_mem_pkg` (`dv/auto_dv/env/gen_mem_pkg.sv`), classes
+`gen_mmio_handler` (virtual `on_write` hook, plus `on_read`) and `gen_mem_model`; functions `load_vmem`,
+`crc32_index_word`, `verify_digest`, `read32`, `write_masked`, `peek_word` (side-effect free, 0 for
+unmapped), `is_mapped`, `add_mmio`, `add_watch`, `word_count`. Report ids: `MEM_LOAD` (uvm_fatal on a
+digest or word-count mismatch or missing sidecar plusargs) and `MEM_UNMAPPED` (uvm_error unless
+`+gen_mem_unmapped_ok=1`, then counted in `unmapped_count` and answered 0). Regions come from the rendered
+`GEN_MM_*` constants (boot page / program, DM, MMIO); the MMIO window sizes come from the rendered
+`GEN_MM_*_SIZE` constants (T-068). Unit test `dv/auto_dv/tb/unit/gen_ut_mem_model_top.sv`, transcript
+`dv/auto_dv/evidence/gen_tdd_mem_model.md`.
+
 ## 2. Files (planned) and how to call it
 
 AS BUILT (step 1c): `dv/auto_dv/env/gen_mem_pkg.sv` (package gen_mem_pkg: `gen_mmio_handler` base

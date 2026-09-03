@@ -48,3 +48,37 @@ while other immediates trap with cause 2 and mtval = the instruction and retire 
 reported in the step's CSR write list), the fast interrupt bit 16 sticks in mie (gen_mie_csr_t), cpuctrlsts
 writes land masked through the genibex extension; gpr and pc accessors. The shared library exports 22
 `gen_isa_*` symbols (`nm -D`).
+
+## 4. T-068 (2026-09-03): claim correction, accessors, build script
+
+Correction (cross-model 2a medium 6): the shim's header comment, `gen_component_api_isa_shim.md` Section 4 and
+the step-2a commit message described a byte-wise misaligned MMIO rule (per-word PMP splitting, the permitted
+first word performed, the second faulted, `mtval` overridden to the aligned second word). The shim does NOT
+implement that: every access is served byte-wise through `mmio_fetch/load/store` over the sparse memory and an
+armed bus fault fails the bytes it covers; the per-word rule and the mtval override are pending with the
+misaligned-access directed test (C5.4). The link-test-2 evidence that Spike splits misaligned accesses per byte
+stands; it was never the shim's implementation. Also pending, now listed in the API document (Section 4a):
+mstatus MPP legalization, mcountinhibit/mhpmevent masks, NMI emulation, dcsr/tdata legalization, WFI
+`in_wfi`, the B5 `nmip` direction, the CSR-state compare.
+
+New in T-068: per-step accessors `gen_isa_reg_write(i, idx, val)` (every integer register write of the step),
+`gen_isa_mem_write(i, addr, data, size)`, `gen_isa_mem_read(i, ...)`, `gen_isa_fetch_insn(pc)`, and
+`reg_writes` in `gen_isa_step_t` (the scoreboard's Zcmp union compare and draft-B path consume them); the
+identical `if (logging) ... else ...` branches collapsed; `GEN_MM_BOOT_PAGE_MASK` from the rendered header
+instead of a literal. Build script: any absolute outdir (inside or outside the clone) is accepted, no RPATH is
+baked in (the flow's `runtime_lib_dirs` and the local driver export LD_LIBRARY_PATH; the simv link uses
+`-Wl,-rpath-link`), and `test` mode exports the path itself. The history sentence in the unit test's header
+is gone.
+
+Unit test re-run (retained `dv/auto_dv/evidence/gen_tdd_logs/isa_shim/ut_run_t068.log`):
+
+```
+# T-068 shim unit test: 2026-09-03T08:45:31Z host=soc-l-11 cmd: bash dv/auto_dv/isa/gen_isa_shim_build.sh test ... prog.vmem
+GEN_UT_ISA_SHIM PASS (0 failures)
+```
+85 OK lines (51 before): the new checks cover a cm.push step (4 stores, descending 4-byte-aligned addresses,
+`mem_write(0)` equals the first-access fields, -1 past the end), a cm.pop step (5 register writes in ascending
+index order, 4 loads), a single-write step, `fetch_insn(pc_before) == insn` on every step and 0 on an unmapped
+pc. `readelf -d` on the built library shows no RPATH/RUNPATH; a library build into Runtime's shared out root
+(`/proj_soc/user_dev/fzhang/ibex_dv_out/t068_shim_outdir_check/lib`) succeeded. The 2a logs are retained as
+`isa_shim_red.log`, `isa_shim_green.log`, `ut_green_2a.log`.

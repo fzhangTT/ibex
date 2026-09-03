@@ -2,9 +2,22 @@
 trigger on a single-bit SV field with a caller-sized timeout; nothing here polls a counter (A-01).
 Command codes and the clock period come from the rendered gen_knobs.py (one origin). Failures are
 Python asserts (the only Python-side failure mechanism, TB_CONTRACT Section 3); messages are ASCII."""
+import cocotb
 from cocotb.triggers import Edge, with_timeout
 
-from dv.auto_dv.gen_tb.gen_knobs import CMD, CONSTANTS
+from dv.auto_dv.gen_tb.gen_knobs import CMD, PLUSARGS
+
+
+def knob_default(name):
+    """A rendered TB constant (dv/auto_dv/gen_tb/gen_knobs.py CONSTANTS)."""
+    from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS
+    return CONSTANTS[name]
+
+
+def finish_timeout_cycles():
+    """+gen_finish_timeout when supplied, else its default (rendered from GEN_FINISH_TIMEOUT_CYCLES_DEFAULT)."""
+    p = PLUSARGS["finish_timeout"]
+    return int(cocotb.plusargs.get(p["plusarg"], p["default"]))
 
 
 class GenBridge:
@@ -13,7 +26,7 @@ class GenBridge:
         self.log = log
         self.sent = 0
         self.seq = 0
-        self.period_ns = CONSTANTS["GEN_CLK_PERIOD_NS"]
+        self.period_ns = knob_default("GEN_CLK_PERIOD_NS")
 
     async def _edge(self, sig, cycles, what):
         try:
@@ -64,12 +77,13 @@ class GenBridge:
         await self._edge(b.evt_retired_hit, timeout_cycles, f"evt_retired_hit for {target_count} retirements")
 
     async def finish(self, timeout_cycles=None):
-        """Checks first, then the finish handshake (TB_CONTRACT Section 2)."""
+        """Own checks first, then drop stim_active, then the finish handshake (TB_CONTRACT Section 2);
+        the budget is the caller's, else +gen_finish_timeout, else its rendered default."""
         b = self.h.b
-        b.stim_active.value = 0
         consumed = int(b.cmds_consumed.value)
         assert consumed == self.sent, f"GEN_BRIDGE: cmds_consumed {consumed} != sent {self.sent}"
-        budget = timeout_cycles if timeout_cycles is not None else CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"]
+        b.stim_active.value = 0
+        budget = timeout_cycles if timeout_cycles is not None else finish_timeout_cycles()
         b.finish_req.value = 1
         await self._edge(b.finish_ack, budget, "finish_ack")
         self.log.info("GEN_BRIDGE finished: %d commands sent and consumed, %d retirements counted",

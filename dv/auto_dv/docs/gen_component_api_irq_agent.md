@@ -27,7 +27,9 @@ sequences; every line edge is published on `ap` with its cycle for gen_irq_check
 
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
-| `+gen_irq_regime=quiet|sparse|storm|nested|nmi_mix` | `PLUSARG_IRQ_REGIME` | distribution set for random interrupt traffic | quiet |
+| `+gen_knob_irq_regime=quiet|sparse|storm` | `PLUSARG_KNOB_IRQ_REGIME` | interrupt event rate (layer-2 regime knob, gen_tb_knobs.yaml) | quiet |
+| `+gen_knob_irq_line_mix=single|multi|fast_only|with_nmi` | `PLUSARG_KNOB_IRQ_LINE_MIX` | lines per interrupt event | single |
+| `+gen_knob_irq_hold=until_taken|through_handler|pulse` | `PLUSARG_KNOB_IRQ_HOLD` | interrupt line release policy | until_taken |
 | `+gen_irq_min_gap=<n>` | `PLUSARG_IRQ_MIN_GAP` | minimum cycles between random assertions | 50 |
 | `+gen_irq_hold_min/max=<n>` | `PLUSARG_IRQ_HOLD_MIN/MAX` | hold length for CYCLES policy | 1 / 200 |
 | `+gen_irq_ack_addr=<hex>` | `PLUSARG_IRQ_ACK_ADDR` | shared with gen_mem_model: handler store that releases UNTIL_ACK lines | gen_tb_pkg constant |

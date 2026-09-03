@@ -17,8 +17,14 @@ package gen_isa_dpi_pkg;
                                                        output int mem_writes, output int unsigned mem_addr,
                                                        output int unsigned mem_wdata, output int unsigned mem_rdata,
                                                        output int unsigned mem_size, output int unsigned prv,
-                                                       output int csr_writes);
+                                                       output int csr_writes, output int reg_writes);
   import "DPI-C" context function int gen_isa_csr_write(input int i, output int unsigned addr, output int unsigned val);
+  import "DPI-C" context function int gen_isa_reg_write(input int i, output int unsigned idx, output int unsigned val);
+  import "DPI-C" context function int gen_isa_mem_write(input int i, output int unsigned addr, output int unsigned data,
+                                                        output int unsigned size);
+  import "DPI-C" context function int gen_isa_mem_read(input int i, output int unsigned addr, output int unsigned data,
+                                                       output int unsigned size);
+  import "DPI-C" context function int unsigned gen_isa_fetch_insn(input int unsigned pc);
   import "DPI-C" context function int unsigned gen_isa_read_csr(input int unsigned addr);
   import "DPI-C" context function int gen_isa_write_csr(input int unsigned addr, input int unsigned val);
   import "DPI-C" context function int unsigned gen_isa_read_gpr(input int idx);

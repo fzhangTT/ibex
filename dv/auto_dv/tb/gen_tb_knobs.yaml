@@ -1,171 +1,187 @@
-# gen_tb_knobs.yaml: the ONE source of plusarg names, regime-knob value sets, TB constants and the
-# TB memory map (architecture C11). dv/auto_dv/tb/gen_knobs_codegen.py renders it into the marked
-# region of gen_tb_pkg.sv, dv/auto_dv/gen_tb/gen_knobs.py and dv/auto_dv/isa/gen_isa_shim_map.h;
-# `--check` fails when any rendered file is stale. Plusarg `name` renders as `+gen_<name>=...` and
-# `PLUSARG_<NAME>`; enum values are the DV Lead's regime knobs (docs/gen_fcov_plan.md Section REG).
+# gen_tb_knobs.yaml: the ONE source of plusarg names, regime-knob value sets and their numeric windows,
+# TB constants and the TB memory map (architecture C11). dv/auto_dv/tb/gen_knobs_codegen.py renders it
+# into the marked region of gen_tb_pkg.sv, dv/auto_dv/tb/gen_env_cfg_knobs.svh, dv/auto_dv/gen_tb/gen_knobs.py
+# and dv/auto_dv/isa/gen_isa_shim_map.h; `--check` fails when any rendered file is stale; load() refuses
+# any key outside the schema. Plusarg `name` renders as `+gen_<name>=...` and `PLUSARG_<NAME>`; enum
+# values are the DV Lead's regime knobs (docs/gen_fcov_plan.md Section REG). Every desc is quoted.
 schema_version: 1
 # smepmp: Ibex implements mseccfg (MML/MMWP/RLB); without it the model traps on csr 0x747 (lock-step run out_2a)
 isa_string: rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp
 
 plusargs:
   # ---- environment ----
-  - {name: build_config, kind: string, default: opentitan, desc: build configuration name echoed in the banner (must match the compile)}
-  - {name: smoke_cycles, kind: int, default: 3000, desc: bounded run length of gen_smoke_tb_top}
-  - {name: smoke_intg_flip, kind: int, default: null, desc: smoke red-run knob, bit of the SECDED-encoded NOP word to flip (absent = no corruption)}
-  - {name: dbg_csr_probe, kind: bool, default: 0, debug_only: true, desc: probe P6 (docs/gen_probe_register.md), debug only, never in a measured run}
-  - {name: mem_image, kind: string, default: null, desc: program image (.vmem) loaded once at time 0}
-  - {name: mem_image_crc32, kind: hex, default: null, desc: CRC-32 over (index, word) pairs from the .sym.json sidecar, recomputed after load}
-  - {name: mem_image_words, kind: int, default: null, desc: word count from the sidecar}
-  - {name: mem_readback_words, kind: int, default: 64, desc: words Python reads back through MEM_PEEK and compares with the .vmem}
-  - {name: tohost_addr, kind: hex, default: null, desc: address of the program tohost word (sidecar symbol); a store there ends the test with the stored code}
-  - {name: mem_unmapped_ok, kind: bool, default: 0, desc: unmapped bus access returns an error response instead of a TB error}
-  - {name: boot_addr, kind: hex, default: 0x80000000, desc: boot_addr_i (must match the image entry page)}
-  - {name: alive_timeout, kind: int, default: 100000, desc: cycles before the SV alive watchdog fatals (TB_CONTRACT Section 2)}
-  - {name: finish_timeout, kind: int, default: 20000, desc: default finish-handshake budget in cycles (Python overrides per test)}
-  - {name: regime_sched, kind: string, default: null, desc: layer-3 schedule knob:value@r<N>|c<N>,... (consumed when supplied, else derived from RANDOM_SEED and echoed)}
-  - {name: rvfi_trace, kind: bool, default: 0, desc: write an ASCII RVFI trace file (debug only)}
-  - {name: fcov_en, kind: bool, default: 1, desc: instantiate covergroups}
-  - {name: icram_init, kind: enum, values: [zero, random], default: random, desc: initial contents of the icache tag/data RAM models}
-  - {name: fetch_en_at_reset, kind: bool, default: 1, desc: fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)}
-  - {name: key_reset_valid, kind: bool, default: 1, desc: ic_scr_key_valid_i high out of reset (ibex_top behaviour)}
-  - {name: sb_trace, kind: bool, default: 0, desc: scoreboard per-record trace (debug only)}
-  - {name: ut_lockstep_min_ratio_pct, kind: int, default: 90, desc: lock-step test, minimum compared/retired ratio in percent}
-  - {name: isa_string, kind: string, default: null, desc: model ISA string override (debug only; the default is GEN_ISA_STRING)}
-  - {name: isa_log, kind: string, default: null, desc: model commit log path for debug}
+  - {name: build_config, kind: string, default: opentitan, desc: "build configuration name echoed in the banner (must match the compile)"}
+  - {name: smoke_cycles, kind: int, default: 3000, desc: "bounded run length of gen_smoke_tb_top"}
+  - {name: smoke_intg_flip, kind: int, default: null, desc: "smoke red-run knob, bit of the SECDED-encoded NOP word to flip (absent = no corruption)"}
+  - {name: dbg_csr_probe, kind: bool, default: 0, debug_only: true, desc: "probe P6 (docs/gen_probe_register.md), debug only, never in a measured run"}
+  - {name: mem_image, kind: string, default: null, desc: "program image (.vmem) loaded once at time 0"}
+  - {name: mem_image_crc32, kind: hex, default: null, desc: "CRC-32 over (index, word) pairs from the .sym.json sidecar, recomputed after load"}
+  - {name: mem_image_words, kind: int, default: null, desc: "word count from the sidecar"}
+  - {name: mem_readback_words, kind: int, default_from: GEN_MEM_READBACK_WORDS_DEFAULT, desc: "words Python reads back through MEM_PEEK and compares with the .vmem"}
+  - {name: tohost_addr, kind: hex, default: null, desc: "address of the program tohost word (sidecar symbol); a store there ends the test with the stored code"}
+  - {name: mem_unmapped_ok, kind: bool, default: 0, desc: "unmapped bus access returns an error response instead of a TB error"}
+  - {name: boot_addr, kind: hex, default_from: memory_map.boot_addr_default, desc: "boot_addr_i (must match the image entry page)"}
+  - {name: hart_id, kind: hex, default: 0, desc: "hart_id_i (architecture C1)"}
+  - {name: alive_timeout, kind: int, default_from: GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT, desc: "cycles before the SV alive watchdog fatals (TB_CONTRACT Section 2)"}
+  - {name: finish_timeout, kind: int, default_from: GEN_FINISH_TIMEOUT_CYCLES_DEFAULT, desc: "finish-handshake budget in cycles used by GenBridge.finish() when the test passes none"}
+  - {name: regime_sched, kind: string, default: null, desc: "layer-3 schedule knob:value@r<N>|c<N>,... (consumed when supplied, else derived from RANDOM_SEED and echoed)"}
+  - {name: rvfi_trace, kind: bool, default: 0, debug_only: true, desc: "print every RVFI record (debug only)"}
+  - {name: fcov_en, kind: bool, default: 1, desc: "instantiate covergroups"}
+  - {name: icram_init, kind: enum, values: [zero, random], default: random, desc: "initial contents of the icache tag/data RAM models"}
+  - {name: fetch_en_at_reset, kind: bool, default: 1, desc: "fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)"}
+  - {name: key_reset_valid, kind: bool, default: 1, desc: "ic_scr_key_valid_i high out of reset (ibex_top behaviour)"}
+  - {name: sb_trace, kind: bool, default: 0, debug_only: true, desc: "scoreboard per-record trace (debug only)"}
+  - {name: isa_string, kind: string, default: null, debug_only: true, desc: "model ISA string override (debug only; the default is GEN_ISA_STRING)"}
+  - {name: isa_log, kind: string, default: null, debug_only: true, desc: "model commit log path (debug only)"}
   # ---- TB unit-test knobs (gen_tests/*) ----
-  - {name: ut_boot_retire, kind: int, default: 200, desc: retirements the boots-and-retires test waits for}
+  - {name: ut_boot_retire, kind: int, default: 200, desc: "retirements the boots-and-retires test waits for"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
-  - {name: ibus_gnt_min, kind: int, default: null, desc: instruction bus grant latency low bound (cycles)}
-  - {name: ibus_gnt_max, kind: int, default: null, desc: instruction bus grant latency high bound}
-  - {name: ibus_rvalid_min, kind: int, default: null, desc: instruction bus response latency low bound (hard floor 1)}
-  - {name: ibus_rvalid_max, kind: int, default: null, desc: instruction bus response latency high bound}
-  - {name: ibus_max_outstanding, kind: int, default: null, desc: grants in flight before gnt is withheld (cap GEN_IBUS_MAX_OUTSTANDING)}
-  - {name: ibus_err_rate, kind: int, default: null, desc: per-mille probability of instr_err_i per response}
-  - {name: ibus_intg_err_rate, kind: int, default: null, desc: per-mille probability of corrupting instr_rdata_i integrity}
-  - {name: ibus_intg_bits, kind: int, default: 1, desc: bits flipped per corrupted instruction response (1 or 2)}
-  - {name: ibus_err_window, kind: string, default: null, desc: lo:hi address window where injected instruction errors apply}
-  - {name: dbus_gnt_min, kind: int, default: null, desc: data bus grant latency low bound}
-  - {name: dbus_gnt_max, kind: int, default: null, desc: data bus grant latency high bound}
-  - {name: dbus_rvalid_min, kind: int, default: null, desc: data bus response latency low bound (hard floor 1)}
-  - {name: dbus_rvalid_max, kind: int, default: null, desc: data bus response latency high bound}
-  - {name: dbus_max_outstanding, kind: int, default: null, desc: data grants in flight (cap GEN_DBUS_MAX_OUTSTANDING)}
-  - {name: dbus_err_rate, kind: int, default: null, desc: per-mille probability of data_err_i per response}
-  - {name: dbus_intg_err_rate, kind: int, default: null, desc: per-mille probability of corrupting data_rdata_i integrity}
-  - {name: dbus_intg_bits, kind: int, default: 1, desc: bits flipped per corrupted data response}
-  - {name: dbus_err_window, kind: string, default: null, desc: lo:hi address window where injected data errors apply}
-  - {name: dbus_err_half, kind: enum, values: [first, second, both, any], default: any, desc: which half of a split access an injected error hits}
-  - {name: dbus_err_store_perform, kind: bool, default: 1, desc: an errored store still updates the memory model}
-  - {name: key_delay_min, kind: int, default: 1, desc: scramble-key response delay low bound}
-  - {name: key_delay_max, kind: int, default: 20, desc: scramble-key response delay high bound}
-  - {name: key_never_cycles, kind: int, default: 0, desc: cycles the key stays withheld in the withheld_then_valid regime}
-  - {name: irq_min_gap, kind: int, default: 0, desc: minimum cycles between interrupt events}
-  - {name: irq_hold_min, kind: int, default: 1, desc: interrupt line hold low bound (CYCLES policy)}
-  - {name: irq_hold_max, kind: int, default: 50, desc: interrupt line hold high bound}
-  - {name: dbg_hold_min, kind: int, default: 1, desc: debug_req_i hold low bound}
-  - {name: dbg_hold_max, kind: int, default: 50, desc: debug_req_i hold high bound}
+  - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
+  - {name: ibus_gnt_max, kind: int, default: null, desc: "instruction bus grant latency high bound"}
+  - {name: ibus_rvalid_min, kind: int, default: null, desc: "instruction bus response latency low bound (hard floor 1)"}
+  - {name: ibus_rvalid_max, kind: int, default: null, desc: "instruction bus response latency high bound"}
+  - {name: ibus_max_outstanding, kind: int, default: null, desc: "grants in flight before gnt is withheld (cap GEN_IBUS_MAX_OUTSTANDING)"}
+  - {name: ibus_err_rate, kind: int, default: null, desc: "per-mille probability of instr_err_i per response"}
+  - {name: ibus_intg_err_rate, kind: int, default: null, desc: "per-mille probability of corrupting instr_rdata_i integrity"}
+  - {name: ibus_intg_bits, kind: int, default: 1, desc: "bits flipped per corrupted instruction response (1 or 2)"}
+  - {name: ibus_err_window, kind: string, default: null, desc: "lo:hi address window where injected instruction errors apply"}
+  - {name: dbus_gnt_min, kind: int, default: null, desc: "data bus grant latency low bound"}
+  - {name: dbus_gnt_max, kind: int, default: null, desc: "data bus grant latency high bound"}
+  - {name: dbus_rvalid_min, kind: int, default: null, desc: "data bus response latency low bound (hard floor 1)"}
+  - {name: dbus_rvalid_max, kind: int, default: null, desc: "data bus response latency high bound"}
+  - {name: dbus_max_outstanding, kind: int, default: null, desc: "data grants in flight (cap GEN_DBUS_MAX_OUTSTANDING)"}
+  - {name: dbus_err_rate, kind: int, default: null, desc: "per-mille probability of data_err_i per response"}
+  - {name: dbus_intg_err_rate, kind: int, default: null, desc: "per-mille probability of corrupting data_rdata_i integrity"}
+  - {name: dbus_intg_bits, kind: int, default: 1, desc: "bits flipped per corrupted data response"}
+  - {name: dbus_err_window, kind: string, default: null, desc: "lo:hi address window where injected data errors apply"}
+  - {name: dbus_err_half, kind: enum, values: [first, second, both, any], default: any, desc: "which half of a split access an injected error hits"}
+  - {name: dbus_err_store_perform, kind: bool, default: 1, desc: "an errored store still updates the memory model"}
+  - {name: key_delay_min, kind: int, default: 1, desc: "scramble-key response delay low bound"}
+  - {name: key_delay_max, kind: int, default: 20, desc: "scramble-key response delay high bound"}
+  - {name: key_never_cycles, kind: int, default: 0, desc: "cycles the key stays withheld in the withheld_then_valid regime"}
+  - {name: irq_min_gap, kind: int, default: 0, desc: "minimum cycles between interrupt events"}
+  - {name: irq_hold_min, kind: int, default: 1, desc: "interrupt line hold low bound (CYCLES policy)"}
+  - {name: irq_hold_max, kind: int, default: 50, desc: "interrupt line hold high bound"}
+  - {name: dbg_hold_min, kind: int, default: 1, desc: "debug_req_i hold low bound"}
+  - {name: dbg_hold_max, kind: int, default: 50, desc: "debug_req_i hold high bound"}
   # ---- layer-2 regime knobs (DV Lead, gen_fcov_plan.md Section REG; +gen_knob_<name>=<value>) ----
-  - {name: knob_imem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: instruction grant latency regime}
-  - {name: knob_imem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: instruction response latency regime}
-  - {name: knob_imem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: instr_err_i injection regime}
-  - {name: knob_imem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: instruction integrity corruption regime}
-  - {name: knob_imem_outstanding_cap, kind: enum, values: [cap1, cap2, cap4, cap8], default: cap8, desc: instruction grants in flight cap}
-  - {name: knob_dmem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: data grant latency regime}
-  - {name: knob_dmem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: data response latency regime}
-  - {name: knob_dmem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: data_err_i injection regime}
-  - {name: knob_dmem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: data integrity corruption regime}
-  - {name: knob_irq_regime, kind: enum, values: [quiet, sparse, storm], default: quiet, desc: interrupt event rate}
-  - {name: knob_irq_line_mix, kind: enum, values: [single, multi, fast_only, with_nmi], default: single, desc: lines per interrupt event}
-  - {name: knob_irq_hold, kind: enum, values: [until_taken, through_handler, pulse], default: until_taken, desc: interrupt line release policy}
-  - {name: knob_debug_req_regime, kind: enum, values: [none, sparse, storm], default: none, desc: debug_req_i event rate}
-  - {name: knob_scr_key_delay, kind: enum, values: [immediate, delayed, withheld_then_valid], default: immediate, desc: scramble-key response regime}
-  - {name: knob_icache_ecc_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: icache RAM ECC injection regime}
-  - {name: knob_fetch_enable_regime, kind: enum, values: [always_on, toggling], default: always_on, desc: fetch_enable_i regime}
-  - {name: knob_mcounteren_writable, kind: enum, values: ["on", "off", invalid], default: "on", desc: mcounteren_writable_i encoding}
-  - {name: knob_instr_mix, kind: enum, values: [isa_only, m_heavy, compressed_heavy, bitmanip_heavy, csr_heavy, ls_heavy, branch_heavy, mixed], default: mixed, desc: program-side instruction mix (region marker)}
-  - {name: knob_priv_regime, kind: enum, values: [m_only, u_heavy, alternating], default: m_only, desc: program-side privilege regime (region marker)}
-  - {name: knob_pmp_regime, kind: enum, values: ["off", sparse, dense, mml_on], default: "off", desc: program-side PMP regime (region marker)}
+  - {name: knob_imem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: "instruction grant latency regime (windows: regime_windows.gnt_delay)"}
+  - {name: knob_imem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: "instruction response latency regime (windows: regime_windows.rvalid_delay)"}
+  - {name: knob_imem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "instr_err_i injection regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_imem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "instruction integrity corruption regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_imem_outstanding_cap, kind: enum, values: [cap1, cap2, cap4, cap8], default: cap8, desc: "instruction grants in flight cap (regime_windows.outstanding_cap)"}
+  - {name: knob_dmem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: "data grant latency regime (windows: regime_windows.gnt_delay)"}
+  - {name: knob_dmem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: "data response latency regime (windows: regime_windows.rvalid_delay)"}
+  - {name: knob_dmem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "data_err_i injection regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_dmem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "data integrity corruption regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_irq_regime, kind: enum, values: [quiet, sparse, storm], default: quiet, desc: "interrupt event rate"}
+  - {name: knob_irq_line_mix, kind: enum, values: [single, multi, fast_only, with_nmi], default: single, desc: "lines per interrupt event"}
+  - {name: knob_irq_hold, kind: enum, values: [until_taken, through_handler, pulse], default: until_taken, desc: "interrupt line release policy"}
+  - {name: knob_debug_req_regime, kind: enum, values: [none, sparse, storm], default: none, desc: "debug_req_i event rate"}
+  - {name: knob_scr_key_delay, kind: enum, values: [immediate, delayed, withheld_then_valid], default: immediate, desc: "scramble-key response regime"}
+  - {name: knob_icache_ecc_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "icache RAM ECC injection regime"}
+  - {name: knob_fetch_enable_regime, kind: enum, values: [always_on, toggling], default: always_on, desc: "fetch_enable_i regime"}
+  - {name: knob_mcounteren_writable, kind: enum, values: ["on", "off", invalid], default: "on", desc: "mcounteren_writable_i encoding"}
+  - {name: knob_instr_mix, kind: enum, values: [isa_only, m_heavy, compressed_heavy, bitmanip_heavy, csr_heavy, ls_heavy, branch_heavy, mixed], default: mixed, desc: "program-side instruction mix (region marker)"}
+  - {name: knob_priv_regime, kind: enum, values: [m_only, u_heavy, alternating], default: m_only, desc: "program-side privilege regime (region marker)"}
+  - {name: knob_pmp_regime, kind: enum, values: ["off", sparse, dense, mml_on], default: "off", desc: "program-side PMP regime (region marker)"}
   # ---- checker enables (+gen_chk_<id>=0|1, default 1; +gen_chk_all=0 disables all unless re-enabled) ----
-  - {name: chk_all, kind: bool, default: 1, desc: master checker enable (isolation mode +gen_chk_all=0 +gen_chk_<id>=1)}
-  - {name: chk_ibus_proto, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_ibus_outstanding, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_sva_rvalid_legal, kind: bool, default: 1, desc: TB self-check enable (stimulus legality)}
-  - {name: chk_dbus_proto, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbus_outstanding, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbus_split, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbus_store_intg, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_icram_write_ecc, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_icram_inval_sweep, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_icram_ecc_response, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_scrkey_proto, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_alert_minor, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_alert_bus, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_alert_internal, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_crash_dump, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_double_fault, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_core_busy, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_data_tag_quiet, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_fetch_en, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_irq_pending, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_irq_entry, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_irq_masked, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_nmi_entry, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_nmi_internal, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbg_entry, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbg_exc, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbg_masked, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbg_dret, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_dbg_trigger, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_ctr_mcycle, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_ctr_minstret, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_ctr_hpm_exact, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_ctr_hpm_bound, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_pmp_data, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_pmp_fetch, kind: bool, default: 1, desc: checker enable}
-  - {name: chk_isa, kind: bool, default: 1, desc: ISA comparator master enable}
-  - {name: chk_isa_pc, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_insn, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_trap, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_rd, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_mem, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_prv, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_pc_next, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_isa_csr, kind: bool, default: 1, desc: ISA compare field enable}
-  - {name: chk_rvfi_proto, kind: bool, default: 1, desc: RVFI stream sanity assertions (monitor)}
-  - {name: chk_t022_never, kind: bool, default: 1, desc: rtl-arch T-022 never-arc asserts in the binds home}
-  - {name: chk_bridge_accounting, kind: bool, default: 1, desc: TB self-check enable}
+  - {name: chk_all, kind: bool, default: 1, desc: "master checker enable (isolation mode +gen_chk_all=0 +gen_chk_<id>=1)"}
+  - {name: chk_ibus_proto, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_ibus_outstanding, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_sva_rvalid_legal, kind: bool, default: 1, desc: "TB self-check enable (stimulus legality)"}
+  - {name: chk_dbus_proto, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbus_outstanding, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbus_split, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbus_store_intg, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_icram_write_ecc, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_icram_inval_sweep, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_icram_ecc_response, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_scrkey_proto, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_alert_minor, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_alert_bus, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_alert_internal, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_crash_dump, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_double_fault, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_core_busy, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_data_tag_quiet, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_fetch_en, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_irq_pending, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_irq_entry, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_irq_masked, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_nmi_entry, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_nmi_internal, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbg_entry, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbg_exc, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbg_masked, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbg_dret, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_dbg_trigger, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_ctr_mcycle, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_ctr_minstret, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_ctr_hpm_exact, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_ctr_hpm_bound, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_pmp_data, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_pmp_fetch, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_isa, kind: bool, default: 1, desc: "ISA comparator master enable"}
+  - {name: chk_isa_pc, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_insn, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_trap, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_rd, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_mem, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_prv, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_pc_next, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_isa_csr, kind: bool, default: 1, desc: "ISA compare field enable"}
+  - {name: chk_rvfi_proto, kind: bool, default: 1, desc: "RVFI stream sanity assertions (monitor)"}
+  - {name: chk_t022_never, kind: bool, default: 1, desc: "rtl-arch T-022 never-arc asserts in the binds home"}
+  - {name: chk_bridge_accounting, kind: bool, default: 1, desc: "TB self-check enable"}
 
 # Bridge command kinds (C2): code = 1-based position; 0 is GEN_CMD_NONE. Rendered as GEN_CMD_<K>
-# (8-bit) in gen_tb_pkg.sv, CMD in gen_knobs.py and GEN_CMD_<K> in the shim header.
+# (8-bit) plus gen_cmd_name() in gen_tb_pkg.sv, CMD in gen_knobs.py and GEN_CMD_<K> in the shim header.
 bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC]
 
-# Constants: `sv` is the SystemVerilog right-hand side when it must reference ibex_pkg; `value`
-# is the integer for Python and C (both when the value is a literal). Order matters for SV.
+# Numeric meaning of the latency, rate and cap regimes (rendered as gen_regime_window / gen_regime_scalar
+# in gen_tb_pkg.sv and REGIME_WINDOWS in gen_knobs.py). Every key must be a value of the knobs that use the
+# group (checked at render time). rvalid classes follow gen_fcov_plan.md: min1 {1}, short {2..4}, long {5..};
+# gnt classes: d0 {0}, d1..d3 short, d4.. long.
+regime_windows:
+  gnt_delay:      {same_cycle: [0, 0], short: [1, 3], long: [4, 32], random: [0, 32]}
+  rvalid_delay:   {min1: [1, 1], short: [2, 4], long: [5, 32], random: [1, 32]}
+  rate_per_mille: {none: 0, rare: 2, frequent: 50}
+  outstanding_cap: {cap1: 1, cap2: 2, cap4: 4, cap8: 8}
+
+# Constants: `sv` is the SystemVerilog right-hand side when it must reference ibex_pkg; `value` is the
+# integer for Python and C when the value is a literal; `derive` names a renderer derivation that computes
+# the Python/C value from rtl/ibex_pkg.sv (the SV side keeps the expression; the renderer also emits a
+# `<NAME>_PY` mirror that gen_tb_top compares with the expression at time 0). Order matters for SV.
 constants:
   - {name: GEN_ICACHE_NUM_FB, value: 4, sv_type: int unsigned, desc: "icache fill buffers, the one re-typed localparam NUM_FB (rtl/ibex_icache.sv:72)"}
-  - {name: GEN_IBUS_MAX_OUTSTANDING, value: 8, sv: "GEN_ICACHE_NUM_FB * ibex_pkg::IC_LINE_BEATS", sv_type: int unsigned, desc: "instruction beats in flight (NUM_FB x IC_LINE_BEATS; rtl-arch T-051 2.3)"}
+  - {name: GEN_IBUS_MAX_OUTSTANDING, derive: ibus_max_outstanding, sv: "GEN_ICACHE_NUM_FB * ibex_pkg::IC_LINE_BEATS", sv_type: int unsigned, desc: "instruction beats in flight (NUM_FB x IC_LINE_BEATS; rtl-arch T-051 2.3)"}
   - {name: GEN_DBUS_MAX_OUTSTANDING, value: 2, sv_type: int unsigned, desc: "data beats in flight, the two halves of one split access (rtl/ibex_load_store_unit.sv:403-405)"}
   - {name: GEN_CSR_WRITE_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from a CSR-write commit edge to its RVFI record (v3 T-051 2.1, predicted, pinned by a directed test)"}
   - {name: GEN_TRAP_TO_RVFI_OFFSET, value: 1, sv_type: int unsigned, desc: "cycles from a trap/mret/dret commit edge to its RVFI record (v3 T-051 2.1)"}
   - {name: GEN_IRQ_MARKER_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)"}
   - {name: GEN_RVFI_ID_EXIT_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)"}
-  - {name: GEN_ICACHE_ECC_WINDOW, value: 1, sv_type: int unsigned, desc: "alert_minor_o in the corrupted-rdata cycle (window 1 counted from the lookup request); invalidation write one cycle later (v3 T-051 2.4)"}
+  - {name: GEN_ICACHE_ECC_WINDOW, value: 1, sv_type: int unsigned, desc: "alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)"}
   - {name: GEN_IRQ_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)"}
   - {name: GEN_DBG_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)"}
   - {name: GEN_CLK_PERIOD_NS, value: 10, sv_type: int unsigned, desc: "TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it"}
-  - {name: GEN_MEM_READBACK_WORDS_DEFAULT, value: 64, sv_type: int unsigned, desc: "default MEM_PEEK read-back sample size"}
-  - {name: GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT, value: 100000, sv_type: int unsigned, desc: "default alive watchdog"}
-  - {name: GEN_IRQ_FAST_MASK, value: 2147418112, sv: "((32'h1 << $bits(ibex_pkg::irqs_t) - 3) - 1) << 16", sv_type: "logic [31:0]", desc: "mie/mip fast interrupt bits 16..30 (15 fast lines); the shim installs them in gen_mie_csr_t"}
+  - {name: GEN_MEM_READBACK_WORDS_DEFAULT, value: 64, sv_type: int unsigned, desc: "default MEM_PEEK read-back sample size (+gen_mem_readback_words)"}
+  - {name: GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT, value: 100000, sv_type: int unsigned, desc: "default alive watchdog (+gen_alive_timeout)"}
+  - {name: GEN_FINISH_TIMEOUT_CYCLES_DEFAULT, value: 20000, sv_type: int unsigned, desc: "default finish-handshake budget (+gen_finish_timeout)"}
+  - {name: GEN_IRQ_FAST_W, derive: irq_fast_w, sv: "$bits(GEN_IRQS_ZERO.irq_fast)", sv_type: int unsigned, desc: "fast interrupt lines (width of ibex_pkg::irqs_t.irq_fast)"}
+  - {name: GEN_IRQ_FAST_MASK, derive: irq_fast_mask, sv: "((32'h1 << GEN_IRQ_FAST_W) - 1) << 16", sv_type: "logic [31:0]", desc: "mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t"}
 
 # TB memory map (test equipment). DM windows are read from gen_dut_top.sv parameters and the
 # program window from gen_riscv_dv_target/gen_link.ld at generation time; the MMIO page and its
 # registers are defined here. Every address renders as a 32'h parameter in gen_tb_pkg.sv, as
-# MEMORY_MAP in gen_knobs.py and as GEN_MM_* in gen_isa_shim_map.h.
+# MEMORY_MAP in gen_knobs.py and as GEN_MM_* in gen_isa_shim_map.h; each register also renders its size.
 memory_map:
   boot_addr_default: 0x80000000
+  boot_page_mask: 0xFFFFFF00     # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv)
   mmio_base: 0x8FFFF000
   mmio_size: 0x1000
-  registers:            # offsets inside the MMIO page
-    sig_addr: 0x000      # riscv-dv signature_addr window (TEST_RESULT and signature writes)
-    irq_ack_addr: 0x100  # handler store releases the pending line (UNTIL_ACK policy)
-    eot_addr: 0x104      # end-of-test register (in addition to the tohost symbol)
-    phase_mark_addr: 0x108  # program-side region marker store (DV Lead REG phase log)
+  registers:            # offset and size inside the MMIO page
+    sig_addr: {offset: 0x000, size: 0x100}   # riscv-dv signature_addr window (TEST_RESULT and signature writes)
+    irq_ack_addr: {offset: 0x100, size: 0x4} # handler store releases the pending line (UNTIL_ACK policy)
+    eot_addr: {offset: 0x104, size: 0x4}     # end-of-test register (in addition to the tohost symbol)
+    phase_mark_addr: {offset: 0x108, size: 0x4}  # program-side region marker store (DV Lead REG phase log)

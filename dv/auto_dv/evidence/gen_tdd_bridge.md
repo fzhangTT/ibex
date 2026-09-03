@@ -88,3 +88,65 @@ The alive watchdog `$fatal`s when Python never sets `alive` (budget from `+gen_a
 unknown `+gen_*` plusarg is `uvm_fatal GEN_UNKNOWN_PLUSARG` at time 0 (A-23); an enum knob value outside
 its yaml set is `uvm_fatal GEN_BAD_KNOB` naming the legal values. In all three the cocotb test reports
 FAIL, so the run fails through collected mechanisms, never through the exit code (simv exits 0 each time).
+
+## 5. T-068 (2026-09-03): retention audit, the uvm_error path forced red, new guards
+
+Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/bridge/` (manifest `gen_tdd_logs/gen_manifest.md`). The 1b
+logs quoted in Sections 1-4 are retained there as `handles_red.log`, `handles_green.log`, `bridge_red.log`,
+`ut_bridge_red_1b_sim.log`, `ut_bridge_green_1b_*.log`, `neg_noalive_1b_*.log`, `neg_unknown_plusarg_1b_*.log`,
+`neg_bad_enum_1b_*.log`.
+
+Correction to Section 2: the two compile defects disclosed there (5 UTOPN, 10 ICPD_INIT) have no retained
+compile log; `out_1b_red/compile.log` is the third, clean compile. They are UNRETAINED (the fixes are visible in
+the code: `ibex_cheriot_pkg::cap_t`, `always` in gen_bridge_if).
+
+### 5.1 The uvm_error failure path forced red through the flow's verdict (Critic 1b M-1)
+
+The dangerous form for a cocotb-master TB is cocotb PASS with UVM_ERROR > 0. Two runs show it and the flow's
+verdict (`gen_verdict.decide`, the same function `gen_run.py` uses) fails both:
+
+1. Accidental evidence from step 1c (retained `ut_bridge_1c_uvm_error_sim.log` / `_stdout.log`): gen_ut_bridge's
+   REGIME_SET command reached `gen_cmd_dispatch`, which errors on a kind without a consumer:
+   ```
+   UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(84) @ 5500: uvm_test_top.env.dispatch [GEN_CMD_DISPATCH] command REGIME_SET has no consumer yet
+   UVM_ERROR :    1
+   ** TESTS=1 PASS=1 FAIL=0 SKIP=0
+   ```
+   Verdict on that log (run by the step-1c reviewer and again in T-068): FAIL, uvm_error.
+2. Deliberate run on the T-068 build, `neg_uvm_error_cocotb_pass` (gen_ut_bridge with `+gen_boot_addr=00000000`:
+   the first fetch hits the unmapped page, every fetch is a collected `MEM_UNMAPPED` error, the bridge test
+   itself passes). Retained `neg_uvm_error_cocotb_pass_t068_sim.log`, `_stdout.log`, `_verdict.txt`:
+   ```
+   UVM_ERROR @ 9000: reporter [MEM_UNMAPPED] read of unmapped address 0x00000080
+   UVM_ERROR :   23
+   ** TESTS=1 PASS=1 FAIL=0 SKIP=0
+   verdict: FAIL
+   reason: uvm_error at log line 30
+   uvm_counts: {'INFO': 13, 'WARNING': 1, 'ERROR': 23, 'FATAL': 0}
+   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+   ```
+   The Critic named MEM_PEEK-without-a-model as the provoker; at HEAD `gen_env` always builds the memory model,
+   so that branch of `gen_bridge::peek_word` is unreachable from a run. The unmapped-boot form exercises the same
+   mechanism (a `uvm_error` raised by a TB component while Python finishes cleanly).
+
+### 5.2 New guards proven red on the T-068 build
+
+- Bare bool plusarg (`neg_bare_bool_t068_sim.log`): `+gen_chk_all` without `=`:
+  `UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(200) @ 0: uvm_test_top [GEN_BARE_PLUSARG] +gen_chk_all needs =0 or =1 (a bare bool plusarg would be a silent no-op)`; verdict FAIL uvm_fatal.
+- Vacuous-pass guard (TB_CONTRACT Section 6): a pure-SV build of gen_tb_top (no `+define+COCOTB_SIM`, no cocotb
+  triple; `dv/auto_dv/work/tb-infra/out_t068_nococotb`, vcs exit 0) run directly (`neg_no_cocotb_t068_sim.log`):
+  `UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(210) @ 0: uvm_test_top [GEN_NO_COCOTB] gen_tb_top tests are cocotb-driven; a pure-SV build of this top would pass vacuously (TB_CONTRACT Section 6)`.
+- The three 1b negatives re-run on the T-068 build with the flow's verdict: `neg_noalive` (`GEN_ALIVE_TIMEOUT:
+  Python never set the alive bit within 3000 cycles`, verdict FAIL sv_fatal), `neg_unknown_plusarg` and
+  `neg_bad_enum` (UVM_FATAL at 0, verdict FAIL uvm_fatal); the negative module now resolves its handles through
+  `GenHandles` and waits with one `Timer` instead of 20000 `ClockCycles`.
+- Green re-run `ut_bridge_green_t068_*`: `GEN_UT_BRIDGE_PASS`, `UVM_ERROR : 0`, `TESTS=1 PASS=1`, verdict PASS.
+
+### 5.3 Behaviour changes in this landing
+
+`GenBridge.finish()` asserts the command accounting first, then drops `stim_active`, then raises `finish_req`
+(TB_CONTRACT Section 2 ordering) and takes its default budget from `+gen_finish_timeout` (whose default is the
+rendered `GEN_FINISH_TIMEOUT_CYCLES_DEFAULT`); the banner prints `boot_addr` and `hart_id`
+(`GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 ...`);
+`gen_cmd_item::kind_name()` uses the rendered `gen_cmd_name()`; the clock half period is written in explicit ns.
+Each local run now writes `run_header.txt` (UTC stamp, host, seed, module, plusargs) and `verdict.txt`.

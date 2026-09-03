@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: assertion_failure at log line 31
+evidence: 	Offending '(outstanding > 0)'
+uvm_counts: {'INFO': 13, 'WARNING': 1, 'ERROR': 2, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

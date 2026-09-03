@@ -78,7 +78,7 @@ package gen_env_pkg;
     endfunction
     function void write(gen_cmd_item t);
       case (t.kind)
-        GEN_CMD_FETCH_EN: begin ctrl.set_fetch_en(t.arg[0]); routed++; end
+        GEN_CMD_FETCH_EN: begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
         GEN_CMD_MEM_PEEK, GEN_CMD_MISC: routed++;   // answered by the bridge / no-op
         default: begin
           ignored++;
@@ -132,10 +132,10 @@ package gen_env_pkg;
       sig_h   = new("GEN_SIG");
       ack_h   = new("GEN_IRQ_ACK");
       phase_h = new("GEN_PHASE_MARK");
-      mem.add_mmio(GEN_MM_SIG_ADDR, 32'h100, sig_h);
-      mem.add_mmio(GEN_MM_IRQ_ACK_ADDR, 32'h4, ack_h);
-      mem.add_mmio(GEN_MM_EOT_ADDR, 32'h4, eot_h);
-      mem.add_mmio(GEN_MM_PHASE_MARK_ADDR, 32'h4, phase_h);
+      mem.add_mmio(GEN_MM_SIG_ADDR, GEN_MM_SIG_SIZE, sig_h);
+      mem.add_mmio(GEN_MM_IRQ_ACK_ADDR, GEN_MM_IRQ_ACK_SIZE, ack_h);
+      mem.add_mmio(GEN_MM_EOT_ADDR, GEN_MM_EOT_SIZE, eot_h);
+      mem.add_mmio(GEN_MM_PHASE_MARK_ADDR, GEN_MM_PHASE_MARK_SIZE, phase_h);
       if (cfg.tohost_addr_set) mem.add_watch(cfg.tohost_addr, eot_h);
       // agents
       ibus_agent = gen_bus_agent::type_id::create("ibus_agent", this);
@@ -196,6 +196,8 @@ package gen_env_pkg;
         nm = a.substr(1, eq - 1);
         if (!gen_is_known_plusarg(nm))
           `uvm_fatal("GEN_UNKNOWN_PLUSARG", $sformatf("unknown plusarg %s (names live in gen_tb_knobs.yaml)", a))
+        if (eq == a.len() && gen_is_bool_plusarg(nm))
+          `uvm_fatal("GEN_BARE_PLUSARG", $sformatf("%s needs =0 or =1 (a bare bool plusarg would be a silent no-op)", a))
       end
     endfunction
 
@@ -204,6 +206,9 @@ package gen_env_pkg;
       int unsigned s;
       super.build_phase(phase);
       cfg = gen_env_cfg::type_id::create("cfg");
+`ifndef COCOTB_SIM
+      `uvm_fatal("GEN_NO_COCOTB", "gen_tb_top tests are cocotb-driven; a pure-SV build of this top would pass vacuously (TB_CONTRACT Section 6)")
+`endif
       check_unknown_plusargs();
       cfg.parse_plusargs();
       if (!cfg.validate(msg)) `uvm_fatal("GEN_BAD_KNOB", msg)
@@ -229,8 +234,8 @@ package gen_env_pkg;
 `else
       $display("%s define COCOTB_SIM=0 (pure-SV run: the alive watchdog will fatal unless a test sets alive)", GEN_BANNER_TAG);
 `endif
-      $display("%s alive_timeout=%0d finish_timeout=%0d mem_image=%s tohost=%s", GEN_BANNER_TAG,
-               cfg.alive_timeout, cfg.finish_timeout, cfg.mem_image_set ? cfg.mem_image : "none",
+      $display("%s boot_addr=0x%08h hart_id=0x%08h alive_timeout=%0d finish_timeout=%0d mem_image=%s tohost=%s", GEN_BANNER_TAG,
+               cfg.boot_addr, cfg.hart_id, cfg.alive_timeout, cfg.finish_timeout, cfg.mem_image_set ? cfg.mem_image : "none",
                cfg.tohost_addr_set ? $sformatf("0x%08h", cfg.tohost_addr) : "none");
       $display("%s knobs imem gnt=%s rvalid=%s err=%s intg=%s cap=%s dmem gnt=%s rvalid=%s err=%s intg=%s key=%s icram_init=%s",
                GEN_BANNER_TAG, cfg.knob_imem_gnt_delay, cfg.knob_imem_rvalid_delay, cfg.knob_imem_err_rate,

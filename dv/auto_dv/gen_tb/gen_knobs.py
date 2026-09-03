@@ -1,33 +1,33 @@
 """Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.
-Python mirror of gen_tb_pkg.sv: plusarg names and defaults, regime knob value sets, TB constants,
-the memory map and the ISA string (one origin, architecture C11)."""
+Python mirror of gen_tb_pkg.sv: plusarg names and defaults, regime knob value sets and windows, TB
+constants, the memory map and the ISA string (one origin, architecture C11)."""
 
 ISA_STRING = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp"
 
 PLUSARGS = {
     "build_config": {"plusarg": "gen_build_config", "kind": "string", "default": 'opentitan', "values": None, "debug_only": False, "desc": 'build configuration name echoed in the banner (must match the compile)'},
     "smoke_cycles": {"plusarg": "gen_smoke_cycles", "kind": "int", "default": 3000, "values": None, "debug_only": False, "desc": 'bounded run length of gen_smoke_tb_top'},
-    "smoke_intg_flip": {"plusarg": "gen_smoke_intg_flip", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'smoke red-run knob'},
-    "dbg_csr_probe": {"plusarg": "gen_dbg_csr_probe", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'probe P6 (docs/gen_probe_register.md)'},
+    "smoke_intg_flip": {"plusarg": "gen_smoke_intg_flip", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'smoke red-run knob, bit of the SECDED-encoded NOP word to flip (absent = no corruption)'},
+    "dbg_csr_probe": {"plusarg": "gen_dbg_csr_probe", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'probe P6 (docs/gen_probe_register.md), debug only, never in a measured run'},
     "mem_image": {"plusarg": "gen_mem_image", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'program image (.vmem) loaded once at time 0'},
-    "mem_image_crc32": {"plusarg": "gen_mem_image_crc32", "kind": "hex", "default": None, "values": None, "debug_only": False, "desc": 'CRC-32 over (index'},
+    "mem_image_crc32": {"plusarg": "gen_mem_image_crc32", "kind": "hex", "default": None, "values": None, "debug_only": False, "desc": 'CRC-32 over (index, word) pairs from the .sym.json sidecar, recomputed after load'},
     "mem_image_words": {"plusarg": "gen_mem_image_words", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'word count from the sidecar'},
     "mem_readback_words": {"plusarg": "gen_mem_readback_words", "kind": "int", "default": 64, "values": None, "debug_only": False, "desc": 'words Python reads back through MEM_PEEK and compares with the .vmem'},
     "tohost_addr": {"plusarg": "gen_tohost_addr", "kind": "hex", "default": None, "values": None, "debug_only": False, "desc": 'address of the program tohost word (sidecar symbol); a store there ends the test with the stored code'},
     "mem_unmapped_ok": {"plusarg": "gen_mem_unmapped_ok", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'unmapped bus access returns an error response instead of a TB error'},
     "boot_addr": {"plusarg": "gen_boot_addr", "kind": "hex", "default": 2147483648, "values": None, "debug_only": False, "desc": 'boot_addr_i (must match the image entry page)'},
+    "hart_id": {"plusarg": "gen_hart_id", "kind": "hex", "default": 0, "values": None, "debug_only": False, "desc": 'hart_id_i (architecture C1)'},
     "alive_timeout": {"plusarg": "gen_alive_timeout", "kind": "int", "default": 100000, "values": None, "debug_only": False, "desc": 'cycles before the SV alive watchdog fatals (TB_CONTRACT Section 2)'},
-    "finish_timeout": {"plusarg": "gen_finish_timeout", "kind": "int", "default": 20000, "values": None, "debug_only": False, "desc": 'default finish-handshake budget in cycles (Python overrides per test)'},
-    "regime_sched": {"plusarg": "gen_regime_sched", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'layer-3 schedule knob:value@r<N>|c<N>'},
-    "rvfi_trace": {"plusarg": "gen_rvfi_trace", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'write an ASCII RVFI trace file (debug only)'},
+    "finish_timeout": {"plusarg": "gen_finish_timeout", "kind": "int", "default": 20000, "values": None, "debug_only": False, "desc": 'finish-handshake budget in cycles used by GenBridge.finish() when the test passes none'},
+    "regime_sched": {"plusarg": "gen_regime_sched", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'layer-3 schedule knob:value@r<N>|c<N>,... (consumed when supplied, else derived from RANDOM_SEED and echoed)'},
+    "rvfi_trace": {"plusarg": "gen_rvfi_trace", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'print every RVFI record (debug only)'},
     "fcov_en": {"plusarg": "gen_fcov_en", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'instantiate covergroups'},
     "icram_init": {"plusarg": "gen_icram_init", "kind": "enum", "default": 'random', "values": ['zero', 'random'], "debug_only": False, "desc": 'initial contents of the icache tag/data RAM models'},
     "fetch_en_at_reset": {"plusarg": "gen_fetch_en_at_reset", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)'},
     "key_reset_valid": {"plusarg": "gen_key_reset_valid", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'ic_scr_key_valid_i high out of reset (ibex_top behaviour)'},
-    "sb_trace": {"plusarg": "gen_sb_trace", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'scoreboard per-record trace (debug only)'},
-    "ut_lockstep_min_ratio_pct": {"plusarg": "gen_ut_lockstep_min_ratio_pct", "kind": "int", "default": 90, "values": None, "debug_only": False, "desc": 'lock-step test'},
-    "isa_string": {"plusarg": "gen_isa_string", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'model ISA string override (debug only; the default is GEN_ISA_STRING)'},
-    "isa_log": {"plusarg": "gen_isa_log", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'model commit log path for debug'},
+    "sb_trace": {"plusarg": "gen_sb_trace", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'scoreboard per-record trace (debug only)'},
+    "isa_string": {"plusarg": "gen_isa_string", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model ISA string override (debug only; the default is GEN_ISA_STRING)'},
+    "isa_log": {"plusarg": "gen_isa_log", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model commit log path (debug only)'},
     "ut_boot_retire": {"plusarg": "gen_ut_boot_retire", "kind": "int", "default": 200, "values": None, "debug_only": False, "desc": 'retirements the boots-and-retires test waits for'},
     "ibus_gnt_min": {"plusarg": "gen_ibus_gnt_min", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency low bound (cycles)'},
     "ibus_gnt_max": {"plusarg": "gen_ibus_gnt_max", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency high bound'},
@@ -57,15 +57,15 @@ PLUSARGS = {
     "irq_hold_max": {"plusarg": "gen_irq_hold_max", "kind": "int", "default": 50, "values": None, "debug_only": False, "desc": 'interrupt line hold high bound'},
     "dbg_hold_min": {"plusarg": "gen_dbg_hold_min", "kind": "int", "default": 1, "values": None, "debug_only": False, "desc": 'debug_req_i hold low bound'},
     "dbg_hold_max": {"plusarg": "gen_dbg_hold_max", "kind": "int", "default": 50, "values": None, "debug_only": False, "desc": 'debug_req_i hold high bound'},
-    "knob_imem_gnt_delay": {"plusarg": "gen_knob_imem_gnt_delay", "kind": "enum", "default": 'short', "values": ['same_cycle', 'short', 'long', 'random'], "debug_only": False, "desc": 'instruction grant latency regime'},
-    "knob_imem_rvalid_delay": {"plusarg": "gen_knob_imem_rvalid_delay", "kind": "enum", "default": 'short', "values": ['min1', 'short', 'long', 'random'], "debug_only": False, "desc": 'instruction response latency regime'},
-    "knob_imem_err_rate": {"plusarg": "gen_knob_imem_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'instr_err_i injection regime'},
-    "knob_imem_intg_err_rate": {"plusarg": "gen_knob_imem_intg_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'instruction integrity corruption regime'},
-    "knob_imem_outstanding_cap": {"plusarg": "gen_knob_imem_outstanding_cap", "kind": "enum", "default": 'cap8', "values": ['cap1', 'cap2', 'cap4', 'cap8'], "debug_only": False, "desc": 'instruction grants in flight cap'},
-    "knob_dmem_gnt_delay": {"plusarg": "gen_knob_dmem_gnt_delay", "kind": "enum", "default": 'short', "values": ['same_cycle', 'short', 'long', 'random'], "debug_only": False, "desc": 'data grant latency regime'},
-    "knob_dmem_rvalid_delay": {"plusarg": "gen_knob_dmem_rvalid_delay", "kind": "enum", "default": 'short', "values": ['min1', 'short', 'long', 'random'], "debug_only": False, "desc": 'data response latency regime'},
-    "knob_dmem_err_rate": {"plusarg": "gen_knob_dmem_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'data_err_i injection regime'},
-    "knob_dmem_intg_err_rate": {"plusarg": "gen_knob_dmem_intg_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'data integrity corruption regime'},
+    "knob_imem_gnt_delay": {"plusarg": "gen_knob_imem_gnt_delay", "kind": "enum", "default": 'short', "values": ['same_cycle', 'short', 'long', 'random'], "debug_only": False, "desc": 'instruction grant latency regime (windows: regime_windows.gnt_delay)'},
+    "knob_imem_rvalid_delay": {"plusarg": "gen_knob_imem_rvalid_delay", "kind": "enum", "default": 'short', "values": ['min1', 'short', 'long', 'random'], "debug_only": False, "desc": 'instruction response latency regime (windows: regime_windows.rvalid_delay)'},
+    "knob_imem_err_rate": {"plusarg": "gen_knob_imem_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'instr_err_i injection regime (rates: regime_windows.rate_per_mille)'},
+    "knob_imem_intg_err_rate": {"plusarg": "gen_knob_imem_intg_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'instruction integrity corruption regime (rates: regime_windows.rate_per_mille)'},
+    "knob_imem_outstanding_cap": {"plusarg": "gen_knob_imem_outstanding_cap", "kind": "enum", "default": 'cap8', "values": ['cap1', 'cap2', 'cap4', 'cap8'], "debug_only": False, "desc": 'instruction grants in flight cap (regime_windows.outstanding_cap)'},
+    "knob_dmem_gnt_delay": {"plusarg": "gen_knob_dmem_gnt_delay", "kind": "enum", "default": 'short', "values": ['same_cycle', 'short', 'long', 'random'], "debug_only": False, "desc": 'data grant latency regime (windows: regime_windows.gnt_delay)'},
+    "knob_dmem_rvalid_delay": {"plusarg": "gen_knob_dmem_rvalid_delay", "kind": "enum", "default": 'short', "values": ['min1', 'short', 'long', 'random'], "debug_only": False, "desc": 'data response latency regime (windows: regime_windows.rvalid_delay)'},
+    "knob_dmem_err_rate": {"plusarg": "gen_knob_dmem_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'data_err_i injection regime (rates: regime_windows.rate_per_mille)'},
+    "knob_dmem_intg_err_rate": {"plusarg": "gen_knob_dmem_intg_err_rate", "kind": "enum", "default": 'none', "values": ['none', 'rare', 'frequent'], "debug_only": False, "desc": 'data integrity corruption regime (rates: regime_windows.rate_per_mille)'},
     "knob_irq_regime": {"plusarg": "gen_knob_irq_regime", "kind": "enum", "default": 'quiet', "values": ['quiet', 'sparse', 'storm'], "debug_only": False, "desc": 'interrupt event rate'},
     "knob_irq_line_mix": {"plusarg": "gen_knob_irq_line_mix", "kind": "enum", "default": 'single', "values": ['single', 'multi', 'fast_only', 'with_nmi'], "debug_only": False, "desc": 'lines per interrupt event'},
     "knob_irq_hold": {"plusarg": "gen_knob_irq_hold", "kind": "enum", "default": 'until_taken', "values": ['until_taken', 'through_handler', 'pulse'], "debug_only": False, "desc": 'interrupt line release policy'},
@@ -141,7 +141,16 @@ CONSTANTS = {
     "GEN_CLK_PERIOD_NS": 10,
     "GEN_MEM_READBACK_WORDS_DEFAULT": 64,
     "GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT": 100000,
+    "GEN_FINISH_TIMEOUT_CYCLES_DEFAULT": 20000,
+    "GEN_IRQ_FAST_W": 15,
     "GEN_IRQ_FAST_MASK": 2147418112,
+}
+
+REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)
+    "gnt_delay": {"same_cycle": [0, 0], "short": [1, 3], "long": [4, 32], "random": [0, 32]},
+    "outstanding_cap": {"cap1": 1, "cap2": 2, "cap4": 4, "cap8": 8},
+    "rate_per_mille": {"none": 0, "rare": 2, "frequent": 50},
+    "rvalid_delay": {"min1": [1, 1], "short": [2, 4], "long": [5, 32], "random": [1, 32]},
 }
 
 KNOB_IDS = {  # regime knob -> REGIME_SET arg0; value index = position in PLUSARGS[name]['values']
@@ -183,6 +192,7 @@ CMD = {  # bridge command kinds (cmd_kind codes)
 
 MEMORY_MAP = {
     "boot_addr_default": 0x80000000,
+    "boot_page_mask": 0xffffff00,
     "boot_page": 0x80000000,
     "prog_size": 0x00100000,
     "dm_base": 0x1a110000,
@@ -193,9 +203,13 @@ MEMORY_MAP = {
     "mmio_base": 0x8ffff000,
     "mmio_size": 0x00001000,
     "sig_addr": 0x8ffff000,
+    "sig_size": 0x00000100,
     "irq_ack_addr": 0x8ffff100,
+    "irq_ack_size": 0x00000004,
     "eot_addr": 0x8ffff104,
+    "eot_size": 0x00000004,
     "phase_mark_addr": 0x8ffff108,
+    "phase_mark_size": 0x00000004,
 }
 
 DEBUG_ONLY = [p["plusarg"] for p in PLUSARGS.values() if p["debug_only"]]

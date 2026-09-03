@@ -1,0 +1,1 @@
+# run neg_bare_bool: 2026-09-03T09:10:51Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_chk_all]

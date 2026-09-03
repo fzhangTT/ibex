@@ -1,0 +1,3 @@
+MUT-003: dv/auto_dv/env/gen_agents_pkg.sv:277 original: vif.gnt = 1'b1;
+            grants++; | mutated: vif.gnt = 1'b1; vif.rvalid = 1'b1;   // MUT-003: a response asserted in the grant cycle
+            grants++;

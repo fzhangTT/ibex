@@ -105,3 +105,56 @@ Time: 775010 ps
 (The first re-run, `ut_bridge_1c`, produced one collected `uvm_error`: its REGIME_SET command now
 reaches `gen_cmd_dispatch`, which errors on a kind without a consumer, by design; the unit test's sixth
 command became a MISC and the run above is clean. REGIME_SET gets its consumer in step 2.)
+
+## 6. T-068 (2026-09-03): retention audit, the assertion shown to fire, re-runs
+
+Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/boot_agents/` (manifest `gen_tdd_logs/gen_manifest.md`): the
+step-1c red (`boot_red_1c_*`, `boot_red.log`), the step-1c greens (`boot_zc_1c_*`, `boot_rdv_s7_1c_*`,
+`compile_1c.log`) and the T-068 runs below.
+
+Corrections to Section 2: compile 1 (`Error-[NCE]` in gen_icache_ram.sv) and run 1 (the single read-back
+mismatch at 0x80000398) have no retained artifact; both are UNRETAINED. The fixes are visible in the code
+(bitwise fill; `+gen_fetch_en_at_reset` and the FETCH_EN consumer).
+
+### 6.1 sva_rvalid_legal: knob wired, shown to fire, ablation (cross-model 1c mediums 1 and 2)
+
+Section 4's "armed and silent" is not evidence that the check works. The knob was a no-op
+(`chk_rvalid_legal_en = 1'b1` unconditionally); it now follows `+gen_chk_sva_rvalid_legal` with the
+`+gen_chk_all` isolation rule and the agent reports its state at time 0 (`... ibus_agent: sva_rvalid_legal armed`
+or `... disabled by knob`). Mutation record MUT-003, `dv/auto_dv/mutations/gen_mut_sva_rvalid_legal.md`: the
+driver asserts `rvalid` together with `gnt` (gen_agents_pkg.sv:277); with every other check disabled the log
+carries exactly two errors, both `[sva_rvalid_legal]` (`ibus: rvalid with no outstanding grant at cycle 5` and
+`cycle 8`), cocotb PASS, flow verdict FAIL (assertion_failure); with `+gen_chk_sva_rvalid_legal=0` the same
+build runs to `UVM_ERROR : 0` and verdict PASS. Logs: `gen_tdd_logs/mutations/mut003_*`. A first attempt
+(`p.due = cycle`) turned out to be a legal one-cycle response and did not fire; it is retained as
+`mut003_attempt1_*`.
+
+### 6.2 Other corrections in the agents
+
+- The published `gen_bus_txn` now carries the real grant latency: `cycle_req` is the first cycle the request
+  was seen and `gnt_delay = cycle_gnt - cycle_req` (they were 0 and the grant cycle).
+- Latency windows, rates and caps come from the rendered `gen_regime_window` / `gen_regime_scalar` (source: the
+  yaml `regime_windows` block); the rvalid classes follow the fcov plan (min1 1, short 2..4, long 5..32,
+  random 1..32), so the default `short` regime now draws 2..4 instead of 1..3 (visible in the agent report
+  `rvalid=2..4(short)` and in the longer boot: 366 cycles for 100 retirements, 343 before).
+- The integrity geometry is checked against the interface width at build time (`GEN_BUS_DRIVER` fatal when
+  `$bits(vif.rdata)` is not 39); the flip indices derive from that width.
+- FETCH_EN commands are queued by `gen_ctrl_driver` and applied at the next falling edge like every other
+  driver (`UVM_INFO ... [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)` at 65000 in boot_zc, one negedge
+  after the command).
+- MMIO window sizes come from the rendered `GEN_MM_*_SIZE`; the boot-page mask in Python comes from
+  `MEMORY_MAP["boot_page_mask"]`; the read-back sample prefers non-zero words.
+- `gen_ut_boot` asserts its precondition: run without `+gen_fetch_en_at_reset=0` it fails at once
+  (`boot_noprecond_t068_stdout.log`: `AssertionError: GEN_UT_BOOT: run with +gen_fetch_en_at_reset=0 (the
+  read-back precedes execution)`, verdict FAIL cocotb_summary).
+
+### 6.3 Re-runs on the T-068 build (compile `compile_t068.log`, vcs exit 0, 0 errors)
+
+```
+boot_zc (boot_zc_t068_*): GEN_UT_BOOT read-back ok: 64 words | GEN_UT_BOOT retired 100 (target 100) at cycle 366
+  | GEN_UT_BOOT tohost code 0x00000001 | GEN_UT_BOOT_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
+boot_rdv_s7 (boot_rdv_s7_t068_*): read-back ok: 64 words | retired 2000 (target 2000) at cycle 10065
+  | tohost code 0x00000001 | GEN_UT_BOOT_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
+```
+`runs_summary_t068.txt` carries the twelve T-068 runs with their verdicts (the summary columns are now the
+flow's verdict and reason, not a grep of the driver's own).

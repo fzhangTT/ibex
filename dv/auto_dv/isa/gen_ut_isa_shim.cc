@@ -1,7 +1,8 @@
 // gen_ut_isa_shim: unit test of the ISA shim (architecture C5; shim unit test 1 of the build order).
-// Written before gen_isa_shim.cc existed (TDD). Checks: Ibex reset legalization, the real Zc image run
-// through the model to its tohost store, grevi/gorci decode (ratified aliases execute, other immediates
-// trap and are served by gen_isa_exec_reference), mtvec/mie/custom-CSR legalization, step bookkeeping.
+// Checks: Ibex reset legalization, the real Zc image run through the model to its tohost store (with the
+// per-step register/memory accessors on its cm.push/cm.pop steps), grevi/gorci decode (ratified aliases
+// execute, other immediates trap and are served by gen_isa_exec_reference), mtvec/mie/custom-CSR
+// legalization, step bookkeeping.
 //   gen_ut_isa_shim <path/to/prog.vmem>
 #include "gen_isa_shim.h"
 #include "gen_isa_shim_map.h"
@@ -47,9 +48,65 @@ int main(int argc, char** argv) {
   check("step 1 retired", st.retired, 1);
   check("step 1 pc_after = _start (jal +4)", st.pc_after, GEN_MM_BOOT_PAGE + 0x84u);
   check("step 1 no trap", st.trap, 0);
+  check("step 1 fetch_insn(pc_before) = insn", gen_isa_fetch_insn(st.pc_before), st.insn);
+  check("step 1 (j) logs no x-register write", st.reg_writes, 0);
+  { uint32_t i = 0, v = 0; check("step 1 reg_write(0) -> -1", gen_isa_reg_write(0, &i, &v) == -1, 1); }
   int steps = 1, tohost_seen = 0; unsigned tohost_val = 0;
+  int fetch_mismatch = 0, rd_we_mismatch = 0, push_seen = 0, pop_seen = 0;
   for (; steps < 2000 && !tohost_seen; steps++) {
     if (gen_isa_step(&st) != 0) { std::printf("step error: %s\n", gen_isa_last_error()); fails++; break; }
+    if (gen_isa_fetch_insn(st.pc_before) != st.insn) fetch_mismatch++;
+    if ((st.reg_writes > 0) != (st.rd_we != 0)) rd_we_mismatch++;
+    if (!push_seen && st.mem_writes >= 2) {   // cm.push: one store per listed register, top register first at sp-4
+      push_seen = 1;
+      std::printf("   (multi-store step: pc 0x%x insn 0x%x, %d writes)\n", st.pc_before, st.insn, st.mem_writes);
+      int bad_rc = 0, bad_align = 0, bad_size = 0, bad_stride = 0;
+      uint32_t a = 0, d = 0, sz = 0, prev = 0;
+      for (int i = 0; i < st.mem_writes; i++) {
+        if (gen_isa_mem_write(i, &a, &d, &sz) != 0) { bad_rc++; continue; }
+        if (a & 3) bad_align++;
+        if (sz != 4) bad_size++;
+        if (i > 0 && a != prev - 4) bad_stride++;
+        if (i == 0) { check("cm.push mem_write(0) addr = mem_addr", a, st.mem_addr); check("cm.push mem_write(0) data = mem_wdata", d, st.mem_wdata); }
+        prev = a;
+      }
+      check("cm.push mem_write(i) rc 0 for every i", bad_rc, 0);
+      check("cm.push store addresses 4-byte aligned", bad_align, 0);
+      check("cm.push store sizes 4", bad_size, 0);
+      check("cm.push consecutive stores descend by 4", bad_stride, 0);
+      check("cm.push mem_write(mem_writes) -> -1", gen_isa_mem_write(st.mem_writes, &a, &d, &sz) == -1, 1);
+      check("cm.push logs no loads", st.mem_reads, 0);
+      check("cm.push mem_read(0) -> -1", gen_isa_mem_read(0, &a, &d, &sz) == -1, 1);
+    }
+    if (!pop_seen && st.reg_writes >= 2) {    // cm.pop: one load and one register write per listed register, plus sp
+      pop_seen = 1;
+      std::printf("   (multi-register-write step: pc 0x%x insn 0x%x, %d writes, %d reads)\n", st.pc_before, st.insn, st.reg_writes, st.mem_reads);
+      int bad_rc = 0, bad_x0 = 0, bad_order = 0;
+      uint32_t idx = 0, val = 0, prev_idx = 0;
+      for (int i = 0; i < st.reg_writes; i++) {
+        if (gen_isa_reg_write(i, &idx, &val) != 0) { bad_rc++; continue; }
+        if (idx == 0) bad_x0++;
+        if (i > 0 && idx <= prev_idx) bad_order++;
+        prev_idx = idx;
+      }
+      check("cm.pop reg_write(i) rc 0 for every i", bad_rc, 0);
+      check("cm.pop reg_write never reports x0", bad_x0, 0);
+      check("cm.pop register indices strictly ascending (Spike log order)", bad_order, 0);
+      check("cm.pop reg_write(reg_writes) -> -1", gen_isa_reg_write(st.reg_writes, &idx, &val) == -1, 1);
+      check("cm.pop logs >= 2 loads", st.mem_reads >= 2, 1);
+      int rbad_rc = 0, rbad_align = 0, rbad_size = 0;
+      uint32_t a = 0, d = 0, sz = 0;
+      for (int i = 0; i < st.mem_reads; i++) {
+        if (gen_isa_mem_read(i, &a, &d, &sz) != 0) { rbad_rc++; continue; }
+        if (a & 3) rbad_align++;
+        if (sz != 4) rbad_size++;
+      }
+      check("cm.pop mem_read(i) rc 0 for every i", rbad_rc, 0);
+      check("cm.pop load addresses 4-byte aligned", rbad_align, 0);
+      check("cm.pop load sizes 4", rbad_size, 0);
+      check("cm.pop mem_read(mem_reads) -> -1", gen_isa_mem_read(st.mem_reads, &a, &d, &sz) == -1, 1);
+      check("cm.pop logs no stores", st.mem_writes, 0);
+    }
     if (st.mem_writes > 0 && st.mem_addr == 0x80000280u) { tohost_seen = 1; tohost_val = st.mem_wdata; }
     if (st.trap) { std::printf("unexpected trap cause 0x%x at pc 0x%x\n", st.trap_cause, st.pc_before); fails++; break; }
   }
@@ -57,6 +114,11 @@ int main(int argc, char** argv) {
   check("tohost value 1 (pass)", tohost_val, 1);
   check("steps to tohost within 400", steps < 400, 1);
   std::printf("   (%d steps)\n", steps);
+  check("fetch_insn(pc_before) = insn on every step", fetch_mismatch, 0);
+  check("rd_we agrees with reg_writes on every step", rd_we_mismatch, 0);
+  check("a multi-store step (cm.push) was found", push_seen, 1);
+  check("a multi-register-write step (cm.pop) was found", pop_seen, 1);
+  check("fetch_insn(unmapped) = 0", gen_isa_fetch_insn(0x00000000u), 0);
 
   std::puts("-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them");
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
@@ -75,6 +137,12 @@ int main(int argc, char** argv) {
   check("rev8 retires", st.retired, 1);
   check("rev8 rd", st.rd_addr, 1);
   check("rev8 value", st.rd_wdata, 0x78563412u);
+  check("rev8 reg_writes = 1", st.reg_writes, 1);
+  { uint32_t i = 0, v = 0;
+    check("rev8 reg_write(0) rc", gen_isa_reg_write(0, &i, &v), 0);
+    check("rev8 reg_write(0) idx = rd_addr", i, st.rd_addr);
+    check("rev8 reg_write(0) val = rd_wdata", v, st.rd_wdata);
+    check("rev8 reg_write(1) -> -1", gen_isa_reg_write(1, &i, &v) == -1, 1); }
   gen_isa_step(&st);
   check("orc.b retires", st.retired, 1);
   check("orc.b value", st.rd_wdata, 0xffffffffu);
@@ -84,6 +152,8 @@ int main(int argc, char** argv) {
   check("grevi imm 1 cause illegal (2)", st.trap_cause, 2);
   check("grevi imm 1 mtval = insn", st.trap_tval, 0x68115213u);
   check("grevi imm 1 retires 0", st.retired, 0);
+  check("grevi imm 1 fetch_insn(pc_before) = insn", gen_isa_fetch_insn(st.pc_before), st.insn);
+  check("grevi imm 1 logs no x-register write", st.reg_writes, 0);
   check("trap pc = mtvec base", st.pc_after, GEN_MM_BOOT_PAGE);
   uint32_t rd = 0;
   check("reference handles grevi imm 1", gen_isa_exec_reference(0x68115213u, 0x12345678u, 0, 0, &rd), 0);

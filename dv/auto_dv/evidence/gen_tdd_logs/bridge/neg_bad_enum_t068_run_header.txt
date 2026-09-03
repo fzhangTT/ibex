@@ -1,0 +1,1 @@
+# run neg_bad_enum: 2026-09-03T09:10:48Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_knob_irq_regime=loud]

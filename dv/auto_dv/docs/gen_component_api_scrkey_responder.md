@@ -27,8 +27,8 @@ Config from plusargs; bridge command KEY_MODE changes the regime at run time.
 |---|---|---|---|
 | `+gen_key_reset_valid=0|1` | `PLUSARG_KEY_RESET_VALID` | value of ic_scr_key_valid_i out of reset (1 = ibex_top behaviour; 0 forces a request at reset) | 1 |
 | `+gen_key_delay_min/max=<n>` | `PLUSARG_KEY_DELAY_MIN/MAX` | cycles valid stays low after a request | 1 / 20 |
-| `+gen_key_regime=immediate|short|long|never_window` | `PLUSARG_KEY_REGIME` | distribution set | short |
-| `+gen_key_never_cycles=<n>` | `PLUSARG_KEY_NEVER_CYCLES` | length of the never_window (key withheld) | 0 |
+| `+gen_knob_scr_key_delay=immediate|delayed|withheld_then_valid` | `PLUSARG_KNOB_SCR_KEY_DELAY` | scramble-key response regime (gen_tb_knobs.yaml): immediate = 1 cycle, delayed = `+gen_key_delay_min..max`, withheld_then_valid = `+gen_key_never_cycles` + 1 | immediate |
+| `+gen_key_never_cycles=<n>` | `PLUSARG_KEY_NEVER_CYCLES` | cycles the key stays withheld in the withheld_then_valid regime | 0 |
 | `+gen_chk_scrkey_proto` | `PLUSARG_CHK_SCRKEY_PROTO` | checker enable | 1 |
 
 ## 4. Wave-level behaviour

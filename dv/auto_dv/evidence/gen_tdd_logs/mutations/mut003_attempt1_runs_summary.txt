@@ -1,0 +1,3 @@
+mut003_isolated          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_chk_all=0 +gen_chk_sva_rvalid_legal=1] simv_exit=0 uvm_errors=0 verdict: verdict: FAIL reason: unexplained exit code None with clean log 
+mut003_default           module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[] simv_exit=0 uvm_errors=0 verdict: verdict: FAIL reason: unexplained exit code None with clean log 
+mut003_ablation          module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_chk_sva_rvalid_legal=0] simv_exit=0 uvm_errors=0 verdict: verdict: FAIL reason: unexplained exit code None with clean log 

@@ -1,0 +1,8 @@
+# RED run (lock-step test on the step-1c top: no RVFI monitor, no scoreboard; compile out_2a_red vcs exit 0)
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_2a_red/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build
+0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+5190.00ns INFO     cocotb.gen_tb_top                  GEN_UT_LOCKSTEP retired 169 compared 0 mismatches 0 tohost 0x00000001
+assert compared * 100 >= retired * min_ratio, f"GEN_UT_LOCKSTEP: compared {compared} of {retired} retired records (< {min_ratio}%)"
+AssertionError: GEN_UT_LOCKSTEP: compared 0 of 169 retired records (< 90%)
+** TESTS=1 PASS=0 FAIL=1 SKIP=0                                              5190.01           0.06      90266.84  **
+Time: 5190010 ps

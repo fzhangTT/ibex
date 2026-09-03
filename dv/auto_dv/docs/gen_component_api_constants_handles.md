@@ -31,7 +31,15 @@ windows come from `gen_dut_top.sv` parameters and the program window from `gen_l
 time. Deviation from the C11 sketch: no separate `gen_tb_knobs_pkg.sv`; the marked block inside
 `gen_tb_pkg.sv` keeps one file for the regex readers. The rest of gen_tb_pkg.sv (GEN_BANNER_TAG,
 GEN_RV32_NOP, IC geometry aliases, `gen_mubi_str`) is hand-written. `gen_tb/gen_handles.py` follows
-with gen_tb_top.
+with gen_tb_top. (T-068) `load()` refuses any key outside the schema (plusargs: name, kind, default,
+default_from, values, debug_only, desc; constants: name, value, derive, sv, sv_type, desc; memory_map:
+boot_addr_default, boot_page_mask, mmio_base, mmio_size, registers{offset,size}; top level: schema_version,
+isa_string, plusargs, bridge_cmds, constants, memory_map, regime_windows); derived constants (`derive:`)
+take their Python/C literal from a parse of rtl/ibex_pkg.sv and render a `_PY` mirror the TB top checks
+against the SV expression at time 0; `default_from:` resolves a plusarg default from a constant or
+memory-map key; `--src` and `--root` let the unit test run refused-fixture and stale-target mutations
+against a scratch copy; new knob `+gen_hart_id`; `+gen_ut_lockstep_min_ratio_pct` removed (the lock-step
+test asserts an exact count).
 
 SV imports `gen_tb_pkg::*`; Python imports `gen_tb.gen_knobs` and `gen_tb.gen_handles`; the
 shim includes `gen_isa_shim_map.h`. Generated files are committed and a `--check` mode diffs them

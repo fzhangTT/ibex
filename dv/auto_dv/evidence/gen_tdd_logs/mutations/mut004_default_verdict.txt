@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at log line 31
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(175) @ 82500: uvm_test_top.env.sb [isa_rd] rd model=x2/80000084 dut=x2/80000085 (order=2 pc=80000084 insn=00000117 trap=0 intr=0 rd=x2/80000085 mem=80000084 w0000 r1111 mode=3 cyc=77)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

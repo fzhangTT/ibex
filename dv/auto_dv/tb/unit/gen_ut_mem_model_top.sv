@@ -1,7 +1,7 @@
 // gen_ut_mem_model_top: unit test of gen_mem_pkg::gen_mem_model (architecture C3.3), pure SV + UVM
 // report functions, no RTL. Loads a real image produced by gen_elf2mem.py, checks the CRC-32 against
 // the sidecar value passed as plusargs, the word count, reads, byte-masked writes, region mapping, the
-// MMIO handler path and the unmapped-access policy. Written before gen_mem_pkg existed (TDD red).
+// MMIO handler path and the unmapped-access policy (TDD transcript: dv/auto_dv/evidence/gen_tdd_mem_model.md).
 //   +gen_ut_image=<path.vmem> +gen_ut_crc32=<hex> +gen_ut_words=<n> +gen_ut_entry=<hex> +gen_ut_entry_word=<hex>
 module gen_ut_mem_model_top;
   import uvm_pkg::*;

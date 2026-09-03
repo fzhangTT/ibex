@@ -1,0 +1,1 @@
+# run neg_uvm_error_cocotb_pass: 2026-09-03T09:10:53Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge plusargs=[+gen_boot_addr=00000000]

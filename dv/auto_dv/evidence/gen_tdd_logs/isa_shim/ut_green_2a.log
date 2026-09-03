@@ -1,0 +1,58 @@
+-- 1. reset legalization (C5.3a Reset row)
+gen_isa_reset                                got 0x1 exp 0x1 OK
+pc = boot page + 0x80                        got 0x80000080 exp 0x80000080 OK
+mtvec = boot page | 1                        got 0x80000001 exp 0x80000001 OK
+mstatus = 0x80 (MPIE, MPP U)                 got 0x80 exp 0x80 OK
+prv M                                        got 0x3 exp 0x3 OK
+misa RV32IMCU + X (MisaXBit = 1 for BaseIsaRV32IorCHERIoT) got 0x40901104 exp 0x40901104 OK
+pmpcfg0 all OFF                              got 0x0 exp 0x0 OK
+pmpaddr0 zero                                got 0x0 exp 0x0 OK
+mie zero                                     got 0x0 exp 0x0 OK
+mcause zero                                  got 0x0 exp 0x0 OK
+-- 2. the Zc image runs to its tohost store
+image words                                  got 0x1 exp 0x1 OK
+entry word j _start                          got 0x40006f exp 0x40006f OK
+step 1 ok                                    got 0x1 exp 0x1 OK
+step 1 pc_before                             got 0x80000080 exp 0x80000080 OK
+step 1 insn                                  got 0x40006f exp 0x40006f OK
+step 1 retired                               got 0x1 exp 0x1 OK
+step 1 pc_after = _start (jal +4)            got 0x80000084 exp 0x80000084 OK
+step 1 no trap                               got 0x0 exp 0x0 OK
+tohost store reached                         got 0x1 exp 0x1 OK
+tohost value 1 (pass)                        got 0x1 exp 0x1 OK
+steps to tohost within 400                   got 0x1 exp 0x1 OK
+   (149 steps)
+-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them
+re-reset                                     got 0x1 exp 0x1 OK
+x2 = 0x12345678                              got 0x12345678 exp 0x12345678 OK
+rev8 retires                                 got 0x1 exp 0x1 OK
+rev8 rd                                      got 0x1 exp 0x1 OK
+rev8 value                                   got 0x78563412 exp 0x78563412 OK
+orc.b retires                                got 0x1 exp 0x1 OK
+orc.b value                                  got 0xffffffff exp 0xffffffff OK
+   (last shim note: csr 0x34b logged but not readable (cause 2))
+grevi imm 1 traps                            got 0x1 exp 0x1 OK
+grevi imm 1 cause illegal (2)                got 0x2 exp 0x2 OK
+grevi imm 1 mtval = insn                     got 0x68115213 exp 0x68115213 OK
+grevi imm 1 retires 0                        got 0x0 exp 0x0 OK
+trap pc = mtvec base                         got 0x80000000 exp 0x80000000 OK
+reference handles grevi imm 1                got 0x0 exp 0x0 OK
+grev(x,1)                                    got 0x2138a9b4 exp 0x2138a9b4 OK
+reference handles gorci imm 1                got 0x0 exp 0x0 OK
+gorc(x,1)                                    got 0x333cfffc exp 0x333cfffc OK
+reference grev 31 (rev)                      got 0x1 exp 0x1 OK
+reference gorc 16                            got 0x1 exp 0x1 OK
+reference rejects a plain addi               got 0x1 exp 0x1 OK
+-- 4. CSR legalization after retired writes
+re-reset                                     got 0x1 exp 0x1 OK
+csrw mtvec retires                           got 0x1 exp 0x1 OK
+mtvec legalized: BASE[7:2] = 0, MODE 1       got 0x80001201 exp 0x80001201 OK
+csr write list has mtvec                     got 0x1 exp 0x1 OK
+csr write 0 is mtvec                         got 0x305 exp 0x305 OK
+csr write 0 value legalized                  got 0x80001201 exp 0x80001201 OK
+mie fast bit 16 sticks                       got 0x10000 exp 0x10000 OK
+csrw cpuctrlsts retires (no trap)            got 0x1 exp 0x1 OK
+cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO got 0xff exp 0xff OK
+gpr write/read                               got 0xdeadbeef exp 0xdeadbeef OK
+set_pc/get_pc                                got 0x80000100 exp 0x80000100 OK
+GEN_UT_ISA_SHIM PASS (0 failures)

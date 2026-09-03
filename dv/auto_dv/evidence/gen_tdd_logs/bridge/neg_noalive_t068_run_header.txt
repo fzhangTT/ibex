@@ -1,0 +1,1 @@
+# run neg_noalive: 2026-09-03T09:10:42Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge_neg plusargs=[+gen_alive_timeout=3000]

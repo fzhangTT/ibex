@@ -1,0 +1,11 @@
+# RED run (boots-and-retires test on the tied-off step-1b top; compile out_1c_red vcs exit 0)
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_1c_red/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/
+0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+105.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000e8: sv 0x00000000 vmem 0x19c09063
+115.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x800000f8: sv 0x00000000 vmem 0x33333e37
+125.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000012c: sv 0x00000000 vmem 0x12511e63
+135.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000130: sv 0x00000000 vmem 0xa0a0a537
+145.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x80000144: sv 0x00000000 vmem 0x0e13a0a0
+15.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x1a110800: sv 0x00000000 vmem 0x00c0006f
+155.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_BOOT read-back mismatch at word 0x8000014c: sv 0x00000000 vmem 0xae3711c4
+UVM_ERROR count: 64

@@ -1,0 +1,33 @@
+# GREEN run: 2026-09-03T07:28:02Z host=soc-l-11 cmd: python3 dv/auto_dv/tb/unit/gen_ut_handles.py
+OK   module exists
+OK   bridge field list non-trivial
+OK   field alive listed
+OK   field stim_active listed
+OK   field cmd_valid listed
+OK   field cmd_kind listed
+OK   field cmd_arg0 listed
+OK   field cmd_seq listed
+OK   field cmd_ack listed
+OK   field cmd_ack_seq listed
+OK   field listener_armed listed
+OK   field cmds_consumed listed
+OK   field peek_data listed
+OK   field evt_retired_target listed
+OK   field evt_retired_arm listed
+OK   field evt_retired_hit listed
+OK   field evt_cycle_target listed
+OK   field evt_cycle_arm listed
+OK   field evt_cycle_hit listed
+OK   field finish_req listed
+OK   field finish_ack listed
+OK   field cycle_count listed
+OK   field evt_retired_count listed
+OK   clk resolved
+OK   bridge field resolved
+OK   attribute access
+OK   missing handle raises
+OK   message names the path
+OK   message is ASCII
+OK   missing bridge instance raises
+GEN_UT_HANDLES PASS (0 failures)
+exit=0

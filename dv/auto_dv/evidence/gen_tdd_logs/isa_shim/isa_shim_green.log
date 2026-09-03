@@ -1,0 +1,14 @@
+# GREEN attempt 1: 2026-09-03T07:58:49Z host=soc-l-11
+terminate called after throwing an instance of 'trap_illegal_instruction'
+dv/auto_dv/isa/gen_isa_shim_build.sh: line 19: 2580101 Aborted                 (core dumped) "$OUT/gen_ut_isa_shim" "$VMEM"
+exit=134
+# GREEN attempt 2 (three TEST expectations corrected: jal target, mtvec BASE arithmetic, cpuctrlsts mask): 2026-09-03T08:00:58Z host=soc-l-11
+exit=0
+-- 1. reset legalization (C5.3a Reset row)
+-- 2. the Zc image runs to its tohost store
+   (149 steps)
+-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them
+   (last shim note: csr 0x34b logged but not readable (cause 2))
+-- 4. CSR legalization after retired writes
+GEN_UT_ISA_SHIM PASS (0 failures)
+OK lines: 51

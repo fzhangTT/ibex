@@ -1,0 +1,3 @@
+# RED: 2026-09-03T07:56:00Z host=soc-l-11 cmd: gen_isa_shim_build.sh test out_isa zc/prog.vmem (gen_isa_shim.cc absent)
+gen_isa_shim_build.sh: dv/auto_dv/isa/gen_isa_shim.cc does not exist
+exit=3

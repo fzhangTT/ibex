@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: sv_fatal at log line 397
+evidence: Fatal: "dv/auto_dv/tb/gen_tb_top.sv", 251: gen_tb_top.unnamed$$_1: at time 29995000 ps
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

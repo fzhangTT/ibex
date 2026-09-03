@@ -40,6 +40,7 @@ typedef struct {
   uint32_t mem_size;          // bytes of the first logged access
   uint32_t prv;               // privilege after the step (3 = M, 0 = U)
   int32_t  csr_writes;        // CSR writes logged (after legalization); read with gen_isa_csr_write()
+  int32_t  reg_writes;        // integer register writes logged (x0 excluded); read with gen_isa_reg_write()
 } gen_isa_step_t;
 
 const char* gen_isa_last_error(void);
@@ -49,6 +50,12 @@ void     gen_isa_write_word(uint32_t addr, uint32_t word);        // backdoor in
 uint32_t gen_isa_read_word(uint32_t addr);
 int      gen_isa_step(gen_isa_step_t* out);
 int      gen_isa_csr_write(int32_t i, uint32_t* addr, uint32_t* val);   // i-th CSR write of the last step
+// Per-step accessors (log order, -1 when i is out of range): x-register writes, data writes, data reads
+// (size in bytes; read data is what Spike logged, which is 0).
+int      gen_isa_reg_write(int32_t i, uint32_t* idx, uint32_t* val);
+int      gen_isa_mem_write(int32_t i, uint32_t* addr, uint32_t* data, uint32_t* size);
+int      gen_isa_mem_read(int32_t i, uint32_t* addr, uint32_t* data, uint32_t* size);
+uint32_t gen_isa_fetch_insn(uint32_t pc);   // word at pc from the shim memory: 16-bit encodings zero-extended, 0 when unmapped
 uint32_t gen_isa_read_csr(uint32_t addr);
 int      gen_isa_write_csr(uint32_t addr, uint32_t val);
 uint32_t gen_isa_read_gpr(int32_t idx);

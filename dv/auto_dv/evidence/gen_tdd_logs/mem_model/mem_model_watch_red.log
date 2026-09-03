@@ -1,0 +1,10 @@
+# RED compile (add_watch missing): 2026-09-03T07:39:40Z host=soc-l-11
+Error-[MFNF] Member not found
+dv/auto_dv/tb/unit/gen_ut_mem_model_top.sv, 87
+"m."
+vcs exit=255
+# GREEN compile+run (add_watch): 2026-09-03T07:41:29Z host=soc-l-11
+vcs exit=0
+simv exit=0
+GEN_UT_MEM_MODEL PASS (0 failures)
+OK lines: 29

@@ -28,11 +28,11 @@ AS BUILT (step 1c): one generic bus agent serves both buses. `dv/auto_dv/tb/gen_
 `ap`), `gen_bus_agent`; transaction type `gen_bus_txn` {kind FETCH/LOAD/STORE, addr, data, intg, be, err,
 injected, gnt_delay, rvalid_delay, cycle_req, cycle_gnt, cycle_rvalid, outstanding_at_gnt}. Instances
 `ibus_agent` and `dbus_agent` in `gen_env`; vifs `uvm_test_top.env.<agent>*.vif`. A separate monitor
-and the sequencer for run-time regime items arrive with the checkers (step 2).
+and the sequencer for run-time regime items arrive with the checkers (step 2). (T-068) latency windows and injection rates come from the rendered `gen_regime_window` / `gen_regime_scalar` functions of gen_tb_pkg (source: the `regime_windows` block of gen_tb_knobs.yaml; rvalid classes min1 1, short 2..4, long 5..32, random 1..32 aligned with the fcov plan; gnt same_cycle 0, short 1..3, long 4..32, random 0..32; rates none 0, rare 2, frequent 50 per mille; caps 1/2/4/8); `chk_rvalid_legal_en` follows `+gen_chk_sva_rvalid_legal` with the `+gen_chk_all` isolation rule; the published `gen_bus_txn` carries the real grant latency (`gnt_delay`, `cycle_req` = the first cycle req was seen); the integrity geometry derives from the interface data width, guarded by a build-time fatal when it is not 39 bits.
 
 Instantiated by `gen_env`, which builds `gen_bus_cfg` with `from_env(cfg, is_data)` from the
 environment configuration (enum knobs `+gen_knob_imem_gnt_delay` same_cycle 0..0 / short 1..3 / long
-4..32 / random 0..32, `+gen_knob_imem_rvalid_delay` min1 1..1 / short 1..3 / long 4..32 / random 1..32,
+4..32 / random 0..32, `+gen_knob_imem_rvalid_delay` min1 1..1 / short 2..4 / long 5..32 / random 1..32 (T-068),
 `+gen_knob_imem_err_rate` and `_intg_err_rate` none 0 / rare 2 / frequent 50 per mille,
 `+gen_knob_imem_outstanding_cap` cap1..cap8 bounded by GEN_IBUS_MAX_OUTSTANDING; numeric
 `+gen_ibus_*` overrides win). The virtual interface comes from `gen_tb_top` through `uvm_config_db`.
@@ -52,7 +52,11 @@ dispatcher in step 2. Completed transactions are published on `ap` (scoreboard, 
 | `+gen_ibus_err_window=lo:hi` | `PLUSARG_IBUS_ERR_WINDOW` | address window where injected errors apply (any if unset) | unset |
 | `+gen_ibus_intg_err_rate=<per_mille>` | `PLUSARG_IBUS_INTG_ERR_RATE` | probability of corrupting rdata integrity bits | 0 |
 | `+gen_ibus_intg_bits=1|2` | `PLUSARG_IBUS_INTG_BITS` | bits flipped per corrupted response | 1 |
-| `+gen_ibus_regime=<name>` | `PLUSARG_IBUS_REGIME` | named distribution set: fast, slow, bursty, stall, err_heavy, intg_err | fast |
+| `+gen_knob_imem_gnt_delay=same_cycle|short|long|random` | `PLUSARG_KNOB_IMEM_GNT_DELAY` | layer-2 grant latency regime (value set and default from gen_tb_knobs.yaml; windows in Section 2) | short |
+| `+gen_knob_imem_rvalid_delay=min1|short|long|random` | `PLUSARG_KNOB_IMEM_RVALID_DELAY` | layer-2 response latency regime | short |
+| `+gen_knob_imem_err_rate=none|rare|frequent` | `PLUSARG_KNOB_IMEM_ERR_RATE` | instr_err_i injection regime (rates in Section 2) | none |
+| `+gen_knob_imem_intg_err_rate=none|rare|frequent` | `PLUSARG_KNOB_IMEM_INTG_ERR_RATE` | instruction integrity corruption regime | none |
+| `+gen_knob_imem_outstanding_cap=cap1|cap2|cap4|cap8` | `PLUSARG_KNOB_IMEM_OUTSTANDING_CAP` | instruction grants in flight cap, bounded by `GEN_IBUS_MAX_OUTSTANDING` | cap8 |
 | `+gen_chk_ibus_proto / gen_chk_ibus_outstanding / gen_chk_sva_rvalid_legal` | `PLUSARG_CHK_*` | checker enables (grant-order consistency is an agent-internal `assert`, not a checker row, v2 XM-L3) | 1 |
 
 ## 4. Wave-level behaviour
@@ -74,7 +78,7 @@ any other; the agent does not know what the core will execute.
 |---|---|---|---|
 | `ibus_proto` | `req & ~gnt` => `req` and `addr` unchanged next cycle; `addr[1:0] == 0`; no X on `req` | icache request hold / arbitration (`rtl/ibex_icache.sv:756-775, 842`), address mux (`:1030-1037`) | `+gen_chk_ibus_proto=0` |
 | `ibus_outstanding` | granted-unanswered `<= GEN_IBUS_MAX_OUTSTANDING`; `core_busy_o != Off` while > 0 (exact) | fill-buffer counters (`rtl/ibex_icache.sv:759-784`), `busy_o` (`:1304`) | `+gen_chk_ibus_outstanding=0` |
-| `sva_rvalid_legal` | TB stimulus legality: `rvalid` only while a grant is outstanding and never in the grant cycle (one id and one knob `+gen_chk_sva_rvalid_legal` everywhere: this row, the dbus agent, the binds home) | TB self-check (not a DUT checker; not counted in the trust-triad evidence) | `+gen_chk_sva_rvalid_legal=0` |
+| `sva_rvalid_legal` | TB stimulus legality: `rvalid` only while a grant is outstanding and never in the grant cycle (one id and one knob `+gen_chk_sva_rvalid_legal` everywhere: this row, the dbus agent, the binds home) | TB self-check (not a DUT checker; not counted in the trust-triad evidence); stray or same-cycle response: a driver that answers in the grant cycle or without an outstanding grant (mutation record MUT-003, dv/auto_dv/mutations/gen_mut_sva_rvalid_legal.md) | `+gen_chk_sva_rvalid_legal=0` |
 
 ## 6. Failure path and diagnostics
 

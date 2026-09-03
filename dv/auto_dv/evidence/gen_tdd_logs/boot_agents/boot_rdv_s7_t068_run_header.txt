@@ -1,0 +1,1 @@
+# run boot_rdv_s7: 2026-09-03T09:11:05Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_boot plusargs=[+gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t036/stim/s7/prog.vmem +gen_mem_image_crc32=5c209be0 +gen_mem_image_words=29375 +gen_boot_addr=80000000 +gen_tohost_addr=800027c0 +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=2000]

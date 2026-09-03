@@ -14,7 +14,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 Driver of `data_gnt_i`, `data_rvalid_i`, `data_rdata_i[MemDataWidth-1:0]`, `data_err_i`;
 consumer of `data_req_o/we/be/addr/wdata[38:0]/tag_o`. Performs stores into the memory model
 (enabled byte lanes only), serves loads, sinks the MMIO windows, injects bus and integrity
-errors including per-half injection on split misaligned accesses. AS BUILT (step 1c): the same `gen_agents_pkg::gen_bus_agent` as the instruction side, instance `dbus_agent` on `gen_bus_if u_dbus_if` (`is_data = 1`): stores are performed into `gen_mem_model` with the byte enables at grant (an errored store still lands unless `+gen_dbus_err_store_perform=0`), loads read the model, the response carries a valid encoding of zero for stores; knobs `+gen_knob_dmem_*` map as on the instruction side, cap fixed at GEN_DBUS_MAX_OUTSTANDING = 2; MMIO windows (signature, irq ack, end-of-test, phase marker) and the tohost watch are the model's.
+errors including per-half injection on split misaligned accesses. AS BUILT (step 1c): the same `gen_agents_pkg::gen_bus_agent` as the instruction side, instance `dbus_agent` on `gen_bus_if u_dbus_if` (`is_data = 1`): stores are performed into `gen_mem_model` with the byte enables at grant (an errored store still lands unless `+gen_dbus_err_store_perform=0`), loads read the model, the response carries a valid encoding of zero for stores; knobs `+gen_knob_dmem_*` map as on the instruction side, cap fixed at GEN_DBUS_MAX_OUTSTANDING = 2; MMIO windows (signature, irq ack, end-of-test, phase marker) and the tohost watch are the model's. (T-068) latency windows and injection rates come from the rendered `gen_regime_window` / `gen_regime_scalar` functions of gen_tb_pkg (source: the `regime_windows` block of gen_tb_knobs.yaml; rvalid classes min1 1, short 2..4, long 5..32, random 1..32 aligned with the fcov plan; gnt same_cycle 0, short 1..3, long 4..32, random 0..32; rates none 0, rare 2, frequent 50 per mille; caps 1/2/4/8); `chk_rvalid_legal_en` follows `+gen_chk_sva_rvalid_legal` with the `+gen_chk_all` isolation rule; the published `gen_bus_txn` carries the real grant latency (`gnt_delay`, `cycle_req` = the first cycle req was seen); the integrity geometry derives from the interface data width, guarded by a build-time fatal when it is not 39 bits.
 
 ## 2. Files (planned) and how to call it
 
@@ -36,7 +36,10 @@ ISA model fault and the NMI/alert checkers.
 | `+gen_dbus_err_half=first|second|both|any` | `PLUSARG_DBUS_ERR_HALF` | which half of a split access an injected error hits | any |
 | `+gen_dbus_err_store_perform=0|1` | `PLUSARG_DBUS_ERR_STORE_PERFORM` | whether an errored store still updates the memory model | 1 |
 | `+gen_dbus_intg_err_rate, gen_dbus_intg_bits` | `PLUSARG_DBUS_INTG_ERR_RATE, PLUSARG_DBUS_INTG_BITS` | rdata integrity corruption (loads and store responses) | 0, 1 |
-| `+gen_dbus_regime=<name>` | `PLUSARG_DBUS_REGIME` | fast, slow, bursty, stall, err_heavy, intg_err, mis_err_first, mis_err_second | fast |
+| `+gen_knob_dmem_gnt_delay=same_cycle|short|long|random` | `PLUSARG_KNOB_DMEM_GNT_DELAY` | layer-2 grant latency regime (value set and default from gen_tb_knobs.yaml; windows as the instruction agent) | short |
+| `+gen_knob_dmem_rvalid_delay=min1|short|long|random` | `PLUSARG_KNOB_DMEM_RVALID_DELAY` | layer-2 response latency regime | short |
+| `+gen_knob_dmem_err_rate=none|rare|frequent` | `PLUSARG_KNOB_DMEM_ERR_RATE` | data_err_i injection regime (none 0, rare 2, frequent 50 per mille) | none |
+| `+gen_knob_dmem_intg_err_rate=none|rare|frequent` | `PLUSARG_KNOB_DMEM_INTG_ERR_RATE` | data integrity corruption regime | none |
 | `+gen_chk_dbus_proto / _outstanding / _split / _store_intg` | `PLUSARG_CHK_*` | checker enables | 1 |
 
 ## 4. Wave-level behaviour
