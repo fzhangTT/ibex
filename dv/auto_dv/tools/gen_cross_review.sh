@@ -53,18 +53,21 @@ MANIFEST=""
 case "$MODE" in
   plan)
     TARGET_DESC="plan/spec file(s): $*"
-    for f in "$@"; do MANIFEST="${MANIFEST}TARGET: $f@$(sha256sum "$f" | cut -c1-8)${NL}"; done
+    PLAN_FILES=("$@"); for f in "$@"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (plan reviews target committed files)"; exit 1; }; MANIFEST="${MANIFEST}TARGET: $f@$(git show "HEAD:$f" | sha256sum | cut -c1-8)${NL}"; done
+    TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:${NL}${MANIFEST}"
     NAME="plan-$(basename "${1%.*}")" ;;
   replan)
     PLAN_F=${1:?plan file}; FIND_F=${2:?findings artifact}; BASEREV=$(git rev-parse --verify "${3:?base rev}")
     TARGET_DESC="scoped re-review: ${PLAN_F} (delta since ${BASEREV:0:8}) against findings in ${FIND_F}"
-    MANIFEST="TARGET: ${PLAN_F}@$(sha256sum "$PLAN_F" | cut -c1-8)${NL}TARGET: ${FIND_F}@$(sha256sum "$FIND_F" | cut -c1-8)${NL}"
+    for f in "$PLAN_F" "$FIND_F"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (replan reviews target committed files)"; exit 1; }; done
+    MANIFEST="TARGET: ${PLAN_F}@$(git show "HEAD:$PLAN_F" | sha256sum | cut -c1-8)${NL}TARGET: ${FIND_F}@$(git show "HEAD:$FIND_F" | sha256sum | cut -c1-8)${NL}"
+    TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Scoped re-review (a recorded re-review per CLAUDE.md's gate): ${PLAN_F} was previously reviewed at commit ${BASEREV} and received the findings in ${FIND_F}. Do exactly two things: (1) verdict EACH finding in that artifact ADDRESSED or NOT ADDRESSED against the current plan text, with line evidence; (2) review ONLY the plan's changes since that commit (run: git diff ${BASEREV} -- ${PLAN_F}) for new defects the remediation introduced. Do NOT re-review unchanged plan content. Echo, verbatim, as the FIRST lines of your output, exactly these lines:${NL}${MANIFEST}"
     NAME="replan-$(basename "${PLAN_F%.*}")" ;;
   diff)
     BASE=$(git rev-parse --verify "${1:?base}"); HEAD_=$(git rev-parse --verify "${2:?head}")
-    TARGET_DESC="committed diff ${BASE:0:8}..${HEAD_:0:8}"
+    TARGET_DESC="committed diff ${BASE:0:8}..${HEAD_:0:8}"; TGT_REV=$HEAD_
     SCOPE_LINE="Review ONLY the committed diff range ${BASE}..${HEAD_} (use git diff/log yourself). Your output's FIRST line must be exactly: TARGET: ${BASE}..${HEAD_} and your LAST line must be the single verdict line, nothing after it."
     NAME="diff-${BASE:0:8}-${HEAD_:0:8}" ;;
   *) echo "unknown mode: $MODE" >&2; exit 1 ;;
@@ -77,9 +80,16 @@ ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
 # reserved atomically (noclobber) so two concurrent runs of one target cannot pick the same file.
 _r=2; until ( set -C; : >"$ART" ) 2>/dev/null; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
 mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"
+# The reviewer reads a detached checkout of the target commit, never the live working tree, so a
+# teammate editing a reviewed file during the run cannot reach the artifact.
+TREE="$XR_TMP/tree"
+git worktree add --detach "$TREE" "$TGT_REV" >/dev/null 2>&1 || { echo "PROTOCOL ERROR: cannot create a worktree of $TGT_REV"; exit 1; }
+cleanup_tree() { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }
+trap cleanup_tree EXIT
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.
 ${SCOPE_LINE}
+Your working directory is a detached, read-only checkout of the reviewed commit (${TGT_REV}); every repo-relative path above resolves there, and git commands work there. Do not read the clone at ${REPO}: its working tree may differ from the commit under review.
 Apply every rubric below to what you review; read-only, modify nothing. Deliver the whole review as ONE final message with no questions to the user. Write NOTHING before the TARGET line(s): no preamble, no status sentence; the TARGET line is the first character of your message.
 End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-WITH-CHANGES' or 'Final verdict: REQUEST-CHANGES', preceded by findings as [severity][file:line] issue - recommendation.
 
@@ -101,7 +111,7 @@ RUN_HOME="$XR_TMP/home"; mkdir -p "$RUN_HOME/.claude"
 [ -f "$HOME/.claude/.credentials.json" ] && install -m 600 "$HOME/.claude/.credentials.json" "$RUN_HOME/.claude/.credentials.json"
 # The CLI itself is installed under $HOME on this host; expose that install read-only inside the scratch HOME.
 CLAUDE_BIN=$(readlink -f "$(type -P claude)") || { echo "PROTOCOL ERROR: claude CLI not found"; exit 1; }
-SANDBOX=(bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc --tmpfs /tmp --bind "$XR_TMP" "$XR_TMP" --bind "$RUN_HOME" "$HOME")
+SANDBOX=(bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc --tmpfs /tmp --bind "$XR_TMP" "$XR_TMP" --ro-bind "$TREE" "$TREE" --bind "$RUN_HOME" "$HOME" --chdir "$TREE")
 [ -d "$HOME/.local" ] && SANDBOX+=(--ro-bind "$HOME/.local" "$HOME/.local")
 timeout 3600 "${SANDBOX[@]}" -- "$CLAUDE_BIN" -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
   --allowedTools "Read,Grep,Glob,Bash" --disallowedTools "Write,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch,Agent,Workflow" \
@@ -151,6 +161,6 @@ fi
   echo
   cat "$RAW"
 } >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART"
-rm -rf "$XR_TMP"
+cleanup_tree; trap - EXIT; rm -rf "$XR_TMP"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
