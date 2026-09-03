@@ -100,7 +100,15 @@ def check_mirror_for_run(build: dict[str, Any]) -> dict[str, Any] | None:
     if not (man.get("tree_sha256") == mirror.get("tree_sha256") == tree_now):
         U.die(f"mirror {root} differs from the build's record (build {str(mirror.get('tree_sha256'))[:12]}, "
               f"manifest {str(man.get('tree_sha256'))[:12]}, tree now {tree_now[:12]}); rebuild or re-sync")
-    return {"root": str(root), "tree_sha256": tree_now, "git_head": (man.get("git") or {}).get("head")}
+    # The tools home (venv, Spike) must be the one the simv was built against: a --spike/--venv rewrite under a
+    # consumer changes what the run loads, so the digest recorded at build time is re-checked here.
+    if mirror.get("tools_digest"):
+        now = M.tools_digest(Path(mirror.get("tools_home") or root))
+        if now != mirror["tools_digest"]:
+            U.die(f"tools home {mirror.get('tools_home')} changed since the build (digest {str(mirror['tools_digest'])[:12]} -> "
+                  f"{str(now)[:12]}); rebuild against the current venv and Spike")
+    return {"root": str(root), "tree_sha256": tree_now, "git_head": (man.get("git") or {}).get("head"),
+            "tools_digest": mirror.get("tools_digest")}
 
 
 def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: dict[str, str],

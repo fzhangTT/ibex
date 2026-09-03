@@ -709,4 +709,9 @@ def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX, settle_s: float = C.LSF_STATUS
 
 
 if __name__ == "__main__":
+    if "--dump-testlist" in sys.argv:
+        # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
+        import json
+        print(json.dumps(load_testlist(Path(sys.argv[sys.argv.index("--dump-testlist") + 1]))))
+        sys.exit(0)
     sys.exit(self_test() if "--self-test" in sys.argv else 0)

@@ -19,6 +19,7 @@ import argparse
 import concurrent.futures as cf
 import os
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -357,8 +358,26 @@ def request_purpose(path: Path) -> int | None:
         return None
 
 
+def build_input_delta(sha_a: str, sha_b: str) -> str:
+    """git diff --stat between two commits restricted to the mirrored build inputs (empty when nothing changed)."""
+    r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "diff", "--stat", sha_a, sha_b, "--", *C.BUILD_INPUT_PATHS],
+                       capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else f"git diff failed: {r.stderr.strip()[:200]}"
+
+
+def pinned_testlist(head_tree: Path) -> dict[str, Any]:
+    """The pinned tree's committed testlist, validated by a process bound to that tree."""
+    env = dict(os.environ, **{C.ENV_SOURCE_ROOT: str(head_tree), C.ENV_MIRROR_ROOT: str(head_tree)})
+    r = subprocess.run([sys.executable, str(C.FLOW_DIR / "gen_flow_util.py"), "--dump-testlist",
+                        str(head_tree / "dv" / "auto_dv" / "flow" / "gen_testlist.yaml")], capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        U.die(f"the pinned tree's testlist does not validate: {r.stderr.strip()[-300:]}")
+    import json
+    return json.loads(r.stdout)
+
+
 def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
-               max_concurrent: int) -> int:
+               max_concurrent: int, canary_sha: str | None = None) -> int:
     """One pass over the queue. Independent purpose-1 requests run concurrently (each its own outdir,
     manifest and LSF accounting) after a single mirror sync for the batch; everything else in file order."""
     p1_all = [p for p in pending if request_purpose(p) == 1]
@@ -374,17 +393,30 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                                             timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         head_tree = M.head_mirror_root(batch_sha)
         synced = M.load_manifest(head_tree) or {}
+        delta = build_input_delta(canary_sha, batch_sha) if canary_sha and canary_sha != batch_sha else ""
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
-                "batch": [p.stem for p in p1]}
+                "canary_sha": canary_sha, "canary_to_batch_build_input_delta": delta, "batch": [p.stem for p in p1]}
+        if delta:
+            # The canary vouched for another tree: a build input changed in between, so this pass leaves the
+            # batch pending for a new canary rather than serving it unvouched.
+            U.log(f"REFUSING the batch this pass: build inputs changed between canary {canary_sha[:12]} and HEAD {batch_sha[:12]}:\n{delta}")
+            for p in rest:
+                serve_one(p, testlist, dry_run, extra_args)
+            return len(rest)
         if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s), pinned to {batch_sha[:12]}")
-            # Scope decisions for the batch come from the committed testlist the batch will run.
-            head_testlist = U.load_testlist(head_tree / "dv" / "auto_dv" / "flow" / "gen_testlist.yaml")
+            # Scope decisions for the batch come from the pinned tree's committed testlist, validated by a process
+            # bound to that tree (not by this server, whose source root is the clone).
+            head_testlist = pinned_testlist(head_tree)
+            batch_lease = M.lease_head_tree(head_tree, "batch_" + "_".join(p.stem for p in p1)[:60])
             # Every regression of the batch is pinned to the commit the batch was synced from.
             batch_args = list(extra_args) + ["--no-sync-mirror", "--head-sha", str(sync["head_sha"])]
-            with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
-                list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
+            try:
+                with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
+                    list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
+            finally:
+                M.release_lease(batch_lease)
         else:
             # Without one good shared sync the batch must not fan out: each regression syncs for itself, in turn.
             sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing itself"
@@ -409,6 +441,8 @@ def main() -> int:
     ap.add_argument("--duration", type=int, default=3600)
     ap.add_argument("--testlist", type=Path, default=C.TESTLIST_YAML)
     ap.add_argument("--only", action="append", default=[], help="serve only the named pending request(s)")
+    ap.add_argument("--canary-sha", default=None,
+                    help="commit the canary passed on; a batch whose pinned commit differs in a build input is refused")
     ap.add_argument("--max-concurrent", type=int, default=C.SERVE_MAX_CONCURRENT_P1,
                     help="independent purpose-1 requests served at once (ruling: purposes 2-4 stay serialized)")
     ap.add_argument("--extra-arg", action="append", default=[],
@@ -421,7 +455,7 @@ def main() -> int:
     deadline = time.time() + a.duration
     served = 0
     while True:
-        served += serve_pass(pending_requests(a.only), testlist, a.dry_run, a.extra_arg, a.max_concurrent)
+        served += serve_pass(pending_requests(a.only), testlist, a.dry_run, a.extra_arg, a.max_concurrent, a.canary_sha)
         if not a.watch or time.time() >= deadline:
             break
         time.sleep(a.interval)

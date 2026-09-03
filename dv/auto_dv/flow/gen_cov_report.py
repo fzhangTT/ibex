@@ -124,6 +124,11 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
         res["group_score"]["urg_total"] = res["totals"].get("group", C.NOT_APPLICABLE)
         res["ledger"] = ledger_summary(grpinfo_txt.read_text(encoding="utf-8", errors="replace"), C.LEDGER_COVERGROUPS) \
             if grpinfo_txt.is_file() else ledger_summary("", C.LEDGER_COVERGROUPS)
+        # The plan says the ledger exists: a report with covergroups but no ledger row is a broken TB, not a pass.
+        has_groups = res["totals"].get("group") not in (None, C.NOT_APPLICABLE) and bool(rows)
+        if C.LEDGER_REQUIRED and has_groups and not res["group_score"]["ledger_excluded"]:
+            res["status"] = status = "ledger_missing"
+            res["ledger"]["error"] = f"no ledger covergroup ({C.LEDGER_COVERGROUPS} / {C.LEDGER_PLAN_IDS}) among {len(rows)} covergroups"
         if dut_scopes and len(good) == len(dut_scopes):
             res["gate_row"] = combine_rows(good)
             gs = res["group_score"]
@@ -202,9 +207,11 @@ def parse_groups(text: str) -> list[dict[str, Any]]:
     cols: list[str] = []
     for line in text.splitlines():
         toks = line.split()
+        if cols and rows and (not toks or line.startswith("Summary for")):
+            break   # the summary table ends at the first blank line or per-group block; those blocks are not rows
         if not toks:
             continue
-        if "SCORE" in toks and "WEIGHT" in toks and "NAME" in toks:
+        if not cols and "SCORE" in toks and "WEIGHT" in toks and "NAME" in toks:
             cols = toks
             continue
         if cols and len(toks) >= 3 and toks[-1] not in ("NAME",):
@@ -220,8 +227,10 @@ def parse_groups(text: str) -> list[dict[str, Any]]:
 def group_score_excluding(rows: list[dict[str, Any]], excluded: tuple[str, ...]) -> dict[str, Any]:
     """URG's functional score is the weight-averaged covergroup score; recompute it without the excluded names
     (the combining rule of record for the witness ledger)."""
-    kept = [g for g in rows if g["name"] not in excluded and g["score"] is not None and g["weight"] > 0]
-    dropped = sorted({g["name"] for g in rows if g["name"] in excluded})
+    def is_ledger(name: str) -> bool:
+        return name in excluded or any(pid in name for pid in C.LEDGER_PLAN_IDS)
+    kept = [g for g in rows if not is_ledger(g["name"]) and g["score"] is not None and g["weight"] > 0]
+    dropped = sorted({g["name"] for g in rows if is_ledger(g["name"])})
     wsum = sum(g["weight"] for g in kept)
     score = round(sum(g["score"] * g["weight"] for g in kept) / wsum, 2) if wsum else None
     return {"score": score, "covergroups_scored": len(kept), "ledger_excluded": dropped}
@@ -355,6 +364,18 @@ def self_test() -> int:
     cond = a["score"] == b["score"] == 50.0 and b["ledger_excluded"] == ["gen_cg_wit_cycle_clause"] and a["ledger_excluded"] == []
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated groups.txt: the score with the ledger group present equals the score without it ({a['score']} vs {b['score']}), ledger excluded by name")
+    # The per-group blocks that follow URG's summary table must not be ingested as rows (fabricated block shape:
+    # score-like lines after a "Summary for Group" header; the real block format is not covered here).
+    blocks = ("Total groups coverage summary\nSCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n 60.00       1  gen_irq_cg\n\n"
+              "Summary for Group gen_regime_cg\n 12.50       1  cp_regime\n 87.50       1  cp_other\n")
+    rows_b = parse_groups(blocks)
+    cond = [g["name"] for g in rows_b] == ["gen_regime_cg", "gen_irq_cg"]
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated groups.txt: only the summary table is parsed, per-group blocks are ignored ({[g['name'] for g in rows_b]})")
+    pid_rows = parse_groups("SCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n  5.00       1  CG-WIT-001_ledger\n")
+    cond = group_score_excluding(pid_rows, C.LEDGER_COVERGROUPS)["ledger_excluded"] == ["CG-WIT-001_ledger"]
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} a covergroup carrying the plan id CG-WIT-001 is matched as ledger too")
     grp = ("Group : gen_tb_top.u_env.u_cov::gen_cg_wit_cycle_clause\n\nSummary for Variable cp_clause\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\n"
            "w_tp_bit_036 3 1 1\nw_tp_bit_042 1 1 1\n\nUncovered bins\n\nNAME COUNT AT_LEAST NUMBER\nw_tp_bit_043 0 1 1\n\n----------\n"
            "Group : gen_tb_top.u_env.u_cov::gen_regime_cg\n\nSummary for Variable cp_regime\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\nbin_fast 9 1 1\n")

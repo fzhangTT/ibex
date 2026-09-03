@@ -27,7 +27,13 @@ SOURCE_MODE_WORKTREE = "worktree"
 SOURCE_MODES = (SOURCE_MODE_HEAD, SOURCE_MODE_WORKTREE)
 ENV_MIRROR_ROOT = "GEN_DV_MIRROR_ROOT"   # the mirror a process binds to (a head-mode process: its per-sha head tree)
 HEAD_MIRROR_SUFFIX = "_head"            # per-sha head trees live beside the worktree mirror: <site root>_head/<sha12>
-HEAD_MIRRORS_KEEP = 6                   # newest head trees kept; older ones are pruned after a sync
+HEAD_MIRRORS_KEEP = 6                   # newest head trees always kept by the prune step
+HEAD_MIRRORS_KEEP_HOURS = 3.0           # head trees younger than this are never pruned
+LEASE_DIRNAME = ".leases"               # a live consumer (regression, batch) leases its head tree here; leased trees are never pruned
+# Mirrored paths that are build inputs: a commit landing between the canary and the batch sync that touches
+# one of them makes the batch refuse (the canary no longer vouches for the tree).
+BUILD_INPUT_PATHS = ("rtl", "vendor", "util", "ci", "dv/auto_dv/tb", "dv/auto_dv/env", "dv/auto_dv/isa", "dv/auto_dv/gen_tb",
+                     "dv/auto_dv/tests", "dv/auto_dv/stim", "dv/auto_dv/flow", "dv/auto_dv/fcov_expectations", "dv/auto_dv/excl")
 ENV_SH = REPO_ROOT / "ci" / "env.sh"
 CONFIG_SCRIPT = SOURCE_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = SOURCE_ROOT / "ci" / "check_fcov_expectations.py"
@@ -354,6 +360,7 @@ URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
 # beside the score as "witnessed clauses: N of M".
 LEDGER_COVERGROUPS = ("gen_cg_wit_cycle_clause",)
 LEDGER_PLAN_IDS = ("CG-WIT-001",)
+LEDGER_REQUIRED = True   # a merge that reports covergroups but no ledger row fails loud (the plan says the ledger exists)
 NOT_APPLICABLE = "n/a"
 # Gate and stopping rule (DV_prompt Section 4): 80 percent per gated metric; a round shows gain
 # when a gated metric improves by at least G points; stop after N consecutive rounds without gain.

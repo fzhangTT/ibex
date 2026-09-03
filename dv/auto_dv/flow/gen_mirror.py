@@ -22,6 +22,7 @@ import contextlib
 import fcntl
 import hashlib
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -130,19 +131,91 @@ def link_tools(dst: Path, site: Path) -> None:
             link.symlink_to(target)
 
 
-def prune_head_mirrors(current: Path) -> list[str]:
-    """Keep the newest HEAD_MIRRORS_KEEP head trees (and the one just synced); remove older ones with their logs."""
-    family = current.parent
-    trees = sorted((p for p in family.iterdir() if p.is_dir() and not p.name.endswith("_logs") and (p / MANIFEST_NAME).is_file()),
-                   key=lambda p: p.stat().st_mtime, reverse=True)
-    removed = []
+def lease_head_tree(tree: Path, tag: str) -> Path:
+    """A live consumer registers itself in its head tree; the prune step never removes a leased tree."""
+    d = tree / C.LEASE_DIRNAME
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f"{os.getpid()}_{re.sub(r'[^A-Za-z0-9_.-]', '_', tag)}.lease"
+    U.dump_yaml({"pid": os.getpid(), "tag": tag, "host": os.uname().nodename, "started_utc": U.now_utc()}, p)
+    return p
+
+
+def release_lease(p: Path) -> None:
+    p.unlink(missing_ok=True)
+
+
+def live_leases(tree: Path) -> list[dict[str, Any]]:
+    """Leases whose process is still alive on this host; stale files (dead pid) are removed."""
+    out: list[dict[str, Any]] = []
+    d = tree / C.LEASE_DIRNAME
+    if not d.is_dir():
+        return out
+    for p in sorted(d.glob("*.lease")):
+        rec = U.load_yaml(p) or {}
+        pid = int(rec.get("pid") or 0)
+        alive = False
+        if pid > 0 and rec.get("host") == os.uname().nodename:
+            try:
+                os.kill(pid, 0)
+                alive = True
+            except OSError:
+                alive = False
+        elif pid > 0:
+            alive = True   # another host's process: cannot probe, treat as live
+        if alive:
+            out.append(dict(rec, lease=str(p)))
+        else:
+            p.unlink(missing_ok=True)
+    return out
+
+
+def head_family() -> Path | None:
+    site = site_mirror_root()
+    return Path(str(site) + C.HEAD_MIRROR_SUFFIX) if site else None
+
+
+def head_trees() -> list[Path]:
+    fam = head_family()
+    if not fam or not fam.is_dir():
+        return []
+    return sorted((p for p in fam.iterdir() if p.is_dir() and not p.name.endswith("_logs") and (p / MANIFEST_NAME).is_file()),
+                  key=lambda p: p.stat().st_mtime, reverse=True)
+
+
+def prune_head_mirrors() -> dict[str, Any]:
+    """The prune step (run from the runtime tick, never from a sync): remove head trees beyond the newest
+    HEAD_MIRRORS_KEEP that are older than HEAD_MIRRORS_KEEP_HOURS and carry no live lease."""
+    import time as _t
+    result: dict[str, Any] = {"removed": [], "kept_leased": [], "kept_recent": [], "kept_newest": []}
+    trees = head_trees()
+    result["kept_newest"] = [p.name for p in trees[:C.HEAD_MIRRORS_KEEP]]
     for p in trees[C.HEAD_MIRRORS_KEEP:]:
-        if p.resolve() == current.resolve():
+        if live_leases(p):
+            result["kept_leased"].append(p.name)
+            continue
+        if _t.time() - p.stat().st_mtime < C.HEAD_MIRRORS_KEEP_HOURS * 3600:
+            result["kept_recent"].append(p.name)
             continue
         shutil.rmtree(p, ignore_errors=True)
-        shutil.rmtree(family / (p.name + "_logs"), ignore_errors=True)
-        removed.append(p.name)
-    return removed
+        shutil.rmtree(p.parent / (p.name + "_logs"), ignore_errors=True)
+        result["removed"].append(p.name)
+    return result
+
+
+def tools_digest(site: Path) -> str | None:
+    """sha256 over the tools home a build binds to: every file under tools/spike/lib and the venv's cocotb VPI
+    library; recorded per build and re-checked before every run (a rewrite under a consumer fails loud)."""
+    h = hashlib.sha256()
+    lib = site / SPIKE_ITEM / "lib"
+    files = sorted(p for p in lib.rglob("*") if p.is_file()) if lib.is_dir() else []
+    vpi = (venv_info(site) or {}).get("cocotb_vpi_lib")
+    if vpi and Path(vpi).is_file():
+        files.append(Path(vpi))
+    if not files:
+        return None
+    for f in files:
+        h.update(str(f).encode()); h.update(b"\0"); h.update(f.read_bytes()); h.update(b"\0")
+    return h.hexdigest()
 
 
 def mirrored_files(root: Path) -> list[Path]:
@@ -346,6 +419,19 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"pinned status: the pinned sha decides (fresh for its sha, stale for another), HEAD now {head_sha()[:12]} irrelevant")
     shutil.rmtree(tiny, ignore_errors=True)
+    # Leases: a live lease is seen, a dead pid's lease is dropped.
+    tree = Path(tempfile.mkdtemp(prefix="head_lease_selftest_", dir=C.WORK_DIR))
+    lease = lease_head_tree(tree, "selftest")
+    U.dump_yaml({"pid": 999999999, "tag": "dead", "host": os.uname().nodename, "started_utc": U.now_utc()}, tree / C.LEASE_DIRNAME / "999999999_dead.lease")
+    live = live_leases(tree)
+    cond = len(live) == 1 and live[0]["tag"] == "selftest" and not (tree / C.LEASE_DIRNAME / "999999999_dead.lease").exists()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"leases: the live process's lease counts, a dead pid's lease is removed ({len(live)} live)")
+    release_lease(lease)
+    cond = live_leases(tree) == []
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "leases: released lease is gone")
+    shutil.rmtree(tree, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -362,6 +448,8 @@ def main() -> int:
                     help="sync from the working tree (worktree) or from committed HEAD via git archive (head)")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--head-sha", default=None, help="head mode: export exactly this commit (a batch pins it before syncing)")
+    ap.add_argument("--prune", action="store_true", help="remove old, unleased head trees (the runtime tick runs this; a sync never does)")
+    ap.add_argument("--force-tools", action="store_true", help="rewrite the tools home (--spike/--venv) even while head trees are leased")
     a = ap.parse_args()
     if a.self_test:
         return self_test()
@@ -380,6 +468,10 @@ def main() -> int:
             U.log(f"WARNING: {dst} is on a local filesystem; LSF hosts will not see it")
         logs = dst.parent / (dst.name + "_logs")
         logs.mkdir(parents=True, exist_ok=True)
+        if not head_mode and (a.spike or a.venv) and not a.force_tools:
+            leased = [t.name for t in head_trees() if live_leases(t)]
+            if leased:
+                U.die(f"--spike/--venv rewrite the tools home that leased head trees {leased} are using; wait or --force-tools")
         with sync_lock(site):
             if head_mode:
                 # Sources of exactly this commit into their own tree; the tools home is shared through symlinks.
@@ -398,9 +490,12 @@ def main() -> int:
             man["tree_sha256"], man["runtime_file_count"] = tree_hash(dst)
             man["file_count"] = len(mirrored_files(dst))
             man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
-            # tools/spike lives in the tools home only; a head tree reaches it through its symlink.
-            man["spike_present"] = rsync_spike(C.REPO_ROOT, site, logs / "rsync_spike.log") if a.spike \
+            # tools/spike lives in the tools home only; a head tree reaches it through its symlink, and a head-mode
+            # sync never rewrites the tools home (--spike there means: require it present).
+            man["spike_present"] = rsync_spike(C.REPO_ROOT, site, logs / "rsync_spike.log") if (a.spike and not head_mode) \
                 else (dst / SPIKE_ITEM / "bin" / "spike").is_file()
+            if head_mode and a.spike and not man["spike_present"]:
+                U.die(f"tools home {site} has no tools/spike; run gen_mirror.py --sync --spike --source worktree first")
             if a.venv:
                 man["venv"] = build_venv(site, logs / "venv.log")
             elif head_mode:
@@ -411,14 +506,14 @@ def main() -> int:
                 man["venv"] = info
             else:
                 man["venv"] = prev.get("venv")
+            man["tools_digest"] = tools_digest(site)
             U.dump_yaml(man, dst / MANIFEST_NAME)
-            if head_mode:
-                removed = prune_head_mirrors(dst)
-                if removed:
-                    U.log(f"pruned old head trees: {removed}")
         U.log(f"mirror manifest {dst / MANIFEST_NAME}: source {a.source}, {man['file_count']} files, sha256 {man['tree_sha256'][:16]}..., "
               f"git {man['git']['head'][:12]}, venv {'ok' if (man.get('venv') or {}).get('cocotb_vpi_lib') else 'MISSING'}, "
               f"spike {man['spike_present']}")
+    if a.prune:
+        res = prune_head_mirrors()
+        U.log(f"prune: removed {res['removed']}, kept leased {res['kept_leased']}, kept recent {res['kept_recent']}, newest kept {len(res['kept_newest'])}")
     if a.check or a.status:
         if not a.sync:
             dst = head_mirror_root(a.head_sha or head_sha()) if a.source == C.SOURCE_MODE_HEAD else a.mirror_root.resolve()

@@ -304,7 +304,9 @@ Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per requ
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
 single-test requests turns around in about one request's time. A batch is head-mode: before it the server syncs
-the mirror once from the commit it pins first (`gen_mirror.py --sync --spike --source head --head-sha S` into the
+the mirror once from the commit it pins first (`--canary-sha C` names the commit the canary passed on: when S differs
+from C in a mirrored build input (`BUILD_INPUT_PATHS`, `git diff --stat C S`), the batch is left pending for a
+new canary and both shas and the delta are recorded; otherwise `gen_mirror.py --sync --spike --source head --head-sha S` into the
 per-sha head tree; S is passed to every regression of the batch as `--head-sha`, the batch's scope decisions
 read that tree's committed testlist, and S and the tree are recorded in every batch manifest as
 `server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
@@ -350,7 +352,11 @@ recomputes URG's weight-averaged covergroup score from groups.txt without the le
 (`group_score` with `ledger_excluded`), the gate row's GROUP takes that value whenever a ledger row was
 present (else URG's total stands), and the ledger's own bins are reported beside it from grpinfo.txt as
 "witnessed clauses: N of M" (`ledger`, also `gate_row.ledger`). This is the mechanism of record; TB Infra's
-`option.weight = 0` on the covergroup is defence in depth. Pinned by `gen_cov_report.py self-test` on
+`option.weight = 0` on the covergroup is defence in depth. A ledger row is matched by its SV name or by a
+plan id (`LEDGER_PLAN_IDS`) in its name; only URG's summary table is parsed (the per-group blocks that
+follow are not rows); and because the plan says the ledger exists, a report that carries covergroups but no
+ledger row ends the merge with status `ledger_missing` (`LEDGER_REQUIRED`), which fails the regression like
+an exclusion violation. Pinned by `gen_cov_report.py self-test` on
 fabricated groups.txt and grpinfo.txt excerpts until a covergroup exists on this site.
 
 Exclusion markers: when an exclusion file is loaded URG appends `(x)` to an instance name that
@@ -490,8 +496,15 @@ directory, so a worktree sync cannot reach a head-mode consumer by construction,
 batches on different commits do not share a tree either; every sync of the family runs under one lock
 (`<site root>.sync.lock`). A head tree carries no venv or Spike of its own: its `.venv` and `tools` are
 symlinks to the tools home (the site mirror root), so `ci/env.sh` in the head tree activates the one venv
-built on shared storage; the newest `HEAD_MIRRORS_KEEP` head trees are kept, older ones pruned after a
-sync. The manifest records `source`, `head_sha` and `tools_home`;
+built on shared storage. A live consumer (a head-mode regression, a batch) leases its tree
+(`<tree>/.leases/<pid>_<tag>.lease`, released at exit); pruning runs only from the runtime tick
+(`gen_mirror.py --prune`), never from a sync, and removes trees beyond the newest `HEAD_MIRRORS_KEEP` only
+when they are older than `HEAD_MIRRORS_KEEP_HOURS` and carry no live lease. The tools home is rewritten only
+by a worktree-mode `--spike` / `--venv` sync, which refuses while any head tree is leased (`--force-tools`
+overrides); a head-mode `--spike` only requires Spike present. Every manifest records `tools_digest`
+(sha256 over tools/spike/lib and the venv's cocotb VPI library); a build records it in its mirror record and
+every run re-checks it before the simulator, so a tools rewrite under a consumer fails loud. The manifest
+records `source`, `head_sha` and `tools_home`;
 `--status` computes the source hash from a fresh HEAD export (into a unique temporary staging directory) for
 a head-mode mirror, so a new commit makes it stale; a pinned consumer (a build or run carrying `GEN_DV_HEAD_SHA`)
 instead asks the manifest whether the mirror is the mirror of that sha, without re-exporting, so concurrent

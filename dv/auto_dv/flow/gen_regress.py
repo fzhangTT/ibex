@@ -468,6 +468,11 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="delete an existing outdir")
     a = ap.parse_args()
     source_bootstrap(a)
+    if os.environ.get(C.ENV_SOURCE_ROOT):
+        # This regression holds a lease on its head tree until it exits: the prune step skips leased trees.
+        import atexit
+        lease = M.lease_head_tree(C.SOURCE_ROOT, a.request or (a.tag or "regress"))
+        atexit.register(M.release_lease, lease)
     if not (a.tier or a.tests or a.repro):
         ap.error("one of --tier, --tests, --repro is required")
     U.require_env("vcs", "urg", "bsub" if not a.local else "vcs")

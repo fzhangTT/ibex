@@ -60,7 +60,8 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
         U.die(f"mirror venv has no cocotb VPI library; run gen_mirror.py --sync --venv")
     rec = {"root": str(root), "tree_sha256": man.get("tree_sha256"), "git_head": (man.get("git") or {}).get("head"),
            "synced_utc": man.get("synced_utc"), "venv": man.get("venv"), "env_sh": str(root / "ci" / "env.sh"),
-           "state_at_build": st["state"]}
+           "state_at_build": st["state"], "tools_home": man.get("tools_home") or str(root),
+           "tools_digest": man.get("tools_digest")}
     return lib, rec
 
 
@@ -181,6 +182,9 @@ def source_facts() -> dict[str, Any]:
     man = M.load_manifest(C.SOURCE_ROOT) or {}
     if man.get("source") != C.SOURCE_MODE_HEAD or not man.get("head_sha"):
         U.die(f"{C.SOURCE_ROOT} is bound as the source root but carries no head-mode mirror manifest")
+    pinned = os.environ.get(C.ENV_HEAD_SHA)
+    if pinned and pinned != man["head_sha"]:
+        U.die(f"pinned {C.ENV_HEAD_SHA}={pinned[:12]} but {C.SOURCE_ROOT} is the tree of {man['head_sha'][:12]}")
     return {"source_mode": C.SOURCE_MODE_HEAD, "head_sha": man["head_sha"]}
 
 
