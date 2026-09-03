@@ -45,7 +45,7 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
 - Doc / spec per coverpoint:
   - cp_op: doc/03_reference/instruction_decode_execute.rst:67-89 (RV32B OTEarlGrey; Zba, Zbb single-cycle); tools/specs/riscv-isa-manual/src/unpriv/zb.adoc: sh1add :2197 ("shifts rs1 to the left by 1 bit and adds it to rs2"; sh2add :2273, sh3add :2370 sections), andn :102, orn :1394, xnor :2602, min :1253, minu :1306, max :1137, maxu :1200, sext.b :2104, sext.h :2150, zext.h :2790, pack :1464-1465 (lower halves, rs1 low, rs2 high), packh :1518 (least-significant bytes). packu has NO ratified sentence (it is the draft-0.92 addition, tools/specs/riscv-bitmanip changelog); the RTL is its definition: `{operand_b[31:16], operand_a[31:16]}` (alu:565).
   - cp_rs1_class (incl. e0000000, byte_msb, half_msb), cp_rs2_class, cp_sign_pair, cp_eq_operands, cp_same_regs, cp_rd_x0, cp_result_class: TB partitions of the RVFI fields listed in section 0; for min/max the sign pair is the pair the signed compare consumes (alu:123-126, :138-140).
-  - cp_wrap (carry out of rs2 + (rs1 << n), shNadd only): the RTL adder takes the 32-bit TRUNCATED shifted operand (bits 31..32-n of rs1 fall off, alu:87-89) and the carry of the 33-bit sum is internal only (adder_result_ext_o[33] never leaves the ALU, :105-107); RVFI shows the 32-bit result. The TB must compute the carry as `((rs1 << n) mod 2^32) + rs2 >= 2^32` from rvfi_rs1_rdata / rvfi_rs2_rdata, which equals the RTL's carry; a formula using the full 33..35-bit product of the shift would not.
+  - cp_wrap (carry out of rs2 + (rs1 << n), shNadd only): the RTL adder takes the 32-bit TRUNCATED shifted operand (bits 31..32-n of rs1 fall off, alu:87-89) and the carry of the 33-bit sum is not exported on RVFI (adder_result_ext_o[33], :105-107, feeds only the EX block and the multiplier, rtl/ibex_ex_block.sv:61, :130, :152); RVFI shows the 32-bit result. The TB must compute the carry as `((rs1 << n) mod 2^32) + rs2 >= 2^32` from rvfi_rs1_rdata / rvfi_rs2_rdata, which equals the RTL's carry; a formula using the full 33..35-bit product of the shift would not.
 - Bins the RTL cannot distinguish or RVFI cannot observe:
   - zext_h vs pack: the same ALU operator and result (decoder :1282 maps both to ALU_PACK; with rs2 = x0 the upper half is zero, alu:567); only the rs2 index (rvfi_insn[24:20] == 0 / rvfi_rs2_addr == 0) separates the bins, as the plan already states.
   - sext_b / sext_h: rvfi_rs2_rdata and rvfi_rs2_addr are 0 (rf_ren_b = 0 for OP-IMM, core:2308): cp_rs2_class, cp_eq_operands and the rs2-based same_regs bins are meaningless for them; the plan's ignore clauses cover the crosses, the coverpoints themselves still sample `zero`.
@@ -78,7 +78,7 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
   - cp_rvfi_tags_ok: rtl/ibex_core.sv:2270-2280 (valid on all micro-ops, last only on the final), pc_wdata == pc_rdata on non-last micro-ops (if_stage:809-810), rvfi_insn == the synthesized word (:2267).
   - cp_minstret_once: minstret increments once per sequence because instr_perf_count_id excludes INSTR_EXPANDED / INSTR_EXPANDED_COMMIT micro-ops (rtl/ibex_id_stage.sv:1218-1220; rtl/ibex_wb_stage.sv:206-210; rtl/ibex_cs_registers.sv:1588).
   - cp_ret_align (popret/popretz): the `jalr x0, 0(ra)` micro-op (cm_ret_ra :143-150) reports ra in rvfi_rs1_rdata (rf_ren_a) and the RAW target in rvfi_pc_wdata (core:2084, B13: bit 0 kept), while the fetch clears bit 0 (if_stage:288) so the next record's pc_rdata is even: bins word/half/odd are readable from rvfi_rs1_rdata[1:0] of that micro-op.
-  - cp_sp_align, cp_sp_wrap: sp before the instruction = rvfi_rs1_rdata of the FIRST store/load micro-op (base x2, rf_ren_a); a misaligned sp splits every access in the LSU (rtl/ibex_load_store_unit.sv:468-486 split_misaligned_access) and is counted once by NumLoads/NumStores (D6).
+  - cp_sp_align, cp_sp_wrap: sp before the instruction = rvfi_rs1_rdata of the FIRST store/load micro-op (base x2, rf_ren_a); a misaligned sp splits every access in the LSU (rtl/ibex_load_store_unit.sv:403-405 defines split_misaligned_access: word with offset != 0, halfword with offset 3; the FSM applies it at :468-486) and is counted once by NumLoads/NumStores (D6).
 - Bins the RTL cannot distinguish or RVFI cannot observe:
   - cp_minstret_once: minstret is NOT on RVFI (core:173-174 export mcycle and mhpmcounter3..12 only). Observable substitutes: rvfi_ext_mhpmcounters[7] = mhpmcounter10 NumInstrRetC (core:2122), which also increments once per Zcmp instruction (same instr_perf_count_id gate plus the compressed flag), or a csrr minstret in the test program. Flag: as written, the bin needs a CSR model or a csrr, not the RVFI record.
   - cp_dummy_en: dummy instructions produce no RVFI record (core:1864 gates valid with ~dummy_instr_id) and cpuctrlsts is not exported; the TB can only know dummy_instr_en from its own CSR-write tracking (the plan says "TB CSR model": consistent, but it is not an RTL observation).
@@ -117,7 +117,7 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
   - cp_rd_x0: rvfi_rd_addr.
 - Bins the RTL cannot distinguish or RVFI cannot observe:
   - cp_result on rd_x0 records is forced `zero` (core:2344-2346): cr_op_result x rd_x0 = yes would always be r0.
-  - rvfi_rs2_rdata / rvfi_rs2_addr are 0 for these unary ops (core:2308); nothing in the plan uses rs2 here, stated for completeness.
+  - rvfi_rs2_rdata / rvfi_rs2_addr are 0 for these unary ops (core:2308); nothing in the plan uses rs2 here.
   - clz and ctz of operand 0 both give 32 and cpop of 0 gives 0: r32 is reachable only through zero for clz/ctz, r0 only through zero for cpop and through a set-bit-31 operand (clz) / set-bit-0 operand (ctz) otherwise; the plan's cr_op_result bins that contradict this (e.g. cpop/r32 needs all_ones) are TB arithmetic, not RTL ambiguity.
 
 ## 7. CG-MUL-003 gen_cg_div_ops (gen_fcov_plan.md:553)
@@ -138,10 +138,10 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
 ## 8. CG-CMP-007 gen_cg_cmp_zcmp_mv (gen_fcov_plan.md:726)
 
 - Observation point: RVFI retirement with rvfi_ext_expanded_insn_last == 1 whose 16-bit source decodes as cm.mvsa01 / cm.mva01s, both micro-ops collected since the first rvfi_ext_expanded_insn_valid at this pc.
-- RTL signal chain (rtl/ibex_compressed_decoder.sv): the 16-bit instruction is [15:13] = 101, [12:10] = 011, [1:0] = 10 with [6:5] = 01 for cm.mvsa01 (:780-800) and 11 for cm.mva01s (:808-828); each expands to two `addi dst, src, 0` micro-ops built by cm_mv_reg (:129-138): cm.mvsa01 first `a0 -> r1s'` (cm_mvsa01(a01 = 0, rs = instr[9:7]) :153-159, tagged INSTR_EXPANDED_COMMIT :783-790) then `a1 -> r2s'` (a01 = 1, rs = instr[4:2], INSTR_EXPANDED_LAST :793-800); cm.mva01s first `r1s' -> a0` (cm_mva01s(rs = instr[9:7], a01 = 0) :160-166, COMMIT :811-818) then `r2s' -> a1` (LAST :821-828). The sreg mapping is `{(rs[2:1] > 0), (rs[2:1] == 0), rs}` (:157): s0/s1 -> x8/x9, s2..s7 -> x18..x23. No interrupt is taken between the two micro-ops (handle_irq excludes INSTR_EXPANDED_COMMIT, rtl/ibex_controller.sv:498-500) and no debug entry (:474-477); RVFI export as in section 0 (:2263-2280).
+- RTL signal chain (rtl/ibex_compressed_decoder.sv): the 16-bit instruction is [15:13] = 101, [12:10] = 011, [1:0] = 10 with [6:5] = 01 for cm.mvsa01 (:780-800) and 11 for cm.mva01s (:808-828); each expands to two `addi dst, src, 0` micro-ops built by cm_mv_reg (:129-138): cm.mvsa01 first `a0 -> r1s'` (cm_mvsa01(a01 = 0, rs = instr[9:7]) :153-159, tagged INSTR_EXPANDED_COMMIT :783-790) then `a1 -> r2s'` (a01 = 1, rs = instr[4:2], INSTR_EXPANDED_LAST :793-800); cm.mva01s first `r1s' -> a0` (cm_mva01s(rs = instr[9:7], a01 = 0) :160-166, COMMIT :811-818) then `r2s' -> a1` (LAST :821-828). The sreg mapping is `{(rs[2:1] > 0), (rs[2:1] == 0), rs}` (:156): s0/s1 -> x8/x9, s2..s7 -> x18..x23. No interrupt is taken between the two micro-ops (handle_irq excludes INSTR_EXPANDED_COMMIT, rtl/ibex_controller.sv:498-500) and no debug entry (:474-477); RVFI export as in section 0 (:2263-2280).
 - Sampling condition in RTL terms: the WB retirement of the LAST micro-op with the COMMIT micro-op retired immediately before it (same pc), no trap; the moves cannot trap (addi), so the only way the pair does not complete is a fetch-side or asynchronous event before the COMMIT micro-op retires.
 - Doc / spec per coverpoint:
-  - cp_insn, cp_r1s, cp_r2s: tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc:1174 ("moves a0 into r1s' and a1 into r2s'. r1s' and r2s' must be different"), :1175 (the execution is atomic), :1163 (norm:cm-mvsa01_res: legal only when r1s' != r2s'), :1242 (cm.mva01s moves r1s' into a0 and r2s' into a1). RTL fields: instr[9:7] and instr[4:2] (:786, :795, :814, :823). Note: the RTL does not check r1s' != r2s' for cm.mvsa01 (no illegal_instr_o in the :780-800 arm); it executes two moves into the same sreg, the second winning: bug candidate B4 in the bug log, the plan ignores that cross bin.
+  - cp_insn, cp_r1s, cp_r2s: tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc:1174 ("moves a0 into r1s' and a1 into r2s'. r1s' and r2s' must be different"), :1175 (the execution is atomic), :1163 (norm:cm-mvsa01_res: legal only when r1s' != r2s'), :1242 (cm.mva01s moves r1s' into a0 and r2s' into a1). RTL fields: instr[9:7] and instr[4:2] (:786, :795, :814, :823). The RTL does not check r1s' != r2s' for cm.mvsa01 (no illegal_instr_o in the :780-800 arm); it executes two moves into the same sreg, the second winning: bug candidate B4 in the bug log, the plan ignores that cross bin.
   - cp_equal, cp_src_values: TB comparisons of the fields and of the first micro-op's rvfi_rs1_rdata pair (a0/a1 values are rvfi_rs1_rdata of the two micro-ops for mvsa01; r1s'/r2s' values likewise for mva01s).
   - cp_b2b, cp_hazard_src: TB ordering over neighbouring records; RTL forwarding makes a preceding ALU or load writer visible in the move's rvfi_rs1_rdata (core:2304-2310 captures the forwarded value).
   - cp_uop_count_ok: exactly two records with the same pc, first with _last = 0, second with _last = 1 (:790, :800, :818, :828).
@@ -166,7 +166,7 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
   - cp_mtvec_mode_w r10/r11 and cp_mtvec_lo_w nonzero: the written bits are dropped (:739-743); the read-back always shows mode 01 and [7:2] = 0, so these bins prove the WARL drop, not a stored value.
   - cp_mcen_gate invalid vs off: identical RTL behaviour (:845 compares against IbexMuBiOn only); only the TB's drive distinguishes them.
   - misa, mstatush, menvcfg, menvcfgh writes: no RTL state changes and no trap; the read-back equals the constant. A bin expecting an illegal-instruction trap on these writes would never hit.
-  - The write record's rvfi_rd_wdata is the OLD value only when rd != x0 (cp_rd = x0 loses it); for csrrs/csrrc with rs1 = x0 the RTL performs no write (csr_op_en gated by rs1 != x0 for the register forms, id_stage csr_op decode), so those pairs are read-only pairs, not write pairs.
+  - The write record's rvfi_rd_wdata is the OLD value only when rd != x0 (cp_rd = x0 loses it); for csrrs/csrrc with rs1 = x0 (and csrrsi/csrrci with uimm = 0) the decoder demotes the operation to CSR_OP_READ (rtl/ibex_decoder.sv:251-258), so no write happens and those pairs are read-only pairs, not write pairs.
 
 ## 10. CG-ISA-007 gen_cg_isa_branch (gen_fcov_plan.md:419)
 
@@ -424,6 +424,397 @@ Delivered in slices of five covergroups; slice 1 = ranks 1..5.
   - funct3 100 traps in the decoder before the CSR unit sees the address (:773, :783): cp_aclass has no meaning for that record.
   - A read of a U-accessible counter alias with the mcounteren bit clear traps in U (:618, :632) and reads in M; the same address therefore lands in two different classes by privilege, which only rvfi_mode reveals.
 
+## 26. CG-ISA-004 gen_cg_isa_lui_auipc (gen_fcov_plan.md:372)
+
+- Observation point: RVFI retirement, condition decoded LUI or AUIPC, rvfi_trap == 0.
+- RTL signal chain: rtl/ibex_decoder.sv legality :469-476; ALU control: LUI = OP_A_IMM (zero) + IMM_B_U with ALU_ADD (:1059-1066), AUIPC = OP_A_CURRPC + IMM_B_U with ALU_ADD (:1068-1076); imm_u_type = {instr[31:12], 12'b0} (rtl/ibex_id_stage.sv:274 region, mux :396/:424 IMM_B_U); the adder's carry is discarded (rtl/ibex_alu.sv:105-107). RVFI: pc_rdata = pc_id (core:2083), rd fields as in section 0.
+- Sampling condition in RTL terms: the WB write of an instruction with opcode 0110111 (LUI) or 0010111 (AUIPC), no trap; on RVFI rvfi_insn[6:0].
+- Doc / spec per coverpoint:
+  - cp_op, cp_imm20: tools/specs/riscv-isa-manual/src/unpriv/rv32.adoc:304-309 (lui places the U-immediate in the top 20 bits and zeros the low 12; auipc adds the U-immediate to the pc of the auipc itself); rvfi_insn[31:12].
+  - cp_pc_align, cp_pc_region: rvfi_pc_rdata (core:2083); doc/03_reference/instruction_fetch.rst:79 (half-word aligned fetch).
+  - cp_wrap (auipc): carry of pc + (imm << 12), discarded by the RTL (alu:105-107); recompute from rvfi_pc_rdata and rvfi_insn[31:12]; rv32.adoc:346 (overflow ignored) is the expected behaviour.
+  - cp_rd_x0: rvfi_rd_addr; lui/auipc with rd = x0 are HINTs (rv32.adoc:962-970).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - cp_result on rd_x0 records is forced 0 (core:2344-2346); the group has no result coverpoint, but cr_op_rd_x0 = yes records carry no value.
+  - The AUIPC add and the LUI "add to zero" are the same adder path; only the a-operand select differs (:1060, :1069), so nothing but the opcode separates the two bins on RVFI.
+
+## 27. CG-MUL-004 gen_cg_div_timing (gen_fcov_plan.md:577)
+
+- Observation point: RVFI retirement of div/divu/rem/remu (as CG-MUL-003) with timing discriminators: the retire delta from the previous retirement, DIT, divide-by-zero, mid-op events, deferred start, neighbours, fetch stall, irq latency.
+- RTL signal chain: the divider starts only when the instruction executes: div_en_id = instr_executing ? div_en_dec : 0 (rtl/ibex_id_stage.sv:734) and instr_executing carries ~outstanding_memory_access (:1059-1062), so a divide behind an outstanding WB load/store starts in the cycle the response arrives (the deferred start of cp_wb_defer); the FSM then runs MD_IDLE -> MD_ABS_A -> MD_ABS_B -> 32 x MD_COMP -> MD_LAST -> MD_CHANGE_SIGN -> MD_FINISH (rtl/ibex_multdiv_fast.sv:426-524, div_counter :450, :459, :471, :480), valid_o in MD_FINISH (:514-517, :529): 36 cycles after the start, retire delta 37; the divide-by-zero fast path MD_IDLE -> MD_FINISH exists only with data_ind_timing off (:434, :445): delta 2; with DIT on every divide takes the long path. There is no FINISH hold (multdiv_ready_id = ready_wb is always 1 by the time the divide finishes; gen_multdiv_bound_props.md:10-29, gen_tp_parts_rtl_factcheck.md X-12). DIT comes from cpuctrlsts.data_ind_timing (rtl/ibex_cs_registers.sv:1905 -> rtl/ibex_core.sv:759, :891). Interrupts, NMI and debug requests are not taken while the divide occupies ID (rtl/ibex_controller.sv:704 requires !id_wb_pending; :498-500), so a pin asserted mid-op is serviced after the divide retires: cp_irq_latency = remaining divide cycles + the entry.
+- Sampling condition in RTL terms: the WB retirement of the divide (one record); the delta is the difference of consecutive rvfi_valid cycles, or of rvfi_ext_mcycle across the two records (rtl/ibex_core.sv:2102 samples mcycle when the instruction leaves ID, which for a divide is its completion cycle).
+- Doc / spec per coverpoint:
+  - cp_delta, cp_div0, cp_dit: doc/03_reference/instruction_decode_execute.rst:146-151 (37 cycles; 2 cycles on divide by zero; the cycle list); RTL :434, :445 (DIT forces the long path), :477-480 (32 COMP steps), :514-517.
+  - cp_wb_defer: rtl/ibex_id_stage.sv:734, :1059-1062 (the divide cannot start while the WB access is outstanding); the plan's C-9 note (no FINISH hold) is the same fact as X-12.
+  - cp_event_mid, cp_irq_latency: rtl/ibex_controller.sv:704, :498-500 (no entry while ID is busy); gen_t090_rtl_facts.md section 1 (entry between retirements).
+  - cp_prev, cp_next, cp_fetch_stall: TB history and the ibus monitor; the load_dep case is the stall_ld_hz path (rtl/ibex_id_stage.sv:1120), which delays the start further.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - Fast and long paths give the same result (section 7); only the delta separates them, and only with DIT off; with DIT on there is no d2 (:434).
+  - cp_dit is a TB CSR-model value: cpuctrlsts is not on RVFI; the RTL's data_ind_timing is internal (cs_registers:1905).
+  - cp_wb_defer is invisible on RVFI except as a larger delta; the dbus monitor supplies the response timing.
+  - A mid-op irq shows only as the intr record after the divide; latency needs pin timestamps (TB side); the RTL bound is 36 remaining cycles plus the entry cycles.
+  - The occupancy window has no RVFI marker: the record appears at completion; the start cycle is the previous record's cycle plus the ID handover, or the WB response cycle when deferred.
+
+## 28. CG-BIT-003 gen_cg_bit_rotate_shiftones (gen_fcov_plan.md:851)
+
+- Observation point: RVFI retirement, condition decoded rol/ror/rori/slo/sro/sloi/sroi, rvfi_trap == 0.
+- RTL signal chain: rtl/ibex_decoder.sv OP: rol `{0110000,001}` :1266, ror `{0110000,101}` :1272, slo `{0010000,001}` :1323, sro `{0010000,101}` :1326; OP-IMM: sloi (funct3 001, instr[31:27] 00100) :1094, sroi (funct3 101, instr[31:27] 00100) :1171, rori (funct3 101, instr[31:27] 01100) :1175. Legality: sloi accepts any instr[26:25] (:503-505), sroi likewise (:547-549), rori requires instr[26:25] == 00 (:550-552, shared with bexti). rtl/ibex_alu.sv: rol/ror are two ID cycles (shift_left toggles with instr_first_cycle_i, :309-310; the two partial shifts are OR-ed through the multicycle path :1228), slo/sro shift ones in (shift_ones :323-324, :343), amount = operand_b[4:0] (:279-290), result :1338 (slo/sro) and :1371 (rol/ror).
+- Sampling condition in RTL terms: the WB write of an instruction decoded to ALU_ROL/ROR/SLO/SRO, no trap; on RVFI the funct7/funct3 pairs above for OP, or OP-IMM funct3 001 with rvfi_insn[31:27] == 00100 (sloi), funct3 101 with rvfi_insn[31:27] == 00100 (sroi) or 01100 and rvfi_insn[26:25] == 00 (rori).
+- Doc / spec per coverpoint:
+  - cp_op: doc/03_reference/instruction_decode_execute.rst:87 (Zbb: rol, ror[i] multi-cycle); tools/specs/riscv-isa-manual/src/unpriv/zb.adoc rol :1759, ror :1868, rori :1937 ("rotate by the amount in the least-significant log2(XLEN) bits of rs2 / shamt"); slo/sro/sloi/sroi have no ratified sentence (draft group rvb_shifter, tools/specs/riscv-bitmanip/texsrc/reference.tex:90): the RTL (alu:323-324, :343, ones shifted in) is the definition.
+  - cp_amount: rvfi_rs2_rdata[4:0] or rvfi_insn[24:20]; cp_rs2_upper: rvfi_rs2_rdata[31:5], ignored (alu:279-290).
+  - cp_sloi_bits, cp_sroi_bit25: rvfi_insn[26:25] / [25]; the decoder does not examine them for sloi/sroi (:503-505, :547-549), so the bins prove a no-trap decode.
+  - cp_operand, cp_rd_x0: section-0 fields.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - rori with instr[26:25] != 00 traps (:550-552): no lenient bins exist for rori, unlike sloi/sroi; a rori record always has canonical bits.
+  - The two-cycle rotate is one record; timing belongs to CG-BIT-010.
+  - Amount bins are equivalence classes of operand_b[4:0]; a32-style upper values are ignored.
+  - Results on rd_x0 records are forced 0 (core:2344-2346).
+
+## 29. CG-CSR-003 gen_cg_csr_trap_handling_warl (gen_fcov_plan.md:1236)
+
+- Observation point: the TB checker's write/read-back pair for mscratch, mepc, mcause, mtval, mip (as CG-CSR-002); for mip the read follows a write with the irq pins held.
+- RTL signal chain (rtl/ibex_cs_registers.sv): mscratch stores all 32 bits (:792, register :1124-1125, read :466); mepc stores {wdata[31:1], 1'b0} (:729, mepc_en :796, read :478-485); mcause stores only irq_ext = (wdata[31:30] == 10), irq_int = (wdata[31:30] == 11) and code = wdata[4:0] (:731-733, mcause_en :800) and reads back {irq_ext | irq_int, irq_int ? 26'h3FFFFFF : 26'h0, code} (:487-489): the written bits 29:5 are never stored, a written 01 in [31:30] reads back as 00, 10 reads as bit 31 set with bits 30:5 zero, 11 reads as bit 31 set with bits 30:5 all ones; mtval stores all 32 bits (:735, mtval_en :803, read :492); mip has NO write case (the write block :786-880 names no CSR_MIP) and reads the live pins (:495-500 from :409-412), so a write is legal and ignored.
+- Sampling condition in RTL terms: csr_we_int for the address (:1020) followed by a csrr of it; the read-back record's rvfi_rd_wdata (rd != x0) is the legalised value; the write record's rvfi_rs1_rdata / zimm is the written value.
+- Doc / spec per coverpoint:
+  - cp_csr, cp_op, cp_wpat: doc/03_reference/cs_registers.rst:27-35 (mscratch RW, mepc WARL, mcause WLRL, mtval WARL, mip read-only); the CSR forms per rv32 Zicsr.
+  - cp_mepc_lo_w: RTL :729 (bit 0 forced 0, bit 1 kept: IALIGN 16 with the C extension, rv32.adoc:105-116).
+  - cp_mcause_hi_w, cp_mcause_mid_w, cp_mcause_code_w: RTL :731-733 and :487-489 as above; gen_t102_rtl_facts.md R10 for the breakpoint code (mcause 3).
+  - cp_mip_pins: the mip read is the pin vector at the read cycle (:409-412, :495-500); the TB's irq drive is the reference; the record also carries rvfi_ext_pre_mip / post_mip (core:1995, :2136), sampled at ID entry and at the stage advance, not exactly at the read cycle.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - mcause: h01 and h00 writes read back identically (h00, mid zero); a written nonzero mid field (bits 29:5) is always dropped and reads 0 (h00/h01/h10) or all ones (h11): cp_mcause_mid_w nonzero bins prove the drop, never a stored value.
+  - mepc: b01 and b11 writes read back as b00 and b10 (:729); the bins prove the mask.
+  - mip: every write is a no-op with no trap; the read-back equals the pins, so a "write pattern" bin on mip only proves that the pattern did not change the read.
+  - RVFI exports no CSR state; a read-back with rd = x0 shows nothing (core:2344-2346).
+
+## 30. CG-BIT-008 gen_cg_bit_ternary (gen_fcov_plan.md:939)
+
+- Observation point: RVFI retirement, condition decoded cmov/cmix/fsl/fsr/fsri, rvfi_trap == 0; rs3 from rvfi_rs3_addr / rvfi_rs3_rdata.
+- RTL signal chain: rtl/ibex_decoder.sv OP with instr[26] = 1: cmix `funct3 001` :1211, cmov `funct3 101` :1220, fsl :1229, fsr :1238 (:1208-1240, RV32B != None); fsri = OP-IMM funct3 101 with instr[26] = 1 (:1157-1161, ALU_FSR with use_rs3_d = 1; legality :540-541). rs3 = instr[31:27] is read in the instruction's SECOND cycle through the a-port: raddr_a = (use_rs3_q & ~instr_first_cycle_i) ? instr_rs3 : instr_rs1 (:203, use_rs3 flop :172-190); RVFI captures it there: rvfi_rs3_addr_d = rf_raddr_a, rvfi_rs3_data_d = multdiv_operand_a_ex in the non-first cycle (rtl/ibex_core.sv:2316-2317). rtl/ibex_alu.sv: two-cycle results through multicycle_result: cmov = (rs2 == 0) ? rs1 : rs3 (:1207-1208, rs1 held in imd_val_q from cycle 1), cmix = (rs1 & rs2) | (rs3 & ~rs2) (:377 negates rs2 in cycle 2, :1217-1218), fsl/fsr = funnel shift of {rs1, rs3} by rs2[5:0] / imm[5:0] (shift_funnel :325-326, shift_left :311-314, amount handling :279-290 with shift_amt[5] selecting the operand, :1227-1231; the reference formulas are the comments :201-224); result mux :1371.
+- Sampling condition in RTL terms: the WB write of an instruction decoded to ALU_CMOV/CMIX/FSL/FSR, no trap; on RVFI rvfi_insn[6:0] == 0110011 with rvfi_insn[26] == 1 and funct3 001 (cmix) / 101 (cmov, fsl, fsr distinguished by rvfi_insn[25] and [30]), or rvfi_insn[6:0] == 0010011 with funct3 101 and rvfi_insn[26] == 1 (fsri).
+- Doc / spec per coverpoint:
+  - cp_op: doc/03_reference/instruction_decode_execute.rst:101 (Zbt v0.93, all multi-cycle); no ratified sentence exists (draft groups tools/specs/riscv-bitmanip/texsrc/reference.tex:90 fsl/fsr, :92 cmix/cmov); the RTL formulas (alu:1207-1231 and the comments :201-224) are the definition.
+  - cp_cmov_ctrl, cp_cmix_mask: rvfi_rs2_rdata (alu:1208, :1218).
+  - cp_funnel_amt: rvfi_rs2_rdata[5:0] (fsl/fsr) or rvfi_insn[25:20] (fsri); alu:279-290 (shift_amt[5] = word swap, :279; 0 selects rs1, 32 selects rs3 wholesale, comments :222-224).
+  - cp_fsri_hi5: rvfi_insn[31:27], the rs3 field of fsri (the 00000 / 01000 patterns coincide with the srli / srai funct7 prefixes but rvfi_insn[26] = 1 makes them fsri, decoder :540-541, :1157-1161).
+  - cp_rs2_upper6: rvfi_rs2_rdata[31:6], ignored (alu:279-290).
+  - cp_rs3_choice, cp_rs1_rs3_class: rvfi_rs3_addr / rvfi_rs3_rdata against rs1 / rs2 / rd fields and values (core:2316-2317).
+  - cp_rd_x0: rvfi_rd_addr.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The two ID cycles are one record; the rs3 value is the one read in the second cycle, so a WB write to rs3 between the two cycles is reflected (forwarding, id_stage:1117) and rvfi_rs3_rdata shows exactly the value used (core:2316-2317).
+  - cmov's result equals rs1 or rs3 (:1208): cp_cmov_ctrl classes are visible only through which operand value appears in rvfi_rd_wdata.
+  - Funnel amounts differing only in rs2[31:6] are one operation (alu:279-290); amount 0 and 32 degenerate to rs1 and rs3 (:222-224).
+  - Results on rd_x0 records are forced 0 (core:2344-2346).
+
+## 31. CG-ISA-009 gen_cg_isa_system (gen_fcov_plan.md:458)
+
+- Observation point: RVFI retirement, condition decoded SYSTEM funct3 000 with funct12 in {0x000 ecall, 0x001 ebreak, 0x302 mret, 0x7b2 dret, 0x105 wfi} or c.ebreak; outcome from rvfi_trap, the debug-mode transition, core_busy_o and the handler's mcause read-back.
+- RTL signal chain: rtl/ibex_decoder.sv:733-757 decodes funct12 into ecall_insn_o / ebrk_insn_o / mret_insn_o / dret_insn_o / wfi_insn_o (rs1 and rd must be x0, the surrounding arm); c.ebreak expands to ebreak (rtl/ibex_compressed_decoder.sv:604-605). Legality in rtl/ibex_id_stage.sv:603-611: dret outside debug mode is illegal (:604), mret in U-mode and wfi in U-mode with mstatus.TW are illegal (:606-608), all folded into illegal_insn_o (:610-611). Controller (rtl/ibex_controller.sv): ecall -> exception cause 11 in M / 8 in U (:871), ebreak -> breakpoint exception (cause 3, mtval 0, R10) unless dcsr.ebreakm/ebreaku for the current privilege or already in debug mode, then DBG_TAKEN_ID with no mcause/mtval/mepc update (:882-899, ebreak_into_debug :481-483); mret / dret are special requests resolved in FLUSH (:953-965) with the privilege restored from mpp / dcsr.prv (rtl/ibex_cs_registers.sv:953-954, :949-951); wfi -> WAIT_SLEEP (:966-967) and the core sleeps until irq_nm | irq_pending | debug_req_i | debug_mode | single-step (:615-617, then FIRST_FETCH :622-645); core_busy_o = ctrl_busy | if_busy | lsu_busy as a MuBi (rtl/ibex_core.sv:521; DUT port dv/auto_dv/tb/gen_dut_top.sv:202, :394). RVFI: trap records for ecall/ebreak (rvfi_trap via id exception :1885), no trap record for an ebreak that enters debug (:1885-1886 gate on ~debug entry), C-1 pc_wdata for mret/dret/trap records (R1), rvfi_mode = executing privilege (R2), rvfi_ext_debug_mode (:2101).
+- Sampling condition in RTL terms: the record of the SYSTEM instruction itself: a trap record (ecall, ebreak-to-exception, illegal mret/dret/wfi) or a normal record (mret, dret, wfi executed, ebreak into debug); the outcome needs the NEXT record (handler entry with mcause, DmHaltAddr with rvfi_ext_debug_mode, or the sequential successor / intr record after wfi).
+- Doc / spec per coverpoint:
+  - cp_op, cp_outcome: tools/specs/riscv-isa-manual/src/priv/machine.adoc:2621 (EBREAK returns control to a debugger, breakpoint exception), :2007-2013 (mtval on [C.]EBREAK, R10); rv32 ecall/ebreak semantics; the debug spec (tools/specs/riscv-debug-spec) for ebreakm/ebreaku and dret; RTL :871 (ecall cause by privilege), :882-899 (ebreak fork), rtl/ibex_id_stage.sv:603-608 (illegal mret/dret/wfi).
+  - cp_priv, cp_debug_mode: rvfi_mode (R2: pre-step privilege, so an ecall from U shows u), rvfi_ext_debug_mode.
+  - cp_ebreakm, cp_ebreaku, cp_tw: TB CSR-model values (dcsr and mstatus are not exported; the RTL reads them at controller :481-483 and id_stage :608).
+  - cp_wfi_wake, cp_wfi_resume, cp_busy_off: controller :615-617 (wake conditions: irq_nm, irq_pending, debug_req_i, debug_mode_q, single-step) and :630-645 (FIRST_FETCH takes the interrupt or debug entry, else DECODE); core_busy_o (core:521) drops only when the controller, IF and LSU are all idle (the plan's C-5 note); irq_enabled = MIE | U (controller:490), so a U-mode wake by an enabled line always enters the handler.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - An ebreak that enters debug mode produces NO trap record and no CSR change (:883-891; core:1885-1886); the only evidence is the next record at DmHaltAddr with rvfi_ext_debug_mode = 1 and dcsr.cause = 1 (EBREAK) readable in the debug ROM.
+  - ebreak vs c.ebreak: one decoder arm after expansion; only the 16-bit rvfi_insn separates them (core:2263-2265).
+  - wfi with an already-true wake condition never enters WAIT_SLEEP visibly (:615-617 leaves at once); pending_at_entry is a TB determination from pin timing; core_busy_o may never drop.
+  - The illegal mret/dret/wfi records are indistinguishable from other illegal instructions on RVFI (trap, mcause 2, mtval = the instruction word, controller :866-868); the cause bins of cp_outcome come from the handler's read-back.
+  - mret/dret records are ordinary records (rvfi_trap = 0) whose redirect shows only in the next record's pc_rdata (R1).
+
+## 32. CG-BIT-005 gen_cg_bit_xperm (gen_fcov_plan.md:889)
+
+- Observation point: RVFI retirement, condition decoded xperm.n / xperm.b / xperm.h, rvfi_trap == 0.
+- RTL signal chain: rtl/ibex_decoder.sv OP `{0010100, 010}` xperm.n :1314, `{0010100, 100}` xperm.b :1317, `{0010100, 110}` xperm.h :1320 (OTEarlGrey/Full). rtl/ibex_alu.sv:752-822: rs2 is split into 8 nibble indexes (sel_n = rs2[i*4 +: 3], valid when rs2[i*4+3] == 0, :752-755), 4 byte indexes (sel_b = rs2[i*8 +: 2], valid when rs2[i*8+2 +: 6] == 0, :756-759) or 2 half-word indexes (sel_h = rs2[i*16], valid when rs2[i*16+1 +: 15] == 0, :760-763); every lane of rs1 is looked up at nibble granularity and an out-of-range index yields 0 (:779-820, `xperm_n[i] = vld[i] ? val_n[sel[i]] : '0`); result mux :1344.
+- Sampling condition in RTL terms: the WB write of an OPCODE_OP instruction with funct7 0010100 and funct3 in {010, 100, 110}, no trap.
+- Doc / spec per coverpoint:
+  - cp_op: doc/03_reference/instruction_decode_execute.rst:97 (Zbp v0.93 in OTEarlGrey); the ratified Zbkx forms coincide with two of the three: xperm8 = xperm.b (tools/specs/riscv-isa-manual/src/unpriv/zb.adoc:2650-2656, "each element in rs2 replaced by the indexed element in rs1, or zero if the index is out of bounds") and xperm4 = xperm.n (:2712-2718); xperm.h has no ratified sentence (draft rvb group, tools/specs/riscv-bitmanip); the RTL (:760-763, :794-800) defines it the same way with 16-bit lanes.
+  - cp_index_pattern, cp_oob_lanes: TB classification of rvfi_rs2_rdata per lane width; the RTL's in-range test is exactly the vld_* terms above (index < number of lanes: 8, 4, 2).
+  - cp_rs1_class, cp_rd_x0: section-0 fields.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - An out-of-range lane and an in-range lane selecting a zero element both produce 0 in that lane (:818): the result alone cannot tell them apart; the TB decides from rs2.
+  - Results on rd_x0 records are forced 0 (core:2344-2346).
+  - xperm.h with rs2 upper index bits: only rs2[i*16] selects and rs2[i*16+1 +: 15] must be all zero for validity (:760-763): "mixed_oob" for .h needs bits above bit 0 of a lane set.
+
+## 33. CG-CSR-010 gen_cg_csr_secureseed (gen_fcov_plan.md:1403)
+
+- Observation point: rvfi_valid with a CSR instruction to 0x7C1 (trapped or not); read/write form from the decode and, as a boundary form, from the retirement gap.
+- RTL signal chain (rtl/ibex_cs_registers.sv): reads return 0 (CSR_SECURESEED :673-675, no storage); a write pulses dummy_instr_seed_en_o = csr_we_int & (csr_addr == CSR_SECURESEED) with dummy_instr_seed_o = csr_wdata_int (:1914-1915; the value is the RMW result of the op, i.e. rs1 / uimm for csrrw[i], rs1 | 0 for csrrs[i], 0 for csrrc[i], because the read value is 0); csr[9:8] = 11 makes U-mode access illegal (:403). Pipeline flush after a CSR write op: rtl/ibex_id_stage.sv:595-597 `csr_pipe_flush = csr_op_en & (op is WRITE/SET/CLEAR) & !no_flush_csr_addr` (mscratch and mepc are the only no-flush addresses, :593), so a secureseed write op costs a flush bubble and a demoted read (csrrs/csrrc with rs1 = x0, csrrsi/csrrci with uimm = 0, decoder :251-258) does not. RVFI: the record itself (rvfi_insn, rvfi_rs1_rdata, rvfi_rd_wdata = 0 for the read value), rvfi_mode, rvfi_trap.
+- Sampling condition in RTL terms: csr_access to 0x7C1 in ID, retired or trapped; the write pulse is internal (P7 probe candidate, not on RVFI).
+- Doc / spec per coverpoint:
+  - cp_op, cp_rs1, cp_form: doc/03_reference/cs_registers.rst:579-589 (custom CSR 0x7C1, M-mode only, a write re-seeds the PRNGs, reads always return zero); decoder :251-258 (read-only demotion).
+  - cp_gap: rtl/ibex_id_stage.sv:593-597 (flush on write ops, not on demoted reads); the delta is measured on rvfi_valid / rvfi_ext_mcycle between records under the plan's S-4 conditions (no other stall source).
+  - cp_seed_val: the value csr_wdata_int carries (:1915), reconstructed on RVFI as csrrw: rvfi_rs1_rdata; csrrwi/csrrsi: uimm; csrrs: rvfi_rs1_rdata; csrrc/csrrci: 0 (read value 0).
+  - cp_dummy_en: TB CSR model (cpuctrlsts not exported).
+  - cp_priv, cp_trap: rvfi_mode, rvfi_trap; :403 for the U-mode trap.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The seed pulse and value (dummy_instr_seed_en_o / _o) are not on RVFI: cp_pulse needs the P7 probe; without it the write is only inferable from the flush gap (cp_gap) or from the instruction decode.
+  - A csrrw with rs1 = x0 writes 0 (a real write with a pulse, rd_wdata 0) while csrrs/csrrc with rs1 = x0 are reads with no pulse and no flush (:251-258, :595-597): same RVFI record shape, different RTL effect; the decode is the only discriminator without the probe.
+  - The read value is always 0 (:674), so rd_wdata never carries information; cr_form_priv_trap.rd_m_ok proves exactly that.
+
+## 34. CG-PRV-001 gen_cg_prv_transition (gen_fcov_plan.md:1552)
+
+- Observation point: every RVFI record that is a privilege-transition event: a trapped record, the first handler record (rvfi_intr), an mret or dret record, a debug entry (rvfi_ext_debug_mode rising), a debug exit.
+- RTL signal chain: the privilege register is priv_lvl_q (rtl/ibex_cs_registers.sv:989-996): exceptions, interrupts and debug entry set M (:907, "any exception, including debug mode, causes a switch to M-mode"; dcsr.prv saves the previous level :913), mret restores mstatus.mpp (:953-954), dret restores dcsr.prv (:949-951); debug mode is the controller's debug_mode_q (entered at DBG_TAKEN_IF/ID rtl/ibex_controller.sv:764-800, left at dret :961-964). Event sources: exceptions in FLUSH (:840-950 by cause, incl. illegal mret-in-U / dret-outside-debug / wfi-with-TW from rtl/ibex_id_stage.sv:603-611), interrupts at IRQ_TAKEN (:725-762, priority NMI > fast > ext > sw > timer), debug entry (debug_req_i, single step, trigger, ebreak-into-debug :474-483, :519-523). RVFI: rvfi_mode = the mode the instruction EXECUTED in (:2078, R2), rvfi_ext_debug_mode = debug mode while in ID (:2101), rvfi_intr on the first handler instruction (:2403-2420), rvfi_trap (:1885, :1888).
+- Sampling condition in RTL terms: the TB derives from/to as the pair (rvfi_mode, rvfi_ext_debug_mode) of the event record and of the next record (the RTL's priv_lvl_q changes in FLUSH / IRQ_TAKEN / DBG_TAKEN, between the two records); a trap record shows the pre-trap mode (R2) and its handler's first record shows M.
+- Doc / spec per coverpoint:
+  - cp_from, cp_to, cp_mode_change: gen_t102_rtl_facts.md R2 (pre-step privilege on the record); cs_registers :907, :949-954; a U-to-U transition is impossible because every trap enters M (:907) and only mret/dret can lower the level (:949-954).
+  - cp_via, cp_u_exit: controller cause arms :840-950 (ecall :871, ebreak :882-899, illegal :860-868 incl. the id_stage :603-611 sources, fetch fault :859-861, load/store faults :900-925), IRQ_TAKEN :725-762, debug causes :519-523; gen_t090_rtl_facts.md sections 1-3 (entry timing).
+  - cp_seq3: TB history over three events.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - Debug mode has no privilege of its own on RVFI: rvfi_mode is priv_lvl_q, which is M inside debug mode (:907), so "dbg" as a from/to state is rvfi_ext_debug_mode, not rvfi_mode; a dret to U shows the dret record with mode 3 and debug_mode 1, then the next record with mode 0 and debug_mode 0.
+  - The illegal mret-in-U, dret-outside-debug and wfi-with-TW traps are ordinary illegal-instruction traps on RVFI (mcause 2, mtval = insn, :866-868): cp_u_exit.mret_in_u / dret_in_u / wfi_tw need the instruction decode of the trap record, not the cause.
+  - An exception inside debug mode goes to DmExceptionAddr without changing rvfi_mode (M stays M) or rvfi_ext_debug_mode: "debug -> debug, same" is the only observable, with no mepc/mcause side effect (controller DBG exception handling; dbg_exc in gen_component_api_debug_checker.md).
+  - Interrupt entries have no trap record; the transition is visible only as the intr record (R-section 1 of gen_t090_rtl_facts.md) whose rvfi_mode is M.
+
+## 35. CG-BIT-011 gen_cg_bit_decode (gen_fcov_plan.md:1004)
+
+- Observation point: RVFI retirement of an OP / OP-IMM encoding in the Zb* decode space, or opcode OP-32 / OP-IMM-32, or a csrr misa; cp_legal_insn iff rvfi_trap == 0, cp_illegal_class iff rvfi_trap == 1.
+- RTL signal chain: the legality tables of rtl/ibex_decoder.sv: OP-IMM shift-space encodings :503-576 (sloi any bits 26:25 :503-505; bclri/bseti/binvi require instr[26:25] == 00 :506-509; shfli/unshfli require instr[26] == 0 :511, :573; sroi any :547-549; rori/bexti require instr[26:25] == 00 :550-552; grevi/gorci legal for OTEarlGrey/Full :553-565), the OP table :588-700 (M ops :653-690; bfp legal :631; bcompress/bdecompress RV32BFull only, illegal here :649-650), the default arm for unknown opcodes incl. OP-32 (0x3b) and OP-IMM-32 (0x1b) :896-898; every illegal decode becomes an illegal-instruction exception with mtval = the 32-bit instruction word (rtl/ibex_controller.sv:866-868) and the decode outputs cleared (:905-918). misa: MISA_VALUE (rtl/ibex_cs_registers.sv:188-201: C bit 2 = 1, B bit 1 = 0, M bit 12 = RV32MEnabled, I bit 8, U bit 20) with X (bit 23) = (RV32BExtra != 0) in the non-CHERIoT path, i.e. set because OTEarlGrey carries non-ratified subsets (:377-382); read at :452.
+- Sampling condition in RTL terms: legal Zb* encodings retire as ordinary records (the arms of sections 2, 6, 14, 19, 23, 28, 30, 32); illegal ones are trap records with rvfi_insn = the word; the misa read is a csrr record with rvfi_rd_wdata = misa_value_masked.
+- Doc / spec per coverpoint:
+  - cp_legal_insn: doc/03_reference/instruction_decode_execute.rst:67-104 (the RV32B OTEarlGrey table: Zba, Zbb, Zbc, Zbs, Zbf, Zbp, Zbr, Zbt present; Zbe absent); the per-op sentences in the earlier sections.
+  - cp_illegal_class: the decoder tables above; bcompress/bdecompress are Zbe (Full only, :649-650); OP-32/OP-IMM-32 are RV64 opcodes, undefined in RV32 (default arm :896-898); the bit-25/bit-26 classes are :506-509, :511, :550-552, :573.
+  - cp_mtval_ok: rtl/ibex_controller.sv:866-868 (mtval = the instruction word; for a compressed illegal encoding the 16-bit word zero-extended).
+  - cp_misa: rtl/ibex_cs_registers.sv:188-201, :377-382; doc/03_reference/cs_registers.rst:140-146 (misa hard-wired).
+  - cp_priv: rvfi_mode; illegal decodes trap identically in M and U.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - All illegal classes raise the same trap (mcause 2, mtval = word); cp_illegal_class is a TB decode of rvfi_insn on the trap record, which is exactly what the RTL used, so the classification is faithful but not an RTL distinction.
+  - A legal Zb* op with rd = x0 retires with rd_wdata forced 0 (core:2344-2346); cp_legal_insn still samples (it is keyed on the encoding, not the result).
+  - The misa X bit is set because RV32BExtra != 0 (:379-381), not because CHERIoT is enabled (tied Off): a bin expecting X clear would never hit in this configuration.
+  - rori_bit25 and bexti_bit25 share one legality arm (:550-552): the trap is the same, the class is the funct3/hi5 decode.
+
+## 36. CG-MUL-002 gen_cg_mul_timing (gen_fcov_plan.md:540)
+
+- Observation point: RVFI retirement of mul/mulh/mulhsu/mulhu (as CG-MUL-001) with timing discriminators: the retire delta, the previous retirement's class, the next retirement's dependency, deferred start, fetch stall.
+- RTL signal chain: the multiplier starts only when the instruction executes: mult_en_id = instr_executing ? mult_en_dec : 0 (rtl/ibex_id_stage.sv:733) and instr_executing carries ~outstanding_memory_access (:1059-1062): a multiply behind an outstanding WB load/store starts in the response cycle (cp_wb_busy). Single-cycle multiplier (rtl/ibex_multdiv_fast.sv): MULL completes in the first cycle (mult_valid = mult_en_i, :203), so mul retires with delta 1; MULH/MULHSU/MULHU take a second cycle (state MULL -> MULH, :210-233), the ID stage stalls one cycle (rtl/ibex_id_stage.sv:910-917 stall_multdiv when ~ex_valid_i), delta 2. There is no hold at completion. The result is forwarded from WB to a dependent consumer (rtl/ibex_id_stage.sv:1103, :1117), so cp_next_dep = yes costs no extra stall.
+- Sampling condition in RTL terms: the WB retirement of the multiply (one record); the delta is the difference of consecutive rvfi_ext_mcycle values (rtl/ibex_core.sv:2102) or rvfi_valid cycles.
+- Doc / spec per coverpoint:
+  - cp_delta: doc/03_reference/instruction_decode_execute.rst:125 ("completes a MUL instruction in 1 cycle. MULH is completed in 2 cycles"); RTL :203, :210-233.
+  - cp_wb_busy, cp_dmem_delay: rtl/ibex_id_stage.sv:733, :1059-1062 (start deferred until the WB access response); the dbus monitor supplies the response cycle.
+  - cp_prev, cp_next_dep, cp_fetch_stall: TB history and the ibus monitor.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The second MULH cycle is invisible on RVFI (one record); only the delta shows it.
+  - A deferred start and a fetch stall both enlarge the delta identically; the two bus monitors are needed to attribute it (the plan's cr_op_delta_clean keeps both at no).
+  - cp_prev.other lumps CSR, fence and system classes whose own retirement timing (flush, sleep) shifts the delta; the plan's gap_clean guard is what makes d1/d2 meaningful.
+
+## 37. CG-PRV-008 gen_cg_prv_trap_vector (gen_fcov_plan.md:1693)
+
+- Observation point: every trap entry: the record after a trapped retirement (its rvfi_pc_rdata is the vector; the trapped record's own pc_wdata is the sequential address, C-1) or the intr record of an interrupt.
+- RTL signal chain: the exception PC mux in rtl/ibex_if_stage.sv:213-232: EXC_PC_EXC = {mtvec[31:8], 8'h00} for synchronous exceptions (controller :831 selects it when not in debug mode), EXC_PC_IRQ = {mtvec[31:8], 1'b0, irq_vec, 2'b00} = base + 4 * cause with irq_vec = exc_cause.lower_cause (:214) and every internal interrupt forced to the NMI vector irq_vec = 31, base + 0x7C (:216-218), EXC_PC_DBG_EXC = DmExceptionAddr for an exception raised inside debug mode (controller :831 with debug_mode_q), EXC_PC_DBD = DmHaltAddr for debug entry (:766, :796). Cause: exc_cause_o from the FLUSH arms (rtl/ibex_controller.sv:840-925) or IRQ_TAKEN (:736-757, priority NMI > fast lowest id > external > software > timer). mepc = exception_pc: pc_if for interrupts and NMI (csr_save_if :732; rtl/ibex_cs_registers.sv:895-896), pc_id for ID-stage exceptions (csr_save_id; :897-899), pc_wb for WB load/store faults (csr_save_wb :839-840; :901-902). mtval: fetch fault -> pc or pc + 2 for the second half (controller :859-861, D10), illegal instruction -> the instruction word, 16-bit zero-extended (:866-868), load/store faults -> the faulting address (:904-925), ecall / ebreak -> 0 (:550 default, R10), internal NMI -> irq_nm_int_mtval (:742). mtvec base is {boot_addr_i[31:8]} after reset or the software value (:739-743). A WB load/store fault has priority over a younger instruction's ID exception (controller :313-317); the younger instruction is flushed without a record and re-executes after the handler (bug-log B14 note, gen_t102_rtl_facts.md R9 mechanism).
+- Sampling condition in RTL terms: the record following a trap record, or the intr record; the RTL performs the entry between the two records (FLUSH / IRQ_TAKEN), so the vector, mcause, mepc and mtval are all "next record" or handler read-back observations.
+- Doc / spec per coverpoint:
+  - cp_cause, cp_fast_id, cp_target: rtl/ibex_if_stage.sv:213-232; rtl/ibex_controller.sv:736-757 (interrupt causes), :840-925 (exception causes); doc/03_reference/cs_registers.rst:173-188 (mtvec vectored, base 256-byte aligned) and the exceptions/interrupts doc page; the NMI vector base + 0x7C follows from cause 31.
+  - cp_base: rtl/ibex_cs_registers.sv:739-743.
+  - cp_mepc_src: the rule above by event type (:895-902 with controller :732, :839-840, csr_save_id in the exception arms).
+  - cp_mtval: controller :859-861, :866-868, :904-925, :550.
+  - cp_from_priv: rvfi_mode of the trapped / interrupted record (R2, pre-step).
+  - cp_younger_in_id: controller :313-317 (WB priority); B14.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The vector never appears on the trap record itself (C-1: pc_wdata is the sequential fetch address); only the next record's pc_rdata shows it, and for an interrupt there is no trap record at all (the intr record is the first evidence).
+  - mepc / mcause / mtval are CSR state: visible only through the handler's csrr records (rd != x0).
+  - pc_if vs pc_id vs pc_wb as the mepc source is an RTL rule by event type, not an exported field; the TB infers it by comparing the read-back with the surrounding records' pcs, exactly as the plan says.
+  - A younger instruction killed by a WB fault leaves no record until it re-executes; its "once, after the handler" appearance is the only trace (B14).
+  - An exception inside debug mode vectors to DmExceptionAddr with no CSR update (controller :831 with debug_mode_q; cs_registers :918-920 skip the update in debug mode): cp_cause.dbg_exc pairs only with dm_exc_addr and has no mcause evidence.
+
+## 38. CG-CSR-012 gen_cg_csr_write_effect (gen_fcov_plan.md:1446)
+
+- Observation point: every CSR write op retired without trap, with the class of the next retirement and the cycle gap between the two.
+- RTL signal chain: a write op (WRITE/SET/CLEAR after the read-only demotion, rtl/ibex_decoder.sv:251-258) commits at csr_we_int = csr_wr & csr_op_en (rtl/ibex_cs_registers.sv:1011, :1020; csr_op_en = csr_access & instr_executing, rtl/ibex_id_stage.sv:747) and flushes the pipeline unless the address is mscratch or mepc (csr_pipe_flush, rtl/ibex_id_stage.sv:593-597): the controller treats it as a special request (rtl/ibex_controller.sv:232, :287-293), retains ID, goes to FLUSH (:664-677) with halt_if and flush_id, then back to DECODE, so the next instruction is delayed by the FLUSH bubble (gap >= 2); mscratch/mepc writes do not flush (gap 1). A write that enables a pending interrupt (mstatus.MIE, mie) makes handle_irq true once the value is committed; the entry waits for the pipeline to drain (:704), so the next record is the intr record (gen_t090_rtl_facts.md section 1).
+- Sampling condition in RTL terms: csr_we_int for the address on a retired record; the gap is measured on rvfi_valid cycles or rvfi_ext_mcycle (core:2102) between the write record and the next record.
+- Doc / spec per coverpoint:
+  - cp_fam, cp_gap: rtl/ibex_id_stage.sv:593-597 (no_flush_csr_addr = {mscratch, mepc}); controller :287-293, :664-677 (the FLUSH bubble).
+  - cp_next, cp_enable: TB classification of the next record; the enable case is controller :498-500 (handle_irq) with :704 (entry after the drain) and the cs_registers commit (:1020).
+  - cp_op: rvfi_insn[14:12].
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The flush itself is invisible; only the gap shows it. A g1 bin on a flushing family cannot hit (the plan ignores other_g1).
+  - The FLUSH bubble length also absorbs fetch stalls: g2_3 vs g_more distinguishes bubble-only from stalled cases only under the plan's stall-free conditions.
+  - cp_enable depends on the TB's irq drive (a line pending at the write); the RTL contributes only the ordering rule "commit, drain, enter".
+
+## 39. CG-CSR-007 gen_cg_csr_debug_csr (gen_fcov_plan.md:1313)
+
+- Observation point: rvfi_valid with a CSR instruction to 0x7B0..0x7BF (trapped or not), plus the read-back pairs for writes in debug mode.
+- RTL signal chain (rtl/ibex_cs_registers.sv): dcsr, dpc, dscratch0, dscratch1 set dbg_csr on read (:549-565) and illegal_csr_dbg = dbg_csr & ~debug_mode (:402) makes any access outside debug mode illegal (one trap, mcause 2, mtval = word, controller :866-868); the hole 0x7B4..0x7BF hits the read-mux default (:702-704), illegal everywhere; the U-mode access is also illegal_csr_priv (:403). dcsr write legalisation (:809-835): xdebugver forced 4 (:812), prv forced U unless M or U (:813-815), cause read-only (:819), stepie/nmip/mprven/stopcount/stoptime forced 0 (:820-826), zero fields forced 0 (:828-833); ebreakm, ebreaku, ebreaks and step are taken from the written word (the struct assignment :811 with no override for them; the dcsr_t layout :215-231 shows ebreaks at bit 13), which is bug candidate B15 for ebreaks (no S-mode, the doc's read-back prediction is 0). dpc stores {wdata[31:1], 1'b0} (:746, depc_en :838); dscratch0/1 store all 32 bits (:840-841).
+- Sampling condition in RTL terms: csr_access to a 0x7Bx address in ID: retired in debug mode (record, rvfi_ext_debug_mode = 1) or trapped outside it (record with rvfi_trap = 1); writes commit at csr_we_int (:1020); the read-back record shows the stored value.
+- Doc / spec per coverpoint:
+  - cp_csr, cp_dbg, cp_priv, cp_form, cp_trap, cp_op: doc/03_reference/cs_registers.rst:67-69 (dcsr WARL, dpc RW), :458-497 (dcsr fields: xdebugver R = 4 :472, ebreakm RW :474, ebreaku WARL :477, step RW :482, prv WARL :485; the note :492 on the 0.13.2 spec); RTL :402, :549-565, :702-704.
+  - cp_wpat, cp_dcsr_*_w, cp_dcsr_ro_w: RTL :809-835 (which written bits survive), the debug spec dcsr chapter (tools/specs/riscv-debug-spec) for the field semantics; B15 for ebreaks.
+  - cp_dpc_lo_w: RTL :746 (bit 0 forced 0).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - Outside debug mode every 0x7Bx access traps identically (dcsr, dpc, dscratch, hole): the class is the instruction decode; the RTL raises one illegal-instruction trap (:405-406).
+  - dcsr.ebreaks is STORED by the RTL (:811, no override) although the hart has no S-mode: a read-back of 1 is the RTL behaviour and the plan's predicted 0 is the expected-fail item (B15, TP-CSR-075/076); do not treat the mismatch as a sampling error.
+  - dcsr.prv written 01 or 10 reads back 00 (:813-815); dcsr.cause never changes on a write (:819); xdebugver always 4 (:812): the corresponding bins prove the WARL drops.
+  - dpc bit 0 written 1 reads back 0 (:746).
+  - RVFI exports no CSR state: every stored value is a read-back record observation (rd != x0).
+
+## 40. CG-CSR-008 gen_cg_csr_trigger_csr (gen_fcov_plan.md:1344)
+
+- Observation point: rvfi_valid with a CSR instruction to tselect 0x7A0, tdata1 0x7A1, tdata2 0x7A2, tdata3 0x7A3, mcontext 0x7A8, mscontext 0x7AA, scontext 0x5A8 (trapped or not).
+- RTL signal chain (rtl/ibex_cs_registers.sv): reads are legal in M and debug mode when DbgTriggerEn (:636-660: tselect, tdata1, tdata2 return their registers; tdata3, mcontext, scontext, mscontext return 0); csr[9:8] = 11 for the 0x7Ax set and 01 for scontext, so U-mode access traps (:403). Writes take effect ONLY in debug mode: tselect_we, tmatch_control_we, tmatch_value_we all carry debug_mode_i (:1775-1780); an M-mode write is legal and ignored (doc cs_registers.rst:355-356). Written values: tselect clamps to DbgHwBreakNum - 1 = 0 (:1785-1786), tdata1 keeps only bit 2 (execute, tmatch_control_d = csr_wdata[2], :1789) and reads back 0x28001048 | (execute << 2) (:1848-1864, R5), tdata2 stores all 32 bits (:1790); tdata3, mcontext, scontext, mscontext have no storage and ignore writes (bug candidate B3: no trap either).
+- Sampling condition in RTL terms: csr_access to one of the seven addresses in ID: retired (M or debug mode, rvfi_trap = 0) or trapped (U mode); the effect of a write is visible only through a later read-back and only for writes made in debug mode.
+- Doc / spec per coverpoint:
+  - cp_csr, cp_dbg, cp_priv, cp_form, cp_trap, cp_op: doc/03_reference/cs_registers.rst:55-57 (tselect, tdata1 WARL), :355-400 (tdata1: debug-mode-only writes, M-mode writes ignored, the field table); RTL :636-660, :1775-1780, :403.
+  - cp_wpat, cp_tsel_w, cp_tdata1_exec_w, cp_tdata1_other_w: RTL :1785-1790 (tselect clamp, bit 2 only, tdata2 full), :1848-1864 (the fixed view).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - An M-mode write and a debug-mode write of the same value produce the same record; only the read-back (or the absence of a trigger effect) shows that the M-mode write was ignored (:1775-1780).
+  - tdata3 / mcontext / mscontext / scontext writes are silently ignored in every mode (B3): a bin expecting a trap never hits; the read-back is always 0.
+  - tdata1 "other" bits written 1 read back as the fixed view (:1848-1864): the bins prove the drop; tselect >= DbgHwBreakNum reads back 0 (:1785-1786).
+  - RVFI exports no CSR state; every stored value is a read-back record observation (rd != x0); a trigger's effect (debug entry before the matching instruction, rtl/ibex_cs_registers.sv:1872 trigger_match on pc_if) is CG-DBG territory.
+
+## 41. CG-PMP-005 gen_cg_pmp_access_verdict (gen_fcov_plan.md:2493)
+
+- Observation point: every non-trivial PMP check performed by the TB's PMP model, one sample per checked word: fetch on rvfi_pc_rdata (and pc + 2 for an uncompressed instruction at pc[1] == 1), data on rvfi_mem_addr with the record's masks; verdict from the model against the DUT's outcome.
+- RTL signal chain (rtl/ibex_pmp.sv, three channels): region match per entry and channel: TOR = start (previous pmpaddr, or 0 for entry 0) <= addr < pmpaddr (:160-163, :207-209), NA4 = exact 4-byte match, NAPOT = masked match (:170-181, :205-206), OFF never matches (:204); basic permission = the R/W/X bit for the access type (:215-218); the effective permission through perm_check_wrapper (:113-126): without MML the original rule (M ignores unlocked entries' permissions: `~lock | perm`; U needs perm, :101-107), with MML the Smepmp truth table (:59-97: R=0,W=1 rows are the shared regions, L=1 rows are M-mode rules, LRWX=1111 is read-only for both); the verdict is decided by the LOWEST-numbered matching entry (:128-147 loop with `if (!matched && match_all[r])`), and with no match the access is denied in U, denied in M when MMWP is set, and denied for M-mode execution when MML is set (:138-139). A debug-mode access inside the debug module range is always allowed (:250-251). Channels in rtl/ibex_core.sv: PMP_I = pc_if with type EXEC and the ID privilege (:1595, :1599-1600), PMP_I2 = pc_if + 2 for the second half of an unaligned 32-bit fetch (:1596), PMP_D = the LSU address with type WRITE/READ by data_we and the LSU privilege (:1597, :1603-1604), which is mstatus.MPP when MPRV is set (rtl/ibex_cs_registers.sv:998). A denial on PMP_I / PMP_I2 becomes an instruction access fault (if_stage pmp_err_if / pmp_err_if_plus2, core:597-598), on PMP_D a load/store access fault with the request suppressed on the bus (core:1063; lsu pmp_err_d, section 5 of gen_hpm_event_defs.md).
+- Sampling condition in RTL terms: the check is combinational on every fetch and data request; RVFI exposes its result only as the retired record (allowed) or the trap record (cause 1 fetch, 5 load, 7 store) plus mtval (fetch: pc or pc + 2, controller :859-861; data: the address :904-925).
+- Doc / spec per coverpoint:
+  - cp_type, cp_priv, cp_match, cp_mode, cp_region: doc/03_reference/pmp.rst:24-31 (fetch and LSU addresses checked; the LSU request is gated; the fetch request is not), :34-38 (granularity 0, NA4 available); tools/specs/riscv-isa-manual/src/priv/machine.adoc:3425-3431 (NAPOT, NA4, TOR modes, four-byte granularity), the priority rule is the RTL loop (:128-147) and the effective privilege of data accesses is machine.adoc:588-596 (MPRV) with RTL cs_registers:998.
+  - cp_mml, cp_lrwx, cp_verdict (MML rows): tools/specs/riscv-isa-manual/src/priv/smepmp.adoc:44-68 (the MML truth table) matched row by row by rtl/ibex_pmp.sv:59-97; cp_mmwp: smepmp.adoc:40 names MMWP, RTL :138 (no-match M access denied when MMWP); the original rules :101-107.
+  - cp_off_shadow: OFF entries never match (:204); the "would cover" decode is the TB model's.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - RVFI shows only the outcome per instruction: an allowed check leaves no trace beyond the record, a denied one is a trap record with cause and mtval; which region decided, and whether a lower-priority region would have decided differently, are model-side facts (the RTL keeps them in region_match_all / region_perm_check, exposed only through the DV_FCOV_SIGNAL pmp_region_override hook :255-257, which is a probe, not RVFI).
+  - The second-half fetch check (PMP_I2) has its own channel; a denial there traps with mtval = pc + 2 (controller :859-861, D10): that is the only RVFI-visible difference from a first-half denial.
+  - The data check uses the LSU privilege (MPRV-modified, cs_registers:998), not rvfi_mode: with MPRV = 1 and MPP = U a load in M is checked as U; the plan's cp_priv must be the effective privilege, not rvfi_mode.
+  - Debug-mode accesses to the debug module range never fault (:250-251) whatever the PMP configuration; a deny bin cannot hit there.
+  - A denied fetch still issues the bus request (pmp.rst:27-31; the request is not gated on the instruction side), so the ibus monitor sees the fetch of a word the PMP then faults.
+
+## 42. CG-PMP-003 gen_cg_pmp_mseccfg (gen_fcov_plan.md:2447)
+
+- Observation point: RVFI retirement of a CSR write to mseccfg or mseccfgh, rvfi_trap == 0, not read-only; pre/post state and any_locked from the read-back model.
+- RTL signal chain (rtl/ibex_cs_registers.sv): mseccfg write enable = csr_we_int & (addr == CSR_MSECCFG) (:1502); MML and MMWP are sticky once set (`pmp_mseccfg_d.mml = q.mml ? 1 : wdata[MML]`, `.mmwp` likewise, :1505-1506); RLB can be set only while no entry is locked (`pmp_mseccfg_d.rlb = any_pmp_entry_locked ? 0 : wdata[RLB]`, :1514) where any_pmp_entry_locked = |(pmp_cfg.lock & ~rlb) (:1510, :1463), so an entry with L = 1 counts whatever its A field (an A = OFF lock blocks RLB too); bits other than MML/MMWP/RLB have no storage (read :503-512 composes the three bits, everything else 0); mseccfgh reads 0 and has no write case (:515-522). RLB itself, once set, can be cleared by a write (the rule is only "cannot be set while locked").
+- Sampling condition in RTL terms: csr_we_int for 0x747 (a csrrs/csrrc with rs1 = x0 or a zero-uimm form is a read); the stored value is visible on the next read-back record (rd != x0).
+- Doc / spec per coverpoint:
+  - cp_pre, cp_post, cp_wr_*, cr_mml_trans, cr_mmwp_trans: tools/specs/riscv-isa-manual/src/priv/smepmp.adoc:76 (MMWP/MML are locked when set, RLB is locked when cleared), :40; RTL :1505-1506.
+  - cr_rlb_trans, cp_any_locked, cp_locked_off_only: smepmp.adoc:68 (locked rules cannot be removed or modified unless RLB is set); RTL :1510-1514 with :1463 (the lock test does not look at A, hence F-PMP-013's "an A=OFF lock counts").
+  - cp_hi_bits, cr_mseccfgh, cr_hi_bits: RTL :503-512 (only three bits stored), :515-522 (mseccfgh constant 0); doc/03_reference/pmp.rst:47-57.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - RVFI exports no CSR state: every post-state bin is a read-back decision (rd != x0).
+  - A write that tries to clear MML or MMWP and a write that keeps them set produce the same stored value (:1505-1506); only the written pattern (decode) separates the hold bins.
+  - RLB "blocked" vs "cleared": both read back 0; the block is decided by the pre-write lock state, which the model must track (:1510-1514).
+  - mseccfgh writes are legal no-ops (no write case, read 0): no trap bin can hit.
+
+## 43. CG-RST-001 gen_cg_rst_boot (gen_fcov_plan.md:5564)
+
+- Observation point: the rst_ni release, closed when the first post-reset event is classified (first retired record, NMI entry, debug entry, or a timeout with fetch disabled); fields from the ibus monitor and RVFI.
+- RTL signal chain: the controller leaves RESET with pc_mux PC_BOOT and pc_set (rtl/ibex_controller.sv:582-587, no instr_req), then BOOT_SET issues the first request (:589-595, instr_req_o = 1), then FIRST_FETCH (:623-645) where a pending interrupt (handle_irq) or debug request (enter_debug_mode) is taken before any instruction, debug having priority (:474-477 and :640-645 after :630-637); the boot PC is {boot_addr_i[31:8], 8'h80} (rtl/ibex_if_stage.sv:243), boot_addr_i[7:0] is unused (:199) and asserted zero (:932 IbexBootAddrUnaligned); csr_mtvec_init at that first PC_BOOT fetch sets mtvec to {boot_addr_i[31:8], 8'h01} (:256; cs_registers :736-741). fetch_enable_i gates the fetch request and execution: with SecureIbex the MuBi must equal IbexMuBiOn (rtl/ibex_core.sv:643-649 instr_req_gated, instr_exec), any other encoding stops fetch and holds IF (controller :996-999 halt_if while ~instr_exec_i). hart_id_i is readable as mhartid (rtl/ibex_cs_registers.sv:430). At reset mstatus.MIE = 0 and mie = 0 (section 21), so only NMI or a debug request can pre-empt the first instruction (controller :498-500: irq_nm bypasses the enable, irq_pending needs mie).
+- Sampling condition in RTL terms: the release itself is a TB event; the first RTL evidence is instr_req_o (BOOT_SET, two cycles after RESET is left) on the ibus, then the first RVFI record (ordinary, or intr with rvfi_ext_nmi, or at DmHaltAddr with rvfi_ext_debug_mode).
+- Doc / spec per coverpoint:
+  - cp_boot_addr, cp_boot_low_byte: rtl/ibex_if_stage.sv:243, :199, :932; doc/03_reference/instruction_fetch.rst (boot address); the mtvec init cs_registers:736-741.
+  - cp_fetch_en_at_release: rtl/ibex_core.sv:643-657 (MuBi on/off; any other encoding = off in the secure build), controller :996-999.
+  - cp_pending, cp_first_event: controller :623-645 (FIRST_FETCH), :474-477 (debug before NMI), :498-500 (NMI needs no enable; a maskable line is masked by mie = 0 at reset).
+  - cp_hart_id: cs_registers :430.
+  - cp_reset_kind: TB (power-on vs mid-run); the RTL path is identical.
+  - cp_boot_to_req_cycles: RESET (no request) -> BOOT_SET (request) is two states (:582-595); FIRST_FETCH waits for the fetch (:624-627).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - Nothing before the first record is on RVFI: the boot fetch address and the request timing come from the ibus monitor only.
+  - A pending NMI and a pending debug request at release both pre-empt the first instruction; with both pending the debug entry wins (:474-477) and the NMI follows after dret, so nmi_taken cannot be the first event then (the plan's ignores match).
+  - An invalid fetch_enable_i encoding and IbexMuBiOff behave identically (core:648-649): only the TB's drive tells the bins apart.
+  - A mid-run reset and a power-on reset are the same RTL sequence; the classes differ only in the TB's history.
+
+## 44. CG-SEC-005 gen_cg_sec_ctrl_inputs (gen_fcov_plan.md:5463)
+
+- Observation point: discrete events: a cpuctrlsts read record (rd != x0, no trap), changes of fetch_enable_i / mcounteren_writable_i / ic_scr_key_valid_i / boot_addr_i, an ic_scr_key_req_o pulse, a retired mcounteren write.
+- RTL signal chain: cpuctrlsts read = {23'b0, ic_scr_key_valid_q, part_q} (rtl/ibex_cs_registers.sv:666-669) where ic_scr_key_valid_q is the input registered every cycle (:1939-1949: one cycle late), bits 6/7 are the hardware-set sync_exc_seen / double_fault_seen (:938-943 set on a synchronous exception outside debug mode, :964-965 cleared by mret; double_fault_seen_o pulses when a second exception arrives with sync_exc_seen set, :942), bit 0 is icache_enable (write :1936); the RVFI record also carries rvfi_ext_ic_scr_key_valid sampled with the instruction (rtl/ibex_core.sv:2103). fetch_enable_i: a value change takes effect combinationally on instr_req_gated / instr_exec (core:643-657) and halts IF (controller :996-999). mcounteren_writable_i gates mcounteren writes (:845; any encoding other than IbexMuBiOn is "off"). ic_scr_key_req_o is raised by the icache invalidation FSM: OUT_OF_RESET when the key is not yet valid (rtl/ibex_icache.sv:1221-1227), and on every icache_inval_i (a retired fence.i) from INVAL_CACHE or INVAL_IDLE (:1241-1267), then AWAIT_SCRAMBLE_KEY until ic_scr_key_valid_i (:1229-1240). boot_addr_i is consumed only at PC_BOOT (rtl/ibex_if_stage.sv:243) and by csr_mtvec_init at the first boot fetch (:256; cs_registers :736-741): a later change has no effect on the PC or mtvec.
+- Sampling condition in RTL terms: the CSR read record (csr_access to 0x7C0 with rd != x0), or a pin edge / pulse seen by the misc monitor; the RTL reacts to fetch_enable in the same cycle, to the key valid one cycle later on the CSR (:1939-1949).
+- Doc / spec per coverpoint:
+  - cp_bit8_readback, cp_bits67_readback, cp_icache_en_readback_in_debug, cp_rvfi_ext_key_valid: doc/03_reference/cs_registers.rst:529-560 (the cpuctrlsts table: bit 8 R ic_scr_key_valid, 7 RW double_fault_seen, 6 RW sync_exc_seen, 5:3 dummy_instr_mask, 2 dummy_instr_en, 1 data_ind_timing, 0 icache_enable); RTL :666-669, :1939-1949, :938-943, :964-965; core:2103.
+  - cp_fetch_en_val: core:643-657; cp_mcounteren_w_val / _write_effect: cs_registers :845, :1563-1571 (section 9).
+  - cp_key_req_context, cp_key_delay: doc/03_reference/icache.rst:101-115 (key request on reset and on FENCE.I, invalidation proceeds in the background, a second FENCE.I during a pending request is ignored, D13); RTL icache :1221-1267; the fence.i itself is rtl/ibex_decoder.sv:710-721 (icache_inval_o).
+  - cp_boot_addr_change_ctx: if_stage :243, :256; cs_registers :736-741 (no later consumer).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The key-valid pin reaches the CSR one cycle late (:1939-1949): a read in the cycle of the change sees the old value; the plan's read-back rule "rd[8] == ic_scr_key_valid_i delayed by one cycle" is that register.
+  - A boot_addr_i change after boot is invisible to the core (no consumer); the "no effect" is the checker rule the plan names, and nothing on RVFI marks the change.
+  - Invalid MuBi encodings of fetch_enable_i and mcounteren_writable_i behave as off (core:648-649; cs_registers :845): only the TB's drive separates invalid from off.
+  - The key request pulse and the key-valid pin are bus/pin events; RVFI carries only rvfi_ext_ic_scr_key_valid per record (core:2103) and cpuctrlsts bit 8 on a read.
+  - A fence.i executed while a key request is pending does not raise a second request (icache :1229-1240, D13); cp_key_req_context.fence_i counts requests, not fence.i instructions.
+
+## 45. CG-CSR-009 gen_cg_csr_cpuctrlsts (gen_fcov_plan.md:1368)
+
+- Observation point: CSR instructions to 0x7C0, synchronous trap retirements outside debug mode, mret retirements, double_fault_seen_o pulses, interrupt/NMI/debug entries.
+- RTL signal chain (rtl/ibex_cs_registers.sv): write = csr_wdata_int[7:0] cast to the part struct (:1888-1889) with per-field gating by parameters (data_ind_timing :1894 / forced 0 without DataIndTiming :1902; dummy_instr_en/mask :1910-1911 / :1925-1926; icache_enable :1936 / :1956; sync_exc_seen and double_fault_seen written as given :1967 and the struct assignment), bits 31:8 dropped (bit 8 is the read-only ic_scr_key_valid register, :1939-1949); write enable :874-876; hardware: on a synchronous exception taken outside debug mode sync_exc_seen is set and, if it was already set, double_fault_seen is set and double_fault_seen_o pulses (:936-945); mret clears sync_exc_seen (:964-965); interrupts, NMI, debug entry and exceptions in debug mode do not touch the bits (the :936-945 block is under the non-debug synchronous-exception branch); read :666-669; 0x7C0 is M-level (csr[9:8] = 11) so U access traps (:403). RVFI: the CSR records (rvfi_insn, rvfi_rs1_rdata / zimm, rvfi_rd_wdata), the trap records (rvfi_trap), mret records, intr records, rvfi_ext_debug_mode.
+- Sampling condition in RTL terms: csr_access to 0x7C0 (retired or trapped in U), or the controller events that reach the :936-945 / :964-965 blocks (csr_save_cause outside debug mode, csr_restore_mret).
+- Doc / spec per coverpoint:
+  - cp_event, cp_op, cp_wpat, cp_*_w, cp_hi_w, cp_priv, cp_trap: doc/03_reference/cs_registers.rst:529-560 (the field table; bits 31:9 reserved, bit 8 read-only); RTL :1888-1889, :874-876, :403.
+  - cp_sync_state, cp_dbl_state, cp_trap_kind, cr_dbl_detect: RTL :936-945 (set / double-fault detection on synchronous exceptions outside debug), :964-965 (mret clear); interrupts and debug entries leave the bits (no path); doc cs_registers.rst bit 6/7 descriptions; gen_t102_rtl_facts.md R6.
+  - cp_key_pin: ic_scr_key_valid_i one cycle before the read (:1939-1949).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - The double_fault_seen_o pulse is a core output pin (misc monitor), not on RVFI; on RVFI the second exception is an ordinary trap record, and the CSR bit shows only on a later read.
+  - Software writes and hardware updates of bits 6/7 are indistinguishable on a read-back unless the TB models the sequence (the plan's cp_sync_state / cp_dbl_state are exactly that model).
+  - Bits 31:8 written are dropped without a trap; bit 8 written 1 reads back as the key pin (:1939-1949), so cp_key_w x cp_key_pin proves the read-only bit, never a stored value.
+  - A cpuctrlsts write in U traps before any effect (:403): u_wr_trap records show rvfi_trap = 1 and nothing else.
+  - dummy_instr_en written 1 changes the retired stream only indirectly (dummy instructions never appear on RVFI, rtl/ibex_core.sv:1864); data_ind_timing shows only through timing groups (sections 27, 36 and CG-BTALU-001).
+
+## 46. CG-CSR-011 gen_cg_csr_pmp_warl (gen_fcov_plan.md:1426)
+
+- Observation point: the CSR read-back pair closing on pmpcfg0..3, pmpaddr0..15, mseccfg, mseccfgh (the comparator of section 25); entry coverpoints sampled once per 8-bit pmpcfg field.
+- RTL signal chain (rtl/ibex_cs_registers.sv): per entry i, pmp_cfg_we[i] = csr_we_int & ~pmp_cfg_locked[i] & ~pmp_cfg_wr_suppress[i] & address match (:1423-1426); the written field is legalised before storage: lock from bit 7 (:1429), mode from bits 4:3 with 2'b10 = NA4 because PMPGranularity == 0 (:1432-1438), exec from bit 2 (:1441), write forced to R & W when MML is clear (W=1,R=0 is reserved there) and taken as written when MML is set (:1444-1445), read from bit 0 (:1446); bits 6:5 have no storage and read 0 (:1381-1382); pmp_cfg_locked[i] = L & ~RLB (:1463); pmp_cfg_wr_suppress[i] = MML & ~RLB & is_mml_m_exec_cfg(wdata) (:1467-1469) where is_mml_m_exec_cfg is L=1 with RWX in {001, 010, 011, 101} (:164-171), i.e. a new locked rule that would let M execute; pmpaddr_we[i] = csr_we_int & ~locked[i] & ~(locked[i+1] & cfg[i+1].mode == TOR) & address match for i < 15 (:1475-1477), without the i+1 term for entry 15 (:1479-1480); pmpaddr reads the stored word unmasked because G = 0 (:1385-1387). mseccfg / mseccfgh: section 42.
+- Sampling condition in RTL terms: csr_we_int for the PMP address range with the pair's read-back record; a suppressed or locked write leaves the flop untouched, so the difference between "written" and "kept" is only in the read-back value.
+- Doc / spec per coverpoint:
+  - cp_csr, cp_fam, cp_op, cp_wpat, cp_entry_idx: doc/03_reference/pmp.rst:16 (16 regions, G = 0), :34-38 (NA4 available at G = 0); read composition :525-531 (cfg), :533-548 (addr).
+  - cp_entry_class: locked_kept = :1463 with :1423-1426; mml_suppress = :1467-1469 with :164-171 and smepmp.adoc:68 (locked rules cannot be added when they grant M execution while MML is set and RLB clear); w_no_r = :1444-1445 (machine.adoc PMP section: R=0,W=1 reserved when MML is clear; the truth table smepmp.adoc:44-68 gives it meaning when MML is set); resv_bits = :1381-1382; plain = the same path with none of the gates active.
+  - cp_addr_class: writable / locked_self = :1475-1480 with :1463; locked_tor_next = :1476 (the i+1 TOR term); rlb_unlock = :1463 (RLB clears the lock gate); cr_addr_last ignore matches :1479-1480 (entry 15 has no i+1 term).
+  - cp_mseccfg_w: section 42 (:1502-1514).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - RVFI carries no CSR state; every class is decided from the read-back word against the model's expected legalisation.
+  - locked_kept and mml_suppress both leave the entry unchanged: the read-back is identical, the class comes from the pre-write state and the written pattern (the model), not from the RTL.
+  - A write of W=1,R=0 with MML clear stores W=0 (:1444-1445), which reads back exactly like a write of W=0,R=0: the w_no_r class is a decode of the written pattern.
+  - With G = 0 there is no address masking (:1385-1387): a pmpaddr all1 / all0 pattern reads back verbatim; the NAPOT/NA4 granularity bins of a G > 0 build cannot exist in this configuration.
+  - Entry 15's locked_tor_next bin cannot hit (no entry 16, :1479-1480), matching the plan's ignore.
+
+## 47. CG-RVFI-001 gen_cg_rvfi_record (gen_fcov_plan.md:5729)
+
+- Observation point: every rvfi_valid cycle, with the previous record kept for the continuity, order and gap coverpoints.
+- RTL signal chain (rtl/ibex_core.sv): the output record is the last RVFI stage (:1775-1791); a stage-0 record is created when an instruction leaves ID or a trapping instruction is flushed (rvfi_stage_valid_d[0] :1864-1865 with rvfi_id_done :1851-1852; dummy instructions excluded) and moves to the output stage when WB is done or the record is a trap (rvfi_wb_done :1890), so rvfi_valid is one cycle per retired instruction. rvfi_order resets to 0 (:2012) and increments by one per non-dummy record (rvfi_stage_order_d :1905), hence the first record after reset carries order 1; rvfi_halt is constant 0 (:2009, :2073) and rvfi_ixl is CSR_MISA_MXL = 1 (:2015, :2079). rvfi_trap = the ID-stage exception of that instruction (rvfi_trap_id :1885-1888, captured :2074); rvfi_intr is set on the first record after the PC was redirected to a trap handler (rvfi_set_trap_pc_d :2404-2414: pc_set with PC_EXC / EXC_PC_IRQ raises it, the next completed ID instruction clears it; rvfi_intr_d :2403 captured :2075) and the handler-entry class comes with rvfi_ext_nmi / rvfi_ext_nmi_int (:1995-1998, output :1829-1830) and rvfi_ext_pre_mip (section 0). rvfi_mode is the ID privilege at capture (:2078). rvfi_insn is the 16-bit halfword for a compressed instruction that is not a Zcmp expansion, the 32-bit word otherwise (:2263-2268). Operands: rs1/rs2 captured in the first ID cycle when the register file port is read, 0 otherwise (:2304-2308); rs3 is 0 in the first cycle and takes the port-A operand of a later cycle (:2309-2310, :2316-2317), i.e. only multi-cycle instructions can show a nonzero rs3. rd: address rvfi_rd_addr_d with data forced 0 for x0 (:2344-2346, section 0), captured :2092 / :2172; a trap record carries rd 0. pc_rdata = pc_id, pc_wdata = pc_set ? branch_target_ex : pc_if (:2083-2084). rvfi_ext_debug_mode = debug_mode at capture (:2101).
+- Sampling condition in RTL terms: rvfi_valid; the RTL never asserts it two cycles in a row for the same instruction (stage 1 loads from stage 0 only when rvfi_wb_done).
+- Doc / spec per coverpoint:
+  - cp_trap, cp_intr, cp_mode, cp_order_step, cp_pc_continuity, cp_valid_gap: the RVFI field semantics are the RTL lines above (no local doc page describes Ibex's RVFI export beyond doc/03_reference/rvfi? none ships; the riscv-formal clone under tools/specs/riscv-formal holds only the build skeleton, no rvfi.md), so the record contract is the RTL: :1864-1865, :1905, :2074-2084, :2403-2414.
+  - cp_insn_kind: :2263-2268 with the expansion tags (section 0, C-1); zcmp_uop = rvfi_ext_expanded_insn_valid (:2270-2280).
+  - cp_rd, cp_rs1, cp_rs2, cp_rs3: :2304-2317, :2344-2346.
+  - cp_pc_delta: :2083-2084; redirect classes: trap (pc_set to PC_EXC), mret/dret (PC_ERET / PC_DRET), fence.i (rtl/ibex_decoder.sv:710-721 jump to the next PC).
+  - cp_intr_kind: irq vs nmi vs nmi_int from :1995-1998 and rvfi_ext_pre_mip (:1995, section 0); the controller's cause priority rtl/ibex_controller.sv:498-500 (irq_nm bypasses mie).
+  - cp_rd_source: alu_wb vs load_lsu is the instruction class (the RTL writes rd from the WB flop or the LSU return, rvfi_rd_wdata_d :2340-2346 selects rf_wdata_lsu vs rf_wdata_wb by rf_we_lsu).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - rvfi_rs3 is nonzero only for multi-cycle instructions (the later-cycle port-A read, :2316-2317); for the single-cycle multiplier build that is divide/remainder, misaligned loads/stores, Zcmp micro-ops that re-read a register, and the ternary Zbt forms if enabled; the plan's cp_rs3.nonzero must expect that population.
+  - cp_valid_gap.g1 (back-to-back records) is the common case; g2 arises from any one-cycle stall; g3_plus is a multi-cycle stall (multdiv, misaligned, WFI, fetch miss). RVFI does not name the stall reason; the bins are timing observations only.
+  - cp_pc_continuity.discontinuous_debug: the debug entry itself produces no record; the first record in debug mode has rvfi_ext_debug_mode = 1 and pc_rdata = DmHaltAddr (section 0), while the record before it shows pc_wdata of the interrupted flow. The class is decided from rvfi_ext_debug_mode of the two records, not from a dedicated RVFI signal.
+  - A trap record and an intr record are two different records (the trapping instruction, then the first handler instruction); rvfi_intr is never set on a trap record itself except when an interrupt is taken on the first instruction of an exception handler (both flags on one record): the cross cr_intr_cont "yes_discontinuous_after_trap" the plan ignores can hit in that nested case only through the previous record's trap flag, and the plan's ignore is correct only because discontinuous_intr is classified first.
+  - rvfi_halt and rvfi_ixl are constants (:2009, :2015): checker rules, no bins, as the plan says.
+  - x0 as rd: rvfi_rd_addr is 0 both for an instruction without a destination (store, branch) and for one that names x0 (the decoded rd is 0 by encoding; :2340-2346 zero the data as well); the none bin covers both and the plan's F-RVFI-034 rule must accept a named x0.
+
+## 48. CG-BIT-009 gen_cg_bit_bfp (gen_fcov_plan.md:960)
+
+- Observation point: RVFI retirement of a decoded bfp (OP, funct7 0100100, funct3 111), rvfi_trap == 0; fields from rvfi_rs2_rdata / rvfi_rs1_rdata.
+- RTL signal chain: decode rtl/ibex_decoder.sv:631 (legal because RV32B != RV32BNone) and :1302 (ALU_BFP); execute rtl/ibex_alu.sv: bfp_len = rs2[27:24] with 0 meaning 16 (:267), bfp_off = rs2[20:16] (:268), bfp_mask = ~(all ones << len) (:269), the shifter is reused to compute mask << off (:240, :265, :308 shift left, :283-285 shift_amt = bfp_off), result = (rs1 & ~(mask << off)) | ((rs2 & mask) << off) (:274-275), selected at :1387. Bits rs2[31:28], rs2[23:21] and rs2[15:0] above the length are not looked at except through the mask (the data is masked before the shift, :275).
+- Sampling condition in RTL terms: a retired OP-class instruction with those funct fields; a single-cycle ALU operation, so no stall and rvfi_rs3 stays 0.
+- Doc / spec per coverpoint:
+  - cp_len, cp_off, cp_overflow, cp_data_class, cp_rs1_class, cp_ctrl_upper: tools/specs/riscv-bitmanip/texsrc/bext.tex:1184-1187 (bfp places up to XLEN/2 LSB bits of rs2 into rs1, the upper bits of rs2 give length and position) and the reference model tools/specs/riscv-bitmanip/cproofs/insns.h:887-898 (len = 0 means XLEN/2, mask = slo(0, len) << off, result = (data & mask) | (rs1 & ~mask); a field that runs past bit 31 is simply truncated by the shift); Ibex's v0.93 draft support: doc/03_reference/instruction_decode_execute.rst:95 (Zbf row).
+  - cp_delta, cp_rd_x0: RVFI timing (section 0); rd = x0 writes are dropped and shown as 0 (rtl/ibex_core.sv:2344-2346).
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - cp_overflow.yes: the RTL has no overflow path; the mask shift drops the bits above 31 (:274-275), so an overflowing field and a non-overflowing one with the same low bits give the same result. The bin proves the stimulus class, the checker proves the truncation.
+  - cp_ctrl_upper.nonzero: bits 31:28 and 23:21 of rs2 are ignored by the RTL (:267-268 read only 27:24 and 20:16); the reference model's `(cfg >> 30) == 2` branch (insns.h:890-891) is the 64-bit encoding form and is dead at XLEN = 32. Both settings give the same result: a stimulus-class bin.
+  - cp_data_class.above_len_set: bits of rs2[15:0] above len_eff are masked away (:269, :275); the result is identical to the same data with those bits clear.
+  - cp_delta is a retirement-timing bin; the bfp is single-cycle, so d2plus can only come from a stall of the neighbouring instruction (fetch miss, preceding multi-cycle op), never from bfp itself.
+
+## 49. CG-CMP-004 gen_cg_cmp_illegal (gen_fcov_plan.md:669)
+
+- Observation point: RVFI record with rvfi_insn[1:0] != 2'b11, rvfi_trap == 1, and the monitor's decode table classing the halfword as an illegal compressed encoding; the handler's mtval read and rvfi_insn checked by the C-12 / X-14 rules.
+- RTL signal chain: rtl/ibex_compressed_decoder.sv raises illegal_instr_o for the reserved code points: C0 c.addi4spn with nzuimm = 0 (which also covers the all-zero halfword, :239), C0 funct3 011 / 001 / 111 / 101 (c.flw, c.fld, c.fsw, c.fsd forms without F/D, :255, :335, :341; the Zcb 100 sub-block's unused encodings :289-324), C1 c.lui / c.addi16sp with nzimm = 0 (:401), c.srli / c.srai with instr[12] = 1 (:420) and the reserved arithmetic sub-encodings (:459-528), C1 default :541-542, C2 c.slli with instr[12] = 1 (:564), c.lwsp with rd = 0 (:571), c.flwsp (:582 in the non-CHERIoT branch), c.jr with rs1 = 0 (:595), the funct3 101 group where c.fsdsp is illegal and the Zcmp encodings live (:614-843: cm.push with rlist <= 3 :635-637, cm.pop / cm.popret / cm.popretz with rlist <= 3 :703-705, the casez defaults :835, :839), c.fswsp (:860, :865), C2 default :868-869, and the 2'b11 default :877-878. A reserved Zcmp encoding is still tagged as expanded (gets_expanded :626 before the rlist check) so its record carries rvfi_ext_expanded_insn_valid and the 32-bit rvfi_insn form (rtl/ibex_core.sv:2263-2268, C-12 / X-14). The trap path: illegal_c_insn_i into the ID stage (rtl/ibex_id_stage.sv:504) -> illegal_insn_o (:610-611) -> controller exception with cause ILLEGAL_INSN and mtval = {16'b0, instr_compressed_i} for a compressed instruction (rtl/ibex_controller.sv:868, :40); the fault is taken in the same way in U and M (no privilege term in :610-611).
+- Sampling condition in RTL terms: the trap record of the illegal halfword (rvfi_trap, rvfi_insn low bits != 11 unless expanded); mtval is visible only through the handler's read.
+- Doc / spec per coverpoint:
+  - cp_class (c.* reserved code points): tools/specs/riscv-isa-manual/src/unpriv/zca.adoc:285 and :293 (c.lwsp / c.flwsp-family rd = x0 reserved), :420 (c.jr rs1 = x0 reserved), :480 (c.lui imm = 0 reserved), :518 (c.addi16sp nzimm = 0 reserved), :536-537 (c.addi4spn nzuimm = 0 reserved), :551 (c.slli shamt[5] = 1 reserved for XLEN = 32); the F/D forms are illegal because misa has no F/D (section 11); RTL sites above.
+  - cp_class (Zcmp reserved): tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc:385 (cm.push rlist 0..3 reserved), :579 (cm.pop), :771 (cm.popretz), :968 (cm.popret); RTL :635-637, :703-705.
+  - cp_rlist_res: instr[7:4] at the reserved values (:631 cm_rlist_init, :635 the <= 3 test).
+  - cp_mtval_ok: controller :868 (mtval = the zero-extended halfword for a compressed instruction; the local doc/03_reference/exception_interrupts.rst:86 describes only the address case, so the RTL line is the reference).
+  - cp_rvfi_insn_ok: rtl/ibex_core.sv:2263-2268 with the expansion tag (C-12 / X-14).
+  - cp_pc_align: rvfi_pc_rdata[1] (any 16-bit aligned PC is legal, if_stage fetch of halfwords).
+  - cp_priv: rvfi_mode (:2078); the illegal-instruction path has no privilege term.
+- Bins the RTL cannot distinguish or RVFI cannot observe:
+  - All illegal compressed classes reach the same trap (cause 2, mtval = halfword); the class exists only in the TB decode table. The RTL has one illegal_instr_o, not one per class.
+  - The all-zero halfword and c.addi4spn with nzuimm = 0 are the same RTL site (:239); they differ only in the halfword value (the plan keeps them as separate bins, which is a stimulus distinction).
+  - A reserved Zcmp encoding is expanded first (:626) and trapped from the expanded form: rvfi_insn is 32-bit and rvfi_ext_expanded_insn_valid is set on that record, mtval is still the 16-bit halfword (controller :868 uses instr_is_compressed_i). This is the C-12 / X-14 rule; the plan's cp_rvfi_insn_ok must not expect the halfword there.
+  - cp_rlist_res values 0..3 for cm.push vs cm.pop family are the same check (cm_rlist_d <= 3); cm.popret / cm.popretz / cm.pop are separated only by instr[9:8] before the check (:747-749), which the trap record does not expose beyond rvfi_insn.
+  - u vs m: identical RTL path; cr_class_priv is a stimulus cross.
+
 ## Slice status
 
-Slices 1-5 (ranks 1-25) written; slices 6.. follow the ranked order in gen_round0_covergroup_set.md.
+Slices 1-10 (ranks 1-49) written; the list is complete.
