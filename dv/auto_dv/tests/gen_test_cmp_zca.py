@@ -54,10 +54,9 @@ debug-mode entry (DBG_REQ bridge codes not rendered, knob debug_req_regime not s
 is >= 3000 retired instructions per seed with the per-form floors governing (the seed-1 program retires about 3800), asserted by fire_program_verdict's retirement floor.
 Dropped clause (program-shaped, owner named): TP-CMP-028 odd c.jr targets (bit 0 set) are not drawn, because the DUT's
 rvfi_pc_wdata keeps bit 0 (bug candidate B13, gen_bug_log.md; the plan's 028 fire-check masks bit 0 for that reason);
-the comparator counts that bit as a documented exception (its R11 row) and B13's xfail item owns the bug. The
-handler's mtval read after c.ebreak is asserted as 0 (doc cs_registers.rst "for all other exceptions mtval is 0", the
-plan's TP-CMP-033 value, met by the DUT); the Spike-based model reports 0 too since the shim's R10 row, so the run is
-UVM_ERROR-free.
+the always-on isa_pc_next comparator row counts that bit as a documented exception and B13's xfail item owns the bug.
+The handler's mtval read after c.ebreak is asserted as 0 (doc cs_registers.rst "for all other exceptions mtval is 0",
+the plan's TP-CMP-033 value); the DUT and the model both report 0, so the isa_rd / isa_mem rows agree on it.
 Knobs: schedulable = lib.TIMING_ONLY_KNOBS (the items' imem/dmem gnt and rvalid delays and imem_outstanding_cap);
 nothing is pinned; declare_bins() is not overridden: the template declares the plan bins of the 21
 items the fire_tp_cmp_* methods name (the manifest is rendered from this module). MODULE=dv.auto_dv.tests.gen_test_cmp_zca.

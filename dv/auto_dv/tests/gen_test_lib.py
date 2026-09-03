@@ -936,6 +936,13 @@ def _self_test():
             print(f"GEN_TEST_LIB notice: {e['name']}: retained pinned-red log is stale evidence ({r['reason'][:120]})", file=sys.stderr)
         checked_reds += 1
     assert checked_reds, "no red entry of a test module here was checked"
+    # the rule's own red: over a fixed name list, a boundary form after a suffixed id matches no synthesized line while the
+    # (?!\d) form does, and a longer id is rejected by both
+    names_fixed = ["fire_tp_bit_014_ops", "fire_tp_bit_014_pattern", "fire_tp_bit_0140"]
+    lines_fixed = [fire_fail_line("gen_test_x", [f"{n}: detail"]) for n in names_fixed[:2]]
+    assert not any(re.search(r"\bfire_tp_bit_014\b", l) for l in lines_fixed), "boundary form accepted against suffixed check names"
+    assert all(re.search(r"\bfire_tp_bit_014(?!\d)", l) for l in lines_fixed), "(?!\\d) form must match suffixed check names"
+    assert not re.search(r"\bfire_tp_bit_014(?!\d)", fire_fail_line("gen_test_x", [f"{names_fixed[2]}: detail"])), "longer id accepted"
     # the fixture header re-types the EOT address: it must equal the rendered map too
     assert check_mmio_map_header(here / "gen_fixtures" / "gen_report_fixture_map.h", {"GEN_EOT_ADDR": "eot_addr"})
     # manifest cross-check: declared == rendered for every committed manifest; stale and missing fail loud
