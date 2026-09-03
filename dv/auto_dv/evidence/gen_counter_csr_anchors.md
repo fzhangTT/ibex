@@ -3,8 +3,8 @@
 Owner: rtl-arch. Written 2026-09-03T19:55Z from rtl/ibex_cs_registers.sv, rtl/ibex_counter.sv, rtl/ibex_pkg.sv, rtl/ibex_core.sv and
 dv/auto_dv/tb/gen_dut_top.sv in this clone. Purpose: the Ibex-specific counter behaviour that tb-infra's gen_isa_shim
 configuration (T-235) must reproduce so gen_isa_compare stops raising rows on it. Question list: the Test Writer's measured
-reading in dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/README_state.md (items 1-4 of its BLOCKER); every claim there is
-confirmed or corrected in section 9 from the RTL. Doc sentences: doc/03_reference/performance_counters.rst and
+reading in dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/README_state.md (items 1-4 of its BLOCKER, an untracked work file;
+the four claims are quoted verbatim in section 9 so the confirmations can be checked from the committed tree). Doc sentences: doc/03_reference/performance_counters.rst and
 doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 
 ## 1. Parameters as resolved for the build
@@ -28,6 +28,7 @@ doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 | Read value of minstret | includes the instruction in WB when it will retire (instr_ret_spec_i selects minstret_next), so a csrr minstret sees the count including the instruction retiring in the same cycle | :1651-1658 |
 | Write | low word via mhpmcounter_we[idx] (0xB00/0xB02), high word via mhpmcounterh_we[idx] (0xB80/0xB82); a write wins over an increment in that cycle | :850-858, :863-871; rtl/ibex_counter.sv:33-51 |
 | Increment path (minstret) | instr_ret_i = perf_instr_ret_wb from the WB stage; retired-count rules, dummy instructions included | dv/auto_dv/evidence/gen_cg_sampling_anchors.md sections 21 and 47; dv/auto_dv/evidence/gen_b8_rtl_facts.md section 4 (not repeated here) |
+| Write of minstret by an instruction that is itself counted | the CSR write commits when the writer completes ID/EX (csr_op_en = csr_access & instr_executing & instr_id_done, rtl/ibex_id_stage.sv:747-749; csr_we_int rtl/ibex_cs_registers.sv:1020), the writer's own retirement increment arrives one cycle later from WB (perf_instr_ret_wb rtl/ibex_wb_stage.sv:208-209 -> instr_ret_i rtl/ibex_core.sv:1549 -> mhpmcounter_incr[2] :1588); the write-wins rule of the counter (rtl/ibex_counter.sv:44-47) covers only an increment in the SAME cycle, so `csrw minstret, V` leaves minstret at V + 1 once the writer has retired (the same holds for mcycle only in the trivial sense that mcycle keeps counting). ISS convention differs: upstream Spike skips the increment that follows an explicit instret write ("explicit writes to instret take precedence", wide_counter_csr_t::bump, tools/riscv-isa-sim/riscv/csrs.cc:1321-1333, with the post-instruction bump at riscv/execute.cc:353), so Spike reads back V. The shim must add one for Ibex, or the comparator must expect V + 1 on the next read. | rtl/ibex_id_stage.sv:747-749; rtl/ibex_cs_registers.sv:1020, :1588; rtl/ibex_wb_stage.sv:208-209; rtl/ibex_core.sv:1549; rtl/ibex_counter.sv:44-47; tools/riscv-isa-sim/riscv/csrs.cc:1321-1333, riscv/execute.cc:353 |
 | Index 1 (0xB01/0xB81) | not a CSR: no read case, so illegal in every mode (default arm) | :702-703; rtl/ibex_pkg.sv has no enum entry between CSR_MCYCLE :564 and CSR_MINSTRET :565 |
 
 ## 3. mhpmcounter3..31(h) (0xB03-0xB1F, 0xB83-0xB9F)
@@ -36,7 +37,7 @@ doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 |---|---|---|
 | 3..12 read | low word = counter[31:0]; high word = counter[63:32] which is 0 because CounterWidth = 32 | rtl/ibex_cs_registers.sv:580-591 (:590), :593-604 (:603); rtl/ibex_counter.sv:86-90 (bits above CounterWidth read 0) |
 | 3..12 write, low word | stored (32 bits), write wins over increment | rtl/ibex_cs_registers.sv:858; rtl/ibex_counter.sv:33-45 |
-| 3..12 write, high word (0xB83-0xB8C) | accepted by the decoder but has no effect: counter_load[31:0] keeps the old low word and only [CounterWidth-1:0] is stored, so a mhpmcounterXh write leaves the counter unchanged | rtl/ibex_cs_registers.sv:871; rtl/ibex_counter.sv:38-45, :86-90 |
+| 3..12 write, high word (0xB83-0xB8C) | the write enable is asserted (we = counter_we_i or counterh_we_i, rtl/ibex_counter.sv:35) and counter_d takes counter_load[31:0], which for an h write is the OLD low word (:38-41), in preference to counter_upd (:44-47): the stored value is held, and an event increment due in that same cycle is lost; bits 63:32 have no storage (:86-90) | rtl/ibex_cs_registers.sv:871; rtl/ibex_counter.sv:35, :38-41, :44-47, :86-90 |
 | 13..31 read | 0 (both halves) | rtl/ibex_cs_registers.sv:1699-1700 |
 | 13..31 write | ignored: the write enables exist but are tied off as unused | :1716-1717 |
 | Events counted (3..12) | hardwired: 3 dside_wait, 4 iside_wait, 5 loads, 6 stores, 7 jumps, 8 branches, 9 taken branches, 10 compressed retired, 11 mul_wait, 12 div_wait | :1589-1598; definitions in dv/auto_dv/evidence/gen_hpm_event_defs.md |
@@ -78,7 +79,7 @@ doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 | Field | RTL behaviour | Anchor |
 |---|---|---|
 | Value | the same counter word as the M-mode CSR of the same index (aliases, not copies) | rtl/ibex_cs_registers.sv:607-619 (:617 low), :621-633 (:631 high) |
-| Legality in M | always legal (read); the addresses are read-only by encoding (csr[11:10] = 11), so any write form traps in every mode | :618 / :632 (rule applies only when priv_lvl_q == U); :404 (illegal_csr_write) |
+| Legality in M | always legal (read); the addresses are read-only by encoding (csr[11:10] = 11), so CSRRW, CSRRWI, or CSRRS / CSRRC with rs1 != x0 (CSRRSI / CSRRCI with uimm != 0) traps in every mode, while CSRRS / CSRRC with rs1 = x0 and the zero-immediate forms are demoted to reads by the decoder and are legal | :618 / :632 (rule applies only when priv_lvl_q == U); :404 (illegal_csr_write, csr_wr from the op); rtl/ibex_decoder.sv:251-258 (CSR_OP_READ demotion) |
 | Legality in U | legal only when mcounteren[idx] = 1; for idx 13..31 mcounteren reads 0 (section 5), so hpmcounter13..31(h) is always illegal in U; cycle/instret/hpmcounter3..12 follow the stored bit; time is index 1, whose bit is forced 0 | :618, :632, :1732 |
 | Trap | illegal instruction (cause 2), mtval = the instruction | :405-406 (illegal_csr_insn_o), controller mtval rtl/ibex_controller.sv:868 |
 | Doc | performance_counters.rst:66-77 (mcounteren gating, illegal instruction on a clear bit) | doc/03_reference/performance_counters.rst:69-75 |
@@ -93,6 +94,15 @@ doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 
 ## 9. The Test Writer's claims (README_state.md BLOCKER items), confirmed or corrected
 
+Verbatim from the README (2026-09-03 19:5xZ state), items 1-4 of its BLOCKER paragraph:
+
+1. "mcountinhibit / mcounteren WARL masks: Ibex keeps CY, IR and bits 3..12 (MHPMCounterNum 10), TM reads 0, bits above 12 read 0; Spike keeps TM (mcounteren) and bits 3..31."
+2. "U-mode alias gating: Ibex traps (cause 2) on hpmcounter13..31 (mcounteren bits above 12 read 0) and on time/timeh; Spike gates by its writable mcounteren and returns time."
+3. "time/timeh (0xC01/0xC81): Ibex traps in every mode; Spike returns the time CSR in M-mode"
+4. "mcounteren_writable_i off: Ibex drops mcounteren writes; Spike stores them"
+
+Verdicts:
+
 | Claim | Verdict | RTL |
 |---|---|---|
 | 1. mcountinhibit / mcounteren keep CY, IR and bits 3..12; TM reads 0; bits above 12 read 0 | CONFIRMED | sections 5 and 6 (:1556-1557, :1566-1567, :1714, :1732) |
@@ -100,7 +110,7 @@ doc/03_reference/cs_registers.rst. RTL is read-only; no fix proposal.
 | 3. time / timeh trap in every mode | CONFIRMED (default arm, no enum entry); also in debug mode | section 8 |
 | 4. mcounteren writes dropped when mcounteren_writable_i is off | CONFIRMED; add: any encoding other than IbexMuBiOn is "off", the write is a silent no-op with no trap, and the read-back returns the old value | section 5 (:845) |
 | (implicit) mhpmevent writes | not in the list but needed by the shim: every mhpmevent write is ignored and reads are the hardwired one-hot for 3..12, 0 for 13..31 | section 4 |
-| (implicit) mhpmcounterXh writes for 3..12 | needed by the shim: the high-word write is a no-op because CounterWidth = 32 | section 3 (rtl/ibex_counter.sv:38-45, :86-90) |
+| (implicit) mhpmcounterXh writes for 3..12 | needed by the shim: the high-word write holds the stored value (CounterWidth = 32) and drops an event increment due in that cycle | section 3 (rtl/ibex_counter.sv:35, :38-41, :44-47, :86-90) |
 | (implicit) minstret read includes the retiring WB instruction | needed by a lock-step model that reads minstret: see sections 21 / 47 of the sampling anchors and :1648-1658 | section 2 |
 
 ## 10. Shim configuration summary (what the model must do, one line each)
