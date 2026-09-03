@@ -1128,3 +1128,12 @@ compares" sentence in the scoreboard doc is withdrawn) and NMI-enabled results s
 Section 0a must not describe rf_wr_suppress handling or the NMI-pre-empted convention as built checks. Third instance
 today of a comparator rule that takes a DUT-side field as its reason to skip or undo a compare (F3 vectored cause,
 fault arming, now rf_wr_suppress): any such rule must be gated on an independent TB-side fact before it counts.
+
+## LOG-039b - 2026-09-03 - CONDITION MET (T-178 reviewed APPROVE-WITH-CHANGES; round 0 now waits only on the T-181 triage)
+
+Runtime's T-178 fix (7a468ec: fcov_policy_failures exempts measured: false with a self-test covering both cases; the
+promoted entries back in flow style; the red-check CLI builders self-tested) is APPROVE-WITH-CHANGES
+(dv/auto_dv/reviews/2026-09-03-claude-diff-04dea6be-7a468ec7.md; two lows on documentation wording and a diff count,
+one fixture info). The LOG-039a condition on round 0 is met; round 0 (request round_0, filed 16:10Z) now waits only
+on the LOG-042 condition: the fire_schedule_applied triage (T-181, Test Writer with tb-infra) concluding with a fix
+landed and reviewed, since the same smoke-tier tests would otherwise fail the round on a TB-side check.
