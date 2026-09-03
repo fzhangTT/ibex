@@ -32,6 +32,7 @@ drain outstanding transactions, report counts.
 |---|---|---|---|
 | `+gen_chk_isa=0|1` | `PLUSARG_CHK_ISA` | silences every isa_* row (the model still steps and publishes its state in every run, since the irq/debug/misc checkers consume it: step 2b, T-090); per-field knobs +gen_chk_isa_{pc,insn,trap,rd,mem,prv,pc_next,csr} | 1 |
 | `+gen_sb_trace=1` | `PLUSARG_SB_TRACE` | debug log of every compared record | 0 |
+| `+gen_isa_pc_next_mask_b13=0|1` | `PLUSARG_ISA_PC_NEXT_MASK_B13` | 1 = `isa_pc_next` masks bit 0 of `rvfi_pc_wdata` on jalr / c.jr / c.jalr records and counts them (`b13_odd_jalr`, rtl-arch R11); 0 = the raw RVFI rule, for the expected-fail test of bug candidate B13 | 1 |
 
 ## 4. Wave-level behaviour
 

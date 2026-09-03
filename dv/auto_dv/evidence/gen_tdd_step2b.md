@@ -155,6 +155,11 @@ out_fu2/h = ba59fc4cbeebfd67). Retained as gen_tdd_logs/lockstep/gen_fu_{a,c}_*;
   b13_odd_jalr=80, 0 mismatches).
 - Every run of the set on out_fu2/h PASS (boot_zc canary, lockstep zc / zc_isaoff / s7, export zc / s7, ut_irq, ut_dbg,
   debug storm 105 entries, the four batch-1 tests with GEN_TEST_PASS) except regime_refuse (FAIL by design).
+- T-144 (Orchestrator, 15:3xZ): the mask is behind the new bool plusarg `+gen_isa_pc_next_mask_b13` (default 1) so the
+  expected-fail test of B13 can run the raw rule. Build out_fu2/j = h plus this knob (2 lines; sources sha256
+  b961b6e9ce76b202) re-ran the whole set with identical verdicts (gen_fu_out_fu2_j_driver.log) and adds the pair
+  gen_fu_j_green_jalr_odd_r11_* (knob 1: b13_odd_jalr 80, 0 misses) / gen_fu_j_red_jalr_odd_unmask_* (knob 0: 80 isa_pc_next
+  misses, nothing else). j is the landed tree; the gen_fu_h_* runs are from h and differ from j only by the knob.
 
 ### 7a. Internal NMI entries and the cause rule (found by the alert_bus isolation run; builds d to h)
 

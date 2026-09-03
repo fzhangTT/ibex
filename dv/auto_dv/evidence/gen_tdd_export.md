@@ -226,3 +226,15 @@ gen_tdd_logs/export/gen_fu_h_rows_*_export_excerpt.txt), first lines hand-checke
 Doc corrections of the review lows: addendum line 41 garble, the read() signature with `sources` (addendum :27, :161 and
 the sink document), the "version 1" heading, the FETCH_EN_LINE_OFFSET comment now states the derivation (ack in the
 ReadWrite region after posedge N, the driver acts at the next negedge and stamps N).
+
+T-150 (Orchestrator, committed form of CM8-M-3): five check-tier, measured-false, debug_only-free testlist entries are
+drafted for Runtime to merge (dv/auto_dv/work/tb-infra/gen_t150_testlist_entries.yaml; tb-infra does not edit
+gen_testlist.yaml): gen_ut_export_irq_storm (gen_irq_directed.S, storm + multi: irq_fast 6327, irq_external 422,
+irq_software 418, irq_timer 390 lines, irq_pending 1722, 1591 I markers), gen_ut_export_dbg_storm and
+gen_ut_export_scrkey_delayed (riscv-dv gen_rand_smoke seed 7: 77 debug_req lines over 107 debug entries; 10 scrkey req and
+10 valid lines under the delayed regime), gen_ut_export_rows_nmi (gen_irq_directed.S, regime phase + irq_nm, isa rows
+silenced) and gen_ut_export_rows_dbg (seed 7, regime phase + debug_req). Each was rehearsed on build out_fu2/j with the
+entry's exact plusargs (gen_fu_j_export_irq_storm_t150_*, gen_fu_j_export_dbg_storm_s7_t150_*, gen_fu_j_export_scrkey_s7_t150_*,
+gen_fu_j_rows_*). Two vehicle facts decided the programs: the interrupt program starves under a debug storm inside
+gen_ut_export's tohost budget (export_dbg_storm_t150 on out_fu2/j: `no tohost store`, not a checker red) and requests no
+scramble key even under the interrupt storm, while the seed-7 program requests 10.

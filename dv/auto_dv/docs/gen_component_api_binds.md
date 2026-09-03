@@ -11,6 +11,15 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 ## 1. Purpose
 
+AS BUILT (2026-09-03, T-162 status): `dv/auto_dv/tb/gen_binds.sv` does not exist yet and no `bind` is compiled; the only
+protocol property in the TB is the stimulus-legality self-check `sva_rvalid_legal` inside `dv/auto_dv/tb/gen_bus_if.sv`
+(`rvalid |-> outstanding > 0`, knob `+gen_chk_sva_rvalid_legal`, mutation MUT-003). The plan's ids `gen_sva_ibus` and
+`gen_sva_dbus` are therefore UNBOUND (no SV carries them), as the plan's as-built column says; the checker knobs
+`chk_ibus_proto`, `chk_ibus_outstanding`, `chk_dbus_proto`, `chk_dbus_outstanding`, `chk_dbus_split` and
+`chk_dbus_store_intg` are rendered but have no consumer (no `cfg.chk_*` read in dv/auto_dv/env or dv/auto_dv/tb), and
+`chk_csr_readback` is neither a knob nor a consumer (the CSR compare knob is `chk_isa_csr`, itself unconsumed). Binding
+rtl-arch's properties here is tb-infra's landing-2 item T-162; until then nothing below this line is built.
+
 The one file that contains every `bind`: protocol SVAs on the wrapper's ports (assertion
 coverage), coverage modules, and the approved probe monitors. No bind forces or drives a DUT net;
 error injection is entirely at the boundary.

@@ -45,6 +45,8 @@
   bit key_reset_valid_set = 1'b0;
   bit sb_trace = 1'b0;
   bit sb_trace_set = 1'b0;
+  bit isa_pc_next_mask_b13 = 1'b1;
+  bit isa_pc_next_mask_b13_set = 1'b0;
   string isa_string = "";
   bit isa_string_set = 1'b0;
   string isa_log = "";
@@ -277,6 +279,7 @@
     if ($value$plusargs({PLUSARG_FETCH_EN_AT_RESET, "=%d"}, u)) begin fetch_en_at_reset = (u != 0); fetch_en_at_reset_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KEY_RESET_VALID, "=%d"}, u)) begin key_reset_valid = (u != 0); key_reset_valid_set = 1'b1; end
     if ($value$plusargs({PLUSARG_SB_TRACE, "=%d"}, u)) begin sb_trace = (u != 0); sb_trace_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_ISA_PC_NEXT_MASK_B13, "=%d"}, u)) begin isa_pc_next_mask_b13 = (u != 0); isa_pc_next_mask_b13_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_STRING, "=%s"}, s)) begin isa_string = s; isa_string_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_LOG, "=%s"}, s)) begin isa_log = s; isa_log_set = 1'b1; end
     if ($value$plusargs({PLUSARG_EXPORT_FILE, "=%s"}, s)) begin export_file = s; export_file_set = 1'b1; end

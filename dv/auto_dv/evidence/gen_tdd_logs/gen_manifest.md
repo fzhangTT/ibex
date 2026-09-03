@@ -688,7 +688,7 @@ Each file is a verbatim copy of the run artifact named in the source column (wor
 | dv/auto_dv/evidence/gen_tdd_logs/isa_shim/gen_t102c_green_ut_isa_shim.log | dv/auto_dv/work/tb-infra/out_t102/ut (unit test stdout and stderr) with a header line | 11686 | 99a97b2ceaff1b76f933d0e26c62713e |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_records.txt | records 13..22 of dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/gen_export.txt | 1480 | 9e8d949037eb71c94f8d69ad89b6e8eb |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_run_header.txt | dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/run_header.txt | 450 | a37130466f44c611c63db36801db1b15 |
-| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/stdout.log | 1361 | 2d91304ce7d65df05b84d15b6c200a8c |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/stdout.log (plus the CM6-L-3 count line appended 2026-09-03) | 1551 | cc12e5ab211c4d40500b5ea280f14d93 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_verdict.txt | dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/verdict.txt | 410 | 5e7cd9c25049bdd17f4ca37ead54f067 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_boot_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/boot_zc/run_header.txt | 403 | 2e9b9dbddd17fea9770464ea9cd13e59 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_boot_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/boot_zc/stdout.log | 990 | f8afa7933f0439958c7a314603508f16 |
@@ -982,3 +982,29 @@ Each file is a verbatim copy of the run artifact named in the source column (wor
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_out_fu2_g_driver.log | dv/auto_dv/work/tb-infra/out_fu2_g_driver.log (scratch driver output) | 3106 | ff39dfb1a009f257f8d4f8e41b824a4f |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_out_fu2_h_driver.log | dv/auto_dv/work/tb-infra/out_fu2_h_driver.log (scratch driver output) | 3150 | fd4eb3ddf66f2236ee744d6c1d53fc69 |
 | dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_mb5h_oot_mutation_batch.log | scratch batch driver output of the MB5 re-run on the landed tree | 1245 | 9a368018f44d5081e75f63df15d9ba05 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_boot_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/boot_zc/run_header.txt | 441 | 578171762d7c92a3b09ff8c3caca5404 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_boot_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/boot_zc/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_boot_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/boot_zc/stdout.log | 5516 | 54c424121352d001b40e0567317612cb |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_green_jalr_odd_r11_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/green_jalr_odd_r11/run_header.txt | 461 | 08cb2b6fca85cd345e0be413bcba2c2b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_green_jalr_odd_r11_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/green_jalr_odd_r11/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_green_jalr_odd_r11_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/green_jalr_odd_r11/stdout.log | 5400 | cbd45a03404cf26fb23219142227ee73 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_red_jalr_odd_unmask_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/red_jalr_odd_unmask/run_header.txt | 490 | f1f45d4c6970954b93b0a2af20c0ee0d |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_red_jalr_odd_unmask_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/red_jalr_odd_unmask/verdict.txt | 422 | 22a3644b94aa7961611dd5bbd232a569 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_red_jalr_odd_unmask_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/red_jalr_odd_unmask/stdout.log | 6295 | 35081063580b704930e7afe659174a34 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_dbg_s7_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/rows_dbg_s7/run_header.txt | 490 | 4acd9492846c46aa6a057589e92aa34e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_dbg_s7_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/rows_dbg_s7/verdict.txt | 283 | 21cff794631ab22f525f3bec705c8fa8 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_dbg_s7_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/rows_dbg_s7/stdout.log | 6391 | 68efba4806ed75d0835cc030909e8ab5 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_nmi_irqp_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/rows_nmi_irqp/run_header.txt | 507 | 9b02de1d7616c61b559762ec05dace4f |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_nmi_irqp_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/rows_nmi_irqp/verdict.txt | 283 | 8e1d671dadad12e08ae4e1f03331450b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_rows_nmi_irqp_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/rows_nmi_irqp/stdout.log | 6549 | 90905a1b1ed132947cd0f8d6ab9727a5 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_irq_storm_t150_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_irq_storm_t150/run_header.txt | 548 | dd39b516d180fcc4284904d16197471c |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_irq_storm_t150_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_irq_storm_t150/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_irq_storm_t150_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/export_irq_storm_t150/stdout.log | 5979 | 411fdbf31cd516ae0b384844d4329861 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_dbg_storm_s7_t150_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_dbg_storm_s7_t150/run_header.txt | 528 | 97d3705f8e45f52e1999949898ad73dd |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_dbg_storm_s7_t150_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_dbg_storm_s7_t150/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_dbg_storm_s7_t150_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/export_dbg_storm_s7_t150/stdout.log | 5964 | 6c234951b118c2b6566a71429559ce02 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_scrkey_s7_t150_run_header.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_scrkey_s7_t150/run_header.txt | 524 | 88428e3e75ad749f6e41dfb4db0a466f |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_scrkey_s7_t150_verdict.txt | dv/auto_dv/work/tb-infra/out_fu2/j/export_scrkey_s7_t150/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_j_export_scrkey_s7_t150_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_fu2/j/export_scrkey_s7_t150/stdout.log | 5952 | 5a5ee2a064eaa4d3dc522c36d9247586 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_compile_j.log | dv/auto_dv/work/tb-infra/out_fu2/j/compile.log | 70582 | 58214728bb90e1cae7103e202ab13d05 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_out_fu2_j_driver.log | dv/auto_dv/work/tb-infra/out_fu2_j_driver.log (scratch driver output) | 3229 | 3216a55793a0590f844f1888d571e147 |

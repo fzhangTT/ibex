@@ -491,9 +491,10 @@ package gen_rvfi_pkg;
         if (t.insn == GEN_INSN_MRET || t.insn == GEN_INSN_DRET) begin
           if (t.pc_wdata != t.pc_rdata + insn_len(t.insn))
             miss("isa_pc_next", $sformatf("mret/dret record pc_wdata=%08h != pc + %0d (C-1)", t.pc_wdata, insn_len(t.insn)), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
-        end else if (is_jalr(t.insn) && t.pc_wdata[0]) begin
+        end else if (is_jalr(t.insn) && t.pc_wdata[0] && cfg.isa_pc_next_mask_b13) begin
           // B13 (rtl-arch R11): rvfi_pc_wdata carries the raw rs1 + imm of a jalr while the core fetches the even address
-          // (rtl/ibex_core.sv:2084); bit 0 is masked and the record counted until the RTL fix
+          // (rtl/ibex_core.sv:2084); bit 0 is masked and the record counted until the RTL fix (+gen_isa_pc_next_mask_b13=0
+          // runs the raw rule for the expected-fail test)
           b13_odd_jalr++;
           if (pc_a != {t.pc_wdata[31:1], 1'b0})
             miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h (bit 0 masked, B13)", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));

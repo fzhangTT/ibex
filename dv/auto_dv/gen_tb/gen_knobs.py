@@ -26,6 +26,7 @@ PLUSARGS = {
     "fetch_en_at_reset": {"plusarg": "gen_fetch_en_at_reset", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)'},
     "key_reset_valid": {"plusarg": "gen_key_reset_valid", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'ic_scr_key_valid_i high out of reset (ibex_top behaviour)'},
     "sb_trace": {"plusarg": "gen_sb_trace", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'scoreboard per-record trace (debug only)'},
+    "isa_pc_next_mask_b13": {"plusarg": "gen_isa_pc_next_mask_b13", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'isa_pc_next masks bit 0 of rvfi_pc_wdata on jalr records (bug candidate B13, rtl-arch R11); 0 = the raw rule, for the expected-fail test of the odd-target report'},
     "isa_string": {"plusarg": "gen_isa_string", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model ISA string override (debug only; the default is GEN_ISA_STRING)'},
     "isa_log": {"plusarg": "gen_isa_log", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model commit log path (debug only)'},
     "export_file": {"plusarg": "gen_export_file", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'record/event export file (relative to the run directory); absent = no export'},
