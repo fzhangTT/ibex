@@ -5,15 +5,15 @@ An item of a group hosted by a test in the round is CREDITED when every seed of 
 expected-fail item), its fire check fired in every seed (GEN_TEST_FIRE fire_tp_<area>_<nnn> ok=True in the sim stdout), every
 bin of the item was HIT in the round's fcov checks (a bins_not_hit bin of the test's manifest counts as unhit, rule (g)) and the
 item is under no measurement hold (whichever hold sections the plan carries, discovered by gen_plan_holds; a held item is recorded,
-not credited). Red fixtures (names ending in _red, red_fixture / red_expect entries, RED-OK verdicts) host no items. Everything else
-is recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists (T-179).
+not credited). Red fixtures (names ending in _red, red_fixture / red_expect entries, RED-OK verdicts) host no items and are excluded from the
+item credit; the per-test table lists every run, reds included. Everything else is recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists (T-179).
 
 Usage:
   gen_round_credit.py --regress-manifest <outdir>/manifest.yaml [--plan-dir dv/auto_dv/docs] [--fcov-dir dv/auto_dv/fcov_expectations]
                       [--csv <out.csv>] [--md <out.md>] [--round <n>]
   gen_round_credit.py --self-test        # synthetic runs: credited / held / unhit / fire-fail / not-run cases
 """
-import re, csv, sys, argparse, pathlib, collections, hashlib, yaml
+import re, csv, sys, argparse, pathlib, collections, hashlib, shlex, yaml
 R = pathlib.Path(__file__).resolve()
 while not (R / 'dv/auto_dv/contract').is_dir():
     if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
@@ -146,7 +146,7 @@ def render_md(rows, round_no, header='', tests=None, heading=None):
     L += ['', f"Total: {len(rows)} items hosted; credited {tot['CREDITED']}; held {tot['HELD']}; unhit {tot['UNHIT']}; fire-fail {tot['FIRE-FAIL']}; not fired {tot['NOT-FIRED']}; not run clean {tot['NOT-RUN-CLEAN']}; unverified {tot['UNVERIFIED']}.",
           f"Witness bins of hosted items: {sum(r['witness_bins'] for r in rows)} (unscored until T-179; listed, never credited).", '']
     if tests:
-        L += ['| Test | Seeds | Verdicts | Distinct reasons |', '|---|---|---|---|'] + [f"| {t} | {n} | {v} | {rs} |" for t, n, v, rs in tests] + ['']
+        L += ['Per test (every run of the regression, red fixtures included; the item table below excludes red fixtures, which host no items):', '', '| Test | Seeds | Verdicts | Distinct reasons |', '|---|---|---|---|'] + [f"| {t} | {n} | {v} | {rs} |" for t, n, v, rs in tests] + ['']
     L += ['| Item | Group | Test | Seeds | Verdicts | Fired | Bins | Unhit | Hold | Status |', '|---|---|---|---|---|---|---|---|---|---|']
     for r in rows: L.append(f"| {r['item']} | {r['group']} | {r['test']} | {r['seeds']} | {r['verdicts']} | {r['fired']} | {r['bins']} | {r['bins_unhit']} | {r['hold'] or '-'} | {r['status']} |")
     return '\n'.join(L) + '\n'
@@ -193,8 +193,8 @@ def main():
     by_test = collections.defaultdict(list)
     for r in runs: by_test[r['test']].append(r)
     tests = [(t, len(rs), '/'.join(sorted({str(r.get('verdict')) for r in rs})), '; '.join(sorted({(r.get('reason') or '-')[:60] for r in rs}))) for t, rs in sorted(by_test.items())]
-    inv = (f"Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {a.regress_manifest} --plan-sha {a.plan_sha} --round {a.round}"
-           + (f" --heading '{a.heading}'" if a.heading else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan (gen_test_plan.md) at {a.plan_sha}. ")
+    inv = (f"Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
+           + (f" --heading {shlex.quote(a.heading)}" if a.heading else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan (gen_test_plan.md) at {a.plan_sha}. ")
     hdr = round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:

@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 18:12 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 18:32 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -166,24 +166,10 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   windows, the interrupt decision cycle) cannot use the channel (TB Infra option B): they are reformulated to boundary
   facts (an RVFI record's cycle versus a pin or bus event's cycle) or stay coverage-only through P4-class sampling; the
   40 such items carry the `[class B]` tag in their Fire-check (Section 1.3 column Class).
-- Measurement hold T-136 (Orchestrator ruling 12:5x UTC; evidence dv/auto_dv/evidence/gen_t090_rtl_facts.md at 39f0eae,
-  lines 49-50 and 70): TB Infra's step-2b comparator fix 2 offers the lock-step model the DUT's own vectored cause, so a
-  DUT that vectors to a wrong or un-enabled interrupt cause passes the comparator until the irq_entry checker recomputes
-  the expected cause from the pre-entry record (post_mip & mie; priority NMI > fast lowest id > external > software >
-  timer, rtl/ibex_controller.sv:736-757, :503-509). Until that check (T-136, TB Infra) is committed and reviewed, NO
-  interrupt-enabled test result counts toward the plan and the irq-entry, irq-priority and NMI items stay unmeasured:
-  their runs may execute, their fire-checks and bins are recorded, but none enters the Phase 1 numbers. Rule (generated,
-  Section 1.4): an item is under the hold when its Pass criteria name gen_chk_irq, or when its stimulus enables an
-  interrupt line and it checks an interrupt or NMI entry; 165 items in 61 test groups today. The hold is
-  lifted by removing this bullet and Section 1.4 in the revision that cites the reviewed T-136 commit.
-- Measurement hold T-137 (Orchestrator LOG-026a): the lock-step comparator arms a model fault from the DUT's own load/store trap
-  record, so a PMP denial or a bus error the DUT reports wrongly (or fails to report) is mirrored instead of caught until TB
-  Infra's T-137 arms faults from bus errors only and never from a PMP denial (the model computes PMP itself) and both
-  reviewers pass it. Until then NO PMP-denial or bus-error test result is credited: runs may execute and record, nothing
-  enters the Phase 1 numbers. Rule (generated, Section 1.5): an item is under the hold when its Pass criteria name
-  gen_chk_pmp or a bus-integrity checker (gen_chk_bus_intg_rsp, gen_chk_store_intg), or when it checks a bus-error or
-  PMP-denial trap; 246 items in 101 test groups today. Lifted by removing this bullet and Section 1.5 in the
-  revision that cites the reviewed T-137 commit.
+- Measurement hold T-136 LIFTED: TB Infra landed the irq_entry expected-cause check (the pre-entry post_mip and mie with the priority order; the entry state published before the Zcmp fold; a report-time referee irq checker entries_seen == scoreboard irq_entries) in 9e912bb; cross-model review dv/auto_dv/reviews/2026-09-03-claude-diff-8fff8755-9e912bb6.md and Critic dv/auto_dv/docs/gen_critic_tb_l1c.md passed it. From the
+  next measured regression interrupt-enabled results (the irq_entry, irq-priority and NMI items) count toward the plan; the held item list is kept in the response file (gen_critic_response_plan_set_v1.md) as the record. Caveats that stay in force: priority-pick items (TP-IRQ-014/015/016/031/038/045) are credited only from directed or sparse cases where the contending lines do not move in the decision window, never from the storm (LOG-037e, T-190); an interrupt entry whose handler starts with a non-last Zcmp micro-op is published before the fold since 1c, and the report-time referee (irq checker entries_seen == scoreboard irq_entries) is the proof each run carries.
+- Measurement hold T-137 LIFTED: TB Infra landed bus-error-only fault arming (a model fault armed only for a bus error the driver announced, never for a PMP denial; both words of a spanning access consumed; announced minus taken reported as an error) in 9e912bb; cross-model review dv/auto_dv/reviews/2026-09-03-claude-diff-8fff8755-9e912bb6.md and Critic dv/auto_dv/docs/gen_critic_tb_l1c.md passed it. From the
+  next measured regression PMP-denial and bus-error results count toward the plan; the held item list is kept in the response file (gen_critic_response_plan_set_v1.md) as the record. Caveats that stay in force: lifted for bus-error arming only (LOG-051): items whose pass criteria rest on a suppressed register write after an integrity corruption stay UNCREDITED until T-183 (the rf_wr_suppress undo gated on an announced corruption, TB Infra 2c) lands and passes review: TP-DBG-032, TP-IRQ-044, TP-DMEM-039, TP-DMEM-041, TP-DMEM-064 (expected-fail), TP-SEC-008, TP-SEC-009, TP-SEC-040 (expected-fail), TP-RVFI-024, TP-RVFI-040 (expected-fail), TP-XIF-003, TP-REG-026; items whose credit depends on the NMI-pre-empted rule (t.intr written into the shared record) are COUNTED ONLY until that fix lands: TP-IRQ-079 and TP-SEC-025 (the NMI pre-empting an interrupt entry before its handler retires; TP-SEC-024 is an interrupt pre-emption and is not affected); every other PMP-denial or bus-error result credits.
 - Credit rule for interrupt-priority items (Critic fu1, LOG-037b; Critic fu2a Section 6 adopted as LOG-037e, T-190): an item whose
   fire check is the priority pick among simultaneously pending lines is credited only from directed or sparse cases in which the
   contending lines do not move in the checker's decision window (gen_ut_irq's two-entry loop is such a case); the storm test never
@@ -206,7 +192,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   / all phase(s), per phase, each phase, phase_idx, knob transition, regime switch or change; never "schedule" alone, program-region
   phases, micro-op phases or mid-run resets); union 82 items in 16 groups at the lift.
 - Round 0 not yet run clean; probe of 37c7ecb refused (no covergroup in the TB; one runaway-program red in gen_test_csr_reset seed
-  1028791296 under triage); nothing credited (LOG-046; Runtime's probe record dv/auto_dv/evidence/gen_round_0_probe/, pending T-207). The probe
+  1028791296 under triage); nothing credited (LOG-046; Runtime's probe record is committed at fa873d7 as dv/auto_dv/evidence/gen_round_0_probe/, six files with
+  gen_README.md, gen_manifest.yaml, gen_dispatch_record.yaml, gen_fcov_summary.yaml, gen_run_verdicts.md and the csr_reset excerpt). The probe
   (LOG-042d dispatch, HEAD 37c7ecb, plan of record fd632aa) ran regress_round_0 with 47 runs, 2 PASS (gen_boot_zc,
   gen_ut_lockstep, which host no items) and 45 FAIL: 44 on "fcov expectation unverifiable: per-test urg report has no grpinfo.txt (no
   covergroup in this vdb)" and one runaway program (gen_test_csr_reset seed 1028791296). The TB carries no SystemVerilog covergroup, so
@@ -247,14 +234,14 @@ Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 4d48d
 
 | Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (4d48d84) |
 |---|---|---|---|
-| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c; T-134 at ce33b4f: an interrupt or debug entry handled before the Zcmp fold). T-137 (a fault armed only for a bus error the driver announced) landed at ce33b4f (gen_rvfi_pkg.sv:448-449 at 4d48d84) and is under REQUEST-CHANGES (LOG-037a: a stale announcement can legitimise a later trap), so its hold stays. isa_pc_next bit-0 convention: the knob +gen_isa_pc_next_mask_b13 exists at 4d48d84 (gen_rvfi_pkg.sv:522-528, default 1, counts b13_odd_jalr; landed ffa9127) and is NOT counted as built here until TB Infra's 1c passes both reviewers (LOG-037a/b); gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); the B13 expected-fail test gen_btalu_hazard_xfail alone runs the raw rule at +gen_isa_pc_next_mask_b13=0. Landing 2a conventions in the comparator (nmi_preempted :325; rf_wr_suppressed with the GPR snapshot :312/:462): landed at 4d48d84, review REQUEST-CHANGES (LOG-037c: the pre-emption rule wrote intr into the shared transaction, the suppress undo rested on the DUT's flag alone), NOT credited until 1c |
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c; T-134 at ce33b4f). T-137 bus-error-only fault arming built at 9e912bb (1c: a model fault armed only for a bus error the driver announced, never for a PMP denial; both words of a spanning access consumed; announced minus taken reported as an error; both reviewers passed it, LOG-051 lift for bus-error arming). isa_pc_next bit-0 convention built: +gen_isa_pc_next_mask_b13 (ffa9127, default 1, counts b13_odd_jalr; reviewed with 1c), the B13 expected-fail test gen_btalu_hazard_xfail alone runs the raw rule at knob 0 (bug candidate B13, rtl-arch R11). Carve-outs (LOG-051): the rf_wr_suppress undo rests on the DUT's flag until T-183 (2c), so items resting on it stay uncredited (TP-DBG-032, TP-IRQ-044, TP-DMEM-039, TP-DMEM-041, TP-DMEM-064 (expected-fail), TP-SEC-008, TP-SEC-009, TP-SEC-040 (expected-fail), TP-RVFI-024, TP-RVFI-040 (expected-fail), TP-XIF-003, TP-REG-026); the NMI-pre-empted rule writes intr into the shared record until 2c, so items depending on it are counted only (TP-IRQ-079 and TP-SEC-025 (the NMI pre-empting an interrupt entry before its handler retires; TP-SEC-024 is an interrupt pre-emption and is not affected)) |
 | gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | UNBUILT at 4d48d84: neither chk_isa_csr nor chk_csr_readback is consumed by the env (the comparator rows consumed are isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next); CSR read-backs are checked at program level by the tests meanwhile |
 | gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | UNBUILT as checker ids at 4d48d84 (no chk_ibus_proto / chk_ibus_outstanding consumed); the bus driver bounds its own outstanding count (GEN_IBUS_MAX_OUTSTANDING) and gen_bus_if.sv carries the sva_rvalid_legal self-check |
 | gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | UNBUILT as checker ids at 4d48d84 (no chk_dbus_* consumed); the bus driver bounds its own outstanding count (GEN_DBUS_MAX_OUTSTANDING); no split-transaction checker |
 | gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | UNBUILT at 4d48d84 (no chk_dbus_store_intg consumed) |
 | gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal landed at 4d48d84 (an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS records outside NMI mode, gen_checkers_pkg.sv:141-145, chk_nmi_internal consumed; mutant MB12), review REQUEST-CHANGES (LOG-037c), NOT credited until 1c; rf_wr_suppress compare landed at 4d48d84 (gen_rvfi_pkg.sv:312 and :462), review REQUEST-CHANGES (LOG-037c: acceptance rests on the DUT's flag alone, T-183 gates it on an announced corruption), NOT credited until 1c |
 | gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 | UNBUILT (pmp_*) |
-| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | irq_pending, irq_masked and the entry bound built; the irq_entry expected-cause rule (T-136: the pre-entry post_mip and mie with the priority order, gen_checkers_pkg.sv:155-168 at 4d48d84) landed at ce33b4f and is under REQUEST-CHANGES (LOG-037a: blind to entries whose handler's first record is a non-last Zcmp micro-op, irq checker entries 0 against scoreboard irq_entries 5), so interrupt-enabled results do not count until 1c passes (Section 1.4). Landing 2a (review REQUEST-CHANGES, LOG-037c, the 1c fixes absent): the bound restarts at each entry; UNTIL_TAKEN releases only the taken line (gen_agents_pkg.sv:609-611); priority claims undecidable at the sample are counted (priority_undecidable), not credited (LOG-037b) |
+| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | built at 9e912bb (1c; cross-model APPROVE-WITH-CHANGES, Critic tb_l1c APPROVE; LOG-051): irq_pending, irq_masked, the entry bound and the irq_entry expected-cause rule (the pre-entry post_mip and mie with the priority order; the entry state published before the Zcmp fold; report-time referee irq checker entries_seen == scoreboard irq_entries). Landing 2a: the bound restarts at each entry; UNTIL_TAKEN releases only the taken line (gen_agents_pkg.sv:609-611); priority claims undecidable at the sample are counted, not credited (LOG-037b, LOG-037e) |
 | gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker); the shim's NMI emulation with the mstack landed at 4d48d84 under REQUEST-CHANGES (LOG-037c), so NMI runs stay consistency-only until 1c passes; nmi_internal landed at 4d48d84, not credited until 1c (see gen_chk_bus_intg_rsp) |
 | gen_chk_debug | dbg_entry, dbg_masked, dbg_exc, dbg_dret, dbg_trigger (gen_dbg_checker) | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_exc=0, +gen_chk_dbg_dret=0, +gen_chk_dbg_trigger=0 | dbg_entry, dbg_masked built; dbg_exc, dbg_dret, dbg_trigger UNBUILT |
 | gen_chk_alerts | alert_minor, alert_internal, alert_bus (gen_misc_monitor) | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 | built (alert_minor against the RAM-model announcement queue) |
@@ -352,436 +339,13 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IC-057 | gen_ic_enable | ibus req; icram fill_write; icram tag_write | bus request | RVFI-only fallback stated | - |
 | TP-REG-018 | gen_reg_schedule | regime phase; ibus req; ibus gnt; ibus rvalid; dbus req; dbus gnt; dbus rvalid; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; pin fetch_enable; icram inject | regime phase | RVFI-only fallback stated | - |
 
-## 1.4 Items under the T-136 measurement hold (generated; 165 items in 61 groups; no result counts until the irq_entry expected-cause check is committed and reviewed)
 
-Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_xif_random (8), gen_irq_lines (7), gen_irq_nmi (7), gen_irq_regime (7), gen_irq_handler (6), gen_dbg_irq_mask (5), gen_irq_debug (5), gen_irq_priority (5), gen_prv_irq (5), gen_rvfi_ext (5), gen_prv_wfi (4), gen_cmp_zcmp_events (3), gen_csr_trap_handling (3), gen_irq_reset (3), gen_prv_mret (3), gen_reg_inflight (3), gen_reg_knob_sweep (3), gen_csr_ordering (2), gen_csr_trap_setup (2), gen_csr_trap_setup_irq (2), gen_dit_dummy_events (2), gen_dmem_ctx (2), gen_exc_double_fault (2), gen_isa_cti (2), gen_isa_random (2), gen_prv_storm (2), gen_rst_pending_at_boot (2), gen_rst_sleep (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_bit_multicycle (1), gen_bit_random (1), gen_cmp_random (1), gen_cmp_zca (1), gen_csr_storm (1), gen_dbg_irq_mask_xfail (1), gen_dbg_mode_misc (1), gen_dbg_random (1), gen_dit_random (1), gen_dmem_regime (1), gen_exc_priority (1), gen_exc_regime (1), gen_fe_redirect (1), gen_fe_sleep (1), gen_irq_nmi_int (1), gen_isa_system (1), gen_mul_random (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmc_random (1), gen_prv_mstatus (1), gen_reg_schedule (1), gen_rst_boot (1), gen_rst_fetch_enable (1), gen_rvfi_proto_basic (1), gen_sec_alert_inject_ibus (1), gen_xif_dummy (1), gen_xif_fetch_enable (1). Evidence: dv/auto_dv/evidence/gen_t090_rtl_facts.md (39f0eae); ruling: Section 0.
-
-| Item | Group | Why held |
-|---|---|---|
-| TP-ISA-016 | gen_isa_cti | Pass criteria name gen_chk_irq |
-| TP-ISA-026 | gen_isa_cti | Pass criteria name gen_chk_irq |
-| TP-ISA-040 | gen_isa_system | Pass criteria name gen_chk_irq |
-| TP-ISA-054 | gen_isa_random | Pass criteria name gen_chk_irq |
-| TP-ISA-055 | gen_isa_random | Pass criteria name gen_chk_irq |
-| TP-MUL-023 | gen_mul_timing | Pass criteria name gen_chk_irq |
-| TP-MUL-028 | gen_mul_random | Pass criteria name gen_chk_irq |
-| TP-CMP-011 | gen_cmp_zca | Pass criteria name gen_chk_irq |
-| TP-CMP-056 | gen_cmp_zcmp_events | Pass criteria name gen_chk_irq |
-| TP-CMP-057 | gen_cmp_zcmp_events | Pass criteria name gen_chk_irq |
-| TP-CMP-058 | gen_cmp_zcmp_events | Pass criteria name gen_chk_irq |
-| TP-CMP-071 | gen_cmp_random | Pass criteria name gen_chk_irq |
-| TP-BIT-036 | gen_bit_multicycle | Pass criteria name gen_chk_irq |
-| TP-BIT-042 | gen_bit_random | Pass criteria name gen_chk_irq |
-| TP-CSR-006 | gen_csr_ordering | Pass criteria name gen_chk_irq |
-| TP-CSR-026 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
-| TP-CSR-029 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
-| TP-CSR-031 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
-| TP-CSR-032 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
-| TP-CSR-034 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
-| TP-CSR-035 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
-| TP-CSR-114 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
-| TP-CSR-115 | gen_csr_ordering | Pass criteria name gen_chk_irq |
-| TP-CSR-119 | gen_csr_storm | Pass criteria name gen_chk_irq |
-| TP-PRV-003 | gen_prv_mstatus | Pass criteria name gen_chk_irq |
-| TP-PRV-007 | gen_prv_mret | Pass criteria name gen_chk_irq |
-| TP-PRV-010 | gen_prv_mret | interrupt-enabled stimulus with an entry check |
-| TP-PRV-011 | gen_prv_mret | Pass criteria name gen_chk_irq |
-| TP-PRV-015 | gen_prv_wfi | Pass criteria name gen_chk_irq |
-| TP-PRV-017 | gen_prv_wfi | Pass criteria name gen_chk_irq |
-| TP-PRV-018 | gen_prv_wfi | Pass criteria name gen_chk_irq |
-| TP-PRV-019 | gen_prv_wfi | interrupt-enabled stimulus with an entry check |
-| TP-PRV-022 | gen_prv_irq | Pass criteria name gen_chk_irq |
-| TP-PRV-023 | gen_prv_irq | Pass criteria name gen_chk_irq |
-| TP-PRV-028 | gen_prv_irq | Pass criteria name gen_chk_irq |
-| TP-PRV-029 | gen_prv_irq | Pass criteria name gen_chk_irq |
-| TP-PRV-030 | gen_prv_irq | Pass criteria name gen_chk_irq |
-| TP-PRV-036 | gen_prv_storm | Pass criteria name gen_chk_irq |
-| TP-PRV-037 | gen_prv_storm | Pass criteria name gen_chk_irq |
-| TP-EXC-055 | gen_exc_double_fault | Pass criteria name gen_chk_irq |
-| TP-EXC-056 | gen_exc_double_fault | interrupt-enabled stimulus with an entry check |
-| TP-EXC-070 | gen_exc_priority | Pass criteria name gen_chk_irq |
-| TP-EXC-072 | gen_exc_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-001 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-002 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-003 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-004 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-005 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-006 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-007 | gen_irq_nmi | Pass criteria name gen_chk_irq |
-| TP-IRQ-008 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-009 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-010 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-011 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-012 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-013 | gen_irq_lines | Pass criteria name gen_chk_irq |
-| TP-IRQ-014 | gen_irq_priority | Pass criteria name gen_chk_irq |
-| TP-IRQ-015 | gen_irq_priority | Pass criteria name gen_chk_irq |
-| TP-IRQ-016 | gen_irq_priority | Pass criteria name gen_chk_irq |
-| TP-IRQ-017 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-018 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-019 | gen_irq_reset | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-020 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-021 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-022 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-023 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-024 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-025 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-026 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-027 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-028 | gen_irq_handler | Pass criteria name gen_chk_irq |
-| TP-IRQ-029 | gen_irq_debug | Pass criteria name gen_chk_irq |
-| TP-IRQ-030 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-031 | gen_irq_priority | Pass criteria name gen_chk_irq |
-| TP-IRQ-032 | gen_irq_handler | Pass criteria name gen_chk_irq |
-| TP-IRQ-033 | gen_irq_handler | Pass criteria name gen_chk_irq |
-| TP-IRQ-034 | gen_irq_handler | Pass criteria name gen_chk_irq |
-| TP-IRQ-035 | gen_irq_nmi | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-036 | gen_irq_nmi | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-037 | gen_irq_nmi | Pass criteria name gen_chk_irq |
-| TP-IRQ-038 | gen_irq_nmi | Pass criteria name gen_chk_irq |
-| TP-IRQ-039 | gen_irq_nmi | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-041 | gen_irq_debug | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-043 | gen_irq_debug | Pass criteria name gen_chk_irq |
-| TP-IRQ-045 | gen_irq_nmi_int | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-049 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-050 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-051 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-052 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-053 | gen_irq_wfi | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-054 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-056 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-057 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-059 | gen_irq_reset | Pass criteria name gen_chk_irq |
-| TP-IRQ-060 | gen_irq_reset | Pass criteria name gen_chk_irq |
-| TP-IRQ-061 | gen_irq_handler | Pass criteria name gen_chk_irq |
-| TP-IRQ-062 | gen_irq_handler | interrupt-enabled stimulus with an entry check |
-| TP-IRQ-063 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-064 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-065 | gen_irq_priority | Pass criteria name gen_chk_irq |
-| TP-IRQ-066 | gen_irq_timing | Pass criteria name gen_chk_irq |
-| TP-IRQ-069 | gen_irq_wfi | Pass criteria name gen_chk_irq |
-| TP-IRQ-070 | gen_irq_csr | Pass criteria name gen_chk_irq |
-| TP-IRQ-071 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-072 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-073 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-074 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-075 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-076 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-077 | gen_irq_regime | Pass criteria name gen_chk_irq |
-| TP-IRQ-078 | gen_irq_debug | Pass criteria name gen_chk_irq |
-| TP-IRQ-079 | gen_irq_nmi | Pass criteria name gen_chk_irq |
-| TP-IRQ-080 | gen_irq_debug | Pass criteria name gen_chk_irq |
-| TP-DBG-003 | gen_dbg_irq_mask | Pass criteria name gen_chk_irq |
-| TP-DBG-016 | gen_dbg_irq_mask | Pass criteria name gen_chk_irq |
-| TP-DBG-021 | gen_dbg_irq_mask_xfail | interrupt-enabled stimulus with an entry check |
-| TP-DBG-047 | gen_dbg_irq_mask | Pass criteria name gen_chk_irq |
-| TP-DBG-061 | gen_dbg_irq_mask | Pass criteria name gen_chk_irq |
-| TP-DBG-062 | gen_dbg_irq_mask | Pass criteria name gen_chk_irq |
-| TP-DBG-063 | gen_dbg_mode_misc | Pass criteria name gen_chk_irq |
-| TP-DBG-068 | gen_dbg_random | Pass criteria name gen_chk_irq |
-| TP-TRG-017 | gen_trg_fire | Pass criteria name gen_chk_irq |
-| TP-TRG-025 | gen_trg_fire | Pass criteria name gen_chk_irq |
-| TP-PMC-054 | gen_pmc_minstret | Pass criteria name gen_chk_irq |
-| TP-PMC-055 | gen_pmc_random | Pass criteria name gen_chk_irq |
-| TP-DMEM-035 | gen_dmem_ctx | Pass criteria name gen_chk_irq |
-| TP-DMEM-036 | gen_dmem_ctx | Pass criteria name gen_chk_irq |
-| TP-DMEM-054 | gen_dmem_regime | Pass criteria name gen_chk_irq |
-| TP-FE-005 | gen_fe_redirect | Pass criteria name gen_chk_irq |
-| TP-FE-026 | gen_fe_sleep | interrupt-enabled stimulus with an entry check |
-| TP-DIT-020 | gen_dit_dummy_events | Pass criteria name gen_chk_irq |
-| TP-DIT-033 | gen_dit_random | Pass criteria name gen_chk_irq |
-| TP-DIT-034 | gen_dit_dummy_events | Pass criteria name gen_chk_irq |
-| TP-SEC-007 | gen_sec_alert_inject_ibus | Pass criteria name gen_chk_irq |
-| TP-SEC-024 | gen_sec_double_fault | Pass criteria name gen_chk_irq |
-| TP-SEC-025 | gen_sec_double_fault | Pass criteria name gen_chk_irq |
-| TP-RST-006 | gen_rst_boot | Pass criteria name gen_chk_irq |
-| TP-RST-014 | gen_rst_fetch_enable | Pass criteria name gen_chk_irq |
-| TP-RST-015 | gen_rst_sleep | Pass criteria name gen_chk_irq |
-| TP-RST-025 | gen_rst_pending_at_boot | interrupt-enabled stimulus with an entry check |
-| TP-RST-026 | gen_rst_pending_at_boot | Pass criteria name gen_chk_irq |
-| TP-RVFI-006 | gen_rvfi_ext | interrupt-enabled stimulus with an entry check |
-| TP-RVFI-007 | gen_rvfi_proto_basic | interrupt-enabled stimulus with an entry check |
-| TP-RVFI-019 | gen_rvfi_ext | Pass criteria name gen_chk_irq |
-| TP-RVFI-020 | gen_rvfi_ext | Pass criteria name gen_chk_irq |
-| TP-RVFI-031 | gen_rst_sleep | Pass criteria name gen_chk_irq |
-| TP-RVFI-032 | gen_rvfi_ext | Pass criteria name gen_chk_irq |
-| TP-RVFI-035 | gen_rvfi_ext | Pass criteria name gen_chk_irq |
-| TP-REG-008 | gen_reg_knob_sweep | Pass criteria name gen_chk_irq |
-| TP-REG-009 | gen_reg_knob_sweep | Pass criteria name gen_chk_irq |
-| TP-REG-010 | gen_reg_knob_sweep | Pass criteria name gen_chk_irq |
-| TP-REG-018 | gen_reg_schedule | Pass criteria name gen_chk_irq |
-| TP-REG-022 | gen_reg_inflight | Pass criteria name gen_chk_irq |
-| TP-REG-023 | gen_reg_inflight | Pass criteria name gen_chk_irq |
-| TP-REG-024 | gen_reg_inflight | Pass criteria name gen_chk_irq |
-| TP-XIF-001 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-004 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-005 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-008 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-011 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-014 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-015 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-016 | gen_xif_fetch_enable | Pass criteria name gen_chk_irq |
-| TP-XIF-020 | gen_xif_random | Pass criteria name gen_chk_irq |
-| TP-XIF-021 | gen_xif_dummy | Pass criteria name gen_chk_irq |
-
-## 1.5 Items under the T-137 measurement hold (generated; 246 items in 101 groups; no PMP-denial or bus-error result counts until bus-error-only fault arming passes both reviewers)
-
-Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp_fetch_fault (9), gen_pmp_perm_mml1 (9), gen_dmem_err (6), gen_pmp_debug (6), gen_pmp_misaligned (6), gen_pmp_perm_mml0 (6), gen_xif_random (6), gen_cmp_zcmp_faults (5), gen_dmem_intg (5), gen_exc_priority (5), gen_pmp_data_fault (5), gen_pmp_match_tor (5), gen_rvfi_trap (5), gen_csr_ordering (4), gen_exc_fetch_fault (4), gen_imem_fetch_err (4), gen_irq_nmi_int (4), gen_pmp_match_napot (4), gen_pmp_mprv (4), gen_pmp_priority (4), gen_pmp_recfg (4), gen_reg_knob_sweep (4), gen_csr_pmp_warl (3), gen_dbg_exc_in_debug (3), gen_dbg_haltreq (3), gen_dbg_pmp_dm (3), gen_dmem_proto_basic (3), gen_exc_sync_causes (3), gen_exc_zcmp (3), gen_irq_regime (3), gen_pmc_hpm_event (3), gen_sec_alert_inject_dbus (3), gen_btalu_hazard (2), gen_dbg_ebreak (2), gen_dbg_step (2), gen_dmem_be (2), gen_dmem_ctx (2), gen_exc_regime (2), gen_fe_fault (2), gen_imem_regime (2), gen_pmp_icache_dummy (2), gen_pmp_match_na4 (2), gen_prv_mprv (2), gen_prv_mret (2), gen_sec_alert_inject_ibus (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_btalu_random (1), gen_cmp_random (1), gen_csr_trap_handling (1), gen_dbg_dret_xfail (1), gen_dbg_mode_misc (1), gen_dbg_pmp_dm_xfail (1), gen_dbg_random (1), gen_dit_dummy_events (1), gen_dmem_err_info (1), gen_dmem_intg_xfail (1), gen_dmem_load_data (1), gen_dmem_proto_basic_info (1), gen_dmem_regime (1), gen_dmem_zcmp (1), gen_exc_debug_mode (1), gen_exc_mret (1), gen_exc_priority_info (1), gen_exc_trap_state (1), gen_fe_redirect (1), gen_fe_regime (1), gen_ic_fill (1), gen_irq_debug (1), gen_irq_nmi (1), gen_irq_timing (1), gen_irq_wfi (1), gen_isa_illegal (1), gen_isa_illegal_info (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmp_csr_warl (1), gen_pmp_debug_xfail (1), gen_pmp_lock (1), gen_pmp_mode_trans (1), gen_pmp_mprv_xfail (1), gen_pmp_mseccfg (1), gen_pmp_reset (1), gen_prv_debug (1), gen_prv_debug_b1_xfail (1), gen_prv_debug_b2_xfail (1), gen_prv_irq (1), gen_prv_storm (1), gen_reg_inflight (1), gen_rst_fetch_enable (1), gen_rvfi_ext (1), gen_rvfi_ext_rf_wr_suppress_xfail (1), gen_rvfi_zcmp (1), gen_sec_alert_inject_dbus_first_beat_xfail (1), gen_sec_alert_inject_dbus_info (1), gen_sec_alerts_neg (1), gen_sec_random (1), gen_xcut_regime_sweep (1), gen_xif_reset (1). Ruling: Section 0 (LOG-026a).
-
-| Item | Group | Why held |
-|---|---|---|
-| TP-ISA-050 | gen_isa_illegal | Pass criteria name gen_chk_pmp |
-| TP-ISA-051 | gen_isa_illegal_info | bus-error or PMP-denial trap in the item text |
-| TP-MUL-030 | gen_mul_timing | Pass criteria name gen_chk_pmp |
-| TP-CMP-060 | gen_cmp_zcmp_faults | Pass criteria name gen_chk_pmp |
-| TP-CMP-061 | gen_cmp_zcmp_faults | bus-error or PMP-denial trap in the item text |
-| TP-CMP-062 | gen_cmp_zcmp_faults | Pass criteria name gen_chk_pmp |
-| TP-CMP-063 | gen_cmp_zcmp_faults | Pass criteria name gen_chk_pmp |
-| TP-CMP-071 | gen_cmp_random | Pass criteria name gen_chk_pmp |
-| TP-CMP-072 | gen_cmp_zcmp_faults | Pass criteria name gen_chk_pmp |
-| TP-BTALU-010 | gen_btalu_hazard | Pass criteria name gen_chk_pmp |
-| TP-BTALU-011 | gen_btalu_hazard | Pass criteria name gen_chk_pmp |
-| TP-BTALU-017 | gen_btalu_random | Pass criteria name gen_chk_pmp |
-| TP-CSR-006 | gen_csr_ordering | Pass criteria name gen_chk_pmp |
-| TP-CSR-008 | gen_csr_ordering | bus-error or PMP-denial trap in the item text |
-| TP-CSR-041 | gen_csr_trap_handling | bus-error or PMP-denial trap in the item text |
-| TP-CSR-095 | gen_csr_pmp_warl | Pass criteria name gen_chk_pmp |
-| TP-CSR-096 | gen_csr_pmp_warl | Pass criteria name gen_chk_pmp |
-| TP-CSR-097 | gen_csr_pmp_warl | Pass criteria name gen_chk_pmp |
-| TP-CSR-103 | gen_csr_ordering | bus-error or PMP-denial trap in the item text |
-| TP-CSR-115 | gen_csr_ordering | Pass criteria name gen_chk_pmp |
-| TP-PRV-004 | gen_prv_debug | bus-error or PMP-denial trap in the item text |
-| TP-PRV-006 | gen_prv_mret | Pass criteria name gen_chk_pmp |
-| TP-PRV-008 | gen_prv_mret | Pass criteria name gen_chk_pmp |
-| TP-PRV-012 | gen_prv_mprv | Pass criteria name gen_chk_pmp |
-| TP-PRV-013 | gen_prv_mprv | Pass criteria name gen_chk_pmp |
-| TP-PRV-014 | gen_prv_debug_b1_xfail | Pass criteria name gen_chk_pmp |
-| TP-PRV-029 | gen_prv_irq | Pass criteria name a bus-integrity checker |
-| TP-PRV-035 | gen_prv_debug_b2_xfail | Pass criteria name gen_chk_pmp |
-| TP-PRV-036 | gen_prv_storm | Pass criteria name gen_chk_pmp |
-| TP-EXC-001 | gen_exc_sync_causes | bus-error or PMP-denial trap in the item text |
-| TP-EXC-002 | gen_exc_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-003 | gen_exc_fetch_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-004 | gen_exc_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-005 | gen_exc_fetch_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-006 | gen_exc_priority | bus-error or PMP-denial trap in the item text |
-| TP-EXC-015 | gen_exc_priority | bus-error or PMP-denial trap in the item text |
-| TP-EXC-024 | gen_exc_sync_causes | bus-error or PMP-denial trap in the item text |
-| TP-EXC-025 | gen_exc_lsu_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-026 | gen_exc_sync_causes | bus-error or PMP-denial trap in the item text |
-| TP-EXC-027 | gen_exc_lsu_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-029 | gen_exc_lsu_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-030 | gen_exc_lsu_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-031 | gen_exc_lsu_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-032 | gen_exc_lsu_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-033 | gen_exc_lsu_fault | Pass criteria name gen_chk_pmp |
-| TP-EXC-034 | gen_exc_lsu_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-035 | gen_exc_priority | bus-error or PMP-denial trap in the item text |
-| TP-EXC-036 | gen_exc_lsu_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-037 | gen_exc_lsu_fault | bus-error or PMP-denial trap in the item text |
-| TP-EXC-040 | gen_exc_priority | bus-error or PMP-denial trap in the item text |
-| TP-EXC-042 | gen_exc_zcmp | bus-error or PMP-denial trap in the item text |
-| TP-EXC-043 | gen_exc_zcmp | bus-error or PMP-denial trap in the item text |
-| TP-EXC-044 | gen_exc_zcmp | bus-error or PMP-denial trap in the item text |
-| TP-EXC-045 | gen_exc_debug_mode | bus-error or PMP-denial trap in the item text |
-| TP-EXC-052 | gen_exc_mret | Pass criteria name gen_chk_pmp |
-| TP-EXC-062 | gen_exc_trap_state | bus-error or PMP-denial trap in the item text |
-| TP-EXC-065 | gen_exc_priority_info | bus-error or PMP-denial trap in the item text |
-| TP-EXC-070 | gen_exc_priority | bus-error or PMP-denial trap in the item text |
-| TP-EXC-072 | gen_exc_regime | bus-error or PMP-denial trap in the item text |
-| TP-EXC-073 | gen_exc_regime | Pass criteria name gen_chk_pmp |
-| TP-IRQ-027 | gen_irq_timing | bus-error or PMP-denial trap in the item text |
-| TP-IRQ-039 | gen_irq_nmi | bus-error or PMP-denial trap in the item text |
-| TP-IRQ-042 | gen_irq_debug | Pass criteria name a bus-integrity checker |
-| TP-IRQ-044 | gen_irq_nmi_int | Pass criteria name a bus-integrity checker |
-| TP-IRQ-045 | gen_irq_nmi_int | Pass criteria name a bus-integrity checker |
-| TP-IRQ-046 | gen_irq_nmi_int | Pass criteria name a bus-integrity checker |
-| TP-IRQ-047 | gen_irq_nmi_int | Pass criteria name a bus-integrity checker |
-| TP-IRQ-058 | gen_irq_wfi | bus-error or PMP-denial trap in the item text |
-| TP-IRQ-072 | gen_irq_regime | bus-error or PMP-denial trap in the item text |
-| TP-IRQ-073 | gen_irq_regime | Pass criteria name a bus-integrity checker |
-| TP-IRQ-075 | gen_irq_regime | Pass criteria name a bus-integrity checker |
-| TP-PMP-006 | gen_pmp_csr_warl | Pass criteria name gen_chk_pmp |
-| TP-PMP-010 | gen_pmp_reset | Pass criteria name gen_chk_pmp |
-| TP-PMP-019 | gen_pmp_lock | Pass criteria name gen_chk_pmp |
-| TP-PMP-031 | gen_pmp_mseccfg | Pass criteria name gen_chk_pmp |
-| TP-PMP-032 | gen_pmp_match_na4 | Pass criteria name gen_chk_pmp |
-| TP-PMP-033 | gen_pmp_match_na4 | Pass criteria name gen_chk_pmp |
-| TP-PMP-034 | gen_pmp_match_napot | Pass criteria name gen_chk_pmp |
-| TP-PMP-035 | gen_pmp_match_napot | Pass criteria name gen_chk_pmp |
-| TP-PMP-036 | gen_pmp_match_napot | Pass criteria name gen_chk_pmp |
-| TP-PMP-037 | gen_pmp_match_napot | Pass criteria name gen_chk_pmp |
-| TP-PMP-038 | gen_pmp_match_tor | Pass criteria name gen_chk_pmp |
-| TP-PMP-039 | gen_pmp_match_tor | Pass criteria name gen_chk_pmp |
-| TP-PMP-040 | gen_pmp_match_tor | Pass criteria name gen_chk_pmp |
-| TP-PMP-041 | gen_pmp_match_tor | Pass criteria name gen_chk_pmp |
-| TP-PMP-042 | gen_pmp_match_tor | Pass criteria name gen_chk_pmp |
-| TP-PMP-043 | gen_pmp_priority | Pass criteria name gen_chk_pmp |
-| TP-PMP-044 | gen_pmp_priority | Pass criteria name gen_chk_pmp |
-| TP-PMP-045 | gen_pmp_priority | Pass criteria name gen_chk_pmp |
-| TP-PMP-046 | gen_pmp_priority | Pass criteria name gen_chk_pmp |
-| TP-PMP-047 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-048 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-049 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-050 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-051 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-052 | gen_pmp_perm_mml0 | Pass criteria name gen_chk_pmp |
-| TP-PMP-053 | gen_pmp_recfg | Pass criteria name gen_chk_pmp |
-| TP-PMP-054 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-055 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-056 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-057 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-058 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-059 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-060 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-061 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-062 | gen_pmp_perm_mml1 | Pass criteria name gen_chk_pmp |
-| TP-PMP-063 | gen_pmp_recfg | Pass criteria name gen_chk_pmp |
-| TP-PMP-064 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-065 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-066 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-067 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-068 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-069 | gen_pmp_data_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-070 | gen_pmp_mprv | Pass criteria name gen_chk_pmp |
-| TP-PMP-071 | gen_pmp_mprv | Pass criteria name gen_chk_pmp |
-| TP-PMP-072 | gen_pmp_mprv | Pass criteria name gen_chk_pmp |
-| TP-PMP-073 | gen_pmp_mprv_xfail | Pass criteria name gen_chk_pmp |
-| TP-PMP-074 | gen_pmp_debug_xfail | Pass criteria name gen_chk_pmp |
-| TP-PMP-075 | gen_pmp_mprv | Pass criteria name gen_chk_pmp |
-| TP-PMP-076 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-077 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-078 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-079 | gen_pmp_fetch_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-080 | gen_pmp_data_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-081 | gen_pmp_data_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-082 | gen_pmp_data_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-083 | gen_pmp_data_fault | Pass criteria name gen_chk_pmp |
-| TP-PMP-084 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-085 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-086 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-087 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-088 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-089 | gen_pmp_misaligned | Pass criteria name gen_chk_pmp |
-| TP-PMP-090 | gen_pmp_recfg | Pass criteria name gen_chk_pmp |
-| TP-PMP-091 | gen_pmp_recfg | Pass criteria name gen_chk_pmp |
-| TP-PMP-092 | gen_pmp_icache_dummy | Pass criteria name gen_chk_pmp |
-| TP-PMP-093 | gen_pmp_icache_dummy | Pass criteria name gen_chk_pmp |
-| TP-PMP-094 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-095 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-096 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-097 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-098 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-099 | gen_pmp_debug | Pass criteria name gen_chk_pmp |
-| TP-PMP-100 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-101 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-102 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-103 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-104 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-105 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-106 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-107 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-109 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-110 | gen_pmp_random_regime | Pass criteria name gen_chk_pmp |
-| TP-PMP-111 | gen_pmp_mode_trans | Pass criteria name gen_chk_pmp |
-| TP-DBG-002 | gen_dbg_haltreq | Pass criteria name gen_chk_pmp |
-| TP-DBG-005 | gen_dbg_haltreq | Pass criteria name gen_chk_pmp |
-| TP-DBG-006 | gen_dbg_haltreq | bus-error or PMP-denial trap in the item text |
-| TP-DBG-024 | gen_dbg_ebreak | Pass criteria name gen_chk_pmp |
-| TP-DBG-029 | gen_dbg_ebreak | bus-error or PMP-denial trap in the item text |
-| TP-DBG-032 | gen_dbg_exc_in_debug | Pass criteria name gen_chk_pmp |
-| TP-DBG-033 | gen_dbg_exc_in_debug | Pass criteria name gen_chk_pmp |
-| TP-DBG-034 | gen_dbg_exc_in_debug | bus-error or PMP-denial trap in the item text |
-| TP-DBG-038 | gen_dbg_dret_xfail | Pass criteria name gen_chk_pmp |
-| TP-DBG-045 | gen_dbg_step | bus-error or PMP-denial trap in the item text |
-| TP-DBG-053 | gen_dbg_step | Pass criteria name gen_chk_pmp |
-| TP-DBG-057 | gen_dbg_pmp_dm | Pass criteria name gen_chk_pmp |
-| TP-DBG-058 | gen_dbg_pmp_dm | Pass criteria name gen_chk_pmp |
-| TP-DBG-059 | gen_dbg_pmp_dm | Pass criteria name gen_chk_pmp |
-| TP-DBG-060 | gen_dbg_pmp_dm_xfail | Pass criteria name gen_chk_pmp |
-| TP-DBG-064 | gen_dbg_mode_misc | Pass criteria name gen_chk_pmp |
-| TP-DBG-068 | gen_dbg_random | Pass criteria name gen_chk_pmp |
-| TP-TRG-012 | gen_trg_fire | Pass criteria name gen_chk_pmp |
-| TP-TRG-024 | gen_trg_fire | Pass criteria name gen_chk_pmp |
-| TP-PMC-012 | gen_pmc_minstret | bus-error or PMP-denial trap in the item text |
-| TP-PMC-037 | gen_pmc_hpm_event | Pass criteria name gen_chk_pmp |
-| TP-PMC-039 | gen_pmc_hpm_event | Pass criteria name gen_chk_pmp |
-| TP-PMC-048 | gen_pmc_hpm_event | bus-error or PMP-denial trap in the item text |
-| TP-IMEM-011 | gen_imem_fetch_err | bus-error or PMP-denial trap in the item text |
-| TP-IMEM-012 | gen_imem_fetch_err | bus-error or PMP-denial trap in the item text |
-| TP-IMEM-016 | gen_imem_fetch_err | Pass criteria name a bus-integrity checker |
-| TP-IMEM-030 | gen_imem_fetch_err | Pass criteria name gen_chk_pmp |
-| TP-IMEM-031 | gen_imem_regime | Pass criteria name a bus-integrity checker |
-| TP-IMEM-037 | gen_imem_regime | Pass criteria name a bus-integrity checker |
-| TP-DMEM-024 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-026 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-030 | gen_dmem_load_data | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-032 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-033 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-034 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-036 | gen_dmem_ctx | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-037 | gen_dmem_err | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-039 | gen_dmem_intg | Pass criteria name a bus-integrity checker |
-| TP-DMEM-040 | gen_dmem_intg | Pass criteria name a bus-integrity checker |
-| TP-DMEM-041 | gen_dmem_intg | Pass criteria name a bus-integrity checker |
-| TP-DMEM-042 | gen_dmem_intg | Pass criteria name a bus-integrity checker |
-| TP-DMEM-043 | gen_dmem_intg | Pass criteria name a bus-integrity checker |
-| TP-DMEM-045 | gen_dmem_be | Pass criteria name a bus-integrity checker |
-| TP-DMEM-048 | gen_dmem_ctx | Pass criteria name gen_chk_pmp |
-| TP-DMEM-053 | gen_dmem_zcmp | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-055 | gen_dmem_regime | Pass criteria name gen_chk_pmp |
-| TP-DMEM-057 | gen_dmem_proto_basic | Pass criteria name a bus-integrity checker |
-| TP-DMEM-058 | gen_dmem_proto_basic | Pass criteria name gen_chk_pmp |
-| TP-DMEM-059 | gen_dmem_proto_basic | Pass criteria name a bus-integrity checker |
-| TP-DMEM-060 | gen_dmem_be | Pass criteria name a bus-integrity checker |
-| TP-DMEM-062 | gen_dmem_proto_basic_info | Pass criteria name a bus-integrity checker |
-| TP-DMEM-063 | gen_dmem_err_info | bus-error or PMP-denial trap in the item text |
-| TP-DMEM-064 | gen_dmem_intg_xfail | Pass criteria name a bus-integrity checker |
-| TP-FE-005 | gen_fe_redirect | bus-error or PMP-denial trap in the item text |
-| TP-FE-020 | gen_fe_fault | Pass criteria name gen_chk_pmp |
-| TP-FE-023 | gen_fe_fault | bus-error or PMP-denial trap in the item text |
-| TP-FE-025 | gen_fe_regime | Pass criteria name gen_chk_pmp |
-| TP-IC-028 | gen_ic_fill | Pass criteria name gen_chk_pmp |
-| TP-DIT-024 | gen_dit_dummy_events | bus-error or PMP-denial trap in the item text |
-| TP-SEC-007 | gen_sec_alert_inject_ibus | Pass criteria name a bus-integrity checker |
-| TP-SEC-008 | gen_sec_alert_inject_dbus | Pass criteria name a bus-integrity checker |
-| TP-SEC-009 | gen_sec_alert_inject_dbus | Pass criteria name a bus-integrity checker |
-| TP-SEC-010 | gen_sec_alert_inject_dbus_info | Pass criteria name a bus-integrity checker |
-| TP-SEC-012 | gen_sec_alert_inject_ibus | Pass criteria name a bus-integrity checker |
-| TP-SEC-021 | gen_sec_double_fault | bus-error or PMP-denial trap in the item text |
-| TP-SEC-027 | gen_sec_double_fault | bus-error or PMP-denial trap in the item text |
-| TP-SEC-035 | gen_sec_alerts_neg | Pass criteria name a bus-integrity checker |
-| TP-SEC-039 | gen_sec_random | Pass criteria name a bus-integrity checker |
-| TP-SEC-040 | gen_sec_alert_inject_dbus_first_beat_xfail | Pass criteria name a bus-integrity checker |
-| TP-RST-010 | gen_rst_fetch_enable | Pass criteria name a bus-integrity checker |
-| TP-RVFI-005 | gen_rvfi_trap | bus-error or PMP-denial trap in the item text |
-| TP-RVFI-016 | gen_rvfi_trap | Pass criteria name gen_chk_pmp |
-| TP-RVFI-017 | gen_rvfi_trap | Pass criteria name gen_chk_pmp |
-| TP-RVFI-018 | gen_rvfi_trap | bus-error or PMP-denial trap in the item text |
-| TP-RVFI-024 | gen_sec_alert_inject_dbus | Pass criteria name a bus-integrity checker |
-| TP-RVFI-026 | gen_rvfi_zcmp | Pass criteria name gen_chk_pmp |
-| TP-RVFI-029 | gen_rvfi_trap | Pass criteria name gen_chk_pmp |
-| TP-RVFI-034 | gen_rvfi_ext | Pass criteria name a bus-integrity checker |
-| TP-RVFI-040 | gen_rvfi_ext_rf_wr_suppress_xfail | Pass criteria name a bus-integrity checker |
-| TP-REG-005 | gen_reg_knob_sweep | Pass criteria name a bus-integrity checker |
-| TP-REG-006 | gen_reg_knob_sweep | Pass criteria name a bus-integrity checker |
-| TP-REG-016 | gen_reg_knob_sweep | Pass criteria name gen_chk_pmp |
-| TP-REG-017 | gen_reg_knob_sweep | Pass criteria name gen_chk_pmp |
-| TP-REG-021 | gen_reg_inflight | Pass criteria name a bus-integrity checker |
-| TP-XIF-001 | gen_xif_random | bus-error or PMP-denial trap in the item text |
-| TP-XIF-003 | gen_xif_random | Pass criteria name a bus-integrity checker |
-| TP-XIF-010 | gen_xif_random | Pass criteria name gen_chk_pmp |
-| TP-XIF-013 | gen_xif_random | Pass criteria name gen_chk_pmp |
-| TP-XIF-019 | gen_xif_random | Pass criteria name gen_chk_pmp |
-| TP-XIF-020 | gen_xif_random | Pass criteria name gen_chk_pmp |
-| TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
-| TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
 
 Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is retired.
 
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha 56e37d7 --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan (gen_test_plan.md) at 56e37d7. Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha a26ed0d --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan (gen_test_plan.md) at a26ed0d. Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|
@@ -797,6 +361,8 @@ Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regres
 
 Total: 162 items hosted; credited 0; held 0; unhit 0; fire-fail 0; not fired 0; not run clean 162; unverified 0.
 Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
+
+Per test (every run of the regression, red fixtures included; the item table below excludes red fixtures, which host no items):
 
 | Test | Seeds | Verdicts | Distinct reasons |
 |---|---|---|---|
@@ -840,7 +406,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 
 | Row | Owner | Request | Acceptance rule |
 |---|---|---|---|
-| WP-1 | TB Infra (addendum Section 9, v4c) | bridge command COV_WITNESS, arg0 = index | index = the row of gen_trace_witness_ids.csv; GEN_WIT_IDS rendered from that file in order; an index outside the global list is uvm_error GEN_CMD_DISPATCH; the command samples gen_wit_cycle_clause_cg.cp_clause and nothing else (no checker reads it) |
+| WP-1 | TB Infra (addendum Section 9, v4c; as built in landing 2b) | bridge command COV_WITNESS, arg0 = index, arg1 = the issuing test's group index (GEN_WITNESS_GROUP_OF; GEN_WITNESS_FOREIGN when it differs; the template issues it as GenBridge.cov_witness(tp_item, owner_group)) | index = the row of gen_trace_witness_ids.csv; GEN_WIT_IDS rendered from that file in order; an index outside the global list is uvm_error GEN_CMD_DISPATCH; the command samples gen_wit_cycle_clause_cg.cp_clause and nothing else (no checker reads it) |
 | WP-2 | Runtime (flow; Orchestrator ruling 11:5x UTC) and TB Infra (v4c) | the running test's index set reaches SV | gen_run reads the testlist entry's witness_ids (TP ids) and gen_trace_witness_ids.csv at the pinned commit, converts them to the index list of +gen_witness_ids=<comma-separated indices> and records both forms plus the CSV's sha in result.yaml; the template uses WITNESS_IDS only to issue COV_WITNESS <index> for the ids whose clause returned TRUE; the dispatcher raises uvm_error GEN_WITNESS_FOREIGN for an index outside the set (C-2); a testlist entry of a group with marked items and no witness_ids is a loader error |
 | WP-3 | Test Writer (gen_test_template.py, committed) | check() result record and epilogue | self.check(..., cycle_clause_true=) returns a CheckResult the template records; finish() issues COV_WITNESS <code> for the passed records with the field set, ids restricted to the entry's witness_ids, codes from WITNESS_IDS, before bridge.finish; a test that never reaches the epilogue witnesses nothing (gen_test_template_api.md Section 9) |
 | WP-4 | Test Writer (gen_test_lib.check_test_source, committed) | structure-check rules (C-1) | refuses the token COV_WITNESS in any test and the keyword cycle_clause_true outside a fire_* method's self.check; a fire_tp_<id> method whose id is not an item of the test's group is a foreign id and fails the run |
@@ -1556,7 +1122,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: per seed >= 50 odd sums whose next RVFI entry has rvfi_pc_rdata == (rs1 + imm) & ~1 (even) and rvfi_trap = 0; no trap with mcause 0 anywhere in the run (redirect and LSB clearing derived from RVFI, C-14; when a bus request for the target appears (cache miss or icache_enable = 0) its address is (rs1 + imm) & ~3 because instr_addr_o is word-aligned, rtl/ibex_icache.sv:1037).
 - Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008; the mask is TB Infra's T-144, its knob landed at ffa9127 and is counted as built after the 1c review, so this item's verdict depends on T-144); gen_chk_ibus_proto (address bits [1:0] always 00).
-- Notes: the T-144 knob landed at ffa9127 (+gen_isa_pc_next_mask_b13, default 1; gen_rvfi_pkg.sv:445-446 at 67b5971 compared the raw pc_wdata); the odd-target clause stays not_built in gen_test_isa_cti until Section 0a records the comparator's mask as built after the 1c review (LOG-037a); the verdict relies on the bit-0 convention of bug candidate B13 (rtl-arch R11).
+- Notes: the T-144 mask is built and reviewed (knob +gen_isa_pc_next_mask_b13 at ffa9127; 1c at 9e912bb passed both reviewers, LOG-051), so the odd-target clause of this item is the Test Writer's to build in gen_test_isa_cti; until it does the clause stays not_built by the module's own statement; the verdict relies on the bit-0 convention of bug candidate B13 (rtl-arch R11).
 - Expected: pass
 - Test group: gen_isa_cti
 - Bins: CG-ISA-006.cr_odd.jalr_odd, CG-ISA-006.cr_odd.c_jr_odd, CG-ISA-006.cr_odd.c_jalr_odd, CG-ISA-006.cp_jalr_imm.odd, CG-ISA-006.cp_target_odd.yes, CG-ISA-006.cp_jalr_rs1.other, CG-ISA-006.cr_jalr_rs1_imm.auto
@@ -6241,6 +5807,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Knobs: knob:debug_req_regime
 - Fire-check: the M-mode tselect/tdata1/tdata2 reads retire without trap; the debug-mode reads retire with rvfi_ext_debug_mode = 1 before any write to those CSRs.
 - Pass criteria: gen_chk_csr_readback (dcsr 0x4000_0003 | cause<<6 with cause = 3 haltreq, dpc = interrupted pc, dscratch 0, tselect 0, tdata1 0x2800_1048, tdata2 0); bit 3 (nmip) of dcsr excluded from the compare (B5, owner TP-DBG-021) and bit 13 == 0; gen_chk_debug
+- Notes: debug-mode bins (Test Writer 3k, T-206; the 3k review's enumeration; DV Lead decision, part 4b): gen_test_csr_reset has no debug handling and no longer schedules the debug regime, so its manifest lists this item's debug-mode bins under bins_not_hit (rule (g)) with that reason, the complete set: gen_csr_reset_read_cg (CG-CSR-016) cp_dbg.dbg, cr_dbg_reset.dcsr_dbg, cr_dbg_reset.dpc_dbg, cr_dbg_reset.dscratch0_dbg, cr_dbg_reset.dscratch1_dbg, cp_csr.dcsr, cp_csr.dpc, cp_csr.dscratch0, cp_csr.dscratch1; gen_csr_debug_csr_cg (CG-CSR-007) cp_csr.dcsr, cp_trap.ok, cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok. The CG-CSR-007 bins stay co-owned with TP-CSR-017 (gen_csr_debug_csr, a debug-capable group) and are hit there once that test exists; the CG-CSR-016 first-debug-entry reads wait for a debug-ROM program in this test. No bin moves; this list is one-to-one with the manifest's not_hit header lines.
 - Expected: pass (doc mismatch D4)
 - Test group: gen_csr_reset
 - Bins: CG-CSR-016.cp_csr.tselect, CG-CSR-016.cp_csr.tdata1, CG-CSR-016.cp_csr.tdata2, CG-CSR-016.cp_csr.dcsr, CG-CSR-016.cp_csr.dpc, CG-CSR-016.cp_csr.dscratch0, CG-CSR-016.cp_csr.dscratch1, CG-CSR-016.cr_dbg_reset.dcsr_dbg, CG-CSR-016.cr_dbg_reset.dpc_dbg, CG-CSR-016.cr_dbg_reset.dscratch0_dbg, CG-CSR-016.cr_dbg_reset.dscratch1_dbg, CG-CSR-007.cr_csr_dbg_trap.dcsr_dbg_ok, CG-CSR-008.cr_csr_dbg_form.tdata1_nondbg_rd, CG-CSR-016.cp_dbg.dbg

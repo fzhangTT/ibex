@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 18:12 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 18:32 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -57,7 +57,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   marked in its covergroup as "coincides with riscv_instr_cover_group.sv <cg>" so the audit is possible;
   the ISA area's marks record this per coverpoint.
 - Bin naming: array coverpoints use URG's form `name[N]` (e.g. fast[0]..fast[14]) in the plan, the CSV and
-  the manifests, so ci/check_fcov_expectations.py finds them in the vdb by that name.
+  the manifests, so ci/check_fcov_expectations.py finds them in the vdb by that name. Cross bins (LOG-054, from TB Infra's first
+  rendered covergroups): a cross bin's name is the cross's component tuple joined by `_`, exactly as urg's Covered bins rows list the
+  components (gen_mul_ops_cg.cr_extremes.c_mul_all_ones_neg_rand), which is how Runtime's derived report keys them (T-215); the plan,
+  the CSV and the manifests use that form. Bin names that are SystemVerilog keywords (xor, or, and, byte, default, event, medium,
+  program, rand, repeat, signed, small, time, unsigned, xnor) render as escaped identifiers in SV and urg reports them plainly, so the
+  manifests keep them as written. Owner item Q-017 records that ci/check_fcov_expectations.py itself lacks cross support.
 - Knob defaults and class windows: the static knob defaults are the TB defaults recorded in
   dv/auto_dv/tb/gen_tb_knobs.yaml (imem/dmem latency short/short, irq_regime quiet, irq_line_mix single);
   they govern only runs without a layer-3 schedule (bring-up, unit tests). Every measured run draws its
@@ -6698,7 +6703,9 @@ removed; the TP-XIF-004 data_outst class was re-anchored, not ignored).
 
 ### CG-WIT-001: gen_cg_wit_cycle_clause
 - Features: none (ledger of fire-check results: the bins map to the marked TP items below, not to DUT features; excluded from traceability condition 2 by gen_trace_check.py)
-- Sample: the bridge command COV_WITNESS <index> issued by the test TEMPLATE's finish() epilogue (before the finish
+- Sample: the bridge command COV_WITNESS <index> <group> (as built in TB Infra landing 2b: arg0 = the row index, arg1 = the issuing
+  test's group index, GEN_WITNESS_GROUP_OF; a foreign group is uvm_error GEN_WITNESS_FOREIGN; gen_component_api_fcov.md Section 7) issued by
+  the test TEMPLATE's finish() epilogue through GenBridge.cov_witness(tp_item, owner_group) (before the finish
   handshake) for every fire_tp_<id> result record whose cycle_clause_true field is set, index = the row of the item in
   gen_trace_witness_ids.csv; a hit RECORDS that the owning test's epilogue issued the command for an id whose fire_tp_<id>
   record had cycle_clause_true; the clause's truth is enforced by the host rules C-1 (check_test_source: no direct

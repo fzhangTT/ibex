@@ -1,6 +1,6 @@
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha 56e37d7 --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan (gen_test_plan.md) at 56e37d7. Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha a26ed0d --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan (gen_test_plan.md) at a26ed0d. Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|
@@ -16,6 +16,8 @@ Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regres
 
 Total: 162 items hosted; credited 0; held 0; unhit 0; fire-fail 0; not fired 0; not run clean 162; unverified 0.
 Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
+
+Per test (every run of the regression, red fixtures included; the item table below excludes red fixtures, which host no items):
 
 | Test | Seeds | Verdicts | Distinct reasons |
 |---|---|---|---|
@@ -78,7 +80,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-CMP-005 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 20 | 20 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CMP-008 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 13 | 13 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CMP-010 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 12 | 12 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-CMP-011 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 7 | 7 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-CMP-011 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 7 | 7 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CMP-012 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 6 | 6 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CMP-014 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 6 | 6 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CMP-016 | gen_cmp_zca | gen_test_cmp_zca | 3 | FAIL | yes | 12 | 12 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
@@ -125,9 +127,9 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-CSR-025 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 6 | 6 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-027 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 22 | 22 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-028 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 34 | 34 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-CSR-029 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 37 | 37 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-CSR-029 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 37 | 37 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-030 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 8 | 8 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-CSR-035 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 37 | 37 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-CSR-035 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 37 | 37 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-036 | gen_csr_trap_setup | gen_test_csr_trap_setup | 3 | FAIL | yes | 23 | 23 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-037 | gen_csr_reset | gen_test_csr_reset | 3 | FAIL | no | 12 | 12 | - | NOT-RUN-CLEAN (cocotb_summary at sim_stdout.log:112; fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-CSR-105 | gen_csr_reset | gen_test_csr_reset | 3 | FAIL | no | 19 | 19 | - | NOT-RUN-CLEAN (cocotb_summary at sim_stdout.log:112; fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
@@ -149,7 +151,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-ISA-013 | gen_isa_shift | gen_test_isa_shift | 3 | FAIL | yes | 39 | 39 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-014 | gen_isa_shift | gen_test_isa_shift | 3 | FAIL | yes | 27 | 27 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-015 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 22 | 22 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-ISA-016 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 40 | 40 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-ISA-016 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 40 | 40 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-017 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 17 | 17 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-018 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 18 | 18 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-019 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 10 | 10 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
@@ -157,7 +159,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-ISA-022 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 15 | 15 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-023 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 122 | 122 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-024 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 9 | 9 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-ISA-026 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 70 | 70 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-ISA-026 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | none | 70 | 70 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-027 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 74 | 74 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-052 | gen_isa_alu | gen_test_isa_alu | 3 | FAIL | yes | 60 | 60 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-ISA-053 | gen_isa_cti | gen_test_isa_cti | 3 | FAIL | yes | 30 | 30 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
@@ -187,7 +189,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-PMP-003 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 4 | 4 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-PMP-004 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 7 | 7 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-PMP-005 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-PMP-006 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 7 | 7 | T-137 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-PMP-006 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 7 | 7 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-PMP-007 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 91 | 91 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-PMP-008 | gen_pmp_csr_warl | gen_test_pmp_csr_warl | 3 | FAIL | yes | 11 | 11 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-001 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | none | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
@@ -195,7 +197,7 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | TP-RST-003 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | yes | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-004 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | none | 5 | 5 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-005 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | none | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
-| TP-RST-006 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | yes | 3 | 3 | T-136 | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
+| TP-RST-006 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | yes | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-007 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | yes | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-008 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | none | 3 | 3 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
 | TP-RST-027 | gen_rst_boot | gen_test_rst_boot | 3 | FAIL | none | 1 | 1 | - | NOT-RUN-CLEAN (fcov expectation unverifiable: per-test urg report has no grpinfo.txt ) |
