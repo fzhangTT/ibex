@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 14:49 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 14:54 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -93,7 +93,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   from the fire-check outcome (cycle_clause_true set only on the TRUE branch), and the fact of record is the SV witness
   ledger (gen_wit_cycle_clause_cg) sampling the dispatched COV_WITNESS against the export events, which a Python test cannot
   produce; the Python structure check is defence in depth with a named residual: a test module can fake a witness and still
-  pass the lint (the reviews of d1d68fd and 69be96b built such modules), so the lint is not the guarantee. d1d68fd is cited for the
+  pass the lint (LOG-024: the reviews built such modules), so the lint is not the guarantee. d1d68fd is cited for the
   committed-testlist rule and the plan_bins guard (verified by the review); the truthful wording of the guarantee, the two-sided
   not_built guard and the bins_not_hit attribute are committed in the Test Writer's landing 3b, 3e3d930 (API document Section 9). SV rule
   (C-2): the dispatcher receives the running test's index set through the plusarg +gen_witness_ids=<comma-separated
@@ -126,10 +126,13 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   items, all but the icram-dependent and no-export-row ones), so the DV Lead removes the tokens of every item whose rows are ALL
   in the build manifest's observed-row list (LOG-028a) IN THE SAME CHANGE as Runtime's landing of that list, with
   gen_token_sunset.py whose per-item RELEASED / GATED output is retained beside the plan (dv/auto_dv/work/dv-lead/
-  gen_trace_check_v2j_sunset.log; first pass on Runtime's T-140 reference probe_export_t140 (head 11413df, gen_ut_export seed 1):
-  19 of the 28 declared rows observed; the nine never observed in that run (pin debug_req, pin irq_external, pin irq_fast,
-  pin irq_nm, pin irq_software, pin irq_timer, regime phase, scrkey req, scrkey valid) hold every item that names one; later
-  passes follow as retained runs of interrupt, debug, regime and key tests observe those rows), regenerating the plan and the
+  gen_trace_check_v2j_sunset.log). Pass 1 reference (LOG-033): dv/auto_dv/work/runtime/out/probe_export_1445_v2k/build/gen_tb/
+  build_manifest.yaml, a head-mode build of committed 2696920 whose gen_ut_export seed-1 run passed behind the gen_boot_zc canary:
+  28 declared rows, 28 emitted by header, 19 observed; the nine never observed in that run (pin debug_req, pin irq_external,
+  pin irq_fast, pin irq_nm, pin irq_software, pin irq_timer, regime phase, scrkey req, scrkey valid) hold every item that
+  names one (115 items released, 86 gated). Pass 2 follows T-150's regression (TB Infra's committed entries exporting under
+  an interrupt storm, a debug-request storm and a scrkey regime switch, served with gen_ut_export as one head-mode regression)
+  with the same command, regenerating the plan and the
   witness CSV (marked = 0 for those rows) and the Test Writer regenerating the affected manifests; a failing run of
   gen_trace_check.py between the two landings is the expected signal that the removal is due, not a defect. Token removal
   is the DV Lead's, decided from the build manifest, never from the yaml alone.
