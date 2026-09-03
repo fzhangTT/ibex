@@ -1,0 +1,29 @@
+Dashboard
+
+Date: Thu Sep  3 05:11:59 2026
+
+User: fzhang
+
+Version: X-2025.06-SP2
+Command line: urg -full64 -format text -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb -elfile /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el -excl_strict -show ratios -report /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/excl_precheck/report10 -log /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/excl_precheck/urg10.log 
+
+Number of tests: 1
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT         
+ 33.22   40.98 1694/4134   27.33 2547/9319    8.66 1994/23016    8.11 6/74   33.91 798/2353   80.34 143/178 
+
+
+-------------------------------------------------------------------------------
+Hierarchical coverage data for top-level instances 
+SCORE   LINE              COND              TOGGLE             FSM            BRANCH           ASSERT          NAME                
+ 33.45   40.98 1694/4134   27.33 2547/9319    8.66 1994/23016    8.11 6/74     33.91 798/2353   81.71 143/175  gen_smoke_tb_top(X) 
+  0.00  --     --         --     --         --     --          --     --      --     --          0.00 0/3      uvm_pkg             
+
+
+-------------------------------------------------------------------------------
+Total Module Definition Coverage Summary 
+SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT        
+ 31.70   40.41 1451/3591   28.33 2427/8566   10.47 1699/16226    8.11 6/74   31.33 662/2113   71.54 88/123 
+

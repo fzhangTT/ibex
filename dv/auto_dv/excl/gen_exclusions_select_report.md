@@ -2,6 +2,7 @@
 dump: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/full_exclusions
 parsed entries: 8437
 
+config check: BranchPredictor=0 BranchTargetALU=1 RV32B=ibex_pkg::RV32BOTEarlGrey (util/ibex_config.py opentitan vcs_opts)
 BLOCK ibex_core [(2223, 2225)]: 1 blocks
 BLOCK ibex_id_stage [(901, 908)]: 2 blocks
 BLOCK ibex_decoder [(314, 323), (339, 352), (402, 407), (447, 453), (474, 482), (793, 876), (883, 891)]: 40 blocks
@@ -11,9 +12,9 @@ BLOCK ibex_load_store_unit [(139, 140), (211, 219), (437, 467), (565, 603), (616
 BLOCK ibex_cs_registers [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 2056), (2063, 2067), (2108, 2209), (2218, 2224)]: 41 blocks
 BLOCK ibex_controller [(690, 696)]: 1 blocks
 BLOCK ibex_decoder [(1342, 1344), (1348, 1350)]: 2 blocks
-BLOCK ibex_controller [(990, 993)]: 1 blocks
-BLOCK ibex_load_store_unit [(605, 607)]: 1 blocks
-BLOCK ibex_multdiv_fast [(522, 524)]: 1 blocks
+BLOCK ibex_controller [(990, 993)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
+BLOCK ibex_load_store_unit [(605, 607)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
+BLOCK ibex_multdiv_fast [(522, 524)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
 BLOCK ibex_id_stage [(968, 970)]: 1 blocks
 BLOCK ibex_multdiv_fast [(238, 240)]: 1 blocks
 BLOCK ibex_icache [(1268, 1268)]: 1 blocks
@@ -30,8 +31,9 @@ BRANCH ibex_cs_registers [(424, 426)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 0 vectors
 BRANCH ibex_register_file_ff [(113, 113), (227, 230)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 1 vectors
 BRANCH ibex_controller [(684, 684)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 0 vectors
 BRANCH ibex_id_stage [(936, 942)] / 0"$/: 0 vectors
-CHERIOT_EX blocks 103, branch vectors 112
-Conditions: 409 condition objects, 786 vectors selected (343 A.1 all-vector, 443 A.4 impossible-value).
+CHERIOT_EX guard analysis: 265 dead RTL lines in rtl/ibex_cheriot_ex.sv (reasons in the per-group annotations)
+CHERIOT_EX dead-arm blocks 75, dead-arm branch vectors 66
+Conditions: 384 condition objects, 670 vectors selected (119 A.1 all-vector, 551 A.4 impossible-value).
 Conditions mentioning a CHERIoT name but NOT selected (manual follow-up; kept in coverage):
   - ibex_controller ibex_controller.sv:268 ((ecall_insn | ebrk_insn | illegal_insn_d | instr_fetch_err | ((cheriot_enable_i == ibex_pkg::IbexMuBiOn) & cheriot_ex_err) | cheriot_asr_err_d) & (ctrl_fsm_cs != FLUSH))
   - ibex_controller ibex_controller.sv:271 ((ecall_insn | ebrk_insn | illegal_insn_d | instr_fetch_err | cheriot_asr_err_d) & (ctrl_fsm_cs != FLUSH))
@@ -95,46 +97,8 @@ FSM ibex_load_store_unit.ls_fsm_cs: 10 states+transitions
 FSM ibex_load_store_unit.cap_rx_fsm_q: 7 states+transitions
 ASSERT ibex_register_file_ff: 3 of 3 found: ['g_cheriot_rf.CheriotRaddrAMSBClear', 'g_cheriot_rf.CheriotRaddrBMSBClear', 'g_cheriot_rf.CheriotWaddrMSBClear']
 
-Emitted 1597 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
-Dropped 48 entries refuted by a strict load (covered in the reference vdb; kept in coverage):
-  - ibex_cheriot_ex: Block 7 "1118384118" "cheriot_rf_we_raw = 1'b0;"
-  - ibex_cheriot_ex: Block 60 "3581702828" "tmp32a = 32'b0;"
-  - ibex_cheriot_ex: Block 64 "1614952474" "tmp32b = 32'b0;"
-  - ibex_cheriot_ex: Block 65 "1545381993" "addr_result = (tmp32a + tmp32b);"
-  - ibex_cheriot_ex: Block 74 "2780403584" "tfcap1 = 112'b0;"
-  - ibex_cheriot_ex: Block 75 "2153503894" "setaddr1_outcap = ibex_cheriot_pkg::cheriot_set_address(tfcap1, taddr1);"
-  - ibex_cheriot_ex: Block 142 "208954213" "cheriot_wb_err_q <= 1'b0;"
-  - ibex_cheriot_ex: Block 143 "73012180" "cheriot_wb_err_q <= cheriot_wb_err_d;"
-  - ibex_cheriot_ex: Branch 2 "1293082901" "instr_is_cheriot_i" (1) "instr_is_cheriot_i 0"
-  - ibex_cheriot_ex: Branch 3 "1293082901" "instr_is_cheriot_i" (1) "instr_is_cheriot_i 0"
-  - ibex_cheriot_ex: Branch 4 "3610553060" "debug_mode_i" (1) "debug_mode_i 0"
-  - ibex_cheriot_ex: Branch 5 "822058008" "is_store_cap" (1) "is_store_cap 0"
-  - ibex_cheriot_ex: Branch 6 "822058008" "is_store_cap" (1) "is_store_cap 0"
-  - ibex_cheriot_ex: Branch 7 "991943670" "(is_cap | cheriot_operator_i.CJALR)" (1) "(is_cap | cheriot_operator_i.CJALR) 0"
-  - ibex_cheriot_ex: Branch 8 "2153596606" "is_cap" (1) "is_cap 0"
-  - ibex_cheriot_ex: Branch 21 "1505174304" "1'b1" (39) "1'b1 default,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
-  - ibex_cheriot_ex: Branch 22 "491773564" "cheriot_adder_a_sel_i" (4) "cheriot_adder_a_sel_i default"
-  - ibex_cheriot_ex: Branch 23 "3026872665" "cheriot_adder_b_sel_i" (2) "cheriot_adder_b_sel_i default"
-  - ibex_cheriot_ex: Branch 24 "3593742652" "(cheriot_setaddr_sel_i == SETADDR_PCC_PCNXT)" (4) "(cheriot_setaddr_sel_i == SETADDR_PCC_PCNXT) 0,0,0,0"
-  - ibex_cheriot_ex: Branch 15 "1571378344" "(~instr_is_cheriot_i)" (0) "(~instr_is_cheriot_i) 1"
-  - ibex_cheriot_ex: Branch 17 "1571378344" "(~instr_is_cheriot_i)" (0) "(~instr_is_cheriot_i) 1"
-  - ibex_cheriot_ex: Condition 49 "2140812203" "(cheriot_setaddr_sel_i == SETADDR_PCC_PCNXT) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 50 "3858269055" "(cheriot_setaddr_sel_i == SETADDR_PCC_ARITH) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 51 "3618601917" "(cheriot_setaddr_sel_i == SETADDR_RFA_ARITH) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 53 "677371940" "(cheriot_setaddr_sel_i == SETADDR_SCR) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 108 "2945604421" "(instr_is_cheriot_i ? rf_rcap_ng_b : 35'b0) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 109 "2075327243" "(instr_is_cheriot_i ? rf_rdata_ng_b : 32'b0) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 118 "2452345331" "(debug_mode_i ? '0 : ('{CTAG:lc_ctag, SD_LM:lc_csdlm, GL_LG:lc_cglg})) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 119 "776353460" "(cheriot_operator_i.CLOAD_CAP | cheriot_operator_i.CSTORE_CAP) 1 -1" (1 "00")
-  - ibex_cheriot_ex: Condition 120 "1529653651" "(is_store_cap ? rf_rdata_b : 32'b0) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 121 "4030100550" "(is_store_cap ? csc_wcap : 35'b0) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 122 "3008940757" "((is_cap | cheriot_operator_i.CJALR) ? ({{20 {cheriot_imm12_i[11]}}, cheriot_imm12_i}) : '0) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 123 "3395516236" "(is_cap | cheriot_operator_i.CJALR) 1 -1" (1 "00")
-  - ibex_cheriot_ex: Condition 124 "558635136" "((cheriot_enable_i == ibex_pkg::IbexMuBiOn) & ((~debug_mode_i)) & (addr_bound_vio_rv32 | perm_vio_rv32)) 1 -1" (1 "011")
-  - ibex_cheriot_ex: Condition 125 "2961510797" "(cheriot_enable_i == ibex_pkg::IbexMuBiOn) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 128 "3777427688" "(cheriot_enable_i == ibex_pkg::IbexMuBiOn) 1 -1" (1 "0")
-  - ibex_cheriot_ex: Condition 129 "2652810038" "(addr_bound_vio | perm_vio | (csr_dbg_tclr_fault_i & perm_vio_slc)) 1 -1" (1 "000")
-  - ibex_cheriot_ex: Condition 132 "3778735365" "(is_cap ? (addr_bound_vio | (cheriot_top_chkaddr_ext > rf_fullcap_a.top33)) : addr_bound_vio) 1 -1" (1 "0")
+Emitted 1442 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
+Dropped 10 entries refuted by a strict load (covered in the reference vdb; kept in coverage):
   - ibex_cs_registers: Block 273 "2749661524" "cheriot_csr_rdata_o = 32'b0;"
   - ibex_cs_registers: Block 275 "4291899431" "pcc_cap_q <= 112'b1000000000000000000000000000000000000000000000000000000000000000000011110101100101011110001111100000000000000000;"
   - ibex_cs_registers: Block 292 "2707070097" "mtvec_cap <= 35'b00101011110001111100000000000000000;"

@@ -1,6 +1,6 @@
 # Response file: reviews of the exclusion set (commit dca91fd, dv/auto_dv/excl/**)
 
-Owner: rtl-arch. Created 2026-09-03 09:05Z ahead of the findings. Reviews expected: post-execution
+Owner: rtl-arch. Created 2026-09-03 09:05Z ahead of the findings; rows filled 09:16Z for the cross-model review (the Critic's rows follow when its check lands). Reviews expected: post-execution
 cross-model review (target 42e6f28..dca91fd) and the Critic's check of the same commit. Rule: every
 finding gets one row below with ADDRESSED or DISPUTED and the evidence; gen_exclusions.el is never
 edited silently: a change to the file is a regeneration by dv/auto_dv/excl/gen_excl_select.py with
@@ -10,9 +10,14 @@ the selection-spec change named here and re-proved by a strict load.
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
-| - | - | (none received yet) | - | - |
+| H-1 | cross-model dca91fd [high] gen_excl_select.py:355 | the A.1 sweep excluded reachable-but-masked ibex_cheriot_ex logic (check_rv32, all-false arms of check_cheriot, err_cause_comb fall-through) under an unreachability claim | ADDRESSED | the sweep is replaced by a guard analysis of rtl/ibex_cheriot_ex.sv (gen_excl_select.py guard_analysis / cheriot_ex_branch_dead_vectors / ex_const): an object is excluded only when an enclosing arm requires a constant-0 term or follows a constant-1 one, the constants being the yosys constant-propagation list (t022_flat.il, regenerable) plus the decoder defaults rtl/ibex_decoder.sv:297-303; each annotation names the guard and the term. Result: check_rv32 :699-737 live, check_cheriot else arms live, err_cause_comb :922 live, shared-adder defaults live (all four reviewer examples), 265 dead lines; entries dropped from 103 Blocks / 112 Branch vectors / 343 Condition vectors to 75 / 66 / 119; the gated LINE denominator with the file rises 4057 -> 4134 (the masked logic now counts). Strict load pass 9 and 10 clean (gen_precheck_urg_pass10.log); README section 1 rule 3 and section 4 rewritten. |
+| M-1 | [medium] README:81, :127-130 | ASSERT row compared different scopes; the Assert entries do take effect | ADDRESSED | README section 3 table is now the gated rows summed from the hierarchy reports (ASSERT 143/178 -> 143/175, 3 removed) with the URG top-row explanation as a note; section 5 item 4 closed; the annotation names the macro correctly (`ASSERT(name, cheriot_enabled \|-> ...)`, not ASSERT_IF). |
+| M-2 | [medium] README:74-80 | "objects removed" not reconciled with entry counts | ADDRESSED (explanation + census; exact no-op list is a follow-up) | README section 3: per metric the objects removed, the entries emitted and the mechanism (multi-line Blocks; vectors already Unreachable by -cm_seqnoconst are no-ops; toggle objects per bit and edge; FSM states unscored), plus the status-token census of the pass-10 report (LINE excluded 847 / unreachable 1115, BRANCH 244 / 373, TOGGLE 828 / 179, ASSERT 3, FSM 18). The per-object join of dump, .el and report that names every no-op entry is the follow-up for the first measured regression (both carry line numbers). |
+| M-3 | [medium] README:5-8 | authority chain under git-ignored dv/auto_dv/work/ | ADDRESSED | promoted to dv/auto_dv/evidence/: gen_exclusions_draft_v2.md, gen_unreachability_evidence.md, gen_cheriot_carveout.md, gen_param_resolution.md, gen_hierarchy_map.md (ASCII, byte copies of the working files at 09:12Z); the Critic rulings were already committed there (gen_critic_exclusions_draft_v1/v2.md). README header now lists every path with what it contributes. Annotations cite the documents by name (no directory), resolvable at the committed paths. |
+| L-1 | [low] gen_excl_select.py:107-108 | class-D annotations carry "TO BE FILLED" EC-3 fields | ADDRESSED | the three spare-encoding groups are held out unless --allow-unfilled-ec3 is given; the .el header states the hold-out; README section 1 rule 7 and F-3 row updated. The three 2a groups (no spare encoding, no EC-3 requirement) stay in. |
+| L-2 | [low] gen_excl_select.py:130-131, 156-157 | class-P parameter values re-typed as prose | ADDRESSED | gen_excl_select.py runs `util/ibex_config.py opentitan vcs_opts` at generation, stops unless BranchPredictor = 0, BranchTargetALU = 1 and RV32B = RV32BOTEarlGrey, records the read values in the selection report, and the class-P annotation states that the values were verified at generation. |
 
-## 2. Evidence prepared in advance for the announced review focus
+## 2. Evidence prepared in advance for the announced review focus (written before the findings; E-4 and E-5 superseded by the rows above where they differ)
 
 E-1 Justification versus RTL. Every group's ANNOTATION names class, RTL location, tie chain or
 parameter, EC set and the T022_* proof; the proofs are re-runnable from

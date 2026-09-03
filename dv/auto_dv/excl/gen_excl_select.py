@@ -9,7 +9,7 @@ the ten A.8 carve-backs and the four class-R arcs are never selected.
 
 Usage: gen_excl_select.py --dump <dir with fullexclude_module.*> --out gen_exclusions.el --report <md>
 """
-import argparse, re, sys
+import argparse, re, subprocess, sys
 from pathlib import Path
 
 METRICS = ["line", "branch", "cond", "tgl", "fsm", "assert"]
@@ -92,7 +92,7 @@ def ann_T(where, evidence, extra=""):
 
 
 def ann_P(where, param, evidence):
-    return (f"Class P (build-parameter constant, opentitan configuration): {where}. {param} is an elaboration "
+    return (f"Class P (build-parameter constant, opentitan configuration, values verified against util/ibex_config.py at generation): {where}. {param} is an elaboration "
             f"constant (dv/auto_dv/work/rtl-arch/gen_param_resolution.md; time-0 config banner). "
             f"EC-1 {evidence}; EC-2 expected URG Unreachable; EC-5 strict load. gen_exclusions_draft.md Part C.")
 
@@ -237,11 +237,21 @@ def split_ternary(expr):
     return None
 
 
+EX_MODE = False
+
+
 def const_value(operand, _depth=0):
     """Return the impossible value (0/1) of a constant-tie operand, or None."""
     o = strip_outer(operand)
     if _depth > 3:
         return None
+    if EX_MODE:
+        # ternary condition / top-level negation keep URG's encoding rules below; plain terms use the
+        # module constant table
+        if split_ternary(o) is None and not re.match(r'^[~!]', o):
+            cv = ex_const(o)
+            if cv is not None:
+                return 1 - cv
     sel = split_ternary(o)
     if sel is not None:
         # URG encodes a ternary CONDITION by its select; a ternary used as an operand has the value
@@ -277,6 +287,7 @@ def const_value(operand, _depth=0):
 
 
 def select_conditions(entries, live_lines_cheriot_ex, report):
+    global EX_MODE
     """A.4 / A.1: vectors in which a constant-tie operand takes its impossible value."""
     out = []
     unclassified = []
@@ -285,11 +296,13 @@ def select_conditions(entries, live_lines_cheriot_ex, report):
             continue
         sig = e.header.split('"')[3] if e.header.count('"') >= 4 else ""
         expr = sig.rsplit(" ", 2)[0] if sig else ""
-        if e.mod == "ibex_cheriot_ex" and not in_ranges(e.line, live_lines_cheriot_ex):
-            out.append((e, list(e.vectors), "A1"))  # every vector; refuted (covered) ones are dropped by --attempts
+        if e.mod == "ibex_cheriot_ex" and e.line in live_lines_cheriot_ex:   # here: the DEAD line map
+            out.append((e, list(e.vectors), "A1"))
             continue
+        EX_MODE = (e.mod == "ibex_cheriot_ex")
         ops = split_top(strip_outer(expr))
         vals = [const_value(expr, 0)] if len(ops) == 1 else [const_value(o, 1) for o in ops]
+        EX_MODE = False
         if all(v is None for v in vals):
             if re.search(r'cheriot|is_cap|IbexMuBiOn', re.sub(r'g_cheriot_(rf|ex)\.', '', expr)) and e.mod != "ibex_cheriot_ex":
                 unclassified.append(f"{e.mod} {Path(e.file).name if e.file else '?'}:{e.line} {expr}")
@@ -348,20 +361,339 @@ FSMS = [
 
 ASSERTS = [
     ("ibex_register_file_ff", ["CheriotWaddrMSBClear", "CheriotRaddrAMSBClear", "CheriotRaddrBMSBClear"],
-     ann_T("A.7 rtl/ibex_register_file_ff.sv:237-239 ASSERT_IF with antecedent cheriot_enabled == constant 0: vacuous, never covered", "T022_RF_CAP0")),
+     ann_T("A.7 rtl/ibex_register_file_ff.sv:237-239 `ASSERT(name, cheriot_enabled |-> ...)` with antecedent cheriot_enabled == constant 0: vacuous, never covered", "T022_RF_CAP0")),
 ]
 
-# A.1 ibex_cheriot_ex: everything except the live objects
-CHERIOT_EX_LIVE_LINES = [(200, 233), (943, 960), (970, 973), (991, 994)]
+# A.5 for ibex_cheriot_ex: the constant CHERIoT-only ports (toggle objects); live RV32I ports never selected
 CHERIOT_EX_LIVE_PORTS = {"lsu_req_o", "lsu_we_o", "lsu_addr_o", "lsu_wdata_o", "lsu_type_o", "lsu_sign_ext_o", "rv32_addr_incr_req_o", "rv32_addr_last_o",
                          "rv32_lsu_req_i", "rv32_lsu_we_i", "rv32_lsu_type_i", "rv32_lsu_wdata_i", "rv32_lsu_sign_ext_i", "rv32_lsu_addr_i", "rv32_lsu_err",
                          "addr_incr_req_i", "addr_last_i", "csr_rdata_i", "csr_mstatus_mie_i", "csr_mshwm_new_o", "fwd_wdata_i", "fwd_we_i", "fwd_waddr_i",
                          "rf_rdata_a_i", "rf_rdata_b_i", "rf_raddr_a_i", "rf_raddr_b_i", "pc_id_i", "debug_mode_i", "instr_valid_i", "instr_first_cycle_i",
                          "instr_is_compressed_i", "instr_is_rv32lsu_i", "clk_i", "rst_ni", "lsu_req_done_i", "lsu_resp_valid_i", "lsu_load_err_i",
                          "lsu_store_err_i", "rv32_lsu_err_i"}
-CHERIOT_EX_ANN = ann_T("A.1 object-list exclusion inside u_ibex_cheriot_ex (gen_cheriot_carveout.md A1, buckets C/D): every object not on the live list (RV32I LSU mux arms :943-960, :970-973, :991-994, fwd merger :200-233 and the live ports stay in coverage)",
-                       "T022_DEC_CHERI0 (instr_is_cheriot_o == 0), T022_ID_CHERI0 (cheriot_exec_id_o == 0)")
-CHERIOT_EX_ARM_ANN = ann_T("A.1 step 3: CHERIoT arms of the live ternaries :943-960 and :234-235 (instr_is_cheriot_i true arms)", "T022_DEC_CHERI0")
+
+
+def ann_ex(reason, line):
+    return (A0 + f"Class T (dead arm inside u_ibex_cheriot_ex, A.1 revised): rtl/ibex_cheriot_ex.sv:{line}: {reason}. "
+            f"Term(s) {CHERIOT_EX_EVIDENCE}. Reachable-but-masked logic of this module is NOT excluded. "
+            f"EC-1 constant propagation + k-induction; EC-5 strict load.")
+
+
+
+
+# ---------------------------------------------------------------------------------------------
+# A.1 (revised after review 42e6f28d..dca91fd2, HIGH): ibex_cheriot_ex objects are excluded only
+# when an enclosing guard is provably dead under the cheriot_enable_i tie (a "dead arm"), never
+# because they are "not on a live list". The constants below are the machine-checked ones.
+# ---------------------------------------------------------------------------------------------
+# 1-bit nets of u_ibex_cheriot_ex that yosys `opt -full` ties to 1'0 with the wrapper tie
+# (dv/auto_dv/work/rtl-arch/t022/model/t022_flat.il `connect` lines, regenerable by
+# dv/auto_dv/evidence/gen_t022_formal/gen_t022_regen.sh step 3; EC-1 by constant propagation).
+CHERIOT_EX_CONST0_1BIT = {
+    "branch_req_o", "branch_req_raw", "branch_req_spec_o", "branch_req_spec_raw", "cheriot_exec_id_i",
+    "cheriot_ex_err_o", "cheriot_ex_err_raw", "cheriot_ex_valid_o", "cheriot_lsu_err", "cheriot_lsu_is_cap",
+    "cheriot_lsu_req", "cheriot_lsu_we", "cheriot_rf_we_o", "cheriot_wb_err_d", "cheriot_wb_err_o",
+    "cheriot_wb_err_q", "chk_cs2_bad_type", "cpu_lsu_cheriot_err", "csr_access_o", "csr_clr_mie_o",
+    "csr_clr_mie_raw", "csr_op_en_o", "csr_op_en_raw", "csr_set_mie_o", "csr_set_mie_raw",
+    "illegal_scr_addr", "instr_is_cheriot_i", "is_cap", "is_load_cap", "is_store_cap", "lsu_cheriot_err_o",
+    "perm_vio_slc", "req_exact", "rv32_lsu_err", "scr_legalization"}
+# multi-bit inputs/nets of u_ibex_cheriot_ex that the same netlist ties to all-zero (value 0): the
+# decoder assigns them only inside (cheriot_enable_i == On) arms and defaults them to the zero
+# literal (rtl/ibex_decoder.sv:297-303), which the netlist confirms.
+CHERIOT_EX_CONST_ZERO_MULTI = {
+    "cheriot_adder_a_sel_i", "cheriot_adder_b_sel_i", "cheriot_cap_field_sel_i", "cheriot_cs2_dec_i",
+    "cheriot_imm12_i", "cheriot_imm20_i", "cheriot_imm21_i", "cheriot_operator_i", "cheriot_setaddr_sel_i",
+    "cheriot_setbounds_sel_i", "csr_addr_o", "csr_op_o", "cheriot_lsu_wcap", "csc_wcap", "csr_wcap_o",
+    "lsu_wcap_o", "result_cap_o", "rf_rcap_a_i", "rf_rcap_b_i", "ztop_rcap_i"}
+CHERIOT_EX_EVIDENCE = ("constant under the cheriot_enable_i tie: yosys constant propagation, "
+                       "t022_flat.il connect list (gen_t022_regen.sh step 3) and the decoder defaults "
+                       "rtl/ibex_decoder.sv:297-303 with CHERIoT-only assignments; T022_DEC_CHERI0, T022_ID_CHERI0")
+
+
+def load_enum_values(pkg_paths):
+    """NAME -> integer value for every `typedef enum` literal in the given packages."""
+    vals = {}
+    for pth in pkg_paths:
+        txt = Path(pth).read_text()
+        for m in re.finditer(r"typedef\s+enum[^{]*\{(.*?)\}\s*(\w+)\s*;", txt, re.S):
+            body = re.sub(r"//[^\n]*", "", m.group(1))
+            nxt = 0
+            for item in body.split(","):
+                item = item.strip()
+                if not item:
+                    continue
+                mm = re.match(r"(\w+)\s*(?:=\s*(\S+))?$", item)
+                if not mm:
+                    continue
+                if mm.group(2):
+                    lit = mm.group(2)
+                    ml = re.match(r"^(\d+)?'([bhd])([0-9a-fA-F_]+)$", lit)
+                    v = int(ml.group(3).replace("_", ""), {"b": 2, "h": 16, "d": 10}[ml.group(2)]) if ml else int(lit)
+                else:
+                    v = nxt
+                vals[mm.group(1)] = v
+                nxt = v + 1
+    return vals
+
+
+ENUMS = load_enum_values(["rtl/ibex_cheriot_pkg.sv", "rtl/ibex_pkg.sv"])
+RE_EQ = re.compile(r"^\(?\s*([\w.]+)\s*(==|!=)\s*([\w:']+)\s*\)?$")
+
+
+def lit_value(tok):
+    tok = tok.split("::")[-1]
+    ml = re.match(r"^(\d+)?'([bhd])([0-9a-fA-F_]+)$", tok)
+    if ml:
+        return int(ml.group(3).replace("_", ""), {"b": 2, "h": 16, "d": 10}[ml.group(2)])
+    if tok.isdigit():
+        return int(tok)
+    return ENUMS.get(tok)
+
+
+def ex_const(expr, _depth=0):
+    """Constant VALUE (0/1) of an ibex_cheriot_ex boolean expression under the tie, or None."""
+    o = strip_outer(expr)
+    if _depth > 6 or not o:
+        return None
+    if o in ("1'b1", "1"):
+        return 1
+    if o in ("1'b0", "0"):
+        return 0
+    m = re.match(r"^[~!]\s*(.+)$", o)
+    if m:
+        v = ex_const(m.group(1), _depth + 1)
+        return None if v is None else 1 - v
+    if RE_ON.match(o) or RE_OFF.match(o) is not None and False:
+        return 0
+    if RE_OFF.match(o) or RE_ISOFF.match(o):
+        return 1
+    m = RE_NAME.match(o)
+    if m:
+        nm = m.group(1)
+        if nm in CHERIOT_EX_CONST0_1BIT or nm.split(".")[-1] in CONST0 or nm.startswith("cheriot_operator_i."):
+            return 0
+        if nm.split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI and "." in nm:
+            return 0      # a field of an all-zero struct
+        return None
+    m = RE_EQ.match(o)
+    if m and m.group(1).split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI:
+        lv = lit_value(m.group(3))
+        if lv is None:
+            return None
+        eq = 1 if lv == 0 else 0
+        return eq if m.group(2) == "==" else 1 - eq
+    parts, kinds = split_top_ops(o)
+    if len(parts) > 1 and kinds:
+        vals = [ex_const(pp, _depth + 1) for pp in parts]
+        if all(k in ("&", "&&") for k in kinds):
+            if any(v == 0 for v in vals):
+                return 0
+            if all(v == 1 for v in vals):
+                return 1
+        if all(k in ("|", "||") for k in kinds):
+            if any(v == 1 for v in vals):
+                return 1
+            if all(v == 0 for v in vals):
+                return 0
+    return None
+
+
+RE_HDR_IF = re.compile(r"^\s*(?:end\s+)?(else\s+if|if)\s*\((.*)$")
+RE_HDR_ELSE = re.compile(r"^\s*(?:end\s+)?else\s*(begin)?\s*(//.*)?$")
+RE_HDR_CASE = re.compile(r"^\s*(?:unique\s+|priority\s+)?case\s*\((.*)\)\s*$")
+RE_CASE_ITEM = re.compile(r"^\s*(default|[\w.]+|\([^:]*\))\s*:\s*(begin)?\s*(.*)$")
+
+
+def strip_comment(l):
+    return re.sub(r"//.*$", "", l).rstrip()
+
+
+def guard_analysis(rtl_path):
+    """Per RTL line: (dead, reason) from the enclosing if/else/case arms, using the file's indentation
+    as the nesting (lowRISC style: bodies indented deeper than their header; chains at equal indent).
+    Also returns per header line the ordered chain conditions and per case line the item labels."""
+    raw = Path(rtl_path).read_text().split("\n")
+    n = len(raw)
+    lines = [strip_comment(l) for l in raw]
+    # join multi-line headers (an `if (` whose parentheses close on a later line)
+    hdr_text = {}
+    hdr_end = {}
+    i = 0
+    while i < n:
+        l = lines[i]
+        if RE_HDR_IF.match(l) or RE_HDR_CASE.match(l) or re.match(r"^\s*(?:unique\s+)?case\s*\(", l):
+            txt = l
+            j = i
+            while txt.count("(") > txt.count(")") and j + 1 < n:
+                j += 1
+                txt += " " + lines[j].strip()
+            hdr_text[i] = txt
+            hdr_end[i] = j
+        i += 1
+
+    def indent(l):
+        return len(l) - len(l.lstrip(" "))
+
+    dead = {}           # line index -> reason
+    chains = {}         # header line index -> list of (cond, header_line_index)
+    case_items = {}     # case header line index -> list of (label, item_line_index)
+    stack = []          # frames: dict(indent, kind, cond, dead, reason, chain(list), case_sel, case_hdr)
+    # `stack` holds only frames whose body is still open (by indentation)
+    for idx in range(n):
+        l = lines[idx]
+        if not l.strip():
+            continue
+        ind = indent(l)
+        is_hdr = idx in hdr_text
+        txt = hdr_text.get(idx, l)
+        m_if = RE_HDR_IF.match(txt) if is_hdr else None
+        m_else = RE_HDR_ELSE.match(l)
+        m_case = RE_HDR_CASE.match(txt) if is_hdr else None
+        # close frames whose body ended: any line at indent <= frame indent closes it, except a
+        # continuation of the same chain (else / else if at the same indent) handled below
+        while stack and ind <= stack[-1]["indent"] and not (
+                (m_if and m_if.group(1) == "else if" or m_else) and ind == stack[-1]["indent"] and stack[-1]["kind"] in ("if", "elseif")):
+            stack.pop()
+        # case items: a line at case-indent + 2 matching `label:` while a case frame is open
+        top = stack[-1] if stack else None
+        if top and top["kind"] == "case" and ind == top["indent"] + 2 and not m_if and not m_else and RE_CASE_ITEM.match(l) \
+                and not l.strip().startswith("end"):
+            mi = RE_CASE_ITEM.match(l)
+            label = mi.group(1).strip()
+            sel = top["case_sel"]
+            if sel in ("1'b1", "1"):
+                cval = ex_const(label)
+                item_dead = (cval == 0)
+                reason = f"case (1'b1) item `{label}` is constant 0" if item_dead else ""
+                if label == "default":
+                    item_dead = False
+            else:
+                sel_name = strip_outer(sel).split(".")[0]
+                if sel_name in CHERIOT_EX_CONST_ZERO_MULTI:
+                    if label == "default":
+                        labels_here = [lab for lab, _ in case_items.get(top["hdr"], [])]
+                        item_dead = any(lit_value(lab) == 0 for lab in labels_here)
+                        reason = f"case ({sel}) selector is constant 0 and a listed item matches 0" if item_dead else ""
+                    else:
+                        lv = lit_value(label)
+                        item_dead = (lv is not None and lv != 0)
+                        reason = f"case ({sel}) selector is constant 0, item `{label}` = {lv}" if item_dead else ""
+                else:
+                    item_dead = False
+                    reason = ""
+            case_items.setdefault(top["hdr"], []).append((label, idx))
+            inherited = top["dead"]
+            frame = {"indent": ind, "kind": "caseitem", "cond": label, "dead": inherited or item_dead,
+                     "reason": top["reason"] if inherited else reason, "chain": [], "case_sel": None, "hdr": idx}
+            stack.append(frame)
+            if frame["dead"]:
+                dead[idx] = frame["reason"]
+            continue
+        if m_if or m_else:
+            kind = "if" if (m_if and m_if.group(1) == "if") else ("elseif" if m_if else "else")
+            cond = m_if.group(2).rsplit(")", 1)[0] if m_if else None
+            if m_if:
+                # drop the trailing `begin`/`)` remnants: keep the text inside the outermost parens
+                inner = txt[txt.index("(") :]
+                depth = 0
+                for k, ch in enumerate(inner):
+                    if ch == "(":
+                        depth += 1
+                    elif ch == ")":
+                        depth -= 1
+                        if depth == 0:
+                            cond = inner[1:k]
+                            break
+            prev_chain = []
+            if kind in ("elseif", "else") and stack and stack[-1]["indent"] == ind and stack[-1]["kind"] in ("if", "elseif"):
+                prev_chain = list(stack[-1]["chain"])
+                enclosing_dead, enclosing_reason = stack[-1]["enc_dead"], stack[-1]["enc_reason"]
+                stack.pop()
+            else:
+                enclosing_dead = bool(stack and stack[-1]["dead"])
+                enclosing_reason = stack[-1]["reason"] if stack else ""
+            chain = prev_chain + ([(cond, idx)] if cond is not None else [])
+            # arm dead-ness: own condition constant 0, or an earlier chain condition constant 1
+            own_dead = False
+            reason = ""
+            for c, _hl in prev_chain:
+                if ex_const(c) == 1:
+                    own_dead = True
+                    reason = f"earlier arm `if ({c})` is constant 1"
+                    break
+            if not own_dead and cond is not None and ex_const(cond) == 0:
+                own_dead = True
+                reason = f"arm `if ({cond})` requires a constant-0 term"
+            frame = {"indent": ind, "kind": kind, "cond": cond, "dead": enclosing_dead or own_dead,
+                     "reason": enclosing_reason if enclosing_dead else reason, "chain": chain,
+                     "case_sel": None, "hdr": idx, "enc_dead": enclosing_dead, "enc_reason": enclosing_reason}
+            stack.append(frame)
+            first = chain[0][1] if chain else idx
+            chains[first] = chain
+            if enclosing_dead:
+                for k in range(idx, hdr_end.get(idx, idx) + 1):
+                    dead[k] = enclosing_reason
+            continue
+        if m_case:
+            sel = m_case.group(1)
+            enclosing_dead = bool(stack and stack[-1]["dead"])
+            frame = {"indent": ind, "kind": "case", "cond": sel, "dead": enclosing_dead,
+                     "reason": stack[-1]["reason"] if enclosing_dead else "", "chain": [], "case_sel": sel, "hdr": idx}
+            stack.append(frame)
+            case_items.setdefault(idx, [])
+            if frame["dead"]:
+                dead[idx] = frame["reason"]
+            continue
+        # ordinary line: dead if any open frame is dead
+        if stack and stack[-1]["dead"]:
+            dead[idx] = stack[-1]["reason"]
+    # dead is 0-based; return 1-based line numbers
+    return ({k + 1: v for k, v in dead.items()},
+            {k + 1: [(c, h + 1) for c, h in v] for k, v in chains.items()},
+            {k + 1: [(lab, i + 1) for lab, i in v] for k, v in case_items.items()})
+
+
+def cheriot_ex_branch_dead_vectors(e, dead, chains, case_items):
+    """Vectors of a Branch object of ibex_cheriot_ex whose arm is dead: (vector line, reason)."""
+    out = []
+    if e.line in dead:
+        return [(v, dead[e.line]) for v in e.vectors]
+    sig = e.header.split('"')[3] if e.header.count('"') >= 4 else ""
+    for v in e.vectors:
+        m = re.search(r'\((\d+)\) "(.*)"$', v)
+        if not m:
+            continue
+        vs = m.group(2)
+        rest = vs[len(sig):].strip() if vs.startswith(sig) else vs.split(" ", 1)[-1]
+        toks = [t.strip() for t in rest.split(",")]
+        if e.line in case_items and case_items[e.line]:
+            label = toks[0]
+            if label.startswith("CASEITEM-"):
+                label = label.split(":", 1)[1].strip()
+            hit = [(lab, il) for lab, il in case_items[e.line] if strip_outer(lab) == strip_outer(label) or lab == label]
+            if hit and hit[0][1] in dead:
+                out.append((v, dead[hit[0][1]]))
+            continue
+        chain = chains.get(e.line)
+        if chain:
+            if all(t in ("0", "-") for t in toks):          # else arm
+                body = None
+                for k in range(chain[-1][1] + 1, chain[-1][1] + 40):
+                    pass
+                for c, _h in chain:
+                    if ex_const(c) == 1:
+                        out.append((v, f"else arm of a chain whose `if ({c})` is constant 1"))
+                        break
+                continue
+            arm = next((i for i, t in enumerate(toks) if t == "1"), None)
+            if arm is not None and arm < len(chain):
+                c = chain[arm][0]
+                if ex_const(c) == 0:
+                    out.append((v, f"arm `if ({c})` requires a constant-0 term ({CHERIOT_EX_EVIDENCE})"))
+                elif any(ex_const(cc) == 1 for cc, _ in chain[:arm]):
+                    out.append((v, "arm behind a constant-1 earlier condition"))
+    return out
+
 
 
 def main():
@@ -370,6 +702,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--report", required=True)
     ap.add_argument("--attempts", action="append", default=[], help="URG attempts.log of a strict load; listed objects are refuted and dropped")
+    ap.add_argument("--allow-unfilled-ec3", action="store_true",
+                    help="emit the three class-D spare-encoding default arms although their EC-3 attempts/failures are not filled (F-3 open)")
     a = ap.parse_args()
     refuted = set()          # (module, exact entry line)
     refuted_heads = set()    # (module, "Kind id") for bare-header (whole object) attempts
@@ -395,8 +729,20 @@ def main():
         chks[key] = e.chk
         groups.setdefault(key, []).append((ann, lines))
 
+    # class P prose values are read from the configuration, never re-typed (review low 2)
+    cfg = subprocess.run([sys.executable, "util/ibex_config.py", "opentitan", "vcs_opts"], check=True,
+                         capture_output=True, text=True).stdout
+    pvals = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
+    defs = {m.group(1): m.group(2) for m in re.finditer(r"\+define\+(\w+)=(\S+)", cfg)}
+    cfg_ok = pvals.get("BranchPredictor") == 0 and pvals.get("BranchTargetALU") == 1 and defs.get("RV32B", "").endswith("RV32BOTEarlGrey")
+    if not cfg_ok:
+        sys.exit(f"gen_excl_select: opentitan configuration differs from the class-P assumptions: {pvals.get('BranchPredictor')=} {pvals.get('BranchTargetALU')=} RV32B={defs.get('RV32B')}")
+    report.append(f"config check: BranchPredictor={pvals['BranchPredictor']} BranchTargetALU={pvals['BranchTargetALU']} RV32B={defs['RV32B']} (util/ibex_config.py opentitan vcs_opts)")
     # Blocks
     for mod, ranges, ann in BLOCKS:
+        if "TO BE FILLED" in ann and not a.allow_unfilled_ec3:
+            report.append(f"BLOCK {mod} {ranges}: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)")
+            continue
         hits = [e for e in entries if e.metric == "line" and e.mod == mod and in_ranges(e.line, ranges) and not RE_STMT_HDR.match(e.header)]
         report.append(f"BLOCK {mod} {ranges}: {len(hits)} blocks")
         for e in hits:
@@ -404,32 +750,40 @@ def main():
     # Branch vectors
     for mod, ranges, vec_re, ann in BRANCHES:
         n = 0
+        if "TO BE FILLED" in ann and not a.allow_unfilled_ec3:
+            report.append(f"BRANCH {mod} {ranges}: class-D spare-encoding group HELD OUT (EC-3 not filled)")
+            continue
         for e in entries:
             if e.metric == "branch" and e.mod == mod and in_ranges(e.line, ranges):
                 sel = [v for v in e.vectors if re.search(vec_re, v)]
                 if sel:
                     add(e, ann, sel); n += len(sel)   # vectors only: a bare header would exclude every arm
         report.append(f"BRANCH {mod} {ranges} /{vec_re}/: {n} vectors")
-    # ibex_cheriot_ex object list: blocks and branches (conditions handled below)
+    # ibex_cheriot_ex (A.1, revised): dead arms only. Blocks and branch vectors under a provably dead
+    # guard; conditions: on dead lines every vector, elsewhere the impossible-value vectors (A.4 rule
+    # with the module's constant table). Reachable-but-masked logic stays in coverage.
+    global EX_MODE
+    dead, chains, case_items = guard_analysis("rtl/ibex_cheriot_ex.sv")
+    report.append(f"CHERIOT_EX guard analysis: {len(dead)} dead RTL lines in rtl/ibex_cheriot_ex.sv (reasons in the per-group annotations)")
     n_b = n_v = 0
     for e in entries:
         if e.mod != "ibex_cheriot_ex":
             continue
-        if e.metric == "line" and not in_ranges(e.line, CHERIOT_EX_LIVE_LINES) and not RE_STMT_HDR.match(e.header) \
-                and not re.match(r'^Block \d+ "\d+" "(;|else)', e.header):
-            add(e, CHERIOT_EX_ANN, [e.header]); n_b += 1
+        if e.metric == "line" and e.line in dead:
+            add(e, ann_ex(dead[e.line], e.line), [e.header]); n_b += 1
         elif e.metric == "branch":
-            if not in_ranges(e.line, CHERIOT_EX_LIVE_LINES) and "rst_ni" not in e.header:
-                add(e, CHERIOT_EX_ANN, list(e.vectors)); n_v += len(e.vectors)   # every arm; refuted ones dropped by --attempts
-            elif in_ranges(e.line, [(943, 960), (234, 235)]) and "instr_is_cheriot_i" in e.header:
-                sel = [v for v in e.vectors if re.search(r'instr_is_cheriot_i\)? 1"$', v)]
-                if sel:
-                    add(e, CHERIOT_EX_ARM_ANN, sel); n_v += len(sel)
-    report.append(f"CHERIOT_EX blocks {n_b}, branch vectors {n_v}")
+            for v, why in cheriot_ex_branch_dead_vectors(e, dead, chains, case_items):
+                add(e, ann_ex(why, e.line), [v]); n_v += 1
+    report.append(f"CHERIOT_EX dead-arm blocks {n_b}, dead-arm branch vectors {n_v}")
     # Conditions (A.4 generic + A.1)
-    for e, sel, tag in select_conditions(entries, CHERIOT_EX_LIVE_LINES, report):
-        ann = CHERIOT_EX_ANN if tag == "A1" else ann_T(f"A.4 condition vectors with a constant-tie operand at its impossible value ({Path(e.file).name if e.file else '?'}:{e.line})", "T022_* (gen_unreachability_evidence.md 4.1 table)")
-        add(e, ann, [e.header] if sel is None else sel)
+    for e, sel, tag in select_conditions(entries, dead, report):
+        if tag == "A1":
+            ann = ann_ex(dead[e.line], e.line)
+        elif e.mod == "ibex_cheriot_ex":
+            ann = ann_ex("condition vector in which a constant term takes its impossible value", e.line)
+        else:
+            ann = ann_T(f"A.4 condition vectors with a constant-tie operand at its impossible value ({Path(e.file).name if e.file else '?'}:{e.line})", "T022_* (gen_unreachability_evidence.md 4.1 table)")
+        add(e, ann, sel)
     # Toggles
     for mod, names in TOGGLES.items():
         hits = []
@@ -449,7 +803,7 @@ def main():
                 hits.append(e)
         report.append(f"TOGGLE {mod}: {len(hits)} ports" + ("" if names is None or mod == "ibex_cheriot_ex" else f" (spec {len(names)}; missing: {sorted(set(names) - {h.header.split()[1].split('.')[0] for h in hits})})"))
         for e in hits:
-            add(e, TGL_ANN if mod != "ibex_cheriot_ex" else CHERIOT_EX_ANN, [e.header])
+            add(e, TGL_ANN, [e.header])
     # FSMs
     for mod, fsm, states, tr_re, ann in FSMS:
         for e in entries:
@@ -469,7 +823,10 @@ def main():
     lines = ["// gen_exclusions.el -- URG exclusion file for the ibex auto-DV DUT (gen_dut_top: u_dut.u_ibex_core + u_dut.u_register_file).",
              "// GENERATED by dv/auto_dv/excl/gen_excl_select.py from a `urg -dump full_exclusions` module dump; do not edit by hand.",
              "// Content = gen_exclusions_draft.md v2 (Parts A, C, C.2); README: dv/auto_dv/excl/gen_exclusions_README.md.",
-             "// Load: urg ... -elfile gen_exclusions.el -excl_strict (a rejected entry is a finding, never a reason to drop the flag).", ""]
+             "// Load: urg ... -elfile gen_exclusions.el -excl_strict (a rejected entry is a finding, never a reason to drop the flag).",
+             ("// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED with unfilled EC-3 fields (--allow-unfilled-ec3)."
+              if a.allow_unfilled_ec3 else
+              "// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): HELD OUT until the first measured regression fills their EC-3 fields (Critic F-3)."), ""]
     total = 0
     dropped = []
     for (mod, metric) in sorted(groups, key=lambda k: (k[0], order[k[1]])):
