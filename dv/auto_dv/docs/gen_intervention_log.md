@@ -1518,3 +1518,15 @@ plan names) and asserts the bin per row, run as part of GEN_UT_FCOV_CODEGEN or a
 fails before a proof run is retained; a proof manifest alone does not prove a sampler. tb-infra fixes the three open
 classifiers in slice 3 with reds and the new unit test; the Critic's mediums (FM1 rebuilt on the final sampler with its
 ablation retained; the fcov-off red as a real run whose retained report carries no coverage) land with it.
+
+## LOG-059 - 2026-09-03 - Shared-tree edits are validated before they are written in place
+
+Runtime disclosed (CM70 touch, gen_critic_response_flow.md) that its first rewrite of the B8 reproducer's notes line wrote an
+unquoted YAML scalar containing ": ", which left the shared working-tree gen_testlist.yaml unparseable for about one minute
+at 19:42Z until it restored the file from HEAD and redid the edit as a quoted scalar. The committed file was never affected
+and no flow process read the file in that minute, but a teammate loading the working-tree testlist then would have failed
+on a YAML error that was not theirs. Ruling for every teammate editing a shared-tree file that other roles read (the
+testlist, the plan and CSVs, the response files, the knobs and fcov yaml): write the new content to a scratch file, run
+the file's own validator on it (the testlist loader, the trace check, py_compile, the codegen --check), and only then
+replace the shared copy in one move; never edit such a file in place and validate afterwards. Runtime already adopted the
+parse-before-write rule; this entry makes it the team's.
