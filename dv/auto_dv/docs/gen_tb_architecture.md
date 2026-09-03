@@ -8,7 +8,7 @@
 | DUT | `gen_dut_top` = `ibex_core` + `ibex_register_file_ff` per the DV_prompt Section 2 ruling and Q-002 (revised); instances `u_ibex_core`, `u_register_file`; `cheriot_enable_i` tied `IbexMuBiOff`, register-file `test_en_i` tied 0; bus data ports literal 39 bits (integrity in [38:32]); `+define+RVFI` |
 | Document owner | DV Lead (adopts, edits, rules, signs off) |
 | Component sections owner | TB Infra (Section 6, `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 3 at its T-068 revision, sha256 prefix de5bc9573c84255b; Section 9, `dv/auto_dv/docs/gen_rvfi_export_addendum.md` version 4c, sha256 prefix e2822b1bdd62c9ba) |
-| Status | adopted by DV Lead 2026-09-03 12:02 UTC (v1f: Section 9 re-embedded from TB Infra's addendum version 4c (event channel Section 8 with 29 exact rows, COV_WITNESS Section 9 with C-2; committed copy dv/auto_dv/docs/gen_rvfi_export_addendum.md, sha256 prefix e2822b1bdd62c9ba; the Orchestrator's replan verdict: dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on version 4c at d0c0d15: D1 medium rendering owner and id kind, D2 names, D3 stale text, D4 MUT-H sample point, D5 response table, D6 icram row set open; the 8.5 note below lists the open items)); v1e embedded version 2a; v1d re-embedded the component sections at their T-068 revision, sha256 prefix de5bc9573c84255b; v1b folded the lows of the cross-model re-review dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md (APPROVE-WITH-CHANGES) and of the Critic's part 2 (dv/auto_dv/docs/gen_critic_tb_architecture_v2.md, APPROVE)). Document APPROVED by both reviewers (LOG-012); responses: dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md |
+| Status | adopted by DV Lead 2026-09-03 12:14 UTC (v1g: Section 9 re-embedded from TB Infra's aligned addendum version 4c at 50256f0 (32 exact event rows incl. icram lookup/tag_write/fill_write; Section 9 with WITNESS_IDS/GEN_WIT_IDS from gen_trace_witness_ids.csv, flow-rendered +gen_witness_ids, GEN_WITNESS_FOREIGN, digest guard, gen_wit_cycle_clause_cg with option.weight 0, epilogue issue point); v1f embedded the d0c0d15 text with five open items; committed copy dv/auto_dv/docs/gen_rvfi_export_addendum.md, sha256 prefix f510177cda02a0c6; the Orchestrator's replan verdict: dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0)); v1e embedded version 2a; v1d re-embedded the component sections at their T-068 revision, sha256 prefix de5bc9573c84255b; v1b folded the lows of the cross-model re-review dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md (APPROVE-WITH-CHANGES) and of the Critic's part 2 (dv/auto_dv/docs/gen_critic_tb_architecture_v2.md, APPROVE)). Document APPROVED by both reviewers (LOG-012); responses: dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md |
 | Governing documents | `DV_prompt.txt`, `docs/dv/FENCE.md` (wins), `docs/dv/SIM_RECIPE.md`, `docs/dv/TB_CONTRACT.md`, `docs/dv/dv_principles.md`; flow contract for testlist entries, expected_fail, tiers, fcov manifests and run requests: `dv/auto_dv/docs/gen_runtime_api.md` |
 | Inputs | `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (Phase 0 step 3, superseded passages marked inline), `dv/auto_dv/work/rtl-arch/gen_answers_tb_infra.md`, `dv/auto_dv/docs/gen_probe_register.md` v2, `dv/auto_dv/docs/gen_intervention_log.md`, `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`, `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md` (APPROVE with conditions), `dv/auto_dv/docs/gen_critic_tb_architecture_v2.md`, `dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md`, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_sections.md` |
 
@@ -1278,28 +1278,27 @@ wording in its next revision together with the retired knob names (8.3 item 4).
 - Runtime: state in the config banner whether the VCS build defines `SIMULATION` (prim_lfsr default
   seed randomisation, F-DIT-025).
 
-### 8.5 Record and event export acceptance (T-080 addendum version 4c, Section 9)
+### 8.5 Record and event export acceptance (T-080 addendum version 4c at 50256f0, Section 9)
 Accepted as designed: the export is observation only over boundary signals (RVFI is probe register row RVFI; the event
 rows are bus, pin, alert, misc, icache-RAM, key and regime boundary events), read once by Python after a flushed,
 acknowledged prefix (no per-cycle polling), fails loud on any format or count mismatch, carries one rendered field
-list and one rendered event table from gen_tb_knobs.yaml on both sides (29 exact rows, no wildcards, since d0c0d15),
-and the hpm counters ride behind a second knob for the PMC/DIT/BTALU fire-checks. The `I` line is written once per
-RISING edge of the `rvfi_ext_irq_valid` level (fact-check X-16, plan convention C-13). Version 4c carries the two event
-kinds the plan's cycle-level rule requires (misc irq_pending value changes; ibus/dbus req rows with req_cycle on the gnt
-rows), the COV_WITNESS command that samples the witness ledger CG-WIT-001 and the owner-only rule C-2 (+gen_witness_ids,
-GEN_WITNESS_FOREIGN). Alignment items still open against plan v2h (b40ff52) and the Orchestrator's rulings, for TB
-Infra's next revision: (1) the covergroup is named by its plan name gen_cg_wit_cycle_clause where the exclusion of
-record keys on the SystemVerilog name gen_wit_cycle_clause_cg (C7 mapping; Runtime 5506f23); (2) the Python table is
-WIT_IDS in the text and WITNESS_IDS in the code; (3) the plusarg is said to be rendered by the Test Writer's template
-where the ruling gives it to Runtime's gen_run from gen_trace_witness_ids.csv at the pinned commit; (4) the plan-demanded
-rows icram lookup, tag_write and fill_write (17 TP-IC items, plan Section 2a WP-8) are not in the Section 8 table;
-(5) the digest guard of WP-8 is not stated. None of them changes the record or event line format.
+list and one rendered event table from gen_tb_knobs.yaml on both sides (32 exact rows, no wildcards: the 29 rows of
+d0c0d15 plus icram lookup [index], tag_write [way, index, valid] and fill_write [way, index] for plan WP-8), and the
+hpm counters ride behind a second knob for the PMC/DIT/BTALU fire-checks. The `I` line is written once per RISING edge
+of the `rvfi_ext_irq_valid` level (fact-check X-16, plan convention C-13). Section 9 as committed at 50256f0 is aligned
+with plan v2h (b40ff52) and the Orchestrator's rulings: the covergroup is gen_wit_cycle_clause_cg (declared in
+gen_fcov_pkg, one instance in gen_env with handle wit_cg; option.weight = 0 as defence in depth, Runtime's exclusion by
+that name the mechanism of record), the tables are GEN_WIT_IDS (SV) and WITNESS_IDS (gen_knobs.py) rendered from
+gen_trace_witness_ids.csv in row order, the flow renders +gen_witness_ids from the entry's TP ids (GEN_WITNESS_FOREIGN
+outside the set, GEN_CMD_DISPATCH outside the list), the digest guard carries the CSV sha256 prefix as GEN_WIT_DIGEST /
+WITNESS_DIGEST with +gen_witness_digest and uvm_error GEN_WITNESS_DIGEST, and the command is issued by the template's
+finish() epilogue. The five items v1f listed as open are closed; everything in Section 9 is text until build step 3.
 
-## 9. Record and event export (TB Infra T-080 design addendum, version 4c, embedded verbatim)
+## 9. Record and event export (TB Infra T-080 design addendum, version 4c at 50256f0, embedded verbatim)
 
-Re-embedded by the DV Lead 2026-09-03 12:02 UTC. The text below is the committed `dv/auto_dv/docs/gen_rvfi_export_addendum.md`
-(sha256 prefix e2822b1bdd62c9ba), heading depth shifted by one level. The Orchestrator's gate verdict on this version:
-dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on version 4c at d0c0d15: D1 medium rendering owner and id kind, D2 names, D3 stale text, D4 MUT-H sample point, D5 response table, D6 icram row set open; the 8.5 note below lists the open items). TB Infra owns the component; the Test Writer is the consumer; the plan's witness protocol
+Re-embedded by the DV Lead 2026-09-03 12:14 UTC. The text below is the committed `dv/auto_dv/docs/gen_rvfi_export_addendum.md`
+(sha256 prefix f510177cda02a0c6), heading depth shifted by one level. The Orchestrator's gate verdict on this version:
+dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0). TB Infra owns the component; the Test Writer is the consumer; the plan's witness protocol
 (gen_test_plan.md Section 0) names the command this text designs in its Section 9.
 
 
@@ -1576,6 +1575,9 @@ so `read()` builds one namedtuple type per (source, event). Sources are enabled 
 | alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
 | misc | irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr (one row each) | value | gen_misc_monitor | every value change (irq_pending_o is the DUT output pin, 26 marked items assert it in a named cycle; core_busy as the MuBi encoding) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
+| icram | lookup | index | gen_icache_ram (announcement port) | the cycle a lookup reads the tag and data RAMs of every way at `index` (plan round 7 WP-8: TP-IC-002/004/008/011) |
+| icram | tag_write | way, index, valid | gen_icache_ram (announcement port) | the cycle a tag RAM write lands: a fill writes `valid` = 1, an invalidation writes 0 (TP-IC-004/008/011 and the fill items) |
+| icram | fill_write | way, index | gen_icache_ram (announcement port) | the cycle a data RAM fill write lands (TP-IC-015/023/024/030/031/057) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
 | regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
 
@@ -1584,7 +1586,9 @@ codegen refuses an event token `<name>`), rendering one function per row, `gen_e
 header carries one `# events` row per rendered row of every registered and enabled source and `read()` requires all
 of them and refuses an `E` line whose (source, event) is not a header row, so a misspelled or unlisted event token is
 a FAIL, never a silent miss; the writer functions
-take the fields as named arguments in the row's order, so the SV side cannot reorder a column; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
+take the fields as named arguments in the row's order, so the SV side cannot reorder a column; the three RAM-port rows
+(lookup, tag_write, fill_write) carry the RAM model's own port facts and their field sets are final when the
+announcement port is built in step (3), any change being a yaml change the codegen unit test and the header check see; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
 all step 2b) has its rows rendered and its writer functions present but unused until the component lands, and
 the header's `sources=` lists only sources with a registered writer instance; `read()` accepts an absent source.
 Ordering: `E` lines are written in the cycle of the event in the active region (drivers act at the negedge,
@@ -1603,26 +1607,33 @@ green; (3) the step-2b sources (pin, alert, misc, regime) land with their compon
 and icram with them (gen_icache_ram.sv:6 defers its announcement hooks, so the port is built in step (3)), each with
 its own red. The plan's RVFI-only fallback rule applies to items whose source arrives in step (3).
 
-### 9. Witness command for the plan's sunset (DV Lead round 4, version 4b)
+### 9. Witness command for the plan's sunset (DV Lead round 4; aligned to plan v2h and the Orchestrator's rulings, version 4c)
 
-A test whose cycle-level clause passed against the export records the fact for coverage: bridge command
-`COV_WITNESS` (appended to `bridge_cmds`; arg0 = the rendered index of the marked test-plan item) routed by
-`gen_cmd_dispatch` to one covergroup, `gen_cg_wit_cycle_clause` (plan id CG-WIT-001, in `gen_fcov_pkg`, build step
-3), whose single coverpoint `cp_clause` has one bin per marked item. The bin list has one origin: the codegen reads
-the rows of `dv/auto_dv/docs/gen_trace_tp_bin.csv` whose covergroup column is `CG-WIT-001` (a new codegen input,
-read like `gen_dut_top.sv` and `gen_link.ld`) and renders `GEN_WIT_IDS` (SV: the item id per index, the bin list)
-and `WIT_IDS` (gen_knobs.py: item id -> index for the Test Writer's template). An index outside the list is a
-collected `uvm_error GEN_CMD_DISPATCH`. Owner-only acceptance (Critic condition C-2): the running test's rendered id
-set reaches the dispatcher as a normal string knob, `+gen_witness_ids=<comma-separated indices>` (yaml `witness_ids`,
-default empty = no id accepted; the testlist entry carries it, rendered by the Test Writer's template from the entry's
-`witness_ids`, the same rendering that feeds `fire_<tp_id>`); an index inside the global list but outside the running
-test's set is a collected `uvm_error GEN_WITNESS_FOREIGN` and no sample. The knob and both checks land with build step
-3, together with the covergroup. Standing of the group (Critic C-4, DV Lead W-1, gen_fcov_plan.md Section 1): weight 0
-in the gate computation and reported beside the score as "witnessed clauses: N of M marked items", never as bins hit
-or features covered. The anti-vacuity claim rests on the Test Writer's host structure check (`check_test_source`,
-Critic C-1: the command is issued only from the `finish()` epilogue for ids whose `fire_<tp_id>` result record has
-`cycle_clause_true` set), not on the TB: the dispatcher cannot tell a true clause from a hand-issued command, it only
-refuses foreign ids. Coverage only: no checker reads it. The bins are excluded from manifests
-while the item carries the plan's marker token and become must-hit when the token is removed (gen_test_plan.md
-Section 0, sunset); the C7 covergroup strategy applies (isolated namespace; anti-vacuity by the host check above,
-so an always-true event cannot hit the bin without a structure-check failure on the host side).
+A test whose cycle-level clause passed against the export records the fact for coverage. Protocol (plan v2h Section 0,
+Critic gen_critic_plan_witness_v1.md C-1..C-5): the template's `finish()` epilogue, before the finish handshake, issues one
+bridge command `COV_WITNESS <index>` (appended to `bridge_cmds`; arg0 = index, args 1..3 zero) for every `fire_<tp_id>`
+whose result record has `cycle_clause_true` set; no other code may issue it (host structure check `check_test_source`,
+C-1). The index is the ROW ORDER (0-based) of `dv/auto_dv/docs/gen_trace_witness_ids.csv` (columns index, tp_item, bin,
+test_group, marked; 220 rows; committed 7ac3744), the single rendering source: the codegen reads it like `gen_dut_top.sv`
+and `gen_link.ld` and renders `GEN_WIT_IDS` (SV: tp_item and bin per index, in file order) and `WITNESS_IDS`
+(gen_knobs.py: tp_item -> index, the table the template reads through gen_test_lib). Dispatch (`gen_cmd_dispatch`): an
+index outside the list is a collected `uvm_error GEN_CMD_DISPATCH`. Owner-only acceptance (C-2): the FLOW renders the
+running test's set into the plusarg `+gen_witness_ids=<comma-separated indices>` (yaml knob `witness_ids`, string,
+default empty = no index accepted) from the testlist entry's `witness_ids` (TP ids) through the CSV at the pinned commit
+(Orchestrator's ruling; Runtime implements the rendering), and an index inside the list but outside that set is a
+collected `uvm_error GEN_WITNESS_FOREIGN` with no sample. Digest guard (plan WP-8): every rendering of the CSV carries
+its sha256 prefix (`GEN_WIT_DIGEST` in SV, `WITNESS_DIGEST` in gen_knobs.py); the flow passes
+`+gen_witness_digest=<prefix>` from the CSV it rendered the set from, and the dispatcher refuses a mismatch with a
+collected `uvm_error GEN_WITNESS_DIGEST` before it accepts any index, so a stale rendering against a newer plan fails
+loud. Covergroup: `gen_wit_cycle_clause_cg` (the architecture's C7 naming rule for plan id CG-WIT-001, plan name
+gen_cg_wit_cycle_clause; declared in `gen_fcov_pkg`, one instance in `gen_env`, handle `wit_cg`; URG lists it under
+that type name), single coverpoint `cp_clause` with one bin `w_<tp_id lower case>` per CSV row in file order, sampled
+by the command. `option.weight = 0` is rendered on it as defence in depth; Runtime's exclusion of the group BY NAME at
+merge and report time is the mechanism of record (Orchestrator's ruling), so it never enters the functional-group
+score and is reported beside it as "witnessed clauses: N of M marked items" (Critic C-4, DV Lead W-1,
+gen_fcov_plan.md Section 1). Coverage only: no checker reads it. The bins are excluded from a test's manifest while
+its item carries the plan's marker token and become must-hit when the token is removed (gen_test_plan.md Section 0,
+sunset: decided from the rendered exact event rows of Section 8 and Runtime's export_sources). The anti-vacuity claim
+rests on the host structure check, not on the TB: the dispatcher cannot tell a true clause from a hand-issued command,
+it refuses foreign indices and stale digests. Everything in this section lands with build step 3 together with the
+covergroup; none of it exists in SV or Python at version 4c.
