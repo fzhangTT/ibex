@@ -328,3 +328,11 @@ Not a flow defect, exposed by head mode as intended: test-writer-011 (gen_test_c
 | Check-tier entry for tb-infra's gen_ut_export (review low) | Entry derived from the test's docstring (gen_ut_lockstep's plusargs plus +gen_export_file=gen_export.txt, pass marker GEN_UT_EXPORT_PASS, owner tb-infra, component gen_export_pkg, measured false); tb-infra asked to confirm or amend | gen_testlist.yaml | head-mode run from a temp testlist on a867a467: PASS, export file 180 lines (dv/auto_dv/work/runtime/out/t_ut_export_1157) |
 
 Disclosure: the entry's first description carried an unquoted colon-space, so dv/auto_dv/flow/gen_testlist.yaml did not parse for about a minute (11:56-11:57Z) until the loader run right after the edit caught it; no request was served in that window.
+
+## Ruling: the flow renders +gen_witness_ids from the testlist entry and the witness CSV (Orchestrator, 2026-09-03 12:0xZ)
+
+| Item | Response | Where | Proof |
+|---|---|---|---|
+| gen_run renders +gen_witness_ids=<indices> from the entry's witness_ids and dv/auto_dv/docs/gen_trace_witness_ids.csv at the pinned commit, records ids / indices / CSV digest in result.yaml, refuses an id absent from the CSV | `witness_ids` testlist key; `U.witness_index` reads the CSV at the source root (its `index` column, 0-based, is the rendered value), `U.witness_render` resolves the ids, dies on an absent id and, until the SV side lands PLUSARG_WITNESS_IDS in gen_tb_pkg.sv, on any entry listing witness_ids; gen_run appends the plusarg and records `witness {tp_ids, indices, csv, csv_sha256, plusarg}`; loader validation at load time | gen_flow_const.py WITNESS_CSV / SV_PLUSARG_WITNESS_IDS, gen_flow_util.py, gen_run.py, gen_runtime_api.md Section 7 | util self-test: TP-BIT-036 -> 0 from the real CSV (220 ids); two valid ids resolve to [0, 1] once the SV plusarg exists (today: refused as "SV side not landed", the expected state); loader refuses an unknown id and a bare-string witness_ids |
+
+Disclosure: the first insertion of the witness_ids check hooked into the red_fixture if/elif chain, so every red fixture's red_expect was refused and the working-tree testlist did not load for about a minute (12:01-12:02Z) until the self-test run right after the edit caught it; no request was served in that window.

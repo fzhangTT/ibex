@@ -236,7 +236,12 @@ TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
                       "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect",
-                      "keep_artifacts")
+                      "keep_artifacts", "witness_ids")
+# Witness protocol (plan WP rows): a test entry lists the TP ids whose clause it witnesses; the flow renders the
+# indices of dv/auto_dv/docs/gen_trace_witness_ids.csv (its index column) into the SV plusarg named by the
+# constants home and records ids, indices and the CSV digest in result.yaml.
+WITNESS_CSV = SOURCE_ROOT / "dv" / "auto_dv" / "docs" / "gen_trace_witness_ids.csv"
+SV_PLUSARG_WITNESS_IDS = "PLUSARG_WITNESS_IDS"
 # Retention of the per-run export file: purposes 1-3 keep every artifact; a purpose-4 regression prunes the
 # file named by the test's export plusarg after the manifest is written, for PASS / RED-OK runs only, unless
 # the entry says keep_artifacts: true; every pruned path is recorded in result.yaml (pruned_artifacts); the

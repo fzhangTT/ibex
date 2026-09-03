@@ -432,6 +432,12 @@ other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, e
 Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `GEN_TEST_FAIL` (the test
 harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
 accept any fixture failure. The Test Writer supplies the ids; the policy and the values land together.
+Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
+resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
+`index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated
+indices>` with the plusarg name read from the SV constants home (`PLUSARG_WITNESS_IDS`), and records `witness
+{tp_ids, indices, csv, csv_sha256, plusarg}` in result.yaml. The loader refuses an entry whose TP id is absent
+from the CSV and, until TB Infra's SV side lands the plusarg, any entry that lists witness_ids at all.
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md)
 

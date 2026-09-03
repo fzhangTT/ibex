@@ -266,6 +266,8 @@ def self_test() -> int:
                 ("a generic GEN_TEST_FAIL red_expect under red_expect_policy [fire_id]", lambda d: (d.__setitem__("red_expect_policy", ["fire_id"]),
                     d["tests"][0].update(red_fixture=True, measured=False, red_expect="GEN_TEST_FAIL gen_smoke: [0-9]+ fire-check failure"))),
                 ("an unknown red_expect_policy token", lambda d: d.__setitem__("red_expect_policy", ["bogus"])),
+                ("witness_ids naming a TP id absent from the CSV", lambda d: d["tests"][0].update(witness_ids=["TP-NOPE-999"])),
+                ("witness_ids as a bare string", lambda d: d["tests"][0].update(witness_ids="TP-BIT-036")),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -290,6 +292,21 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "red_expect_policy [fire_id] accepts signatures that name a fire_ id")
+    # Witness table: the CSV's index column is the rendered index; a valid id resolves, an unknown id dies.
+    wt = witness_index()
+    cond = wt.get("TP-BIT-036") == 0 and len(wt) >= 200
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"witness_index from the real CSV: TP-BIT-036 -> {wt.get('TP-BIT-036')}, {len(wt)} ids")
+    fake = {"name": "gen_x", "witness_ids": ["TP-BIT-036", "TP-BIT-042"]}
+    try:
+        rec = witness_render(fake)
+        cond = rec is not None and rec["indices"] == [0, 1] and rec["plusarg"].endswith("=0,1")
+        note = f"rendered {rec['plusarg']} (SV side present)"
+    except SystemExit:
+        cond = witness_plusarg_name() is None
+        note = "refused because the SV side (PLUSARG_WITNESS_IDS) is not landed yet; indices would be [0, 1]"
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"witness_render on two valid ids: {note}")
     # export_facts on the real rendered table: exact rows only, every row a (source, event, fields) triple.
     ef = export_facts()
     cond = len(ef["export_sources"]) >= 1 and all(set(r) == {"source", "event", "fields"} for r in ef["export_sources"]) \
@@ -370,6 +387,48 @@ def export_facts() -> dict[str, Any]:
              if isinstance(p, dict) and str(p.get("plusarg", "")).startswith("gen_export")}
     return {"export_sources": rows, "export_source_names": sorted({r["source"] for r in rows}),
             "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
+
+
+def witness_index() -> dict[str, int]:
+    """tp_item -> index from the witness CSV at the source root (the CSV's own index column, the value the
+    bridge command COV_WITNESS carries); a missing file or column stops the flow."""
+    import csv
+    if not C.WITNESS_CSV.is_file():
+        die(f"{C.WITNESS_CSV}: missing (the witness id table)")
+    with open(C.WITNESS_CSV, newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    if not rows or "index" not in rows[0] or "tp_item" not in rows[0]:
+        die(f"{C.WITNESS_CSV}: needs the columns index and tp_item")
+    out: dict[str, int] = {}
+    for r in rows:
+        try:
+            out[r["tp_item"].strip()] = int(r["index"])
+        except ValueError:
+            die(f"{C.WITNESS_CSV}: row {r!r} has a non-integer index")
+    return out
+
+
+def witness_plusarg_name() -> str | None:
+    """The +gen_witness_ids plusarg string as the SV constants home declares it (None until TB Infra lands it)."""
+    return {ident: name for name, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_WITNESS_IDS)
+
+
+def witness_render(test: dict[str, Any]) -> dict[str, Any] | None:
+    """The witness record of a test entry: TP ids, their CSV indices, the CSV digest prefix and the rendered
+    plusarg; None when the entry lists no witness_ids."""
+    ids = test.get("witness_ids")
+    if not ids:
+        return None
+    table = witness_index()
+    missing = [i for i in ids if i not in table]
+    if missing:
+        die(f"test {test['name']}: witness_ids {missing} are not in {C.WITNESS_CSV.name}")
+    name = witness_plusarg_name()
+    if not name:
+        die(f"test {test['name']} lists witness_ids but {C.TB_PKG_SV.name} declares no {C.SV_PLUSARG_WITNESS_IDS} (SV side not landed)")
+    indices = [table[i] for i in ids]
+    return {"tp_ids": list(ids), "indices": indices, "csv": str(C.WITNESS_CSV), "csv_sha256": sha256_file(C.WITNESS_CSV)[:12],
+            "plusarg": f"+{name}=" + ",".join(str(i) for i in indices)}
 
 
 def debug_only_from_knobs() -> set[str]:
@@ -495,6 +554,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             seed = prog.get("seed", C.PROGRAM_SEED_RUN)
             if not (seed == C.PROGRAM_SEED_RUN or isinstance(seed, int)):
                 die(f"{path}: test {t['name']} program.seed must be an integer or {C.PROGRAM_SEED_RUN!r}")
+        w = t.get("witness_ids")
+        if w is not None:
+            if not isinstance(w, list) or not w or not all(isinstance(x, str) and x for x in w):
+                die(f"{path}: test {t['name']}: witness_ids must be a non-empty list of TP ids")
+            witness_render(t)   # dies on an id absent from the CSV or on a missing SV plusarg
         export_name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
         for pa in t["plusargs"]:
             name = plusarg_name(pa)

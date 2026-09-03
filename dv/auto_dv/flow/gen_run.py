@@ -56,6 +56,10 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
     if cov_vdb is not None:
         argv += ["-cm", build["cov_metrics"], "-cm_dir", str(cov_vdb), "-cm_name", cm_name(test["name"], seed),
                  *C.COV_RUNTIME_EXTRA]
+    witness = U.witness_render(test)
+    if witness:
+        # The witness indices of this entry, rendered from the CSV at the pinned source root (plan WP rows).
+        argv.append(witness["plusarg"])
     if waves:
         if not build.get("waves"):
             U.die("waves requested but the build was not compiled with --waves (-debug_access+all)")
@@ -295,7 +299,7 @@ def main() -> int:
         "banner_seen": res["banner_seen"], "banner": res["banner"], "crash_signature": res.get("crash_signature"),
         "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")),
-        "red_expect": test.get("red_expect"), "owner": test["owner"],
+        "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": U.witness_render(test),
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},
