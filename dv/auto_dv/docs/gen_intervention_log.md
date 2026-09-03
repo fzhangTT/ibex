@@ -133,17 +133,6 @@ Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 1
 
 ## Q-002 (revised) - 2026-09-03 - QUESTION revision (DV Lead wording, filed verbatim; supersedes the Q-002 text above and absorbs rtl-arch Q-A/Q-B/Q-C)
 
-Q-DL-1 is REVISED to absorb rtl-arch Q-A/Q-B/Q-C, and three questions are added for the
-security-relevant RTL-defined behaviours rtl-arch flagged (gen_behaviour_summaries.md Part A) and
-for tb-infra's owner items (gen_tb_scoping_notes.md section i). tb-infra Q-1 (split `*_intg`
-ports in the wrapper, pure wiring) and Q-2 (no clock gate; core_busy_o exposed) are wrapper
-representation choices that do not move the DUT boundary; the DV Lead decides both as tb-infra
-recommends (split ports; no gate) and records them here, not as owner questions.
-
-Status: pending. Default applied meanwhile.
-
-## Q-002 (revised) - 2026-09-03 - QUESTION revision (DV Lead wording, filed verbatim; supersedes the Q-002 text above and absorbs rtl-arch Q-A/Q-B/Q-C)
-
 Q-DL-1 (revised) gen_dut_top build choices that fix the DUT boundary. The DUT is ibex_core plus
 ibex_register_file_ff; ibex_core parameters that ibex_top derives from SecureIbex default to 0 on
 ibex_core, so the wrapper must set them. The team proposes to mirror ibex_top for the opentitan
