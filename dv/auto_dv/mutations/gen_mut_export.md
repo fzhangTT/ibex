@@ -93,7 +93,7 @@ without the mutation is every green run of the landing.
 |---|---|---|---|---|
 | MUT-I | gen_agents_pkg.sv:291 (gen_bus_driver): the E req line is never written (`req_stamp` still taken) | gen_ut_export zc | FAIL: `AssertionError: GEN_EXPORT: ibus: 0 E req lines against 154 E gnt lines (at most one request awaits its grant; MUT-I)` | gen_export.py rule `n_req - n in (0, 1)` replaced by `pass`: PASS |
 | MUT-J | gen_agents_pkg.sv:275 (gen_bus_driver): the E rvalid line is never written | gen_ut_export zc | FAIL: `AssertionError: GEN_EXPORT: ibus: 154 E gnt lines against 0 E rvalid lines (outstanding responses must stay within 0..8; MUT-J)` | gen_export.py rule `0 <= n - n_rv <= BUS_MAX_OUTSTANDING[bus]` replaced by `pass`: PASS |
-| MUT-K | gen_agents_pkg.sv:404 (gen_scrkey_driver): `sink.register_row("scrkey", "req"); sink.register_row("scrkey", "valid");` removed | gen_ut_boot zc WITHOUT `+gen_export_file`, and once more with it | FAIL both: `UVM_FATAL gen_export_pkg.sv(100) @ 0: sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)` | none (fatal); the unmutated build's runs pass |
+| MUT-K | gen_agents_pkg.sv:405 (gen_scrkey_driver): `sink.register_row("scrkey", "req"); sink.register_row("scrkey", "valid");` removed | gen_ut_boot zc WITHOUT `+gen_export_file`, and once more with it | FAIL both: `UVM_FATAL gen_export_pkg.sv(100) @ 0: sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)` | none (fatal); the unmutated build's runs pass |
 
 Exact edits: MUT-I original `if (ev_on()) begin / req_stamp = sink.cycle(); / sink.write_event(cfg.is_data ? gen_export_line_dbus_req(req_stamp, vif.addr, req_we(), req_be()) : gen_export_line_ibus_req(req_stamp, vif.addr, req_we(), req_be())); / end`, mutated `if (ev_on()) begin / req_stamp = sink.cycle();   // MUT-I: the req writer is silent / end`; MUT-J original `if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_rvalid(sink.cycle(), p.addr, p.we, p.err, p.intg_bad, pend.size()) : gen_export_line_ibus_rvalid(...));`, mutated `;   // MUT-J: the rvalid writer is silent`; MUT-K as in the table.
 The MUT-G row's citation of gen_mut_export_gh_batches.log is now backed by the retained file (with the checksum lines).
@@ -108,3 +108,15 @@ Two forms discarded and recorded: (1) the stamp shifted by one (`c + 1`) is caug
 non-decreasing-cycle rule (the other rows of the same posedge keep stamp c), so the proof was not the stamp rule's; (2) the
 misc monitor sampling at the negedge is not a defect (the value-stamp pairs are identical) and passed both runs. The stale
 value is the class the rule owns: a right-ordered file whose misc row lags the record it describes.
+
+## MUT-I, MUT-J, MUT-K re-run on the landing-1c tree (CM18-M-2, 2026-09-03)
+
+Built out of tree from the final landing-1c sources (the copy's build f, sources sha256 a056526d879ea458) plus the one
+edit each; the mutant builds' own `sources sha256`: MUT-I 85a0229e7139b2dc, MUT-J 2add9023a38be7f1, MUT-K 1b2501fd1b7197e3
+(gen_fu_l1c_MUT{I,J,K}_build_compile.log). The reader's messages no longer carry the mutant ids (CR7-L-7; the ids live
+here). MUT-I catch on gen_ut_export zc: FAIL `AssertionError: GEN_EXPORT: ibus: 0 E req lines against 154 E gnt lines (at
+most one request awaits its grant)`, ablation (the rule replaced by `pass`) PASS; MUT-J catch: FAIL `AssertionError:
+GEN_EXPORT: ibus: 154 E gnt lines against 0 E rvalid lines (outstanding responses must stay within 0..8)`, ablation PASS;
+MUT-K: `UVM_FATAL gen_export_pkg.sv(100) @ 0 ... emitted row scrkey/req has no registered writer in this build
+(export_active_sources lists scrkey)` on gen_ut_boot zc both without and with `+gen_export_file` (gen_fu_l1c_MUTK_catch_*).
+The gen_mut_export.md MUT-K row's anchor is gen_agents_pkg.sv:405 (CS3-D).

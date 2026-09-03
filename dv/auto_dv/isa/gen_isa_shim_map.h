@@ -31,6 +31,7 @@
 #define GEN_DBUS_MAX_OUTSTANDING           2u
 #define GEN_CSR_WRITE_TO_RVFI_OFFSET       2u
 #define GEN_TRAP_TO_RVFI_OFFSET            1u
+#define GEN_LSU_TRAP_TO_RVFI_OFFSET        0u
 #define GEN_IRQ_MARKER_TO_RVFI_OFFSET      2u
 #define GEN_RVFI_ID_EXIT_OFFSET            2u
 #define GEN_ICACHE_ECC_WINDOW              1u
@@ -52,6 +53,8 @@
 #define GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT   6u
 #define GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT 7u
 #define GEN_MEM_ERR_ARM_KIND_ERR           1u
+#define GEN_BUS_ERR_LOG_DEPTH              256u
+#define GEN_BUS_ERR_DRAIN_CYCLES           64u
 #define GEN_NMI_INT_ENTRY_BOUND_RECORDS    4u
 #define GEN_MEM_ERR_ARM_KIND_INTG          2u
 #define GEN_ISA_FAULT_KIND_FETCH           0u

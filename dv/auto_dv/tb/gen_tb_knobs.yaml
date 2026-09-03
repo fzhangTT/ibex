@@ -174,6 +174,7 @@ constants:
   - {name: GEN_DBUS_MAX_OUTSTANDING, value: 2, sv_type: int unsigned, desc: "data beats in flight, the two halves of one split access (rtl/ibex_load_store_unit.sv:403-405)"}
   - {name: GEN_CSR_WRITE_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from a CSR-write commit edge to its RVFI record (v3 T-051 2.1, predicted, pinned by a directed test)"}
   - {name: GEN_TRAP_TO_RVFI_OFFSET, value: 1, sv_type: int unsigned, desc: "cycles from a trap/mret/dret commit edge to its RVFI record (v3 T-051 2.1)"}
+  - {name: GEN_LSU_TRAP_TO_RVFI_OFFSET, value: 0, sv_type: int unsigned, desc: "cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle"}
   - {name: GEN_IRQ_MARKER_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)"}
   - {name: GEN_RVFI_ID_EXIT_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)"}
   - {name: GEN_ICACHE_ECC_WINDOW, value: 1, sv_type: int unsigned, desc: "alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)"}
@@ -195,6 +196,8 @@ constants:
   - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
   - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
   - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}
+  - {name: GEN_BUS_ERR_LOG_DEPTH, value: 256, sv_type: int unsigned, desc: "TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property"}
+  - {name: GEN_BUS_ERR_DRAIN_CYCLES, value: 64, sv_type: int unsigned, desc: "cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it (response to WB retirement plus the record lag)"}
   - {name: GEN_NMI_INT_ENTRY_BOUND_RECORDS, value: 4, sv_type: int unsigned, desc: "records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)"}
   - {name: GEN_MEM_ERR_ARM_KIND_INTG, value: 2, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response"}
   - {name: GEN_ISA_FAULT_KIND_FETCH, value: 0, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: instruction fetch (shim fault_hits)"}

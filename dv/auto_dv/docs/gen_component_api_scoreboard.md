@@ -45,7 +45,7 @@ association is by order with the response preceding the record.
 |---|---|---|---|
 | `isa_pc` | model pc before the step == `rvfi_pc_rdata` (exact per record) | fetch/branch target: `rtl/ibex_if_stage.sv` pc mux, `rtl/ibex_ex_block.sv` branch target ALU | `+gen_chk_isa_pc=0` |
 | `isa_insn` | model instruction bits == `rvfi_insn` | compressed decoder expansion (`rtl/ibex_compressed_decoder.sv`), fetch data path | `+gen_chk_isa_insn=0` |
-| `isa_trap` | model trap <=> `rvfi_trap`; cause per handler read-back; on a breakpoint record (cause 3) the model's mepc == pc and mtval == 0 (R10); a load/store trap arms the model's fault only for a driver-announced bus error (T-137) | controller exception cause select (`rtl/ibex_controller.sv:299-337, 900-927`), decoder illegal detection | `+gen_chk_isa_trap=0` |
+| `isa_trap` | model trap <=> `rvfi_trap`; cause per handler read-back; on a breakpoint record (cause 3) the model's mepc == pc and mtval == 0 (R10); a load/store trap in either encoding (`gen_insn_mem_access`: 32-bit, c.lw/c.sw/c.lwsp/c.swsp, Zcb) arms the model's fault only for a driver-announced bus error, with the DUT's mtval (the failing transaction's address; T-137, landing 1c) | controller exception cause select (`rtl/ibex_controller.sv:299-337, 900-927`), decoder illegal detection | `+gen_chk_isa_trap=0` |
 | `isa_rd` | GPR write (index, value) == `rvfi_rd_addr/rd_wdata` | ALU operator select (`rtl/ibex_alu.sv`), multiplier/divider (`rtl/ibex_multdiv_fast.sv`), decoder rd/we (`rtl/ibex_decoder.sv`), WB mux (`rtl/ibex_wb_stage.sv`) | `+gen_chk_isa_rd=0` |
 | `isa_mem` | memory access address, size, store data == `rvfi_mem_*` | LSU address/data rotation and byte enables (`rtl/ibex_load_store_unit.sv:138-221`) | `+gen_chk_isa_mem=0` |
 | `isa_prv` | the model's privilege BEFORE the step (`prv_before`) == `rvfi_mode`: rvfi_mode is the mode the instruction executed in, so the post-step privilege is not compared (T-102; the pre-T-102 compare fired on every mret and every U-mode trap) | privilege update on trap/mret (`rtl/ibex_cs_registers.sv:953-993`) | `+gen_chk_isa_prv=0` |
@@ -97,16 +97,20 @@ debug on the very next record: the entry rule is `pc_rdata == DmHaltAddr` with `
 record outside debug mode or the previous record a dret. Entries are handled BEFORE the Zcmp fold (T-134): a handler
 whose first record is a non-last Zcmp micro-op still steps the entry first, and an interrupt or debug entry inside an
 open sequence drops the partial micro-ops, since the DUT restarts the sequence from its first micro-op after mret
-(rtl-arch R9 (c)); the drops are counted as `zcmp_splits` in the GEN_SB report and logged with the sequence pc. Known
+(rtl-arch R9 (c)); the drops are counted as `zcmp_splits` in the GEN_SB report and logged with the sequence pc. The
+entry's model state is published before the fold returns (`publish_state` on a folded micro-op that carried the entry),
+so the irq and debug checkers evaluate an entry whose handler starts with a micro-op like any other; two report-time
+referees in gen_env (`irq_entries_referee`, `dbg_entries_referee`) fail the run when the checkers' entry counts differ
+from the scoreboard's `irq_entries` / `dbg_entries` (red: gen_fu_l1c_a_zcmp_irq_sparse, 15 stepped, 0 seen; mutant RC1). Known
 limit of the withholding rule (Critic T-090 L-7): a `csrr mip` that retires inside the one-record window with an
 enabled pending bit reads the bit on the DUT while the model never saw it, an isa_rd miss (0 of 3934 storm records so
 far); the miss names the record, so it is loud, not silent.
 
 Trapping memory accesses (T-102c, conditioned by T-137, ruling LOG-026a): a trap record of a load or store arms the
 model's bus fault on the record's address and size for that one step (`gen_isa_arm_fault`) ONLY when the data-bus driver
-announced an injected or armed error response for that word (`gen_tb_pkg::gen_bus_err_log`, written by gen_bus_driver
-on every data-bus error it injects; the announcement is consumed by the arming, a misaligned access matches either
-word). Otherwise the model decides alone: a PMP denial is Spike's own decision from the same CSR writes, and a DUT fault
+announced an injected or armed error response for that word (`gen_tb_pkg::gen_bus_err_log`, a cycle-stamped entry per
+data-bus error gen_bus_driver injects; one announcement is one event: the arming consumes the oldest entry of each word
+the access touches, both words of a spanning access, and `take()` reports which words were announced). Otherwise the model decides alone: a PMP denial is Spike's own decision from the same CSR writes, and a DUT fault
 on an access nobody corrupted is an isa_trap miss (`dut trapped, model retired 1`). The GEN_SB report splits the trap
 records into `faults_armed` (TB-caused) and `faults_unannounced` (the model decided) beside `bus_err_announced`; an
 unannounced count above zero in a run without PMP denials is itself a finding. PMP denials: gen_pmp_deny_directed.S (a
@@ -119,6 +123,23 @@ separately (`gen_bus_err_log::intg_announced`) for the irq checker's internal-NM
 raise alert_major_bus and an internal NMI, not a bus-error trap). Red for the conditioned form: MB6 in
 dv/auto_dv/mutations/gen_mut_step2b.md (a legal store reported as a trap is an isa_trap miss).
 
+Rules of the armed fault, from the DUT (landing 1c, gen_dmem_err_directed.S under `+gen_knob_dmem_err_rate=frequent`):
+(a) both encodings: RVFI reports a compressed instruction in its 16-bit form, so the load/store test and the access size
+come from `gen_tb_pkg::gen_insn_mem_access` (32-bit opcodes, c.lw / c.sw / c.lwsp / c.swsp, the Zcb byte and half forms);
+a c.sw fault was never armed before it (red: gen_fu_l1c_a_dmem_err_rate, `isa_trap dut trapped, model retired 1` at a
+c.sw; mutant RC2). (b) mtval: Ibex writes the address of the FAILING bus transaction, `lsu_addr_last` in
+rtl/ibex_load_store_unit.sv:258, which advances to the second word of a spanning access only when the first transaction
+had no error (:520, :540); the scoreboard derives it from the words `take()` consumed (the effective address when the
+first word was announced, else the second word) and hands it to the shim (`gen_isa_arm_fault(kind, addr, size, tval)`),
+which writes mtval after the faulting step (Spike's own tval is the effective address; shim unit test section 13,
+mutant RS1). (c) Announced-never-trapped: the report-time referee `bus_err_leftover` fails the run when an announcement
+older than GEN_BUS_ERR_DRAIN_CYCLES was never consumed by a trap record (an injected error the DUT did not trap on, or
+one the TB announced without driving it: mutant RM-L1). (d) Limitation: a faulted store's memory side effect is the
+driver's (`err_store_perform`) on the DUT side and none on the model's; a program that reads such a word back before a
+successful retry diverges. (e) The riscv-dv seed-7 program is not a vehicle for injected data faults: its handler skips
+the faulting instruction, a later use of the unloaded register reads an unmapped address, and there the TB memory
+returns zeros with a collected MEM_UNMAPPED error while Spike faults (gen_fu_l1c_b_dmem_err_rate_s7, a program limit).
+
 Zcmp sequences: a trapping Zcmp micro-op ends the sequence early (it is compared as the sequence's last record, the model
 steps the whole instruction with the fault armed, and the accesses and register writes completed before the fault are
 compared as the union; both sides store the highest register of rlist first, rtl/ibex_compressed_decoder.sv:626-660 and
@@ -130,7 +151,7 @@ to equal the record's pc and its mtval to be 0 under isa_trap (counted as `break
 finding. Odd jalr targets (rtl-arch R11, bug candidate B13 in the DV Lead's log): `rvfi_pc_wdata` of a jalr / c.jr /
 c.jalr record carries the raw rs1 + imm with bit 0 set while the core fetches the even address (rtl/ibex_core.sv:2084);
 `isa_pc_next` masks bit 0 on exactly those records and counts them as `b13_odd_jalr` (a documented exception; the red
-with the mask absent is gen_tdd_logs/lockstep/gen_red_jalr_odd_r11_*); any other odd `pc_wdata` still fails.
+with the mask absent is gen_tdd_logs/lockstep/gen_fu_a_red_jalr_odd_r11_v2_*); any other odd `pc_wdata` still fails.
 
 Model-state publication (step 2b, T-090): after every compared record the scoreboard publishes one `gen_model_state`
 on `ap_state` (order, cycle, model pc after the step, insn, mie / mstatus / mcause / mepc / mtval / dcsr read from the

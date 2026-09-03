@@ -1,0 +1,57 @@
+start 17:20:10Z l1c tree build f: 
+RC1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RC1/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 c4e742249c7d0fc3
+RC1_catch_zcirq_sparse: verdict: FAIL reason: uvm_error at sim.log:48  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(244) @ 17655500: uvm_test_top.env [irq_entries_referee] scoreboard stepped 15 interrupt entries, the irq checker saw 0
+RC1: build sources sha256: d2c25aa56833ce0b; source tree untouched: c4e742249c7d0fc3
+RML1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RML1/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+RML1_catch_dmemerr: verdict: FAIL reason: uvm_error at sim.log:43  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(549) @ 7479500: uvm_test_top.env.sb [bus_err_leftover] 55 announced data-bus errors never consumed by a trap record (announced 56, taken 0, drain window 64 cycles)
+RML1: build sources sha256: c818ed35d2fcb20a; source tree untouched: c4e742249c7d0fc3
+RC2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RC2/dv/auto_dv/tb/gen_tb_pkg.sv; original sha256 a6d27cf6c5399e57
+RC2_catch_dmemerr: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2065500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=387 pc=80000148 insn=0000c54c trap=1 intr=0 rd=x0/00000000 mem=80000274 w0
+RC2_ablate_dmemerr: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RC2: build sources sha256: b527978d3e2671b1; source tree untouched: c4e742249c7d0fc3
+RC3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RC3/dv/auto_dv/env/gen_checkers_pkg.sv; original sha256 7592ec551b4cb162
+RC3_catch_dmemerr: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(372) @ 5694500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 1164, cycle 5689) without a double_fault_seen_o pulse at cycle 5688
+RC3_ablate_dmemerr: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RC3: build sources sha256: 8220d9a84b8cff61; source tree untouched: c4e742249c7d0fc3
+RS1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RS1/dv/auto_dv/isa/gen_isa_shim.cc; original sha256 76293bbdd49351b1
+RS1_catch_dmemerr: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2202500: uvm_test_top.env.sb [isa_rd] rd model=x22/8000026e dut=x22/80000270 (order=418 pc=80000176 insn=34302b73 trap=0 intr=0 rd=x22/80000270 mem=fffffcbd w0000 r1111 mod
+RS1_ablate_dmemerr: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RS1: build sources sha256: 30626974030122f4; source tree untouched: c4e742249c7d0fc3
+RS1 unit test: GEN_UT_ISA_SHIM FAIL (2 failures) 3 failing checks: step tval = the second word                  got 0x80000186 exp 0x80000188 FAIL;mtval CSR = the second word                  got 0x80000186 exp 0x80000188 FAIL;GEN_UT_ISA_SHIM FAIL (2 failures);
+MB3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB3/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MB3_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  159 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(403) @ 72500: uvm_test_top.env.misc_mon [alert_bus] cycle 67: alert_major_bus_o=0 expected 1 (ibus rvalid 1 corrupt 1, dbus rvalid 0 corrupt 0)
+MB3_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB3: build sources sha256: abda8d372f008c86; source tree untouched: c4e742249c7d0fc3
+MB4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB4/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB4_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  541 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(237) @ 8500: uvm_test_top.env.irq_chk [irq_pending] cycle 0: irq_pending_o=1 expected 0 (pins 00000 mie 00000000)
+MB4_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB4: build sources sha256: f4958fbe6cd44945; source tree untouched: c4e742249c7d0fc3
+MB5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB5/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 c4e742249c7d0fc3
+MB5_catch_irq_dir: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  300 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(197) @ 1500500: uvm_test_top.env.irq_chk [irq_entry] entry mcause 80000014 at order 302: taken line was not pending-and-enabled (pending-and-enabled either 00080000 both 00000
+MB5_ablate_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB5: build sources sha256: edc770bef56fee9c; source tree untouched: c4e742249c7d0fc3
+MB6 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB6/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 c4e742249c7d0fc3
+MB6_catch_boot_s7: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(250) @ 1782500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=469 pc=80001782 insn=0088a023 trap=1 intr=0 rd=x0/00000000 mem=8001c4a0 w1
+MB6_ablate_boot_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB6: build sources sha256: be2ad512fbd288fd; source tree untouched: c4e742249c7d0fc3
+MB7 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB7/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 c4e742249c7d0fc3
+MB7_catch_boot_zcirq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   16 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 5311500: uvm_test_top.env.sb [isa_rd] Zcmp union: model wrote 1 registers, dut 3 (order=1148 pc=80000248 insn=ff010113 trap=0 intr=0 rd=x2/80000310 mem=80000310 w0000 r1111
+MB7_ablate_boot_zcirq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB7: build sources sha256: 403ee454b9411265; source tree untouched: c4e742249c7d0fc3
+MUTI applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTI/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTI_catch_export_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTI_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTI/dv/auto_dv/gen_tb/gen_export.py; original sha256 b8fa2a7503cddf02
+MUTI_ablate_export_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTI: shared tree untouched: 8160e436ce3ecad7 b8fa2a7503cddf02 d55deeb92777d47b 
+MUTJ applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTJ/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTJ_catch_export_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTJ_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTJ/dv/auto_dv/gen_tb/gen_export.py; original sha256 b8fa2a7503cddf02
+MUTJ_ablate_export_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTJ: shared tree untouched: 8160e436ce3ecad7 b8fa2a7503cddf02 d55deeb92777d47b 
+MUTK applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTK/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTK_catch_boot_zc: verdict: FAIL reason: uvm_fatal at sim.log:31  UVM_ERROR :    0 first: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)
+MUTK: build sources sha256: 1b2501fd1b7197e3; source tree untouched: c4e742249c7d0fc3
+MUTK applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTK/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTK_catch_boot_zc_export: verdict: FAIL reason: uvm_fatal at sim.log:31  UVM_ERROR :    0 first: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)
+MUTK: build sources sha256: 1b2501fd1b7197e3; source tree untouched: c4e742249c7d0fc3
+end 17:26:32Z

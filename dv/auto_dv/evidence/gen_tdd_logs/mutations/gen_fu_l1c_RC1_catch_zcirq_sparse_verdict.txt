@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:48
+evidence: UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(244) @ 17655500: uvm_test_top.env [irq_entries_referee] scoreboard stepped 15 interrupt entries, the irq checker saw 0
+uvm_counts: {'INFO': 25, 'WARNING': 0, 'ERROR': 1, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

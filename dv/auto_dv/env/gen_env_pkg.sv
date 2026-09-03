@@ -238,6 +238,12 @@ package gen_env_pkg;
     endfunction
 
     function void report_phase(uvm_phase phase);
+      // referees: every interrupt / debug entry the scoreboard stepped must have reached the entry checkers as a published
+      // state (an entry whose handler's first record folds into a Zcmp sequence once escaped them)
+      if (irq_chk.entries_seen != sb.irq_entries)
+        `uvm_error("irq_entries_referee", $sformatf("scoreboard stepped %0d interrupt entries, the irq checker saw %0d", sb.irq_entries, irq_chk.entries_seen))
+      if (dbg_chk.entries != sb.dbg_entries)
+        `uvm_error("dbg_entries_referee", $sformatf("scoreboard stepped %0d debug entries, the debug checker saw %0d", sb.dbg_entries, dbg_chk.entries))
       `uvm_info("GEN_ENV", $sformatf("mem: %0d words, %0d mmio writes, %0d unmapped accesses; eot stores %0d (last code 0x%08h); sig writes %0d; key requests %0d; commands routed %0d ignored %0d",
                 mem.word_count(), mem.mmio_writes, mem.unmapped_count, bvif.evt_eot_count, bvif.evt_eot_code, sig_h.writes, scrkey.requests, dispatch.routed, dispatch.ignored), UVM_LOW)
     endfunction

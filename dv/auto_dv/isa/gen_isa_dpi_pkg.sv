@@ -40,7 +40,7 @@ package gen_isa_dpi_pkg;
   import "DPI-C" context function void gen_isa_arm_async(input int unsigned pre_mip, input int unsigned nmi_mtval,
                                                          input int nmi, input int nmi_int, input int debug_req,
                                                          input int irq_valid);
-  import "DPI-C" context function void gen_isa_arm_fault(input int kind, input int unsigned addr, input int unsigned size);
+  import "DPI-C" context function void gen_isa_arm_fault(input int kind, input int unsigned addr, input int unsigned size, input int unsigned tval);
   import "DPI-C" context function void gen_isa_set_time(input longint unsigned mcycle);
   import "DPI-C" context function void gen_isa_set_hpm(input int idx, input int unsigned lo, input int unsigned hi);
   import "DPI-C" context function void gen_isa_set_status(input int ic_scr_key_valid);

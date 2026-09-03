@@ -359,7 +359,8 @@ package gen_checkers_pkg;
     function void write_state(gen_model_state st);
       if (st.is_mret && !st.is_trap) sync_seen = 0;
       if (st.is_trap && !st.is_intr && !st.debug_mode) begin
-        int unsigned want = st.cycle - GEN_TRAP_TO_RVFI_OFFSET;
+        bit is_store; int unsigned bytes;
+        int unsigned want = st.cycle - (gen_insn_mem_access(st.insn, is_store, bytes) ? GEN_LSU_TRAP_TO_RVFI_OFFSET : GEN_TRAP_TO_RVFI_OFFSET);
         bit found = 0;
         sync_traps++;
         foreach (dfs_cycles[i]) if (dfs_cycles[i] == want) found = 1;

@@ -318,14 +318,14 @@ int main(int argc, char** argv) {
   gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000013u);          // trap vector: nop
   gen_isa_step(&st);
   check("ebreak traps", st.trap, 1);
-  check("ebreak cause 3 (breakpoint)", st.trap_cause, 3);
+  check("ebreak cause 3 (breakpoint)", st.trap_cause, CAUSE_BREAKPOINT);
   check("ebreak mtval = 0 (Ibex, spec-legal)", st.trap_tval, 0);
   check("ebreak mtval CSR = 0", gen_isa_read_csr(CSR_MTVAL), 0);
   check("ebreak mepc = its own pc", gen_isa_read_csr(CSR_MEPC), scratch);
   gen_isa_set_pc(scratch + 4u);
   gen_isa_step(&st);
   check("c.ebreak traps", st.trap, 1);
-  check("c.ebreak cause 3", st.trap_cause, 3);
+  check("c.ebreak cause 3", st.trap_cause, CAUSE_BREAKPOINT);
   check("c.ebreak mtval = 0", st.trap_tval, 0);
   check("c.ebreak mepc = its own pc (2-byte aligned)", gen_isa_read_csr(CSR_MEPC), scratch + 4u);
 
@@ -402,6 +402,31 @@ int main(int argc, char** argv) {
     check("nmi mret restored the handler's mcause (11)", gen_isa_read_csr(CSR_MCAUSE), 11);
     gen_isa_step(&st);                                     // handler's mret
     check("handler mret returns to the ecall pc", st.pc_after, scratch); }
+
+  std::puts("-- 13. an armed data fault takes the DUT's mtval: the last bus transaction's address, the second word of a spanning access (rtl/ibex_load_store_unit.sv:258)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  {
+    const uint32_t data = scratch + 0x100u;                    // a mapped data area: word, word, word
+    gen_isa_write_word(data, 0x11111111u); gen_isa_write_word(data + 4u, 0x22222222u); gen_isa_write_word(data + 8u, 0x33333333u);
+    gen_isa_write_word(scratch, 0x0065a603u);                  // lw a2, 6(a1): bytes 6..9 span the words at +4 and +8
+    gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000013u);          // trap vector: nop
+    gen_isa_write_gpr(11, data);
+    gen_isa_arm_fault(GEN_ISA_FAULT_KIND_LOAD, data + 6u, 4u, data + 8u);
+    gen_isa_step(&st);
+    check("the spanning load faults", st.trap, 1);
+    check("cause 5 (load access fault)", st.trap_cause, 5);
+    check("step tval = the second word", st.trap_tval, data + 8u);
+    check("mtval CSR = the second word", gen_isa_read_csr(CSR_MTVAL), data + 8u);
+    check("mepc = the load's pc", gen_isa_read_csr(CSR_MEPC), scratch);
+    gen_isa_set_pc(scratch);
+    gen_isa_arm_fault(GEN_ISA_FAULT_KIND_LOAD, data + 6u, 4u, data + 6u);
+    gen_isa_step(&st);
+    check("an aligned-convention tval passes through unchanged", st.trap_tval, data + 6u);
+    gen_isa_set_pc(scratch);
+    gen_isa_step(&st);
+    check("unarmed, the same load retires", st.retired, 1);
+    check("and reads the spanning bytes", gen_isa_read_gpr(12), 0x33332222u);
+  }
 
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;

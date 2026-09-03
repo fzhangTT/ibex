@@ -1,0 +1,34 @@
+start 16:48:09Z sources sha256: 4e3a5bdf9118ebe2
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_irq_storm: verdict: FAIL reason: cocotb_summary at stdout.log:54  uvm_err=0
+zcmp_dbg_storm: verdict: FAIL reason: cocotb_summary at stdout.log:53  uvm_err=0
+zcmp_trap: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_dbg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm_nmi: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+green_jalr_odd_r11: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ebreak_r10: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+pmp_deny: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+dmem_err_rate: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=2231
+regime_refuse_zc: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+alert_bus_intg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+intg_s7_allchk: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_nmi_irqp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_dbg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_rst_boot: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_pmp_csr_warl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 16:49:14Z
+runs done 16:49:14Z
+start 16:55:33Z sources sha256: 4e3a5bdf9118ebe2
+dmem_err_dir: verdict: FAIL reason: cocotb_summary at stdout.log:57  uvm_err=0
+dmem_err_dir_quiet: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 16:55:37Z

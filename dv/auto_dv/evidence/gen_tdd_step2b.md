@@ -107,7 +107,8 @@ out_fu2/h = ba59fc4cbeebfd67). Retained as gen_tdd_logs/lockstep/gen_fu_{a,c}_*;
   entry with `in_seq` drops the partial micro-ops (`zcmp_splits`). Red on the pre-fix tree (gen_red_zcmp_irq_sparse_t134_*,
   gen_zcmp_irq_directed.S under `knob_irq_regime=sparse`: 425 misses, isa_insn and isa_rd union rows from the appended
   micro-ops); the storm variant starved (gen_red_zcmp_irq_storm_t134_starved_*: interrupts every ~20 cycles restart every
-  sequence, the program never reaches tohost; kept as the reason for the sparse regime). Green on out_fu2/h
+  sequence, the program never reaches tohost; kept as the reason for the sparse regime; retained as stdout excerpt and
+  verdict only, the run has no run header because it ended in cocotb's timeout before the finish handshake). Green on out_fu2/h
   (gen_fu_h_green_zcmp_irq_sparse_*): 3708 retired, 1247 compared, 2461 folded, 5 entries whose first handler record is a
   cm.push micro-op, 4 splits, 0 mismatches. Mutation MB7 (a split leaves the partial sequence open) caught under isa_rd.
 - T-137 (trap legitimacy, LOG-026a form): the model's fault is armed only for a word gen_bus_driver announced
@@ -124,7 +125,9 @@ out_fu2/h = ba59fc4cbeebfd67). Retained as gen_tdd_logs/lockstep/gen_fu_{a,c}_*;
   expectation of that line (`expectations released`).
   (2) out_fu2/b then showed 8 `taken line was not pending-and-enabled`: a line raised after the previous record's post_mip
   SAMPLE but before that record retired is in neither mip sample, and the checker had already dropped the raise event at
-  the record. Fix: the driver-event window spans two records (`raised_prev` / `released_prev`).
+  the record. Fix: the driver-event window spans two records (`raised_prev` / `released_prev`). Builds b and c survive
+  only as the verdict lines of gen_fu_out_fu2_{b,c}_driver.log; the message quoted here is transcribed from build b's
+  sim.log, which was not retained (the same message is in MB5's retained catch log).
   Green on out_fu2/h (gen_fu_h_lockstep_irq_storm_*): 3934 records, 919 entries, cause checked 919, mismatches 0, priority
   undecidable 371, expectations released 415, bound failures 0, irq_pending 27077 cycles 0 mismatches; gen_fu_h_ut_irq_dir
   5 entries, 5 checked, 0 mismatches (1 undecidable). The 415 released expectations and 371 undecidable entries are the
@@ -136,7 +139,8 @@ out_fu2/h = ba59fc4cbeebfd67). Retained as gen_tdd_logs/lockstep/gen_fu_{a,c}_*;
   REGIME_SET: no run-time consumer for knob_fetch_enable_regime (regime_set_consumer none)` while its pass marker printed.
 - CM5-L-5 / CR5-L-2: gen_fu_h_alert_bus_intg_s7_* (`+gen_knob_dmem_intg_err_rate=frequent`, isolation of alert_bus):
   alert_bus hits=181 mismatches=0, the positive half of the rule. The Zc image cannot serve as the vehicle (its loads are
-  corrupted before it reaches tohost: gen_fu_a_* first attempt, a program limit, not a checker red). The same run showed
+  corrupted before it reaches tohost: the first attempt on build a, whose sim.log was not retained and whose verdict line
+  is in gen_fu_out_fu2_a_driver.log; a program limit, not a checker red). The same run showed
   54 internal-NMI entries (mcause 0xFFFFFFE0 from the integrity errors) counted as cause mismatches by the T-136 rule,
   which requires a pending NMI: internal NMIs are the not-yet-built `nmi_internal` rule's and are exempted from the
   pending check in out_fu2/h (Section 7a).
@@ -230,3 +234,89 @@ reds included) and gen_fu_l_* (the landed tree's set).
   the boot jump spends one cycle in ID and one in WB; measured 2 on records 0..3 of the retained Zc export); mutant MUT-L
   (the misc writer reports the previous sample's value; the stamp-shift form was also caught by read()'s cycle rule and
   a negedge sample is not a defect, both recorded in gen_mut_export.md).
+
+## 9. Landing 1c: the fu1 REQUEST-CHANGES fixes (entry state before the fold, one announcement one event, the data-fault rules)
+
+Method: every edit was made in an out-of-tree copy of the tree at c6324ef (scratchpad l1c_root; the shared working tree
+was not touched until the announced copy-in window). Builds, each `sources sha256` from its compile.log
+(gen_fu_l1c_compile_{a,b,c,d,f}.log): a 4027975f37afdd17 (the report-time referees, the cycle-stamped announcement log
+with the two-word take, the shim's debug-mode guard on the R10 mtval rule; the entry publish and the encoding fix NOT yet
+applied: the red build), b 4e3a5bdf9118ebe2 (entry state published before the fold, `gen_insn_mem_access`, one entry per
+word, the load/store double-fault offset), c deea1c7de46e9d69 (a first mtval rule through the fault range: wrong), d
+c7156b73ce7463ab (the shim takes `tval`; the rule still "second word": wrong the other way), e 94bb3021a5c67974 (the
+failing-transaction rule: green), f a056526d879ea458 (e plus the shim unit test's section 13 moved before its summary
+line; sources of the simulator unchanged, every verdict identical to e: gen_fu_l1c_f_driver.log against
+gen_fu_l1c_e_driver.log). The retained set gen_fu_l1c_* is build f: 28 runs, 25 PASS; the three FAILs are the two
+starved zcirq storm runs below and regime_refuse_zc, which fails by design.
+
+- CM18-H-1 / CR7 (LOG-025), entry state before the Zcmp fold: red first on build a, gen_fu_l1c_a_zcmp_irq_sparse_*
+  (gen_zcmp_irq_directed.S, sparse, multi): `irq_entries_referee scoreboard stepped 15 interrupt entries, the irq checker
+  saw 0`, the new referee in gen_env's report_phase against the scoreboard's `irq_entries` (the debug twin
+  `dbg_entries_referee` compares `dbg_chk.entries` with `sb.dbg_entries`). Fix: `publish_state` on the folded micro-op
+  that carried the entry, before the fold's return. Green on f, gen_fu_l1c_zcmp_irq_sparse_*: 1288 records, 2540 folded,
+  irq_entries=15, GEN_IRQ_CHK `entries=15 cause checked=15 mismatches=0`, zcmp_splits=4; the referees ran in every run
+  of the set (lockstep_s7_dbg_storm: 105 = 105 debug entries). Mutant RC1 (the publish removed) is caught by the referee
+  alone (gen_mut_step2b.md, landing-1c batch). CR7-L-8: the same program under the irq storm (mean 100) and under the
+  debug storm (mean 200), gen_fu_l1c_zcmp_irq_storm_* / gen_fu_l1c_zcmp_dbg_storm_*: both FAIL on `GEN_UT_LOCKSTEP: no
+  tohost store (SimTimeoutError)`, the program does not reach tohost inside the test's 20000-cycle tohost window (irq
+  storm: 5739 records, 474 entries, 1 split logged, last record at cycle 30743; debug storm: 4314 records, last record
+  at cycle 33641); starved, not red: no UVM_ERROR, and no ISA compare report line because the run ends in cocotb's
+  timeout before the finish handshake (the run header is present, the report is not). Under a sparse debug regime the program
+  completes (gen_fu_l1c_zcmp_dbg_sparse_*: 1231 records, 2408 folded, 2 debug entries, 0 splits, 0 mismatches), so the
+  debug-split path of T-134 (an entry that lands inside an open Zcmp sequence) is still unexercised by a completed run;
+  the interrupt-split path is (4 splits in the sparse irq run, 1 in the starved storm run).
+- CM18-M-1 / CR7 (LOG-026a) / CR7-M-1(b), one announcement is one event: `gen_bus_err_log` entries carry the injection
+  cycle; `take(addr, bytes)` consumes the OLDEST entry of each word the access touches (both words of a spanning access,
+  two announcements for two transactions) and reports which words were announced; the first form of this landing
+  deleted every entry of a word and mis-armed the second of two injections on one address (found by build a's
+  dmem_err_rate run before the reds above, corrected in b). Report-time referee `bus_err_leftover`: an entry older than
+  GEN_BUS_ERR_DRAIN_CYCLES (64) never consumed by a trap record fails the run. Red: mutant RM-L1 (the driver announces an
+  error it does not drive) `bus_err_leftover 55 announced data-bus errors never consumed by a trap record (announced 56,
+  taken 0, drain window 64 cycles)` with every isa row silent (no DUT trap, no model fault). Green: gen_fu_l1c_dmem_err_dir_*
+  (below) 61 announced / 61 taken / 0 leftover, gen_fu_l1c_zcmp_trap_* 1 / 1.
+- The vehicle, gen_dmem_err_directed.S (new): a buffer written and read back with every LSU access shape (aligned word,
+  word-spanning `sw`/`lw` at offset 6, half, byte, `c.sw`/`c.lw`), the handler accepts causes 5 and 7 only and retries the
+  access by returning to it; one probe load inside the handler may itself fault (a nested fault before the mret, a double
+  fault on `double_fault_seen_o`), the nested entry only retries the probe and the outer handler restores MPP = M before
+  its mret (the first version left MPP = U after the nested mret, so the outer mret returned to U-mode and the fetch was
+  PMP-denied on DUT and model alike: cause 1, a program bug both sides agreed on). Under `+gen_knob_dmem_err_rate=frequent`
+  on f: 2466 records, 61 trap records = 61 injected errors (15 on 16-bit encodings, 46 on 32-bit), 61 armed, 0
+  unannounced, 1 double fault expected and 1 pulse, 0 mismatches, tohost 1 (gen_fu_l1c_dmem_err_dir_*); without errors
+  1317 records (gen_fu_l1c_dmem_err_dir_quiet_*). Three DUT-side rules came out of it, each pre-existing at HEAD (the
+  same failures on the 2b copy's build): (a) ENCODINGS: T-137's arming tested `insn[6:0]` only, so a compressed store's
+  fault was never armed; red gen_fu_l1c_a_dmem_err_rate_* (riscv-dv seed 7, frequent): `isa_trap dut trapped, model
+  retired 1` at order 672, pc 800017ac, insn 0000d044 (c.sw); fix `gen_tb_pkg::gen_insn_mem_access` (both encodings, Zcb
+  included); mutant RC2 (c.sw armed as a load). (b) DOUBLE-FAULT OFFSET: the same run raised 113 `double_fault ... without
+  a double_fault_seen_o pulse at cycle N-1`: every pulse of a load/store fault sits at the record's own cycle (the error is
+  seen in WB and saved from FLUSH one cycle later while the record leaves WB: rtl/ibex_controller.sv:827-845,
+  rtl/ibex_core.sv:1888-1890), ID-stage exceptions keep the offset 1; constant GEN_LSU_TRAP_TO_RVFI_OFFSET = 0, mutant RC3.
+  (c) MTVAL: Ibex writes the address of the FAILING bus transaction, `lsu_addr_last` (rtl/ibex_load_store_unit.sv:258),
+  which advances to the second word of a spanning access only when the first transaction had no error (:520, :540); Spike's
+  tval is the effective address. Two wrong rules were red before the right one: build c (the model faults from the second
+  word on) gen_fu_l1c_c_red_dmem_err_dir_*: 8 `isa_rd rd model=x22/8000026e dut=x22/80000270` (the handler's `csrr mtval`,
+  compared as any rd); build d (always the second word) gen_fu_l1c_d_red_dmem_err_dir_*: 7 `isa_rd rd model=x22/80000270
+  dut=x22/8000026e` where the FIRST transaction had erred. Fix: `take()` says which words were announced, the scoreboard
+  derives the tval (first word announced: the effective address; else the second word) and the shim writes it to mtval
+  after the faulting step (`gen_isa_arm_fault(kind, addr, size, tval)`); shim unit test section 13 (spanning load, tval =
+  the second word; an unchanged tval passes through; the same load retires unarmed) green in gen_fu_l1c_ut_isa_shim_green.log
+  and red on mutant RS1 (the write removed): `step tval = the second word got 0x80000186 exp 0x80000188 FAIL`, `mtval CSR
+  ...FAIL`, gen_fu_l1c_RS1_ut_isa_shim_red.log; RS1 in the simulator: the isa_rd catch above.
+- The riscv-dv seed-7 program is not a vehicle for injected data faults (gen_fu_l1c_b_dmem_err_rate_*): its handler skips
+  the faulting instruction, a later use of the never-loaded register reads address 0x24/0x25 (order 6072) where the TB
+  memory returns zeros with a collected MEM_UNMAPPED error while Spike faults (cause 5): a program limit recorded in
+  gen_component_api_scoreboard.md, not a checker red.
+- CR7-L-5, the R10 mtval row: gen_ebreak_directed.S (new; 4-byte `ebreak` under `.option norvc`, the assembler had
+  compressed the first version, `c.ebreak` on both alignments, the handler reads mcause / mtval / mepc into registers and
+  steps mepc by the encoding length): gen_fu_l1c_ebreak_r10_*: 535 records, 30 traps = 30 breakpoints, 0 mismatches. The
+  row is a CONSISTENCY compare: the model's mtval 0 is the shim's convention (unit test section 8), the DUT's value reaches
+  the comparator through the handler's `csrr` as an rd value; the two agree, which is what the row states, not more.
+- Mutations of this landing: gen_mut_step2b.md, section "Landing 1c batch": RC1, RC2, RC3, RS1, RM-L1 and the re-run of
+  MB3, MB4, MB5, MB6, MB7 (gen_mut_export.md: MUT-I, MUT-J, MUT-K) on the final tree, each with its own build's
+  sources sha256 (CM18-M-2).
+- Corrections of records (CR7-L-2, L-4, CM19-L-1, CS3-D): this file's Section 7 (the build a / b / c provenance lines,
+  the starved run's missing report), gen_mut_step2b.md MB5 (2 + 3 messages), gen_critic_response_tb_t090.md (gen_fu_j_*
+  names, the two knobs left out of the checker-id row), gen_component_api_export_sink.md Sections 2 / 2a / 2b / 2c / 4 / 8
+  as built, gen_rvfi_export_addendum.md (no absent source is accepted), gen_mut_export.md MUT-K :405.
+- Not in this landing: the rows Runtime's testlist needs (dv/auto_dv/work/tb-infra/gen_t150_testlist_entries_v2.yaml:
+  rows_nmi with every checker on, intent-only descriptions, the gen_ut_regime_refuse red fixture) are handed over as a
+  file; tb-infra does not edit the testlist.

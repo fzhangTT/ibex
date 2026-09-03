@@ -18,10 +18,11 @@ rules): `gen_checkers_pkg::gen_irq_checker` consumes the scoreboard's `gen_model
 debug per record, published after every compared record) and the driver's `gen_irq_evt`: `irq_pending` (every cycle,
 evaluated GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 cycles later against the driven pins and the model's mie history),
 `irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records), `irq_masked`
-(an interrupt entry while M-mode with MIE clear); `nmi_internal` is not built.
+(an interrupt entry while M-mode with MIE clear); `nmi_internal` (an internal NMI entry not backed by an announced data-side corruption, or later than its bound).
 
 Cause rule (T-136, ids `irq_entry` / `nmi_entry`, built after the first storm program showed the model following the
-DUT's vector): on EVERY intr record, independent of open expectations, the taken cause must be an interrupt line that
+DUT's vector): on every interrupt entry the scoreboard steps (its state is published before the Zcmp fold, so an entry
+whose handler starts with a micro-op is evaluated too), independent of open expectations, the taken cause must be an interrupt line that
 was pending-and-enabled at the DUT's decision and the highest-priority such line (NMI, then the lowest fast id, then
 external, software, timer: rtl/ibex_controller.sv:736-757, gen_mfip_id). The decision lies between the previous
 record's `post_mip` and the entry record's `pre_mip` (rtl-arch gen_t090_rtl_facts.md Section 2), so two sets are
@@ -41,7 +42,7 @@ taken right after its mret); `nmi ... (internal N, accepted on announced corrupt
 phantom NMI (`NMI entry without a pending NMI pin or an injected integrity error since the last NMI entry`). Announcements
 up to the previous record are consumed by an accepted entry, so a corruption landing between that record and the entry
 record may justify the following entry (a few-cycle acceptance window, stated). The one-instruction latency and the
-mcause 0xFFFFFFE0 / mtval read-back are the not-yet-built `nmi_internal` rule's. A line raised between the previous record's sample and the
+mcause 0xFFFFFFE0 / mtval read-back are the `nmi_internal` rule's (landing 2a). A line raised between the previous record's sample and the
 decision is therefore accepted through the driver's event (the Critic's T-090 Section 6 question). Entries whose
 priority claim could not be decided because a candidate line moved inside the window are counted (`priority
 undecidable` in the GEN_IRQ_CHK report) instead of errored, so the frequency of the approximation is evidence. The entry

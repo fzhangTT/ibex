@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:33
+evidence: UVM_ERROR @ 25987000: reporter [MEM_UNMAPPED] read of unmapped address 0x00000024
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

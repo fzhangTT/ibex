@@ -220,6 +220,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_DBUS_MAX_OUTSTANDING = 2;  // data beats in flight, the two halves of one split access (rtl/ibex_load_store_unit.sv:403-405)
   parameter int unsigned GEN_CSR_WRITE_TO_RVFI_OFFSET = 2;  // cycles from a CSR-write commit edge to its RVFI record (v3 T-051 2.1, predicted, pinned by a directed test)
   parameter int unsigned GEN_TRAP_TO_RVFI_OFFSET = 1;  // cycles from a trap/mret/dret commit edge to its RVFI record (v3 T-051 2.1)
+  parameter int unsigned GEN_LSU_TRAP_TO_RVFI_OFFSET = 0;  // cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle
   parameter int unsigned GEN_IRQ_MARKER_TO_RVFI_OFFSET = 2;  // cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
   parameter int unsigned GEN_ICACHE_ECC_WINDOW = 1;  // alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)
@@ -246,6 +247,8 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)
+  parameter int unsigned GEN_BUS_ERR_LOG_DEPTH = 256;  // TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property
+  parameter int unsigned GEN_BUS_ERR_DRAIN_CYCLES = 64;  // cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it (response to WB retirement plus the record lag)
   parameter int unsigned GEN_NMI_INT_ENTRY_BOUND_RECORDS = 4;  // records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_INTG = 2;  // MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response
   parameter int unsigned GEN_ISA_FAULT_KIND_FETCH = 0;  // gen_isa_arm_fault kind: instruction fetch (shim fault_hits)
@@ -507,7 +510,8 @@ package gen_tb_pkg;
   // the model's fault only for an announced word, so a DUT fault on an access nobody corrupted fails as isa_trap (T-137);
   // the irq checker accepts an NMI-vector entry without a pin NMI only after an announced corruption (internal NMI).
   class gen_bus_err_log;
-    static logic [31:0] words [$];
+    typedef struct { logic [31:0] word; int unsigned cycle; } ann_t;
+    static ann_t words [$];   // announced error words with the cycle of the response; bounded to GEN_BUS_ERR_LOG_DEPTH (TB-local queue bound, not a DUT property)
     static int unsigned announced = 0, taken = 0;
     static int unsigned intg_announced = 0;   // data-side integrity corruptions: each raises the DUT's internal NMI (irq checker)
     static logic [31:0] intg_first_addr = '0;  // address of the corruption that set the DUT's pending bit (its mtval), until consumed
@@ -519,20 +523,66 @@ package gen_tb_pkg;
     static function logic [31:0] take_intg();   // the internal-NMI entry consumes the pending bit (rtl/ibex_controller.sv:407-411)
       intg_pending = 0; return intg_first_addr;
     endfunction
-    static function void note(logic [31:0] addr);
-      words.push_back({addr[31:2], 2'b00}); announced++;
-      while (words.size() > 256) void'(words.pop_front());
+    static function void note(logic [31:0] addr, int unsigned cycle);
+      ann_t a; a.word = {addr[31:2], 2'b00}; a.cycle = cycle;
+      words.push_back(a); announced++;
+      while (words.size() > GEN_BUS_ERR_LOG_DEPTH) void'(words.pop_front());
     endfunction
-    // consumes the announcement for the word of addr (or the next word of a misaligned access)
-    static function bit take(logic [31:0] addr, int unsigned bytes);
+    // consumes EVERY announcement of the words the access touches (both words of a misaligned access whose halves both
+    // erred), so no stale announcement can legitimise a later trap on that word
+    // one announcement is one event: a trap consumes the oldest entry of each word its access touches; the result says
+    // which words were announced (bit 0: the first word, bit 1: the second word of a spanning access), 0 for none
+    static function logic [1:0] take(logic [31:0] addr, int unsigned bytes);
       logic [31:0] w0 = {addr[31:2], 2'b00};
       bit spans_two = (int'(addr[1:0]) + bytes) > 4;
-      foreach (words[i]) if (words[i] == w0 || (spans_two && words[i] == w0 + 4)) begin
+      logic [1:0] hit = 2'b00;
+      hit[0] = take_word(w0);
+      if (spans_two) hit[1] = take_word(w0 + 4);
+      return hit;
+    endfunction
+    static function bit take_word(logic [31:0] w);
+      foreach (words[i]) if (words[i].word == w) begin
         words.delete(i); taken++; return 1'b1;
       end
       return 1'b0;
     endfunction
+    // announcements older than the drain window at the end of the run: an injected error the DUT never trapped on
+    static function int unsigned leftover(int unsigned now);
+      int unsigned n = 0;
+      foreach (words[i]) if (words[i].cycle + GEN_BUS_ERR_DRAIN_CYCLES < now) n++;
+      return n;
+    endfunction
   endclass
+
+  // A load or store in either encoding with its access size (RVFI reports a compressed instruction in its 16-bit form;
+  // Zcmp micro-op records carry the expanded 32-bit form). Zcb: c.lbu/c.lhu/c.lh/c.sb/c.sh (funct6 1000xx, quadrant 0).
+  function automatic bit gen_insn_mem_access(logic [31:0] insn, output bit is_store, output int unsigned bytes);
+    is_store = 0; bytes = 0;
+    if (insn[1:0] == 2'b11) begin
+      if (insn[6:0] != ibex_pkg::OPCODE_LOAD && insn[6:0] != ibex_pkg::OPCODE_STORE) return 0;
+      is_store = (insn[6:0] == ibex_pkg::OPCODE_STORE); bytes = 32'h1 << insn[13:12]; return 1;
+    end
+    case (insn[1:0])
+      2'b00: case (insn[15:13])
+        3'b010: begin bytes = 4; return 1; end                 // c.lw
+        3'b110: begin is_store = 1; bytes = 4; return 1; end   // c.sw
+        3'b100: case (insn[12:10])
+          3'b000: begin bytes = 1; return 1; end               // c.lbu
+          3'b001: begin bytes = 2; return 1; end               // c.lhu / c.lh
+          3'b010: begin is_store = 1; bytes = 1; return 1; end // c.sb
+          3'b011: begin is_store = 1; bytes = 2; return 1; end // c.sh
+          default: return 0;
+        endcase
+        default: return 0;
+      endcase
+      2'b10: case (insn[15:13])
+        3'b010: begin bytes = 4; return 1; end                 // c.lwsp
+        3'b110: begin is_store = 1; bytes = 4; return 1; end   // c.swsp
+        default: return 0;
+      endcase
+      default: return 0;
+    endcase
+  endfunction
 
   // Every time-0 banner line starts with this tag so a log scanner can grep one token.
   parameter string GEN_BANNER_TAG = "GEN_CONFIG_BANNER";

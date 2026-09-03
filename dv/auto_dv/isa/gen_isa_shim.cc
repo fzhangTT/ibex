@@ -47,8 +47,8 @@ constexpr uint32_t kResetMtvecMode = 1u;
 
 // ---- memory ------------------------------------------------------------------------------------
 std::unordered_map<uint32_t, uint32_t> g_mem;   // word index -> word
-struct armed_fault_t { int kind; uint32_t addr; uint32_t size; bool armed; };
-armed_fault_t g_fault{0, 0, 0, false};
+struct armed_fault_t { int kind; uint32_t addr; uint32_t size; bool armed; uint32_t tval; bool hit; };   // tval: the mtval the DUT reports
+armed_fault_t g_fault{0, 0, 0, false, 0, false};
 // NMI emulation (Spike has none): the entry the way rtl/ibex_cs_registers.sv:905-945 performs it, one recoverable level
 // of mstack (MPIE, MPP, mepc, mcause) restored by the mret that leaves NMI mode (:967-974)
 struct armed_nmi_t { bool armed; bool internal; uint32_t mtval; };
@@ -75,7 +75,9 @@ void mem_wr8(uint32_t a, uint8_t b) {
 bool fault_hits(int kind, uint32_t a, size_t len) {
   if (!g_fault.armed || g_fault.kind != kind) return false;
   uint32_t lo = g_fault.addr, hi = g_fault.addr + (g_fault.size ? g_fault.size : 4);
-  return (a < hi) && (a + len > lo);
+  bool hit = (a < hi) && (a + len > lo);
+  if (hit) g_fault.hit = true;
+  return hit;
 }
 
 class gen_simif_t : public simif_t {
@@ -456,7 +458,10 @@ int gen_isa_step(gen_isa_step_t* out) {
     set_err(std::string("gen_isa_step: ") + e.what());
     return -1;
   }
-  g_fault.armed = false;   // an armed bus fault applies to one step
+  // the fault's mtval is the DUT's convention (rtl/ibex_load_store_unit.sv:258: the last bus transaction's address), not
+  // Spike's effective address; the scoreboard supplies it and the model's CSR takes it before anything reads it
+  if (g_fault.hit && g_fault.tval != 0) g_proc->put_csr(CSR_MTVAL, g_fault.tval);
+  g_fault.armed = false; g_fault.hit = false;   // an armed bus fault applies to one step
   uint64_t minstret1 = g_proc->get_csr(CSR_MINSTRET) | ((uint64_t)g_proc->get_csr(CSR_MINSTRETH) << 32);
   out->retired = (int32_t)(minstret1 - minstret0);
   // debug entry: Spike parks pc in its own ROM (0x800/0x808); Ibex enters at DmHaltAddr (C5.2)
@@ -472,7 +477,7 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap_tval = csr(CSR_MTVAL);
     // Ibex writes mtval 0 on a [c.]ebreak breakpoint exception (rtl/ibex_controller.sv:550; the pc arm is CHERIoT-only),
     // one of the two spec-legal values; Spike writes the pc (rtl-arch R10)
-    if (!was_debug && out->trap_cause == CAUSE_BREAKPOINT) {
+    if (!was_debug && !s->debug_mode && out->trap_cause == CAUSE_BREAKPOINT) {
       g_proc->put_csr(CSR_MTVAL, 0);
       out->trap_tval = 0;
     }
@@ -627,7 +632,7 @@ void gen_isa_arm_async(uint32_t pre_mip, uint32_t nmi_mtval, int32_t nmi, int32_
   if (nmi || nmi_int) g_nmi = {true, nmi == 0, nmi_mtval};   // the external pin outranks the internal cause (rtl/ibex_controller.sv:737-739)
   if (debug_req) g_proc->halt_request = processor_t::HR_REGULAR;
 }
-void gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size) { g_fault = {kind, addr, size, true}; }
+void gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size, uint32_t tval) { g_fault = {kind, addr, size, true, tval, false}; }
 void gen_isa_set_time(uint64_t mcycle) {
   if (!g_proc) return;
   st()->mcycle->write((reg_t)mcycle);   // one 64-bit write: Spike asserts on a second counter write before a step

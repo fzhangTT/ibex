@@ -77,20 +77,23 @@ SV writer contract: in the writer's `end_of_elaboration_phase`, when `sink != nu
 the sink fatals at start of simulation on any active row nobody registered), then per event `if (sink.source_on("ibus"))
 sink.write_event(gen_export_line_ibus_gnt(cycle, addr, we, be, req_cycle, outstanding_after));` (no formatting cost
 when the source is off); the request rise is `gen_export_line_ibus_req(cycle, addr, we, be)`. The `cycle` argument
-is the one cycle base of Section 4 (the bridge's `cycle_count` through `sink.cycle()`, planned with the event part).
+is the one cycle base of Section 4: every event writer stamps `sink.cycle()`, which returns the bridge's `cycle_count`.
+Registration is a self-declaration: it says which rows this writer emits, and the header is derived from it; that the
+writer then emits every registered row is the row observation tests' business (gen_ut_export_rows), not the sink's.
 The RVFI monitor calls `sink.write_record(gen_export_record_line(t, cfg.export_counters))` per record and
-`sink.write_marker("I ...")` per marker (gen_component_api_rvfi_monitor.md Section 8).
+`sink.write_marker("I ...")` per marker (gen_component_api_rvfi_monitor.md Section 8); the record's `cycle` field is
+the RVFI interface's posedge counter, which equals the bridge count (both count posedges from reset release).
 
 Python: `seq = await bridge.export_flush()` (issues `EXPORT_FLUSH`, default ack timeout 200 cycles, returns the
-sequence number carried in `peek_data`), then `data = gen_export.read(path, seq, counters=<bool>)`. `read()` returns
+sequence number carried in `peek_data`), then `data = gen_export.read(path, seq, counters=<bool>, sources="all")` (`sources` is the value the run gave
+`+gen_export_sources`). `read()` returns
 `Export(header, records, markers, events, flush)`: `header` is the dict of the first line's `key=value` tokens;
 `records` is a list of namedtuples whose field names are `EXPORT_RECORD_FIELDS` (plus `EXPORT_COUNTER_FIELDS` when
 `counters=True`), so `data.records[0].pc_rdata` reads by name; `markers` is a list of `Marker(cycle, ext_pre_mip,
 ext_post_mip, ext_nmi, ext_nmi_int, ext_debug_req, ext_debug_mode)`; `events` is a list of `Event(cycle, source,
 event, fields)` with `fields` a tuple in the header row's order; `flush` is `Flush(seq, records, retired, markers,
-events, cycle)` from the marker (the addendum's `ibus_grants` / `dbus_grants` marker fields are planned with the event
-part and are not in the namedtuple yet). The caller states `counters` and the header must agree; the addendum let the header
-alone decide the namedtuple, as built the reader asserts `counters=` equals the caller's flag. `read(path, None)`
+events, ibus_grants, dbus_grants, cycle)` from the marker. The caller states `counters` and the header must agree; the
+addendum let the header alone decide the namedtuple, as built the reader asserts `counters=` equals the caller's flag. `read(path, None)`
 reads to the `# end` marker (post-run diagnostics only, never the basis of a pass). `read()` has no simulator access
 and every failure is an `AssertionError` whose message starts with `GEN_EXPORT:`.
 
@@ -103,8 +106,8 @@ and every failure is an `AssertionError` whose message starts with `GEN_EXPORT:`
 R <field values in header order>                    one line per retired record
 I <cycle> <ext_pre_mip> <ext_post_mip> <ext_nmi> <ext_nmi_int> <ext_debug_req> <ext_debug_mode>   one line per rising edge of rvfi_ext_irq_valid, at the rise cycle
 E <cycle> <source> <event> <field values in the row's order>   one line per boundary event
-# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> cycle=<c>   written by EXPORT_FLUSH; s = the number the command returns; r = the bridge's evt_retired_count read in the same call; the addendum's ibus_grants=<g> dbus_grants=<h> (the bridge's grant counters) are planned with the event part
-# end records=<n> retired=<r> markers=<m> events=<e>                       written in extract_phase
+# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<gi> dbus_grants=<gd> cycle=<c>   written by EXPORT_FLUSH; s = the number the command returns; r = the bridge's evt_retired_count read in the same call; the addendum's ibus_grants=<g> dbus_grants=<h> (the bridge's grant counters) are planned with the event part
+# end records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<gi> dbus_grants=<gd>   written in extract_phase
 ```
 
 `fields` (every `gen_rvfi_txn` field except the CHERIoT carve-out, in this order): `order, pc_rdata, pc_wdata, insn,
@@ -123,17 +126,21 @@ non-hex token.
 `R` lines are in retirement order (`order` ascending). The `# image` line is rest-of-line, so a path with spaces
 cannot break the tokeniser. Every event row names one exact event (no wildcard rows; the codegen refuses `<name>`):
 the header carries one `# events <source> <event> <fields>` row per rendered row of every registered and enabled
-source, and `read()` requires all rows of every source named in `sources=`. As built a file of this landing has no
-event rows: no writer has registered a source yet.
+source, and `read()` requires all rows of every source named in `sources=`. Every active source (ibus, dbus, pin,
+alert, misc, scrkey, regime) has a registered writer, so a file written with `+gen_export_sources=all` carries all
+29 rows of the 7 active sources; `icram` is the one inactive source (yaml `export_active_sources`).
 
 ### 2b. Completeness rule of read(path, seq), as implemented
 
 1. The file is read whole and split on newline; fewer than three lines is `has no header`.
-2. Line 1 must start with `# gen_export v1 `; its `counters=` must equal the caller's `counters` flag and its
+2. Line 1 must start with `# gen_export v2 `; its `counters=` must equal the caller's `counters` flag, its
    `fields=` must equal the comma-joined rendered `EXPORT_RECORD_FIELDS` (plus `EXPORT_COUNTER_FIELDS` when
-   `counters`). Line 2 must start with `# image `.
+   `counters`), and its `sources=` must equal the rendered `EXPORT_ACTIVE_SOURCES` restricted to the caller's
+   `sources` argument (an active source missing from the header fails; the sink can only omit one when its writer did
+   not register, which the sink itself fatals on). Line 2 must start with `# image `.
 3. Every following line that starts with `# events ` is a header row: its (source, event) must be a row of the
-   rendered `EXPORT_EVENTS` with the same field list, and its source must appear in the header's `sources=`.
+   rendered `EXPORT_EVENTS` with the same field list, and its source must appear in the header's `sources=`; every
+   rendered row of every source in `sources=` must be present (a registered source with a missing row fails).
 4. The marker is the FIRST line after the header rows that starts with `# flush ` and carries `seq=<seq>` (decimal,
    the number `export_flush()` returned; every marker `key=value` pair is parsed as decimal)
    (with `seq=None`, the first `# end ` line). No such line is `no complete flush marker with seq=<seq>`: a missing
@@ -152,9 +159,13 @@ event rows: no writer has registered a source yet.
    nothing is required about the order of lines inside one cycle.
 7. The parsed counts must equal the marker: `R` lines == `records`, `I` lines == `markers`, `E` lines == `events`
    (the `I` lines are bound to `markers=` exactly as the `R` lines to `records=` and the `E` lines to `events=`).
-   Planned with the event part: the marker gains `ibus_grants=` / `dbus_grants=` (the bridge's `evt_ibus_grants` /
-   `evt_dbus_grants`, sampled in the same `flush_export()` call as the other counts) and `read()` compares the
-   `E ibus gnt` / `E dbus gnt` line counts against them (MUT-G).
+8. For each of ibus and dbus named in `sources=`: the `E <bus> gnt` line count must equal the marker's
+   `<bus>_grants=` (the bridge's `evt_ibus_grants` / `evt_dbus_grants`, counted by the bus driver in the grant beat
+   and sampled in the same `flush_export()` call as the other counts; mutation MUT-G).
+9. For each of ibus and dbus named in `sources=`, the presence rules (T-141): `#req - #gnt` is 0 or 1 (at most one
+   request awaits its grant at the marker; MUT-I) and `0 <= #gnt - #rvalid <= GEN_<BUS>_MAX_OUTSTANDING` (every
+   response follows a grant and the outstanding responses stay within the bus depth; MUT-J). The constants are the
+   rendered `BUS_MAX_OUTSTANDING` in gen_export.py.
 
 Not part of `read()`: the test's own read of `evt_retired_count` after the ack is a `>=` check against the marker's
 `retired` (gen_ut_export.py does this), and every program-derived check (boot pc, tohost stores, pc continuity) is
@@ -162,27 +173,27 @@ the test's. A missing file raises the Python `FileNotFoundError` from `Path.read
 
 ### 2c. Event channel rows (addendum Section 8)
 
-The yaml `export_events` table, one line function per row in `gen_export_event_lines.svh`. Connected since the step-2
-landing: ibus/dbus (req at the first cycle a request is seen, gnt in the grant beat with `req_cycle` = the req line's
+The yaml `export_events` table, one line function per row in `gen_export_event_lines.svh`. Connected: ibus/dbus (req at the first cycle a request is seen, gnt in the grant beat with `req_cycle` = the req line's
 stamp and `outstanding_after` = the queue depth after the grant, rvalid in the response beat with `intg_injected` = the
 driver's corruption flag), pin (fetch_enable, mcounteren_writable, irq_software, irq_timer, irq_external, irq_fast with
 its index, irq_nm, debug_req), alert and misc (every change, plus the level at reset release), scrkey (req observed,
 valid driven), regime (phase per applied REGIME_SET). Not connected: icram (inactive in `export_active_sources` until the
-RAM model's announcement port). The bridge fields `evt_ibus_grants` / `evt_dbus_grants` are in `gen_bridge_if`.
+RAM model's announcement port). Every writer registers its rows in `end_of_elaboration_phase` (Section 2); the
+registered writer of each row is the component in the table's writer column.
 
 | source | event | fields | writer | when |
 |---|---|---|---|---|
 | ibus, dbus | req | addr, we, be | gen_bus_driver | the first cycle a request is seen (its rise); with the following gnt line's `req_cycle` this gives the cycles the request was held with gnt withheld, and its absence is the "no request" fact |
 | ibus, dbus | gnt | addr, we, be, req_cycle, outstanding_after | gen_bus_driver | the cycle the grant is driven (one per beat); `req_cycle` is the cycle of the matching req line |
 | ibus, dbus | rvalid | addr, we, err, intg_injected, outstanding_after | gen_bus_driver | the cycle the response is driven (one per beat) |
-| pin | irq_software, irq_timer, irq_external, irq_nm, debug_req | value | irq / dbg drivers (step 2b) | every value change (rise and fall) |
-| pin | irq_fast | idx, value | irq driver (step 2b) | every value change of one fast line; `idx` is the line index, so the line count is not re-typed in the table |
+| pin | irq_software, irq_timer, irq_external, irq_nm, debug_req | value | gen_irq_driver / gen_dbg_driver | every value change (rise and fall) |
+| pin | irq_fast | idx, value | gen_irq_driver | every value change of one fast line; `idx` is the line index, so the line count is not re-typed in the table |
 | pin | fetch_enable, mcounteren_writable | value (MuBi encoding) | gen_ctrl_driver | every value change |
-| alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
-| misc | irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr (one row each) | value | gen_misc_monitor (step 2b) | every value change (irq_pending_o is the DUT output pin that 26 marked items assert in a named cycle; core_busy as the MuBi encoding; one line per changed crash_dump_o field) |
+| alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor | every value change (a one-cycle pulse is a rise line and a fall line) |
+| misc | irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr (one row each) | value | gen_misc_monitor | every value change (irq_pending_o is the DUT output pin that 26 marked items assert in a named cycle; core_busy as the MuBi encoding; one line per changed crash_dump_o field) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
-| regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
+| regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer) | the cycle a phase is applied |
 
 As rendered, the yaml carries every row of the table above as its own exact row (29 rows over 8 sources), one writer
 function per row named `gen_export_line_<source>_<event>` with the fields as named arguments; the yaml, the rendered
@@ -209,18 +220,17 @@ level): `export_record_fields`, `export_counter_fields`, `export_events`.
 - `R` lines: written at the posedge where `rvfi_valid` is 1, in the monitor's active-region step after its
   `records++` and `ap.write`. `I` lines: written at the posedge where `rvfi_ext_irq_valid` is 1 and was 0 at the
   previous posedge (the level is sampled every cycle, the line is written once per rising edge, at the rise cycle,
-  with or without a retirement in that cycle). `E` lines (when the writers land): written in the cycle of the event
-  in the active region, drivers at the negedge and monitors at the posedge, so within one cycle the order is driver
-  lines, then the record line, then monitor lines; `read()` requires non-decreasing cycles and nothing more about
+  with or without a retirement in that cycle). `E` lines: written in the cycle of the event in the active region,
+  drivers at the negedge and monitors at the posedge, so within one cycle the order is driver lines, then the record
+  line, then monitor lines; `read()` requires non-decreasing cycles and nothing more about
   intra-cycle order. With the file knob absent the monitor neither formats nor hands over a line: the call
   `sink.write_record(gen_export_record_line(...))` sits inside the `sink != null && sink.enabled` guard
   (gen_rvfi_pkg.sv, run_phase), and the `I` line the same way; the `write_*` methods return at once as a second guard.
 - One cycle base (addendum Section 3): the stamp of every line is the bridge's `cycle_count` (`gen_bridge_if`,
   counted at the posedge), read through `sink.cycle()` at write time by every writer, so a driver acting at the
   negedge stamps the cycle whose posedge just passed, the same base as the record cycle; a driver's own negedge
-  counter is never used for a stamp. Planned with the event part: the sink has no `cycle()` method yet. Today the
-  monitor is the only writer and stamps `gen_rvfi_if.cycle`, the interface's posedge counter, which equals the bridge
-  count; the flush marker's `cycle=` is `bvif.cycle_count` read in `flush_export()`.
+  counter is never used for a stamp. The record line's `cycle` is `gen_rvfi_if.cycle`, the interface's posedge counter,
+  which equals the bridge count; the flush marker's `cycle=` is `bvif.cycle_count` read in `flush_export()`.
 - Same-instant constraint (what makes `records == retired` exact): `flush_export()` runs inside
   `gen_cmd_dispatch::write()`, which `gen_bridge::run_phase` calls from its `@(vif.cmd_valid)` wake. That wake
   follows cocotb's deferred write of `cmd_valid`, i.e. it lands after the NBA region of the posedge in which
@@ -318,11 +328,14 @@ an upper bound because `%0h` writes no leading zeros. Measured on the green runs
 the early flush, 175 `R`, the seq=2 marker, the end marker) and `export_zc_counters/gen_export.txt` 29971 bytes
 (about 171 bytes per record); the riscv-dv seed-7 program, 2008 records, `export_s7/gen_export.txt` 232434 bytes
 (about 116 bytes per record). The addendum's Section 3 quotes the earlier 34-field build out_t080 (21144, 28982 and
-219090 bytes; 2002 seed-7 records with the end marker only). Events (none written yet) are estimated at about 100
-bytes each; on the seed-7 program the bus rows would add about 3500 lines. Wall clock (VCS CPU time from the retained
-out_t080d sim.log files, recorded in `dv/auto_dv/evidence/gen_tdd_export.md`): the Zc lock-step run 0.29 s without
-and 0.26 s with the knob, the seed-7 lock-step run 0.52 s and 0.54 s, i.e. within a few tens of milliseconds at these
-record counts.
+219090 bytes; 2002 seed-7 records with the end marker only). With every active source on (the landing-1c build,
+`gen_fu_l1c_export_s7_*`): the seed-7 program's file is 791905 bytes over 17807 lines, 2008 `R` lines at about 115
+bytes each and 15766 `E` lines at about 35 bytes each (ibus 9502, misc 4587, dbus 1650, scrkey 20, alert 4, pin 3);
+the event lines are 89 percent of the lines and 70 percent of the bytes, the ibus rows and the misc rows (irq_pending
+and core_busy toggle often) dominating. Wall clock (VCS CPU time from the retained out_t080d sim.log files, recorded
+in `dv/auto_dv/evidence/gen_tdd_export.md`): the Zc lock-step run 0.29 s without and 0.26 s with the knob, the seed-7
+lock-step run 0.52 s and 0.54 s; with events on, the seed-7 export run 0.64 s against 0.54 s for the lock-step run
+without the knob on the same build (landing 1c), i.e. about a tenth of a second at these counts.
 
 Retention (a flow policy, ruled by Runtime on 2026-09-03 and quoted from the addendum's Section 3): "the flow never
 deletes inside a run directory during a regression and never prunes silently; the export file is kept on purposes 1

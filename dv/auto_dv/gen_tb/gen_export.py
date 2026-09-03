@@ -130,6 +130,6 @@ def read(path, seq, counters=False, sources="all"):
             assert n == grants, f"GEN_EXPORT: {n} E {bus} gnt lines, marker says {bus}_grants={grants}"
             n_req = sum(1 for e in events if e.source == bus and e.event == "req")
             n_rv = sum(1 for e in events if e.source == bus and e.event == "rvalid")
-            assert n_req - n in (0, 1), f"GEN_EXPORT: {bus}: {n_req} E req lines against {n} E gnt lines (at most one request awaits its grant; MUT-I)"
-            assert 0 <= n - n_rv <= BUS_MAX_OUTSTANDING[bus], f"GEN_EXPORT: {bus}: {n} E gnt lines against {n_rv} E rvalid lines (outstanding responses must stay within 0..{BUS_MAX_OUTSTANDING[bus]}; MUT-J)"
+            assert n_req - n in (0, 1), f"GEN_EXPORT: {bus}: {n_req} E req lines against {n} E gnt lines (at most one request awaits its grant)"
+            assert 0 <= n - n_rv <= BUS_MAX_OUTSTANDING[bus], f"GEN_EXPORT: {bus}: {n} E gnt lines against {n_rv} E rvalid lines (outstanding responses must stay within 0..{BUS_MAX_OUTSTANDING[bus]})"
     return Export(hdr, records, markers, events, flush)

@@ -25,6 +25,7 @@ case "$MODE" in
     VMEM="${3:?prog.vmem}"
     "$CXX" "${FLAGS[@]}" dv/auto_dv/isa/gen_ut_isa_shim.cc "$SRC" "${LIBS[@]}" -o "$OUT/gen_ut_isa_shim" || exit $?
     export LD_LIBRARY_PATH="$ROOT/$SPIKE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    echo "# gen_ut_isa_shim $(date -u +%Y-%m-%dT%H:%M:%SZ) shim sha256 $(sha256sum "$SRC" | cut -c1-16) test sha256 $(sha256sum dv/auto_dv/isa/gen_ut_isa_shim.cc | cut -c1-16) image $VMEM"
     "$OUT/gen_ut_isa_shim" "$VMEM" ;;
   *) echo "usage: lib|test" >&2; exit 2 ;;
 esac

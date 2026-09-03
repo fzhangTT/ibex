@@ -303,7 +303,7 @@ package gen_agents_pkg;
             p.err = 0; p.injected = 0; p.intg_bad = 0;
             if (armed_hit(GEN_MEM_ERR_ARM_KIND_ERR, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin
               p.err = 1; p.injected = 1; injected_err++;
-              if (cfg.is_data) gen_bus_err_log::note(p.addr);   // the scoreboard arms the model's fault only for announced errors
+              if (cfg.is_data) gen_bus_err_log::note(p.addr, bvif.cycle_count);   // the scoreboard arms the model's fault only for announced errors
             end
             if (p.we) begin
               if (!p.err || cfg.err_store_perform) mem.write_masked(p.addr, p.wdata, p.be);

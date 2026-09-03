@@ -308,9 +308,9 @@ package gen_rvfi_pkg;
     function void write(gen_rvfi_txn t);
       int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
-      int unsigned pc_expect, insn_expect;
+      int unsigned pc_expect, insn_expect, bytes;
       logic [31:0] gpr_before [32];   // snapshot for a suppressed register write (any encoding of the load)
-      bit is_seq = 0, dbg_entry = 0;
+      bit is_seq = 0, dbg_entry = 0, is_store;
       if (!model_ready) return;
       // ---- asynchronous entries before this record (C5.2) come before the Zcmp fold: the handler's first record can
       //      itself be a micro-op, and an entry inside a sequence drops its partial micro-ops (the sequence restarts, R9)
@@ -371,6 +371,7 @@ package gen_rvfi_pkg;
         seq_note(t);
         folded++;
         bvif.evt_isa_records = compared + folded;
+        if (t.intr || dbg_entry) publish_state(t, pc_a, prv, csr_n);   // the entry stepped above must reach the checkers
         return;
       end
       pc_expect = t.pc_rdata; insn_expect = t.insn;
@@ -442,15 +443,19 @@ package gen_rvfi_pkg;
       // a trapping memory access: only a bus error the data-bus driver announced for that word becomes the model's fault on
       // the same bytes for this one step (size from funct3); otherwise the model decides alone, so a PMP denial faults on
       // both sides and a DUT fault on an access nobody corrupted is an isa_trap miss (T-137)
-      if (t.trap && (t.insn[6:0] == ibex_pkg::OPCODE_STORE || t.insn[6:0] == ibex_pkg::OPCODE_LOAD)) begin
-        int unsigned bytes = 32'h1 << t.insn[13:12];
-        if (gen_bus_err_log::take(t.mem_addr, bytes)) begin
+      if (t.trap && gen_insn_mem_access(t.insn, is_store, bytes)) begin
+        logic [1:0] hit = gen_bus_err_log::take(t.mem_addr, bytes);
+        if (hit != 2'b00) begin
+          // Ibex's mtval is the address of the FAILING bus transaction: the effective address when the first transaction
+          // of the access errors (the LSU keeps addr_last on an error, rtl/ibex_load_store_unit.sv:258, :540), the second
+          // word when only the second transaction of a spanning access errors; the model takes it with the fault
+          logic [31:0] tval = hit[0] ? t.mem_addr : {t.mem_addr[31:2], 2'b00} + 32'd4;
           faults_armed++;
-          gen_isa_arm_fault(t.insn[6:0] == ibex_pkg::OPCODE_STORE ? GEN_ISA_FAULT_KIND_STORE : GEN_ISA_FAULT_KIND_LOAD, t.mem_addr, bytes);
+          gen_isa_arm_fault(is_store ? GEN_ISA_FAULT_KIND_STORE : GEN_ISA_FAULT_KIND_LOAD, t.mem_addr, bytes, tval);
         end else begin
           faults_unannounced++;
           `uvm_info("GEN_SB", $sformatf("%s trap at %08h (order %0d) without a TB-injected error: the model decides",
-                                        t.insn[6:0] == ibex_pkg::OPCODE_STORE ? "store" : "load", t.mem_addr, t.order), UVM_LOW)
+                                        is_store ? "store" : "load", t.mem_addr, t.order), UVM_LOW)
         end
       end
       // a suppressed register write (a load whose response carried an integrity error, rtl/ibex_core.sv rvfi_ext_rf_wr_suppress):
@@ -537,6 +542,12 @@ package gen_rvfi_pkg;
     endfunction
 
     function void report_phase(uvm_phase phase);
+      // referee: every announced data-bus error must have been consumed by a trap record (a leftover is an injected error
+      // the DUT never trapped on, or a stale announcement that could legitimise a later trap); announcements younger than the
+      // drain window are still in flight at the end of the run
+      if (gen_bus_err_log::leftover(bvif.cycle_count) != 0)
+        `uvm_error("bus_err_leftover", $sformatf("%0d announced data-bus errors never consumed by a trap record (announced %0d, taken %0d, drain window %0d cycles)",
+                                                gen_bus_err_log::leftover(bvif.cycle_count), gen_bus_err_log::announced, gen_bus_err_log::taken, GEN_BUS_ERR_DRAIN_CYCLES))
       `uvm_info("GEN_SB", $sformatf("ISA compare: records=%0d mismatches=%0d folded=%0d draft_b=%0d traps=%0d breakpoints=%0d irq_entries=%0d dbg_entries=%0d zcmp_splits=%0d faults_armed=%0d faults_unannounced=%0d bus_err_announced=%0d b13_odd_jalr=%0d rf_wr_suppressed=%0d nmi_preempted=%0d rvfi_rmask_on_nonload=%0d",
                 compared, mismatches, folded, draft_b, traps, breakpoints, irq_entries, dbg_entries, seq_splits, faults_armed, faults_unannounced, gen_bus_err_log::announced, b13_odd_jalr, rf_wr_suppressed, nmi_preempted, rmask_nonload), UVM_LOW)
     endfunction

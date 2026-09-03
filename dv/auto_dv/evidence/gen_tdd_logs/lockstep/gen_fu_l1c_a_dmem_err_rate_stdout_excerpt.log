@@ -1,0 +1,41 @@
+# excerpt of scratch l1c_root dv/auto_dv/work/tb-infra/l1c/a/dmem_err_rate/stdout.log (landing 1c red build l1c/a: the entry-count referee without the publish, the compressed-store fault never armed; UVM_ERROR lines counted by grep: 26148, first 12 kept)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=1 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/s7/prog.vmem tohost=0x800027c0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=frequent intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(211) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(212) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=50/1000(frequent) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(241) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(131) @ 0: uvm_test_top.env.sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 1952500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 497, cycle 1947) without a double_fault_seen_o pulse at cycle 1946
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 1986500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 503, cycle 1981) without a double_fault_seen_o pulse at cycle 1980
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 2009500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 506, cycle 2004) without a double_fault_seen_o pulse at cycle 2003
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 2046500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 514, cycle 2041) without a double_fault_seen_o pulse at cycle 2040
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 2574500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 658, cycle 2569) without a double_fault_seen_o pulse at cycle 2568
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2646500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=672 pc=800017ac insn=0000d044 trap=1 intr=0 rd=x0/00000000 mem=8001c3b0 w0000 r0000 mode=3 cyc=2641)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(371) @ 2646500: uvm_test_top.env.misc_mon [double_fault] second synchronous trap (order 672, cycle 2641) without a double_fault_seen_o pulse at cycle 2640
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2654500: uvm_test_top.env.sb [isa_pc] pc model=800017ae dut=80001700 (order=673 pc=80001700 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80001704 w0000 r1111 mode=3 cyc=2649)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2654500: uvm_test_top.env.sb [isa_insn] insn model=0000d408 dut=0800006f (order=673 pc=80001700 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80001704 w0000 r1111 mode=3 cyc=2649)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2654500: uvm_test_top.env.sb [isa_mem] store model=1 dut wmask=0000 (order=673 pc=80001700 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80001704 w0000 r1111 mode=3 cyc=2649)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2654500: uvm_test_top.env.sb [isa_pc_next] pc_next model=800017b0 dut=80001780 (order=673 pc=80001700 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80001704 w0000 r1111 mode=3 cyc=2649)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 2661500: uvm_test_top.env.sb [isa_pc] pc model=800017b0 dut=80001780 (order=674 pc=80001780 insn=000018f1 trap=0 intr=0 rd=x17/8001c408 mem=8001c408 w0000 r1111 mode=3 cyc=2656)
+282085.01ns INFO     cocotb.regression                  gen_ut_lockstep failed
+                                                            raise AssertionError(f"GEN_UT_LOCKSTEP: no tohost store ({type(exc).__name__})") from None
+                                                        AssertionError: GEN_UT_LOCKSTEP: no tohost store (SimTimeoutError)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            282085.01           1.17     241879.27  **

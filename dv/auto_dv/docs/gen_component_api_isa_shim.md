@@ -24,7 +24,7 @@ platform rule the model lacks. AS BUILT (step 2a): `dv/auto_dv/isa/gen_isa_shim.
 evidence/gen_t019_spike_build.md` (14/14 API link test).
 
 DPI exports: `gen_isa_reset(cfg)`, `gen_isa_arm_async(pre_mip, taken_cause, nmi, nmi_int, debug_req,
-irq_valid)`, `gen_isa_arm_fault(kind, addr, size)`, `gen_isa_note_memory_write(addr, data, be)`,
+irq_valid)`, `gen_isa_arm_fault(kind, addr, size, tval)`, `gen_isa_note_memory_write(addr, data, be)`,
 `gen_isa_step(txn_in, txn_out)` (returns the number of instructions the model retired in that step: 0 for a
 step that only took an interrupt, trigger or synchronous trap, 1 otherwise; the scoreboard asserts it per
 record class, C5.2, v2 XM-M2), `gen_isa_exec_reference(insn, rs1, rs2, rs3, rd_out)` (draft-B ops: grev/gorc, slo/sro, shfl/unshfl, xperm, cmov/cmix, fsl/fsr/fsri, bfp, crc32 and crc32c, pack/packu/packh; T-102),
@@ -65,7 +65,8 @@ needs the same pc override. Memory (A-15, corrected by link test 2): with `addr_
 every access is served byte-wise through `mmio_fetch/load/store` over the shim's sparse memory (an
 aligned access arrives as one full-length call, a misaligned one as single-byte calls in address order
 that stop at the first failing byte, `mmu_t::mmio`, mmu.cc:168-184; the shim serves each call byte by
-byte from its word map), and an armed bus fault (`gen_isa_arm_fault`) applies to the bytes it covers.
+byte from its word map), and an armed bus fault (`gen_isa_arm_fault`) applies to the bytes it covers; its `tval` is written to mtval after the
+faulting step (the DUT's failing-transaction address, gen_component_api_scoreboard.md; Spike's own tval is the effective address).
 NOT implemented (T-068): the per-word PMP rule (perform the permitted first word, fault the second, BS
 MEM-13) and the mtval override to the aligned second word; both are owed with the misaligned-access
 directed test (C5.4 pending). Legalization (component sections C5.3a, RTL-defined rows; the per-row
@@ -107,7 +108,7 @@ tdata3/mcontext/scontext trapping, B5 dcsr.nmip.
 | mstatus without XS/SD (Spike sets XS for a custom extension; Ibex has none) | BUILT (T-102) | `gen_mstatus_view_t` on the csrmap entry, the inner object stays the privilege state |
 | cpuctrlsts bit 8 = ic_scr_key_valid from RVFI (`gen_isa_set_status`) | BUILT (T-102; an RVFI-consistency anchor until scrkey_proto) | `gen_cpuctrl_csr_t` |
 | cpuctrlsts bits 6/7 (sync_exc_seen, double_fault_seen, `GEN_CPUCTRLSTS_*_BIT`) set from the model's own synchronous exceptions outside debug mode, sync_exc_seen cleared by mret, both software-writable | BUILT (T-102b, T-102c: exceptions taken in debug mode and debug entry set nothing; unit case section 9) | `gen_cpuctrl_csr_t::set_flags`, unit test sections 7 and 9 |
-| armed bus fault (`gen_isa_arm_fault(GEN_ISA_FAULT_KIND_LOAD / _STORE, addr, size)`) applies to the next step only; the comparator arms it for a trapping load/store record ONLY when gen_bus_driver announced a bus error for that word (T-137, `gen_bus_err_log`), otherwise the model decides (a PMP denial is Spike's own) | BUILT (T-102c; conditioned T-137) | `fault_hits`, `gen_isa_step` |
+| armed bus fault (`gen_isa_arm_fault(GEN_ISA_FAULT_KIND_LOAD / _STORE, addr, size, tval)`) applies to the next step only and leaves `tval` in mtval (unit test section 13); the comparator arms it for a trapping load/store record ONLY when gen_bus_driver announced a bus error for that word (T-137, `gen_bus_err_log`), otherwise the model decides (a PMP denial is Spike's own) | BUILT (T-102c; conditioned T-137) | `fault_hits`, `gen_isa_step` |
 | mtval = 0 on a breakpoint exception ([c.]ebreak): Ibex writes 0, Spike the pc, both spec-legal (rtl-arch R10, rtl/ibex_controller.sv:550, :894-897) | BUILT (this landing; unit test section 8, red 3 failures then green) | `gen_isa_step` after the step |
 | NMI and internal-NMI emulation: `gen_isa_arm_async(pre_mip, nmi_mtval, nmi, nmi_int, ...)` makes the next step the entry (rtl/ibex_cs_registers.sv:905-945: MPIE = MIE, MIE = 0, MPP = prv, mepc = pc, mcause 0x8000001F or 0xFFFFFFE0, mtval = nmi_mtval for the internal cause, prv M, pc = mtvec base + 0x7C) with one recoverable mstack level (MPIE, MPP, mepc, mcause) restored by the mret that leaves NMI mode (:967-974); the external pin outranks the internal cause | BUILT (landing 2a; unit test sections 10-12, red 16 failures then green) | `g_nmi`, `g_mstack`, `g_nmi_mode` in `gen_isa_step` |
 | tdata1/tdata2 written in debug mode only; tdata1 reads Ibex's fixed mcontrol view `GEN_TDATA1_IBEX_RDATA` plus the execute bit (rtl/ibex_cs_registers.sv:1848-1864) | BUILT (T-102) | `gen_trigger_view_t` |

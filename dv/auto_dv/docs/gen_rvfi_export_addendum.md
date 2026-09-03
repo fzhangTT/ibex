@@ -292,9 +292,11 @@ of them and refuses an `E` line whose (source, event) is not a header row, so a 
 a FAIL, never a silent miss; the writer functions
 take the fields as named arguments in the row's order, so the SV side cannot reorder a column; the three RAM-port rows
 (lookup, tag_write, fill_write) carry the RAM model's own port facts and their field sets are final when the
-announcement port is built in step (3), any change being a yaml change the codegen unit test and the header check see; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
-all step 2b) has its rows rendered and its writer functions present but unused until the component lands, and
-the header's `sources=` lists only sources with a registered writer instance; `read()` accepts an absent source.
+announcement port is built in step (3), any change being a yaml change the codegen unit test and the header check see; every active source (yaml `export_active_sources`) has a writer that registers its rows in
+`end_of_elaboration_phase`; the sink fatals at start of simulation on an active row nobody registered, the header's
+`sources=` lists the active sources that registered and are enabled by `+gen_export_sources`, and `read()` requires
+`sources=` to equal the rendered active list restricted to that knob (an absent active source fails). Only `icram` is
+inactive (no announcement port yet); its rows are rendered and unused.
 Ordering: `E` lines are written in the cycle of the event in the active region (drivers act at the negedge,
 monitors sample at the posedge), so within one cycle the order is driver lines, then the record line, then
 monitor lines; `read()` requires non-decreasing cycles and nothing more about intra-cycle order. Cost: about 100

@@ -1,0 +1,1548 @@
+sources sha256 (dv/auto_dv env, tb, isa, gen_tb): a056526d879ea458
+flow flags: -full64 -sverilog -ntb_opts uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI -timescale=1ns/10ps -licqueue -CFLAGS --std=c99\ -fno-extended-identifiers -xlrm uniq_prior_final -lca -kdb -debug_access+pp +define+COCOTB_SIM
+built /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/lib/libgen_isa_shim.so
+                         Chronologic VCS (TM)
+       Version X-2025.06-SP2_Full64 -- Thu Sep  3 13:29:46 2026
+                    Copyright (c) 1991 - 2025 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+  LCA features enabled by '-lca' argument on the command line.  For more 
+  information regarding list of LCA features please refer to Chapter "LCA 
+  features" in the VCS Release Notes
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+  The VPI function 'vpi_register_cb' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+     -.--ns ERROR    gpi                                ..b/vpi/VpiCbHdl.cpp:72   in arm_callback                    VPI: Unable to register a callback handle for VPI type cbStartOfSimulation(11)
+  The VPI function 'vpi_chk_error' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+  The VPI function 'vpi_register_cb' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+     -.--ns ERROR    gpi                                ..b/vpi/VpiCbHdl.cpp:72   in arm_callback                    VPI: Unable to register a callback handle for VPI type cbEndOfSimulation(12)
+  The VPI function 'vpi_chk_error' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_tlm_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_callback.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_component.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_tr_database.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_tr_database.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_message_catcher.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_buf.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_flop.sv'.
+Back to file 'rtl/ibex_icache.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_lfsr.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi_pkg.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_dec.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sender.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sync.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_dec.sv'.
+Back to file 'rtl/ibex_branch_predict.sv'.
+Back to file 'rtl/ibex_compressed_decoder.sv'.
+Back to file 'rtl/ibex_controller.sv'.
+Back to file 'rtl/ibex_controller.sv'.
+Back to file 'rtl/ibex_cs_registers.sv'.
+Back to file 'rtl/ibex_csr.sv'.
+Back to file 'rtl/ibex_decoder.sv'.
+Back to file 'rtl/ibex_fetch_fifo.sv'.
+Back to file 'rtl/ibex_id_stage.sv'.
+Back to file 'rtl/ibex_id_stage.sv'.
+Back to file 'rtl/ibex_if_stage.sv'.
+Back to file 'rtl/ibex_if_stage.sv'.
+Back to file 'rtl/ibex_load_store_unit.sv'.
+Back to file 'rtl/ibex_load_store_unit.sv'.
+Back to file 'rtl/ibex_multdiv_fast.sv'.
+Back to file 'rtl/ibex_multdiv_slow.sv'.
+Back to file 'rtl/ibex_pmp.sv'.
+Back to file 'rtl/ibex_wb_stage.sv'.
+Back to file 'rtl/ibex_wb_stage.sv'.
+Back to file 'rtl/ibex_core.sv'.
+Back to file 'rtl/ibex_core.sv'.
+Back to file 'rtl/ibex_register_file_ff.sv'.
+Back to file 'dv/auto_dv/env/gen_cfg_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_cfg_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_export_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_export_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_agents_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_rvfi_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_rvfi_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_checkers_pkg.sv'.
+Back to file 'dv/auto_dv/env/gen_env_pkg.sv'.
+       uvm_custom_install_verdi_recording
+       gen_tb_top
+assign 0 /gen_tb_top/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/decoder_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_register_file/RV32E (global:"command line":0)
+assign 1 /gen_tb_top/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/decoder_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ex_block_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/controller_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/wb_stage_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/g_cheriot_ex/u_ibex_cheriot_ex/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/ICache (global:"command line":0)
+assign 1 /gen_tb_top/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/gen_icache/icache_i/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/ICacheScramble (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICacheScramble (global:"command line":0)
+assign 0 /gen_tb_top/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/controller_i/BranchPredictor (global:"command line":0)
+assign 1 /gen_tb_top/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPEnable (global:"command line":0)
+assign 0 /gen_tb_top/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/g_pmp/pmp_i/PMPGranularity (global:"command line":0)
+assign 16 /gen_tb_top/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/g_pmp/pmp_i/PMPNumRegions (global:"command line":0)
+assign 10 /gen_tb_top/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/u_ibex_core/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/MHPMCounterNum (global:"command line":0)
+assign 32 /gen_tb_top/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/u_ibex_core/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/MHPMCounterWidth (global:"command line":0)
+dv/auto_dv/env/gen_agents_pkg.sv, 194
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,194) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_agents_pkg.sv, 229
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,229) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_agents_pkg.sv, 364
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,364) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_checkers_pkg.sv, 301
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,301)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_checkers_pkg.sv, 301
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,301)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_checkers_pkg.sv, 345
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,345)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/env/gen_checkers_pkg.sv, 346
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,346)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/tb/gen_tb_top.sv, 275
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,275) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/tb/gen_tb_top.sv, 276
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,276) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/tb/gen_tb_top.sv, 283
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,283) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+dv/auto_dv/tb/gen_tb_top.sv, 284
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,284) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+rtl/ibex_core.sv, 2144
+"rvfi_stage_halt[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2145
+"rvfi_stage_trap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2146
+"rvfi_stage_intr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2147
+"rvfi_stage_order[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2148
+"rvfi_stage_insn[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2149
+"rvfi_stage_mode[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2150
+"rvfi_stage_ixl[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2151
+"rvfi_stage_rs1_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2152
+"rvfi_stage_rs2_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2153
+"rvfi_stage_rs3_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2154
+"rvfi_stage_pc_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2155
+"rvfi_stage_pc_wdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2156
+"rvfi_stage_mem_rmask[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2157
+"rvfi_stage_mem_wmask[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2158
+"rvfi_stage_rs1_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2159
+"rvfi_stage_rs2_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2160
+"rvfi_stage_rs3_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2161
+"rvfi_stage_mem_wdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2162
+"rvfi_stage_mem_is_cap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2163
+"rvfi_stage_mem_wcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2164
+"rvfi_stage_mem_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2165
+"rvfi_stage_rs1_rcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2166
+"rvfi_stage_rs2_rcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2178
+"rvfi_ext_stage_debug_mode[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2179
+"rvfi_ext_stage_mcycle[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2180
+"rvfi_ext_stage_ic_scr_key_valid[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2181
+"rvfi_ext_stage_mhpmcounters[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2182
+"rvfi_ext_stage_mhpmcountersh[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2183
+"rvfi_ext_stage_expanded_insn_valid[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2184
+"rvfi_ext_stage_expanded_insn[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2185
+"rvfi_ext_stage_expanded_insn_last[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+rtl/ibex_core.sv, 2194
+"rvfi_ext_stage_post_mip[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+52 modules and 0 UDP read.
+recompiling package vcs_paramclassrepository
+recompiling package _vcs_DPI_package
+recompiling package uvm_pkg
+recompiling package _vcs_msglog
+recompiling module uvm_custom_install_verdi_recording
+recompiling package ibex_pkg
+recompiling package ibex_cheriot_pkg
+recompiling package prim_cipher_pkg
+recompiling module prim_buf
+recompiling package prim_secded_pkg
+recompiling module prim_secded_inv_28_22_dec
+recompiling module prim_secded_inv_28_22_enc
+recompiling module prim_secded_inv_39_32_dec
+recompiling module prim_secded_inv_39_32_enc
+recompiling module ibex_icache
+recompiling package prim_mubi_pkg
+recompiling module ibex_cheriot_ex
+recompiling module ibex_alu
+recompiling module ibex_controller
+recompiling module ibex_cs_registers
+recompiling module ibex_csr
+recompiling module ibex_counter
+recompiling module ibex_decoder
+recompiling module ibex_ex_block
+recompiling module ibex_id_stage
+recompiling module ibex_if_stage
+recompiling module ibex_load_store_unit
+recompiling module ibex_multdiv_fast
+recompiling module ibex_pmp
+recompiling module ibex_wb_stage
+recompiling module ibex_dummy_instr
+recompiling module ibex_core
+recompiling package gen_tb_pkg
+recompiling module gen_dut_top
+recompiling module gen_bridge_if
+recompiling module gen_bus_if
+recompiling module gen_scrkey_if
+recompiling module gen_ctrl_if
+recompiling module gen_icache_ram
+recompiling module gen_rvfi_if
+recompiling module gen_irq_if
+recompiling module gen_dbg_if
+recompiling module gen_misc_if
+recompiling package gen_cfg_pkg
+recompiling package gen_export_pkg
+recompiling package gen_mem_pkg
+recompiling package gen_agents_pkg
+recompiling package gen_isa_dpi_pkg
+recompiling package gen_rvfi_pkg
+recompiling package gen_checkers_pkg
+50 of 52 modules done
+recompiling package gen_env_pkg
+recompiling module gen_tb_top
+All of 52 modules done
+rm -f _cuarc*.so _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
+cc1plus: warning: command-line option '-std=c99' is valid for C/ObjC but not for C++
+g++ -w  -pipe -DVCSMX -DUVM_DPI_DO_TYPE_CHECK -fPIC --std=c99 -fno-extended-identifiers -O -I/tools_vendor/synopsys/vcs/X-2025.06-SP2/include     -c /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.cc
+cc1plus: warning: command-line option '-std=c99' is valid for C/ObjC but not for C++
+g++ -w  -pipe -DVCSMX -DUVM_DPI_DO_TYPE_CHECK -fPIC --std=c99 -fno-extended-identifiers -O -I/tools_vendor/synopsys/vcs/X-2025.06-SP2/include     -c /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/dpi/uvm_verdi_dpi.cpp
+if [ -x /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/vcs_simv ]; then chmod a-x /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/vcs_simv; fi
+g++  -o /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/vcs_simv      -Wl,--no-as-needed -L/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/lib -lgen_isa_shim -Wl,-rpath,/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/lib -Wl,-rpath-link,/localdev/fzhang/ws/ibex-challenge/tools/spike/lib -rdynamic  -Wl,-rpath='$ORIGIN'/vcs_simv.daidir -Wl,-rpath=./vcs_simv.daidir -Wl,-rpath=/tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib -L/tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 uvm_dpi.o uvm_verdi_dpi.o   objs/amcQw_d.o  _4176683_archive_1.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o            -lvirsim -lerrorinf -lsnpsmalloc -lvfs      -lvcsnew -ldistsimclient -lsimprofile -lreader_common /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/libBA.a -luclinative /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive      ./../vcs_simv.daidir/vc_hdrs.o _vcs_pli_stub_.o   /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/vcs_save_restore_new.o /tools_vendor/synopsys/verdi/X-2025.06-SP2/share/PLI/VCS/LINUX64/pli.a -ldl -lm  -lc -lpthread -ldl 
+/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_l1c/vcs_simv up to date
+CPU time: 9.109 seconds to compile + .217 seconds to elab + .697 seconds to link
+Verdi KDB elaboration done and the database successfully generated
+vcs exit: 0
+start 17:29:59Z sources sha256: a056526d879ea458
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_trap: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ebreak_r10: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+dmem_err_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_nmi_irqp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 17:30:14Z
+gen_knobs_codegen --check: up to date
+OK   yaml source exists
+OK   codegen exists
+OK   codegen --check passes
+OK   plusarg names unique
+OK   yaml parses with no spurious plusarg keys (every desc quoted)
+OK   pkg declares PLUSARG_BUILD_CONFIG once
+OK   pkg declares PLUSARG_SMOKE_CYCLES once
+OK   pkg declares PLUSARG_SMOKE_INTG_FLIP once
+OK   pkg declares PLUSARG_DBG_CSR_PROBE once
+OK   pkg declares PLUSARG_MEM_IMAGE once
+OK   pkg declares PLUSARG_MEM_IMAGE_CRC32 once
+OK   pkg declares PLUSARG_MEM_IMAGE_WORDS once
+OK   pkg declares PLUSARG_MEM_READBACK_WORDS once
+OK   pkg declares PLUSARG_TOHOST_ADDR once
+OK   pkg declares PLUSARG_MEM_UNMAPPED_OK once
+OK   pkg declares PLUSARG_BOOT_ADDR once
+OK   pkg declares PLUSARG_HART_ID once
+OK   pkg declares PLUSARG_ALIVE_TIMEOUT once
+OK   pkg declares PLUSARG_FINISH_TIMEOUT once
+OK   pkg declares PLUSARG_REGIME_SCHED once
+OK   pkg declares PLUSARG_RVFI_TRACE once
+OK   pkg declares PLUSARG_FCOV_EN once
+OK   pkg declares PLUSARG_ICRAM_INIT once
+OK   enum icram_init has >= 2 values
+OK   enum icram_init default is a value
+OK   pkg carries values of icram_init
+OK   pkg declares PLUSARG_FETCH_EN_AT_RESET once
+OK   pkg declares PLUSARG_KEY_RESET_VALID once
+OK   pkg declares PLUSARG_SB_TRACE once
+OK   pkg declares PLUSARG_ISA_PC_NEXT_MASK_B13 once
+OK   pkg declares PLUSARG_ISA_STRING once
+OK   pkg declares PLUSARG_ISA_LOG once
+OK   pkg declares PLUSARG_EXPORT_FILE once
+OK   pkg declares PLUSARG_EXPORT_COUNTERS once
+OK   pkg declares PLUSARG_EXPORT_SOURCES once
+OK   pkg declares PLUSARG_EXPORT_FLUSH_EVERY once
+OK   pkg declares PLUSARG_UT_BOOT_RETIRE once
+OK   pkg declares PLUSARG_UT_ROWS_SET once
+OK   enum ut_rows_set has >= 2 values
+OK   enum ut_rows_set default is a value
+OK   pkg carries values of ut_rows_set
+OK   pkg declares PLUSARG_IBUS_GNT_MIN once
+OK   pkg declares PLUSARG_IBUS_GNT_MAX once
+OK   pkg declares PLUSARG_IBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_IBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_IBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_IBUS_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_BITS once
+OK   pkg declares PLUSARG_IBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_GNT_MIN once
+OK   pkg declares PLUSARG_DBUS_GNT_MAX once
+OK   pkg declares PLUSARG_DBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_DBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_DBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_DBUS_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_BITS once
+OK   pkg declares PLUSARG_DBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_ERR_HALF once
+OK   enum dbus_err_half has >= 2 values
+OK   enum dbus_err_half default is a value
+OK   pkg carries values of dbus_err_half
+OK   pkg declares PLUSARG_DBUS_ERR_STORE_PERFORM once
+OK   pkg declares PLUSARG_KEY_DELAY_MIN once
+OK   pkg declares PLUSARG_KEY_DELAY_MAX once
+OK   pkg declares PLUSARG_KEY_NEVER_CYCLES once
+OK   pkg declares PLUSARG_IRQ_MIN_GAP once
+OK   pkg declares PLUSARG_IRQ_HOLD_MIN once
+OK   pkg declares PLUSARG_IRQ_HOLD_MAX once
+OK   pkg declares PLUSARG_DBG_HOLD_MIN once
+OK   pkg declares PLUSARG_DBG_HOLD_MAX once
+OK   pkg declares PLUSARG_KNOB_IMEM_GNT_DELAY once
+OK   enum knob_imem_gnt_delay has >= 2 values
+OK   enum knob_imem_gnt_delay default is a value
+OK   pkg carries values of knob_imem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_RVALID_DELAY once
+OK   enum knob_imem_rvalid_delay has >= 2 values
+OK   enum knob_imem_rvalid_delay default is a value
+OK   pkg carries values of knob_imem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_ERR_RATE once
+OK   enum knob_imem_err_rate has >= 2 values
+OK   enum knob_imem_err_rate default is a value
+OK   pkg carries values of knob_imem_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_INTG_ERR_RATE once
+OK   enum knob_imem_intg_err_rate has >= 2 values
+OK   enum knob_imem_intg_err_rate default is a value
+OK   pkg carries values of knob_imem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_OUTSTANDING_CAP once
+OK   enum knob_imem_outstanding_cap has >= 2 values
+OK   enum knob_imem_outstanding_cap default is a value
+OK   pkg carries values of knob_imem_outstanding_cap
+OK   pkg declares PLUSARG_KNOB_DMEM_GNT_DELAY once
+OK   enum knob_dmem_gnt_delay has >= 2 values
+OK   enum knob_dmem_gnt_delay default is a value
+OK   pkg carries values of knob_dmem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_RVALID_DELAY once
+OK   enum knob_dmem_rvalid_delay has >= 2 values
+OK   enum knob_dmem_rvalid_delay default is a value
+OK   pkg carries values of knob_dmem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_ERR_RATE once
+OK   enum knob_dmem_err_rate has >= 2 values
+OK   enum knob_dmem_err_rate default is a value
+OK   pkg carries values of knob_dmem_err_rate
+OK   pkg declares PLUSARG_KNOB_DMEM_INTG_ERR_RATE once
+OK   enum knob_dmem_intg_err_rate has >= 2 values
+OK   enum knob_dmem_intg_err_rate default is a value
+OK   pkg carries values of knob_dmem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IRQ_REGIME once
+OK   enum knob_irq_regime has >= 2 values
+OK   enum knob_irq_regime default is a value
+OK   pkg carries values of knob_irq_regime
+OK   pkg declares PLUSARG_KNOB_IRQ_LINE_MIX once
+OK   enum knob_irq_line_mix has >= 2 values
+OK   enum knob_irq_line_mix default is a value
+OK   pkg carries values of knob_irq_line_mix
+OK   pkg declares PLUSARG_KNOB_IRQ_HOLD once
+OK   enum knob_irq_hold has >= 2 values
+OK   enum knob_irq_hold default is a value
+OK   pkg carries values of knob_irq_hold
+OK   pkg declares PLUSARG_KNOB_DEBUG_REQ_REGIME once
+OK   enum knob_debug_req_regime has >= 2 values
+OK   enum knob_debug_req_regime default is a value
+OK   pkg carries values of knob_debug_req_regime
+OK   pkg declares PLUSARG_KNOB_SCR_KEY_DELAY once
+OK   enum knob_scr_key_delay has >= 2 values
+OK   enum knob_scr_key_delay default is a value
+OK   pkg carries values of knob_scr_key_delay
+OK   pkg declares PLUSARG_KNOB_ICACHE_ECC_ERR_RATE once
+OK   enum knob_icache_ecc_err_rate has >= 2 values
+OK   enum knob_icache_ecc_err_rate default is a value
+OK   pkg carries values of knob_icache_ecc_err_rate
+OK   pkg declares PLUSARG_KNOB_FETCH_ENABLE_REGIME once
+OK   enum knob_fetch_enable_regime has >= 2 values
+OK   enum knob_fetch_enable_regime default is a value
+OK   pkg carries values of knob_fetch_enable_regime
+OK   pkg declares PLUSARG_KNOB_MCOUNTEREN_WRITABLE once
+OK   enum knob_mcounteren_writable has >= 2 values
+OK   enum knob_mcounteren_writable default is a value
+OK   pkg carries values of knob_mcounteren_writable
+OK   pkg declares PLUSARG_KNOB_INSTR_MIX once
+OK   enum knob_instr_mix has >= 2 values
+OK   enum knob_instr_mix default is a value
+OK   pkg carries values of knob_instr_mix
+OK   pkg declares PLUSARG_KNOB_PRIV_REGIME once
+OK   enum knob_priv_regime has >= 2 values
+OK   enum knob_priv_regime default is a value
+OK   pkg carries values of knob_priv_regime
+OK   pkg declares PLUSARG_KNOB_PMP_REGIME once
+OK   enum knob_pmp_regime has >= 2 values
+OK   enum knob_pmp_regime default is a value
+OK   pkg carries values of knob_pmp_regime
+OK   pkg declares PLUSARG_CHK_ALL once
+OK   pkg declares PLUSARG_CHK_IBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_IBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_SVA_RVALID_LEGAL once
+OK   pkg declares PLUSARG_CHK_DBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_DBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_DBUS_SPLIT once
+OK   pkg declares PLUSARG_CHK_DBUS_STORE_INTG once
+OK   pkg declares PLUSARG_CHK_ICRAM_WRITE_ECC once
+OK   pkg declares PLUSARG_CHK_ICRAM_INVAL_SWEEP once
+OK   pkg declares PLUSARG_CHK_ICRAM_ECC_RESPONSE once
+OK   pkg declares PLUSARG_CHK_SCRKEY_PROTO once
+OK   pkg declares PLUSARG_CHK_ALERT_MINOR once
+OK   pkg declares PLUSARG_CHK_ALERT_BUS once
+OK   pkg declares PLUSARG_CHK_ALERT_INTERNAL once
+OK   pkg declares PLUSARG_CHK_CRASH_DUMP once
+OK   pkg declares PLUSARG_CHK_DOUBLE_FAULT once
+OK   pkg declares PLUSARG_CHK_CORE_BUSY once
+OK   pkg declares PLUSARG_CHK_DATA_TAG_QUIET once
+OK   pkg declares PLUSARG_CHK_FETCH_EN once
+OK   pkg declares PLUSARG_CHK_IRQ_PENDING once
+OK   pkg declares PLUSARG_CHK_IRQ_ENTRY once
+OK   pkg declares PLUSARG_CHK_IRQ_MASKED once
+OK   pkg declares PLUSARG_CHK_NMI_ENTRY once
+OK   pkg declares PLUSARG_CHK_NMI_INTERNAL once
+OK   pkg declares PLUSARG_CHK_DBG_ENTRY once
+OK   pkg declares PLUSARG_CHK_DBG_EXC once
+OK   pkg declares PLUSARG_CHK_DBG_MASKED once
+OK   pkg declares PLUSARG_CHK_DBG_DRET once
+OK   pkg declares PLUSARG_CHK_DBG_TRIGGER once
+OK   pkg declares PLUSARG_CHK_CTR_MCYCLE once
+OK   pkg declares PLUSARG_CHK_CTR_MINSTRET once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_EXACT once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_BOUND once
+OK   pkg declares PLUSARG_CHK_PMP_DATA once
+OK   pkg declares PLUSARG_CHK_PMP_FETCH once
+OK   pkg declares PLUSARG_CHK_ISA once
+OK   pkg declares PLUSARG_CHK_ISA_PC once
+OK   pkg declares PLUSARG_CHK_ISA_INSN once
+OK   pkg declares PLUSARG_CHK_ISA_TRAP once
+OK   pkg declares PLUSARG_CHK_ISA_RD once
+OK   pkg declares PLUSARG_CHK_ISA_MEM once
+OK   pkg declares PLUSARG_CHK_ISA_PRV once
+OK   pkg declares PLUSARG_CHK_ISA_PC_NEXT once
+OK   pkg declares PLUSARG_CHK_ISA_CSR once
+OK   pkg declares PLUSARG_CHK_RVFI_PROTO once
+OK   pkg declares PLUSARG_CHK_T022_NEVER once
+OK   pkg declares PLUSARG_CHK_BRIDGE_ACCOUNTING once
+OK   no PLUSARG_ outside the generated region
+OK   hart_id knob present (C1)
+OK   ut_lockstep_min_ratio_pct removed (exact consumed-records check)
+OK   dbg_csr_probe is debug_only
+OK   rvfi_trace is debug_only
+OK   isa_string is debug_only
+OK   isa_log is debug_only
+OK   sb_trace is debug_only
+OK   Runtime debug_only_plusargs lists gen_dbg_csr_probe
+OK   Runtime debug_only_plusargs lists gen_rvfi_trace
+OK   Runtime debug_only_plusargs lists gen_sb_trace
+OK   Runtime debug_only_plusargs lists gen_isa_string
+OK   Runtime debug_only_plusargs lists gen_isa_log
+OK   Runtime debug_only_plusargs lists gen_export_flush_every
+OK   regime knob knob_imem_gnt_delay present as enum
+OK   regime knob knob_imem_rvalid_delay present as enum
+OK   regime knob knob_imem_err_rate present as enum
+OK   regime knob knob_imem_intg_err_rate present as enum
+OK   regime knob knob_imem_outstanding_cap present as enum
+OK   regime knob knob_dmem_gnt_delay present as enum
+OK   regime knob knob_dmem_rvalid_delay present as enum
+OK   regime knob knob_dmem_err_rate present as enum
+OK   regime knob knob_dmem_intg_err_rate present as enum
+OK   regime knob knob_irq_regime present as enum
+OK   regime knob knob_irq_line_mix present as enum
+OK   regime knob knob_irq_hold present as enum
+OK   regime knob knob_debug_req_regime present as enum
+OK   regime knob knob_scr_key_delay present as enum
+OK   regime knob knob_icache_ecc_err_rate present as enum
+OK   regime knob knob_fetch_enable_regime present as enum
+OK   regime knob knob_mcounteren_writable present as enum
+OK   regime knob knob_instr_mix present as enum
+OK   regime knob knob_priv_regime present as enum
+OK   regime knob knob_pmp_regime present as enum
+OK   regime_windows.gnt_delay keys equal values of knob_imem_gnt_delay
+OK   regime_windows.gnt_delay keys equal values of knob_dmem_gnt_delay
+OK   regime_windows.rvalid_delay keys equal values of knob_imem_rvalid_delay
+OK   regime_windows.rvalid_delay keys equal values of knob_dmem_rvalid_delay
+OK   regime_windows.rate_per_mille keys equal values of knob_imem_err_rate
+OK   regime_windows.rate_per_mille keys equal values of knob_dmem_err_rate
+OK   regime_windows.outstanding_cap keys equal values of knob_imem_outstanding_cap
+OK   rvalid classes align with the fcov plan (min1 1, short 2..4, long 5..)
+OK   pkg has gen_regime_window()
+OK   pkg has gen_regime_scalar()
+OK   pkg renders rvalid window min1
+OK   pkg renders rvalid window short
+OK   pkg renders rvalid window long
+OK   pkg renders rvalid window random
+OK   gen_knobs.py exists
+OK   python PLUSARGS has every name
+OK   python ISA_STRING equals yaml
+OK   python knob values match yaml
+OK   python REGIME_WINDOWS equals yaml
+OK   python DEBUG_ONLY equals yaml
+OK   header exists
+OK   header ISA string equals yaml
+OK   header carries boot_addr_default
+OK   pkg carries GEN_MM_BOOT_ADDR_DEFAULT
+OK   header carries boot_page_mask
+OK   pkg carries GEN_MM_BOOT_PAGE_MASK
+OK   header carries boot_reset_offset
+OK   pkg carries GEN_MM_BOOT_RESET_OFFSET
+OK   header carries boot_page
+OK   pkg carries GEN_MM_BOOT_PAGE
+OK   header carries prog_size
+OK   pkg carries GEN_MM_PROG_SIZE
+OK   header carries dm_base
+OK   pkg carries GEN_MM_DM_BASE
+OK   header carries dm_size
+OK   pkg carries GEN_MM_DM_SIZE
+OK   header carries dm_halt
+OK   pkg carries GEN_MM_DM_HALT
+OK   header carries dm_exception
+OK   pkg carries GEN_MM_DM_EXCEPTION
+OK   header carries dm_budget
+OK   pkg carries GEN_MM_DM_BUDGET
+OK   header carries mmio_base
+OK   pkg carries GEN_MM_MMIO_BASE
+OK   header carries mmio_size
+OK   pkg carries GEN_MM_MMIO_SIZE
+OK   header carries sig_addr
+OK   pkg carries GEN_MM_SIG_ADDR
+OK   header carries sig_size
+OK   pkg carries GEN_MM_SIG_SIZE
+OK   header carries irq_ack_addr
+OK   pkg carries GEN_MM_IRQ_ACK_ADDR
+OK   header carries irq_ack_size
+OK   pkg carries GEN_MM_IRQ_ACK_SIZE
+OK   header carries eot_addr
+OK   pkg carries GEN_MM_EOT_ADDR
+OK   header carries eot_size
+OK   pkg carries GEN_MM_EOT_SIZE
+OK   header carries phase_mark_addr
+OK   pkg carries GEN_MM_PHASE_MARK_ADDR
+OK   header carries phase_mark_size
+OK   pkg carries GEN_MM_PHASE_MARK_SIZE
+OK   memory map renders sig_size
+OK   memory map renders irq_ack_size
+OK   memory map renders eot_size
+OK   memory map renders phase_mark_size
+OK   memory map carries boot_page_mask
+OK   memory map dm_base agrees with gen_program
+OK   memory map dm_size agrees with gen_program
+OK   memory map dm_halt agrees with gen_program
+OK   memory map boot_page agrees with gen_program
+OK   memory map prog_size agrees with gen_program
+OK   gen_program ISA string equals yaml
+OK   MMIO page outside program and DM windows
+OK   pkg declares constant GEN_ICACHE_NUM_FB
+OK   header carries GEN_ICACHE_NUM_FB
+OK   python CONSTANTS[GEN_ICACHE_NUM_FB] equals yaml
+OK   pkg declares constant GEN_IBUS_MAX_OUTSTANDING
+OK   header carries GEN_IBUS_MAX_OUTSTANDING
+OK   pkg renders GEN_IBUS_MAX_OUTSTANDING_PY mirror
+OK   pkg declares constant GEN_DBUS_MAX_OUTSTANDING
+OK   header carries GEN_DBUS_MAX_OUTSTANDING
+OK   python CONSTANTS[GEN_DBUS_MAX_OUTSTANDING] equals yaml
+OK   pkg declares constant GEN_CSR_WRITE_TO_RVFI_OFFSET
+OK   header carries GEN_CSR_WRITE_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_CSR_WRITE_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_TRAP_TO_RVFI_OFFSET
+OK   header carries GEN_TRAP_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_TRAP_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_LSU_TRAP_TO_RVFI_OFFSET
+OK   header carries GEN_LSU_TRAP_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_LSU_TRAP_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_IRQ_MARKER_TO_RVFI_OFFSET
+OK   header carries GEN_IRQ_MARKER_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_IRQ_MARKER_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_RVFI_ID_EXIT_OFFSET
+OK   header carries GEN_RVFI_ID_EXIT_OFFSET
+OK   python CONSTANTS[GEN_RVFI_ID_EXIT_OFFSET] equals yaml
+OK   pkg declares constant GEN_ICACHE_ECC_WINDOW
+OK   header carries GEN_ICACHE_ECC_WINDOW
+OK   python CONSTANTS[GEN_ICACHE_ECC_WINDOW] equals yaml
+OK   pkg declares constant GEN_IRQ_ENTRY_BOUND_RECORDS
+OK   header carries GEN_IRQ_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_IRQ_ENTRY_BOUND_RECORDS] equals yaml
+OK   pkg declares constant GEN_DBG_ENTRY_BOUND_RECORDS
+OK   header carries GEN_DBG_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_DBG_ENTRY_BOUND_RECORDS] equals yaml
+OK   pkg declares constant GEN_CLK_PERIOD_NS
+OK   header carries GEN_CLK_PERIOD_NS
+OK   python CONSTANTS[GEN_CLK_PERIOD_NS] equals yaml
+OK   pkg declares constant GEN_MEM_READBACK_WORDS_DEFAULT
+OK   header carries GEN_MEM_READBACK_WORDS_DEFAULT
+OK   python CONSTANTS[GEN_MEM_READBACK_WORDS_DEFAULT] equals yaml
+OK   pkg declares constant GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   header carries GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   python CONSTANTS[GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT] equals yaml
+OK   pkg declares constant GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   header carries GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   python CONSTANTS[GEN_FINISH_TIMEOUT_CYCLES_DEFAULT] equals yaml
+OK   pkg declares constant GEN_IRQ_FAST_W
+OK   header carries GEN_IRQ_FAST_W
+OK   pkg renders GEN_IRQ_FAST_W_PY mirror
+OK   pkg declares constant GEN_IRQ_FAST_MASK
+OK   header carries GEN_IRQ_FAST_MASK
+OK   pkg renders GEN_IRQ_FAST_MASK_PY mirror
+OK   pkg declares constant GEN_CSR_MARCHID_VALUE
+OK   header carries GEN_CSR_MARCHID_VALUE
+OK   pkg renders GEN_CSR_MARCHID_VALUE_PY mirror
+OK   pkg declares constant GEN_CSR_CPUCTRLSTS
+OK   header carries GEN_CSR_CPUCTRLSTS
+OK   pkg renders GEN_CSR_CPUCTRLSTS_PY mirror
+OK   pkg declares constant GEN_CSR_SECURESEED
+OK   header carries GEN_CSR_SECURESEED
+OK   pkg renders GEN_CSR_SECURESEED_PY mirror
+OK   pkg declares constant GEN_MHPM_COUNTER_NUM
+OK   header carries GEN_MHPM_COUNTER_NUM
+OK   python CONSTANTS[GEN_MHPM_COUNTER_NUM] equals yaml
+OK   pkg declares constant GEN_INSN_MRET
+OK   header carries GEN_INSN_MRET
+OK   python CONSTANTS[GEN_INSN_MRET] equals yaml
+OK   pkg declares constant GEN_INSN_DRET
+OK   header carries GEN_INSN_DRET
+OK   python CONSTANTS[GEN_INSN_DRET] equals yaml
+OK   pkg declares constant GEN_TDATA1_IBEX_RDATA
+OK   header carries GEN_TDATA1_IBEX_RDATA
+OK   python CONSTANTS[GEN_TDATA1_IBEX_RDATA] equals yaml
+OK   pkg declares constant GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT
+OK   header carries GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT
+OK   python CONSTANTS[GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT] equals yaml
+OK   pkg declares constant GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT
+OK   header carries GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT
+OK   python CONSTANTS[GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT] equals yaml
+OK   pkg declares constant GEN_MEM_ERR_ARM_KIND_ERR
+OK   header carries GEN_MEM_ERR_ARM_KIND_ERR
+OK   python CONSTANTS[GEN_MEM_ERR_ARM_KIND_ERR] equals yaml
+OK   pkg declares constant GEN_BUS_ERR_LOG_DEPTH
+OK   header carries GEN_BUS_ERR_LOG_DEPTH
+OK   python CONSTANTS[GEN_BUS_ERR_LOG_DEPTH] equals yaml
+OK   pkg declares constant GEN_BUS_ERR_DRAIN_CYCLES
+OK   header carries GEN_BUS_ERR_DRAIN_CYCLES
+OK   python CONSTANTS[GEN_BUS_ERR_DRAIN_CYCLES] equals yaml
+OK   pkg declares constant GEN_NMI_INT_ENTRY_BOUND_RECORDS
+OK   header carries GEN_NMI_INT_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_NMI_INT_ENTRY_BOUND_RECORDS] equals yaml
+OK   pkg declares constant GEN_MEM_ERR_ARM_KIND_INTG
+OK   header carries GEN_MEM_ERR_ARM_KIND_INTG
+OK   python CONSTANTS[GEN_MEM_ERR_ARM_KIND_INTG] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_FETCH
+OK   header carries GEN_ISA_FAULT_KIND_FETCH
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_FETCH] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_LOAD
+OK   header carries GEN_ISA_FAULT_KIND_LOAD
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_LOAD] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_STORE
+OK   header carries GEN_ISA_FAULT_KIND_STORE
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_STORE] equals yaml
+OK   derived GEN_IBUS_MAX_OUTSTANDING == GEN_ICACHE_NUM_FB * IC_LINE_BEATS (ibex_pkg parse)
+OK   derived GEN_IRQ_FAST_W == irq_fast width (ibex_pkg parse)
+OK   derived GEN_IRQ_FAST_MASK == ((1 << w) - 1) << 16
+OK   boot_addr default from memory_map.boot_addr_default
+OK   mem_readback_words default from GEN_MEM_READBACK_WORDS_DEFAULT
+OK   alive_timeout default from GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   finish_timeout default from GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   yaml has bridge_cmds
+OK   pkg declares GEN_CMD_IRQ_SET = 1
+OK   pkg gen_cmd_name maps 1 to IRQ_SET
+OK   pkg declares GEN_CMD_IRQ_CLR = 2
+OK   pkg gen_cmd_name maps 2 to IRQ_CLR
+OK   pkg declares GEN_CMD_NMI_PULSE = 3
+OK   pkg gen_cmd_name maps 3 to NMI_PULSE
+OK   pkg declares GEN_CMD_DBG_REQ = 4
+OK   pkg gen_cmd_name maps 4 to DBG_REQ
+OK   pkg declares GEN_CMD_REGIME_SET = 5
+OK   pkg gen_cmd_name maps 5 to REGIME_SET
+OK   pkg declares GEN_CMD_KEY_MODE = 6
+OK   pkg gen_cmd_name maps 6 to KEY_MODE
+OK   pkg declares GEN_CMD_MEM_ERR_ARM = 7
+OK   pkg gen_cmd_name maps 7 to MEM_ERR_ARM
+OK   pkg declares GEN_CMD_ICACHE_ECC_ARM = 8
+OK   pkg gen_cmd_name maps 8 to ICACHE_ECC_ARM
+OK   pkg declares GEN_CMD_FETCH_EN = 9
+OK   pkg gen_cmd_name maps 9 to FETCH_EN
+OK   pkg declares GEN_CMD_MEM_PEEK = 10
+OK   pkg gen_cmd_name maps 10 to MEM_PEEK
+OK   pkg declares GEN_CMD_MISC = 11
+OK   pkg gen_cmd_name maps 11 to MISC
+OK   pkg declares GEN_CMD_EXPORT_FLUSH = 12
+OK   pkg gen_cmd_name maps 12 to EXPORT_FLUSH
+OK   python CMD codes match
+OK   pkg declares GEN_KNOB_ID_IMEM_GNT_DELAY = 0
+OK   pkg declares GEN_KNOB_ID_IMEM_RVALID_DELAY = 1
+OK   pkg declares GEN_KNOB_ID_IMEM_ERR_RATE = 2
+OK   pkg declares GEN_KNOB_ID_IMEM_INTG_ERR_RATE = 3
+OK   pkg declares GEN_KNOB_ID_IMEM_OUTSTANDING_CAP = 4
+OK   pkg declares GEN_KNOB_ID_DMEM_GNT_DELAY = 5
+OK   pkg declares GEN_KNOB_ID_DMEM_RVALID_DELAY = 6
+OK   pkg declares GEN_KNOB_ID_DMEM_ERR_RATE = 7
+OK   pkg declares GEN_KNOB_ID_DMEM_INTG_ERR_RATE = 8
+OK   pkg declares GEN_KNOB_ID_IRQ_REGIME = 9
+OK   pkg declares GEN_KNOB_ID_IRQ_LINE_MIX = 10
+OK   pkg declares GEN_KNOB_ID_IRQ_HOLD = 11
+OK   pkg declares GEN_KNOB_ID_DEBUG_REQ_REGIME = 12
+OK   pkg declares GEN_KNOB_ID_SCR_KEY_DELAY = 13
+OK   pkg declares GEN_KNOB_ID_ICACHE_ECC_ERR_RATE = 14
+OK   pkg declares GEN_KNOB_ID_FETCH_ENABLE_REGIME = 15
+OK   pkg declares GEN_KNOB_ID_MCOUNTEREN_WRITABLE = 16
+OK   pkg declares GEN_KNOB_ID_INSTR_MIX = 17
+OK   pkg declares GEN_KNOB_ID_PRIV_REGIME = 18
+OK   pkg declares GEN_KNOB_ID_PMP_REGIME = 19
+OK   python KNOB_IDS matches
+OK   pkg renders GEN_EXPORT_RECORD_FIELDS
+OK   pkg renders GEN_EXPORT_COUNTER_FIELDS
+OK   pkg has gen_export_source_known and gen_export_event_header
+OK   record field order is a gen_rvfi_txn member
+OK   record field pc_rdata is a gen_rvfi_txn member
+OK   record field pc_wdata is a gen_rvfi_txn member
+OK   record field insn is a gen_rvfi_txn member
+OK   record field trap is a gen_rvfi_txn member
+OK   record field halt is a gen_rvfi_txn member
+OK   record field intr is a gen_rvfi_txn member
+OK   record field mode is a gen_rvfi_txn member
+OK   record field ixl is a gen_rvfi_txn member
+OK   record field rs1_addr is a gen_rvfi_txn member
+OK   record field rs1_rdata is a gen_rvfi_txn member
+OK   record field rs2_addr is a gen_rvfi_txn member
+OK   record field rs2_rdata is a gen_rvfi_txn member
+OK   record field rs3_addr is a gen_rvfi_txn member
+OK   record field rs3_rdata is a gen_rvfi_txn member
+OK   record field rd_addr is a gen_rvfi_txn member
+OK   record field rd_wdata is a gen_rvfi_txn member
+OK   record field mem_addr is a gen_rvfi_txn member
+OK   record field mem_rmask is a gen_rvfi_txn member
+OK   record field mem_wmask is a gen_rvfi_txn member
+OK   record field mem_rdata is a gen_rvfi_txn member
+OK   record field mem_wdata is a gen_rvfi_txn member
+OK   record field ext_pre_mip is a gen_rvfi_txn member
+OK   record field ext_post_mip is a gen_rvfi_txn member
+OK   record field ext_nmi is a gen_rvfi_txn member
+OK   record field ext_nmi_int is a gen_rvfi_txn member
+OK   record field ext_debug_req is a gen_rvfi_txn member
+OK   record field ext_debug_mode is a gen_rvfi_txn member
+OK   record field ext_rf_wr_suppress is a gen_rvfi_txn member
+OK   record field ext_ic_scr_key_valid is a gen_rvfi_txn member
+OK   record field ext_irq_valid is a gen_rvfi_txn member
+OK   record field ext_exp_valid is a gen_rvfi_txn member
+OK   record field ext_exp_insn is a gen_rvfi_txn member
+OK   record field ext_exp_last is a gen_rvfi_txn member
+OK   record field ext_mcycle is a gen_rvfi_txn member
+OK   record field cycle is a gen_rvfi_txn member
+OK   counter fields are 10 + 10
+OK   record-line include lists every field in order
+OK   event include defines gen_export_line_ibus_req
+OK   pkg event header names ibus/req
+OK   event include defines gen_export_line_ibus_gnt
+OK   pkg event header names ibus/gnt
+OK   event include defines gen_export_line_ibus_rvalid
+OK   pkg event header names ibus/rvalid
+OK   event include defines gen_export_line_dbus_req
+OK   pkg event header names dbus/req
+OK   event include defines gen_export_line_dbus_gnt
+OK   pkg event header names dbus/gnt
+OK   event include defines gen_export_line_dbus_rvalid
+OK   pkg event header names dbus/rvalid
+OK   event include defines gen_export_line_pin_irq_software
+OK   pkg event header names pin/irq_software
+OK   event include defines gen_export_line_pin_irq_timer
+OK   pkg event header names pin/irq_timer
+OK   event include defines gen_export_line_pin_irq_external
+OK   pkg event header names pin/irq_external
+OK   event include defines gen_export_line_pin_irq_fast
+OK   pkg event header names pin/irq_fast
+OK   event include defines gen_export_line_pin_irq_nm
+OK   pkg event header names pin/irq_nm
+OK   event include defines gen_export_line_pin_debug_req
+OK   pkg event header names pin/debug_req
+OK   event include defines gen_export_line_pin_fetch_enable
+OK   pkg event header names pin/fetch_enable
+OK   event include defines gen_export_line_pin_mcounteren_writable
+OK   pkg event header names pin/mcounteren_writable
+OK   event include defines gen_export_line_alert_alert_minor
+OK   pkg event header names alert/alert_minor
+OK   event include defines gen_export_line_alert_alert_major_bus
+OK   pkg event header names alert/alert_major_bus
+OK   event include defines gen_export_line_alert_alert_major_internal
+OK   pkg event header names alert/alert_major_internal
+OK   event include defines gen_export_line_alert_double_fault_seen
+OK   pkg event header names alert/double_fault_seen
+OK   event include defines gen_export_line_misc_irq_pending
+OK   pkg event header names misc/irq_pending
+OK   event include defines gen_export_line_misc_core_busy
+OK   pkg event header names misc/core_busy
+OK   event include defines gen_export_line_misc_crash_dump_current_pc
+OK   pkg event header names misc/crash_dump_current_pc
+OK   event include defines gen_export_line_misc_crash_dump_next_pc
+OK   pkg event header names misc/crash_dump_next_pc
+OK   event include defines gen_export_line_misc_crash_dump_last_data_addr
+OK   pkg event header names misc/crash_dump_last_data_addr
+OK   event include defines gen_export_line_misc_crash_dump_exception_pc
+OK   pkg event header names misc/crash_dump_exception_pc
+OK   event include defines gen_export_line_misc_crash_dump_exception_addr
+OK   pkg event header names misc/crash_dump_exception_addr
+OK   event include defines gen_export_line_icram_inject
+OK   pkg event header names icram/inject
+OK   event include defines gen_export_line_icram_lookup
+OK   pkg event header names icram/lookup
+OK   event include defines gen_export_line_icram_tag_write
+OK   pkg event header names icram/tag_write
+OK   event include defines gen_export_line_icram_fill_write
+OK   pkg event header names icram/fill_write
+OK   event include defines gen_export_line_scrkey_req
+OK   pkg event header names scrkey/req
+OK   event include defines gen_export_line_scrkey_valid
+OK   pkg event header names scrkey/valid
+OK   event include defines gen_export_line_regime_phase
+OK   pkg event header names regime/phase
+OK   python EXPORT_RECORD_FIELDS equals yaml
+OK   python EXPORT_COUNTER_FIELDS equals yaml
+OK   python EXPORT_EVENTS equals yaml
+OK   every knob_* names a regime_set_consumer
+OK   python REGIME_SET_CONSUMED equals the yaml run-time consumers
+OK   python KNOB_CONSUMER equals yaml
+OK   pkg has gen_knob_regime_set_consumed and gen_knob_consumer
+OK   python EXPORT_ACTIVE_SOURCES equals yaml
+OK   active sources are a subset of the event sources
+OK   pkg renders GEN_EXPORT_ACTIVE_SOURCES and gen_export_source_active
+OK   pkg renders GEN_EXPORT_ROWS in yaml order
+OK   pkg has gen_export_row_header
+OK   pkg row header case for ibus/req
+OK   pkg row header case for ibus/gnt
+OK   pkg row header case for ibus/rvalid
+OK   pkg row header case for dbus/req
+OK   pkg row header case for dbus/gnt
+OK   pkg row header case for dbus/rvalid
+OK   pkg row header case for pin/irq_software
+OK   pkg row header case for pin/irq_timer
+OK   pkg row header case for pin/irq_external
+OK   pkg row header case for pin/irq_fast
+OK   pkg row header case for pin/irq_nm
+OK   pkg row header case for pin/debug_req
+OK   pkg row header case for pin/fetch_enable
+OK   pkg row header case for pin/mcounteren_writable
+OK   pkg row header case for alert/alert_minor
+OK   pkg row header case for alert/alert_major_bus
+OK   pkg row header case for alert/alert_major_internal
+OK   pkg row header case for alert/double_fault_seen
+OK   pkg row header case for misc/irq_pending
+OK   pkg row header case for misc/core_busy
+OK   pkg row header case for misc/crash_dump_current_pc
+OK   pkg row header case for misc/crash_dump_next_pc
+OK   pkg row header case for misc/crash_dump_last_data_addr
+OK   pkg row header case for misc/crash_dump_exception_pc
+OK   pkg row header case for misc/crash_dump_exception_addr
+OK   pkg row header case for icram/inject
+OK   pkg row header case for icram/lookup
+OK   pkg row header case for icram/tag_write
+OK   pkg row header case for icram/fill_write
+OK   pkg row header case for scrkey/req
+OK   pkg row header case for scrkey/valid
+OK   pkg row header case for regime/phase
+OK   export knob export_file present
+OK   export knob export_counters present
+OK   export knob export_sources present
+OK   export knob export_flush_every present
+OK   export_flush_every is debug_only
+OK   EXPORT_FLUSH is a bridge command
+OK   pkg has gen_knob_value()
+OK   pkg has gen_knob_name()
+OK   pkg has gen_is_known_plusarg
+OK   known-plusarg list covers every name
+OK   pkg has gen_is_bool_plusarg
+OK   bool-plusarg list covers every bool knob
+OK   env cfg include exists
+OK   cfg field for build_config
+OK   cfg parses PLUSARG_BUILD_CONFIG
+OK   cfg field for smoke_cycles
+OK   cfg parses PLUSARG_SMOKE_CYCLES
+OK   cfg field for smoke_intg_flip
+OK   cfg parses PLUSARG_SMOKE_INTG_FLIP
+OK   cfg field for dbg_csr_probe
+OK   cfg parses PLUSARG_DBG_CSR_PROBE
+OK   cfg field for mem_image
+OK   cfg parses PLUSARG_MEM_IMAGE
+OK   cfg field for mem_image_crc32
+OK   cfg parses PLUSARG_MEM_IMAGE_CRC32
+OK   cfg field for mem_image_words
+OK   cfg parses PLUSARG_MEM_IMAGE_WORDS
+OK   cfg field for mem_readback_words
+OK   cfg parses PLUSARG_MEM_READBACK_WORDS
+OK   cfg field for tohost_addr
+OK   cfg parses PLUSARG_TOHOST_ADDR
+OK   cfg field for mem_unmapped_ok
+OK   cfg parses PLUSARG_MEM_UNMAPPED_OK
+OK   cfg field for boot_addr
+OK   cfg parses PLUSARG_BOOT_ADDR
+OK   cfg field for hart_id
+OK   cfg parses PLUSARG_HART_ID
+OK   cfg field for alive_timeout
+OK   cfg parses PLUSARG_ALIVE_TIMEOUT
+OK   cfg field for finish_timeout
+OK   cfg parses PLUSARG_FINISH_TIMEOUT
+OK   cfg field for regime_sched
+OK   cfg parses PLUSARG_REGIME_SCHED
+OK   cfg field for rvfi_trace
+OK   cfg parses PLUSARG_RVFI_TRACE
+OK   cfg field for fcov_en
+OK   cfg parses PLUSARG_FCOV_EN
+OK   cfg field for icram_init
+OK   cfg parses PLUSARG_ICRAM_INIT
+OK   cfg field for fetch_en_at_reset
+OK   cfg parses PLUSARG_FETCH_EN_AT_RESET
+OK   cfg field for key_reset_valid
+OK   cfg parses PLUSARG_KEY_RESET_VALID
+OK   cfg field for sb_trace
+OK   cfg parses PLUSARG_SB_TRACE
+OK   cfg field for isa_pc_next_mask_b13
+OK   cfg parses PLUSARG_ISA_PC_NEXT_MASK_B13
+OK   cfg field for isa_string
+OK   cfg parses PLUSARG_ISA_STRING
+OK   cfg field for isa_log
+OK   cfg parses PLUSARG_ISA_LOG
+OK   cfg field for export_file
+OK   cfg parses PLUSARG_EXPORT_FILE
+OK   cfg field for export_counters
+OK   cfg parses PLUSARG_EXPORT_COUNTERS
+OK   cfg field for export_sources
+OK   cfg parses PLUSARG_EXPORT_SOURCES
+OK   cfg field for export_flush_every
+OK   cfg parses PLUSARG_EXPORT_FLUSH_EVERY
+OK   cfg field for ut_boot_retire
+OK   cfg parses PLUSARG_UT_BOOT_RETIRE
+OK   cfg field for ut_rows_set
+OK   cfg parses PLUSARG_UT_ROWS_SET
+OK   cfg field for ibus_gnt_min
+OK   cfg parses PLUSARG_IBUS_GNT_MIN
+OK   cfg field for ibus_gnt_max
+OK   cfg parses PLUSARG_IBUS_GNT_MAX
+OK   cfg field for ibus_rvalid_min
+OK   cfg parses PLUSARG_IBUS_RVALID_MIN
+OK   cfg field for ibus_rvalid_max
+OK   cfg parses PLUSARG_IBUS_RVALID_MAX
+OK   cfg field for ibus_max_outstanding
+OK   cfg parses PLUSARG_IBUS_MAX_OUTSTANDING
+OK   cfg field for ibus_err_rate
+OK   cfg parses PLUSARG_IBUS_ERR_RATE
+OK   cfg field for ibus_intg_err_rate
+OK   cfg parses PLUSARG_IBUS_INTG_ERR_RATE
+OK   cfg field for ibus_intg_bits
+OK   cfg parses PLUSARG_IBUS_INTG_BITS
+OK   cfg field for ibus_err_window
+OK   cfg parses PLUSARG_IBUS_ERR_WINDOW
+OK   cfg field for dbus_gnt_min
+OK   cfg parses PLUSARG_DBUS_GNT_MIN
+OK   cfg field for dbus_gnt_max
+OK   cfg parses PLUSARG_DBUS_GNT_MAX
+OK   cfg field for dbus_rvalid_min
+OK   cfg parses PLUSARG_DBUS_RVALID_MIN
+OK   cfg field for dbus_rvalid_max
+OK   cfg parses PLUSARG_DBUS_RVALID_MAX
+OK   cfg field for dbus_max_outstanding
+OK   cfg parses PLUSARG_DBUS_MAX_OUTSTANDING
+OK   cfg field for dbus_err_rate
+OK   cfg parses PLUSARG_DBUS_ERR_RATE
+OK   cfg field for dbus_intg_err_rate
+OK   cfg parses PLUSARG_DBUS_INTG_ERR_RATE
+OK   cfg field for dbus_intg_bits
+OK   cfg parses PLUSARG_DBUS_INTG_BITS
+OK   cfg field for dbus_err_window
+OK   cfg parses PLUSARG_DBUS_ERR_WINDOW
+OK   cfg field for dbus_err_half
+OK   cfg parses PLUSARG_DBUS_ERR_HALF
+OK   cfg field for dbus_err_store_perform
+OK   cfg parses PLUSARG_DBUS_ERR_STORE_PERFORM
+OK   cfg field for key_delay_min
+OK   cfg parses PLUSARG_KEY_DELAY_MIN
+OK   cfg field for key_delay_max
+OK   cfg parses PLUSARG_KEY_DELAY_MAX
+OK   cfg field for key_never_cycles
+OK   cfg parses PLUSARG_KEY_NEVER_CYCLES
+OK   cfg field for irq_min_gap
+OK   cfg parses PLUSARG_IRQ_MIN_GAP
+OK   cfg field for irq_hold_min
+OK   cfg parses PLUSARG_IRQ_HOLD_MIN
+OK   cfg field for irq_hold_max
+OK   cfg parses PLUSARG_IRQ_HOLD_MAX
+OK   cfg field for dbg_hold_min
+OK   cfg parses PLUSARG_DBG_HOLD_MIN
+OK   cfg field for dbg_hold_max
+OK   cfg parses PLUSARG_DBG_HOLD_MAX
+OK   cfg field for knob_imem_gnt_delay
+OK   cfg parses PLUSARG_KNOB_IMEM_GNT_DELAY
+OK   cfg field for knob_imem_rvalid_delay
+OK   cfg parses PLUSARG_KNOB_IMEM_RVALID_DELAY
+OK   cfg field for knob_imem_err_rate
+OK   cfg parses PLUSARG_KNOB_IMEM_ERR_RATE
+OK   cfg field for knob_imem_intg_err_rate
+OK   cfg parses PLUSARG_KNOB_IMEM_INTG_ERR_RATE
+OK   cfg field for knob_imem_outstanding_cap
+OK   cfg parses PLUSARG_KNOB_IMEM_OUTSTANDING_CAP
+OK   cfg field for knob_dmem_gnt_delay
+OK   cfg parses PLUSARG_KNOB_DMEM_GNT_DELAY
+OK   cfg field for knob_dmem_rvalid_delay
+OK   cfg parses PLUSARG_KNOB_DMEM_RVALID_DELAY
+OK   cfg field for knob_dmem_err_rate
+OK   cfg parses PLUSARG_KNOB_DMEM_ERR_RATE
+OK   cfg field for knob_dmem_intg_err_rate
+OK   cfg parses PLUSARG_KNOB_DMEM_INTG_ERR_RATE
+OK   cfg field for knob_irq_regime
+OK   cfg parses PLUSARG_KNOB_IRQ_REGIME
+OK   cfg field for knob_irq_line_mix
+OK   cfg parses PLUSARG_KNOB_IRQ_LINE_MIX
+OK   cfg field for knob_irq_hold
+OK   cfg parses PLUSARG_KNOB_IRQ_HOLD
+OK   cfg field for knob_debug_req_regime
+OK   cfg parses PLUSARG_KNOB_DEBUG_REQ_REGIME
+OK   cfg field for knob_scr_key_delay
+OK   cfg parses PLUSARG_KNOB_SCR_KEY_DELAY
+OK   cfg field for knob_icache_ecc_err_rate
+OK   cfg parses PLUSARG_KNOB_ICACHE_ECC_ERR_RATE
+OK   cfg field for knob_fetch_enable_regime
+OK   cfg parses PLUSARG_KNOB_FETCH_ENABLE_REGIME
+OK   cfg field for knob_mcounteren_writable
+OK   cfg parses PLUSARG_KNOB_MCOUNTEREN_WRITABLE
+OK   cfg field for knob_instr_mix
+OK   cfg parses PLUSARG_KNOB_INSTR_MIX
+OK   cfg field for knob_priv_regime
+OK   cfg parses PLUSARG_KNOB_PRIV_REGIME
+OK   cfg field for knob_pmp_regime
+OK   cfg parses PLUSARG_KNOB_PMP_REGIME
+OK   cfg field for chk_all
+OK   cfg parses PLUSARG_CHK_ALL
+OK   cfg field for chk_ibus_proto
+OK   cfg parses PLUSARG_CHK_IBUS_PROTO
+OK   cfg field for chk_ibus_outstanding
+OK   cfg parses PLUSARG_CHK_IBUS_OUTSTANDING
+OK   cfg field for chk_sva_rvalid_legal
+OK   cfg parses PLUSARG_CHK_SVA_RVALID_LEGAL
+OK   cfg field for chk_dbus_proto
+OK   cfg parses PLUSARG_CHK_DBUS_PROTO
+OK   cfg field for chk_dbus_outstanding
+OK   cfg parses PLUSARG_CHK_DBUS_OUTSTANDING
+OK   cfg field for chk_dbus_split
+OK   cfg parses PLUSARG_CHK_DBUS_SPLIT
+OK   cfg field for chk_dbus_store_intg
+OK   cfg parses PLUSARG_CHK_DBUS_STORE_INTG
+OK   cfg field for chk_icram_write_ecc
+OK   cfg parses PLUSARG_CHK_ICRAM_WRITE_ECC
+OK   cfg field for chk_icram_inval_sweep
+OK   cfg parses PLUSARG_CHK_ICRAM_INVAL_SWEEP
+OK   cfg field for chk_icram_ecc_response
+OK   cfg parses PLUSARG_CHK_ICRAM_ECC_RESPONSE
+OK   cfg field for chk_scrkey_proto
+OK   cfg parses PLUSARG_CHK_SCRKEY_PROTO
+OK   cfg field for chk_alert_minor
+OK   cfg parses PLUSARG_CHK_ALERT_MINOR
+OK   cfg field for chk_alert_bus
+OK   cfg parses PLUSARG_CHK_ALERT_BUS
+OK   cfg field for chk_alert_internal
+OK   cfg parses PLUSARG_CHK_ALERT_INTERNAL
+OK   cfg field for chk_crash_dump
+OK   cfg parses PLUSARG_CHK_CRASH_DUMP
+OK   cfg field for chk_double_fault
+OK   cfg parses PLUSARG_CHK_DOUBLE_FAULT
+OK   cfg field for chk_core_busy
+OK   cfg parses PLUSARG_CHK_CORE_BUSY
+OK   cfg field for chk_data_tag_quiet
+OK   cfg parses PLUSARG_CHK_DATA_TAG_QUIET
+OK   cfg field for chk_fetch_en
+OK   cfg parses PLUSARG_CHK_FETCH_EN
+OK   cfg field for chk_irq_pending
+OK   cfg parses PLUSARG_CHK_IRQ_PENDING
+OK   cfg field for chk_irq_entry
+OK   cfg parses PLUSARG_CHK_IRQ_ENTRY
+OK   cfg field for chk_irq_masked
+OK   cfg parses PLUSARG_CHK_IRQ_MASKED
+OK   cfg field for chk_nmi_entry
+OK   cfg parses PLUSARG_CHK_NMI_ENTRY
+OK   cfg field for chk_nmi_internal
+OK   cfg parses PLUSARG_CHK_NMI_INTERNAL
+OK   cfg field for chk_dbg_entry
+OK   cfg parses PLUSARG_CHK_DBG_ENTRY
+OK   cfg field for chk_dbg_exc
+OK   cfg parses PLUSARG_CHK_DBG_EXC
+OK   cfg field for chk_dbg_masked
+OK   cfg parses PLUSARG_CHK_DBG_MASKED
+OK   cfg field for chk_dbg_dret
+OK   cfg parses PLUSARG_CHK_DBG_DRET
+OK   cfg field for chk_dbg_trigger
+OK   cfg parses PLUSARG_CHK_DBG_TRIGGER
+OK   cfg field for chk_ctr_mcycle
+OK   cfg parses PLUSARG_CHK_CTR_MCYCLE
+OK   cfg field for chk_ctr_minstret
+OK   cfg parses PLUSARG_CHK_CTR_MINSTRET
+OK   cfg field for chk_ctr_hpm_exact
+OK   cfg parses PLUSARG_CHK_CTR_HPM_EXACT
+OK   cfg field for chk_ctr_hpm_bound
+OK   cfg parses PLUSARG_CHK_CTR_HPM_BOUND
+OK   cfg field for chk_pmp_data
+OK   cfg parses PLUSARG_CHK_PMP_DATA
+OK   cfg field for chk_pmp_fetch
+OK   cfg parses PLUSARG_CHK_PMP_FETCH
+OK   cfg field for chk_isa
+OK   cfg parses PLUSARG_CHK_ISA
+OK   cfg field for chk_isa_pc
+OK   cfg parses PLUSARG_CHK_ISA_PC
+OK   cfg field for chk_isa_insn
+OK   cfg parses PLUSARG_CHK_ISA_INSN
+OK   cfg field for chk_isa_trap
+OK   cfg parses PLUSARG_CHK_ISA_TRAP
+OK   cfg field for chk_isa_rd
+OK   cfg parses PLUSARG_CHK_ISA_RD
+OK   cfg field for chk_isa_mem
+OK   cfg parses PLUSARG_CHK_ISA_MEM
+OK   cfg field for chk_isa_prv
+OK   cfg parses PLUSARG_CHK_ISA_PRV
+OK   cfg field for chk_isa_pc_next
+OK   cfg parses PLUSARG_CHK_ISA_PC_NEXT
+OK   cfg field for chk_isa_csr
+OK   cfg parses PLUSARG_CHK_ISA_CSR
+OK   cfg field for chk_rvfi_proto
+OK   cfg parses PLUSARG_CHK_RVFI_PROTO
+OK   cfg field for chk_t022_never
+OK   cfg parses PLUSARG_CHK_T022_NEVER
+OK   cfg field for chk_bridge_accounting
+OK   cfg parses PLUSARG_CHK_BRIDGE_ACCOUNTING
+OK   cfg has parse_plusargs
+OK   cfg validates enum values
+OK   cfg boot_addr default resolved to the memory-map literal
+OK   fixture differs from the source (unknown plusarg key)
+OK   loader refuses: unknown plusarg key
+OK   fixture differs from the source (unquoted comma in desc)
+OK   loader refuses: unquoted comma in desc
+OK   fixture differs from the source (unknown constant key)
+OK   loader refuses: unknown constant key
+OK   fixture differs from the source (unknown memory_map key)
+OK   loader refuses: unknown memory_map key
+OK   fixture differs from the source (unknown register key)
+OK   loader refuses: unknown register key
+OK   fixture differs from the source (unknown top-level key)
+OK   loader refuses: unknown top-level key
+OK   fixture differs from the source (regime knob without regime_set_consumer refused)
+OK   loader refuses: regime knob without regime_set_consumer refused
+OK   fixture differs from the source (unknown regime_set_consumer refused)
+OK   loader refuses: unknown regime_set_consumer refused
+OK   fixture differs from the source (missing export_active_sources refused)
+OK   loader refuses: missing export_active_sources refused
+OK   fixture differs from the source (regime window value outside the enum set)
+OK   loader refuses: regime window value outside the enum set
+OK   fixture differs from the source (unknown derivation)
+OK   loader refuses: unknown derivation
+OK   fixture differs from the source (export event row with an unknown key)
+OK   loader refuses: export event row with an unknown key
+OK   fixture differs from the source (tdata1 literal differing from the RTL refused)
+OK   loader refuses: tdata1 literal differing from the RTL refused
+OK   fixture differs from the source (MHPMCounterNum literal differing from the build configuration refused)
+OK   loader refuses: MHPMCounterNum literal differing from the build configuration refused
+OK   fixture differs from the source (active source outside the event table refused)
+OK   loader refuses: active source outside the event table refused
+OK   fixture differs from the source (export event wildcard row refused)
+OK   loader refuses: export event wildcard row refused
+OK   fixture differs from the source (default and default_from together)
+OK   loader refuses: default and default_from together
+OK   --check passes on the fresh scratch copy
+OK   --check fails on a mutated dv/auto_dv/tb/gen_tb_pkg.sv
+OK   --check passes again after restoring dv/auto_dv/tb/gen_tb_pkg.sv
+OK   --check fails on a mutated dv/auto_dv/tb/gen_env_cfg_knobs.svh
+OK   --check passes again after restoring dv/auto_dv/tb/gen_env_cfg_knobs.svh
+OK   --check fails on a mutated dv/auto_dv/gen_tb/gen_knobs.py
+OK   --check passes again after restoring dv/auto_dv/gen_tb/gen_knobs.py
+OK   --check fails on a mutated dv/auto_dv/isa/gen_isa_shim_map.h
+OK   --check passes again after restoring dv/auto_dv/isa/gen_isa_shim_map.h
+OK   --check fails on a mutated dv/auto_dv/env/gen_export_record_line.svh
+OK   --check passes again after restoring dv/auto_dv/env/gen_export_record_line.svh
+OK   --check fails on a mutated dv/auto_dv/env/gen_export_event_lines.svh
+OK   --check passes again after restoring dv/auto_dv/env/gen_export_event_lines.svh
+OK   --check passes on the restored scratch copy
+GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+# gen_ut_isa_shim 2026-09-03T17:30:20Z shim sha256 76293bbdd49351b1 test sha256 442198a9aac4c9b7 image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem
+   (multi-store step: pc 0x800000ae insn 0xb872, 4 writes)
+   (multi-register-write step: pc 0x800000da insn 0xba72, 5 writes, 4 reads)
+   (149 steps)
+   (last shim note: csr 0x34b logged but not readable (cause 2))
+GEN_UT_ISA_SHIM PASS (0 failures)
+done 17:30:20Z

@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:43
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(549) @ 7479500: uvm_test_top.env.sb [bus_err_leftover] 55 announced data-bus errors never consumed by a trap record (announced 56, taken 0, drain window 64 cycles)
+uvm_counts: {'INFO': 21, 'WARNING': 0, 'ERROR': 1, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0
