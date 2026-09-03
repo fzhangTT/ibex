@@ -1,0 +1,2 @@
+MUT-E: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = (records == 0) ? vif.pc_rdata + 32'h4 : vif.pc_rdata; t.pc_wdata = vif.pc_wdata;   // MUT-E: first record pc moved
+MUT-E-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:34 original: assert first_pc == boot_page + FIRST_FETCH_OFFSET, f"GEN_UT_EXPORT: first record pc 0x{first_pc:08x} != boot page + 0x80 (0x{boot_page + FIRST_FETCH_OFFSET:08x})" | mutated: pass  # ABLATION MUT-E: first-pc assert disabled

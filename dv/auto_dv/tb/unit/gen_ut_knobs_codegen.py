@@ -25,7 +25,9 @@ TESTLIST = ROOT / "dv/auto_dv/flow/gen_testlist.yaml"
 PROGRAM = ROOT / "dv/auto_dv/stim/gen_program.py"
 SCRATCH = ROOT / "dv/auto_dv/work/tb-infra/ut_scratch/knobs_codegen"
 TARGETS = ("dv/auto_dv/tb/gen_tb_pkg.sv", "dv/auto_dv/tb/gen_env_cfg_knobs.svh",
-           "dv/auto_dv/gen_tb/gen_knobs.py", "dv/auto_dv/isa/gen_isa_shim_map.h")
+           "dv/auto_dv/gen_tb/gen_knobs.py", "dv/auto_dv/isa/gen_isa_shim_map.h",
+           "dv/auto_dv/env/gen_export_record_line.svh", "dv/auto_dv/env/gen_export_event_lines.svh")
+RVFI_PKG = ROOT / "dv/auto_dv/env/gen_rvfi_pkg.sv"
 # the 20 DV Lead regime knobs (gen_fcov_plan.md Section REG)
 REG_KNOBS = ["imem_gnt_delay", "imem_rvalid_delay", "imem_err_rate", "imem_intg_err_rate", "imem_outstanding_cap",
              "dmem_gnt_delay", "dmem_rvalid_delay", "dmem_err_rate", "dmem_intg_err_rate", "irq_regime",
@@ -75,6 +77,8 @@ def refused_fixtures(text):
                                                                    "rate_per_mille: {none: 0, rare: 2, often: 50}", 1),
            "regime_windows.rate_per_mille")
     yield ("unknown derivation", text.replace("derive: irq_fast_w,", "derive: irq_fast_width,", 1), "unknown derivation")
+    yield ("export event row with an unknown key", text.replace("{source: icram, event: inject, fields: [way, index]}",
+                                                                   "{source: icram, event: inject, feilds: [way, index]}", 1), "unknown key(s) feilds")
     yield ("default and default_from together", text.replace("{name: hart_id, kind: hex, default: 0,",
                                                              "{name: hart_id, kind: hex, default: 0, default_from: GEN_CLK_PERIOD_NS,", 1),
            "exactly one of default / default_from")
@@ -193,6 +197,31 @@ def main():
         for i, k in enumerate(knob_names):
             check(f"pkg declares GEN_KNOB_ID_{k[5:].upper()} = {i}", re.search(rf"GEN_KNOB_ID_{k[5:].upper()}\s*=\s*{i}\b", pkg) is not None)
         check("python KNOB_IDS matches", list(m.KNOB_IDS) == knob_names and all(m.KNOB_IDS[k] == i for i, k in enumerate(knob_names)))
+    # ---- record and event export: one origin for the header field lists and the event rows
+    rf, cf, ev = src["export_record_fields"], src["export_counter_fields"], src["export_events"]
+    check("pkg renders GEN_EXPORT_RECORD_FIELDS", f'GEN_EXPORT_RECORD_FIELDS = "{",".join(rf)}"' in pkg)
+    check("pkg renders GEN_EXPORT_COUNTER_FIELDS", f'GEN_EXPORT_COUNTER_FIELDS = "{",".join(cf)}"' in pkg)
+    check("pkg has gen_export_source_known and gen_export_event_header", "function automatic bit gen_export_source_known" in pkg and "function automatic string gen_export_event_header" in pkg)
+    txn = RVFI_PKG.read_text()
+    body = txn[txn.index("class gen_rvfi_txn"):txn.index("endclass", txn.index("class gen_rvfi_txn"))]
+    for f in rf:
+        check(f"record field {f} is a gen_rvfi_txn member", re.search(rf"\b{f}\b", body) is not None)
+    check("counter fields are 10 + 10", len(cf) == 20 and sum(1 for f in cf if f.endswith("h")) == 10)
+    rline = (ROOT / "dv/auto_dv/env/gen_export_record_line.svh").read_text()
+    check("record-line include lists every field in order", ", ".join(f"t.{f}" for f in rf) in rline)
+    eline = (ROOT / "dv/auto_dv/env/gen_export_event_lines.svh").read_text()
+    for row in ev:
+        fn = f"gen_export_line_{row['source']}_" + ("any" if row["event"] == "<name>" else row["event"])
+        check(f"event include defines {fn}", f"function automatic string {fn}(" in eline)
+        check(f"pkg event header names {row['source']}/{row['event']}", f"# events {row['source']} {row['event']} {','.join(row['fields'])}" in pkg)
+    if PY_OUT.is_file():
+        check("python EXPORT_RECORD_FIELDS equals yaml", list(m.EXPORT_RECORD_FIELDS) == rf)
+        check("python EXPORT_COUNTER_FIELDS equals yaml", list(m.EXPORT_COUNTER_FIELDS) == cf)
+        check("python EXPORT_EVENTS equals yaml", [(a, b, list(c)) for a, b, c in m.EXPORT_EVENTS] == [(r["source"], r["event"], r["fields"]) for r in ev])
+    for n in ("export_file", "export_counters", "export_sources", "export_flush_every"):
+        check(f"export knob {n} present", n in names)
+    check("export_flush_every is debug_only", "export_flush_every" in dbg_only)
+    check("EXPORT_FLUSH is a bridge command", "EXPORT_FLUSH" in src["bridge_cmds"])
     check("pkg has gen_knob_value()", "function automatic string gen_knob_value(int id, int idx)" in pkg)
     check("pkg has gen_knob_name()", "function automatic string gen_knob_name(int id)" in pkg)
     check("pkg has gen_is_known_plusarg", "function automatic bit gen_is_known_plusarg" in pkg)

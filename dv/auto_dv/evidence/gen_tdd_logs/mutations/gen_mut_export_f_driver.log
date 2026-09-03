@@ -1,0 +1,14 @@
+== MUT-F 2026-09-03T10:42:11Z
+MUT-F: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: if (flushes == 1) $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count);   // MUT-F: later flushes write no marker
+compile: vcs exit: 0 errors=0
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_export.py:64 original: if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == f"{seq:x}": | mutated: if seq is not None and lines[i].startswith("# flush "):  # ABLATION MUT-F: any flush marker accepted
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:97 original: check_records(data.records, data.markers, img, int(h.b.evt_eot_count.value), log) | mutated: pass  # ABLATION MUT-F: every fixture content check disabled (second catcher: the stale early marker has no records)
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:96 original: assert [r.order for r in early.records] == [r.order for r in data.records[:len(early.records)]], "GEN_UT_EXPORT: the early flush is not a prefix of the final one" | mutated: pass  # ABLATION MUT-F: prefix check disabled (second catcher)
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_EXPORT: no complete flush marker with seq=2 in gen_export.txt
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+final: sources identical to pre-mutation

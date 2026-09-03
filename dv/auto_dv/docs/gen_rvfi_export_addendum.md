@@ -1,6 +1,6 @@
 # Record and event export (T-080 design addendum, for gen_tb_architecture.md Section 9)
 
-Author: tb-infra, 2026-09-03. Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
+Author: tb-infra, 2026-09-03. Version 4b (as-built alignment after the record part landed: rendered include and method names, read() signature, the generic <name> event rows, measured sizes and wall-clock). Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
 (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_rvfi_export_addendum.md`, APPROVE-WITH-CHANGES; rows answered in
 `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md`). Status: text for the DV Lead's re-embed and the
 Orchestrator's approval; no SV or Python exists yet. Consumer: Test Writer (fire-checks over per-record RVFI facts
@@ -20,8 +20,9 @@ Writer's template adds it when the test declares that it consumes records); an e
 and runs no export code. A bridge command `EXPORT_FLUSH` (appended to `bridge_cmds`, so existing codes keep their
 values) makes the monitor write a flush marker and `$fflush` before the bridge acks, so Python parses a complete
 prefix of the file inside its checks, before the finish handshake (TB_CONTRACT Section 2 ordering). The Python
-side is one module, `dv/auto_dv/gen_tb/gen_export.py`: `read(path)` returns the records, markers and events of the
-prefix ending at the last complete flush marker, enforces the format rules of Section 3, and fails loud
+side is one module, `dv/auto_dv/gen_tb/gen_export.py`: `read(path, seq, counters=False)` returns the records, markers
+and events of the prefix ending at the flush marker with sequence `seq`, requires the header's `counters=` flag to
+agree with the caller, enforces the format rules of Section 3 (including the I-line count), and fails loud
 (AssertionError, the only Python-side failure mechanism) on any violation.
 
 ## 2. File format (version 1)
@@ -45,9 +46,10 @@ ext_ic_scr_key_valid, ext_irq_valid, ext_exp_valid, ext_exp_insn, ext_exp_last, 
 `rs3_addr`, `rs3_rdata`, the `*_rcap` capability fields and `mem_is_cap` (CHERIoT carve-out, constant in this
 configuration; the `rvfi_cap_quiet` check owns them). The field lists have one origin: yaml keys
 `export_record_fields`, `export_counter_fields` and the `export_events` table in `gen_tb_knobs.yaml`, rendered as
-`GEN_EXPORT_RECORD_FIELDS` / `GEN_EXPORT_COUNTER_FIELDS` and the include `dv/auto_dv/env/gen_export_fields.svh`
-(the `R` writer function and one writer function per event row, whose argument names ARE the field names, so the
-SV side cannot reorder a column) and as `EXPORT_RECORD_FIELDS` / `EXPORT_COUNTER_FIELDS` / `EXPORT_EVENTS`
+`GEN_EXPORT_RECORD_FIELDS` / `GEN_EXPORT_COUNTER_FIELDS` and two includes, `dv/auto_dv/env/gen_export_record_line.svh`
+(the `R` writer function `gen_export_record_line(t, counters)`, included in gen_rvfi_pkg) and
+`dv/auto_dv/env/gen_export_event_lines.svh` (one writer function per event row, `gen_export_line_<source>_<event|any>`,
+whose argument names ARE the field names, so the SV side cannot reorder a column; included in gen_export_pkg), and as `EXPORT_RECORD_FIELDS` / `EXPORT_COUNTER_FIELDS` / `EXPORT_EVENTS`
 (gen_knobs.py, the header `read()` requires), so a field added on one side fails the other side's header check
 instead of shifting columns silently; the codegen's top-level schema and `gen_ut_knobs_codegen.py` are extended
 for the three keys (Section 4). The `image` header line is
@@ -101,10 +103,12 @@ default line stays about 220 bytes.
   completed flush. (d) `$ferror` after a flush: `uvm_error GEN_EXPORT`, the run FAILS; `read()` is the
   second line of defence. A debug-only knob `+gen_export_flush_every=<n>` (default 0 = off, refused in
   measured runs like every debug-only knob) `$fflush`es every n records for triage of abnormal ends.
-- Cost and retention: with the knob absent no code path differs (the monitor's `ap` publishing is unchanged).
-  With the knob on the cost is one `$fwrite` of about 220 bytes per record (about 320 with counters): 2000
-  records = 0.4 MB, 1e6 records = 220 MB. The TDD evidence (Section 5) records the wall-clock delta with and
-  without the knob on the Zc program and the riscv-dv seed-7 program. Retention: the file lives in the run
+- Cost and retention: with the knob absent the monitor neither formats nor hands over a line (`sink.enabled`
+  guards the call) and the `ap` publishing is unchanged. Measured on the record part (build out_t080): the Zc
+  program's 175 records make a 21144-byte file (121 bytes per record; 28982 bytes = 166 per record with the
+  counters), the seed-7 program's 2002 records 219090 bytes (109 per record); 1e6 records are therefore about
+  110-170 MB. Wall clock (retained runs): VCS CPU time 0.27 s without and 0.33 s with the knob on the Zc lock-step run,
+  0.54 s and 0.55 s on the seed-7 run, i.e. a few tens of milliseconds at these record counts. Retention: the file lives in the run
   directory next to sim.log. Retention is a flow policy, ruled by Runtime (2026-09-03): the flow never deletes
   inside a run directory during a regression and never prunes silently; the export file is kept on purposes 1 to 3
   (bring-up, component change, reproduction) and on any non-PASS verdict; on purpose-4 full regressions it is
@@ -139,7 +143,9 @@ default line stays about 220 bytes.
    calls `read()`, asserts the header fields equal the rendered list, `records == retired` from the marker, the
    `R`-line count equals `records`, `order` increments by one, every line has the header's field count, the first
    record's `pc_rdata` is boot page + 0x80, and the Zc program's known content (the count of `cm.push` /
-   `cm.pop` encodings in `ext_exp_insn` of the folded records, and the tohost stores: every `R` line storing to the tohost
+   `cm.pop` encodings in `ext_exp_insn` of the folded records (NOT implemented in the first landing: the count is
+   not derivable from the image without a decoder, so the tohost-store rule below carries the program-derived
+   content check), and the tohost stores: every `R` line storing to the tohost
    address carries the value 1 and their count does not exceed the memory model's independent end-of-test count
    (the bridge's `evt_eot_count`), which is the program-independent form ("last store" is not: the Zc program
    pushes a stack frame after its tohost store, the riscv-dv programs store tohost repeatedly), plus the pc-continuity rule that MUT-A's catch depends
@@ -233,14 +239,14 @@ so `read()` builds one namedtuple type per (source, event). Sources are enabled 
 | pin | irq_software, irq_timer, irq_external, irq_fast<n>, irq_nm, debug_req | value | irq / dbg drivers (step 2b) | every value change (rise and fall) |
 | pin | fetch_enable, mcounteren_writable | value (MuBi encoding) | gen_ctrl_driver | every value change |
 | alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
-| misc | core_busy | value (MuBi) | gen_misc_monitor | every value change |
-| misc | crash_dump | field, value | gen_misc_monitor | every change of a crash_dump_o field (current_pc, next_pc, last_data_addr, exception_pc, exception_addr) |
+| misc | <name> (core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr) | value | gen_misc_monitor | every value change (core_busy as the MuBi encoding) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
 | regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
 
-Rules: the writer functions take the fields as named arguments in the row's order, so the SV side cannot
-reorder a column; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
+Rules: rows whose event is `<name>` render one function taking the event token as a string argument
+(`gen_export_line_<source>_any(cycle, name, value)`); the other rows one function per event; the writer functions
+take the fields as named arguments in the row's order, so the SV side cannot reorder a column; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
 all step 2b) has its rows rendered and its writer functions present but unused until the component lands, and
 the header's `sources=` lists only sources with a registered writer instance; `read()` accepts an absent source.
 Ordering: `E` lines are written in the cycle of the event in the active region (drivers act at the negedge,
@@ -250,7 +256,7 @@ bytes per event; on the seed-7 program (2002 retirements) the bus rows add about
 rows a handful; the wall-clock delta is measured as for the record lines. Trust triad: MUT-G (dropped event) and
 MUT-H (wrong event cycle) in Section 5, plus the fixture's independent-count check against the bridge's grant
 counters (`evt_ibus_grants`, `evt_dbus_grants`: two new bridge fields fed by the agents, the same "counts on both
-sides" pattern as `cmds_consumed`).
+sides" pattern as `cmds_consumed`; they arrive with build step (2) below, not with the record part).
 
 Build order inside T-080: (1) sink, header, R/I lines, flush and end markers, `read()`, red then green (the
 reviewed v3a part); (2) bus, ctrl, scrkey and icram events (writers exist today), red then green; (3) the step-2b

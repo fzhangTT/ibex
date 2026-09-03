@@ -49,6 +49,14 @@
   bit isa_string_set = 1'b0;
   string isa_log = "";
   bit isa_log_set = 1'b0;
+  string export_file = "";
+  bit export_file_set = 1'b0;
+  bit export_counters = 1'b0;
+  bit export_counters_set = 1'b0;
+  string export_sources = "all";
+  bit export_sources_set = 1'b0;
+  int unsigned export_flush_every = 0;
+  bit export_flush_every_set = 1'b0;
   int unsigned ut_boot_retire = 200;
   bit ut_boot_retire_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
@@ -269,6 +277,10 @@
     if ($value$plusargs({PLUSARG_SB_TRACE, "=%d"}, u)) begin sb_trace = (u != 0); sb_trace_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_STRING, "=%s"}, s)) begin isa_string = s; isa_string_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_LOG, "=%s"}, s)) begin isa_log = s; isa_log_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_EXPORT_FILE, "=%s"}, s)) begin export_file = s; export_file_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_EXPORT_COUNTERS, "=%d"}, u)) begin export_counters = (u != 0); export_counters_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_EXPORT_SOURCES, "=%s"}, s)) begin export_sources = s; export_sources_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_EXPORT_FLUSH_EVERY, "=%d"}, u)) begin export_flush_every = u; export_flush_every_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_BOOT_RETIRE, "=%d"}, u)) begin ut_boot_retire = u; ut_boot_retire_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end

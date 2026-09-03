@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: cocotb_critical at stdout.log:12
+evidence:      0.00ns CRITICAL cocotb.regression                  Failed to import module dv.auto_dv.gen_tb.gen_tests.gen_ut_export: cannot import name 'gen_export' from 'dv.auto_dv.gen_tb' (unknown location)
+uvm_counts: {}
+cocotb_summary: None
+marker_seen: False
+banner_seen: False
+exit_code: 0

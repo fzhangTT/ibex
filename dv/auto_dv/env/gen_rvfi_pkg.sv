@@ -9,6 +9,7 @@ package gen_rvfi_pkg;
   import uvm_pkg::*;
   import gen_tb_pkg::*;
   import gen_cfg_pkg::*;
+  import gen_export_pkg::*;
   import gen_isa_dpi_pkg::*;
   `include "uvm_macros.svh"
 
@@ -29,6 +30,7 @@ package gen_rvfi_pkg;
     bit          ext_exp_valid, ext_exp_last;
     logic [15:0] ext_exp_insn;
     int unsigned cycle;
+    logic [31:0] ext_mhpmcounters [10], ext_mhpmcountersh [10];   // sampled only for the export's counters knob
     `uvm_object_utils_begin(gen_rvfi_txn)
       `uvm_field_int(order, UVM_ALL_ON)
       `uvm_field_int(insn, UVM_ALL_ON)
@@ -49,6 +51,8 @@ package gen_rvfi_pkg;
     endfunction
   endclass
 
+  `include "gen_export_record_line.svh"
+
   // ------------------------------------------------------------------------------------------
   class gen_rvfi_monitor extends uvm_component;
     `uvm_component_utils(gen_rvfi_monitor)
@@ -57,9 +61,10 @@ package gen_rvfi_pkg;
     gen_env_cfg cfg;
     uvm_analysis_port #(gen_rvfi_txn) ap;
     uvm_analysis_port #(gen_rvfi_txn) ap_irq;
+    gen_export_sink sink;   // set by gen_env; null = no export
     int unsigned records = 0, irq_markers = 0;
     logic [63:0] last_order;
-    bit          have_order = 0, dbg_mode_q = 0;
+    bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       ap = new("ap", this);
@@ -91,6 +96,10 @@ package gen_rvfi_pkg;
       t.ext_exp_valid = vif.ext_expanded_insn_valid; t.ext_exp_last = vif.ext_expanded_insn_last;
       t.ext_exp_insn = vif.ext_expanded_insn;
       t.cycle = vif.cycle;
+      if (cfg.export_counters) begin
+        t.ext_mhpmcounters = vif.ext_mhpmcounters;
+        t.ext_mhpmcountersh = vif.ext_mhpmcountersh;
+      end
       return t;
     endfunction
     task run_phase(uvm_phase phase);
@@ -110,12 +119,18 @@ package gen_rvfi_pkg;
           dbg_mode_q = t.ext_debug_mode;
           if (t.intr) bvif.evt_irq_taken = ~bvif.evt_irq_taken;
           ap.write(t);
+          if (sink != null && sink.enabled) sink.write_record(gen_export_record_line(t, cfg.export_counters));
           if (cfg.rvfi_trace) `uvm_info("GEN_RVFI", t.brief(), UVM_LOW)
-        end else if (vif.ext_irq_valid) begin
-          gen_rvfi_txn t = sample();   // interrupt marker without a retirement
-          irq_markers++;
-          ap_irq.write(t);
         end
+        // rvfi_ext_irq_valid is a LEVEL (X-16 / C-13): one marker per rising edge, at the rise cycle
+        if (vif.ext_irq_valid && !irq_valid_q) begin
+          gen_rvfi_txn m = sample();
+          irq_markers++;
+          ap_irq.write(m);
+          if (sink != null && sink.enabled) sink.write_marker($sformatf("I %0h %0h %0h %0h %0h %0h %0h", m.cycle, m.ext_pre_mip, m.ext_post_mip,
+                                                  m.ext_nmi, m.ext_nmi_int, m.ext_debug_req, m.ext_debug_mode));
+        end
+        irq_valid_q = vif.ext_irq_valid;
       end
     endtask
     function void report_phase(uvm_phase phase);

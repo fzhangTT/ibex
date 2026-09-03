@@ -29,11 +29,15 @@ REL_PKG = "dv/auto_dv/tb/gen_tb_pkg.sv"
 REL_CFG = "dv/auto_dv/tb/gen_env_cfg_knobs.svh"
 REL_PY = "dv/auto_dv/gen_tb/gen_knobs.py"
 REL_H = "dv/auto_dv/isa/gen_isa_shim_map.h"
+REL_RLINE = "dv/auto_dv/env/gen_export_record_line.svh"
+REL_ELINE = "dv/auto_dv/env/gen_export_event_lines.svh"
 BEGIN = "  // GEN_KNOBS_BEGIN"
 END = "  // GEN_KNOBS_END"
 KINDS = {"string", "int", "hex", "bool", "enum"}
 SCHEMA = {
-    "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map"},
+    "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map",
+            "export_record_fields", "export_counter_fields", "export_events"},
+    "export_event": {"source", "event", "fields"},
     "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc"},
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
     "memory_map": {"boot_addr_default", "boot_page_mask", "mmio_base", "mmio_size", "registers"},
@@ -97,7 +101,8 @@ def load(src_path=SRC):
     check_keys(src, SCHEMA["top"], "top level")
     if src.get("schema_version") != 1:
         die("unsupported schema_version")
-    for section in ("isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map"):
+    for section in ("isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map",
+                    "export_record_fields", "export_counter_fields", "export_events"):
         if section not in src:
             die(f"missing section {section}")
     names = [p.get("name") for p in src["plusargs"]]
@@ -172,7 +177,71 @@ def load(src_path=SRC):
                     die(f"regime_windows.{group}.{k}: expected [lo, hi] with 0 <= lo <= hi")
             elif not isinstance(v, int) or v < 0:
                 die(f"regime_windows.{group}.{k}: expected a non-negative integer")
+    for key in ("export_record_fields", "export_counter_fields"):
+        names = src[key]
+        if not isinstance(names, list) or not names or len(names) != len(set(names)) \
+                or any(not re.fullmatch(r"[a-z][a-z0-9_]*", str(n)) for n in names):
+            die(f"{key}: expected a non-empty list of unique lower_case names")
+    seen = set()
+    for row in src["export_events"]:
+        check_keys(row, SCHEMA["export_event"], f"export_events row {row.get('source', '?')}/{row.get('event', '?')}")
+        for req in ("source", "event", "fields"):
+            if req not in row:
+                die(f"export_events row: missing {req}")
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", row["source"]):
+            die(f"export_events: bad source {row['source']}")
+        if row["event"] != "<name>" and not re.fullmatch(r"[a-z][a-z0-9_]*", row["event"]):
+            die(f"export_events: bad event {row['event']} (a fixed lower_case word or <name>)")
+        if (row["source"], row["event"]) in seen:
+            die(f"export_events: duplicate row {row['source']}/{row['event']}")
+        seen.add((row["source"], row["event"]))
+        if not isinstance(row["fields"], list) or not row["fields"] or any(not re.fullmatch(r"[a-z][a-z0-9_]*", str(f)) for f in row["fields"]):
+            die(f"export_events {row['source']}/{row['event']}: fields must be a non-empty list of lower_case names")
     return src
+
+
+def export_sources(src):
+    out = []
+    for row in src["export_events"]:
+        if row["source"] not in out:
+            out.append(row["source"])
+    return out
+
+
+def event_fn_name(row):
+    return f"gen_export_line_{row['source']}_" + ("any" if row["event"] == "<name>" else row["event"])
+
+
+def render_record_line(src):
+    """Include for gen_rvfi_pkg (after class gen_rvfi_txn): the R line of one record in the rendered field order."""
+    fields = src["export_record_fields"]
+    L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml (export_record_fields); do not edit.",
+         "// Included inside gen_rvfi_pkg after class gen_rvfi_txn: the export's R line in the header's field order (all hex).",
+         "function automatic string gen_export_record_line(gen_rvfi_txn t, bit counters);",
+         "  string s;",
+         '  s = $sformatf("R ' + " ".join("%0h" for _ in fields) + '", ' + ", ".join(f"t.{f}" for f in fields) + ");"]
+    n = len(src["export_counter_fields"]) // 2
+    L.append("  if (counters)")
+    L.append('    s = {s, $sformatf(" ' + " ".join("%0h" for _ in range(2 * n)) + '", '
+             + ", ".join(f"t.ext_mhpmcounters[{i}]" for i in range(n)) + ", "
+             + ", ".join(f"t.ext_mhpmcountersh[{i}]" for i in range(n)) + ")};")
+    L += ["  return s;", "endfunction", ""]
+    return "\n".join(L)
+
+
+def render_event_lines(src):
+    """Include for gen_export_pkg: one line-formatting function per event row; argument names are the field names."""
+    L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml (export_events); do not edit.",
+         "// Included inside gen_export_pkg: the E line of one boundary event, `E <cycle> <source> <event> <fields...>` (all hex)."]
+    for row in src["export_events"]:
+        args = ["int unsigned cycle"] + (["string name"] if row["event"] == "<name>" else []) + [f"int unsigned {f}" for f in row["fields"]]
+        ev = "%s" if row["event"] == "<name>" else row["event"]
+        vals = ["cycle"] + (["name"] if row["event"] == "<name>" else []) + list(row["fields"])
+        L.append(f"function automatic string {event_fn_name(row)}({', '.join(args)});")
+        L.append(f'  return $sformatf("E %0h {row["source"]} {ev} ' + " ".join("%0h" for _ in row["fields"]) + '", ' + ", ".join(vals) + ");")
+        L.append("endfunction")
+    L.append("")
+    return "\n".join(L)
 
 
 def derive_values(src):
@@ -326,6 +395,25 @@ def render_sv_region(src, mm, cvals):
     L.append('      default: return "";')
     L.append("    endcase")
     L.append("  endfunction")
+    L.append("  // Record and event export (architecture Section 9): the header's field lists, the event sources and rows.")
+    L.append(f'  parameter string GEN_EXPORT_RECORD_FIELDS = "{",".join(src["export_record_fields"])}";')
+    L.append(f'  parameter string GEN_EXPORT_COUNTER_FIELDS = "{",".join(src["export_counter_fields"])}";')
+    L.append(f'  parameter string GEN_EXPORT_SOURCES = "{",".join(export_sources(src))}";')
+    L.append("  function automatic bit gen_export_source_known(string s);")
+    L.append("    case (s)")
+    L.append("      " + ", ".join(f'"{x}"' for x in export_sources(src)) + ": return 1'b1;")
+    L.append("      default: return 1'b0;")
+    L.append("    endcase")
+    L.append("  endfunction")
+    L.append("  // The `# events <source> <event> <fields>` header rows of one source, newline-terminated.")
+    L.append("  function automatic string gen_export_event_header(string source);")
+    L.append("    case (source)")
+    for srcname in export_sources(src):
+        rows = "".join(f'# events {r["source"]} {r["event"]} {",".join(r["fields"])}\\n' for r in src["export_events"] if r["source"] == srcname)
+        L.append(f'      "{srcname}": return "{rows}";')
+    L.append('      default: return "";')
+    L.append("    endcase")
+    L.append("  endfunction")
     L.append("  // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).")
     L.append("  function automatic bit gen_is_known_plusarg(string name);")
     L.append("    case (name)")
@@ -383,6 +471,13 @@ def render_py(src, mm, cvals):
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f'    "{k}": {i},')
     L.append("}"); L.append("")
+    L.append(f"EXPORT_RECORD_FIELDS = {tuple(src['export_record_fields'])!r}")
+    L.append(f"EXPORT_COUNTER_FIELDS = {tuple(src['export_counter_fields'])!r}")
+    L.append(f"EXPORT_SOURCES = {tuple(export_sources(src))!r}")
+    L.append("EXPORT_EVENTS = (  # (source, event or '<name>', fields)")
+    for row in src["export_events"]:
+        L.append(f"    ({row['source']!r}, {row['event']!r}, {tuple(row['fields'])!r}),")
+    L.append(")"); L.append("")
     L.append("MEMORY_MAP = {")
     for k, v in mm.items():
         L.append(f'    "{k}": 0x{v:08x},')
@@ -472,7 +567,8 @@ def render_all(src_path, root):
     resolve_defaults(src, mm, cvals)
     pkg = root / REL_PKG
     return {pkg: render_pkg(src, mm, cvals, pkg), root / REL_PY: render_py(src, mm, cvals),
-            root / REL_H: render_h(src, mm, cvals), root / REL_CFG: render_cfg(src)}, src, mm
+            root / REL_H: render_h(src, mm, cvals), root / REL_CFG: render_cfg(src),
+            root / REL_RLINE: render_record_line(src), root / REL_ELINE: render_event_lines(src)}, src, mm
 
 
 def main():

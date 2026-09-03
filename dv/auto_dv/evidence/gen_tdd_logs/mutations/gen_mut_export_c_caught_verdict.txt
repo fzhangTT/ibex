@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: cocotb_summary at stdout.log:57
+evidence:                                                         ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                          5905.01           0.07      90809.26  **
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

@@ -1,0 +1,71 @@
+== baseline 2026-09-03T10:24:07Z
+export_zc_twoflush      xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+export_s7_twoflush      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:52 
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-A 2026-09-03T10:24:12Z
+MUT-A: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata + 32'h2;   // MUT-A
+compile: vcs exit: 0 errors=0
+MUT-A-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:56 original: assert breaks == 0, f"GEN_UT_EXPORT: {breaks} pc discontinuities between consecutive records" | mutated: pass  # ABLATION MUT-A: continuity assert disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:210 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_UT_EXPORT: 153 pc discontinuities between consecutive records
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-B 2026-09-03T10:24:35Z
+MUT-B: dv/auto_dv/env/gen_rvfi_pkg.sv:122 original: if (sink != null) sink.write_record(gen_export_record_line(t, cfg.export_counters)); | mutated: if (sink != null && records != 50) sink.write_record(gen_export_record_line(t, cfg.export_counters));   // MUT-B: one record dropped
+compile: vcs exit: 0 errors=0
+MUT-B-ablation: dv/auto_dv/gen_tb/gen_export.py:70 original: assert flush.records == flush.retired, f"GEN_EXPORT: marker records {flush.records} != retired {flush.retired} (the sink and the bridge disagree)" | mutated: pass  # ABLATION MUT-B: records==retired rule disabled
+MUT-B-ablation: dv/auto_dv/gen_tb/gen_export.py:85 original: assert rec.order == records[-1].order + 1, f"GEN_EXPORT: order {rec.order} after {records[-1].order} ({where})" | mutated: pass  # ABLATION MUT-B: order rule disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:58 
+  caught:                                                         AssertionError: GEN_EXPORT: marker records 174 != retired 175 (the sink and the bridge disagree)
+  ablation:                                                         AssertionError: GEN_UT_EXPORT: 1 pc discontinuities between consecutive records
+MUT-C-member: dv/auto_dv/env/gen_rvfi_pkg.sv:67 original: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; | mutated: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; string held = "";   // MUT-C
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-C 2026-09-03T10:24:58Z
+MUT-C: dv/auto_dv/env/gen_rvfi_pkg.sv:122 original: if (sink != null) sink.write_record(gen_export_record_line(t, cfg.export_counters)); | mutated: if (sink != null) begin string l = gen_export_record_line(t, cfg.export_counters); if (records == 50) held = l; else if (held != "") begin sink.write_record(l); sink.write_record(held); held = ""; end else sink.write_record(l); end   // MUT-C: records 50 and 51 swapped
+compile: vcs exit: 0 errors=0
+MUT-C-ablation: dv/auto_dv/gen_tb/gen_export.py:85 original: assert rec.order == records[-1].order + 1, f"GEN_EXPORT: order {rec.order} after {records[-1].order} ({where})" | mutated: pass  # ABLATION MUT-C: order rule disabled
+MUT-C-ablation: dv/auto_dv/gen_tb/gen_export.py:103 original: assert cyc >= last_cycle, f"GEN_EXPORT: cycle {cyc} after {last_cycle} ({where})" | mutated: pass  # ABLATION MUT-C: cycle rule disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:58 
+  caught:                                                         AssertionError: GEN_EXPORT: order 51 after 49 (line 53)
+  ablation:                                                         AssertionError: GEN_UT_EXPORT: 1 pc discontinuities between consecutive records
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-D 2026-09-03T10:25:21Z
+MUT-D: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: // MUT-D: the flush marker is not written
+      ;
+compile: vcs exit: 0 errors=0
+MUT-D-ablation: dv/auto_dv/gen_tb/gen_export.py:66 original: assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}" | mutated: if marker_idx is None: marker_idx = len(lines); lines.append("# flush seq=0 records=%x retired=%x markers=%x events=%x cycle=0" % (sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("I ")), sum(1 for l in lines if l.startswith("E "))))  # ABLATION MUT-D: EOF accepted as the boundary
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_EXPORT: no complete flush marker with seq=2 in gen_export.txt
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-E 2026-09-03T10:25:44Z
+MUT-E: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = (records == 0) ? vif.pc_rdata + 32'h4 : vif.pc_rdata; t.pc_wdata = vif.pc_wdata;   // MUT-E: first record pc moved
+compile: vcs exit: 0 errors=0
+MUT-E-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:34 original: assert first_pc == boot_page + FIRST_FETCH_OFFSET, f"GEN_UT_EXPORT: first record pc 0x{first_pc:08x} != boot page + 0x80 (0x{boot_page + FIRST_FETCH_OFFSET:08x})" | mutated: pass  # ABLATION MUT-E: first-pc assert disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_UT_EXPORT: first record pc 0x80000084 != boot page + 0x80 (0x80000080)
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_export.sh: line 23: mid: unbound variable
+== MUT-F 2026-09-03T10:26:09Z
+MUT-F: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: if (flushes == 1) $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count);   // MUT-F: later flushes write no marker
+compile: vcs exit: 0 errors=0
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_export.py:64 original: if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == f"{seq:x}": | mutated: if seq is not None and lines[i].startswith("# flush "):  # ABLATION MUT-F: any flush marker accepted
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+  caught:                                                         AssertionError: GEN_EXPORT: no complete flush marker with seq=2 in gen_export.txt
+  ablation:                                                         AssertionError: GEN_UT_EXPORT: no records exported
+final: sources identical to pre-mutation

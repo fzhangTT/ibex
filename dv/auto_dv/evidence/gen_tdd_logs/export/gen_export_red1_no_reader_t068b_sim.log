@@ -1,0 +1,11 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t068b/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem +gen_mem_image_crc32=cf0cb3b8 +gen_mem_image_words=204 +gen_boot_addr=80000000 +gen_tohost_addr=80000280 +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=100 +gen_export_file=gen_export.txt -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_t068b/export_red1_no_reader/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 06:11 2026
+$finish at simulation time                    0
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 0 attempts, 0 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 0 attempts, 0 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 00 ps
+CPU Time:      0.360 seconds;       Data structure size:   0.7Mb
+Thu Sep  3 06:11:09 2026

@@ -1,0 +1,1 @@
+MUT-C-member: dv/auto_dv/env/gen_rvfi_pkg.sv:67 original: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; | mutated: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; string held = "";   // MUT-C

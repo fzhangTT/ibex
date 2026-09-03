@@ -1,0 +1,244 @@
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 06:37 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_export.gen_ut_export
+     0.00ns INFO     cocotb.regression                  running gen_ut_export (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem tohost=0x80000280
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(132) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/tb-infra/out_codegen/zc/prog.vmem: 204 words, crc32 0xcf0cb3b8 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(157) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(158) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(311) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal disabled by knob
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(311) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal disabled by knob
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(171) @ 0: uvm_test_top.env.sb [GEN_SB] ISA compare disabled by knob
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(76) @ 0: uvm_test_top.env.sink [GEN_EXPORT] export file gen_export.txt open; sources: (none)
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(407) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_INFO @ 549000: reporter [GEN_EOT] end-of-test store 0x00000001 at 0x80000280 (store 1)
+  5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT flush seq 2: records 175 retired 175 markers 0 events 0 (bridge retired now 175; early flush seq 1 had 0 records)
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 1 pc_wdata 0x80000086, next pc_rdata 0x80000084
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 2 pc_wdata 0x8000008a, next pc_rdata 0x80000088
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 3 pc_wdata 0x8000008e, next pc_rdata 0x8000008c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 4 pc_wdata 0x80000090, next pc_rdata 0x8000008e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 5 pc_wdata 0x80000094, next pc_rdata 0x80000092
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 6 pc_wdata 0x80000098, next pc_rdata 0x80000096
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 7 pc_wdata 0x8000009c, next pc_rdata 0x8000009a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 8 pc_wdata 0x800000a0, next pc_rdata 0x8000009e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 9 pc_wdata 0x800000a4, next pc_rdata 0x800000a2
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 10 pc_wdata 0x800000a8, next pc_rdata 0x800000a6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 11 pc_wdata 0x800000ac, next pc_rdata 0x800000aa
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 12 pc_wdata 0x800000b0, next pc_rdata 0x800000ae
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 17 pc_wdata 0x800000b2, next pc_rdata 0x800000b0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 18 pc_wdata 0x800000b6, next pc_rdata 0x800000b4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 19 pc_wdata 0x800000b8, next pc_rdata 0x800000b6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 20 pc_wdata 0x800000bc, next pc_rdata 0x800000ba
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 21 pc_wdata 0x800000be, next pc_rdata 0x800000bc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 22 pc_wdata 0x800000c2, next pc_rdata 0x800000c0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 23 pc_wdata 0x800000c4, next pc_rdata 0x800000c2
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 24 pc_wdata 0x800000c8, next pc_rdata 0x800000c6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 25 pc_wdata 0x800000ca, next pc_rdata 0x800000c8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 26 pc_wdata 0x800000ce, next pc_rdata 0x800000cc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 27 pc_wdata 0x800000d0, next pc_rdata 0x800000ce
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 28 pc_wdata 0x800000d4, next pc_rdata 0x800000d2
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 29 pc_wdata 0x800000d6, next pc_rdata 0x800000d4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 30 pc_wdata 0x800000d8, next pc_rdata 0x800000d6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 31 pc_wdata 0x800000da, next pc_rdata 0x800000d8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 32 pc_wdata 0x800000dc, next pc_rdata 0x800000da
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 37 pc_wdata 0x800000de, next pc_rdata 0x800000dc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 38 pc_wdata 0x800000e2, next pc_rdata 0x800000e0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 39 pc_wdata 0x800000e6, next pc_rdata 0x800000e4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 40 pc_wdata 0x800000ea, next pc_rdata 0x800000e8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 41 pc_wdata 0x800000ee, next pc_rdata 0x800000ec
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 42 pc_wdata 0x800000f2, next pc_rdata 0x800000f0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 43 pc_wdata 0x800000f6, next pc_rdata 0x800000f4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 44 pc_wdata 0x800000fa, next pc_rdata 0x800000f8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 45 pc_wdata 0x800000fe, next pc_rdata 0x800000fc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 46 pc_wdata 0x80000102, next pc_rdata 0x80000100
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 47 pc_wdata 0x80000106, next pc_rdata 0x80000104
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 48 pc_wdata 0x8000010a, next pc_rdata 0x80000108
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 49 pc_wdata 0x8000010e, next pc_rdata 0x8000010c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 50 pc_wdata 0x80000112, next pc_rdata 0x80000110
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 53 pc_wdata 0x80000114, next pc_rdata 0x80000112
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 54 pc_wdata 0x80000118, next pc_rdata 0x80000116
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 55 pc_wdata 0x8000011c, next pc_rdata 0x8000011a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 56 pc_wdata 0x80000120, next pc_rdata 0x8000011e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 57 pc_wdata 0x80000122, next pc_rdata 0x80000120
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 58 pc_wdata 0x80000126, next pc_rdata 0x80000124
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 59 pc_wdata 0x80000128, next pc_rdata 0x80000126
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 60 pc_wdata 0x8000012c, next pc_rdata 0x8000012a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 63 pc_wdata 0x8000012e, next pc_rdata 0x8000012c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 64 pc_wdata 0x80000132, next pc_rdata 0x80000130
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 65 pc_wdata 0x80000136, next pc_rdata 0x80000134
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 66 pc_wdata 0x8000013a, next pc_rdata 0x80000138
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 67 pc_wdata 0x8000013e, next pc_rdata 0x8000013c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 68 pc_wdata 0x80000142, next pc_rdata 0x80000140
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 70 pc_wdata 0x80000144, next pc_rdata 0x80000142
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 71 pc_wdata 0x80000148, next pc_rdata 0x80000146
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 72 pc_wdata 0x8000014c, next pc_rdata 0x8000014a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 73 pc_wdata 0x80000150, next pc_rdata 0x8000014e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 74 pc_wdata 0x80000154, next pc_rdata 0x80000152
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 75 pc_wdata 0x80000158, next pc_rdata 0x80000156
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 76 pc_wdata 0x8000015c, next pc_rdata 0x8000015a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 77 pc_wdata 0x80000160, next pc_rdata 0x8000015e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 78 pc_wdata 0x80000164, next pc_rdata 0x80000162
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 79 pc_wdata 0x80000168, next pc_rdata 0x80000166
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 80 pc_wdata 0x8000016c, next pc_rdata 0x8000016a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 81 pc_wdata 0x8000016e, next pc_rdata 0x8000016c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 82 pc_wdata 0x80000170, next pc_rdata 0x8000016e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 84 pc_wdata 0x80000172, next pc_rdata 0x80000170
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 85 pc_wdata 0x80000176, next pc_rdata 0x80000174
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 86 pc_wdata 0x8000017a, next pc_rdata 0x80000178
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 87 pc_wdata 0x8000017e, next pc_rdata 0x8000017c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 88 pc_wdata 0x80000182, next pc_rdata 0x80000180
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 89 pc_wdata 0x80000186, next pc_rdata 0x80000184
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 90 pc_wdata 0x8000018a, next pc_rdata 0x80000188
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 91 pc_wdata 0x8000018e, next pc_rdata 0x8000018c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 92 pc_wdata 0x80000192, next pc_rdata 0x80000190
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 93 pc_wdata 0x80000196, next pc_rdata 0x80000194
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 94 pc_wdata 0x80000198, next pc_rdata 0x80000196
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 95 pc_wdata 0x8000019a, next pc_rdata 0x80000198
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 96 pc_wdata 0x8000019e, next pc_rdata 0x8000019c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 97 pc_wdata 0x800001a0, next pc_rdata 0x8000019e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 98 pc_wdata 0x800001a2, next pc_rdata 0x800001a0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 99 pc_wdata 0x800001a6, next pc_rdata 0x800001a4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 100 pc_wdata 0x800001aa, next pc_rdata 0x800001a8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 101 pc_wdata 0x800001ac, next pc_rdata 0x800001aa
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 102 pc_wdata 0x800001ae, next pc_rdata 0x800001ac
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 103 pc_wdata 0x800001b2, next pc_rdata 0x800001b0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 104 pc_wdata 0x800001b6, next pc_rdata 0x800001b4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 105 pc_wdata 0x800001b8, next pc_rdata 0x800001b6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 106 pc_wdata 0x800001ba, next pc_rdata 0x800001b8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 107 pc_wdata 0x800001bc, next pc_rdata 0x800001ba
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 108 pc_wdata 0x800001be, next pc_rdata 0x800001bc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 109 pc_wdata 0x800001c0, next pc_rdata 0x800001be
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 110 pc_wdata 0x800001c2, next pc_rdata 0x800001c0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 111 pc_wdata 0x800001c6, next pc_rdata 0x800001c4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 112 pc_wdata 0x800001ca, next pc_rdata 0x800001c8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 113 pc_wdata 0x800001ce, next pc_rdata 0x800001cc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 114 pc_wdata 0x800001d0, next pc_rdata 0x800001ce
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 115 pc_wdata 0x800001d4, next pc_rdata 0x800001d2
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 116 pc_wdata 0x800001d8, next pc_rdata 0x800001d6
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 117 pc_wdata 0x800001dc, next pc_rdata 0x800001da
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 118 pc_wdata 0x800001e0, next pc_rdata 0x800001de
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 119 pc_wdata 0x800001e2, next pc_rdata 0x800001e0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 120 pc_wdata 0x800001e6, next pc_rdata 0x800001e4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 121 pc_wdata 0x800001ea, next pc_rdata 0x800001e8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 122 pc_wdata 0x800001ee, next pc_rdata 0x800001ec
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 123 pc_wdata 0x800001f2, next pc_rdata 0x800001f0
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 124 pc_wdata 0x800001f4, next pc_rdata 0x800001f2
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 125 pc_wdata 0x800001f6, next pc_rdata 0x800001f4
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 126 pc_wdata 0x800001fa, next pc_rdata 0x800001f8
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 127 pc_wdata 0x800001fe, next pc_rdata 0x800001fc
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 128 pc_wdata 0x80000202, next pc_rdata 0x80000200
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 129 pc_wdata 0x80000206, next pc_rdata 0x80000204
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 130 pc_wdata 0x80000208, next pc_rdata 0x80000206
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 131 pc_wdata 0x8000020a, next pc_rdata 0x80000208
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 132 pc_wdata 0x8000020e, next pc_rdata 0x8000020c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 133 pc_wdata 0x80000212, next pc_rdata 0x80000210
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 134 pc_wdata 0x80000216, next pc_rdata 0x80000214
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 135 pc_wdata 0x8000021a, next pc_rdata 0x80000218
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 136 pc_wdata 0x8000021c, next pc_rdata 0x8000021a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 137 pc_wdata 0x80000220, next pc_rdata 0x8000021e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 138 pc_wdata 0x80000224, next pc_rdata 0x80000222
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 139 pc_wdata 0x80000228, next pc_rdata 0x80000226
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 140 pc_wdata 0x8000022a, next pc_rdata 0x80000228
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 141 pc_wdata 0x8000022c, next pc_rdata 0x8000022a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 142 pc_wdata 0x8000022e, next pc_rdata 0x8000022c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 143 pc_wdata 0x80000232, next pc_rdata 0x80000230
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 144 pc_wdata 0x80000236, next pc_rdata 0x80000234
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 145 pc_wdata 0x8000023a, next pc_rdata 0x80000238
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 146 pc_wdata 0x8000023e, next pc_rdata 0x8000023c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 148 pc_wdata 0x80000240, next pc_rdata 0x8000023e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 149 pc_wdata 0x80000242, next pc_rdata 0x80000240
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 152 pc_wdata 0x80000246, next pc_rdata 0x80000244
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 153 pc_wdata 0x8000024a, next pc_rdata 0x80000248
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 154 pc_wdata 0x8000024e, next pc_rdata 0x8000024c
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 155 pc_wdata 0x80000252, next pc_rdata 0x80000250
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 157 pc_wdata 0x80000254, next pc_rdata 0x80000252
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 158 pc_wdata 0x80000258, next pc_rdata 0x80000256
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 159 pc_wdata 0x8000025c, next pc_rdata 0x8000025a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 163 pc_wdata 0x80000260, next pc_rdata 0x8000025e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 164 pc_wdata 0x80000262, next pc_rdata 0x80000260
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 165 pc_wdata 0x80000266, next pc_rdata 0x80000264
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 166 pc_wdata 0x80000268, next pc_rdata 0x80000266
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 167 pc_wdata 0x8000026c, next pc_rdata 0x8000026a
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 168 pc_wdata 0x80000270, next pc_rdata 0x8000026e
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 169 pc_wdata 0x80000274, next pc_rdata 0x80000272
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 170 pc_wdata 0x80000278, next pc_rdata 0x80000276
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 171 pc_wdata 0x80000278, next pc_rdata 0x80000276
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 172 pc_wdata 0x80000278, next pc_rdata 0x80000276
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 173 pc_wdata 0x80000278, next pc_rdata 0x80000276
+  5905.00ns ERROR    cocotb.gen_tb_top                  GEN_UT_EXPORT pc discontinuity: order 174 pc_wdata 0x80000278, next pc_rdata 0x80000276
+  5905.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finish budget 5000 cycles (caller)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(265) @ 590500: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 585, commands consumed 67, retired 175
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 590500: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 590500: uvm_test_top.env.dbus_agent [gen_bus_agent] dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1: grants=29 responses=29 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(318) @ 590500: uvm_test_top.env.ibus_agent [gen_bus_agent] ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1: grants=154 responses=154 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(137) @ 590500: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=175 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(375) @ 590500: uvm_test_top.env.sb [GEN_SB] ISA compare: records=0 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=0
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(117) @ 590500: uvm_test_top.env.sink [GEN_EXPORT] export: records=175 markers=0 events=0 flushes=2
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(175) @ 590500: uvm_test_top.env [GEN_ENV] mem: 204 words, 0 mmio writes, 0 unmapped accesses; eot stores 1 (last code 0x00000001); sig writes 0; key requests 0; commands routed 67 ignored 0
+  5905.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finished: 67 commands sent and consumed, 175 retirements counted
+  5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 590500: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   18
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_EXPORT]     2
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[MEM_LOAD]     1
+[RNTST]     1
+[TEST_DONE]     1
+[gen_bus_agent]     4
+
+  5905.01ns INFO     cocotb.regression                  gen_ut_export passed
+  5905.01ns INFO     cocotb.regression                  *****************************************************************************************************************
+                                                        ** TEST                                                     STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *****************************************************************************************************************
+                                                        ** dv.auto_dv.gen_tb.gen_tests.gen_ut_export.gen_ut_export   PASS        5905.01           0.07      81669.73  **
+                                                        *****************************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                          5905.01           0.09      64714.00  **
+                                                        *****************************************************************************************************************
+                                                        
+$finish at simulation time               590501
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 591 attempts, 29 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 591 attempts, 154 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 5905010 ps
+CPU Time:      0.440 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 06:37:58 2026

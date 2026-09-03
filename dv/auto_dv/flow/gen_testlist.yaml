@@ -34,6 +34,8 @@
 #                          (undeclared reason), an unexpected PASS is FAIL; kept out of the pass rate
 #                          and of coverage (must be measured: false; exclusive with expected_fail)
 #   red_expect             regex of the designed failure's evidence line (required with red_fixture)
+#   keep_artifacts         true = a purpose-4 regression keeps this test's export file on PASS / RED-OK
+#                          runs (default: pruned after the manifest, paths recorded in result.yaml)
 #   component              TB component this test exercises (purpose-2 selection)
 #   measured               default true; false = mutation-evidence or forced-error test that never
 #                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
@@ -48,7 +50,7 @@ schema_version: 1
 #     dv/auto_dv/gen_tb/gen_knobs.py (PLUSARGS[...]['debug_only']); load_testlist refuses this
 #     list unless it equals that set.
 fcov_manifest_required_tiers: []
-debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace]
+debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every]
 
 builds:
   gen_smoke:

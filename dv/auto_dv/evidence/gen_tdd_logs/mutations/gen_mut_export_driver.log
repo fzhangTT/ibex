@@ -1,0 +1,76 @@
+== recompile out_t080 with the sink.enabled guard 2026-09-03T10:37:01Z
+compile: vcs exit: 0 errors=0
+== baseline 2026-09-03T10:37:24Z
+export_s7_twoflush      xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+export_zc_counters_twoflv_exit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+== MUT-A 2026-09-03T10:37:32Z
+MUT-A: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata + 32'h2;   // MUT-A
+compile: vcs exit: 0 errors=0
+MUT-A-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:56 original: assert breaks == 0, f"GEN_UT_EXPORT: {breaks} pc discontinuities between consecutive records" | mutated: pass  # ABLATION MUT-A: continuity assert disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:210 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_UT_EXPORT: 153 pc discontinuities between consecutive records
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+== MUT-B 2026-09-03T10:37:58Z
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+AssertionError: ('MUT-B', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 'if (sink != null) sink.write_record(gen_export_rec', 0)
+compile: vcs exit: 0 errors=0
+MUT-B-ablation: dv/auto_dv/gen_tb/gen_export.py:70 original: assert flush.records == flush.retired, f"GEN_EXPORT: marker records {flush.records} != retired {flush.retired} (the sink and the bridge disagree)" | mutated: pass  # ABLATION MUT-B: records==retired rule disabled
+MUT-B-ablation: dv/auto_dv/gen_tb/gen_export.py:85 original: assert rec.order == records[-1].order + 1, f"GEN_EXPORT: order {rec.order} after {records[-1].order} ({where})" | mutated: pass  # ABLATION MUT-B: order rule disabled
+MUT-B-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:56 original: assert breaks == 0, f"GEN_UT_EXPORT: {breaks} pc discontinuities between consecutive records" | mutated: pass  # ABLATION: continuity assert disabled (second catcher)
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+MUT-C-member: dv/auto_dv/env/gen_rvfi_pkg.sv:67 original: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; | mutated: bit          have_order = 0, dbg_mode_q = 0, irq_valid_q = 0; string held = "";   // MUT-C
+== MUT-C 2026-09-03T10:38:26Z
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+AssertionError: ('MUT-C', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 'if (sink != null) sink.write_record(gen_export_rec', 0)
+compile: vcs exit: 0 errors=0
+MUT-C-ablation: dv/auto_dv/gen_tb/gen_export.py:85 original: assert rec.order == records[-1].order + 1, f"GEN_EXPORT: order {rec.order} after {records[-1].order} ({where})" | mutated: pass  # ABLATION MUT-C: order rule disabled
+MUT-C-ablation: dv/auto_dv/gen_tb/gen_export.py:103 original: assert cyc >= last_cycle, f"GEN_EXPORT: cycle {cyc} after {last_cycle} ({where})" | mutated: pass  # ABLATION MUT-C: cycle rule disabled
+MUT-C-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:56 original: assert breaks == 0, f"GEN_UT_EXPORT: {breaks} pc discontinuities between consecutive records" | mutated: pass  # ABLATION: continuity assert disabled (second catcher)
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+== MUT-D 2026-09-03T10:38:52Z
+MUT-D: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: // MUT-D: the flush marker is not written
+      ;
+compile: vcs exit: 0 errors=0
+MUT-D-ablation: dv/auto_dv/gen_tb/gen_export.py:66 original: assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}" | mutated: if marker_idx is None: marker_idx = len(lines); lines.append("# flush seq=0 records=%x retired=%x markers=%x events=%x cycle=0" % (sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("I ")), sum(1 for l in lines if l.startswith("E "))))  # ABLATION MUT-D: EOF accepted as the boundary
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_EXPORT: no complete flush marker with seq=2 in gen_export.txt
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+== MUT-E 2026-09-03T10:39:17Z
+MUT-E: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = (records == 0) ? vif.pc_rdata + 32'h4 : vif.pc_rdata; t.pc_wdata = vif.pc_wdata;   // MUT-E: first record pc moved
+compile: vcs exit: 0 errors=0
+MUT-E-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:34 original: assert first_pc == boot_page + FIRST_FETCH_OFFSET, f"GEN_UT_EXPORT: first record pc 0x{first_pc:08x} != boot page + 0x80 (0x{boot_page + FIRST_FETCH_OFFSET:08x})" | mutated: pass  # ABLATION MUT-E: first-pc assert disabled
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+  caught:                                                         AssertionError: GEN_UT_EXPORT: first record pc 0x80000084 != boot page + 0x80 (0x80000080)
+  ablation:   5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+== MUT-F 2026-09-03T10:39:41Z
+MUT-F: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: if (flushes == 1) $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count);   // MUT-F: later flushes write no marker
+compile: vcs exit: 0 errors=0
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_export.py:64 original: if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == f"{seq:x}": | mutated: if seq is not None and lines[i].startswith("# flush "):  # ABLATION MUT-F: any flush marker accepted
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:31 original: assert records, "GEN_UT_EXPORT: no records exported" | mutated: pass  # ABLATION MUT-F: records-non-empty check disabled (second catcher)
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:38 original: assert tohost_stores, f"GEN_UT_EXPORT: no store to tohost 0x{img.tohost:08x} in the export" | mutated: pass  # ABLATION MUT-F: tohost-store check disabled (second catcher)
+MUT-F-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:96 original: assert [r.order for r in early.records] == [r.order for r in data.records[:len(early.records)]], "GEN_UT_EXPORT: the early flush is not a prefix of the final one" | mutated: pass  # ABLATION MUT-F: prefix check disabled (second catcher)
+reverted: ok
+caught      xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+ablation    xit=0 uvm_errors=0 verdict: verdict: FAIL reason: cocotb_summary at stdout.log:57 
+  caught:                                                         AssertionError: GEN_EXPORT: no complete flush marker with seq=2 in gen_export.txt
+  ablation: 
+final: sources identical to pre-mutation

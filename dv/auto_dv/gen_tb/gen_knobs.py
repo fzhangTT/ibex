@@ -28,6 +28,10 @@ PLUSARGS = {
     "sb_trace": {"plusarg": "gen_sb_trace", "kind": "bool", "default": 0, "values": None, "debug_only": True, "desc": 'scoreboard per-record trace (debug only)'},
     "isa_string": {"plusarg": "gen_isa_string", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model ISA string override (debug only; the default is GEN_ISA_STRING)'},
     "isa_log": {"plusarg": "gen_isa_log", "kind": "string", "default": None, "values": None, "debug_only": True, "desc": 'model commit log path (debug only)'},
+    "export_file": {"plusarg": "gen_export_file", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'record/event export file (relative to the run directory); absent = no export'},
+    "export_counters": {"plusarg": "gen_export_counters", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'append the hpm counter words to every R line of the export'},
+    "export_sources": {"plusarg": "gen_export_sources", "kind": "string", "default": 'all', "values": None, "debug_only": False, "desc": 'comma-separated event sources written to the export (all = every source with a registered writer)'},
+    "export_flush_every": {"plusarg": "gen_export_flush_every", "kind": "int", "default": 0, "values": None, "debug_only": True, "desc": 'flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)'},
     "ut_boot_retire": {"plusarg": "gen_ut_boot_retire", "kind": "int", "default": 200, "values": None, "debug_only": False, "desc": 'retirements the boots-and-retires test waits for'},
     "ibus_gnt_min": {"plusarg": "gen_ibus_gnt_min", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency low bound (cycles)'},
     "ibus_gnt_max": {"plusarg": "gen_ibus_gnt_max", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency high bound'},
@@ -188,7 +192,24 @@ CMD = {  # bridge command kinds (cmd_kind codes)
     "FETCH_EN": 9,
     "MEM_PEEK": 10,
     "MISC": 11,
+    "EXPORT_FLUSH": 12,
 }
+
+EXPORT_RECORD_FIELDS = ('order', 'pc_rdata', 'pc_wdata', 'insn', 'trap', 'halt', 'intr', 'mode', 'ixl', 'rs1_addr', 'rs1_rdata', 'rs2_addr', 'rs2_rdata', 'rd_addr', 'rd_wdata', 'mem_addr', 'mem_rmask', 'mem_wmask', 'mem_rdata', 'mem_wdata', 'ext_pre_mip', 'ext_post_mip', 'ext_nmi', 'ext_nmi_int', 'ext_debug_req', 'ext_debug_mode', 'ext_rf_wr_suppress', 'ext_ic_scr_key_valid', 'ext_irq_valid', 'ext_exp_valid', 'ext_exp_insn', 'ext_exp_last', 'ext_mcycle', 'cycle')
+EXPORT_COUNTER_FIELDS = ('mhpmcounter3', 'mhpmcounter4', 'mhpmcounter5', 'mhpmcounter6', 'mhpmcounter7', 'mhpmcounter8', 'mhpmcounter9', 'mhpmcounter10', 'mhpmcounter11', 'mhpmcounter12', 'mhpmcounter3h', 'mhpmcounter4h', 'mhpmcounter5h', 'mhpmcounter6h', 'mhpmcounter7h', 'mhpmcounter8h', 'mhpmcounter9h', 'mhpmcounter10h', 'mhpmcounter11h', 'mhpmcounter12h')
+EXPORT_SOURCES = ('ibus', 'dbus', 'pin', 'alert', 'misc', 'icram', 'scrkey', 'regime')
+EXPORT_EVENTS = (  # (source, event or '<name>', fields)
+    ('ibus', 'gnt', ('addr', 'we', 'be', 'outstanding_after')),
+    ('ibus', 'rvalid', ('addr', 'we', 'err', 'intg_injected', 'outstanding_after')),
+    ('dbus', 'gnt', ('addr', 'we', 'be', 'outstanding_after')),
+    ('dbus', 'rvalid', ('addr', 'we', 'err', 'intg_injected', 'outstanding_after')),
+    ('pin', '<name>', ('value',)),
+    ('alert', '<name>', ('value',)),
+    ('misc', '<name>', ('value',)),
+    ('icram', 'inject', ('way', 'index')),
+    ('scrkey', '<name>', ('value',)),
+    ('regime', 'phase', ('knob_id', 'value_idx', 'phase_idx')),
+)
 
 MEMORY_MAP = {
     "boot_addr_default": 0x80000000,

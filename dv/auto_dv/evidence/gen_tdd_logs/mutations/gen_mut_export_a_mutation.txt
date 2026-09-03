@@ -1,0 +1,2 @@
+MUT-A: dv/auto_dv/env/gen_rvfi_pkg.sv:88 original: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata; | mutated: t.pc_rdata = vif.pc_rdata; t.pc_wdata = vif.pc_wdata + 32'h2;   // MUT-A
+MUT-A-ablation: dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py:56 original: assert breaks == 0, f"GEN_UT_EXPORT: {breaks} pc discontinuities between consecutive records" | mutated: pass  # ABLATION MUT-A: continuity assert disabled

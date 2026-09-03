@@ -9,6 +9,7 @@ package gen_env_pkg;
   import gen_cfg_pkg::*;
   import gen_mem_pkg::*;
   import gen_agents_pkg::*;
+  import gen_export_pkg::*;
   import gen_rvfi_pkg::*;
   `include "uvm_macros.svh"
 
@@ -72,6 +73,8 @@ package gen_env_pkg;
   class gen_cmd_dispatch extends uvm_subscriber #(gen_cmd_item);
     `uvm_component_utils(gen_cmd_dispatch)
     gen_ctrl_driver ctrl;
+    gen_export_sink sink;
+    virtual gen_bridge_if bvif;
     int unsigned routed = 0, ignored = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -79,6 +82,7 @@ package gen_env_pkg;
     function void write(gen_cmd_item t);
       case (t.kind)
         GEN_CMD_FETCH_EN: begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
+        GEN_CMD_EXPORT_FLUSH: begin bvif.peek_data = sink.flush_export(); routed++; end   // the seq rides back like a MEM_PEEK word
         GEN_CMD_MEM_PEEK, GEN_CMD_MISC: routed++;   // answered by the bridge / no-op
         default: begin
           ignored++;
@@ -101,6 +105,7 @@ package gen_env_pkg;
     gen_cmd_dispatch  dispatch;
     gen_rvfi_monitor  rvfi_mon;
     gen_scoreboard    sb;
+    gen_export_sink   sink;
     gen_eot_handler    eot_h;
     gen_record_handler sig_h, ack_h, phase_h;
     virtual gen_bridge_if bvif;
@@ -147,6 +152,7 @@ package gen_env_pkg;
       dispatch = gen_cmd_dispatch::type_id::create("dispatch", this);
       rvfi_mon = gen_rvfi_monitor::type_id::create("rvfi_mon", this);
       sb       = gen_scoreboard::type_id::create("sb", this);
+      sink     = gen_export_sink::type_id::create("sink", this);
       bridge = gen_bridge::type_id::create("bridge", this);
       `uvm_info("GEN_ENV", {"ibus: ", ibus_agent.cfg.describe()}, UVM_LOW)
       `uvm_info("GEN_ENV", {"dbus: ", dbus_agent.cfg.describe()}, UVM_LOW)
@@ -158,6 +164,9 @@ package gen_env_pkg;
       dbus_agent.driver.mem = mem;
       bridge.mem = mem;
       dispatch.ctrl = ctrl;
+      dispatch.sink = sink;
+      dispatch.bvif = bvif;
+      rvfi_mon.sink = sink;
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
     endfunction

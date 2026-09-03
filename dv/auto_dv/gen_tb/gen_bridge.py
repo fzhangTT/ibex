@@ -62,6 +62,11 @@ class GenBridge:
         self.sent += 1
         return int(b.peek_data.value)
 
+    async def export_flush(self, timeout_cycles=200):
+        """EXPORT_FLUSH: the sink writes its flush marker and flushes before the ack; returns the flush sequence number
+        (carried back in peek_data) for gen_export.read(path, seq)."""
+        return await self.cmd("EXPORT_FLUSH", (0, 0, 0, 0), timeout_cycles)
+
     async def wait_cycles_until(self, target_cycle, timeout_cycles=None):
         """Arm the cycle threshold and await its single hit edge."""
         b = self.h.b

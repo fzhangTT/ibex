@@ -1,0 +1,4 @@
+MUT-D: dv/auto_dv/env/gen_export_pkg.sv:99 original: $fwrite(fd, "# flush seq=%0h records=%0h retired=%0h markers=%0h events=%0h cycle=%0h\n", flushes, records,
+              bvif.evt_retired_count, markers, events, bvif.cycle_count); | mutated: // MUT-D: the flush marker is not written
+      ;
+MUT-D-ablation: dv/auto_dv/gen_tb/gen_export.py:66 original: assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}" | mutated: if marker_idx is None: marker_idx = len(lines); lines.append("# flush seq=0 records=%x retired=%x markers=%x events=%x cycle=0" % (sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("R ")), sum(1 for l in lines if l.startswith("I ")), sum(1 for l in lines if l.startswith("E "))))  # ABLATION MUT-D: EOF accepted as the boundary

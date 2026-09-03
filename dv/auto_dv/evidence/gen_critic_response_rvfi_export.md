@@ -19,3 +19,16 @@ a text change to the design, validated by the reviewer's re-read, not by a run.
 | [low] `final_phase` ordering of `finish_ack` vs the end marker undocumented | FIXED | Section 3 "Close": end marker, `$fflush`, `$ferror`, `$fclose` in `extract_phase` (bottom-up, before the UVM report and before `final_phase` toggles `finish_ack`). |
 | (reviewer note) the owner's "Section 8" probe-rule citation is a misreference; the addendum's Section 7 is right | noted | Section 0 keeps "DV_prompt Section 7 (modelling and checking)". |
 | (carried) DV Lead v2a: one `I` line per rising edge of the `rvfi_ext_irq_valid` level | included | Section 2. |
+
+## Replan review of version 3a (`dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum.md`, APPROVE-WITH-CHANGES; all nine earlier rows judged ADDRESSED)
+
+| Finding | Status | Where in v4a |
+|---|---|---|
+| [medium] `read()` not bound to the flush just issued; a stale earlier marker passes when the latest is missing; MUT-D cannot fire on a stale marker | FIXED (text) | Section 2: the flush marker carries `seq=<s>`; Section 3: EXPORT_FLUSH returns the flush sequence number in `peek_data` with the ack, `read(path, seq)` accepts only a complete marker with that sequence and the matching record count, anything else is a completeness FAIL; Section 5.2: MUT-F (marker written for the first flush only, test flushes twice, `read(seq=2)` fails); Section 4: `GenBridge.export_flush()` returns the number. |
+| [low] "the tohost store is the last R line" is false (the program spins after the store) | FIXED (text) | Section 5.1: assert on the last `R` line with a non-zero `mem_wmask` at the tohost address. |
+| [low] MUT-A's catch mechanism missing from the 5.1 assert list; rule across Zcmp folded records and traps | FIXED (text) | Section 5.1: `pc_rdata[k+1] == pc_wdata[k]` for consecutive `R` lines with no `I` line between them and record k not a debug entry; Zcmp applied at sequence boundaries with the micro-op-internal convention recorded at the first green run before it is asserted; traps unchanged (pc_wdata is the vector). |
+
+Version 4 (DV Lead decision, plan round 3 medium 2: the bus/pin EVENT channel, Section 8; knob family renamed to
+`+gen_export_*`) awaits its own replan review; its rows will be added here. Version 4b (2026-09-03) aligns the text
+with the record part as built (rendered include and method names, `read(path, seq, counters)`, the generic `<name>`
+event rows, measured sizes and wall clock); the build evidence is `dv/auto_dv/evidence/gen_tdd_export.md`.

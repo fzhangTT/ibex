@@ -53,5 +53,6 @@
 #define GEN_CMD_FETCH_EN                     9u
 #define GEN_CMD_MEM_PEEK                     10u
 #define GEN_CMD_MISC                         11u
+#define GEN_CMD_EXPORT_FLUSH                 12u
 
 #endif
