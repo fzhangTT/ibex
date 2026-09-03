@@ -776,3 +776,17 @@ sim.log inside the Test Writer's own work directory. None of these touches fence
 denies Ibex DV collateral, sibling clones, other branches and remotes, and the shared /tmp); they break the
 team rules (teammates run no git commands; a role lists only its own work directory). Recorded for
 transparency; the Test Writer re-briefs its subagents. No owner action needed.
+
+## LOG-030 - 2026-09-03 - NOTE (wave 5: layers live expose a fixed end-of-test budget; progress-based wait in landing 3c)
+
+Wave 5 (test-writer-047/048, head mode with step 2b, so every flow run now draws and applies bus regimes):
+gen_test_cmp_zcmp_basic PASS on two seeds (528k and 654k cycles, UVM_ERROR 0); seed 421987159 and its red FAIL
+with "end-of-test store 1 of 4133 not seen within 300000 cycles" under dmem_gnt_delay long plus imem_rvalid_delay
+long/random plus imem_gnt_delay random. Not a hang: the core kept fetching (12272 ibus rvalids in 300k cycles);
+the program's long prologue had not reached its first report store within the template's fixed per-store budget.
+Reproduced locally with the exact schedule; single regimes pass. Decision: the template's end-of-test wait
+becomes progress-based in landing 3c (a store is late only when retirement has stopped for one budget, failing
+loud as "no retirement"; a program that keeps retiring is waited for up to 16 budgets with GEN_TEST_SLOW lines
+counted in the report, then failed as a runaway; the cmp_zcmp_basic tripled-budget hack removed; red fixture
+gen_ut_eot_stall proves the fail path). Batch-2 acceptance (049..062) and the wave-5 re-file run against the
+3c commit. Counted as a template defect found by acceptance under live layers; no DUT finding.
