@@ -46,7 +46,9 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
         argv.append(f"+{C.PLUSARG_UVM_TESTNAME}={uvm_test}")
     argv += [f"+{C.PLUSARG_UVM_VERBOSITY}={C.UVM_VERBOSITY_DEFAULT}", f"+{C.PLUSARG_UVM_NO_RELNOTES}",
              f"+{C.PLUSARG_BUILD_CONFIG}={build['build_config']}"]
-    argv += list(test["plusargs"]) + list(extra_plusargs)
+    # An operator plusarg replaces a same-name testlist plusarg: VCS takes the FIRST occurrence.
+    extra_names = {U.plusarg_name(x) for x in extra_plusargs}
+    argv += [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
     argv += ["-l", str(run_dir / C.SIM_LOG)]
     if cov_vdb is not None:
         argv += ["-cm", build["cov_metrics"], "-cm_dir", str(cov_vdb), "-cm_name", cm_name(test["name"], seed),
@@ -128,7 +130,7 @@ def fcov_check(test: dict[str, Any], vdb: Path, seed: int, run_dir: Path) -> dic
     r = subprocess.run(argv, capture_output=True, text=True, cwd=C.REPO_ROOT)
     log_path.write_text(" ".join(argv) + "\n" + r.stdout + r.stderr, encoding="utf-8")
     return {"exit_code": r.returncode, "log": str(log_path),
-            "status": {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}.get(r.returncode, "UNKNOWN")}
+            "status": C.FCOV_EXIT_CODES.get(r.returncode, "UNKNOWN")}
 
 
 def main() -> int:
@@ -149,7 +151,11 @@ def main() -> int:
     ap.add_argument("--plusarg", action="append", default=[], help="extra plusarg (repeatable)")
     ap.add_argument("--fcov-check", action="store_true",
                     help="run the fcov-expectation check now (single writer to the vdb)")
+    ap.add_argument("--measured", choices=("auto", "yes", "no"), default="auto",
+                    help="measured run (coverage enters a measured merge): auto = testlist measured flag")
+    ap.add_argument("--pass-marker", help="override the testlist pass_marker (red-run evidence only)")
     a = ap.parse_args()
+    U.require_sv_constants()
 
     build_manifest = a.build_dir.resolve() / C.BUILD_MANIFEST
     if not build_manifest.is_file():
@@ -170,6 +176,23 @@ def main() -> int:
     if build.get("coverage") and not a.no_coverage:
         cov_vdb = (a.cov_dir or Path(build["build_vdb"])).resolve()
         cov_vdb.parent.mkdir(parents=True, exist_ok=True)
+    measured = bool(test.get("measured", True)) if a.measured == "auto" else (a.measured == "yes")
+    if build.get("mutation_id"):
+        measured = False
+    pass_marker = a.pass_marker or test.get("pass_marker")
+    # Debug-only knobs (tb-arch P6) never run in a measured coverage run: refuse in writing.
+    debug_only = [n for n in (testlist.get("debug_only_plusargs") or [])
+                  if U.plusarg_enabled(list(test["plusargs"]) + list(a.plusarg), n)]
+    if measured and cov_vdb is not None and debug_only:
+        refusal = {"test": test["name"], "seed": seed, "verdict": C.VERDICT_NOT_RUN,
+                   "reason": f"debug-only plusarg(s) {debug_only} enabled in a measured coverage run (P6); "
+                             "run it unmeasured (measured: false or --measured no)",
+                   "run_dir": str(run_dir), "build": build["build"], "owner": test["owner"], "measured": True,
+                   "sim_log": None, "run_log": None, "run_cmd": None, "vdb": None, "cm_name": None, "waves": None,
+                   "wall_s": None, "lsf": None, "exit_code": None}
+        U.dump_yaml(refusal, run_dir / C.RESULT_YAML)
+        U.log(f"{test['name']} seed={seed}: NOT_RUN ({refusal['reason']})")
+        return 2
     argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, a.plusarg)
     mirror_used = check_mirror_for_run(build) if test.get("cocotb_module") else None
     for stale in (C.SIM_LOG, C.SIM_STDOUT_LOG, C.RESULT_YAML, "exit_code", C.LSF_OUT, C.LSF_ERR):
@@ -210,8 +233,9 @@ def main() -> int:
             timed_out = True
 
     sim_log = run_dir / C.SIM_LOG
-    res = V.decide(sim_log, test.get("pass_marker"), timed_out, bool(test.get("expected_fail")), rc,
-                   extra_logs=[run_dir / C.SIM_STDOUT_LOG])
+    res = V.decide(sim_log, pass_marker, timed_out, bool(test.get("expected_fail")), rc,
+                   extra_logs=[run_dir / C.SIM_STDOUT_LOG], build_config=build["build_config"],
+                   stderr_logs=[run_dir / C.LSF_ERR, run_log, run_dir / C.SIM_STDOUT_LOG])
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
     result: dict[str, Any] = {
@@ -225,7 +249,9 @@ def main() -> int:
         "waves": str(run_dir / C.WAVES_FSDB) if (run_dir / C.WAVES_FSDB).exists()
         else (str(run_dir / C.WAVES_VPD) if (run_dir / C.WAVES_VPD).exists() else None),
         "uvm_counts": res["uvm_counts"], "cocotb_summary": res["cocotb_summary"],
-        "finish_seen": res["finish_seen"], "marker_seen": res["marker_seen"],
+        "finish_seen": res["finish_seen"], "marker_seen": res["marker_seen"], "pass_marker": pass_marker,
+        "banner_seen": res["banner_seen"], "banner": res["banner"], "crash_signature": res.get("crash_signature"),
+        "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "owner": test["owner"],
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used,

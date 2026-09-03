@@ -98,17 +98,29 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   expiry). Without `--lsf` the same script runs on this host.
 - **Timeout.** `timeout -k 20 <timeout_s>` around the simv inside the job (exit code 124 = timed
   out); the testlist `timeout_s` is the budget, `--timeout-s` overrides it.
-- **Verdict** (`gen_verdict.py`, self-tested with `--self-test`): TIMEOUT if the budget expired;
+- **Verdict** (`gen_verdict.py`, `--self-test` pinned to real log excerpts, evidence
+  `dv/auto_dv/evidence/gen_t038_flow_red_runs.md`): TIMEOUT if the budget expired (also when the
+  simulator died before sim.log existed);
   FAIL on any collected mechanism in `sim.log` (UVM_FATAL/UVM_ERROR summary count > 0 or an
   `UVM_FATAL`/`UVM_ERROR` message line, `Fatal:`/`$fatal`/`GEN_*_FAIL`, `Error-[...]`/`Error:`, cocotb
   `CRITICAL` or a `** TESTS=... FAIL=n` summary with n > 0 or PASS=0, `Assertion ... failed`/`Offending`);
-  FAIL when the end-of-test marker is missing (the test's `pass_marker`, or `$finish` when null);
-  FAIL when the simv exit code is neither 0 nor 124 although the log is clean ("nonzero exit with
-  clean log": the exit code is one more collected mechanism, never the only one); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
+  FAIL when the end-of-test marker is missing (the test's `pass_marker`, matched as the last whole
+  token of a line, or `$finish` when null); FAIL when the time-zero banner line
+  `GEN_CONFIG_BANNER build_config=opentitan` is missing (the banner block is copied into
+  result.yaml); FAIL when the marker is present but neither `$finish` was seen nor the exit code is
+  0, or the exit code is neither 0 nor 124 ("unexplained exit code": one more collected mechanism,
+  never the only one); FAIL on a crash signature (`Segmentation fault|Killed|core dumped|Aborted|Bus
+  error|Illegal instruction`) in lsf.err, run.log or sim_stdout.log; otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
   The process exit code is recorded, never decisive.
 - `--fcov-check`: runs `ci/check_fcov_expectations.py --manifest <fcov_expectation_file> --vdb <vdb>
   --cm-name test_<name>_<seed>` right away (single writer); exit 2 (unhit) or 1 (protocol error)
   turns a PASS into FAIL. In a regression the check runs after every writer finished (Section 3).
+- `--measured auto|yes|no`: whether the run's coverage enters a measured merge (auto = the testlist
+  `measured` flag; a mutation build forces no). A measured coverage run whose plusargs enable a knob
+  listed under the testlist header `debug_only_plusargs` is refused in writing (result.yaml NOT_RUN,
+  no job): tb-arch ruling P6, the CSR-flop debug compare never enters a measurement.
+- `--pass-marker`: overrides the testlist marker (red-run evidence only). An operator `--plusarg`
+  replaces a same-name testlist plusarg (VCS honours the first occurrence).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
@@ -134,8 +146,10 @@ gen_regress.py --repro <test> <seed> [--waves]
 ```
 
 - **Tiers.** A test's `tier` is its lowest tier; `--tier targeted` runs smoke plus targeted tests,
-  `--tier full` runs everything. `--group G` restricts the targeted tier to tests whose
-  `feature_groups` contain G (smoke tests stay in).
+  `--tier full` runs everything measured. `--group G` restricts the targeted tier to tests whose
+  `feature_groups` contain G (smoke tests stay in). Tier `check` (gen_smoke, the cocotb probe) sits
+  outside the measured tiers: build/elaboration checks, `measured: false` by construction, run only
+  with `--tier check` or by name (Critic R-01).
 - **Seeds.** A count in the testlist (or `--seeds`) derives seeds deterministically from
   `--base-seed` (default: the start time) and the test name, so a regression is repeatable from its
   manifest (`scope.base_seed`); `--seed-list` pins explicit seeds for every selected test.
@@ -148,6 +162,18 @@ gen_regress.py --repro <test> <seed> [--waves]
   URG merge (`urg -full64 -format both -dbname cov/merged.vdb -report cov/report -log cov/merge.log
   -show ratios -dir <each build vdb> [-elfile ...]`); `manifest.yaml`; a one-line summary. Exit 0
   only when no run is FAIL, TIMEOUT or NOT_RUN.
+- **Mutation builds (Critic A-24).** `--rtl-root DIR --mutation-id ID` compiles from a mutated copy:
+  any listed source that exists under DIR (clone-relative layout, e.g. `DIR/rtl/ibex_alu.sv`) replaces
+  the clone's file; the build manifest records `rtl_root_override`, `mutation_id` and every
+  substitution with both sha256 digests; every run is `measured: false` (unmeasured vdb tree);
+  `--purpose 4` is refused. DV never edits `rtl/` in place.
+- **Summary accounting (Critic P-07).** `summary.runs_without_fcov_manifest` and
+  `tests_without_fcov_manifest` list every run without a declared-bins manifest; the testlist header
+  `fcov_manifest_required_tiers` turns a null manifest into a FAIL on the named tiers once the first
+  covergroup exists.
+- **Out root (Critic P-10).** A non-local regression refuses an out root on a local filesystem
+  (`--allow-local-out-root` for single-host debugging); every manifest records `out_root`,
+  `out_root_fs` and the site pointer path.
 - `--elfile`: URG exclusion files (the exclusion deliverable) applied at the measured merge with
   `-excl_strict` (Section 7a). `--dump-exclusions` (implied by `--purpose 4`) writes the
   full-exclusions dump. `--build-vcs-arg` passes an extra vcs argument to every build (trials such
@@ -238,14 +264,19 @@ machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
 ## 7. gen_testlist.yaml (schema)
 
-`schema_version: 1`. `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
-in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`. `tests[]`: `name` (gen_
+`schema_version: 1`. Header policies: `fcov_manifest_required_tiers` (list), `debug_only_plusargs`
+(list of knob names). `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
+in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`, `cov_trees` (coverage
+roots below tb_top, default `[dut_instance]`; the single source of the `-cm_hier` scope, Critic
+P-04; the DV Lead rules wrapper versus `[u_dut.u_ibex_core, u_dut.u_register_file]`). `tests[]`: `name` (gen_
 prefix, unique), `description`, `tier`, `build`, `uvm_test` (null for a top without a UVM test
 class; otherwise a class identifier, anything else is rejected), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
 (`dv/auto_dv/fcov_expectations/<name>.fcov.yaml` or null), `timeout_s`, `owner` (role slug),
 optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `component`, `notes`.
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
-owners. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
+owners, a tier-check test that is not `measured: false`, and any plusarg whose name is neither a
+`PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
+Every flow step first runs `gen_flow_util.require_sv_constants()` (the SV/Python constants check). The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/work/critic/gen_critic_exclusions_draft_v1.md)

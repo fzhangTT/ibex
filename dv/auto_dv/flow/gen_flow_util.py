@@ -133,14 +133,30 @@ def env_wrapped_command(argv: list[str], cwd: Path) -> list[str]:
 LOCAL_FS_TYPES = {"xfs", "ext4", "ext3", "ext2", "btrfs", "tmpfs", "overlay"}
 
 
-def path_is_shared(path: Path) -> bool:
-    """Heuristic from the filesystem type: network filesystems are shared, local block ones not."""
+def fs_type(path: Path) -> str:
+    """Filesystem type name from df -T (stat -f reports site filesystems such as wekafs as a bare magic)."""
     probe = path
     while not probe.exists() and probe != probe.parent:
         probe = probe.parent
+    r = subprocess.run(["df", "-T", str(probe)], capture_output=True, text=True)
+    lines = r.stdout.strip().splitlines()
+    if len(lines) >= 2 and len(lines[-1].split()) >= 2:
+        return lines[-1].split()[1].lower()
     r = subprocess.run(["stat", "-f", "-c", "%T", str(probe)], capture_output=True, text=True)
-    fstype = r.stdout.strip().lower()
+    return r.stdout.strip().lower()
+
+
+def path_is_shared(path: Path) -> bool:
+    """Heuristic from the filesystem type: network filesystems are shared, local block ones not."""
+    fstype = fs_type(path)
     return bool(fstype) and fstype not in LOCAL_FS_TYPES
+
+
+def require_sv_constants() -> None:
+    """Flow steps call this first: SV and Python constants homes must agree (P-06)."""
+    problems = C.check_sv_constants()
+    if problems:
+        die("constants mismatch between gen_tb_pkg.sv / ci checker and gen_flow_const.py: " + "; ".join(problems))
 
 
 def parse_seed(text: str) -> int:
@@ -206,6 +222,16 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         die(f"{path}: schema_version must be {C.TESTLIST_SCHEMA_VERSION}")
     builds = data.get("builds") or {}
     tests = data.get("tests") or []
+    unknown_top = set(data) - {"schema_version", "builds", "tests"} - set(C.TESTLIST_OPTIONAL_TOP_KEYS)
+    if unknown_top:
+        die(f"{path}: unknown top-level keys {sorted(unknown_top)}")
+    for k in C.TESTLIST_OPTIONAL_TOP_KEYS:
+        if k in data and not isinstance(data[k], list):
+            die(f"{path}: {k} must be a list")
+    for t_ in data.get("fcov_manifest_required_tiers") or []:
+        if t_ not in C.ALL_TIERS:
+            die(f"{path}: fcov_manifest_required_tiers names unknown tier {t_!r}")
+    known_plusargs = set(C.sv_plusarg_names()) | set(C.SIMULATOR_PLUSARGS)
     for bname, b in builds.items():
         for k in C.BUILD_REQUIRED_KEYS:
             if k not in b:
@@ -213,6 +239,9 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         unknown = set(b) - set(C.BUILD_REQUIRED_KEYS) - set(C.BUILD_OPTIONAL_KEYS)
         if unknown:
             die(f"{path}: build {bname} has unknown keys {sorted(unknown)}")
+        trees = b.get("cov_trees")
+        if trees is not None and (not isinstance(trees, list) or not trees or not all(isinstance(x, str) for x in trees)):
+            die(f"{path}: build {bname} cov_trees must be a non-empty list of instance paths below tb_top")
     names = set()
     for t in tests:
         for k in C.TEST_REQUIRED_KEYS:
@@ -224,8 +253,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         if t["name"] in names:
             die(f"{path}: duplicate test name {t['name']}")
         names.add(t["name"])
-        if t["tier"] not in C.TIERS:
-            die(f"{path}: test {t['name']} tier {t['tier']!r} not in {C.TIERS}")
+        if t["tier"] not in C.ALL_TIERS:
+            die(f"{path}: test {t['name']} tier {t['tier']!r} not in {C.ALL_TIERS}")
+        if t["tier"] == C.CHECK_TIER and t.get("measured", True):
+            die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false (Critic R-01)")
         if t["build"] not in builds:
             die(f"{path}: test {t['name']} names unknown build {t['build']!r}")
         if t["owner"] not in C.OWNER_ROLES:
@@ -239,7 +270,28 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         uvm = t.get("uvm_test")
         if uvm is not None and not (isinstance(uvm, str) and re.match(r"^[A-Za-z_]\w*$", uvm)):
             die(f"{path}: test {t['name']} uvm_test must be null or a class identifier, got {uvm!r}")
+        for pa in t["plusargs"]:
+            name = plusarg_name(pa)
+            if name is None:
+                die(f"{path}: test {t['name']} plusarg {pa!r} is not of the form +name or +name=value")
+            if name not in known_plusargs:
+                die(f"{path}: test {t['name']} plusarg {pa!r}: name {name!r} is neither a PLUSARG_* of "
+                    f"{C.TB_PKG_SV.name} nor a simulator/UVM plusarg (P-06 single source)")
     return data
+
+
+def plusarg_name(pa: str) -> str | None:
+    m = re.match(r"^\+([A-Za-z_][\w+]*)(=.*)?$", pa)
+    return m.group(1) if m else None
+
+
+def plusarg_enabled(plusargs: list[str], name: str) -> bool:
+    """True when +name is present with no value or a value other than 0."""
+    for pa in plusargs:
+        if plusarg_name(pa) == name:
+            val = pa.split("=", 1)[1] if "=" in pa else "1"
+            return val.strip() not in ("0", "")
+    return False
 
 
 def test_by_name(testlist: dict[str, Any], name: str) -> dict[str, Any]:
@@ -256,8 +308,10 @@ def select_tests(testlist: dict[str, Any], tier: str | None, names: list[str] | 
         return [test_by_name(testlist, n) for n in names]
     if tier is None:
         die("select_tests: need a tier or explicit names")
+    if tier == C.CHECK_TIER:
+        return [t for t in tests if t["tier"] == C.CHECK_TIER]
     rank = C.TIER_RANK[tier]
-    chosen = [t for t in tests if C.TIER_RANK[t["tier"]] <= rank]
+    chosen = [t for t in tests if t["tier"] in C.TIER_RANK and C.TIER_RANK[t["tier"]] <= rank]
     if tier == "targeted" and group:
         chosen = [t for t in chosen if group in (t.get("feature_groups") or []) or t["tier"] == "smoke"]
     return chosen

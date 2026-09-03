@@ -173,6 +173,17 @@ Coverage Glitch ... Compiling the design with -cm_glitch 0 might help`. The tie 
 the "covered" event is a time-zero evaluation glitch; `gen_regress.py --build-vcs-arg "-cm_glitch
 0"` is the trial knob when rtl-arch wants it (`merge.log` of every regression carries the list).
 
+Trial served afterwards (run request rtl-arch-001, purpose 2, 06:06 UTC, results manifest
+`dv/auto_dv/work/runtime/results/rtl-arch-001/manifest.yaml`, out-tree
+`<out root>/regress_req_rtl-arch-001`): the same smoke build with `-cm_glitch 0` (2 seeds, LSF jobs
+10930598 and 10930599, both PASS). VCS accepts the flag with `Warning-[VCM-OPTIGN]` ("-cm_glitch
+option does not work with fsm and path"); merge.log carries zero `UCAPI-CSM` and zero `RCGLTCH`
+lines (baseline: 14 and 1). Side effect on the DUT row: LINE 1694/4351 (38.93) against 2397/4351
+(55.09), COND 2547/9566 (26.63) against 3579/9566 (37.41), BRANCH 798/2418 (33.00) against 992/2418
+(41.03); TOGGLE, FSM and ASSERT unchanged. So a large share of the baseline line, condition and
+branch hits of the NOP smoke are zero-time glitch events, not settled values; whether measured
+builds adopt `-cm_glitch 0` is the DV Lead's decision (rtl-arch proposes it through the DV Lead).
+
 ## 6. Run-request queue served end to end
 
 Three self-test requests written to `dv/auto_dv/work/runtime/requests/` and served by

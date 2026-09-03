@@ -181,13 +181,14 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     L.append("## 4. LSF cost per regression")
     L.append("")
-    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | Status |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|")
+    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | Runs w/o fcov manifest | Status |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|")
     for m in regs:
         cost = m.get("lsf_cost") or {}
+        sm = m.get("summary") or {}
         L.append(f"| {m.get('tag') or Path(m.get('outdir', '')).name} | {m.get('purpose') or '-'} | {m.get('requester') or '-'} | "
                  f"{cost.get('jobs', '-')} | {fmt(cost.get('cpu_s'))} | {fmt(cost.get('wall_s'))} | {fmt(cost.get('slot_s'))} | "
-                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | {m.get('status')} |")
+                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | {sm.get('runs_without_fcov_manifest', '-')} | {m.get('status')} |")
     L.append("")
     L.append("## 5. Run requests served")
     L.append("")

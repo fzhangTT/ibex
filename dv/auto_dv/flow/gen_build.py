@@ -7,6 +7,7 @@ manifest (command, flag groups, filelist digests, git HEAD, tool versions, compi
 Usage (from a login shell with ci/env.sh sourced, or through --lsf):
     gen_build.py --build gen_smoke --coverage [--cond] [--cocotb] [--waves] [--no-diag-noconst]
                  [--outdir DIR] [--lsf] [--define NAME ...] [--vcs-arg ARG ...]
+                 [--rtl-root DIR --mutation-id ID]   # mutation build from a mutated RTL copy
 """
 
 from __future__ import annotations
@@ -62,10 +63,13 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
     return lib, rec
 
 
-def absolutize_filelist(src: Path, dst: Path) -> None:
+def absolutize_filelist(src: Path, dst: Path, rtl_root: Path | None = None) -> list[dict[str, str]]:
     """Copy a clone-root-relative VCS -f file into the outdir with absolute paths, so vcs can run
-    with the outdir as cwd (its side files then land there, never in the clone root)."""
+    with the outdir as cwd (its side files then land there, never in the clone root). With an RTL
+    root override (mutation builds, Critic A-24) a source that exists under rtl_root replaces the
+    clone's copy; every substitution is returned with both digests for the manifest."""
     out: list[str] = []
+    subs: list[dict[str, str]] = []
     for raw in src.read_text(encoding="utf-8").splitlines():
         code, _, comment = raw.partition("//")
         entry = code.strip()
@@ -75,19 +79,29 @@ def absolutize_filelist(src: Path, dst: Path) -> None:
         if entry.startswith("+incdir+"):
             entry = "+incdir+" + str((C.REPO_ROOT / entry[len("+incdir+"):]).resolve())
         elif not entry.startswith(("+", "-")):
-            entry = str((C.REPO_ROOT / entry).resolve())
+            orig = (C.REPO_ROOT / entry).resolve()
+            chosen = orig
+            if rtl_root is not None and (rtl_root / entry).is_file():
+                chosen = (rtl_root / entry).resolve()
+                subs.append({"file": entry, "original_sha256": U.sha256_file(orig), "mutated_sha256": U.sha256_file(chosen),
+                             "mutated_path": str(chosen)})
+            entry = str(chosen)
         out.append(entry + ((" //" + comment) if comment else ""))
     dst.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return subs
 
 
 def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) -> tuple[list[str], dict[str, list[str]]]:
     groups: dict[str, list[str]] = {}
     groups["base"] = list(C.VCS_BASE_FLAGS)
     groups["filelists"] = []
+    a.rtl_substitutions = []
     for fl in build["filelists"]:
         dst = outdir / Path(fl).name
-        absolutize_filelist(C.REPO_ROOT / fl, dst)
+        a.rtl_substitutions += absolutize_filelist(C.REPO_ROOT / fl, dst, a.rtl_root)
         groups["filelists"] += ["-f", str(dst)]
+    if a.rtl_root is not None and not a.rtl_substitutions:
+        U.die(f"--rtl-root {a.rtl_root}: no listed source exists there; nothing would be mutated")
     groups["top"] = ["-top", build["tb_top"]]
     groups["uvm"] = list(C.VCS_UVM_FLAGS)
     groups["defines"] = [f"+define+{d}" for d in list(build.get("defines") or []) + list(a.define or [])]
@@ -97,9 +111,11 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["debug"] = list(C.VCS_DEBUG_WAVES_FLAGS if a.waves else C.VCS_DEBUG_PP_FLAGS)
     if a.coverage:
         hier = outdir / "cm_hier.cfg"
-        hier.write_text(U.render_fields(C.CM_HIER_TEMPLATE.read_text(encoding="utf-8"),
-                                        {"tb_top": build["tb_top"], "dut_instance": build["dut_instance"]}),
-                        encoding="utf-8")
+        # One +tree per coverage root; the build entry (cov_trees, default the DUT instance) is the
+        # single source of the scope (P-04).
+        tmpl = C.CM_HIER_TEMPLATE.read_text(encoding="utf-8")
+        hier.write_text("".join(U.render_fields(tmpl, {"tb_top": build["tb_top"], "dut_instance": tree})
+                                for tree in cov_trees(build)), encoding="utf-8")
         metrics = C.COV_METRICS_WITH_COND if a.cond else C.COV_METRICS_VERIFIED
         groups["coverage"] = ["-cm", metrics, *C.COV_COMPILE_EXTRA,
                               "-cm_dir", str(outdir / C.BUILD_VDB_NAME), "-cm_hier", str(hier)]
@@ -120,6 +136,14 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     return argv, groups
 
 
+def cov_trees(build: dict[str, Any]) -> list[str]:
+    return list(build.get("cov_trees") or [build["dut_instance"]])
+
+
+def cov_scopes(build: dict[str, Any]) -> list[str]:
+    return [f"{build['tb_top']}.{t}" for t in cov_trees(build)]
+
+
 def summarize_compile_log(log: Path) -> dict[str, Any]:
     text = log.read_text(encoding="utf-8", errors="replace") if log.is_file() else ""
     errors = re.findall(r"^Error-\[([\w-]+)\]", text, re.M)
@@ -127,7 +151,7 @@ def summarize_compile_log(log: Path) -> dict[str, Any]:
     wcount: dict[str, int] = {}
     for w in warnings:
         wcount[w] = wcount.get(w, 0) + 1
-    m = re.search(r"Compiler version (\S+)", text)
+    m = re.search(r"^\s*Version (\S+)", text, re.M)
     return {"error_count": len(errors), "error_classes": sorted(set(errors)),
             "warning_classes": dict(sorted(wcount.items())),
             "elab_ok": "CPU time:" in text and not errors,
@@ -156,8 +180,14 @@ def main() -> int:
     ap.add_argument("--lsf-slots", type=int, default=C.LSF_BUILD_SLOTS)
     ap.add_argument("--timeout-s", type=int, default=3600)
     ap.add_argument("--force", action="store_true", help="delete an existing outdir first")
+    ap.add_argument("--rtl-root", type=Path,
+                    help="mutation builds (Critic A-24): directory holding mutated copies of RTL files, "
+                         "clone-relative layout (e.g. <dir>/rtl/ibex_alu.sv); DV never edits rtl/ in place")
+    ap.add_argument("--mutation-id", help="mutation identifier recorded with --rtl-root (required with it)")
     a = ap.parse_args()
-
+    if (a.rtl_root is None) != (a.mutation_id is None):
+        ap.error("--rtl-root and --mutation-id go together")
+    U.require_sv_constants()
     testlist = U.load_testlist(a.testlist)
     if a.build not in testlist["builds"]:
         U.die(f"build {a.build!r} not in {a.testlist}")
@@ -180,6 +210,8 @@ def main() -> int:
             inner += ["--define", d]
         for x in a.vcs_arg or []:
             inner += ["--vcs-arg", x]
+        if a.rtl_root:
+            inner += ["--rtl-root", str(a.rtl_root), "--mutation-id", a.mutation_id]
         job = U.LsfJob(U.env_wrapped_command(inner, C.REPO_ROOT), cwd=outdir,
                        job_name=f"{C.LSF_JOB_PREFIX}_build_{a.build}", slots=a.lsf_slots,
                        out_file=outdir / C.LSF_OUT, err_file=outdir / C.LSF_ERR, run_timeout_s=a.timeout_s)
@@ -209,7 +241,10 @@ def main() -> int:
         "dut_instance": build["dut_instance"], "build_config": C.BUILD_CONFIG, "outdir": str(outdir),
         "simv": str(outdir / C.SIMV_NAME), "compile_log": str(outdir / C.COMPILE_LOG),
         "coverage": bool(a.coverage), "cov_metrics": (groups.get("coverage") or [None, None])[1],
-        "cov_scope": f"{build['tb_top']}.{build['dut_instance']}" if a.coverage else None,
+        "cov_scope": cov_scopes(build)[0] if a.coverage else None,
+        "cov_scopes": cov_scopes(build) if a.coverage else [],
+        "rtl_root_override": str(a.rtl_root.resolve()) if a.rtl_root else None, "mutation_id": a.mutation_id,
+        "rtl_substitutions": a.rtl_substitutions,
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,
         "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,

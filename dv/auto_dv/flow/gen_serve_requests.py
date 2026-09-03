@@ -26,7 +26,7 @@ from typing import Any
 import gen_flow_const as C
 import gen_flow_util as U
 
-TIER_WORDS = {"smoke": "smoke", "targeted": "targeted", "full": "full", "all": "full"}
+TIER_WORDS = {"smoke": "smoke", "targeted": "targeted", "full": "full", "all": "full", "check": "check"}
 
 
 def parse_bool(v: Any) -> bool:

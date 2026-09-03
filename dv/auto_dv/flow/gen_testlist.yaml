@@ -12,7 +12,9 @@
 # tests[]: one entry per test; the flow runs it as <build>/vcs_simv with the plusargs below.
 #   name                   gen_ prefixed, unique; also the fcov manifest and cm_name key
 #   description            one line
-#   tier                   smoke | targeted | full (a test is in its tier and every higher tier)
+#   tier                   smoke | targeted | full (a test is in its tier and every higher tier), or
+#                          check: build/elaboration checks outside the measured tiers (--tier check
+#                          or by name only; must be measured: false; Critic R-01)
 #   build                  key into builds
 #   uvm_test               value of +UVM_TESTNAME (null = the TB top has no UVM test class)
 #   plusargs               list of "+name=value" strings from the testlist entry
@@ -29,11 +31,23 @@
 #                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
 schema_version: 1
 
+# Policies (flow-enforced):
+#   fcov_manifest_required_tiers: tiers whose tests must carry an fcov_expectation_file once the
+#     first covergroup exists (a null manifest there FAILs the run; Critic P-07). Empty until then.
+#   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: the
+#     CSR-flop debug compare); a measured run enabling one is refused in writing (NOT_RUN).
+#     TB Infra names the knob (declared once in the SV constants home) and I add it here.
+fcov_manifest_required_tiers: []
+debug_only_plusargs: []
+
 builds:
   gen_smoke:
     description: gen_smoke_tb_top around gen_dut_top, pure SV, opentitan configuration
     tb_top: gen_smoke_tb_top
     dut_instance: u_dut
+    # cov_trees (default [dut_instance]): the -cm_hier +tree roots below tb_top; the single source
+    # of the coverage scope (Critic P-04). Pending DV Lead ruling: wrapper (u_dut) or
+    # [u_dut.u_ibex_core, u_dut.u_register_file].
     filelists:
       - dv/auto_dv/tb/gen_rtl.f
       - dv/auto_dv/tb/gen_smoke_tb.f
@@ -53,8 +67,8 @@ builds:
 
 tests:
   - name: gen_smoke
-    description: NOP program through the icache for a bounded cycle count; checks retirement and no alert
-    tier: smoke
+    description: build/elaboration check (not a regression test); NOP program, checks retirement and no alert
+    tier: check
     build: gen_smoke
     uvm_test: null
     plusargs:
@@ -68,10 +82,11 @@ tests:
     cocotb_module: null
     expected_fail: false
     component: gen_dut_top
+    measured: false
 
   - name: gen_cocotb_probe
     description: flow probe; cocotb loads on the LSF host from the shared mirror, observes RVFI retirements from Python
-    tier: targeted
+    tier: check
     build: gen_smoke_cocotb
     uvm_test: null
     plusargs:

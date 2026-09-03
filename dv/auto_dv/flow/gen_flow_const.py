@@ -173,12 +173,23 @@ LSF_REPORT_HOST_RE = re.compile(r"executed on host\(s\) <([^>]+)>")
 TESTLIST_SCHEMA_VERSION = 1
 TIERS = ("smoke", "targeted", "full")
 TIER_RANK = {t: i for i, t in enumerate(TIERS)}
+# Build/elaboration checks (gen_smoke, the cocotb probe): outside the measured tiers, selectable
+# only by name or with --tier check; never in a measured merge (Critic R-01).
+CHECK_TIER = "check"
+ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
                       "expected_fail", "component", "notes", "measured")
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
-BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args")
+# cov_trees: coverage scope roots below tb_top (default [dut_instance]); the single source of the
+# -cm_hier scope (Critic P-04; the DV Lead rules on wrapper vs core+regfile).
+BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees")
+# Testlist header policies: fcov_manifest_required_tiers (P-07), debug_only_plusargs (tb-arch P6).
+TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs")
+# Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).
+SIMULATOR_PLUSARGS = ("ntb_random_seed", "UVM_TESTNAME", "UVM_VERBOSITY", "UVM_NO_RELNOTES", "UVM_TIMEOUT",
+                      "UVM_MAX_QUIT_COUNT", "vcs+lic+wait", "vcs+finish", "vcs+stop")
 OWNER_ROLES = ("orchestrator", "dv-lead", "rtl-arch", "tb-infra", "test-writer", "runtime",
                "critic")
 
@@ -206,6 +217,11 @@ VERDICT_XFAIL = "XFAIL"
 END_MARKER_DEFAULT = "$finish"
 # simv exit codes that do not by themselves fail a clean-log run (0; 124 = coreutils timeout, TIMEOUT).
 EXIT_CODES_CLEAN = (0, 124)
+# Crash signatures scanned in lsf.err and run.log (the simulator dies without a sim.log message).
+CRASH_RE = re.compile(r"Segmentation fault|Killed|core dumped|Aborted|Bus error|Illegal instruction")
+# ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).
+FCOV_EXIT_CODES = {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}
+FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 usage/protocol error")
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (
     ("uvm_fatal", re.compile(r"^UVM_FATAL\s+(?!:\s*0\b)")),
@@ -225,8 +241,18 @@ URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
 NOT_APPLICABLE = "n/a"
 
 
+def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:
+    """Every `parameter string PLUSARG_<X> = "<name>"` of the SV constants home: {name: PLUSARG_X}."""
+    if not tb_pkg.is_file():
+        return {}
+    text = tb_pkg.read_text(encoding="utf-8")
+    return {m.group(2): m.group(1)
+            for m in re.finditer(r'parameter\s+string\s+(PLUSARG_\w+)\s*=\s*"([^"]*)"', text)}
+
+
 def check_sv_constants(tb_pkg: Path = TB_PKG_SV) -> list[str]:
-    """Return mismatches between this module and gen_tb_pkg.sv for the shared names."""
+    """Mismatches between this module and gen_tb_pkg.sv for the shared names, plus the
+    fcov-checker exit-code contract against its own docstring (P-06 single source)."""
     problems: list[str] = []
     if not tb_pkg.is_file():
         return [f"{tb_pkg}: missing"]
@@ -237,6 +263,12 @@ def check_sv_constants(tb_pkg: Path = TB_PKG_SV) -> list[str]:
             problems.append(f"{sv_name}: not declared in {tb_pkg}")
         elif m.group(1) != py_value:
             problems.append(f"{sv_name}: SV={m.group(1)!r} Python={py_value!r}")
+    if FCOV_CHECKER.is_file():
+        doc = FCOV_CHECKER.read_text(encoding="utf-8")
+        for anchor in FCOV_DOCSTRING_ANCHORS:
+            if anchor not in doc:
+                problems.append(f"{FCOV_CHECKER.name}: exit-code contract text {anchor!r} not found; "
+                                f"FCOV_EXIT_CODES may be stale")
     return problems
 
 

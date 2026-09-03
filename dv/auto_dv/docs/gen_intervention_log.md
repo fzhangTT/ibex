@@ -285,3 +285,11 @@ unchanged; VCS states the flag does not apply to FSM). The DV Lead rules on adop
 measured builds; the Orchestrator's recommendation is to adopt it and re-measure the round-0
 baseline, because glitch-only hits are not exercised logic (DV_prompt.txt Section 10). Evidence:
 `dv/auto_dv/evidence/gen_t010_compile_path.md` Section 5.
+
+## LOG-008 - 2026-09-03 - NOTE (control for LOG-007)
+
+Same-seed control (run request rtl-arch-002): the two trial seeds under the standard flags
+reproduce the T-010 baseline numerators exactly (LINE 2397/4351, COND 3579/9566, BRANCH 992/2418)
+with the 14 coverage-status-mismatch warnings back. The `-cm_glitch 0` numerator drop in LOG-007
+is therefore the filter, not the seeds. The DV Lead's run-scope ruling on adopting the flag is
+now unblocked. Manifest: `dv/auto_dv/work/runtime/results/rtl-arch-002/manifest.yaml`.

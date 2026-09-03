@@ -62,6 +62,8 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
         argv.append("--waves")
     for x in a.build_vcs_arg or []:
         argv += ["--vcs-arg", x]
+    if a.rtl_root:
+        argv += ["--rtl-root", str(a.rtl_root), "--mutation-id", a.mutation_id]
     if a.build_lsf and not a.local:
         argv.append("--lsf")
     U.log(f"build {name}: {' '.join(argv[2:])}")
@@ -78,7 +80,9 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
     return {"dir": str(bdir), "manifest": str(man_path), "status": man.get("status", "failed"),
             "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "lsf": man.get("lsf"),
             "cov_metrics": man.get("cov_metrics"), "defines": man.get("defines"), "constfile": man.get("constfile"),
-            "cov_scope": man.get("cov_scope"), "vdb": None,
+            "cov_scope": man.get("cov_scope"), "cov_scopes": man.get("cov_scopes") or [], "vdb": None,
+            "mutation_id": man.get("mutation_id"), "rtl_root_override": man.get("rtl_root_override"),
+            "rtl_substitutions": man.get("rtl_substitutions"),
             "unmeasured_vdb": str(unmeasured_vdb) if unmeasured_vdb else None}
 
 
@@ -87,11 +91,12 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
     """One test+seed through gen_run.py (which submits its own bsub -K job unless --local)."""
     run_dir = outdir / "runs" / f"{t['name']}_{seed}"
     run_dir.mkdir(parents=True, exist_ok=True)
-    measured = bool(t.get("measured", True))
+    measured = bool(t.get("measured", True)) and not a.mutation_id
     cov_vdb = Path(build["dir"]) / C.BUILD_VDB_NAME if measured else Path(build["unmeasured_vdb"] or "")
     argv = [sys.executable, str(C.FLOW_DIR / "gen_run.py"), "--build-dir", build["dir"], "--test", t["name"],
             "--seed", str(seed), "--run-dir", str(run_dir), "--testlist", str(a.testlist),
-            "--pend-allowance-s", str(a.pend_allowance_s), "--job-tag", outdir.name]
+            "--pend-allowance-s", str(a.pend_allowance_s), "--job-tag", outdir.name,
+            "--measured", "yes" if measured else "no"]
     if coverage:
         argv += ["--cov-dir", str(cov_vdb)]
     else:
@@ -142,14 +147,29 @@ def post_fcov_checks(runs: list[dict[str, Any]], testlist: dict[str, Any], outdi
             U.dump_yaml(stored, res_path)
 
 
-def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
+def summarize(runs: list[dict[str, Any]], testlist: dict[str, Any] | None = None) -> dict[str, Any]:
     counts = {v: 0 for v in (C.VERDICT_PASS, C.VERDICT_FAIL, C.VERDICT_XFAIL, C.VERDICT_TIMEOUT, C.VERDICT_NOT_RUN)}
     for r in runs:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
     n = len(runs)
     good = counts[C.VERDICT_PASS] + counts[C.VERDICT_XFAIL]
-    return {"planned": n, **{k.lower(): v for k, v in counts.items()},
-            "pass_rate_pct": round(100.0 * good / n, 2) if n else None}
+    out = {"planned": n, **{k.lower(): v for k, v in counts.items()},
+           "pass_rate_pct": round(100.0 * good / n, 2) if n else None}
+    # Trust-triad rule 3 accounting (P-07): runs without a declared-bins manifest are listed, never silent.
+    exempt = sorted({r["test"] for r in runs if not r.get("fcov_expectation_file")})
+    out["runs_without_fcov_manifest"] = sum(1 for r in runs if not r.get("fcov_expectation_file"))
+    out["tests_without_fcov_manifest"] = exempt
+    return out
+
+
+def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any]) -> None:
+    """A null manifest on a tier the testlist header requires one for is a missing trust-triad artefact."""
+    required = set(testlist.get("fcov_manifest_required_tiers") or [])
+    for r in runs:
+        t = U.test_by_name(testlist, r["test"])
+        if t["tier"] in required and not t.get("fcov_expectation_file") and r["verdict"] == C.VERDICT_PASS:
+            r["verdict"] = C.VERDICT_FAIL
+            r["reason"] = f"no fcov_expectation_file on tier {t['tier']} (fcov_manifest_required_tiers)"
 
 
 def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -174,7 +194,7 @@ def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, An
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sel = ap.add_mutually_exclusive_group()
-    sel.add_argument("--tier", choices=C.TIERS)
+    sel.add_argument("--tier", choices=C.ALL_TIERS)
     sel.add_argument("--tests", help="comma-separated test names")
     sel.add_argument("--repro", nargs=2, metavar=("TEST", "SEED"), help="rerun exactly one test+seed")
     ap.add_argument("--group", help="feature group filter for --tier targeted")
@@ -203,14 +223,23 @@ def main() -> int:
     ap.add_argument("--build-vcs-arg", action="append", help="extra vcs argument for every build (trials)")
     ap.add_argument("--no-sync-mirror", action="store_true",
                     help="do not re-sync the shared mirror before cocotb builds (default: sync)")
+    ap.add_argument("--allow-local-out-root", action="store_true",
+                    help="proceed with an out root on a local filesystem (debug on a single host only)")
+    ap.add_argument("--rtl-root", type=Path, help="mutation build: directory of mutated RTL copies (A-24)")
+    ap.add_argument("--mutation-id", help="mutation identifier (with --rtl-root); every run is unmeasured")
     ap.add_argument("--force", action="store_true", help="delete an existing outdir")
     a = ap.parse_args()
     if not (a.tier or a.tests or a.repro):
         ap.error("one of --tier, --tests, --repro is required")
     U.require_env("vcs", "urg", "bsub" if not a.local else "vcs")
-    if not a.local and not U.path_is_shared(C.OUT_DIR):
-        U.log(f"WARNING: out root {C.OUT_DIR} is on a local filesystem; LSF jobs will not see it "
-              f"(set {C.ENV_OUT_ROOT} or work/runtime/gen_site.yaml out_root, SIM_RECIPE Section 7)")
+    U.require_sv_constants()
+    if (a.rtl_root is None) != (a.mutation_id is None):
+        ap.error("--rtl-root and --mutation-id go together")
+    if a.mutation_id and a.purpose == 4:
+        ap.error("a mutation build never enters a measurement (purpose 4)")
+    if not a.local and not U.path_is_shared(C.OUT_DIR) and not a.allow_local_out_root:
+        U.die(f"out root {C.OUT_DIR} is on a local filesystem ({U.fs_type(C.OUT_DIR)}); LSF jobs cannot see it. "
+              f"Set out_root in {C.SITE_YAML} or {C.ENV_OUT_ROOT} (SIM_RECIPE Section 7), or --allow-local-out-root")
 
     start = time.time()
     testlist = U.load_testlist(a.testlist)
@@ -228,6 +257,8 @@ def main() -> int:
     outdir.mkdir(parents=True)
     manifest: dict[str, Any] = {
         "kind": "regression", "tag": a.tag, "request": a.request, "requester": a.requester,
+        "out_root": str(C.OUT_DIR), "out_root_fs": U.fs_type(C.OUT_DIR), "site_yaml": str(C.SITE_YAML),
+        "mutation": {"id": a.mutation_id, "rtl_root": str(a.rtl_root)} if a.mutation_id else None,
         "purpose": a.purpose, "purpose_text": C.PURPOSES.get(a.purpose) if a.purpose else None,
         "build_config": C.BUILD_CONFIG,
         "scope": {"tier": a.tier, "tests": a.tests, "group": a.group, "repro": a.repro,
@@ -274,13 +305,14 @@ def main() -> int:
         for f in cf.as_completed(futs):
             runs.append(f.result())
             manifest["runs"] = sorted(runs, key=lambda r: (r["test"], r["seed"]))
-            manifest["summary"] = summarize(runs)
+            manifest["summary"] = summarize(runs, testlist)
             U.dump_yaml(manifest, outdir / "manifest.yaml")
     runs.sort(key=lambda r: (r["test"], r["seed"]))
 
     cov_status = "not_requested"
     if coverage:
         post_fcov_checks(runs, testlist, outdir)
+        fcov_policy_failures(runs, testlist)
         measured_vdbs: list[Path] = []
         unmeasured_vdbs: list[Path] = []
         for bname, b in builds.items():
@@ -291,7 +323,7 @@ def main() -> int:
             if b.get("unmeasured_vdb") and any(r.get("vdb") and not r.get("measured", True) for r in runs
                                                if r.get("build") == bname):
                 unmeasured_vdbs.append(Path(b["unmeasured_vdb"]))
-        dut_scopes = sorted({b["cov_scope"] for b in builds.values() if b.get("cov_scope")})
+        dut_scopes = sorted({sc for b in builds.values() for sc in (b.get("cov_scopes") or [b.get("cov_scope")]) if sc})
         dump = a.dump_exclusions or a.purpose == 4
         if measured_vdbs:
             U.log(f"urg merge (measured) of {len(measured_vdbs)} vdb(s)" + (" with exclusion dump" if dump else ""))
@@ -307,21 +339,23 @@ def main() -> int:
         cov_status = cov["status"]
         if unmeasured_vdbs:
             U.log(f"urg merge (unmeasured, informational) of {len(unmeasured_vdbs)} vdb(s)")
+            # A requested exclusion dump lands on the unmeasured merge when no measured merge exists.
             cov["unmeasured"] = R.merge(outdir / C.UNMEASURED_COV_DIRNAME, sorted(unmeasured_vdbs), None,
-                                        dut_scopes=dut_scopes)
+                                        dut_scopes=dut_scopes, dump_exclusions=dump and not measured_vdbs)
             cov["unmeasured"]["tests"] = sorted({r["test"] for r in runs if not r.get("measured", True)})
         manifest["coverage"] = cov
         if cov.get("dashboard_txt"):
             U.log(f"URG dashboard: {cov['dashboard_txt']} totals={cov['totals']}")
         if cov.get("exclusion_violations"):
             U.log(f"EXCLUSION VIOLATION (strict): {cov['exclusion_violations'][:3]} -> merge FAILED")
-    manifest.update(runs=runs, summary=summarize(runs), lsf_cost=lsf_cost(builds, runs),
+    manifest.update(runs=runs, summary=summarize(runs, testlist), lsf_cost=lsf_cost(builds, runs),
                     finished_utc=U.now_utc(), wall_s=round(time.time() - start, 1), status="done",
                     lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])
     U.dump_yaml(manifest, outdir / "manifest.yaml")
     s = manifest["summary"]
     U.log(f"done: {s['pass']} pass, {s['fail']} fail, {s['xfail']} xfail, {s['timeout']} timeout, "
-          f"{s['not_run']} not_run of {s['planned']}; manifest {outdir / 'manifest.yaml'}")
+          f"{s['not_run']} not_run of {s['planned']}; {s['runs_without_fcov_manifest']} run(s) without an fcov "
+          f"manifest {s['tests_without_fcov_manifest']}; manifest {outdir / 'manifest.yaml'}")
     if manifest["lsf_jobs_left"]:
         U.log(f"WARNING: LSF jobs still present with prefix {C.LSF_JOB_PREFIX}: {manifest['lsf_jobs_left']}")
     bad = s["fail"] + s["timeout"] + s["not_run"]
