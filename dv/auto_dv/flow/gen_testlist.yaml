@@ -805,8 +805,7 @@ tests:
     measured: false
 
   - name: gen_test_isa_cti_red
-    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design; RED-OK once TB
-      Infra''s comparator rows land (until then the first collected evidence line is the comparator''s uvm_error and the flow verdict is FAIL); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design (RED-OK; UVM_ERROR-free since TB Infra''s comparator rows R10/R11); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
     red_expect: 'GEN_TEST_FAIL gen_test_isa_cti: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_017(?!\d)'
     tier: check
@@ -997,7 +996,7 @@ tests:
 
   - name: gen_test_cmp_zca_red
     description: 'TDD red fixture of gen_test_cmp_zca, pinned to TP-CMP-005 (generator --red --red-item TP-CMP-005): one c.swsp immediate is moved so the read-back sees stale data, so fire_tp_cmp_005 FAILs
-      by design; RED-OK once TB Infra''s comparator rows land (until then the first collected evidence line is the comparator''s uvm_error and the flow verdict is FAIL); every other item''s red is retained
+      by design (RED-OK; UVM_ERROR-free since TB Infra''s comparator rows R10/R11); every other item''s red is retained
       locally (gen_tdd_batch2.md)'
     red_fixture: true
     red_expect: 'GEN_TEST_FAIL gen_test_cmp_zca: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_005(?!\d)'

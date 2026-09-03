@@ -209,7 +209,7 @@ REAL_SHAPE_KILL = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/se
 
 
 # The same two reports with the PID field re-rendered the way bash prints it (%5ld): a PID below 10000
-# carries leading spaces (review of 2a4916c, finding 1).
+# carries leading spaces.
 SHORT_PID_SEGV = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_SEGV.sh: line 7:   537 Segmentation fault      timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_SEGV +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_SEGV.log 2>&1'
 SHORT_PID_KILL = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_KILL.sh: line 7:     7 Killed                  timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_KILL +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_KILL.log 2>&1'
 

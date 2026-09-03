@@ -415,10 +415,25 @@ def self_test() -> int:
             none = red_signature_check({"name": "gen_test_y_red", "pass_marker": "GEN_TEST_PASS", "red_expect": r"x"})
         finally:
             C.SOURCE_ROOT = saved_root
-        cond = good and good["refuse"] is None and good["harness_match"] and good["verdict"] == C.VERDICT_RED_OK \
-            and bad_sig and bad_sig["refuse"] is not None and not bad_sig["harness_match"] and none is None
+        (ev / "gen_z_red1_stdout.log").write_text("UVM_ERROR @ 5: [isa_rd] mismatch\nAssertionError: GEN_TEST_FAIL gen_test_z: 1 fire-check failure(s): fire_tp_z_001\n"
+                                                "** TESTS=1 PASS=0 FAIL=1 SKIP=0 **\n", encoding="utf-8")
+        z = {"name": "gen_test_z_red", "pass_marker": "GEN_TEST_PASS", "red_expect": r"GEN_TEST_FAIL gen_test_z: [0-9]+ fire-check failure\(s\):.*\bfire_tp_z_001(?!\d)"}
+        saved_root, C.SOURCE_ROOT = C.SOURCE_ROOT, root
+        try:
+            stale_refused = red_signature_check(z)
+            C.RED_STALE_ALLOWLIST["gen_test_z_red"] = ("T-XXX", "self-test entry")
+            try:
+                stale_allowed = red_signature_check(z)
+            finally:
+                del C.RED_STALE_ALLOWLIST["gen_test_z_red"]
+        finally:
+            C.SOURCE_ROOT = saved_root
+        cond = good and good["refuse"] is None and good["harness_match"] and good["verdict"] == C.VERDICT_RED_OK and good["stale_cause"] is None \
+            and bad_sig and bad_sig["refuse"] is not None and not bad_sig["harness_match"] and none is None \
+            and stale_refused and stale_refused["refuse"] == C.RED_STALE_REFUSE and stale_refused["stale_evidence"] \
+            and stale_allowed and stale_allowed["refuse"] is None and stale_allowed["stale_cause"] == C.RED_STALE_TEXT.format(task="T-XXX")
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", "red_signature_check: a signature matching the retained harness line passes (RED-OK), a \\b-anchored id defeated by a suffix is refused, no log -> None")
+    print("SELF-TEST", "ok " if cond else "BAD", "red_signature_check: matching harness line passes (RED-OK), a \\b-anchored id defeated by a suffix is refused, no log -> None, a UVM error ahead of a matching harness line is refused (literal criterion) unless the entry is allowlisted, then stale with its task")
     # Request server partition: a head-mode request that merely carries an empty elcheck key builds and is pinned.
     import gen_serve_requests as _SR
     with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td6:
@@ -461,7 +476,7 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if marker_ok else "BAD", f"the flow-run marker the template's guard reads is the one the job script exports ({marker_note})")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
-            (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
+            (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument"),
             (["-cm_glitch", "0", "-xlrm", "0"], ["-xlrm", "0"], ["-cm_glitch", "0"], "same value elsewhere survives (positions, not values)")):
         kept, dropped = drop_cm_args(args)
         cond = kept == want_kept and dropped == want_dropped
@@ -575,17 +590,25 @@ def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
     lines = sim_lines + stdout.read_text(encoding="utf-8", errors="replace").splitlines()
     res = V.decide_lines(lines, test.get("pass_marker"), False, 1, C.BUILD_CONFIG, [], True, False,
                          banner_lines=sim_lines or None, red_fixture=True, red_expect=test.get("red_expect"))
-    # The signature rule proper: the harness line of the retained log (the designed failure the fixture proves) must
-    # match the regex. The verdict beside it can still be FAIL when the log predates a TB fix and carries UVM errors
-    # ahead of the harness line (stale evidence, reported, not refused: the live run decides that).
+    # Two checks: the harness line of the retained log (the designed failure the fixture proves) must match the regex,
+    # and the log must come out RED-OK through the verdict (the literal criterion, T-153). A log whose verdict is not
+    # RED-OK is refused unless the entry is on RED_STALE_ALLOWLIST (a live comparator row ahead of the harness line).
     harness = next((l.strip() for l in lines if C.RED_EXPECT_HARNESS_PREFIX in l), None)
     rx = test.get("red_expect") or ""
     match = bool(harness and re.search(rx, harness))
+    stale = bool(match and res["verdict"] != C.VERDICT_RED_OK)
+    allow = C.RED_STALE_ALLOWLIST.get(test["name"])
+    if not match:
+        refuse = (f"no {C.RED_EXPECT_HARNESS_PREFIX} line in the retained pinned-red log" if not harness
+                  else "red_expect does not match the retained log's harness line")
+    elif stale and allow is None:
+        refuse = C.RED_STALE_REFUSE
+    else:
+        refuse = None
     return {"log": str(stdout), "sim_log": str(sim) if sim else None, "verdict": res["verdict"], "reason": res["reason"],
             "evidence": str(res.get("evidence") or "")[:200], "harness_line": (harness or "")[:200], "harness_match": match,
-            "refuse": (None if match else (f"no {C.RED_EXPECT_HARNESS_PREFIX} line in the retained pinned-red log" if not harness
-                                            else "red_expect does not match the retained log's harness line")),
-            "stale_evidence": bool(match and res["verdict"] != C.VERDICT_RED_OK)}
+            "refuse": refuse, "stale_evidence": stale,
+            "stale_cause": C.RED_STALE_TEXT.format(task=allow[0]) if (stale and allow is not None) else None}
 
 
 def slow_total(logs: list[Path]) -> dict[str, int] | None:
@@ -797,7 +820,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             chk = red_signature_check(t)
             if chk and chk["refuse"]:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} refused: {chk['refuse']} ({Path(chk['log']).name}: "
-                    f"{chk['harness_line'][:160]!r})")
+                    f"harness {chk['harness_line'][:120]!r}; verdict {chk['verdict']}: {chk['reason'][:120]})")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:
@@ -1093,11 +1116,14 @@ def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX, settle_s: float = C.LSF_STATUS
 
 if __name__ == "__main__":
     if "--check-red-signatures" in sys.argv:
-        # Every red fixture of a testlist against its retained pinned-red log; exit 2 when any checked entry is not RED-OK.
+        # Every red fixture of a testlist against its retained pinned-red log. Exit RED_CHECK_EXIT_REFUSE when a signature
+        # does not match its log's harness line or the log's own verdict is not RED-OK, RED_CHECK_EXIT_STALE when the only
+        # non-RED-OK logs belong to allowlisted entries (a pending comparator row), 0 when every checked log is RED-OK.
         nxt = sys.argv[sys.argv.index("--check-red-signatures") + 1:][:1]
         tl = Path(nxt[0]) if nxt and not nxt[0].startswith("--") else C.TESTLIST_YAML   # a following flag is not a path
         data = load_yaml(tl)
         bad = stale = 0
+        causes: dict[str, int] = {}
         for t in data.get("tests", []):
             if not t.get("red_fixture"):
                 continue
@@ -1107,15 +1133,18 @@ if __name__ == "__main__":
                 continue
             ok_ = chk["refuse"] is None
             bad += 0 if ok_ else 1
-            stale += 1 if (ok_ and chk["stale_evidence"]) else 0
+            if ok_ and chk["stale_evidence"]:
+                stale += 1
+                causes[chk["stale_cause"]] = causes.get(chk["stale_cause"], 0) + 1
             tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
             print(f"RED-CHECK {tag} {t['name']}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
                   + (f"; {chk['refuse']}" if chk["refuse"] else "")
-                  + ("; stale evidence: the verdict's first collected line is not the harness line (log predates a TB fix)" if chk["stale_evidence"] else ""))
+                  + (f"; {chk['stale_cause']} (the verdict's first collected line is not the harness line)" if chk["stale_evidence"] else ""))
         verdict = (f"FAIL ({bad} signature(s) do not match their retained log's harness line)" if bad
-                   else (f"PASS ({stale} stale retained log(s): the literal verdict criterion is not met yet)" if stale else "PASS"))
+                   else (f"PASS ({stale} stale retained log(s), the literal verdict criterion is not met yet: "
+                         + "; ".join(f"{n} {c}" for c, n in sorted(causes.items())) + ")" if stale else "PASS"))
         print("RED-CHECK:", verdict)
-        sys.exit(2 if bad else (C.RED_CHECK_EXIT_STALE if stale else 0))
+        sys.exit(C.RED_CHECK_EXIT_REFUSE if bad else (C.RED_CHECK_EXIT_STALE if stale else 0))
     if "--dump-testlist" in sys.argv:
         # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
         import json

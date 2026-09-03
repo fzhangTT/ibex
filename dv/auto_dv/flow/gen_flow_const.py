@@ -39,7 +39,16 @@ RED_LOG_PATTERNS = ("gen_{group}_red1_stdout.log", "gen_b2_{group}_red1_stdout.l
 RED_LOG_SIM_PATTERN = "gen_{group}_red1_sim.log"
 RED_TEST_PREFIX = "gen_test_"
 RED_TEST_SUFFIX = "_red"
-RED_CHECK_EXIT_STALE = 3   # --check-red-signatures: no refusal, but stale retained logs remain (a visible debt)
+RED_CHECK_EXIT_REFUSE = 2   # --check-red-signatures: a signature does not match its retained log's harness line
+RED_CHECK_EXIT_STALE = 3    # --check-red-signatures: no refusal, but stale retained logs remain (a visible debt)
+# The literal criterion (T-153): the retained pinned-red log, run through the verdict with the entry's red_expect, must
+# come out RED-OK, else the entry is refused at load. The one exception is this allowlist of entries whose retained log
+# still carries a live comparator error ahead of the harness line: entry -> (blocking task, removal condition). Such an
+# entry is reported "stale: comparator row pending (<task>)" and counted in the exit-3 summary; the list shrinks to
+# nothing when the rows land and the logs are re-retained.
+RED_STALE_ALLOWLIST: dict[str, tuple[str, str]] = {}   # empty: every retained pinned-red log is RED-OK at HEAD
+RED_STALE_TEXT = "stale: comparator row pending ({task})"
+RED_STALE_REFUSE = "retained pinned-red log does not come out RED-OK through the verdict (stale evidence: re-retain it at HEAD)"
 SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"

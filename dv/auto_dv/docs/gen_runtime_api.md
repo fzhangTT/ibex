@@ -479,16 +479,21 @@ Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `G
 harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
 accept any fixture failure. The Test Writer supplies the ids; the header is on and the loader refuses a
 generic signature (and any red fixture without one). A signature must also match the fixture's own retained
-pinned-red log when one exists (review of e83614c): the loader looks under the source root for the Test Writer's
+pinned-red log when one exists: the loader looks under the source root for the Test Writer's
 `dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_<group>_red1_stdout.log` (or `gen_b2_<group>_...`, `RED_LOG_*`
 constants) and refuses the entry when the log's `GEN_TEST_FAIL` harness line does not match `red_expect` (a
-check id with a suffix defeats a `\b`-anchored id, for example). The full verdict of that log is reported beside it
-(`gen_flow_util.py --check-red-signatures [testlist]`): a log that predates a TB fix can carry UVM errors ahead of
-the harness line and shows as STALE, not refused, because the live run decides that (ruling 2026-09-03: two-level
-rule). T-153 switch: once the Test Writer has re-retained the stale logs at HEAD (rst_boot, csr_reset, csr_trap_setup,
-pmp_csr_warl with landing 3d; isa_cti and cmp_zca after tb-infra's R10/R11 comparator rows), the literal verdict
-criterion becomes the enforced rule: the retained log must come out RED-OK, STALE is refused too. Head trees carry no
-evidence and skip the check, so the clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
+check id with a suffix defeats a `\b`-anchored id, for example) or when the log does not come out RED-OK through
+the verdict (the literal criterion, T-153: the retained evidence must prove the fixture as the flow judges it).
+The one exception is `RED_STALE_ALLOWLIST` in gen_flow_const.py, entries whose retained log still carries a live
+comparator error ahead of the harness line, keyed by entry name with the blocking task and the removal condition
+(empty today: the last two, isa_cti for T-144 and cmp_zca for R10, left it when the rows landed and the logs were
+re-retained); such an entry is reported
+`stale: comparator row pending (<task>)` and counted, and the list shrinks to nothing when the rows land and the
+logs are re-retained. `gen_flow_util.py --check-red-signatures [testlist]` lists every red with the harness match
+and the verdict; exit codes: `RED_CHECK_EXIT_REFUSE` = 2 when any entry would be refused, `RED_CHECK_EXIT_STALE` = 3
+when the only non-RED-OK logs are allowlisted (summary `PASS (n stale ...)`, per task), 0 when every checked log is
+RED-OK, so a caller must not read 3 as a refusal. Head trees carry no evidence and skip the check, so the
+clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
 Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
 resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
 `index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated
