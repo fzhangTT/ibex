@@ -52,6 +52,7 @@
   localparam int GEN_FC_MUL_OPS_CP_FUNCT3_F3 = 3;
   covergroup gen_mul_ops_cg with function sample(int v_cp_op, int v_cp_rs1_class, int v_cp_rs2_class, int v_cp_sign_pair, int v_cp_same_regs, int v_cp_rd_x0, int v_cp_result_class, int v_cp_funct3);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins mul= {0}; bins mulh= {1}; bins mulhsu= {2}; bins mulhu= {3}; bins c_mul= {4}; ignore_bins na = {-1}; }
     cp_rs1_class: coverpoint v_cp_rs1_class { bins zero= {0}; bins one= {1}; bins all_ones= {2}; bins int_min= {3}; bins int_max= {4}; bins p16= {5}; bins two= {6}; bins neg_rand= {7}; bins pos_rand= {8}; ignore_bins na = {-1}; }
     cp_rs2_class: coverpoint v_cp_rs2_class { bins zero= {0}; bins one= {1}; bins all_ones= {2}; bins int_min= {3}; bins int_max= {4}; bins p16= {5}; bins two= {6}; bins neg_rand= {7}; bins pos_rand= {8}; ignore_bins na = {-1}; }
@@ -505,6 +506,7 @@
   localparam int GEN_FC_DIV_OPS_CP_RESULT_CLASS_OTHER = 6;
   covergroup gen_div_ops_cg with function sample(int v_cp_op, int v_cp_dividend, int v_cp_divisor, int v_cp_sign_pair, int v_cp_rd_x0, int v_cp_result_class);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins div= {0}; bins divu= {1}; bins rem= {2}; bins remu= {3}; ignore_bins na = {-1}; }
     cp_dividend: coverpoint v_cp_dividend { bins zero= {0}; bins one= {1}; bins all_ones= {2}; bins int_min= {3}; bins int_max= {4}; bins two= {5}; bins seven= {6}; bins neg_rand= {7}; bins pos_rand= {8}; ignore_bins na = {-1}; }
     cp_divisor: coverpoint v_cp_divisor { bins zero= {0}; bins one= {1}; bins all_ones= {2}; bins int_min= {3}; bins two= {4}; bins minus_two= {5}; bins eq_dividend= {6}; bins abs_gt_dividend= {7}; bins neg_rand= {8}; bins pos_rand= {9}; ignore_bins na = {-1}; }
@@ -714,6 +716,7 @@
   localparam int GEN_FC_ISA_ALU_REG_CP_WRAP_NONE = 5;
   covergroup gen_isa_alu_reg_cg with function sample(int v_cp_op, int v_cp_rs1_class, int v_cp_rs2_class, int v_cp_sign_pair, int v_cp_eq_operands, int v_cp_same_regs, int v_cp_rd_x0, int v_cp_result_class, int v_cp_wrap);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins add= {0}; bins sub= {1}; bins slt= {2}; bins sltu= {3}; bins \xor = {4}; bins \or = {5}; bins \and = {6}; ignore_bins na = {-1}; }
     cp_rs1_class: coverpoint v_cp_rs1_class { bins zero= {0}; bins all_ones= {1}; bins int_min= {2}; bins int_max= {3}; bins one= {4}; bins pos_rand= {5}; bins neg_rand= {6}; ignore_bins na = {-1}; }
     cp_rs2_class: coverpoint v_cp_rs2_class { bins zero= {0}; bins all_ones= {1}; bins int_min= {2}; bins int_max= {3}; bins one= {4}; bins pos_rand= {5}; bins neg_rand= {6}; ignore_bins na = {-1}; }
@@ -1089,6 +1092,7 @@
   localparam int GEN_FC_BIT_ZBA_ZBB_OPS_CP_WRAP_YES = 1;
   covergroup gen_bit_zba_zbb_ops_cg with function sample(int v_cp_op, int v_cp_rs1_class, int v_cp_rs2_class, int v_cp_eq_operands, int v_cp_same_regs, int v_cp_rd_x0, int v_cp_sign_pair, int v_cp_result_class, int v_cp_wrap);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins sh1add= {0}; bins sh2add= {1}; bins sh3add= {2}; bins andn= {3}; bins orn= {4}; bins \xnor = {5}; bins min= {6}; bins max= {7}; bins minu= {8}; bins maxu= {9}; bins sext_b= {10}; bins sext_h= {11}; bins zext_h= {12}; bins pack= {13}; bins packu= {14}; bins packh= {15}; ignore_bins na = {-1}; }
     cp_rs1_class: coverpoint v_cp_rs1_class { bins zero= {0}; bins all_ones= {1}; bins int_min= {2}; bins int_max= {3}; bins one= {4}; bins e0000000= {5}; bins byte_msb= {6}; bins half_msb= {7}; bins pos_rand= {8}; bins neg_rand= {9}; ignore_bins na = {-1}; }
     cp_rs2_class: coverpoint v_cp_rs2_class { bins zero= {0}; bins all_ones= {1}; bins int_min= {2}; bins int_max= {3}; bins one= {4}; bins pos_rand= {5}; bins neg_rand= {6}; ignore_bins na = {-1}; }
@@ -1530,6 +1534,7 @@
   localparam int GEN_FC_ISA_ALU_IMM_CP_SLT_CASE_OTHER = 6;
   covergroup gen_isa_alu_imm_cg with function sample(int v_cp_op, int v_cp_rs1_class, int v_cp_imm_class, int v_cp_rd_x0, int v_cp_rs1_eq_rd, int v_cp_result_class, int v_cp_addi_wrap, int v_cp_slt_case);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins addi= {0}; bins slti= {1}; bins sltiu= {2}; bins xori= {3}; bins ori= {4}; bins andi= {5}; ignore_bins na = {-1}; }
     cp_rs1_class: coverpoint v_cp_rs1_class { bins zero= {0}; bins all_ones= {1}; bins int_min= {2}; bins int_max= {3}; bins one= {4}; bins pos_rand= {5}; bins neg_rand= {6}; ignore_bins na = {-1}; }
     cp_imm_class: coverpoint v_cp_imm_class { bins zero= {0}; bins plus1= {1}; bins minus1= {2}; bins max_pos= {3}; bins min_neg= {4}; bins pos_rand= {5}; bins neg_rand= {6}; ignore_bins na = {-1}; }
@@ -1687,6 +1692,7 @@
   localparam int GEN_FC_ISA_SHIFT_CP_RESULT_CLASS_OTHER = 5;
   covergroup gen_isa_shift_cg with function sample(int v_cp_op, int v_cp_shamt, int v_cp_rs2_upper, int v_cp_operand, int v_cp_rd_x0, int v_cp_result_class);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins slli= {0}; bins srli= {1}; bins srai= {2}; bins sll= {3}; bins srl= {4}; bins sra= {5}; ignore_bins na = {-1}; }
     cp_shamt: coverpoint v_cp_shamt { bins s0= {0}; bins s1= {1}; bins mid= {2}; bins s31= {3}; ignore_bins na = {-1}; }
     cp_rs2_upper: coverpoint v_cp_rs2_upper { bins zero= {0}; bins is32= {1}; bins is33= {2}; bins all_ones= {3}; bins msb_only= {4}; bins ffffffe0= {5}; bins other_nonzero= {6}; ignore_bins na = {-1}; }
@@ -1861,6 +1867,7 @@
   localparam int GEN_FC_BIT_COUNT_CP_RD_X0_YES = 1;
   covergroup gen_bit_count_cg with function sample(int v_cp_op, int v_cp_operand, int v_cp_single_pos, int v_cp_result, int v_cp_rd_x0);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_op: coverpoint v_cp_op { bins clz= {0}; bins ctz= {1}; bins cpop= {2}; ignore_bins na = {-1}; }
     cp_operand: coverpoint v_cp_operand { bins zero= {0}; bins all_ones= {1}; bins msb_only= {2}; bins lsb_only= {3}; bins single_other= {4}; bins alt_5= {5}; bins alt_a= {6}; bins int_max= {7}; bins \rand = {8}; ignore_bins na = {-1}; }
     cp_single_pos: coverpoint v_cp_single_pos { bins p0= {0}; bins p1= {1}; bins p2= {2}; bins p3= {3}; bins p4= {4}; bins p5= {5}; bins p6= {6}; bins p7= {7}; bins p8= {8}; bins p9= {9}; bins p10= {10}; bins p11= {11}; bins p12= {12}; bins p13= {13}; bins p14= {14}; bins p15= {15}; bins p16= {16}; bins p17= {17}; bins p18= {18}; bins p19= {19}; bins p20= {20}; bins p21= {21}; bins p22= {22}; bins p23= {23}; bins p24= {24}; bins p25= {25}; bins p26= {26}; bins p27= {27}; bins p28= {28}; bins p29= {29}; bins p30= {30}; bins p31= {31}; ignore_bins na = {-1}; }
@@ -2072,6 +2079,7 @@
   localparam int GEN_FC_CMP_ZCA_CP_RD_FULL_X3_7 = 4;
   covergroup gen_cmp_zca_cg with function sample(int v_cp_insn, int v_cp_pc_align, int v_cp_next_len, int v_cp_pc_inc, int v_cp_insn32_straddle, int v_cp_reg3, int v_cp_rd_full);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_insn: coverpoint v_cp_insn { bins c_addi4spn= {0}; bins c_lw= {1}; bins c_sw= {2}; bins c_lwsp= {3}; bins c_swsp= {4}; bins c_addi= {5}; bins c_nop= {6}; bins c_jal= {7}; bins c_j= {8}; bins c_li= {9}; bins c_lui= {10}; bins c_addi16sp= {11}; bins c_srli= {12}; bins c_srai= {13}; bins c_andi= {14}; bins c_sub= {15}; bins c_xor= {16}; bins c_or= {17}; bins c_and= {18}; bins c_beqz= {19}; bins c_bnez= {20}; bins c_slli= {21}; bins c_mv= {22}; bins c_jr= {23}; bins c_add= {24}; bins c_jalr= {25}; ignore_bins na = {-1}; }
     cp_pc_align: coverpoint v_cp_pc_align { bins word= {0}; bins half= {1}; ignore_bins na = {-1}; }
     cp_next_len: coverpoint v_cp_next_len { bins n16= {0}; bins n32= {1}; ignore_bins na = {-1}; }
@@ -2389,6 +2397,7 @@
   localparam int GEN_FC_CMP_ZCMP_PUSHPOP_CP_DUMMY_EN_ON = 1;
   covergroup gen_cmp_zcmp_pushpop_cg with function sample(int v_cp_insn, int v_cp_rlist, int v_cp_spimm, int v_cp_stack_adj, int v_cp_sp_align, int v_cp_sp_wrap, int v_cp_uop_count_ok, int v_cp_order_ok, int v_cp_rvfi_tags_ok, int v_cp_minstret_once, int v_cp_ret_align, int v_cp_dmem_delay, int v_cp_dummy_en);
     option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
     cp_insn: coverpoint v_cp_insn { bins cm_push= {0}; bins cm_pop= {1}; bins cm_popret= {2}; bins cm_popretz= {3}; ignore_bins na = {-1}; }
     cp_rlist: coverpoint v_cp_rlist { bins r4= {0}; bins r5= {1}; bins r6= {2}; bins r7= {3}; bins r8= {4}; bins r9= {5}; bins r10= {6}; bins r11= {7}; bins r12= {8}; bins r13= {9}; bins r14= {10}; bins r15= {11}; ignore_bins na = {-1}; }
     cp_spimm: coverpoint v_cp_spimm { bins s0= {0}; bins s1= {1}; bins s2= {2}; bins s3= {3}; ignore_bins na = {-1}; }
@@ -2659,5 +2668,665 @@
       bins popret_above_max= binsof(cp_insn.cm_popret) && binsof(cp_sp_wrap.pop_above_max);
       bins popretz_above_max= binsof(cp_insn.cm_popretz) && binsof(cp_sp_wrap.pop_above_max);
       bins push_below_zero= binsof(cp_insn.cm_push) && binsof(cp_sp_wrap.push_below_zero);
+    }
+  endgroup
+
+  // CG-CMP-007 (gen_cmp_zcmp_mv_cg), 29 coverpoint bins, 134 cross bins
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01 = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S0 = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S1 = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S2 = 2;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S3 = 3;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S4 = 4;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S5 = 5;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S6 = 6;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R1S_S7 = 7;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S0 = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S1 = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S2 = 2;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S3 = 3;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S4 = 4;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S5 = 5;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S6 = 6;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_R2S_S7 = 7;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_EQUAL_NO = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_EQUAL_YES = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_SRC_VALUES_DISTINCT = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_SRC_VALUES_SAME = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_B2B_MVSA01_THEN_MVA01S = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_B2B_MVA01S_THEN_MVSA01 = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_B2B_NONE = 2;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_LOAD_PREV = 0;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_ALU_PREV = 1;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_NONE = 2;
+  localparam int GEN_FC_CMP_ZCMP_MV_CP_UOP_COUNT_OK_YES = 0;
+  covergroup gen_cmp_zcmp_mv_cg with function sample(int v_cp_insn, int v_cp_r1s, int v_cp_r2s, int v_cp_equal, int v_cp_src_values, int v_cp_b2b, int v_cp_hazard_src, int v_cp_uop_count_ok);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_insn: coverpoint v_cp_insn { bins cm_mvsa01= {0}; bins cm_mva01s= {1}; ignore_bins na = {-1}; }
+    cp_r1s: coverpoint v_cp_r1s { bins s0= {0}; bins s1= {1}; bins s2= {2}; bins s3= {3}; bins s4= {4}; bins s5= {5}; bins s6= {6}; bins s7= {7}; ignore_bins na = {-1}; }
+    cp_r2s: coverpoint v_cp_r2s { bins s0= {0}; bins s1= {1}; bins s2= {2}; bins s3= {3}; bins s4= {4}; bins s5= {5}; bins s6= {6}; bins s7= {7}; ignore_bins na = {-1}; }
+    cp_equal: coverpoint v_cp_equal { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_src_values: coverpoint v_cp_src_values { bins distinct= {0}; bins same= {1}; ignore_bins na = {-1}; }
+    cp_b2b: coverpoint v_cp_b2b { bins mvsa01_then_mva01s= {0}; bins mva01s_then_mvsa01= {1}; bins none= {2}; ignore_bins na = {-1}; }
+    cp_hazard_src: coverpoint v_cp_hazard_src { bins load_prev= {0}; bins alu_prev= {1}; bins none= {2}; ignore_bins na = {-1}; }
+    cp_uop_count_ok: coverpoint v_cp_uop_count_ok { bins yes= {0}; ignore_bins na = {-1}; }
+    cr_insn_r1_r2: cross cp_insn, cp_r1s, cp_r2s {
+      bins cm_mvsa01_s0_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s0_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s0_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s0_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s0_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s0_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s0_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s0) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s1_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s1_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s1_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s1_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s1_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s1_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s1_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s1) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s2_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s2_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s2_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s2_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s2_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s2_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s2_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s2) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s3_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s3_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s3_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s3_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s3_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s3_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s3_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s3) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s4_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s4_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s4_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s4_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s4_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s4_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s4_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s4) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s5_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s5_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s5_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s5_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s5_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s5_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s6);
+      bins cm_mvsa01_s5_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s5) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s6_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s6_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s6_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s6_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s6_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s6_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s6_s7= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s6) && binsof(cp_r2s.s7);
+      bins cm_mvsa01_s7_s0= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s0);
+      bins cm_mvsa01_s7_s1= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s1);
+      bins cm_mvsa01_s7_s2= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s2);
+      bins cm_mvsa01_s7_s3= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s3);
+      bins cm_mvsa01_s7_s4= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s4);
+      bins cm_mvsa01_s7_s5= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s5);
+      bins cm_mvsa01_s7_s6= binsof(cp_insn.cm_mvsa01) && binsof(cp_r1s.s7) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s0_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s0_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s0_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s0_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s0_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s0_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s0_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s0_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s0) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s1_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s1_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s1_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s1_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s1_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s1_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s1_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s1_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s1) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s2_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s2_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s2_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s2_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s2_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s2_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s2_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s2_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s2) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s3_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s3_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s3_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s3_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s3_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s3_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s3_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s3_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s3) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s4_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s4_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s4_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s4_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s4_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s4_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s4_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s4_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s4) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s5_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s5_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s5_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s5_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s5_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s5_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s5_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s5_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s5) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s6_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s6_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s6_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s6_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s6_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s6_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s6_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s6_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s6) && binsof(cp_r2s.s7);
+      bins cm_mva01s_s7_s0= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s0);
+      bins cm_mva01s_s7_s1= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s1);
+      bins cm_mva01s_s7_s2= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s2);
+      bins cm_mva01s_s7_s3= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s3);
+      bins cm_mva01s_s7_s4= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s4);
+      bins cm_mva01s_s7_s5= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s5);
+      bins cm_mva01s_s7_s6= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s6);
+      bins cm_mva01s_s7_s7= binsof(cp_insn.cm_mva01s) && binsof(cp_r1s.s7) && binsof(cp_r2s.s7);
+    }
+    cr_insn_equal: cross cp_insn, cp_equal {
+      bins cm_mvsa01_yes= binsof(cp_insn.cm_mvsa01) && binsof(cp_equal.yes);
+      bins cm_mva01s_no= binsof(cp_insn.cm_mva01s) && binsof(cp_equal.no);
+      bins cm_mva01s_yes= binsof(cp_insn.cm_mva01s) && binsof(cp_equal.yes);
+      bins cm_mvsa01_no= binsof(cp_insn.cm_mvsa01) && binsof(cp_equal.no);
+    }
+    cr_insn_b2b: cross cp_insn, cp_b2b {
+      bins cm_mva01s_mva01s_then_mvsa01= binsof(cp_insn.cm_mva01s) && binsof(cp_b2b.mva01s_then_mvsa01);
+      bins cm_mva01s_mvsa01_then_mva01s= binsof(cp_insn.cm_mva01s) && binsof(cp_b2b.mvsa01_then_mva01s);
+      bins cm_mvsa01_mva01s_then_mvsa01= binsof(cp_insn.cm_mvsa01) && binsof(cp_b2b.mva01s_then_mvsa01);
+      bins cm_mvsa01_mvsa01_then_mva01s= binsof(cp_insn.cm_mvsa01) && binsof(cp_b2b.mvsa01_then_mva01s);
+    }
+    cr_insn_hazard: cross cp_insn, cp_hazard_src {
+      bins cm_mva01s_alu_prev= binsof(cp_insn.cm_mva01s) && binsof(cp_hazard_src.alu_prev);
+      bins cm_mva01s_load_prev= binsof(cp_insn.cm_mva01s) && binsof(cp_hazard_src.load_prev);
+      bins cm_mva01s_none= binsof(cp_insn.cm_mva01s) && binsof(cp_hazard_src.none);
+      bins cm_mvsa01_alu_prev= binsof(cp_insn.cm_mvsa01) && binsof(cp_hazard_src.alu_prev);
+      bins cm_mvsa01_load_prev= binsof(cp_insn.cm_mvsa01) && binsof(cp_hazard_src.load_prev);
+      bins cm_mvsa01_none= binsof(cp_insn.cm_mvsa01) && binsof(cp_hazard_src.none);
+    }
+  endgroup
+
+  // CG-CSR-002 (gen_csr_trap_setup_warl_cg), 67 coverpoint bins, 143 cross bins
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MSTATUS = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MISA = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MIE = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MTVEC = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MCOUNTEREN = 4;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MSTATUSH = 5;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MENVCFG = 6;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MENVCFGH = 7;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRW = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRS = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRC = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRWI = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRSI = 4;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_OP_CSRRCI = 5;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_RAND = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ALL1 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ALL0 = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_LEGAL_ONLY = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ILLEGAL_ONLY = 4;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_MSB_ONLY = 5;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_RD_X0 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_RD_NONX0 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MPP_W_U = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MPP_W_S = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MPP_W_H = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MPP_W_M = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MIE_W_B0 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MIE_W_B1 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MPIE_W_B0 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MPIE_W_B1 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MPRV_W_B0 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_MPRV_W_B1 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_TW_W_B0 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MST_TW_W_B1 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_MODE_W_D00 = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_MODE_W_V01 = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_MODE_W_R10 = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_MODE_W_R11 = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_LO_W_ZERO = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_LO_W_NONZERO = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_LOW = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_BOOT_PAGE = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_HIGH = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_RAND = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_STD_ONLY = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_FAST_ONLY = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_STD_FAST = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_RO_ONLY = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_ALL_FAST = 4;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_ON = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_OFF = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_INVALID = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_CY = 0;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_IR = 1;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM3 = 2;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM4 = 3;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM5 = 4;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM6 = 5;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM7 = 6;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM8 = 7;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM9 = 8;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM10 = 9;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM11 = 10;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM12 = 11;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_TM_RO = 12;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HI_RO = 13;
+  localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_ALL1 = 14;
+  covergroup gen_csr_trap_setup_warl_cg with function sample(int v_cp_csr, int v_cp_op, int v_cp_wpat, int v_cp_rd, int v_cp_mpp_w, int v_cp_mst_mie_w, int v_cp_mst_mpie_w, int v_cp_mst_mprv_w, int v_cp_mst_tw_w, int v_cp_mtvec_mode_w, int v_cp_mtvec_lo_w, int v_cp_mtvec_base_w, int v_cp_mie_w, int v_cp_mcen_gate, int v_cp_mcen_w);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_csr: coverpoint v_cp_csr { bins mstatus= {0}; bins misa= {1}; bins mie= {2}; bins mtvec= {3}; bins mcounteren= {4}; bins mstatush= {5}; bins menvcfg= {6}; bins menvcfgh= {7}; ignore_bins na = {-1}; }
+    cp_op: coverpoint v_cp_op { bins csrrw= {0}; bins csrrs= {1}; bins csrrc= {2}; bins csrrwi= {3}; bins csrrsi= {4}; bins csrrci= {5}; ignore_bins na = {-1}; }
+    cp_wpat: coverpoint v_cp_wpat { bins \rand = {0}; bins all1= {1}; bins all0= {2}; bins legal_only= {3}; bins illegal_only= {4}; bins msb_only= {5}; ignore_bins na = {-1}; }
+    cp_rd: coverpoint v_cp_rd { bins x0= {0}; bins nonx0= {1}; ignore_bins na = {-1}; }
+    cp_mpp_w: coverpoint v_cp_mpp_w { bins u= {0}; bins s= {1}; bins h= {2}; bins m= {3}; ignore_bins na = {-1}; }
+    cp_mst_mie_w: coverpoint v_cp_mst_mie_w { bins b0= {0}; bins b1= {1}; ignore_bins na = {-1}; }
+    cp_mst_mpie_w: coverpoint v_cp_mst_mpie_w { bins b0= {0}; bins b1= {1}; ignore_bins na = {-1}; }
+    cp_mst_mprv_w: coverpoint v_cp_mst_mprv_w { bins b0= {0}; bins b1= {1}; ignore_bins na = {-1}; }
+    cp_mst_tw_w: coverpoint v_cp_mst_tw_w { bins b0= {0}; bins b1= {1}; ignore_bins na = {-1}; }
+    cp_mtvec_mode_w: coverpoint v_cp_mtvec_mode_w { bins d00= {0}; bins v01= {1}; bins r10= {2}; bins r11= {3}; ignore_bins na = {-1}; }
+    cp_mtvec_lo_w: coverpoint v_cp_mtvec_lo_w { bins zero= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_mtvec_base_w: coverpoint v_cp_mtvec_base_w { bins low= {0}; bins boot_page= {1}; bins high= {2}; bins \rand = {3}; ignore_bins na = {-1}; }
+    cp_mie_w: coverpoint v_cp_mie_w { bins std_only= {0}; bins fast_only= {1}; bins std_fast= {2}; bins ro_only= {3}; bins all_fast= {4}; ignore_bins na = {-1}; }
+    cp_mcen_gate: coverpoint v_cp_mcen_gate { bins on= {0}; bins off= {1}; bins invalid= {2}; ignore_bins na = {-1}; }
+    cp_mcen_w: coverpoint v_cp_mcen_w { bins cy= {0}; bins ir= {1}; bins hpm3= {2}; bins hpm4= {3}; bins hpm5= {4}; bins hpm6= {5}; bins hpm7= {6}; bins hpm8= {7}; bins hpm9= {8}; bins hpm10= {9}; bins hpm11= {10}; bins hpm12= {11}; bins tm_ro= {12}; bins hi_ro= {13}; bins all1= {14}; ignore_bins na = {-1}; }
+    cr_csr_wpat: cross cp_csr, cp_wpat {
+      bins mie_all0= binsof(cp_csr.mie) && binsof(cp_wpat.all0);
+      bins misa_illegal= binsof(cp_csr.misa) && binsof(cp_wpat.illegal_only);
+      bins misa_legal= binsof(cp_csr.misa) && binsof(cp_wpat.legal_only);
+      bins misa_msb= binsof(cp_csr.misa) && binsof(cp_wpat.msb_only);
+      bins misa_rand= binsof(cp_csr.misa) && binsof(cp_wpat.\rand );
+      bins misa_all0= binsof(cp_csr.misa) && binsof(cp_wpat.all0);
+      bins misa_all1= binsof(cp_csr.misa) && binsof(cp_wpat.all1);
+      bins mstatus_all0= binsof(cp_csr.mstatus) && binsof(cp_wpat.all0);
+      bins mstatus_illegal= binsof(cp_csr.mstatus) && binsof(cp_wpat.illegal_only);
+      bins mstatus_legal= binsof(cp_csr.mstatus) && binsof(cp_wpat.legal_only);
+      bins mstatus_msb= binsof(cp_csr.mstatus) && binsof(cp_wpat.msb_only);
+      bins mstatus_rand= binsof(cp_csr.mstatus) && binsof(cp_wpat.\rand );
+      bins mstatus_all1= binsof(cp_csr.mstatus) && binsof(cp_wpat.all1);
+      bins mstatush_all0= binsof(cp_csr.mstatush) && binsof(cp_wpat.all0);
+      bins mstatush_all1= binsof(cp_csr.mstatush) && binsof(cp_wpat.all1);
+      bins mstatush_msb= binsof(cp_csr.mstatush) && binsof(cp_wpat.msb_only);
+      bins mstatush_rand= binsof(cp_csr.mstatush) && binsof(cp_wpat.\rand );
+      bins menvcfg_all0= binsof(cp_csr.menvcfg) && binsof(cp_wpat.all0);
+      bins menvcfg_all1= binsof(cp_csr.menvcfg) && binsof(cp_wpat.all1);
+      bins menvcfg_msb= binsof(cp_csr.menvcfg) && binsof(cp_wpat.msb_only);
+      bins menvcfg_rand= binsof(cp_csr.menvcfg) && binsof(cp_wpat.\rand );
+      bins menvcfgh_all0= binsof(cp_csr.menvcfgh) && binsof(cp_wpat.all0);
+      bins menvcfgh_all1= binsof(cp_csr.menvcfgh) && binsof(cp_wpat.all1);
+      bins menvcfgh_msb= binsof(cp_csr.menvcfgh) && binsof(cp_wpat.msb_only);
+      bins menvcfgh_rand= binsof(cp_csr.menvcfgh) && binsof(cp_wpat.\rand );
+      bins mie_illegal= binsof(cp_csr.mie) && binsof(cp_wpat.illegal_only);
+      bins mie_legal= binsof(cp_csr.mie) && binsof(cp_wpat.legal_only);
+      bins mie_msb= binsof(cp_csr.mie) && binsof(cp_wpat.msb_only);
+      bins mie_rand= binsof(cp_csr.mie) && binsof(cp_wpat.\rand );
+      bins mie_all1= binsof(cp_csr.mie) && binsof(cp_wpat.all1);
+      bins mtvec_legal= binsof(cp_csr.mtvec) && binsof(cp_wpat.legal_only);
+      bins mtvec_rand= binsof(cp_csr.mtvec) && binsof(cp_wpat.\rand );
+      bins mtvec_all0= binsof(cp_csr.mtvec) && binsof(cp_wpat.all0);
+      bins mtvec_all1= binsof(cp_csr.mtvec) && binsof(cp_wpat.all1);
+      bins mtvec_illegal= binsof(cp_csr.mtvec) && binsof(cp_wpat.illegal_only);
+      bins mtvec_msb= binsof(cp_csr.mtvec) && binsof(cp_wpat.msb_only);
+      bins mcounteren_all0= binsof(cp_csr.mcounteren) && binsof(cp_wpat.all0);
+      bins mcounteren_illegal= binsof(cp_csr.mcounteren) && binsof(cp_wpat.illegal_only);
+      bins mcounteren_legal= binsof(cp_csr.mcounteren) && binsof(cp_wpat.legal_only);
+      bins mcounteren_msb= binsof(cp_csr.mcounteren) && binsof(cp_wpat.msb_only);
+      bins mcounteren_rand= binsof(cp_csr.mcounteren) && binsof(cp_wpat.\rand );
+      bins mcounteren_all1= binsof(cp_csr.mcounteren) && binsof(cp_wpat.all1);
+    }
+    cr_csr_op: cross cp_csr, cp_op {
+      bins misa_csrrc= binsof(cp_csr.misa) && binsof(cp_op.csrrc);
+      bins misa_csrrci= binsof(cp_csr.misa) && binsof(cp_op.csrrci);
+      bins misa_csrrs= binsof(cp_csr.misa) && binsof(cp_op.csrrs);
+      bins misa_csrrsi= binsof(cp_csr.misa) && binsof(cp_op.csrrsi);
+      bins misa_csrrw= binsof(cp_csr.misa) && binsof(cp_op.csrrw);
+      bins misa_csrrwi= binsof(cp_csr.misa) && binsof(cp_op.csrrwi);
+      bins mstatus_csrrc= binsof(cp_csr.mstatus) && binsof(cp_op.csrrc);
+      bins mstatus_csrrci= binsof(cp_csr.mstatus) && binsof(cp_op.csrrci);
+      bins mstatus_csrrs= binsof(cp_csr.mstatus) && binsof(cp_op.csrrs);
+      bins mstatus_csrrsi= binsof(cp_csr.mstatus) && binsof(cp_op.csrrsi);
+      bins mstatus_csrrw= binsof(cp_csr.mstatus) && binsof(cp_op.csrrw);
+      bins mstatus_csrrwi= binsof(cp_csr.mstatus) && binsof(cp_op.csrrwi);
+      bins mstatush_csrrc= binsof(cp_csr.mstatush) && binsof(cp_op.csrrc);
+      bins mstatush_csrrci= binsof(cp_csr.mstatush) && binsof(cp_op.csrrci);
+      bins mstatush_csrrs= binsof(cp_csr.mstatush) && binsof(cp_op.csrrs);
+      bins mstatush_csrrsi= binsof(cp_csr.mstatush) && binsof(cp_op.csrrsi);
+      bins mstatush_csrrw= binsof(cp_csr.mstatush) && binsof(cp_op.csrrw);
+      bins mstatush_csrrwi= binsof(cp_csr.mstatush) && binsof(cp_op.csrrwi);
+      bins menvcfg_csrrc= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrc);
+      bins menvcfg_csrrci= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrci);
+      bins menvcfg_csrrs= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrs);
+      bins menvcfg_csrrsi= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrsi);
+      bins menvcfg_csrrw= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrw);
+      bins menvcfg_csrrwi= binsof(cp_csr.menvcfg) && binsof(cp_op.csrrwi);
+      bins menvcfgh_csrrc= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrc);
+      bins menvcfgh_csrrci= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrci);
+      bins menvcfgh_csrrs= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrs);
+      bins menvcfgh_csrrsi= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrsi);
+      bins menvcfgh_csrrw= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrw);
+      bins menvcfgh_csrrwi= binsof(cp_csr.menvcfgh) && binsof(cp_op.csrrwi);
+      bins mie_csrrc= binsof(cp_csr.mie) && binsof(cp_op.csrrc);
+      bins mie_csrrci= binsof(cp_csr.mie) && binsof(cp_op.csrrci);
+      bins mie_csrrs= binsof(cp_csr.mie) && binsof(cp_op.csrrs);
+      bins mie_csrrsi= binsof(cp_csr.mie) && binsof(cp_op.csrrsi);
+      bins mie_csrrw= binsof(cp_csr.mie) && binsof(cp_op.csrrw);
+      bins mie_csrrwi= binsof(cp_csr.mie) && binsof(cp_op.csrrwi);
+      bins mtvec_csrrc= binsof(cp_csr.mtvec) && binsof(cp_op.csrrc);
+      bins mtvec_csrrci= binsof(cp_csr.mtvec) && binsof(cp_op.csrrci);
+      bins mtvec_csrrs= binsof(cp_csr.mtvec) && binsof(cp_op.csrrs);
+      bins mtvec_csrrsi= binsof(cp_csr.mtvec) && binsof(cp_op.csrrsi);
+      bins mtvec_csrrw= binsof(cp_csr.mtvec) && binsof(cp_op.csrrw);
+      bins mtvec_csrrwi= binsof(cp_csr.mtvec) && binsof(cp_op.csrrwi);
+      bins mcounteren_csrrc= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrc);
+      bins mcounteren_csrrci= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrci);
+      bins mcounteren_csrrs= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrs);
+      bins mcounteren_csrrsi= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrsi);
+      bins mcounteren_csrrw= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrw);
+      bins mcounteren_csrrwi= binsof(cp_csr.mcounteren) && binsof(cp_op.csrrwi);
+    }
+    cr_mst_fields: cross cp_mst_mie_w, cp_mst_mpie_w, cp_mst_mprv_w, cp_mst_tw_w {
+      bins all0= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b0);
+      bins mie_mpie= binsof(cp_mst_mie_w.b1) && binsof(cp_mst_mpie_w.b1) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b0);
+      bins mie_only= binsof(cp_mst_mie_w.b1) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b0);
+      bins mpie_only= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b1) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b0);
+      bins mprv_only= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b1) && binsof(cp_mst_tw_w.b0);
+      bins mprv_tw= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b1) && binsof(cp_mst_tw_w.b1);
+      bins tw_only= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b1);
+      bins all1= binsof(cp_mst_mie_w.b1) && binsof(cp_mst_mpie_w.b1) && binsof(cp_mst_mprv_w.b1) && binsof(cp_mst_tw_w.b1);
+    }
+    cr_mpp_op: cross cp_mpp_w, cp_op {
+      bins mpp_h_csrrs= binsof(cp_mpp_w.h) && binsof(cp_op.csrrs);
+      bins mpp_h_csrrw= binsof(cp_mpp_w.h) && binsof(cp_op.csrrw);
+      bins mpp_m_csrrs= binsof(cp_mpp_w.m) && binsof(cp_op.csrrs);
+      bins mpp_m_csrrw= binsof(cp_mpp_w.m) && binsof(cp_op.csrrw);
+      bins mpp_s_csrrs= binsof(cp_mpp_w.s) && binsof(cp_op.csrrs);
+      bins mpp_s_csrrw= binsof(cp_mpp_w.s) && binsof(cp_op.csrrw);
+      bins mpp_u_csrrc= binsof(cp_mpp_w.u) && binsof(cp_op.csrrc);
+      bins mpp_u_csrrw= binsof(cp_mpp_w.u) && binsof(cp_op.csrrw);
+    }
+    cr_mie_w_op: cross cp_mie_w, cp_op {
+      bins allfast_csrrw= binsof(cp_mie_w.all_fast) && binsof(cp_op.csrrw);
+      bins both_csrrw= binsof(cp_mie_w.std_fast) && binsof(cp_op.csrrw);
+      bins fast_csrrc= binsof(cp_mie_w.fast_only) && binsof(cp_op.csrrc);
+      bins fast_csrrs= binsof(cp_mie_w.fast_only) && binsof(cp_op.csrrs);
+      bins fast_csrrw= binsof(cp_mie_w.fast_only) && binsof(cp_op.csrrw);
+      bins ro_csrrw= binsof(cp_mie_w.ro_only) && binsof(cp_op.csrrw);
+      bins std_csrrc= binsof(cp_mie_w.std_only) && binsof(cp_op.csrrc);
+      bins std_csrrci= binsof(cp_mie_w.std_only) && binsof(cp_op.csrrci);
+      bins std_csrrs= binsof(cp_mie_w.std_only) && binsof(cp_op.csrrs);
+      bins std_csrrsi= binsof(cp_mie_w.std_only) && binsof(cp_op.csrrsi);
+      bins std_csrrw= binsof(cp_mie_w.std_only) && binsof(cp_op.csrrw);
+    }
+    cr_mtvec_base_op: cross cp_mtvec_base_w, cp_op {
+      bins boot_csrrw= binsof(cp_mtvec_base_w.boot_page) && binsof(cp_op.csrrw);
+      bins high_csrrs= binsof(cp_mtvec_base_w.high) && binsof(cp_op.csrrs);
+      bins high_csrrw= binsof(cp_mtvec_base_w.high) && binsof(cp_op.csrrw);
+      bins low_csrrw= binsof(cp_mtvec_base_w.low) && binsof(cp_op.csrrw);
+      bins rand_csrrc= binsof(cp_mtvec_base_w.\rand ) && binsof(cp_op.csrrc);
+      bins rand_csrrs= binsof(cp_mtvec_base_w.\rand ) && binsof(cp_op.csrrs);
+      bins rand_csrrw= binsof(cp_mtvec_base_w.\rand ) && binsof(cp_op.csrrw);
+    }
+    cr_mtvec_mode_lo: cross cp_mtvec_mode_w, cp_mtvec_lo_w {
+      bins d00_nz= binsof(cp_mtvec_mode_w.d00) && binsof(cp_mtvec_lo_w.nonzero);
+      bins d00_zero= binsof(cp_mtvec_mode_w.d00) && binsof(cp_mtvec_lo_w.zero);
+      bins r10_nz= binsof(cp_mtvec_mode_w.r10) && binsof(cp_mtvec_lo_w.nonzero);
+      bins r10_zero= binsof(cp_mtvec_mode_w.r10) && binsof(cp_mtvec_lo_w.zero);
+      bins r11_nz= binsof(cp_mtvec_mode_w.r11) && binsof(cp_mtvec_lo_w.nonzero);
+      bins r11_zero= binsof(cp_mtvec_mode_w.r11) && binsof(cp_mtvec_lo_w.zero);
+      bins v01_nz= binsof(cp_mtvec_mode_w.v01) && binsof(cp_mtvec_lo_w.nonzero);
+      bins v01_zero= binsof(cp_mtvec_mode_w.v01) && binsof(cp_mtvec_lo_w.zero);
+    }
+    cr_mcen_gate_w: cross cp_mcen_gate, cp_mcen_w {
+      bins on_cy= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.cy);
+      bins on_hi_ro= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.hi_ro);
+      bins on_hpm12= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.hpm12);
+      bins on_hpm3= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.hpm3);
+      bins on_ir= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.ir);
+      bins on_tm_ro= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.tm_ro);
+      bins invalid_all1= binsof(cp_mcen_gate.invalid) && binsof(cp_mcen_w.all1);
+      bins invalid_ir= binsof(cp_mcen_gate.invalid) && binsof(cp_mcen_w.ir);
+      bins off_all1= binsof(cp_mcen_gate.off) && binsof(cp_mcen_w.all1);
+      bins off_cy= binsof(cp_mcen_gate.off) && binsof(cp_mcen_w.cy);
+      bins on_all1= binsof(cp_mcen_gate.on) && binsof(cp_mcen_w.all1);
+    }
+  endgroup
+
+  // CG-ISA-007 (gen_isa_branch_cg), 28 coverpoint bins, 180 cross bins
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BEQ = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BNE = 1;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BLT = 2;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BGE = 3;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BLTU = 4;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_BGEU = 5;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_C_BEQZ = 6;
+  localparam int GEN_FC_ISA_BRANCH_CP_OP_C_BNEZ = 7;
+  localparam int GEN_FC_ISA_BRANCH_CP_TAKEN_NO = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_TAKEN_YES = 1;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_EQUAL = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_INTMIN_ZERO = 1;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ZERO_INTMIN = 2;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ZERO_ONES = 3;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ONES_ZERO = 4;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_BOTH_MSB_EQ = 5;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_SLT_UGT = 6;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_SGT_ULT = 7;
+  localparam int GEN_FC_ISA_BRANCH_CP_CMP_CLASS_RAND = 8;
+  localparam int GEN_FC_ISA_BRANCH_CP_OFFSET_SELF = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_OFFSET_MAX_FWD = 1;
+  localparam int GEN_FC_ISA_BRANCH_CP_OFFSET_MAX_BWD = 2;
+  localparam int GEN_FC_ISA_BRANCH_CP_OFFSET_POS_RAND = 3;
+  localparam int GEN_FC_ISA_BRANCH_CP_OFFSET_NEG_RAND = 4;
+  localparam int GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_WORD = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_HALF = 1;
+  localparam int GEN_FC_ISA_BRANCH_CP_WRAP_NO = 0;
+  localparam int GEN_FC_ISA_BRANCH_CP_WRAP_YES = 1;
+  covergroup gen_isa_branch_cg with function sample(int v_cp_op, int v_cp_taken, int v_cp_cmp_class, int v_cp_offset, int v_cp_target_align, int v_cp_wrap);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_op: coverpoint v_cp_op { bins beq= {0}; bins bne= {1}; bins blt= {2}; bins bge= {3}; bins bltu= {4}; bins bgeu= {5}; bins c_beqz= {6}; bins c_bnez= {7}; ignore_bins na = {-1}; }
+    cp_taken: coverpoint v_cp_taken { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_cmp_class: coverpoint v_cp_cmp_class { bins equal= {0}; bins intmin_zero= {1}; bins zero_intmin= {2}; bins zero_ones= {3}; bins ones_zero= {4}; bins both_msb_eq= {5}; bins slt_ugt= {6}; bins sgt_ult= {7}; bins \rand = {8}; ignore_bins na = {-1}; }
+    cp_offset: coverpoint v_cp_offset { bins self= {0}; bins max_fwd= {1}; bins max_bwd= {2}; bins pos_rand= {3}; bins neg_rand= {4}; ignore_bins na = {-1}; }
+    cp_target_align: coverpoint v_cp_target_align { bins word= {0}; bins half= {1}; ignore_bins na = {-1}; }
+    cp_wrap: coverpoint v_cp_wrap { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cr_wrap: cross cp_op, cp_wrap {
+      bins beq_yes= binsof(cp_op.beq) && binsof(cp_wrap.yes);
+      bins bge_yes= binsof(cp_op.bge) && binsof(cp_wrap.yes);
+      bins bgeu_yes= binsof(cp_op.bgeu) && binsof(cp_wrap.yes);
+      bins blt_yes= binsof(cp_op.blt) && binsof(cp_wrap.yes);
+      bins bltu_yes= binsof(cp_op.bltu) && binsof(cp_wrap.yes);
+      bins bne_yes= binsof(cp_op.bne) && binsof(cp_wrap.yes);
+      bins c_beqz_yes= binsof(cp_op.c_beqz) && binsof(cp_wrap.yes);
+      bins c_bnez_yes= binsof(cp_op.c_bnez) && binsof(cp_wrap.yes);
+      bins c_beqz_no= binsof(cp_op.c_beqz) && binsof(cp_wrap.no);
+      bins c_bnez_no= binsof(cp_op.c_bnez) && binsof(cp_wrap.no);
+      bins beq_no= binsof(cp_op.beq) && binsof(cp_wrap.no);
+      bins bge_no= binsof(cp_op.bge) && binsof(cp_wrap.no);
+      bins bgeu_no= binsof(cp_op.bgeu) && binsof(cp_wrap.no);
+      bins blt_no= binsof(cp_op.blt) && binsof(cp_wrap.no);
+      bins bltu_no= binsof(cp_op.bltu) && binsof(cp_wrap.no);
+      bins bne_no= binsof(cp_op.bne) && binsof(cp_wrap.no);
+    }
+    cr_op_align: cross cp_op, cp_target_align {
+      bins c_beqz_half= binsof(cp_op.c_beqz) && binsof(cp_target_align.half);
+      bins c_beqz_word= binsof(cp_op.c_beqz) && binsof(cp_target_align.word);
+      bins c_bnez_half= binsof(cp_op.c_bnez) && binsof(cp_target_align.half);
+      bins c_bnez_word= binsof(cp_op.c_bnez) && binsof(cp_target_align.word);
+      bins beq_half= binsof(cp_op.beq) && binsof(cp_target_align.half);
+      bins beq_word= binsof(cp_op.beq) && binsof(cp_target_align.word);
+      bins bge_half= binsof(cp_op.bge) && binsof(cp_target_align.half);
+      bins bge_word= binsof(cp_op.bge) && binsof(cp_target_align.word);
+      bins bgeu_half= binsof(cp_op.bgeu) && binsof(cp_target_align.half);
+      bins bgeu_word= binsof(cp_op.bgeu) && binsof(cp_target_align.word);
+      bins blt_half= binsof(cp_op.blt) && binsof(cp_target_align.half);
+      bins blt_word= binsof(cp_op.blt) && binsof(cp_target_align.word);
+      bins bltu_half= binsof(cp_op.bltu) && binsof(cp_target_align.half);
+      bins bltu_word= binsof(cp_op.bltu) && binsof(cp_target_align.word);
+      bins bne_half= binsof(cp_op.bne) && binsof(cp_target_align.half);
+      bins bne_word= binsof(cp_op.bne) && binsof(cp_target_align.word);
+    }
+    cr_op_offset_taken: cross cp_op, cp_offset, cp_taken {
+      bins c_beqz_neg_rand_no= binsof(cp_op.c_beqz) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins c_beqz_neg_rand_yes= binsof(cp_op.c_beqz) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins c_beqz_pos_rand_no= binsof(cp_op.c_beqz) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins c_beqz_pos_rand_yes= binsof(cp_op.c_beqz) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins c_bnez_neg_rand_no= binsof(cp_op.c_bnez) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins c_bnez_neg_rand_yes= binsof(cp_op.c_bnez) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins c_bnez_pos_rand_no= binsof(cp_op.c_bnez) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins c_bnez_pos_rand_yes= binsof(cp_op.c_bnez) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins beq_neg_rand_no= binsof(cp_op.beq) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins beq_neg_rand_yes= binsof(cp_op.beq) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins beq_pos_rand_no= binsof(cp_op.beq) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins beq_pos_rand_yes= binsof(cp_op.beq) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins bge_neg_rand_no= binsof(cp_op.bge) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins bge_neg_rand_yes= binsof(cp_op.bge) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins bge_pos_rand_no= binsof(cp_op.bge) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins bge_pos_rand_yes= binsof(cp_op.bge) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins bgeu_neg_rand_no= binsof(cp_op.bgeu) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins bgeu_neg_rand_yes= binsof(cp_op.bgeu) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins bgeu_pos_rand_no= binsof(cp_op.bgeu) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins bgeu_pos_rand_yes= binsof(cp_op.bgeu) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins blt_neg_rand_no= binsof(cp_op.blt) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins blt_neg_rand_yes= binsof(cp_op.blt) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins blt_pos_rand_no= binsof(cp_op.blt) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins blt_pos_rand_yes= binsof(cp_op.blt) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins bltu_neg_rand_no= binsof(cp_op.bltu) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins bltu_neg_rand_yes= binsof(cp_op.bltu) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins bltu_pos_rand_no= binsof(cp_op.bltu) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins bltu_pos_rand_yes= binsof(cp_op.bltu) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins bne_neg_rand_no= binsof(cp_op.bne) && binsof(cp_offset.neg_rand) && binsof(cp_taken.no);
+      bins bne_neg_rand_yes= binsof(cp_op.bne) && binsof(cp_offset.neg_rand) && binsof(cp_taken.yes);
+      bins bne_pos_rand_no= binsof(cp_op.bne) && binsof(cp_offset.pos_rand) && binsof(cp_taken.no);
+      bins bne_pos_rand_yes= binsof(cp_op.bne) && binsof(cp_offset.pos_rand) && binsof(cp_taken.yes);
+      bins beq_max_bwd_no= binsof(cp_op.beq) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins beq_max_bwd_yes= binsof(cp_op.beq) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins beq_max_fwd_no= binsof(cp_op.beq) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins beq_max_fwd_yes= binsof(cp_op.beq) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins beq_self_no= binsof(cp_op.beq) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins beq_self_yes= binsof(cp_op.beq) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins bge_max_bwd_no= binsof(cp_op.bge) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins bge_max_bwd_yes= binsof(cp_op.bge) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins bge_max_fwd_no= binsof(cp_op.bge) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins bge_max_fwd_yes= binsof(cp_op.bge) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins bge_self_no= binsof(cp_op.bge) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins bge_self_yes= binsof(cp_op.bge) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins bgeu_max_bwd_no= binsof(cp_op.bgeu) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins bgeu_max_bwd_yes= binsof(cp_op.bgeu) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins bgeu_max_fwd_no= binsof(cp_op.bgeu) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins bgeu_max_fwd_yes= binsof(cp_op.bgeu) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins bgeu_self_no= binsof(cp_op.bgeu) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins bgeu_self_yes= binsof(cp_op.bgeu) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins blt_max_bwd_no= binsof(cp_op.blt) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins blt_max_bwd_yes= binsof(cp_op.blt) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins blt_max_fwd_no= binsof(cp_op.blt) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins blt_max_fwd_yes= binsof(cp_op.blt) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins blt_self_no= binsof(cp_op.blt) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins blt_self_yes= binsof(cp_op.blt) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins bltu_max_bwd_no= binsof(cp_op.bltu) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins bltu_max_bwd_yes= binsof(cp_op.bltu) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins bltu_max_fwd_no= binsof(cp_op.bltu) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins bltu_max_fwd_yes= binsof(cp_op.bltu) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins bltu_self_no= binsof(cp_op.bltu) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins bltu_self_yes= binsof(cp_op.bltu) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins bne_max_bwd_no= binsof(cp_op.bne) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins bne_max_bwd_yes= binsof(cp_op.bne) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins bne_max_fwd_no= binsof(cp_op.bne) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins bne_max_fwd_yes= binsof(cp_op.bne) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins bne_self_no= binsof(cp_op.bne) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins bne_self_yes= binsof(cp_op.bne) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins c_beqz_max_bwd_no= binsof(cp_op.c_beqz) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins c_beqz_max_bwd_yes= binsof(cp_op.c_beqz) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins c_beqz_max_fwd_no= binsof(cp_op.c_beqz) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins c_beqz_max_fwd_yes= binsof(cp_op.c_beqz) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins c_beqz_self_no= binsof(cp_op.c_beqz) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins c_beqz_self_yes= binsof(cp_op.c_beqz) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+      bins c_bnez_max_bwd_no= binsof(cp_op.c_bnez) && binsof(cp_offset.max_bwd) && binsof(cp_taken.no);
+      bins c_bnez_max_bwd_yes= binsof(cp_op.c_bnez) && binsof(cp_offset.max_bwd) && binsof(cp_taken.yes);
+      bins c_bnez_max_fwd_no= binsof(cp_op.c_bnez) && binsof(cp_offset.max_fwd) && binsof(cp_taken.no);
+      bins c_bnez_max_fwd_yes= binsof(cp_op.c_bnez) && binsof(cp_offset.max_fwd) && binsof(cp_taken.yes);
+      bins c_bnez_self_no= binsof(cp_op.c_bnez) && binsof(cp_offset.self) && binsof(cp_taken.no);
+      bins c_bnez_self_yes= binsof(cp_op.c_bnez) && binsof(cp_offset.self) && binsof(cp_taken.yes);
+    }
+    cr_op_taken_cmp: cross cp_op, cp_taken, cp_cmp_class {
+      bins beq_no_intmin_zero= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.intmin_zero);
+      bins beq_no_ones_zero= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.ones_zero);
+      bins beq_no_rand= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins beq_no_sgt_ult= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.sgt_ult);
+      bins beq_no_slt_ugt= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.slt_ugt);
+      bins beq_no_zero_intmin= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_intmin);
+      bins beq_no_zero_ones= binsof(cp_op.beq) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_ones);
+      bins beq_yes_both_msb_eq= binsof(cp_op.beq) && binsof(cp_taken.yes) && binsof(cp_cmp_class.both_msb_eq);
+      bins beq_yes_equal= binsof(cp_op.beq) && binsof(cp_taken.yes) && binsof(cp_cmp_class.equal);
+      bins bge_no_intmin_zero= binsof(cp_op.bge) && binsof(cp_taken.no) && binsof(cp_cmp_class.intmin_zero);
+      bins bge_no_ones_zero= binsof(cp_op.bge) && binsof(cp_taken.no) && binsof(cp_cmp_class.ones_zero);
+      bins bge_no_rand= binsof(cp_op.bge) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins bge_no_slt_ugt= binsof(cp_op.bge) && binsof(cp_taken.no) && binsof(cp_cmp_class.slt_ugt);
+      bins bge_yes_both_msb_eq= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.both_msb_eq);
+      bins bge_yes_equal= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.equal);
+      bins bge_yes_rand= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
+      bins bge_yes_sgt_ult= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.sgt_ult);
+      bins bge_yes_zero_intmin= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_intmin);
+      bins bge_yes_zero_ones= binsof(cp_op.bge) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_ones);
+      bins bgeu_no_rand= binsof(cp_op.bgeu) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins bgeu_no_sgt_ult= binsof(cp_op.bgeu) && binsof(cp_taken.no) && binsof(cp_cmp_class.sgt_ult);
+      bins bgeu_no_zero_intmin= binsof(cp_op.bgeu) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_intmin);
+      bins bgeu_no_zero_ones= binsof(cp_op.bgeu) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_ones);
+      bins bgeu_yes_both_msb_eq= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.both_msb_eq);
+      bins bgeu_yes_equal= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.equal);
+      bins bgeu_yes_intmin_zero= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.intmin_zero);
+      bins bgeu_yes_ones_zero= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.ones_zero);
+      bins bgeu_yes_rand= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
+      bins bgeu_yes_slt_ugt= binsof(cp_op.bgeu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.slt_ugt);
+      bins blt_no_both_msb_eq= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.both_msb_eq);
+      bins blt_no_equal= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.equal);
+      bins blt_no_rand= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins blt_no_sgt_ult= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.sgt_ult);
+      bins blt_no_zero_intmin= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_intmin);
+      bins blt_no_zero_ones= binsof(cp_op.blt) && binsof(cp_taken.no) && binsof(cp_cmp_class.zero_ones);
+      bins blt_yes_intmin_zero= binsof(cp_op.blt) && binsof(cp_taken.yes) && binsof(cp_cmp_class.intmin_zero);
+      bins blt_yes_ones_zero= binsof(cp_op.blt) && binsof(cp_taken.yes) && binsof(cp_cmp_class.ones_zero);
+      bins blt_yes_rand= binsof(cp_op.blt) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
+      bins blt_yes_slt_ugt= binsof(cp_op.blt) && binsof(cp_taken.yes) && binsof(cp_cmp_class.slt_ugt);
+      bins bltu_no_both_msb_eq= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.both_msb_eq);
+      bins bltu_no_equal= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.equal);
+      bins bltu_no_intmin_zero= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.intmin_zero);
+      bins bltu_no_ones_zero= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.ones_zero);
+      bins bltu_no_rand= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins bltu_no_slt_ugt= binsof(cp_op.bltu) && binsof(cp_taken.no) && binsof(cp_cmp_class.slt_ugt);
+      bins bltu_yes_rand= binsof(cp_op.bltu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
+      bins bltu_yes_sgt_ult= binsof(cp_op.bltu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.sgt_ult);
+      bins bltu_yes_zero_intmin= binsof(cp_op.bltu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_intmin);
+      bins bltu_yes_zero_ones= binsof(cp_op.bltu) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_ones);
+      bins bne_no_both_msb_eq= binsof(cp_op.bne) && binsof(cp_taken.no) && binsof(cp_cmp_class.both_msb_eq);
+      bins bne_no_equal= binsof(cp_op.bne) && binsof(cp_taken.no) && binsof(cp_cmp_class.equal);
+      bins bne_yes_intmin_zero= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.intmin_zero);
+      bins bne_yes_ones_zero= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.ones_zero);
+      bins bne_yes_rand= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
+      bins bne_yes_sgt_ult= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.sgt_ult);
+      bins bne_yes_slt_ugt= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.slt_ugt);
+      bins bne_yes_zero_intmin= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_intmin);
+      bins bne_yes_zero_ones= binsof(cp_op.bne) && binsof(cp_taken.yes) && binsof(cp_cmp_class.zero_ones);
+      bins c_beqz_no_intmin_zero= binsof(cp_op.c_beqz) && binsof(cp_taken.no) && binsof(cp_cmp_class.intmin_zero);
+      bins c_beqz_no_ones_zero= binsof(cp_op.c_beqz) && binsof(cp_taken.no) && binsof(cp_cmp_class.ones_zero);
+      bins c_beqz_no_slt_ugt= binsof(cp_op.c_beqz) && binsof(cp_taken.no) && binsof(cp_cmp_class.slt_ugt);
+      bins c_beqz_yes_equal= binsof(cp_op.c_beqz) && binsof(cp_taken.yes) && binsof(cp_cmp_class.equal);
+      bins c_bnez_no_equal= binsof(cp_op.c_bnez) && binsof(cp_taken.no) && binsof(cp_cmp_class.equal);
+      bins c_bnez_yes_intmin_zero= binsof(cp_op.c_bnez) && binsof(cp_taken.yes) && binsof(cp_cmp_class.intmin_zero);
+      bins c_bnez_yes_ones_zero= binsof(cp_op.c_bnez) && binsof(cp_taken.yes) && binsof(cp_cmp_class.ones_zero);
+      bins c_bnez_yes_slt_ugt= binsof(cp_op.c_bnez) && binsof(cp_taken.yes) && binsof(cp_cmp_class.slt_ugt);
+      bins c_beqz_no_rand= binsof(cp_op.c_beqz) && binsof(cp_taken.no) && binsof(cp_cmp_class.\rand );
+      bins c_bnez_yes_rand= binsof(cp_op.c_bnez) && binsof(cp_taken.yes) && binsof(cp_cmp_class.\rand );
     }
   endgroup

@@ -1,0 +1,47 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+lockstep_branch: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:22Z
+urg lockstep_branch exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:29Z
+urg lockstep_zcmp_mv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:35Z
+urg lockstep_csrwarl exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl_off: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:40Z
+urg lockstep_csrwarl_off exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl_inv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:44Z
+urg lockstep_csrwarl_inv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_bitcnt: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:49Z
+urg lockstep_bitcnt exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_zca: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:54Z
+urg lockstep_zca exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:02:58Z
+urg lockstep_zcmp exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:03:04Z
+urg lockstep_muldiv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_alu: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:03:10Z
+urg lockstep_alu exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+start 20:03:12Z sources sha256: 86c7caf1d034cdec
+ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_mv_res: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=32
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 20:03:21Z

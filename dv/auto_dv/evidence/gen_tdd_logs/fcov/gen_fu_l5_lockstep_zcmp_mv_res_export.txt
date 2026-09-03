@@ -1,0 +1,131 @@
+# gen_export v2 seed=1 build_config=opentitan counters=0 sources=ibus,dbus,pin,alert,misc,scrkey,regime fields=order,pc_rdata,pc_wdata,insn,trap,halt,intr,mode,ixl,rs1_addr,rs1_rdata,rs2_addr,rs2_rdata,rs3_addr,rs3_rdata,rd_addr,rd_wdata,mem_addr,mem_rmask,mem_wmask,mem_rdata,mem_wdata,ext_pre_mip,ext_post_mip,ext_nmi,ext_nmi_int,ext_debug_req,ext_debug_mode,ext_rf_wr_suppress,ext_ic_scr_key_valid,ext_irq_valid,ext_exp_valid,ext_exp_insn,ext_exp_last,ext_mcycle,cycle
+# image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zcmp_mv_res/prog.vmem
+# events ibus req addr,we,be
+# events ibus gnt addr,we,be,req_cycle,outstanding_after
+# events ibus rvalid addr,we,err,intg_injected,outstanding_after
+# events dbus req addr,we,be
+# events dbus gnt addr,we,be,req_cycle,outstanding_after
+# events dbus rvalid addr,we,err,intg_injected,outstanding_after
+# events pin irq_software value
+# events pin irq_timer value
+# events pin irq_external value
+# events pin irq_fast idx,value
+# events pin irq_nm value
+# events pin debug_req value
+# events pin fetch_enable value
+# events pin mcounteren_writable value
+# events alert alert_minor value
+# events alert alert_major_bus value
+# events alert alert_major_internal value
+# events alert double_fault_seen value
+# events misc irq_pending value
+# events misc core_busy value
+# events misc crash_dump_current_pc value
+# events misc crash_dump_next_pc value
+# events misc crash_dump_last_data_addr value
+# events misc crash_dump_exception_pc value
+# events misc crash_dump_exception_addr value
+# events scrkey req value
+# events scrkey valid value
+# events regime phase knob_id,value_idx,phase_idx
+E 0 pin fetch_enable a
+E 0 pin mcounteren_writable 5
+E 0 alert alert_minor 0
+E 0 alert alert_major_bus 0
+E 0 alert alert_major_internal 0
+E 0 alert double_fault_seen 0
+E 0 misc irq_pending 0
+E 0 misc core_busy 5
+E 0 misc crash_dump_current_pc 0
+E 0 misc crash_dump_next_pc 0
+E 0 misc crash_dump_last_data_addr 0
+E 0 misc crash_dump_exception_pc 0
+E 0 misc crash_dump_exception_addr 0
+E 1 misc crash_dump_next_pc 80000080
+E e pin fetch_enable 5
+E f ibus req 80000080 0 f
+E 12 ibus gnt 80000080 0 f f 1
+E 13 ibus req 80000084 0 f
+E 15 ibus rvalid 80000080 0 0 0 0
+E 16 ibus gnt 80000084 0 f 13 1
+E 16 misc crash_dump_current_pc 80000080
+E 16 misc crash_dump_next_pc 80000084
+E 17 ibus req 80000084 0 f
+R 1 80000080 80000084 40006f 0 0 0 3 1 0 0 0 0 0 0 0 0 80000084 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 16 18
+E 1a ibus rvalid 80000084 0 0 0 0
+E 1a ibus gnt 80000084 0 f 17 1
+E 1b ibus req 80000088 0 f
+E 1c ibus rvalid 80000084 0 0 0 0
+E 1d misc crash_dump_current_pc 80000084
+E 1d misc crash_dump_next_pc 80000088
+E 1e ibus gnt 80000088 0 f 1b 1
+E 1f ibus req 8000008c 0 f
+R 2 80000084 80000088 a000537 0 0 0 3 1 0 0 0 0 0 0 a a000000 a000000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1d 1f
+E 20 ibus gnt 8000008c 0 f 1f 2
+E 21 ibus rvalid 80000088 0 0 0 1
+E 21 ibus req 80000090 0 f
+E 22 misc crash_dump_current_pc 80000088
+E 22 misc crash_dump_next_pc 8000008c
+E 23 ibus rvalid 8000008c 0 0 0 0
+E 24 ibus gnt 80000090 0 f 21 1
+E 24 misc crash_dump_current_pc 8000008c
+E 24 misc crash_dump_next_pc 8000008e
+R 3 80000088 8000008c a0005b7 0 0 0 3 1 0 0 0 0 0 0 b a000000 a000000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 22 24
+E 25 ibus req 80000094 0 f
+R 4 8000008c 8000008e 585 0 0 0 3 1 b a000000 0 0 0 0 b a000001 a000001 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 24 26
+E 27 ibus gnt 80000094 0 f 25 2
+E 28 ibus rvalid 80000090 0 0 0 1
+E 28 ibus req 80000098 0 f
+E 29 misc crash_dump_current_pc 8000008e
+E 29 misc crash_dump_next_pc 80000092
+E 2a ibus gnt 80000098 0 f 28 2
+E 2a misc crash_dump_current_pc 80000092
+E 2a misc crash_dump_next_pc 80000094
+E 2b ibus rvalid 80000094 0 0 0 1
+E 2b ibus req 8000009c 0 f
+R 5 8000008e 80000092 10000437 0 0 0 3 1 0 0 0 0 0 0 8 10000000 10000000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 29 2b
+E 2c ibus gnt 8000009c 0 f 2b 2
+E 2c misc crash_dump_current_pc 80000094
+R 6 80000092 80000094 405 0 0 0 3 1 8 10000000 0 0 0 0 8 10000001 10000001 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 2a 2c
+E 2d ibus req 800000a0 0 f
+E 2d misc crash_dump_next_pc 80000096
+E 2e ibus rvalid 80000098 0 0 0 1
+E 2e misc crash_dump_current_pc 80000096
+E 2e misc crash_dump_next_pc 80000098
+R 7 80000094 80000094 50413 0 0 0 3 1 a a000000 0 0 0 0 8 a000000 a000000 f 0 0 0 0 0 0 0 0 0 0 1 0 1 ac22 0 2c 2e
+E 2f ibus rvalid 8000009c 0 0 0 0
+E 2f misc crash_dump_current_pc 80000098
+E 2f misc crash_dump_next_pc 8000009c
+R 8 80000094 80000096 58413 0 0 0 3 1 b a000001 0 0 0 0 8 a000001 a000001 f 0 0 0 0 0 0 0 0 0 0 1 0 1 ac22 1 2d 2f
+E 30 ibus gnt 800000a0 0 f 2d 1
+E 30 misc crash_dump_current_pc 8000009c
+E 30 misc crash_dump_next_pc 800000a0
+R 9 80000096 80000098 1 0 0 0 3 1 0 0 0 0 0 0 0 0 0 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 2e 30
+E 31 ibus req 800000a4 0 f
+R a 80000098 8000009c f17 0 0 0 3 1 0 0 0 0 0 0 1e 80000098 80000098 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 2f 31
+E 32 ibus gnt 800000a4 0 f 31 2
+R b 8000009c 800000a0 10f0f13 0 0 0 3 1 1e 80000098 0 0 0 0 1e 800000a8 800000a8 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 30 32
+E 33 ibus req 800000a8 0 f
+E 34 ibus rvalid 800000a0 0 0 0 1
+E 35 misc crash_dump_current_pc 800000a0
+E 35 misc crash_dump_next_pc 800000a2
+E 36 ibus rvalid 800000a4 0 0 0 0
+E 36 ibus gnt 800000a8 0 f 33 1
+E 37 dbus req 800000a8 1 f
+E 37 ibus req 800000ac 0 f
+E 37 misc crash_dump_current_pc 800000a2
+E 37 misc crash_dump_next_pc 800000a6
+R c 800000a0 800000a2 4f85 0 0 0 3 1 0 0 0 0 0 0 1f 1 1 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 35 37
+E 38 ibus rvalid 800000a8 0 0 0 0
+E 39 dbus gnt 800000a8 1 f 37 1
+E 39 ibus gnt 800000ac 0 f 37 1
+E 3a ibus req 800000a4 0 f
+E 3a misc crash_dump_current_pc 800000a6
+E 3a misc crash_dump_next_pc 800000a8
+E 3a misc crash_dump_last_data_addr 800000a8
+E 3b misc crash_dump_next_pc 800000a6
+E 3c dbus rvalid 800000a8 1 0 0 0
+E 3c ibus gnt 800000a4 0 f 3a 2
+E 3d ibus rvalid 800000ac 0 0 0 1
+E 3d ibus req 800000a8 0 f
+R d 800000a2 800000a6 1ff2023 0 0 0 3 1 1e 800000a8 1f 1 1e 800000a8 0 0 800000a8 0 f 0 1 0 0 0 0 0 0 0 1 0 0 0 0 39 3d

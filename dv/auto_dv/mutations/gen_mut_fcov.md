@@ -35,3 +35,19 @@ Guarding this class needs a count assertion in the proof (a bin's expected count
 classifier; the transcript carries the counts of every proof run so a reviewer can compare them, and the renderer's unit test cannot
 help (the classifiers are hand-written). Owed to the fcov plan owner as a note: the plan's `eq` and `other` bins of one coverpoint are
 a partition, so a directed program with a known number of equal cases is the natural count check.
+
+## Slice 3 (T-205: gen_cmp_zcmp_mv_cg, gen_csr_trap_setup_warl_cg, gen_isa_branch_cg)
+
+Method as above: the mutant is applied to a copy of the landed sources (gen_fcov_pkg.sv sha256 17e8e582968cb01e, build m 86c7caf1d034cdec),
+compiled out of tree, run once with the covergroups on (the lock-step run itself passes: the mutation is in the sampler), urg on that run's
+vdb, and the checker on the slice's proof manifest; the ablation is the manifest without the named bins, which is the un-mutated proof.
+
+| id | mutation | catch run | mutant build (sources sha256) | result | ablation |
+|---|---|---|---|---|---|
+| FM5 | gen_fcov_pkg.sv (gen_isa_cov): c.bnez decoded as c.beqz (`op = GEN_FC_ISA_BRANCH_CP_OP_C_BEQZ` for both CB forms) | gen_ut_lockstep on gen_branch_directed.S, urg, checker on gen_fcov_proof_slice3a.fcov.yaml | 2cb6a03469ac6095 | simulation PASS; checker `FAIL -- 1 declared bin(s) not hit: gen_isa_branch_cg.cp_op.c_bnez` (gen_fu_l5_FM5_check.log) | the manifest without that bin is the proof minus one line; the un-mutated run hits it 15 times |
+| FM6 | gen_fcov_pkg.sv (gen_isa_cov): the hazard tracker never sees the writer before a move (`mv_hz = ..._NONE`) | gen_ut_lockstep on gen_zcmp_mv_directed.S, urg, checker on gen_fcov_proof_slice3b.fcov.yaml | e176689e283cf2c5 | simulation PASS; checker `FAIL -- 2 declared bin(s) not hit: gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev, ...load_prev` (gen_fu_l5_FM6_check.log) | the manifest without the two bins; the un-mutated run hits load_prev 2 and alu_prev 4 times |
+| FM7 | gen_fcov_pkg.sv (gen_isa_cov): the immediate CSR forms sampled as the register forms (`csr_op = f3[1:0] - 1`, the `+ 3` for f3[2] dropped) | gen_ut_lockstep on gen_csr_warl_directed.S, urg, checker on gen_fcov_proof_slice3c.fcov.yaml | 7e0af12158aef8e9 | simulation PASS; checker `FAIL -- 3 declared bin(s) not hit: gen_csr_trap_setup_warl_cg.cp_op.csrrci, .csrrsi, .csrrwi` (gen_fu_l5_FM7_check.log) | the manifest without the three bins |
+
+The first FM6 run (build l, before the hazard tracker decoded loads) named only load_prev, because alu_prev was not in the proof
+manifest generated from that build: a mutant catch is only as wide as the manifest, so the manifests are regenerated from the landed
+build's reports before the mutants are judged.

@@ -75,9 +75,12 @@ Files: `dv/auto_dv/tb/gen_fcov_codegen.py` renders `dv/auto_dv/env/gen_fcov_grou
 `dv/auto_dv/docs/gen_trace_tp_bin.csv` (every bin a plan covergroup declares, cross bins included and already reduced by the
 plan's ignore rules) and `dv/auto_dv/docs/gen_fcov_plan.md` (the SV name from the header `### CG-X-nnn: gen_cg_<name>` ->
 `gen_<name>_cg`, each coverpoint's bin ORDER from its `bins a{..}, b{..}` list, each cross's component coverpoints from
-`cr_x = cp_a x cp_b [x cp_c]` and its explicitly named tuples such as `div_intmin_m1{div, int_min, all_ones}`). Per group:
+`cr_x = cp_a x cp_b [x cp_c]` and its explicitly named tuples such as `div_intmin_m1{div, int_min, all_ones}` or
+`mstatus_csrrw{mstatus csrrw}`, comma- or space-separated; a tuple part that is a 1-bit value, `all0{0 0 0 0}`, names the bin
+`b<value>`). Per group:
 `covergroup gen_<name>_cg with function sample(int v_<cp>, ...)` in the plan's coverpoint order, type-based
-(`option.per_instance = 0`, so urg reports `gen_<name>_cg.<cp>.<bin>`), one `bins <name> = {i}` per plan bin on consecutive
+(`option.per_instance = 0`, so urg reports `gen_<name>_cg.<cp>.<bin>`; `option.cross_auto_bin_max = 0`, so a cross has exactly
+the CSV's named bins and the plan's ignored tuples create no automatic bins), one `bins <name> = {i}` per plan bin on consecutive
 indices with a `localparam int GEN_FC_<NAME>_<CP>_<BIN>` per bin, `ignore_bins na = {-1}` (a not-applicable sample), and one
 `bins <csv name> = binsof(cp_a.x) && binsof(cp_b.y)` per cross bin (the name is the components joined by `_`; the renderer splits
 it by longest match with backtracking or takes the plan's explicit tuple). Bin names that are SystemVerilog keywords (`xor`,
@@ -109,6 +112,9 @@ nothing and the report line says so (`GEN_FCOV isa samples: ... (covergroups off
 | gen_bit_count_cg (CG-BIT-002) | OP-IMM funct3 001 with instr[31:20] 0x600 / 0x601 / 0x602 (clz / ctz / cpop) | 52 / 147 | gen_bitcnt_directed.S |
 | gen_cmp_zca_cg (CG-CMP-001) | a 16-bit retirement (rvfi_insn[1:0] != 11, no Zcmp micro-op) for every coverpoint but the straddle, which samples 32-bit retirements; the next instruction's length makes the sample one record late | 54 / 169 | gen_zca_directed.S |
 | gen_cmp_zcmp_pushpop_cg (CG-CMP-006) | the last micro-op record (rvfi_ext_expanded_insn_last) of a cm.push / cm.pop / cm.popret / cm.popretz whose sequence never trapped, collected from its first micro-op | 51 / 244 | gen_zcmp_directed.S (+ the min1 / long / random regime runs) |
+| gen_cmp_zcmp_mv_cg (CG-CMP-007) | the last micro-op record of a cm.mvsa01 / cm.mva01s (source word `101 011 r1s' 01/11 r2s' 10`), sampled one record late so the neighbour after is known | 29 / 134 | gen_zcmp_mv_directed.S |
+| gen_csr_trap_setup_warl_cg (CG-CSR-002) | the read-back that closes a write pair on mstatus, misa, mie, mtvec, mcounteren, mstatush, menvcfg, menvcfgh: a CSR-op record with rd != x0 on the CSR of an open write | 67 / 143 | gen_csr_warl_directed.S (+ the mcounteren gate off / invalid runs) |
+| gen_isa_branch_cg (CG-ISA-007) | BRANCH funct3 000 / 001 / 1xx, or c.beqz / c.bnez in the 16-bit form (`11x ... 01`), rvfi_trap == 0 | 28 / 180 | gen_branch_directed.S |
 
 Slice 2 additions. CG-CMP-001 keeps one 16-bit record pending until the next record arrives (its `cp_next_len`); a Zcmp
 micro-op record counts as a 16-bit successor; c.nop is c.addi with rd = x0, c.addi16sp is the c.lui encoding with rd = x2, c.jr /
@@ -124,6 +130,40 @@ rvfi_ext_mhpmcounters[7] (mhpmcounter10, NumInstrRetC: the record before the seq
 class from the regime knob in force (`knob_dmem_rvalid_delay`: min1 / short / long, random = mixed) and dummy_instr_en from the model's
 cpuctrlsts bit 2 (`gen_isa_read_csr`); a trapping micro-op or a record of another pc abandons the sequence (counted). The wrap bins
 (`push_below_zero`, `pop_above_max`) need a stack around address 0 or 2^32 and are not exercised by the proof programs.
+
+Slice 3 additions. CG-CMP-007 rides the same collector: the source word's [12:10] = 011 selects the move forms, the two micro-ops
+must be `addi dst, src, 0` with the register pair of their position (r1s' / a0 then r2s' / a1 for cm.mvsa01; a0 / r1s' then a1 / r2s'
+for cm.mva01s), `cp_src_values` compares the two micro-ops' rs1_rdata, `cp_uop_count_ok` needs exactly two records with the tags in
+order. The neighbour coverpoints use an instruction-boundary tracker (`cur_wr` / `prev_wr`: the registers written by the instruction
+in progress and by the one before it, an expansion counting as one instruction; `cur_ld`: it was a load, decoded with
+gen_insn_mem_access because Ibex reports rvfi_mem_rmask on non-memory records too): `cp_hazard_src` is load_prev when the previous
+instruction loaded a source register of the move, alu_prev when any other instruction wrote one (a move pair included), none
+otherwise; `cp_b2b` is <first>_then_<second> when the instruction immediately before is the other move form (checked at the sequence's
+end) or when the record after opens the other form (checked at the flush), the neighbour before winning when both hold. The reserved
+cm.mvsa01 with r1s' == r2s' (B4) is not in the proof program: Spike refuses it (illegal instruction) while Ibex executes two moves, so
+`cr_insn_equal.cm_mvsa01_yes` cannot be hit under lock-step (gen_zcmp_mv_reserved_directed.S is the retained divergence).
+CG-CSR-002 is a pair tracker per CSR: a CSR-op record on one of the eight addresses with rd != x0 returns the standing value, so it
+closes an open pair (sampled then) and refreshes a shadow of the value; a write (csrrw / csrrwi always; csrrs / csrrc / csrrsi / csrrci
+only with rs1 or uimm != 0, the decoder demoting the rest to reads) opens a pair with the operand (rs1_rdata or the zimm), the op, rd
+and the effective written value (the operand for the rw forms, old | operand or old & ~operand for the set / clear forms, old being the
+record's own rd_wdata when rd != x0, else the shadow if no write intervened since the last read-back, else unknown and the field
+coverpoints sample na); a second write before any read-back replaces the pair (counted as replaced). `cp_wpat` classifies the operand
+against the CSR's Ibex-writable mask (mstatus 0x00221888, mie 0x7FFF0888, mtvec 0xFFFFFF00, mcounteren bit 0 and bits 2..GEN_MHPM_COUNTER_NUM+2,
+the others 0): all0, all1, msb_only, legal_only (only writable bits), illegal_only (no writable bit, and the CSR has some), rand; a CSR
+without writable bits has no illegal-only class, so its mixed patterns are rand (misa_legal / misa_illegal in the trace CSV are
+unreachable by construction). The field coverpoints use the effective value: MPP and the four mstatus bits; mtvec mode = [1:0], lo = [7:2]
+zero / nonzero, base = boot_page when [31:8] equals boot_addr[31:8] (before low / high: the boot page has bit 31 set), low when the
+value < 0x1000, high on bit 31, rand otherwise; mie: all_fast when every fast bit 16..30 is set, else std_fast / std_only / fast_only by
+the standard (3, 7, 11) and fast groups, ro_only when only read-only bits are set, na for 0; mcounteren: all1, a single bit in the
+counter field by its name (cy, tm_ro, ir, hpm3..hpm12), hi_ro when only bits above the field are set, na otherwise. `cp_mcen_gate` is
+the TB's drive (knob_mcounteren_writable: on / off / invalid), not a DUT value. CG-ISA-007 decodes the 32-bit B-type immediate or the CB
+offset; taken = pc_wdata != pc + len; `cp_cmp_class` precedence: both_msb_eq, intmin_zero, zero_intmin, zero_ones, ones_zero, equal,
+slt_ugt, sgt_ult, rand (c.beqz / c.bnez compare against x0, rs2 = 0); `cp_offset`: self (0), max_fwd (4094, 254 for the CB forms), max_bwd
+(-4096 / -256), pos_rand / neg_rand; `cp_target_align` = bit 1 of pc + imm on every record (taken or not); `cp_wrap` samples only on a
+taken branch and is the carry out of the 32-bit add of pc and the sign-extended immediate, which is set for every backward branch and
+clear for every forward branch below 2^32 (the plan's literal definition; a taken branch near the address-space ends would be the only
+other case). `cp_offset.self` is never hit by a proof program: a taken self-branch spins until an interrupt, and no promoted manifest
+declares it.
 
 Evidence (dv/auto_dv/evidence/gen_tdd_fcov.md): each proof run is a lock-step run of the named operand-walk program (every
 result also compared against the model), urg on its own vdb, and `ci/check_fcov_expectations.py --report-dir` on a manifest of

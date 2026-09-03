@@ -45,6 +45,8 @@ def main():
     check("every rendered covergroup is type-based", text.count("covergroup ") == text.count("option.per_instance = 0;"))
     check("keyword bin names are escaped identifiers", "bins \\xor = {" in text and "binsof(cp_op.\\xor )" in text)
     check("no auto cross bins: every cross bin is named from the CSV", "bins auto" not in text)
+    check("a tuple naming 1-bit values renders the b<v> bins", "bins all0= binsof(cp_mst_mie_w.b0) && binsof(cp_mst_mpie_w.b0) && binsof(cp_mst_mprv_w.b0) && binsof(cp_mst_tw_w.b0);" in text)
+    check("a space-separated tuple renders its components", "bins mstatus_csrrw= binsof(cp_csr.mstatus) && binsof(cp_op.csrrw);" in text)
     # ---- refusals on scratch copies
     root = scratch_tree("plan_bins_differ")
     p = root / PLAN; s = p.read_text()

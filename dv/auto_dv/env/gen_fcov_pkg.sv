@@ -93,6 +93,16 @@ package gen_fcov_pkg;
     gen_bit_count_cg   cnt_cg;
     gen_cmp_zca_cg     zca_cg;
     gen_cmp_zcmp_pushpop_cg zcmp_cg;
+    gen_cmp_zcmp_mv_cg mv_cg;
+    gen_csr_trap_setup_warl_cg csr_cg;
+    gen_isa_branch_cg  br_cg;
+    // CG-CMP-007 move pair: form, register fields, the two source values, the neighbour facts; sampled once the next record is known
+    int zp_mv = -1, mv_r1, mv_r2, mv_hz, mv_prev; logic [31:0] mv_src1, mv_src2; bit mv_ok, mv_pend = 0; int mv_v [8];
+    // the registers written and the load fact of the instruction in progress and of the one before it (an expansion is one instruction)
+    logic [31:0] cur_wr = '0, prev_wr = '0; bit cur_ld = 0, prev_ld = 0; int cur_mv = -1, prev_mv = -1;
+    // CG-CSR-002 pairs per tracked CSR: the open write (op, operand, rd, effective value) and the standing value of the last read-back
+    bit csr_pend [8], csr_eff_ok [8], csr_shadow_ok [8]; int csr_op [8], csr_rd [8]; logic [31:0] csr_wval [8], csr_eff [8], csr_shadow [8];
+    int unsigned n_br = 0, n_mv = 0, n_csr_pairs = 0, n_csr_wr = 0, n_csr_replaced = 0;
     // CG-CMP-006 sequence collector: one cm.push / cm.pop / cm.popret / cm.popretz from its first micro-op record to its last
     bit zp_in = 0, zp_sp_valid, zp_order_ok, zp_tags_ok; int zp_kind, zp_rlist, zp_spimm, zp_n, zp_adj, zp_count, zp_mem_k, zp_ret_align;
     logic [31:0] zp_pc, zp_sp, zp_mhpm10_before, prev_mhpm10 = 0; logic [4:0] zp_prev_reg; int unsigned n_zcmp = 0, n_zcmp_abandoned = 0;
@@ -103,7 +113,7 @@ package gen_fcov_pkg;
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_FCOV", "cfg not in uvm_config_db")
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     function int mul_rs_cls(logic [31:0] v);   // CG-MUL-001 cp_rs1_class / cp_rs2_class (same bin list)
@@ -504,6 +514,14 @@ package gen_fcov_pkg;
         default:  zp_kind = -1;
       endcase
       zp_rlist = int'(w[7:4]); zp_spimm = int'(w[3:2]);
+      zp_mv = mv_form(w);
+      if (zp_mv >= 0) begin   // the sources: a0 / a1 for cm.mvsa01, r1s' / r2s' for cm.mva01s; the neighbour facts come from the instruction before
+        logic [31:0] srcs;
+        mv_r1 = int'(w[9:7]); mv_r2 = int'(w[4:2]); mv_ok = 1;
+        srcs = (zp_mv == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01) ? (32'h1 << 10) | (32'h1 << 11) : (32'h1 << (8 + mv_r1)) | (32'h1 << (8 + mv_r2));
+        mv_hz = ((prev_wr & srcs) == 0) ? GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_NONE : prev_ld ? GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_LOAD_PREV : GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_ALU_PREV;
+        mv_prev = prev_mv;
+      end
       zp_n = (zp_rlist == 15) ? 13 : zp_rlist - 3;                                       // rlist 15 saves x27..x18, x9, x8, x1
       zp_adj = ((zp_rlist <= 7) ? 16 : (zp_rlist <= 11) ? 32 : (zp_rlist <= 14) ? 48 : 64) + zp_spimm * 16;   // zcmp.adoc stack_adj (RV32)
     endfunction
@@ -521,6 +539,21 @@ package gen_fcov_pkg;
       zp_count++;
       if (!t.ext_exp_last && t.pc_wdata != t.pc_rdata) zp_tags_ok = 0;   // intermediate micro-ops report their own pc (R9)
       if (t.insn[1:0] != 2'b11) zp_tags_ok = 0;                            // every micro-op word is the synthesized 32-bit one
+      if (zp_mv >= 0) begin   // a move micro-op: `addi dst, src, 0` with the register pair of its position
+        logic [4:0] want_rd, want_rs1; logic [4:0] sreg = 5'(8 + (zp_count == 1 ? mv_r1 : mv_r2)); logic [4:0] areg = (zp_count == 1) ? 5'd10 : 5'd11;
+        if (zp_mv == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01) begin want_rd = sreg; want_rs1 = areg; end else begin want_rd = areg; want_rs1 = sreg; end
+        if (t.insn[6:0] != ibex_pkg::OPCODE_OP_IMM || t.insn[14:12] != 3'b000 || t.insn[31:20] != 12'h0 || t.insn[11:7] != want_rd || t.insn[19:15] != want_rs1 || zp_count > 2) mv_ok = 0;
+        if (zp_count == 1) mv_src1 = t.rs1_rdata; else mv_src2 = t.rs1_rdata;
+        if (t.ext_exp_last) begin
+          mv_v[0] = zp_mv; mv_v[1] = mv_r1; mv_v[2] = mv_r2;
+          mv_v[3] = (mv_r1 == mv_r2) ? GEN_FC_CMP_ZCMP_MV_CP_EQUAL_YES : GEN_FC_CMP_ZCMP_MV_CP_EQUAL_NO;
+          mv_v[4] = (mv_src1 == mv_src2) ? GEN_FC_CMP_ZCMP_MV_CP_SRC_VALUES_SAME : GEN_FC_CMP_ZCMP_MV_CP_SRC_VALUES_DISTINCT;
+          mv_v[5] = (mv_prev >= 0 && mv_prev != zp_mv) ? mv_b2b(mv_prev, zp_mv) : GEN_FC_CMP_ZCMP_MV_CP_B2B_NONE;   // the neighbour after is checked at the flush
+          mv_v[6] = mv_hz;
+          mv_v[7] = (zp_count == 2 && mv_ok && zp_tags_ok) ? GEN_FC_CMP_ZCMP_MV_CP_UOP_COUNT_OK_YES : -1;
+          mv_pend = 1; cur_mv = zp_mv; n_mv++;
+        end
+      end
       if (gen_insn_mem_access(t.insn, is_st, bytes) && t.insn[19:15] == 5'd2) begin   // sp-based store (push) / load (pop*)
         if (!zp_sp_valid) begin zp_sp = t.rs1_rdata; zp_sp_valid = 1; end
         r = is_st ? t.insn[24:20] : t.insn[11:7];
@@ -548,12 +581,164 @@ package gen_fcov_pkg;
         zp_in = 0;
       end
     endfunction
+    // ---- CG-CMP-007 helpers: the move form of a Zcmp source word (-1 for the stack forms), the b2b bin of an ordered pair
+    function int mv_form(logic [15:0] w);
+      if (w[15:13] != 3'b101 || w[12:10] != 3'b011 || w[1:0] != 2'b10) return -1;
+      return (w[6:5] == 2'b01) ? GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01 : (w[6:5] == 2'b11) ? GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S : -1;
+    endfunction
+    function int mv_b2b(int first, int second);
+      return (first == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01) ? GEN_FC_CMP_ZCMP_MV_CP_B2B_MVSA01_THEN_MVA01S : GEN_FC_CMP_ZCMP_MV_CP_B2B_MVA01S_THEN_MVSA01;
+    endfunction
+    // the pending move pair samples once the following record is known: the other move form opening there is the b2b neighbour after
+    function void mv_flush(gen_rvfi_txn nxt);
+      if (!mv_pend) return;
+      if (nxt != null && mv_v[5] == GEN_FC_CMP_ZCMP_MV_CP_B2B_NONE && nxt.ext_exp_valid && !zp_in) begin
+        int k = mv_form(nxt.ext_exp_insn);
+        if (k >= 0 && k != mv_v[0]) mv_v[5] = mv_b2b(mv_v[0], k);
+      end
+      mv_cg.sample(mv_v[0], mv_v[1], mv_v[2], mv_v[3], mv_v[4], mv_v[5], mv_v[6], mv_v[7]);
+      mv_pend = 0;
+    endfunction
+
+    // ---- CG-ISA-007: the compare classes in plan precedence (the named operand pairs before equal and the sign-order classes)
+    function int br_cmp_cls(logic [31:0] a, logic [31:0] b);
+      if (a == 32'h8000_0000 && b == 32'h8000_0000) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_BOTH_MSB_EQ;
+      if (a == 32'h8000_0000 && b == 32'h0) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_INTMIN_ZERO;
+      if (a == 32'h0 && b == 32'h8000_0000) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ZERO_INTMIN;
+      if (a == 32'h0 && b == 32'hffff_ffff) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ZERO_ONES;
+      if (a == 32'hffff_ffff && b == 32'h0) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_ONES_ZERO;
+      if (a == b) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_EQUAL;
+      if ($signed(a) < $signed(b) && a > b) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_SLT_UGT;
+      if ($signed(a) > $signed(b) && a < b) return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_SGT_ULT;
+      return GEN_FC_ISA_BRANCH_CP_CMP_CLASS_RAND;
+    endfunction
+    function int br_off_cls(int imm, bit c16);
+      if (imm == 0) return GEN_FC_ISA_BRANCH_CP_OFFSET_SELF;
+      if (imm == (c16 ? 254 : 4094)) return GEN_FC_ISA_BRANCH_CP_OFFSET_MAX_FWD;
+      if (imm == (c16 ? -256 : -4096)) return GEN_FC_ISA_BRANCH_CP_OFFSET_MAX_BWD;
+      return (imm > 0) ? GEN_FC_ISA_BRANCH_CP_OFFSET_POS_RAND : GEN_FC_ISA_BRANCH_CP_OFFSET_NEG_RAND;
+    endfunction
+    // a BRANCH record (funct3 000 / 001 / 1xx) or c.beqz / c.bnez in its 16-bit form; taken = the next pc is not the sequential one
+    function bit br_sample(gen_rvfi_txn t);
+      int op, imm; bit c16, taken; logic [31:0] rs2, target; logic [32:0] sum;
+      if (t.insn[1:0] == 2'b11) begin
+        if (t.insn[6:0] != 7'b1100011 || t.insn[14:13] == 2'b01) return 0;
+        case (t.insn[14:12])
+          3'b000: op = GEN_FC_ISA_BRANCH_CP_OP_BEQ; 3'b001: op = GEN_FC_ISA_BRANCH_CP_OP_BNE;  3'b100: op = GEN_FC_ISA_BRANCH_CP_OP_BLT;
+          3'b101: op = GEN_FC_ISA_BRANCH_CP_OP_BGE; 3'b110: op = GEN_FC_ISA_BRANCH_CP_OP_BLTU; default: op = GEN_FC_ISA_BRANCH_CP_OP_BGEU;
+        endcase
+        imm = signed'({t.insn[31], t.insn[7], t.insn[30:25], t.insn[11:8], 1'b0});   // imm_b, 13 bits
+        c16 = 0; rs2 = t.rs2_rdata;
+      end else begin
+        if (t.insn[1:0] != 2'b01 || t.insn[15:14] != 2'b11) return 0;   // c.beqz 110, c.bnez 111
+        op = t.insn[13] ? GEN_FC_ISA_BRANCH_CP_OP_C_BNEZ : GEN_FC_ISA_BRANCH_CP_OP_C_BEQZ;
+        imm = signed'({t.insn[12], t.insn[6:5], t.insn[2], t.insn[11:10], t.insn[4:3], 1'b0});   // CB offset, 9 bits
+        c16 = 1; rs2 = 32'h0;   // the compare is against x0
+      end
+      taken = (t.pc_wdata != t.pc_rdata + (c16 ? 32'd2 : 32'd4));
+      target = t.pc_rdata + 32'(imm);
+      sum = {1'b0, t.pc_rdata} + {1'b0, 32'(imm)};   // the carry the target adder discards
+      n_br++;
+      br_cg.sample(op, taken ? GEN_FC_ISA_BRANCH_CP_TAKEN_YES : GEN_FC_ISA_BRANCH_CP_TAKEN_NO, br_cmp_cls(t.rs1_rdata, rs2), br_off_cls(imm, c16),
+                   target[1] ? GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_HALF : GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_WORD,
+                   taken ? (sum[32] ? GEN_FC_ISA_BRANCH_CP_WRAP_YES : GEN_FC_ISA_BRANCH_CP_WRAP_NO) : -1);
+      return 1;
+    endfunction
+
+    // ---- CG-CSR-002: the tracked CSRs in plan order and the bits Ibex lets a write change (mcounteren: bit 0 and 2..MHPMCounterNum+2)
+    function int csr_idx(logic [11:0] a);
+      case (a) 12'h300: return 0; 12'h301: return 1; 12'h304: return 2; 12'h305: return 3; 12'h306: return 4; 12'h310: return 5; 12'h30A: return 6; 12'h31A: return 7; default: return -1; endcase
+    endfunction
+    function logic [31:0] csr_wmask(int i);
+      case (i)
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MSTATUS:    return 32'h0022_1888;   // MIE, MPIE, MPP, MPRV, TW
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MIE:        return 32'h7FFF_0888;   // software, timer, external, fast 16..30
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MTVEC:      return 32'hFFFF_FF00;
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MCOUNTEREN: return 32'h1 | (((32'h1 << (GEN_MHPM_COUNTER_NUM + 3)) - 1) & ~32'h3);
+        default:                                      return 32'h0;
+      endcase
+    endfunction
+    function int mie_w_cls(logic [31:0] v);
+      logic [31:0] std = v & 32'h0000_0888, fast = v & 32'h7FFF_0000;
+      if (fast == 32'h7FFF_0000) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_ALL_FAST;
+      if (std != 0 && fast != 0) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_STD_FAST;
+      if (std != 0) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_STD_ONLY;
+      if (fast != 0) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_FAST_ONLY;
+      return (v != 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MIE_W_RO_ONLY : -1;
+    endfunction
+    function int mcen_w_cls(logic [31:0] v);
+      logic [31:0] low = v & ((32'h1 << (GEN_MHPM_COUNTER_NUM + 3)) - 1);
+      if (v == 32'hffff_ffff) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_ALL1;
+      if (low != 0 && (low & (low - 1)) == 0 && low == v) begin   // exactly one bit, in the counter field
+        if (low == 32'h1) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_CY;
+        if (low == 32'h2) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_TM_RO;
+        if (low == 32'h4) return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_IR;
+        return GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HPM3 + ($clog2(low) - 3);
+      end
+      return (v != 0 && low == 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_W_HI_RO : -1;   // only bits above the counter field
+    endfunction
+    // the pair closes on the read-back: the write operand classifies cp_wpat, the effective written value the field coverpoints
+    function void csr_pair_sample(int i);
+      int wpat, mpp = -1, mie_b = -1, mpie_b = -1, mprv_b = -1, tw_b = -1, tmode = -1, tlo = -1, tbase = -1, miew = -1, gate = -1, mcw = -1;
+      logic [31:0] v = csr_eff[i], w = csr_wval[i], mask = csr_wmask(i);
+      wpat = (w == 32'h0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ALL0 : (w == 32'hffff_ffff) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ALL1 :
+             (w == 32'h8000_0000) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_MSB_ONLY : ((w & ~mask) == 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_LEGAL_ONLY :
+             ((w & mask) == 0 && mask != 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_ILLEGAL_ONLY : GEN_FC_CSR_TRAP_SETUP_WARL_CP_WPAT_RAND;   // a CSR without writable bits has no illegal-only class: mixed patterns are rand
+      if (csr_eff_ok[i]) case (i)
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MSTATUS: begin mpp = int'(v[12:11]); mie_b = int'(v[3]); mpie_b = int'(v[7]); mprv_b = int'(v[17]); tw_b = int'(v[21]); end
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MTVEC: begin
+          tmode = int'(v[1:0]); tlo = (v[7:2] != 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_LO_W_NONZERO : GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_LO_W_ZERO;
+          tbase = (v[31:8] == cfg.boot_addr[31:8]) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_BOOT_PAGE : (v < 32'h1000) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_LOW :
+                  v[31] ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_HIGH : GEN_FC_CSR_TRAP_SETUP_WARL_CP_MTVEC_BASE_W_RAND;
+        end
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MIE: miew = mie_w_cls(v);
+        GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MCOUNTEREN: mcw = mcen_w_cls(v);
+        default: ;
+      endcase
+      if (i == GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MCOUNTEREN)
+        gate = (cfg.knob_mcounteren_writable == "on") ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_ON : (cfg.knob_mcounteren_writable == "off") ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_OFF : GEN_FC_CSR_TRAP_SETUP_WARL_CP_MCEN_GATE_INVALID;
+      n_csr_pairs++;
+      csr_cg.sample(i, csr_op[i], wpat, (csr_rd[i] == 0) ? GEN_FC_CSR_TRAP_SETUP_WARL_CP_RD_X0 : GEN_FC_CSR_TRAP_SETUP_WARL_CP_RD_NONX0,
+                    mpp, mie_b, mpie_b, mprv_b, tw_b, tmode, tlo, tbase, miew, gate, mcw);
+      csr_pend[i] = 0;
+    endfunction
+    // a CSR-op record on a tracked CSR: rd != x0 returns the standing value (closes an open pair, refreshes the shadow); a write opens a pair
+    function bit csr_track(gen_rvfi_txn t);
+      int i; logic [2:0] f3 = t.insn[14:12]; logic [31:0] src, old; bit old_ok, is_write;
+      if (t.insn[6:0] != 7'b1110011 || f3 == 3'b000 || f3 == 3'b100) return 0;
+      i = csr_idx(t.insn[31:20]);
+      if (i < 0) return 0;
+      src = f3[2] ? 32'(t.insn[19:15]) : t.rs1_rdata;
+      is_write = (f3[1:0] == 2'b01) || (t.insn[19:15] != 5'd0);   // csrrs / csrrc with rs1 = x0 (uimm 0) are reads (the decoder demotes them)
+      if (t.rd_addr != 0) begin
+        if (csr_pend[i]) csr_pair_sample(i);
+        csr_shadow[i] = t.rd_wdata; csr_shadow_ok[i] = 1;
+      end
+      if (is_write) begin
+        if (csr_pend[i]) n_csr_replaced++;   // a second write with rd = x0 before any read-back: the first pair never closes
+        old = (t.rd_addr != 0) ? t.rd_wdata : csr_shadow[i]; old_ok = (t.rd_addr != 0) || csr_shadow_ok[i];
+        csr_pend[i] = 1; csr_op[i] = int'(f3[1:0]) - 1 + (f3[2] ? 3 : 0); csr_rd[i] = int'(t.rd_addr); csr_wval[i] = src;
+        case (f3[1:0])
+          2'b01:   begin csr_eff[i] = src;        csr_eff_ok[i] = 1; end
+          2'b10:   begin csr_eff[i] = old | src;  csr_eff_ok[i] = old_ok; end
+          default: begin csr_eff[i] = old & ~src; csr_eff_ok[i] = old_ok; end
+        endcase
+        csr_shadow_ok[i] = 0;   // the standing value is now the legalised write, known only from the next read-back
+        n_csr_wr++;
+      end
+      return 1;
+    endfunction
     function void write(gen_rvfi_txn t);
       logic [6:0] f7 = t.insn[31:25]; logic [2:0] f3 = t.insn[14:12];
       bit is_op = (t.insn[6:0] == ibex_pkg::OPCODE_OP), is_opimm = (t.insn[6:0] == ibex_pkg::OPCODE_OP_IMM);
       bit is_cmul = (t.insn[1:0] == 2'b01 && t.insn[15:10] == 6'b100111 && t.insn[6:5] == 2'b10);   // c.mul (Zcb)
       if (mul_cg == null) return;
+      mv_flush(t);
       zca_flush(t);
+      // an instruction boundary (a plain record, or the first micro-op of an expansion) closes the write set of the instruction before
+      if (!t.ext_exp_valid || !zp_in || t.pc_rdata != zp_pc) begin prev_wr = cur_wr; prev_ld = cur_ld; prev_mv = cur_mv; cur_wr = '0; cur_ld = 0; cur_mv = -1; end
+      if (!t.trap && t.rd_addr != 0) cur_wr[t.rd_addr] = 1'b1;
+      begin bit st; int unsigned nb; if (gen_insn_mem_access(t.insn, st, nb) && !st) cur_ld = 1; end   // decoded: Ibex reports rvfi_mem_rmask for non-memory records too
       if (t.ext_exp_valid) begin   // a Zcmp micro-op record: the sequence collector owns it
         if (zp_in && t.pc_rdata != zp_pc) n_zcmp_abandoned++;   // a sequence replaced by another one's first micro-op (an entry split it)
         if (!zp_in || t.pc_rdata != zp_pc) zp_start(t);
@@ -574,6 +759,7 @@ package gen_fcov_pkg;
         n_zca32++;
         zca_cg.sample(-1, -1, -1, -1, t.pc_rdata[1] ? GEN_FC_CMP_ZCA_CP_INSN32_STRADDLE_YES : GEN_FC_CMP_ZCA_CP_INSN32_STRADDLE_NO, -1, -1);
       end
+      if (!t.ext_exp_valid && (br_sample(t) || csr_track(t))) return;
       if (is_opimm && f3 == 3'b001 && t.insn[31:20] inside {12'h600, 12'h601, 12'h602}) begin
         int op = (t.insn[31:20] == 12'h600) ? GEN_FC_BIT_COUNT_CP_OP_CLZ : (t.insn[31:20] == 12'h601) ? GEN_FC_BIT_COUNT_CP_OP_CTZ : GEN_FC_BIT_COUNT_CP_OP_CPOP;
         n_cnt++;
@@ -625,7 +811,8 @@ package gen_fcov_pkg;
     endfunction
     function void report_phase(uvm_phase phase);
       zca_flush(null);   // the last 16-bit record has no successor: its next_len is not applicable
-      `uvm_info("GEN_FCOV", $sformatf("isa samples: mul=%0d div=%0d alu_reg=%0d zba_zbb=%0d alu_imm=%0d shift=%0d bit_count=%0d zca=%0d zca32=%0d zcmp=%0d (abandoned %0d)%s", n_mul, n_div, n_alu, n_bit, n_imm, n_sh, n_cnt, n_zca, n_zca32, n_zcmp, n_zcmp_abandoned, mul_cg == null ? " (covergroups off)" : ""), UVM_LOW)
+      mv_flush(null);    // a move pair at the very end has no neighbour after
+      `uvm_info("GEN_FCOV", $sformatf("isa samples: mul=%0d div=%0d alu_reg=%0d zba_zbb=%0d alu_imm=%0d shift=%0d bit_count=%0d zca=%0d zca32=%0d zcmp=%0d (abandoned %0d) zcmp_mv=%0d branch=%0d csr_pairs=%0d (writes %0d, replaced %0d)%s", n_mul, n_div, n_alu, n_bit, n_imm, n_sh, n_cnt, n_zca, n_zca32, n_zcmp, n_zcmp_abandoned, n_mv, n_br, n_csr_pairs, n_csr_wr, n_csr_replaced, mul_cg == null ? " (covergroups off)" : ""), UVM_LOW)
     endfunction
   endclass
 endpackage

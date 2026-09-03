@@ -92,3 +92,51 @@ one red per slice and one sampler mutant. Logs: dv/auto_dv/evidence/gen_tdd_logs
 - Landed sources: build k 893384b8eec4e6d5 (the slt fix, the opcode enums, the abandoned-sequence count, the yaml derivation of the drain
   window): every proof run re-done on it (bitcnt, zca, zcmp under four regimes, zcmp_mis, zcmp_dummy red, muldiv, alu, zcmp_irq_sparse)
   and the five proof manifests PASS (gen_fu_l4_k_driver.log).
+
+## 3. Slice 3: gen_cmp_zcmp_mv_cg, gen_csr_trap_setup_warl_cg, gen_isa_branch_cg
+
+Ranks 8, 9 and 10 of evidence/gen_round0_covergroup_set.md. Anchors: rtl-arch gen_cg_sampling_anchors.md sections 8-10. Builds: l
+(2935ce47b627e0d5, the first green set) and m (86c7caf1d034cdec, the landed sources: the load decode of the hazard tracker, the
+mtvec patterns, `option.cross_auto_bin_max = 0`); the retained logs are the build-m runs (gen_tdd_logs/fcov/gen_fu_l5_*).
+
+- Renderer: the plan's cross lines for CG-CSR-002 name their tuples space-separated (`mstatus_csrrw{mstatus csrrw}`) and by bit value
+  (`all0{0 0 0 0}` over four 1-bit coverpoints); the tuple parser now splits on commas or spaces and maps a value part to the `b<value>`
+  bin (unit-test cases added, GEN_UT_FCOV_CODEGEN PASS). Red first: with the three ids in IMPLEMENTED the renderer refused
+  `CG-CSR-002.cr_csr_wpat.misa_illegal: does not split` (comma-only tuples) and then `cr_mst_fields.all0` (value tuples) before the fix.
+  Rendered: 12 covergroups, 619 coverpoint bins, 2501 cross bins (the three groups: 28 / 180, 29 / 134, 67 / 143).
+- Automatic cross bins: the build-l reports showed bracketed auto bins beside the named ones (`[c_bnez]_[yes]_[equal]`, the tuples the
+  plan ignores; 52 of them in the slice-1 report too), because a cross with user bins still auto-creates bins for the remaining tuples.
+  `option.cross_auto_bin_max = 0` in every rendered group removes them: 0 bracketed bins in every build-m report, the earlier five
+  proof manifests still PASS on build m (128 / 122 / 52 / 46 / 38 bins: gen_fu_l5_slice1_check.log ... slice2c).
+- Programs (all lock-step PASS on build m, 0 UVM_ERROR): gen_branch_directed.S (218 branch samples: 6 ops x 10 operand pairs x
+  forward / backward / half-aligned, c.beqz / c.bnez x 5 values x 3 forms, the four maximal offsets), gen_zcmp_mv_directed.S (130 move
+  pairs: every cm.mva01s pair, every legal cm.mvsa01 pair, back to back both ways, load / ALU writers), gen_csr_warl_directed.S (214
+  write / read-back pairs, 0 replaced; the same program under +gen_knob_mcounteren_writable=off and =invalid). Red first for the branch
+  program: build l counted 26 of 28 coverpoint bins; `cp_offset.max_fwd` was unhit because the assembler had widened the four
+  maximal forward branches (beq / bne +4094 emitted as `bne + jal`, c.beqz / c.bnez +254 as 32-bit branches at +256), and
+  `cr_op_align.c_bnez_word` because `.balign 4` under `.option norvc` cannot pad by two bytes and left the code misaligned; the program
+  now emits the maximal branches as raw words (`.word 0x7e628fe3`, `.2byte 0xcc7d`), aligns with rvc enabled for the directive and
+  runs with `.option norelax` (the disassembly checked: every 32-bit branch at a word address, targets +6 half / +8 word / -4 word for
+  the CB forms, offsets 4094 / -4096 / 254 / -256 present). Red first for the move program: `cp_hazard_src.alu_prev` was unhit on
+  build l because the tracker took rvfi_mem_rmask != 0 as "the previous instruction was a load", and Ibex reports a non-zero rmask on
+  non-memory records too (the B8 export shows `csrs` with rmask f); the tracker now decodes the instruction (gen_insn_mem_access).
+  Red first for the CSR program: `cr_mtvec_mode_lo.v01_nz` and `cr_mtvec_base_op.high_csrrs` were unhit (no pattern with mode 01 and
+  a non-zero [7:2]; `csrrs 0x80000000` from 0 lands on the boot page, not `high`); patterns 0x80000105 and `csrrs 0x90000000` added.
+- Proofs (gen_fu_l5_*_check.log, each on the run's own fresh vdb): gen_fcov_proof_slice3a.fcov.yaml PASS 27 bins (every coverpoint bin
+  but cp_offset.self); slice3b PASS 29 bins (every coverpoint bin); slice3c PASS 65 bins, slice3c_off and slice3c_inv PASS 65 each
+  (cp_mcen_gate.off / .invalid in place of .on). Cross coverage from urg's per-cross summaries: gen_isa_branch_cg 140 / 180 (the 40
+  unhit are the 16 `self` tuples and the maximal offsets of the six ops not exercised at the limit: only beq / bne / c.beqz / c.bnez
+  branch by +-max), gen_cmp_zcmp_mv_cg 133 / 134 (cm_mvsa01_yes, below), gen_csr_trap_setup_warl_cg 137 / 143 in the On run
+  (misa_legal / misa_illegal unreachable by construction; the four off / invalid gate tuples hit in the other two runs: 2 / 11 each).
+- FINDING (B4, zcmp.adoc norm:cm-mvsa01_res): gen_zcmp_mv_reserved_directed.S executes one cm.mvsa01 with r1s' == r2s'. Ibex retires
+  two moves into s0 (the record shows rd = x8 written with a1's value), the Spike model raises an illegal instruction (tools/riscv-isa-sim/
+  riscv/insns/cm_mvsa01.h `require(insn.rvc_r1sc() != insn.rvc_r2sc())`), and the comparator flags the record (`isa_trap dut retired,
+  model retired 0 trap=1 cause=00000002 tval=0000ac22`, then isa_rd / isa_pc_next; 32 UVM_ERROR rows, the model's pc parked at the
+  handler). Retained gen_fu_l5_lockstep_zcmp_mv_res_* (verdict, header, excerpt, export). The promoted manifest gen_test_cmp_zcmp_basic
+  declares cr_insn_equal.cm_mvsa01_yes, which no lock-step run can hit; reported to the Orchestrator 19:56Z. Ruling B4-R1 (DV Lead,
+  gen_bug_log.md): the bin is TP-CMP-051's alone (an expected-fail test of its own), leaves the pass test's manifest with the Test
+  Writer's re-render, and the TB does not adopt the RTL behaviour as its reference (a shim override refused, comparators-off refused).
+- Sampler mutants (gen_mut_fcov.md): FM5 (c.bnez sampled as c.beqz), FM6 (the writer before a move never seen), FM7 (the immediate CSR
+  forms sampled as the register forms), each built from the landed sampler and caught by the checker on the slice's proof manifest
+  with the run itself passing (1, 2 and 3 unhit bins named).
+- Testlist entries for Runtime: dv/auto_dv/work/tb-infra/gen_l5_testlist_entries.yaml (the three lock-step runs and the B4 red as expected_fail).

@@ -1,0 +1,23 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+FM5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM5/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 17e8e582968cb01e
+FM5_catch_branch: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM5: build sources sha256: 2cb6a03469ac6095; source tree untouched: 7927a36ea2e6e470
+FM5: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_isa_branch_cg.cp_op.c_bnez
+FM6 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM6/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 17e8e582968cb01e
+FM6_catch_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM6: build sources sha256: e176689e283cf2c5; source tree untouched: 7927a36ea2e6e470
+FM6: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev
+FM7 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM7/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 17e8e582968cb01e
+FM7_catch_csrwarl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM7: build sources sha256: 7e0af12158aef8e9; source tree untouched: 7927a36ea2e6e470
+FM7: checker FCOV-EXPECTATION: FAIL - 3 declared bin(s) not hit: gen_csr_trap_setup_warl_cg.cp_op.csrrci, gen_csr_trap_setup_warl_cg.cp_op.csrrsi, gen_csr_trap_setup_warl_cg.cp_op.csrrwi

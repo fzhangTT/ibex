@@ -1,0 +1,31 @@
+# gen_fcov_proof_slice3a.fcov.yaml: fcov-expectation proof of T-205 slice 3 (gen_isa_branch_cg): every coverpoint bin the lock-step run of gen_branch_directed.S hits (cp_offset.self excluded: a taken self-branch never ends without an interrupt and no promoted manifest declares it), checked by ci/check_fcov_expectations.py on the run's urg report (gen_tdd_logs/fcov/gen_fu_l5_*).
+test: gen_fcov_proof_slice3a
+owner: tb-infra
+bins:
+  - gen_isa_branch_cg.cp_op.c_bnez
+  - gen_isa_branch_cg.cp_op.c_beqz
+  - gen_isa_branch_cg.cp_op.bgeu
+  - gen_isa_branch_cg.cp_op.bltu
+  - gen_isa_branch_cg.cp_op.bge
+  - gen_isa_branch_cg.cp_op.blt
+  - gen_isa_branch_cg.cp_op.bne
+  - gen_isa_branch_cg.cp_op.beq
+  - gen_isa_branch_cg.cp_taken.yes
+  - gen_isa_branch_cg.cp_taken.no
+  - gen_isa_branch_cg.cp_cmp_class.rand
+  - gen_isa_branch_cg.cp_cmp_class.sgt_ult
+  - gen_isa_branch_cg.cp_cmp_class.slt_ugt
+  - gen_isa_branch_cg.cp_cmp_class.both_msb_eq
+  - gen_isa_branch_cg.cp_cmp_class.ones_zero
+  - gen_isa_branch_cg.cp_cmp_class.zero_ones
+  - gen_isa_branch_cg.cp_cmp_class.zero_intmin
+  - gen_isa_branch_cg.cp_cmp_class.intmin_zero
+  - gen_isa_branch_cg.cp_cmp_class.equal
+  - gen_isa_branch_cg.cp_offset.neg_rand
+  - gen_isa_branch_cg.cp_offset.pos_rand
+  - gen_isa_branch_cg.cp_offset.max_bwd
+  - gen_isa_branch_cg.cp_offset.max_fwd
+  - gen_isa_branch_cg.cp_target_align.half
+  - gen_isa_branch_cg.cp_target_align.word
+  - gen_isa_branch_cg.cp_wrap.yes
+  - gen_isa_branch_cg.cp_wrap.no

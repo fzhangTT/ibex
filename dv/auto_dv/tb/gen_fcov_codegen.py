@@ -24,7 +24,8 @@ REL_CSV = "dv/auto_dv/docs/gen_trace_tp_bin.csv"
 REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
-IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006")
+IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
+               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007")
 
 
 def die(msg):
@@ -70,10 +71,11 @@ def load_plan(root):
         m = re.match(r"^\s+- (cr_[a-z0-9_]+) = ((?:cp_[a-z0-9_]+\s*x\s*)+cp_[a-z0-9_]+)\s*:\s*bins (.*)$", line)
         if m:
             comps = [c.strip() for c in re.split(r"\s+x\s+", m.group(2))]
-            # explicit cross bins name the component tuple in braces: `div_intmin_m1{div, int_min, all_ones}`; `auto{...}` names none
+            # explicit cross bins name the component tuple in braces, comma- or space-separated: `div_intmin_m1{div, int_min,
+            # all_ones}`, `mstatus_csrrw{mstatus csrrw}`; `auto{...}` names none
             explicit = {}
             for name, inside in re.findall(r"([a-z0-9_]+)\{([^}]*)\}", m.group(3)):
-                parts = [x.strip() for x in inside.split(",")]
+                parts = [x for x in re.split(r"[,\s]+", inside.strip()) if x]
                 if name != "auto" and len(parts) == len(comps) and all(re.fullmatch(r"[a-z0-9_]+", x) for x in parts):
                     explicit[name] = parts
             cur["crosses"][m.group(1)] = {"comps": comps, "explicit": explicit}
@@ -145,6 +147,7 @@ def render(root):
         args = ", ".join(f"int v_{cp}" for cp in cps)
         L.append(f"  covergroup {sv} with function sample({args});")
         L.append("    option.per_instance = 0;")
+        L.append("    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples")
         for cp in cps:
             body = " ".join(f"bins {sv_bin(b)}= {{{i}}};" for i, b in enumerate(order[cp]))
             L.append(f"    {cp}: coverpoint v_{cp} {{ {body} ignore_bins na = {{-1}}; }}")
@@ -158,6 +161,9 @@ def render(root):
             L.append(f"    {cr}: cross {', '.join(comps)} {{")
             for b in cb[cr]:
                 parts = explicit.get(b) or split_cross_bin(b, [order[c] for c in comps])
+                # a tuple may name a 1-bit coverpoint's value (`all0{0 0 0 0}`): the bin of value v is b<v>
+                if parts is not None:
+                    parts = [p if p in order[c] or f"b{p}" not in order[c] else f"b{p}" for c, p in zip(comps, parts)]
                 if parts is None or any(p not in order[c] for c, p in zip(comps, parts)):
                     die(f"{cg}.{cr}.{b}: does not split into bins of {comps}")
                 L.append(f"      bins {sv_bin(b)}= " + " && ".join(f"binsof({c}.{sv_bin(p)})" for c, p in zip(comps, parts)) + ";")

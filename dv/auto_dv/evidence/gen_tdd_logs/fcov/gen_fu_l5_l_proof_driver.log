@@ -1,0 +1,26 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+lockstep_branch: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 19:52:25Z
+urg lockstep_branch exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 19:52:31Z
+urg lockstep_zcmp_mv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 19:52:37Z
+urg lockstep_csrwarl exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl_off: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 19:52:43Z
+urg lockstep_csrwarl_off exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl_inv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 19:52:51Z
+urg lockstep_csrwarl_inv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 

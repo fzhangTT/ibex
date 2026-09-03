@@ -1,0 +1,33 @@
+# gen_fcov_proof_slice3b.fcov.yaml: fcov-expectation proof of T-205 slice 3 (gen_cmp_zcmp_mv_cg): every coverpoint bin, hit by one lock-step run of gen_zcmp_mv_directed.S and checked by ci/check_fcov_expectations.py on the run's urg report (gen_tdd_logs/fcov/gen_fu_l5_*); the cross tuple cm_mvsa01 x equal.yes is the reserved encoding Spike refuses (B4) and is not declared.
+test: gen_fcov_proof_slice3b
+owner: tb-infra
+bins:
+  - gen_cmp_zcmp_mv_cg.cp_insn.cm_mva01s
+  - gen_cmp_zcmp_mv_cg.cp_insn.cm_mvsa01
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s7
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s6
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s5
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s4
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s3
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s2
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s1
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s0
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s7
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s6
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s5
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s4
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s3
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s2
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s1
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s0
+  - gen_cmp_zcmp_mv_cg.cp_equal.yes
+  - gen_cmp_zcmp_mv_cg.cp_equal.no
+  - gen_cmp_zcmp_mv_cg.cp_src_values.same
+  - gen_cmp_zcmp_mv_cg.cp_src_values.distinct
+  - gen_cmp_zcmp_mv_cg.cp_b2b.none
+  - gen_cmp_zcmp_mv_cg.cp_b2b.mva01s_then_mvsa01
+  - gen_cmp_zcmp_mv_cg.cp_b2b.mvsa01_then_mva01s
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.none
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev
+  - gen_cmp_zcmp_mv_cg.cp_uop_count_ok.yes
