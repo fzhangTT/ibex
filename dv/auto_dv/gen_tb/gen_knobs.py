@@ -187,6 +187,32 @@ KNOB_IDS = {  # regime knob -> REGIME_SET arg0; value index = position in PLUSAR
     "knob_pmp_regime": 19,
 }
 
+KNOB_CONSUMER = {  # regime knob -> yaml regime_set_consumer (bus, irq, dbg, scrkey, none, program)
+    "knob_imem_gnt_delay": "bus",
+    "knob_imem_rvalid_delay": "bus",
+    "knob_imem_err_rate": "bus",
+    "knob_imem_intg_err_rate": "bus",
+    "knob_imem_outstanding_cap": "bus",
+    "knob_dmem_gnt_delay": "bus",
+    "knob_dmem_rvalid_delay": "bus",
+    "knob_dmem_err_rate": "bus",
+    "knob_dmem_intg_err_rate": "bus",
+    "knob_irq_regime": "irq",
+    "knob_irq_line_mix": "irq",
+    "knob_irq_hold": "irq",
+    "knob_debug_req_regime": "dbg",
+    "knob_scr_key_delay": "scrkey",
+    "knob_icache_ecc_err_rate": "none",
+    "knob_fetch_enable_regime": "none",
+    "knob_mcounteren_writable": "none",
+    "knob_instr_mix": "program",
+    "knob_priv_regime": "program",
+    "knob_pmp_regime": "program",
+}
+
+# knobs the SV dispatcher consumes at run time (REGIME_SET); the test library's CONSUMED_KNOBS reads this
+REGIME_SET_CONSUMED = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_err_rate", "knob_imem_intg_err_rate", "knob_imem_outstanding_cap", "knob_dmem_gnt_delay", "knob_dmem_rvalid_delay", "knob_dmem_err_rate", "knob_dmem_intg_err_rate", "knob_irq_regime", "knob_irq_line_mix", "knob_irq_hold", "knob_debug_req_regime", "knob_scr_key_delay",)
+
 CMD = {  # bridge command kinds (cmd_kind codes)
     "IRQ_SET": 1,
     "IRQ_CLR": 2,

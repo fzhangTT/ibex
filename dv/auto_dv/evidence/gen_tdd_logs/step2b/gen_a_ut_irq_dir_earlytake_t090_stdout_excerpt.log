@@ -1,0 +1,13 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/a/ut_irq_dir/stdout.log (config banner, first checker or comparator lines, component reports, UVM counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 1508500 sb [isa_trap] dut retired, model retired 0 trap=1 cause=80000013 tval=00000000 (order=302 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000092 mem=00000092 w0000 r1111 mode=3 cyc=1503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 1508500 sb [isa_rd] dut wrote x5/00000092, model wrote nothing (order=302 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000092 mem=00000092 w0000 r1111 mode=3 cyc=1503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 1508500 sb [isa_pc_next] pc_next model=8000024c dut=8000011c (order=302 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000092 mem=00000092 w0000 r1111 mode=3 cyc=1503)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 1511500 sb [isa_pc] pc model=8000024c dut=8000011c (order=303 pc=8000011c insn=0000bffd trap=0 intr=0 rd=x0/00000000 mem=8000011e w0000 r1111 mode=3 cyc=1506)
+ 15005.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line fast3 mask 0x00040 taken=True at cycle 1495
+ 18195.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line external mask 0x00004 taken=True at cycle 1814
+ 21245.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line software mask 0x00001 taken=True at cycle 2119
+ 24345.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line timer mask 0x00002 taken=True at cycle 2429
+ 27445.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line fast14+fast0 mask 0x20008 taken=True at cycle 2739
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                   30445.01           0.19     161578.06  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

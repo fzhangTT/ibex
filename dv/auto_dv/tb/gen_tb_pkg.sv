@@ -331,6 +331,38 @@ package gen_tb_pkg;
       default: return "";
     endcase
   endfunction
+  // REGIME_SET consumer per knob (yaml regime_set_consumer): the dispatcher refuses a knob without a run-time consumer.
+  function automatic string gen_knob_consumer(int id);
+    case (id)
+      0: return "bus";
+      1: return "bus";
+      2: return "bus";
+      3: return "bus";
+      4: return "bus";
+      5: return "bus";
+      6: return "bus";
+      7: return "bus";
+      8: return "bus";
+      9: return "irq";
+      10: return "irq";
+      11: return "irq";
+      12: return "dbg";
+      13: return "scrkey";
+      14: return "none";
+      15: return "none";
+      16: return "none";
+      17: return "program";
+      18: return "program";
+      19: return "program";
+      default: return "";
+    endcase
+  endfunction
+  function automatic bit gen_knob_regime_set_consumed(int id);
+    case (id)
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13: return 1'b1;
+      default: return 1'b0;
+    endcase
+  endfunction
   function automatic string gen_knob_value(int id, int idx);
     case (id)
       0: case (idx) 0: return "same_cycle"; 1: return "short"; 2: return "long"; 3: return "random"; default: return ""; endcase
@@ -396,6 +428,16 @@ package gen_tb_pkg;
   endfunction
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)
   // GEN_KNOBS_END
+  // ICache RAM model announcements (C3.4): the RAM models push injected-error lookups here; gen_misc_monitor consumes them
+  // as the expected-alert feed and the export's icram rows (T-080 step 3) read the same queue. No injection exists yet.
+  class gen_icram_events;
+    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; } evt_t;
+    static evt_t q [$];
+    static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind);
+      q.push_back('{cycle, way, index, kind});
+      while (q.size() > 256) void'(q.pop_front());
+    endfunction
+  endclass
 
   // Every time-0 banner line starts with this tag so a log scanner can grep one token.
   parameter string GEN_BANNER_TAG = "GEN_CONFIG_BANNER";

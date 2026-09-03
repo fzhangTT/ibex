@@ -1,0 +1,8 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/a/lockstep_s7_dbg_storm/stdout.log (config banner, first checker or comparator lines, component reports, UVM counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 9780500 sb [isa_pc] pc model=800025b6 dut=1a110800 (order=1868 pc=1a110800 insn=00c0006f trap=0 intr=0 rd=x0/00000000 mem=1a110804 w0000 r1111 mode=3 cyc=9775)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 9780500 sb [isa_insn] insn model=0000bfe5 dut=00c0006f (order=1868 pc=1a110800 insn=00c0006f trap=0 intr=0 rd=x0/00000000 mem=1a110804 w0000 r1111 mode=3 cyc=9775)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 9780500 sb [isa_pc_next] pc_next model=800025ae dut=1a11080c (order=1868 pc=1a110800 insn=00c0006f trap=0 intr=0 rd=x0/00000000 mem=1a110804 w0000 r1111 mode=3 cyc=9775)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 9788500 sb [isa_pc] pc model=800025ae dut=1a11080c (order=1869 pc=1a11080c insn=7b200073 trap=0 intr=0 rd=x0/00000000 mem=fffff84e w0000 r1111 mode=3 cyc=9783)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            109325.01           0.50     220533.20  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

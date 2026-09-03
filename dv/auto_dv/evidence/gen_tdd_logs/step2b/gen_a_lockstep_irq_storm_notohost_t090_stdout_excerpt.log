@@ -1,0 +1,8 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/a/lockstep_irq_storm/stdout.log (config banner, first checker or comparator lines, component reports, UVM counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 123500 sb [isa_trap] dut retired, model retired 0 trap=1 cause=80000013 tval=00000000 (order=10 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000000 mem=00000000 w0000 r1111 mode=3 cyc=118)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 123500 sb [isa_rd] dut wrote x5/00000000, model wrote nothing (order=10 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000000 mem=00000000 w0000 r1111 mode=3 cyc=118)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 123500 sb [isa_pc_next] pc_next model=8000024c dut=8000011c (order=10 pc=8000011a insn=00000285 trap=0 intr=0 rd=x5/00000000 mem=00000000 w0000 r1111 mode=3 cyc=118)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 135500 sb [isa_trap] interrupt entry expected, model retired 1 cause 00000000 (order=11 pc=80000254 insn=30200073 trap=0 intr=1 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=130)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            408135.01           1.40     292087.52  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

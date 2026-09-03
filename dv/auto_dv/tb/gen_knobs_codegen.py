@@ -38,7 +38,7 @@ SCHEMA = {
     "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map",
             "export_record_fields", "export_counter_fields", "export_events"},
     "export_event": {"source", "event", "fields"},
-    "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc"},
+    "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc", "regime_set_consumer"},
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
     "memory_map": {"boot_addr_default", "boot_page_mask", "boot_reset_offset", "mmio_base", "mmio_size", "registers"},
     "register": {"offset", "size"},
@@ -54,6 +54,9 @@ WINDOW_KNOBS = {
 RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
 DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask", "csr_marchid_value", "csr_addr_cpuctrlsts",
                "csr_addr_secureseed"}
+# REGIME_SET consumers a knob may name; the first four are run-time consumers in the SV dispatcher
+KNOB_CONSUMERS = {"bus", "irq", "dbg", "scrkey", "none", "program"}
+RUNTIME_CONSUMERS = {"bus", "irq", "dbg", "scrkey"}
 
 
 def die(msg):
@@ -155,6 +158,12 @@ def load(src_path=SRC):
             p["default"] = str(p["default"])
         elif "values" in p:
             die(f"{where}: values only on enum knobs")
+    for p in src["plusargs"]:
+        if p["kind"] == "enum" and p["name"].startswith("knob_"):
+            if p.get("regime_set_consumer") not in KNOB_CONSUMERS:
+                die(f"plusarg {p['name']}: regime_set_consumer must be one of {sorted(KNOB_CONSUMERS)}")
+        elif "regime_set_consumer" in p:
+            die(f"plusarg {p['name']}: regime_set_consumer is for enum knob_* entries only")
     for c in src["constants"]:
         where = f"constant {c.get('name', '?')}"
         check_keys(c, SCHEMA["constant"], where)
@@ -412,6 +421,21 @@ def render_sv_region(src, mm, cvals):
     L.append('      default: return "";')
     L.append("    endcase")
     L.append("  endfunction")
+    L.append("  // REGIME_SET consumer per knob (yaml regime_set_consumer): the dispatcher refuses a knob without a run-time consumer.")
+    L.append("  function automatic string gen_knob_consumer(int id);")
+    L.append("    case (id)")
+    for i, p in enumerate(knobs):
+        L.append(f'      {i}: return "{p["regime_set_consumer"]}";')
+    L.append('      default: return "";')
+    L.append("    endcase")
+    L.append("  endfunction")
+    L.append("  function automatic bit gen_knob_regime_set_consumed(int id);")
+    L.append("    case (id)")
+    consumed = [i for i, p in enumerate(knobs) if p["regime_set_consumer"] in RUNTIME_CONSUMERS]
+    L.append("      " + ", ".join(str(i) for i in consumed) + ": return 1'b1;")
+    L.append("      default: return 1'b0;")
+    L.append("    endcase")
+    L.append("  endfunction")
     L.append("  function automatic string gen_knob_value(int id, int idx);")
     L.append("    case (id)")
     for i, p in enumerate(knobs):
@@ -491,6 +515,14 @@ def render_py(src, mm, cvals):
     for i, p in enumerate([q for q in src["plusargs"] if q["kind"] == "enum" and q["name"].startswith("knob_")]):
         L.append(f'    "{p["name"]}": {i},')
     L.append("}"); L.append("")
+    rk = [q for q in src["plusargs"] if q["kind"] == "enum" and q["name"].startswith("knob_")]
+    L.append("KNOB_CONSUMER = {  # regime knob -> yaml regime_set_consumer (bus, irq, dbg, scrkey, none, program)")
+    for p in rk:
+        L.append(f'    "{p["name"]}": "{p["regime_set_consumer"]}",')
+    L.append("}"); L.append("")
+    L.append("# knobs the SV dispatcher consumes at run time (REGIME_SET); the test library's CONSUMED_KNOBS reads this")
+    L.append("REGIME_SET_CONSUMED = (" + ", ".join(f'"{p["name"]}"' for p in rk if p["regime_set_consumer"] in RUNTIME_CONSUMERS) + ",)")
+    L.append("")
     L.append("CMD = {  # bridge command kinds (cmd_kind codes)")
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f'    "{k}": {i},')

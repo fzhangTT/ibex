@@ -99,7 +99,7 @@ def main():
     pkg = PKG.read_text()
     names = [p["name"] for p in src["plusargs"]]
     check("plusarg names unique", len(names) == len(set(names)))
-    allowed = {"name", "kind", "default", "default_from", "values", "debug_only", "desc"}
+    allowed = {"name", "kind", "default", "default_from", "values", "debug_only", "desc", "regime_set_consumer"}
     check("yaml parses with no spurious plusarg keys (every desc quoted)",
           all(set(p) <= allowed for p in src["plusargs"]),
           str([(p["name"], sorted(set(p) - allowed)) for p in src["plusargs"] if not set(p) <= allowed]))
@@ -220,6 +220,12 @@ def main():
         check("python EXPORT_RECORD_FIELDS equals yaml", list(m.EXPORT_RECORD_FIELDS) == rf)
         check("python EXPORT_COUNTER_FIELDS equals yaml", list(m.EXPORT_COUNTER_FIELDS) == cf)
         check("python EXPORT_EVENTS equals yaml", [(a, b, list(c)) for a, b, c in m.EXPORT_EVENTS] == [(r["source"], r["event"], r["fields"]) for r in ev])
+    rk = [p for p in src["plusargs"] if p["kind"] == "enum" and p["name"].startswith("knob_")]
+    check("every knob_* names a regime_set_consumer", all("regime_set_consumer" in p for p in rk))
+    check("python REGIME_SET_CONSUMED equals the yaml run-time consumers",
+          list(m.REGIME_SET_CONSUMED) == [p["name"] for p in rk if p["regime_set_consumer"] in ("bus", "irq", "dbg", "scrkey")])
+    check("python KNOB_CONSUMER equals yaml", m.KNOB_CONSUMER == {p["name"]: p["regime_set_consumer"] for p in rk})
+    check("pkg has gen_knob_regime_set_consumed and gen_knob_consumer", "function automatic bit gen_knob_regime_set_consumed" in pkg and "function automatic string gen_knob_consumer" in pkg)
     for n in ("export_file", "export_counters", "export_sources", "export_flush_every"):
         check(f"export knob {n} present", n in names)
     check("export_flush_every is debug_only", "export_flush_every" in dbg_only)

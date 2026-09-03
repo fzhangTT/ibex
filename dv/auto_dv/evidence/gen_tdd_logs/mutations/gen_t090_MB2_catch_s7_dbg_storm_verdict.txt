@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:33
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(175) @ 913500: uvm_test_top.env.dbg_chk [dbg_entry] debug_req_i at cycle 856 (order 241) without debug entry within 17 records (now order 259)
+uvm_counts: {'INFO': 22, 'WARNING': 0, 'ERROR': 30, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

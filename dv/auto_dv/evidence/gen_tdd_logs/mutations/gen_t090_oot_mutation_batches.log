@@ -1,0 +1,59 @@
+# T-090 step-2b out-of-tree mutation batches (driver output; the shared tree's file sha256 printed after each mutant)
+## batch bk0q51t95
+12:25:46Z
+MB1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB1/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB1_catch_irq_storm: verdict: FAIL reason: cocotb_summary at stdout.log:52   first: 
+MB1_ablate_irq_storm: verdict: FAIL reason: cocotb_summary at stdout.log:52   first: 
+MB1: shared tree untouched: 26a386adf5f05a64
+MB2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB2/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB2_catch_s7_dbg_storm: verdict: FAIL reason: cocotb_summary at stdout.log:55   first: 
+MB2_ablate_s7_dbg_storm: verdict: FAIL reason: cocotb_summary at stdout.log:55   first: 
+MB2: shared tree untouched: 26a386adf5f05a64
+MB3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB3/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB3_catch_zc: verdict: FAIL reason: uvm_error at sim.log:32   first: 
+MB3_ablate_zc: verdict: FAIL reason: cocotb_summary at stdout.log:55   first: 
+MB3: shared tree untouched: 26a386adf5f05a64
+MB4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB4/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB4_catch_zc: verdict: FAIL reason: uvm_error at sim.log:31   first: 
+MB4_ablate_zc: verdict: FAIL reason: cocotb_summary at stdout.log:55   first: 
+MB4: shared tree untouched: 26a386adf5f05a64
+12:27:56Z
+625e9fa333c0a611d896f  dv/auto_dv/env/gen_agents_pkg.sv
+ef3bc16a9ed47589fc0d8  dv/auto_dv/tb/gen_tb_top.sv
+## batch bmdwv1t50
+12:32:32Z
+MB1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB1/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB1_catch_irq_storm: verdict: FAIL reason: cocotb_summary at stdout.log:54   first: 
+MB1_ablate_irq_storm: verdict: FAIL reason: cocotb_summary at stdout.log:54   first: 
+MB1: shared tree untouched: bdba3b1198270fd1
+MB2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB2/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB2_catch_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB2_ablate_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB2: shared tree untouched: bdba3b1198270fd1
+MB3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB3/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB3_catch_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  159 first: 
+MB3_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB3: shared tree untouched: bdba3b1198270fd1
+MB4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB4/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB4_catch_zc: verdict: FAIL reason: uvm_error at sim.log:31  UVM_ERROR :  541 first: 
+MB4_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB4: shared tree untouched: bdba3b1198270fd1
+12:34:31Z
+## batch boswu43hk
+12:37:36Z
+MB1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB1/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB1_catch_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB1_ablate_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB1: shared tree untouched: ca4f07d1e1d618d7
+MB2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB2/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 625e9fa333c0a611
+MB2_catch_s7_dbg_storm: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   30 first: 
+MB2_ablate_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB2: shared tree untouched: ca4f07d1e1d618d7
+12:38:47Z
+## batch b4fas99ti
+12:39:20Z
+MB1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB1/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB1_catch_irq_storm: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   66 first: 
+MB1_ablate_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB1: shared tree untouched: ca4f07d1e1d618d7
+12:40:06Z

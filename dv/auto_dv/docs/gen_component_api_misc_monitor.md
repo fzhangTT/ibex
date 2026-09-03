@@ -13,7 +13,13 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 Samples the wrapper's miscellaneous outputs every cycle and runs the boundary checkers that need
 the agents' injection bookkeeping (injected integrity and cache-ECC errors) and the scoreboard's
-retirement facts (traps, mret, CSR writes).
+retirement facts (traps, mret, CSR writes). AS BUILT (step 2b, T-090): `gen_checkers_pkg::gen_misc_monitor` on
+`dv/auto_dv/tb/gen_misc_if.sv` (alerts, crash_dump, double_fault_seen, core_busy, data_tag_o, fetch_enable, irq_pending):
+`alert_bus` (exact: high in the rvalid cycle of a response the bus driver marked `intg_corrupt`, never otherwise),
+`alert_internal` (never high), `data_tag_quiet` (never high), `alert_minor` (only within GEN_ICACHE_ECC_WINDOW of an ECC
+injection announced through `gen_tb_pkg::gen_icram_events`; no injection exists yet, so any pulse is a failure),
+`double_fault` (a pulse exactly GEN_TRAP_TO_RVFI_OFFSET cycles before the second synchronous trap record with no mret
+between, from the model state); `crash_dump`, `core_busy` and `fetch_en` are not built.
 
 ## 2. Files (planned) and how to call it
 

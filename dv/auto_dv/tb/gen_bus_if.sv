@@ -22,6 +22,8 @@ interface gen_bus_if #(
   logic [DataW-1:0]  wdata;
   logic [DataW-1:0]  rdata;
 
+  logic              intg_corrupt = 1'b0;   // with rvalid: rdata carries corrupted integrity (alert_bus expectation)
+
   bit chk_rvalid_legal_en = 1'b1;
 
   // Grants not yet answered, counted at the clock edge (a grant and a response in the same cycle

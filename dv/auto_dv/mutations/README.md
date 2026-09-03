@@ -44,4 +44,5 @@ One block per mutation, kept as evidence next to the checker it proves (mutation
   working tree, so another role can never compile a live mutation; the runner records the shared tree's checksum after
   the batch. Disclosed: T-102's P1..P9 ran in the shared tree under the announce-and-revert rule before the L-1 rule
   reached tb-infra (every revert byte-checked); P10 onward use the out-of-tree runner.
+- `gen_mut_step2b.md`: MB1..MB4, the step-2b agents and boundary checkers (irq_entry, dbg_entry, alert_bus, irq_pending) with the TB-side defect each catches, out of tree (T-090).
 - `gen_mut_t102.md`: P1..P11, the comparator conventions and shim legalization of T-102 (pre-step privilege, mret/dret pc_next, counter and status syncs, Ibex CSR views, one draft-B reference) caught by the named isa_* row with hidden referees inert, each with its ablation.

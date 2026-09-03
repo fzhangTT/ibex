@@ -18,7 +18,10 @@ the address-derived tweak; the model stores bits verbatim (it replaces ibex_top'
 
 ## 2. Files (planned) and how to call it
 
-AS BUILT (step 1c): `dv/auto_dv/tb/gen_icache_ram.sv` (module `gen_icache_ram #(Width, Depth, Name)`,
+Step 2b (T-090) adds the announcement path only: `gen_tb_pkg::gen_icram_events::announce(cycle, way, index, kind)` is the
+static queue the RAM models will push injected lookups into and that `gen_misc_monitor` (expected alert_minor) and the
+export's icram rows (T-080 step 3) read; the models call nothing yet, so the queue stays empty and alert_minor must stay
+low. AS BUILT (step 1c): `dv/auto_dv/tb/gen_icache_ram.sv` (module `gen_icache_ram #(Width, Depth, Name)`,
 instantiated in `gen_tb_top` generate loop `g_icram[w]` as `u_tag` with `TagSizeECC` and `u_data` with
 `LineSizeECC`, `Depth = IC_NUM_LINES`; prim_ram_1p timing: write at the edge with req & write, read data the
 cycle after req & ~write, held; contents from `+gen_icram_init` (random bitwise fill or zero); counters

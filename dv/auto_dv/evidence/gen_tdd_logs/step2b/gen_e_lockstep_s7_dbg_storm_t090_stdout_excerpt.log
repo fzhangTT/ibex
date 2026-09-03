@@ -1,0 +1,15 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/e/lockstep_s7_dbg_storm/stdout.log (build e, final step-2b tree: banner, component reports, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(597) @ 10932500: dbg [GEN_DBG] requests=39 releases=38
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(185) @ 10932500: dbg_chk [GEN_DBG_CHK] debug entries=105 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(538) @ 10932500: irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(140) @ 10932500: irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=10925 mismatches=0; entries=0 nmi=0 bound failures=0 open expectations=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(284) @ 10932500: misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0; alert_internal hits=0; data_tag hits=0; sync traps=1 double faults expected=0 pulses=
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(456) @ 10932500: sb [GEN_SB] ISA compare: records=2000 mismatches=0 folded=0 draft_b=0 traps=1 irq_entries=0 dbg_entries=105 rvfi_rmask_on_nonload=1521
+109325.00ns INFO     cocotb.gen_tb_top                  GEN_UT_LOCKSTEP_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+[GEN_DBG_CHK]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            109325.01           0.37     296705.69  **

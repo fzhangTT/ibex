@@ -13,7 +13,15 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 Predicts interrupt and NMI entry from the driven pins, the modelled `mie`/`mstatus`/priv state
 and debug/NMI mode; checks `irq_pending_o` every cycle under the settle-window rule (class windowed, v2 XM-M5) and the entry vector, cause and timing on
-the RVFI stream; checks the internal NMI from injected LSU integrity errors.
+the RVFI stream; checks the internal NMI from injected LSU integrity errors. AS BUILT (step 2b, T-090, entry and pending
+rules): `gen_checkers_pkg::gen_irq_checker` consumes the scoreboard's `gen_model_state` (mie / mstatus / mcause / prv /
+debug per record, published after every compared record) and the driver's `gen_irq_evt`: `irq_pending` (every cycle,
+evaluated GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 cycles later against the driven pins and the model's mie history),
+`irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records), `irq_masked`
+(an interrupt entry while M-mode with MIE clear); `nmi_internal` is not built. Owed rules found by the first storm
+program (T-090 F3): that the line the DUT's vector names was asserted and enabled at the DUT's decision cycle, and that
+it was the highest-priority pending line (lowest fast index, then external, software, timer: rtl/ibex_controller.sv
+502-512, 746-756); today the scoreboard offers the model the DUT's vector bit and neither fact is checked.
 
 ## 2. Files (planned) and how to call it
 

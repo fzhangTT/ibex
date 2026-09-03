@@ -12,7 +12,13 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 ## 1. Purpose
 
 Drives `irq_software_i`, `irq_timer_i`, `irq_external_i`, `irq_fast_i[14:0]` and `irq_nm_i`
-as levels with randomized timing and hold policies; the source of every interrupt stimulus.
+as levels with randomized timing and hold policies; the source of every interrupt stimulus. AS BUILT (step 2b, T-090):
+`gen_agents_pkg::gen_irq_driver` on `dv/auto_dv/tb/gen_irq_if.sv` (instance `u_irq_if`; line numbering 0 software,
+1 timer, 2 external, 3..17 fast[0..14], 18 nm), acting at the falling edge: IRQ_SET (arg0 line mask, arg1 hold policy
+CYCLES / UNTIL_ACK / UNTIL_TAKEN / STICKY, arg2 cycles), IRQ_CLR (mask), NMI_PULSE (cycles), UNTIL_TAKEN released on the
+next `evt_irq_taken` edge, UNTIL_ACK on a store to the irq-ack MMIO register; the regime engine draws events for
+`knob_irq_regime` sparse (mean 2000 cycles) / storm (mean 20) with lines from `knob_irq_line_mix` and the policy from
+`knob_irq_hold`, all three switched at run time by REGIME_SET; every change is published as `gen_irq_evt` with its cycle.
 
 ## 2. Files (planned) and how to call it
 

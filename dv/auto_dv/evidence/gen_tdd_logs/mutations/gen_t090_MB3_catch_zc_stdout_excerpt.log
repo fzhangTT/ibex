@@ -1,0 +1,17 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB3/out/MB3_catch_zc/stdout.log (out-of-tree mutant: banner, first checker lines, component reports, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(258) @ 72500: misc_mon [alert_bus] cycle 67: alert_major_bus_o=0 expected 1 (ibus rvalid 1 corrupt 1, dbus rvalid 0 corrupt 0)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(258) @ 77500: misc_mon [alert_bus] cycle 72: alert_major_bus_o=0 expected 1 (ibus rvalid 1 corrupt 1, dbus rvalid 0 corrupt 0)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(258) @ 79500: misc_mon [alert_bus] cycle 74: alert_major_bus_o=0 expected 1 (ibus rvalid 1 corrupt 1, dbus rvalid 0 corrupt 0)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(216) @ 0: sb [GEN_SB] ISA compare disabled by knob
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(597) @ 549000: dbg [GEN_DBG] requests=0 releases=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(185) @ 549000: dbg_chk [GEN_DBG_CHK] debug entries=0 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(538) @ 549000: irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(140) @ 549000: irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=541 mismatches=0; entries=0 nmi=0 bound failures=0 open expectations=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(284) @ 549000: misc_mon [GEN_MISC] alert_bus hits=0 mismatches=159; alert_minor hits=0 mismatches=0; alert_internal hits=0; data_tag hits=0; sync traps=0 double faults expected=0 pulses=
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(455) @ 549000: sb [GEN_SB] ISA compare: records=0 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=0
+UVM_ERROR :  159
+[GEN_DBG_CHK]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                      5490.01           0.09      61485.88  **

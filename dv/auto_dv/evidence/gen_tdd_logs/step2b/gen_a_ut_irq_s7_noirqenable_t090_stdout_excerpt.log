@@ -1,0 +1,5 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/a/ut_irq_s7/stdout.log (config banner, first checker or comparator lines, component reports, UVM counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+ 50625.00ns INFO     cocotb.gen_tb_top                  GEN_UT_IRQ line fast3 mask 0x00040 taken=False at cycle 5057
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                   50625.01           0.22     231770.40  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

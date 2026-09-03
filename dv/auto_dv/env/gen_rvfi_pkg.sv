@@ -54,6 +54,30 @@ package gen_rvfi_pkg;
   `include "gen_export_record_line.svh"
 
   // ------------------------------------------------------------------------------------------
+  // The model of record after one RVFI record was processed (published by gen_scoreboard on ap_state);
+  // the irq/debug/misc checkers consume this, never the shim directly.
+  class gen_model_state extends uvm_sequence_item;
+    logic [63:0] order;
+    int unsigned cycle;          // cycle of the record
+    logic [31:0] pc_after, insn;
+    logic [31:0] mie, mstatus, mcause, mepc, mtval, dcsr;
+    logic [1:0]  prv;            // privilege after the record
+    bit          is_trap, is_intr, is_mret, is_dret, debug_mode, wrote_mie, wrote_mstatus;
+    `uvm_object_utils_begin(gen_model_state)
+      `uvm_field_int(order, UVM_ALL_ON)
+      `uvm_field_int(cycle, UVM_ALL_ON)
+      `uvm_field_int(pc_after, UVM_ALL_ON)
+      `uvm_field_int(mie, UVM_ALL_ON)
+      `uvm_field_int(mstatus, UVM_ALL_ON)
+      `uvm_field_int(mcause, UVM_ALL_ON)
+      `uvm_field_int(prv, UVM_ALL_ON)
+    `uvm_object_utils_end
+    function new(string name = "gen_model_state");
+      super.new(name);
+    endfunction
+  endclass
+
+  // ------------------------------------------------------------------------------------------
   class gen_rvfi_monitor extends uvm_component;
     `uvm_component_utils(gen_rvfi_monitor)
     virtual gen_rvfi_if   vif;
@@ -147,9 +171,27 @@ package gen_rvfi_pkg;
     bit          model_ready = 0;
     bit          in_seq = 0;
     gen_rvfi_txn seq_first;
-    bit          dbg_q = 0;
+    bit          dbg_q = 0, dret_q = 0;
+    uvm_analysis_port #(gen_model_state) ap_state;
     function new(string name, uvm_component parent);
       super.new(name, parent);
+      ap_state = new("ap_state", this);
+    endfunction
+    // the model of record after this record, for the boundary checkers (mie/mstatus/mcause/prv/debug and the CSR writes)
+    function void publish_state(gen_rvfi_txn t, int unsigned pc_a, int unsigned prv, int csr_n);
+      gen_model_state st = gen_model_state::type_id::create("st");
+      int unsigned a, v;
+      st.order = t.order; st.cycle = t.cycle; st.pc_after = pc_a; st.insn = t.insn; st.prv = prv[1:0];
+      st.mie = gen_isa_read_csr(ibex_pkg::CSR_MIE); st.mstatus = gen_isa_read_csr(ibex_pkg::CSR_MSTATUS);
+      st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
+      st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR);
+      st.is_trap = t.trap; st.is_intr = t.intr; st.debug_mode = t.ext_debug_mode;
+      st.is_mret = (t.insn == GEN_INSN_MRET); st.is_dret = (t.insn == GEN_INSN_DRET);
+      for (int i = 0; i < csr_n; i++) if (gen_isa_csr_write(i, a, v) == 0) begin
+        if (a == ibex_pkg::CSR_MIE) st.wrote_mie = 1;
+        if (a == ibex_pkg::CSR_MSTATUS) st.wrote_mstatus = 1;
+      end
+      ap_state.write(st);
     endfunction
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
@@ -170,10 +212,9 @@ package gen_rvfi_pkg;
     function void start_of_simulation_phase(uvm_phase phase);
       int rc, n;
       super.start_of_simulation_phase(phase);
-      if (!isa_on()) begin
-        `uvm_info("GEN_SB", "ISA compare disabled by knob", UVM_LOW)
-        return;
-      end
+      // the model steps in every run: the irq/debug/misc checkers consume its published state; the knobs silence only
+      // the isa_* rows (fld), so an isolation run of a boundary checker still has the model of record
+      if (!isa_on()) `uvm_info("GEN_SB", "ISA compare rows silenced by knob; the model still steps for the boundary checkers", UVM_LOW)
       rc = gen_isa_reset_dpi(cfg.boot_addr, 0, cfg.isa_string_set ? cfg.isa_string : "",
                              cfg.isa_log_set ? cfg.isa_log : "", cfg.knob_mcounteren_writable == "on");
       if (rc != 0) `uvm_fatal("ISA_INIT", {"gen_isa_reset failed: ", gen_isa_last_error()})
@@ -313,23 +354,39 @@ package gen_rvfi_pkg;
       end
       // ---- asynchronous entries before this record (C5.2): interrupt marker / debug request
       if (t.intr) begin
-        gen_isa_arm_async(t.ext_pre_mip, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
+        // The DUT's vector names the interrupt it took (vectored mtvec: handler pc = base + 4 * cause) and the model is
+        // offered exactly that bit: the record's pre_mip is sampled when the handler's first instruction is in ID,
+        // after the decision, and a line released or raised in between (UNTIL_TAKEN releases every held line on any
+        // entry) makes pre_mip an unreliable record of the decision-time set. Spike still refuses an entry that is
+        // not enabled (isa_trap); that the taken line was pending at the decision, and the priority among pending
+        // lines, are boundary rules for the irq checker (owed), not the model's choice. Cause 31 (NMI) keeps pre_mip.
+        logic [31:0] base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;
+        logic [31:0] inj = t.ext_pre_mip;
+        int unsigned cause = (t.pc_rdata - base) >> 2;
+        if (t.pc_rdata >= base && cause < 31) inj = 32'h1 << cause;
+        gen_isa_arm_async(inj, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
         if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
         irq_entries++;
         if (retired != 0 || !cause[31])
           miss("isa_trap", $sformatf("interrupt entry expected, model retired %0d cause %08h", retired, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
         if (pc_a != t.pc_rdata)
           miss("isa_pc", $sformatf("interrupt vector model=%08h dut=%08h", pc_a, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
-      end else if (t.ext_debug_mode && !dbg_q && t.pc_rdata == GEN_MM_DM_HALT) begin
+      end else if (t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT) begin   // a request held through dret re-enters at once
         gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b1, 1'b0);
         if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
         dbg_entries++;
         if (retired != 0 || pc_a != GEN_MM_DM_HALT)
           miss("isa_pc", $sformatf("debug entry expected at DmHaltAddr, model retired %0d pc=%08h", retired, pc_a), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
       end else begin
-        gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b0, 1'b0);
+        // an ordinary record: pending bits the DUT saw and still retired past are withheld from the model when they are
+        // enabled (M-mode with MIE, or U-mode), since Spike would take them before this instruction; the entry itself
+        // comes with the next record's intr and its own pre_mip
+        logic [31:0] mie_m = gen_isa_read_csr(ibex_pkg::CSR_MIE);
+        logic [31:0] mst_m = gen_isa_read_csr(ibex_pkg::CSR_MSTATUS);
+        bit ien = (gen_isa_get_prv() != 3) || mst_m[3];
+        gen_isa_arm_async(ien ? (t.ext_pre_mip & ~mie_m) : t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b0, 1'b0);
       end
-      dbg_q = t.ext_debug_mode;
+      dbg_q = t.ext_debug_mode; dret_q = (t.insn == GEN_INSN_DRET);
       // ---- the record itself: the model's counters and status follow the record's sampled values (ID-exit sample point,
       //      the cycle a CSR read sees). A csrr of cycle, mhpmcounterN or cpuctrlsts bit 8 under isa_rd is therefore a
       //      CONSISTENCY compare (record value == read value), not an independent check (Critic T-102 M-1): the counters
@@ -391,6 +448,7 @@ package gen_rvfi_pkg;
       // rvfi_mode is the privilege the instruction executed in, so the model's pre-step privilege is compared (both RISC-V encoded)
       if (prv_b[1:0] != t.mode)
         miss("isa_prv", $sformatf("priv model=%0d (before the step) dut mode=%0d", prv_b, t.mode), t, fld(cfg.chk_isa_prv, cfg.chk_isa_prv_set));
+      publish_state(t, pc_a, prv, csr_n);
       if (cfg.sb_trace) `uvm_info("GEN_SB", $sformatf("%s | model pc=%08h->%08h retired=%0d trap=%0d", t.brief(), pc_b, pc_a, retired, trap), UVM_LOW)
     endfunction
 

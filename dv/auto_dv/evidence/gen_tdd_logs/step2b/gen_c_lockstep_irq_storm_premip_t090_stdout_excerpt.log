@@ -1,0 +1,10 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/c/lockstep_irq_storm/stdout.log (build c: F3, the entry record's pre_mip lacks the bit the DUT's vector names)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 166500: sb [isa_pc] interrupt vector model=80000244 dut=80000268 (order=14 pc=80000268 insn=30200073 trap=0 intr=1 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=161)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 166500: sb [isa_pc] pc model=80000244 dut=80000268 (order=14 pc=80000268 insn=30200073 trap=0 intr=1 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=161)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 200500: sb [isa_pc] interrupt vector model=80000244 dut=8000024c (order=18 pc=8000024c insn=30200073 trap=0 intr=1 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=195)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(235) @ 200500: sb [isa_pc] pc model=80000244 dut=8000024c (order=18 pc=8000024c insn=30200073 trap=0 intr=1 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=195)
+                                                            raise AssertionError(f"GEN_UT_LOCKSTEP: no tohost store ({type(exc).__name__})") from None
+                                                        AssertionError: GEN_UT_LOCKSTEP: no tohost store (SimTimeoutError)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            415725.01           1.01     412776.64  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

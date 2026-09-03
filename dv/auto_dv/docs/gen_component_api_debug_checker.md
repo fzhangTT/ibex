@@ -13,7 +13,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 Predicts debug-mode entry and exit from `debug_req_i`, ebreak, the trigger CSRs and `dcsr.step`,
 and checks entry address, `dcsr.cause`, `dpc`, masking of interrupts in debug mode, and `dret`
-semantics on the RVFI stream.
+semantics on the RVFI stream. AS BUILT (step 2b, entry rules only): `gen_checkers_pkg::gen_dbg_checker`: `dbg_entry` (debug_req_i asserted -> a debug-mode record within GEN_DBG_ENTRY_BOUND_RECORDS records), `dbg_masked` (no interrupt entry while in debug mode). `dbg_exc`, `dbg_dret`, `dbg_trigger` need the CSR read-back records of C6 and follow.
 
 ## 2. Files (planned) and how to call it
 

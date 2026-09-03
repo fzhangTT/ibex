@@ -30,7 +30,7 @@ drain outstanding transactions, report counts.
 
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
-| `+gen_chk_isa=0|1` | `PLUSARG_CHK_ISA` | master enable of the ISA-model compare; per-field knobs +gen_chk_isa_{pc,insn,trap,rd,mem,prv,pc_next,csr} | 1 |
+| `+gen_chk_isa=0|1` | `PLUSARG_CHK_ISA` | silences every isa_* row (the model still steps and publishes its state in every run, since the irq/debug/misc checkers consume it: step 2b, T-090); per-field knobs +gen_chk_isa_{pc,insn,trap,rd,mem,prv,pc_next,csr} | 1 |
 | `+gen_sb_trace=1` | `PLUSARG_SB_TRACE` | debug log of every compared record | 0 |
 
 ## 4. Wave-level behaviour
@@ -65,6 +65,21 @@ those land, a csrr of these CSRs passing `isa_rd` says nothing about counter or 
 history (rtl/ibex_cs_registers.sv:935-943, :964-965), so a read of them is an independent compare. Draft-B
 records (C5.5): the R4 forms (cmov, cmix, fsl, fsr, fsri) read rs3 = insn[31:27] from the model's register file; the
 record's `rvfi_rs3_addr/rdata` are compared with it under `isa_rd` and the value feeds the reference.
+
+Asynchronous entries (step 2b, T-090, found on the first interrupt-enabled and debug-storm programs): on a record with
+`rvfi_intr` the model is offered exactly the interrupt the DUT's vector names (handler pc = mtvec base + 4 * cause, from
+the record's pre_mip), so lines raised between the DUT's decision and the record cannot divert the model; Spike still
+refuses an entry that is not pending and enabled (isa_trap), and the priority among simultaneously pending lines is a
+boundary rule for the irq checker (not built yet). On an ordinary record the pending bits that are ENABLED (M-mode with
+MIE, or U-mode) are withheld from the model, because the DUT retired that instruction before taking them and Spike would
+take them first; disabled pending bits are injected so a mip read compares. A debug request held through dret re-enters
+debug on the very next record: the entry rule is `pc_rdata == DmHaltAddr` with `ext_debug_mode` and either the previous
+record outside debug mode or the previous record a dret.
+
+Model-state publication (step 2b, T-090): after every compared record the scoreboard publishes one `gen_model_state`
+on `ap_state` (order, cycle, model pc after the step, insn, mie / mstatus / mcause / mepc / mtval / dcsr read from the
+model, privilege after the record, trap / interrupt / mret / dret / debug flags, and whether the record wrote mie or
+mstatus); `gen_irq_checker`, `gen_dbg_checker` and `gen_misc_monitor` consume it and never read the shim directly.
 
 ### 5a. Mutation classes per id
 

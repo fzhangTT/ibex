@@ -69,27 +69,29 @@ plusargs:
   - {name: irq_hold_max, kind: int, default: 50, desc: "interrupt line hold high bound"}
   - {name: dbg_hold_min, kind: int, default: 1, desc: "debug_req_i hold low bound"}
   - {name: dbg_hold_max, kind: int, default: 50, desc: "debug_req_i hold high bound"}
-  # ---- layer-2 regime knobs (DV Lead, gen_fcov_plan.md Section REG; +gen_knob_<name>=<value>) ----
-  - {name: knob_imem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: "instruction grant latency regime (windows: regime_windows.gnt_delay)"}
-  - {name: knob_imem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: "instruction response latency regime (windows: regime_windows.rvalid_delay)"}
-  - {name: knob_imem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "instr_err_i injection regime (rates: regime_windows.rate_per_mille)"}
-  - {name: knob_imem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "instruction integrity corruption regime (rates: regime_windows.rate_per_mille)"}
-  - {name: knob_imem_outstanding_cap, kind: enum, values: [cap1, cap2, cap4, cap8], default: cap8, desc: "instruction grants in flight cap (regime_windows.outstanding_cap)"}
-  - {name: knob_dmem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, desc: "data grant latency regime (windows: regime_windows.gnt_delay)"}
-  - {name: knob_dmem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, desc: "data response latency regime (windows: regime_windows.rvalid_delay)"}
-  - {name: knob_dmem_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "data_err_i injection regime (rates: regime_windows.rate_per_mille)"}
-  - {name: knob_dmem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "data integrity corruption regime (rates: regime_windows.rate_per_mille)"}
-  - {name: knob_irq_regime, kind: enum, values: [quiet, sparse, storm], default: quiet, desc: "interrupt event rate"}
-  - {name: knob_irq_line_mix, kind: enum, values: [single, multi, fast_only, with_nmi], default: single, desc: "lines per interrupt event"}
-  - {name: knob_irq_hold, kind: enum, values: [until_taken, through_handler, pulse], default: until_taken, desc: "interrupt line release policy"}
-  - {name: knob_debug_req_regime, kind: enum, values: [none, sparse, storm], default: none, desc: "debug_req_i event rate"}
-  - {name: knob_scr_key_delay, kind: enum, values: [immediate, delayed, withheld_then_valid], default: immediate, desc: "scramble-key response regime"}
-  - {name: knob_icache_ecc_err_rate, kind: enum, values: [none, rare, frequent], default: none, desc: "icache RAM ECC injection regime"}
-  - {name: knob_fetch_enable_regime, kind: enum, values: [always_on, toggling], default: always_on, desc: "fetch_enable_i regime"}
-  - {name: knob_mcounteren_writable, kind: enum, values: ["on", "off", invalid], default: "on", desc: "mcounteren_writable_i encoding"}
-  - {name: knob_instr_mix, kind: enum, values: [isa_only, m_heavy, compressed_heavy, bitmanip_heavy, csr_heavy, ls_heavy, branch_heavy, mixed], default: mixed, desc: "program-side instruction mix (region marker)"}
-  - {name: knob_priv_regime, kind: enum, values: [m_only, u_heavy, alternating], default: m_only, desc: "program-side privilege regime (region marker)"}
-  - {name: knob_pmp_regime, kind: enum, values: ["off", sparse, dense, mml_on], default: "off", desc: "program-side PMP regime (region marker)"}
+  # ---- layer-2 regime knobs (DV Lead, gen_fcov_plan.md Section REG; +gen_knob_<name>=<value>). regime_set_consumer names the
+  # run-time consumer of REGIME_SET for the knob (bus, irq, dbg, scrkey), none (no run-time consumer yet: the dispatcher
+  # refuses it) or program (a program-side region marker); rendered as REGIME_SET_CONSUMED and gen_knob_regime_set_consumed() ----
+  - {name: knob_imem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, regime_set_consumer: bus, desc: "instruction grant latency regime (windows: regime_windows.gnt_delay)"}
+  - {name: knob_imem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, regime_set_consumer: bus, desc: "instruction response latency regime (windows: regime_windows.rvalid_delay)"}
+  - {name: knob_imem_err_rate, kind: enum, values: [none, rare, frequent], default: none, regime_set_consumer: bus, desc: "instr_err_i injection regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_imem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, regime_set_consumer: bus, desc: "instruction integrity corruption regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_imem_outstanding_cap, kind: enum, values: [cap1, cap2, cap4, cap8], default: cap8, regime_set_consumer: bus, desc: "instruction grants in flight cap (regime_windows.outstanding_cap)"}
+  - {name: knob_dmem_gnt_delay, kind: enum, values: [same_cycle, short, long, random], default: short, regime_set_consumer: bus, desc: "data grant latency regime (windows: regime_windows.gnt_delay)"}
+  - {name: knob_dmem_rvalid_delay, kind: enum, values: [min1, short, long, random], default: short, regime_set_consumer: bus, desc: "data response latency regime (windows: regime_windows.rvalid_delay)"}
+  - {name: knob_dmem_err_rate, kind: enum, values: [none, rare, frequent], default: none, regime_set_consumer: bus, desc: "data_err_i injection regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_dmem_intg_err_rate, kind: enum, values: [none, rare, frequent], default: none, regime_set_consumer: bus, desc: "data integrity corruption regime (rates: regime_windows.rate_per_mille)"}
+  - {name: knob_irq_regime, kind: enum, values: [quiet, sparse, storm], default: quiet, regime_set_consumer: irq, desc: "interrupt event rate"}
+  - {name: knob_irq_line_mix, kind: enum, values: [single, multi, fast_only, with_nmi], default: single, regime_set_consumer: irq, desc: "lines per interrupt event"}
+  - {name: knob_irq_hold, kind: enum, values: [until_taken, through_handler, pulse], default: until_taken, regime_set_consumer: irq, desc: "interrupt line release policy"}
+  - {name: knob_debug_req_regime, kind: enum, values: [none, sparse, storm], default: none, regime_set_consumer: dbg, desc: "debug_req_i event rate"}
+  - {name: knob_scr_key_delay, kind: enum, values: [immediate, delayed, withheld_then_valid], default: immediate, regime_set_consumer: scrkey, desc: "scramble-key response regime"}
+  - {name: knob_icache_ecc_err_rate, kind: enum, values: [none, rare, frequent], default: none, regime_set_consumer: none, desc: "icache RAM ECC injection regime"}
+  - {name: knob_fetch_enable_regime, kind: enum, values: [always_on, toggling], default: always_on, regime_set_consumer: none, desc: "fetch_enable_i regime"}
+  - {name: knob_mcounteren_writable, kind: enum, values: ["on", "off", invalid], default: "on", regime_set_consumer: none, desc: "mcounteren_writable_i encoding"}
+  - {name: knob_instr_mix, kind: enum, values: [isa_only, m_heavy, compressed_heavy, bitmanip_heavy, csr_heavy, ls_heavy, branch_heavy, mixed], default: mixed, regime_set_consumer: program, desc: "program-side instruction mix (region marker)"}
+  - {name: knob_priv_regime, kind: enum, values: [m_only, u_heavy, alternating], default: m_only, regime_set_consumer: program, desc: "program-side privilege regime (region marker)"}
+  - {name: knob_pmp_regime, kind: enum, values: ["off", sparse, dense, mml_on], default: "off", regime_set_consumer: program, desc: "program-side PMP regime (region marker)"}
   # ---- checker enables (+gen_chk_<id>=0|1, default 1; +gen_chk_all=0 disables all unless re-enabled) ----
   - {name: chk_all, kind: bool, default: 1, desc: "master checker enable (isolation mode +gen_chk_all=0 +gen_chk_<id>=1)"}
   - {name: chk_ibus_proto, kind: bool, default: 1, desc: "checker enable"}

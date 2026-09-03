@@ -163,13 +163,26 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
   assign u_scrkey_if.req  = ic_scr_key_req;
   assign ic_scr_key_valid = u_scrkey_if.valid;
 
-  // Step 2 tie-offs (interrupt and debug agents): no events.
-  assign irq_software     = 1'b0;
-  assign irq_timer        = 1'b0;
-  assign irq_external     = 1'b0;
-  assign irq_fast         = '0;
-  assign irq_nm           = 1'b0;
-  assign debug_req        = 1'b0;
+  // ---- interrupt and debug drivers, observed outputs (step 2b) --------------------------------
+  gen_irq_if u_irq_if (.clk(clk), .rst_n(rst_n));
+  assign irq_software = u_irq_if.sw;
+  assign irq_timer    = u_irq_if.timer;
+  assign irq_external = u_irq_if.ext;
+  assign irq_fast     = u_irq_if.fast;
+  assign irq_nm       = u_irq_if.nm;
+  assign u_irq_if.pending = irq_pending;
+  gen_dbg_if u_dbg_if (.clk(clk), .rst_n(rst_n));
+  assign debug_req = u_dbg_if.req;
+  gen_misc_if u_misc_if (.clk(clk), .rst_n(rst_n));
+  assign u_misc_if.alert_minor          = alert_minor;
+  assign u_misc_if.alert_major_internal = alert_major_internal;
+  assign u_misc_if.alert_major_bus      = alert_major_bus;
+  assign u_misc_if.double_fault_seen    = double_fault_seen;
+  assign u_misc_if.data_tag_o           = data_tag_o;
+  assign u_misc_if.irq_pending          = irq_pending;
+  assign u_misc_if.core_busy            = core_busy;
+  assign u_misc_if.fetch_enable         = fetch_enable;
+  assign u_misc_if.crash_dump           = crash_dump;
   gen_ctrl_if u_ctrl_if (.clk(clk), .rst_n(rst_n));
   assign fetch_enable        = u_ctrl_if.fetch_enable;
   assign mcounteren_writable = u_ctrl_if.mcounteren_writable;
@@ -264,6 +277,11 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     uvm_config_db#(virtual gen_scrkey_if)::set(null, "uvm_test_top.env.scrkey*", "vif", u_scrkey_if);
     uvm_config_db#(virtual gen_ctrl_if)::set(null, "uvm_test_top.env.ctrl*", "vif", u_ctrl_if);
     uvm_config_db#(virtual gen_rvfi_if)::set(null, "uvm_test_top.env.rvfi_mon*", "vif", u_rvfi_if);
+    uvm_config_db#(virtual gen_irq_if)::set(null, "uvm_test_top.env.irq*", "vif", u_irq_if);
+    uvm_config_db#(virtual gen_dbg_if)::set(null, "uvm_test_top.env.dbg*", "vif", u_dbg_if);
+    uvm_config_db#(virtual gen_misc_if)::set(null, "uvm_test_top.env.misc_mon*", "vif", u_misc_if);
+    uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.misc_mon*", "ibus_vif", u_ibus_if);
+    uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.misc_mon*", "dbus_vif", u_dbus_if);
     run_test();
   end
 endmodule

@@ -142,6 +142,21 @@ package gen_agents_pkg;
       if (err_win_lo == 0 && err_win_hi == 0) return 1'b1;
       return (a >= err_win_lo) && (a <= err_win_hi);
     endfunction
+    // REGIME_SET at run time (gen_cmd_dispatch): the knob id selects the regime this configuration owns
+    function bit apply_knob(int id, string value);
+      case (id)
+        GEN_KNOB_ID_IMEM_GNT_DELAY, GEN_KNOB_ID_DMEM_GNT_DELAY:         apply_gnt_regime(value);
+        GEN_KNOB_ID_IMEM_RVALID_DELAY, GEN_KNOB_ID_DMEM_RVALID_DELAY:   apply_rvalid_regime(value);
+        GEN_KNOB_ID_IMEM_ERR_RATE, GEN_KNOB_ID_DMEM_ERR_RATE:           begin err_regime = value; err_rate = rate_of(value); end
+        GEN_KNOB_ID_IMEM_INTG_ERR_RATE, GEN_KNOB_ID_DMEM_INTG_ERR_RATE: begin intg_regime = value; intg_err_rate = rate_of(value); end
+        GEN_KNOB_ID_IMEM_OUTSTANDING_CAP:                               apply_cap_regime(value);
+        default: return 0;
+      endcase
+      if (rvalid_min < 1) rvalid_min = 1;
+      if (rvalid_max < rvalid_min) rvalid_max = rvalid_min;
+      if (gnt_max < gnt_min) gnt_max = gnt_min;
+      return 1;
+    endfunction
     function string describe();
       return $sformatf("%s gnt=%0d..%0d(%s) rvalid=%0d..%0d(%s) cap=%0d(%s) err=%0d/1000(%s) intg=%0d/1000(%s)x%0d",
                        is_data ? "dbus" : "ibus", gnt_min, gnt_max, gnt_regime, rvalid_min, rvalid_max, rvalid_regime,
@@ -160,6 +175,7 @@ package gen_agents_pkg;
     logic [6:0]  intg;      // driven integrity
     bit          err;
     bit          injected;
+    bit          intg_bad;  // the driven integrity is corrupted (alert_bus must fire in the rvalid cycle)
     int unsigned gnt_delay;
     int unsigned rvalid_delay;
     int unsigned cycle_req;
@@ -181,6 +197,19 @@ package gen_agents_pkg;
     gen_bus_pend_t pend [$];
     int unsigned cycle = 0;
     int unsigned grants = 0, responses = 0, injected_err = 0, injected_intg = 0;
+    // one-shot arming (bridge MEM_ERR_ARM): kind 1 = bus error, 2 = integrity corruption; count accesses in [lo, hi]
+    int unsigned arm_kind = 0, arm_count = 0;
+    logic [31:0] arm_lo = '0, arm_hi = '0;
+    function void arm_err(int unsigned kind, logic [31:0] lo, logic [31:0] hi, int unsigned count);
+      arm_kind = kind; arm_lo = lo; arm_hi = hi; arm_count = count;
+      `uvm_info("GEN_BUS_ARM", $sformatf("%s: armed kind %0d for %0d accesses in [%08h, %08h]", cfg.is_data ? "dbus" : "ibus", kind, count, lo, hi), UVM_LOW)
+    endfunction
+    function bit armed_hit(int unsigned kind, logic [31:0] a);
+      if (arm_count == 0 || arm_kind != kind) return 0;
+      if (a < arm_lo || a > arm_hi) return 0;
+      arm_count--;
+      return 1;
+    endfunction
     function new(string name, uvm_component parent);
       super.new(name, parent);
       ap = new("ap", this);
@@ -206,7 +235,7 @@ package gen_agents_pkg;
       int unsigned req_cycle = 0;     // first cycle the pending request was seen
       int unsigned last_due = 0;
       int unsigned data_w = $bits(vif.rdata);
-      vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0;
+      vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
       forever begin
         @(negedge vif.clk);
         if (!vif.rst_n) begin
@@ -216,13 +245,14 @@ package gen_agents_pkg;
         end
         cycle++;
         // ---- response side: at most one per cycle, in order
-        vif.rvalid = 1'b0; vif.err = 1'b0;
+        vif.rvalid = 1'b0; vif.err = 1'b0; vif.intg_corrupt = 1'b0;
         if (pend.size() > 0 && pend[0].due <= cycle) begin
           gen_bus_pend_t p = pend.pop_front();
           gen_bus_txn t = gen_bus_txn::type_id::create("txn");
           vif.rvalid = 1'b1;
           vif.err    = p.err;
           vif.rdata  = {p.intg, p.word};
+          vif.intg_corrupt = p.intg_bad;
           responses++;
           t.kind = cfg.is_data ? (p.we ? GEN_BUS_STORE : GEN_BUS_LOAD) : GEN_BUS_FETCH;
           t.addr = p.addr; t.data = p.we ? p.wdata : p.word; t.intg = p.intg; t.be = p.be;
@@ -245,8 +275,8 @@ package gen_agents_pkg;
             p.addr = vif.addr; p.we = cfg.is_data ? vif.we : 1'b0; p.be = cfg.is_data ? vif.be : 4'hF;
             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
             p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size();
-            p.err = 0; p.injected = 0;
-            if (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate)) begin
+            p.err = 0; p.injected = 0; p.intg_bad = 0;
+            if (armed_hit(1, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin
               p.err = 1; p.injected = 1; injected_err++;
             end
             if (p.we) begin
@@ -258,7 +288,7 @@ package gen_agents_pkg;
             enc = encode(p.we ? 32'h0 : p.word);   // store responses carry a valid encoding of zero
             if (p.we) p.word = 32'h0;
             p.intg = enc[38:32];
-            if (cfg.intg_err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.intg_err_rate)) begin
+            if (armed_hit(2, p.addr) || (cfg.intg_err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.intg_err_rate))) begin
               int b1 = $urandom_range(data_w - 1, 0);
               logic [38:0] flipped = {p.intg, p.word};
               flipped[b1] = ~flipped[b1];
@@ -267,7 +297,7 @@ package gen_agents_pkg;
                 flipped[b2] = ~flipped[b2];
               end
               p.intg = flipped[38:32]; p.word = flipped[31:0];
-              p.injected = 1; injected_intg++;
+              p.injected = 1; p.intg_bad = 1; injected_intg++;
             end
             p.rvalid_delay = $urandom_range(cfg.rvalid_max, cfg.rvalid_min);
             p.due = cycle + p.rvalid_delay;
@@ -338,18 +368,24 @@ package gen_agents_pkg;
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg))
         `uvm_fatal("GEN_SCRKEY", "cfg not in uvm_config_db")
     endfunction
+    string regime;   // current knob_scr_key_delay value (REGIME_SET / KEY_MODE change it)
+    function void set_regime(string v);
+      regime = v;
+      `uvm_info("GEN_SCRKEY", {"key regime <= ", v}, UVM_LOW)
+    endfunction
     function int unsigned delay_cycles();
-      case (cfg.knob_scr_key_delay)
+      case (regime)
         "immediate":           return 1;
         "delayed":             return $urandom_range(cfg.key_delay_max, cfg.key_delay_min);
         "withheld_then_valid": return cfg.key_never_cycles + 1;
-        default: `uvm_fatal("GEN_SCRKEY", {"bad knob_scr_key_delay ", cfg.knob_scr_key_delay})
+        default: `uvm_fatal("GEN_SCRKEY", {"bad knob_scr_key_delay ", regime})
       endcase
       return 1;
     endfunction
     task run_phase(uvm_phase phase);
       int unsigned wait_n = 0;
       bit req_q = 0;
+      regime = cfg.knob_scr_key_delay;
       vif.valid = cfg.key_reset_valid;
       forever begin
         @(negedge vif.clk);
@@ -365,6 +401,201 @@ package gen_agents_pkg;
         req_q = vif.req;
       end
     endtask
+  endclass
+
+  // ------------------------------------------------------------------------------------------
+  // Interrupt line event, published by gen_irq_driver (and gen_dbg_driver for debug_req) for the checkers.
+  typedef enum {GEN_IRQ_HOLD_CYCLES, GEN_IRQ_HOLD_UNTIL_ACK, GEN_IRQ_HOLD_UNTIL_TAKEN, GEN_IRQ_HOLD_STICKY} gen_irq_hold_e;
+  class gen_irq_evt extends uvm_sequence_item;
+    logic [18:0]   lines_after;   // level of every line after this event (0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm)
+    logic [18:0]   changed;       // lines that changed in this event
+    bit            level;         // 1 = asserted, 0 = released
+    gen_irq_hold_e hold;
+    int unsigned   cycle;
+    bit            from_regime;   // 1 = the autonomous regime engine, 0 = a bridge command
+    `uvm_object_utils_begin(gen_irq_evt)
+      `uvm_field_int(lines_after, UVM_ALL_ON)
+      `uvm_field_int(changed, UVM_ALL_ON)
+      `uvm_field_int(level, UVM_ALL_ON)
+      `uvm_field_enum(gen_irq_hold_e, hold, UVM_ALL_ON)
+      `uvm_field_int(cycle, UVM_ALL_ON)
+      `uvm_field_int(from_regime, UVM_ALL_ON)
+    `uvm_object_utils_end
+    function new(string name = "gen_irq_evt");
+      super.new(name);
+    endfunction
+  endclass
+
+  // gen_irq_driver (C3.6): levels on the interrupt pins from bridge commands (IRQ_SET mask, hold policy,
+  // hold cycles; IRQ_CLR mask; NMI_PULSE cycles) and from the regime engine (knob_irq_regime quiet /
+  // sparse / storm, knob_irq_line_mix, knob_irq_hold). Hold policies: CYCLES(n) releases after n cycles,
+  // UNTIL_TAKEN releases every line held with that policy on the next interrupt entry (evt_irq_taken), STICKY
+  // never releases, UNTIL_ACK releases on the handler's store to the irq-ack register (memory-model hook).
+  // Acts at the falling edge like every driver; every change is published on ap with its cycle.
+  class gen_irq_driver extends uvm_component;
+    `uvm_component_utils(gen_irq_driver)
+    virtual gen_irq_if    vif;
+    virtual gen_bridge_if bvif;
+    gen_env_cfg cfg;
+    uvm_analysis_port #(gen_irq_evt) ap;
+    string regime, line_mix, hold_knob;
+    logic [18:0]   level = '0;
+    gen_irq_hold_e hold_of [19];
+    int unsigned   hold_left [19];
+    int unsigned   events = 0, releases = 0, regime_events = 0;
+    function new(string name, uvm_component parent);
+      super.new(name, parent);
+      ap = new("ap", this);
+    endfunction
+    function void build_phase(uvm_phase phase);
+      super.build_phase(phase);
+      if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "vif", vif)) `uvm_fatal("GEN_IRQ", "vif not in uvm_config_db")
+      if (!uvm_config_db#(virtual gen_bridge_if)::get(this, "", "bridge_vif", bvif)) `uvm_fatal("GEN_IRQ", "bridge_vif not in uvm_config_db")
+      if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_IRQ", "cfg not in uvm_config_db")
+      regime = cfg.knob_irq_regime; line_mix = cfg.knob_irq_line_mix; hold_knob = cfg.knob_irq_hold;
+      foreach (hold_of[i]) begin hold_of[i] = GEN_IRQ_HOLD_CYCLES; hold_left[i] = 0; end
+    endfunction
+    function void set_regime(int id, string value);
+      case (id)
+        GEN_KNOB_ID_IRQ_REGIME:   regime = value;
+        GEN_KNOB_ID_IRQ_LINE_MIX: line_mix = value;
+        GEN_KNOB_ID_IRQ_HOLD:     hold_knob = value;
+        default: `uvm_fatal("GEN_IRQ", {"not an irq knob: ", gen_knob_name(id)})
+      endcase
+      `uvm_info("GEN_IRQ", $sformatf("%s <= %s", gen_knob_name(id), value), UVM_LOW)
+    endfunction
+    function void publish(logic [18:0] changed, bit lvl, gen_irq_hold_e h, bit from_regime);
+      gen_irq_evt e = gen_irq_evt::type_id::create($sformatf("irq_%0d", events));
+      e.lines_after = level; e.changed = changed; e.level = lvl; e.hold = h; e.cycle = bvif.cycle_count; e.from_regime = from_regime;
+      events++;
+      ap.write(e);
+    endfunction
+    function void apply_levels();
+      vif.sw = level[0]; vif.timer = level[1]; vif.ext = level[2]; vif.fast = level[17:3]; vif.nm = level[18];
+    endfunction
+    function void cmd_set(logic [18:0] mask, gen_irq_hold_e h, int unsigned cycles, bit from_regime);
+      for (int i = 0; i < 19; i++) if (mask[i]) begin hold_of[i] = h; hold_left[i] = (h == GEN_IRQ_HOLD_CYCLES) ? (cycles == 0 ? 1 : cycles) : 0; end
+      level |= mask;
+      apply_levels();
+      publish(mask, 1'b1, h, from_regime);
+    endfunction
+    function void cmd_clr(logic [18:0] mask);
+      level &= ~mask;
+      apply_levels();
+      releases++;
+      publish(mask, 1'b0, GEN_IRQ_HOLD_CYCLES, 1'b0);
+    endfunction
+    function void ack_seen();   // from the irq-ack MMIO handler
+      logic [18:0] m = '0;
+      for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_ACK) m[i] = 1'b1;
+      if (m != 0) cmd_clr(m);
+    endfunction
+    function logic [18:0] regime_lines();
+      logic [18:0] m = '0;
+      int n;
+      case (line_mix)
+        "single":    m[$urandom_range(17, 0)] = 1'b1;
+        "multi":     begin n = $urandom_range(4, 2); repeat (n) m[$urandom_range(17, 0)] = 1'b1; end
+        "fast_only": m[$urandom_range(17, 3)] = 1'b1;
+        "with_nmi":  begin m[$urandom_range(17, 0)] = 1'b1; if ($urandom_range(3, 0) == 0) m[18] = 1'b1; end
+        default: `uvm_fatal("GEN_IRQ", {"bad knob_irq_line_mix ", line_mix})
+      endcase
+      return m;
+    endfunction
+    task run_phase(uvm_phase phase);
+      bit taken_q;
+      apply_levels();
+      taken_q = bvif.evt_irq_taken;
+      forever begin
+        @(negedge vif.clk);
+        if (!vif.rst_n) continue;
+        begin   // releases: CYCLES countdown, UNTIL_TAKEN on an entry
+          logic [18:0] rel = '0;
+          for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_CYCLES) begin
+            if (hold_left[i] > 0) hold_left[i]--;
+            if (hold_left[i] == 0) rel[i] = 1'b1;
+          end
+          if (bvif.evt_irq_taken != taken_q) begin
+            taken_q = bvif.evt_irq_taken;
+            for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_TAKEN) rel[i] = 1'b1;
+          end
+          if (rel != 0) cmd_clr(rel);
+        end
+        if (regime != "quiet") begin   // regime engine: geometric inter-arrival (sparse mean 2000 cycles, storm mean 20)
+          int unsigned denom = (regime == "storm") ? 20 : 2000;
+          if ($urandom_range(denom - 1, 0) == 0) begin
+            gen_irq_hold_e h = (hold_knob == "pulse") ? GEN_IRQ_HOLD_CYCLES :
+                               (hold_knob == "through_handler") ? GEN_IRQ_HOLD_UNTIL_ACK : GEN_IRQ_HOLD_UNTIL_TAKEN;
+            logic [18:0] m = regime_lines();
+            if (m[18]) begin m[18] = 1'b0; cmd_set(19'h40000, GEN_IRQ_HOLD_CYCLES, 1, 1'b1); end
+            if (m != 0) cmd_set(m, h, (hold_knob == "pulse") ? 1 : $urandom_range(cfg.irq_hold_max, cfg.irq_hold_min), 1'b1);
+            regime_events++;
+          end
+        end
+      end
+    endtask
+    function void report_phase(uvm_phase phase);
+      `uvm_info("GEN_IRQ", $sformatf("events=%0d releases=%0d regime_events=%0d final_levels=%05h", events, releases, regime_events, level), UVM_LOW)
+    endfunction
+  endclass
+
+  // gen_dbg_driver (C3.7): debug_req_i level from DBG_REQ (arg0 1/0, arg1 hold policy 0 CYCLES(arg2) /
+  // 1 UNTIL_DEBUG_MODE / 2 STICKY) and from knob_debug_req_regime (none / sparse / storm).
+  class gen_dbg_driver extends uvm_component;
+    `uvm_component_utils(gen_dbg_driver)
+    virtual gen_dbg_if    vif;
+    virtual gen_bridge_if bvif;
+    gen_env_cfg cfg;
+    uvm_analysis_port #(gen_irq_evt) ap;   // reuses the event item: changed[0] = req, level, cycle
+    string regime;
+    int unsigned hold_policy = 0, hold_left = 0, requests = 0, releases = 0;
+    function new(string name, uvm_component parent);
+      super.new(name, parent);
+      ap = new("ap", this);
+    endfunction
+    function void build_phase(uvm_phase phase);
+      super.build_phase(phase);
+      if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "vif", vif)) `uvm_fatal("GEN_DBG", "vif not in uvm_config_db")
+      if (!uvm_config_db#(virtual gen_bridge_if)::get(this, "", "bridge_vif", bvif)) `uvm_fatal("GEN_DBG", "bridge_vif not in uvm_config_db")
+      if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_DBG", "cfg not in uvm_config_db")
+      regime = cfg.knob_debug_req_regime;
+    endfunction
+    function void publish(bit lvl);
+      gen_irq_evt e = gen_irq_evt::type_id::create($sformatf("dbg_%0d", requests + releases));
+      e.lines_after = {18'h0, vif.req}; e.changed = 19'h1; e.level = lvl; e.cycle = bvif.cycle_count;
+      ap.write(e);
+    endfunction
+    function void cmd(bit assert_req, int unsigned policy, int unsigned cycles);
+      if (assert_req) begin
+        vif.req = 1'b1; hold_policy = policy; hold_left = (policy == 0) ? (cycles == 0 ? 1 : cycles) : 0;
+        requests++; publish(1'b1);
+      end else begin
+        vif.req = 1'b0; releases++; publish(1'b0);
+      end
+    endfunction
+    function void set_regime(string value);
+      regime = value;
+      `uvm_info("GEN_DBG", {"knob_debug_req_regime <= ", value}, UVM_LOW)
+    endfunction
+    task run_phase(uvm_phase phase);
+      bit entered_q = bvif.evt_dbg_entered;
+      forever begin
+        @(negedge vif.clk);
+        if (!vif.rst_n) continue;
+        if (vif.req) begin
+          if (hold_policy == 0) begin if (hold_left > 0) hold_left--; if (hold_left == 0) cmd(1'b0, 0, 0); end
+          else if (hold_policy == 1 && bvif.evt_dbg_entered != entered_q) cmd(1'b0, 0, 0);
+        end
+        entered_q = bvif.evt_dbg_entered;
+        if (regime != "none" && !vif.req) begin
+          int unsigned denom = (regime == "storm") ? 200 : 5000;
+          if ($urandom_range(denom - 1, 0) == 0) cmd(1'b1, 1, 0);
+        end
+      end
+    endtask
+    function void report_phase(uvm_phase phase);
+      `uvm_info("GEN_DBG", $sformatf("requests=%0d releases=%0d", requests, releases), UVM_LOW)
+    endfunction
   endclass
 
   // ------------------------------------------------------------------------------------------
@@ -434,10 +665,12 @@ package gen_agents_pkg;
     string       tag;
     int unsigned writes = 0;
     logic [31:0] last_data = '0, last_addr = '0;
+    gen_irq_driver irq;   // set on the irq-ack window: a store releases the UNTIL_ACK lines
     function new(string t); tag = t; endfunction
     virtual function void on_write(logic [31:0] addr, logic [31:0] data, logic [3:0] be);
       writes++; last_data = data; last_addr = addr;
       uvm_report_info(tag, $sformatf("store 0x%08h at 0x%08h (be %b)", data, addr, be), UVM_HIGH);
+      if (irq != null) irq.ack_seen();
     endfunction
   endclass
 endpackage

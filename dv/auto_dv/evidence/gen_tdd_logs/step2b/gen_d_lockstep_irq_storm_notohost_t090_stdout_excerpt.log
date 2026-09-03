@@ -1,0 +1,6 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/d/lockstep_irq_storm/stdout.log (build d: comparator clean (UVM_ERROR 0); the test timed out on tohost, the program stored it after 10000 retirements)
+GEN_CONFIG_BANNER build_config=opentitan
+                                                            raise AssertionError(f"GEN_UT_LOCKSTEP: no tohost store ({type(exc).__name__})") from None
+                                                        AssertionError: GEN_UT_LOCKSTEP: no tohost store (SimTimeoutError)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            415725.01           1.03     402196.96  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

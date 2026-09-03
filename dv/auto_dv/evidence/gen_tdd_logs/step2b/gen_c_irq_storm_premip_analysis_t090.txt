@@ -1,0 +1,14 @@
+# build c, gen_ut_lockstep on gen_irq_directed.S (5000-iteration version) under +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=multi +gen_export_file, +gen_chk_all=0 (records only):
+# for each entry record (intr=1): the cause the DUT's vector names, the record's pre_mip and post_mip, the previous record. The taken bit is absent from pre_mip on orders 14, 18, 23 ... (F3).
+order 9 cyc 110 pc 8000024c cause 19 pre_mip 39e80080 bit_set 1 post_mip 39e80080 | prev order 8 cyc 98 pre 39e00000 post 39e00000
+order 11 cyc 130 pc 80000254 cause 21 pre_mip 00600000 bit_set 1 post_mip 00600000 | prev order 10 cyc 118 pre 39e80080 post 00000000
+order 13 cyc 148 pc 80000250 cause 20 pre_mip 40100000 bit_set 1 post_mip 61120080 | prev order 12 cyc 138 pre 00600000 post 40100000
+order 14 cyc 161 pc 80000268 cause 26 pre_mip 691a0080 bit_set 0 post_mip 2c000000 | prev order 13 cyc 148 pre 40100000 post 61120080
+order 17 cyc 182 pc 80000244 cause 17 pre_mip 20020000 bit_set 1 post_mip 20020000 | prev order 16 cyc 171 pre 00000000 post 00000000
+order 18 cyc 195 pc 8000024c cause 19 pre_mip 20020000 bit_set 0 post_mip 04080800 | prev order 17 cyc 182 pre 20020000 post 20020000
+order 23 cyc 233 pc 8000022c cause 11 pre_mip 00000808 bit_set 1 post_mip 18200808 | prev order 22 cyc 220 pre 00000000 post 00000000
+order 26 cyc 254 pc 80000244 cause 17 pre_mip 02120000 bit_set 1 post_mip 02120000 | prev order 25 cyc 244 pre 00000000 post 02120000
+order 27 cyc 267 pc 80000270 cause 28 pre_mip 02120000 bit_set 0 post_mip 10000080 | prev order 26 cyc 254 pre 02120000 post 02120000
+order 28 cyc 278 pc 8000024c cause 19 pre_mip 10000080 bit_set 0 post_mip 01180000 | prev order 27 cyc 267 pre 02120000 post 10000080
+order 35 cyc 319 pc 80000240 cause 16 pre_mip 000b0000 bit_set 1 post_mip 000b0000 | prev order 34 cyc 305 pre 00000000 post 00000000
+order 42 cyc 361 pc 80000270 cause 28 pre_mip 30000000 bit_set 1 post_mip 30000000 | prev order 41 cyc 349 pre 00000000 post 00000000

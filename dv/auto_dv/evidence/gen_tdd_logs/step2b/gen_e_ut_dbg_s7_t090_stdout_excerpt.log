@@ -1,0 +1,18 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t090/e/ut_dbg_s7/stdout.log (build e, final step-2b tree: banner, component reports, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+ 10745.00ns INFO     cocotb.gen_tb_top                  GEN_UT_DBG entry 0 at cycle 1069
+ 13495.00ns INFO     cocotb.gen_tb_top                  GEN_UT_DBG entry 1 at cycle 1344
+ 17195.00ns INFO     cocotb.gen_tb_top                  GEN_UT_DBG entries 2 retired 461 compared 461 mismatches 0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(597) @ 1719500: dbg [GEN_DBG] requests=2 releases=2
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(185) @ 1719500: dbg_chk [GEN_DBG_CHK] debug entries=2 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(538) @ 1719500: irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(140) @ 1719500: irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=1712 mismatches=0; entries=0 nmi=0 bound failures=0 open expectations=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(284) @ 1719500: misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0; alert_internal hits=0; data_tag hits=0; sync traps=0 double faults expected=0 pulses=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(456) @ 1719500: sb [GEN_SB] ISA compare: records=461 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=2 rvfi_rmask_on_nonload=461
+ 17195.00ns INFO     cocotb.gen_tb_top                  GEN_UT_DBG_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+[GEN_DBG_CHK]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                   17195.01           0.13     131920.55  **

@@ -11,6 +11,7 @@ package gen_env_pkg;
   import gen_agents_pkg::*;
   import gen_export_pkg::*;
   import gen_rvfi_pkg::*;
+  import gen_checkers_pkg::*;
   `include "uvm_macros.svh"
 
   // ------------------------------------------------------------------------------------------
@@ -68,21 +69,59 @@ package gen_env_pkg;
 
   // ------------------------------------------------------------------------------------------
   // Bridge command dispatcher: routes each gen_cmd_item to the component that acts on it. Kinds
-  // without a consumer yet (irq/debug agents, regimes, injection arms: step 2) are collected errors so
-  // a test cannot believe it stimulated something that nothing consumed.
+  // without a consumer yet (ICACHE_ECC_ARM, COV_WITNESS) are collected errors so a test cannot believe it
+  // stimulated something that nothing consumed.
   class gen_cmd_dispatch extends uvm_subscriber #(gen_cmd_item);
     `uvm_component_utils(gen_cmd_dispatch)
-    gen_ctrl_driver ctrl;
-    gen_export_sink sink;
+    gen_ctrl_driver   ctrl;
+    gen_export_sink   sink;
+    gen_irq_driver    irq;
+    gen_dbg_driver    dbg;
+    gen_scrkey_driver scrkey;
+    gen_bus_agent     ibus, dbus;
     virtual gen_bridge_if bvif;
-    int unsigned routed = 0, ignored = 0;
+    int unsigned routed = 0, ignored = 0, phases = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
     endfunction
+    // REGIME_SET: arg0 = knob id (GEN_KNOB_ID_*), arg1 = value index. The rendered predicate decides which knobs have a
+    // run-time consumer (yaml regime_set_consumer); a knob without one is a collected error, never a silent no-op.
+    function void apply_knob(int id, int idx);
+      string name = gen_knob_name(id), value = gen_knob_value(id, idx);
+      if (name == "" || value == "") `uvm_fatal("GEN_CMD_DISPATCH", $sformatf("REGIME_SET with bad knob %0d / value %0d", id, idx))
+      if (!gen_knob_regime_set_consumed(id)) begin
+        `uvm_error("GEN_CMD_DISPATCH", {"REGIME_SET: no run-time consumer for ", name, " (regime_set_consumer ", gen_knob_consumer(id), ")"})
+        return;
+      end
+      case (id)
+        GEN_KNOB_ID_IMEM_GNT_DELAY, GEN_KNOB_ID_IMEM_RVALID_DELAY, GEN_KNOB_ID_IMEM_ERR_RATE, GEN_KNOB_ID_IMEM_INTG_ERR_RATE,
+        GEN_KNOB_ID_IMEM_OUTSTANDING_CAP:
+          if (!ibus.cfg.apply_knob(id, value)) `uvm_fatal("GEN_CMD_DISPATCH", {"ibus refused ", name})
+        GEN_KNOB_ID_DMEM_GNT_DELAY, GEN_KNOB_ID_DMEM_RVALID_DELAY, GEN_KNOB_ID_DMEM_ERR_RATE, GEN_KNOB_ID_DMEM_INTG_ERR_RATE:
+          if (!dbus.cfg.apply_knob(id, value)) `uvm_fatal("GEN_CMD_DISPATCH", {"dbus refused ", name})
+        GEN_KNOB_ID_IRQ_REGIME, GEN_KNOB_ID_IRQ_LINE_MIX, GEN_KNOB_ID_IRQ_HOLD: irq.set_regime(id, value);
+        GEN_KNOB_ID_DEBUG_REQ_REGIME: dbg.set_regime(value);
+        GEN_KNOB_ID_SCR_KEY_DELAY:    scrkey.set_regime(value);
+        default: `uvm_fatal("GEN_CMD_DISPATCH", {"consumed knob without a dispatcher case: ", name})   // predicate and case must agree
+      endcase
+      phases++;
+      `uvm_info("GEN_PHASE", $sformatf("phase %0d knob=%s value=%s cycle=%0d", phases, name, value, bvif.cycle_count), UVM_LOW)
+    endfunction
     function void write(gen_cmd_item t);
       case (t.kind)
-        GEN_CMD_FETCH_EN: begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
+        GEN_CMD_FETCH_EN:     begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
         GEN_CMD_EXPORT_FLUSH: begin bvif.peek_data = sink.flush_export(); routed++; end   // the seq rides back like a MEM_PEEK word
+        GEN_CMD_IRQ_SET:      begin irq.cmd_set(t.arg[0][18:0], gen_irq_hold_e'(t.arg[1]), t.arg[2], 1'b0); routed++; end
+        GEN_CMD_IRQ_CLR:      begin irq.cmd_clr(t.arg[0][18:0]); routed++; end
+        GEN_CMD_NMI_PULSE:    begin irq.cmd_set(19'h40000, GEN_IRQ_HOLD_CYCLES, t.arg[0] == 0 ? 1 : t.arg[0], 1'b0); routed++; end
+        GEN_CMD_DBG_REQ:      begin dbg.cmd(t.arg[0][0], t.arg[1], t.arg[2]); routed++; end
+        GEN_CMD_REGIME_SET:   begin apply_knob(t.arg[0], t.arg[1]); routed++; end
+        GEN_CMD_KEY_MODE:     begin scrkey.set_regime(gen_knob_value(GEN_KNOB_ID_SCR_KEY_DELAY, t.arg[0])); routed++; end
+        GEN_CMD_MEM_ERR_ARM: begin   // arg0 bus (0 ibus, 1 dbus), arg1 lo, arg2 hi, arg3 = kind (1 err, 2 intg) | count << 8
+          if (t.arg[0] == 0) ibus.driver.arm_err(t.arg[3][7:0], t.arg[1], t.arg[2], t.arg[3][31:8] == 0 ? 1 : t.arg[3][31:8]);
+          else               dbus.driver.arm_err(t.arg[3][7:0], t.arg[1], t.arg[2], t.arg[3][31:8] == 0 ? 1 : t.arg[3][31:8]);
+          routed++;
+        end
         GEN_CMD_MEM_PEEK, GEN_CMD_MISC: routed++;   // answered by the bridge / no-op
         default: begin
           ignored++;
@@ -106,6 +145,11 @@ package gen_env_pkg;
     gen_rvfi_monitor  rvfi_mon;
     gen_scoreboard    sb;
     gen_export_sink   sink;
+    gen_irq_driver    irq;
+    gen_dbg_driver    dbg;
+    gen_irq_checker   irq_chk;
+    gen_dbg_checker   dbg_chk;
+    gen_misc_monitor  misc_mon;
     gen_eot_handler    eot_h;
     gen_record_handler sig_h, ack_h, phase_h;
     virtual gen_bridge_if bvif;
@@ -153,6 +197,11 @@ package gen_env_pkg;
       rvfi_mon = gen_rvfi_monitor::type_id::create("rvfi_mon", this);
       sb       = gen_scoreboard::type_id::create("sb", this);
       sink     = gen_export_sink::type_id::create("sink", this);
+      irq      = gen_irq_driver::type_id::create("irq", this);
+      dbg      = gen_dbg_driver::type_id::create("dbg", this);
+      irq_chk  = gen_irq_checker::type_id::create("irq_chk", this);
+      dbg_chk  = gen_dbg_checker::type_id::create("dbg_chk", this);
+      misc_mon = gen_misc_monitor::type_id::create("misc_mon", this);
       bridge = gen_bridge::type_id::create("bridge", this);
       `uvm_info("GEN_ENV", {"ibus: ", ibus_agent.cfg.describe()}, UVM_LOW)
       `uvm_info("GEN_ENV", {"dbus: ", dbus_agent.cfg.describe()}, UVM_LOW)
@@ -166,9 +215,17 @@ package gen_env_pkg;
       dispatch.ctrl = ctrl;
       dispatch.sink = sink;
       dispatch.bvif = bvif;
+      dispatch.irq = irq; dispatch.dbg = dbg; dispatch.scrkey = scrkey;
+      dispatch.ibus = ibus_agent; dispatch.dbus = dbus_agent;
+      ack_h.irq = irq;
       rvfi_mon.sink = sink;
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
+      sb.ap_state.connect(irq_chk.imp_state);
+      sb.ap_state.connect(dbg_chk.imp_state);
+      sb.ap_state.connect(misc_mon.imp_state);
+      irq.ap.connect(irq_chk.imp_evt);
+      dbg.ap.connect(dbg_chk.imp_evt);
     endfunction
 
     function void report_phase(uvm_phase phase);
@@ -251,6 +308,9 @@ package gen_env_pkg;
                cfg.knob_imem_intg_err_rate, cfg.knob_imem_outstanding_cap, cfg.knob_dmem_gnt_delay,
                cfg.knob_dmem_rvalid_delay, cfg.knob_dmem_err_rate, cfg.knob_dmem_intg_err_rate,
                cfg.knob_scr_key_delay, cfg.icram_init);
+      $display("%s knobs irq regime=%s line_mix=%s hold=%s debug_req=%s fetch_enable=%s icache_ecc=%s", GEN_BANNER_TAG,
+               cfg.knob_irq_regime, cfg.knob_irq_line_mix, cfg.knob_irq_hold, cfg.knob_debug_req_regime,
+               cfg.knob_fetch_enable_regime, cfg.knob_icache_ecc_err_rate);
     endfunction
 
     function void end_of_elaboration_phase(uvm_phase phase);
