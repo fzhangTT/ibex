@@ -1591,3 +1591,17 @@ and the gate passed; the review launched with the byte-identical claim unverifie
 command list and the Orchestrator killed the review within two minutes, re-ran the three commands from a fresh worktree
 (three commands, rc 0, worktree clean) and relaunched. Rule added to LOG-048/060/061: a gate that compares state after
 running commands also asserts how many commands ran; "nothing changed" after nothing ran is not a pass.
+
+## LOG-065 - 2026-09-03 - The committer wrote a commit message claiming content the diff does not carry
+
+The commit message of tb-infra's landing 5 (a9b63ae) says "the abs, addi_wrap and cp_minstret_once classifiers corrected
+with reds and the classifier unit test". The cross-model review (REQUEST-CHANGES, artifact f2320ca) found none of that in
+the diff: the three classifiers are byte-identical to 50971ad, no red is retained, and no classifier unit test exists in
+the tree. tb-infra's hand-off note listed the landing's content in four points (three covergroups, the renderer change,
+the B4 reproducer and the B8 mapping, the retained logs) and did not claim the fixes; the Orchestrator wrote them into the
+subject from what it had asked slice 3 to carry, not from the note or the diff. A commit subject is part of the record
+and the reviewer read it as an honesty defect of the landing; the defect is the committer's. Rule: the commit subject is
+composed only from the hand-off note's content list, and each item in it is confirmed against the diff (a file, a hunk,
+or a retained artifact named for each) before the commit; an item the Orchestrator expected but the note does not list is
+asked about, never assumed. The classifier fixes (Critic tb_l3 H-1(b)/(c), CM66-MAJ-1) and the LOG-058 unit test remain
+owed and go into landing 6 ahead of any new covergroup; no proof credit rests on the affected bins until then.
