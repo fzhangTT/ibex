@@ -1658,3 +1658,15 @@ touch returned REQUEST-CHANGES on it. The tier is a plan-owned field; the go sho
 rule or asked of the DV Lead. Ruling: Runtime returns both entries to targeted in its required fix touch, measured still
 false until the PMP covergroups exist. Rule: a go that sets a field the plan owns (tier, measured, expected-fail, hosted
 group) cites the plan rule it satisfies, or goes to the DV Lead first; the acceptance form records results, not tiers.
+
+## LOG-070 - 2026-09-03 - A pre-commit hash re-check reported a mismatch and the commit chain went on; undone
+
+Committing Runtime's build-input gate touch, the Orchestrator's hash re-check printed CHANGED for
+gen_critic_response_flow.md (the tree copy, dac6899071ae, already carried Runtime's CM103 and TL-246 rows for its next,
+unhanded testlist fix touch; the handed hash was ed95bb8c1cdf), but the check's exit status was not gated and the chain
+committed the file in that intermediate state (4cb60ea) and launched its review. The mismatch was read a minute later; the
+review was killed and its run directory removed, and the commit was undone (git reset, nothing pushed), so HEAD is 624fdea
+and the tree holds Runtime's files as it left them. Runtime re-hands the gate touch with a response file that carries only
+the rows of that touch, or hands the fix touch with it as a second commit. Rule for the committer: every step of the
+pre-commit chain aborts on failure (a check's exit status is gated, not printed), and the hash re-check runs as the last
+step immediately before git add, with no step between.
