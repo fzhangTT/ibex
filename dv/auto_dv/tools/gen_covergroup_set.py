@@ -13,8 +13,12 @@ Usage: gen_covergroup_set.py [--testlist F] [--fcov-dir D] [--fcov-plan F] [--md
 """
 import re, csv, sys, argparse, pathlib, collections, yaml
 R = pathlib.Path(__file__).resolve()
-while not (R / 'dv/auto_dv/contract').is_dir(): R = R.parent
-LEDGER_PLAN = 'CG-WIT-001'
+while not (R / 'dv/auto_dv/contract').is_dir():
+    if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
+    R = R.parent
+sys.path.insert(0, str(R / 'dv/auto_dv/flow')); sys.path.insert(0, str(R / 'dv/auto_dv/tests'))
+from gen_flow_const import LEDGER_COVERGROUPS  # the ledger covergroup's SV name(s), one home (gen_flow_const.py)
+from gen_fcov_manifest import WITNESS_CG as LEDGER_PLAN, impl_cg_name, plan_cg_names, module_items  # plan id and the plan-to-SV name rule, one home
 
 def main():
     ap = argparse.ArgumentParser()
@@ -26,7 +30,8 @@ def main():
     plan_of_impl = {}; anchor = {}
     for i, line in enumerate(plan.splitlines(), 1):
         m = re.match(r'^### (CG-[A-Z]+-\d{3}): (gen_cg_\w+)', line)
-        if m: plan_of_impl['gen_' + m.group(2)[len('gen_cg_'):] + '_cg'] = m.group(1); anchor[m.group(1)] = f'gen_fcov_plan.md:{i} {line.strip()}'
+        if m: plan_of_impl[impl_cg_name(m.group(2))] = m.group(1); anchor[m.group(1)] = f'gen_fcov_plan.md:{i} {line.strip()}'
+    ledger_impls = set(LEDGER_COVERGROUPS)
     tl = yaml.safe_load(open(a.testlist))
     entries = [e for e in tl['tests'] if e.get('fcov_expectation_file')]
     per_cg = collections.defaultdict(lambda: {'bins': set(), 'cps': collections.defaultdict(set), 'manifests': collections.Counter()})
@@ -41,6 +46,12 @@ def main():
             cg, cp, bn = b.split('.', 2)
             per_cg[cg]['bins'].add(f'{cp}.{bn}'); per_cg[cg]['cps'][cp].add(bn); per_cg[cg]['manifests'][e['name']] += 1; cgs[cg] += 1
         per_man[e['name']] = {'bins': len(bins), 'not_hit': len(nh), 'cgs': cgs, 'tier': e.get('tier'), 'measured': e.get('measured')}
+    named = {pathlib.Path(e['fcov_expectation_file']).name for e in entries}
+    extra = []
+    for p in sorted(pathlib.Path(a.fcov_dir).glob('*.fcov.yaml')):
+        if p.name in named: continue
+        txt = p.read_text(); bins = list((yaml.safe_load(txt) or {}).get('bins') or []); cgs = collections.Counter(b.split('.', 1)[0] for b in bins)
+        extra.append((p.name, len(bins), len(re.findall(r'^# not_hit ', txt, re.M)), cgs))
     ranked = sorted(per_cg.items(), key=lambda kv: (-len(kv[1]['bins']), kv[0]))
     rank_of = {cg: i + 1 for i, (cg, _) in enumerate(ranked)}
     complete_at = {m: max(rank_of[cg] for cg in d['cgs']) if d['cgs'] else 0 for m, d in per_man.items()}
@@ -49,7 +60,7 @@ def main():
     for rk, (cg, d) in enumerate(ranked, 1):
         pid = plan_of_impl.get(cg, 'UNKNOWN (no plan header)')
         done_here = sorted(m for m, r in complete_at.items() if r == rk)
-        rows.append({'rank': rk, 'covergroup': cg, 'plan_id': pid, 'ledger': 'yes' if pid == LEDGER_PLAN else 'no', 'bins_referenced': len(d['bins']),
+        rows.append({'rank': rk, 'covergroup': cg, 'plan_id': pid, 'ledger': 'yes' if cg in ledger_impls else 'no', 'bins_referenced': len(d['bins']),
                      'coverpoints_referenced': len(d['cps']), 'coverpoints': '; '.join(f"{cp} ({len(bs)})" for cp, bs in sorted(d['cps'].items())),
                      'manifests': len(d['manifests']), 'manifest_bins': '; '.join(f"{m} ({n})" for m, n in sorted(d['manifests'].items())),
                      'manifests_completed_at_this_rank': '; '.join(done_here) or '-', 'plan_anchor': anchor.get(pid, '-')})
@@ -65,8 +76,8 @@ completed at this rank" names the manifests that become fully verifiable once th
 {LEDGER_PLAN} (gen_wit_cycle_clause_cg, T-179) is marked; its bins are witness bins, excluded from the score by name. Plan anchors are the
 gen_fcov_plan.md headers (file:line). Covergroups without a plan header: {len(unknown)} ({', '.join(unknown) or 'none'}).
 
-Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(entries)} manifests ({sum(d['bins'] for d in per_man.values())} declared bins in total,
-{sum(d['not_hit'] for d in per_man.values())} bins_not_hit excluded).
+Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(entries)} manifests: {sum(d['bins'] for d in per_man.values())} declared bins
+({sum(d['bins'] for d in per_man.values()) - total_bins} declared by more than one manifest); a further {sum(d['not_hit'] for d in per_man.values())} bins_not_hit bins are not declared by any manifest.
 
 | Rank | Covergroup (SV) | Plan id | Ledger | Bins referenced | Coverpoints / crosses referenced (bins each) | Manifests (bins each) | Manifests completed at this rank | Plan anchor |
 |---|---|---|---|---|---|---|---|---|
@@ -75,17 +86,41 @@ Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(ent
     mt = "\n## Per manifest\n\n| Manifest (test) | Tier | measured | Declared bins | bins_not_hit | Covergroups needed | Complete at rank |\n|---|---|---|---|---|---|---|\n"
     for m, d in sorted(per_man.items(), key=lambda kv: (complete_at[kv[0]], kv[0])):
         mt += f"| {m} | {d['tier']} | {str(bool(d['measured'])).lower()} | {d['bins']} | {d['not_hit']} | {len(d['cgs'])}: {'; '.join(f'{cg} ({n})' for cg, n in sorted(d['cgs'].items()))} | {complete_at[m]} |\n"
-    ledger_impl = 'gen_wit_cycle_clause_cg'
-    if ledger_impl not in per_cg:
-        mt += (f"\n## Ledger covergroup\n\n{LEDGER_PLAN} ({ledger_impl}, {anchor.get(LEDGER_PLAN, '-')}) is referenced by NO promoted manifest today: the released witness bins belong to"
-               f" unbuilt groups, and the one released item of a promoted test (TP-CSR-029, gen_test_csr_trap_setup) carries its witness bin under bins_not_hit (rule g)."
-               f" It enters this set the moment a promoted manifest declares a witness bin; its implementation is T-179 regardless, because the witness score (Section 0)"
-               f" depends on it.\n")
+    # committed manifests the committed testlist does not name yet (CM37-M-1): excluded from the ranking, stated with what they add
+    mt += "\n## Committed manifests not yet named by the committed testlist (excluded from the ranking)\n\n"
+    if extra:
+        mt += "| Manifest file | Declared bins | bins_not_hit | Covergroups (bins each) | New to the set above |\n|---|---|---|---|---|\n"
+        for name, nb, nh, cgs in extra:
+            new = [cg for cg in cgs if cg not in per_cg]
+            cg_txt = '; '.join(cg + ' (' + str(n) + ')' for cg, n in sorted(cgs.items()))
+            new_txt = '; '.join(cg + ' (' + plan_of_impl.get(cg, 'UNKNOWN') + ', ' + anchor.get(plan_of_impl.get(cg), '-').split(' ')[0] + ')' for cg in new) or 'none'
+            mt += '| ' + name + ' | ' + str(nb) + ' | ' + str(nh) + ' | ' + cg_txt + ' | ' + new_txt + ' |\n'
+        mt += "\nThese enter the ranking the moment their testlist entries are committed (a staged entry is not an input of this file).\n"
+    else:
+        mt += "None: every committed manifest is named by the committed testlist.\n"
+    # the ledger covergroup (CM37-L-1): derived from the witness CSV and the promoted tests' modules, not written by hand
+    wit_rows = list(csv.DictReader(open(R / 'dv/auto_dv/docs/gen_trace_witness_ids.csv', newline='')))
+    hosted = {re.sub(r'^gen_test_', 'gen_', e['name']): e['name'] for e in entries}
+    released_hosted = []
+    for w in wit_rows:
+        if w['marked'] == '1' or w['test_group'] not in hosted: continue
+        test = hosted[w['test_group']]; mp = R / f"dv/auto_dv/fcov_expectations/{test}.fcov.yaml"; mod = R / f"dv/auto_dv/tests/{test}.py"
+        nh = set(re.findall(r'^# not_hit (\S+):', mp.read_text(), re.M)) if mp.exists() else set()
+        why = 'declared' if any(x.endswith('.' + w['bin']) for x in ((yaml.safe_load(mp.read_text()) or {}).get('bins') or [])) else None
+        if any(x.endswith('.' + w['bin']) for x in nh): why = 'bins_not_hit'
+        elif mod.exists() and w['tp_item'] in (module_items(mod)[1] or {}): why = 'not_built'
+        released_hosted.append((w['tp_item'], test, why or 'absent (neither declared, bins_not_hit nor not_built)'))
+    mt += f"\n## Ledger covergroup\n\n{LEDGER_PLAN} ({', '.join(sorted(ledger_impls))}, {anchor.get(LEDGER_PLAN, '-')}) is "
+    if any(cg in ledger_impls for cg in per_cg): mt += "in the ranking above (a promoted manifest declares a witness bin).\n"
+    else:
+        mt += ("referenced by NO promoted manifest today: the released witness bins belong to unbuilt groups except "
+               + (', '.join(f"{t} ({test}: {why})" for t, test, why in released_hosted) or 'none') +
+               ". It enters this set the moment a promoted manifest declares a witness bin; its implementation is T-179 regardless, because the witness score (gen_test_plan.md Section 0) depends on it.\n")
     out = hdr + body + mt
     assert not [c for c in out.encode() if c > 127]
     pathlib.Path(a.md).write_text(out)
     with open(a.csv, 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
-    print(f'{len(rows)} covergroups, {total_bins} referenced bins, {len(entries)} manifests; ledger rank {rank_of.get("gen_wit_cycle_clause_cg", "-")}; unknown {unknown}; wrote {a.md}, {a.csv}')
+    print(f'{len(rows)} covergroups, {total_bins} referenced bins, {len(entries)} manifests; extra committed manifests {len(extra)}; ledger in ranking {any(cg in ledger_impls for cg in per_cg)}; unknown {unknown}; wrote {a.md}, {a.csv}')
 
 if __name__ == '__main__': main()
