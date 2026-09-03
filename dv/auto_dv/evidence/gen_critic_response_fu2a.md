@@ -19,3 +19,25 @@ to landing 2c with the red it will carry. Evidence: gen_tdd_step2b.md Sections 9
 | CM25-L-5 | the three conventions lack RTL anchors | FIXED (2b) | gen_component_api_scoreboard.md table: rtl/ibex_core.sv:2403-2413 and rtl/ibex_controller.sv:498 (NMI pre-emption), rtl/ibex_core.sv:2383-2385 (rf_wr_suppress), rtl/ibex_controller.sv:736-757 (one taken cause per entry), plus the mtval convention. |
 | CM25-L-6 | external-vs-internal NMI classified from the single t.ext_nmi sample | OWED to 2c (documented precondition now) | the classification needs the pin high at the record's sample; a pulse shorter than the entry latency is classified internal and then fails the announced-corruption test loudly (not silently); 2c classifies from the same nmi_either window the irq checker uses. |
 | T-189 (LOG-037e) | intent anchors for the NMI emulation | stated | the semantics anchors (exception_interrupts.rst :56-59, :72-73, :84, :90, :93-96, :176-179) go into gen_component_api_isa_shim.md with 2c's L-7 statement. |
+
+## Critic verdict on landing 2b (dv/auto_dv/docs/gen_critic_tb_l2b.md, REQUEST-CHANGES): CR-2B rows
+
+| id | finding | status | as built / owed |
+|---|---|---|---|
+| CR-2B-M-1 | COV_WITNESS arg1 (the issuing group) is the reference; the template still sends 0 and the flow's witness_render dies on witness_ids (T-226, three roles) | protocol stable | nothing further on the TB side: arg0 = the item's index, arg1 = the issuing test's group index, refusals GEN_CMD_DISPATCH / GEN_WITNESS_FOREIGN (gen_component_api_fcov.md Section 7). |
+| CR-2B-M-2 | four of the nine SVA groups (icram, irq, dbg, alert) have no catching mutant | OWED to 2c | one named mutant per group, each with its group knob's ablation, as for MUT-M / MUT-N / RM1..RM3; the icram group needs the RAM model's announcement port or an out-of-tree RTL mutant of the ECC path. |
+| CR-2B-M-3 | gen_component_api_scoreboard.md:132 says the suppressed register write is accepted only with an announced corruption, :86 calls integrity runs full lock-step compares, while the code accepts on the DUT flag and the gate is owed | FIXED (docs-only delta) | the row states the acceptance on the DUT flag alone and the owed gate (T-183, LOG-051 carve-out); :86 says integrity-error runs stay consistency-only until it lands. |
+| CR-2B-L-1..L-15 | the fifteen lows (six adopted from the cross-model artifact, whose medium the Critic keeps as L-5) | OWED to 2c | answered row by row with landing 2c together with the CM43 rows below. |
+
+## Cross-model review of landing 2b (artifact 2026-09-03-claude-diff-f146ceba-d752fb36.md, APPROVE-WITH-CHANGES): CM43 rows
+
+| id | finding | status | plan |
+|---|---|---|---|
+| CM43-M-1 | sva_alert_minor_window hand-codes a two-cycle window while ICACHE_ECC_WINDOW (bound to GEN_ICACHE_ECC_WINDOW = 1) is never referenced | OWED to 2c | the window built from the parameter (a range), or the yaml constant raised to 2 with the reason, with a red showing the tighter window bites. |
+| CM43-L-1 | sva_icram_widths pins 28 / 78 as literals | OWED to 2c | derived as gen_dut_top.sv derives them (IC_TAG_SIZE + IC_TAG_ECC_SIZE, BusSizeECC * IC_LINE_BEATS). |
+| CM43-L-2 | the group knobs retyped as string literals; the rendered cfg.chk_sva_* fields have no consumer | OWED to 2c | names from the PLUSARG_* parameters, or the yaml desc says the cfg mirror is unconsumed. |
+| CM43-L-3 | dcsr_q[1:0] hand-sliced as prv | OWED to 2c | a named field (localparam or the shim map). |
+| CM43-L-4 | wit_referee has no mutation evidence of its own (WM1 was caught by the Python assert) | OWED to 2c | a referee-targeted mutant (sample a different index than the one bookkept) with the Python assert inert. |
+| CM43-L-5 | RM1..RM3 share the build sha because the RTL copy is outside the sources hash | OWED to 2c (record) | the mutated RTL file's sha per RM row. |
+| CM43-L-6 | gen_protocol_props.sv header cites untracked draft paths and a landing tag | OWED to 2c | the deviation list kept, the untracked provenance and the tag dropped (rtl-arch's tracked anchor file). |
+| CM43-L-7 | gen_ut_witness_foreign.py shares its basename with a Test Writer fixture | OWED to 2c | renamed gen_ut_cov_witness_foreign (module path stated in the manifest rows). |

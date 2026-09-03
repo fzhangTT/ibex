@@ -83,7 +83,7 @@ Section 1), evaluated on every intr record from the previous record's `post_mip`
 driver's events. An NMI-vector entry (cause 31) is emulated by the model (landing 2a): the record's `ext_nmi` sample
 decides external (mcause 0x8000001F) against internal (0xFFFFFFE0, mtval = the announced corruption's address from
 `gen_bus_err_log::take_intg()`), and the shim performs the entry and the mstack restore on the closing mret
-(gen_component_api_isa_shim.md), so NMI-enabled and integrity-error runs are full lock-step compares, no longer
+(gen_component_api_isa_shim.md), so NMI-enabled runs are full lock-step compares (LOG-051); integrity-error runs stay consistency-only until the suppressed-write gate lands (T-183, landing 2c), no longer
 consistency-only. An interrupt entry the NMI pre-empted before its handler retired anything leaves no record of its own:
 the record after the NMI entry then sits at a vector address without `rvfi_intr`, and the model takes that interrupt at
 that record (`nmi_preempted` in the report; 2 in the with-NMI storm). The entry's vector cause is also written to the
@@ -129,7 +129,7 @@ the items it decides; cited as rows, ruling LOG-037c):
 | convention | what the comparator does | RTL | decides |
 |---|---|---|---|
 | NMI-pre-empted interrupt entry | an interrupt entry the NMI pre-empts before its handler retires anything has no `rvfi_intr` record of its own: the record after the NMI's entry sits at a vector address without the flag, and the model, back from the NMI's mret in the pre-entry state, takes that interrupt then (`after_nmi_entry`, counted `nmi_preempted`) | rtl/ibex_core.sv:2403-2413 (the intr flag goes to the NMI record), rtl/ibex_controller.sv:498 | TP-IRQ-079 |
-| suppressed register write | a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress = 1` and keeps its old destination: the model's write is undone from a GPR snapshot taken before the step (counted `rf_wr_suppressed`); accepted only with an announced corruption (`gen_bus_err_log::note_intg`) | rtl/ibex_core.sv:2383-2385 | TP-DMEM-039 / 041 / 064, TP-RVFI-024 |
+| suppressed register write | a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress = 1` and keeps its old destination: the model's write is undone from a GPR snapshot taken before the step (counted `rf_wr_suppressed`) on the DUT's flag alone; the gate on an announced corruption for that load and on the DUT's rd fields reporting no write is OWED to landing 2c (T-183, LOG-051 carve-out): until it lands, integrity-corruption runs are consistency-only | rtl/ibex_core.sv:2383-2385 | TP-DMEM-039 / 041 / 064, TP-RVFI-024 |
 | irq_entry bound restarts at each entry | a raised, enabled line must be taken within GEN_IRQ_ENTRY_BOUND_RECORDS records counted from the LAST interrupt entry, not from the raise: the DUT serves one entry at a time and the others wait behind the handler | rtl/ibex_controller.sv:736-757 (one taken cause per entry) | TP-IRQ-001 / 012 / 022 |
 | mtval of a bus fault | the failing bus transaction's address (Rules (b) below) | rtl/ibex_load_store_unit.sv:258, :520, :540 | TP-DMEM fault items |
 
@@ -143,7 +143,7 @@ had no error (:520, :540); the scoreboard derives it from the words `take()` con
 first word was announced, else the second word) and hands it to the shim (`gen_isa_arm_fault(kind, addr, size, tval)`),
 which writes mtval after the faulting step (Spike's own tval is the effective address; shim unit test section 13,
 mutant RS1). (c) Announced-never-trapped: the report-time referee `bus_err_leftover` fails the run when an announcement
-older than GEN_BUS_ERR_DRAIN_CYCLES was never consumed by a trap record (an injected error the DUT did not trap on, or
+older than GEN_BUS_ERR_DRAIN_CYCLES (64 = 2 x 32: the two in-order transactions of a split access each waiting the longest rvalid window the yaml allows; a longer window must raise it) was never consumed by a trap record (an injected error the DUT did not trap on, or
 one the TB announced without driving it: mutant RM-L1). (d) Limitation: a faulted store's memory side effect is the
 driver's (`err_store_perform`) on the DUT side and none on the model's; a program that reads such a word back before a
 successful retry diverges. (e) The riscv-dv seed-7 program is not a vehicle for injected data faults: its handler skips
