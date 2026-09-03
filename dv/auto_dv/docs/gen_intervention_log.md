@@ -818,3 +818,23 @@ codegen fixtures, README rename), the binding rulings (LOG-025, LOG-026a, LOG-02
 inherited edits by rebuilding, finish the checker holes first, split into two landings if needed, close the
 window with the canary. Third respawn of the day (rtl-arch LOG-010, tb-infra earlier); the pattern is a long
 foreground turn with no filesystem output, which the STATUS rule is meant to expose.
+
+## LOG-024c - 2026-09-03 - GATE HELD (landing 3c at 69be96b: cross-model REQUEST-CHANGES; Orchestrator verification error)
+
+The cross-model review of ee2405a..69be96b (dv/auto_dv/reviews/2026-09-03-claude-diff-ee2405a7-69be96b5.md)
+finds a high in the library self-test itself: every red-source loop raises AssertionError("red source ...
+accepted") inside a try whose except catches AssertionError and checks the reason text, so the loops cannot
+fail and none of the refused-forgery claims was ever proven; re-running with a collector shows one of the nine
+new reds accepted (a helper aliasing its parameter before writing failures). Mediums: the committed-tree
+self-test claim was false at 69be96b (bit_ratified has no entry in the committed testlist until e83614c); the
+602-bin isa_alu green is asserted, not retained; the residual wording is still inaccurate because
+indirection-free statements pass (del self.failures[:], attribute-chain writes through template-owned objects,
+template patching through an import alias). Orchestrator error: the "PASS in both forms" verification for
+69be96b was run in the working tree, which already carried Runtime's uncommitted testlist edit; committer
+checks must run from a detached checkout of the commit, as the reviewers do. Ruling: the self-test loops get a
+sentinel that cannot be swallowed and every red is re-proven; the helper-parameter rule treats every parameter
+of a helper that receives self at a call site as test-standing; the lint stops growing beyond that, and the API
+document replaces "any indirection defeats it" with an explicit list of the refused forms plus the sentence that
+everything else passes and the lint is not a guarantee (the guarantee stays architectural: committed testlist
+ids, fire-check codes, SV ledger). These fold into the pending landing 3d; LOG-024 holds until 3d is committed
+and re-reviewed.
