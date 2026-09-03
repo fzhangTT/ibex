@@ -299,6 +299,24 @@ parser reads). `unreachable` counts URG "Unreachable" marks (constant analysis, 
 in one module's section of `modinfo.txt`, per line rows, condition vectors and toggle rows: the
 machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
+## 6a. Build mechanics beyond vcs: pre_build, extra_ldflags, runtime_lib_dirs
+
+A build entry may declare, with `{outdir}` (and `{mirror}`) rendered by the flow:
+
+- `pre_build`: commands run in order before vcs, clone root as cwd, the sourced environment
+  inherited (for example TB Infra's `bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib`,
+  which builds the Spike-backed ISA shim as a shared library next to the simv). Each step is
+  logged to `<outdir>/pre_build_<i>.log`; a non-zero exit stops the build; `build_manifest.pre_build`
+  records command, rc, wall time and the sha256 of every file under `<outdir>/lib`.
+- `extra_ldflags`: appended to the SIM_RECIPE base `-Wl,--no-as-needed` into the single `-LDFLAGS`
+  string (for example `-L{outdir}/lib -lgen_isa_shim -Wl,-rpath,{outdir}/lib`);
+  `build_manifest.ldflags` is the string vcs saw.
+- `runtime_lib_dirs`: directories exported as `LD_LIBRARY_PATH` by every run of the build (for
+  example `{outdir}/lib` and `{mirror}/tools/spike/lib`): a shared library whose own rpath points into
+  the clone cannot be resolved on a compute host, LD_LIBRARY_PATH can; recorded in
+  `build_manifest.runtime_lib_dirs` and visible in each run's `run_cmd.sh`.
+The values live in the build entry only (TB Infra owns the mechanics, the flow never re-types them).
+
 ## 7. gen_testlist.yaml (schema)
 
 Rulings applied in the testlist (single source): every build entry carries `cov_trees:
@@ -311,7 +329,8 @@ glitch-filtered). `schema_version: 1`. Header policies: `fcov_manifest_required_
 in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`, `cov_trees` (gated
 coverage roots below tb_top, default `[dut_instance]`; the single source of the `-cm_hier` scope;
 ruled: `[u_dut.u_ibex_core, u_dut.u_register_file]`), `info_trees` (instrumented, reported
-informationally, never gated; ruled: `[u_dut]`). `tests[]`: `name` (gen_
+informationally, never gated; ruled: `[u_dut]`), `pre_build`, `extra_ldflags`, `runtime_lib_dirs`
+(Section 6a). `tests[]`: `name` (gen_
 prefix, unique), `description`, `tier`, `build`, `uvm_test` (null for a top without a UVM test
 class; otherwise a class identifier, anything else is rejected), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
 (`dv/auto_dv/fcov_expectations/<name>.fcov.yaml` or null), `timeout_s`, `owner` (role slug),

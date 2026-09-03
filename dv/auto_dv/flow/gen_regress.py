@@ -352,9 +352,9 @@ def main() -> int:
 
     builds: dict[str, Any] = {}
     needs_mirror = any(testlist["builds"][b].get("cocotb") for b in {t["build"] for t, _ in plan})
-    if needs_mirror and not a.no_sync_mirror and not a.local:
-        # cocotb builds load the VPI library from the mirror venv and runs import from the mirror:
-        # sync it first so the build records the revision the runs will see.
+    if needs_mirror and not a.no_sync_mirror:
+        # cocotb builds load the VPI library from the mirror venv and runs import from the mirror (in
+        # --local mode too): sync it first so the build records the revision the runs will see.
         rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync"], cwd=C.REPO_ROOT,
                                     log_path=outdir / "regress.log", timeout_s=1800)
         manifest["mirror_sync"] = {"rc": rc, "wall_s": round(wall, 1)}

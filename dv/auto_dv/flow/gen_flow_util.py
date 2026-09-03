@@ -286,6 +286,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: build {bname} info_trees must be a list of instance paths below tb_top")
         if info and trees and set(info) & set(trees):
             die(f"{path}: build {bname}: a tree cannot be both gated (cov_trees) and informational (info_trees)")
+        for key in ("pre_build", "extra_ldflags", "runtime_lib_dirs"):
+            v = b.get(key)
+            if v is not None and (not isinstance(v, list) or not all(isinstance(x, str) for x in v)):
+                die(f"{path}: build {bname} {key} must be a list of strings")
         nested = nested_pairs(trees or [])
         if nested:
             die(f"{path}: build {bname}: gated cov_trees must not nest (URG hierarchy rows are cumulative over "

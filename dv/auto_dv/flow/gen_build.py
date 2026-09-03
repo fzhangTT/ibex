@@ -114,6 +114,9 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["defines"] = [f"+define+{d}" for d in list(build.get("defines") or []) + list(a.define or [])]
     groups["config"] = config_opts()
     groups["common"] = list(C.VCS_COMMON_FLAGS)
+    # One -LDFLAGS string: the SIM_RECIPE base plus the build entry's extra_ldflags ({outdir} rendered).
+    ldflags = [C.LDFLAGS_BASE] + [x.format(outdir=str(outdir)) for x in (build.get("extra_ldflags") or [])]
+    groups["ldflags"] = ["-LDFLAGS", " ".join(ldflags)]
     groups["output"] = [f"-Mdir={outdir / C.SIMV_CSRC_NAME}", "-o", str(outdir / C.SIMV_NAME)]
     groups["debug"] = list(C.VCS_DEBUG_WAVES_FLAGS if a.waves else C.VCS_DEBUG_PP_FLAGS)
     if a.coverage:
@@ -137,7 +140,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     groups["extra"] = list(build.get("extra_vcs_args") or []) + list(a.vcs_arg or [])
     groups["log"] = ["-l", str(outdir / C.COMPILE_LOG)]
     argv = ["vcs"]
-    for g in ("base", "filelists", "top", "uvm", "defines", "config", "common", "output", "debug",
+    for g in ("base", "filelists", "top", "uvm", "defines", "config", "common", "ldflags", "output", "debug",
               "coverage", "cocotb", "extra", "log"):
         argv += groups.get(g, [])
     return argv, groups
@@ -159,6 +162,31 @@ def cov_scopes(build: dict[str, Any]) -> list[str]:
 
 def info_scopes(build: dict[str, Any]) -> list[str]:
     return [f"{build['tb_top']}.{t}" for t in info_trees(build)]
+
+
+def run_pre_build(build: dict[str, Any], outdir: Path, timeout_s: int) -> list[dict[str, Any]]:
+    """The build entry's pre_build commands (e.g. the ISA shim library), in order, clone root as cwd,
+    the sourced environment inherited; any failure stops the build. Products under <outdir> are digested."""
+    records: list[dict[str, Any]] = []
+    for i, tmpl in enumerate(build.get("pre_build") or []):
+        cmd = tmpl.format(outdir=str(outdir))
+        log = outdir / f"pre_build_{i}.log"
+        rc, wall, timed_out = U.run_bounded(["bash", "-c", cmd], cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s)
+        rec = {"command": cmd, "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "log": str(log)}
+        records.append(rec)
+        if rc != 0 or timed_out:
+            U.die(f"pre_build step {i} failed (rc={rc}, timed_out={timed_out}): {cmd}; see {log}")
+    lib_dir = outdir / "lib"
+    if lib_dir.is_dir():
+        for r in records:
+            r["products"] = {f.name: U.sha256_file(f) for f in sorted(lib_dir.iterdir()) if f.is_file()}
+    return records
+
+
+def runtime_lib_dirs(build: dict[str, Any], outdir: Path) -> list[str]:
+    mirror = M.mirror_root()
+    return [x.format(outdir=str(outdir), mirror=str(mirror) if mirror else "MIRROR_UNSET")
+            for x in (build.get("runtime_lib_dirs") or [])]
 
 
 def summarize_compile_log(log: Path) -> dict[str, Any]:
@@ -246,6 +274,7 @@ def main() -> int:
 
     U.require_env("vcs")
     a.mirror_record = None
+    pre_build = run_pre_build(build, outdir, a.timeout_s)
     argv, groups = compose_command(build, outdir, a)
     # Staged copy of the environment entry point: run jobs source it from the (shared) outdir.
     shutil.copyfile(C.ENV_SH, outdir / C.STAGED_ENV_SH)
@@ -266,6 +295,7 @@ def main() -> int:
         "rtl_substitutions": a.rtl_substitutions,
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,
         "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
+        "pre_build": pre_build, "ldflags": groups["ldflags"][1], "runtime_lib_dirs": runtime_lib_dirs(build, outdir),
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.REPO_ROOT / f for f in build["filelists"]]),

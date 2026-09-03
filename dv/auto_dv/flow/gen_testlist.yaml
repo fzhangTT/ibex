@@ -85,6 +85,13 @@ builds:
       - RVFI
     cocotb: true
     extra_vcs_args: ["-cm_glitch", "0"]
+    # ISA shim (Spike behind DPI) as a shared library next to the simv (TB Infra, dv/auto_dv/isa).
+    pre_build:
+      - bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib
+    extra_ldflags: ["-L{outdir}/lib", "-lgen_isa_shim", "-Wl,-rpath,{outdir}/lib"]
+    # Run-time library search path of every run: the shim beside the simv and the mirror's spike (the
+    # shim's own rpath points into the clone's tools/spike, which LSF hosts cannot see).
+    runtime_lib_dirs: ["{outdir}/lib", "{mirror}/tools/spike/lib"]
 
 tests:
   - name: gen_smoke
@@ -163,3 +170,25 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+
+  - name: gen_ut_lockstep
+    description: lock-step comparator (Spike ISA shim vs RVFI retirement) on the directed Zc program; checks the DUT against the model (TB Infra)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: [bringup, isa_model]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    component: gen_isa_shim
+    measured: true

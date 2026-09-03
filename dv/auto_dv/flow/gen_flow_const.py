@@ -104,7 +104,6 @@ VCS_UVM_FLAGS = ["-ntb_opts", "uvm-1.2", "+define+UVM", "+define+UVM_REGEX_NO_DP
 VCS_COMMON_FLAGS = [
     "-timescale=1ns/10ps",
     "-licqueue",
-    "-LDFLAGS", "-Wl,--no-as-needed",
     "-CFLAGS", "--std=c99 -fno-extended-identifiers",
     "-xlrm", "uniq_prior_final",
     "-lca", "-kdb",
@@ -211,7 +210,13 @@ BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
 # cov_trees: the gated coverage roots below tb_top (single source of the -cm_hier scope; ruled:
 # the two inner instances, never nested).
 # info_trees: instrumented and reported informationally (the wrapper), never in the gate numbers.
-BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees", "info_trees")
+# pre_build: commands run (clone root cwd, env sourced) before vcs, "{outdir}" rendered; extra_ldflags:
+# appended to the SIM_RECIPE -LDFLAGS base, "{outdir}" rendered; runtime_lib_dirs: LD_LIBRARY_PATH of
+# every run of the build, "{outdir}" and "{mirror}" rendered (shared libraries such as the ISA shim
+# and the mirror's spike, which a compute host cannot reach through a clone-path rpath).
+BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees", "info_trees",
+                       "pre_build", "extra_ldflags", "runtime_lib_dirs")
+LDFLAGS_BASE = "-Wl,--no-as-needed"
 # DV Lead rulings applied by the flow (dv/auto_dv/docs/gen_tb_architecture.md Section 5). The scope
 # text names no instance: the names come from the build entry's cov_trees / info_trees (single source).
 RULING_SCOPE_TEMPLATE = ("gen_tb_architecture.md Section 5: the gate numbers are the gated cov_trees {gated} combined "
