@@ -766,3 +766,13 @@ driven by it); (2) exclusion is by row, not by source: the three unobserved rows
 retained run shows them; (3) tb-infra makes writers register the rows they emit and the sink fatal at
 elaboration on an emitted row with no registered writer (T-141, with CM8-M-1/M-2). Supersedes the source-level
 wording of LOG-028; the M-1 fix (read export_sources_emitted, not export_sources) lands with v2i.
+
+## LOG-029 - 2026-09-03 - NOTE (fence-adjacent slips by two Test Writer subagents; no fenced content touched)
+
+Reported by the Test Writer at 13:50Z: the mul_mul subagent ran one read-only `git log -1` and a `find` that
+listed path names under dv/auto_dv/work/orchestrator and dv/auto_dv/work/runtime (nothing read); the mul_div
+subagent listed the shared out directory named in gen_site.yaml and read three lines of a sibling run's
+sim.log inside the Test Writer's own work directory. None of these touches fenced content (docs/dv/FENCE.md
+denies Ibex DV collateral, sibling clones, other branches and remotes, and the shared /tmp); they break the
+team rules (teammates run no git commands; a role lists only its own work directory). Recorded for
+transparency; the Test Writer re-briefs its subagents. No owner action needed.
