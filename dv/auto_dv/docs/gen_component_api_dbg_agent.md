@@ -57,3 +57,8 @@ step-mix regime.
 ## 8. At build
 
 Confirm the INITIALIZED gating mechanism with the Test Writer.
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+pin row from gen_dbg_driver: `debug_req` (value) on every DBG_REQ assert or release.

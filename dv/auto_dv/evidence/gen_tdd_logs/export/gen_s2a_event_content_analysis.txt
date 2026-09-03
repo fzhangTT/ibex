@@ -1,0 +1,100 @@
+# T-080 step 2, build out_t080s2/a: event lines per (source, event) and the first line of selected rows, read with gen_export.read (format version 2)
+export_zc: records 175 events 902 marker Flush(seq=2, records=175, retired=175, markers=0, events=902, ibus_grants=154, dbus_grants=29, cycle=585)
+   alert alert_major_bus: 1
+   alert alert_major_internal: 1
+   alert alert_minor: 1
+   alert double_fault_seen: 1
+   dbus gnt: 29
+   dbus req: 29
+   dbus rvalid: 29
+   ibus gnt: 154
+   ibus req: 155
+   ibus rvalid: 153
+   misc core_busy: 1
+   misc crash_dump_current_pc: 151
+   misc crash_dump_exception_addr: 1
+   misc crash_dump_exception_pc: 1
+   misc crash_dump_last_data_addr: 26
+   misc crash_dump_next_pc: 165
+   misc irq_pending: 1
+   pin fetch_enable: 2
+   pin mcounteren_writable: 1
+   first ibus req: cycle 61 fields ['0x80000080', '0x0', '0xf']
+   first ibus gnt: cycle 64 fields ['0x80000080', '0x0', '0xf', '0x3d', '0x1']
+   first ibus rvalid: cycle 67 fields ['0x80000080', '0x0', '0x0', '0x0', '0x0']
+   first dbus req: cycle 109 fields ['0x8000039c', '0x1', '0xf']
+   first dbus gnt: cycle 111 fields ['0x8000039c', '0x1', '0xf', '0x6d', '0x1']
+   first dbus rvalid: cycle 114 fields ['0x8000039c', '0x1', '0x0', '0x0', '0x0']
+   first pin fetch_enable: cycle 0 fields ['0xa']
+   first pin mcounteren_writable: cycle 0 fields ['0x5']
+   first misc irq_pending: cycle 0 fields ['0x0']
+   fetch_enable lines: [(0, '0xa'), (60, '0x5')]
+export_s7: records 2008 events 15765 marker Flush(seq=2, records=2008, retired=2008, markers=0, events=15765, ibus_grants=3167, dbus_grants=550, cycle=10106)
+   alert alert_major_bus: 1
+   alert alert_major_internal: 1
+   alert alert_minor: 1
+   alert double_fault_seen: 1
+   dbus gnt: 550
+   dbus req: 550
+   dbus rvalid: 550
+   ibus gnt: 3167
+   ibus req: 3168
+   ibus rvalid: 3166
+   misc core_busy: 1
+   misc crash_dump_current_pc: 2009
+   misc crash_dump_exception_addr: 1
+   misc crash_dump_exception_pc: 3
+   misc crash_dump_last_data_addr: 66
+   misc crash_dump_next_pc: 2506
+   misc irq_pending: 1
+   pin fetch_enable: 2
+   pin mcounteren_writable: 1
+   scrkey req: 10
+   scrkey valid: 10
+   first ibus req: cycle 61 fields ['0x80000080', '0x0', '0xf']
+   first ibus gnt: cycle 64 fields ['0x80000080', '0x0', '0xf', '0x3d', '0x1']
+   first ibus rvalid: cycle 67 fields ['0x80000080', '0x0', '0x0', '0x0', '0x0']
+   first dbus req: cycle 1771 fields ['0x8001c4a0', '0x1', '0xf']
+   first dbus gnt: cycle 1773 fields ['0x8001c4a0', '0x1', '0xf', '0x6eb', '0x1']
+   first dbus rvalid: cycle 1776 fields ['0x8001c4a0', '0x1', '0x0', '0x0', '0x0']
+   first pin fetch_enable: cycle 0 fields ['0xa']
+   first pin mcounteren_writable: cycle 0 fields ['0x5']
+   first scrkey valid: cycle 1207 fields ['0x0']
+   first scrkey req: cycle 1207 fields ['0x1']
+   first misc irq_pending: cycle 0 fields ['0x0']
+   fetch_enable lines: [(0, '0xa'), (60, '0x5')]
+export_irq_storm: records 3939 events 47672 marker Flush(seq=2, records=3939, retired=3939, markers=1591, events=47672, ibus_grants=8953, dbus_grants=1, cycle=27116)
+   alert alert_major_bus: 1
+   alert alert_major_internal: 1
+   alert alert_minor: 1
+   alert double_fault_seen: 1
+   dbus gnt: 1
+   dbus req: 1
+   dbus rvalid: 1
+   ibus gnt: 8953
+   ibus req: 8953
+   ibus rvalid: 8952
+   misc core_busy: 1
+   misc crash_dump_current_pc: 3913
+   misc crash_dump_exception_addr: 1
+   misc crash_dump_exception_pc: 322
+   misc crash_dump_last_data_addr: 2
+   misc crash_dump_next_pc: 7286
+   misc irq_pending: 1722
+   pin fetch_enable: 2
+   pin irq_external: 422
+   pin irq_fast: 6327
+   pin irq_software: 418
+   pin irq_timer: 390
+   pin mcounteren_writable: 1
+   first ibus req: cycle 61 fields ['0x80000080', '0x0', '0xf']
+   first ibus gnt: cycle 64 fields ['0x80000080', '0x0', '0xf', '0x3d', '0x1']
+   first ibus rvalid: cycle 67 fields ['0x80000080', '0x0', '0x0', '0x0', '0x0']
+   first dbus req: cycle 27073 fields ['0x800002d0', '0x1', '0xf']
+   first dbus gnt: cycle 27075 fields ['0x800002d0', '0x1', '0xf', '0x69c1', '0x1']
+   first dbus rvalid: cycle 27078 fields ['0x800002d0', '0x1', '0x0', '0x0', '0x0']
+   first pin fetch_enable: cycle 0 fields ['0xa']
+   first pin mcounteren_writable: cycle 0 fields ['0x5']
+   first pin irq_fast: cycle 6 fields ['0x5', '0x1']
+   first misc irq_pending: cycle 0 fields ['0x0']
+   fetch_enable lines: [(0, '0xa'), (60, '0x5')]

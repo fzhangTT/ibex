@@ -66,3 +66,8 @@ pipeline state (crosses sampled in the scoreboard), NMI during handler, interrup
 
 Write the user-extension `gen_plic_section` ack store; decide the ack register protocol (write
 value = cause id).
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+pin rows from gen_irq_driver: `irq_software`, `irq_timer`, `irq_external`, `irq_nm` (value) and `irq_fast` (idx, value), one line per line whose level changed in `apply_levels`, stamped `sink.cycle()`.

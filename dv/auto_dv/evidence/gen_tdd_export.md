@@ -145,3 +145,45 @@ byte-identical, crc32 cf0cb3b8); SETTLE_CYCLES derives from the
 rendered rvalid window maximum plus a pipeline margin; the early flush is issued after half the retirement target so the
 prefix assertion compares non-empty lists. Decision recorded: gen_ut_export stays a local-driver unit test (no testlist
 entry) until the Test Writer's first export consumer lands; a check-tier entry then follows the gen_ut_bridge pattern.
+
+## 11. Step 2: the event writers, format version 2, the active-source list (version 4d)
+
+Built in one announced window (Runtime told 13:05Z): every event source whose component exists after the step-2b
+re-application writes its rows (ibus/dbus req, gnt, rvalid in gen_bus_driver; pin fetch_enable/mcounteren_writable in
+gen_ctrl_driver; the irq lines in gen_irq_driver::apply_levels, debug_req in gen_dbg_driver; alert and misc rows in
+gen_misc_monitor, sampled at the posedge; scrkey req/valid in the key responder; regime phase in gen_cmd_dispatch), each
+through `sink.write_event` with the rendered line function and the stamp `sink.cycle()` (new; the bridge's cycle_count);
+the pin, alert and misc writers also emit the level at reset release. gen_bridge_if gained evt_ibus_grants /
+evt_dbus_grants (incremented in the grant beat, non-blocking); the flush and end markers carry ibus_grants= dbus_grants=
+and the header says `v2`. The yaml key `export_active_sources` renders EXPORT_ACTIVE_SOURCES (the attribute Runtime's
+manifest reader expects), GEN_EXPORT_ACTIVE_SOURCES and gen_export_source_active(); the sink derives the header's
+sources= from that list intersected with +gen_export_sources and fatals on a writer for an inactive source or an active
+source without a writer. read() gains three rules: the header's sources= equals the rendered active list restricted to
+the run's knob (the test passes its +gen_export_sources value), the E gnt count of every enabled bus equals the marker's
+grant counter (MUT-G), and both marker kinds carry the two grant keys. Codegen unit test PASS with the new checks and one
+new refused fixture (an active source outside the event table).
+
+Red: no dedicated red run exists for the writers. A missing writer is not observable through the format (an inactive
+source is legal and its rows simply do not appear), and the pre-step-2 build's file fails the new reader on the `v1`
+header before any rule, which is a version refusal, not a red of the writers. The trust evidence for the writers is
+therefore the content of the first green (below) and the two mutations MUT-G / MUT-H.
+
+First green (build out_t080s2/a, compile clean on the first try; gen_tdd_logs/export/gen_s2a_*): export_zc 175 records,
+902 E lines (ibus req 155 / gnt 154 / rvalid 153: one response pending at the flush; dbus 29/29/29; the four alert rows and
+misc irq_pending/core_busy once each at reset release; crash_dump_current_pc 151 and next_pc 165; pin fetch_enable at
+cycle 0 = MuBiOff and at cycle 60 = MuBiOn, mcounteren_writable at 0); export_s7 2008 records, 15765 E lines incl. scrkey
+req/valid 10 each; export_irq_storm 3939 records, 47672 E lines incl. irq_fast 6327, irq_pending 1722; export_zc_counters
+PASS; the canary (boot_zc, lockstep_zc, lockstep_s7) PASS. Content facts checked by hand and retained
+(gen_s2a_event_content_analysis.txt): the first ibus req at cycle 61 (the cycle after fetch_enable rose at 60), its gnt
+at 64 with req_cycle 0x3d = 61 and outstanding_after 1, its rvalid at 67; the first dbus store of the Zc program at
+0x8000039c. The fetch_enable line offset (the line's cycle against cycle_count read after the FETCH_EN ack edge) was 0 on
+all four runs and is now asserted exactly (`FETCH_EN_LINE_OFFSET = 0`); the "minus one" the version-4c text predicted was
+wrong and is withdrawn. Cost: about 2 misc lines per retired instruction come from the crash_dump pc fields (the plan
+demands them for one item); a consumer that does not need them uses `+gen_export_sources` without misc.
+
+Mutations (out of tree, gen_tdd_logs/mutations/gen_mut_export_MUT*): MUT-H (fetch_enable line stamped one cycle late)
+caught by the fixture's offset rule (`offset -1 != 0`), ablation PASS; MUT-G (one gnt line dropped, counter intact)
+caught by read()'s gnt-count rule (`GEN_EXPORT: 153 E ibus gnt lines, marker says ibus_grants=154`), ablation PASS. Pinned reruns export_zc / export_s7 PASS with the offset
+asserted; a restricted run (`+gen_export_sources=ibus,pin`) PASS with the header sources= equal to the restricted list
+(gen_s2a_export_zc_ibusonly_*). Window closed on build out_t080s2/a; the follow-up landing (T-134 / T-136 / T-137 and the
+review rows) starts in the same tree.

@@ -1,0 +1,7 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t080s2/a/lockstep_s7/stdout.log (T-080 step 2 build a: banner, export summary, fixture lines, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 10074500: sb [GEN_SB] ISA compare: records=2002 mismatches=0 folded=0 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=1453
+GEN_UT_LOCKSTEP_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            100745.01           0.40     253046.61  **

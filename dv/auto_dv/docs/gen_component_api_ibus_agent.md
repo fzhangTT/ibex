@@ -95,3 +95,8 @@ transition covergroup samples REGIME_SET commands.
 
 Confirm the outstanding bound `GEN_IBUS_MAX_OUTSTANDING` with a slow-rvalid/fast-gnt regime after a branch; measure the
 latency needed for `GEN_IRQ_ENTRY_BOUND_RECORDS`; fill in file names once created.
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+ibus rows: `req` (the first cycle a request is seen: addr, we 0, be F), `gnt` (the grant beat: addr, we, be, `req_cycle` = the req line's stamp, `outstanding_after` = the driver's queue depth after the grant), `rvalid` (the response beat: addr, we, err, `intg_injected` = the driver corrupted the integrity, `outstanding_after`); the driver also increments the bridge's `evt_ibus_grants` in the grant beat.

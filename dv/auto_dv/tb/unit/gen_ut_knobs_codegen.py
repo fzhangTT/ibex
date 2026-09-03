@@ -81,6 +81,7 @@ def refused_fixtures(text):
                                                                    "{source: icram, event: inject, feilds: [way, index]}", 1), "unknown key(s) feilds")
     yield ("tdata1 literal differing from the RTL refused", text.replace("GEN_TDATA1_IBEX_RDATA, value: 0x28001048,", "GEN_TDATA1_IBEX_RDATA, value: 0x28001049,", 1), "differs from rtl/ibex_cs_registers.sv")
     yield ("MHPMCounterNum literal differing from the build configuration refused", text.replace("GEN_MHPM_COUNTER_NUM, value: 10,", "GEN_MHPM_COUNTER_NUM, value: 11,", 1), "differs from ibex_configs.yaml")
+    yield ("active source outside the event table refused", text.replace("export_active_sources: [ibus,", "export_active_sources: [ibux,", 1), "export_active_sources must list")
     yield ("export event wildcard row refused", text.replace("{source: icram, event: inject, fields: [way, index]}",
                                                               '{source: icram, event: "<name>", fields: [way, index]}', 1), "no wildcard rows")
     yield ("default and default_from together", text.replace("{name: hart_id, kind: hex, default: 0,",
@@ -228,6 +229,9 @@ def main():
           list(m.REGIME_SET_CONSUMED) == [p["name"] for p in rk if p["regime_set_consumer"] in ("bus", "irq", "dbg", "scrkey")])
     check("python KNOB_CONSUMER equals yaml", m.KNOB_CONSUMER == {p["name"]: p["regime_set_consumer"] for p in rk})
     check("pkg has gen_knob_regime_set_consumed and gen_knob_consumer", "function automatic bit gen_knob_regime_set_consumed" in pkg and "function automatic string gen_knob_consumer" in pkg)
+    check("python EXPORT_ACTIVE_SOURCES equals yaml", list(m.EXPORT_ACTIVE_SOURCES) == list(src["export_active_sources"]))
+    check("active sources are a subset of the event sources", set(src["export_active_sources"]) <= {r["source"] for r in ev})
+    check("pkg renders GEN_EXPORT_ACTIVE_SOURCES and gen_export_source_active", f'GEN_EXPORT_ACTIVE_SOURCES = "{",".join(src["export_active_sources"])}"' in pkg and "function automatic bit gen_export_source_active" in pkg)
     for n in ("export_file", "export_counters", "export_sources", "export_flush_every"):
         check(f"export knob {n} present", n in names)
     check("export_flush_every is debug_only", "export_flush_every" in dbg_only)

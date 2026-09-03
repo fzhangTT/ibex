@@ -8,6 +8,7 @@ package gen_agents_pkg;
   import uvm_pkg::*;
   import gen_tb_pkg::*;
   import gen_cfg_pkg::*;
+  import gen_export_pkg::*;
   import gen_mem_pkg::*;
   `include "uvm_macros.svh"
 
@@ -193,6 +194,8 @@ package gen_agents_pkg;
     virtual gen_bus_if vif;
     gen_bus_cfg   cfg;
     gen_mem_model mem;
+    gen_export_sink sink;                  // E req / gnt / rvalid lines when the source is on (set by gen_env)
+    virtual gen_bridge_if bvif;            // grant counters evt_ibus_grants / evt_dbus_grants
     uvm_analysis_port #(gen_bus_txn) ap;   // completed transactions with the driver's injection facts
     gen_bus_pend_t pend [$];
     int unsigned cycle = 0;
@@ -227,12 +230,18 @@ package gen_agents_pkg;
         `uvm_fatal("GEN_BUS_DRIVER", {get_full_name(), ": vif not in uvm_config_db"})
       if ($bits(vif.rdata) != $bits(logic [38:0]))
         `uvm_fatal("GEN_BUS_DRIVER", $sformatf("%s: bus data width %0d, the driver encodes %0d bits", get_full_name(), $bits(vif.rdata), $bits(logic [38:0])))
+      if (!uvm_config_db#(virtual gen_bridge_if)::get(this, "", "bridge_vif", bvif))
+        `uvm_fatal("GEN_BUS_DRIVER", {get_full_name(), ": bridge_vif not in uvm_config_db"})
+    endfunction
+    function bit ev_on();
+      return sink != null && sink.source_on(cfg.is_data ? "dbus" : "ibus");
     endfunction
 
     task run_phase(uvm_phase phase);
       int unsigned gnt_wait = 0;
       bit          gnt_armed = 0;
-      int unsigned req_cycle = 0;     // first cycle the pending request was seen
+      int unsigned req_cycle = 0;     // first cycle the pending request was seen (driver counter, for the txn)
+      int unsigned req_stamp = 0;     // the same instant on the export's cycle base (E req / gnt lines)
       int unsigned last_due = 0;
       int unsigned data_w = $bits(vif.rdata);
       vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
@@ -254,6 +263,8 @@ package gen_agents_pkg;
           vif.rdata  = {p.intg, p.word};
           vif.intg_corrupt = p.intg_bad;
           responses++;
+          if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_rvalid(sink.cycle(), p.addr, p.we, p.err, p.intg_bad, pend.size())
+                                                    : gen_export_line_ibus_rvalid(sink.cycle(), p.addr, p.we, p.err, p.intg_bad, pend.size()));
           t.kind = cfg.is_data ? (p.we ? GEN_BUS_STORE : GEN_BUS_LOAD) : GEN_BUS_FETCH;
           t.addr = p.addr; t.data = p.we ? p.wdata : p.word; t.intg = p.intg; t.be = p.be;
           t.err = p.err; t.injected = p.injected; t.gnt_delay = p.gnt_delay; t.rvalid_delay = p.rvalid_delay;
@@ -268,6 +279,11 @@ package gen_agents_pkg;
             gnt_armed = 1;
             req_cycle = cycle;
             gnt_wait = $urandom_range(cfg.gnt_max, cfg.gnt_min);
+            if (ev_on()) begin
+              req_stamp = sink.cycle();
+              sink.write_event(cfg.is_data ? gen_export_line_dbus_req(req_stamp, vif.addr, vif.we, vif.be)
+                                           : gen_export_line_ibus_req(req_stamp, vif.addr, 1'b0, 4'hF));
+            end
           end
           if (gnt_wait == 0 && pend.size() < cfg.max_outstanding) begin
             gen_bus_pend_t p;
@@ -306,6 +322,9 @@ package gen_agents_pkg;
             pend.push_back(p);
             vif.gnt = 1'b1;
             grants++;
+            if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
+            if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_gnt(sink.cycle(), p.addr, p.we, p.be, req_stamp, pend.size())
+                                                      : gen_export_line_ibus_gnt(sink.cycle(), p.addr, p.we, p.be, req_stamp, pend.size()));
             gnt_armed = 0;
           end else if (gnt_wait > 0) begin
             gnt_wait--;
@@ -358,6 +377,7 @@ package gen_agents_pkg;
     virtual gen_scrkey_if vif;
     gen_env_cfg cfg;
     int unsigned requests = 0;
+    gen_export_sink sink;   // E scrkey req / valid lines on every change
     function new(string name, uvm_component parent);
       super.new(name, parent);
     endfunction
@@ -384,9 +404,10 @@ package gen_agents_pkg;
     endfunction
     task run_phase(uvm_phase phase);
       int unsigned wait_n = 0;
-      bit req_q = 0;
+      bit req_q = 0, valid_q;
       regime = cfg.knob_scr_key_delay;
       vif.valid = cfg.key_reset_valid;
+      valid_q = vif.valid;
       forever begin
         @(negedge vif.clk);
         if (!vif.rst_n) begin vif.valid = cfg.key_reset_valid; wait_n = 0; continue; end
@@ -398,6 +419,11 @@ package gen_agents_pkg;
           wait_n--;
           if (wait_n == 0) vif.valid = 1'b1;
         end
+        if (sink != null && sink.source_on("scrkey")) begin
+          if (vif.req != req_q) sink.write_event(gen_export_line_scrkey_req(sink.cycle(), vif.req));
+          if (vif.valid != valid_q) sink.write_event(gen_export_line_scrkey_valid(sink.cycle(), vif.valid));
+        end
+        valid_q = vif.valid;
         req_q = vif.req;
       end
     endtask
@@ -439,6 +465,8 @@ package gen_agents_pkg;
     gen_env_cfg cfg;
     uvm_analysis_port #(gen_irq_evt) ap;
     string regime, line_mix, hold_knob;
+    gen_export_sink sink;                  // E pin lines per changed line
+    logic [18:0]   applied_q = '0;         // the levels last driven (the E line set is the difference)
     logic [18:0]   level = '0;
     gen_irq_hold_e hold_of [19];
     int unsigned   hold_left [19];
@@ -472,6 +500,19 @@ package gen_agents_pkg;
     endfunction
     function void apply_levels();
       vif.sw = level[0]; vif.timer = level[1]; vif.ext = level[2]; vif.fast = level[17:3]; vif.nm = level[18];
+      if (sink != null && sink.source_on("pin")) begin
+        int unsigned c = sink.cycle();
+        for (int i = 0; i < 19; i++) if (level[i] != applied_q[i]) begin
+          case (i)
+            0:  sink.write_event(gen_export_line_pin_irq_software(c, level[i]));
+            1:  sink.write_event(gen_export_line_pin_irq_timer(c, level[i]));
+            2:  sink.write_event(gen_export_line_pin_irq_external(c, level[i]));
+            18: sink.write_event(gen_export_line_pin_irq_nm(c, level[i]));
+            default: sink.write_event(gen_export_line_pin_irq_fast(c, i - 3, level[i]));
+          endcase
+        end
+      end
+      applied_q = level;
     endfunction
     function void cmd_set(logic [18:0] mask, gen_irq_hold_e h, int unsigned cycles, bit from_regime);
       for (int i = 0; i < 19; i++) if (mask[i]) begin hold_of[i] = h; hold_left[i] = (h == GEN_IRQ_HOLD_CYCLES) ? (cycles == 0 ? 1 : cycles) : 0; end
@@ -547,6 +588,7 @@ package gen_agents_pkg;
     virtual gen_bridge_if bvif;
     gen_env_cfg cfg;
     uvm_analysis_port #(gen_irq_evt) ap;   // reuses the event item: changed[0] = req, level, cycle
+    gen_export_sink sink;                  // E pin debug_req line per change
     string regime;
     int unsigned hold_policy = 0, hold_left = 0, requests = 0, releases = 0;
     function new(string name, uvm_component parent);
@@ -572,6 +614,7 @@ package gen_agents_pkg;
       end else begin
         vif.req = 1'b0; releases++; publish(1'b0);
       end
+      if (sink != null && sink.source_on("pin")) sink.write_event(gen_export_line_pin_debug_req(sink.cycle(), vif.req));
     endfunction
     function void set_regime(string value);
       regime = value;
@@ -607,6 +650,7 @@ package gen_agents_pkg;
     virtual gen_ctrl_if vif;
     gen_env_cfg cfg;
     int unsigned fetch_en_changes = 0;
+    gen_export_sink sink;          // E pin fetch_enable / mcounteren_writable lines (initial level, then every change)
     logic [31:0] fetch_en_q [$];   // FETCH_EN arguments waiting for the next falling edge
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -635,11 +679,20 @@ package gen_agents_pkg;
         default: vif.fetch_enable = ibex_pkg::ibex_mubi_t'(0);   // invalid encoding acts as Off (CTRL-04)
       endcase
       fetch_en_changes++;
+      if (sink != null && sink.source_on("pin")) sink.write_event(gen_export_line_pin_fetch_enable(sink.cycle(), int'(vif.fetch_enable)));
       `uvm_info("GEN_CTRL", $sformatf("fetch_enable_i <= %s (FETCH_EN arg %0d)", gen_mubi_str(vif.fetch_enable), v), UVM_LOW)
     endfunction
     task run_phase(uvm_phase phase);
+      bit init_done = 0;
       forever begin
         @(negedge vif.clk);
+        if (vif.rst_n && !init_done) begin   // the levels at reset release, so a consumer knows the starting value
+          init_done = 1;
+          if (sink != null && sink.source_on("pin")) begin
+            sink.write_event(gen_export_line_pin_fetch_enable(sink.cycle(), int'(vif.fetch_enable)));
+            sink.write_event(gen_export_line_pin_mcounteren_writable(sink.cycle(), int'(vif.mcounteren_writable)));
+          end
+        end
         if (vif.rst_n && fetch_en_q.size() > 0) set_fetch_en(fetch_en_q.pop_front());
       end
     endtask

@@ -105,6 +105,7 @@ package gen_env_pkg;
         default: `uvm_fatal("GEN_CMD_DISPATCH", {"consumed knob without a dispatcher case: ", name})   // predicate and case must agree
       endcase
       phases++;
+      if (sink != null && sink.source_on("regime")) sink.write_event(gen_export_line_regime_phase(sink.cycle(), id, idx, phases));
       `uvm_info("GEN_PHASE", $sformatf("phase %0d knob=%s value=%s cycle=%0d", phases, name, value, bvif.cycle_count), UVM_LOW)
     endfunction
     function void write(gen_cmd_item t);
@@ -219,6 +220,11 @@ package gen_env_pkg;
       dispatch.ibus = ibus_agent; dispatch.dbus = dbus_agent;
       ack_h.irq = irq;
       rvfi_mon.sink = sink;
+      // event writers: the sink handle and the source registration (the yaml's active list must match this set)
+      ibus_agent.driver.sink = sink; dbus_agent.driver.sink = sink; ctrl.sink = sink; scrkey.sink = sink;
+      irq.sink = sink; dbg.sink = sink; misc_mon.sink = sink;
+      sink.register_source("ibus"); sink.register_source("dbus"); sink.register_source("pin"); sink.register_source("scrkey");
+      sink.register_source("alert"); sink.register_source("misc"); sink.register_source("regime");
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
       sb.ap_state.connect(irq_chk.imp_state);

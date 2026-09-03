@@ -56,7 +56,7 @@ export sink's flush sequence number, written by the dispatcher from `gen_export_
 `evt_retired_hit` and `evt_cycle_hit` (v3, N-02: one single-bit toggle PER threshold, raised by the
 interface's own threshold engine the first cycle at or beyond the armed target; the only thing Python
 awaits for a threshold, A-01), `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` (single-bit toggles
-from the monitors, step 2), `evt_retired_count[31:0]` (counted from the boundary `rvfi_valid`),
+from the monitors, step 2), `evt_retired_count[31:0]` (counted from the boundary `rvfi_valid`), `evt_ibus_grants[31:0]` / `evt_dbus_grants[31:0]` (grant beats driven by the bus drivers; the export's independent gnt count, sampled into its markers; step 2),
 `evt_err_count[15:0]` (read once at finish, never awaited), `cycle_count[31:0]` (cycles since reset
 release, read-only), `finish_ack` (toggled in gen_base_test's final_phase, after the UVM report). SV
 captures the command fields in the delta of the `cmd_valid` edge (gen_bridge run_phase), publishes a

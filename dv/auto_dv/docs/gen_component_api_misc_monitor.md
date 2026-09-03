@@ -67,3 +67,8 @@ pipeline state.
 ## 8. At build
 
 Decide the settle window for `crash_dump`; confirm alert pulse widths on the first waveforms.
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+alert rows (`alert_minor`, `alert_major_bus`, `alert_major_internal`, `double_fault_seen`) and misc rows (`irq_pending`, `core_busy` as the MuBi encoding, `crash_dump_current_pc`, `crash_dump_next_pc`, `crash_dump_last_data_addr`, `crash_dump_exception_pc`, `crash_dump_exception_addr`): the level at reset release, then every change, sampled at the posedge (about two crash_dump lines per retired instruction; `+gen_export_sources` without misc drops them).

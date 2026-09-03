@@ -1,0 +1,5 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTG/out/MUTG_catch_zc/stdout.log (out-of-tree MUT-G: the third gnt line dropped while the grant counter increments; ablation = read()'s gnt-count rule off)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(99) @ 0: sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                          5905.01           0.07      81909.30  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

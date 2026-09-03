@@ -76,3 +76,8 @@ crosses, integrity injection, MMIO window hits, regime id and transitions.
 
 Confirm the second-half byte-enable table against the first waveforms; decide the MMIO window
 addresses in gen_tb_pkg (signature, irq-ack, end-of-test).
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+dbus rows: `req`, `gnt`, `rvalid` as for ibus (we and be from the request); the driver increments `evt_dbus_grants` in the grant beat.

@@ -1,0 +1,1112 @@
+# gen_export v2 seed=1 build_config=opentitan counters=0 sources=ibus,dbus,pin,alert,misc,scrkey,regime fields=order,pc_rdata,pc_wdata,insn,trap,halt,intr,mode,ixl,rs1_addr,rs1_rdata,rs2_addr,rs2_rdata,rs3_addr,rs3_rdata,rd_addr,rd_wdata,mem_addr,mem_rmask,mem_wmask,mem_rdata,mem_wdata,ext_pre_mip,ext_post_mip,ext_nmi,ext_nmi_int,ext_debug_req,ext_debug_mode,ext_rf_wr_suppress,ext_ic_scr_key_valid,ext_irq_valid,ext_exp_valid,ext_exp_insn,ext_exp_last,ext_mcycle,cycle
+# image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem
+# events ibus req addr,we,be
+# events ibus gnt addr,we,be,req_cycle,outstanding_after
+# events ibus rvalid addr,we,err,intg_injected,outstanding_after
+# events dbus req addr,we,be
+# events dbus gnt addr,we,be,req_cycle,outstanding_after
+# events dbus rvalid addr,we,err,intg_injected,outstanding_after
+# events pin irq_software value
+# events pin irq_timer value
+# events pin irq_external value
+# events pin irq_fast idx,value
+# events pin irq_nm value
+# events pin debug_req value
+# events pin fetch_enable value
+# events pin mcounteren_writable value
+# events alert alert_minor value
+# events alert alert_major_bus value
+# events alert alert_major_internal value
+# events alert double_fault_seen value
+# events misc irq_pending value
+# events misc core_busy value
+# events misc crash_dump_current_pc value
+# events misc crash_dump_next_pc value
+# events misc crash_dump_last_data_addr value
+# events misc crash_dump_exception_pc value
+# events misc crash_dump_exception_addr value
+# events scrkey req value
+# events scrkey valid value
+# events regime phase knob_id,value_idx,phase_idx
+E 0 pin fetch_enable a
+E 0 pin mcounteren_writable 5
+E 0 alert alert_minor 0
+E 0 alert alert_major_bus 0
+E 0 alert alert_major_internal 0
+E 0 alert double_fault_seen 0
+E 0 misc irq_pending 0
+E 0 misc core_busy 5
+E 0 misc crash_dump_current_pc 0
+E 0 misc crash_dump_next_pc 0
+E 0 misc crash_dump_last_data_addr 0
+E 0 misc crash_dump_exception_pc 0
+E 0 misc crash_dump_exception_addr 0
+E 1 misc crash_dump_next_pc 80000080
+E 3c pin fetch_enable 5
+E 3d ibus req 80000080 0 f
+E 40 ibus gnt 80000080 0 f 3d 1
+E 41 ibus req 80000084 0 f
+E 43 ibus rvalid 80000080 0 0 0 0
+E 44 ibus gnt 80000084 0 f 41 1
+E 44 misc crash_dump_current_pc 80000080
+E 44 misc crash_dump_next_pc 80000084
+E 45 ibus req 80000084 0 f
+R 1 80000080 80000084 40006f 0 0 0 3 1 0 0 0 0 0 0 0 0 80000084 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 44 46
+E 48 ibus rvalid 80000084 0 0 0 0
+E 48 ibus gnt 80000084 0 f 45 1
+E 49 ibus req 80000088 0 f
+E 4a ibus rvalid 80000084 0 0 0 0
+E 4b misc crash_dump_current_pc 80000084
+E 4b misc crash_dump_next_pc 80000088
+E 4c ibus gnt 80000088 0 f 49 1
+E 4d ibus req 8000008c 0 f
+R 2 80000084 80000088 117 0 0 0 3 1 0 0 0 0 0 0 2 80000084 80000084 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 4b 4d
+E 4e ibus gnt 8000008c 0 f 4d 2
+E 4f ibus rvalid 80000088 0 0 0 1
+E 4f ibus req 80000090 0 f
+E 50 misc crash_dump_current_pc 80000088
+E 50 misc crash_dump_next_pc 8000008c
+E 51 ibus rvalid 8000008c 0 0 0 0
+E 52 ibus gnt 80000090 0 f 4f 1
+E 52 misc crash_dump_current_pc 8000008c
+E 52 misc crash_dump_next_pc 8000008e
+R 3 80000088 8000008c 31c10113 0 0 0 3 1 2 80000084 0 0 0 0 2 800003a0 800003a0 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 50 52
+E 53 ibus req 80000094 0 f
+R 4 8000008c 8000008e 828a 0 0 0 3 1 0 0 2 800003a0 0 0 5 800003a0 800003a0 f 0 0 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 52 54
+E 55 ibus gnt 80000094 0 f 53 2
+E 56 ibus rvalid 80000090 0 0 0 1
+E 56 ibus req 80000098 0 f
+E 57 misc crash_dump_current_pc 8000008e
+E 57 misc crash_dump_next_pc 80000092
+E 58 ibus gnt 80000098 0 f 56 2
+E 59 ibus rvalid 80000094 0 0 0 1
+E 59 ibus req 8000009c 0 f
+R 5 8000008e 80000092 111110b7 0 0 0 3 1 0 0 0 0 0 0 1 11111000 11111000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 57 59
+E 5a ibus gnt 8000009c 0 f 59 2
+E 5a misc crash_dump_current_pc 80000092
+E 5a misc crash_dump_next_pc 80000096
+E 5b ibus req 800000a0 0 f
+E 5c ibus rvalid 80000098 0 0 0 1
+R 6 80000092 80000096 11108093 0 0 0 3 1 1 11111000 0 0 0 0 1 11111111 11111111 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 5a 5c
+E 5d ibus rvalid 8000009c 0 0 0 0
+E 5d misc crash_dump_current_pc 80000096
+E 5d misc crash_dump_next_pc 8000009a
+E 5e ibus gnt 800000a0 0 f 5b 1
+E 5e misc crash_dump_current_pc 8000009a
+E 5e misc crash_dump_next_pc 8000009e
+E 5f ibus req 800000a4 0 f
+R 7 80000096 8000009a 22222437 0 0 0 3 1 0 0 0 0 0 0 8 22222000 22222000 f 0 0 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 5d 5f
+E 60 ibus gnt 800000a4 0 f 5f 2
+R 8 8000009a 8000009e 22240413 0 0 0 3 1 8 22222000 0 0 0 0 8 22222222 22222222 f 0 0 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 5e 60
+E 61 ibus req 800000a8 0 f
+E 62 ibus rvalid 800000a0 0 0 0 1
+E 63 misc crash_dump_current_pc 8000009e
+E 63 misc crash_dump_next_pc 800000a2
+E 64 ibus rvalid 800000a4 0 0 0 0
+E 64 ibus gnt 800000a8 0 f 61 1
+E 65 ibus req 800000ac 0 f
+E 65 misc crash_dump_current_pc 800000a2
+E 65 misc crash_dump_next_pc 800000a6
+R 9 8000009e 800000a2 333334b7 0 0 0 3 1 0 0 0 0 0 0 9 33333000 33333000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 63 65
+E 66 ibus rvalid 800000a8 0 0 0 0
+E 67 ibus gnt 800000ac 0 f 65 1
+E 67 misc crash_dump_current_pc 800000a6
+E 67 misc crash_dump_next_pc 800000aa
+R a 800000a2 800000a6 33348493 0 0 0 3 1 9 33333000 0 0 0 0 9 33333333 33333333 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 65 67
+E 68 ibus req 800000b0 0 f
+R b 800000a6 800000aa 44444937 0 0 0 3 1 0 0 0 0 0 0 12 44444000 44444000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 67 69
+E 6a ibus gnt 800000b0 0 f 68 2
+E 6b ibus rvalid 800000ac 0 0 0 1
+E 6b ibus req 800000b4 0 f
+E 6c misc crash_dump_current_pc 800000aa
+E 6c misc crash_dump_next_pc 800000ae
+E 6d dbus req 8000039c 1 f
+E 6d ibus rvalid 800000b0 0 0 0 0
+E 6d ibus gnt 800000b4 0 f 6b 1
+E 6d misc crash_dump_current_pc 800000ae
+E 6e ibus req 800000b8 0 f
+R c 800000aa 800000ae 44490913 0 0 0 3 1 12 44444000 0 0 0 0 12 44444444 44444444 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 6c 6e
+E 6f dbus gnt 8000039c 1 f 6d 1
+E 70 misc crash_dump_last_data_addr 8000039c
+E 71 ibus rvalid 800000b4 0 0 0 0
+E 71 ibus gnt 800000b8 0 f 6e 1
+E 72 dbus rvalid 8000039c 1 0 0 0
+E 72 ibus req 800000bc 0 f
+E 73 dbus req 80000398 1 f
+E 73 ibus rvalid 800000b8 0 0 0 0
+E 73 ibus gnt 800000bc 0 f 72 1
+R d 800000ae 800000ae ff212e23 0 0 0 3 1 2 800003a0 12 44444444 2 800003a0 0 0 8000039c 0 f 0 44444444 0 0 0 0 0 0 0 1 0 1 b872 0 6f 73
+E 74 ibus req 800000c0 0 f
+E 75 dbus gnt 80000398 1 f 73 1
+E 76 ibus gnt 800000c0 0 f 74 2
+E 76 misc crash_dump_last_data_addr 80000398
+E 77 ibus rvalid 800000bc 0 0 0 1
+E 77 ibus req 800000c4 0 f
+E 79 dbus rvalid 80000398 1 0 0 0
+E 79 ibus gnt 800000c4 0 f 77 2
+E 7a dbus req 80000394 1 f
+E 7a ibus rvalid 800000c0 0 0 0 1
+R e 800000ae 800000ae fe912c23 0 0 0 3 1 2 800003a0 9 33333333 2 800003a0 0 0 80000398 0 f 0 33333333 0 0 0 0 0 0 0 1 0 1 b872 0 75 7a
+E 7b ibus rvalid 800000c4 0 0 0 0
+E 7d dbus gnt 80000394 1 f 7a 1
+E 7e misc crash_dump_last_data_addr 80000394
+E 7f dbus rvalid 80000394 1 0 0 0
+E 80 dbus req 80000390 1 f
+R f 800000ae 800000ae fe812a23 0 0 0 3 1 2 800003a0 8 22222222 2 800003a0 0 0 80000394 0 f 0 22222222 0 0 0 0 0 0 0 1 0 1 b872 0 7d 80
+E 83 dbus gnt 80000390 1 f 80 1
+E 84 misc crash_dump_next_pc 800000b0
+E 84 misc crash_dump_last_data_addr 80000390
+E 87 dbus rvalid 80000390 1 0 0 0
+E 88 misc crash_dump_current_pc 800000b0
+E 88 misc crash_dump_next_pc 800000b4
+R 10 800000ae 800000ae fe112823 0 0 0 3 1 2 800003a0 1 11111111 2 800003a0 0 0 80000390 0 f 0 11111111 0 0 0 0 0 0 0 1 0 1 b872 0 83 88
+E 89 misc crash_dump_current_pc 800000b4
+E 89 misc crash_dump_next_pc 800000b6
+R 11 800000ae 800000b0 ff010113 0 0 0 3 1 2 800003a0 0 0 0 0 2 80000390 80000390 f 0 0 0 0 0 0 0 0 0 0 1 0 1 b872 1 87 89
+E 8a ibus req 800000c8 0 f
+E 8a misc crash_dump_current_pc 800000b6
+E 8a misc crash_dump_next_pc 800000ba
+R 12 800000b0 800000b4 40228333 0 0 0 3 1 5 800003a0 2 80000390 0 0 6 10 10 f 0 0 80000390 0 0 0 0 0 0 0 1 0 0 0 0 88 8a
+E 8b dbus req 8000039c 0 f
+E 8b ibus gnt 800000c8 0 f 8a 1
+E 8b misc crash_dump_current_pc 800000ba
+E 8b misc crash_dump_next_pc 800000bc
+R 13 800000b4 800000b6 43c1 0 0 0 3 1 0 0 0 0 0 0 7 10 10 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 89 8b
+E 8c ibus req 800000cc 0 f
+R 14 800000b6 800000ba 1a731963 0 0 0 3 1 6 10 7 10 0 0 0 0 0 f 0 0 10 0 0 0 0 0 0 0 1 0 0 0 0 8a 8c
+E 8e dbus gnt 8000039c 0 f 8b 1
+E 8e ibus gnt 800000cc 0 f 8c 2
+E 8f ibus rvalid 800000c8 0 0 0 1
+E 8f misc crash_dump_current_pc 800000bc
+E 8f misc crash_dump_next_pc 800000c0
+E 8f misc crash_dump_last_data_addr 8000039c
+E 90 ibus req 800000d0 0 f
+E 91 ibus rvalid 800000cc 0 0 0 0
+E 92 dbus rvalid 8000039c 0 0 0 0
+E 92 ibus gnt 800000d0 0 f 90 1
+E 93 ibus req 800000d4 0 f
+R 15 800000ba 800000bc 4e32 0 0 0 3 1 2 80000390 0 0 2 80000390 1c 44444444 8000039c f 0 44444444 0 0 0 0 0 0 0 0 1 0 0 0 0 8e 93
+E 94 dbus req 80000398 0 f
+E 94 misc crash_dump_current_pc 800000c0
+E 94 misc crash_dump_next_pc 800000c2
+E 95 ibus rvalid 800000d0 0 0 0 0
+E 95 ibus gnt 800000d4 0 f 93 1
+R 16 800000bc 800000c0 1b2e1663 0 0 0 3 1 1c 44444444 12 44444444 0 0 0 0 0 f 0 44444444 44444444 0 0 0 0 0 0 0 1 0 0 0 0 93 95
+E 96 dbus gnt 80000398 0 f 94 1
+E 97 misc crash_dump_current_pc 800000c2
+E 97 misc crash_dump_next_pc 800000c6
+E 97 misc crash_dump_last_data_addr 80000398
+E 98 ibus rvalid 800000d4 0 0 0 0
+E 98 ibus req 800000d8 0 f
+E 99 dbus rvalid 80000398 0 0 0 0
+E 9a ibus gnt 800000d8 0 f 98 1
+R 17 800000c0 800000c2 4e22 0 0 0 3 1 2 80000390 0 0 2 80000390 1c 33333333 80000398 f 0 33333333 22222222 0 0 0 0 0 0 0 1 0 0 0 0 96 9a
+E 9b dbus req 80000394 0 f
+E 9b ibus req 800000dc 0 f
+E 9b misc crash_dump_current_pc 800000c6
+E 9b misc crash_dump_next_pc 800000c8
+E 9c dbus gnt 80000394 0 f 9b 1
+E 9c ibus rvalid 800000d8 0 0 0 0
+R 18 800000c2 800000c6 1a9e1363 0 0 0 3 1 1c 33333333 9 33333333 0 0 0 0 0 f 0 33333333 33333333 0 0 0 0 0 0 0 1 0 0 0 0 9a 9c
+E 9d ibus gnt 800000dc 0 f 9b 1
+E 9d misc crash_dump_current_pc 800000c8
+E 9d misc crash_dump_next_pc 800000cc
+E 9d misc crash_dump_last_data_addr 80000394
+E a0 dbus rvalid 80000394 0 0 0 0
+E a0 ibus rvalid 800000dc 0 0 0 0
+R 19 800000c6 800000c8 4e12 0 0 0 3 1 2 80000390 0 0 2 80000390 1c 22222222 80000394 f 0 22222222 0 0 0 0 0 0 0 0 1 0 0 0 0 9c a1
+E a2 dbus req 80000390 0 f
+E a2 misc crash_dump_current_pc 800000cc
+E a2 misc crash_dump_next_pc 800000ce
+E a3 dbus gnt 80000390 0 f a2 1
+E a3 ibus req 800000e0 0 f
+R 1a 800000c8 800000cc 1a8e1063 0 0 0 3 1 1c 22222222 8 22222222 0 0 0 0 0 f 0 22222222 22222222 0 0 0 0 0 0 0 1 0 0 0 0 a1 a3
+E a4 misc crash_dump_current_pc 800000ce
+E a4 misc crash_dump_next_pc 800000d2
+E a4 misc crash_dump_last_data_addr 80000390
+E a5 ibus gnt 800000e0 0 f a3 1
+E a6 ibus req 800000e4 0 f
+E a7 dbus rvalid 80000390 0 0 0 0
+E a7 ibus gnt 800000e4 0 f a6 2
+R 1b 800000cc 800000ce 4e02 0 0 0 3 1 2 80000390 0 0 2 80000390 1c 11111111 80000390 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 a3 a8
+E a9 ibus rvalid 800000e0 0 0 0 1
+E a9 misc crash_dump_current_pc 800000d2
+E a9 misc crash_dump_next_pc 800000d4
+E aa ibus rvalid 800000e4 0 0 0 0
+E aa misc crash_dump_current_pc 800000d4
+E aa misc crash_dump_next_pc 800000d6
+R 1c 800000ce 800000d2 181e1d63 0 0 0 3 1 1c 11111111 1 11111111 0 0 0 0 0 f 0 11111111 11111111 0 0 0 0 0 0 0 1 0 0 0 0 a8 aa
+E ab ibus req 800000e8 0 f
+E ab misc crash_dump_current_pc 800000d6
+E ab misc crash_dump_next_pc 800000d8
+R 1d 800000d2 800000d4 4081 0 0 0 3 1 0 0 0 0 0 0 1 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 a9 ab
+E ac misc crash_dump_current_pc 800000d8
+E ac misc crash_dump_next_pc 800000da
+R 1e 800000d4 800000d6 4401 0 0 0 3 1 0 0 0 0 0 0 8 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 aa ac
+E ad dbus req 8000039c 0 f
+E ad ibus gnt 800000e8 0 f ab 1
+E ad misc crash_dump_current_pc 800000da
+R 1f 800000d6 800000d8 4481 0 0 0 3 1 0 0 0 0 0 0 9 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 ab ad
+E ae dbus gnt 8000039c 0 f ad 1
+E ae ibus req 800000ec 0 f
+R 20 800000d8 800000da 4901 0 0 0 3 1 0 0 0 0 0 0 12 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 ac ae
+E af misc crash_dump_last_data_addr 8000039c
+E b0 dbus rvalid 8000039c 0 0 0 0
+E b0 ibus rvalid 800000e8 0 0 0 0
+E b1 dbus req 80000398 0 f
+E b1 ibus gnt 800000ec 0 f ae 1
+R 21 800000da 800000da c12903 0 0 0 3 1 2 80000390 0 0 2 80000390 12 44444444 8000039c f 0 44444444 0 0 0 0 0 0 0 0 1 0 1 ba72 0 ae b1
+E b4 dbus gnt 80000398 0 f b1 1
+E b4 ibus rvalid 800000ec 0 0 0 0
+E b5 misc crash_dump_last_data_addr 80000398
+E b7 dbus rvalid 80000398 0 0 0 0
+E b8 dbus req 80000394 0 f
+R 22 800000da 800000da 812483 0 0 0 3 1 2 80000390 0 0 2 80000390 9 33333333 80000398 f 0 33333333 0 0 0 0 0 0 0 0 1 0 1 ba72 0 b4 b8
+E bb dbus gnt 80000394 0 f b8 1
+E bc misc crash_dump_last_data_addr 80000394
+E be dbus rvalid 80000394 0 0 0 0
+E bf dbus req 80000390 0 f
+R 23 800000da 800000da 412403 0 0 0 3 1 2 80000390 0 0 2 80000390 8 22222222 80000394 f 0 22222222 0 0 0 0 0 0 0 0 1 0 1 ba72 0 bb bf
+E c2 dbus gnt 80000390 0 f bf 1
+E c3 misc crash_dump_next_pc 800000dc
+E c3 misc crash_dump_last_data_addr 80000390
+E c6 dbus rvalid 80000390 0 0 0 0
+E c7 misc crash_dump_current_pc 800000dc
+E c7 misc crash_dump_next_pc 800000e0
+R 24 800000da 800000da 12083 0 0 0 3 1 2 80000390 0 0 2 80000390 1 11111111 80000390 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ba72 0 c2 c7
+E c8 ibus req 800000f0 0 f
+E c8 misc crash_dump_current_pc 800000e0
+E c8 misc crash_dump_next_pc 800000e4
+R 25 800000da 800000dc 1010113 0 0 0 3 1 2 80000390 0 0 0 0 2 800003a0 800003a0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ba72 1 c6 c8
+E c9 misc crash_dump_current_pc 800000e4
+E c9 misc crash_dump_next_pc 800000e8
+R 26 800000dc 800000e0 18511663 0 0 0 3 1 2 800003a0 5 800003a0 0 0 0 0 0 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 c7 c9
+E ca ibus gnt 800000f0 0 f c8 1
+E ca misc crash_dump_current_pc 800000e8
+E ca misc crash_dump_next_pc 800000ec
+R 27 800000e0 800000e4 11111e37 0 0 0 3 1 0 0 0 0 0 0 1c 11111000 11111000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 c8 ca
+E cb ibus req 800000f4 0 f
+E cb misc crash_dump_current_pc 800000ec
+E cb misc crash_dump_next_pc 800000f0
+R 28 800000e4 800000e8 111e0e13 0 0 0 3 1 1c 11111000 0 0 0 0 1c 11111111 11111111 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 c9 cb
+R 29 800000e8 800000ec 19c09063 0 0 0 3 1 1 11111111 1c 11111111 0 0 0 0 0 f 0 11111111 11111111 0 0 0 0 0 0 0 1 0 0 0 0 ca cc
+E cd ibus rvalid 800000f0 0 0 0 0
+E cd ibus gnt 800000f4 0 f cb 1
+R 2a 800000ec 800000f0 22222e37 0 0 0 3 1 0 0 0 0 0 0 1c 22222000 22222000 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 cb cd
+E ce ibus req 800000f8 0 f
+E ce misc crash_dump_current_pc 800000f0
+E ce misc crash_dump_next_pc 800000f4
+E cf ibus rvalid 800000f4 0 0 0 0
+E d0 misc crash_dump_current_pc 800000f4
+E d0 misc crash_dump_next_pc 800000f8
+R 2b 800000f0 800000f4 222e0e13 0 0 0 3 1 1c 22222000 0 0 0 0 1c 22222222 22222222 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 ce d0
+E d1 ibus gnt 800000f8 0 f ce 1
+E d2 ibus req 800000fc 0 f
+R 2c 800000f4 800000f8 17c41a63 0 0 0 3 1 8 22222222 1c 22222222 0 0 0 0 0 f 0 11111111 22222222 0 0 0 0 0 0 0 1 0 0 0 0 d0 d2
+E d3 ibus rvalid 800000f8 0 0 0 0
+E d4 ibus gnt 800000fc 0 f d2 1
+E d4 misc crash_dump_current_pc 800000f8
+E d4 misc crash_dump_next_pc 800000fc
+E d5 ibus req 80000100 0 f
+R 2d 800000f8 800000fc 33333e37 0 0 0 3 1 0 0 0 0 0 0 1c 33333000 33333000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 d4 d6
+E d7 ibus gnt 80000100 0 f d5 2
+E d8 ibus rvalid 800000fc 0 0 0 1
+E d8 ibus req 80000104 0 f
+E d9 ibus rvalid 80000100 0 0 0 0
+E d9 misc crash_dump_current_pc 800000fc
+E d9 misc crash_dump_next_pc 80000100
+E da ibus gnt 80000104 0 f d8 1
+E da misc crash_dump_current_pc 80000100
+E da misc crash_dump_next_pc 80000104
+E db ibus req 80000108 0 f
+R 2e 800000fc 80000100 333e0e13 0 0 0 3 1 1c 33333000 0 0 0 0 1c 33333333 33333333 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 d9 db
+R 2f 80000100 80000104 17c49463 0 0 0 3 1 9 33333333 1c 33333333 0 0 0 0 0 f 0 11111111 33333333 0 0 0 0 0 0 0 1 0 0 0 0 da dc
+E de ibus rvalid 80000104 0 0 0 0
+E de ibus gnt 80000108 0 f db 1
+E df ibus req 8000010c 0 f
+E df misc crash_dump_current_pc 80000104
+E df misc crash_dump_next_pc 80000108
+E e0 ibus rvalid 80000108 0 0 0 0
+E e0 ibus gnt 8000010c 0 f df 1
+E e1 ibus req 80000110 0 f
+E e1 misc crash_dump_current_pc 80000108
+E e1 misc crash_dump_next_pc 8000010c
+R 30 80000104 80000108 44444e37 0 0 0 3 1 0 0 0 0 0 0 1c 44444000 44444000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 df e1
+E e2 ibus gnt 80000110 0 f e1 2
+E e3 ibus req 80000114 0 f
+R 31 80000108 8000010c 444e0e13 0 0 0 3 1 1c 44444000 0 0 0 0 1c 44444444 44444444 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 e1 e3
+E e4 ibus rvalid 8000010c 0 0 0 1
+E e4 ibus gnt 80000114 0 f e3 2
+E e5 ibus rvalid 80000110 0 0 0 1
+E e5 ibus req 80000118 0 f
+E e5 misc crash_dump_current_pc 8000010c
+E e5 misc crash_dump_next_pc 80000110
+E e6 dbus req 8000039c 1 f
+E e6 misc crash_dump_current_pc 80000110
+R 32 8000010c 80000110 15c91e63 0 0 0 3 1 12 44444444 1c 44444444 0 0 0 0 0 f 0 11111111 44444444 0 0 0 0 0 0 0 1 0 0 0 0 e5 e7
+E e8 ibus rvalid 80000114 0 0 0 0
+E e8 ibus gnt 80000118 0 f e5 1
+# flush seq=1 records=50 retired=50 markers=0 events=268 ibus_grants=40 dbus_grants=12 cycle=233
+E e9 dbus gnt 8000039c 1 f e6 1
+E e9 ibus req 8000011c 0 f
+E ea ibus rvalid 80000118 0 0 0 0
+E ea misc crash_dump_last_data_addr 8000039c
+E eb dbus rvalid 8000039c 1 0 0 0
+E ec dbus req 80000398 1 f
+E ec ibus gnt 8000011c 0 f e9 1
+R 33 80000110 80000110 fe812e23 0 0 0 3 1 2 800003a0 8 22222222 2 800003a0 0 0 8000039c 0 f 0 22222222 0 0 0 0 0 0 0 1 0 1 b856 0 e9 ec
+E ed ibus req 80000120 0 f
+E ee dbus gnt 80000398 1 f ec 1
+E ef misc crash_dump_next_pc 80000112
+E ef misc crash_dump_last_data_addr 80000398
+E f0 ibus rvalid 8000011c 0 0 0 0
+E f0 ibus gnt 80000120 0 f ed 1
+E f1 dbus rvalid 80000398 1 0 0 0
+E f1 ibus req 80000124 0 f
+E f2 misc crash_dump_current_pc 80000112
+E f2 misc crash_dump_next_pc 80000116
+R 34 80000110 80000110 fe112c23 0 0 0 3 1 2 800003a0 1 11111111 2 800003a0 0 0 80000398 0 f 0 11111111 0 0 0 0 0 0 0 1 0 1 b856 0 ee f2
+E f3 ibus rvalid 80000120 0 0 0 0
+E f3 misc crash_dump_current_pc 80000116
+E f3 misc crash_dump_next_pc 8000011a
+R 35 80000110 80000112 fe010113 0 0 0 3 1 2 800003a0 0 0 0 0 2 80000380 80000380 f 0 0 0 0 0 0 0 0 0 0 1 0 1 b856 1 f1 f3
+E f4 ibus gnt 80000124 0 f f1 1
+E f4 misc crash_dump_current_pc 8000011a
+E f4 misc crash_dump_next_pc 8000011e
+R 36 80000112 80000116 40228333 0 0 0 3 1 5 800003a0 2 80000380 0 0 6 20 20 f 0 0 80000380 0 0 0 0 0 0 0 1 0 0 0 0 f2 f4
+E f5 dbus req 8000039c 0 f
+E f5 ibus req 80000128 0 f
+E f5 misc crash_dump_current_pc 8000011e
+E f5 misc crash_dump_next_pc 80000120
+R 37 80000116 8000011a 2000393 0 0 0 3 1 0 0 0 0 0 0 7 20 20 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 f3 f5
+E f6 dbus gnt 8000039c 0 f f5 1
+R 38 8000011a 8000011e 14731763 0 0 0 3 1 6 20 7 20 0 0 0 0 0 f 0 0 20 0 0 0 0 0 0 0 1 0 0 0 0 f4 f6
+E f7 ibus gnt 80000128 0 f f5 2
+E f7 misc crash_dump_current_pc 80000120
+E f7 misc crash_dump_next_pc 80000124
+E f7 misc crash_dump_last_data_addr 8000039c
+E f8 dbus rvalid 8000039c 0 0 0 0
+E f8 ibus rvalid 80000124 0 0 0 1
+E f8 ibus req 8000012c 0 f
+E f9 ibus rvalid 80000128 0 0 0 0
+R 39 8000011e 80000120 4e72 0 0 0 3 1 2 80000380 0 0 2 80000380 1c 22222222 8000039c f 0 22222222 44444444 0 0 0 0 0 0 0 1 0 0 0 0 f6 f9
+E fa dbus req 80000398 0 f
+E fa misc crash_dump_current_pc 80000124
+E fa misc crash_dump_next_pc 80000126
+E fb ibus gnt 8000012c 0 f f8 1
+R 3a 80000120 80000124 148e1463 0 0 0 3 1 1c 22222222 8 22222222 0 0 0 0 0 f 0 22222222 22222222 0 0 0 0 0 0 0 1 0 0 0 0 f9 fb
+E fc ibus req 80000130 0 f
+E fd dbus gnt 80000398 0 f fa 1
+E fe ibus gnt 80000130 0 f fc 2
+E fe misc crash_dump_current_pc 80000126
+E fe misc crash_dump_next_pc 8000012a
+E fe misc crash_dump_last_data_addr 80000398
+E ff ibus rvalid 8000012c 0 0 0 1
+E ff ibus req 80000134 0 f
+E 101 dbus rvalid 80000398 0 0 0 0
+E 101 ibus rvalid 80000130 0 0 0 0
+E 102 ibus gnt 80000134 0 f ff 1
+R 3b 80000124 80000126 4e62 0 0 0 3 1 2 80000380 0 0 2 80000380 1c 11111111 80000398 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 fd 102
+E 103 dbus req 8000039c 0 f
+E 103 ibus req 80000138 0 f
+E 103 misc crash_dump_current_pc 8000012a
+E 104 ibus gnt 80000138 0 f 103 2
+R 3c 80000126 8000012a 141e1163 0 0 0 3 1 1c 11111111 1 11111111 0 0 0 0 0 f 0 11111111 11111111 0 0 0 0 0 0 0 1 0 0 0 0 102 104
+E 105 ibus rvalid 80000134 0 0 0 1
+E 105 ibus req 8000013c 0 f
+E 106 dbus gnt 8000039c 0 f 103 1
+E 106 ibus gnt 8000013c 0 f 105 2
+E 107 misc crash_dump_last_data_addr 8000039c
+E 108 dbus rvalid 8000039c 0 0 0 0
+E 108 ibus rvalid 80000138 0 0 0 1
+E 109 dbus req 80000398 0 f
+E 109 ibus rvalid 8000013c 0 0 0 0
+R 3d 8000012a 8000012a 1c12403 0 0 0 3 1 2 80000380 0 0 2 80000380 8 22222222 8000039c f 0 22222222 11111111 0 0 0 0 0 0 0 1 0 1 ba56 0 106 109
+E 10c dbus gnt 80000398 0 f 109 1
+E 10d misc crash_dump_next_pc 8000012c
+E 10d misc crash_dump_last_data_addr 80000398
+E 10f dbus rvalid 80000398 0 0 0 0
+E 110 misc crash_dump_current_pc 8000012c
+E 110 misc crash_dump_next_pc 80000130
+R 3e 8000012a 8000012a 1812083 0 0 0 3 1 2 80000380 0 0 2 80000380 1 11111111 80000398 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ba56 0 10c 110
+E 111 ibus req 80000140 0 f
+E 111 misc crash_dump_current_pc 80000130
+E 111 misc crash_dump_next_pc 80000134
+R 3f 8000012a 8000012c 2010113 0 0 0 3 1 2 80000380 0 0 0 0 2 800003a0 800003a0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ba56 1 10f 111
+E 112 ibus gnt 80000140 0 f 111 1
+E 112 misc crash_dump_current_pc 80000134
+E 112 misc crash_dump_next_pc 80000138
+R 40 8000012c 80000130 12511e63 0 0 0 3 1 2 800003a0 5 800003a0 0 0 0 0 0 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 110 112
+E 113 ibus req 80000144 0 f
+E 113 misc crash_dump_current_pc 80000138
+E 113 misc crash_dump_next_pc 8000013c
+R 41 80000130 80000134 a0a0a537 0 0 0 3 1 0 0 0 0 0 0 a a0a0a000 a0a0a000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 111 113
+E 114 misc crash_dump_current_pc 8000013c
+E 114 misc crash_dump_next_pc 80000140
+R 42 80000134 80000138 a050513 0 0 0 3 1 a a0a0a000 0 0 0 0 a a0a0a0a0 a0a0a0a0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 112 114
+E 115 ibus rvalid 80000140 0 0 0 0
+E 115 ibus gnt 80000144 0 f 113 1
+R 43 80000138 8000013c a1a1a5b7 0 0 0 3 1 0 0 0 0 0 0 b a1a1a000 a1a1a000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 113 115
+E 116 ibus req 80000148 0 f
+E 116 misc crash_dump_current_pc 80000140
+R 44 8000013c 80000140 1a158593 0 0 0 3 1 b a1a1a000 0 0 0 0 b a1a1a1a1 a1a1a1a1 f 0 11111111 11111111 0 0 0 0 0 0 0 1 0 0 0 0 114 116
+E 117 ibus rvalid 80000144 0 0 0 0
+E 117 misc crash_dump_next_pc 80000142
+E 118 misc crash_dump_current_pc 80000142
+E 118 misc crash_dump_next_pc 80000146
+R 45 80000140 80000140 50413 0 0 0 3 1 a a0a0a0a0 0 0 0 0 8 a0a0a0a0 a0a0a0a0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ac26 0 116 118
+E 119 ibus gnt 80000148 0 f 116 1
+R 46 80000140 80000142 58493 0 0 0 3 1 b a1a1a1a1 0 0 0 0 9 a1a1a1a1 a1a1a1a1 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ac26 1 117 119
+E 11a ibus req 8000014c 0 f
+R 47 80000142 80000146 a0a0ae37 0 0 0 3 1 0 0 0 0 0 0 1c a0a0a000 a0a0a000 f 0 11111111 a0a0a0a0 0 0 0 0 0 0 0 1 0 0 0 0 118 11a
+E 11b ibus rvalid 80000148 0 0 0 0
+E 11c ibus gnt 8000014c 0 f 11a 1
+E 11c misc crash_dump_current_pc 80000146
+E 11c misc crash_dump_next_pc 8000014a
+E 11d ibus req 80000150 0 f
+E 11e ibus gnt 80000150 0 f 11d 2
+R 48 80000146 8000014a a0e0e13 0 0 0 3 1 1c a0a0a000 0 0 0 0 1c a0a0a0a0 a0a0a0a0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 11c 11e
+E 11f ibus rvalid 8000014c 0 0 0 1
+E 11f ibus req 80000154 0 f
+E 120 ibus rvalid 80000150 0 0 0 0
+E 120 ibus gnt 80000154 0 f 11f 1
+E 120 misc crash_dump_current_pc 8000014a
+E 120 misc crash_dump_next_pc 8000014e
+E 121 ibus req 80000158 0 f
+E 121 misc crash_dump_current_pc 8000014e
+E 121 misc crash_dump_next_pc 80000152
+E 122 ibus rvalid 80000154 0 0 0 0
+R 49 8000014a 8000014e 11c41f63 0 0 0 3 1 8 a0a0a0a0 1c a0a0a0a0 0 0 0 0 0 f 0 11111111 a0a0a0a0 0 0 0 0 0 0 0 1 0 0 0 0 120 122
+E 123 misc crash_dump_current_pc 80000152
+E 123 misc crash_dump_next_pc 80000156
+R 4a 8000014e 80000152 a1a1ae37 0 0 0 3 1 0 0 0 0 0 0 1c a1a1a000 a1a1a000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 121 123
+E 124 ibus gnt 80000158 0 f 121 1
+E 125 ibus req 8000015c 0 f
+R 4b 80000152 80000156 1a1e0e13 0 0 0 3 1 1c a1a1a000 0 0 0 0 1c a1a1a1a1 a1a1a1a1 f 0 11111111 11111111 0 0 0 0 0 0 0 1 0 0 0 0 123 125
+E 126 ibus gnt 8000015c 0 f 125 2
+E 127 ibus req 80000160 0 f
+E 128 ibus rvalid 80000158 0 0 0 1
+E 128 ibus gnt 80000160 0 f 127 2
+E 129 ibus rvalid 8000015c 0 0 0 1
+E 129 ibus req 80000164 0 f
+E 129 misc crash_dump_current_pc 80000156
+E 129 misc crash_dump_next_pc 8000015a
+E 12a ibus gnt 80000164 0 f 129 2
+E 12a misc crash_dump_current_pc 8000015a
+E 12a misc crash_dump_next_pc 8000015e
+E 12b ibus rvalid 80000160 0 0 0 1
+E 12b ibus req 80000168 0 f
+R 4c 80000156 8000015a 11c49963 0 0 0 3 1 9 a1a1a1a1 1c a1a1a1a1 0 0 0 0 0 f 0 11111111 a1a1a1a1 0 0 0 0 0 0 0 1 0 0 0 0 129 12b
+E 12c ibus rvalid 80000164 0 0 0 0
+E 12c misc crash_dump_current_pc 8000015e
+E 12c misc crash_dump_next_pc 80000162
+R 4d 8000015a 8000015e 52525937 0 0 0 3 1 0 0 0 0 0 0 12 52525000 52525000 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 12a 12c
+E 12d misc crash_dump_current_pc 80000162
+E 12d misc crash_dump_next_pc 80000166
+E 12e ibus gnt 80000168 0 f 12b 1
+R 4e 8000015e 80000162 25290913 0 0 0 3 1 12 52525000 0 0 0 0 12 52525252 52525252 f 0 11111111 52525000 0 0 0 0 0 0 0 1 0 0 0 0 12c 12e
+E 12f ibus req 8000016c 0 f
+R 4f 80000162 80000166 535359b7 0 0 0 3 1 0 0 0 0 0 0 13 53535000 53535000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 12d 12f
+E 131 ibus rvalid 80000168 0 0 0 0
+E 131 ibus gnt 8000016c 0 f 12f 1
+E 132 ibus req 80000170 0 f
+E 132 misc crash_dump_current_pc 80000166
+E 132 misc crash_dump_next_pc 8000016a
+E 133 misc crash_dump_current_pc 8000016a
+E 133 misc crash_dump_next_pc 8000016c
+E 134 ibus gnt 80000170 0 f 132 2
+R 50 80000166 8000016a 35398993 0 0 0 3 1 13 53535000 0 0 0 0 13 53535353 53535353 f 0 11111111 53535000 0 0 0 0 0 0 0 1 0 0 0 0 132 134
+E 135 ibus rvalid 8000016c 0 0 0 1
+E 135 ibus req 80000174 0 f
+R 51 8000016a 8000016c 4501 0 0 0 3 1 0 0 0 0 0 0 a 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 133 135
+E 136 ibus gnt 80000174 0 f 135 2
+E 136 misc crash_dump_current_pc 8000016c
+E 136 misc crash_dump_next_pc 8000016e
+E 137 ibus rvalid 80000170 0 0 0 1
+E 137 ibus req 80000178 0 f
+E 137 misc crash_dump_current_pc 8000016e
+E 138 misc crash_dump_next_pc 80000170
+R 52 8000016c 8000016e 4581 0 0 0 3 1 0 0 0 0 0 0 b 0 0 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 136 138
+E 139 ibus rvalid 80000174 0 0 0 0
+E 139 ibus gnt 80000178 0 f 137 1
+E 139 misc crash_dump_current_pc 80000170
+E 139 misc crash_dump_next_pc 80000174
+R 53 8000016e 8000016e 90513 0 0 0 3 1 12 52525252 0 0 0 0 a 52525252 52525252 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ad6e 0 137 139
+E 13a ibus req 8000017c 0 f
+E 13a misc crash_dump_current_pc 80000174
+E 13a misc crash_dump_next_pc 80000178
+R 54 8000016e 80000170 98593 0 0 0 3 1 13 53535353 0 0 0 0 b 53535353 53535353 f 0 11111111 0 0 0 0 0 0 0 0 1 0 1 ad6e 1 138 13a
+E 13b ibus rvalid 80000178 0 0 0 0
+R 55 80000170 80000174 52525e37 0 0 0 3 1 0 0 0 0 0 0 1c 52525000 52525000 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 139 13b
+E 13c ibus gnt 8000017c 0 f 13a 1
+E 13c misc crash_dump_current_pc 80000178
+E 13c misc crash_dump_next_pc 8000017c
+R 56 80000174 80000178 252e0e13 0 0 0 3 1 1c 52525000 0 0 0 0 1c 52525252 52525252 f 0 11111111 52525252 0 0 0 0 0 0 0 1 0 0 0 0 13a 13c
+E 13d ibus req 80000180 0 f
+R 57 80000178 8000017c fc51863 0 0 0 3 1 a 52525252 1c 52525252 0 0 0 0 0 f 0 11111111 52525252 0 0 0 0 0 0 0 1 0 0 0 0 13c 13e
+E 13f ibus gnt 80000180 0 f 13d 2
+E 140 ibus rvalid 8000017c 0 0 0 1
+E 140 ibus req 80000184 0 f
+E 141 misc crash_dump_current_pc 8000017c
+E 141 misc crash_dump_next_pc 80000180
+E 142 ibus rvalid 80000180 0 0 0 0
+E 143 ibus gnt 80000184 0 f 140 1
+E 143 misc crash_dump_current_pc 80000180
+E 143 misc crash_dump_next_pc 80000184
+R 58 8000017c 80000180 53535e37 0 0 0 3 1 0 0 0 0 0 0 1c 53535000 53535000 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 141 143
+E 144 ibus req 80000188 0 f
+R 59 80000180 80000184 353e0e13 0 0 0 3 1 1c 53535000 0 0 0 0 1c 53535353 53535353 f 0 11111111 53535353 0 0 0 0 0 0 0 1 0 0 0 0 143 145
+E 147 ibus rvalid 80000184 0 0 0 0
+E 147 ibus gnt 80000188 0 f 144 1
+E 148 ibus req 8000018c 0 f
+E 148 misc crash_dump_current_pc 80000184
+E 148 misc crash_dump_next_pc 80000188
+E 149 ibus rvalid 80000188 0 0 0 0
+E 14a misc crash_dump_current_pc 80000188
+E 14a misc crash_dump_next_pc 8000018c
+R 5a 80000184 80000188 fc59263 0 0 0 3 1 b 53535353 1c 53535353 0 0 0 0 0 f 0 11111111 53535353 0 0 0 0 0 0 0 1 0 0 0 0 148 14a
+E 14b ibus gnt 8000018c 0 f 148 1
+E 14c ibus req 80000190 0 f
+R 5b 80000188 8000018c 417 0 0 0 3 1 0 0 0 0 0 0 8 80000188 80000188 f 0 11111111 0 0 0 0 0 0 0 0 1 0 0 0 0 14a 14c
+E 14d ibus rvalid 8000018c 0 0 0 0
+E 14e ibus gnt 80000190 0 f 14c 1
+E 14e misc crash_dump_current_pc 8000018c
+E 14e misc crash_dump_next_pc 80000190
+E 14f ibus req 80000194 0 f
+E 150 ibus rvalid 80000190 0 0 0 0
+E 150 ibus gnt 80000194 0 f 14f 1
+R 5c 8000018c 80000190 10840413 0 0 0 3 1 8 80000188 0 0 0 0 8 80000290 80000290 f 0 11111111 80000188 0 0 0 0 0 0 0 1 0 0 0 0 14e 150
+E 151 ibus req 80000198 0 f
+E 151 misc crash_dump_current_pc 80000190
+E 151 misc crash_dump_next_pc 80000194
+E 153 ibus rvalid 80000194 0 0 0 0
+E 153 ibus gnt 80000198 0 f 151 1
+R 5d 80000190 80000194 f8500493 0 0 0 3 1 0 0 0 0 0 0 9 ffffff85 ffffff85 f 0 11111111 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 151 153
+E 154 dbus req 80000290 1 2
+E 154 ibus req 8000019c 0 f
+E 154 misc crash_dump_current_pc 80000194
+E 154 misc crash_dump_next_pc 80000196
+E 155 ibus rvalid 80000198 0 0 0 0
+E 155 ibus gnt 8000019c 0 f 154 1
+E 156 ibus req 800001a0 0 f
+E 157 dbus gnt 80000290 1 2 154 1
+E 158 ibus rvalid 8000019c 0 0 0 0
+E 158 misc crash_dump_current_pc 80000196
+E 158 misc crash_dump_next_pc 80000198
+E 158 misc crash_dump_last_data_addr 80000291
+E 159 dbus rvalid 80000290 1 0 0 0
+E 159 ibus gnt 800001a0 0 f 156 1
+E 15a ibus req 800001a4 0 f
+E 15a misc crash_dump_current_pc 80000198
+E 15a misc crash_dump_next_pc 8000019c
+R 5e 80000194 80000196 8844 0 0 0 3 1 8 80000290 9 ffffff85 8 80000290 0 0 80000291 0 1 0 ffffff85 0 0 0 0 0 0 0 1 0 0 0 0 157 15a
+E 15b dbus req 80000290 1 c
+E 15b ibus rvalid 800001a0 0 0 0 0
+E 15b misc crash_dump_current_pc 8000019c
+E 15b misc crash_dump_next_pc 8000019e
+R 5f 80000196 80000198 6485 0 0 0 3 1 0 0 0 0 0 0 9 1000 1000 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 159 15b
+R 60 80000198 8000019c 23448493 0 0 0 3 1 9 1000 0 0 0 0 9 1234 1234 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 15a 15c
+E 15d dbus gnt 80000290 1 c 15b 1
+E 15d ibus gnt 800001a4 0 f 15a 1
+E 15e ibus req 800001a8 0 f
+E 15e misc crash_dump_current_pc 8000019e
+E 15e misc crash_dump_next_pc 800001a0
+E 15e misc crash_dump_last_data_addr 80000292
+E 15f ibus rvalid 800001a4 0 0 0 0
+E 160 ibus gnt 800001a8 0 f 15e 1
+E 161 dbus rvalid 80000290 1 0 0 0
+E 161 ibus req 800001ac 0 f
+E 162 dbus req 80000290 0 2
+E 162 ibus rvalid 800001a8 0 0 0 0
+E 162 ibus gnt 800001ac 0 f 161 1
+R 61 8000019c 8000019e 8c24 0 0 0 3 1 8 80000290 9 1234 8 80000290 0 0 80000292 0 3 0 1234 0 0 0 0 0 0 0 1 0 0 0 0 15d 162
+E 163 ibus req 800001b0 0 f
+E 164 ibus rvalid 800001ac 0 0 0 0
+E 164 ibus gnt 800001b0 0 f 163 1
+E 165 dbus gnt 80000290 0 2 162 1
+E 165 ibus req 800001b4 0 f
+E 166 misc crash_dump_current_pc 800001a0
+E 166 misc crash_dump_next_pc 800001a4
+E 166 misc crash_dump_last_data_addr 80000291
+E 168 ibus rvalid 800001b0 0 0 0 0
+E 168 ibus gnt 800001b4 0 f 165 1
+E 169 dbus rvalid 80000290 0 0 0 0
+E 16a ibus rvalid 800001b4 0 0 0 0
+E 16a misc crash_dump_current_pc 800001a4
+E 16a misc crash_dump_next_pc 800001a8
+R 62 8000019e 800001a0 8048 0 0 0 3 1 8 80000290 0 0 8 80000290 a 85 80000291 1 0 85 11111111 0 0 0 0 0 0 0 1 0 0 0 0 165 16a
+E 16b dbus req 80000290 0 c
+E 16b ibus req 800001b8 0 f
+E 16b misc crash_dump_current_pc 800001a8
+E 16b misc crash_dump_next_pc 800001aa
+R 63 800001a0 800001a4 8500e13 0 0 0 3 1 0 0 0 0 0 0 1c 85 85 f 0 85 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 169 16b
+R 64 800001a4 800001a8 dc51263 0 0 0 3 1 a 85 1c 85 0 0 0 0 0 f 0 85 85 0 0 0 0 0 0 0 1 0 0 0 0 16a 16c
+E 16d dbus gnt 80000290 0 c 16b 1
+E 16d ibus gnt 800001b8 0 f 16b 1
+E 16e ibus req 800001bc 0 f
+E 16e misc crash_dump_current_pc 800001aa
+E 16e misc crash_dump_next_pc 800001ac
+E 16e misc crash_dump_last_data_addr 80000292
+E 16f dbus rvalid 80000290 0 0 0 0
+E 170 ibus rvalid 800001b8 0 0 0 0
+E 170 ibus gnt 800001bc 0 f 16e 1
+E 170 misc crash_dump_current_pc 800001ac
+E 170 misc crash_dump_next_pc 800001b0
+R 65 800001a8 800001aa 8428 0 0 0 3 1 8 80000290 0 0 8 80000290 a 1234 80000292 3 0 1234 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 16d 170
+E 171 ibus req 800001c0 0 f
+E 171 misc crash_dump_current_pc 800001b0
+E 171 misc crash_dump_next_pc 800001b4
+R 66 800001aa 800001ac 6e05 0 0 0 3 1 0 0 0 0 0 0 1c 1000 1000 f 0 1234 0 0 0 0 0 0 0 0 1 0 0 0 0 16f 171
+E 172 misc crash_dump_current_pc 800001b4
+E 172 misc crash_dump_next_pc 800001b6
+R 67 800001ac 800001b0 234e0e13 0 0 0 3 1 1c 1000 0 0 0 0 1c 1234 1234 f 0 1234 0 0 0 0 0 0 0 0 1 0 0 0 0 170 172
+E 173 misc crash_dump_current_pc 800001b6
+E 173 misc crash_dump_next_pc 800001b8
+R 68 800001b0 800001b4 bc51c63 0 0 0 3 1 a 1234 1c 1234 0 0 0 0 0 f 0 1234 1234 0 0 0 0 0 0 0 1 0 0 0 0 171 173
+E 174 dbus req 80000290 1 3
+E 174 ibus rvalid 800001bc 0 0 0 0
+E 174 ibus gnt 800001c0 0 f 171 1
+E 174 misc crash_dump_current_pc 800001b8
+E 174 misc crash_dump_next_pc 800001ba
+R 69 800001b4 800001b6 74e1 0 0 0 3 1 0 0 0 0 0 0 9 ffff8000 ffff8000 f 0 1234 0 0 0 0 0 0 0 0 1 0 0 0 0 172 174
+E 175 ibus req 800001c4 0 f
+R 6a 800001b6 800001b8 485 0 0 0 3 1 9 ffff8000 0 0 0 0 9 ffff8001 ffff8001 f 0 1234 11111111 0 0 0 0 0 0 0 1 0 0 0 0 173 175
+E 177 dbus gnt 80000290 1 3 174 1
+E 178 ibus rvalid 800001c0 0 0 0 0
+E 178 ibus gnt 800001c4 0 f 175 1
+E 178 misc crash_dump_current_pc 800001ba
+E 178 misc crash_dump_next_pc 800001bc
+E 178 misc crash_dump_last_data_addr 80000290
+E 179 ibus req 800001c8 0 f
+E 17a dbus rvalid 80000290 1 0 0 0
+E 17b dbus req 80000290 0 3
+R 6b 800001b8 800001ba 8c04 0 0 0 3 1 8 80000290 9 ffff8001 8 80000290 0 0 80000290 0 3 0 ffff8001 0 0 0 0 0 0 0 1 0 0 0 0 177 17b
+E 17c ibus rvalid 800001c4 0 0 0 0
+E 17c ibus gnt 800001c8 0 f 179 1
+E 17d ibus req 800001cc 0 f
+E 17e dbus gnt 80000290 0 3 17b 1
+E 17e ibus rvalid 800001c8 0 0 0 0
+E 17e ibus gnt 800001cc 0 f 17d 1
+E 17f misc crash_dump_current_pc 800001bc
+E 17f misc crash_dump_next_pc 800001be
+E 180 dbus rvalid 80000290 0 0 0 0
+E 180 ibus rvalid 800001cc 0 0 0 0
+E 180 ibus req 800001d0 0 f
+E 181 misc crash_dump_current_pc 800001be
+E 181 misc crash_dump_next_pc 800001c0
+R 6c 800001ba 800001bc 8448 0 0 0 3 1 8 80000290 0 0 8 80000290 a ffff8001 80000290 3 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 17e 181
+E 182 ibus gnt 800001d0 0 f 180 1
+E 182 misc crash_dump_current_pc 800001c0
+E 182 misc crash_dump_next_pc 800001c4
+R 6d 800001bc 800001be 7e61 0 0 0 3 1 0 0 0 0 0 0 1c ffff8000 ffff8000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 180 182
+E 183 ibus req 800001d4 0 f
+E 183 misc crash_dump_current_pc 800001c4
+E 183 misc crash_dump_next_pc 800001c8
+R 6e 800001be 800001c0 e05 0 0 0 3 1 1c ffff8000 0 0 0 0 1c ffff8001 ffff8001 f 0 ffff8001 11111111 0 0 0 0 0 0 0 1 0 0 0 0 181 183
+E 184 ibus rvalid 800001d0 0 0 0 0
+E 184 misc crash_dump_current_pc 800001c8
+E 184 misc crash_dump_next_pc 800001cc
+R 6f 800001c0 800001c4 bc51463 0 0 0 3 1 a ffff8001 1c ffff8001 0 0 0 0 0 f 0 ffff8001 ffff8001 0 0 0 0 0 0 0 1 0 0 0 0 182 184
+E 185 ibus gnt 800001d4 0 f 183 1
+E 185 misc crash_dump_current_pc 800001cc
+E 185 misc crash_dump_next_pc 800001ce
+R 70 800001c4 800001c8 12345637 0 0 0 3 1 0 0 0 0 0 0 c 12345000 12345000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 183 185
+E 186 ibus req 800001d8 0 f
+E 186 misc crash_dump_current_pc 800001ce
+E 186 misc crash_dump_next_pc 800001d2
+R 71 800001c8 800001cc 67860613 0 0 0 3 1 c 12345000 0 0 0 0 c 12345678 12345678 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 184 186
+E 187 ibus rvalid 800001d4 0 0 0 0
+R 72 800001cc 800001ce 9e61 0 0 0 3 1 c 12345678 0 0 0 0 c 78 12345777 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 185 187
+E 188 ibus gnt 800001d8 0 f 186 1
+E 188 misc crash_dump_current_pc 800001d2
+E 188 misc crash_dump_next_pc 800001d6
+R 73 800001ce 800001d2 7800e13 0 0 0 3 1 0 0 0 0 0 0 1c 78 78 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 186 188
+E 189 ibus req 800001dc 0 f
+E 18a ibus gnt 800001dc 0 f 189 2
+R 74 800001d2 800001d6 9c61b63 0 0 0 3 1 c 78 1c 78 0 0 0 0 0 f 0 ffff8001 78 0 0 0 0 0 0 0 1 0 0 0 0 188 18a
+E 18b ibus req 800001e0 0 f
+E 18c ibus rvalid 800001d8 0 0 0 1
+E 18c ibus gnt 800001e0 0 f 18b 2
+E 18d ibus rvalid 800001dc 0 0 0 1
+E 18d ibus req 800001e4 0 f
+E 18d misc crash_dump_current_pc 800001d6
+E 18d misc crash_dump_next_pc 800001da
+E 18e ibus rvalid 800001e0 0 0 0 0
+E 18e ibus gnt 800001e4 0 f 18d 1
+E 18e misc crash_dump_current_pc 800001da
+E 18e misc crash_dump_next_pc 800001de
+E 18f ibus req 800001e8 0 f
+E 18f misc crash_dump_current_pc 800001de
+E 18f misc crash_dump_next_pc 800001e0
+R 75 800001d6 800001da 12345637 0 0 0 3 1 0 0 0 0 0 0 c 12345000 12345000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 18d 18f
+E 190 ibus rvalid 800001e4 0 0 0 0
+E 190 misc crash_dump_current_pc 800001e0
+E 190 misc crash_dump_next_pc 800001e4
+R 76 800001da 800001de 68060613 0 0 0 3 1 c 12345000 0 0 0 0 c 12345680 12345680 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 18e 190
+E 191 misc crash_dump_current_pc 800001e4
+E 191 misc crash_dump_next_pc 800001e8
+R 77 800001de 800001e0 9e65 0 0 0 3 1 c 12345680 0 0 0 0 c ffffff80 12345c84 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 18f 191
+E 192 ibus gnt 800001e8 0 f 18f 1
+R 78 800001e0 800001e4 f8000e13 0 0 0 3 1 0 0 0 0 0 0 1c ffffff80 ffffff80 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 190 192
+E 193 ibus req 800001ec 0 f
+R 79 800001e4 800001e8 9c61263 0 0 0 3 1 c ffffff80 1c ffffff80 0 0 0 0 0 f 0 ffff8001 ffffff80 0 0 0 0 0 0 0 1 0 0 0 0 191 193
+E 194 ibus gnt 800001ec 0 f 193 2
+E 195 ibus req 800001f0 0 f
+E 196 ibus rvalid 800001e8 0 0 0 1
+E 196 ibus gnt 800001f0 0 f 195 2
+E 197 ibus rvalid 800001ec 0 0 0 1
+E 197 ibus req 800001f4 0 f
+E 197 misc crash_dump_current_pc 800001e8
+E 197 misc crash_dump_next_pc 800001ec
+E 198 ibus rvalid 800001f0 0 0 0 0
+E 198 misc crash_dump_current_pc 800001ec
+E 198 misc crash_dump_next_pc 800001f0
+E 199 misc crash_dump_current_pc 800001f0
+E 199 misc crash_dump_next_pc 800001f2
+R 7a 800001e8 800001ec 1234b637 0 0 0 3 1 0 0 0 0 0 0 c 1234b000 1234b000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 197 199
+E 19a ibus gnt 800001f4 0 f 197 1
+E 19a misc crash_dump_current_pc 800001f2
+E 19a misc crash_dump_next_pc 800001f4
+R 7b 800001ec 800001f0 bcd60613 0 0 0 3 1 c 1234b000 0 0 0 0 c 1234abcd 1234abcd f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 198 19a
+E 19b ibus req 800001f8 0 f
+R 7c 800001f0 800001f2 9e69 0 0 0 3 1 c 1234abcd 0 0 0 0 c abcd 1234abcd f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 199 19b
+R 7d 800001f2 800001f4 6e2d 0 0 0 3 1 0 0 0 0 0 0 1c b000 b000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 19a 19c
+E 19d ibus rvalid 800001f4 0 0 0 0
+E 19d ibus gnt 800001f8 0 f 19b 1
+E 19e ibus req 800001fc 0 f
+E 19e misc crash_dump_current_pc 800001f4
+E 19e misc crash_dump_next_pc 800001f8
+E 19f ibus rvalid 800001f8 0 0 0 0
+E 19f ibus gnt 800001fc 0 f 19e 1
+E 1a0 ibus req 80000200 0 f
+E 1a0 misc crash_dump_current_pc 800001f8
+E 1a0 misc crash_dump_next_pc 800001fc
+R 7e 800001f4 800001f8 bcde0e13 0 0 0 3 1 1c b000 0 0 0 0 1c abcd abcd f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 19e 1a0
+E 1a2 ibus gnt 80000200 0 f 1a0 2
+R 7f 800001f8 800001fc 7c61863 0 0 0 3 1 c abcd 1c abcd 0 0 0 0 0 f 0 ffff8001 abcd 0 0 0 0 0 0 0 1 0 0 0 0 1a0 1a2
+E 1a3 ibus rvalid 800001fc 0 0 0 1
+E 1a3 ibus req 80000204 0 f
+E 1a4 misc crash_dump_current_pc 800001fc
+E 1a4 misc crash_dump_next_pc 80000200
+E 1a5 ibus gnt 80000204 0 f 1a3 2
+E 1a6 ibus rvalid 80000200 0 0 0 1
+E 1a6 ibus req 80000208 0 f
+R 80 800001fc 80000200 1234b637 0 0 0 3 1 0 0 0 0 0 0 c 1234b000 1234b000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1a4 1a6
+E 1a7 misc crash_dump_current_pc 80000200
+E 1a7 misc crash_dump_next_pc 80000204
+E 1a8 ibus rvalid 80000204 0 0 0 0
+E 1a8 ibus gnt 80000208 0 f 1a6 1
+E 1a9 ibus req 8000020c 0 f
+E 1a9 misc crash_dump_current_pc 80000204
+E 1a9 misc crash_dump_next_pc 80000206
+R 81 80000200 80000204 bcd60613 0 0 0 3 1 c 1234b000 0 0 0 0 c 1234abcd 1234abcd f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1a7 1a9
+E 1aa ibus gnt 8000020c 0 f 1a9 2
+E 1aa misc crash_dump_current_pc 80000206
+E 1aa misc crash_dump_next_pc 80000208
+E 1ab ibus req 80000210 0 f
+R 82 80000204 80000206 9e6d 0 0 0 3 1 c 1234abcd 0 0 0 0 c ffffabcd 1234b1d2 f 0 ffff8001 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 1a9 1ab
+E 1ac ibus rvalid 80000208 0 0 0 1
+R 83 80000206 80000208 7e6d 0 0 0 3 1 0 0 0 0 0 0 1c ffffb000 ffffb000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1aa 1ac
+E 1ad ibus rvalid 8000020c 0 0 0 0
+E 1ad misc crash_dump_current_pc 80000208
+E 1ad misc crash_dump_next_pc 8000020c
+E 1ae ibus gnt 80000210 0 f 1ab 1
+E 1ae misc crash_dump_current_pc 8000020c
+E 1ae misc crash_dump_next_pc 80000210
+E 1af ibus req 80000214 0 f
+R 84 80000208 8000020c bcde0e13 0 0 0 3 1 1c ffffb000 0 0 0 0 1c ffffabcd ffffabcd f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1ad 1af
+R 85 8000020c 80000210 5c61e63 0 0 0 3 1 c ffffabcd 1c ffffabcd 0 0 0 0 0 f 0 ffff8001 ffffabcd 0 0 0 0 0 0 0 1 0 0 0 0 1ae 1b0
+E 1b1 ibus gnt 80000214 0 f 1af 2
+E 1b2 ibus rvalid 80000210 0 0 0 1
+E 1b2 ibus req 80000218 0 f
+E 1b3 ibus rvalid 80000214 0 0 0 0
+E 1b3 misc crash_dump_current_pc 80000210
+E 1b3 misc crash_dump_next_pc 80000214
+E 1b4 misc crash_dump_current_pc 80000214
+E 1b4 misc crash_dump_next_pc 80000218
+E 1b5 ibus gnt 80000218 0 f 1b2 1
+R 86 80000210 80000214 f0f1637 0 0 0 3 1 0 0 0 0 0 0 c f0f1000 f0f1000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1b3 1b5
+E 1b6 ibus req 8000021c 0 f
+R 87 80000214 80000218 f0f60613 0 0 0 3 1 c f0f1000 0 0 0 0 c f0f0f0f f0f0f0f f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1b4 1b6
+E 1b7 ibus rvalid 80000218 0 0 0 0
+E 1b7 ibus gnt 8000021c 0 f 1b6 1
+E 1b8 ibus req 80000220 0 f
+E 1b8 misc crash_dump_current_pc 80000218
+E 1b8 misc crash_dump_next_pc 8000021a
+E 1ba ibus rvalid 8000021c 0 0 0 0
+E 1ba ibus gnt 80000220 0 f 1b8 1
+R 88 80000218 8000021a 9e75 0 0 0 3 1 c f0f0f0f 0 0 0 0 c f0f0f0f0 f0f0f0e f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1b8 1ba
+E 1bb ibus req 80000224 0 f
+E 1bb misc crash_dump_current_pc 8000021a
+E 1bb misc crash_dump_next_pc 8000021e
+E 1bc ibus gnt 80000224 0 f 1bb 2
+E 1bd ibus rvalid 80000220 0 0 0 1
+E 1bd ibus req 80000228 0 f
+R 89 8000021a 8000021e f0f0fe37 0 0 0 3 1 0 0 0 0 0 0 1c f0f0f000 f0f0f000 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1bb 1bd
+E 1be ibus rvalid 80000224 0 0 0 0
+E 1be ibus gnt 80000228 0 f 1bd 1
+E 1be misc crash_dump_current_pc 8000021e
+E 1be misc crash_dump_next_pc 80000222
+E 1bf ibus req 8000022c 0 f
+E 1bf misc crash_dump_current_pc 80000222
+E 1bf misc crash_dump_next_pc 80000226
+E 1c0 ibus rvalid 80000228 0 0 0 0
+E 1c0 misc crash_dump_current_pc 80000226
+E 1c0 misc crash_dump_next_pc 80000228
+R 8a 8000021e 80000222 f0e0e13 0 0 0 3 1 1c f0f0f000 0 0 0 0 1c f0f0f0f0 f0f0f0f0 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1be 1c0
+E 1c1 ibus gnt 8000022c 0 f 1bf 1
+E 1c1 misc crash_dump_current_pc 80000228
+E 1c1 misc crash_dump_next_pc 8000022a
+R 8b 80000222 80000226 5c61363 0 0 0 3 1 c f0f0f0f0 1c f0f0f0f0 0 0 0 0 0 f 0 ffff8001 f0f0f0f0 0 0 0 0 0 0 0 1 0 0 0 0 1bf 1c1
+E 1c2 ibus req 80000230 0 f
+E 1c2 misc crash_dump_current_pc 8000022a
+E 1c2 misc crash_dump_next_pc 8000022c
+R 8c 80000226 80000228 461d 0 0 0 3 1 0 0 0 0 0 0 c 7 7 f 0 ffff8001 20 0 0 0 0 0 0 0 1 0 0 0 0 1c0 1c2
+R 8d 80000228 8000022a 56e9 0 0 0 3 1 0 0 0 0 0 0 d fffffffa fffffffa f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1c1 1c3
+E 1c4 ibus gnt 80000230 0 f 1c2 2
+R 8e 8000022a 8000022c 9e55 0 0 0 3 1 c 7 d fffffffa 0 0 c ffffffd6 6 f 0 ffff8001 fffffffa 0 0 0 0 0 0 0 1 0 0 0 0 1c2 1c4
+E 1c5 ibus rvalid 8000022c 0 0 0 1
+E 1c5 ibus req 80000234 0 f
+E 1c6 misc crash_dump_current_pc 8000022c
+E 1c6 misc crash_dump_next_pc 80000230
+E 1c7 ibus rvalid 80000230 0 0 0 0
+E 1c7 ibus gnt 80000234 0 f 1c5 1
+E 1c8 ibus req 80000238 0 f
+E 1c8 misc crash_dump_current_pc 80000230
+E 1c8 misc crash_dump_next_pc 80000234
+R 8f 8000022c 80000230 fd600e13 0 0 0 3 1 0 0 0 0 0 0 1c ffffffd6 ffffffd6 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1c6 1c8
+E 1c9 ibus rvalid 80000234 0 0 0 0
+E 1ca misc crash_dump_current_pc 80000234
+E 1ca misc crash_dump_next_pc 80000238
+R 90 80000230 80000234 3c61c63 0 0 0 3 1 c ffffffd6 1c ffffffd6 0 0 0 0 0 f 0 ffff8001 ffffffd6 0 0 0 0 0 0 0 1 0 0 0 0 1c8 1ca
+E 1cb ibus gnt 80000238 0 f 1c8 1
+E 1cc ibus req 8000023c 0 f
+R 91 80000234 80000238 97 0 0 0 3 1 0 0 0 0 0 0 1 80000234 80000234 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1ca 1cc
+E 1cd ibus gnt 8000023c 0 f 1cc 2
+E 1ce ibus req 80000240 0 f
+E 1cf ibus rvalid 80000238 0 0 0 1
+E 1cf ibus gnt 80000240 0 f 1ce 2
+E 1d0 ibus req 80000244 0 f
+E 1d0 misc crash_dump_current_pc 80000238
+E 1d0 misc crash_dump_next_pc 8000023c
+E 1d1 ibus rvalid 8000023c 0 0 0 1
+E 1d1 ibus gnt 80000244 0 f 1d0 2
+E 1d2 dbus req 8000039c 1 f
+E 1d2 ibus req 80000248 0 f
+E 1d2 misc crash_dump_current_pc 8000023c
+R 92 80000238 8000023c 1008093 0 0 0 3 1 1 80000234 0 0 0 0 1 80000244 80000244 f 0 ffff8001 0 0 0 0 0 0 0 0 1 0 0 0 0 1d0 1d2
+E 1d3 ibus rvalid 80000240 0 0 0 1
+E 1d3 ibus gnt 80000248 0 f 1d2 2
+E 1d4 ibus rvalid 80000244 0 0 0 1
+E 1d4 ibus req 8000024c 0 f
+E 1d5 dbus gnt 8000039c 1 f 1d2 1
+E 1d5 ibus gnt 8000024c 0 f 1d4 2
+E 1d6 ibus rvalid 80000248 0 0 0 1
+E 1d6 misc crash_dump_next_pc 8000023e
+E 1d6 misc crash_dump_last_data_addr 8000039c
+E 1d7 dbus rvalid 8000039c 1 0 0 0
+E 1d7 ibus req 80000250 0 f
+E 1d8 ibus rvalid 8000024c 0 0 0 0
+E 1d8 misc crash_dump_current_pc 8000023e
+E 1d8 misc crash_dump_next_pc 80000240
+R 93 8000023c 8000023c fe112e23 0 0 0 3 1 2 800003a0 1 80000244 2 800003a0 0 0 8000039c 0 f 0 80000244 0 0 0 0 0 0 0 1 0 1 b842 0 1d5 1d8
+E 1d9 dbus req 8000039c 0 f
+E 1d9 misc crash_dump_current_pc 80000240
+R 94 8000023c 8000023e ff010113 0 0 0 3 1 2 800003a0 0 0 0 0 2 80000390 80000390 f 0 0 0 0 0 0 0 0 0 0 1 0 1 b842 1 1d7 1d9
+E 1da ibus gnt 80000250 0 f 1d7 1
+R 95 8000023e 80000240 4081 0 0 0 3 1 0 0 0 0 0 0 1 0 0 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1d8 1da
+E 1db ibus req 80000254 0 f
+E 1dc dbus gnt 8000039c 0 f 1d9 1
+E 1dc ibus gnt 80000254 0 f 1db 2
+E 1dd ibus rvalid 80000250 0 0 0 1
+E 1de ibus rvalid 80000254 0 0 0 0
+E 1e0 dbus rvalid 8000039c 0 0 0 0
+E 1e1 ibus req 80000244 0 f
+E 1e1 misc crash_dump_next_pc 80000242
+R 96 80000240 80000240 c12083 0 0 0 3 1 2 80000390 0 0 2 80000390 1 80000244 8000039c f 0 80000244 ffffffd6 0 0 0 0 0 0 0 1 0 1 be42 0 1dc 1e1
+E 1e2 ibus gnt 80000244 0 f 1e1 1
+E 1e2 misc crash_dump_next_pc 80000244
+R 97 80000240 80000240 1010113 0 0 0 3 1 2 80000390 0 0 0 0 2 800003a0 800003a0 f 0 80000244 0 0 0 0 0 0 0 0 1 0 1 be42 0 1e0 1e2
+E 1e3 ibus req 80000248 0 f
+R 98 80000240 80000244 8067 0 0 0 3 1 1 80000244 0 0 0 0 0 0 80000242 f 0 80000244 0 0 0 0 0 0 0 0 1 0 1 be42 1 1e1 1e3
+E 1e5 ibus gnt 80000248 0 f 1e3 2
+E 1e6 ibus rvalid 80000244 0 0 0 1
+E 1e6 ibus req 8000024c 0 f
+E 1e7 ibus gnt 8000024c 0 f 1e6 2
+E 1e7 misc crash_dump_current_pc 80000244
+E 1e7 misc crash_dump_next_pc 80000248
+E 1e8 ibus rvalid 80000248 0 0 0 1
+E 1e8 ibus req 80000250 0 f
+E 1e9 ibus rvalid 8000024c 0 0 0 0
+E 1e9 ibus gnt 80000250 0 f 1e8 1
+E 1e9 misc crash_dump_current_pc 80000248
+E 1e9 misc crash_dump_next_pc 8000024c
+R 99 80000244 80000248 2511263 0 0 0 3 1 2 800003a0 5 800003a0 0 0 0 0 0 f 0 80000244 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 1e7 1e9
+E 1ea ibus req 80000254 0 f
+E 1ea misc crash_dump_current_pc 8000024c
+E 1ea misc crash_dump_next_pc 80000250
+R 9a 80000248 8000024c 97 0 0 0 3 1 0 0 0 0 0 0 1 80000248 80000248 f 0 80000244 0 0 0 0 0 0 0 0 1 0 0 0 0 1e9 1eb
+E 1ec ibus gnt 80000254 0 f 1ea 2
+R 9b 8000024c 80000250 1608093 0 0 0 3 1 1 80000248 0 0 0 0 1 8000025e 8000025e f 0 80000244 0 0 0 0 0 0 0 0 1 0 0 0 0 1ea 1ec
+E 1ed ibus rvalid 80000250 0 0 0 1
+E 1ed ibus req 80000258 0 f
+E 1ee dbus req 8000039c 1 f
+E 1ee ibus rvalid 80000254 0 0 0 0
+E 1ee ibus gnt 80000258 0 f 1ed 1
+E 1ee misc crash_dump_current_pc 80000250
+E 1ef ibus req 8000025c 0 f
+E 1f0 ibus rvalid 80000258 0 0 0 0
+E 1f0 ibus gnt 8000025c 0 f 1ef 1
+E 1f1 dbus gnt 8000039c 1 f 1ee 1
+E 1f1 ibus req 80000260 0 f
+E 1f2 misc crash_dump_next_pc 80000252
+E 1f3 dbus rvalid 8000039c 1 0 0 0
+E 1f3 ibus rvalid 8000025c 0 0 0 0
+E 1f4 ibus gnt 80000260 0 f 1f1 1
+E 1f4 misc crash_dump_current_pc 80000252
+E 1f4 misc crash_dump_next_pc 80000256
+R 9c 80000250 80000250 fe112e23 0 0 0 3 1 2 800003a0 1 8000025e 2 800003a0 0 0 8000039c 0 f 0 8000025e 0 0 0 0 0 0 0 1 0 1 b842 0 1f1 1f4
+E 1f5 ibus req 80000264 0 f
+E 1f5 misc crash_dump_current_pc 80000256
+E 1f5 misc crash_dump_next_pc 8000025a
+R 9d 80000250 80000252 ff010113 0 0 0 3 1 2 800003a0 0 0 0 0 2 80000390 80000390 f 0 0 0 0 0 0 0 0 0 0 1 0 1 b842 1 1f3 1f5
+E 1f6 dbus req 8000039c 0 f
+E 1f6 ibus gnt 80000264 0 f 1f5 2
+E 1f6 misc crash_dump_current_pc 8000025a
+R 9e 80000252 80000256 5a5a6537 0 0 0 3 1 0 0 0 0 0 0 a 5a5a6000 5a5a6000 f 0 0 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 1f4 1f6
+E 1f7 ibus req 80000268 0 f
+R 9f 80000256 8000025a a5a50513 0 0 0 3 1 a 5a5a6000 0 0 0 0 a 5a5a5a5a 5a5a5a5a f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1f5 1f7
+E 1f8 dbus gnt 8000039c 0 f 1f6 1
+E 1f8 ibus rvalid 80000260 0 0 0 1
+E 1f8 ibus gnt 80000268 0 f 1f7 2
+E 1f9 ibus rvalid 80000264 0 0 0 1
+E 1f9 ibus req 8000026c 0 f
+E 1fb dbus rvalid 8000039c 0 0 0 0
+E 1fb ibus rvalid 80000268 0 0 0 0
+E 1fb ibus gnt 8000026c 0 f 1f9 1
+R a0 8000025a 8000025a c12083 0 0 0 3 1 2 80000390 0 0 2 80000390 1 8000025e 8000039c f 0 8000025e ffffffd6 0 0 0 0 0 0 0 1 0 1 bc42 0 1f8 1fc
+E 1fd ibus rvalid 8000026c 0 0 0 0
+E 1fd ibus req 8000025c 0 f
+E 1fd misc crash_dump_next_pc 8000025c
+R a1 8000025a 8000025a 1010113 0 0 0 3 1 2 80000390 0 0 0 0 2 800003a0 800003a0 f 0 8000025e 0 0 0 0 0 0 0 0 1 0 1 bc42 0 1fb 1fd
+E 1fe misc crash_dump_next_pc 8000025e
+R a2 8000025a 8000025a 513 0 0 0 3 1 0 0 0 0 0 0 a 0 0 f 0 8000025e 0 0 0 0 0 0 0 0 1 0 1 bc42 0 1fc 1fe
+E 1ff ibus gnt 8000025c 0 f 1fd 1
+R a3 8000025a 8000025e 8067 0 0 0 3 1 1 8000025e 0 0 0 0 0 0 8000025c f 0 8000025e 0 0 0 0 0 0 0 0 1 0 1 bc42 1 1fd 1ff
+E 200 ibus req 80000260 0 f
+E 202 ibus rvalid 8000025c 0 0 0 0
+E 203 ibus gnt 80000260 0 f 200 1
+E 203 misc crash_dump_current_pc 8000025e
+E 203 misc crash_dump_next_pc 80000260
+E 204 ibus req 80000264 0 f
+E 205 ibus rvalid 80000260 0 0 0 0
+E 205 ibus gnt 80000264 0 f 204 1
+R a4 8000025e 80000260 e509 0 0 0 3 1 a 0 0 0 0 0 0 0 0 f 0 8000025e 0 0 0 0 0 0 0 0 1 0 0 0 0 203 205
+E 206 ibus req 80000268 0 f
+E 206 misc crash_dump_current_pc 80000260
+E 206 misc crash_dump_next_pc 80000264
+R a5 80000260 80000264 511463 0 0 0 3 1 2 800003a0 5 800003a0 0 0 0 0 0 f 0 8000025e 800003a0 0 0 0 0 0 0 0 1 0 0 0 0 206 208
+E 209 ibus rvalid 80000264 0 0 0 0
+E 209 ibus gnt 80000268 0 f 206 1
+E 20a ibus req 8000026c 0 f
+E 20a misc crash_dump_current_pc 80000264
+E 20a misc crash_dump_next_pc 80000266
+E 20b ibus rvalid 80000268 0 0 0 0
+E 20b misc crash_dump_current_pc 80000266
+E 20b misc crash_dump_next_pc 80000268
+E 20c misc crash_dump_next_pc 8000026a
+R a6 80000264 80000266 4185 0 0 0 3 1 0 0 0 0 0 0 3 1 1 f 0 8000025e 8000025e 0 0 0 0 0 0 0 1 0 0 0 0 20a 20c
+E 20d ibus gnt 8000026c 0 f 20a 1
+R a7 80000266 8000026a a011 0 0 0 3 1 0 0 0 0 0 0 0 0 80000268 f 0 8000025e 0 0 0 0 0 0 0 0 1 0 0 0 0 20b 20d
+E 20e ibus req 80000268 0 f
+E 210 ibus gnt 80000268 0 f 20e 2
+E 211 ibus rvalid 8000026c 0 0 0 1
+E 211 ibus req 8000026c 0 f
+E 213 ibus gnt 8000026c 0 f 211 2
+E 214 ibus rvalid 80000268 0 0 0 1
+E 214 ibus req 80000270 0 f
+E 215 ibus rvalid 8000026c 0 0 0 0
+E 216 misc crash_dump_current_pc 8000026a
+E 216 misc crash_dump_next_pc 8000026e
+E 217 ibus gnt 80000270 0 f 214 1
+E 218 ibus req 80000274 0 f
+R a8 8000026a 8000026e f17 0 0 0 3 1 0 0 0 0 0 0 1e 8000026a 8000026a f 0 8000025e 0 0 0 0 0 0 0 0 1 0 0 0 0 216 218
+E 219 ibus gnt 80000274 0 f 218 2
+E 21a ibus rvalid 80000270 0 0 0 1
+E 21a ibus req 80000278 0 f
+E 21b misc crash_dump_current_pc 8000026e
+E 21b misc crash_dump_next_pc 80000272
+E 21c ibus gnt 80000278 0 f 21a 2
+E 21d ibus rvalid 80000274 0 0 0 1
+E 21d ibus req 8000027c 0 f
+R a9 8000026e 80000272 16f0f13 0 0 0 3 1 1e 8000026a 0 0 0 0 1e 80000280 80000280 f 0 8000025e 0 0 0 0 0 0 0 0 1 0 0 0 0 21b 21d
+E 21e dbus req 80000280 1 f
+E 21e misc crash_dump_current_pc 80000272
+E 21e misc crash_dump_next_pc 80000276
+E 21f ibus gnt 8000027c 0 f 21d 2
+E 220 dbus gnt 80000280 1 f 21e 1
+E 220 ibus rvalid 80000278 0 0 0 1
+E 220 ibus req 80000280 0 f
+E 221 misc crash_dump_current_pc 80000276
+E 221 misc crash_dump_next_pc 80000278
+E 221 misc crash_dump_last_data_addr 80000280
+E 222 ibus gnt 80000280 0 f 220 2
+E 222 misc crash_dump_next_pc 80000276
+E 223 ibus rvalid 8000027c 0 0 0 1
+E 223 ibus req 80000274 0 f
+E 224 dbus rvalid 80000280 1 0 0 0
+E 225 ibus rvalid 80000280 0 0 0 0
+R aa 80000272 80000276 3f2023 0 0 0 3 1 1e 80000280 3 1 1e 80000280 0 0 80000280 0 f 0 1 0 0 0 0 0 0 0 1 0 0 0 0 220 225
+E 226 ibus gnt 80000274 0 f 223 1
+R ab 80000276 80000276 a001 0 0 0 3 1 0 0 0 0 0 0 0 0 80000278 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 224 226
+E 227 ibus req 80000278 0 f
+E 228 ibus rvalid 80000274 0 0 0 0
+E 229 misc crash_dump_next_pc 80000278
+E 22a ibus gnt 80000278 0 f 227 1
+E 22a misc crash_dump_next_pc 80000276
+E 22b ibus req 80000274 0 f
+R ac 80000276 80000276 a001 0 0 0 3 1 0 0 0 0 0 0 0 0 80000278 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 229 22b
+E 22c ibus gnt 80000274 0 f 22b 2
+E 22d ibus rvalid 80000278 0 0 0 1
+E 22d ibus req 80000278 0 f
+E 22e ibus gnt 80000278 0 f 22d 2
+E 22f ibus req 8000027c 0 f
+E 230 ibus rvalid 80000274 0 0 0 1
+E 231 ibus rvalid 80000278 0 0 0 0
+E 231 misc crash_dump_next_pc 80000278
+E 232 ibus gnt 8000027c 0 f 22f 1
+E 232 misc crash_dump_next_pc 80000276
+E 233 ibus req 80000274 0 f
+R ad 80000276 80000276 a001 0 0 0 3 1 0 0 0 0 0 0 0 0 80000278 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 231 233
+E 234 ibus gnt 80000274 0 f 233 2
+E 235 ibus rvalid 8000027c 0 0 0 1
+E 235 ibus req 80000278 0 f
+E 237 ibus gnt 80000278 0 f 235 2
+E 238 ibus rvalid 80000274 0 0 0 1
+E 238 ibus req 8000027c 0 f
+E 239 ibus rvalid 80000278 0 0 0 0
+E 239 misc crash_dump_next_pc 80000278
+E 23a ibus gnt 8000027c 0 f 238 1
+E 23a misc crash_dump_next_pc 80000276
+E 23b ibus req 80000274 0 f
+R ae 80000276 80000276 a001 0 0 0 3 1 0 0 0 0 0 0 0 0 80000278 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 239 23b
+E 23c ibus gnt 80000274 0 f 23b 2
+E 23d ibus rvalid 8000027c 0 0 0 1
+E 23d ibus req 80000278 0 f
+E 23e ibus rvalid 80000274 0 0 0 0
+E 23f misc crash_dump_next_pc 80000278
+E 240 ibus gnt 80000278 0 f 23d 1
+E 240 misc crash_dump_next_pc 80000276
+E 241 ibus req 80000274 0 f
+R af 80000276 80000276 a001 0 0 0 3 1 0 0 0 0 0 0 0 0 80000278 f 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 23f 241
+E 243 ibus gnt 80000274 0 f 241 2
+E 244 ibus rvalid 80000278 0 0 0 1
+E 244 ibus req 80000278 0 f
+E 247 ibus rvalid 80000274 0 0 0 0
+E 247 ibus gnt 80000278 0 f 244 1
+E 248 ibus req 80000274 0 f
+E 248 misc crash_dump_next_pc 80000278
+# flush seq=2 records=175 retired=175 markers=0 events=902 ibus_grants=154 dbus_grants=29 cycle=585
+E 249 ibus rvalid 80000278 0 0 0 0
+E 249 misc crash_dump_next_pc 80000276
+# end records=175 retired=175 markers=0 events=904 ibus_grants=154 dbus_grants=29

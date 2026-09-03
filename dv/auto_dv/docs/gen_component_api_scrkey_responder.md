@@ -57,3 +57,8 @@ key-invalid windows overlapping fetches.
 
 Confirm the pulse timing against the first waveform; cover valid tied high (no request at
 reset).
+
+## Export event rows (T-080 step 2, addendum Section 8)
+
+Written through `gen_export_sink::write_event` with the rendered line functions when the source is active and enabled;
+scrkey rows: `req` (the observed ic_scr_key_req_o) and `valid` (the driven ic_scr_key_valid_i), one line per change at the responder's falling-edge sample.

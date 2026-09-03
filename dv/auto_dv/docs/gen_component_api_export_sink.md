@@ -29,10 +29,17 @@ the RVFI monitor and the event writers hand in as ready-formatted strings (`writ
 (returns the flush sequence number, which the dispatcher places in `peek_data`), and writes the end marker,
 `$fflush`es, checks `$ferror` and `$fclose`s in `extract_phase`. `$ferror` is checked after every `$fflush` of a flush
 marker and at the end. Event sources register through `register_source(name)` and gate every line through
-`source_on(name)`; the header's `sources=` field lists the sources that are registered AND enabled by
-`+gen_export_sources`. In this landing no writer registers a source (the bus, ctrl, scrkey and icram writers and the
-step-2b writers are not connected yet), so `sources=` is empty, no `# events` row is written and `events` stays 0;
-the log line at open reads `export file <path> open; sources: (none)`. The line text is formatted by functions
+`source_on(name)`; the header's `sources=` field is the yaml's ACTIVE list (`export_active_sources`, rendered
+`GEN_EXPORT_ACTIVE_SOURCES` / `EXPORT_ACTIVE_SOURCES`, the set Runtime records as `export_sources_emitted`) intersected
+with `+gen_export_sources`, in yaml order; a writer registering an inactive source, or an active source without a
+registered writer, is `uvm_fatal GEN_EXPORT` at start of simulation, so the header equals the manifest's emitted set by
+construction (a restricting knob makes it a subset). Since the step-2 landing (format version 2) every source but icram
+has its writers connected: the bus drivers (req, gnt, rvalid), the key responder (req, valid), the ctrl driver
+(fetch_enable, mcounteren_writable), the irq and debug drivers (pin lines), gen_misc_monitor (alert and misc rows) and the
+regime dispatcher (phase); the pin, alert and misc writers also emit the level at reset release. `sink.cycle()` (the
+bridge's `cycle_count`) is the stamp of every E line; the flush and end markers carry `ibus_grants=` / `dbus_grants=`
+(the bridge fields the drivers increment in the grant beat) and `read()` requires the E gnt count of every enabled bus
+to equal them. The line text is formatted by functions
 rendered from the yaml (`gen_export_record_line` in `dv/auto_dv/env/gen_export_record_line.svh`, one
 `gen_export_line_<source>_<event>` per event row in `dv/auto_dv/env/gen_export_event_lines.svh`), whose argument
 names are the field names, so the SV side cannot reorder a column. The addendum's Sections 4 and 8 still name one
@@ -82,7 +89,7 @@ and every failure is an `AssertionError` whose message starts with `GEN_EXPORT:`
 ### 2a. File format (version 1)
 
 ```
-# gen_export v1 seed=<n> build_config=<name> counters=<0|1> sources=<csv of registered and enabled sources> fields=<csv of R field names>
+# gen_export v2 seed=<n> build_config=<name> counters=<0|1> sources=<csv of active sources enabled by the knob> fields=<csv of R field names>
 # image <path as given to +gen_mem_image, rest of line, or the word none>
 # events <source> <event> <csv of field names>     one row per (source, event) of every registered and enabled source
 R <field values in header order>                    one line per retired record
@@ -147,11 +154,13 @@ the test's. A missing file raises the Python `FileNotFoundError` from `Path.read
 
 ### 2c. Event channel rows (addendum Section 8)
 
-The yaml `export_events` table, one line function per row in `gen_export_event_lines.svh`. NOT yet connected in this
-landing: the bus, ctrl, scrkey and icram writers (whose components exist) and the step-2b writers (pin, alert, misc,
-regime, whose components do not exist yet); the header's `sources=` field stays empty until a writer registers. The
-bridge fields `evt_ibus_grants` / `evt_dbus_grants` that the addendum names for the fixture's independent count are
-not in `gen_bridge_if` yet.
+The yaml `export_events` table, one line function per row in `gen_export_event_lines.svh`. Connected since the step-2
+landing: ibus/dbus (req at the first cycle a request is seen, gnt in the grant beat with `req_cycle` = the req line's
+stamp and `outstanding_after` = the queue depth after the grant, rvalid in the response beat with `intg_injected` = the
+driver's corruption flag), pin (fetch_enable, mcounteren_writable, irq_software, irq_timer, irq_external, irq_fast with
+its index, irq_nm, debug_req), alert and misc (every change, plus the level at reset release), scrkey (req observed,
+valid driven), regime (phase per applied REGIME_SET). Not connected: icram (inactive in `export_active_sources` until the
+RAM model's announcement port). The bridge fields `evt_ibus_grants` / `evt_dbus_grants` are in `gen_bridge_if`.
 
 | source | event | fields | writer | when |
 |---|---|---|---|---|

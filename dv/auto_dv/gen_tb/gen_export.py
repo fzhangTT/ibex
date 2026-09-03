@@ -2,7 +2,8 @@
 parses the prefix of the file that ends at the flush marker carrying `seq` (the number EXPORT_FLUSH returned) and
 enforces the format rules: header field list equal to the rendered EXPORT_RECORD_FIELDS (plus the counter fields
 when the header says counters=1), one `# events` row per (source, event) of the enabled sources, `records ==
-retired` in the marker, R-line count == records, E-line count == events, order strictly +1 across R lines,
+retired` in the marker, R-line count == records, E-line count == events, E <bus> gnt count == the marker's
+<bus>_grants for each enabled bus (format version 2), order strictly +1 across R lines,
 non-decreasing cycle across all lines, field count per line equal to its header row, hex-only tokens. Every
 violation is an AssertionError (the only Python-side failure mechanism). Radix: every R/I/E value is hex without
 prefix; every marker key=value pair (flush, end) and the header's seed= and counters= are decimal. No simulator
@@ -10,10 +11,10 @@ access; pure file parsing; ASCII only."""
 from collections import namedtuple
 from pathlib import Path
 
-from dv.auto_dv.gen_tb.gen_knobs import EXPORT_COUNTER_FIELDS, EXPORT_EVENTS, EXPORT_RECORD_FIELDS
+from dv.auto_dv.gen_tb.gen_knobs import EXPORT_ACTIVE_SOURCES, EXPORT_COUNTER_FIELDS, EXPORT_EVENTS, EXPORT_RECORD_FIELDS
 
 Marker = namedtuple("Marker", "cycle ext_pre_mip ext_post_mip ext_nmi ext_nmi_int ext_debug_req ext_debug_mode")
-Flush = namedtuple("Flush", "seq records retired markers events cycle")
+Flush = namedtuple("Flush", "seq records retired markers events ibus_grants dbus_grants cycle")
 Event = namedtuple("Event", "cycle source event fields")
 Export = namedtuple("Export", "header records markers events flush")
 MARKER_FIELDS = Marker._fields[1:]
@@ -35,18 +36,21 @@ def _kv(line, prefix, where):
     return out
 
 
-def read(path, seq, counters=False):
+def read(path, seq, counters=False, sources="all"):
     """Records, markers and events up to (not including) the flush marker with sequence `seq`; seq=None reads to the
-    end marker (post-run diagnostics only, never the basis of a pass)."""
+    end marker (post-run diagnostics only, never the basis of a pass). `sources` is the run's +gen_export_sources value:
+    the header's sources= must equal the rendered active list restricted to it (format version 2)."""
     text = Path(path).read_text()
     lines = text.split("\n")
     assert len(lines) >= 3, f"GEN_EXPORT: {path} has no header"
-    hdr = _kv(lines[0], "# gen_export v1 ", "line 1")
+    hdr = _kv(lines[0], "# gen_export v2 ", "line 1")
     fields = list(EXPORT_RECORD_FIELDS) + (list(EXPORT_COUNTER_FIELDS) if counters else [])
     assert hdr.get("counters") == ("1" if counters else "0"), f"GEN_EXPORT: header counters={hdr.get('counters')} but the reader expects {'1' if counters else '0'}"
     assert hdr.get("fields") == ",".join(fields), f"GEN_EXPORT: header field list differs from the rendered EXPORT_RECORD_FIELDS"
     assert lines[1].startswith("# image "), "GEN_EXPORT: line 2 is not the image line"
     enabled = [s for s in hdr.get("sources", "").split(",") if s]
+    want = [s for s in EXPORT_ACTIVE_SOURCES if sources == "all" or s in sources.split(",")]
+    assert enabled == want, f"GEN_EXPORT: header sources={enabled} but the rendered active sources under +gen_export_sources={sources} are {want}"
     rows = {}
     n = 2
     while n < len(lines) and lines[n].startswith("# events "):
@@ -69,14 +73,14 @@ def read(path, seq, counters=False):
     assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}"
     where = f"line {marker_idx + 1}"
     mk = _kv(lines[marker_idx], "# flush " if seq is not None else "# end ", where)
-    need = ("seq", "records", "retired", "markers", "events", "cycle") if seq is not None else ("records", "retired", "markers", "events")
+    need = ("seq", "records", "retired", "markers", "events", "ibus_grants", "dbus_grants", "cycle") if seq is not None else ("records", "retired", "markers", "events", "ibus_grants", "dbus_grants")
     for k in need:   # a marker cut short by a buffer boundary is not a complete flush
         assert k in mk, f"GEN_EXPORT: marker without {k}= ({where}): truncated, not a complete marker"
     def _dec(k):   # marker key=value pairs are decimal
         assert mk[k].isdigit(), f"GEN_EXPORT: marker {k}={mk[k]!r} is not decimal ({where})"
         return int(mk[k])
     flush = Flush(_dec("seq") if seq is not None else 0, _dec("records"), _dec("retired"), _dec("markers"), _dec("events"),
-                  _dec("cycle") if seq is not None else 0)
+                  _dec("ibus_grants"), _dec("dbus_grants"), _dec("cycle") if seq is not None else 0)
     assert flush.records == flush.retired, f"GEN_EXPORT: marker records {flush.records} != retired {flush.retired} (the sink and the bridge disagree)"
     Record = namedtuple("Record", fields)
     records, markers, events = [], [], []
@@ -115,4 +119,8 @@ def read(path, seq, counters=False):
     assert len(records) == flush.records, f"GEN_EXPORT: {len(records)} R lines parsed, marker says {flush.records}"
     assert len(markers) == flush.markers, f"GEN_EXPORT: {len(markers)} I lines parsed, marker says {flush.markers}"
     assert len(events) == flush.events, f"GEN_EXPORT: {len(events)} E lines parsed, marker says {flush.events}"
+    for bus, grants in (("ibus", flush.ibus_grants), ("dbus", flush.dbus_grants)):   # the drivers' own grant count (MUT-G)
+        if bus in enabled:
+            n = sum(1 for e in events if e.source == bus and e.event == "gnt")
+            assert n == grants, f"GEN_EXPORT: {n} E {bus} gnt lines, marker says {bus}_grants={grants}"
     return Export(hdr, records, markers, events, flush)

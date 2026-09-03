@@ -69,3 +69,14 @@ numbers below are those of the build each mutation ran on (gen_export_pkg.sv:99 
       no content checks of its own would pass on it.
 
 Not yet covered (arrive with build step (2), the event lines): MUT-G dropped event, MUT-H wrong event cycle.
+
+## Step 2 (version 4d): MUT-G and MUT-H executed, out of tree
+
+| Id | Mutation | Vehicle and knobs | Catch | Ablation |
+|---|---|---|---|---|
+| MUT-H | gen_ctrl_driver stamps the fetch_enable line with `sink.cycle() + 1` | gen_ut_export on the Zc image, `+gen_chk_all=0` (the export checks are the test's own) | FAIL: `GEN_UT_EXPORT: fetch_enable line offset -1 != 0` (the fixture's exact offset, recorded 0 on the first green) | `FETCH_EN_LINE_OFFSET = None` in the copy's test: PASS |
+| MUT-G | gen_bus_driver drops the third gnt line while `grants` and the bridge's grant counter still increment (gen_agents_pkg.sv, the gnt `write_event` guarded by `grants != 3`) | gen_ut_export on the Zc image, `+gen_chk_all=0` | FAIL: `GEN_EXPORT: 153 E ibus gnt lines, marker says ibus_grants=154` (read()'s gnt-count rule; the first mutant text was malformed and did not compile, gen_mut_export_gh_batches.log) | `read()`'s gnt-count assert replaced by `pass` in the copy: PASS |
+
+Both mutants are built from a scratch copy of dv/auto_dv (gen_tdd_logs/mutations/gen_mut_export_MUT{G,H}_*); the ablation
+is a second edit of the same copy (Python only, no recompile) so the catch and the ablation run on one build. The shared
+tree's gen_agents_pkg.sv / gen_export.py / gen_ut_export.py checksums are printed unchanged after each mutant.

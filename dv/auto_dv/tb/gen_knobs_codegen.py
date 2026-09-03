@@ -38,7 +38,7 @@ END = "  // GEN_KNOBS_END"
 KINDS = {"string", "int", "hex", "bool", "enum"}
 SCHEMA = {
     "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map",
-            "export_record_fields", "export_counter_fields", "export_events"},
+            "export_record_fields", "export_counter_fields", "export_events", "export_active_sources"},
     "export_event": {"source", "event", "fields"},
     "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc", "regime_set_consumer"},
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
@@ -264,6 +264,9 @@ def load(src_path=SRC):
         seen.add((row["source"], row["event"]))
         if not isinstance(row["fields"], list) or not row["fields"] or any(not re.fullmatch(r"[a-z][a-z0-9_]*", str(f)) for f in row["fields"]):
             die(f"export_events {row['source']}/{row['event']}: fields must be a non-empty list of lower_case names")
+    act = src["export_active_sources"]
+    if not isinstance(act, list) or len(set(act)) != len(act) or any(a not in export_sources(src) for a in act):
+        die(f"export_active_sources must list distinct sources of export_events, got {act}")
     return src
 
 
@@ -488,6 +491,13 @@ def render_sv_region(src, mm, cvals):
     L.append(f'  parameter string GEN_EXPORT_RECORD_FIELDS = "{",".join(src["export_record_fields"])}";')
     L.append(f'  parameter string GEN_EXPORT_COUNTER_FIELDS = "{",".join(src["export_counter_fields"])}";')
     L.append(f'  parameter string GEN_EXPORT_SOURCES = "{",".join(export_sources(src))}";')
+    L.append(f'  parameter string GEN_EXPORT_ACTIVE_SOURCES = "{",".join(src["export_active_sources"])}";  // sources with a writer in this build (yaml export_active_sources)')
+    L.append("  function automatic bit gen_export_source_active(string s);")
+    L.append("    case (s)")
+    L.append("      " + ", ".join(f'"{x}"' for x in src["export_active_sources"]) + ": return 1'b1;")
+    L.append("      default: return 1'b0;")
+    L.append("    endcase")
+    L.append("  endfunction")
     L.append("  function automatic bit gen_export_source_known(string s);")
     L.append("    case (s)")
     L.append("      " + ", ".join(f'"{x}"' for x in export_sources(src)) + ": return 1'b1;")
@@ -571,6 +581,7 @@ def render_py(src, mm, cvals):
     L.append(f"EXPORT_RECORD_FIELDS = {tuple(src['export_record_fields'])!r}")
     L.append(f"EXPORT_COUNTER_FIELDS = {tuple(src['export_counter_fields'])!r}")
     L.append(f"EXPORT_SOURCES = {tuple(export_sources(src))!r}")
+    L.append(f"EXPORT_ACTIVE_SOURCES = {tuple(src['export_active_sources'])!r}  # sources whose writers are instanced in this build (yaml export_active_sources)")
     L.append("EXPORT_EVENTS = (  # (source, event, fields); one exact event per row")
     for row in src["export_events"]:
         L.append(f"    ({row['source']!r}, {row['event']!r}, {tuple(row['fields'])!r}),")

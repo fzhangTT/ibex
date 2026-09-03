@@ -1,0 +1,9 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTH/out/MUTH_catch_zc/stdout.log (out-of-tree MUT-H: fetch_enable line stamped one cycle late; ablation = fixture offset check off)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(99) @ 0: sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+GEN_UT_EXPORT flush seq 2: records 175 retired 175 markers 0 events 902 (bridge retired now 175; early flush seq 1 had 50 records)
+GEN_UT_EXPORT fetch_enable lines 2; FETCH_EN(1) line at cycle 61, ack cycle 60, offset -1
+                                                            assert delta == FETCH_EN_LINE_OFFSET, f"GEN_UT_EXPORT: fetch_enable line offset {delta} != {FETCH_EN_LINE_OFFSET} (ack cycle {fetch_en_ack_cycle}, line cycle {on.cycle})"
+                                                        AssertionError: GEN_UT_EXPORT: fetch_enable line offset -1 != 0 (ack cycle 60, line cycle 61)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                          5905.01           0.07      81136.51  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

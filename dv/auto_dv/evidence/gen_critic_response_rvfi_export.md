@@ -69,7 +69,7 @@ ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with th
 | R3-M2 | MUT-G catch not same-instant (carried from r2) | ADDRESSED (text; code with step (2)) | Section 2 marker `ibus_grants= dbus_grants=`, Section 3 flush text and rule list, 5.2 MUT-G. |
 | R3-M3 | no row per r2 finding; tohost row wrong | ADDRESSED | the R1/R2 table above (at 6d16d9c) and this section. |
 | R3-L1 | radix: plan `%h`/`%0d` vs build | ADDRESSED | Section 2 radix rule (this commit corrects the header sentence: `seed=`, `counters=` decimal); code at 6b3301d: `%0d` markers, decimal reader. |
-| R3-L2 | no single cycle base | ADDRESSED | Section 3 "One cycle base": `sink.cycle()` for event writers; the monitor's `gen_rvfi_if.cycle` is the same count by construction (both counters cited); `sink.cycle()` at 6b3301d. |
+| R3-L2 | no single cycle base | ADDRESSED | Section 3 "One cycle base": `sink.cycle()` for event writers; the monitor's `gen_rvfi_if.cycle` is the same count by construction (both counters cited). Correction (r5 D5): `sink.cycle()` did not exist at 6b3301d (the marker read `bvif.cycle_count` inline); it arrives with the step-2 landing (version 4d). |
 | R3-L3 | continuity must exclude mret/dret (C-1) | ADDRESSED | 5.1 text; gen_ut_export.py excludes the two encodings; run retained at 6b3301d. |
 | R3-L4 | rule list omits the I-line count | ADDRESSED | Section 3 rule list names `I` lines == `markers` (this commit); `read()` has asserted it since 1f8186e. |
 | R3-L5 | rs3 attributed to the CHERIoT carve-out | ADDRESSED | rs3 exported (36 fields) at 6b3301d; Section 2 states the basis. |
@@ -91,10 +91,22 @@ ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with th
 | R4-M3 | six r3 findings without a row; code claims cite uncommitted runs | ADDRESSED | R3 table above (every r3 finding); the R1/R2 preamble names 6b3301d for every code and run claim. |
 | R4-L1 | MUT-H bound still unnamed | ADDRESSED (text) | as R3-L7. |
 | R4-L2 | Section 3 flush text lacks the grant counters and the `E gnt` rule; who increments the bridge fields | ADDRESSED (text) | Section 3 flush paragraph and rule list; Section 8 trust-triad paragraph: the bus drivers increment them in the grant beat, independent of the line writer. |
-| R4-L3 | `sink.cycle()` "by every writer" is not what the R/I writer does | ADDRESSED (text) | Section 3: the monitor's `gen_rvfi_if.cycle` is the same count by construction (gen_rvfi_if.sv:24-25, gen_bridge_if.sv:48-54). |
+| R4-L3 | `sink.cycle()` "by every writer" is not what the R/I writer does | ADDRESSED (text) | Section 3: the monitor's `gen_rvfi_if.cycle` is the same count by construction (gen_rvfi_if.sv:24-25, gen_bridge_if.sv:48-54); `sink.cycle()` itself is built in the step-2 landing (version 4d), not at 6b3301d. |
 | R4-L4 | stale pre-build text (line 6, `flush()`, residue, `%h`/`%0d`, I count) | ADDRESSED | this commit: status sentence, `flush_export()` everywhere, sink writes the marker, header wording, radix sentence, I count in the rule list. |
 | R4-L5 | measured sizes match no retained file | ADDRESSED | as R3-L11; the runs are committed at 6b3301d. |
 | R4-L6 | icram under step (2) | ADDRESSED (text) | as R3-L8. |
 | R4-L7 | Section 9 omits the group's standing and the anti-vacuity basis | ADDRESSED (text) | Section 9: weight 0, "witnessed clauses: N of M", anti-vacuity by `check_test_source` (C-1), not the TB. |
 | R4-L8 | header "every key=value is decimal" is false; header-row rule overstated | ADDRESSED (text and code, this commit) | Section 2 radix rule names `seed=` and `counters=`; `read()` per-source row requirement (R3-L12). |
 | R4-L9 | lag: markers `%0h` etc. at 6d16d9c, working tree uncommitted | ADDRESSED | landed at 6b3301d (T-080 landing 1a). |
+
+## Replan review r5 (`2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md`, of 50256f0, APPROVE-WITH-CHANGES; Part-2 rows answered by version 4d)
+
+| Row | Finding | Status | Where |
+|---|---|---|---|
+| D1 | [medium] Section 9 said the template renders the plusarg as indices; the template treats witness_ids as TP ids and Runtime's gen_run renders +gen_witness_ids from the CSV | ADDRESSED (text at 50256f0 and here) | Section 9: the FLOW renders `+gen_witness_ids` from the entry's TP ids through gen_trace_witness_ids.csv at the pinned commit (Runtime landed it, 82edddb); the template only issues COV_WITNESS <index> for TRUE clauses. |
+| D2 | [low] names: the codegen input is gen_trace_witness_ids.csv, the table WITNESS_IDS, the covergroup gen_wit_cycle_clause_cg | ADDRESSED (50256f0) | Section 9 carries all three. |
+| D3 | [low] stale text after the exact-row change (line 3 generic rows, line 57 `<event|any>`, 2002 vs 2008, "or its own gen_export_pkg.sv") | ADDRESSED (version 4d) | header rewritten; Section 2 names the include only; Section 8 cost sentence says 2008; the sink row names env/gen_export_pkg.sv. |
+| D4 | [low] MUT-H's "minus one" asserted a priori; the Python read after the ack edge is scheduling-dependent | ADDRESSED (version 4d) | the fixture reads `cycle_count` right after `Edge(cmd_ack)` (the stated sample point), the offset to the FETCH_EN(1) pin line is recorded on the first green run and asserted exactly since (`FETCH_EN_LINE_OFFSET` in gen_ut_export.py; the value and the run are in gen_tdd_export.md Section 11). |
+| D5 | [low] rows R3-L2 / R4-L3 claim `sink.cycle()` at 6b3301d | FIXED | both rows corrected above: it arrives with version 4d. |
+| D6 | [low] Section 8 has only icram inject; the plan's lookup / tag_write / fill_write rows | ADDRESSED (50256f0) | three exact icram rows rendered and inactive until the RAM model's port (step 3). |
+| active-source list (Orchestrator, DV Lead, Runtime) | export_sources_emitted needs a rendered list of the sources whose writers are instanced | FIXED (version 4d) | yaml `export_active_sources` -> `EXPORT_ACTIVE_SOURCES` (the attribute Runtime's reader expects), `GEN_EXPORT_ACTIVE_SOURCES` / `gen_export_source_active()`; the sink derives the header's `sources=` from it and fatals on a mismatch with the registered writers. |

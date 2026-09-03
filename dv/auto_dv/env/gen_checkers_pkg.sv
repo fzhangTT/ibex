@@ -9,6 +9,7 @@ package gen_checkers_pkg;
   import gen_cfg_pkg::*;
   import gen_agents_pkg::*;
   import gen_rvfi_pkg::*;
+  import gen_export_pkg::*;
   `include "uvm_macros.svh"
 
   `uvm_analysis_imp_decl(_state)
@@ -199,6 +200,35 @@ package gen_checkers_pkg;
     uvm_analysis_imp_state #(gen_model_state, gen_misc_monitor) imp_state;
     int unsigned alert_bus_hits = 0, alert_bus_mismatch = 0, alert_internal_hits = 0, data_tag_hits = 0;
     int unsigned alert_minor_hits = 0, alert_minor_mismatch = 0;
+    gen_export_sink sink;   // E alert / misc lines: the levels at reset release, then every change
+    bit ev_init = 0;
+    logic a_minor_q, a_bus_q, a_int_q, dfs_q, irq_pend_q;
+    int unsigned busy_q, cd_cur_q, cd_next_q, cd_lda_q, cd_epc_q, cd_eaddr_q;
+    function void write_changes();
+      int unsigned c;
+      if (sink == null || !(sink.source_on("alert") || sink.source_on("misc"))) return;
+      c = sink.cycle();
+      if (sink.source_on("alert")) begin
+        if (!ev_init || misc.alert_minor != a_minor_q) sink.write_event(gen_export_line_alert_alert_minor(c, misc.alert_minor));
+        if (!ev_init || misc.alert_major_bus != a_bus_q) sink.write_event(gen_export_line_alert_alert_major_bus(c, misc.alert_major_bus));
+        if (!ev_init || misc.alert_major_internal != a_int_q) sink.write_event(gen_export_line_alert_alert_major_internal(c, misc.alert_major_internal));
+        if (!ev_init || misc.double_fault_seen != dfs_q) sink.write_event(gen_export_line_alert_double_fault_seen(c, misc.double_fault_seen));
+      end
+      if (sink.source_on("misc")) begin
+        if (!ev_init || misc.irq_pending != irq_pend_q) sink.write_event(gen_export_line_misc_irq_pending(c, misc.irq_pending));
+        if (!ev_init || int'(misc.core_busy) != busy_q) sink.write_event(gen_export_line_misc_core_busy(c, int'(misc.core_busy)));
+        if (!ev_init || misc.crash_dump.current_pc != cd_cur_q) sink.write_event(gen_export_line_misc_crash_dump_current_pc(c, misc.crash_dump.current_pc));
+        if (!ev_init || misc.crash_dump.next_pc != cd_next_q) sink.write_event(gen_export_line_misc_crash_dump_next_pc(c, misc.crash_dump.next_pc));
+        if (!ev_init || misc.crash_dump.last_data_addr != cd_lda_q) sink.write_event(gen_export_line_misc_crash_dump_last_data_addr(c, misc.crash_dump.last_data_addr));
+        if (!ev_init || misc.crash_dump.exception_pc != cd_epc_q) sink.write_event(gen_export_line_misc_crash_dump_exception_pc(c, misc.crash_dump.exception_pc));
+        if (!ev_init || misc.crash_dump.exception_addr != cd_eaddr_q) sink.write_event(gen_export_line_misc_crash_dump_exception_addr(c, misc.crash_dump.exception_addr));
+      end
+      ev_init = 1;
+      a_minor_q = misc.alert_minor; a_bus_q = misc.alert_major_bus; a_int_q = misc.alert_major_internal; dfs_q = misc.double_fault_seen;
+      irq_pend_q = misc.irq_pending; busy_q = int'(misc.core_busy);
+      cd_cur_q = misc.crash_dump.current_pc; cd_next_q = misc.crash_dump.next_pc; cd_lda_q = misc.crash_dump.last_data_addr;
+      cd_epc_q = misc.crash_dump.exception_pc; cd_eaddr_q = misc.crash_dump.exception_addr;
+    endfunction
     int unsigned dfs_pulses = 0, dfs_expected = 0, dfs_mismatch = 0, sync_traps = 0;
     int unsigned dfs_cycles [$];
     bit sync_seen = 0;
@@ -239,6 +269,7 @@ package gen_checkers_pkg;
       forever begin
         @(posedge misc.clk);
         if (!misc.rst_n) continue;
+        write_changes();
         if (misc.alert_major_internal) begin
           alert_internal_hits++;
           if (gen_chk_en(cfg, cfg.chk_alert_internal, cfg.chk_alert_internal_set))

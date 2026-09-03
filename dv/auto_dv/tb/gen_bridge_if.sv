@@ -42,6 +42,8 @@ interface gen_bridge_if (
   logic [15:0] evt_err_count     = '0;
   logic [31:0] evt_isa_records   = '0;   // RVFI records the scoreboard compared against the model
   logic [15:0] evt_isa_mismatch  = '0;   // ISA compare mismatches (each also a uvm_error)
+  logic [31:0] evt_ibus_grants   = '0;   // grant beats the bus drivers drove (the export's independent gnt count)
+  logic [31:0] evt_dbus_grants   = '0;
   logic        finish_ack        = 1'b0;
 
   // Free-running counters (cycles since reset release; retirements from the RVFI valid pin).

@@ -1,0 +1,11 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t080s2/a/export_zc_counters/stdout.log (T-080 step 2 build a: banner, export summary, fixture lines, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(99) @ 0: sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+GEN_UT_EXPORT flush seq 2: records 175 retired 175 markers 0 events 902 (bridge retired now 175; early flush seq 1 had 50 records)
+GEN_UT_EXPORT fetch_enable lines 2; FETCH_EN(1) line at cycle 60, ack cycle 60, offset 0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 590500: sb [GEN_SB] ISA compare: records=154 mismatches=0 folded=21 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=131
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(141) @ 590500: sink [GEN_EXPORT] export: records=175 markers=0 events=904 flushes=2
+GEN_UT_EXPORT_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                          5905.01           0.07      82514.84  **

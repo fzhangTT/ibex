@@ -249,3 +249,8 @@ export_events:
   - {source: scrkey, event: req, fields: [value]}
   - {source: scrkey, event: valid, fields: [value]}
   - {source: regime, event: phase, fields: [knob_id, value_idx, phase_idx]}
+
+# Sources whose writers are instanced in this build (the plan's sunset input; Runtime copies the rendered
+# EXPORT_ACTIVE_SOURCES into build_manifest.yaml export_sources_emitted and the sink derives the header's sources= from it).
+# icram waits for the RAM model's announcement port.
+export_active_sources: [ibus, dbus, pin, alert, misc, scrkey, regime]

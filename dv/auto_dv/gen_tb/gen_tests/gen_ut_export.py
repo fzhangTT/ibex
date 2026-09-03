@@ -22,10 +22,31 @@ PASS_MARKER = "GEN_UT_EXPORT_PASS"
 SETTLE_CYCLES = max(hi for lo, hi in REGIME_WINDOWS["rvalid_delay"].values()) + 8
 FIRST_FETCH_OFFSET = MEMORY_MAP["boot_reset_offset"]   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv), one origin in the yaml
 MRET_INSN, DRET_INSN = CONSTANTS["GEN_INSN_MRET"], CONSTANTS["GEN_INSN_DRET"]   # their pc_wdata is not the target (plan C-1)
+# cycles between the FETCH_EN(1) pin line (the driver acts at the negedge) and cycle_count read after the ack edge; recorded
+# at the first green run of the event part (build out_t080s2/a: 0 on all four runs), asserted exactly since (addendum Section 5, MUT-H).
+FETCH_EN_LINE_OFFSET = 0
 
 
 def plus(name, default=None):
     return cocotb.plusargs.get(PLUSARGS[name]["plusarg"], default)
+
+
+def check_events(data, fetch_en_ack_cycle, log):
+    """Event-channel fixture checks (addendum Section 5): the drivers' gnt lines exist for every enabled bus (their count
+    against the marker's grant counter is read()'s rule, MUT-G), and the FETCH_EN(1) pin line relates to the bridge's
+    cycle_count read after the command's ack by a fixed offset (MUT-H)."""
+    enabled = set(data.header.get("sources", "").split(","))
+    for bus in ("ibus", "dbus"):
+        if bus in enabled:
+            assert any(e.source == bus and e.event == "gnt" for e in data.events), f"GEN_UT_EXPORT: no E {bus} gnt line"
+    if "pin" in enabled:
+        fe = [e for e in data.events if e.source == "pin" and e.event == "fetch_enable"]
+        assert len(fe) >= 2, f"GEN_UT_EXPORT: {len(fe)} fetch_enable lines, expected the reset level and the FETCH_EN change"
+        on = fe[1]
+        delta = fetch_en_ack_cycle - on.cycle
+        log.info("GEN_UT_EXPORT fetch_enable lines %d; FETCH_EN(1) line at cycle %d, ack cycle %d, offset %d", len(fe), on.cycle, fetch_en_ack_cycle, delta)
+        if FETCH_EN_LINE_OFFSET is not None:
+            assert delta == FETCH_EN_LINE_OFFSET, f"GEN_UT_EXPORT: fetch_enable line offset {delta} != {FETCH_EN_LINE_OFFSET} (ack cycle {fetch_en_ack_cycle}, line cycle {on.cycle})"
 
 
 def check_records(records, markers, img, eot_count, log):
@@ -78,6 +99,7 @@ async def gen_ut_export(dut):
             bad += 1
     assert bad == 0, f"GEN_UT_EXPORT: {bad} read-back mismatches"
     await b.cmd("FETCH_EN", (1, 0, 0, 0))
+    fetch_en_ack_cycle = int(h.b.cycle_count.value)   # read right after the ack edge (the sample point of the fetch_enable line rule)
     await b.wait_retired_until(retire_target // 2, timeout_cycles=retire_target * 40 + 2000)   # so the early prefix has records
     seq_early = await b.export_flush()   # an early flush: read(seq) must bind to the flush it names, never to this one
     await b.wait_retired_until(retire_target, timeout_cycles=retire_target * 40 + 2000)
@@ -92,13 +114,15 @@ async def gen_ut_export(dut):
     retired_now = int(h.b.evt_retired_count.value)
     counters = plus("export_counters", "0") == "1"
     assert seq == seq_early + 1, f"GEN_UT_EXPORT: flush sequence {seq} does not follow {seq_early}"
-    data = gen_export.read(export_path, seq, counters=counters)
-    early = gen_export.read(export_path, seq_early, counters=counters)
+    sources_knob = plus("export_sources", PLUSARGS["export_sources"]["default"])
+    data = gen_export.read(export_path, seq, counters=counters, sources=sources_knob)
+    early = gen_export.read(export_path, seq_early, counters=counters, sources=sources_knob)
     log.info("GEN_UT_EXPORT flush seq %d: records %d retired %d markers %d events %d (bridge retired now %d; early flush seq %d had %d records)",
              seq, data.flush.records, data.flush.retired, data.flush.markers, data.flush.events, retired_now, seq_early, early.flush.records)
     assert retired_now >= data.flush.retired, f"GEN_UT_EXPORT: bridge retired {retired_now} < marker retired {data.flush.retired}"
     assert [r.order for r in early.records] == [r.order for r in data.records[:len(early.records)]], "GEN_UT_EXPORT: the early flush is not a prefix of the final one"
     check_records(data.records, data.markers, img, int(h.b.evt_eot_count.value), log)
+    check_events(data, fetch_en_ack_cycle, log)
     assert int(h.b.evt_eot_code.value) == 1, "GEN_UT_EXPORT: program did not report pass"
     await b.finish(timeout_cycles=5000)
     log.info(PASS_MARKER)

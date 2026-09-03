@@ -1,8 +1,9 @@
 # Record and event export (T-080 design addendum, for gen_tb_architecture.md Section 9)
 
 Author: tb-infra, 2026-09-03. Version history: 4c = the text committed at 4c4b9b8 (exact rows, C-2 owner set); 4c.1 = the text
-at 50256f0 (Section 9 aligned to plan v2h and the rulings, three icram rows); 4d = the step-2 landing text (active-source
-list, the r5 Part-2 rows). Version 4c (the Orchestrator's name for the r4 round): answers the replan reviews r2, r3 and r4 (`dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md`, `-r3.md`, `-r4.md`, all REQUEST-CHANGES; r2: irq_pending and bus request events, grant counters sampled into the flush marker, one cycle base, mret/dret excluded from continuity, I lines bound to markers=, hex/decimal radix rule, rs3 exported, the Zc statement corrected) and the DV Lead's round-4 asks (COV_WITNESS, Section 9), plus the as-built alignment after the record part landed (rendered include and method names, read() signature, the generic <name> event rows, measured sizes and wall clock); the response table in `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md` carries one row per finding of both replan artifacts. Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
+at 50256f0 (Section 9 aligned to plan v2h and the rulings, three icram rows); 4d = THIS text, the step-2 landing (event writers
+for every source but icram, file format version 2 with the grant counters, the active-source list, the r5 Part-2 rows D1..D6).
+Version 4c (the Orchestrator's name for the r4 round): answers the replan reviews r2, r3 and r4 (`dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r2.md`, `-r3.md`, `-r4.md`, all REQUEST-CHANGES; r2: irq_pending and bus request events, grant counters sampled into the flush marker, one cycle base, mret/dret excluded from continuity, I lines bound to markers=, hex/decimal radix rule, rs3 exported, the Zc statement corrected) and the DV Lead's round-4 asks (COV_WITNESS, Section 9), plus the as-built alignment after the record part landed (rendered include and method names, read() signature, the generic <name> event rows, measured sizes and wall clock); the response table in `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md` carries one row per finding of both replan artifacts. Version 4a (v4 plus the v3a replan review's remaining medium and two lows: read() bound to the flush sequence just issued, MUT-F stale marker, the last-store assertion, the pc-continuity rule). Version 4: version 3a (record lines, reviewed) plus the EVENT channel the DV Lead's plan round-3 decision requires (Section 8: bus, pin, alert, misc, icache-RAM, key and regime events as `E` lines in the same file, same discipline) and the knob family renamed to `+gen_export_*` because the file now carries more than RVFI records. Earlier: version 3a folded Runtime's retention ruling; version 3 answered the plan review; base: version 2a plus the cross-model plan review's findings
 (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_rvfi_export_addendum.md`, APPROVE-WITH-CHANGES; rows answered in
 `dv/auto_dv/evidence/gen_critic_response_rvfi_export.md`). Status: the record part (Sections 1 to 5: sink, R and I lines, markers, reader) is BUILT and landed
 (1f8186e, 6b3301d) and the text names it as built; the event channel (Section 8) and the witness command (Section 9) are
@@ -28,17 +29,17 @@ and events of the prefix ending at the flush marker with sequence `seq`, require
 agree with the caller, enforces the format rules of Section 3 (including the I-line count), and fails loud
 (AssertionError, the only Python-side failure mechanism) on any violation.
 
-## 2. File format (version 1)
+## 2. File format (version 2)
 
 ```
-# gen_export v1 seed=<n> build_config=<name> counters=<0|1> sources=<csv of registered and enabled event sources> fields=<comma-separated R field names>
+# gen_export v2 seed=<n> build_config=<name> counters=<0|1> sources=<csv: the rendered active sources enabled by the knob, in yaml order> fields=<comma-separated R field names>
 # image <path as given to +gen_mem_image, rest of line, or the word none>
 # events <source> <event> <comma-separated field names>                        one line per (source, event) row of the rendered event table (Section 8)
 R <field values in header order, hex without prefix, flags 0/1>            one line per retired record
 I <cycle> <ext_pre_mip> <ext_post_mip> <ext_nmi> <ext_nmi_int> <ext_debug_req> <ext_debug_mode>   one line per RISING EDGE of rvfi_ext_irq_valid, at the rise cycle
 E <cycle> <source> <event> <field values in the row's order>                   one line per boundary event (Section 8)
-# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h> cycle=<c>   written by EXPORT_FLUSH; s = the flush sequence number the command returns; r, g, h = the bridge's evt_retired_count / evt_ibus_grants / evt_dbus_grants read in the same call (the grant fields arrive with the event part)
-# end records=<n> retired=<r> markers=<m> events=<e>                           written in extract_phase (Section 3)
+# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h> cycle=<c>   written by EXPORT_FLUSH; s = the flush sequence number the command returns; r, g, h = the bridge's evt_retired_count / evt_ibus_grants / evt_dbus_grants read in the same call (version 2: the grant fields are present on both markers and required by read())art)
+# end records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h>   written in extract_phase (Section 3)
 ```
 
 `fields` (every `gen_rvfi_txn` field, 36 names in this order): `order, pc_rdata, pc_wdata, insn, trap, halt, intr,
@@ -107,7 +108,8 @@ default line stays about 220 bytes.
   image line and, for every source named in `sources=`, every one of its rendered `# events` rows (a row for a
   source outside `sources=` is a FAIL), `records == retired` from the marker itself, the number of parsed `R`
   lines equal to `records`, the number of `I` lines equal to `markers`, the number of `E` lines equal to `events`,
-  per bus the number of `E <bus> gnt` lines equal to the marker's `ibus_grants=` / `dbus_grants=` (build step (2)),
+  per enabled bus the number of `E <bus> gnt` lines equal to the marker's `ibus_grants=` / `dbus_grants=`, the header's
+  `sources=` equal to the rendered active list restricted to the run's `+gen_export_sources` (version 2),
   `order` strictly +1 across `R` lines,
   non-decreasing `cycle` across all lines, the field count of every line equal to its header row's, every `E`
   (source, event) pair present in the header table, and hex-only tokens. Python's own read of `evt_retired_count` after the ack is a `>=` check against the marker's `retired`. A post-run diagnostic read (`read(path, seq=None)`) uses the end marker and is never the basis of a pass.
@@ -149,11 +151,13 @@ default line stays about 220 bytes.
 | knob `export_flush_every` (int, default 0, debug_only; plusarg `gen_export_flush_every`) | gen_tb_knobs.yaml; Runtime's loader reads the rendered gen_knobs.py table and refuses the testlist unless `debug_only_plusargs` equals it, so the landing that adds this knob carries Runtime's one-line testlist change in the same commit | periodic $fflush for triage of abnormal ends |
 | yaml top-level keys `export_record_fields`, `export_counter_fields`, `export_events` | gen_tb_knobs.yaml; codegen `SCHEMA["top"]` extended; rendered `GEN_EXPORT_RECORD_FIELDS`, `GEN_EXPORT_COUNTER_FIELDS`, the include `env/gen_export_record_line.svh` and `env/gen_export_event_lines.svh` (writer functions) and `EXPORT_RECORD_FIELDS`, `EXPORT_COUNTER_FIELDS`, `EXPORT_EVENTS` in gen_knobs.py; `gen_ut_knobs_codegen.py` asserts the renderings equal the yaml, that every record field is a `gen_rvfi_txn` member and that the include declares one writer function per event row | one origin for the column order |
 | knob `export_sources` (string, default `all`) | gen_tb_knobs.yaml -> PLUSARG_EXPORT_SOURCES | comma-separated subset of the event sources of Section 8; a name outside the rendered source list is `uvm_fatal GEN_EXPORT`; records and markers are always written when the file knob is set |
-| `gen_rvfi_txn` extension | env/gen_rvfi_pkg.sv | `ext_mhpmcounters[10]`, `ext_mhpmcountersh[10]` sampled from the interface only when the counters knob is on |
+| `gen_rvfi_txn` extension | env/gen_rvfi_pkg.sv | `ext_mhpmcounters[10]`, `ext_mhpmcountersh[10]` sampled from the interface on every record (the comparator syncs the model from them); appended to the R line only when the counters knob is on |
+| yaml top-level key `export_active_sources` (version 4d) | gen_tb_knobs.yaml; codegen `SCHEMA["top"]`; rendered `EXPORT_ACTIVE_SOURCES` (gen_knobs.py, the attribute Runtime copies into build_manifest.yaml `export_sources_emitted`), `GEN_EXPORT_ACTIVE_SOURCES` and `gen_export_source_active()` (gen_tb_pkg.sv) | the sources whose writers are instanced in the build (today every source but icram); the sink derives the header's `sources=` from this list intersected with `+gen_export_sources`, refuses a writer registering an inactive source and an active source without a writer (both `uvm_fatal GEN_EXPORT`), so Runtime's header-versus-manifest cross-check holds by construction; with a restricting knob the header is a subset of the emitted set |
+| bridge fields `evt_ibus_grants`, `evt_dbus_grants` (version 4d) | tb/gen_bridge_if.sv, incremented by the bus drivers in the grant beat | the export's independent grant count, sampled into both markers by the sink; `read()` requires `E <bus> gnt` count == `<bus>_grants` for every enabled bus (MUT-G) |
 | bridge command `EXPORT_FLUSH` (appended) | bridge_cmds; gen_cmd_dispatch -> gen_export_sink.flush_export() | ack implies flushed; flush_export() never runs from a clocked process; the flush sequence number returns in `peek_data` |
 | `gen_export_sink` (new env component) | env/gen_env_pkg.sv (or its own gen_export_pkg.sv) | owns the fd: header lines, flush marker with the same-instant counts, `$ferror`, end marker and `$fclose` in extract_phase; `write_record` / `write_marker` / `write_event` for every writer |
 | `gen_rvfi_monitor` R/I writer | env/gen_rvfi_pkg.sv | one R line per record through the rendered writer function, one I line per rising edge |
-| event writers | gen_agents_pkg (bus drivers, key responder, ctrl driver), the irq/dbg drivers and gen_misc_monitor (step 2b), gen_icache_ram announcements, the regime dispatcher | one call of the rendered writer function per event (Section 8) |
+| event writers (built, version 4d) | gen_agents_pkg (bus drivers: req / gnt / rvalid; key responder: req / valid; ctrl driver: fetch_enable / mcounteren_writable; irq driver: the irq lines; dbg driver: debug_req), gen_checkers_pkg::gen_misc_monitor (alert and misc rows), gen_cmd_dispatch (regime phase); gen_icache_ram announcements not yet | one call of the rendered writer function per event through `sink.write_event`, stamped with `sink.cycle()`; the pin, alert and misc writers also emit the level at reset release, so a consumer knows the starting value |
 | `dv/auto_dv/gen_tb/gen_export.py` | Python reader: `read(path, seq, counters=False) -> Export(header, records, markers, events, flush)`; field access by name from `EXPORT_RECORD_FIELDS` and `EXPORT_EVENTS`; enforces Section 3 | ASCII only |
 | `GenBridge.export_flush()` | gen_bridge.py | issues EXPORT_FLUSH and returns the flush sequence number from `peek_data`; the test passes it to `read(path, seq)` |
 | API documents | `gen_component_api_rvfi_monitor.md` Sections 3, 6 and a new Section 8 (record lines); a new `gen_component_api_export_sink.md` (the sink, the event table, the knobs, guarantees, cost); one sentence in each writer's API document naming its event rows | |
@@ -206,11 +210,11 @@ default line stays about 220 bytes.
      from the bridge in the same call as the other counts (same-instant; a Python-side read after the ack is NOT
      used, since fetches continue in the spin loop after EOT).
    - MUT-H wrong event cycle: the ctrl driver stamps its `fetch_enable` line with `cycle + 1` -> caught by the
-     fixture's correlation check: the line's `cycle` equals the bridge's `cycle_count` sampled at the FETCH_EN ack
-     minus one (the driver acts at the negedge before the ack posedge and the sink stamps the cycle whose posedge just
-     passed), and the first `R` record's `cycle` is greater than the line's; the record gap is recorded at the first
-     green run and then asserted as an exact bound, the way the trap `pc_wdata` convention was recorded before it was
-     asserted. A `cycle + 1` stamp breaks the equality.
+     fixture's correlation check: the line's `cycle` relates to the bridge's `cycle_count` that Python reads right after
+     `Edge(cmd_ack)` (the stated sample point) by a fixed offset, recorded at the first green run and asserted exactly
+     since: 0 on every run of build out_t080s2/a (`FETCH_EN_LINE_OFFSET` in gen_ut_export.py; the a-priori "minus one" of
+     version 4c was wrong and is withdrawn), and the first `R` record's `cycle` is greater than the line's. A
+     `cycle + 1` stamp breaks the equality.
    Records: `dv/auto_dv/mutations/gen_mut_export.md` (ids MUT-A..F, executed; MUT-G/H with the event part). The existing `rvfi_order` check is NOT relied on (it is off
    under `+gen_chk_all=0`); `read()` carries its own order rule.
 3. fcov-expectation: not applicable (check-tier unit test outside the regression, per the standing ruling); the
@@ -301,11 +305,12 @@ counters (`evt_ibus_grants`, `evt_dbus_grants`: two new bridge fields incremente
 beat, independent of the line writer, the same "counts on both sides" pattern as `cmds_consumed`; they arrive with
 build step (2) below, not with the record part).
 
-Build order inside T-080: (1) sink, header, R/I lines, flush and end markers, `read()`, red then green (the
-reviewed v3a part; landed 1f8186e and 6b3301d); (2) bus, ctrl and scrkey events (writers exist today), red then
-green; (3) the step-2b sources (pin, alert, misc, regime) land with their components in the step-2b re-application,
-and icram with them (gen_icache_ram.sv:6 defers its announcement hooks, so the port is built in step (3)), each with
-its own red. The plan's RVFI-only fallback rule applies to items whose source arrives in step (3).
+Build order inside T-080: (1) sink, header, R/I lines, flush and end markers, `read()`, red then green (landed 1f8186e
+and 6b3301d); (2) THIS landing (version 4d): the writers of every source whose component exists after the step-2b
+re-application (bus, ctrl, scrkey, pin, alert, misc, regime), the grant counters, file format version 2, the
+active-source list, MUT-G and MUT-H; (3) icram (gen_icache_ram.sv:6 defers its announcement hooks; the rows are rendered
+and inactive) and the witness command of Section 9, each with its own red. The plan's RVFI-only fallback rule applies to
+items whose source is inactive.
 
 ## 9. Witness command for the plan's sunset (DV Lead round 4; aligned to plan v2h and the Orchestrator's rulings, version 4c)
 
