@@ -1322,3 +1322,13 @@ reviewed flow touch (T-208) before round 0 is re-declared; the refused run is re
 
 LOG-042e says the DV Lead lands the lift in v2r part 1; part 1 (ce21d32) was committed from an earlier list before that
 ruling reached the DV Lead, and the lift landed in v2r part 2 (e93c880). No content consequence.
+
+## LOG-048 - 2026-09-03 - Orchestrator error: a review launched with an unverified reproduction claim (killed, relaunched)
+
+The first cross-model review of plan v2r part 3 (43b47da..79ef3fa, 18:03Z) was launched with a REVIEW_FOCUS stating that the
+promotion table's header command "leaves it byte-identical", derived from a check whose command string had been mis-parsed
+from the header (the tool exited 2 without regenerating, so the "0 files changed" result was vacuous). The Orchestrator
+noticed within a minute, killed that review, removed only its run directory, re-ran the exact header command
+(python3 dv/auto_dv/tools/gen_promotion_table.py --plan-sha 43b47da) from a detached checkout of 79ef3fa (rc 0, table
+byte-identical), and relaunched with the verified text. No artifact from the first launch exists. Rule restated (LOG-040
+class): a focus claim is written from a reproduction's exit code and output, never from a derived count.
