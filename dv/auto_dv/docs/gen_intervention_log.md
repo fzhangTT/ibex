@@ -1220,3 +1220,15 @@ not move inside the checker's decision window; the storm test never credits a pr
 the checker publishes per-entry decidability so a priority item's fire check can assert its own entry was decidable;
 the cause of the decidable share rising from 40 to 78 percent is stated in the TB doc. The plan's credit rule carries
 the same sentence (DV Lead, T-190). The LOG-037b condition on T-137 is unchanged.
+
+## LOG-042d - 2026-09-03 - RESOLVED (round 0 released on landing 3h)
+
+Landing 3h (9500268) is committed and its cross-model review is APPROVE (reviews/2026-09-03-claude-diff-3cc1fe78-9500268b.md):
+the schedule runner's wait ends only at the program's final store, a pre-fix red reproduces the probe's numbers, a mutation
+red fails loud after the fix, and the 13 batch-2 acceptance seeds pass with mid-run phases applied. The LOG-042 hold on round
+0 is lifted: Runtime dispatches round_0 head-mode from e8ac866 (plan of record fd632aa, tests at 9500268) behind the recorded
+canary-vs-pinned hold; rtl-arch's pass 14 runs on the committed round evidence under dv/auto_dv/evidence/gen_round_0/. Results
+that need an interrupt-enabled regime, a PMP-denial or bus-error regime, an integrity-error regime, or the T-137 comparator
+remain uncredited (LOG-025, LOG-026a, LOG-037b); the round measures them for consistency only until T-136 and T-137 lift.
+Two lows from the review (cite the committed testlist in gen_tdd_batch1.md Section 10; record the template sha256 in future
+pre-fix red headers) ride with the Test Writer's next touch.
