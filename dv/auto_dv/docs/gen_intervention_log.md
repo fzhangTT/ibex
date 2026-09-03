@@ -1137,3 +1137,18 @@ promoted entries back in flow style; the red-check CLI builders self-tested) is 
 one fixture info). The LOG-039a condition on round 0 is met; round 0 (request round_0, filed 16:10Z) now waits only
 on the LOG-042 condition: the fire_schedule_applied triage (T-181, Test Writer with tb-infra) concluding with a fix
 landed and reviewed, since the same smoke-tier tests would otherwise fail the round on a TB-side check.
+
+## LOG-042a - 2026-09-03 - CAUSE FOUND (the 3e template's schedule runner never applies mid-run phases)
+
+Runtime's bisect (two operator probes, gen_test_bit_ratified seed 288888690 pinned to 7ef16a0, the 3e template on the
+pre-2a TB, and to d3c6ca8, the wave's tree) is identical on every point: six GEN_TEST_PHASE lines, all idx=0 at cycles
+60-65; zero idx>0 lines; the same "fire_schedule_applied ok=False reached 11 of 14 scheduled entries by EOT ... applied 6,
+missed [... @c709 ..., @c11563]"; GEN_TEST_SCHED shows the derived schedule with entries at c0, c709 and c11563; no
+dispatcher refusal at either sha. So the cause is the 3e template's schedule runner (7ef16a0): the later triggers are
+scheduled and logged as reached but never applied. tb-infra's 2a is cleared of this item. Consequence for the record:
+the 3e promotion proof "the layers are live" (l9g, 16 seed-1 greens) exercised only the idx=0 batch (six knobs at
+start-up), so mid-run regime changes have never run on any test; the promoted tests' measured status does not depend on
+it, but no plan item that needs a mid-run regime change is credited until the runner is fixed. Owner: the Test Writer
+(landing 3h, with 3g): fix the runner, add a red where a scheduled c-triggered entry is not applied (fail loud on the TB
+side as well if the dispatcher was never called), retain a green with idx>0 GEN_TEST_PHASE lines and re-run the 13
+failing acceptance seeds; round 0 dispatches after 3h is committed and reviewed.
