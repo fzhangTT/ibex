@@ -1647,3 +1647,14 @@ author checks for testlist or manifest commits after that HEAD before handing; (
 headers' input digests (the promotion table's testlist digest, the covergroup set's input list) against HEAD before the
 commit, so a stale generation is refused rather than undone; (3) an unpushed, unreviewed commit that fails the post-commit
 check is undone rather than patched forward, and the undo is recorded here with the reason.
+
+## LOG-069 - 2026-09-03 - An Orchestrator go set a plan-owned field against the plan's rule
+
+The Orchestrator's go for the T-246 promotion told Runtime to move gen_test_pmp_mseccfg and gen_test_pmp_lock from tier
+check to smoke, taking the tier from the Test Writer's acceptance form. The plan's tier rule (the lowest tier among a
+group's items, gen_test_plan.md Section 3) gives targeted for both groups, and the DV Lead's regenerated promotion table
+flagged the disagreement ("targeted (TESTLIST SAYS smoke)") in the same minute the cross-model review of the testlist
+touch returned REQUEST-CHANGES on it. The tier is a plan-owned field; the go should have been checked against the plan's
+rule or asked of the DV Lead. Ruling: Runtime returns both entries to targeted in its required fix touch, measured still
+false until the PMP covergroups exist. Rule: a go that sets a field the plan owns (tier, measured, expected-fail, hosted
+group) cites the plan rule it satisfies, or goes to the DV Lead first; the acceptance form records results, not tiers.
