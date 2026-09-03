@@ -1,0 +1,37 @@
+// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.
+// Memory map, ISA string and TB constants for the Spike DPI shim (architecture C5.1, C11).
+#ifndef GEN_ISA_SHIM_MAP_H
+#define GEN_ISA_SHIM_MAP_H
+
+#define GEN_ISA_STRING "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
+
+#define GEN_MM_BOOT_ADDR_DEFAULT      0x80000000u
+#define GEN_MM_BOOT_PAGE              0x80000000u
+#define GEN_MM_PROG_SIZE              0x00100000u
+#define GEN_MM_DM_BASE                0x1a110000u
+#define GEN_MM_DM_SIZE                0x00001000u
+#define GEN_MM_DM_HALT                0x1a110800u
+#define GEN_MM_DM_EXCEPTION           0x1a110808u
+#define GEN_MM_DM_BUDGET              0x00000800u
+#define GEN_MM_MMIO_BASE              0x8ffff000u
+#define GEN_MM_MMIO_SIZE              0x00001000u
+#define GEN_MM_SIG_ADDR               0x8ffff000u
+#define GEN_MM_IRQ_ACK_ADDR           0x8ffff100u
+#define GEN_MM_EOT_ADDR               0x8ffff104u
+#define GEN_MM_PHASE_MARK_ADDR        0x8ffff108u
+
+#define GEN_ICACHE_NUM_FB                  4u
+#define GEN_IBUS_MAX_OUTSTANDING           8u
+#define GEN_DBUS_MAX_OUTSTANDING           2u
+#define GEN_CSR_WRITE_TO_RVFI_OFFSET       2u
+#define GEN_TRAP_TO_RVFI_OFFSET            1u
+#define GEN_IRQ_MARKER_TO_RVFI_OFFSET      2u
+#define GEN_RVFI_ID_EXIT_OFFSET            2u
+#define GEN_ICACHE_ECC_WINDOW              1u
+#define GEN_IRQ_ENTRY_BOUND_RECORDS        17u
+#define GEN_DBG_ENTRY_BOUND_RECORDS        17u
+#define GEN_MEM_READBACK_WORDS_DEFAULT     64u
+#define GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT   100000u
+#define GEN_IRQ_FAST_MASK                  2147418112u
+
+#endif

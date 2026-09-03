@@ -51,7 +51,17 @@ SPIKE = Path(os.environ.get("GEN_SPIKE_BIN", str(ROOT / "tools/spike/bin/spike")
 # The one ISA string for the model (lock-step shim and standalone runs alike; the knobs codegen will
 # emit it into gen_isa_shim_map.h, until then this is the single definition): the ratified
 # extensions of RV32IMC + Zba/Zbb/Zbc/Zbs + Zca/Zcb/Zcmp, counters, misaligned support.
-SPIKE_ISA = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
+def _gen_knobs():
+    """The rendered constants mirror (dv/auto_dv/gen_tb/gen_knobs.py): ISA string and MMIO page."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gen_knobs", ROOT / "dv/auto_dv/gen_tb/gen_knobs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+GEN_KNOBS = _gen_knobs()
+SPIKE_ISA = GEN_KNOBS.ISA_STRING
 # Memory windows are derived from the SV parameters and gen_link.ld at run time (spike_mem_opts()).
 CONFIG_NAME = "opentitan"   # the build configuration (DV_prompt Section 2); stated in every report
 
@@ -163,8 +173,11 @@ def check_link_constants(ld: Path) -> dict:
 
 
 def spike_mem_opts(mm: dict) -> str:
-    """-m windows for Spike from the same map (4 KiB aligned by construction of the SV parameters)."""
-    return f"-m0x{mm['dm_base']:x}:0x{mm['dm_size']:x},0x{mm['boot_page']:x}:0x{mm['prog_size']:x}"
+    """-m windows for Spike: DM, program and the TB MMIO page (so signature and marker stores succeed
+    standalone); all 4 KiB aligned by construction of the sources."""
+    mmio = GEN_KNOBS.MEMORY_MAP
+    return (f"-m0x{mm['dm_base']:x}:0x{mm['dm_size']:x},0x{mm['boot_page']:x}:0x{mm['prog_size']:x},"
+            f"0x{mmio['mmio_base']:x}:0x{mmio['mmio_size']:x}")
 
 
 def check_debug_rom_budget(elf: Path, mm: dict) -> int:
