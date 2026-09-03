@@ -199,3 +199,52 @@ Sweeps on the final generator (sha256 56ef5fe5f695106b), from head_export13 with
 Note for the covergroup author (CM72-I-3): rlbclr_then_cfg is a per-seed must-hit bin whose hit assumes the cp_bb pair predicate counts
 consecutive PMP CSR writes (the `li t0` between the mseccfg clear and the pmpcfg write is not a PMP CSR write), the assumption the declared
 lock_then_* bins already make; a predicate on consecutive rvfi_order would miss both.
+
+## 6. Group gen_pmc_ctrl: a complete draft held out of the tree, blocked on the ISA model's counter set
+
+One unnamed subagent (dispatched by the previous Test Writer instance at 18:1x Z against 56e37d7, brief
+dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/BRIEF.md) wrote gen_test_pmc_ctrl.py, gen_programs/gen_pmc_ctrl_prog.py and the rendered
+manifest into its export (last edit 18:54Z; the instance was stopped at 18:46Z, LOG-056, and the subagent's report never arrived). The
+respawned Test Writer verified the delivery from the snapshot batch3/gen_pmc_ctrl/draft_18_54Z/ on head_export14 (an export of 2ea81ac, the
+TB of tb-infra landing 4) with one docstring paragraph added (below): 13 of 14 items built (TP-PMC-057 not_built: the mcounteren_writable pin is
+a static plusarg knob with no mid-run driver, TB ask), 204 bins declared with 18 bins_not_hit (debug window, the pin's off / invalid values,
+024's export-row clause), the manifest equal to a --test-module render, the library self-test PASS with the module present (the LOG-050
+regime-handler rule included: schedulable = lib.TIMING_ONLY_KNOBS). Files as verified: gen_test_pmc_ctrl.py sha256
+5a03a61a4ecf6370, gen_pmc_ctrl_prog.py e7893d97218c421e,
+gen_test_pmc_ctrl.fcov.yaml 193caa85e484aecb (kept under the work directory, not in the tree).
+
+Runs on out_head14 (programs rebuilt from the draft generator, batch3/gen_pmc_ctrl/h14/; the s1 green retained as
+gen_b3_pmc_ctrl_s1_stdout_excerpt.log with the comparator's first mismatches and summary): the fire checks and the reds do what the plan
+asks, the ISA comparator does not follow the program.
+
+| Run | fire checks | GEN_TEST_BINS | gen_isa_compare |
+|---|---|---|---|
+| b3_pmc_ctrl_s1 | PASS | 204 | UVM_ERROR 654; ISA compare: records=6056 mismatches=654 |
+| b3_pmc_ctrl_s2 | PASS | 204 | UVM_ERROR 572; ISA compare: records=6999 mismatches=572 |
+| b3_pmc_ctrl_s3 | PASS | 204 | UVM_ERROR 643; ISA compare: records=6539 mismatches=643 |
+| b3_pmc_ctrl_red_022 | FAIL on fire_tp_pmc_022 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_023 | FAIL on fire_tp_pmc_023 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_024 | FAIL on fire_tp_pmc_024 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_025 | FAIL on fire_tp_pmc_025 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_026 | FAIL on fire_tp_pmc_026 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_027 | FAIL on fire_tp_pmc_027 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_028 | FAIL on fire_tp_pmc_028 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_029 | FAIL on fire_tp_pmc_029 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_030 | FAIL on fire_tp_pmc_030 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_031 | FAIL on fire_tp_pmc_031 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_032 | FAIL on fire_tp_pmc_032 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_033 | FAIL on fire_tp_pmc_033 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red_056 | FAIL on fire_tp_pmc_056 alone | 204 | (red run: no UVM summary) |
+| b3_pmc_ctrl_red1 (seed-drawn) | FAIL on fire_tp_pmc_023 alone | 204 | (red run: no UVM summary) |
+
+Blocker (TB, reported to the Orchestrator 19:52Z; batch3/gen_pmc_ctrl/README_state.md): the upstream ISA model behind gen_isa_shim.cc has
+the specification's full counter set while Ibex's opentitan configuration has MHPMCounterNum 10 with the counters above it hardwired to 0,
+mcounteren.TM hardwired 0, no time/timeh and the mcounteren_writable pin. Two mechanisms follow: every wide mcountinhibit / mcounteren
+read-back is an isa_rd mismatch (TP-PMC-022/027 and every phase writing wide patterns), and a U-mode alias access (hpmcounter13..31 or
+time/timeh) traps in Ibex and not in the model, after which lock-step never re-aligns (the model's ecall lands one record late, cause 8,
+isa_trap on every record after). Removing TP-PMC-032 from the program does not clear it (batch3/gen_pmc_ctrl/x032/). The exact ask is in
+STATUS.md and the README: the shim (or a comparator fold class) configured to Ibex's counter set. The plan's pass criteria for 032 and the
+WARL items name gen_isa_compare as the referee of behaviour the upstream model does not have; the fire checks against the generator's
+model carry those clauses meanwhile. Consequence: no testlist entry (the flow verdict would FAIL on the comparator), the draft's docstring
+states the dependency, the three files stay under dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/verified_h14/ (the subagent's
+snapshot beside them in draft_18_54Z/) until the shim lands, when the group is re-verified and staged with its pin-off entry.
