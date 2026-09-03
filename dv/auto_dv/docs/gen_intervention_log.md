@@ -678,3 +678,16 @@ not: `git grep not_built d1d68fd -- dv/auto_dv` matches only the Critic's v2 ver
 `plan_bins` returning an empty list with a stderr reason for an all-excluded item set (T-109 M-1), a
 different item. The Critic's v3 M-1 stands as the first medium; landing 3b must carry the actual guard or a
 response row the Critic can judge. Orchestrator error, corrected here.
+
+## LOG-025 - 2026-09-03 - RULING (interrupt-enabled results do not count until T-136)
+
+rtl-arch's RTL-facts check of the step-2b comparator fixes (dv/auto_dv/evidence/gen_t090_rtl_facts.md, 39f0eae)
+and the cross-model review of 67b5971 (CM5-M-1) find the same hole from two sides: fix 2 offers the model the
+DUT's own vectored cause, and the irq_entry rule clears every open expectation on any entry record, so a DUT
+that vectors to a wrong or un-enabled cause, or violates the priority among pending lines (NMI > fast
+lowest-id > ext > sw > timer, rtl/ibex_controller.sv:736-757), passes. Ruling: 67b5971 stays committed (fixes
+1 and 3 match the RTL; the fix keeps the model in step); tb-infra builds T-136 (irq_entry recomputes the
+expected cause from the pre-entry record's post_mip & mie and the line vector, clears only the matching
+expectation, out-of-tree red) in its next landing; until T-136 is committed and reviewed, no interrupt-enabled
+test result counts toward the plan and the irq-entry, priority and NMI items stay unmeasured. The DV Lead
+annotates the affected items; the Test Writer lands interrupt-free batch-2 groups first.
