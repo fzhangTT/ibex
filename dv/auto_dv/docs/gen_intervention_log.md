@@ -1425,3 +1425,16 @@ plan file's sha256 beside the parent commit) so a label can never point at a pla
 Writer lands the csr_reset manifest re-render as a small landing ahead of its consolidated touch so the plan can cite it.
 Rule restated for the plan: text describes an artifact's state only when that artifact is committed; otherwise it records
 the decision and the task that lands it. No plan landing other than part 4c until the re-review passes (LOG-044 class).
+
+## LOG-056 - 2026-09-03 - Test Writer respawned a second time (silent 30 minutes inside a fan-out)
+
+The Test Writer's STATUS.md stopped at 18:14:20Z; its own files stopped at 18:21Z (the gen_pmp_lock 800-seed sweep log); the
+only newer files under its work dir were a subagent's gen_pmc_ctrl sweep outputs. Eight Orchestrator messages between 18:14Z
+and 18:38Z (review rows CM38/CM42/CM35, the Critic's batch3 v2 interim, the T-222 re-render on the plan's critical path)
+drew no reply, and the 18:38Z watchdog nudge asking for a STATUS refresh within one tool round was not answered by the
+18:45Z tick. Per the watchdog rule the instance was stopped and a fresh Test Writer spawned at 18:46Z with the full brief
+(rules, tree state, the ordered task list: T-222 first, then the consolidated batch-3 touch, then the next groups) and the
+communication rules that failed twice today (background subagents only, answer within one tool round, STATUS every 10
+minutes from date -u). All of the predecessor's uncommitted work stays on disk and belongs to the new instance. Same class
+as LOG-043; the remedy is the same, the pattern (a foreground fan-out during which the inbox is unread) is now the leading
+cause of lost time on this team.
