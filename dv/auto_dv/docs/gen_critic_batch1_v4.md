@@ -59,3 +59,9 @@ H-1 (the self-test loops made able to fail, re-run from a clean archive, the ali
 - Its lows (four wave-5 logs from an intermediate template; the old CM3-I-1 row; nine versus eleven dropped names) verified and adopted as L-6 and L-7; its info items are I-3.
 - Items both verified with the same result: the progress-based wait's logic and bound, the two reds' decisive lines, full-text manifest equality (isa_cti, bit_draft, isa_alu), the SHA removals, the wave-5 reproductions' consistency.
 - Mine that it did not raise: L-1 (GEN_DV_FLOW_RUN unexported by the flow), L-2 (bit_draft reasons without the blocker), L-4 (3b re-renders without runs), L-5 (excerpt ruling LOG number), I-2 (bins_not_hit without sunset).
+
+## 6. Addendum: LOG-024c (the Orchestrator's ruling on H-1 and M-2)
+
+- The ruling (fix the self-test with a sentinel and re-prove every red; treat every parameter of a helper that receives self as test-standing; then stop growing the lint; the API lists the refused forms explicitly plus "everything else passes; the lint is not a guarantee") is the closure path for both findings. H-1 closes when the corrected self-test, run from a clean archive of the landing, refuses every red source including the aliased-parameter helper. M-2 closes when the API carries the explicit enumeration and that sentence; that is the honest-enumeration option my M-2 named, and the SV ledger stays the fact of record (LOG-024a). My withdrawn acceptance of the "any indirection" wording stays withdrawn; the ruling's wording replaces it. Nothing in the ruling changes M-1.
+- On "stop growing the lint": agreed, provided the enumeration in the API is the list the self-test proves refused, so that the two cannot drift; the self-test's red sources are that list.
+
