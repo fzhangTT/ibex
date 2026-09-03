@@ -560,3 +560,15 @@ because HEAD moved between waves; fix: one pinned HEAD per batch, atomic stage s
 staging between concurrent waves. Both are defects in generated infrastructure caught by the flow's
 first real batch; neither touches the DUT or the tests' checks. Counted for the closure report under
 "generated infrastructure requiring review or repair". Re-serve after both fixes land.
+
+## LOG-020 - 2026-09-03 - NOTE (milestone: first Phase 1 acceptance runs green through the flow on LSF)
+
+11:27-11:29 UTC: batch-1 wave 2 (requests test-writer-023..030) served in head mode pinned to
+7fa4262 on LSF: gen_test_csr_access PASS x3, gen_test_cmp_zcmp_basic PASS x3, gen_test_bit_draft
+PASS x3, gen_test_cmp_zcb PASS x2 with one NOT_RUN (seed 866812001: the per-seed generator
+gen_cmp_zcb_prog.py stopped on its own coverage self-check "load form x uimm not covered", so no
+program was produced; a generator defect, not a flow or DUT defect; assigned to the Test Writer), and
+all four red fixtures RED-OK with their red_expect matched. 15 LSF jobs, 92 seconds wall for the pass.
+These are check-tier, measured: false runs (no coverage); the first measured round needs the step-2b
+re-landing (regime knobs) and the comparator fix T-102 for the other four batch-1 tests. Manifests
+under dv/auto_dv/work/runtime/results/test-writer-023..030/.
