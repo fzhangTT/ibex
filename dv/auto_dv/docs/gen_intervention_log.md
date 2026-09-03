@@ -37,3 +37,13 @@ the landing check exempts `docs/` and `reviews/`. Status: pending; no work depen
 `IBEX_TOOLS_DIR` (`/localdev/fzhang/ws/tools`) contains `spike-ibex-cosim/` and `src/`. The
 first is the lowRISC Spike fork, which `DV_prompt.txt` Section 3 fences. Every teammate spawn
 prompt names both paths as do-not-read. `ci/env.sh` does not reference either.
+
+## LOG-003 - 2026-09-03 - NOTE (reviewer availability)
+
+Probe of the preferred cross-model reviewer failed: `codex exec` (codex-cli 0.152.1, model
+gpt-5.6-sol, reasoning high) returns "ERROR: You hit your spend cap set by the owner of your
+workspace." before answering. Per CLAUDE.md (Cross-model review policy, reviewer preference)
+and the cross-review skill's fallback clause, reviews use a fresh Opus-class-or-above Claude
+session until codex is available again; every artifact header records the model used and the
+raw codex error. Owner action that would restore the preferred path: raise the codex spend cap.
+The Orchestrator re-probes codex before each review and switches back when it answers.
