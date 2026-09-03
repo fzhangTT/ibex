@@ -198,6 +198,33 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     .alert_major_bus_o(alert_major_bus), .core_busy_o(core_busy)
   );
 
+  // ---- RVFI bundle for the monitor (step 2a) ----------------------------------------------------
+  gen_rvfi_if u_rvfi_if (.clk(clk), .rst_n(rst_n));
+  assign u_rvfi_if.valid = rvfi_valid;         assign u_rvfi_if.order = rvfi_order;
+  assign u_rvfi_if.insn = rvfi_insn;           assign u_rvfi_if.trap = rvfi_trap;
+  assign u_rvfi_if.halt = rvfi_halt;           assign u_rvfi_if.intr = rvfi_intr;
+  assign u_rvfi_if.mode = rvfi_mode;           assign u_rvfi_if.ixl = rvfi_ixl;
+  assign u_rvfi_if.rs1_addr = rvfi_rs1_addr;   assign u_rvfi_if.rs2_addr = rvfi_rs2_addr;
+  assign u_rvfi_if.rs3_addr = rvfi_rs3_addr;   assign u_rvfi_if.rd_addr = rvfi_rd_addr;
+  assign u_rvfi_if.rs1_rdata = rvfi_rs1_rdata; assign u_rvfi_if.rs2_rdata = rvfi_rs2_rdata;
+  assign u_rvfi_if.rs3_rdata = rvfi_rs3_rdata; assign u_rvfi_if.rd_wdata = rvfi_rd_wdata;
+  assign u_rvfi_if.pc_rdata = rvfi_pc_rdata;   assign u_rvfi_if.pc_wdata = rvfi_pc_wdata;
+  assign u_rvfi_if.mem_addr = rvfi_mem_addr;   assign u_rvfi_if.mem_rdata = rvfi_mem_rdata;
+  assign u_rvfi_if.mem_wdata = rvfi_mem_wdata; assign u_rvfi_if.mem_rmask = rvfi_mem_rmask;
+  assign u_rvfi_if.mem_wmask = rvfi_mem_wmask; assign u_rvfi_if.mem_is_cap = rvfi_mem_is_cap;
+  assign u_rvfi_if.ext_pre_mip = rvfi_ext_pre_mip;   assign u_rvfi_if.ext_post_mip = rvfi_ext_post_mip;
+  assign u_rvfi_if.ext_nmi = rvfi_ext_nmi;           assign u_rvfi_if.ext_nmi_int = rvfi_ext_nmi_int;
+  assign u_rvfi_if.ext_debug_req = rvfi_ext_debug_req; assign u_rvfi_if.ext_debug_mode = rvfi_ext_debug_mode;
+  assign u_rvfi_if.ext_rf_wr_suppress = rvfi_ext_rf_wr_suppress;
+  assign u_rvfi_if.ext_mcycle = rvfi_ext_mcycle;
+  assign u_rvfi_if.ext_mhpmcounters = rvfi_ext_mhpmcounters;
+  assign u_rvfi_if.ext_mhpmcountersh = rvfi_ext_mhpmcountersh;
+  assign u_rvfi_if.ext_ic_scr_key_valid = rvfi_ext_ic_scr_key_valid;
+  assign u_rvfi_if.ext_irq_valid = rvfi_ext_irq_valid;
+  assign u_rvfi_if.ext_expanded_insn_valid = rvfi_ext_expanded_insn_valid;
+  assign u_rvfi_if.ext_expanded_insn = rvfi_ext_expanded_insn;
+  assign u_rvfi_if.ext_expanded_insn_last = rvfi_ext_expanded_insn_last;
+
   // ---- cocotb bridge ---------------------------------------------------------------------------
   gen_bridge_if u_bridge_if (.clk(clk), .rst_n(rst_n), .rvfi_valid(rvfi_valid));
 
@@ -217,6 +244,7 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.dbus_agent*", "vif", u_dbus_if);
     uvm_config_db#(virtual gen_scrkey_if)::set(null, "uvm_test_top.env.scrkey*", "vif", u_scrkey_if);
     uvm_config_db#(virtual gen_ctrl_if)::set(null, "uvm_test_top.env.ctrl*", "vif", u_ctrl_if);
+    uvm_config_db#(virtual gen_rvfi_if)::set(null, "uvm_test_top.env.rvfi_mon*", "vif", u_rvfi_if);
     run_test();
   end
 endmodule

@@ -127,6 +127,24 @@ def render_sv_region(src, mm):
     L.append("  parameter logic [7:0] GEN_CMD_NONE = 8'd0;")
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f"  parameter logic [7:0] GEN_CMD_{k} = 8'd{i};")
+    knobs = [p for p in src["plusargs"] if p["kind"] == "enum" and p["name"].startswith("knob_")]
+    L.append("  // Regime knob ids and value lookup (bridge command REGIME_SET: arg0 = knob id, arg1 = value index).")
+    for i, p in enumerate(knobs):
+        L.append(f"  parameter int GEN_KNOB_ID_{p['name'][5:].upper()} = {i};")
+    L.append("  function automatic string gen_knob_name(int id);")
+    L.append("    case (id)")
+    for i, p in enumerate(knobs):
+        L.append(f'      {i}: return "{p["name"]}";')
+    L.append('      default: return "";')
+    L.append("    endcase")
+    L.append("  endfunction")
+    L.append("  function automatic string gen_knob_value(int id, int idx);")
+    L.append("    case (id)")
+    for i, p in enumerate(knobs):
+        L.append(f"      {i}: case (idx) " + " ".join(f'{j}: return "{v}";' for j, v in enumerate(p["values"])) + ' default: return ""; endcase')
+    L.append('      default: return "";')
+    L.append("    endcase")
+    L.append("  endfunction")
     L.append("  // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).")
     L.append("  function automatic bit gen_is_known_plusarg(string name);")
     L.append("    case (name)")
@@ -164,6 +182,12 @@ def render_py(src, mm):
     L.append("CONSTANTS = {")
     for c in src["constants"]:
         L.append(f'    "{c["name"]}": {int(c["value"])},')
+    L.append("}"); L.append("")
+    L.append("KNOB_IDS = {  # regime knob -> REGIME_SET arg0; value index = position in PLUSARGS[name]['values']")
+    for i, p in enumerate(src["plusargs"]):
+        pass
+    for i, p in enumerate([q for q in src["plusargs"] if q["kind"] == "enum" and q["name"].startswith("knob_")]):
+        L.append(f'    "{p["name"]}": {i},')
     L.append("}"); L.append("")
     L.append("CMD = {  # bridge command kinds (cmd_kind codes)")
     for i, k in enumerate(src["bridge_cmds"], start=1):
@@ -217,13 +241,12 @@ def render_cfg(src):
     L = ["// Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.",
          "// Included inside class gen_env_cfg (dv/auto_dv/env/gen_env_pkg.sv): fields, parse_plusargs(),",
          "// validate(), pinned_count(). Types: string/enum -> string, int -> int unsigned, hex -> logic [31:0],",
-         "// bool -> bit. `<name>_set` records that the plusarg was supplied (pinning, optional knobs).", ""]
+         "// bool -> bit. `<name>_set` records that the plusarg was supplied (pinning, optional knobs, checker isolation).", ""]
     for p in src["plusargs"]:
         k = p["kind"]; n = p["name"]
         typ = {"string": "string", "enum": "string", "int": "int unsigned", "hex": "logic [31:0]", "bool": "bit"}[k]
         L.append(f"  {typ} {n} = {sv_literal(p)};")
-        if k != "bool":
-            L.append(f"  bit {n}_set = 1'b0;")
+        L.append(f"  bit {n}_set = 1'b0;")   # every knob records whether it was supplied (isolation mode needs it for bools)
     L += ["", "  function void parse_plusargs();", "    string s; int unsigned u; logic [31:0] h;"]
     for p in src["plusargs"]:
         k = p["kind"]; n = p["name"]; P = f"PLUSARG_{n.upper()}"
@@ -234,7 +257,7 @@ def render_cfg(src):
         elif k == "hex":
             L.append(f'    if ($value$plusargs({{{P}, "=%h"}}, h)) begin {n} = h; {n}_set = 1\'b1; end')
         else:
-            L.append(f'    if ($value$plusargs({{{P}, "=%d"}}, u)) {n} = (u != 0);')
+            L.append(f'    if ($value$plusargs({{{P}, "=%d"}}, u)) begin {n} = (u != 0); {n}_set = 1\'b1; end')
     L += ["  endfunction", "",
           "  // Enumerated knobs must hold one of their yaml values; msg names the first offender.",
           "  function bit validate(output string msg);"]

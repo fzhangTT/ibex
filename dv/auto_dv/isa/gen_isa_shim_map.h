@@ -3,7 +3,7 @@
 #ifndef GEN_ISA_SHIM_MAP_H
 #define GEN_ISA_SHIM_MAP_H
 
-#define GEN_ISA_STRING "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
+#define GEN_ISA_STRING "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp"
 
 #define GEN_MM_BOOT_ADDR_DEFAULT      0x80000000u
 #define GEN_MM_BOOT_PAGE              0x80000000u

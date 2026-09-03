@@ -9,6 +9,7 @@ package gen_env_pkg;
   import gen_cfg_pkg::*;
   import gen_mem_pkg::*;
   import gen_agents_pkg::*;
+  import gen_rvfi_pkg::*;
   `include "uvm_macros.svh"
 
   // ------------------------------------------------------------------------------------------
@@ -98,6 +99,8 @@ package gen_env_pkg;
     gen_scrkey_driver scrkey;
     gen_ctrl_driver   ctrl;
     gen_cmd_dispatch  dispatch;
+    gen_rvfi_monitor  rvfi_mon;
+    gen_scoreboard    sb;
     gen_eot_handler    eot_h;
     gen_record_handler sig_h, ack_h, phase_h;
     virtual gen_bridge_if bvif;
@@ -142,6 +145,8 @@ package gen_env_pkg;
       scrkey = gen_scrkey_driver::type_id::create("scrkey", this);
       ctrl   = gen_ctrl_driver::type_id::create("ctrl", this);
       dispatch = gen_cmd_dispatch::type_id::create("dispatch", this);
+      rvfi_mon = gen_rvfi_monitor::type_id::create("rvfi_mon", this);
+      sb       = gen_scoreboard::type_id::create("sb", this);
       bridge = gen_bridge::type_id::create("bridge", this);
       `uvm_info("GEN_ENV", {"ibus: ", ibus_agent.cfg.describe()}, UVM_LOW)
       `uvm_info("GEN_ENV", {"dbus: ", dbus_agent.cfg.describe()}, UVM_LOW)
@@ -154,6 +159,7 @@ package gen_env_pkg;
       bridge.mem = mem;
       dispatch.ctrl = ctrl;
       bridge.cmd_ap.connect(dispatch.analysis_export);
+      rvfi_mon.ap.connect(sb.analysis_export);
     endfunction
 
     function void report_phase(uvm_phase phase);

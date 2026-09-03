@@ -17,7 +17,7 @@ BRIDGE_READ = (
     "listener_armed", "cmd_ack", "cmd_ack_seq", "cmds_consumed", "peek_data", "evt_retired_hit",
     "evt_cycle_hit", "evt_irq_taken", "evt_dbg_entered", "evt_eot_seen", "evt_eot_code", "evt_eot_count",
     "evt_retired_count",
-    "evt_err_count", "finish_ack", "cycle_count",
+    "evt_err_count", "evt_isa_records", "evt_isa_mismatch", "finish_ack", "cycle_count",
 )
 BRIDGE_FIELDS = BRIDGE_WRITE + BRIDGE_READ
 

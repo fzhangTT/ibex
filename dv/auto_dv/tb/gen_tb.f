@@ -7,8 +7,11 @@ dv/auto_dv/tb/gen_bus_if.sv
 dv/auto_dv/tb/gen_scrkey_if.sv
 dv/auto_dv/tb/gen_ctrl_if.sv
 dv/auto_dv/tb/gen_icache_ram.sv
+dv/auto_dv/tb/gen_rvfi_if.sv
 dv/auto_dv/env/gen_cfg_pkg.sv
 dv/auto_dv/env/gen_mem_pkg.sv
 dv/auto_dv/env/gen_agents_pkg.sv
+dv/auto_dv/isa/gen_isa_dpi_pkg.sv
+dv/auto_dv/env/gen_rvfi_pkg.sv
 dv/auto_dv/env/gen_env_pkg.sv
 dv/auto_dv/tb/gen_tb_top.sv

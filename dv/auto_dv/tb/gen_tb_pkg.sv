@@ -25,6 +25,8 @@ package gen_tb_pkg;
   parameter string PLUSARG_ICRAM_INIT = "gen_icram_init";  // enum, default random: initial contents of the icache tag/data RAM models
   parameter string PLUSARG_FETCH_EN_AT_RESET = "gen_fetch_en_at_reset";  // bool, default 1: fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)
   parameter string PLUSARG_KEY_RESET_VALID = "gen_key_reset_valid";  // bool, default 1: ic_scr_key_valid_i high out of reset (ibex_top behaviour)
+  parameter string PLUSARG_SB_TRACE = "gen_sb_trace";  // bool, default 0: scoreboard per-record trace (debug only)
+  parameter string PLUSARG_UT_LOCKSTEP_MIN_RATIO_PCT = "gen_ut_lockstep_min_ratio_pct";  // int, default 90: lock-step test
   parameter string PLUSARG_ISA_STRING = "gen_isa_string";  // string, default unset: model ISA string override (debug only; the default is GEN_ISA_STRING)
   parameter string PLUSARG_ISA_LOG = "gen_isa_log";  // string, default unset: model commit log path for debug
   parameter string PLUSARG_UT_BOOT_RETIRE = "gen_ut_boot_retire";  // int, default 200: retirements the boots-and-retires test waits for
@@ -212,10 +214,81 @@ package gen_tb_pkg;
   parameter logic [7:0] GEN_CMD_FETCH_EN = 8'd9;
   parameter logic [7:0] GEN_CMD_MEM_PEEK = 8'd10;
   parameter logic [7:0] GEN_CMD_MISC = 8'd11;
+  // Regime knob ids and value lookup (bridge command REGIME_SET: arg0 = knob id, arg1 = value index).
+  parameter int GEN_KNOB_ID_IMEM_GNT_DELAY = 0;
+  parameter int GEN_KNOB_ID_IMEM_RVALID_DELAY = 1;
+  parameter int GEN_KNOB_ID_IMEM_ERR_RATE = 2;
+  parameter int GEN_KNOB_ID_IMEM_INTG_ERR_RATE = 3;
+  parameter int GEN_KNOB_ID_IMEM_OUTSTANDING_CAP = 4;
+  parameter int GEN_KNOB_ID_DMEM_GNT_DELAY = 5;
+  parameter int GEN_KNOB_ID_DMEM_RVALID_DELAY = 6;
+  parameter int GEN_KNOB_ID_DMEM_ERR_RATE = 7;
+  parameter int GEN_KNOB_ID_DMEM_INTG_ERR_RATE = 8;
+  parameter int GEN_KNOB_ID_IRQ_REGIME = 9;
+  parameter int GEN_KNOB_ID_IRQ_LINE_MIX = 10;
+  parameter int GEN_KNOB_ID_IRQ_HOLD = 11;
+  parameter int GEN_KNOB_ID_DEBUG_REQ_REGIME = 12;
+  parameter int GEN_KNOB_ID_SCR_KEY_DELAY = 13;
+  parameter int GEN_KNOB_ID_ICACHE_ECC_ERR_RATE = 14;
+  parameter int GEN_KNOB_ID_FETCH_ENABLE_REGIME = 15;
+  parameter int GEN_KNOB_ID_MCOUNTEREN_WRITABLE = 16;
+  parameter int GEN_KNOB_ID_INSTR_MIX = 17;
+  parameter int GEN_KNOB_ID_PRIV_REGIME = 18;
+  parameter int GEN_KNOB_ID_PMP_REGIME = 19;
+  function automatic string gen_knob_name(int id);
+    case (id)
+      0: return "knob_imem_gnt_delay";
+      1: return "knob_imem_rvalid_delay";
+      2: return "knob_imem_err_rate";
+      3: return "knob_imem_intg_err_rate";
+      4: return "knob_imem_outstanding_cap";
+      5: return "knob_dmem_gnt_delay";
+      6: return "knob_dmem_rvalid_delay";
+      7: return "knob_dmem_err_rate";
+      8: return "knob_dmem_intg_err_rate";
+      9: return "knob_irq_regime";
+      10: return "knob_irq_line_mix";
+      11: return "knob_irq_hold";
+      12: return "knob_debug_req_regime";
+      13: return "knob_scr_key_delay";
+      14: return "knob_icache_ecc_err_rate";
+      15: return "knob_fetch_enable_regime";
+      16: return "knob_mcounteren_writable";
+      17: return "knob_instr_mix";
+      18: return "knob_priv_regime";
+      19: return "knob_pmp_regime";
+      default: return "";
+    endcase
+  endfunction
+  function automatic string gen_knob_value(int id, int idx);
+    case (id)
+      0: case (idx) 0: return "same_cycle"; 1: return "short"; 2: return "long"; 3: return "random"; default: return ""; endcase
+      1: case (idx) 0: return "min1"; 1: return "short"; 2: return "long"; 3: return "random"; default: return ""; endcase
+      2: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      3: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      4: case (idx) 0: return "cap1"; 1: return "cap2"; 2: return "cap4"; 3: return "cap8"; default: return ""; endcase
+      5: case (idx) 0: return "same_cycle"; 1: return "short"; 2: return "long"; 3: return "random"; default: return ""; endcase
+      6: case (idx) 0: return "min1"; 1: return "short"; 2: return "long"; 3: return "random"; default: return ""; endcase
+      7: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      8: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      9: case (idx) 0: return "quiet"; 1: return "sparse"; 2: return "storm"; default: return ""; endcase
+      10: case (idx) 0: return "single"; 1: return "multi"; 2: return "fast_only"; 3: return "with_nmi"; default: return ""; endcase
+      11: case (idx) 0: return "until_taken"; 1: return "through_handler"; 2: return "pulse"; default: return ""; endcase
+      12: case (idx) 0: return "none"; 1: return "sparse"; 2: return "storm"; default: return ""; endcase
+      13: case (idx) 0: return "immediate"; 1: return "delayed"; 2: return "withheld_then_valid"; default: return ""; endcase
+      14: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      15: case (idx) 0: return "always_on"; 1: return "toggling"; default: return ""; endcase
+      16: case (idx) 0: return "on"; 1: return "off"; 2: return "invalid"; default: return ""; endcase
+      17: case (idx) 0: return "isa_only"; 1: return "m_heavy"; 2: return "compressed_heavy"; 3: return "bitmanip_heavy"; 4: return "csr_heavy"; 5: return "ls_heavy"; 6: return "branch_heavy"; 7: return "mixed"; default: return ""; endcase
+      18: case (idx) 0: return "m_only"; 1: return "u_heavy"; 2: return "alternating"; default: return ""; endcase
+      19: case (idx) 0: return "off"; 1: return "sparse"; 2: return "dense"; 3: return "mml_on"; default: return ""; endcase
+      default: return "";
+    endcase
+  endfunction
   // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).
   function automatic bit gen_is_known_plusarg(string name);
     case (name)
-      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_isa_string", "gen_isa_log", "gen_ut_boot_retire", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_ut_lockstep_min_ratio_pct", "gen_isa_string", "gen_isa_log", "gen_ut_boot_retire", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
       default: return 1'b0;
     endcase
   endfunction

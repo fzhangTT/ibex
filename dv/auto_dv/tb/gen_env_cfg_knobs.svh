@@ -1,7 +1,7 @@
 // Rendered by dv/auto_dv/tb/gen_knobs_codegen.py from dv/auto_dv/tb/gen_tb_knobs.yaml; do not edit.
 // Included inside class gen_env_cfg (dv/auto_dv/env/gen_env_pkg.sv): fields, parse_plusargs(),
 // validate(), pinned_count(). Types: string/enum -> string, int -> int unsigned, hex -> logic [31:0],
-// bool -> bit. `<name>_set` records that the plusarg was supplied (pinning, optional knobs).
+// bool -> bit. `<name>_set` records that the plusarg was supplied (pinning, optional knobs, checker isolation).
 
   string build_config = "opentitan";
   bit build_config_set = 1'b0;
@@ -10,6 +10,7 @@
   int unsigned smoke_intg_flip = 0;
   bit smoke_intg_flip_set = 1'b0;
   bit dbg_csr_probe = 1'b0;
+  bit dbg_csr_probe_set = 1'b0;
   string mem_image = "";
   bit mem_image_set = 1'b0;
   logic [31:0] mem_image_crc32 = 32'h0;
@@ -21,6 +22,7 @@
   logic [31:0] tohost_addr = 32'h0;
   bit tohost_addr_set = 1'b0;
   bit mem_unmapped_ok = 1'b0;
+  bit mem_unmapped_ok_set = 1'b0;
   logic [31:0] boot_addr = 32'h80000000;
   bit boot_addr_set = 1'b0;
   int unsigned alive_timeout = 100000;
@@ -30,11 +32,19 @@
   string regime_sched = "";
   bit regime_sched_set = 1'b0;
   bit rvfi_trace = 1'b0;
+  bit rvfi_trace_set = 1'b0;
   bit fcov_en = 1'b1;
+  bit fcov_en_set = 1'b0;
   string icram_init = "random";
   bit icram_init_set = 1'b0;
   bit fetch_en_at_reset = 1'b1;
+  bit fetch_en_at_reset_set = 1'b0;
   bit key_reset_valid = 1'b1;
+  bit key_reset_valid_set = 1'b0;
+  bit sb_trace = 1'b0;
+  bit sb_trace_set = 1'b0;
+  int unsigned ut_lockstep_min_ratio_pct = 90;
+  bit ut_lockstep_min_ratio_pct_set = 1'b0;
   string isa_string = "";
   bit isa_string_set = 1'b0;
   string isa_log = "";
@@ -80,6 +90,7 @@
   string dbus_err_half = "any";
   bit dbus_err_half_set = 1'b0;
   bit dbus_err_store_perform = 1'b1;
+  bit dbus_err_store_perform_set = 1'b0;
   int unsigned key_delay_min = 1;
   bit key_delay_min_set = 1'b0;
   int unsigned key_delay_max = 20;
@@ -137,75 +148,125 @@
   string knob_pmp_regime = "off";
   bit knob_pmp_regime_set = 1'b0;
   bit chk_all = 1'b1;
+  bit chk_all_set = 1'b0;
   bit chk_ibus_proto = 1'b1;
+  bit chk_ibus_proto_set = 1'b0;
   bit chk_ibus_outstanding = 1'b1;
+  bit chk_ibus_outstanding_set = 1'b0;
   bit chk_sva_rvalid_legal = 1'b1;
+  bit chk_sva_rvalid_legal_set = 1'b0;
   bit chk_dbus_proto = 1'b1;
+  bit chk_dbus_proto_set = 1'b0;
   bit chk_dbus_outstanding = 1'b1;
+  bit chk_dbus_outstanding_set = 1'b0;
   bit chk_dbus_split = 1'b1;
+  bit chk_dbus_split_set = 1'b0;
   bit chk_dbus_store_intg = 1'b1;
+  bit chk_dbus_store_intg_set = 1'b0;
   bit chk_icram_write_ecc = 1'b1;
+  bit chk_icram_write_ecc_set = 1'b0;
   bit chk_icram_inval_sweep = 1'b1;
+  bit chk_icram_inval_sweep_set = 1'b0;
   bit chk_icram_ecc_response = 1'b1;
+  bit chk_icram_ecc_response_set = 1'b0;
   bit chk_scrkey_proto = 1'b1;
+  bit chk_scrkey_proto_set = 1'b0;
   bit chk_alert_minor = 1'b1;
+  bit chk_alert_minor_set = 1'b0;
   bit chk_alert_bus = 1'b1;
+  bit chk_alert_bus_set = 1'b0;
   bit chk_alert_internal = 1'b1;
+  bit chk_alert_internal_set = 1'b0;
   bit chk_crash_dump = 1'b1;
+  bit chk_crash_dump_set = 1'b0;
   bit chk_double_fault = 1'b1;
+  bit chk_double_fault_set = 1'b0;
   bit chk_core_busy = 1'b1;
+  bit chk_core_busy_set = 1'b0;
   bit chk_data_tag_quiet = 1'b1;
+  bit chk_data_tag_quiet_set = 1'b0;
   bit chk_fetch_en = 1'b1;
+  bit chk_fetch_en_set = 1'b0;
   bit chk_irq_pending = 1'b1;
+  bit chk_irq_pending_set = 1'b0;
   bit chk_irq_entry = 1'b1;
+  bit chk_irq_entry_set = 1'b0;
   bit chk_irq_masked = 1'b1;
+  bit chk_irq_masked_set = 1'b0;
   bit chk_nmi_entry = 1'b1;
+  bit chk_nmi_entry_set = 1'b0;
   bit chk_nmi_internal = 1'b1;
+  bit chk_nmi_internal_set = 1'b0;
   bit chk_dbg_entry = 1'b1;
+  bit chk_dbg_entry_set = 1'b0;
   bit chk_dbg_exc = 1'b1;
+  bit chk_dbg_exc_set = 1'b0;
   bit chk_dbg_masked = 1'b1;
+  bit chk_dbg_masked_set = 1'b0;
   bit chk_dbg_dret = 1'b1;
+  bit chk_dbg_dret_set = 1'b0;
   bit chk_dbg_trigger = 1'b1;
+  bit chk_dbg_trigger_set = 1'b0;
   bit chk_ctr_mcycle = 1'b1;
+  bit chk_ctr_mcycle_set = 1'b0;
   bit chk_ctr_minstret = 1'b1;
+  bit chk_ctr_minstret_set = 1'b0;
   bit chk_ctr_hpm_exact = 1'b1;
+  bit chk_ctr_hpm_exact_set = 1'b0;
   bit chk_ctr_hpm_bound = 1'b1;
+  bit chk_ctr_hpm_bound_set = 1'b0;
   bit chk_pmp_data = 1'b1;
+  bit chk_pmp_data_set = 1'b0;
   bit chk_pmp_fetch = 1'b1;
+  bit chk_pmp_fetch_set = 1'b0;
   bit chk_isa = 1'b1;
+  bit chk_isa_set = 1'b0;
   bit chk_isa_pc = 1'b1;
+  bit chk_isa_pc_set = 1'b0;
   bit chk_isa_insn = 1'b1;
+  bit chk_isa_insn_set = 1'b0;
   bit chk_isa_trap = 1'b1;
+  bit chk_isa_trap_set = 1'b0;
   bit chk_isa_rd = 1'b1;
+  bit chk_isa_rd_set = 1'b0;
   bit chk_isa_mem = 1'b1;
+  bit chk_isa_mem_set = 1'b0;
   bit chk_isa_prv = 1'b1;
+  bit chk_isa_prv_set = 1'b0;
   bit chk_isa_pc_next = 1'b1;
+  bit chk_isa_pc_next_set = 1'b0;
   bit chk_isa_csr = 1'b1;
+  bit chk_isa_csr_set = 1'b0;
   bit chk_rvfi_proto = 1'b1;
+  bit chk_rvfi_proto_set = 1'b0;
   bit chk_t022_never = 1'b1;
+  bit chk_t022_never_set = 1'b0;
   bit chk_bridge_accounting = 1'b1;
+  bit chk_bridge_accounting_set = 1'b0;
 
   function void parse_plusargs();
     string s; int unsigned u; logic [31:0] h;
     if ($value$plusargs({PLUSARG_BUILD_CONFIG, "=%s"}, s)) begin build_config = s; build_config_set = 1'b1; end
     if ($value$plusargs({PLUSARG_SMOKE_CYCLES, "=%d"}, u)) begin smoke_cycles = u; smoke_cycles_set = 1'b1; end
     if ($value$plusargs({PLUSARG_SMOKE_INTG_FLIP, "=%d"}, u)) begin smoke_intg_flip = u; smoke_intg_flip_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_DBG_CSR_PROBE, "=%d"}, u)) dbg_csr_probe = (u != 0);
+    if ($value$plusargs({PLUSARG_DBG_CSR_PROBE, "=%d"}, u)) begin dbg_csr_probe = (u != 0); dbg_csr_probe_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_IMAGE, "=%s"}, s)) begin mem_image = s; mem_image_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_IMAGE_CRC32, "=%h"}, h)) begin mem_image_crc32 = h; mem_image_crc32_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_IMAGE_WORDS, "=%d"}, u)) begin mem_image_words = u; mem_image_words_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_READBACK_WORDS, "=%d"}, u)) begin mem_readback_words = u; mem_readback_words_set = 1'b1; end
     if ($value$plusargs({PLUSARG_TOHOST_ADDR, "=%h"}, h)) begin tohost_addr = h; tohost_addr_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_MEM_UNMAPPED_OK, "=%d"}, u)) mem_unmapped_ok = (u != 0);
+    if ($value$plusargs({PLUSARG_MEM_UNMAPPED_OK, "=%d"}, u)) begin mem_unmapped_ok = (u != 0); mem_unmapped_ok_set = 1'b1; end
     if ($value$plusargs({PLUSARG_BOOT_ADDR, "=%h"}, h)) begin boot_addr = h; boot_addr_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ALIVE_TIMEOUT, "=%d"}, u)) begin alive_timeout = u; alive_timeout_set = 1'b1; end
     if ($value$plusargs({PLUSARG_FINISH_TIMEOUT, "=%d"}, u)) begin finish_timeout = u; finish_timeout_set = 1'b1; end
     if ($value$plusargs({PLUSARG_REGIME_SCHED, "=%s"}, s)) begin regime_sched = s; regime_sched_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_RVFI_TRACE, "=%d"}, u)) rvfi_trace = (u != 0);
-    if ($value$plusargs({PLUSARG_FCOV_EN, "=%d"}, u)) fcov_en = (u != 0);
+    if ($value$plusargs({PLUSARG_RVFI_TRACE, "=%d"}, u)) begin rvfi_trace = (u != 0); rvfi_trace_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_FCOV_EN, "=%d"}, u)) begin fcov_en = (u != 0); fcov_en_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ICRAM_INIT, "=%s"}, s)) begin icram_init = s; icram_init_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_FETCH_EN_AT_RESET, "=%d"}, u)) fetch_en_at_reset = (u != 0);
-    if ($value$plusargs({PLUSARG_KEY_RESET_VALID, "=%d"}, u)) key_reset_valid = (u != 0);
+    if ($value$plusargs({PLUSARG_FETCH_EN_AT_RESET, "=%d"}, u)) begin fetch_en_at_reset = (u != 0); fetch_en_at_reset_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_KEY_RESET_VALID, "=%d"}, u)) begin key_reset_valid = (u != 0); key_reset_valid_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_SB_TRACE, "=%d"}, u)) begin sb_trace = (u != 0); sb_trace_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_LOCKSTEP_MIN_RATIO_PCT, "=%d"}, u)) begin ut_lockstep_min_ratio_pct = u; ut_lockstep_min_ratio_pct_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_STRING, "=%s"}, s)) begin isa_string = s; isa_string_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_LOG, "=%s"}, s)) begin isa_log = s; isa_log_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_BOOT_RETIRE, "=%d"}, u)) begin ut_boot_retire = u; ut_boot_retire_set = 1'b1; end
@@ -228,7 +289,7 @@
     if ($value$plusargs({PLUSARG_DBUS_INTG_BITS, "=%d"}, u)) begin dbus_intg_bits = u; dbus_intg_bits_set = 1'b1; end
     if ($value$plusargs({PLUSARG_DBUS_ERR_WINDOW, "=%s"}, s)) begin dbus_err_window = s; dbus_err_window_set = 1'b1; end
     if ($value$plusargs({PLUSARG_DBUS_ERR_HALF, "=%s"}, s)) begin dbus_err_half = s; dbus_err_half_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_DBUS_ERR_STORE_PERFORM, "=%d"}, u)) dbus_err_store_perform = (u != 0);
+    if ($value$plusargs({PLUSARG_DBUS_ERR_STORE_PERFORM, "=%d"}, u)) begin dbus_err_store_perform = (u != 0); dbus_err_store_perform_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KEY_DELAY_MIN, "=%d"}, u)) begin key_delay_min = u; key_delay_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KEY_DELAY_MAX, "=%d"}, u)) begin key_delay_max = u; key_delay_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KEY_NEVER_CYCLES, "=%d"}, u)) begin key_never_cycles = u; key_never_cycles_set = 1'b1; end
@@ -257,54 +318,54 @@
     if ($value$plusargs({PLUSARG_KNOB_INSTR_MIX, "=%s"}, s)) begin knob_instr_mix = s; knob_instr_mix_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_PRIV_REGIME, "=%s"}, s)) begin knob_priv_regime = s; knob_priv_regime_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_PMP_REGIME, "=%s"}, s)) begin knob_pmp_regime = s; knob_pmp_regime_set = 1'b1; end
-    if ($value$plusargs({PLUSARG_CHK_ALL, "=%d"}, u)) chk_all = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_IBUS_PROTO, "=%d"}, u)) chk_ibus_proto = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_IBUS_OUTSTANDING, "=%d"}, u)) chk_ibus_outstanding = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_SVA_RVALID_LEGAL, "=%d"}, u)) chk_sva_rvalid_legal = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBUS_PROTO, "=%d"}, u)) chk_dbus_proto = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBUS_OUTSTANDING, "=%d"}, u)) chk_dbus_outstanding = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBUS_SPLIT, "=%d"}, u)) chk_dbus_split = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBUS_STORE_INTG, "=%d"}, u)) chk_dbus_store_intg = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ICRAM_WRITE_ECC, "=%d"}, u)) chk_icram_write_ecc = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ICRAM_INVAL_SWEEP, "=%d"}, u)) chk_icram_inval_sweep = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ICRAM_ECC_RESPONSE, "=%d"}, u)) chk_icram_ecc_response = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_SCRKEY_PROTO, "=%d"}, u)) chk_scrkey_proto = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ALERT_MINOR, "=%d"}, u)) chk_alert_minor = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ALERT_BUS, "=%d"}, u)) chk_alert_bus = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ALERT_INTERNAL, "=%d"}, u)) chk_alert_internal = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CRASH_DUMP, "=%d"}, u)) chk_crash_dump = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DOUBLE_FAULT, "=%d"}, u)) chk_double_fault = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CORE_BUSY, "=%d"}, u)) chk_core_busy = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DATA_TAG_QUIET, "=%d"}, u)) chk_data_tag_quiet = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_FETCH_EN, "=%d"}, u)) chk_fetch_en = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_IRQ_PENDING, "=%d"}, u)) chk_irq_pending = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_IRQ_ENTRY, "=%d"}, u)) chk_irq_entry = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_IRQ_MASKED, "=%d"}, u)) chk_irq_masked = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_NMI_ENTRY, "=%d"}, u)) chk_nmi_entry = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_NMI_INTERNAL, "=%d"}, u)) chk_nmi_internal = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBG_ENTRY, "=%d"}, u)) chk_dbg_entry = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBG_EXC, "=%d"}, u)) chk_dbg_exc = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBG_MASKED, "=%d"}, u)) chk_dbg_masked = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBG_DRET, "=%d"}, u)) chk_dbg_dret = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_DBG_TRIGGER, "=%d"}, u)) chk_dbg_trigger = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CTR_MCYCLE, "=%d"}, u)) chk_ctr_mcycle = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CTR_MINSTRET, "=%d"}, u)) chk_ctr_minstret = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CTR_HPM_EXACT, "=%d"}, u)) chk_ctr_hpm_exact = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_CTR_HPM_BOUND, "=%d"}, u)) chk_ctr_hpm_bound = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_PMP_DATA, "=%d"}, u)) chk_pmp_data = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_PMP_FETCH, "=%d"}, u)) chk_pmp_fetch = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA, "=%d"}, u)) chk_isa = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_PC, "=%d"}, u)) chk_isa_pc = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_INSN, "=%d"}, u)) chk_isa_insn = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_TRAP, "=%d"}, u)) chk_isa_trap = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_RD, "=%d"}, u)) chk_isa_rd = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_MEM, "=%d"}, u)) chk_isa_mem = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_PRV, "=%d"}, u)) chk_isa_prv = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_PC_NEXT, "=%d"}, u)) chk_isa_pc_next = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_ISA_CSR, "=%d"}, u)) chk_isa_csr = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_RVFI_PROTO, "=%d"}, u)) chk_rvfi_proto = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_T022_NEVER, "=%d"}, u)) chk_t022_never = (u != 0);
-    if ($value$plusargs({PLUSARG_CHK_BRIDGE_ACCOUNTING, "=%d"}, u)) chk_bridge_accounting = (u != 0);
+    if ($value$plusargs({PLUSARG_CHK_ALL, "=%d"}, u)) begin chk_all = (u != 0); chk_all_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_IBUS_PROTO, "=%d"}, u)) begin chk_ibus_proto = (u != 0); chk_ibus_proto_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_IBUS_OUTSTANDING, "=%d"}, u)) begin chk_ibus_outstanding = (u != 0); chk_ibus_outstanding_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_RVALID_LEGAL, "=%d"}, u)) begin chk_sva_rvalid_legal = (u != 0); chk_sva_rvalid_legal_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBUS_PROTO, "=%d"}, u)) begin chk_dbus_proto = (u != 0); chk_dbus_proto_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBUS_OUTSTANDING, "=%d"}, u)) begin chk_dbus_outstanding = (u != 0); chk_dbus_outstanding_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBUS_SPLIT, "=%d"}, u)) begin chk_dbus_split = (u != 0); chk_dbus_split_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBUS_STORE_INTG, "=%d"}, u)) begin chk_dbus_store_intg = (u != 0); chk_dbus_store_intg_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ICRAM_WRITE_ECC, "=%d"}, u)) begin chk_icram_write_ecc = (u != 0); chk_icram_write_ecc_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ICRAM_INVAL_SWEEP, "=%d"}, u)) begin chk_icram_inval_sweep = (u != 0); chk_icram_inval_sweep_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ICRAM_ECC_RESPONSE, "=%d"}, u)) begin chk_icram_ecc_response = (u != 0); chk_icram_ecc_response_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SCRKEY_PROTO, "=%d"}, u)) begin chk_scrkey_proto = (u != 0); chk_scrkey_proto_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ALERT_MINOR, "=%d"}, u)) begin chk_alert_minor = (u != 0); chk_alert_minor_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ALERT_BUS, "=%d"}, u)) begin chk_alert_bus = (u != 0); chk_alert_bus_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ALERT_INTERNAL, "=%d"}, u)) begin chk_alert_internal = (u != 0); chk_alert_internal_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CRASH_DUMP, "=%d"}, u)) begin chk_crash_dump = (u != 0); chk_crash_dump_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DOUBLE_FAULT, "=%d"}, u)) begin chk_double_fault = (u != 0); chk_double_fault_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CORE_BUSY, "=%d"}, u)) begin chk_core_busy = (u != 0); chk_core_busy_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DATA_TAG_QUIET, "=%d"}, u)) begin chk_data_tag_quiet = (u != 0); chk_data_tag_quiet_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_FETCH_EN, "=%d"}, u)) begin chk_fetch_en = (u != 0); chk_fetch_en_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_IRQ_PENDING, "=%d"}, u)) begin chk_irq_pending = (u != 0); chk_irq_pending_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_IRQ_ENTRY, "=%d"}, u)) begin chk_irq_entry = (u != 0); chk_irq_entry_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_IRQ_MASKED, "=%d"}, u)) begin chk_irq_masked = (u != 0); chk_irq_masked_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_NMI_ENTRY, "=%d"}, u)) begin chk_nmi_entry = (u != 0); chk_nmi_entry_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_NMI_INTERNAL, "=%d"}, u)) begin chk_nmi_internal = (u != 0); chk_nmi_internal_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBG_ENTRY, "=%d"}, u)) begin chk_dbg_entry = (u != 0); chk_dbg_entry_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBG_EXC, "=%d"}, u)) begin chk_dbg_exc = (u != 0); chk_dbg_exc_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBG_MASKED, "=%d"}, u)) begin chk_dbg_masked = (u != 0); chk_dbg_masked_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBG_DRET, "=%d"}, u)) begin chk_dbg_dret = (u != 0); chk_dbg_dret_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_DBG_TRIGGER, "=%d"}, u)) begin chk_dbg_trigger = (u != 0); chk_dbg_trigger_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CTR_MCYCLE, "=%d"}, u)) begin chk_ctr_mcycle = (u != 0); chk_ctr_mcycle_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CTR_MINSTRET, "=%d"}, u)) begin chk_ctr_minstret = (u != 0); chk_ctr_minstret_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CTR_HPM_EXACT, "=%d"}, u)) begin chk_ctr_hpm_exact = (u != 0); chk_ctr_hpm_exact_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_CTR_HPM_BOUND, "=%d"}, u)) begin chk_ctr_hpm_bound = (u != 0); chk_ctr_hpm_bound_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_PMP_DATA, "=%d"}, u)) begin chk_pmp_data = (u != 0); chk_pmp_data_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_PMP_FETCH, "=%d"}, u)) begin chk_pmp_fetch = (u != 0); chk_pmp_fetch_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA, "=%d"}, u)) begin chk_isa = (u != 0); chk_isa_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_PC, "=%d"}, u)) begin chk_isa_pc = (u != 0); chk_isa_pc_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_INSN, "=%d"}, u)) begin chk_isa_insn = (u != 0); chk_isa_insn_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_TRAP, "=%d"}, u)) begin chk_isa_trap = (u != 0); chk_isa_trap_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_RD, "=%d"}, u)) begin chk_isa_rd = (u != 0); chk_isa_rd_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_MEM, "=%d"}, u)) begin chk_isa_mem = (u != 0); chk_isa_mem_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_PRV, "=%d"}, u)) begin chk_isa_prv = (u != 0); chk_isa_prv_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_PC_NEXT, "=%d"}, u)) begin chk_isa_pc_next = (u != 0); chk_isa_pc_next_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_ISA_CSR, "=%d"}, u)) begin chk_isa_csr = (u != 0); chk_isa_csr_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_RVFI_PROTO, "=%d"}, u)) begin chk_rvfi_proto = (u != 0); chk_rvfi_proto_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_T022_NEVER, "=%d"}, u)) begin chk_t022_never = (u != 0); chk_t022_never_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_BRIDGE_ACCOUNTING, "=%d"}, u)) begin chk_bridge_accounting = (u != 0); chk_bridge_accounting_set = 1'b1; end
   endfunction
 
   // Enumerated knobs must hold one of their yaml values; msg names the first offender.

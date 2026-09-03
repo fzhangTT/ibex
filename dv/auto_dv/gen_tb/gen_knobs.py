@@ -2,7 +2,7 @@
 Python mirror of gen_tb_pkg.sv: plusarg names and defaults, regime knob value sets, TB constants,
 the memory map and the ISA string (one origin, architecture C11)."""
 
-ISA_STRING = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
+ISA_STRING = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp"
 
 PLUSARGS = {
     "build_config": {"plusarg": "gen_build_config", "kind": "string", "default": 'opentitan', "values": None, "debug_only": False, "desc": 'build configuration name echoed in the banner (must match the compile)'},
@@ -24,6 +24,8 @@ PLUSARGS = {
     "icram_init": {"plusarg": "gen_icram_init", "kind": "enum", "default": 'random', "values": ['zero', 'random'], "debug_only": False, "desc": 'initial contents of the icache tag/data RAM models'},
     "fetch_en_at_reset": {"plusarg": "gen_fetch_en_at_reset", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)'},
     "key_reset_valid": {"plusarg": "gen_key_reset_valid", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'ic_scr_key_valid_i high out of reset (ibex_top behaviour)'},
+    "sb_trace": {"plusarg": "gen_sb_trace", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'scoreboard per-record trace (debug only)'},
+    "ut_lockstep_min_ratio_pct": {"plusarg": "gen_ut_lockstep_min_ratio_pct", "kind": "int", "default": 90, "values": None, "debug_only": False, "desc": 'lock-step test'},
     "isa_string": {"plusarg": "gen_isa_string", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'model ISA string override (debug only; the default is GEN_ISA_STRING)'},
     "isa_log": {"plusarg": "gen_isa_log", "kind": "string", "default": None, "values": None, "debug_only": False, "desc": 'model commit log path for debug'},
     "ut_boot_retire": {"plusarg": "gen_ut_boot_retire", "kind": "int", "default": 200, "values": None, "debug_only": False, "desc": 'retirements the boots-and-retires test waits for'},
@@ -140,6 +142,29 @@ CONSTANTS = {
     "GEN_MEM_READBACK_WORDS_DEFAULT": 64,
     "GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT": 100000,
     "GEN_IRQ_FAST_MASK": 2147418112,
+}
+
+KNOB_IDS = {  # regime knob -> REGIME_SET arg0; value index = position in PLUSARGS[name]['values']
+    "knob_imem_gnt_delay": 0,
+    "knob_imem_rvalid_delay": 1,
+    "knob_imem_err_rate": 2,
+    "knob_imem_intg_err_rate": 3,
+    "knob_imem_outstanding_cap": 4,
+    "knob_dmem_gnt_delay": 5,
+    "knob_dmem_rvalid_delay": 6,
+    "knob_dmem_err_rate": 7,
+    "knob_dmem_intg_err_rate": 8,
+    "knob_irq_regime": 9,
+    "knob_irq_line_mix": 10,
+    "knob_irq_hold": 11,
+    "knob_debug_req_regime": 12,
+    "knob_scr_key_delay": 13,
+    "knob_icache_ecc_err_rate": 14,
+    "knob_fetch_enable_regime": 15,
+    "knob_mcounteren_writable": 16,
+    "knob_instr_mix": 17,
+    "knob_priv_regime": 18,
+    "knob_pmp_regime": 19,
 }
 
 CMD = {  # bridge command kinds (cmd_kind codes)

@@ -4,7 +4,8 @@
 # `--check` fails when any rendered file is stale. Plusarg `name` renders as `+gen_<name>=...` and
 # `PLUSARG_<NAME>`; enum values are the DV Lead's regime knobs (docs/gen_fcov_plan.md Section REG).
 schema_version: 1
-isa_string: rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm
+# smepmp: Ibex implements mseccfg (MML/MMWP/RLB); without it the model traps on csr 0x747 (lock-step run out_2a)
+isa_string: rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp
 
 plusargs:
   # ---- environment ----
@@ -27,6 +28,8 @@ plusargs:
   - {name: icram_init, kind: enum, values: [zero, random], default: random, desc: initial contents of the icache tag/data RAM models}
   - {name: fetch_en_at_reset, kind: bool, default: 1, desc: fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)}
   - {name: key_reset_valid, kind: bool, default: 1, desc: ic_scr_key_valid_i high out of reset (ibex_top behaviour)}
+  - {name: sb_trace, kind: bool, default: 0, desc: scoreboard per-record trace (debug only)}
+  - {name: ut_lockstep_min_ratio_pct, kind: int, default: 90, desc: lock-step test, minimum compared/retired ratio in percent}
   - {name: isa_string, kind: string, default: null, desc: model ISA string override (debug only; the default is GEN_ISA_STRING)}
   - {name: isa_log, kind: string, default: null, desc: model commit log path for debug}
   # ---- TB unit-test knobs (gen_tests/*) ----

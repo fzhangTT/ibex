@@ -14,7 +14,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 Upstream Spike (pinned 4ffd6ba860f4190ceac2716fa3c2cf139e85538f, `tools/spike`) as a step-locked
 library behind DPI-C: one `processor_t` over our own `simif_t` (memory image, MMIO windows, fault
 injection), stepped once per RVFI record, with a legalization layer for every Ibex WARL and
-platform rule the model lacks.
+platform rule the model lacks. AS BUILT (step 2a): `dv/auto_dv/isa/gen_isa_shim.h` (C ABI), `gen_isa_shim.cc` (implementation and the scalar DPI wrappers `gen_isa_reset_dpi`, `gen_isa_step_dpi`, `gen_isa_is_draft_b`), `gen_isa_dpi_pkg.sv` (imports), `gen_isa_shim_build.sh` (`lib`: libgen_isa_shim.so next to the simv, linked with `-LDFLAGS "-L<out>/lib -lgen_isa_shim -Wl,-rpath,<out>/lib"`; `test`: the C++ unit test). The shim owns a sparse word memory loaded from the same .vmem (every access is MMIO to Spike), legalizes reset (pc, mtvec, mstatus 0x80, PMP off, misa fixed to the RTL's MISA_VALUE through a constant csr_t, time/timeh trapping), installs `gen_mie_csr_t` and the `genibex` extension (cpuctrlsts 8 writable bits, secureseed), legalizes mtvec and mcounteren after each step (a logged CSR address `get_csr` rejects, e.g. mtval2 on traps, is recorded unlegalized), reports retired count, trap cause/tval, rd write, first memory access and the CSR write list per step, parks debug entry at DmHaltAddr, and computes grev/gorc for `gen_isa_exec_reference` (the other draft-B ops arrive with their directed tests). Unit test `gen_ut_isa_shim.cc` (51 checks) and transcript `dv/auto_dv/evidence/gen_tdd_isa_shim.md`.
 
 ## 2. Files (planned) and how to call it
 
@@ -35,7 +35,7 @@ record class, C5.2, v2 XM-M2), `gen_isa_exec_reference(insn, rs1, rs2, rd_out)` 
 
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
-| `+gen_isa_string=<isa>` | `PLUSARG_ISA_STRING` | model ISA string; the single definition is `GEN_ISA_STRING` in the generated `gen_isa_shim_map.h`, shared with `gen_program.py` (v2 XM-L2); the plusarg only overrides for debug | GEN_ISA_STRING = rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm |
+| `+gen_isa_string=<isa>` | `PLUSARG_ISA_STRING` | model ISA string; the single definition is `GEN_ISA_STRING` in the generated `gen_isa_shim_map.h`, shared with `gen_program.py` (v2 XM-L2); the plusarg only overrides for debug | GEN_ISA_STRING (gen_tb_knobs.yaml isa_string; currently rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm_smepmp: smepmp because Ibex implements mseccfg) |
 | `+gen_isa_log=<path>` | `PLUSARG_ISA_LOG` | model commit log for debug (empty = /dev/null) | unset |
 
 ## 4. Wave-level behaviour

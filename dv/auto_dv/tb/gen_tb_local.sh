@@ -21,6 +21,8 @@ case "$MODE" in
     CFG_OPTS="$(util/ibex_config.py opentitan vcs_opts)" || { echo "ibex_config.py failed" >&2; exit 1; }
     VPI_LIB="$(cocotb-config --lib-name-path vpi vcs)" || { echo "cocotb-config failed (venv?)" >&2; exit 1; }
     echo "config opts: $CFG_OPTS" > "$OUT/config_opts.txt"
+    # the ISA shim shared library (Spike behind DPI) goes next to the simv; VCS links it via -LDFLAGS
+    bash dv/auto_dv/isa/gen_isa_shim_build.sh lib "$OUT/lib" || { echo "shim build failed" >&2; exit 1; }
     # shellcheck disable=SC2086
     vcs -full64 -sverilog \
         -f dv/auto_dv/tb/gen_rtl.f -f dv/auto_dv/tb/gen_tb.f \
@@ -28,7 +30,7 @@ case "$MODE" in
         -ntb_opts uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI +define+RVFI \
         $CFG_OPTS \
         -timescale=1ns/10ps -licqueue \
-        -LDFLAGS '-Wl,--no-as-needed' -CFLAGS '--std=c99 -fno-extended-identifiers' \
+        -LDFLAGS "-Wl,--no-as-needed -L$OUT/lib -lgen_isa_shim -Wl,-rpath,$OUT/lib" -CFLAGS '--std=c99 -fno-extended-identifiers' \
         -Mdir="$OUT/vcs_simv.csrc" -o "$OUT/vcs_simv" \
         -debug_access+pp -xlrm uniq_prior_final -lca -kdb \
         +define+COCOTB_SIM +vpi -P dv/auto_dv/flow/gen_pli.tab -load "$VPI_LIB" \

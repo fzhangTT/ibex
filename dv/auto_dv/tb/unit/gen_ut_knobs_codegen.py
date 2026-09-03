@@ -108,6 +108,14 @@ def main():
             check(f"cfg parses PLUSARG_{pa['name'].upper()}", f"PLUSARG_{pa['name'].upper()}" in svh)
         check("cfg has parse_plusargs", "function void parse_plusargs" in svh)
         check("cfg validates enum values", "GEN_ENUM_" in svh and "_VALUES" in svh)
+    # step 2b: regime knob ids and value lookup for REGIME_SET (SV) and the Python bridge
+    knob_names = [p["name"] for p in src["plusargs"] if p["kind"] == "enum" and p["name"].startswith("knob_")]
+    for i, k in enumerate(knob_names):
+        check(f"pkg declares GEN_KNOB_ID_{k[5:].upper()} = {i}", re.search(rf"GEN_KNOB_ID_{k[5:].upper()}\s*=\s*{i}\b", pkg) is not None)
+    check("pkg has gen_knob_value()", "function automatic string gen_knob_value(int id, int idx)" in pkg)
+    check("pkg has gen_knob_name()", "function automatic string gen_knob_name(int id)" in pkg)
+    if PY_OUT.is_file():
+        check("python KNOB_IDS matches", list(m.KNOB_IDS) == knob_names and all(m.KNOB_IDS[k] == i for i, k in enumerate(knob_names)))
     check("pkg has gen_is_known_plusarg", "function automatic bit gen_is_known_plusarg" in pkg)
     check("known-plusarg list covers every name", all(f'"gen_{n}"' in pkg[pkg.find("gen_is_known_plusarg"):] for n in names))
     return finish()

@@ -13,7 +13,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 Turns every `rvfi_valid` cycle into a `gen_rvfi_txn` and every `rvfi_ext_irq_valid` pulse
 without a retirement into a `gen_rvfi_irq_txn`; the scoreboard's primary input and the source of
-the bridge events (v2, A-01): the retirement count behind `evt_retired_target` / `evt_thresh_hit` / `evt_retired_count`, plus `evt_irq_taken`, `evt_dbg_entered`.
+the bridge events (v2, A-01): the retirement count behind `evt_retired_target` / `evt_thresh_hit` / `evt_retired_count`, plus `evt_irq_taken`, `evt_dbg_entered`. AS BUILT (step 2a): `gen_rvfi_pkg::gen_rvfi_monitor` on `dv/auto_dv/tb/gen_rvfi_if.sv` (instance `u_rvfi_if`, every wrapper rvfi_* port assigned in gen_tb_top; vif `uvm_test_top.env.rvfi_mon*`): samples at the posedge with `valid`, publishes `gen_rvfi_txn` on `ap` (and the `rvfi_ext_irq_valid` marker without a retirement on `ap_irq`), checks `rvfi_order` (+1 per record, `rvfi_halt` never set; id rvfi_order under `+gen_chk_rvfi_proto`), toggles the bridge events `evt_dbg_entered` (first record in debug mode) and `evt_irq_taken` (`rvfi_intr`), `+gen_rvfi_trace=1` prints every record. `rvfi_pc_cont` and `rvfi_cap_quiet` follow with the misc checkers.
 
 ## 2. Files (planned) and how to call it
 
