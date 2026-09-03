@@ -47,7 +47,8 @@ FCOV_HOME = REPO_ROOT / "dv/auto_dv/fcov_expectations"
 OWNER = "test-writer"
 NOT_IN_MANIFEST = "not in manifest"
 # gen_test_plan.md Section 0 (Marker): while an item carries this exact token its witness bin stays out of the manifest.
-CYCLE_CLAUSE_TOKEN = "[CYCLE-CLAUSE coverage-only until the event export lands]"
+sys.path.insert(0, str(REPO_ROOT / "dv/auto_dv/tools"))   # the marker token has one home, the DV Lead's gen_plan_marker
+from gen_plan_marker import TOKEN as CYCLE_CLAUSE_TOKEN  # noqa: E402
 WITNESS_CG = "CG-WIT-001"
 
 
@@ -356,11 +357,16 @@ def main():
         # rule (e): a Section 1.1 coverpoint is dropped (CG-MUL-002.cp_dmem_delay is regression-level)
         ex_cps, _ = excluded_coverpoints(cg_blocks())
         assert ("CG-MUL-002", "cp_dmem_delay") in ex_cps
-        # rule (f): a marked item's witness bin stays out; the item's other bins stay in
-        _t, wrows, wdropped = build("gen_test_x", ["TP-CSR-029"])
-        assert CYCLE_CLAUSE_TOKEN in tps["TP-CSR-029"] and not any(cg == WITNESS_CG for cg, _, _, _ in wrows), wrows[:3]
-        assert any(d[3].startswith("witness bin of a marked item") for d in wdropped), wdropped
-        assert any(cg == "CG-CSR-002" for cg, _, _, _ in wrows)
+        # rule (f): a marked item's witness bin stays out; the item's other bins stay in (any item still carrying the token;
+        # the sunset passes shrink that set, so the fixture is drawn from the plan, not named)
+        marked = sorted(t for t, blk in tps.items() if CYCLE_CLAUSE_TOKEN in blk and WITNESS_CG in blk)
+        if marked:
+            _t, wrows, wdropped = build("gen_test_x", [marked[0]])
+            assert not any(cg == WITNESS_CG for cg, _, _, _ in wrows), wrows[:3]
+            assert any(d[3].startswith("witness bin of a marked item") for d in wdropped), wdropped
+            assert wrows, f"{marked[0]}: rule (f) must keep the item's other bins"
+        else:
+            print("GEN_FCOV_MANIFEST self-test: no marked item with a witness bin left in the plan; rule (f) fixture skipped")
         mod = REPO_ROOT / "dv/auto_dv/tests/gen_test_cmp_zcb.py"
         assert fire_items_of_module(mod) == ["TP-CMP-034", "TP-CMP-036", "TP-CMP-038"], fire_items_of_module(mod)
         assert tp_id_of_fire("fire_tp_bit_016_gorci") == "TP-BIT-016" and tp_id_of_fire("fire_eot_pass_code") is None
