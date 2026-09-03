@@ -1000,3 +1000,14 @@ saw the subject line of the artifact's commit in a git log listing before writin
 only after its Section 5; H-1 is established from the code path and the retained counts); and the DV Lead's
 read-only audit of the 187 retained logs found them byte-consistent with the manifest while gen_fu_a_* / gen_fu_c_*
 names cited in the transcript do not exist as files (driver-log verdict lines only). Both go to tb-infra's 1c rows.
+
+## LOG-038a - 2026-09-03 - LANDED (sunset pass 2 at d0e6a71)
+
+Pass 2 landed as the joint commit d0e6a71 (plan v2m plus the Test Writer's gen_test_csr_trap_setup manifest): 86
+tokens released across 36 groups by the 28 observed rows of the retained reference
+dv/auto_dv/evidence/gen_sunset_pass2/gen_build_manifest_979350a.yaml, 0 gated, 19 items still marked (17
+icram-dependent, TP-PMC-001, TP-REG-018). The released TP-CSR-029 witness bin is declared by gen_test_csr_trap_setup
+under bins_not_hit (rule (g), irq agent absent) so it stays visible as unhit. Verified by the Orchestrator from a
+detached checkout: library self-test PASS with no environment variable; trace check PASS with 19 marked. Reviews:
+cross-model running; Critic v8 queued. Two passes (LOG-033, LOG-038) have now moved 201 of the 220 original
+coverage-only items to must-hit; the 19 remaining wait for an icram writer.
