@@ -1417,13 +1417,13 @@ tests:
     keep_artifacts: true
     component: gen_fcov_pkg
     measured: false
-    notes: 'RTL finding B8 (dv/auto_dv/evidence/gen_b8_rtl_facts.md, section 6: the RTL-level signature the reproducer should observe); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv: [isa_mem] rows tagged "Zcmp stores:" or "Zcmp loads:" with a model / dut count mismatch, and [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B8 red and needs triage; the row-mapping reference follows once tb-infra commits it'
+    notes: 'RTL finding B8 (dv/auto_dv/evidence/gen_b8_rtl_facts.md, section 6: the RTL-level signature the reproducer should observe); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv: [isa_mem] rows tagged "Zcmp stores:" or "Zcmp loads:" with a model / dut count mismatch, and [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B8 red and needs triage; the row mapping is dv/auto_dv/evidence/gen_b8_row_mapping.md'
 
   - name: gen_test_pmp_mseccfg
     description: 'Phase 1 batch 3: mseccfg (Smepmp MML, MMWP, RLB) WARL and sticky rules, RLB against locked entries, MML executable-lock suppression with RLB 0/1, and the interpretation change under MML
       with U-mode probes through a returning handler (TP-PMP-011, 012, 022..031 built; TP-PMP-108 not built: the walk needs a wrapper reset the bridge lacks); per-seed program gen_pmp_mseccfg_prog.py; fire_tp_pmp_011..031
       on the report channel'
-    tier: check
+    tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
@@ -1472,7 +1472,7 @@ tests:
     description: 'Phase 1 batch 3: PMP lock, TOR-lock and RLB rules (locked pmpcfg bytes and pmpaddr ignore writes, TOR i+1 lock protects pmpaddr(i), the last entry depends on its own lock, L=1 with A=OFF
       locks and blocks RLB, pre-write lock evaluation on back-to-back writes, RLB=1 bypass, RLB cleared with locks present; TP-PMP-013..021 and TP-PMP-112, all 10 built); per-seed program gen_pmp_lock_prog.py;
       fire_tp_pmp_013..021 and fire_tp_pmp_112 on the report channel'
-    tier: check
+    tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
@@ -1608,4 +1608,173 @@ tests:
     keep_artifacts: true
     component: gen_fcov_pkg
     measured: false
-    notes: RTL finding B4; the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l5_lockstep_zcmp_mv_res_*
+    notes: 'RTL finding B4 (dv/auto_dv/evidence/gen_b4_rtl_facts.md; DV Lead ruling B4-R1 in dv/auto_dv/docs/gen_bug_log.md: the TB does not adopt the RTL behaviour as its reference before the owner rules); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l5_lockstep_zcmp_mv_res_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv tagged [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B4 red and needs triage'
+
+  - name: gen_ut_lockstep_sbit
+    description: lock-step run of gen_sbit_directed.S (bclr / bset / binv / bext and the immediate forms over the index classes, prior bit states, operand and rs2 upper-bit classes, rd x0, binv twice); exercises gen_bit_sbit_cg (TB Infra T-205 slice 4a)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=1000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_sbit_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcb
+    description: lock-step run of gen_zcb_directed.S (every Zcb form, both data signs, aligned / off-by-one / word-crossing half-word accesses, the ALU operand classes, c.mul); exercises gen_cmp_zcb_cg (TB Infra T-205 slice 4a)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=300
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcb_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_vectors
+    description: sampler unit test (LOG-058), the classifier vector table of gen_isa_cov through FCOV_SELFTEST after the boot program; 0 failures required (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_alu_eq
+    description: sampler unit test with gen_alu_directed.S, then FCOV_QUERY 0 (slt eq count) must be 84, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=22000
+      - +gen_ut_fcov_query=0
+      - +gen_ut_fcov_expect=84
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_alu_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_zcmp_count
+    description: sampler unit test with gen_zcmp_directed.S, then FCOV_QUERY 1 (Zcmp sequences) must be 290, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=4000
+      - +gen_ut_fcov_query=1
+      - +gen_ut_fcov_expect=290
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_zcmp_minstret
+    description: sampler unit test with gen_zcmp_directed.S, then FCOV_QUERY 2 (minstret_once misses) must be 0, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=4000
+      - +gen_ut_fcov_query=2
+      - +gen_ut_fcov_expect=0
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_bitcnt_x0
+    description: sampler unit test with gen_bitcnt_directed.S, then FCOV_QUERY 4 (rd = x0 bit-count records) must be 91, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=1000
+      - +gen_ut_fcov_query=4
+      - +gen_ut_fcov_expect=91
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_bitcnt_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
