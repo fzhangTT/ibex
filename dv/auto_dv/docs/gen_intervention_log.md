@@ -302,3 +302,20 @@ informational unmeasured merge report of run request rtl-arch-002 (`gen_smoke` i
 the dashboard's measured rounds). Source: `<out root>/regress_rtl-arch-002/cov_unmeasured/report`
 as recorded in `dv/auto_dv/work/runtime/results/rtl-arch-002/manifest.yaml`. The comparison and
 conclusion stand; only the provenance was under-stated. Found by the T-038 post-execution review.
+
+## LOG-005a - 2026-09-03 - AMENDMENT to LOG-005 (facts established by the Critic)
+
+The Critic re-examined the out-tree `dv/auto_dv/work/tb-infra/out_t029/smoke/`: four run
+directories exist with sequential ctime/mtime stamps (sim/sim.log 01:55:04.6, red1/sim.log
+01:55:05.9, red2/sim.log 01:55:07.2, green2/sim.log 01:55:08.8 local), and green2/sim.log differs
+from the first green log (md5, command path, VCS run stamp, CPU time). A distinct green re-run
+after the red runs therefore did take place; the three later runs were launched by hand, which is
+why the driver log shows one PASS. The cross-model review's statement "no green2/ directory
+exists" was wrong for this filesystem (the evidence cited wrong paths, `out_t029/red1/` instead of
+`out_t029/smoke/red1/`, which likely misdirected the check). The committed excerpt was still
+deficient: Section 6 quoted only lines identical to Section 3 and no identifying line (command
+path, simulator stamp, CPU time). Standing rule from now on, applied by the Critic to every
+evidence audit: each claimed run maps to a distinct retained log whose path, mtime/ctime and
+in-log simulator stamp are consistent with the claimed sequence; identical quoted content across
+two claimed runs is a red flag; the committed excerpt quotes the identifying lines. TB Infra's
+T-036 re-run (committed driver, retained directories, identifying lines) stands as the evidence.
