@@ -21,7 +21,7 @@ import os, sys, re, pathlib, shutil, subprocess, yaml
 R = next(p for p in pathlib.Path(__file__).resolve().parents if (p / 'dv/auto_dv/contract').is_dir()); W = R / 'dv/auto_dv/work/dv-lead'
 S = pathlib.Path(os.environ.get('GEN_SCRATCH', str(W / 'scratch_sunset')))  # rehearsal copies; never the docs directory
 if not (W / 'parts6').is_dir(): sys.exit(f'plan parts not found under {W} (gitignored work directory of the DV Lead): this driver edits the parts, so it runs only in the DV Lead clone; the retained RELEASED / GATED logs under dv/auto_dv/evidence/gen_sunset_pass<n>/ are the committed record')
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, present as row_present  # one definition (CM20-L-4)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, present as row_present  # one definition of the marker token and the wildcard rule
 AREAS = ['isa', 'csr', 'exc_irq', 'pmp', 'dbg_trg_pmc', 'mem_fetch_icache', 'sec_rst_rvfi_cheri', 'xcut']
 args = sys.argv[1:]; manifest = None; dry = '--dry' in args; rehearse = '--rehearse' in args
 if '--build-manifest' in args: manifest = pathlib.Path(args[args.index('--build-manifest') + 1])

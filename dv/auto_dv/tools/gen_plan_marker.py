@@ -1,6 +1,6 @@
 """One definition of the cycle-clause marker token and the export-row wildcard rule (gen_test_plan.md Section 0), imported by
 dv/auto_dv/tools/gen_trace_check.py and dv/auto_dv/tools/gen_token_sunset.py (the Test Writer's gen_fcov_manifest.py may import it
-the same way). gen_trace_check.py parses argv at import time, so the shared definitions live here rather than in it (CM20-L-4).
+the same way). gen_trace_check.py parses argv at import time, so the shared definitions live here rather than in it.
 """
 import re
 TOKEN = '[CYCLE-CLAUSE coverage-only until the event export lands]'

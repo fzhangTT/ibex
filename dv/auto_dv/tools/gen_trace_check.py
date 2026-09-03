@@ -20,7 +20,7 @@ Options (export_sources entries may be "<source> <event>" strings or {source, ev
 """
 import re, csv, sys, argparse, collections, pathlib
 R = pathlib.Path(__file__).resolve().parents[1]; D = R / 'docs'
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, WILDCARD_TOKENS, present  # one definition (CM20-L-4)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, WILDCARD_TOKENS, present  # one definition of the marker token and the wildcard rule
 ap = argparse.ArgumentParser()
 ap.add_argument('--knobs', default=str(R / 'tb' / 'gen_tb_knobs.yaml'))
 ap.add_argument('--build-manifest', default=None)

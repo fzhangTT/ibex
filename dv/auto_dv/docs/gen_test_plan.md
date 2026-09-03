@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:01 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -9291,6 +9291,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Bins: CG-IRQ-013.cp_preempt.debug_req, CG-IRQ-013.cr_preempt_pos.debug_req_vector_req_outstanding, CG-IRQ-013.cr_preempt_pos.debug_req_vector_word_in_if, CG-IRQ-013.cr_preempt_line.debug_req_external, CG-IRQ-013.cr_preempt_line.debug_req_fast, CG-IRQ-013.cr_preempt_line.debug_req_software, CG-IRQ-013.cr_preempt_resume.debug_req_irq_handler_runs, CG-IRQ-013.cp_line.software, CG-IRQ-013.cp_line.timer, CG-IRQ-013.cp_line.external, CG-IRQ-013.cp_line.fast, CG-WIT-001.cp_clause.w_tp_irq_080
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_exc_sync_causes | TP-EXC-001, 007, 016, 022, 023, 024, 026 | 1 | smoke | short |
@@ -9314,34 +9315,6 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 | gen_irq_nmi | TP-IRQ-007, 035, 036, 037, 038, 039, 040, 079 | 1 | smoke/targeted | short |
 | gen_irq_nmi_int | TP-IRQ-044, 045, 046, 047, 048 | 1 | smoke/targeted | medium |
 | gen_irq_wfi | TP-IRQ-049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 068, 069 | 1 | smoke/targeted | medium |
-| gen_irq_debug | TP-IRQ-029, 041, 042, 043, 078, 080 | 1 | targeted | medium |
-| gen_irq_reset | TP-IRQ-019, 059, 060, 067 | 1 | targeted | short |
-| gen_irq_regime | TP-IRQ-071, 072, 073, 074, 075, 076, 077 | 2 | full | long |
-
-
-| group | items | phase | tier | runtime class |
-|---|---|---|---|---|
-| gen_exc_sync_causes | TP-EXC-001, 007, 016, 022, 023, 024, 026 | 1 | smoke | short |
-| gen_exc_fetch_fault | TP-EXC-002, 003, 004, 005 | 1 | targeted | short |
-| gen_exc_illegal | TP-EXC-008, 009, 010, 011, 013 | 1 | targeted | short |
-| gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 070 | 1 | targeted | medium |
-| gen_exc_priority_info | TP-EXC-065 (informational; own `_info` test, C-15) | 1 | targeted | short |
-| gen_exc_ebreak_ecall | TP-EXC-017, 018, 020, 021 | 1 | targeted | short |
-| gen_exc_zcmp | TP-EXC-014, 042, 043, 044 | 1 | targeted | medium |
-| gen_exc_lsu_fault | TP-EXC-025, 027, 028, 029, 030, 031, 032, 033, 034, 036, 037, 038, 039 | 1 | targeted | medium |
-| gen_exc_debug_mode | TP-EXC-019, 045, 046, 047, 048 | 1 | targeted | medium |
-| gen_exc_trap_state | TP-EXC-041, 049, 060, 062, 063, 064, 066, 067, 068, 069 | 1 | targeted | short |
-| gen_exc_mret | TP-EXC-050, 051, 052, 053, 061 | 1 | smoke (050) / targeted | short |
-| gen_exc_double_fault | TP-EXC-054, 055, 056, 057, 058, 059 | 1 | smoke (054) / targeted | short |
-| gen_exc_regime | TP-EXC-071, 072, 073, 074 | 2 | full | long |
-| gen_irq_lines | TP-IRQ-001, 002, 003, 004, 005, 006, 013 | 1 | smoke (001-004) / targeted | short |
-| gen_irq_csr | TP-IRQ-008, 009, 010, 011, 012, 017, 018, 020, 070 | 1 | targeted | short |
-| gen_irq_priority | TP-IRQ-014, 015, 016, 031, 065 | 1 | targeted | short |
-| gen_irq_timing | TP-IRQ-021, 022, 023, 024, 025, 026, 027, 030, 063, 064, 066 | 1 | targeted | medium |
-| gen_irq_handler | TP-IRQ-028, 032, 033, 034, 061, 062 | 1 | targeted | short |
-| gen_irq_nmi | TP-IRQ-007, 035, 036, 037, 038, 039, 040, 079 | 1 | smoke (007) / targeted | short |
-| gen_irq_nmi_int | TP-IRQ-044, 045, 046, 047, 048 | 1 | smoke (044) / targeted | medium |
-| gen_irq_wfi | TP-IRQ-049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 068, 069 | 1 | smoke (049) / targeted | medium |
 | gen_irq_debug | TP-IRQ-029, 041, 042, 043, 078, 080 | 1 | targeted | medium |
 | gen_irq_reset | TP-IRQ-019, 059, 060, 067 | 1 | targeted | short |
 | gen_irq_regime | TP-IRQ-071, 072, 073, 074, 075, 076, 077 | 2 | full | long |
@@ -11044,6 +11017,7 @@ Conventions used below:
 
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_pmp_csr_warl | TP-PMP-001, 002, 003, 004, 005, 006, 007, 008 | 1 | smoke/targeted | short |
@@ -11066,31 +11040,6 @@ Conventions used below:
 | gen_pmp_priority | TP-PMP-043, 044, 045, 046 | 1 | targeted | medium |
 | gen_pmp_random_regime | TP-PMP-100, 101, 102, 103, 104, 105, 106, 107, 109, 110 | 2 | full | long |
 | gen_pmp_recfg | TP-PMP-053, 063, 090, 091 | 1 | smoke/targeted | medium |
-| gen_pmp_reset | TP-PMP-010 | 1 | smoke | short |
-
-
-| group | items | phase | tier | estimated runtime class |
-|---|---|---|---|---|
-| gen_pmp_csr_warl | TP-PMP-001, TP-PMP-002, TP-PMP-003, TP-PMP-004, TP-PMP-005, TP-PMP-006, TP-PMP-007, TP-PMP-008 | 1 | smoke/targeted | short |
-| gen_pmp_data_fault | TP-PMP-069, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083 | 1 | smoke/targeted | medium |
-| gen_pmp_debug | TP-PMP-009, TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099 | 1 | targeted | medium |
-| gen_pmp_debug_xfail | TP-PMP-074 (expected-fail B2, own test) | 1 | targeted | medium |
-| gen_pmp_fetch_fault | TP-PMP-064, TP-PMP-065, TP-PMP-066, TP-PMP-067, TP-PMP-068, TP-PMP-076, TP-PMP-077, TP-PMP-078, TP-PMP-079 | 1 | smoke/targeted | medium |
-| gen_pmp_icache_dummy | TP-PMP-092, TP-PMP-093 | 1 | targeted | medium |
-| gen_pmp_lock | TP-PMP-013, TP-PMP-014, TP-PMP-015, TP-PMP-016, TP-PMP-017, TP-PMP-018, TP-PMP-019, TP-PMP-020, TP-PMP-021, TP-PMP-112 | 1 | targeted | short |
-| gen_pmp_mode_trans | TP-PMP-111 | 1 | targeted | medium |
-| gen_pmp_match_na4 | TP-PMP-032, TP-PMP-033 | 1 | targeted | medium |
-| gen_pmp_match_napot | TP-PMP-034, TP-PMP-035, TP-PMP-036, TP-PMP-037 | 1 | targeted | medium |
-| gen_pmp_match_tor | TP-PMP-038, TP-PMP-039, TP-PMP-040, TP-PMP-041, TP-PMP-042 | 1 | targeted | medium |
-| gen_pmp_misaligned | TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089 | 1 | targeted | medium |
-| gen_pmp_mprv | TP-PMP-070, TP-PMP-071, TP-PMP-072, TP-PMP-075 | 1 | targeted | medium |
-| gen_pmp_mprv_xfail | TP-PMP-073 (expected-fail B1, own test) | 1 | targeted | medium |
-| gen_pmp_mseccfg | TP-PMP-011, TP-PMP-012, TP-PMP-022, TP-PMP-023, TP-PMP-024, TP-PMP-025, TP-PMP-026, TP-PMP-027, TP-PMP-028, TP-PMP-029, TP-PMP-030, TP-PMP-031, TP-PMP-108 | 1 | targeted | short |
-| gen_pmp_perm_mml0 | TP-PMP-047, TP-PMP-048, TP-PMP-049, TP-PMP-050, TP-PMP-051, TP-PMP-052 | 1 | smoke/targeted | medium |
-| gen_pmp_perm_mml1 | TP-PMP-054, TP-PMP-055, TP-PMP-056, TP-PMP-057, TP-PMP-058, TP-PMP-059, TP-PMP-060, TP-PMP-061, TP-PMP-062 | 1 | full/targeted | medium |
-| gen_pmp_priority | TP-PMP-043, TP-PMP-044, TP-PMP-045, TP-PMP-046 | 1 | targeted | medium |
-| gen_pmp_random_regime | TP-PMP-100, TP-PMP-101, TP-PMP-102, TP-PMP-103, TP-PMP-104, TP-PMP-105, TP-PMP-106, TP-PMP-107, TP-PMP-109, TP-PMP-110 | 2 | full | long |
-| gen_pmp_recfg | TP-PMP-053, TP-PMP-063, TP-PMP-090, TP-PMP-091 | 1 | smoke/targeted | medium |
 | gen_pmp_reset | TP-PMP-010 | 1 | smoke | short |
 
 ## New checkers requested
