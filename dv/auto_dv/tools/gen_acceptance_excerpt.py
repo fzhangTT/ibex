@@ -160,7 +160,7 @@ def main() -> int:
         out = EVIDENCE_DIR / excerpt_name(a.tag, req)
         digest = hashlib.sha256(text.encode()).hexdigest()
         if a.write:
-            out.write_text(text)
+            out.write_bytes(text.encode())   # the byte contract same_bytes() checks
             print(f"wrote {out} sha256 {digest[:12]}")
         elif a.check:
             same = same_bytes(out, text)
