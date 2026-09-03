@@ -905,3 +905,9 @@ no Critic-versus-ruling conflict remains to route to the owner. (b) LOG-024 stay
 tier promotion and batch-2 acceptance wait for landing 3e and its re-review; the round-0 sequence (T-158) shifts
 behind it. (c) Every response row marked FIXED must be backed by a check the reviewer can rerun; a FIXED row whose
 fix does not touch the failing path is an honesty defect, not a low.
+
+## LOG-035 - 2026-09-03 - RULING (TP-CMP-001 floor; recorded because the plan cited an unlogged ruling)
+
+The DV Lead's batch-2 ruling that TP-CMP-001's ">= 5000 instructions" floor becomes >= 3000 retired per seed with
+the per-form floors governing (the template's single-program budget caps a seed near 3800; batch-2 evidence in
+dv/auto_dv/evidence/gen_tdd_batch2.md) is confirmed. The plan cites this entry, not a time of day.
