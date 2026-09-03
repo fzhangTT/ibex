@@ -142,9 +142,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     if not a.coverage:
         # Coverage sub-options (-cm_glitch 0 and friends) mean nothing without -cm and only draw
         # Warning-[VCM-INSOPTMIS]; a no-coverage build drops them and records that it did.
-        dropped = [x for i, x in enumerate(extra) if x.startswith("-cm") or (i > 0 and extra[i - 1].startswith("-cm"))]
-        extra = [x for x in extra if x not in dropped]
-        a.dropped_cm_args = dropped
+        extra, a.dropped_cm_args = U.drop_cm_args(extra)
     else:
         a.dropped_cm_args = []
     groups["extra"] = extra

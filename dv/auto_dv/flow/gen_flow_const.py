@@ -129,6 +129,9 @@ COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
 COV_COMPILE_EXTRA = ["-cm_tgl", "portsonly", "-cm_tgl", "structarr", "-cm_report", "noinitial",
                      "-cm_seqnoconst"]
 COV_RUNTIME_EXTRA = ["-cm_log", "/dev/null", "-assert", "nopostproc"]
+# VCS coverage flags that take one value; every other -cm* flag stands alone (the no-coverage drop uses this).
+CM_VALUE_FLAGS = ("-cm", "-cm_dir", "-cm_name", "-cm_hier", "-cm_glitch", "-cm_tgl", "-cm_line", "-cm_cond",
+                  "-cm_report", "-cm_log", "-cm_libs", "-cm_assert_hier", "-cm_fsmopt")
 COV_DIAG_NOCONST = ["-diag", "noconst"]
 COCOTB_DEFINE = "+define+COCOTB_SIM"
 COCOTB_ENV_MODULE = "MODULE"
@@ -174,6 +177,9 @@ WAVES_VPD = "waves.vpd"
 DUMP_TCL = "dump.tcl"
 DEFAULT_TIMEOUT_S = 1800
 TIMEOUT_GRACE_S = 20
+MIRROR_SYNC_TIMEOUT_S = 1800   # gen_mirror.py --sync --spike, whether gen_regress or the request server runs it
+ELCHECK_TIMEOUT_S = 1800       # one report-only URG merge of the exclusion check
+LSF_STATUS_SETTLE_S = 15.0   # bjobs shows a finished job as RUN for a few seconds after bsub -K returns
 JOB_TIMEOUT_CMD = "timeout"   # first word of the job script's simv line; bash's kill report quotes it first
 
 # --- LSF (SIM_RECIPE Section 7; exclusive to the runtime role) -------------------------------
@@ -281,7 +287,8 @@ EXIT_CODES_CLEAN = (0, 124)
 # Crash signatures: the SHELL's process-termination report (job script stderr = lsf.err, or run.log
 # for local runs), never free text. An ISS/TB log line such as "Illegal instruction (hart 0) at PC"
 # must not match (real false positive on gen_ut_bridge, tb-infra-002).
-CRASH_RE = re.compile(r"(^|: )(\d+ )?(Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated)"
+# bash prints the PID with %5ld: a short PID carries leading spaces (": line 7:   537 Killed ...").
+CRASH_RE = re.compile(r"(^|: )\s*(\d+\s+)?(Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated)"
                       r"(\s+\(core dumped\))?\s*(" + re.escape(JOB_TIMEOUT_CMD) + r"( |$)|\S*simv\S*|bash|$)"
                       r"|\(core dumped\)|timeout: sending signal")
 # ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).

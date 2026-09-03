@@ -248,6 +248,9 @@ def unreachable_summary(report_dir: Path, module: str) -> dict[str, Any]:
 REAL_HIER_PLAIN = """    SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT
      31.97   37.81 1596/4221   26.62 2504/9407    6.92 1678/24236    6.98 6/86   31.43 726/2310   82.08 142/173  u_ibex_core
 """
+REAL_HIER_EXCL_TOP = """SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT
+ 33.71   41.75 1694/4057   27.62 2547/9220    8.66 1994/23016    8.11 6/74   34.40 798/2320   81.71 143/175  gen_smoke_tb_top(X)
+"""
 REAL_HIER_EXCL = """    SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT
      33.25   40.64 1596/3927   27.63 2504/9061    8.24 1678/20364    8.11 6/74   32.82 726/2212   82.08 142/173  u_ibex_core(x)
 """
@@ -262,6 +265,10 @@ def self_test() -> int:
         cond = "parse_error" not in row and row["ratios"]["line"] == want_line and row.get("excl_marker") == want_marker
         ok &= cond
         print(f"SELF-TEST {'ok ' if cond else 'BAD'} {name}: {row.get('parse_error') or row['ratios']['line']} marker={row.get('excl_marker')}")
+    top = parse_hierarchy_rows(REAL_HIER_EXCL_TOP, "gen_smoke_tb_top")
+    cond = "parse_error" not in top and top["ratios"]["toggle"] == "1994/23016" and top.get("excl_marker") == "(X)"
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} real top row with exclusions below, (X) marker: {top.get('parse_error') or top['ratios']['toggle']} marker={top.get('excl_marker')}")
     miss = parse_hierarchy_rows(REAL_HIER_EXCL, "gen_smoke_tb_top.u_dut.u_register_file")
     cond = "parse_error" in miss
     ok &= cond

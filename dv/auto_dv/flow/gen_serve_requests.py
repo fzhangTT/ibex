@@ -26,7 +26,6 @@ from pathlib import Path
 import yaml
 from typing import Any
 
-import gen_cov_report as R
 import gen_flow_const as C
 import gen_flow_util as U
 
@@ -86,6 +85,8 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
         return None, "seeds must be a count or an explicit list"
     if elcheck is not None and (tests or seeds):
         return None, "elcheck runs no simulation: tests and seeds must be empty"
+    if elcheck is not None and req.get("build_vcs_args"):
+        return None, "elcheck compiles nothing: build_vcs_args is not accepted with it"
     norm = dict(req)
     bva = req.get("build_vcs_args") or []
     if isinstance(bva, str):
@@ -183,6 +184,10 @@ def scope_for(req: dict[str, Any], testlist: dict[str, Any]) -> tuple[list[str] 
     return args, None, scope
 
 
+class ElcheckError(Exception):
+    """An elcheck that cannot run to completion; recorded in the manifest, never a die of the server."""
+
+
 def scopes_for_vdb(vdb: Path, build_name: str | None) -> tuple[list[str], list[str], str]:
     """The gated and informational scopes of the build that produced a vdb: read from the build manifest
     of the regression the vdb belongs to (walk up to its manifest.yaml), never re-typed."""
@@ -193,10 +198,10 @@ def scopes_for_vdb(vdb: Path, build_name: str | None) -> tuple[list[str], list[s
             builds = reg.get("builds") or {}
             name = build_name or (next(iter(builds)) if len(builds) == 1 else None)
             if name not in builds:
-                U.die(f"elcheck: regression {man} has builds {sorted(builds)}; name one with elcheck.build")
+                raise ElcheckError(f"regression {man} has builds {sorted(builds)}; name one with elcheck.build")
             bman = U.load_yaml(Path(builds[name]["manifest"]))
             return list(bman.get("cov_scopes") or []), list(bman.get("info_scopes") or []), str(builds[name]["manifest"])
-    U.die(f"elcheck: no regression manifest.yaml above {vdb}")
+    raise ElcheckError(f"no regression manifest.yaml above {vdb}")
 
 
 def merge_warnings(merge_log: str) -> list[str]:
@@ -211,10 +216,26 @@ def run_elcheck(req: dict[str, Any], outdir: Path) -> dict[str, Any]:
     vdb = Path(req["elcheck"]["vdb"]).resolve()
     elfile = Path(req["elcheck"]["elfile"]).resolve()
     dut, info, bman = scopes_for_vdb(vdb, req["elcheck"].get("build"))
-    with_el = R.merge(outdir / "cov_elcheck", [vdb], [elfile], None, dut, True, info)
-    without = R.merge(outdir / "cov_plain", [vdb], None, None, dut, False, info)
-    for res in (with_el, without):
+
+    def merge_cli(cov_dir: Path, with_file: bool) -> dict[str, Any]:
+        argv = [sys.executable, str(C.FLOW_DIR / "gen_cov_report.py"), "merge", "--cov-dir", str(cov_dir), "--vdb", str(vdb)]
+        argv += [a for s in dut for a in ("--dut-scope", s)] + [a for s in info for a in ("--info-scope", s)]
+        if with_file:
+            argv += ["--elfile", str(elfile), "--dump-exclusions"]
+        rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=cov_dir.parent / f"{cov_dir.name}.log",
+                                            timeout_s=C.ELCHECK_TIMEOUT_S)
+        res_path = cov_dir / "coverage.yaml"
+        if timed_out or not res_path.is_file():
+            raise ElcheckError(f"merge into {cov_dir} did not produce coverage.yaml (rc={rc}, timed_out={timed_out}); "
+                               f"see {cov_dir.parent / (cov_dir.name + '.log')}")
+        res = U.load_yaml(res_path)
+        res["merge_rc"] = rc
         res["merge_warnings"] = merge_warnings(res["merge_log"])
+        return res
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    with_el = merge_cli(outdir / "cov_elcheck", True)
+    without = merge_cli(outdir / "cov_plain", False)
     # Per-metric excluded counts: the denominators the exclusion file removed from the gated rows.
     excluded: dict[str, Any] = {}
     gw, gwo = with_el.get("gate_row") or {}, without.get("gate_row") or {}
@@ -273,7 +294,10 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
         U.dump_yaml(record, manifest_path)
         t0 = time.time()
         outdir.mkdir(parents=True, exist_ok=True)
-        record["elcheck"] = run_elcheck(req, outdir)
+        try:
+            record["elcheck"] = run_elcheck(req, outdir)
+        except (ElcheckError, Exception, SystemExit) as e:  # noqa: B014 - a die anywhere below must still be recorded
+            record["elcheck"] = {"kind": "elcheck", "verdict": "failed", "error": f"{type(e).__name__}: {e}"}
         record.update(status="done", serve_wall_s=round(time.time() - t0, 1), finished_utc=U.now_utc())
         U.dump_yaml(record, manifest_path)
         shutil.move(str(running), str(C.DONE_DIR / path.name))
@@ -325,13 +349,22 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
     rest = [p for p in pending if p not in p1]
     if len(p1) > 1 and not dry_run:
         # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
-        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike"],
-                                    cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log", timeout_s=1800)
-        sync = {"rc": rc, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(), "batch": [p.stem for p in p1]}
-        U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
-        batch_args = list(extra_args) + (["--no-sync-mirror"] if rc == 0 else [])
-        with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
-            list(pool.map(lambda p: serve_one(p, testlist, dry_run, batch_args, sync), p1))
+        rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike"],
+                                            cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log",
+                                            timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
+        sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
+                "batch": [p.stem for p in p1]}
+        if rc == 0 and not timed_out:
+            U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
+            batch_args = list(extra_args) + ["--no-sync-mirror"]
+            with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
+                list(pool.map(lambda p: serve_one(p, testlist, dry_run, batch_args, sync), p1))
+        else:
+            # Without one good shared sync the batch must not fan out: each regression syncs for itself, in turn.
+            sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing itself"
+            U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(p1)} purpose-1 request(s)")
+            for p in p1:
+                serve_one(p, testlist, dry_run, extra_args, sync)
     else:
         for p in p1:
             serve_one(p, testlist, dry_run, extra_args)

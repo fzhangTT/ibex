@@ -356,7 +356,7 @@ def main() -> int:
         # cocotb builds load the VPI library from the mirror venv and runs import from the mirror (in
         # --local mode too): sync it first so the build records the revision the runs will see.
         rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike"], cwd=C.REPO_ROOT,
-                                    log_path=outdir / "regress.log", timeout_s=1800)
+                                    log_path=outdir / "regress.log", timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         manifest["mirror_sync"] = {"rc": rc, "wall_s": round(wall, 1), "spike": True}
         U.log(f"mirror sync rc={rc} in {wall:.0f}s")
         if rc != 0:

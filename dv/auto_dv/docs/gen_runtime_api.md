@@ -263,7 +263,7 @@ Purpose and the scope it allows (a larger scope is refused in writing, in the ma
 |---|---|---|
 | 1 bring-up of one test | exactly one named test, at most 5 seeds | a tier word, several tests, more seeds |
 | 2 TB component change | smoke tier + every test whose `component` matches + the mutation-evidence tests of that component (`feature_groups: [mutation]`) + explicitly named tests | `tests: full`; no component and no test |
-| 2 with `elcheck` | two URG merges of the named vdb through `gen_cov_report.merge`, one with the exclusion file (`-excl_strict`, `-dump full_exclusions`) and one without, same gated and informational scopes; manifest `elcheck` carries both results, `merge_warnings`, `exclusion_violations`, `excluded_counts_gate_row` (denominators the file removed per metric) and a verdict `ok`/`failed` | tests or seeds non-empty; no component; a purpose other than 2 |
+| 2 with `elcheck` | two URG merges of the named vdb through the `gen_cov_report.py merge` CLI in bounded subprocesses, one with the exclusion file (`-excl_strict`, `-dump full_exclusions`) and one without, same gated and informational scopes; manifest `elcheck` carries both results, `merge_warnings`, `exclusion_violations`, `excluded_counts_gate_row` (denominators the file removed per metric) and a verdict `ok`/`failed`; a check that cannot run (no regression manifest above the vdb, a merge that dies or times out) is recorded as `verdict: failed` with `error`, the request still moves to done/ | tests or seeds non-empty; `build_vcs_args` given; no component; a purpose other than 2 |
 | 3 failure reproduction | one test, one explicit seed, no coverage, waves optional | anything else |
 | 4 Phase 1 gate or closure round | `tests: full` with `coverage: yes`, requester dv-lead or orchestrator | another tier, coverage no, another requester (route through the DV Lead) |
 
@@ -284,8 +284,9 @@ each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounti
 single-test requests turns around in about one request's time. Before such a batch the server syncs
 the mirror once (`gen_mirror.py --sync --spike`, recorded in every batch manifest as
 `server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
-on the mirror tree; a lone purpose-1 request and purposes 2 to 4 are served one at a time in file
-order, each syncing for itself. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
+on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
+regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
+request and purposes 2 to 4 are served one at a time in file order, each syncing for itself. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
 values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
 they are recorded in the manifest as `operator_extra_args`. Only the runtime role runs this
 script (LSF is exclusive to it).
@@ -330,7 +331,8 @@ A build entry may declare the fields below. One placeholder set is rendered in a
 `{outdir}` (the build directory) and `{mirror}` (the tree the runs execute from: the shared mirror
 root from `gen_site.yaml`, or the clone root for a `--local-cocotb` build, whose runs stay on the
 submit host). Any other brace token, or `{mirror}` without a mirror root, fails the build with the
-known set named; nothing is dropped silently.
+known set named; nothing is dropped silently. Consequently a `pre_build` command cannot contain bash
+`${VAR}` expansions or awk-style braces: put such logic in the script the entry calls.
 
 - `pre_build`: commands run in order before vcs, clone root as cwd, the sourced environment
   inherited (for example TB Infra's `bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib`,
@@ -613,5 +615,5 @@ the current host (sources the staged env.sh). Through the flow: `gen_regress.py 
 ## 9. Cleanup rule
 
 Every regression manifest records `lsf_jobs_left` (this regression's `gen_dv_<tag>_*` jobs still
-active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check; the runtime role runs `bjobs`
+active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check (bjobs shows a finished job as RUN for a few seconds after `bsub -K` returns, so a non-empty answer is re-polled every 3 s for up to 15 s before it is recorded); the runtime role runs `bjobs`
 at the end of every task.

@@ -240,6 +240,14 @@ def self_test() -> int:
             cond = True
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist refuses a testlist whose gated trees nest")
+    for args, want_kept, want_dropped, label in (
+            (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
+            (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
+            (["-cm_glitch", "0", "-xlrm", "0"], ["-xlrm", "0"], ["-cm_glitch", "0"], "same value elsewhere survives (positions, not values)")):
+        kept, dropped = drop_cm_args(args)
+        cond = kept == want_kept and dropped == want_dropped
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} drop_cm_args {label}: kept={kept} dropped={dropped}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -526,15 +534,41 @@ def lsf_job_name(tag: str, leaf: str) -> str:
     return f"{C.LSF_JOB_PREFIX}_{tag}_{leaf}" if tag else f"{C.LSF_JOB_PREFIX}_{leaf}"
 
 
-def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX) -> list[str]:
-    """Job ids of this user's LSF jobs whose name starts with prefix (cleanup check)."""
-    r = subprocess.run(["bjobs", "-noheader", "-o", "jobid job_name stat"], capture_output=True, text=True)
-    out = []
-    for line in r.stdout.splitlines():
-        parts = line.split()
-        if len(parts) >= 3 and parts[1].startswith(prefix) and parts[2] in C.LSF_ACTIVE_STATES:
-            out.append(parts[0])
-    return out
+def drop_cm_args(args: list[str]) -> tuple[list[str], list[str]]:
+    """Split vcs arguments into (kept, dropped): every -cm* flag is dropped, and only a flag in
+    C.CM_VALUE_FLAGS takes the following token with it; positions decide, never values."""
+    kept: list[str] = []
+    dropped: list[str] = []
+    i = 0
+    while i < len(args):
+        x = args[i]
+        if x.startswith("-cm"):
+            dropped.append(x)
+            if x in C.CM_VALUE_FLAGS and i + 1 < len(args):
+                dropped.append(args[i + 1])
+                i += 1
+        else:
+            kept.append(x)
+        i += 1
+    return kept, dropped
+
+
+def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX, settle_s: float = C.LSF_STATUS_SETTLE_S,
+                  interval_s: float = 3.0) -> list[str]:
+    """Job ids of this user's LSF jobs whose name starts with prefix (cleanup check). bjobs reports a
+    finished job as RUN for a few seconds after bsub -K returned, so a non-empty answer is re-polled
+    until it clears or settle_s elapses."""
+    deadline = time.time() + settle_s
+    while True:
+        r = subprocess.run(["bjobs", "-noheader", "-o", "jobid job_name stat"], capture_output=True, text=True)
+        out = []
+        for line in r.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 3 and parts[1].startswith(prefix) and parts[2] in C.LSF_ACTIVE_STATES:
+                out.append(parts[0])
+        if not out or time.time() >= deadline:
+            return out
+        time.sleep(interval_s)
 
 
 if __name__ == "__main__":

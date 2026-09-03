@@ -180,6 +180,12 @@ REAL_SHAPE_SEGV = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/se
 REAL_SHAPE_KILL = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_KILL.sh: line 7: 2853999 Killed                  timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_KILL +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_KILL.log 2>&1'
 
 
+# The same two reports with the PID field re-rendered the way bash prints it (%5ld): a PID below 10000
+# carries leading spaces (review of 2a4916c, finding 1).
+SHORT_PID_SEGV = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_SEGV.sh: line 7:   537 Segmentation fault      timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_SEGV +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_SEGV.log 2>&1'
+SHORT_PID_KILL = '/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/run_cmd_KILL.sh: line 7:     7 Killed                  timeout -k 20 900 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/vcs_simv_KILL +vcs+lic+wait +ntb_random_seed=1 > /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/crash_shape/sim_stdout_KILL.log 2>&1'
+
+
 def self_test() -> int:
     """Exercise the REAL decide_lines on real log excerpts; each case names the rule it pins."""
     B = [BANNER]
@@ -197,6 +203,8 @@ def self_test() -> int:
         ("fabricated: bare shell kill report, direct simv shape", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["12345 Killed                  vcs_simv +vcs+lic+wait"], True, C.VERDICT_FAIL),
         ("real-shaped: job-script SIGSEGV report (timeout-wrapped simv), clean log, rc 0", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [REAL_SHAPE_SEGV], True, C.VERDICT_FAIL),
         ("real-shaped: job-script SIGKILL report (timeout-wrapped simv), clean log, rc 0", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [REAL_SHAPE_KILL], True, C.VERDICT_FAIL),
+        ("real-shaped: SIGSEGV report with a 3-digit PID (bash %5ld padding)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [SHORT_PID_SEGV], True, C.VERDICT_FAIL),
+        ("real-shaped: SIGKILL report with a 1-digit PID (bash %5ld padding)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [SHORT_PID_KILL], True, C.VERDICT_FAIL),
         ("real (tb-infra-002, job 10932403): ISS log line with 'Illegal instruction' is NOT a crash", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False,
          ["               12000: Illegal instruction (hart 0) at PC 0x80000080: 0x00000000"], True, C.VERDICT_PASS),
         ("fabricated: marker quoted inside a message is not the marker (P-02)", B + ["waiting for GEN_SMOKE_PASS marker", "$finish called"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
@@ -218,10 +226,12 @@ def self_test() -> int:
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
     # The crash regex alone: the job script's report shape for every signal word, and the ISS line that stays clean.
-    for sig in ("Segmentation fault", "Bus error", "Aborted", "Illegal instruction", "Killed", "Terminated"):
-        cond = bool(C.CRASH_RE.search(REAL_SHAPE_SEGV.replace("Segmentation fault", sig)))
-        ok &= cond
-        print(f"SELF-TEST {'ok ' if cond else 'BAD'} crash regex matches the job-script report with {sig!r}")
+    for width, fixture, word in (("7-digit PID", REAL_SHAPE_SEGV, "Segmentation fault"), ("3-digit PID", SHORT_PID_SEGV, "Segmentation fault"),
+                                 ("1-digit PID", SHORT_PID_KILL, "Killed")):
+        for sig in ("Segmentation fault", "Bus error", "Aborted", "Illegal instruction", "Killed", "Terminated"):
+            cond = bool(C.CRASH_RE.search(fixture.replace(word, sig)))
+            ok &= cond
+            print(f"SELF-TEST {'ok ' if cond else 'BAD'} crash regex matches the job-script report, {width}, {sig!r}")
     cond = not C.CRASH_RE.search("               12000: Illegal instruction (hart 0) at PC 0x80000080: 0x00000000")
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} crash regex leaves the ISS 'Illegal instruction (hart 0)' line clean")
