@@ -240,6 +240,14 @@ def self_test() -> int:
             cond = True
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist refuses a testlist whose gated trees nest")
+        cond = red_expect_error(".*") is not None and red_expect_error("(") is not None and red_expect_error("") is not None \
+            and red_expect_error("GEN_TEST_FAIL gen_x") is None
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", "red_expect_error: empty-matching, invalid and empty refused; a real signature accepted (one rule for loader and CLI)")
+        cond = clone_relative_file("dv/auto_dv/flow/gen_stim.py") is not None and clone_relative_file("dv/auto_dv/flow/../../../ci/env.sh") is None \
+            and clone_relative_file(str(C.REPO_ROOT / "ci" / "env.sh")) is None and clone_relative_file("dv/auto_dv/flow/gen_missing.py") is None
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", "clone_relative_file: accepts a clone file, refuses .., absolute and missing paths")
         for label, mutate in (
                 ("red_fixture with expected_fail", lambda d: d["tests"][0].update(red_fixture=True, expected_fail=True, measured=False)),
                 ("red_fixture with measured true", lambda d: d["tests"][0].update(red_fixture=True, measured=True, tier="smoke")),
@@ -252,6 +260,7 @@ def self_test() -> int:
                 ("program with generator and directed", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/gen_stim.py", "directed": ["x.S"], "seed": "run"})),
                 ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
                 ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
+                ("program.generator escaping the clone with ..", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/../../../ci/env.sh", "seed": "run"})),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -277,6 +286,29 @@ def self_test() -> int:
 
 
 # --- Testlist -------------------------------------------------------------------------------
+def red_expect_error(rx: Any) -> str | None:
+    """Why a red_expect value is unusable (None when fine): one rule for the loader and the verdict CLI."""
+    if not isinstance(rx, str) or not rx:
+        return "red_expect must be a non-empty regex"
+    try:
+        compiled = re.compile(rx)
+    except re.error as e:
+        return f"red_expect {rx!r} is not a valid regex ({e})"
+    if compiled.search(""):
+        return f"red_expect {rx!r} matches the empty string and would accept any FAIL without a collected line"
+    return None
+
+
+def clone_relative_file(rel: Any) -> Path | None:
+    """The clone file a clone-relative path names, or None when the path is absolute, escapes the clone
+    (.. or a symlink) or names no regular file."""
+    if not isinstance(rel, str) or not rel or Path(rel).is_absolute() or ".." in Path(rel).parts:
+        return None
+    p = (C.REPO_ROOT / rel).resolve()
+    root = C.REPO_ROOT.resolve()
+    return p if p.is_file() and (p == root or root in p.parents) else None
+
+
 def debug_only_from_knobs() -> set[str]:
     """Plusarg names marked debug_only in TB Infra's rendered knob table (gen_knobs.PLUSARGS): the one
     origin of the property and of the names themselves, so no naming rule is re-encoded here."""
@@ -353,15 +385,9 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")
             if t.get("measured", True):
                 die(f"{path}: test {t['name']}: a red_fixture must be measured: false (never counted as coverage)")
-            rx = t.get("red_expect")
-            if not isinstance(rx, str) or not rx:
-                die(f"{path}: test {t['name']}: a red_fixture must declare red_expect (regex the collected evidence line of its designed failure matches)")
-            try:
-                compiled = re.compile(rx)
-            except re.error as e:
-                die(f"{path}: test {t['name']}: red_expect {rx!r} is not a valid regex ({e})")
-            if compiled.search(""):
-                die(f"{path}: test {t['name']}: red_expect {rx!r} matches the empty string and would accept any FAIL without a collected line")
+            err = red_expect_error(t.get("red_expect"))
+            if err:
+                die(f"{path}: test {t['name']}: a red_fixture must declare the evidence line of its designed failure: {err}")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:
@@ -389,8 +415,8 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                 die(f"{path}: test {t['name']} program needs exactly one of {'/'.join(C.PROGRAM_SOURCE_FORMS)}, got {forms}")
             gen = prog.get("generator")
             if gen is not None:
-                if not isinstance(gen, str) or Path(gen).is_absolute() or not (C.REPO_ROOT / gen).is_file():
-                    die(f"{path}: test {t['name']} program.generator must be a clone-relative path to an existing script, got {gen!r}")
+                if clone_relative_file(gen) is None:
+                    die(f"{path}: test {t['name']} program.generator must be a clone-relative path (no .., no symlink out of the clone) to an existing script, got {gen!r}")
             gargs = prog.get("generator_args")
             if gargs is not None and (gen is None or not isinstance(gargs, list) or not all(isinstance(x, str) for x in gargs)):
                 die(f"{path}: test {t['name']} program.generator_args must be a list of strings and needs program.generator")

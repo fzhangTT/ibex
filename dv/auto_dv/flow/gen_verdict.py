@@ -362,6 +362,11 @@ def main() -> int:
         return self_test()
     if not a.sim_log:
         ap.error("--sim-log required")
+    if a.red_fixture:
+        import gen_flow_util as U
+        err = U.red_expect_error(a.red_expect)
+        if err:
+            ap.error(f"--red-fixture needs a usable --red-expect: {err}")
     res = decide(a.sim_log, a.pass_marker, a.timed_out, a.expected_fail, rc=a.exit_code, extra_logs=a.extra_log,
                  build_config=a.build_config, stderr_logs=a.stderr_log, red_fixture=a.red_fixture, red_expect=a.red_expect)
     for k, v in res.items():

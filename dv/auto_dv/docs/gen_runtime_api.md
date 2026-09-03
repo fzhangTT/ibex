@@ -36,7 +36,8 @@ DV_prompt.txt Section 11 is this directory plus `gen_testlist.yaml`. Evidence th
   the run dir for the checker). Any accidental listing of a path outside this clone, the shared out
   root or the mirror is a reportable event: record it in STATUS.md and report it to the Orchestrator
   for the intervention log, without the content. Flow self-tests keep their scratch under
-  `dv/auto_dv/work/runtime/selftest_tmp/`.
+  `dv/auto_dv/work/runtime/selftest_tmp/`, or under the directory `GEN_DV_SELFTEST_TMP` names explicitly
+  (an independent reviewer running them from a read-only checkout).
 - **Constants home.** Paths, plusarg names, log markers, LSF defaults and schema keys live in
   `gen_flow_const.py` only. `python3 gen_flow_const.py --check` proves the plusarg names shared with
   the SV constants home `dv/auto_dv/tb/gen_tb_pkg.sv` are identical.
@@ -157,7 +158,8 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   The process exit code is recorded, never decisive.
   The same decision is available from the command line for scripts: `gen_verdict.py --sim-log <sim.log>
   --pass-marker <marker> --exit-code <simv rc> [--extra-log sim_stdout.log] [--stderr-log lsf.err]
-  [--timed-out] [--expected-fail] [--red-fixture --red-expect <regex>] [--build-config opentitan]`;
+  [--timed-out] [--expected-fail] [--red-fixture --red-expect <regex>] [--build-config opentitan]` (the
+  CLI applies the loader's red_expect rule: a missing, invalid or empty-matching regex is refused);
   without `--exit-code` a clean log is FAIL (unexplained exit code None), exactly as inside the flow;
   the CLI and `gen_run.py` exit 0 for PASS, XFAIL and RED-OK.
 - `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
@@ -578,9 +580,12 @@ program:
 Program forms, exactly one per block: `riscv_dv_test` (the riscv-dv generator build named by
 `riscv_dv_gen_build` in gen_site.yaml), `directed` (a list of clone-relative sources), or
 `generator` (a clone-relative script the flow runs first as `python3 <generator> --seed <seed> --out
-<run>/program/gen_source.S <generator_args>`, clone root as cwd, bounded by the run's timeout, log
+<run>/program/gen_source.S <generator_args>`, clone root as cwd, each program stage bounded by the run's
+`timeout_s`, PYTHONHASHSEED pinned to 0, into a program directory the flow empties first (a stale source
+or image can never pass for this run's), log
 `<run>/program/generator.log`; the source it writes is then the one directed input of gen_program.py,
-so the seed binding is by construction). The program record in result.yaml gains `generator`,
+so the seed binding is by construction; the source must exist, be non-empty and be written by this
+invocation, else the run stops). The program record in result.yaml gains `generator`,
 `generator_args`, `generator_command`, `generator_source`, `generator_source_sha256`,
 `generator_wall_s`, `generator_log`. A generator that exits non-zero, times out or writes no source
 stops the run before the simulator, like a failing gen_program.py (the regression records NOT_RUN

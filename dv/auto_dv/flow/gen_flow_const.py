@@ -8,6 +8,7 @@ dv/auto_dv/tb/gen_tb_pkg.sv; `--check` proves the two agree on the shared names.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -70,10 +71,15 @@ ENV_TOOLCHECK_VAR = "IBEX_ENV_TOOLCHECK"
 SELFTEST_TMP = WORK_DIR / "selftest_tmp"   # scratch parent of every flow self-test (never the shared /tmp, F-001)
 
 
+SELFTEST_TMP_ENV = "GEN_DV_SELFTEST_TMP"   # reviewer override: a private scratch dir when the clone is read-only
+
+
 def selftest_tmp() -> str:
-    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
-    SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    return str(SELFTEST_TMP)
+    """Scratch parent for self-tests: under the runtime work tree (or the directory GEN_DV_SELFTEST_TMP
+    names explicitly), never the shared /tmp (F-001)."""
+    root = Path(os.environ[SELFTEST_TMP_ENV]) if os.environ.get(SELFTEST_TMP_ENV) else SELFTEST_TMP
+    root.mkdir(parents=True, exist_ok=True)
+    return str(root)
 
 
 REQUESTS_DIR = WORK_DIR / "requests"

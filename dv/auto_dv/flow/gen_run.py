@@ -222,7 +222,7 @@ def main() -> int:
     if test.get("program"):
         # The image is built on the submit host into the (shared) run dir; the job only reads it.
         program_rec = S.build_program(test["program"], seed, run_dir / C.PROGRAM_DIRNAME,
-                                      run_dir / "gen_program_driver.log")
+                                      run_dir / "gen_program_driver.log", timeout_s=timeout_s)
         image_args = S.image_plusargs(program_rec)
         program_rec["image_plusargs"] = image_args
         extra_plusargs = image_args + extra_plusargs

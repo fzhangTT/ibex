@@ -22,7 +22,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +37,13 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     if not C.PROGRAM_TOOL.is_file():
         U.die(f"{C.PROGRAM_TOOL} missing")
     seed = run_seed if prog.get("seed", C.PROGRAM_SEED_RUN) == C.PROGRAM_SEED_RUN else int(prog["seed"])
-    out.mkdir(parents=True, exist_ok=True)
+    # A fresh program directory every time: nothing stale (a previous source or image) can pass for this run's.
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    # Pinned hash seed: set iteration and string hashing in a generator or in gen_program.py must not vary the
+    # program for one seed. The build-configuration name has one home (gen_flow_const.BUILD_CONFIG).
+    env = dict(os.environ, PYTHONHASHSEED="0", **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
     generated: dict[str, Any] = {}
     if prog.get("generator"):
         # A per-seed program generator (Test Writer): everything it emits derives from --seed, so the
@@ -44,9 +52,11 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
         gen_log = out / "generator.log"
         gen_argv = [sys.executable, str(C.REPO_ROOT / prog["generator"]), "--seed", str(seed), "--out", str(src),
                     *[str(x) for x in (prog.get("generator_args") or [])]]
-        grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.REPO_ROOT, log_path=gen_log, timeout_s=timeout_s)
-        if grc != 0 or gto or not src.is_file():
-            U.die(f"program generator failed (rc={grc}, timed_out={gto}, source present={src.is_file()}); see {gen_log}")
+        t_invoke = time.time()
+        grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.REPO_ROOT, log_path=gen_log, timeout_s=timeout_s, env=env)
+        fresh = src.is_file() and src.stat().st_size > 0 and src.stat().st_mtime >= t_invoke - 1.0
+        if grc != 0 or gto or not fresh:
+            U.die(f"program generator failed (rc={grc}, timed_out={gto}, source written by this invocation={fresh}); see {gen_log}")
         generated = {"generator": prog["generator"], "generator_args": list(prog.get("generator_args") or []),
                      "generator_command": " ".join(gen_argv), "generator_source": str(src),
                      "generator_source_sha256": U.sha256_file(src), "generator_wall_s": round(gwall, 1),
@@ -65,9 +75,6 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     if prog.get("spike_check"):
         argv.append("--spike-check")
     argv += [str(x) for x in (prog.get("extra_args") or [])]
-    # The build-configuration name has one home (gen_flow_const.BUILD_CONFIG); it is exported so the
-    # stimulus tool can read it instead of carrying its own constant (owner of gen_program.py decides).
-    env = dict(os.environ, **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
     rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s, env=env)
     vmem = out / C.PROGRAM_VMEM
     sidecar = out / C.PROGRAM_SIDECAR
