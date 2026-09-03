@@ -320,3 +320,54 @@ starved zcirq storm runs below and regime_refuse_zc, which fails by design.
 - Not in this landing: the rows Runtime's testlist needs (dv/auto_dv/work/tb-infra/gen_t150_testlist_entries_v2.yaml:
   rows_nmi with every checker on, intent-only descriptions, the gen_ut_regime_refuse red fixture) are handed over as a
   file; tb-infra does not edit the testlist.
+
+## 10. Landing 2b: the protocol SVA layer, COV_WITNESS (T-179), the misc mirror and drain rules, dbg_dret
+
+Method as in Section 9: an out-of-tree copy of the shared tree after landing 1c (scratch l2b_root for the SVA layer's
+re-basing and its mutants, then wit_root for everything else; the shared tree untouched until the announced copy-in).
+Builds: l2b/a 68a36e6ac32db967 (the SVA layer re-applied on the 1c tree: 11 canary runs PASS, gen_fu_l2b_base_*), wit/a
+ea8cfe1aa2865c30 (T-179 red), wit/b 8d5824cba05661e5 (a second red), wit/c 242f0558621c52da (T-179 green), wit/e
+5ca9fd98c937c26f (the landed sources: 16 runs PASS, gen_fu_l2b_*).
+
+- T-162, the protocol SVA layer: `gen_protocol_props.sv` (rtl-arch's draft id-for-id, 50 asserts, 20 covers, nine group
+  knobs) bound into gen_dut_top by `gen_binds.sv`; three draft forms had to change to compile and mean what the table says
+  (an implication inside a boolean conjunction rewritten as a boolean, `valid_drops` as `|->`, the store `fields_hold` as
+  `(!data_we_o || $stable(data_wdata_o))`) and the split rows became covers (gen_component_api_binds.md). Mutants
+  (gen_mut_step2b.md, landing 2b): MUT-M / MUT-N on the agents, RM1 / RM2 / RM3 on the RTL, every group knob's ablation PASS.
+  INCIDENT: the first RM1..RM3 batch (17:35-17:37Z) mutated the SHARED clone's rtl/ibex_core.sv and rtl/ibex_load_store_unit.sv
+  through a symlinked rtl copy (mut_l2b_final.log, kept as the record of it: its start/end sha lines differ); the files were
+  restored from HEAD at 17:39:28Z (shas 88b8bf3907472f1d / 86e156efaf7ac46a), Runtime and the Orchestrator were told
+  (intervention log), the driver now copies rtl for real and refuses a symlink, and RM1..RM3 were re-run from a private copy
+  with identical counts and an unchanged source tree (mut_l2b_rm_rerun.log). Only the re-run is cited.
+- T-179, COV_WITNESS (CG-WIT-001): red on wit/a, the command in the yaml and the covergroup package present but no
+  dispatcher route: gen_ut_witness FAIL `command COV_WITNESS has no consumer yet` (gen_fu_l2b_a_ut_witness_*). Second red on
+  wit/b after the route: `the first witness (TP-BIT-036) counts 2 distinct bins, expected 1` and a `wit_referee` error in
+  every run: an `int` cast of a real rounds to nearest, so the `+ 0.5` in the distinct-bin formula double-rounded (0 read as
+  1, 1 as 2; gen_fu_l2b_b_ut_witness_*, gen_fu_l2b_b_boot_zc_*). Green on wit/c and e: gen_ut_witness counts 1, 1, 2
+  (`GEN_WIT witnesses=3 distinct=2 covergroup=2`), gen_ut_witness with `+gen_fcov_en=0` PASS on the bookkeeping path,
+  gen_ut_witness_foreign FAILS by design (`GEN_WITNESS_FOREIGN COV_WITNESS TP-BIT-036 (index 0) belongs to
+  gen_bit_multicycle, issued by gen_bit_random`, covergroup 0, no referee). Codegen: the CSV loader's refusals (repeated bin,
+  missing file) are fixtures of gen_ut_knobs_codegen.py, which also mutates the rendered include like every target
+  (GEN_UT_KNOBS_CODEGEN PASS, 967 checks, gen_fu_l2b_ut_knobs_codegen.log). Mutant WM1 (the covergroup never sampled):
+  caught by gen_ut_witness (the peek stays 0), ablation `+gen_fcov_en=0` PASS. Protocol note for the template (Test Writer):
+  arg1 is the issuing test's group index (gen_component_api_fcov.md Section 7).
+- Misc rules: `crash_dump` (the mepc / mtval mirrors against the model of record at every record; LATE and EARLY named and
+  counted: dmem_err_dir 2466 checked / 54 late / 0 mismatches, the 54 being the load/store faults whose save edge is the
+  record's own; ebreak_r10 6 early, the handler's `csrw mepc`; s7 debug storm 2000 / 0 / 0) and `fetch_en` (no record later
+  than GEN_FETCH_EN_DRAIN_CYCLES = 64 after fetch_enable_i left On; gen_ut_fetch_en: 61 records by the end of the drain
+  window and 61 after 256 more idle cycles, the same under long rvalid delays on the seed-7 program: 201 / 201). Mutants
+  MB13 (exception_pc offset by 4: caught at order 1) and MB14 (the DUT's fetch_enable_i tied On: a record 68 cycles after
+  the Off edge), ablations PASS.
+- dbg_dret from the published state: the record after a dret outside debug has `pc_rdata == dpc` and `mode == dcsr.prv`
+  of the dret's model state (37 returns checked in gen_fu_l2b_lockstep_s7_dbg_storm_*, 0 failures); mutant RM4 (dret resumes
+  at dpc + 4, out-of-tree RTL from a private copy): 14 errors under `+gen_chk_all=0 +gen_chk_dbg_dret=1`, ablation PASS.
+- Rulings carried: the storm mean 100 and its livelock reason are in the yaml and gen_component_api_irq_agent.md (2a); the
+  three landing-2a comparator conventions are rows with RTL lines in gen_component_api_scoreboard.md (LOG-037c).
+- Landed sources: the shared tree was compiled twice after the copy-in, out_l2b (sources sha256 5ca9fd98c937c26f, equal to
+  wit/e; gen_fu_l2b_shared_*) and, after three review lows were folded in as comment / literal changes only (CM33-L-1: the
+  stale take() comment removed; CM33-L-2: CAUSE_LOAD_ACCESS in shim unit test section 13; CM25-L-1: the two false comments
+  at the interrupt-entry arming rewritten), out_l2b_final (sources sha256 f7289c6b83086cd2; gen_fu_l2b_final_*: boot_zc,
+  lockstep_zc, ut_witness, ut_fetch_en, dmem_err_dir, lockstep_s7_dbg_storm PASS, codegen --check up to date, shim unit test
+  PASS). The mutants above were built from wit/e's sources; the three edits do not enter any rule.
+- Scope note (LOG-046, T-205): the misc rules and dbg_dret were re-scoped to landing 2c while this landing was already built
+  and proven; they land here as built rather than being held back, so that the next windows can go to the covergroups.

@@ -295,12 +295,12 @@ of `cm.push` / `cm.pop` encodings in `ext_exp_insn` is not among the built check
 None: no covergroup samples the export, and the fcov-expectation rule is not applicable to the check-tier unit test
 (standing ruling); the Test Writer's tests that consume the file carry their own manifests.
 
-Witness command (addendum Section 9; planned, build step 3, nothing of it exists in the yaml or the env yet): a test
-whose cycle-level clause passed against the export records the fact through the bridge command `COV_WITNESS`
-(appended to `bridge_cmds`; arg0 = the rendered index of the marked test-plan item), routed by `gen_cmd_dispatch` to
-the covergroup `gen_cg_wit_cycle_clause` (plan id CG-WIT-001, `gen_fcov_pkg`), one bin per marked item, the bin list
-rendered from `gen_trace_tp_bin.csv`. Coverage only: no checker reads it, and the sample is the command itself, which
-a test issues only after its own clause passed.
+Witness command (addendum Section 9): BUILT in landing 2b as `COV_WITNESS` (appended to `bridge_cmds`; arg0 = the rendered
+index of the marked test-plan item, arg1 = the issuing test's group index), routed by `gen_cmd_dispatch` to
+`gen_fcov_pkg::gen_wit_cov` and its covergroup `gen_wit_cycle_clause_cg` (plan id CG-WIT-001), one bin per row of
+`dv/auto_dv/docs/gen_trace_witness_ids.csv` rendered by the codegen into `gen_wit_bins.svh` and the `WITNESS_*` tables of
+gen_knobs.py: gen_component_api_fcov.md. Coverage only: no checker reads it, and the sample is the command itself, which
+a test's epilogue issues only after its own clause passed.
 
 Mutation classes the export's CONSUMER catches (for the Test Writer; each with hidden referees inert,
 `+gen_chk_all=0`, and an ablation control with the named rule disabled):

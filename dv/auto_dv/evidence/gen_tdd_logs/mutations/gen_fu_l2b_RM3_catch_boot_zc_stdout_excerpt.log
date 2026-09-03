@@ -1,0 +1,612 @@
+# excerpt of scratch mut_root/RM3/out/RM3_catch_boot_zc/stdout.log (out-of-tree mutant RM3 (landing 2b); UVM_ERROR lines counted by grep: 545, first 12 kept)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem tohost=0x80000280
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(211) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(212) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(231) @ 0: uvm_test_top.env.sb [GEN_SB] ISA compare rows silenced by knob; the model still steps for the boundary checkers
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(241) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 45000ps failed at 45000ps
+UVM_ERROR @ 4500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 0
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 55000ps failed at 55000ps
+UVM_ERROR @ 5500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 1
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 65000ps failed at 65000ps
+UVM_ERROR @ 6500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 2
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 75000ps failed at 75000ps
+UVM_ERROR @ 7500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 3
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 85000ps failed at 85000ps
+UVM_ERROR @ 8500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 4
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 95000ps failed at 95000ps
+UVM_ERROR @ 9500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 5
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 105000ps failed at 105000ps
+UVM_ERROR @ 10500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 6
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 115000ps failed at 115000ps
+UVM_ERROR @ 11500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 7
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 125000ps failed at 125000ps
+UVM_ERROR @ 12500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 8
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 135000ps failed at 135000ps
+UVM_ERROR @ 13500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 9
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 145000ps failed at 145000ps
+UVM_ERROR @ 14500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 10
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 155000ps failed at 155000ps
+UVM_ERROR @ 15500: reporter [sva_dbus_tag_quiet] GEN_PROTO sva_dbus_tag_quiet: protocol property violated at cycle 11
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 165000ps failed at 165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 175000ps failed at 175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 185000ps failed at 185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 195000ps failed at 195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 205000ps failed at 205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 215000ps failed at 215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 225000ps failed at 225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 235000ps failed at 235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 245000ps failed at 245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 255000ps failed at 255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 265000ps failed at 265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 275000ps failed at 275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 285000ps failed at 285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 295000ps failed at 295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 305000ps failed at 305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 315000ps failed at 315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 325000ps failed at 325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 335000ps failed at 335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 345000ps failed at 345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 355000ps failed at 355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 365000ps failed at 365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 375000ps failed at 375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 385000ps failed at 385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 395000ps failed at 395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 405000ps failed at 405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 415000ps failed at 415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 425000ps failed at 425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 435000ps failed at 435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 445000ps failed at 445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 455000ps failed at 455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 465000ps failed at 465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 475000ps failed at 475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 485000ps failed at 485000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 495000ps failed at 495000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 505000ps failed at 505000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 515000ps failed at 515000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 525000ps failed at 525000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 535000ps failed at 535000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 545000ps failed at 545000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 555000ps failed at 555000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 565000ps failed at 565000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 575000ps failed at 575000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 585000ps failed at 585000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 595000ps failed at 595000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 605000ps failed at 605000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 615000ps failed at 615000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 625000ps failed at 625000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 635000ps failed at 635000ps
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_UT_BOOT read-back ok: 64 words
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 645000ps failed at 645000ps
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 655000ps failed at 655000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 665000ps failed at 665000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 675000ps failed at 675000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 685000ps failed at 685000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 695000ps failed at 695000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 705000ps failed at 705000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 715000ps failed at 715000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 725000ps failed at 725000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 735000ps failed at 735000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 745000ps failed at 745000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 755000ps failed at 755000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 765000ps failed at 765000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 775000ps failed at 775000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 785000ps failed at 785000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 795000ps failed at 795000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 805000ps failed at 805000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 815000ps failed at 815000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 825000ps failed at 825000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 835000ps failed at 835000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 845000ps failed at 845000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 855000ps failed at 855000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 865000ps failed at 865000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 875000ps failed at 875000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 885000ps failed at 885000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 895000ps failed at 895000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 905000ps failed at 905000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 915000ps failed at 915000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 925000ps failed at 925000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 935000ps failed at 935000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 945000ps failed at 945000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 955000ps failed at 955000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 965000ps failed at 965000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 975000ps failed at 975000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 985000ps failed at 985000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 995000ps failed at 995000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1005000ps failed at 1005000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1015000ps failed at 1015000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1025000ps failed at 1025000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1035000ps failed at 1035000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1045000ps failed at 1045000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1055000ps failed at 1055000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1065000ps failed at 1065000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1075000ps failed at 1075000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1085000ps failed at 1085000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1095000ps failed at 1095000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1105000ps failed at 1105000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1115000ps failed at 1115000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1125000ps failed at 1125000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1135000ps failed at 1135000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1145000ps failed at 1145000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1155000ps failed at 1155000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1165000ps failed at 1165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1175000ps failed at 1175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1185000ps failed at 1185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1195000ps failed at 1195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1205000ps failed at 1205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1215000ps failed at 1215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1225000ps failed at 1225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1235000ps failed at 1235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1245000ps failed at 1245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1255000ps failed at 1255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1265000ps failed at 1265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1275000ps failed at 1275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1285000ps failed at 1285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1295000ps failed at 1295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1305000ps failed at 1305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1315000ps failed at 1315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1325000ps failed at 1325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1335000ps failed at 1335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1345000ps failed at 1345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1355000ps failed at 1355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1365000ps failed at 1365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1375000ps failed at 1375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1385000ps failed at 1385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1395000ps failed at 1395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1405000ps failed at 1405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1415000ps failed at 1415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1425000ps failed at 1425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1435000ps failed at 1435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1445000ps failed at 1445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1455000ps failed at 1455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1465000ps failed at 1465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1475000ps failed at 1475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1485000ps failed at 1485000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1495000ps failed at 1495000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1505000ps failed at 1505000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1515000ps failed at 1515000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1525000ps failed at 1525000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1535000ps failed at 1535000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1545000ps failed at 1545000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1555000ps failed at 1555000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1565000ps failed at 1565000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1575000ps failed at 1575000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1585000ps failed at 1585000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1595000ps failed at 1595000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1605000ps failed at 1605000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1615000ps failed at 1615000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1625000ps failed at 1625000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1635000ps failed at 1635000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1645000ps failed at 1645000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1655000ps failed at 1655000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1665000ps failed at 1665000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1675000ps failed at 1675000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1685000ps failed at 1685000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1695000ps failed at 1695000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1705000ps failed at 1705000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1715000ps failed at 1715000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1725000ps failed at 1725000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1735000ps failed at 1735000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1745000ps failed at 1745000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1755000ps failed at 1755000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1765000ps failed at 1765000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1775000ps failed at 1775000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1785000ps failed at 1785000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1795000ps failed at 1795000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1805000ps failed at 1805000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1815000ps failed at 1815000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1825000ps failed at 1825000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1835000ps failed at 1835000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1845000ps failed at 1845000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1855000ps failed at 1855000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1865000ps failed at 1865000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1875000ps failed at 1875000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1885000ps failed at 1885000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1895000ps failed at 1895000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1905000ps failed at 1905000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1915000ps failed at 1915000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1925000ps failed at 1925000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1935000ps failed at 1935000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1945000ps failed at 1945000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1955000ps failed at 1955000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1965000ps failed at 1965000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1975000ps failed at 1975000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1985000ps failed at 1985000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 1995000ps failed at 1995000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2005000ps failed at 2005000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2015000ps failed at 2015000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2025000ps failed at 2025000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2035000ps failed at 2035000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2045000ps failed at 2045000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2055000ps failed at 2055000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2065000ps failed at 2065000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2075000ps failed at 2075000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2085000ps failed at 2085000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2095000ps failed at 2095000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2105000ps failed at 2105000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2115000ps failed at 2115000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2125000ps failed at 2125000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2135000ps failed at 2135000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2145000ps failed at 2145000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2155000ps failed at 2155000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2165000ps failed at 2165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2175000ps failed at 2175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2185000ps failed at 2185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2195000ps failed at 2195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2205000ps failed at 2205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2215000ps failed at 2215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2225000ps failed at 2225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2235000ps failed at 2235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2245000ps failed at 2245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2255000ps failed at 2255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2265000ps failed at 2265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2275000ps failed at 2275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2285000ps failed at 2285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2295000ps failed at 2295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2305000ps failed at 2305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2315000ps failed at 2315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2325000ps failed at 2325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2335000ps failed at 2335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2345000ps failed at 2345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2355000ps failed at 2355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2365000ps failed at 2365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2375000ps failed at 2375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2385000ps failed at 2385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2395000ps failed at 2395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2405000ps failed at 2405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2415000ps failed at 2415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2425000ps failed at 2425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2435000ps failed at 2435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2445000ps failed at 2445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2455000ps failed at 2455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2465000ps failed at 2465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2475000ps failed at 2475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2485000ps failed at 2485000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2495000ps failed at 2495000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2505000ps failed at 2505000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2515000ps failed at 2515000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2525000ps failed at 2525000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2535000ps failed at 2535000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2545000ps failed at 2545000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2555000ps failed at 2555000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2565000ps failed at 2565000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2575000ps failed at 2575000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2585000ps failed at 2585000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2595000ps failed at 2595000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2605000ps failed at 2605000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2615000ps failed at 2615000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2625000ps failed at 2625000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2635000ps failed at 2635000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2645000ps failed at 2645000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2655000ps failed at 2655000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2665000ps failed at 2665000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2675000ps failed at 2675000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2685000ps failed at 2685000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2695000ps failed at 2695000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2705000ps failed at 2705000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2715000ps failed at 2715000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2725000ps failed at 2725000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2735000ps failed at 2735000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2745000ps failed at 2745000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2755000ps failed at 2755000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2765000ps failed at 2765000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2775000ps failed at 2775000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2785000ps failed at 2785000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2795000ps failed at 2795000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2805000ps failed at 2805000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2815000ps failed at 2815000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2825000ps failed at 2825000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2835000ps failed at 2835000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2845000ps failed at 2845000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2855000ps failed at 2855000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2865000ps failed at 2865000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2875000ps failed at 2875000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2885000ps failed at 2885000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2895000ps failed at 2895000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2905000ps failed at 2905000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2915000ps failed at 2915000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2925000ps failed at 2925000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2935000ps failed at 2935000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2945000ps failed at 2945000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2955000ps failed at 2955000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2965000ps failed at 2965000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2975000ps failed at 2975000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2985000ps failed at 2985000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 2995000ps failed at 2995000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3005000ps failed at 3005000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3015000ps failed at 3015000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3025000ps failed at 3025000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3035000ps failed at 3035000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3045000ps failed at 3045000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3055000ps failed at 3055000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3065000ps failed at 3065000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3075000ps failed at 3075000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3085000ps failed at 3085000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3095000ps failed at 3095000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3105000ps failed at 3105000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3115000ps failed at 3115000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3125000ps failed at 3125000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3135000ps failed at 3135000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3145000ps failed at 3145000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3155000ps failed at 3155000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3165000ps failed at 3165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3175000ps failed at 3175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3185000ps failed at 3185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3195000ps failed at 3195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3205000ps failed at 3205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3215000ps failed at 3215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3225000ps failed at 3225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3235000ps failed at 3235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3245000ps failed at 3245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3255000ps failed at 3255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3265000ps failed at 3265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3275000ps failed at 3275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3285000ps failed at 3285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3295000ps failed at 3295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3305000ps failed at 3305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3315000ps failed at 3315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3325000ps failed at 3325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3335000ps failed at 3335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3345000ps failed at 3345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3355000ps failed at 3355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3365000ps failed at 3365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3375000ps failed at 3375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3385000ps failed at 3385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3395000ps failed at 3395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3405000ps failed at 3405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3415000ps failed at 3415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3425000ps failed at 3425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3435000ps failed at 3435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3445000ps failed at 3445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3455000ps failed at 3455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3465000ps failed at 3465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3475000ps failed at 3475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3485000ps failed at 3485000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3495000ps failed at 3495000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3505000ps failed at 3505000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3515000ps failed at 3515000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3525000ps failed at 3525000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3535000ps failed at 3535000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3545000ps failed at 3545000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3555000ps failed at 3555000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3565000ps failed at 3565000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3575000ps failed at 3575000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3585000ps failed at 3585000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3595000ps failed at 3595000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3605000ps failed at 3605000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3615000ps failed at 3615000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3625000ps failed at 3625000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3635000ps failed at 3635000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3645000ps failed at 3645000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3655000ps failed at 3655000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3665000ps failed at 3665000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3675000ps failed at 3675000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3685000ps failed at 3685000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3695000ps failed at 3695000ps
+  3705.00ns INFO     cocotb.gen_tb_top                  GEN_UT_BOOT retired 100 (target 100) at cycle 366
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3705000ps failed at 3705000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3715000ps failed at 3715000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3725000ps failed at 3725000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3735000ps failed at 3735000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3745000ps failed at 3745000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3755000ps failed at 3755000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3765000ps failed at 3765000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3775000ps failed at 3775000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3785000ps failed at 3785000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3795000ps failed at 3795000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3805000ps failed at 3805000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3815000ps failed at 3815000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3825000ps failed at 3825000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3835000ps failed at 3835000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3845000ps failed at 3845000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3855000ps failed at 3855000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3865000ps failed at 3865000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3875000ps failed at 3875000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3885000ps failed at 3885000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3895000ps failed at 3895000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3905000ps failed at 3905000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3915000ps failed at 3915000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3925000ps failed at 3925000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3935000ps failed at 3935000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3945000ps failed at 3945000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3955000ps failed at 3955000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3965000ps failed at 3965000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3975000ps failed at 3975000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3985000ps failed at 3985000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 3995000ps failed at 3995000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4005000ps failed at 4005000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4015000ps failed at 4015000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4025000ps failed at 4025000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4035000ps failed at 4035000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4045000ps failed at 4045000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4055000ps failed at 4055000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4065000ps failed at 4065000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4075000ps failed at 4075000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4085000ps failed at 4085000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4095000ps failed at 4095000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4105000ps failed at 4105000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4115000ps failed at 4115000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4125000ps failed at 4125000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4135000ps failed at 4135000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4145000ps failed at 4145000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4155000ps failed at 4155000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4165000ps failed at 4165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4175000ps failed at 4175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4185000ps failed at 4185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4195000ps failed at 4195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4205000ps failed at 4205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4215000ps failed at 4215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4225000ps failed at 4225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4235000ps failed at 4235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4245000ps failed at 4245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4255000ps failed at 4255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4265000ps failed at 4265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4275000ps failed at 4275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4285000ps failed at 4285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4295000ps failed at 4295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4305000ps failed at 4305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4315000ps failed at 4315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4325000ps failed at 4325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4335000ps failed at 4335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4345000ps failed at 4345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4355000ps failed at 4355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4365000ps failed at 4365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4375000ps failed at 4375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4385000ps failed at 4385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4395000ps failed at 4395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4405000ps failed at 4405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4415000ps failed at 4415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4425000ps failed at 4425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4435000ps failed at 4435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4445000ps failed at 4445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4455000ps failed at 4455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4465000ps failed at 4465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4475000ps failed at 4475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4485000ps failed at 4485000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4495000ps failed at 4495000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4505000ps failed at 4505000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4515000ps failed at 4515000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4525000ps failed at 4525000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4535000ps failed at 4535000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4545000ps failed at 4545000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4555000ps failed at 4555000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4565000ps failed at 4565000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4575000ps failed at 4575000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4585000ps failed at 4585000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4595000ps failed at 4595000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4605000ps failed at 4605000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4615000ps failed at 4615000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4625000ps failed at 4625000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4635000ps failed at 4635000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4645000ps failed at 4645000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4655000ps failed at 4655000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4665000ps failed at 4665000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4675000ps failed at 4675000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4685000ps failed at 4685000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4695000ps failed at 4695000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4705000ps failed at 4705000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4715000ps failed at 4715000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4725000ps failed at 4725000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4735000ps failed at 4735000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4745000ps failed at 4745000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4755000ps failed at 4755000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4765000ps failed at 4765000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4775000ps failed at 4775000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4785000ps failed at 4785000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4795000ps failed at 4795000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4805000ps failed at 4805000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4815000ps failed at 4815000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4825000ps failed at 4825000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4835000ps failed at 4835000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4845000ps failed at 4845000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4855000ps failed at 4855000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4865000ps failed at 4865000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4875000ps failed at 4875000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4885000ps failed at 4885000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4895000ps failed at 4895000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4905000ps failed at 4905000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4915000ps failed at 4915000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4925000ps failed at 4925000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4935000ps failed at 4935000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4945000ps failed at 4945000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4955000ps failed at 4955000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4965000ps failed at 4965000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4975000ps failed at 4975000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4985000ps failed at 4985000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 4995000ps failed at 4995000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5005000ps failed at 5005000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5015000ps failed at 5015000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5025000ps failed at 5025000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5035000ps failed at 5035000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5045000ps failed at 5045000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5055000ps failed at 5055000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5065000ps failed at 5065000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5075000ps failed at 5075000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5085000ps failed at 5085000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5095000ps failed at 5095000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5105000ps failed at 5105000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5115000ps failed at 5115000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5125000ps failed at 5125000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5135000ps failed at 5135000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5145000ps failed at 5145000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5155000ps failed at 5155000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5165000ps failed at 5165000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5175000ps failed at 5175000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5185000ps failed at 5185000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5195000ps failed at 5195000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5205000ps failed at 5205000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5215000ps failed at 5215000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5225000ps failed at 5225000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5235000ps failed at 5235000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5245000ps failed at 5245000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5255000ps failed at 5255000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5265000ps failed at 5265000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5275000ps failed at 5275000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5285000ps failed at 5285000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5295000ps failed at 5295000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5305000ps failed at 5305000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5315000ps failed at 5315000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5325000ps failed at 5325000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5335000ps failed at 5335000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5345000ps failed at 5345000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5355000ps failed at 5355000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5365000ps failed at 5365000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5375000ps failed at 5375000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5385000ps failed at 5385000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5395000ps failed at 5395000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5405000ps failed at 5405000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5415000ps failed at 5415000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5425000ps failed at 5425000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5435000ps failed at 5435000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5445000ps failed at 5445000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5455000ps failed at 5455000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5465000ps failed at 5465000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5475000ps failed at 5475000ps
+"dv/auto_dv/tb/gen_protocol_props.sv", 216: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet: started at 5485000ps failed at 5485000ps
+  5490.00ns INFO     cocotb.gen_tb_top                  GEN_UT_BOOT tohost code 0x00000001
+UVM_INFO @ 549000: reporter [GEN_EOT] end-of-test store 0x00000001 at 0x80000280 (store 1)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(340) @ 549000: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 544, commands consumed 65, retired 169
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(696) @ 549000: uvm_test_top.env.dbg [GEN_DBG] requests=0 releases=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(288) @ 549000: uvm_test_top.env.dbg_chk [GEN_DBG_CHK] debug entries=0 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(628) @ 549000: uvm_test_top.env.irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(243) @ 549000: uvm_test_top.env.irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=541 mismatches=0; entries=0 nmi=0 (internal 0, accepted on announced corruptions) cause checked=0 mismatches=0 priority undecidable=0 bound failures=0 expectations released=0 open expectations=0 nmi_internal bound failures=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(429) @ 549000: uvm_test_top.env.misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0; alert_internal hits=0; data_tag hits=544; sync traps=0 double faults expected=0 pulses=0 mismatches=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(163) @ 549000: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=169 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(551) @ 549000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=148 mismatches=0 folded=21 draft_b=0 traps=0 breakpoints=0 irq_entries=0 dbg_entries=0 zcmp_splits=0 faults_armed=0 faults_unannounced=0 bus_err_announced=0 b13_odd_jalr=0 rf_wr_suppressed=0 nmi_preempted=0 rvfi_rmask_on_nonload=126
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(247) @ 549000: uvm_test_top.env [GEN_ENV] mem: 204 words, 0 mmio writes, 0 unmapped accesses; eot stores 1 (last code 0x00000001); sig writes 0; key requests 0; commands routed 65 ignored 0
+  5490.00ns INFO     cocotb.gen_tb_top                  GEN_UT_BOOT_PASS
+UVM_WARNING :    0
+UVM_ERROR :  545
+UVM_FATAL :    0
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_DBG]     1
+[GEN_DBG_CHK]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_IRQ]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     3
+  5490.01ns INFO     cocotb.regression                  gen_ut_boot passed
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                      5490.01           0.09      61566.27  **

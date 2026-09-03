@@ -254,7 +254,8 @@ package gen_checkers_pkg;
     logic [63:0] req_order; int unsigned req_cycle; bit req_open = 0;
     bit dbg_q = 0, dret_q = 0, have_st = 0;
     logic [63:0] last_order;
-    int unsigned entries = 0, bound_fail = 0, masked_fail = 0;
+    int unsigned entries = 0, bound_fail = 0, masked_fail = 0, dret_checked = 0, dret_fail = 0;
+    logic [31:0] dpc_q, dcsr_q;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       imp_state = new("imp_state", this);
@@ -268,6 +269,17 @@ package gen_checkers_pkg;
       if (e.level && have_st && !dbg_q && !req_open) begin req_open = 1; req_order = last_order; req_cycle = e.cycle; end   // the first open request keeps the bound
     endfunction
     function void write_state(gen_model_state st);
+      // dbg_dret: the record after a dret is fetched from the model's dpc in the mode dcsr.prv named (rtl/ibex_if_stage.sv:247;
+      // a request held through the dret re-enters debug first and that record is the debug ROM's, judged by the entry rule)
+      if (have_st && dret_q && !st.debug_mode) begin
+        dret_checked++;
+        if (st.pc_rdata != dpc_q || st.mode != dcsr_q[1:0]) begin
+          dret_fail++;
+          if (gen_chk_en(cfg, cfg.chk_dbg_dret, cfg.chk_dbg_dret_set))
+            `uvm_error("dbg_dret", $sformatf("record after dret (order %0d): pc %08h mode %0d, dpc %08h dcsr.prv %0d", st.order, st.pc_rdata, st.mode, dpc_q, dcsr_q[1:0]))
+        end
+      end
+      dpc_q = st.dpc; dcsr_q = st.dcsr;
       if (st.debug_mode && (!dbg_q || dret_q)) begin   // a request held through dret re-enters at once
         entries++;
         req_open = 0;
@@ -285,7 +297,7 @@ package gen_checkers_pkg;
       dbg_q = st.debug_mode; dret_q = st.is_dret; last_order = st.order; have_st = 1;
     endfunction
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_DBG_CHK", $sformatf("debug entries=%0d bound failures=%0d masked failures=%0d", entries, bound_fail, masked_fail), UVM_LOW)
+      `uvm_info("GEN_DBG_CHK", $sformatf("debug entries=%0d bound failures=%0d masked failures=%0d dret checked=%0d failures=%0d", entries, bound_fail, masked_fail, dret_checked, dret_fail), UVM_LOW)
     endfunction
   endclass
 
@@ -335,6 +347,11 @@ package gen_checkers_pkg;
     int unsigned dfs_pulses = 0, dfs_expected = 0, dfs_mismatch = 0, sync_traps = 0;
     int unsigned dfs_cycles [$];
     bit sync_seen = 0;
+    // crash_dump mirror: the mismatch seen at a record and the models of record on both sides of it
+    bit cd_pending = 0; logic [31:0] cd_epc_seen, cd_addr_seen, cd_epc_exp, cd_addr_exp, cd_epc_prev, cd_addr_prev; logic [63:0] cd_order;
+    int unsigned cd_checked = 0, cd_late = 0, cd_early = 0, cd_mismatch = 0;
+    // fetch_enable: the cycle it left On (0 = never / back On) and the records seen after the drain window
+    int unsigned fe_off_cycle = 0, fe_records_after_off = 0, fe_late_records = 0; bit fe_on_q = 1;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       imp_state = new("imp_state", this);
@@ -357,6 +374,38 @@ package gen_checkers_pkg;
       sink.register_row("misc", "crash_dump_exception_addr");
     endfunction
     function void write_state(gen_model_state st);
+      // crash_dump_o.exception_pc / exception_addr mirror mepc / mtval (rtl/ibex_core.sv:1329-1330). At a record's posedge the
+      // mirror shows the CSR before that edge: a trap saving at the record's own edge (load/store faults) is one record LATE, the
+      // next record's CSR write (GEN_CSR_WRITE_TO_RVFI_OFFSET edges ahead of its record) can show one record EARLY; both are
+      // accepted by name, anything else is a crash_dump failure judged when the next state arrives
+      if (cd_pending) begin
+        if (cd_epc_seen == st.mepc && cd_addr_seen == st.mtval) cd_early++;
+        else begin
+          cd_mismatch++;
+          if (gen_chk_en(cfg, cfg.chk_crash_dump, cfg.chk_crash_dump_set))
+            `uvm_error("crash_dump", $sformatf("crash_dump exception_pc/exception_addr %08h/%08h at order %0d: model mepc/mtval %08h/%08h, previous %08h/%08h, next %08h/%08h",
+                                               cd_epc_seen, cd_addr_seen, cd_order, cd_epc_exp, cd_addr_exp, cd_epc_prev, cd_addr_prev, st.mepc, st.mtval))
+        end
+        cd_pending = 0;
+      end
+      cd_checked++;
+      if (misc.crash_dump.exception_pc != st.mepc || misc.crash_dump.exception_addr != st.mtval) begin
+        if (cd_checked > 1 && misc.crash_dump.exception_pc == cd_epc_prev && misc.crash_dump.exception_addr == cd_addr_prev) cd_late++;
+        else begin
+          cd_pending = 1; cd_epc_seen = misc.crash_dump.exception_pc; cd_addr_seen = misc.crash_dump.exception_addr;
+          cd_epc_exp = st.mepc; cd_addr_exp = st.mtval; cd_order = st.order;
+        end
+      end
+      cd_epc_prev = st.mepc; cd_addr_prev = st.mtval;
+      // fetch_en: after fetch_enable_i leaves On only the in-flight instructions retire, within GEN_FETCH_EN_DRAIN_CYCLES
+      if (fe_off_cycle != 0) begin
+        fe_records_after_off++;
+        if (st.cycle > fe_off_cycle + GEN_FETCH_EN_DRAIN_CYCLES) begin
+          fe_late_records++;
+          if (gen_chk_en(cfg, cfg.chk_fetch_en, cfg.chk_fetch_en_set))
+            `uvm_error("fetch_en", $sformatf("record at order %0d, cycle %0d, %0d cycles after fetch_enable_i left On at cycle %0d (drain window %0d)", st.order, st.cycle, st.cycle - fe_off_cycle, fe_off_cycle, GEN_FETCH_EN_DRAIN_CYCLES))
+        end
+      end
       if (st.is_mret && !st.is_trap) sync_seen = 0;
       if (st.is_trap && !st.is_intr && !st.debug_mode) begin
         bit is_store; int unsigned bytes;
@@ -416,6 +465,12 @@ package gen_checkers_pkg;
               `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d without an announced ECC injection", misc.cycle))
           end
         end
+        begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
+          bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
+          if (fe_on_q && !fe_on) fe_off_cycle = misc.cycle;
+          if (fe_on) fe_off_cycle = 0;
+          fe_on_q = fe_on;
+        end
         if (misc.double_fault_seen) begin
           dfs_pulses++;
           dfs_cycles.push_back(misc.cycle);
@@ -426,8 +481,8 @@ package gen_checkers_pkg;
     function void report_phase(uvm_phase phase);
       if (dfs_pulses > dfs_expected && gen_chk_en(cfg, cfg.chk_double_fault, cfg.chk_double_fault_set))
         `uvm_error("double_fault", $sformatf("%0d double_fault_seen_o pulses for %0d expected double faults", dfs_pulses, dfs_expected))
-      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d; alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d",
-                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch), UVM_LOW)
+      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d; alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
+                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
     endfunction
   endclass
 endpackage

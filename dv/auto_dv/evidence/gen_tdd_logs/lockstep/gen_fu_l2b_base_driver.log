@@ -1,0 +1,14 @@
+start 17:35:13Z sources sha256: 68a36e6ac32db967
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm_nmi: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+pmp_deny: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+dmem_err_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+alert_bus_intg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+intg_s7_allchk: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 17:35:41Z
+all done 17:37:40Z

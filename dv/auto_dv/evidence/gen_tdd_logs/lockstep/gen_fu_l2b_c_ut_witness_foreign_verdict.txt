@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:32
+evidence: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(60) @ 310500: uvm_test_top.env.wit [GEN_WITNESS_FOREIGN] COV_WITNESS TP-BIT-036 (index 0) belongs to gen_bit_multicycle, issued by gen_bit_random
+uvm_counts: {'INFO': 21, 'WARNING': 0, 'ERROR': 1, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

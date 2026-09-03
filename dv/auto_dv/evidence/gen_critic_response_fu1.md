@@ -39,3 +39,10 @@ gen_tdd_logs/*/gen_fu_l1c_*. Build of record: the copy's build f, sources sha256
 - The riscv-dv seed-7 program derails under injected data faults (skipped loads, then an unmapped read where the TB memory
   returns zeros and Spike faults): a program limit, recorded in gen_component_api_scoreboard.md; gen_dmem_err_directed.S is
   the vehicle instead.
+
+## Cross-model review of landing 1c (9e912bb, artifact 2026-09-03-claude-diff-8fff8755-9e912bb6.md, APPROVE-WITH-CHANGES): CM33 rows
+
+| id | finding | status | as built |
+|---|---|---|---|
+| CM33-L-1 | gen_tb_pkg.sv:531-532 comment says take() consumes EVERY announcement, contradicting take_word | FIXED (landing 2b) | the two stale lines are deleted; the one-announcement-one-event comment stands alone. |
+| CM33-L-2 | gen_ut_isa_shim.cc:417 keeps the literal cause 5 | FIXED (landing 2b) | `CAUSE_LOAD_ACCESS` from Spike's encoding header. |

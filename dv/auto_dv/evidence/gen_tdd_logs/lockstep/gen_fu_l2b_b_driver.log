@@ -1,0 +1,6 @@
+start 17:45:19Z sources sha256: 8d5824cba05661e5
+ut_witness: verdict: FAIL reason: cocotb_summary at stdout.log:53  uvm_err=0
+ut_witness_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_witness_foreign: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=3
+boot_zc: verdict: FAIL reason: uvm_error at sim.log:45  uvm_err=2
+lockstep_zc: verdict: FAIL reason: uvm_error at sim.log:45  uvm_err=2

@@ -3,6 +3,8 @@
 +incdir+dv/auto_dv/env
 dv/auto_dv/tb/gen_tb_pkg.sv
 dv/auto_dv/tb/gen_dut_top.sv
+dv/auto_dv/tb/gen_protocol_props.sv
+dv/auto_dv/tb/gen_binds.sv
 dv/auto_dv/tb/gen_bridge_if.sv
 dv/auto_dv/tb/gen_bus_if.sv
 dv/auto_dv/tb/gen_scrkey_if.sv
@@ -14,6 +16,7 @@ dv/auto_dv/tb/gen_dbg_if.sv
 dv/auto_dv/tb/gen_misc_if.sv
 dv/auto_dv/env/gen_cfg_pkg.sv
 dv/auto_dv/env/gen_export_pkg.sv
+dv/auto_dv/env/gen_fcov_pkg.sv
 dv/auto_dv/env/gen_mem_pkg.sv
 dv/auto_dv/env/gen_agents_pkg.sv
 dv/auto_dv/isa/gen_isa_dpi_pkg.sv

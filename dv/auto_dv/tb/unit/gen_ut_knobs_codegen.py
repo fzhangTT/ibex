@@ -26,7 +26,8 @@ PROGRAM = ROOT / "dv/auto_dv/stim/gen_program.py"
 SCRATCH = ROOT / "dv/auto_dv/work/tb-infra/ut_scratch/knobs_codegen"
 TARGETS = ("dv/auto_dv/tb/gen_tb_pkg.sv", "dv/auto_dv/tb/gen_env_cfg_knobs.svh",
            "dv/auto_dv/gen_tb/gen_knobs.py", "dv/auto_dv/isa/gen_isa_shim_map.h",
-           "dv/auto_dv/env/gen_export_record_line.svh", "dv/auto_dv/env/gen_export_event_lines.svh")
+           "dv/auto_dv/env/gen_export_record_line.svh", "dv/auto_dv/env/gen_export_event_lines.svh",
+           "dv/auto_dv/env/gen_wit_bins.svh")
 RVFI_PKG = ROOT / "dv/auto_dv/env/gen_rvfi_pkg.sv"
 # the 20 DV Lead regime knobs (gen_fcov_plan.md Section REG)
 REG_KNOBS = ["imem_gnt_delay", "imem_rvalid_delay", "imem_err_rate", "imem_intg_err_rate", "imem_outstanding_cap",
@@ -92,6 +93,12 @@ def refused_fixtures(text):
     yield ("active source outside the event table refused", text.replace("export_active_sources: [ibus,", "export_active_sources: [ibux,", 1), "export_active_sources must list")
     yield ("export event wildcard row refused", text.replace("{source: icram, event: inject, fields: [way, index]}",
                                                               '{source: icram, event: "<name>", fields: [way, index]}', 1), "no wildcard rows")
+    # CG-WIT-001 CSV: a repeated bin and a missing file are refused (the yaml names the file; an absolute path is allowed)
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    bad = SCRATCH / "wit_repeated_bin.csv"
+    bad.write_text("index,tp_item,bin,test_group,marked\n0,TP-BIT-036,w_tp_bit_036,gen_bit_multicycle,0\n1,TP-BIT-042,w_tp_bit_036,gen_bit_random,0\n")
+    yield ("witness csv with a repeated bin refused", text.replace("witness_csv: dv/auto_dv/docs/gen_trace_witness_ids.csv", f"witness_csv: {bad}", 1), "repeated bin")
+    yield ("missing witness csv refused", text.replace("witness_csv: dv/auto_dv/docs/gen_trace_witness_ids.csv", "witness_csv: dv/auto_dv/docs/gen_no_such.csv", 1), "not found")
     yield ("default and default_from together", text.replace("{name: hart_id, kind: hex, default: 0,",
                                                              "{name: hart_id, kind: hex, default: 0, default_from: GEN_CLK_PERIOD_NS,", 1),
            "exactly one of default / default_from")
@@ -279,7 +286,7 @@ def main():
     root = SCRATCH / "tree"
     if root.exists():
         shutil.rmtree(root)
-    for rel in TARGETS:
+    for rel in TARGETS + ("dv/auto_dv/docs/gen_trace_witness_ids.csv",):   # the CSV is an input the renderer reads under --root
         dst = root / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / rel, dst)

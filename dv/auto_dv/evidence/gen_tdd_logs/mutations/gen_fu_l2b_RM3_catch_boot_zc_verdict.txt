@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: assertion_failure at sim.log:33
+evidence: 	Offending '(data_tag_o == 1'b0)'
+uvm_counts: {'INFO': 22, 'WARNING': 0, 'ERROR': 545, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

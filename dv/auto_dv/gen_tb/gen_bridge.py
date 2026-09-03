@@ -5,7 +5,7 @@ Python asserts (the only Python-side failure mechanism, TB_CONTRACT Section 3); 
 import cocotb
 from cocotb.triggers import Edge, with_timeout
 
-from dv.auto_dv.gen_tb.gen_knobs import CMD, PLUSARGS
+from dv.auto_dv.gen_tb.gen_knobs import CMD, PLUSARGS, WITNESS_GROUPS, WITNESS_IDS
 
 
 def knob_default(name):
@@ -66,6 +66,12 @@ class GenBridge:
         """EXPORT_FLUSH: the sink writes its flush marker and flushes before the ack; returns the flush sequence number
         (carried back in peek_data) for gen_export.read(path, seq)."""
         return await self.cmd("EXPORT_FLUSH", (0, 0, 0, 0), timeout_cycles)
+
+    async def cov_witness(self, tp_item, owner_group, timeout_cycles=200):
+        """COV_WITNESS (CG-WIT-001): the issuing test's fire-check cycle clause held for tp_item; arg0 = the item's rendered
+        index, arg1 = the issuing test's group index (the dispatcher refuses an item of another group). Returns the distinct
+        bins hit so far as the covergroup counts them."""
+        return await self.cmd("COV_WITNESS", (WITNESS_IDS[tp_item], WITNESS_GROUPS[owner_group], 0, 0), timeout_cycles)
 
     async def wait_cycles_until(self, target_cycle, timeout_cycles=None):
         """Arm the cycle threshold and await its single hit edge."""

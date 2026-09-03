@@ -33,12 +33,13 @@ REL_PY = "dv/auto_dv/gen_tb/gen_knobs.py"
 REL_H = "dv/auto_dv/isa/gen_isa_shim_map.h"
 REL_RLINE = "dv/auto_dv/env/gen_export_record_line.svh"
 REL_ELINE = "dv/auto_dv/env/gen_export_event_lines.svh"
+REL_WIT = "dv/auto_dv/env/gen_wit_bins.svh"
 BEGIN = "  // GEN_KNOBS_BEGIN"
 END = "  // GEN_KNOBS_END"
 KINDS = {"string", "int", "hex", "bool", "enum"}
 SCHEMA = {
     "top": {"schema_version", "isa_string", "plusargs", "bridge_cmds", "regime_windows", "constants", "memory_map",
-            "export_record_fields", "export_counter_fields", "export_events", "export_active_sources"},
+            "export_record_fields", "export_counter_fields", "export_events", "export_active_sources", "witness_csv"},
     "export_event": {"source", "event", "fields"},
     "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc", "regime_set_consumer"},
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
@@ -603,6 +604,14 @@ def render_py(src, mm, cvals):
     for row in src["export_events"]:
         L.append(f"    ({row['source']!r}, {row['event']!r}, {tuple(row['fields'])!r}),")
     L.append(")"); L.append("")
+    rows = src.get("_witness_rows") or []
+    groups = witness_groups(rows)
+    L.append("# CG-WIT-001 witness protocol (COV_WITNESS arg0 = WITNESS_IDS[tp], arg1 = WITNESS_GROUPS[the issuing test's group])")
+    L.append("WITNESS_IDS = {" + ", ".join(f"{r['tp_item']!r}: {i}" for i, r in enumerate(rows)) + "}")
+    L.append("WITNESS_BINS = {" + ", ".join(f"{r['tp_item']!r}: {r['bin']!r}" for r in rows) + "}")
+    L.append("WITNESS_GROUP_OF = {" + ", ".join(f"{r['tp_item']!r}: {r['test_group']!r}" for r in rows) + "}")
+    L.append("WITNESS_GROUPS = {" + ", ".join(f"{g!r}: {k}" for g, k in groups.items()) + "}")
+    L.append(f"WITNESS_COUNT = {len(rows)}"); L.append("")
     L.append("MEMORY_MAP = {")
     for k, v in mm.items():
         L.append(f'    "{k}": 0x{v:08x},')
@@ -685,15 +694,71 @@ def render_cfg(src):
     return "\n".join(L) + "\n"
 
 
+def load_witness(src, root):
+    """The CG-WIT-001 rows of the witness CSV (witness_csv): index = row order, unique bins w_tp_<area>_<nnn>, non-empty groups."""
+    import csv
+    rel = src.get("witness_csv")
+    if not isinstance(rel, str) or not rel:
+        die("witness_csv must name the CG-WIT-001 CSV")
+    path = Path(rel) if Path(rel).is_absolute() else root / rel
+    if not path.is_file():
+        die(f"witness_csv {rel} not found")
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+    if not rows or set(rows[0].keys()) != {"index", "tp_item", "bin", "test_group", "marked"}:
+        die(f"witness_csv {rel}: columns must be index,tp_item,bin,test_group,marked")
+    seen_bin, seen_tp = set(), set()
+    for i, r in enumerate(rows):
+        if r["index"] != str(i):
+            die(f"witness_csv {rel}: row {i} carries index {r['index']}")
+        if not re.fullmatch(r"TP-[A-Z]+-[0-9]{3}", r["tp_item"]) or r["tp_item"] in seen_tp:
+            die(f"witness_csv {rel}: bad or repeated tp_item {r['tp_item']} at row {i}")
+        if not re.fullmatch(r"w_tp_[a-z0-9]+_[0-9]{3}", r["bin"]) or r["bin"] in seen_bin:
+            die(f"witness_csv {rel}: bad or repeated bin {r['bin']} at row {i}")
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", r["test_group"]):
+            die(f"witness_csv {rel}: bad test_group {r['test_group']!r} at row {i}")
+        if r["marked"] not in ("0", "1"):
+            die(f"witness_csv {rel}: marked must be 0 or 1 at row {i}")
+        seen_bin.add(r["bin"]); seen_tp.add(r["tp_item"])
+    return rows
+
+
+def witness_groups(rows):
+    """test group -> group index, in first-appearance order."""
+    groups = {}
+    for r in rows:
+        groups.setdefault(r["test_group"], len(groups))
+    return groups
+
+
+def render_wit(rows):
+    groups = witness_groups(rows)
+    L = ["// gen_wit_bins.svh: CG-WIT-001 witness bins, rendered by dv/auto_dv/tb/gen_knobs_codegen.py from the yaml's witness_csv",
+         "// (dv/auto_dv/docs/gen_trace_witness_ids.csv); do not edit. Included by gen_fcov_pkg.sv.",
+         f"localparam int unsigned GEN_WITNESS_COUNT = {len(rows)};",
+         f"localparam int unsigned GEN_WITNESS_GROUP_COUNT = {len(groups)};",
+         'localparam string GEN_WITNESS_TP_NAMES = "' + ",".join(r["tp_item"] for r in rows) + '";  // index order',
+         'localparam string GEN_WITNESS_GROUP_NAMES = "' + ",".join(groups) + '";  // group index order',
+         "// the owning test's group index per row (COV_WITNESS arg1 must equal it)",
+         "localparam int unsigned GEN_WITNESS_GROUP_OF [GEN_WITNESS_COUNT] = '{" + ", ".join(str(groups[r["test_group"]]) for r in rows) + "};",
+         "`define GEN_WIT_BINS \\"]
+    for i, r in enumerate(rows):
+        tail = " \\" if i + 1 < len(rows) else ""
+        L.append(f"  bins {r['bin']} = {{{i}}};{tail}")
+    return "\n".join(L) + "\n"
+
+
 def render_all(src_path, root):
     src = load(src_path)
+    src["_witness_rows"] = load_witness(src, root)
     cvals = const_values(src)
     mm = memory_map(src)
     resolve_defaults(src, mm, cvals)
     pkg = root / REL_PKG
     return {pkg: render_pkg(src, mm, cvals, pkg), root / REL_PY: render_py(src, mm, cvals),
             root / REL_H: render_h(src, mm, cvals), root / REL_CFG: render_cfg(src),
-            root / REL_RLINE: render_record_line(src), root / REL_ELINE: render_event_lines(src)}, src, mm
+            root / REL_RLINE: render_record_line(src), root / REL_ELINE: render_event_lines(src),
+            root / REL_WIT: render_wit(src["_witness_rows"])}, src, mm
 
 
 def main():

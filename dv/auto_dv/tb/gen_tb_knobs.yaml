@@ -98,6 +98,15 @@ plusargs:
   - {name: chk_all, kind: bool, default: 1, desc: "master checker enable (isolation mode +gen_chk_all=0 +gen_chk_<id>=1)"}
   - {name: chk_ibus_proto, kind: bool, default: 1, desc: "checker enable"}
   - {name: chk_ibus_outstanding, kind: bool, default: 1, desc: "checker enable"}
+  - {name: chk_sva_st, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_st_*)"}
+  - {name: chk_sva_ibus, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_ibus_*)"}
+  - {name: chk_sva_dbus, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_dbus_*)"}
+  - {name: chk_sva_icram, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_icram_*)"}
+  - {name: chk_sva_scrkey, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_scrkey_*)"}
+  - {name: chk_sva_irq, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_irq_*)"}
+  - {name: chk_sva_dbg, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_dbg_*)"}
+  - {name: chk_sva_alert, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_alert_*)"}
+  - {name: chk_sva_rvfi, kind: bool, default: 1, desc: "protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_rvfi_*)"}
   - {name: chk_sva_rvalid_legal, kind: bool, default: 1, desc: "TB self-check enable (stimulus legality)"}
   - {name: chk_dbus_proto, kind: bool, default: 1, desc: "checker enable"}
   - {name: chk_dbus_outstanding, kind: bool, default: 1, desc: "checker enable"}
@@ -146,7 +155,11 @@ plusargs:
 
 # Bridge command kinds (C2): code = 1-based position; 0 is GEN_CMD_NONE. Rendered as GEN_CMD_<K>
 # (8-bit) plus gen_cmd_name() in gen_tb_pkg.sv, CMD in gen_knobs.py and GEN_CMD_<K> in the shim header.
-bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH]
+bridge_cmds: [IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH, COV_WITNESS]
+# CG-WIT-001: the witness bins, one per marked test-plan item, rendered from this CSV (index, tp_item, bin, test_group, marked)
+# into gen_wit_bins.svh (gen_fcov_pkg) and the WITNESS_* tables of gen_knobs.py; COV_WITNESS arg0 = index, arg1 = the issuing
+# test's group index.
+witness_csv: dv/auto_dv/docs/gen_trace_witness_ids.csv
 
 # Numeric meaning of the latency, rate and cap regimes (rendered as gen_regime_window / gen_regime_scalar
 # in gen_tb_pkg.sv and REGIME_WINDOWS in gen_knobs.py). Every key must be a value of the knobs that use the
@@ -174,6 +187,7 @@ constants:
   - {name: GEN_DBUS_MAX_OUTSTANDING, value: 2, sv_type: int unsigned, desc: "data beats in flight, the two halves of one split access (rtl/ibex_load_store_unit.sv:403-405)"}
   - {name: GEN_CSR_WRITE_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from a CSR-write commit edge to its RVFI record (v3 T-051 2.1, predicted, pinned by a directed test)"}
   - {name: GEN_TRAP_TO_RVFI_OFFSET, value: 1, sv_type: int unsigned, desc: "cycles from a trap/mret/dret commit edge to its RVFI record (v3 T-051 2.1)"}
+  - {name: GEN_FETCH_EN_DRAIN_CYCLES, value: 64, sv_type: int unsigned, desc: "cycles after fetch_enable_i leaves On within which the pipeline's in-flight instructions may still retire; a record later than that is a fetch_en failure"}
   - {name: GEN_LSU_TRAP_TO_RVFI_OFFSET, value: 0, sv_type: int unsigned, desc: "cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle"}
   - {name: GEN_IRQ_MARKER_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)"}
   - {name: GEN_RVFI_ID_EXIT_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)"}

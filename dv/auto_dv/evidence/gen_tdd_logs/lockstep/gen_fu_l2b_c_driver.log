@@ -1,0 +1,11 @@
+start 17:46:50Z sources sha256: 242f0558621c52da
+ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_witness_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_witness_foreign: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+dmem_err_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+regime_refuse_zc: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2

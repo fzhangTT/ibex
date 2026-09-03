@@ -123,6 +123,16 @@ separately (`gen_bus_err_log::intg_announced`) for the irq checker's internal-NM
 raise alert_major_bus and an internal NMI, not a bus-error trap). Red for the conditioned form: MB6 in
 dv/auto_dv/mutations/gen_mut_step2b.md (a legal store reported as a trap is an isa_trap miss).
 
+Conventions the comparator adopts from the DUT (the landing-2a runs surfaced them; each names the RTL that makes it so and
+the items it decides; cited as rows, ruling LOG-037c):
+
+| convention | what the comparator does | RTL | decides |
+|---|---|---|---|
+| NMI-pre-empted interrupt entry | an interrupt entry the NMI pre-empts before its handler retires anything has no `rvfi_intr` record of its own: the record after the NMI's entry sits at a vector address without the flag, and the model, back from the NMI's mret in the pre-entry state, takes that interrupt then (`after_nmi_entry`, counted `nmi_preempted`) | rtl/ibex_core.sv:2403-2413 (the intr flag goes to the NMI record), rtl/ibex_controller.sv:498 | TP-IRQ-079 |
+| suppressed register write | a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress = 1` and keeps its old destination: the model's write is undone from a GPR snapshot taken before the step (counted `rf_wr_suppressed`); accepted only with an announced corruption (`gen_bus_err_log::note_intg`) | rtl/ibex_core.sv:2383-2385 | TP-DMEM-039 / 041 / 064, TP-RVFI-024 |
+| irq_entry bound restarts at each entry | a raised, enabled line must be taken within GEN_IRQ_ENTRY_BOUND_RECORDS records counted from the LAST interrupt entry, not from the raise: the DUT serves one entry at a time and the others wait behind the handler | rtl/ibex_controller.sv:736-757 (one taken cause per entry) | TP-IRQ-001 / 012 / 022 |
+| mtval of a bus fault | the failing bus transaction's address (Rules (b) below) | rtl/ibex_load_store_unit.sv:258, :520, :540 | TP-DMEM fault items |
+
 Rules of the armed fault, from the DUT (landing 1c, gen_dmem_err_directed.S under `+gen_knob_dmem_err_rate=frequent`):
 (a) both encodings: RVFI reports a compressed instruction in its 16-bit form, so the load/store test and the access size
 come from `gen_tb_pkg::gen_insn_mem_access` (32-bit opcodes, c.lw / c.sw / c.lwsp / c.swsp, the Zcb byte and half forms);

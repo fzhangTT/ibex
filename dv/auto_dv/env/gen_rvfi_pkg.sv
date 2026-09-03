@@ -60,8 +60,10 @@ package gen_rvfi_pkg;
     logic [63:0] order;
     int unsigned cycle;          // cycle of the record
     logic [31:0] pc_after, insn;
-    logic [31:0] mie, mstatus, mcause, mepc, mtval, dcsr;
+    logic [31:0] mie, mstatus, mcause, mepc, mtval, dcsr, dpc;
     logic [1:0]  prv;            // privilege after the record
+    logic [31:0] pc_rdata;       // the DUT record's pc
+    logic [1:0]  mode;           // the DUT record's privilege
     logic [31:0] pre_mip, post_mip;   // the record's rvfi_ext mip samples
     bit          nmi_pend, nmi_int_pend;
     int          entry_cause;         // interrupt entry: the cause the DUT's vector names (31 = NMI); -1 otherwise
@@ -191,7 +193,8 @@ package gen_rvfi_pkg;
       st.order = t.order; st.cycle = t.cycle; st.pc_after = pc_a; st.insn = t.insn; st.prv = prv[1:0];
       st.mie = gen_isa_read_csr(ibex_pkg::CSR_MIE); st.mstatus = gen_isa_read_csr(ibex_pkg::CSR_MSTATUS);
       st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
-      st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR);
+      st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR); st.dpc = gen_isa_read_csr(ibex_pkg::CSR_DPC);
+      st.pc_rdata = t.pc_rdata; st.mode = t.mode[1:0];
       st.is_trap = t.trap; st.is_intr = t.intr; st.debug_mode = t.ext_debug_mode;
       st.pre_mip = t.ext_pre_mip; st.post_mip = t.ext_post_mip; st.nmi_pend = t.ext_nmi; st.nmi_int_pend = t.ext_nmi_int;
       st.entry_cause = entry_cause; entry_cause = -1;
@@ -335,10 +338,10 @@ package gen_rvfi_pkg;
       if (t.intr) begin
         // The DUT's vector names the interrupt it took (vectored mtvec: handler pc = base + 4 * cause) and the model is
         // offered exactly that bit: the record's pre_mip is sampled when the handler's first instruction is in ID,
-        // after the decision, and a line released or raised in between (UNTIL_TAKEN releases every held line on any
+        // after the decision, and a line released or raised in between (UNTIL_TAKEN releases the taken line at its
         // entry) makes pre_mip an unreliable record of the decision-time set. Spike still refuses an entry that is
         // not enabled (isa_trap); that the taken line was pending at the decision, and the priority among pending
-        // lines, are boundary rules for the irq checker (owed), not the model's choice. Cause 31 (NMI) keeps pre_mip.
+        // lines, are the irq checker's rules (T-136), not the model's choice. Cause 31 (NMI) keeps pre_mip.
         logic [31:0] base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;   // mtvec[7:0] read as 8'h01 (rtl/ibex_cs_registers.sv)
         logic [31:0] inj = t.ext_pre_mip;
         int unsigned cause = (t.pc_rdata - base) >> 2;

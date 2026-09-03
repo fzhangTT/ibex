@@ -31,6 +31,7 @@
 #define GEN_DBUS_MAX_OUTSTANDING           2u
 #define GEN_CSR_WRITE_TO_RVFI_OFFSET       2u
 #define GEN_TRAP_TO_RVFI_OFFSET            1u
+#define GEN_FETCH_EN_DRAIN_CYCLES          64u
 #define GEN_LSU_TRAP_TO_RVFI_OFFSET        0u
 #define GEN_IRQ_MARKER_TO_RVFI_OFFSET      2u
 #define GEN_RVFI_ID_EXIT_OFFSET            2u
@@ -73,5 +74,6 @@
 #define GEN_CMD_MEM_PEEK                     10u
 #define GEN_CMD_MISC                         11u
 #define GEN_CMD_EXPORT_FLUSH                 12u
+#define GEN_CMD_COV_WITNESS                  13u
 
 #endif

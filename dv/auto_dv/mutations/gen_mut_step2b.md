@@ -97,3 +97,38 @@ Exact edits of the new mutants (the re-run rows keep the edits of their first ta
 | RC3 | `dv/auto_dv/env/gen_checkers_pkg.sv` (gen_misc_monitor `write_state`) | `? GEN_LSU_TRAP_TO_RVFI_OFFSET : GEN_TRAP_TO_RVFI_OFFSET);` | `? GEN_TRAP_TO_RVFI_OFFSET : GEN_TRAP_TO_RVFI_OFFSET);   // RC3: one pulse offset for every trap kind` |
 | RS1 | `dv/auto_dv/isa/gen_isa_shim.cc` (after `g_proc->step(1)`) | `if (g_fault.hit && g_fault.tval != 0) g_proc->put_csr(CSR_MTVAL, g_fault.tval);` | the line removed (`// RS1: the fault keeps Spike's effective-address mtval`) |
 | RM-L1 | `dv/auto_dv/env/gen_agents_pkg.sv` (gen_bus_driver, the injection branch) | `p.err = 1; p.injected = 1; injected_err++;` (the `gen_bus_err_log::note(p.addr, bvif.cycle_count)` line after it kept) | `p.err = 0; p.injected = 1; injected_err++;   // RM-L1: announced, never driven` |
+
+## Landing 2b batch: the protocol SVA layer, the witness covergroup, the misc and dret rules (2026-09-03)
+
+Built out of tree from the landing-2b sources (l2b_root, build a 68a36e6ac32db967, for MUT-M / MUT-N / RM1..RM3; wit_root, the
+landed build e 5ca9fd98c937c26f, for WM1 / MB13 / MB14 / RM4) plus one edit each; `build` is the mutant build's own
+`sources sha256` (gen_fu_l2b_<id>_build_compile.log; the RTL is not part of that hash, the RTL mutants' copies are recorded in
+their compile.launch.log). RM1..RM3 as cited are the RE-RUN from a private rtl copy (mut_l2b_rm_rerun.log); the first run
+(mut_l2b_final.log, retained as gen_fu_l2b_oot_mutation_batch_tainted.log) mutated the shared clone's rtl through a
+symlinked copy and its RM rows stacked three mutations, so it proves nothing and is kept only as the incident's record.
+
+| mutant | what is broken | run | build | catch | ablation |
+|---|---|---|---|---|---|
+| MUT-M | gen_agents_pkg.sv (gen_scrkey_driver): the responder keeps ic_scr_key_valid_i high through a re-key instead of dropping it with the new request | gen_ut_boot seed-7, row sva_scrkey | af81efcfe78a1b84 | FAIL (UVM_ERROR 5) | `+gen_chk_sva_scrkey=0`: PASS (0) |
+| MUT-N | gen_agents_pkg.sv (gen_bus_driver): instr_err_i pulses outside a response beat (the idle level of err is 1) | gen_ut_boot zc, row sva_ibus | d089c40458b67369 | FAIL (UVM_ERROR 405) | `+gen_chk_sva_ibus=0`: PASS (0) |
+| RM1 | rtl/ibex_core.sv (out-of-tree copy): the On bits of core_busy_o never rise | gen_ut_boot zc, row sva_st | 68a36e6ac32db967 | FAIL (UVM_ERROR 545) | `+gen_chk_sva_st=0`: PASS (0) |
+| RM2 | rtl/ibex_core.sv (out-of-tree copy): rvfi_halt set on every record | gen_ut_boot zc, row sva_rvfi | 68a36e6ac32db967 | FAIL (UVM_ERROR 169) | `+gen_chk_sva_rvfi=0`: PASS (0) |
+| RM3 | rtl/ibex_load_store_unit.sv (out-of-tree copy): data_tag_o driven high | gen_ut_boot zc, row sva_dbus | 68a36e6ac32db967 | FAIL (UVM_ERROR 545) | `+gen_chk_sva_dbus=0`: PASS (0) |
+| WM1 | gen_fcov_pkg.sv: the witness covergroup is never sampled | gen_ut_witness zc, every checker on | 3e91ae996ae27f98 | FAIL: `the first witness (TP-BIT-036) counts 0 distinct bins, expected 1` | `+gen_fcov_en=0` (bookkeeping path): PASS |
+| MB13 | gen_tb_top.sv: the observed crash_dump.exception_pc offset by 4 | gen_ut_lockstep on gen_dmem_err_directed.S, frequent, row crash_dump | 776392d1e882e0ed | FAIL: `crash_dump exception_pc/exception_addr 00000004/00000000 at order 1: model mepc/mtval 00000000/00000000 ...` | `+gen_chk_crash_dump=0`: PASS (0) |
+| MB14 | gen_tb_top.sv: the DUT's fetch_enable_i tied On while the TB drives Off | gen_ut_fetch_en zc, row fetch_en | 4e2d112c2159b89c | FAIL: `record at order 90, cycle 270, 68 cycles after fetch_enable_i left On at cycle 202 (drain window 64)` | `+gen_chk_fetch_en=0`: PASS (0) |
+| RM4 | rtl/ibex_if_stage.sv:247 (out-of-tree copy): dret resumes one word past dpc | gen_ut_lockstep seed-7 debug storm, row dbg_dret | 5ca9fd98c937c26f | FAIL (UVM_ERROR 14): `record after dret: pc ... dpc ...` | `+gen_chk_dbg_dret=0`: PASS (0) |
+
+Exact edits:
+
+| mutant | file | original | mutated |
+|---|---|---|---|
+| WM1 | `dv/auto_dv/env/gen_fcov_pkg.sv` (`witness`) | `if (cg != null) cg.sample(idx);` | the line removed (`// WM1: the covergroup is never sampled`) |
+| MB13 | `dv/auto_dv/tb/gen_tb_top.sv` | `assign u_misc_if.crash_dump = crash_dump;` | `assign u_misc_if.crash_dump = '{current_pc: ..., next_pc: ..., last_data_addr: ..., exception_pc: crash_dump.exception_pc + 32'd4, exception_addr: ...};` |
+| MB14 | `dv/auto_dv/tb/gen_tb_top.sv` (the DUT instance) | `.fetch_enable_i(fetch_enable),` | `.fetch_enable_i(ibex_pkg::IbexMuBiOn),` |
+| RM4 | `rtl/ibex_if_stage.sv:247` (copy) | `PC_DRET: fetch_addr_n = csr_depc_i;` | `PC_DRET: fetch_addr_n = csr_depc_i + 32'd4;` |
+| MUT-M | `dv/auto_dv/env/gen_agents_pkg.sv` (gen_scrkey_driver) | `requests++;` / `vif.valid = 1'b0;` | `requests++;   // MUT-M: the responder keeps valid high through a re-key` (the drop removed) |
+| MUT-N | `dv/auto_dv/env/gen_agents_pkg.sv` (gen_bus_driver idle level) | `vif.rvalid = 1'b0; vif.err = 1'b0; vif.intg_corrupt = 1'b0;` | `vif.rvalid = 1'b0; vif.err = 1'b1; vif.intg_corrupt = 1'b0;   // MUT-N: err pulses outside a response` |
+| RM1 | `rtl/ibex_core.sv` (copy) | `assign core_busy_o[i] =  \|busy_bits_buf[i*NumBusySignals +: NumBusySignals];` | `assign core_busy_o[i] =  1'b0;` |
+| RM2 | `rtl/ibex_core.sv` (copy) | `assign rvfi_halt       = rvfi_stage_halt      [RVFI_STAGES-1];` | `assign rvfi_halt       = rvfi_valid;` |
+| RM3 | `rtl/ibex_load_store_unit.sv` (copy) | `assign data_tag_o = data_wdata_tag;` | `assign data_tag_o = 1'b1;` |

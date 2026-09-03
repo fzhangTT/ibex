@@ -10,6 +10,7 @@ package gen_env_pkg;
   import gen_mem_pkg::*;
   import gen_agents_pkg::*;
   import gen_export_pkg::*;
+  import gen_fcov_pkg::*;
   import gen_rvfi_pkg::*;
   import gen_checkers_pkg::*;
   `include "uvm_macros.svh"
@@ -75,6 +76,7 @@ package gen_env_pkg;
     `uvm_component_utils(gen_cmd_dispatch)
     gen_ctrl_driver   ctrl;
     gen_export_sink   sink;
+    gen_wit_cov       wit;
     gen_irq_driver    irq;
     gen_dbg_driver    dbg;
     gen_scrkey_driver scrkey;
@@ -116,6 +118,7 @@ package gen_env_pkg;
       case (t.kind)
         GEN_CMD_FETCH_EN:     begin ctrl.queue_fetch_en(t.arg[0]); routed++; end
         GEN_CMD_EXPORT_FLUSH: begin bvif.peek_data = sink.flush_export(); routed++; end   // the seq rides back like a MEM_PEEK word
+        GEN_CMD_COV_WITNESS:  begin bvif.peek_data = wit.witness(t.arg[0], t.arg[1]); routed++; end   // arg0 item index, arg1 the issuing test's group
         GEN_CMD_IRQ_SET:      begin irq.cmd_set(t.arg[0][18:0], gen_irq_hold_e'(t.arg[1]), t.arg[2], 1'b0); routed++; end
         GEN_CMD_IRQ_CLR:      begin irq.cmd_clr(t.arg[0][18:0]); routed++; end
         GEN_CMD_NMI_PULSE:    begin irq.cmd_set(19'h40000, GEN_IRQ_HOLD_CYCLES, t.arg[0] == 0 ? 1 : t.arg[0], 1'b0); routed++; end
@@ -150,6 +153,7 @@ package gen_env_pkg;
     gen_rvfi_monitor  rvfi_mon;
     gen_scoreboard    sb;
     gen_export_sink   sink;
+    gen_wit_cov       wit;
     gen_irq_driver    irq;
     gen_dbg_driver    dbg;
     gen_irq_checker   irq_chk;
@@ -199,6 +203,7 @@ package gen_env_pkg;
       scrkey = gen_scrkey_driver::type_id::create("scrkey", this);
       ctrl   = gen_ctrl_driver::type_id::create("ctrl", this);
       dispatch = gen_cmd_dispatch::type_id::create("dispatch", this);
+      wit = gen_wit_cov::type_id::create("wit", this);
       rvfi_mon = gen_rvfi_monitor::type_id::create("rvfi_mon", this);
       sb       = gen_scoreboard::type_id::create("sb", this);
       sink     = gen_export_sink::type_id::create("sink", this);
@@ -219,6 +224,7 @@ package gen_env_pkg;
       bridge.mem = mem;
       dispatch.ctrl = ctrl;
       dispatch.sink = sink;
+      dispatch.wit = wit;
       dispatch.bvif = bvif;
       dispatch.irq = irq; dispatch.dbg = dbg; dispatch.scrkey = scrkey;
       dispatch.ibus = ibus_agent; dispatch.dbus = dbus_agent;

@@ -414,7 +414,7 @@ int main(int argc, char** argv) {
     gen_isa_arm_fault(GEN_ISA_FAULT_KIND_LOAD, data + 6u, 4u, data + 8u);
     gen_isa_step(&st);
     check("the spanning load faults", st.trap, 1);
-    check("cause 5 (load access fault)", st.trap_cause, 5);
+    check("cause 5 (load access fault)", st.trap_cause, CAUSE_LOAD_ACCESS);
     check("step tval = the second word", st.trap_tval, data + 8u);
     check("mtval CSR = the second word", gen_isa_read_csr(CSR_MTVAL), data + 8u);
     check("mepc = the load's pc", gen_isa_read_csr(CSR_MEPC), scratch);

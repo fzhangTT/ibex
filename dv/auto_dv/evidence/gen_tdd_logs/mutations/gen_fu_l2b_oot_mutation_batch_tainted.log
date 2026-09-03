@@ -1,0 +1,22 @@
+start 17:35:45Z l2 tree: 88b8bf3907472f1d 86e156efaf7ac46a 8160e436ce3ecad7 406795a16b383e42 
+MUTM applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTM/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTM_catch_boot_s7: verdict: FAIL reason: assertion_failure at sim.log:34  UVM_ERROR :    5 first: 
+MUTM_ablate_boot_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTM: source tree untouched: 88b8bf3907472f1d 86e156efaf7ac46a 8160e436ce3ecad7 
+MUTN applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTN/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTN_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:33  UVM_ERROR :  405 first: 
+MUTN_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTN: source tree untouched: 88b8bf3907472f1d 86e156efaf7ac46a 8160e436ce3ecad7 
+RM1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RM1/rtl/ibex_core.sv; original sha256 88b8bf3907472f1d
+RM1_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:33  UVM_ERROR :  545 first: 
+RM1_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RM1: source tree untouched: 7ef9a680c80c9bbc 86e156efaf7ac46a 8160e436ce3ecad7 
+RM2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RM2/rtl/ibex_core.sv; original sha256 7ef9a680c80c9bbc
+RM2_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:34  UVM_ERROR :  169 first: 
+RM2_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RM2: source tree untouched: 04cc6a9f623f456d 86e156efaf7ac46a 8160e436ce3ecad7 
+RM3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RM3/rtl/ibex_load_store_unit.sv; original sha256 86e156efaf7ac46a
+RM3_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:33  UVM_ERROR :  545 first: 
+RM3_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RM3: source tree untouched: 04cc6a9f623f456d fc803804bb636d07 8160e436ce3ecad7 
+end 17:37:40Z l2 tree: 04cc6a9f623f456d fc803804bb636d07 8160e436ce3ecad7 406795a16b383e42 

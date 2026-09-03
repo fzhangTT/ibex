@@ -31,6 +31,11 @@ instead of polling; before finishing compare `cmds_consumed` with the sent count
 @(posedge cmd_valid)` captures the fields and pushes a `gen_cmd_item` to the addressed sequencer.
 `GenBridge.export_flush(timeout_cycles=200)` wraps EXPORT_FLUSH (arguments none) and returns the export sink's flush
 sequence number read from `peek_data` with the ack, the value `gen_export.read(path, seq)` binds to.
+`GenBridge.cov_witness(tp_item, owner_group, timeout_cycles=200)` wraps COV_WITNESS (CG-WIT-001): `cmd_arg0` = the item's
+rendered index (`gen_knobs.WITNESS_IDS[tp_item]`), `cmd_arg1` = the issuing test's group index (`WITNESS_GROUPS[owner_group]`);
+the dispatcher routes it to `gen_fcov_pkg::gen_wit_cov`, which refuses an index outside the list (`GEN_CMD_DISPATCH`) or an
+item of another test's group (`GEN_WITNESS_FOREIGN`, collected) and otherwise samples the covergroup; the ack's `peek_data`
+carries the number of distinct bins hit so far as the covergroup counts them (gen_component_api_fcov.md).
 
 ## 3. Knobs
 
@@ -44,7 +49,7 @@ sequence number read from `peek_data` with the ack, the value `gen_export.read(p
 AS BUILT (step 1b, `dv/auto_dv/tb/gen_bridge_if.sv`, instance `u_bridge_if` in gen_tb_top; Python
 view `gen_handles.GenHandles(dut).b.<field>`). Python-written: `alive`, `stim_active`, `cmd_valid`
 (level toggled once per command), `cmd_kind[7:0]` (codes `GEN_CMD_*` from gen_tb_knobs.yaml: IRQ_SET,
-IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH),
+IRQ_CLR, NMI_PULSE, DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC, EXPORT_FLUSH, COV_WITNESS),
 `cmd_arg0..3[31:0]` (four scalars, not an unpacked array, for VPI robustness), `cmd_seq[15:0]`,
 `evt_retired_target[31:0]` + `evt_retired_arm` (toggle after writing the target), `evt_cycle_target[31:0]`
 + `evt_cycle_arm`, `finish_req`. SV-written: `listener_armed`, `cmd_ack` (toggles the cycle after the

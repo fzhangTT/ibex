@@ -165,6 +165,24 @@
   bit chk_ibus_proto_set = 1'b0;
   bit chk_ibus_outstanding = 1'b1;
   bit chk_ibus_outstanding_set = 1'b0;
+  bit chk_sva_st = 1'b1;
+  bit chk_sva_st_set = 1'b0;
+  bit chk_sva_ibus = 1'b1;
+  bit chk_sva_ibus_set = 1'b0;
+  bit chk_sva_dbus = 1'b1;
+  bit chk_sva_dbus_set = 1'b0;
+  bit chk_sva_icram = 1'b1;
+  bit chk_sva_icram_set = 1'b0;
+  bit chk_sva_scrkey = 1'b1;
+  bit chk_sva_scrkey_set = 1'b0;
+  bit chk_sva_irq = 1'b1;
+  bit chk_sva_irq_set = 1'b0;
+  bit chk_sva_dbg = 1'b1;
+  bit chk_sva_dbg_set = 1'b0;
+  bit chk_sva_alert = 1'b1;
+  bit chk_sva_alert_set = 1'b0;
+  bit chk_sva_rvfi = 1'b1;
+  bit chk_sva_rvfi_set = 1'b0;
   bit chk_sva_rvalid_legal = 1'b1;
   bit chk_sva_rvalid_legal_set = 1'b0;
   bit chk_dbus_proto = 1'b1;
@@ -339,6 +357,15 @@
     if ($value$plusargs({PLUSARG_CHK_ALL, "=%d"}, u)) begin chk_all = (u != 0); chk_all_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_IBUS_PROTO, "=%d"}, u)) begin chk_ibus_proto = (u != 0); chk_ibus_proto_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_IBUS_OUTSTANDING, "=%d"}, u)) begin chk_ibus_outstanding = (u != 0); chk_ibus_outstanding_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_ST, "=%d"}, u)) begin chk_sva_st = (u != 0); chk_sva_st_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_IBUS, "=%d"}, u)) begin chk_sva_ibus = (u != 0); chk_sva_ibus_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_DBUS, "=%d"}, u)) begin chk_sva_dbus = (u != 0); chk_sva_dbus_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_ICRAM, "=%d"}, u)) begin chk_sva_icram = (u != 0); chk_sva_icram_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_SCRKEY, "=%d"}, u)) begin chk_sva_scrkey = (u != 0); chk_sva_scrkey_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_IRQ, "=%d"}, u)) begin chk_sva_irq = (u != 0); chk_sva_irq_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_DBG, "=%d"}, u)) begin chk_sva_dbg = (u != 0); chk_sva_dbg_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_ALERT, "=%d"}, u)) begin chk_sva_alert = (u != 0); chk_sva_alert_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CHK_SVA_RVFI, "=%d"}, u)) begin chk_sva_rvfi = (u != 0); chk_sva_rvfi_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_SVA_RVALID_LEGAL, "=%d"}, u)) begin chk_sva_rvalid_legal = (u != 0); chk_sva_rvalid_legal_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_DBUS_PROTO, "=%d"}, u)) begin chk_dbus_proto = (u != 0); chk_dbus_proto_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_DBUS_OUTSTANDING, "=%d"}, u)) begin chk_dbus_outstanding = (u != 0); chk_dbus_outstanding_set = 1'b1; end

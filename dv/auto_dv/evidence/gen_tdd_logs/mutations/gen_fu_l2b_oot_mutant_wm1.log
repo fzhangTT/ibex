@@ -1,0 +1,4 @@
+WM1 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/WM1/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 f33383f8b031b3a1
+WM1_catch_ut_witness: verdict: FAIL reason: cocotb_summary at stdout.log:53   first: 
+WM1_ablate_ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+WM1: build sources sha256: 3e91ae996ae27f98; source tree untouched: c4e742249c7d0fc3

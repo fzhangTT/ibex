@@ -1,0 +1,15 @@
+start 17:55:02Z
+MB13 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB13/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB13_catch_dmemerr: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR : 2463 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(386) @ 82500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 00000004/00000000 at order 1: model mepc/mtval 00000000/00000000, previous 00000000
+MB13_ablate_dmemerr: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB13: build sources sha256: 776392d1e882e0ed; source tree untouched: 5488f8523f1174b8
+MB14 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB14/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB14_catch_ut_fetch_en: verdict: FAIL reason: uvm_error at sim.log:34  UVM_ERROR :   79 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(406) @ 275500: uvm_test_top.env.misc_mon [fetch_en] record at order 90, cycle 270, 68 cycles after fetch_enable_i left On at cycle 202 (drain window 64)
+MB14_ablate_ut_fetch_en: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB14: build sources sha256: 4e2d112c2159b89c; source tree untouched: 5488f8523f1174b8
+RM4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RM4/rtl/ibex_if_stage.sv; original sha256 8b99f212f06aa942
+RM4_catch_s7_dbg_storm: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   14 first: 
+RM4_ablate_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RM4: source tree untouched: 88b8bf3907472f1d 86e156efaf7ac46a 8160e436ce3ecad7 
+end 17:56:21Z
+rtl after: 8b99f212f06aa942 88b8bf3907472f1d  status []
