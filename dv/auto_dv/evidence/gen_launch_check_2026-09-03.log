@@ -1,0 +1,13 @@
+ITEM 1   PASS  no '^- PROPOSED RULING' marker in DV_prompt.txt
+ITEM 2   PASS  FENCE.md exists with ci/ allowlist naming the six required entries
+ITEM 3   PASS  SIM_RECIPE.md carries four dated marker lines
+ITEM 4   PASS  TB_CONTRACT.md is Zone A variant (clean scan, dated fence-integrity PASS)
+ITEM 5   PASS  CLAUDE.md/AGENTS.md Zone A markers + clean scan; dv_principles.md present, S6 'Zone A', dated PASS
+ITEM 6   PASS  no vendored spike/patches; riscv-dv lock rev == FENCE.md attested rev (empty diff); no 'Ibex Specific'
+ITEM 7   PASS  dv/auto_dv/.gitignore exists and ignores work/
+ITEM 8   PASS  S4 numeric N and G; S2 two 'Owner ruling (' bullets; signed and dated sign-off line
+ITEM 9   PASS  fence-string scan clean; ci/reviews/ exactly six files; GUIDE.md dated PASS; review wrapper literals
+ITEM 10  PASS  .mcp.json and .codex/config.toml list exactly the three local MCP servers, no remote
+ITEM 11  PASS  positive-list checks (dv/, docs/, ci/, vendor/, formal/, six doc files)
+---
+LAUNCH-CHECK: PASS (2026-09-03 1908ddd)
