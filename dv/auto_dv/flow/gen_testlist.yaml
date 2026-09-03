@@ -1,0 +1,58 @@
+# Team regression testlist (owner: runtime; test entries are added by the Test Writer, build
+# entries by TB Infra through the runtime owner). Schema: dv/auto_dv/docs/gen_runtime_api.md.
+#
+# builds.<name>: one VCS compile.
+#   tb_top         compile top module (-top)
+#   dut_instance   instance name of gen_dut_top inside tb_top (coverage scope: tb_top.dut_instance)
+#   filelists      VCS -f files, clone-root relative, in order
+#   defines        +define+ names added to the SIM_RECIPE Section 2 set
+#   cocotb         true = add the Section 4 cocotb triple at compile time
+#   extra_vcs_args optional extra compile arguments
+#
+# tests[]: one entry per test; the flow runs it as <build>/vcs_simv with the plusargs below.
+#   name                   gen_ prefixed, unique; also the fcov manifest and cm_name key
+#   description            one line
+#   tier                   smoke | targeted | full (a test is in its tier and every higher tier)
+#   build                  key into builds
+#   uvm_test               value of +UVM_TESTNAME (null = the TB top has no UVM test class)
+#   plusargs               list of "+name=value" strings from the testlist entry
+#   seeds                  count (seeds derived from --base-seed per test) or explicit list
+#   fcov_expectation_file  dv/auto_dv/fcov_expectations/<name>.fcov.yaml or null
+#   timeout_s              per-run wall-clock budget of the simulation process
+#   owner                  role slug
+#   pass_marker            log line that proves the end of test was reached (null = "$finish")
+#   feature_groups         tags for the targeted tier (--group)
+#   cocotb_module          dotted Python module for cocotb-driven tests (null = pure SV)
+#   expected_fail          true = an RTL-vs-intent bug candidate; FAIL is reported as XFAIL
+#   component              TB component this test exercises (purpose-2 selection)
+schema_version: 1
+
+builds:
+  gen_smoke:
+    description: gen_smoke_tb_top around gen_dut_top, pure SV, opentitan configuration
+    tb_top: gen_smoke_tb_top
+    dut_instance: u_dut
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_smoke_tb.f
+    defines:
+      - RVFI
+    cocotb: false
+
+tests:
+  - name: gen_smoke
+    description: NOP program through the icache for a bounded cycle count; checks retirement and no alert
+    tier: smoke
+    build: gen_smoke
+    uvm_test: none
+    plusargs:
+      - +gen_smoke_cycles=3000
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_SMOKE_PASS
+    feature_groups: [bringup]
+    cocotb_module: null
+    expected_fail: false
+    component: gen_dut_top

@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""Single constants home of the generated regression flow (Python side).
+
+Every path, plusarg name, log marker, LSF default and schema constant the flow scripts use is
+defined here and imported; no script re-types a literal. The SV-side constants home is
+dv/auto_dv/tb/gen_tb_pkg.sv; `--check` proves the two agree on the shared names.
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+# --- Repository anchors (everything resolves from the clone root) ---------------------------
+FLOW_DIR = Path(__file__).resolve().parent
+REPO_ROOT = FLOW_DIR.parents[2]
+ENV_SH = REPO_ROOT / "ci" / "env.sh"
+CONFIG_SCRIPT = REPO_ROOT / "util" / "ibex_config.py"
+FCOV_CHECKER = REPO_ROOT / "ci" / "check_fcov_expectations.py"
+TB_DIR = REPO_ROOT / "dv" / "auto_dv" / "tb"
+TB_PKG_SV = TB_DIR / "gen_tb_pkg.sv"
+FCOV_EXPECT_DIR = REPO_ROOT / "dv" / "auto_dv" / "fcov_expectations"
+DOCS_DIR = REPO_ROOT / "dv" / "auto_dv" / "docs"
+DASHBOARD_MD = DOCS_DIR / "gen_dashboard.md"
+DASHBOARD_METRICS_MD = DOCS_DIR / "dashboard_metrics.md"
+
+TESTLIST_YAML = FLOW_DIR / "gen_testlist.yaml"
+CM_HIER_TEMPLATE = FLOW_DIR / "gen_cm_hier.cfg"
+PLI_TAB = FLOW_DIR / "gen_pli.tab"
+DUMP_TCL_TEMPLATE = FLOW_DIR / "gen_dump.tcl"
+
+# --- Working tree of the runtime role (not committed) ----------------------------------------
+WORK_DIR = REPO_ROOT / "dv" / "auto_dv" / "work" / "runtime"
+SITE_YAML = WORK_DIR / "gen_site.yaml"
+ENV_OUT_ROOT = "GEN_DV_OUT_ROOT"
+
+
+def _out_root() -> Path:
+    """Out-tree root: env var, else the site pointer file, else the clone's work tree.
+    LSF jobs read and write out-trees, so on a site whose clone is on local disk this must
+    point at shared storage (SIM_RECIPE Section 7)."""
+    import os
+    v = os.environ.get(ENV_OUT_ROOT)
+    if v:
+        return Path(v)
+    if SITE_YAML.is_file():
+        m = re.search(r"^out_root:\s*(\S+)", SITE_YAML.read_text(encoding="utf-8"), re.M)
+        if m:
+            return Path(m.group(1))
+    return WORK_DIR / "out"
+
+
+OUT_DIR = _out_root()
+STAGED_ENV_SH = "env.sh"
+ENV_TOOLCHECK_VAR = "IBEX_ENV_TOOLCHECK"
+REQUESTS_DIR = WORK_DIR / "requests"
+RUNNING_DIR = WORK_DIR / "running"
+DONE_DIR = WORK_DIR / "done"
+RESULTS_DIR = WORK_DIR / "results"
+
+# --- Build configuration (fixed for the whole effort, DV_prompt.txt Section 2) ---------------
+BUILD_CONFIG = "opentitan"
+
+# --- Plusarg names shared with gen_tb_pkg.sv (checked by --check) ----------------------------
+PLUSARG_BUILD_CONFIG = "gen_build_config"
+PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles"
+BANNER_TAG = "GEN_CONFIG_BANNER"
+# name in gen_tb_pkg.sv -> value here
+SV_SHARED_CONSTANTS = {
+    "PLUSARG_BUILD_CONFIG": PLUSARG_BUILD_CONFIG,
+    "PLUSARG_SMOKE_CYCLES": PLUSARG_SMOKE_CYCLES,
+    "GEN_BANNER_TAG": BANNER_TAG,
+}
+
+# Simulator/UVM plusargs (names fixed by VCS and UVM, not by the TB).
+PLUSARG_NTB_SEED = "ntb_random_seed"
+PLUSARG_UVM_TESTNAME = "UVM_TESTNAME"
+PLUSARG_UVM_VERBOSITY = "UVM_VERBOSITY"
+PLUSARG_UVM_NO_RELNOTES = "UVM_NO_RELNOTES"
+UVM_VERBOSITY_DEFAULT = "UVM_LOW"
+
+# --- Seeds: one run seed drives every source of randomness ----------------------------------
+SEED_MIN = 1
+SEED_MAX = 2**31 - 1
+ENV_RANDOM_SEED = "RANDOM_SEED"
+SEED_RECORD_TAG = "GEN_RUN_SEED"
+
+# --- VCS compile flag groups (docs/dv/SIM_RECIPE.md Sections 2, 3, 4, 6) ---------------------
+VCS_BASE_FLAGS = ["-full64", "-sverilog"]
+VCS_UVM_FLAGS = ["-ntb_opts", "uvm-1.2", "+define+UVM", "+define+UVM_REGEX_NO_DPI"]
+VCS_COMMON_FLAGS = [
+    "-timescale=1ns/10ps",
+    "-licqueue",
+    "-LDFLAGS", "-Wl,--no-as-needed",
+    "-CFLAGS", "--std=c99 -fno-extended-identifiers",
+    "-xlrm", "uniq_prior_final",
+    "-lca", "-kdb",
+]
+VCS_DEBUG_PP_FLAGS = ["-debug_access+pp"]
+VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all", "-ucli"]
+# Verified set from SIM_RECIPE Section 3; cond is the T-010 trial metric (see gen_runtime_api.md).
+COV_METRICS_VERIFIED = "line+tgl+assert+fsm+branch"
+COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
+COV_COMPILE_EXTRA = ["-cm_tgl", "portsonly", "-cm_tgl", "structarr", "-cm_report", "noinitial",
+                     "-cm_seqnoconst"]
+COV_RUNTIME_EXTRA = ["-cm_log", "/dev/null", "-assert", "nopostproc"]
+COV_DIAG_NOCONST = ["-diag", "noconst"]
+# Side files vcs drops into its cwd; gen_build.py moves them into the outdir after the compile.
+VCS_CWD_SIDE_FILES = ("constfile.txt", ".fsm.sch.verilog.xml", "ucli.key", "vcs.key")
+COCOTB_DEFINE = "+define+COCOTB_SIM"
+CM_NAME_PREFIX = "test_"
+BUILD_VDB_NAME = "build.vdb"
+MERGED_VDB_NAME = "merged.vdb"
+URG_REPORT_DIRNAME = "report"
+URG_DASHBOARD_TXT = "dashboard.txt"
+URG_MERGE_LOG = "merge.log"
+
+# --- Run-time defaults ----------------------------------------------------------------------
+SIMV_NAME = "vcs_simv"
+SIMV_CSRC_NAME = "vcs_simv.csrc"
+COMPILE_LOG = "compile.log"
+BUILD_MANIFEST = "build_manifest.yaml"
+BUILD_LATEST_SUFFIX = ".latest"
+SIM_LOG = "sim.log"
+RUN_LOG = "run.log"
+RUN_CMD_SH = "run_cmd.sh"
+RESULT_YAML = "result.yaml"
+LSF_OUT = "lsf.out"
+LSF_ERR = "lsf.err"
+WAVES_FSDB = "waves.fsdb"
+WAVES_VPD = "waves.vpd"
+DUMP_TCL = "dump.tcl"
+DEFAULT_TIMEOUT_S = 1800
+TIMEOUT_GRACE_S = 20
+
+# --- LSF (SIM_RECIPE Section 7; exclusive to the runtime role) -------------------------------
+LSF_QUEUE = "regress"
+LSF_SIM_SLOTS = 1
+LSF_BUILD_SLOTS = 4
+LSF_SPAN = "span[hosts=1]"
+LSF_JOB_PREFIX = "gen_dv"
+LSF_PEND_ALLOWANCE_S = 3600
+LSF_POLL_S = 15
+LSF_SUBMIT_RE = re.compile(r"Job <(\d+)> is submitted to queue <([^>]+)>")
+LSF_STARTED_RE = re.compile(r"<<Starting on (\S+)>>")
+# Job-report fields LSF writes into the -o file; the flow's LSF cost source.
+LSF_REPORT_CPU_RE = re.compile(r"CPU time\s*:\s*([\d.]+)\s*sec")
+LSF_REPORT_RUN_RE = re.compile(r"Run time\s*:\s*([\d.]+)\s*sec")
+LSF_REPORT_MEM_RE = re.compile(r"Max Memory\s*:\s*([\d.]+)\s*(\w+)")
+LSF_REPORT_HOST_RE = re.compile(r"executed on host\(s\) <([^>]+)>")
+
+# --- Testlist schema ------------------------------------------------------------------------
+TESTLIST_SCHEMA_VERSION = 1
+TIERS = ("smoke", "targeted", "full")
+TIER_RANK = {t: i for i, t in enumerate(TIERS)}
+TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
+                      "fcov_expectation_file", "timeout_s", "owner")
+TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
+                      "expected_fail", "component", "notes")
+BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
+BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args")
+OWNER_ROLES = ("orchestrator", "dv-lead", "rtl-arch", "tb-infra", "test-writer", "runtime",
+               "critic")
+
+# --- Run-request queue (agent_team_prompt.txt, Runtime Manager section) ----------------------
+REQUEST_REQUIRED_KEYS = ("requester", "purpose", "tests", "seeds", "coverage", "notes")
+REQUEST_NAME_RE = re.compile(r"^(?P<requester>[a-z-]+)-(?P<seq>\d+)\.ya?ml$")
+PURPOSES = {
+    1: "bring-up of one test: that test, a handful of seeds",
+    2: "TB component change: smoke tier + the tests that exercise the component + mutation runs",
+    3: "failure reproduction: the single test and seed",
+    4: "Phase 1 gate or closure-round measurement: the full regression with coverage",
+}
+PURPOSE1_MAX_TESTS = 1
+PURPOSE1_MAX_SEEDS = 5
+PURPOSE3_SEEDS = 1
+PURPOSE4_REQUESTERS = ("dv-lead", "orchestrator")
+RESULTS_MANIFEST = "manifest.yaml"
+
+# --- Verdicts -------------------------------------------------------------------------------
+VERDICT_PASS = "PASS"
+VERDICT_FAIL = "FAIL"
+VERDICT_TIMEOUT = "TIMEOUT"
+VERDICT_NOT_RUN = "NOT_RUN"
+VERDICT_XFAIL = "XFAIL"
+END_MARKER_DEFAULT = "$finish"
+# Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
+FAIL_PATTERNS = (
+    ("uvm_fatal", re.compile(r"^UVM_FATAL\s+(?!:\s*0\b)")),
+    ("uvm_error", re.compile(r"^UVM_ERROR\s+(?!:\s*0\b)")),
+    ("sv_fatal", re.compile(r"^Fatal:|\$fatal|GEN_\w*_FAIL")),
+    ("vcs_runtime_error", re.compile(r"^Error-\[|^Error:")),
+    ("cocotb_critical", re.compile(r"\bCRITICAL\b")),
+    ("cocotb_test_fail", re.compile(r"\*\*\s+TESTS=\d+\s+PASS=\d+\s+FAIL=(?!0\b)\d+")),
+    ("assertion_failure", re.compile(r"Assertion .* failed|Offending")),
+)
+UVM_SUMMARY_RE = re.compile(r"^UVM_(FATAL|ERROR|WARNING|INFO)\s*:\s*(\d+)")
+COCOTB_SUMMARY_RE = re.compile(r"\*\*\s+TESTS=(\d+)\s+PASS=(\d+)\s+FAIL=(\d+)\s+SKIP=(\d+)")
+FINISH_RE = re.compile(r"^\$finish (at simulation time|called)")
+
+# --- URG dashboard metrics (DV_prompt Section 4: six code metrics + functional) --------------
+URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
+NOT_APPLICABLE = "n/a"
+
+
+def check_sv_constants(tb_pkg: Path = TB_PKG_SV) -> list[str]:
+    """Return mismatches between this module and gen_tb_pkg.sv for the shared names."""
+    problems: list[str] = []
+    if not tb_pkg.is_file():
+        return [f"{tb_pkg}: missing"]
+    text = tb_pkg.read_text(encoding="utf-8")
+    for sv_name, py_value in SV_SHARED_CONSTANTS.items():
+        m = re.search(rf'parameter\s+string\s+{sv_name}\s*=\s*"([^"]*)"', text)
+        if not m:
+            problems.append(f"{sv_name}: not declared in {tb_pkg}")
+        elif m.group(1) != py_value:
+            problems.append(f"{sv_name}: SV={m.group(1)!r} Python={py_value!r}")
+    return problems
+
+
+def main() -> int:
+    if "--check" in sys.argv:
+        problems = check_sv_constants()
+        for p in problems:
+            print("CONST-CHECK MISMATCH:", p)
+        print("CONST-CHECK:", "PASS" if not problems else "FAIL")
+        return 0 if not problems else 1
+    print(f"REPO_ROOT={REPO_ROOT}")
+    print(f"WORK_DIR={WORK_DIR}")
+    print(f"TESTLIST_YAML={TESTLIST_YAML}")
+    print("usage: gen_flow_const.py --check   (compare shared names with gen_tb_pkg.sv)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
