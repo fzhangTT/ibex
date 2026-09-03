@@ -84,7 +84,7 @@ cm.pop / cm.popret / cm.popretz (:686-774):
   verdict.txt}; 9408 UVM_ERROR rows by the excerpt header's grep count, first 12 kept) witnesses the double sp increment of this
   replay, not the above-frame register corruption: at order 38, on a ret micro-op, only x2 diverges (model 800003b0, DUT
   800003d0, one stack frame too far); the register values read from above the frame are not among the kept rows; the per-row
-  mapping is tb-infra's, as for the plain-pop run); the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
+  mapping is tb-infra's, as for the plain-pop run; the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
   run is NOT this case, that program has no popret, see section 6), then sp is incremented a second time and the ret
   executes. This is the only path that corrupts registers that were loaded correctly the first time.
 

@@ -45,6 +45,7 @@ Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM6
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at a152cef4a6bf824b: 184 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
+- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at 34c2d940162d39a8: 184 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
 - Non-review change at 6283d7c2b1edec3e: tb-infra's row mapping of the retained reproducer (27 rows, all in section-3 cases) corrected the x18 = 00000000 attribution (a lost s2 store at push rl8 read back faithfully by pop rl8, not the CmPopRetRa replay; 800003ff stays with its source named) and is summarised in section 6; the verdict is unchanged.
 - Non-review change at af35620e393b (landing 2c released it): section 3 and 6 cite the retained popret reproducer lockstep_zcmp_dummy_popret (evidence/gen_tdd_logs/lockstep/gen_fu_l7_lockstep_zcmp_dummy_popret_*), the landed dv/auto_dv/evidence/gen_b8_row_mapping.md replaces the pending marker, and the assertion status (not built, LOG-067 probe bind behind a knob) is stated; verdict unchanged.
+- CM124-L-1 (review of 5b93f62, artifact dv/auto_dv/reviews/2026-09-03-claude-diff-408c92f9-5b93f624.md, APPROVE-WITH-CHANGES, committed 9914207), fixed at 34c2d940162d: the stray ")" after "as for the plain-pop run" (line 87) is removed, so the section-3 parenthesis opened at "(the x18 = 800003ff" closes once at "see section 6)"; the paragraph balances at 6 opens / 6 closes.
