@@ -186,7 +186,7 @@ tests:
     cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_boot
     expected_fail: false
     component: gen_tb_top
-    measured: false
+    measured: false   # canary of the flow, no plan items: its coverage is never counted
 
   - name: gen_ut_lockstep
     description: lock-step comparator (Spike ISA shim vs RVFI retirement) on the directed Zc program; checks the DUT against the model (TB Infra)
@@ -208,7 +208,7 @@ tests:
     cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
     expected_fail: false
     component: gen_isa_shim
-    measured: false
+    measured: false   # TB lock-step check without an fcov manifest (LOG-039): unmeasured by kind
 
   - name: gen_ut_lockstep_forced_red
     description: forced red of the lock-step comparator (TB Infra T-068) with the model ISA string overridden to plain rv32imc, so every Zc retirement mismatches; a red fixture, recorded RED-OK (an unexpected PASS is FAIL); never in a measured tier

@@ -259,9 +259,9 @@ gen_regress.py --repro <test> <seed> [--waves]
   `--purpose 4` is refused. DV never edits `rtl/` in place.
 - **Summary accounting (Critic P-07).** `summary.runs_without_fcov_manifest` and
   `tests_without_fcov_manifest` list every run without a declared-bins manifest; the testlist header
-  `fcov_manifest_required_tiers` turns a null manifest into a FAIL for measured tests on the named tiers (an entry with
-  `measured: false` contributes no coverage and is exempt) once the first
-  covergroup exists.
+  `fcov_manifest_required_tiers` turns a null manifest into a FAIL for measured tests on the named tiers at merge time
+  (unconditionally, whether or not a covergroup exists), and on every measured tier once the first covergroup exists;
+  an entry with `measured: false` contributes no coverage and is exempt, as is tier check.
 - **Out root (Critic P-10).** A non-local regression refuses an out root on a local filesystem
   (`--allow-local-out-root` for single-host debugging); every manifest records `out_root`,
   `out_root_fs` and the site pointer path.

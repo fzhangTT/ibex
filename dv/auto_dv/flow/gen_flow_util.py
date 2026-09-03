@@ -437,11 +437,11 @@ def self_test() -> int:
     # CLI builders: a refused entry prints its refusal alone, an allowlisted stale entry its cause; the summary and exit code follow the counts.
     base = {"log": "/x/gen_q_red1_stdout.log", "harness_match": True, "verdict": C.VERDICT_FAIL, "refuse": None, "stale_evidence": False, "stale_cause": None}
     l_ok = red_check_line("gen_q_red", dict(base, verdict=C.VERDICT_RED_OK))
-    l_ref = red_check_line("gen_q_red", dict(base, refuse=C.RED_STALE_REFUSE, stale_evidence=True))
+    l_ref = red_check_line("gen_q_red", dict(base, refuse=C.RED_STALE_REFUSE, stale_evidence=True, stale_cause=C.RED_STALE_TEXT.format(task="T-1")))
     l_mis = red_check_line("gen_q_red", dict(base, harness_match=False, refuse="red_expect does not match the retained log's harness line"))
     l_stale = red_check_line("gen_q_red", dict(base, stale_evidence=True, stale_cause=C.RED_STALE_TEXT.format(task="T-1")))
     s_ok = red_check_summary({}, {}); s_stale = red_check_summary({}, {C.RED_STALE_TEXT.format(task="T-1"): 2}); s_ref = red_check_summary({"harness-line mismatch": 1, "retained log not RED-OK": 2}, {})
-    cond = l_ok.startswith("RED-CHECK ok  ") and "None" not in l_ref and l_ref.startswith("RED-CHECK FAIL") and C.RED_STALE_REFUSE in l_ref and "first collected" not in l_ref \
+    cond = l_ok.startswith("RED-CHECK ok  ") and "None" not in l_ref and l_ref.startswith("RED-CHECK FAIL") and C.RED_STALE_REFUSE in l_ref and "first collected" not in l_ref and "(T-1)" not in l_ref \
         and l_mis.startswith("RED-CHECK FAIL") and l_stale.startswith("RED-CHECK STALE") and "(T-1)" in l_stale \
         and s_ok == ("PASS", 0) and s_stale[1] == C.RED_CHECK_EXIT_STALE and s_stale[0].startswith("PASS (2 stale") \
         and s_ref[1] == C.RED_CHECK_EXIT_REFUSE and s_ref[0] == "FAIL (3 red entry(ies) refused: 1 harness-line mismatch; 2 retained log not RED-OK)"
