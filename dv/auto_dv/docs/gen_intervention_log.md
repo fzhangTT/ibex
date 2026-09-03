@@ -1459,3 +1459,14 @@ cross bins were missing for that reason alone). Accepted: the retitle changes a 
 original report is retained untouched beside the derived one and both paths are recorded per run; the cross-model review of
 b82b29f judges it. The fixture for the required assertion (gen_mul_ops_cg.cr_op_rd_x0.mul_no HIT) was cut by Runtime from
 its own head-mode probe of gen_test_mul_mul on the six landed covergroups, so tb-infra's sample is no longer on the path.
+
+## A-002a - 2026-09-03 - Harness filter installed for the remove ruling
+
+The owner saw the warning again and asked for a filter. The Orchestrator installed a user-level PreToolUse hook for the
+Bash tool (/home/fzhang/.claude/settings.json -> /home/fzhang/.claude/hooks/a002_no_rm_var.sh): any Bash command segment
+that invokes the remove or rmdir command with a shell variable among its arguments (dollar-name, brace or subshell forms)
+is blocked with exit 2 and the reason is returned to the calling agent; literal paths and other tools (git worktree
+remove) pass. Dry runs confirmed the blocked and passing forms, and the hook took effect immediately: the Orchestrator's
+own next Bash call was blocked because its heredoc prose mentioned the pattern, which is the intended behaviour. The hook
+applies to every agent of this session. Runtime's flow-side guard (remove_tree_guarded, 705edb8) covers the Python
+removals and is under a held review until its self-test is independent of GEN_DV_SELFTEST_TMP.
