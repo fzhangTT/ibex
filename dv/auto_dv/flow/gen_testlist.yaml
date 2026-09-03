@@ -230,7 +230,7 @@ tests:
     measured: false
 
   - name: gen_ut_export
-    description: record and event export test (TB Infra T-080) running the lock-step boot flow with +gen_export_file, two flushes and a read-back of the export file bound to the flush sequence; checks the rendered field list, record counts, first-fetch pc, tohost stores and pc continuity
+    description: Record export unit test (TB Infra T-080) with two EXPORT_FLUSH commands, read(seq) bound to the second, header/count/order/cycle rules, first-record pc, tohost stores, pc continuity (trap, mret, dret excluded per C-1)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -243,13 +243,37 @@ tests:
       seed: 1
     seeds: 1
     fcov_expectation_file: null
-    timeout_s: 900
+    timeout_s: 300
     owner: tb-infra
     pass_marker: GEN_UT_EXPORT_PASS
-    feature_groups: [bringup, export]
+    feature_groups: []
     cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
     expected_fail: false
-    component: gen_export_pkg
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_counters
+    description: Record export unit test with counters (TB Infra T-080, +gen_export_counters=1) with two EXPORT_FLUSH commands, read(seq) bound to the second, header/count/order/cycle rules, first-record pc, tohost stores, pc continuity (trap, mret, dret excluded per C-1)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_export_file=gen_export.txt
+      - +gen_export_counters=1
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    component: gen_export_sink
     measured: false
 
   # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)

@@ -314,6 +314,25 @@ def self_test() -> int:
         and "gen_export_file" in ef["export_knobs"]
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"export_facts from the rendered table: {len(ef['export_sources'])} exact rows over sources {ef['export_source_names']}, knobs {sorted(ef['export_knobs'])}")
+    # Emitted rows: empty until an active-source list is rendered (never the rendered table); header parse and check.
+    cond = isinstance(ef["export_sources_emitted"], list) and (ef["export_sources_emitted"] == [] or "EXPORT_ACTIVE_SOURCES" in ef["export_sources_emitted_origin"])
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"export_sources_emitted: {len(ef['export_sources_emitted'])} rows ({ef['export_sources_emitted_origin'][:60]})")
+    import tempfile as _tf
+    with _tf.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=C.selftest_tmp()) as td2:
+        hp = Path(td2) / "gen_export.txt"
+        hp.write_text("# gen_export v1 seed=1 build_config=opentitan counters=0 sources=ibus,dbus fields=order,pc_rdata\n# image x\n", encoding="utf-8")
+        got = export_header_sources(hp)
+        hp.write_text("# gen_export v1 seed=1 build_config=opentitan counters=0 sources= fields=order\n", encoding="utf-8")
+        got_empty = export_header_sources(hp)
+        cond = got == ["ibus", "dbus"] and got_empty == [] and export_header_sources(Path(td2) / "missing.txt") is None
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"export_header_sources: fabricated header sources=ibus,dbus -> {got}, empty -> {got_empty}, missing file -> None")
+    rows_i = [{"source": "ibus", "event": "req", "fields": []}]
+    cond = emitted_check([], []) is None and emitted_check(rows_i, ["ibus"]) is None \
+        and "only in header ['ibus']" in (emitted_check([], ["ibus"]) or "") and "only in manifest ['ibus']" in (emitted_check(rows_i, []) or "")
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "emitted_check: equal sets pass (empty and non-empty), a mismatch names the difference both ways")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -385,8 +404,40 @@ def export_facts() -> dict[str, Any]:
     # PLUSARGS is keyed by knob name; the plusarg string sits in each row.
     knobs = {p["plusarg"]: p.get("default") for p in getattr(k, "PLUSARGS", {}).values()
              if isinstance(p, dict) and str(p.get("plusarg", "")).startswith("gen_export")}
+    # Emitted rows (ruling 2026-09-03): only the rows whose writer is instanced in the build, taken from a
+    # codegen-rendered active-source list; until TB Infra renders it the list is EMPTY, never the rendered table.
+    active = getattr(k, "EXPORT_ACTIVE_SOURCES", None)
+    if active is None:
+        emitted, origin = [], "no rendered active-source list yet (EXPORT_ACTIVE_SOURCES absent): empty by ruling"
+    else:
+        active_set = {str(a) for a in active}
+        emitted, origin = [r for r in rows if r["source"] in active_set], "rows of EXPORT_EVENTS whose source is in EXPORT_ACTIVE_SOURCES"
     return {"export_sources": rows, "export_source_names": sorted({r["source"] for r in rows}),
+            "export_sources_emitted": emitted, "export_sources_emitted_origin": origin,
             "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
+
+
+def export_header_sources(path: Path) -> list[str] | None:
+    """The sources= list of an export file's first header line (`# gen_export v1 ... sources=a,b ...`): the
+    run-time truth of which writers emitted; None when the file or the header is absent."""
+    if not path.is_file():
+        return None
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        first = fh.readline()
+    m = re.search(r"\bsources=(\S*)", first)
+    if not first.startswith("# gen_export") or not m:
+        return None
+    return [t for t in m.group(1).split(",") if t]
+
+
+def emitted_check(emitted_rows: list[dict[str, Any]], header_sources: list[str]) -> str | None:
+    """The manifest's emitted source set must equal the header's sources= set; the message names the difference."""
+    manifest = {r["source"] for r in emitted_rows or []}
+    header = set(header_sources or [])
+    if manifest == header:
+        return None
+    return (f"export sources emitted mismatch: manifest {sorted(manifest)} vs export header sources= {sorted(header)}"
+            f" (only in manifest {sorted(manifest - header)}, only in header {sorted(header - manifest)})")
 
 
 def witness_index() -> dict[str, int]:

@@ -284,6 +284,17 @@ def main() -> int:
                    red_expect=test.get("red_expect"))
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
+    # Export header cross-check (ruling 2026-09-03): a run that wrote an export file must agree with the build
+    # manifest on which sources emitted; a mismatch fails the run (the canary at that build catches it).
+    export_header: list[str] | None = None
+    export_name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
+    export_val = next((U.plusarg_value(pa) for pa in argv if pa.startswith("+") and U.plusarg_name(pa) == export_name), None) if export_name else None
+    if export_val:
+        export_header = U.export_header_sources(run_dir / export_val)
+        if export_header is not None:
+            err = U.emitted_check(build.get("export_sources_emitted") or [], export_header)
+            if err and res["verdict"] in (C.VERDICT_PASS, C.VERDICT_RED_OK):
+                res.update(verdict=C.VERDICT_FAIL, reason=err)
     result: dict[str, Any] = {
         "test": test["name"], "seed": seed, "verdict": res["verdict"], "reason": res["reason"],
         "evidence": res["evidence"], "exit_code": rc, "timed_out": timed_out,
@@ -300,6 +311,7 @@ def main() -> int:
         "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")),
         "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": U.witness_render(test),
+        "export_header_sources": export_header, "export_sources_emitted": build.get("export_sources_emitted"),
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},

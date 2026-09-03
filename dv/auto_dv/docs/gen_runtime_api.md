@@ -107,6 +107,15 @@ plusargs with their compiled defaults) and `export_record_fields`; the regressio
 `export_sources` and `export_knobs` under `builds.<name>`. The table is read from the source root (the
 committed tree in head mode), never re-typed. `gen_flow_util.export_facts` is the reader.
 
+Two fields, two meanings (ruling 2026-09-03): `export_sources` is what the codegen RENDERED (every row of
+the table, the codegen cross-check); `export_sources_emitted` is what the build's writers EMIT, the plan's
+sunset input: the rows whose source is in the codegen-rendered active-source list (`EXPORT_ACTIVE_SOURCES`
+in the knob table, provided by TB Infra); until that list exists the field is an empty list, never a copy of
+the rendered table (`export_sources_emitted_origin` says which). A run that wrote an export file re-checks
+it: the `sources=` set of the file's first header line must equal the manifest's emitted source set, else the
+run FAILs (`export sources emitted mismatch ...`); result.yaml records `export_header_sources` and the
+manifest's `export_sources_emitted`. The DV Lead's sunset tool fails only on emitted rows.
+
 ## 2. gen_run.py (one test, one seed)
 
 ```
