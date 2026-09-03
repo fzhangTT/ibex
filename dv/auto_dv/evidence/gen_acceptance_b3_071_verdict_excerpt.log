@@ -1,0 +1,55 @@
+# gen_acceptance_b3_071_verdict_excerpt.log: batch-3 acceptance verdicts of request test-writer-071 (CM103-m-2)
+# Source: the request manifest dv/auto_dv/work/runtime/results/test-writer-071/manifest.yaml (work tree, unmirrored) and each
+# run's result.yaml, sim.log and sim_stdout.log under the out root (site storage). Lines are copied, long lines truncated as marked.
+requester: test-writer   purpose: 1   scope_decision: accepted   status: done
+request tests: ['gen_test_pmp_mseccfg']   seeds: 3   coverage: False
+received_utc: 2026-09-03T20:57:46Z   finished_utc: 2026-09-03T20:58:45Z   regress_rc: 0
+pinned_sha: 902da1f693d84779684d0e4ea6f3f483a8ed960f   canary_sha: 902da1f693d84779684d0e4ea6f3f483a8ed960f   canary_decision: accepted
+batch_record (work tree): /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/batches/20260903T205742Z_902da1f693d8.yaml
+regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-071
+regress_cmd: /localdev/fzhang/ws/ibex-challenge/.venv/bin/python3 /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_regress.py --tests gen_test_pmp_mseccfg --seeds 3 --no-coverage --no-sync-mirror --head-sha 902da1f693d84779684d0e4ea6f3f483a8ed960f --outdir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-071 --force --request test-writer-071 --requester test-writer --purpose 1 --source head
+summary: planned=3 pass=3 fail=0 xfail=0 timeout=0 not_run=0 red_ok=0 pass_rate_pct=100.0 runs_without_fcov_manifest=0 tests_without_fcov_manifest=[]
+
+## manifest rows (test, seed, verdict, reason, wall_s, lsf_job_id, sim_log)
+gen_test_pmp_mseccfg | 898315684 | PASS | no collected failure mechanism; end marker and config banner present | 10.2 | 10949633 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-071/runs/gen_test_pmp_mseccfg_898315684/sim.log
+gen_test_pmp_mseccfg | 1467344624 | PASS | no collected failure mechanism; end marker and config banner present | 6.5 | 10949632 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-071/runs/gen_test_pmp_mseccfg_1467344624/sim.log
+gen_test_pmp_mseccfg | 1477686147 | PASS | no collected failure mechanism; end marker and config banner present | 8.3 | 10949634 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-071/runs/gen_test_pmp_mseccfg_1477686147/sim.log
+
+## run gen_test_pmp_mseccfg seed 898315684: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 32, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmp_mseccfg seed 898315684: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:259: 176530.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 6 of 6 scheduled entries by EOT (cycle 17648, retired 938), applied 6 (k=1, source=derived)
+sim_stdout.log:274: 176530.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=77 gen_pmp_mseccfg_cg.cp_csr.mseccfg gen_pmp_mseccfg_cg.cp_hi_bits.nonzero gen_pmp_mseccfg_cg.cp_hi_bits.zero gen_pmp_mseccfg_cg.cp_post.s000 gen_pmp_mseccfg_cg.cp_post.s001 gen_pmp_mseccfg ...[3427 more chars]
+sim_stdout.log:292: 176530.00ns INFO cocotb.gen_tb_top gen_test_pmp_mseccfg GEN_TEST_PASS
+sim_stdout.log:299: UVM_ERROR : 0
+sim_stdout.log:300: UVM_FATAL : 0
+sim.log:62: UVM_ERROR : 0
+sim.log:63: UVM_FATAL : 0
+
+## run gen_test_pmp_mseccfg seed 1467344624: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 32, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmp_mseccfg seed 1467344624: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:246: 160280.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 6 of 6 scheduled entries by EOT (cycle 16023, retired 868), applied 6 (k=1, source=derived)
+sim_stdout.log:261: 160280.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=77 gen_pmp_mseccfg_cg.cp_csr.mseccfg gen_pmp_mseccfg_cg.cp_hi_bits.nonzero gen_pmp_mseccfg_cg.cp_hi_bits.zero gen_pmp_mseccfg_cg.cp_post.s000 gen_pmp_mseccfg_cg.cp_post.s001 gen_pmp_mseccfg ...[3427 more chars]
+sim_stdout.log:279: 160280.00ns INFO cocotb.gen_tb_top gen_test_pmp_mseccfg GEN_TEST_PASS
+sim_stdout.log:286: UVM_ERROR : 0
+sim_stdout.log:287: UVM_FATAL : 0
+sim.log:62: UVM_ERROR : 0
+sim.log:63: UVM_FATAL : 0
+
+## run gen_test_pmp_mseccfg seed 1477686147: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 39, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmp_mseccfg seed 1477686147: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:264: 94920.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 12 of 13 scheduled entries by EOT (cycle 9487, retired 904), applied 12 (k=5, source=derived)
+sim_stdout.log:279: 94920.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=77 gen_pmp_mseccfg_cg.cp_csr.mseccfg gen_pmp_mseccfg_cg.cp_hi_bits.nonzero gen_pmp_mseccfg_cg.cp_hi_bits.zero gen_pmp_mseccfg_cg.cp_post.s000 gen_pmp_mseccfg_cg.cp_post.s001 gen_pmp_mseccfg_ ...[3426 more chars]
+sim_stdout.log:297: 94920.00ns INFO cocotb.gen_tb_top gen_test_pmp_mseccfg GEN_TEST_PASS
+sim_stdout.log:304: UVM_ERROR : 0
+sim_stdout.log:305: UVM_FATAL : 0
+sim.log:69: UVM_ERROR : 0
+sim.log:70: UVM_FATAL : 0

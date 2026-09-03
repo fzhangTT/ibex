@@ -1423,7 +1423,7 @@ tests:
     description: 'Phase 1 batch 3: mseccfg (Smepmp MML, MMWP, RLB) WARL and sticky rules, RLB against locked entries, MML executable-lock suppression with RLB 0/1, and the interpretation change under MML
       with U-mode probes through a returning handler (TP-PMP-011, 012, 022..031 built; TP-PMP-108 not built: the walk needs a wrapper reset the bridge lacks); per-seed program gen_pmp_mseccfg_prog.py; fire_tp_pmp_011..031
       on the report channel'
-    tier: smoke
+    tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
@@ -1442,6 +1442,7 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+    notes: measured false until the PMP covergroups are built; round-0 refusal class
 
   - name: gen_test_pmp_mseccfg_red
     description: 'TDD red fixture of gen_test_pmp_mseccfg, pinned to TP-PMP-011 (generator --red --red-item TP-PMP-011): one lock-free mseccfg write carries the RLB bit flipped and the planned state is restored
@@ -1472,7 +1473,7 @@ tests:
     description: 'Phase 1 batch 3: PMP lock, TOR-lock and RLB rules (locked pmpcfg bytes and pmpaddr ignore writes, TOR i+1 lock protects pmpaddr(i), the last entry depends on its own lock, L=1 with A=OFF
       locks and blocks RLB, pre-write lock evaluation on back-to-back writes, RLB=1 bypass, RLB cleared with locks present; TP-PMP-013..021 and TP-PMP-112, all 10 built); per-seed program gen_pmp_lock_prog.py;
       fire_tp_pmp_013..021 and fire_tp_pmp_112 on the report channel'
-    tier: smoke
+    tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
@@ -1491,6 +1492,7 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+    notes: measured false until the PMP covergroups are built; round-0 refusal class
 
   - name: gen_test_pmp_lock_red
     description: 'TDD red fixture of gen_test_pmp_lock, pinned to TP-PMP-013 (generator --red --red-item TP-PMP-013): a lock-mix pmpcfg word write that changes an unlocked lane is replaced by a read, so
@@ -1608,7 +1610,7 @@ tests:
     keep_artifacts: true
     component: gen_fcov_pkg
     measured: false
-    notes: 'RTL finding B4 (dv/auto_dv/evidence/gen_b4_rtl_facts.md; DV Lead ruling B4-R1 in dv/auto_dv/docs/gen_bug_log.md: the TB does not adopt the RTL behaviour as its reference before the owner rules); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l5_lockstep_zcmp_mv_res_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv tagged [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B4 red and needs triage'
+    notes: 'RTL finding B4 (dv/auto_dv/evidence/gen_b4_rtl_facts.md; DV Lead ruling B4-R1 in dv/auto_dv/docs/gen_bug_log.md: the TB does not adopt the RTL behaviour as its reference before the owner rules); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l5_lockstep_zcmp_mv_res_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv tagged [isa_trap] "dut retired, model retired 0 trap=1 cause=00000002 tval=0000ac22" at the cm.mvsa01 record, followed by [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B4 red and needs triage'
 
   - name: gen_ut_lockstep_sbit
     description: lock-step run of gen_sbit_directed.S (bclr / bset / binv / bext and the immediate forms over the index classes, prior bit states, operand and rs2 upper-bit classes, rd x0, binv twice); exercises gen_bit_sbit_cg (TB Infra T-205 slice 4a)
