@@ -246,6 +246,9 @@ def self_test() -> int:
                 ("red_fixture without red_expect", lambda d: d["tests"][0].update(red_fixture=True, measured=False)),
                 ("red_fixture with an invalid red_expect regex", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="(")),
                 ("red_expect without red_fixture", lambda d: d["tests"][0].update(red_expect="x")),
+                ("red_expect matching the empty string (.*)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect=".*")),
+                ("red_expect matching the empty string (x?)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="x?")),
+                ("red_expect matching the empty string (^)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="^")),
                 ("program with generator and directed", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/gen_stim.py", "directed": ["x.S"], "seed": "run"})),
                 ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
                 ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
@@ -354,9 +357,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             if not isinstance(rx, str) or not rx:
                 die(f"{path}: test {t['name']}: a red_fixture must declare red_expect (regex the collected evidence line of its designed failure matches)")
             try:
-                re.compile(rx)
+                compiled = re.compile(rx)
             except re.error as e:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} is not a valid regex ({e})")
+            if compiled.search(""):
+                die(f"{path}: test {t['name']}: red_expect {rx!r} matches the empty string and would accept any FAIL without a collected line")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:

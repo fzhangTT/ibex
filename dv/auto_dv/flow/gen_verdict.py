@@ -79,7 +79,8 @@ def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
         # origins names the file and its own line for every scanned line (sim.log then the stdout capture);
         # without it the index into the scanned text is all there is.
         where = f"{origins[idx - 1][0]}:{origins[idx - 1][1]}" if origins and idx <= len(origins) else f"log line {idx}"
-        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}", evidence=line[:300])
+        # evidence is the display form (300 chars); evidence_line is the full line the red_expect regex sees.
+        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}", evidence=line[:300], evidence_line=line)
         return out
     marker_ok = marker_seen if pass_marker else finish_seen
     if not marker_ok:
@@ -136,8 +137,12 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
         # red_expect is the designed outcome (RED-OK); any other FAIL is a broken fixture or environment;
         # PASS means the checker it proves is dead; a TIMEOUT is not the designed failure and stays TIMEOUT.
         if res["verdict"] == C.VERDICT_FAIL:
-            evidence = res.get("evidence") or ""
-            if red_expect and re.search(red_expect, evidence):
+            evidence = res.get("evidence_line") or ""
+            if not evidence:
+                # No collected line (exit code, crash signature, missing marker or banner): never the designed failure.
+                res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
+                           "no collected evidence line for red_expect to match")
+            elif red_expect and re.search(red_expect, evidence):
                 res.update(verdict=C.VERDICT_RED_OK, reason=f"red fixture failed as designed (red_expect matched): {res['reason']}")
             else:
                 res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
@@ -258,11 +263,19 @@ def self_test() -> int:
     red_pass = decide_lines(B + REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,
                             red_expect=r"GEN_SMOKE_FAIL")
     red_to = decide_lines([], "GEN_SMOKE_PASS", True, 124, "opentitan", [], False, red_fixture=True, red_expect=r"x")
+    # No collected line (clean log, rc 139): even a regex matching "" must not make it RED-OK.
+    red_empty = decide_lines(B + REAL_GREEN, "GEN_SMOKE_PASS", False, 139, "opentitan", [], True, red_fixture=True, red_expect=r".*")
+    # The regex sees the full line: a signature past column 300 still matches.
+    long_line = " " * 320 + "AssertionError: GEN_TEST_FAIL gen_x: 1 fire-check failure(s)"
+    red_long = decide_lines(B + [long_line], "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,
+                            red_expect=r"GEN_TEST_FAIL gen_x")
     for name, got, want, needle in (("red fixture: real $fatal log whose evidence matches red_expect is RED-OK", red_fail, C.VERDICT_RED_OK, "red_expect matched"),
                                     ("red fixture: real $fatal log whose red_expect names a LATER line (GEN_TEST_FAIL) is FAIL (undeclared reason)", red_other, C.VERDICT_FAIL, "undeclared reason"),
                                     ("red fixture: no red_expect at all is FAIL (undeclared reason)", red_none, C.VERDICT_FAIL, "undeclared reason"),
                                     ("red fixture: real green log is FAIL (dead checker)", red_pass, C.VERDICT_FAIL, "passed unexpectedly"),
-                                    ("red fixture: timeout stays TIMEOUT", red_to, C.VERDICT_TIMEOUT, "timeout")):
+                                    ("red fixture: timeout stays TIMEOUT", red_to, C.VERDICT_TIMEOUT, "timeout"),
+                                    ("red fixture: FAIL without a collected line is never RED-OK, even with red_expect '.*'", red_empty, C.VERDICT_FAIL, "no collected evidence line"),
+                                    ("red fixture: signature beyond column 300 matches (full line, not the display cut)", red_long, C.VERDICT_RED_OK, "red_expect matched")):
         cond = got["verdict"] == want and needle in got["reason"]
         ok &= cond
         print(f"SELF-TEST {'ok ' if cond else 'BAD'} {name}: want {want} got {got['verdict']} ({got['reason'][:60]})")
@@ -297,7 +310,7 @@ def self_test() -> int:
             ok &= got == want
             print(f"SELF-TEST {flag} {name}: want {want} got {got}")
         # Locator: a failure in the stdout capture is named by that file and its own line, never by an
-        # index into the concatenated text (Critic: test-writer-005 said 'log line 100' for sim_stdout.log:62).
+        # index into the concatenated text.
         (d / "sim_stdout.log").write_text("\n".join(["cocotb line"] * 4 + ["AssertionError: GEN_TEST_FAIL gen_x: 1 fire-check failure(s)"]) + "\n", encoding="utf-8")
         (d / "lsf.err").write_text("", encoding="utf-8")
         got = decide(d / "sim.log", "GEN_SMOKE_PASS", False, False, 0, extra_logs=[d / "sim_stdout.log"],

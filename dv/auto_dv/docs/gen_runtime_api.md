@@ -143,7 +143,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `red_fixture: true` (a TDD fixture that fails by design, never an RTL-bug candidate) with its
   `red_expect` regex: a FAIL whose collected evidence line matches `red_expect` becomes RED-OK ("red
   fixture failed as designed (red_expect matched)"; the regex is tried against the FIRST collected
-  evidence line, so it must name the earliest line of the designed failure), any other FAIL stays FAIL ("red fixture failed for
+  evidence line in full, so it must name the earliest line of the designed failure; result.yaml shows
+  the line cut to 300 characters for display only; a FAIL without a collected line, such as an
+  unexplained exit code, a crash signature or a missing marker or banner, is never RED-OK, and the
+  loader refuses a red_expect that matches the empty string), any other FAIL stays FAIL ("red fixture failed for
   an undeclared reason": a broken fixture or environment is not the designed failure), PASS becomes
   FAIL ("red fixture passed unexpectedly": the checker it proves is dead); a TIMEOUT stays TIMEOUT.
   RED-OK is never a regression failure and never coverage: the loader requires `measured: false` and a
