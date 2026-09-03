@@ -431,11 +431,15 @@ def self_test() -> int:
     cond = results.get("a", -1) == results.get("b", -2) and results.get("a", 0) > 100
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"two concurrent HEAD exports into distinct staging dirs: {results}")
-    # Per-sha head trees are distinct paths, and a pinned status never consults the moving HEAD.
-    ra, rb = head_mirror_root("a" * 40), head_mirror_root("b" * 40)
-    cond = ra != rb and ra.parent == rb.parent and ra.parent.name.endswith(C.HEAD_MIRROR_SUFFIX)
-    ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"head trees are keyed by sha under one family dir: {ra.parent.name}/{ra.name} vs {rb.name}")
+    # Per-sha head trees are distinct paths, and a pinned status never consults the moving HEAD. The head family hangs
+    # off the site pointer, which a clean checkout lacks (gen_site.yaml is git-ignored): reported as skipped there.
+    if site_mirror_root() is None:
+        print(f"SELF-TEST skip head trees are keyed by sha under one family dir: no site mirror root ({C.SITE_YAML} absent in this checkout)")
+    else:
+        ra, rb = head_mirror_root("a" * 40), head_mirror_root("b" * 40)
+        cond = ra != rb and ra.parent == rb.parent and ra.parent.name.endswith(C.HEAD_MIRROR_SUFFIX)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"head trees are keyed by sha under one family dir: {ra.parent.name}/{ra.name} vs {rb.name}")
     tiny = Path(tempfile.mkdtemp(prefix="head_tree_selftest_", dir=C.WORK_DIR))
     (tiny / "ci").mkdir(); (tiny / "ci" / "env.sh").write_text("# tiny\n", encoding="utf-8")
     h, n = tree_hash(tiny)
