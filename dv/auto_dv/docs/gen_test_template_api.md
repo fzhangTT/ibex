@@ -185,7 +185,7 @@ module-level aliases (`Base = GenTest`): test classes are module-level (a class 
 refused); module-level writes to a test class (`T.finish = f`, `setattr`) are refused; only the four hooks
 and `fire_*` methods are defined; at least one `self.check` with a non-literal ok; `layers_required =
 False` is accepted only when the class's `name` has a testlist entry with `measured: false` (committed
-`gen_testlist.yaml`, then the Test Writer's staged entries) or the class is in
+`gen_testlist.yaml`; a developer run may name a staged file through GEN_TEST_STAGED_ENTRIES, Section 7) or the class is in
 `lib.LAYERS_OPTOUT_ALLOWLIST` with a reason (empty today); the token `COV_WITNESS` never appears in a
 test; `cycle_clause_true=` is a keyword of `self.check` inside a `fire_*` method only. Each rule has a
 refused red source in the self-test (three sets of red sources today; the self-test output lists them).
@@ -202,11 +202,17 @@ never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp
 item carries the cycle-clause marker, so no test issues a witness today; the SV side (dispatcher row,
 `GEN_WITNESS_FOREIGN`) is TB Infra's.
 
-The witness record cannot be forged from a test under the structure check: `check()` appends to the template-private
-`_results` (test code assigning to or calling into any template-assigned instance name, `lib.*` or the template is
-refused), the allowed ids are read in the epilogue from the committed entry of the class's `name` (never an instance
-attribute), and the codes from the rendered table; an id the table lacks fails with the GEN_TEST_FAIL prefix. Fixtures
-gen_ut_witness_ok / _foreign / _notable / _noid prove the four epilogue paths with a Python-side fake dispatcher.
+What the witness guarantee rests on, truthfully: the fact of record is the SV witness ledger, which samples on export
+events with ids from the committed testlist entry and codes from the fire-check outcome; a Python test cannot produce
+that record by itself. The Python side keeps the record template-private (`_results`, filled by `check()`; allowed ids
+read in the epilogue from the committed entry of the class's name; codes from the rendered table; an id the table lacks
+fails with the GEN_TEST_FAIL prefix), and `check_test_source` is defense in depth, a source lint that refuses the cheap
+forgeries (assignment to template-assigned names through `self`, calls into or aliases of the verdict record, `getattr`/`setattr`/
+`vars`/`__dict__`/`type(self)` on the test object, class-body assignment to a template method, module-level functions
+that receive the test object and touch its template-owned names, `lib`/template patching, the COV_WITNESS token). It is
+not airtight: string-built names, exec/importlib, dunder tricks and helpers obscured through containers pass it; those
+are the named residual, caught only by the SV ledger and review. Fixtures gen_ut_witness_ok / _foreign / _notable /
+_noid prove the four epilogue paths with a Python-side fake dispatcher.
 
 `run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test
 (fixture gen_ut_drain_probe holds the runner 40 cycles across the end of test).

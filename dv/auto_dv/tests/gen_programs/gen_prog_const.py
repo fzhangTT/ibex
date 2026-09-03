@@ -62,6 +62,7 @@ HPMCOUNTER_BASE = 0xc00    # cycle, instret, hpmcounter3..31 (user-mode aliases)
 MHPMEVENT_BASE = 0x320     # mcountinhibit at 0x320, mhpmevent3..31 at 0x323..0x33f
 
 MSTATUS_RESET = 0x0000_0080
+MARCHID_IBEX = 22            # RISC-V marchid registry entry of lowRISC Ibex (gen_feature_list.md Section 4.2)
 MISA_VALUE = 0x4090_1104
 MCONFIGPTR_VALUE = 0
 

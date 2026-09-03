@@ -52,13 +52,13 @@ Program: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py at the run seed (te
 {generator: ..., seed: run}`), plan.k report words then tohost TOHOST_PASS; red fixtures `--red
 [--red-item <id>]` re-target one read of the item so exactly its fire-check fails (generator docstring).
 Knobs: the items' Knobs lines (imem_gnt_delay, imem_rvalid_delay, irq_line_mix, debug_req_regime,
-scr_key_delay) are declared schedulable; nothing is pinned. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb). declare_bins() is
+scr_key_delay) are declared schedulable; nothing is pinned. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). declare_bins() is
 the template default (the plan's bins of the six fire_tp items, checked against the rendered manifest in
 finish(); the entry stays unwired until gen_fcov_pkg lands). Always-on checkers relied on: the ISA comparator
 rows isa_pc/isa_insn/isa_trap/isa_rd/isa_mem/isa_prv/isa_pc_next, rvfi_proto, the bus protocol checkers
 (ibus/dbus). MODULE=dv.auto_dv.tests.gen_test_csr_reset, TOPLEVEL=gen_tb_top.
 
-T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the comparator conventions and the shim's CSR legalization (marchid, tdata1, cpuctrlsts bit 8), so the flow verdict is expected PASS from acceptance wave 4 on; the mcycle/cycle, mhpmcounter* and cpuctrlsts bit 8 read-backs are consistency compares against DUT-synchronised model state until the ctr_* and scrkey_proto checkers exist (Critic gen_critic_tb_t102.md), so TP-CSR-107/108's counter clauses count as checked for consistency, not value-verified.
+Counter (mcycle/cycle, mhpmcounter*) and cpuctrlsts bit 8 read-backs are consistency compares until the ctr_* and scrkey_proto checkers exist; TP-CSR-107/108's counter clauses count as checked for consistency, not value-verified.
 """
 import cocotb
 
@@ -136,6 +136,8 @@ class CsrReset(GenTest):
                    "knob_scr_key_delay")
     # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
+    # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    not_built = {}
 
     def report_count(self):
         self._plan = prog.plan(self.seed)

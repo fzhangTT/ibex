@@ -30,7 +30,7 @@ are resolved from the image sidecar). Red fixtures: `--red --red-item TP-CSR-0nn
 item's intent (the seed draws the item without --red-item); exactly that fire_tp method fails. Knobs:
 knob_imem_gnt_delay and knob_imem_rvalid_delay (the fetch-latency regimes the built items name); the irq knobs
 the items also name (irq_regime, irq_line_mix, irq_hold) are excluded because the program has no interrupt
-handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb).
+handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false).
 declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked
 against the rendered manifest in finish()).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
@@ -39,7 +39,7 @@ mret target and privilege rows, the shim's mstatus XS mask) is TB Infra's: the f
 uvm_error on this program until it lands, and no program clause is bent around it.
 MODULE=dv.auto_dv.tests.gen_test_csr_trap_setup, TOPLEVEL=gen_tb_top.
 
-T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the mret target and privilege rows and the shim's mstatus XS mask, so the flow verdict is expected PASS from acceptance wave 4 on. Precondition not applied: irq agent absent (step 2b): TP-CSR-023's one-pending-disabled-irq case (20 percent of seeds) and TP-CSR-029's irq-pins-high case (30 percent of seeds) are not programmed; both items count as built for their register clauses only and log GEN_TEST_INFO with that label.
+Precondition not applied: irq agent absent; TP-CSR-023's pending-disabled-irq case and TP-CSR-029's irq-pins-high case are not programmed (register clauses only, GEN_TEST_INFO carries the label). Their irq bins are excluded from the manifest (bins_not_hit).
 """
 import cocotb
 
@@ -71,6 +71,18 @@ class CsrTrapSetup(GenTest):
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
     # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
+    # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
+    bins_not_hit = {
+        "gen_prv_trap_vector_cg.cp_cause.irq_fast": "irq agent absent: no interrupt is taken in this test",
+        "gen_prv_trap_vector_cg.cp_cause.irq_sw": "irq agent absent: no interrupt is taken in this test",
+        "gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast": "irq agent absent: no interrupt is taken in this test",
+        "gen_prv_trap_vector_cg.cr_base_cause.low_irq_sw": "irq agent absent: no interrupt is taken in this test",
+    }
+    not_built = {
+        "TP-CSR-026": "needs the irq agent and irq event records (step 2b)",
+        "TP-CSR-031": "needs the irq agent and irq event records (step 2b)",
+    }
 
     def report_count(self):
         return _plan(self.seed).k

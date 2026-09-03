@@ -76,6 +76,7 @@ class GenTest:
     # leaves its value in evt_eot_code, so Python collects them edge by edge into self.reports and
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
+    bins_not_hit = {}       # bins of built items the test cannot hit (precondition not applied), with the reason; left out of the manifest
 
     def __init__(self, dut):
         self.dut = dut
@@ -105,6 +106,11 @@ class GenTest:
         self.failures = []
         self._results = []         # CheckResult per check(); template-owned (the structure check refuses test code touching it)
         self._cmd_lock = Lock()
+        staged = os.environ.get(lib.STAGED_ENTRIES_ENV)
+        assert not (staged and "/runs/" in os.environ.get("SIM_DIR", "")), \
+            f"GEN_TEST: {lib.STAGED_ENTRIES_ENV} is set inside a flow run directory; the variable is for developer runs only"
+        if staged:
+            self.log.info("GEN_TEST_DEV staged entries in use: %s", staged)
         self.log.info("GEN_TEST_SEED test=%s seed=%d image=%s", self.name, self.seed, image_path)
 
     # ---- bridge helpers -------------------------------------------------------------------------
@@ -289,7 +295,7 @@ class GenTest:
         fire_tp_<area>_<nnn> methods, through the manifest generator's derivation (gen_fcov_manifest.py
         --test-module renders the same set), so finish() proves the rendered manifest current and the manifest
         covers exactly the items the test checks; a test hitting a subset of those bins declares that subset."""
-        return lib.plan_bins(self.name, lib.fire_items(type(self)))
+        return lib.plan_bins(self.name, lib.fire_items(type(self)), tuple(type(self).bins_not_hit))
 
     def report_count(self):
         """Hook: number of report words the program stores before its end-of-test store; the default is the

@@ -396,7 +396,7 @@ Every red trips the intended item; where a superset check audits the same record
 (cmp_zcmp_basic 039 for any push, 045 for any pop, 047 for the popret's words, 052 for the hazard mva01s; bit_draft red2 trips the gorci
 compare and the new control-coverage check). The first csr_access remediation runs (rem_csr_access_s1/s2/red1_*) were overwritten by a
 shared-scratchpad collision between two subagents and are superseded by the rem_csr_access_v2_* runs; the rem_cmp_zcb_s1 and
-rem_manifest_stale runs of 11:37 UTC failed on a stale image (old generator) and are superseded by rem2_*: all retained, none cited as proof.
+rem_manifest_stale runs of 11:37 UTC failed on a stale image (old generator) and are superseded by rem2_*; the retention pass of landing 3 dropped these superseded runs from gen_tdd_logs/test_writer (named in the manifest header), none was cited as proof.
 
 ### 8.3 Reproduction
 
@@ -405,6 +405,10 @@ rem_manifest_stale runs of 11:37 UTC failed on a stale image (old generator) and
     SEED=1 dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh <OUT> <name> dv.auto_dv.tests.gen_test_<g> <w>/prog/prog.vmem
 
 Flow: the red entries in gen_testlist_entries.yaml pin one item each; acceptance wave 3 re-runs the four comparator-clean tests.
+
+Incident recorded (cross-model review of 2d72b4a): the bit_draft generator's --red-item help string used Python 3.12-only nested
+f-string quoting; the Test Writer's py_compile under the system Python 3.9 caught it before the landing and the string was
+de-nested (seed-1 program byte-identical). The flow's interpreter is 3.12, so no run was affected.
 
 ## 9. Acceptance wave 3 (2d72b4a), the T-102 build, and landing 3
 

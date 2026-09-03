@@ -60,17 +60,53 @@ avoids the observation. The per-item red runs are local (retained with md5); the
 | CM-B1-M-1 | medium | manifests rendered for the whole group | FIXED (2d72b4a) | Per built item set (CR-M-1). |
 | CM-B1-M-2 | medium | CSR addresses re-typed in five generators | FIXED (2d72b4a) | gen_programs/gen_prog_const.py (CR-L-2); a rendered table from the shim's CSR map can replace its literals when TB Infra renders one. |
 | CM-B1-L-1 | low | irq-agent preconditions silently reduced (TP-CSR-023/029, TP-RST-006) | FIXED (landing 3) | Docstrings carry "Precondition not applied: irq agent absent (step 2b)" per item, and the fire-checks log GEN_TEST_INFO with the same label so the item is not counted as fully built. |
-| CM-B1-L-2 | low | docstrings cite entries and a transcript outside the reviewed range | FIXED (landing 3) | The layers line cites d58bdeb (entries); the T-102 status cites d0c0d15 and 50256f0. |
-| CM-B1-L-3 | low | layers_required block pasted into eight docstrings | FIXED (landing 3) | One line per test pointing at API Section 3; one standard class-level comment. |
+| CM-B1-L-2 | low | docstrings cite entries and a transcript outside the reviewed range | FIXED (3 for seven tests, 3b for csr_access; bit_draft in 3c) | The layers line cites d58bdeb (entries); the T-102 status cites d0c0d15 and 50256f0. |
+| CM-B1-L-3 | low | layers_required block pasted into eight docstrings | FIXED (3 for seven tests, 3b for csr_access; bit_draft in 3c) | One line per test pointing at API Section 3; one standard class-level comment. |
 
 ## Critic verdict on T-102 (`dv/auto_dv/docs/gen_critic_tb_t102.md`), Test Writer caveat
 
 | # | Finding | Disposition | Change and evidence |
 |---|---|---|---|
-| CR-T102-1 | revert the M-4 dodges; counter and cpuctrlsts reads are consistency compares until ctr_*/scrkey_proto exist | FIXED (landing 3) | gen_test_csr_access restores the marchid/cycle/hpm reads with rd != x0 and labels them "checked for consistency; value verification pending ctr_*/scrkey_proto"; gen_test_pmp_csr_warl programs LRWX = 1111 (2d72b4a); csr_reset, rst_boot state the same caveat for their counter and cpuctrlsts bit 8 read-backs. The four tests' "blocked on T-102" wording is replaced by the T-102 status citing d0c0d15/50256f0. |
+| CR-T102-1 | revert the M-4 dodges; counter and cpuctrlsts reads are consistency compares until ctr_*/scrkey_proto exist | FIXED (landing 3b; the csr_access files were not in d1d68fd) | gen_test_csr_access restores the marchid/cycle/hpm reads with rd != x0 and labels them "checked for consistency; value verification pending ctr_*/scrkey_proto"; gen_test_pmp_csr_warl programs LRWX = 1111 (2d72b4a); csr_reset, rst_boot state the same caveat for their counter and cpuctrlsts bit 8 read-backs. The four tests' "blocked on T-102" wording is replaced by the T-102 status citing d0c0d15/50256f0. |
 
 ## Acceptance wave 3 (2d72b4a) and the generator import defect
 
 | # | Finding | Disposition | Change and evidence |
 |---|---|---|---|
 | TW-W3-1 | test-writer-033/037 NOT_RUN: gen_cmp_zcmp_basic_prog.py imports gen_prog_const without the sys.path guard, so the flow's script invocation dies with ModuleNotFoundError | FIXED (landing 3) | Guard added (seed-1 source byte-identical); the library self-test now runs every generator as a script with no PYTHONPATH from the clone root, the flow's form, so the class of defect is caught before a commit. Re-filed as wave 3b after the landing. |
+
+## Critic batch-1 v2 (`dv/auto_dv/docs/gen_critic_batch1_v2.md`, one medium) and the cross-model review of 2d72b4a (`dv/auto_dv/reviews/2026-09-03-claude-diff-c35876d7-2d72b4a7.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR2v2-M-1 | medium | declaration and manifest share the fire-method set, so a renamed or guarded-away fire method is invisible and unbuilt items are prose | FIXED (landing 3) | Every test carries a literal `not_built = {TP id: reason}`; the structure check and the manifest generator (`--test-module`) both assert built + not_built == the plan group's items with no overlap (gen_fcov_manifest.check_items_two_sided); the manifest header lists the not_built items; refused red sources: missing attribute, overlap, unaccounted item. Two more rules close the fire_items low: every fire_tp_* method is called from fire_check() (transitively through fire_* methods) and a literal check name inside fire_tp_<item> starts with that item's fire_tp prefix; refused red sources for both. |
+| CR2v2-L-1 | low | zcmp reds also trip the base check 039 (wording) | FIXED | Red signatures are order-independent (`fire-check failure\(s\):.*\bfire_tp_cmp_039\b`), so the pinned item need not be first; stated in the entry description. |
+| CR2v2-L-2 | low | committed testlist carried the generic red_expect at review time | FIXED | 20a66cf carries the per-item form; the order-independent form follows with landing 3 (Runtime re-copies); waves 3 and 4 (RED-OK on fire_tp_csr_001, cmp_036, bit_016_gorci, rst_006, csr_106, csr_036, pmp_001) are the flow-level proof. |
+| CR2v2-L-3 / CM-2d72-H | low / high | seven pre-rendered whole-group batch-2 manifests, mentioned nowhere | FIXED (landing 3) | Removed (dv/auto_dv/fcov_expectations/gen_test_{bit_ratified,cmp_zca,isa_alu,isa_cti,isa_shift,mul_div,mul_mul}.fcov.yaml); each returns rendered per built items from its test module when the batch-2 test lands; the library self-test now refuses a manifest without a test module. |
+| CR2v2-L-4 | low | rule (f) keys on the plan token while WP-5 names the CSV column | STATED | The generator keys on the token; the self-test asserts the committed gen_trace_witness_ids.csv `marked` column agrees row by row (equal by construction, DV Lead v2h); API Section 7 says so. |
+| CM-2d72-M-1 | medium | CM-Major marked FIXED citing the uncommitted staging file | FIXED | Re-cited: 20a66cf (committed per-item signatures); flow proof waves 3 and 4. |
+| CM-2d72-M-2 | medium | the 3.12-only f-string incident is recorded in no file | FIXED | gen_tdd_batch1.md Section 8 note. |
+| CM-2d72-L-1 | low | fire_items counts methods fire_check never calls; no name rule | FIXED | See CR2v2-M-1 (called-from-fire_check and item-naming rules). |
+| CM-2d72-L-2 | low | cmp_zcmp_basic and pmp_csr_warl docstrings describe the group-based default | FIXED | Both say "the plan's bins of the items the fire_tp methods name". |
+| CM-2d72-L-3 | low | plan_bins asserts on all-excluded sets | FIXED | CM-T109-M-1. |
+| CM-2d72-I-1 | info | csr_access M-4 removed observations | FIXED (landing 3b) | Reads restored with rd != x0 as consistency compares per the Critic's T-102 caveat (subagent report, greens and reds on the HEAD build). |
+| TW-L3-1 | row from the Orchestrator | the lib self-test no longer covered manifests without a test module | FIXED | Manifest-side pass re-added (every committed manifest belongs to a committed test module); the seven batch-2 manifests removed. |
+| TW-L3-2 | row from the Orchestrator | red_expect required the pinned item first in the joined list | FIXED | Order-independent signatures on all nine committed red entries (staging file; Runtime re-copies). |
+
+## Cross-model review of d1d68fd (REQUEST-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-53b0fcef-d1d68fd4.md`) and Critic batch-1 v3 (`dv/auto_dv/docs/gen_critic_batch1_v3.md`)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM3-H-1 / CR3-M-2 | high / medium | the structure check does not make the witness record unforgeable (15 forgeries pass) | FIXED as ruled (3b) | (a) the lint now refuses the cheap cases: class-body assignment to a template method or hook (`finish = _f`), aliasing the verdict record (`rs = self._results`; a read alias of self.reports stays allowed), `getattr/setattr/delattr/vars/type(self, ...)`, `self.__dict__`/`self.__class__`, and module-level helpers that assign to template-owned names of a parameter or call into its verdict record (`_forge(t)`), seven red sources; (b) the guarantee is reworded truthfully in API Section 9 (fact of record = the SV witness ledger on export events with ids from the committed entry and codes from the fire-check outcome; the lint is defense in depth; residual named: string-built names, exec/importlib, dunder tricks, helpers obscured through containers). |
+| CM3-H-2 | high | API :205 and response :107-108 claim unforgeability | FIXED (3b) | API Section 9 rewritten; CM4-M-2 re-marked PARTIAL with the residual. |
+| CM3-M-1 / CR3-L-4 | medium / low | CR-T102-1 marked FIXED for work absent from d1d68fd | FIXED (3b) | Row re-marked "FIXED (landing 3b)"; the csr_access files are in 3b (greens and per-item reds on the HEAD build, consistency labels). A FIXED row names the commit that carries the work. |
+| CM3-L-1 / CR3-L-5 | low | CM-B1-L-2/L-3 claimed eight docstrings | FIXED (3b) | Rows scoped: seven at d1d68fd, csr_access in 3b, bit_draft in 3c. |
+| CM3-L-2 / CR3-L-6 | low | API Section 9 :188 still names the staged entries | FIXED (3b) | Reworded to the committed testlist plus the developer variable of Section 7. |
+| CM3-L-3 | low | self_attr dead code | FIXED (3b) | Removed. |
+| CM3-L-4 / CR3-L-7 | low | docstrings narrate SHAs and wave numbers | FIXED (3b) | Batch-1 and batch-2 docstrings are intent only (consistency compares until ctr_*/scrkey_proto exist; irq precondition not applied); SHAs and waves live in gen_tdd_batch1.md / gen_tdd_batch2.md. |
+| CM3-I-1 / CR3-I-1 | info | GEN_TEST_STAGED_ENTRIES could reach a flow run | FIXED (3b) | The template asserts in setup() that the variable is unset when SIM_DIR is a flow run directory (`/runs/`), and logs GEN_TEST_DEV when a developer run uses it; Runtime scrubs it from the job environment. |
+| CR3-M-1 | medium | the not_built two-sided guard was not in d1d68fd | FIXED (3b) | `not_built` on every test; check_test_source and gen_fcov_manifest.check_items_two_sided assert built + not_built == group, disjoint; red sources (missing, overlap, unaccounted); manifest headers list not_built. plan_bins returning [] is a different, earlier row (CM-T109-M-1). |
+| CR3-L-1 | low | the excerpt rule cites no recorded ruling | STATED | The retention rule is the Orchestrator's message of 12:2x UTC (recorded as a ruling in the intervention log by the Orchestrator; the manifest header cites it by time until the LOG number is known). |
+| CR3-L-2 | low | gen_tdd_batch1.md:399 says superseded runs are retained while the manifest dropped them | FIXED (3b) | Sentence corrected: superseded runs dropped in the retention pass, named in the manifest header. |
+| CR3-L-3 | low | irq bins declared by tests whose irq precondition is not applied | FIXED (3b) | New class attribute `bins_not_hit = {bin: reason}` (template default {}), honoured by declare_bins() and by the manifest generator (`# not_hit` header lines, bins left out): csr_trap_setup drops the four irq cause bins (172 -> 168), rst_boot its irq_enabled_later bin (9 -> 8). |
+| CR3-L-4 / L-5 / L-6 / L-7 | low | as CM3-M-1 / L-1 / L-2 / L-4 | FIXED (3b) | See the rows above. |

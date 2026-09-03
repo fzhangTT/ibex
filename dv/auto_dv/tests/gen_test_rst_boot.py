@@ -41,14 +41,14 @@ one item's intent so exactly fire_tp_rst_003 / 006 / 007 fails (generator docstr
 
 Knobs (the built items' Knobs lines): knob_imem_gnt_delay, knob_imem_rvalid_delay (TP-RST-003),
 knob_irq_regime (TP-RST-006: lines may be driven, mie stays 0, nothing may be taken),
-knob_scr_key_delay (TP-RST-007). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false since d58bdeb). declare_bins() is the template
+knob_scr_key_delay (TP-RST-007). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). declare_bins() is the template
 default (the plan's bins of the three fire_tp items, checked against the rendered manifest in finish()).
 Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
 gen_chk_csr_readback, gen_chk_ibus_proto / gen_chk_dbus_proto, gen_chk_irq (irq_pending_o = 0 with
 mie = 0), gen_chk_rvfi_proto.
 MODULE=dv.auto_dv.tests.gen_test_rst_boot, TOPLEVEL=gen_tb_top.
 
-T-102 status: TB Infra's d0c0d15 and 50256f0 fixed the comparator conventions (mret/dret and trap pc_wdata, isa_prv) and the shim's CSR legalization (cpuctrlsts bit 8, tdata1, marchid), so the flow verdict is expected PASS from acceptance wave 4 on; the cpuctrlsts bit 8 read is a consistency compare against DUT-synchronised model state until the scrkey_proto checker exists (Critic gen_critic_tb_t102.md). Precondition not applied: irq agent absent (step 2b): TP-RST-006's interrupt-line-held clause is not programmed, the item counts as built for its register clauses only.
+The cpuctrlsts bit 8 read-back is a consistency compare until the scrkey_proto checker exists. Precondition not applied: irq agent absent; TP-RST-006's interrupt-line-held clause is not programmed (register clauses only, GEN_TEST_INFO carries the label); its irq bin is excluded from the manifest (bins_not_hit).
 """
 import cocotb
 
@@ -146,6 +146,21 @@ class RstBoot(GenTest):
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_regime", KEY_KNOB)
     # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
     layers_required = False
+    # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
+    bins_not_hit = {
+        "gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire": "irq agent absent: no interrupt line is driven",
+    }
+    not_built = {
+        "TP-SEC-031": "alert pin behaviour at reset: needs the event export (pin records)",
+        "TP-RST-001": "first fetch address: needs the bus records of the event export",
+        "TP-RST-002": "boot bus facts: needs the bus records of the event export",
+        "TP-RST-004": "reset pin sequencing: needs the pin records of the event export",
+        "TP-RST-005": "reset pin sequencing: needs the pin records of the event export",
+        "TP-RST-008": "boot bus facts: needs the bus records of the event export",
+        "TP-RST-027": "reset-time bus/pin facts: needs the event export",
+        "TP-RVFI-036": "RVFI record fact: needs the record export",
+    }
 
     def report_count(self):
         return prog.plan(self.seed).k

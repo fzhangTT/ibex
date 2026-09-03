@@ -31,6 +31,7 @@ Usage (host, no simulator):
 """
 import argparse
 import ast
+import functools
 import csv
 import re
 import sys
@@ -50,6 +51,7 @@ CYCLE_CLAUSE_TOKEN = "[CYCLE-CLAUSE coverage-only until the event export lands]"
 WITNESS_CG = "CG-WIT-001"
 
 
+@functools.lru_cache(maxsize=None)
 def cg_blocks():
     """CG id -> its plan block text (same block rule as gen_trace_check.py)."""
     text = FCOV_PLAN.read_text()
@@ -57,6 +59,7 @@ def cg_blocks():
             re.finditer(r"^### (CG-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)", text, re.M | re.S)}
 
 
+@functools.lru_cache(maxsize=None)
 def tp_blocks():
     text = TEST_PLAN.read_text()
     return {m.group(1): m.group(2) for m in
@@ -219,12 +222,19 @@ def bins_of_items(items, tps, blocks, make_segmentable, required=True):
     return rows, dropped
 
 
-def render(test, rows, notes, names):
+def render(test, rows, notes, names, not_built=None, not_hit=None):
     tokens = []
+    not_hit = not_hit or {}
     for tok, (cg, cp, b, adopted) in zip(bin_tokens(rows, names), rows):
+        if tok in not_hit:
+            continue
         note = notes.get(cg, "see the covergroup's Sample line")
         tokens.append((tok, cg, note + ("; adopted from riscv-dv, counted separately" if adopted else "")))
-    out = [f"test: {test}", f"owner: {OWNER}", "bins:"]
+    unknown = sorted(set(not_hit) - set(bin_tokens(rows, names)))
+    assert not unknown, f"bins_not_hit names bins the items do not own: {unknown}"
+    out = [f"# not_built {tp}: {why}" for tp, why in sorted((not_built or {}).items())]
+    out += [f"# not_hit {b}: {why}" for b, why in sorted(not_hit.items())]
+    out += [f"test: {test}", f"owner: {OWNER}", "bins:"]
     out += [f"  - {t}" for t, _, _ in tokens]
     out.append("anti_vacuity:")
     # notes are YAML double-quoted scalars: escape backslashes and double quotes taken from the plan text
@@ -234,16 +244,16 @@ def render(test, rows, notes, names):
     return text
 
 
-def build(test, items):
+def build(test, items, not_built=None, not_hit=None):
     tps = tp_blocks()
     blocks = cg_blocks()
     rows, dropped = bins_of_items(items, tps, blocks, load_segmentable())
-    return render(test, rows, cg_sample_notes(blocks), plan_cg_names()), rows, dropped
+    return render(test, rows, cg_sample_notes(blocks), plan_cg_names(), not_built, not_hit), rows, dropped
 
 
-def plan_bins(test, items):
-    """The tokens the plan assigns to these items, by the same derivation as the manifest; [] for no items (bring-up
-    tests and fixtures declare nothing)."""
+def plan_bins(test, items, not_hit=()):
+    """The tokens the plan assigns to these items, by the same derivation as the manifest, minus the test's declared
+    bins_not_hit; [] for no items (bring-up tests and fixtures declare nothing)."""
     items = sorted(set(items))
     if not items:
         return []
@@ -253,7 +263,10 @@ def plan_bins(test, items):
     rows, dropped = bins_of_items(items, tps, cg_blocks(), load_segmentable(), required=False)
     if not rows:
         print(f"GEN_FCOV_MANIFEST: {test}: no manifest bins for {items} (excluded: {sorted({d[3] for d in dropped})})", file=sys.stderr)
-    return bin_tokens(rows, plan_cg_names())
+    toks = bin_tokens(rows, plan_cg_names())
+    unknown = sorted(set(not_hit) - set(toks))
+    assert not unknown, f"{test}: bins_not_hit names bins the items do not own: {unknown}"
+    return [t for t in toks if t not in not_hit]
 
 
 def tp_id_of_fire(name):
@@ -265,10 +278,45 @@ def tp_id_of_fire(name):
 def fire_items_of_module(path):
     """TP ids named by the fire_tp_* methods of the classes in a test module (host side, by AST; the running test
     derives the same set from its class), so a manifest covers exactly the items the test checks."""
+    return module_items(path)[0]
+
+
+def plan_group_of(test_name):
+    """gen_test_<x> hosts the plan group gen_<x> (Test Writer plan Section 1)."""
+    return re.sub(r"^gen_test_", "gen_", test_name)
+
+
+def module_items(path):
+    """(built, not_built, group) of a test module: built = TP ids of its fire_tp_* methods, not_built = the class's
+    `not_built = {TP id: reason}` literal, group = the plan group of the class's `name`."""
     tree = ast.parse(Path(path).read_text(), filename=str(path))
-    ids = {tp_id_of_fire(n.name) for c in ast.walk(tree) if isinstance(c, ast.ClassDef)
-           for n in c.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
-    return sorted(i for i in ids if i)
+    built, not_built, group, not_hit = set(), {}, None, {}
+    for c in ast.walk(tree):
+        if not isinstance(c, ast.ClassDef):
+            continue
+        built |= {tp_id_of_fire(n.name) for n in c.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))} - {None}
+        for a in c.body:
+            if isinstance(a, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "not_built" for t in a.targets) and isinstance(a.value, ast.Dict):
+                not_built.update({k.value: v.value for k, v in zip(a.value.keys, a.value.values) if isinstance(k, ast.Constant) and isinstance(v, ast.Constant)})
+            if isinstance(a, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "bins_not_hit" for t in a.targets) and isinstance(a.value, ast.Dict):
+                not_hit.update({k.value: v.value for k, v in zip(a.value.keys, a.value.values) if isinstance(k, ast.Constant) and isinstance(v, ast.Constant)})
+            if isinstance(a, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "name" for t in a.targets) and isinstance(a.value, ast.Constant):
+                group = plan_group_of(a.value.value)
+    module_items.last_not_hit = not_hit
+    return sorted(built), not_built, group
+
+
+def check_items_two_sided(built, not_built, group, where):
+    """built + not_built == the plan group's items, disjoint (Critic batch-1 v2: a renamed or guarded-away fire method
+    or an unlisted item is an error, never silence). A group without items (bring-up tests) asks nothing."""
+    items = set(items_of_group(group, required=False)) if group else set()
+    if not items:
+        return items
+    b, nb = set(built), set(not_built)
+    overlap, missing, extra = sorted(b & nb), sorted(items - b - nb), sorted((b | nb) - items)
+    assert not overlap and not missing and not extra, (f"{where}: built + not_built must equal plan group {group}: overlap {overlap}, "
+                                                        f"unaccounted {missing}, outside the group {extra}")
+    return items
 
 
 def main():
@@ -325,16 +373,23 @@ def main():
     if not a.test or sum(bool(x) for x in (a.group, a.items, a.test_module)) != 1:
         ap.error("--test and exactly one of --group / --items / --test-module are required")
     tps = tp_blocks()
-    items = items_of_group(a.group, tps) if a.group else a.items.split(",") if a.items else fire_items_of_module(a.test_module)
-    assert items, f"no items: {a.test_module} has no fire_tp_<area>_<nnn> method"
-    text, rows, dropped = build(a.test, items)
+    not_built = None
+    if a.test_module:
+        items, not_built, group = module_items(a.test_module)
+        not_hit = module_items.last_not_hit
+        assert items, f"no items: {a.test_module} has no fire_tp_<area>_<nnn> method"
+        check_items_two_sided(items, not_built, group, a.test_module)
+    else:
+        items = items_of_group(a.group, tps) if a.group else a.items.split(",")
+        not_hit = None
+    text, rows, dropped = build(a.test, items, not_built, not_hit)
     for d in dropped:
         print(f"# dropped {d[0]} {d[1]} {d[2]}: {d[3]}", file=sys.stderr)
     if a.write:
         FCOV_HOME.mkdir(parents=True, exist_ok=True)
         path = FCOV_HOME / f"{a.test}.fcov.yaml"
         path.write_text(text)
-        print(f"wrote {path} ({len(rows)} bins, {len(dropped)} dropped by the manifest rule)")
+        print(f"wrote {path} ({len(rows) - len(not_hit or {})} bins, {len(dropped)} dropped by the manifest rule, {len(not_hit or {})} not_hit)")
     else:
         sys.stdout.write(text)
     return 0

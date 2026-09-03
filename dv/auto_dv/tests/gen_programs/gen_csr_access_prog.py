@@ -30,25 +30,28 @@ Register use: x4 holds GEN_MM_EOT_ADDR, x3 the tohost code, x30/x31 belong to th
 (scratch, trap counter); every random rd/rs1/filler register comes from x1, x2, x5..x29.
 
 Operand constraints beyond the plan's C-SWEEP/C-MPRV/C-DUM rules, imposed by the ISA comparator as
-built (T-102: dv/auto_dv/isa/gen_isa_shim.cc, dv/auto_dv/env/gen_rvfi_pkg.sv; each lifts when the
-comparator models the DUT fact):
+built (dv/auto_dv/isa/gen_isa_shim.cc, dv/auto_dv/env/gen_rvfi_pkg.sv at T-102, commits d0c0d15 and
+50256f0; each lifts when the comparator models the DUT fact):
 - mcountinhibit.IR is never set (the shim derives a retirement from Spike's minstret delta) and
   mcountinhibit operands stay inside the implemented mask (Spike keeps bits 13..31, Ibex drops them);
 - mstatus.MIE stays 0 (no interrupt entry in a program whose handler skips one 32-bit word) and
   mstatus operands carry XS = 0 (Spike keeps XS and derives SD; Ibex has no XS);
-- mcause operands are read-back fixed points (Spike models mcause as fully writable).
-BLOCKED on T-102 (the clause is not exercised at all; no read with a discarded result stands in for it):
-- cpuctrlsts in TP-CSR-002/003/004 (the shim masks bit 8 ic_scr_key_valid, which the DUT reads as 1);
-- mcycle, minstret(h) and mhpmcounter3..(2+MHPMCounterNum) in the TP-CSR-004 sweep (the shim's mcycle
-  does not follow the DUT, a minstret write breaks the shim's retirement detection, Spike's hpm
-  counters are constant 0);
-- marchid, cycle and the hpmcounter3..(2+MHPMCounterNum) low halves in the TP-CSR-012 address set
-  (Spike reads marchid 5 against the Ibex value 22; cycle and the hpm low halves as above); the high
-  halves, cycleh, instret(h) and the unimplemented hpmcounter addresses are read and checked;
-- TP-CSR-005: every deliberate trap ends in an mret whose rvfi_pc_wdata is the next sequential
-  address (plan C-1), which the comparator's isa_pc_next row does not exempt; its block stays behind
-  F3_100_WORDS / --traps (report words mcause 2, mtval = word, mscratch untouched).
-Excluded on purpose: dscratch0/1 (debug mode is not enterable from a program at HEAD) and the
+- mcause operands are read-back fixed points (Spike models mcause as fully writable);
+- mcycle, minstret(h) and mhpmcounter3..(2+MHPMCounterNum) are not written by the TP-CSR-004 sweep:
+  the comparator's counter state is synchronised from the DUT record, so a written counter value has
+  no independent check until the ctr_* checkers land (step 2d).
+Consistency compares (Expect.pending names the owning checker; counted apart from the verified words):
+the model state these reads are compared against is synchronised from the DUT record before each step
+(T-102, Critic verdict gen_critic_tb_t102.md Section 2), so the test checks them for consistency only
+and their value verification is pending ctr_* (cycle, hpmcounter3..(2+MHPMCounterNum): a pair of
+adjacent reads is non-decreasing, strictly increasing for cycle with CY running, equal for the event
+counters no adjacent CSR read can bump, and every read is >= the previous read of the same counter)
+and scrkey_proto (cpuctrlsts bit 8 ic_scr_key_valid: excluded from the value compare, equal across
+the two reads of a sweep block). marchid is a verified constant (RISC-V marchid registry entry 22 of
+lowRISC Ibex, gen_feature_list.md Section 4.2; cross-checked against the rendered GEN_CSR_MARCHID_VALUE).
+Not built: TP-CSR-005 (every deliberate trap ends in an mret; its block stays behind F3_100_WORDS /
+--traps with report words mcause 2, mtval = word, mscratch untouched, until the item is re-enabled on
+the T-102 comparator), dscratch0/1 (debug mode is not enterable from a program at HEAD) and the
 U-mode half of TP-CSR-005 (needs the C-2 PMP prologue; this program stays in M-mode).
 The trap handler stays installed in every program: an unplanned trap reports mcause/mtval and
 bumps the trap count, whose final report word is checked against the planned trap number.
@@ -123,7 +126,12 @@ MIE_MASK = CONSTANTS["GEN_IRQ_FAST_MASK"] | (1 << 3) | (1 << 7) | (1 << 11)   # 
 MSTATUS_BITS = (1 << 3) | (1 << 7) | (1 << 17) | (1 << 21)   # MIE, MPIE, MPRV, TW; MPP legalised apart
 MSTATUS_RESTORE = 3 << 11  # MPP = M, MPRV = 0: the state every other block relies on (C-MPRV)
 CPUCTRL_WMASK = 0xFF
+CPUCTRL_CMP_MASK = MASK32 & ~(1 << 8)   # bit 8 ic_scr_key_valid is TB-driven status: consistency only (scrkey_proto)
 MCAUSE_INT_FILL = 0x7FFFFFE0            # bits 30:5 read all-ones for an internal-NMI cause
+PENDING_CTR, PENDING_SCRKEY = "ctr_*", "scrkey_proto"   # checkers that own the value of a consistency compare
+# HPM counters whose event (loads, stores, jumps, branches, compressed retirements, mul/div waits) cannot occur between
+# two adjacent CSR reads; 3 (dside wait) and 4 (iside wait) may still count during the pair
+HPM_SAME = tuple(range(5, 13))
 # Bits a red deviation never flips: the shim constraints (IR, MIE, XS) and MPP/MPRV (a U-privileged report store traps).
 RED_AVOID = {"mcountinhibit": 1 << 2, "mstatus": (1 << 3) | (3 << 11) | (3 << 15) | (1 << 17)}
 # CSRs a red deviation skips: the value carries into later words (mcycleh -> cycleh, minstret -> instret), reads back
@@ -269,13 +277,15 @@ def li_len(v):
 @dataclass
 class Expect:
     """One report word: what the test compares it with. kind eq: (got & mask) == (value & mask); same: equals report
-    [ref] under mask."""
+    [ref] under mask; ge / gt: got >= / > report[ref]; base: recorded, no check. pending names the checker that owns the
+    value of a consistency compare ("" for a verified word)."""
     item: str
     label: str
     kind: str = "eq"
     value: int = 0
     mask: int = MASK32
     ref: int = -1
+    pending: str = ""
 
 
 @dataclass
@@ -311,6 +321,7 @@ class _Builder:
         self.red_note = ""
         self._last_report = False
         self.mcycleh = 0             # architectural mcycleh in program order (reset 0, then the sweep's write)
+        self.last_ctr = {}           # counter name -> index of its last report word (monotonicity across the program)
 
     # ---- emission primitives ----------------------------------------------------------------------
     def ins(self, text, retire=1):
@@ -500,9 +511,10 @@ class _Builder:
     def block_002(self, idx):
         """TP-CSR-002: a demoted form (rs1 = x0 / uimm = 0) reads and leaves the CSR unchanged; forms uniform per the item."""
         item = "TP-CSR-002"
-        csr = self.rng.choice(["mscratch", "mie", "mcountinhibit", "secureseed", "minstret"])
+        csr = self.rng.choice(["mscratch", "mie", "mcountinhibit", "cpuctrlsts", "secureseed", "minstret"])
         form = self.rng.choice(DEMOTED)
         rd = self.draw_rd(allow_x0=csr != "minstret")
+        mask, pending = _cmp_rule(csr)
         value = self.preload(csr) if csr != "minstret" else None
         self.fill({rd})
         emit_form, emit_src = form, 0
@@ -522,15 +534,16 @@ class _Builder:
             self.csr_read(rd2, csr)
             self.report(rd2, Expect(item, f"seq{idx} minstret csrr after the demoted read", "eq", self.retired - 1))
         else:
-            self.report(rd, Expect(item, f"seq{idx} {form} x0 {csr}: rd = CSR value", "eq", value if rd else 0))
+            self.report(rd, Expect(item, f"seq{idx} {form} x0 {csr}: rd = CSR value", "eq", value if rd else 0, mask, pending=pending))
             self.csr_read(rd2, csr)
-            self.report(rd2, Expect(item, f"seq{idx} {csr} unchanged after demoted {form}", "eq", value))
+            self.report(rd2, Expect(item, f"seq{idx} {csr} unchanged after demoted {form}", "eq", value, mask, pending=pending))
         self.counts[item] += 1
 
     def block_003(self, idx):
         """TP-CSR-003: csrrw rd, csr, x0 / csrrwi rd, csr, 0 is a real write of zero; rd uniform over x0 and the pool."""
         item = "TP-CSR-003"
-        csr = self.rng.choice(["mscratch", "mie", "mtval", "mcountinhibit", "mepc"])
+        csr = self.rng.choice(["mscratch", "mie", "mtval", "mcountinhibit", "mepc", "cpuctrlsts"])
+        mask, pending = _cmp_rule(csr)
         value = self.preload(csr, nonzero=True)
         form = self.rng.choice(["csrrw", "csrrwi"])
         rd = self.rng.choice([0] + POOL)
@@ -547,18 +560,20 @@ class _Builder:
         self.csr_op(emit_form, rd, csr, emit_src)
         if flanked:
             self.csr_op("csrrci", 0, "mstatus", 8)
-        self.report(rd, Expect(item, f"seq{idx} {form} x0-source {csr}: rd = pre-write value", "eq", value if rd else 0))
+        self.report(rd, Expect(item, f"seq{idx} {form} x0-source {csr}: rd = pre-write value", "eq", value if rd else 0, mask, pending=pending))
         rd2 = self.pick()
         self.csr_read(rd2, csr)
-        self.report(rd2, Expect(item, f"seq{idx} {csr} reads 0 after the write of zero", "eq", 0))
+        self.report(rd2, Expect(item, f"seq{idx} {csr} reads 0 after the write of zero", "eq", 0, mask, pending=pending))
         self.counts[item] += 1
 
     def block_004(self, csr):
         """TP-CSR-004: csrrw/csrrwi x0 (W-OP restricted) writes csr, csrr reads it back, two more reads agree."""
         item = "TP-CSR-004"
         op = Weighted({k: TABLES["W-OP"][k] for k in ("csrrw", "csrrwi")}).draw(self.rng)
+        mask, pending = _cmp_rule(csr)
         if csr == "mcycleh":
             self.csr_write("mcycle", 0)                    # the low half restarts: no carry into mcycleh within a run
+            self.last_ctr.pop("cycle", None)               # cycle reads restart their monotonic chain here
         if op == "csrrw":
             v = constrain(csr, self.draw_pattern(writable_mask(csr), ("rand", "legal_only", "all1")), self.rng)
             rs = self.pick()
@@ -581,13 +596,13 @@ class _Builder:
         self.fill(set())
         rd2 = self.pick()
         self.csr_read(rd2, csr)
-        self.report(rd2, Expect(item, f"{csr} read-back after {op} x0", "eq", exp))
+        self.report(rd2, Expect(item, f"{csr} read-back after {op} x0", "eq", exp, mask, pending=pending))
         ra = self.pick()
         rb = self.pick([ra])
         self.csr_read(ra, csr)
         self.csr_read(rb, csr)
-        ia = self.report(ra, Expect(item, f"{csr} first of two reads", "eq", exp))
-        self.report(rb, Expect(item, f"{csr} second read equals the first (no read side effect)", "same", ref=ia))
+        ia = self.report(ra, Expect(item, f"{csr} first of two reads", "eq", exp, mask, pending=pending))
+        self.report(rb, Expect(item, f"{csr} second read equals the first (no read side effect)", "same", ref=ia, pending=pending))
         if csr == "mstatus":
             rr = self.pick()
             self.li(rr, MSTATUS_RESTORE)
@@ -620,12 +635,36 @@ class _Builder:
         self.report(rq, Expect(item, "mscratch unchanged by the funct3=100 words", "eq", value))
         return n_words
 
+    def ctr_pair(self, item, name, addr, form, second_kind):
+        """Two adjacent demoted reads of a running counter (consistency compares, pending ctr_*): the first is >= the
+        previous read of the same counter, the second relates to the first by second_kind (ge / gt / same)."""
+        r1 = self.draw_rd(allow_x0=False)
+        r2 = self.pick([r1])
+        form2 = Weighted({k: TABLES["W-OP"][k] for k in DEMOTED}).draw(self.rng)
+        self.csr_op(form, r1, addr, 0)
+        self.csr_op(form2, r2, addr, 0)
+        prev = self.last_ctr.get(name)
+        if prev is None:
+            i1 = self.report(r1, Expect(item, f"{name} via {form} x0 (first read of the run)", "base", pending=PENDING_CTR))
+        else:
+            i1 = self.report(r1, Expect(item, f"{name} via {form} x0 >= its previous read", "ge", ref=prev, pending=PENDING_CTR))
+        word = {"ge": "not below", "gt": "above", "same": "equal to"}[second_kind]
+        i2 = self.report(r2, Expect(item, f"{name} again via {form2} x0: {word} the adjacent read", second_kind, ref=i1,
+                                    pending=PENDING_CTR))
+        self.last_ctr[name] = i2
+
     def block_012(self, name, addr, expect):
-        """TP-CSR-012: a demoted form (W-OP demoted subset) reads a read-only address; expect = constant, 'pair' or 'mcycleh'."""
+        """TP-CSR-012: a demoted form (W-OP demoted subset) reads a read-only address; expect = constant, 'pair', 'cycle',
+        'hpm<n>' or 'mcycleh'."""
         item = "TP-CSR-012"
         form = Weighted({k: TABLES["W-OP"][k] for k in DEMOTED}).draw(self.rng)
         self.fill(set())
-        if expect == "pair":
+        if expect == "cycle":
+            self.csr_op("csrrci", 0, "mcountinhibit", 1)   # CY runs, so the adjacent read is strictly later
+            self.ctr_pair(item, name, addr, form, "gt")
+        elif isinstance(expect, str) and expect.startswith("hpm"):
+            self.ctr_pair(item, name, addr, form, "same" if int(expect[3:]) in HPM_SAME else "ge")
+        elif expect == "pair":
             r1 = self.draw_rd(allow_x0=False)
             r2 = self.pick([r1])
             form2 = Weighted({k: TABLES["W-OP"][k] for k in DEMOTED}).draw(self.rng)
@@ -649,22 +688,30 @@ class _Builder:
         self.counts[item] += 1
 
 
+def _cmp_rule(csr):
+    """(compare mask, pending checker) of a CSR's value words: cpuctrlsts bit 8 is consistency-only (scrkey_proto)."""
+    return (CPUCTRL_CMP_MASK, PENDING_SCRKEY) if csr == "cpuctrlsts" else (MASK32, "")
+
+
 def sweep_csrs():
-    """TP-CSR-004 write sweep: the Implemented CSR map minus mseccfg (C-SWEEP) and the T-102 blocked counters."""
+    """TP-CSR-004 write sweep: the Implemented CSR map minus mseccfg (C-SWEEP) and the counters pending ctr_*."""
     names = ["mstatus", "mie", "mtvec", "mcounteren", "mcountinhibit", "mscratch", "mepc", "mcause", "mtval",
-             "mcycleh", "secureseed"]
+             "mcycleh", "cpuctrlsts", "secureseed"]
     names += [f"pmpcfg{i}" for i in range(build_params()["PMPNumRegions"] // 4)]
     names += [f"pmpaddr{i}" for i in range(build_params()["PMPNumRegions"])]
     return names
 
 
 def readonly_set(hart_id):
-    """TP-CSR-012 address set minus the T-102 blocked addresses: (name, address, expectation) with the constants of the
-    Implemented CSR map."""
+    """TP-CSR-012 address set: (name, address, expectation) with the constants of the Implemented CSR map; the running
+    counters carry a consistency expectation ('cycle', 'hpm<n>')."""
     n = hpm_num()
-    rows = [("mvendorid", K.CSR["mvendorid"], tb_param("CsrMvendorId")), ("mimpid", K.CSR["mimpid"], tb_param("CsrMimpId")),
-            ("mhartid", K.CSR["mhartid"], hart_id), ("mconfigptr", K.CSR["mconfigptr"], K.MCONFIGPTR_VALUE),
-            ("cycleh", K.CSR["cycleh"], "mcycleh"), ("instret", K.CSR["instret"], "pair"), ("instreth", K.CSR["instreth"], 0)]
+    rows = [("mvendorid", K.CSR["mvendorid"], tb_param("CsrMvendorId")), ("marchid", K.CSR["marchid"], K.MARCHID_IBEX),
+            ("mimpid", K.CSR["mimpid"], tb_param("CsrMimpId")), ("mhartid", K.CSR["mhartid"], hart_id),
+            ("mconfigptr", K.CSR["mconfigptr"], K.MCONFIGPTR_VALUE),
+            ("cycle", K.CSR["cycle"], "cycle"), ("cycleh", K.CSR["cycleh"], "mcycleh"),
+            ("instret", K.CSR["instret"], "pair"), ("instreth", K.CSR["instreth"], 0)]
+    rows += [(f"hpmcounter{i}", K.hpmcounter(i), f"hpm{i}") for i in range(3, 3 + n)]           # running event counters
     rows += [(f"hpmcounter{i}h", K.hpmcounter(i, high=True), 0) for i in range(3, 3 + n)]   # 32-bit counters: high half 0
     rows += [(f"hpmcounter{i}", K.hpmcounter(i), 0) for i in range(3 + n, 32)]              # unimplemented: RO-zero in M
     rows += [(f"hpmcounter{i}h", K.hpmcounter(i, high=True), 0) for i in range(3 + n, 32)]
@@ -678,6 +725,8 @@ def plan(seed, red=False, hart_id=0, traps=F3_100_WORDS, red_item=None):
     assert not red_item or red_item in BUILT, f"gen_csr_access_prog: no red fixture for {red_item}"
     # cycleh is checked exactly: mcycle runs from 0 (reset, then the sweep's zeroing) and a run is shorter than 2^32 cycles
     assert CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"] < 1 << 32
+    # the intent value of marchid must be the one the TB renders from ibex_pkg; a difference is a finding, never adopted
+    assert K.MARCHID_IBEX == CONSTANTS["GEN_CSR_MARCHID_VALUE"], "gen_csr_access_prog: marchid intent differs from the rendered value"
     rng = random.Random(f"{seed}:program:{GROUP}")
     b = _Builder(rng, red_item)
     # the boot stub's jump and the prologue (emit()) retire before the first block
@@ -757,7 +806,7 @@ def evaluate(plan, reports, item):
     """Compare the item's report words with the plan: (checked, failures), failures as 'idx label: expected .. got ..'."""
     checked, bad = 0, []
     for i, e in enumerate(plan.expected):
-        if e.item != item:
+        if e.item != item or e.kind == "base":
             continue
         checked += 1
         if i >= len(reports) or (e.ref >= 0 and e.ref >= len(reports)):
@@ -768,11 +817,24 @@ def evaluate(plan, reports, item):
             ok, want = (got & e.mask) == (e.value & e.mask), f"0x{e.value & e.mask:08x}" + ("" if e.mask == MASK32 else f" under mask 0x{e.mask:08x}")
         elif e.kind == "same":
             ok, want = (got & e.mask) == (reports[e.ref] & e.mask), f"report[{e.ref}] 0x{reports[e.ref]:08x}"
+        elif e.kind == "ge":
+            ok, want = got >= reports[e.ref], f">= report[{e.ref}] 0x{reports[e.ref]:08x}"
+        elif e.kind == "gt":
+            ok, want = got > reports[e.ref], f"> report[{e.ref}] 0x{reports[e.ref]:08x}"
         else:
             raise AssertionError(f"gen_csr_access_prog: unknown expectation kind {e.kind}")
         if not ok:
             bad.append(f"[{i}] {e.label}: expected {want}, got 0x{got:08x}")
     return checked, bad
+
+
+def pending_words(plan, item):
+    """Consistency compares of the item by owning checker: {checker: words} (evaluate counts them among the checked words)."""
+    out = {}
+    for e in plan.expected:
+        if e.item == item and e.kind != "base" and e.pending:
+            out[e.pending] = out.get(e.pending, 0) + 1
+    return out
 
 
 def reports_from_spike_log(path):
