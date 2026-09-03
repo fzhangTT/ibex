@@ -986,3 +986,17 @@ Ruling: a measured run must declare its expected functional coverage; gen_ut_loc
 the same landing; tb-infra may re-promote it with a manifest if it wants its coverage counted. The 15 promoted
 tests (14 smoke, gen_test_bit_draft targeted; gen_test_boot_retire stays check / measured: false) carry their
 per-item manifests per the DV Lead's tier table.
+
+## LOG-037b - 2026-09-03 - HOLD ANSWERS (Critic on tb-infra follow-up landing 1)
+
+The Critic's check of ce33b4f (dv/auto_dv/docs/gen_critic_tb_fu1.md, REQUEST-CHANGES on one high and two mediums,
+the same high as the cross-model review) answers the two holds explicitly: LOG-025 (T-136) does NOT lift until the
+entry state is published before the Zcmp fold, a red on gen_zcmp_irq_directed proves cause-checked equals
+irq_entries, and a report-time rule enforces it; LOG-026a (T-137) MAY lift with tb-infra's next landing on two
+conditions that belong to it anyway: MB6 re-run on the committed sha, and take() consuming both words of a spanning
+access. The 371 undecidable priority claims are not a soundness gap; the plan credits priority-pick items only from
+runs where the entry's claim was decidable (condition for the DV Lead, not a hold). Two record notes: the Critic
+saw the subject line of the artifact's commit in a git log listing before writing (the artifact itself was opened
+only after its Section 5; H-1 is established from the code path and the retained counts); and the DV Lead's
+read-only audit of the 187 retained logs found them byte-consistent with the manifest while gen_fu_a_* / gen_fu_c_*
+names cited in the transcript do not exist as files (driver-log verdict lines only). Both go to tb-infra's 1c rows.
