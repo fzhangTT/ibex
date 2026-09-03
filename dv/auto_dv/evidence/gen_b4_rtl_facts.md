@@ -1,7 +1,7 @@
 # B4 RTL facts: cm.mvsa01 with r1s' == r2s' (T-237)
 
 Owner: rtl-arch. Written 2026-09-03T20:02Z from rtl/ibex_compressed_decoder.sv, rtl/ibex_core.sv, rtl/ibex_register_file_ff.sv,
-the Zc chapter of the ISA manual in this clone (tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc) and the upstream Spike
+the Zc chapter of the ISA manual in this clone (tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc, on-disk revision fa794b6 of 2026-09-02, an untracked local copy) and the upstream Spike
 source in this clone (tools/riscv-isa-sim, revision 4ffd6ba8 of 2026-09-02; an allowed upstream project, docs/dv/FENCE.md:65-66).
 Scope: the RTL-side facts behind bug candidate B4 (dv/auto_dv/docs/gen_bug_log.md:60). The DV consequence (the manifest bin,
 the comparator's isa_trap / isa_rd / isa_pc_next rows) is the DV Lead's ruling and is kept out of this note; the owner item is
@@ -25,7 +25,7 @@ reserves (section 4).
 | sreg -> xreg mapping | dst = {(rs[2:1] > 0), (rs[2:1] == 0), rs}: s0/s1 -> x8/x9, s2..s7 -> x18..x23 | :156 (cm_mvsa01), :162 (cm_mva01s) |
 | Micro-op 1 (CmIdle) | `addi r1s', a0, 0` built by cm_mvsa01(a01 = 0, rs = instr_i[9:7]) via cm_mv_reg; tagged INSTR_EXPANDED_COMMIT; FSM -> CmMvSecondReg when ID accepts it | :788, :790, :791; helpers :153-158 and :129-137 |
 | Micro-op 2 (CmMvSecondReg) | `addi r2s', a1, 0` built by cm_mvsa01(a01 = 1, rs = instr_i[4:2]); tagged INSTR_EXPANDED_LAST; FSM -> CmIdle | :797, :800 |
-| Illegal terms in the arm | none: the only illegal_instr_o assignments of the funct3-101 group are the instr_i[6:5] default (:835), the instr_i[12:8] default (:839) and the reserved rlist tests of push/pop (:635, :703) | :835, :839, :635, :703 |
+| Illegal terms in the arm | none. The encoding-level illegal_instr_o assignments of the funct3-101 group are the instr_i[6:5] default (:835), the instr_i[12:8] default (:839) and the reserved-rlist assignments of push/pop (:637 under the test :635, :705 under :703); the group's two configuration-level assignments do not apply to this build: :620 fires only with BaseIsaRV32IorCHERIoT and cheriot_enable_i == IbexMuBiOn (tied Off, dv/auto_dv/tb/gen_dut_top.sv:206) and :843 only when RV32ZC excludes Zcmp (the build is RV32ZcaZcbZcmp, ibex_configs.yaml) | :835, :839, :637, :705; preconditions :620, :843 |
 
 ## 3. Why the second write wins
 
@@ -35,12 +35,15 @@ reserves (section 4).
 - With r1s' == r2s' both micro-ops carry the same rd. The first writes a0's value, the second writes a1's value to the same
   register one retirement later; the register holds a1 afterwards (tb-infra's observation s0 = a1 for r1s' = r2s' = s0).
 - The COMMIT tag on the first micro-op (:790) blocks interrupts between the two (rtl/ibex_controller.sv:498-500) and the
-  debug gates block entry on both tags (:474-477), so the pair is atomic as the specification requires for the legal case
-  (zcmp.adoc:1175); the atomicity is what makes the intermediate state (register = a0) unobservable by software.
+  debug gates block entry while the ID instruction carries INSTR_EXPANDED or INSTR_EXPANDED_COMMIT (:474-477); the second
+  micro-op carries INSTR_EXPANDED_LAST, and an interrupt or debug request accepted on it is taken with the saved PC = pc_if
+  after that micro-op has completed (csr_save_if_o in IRQ_TAKEN :732 and DBG_TAKEN_IF :773), so the pair is atomic as the
+  specification requires for the legal case (zcmp.adoc:1175); the atomicity is what makes the intermediate state
+  (register = a0) unobservable by software.
 - RVFI shows two records for the one halfword, both with rvfi_ext_expanded_insn_valid, the second with
   rvfi_ext_expanded_insn_last, both with rvfi_rd_addr = the mapped sreg; rvfi_rd_wdata is a0 on the first and a1 on the second
-  (rtl/ibex_core.sv:2270-2280, :2340-2346). rvfi_trap = 0 on both. A model that traps sees one trap record instead, which is
-  the comparator's first divergence.
+  (rtl/ibex_core.sv:2270-2280, :2340-2346). rvfi_trap = 0 on both. (Observation for the DV Lead, not an RTL fact: a model that traps produces one trap record
+  instead, which is where a lock-step comparison first diverges.)
 
 ## 4. Other Zcmp reserved forms: does the decoder share the pattern?
 
@@ -77,9 +80,9 @@ Conclusion: cm.mvsa01 with equal registers is the only Zcmp encoding the decoder
 | Field reads, no comparison | :788, :797 |
 | sreg mapping | :156, :162 |
 | Expansion order and tags | :788, :790, :791, :797, :800 |
-| Illegal terms of the group | :835, :839, :635, :703 |
+| Illegal terms of the group | :835, :839, :637 (:635), :705 (:703); configuration-level :620, :843 |
 | Atomicity gates | rtl/ibex_controller.sv:474-477, :498-500 |
 | Register write ordering | rtl/ibex_wb_stage.sv:303; rtl/ibex_register_file_ff.sv:252 |
 | RVFI records | rtl/ibex_core.sv:2270-2280, :2340-2346 |
-| Specification | tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc:1163, :1174-1175, :1242, :385/:579/:771/:968 |
+| Specification | tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc:1163, :1174-1175, :1242, :385/:579/:771/:968 (revision fa794b6, 2026-09-02) |
 | Reference model | tools/riscv-isa-sim/riscv/insns/cm_mvsa01.h:2, cm_mva01s.h |
