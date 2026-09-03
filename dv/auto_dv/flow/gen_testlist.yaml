@@ -1417,5 +1417,5 @@ tests:
     keep_artifacts: true
     component: gen_fcov_pkg
     measured: false
-    notes: RTL finding B8; the retained red is gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; the row mapping is evidence/gen_b8_row_mapping.md
+    notes: 'RTL finding B8 (dv/auto_dv/evidence/gen_b8_rtl_facts.md, section 6: the RTL-level signature the reproducer should observe); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv tagged [isa_mem] "Zcmp stores: model N, dut N+1" / "Zcmp loads: model N, dut N+1" and [isa_rd] "Zcmp union: ..." register mismatches; a FAIL through any other mechanism is not the B8 red and needs triage; the row-mapping reference follows once tb-infra commits it'
 
