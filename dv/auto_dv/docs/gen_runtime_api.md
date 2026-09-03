@@ -58,6 +58,9 @@ gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb]
   structarr -cm_report noinitial -cm_seqnoconst -cm_dir <outdir>/build.vdb -cm_hier <outdir>/cm_hier.cfg`.
   The hier file is rendered from the checked-in template `gen_cm_hier.cfg` as
   `+tree <tb_top>.<dut_instance>`, so only the gen_dut_top instance is instrumented.
+- A build without `--coverage` drops the `-cm_*` entries of the build entry's `extra_vcs_args`
+  (for example `-cm_glitch 0`), which mean nothing without `-cm` and only draw
+  `Warning-[VCM-INSOPTMIS]`; `build_manifest.dropped_cm_args_no_coverage` records them.
 - `--cond`: adds condition coverage (`-cm line+cond+tgl+assert+fsm+branch`). Trial result (T-010):
   VCS compiles it and URG reports it for this DUT (COND 37.41 percent, 3579/9566 in the first
   smoke report). `gen_regress.py` uses it by default (`--no-cond` drops it).

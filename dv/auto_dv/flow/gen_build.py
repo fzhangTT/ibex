@@ -137,7 +137,16 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
         shutil.copyfile(C.PLI_TAB, tab)
         lib, a.mirror_record = cocotb_lib(a)
         groups["cocotb"] = [C.COCOTB_DEFINE, "+vpi", "-P", str(tab), "-load", lib]
-    groups["extra"] = list(build.get("extra_vcs_args") or []) + list(a.vcs_arg or [])
+    extra = list(build.get("extra_vcs_args") or []) + list(a.vcs_arg or [])
+    if not a.coverage:
+        # Coverage sub-options (-cm_glitch 0 and friends) mean nothing without -cm and only draw
+        # Warning-[VCM-INSOPTMIS]; a no-coverage build drops them and records that it did.
+        dropped = [x for i, x in enumerate(extra) if x.startswith("-cm") or (i > 0 and extra[i - 1].startswith("-cm"))]
+        extra = [x for x in extra if x not in dropped]
+        a.dropped_cm_args = dropped
+    else:
+        a.dropped_cm_args = []
+    groups["extra"] = extra
     groups["log"] = ["-l", str(outdir / C.COMPILE_LOG)]
     argv = ["vcs"]
     for g in ("base", "filelists", "top", "uvm", "defines", "config", "common", "ldflags", "output", "debug",
@@ -296,6 +305,7 @@ def main() -> int:
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,
         "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
         "pre_build": pre_build, "ldflags": groups["ldflags"][1], "runtime_lib_dirs": runtime_lib_dirs(build, outdir),
+        "dropped_cm_args_no_coverage": a.dropped_cm_args,
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.REPO_ROOT / f for f in build["filelists"]]),
