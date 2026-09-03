@@ -1,5 +1,3 @@
-# not_built TP-CSR-026: needs the irq agent and irq event records (step 2b)
-# not_built TP-CSR-031: needs the irq agent and irq event records (step 2b)
 # not_hit gen_prv_trap_vector_cg.cp_cause.irq_fast: irq agent absent: no interrupt is taken in this test
 # not_hit gen_prv_trap_vector_cg.cp_cause.irq_sw: irq agent absent: no interrupt is taken in this test
 # not_hit gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast: irq agent absent: no interrupt is taken in this test

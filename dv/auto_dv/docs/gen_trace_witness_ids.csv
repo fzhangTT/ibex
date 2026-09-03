@@ -7,7 +7,7 @@ index,tp_item,bin,test_group,marked
 5,TP-BTALU-018,w_tp_btalu_018,gen_btalu_perf_b17_xfail,0
 6,TP-CMP-057,w_tp_cmp_057,gen_cmp_zcmp_events,1
 7,TP-CMP-058,w_tp_cmp_058,gen_cmp_zcmp_events,1
-8,TP-CSR-029,w_tp_csr_029,gen_csr_trap_setup_irq,1
+8,TP-CSR-029,w_tp_csr_029,gen_csr_trap_setup,1
 9,TP-CSR-031,w_tp_csr_031,gen_csr_trap_setup_irq,1
 10,TP-CSR-034,w_tp_csr_034,gen_csr_trap_handling,1
 11,TP-CSR-085,w_tp_csr_085,gen_csr_cpuctrl,1

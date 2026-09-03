@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 14:54 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 15:41 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -125,14 +125,19 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   list will be long (with 29 exact rows rendered, the first emitted-set manifest un-marks about two hundred of the 220
   items, all but the icram-dependent and no-export-row ones), so the DV Lead removes the tokens of every item whose rows are ALL
   in the build manifest's observed-row list (LOG-028a) IN THE SAME CHANGE as Runtime's landing of that list, with
-  gen_token_sunset.py whose per-item RELEASED / GATED output is retained beside the plan (dv/auto_dv/work/dv-lead/
-  gen_trace_check_v2j_sunset.log). Pass 1 reference (LOG-033): dv/auto_dv/work/runtime/out/probe_export_1445_v2k/build/gen_tb/
-  build_manifest.yaml, a head-mode build of committed 2696920 whose gen_ut_export seed-1 run passed behind the gen_boot_zc canary:
-  28 declared rows, 28 emitted by header, 19 observed; the nine never observed in that run (pin debug_req, pin irq_external,
-  pin irq_fast, pin irq_nm, pin irq_software, pin irq_timer, regime phase, scrkey req, scrkey valid) hold every item that
-  names one (115 items released, 86 gated). Pass 2 follows T-150's regression (TB Infra's committed entries exporting under
-  an interrupt storm, a debug-request storm and a scrkey regime switch, served with gen_ut_export as one head-mode regression)
-  with the same command, regenerating the plan and the
+  dv/auto_dv/tools/gen_token_sunset.py (committed with v2l; the release is also reproducible from gen_trace_check.py's FAIL list against
+  the same manifest). Every pass retains its inputs and outputs under dv/auto_dv/evidence/gen_sunset_pass<n>/: a byte copy of the
+  reference build manifest, the driver's per-item RELEASED / GATED log, the tool's output before and after the removal, and a
+  gen_README.md naming the ruling; a plan state never rests on a work-directory file. Pass 1 (LOG-033): dv/auto_dv/evidence/
+  gen_sunset_pass1/gen_build_manifest_2696920.yaml, the byte copy of Runtime's dv/auto_dv/work/runtime/out/probe_export_1445_v2k/
+  build/gen_tb/build_manifest.yaml, a head-mode build of committed 2696920 whose gen_ut_export seed-1 run passed behind the gen_boot_zc
+  canary: 28 declared rows, 28 emitted by header, 19 observed (the probe_export_t140 rehearsal reference at 11413df carried the
+  identical 19-row observed list); the nine never observed in that run (pin debug_req, pin irq_external, pin irq_fast, pin irq_nm,
+  pin irq_software, pin irq_timer, regime phase, scrkey req, scrkey valid) hold every item that names one (115 items released, 86
+  gated; gen_sunset_pass1/gen_token_sunset_released_gated.log and gen_sunset_pass1/gen_trace_check_before_after.log). Pass 2
+  follows T-150's regression (LOG-033 is its only record until TB Infra's committed entries exist: the entries exporting under an
+  interrupt storm, a debug-request storm and a scrkey regime switch, served with gen_ut_export as one head-mode regression, are
+  named here when they land) with the same command, regenerating the plan and the
   witness CSV (marked = 0 for those rows) and the Test Writer regenerating the affected manifests; a failing run of
   gen_trace_check.py between the two landings is the expected signal that the removal is due, not a defect. Token removal
   is the DV Lead's, decided from the build manifest, never from the yaml alone.
@@ -185,11 +190,11 @@ Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 67b59
 
 | Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (67b5971) |
 |---|---|---|---|
-| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c); isa_pc_next compares rvfi_pc_wdata with bit 0 MASKED on jump-class records (bug candidate B13, RVFI cosmetic; batch-2 gen_test_isa_cti saw 64 rows per seed of dut == model or 1 on odd jalr targets) and the B13 expected-fail test gen_btalu_hazard_xfail runs the unmasked rule by knob (TB Infra names it) |
-| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | built (comparator) |
-| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | built (bus agents) |
-| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | built (bus agents) |
-| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | built (bus agents) |
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c) EXCEPT the isa_pc_next bit-0 convention for jump-class records: the bit-0 mask is OWED to TB Infra (T-144), unbuilt at 67b5971 (gen_rvfi_pkg.sv:445-446 compares pc_a != t.pc_wdata with no mask and no knob exists; the same at 5f530a8, :451), so gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); once T-144 lands the compare masks bit 0 and the B13 expected-fail test gen_btalu_hazard_xfail alone runs the unmasked rule by the knob T-144 names |
+| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | UNBUILT at 67b5971: neither chk_isa_csr nor chk_csr_readback is consumed by the env (the comparator rows consumed are isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next); CSR read-backs are checked at program level by the tests meanwhile |
+| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | UNBUILT as checker ids at 67b5971 (no chk_ibus_proto / chk_ibus_outstanding consumed); the bus driver bounds its own outstanding count (GEN_IBUS_MAX_OUTSTANDING) and gen_bus_if.sv carries the sva_rvalid_legal self-check |
+| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | UNBUILT as checker ids at 67b5971 (no chk_dbus_* consumed); the bus driver bounds its own outstanding count (GEN_DBUS_MAX_OUTSTANDING); no split-transaction checker |
+| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | UNBUILT at 67b5971 (no chk_dbus_store_intg consumed) |
 | gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal UNBUILT (the internal NMI from an injected LSU integrity error: entry, mcause 0x8000001f, mtval); rf_wr_suppress in the comparator |
 | gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 | UNBUILT (pmp_*) |
 | gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | built; irq_entry checks the entry bound only: the expected-cause rule (pending and enabled at the decision, priority NMI > fast lowest id > external > software > timer) is T-136, and interrupt-enabled results do not count until it is in (Section 0 hold, Section 1.4) |
@@ -203,8 +208,8 @@ Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 67b59
 | gen_chk_sleep | core_busy (sleep rows) | +gen_chk_core_busy=0 | UNBUILT |
 | gen_chk_fetch_en | fetch_en | +gen_chk_fetch_en=0 | UNBUILT |
 | gen_chk_cheriot_quiet | data_tag_quiet (data_tag_o never high, gen_misc_monitor); cap-field quiet rows | +gen_chk_data_tag_quiet=0 | data_tag_quiet built; cap-field rows UNBUILT |
-| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) | bound (gen_binds.sv) |
-| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 (TB Infra to add the row) | requested |
+| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) | UNBOUND at 67b5971: no gen_binds.sv exists in the tree (the binds file for the C10 properties is OWED to TB Infra as T-162); only the TB self-check sva_rvalid_legal (gen_bus_if.sv, knob consumed) is built |
+| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 | built (chk_rvfi_proto consumed by gen_rvfi_monitor at 67b5971) |
 | gen_chk_bitmanip_ref (requested) | C5.5 draft-B reference function compare in the shim | +gen_chk_isa_rd=0 (same row) | built (T-102: draft-B reference extended to the remaining C5.5 ops) |
 | gen_chk_zcmp_seq, gen_chk_timing_isa, gen_chk_trap_timing, gen_chk_csr_flush, gen_chk_exc_flush, gen_chk_regime, gen_chk_reset (requested) | test-level compares in the hosting cocotb test unless TB Infra adds a row (Section 6 of the architecture, "New checkers requested" mapping) | per test | requested |
 | gen_sva_multdiv, gen_sva_csr_excl (requested) | bound assertions in gen_binds.sv (F-MUL-028; CSR exclusion probe) | +gen_chk_sva_multdiv=0, +gen_chk_sva_csr_excl=0 | requested |
@@ -276,7 +281,7 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-CMP-058 | gen_cmp_zcmp_events | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm | pin edge | RVFI-only fallback stated | class B |
 | TP-BIT-036 | gen_bit_multicycle | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; dbus rvalid | pin edge | RVFI-only fallback stated | - |
 | TP-BIT-042 | gen_bit_random | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req; pin irq_nm; dbus rvalid | pin edge | RVFI-only fallback stated | - |
-| TP-CSR-029 | gen_csr_trap_setup_irq | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | irq_pending_o | RVFI-only fallback stated | - |
+| TP-CSR-029 | gen_csr_trap_setup | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | irq_pending_o | RVFI-only fallback stated | - |
 | TP-CSR-031 | gen_csr_trap_setup_irq | misc irq_pending; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req | irq_pending_o | RVFI-only fallback stated | class B |
 | TP-CSR-034 | gen_csr_trap_handling | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | pin edge | RVFI-only fallback stated | - |
 | TP-CSR-085 | gen_csr_cpuctrl | scrkey valid | scrkey | RVFI-only fallback stated | - |
@@ -378,7 +383,7 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 
 ## 1.4 Items under the T-136 measurement hold (generated; 165 items in 61 groups; no result counts until the irq_entry expected-cause check is committed and reviewed)
 
-Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_xif_random (8), gen_irq_lines (7), gen_irq_nmi (7), gen_irq_regime (7), gen_irq_handler (6), gen_dbg_irq_mask (5), gen_irq_debug (5), gen_irq_priority (5), gen_prv_irq (5), gen_rvfi_ext (5), gen_prv_wfi (4), gen_cmp_zcmp_events (3), gen_csr_trap_handling (3), gen_csr_trap_setup_irq (3), gen_irq_reset (3), gen_prv_mret (3), gen_reg_inflight (3), gen_reg_knob_sweep (3), gen_csr_ordering (2), gen_dit_dummy_events (2), gen_dmem_ctx (2), gen_exc_double_fault (2), gen_isa_cti (2), gen_isa_random (2), gen_prv_storm (2), gen_rst_pending_at_boot (2), gen_rst_sleep (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_bit_multicycle (1), gen_bit_random (1), gen_cmp_random (1), gen_cmp_zca (1), gen_csr_storm (1), gen_csr_trap_setup (1), gen_dbg_irq_mask_xfail (1), gen_dbg_mode_misc (1), gen_dbg_random (1), gen_dit_random (1), gen_dmem_regime (1), gen_exc_priority (1), gen_exc_regime (1), gen_fe_redirect (1), gen_fe_sleep (1), gen_irq_nmi_int (1), gen_isa_system (1), gen_mul_random (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmc_random (1), gen_prv_mstatus (1), gen_reg_schedule (1), gen_rst_boot (1), gen_rst_fetch_enable (1), gen_rvfi_proto_basic (1), gen_sec_alert_inject_ibus (1), gen_xif_dummy (1), gen_xif_fetch_enable (1). Evidence: dv/auto_dv/evidence/gen_t090_rtl_facts.md (39f0eae); ruling: Section 0.
+Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_xif_random (8), gen_irq_lines (7), gen_irq_nmi (7), gen_irq_regime (7), gen_irq_handler (6), gen_dbg_irq_mask (5), gen_irq_debug (5), gen_irq_priority (5), gen_prv_irq (5), gen_rvfi_ext (5), gen_prv_wfi (4), gen_cmp_zcmp_events (3), gen_csr_trap_handling (3), gen_irq_reset (3), gen_prv_mret (3), gen_reg_inflight (3), gen_reg_knob_sweep (3), gen_csr_ordering (2), gen_csr_trap_setup (2), gen_csr_trap_setup_irq (2), gen_dit_dummy_events (2), gen_dmem_ctx (2), gen_exc_double_fault (2), gen_isa_cti (2), gen_isa_random (2), gen_prv_storm (2), gen_rst_pending_at_boot (2), gen_rst_sleep (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_bit_multicycle (1), gen_bit_random (1), gen_cmp_random (1), gen_cmp_zca (1), gen_csr_storm (1), gen_dbg_irq_mask_xfail (1), gen_dbg_mode_misc (1), gen_dbg_random (1), gen_dit_random (1), gen_dmem_regime (1), gen_exc_priority (1), gen_exc_regime (1), gen_fe_redirect (1), gen_fe_sleep (1), gen_irq_nmi_int (1), gen_isa_system (1), gen_mul_random (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmc_random (1), gen_prv_mstatus (1), gen_reg_schedule (1), gen_rst_boot (1), gen_rst_fetch_enable (1), gen_rvfi_proto_basic (1), gen_sec_alert_inject_ibus (1), gen_xif_dummy (1), gen_xif_fetch_enable (1). Evidence: dv/auto_dv/evidence/gen_t090_rtl_facts.md (39f0eae); ruling: Section 0.
 
 | Item | Group | Why held |
 |---|---|---|
@@ -398,7 +403,7 @@ Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_
 | TP-BIT-042 | gen_bit_random | Pass criteria name gen_chk_irq |
 | TP-CSR-006 | gen_csr_ordering | Pass criteria name gen_chk_irq |
 | TP-CSR-026 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
-| TP-CSR-029 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
+| TP-CSR-029 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
 | TP-CSR-031 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
 | TP-CSR-032 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
 | TP-CSR-034 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
@@ -877,8 +882,8 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | gen_csr_umode | 7 | TP-CSR-015..TP-PRV-033 |
 | gen_csr_debug_csr | 6 | TP-CSR-017..TP-CSR-079 |
 | gen_csr_machine_ids | 4 | TP-CSR-019..TP-CSR-022 |
-| gen_csr_trap_setup | 8 | TP-CSR-023..TP-CSR-036 |
-| gen_csr_trap_setup_irq | 3 | TP-CSR-026..TP-CSR-031 |
+| gen_csr_trap_setup | 9 | TP-CSR-023..TP-CSR-036 |
+| gen_csr_trap_setup_irq | 2 | TP-CSR-026..TP-CSR-031 |
 | gen_csr_trap_handling | 15 | TP-CSR-032..TP-CSR-114 |
 | gen_csr_reset | 6 | TP-CSR-037..TP-CSR-109 |
 | gen_csr_counters | 20 | TP-CSR-050..TP-CSR-113 |
@@ -1536,7 +1541,8 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: how the odd sum is formed, target alignment (word/half), rd, form.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: per seed >= 50 odd sums whose next RVFI entry has rvfi_pc_rdata == (rs1 + imm) & ~1 (even) and rvfi_trap = 0; no trap with mcause 0 anywhere in the run (redirect and LSB clearing derived from RVFI, C-14; when a bus request for the target appears (cache miss or icache_enable = 0) its address is (rs1 + imm) & ~3 because instr_addr_o is word-aligned, rtl/ibex_icache.sv:1037).
-- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008); gen_chk_ibus_proto (address bits [1:0] always 00).
+- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008; the mask is TB Infra's T-144, not built at 67b5971, so this item's verdict depends on T-144); gen_chk_ibus_proto (address bits [1:0] always 00).
+- Notes: until T-144 lands (gen_rvfi_pkg.sv:445-446 at 67b5971 compares the raw pc_wdata) the odd-target clause stays not_built in gen_test_isa_cti; the verdict relies on the bit-0 convention of bug candidate B13 (rtl-arch R11).
 - Expected: pass
 - Test group: gen_isa_cti
 - Bins: CG-ISA-006.cr_odd.jalr_odd, CG-ISA-006.cr_odd.c_jr_odd, CG-ISA-006.cr_odd.c_jalr_odd, CG-ISA-006.cp_jalr_imm.odd, CG-ISA-006.cp_target_odd.yes, CG-ISA-006.cp_jalr_rs1.other, CG-ISA-006.cr_jalr_rs1_imm.auto
@@ -2504,7 +2510,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode; U per C-2.
-- Stimulus: >= 3000 retired instructions per seed (the per-form floors below carry the intent; the template's single-program budget caps a seed near 3800 retirements, Test Writer batch 2, ruled 13:5x UTC) with a 50/50 compressed/32-bit mix so 32-bit instructions frequently start at pc[1] = 1 and straddle a word boundary; all Zca instruction kinds present.
+- Stimulus: >= 3000 retired instructions per seed (the per-form floors below carry the intent; the template's single-program budget caps a seed near 3800 retirements, Test Writer batch 2, ruling LOG-035; dv/auto_dv/evidence/gen_tdd_batch2.md) with a 50/50 compressed/32-bit mix so 32-bit instructions frequently start at pc[1] = 1 and straddle a word boundary; all Zca instruction kinds present.
 - Randomized: mix ratio per block, instruction kinds, operands, alignment, M/U.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:imem_outstanding_cap
 - Fire-check: RVFI shows compressed retirements with rvfi_insn[31:16] = 0 and rvfi_pc_wdata = pc + 2 (non-CTI), and >= 500 32-bit retirements with rvfi_pc_rdata[1] = 1 straddling a word boundary, all with rvfi_trap = 0.
@@ -3282,7 +3288,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
 - Bins: CG-CMP-008.cp_insn.cm_push, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.nmi_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_last_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_last_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes, CG-CMP-008.cr_insn_rlist_event.auto
-- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-102c landed 18470dd; T-134 landed ce33b4f, an interrupt or debug entry handled before the Zcmp fold): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-CMP-057: Interrupt during the cm.pop / cm.popret load phase
 - Features: F-CMP-057
 - Phase: 1
@@ -3296,7 +3302,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
 - Bins: CG-CMP-008.cp_insn.cm_pop, CG-CMP-008.cp_insn.cm_popret, CG-CMP-008.cp_insn.cm_popretz, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_commit_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_commit_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na, CG-WIT-001.cp_clause.w_tp_cmp_057
-- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-102c landed 18470dd; T-134 landed ce33b4f, an interrupt or debug entry handled before the Zcmp fold): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-CMP-058: Interrupts are blocked during the COMMIT micro-ops
 - Features: F-CMP-058
 - Phase: 1
@@ -3338,7 +3344,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Expected: pass
 - Test group: gen_cmp_zcmp_faults
 - Bins: CG-CMP-008.cr_event_phase_outcome.store_fault_pmp_trap, CG-CMP-008.cr_fault_idx.auto, CG-CMP-008.cp_event.store_fault_pmp, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes
-- Notes: the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
+- Notes: the comparator side depends on TB Infra's T-102c rule (T-102c landed 18470dd; T-134 landed ce33b4f, an interrupt or debug entry handled before the Zcmp fold): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
 ### TP-CMP-061: Bus error on the k-th pushed store
 - Features: F-CMP-060
 - Phase: 1
@@ -3352,7 +3358,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Expected: pass
 - Test group: gen_cmp_zcmp_faults
 - Bins: CG-CMP-008.cr_event_phase_outcome.store_fault_bus_trap, CG-CMP-008.cr_fault_idx.auto, CG-CMP-008.cp_event.store_fault_bus, CG-CMP-008.cr_insn_rlist_event.auto
-- Notes: the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
+- Notes: the comparator side depends on TB Infra's T-102c rule (T-102c landed 18470dd; T-134 landed ce33b4f, an interrupt or debug entry handled before the Zcmp fold): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
 ### TP-CMP-062: Load access fault (PMP or bus error) on the k-th popped load
 - Features: F-CMP-061
 - Phase: 1
@@ -4402,55 +4408,44 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 
 ---------------------------------------------------------------------------------------------------
 ## Test groups
-
-Runtime class: short = a few thousand instructions, one seed sweep of a smoke item; medium = the
-corner-heavy Phase-1 items (directed-in-random with handler traffic); long = Phase-2 random
-regimes (>= 20000 instructions per seed, multiple regimes per run).
-
-| Group | Items (TP- prefix omitted) | Phase | Tier | Runtime class |
+| Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
-| gen_isa_alu | ISA-001, ISA-002, ISA-003, ISA-004, ISA-005, ISA-006, ISA-007, ISA-008, ISA-009, ISA-052 | 1 | smoke/targeted | short/medium |
-| gen_isa_shift | ISA-010, ISA-011, ISA-013, ISA-014 | 1 | smoke/targeted | short/medium |
-| gen_isa_illegal | ISA-012, ISA-021, ISA-025, ISA-028, ISA-042, ISA-046, ISA-047, ISA-048, ISA-049, ISA-050 | 1 | targeted | medium |
-| gen_isa_cti | ISA-015, ISA-016, ISA-017, ISA-018, ISA-019, ISA-020, ISA-022, ISA-023, ISA-024, ISA-026, ISA-027, ISA-053 | 1 | smoke/targeted | short/medium |
-| gen_isa_fence | ISA-029, ISA-030, ISA-031 | 1 | targeted | medium |
-| gen_isa_system | ISA-032, ISA-033, ISA-034, ISA-035, ISA-036, ISA-037, ISA-038, ISA-039, ISA-040, ISA-041 | 1 | smoke/targeted | short/medium |
-| gen_isa_csr_insn | ISA-043, ISA-044, ISA-045 | 1 | smoke/targeted | short/medium |
-| gen_isa_illegal_info | ISA-051 | 1 | targeted | medium |
-| gen_isa_random | ISA-054, ISA-055, ISA-056 | 2 | full | long |
-| gen_isa_illegal_ebreak_info | ISA-057 | 1 | targeted | medium |
-| gen_mul_mul | MUL-001, MUL-002, MUL-003, MUL-004, MUL-005, MUL-006, MUL-007, MUL-008, MUL-027 | 1 | smoke/targeted | short/medium |
-| gen_mul_timing | MUL-009, MUL-010, MUL-011, MUL-023, MUL-024, MUL-025, MUL-030 | 1 | targeted | medium |
-| gen_mul_div | MUL-012, MUL-013, MUL-014, MUL-015, MUL-016, MUL-017, MUL-018, MUL-019, MUL-020, MUL-021, MUL-022, MUL-026 | 1 | smoke/targeted | short/medium |
-| gen_mul_random | MUL-028, MUL-029 | 2 | full | long |
-| gen_cmp_zca | CMP-001, CMP-002, CMP-004, CMP-005, CMP-008, CMP-010, CMP-011, CMP-012, CMP-014, CMP-016, CMP-017, CMP-018, CMP-020, CMP-021, CMP-023, CMP-024, CMP-026, CMP-028, CMP-030, CMP-032, CMP-033 | 1 | smoke/targeted | short/medium |
-| gen_cmp_illegal | CMP-003, CMP-006, CMP-007, CMP-015, CMP-019, CMP-022, CMP-025, CMP-029, CMP-035, CMP-037, CMP-044, CMP-054, CMP-067 | 1 | targeted | medium |
-| gen_cmp_hints | CMP-009, CMP-013, CMP-027, CMP-031 | 1 | targeted | medium |
-| gen_cmp_zcb | CMP-034, CMP-036, CMP-038 | 1 | smoke | short |
-| gen_cmp_zcmp_basic | CMP-039, CMP-040, CMP-041, CMP-042, CMP-043, CMP-045, CMP-046, CMP-047, CMP-048, CMP-049, CMP-050, CMP-052, CMP-053, CMP-055, CMP-066, CMP-068, CMP-069, CMP-073 | 1 | smoke/targeted | short/medium |
-| gen_cmp_zcmp_basic_xfail | CMP-051 | 1 | targeted | medium |
-| gen_cmp_zcmp_events | CMP-056, CMP-057, CMP-058, CMP-059, CMP-064 | 1 | targeted | medium |
-| gen_cmp_zcmp_faults | CMP-060, CMP-061, CMP-062, CMP-063, CMP-072 | 1 | targeted | medium |
-| gen_cmp_zcmp_events_xfail | CMP-065 | 1 | targeted | medium |
-| gen_cmp_random | CMP-070, CMP-071 | 2 | full | long |
-| gen_bit_ratified | BIT-001, BIT-002, BIT-003, BIT-004, BIT-005, BIT-006, BIT-007, BIT-008, BIT-009, BIT-010, BIT-014, BIT-015, BIT-017, BIT-018, BIT-019, BIT-020, BIT-021, BIT-038, BIT-040 | 1 | smoke/targeted | short/medium |
-| gen_bit_draft | BIT-011, BIT-016, BIT-022, BIT-023, BIT-024, BIT-025, BIT-026, BIT-027, BIT-028, BIT-029, BIT-030, BIT-031, BIT-032, BIT-033 | 1 | targeted | medium |
-| gen_bit_multicycle | BIT-012, BIT-013, BIT-036, BIT-039, BIT-043 | 1 | smoke/targeted | short/medium |
-| gen_bit_illegal | BIT-034, BIT-035, BIT-037 | 1 | targeted | medium |
-| gen_bit_random | BIT-041, BIT-042 | 2 | full | long |
-| gen_btalu_basic | BTALU-001, BTALU-002, BTALU-003, BTALU-004, BTALU-005, BTALU-007, BTALU-009, BTALU-012, BTALU-014 | 1 | smoke/targeted | short/medium |
-| gen_btalu_dit | BTALU-006, BTALU-015 | 1 | targeted | medium |
-| gen_btalu_hazard_xfail | BTALU-008 | 1 | targeted | medium |
-| gen_btalu_hazard | BTALU-010, BTALU-011, BTALU-013 | 1 | targeted | medium |
-| gen_btalu_dit_xfail | BTALU-016 | 1 | targeted | medium |
-| gen_btalu_random | BTALU-017 | 2 | full | long |
-| gen_btalu_perf_b17_xfail | BTALU-018 | 1 | targeted | medium |
-
-Expected-fail items (5): TP-CMP-051 (B4), TP-CMP-065 (B8), TP-BTALU-008 (B13), TP-BTALU-016 (B11),
-TP-BTALU-018 (B17). Informational, excluded from the pass gate (2): TP-ISA-051 (B14 record
-confirmation), TP-ISA-057 (rvfi_trap quirk on the illegal ebreak variant). Doc-mismatch items (2):
-TP-MUL-012 (D7), TP-BIT-030 (D8); D20 (mhpmevent read value) is cited by TP-ISA-023 / TP-BTALU-015
-without changing their Expected (no value is predicted from the doc).
+| gen_isa_alu | TP-ISA-001, 002, 003, 004, 005, 006, 007, 008, 009, 052 | 1 | smoke/targeted | short/medium |
+| gen_isa_shift | TP-ISA-010, 011, 013, 014 | 1 | smoke/targeted | short/medium |
+| gen_isa_illegal | TP-ISA-012, 021, 025, 028, 042, 046, 047, 048, 049, 050 | 1 | targeted | medium |
+| gen_isa_cti | TP-ISA-015, 016, 017, 018, 019, 020, 022, 023, 024, 026, 027, 053 | 1 | smoke/targeted | short/medium |
+| gen_isa_fence | TP-ISA-029, 030, 031 | 1 | targeted | medium |
+| gen_isa_system | TP-ISA-032, 033, 034, 035, 036, 037, 038, 039, 040, 041 | 1 | smoke/targeted | short/medium |
+| gen_isa_csr_insn | TP-ISA-043, 044, 045 | 1 | smoke/targeted | short/medium |
+| gen_isa_illegal_info | TP-ISA-051 | 1 | targeted | medium |
+| gen_isa_random | TP-ISA-054, 055, 056 | 2 | full | long |
+| gen_isa_illegal_ebreak_info | TP-ISA-057 | 1 | targeted | medium |
+| gen_mul_mul | TP-MUL-001, 002, 003, 004, 005, 006, 007, 008, 027 | 1 | smoke/targeted | short/medium |
+| gen_mul_timing | TP-MUL-009, 010, 011, 023, 024, 025, 030 | 1 | targeted | medium |
+| gen_mul_div | TP-MUL-012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 026 | 1 | smoke/targeted | short/medium |
+| gen_mul_random | TP-MUL-028, 029 | 2 | full | long |
+| gen_cmp_zca | TP-CMP-001, 002, 004, 005, 008, 010, 011, 012, 014, 016, 017, 018, 020, 021, 023, 024, 026, 028, 030, 032, 033 | 1 | smoke/targeted | short/medium |
+| gen_cmp_illegal | TP-CMP-003, 006, 007, 015, 019, 022, 025, 029, 035, 037, 044, 054, 067 | 1 | targeted | medium |
+| gen_cmp_hints | TP-CMP-009, 013, 027, 031 | 1 | targeted | medium |
+| gen_cmp_zcb | TP-CMP-034, 036, 038 | 1 | smoke | short |
+| gen_cmp_zcmp_basic | TP-CMP-039, 040, 041, 042, 043, 045, 046, 047, 048, 049, 050, 052, 053, 055, 066, 068, 069, 073 | 1 | smoke/targeted | short/medium |
+| gen_cmp_zcmp_basic_xfail | TP-CMP-051 | 1 | targeted | medium |
+| gen_cmp_zcmp_events | TP-CMP-056, 057, 058, 059, 064 | 1 | targeted | medium |
+| gen_cmp_zcmp_faults | TP-CMP-060, 061, 062, 063, 072 | 1 | targeted | medium |
+| gen_cmp_zcmp_events_xfail | TP-CMP-065 | 1 | targeted | medium |
+| gen_cmp_random | TP-CMP-070, 071 | 2 | full | long |
+| gen_bit_ratified | TP-BIT-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 014, 015, 017, 018, 019, 020, 021, 038, 040 | 1 | smoke/targeted | short/medium |
+| gen_bit_draft | TP-BIT-011, 016, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033 | 1 | targeted | medium |
+| gen_bit_multicycle | TP-BIT-012, 013, 036, 039, 043 | 1 | smoke/targeted | short/medium |
+| gen_bit_illegal | TP-BIT-034, 035, 037 | 1 | targeted | medium |
+| gen_bit_random | TP-BIT-041, 042 | 2 | full | long |
+| gen_btalu_basic | TP-BTALU-001, 002, 003, 004, 005, 007, 009, 012, 014 | 1 | smoke/targeted | short/medium |
+| gen_btalu_dit | TP-BTALU-006, 015 | 1 | targeted | medium |
+| gen_btalu_hazard_xfail | TP-BTALU-008 | 1 | targeted | medium |
+| gen_btalu_hazard | TP-BTALU-010, 011, 013 | 1 | targeted | medium |
+| gen_btalu_dit_xfail | TP-BTALU-016 | 1 | targeted | medium |
+| gen_btalu_random | TP-BTALU-017 | 2 | full | long |
+| gen_btalu_perf_b17_xfail | TP-BTALU-018 | 1 | targeted | medium |
 
 ## New checkers requested
 
@@ -5116,7 +5111,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: read-back pairs for every op x class combination listed in Bins; irq_pending_o observed equal to |(pins & read-back) one cycle after each write. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mie/mip csrr read-back on rvfi_rd_wdata and, for an enabled pending line, the rvfi_intr record that follows)
 - Pass criteria: gen_chk_csr_readback (mask MIE_MASK (0x7FFF_0888)); gen_chk_irq (irq_pending_o == |(pins & mie))
 - Expected: pass
-- Test group: gen_csr_trap_setup_irq
+- Test group: gen_csr_trap_setup
 - Bins: CG-CSR-002.cr_csr_op.mie_csrrw, CG-CSR-002.cr_csr_op.mie_csrrs, CG-CSR-002.cr_csr_op.mie_csrrc, CG-CSR-002.cr_csr_op.mie_csrrwi, CG-CSR-002.cr_csr_op.mie_csrrsi, CG-CSR-002.cr_csr_op.mie_csrrci, CG-CSR-002.cr_csr_wpat.mie_rand, CG-CSR-002.cr_csr_wpat.mie_legal, CG-CSR-002.cr_csr_wpat.mie_illegal, CG-CSR-002.cr_csr_wpat.mie_msb, CG-CSR-002.cr_mie_w_op.std_csrrw, CG-CSR-002.cr_mie_w_op.fast_csrrw, CG-CSR-002.cr_mie_w_op.both_csrrw, CG-CSR-002.cr_mie_w_op.ro_csrrw, CG-CSR-002.cr_mie_w_op.allfast_csrrw, CG-CSR-002.cr_mie_w_op.std_csrrs, CG-CSR-002.cr_mie_w_op.fast_csrrs, CG-CSR-002.cr_mie_w_op.std_csrrc, CG-CSR-002.cr_mie_w_op.fast_csrrc, CG-CSR-002.cr_mie_w_op.std_csrrsi, CG-CSR-002.cr_mie_w_op.std_csrrci, CG-WIT-001.cp_clause.w_tp_csr_029
 
 ### TP-CSR-030: mie write of all-ones reads back MIE_MASK (0x7FFF_0888)
@@ -6942,19 +6937,17 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Bins: CG-PRV-007.cr_mret_dbg.m_dm_rom, CG-PRV-007.cr_mret_dbg.u_dm_rom, CG-PRV-007.cr_mret_dbg.m_outside, CG-PRV-007.cr_mret_dbg.u_outside, CG-PRV-007.cp_event.mret_in_dbg, CG-PRV-004.cr_kind_priv_trap.mret_dbg_ok, CG-PRV-004.cr_kind_priv_trap.ecall_dbg_trap
 
 ## Test groups
-
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_csr_access | TP-CSR-001, 002, 003, 004, 005, 012 | 1 | smoke/targeted | short |
 | gen_csr_ordering | TP-CSR-006, 007, 008, 101, 102, 103, 115 | 1 | smoke/targeted | medium |
 | gen_csr_illegal | TP-CSR-009, 010, 011, 013, 014, 016, 049, 104, 110, 111 | 1 | smoke/targeted | medium |
 | gen_csr_machine_ids | TP-CSR-019, 020, 021, 022 | 1 | smoke | short |
-| gen_csr_trap_setup | TP-CSR-023, 024, 025, 026, 027, 028, 029, 030, 031, 035, 036 | 1 | smoke/targeted | short |
+| gen_csr_trap_setup | TP-CSR-023, 024, 025, 027, 028, 029, 030, 035, 036 | 1 | smoke/targeted | short |
 | gen_csr_trap_handling | TP-CSR-032, 033, 034, 038, 039, 040, 041, 042, 043, 044, 045, 046, 047, 048, 114 | 1 | smoke/targeted | short |
 | gen_csr_counters | TP-CSR-050, 051, 052, 058, 059, 060, 061, 062, 063, 064, 065, 066, 067, 068, 069, 070, 071, 072, 073, 113 | 1 | smoke/targeted | medium |
-| gen_csr_umode | TP-CSR-015, 053, 054, 055, 056, 057, TP-PRV-033 | 1 | smoke/targeted | short |
+| gen_csr_umode | TP-CSR-015, 053, 054, 055, 056, 057; TP-PRV-033 | 1 | smoke/targeted | short |
 | gen_csr_debug_csr | TP-CSR-017, 018, 074, 077, 078, 079 | 1 | targeted | medium |
-| gen_csr_debug_csr_b15a_xfail (TP-CSR-075, B15 mask) and gen_csr_debug_csr_b15b_xfail (TP-CSR-076, B15 ebreaks) | TP-CSR-075, 076 | 1 | targeted | medium |
 | gen_csr_trigger_csr | TP-CSR-080, 081, 082, 084 | 1 | smoke/targeted | short |
 | gen_csr_trigger_csr_xfail | TP-CSR-083 | 1 | targeted | short |
 | gen_csr_cpuctrl | TP-CSR-085, 086, 087, 088, 089, 090, 091, 092, 093, 094 | 1 | smoke/targeted | medium |
@@ -6970,28 +6963,12 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_prv_illegal | TP-PRV-009, 020, 021, 027 | 1 | smoke/targeted | short |
 | gen_prv_irq | TP-PRV-022, 023, 028, 029, 030 | 1 | smoke/targeted | medium |
 | gen_prv_debug | TP-PRV-004, 024, 025, 026, 039 | 1 | smoke/targeted | medium |
-| gen_prv_debug_b1_xfail (TP-PRV-014, B1) and gen_prv_debug_b2_xfail (TP-PRV-035, B2) | TP-PRV-014, 035 | 1 | targeted | medium |
 | gen_prv_storm | TP-PRV-036, 037, 038 | 2 | full | long |
-
-Expected-fail items: TP-CSR-075 and TP-CSR-076 (B15), TP-CSR-083 (B3), TP-PRV-014 (B1),
-TP-PRV-035 (B2). TP-CSR-075 joins the B15 list because an all-ones write necessarily sets bit 13
-(gen_bug_log.md B15 row to be extended by the DV Lead).
-Doc-mismatch items (pass, RTL followed): TP-CSR-017 (D12), TP-CSR-024 (D2), TP-CSR-032 (D1),
-TP-CSR-042/043/044/045/046 (D3), TP-CSR-061 and TP-CSR-107 (D20), TP-CSR-081, TP-CSR-084 and TP-CSR-108 (D4).
-RTL-defined items (B6 ruling C-20, pass): TP-CSR-018, TP-PRV-004, TP-PRV-026, TP-PRV-039 (mret inside debug
-mode, F-PRV-036); RTL-defined NMI-mode mret target (jump to the current mepc_q, CSR values from mstack):
-TP-PRV-010 (F-PRV-011 note).
-Fact-check (T-053) fold: X-1 applied to TP-CSR-018/035/040 and TP-PRV-004/005/008/010/024/029; X-2 to
-TP-PRV-001/006/008/014 and every U-mode item (C-2 reference); X-3/D20 to TP-CSR-061/107; X-7 to
-TP-CSR-031/103; X-8 to TP-PRV-018/019; X-17 to TP-CSR-064/065/066; UNREACHABLE rows TP-CSR-004/095/101
-constrained (C-SWEEP); UNOBSERVABLE rows TP-CSR-002/092/093 (P7 probe-gated, boundary form) and
-TP-PRV-029 (C-14); mtval excluded from TP-CSR-008; TP-CSR-011 conditioned on the implemented set;
-TP-CSR-102 restated per field.
-Documented behaviour with a design-weakness note (B12, pass): TP-CSR-094.
-B5 (dcsr.nmip): owner item TP-DBG-021; TP-CSR-074/075/108 exclude bit 3 from their compare.
-Canonical feature IDs owned by this area group (F-CSR-002/003/005/019/020/024/026/032/035/085/099,
-F-PRV-005/007/010/014/015/016/036) are each cited directly by at least one item above; items that cite
-an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the canonical entry.
+| gen_csr_trap_setup_irq | TP-CSR-026, 031 | 1 | targeted | - |
+| gen_csr_debug_csr_b15a_xfail | TP-CSR-075 | 1 | targeted | - |
+| gen_csr_debug_csr_b15b_xfail | TP-CSR-076 | 1 | targeted | - |
+| gen_prv_debug_b1_xfail | TP-PRV-014 | 1 | targeted | - |
+| gen_prv_debug_b2_xfail | TP-PRV-035 | 1 | targeted | - |
 
 ## New checkers requested
 
@@ -8586,7 +8563,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Expected: pass
 - Test group: gen_irq_timing
 - Bins: CG-IRQ-004.cr_ctx_outcome.zcmp_expanded_taken, CG-IRQ-004.cr_ctx_outcome.zcmp_commit_taken, CG-IRQ-004.cr_ctx_latency.zcmp_expanded_three_five, CG-IRQ-004.cr_ctx_latency.zcmp_commit_six_ten, CG-EXC-008.cp_event.irq_during_expanded, CG-EXC-008.cp_event.irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_push_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_push_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_pop_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_pop_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_popret_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_popret_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_popretz_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_popretz_irq_during_commit_deferred, CG-EXC-008.cr_event_pos.irq_during_expanded_first, CG-EXC-008.cr_event_pos.irq_during_expanded_middle, CG-EXC-008.cr_event_pos.irq_during_expanded_last, CG-EXC-008.cr_event_rlist.irq_during_expanded_r5_7, CG-EXC-008.cr_event_rlist.irq_during_expanded_r8_11, CG-EXC-008.cr_event_rlist.irq_during_commit_deferred_r12_15, CG-EXC-008.cr_event_after.irq_during_expanded_reexecuted_from_first, CG-IRQ-001.cr_line_mepc.fast_0_cm_pc, CG-IRQ-001.cp_mepc_src.cm_pc, CG-WIT-001.cp_clause.w_tp_irq_025
-- Notes: rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): mepc = the cm.* pc and the retired micro-ops repeat after mret (flush_expanded resets the expander, rtl/ibex_if_stage.sv:482-483); the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Notes: rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): mepc = the cm.* pc and the retired micro-ops repeat after mret (flush_expanded resets the expander, rtl/ibex_if_stage.sv:482-483); the comparator side depends on TB Infra's T-102c rule (T-102c landed 18470dd; T-134 landed ce33b4f, an interrupt or debug entry handled before the Zcmp fold): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-IRQ-026: Interrupt in the same cycle as an ID-stage exception: the exception wins, the interrupt stays pending
 - Features: F-IRQ-021
 - Phase: 1
@@ -9358,36 +9335,32 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Bins: CG-IRQ-013.cp_preempt.debug_req, CG-IRQ-013.cr_preempt_pos.debug_req_vector_req_outstanding, CG-IRQ-013.cr_preempt_pos.debug_req_vector_word_in_if, CG-IRQ-013.cr_preempt_line.debug_req_external, CG-IRQ-013.cr_preempt_line.debug_req_fast, CG-IRQ-013.cr_preempt_line.debug_req_software, CG-IRQ-013.cr_preempt_resume.debug_req_irq_handler_runs, CG-IRQ-013.cp_line.software, CG-IRQ-013.cp_line.timer, CG-IRQ-013.cp_line.external, CG-IRQ-013.cp_line.fast, CG-WIT-001.cp_clause.w_tp_irq_080
 
 ## Test groups
-
-| group | items | phase | tier | runtime class |
+| Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_exc_sync_causes | TP-EXC-001, 007, 016, 022, 023, 024, 026 | 1 | smoke | short |
 | gen_exc_fetch_fault | TP-EXC-002, 003, 004, 005 | 1 | targeted | short |
 | gen_exc_illegal | TP-EXC-008, 009, 010, 011, 013 | 1 | targeted | short |
 | gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 070 | 1 | targeted | medium |
-| gen_exc_priority_info | TP-EXC-065 (informational; own `_info` test, C-15) | 1 | targeted | short |
+| gen_exc_priority_info | TP-EXC-065 | 1 | targeted | short |
 | gen_exc_ebreak_ecall | TP-EXC-017, 018, 020, 021 | 1 | targeted | short |
 | gen_exc_zcmp | TP-EXC-014, 042, 043, 044 | 1 | targeted | medium |
 | gen_exc_lsu_fault | TP-EXC-025, 027, 028, 029, 030, 031, 032, 033, 034, 036, 037, 038, 039 | 1 | targeted | medium |
 | gen_exc_debug_mode | TP-EXC-019, 045, 046, 047, 048 | 1 | targeted | medium |
 | gen_exc_trap_state | TP-EXC-041, 049, 060, 062, 063, 064, 066, 067, 068, 069 | 1 | targeted | short |
-| gen_exc_mret | TP-EXC-050, 051, 052, 053, 061 | 1 | smoke (050) / targeted | short |
-| gen_exc_double_fault | TP-EXC-054, 055, 056, 057, 058, 059 | 1 | smoke (054) / targeted | short |
+| gen_exc_mret | TP-EXC-050, 051, 052, 053, 061 | 1 | smoke/targeted | short |
+| gen_exc_double_fault | TP-EXC-054, 055, 056, 057, 058, 059 | 1 | smoke/targeted | short |
 | gen_exc_regime | TP-EXC-071, 072, 073, 074 | 2 | full | long |
-| gen_irq_lines | TP-IRQ-001, 002, 003, 004, 005, 006, 013 | 1 | smoke (001-004) / targeted | short |
+| gen_irq_lines | TP-IRQ-001, 002, 003, 004, 005, 006, 013 | 1 | smoke/targeted | short |
 | gen_irq_csr | TP-IRQ-008, 009, 010, 011, 012, 017, 018, 020, 070 | 1 | targeted | short |
 | gen_irq_priority | TP-IRQ-014, 015, 016, 031, 065 | 1 | targeted | short |
 | gen_irq_timing | TP-IRQ-021, 022, 023, 024, 025, 026, 027, 030, 063, 064, 066 | 1 | targeted | medium |
 | gen_irq_handler | TP-IRQ-028, 032, 033, 034, 061, 062 | 1 | targeted | short |
-| gen_irq_nmi | TP-IRQ-007, 035, 036, 037, 038, 039, 040, 079 | 1 | smoke (007) / targeted | short |
-| gen_irq_nmi_int | TP-IRQ-044, 045, 046, 047, 048 | 1 | smoke (044) / targeted | medium |
-| gen_irq_wfi | TP-IRQ-049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 068, 069 | 1 | smoke (049) / targeted | medium |
+| gen_irq_nmi | TP-IRQ-007, 035, 036, 037, 038, 039, 040, 079 | 1 | smoke/targeted | short |
+| gen_irq_nmi_int | TP-IRQ-044, 045, 046, 047, 048 | 1 | smoke/targeted | medium |
+| gen_irq_wfi | TP-IRQ-049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 068, 069 | 1 | smoke/targeted | medium |
 | gen_irq_debug | TP-IRQ-029, 041, 042, 043, 078, 080 | 1 | targeted | medium |
 | gen_irq_reset | TP-IRQ-019, 059, 060, 067 | 1 | targeted | short |
 | gen_irq_regime | TP-IRQ-071, 072, 073, 074, 075, 076, 077 | 2 | full | long |
-
-Runtime classes: short < 2 min per seed; medium 2-10 min per seed (many iterations, aligned
-drivers, deep stalls); long > 10 min per seed (random regimes, multi-seed).
 
 ## New checkers requested
 
@@ -11084,29 +11057,28 @@ Conventions used below:
 
 
 ## Test groups
-
-| group | items | phase | tier | estimated runtime class |
+| Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
-| gen_pmp_csr_warl | TP-PMP-001, TP-PMP-002, TP-PMP-003, TP-PMP-004, TP-PMP-005, TP-PMP-006, TP-PMP-007, TP-PMP-008 | 1 | smoke/targeted | short |
-| gen_pmp_data_fault | TP-PMP-069, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083 | 1 | smoke/targeted | medium |
-| gen_pmp_debug | TP-PMP-009, TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099 | 1 | targeted | medium |
-| gen_pmp_debug_xfail | TP-PMP-074 (expected-fail B2, own test) | 1 | targeted | medium |
-| gen_pmp_fetch_fault | TP-PMP-064, TP-PMP-065, TP-PMP-066, TP-PMP-067, TP-PMP-068, TP-PMP-076, TP-PMP-077, TP-PMP-078, TP-PMP-079 | 1 | smoke/targeted | medium |
-| gen_pmp_icache_dummy | TP-PMP-092, TP-PMP-093 | 1 | targeted | medium |
-| gen_pmp_lock | TP-PMP-013, TP-PMP-014, TP-PMP-015, TP-PMP-016, TP-PMP-017, TP-PMP-018, TP-PMP-019, TP-PMP-020, TP-PMP-021, TP-PMP-112 | 1 | targeted | short |
+| gen_pmp_csr_warl | TP-PMP-001, 002, 003, 004, 005, 006, 007, 008 | 1 | smoke/targeted | short |
+| gen_pmp_data_fault | TP-PMP-069, 080, 081, 082, 083 | 1 | smoke/targeted | medium |
+| gen_pmp_debug | TP-PMP-009, 094, 095, 096, 097, 098, 099 | 1 | targeted | medium |
+| gen_pmp_debug_xfail | TP-PMP-074 | 1 | targeted | medium |
+| gen_pmp_fetch_fault | TP-PMP-064, 065, 066, 067, 068, 076, 077, 078, 079 | 1 | smoke/targeted | medium |
+| gen_pmp_icache_dummy | TP-PMP-092, 093 | 1 | targeted | medium |
+| gen_pmp_lock | TP-PMP-013, 014, 015, 016, 017, 018, 019, 020, 021, 112 | 1 | targeted | short |
 | gen_pmp_mode_trans | TP-PMP-111 | 1 | targeted | medium |
-| gen_pmp_match_na4 | TP-PMP-032, TP-PMP-033 | 1 | targeted | medium |
-| gen_pmp_match_napot | TP-PMP-034, TP-PMP-035, TP-PMP-036, TP-PMP-037 | 1 | targeted | medium |
-| gen_pmp_match_tor | TP-PMP-038, TP-PMP-039, TP-PMP-040, TP-PMP-041, TP-PMP-042 | 1 | targeted | medium |
-| gen_pmp_misaligned | TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089 | 1 | targeted | medium |
-| gen_pmp_mprv | TP-PMP-070, TP-PMP-071, TP-PMP-072, TP-PMP-075 | 1 | targeted | medium |
-| gen_pmp_mprv_xfail | TP-PMP-073 (expected-fail B1, own test) | 1 | targeted | medium |
-| gen_pmp_mseccfg | TP-PMP-011, TP-PMP-012, TP-PMP-022, TP-PMP-023, TP-PMP-024, TP-PMP-025, TP-PMP-026, TP-PMP-027, TP-PMP-028, TP-PMP-029, TP-PMP-030, TP-PMP-031, TP-PMP-108 | 1 | targeted | short |
-| gen_pmp_perm_mml0 | TP-PMP-047, TP-PMP-048, TP-PMP-049, TP-PMP-050, TP-PMP-051, TP-PMP-052 | 1 | smoke/targeted | medium |
-| gen_pmp_perm_mml1 | TP-PMP-054, TP-PMP-055, TP-PMP-056, TP-PMP-057, TP-PMP-058, TP-PMP-059, TP-PMP-060, TP-PMP-061, TP-PMP-062 | 1 | full/targeted | medium |
-| gen_pmp_priority | TP-PMP-043, TP-PMP-044, TP-PMP-045, TP-PMP-046 | 1 | targeted | medium |
-| gen_pmp_random_regime | TP-PMP-100, TP-PMP-101, TP-PMP-102, TP-PMP-103, TP-PMP-104, TP-PMP-105, TP-PMP-106, TP-PMP-107, TP-PMP-109, TP-PMP-110 | 2 | full | long |
-| gen_pmp_recfg | TP-PMP-053, TP-PMP-063, TP-PMP-090, TP-PMP-091 | 1 | smoke/targeted | medium |
+| gen_pmp_match_na4 | TP-PMP-032, 033 | 1 | targeted | medium |
+| gen_pmp_match_napot | TP-PMP-034, 035, 036, 037 | 1 | targeted | medium |
+| gen_pmp_match_tor | TP-PMP-038, 039, 040, 041, 042 | 1 | targeted | medium |
+| gen_pmp_misaligned | TP-PMP-084, 085, 086, 087, 088, 089 | 1 | targeted | medium |
+| gen_pmp_mprv | TP-PMP-070, 071, 072, 075 | 1 | targeted | medium |
+| gen_pmp_mprv_xfail | TP-PMP-073 | 1 | targeted | medium |
+| gen_pmp_mseccfg | TP-PMP-011, 012, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 108 | 1 | targeted | short |
+| gen_pmp_perm_mml0 | TP-PMP-047, 048, 049, 050, 051, 052 | 1 | smoke/targeted | medium |
+| gen_pmp_perm_mml1 | TP-PMP-054, 055, 056, 057, 058, 059, 060, 061, 062 | 1 | targeted/full | medium |
+| gen_pmp_priority | TP-PMP-043, 044, 045, 046 | 1 | targeted | medium |
+| gen_pmp_random_regime | TP-PMP-100, 101, 102, 103, 104, 105, 106, 107, 109, 110 | 2 | full | long |
+| gen_pmp_recfg | TP-PMP-053, 063, 090, 091 | 1 | smoke/targeted | medium |
 | gen_pmp_reset | TP-PMP-010 | 1 | smoke | short |
 
 ## New checkers requested
@@ -14517,7 +14489,6 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Bins: CG-PMC-003.cp_variant.fence_i, CG-PMC-003.cr_variant_rel.fencei_gt
 
 ## Test groups
-
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_dbg_haltreq | TP-DBG-001, 002, 004, 005, 006, 007, 008, 009, 014, 015, 069, 071 | 1 | smoke/targeted | short |
@@ -14552,9 +14523,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 | gen_pmc_hpm_b17_div_xfail | TP-PMC-060 | 1 | targeted | short |
 | gen_trg_csr_xfail | TP-TRG-008 | 1 | targeted | short |
 | gen_trg_fire_xfail | TP-TRG-020 | 1 | targeted | short |
-
-Runtime classes: short < 2 min per seed on the verified flow; medium 2-10 min (slow-memory
-regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA model).
+| gen_pmc_hpm_b20_fencei_xfail | TP-PMC-061 | 1 | targeted | - |
 
 ## New checkers requested
 
@@ -18554,48 +18523,45 @@ draw weights of the agent / program generator per transaction.
   CG-IC-005.cp_off_window.long, CG-IC-005.cr_off_window_x_hit.long_hit, CG-IC-005.cr_off_window_x_hit.short_hit, CG-WIT-001.cp_clause.w_tp_ic_057
 
 ## Test groups
-
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
-| gen_imem_proto_basic | 10: TP-IMEM-001..004, TP-IMEM-006..007, TP-IMEM-009, TP-IMEM-029, TP-IMEM-039, TP-IMEM-040 (informational) | 1 | smoke | short |
-| gen_imem_latency | 5: TP-IMEM-005, TP-IMEM-008, TP-IMEM-010, TP-IMEM-032..033 | 1 | targeted | medium |
-| gen_imem_fetch_err | 7: TP-IMEM-011..016, TP-IMEM-030 | 1 | smoke/targeted | medium |
-| gen_imem_redirect | 5: TP-IMEM-017..021 | 1 | smoke/targeted | medium |
-| gen_imem_gating | 5: TP-IMEM-022..026 | 1 | smoke/targeted | medium |
-| gen_imem_boot | 2: TP-IMEM-027..028 | 1 | smoke/targeted | medium |
-| gen_imem_regime | 6: TP-IMEM-031, TP-IMEM-034..038 | 2 | full | long |
-| gen_dmem_proto_basic | 14: TP-DMEM-001..004, TP-DMEM-006..010, TP-DMEM-049, TP-DMEM-057..059, TP-DMEM-062 (informational, Q-DL-9) | 1 | smoke/targeted | medium |
-| gen_dmem_latency | 1: TP-DMEM-005 | 1 | targeted | medium |
-| gen_dmem_be | 7: TP-DMEM-011..015, TP-DMEM-045, TP-DMEM-060 | 1 | smoke/targeted | medium |
-| gen_dmem_misaligned | 7: TP-DMEM-016..022 | 1 | smoke/targeted | medium |
-| gen_dmem_regime | 6: TP-DMEM-023, TP-DMEM-029, TP-DMEM-038, TP-DMEM-054..056 | 2 | full | long |
-| gen_dmem_err | 9: TP-DMEM-024..027, TP-DMEM-032..034, TP-DMEM-037, TP-DMEM-063 (informational, B14 confirmation) | 1 | smoke/targeted | medium |
-| gen_dmem_load_data | 4: TP-DMEM-028, TP-DMEM-030..031, TP-DMEM-050 | 1 | smoke/targeted | medium |
-| gen_dmem_ctx | 8: TP-DMEM-035..036, TP-DMEM-044, TP-DMEM-046..048, TP-DMEM-051, TP-DMEM-061 | 1 | smoke/targeted | medium |
-| gen_dmem_intg | 5: TP-DMEM-039..043 | 1 | targeted | medium |
-| gen_dmem_intg_xfail | 1: TP-DMEM-064 (expected-fail, B16; own test) | 1 | targeted | medium |
-| gen_dmem_zcmp | 2: TP-DMEM-052..053 | 1 | targeted | medium |
-| gen_fe_boot | 4: TP-FE-001..003, TP-FE-027 | 1 | smoke/targeted | medium |
-| gen_fe_redirect | 5: TP-FE-004..005, TP-FE-012..014 | 1 | smoke/targeted | medium |
-| gen_fe_align | 6: TP-FE-006..011 | 1 | smoke/targeted | medium |
-| gen_fe_regime | 4: TP-FE-015, TP-FE-024..025, TP-FE-028 | 2 | full | long |
-| gen_fe_backpressure | 3: TP-FE-016..018 | 1 | smoke/targeted | medium |
-| gen_fe_fault | 5: TP-FE-019..023 | 1 | smoke/targeted | medium |
-| gen_fe_sleep | 1: TP-FE-026 | 1 | smoke | short |
-| gen_ic_ram | 8: TP-IC-001..006, TP-IC-045..046 | 1 | smoke/targeted | medium |
-| gen_ic_inval | 10: TP-IC-007..016 | 1 | smoke/targeted | medium |
-| gen_ic_enable | 11: TP-IC-017..020, TP-IC-029..034, TP-IC-057 | 1 | smoke/targeted | medium |
-| gen_ic_replace | 2: TP-IC-021..022 | 1 | targeted | medium |
-| gen_ic_replace_info | 1: TP-IC-038 (informational; own test) | 1 | targeted | medium |
-| gen_ic_fill | 7: TP-IC-023..028, TP-IC-039 | 1 | smoke/targeted | medium |
-| gen_ic_ecc | 6: TP-IC-035..037, TP-IC-042..044 | 1 | smoke/targeted | medium |
-| gen_ic_regime | 8: TP-IC-040..041, TP-IC-047..049, TP-IC-054..056 | 2 | full | long |
-| gen_ic_busy | 4: TP-IC-050..053 | 1 | smoke/targeted | medium |
-
-Total: 189 items in 34 groups; TP-IMEM-040, TP-DMEM-062 (Q-DL-9 unsolicited-rvalid demonstrations, one
-per bus), TP-DMEM-063 (B14 two-record confirmation) and TP-IC-038 (multi-way hit, software-constraint
-violation) are informational and outside the pass gate, each its own `_info` test; TP-DMEM-064 (B16) is the
-area's only expected-fail item and its own `_xfail` test (C-15).
+| gen_imem_proto_basic | TP-IMEM-001, 002, 003, 004, 006, 007, 009, 029, 039 | 1 | smoke | short |
+| gen_imem_latency | TP-IMEM-005, 008, 010, 032, 033 | 1 | targeted | medium |
+| gen_imem_fetch_err | TP-IMEM-011, 012, 013, 014, 015, 016, 030 | 1 | smoke/targeted | medium |
+| gen_imem_redirect | TP-IMEM-017, 018, 019, 020, 021 | 1 | smoke/targeted | medium |
+| gen_imem_gating | TP-IMEM-022, 023, 024, 025, 026 | 1 | smoke/targeted | medium |
+| gen_imem_boot | TP-IMEM-027, 028 | 1 | smoke/targeted | medium |
+| gen_imem_regime | TP-IMEM-031, 034, 035, 036, 037, 038 | 2 | full | long |
+| gen_dmem_proto_basic | TP-DMEM-001, 002, 003, 004, 006, 007, 008, 009, 010, 049, 057, 058, 059 | 1 | smoke/targeted | medium |
+| gen_dmem_latency | TP-DMEM-005 | 1 | targeted | medium |
+| gen_dmem_be | TP-DMEM-011, 012, 013, 014, 015, 045, 060 | 1 | smoke/targeted | medium |
+| gen_dmem_misaligned | TP-DMEM-016, 017, 018, 019, 020, 021, 022 | 1 | smoke/targeted | medium |
+| gen_dmem_regime | TP-DMEM-023, 029, 038, 054, 055, 056 | 2 | full | long |
+| gen_dmem_err | TP-DMEM-024, 025, 026, 027, 032, 033, 034, 037 | 1 | smoke/targeted | medium |
+| gen_dmem_load_data | TP-DMEM-028, 030, 031, 050 | 1 | smoke/targeted | medium |
+| gen_dmem_ctx | TP-DMEM-035, 036, 044, 046, 047, 048, 051, 061 | 1 | smoke/targeted | medium |
+| gen_dmem_intg | TP-DMEM-039, 040, 041, 042, 043 | 1 | targeted | medium |
+| gen_dmem_intg_xfail | TP-DMEM-064 | 1 | targeted | medium |
+| gen_dmem_zcmp | TP-DMEM-052, 053 | 1 | targeted | medium |
+| gen_fe_boot | TP-FE-001, 002, 003, 027 | 1 | smoke/targeted | medium |
+| gen_fe_redirect | TP-FE-004, 005, 012, 013, 014 | 1 | smoke/targeted | medium |
+| gen_fe_align | TP-FE-006, 007, 008, 009, 010, 011 | 1 | smoke/targeted | medium |
+| gen_fe_regime | TP-FE-015, 024, 025, 028 | 2 | full | long |
+| gen_fe_backpressure | TP-FE-016, 017, 018 | 1 | smoke/targeted | medium |
+| gen_fe_fault | TP-FE-019, 020, 021, 022, 023 | 1 | smoke/targeted | medium |
+| gen_fe_sleep | TP-FE-026 | 1 | smoke | short |
+| gen_ic_ram | TP-IC-001, 002, 003, 004, 005, 006, 045, 046 | 1 | smoke/targeted | medium |
+| gen_ic_inval | TP-IC-007, 008, 009, 010, 011, 012, 013, 014, 015, 016 | 1 | smoke/targeted | medium |
+| gen_ic_enable | TP-IC-017, 018, 019, 020, 029, 030, 031, 032, 033, 034, 057 | 1 | smoke/targeted | medium |
+| gen_ic_replace | TP-IC-021, 022 | 1 | targeted | medium |
+| gen_ic_replace_info | TP-IC-038 | 1 | targeted | medium |
+| gen_ic_fill | TP-IC-023, 024, 025, 026, 027, 028, 039 | 1 | smoke/targeted | medium |
+| gen_ic_ecc | TP-IC-035, 036, 037, 042, 043, 044 | 1 | smoke/targeted | medium |
+| gen_ic_regime | TP-IC-040, 041, 047, 048, 049, 054, 055, 056 | 2 | full | long |
+| gen_ic_busy | TP-IC-050, 051, 052, 053 | 1 | smoke/targeted | medium |
+| gen_imem_proto_basic_info | TP-IMEM-040 | 2 | targeted | - |
+| gen_dmem_proto_basic_info | TP-DMEM-062 | 2 | targeted | - |
+| gen_dmem_err_info | TP-DMEM-063 | 1 | targeted | - |
 
 ## New checkers requested
 
@@ -22398,51 +22364,48 @@ TP-CHERI-002.
 
 ---------------------------------------------------------------------------------------------------
 ## Test groups
----------------------------------------------------------------------------------------------------
-
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
-| gen_sec_cpuctrlsts | TP-DIT-001, TP-SEC-033, TP-SEC-034 | 1 | smoke/targeted | short |
-| gen_dit_timing | TP-DIT-002..009, TP-DIT-011 | 1 | targeted | medium |
-| gen_dit_dummy | TP-DIT-010, 012, 013, 014, 016, 017, 018, 026, 029, TP-RVFI-027 | 1 | smoke/targeted | medium |
-| gen_dit_dummy_xfail | TP-DIT-019 (expected-fail B7, own test) | 1 | targeted | short |
-| gen_dit_dummy_events_xfail | TP-DIT-032 (expected-fail B8, own test) | 1 | targeted | short |
-| gen_rvfi_proto_basic_xfail | TP-RVFI-013 (expected-fail B13, own test) | 1 | targeted | short |
-| gen_rvfi_trap_info | TP-RVFI-039 (informational B14 confirmation, own test) | 1 | targeted | short |
-| gen_dit_dummy_events | TP-DIT-020..025, 030, 031, 034 | 1 | targeted | medium |
+| gen_sec_cpuctrlsts | TP-DIT-001; TP-SEC-033, 034 | 1 | smoke/targeted | short |
+| gen_dit_timing | TP-DIT-002, 003, 004, 005, 006, 007, 008, 009, 011 | 1 | targeted | medium |
+| gen_dit_dummy | TP-DIT-010, 012, 013, 014, 016, 017, 018, 026, 029; TP-RVFI-027 | 1 | smoke/targeted | medium |
+| gen_dit_dummy_xfail | TP-DIT-019 | 1 | targeted | short |
+| gen_dit_dummy_events_xfail | TP-DIT-032 | 1 | targeted | short |
+| gen_rvfi_proto_basic_xfail | TP-RVFI-013 | 1 | targeted | short |
+| gen_rvfi_trap_info | TP-RVFI-039 | 1 | targeted | short |
+| gen_dit_dummy_events | TP-DIT-020, 021, 022, 023, 024, 025, 030, 031, 034 | 1 | targeted | medium |
 | gen_dit_secureseed | TP-DIT-015, 027, 028 | 1 | targeted | short |
 | gen_dit_random | TP-DIT-033 | 2 | full | long |
 | gen_sec_alert_inject_icache | TP-SEC-001 | 1 | targeted | medium |
 | gen_sec_alerts_neg | TP-SEC-002, 003, 005, 006, 013, 014, 015, 035 | 1 | smoke/targeted/full | long |
-| gen_sec_alert_fault_pc | TP-SEC-004 | 1 | targeted (mutation evidence) | short |
+| gen_sec_alert_fault_pc | TP-SEC-004 | 1 | targeted | short |
 | gen_sec_alert_inject_ibus | TP-SEC-007, 012 | 1 | targeted | medium |
-| gen_sec_alert_inject_dbus | TP-SEC-008, 009, TP-RVFI-024 (completing-beat classes) | 1 | targeted | medium |
-| gen_sec_alert_inject_dbus_info | TP-SEC-010 (informational, own test) | 1 | targeted | short |
-| gen_sec_alert_inject_dbus_clean_info | TP-SEC-011 (informational, own test) | 1 | targeted | short |
-| gen_sec_alert_inject_dbus_first_beat_xfail | TP-SEC-040 (expected-fail B16, own test) | 1 | targeted | short |
-| gen_rvfi_ext_rf_wr_suppress_xfail | TP-RVFI-040 (expected-fail B16, own test) | 1 | targeted | short |
+| gen_sec_alert_inject_dbus | TP-RVFI-024; TP-SEC-008, 009 | 1 | targeted | medium |
+| gen_sec_alert_inject_dbus_info | TP-SEC-010 | 1 | targeted | short |
+| gen_sec_alert_inject_dbus_clean_info | TP-SEC-011 | 1 | targeted | short |
+| gen_sec_alert_inject_dbus_first_beat_xfail | TP-SEC-040 | 1 | targeted | short |
+| gen_rvfi_ext_rf_wr_suppress_xfail | TP-RVFI-040 | 1 | targeted | short |
 | gen_sec_inputs_mubi | TP-SEC-016, 019 | 1 | targeted | short |
-| gen_sec_boundary | TP-SEC-017, 037, 038, TP-RST-020, TP-RST-028 | 1 | smoke | short |
-| gen_sec_scr_key | TP-SEC-020, TP-RVFI-023 | 1 | targeted | short |
-| gen_sec_double_fault | TP-SEC-021..027 | 1 | targeted | medium |
+| gen_sec_boundary | TP-RST-020, 028; TP-SEC-017, 037, 038 | 1 | smoke | short |
+| gen_sec_scr_key | TP-RVFI-023; TP-SEC-020 | 1 | targeted | short |
+| gen_sec_double_fault | TP-SEC-021, 022, 023, 024, 025, 026, 027 | 1 | targeted | medium |
 | gen_sec_crash_dump | TP-SEC-028, 029, 030, 032 | 1 | targeted | medium |
 | gen_sec_random | TP-SEC-039 | 2 | full | long |
-| gen_rst_boot | TP-RST-001..008, 027, TP-SEC-031, TP-RVFI-036 | 1 | smoke/targeted | short |
-| gen_rst_fetch_enable | TP-RST-009..014 | 1 | targeted | medium |
-| gen_rst_sleep | TP-RST-015, 016, TP-SEC-018, TP-RVFI-031 | 1 | targeted | medium |
-| gen_rst_midrun_reset | TP-RST-017, 018, 019, TP-SEC-036 | 1 | targeted | medium |
-| gen_rst_regfile | TP-RST-021, 022, 023 | 1 | targeted | short |
+| gen_rst_boot | TP-RST-001, 002, 003, 004, 005, 006, 007, 008, 027; TP-RVFI-036; TP-SEC-031 | 1 | smoke/targeted | short |
+| gen_rst_fetch_enable | TP-RST-009, 010, 011, 012, 013, 014 | 1 | targeted | medium |
+| gen_rst_sleep | TP-RST-015, 016; TP-RVFI-031; TP-SEC-018 | 1 | smoke/targeted | medium |
+| gen_rst_midrun_reset | TP-RST-017, 018, 019; TP-SEC-036 | 1 | targeted | medium |
+| gen_rst_regfile | TP-RST-021, 022, 023 | 1 | smoke/targeted | short |
 | gen_rst_pending_at_boot | TP-RST-024, 025, 026 | 1 | targeted | short |
 | gen_rst_random | TP-RST-029 | 2 | full | long |
-| gen_rvfi_proto_basic | TP-RVFI-001..004, 007..012, 038 | 1 | smoke/targeted | short |
+| gen_rvfi_proto_basic | TP-RVFI-001, 002, 003, 004, 007, 008, 009, 010, 011, 012, 038 | 1 | smoke/targeted | short |
 | gen_rvfi_trap | TP-RVFI-005, 016, 017, 018, 028, 029, 030 | 1 | targeted | medium |
 | gen_rvfi_ext | TP-RVFI-006, 019, 020, 021, 022, 032, 034, 035 | 1 | targeted | medium |
 | gen_rvfi_mem | TP-RVFI-014, 015 | 1 | targeted | short |
 | gen_rvfi_zcmp | TP-RVFI-025, 026 | 1 | targeted | short |
 | gen_rvfi_random | TP-RVFI-037 | 2 | full | long |
-| gen_cheri_off_quiet | TP-CHERI-001..004, TP-RVFI-033 | 1 | smoke/targeted | short |
+| gen_cheri_off_quiet | TP-CHERI-001, 002, 003, 004; TP-RVFI-033 | 1 | smoke/targeted | short |
 
----------------------------------------------------------------------------------------------------
 ## New checkers requested
 ---------------------------------------------------------------------------------------------------
 
@@ -23694,19 +23657,18 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Bins: CG-REG-006.cp_pmp_regime_tr.mml_on_to_off, CG-REG-006.cp_pmp_regime_tr.mml_on_to_sparse, CG-REG-006.cp_pmp_regime_tr.mml_on_to_dense
 
 ## Test groups
-
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
-| gen_reg_knob_sweep | TP-REG-001..017 | 1 | targeted | medium (one sweep run per knob; K >= number of values) |
-| gen_reg_schedule | TP-REG-018, TP-REG-019 | 1 | targeted / smoke | medium (TP-REG-019 adds one repro re-run) |
-| gen_reg_inflight | TP-REG-020..025 | 2 | full | long (short phases, many boundaries) |
+| gen_reg_knob_sweep | TP-REG-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014, 015, 016, 017 | 1 | targeted | medium (one sweep run per knob; K >= number of values) |
+| gen_reg_schedule | TP-REG-018, 019 | 1 | smoke/targeted | medium (TP-REG-019 adds one repro re-run) |
+| gen_reg_inflight | TP-REG-020, 021, 022, 023, 024, 025 | 2 | full | long (short phases, many boundaries) |
 | gen_xcut_regime_sweep | TP-REG-026 | 2 | full | medium (integrity-rate sweep, K >= 7) |
 | gen_csr_mcounteren | TP-REG-027 | 1 | targeted | short (three runs, one per pin class) |
-| gen_xif_random | TP-XIF-001..015, TP-XIF-018..020, TP-XIF-022 | 2 | full | long (all agents active, full random schedule) |
+| gen_xif_random | TP-XIF-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014, 015, 018, 019, 020, 022 | 2 | full | long (all agents active, full random schedule) |
 | gen_xif_fetch_enable | TP-XIF-016 | 2 | full | medium |
-| gen_xif_reset | TP-XIF-017, TP-REG-028 | 2 | full | medium (many short re-boots; the schedule continues across each reset) |
+| gen_xif_reset | TP-REG-028; TP-XIF-017 | 2 | full | medium (many short re-boots; the schedule continues across each reset) |
 | gen_xif_dummy | TP-XIF-021 | 2 | full | medium (probe-gated (P1), not in manifest: bins owned for closure, listed in no manifest until the probe register carries P1) |
-| gen_adopt_isa_random | TP-ADOPT-001..006 | 2 | full | medium (passive RVFI sampling; also accumulates in every other group) |
+| gen_adopt_isa_random | TP-ADOPT-001, 002, 003, 004, 005, 006 | 2 | full | medium (passive RVFI sampling; also accumulates in every other group) |
 
 ## New checkers requested
 

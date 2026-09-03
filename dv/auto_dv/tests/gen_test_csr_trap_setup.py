@@ -17,8 +17,8 @@ boot base needs memory at the boot page's first 0x80 bytes, which gen_link.ld do
 exercised as write and read-back, then a handler copy is installed before the ecall); the low base is the
 program's .debug_rom copy in the DM window, the only memory below bit 31 in the TB map; TP-CSR-035's
 rvfi_pc_rdata clause is observed through the handler copy's marker word (the program report channel), not
-RVFI. Not built: TP-CSR-026 (interrupt taken on MIE set; needs an irq agent and rvfi_intr) and TP-CSR-031
-(irq_pending_o / WFI wake timing; needs the irq agent, core_busy_o and per-cycle pin facts).
+RVFI. TP-CSR-026 (interrupt taken on MIE set) and TP-CSR-031 (irq_pending_o / WFI wake timing) form the plan group
+gen_csr_trap_setup_irq, hosted by an interrupt-enabled test; every item of this test's group is built here.
 Canonical features covered (gen_feature_list.md Section 3): F-CSR-023 (carries the folded F-CSR-025 and
 F-PRV-035), F-CSR-024, F-CSR-027, F-CSR-028, F-CSR-029 (carries the folded F-CSR-030), F-CSR-035 (carries
 the folded F-CSR-036); not covered here: F-CSR-026, F-CSR-031.
@@ -30,7 +30,7 @@ are resolved from the image sidecar). Red fixtures: `--red --red-item TP-CSR-0nn
 item's intent (the seed draws the item without --red-item); exactly that fire_tp method fails. Knobs:
 knob_imem_gnt_delay and knob_imem_rvalid_delay (the fetch-latency regimes the built items name); the irq knobs
 the items also name (irq_regime, irq_line_mix, irq_hold) are excluded because the program has no interrupt
-handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false).
+handler and the build has no irq agent (they belong to the blocked clauses).
 declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked
 against the rendered manifest in finish()).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
@@ -69,9 +69,6 @@ def _detail(n, bad, what):
 class CsrTrapSetup(GenTest):
     name = "gen_test_csr_trap_setup"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
-    # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
     bins_not_hit = {
         "gen_prv_trap_vector_cg.cp_cause.irq_fast": "irq agent absent: no interrupt is taken in this test",
@@ -79,10 +76,8 @@ class CsrTrapSetup(GenTest):
         "gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast": "irq agent absent: no interrupt is taken in this test",
         "gen_prv_trap_vector_cg.cr_base_cause.low_irq_sw": "irq agent absent: no interrupt is taken in this test",
     }
-    not_built = {
-        "TP-CSR-026": "needs the irq agent and irq event records (step 2b)",
-        "TP-CSR-031": "needs the irq agent and irq event records (step 2b)",
-    }
+    # every item of the plan group is built (two-sided against the group by the structure check)
+    not_built = {}
 
     def report_count(self):
         return _plan(self.seed).k

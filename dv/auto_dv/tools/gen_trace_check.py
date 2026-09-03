@@ -11,10 +11,11 @@ Options (export_sources entries may be "<source> <event>" strings or {source, ev
                            "<name>" is a wildcard and counts as ABSENT (gen_test_plan.md Section 0)
   --observed-field <key>   manifest key of Runtime's per-row first-seen list (T-140; default export_rows_observed): the sunset
                            un-marks an item only when EVERY export row is observed (LOG-028a); absent list = sunset refused
-  --build-manifest <path>  a build's build_manifest.yaml; its export_sources_emitted list (the rows the build's registered writers
-                           emit; "<source> <event>" strings or {source, event} maps) decides the cycle-clause sunset (C-3): a
-                           still-marked item whose export rows are all EMITTED fails; export_sources (the rendered table) only
-                           reports how many marked items are renderable.
+  --build-manifest <path>  a build's build_manifest.yaml. Its export_sources_emitted list (the rows the build's registered writers
+                           emit; "<source> <event>" strings or {source, event} maps) only BOUNDS the cycle-clause sunset (C-3): it
+                           sorts the marked items into renderable / emitted / gated. The observed-row list (--observed-field) DECIDES
+                           it: a still-marked item whose export rows are all OBSERVED fails. export_sources (the rendered table)
+                           only reports how many marked items are renderable.
                            Without it the tool reports the sunset input as unknown and does not fail on it.
 """
 import re, csv, sys, argparse, collections, pathlib
@@ -25,7 +26,7 @@ ap.add_argument('--build-manifest', default=None)
 # LOG-028a (gen_test_plan.md Section 0, T-142): an item sunsets only when every one of its export rows was OBSERVED in a retained
 # run of the pinned build (Runtime's per-row first-seen list, T-140); exclusion is by row, never by source; no list = refused.
 ap.add_argument('--observed-field', default='export_rows_observed', help='manifest key of the observed-row list (T-140)')
-ap.add_argument('--exclude-rows', default=None, help='rehearsal only: treat the emitted rows minus these (semicolon-separated) as the observed list')
+ap.add_argument('--exclude-rows', default=None, help='rehearsal only, refused when the manifest carries the observed list: treat the emitted rows minus these (semicolon-separated) as the observed list')
 args = ap.parse_args()
 TOKEN = '[CYCLE-CLAUSE coverage-only until the event export lands]'
 def blocks(text, prefix):
@@ -163,7 +164,8 @@ elif args.build_manifest:
     rendered = rowset(man.get('export_sources')) if 'export_sources' in man else None
     if 'export_sources_emitted' in man:  # the rows the build's registered writers emit (Runtime, from the canary export header sources=)
         export_sources = rowset(man['export_sources_emitted'])
-        if args.exclude_rows is not None: observed = export_sources - {r.strip() for r in args.exclude_rows.split(';') if r.strip()}; obs_origin = 'rehearsal: emitted minus --exclude-rows'
+        if args.exclude_rows is not None and args.observed_field in man: sys.exit(f'REHEARSAL FLAG REFUSED: {args.build_manifest} carries {args.observed_field}; --exclude-rows may only stand in for a missing observed list')
+        if args.exclude_rows is not None: observed = export_sources - {r.strip() for r in args.exclude_rows.split(';') if r.strip()}; obs_origin = 'REHEARSAL (no observed list in the manifest): emitted minus --exclude-rows; this run cannot gate a sunset'
         elif args.observed_field in man: observed = rowset(man[args.observed_field]); obs_origin = f'manifest key {args.observed_field}'
         else: observed = None; obs_origin = f'no observed-row list ({args.observed_field}, T-140): sunset refused, no item un-marks on a declaration'
         obs_ok = (lambda t: any(re.fullmatch(r'pin irq_fast\d*', r) for r in observed) if t == 'pin irq_fast' else t in observed) if observed is not None else (lambda t: False)
