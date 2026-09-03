@@ -572,3 +572,14 @@ all four red fixtures RED-OK with their red_expect matched. 15 LSF jobs, 92 seco
 These are check-tier, measured: false runs (no coverage); the first measured round needs the step-2b
 re-landing (regime knobs) and the comparator fix T-102 for the other four batch-1 tests. Manifests
 under dv/auto_dv/work/runtime/results/test-writer-023..030/.
+
+## LOG-021 - 2026-09-03 - NOTE (plan documents regenerated in the working tree for about one minute during a running review; restored)
+
+About 11:47 UTC, while staging v2h in a scratch copy, the DV Lead's build script still pointed at the
+real docs directory and regenerated gen_test_plan.md, gen_fcov_plan.md, gen_feature_list.md and the
+trace CSVs in the working tree; the DV Lead restored them byte-identical to HEAD (7ac3744) within
+about a minute and hardened the staging script's dry mode to write only under its scratchpad. Nothing
+was committed. Caveat recorded by the Orchestrator: the sandboxed reviewer reads the working tree, not
+committed blobs, so the round-7 artifact (started 11:38 UTC) is checked on arrival for text that exists
+only in v2h (the operational token-removal rule, the unforgeability sentence); if found, round 7 is
+re-run against the committed v2g. Disclosed by the DV Lead unprompted.
