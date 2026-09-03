@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:35 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:43 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -43,8 +43,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   the fcov plan); a regime is pinnable from the command line (+gen_knob_<name>=<value>; the layer-3
   schedule derives from the run seed and is reproducible or overridable with
   +gen_regime_sched=<knob>:<value>@r<N>|c<N>,...; there is no separate schedule seed); one run seed
-  drives every source of randomness. The layer-3 schedule's mid-run phases are under the T-181 measurement hold (Section 1.6)
-  until the Test Writer's 3h lands: the 3e runner applied the start-up knobs only (LOG-042a).
+  drives every source of randomness. The layer-3 schedule's mid-run phases were under the T-181 measurement hold until the Test
+  Writer's 3h (9500268) fixed the runner's EOT wait (LOG-042a/c; lifted LOG-042e; the caveats are in the T-181 bullet below).
 - Every expected-fail item is its own `_xfail` test (one item, one bug id per test): the test's single xfail_bug
   attribute names the candidate whose fix turns it green and its one fire-check attributes the failure; no two
   expected-fail items share a group (gen_prv_debug_b1_xfail / _b2_xfail; gen_csr_debug_csr_b15a_xfail / _b15b_xfail).
@@ -190,19 +190,21 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   credits a priority item (the referee found 448 undecidable priority claims there). Items: TP-IRQ-014/015/016/031 (gen_irq_priority),
   TP-IRQ-038 (gen_irq_nmi), TP-IRQ-045 (gen_irq_nmi_int); their Notes repeat the rule. Not a hold: the items run, their claims are
   counted, only decidable directed or sparse entries credit them.
-- Measurement hold T-181 (Orchestrator LOG-042a; root cause LOG-042c: the template's EOT wait treated the first report-word store as the
-  end of test, so the runner exited before any mid-run trigger): the 3e template's schedule runner applied only the idx=0 knobs at start-up and
-  never a mid-run regime phase, on any test and any tree (Runtime's bisect is identical at 7ef16a0 and d3c6ca8; TB Infra's 2a is
-  cleared), so the promotion's layers-live evidence (l9g) exercised the initial phase only; the promoted tests' measured status does
-  not depend on it (their items run at the start-up knobs). Until the Test Writer's 3h lands (runner fix with a red and a green
-  showing idx > 0 phases applied, the 13 acceptance seeds re-run) and passes review, NO item whose stimulus is a mid-run regime
-  change is credited: runs may execute and record, nothing enters the Phase 1 numbers. Rule (generated, Section 1.6): an item is
-  under the hold when its Test group matches the Python pattern ^gen_reg_|regime (group rule: 71 items) or when its Stimulus
-  and Preconditions match the text rule stated exactly in Section 1.6 (its Python pattern and phrase list; in short: regime schedule,
-  cross-cutting schedule, gen_regime_sched, regimes scheduled, a knob value in some / most / every phase, per phase, knob transition,
-  regime switch; text rule: 37 items); union 82 items in 16 test groups today, none of them a
-  promoted round-0 group. Lifted by removing this bullet and Section 1.6 in
-  the revision that cites the reviewed 3h commit.
+- Measurement hold T-181 LIFTED (LOG-042e): the 3e template's schedule runner applied only the idx=0 knobs at start-up and never a
+  mid-run regime phase, on any test and any tree (LOG-042a; root cause LOG-042c: the template's EOT wait treated the first report-word
+  store as the end of test, so the runner exited before any mid-run trigger; Runtime's bisect identical at 7ef16a0 and d3c6ca8, TB
+  Infra's 2a cleared). The Test Writer's 3h (9500268) fixed the wait (red, mutation red and green with idx > 0 phases applied) and
+  passed both reviewers (cross-model LOG-042d, Critic batch-1 v7 LOG-042e); Runtime's head-mode wave on 9500268 (13 of 13 PASS) is
+  the LOG-042 record. Caveats that stay in force: (1) a seed whose mid-run triggers all fall after the end of test passes with no
+  mid-run phase applied, so a mid-run bin can stay unhit on a PASS and the fcov gate (the declared bins) is where that shows; (2) the
+  items the hold covered sit in unbuilt groups, so the lift credits none of them today; (3) the promotion's layers-live evidence (l9g)
+  exercised the initial phase only, which the promoted tests' measured status does not depend on. Rule of the lifted hold, for the
+  record and so that a reader regenerates its list: an item was held when its Test group matched the Python pattern `^gen_reg_|regime`
+  (71 items) or when its Stimulus and Preconditions texts, joined by one space, matched the Python pattern
+  `regime schedule|cross-cutting (regime )?schedule|gen_regime_sched|regimes? scheduled|in (some|most|>= ?1|at least one|every|all) phases?|per phase|each phase|phase_idx|knob transition|regime (switch|change)` under re.search with re.IGNORECASE (37 items; in words the Section REG layer-schedule vocabulary:
+  regime schedule, cross-cutting schedule, gen_regime_sched, regimes scheduled, a knob value in some / most / >= 1 / at least one / every
+  / all phase(s), per phase, each phase, phase_idx, knob transition, regime switch or change; never "schedule" alone, program-region
+  phases, micro-op phases or mid-run resets); union 82 items in 16 groups at the lift.
 - `Expected: informational` means: the item is outside the Phase 1 pass gate; it is its own `_info` test with
   `measured: false`; its checkers stay ON and their verdicts are recorded, not gated; the test asserts only that the
   scenario fired and logs the observation as GEN_TEST_INFO <id>. Reason classes: a downgraded or record-only bug
@@ -760,103 +762,6 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
 | TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
 
-## 1.6 Items under the T-181 measurement hold (generated; group rule 71 items, stimulus-text rule 37 items, union 82 items in 16 groups; no mid-run regime result counts until the schedule runner applies idx > 0 phases, Test Writer 3h)
-
-Groups (items held): gen_reg_knob_sweep (17), gen_pmp_random_regime (10), gen_ic_regime (8), gen_irq_regime (7), gen_xif_random (7), gen_dmem_regime (6), gen_imem_regime (6), gen_reg_inflight (6), gen_exc_regime (4), gen_fe_regime (4), gen_reg_schedule (2), gen_isa_random (1), gen_mul_random (1), gen_xcut_regime_sweep (1), gen_xif_fetch_enable (1), gen_xif_reset (1). Ruling: Section 0 (LOG-042a; root cause LOG-042c).
-
-Rules, stated so that a reader regenerates the list (Critic v9 CR9-M-2): (a) group rule: the item's Test group matches the Python
-pattern `^gen_reg_|regime` (re.search); (b) text rule: the item's Stimulus and Preconditions field texts, joined by one space,
-match the Python pattern `regime schedule|cross-cutting (regime )?schedule|gen_regime_sched|regimes? scheduled|in (some|most|>= ?1|at least one|every|all) phases?|per phase|each phase|phase_idx|knob transition|regime (switch|change)` under re.search with re.IGNORECASE. In words, the text rule fires on any of:
-"regime schedule", "cross-cutting schedule" or "cross-cutting regime schedule", "gen_regime_sched", "regime scheduled" or
-"regimes scheduled", "in some / most / >= 1 / at least one / every / all phase(s)", "per phase", "each phase", "phase_idx",
-"knob transition", "regime switch" or "regime change"; it does not fire on "schedule" alone, on program-region phases (U-mode
-phases, DIT alternating phases), on micro-op phases or on mid-run resets. An item is held when either rule fires; the Why held
-column names the rule(s). Counts: group rule 71 items, text rule 37 items, union 82 items.
-
-| Item | Group | Why held |
-|---|---|---|
-| TP-ISA-054 | gen_isa_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-MUL-028 | gen_mul_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-EXC-071 | gen_exc_regime | group rule: regime / layer-schedule group |
-| TP-EXC-072 | gen_exc_regime | group rule: regime / layer-schedule group |
-| TP-EXC-073 | gen_exc_regime | group rule: regime / layer-schedule group |
-| TP-EXC-074 | gen_exc_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-071 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-072 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-073 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-074 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-075 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-076 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-IRQ-077 | gen_irq_regime | group rule: regime / layer-schedule group |
-| TP-PMP-100 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-101 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-102 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-103 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-104 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-105 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-106 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-107 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-PMP-109 | gen_pmp_random_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-PMP-110 | gen_pmp_random_regime | group rule: regime / layer-schedule group |
-| TP-IMEM-031 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IMEM-034 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IMEM-035 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IMEM-036 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IMEM-037 | gen_imem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IMEM-038 | gen_imem_regime | group rule: regime / layer-schedule group |
-| TP-DMEM-023 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-DMEM-029 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-DMEM-038 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-DMEM-054 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-DMEM-055 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-DMEM-056 | gen_dmem_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-FE-015 | gen_fe_regime | group rule: regime / layer-schedule group |
-| TP-FE-024 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-FE-025 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-FE-028 | gen_fe_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-040 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-041 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-047 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-048 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-049 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-054 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-055 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-IC-056 | gen_ic_regime | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-REG-001 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-002 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-003 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-004 | gen_reg_knob_sweep | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-REG-005 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-006 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-007 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-008 | gen_reg_knob_sweep | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-REG-009 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-010 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-011 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-012 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-013 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-014 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-015 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-016 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-017 | gen_reg_knob_sweep | group rule: regime / layer-schedule group |
-| TP-REG-018 | gen_reg_schedule | group rule: regime / layer-schedule group and text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-REG-019 | gen_reg_schedule | group rule: regime / layer-schedule group |
-| TP-REG-020 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-REG-021 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-REG-022 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-REG-023 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-REG-024 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-REG-025 | gen_reg_inflight | group rule: regime / layer-schedule group |
-| TP-XIF-001 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-004 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-007 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-008 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-009 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-011 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-016 | gen_xif_fetch_enable | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-XIF-018 | gen_xif_random | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
-| TP-REG-026 | gen_xcut_regime_sweep | group rule: regime / layer-schedule group |
-| TP-REG-028 | gen_xif_reset | text rule: Stimulus or Preconditions match the Section 1.6 pattern |
 
 # 2. New checkers requested from TB Infra (beyond the inventory)
 
@@ -11107,9 +11012,10 @@ Conventions used below:
 - Knobs: knob:instr_mix csr_heavy, knob:pmp_regime dense, knob:pmp_regime mml_on
 - Fire-check: RVFI, per seed: at least 100 PMP CSR writes retire with their readback compared; the phase's (locked, RLB, MML) state is shown by csrr; at least one write per seed is ignored by a lock and, in the mml_on phases, at least one L=1 executable row is suppressed, each proven by an unchanged readback.
 - Pass criteria: gen_chk_csr_readback (predicted WARL-legalised value vs csrr readback on rvfi_rd_wdata); gen_isa_compare (rd value and trap agreement); gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement)
+- Notes: bin ownership (Test Writer batch 3 at e7a0941, gen_tdd_batch3.md Section 3): this item keeps the 24 CG-PMP-003.cr_state_trans arcs reachable in one power-on; the nine reset-only arcs (s000_to_s101, s000_to_s111, s010_to_s111, s000_to_s100, s000_to_s110, s001_to_s100, s001_to_s110, s010_to_s110, s011_to_s110) are TP-PMP-108's alone, because MML and MMWP are sticky, a locked M-exec rule pins RLB at 0 while MML is set, and a random regime never revisits a lower state without the wrapper reset that TP-PMP-108's walk restarts from; no test of this group declares those nine until the mid-run reset command exists (TB ask filed with tb-infra for after 2b).
 - Expected: pass
 - Test group: gen_pmp_random_regime
-- Bins: CG-PMP-001.cr_mode_lrwx.*, CG-PMP-001.cr_lock_outcome.*, CG-PMP-001.cr_mml_exec_suppress.*, CG-PMP-002.cr_idx_op.*, CG-PMP-002.cr_tor_lock.*, CG-PMP-003.cr_state_trans.*, CG-PMP-011.cp_csr.*, CG-PMP-011.cp_bb.lock_then_addr, CG-PMP-011.cp_bb.lock_then_cfg, CG-PMP-011.cp_bb.lock_then_rlb
+- Bins: CG-PMP-001.cr_mode_lrwx.*, CG-PMP-001.cr_lock_outcome.*, CG-PMP-001.cr_mml_exec_suppress.*, CG-PMP-002.cr_idx_op.*, CG-PMP-002.cr_tor_lock.*, CG-PMP-003.cr_state_trans.s000_to_s000, CG-PMP-003.cr_state_trans.s000_to_s001, CG-PMP-003.cr_state_trans.s000_to_s010, CG-PMP-003.cr_state_trans.s000_to_s011, CG-PMP-003.cr_state_trans.s001_to_s000, CG-PMP-003.cr_state_trans.s001_to_s001, CG-PMP-003.cr_state_trans.s001_to_s010, CG-PMP-003.cr_state_trans.s001_to_s011, CG-PMP-003.cr_state_trans.s001_to_s101, CG-PMP-003.cr_state_trans.s001_to_s111, CG-PMP-003.cr_state_trans.s010_to_s010, CG-PMP-003.cr_state_trans.s010_to_s011, CG-PMP-003.cr_state_trans.s011_to_s010, CG-PMP-003.cr_state_trans.s011_to_s011, CG-PMP-003.cr_state_trans.s011_to_s111, CG-PMP-003.cr_state_trans.s100_to_s100, CG-PMP-003.cr_state_trans.s100_to_s110, CG-PMP-003.cr_state_trans.s101_to_s100, CG-PMP-003.cr_state_trans.s101_to_s101, CG-PMP-003.cr_state_trans.s101_to_s110, CG-PMP-003.cr_state_trans.s101_to_s111, CG-PMP-003.cr_state_trans.s110_to_s110, CG-PMP-003.cr_state_trans.s111_to_s110, CG-PMP-003.cr_state_trans.s111_to_s111, CG-PMP-011.cp_csr.*, CG-PMP-011.cp_bb.lock_then_addr, CG-PMP-011.cp_bb.lock_then_cfg, CG-PMP-011.cp_bb.lock_then_rlb
 
 ### TP-PMP-110: Phase 2: region priority sweep with random overlap geometry
 - Features: F-PMP-045, F-PMP-046, F-PMP-047
@@ -22714,12 +22620,13 @@ reference the knobs by name; this file is the definition.
   DV_prompt Section 6 "Seeds") and echoes it in the time-0 banner, so test name + seed reproduce
   the schedule; supplied, the string is CONSUMED as the schedule (gen_tb_architecture.md 4.2, XM-L5),
   so one schedule replays under another data seed by copying the echoed string.
-- T-181 hold (LOG-042a, 2026-09-03): the 3e template's schedule runner applied only the idx=0 knobs at start-up and never a
-  mid-run phase, on any test and any tree (Runtime bisect identical at 7ef16a0 and d3c6ca8; 2a cleared). The promotion's
-  layers-live evidence (l9g) therefore exercised the initial phase only, which the promoted tests' measured status does not
-  depend on. Items whose stimulus is a mid-run regime change (this area's gen_reg_* groups and every *regime* group,
-  gen_test_plan.md Section 1.6) are not credited until the Test Writer's 3h (runner fix with a red and a green showing
-  idx > 0 phases applied) lands and passes review.
+- T-181 (LOG-042a, root cause LOG-042c, lifted LOG-042e, 2026-09-03): the 3e template's schedule runner applied only the idx=0 knobs at
+  start-up and never a mid-run phase, on any test and any tree (its EOT wait ended at the first report-word store); the Test Writer's
+  3h (9500268) fixed it and passed both reviewers. Caveats: a seed whose mid-run triggers all fall after the end of test passes with
+  no mid-run phase applied, so a mid-run bin can stay unhit on a PASS and the fcov gate is where that shows; the promotion's
+  layers-live evidence (l9g) exercised the initial phase only, which the promoted tests' measured status does not depend on; the
+  items the hold covered (this area's gen_reg_* groups, every *regime* group and the items whose stimulus names a mid-run regime
+  change, gen_test_plan.md Section 0) sit in unbuilt groups, so the lift credits none of them today.
 - Default: the value in force when a test does not enable the schedule (Phase-1 feature-targeted
   tests) and no pin is given. Phase-2 tests draw every knob per phase from the value set
   (uniform unless stated); the default is not favoured, so randomness does not collapse into one

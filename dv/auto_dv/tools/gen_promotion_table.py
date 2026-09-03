@@ -58,7 +58,8 @@ def main():
         note = NOTES.get(name)
         if note: held_txt = f'- ({note})' if held_txt == '-' else f'{held_txt}; {note}'
         listed = e.get('tier', '?')
-        flag = '' if listed == ruling else f' (TESTLIST SAYS {listed})'
+        if listed == 'check' and not e.get('measured', False): ruling, flag = f'check (first landing, measured: false; promotion candidate {ruling})', ''
+        else: flag = '' if listed == ruling else f' (TESTLIST SAYS {listed})'
         rows.append(f"| {name} | {group} | {len(gitems)} ({tiers.get('smoke', 0)} / {tiers.get('targeted', 0)}) | {ruling}{flag} | {seeds} | {held_txt} |")
     hdr = f"""# Per-entry tier ruling for the {len(entries)} built tests (DV Lead; applied by the Test Writer's landing 3e at 7ef16a0 and Runtime's promotion landing 3e6f1b2; LOG-024e, LOG-039)
 
