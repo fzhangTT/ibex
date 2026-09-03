@@ -105,7 +105,9 @@ tdata3/mcontext/scontext trapping, B5 dcsr.nmip.
 | mhpmcounter3..(3+N-1) and the hpmcounter aliases synced from RVFI (`gen_isa_set_hpm`) | BUILT (T-102) | `gen_masked_csr_t` holders, `counter_proxy_csr_t` aliases |
 | mcycle synced from RVFI (`gen_isa_set_time`, one 64-bit write) | BUILT (T-102; the two-write form asserted in Spike and was never called before) | `gen_isa_set_time` |
 | mstatus without XS/SD (Spike sets XS for a custom extension; Ibex has none) | BUILT (T-102) | `gen_mstatus_view_t` on the csrmap entry, the inner object stays the privilege state |
-| cpuctrlsts bit 8 = ic_scr_key_valid from RVFI (`gen_isa_set_status`) | BUILT (T-102) | `gen_cpuctrl_csr_t` |
+| cpuctrlsts bit 8 = ic_scr_key_valid from RVFI (`gen_isa_set_status`) | BUILT (T-102; an RVFI-consistency anchor until scrkey_proto) | `gen_cpuctrl_csr_t` |
+| cpuctrlsts bits 6/7 (sync_exc_seen, double_fault_seen, `GEN_CPUCTRLSTS_*_BIT`) set from the model's own synchronous exceptions outside debug mode, sync_exc_seen cleared by mret, both software-writable | BUILT (T-102b, T-102c: exceptions taken in debug mode and debug entry set nothing) | `gen_cpuctrl_csr_t::set_flags`, unit test section 7 |
+| armed bus fault (`gen_isa_arm_fault(kind 1 load / 2 store, addr, size)`) applies to the next step only; the comparator arms it for a trapping load/store record so the model takes the DUT's access fault | BUILT (T-102c) | `fault_hits`, `gen_isa_step` |
 | NMI and internal-NMI emulation (cause 0x8000001F/0xFFFFFFE0, vector base+0x7C, mstack) | DEFERRED | - |
 | tdata1/tdata2 written in debug mode only; tdata1 reads Ibex's fixed mcontrol view `GEN_TDATA1_IBEX_RDATA` plus the execute bit (rtl/ibex_cs_registers.sv:1848-1864) | BUILT (T-102) | `gen_trigger_view_t` |
 | dcsr legalization and trigger entry pc override | DEFERRED | - |

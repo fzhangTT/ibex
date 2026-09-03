@@ -232,7 +232,9 @@ package gen_tb_pkg;
   parameter int unsigned GEN_MHPM_COUNTER_NUM = 10;  // MHPMCounterNum of the build (Runtime's -pvalue; gen_tb_top fatals when u_dut.MHPMCounterNum differs); the shim's mhpmevent values and the counter sync use it
   parameter logic [31:0] GEN_INSN_MRET = 807403635;  // mret encoding (privileged spec); plan C-1: its RVFI pc_wdata is pc + 4, so isa_pc_next and the export continuity rule skip it
   parameter logic [31:0] GEN_INSN_DRET = 2065694835;  // dret encoding (debug spec); plan C-1 as for mret
-  parameter logic [31:0] GEN_TDATA1_IBEX_RDATA = 671092808;  // tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag
+  parameter logic [31:0] GEN_TDATA1_IBEX_RDATA = 671092808;  // tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render
+  parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
+  parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.
   parameter logic [31:0] GEN_MM_BOOT_ADDR_DEFAULT = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_BOOT_PAGE_MASK = 32'hffff_ff00;

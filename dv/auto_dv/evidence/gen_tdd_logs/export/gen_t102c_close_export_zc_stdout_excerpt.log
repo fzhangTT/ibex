@@ -1,0 +1,7 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102c/b/export_zc/stdout.log (T-102c closing build b: banner, ISA compare, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 590500: sb [GEN_SB] ISA compare: records=154 mismatches=0 folded=21 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=131
+  5905.00ns INFO     cocotb.gen_tb_top                  GEN_UT_EXPORT_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                          5905.01           0.07      89822.25  **

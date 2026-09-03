@@ -682,3 +682,69 @@ Each file is a verbatim copy of the run artifact named in the source column (wor
 | dv/auto_dv/evidence/gen_tdd_logs/step2b/gen_red_ut_irq_t090_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close3/red_ut_irq/stdout.log | 752 | 12ba38461d7d0bc668e4ae1a48fac0b7 |
 | dv/auto_dv/evidence/gen_tdd_logs/step2b/gen_red_ut_irq_t090_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/close3/ut_irq/verdict.txt | 326 | b26c1432826bcc9a461e2eda7f1f60c9 |
 | dv/auto_dv/evidence/gen_tdd_logs/isa_shim/gen_t102b_green_ut_isa_shim_section7.log | dv/auto_dv/work/tb-infra/out_t102/ut (unit test stdout and stderr) with a header line | 12097 | bf859ad707f8119afd242948d99ef773 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_export_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/export_zc/run_header.txt | 439 | 1d94a23a8a7372f71e983b7837b15a56 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_export_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/export_zc/stdout.log | 998 | a52c2c483c1b73a266492075d0f0cf1a |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_export_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/export_zc/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/isa_shim/gen_t102c_green_ut_isa_shim.log | dv/auto_dv/work/tb-infra/out_t102/ut (unit test stdout and stderr) with a header line | 11686 | 99a97b2ceaff1b76f933d0e26c62713e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_records.txt | records 13..22 of dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/gen_export.txt | 1480 | 9e8d949037eb71c94f8d69ad89b6e8eb |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_run_header.txt | dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/run_header.txt | 450 | a37130466f44c611c63db36801db1b15 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/stdout.log | 1361 | 2d91304ce7d65df05b84d15b6c200a8c |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_verdict.txt | dv/auto_dv/work/tb-infra/out_t090/e/red_zcmp_trap/verdict.txt | 410 | 5e7cd9c25049bdd17f4ca37ead54f067 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_boot_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/boot_zc/run_header.txt | 403 | 2e9b9dbddd17fea9770464ea9cd13e59 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_boot_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/boot_zc/stdout.log | 990 | f8afa7933f0439958c7a314603508f16 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_boot_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/boot_zc/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_compile.log | dv/auto_dv/work/tb-infra/out_t102c/a/compile.log (launcher stdout) | 70225 | 19d001dc77ecdece774138e672388419 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_irq_storm_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_irq_storm/run_header.txt | 477 | 5504cda2d7f9ef12b0f31b814c0ffbf8 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_irq_storm_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_irq_storm/stdout.log | 1026 | 240895a3f45d20747fe5767a1ad6d818 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_irq_storm_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_irq_storm/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_s7_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_s7/run_header.txt | 414 | d48b0dca731be108c3f25be2033cfb06 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_s7_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_s7/stdout.log | 1015 | 7e9f0d675d50f6fcb2903a4db38d8d37 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_s7_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_s7/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_zc/run_header.txt | 411 | 60187b8987cff214d497eabe839132b4 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_zc/stdout.log | 1006 | e0816e3749832b0141333c25202a3f74 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_lockstep_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/lockstep_zc/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_reset_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_reset/run_header.txt | 397 | 8cdff12f33b030288caaa4f89c75986a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_reset_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_reset/stdout.log | 1019 | 402e6b5fcefff6c4eadfd3dcfaef5780 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_reset_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_reset/verdict.txt | 283 | 921693caaf3536e671012a0c746e101e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_trap_setup_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_trap_setup/run_header.txt | 413 | 9b4999f7f8cc7f646783c6ffac0dc569 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_trap_setup_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_trap_setup/stdout.log | 1046 | 6e040d8206dcf335f6b58b444596a29d |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_csr_trap_setup_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_csr_trap_setup/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_pmp_csr_warl_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_pmp_csr_warl/run_header.txt | 407 | 66c946520712b7607ba3a808a811fca7 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_pmp_csr_warl_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/test_pmp_csr_warl/stdout.log | 1039 | f088673f8aec6673e5c8ba6aa7d15428 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_pmp_csr_warl_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_pmp_csr_warl/verdict.txt | 283 | ba931c44920c1eb09bca3d40d80a971b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_rst_boot_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_rst_boot/run_header.txt | 394 | c16549d4b8e8e120aaac7acf9fd4cb4b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_rst_boot_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/test_rst_boot/stdout.log | 1010 | ae67efcf0e4032cd4f67ec8d23089e34 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_test_rst_boot_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/test_rst_boot/verdict.txt | 283 | 90e558a7a16e3461ca63bab97b010f2d |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_dbg_s7_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/ut_dbg_s7/run_header.txt | 382 | a4a960ef5baf3726d4ac82050641e621 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_dbg_s7_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/ut_dbg_s7/stdout.log | 992 | 0c94826dd536549f8de707ddd1988e2c |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_dbg_s7_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/ut_dbg_s7/verdict.txt | 283 | 0e83fe215182b07bdca52cc0af342847 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_irq_dir_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/ut_irq_dir/run_header.txt | 383 | db89f894c13b8c89d1eb51cf859b3f9b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_irq_dir_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/ut_irq_dir/stdout.log | 1586 | 387b07b257e5fa81144d8306cc6f8d95 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_ut_irq_dir_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/ut_irq_dir/verdict.txt | 283 | 0e83fe215182b07bdca52cc0af342847 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_zcmp_trap_gen_export.txt | dv/auto_dv/work/tb-infra/out_t102c/a/zcmp_trap/gen_export.txt | 108226 | 4eb1f92bd7d5e2dfeedbc1dae475d63e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_zcmp_trap_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/a/zcmp_trap/run_header.txt | 446 | 2b1ed84345f6fed0e9c70ad5ca602f2b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_zcmp_trap_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/a/zcmp_trap/stdout.log | 1125 | 126f53855bb500486d2c24c765570e67 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_zcmp_trap_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/a/zcmp_trap/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_ablate_zcmp_trap_run_header.txt | scratch mut_root/P12/out/P12_ablate_zcmp_trap/run_header.txt | 510 | a41adbea3bb7333e336ad110ce9644c6 |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_ablate_zcmp_trap_stdout_excerpt.log | excerpt: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P12/out/P12_ablate_zcmp_trap/stdout.log | 815 | acc88a9171f3b9d1f4cb3cdbf7b7c37d |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_ablate_zcmp_trap_verdict.txt | scratch mut_root/P12/out/P12_ablate_zcmp_trap/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_catch_zcmp_trap_run_header.txt | scratch mut_root/P12/out/P12_catch_zcmp_trap/run_header.txt | 509 | b27aae984a01e531f14aaff3446d0075 |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_catch_zcmp_trap_stdout_excerpt.log | excerpt: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P12/out/P12_catch_zcmp_trap/stdout.log | 1075 | 319cce7c870a0263f1c19edd614b998d |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_catch_zcmp_trap_verdict.txt | scratch mut_root/P12/out/P12_catch_zcmp_trap/verdict.txt | 430 | f5582f902d0e9c148bed40b5c76ef3f8 |
+| dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_t102_P12_oot_compile.log | scratch mut_root/P12/compile.launch.log | 70493 | 8b27334d60877a01fd01edcae73c8c31 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_close_export_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/b/export_zc/run_header.txt | 439 | 2edf1ce2aeb649638540f1826eafb625 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_close_export_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/b/export_zc/stdout.log | 651 | 300213bacd47646a19229f598143ba6e |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_t102c_close_export_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/b/export_zc/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_boot_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/b/boot_zc/run_header.txt | 403 | d264ab06366909c80455013cc2231c1a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_boot_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/b/boot_zc/stdout.log | 643 | 9b053d16a28d2d1853d7790e2934111d |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_boot_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/b/boot_zc/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_compile.log | dv/auto_dv/work/tb-infra/out_t102c/b/compile.log (launcher stdout) | 70233 | 1b891c4166129f572f6b9128754bc232 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_s7_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_s7/run_header.txt | 414 | 1cc23da87e7c081589b0fa5ba9f024e6 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_s7_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_s7/stdout.log | 662 | 21476802c9415fdca866026e9e5209b9 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_s7_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_s7/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_zc_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_zc/run_header.txt | 411 | 34e7eb39f7f2f23b0de78c3ee0a0d1d4 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_zc_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_zc/stdout.log | 659 | 6cec0f0efee3f35cbdbfea8a410030c7 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_lockstep_zc_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/b/lockstep_zc/verdict.txt | 283 | 377d34a1cff5b301f37a808130d0e900 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_zcmp_trap_run_header.txt | dv/auto_dv/work/tb-infra/out_t102c/b/zcmp_trap/run_header.txt | 446 | b2640a02c4f65c6d36a578b88a60511b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_zcmp_trap_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102c/b/zcmp_trap/stdout.log | 775 | c0518ddfd9bce66fa315402235539bd4 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_t102c_close_zcmp_trap_verdict.txt | dv/auto_dv/work/tb-infra/out_t102c/b/zcmp_trap/verdict.txt | 283 | 8fe2581777ac0d6647c5eb38a59e4c5a |

@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:34
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(234) @ 79500: uvm_test_top.env.sb [isa_pc_next] trap record pc_wdata=8000013c != pc + 4 (C-1) (order=17 pc=8000013c insn=ff212e23 trap=1 intr=0 rd=x0/00000000 mem=800002fc w0000 r0000 mode=3 cyc=74)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

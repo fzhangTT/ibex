@@ -24,6 +24,8 @@ SRC = HERE / "gen_tb_knobs.yaml"
 WRAPPER = HERE / "gen_dut_top.sv"
 IBEX_PKG = ROOT / "rtl/ibex_pkg.sv"
 LD = ROOT / "dv/auto_dv/stim/gen_riscv_dv_target/gen_link.ld"
+CS_REGS = ROOT / "rtl/ibex_cs_registers.sv"
+CONFIGS = ROOT / "ibex_configs.yaml"
 # rendered targets, clone-root relative (relocated under --root)
 REL_PKG = "dv/auto_dv/tb/gen_tb_pkg.sv"
 REL_CFG = "dv/auto_dv/tb/gen_env_cfg_knobs.svh"
@@ -91,6 +93,37 @@ def sv_marchid_value(path):
     if not m:
         die(f"CSR_MARCHID_VALUE not found in {path}")
     return int(m.group(1))
+
+
+def sv_tdata1_rdata(path):
+    """Ibex's fixed tdata1 read value: the tmatch_control_rdata concatenation with the one variable (execute) at 0."""
+    text = path.read_text()
+    m = re.search(r"assign\s+tmatch_control_rdata\s*=\s*\{(.*?)\};", text, re.S)
+    if not m:
+        die(f"tmatch_control_rdata assign not found in {path}")
+    body = re.sub(r"//[^\n]*", "", m.group(1))
+    value, width, variables = 0, 0, 0
+    for tok in [t.strip() for t in body.split(",") if t.strip()]:
+        lit = re.fullmatch(r"(\d+)'([hbd])([0-9a-fA-F_]+)", tok)
+        if lit:
+            w = int(lit.group(1)); v = int(lit.group(3).replace("_", ""), {"h": 16, "b": 2, "d": 10}[lit.group(2)])
+        elif re.fullmatch(r"[A-Za-z_]\w*", tok):
+            w, v = 1, 0; variables += 1
+        else:
+            die(f"tmatch_control_rdata: unexpected token {tok!r}")
+        value = (value << w) | v; width += w
+    if width != 32 or variables != 1:
+        die(f"tmatch_control_rdata: {width} bits and {variables} variables parsed, expected 32 and 1")
+    return value
+
+
+def cfg_int_param(path, config, name):
+    """An integer parameter of one build configuration in ibex_configs.yaml."""
+    import yaml as _yaml
+    cfgs = _yaml.safe_load(path.read_text())
+    if config not in cfgs or name not in cfgs[config]:
+        die(f"{path}: no {name} in configuration {config}")
+    return int(cfgs[config][name])
 
 
 def sv_irq_fast_width(path):
@@ -164,6 +197,14 @@ def load(src_path=SRC):
                 die(f"plusarg {p['name']}: regime_set_consumer must be one of {sorted(KNOB_CONSUMERS)}")
         elif "regime_set_consumer" in p:
             die(f"plusarg {p['name']}: regime_set_consumer is for enum knob_* entries only")
+    # literals that mirror the RTL or the build configuration are verified at every render (guards, not derivations)
+    lits = {c["name"]: c for c in src["constants"] if "value" in c}
+    if "GEN_TDATA1_IBEX_RDATA" in lits and int(lits["GEN_TDATA1_IBEX_RDATA"]["value"]) != sv_tdata1_rdata(CS_REGS):
+        die(f"GEN_TDATA1_IBEX_RDATA {int(lits['GEN_TDATA1_IBEX_RDATA']['value']):#x} differs from rtl/ibex_cs_registers.sv tmatch_control_rdata {sv_tdata1_rdata(CS_REGS):#x}")
+    if "GEN_MHPM_COUNTER_NUM" in lits:
+        cfg_name = next((p["default"] for p in src["plusargs"] if p["name"] == "build_config"), None)
+        if int(lits["GEN_MHPM_COUNTER_NUM"]["value"]) != cfg_int_param(CONFIGS, cfg_name, "MHPMCounterNum"):
+            die(f"GEN_MHPM_COUNTER_NUM {lits['GEN_MHPM_COUNTER_NUM']['value']} differs from ibex_configs.yaml {cfg_name} MHPMCounterNum")
     for c in src["constants"]:
         where = f"constant {c.get('name', '?')}"
         check_keys(c, SCHEMA["constant"], where)

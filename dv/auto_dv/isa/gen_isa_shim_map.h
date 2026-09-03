@@ -49,6 +49,8 @@
 #define GEN_INSN_MRET                      807403635u
 #define GEN_INSN_DRET                      2065694835u
 #define GEN_TDATA1_IBEX_RDATA              671092808u
+#define GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT   6u
+#define GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT 7u
 
 #define GEN_CMD_IRQ_SET                      1u
 #define GEN_CMD_IRQ_CLR                      2u

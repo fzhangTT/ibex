@@ -297,7 +297,7 @@ package gen_rvfi_pkg;
       bit is_seq = 0;
       if (!model_ready) return;
       // ---- Zcmp: micro-op records fold to the last one (C5.1/C5.2); the unions are compared on that record
-      if (t.ext_exp_valid && !t.ext_exp_last) begin
+      if (t.ext_exp_valid && !t.ext_exp_last && !t.trap) begin   // a trapping micro-op ends the sequence and is compared below
         if (!in_seq) seq_reset(t);
         seq_note(t);
         folded++;
@@ -305,9 +305,10 @@ package gen_rvfi_pkg;
         return;
       end
       pc_expect = t.pc_rdata; insn_expect = t.insn;
-      if (t.ext_exp_valid && t.ext_exp_last) begin
+      if (t.ext_exp_valid && (t.ext_exp_last || t.trap)) begin
         // the micro-op records carry the expanded 32-bit instruction in rvfi_insn; the Zcmp encoding the
-        // model executes as ONE instruction is rvfi_ext_expanded_insn (16 bits) of the sequence
+        // model executes as ONE instruction is rvfi_ext_expanded_insn (16 bits) of the sequence; a trapping
+        // micro-op ends the sequence early and the model steps the whole instruction with the fault armed
         if (!in_seq) seq_reset(t);
         seq_note(t);
         pc_expect = seq_first.pc_rdata;
@@ -395,6 +396,10 @@ package gen_rvfi_pkg;
       gen_isa_set_time(t.ext_mcycle);
       for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
       gen_isa_set_status(t.ext_ic_scr_key_valid);
+      // a trapping memory access: the DUT's bus error (injected, armed or a PMP denial) becomes the model's fault on the
+      // same bytes for this one step (kinds: 1 load, 2 store; size from funct3), so both sides take the access fault
+      if (t.trap && (t.insn[6:0] == ibex_pkg::OPCODE_STORE || t.insn[6:0] == ibex_pkg::OPCODE_LOAD))
+        gen_isa_arm_fault(t.insn[6:0] == ibex_pkg::OPCODE_STORE ? 2 : 1, t.mem_addr, 32'h1 << t.insn[13:12]);
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
       compared++;
       bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
@@ -406,9 +411,10 @@ package gen_rvfi_pkg;
         traps++;
         if (!(trap && retired == 0))
           miss("isa_trap", $sformatf("dut trapped, model retired %0d trap=%0d cause=%08h", retired, trap, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
-        // trap record: pc_wdata is pc_if = pc + length (F-RVFI-010, C-1); a fetch fault (cause 1) has no fetched length
-        if (trap && cause != 1 && t.pc_wdata != t.pc_rdata + insn_len(t.insn))
-          miss("isa_pc_next", $sformatf("trap record pc_wdata=%08h != pc + %0d (C-1)", t.pc_wdata, insn_len(t.insn)), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
+        // trap record: pc_wdata is pc_if = pc + length (F-RVFI-010, C-1); a fetch fault (cause 1) has no fetched length;
+        // an aborted Zcmp sequence restarts from its own pc, so its offset is 0 (observed T-102c, plan C-12)
+        if (trap && cause != 1 && t.pc_wdata != t.pc_rdata + (t.ext_exp_valid ? 0 : insn_len(t.insn)))
+          miss("isa_pc_next", $sformatf("trap record pc_wdata=%08h != pc + %0d (C-1%s)", t.pc_wdata, t.ext_exp_valid ? 0 : insn_len(t.insn), t.ext_exp_valid ? ", aborted Zcmp restarts" : ""), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end else begin
         if (retired != 1 || trap)
           miss("isa_trap", $sformatf("dut retired, model retired %0d trap=%0d cause=%08h tval=%08h", retired, trap, cause, tval), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));

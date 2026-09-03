@@ -6,6 +6,7 @@
 //   gen_ut_isa_shim <path/to/prog.vmem>
 #include "gen_isa_shim.h"
 #include "gen_isa_shim_map.h"
+#include <riscv/encoding.h>
 #include <cstdio>
 #include <cstring>
 
@@ -44,14 +45,14 @@ int main(int argc, char** argv) {
   std::puts("-- 1. reset legalization (C5.3a Reset row)");
   check("gen_isa_reset", gen_isa_reset(&cfg) == 0, 1);
   check("pc = boot page + boot_reset_offset", gen_isa_get_pc(), GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET);
-  check("mtvec = boot page | 1", gen_isa_read_csr(0x305), GEN_MM_BOOT_PAGE | 1u);
-  check("mstatus = 0x80 (MPIE, MPP U)", gen_isa_read_csr(0x300), 0x80u);
+  check("mtvec = boot page | 1", gen_isa_read_csr(CSR_MTVEC), GEN_MM_BOOT_PAGE | 1u);
+  check("mstatus = 0x80 (MPIE, MPP U)", gen_isa_read_csr(CSR_MSTATUS), 0x80u);
   check("prv M", gen_isa_get_prv(), 3);
-  check("misa RV32IMCU + X (MisaXBit = 1 for BaseIsaRV32IorCHERIoT)", gen_isa_read_csr(0x301), 0x40901104u);
-  check("pmpcfg0 all OFF", gen_isa_read_csr(0x3A0), 0);
-  check("pmpaddr0 zero", gen_isa_read_csr(0x3B0), 0);
-  check("mie zero", gen_isa_read_csr(0x304), 0);
-  check("mcause zero", gen_isa_read_csr(0x342), 0);
+  check("misa RV32IMCU + X (MisaXBit = 1 for BaseIsaRV32IorCHERIoT)", gen_isa_read_csr(CSR_MISA), 0x40901104u);
+  check("pmpcfg0 all OFF", gen_isa_read_csr(CSR_PMPCFG0), 0);
+  check("pmpaddr0 zero", gen_isa_read_csr(CSR_PMPADDR0), 0);
+  check("mie zero", gen_isa_read_csr(CSR_MIE), 0);
+  check("mcause zero", gen_isa_read_csr(CSR_MCAUSE), 0);
 
   std::puts("-- 2. the Zc image runs to its tohost store");
   int words = gen_isa_load_vmem(argv[1]);
@@ -192,31 +193,31 @@ int main(int argc, char** argv) {
   for (unsigned i = 0; i < sizeof(prog2) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog2[i]);
   gen_isa_step(&st); gen_isa_step(&st); gen_isa_step(&st);
   check("csrw mtvec retires", st.retired, 1);
-  check("mtvec legalized: BASE[7:2] = 0, MODE 1", gen_isa_read_csr(0x305), 0x80001201u);   // 0x80001234 -> BASE 0x80001200
+  check("mtvec legalized: BASE[7:2] = 0, MODE 1", gen_isa_read_csr(CSR_MTVEC), 0x80001201u);   // 0x80001234 -> BASE 0x80001200
   check("csr write list has mtvec", st.csr_writes >= 1, 1);
   { uint32_t a = 0, v = 0; gen_isa_csr_write(0, &a, &v); check("csr write 0 is mtvec", a, 0x305); check("csr write 0 value legalized", v, 0x80001201u); }
   gen_isa_step(&st); gen_isa_step(&st);
-  check("mie fast bit 16 sticks", gen_isa_read_csr(0x304), 0x10000u);
+  check("mie fast bit 16 sticks", gen_isa_read_csr(CSR_MIE), 0x10000u);
   gen_isa_step(&st); gen_isa_step(&st);
   check("csrw cpuctrlsts retires (no trap)", st.retired, 1);
-  check("cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO", gen_isa_read_csr(0x7c0), 0xffu);
+  check("cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS), 0xffu);
   check("gpr write/read", (gen_isa_write_gpr(10, 0xdeadbeefu), gen_isa_read_gpr(10)), 0xdeadbeefu);
   check("set_pc/get_pc", (gen_isa_set_pc(0x80000100u), gen_isa_get_pc()), 0x80000100u);
 
   std::puts("-- 5. T-102: Ibex conventions the model must show (reset values, WARL, counters, draft-B references)");
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
-  check("marchid = ibex_pkg CSR_MARCHID_VALUE", gen_isa_read_csr(0xF12), GEN_CSR_MARCHID_VALUE);
-  check("mhpmevent3 = 1 (event bit i-3)", gen_isa_read_csr(0x323), 1);
-  check("mhpmevent(3+N-1) = 1 << (N-1)", gen_isa_read_csr(0x323 + GEN_MHPM_COUNTER_NUM - 1), 1u << (GEN_MHPM_COUNTER_NUM - 1));
-  check("mhpmevent(3+N) = 0 beyond MHPMCounterNum", gen_isa_read_csr(0x323 + GEN_MHPM_COUNTER_NUM), 0);
-  check("mhpmevent31 = 0", gen_isa_read_csr(0x33F), 0);
-  check("tdata1 = Ibex mcontrol view", gen_isa_read_csr(0x7A1), GEN_TDATA1_IBEX_RDATA);
-  gen_isa_write_csr(0x7A1, 0xffffffffu);
-  check("tdata1 write outside debug mode ignored", gen_isa_read_csr(0x7A1), GEN_TDATA1_IBEX_RDATA);
-  gen_isa_write_csr(0x7A2, 0x80000004u);
-  check("tdata2 write outside debug mode ignored", gen_isa_read_csr(0x7A2), 0);
-  gen_isa_write_csr(0x300, 0xffffffffu);
-  check("mstatus all-ones write: XS and SD stay 0", gen_isa_read_csr(0x300) & 0x80018000u, 0);
+  check("marchid = ibex_pkg CSR_MARCHID_VALUE", gen_isa_read_csr(CSR_MARCHID), GEN_CSR_MARCHID_VALUE);
+  check("mhpmevent3 = 1 (event bit i-3)", gen_isa_read_csr(CSR_MHPMEVENT3), 1);
+  check("mhpmevent(3+N-1) = 1 << (N-1)", gen_isa_read_csr(CSR_MHPMEVENT3 + GEN_MHPM_COUNTER_NUM - 1), 1u << (GEN_MHPM_COUNTER_NUM - 1));
+  check("mhpmevent(3+N) = 0 beyond MHPMCounterNum", gen_isa_read_csr(CSR_MHPMEVENT3 + GEN_MHPM_COUNTER_NUM), 0);
+  check("mhpmevent31 = 0", gen_isa_read_csr(CSR_MHPMEVENT31), 0);
+  check("tdata1 = Ibex mcontrol view", gen_isa_read_csr(CSR_TDATA1), GEN_TDATA1_IBEX_RDATA);
+  gen_isa_write_csr(CSR_TDATA1, 0xffffffffu);
+  check("tdata1 write outside debug mode ignored", gen_isa_read_csr(CSR_TDATA1), GEN_TDATA1_IBEX_RDATA);
+  gen_isa_write_csr(CSR_TDATA2, 0x80000004u);
+  check("tdata2 write outside debug mode ignored", gen_isa_read_csr(CSR_TDATA2), 0);
+  gen_isa_write_csr(CSR_MSTATUS, 0xffffffffu);
+  check("mstatus all-ones write: XS and SD stay 0", gen_isa_read_csr(CSR_MSTATUS) & 0x80018000u, 0);
   check("pack",  ref(enc_r(0x04, 4, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0xdef05678u), 1);
   check("packu", ref(enc_r(0x24, 4, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0x9abc1234u), 1);
   check("packh", ref(enc_r(0x04, 7, 1, 2, 3), 0x12345678u, 0x9abcdef0u, 0, 0x0000f078u), 1);
@@ -260,12 +261,12 @@ int main(int argc, char** argv) {
   check("is_draft_b(pack) = 1", gen_isa_is_draft_b(enc_r(0x04, 4, 1, 2, 3)), 1);
   check("is_draft_b(rori) = 0", gen_isa_is_draft_b(enc_i(0x601, 5, 1, 3)), 0);
   gen_isa_set_time(1000);
-  check("cycle CSR follows set_time", gen_isa_read_csr(0xC00), 1000);
-  check("mcycle follows set_time", gen_isa_read_csr(0xB00), 1000);
+  check("cycle CSR follows set_time", gen_isa_read_csr(CSR_CYCLE), 1000);
+  check("mcycle follows set_time", gen_isa_read_csr(CSR_MCYCLE), 1000);
   gen_isa_set_hpm(2, 0x1234u, 1u);
-  check("mhpmcounter5 follows set_hpm (lo)", gen_isa_read_csr(0xB05), 0x1234u);
-  check("mhpmcounter5h follows set_hpm (hi)", gen_isa_read_csr(0xB85), 1u);
-  check("hpmcounter5 alias follows", gen_isa_read_csr(0xC05), 0x1234u);
+  check("mhpmcounter5 follows set_hpm (lo)", gen_isa_read_csr(CSR_MHPMCOUNTER5), 0x1234u);
+  check("mhpmcounter5h follows set_hpm (hi)", gen_isa_read_csr(CSR_MHPMCOUNTER5H), 1u);
+  check("hpmcounter5 alias follows", gen_isa_read_csr(CSR_HPMCOUNTER5), 0x1234u);
   gen_isa_set_status(1);
   check("cpuctrlsts bit 8 follows ic_scr_key_valid", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS), 0x100u);
   gen_isa_write_csr(GEN_CSR_CPUCTRLSTS, 0x1ffu);
@@ -277,8 +278,8 @@ int main(int argc, char** argv) {
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   { const uint32_t prog3[] = {GEN_INSN_MRET, 0x00000013u, 0x00000013u, 0x00000013u, 0x00000073u};   // mret ; nops ; ecall in U
     for (unsigned i = 0; i < sizeof(prog3) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog3[i]);
-    gen_isa_write_csr(0x341, scratch + 16u);   // mepc -> the ecall; mstatus.MPP is U after reset
-    gen_isa_write_csr(0x3B0, 0xffffffffu); gen_isa_write_csr(0x3A0, 0x0fu);   // pmp0 TOR RWX over everything: U-mode fetch and ecall, not an access fault (plan C-2)
+    gen_isa_write_csr(CSR_MEPC, scratch + 16u);   // mepc -> the ecall; mstatus.MPP is U after reset
+    gen_isa_write_csr(CSR_PMPADDR0, 0xffffffffu); gen_isa_write_csr(CSR_PMPCFG0, 0x0fu);   // pmp0 TOR RWX over everything: U-mode fetch and ecall, not an access fault (plan C-2)
     gen_isa_step(&st);
     check("mret retires", st.retired, 1);
     check("mret prv_before = M", st.prv_before, 3);
@@ -295,19 +296,20 @@ int main(int argc, char** argv) {
   gen_isa_write_word(scratch, 0x00000073u);                 // ecall in M at the reset pc
   gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000073u);         // trap vector (mtvec base = boot page): a second ecall
   gen_isa_write_word(GEN_MM_BOOT_PAGE + 4u, GEN_INSN_MRET);  // mret, entered by set_pc
-  check("flags clear after reset", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0);
+  const uint32_t kSync = 1u << GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, kDouble = 1u << GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, kFlags = kSync | kDouble;
+  check("flags clear after reset", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
   gen_isa_step(&st);
   check("first ecall traps", st.trap, 1);
-  check("sync_exc_seen set (bit 6)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0x40u);
+  check("sync_exc_seen set (bit 6)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, kSync);
   gen_isa_step(&st);
   check("second ecall traps", st.trap, 1);
-  check("double_fault_seen set (bit 7)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0xC0u);
+  check("double_fault_seen set (bit 7)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, kFlags);
   gen_isa_set_pc(GEN_MM_BOOT_PAGE + 4u);
   gen_isa_step(&st);
   check("mret retires", st.retired, 1);
-  check("mret clears sync_exc_seen, double_fault_seen sticky", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0x80u);
+  check("mret clears sync_exc_seen, double_fault_seen sticky", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, kDouble);
   gen_isa_write_csr(GEN_CSR_CPUCTRLSTS, 0);
-  check("software clears the status bits", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0);
+  check("software clears the status bits", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
 
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;

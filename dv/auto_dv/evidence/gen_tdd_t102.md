@@ -131,3 +131,30 @@ under gen_tdd_logs lacks the gen_ prefix.
   generators (gen_close3_test2_*) all four PASS, UVM_ERROR 0, mismatches 0, the pc + length rule exercised by 70 mrets
   and 157 traps. Shim unit test 159 OK (gen_tdd_logs/isa_shim; the ut3 run is not retained separately, the green log of
   Section 2 plus this build's compile stand for it).
+
+## 9. T-102c: the trapping Zcmp sequence (cross-model T-102b medium, Critic T-102b REQUEST-CHANGES)
+
+Both reviews asked for the trap-record length to come from the compressed flag (pc + 2 on a Zcmp micro-op) with a
+red/green on a trapping Zcmp sequence. Program dv/auto_dv/stim/gen_directed/gen_zcmp_trap_directed.S (cm.push/cm.pop
+loop under a vectored table of mrets) and unit test gen_ut_zcmp_trap.py (MEM_ERR_ARM on the stack window before the
+core is released: the first cm.push store takes a store access fault; the export shows the record set; zero mismatches).
+Red on out_t090/e (gen_tdd_logs/lockstep/gen_red_zcmp_trap_t102c_*): 2019 misses starting at the record after the trap.
+The retained records (gen_red_zcmp_trap_t102c_records.txt) show three things the reviews did not assume: (1) the
+trapping micro-op record (order 17: trap 1, expanded_insn_valid 1, expanded_insn_last 0, rvfi_insn the expanded sw,
+mem_wmask 0, mem_addr the faulting word) was FOLDED by the comparator as a non-last micro-op, so the model never stepped
+the cm.push; (2) the model had no way to take the DUT's bus fault (gen_isa_arm_fault existed in the shim, no caller);
+(3) `pc_wdata == pc_rdata` on that record, not pc + 2: the aborted sequence restarts from its first micro-op (order 19 is
+the same store again, now completing). Changes: a trapping micro-op ends the sequence and is compared as its last record
+(the model steps the whole cm.push with the fault armed; its completed stores are compared as the union); a trap record of
+a load or store arms `gen_isa_arm_fault(kind, mem_addr, size)` for that one step (the shim now disarms after every step);
+the trap-record offset is 0 when `rvfi_ext_expanded_insn_valid` is set, `insn_len` otherwise; rtl-arch asked to confirm
+the restart convention from RTL. Also in this landing: sync_exc_seen not set for exceptions taken in debug mode; the
+codegen verifies GEN_TDATA1_IBEX_RDATA against the RTL assign and GEN_MHPM_COUNTER_NUM against ibex_configs.yaml at
+every render (two refused fixtures in the codegen unit test); GEN_CPUCTRLSTS_*_BIT constants; Spike's CSR names in the
+shim unit test; the version-history line in the addendum. Green: see the run table below.
+
+Green (build dv/auto_dv/work/tb-infra/out_t102c/a, gen_tdd_logs/lockstep/gen_t102c_*): gen_ut_zcmp_trap PASS (800 records,
+1 trap on a Zcmp micro-op, pc_wdata == pc on it, 0 mismatches; the export retained), boot_zc, lockstep_zc, lockstep_s7,
+export_zc, gen_ut_irq, gen_ut_dbg, lock-step under interrupt storm, the four batch-1 tests: all PASS, UVM_ERROR 0; shim
+unit test 159 OK (gen_t102c_green_ut_isa_shim.log); codegen unit test PASS with the two new refused fixtures. Mutation P12
+(the trap record's pc_wdata reported off by 2 on the trapping-Zcmp run, out of tree): see gen_mut_t102.md.

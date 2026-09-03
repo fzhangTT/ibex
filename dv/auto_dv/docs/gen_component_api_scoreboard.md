@@ -60,7 +60,14 @@ These reads under `isa_rd` are CONSISTENCY compares (record value == read value)
 (Critic T-102 M-1): mcycle, minstret and the HPM counters belong to the counter checkers `ctr_mcycle`, `ctr_minstret`,
 `ctr_hpm_exact` and `ctr_hpm_bound` (step 2d, not built at 4c4b9b8), and cpuctrlsts bit 8 to the scramble-key
 responder's `scrkey_proto` status row (record bit 8 versus the driven value at the ID-exit sample, not built); until
-those land, a csrr of these CSRs passing `isa_rd` says nothing about counter or status correctness. The cpuctrlsts bits
+those land, a csrr of these CSRs passing `isa_rd` says nothing about counter or status correctness. Bit 8 in particular
+is fed from `rvfi_ext_ic_scr_key_valid`, the same register the CSR read returns, so its `isa_rd` compare is an
+RVFI-consistency anchor (the RVFI field agrees with the CSR read path) and nothing more: DEFERRED row until
+`scrkey_proto` compares the record against the value the responder drove. The six intent-derivable HPM counters
+(mhpmcounter5..10: loads, stores, jumps, branches, taken branches, compressed retired) are mirrored from the DUT today;
+the independent TB-side model from the RVFI records (dv/auto_dv/evidence/gen_hpm_event_defs.md rules, expected
+deviations D6, B7, B11, B17, B20) is the `ctr_hpm_exact` / `ctr_hpm_bound` landing after the event writers; only the
+cycle-type counters stay record-synced as consistency compares. The cpuctrlsts bits
 6 and 7 (sync_exc_seen, double_fault_seen) are hardware-set in the DUT and the shim sets them from the model's own trap
 history (rtl/ibex_cs_registers.sv:935-943, :964-965), so a read of them is an independent compare. Draft-B
 records (C5.5): the R4 forms (cmov, cmix, fsl, fsr, fsri) read rs3 = insn[31:27] from the model's register file; the
@@ -75,6 +82,13 @@ MIE, or U-mode) are withheld from the model, because the DUT retired that instru
 take them first; disabled pending bits are injected so a mip read compares. A debug request held through dret re-enters
 debug on the very next record: the entry rule is `pc_rdata == DmHaltAddr` with `ext_debug_mode` and either the previous
 record outside debug mode or the previous record a dret.
+
+Trapping memory accesses and Zcmp sequences (T-102c): a trap record of a load or store arms the model's bus fault on the
+record's address and size for that one step (`gen_isa_arm_fault`), so an injected, armed or PMP-denied access faults on
+both sides; a trapping Zcmp micro-op ends the sequence early (it is compared as the sequence's last record, the model steps
+the whole instruction with the fault armed and its completed stores are compared as the union), and its `pc_wdata` is
+its own pc, since the aborted sequence restarts from the first micro-op (observed on gen_zcmp_trap_directed.S; the
+trap-record rule uses offset 0 when `rvfi_ext_expanded_insn_valid` is set, `insn_len(insn)` otherwise).
 
 Model-state publication (step 2b, T-090): after every compared record the scoreboard publishes one `gen_model_state`
 on `ap_state` (order, cycle, model pc after the step, insn, mie / mstatus / mcause / mepc / mtval / dcsr read from the

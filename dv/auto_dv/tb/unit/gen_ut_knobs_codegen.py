@@ -79,6 +79,8 @@ def refused_fixtures(text):
     yield ("unknown derivation", text.replace("derive: irq_fast_w,", "derive: irq_fast_width,", 1), "unknown derivation")
     yield ("export event row with an unknown key", text.replace("{source: icram, event: inject, fields: [way, index]}",
                                                                    "{source: icram, event: inject, feilds: [way, index]}", 1), "unknown key(s) feilds")
+    yield ("tdata1 literal differing from the RTL refused", text.replace("GEN_TDATA1_IBEX_RDATA, value: 0x28001048,", "GEN_TDATA1_IBEX_RDATA, value: 0x28001049,", 1), "differs from rtl/ibex_cs_registers.sv")
+    yield ("MHPMCounterNum literal differing from the build configuration refused", text.replace("GEN_MHPM_COUNTER_NUM, value: 10,", "GEN_MHPM_COUNTER_NUM, value: 11,", 1), "differs from ibex_configs.yaml")
     yield ("export event wildcard row refused", text.replace("{source: icram, event: inject, fields: [way, index]}",
                                                               '{source: icram, event: "<name>", fields: [way, index]}', 1), "no wildcard rows")
     yield ("default and default_from together", text.replace("{name: hart_id, kind: hex, default: 0,",

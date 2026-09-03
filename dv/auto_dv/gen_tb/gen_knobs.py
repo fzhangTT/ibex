@@ -155,6 +155,8 @@ CONSTANTS = {
     "GEN_INSN_MRET": 807403635,
     "GEN_INSN_DRET": 2065694835,
     "GEN_TDATA1_IBEX_RDATA": 671092808,
+    "GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT": 6,
+    "GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT": 7,
 }
 
 REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)

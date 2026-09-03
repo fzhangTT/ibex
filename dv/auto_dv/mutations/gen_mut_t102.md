@@ -23,14 +23,18 @@ per-test generators (dv/auto_dv/tests/gen_programs/gen_<g>_prog.py) built with g
 
 | P10 | gen_rvfi_pkg.sv (scoreboard): the record after an mret is compared with pc_rdata + 4 (a wrong redirect target as reported) | gen_test_csr_trap_setup seed 1, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc=1`, OUT OF TREE | FAIL (UVM_ERROR 100); first: `isa_pc` pc model=80001700 dut=80001704 (order 1437) | `+gen_chk_isa_pc=0`: PASS (UVM_ERROR 0) |
 | P11 | gen_rvfi_pkg.sv: the mret record's pc_wdata is compared off by 4 (a wrong C-1 convention value as reported) | gen_test_csr_trap_setup seed 1, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc_next=1`, OUT OF TREE | FAIL (UVM_ERROR 100); first: `isa_pc_next` mret/dret record pc_wdata=1a110968 != pc + 4 (order 1436) | `+gen_chk_isa_pc_next=0`: PASS (UVM_ERROR 0) |
+| P12 | gen_rvfi_pkg.sv: the trap record's pc_wdata is compared off by 2 (a wrong C-1 value as reported on a trapping Zcmp micro-op) | gen_ut_zcmp_trap on gen_zcmp_trap_directed.S, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc_next=1`, OUT OF TREE (T-102c) | FAIL (UVM_ERROR 1: `isa_pc_next` trap record pc_wdata=8000013c on order 17, the trapping cm.push store) | `+gen_chk_isa_pc_next=0`: PASS (UVM_ERROR 0) |
 
 Out-of-tree rule (Critic T-080 landing-1 L-1, adopted by the Orchestrator): P10 and P11 were built from a scratch copy of
 dv/auto_dv (every other clone entry symlinked; runner prints the shared tree's gen_rvfi_pkg.sv sha256 after the batch,
 0dd85c87f99c314b unchanged; gen_tdd_logs/mutations/gen_t102_oot_mutation_batch.log). P1..P9 had run in the shared tree
 under the announce-and-revert rule before the L-1 rule reached tb-infra; disclosed here and in README.md.
 
-Summary: 10 of 10 DUT-run mutations (P1..P7, P9, P10, P11) caught with the ablation passing; P8 caught by the
-unit test. P1's message text still prints `prv_b` (the mutation changes only the compared operand), so its first line
+Summary: 11 of 11 DUT-run mutations (P1..P7, P9, P10, P11, P12) caught with the ablation passing; P8 caught by the
+unit test. P4, P5 and P6 show that each sync is LOAD-BEARING for the compare (remove it and the read mismatches); they do
+not show that a wrong DUT counter or status bit would be detected, since the synced value is the DUT's own record (a
+consistency compare, Critic T-102 M-1); detection of a wrong count is the counter checkers' (ctr_*) and of a wrong bit 8
+the scramble-key responder's (scrkey_proto), both owed. P1's message text still prints `prv_b` (the mutation changes only the compared operand), so its first line
 reads "priv model=3 (before the step) dut mode=3" while the compare that fired used the post-step privilege 0.
 Not covered by a mutation: the draft-B references other than cmix (unit-tested with literal vectors in
 gen_ut_isa_shim.cc section 5, no DUT-level exercise until the Test Writer's TP-BIT-022..033 tests), the counter sync's

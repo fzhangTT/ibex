@@ -183,7 +183,9 @@ constants:
   - {name: GEN_MHPM_COUNTER_NUM, value: 10, sv_type: int unsigned, desc: "MHPMCounterNum of the build (Runtime's -pvalue; gen_tb_top fatals when u_dut.MHPMCounterNum differs); the shim's mhpmevent values and the counter sync use it"}
   - {name: GEN_INSN_MRET, value: 0x30200073, sv_type: "logic [31:0]", desc: "mret encoding (privileged spec); plan C-1: its RVFI pc_wdata is pc + 4, so isa_pc_next and the export continuity rule skip it"}
   - {name: GEN_INSN_DRET, value: 0x7B200073, sv_type: "logic [31:0]", desc: "dret encoding (debug spec); plan C-1 as for mret"}
-  - {name: GEN_TDATA1_IBEX_RDATA, value: 0x28001048, sv_type: "logic [31:0]", desc: "tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag"}
+  - {name: GEN_TDATA1_IBEX_RDATA, value: 0x28001048, sv_type: "logic [31:0]", desc: "tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render"}
+  - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
+  - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
 
 # TB memory map (test equipment). DM windows are read from gen_dut_top.sv parameters and the
 # program window from gen_riscv_dv_target/gen_link.ld at generation time; the MMIO page and its

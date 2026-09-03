@@ -1,0 +1,7 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P12/out/P12_ablate_zcmp_trap/stdout.log (out-of-tree mutant P12, T-102c)
+GEN_CONFIG_BANNER build_config=opentitan
+ 36685.00ns INFO     cocotb.gen_tb_top                  GEN_UT_ZCMP_TRAP records 800 traps 1 on Zcmp micro-ops 1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 3668500: sb [GEN_SB] ISA compare: records=278 mismatches=0 folded=522 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=147
+ 36685.00ns INFO     cocotb.gen_tb_top                  GEN_UT_ZCMP_TRAP_PASS
+UVM_ERROR :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                               36685.01           0.11     336148.08  **

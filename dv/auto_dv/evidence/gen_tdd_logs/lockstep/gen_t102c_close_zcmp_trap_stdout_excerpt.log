@@ -1,0 +1,8 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102c/b/zcmp_trap/stdout.log (T-102c closing build b: banner, ISA compare, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+ 36685.00ns INFO     cocotb.gen_tb_top                  GEN_UT_ZCMP_TRAP records 800 traps 1 on Zcmp micro-ops 1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 3668500: sb [GEN_SB] ISA compare: records=278 mismatches=0 folded=522 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=147
+ 36685.00ns INFO     cocotb.gen_tb_top                  GEN_UT_ZCMP_TRAP_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                               36685.01           0.13     288508.79  **

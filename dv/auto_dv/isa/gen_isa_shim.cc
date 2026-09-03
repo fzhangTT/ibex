@@ -182,7 +182,7 @@ class gen_ibex_ext_t : public extension_t {
   const char* name() const override { return "genibex"; }   // no underscore: the ISA parser splits on it
 };
 REGISTER_EXTENSION(genibex, []() { return new gen_ibex_ext_t; })
-constexpr reg_t kCpuctrlSyncExcSeen = 0x40u, kCpuctrlDoubleFaultSeen = 0x80u;   // cpu_ctrl_sts_part_t bits 6 and 7
+constexpr reg_t kCpuctrlSyncExcSeen = 1u << GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, kCpuctrlDoubleFaultSeen = 1u << GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT;
 
 // ---- model instance ---------------------------------------------------------------------------
 cfg_t g_cfg;
@@ -432,6 +432,7 @@ int gen_isa_step(gen_isa_step_t* out) {
     set_err(std::string("gen_isa_step: ") + e.what());
     return -1;
   }
+  g_fault.armed = false;   // an armed bus fault applies to one step
   uint64_t minstret1 = g_proc->get_csr(CSR_MINSTRET) | ((uint64_t)g_proc->get_csr(CSR_MINSTRETH) << 32);
   out->retired = (int32_t)(minstret1 - minstret0);
   // debug entry: Spike parks pc in its own ROM (0x800/0x808); Ibex enters at DmHaltAddr (C5.2)
@@ -445,8 +446,9 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap = 1;
     out->trap_cause = csr(CSR_MCAUSE);
     out->trap_tval = csr(CSR_MTVAL);
-    // a synchronous exception sets sync_exc_seen, a second one while it is set also sets double_fault_seen (debug entry is neither)
-    if (g_cpuctrl && !(out->trap_cause & 0x80000000u) && !(!was_debug && s->debug_mode))
+    // a synchronous exception outside debug mode sets sync_exc_seen, a second one while it is set also sets
+    // double_fault_seen; debug entry and exceptions taken in debug mode set nothing (rtl/ibex_cs_registers.sv:914-943)
+    if (g_cpuctrl && !(out->trap_cause & 0x80000000u) && !was_debug && !s->debug_mode)
       g_cpuctrl->set_flags(kCpuctrlSyncExcSeen | ((g_cpuctrl->read() & kCpuctrlSyncExcSeen) ? kCpuctrlDoubleFaultSeen : 0u), 0);
   } else if (g_cpuctrl && out->insn == GEN_INSN_MRET) {
     g_cpuctrl->set_flags(0, kCpuctrlSyncExcSeen);   // mret clears sync_exc_seen; double_fault_seen stays until software clears it

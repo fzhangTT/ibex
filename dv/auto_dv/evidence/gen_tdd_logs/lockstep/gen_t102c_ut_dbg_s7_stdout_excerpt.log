@@ -1,0 +1,11 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102c/a/ut_dbg_s7/stdout.log (T-102c build: banner, component reports, UVM counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(185) @ 1719500: dbg_chk [GEN_DBG_CHK] debug entries=2 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(140) @ 1719500: irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=1712 mismatches=0; entries=0 nmi=0 bound failures=0 open expectations=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(462) @ 1719500: sb [GEN_SB] ISA compare: records=461 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=2 rvfi_rmask_on_nonload=461
+ 17195.00ns INFO     cocotb.gen_tb_top                  GEN_UT_DBG_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+[GEN_DBG_CHK]     1
+[GEN_IRQ_CHK]     1
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                   17195.01           0.17     103656.97  **

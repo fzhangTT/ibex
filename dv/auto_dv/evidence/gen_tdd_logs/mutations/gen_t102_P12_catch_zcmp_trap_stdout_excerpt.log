@@ -1,0 +1,7 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P12/out/P12_catch_zcmp_trap/stdout.log (out-of-tree mutant P12, T-102c)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(234) @ 79500: sb [isa_pc_next] trap record pc_wdata=8000013c != pc + 4 (C-1) (order=17 pc=8000013c insn=ff212e23 trap=1 intr=0 rd=x0/00000000 mem=800002fc w0000 r0000 mode=3 cyc=74)
+ 36685.00ns INFO     cocotb.gen_tb_top                  GEN_UT_ZCMP_TRAP records 800 traps 1 on Zcmp micro-ops 1
+                                                            assert mism == 0, f"GEN_UT_ZCMP_TRAP: {mism} ISA mismatches (the comparator disagrees with the record set)"
+                                                        AssertionError: GEN_UT_ZCMP_TRAP: 1 ISA mismatches (the comparator disagrees with the record set)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                               36685.01           0.10     361313.97  **
