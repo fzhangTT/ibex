@@ -1,3 +1,4 @@
+# run b2_mul_div_red_013: 2026-09-03T13:07:33Z host=soc-l-11 seed=1 module=dv.auto_dv.tests.gen_test_mul_div build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export/dv/auto_dv/work/test-writer/out_head3 pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/red_013/prog/prog.vmem plusargs=[]
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
      0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_mul_div seed=1 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/red_013/prog/prog.vmem
    645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=-

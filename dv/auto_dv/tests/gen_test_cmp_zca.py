@@ -53,15 +53,13 @@ schedulable here); 017 and 033 rvfi_trap = 1 / rvfi_insn = 0x9002 per record (re
 debug-mode entry (DBG_REQ bridge codes not rendered, knob debug_req_regime not schedulable). The plan's stimulus size
 is >= 3000 retired instructions per seed with the per-form floors governing (the seed-1 program retires about 3800), asserted by fire_program_verdict's retirement floor.
 Dropped clause (program-shaped, owner named): TP-CMP-028 odd c.jr targets (bit 0 set) are not drawn, because the DUT's
-rvfi_pc_wdata keeps bit 0 (bug candidate B13, gen_bug_log.md; the plan's 028 fire-check masks bit 0 for that reason)
-and the always-on isa_pc_next comparator row fails every run of this pass-expected test; B13's xfail item owns it.
-Kept although the comparator flags it (reported, never masked): the handler's mtval read after c.ebreak - Ibex reads
-0 (doc cs_registers.rst "for all other exceptions mtval is 0", the plan's TP-CMP-033 value, asserted here and met
-by the DUT) while the Spike-based model reports the pc, so the isa_rd/isa_mem rows raise 2 uvm_errors per c.ebreak
-until the shim legalizes mtval for breakpoint exceptions (TB Infra, T-102 class).
+rvfi_pc_wdata keeps bit 0 (bug candidate B13, gen_bug_log.md; the plan's 028 fire-check masks bit 0 for that reason);
+the comparator counts that bit as a documented exception (its R11 row) and B13's xfail item owns the bug. The
+handler's mtval read after c.ebreak is asserted as 0 (doc cs_registers.rst "for all other exceptions mtval is 0", the
+plan's TP-CMP-033 value, met by the DUT); the Spike-based model reports 0 too since the shim's R10 row, so the run is
+UVM_ERROR-free.
 Knobs: schedulable = lib.TIMING_ONLY_KNOBS (the items' imem/dmem gnt and rvalid delays and imem_outstanding_cap);
-nothing is pinned; layers_required = False (bring-up opt-out, API doc Section 3: no REGIME_SET consumer at HEAD; the
-staged entry carries measured: false). declare_bins() is not overridden: the template declares the plan bins of the 21
+nothing is pinned; declare_bins() is not overridden: the template declares the plan bins of the 21
 items the fire_tp_cmp_* methods name (the manifest is rendered from this module). MODULE=dv.auto_dv.tests.gen_test_cmp_zca.
 """
 import cocotb
@@ -119,8 +117,6 @@ def _compare(test, item, detail):
 class CmpZca(GenTest):
     name = "gen_test_cmp_zca"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # every item of the plan group has a fire_tp method (two-sided against the group by the structure check)
     not_built = {}
 

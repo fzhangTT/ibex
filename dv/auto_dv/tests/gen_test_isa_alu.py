@@ -54,8 +54,7 @@ prologue and mret return belong to the batch-3 privilege groups). (e) TP-ISA-004
 reset value (doc/03_reference/cs_registers.rst) and is neither written nor read back: the flow's standalone Spike check
 (gen_program.py --spike-check) has no cpuctrlsts and would trap on the read, so the precondition rests on reset.
 Knobs (the items' Knobs lines: imem_rvalid_delay, imem_gnt_delay, dmem_rvalid_delay): schedulable = lib.TIMING_ONLY_KNOBS;
-nothing is pinned. layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b parked), so the template
-logs the layers as not_applied; the staged entry carries measured: false (API doc Section 3).
+nothing is pinned.
 declare_bins() is not overridden: the template declares the plan bins of the ten items the fire_tp_isa_* methods name
 (the manifest dv/auto_dv/fcov_expectations/gen_test_isa_alu.fcov.yaml is rendered from this module).
 MODULE=dv.auto_dv.tests.gen_test_isa_alu.
@@ -136,8 +135,6 @@ def _pc(test, o):
 class IsaAlu(GenTest):
     name = "gen_test_isa_alu"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit until WP-9 lands (code windows at address 0 and the top page)
     bins_not_hit = {

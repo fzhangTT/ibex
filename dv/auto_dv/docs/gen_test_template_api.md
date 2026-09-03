@@ -49,7 +49,7 @@ Testlist entry: `cocotb_module: dv.auto_dv.tests.gen_test_<area>_<topic>`, `uvm_
 | 3 | `run_schedule()` (forked) + `stimulus()` (forked) | the schedule runner arms the bridge cycle or retirement threshold of the next boundary and applies its entries when reached; it stops when the program ends first. `stimulus()` is the test's body and shares the bridge through `self.cmd()` (a lock serializes the two coroutines) | timeouts are asserts naming the awaited edge |
 | 4 | `wait_eot()` | awaits each report store and the end-of-test store (`evt_eot_seen` edges); a store is late only when retirement stopped for `program_budget_cycles` (`GEN_TEST: ... no retirement`, the hang detector) or lagged `PROGRESS_ROUNDS_MAX` budgets while the core kept retiring (`runaway program`); every lagging budget logs `GEN_TEST_SLOW` and finish() reports `GEN_TEST_SLOW_TOTAL rounds=<n>` (slow bus regimes stretch a program several times over; fixtures gen_ut_eot_stall and gen_ut_eot_runaway are the reds); records `eot_cycle`/`eot_retired`; then waits for `stimulus()` to return, lets the schedule runner finish a boundary it is applying (a boundary that passes in the end-of-test cycle itself still counts as hit and is applied), and kills the runner | assert on timeout |
 | 5 | `schedule_check()` then `fire_check()` | `self.check(name, ok, detail)` counts the check, logs `GEN_TEST_FIRE <name> ok=<bool> <detail>` and collects failures. `schedule_check()` computes the reached phases from the bridge counts at the end-of-test store (`eot_cycle`, `eot_retired`: a phase is reached when its `c`/`r` boundary is at or below them), and fails when a reached phase is missing from the applied list, when a phase was applied before its boundary, or when the counts differ; with no schedulable knob it logs `GEN_TEST_LAYERS not_applied` and records no check | one `AssertionError` with every failure: `GEN_TEST_FAIL <name>: n fire-check failure(s): ...` (or `GEN_TEST_XFAIL <bug> ...` when `xfail_bug` is set) |
-| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; refuses a run whose `fire_check()` recorded no check (`GEN_TEST_FAIL <name>: fire_check() recorded no check`); checks that the declared bins equal the test's manifest file (`lib.check_manifest_matches`: a stale or missing manifest fails the run with the differing tokens named; only a test that declares no bins and has no manifest skips); raises the collected failures BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | asserts as named |
+| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; refuses a run whose `fire_check()` recorded no check (`GEN_TEST_FAIL <name>: fire_check() recorded no check`); checks that the declared bins equal the test's manifest file (`lib.check_manifest_matches`: a stale or missing manifest fails the run with the differing tokens named; only a test that declares no bins and has no manifest skips); raises the collected failures as `lib.fire_fail_line(name, failures)` (the line a red entry's `red_expect` matches) BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | asserts as named |
 
 Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the library self-test).
 
@@ -206,13 +206,39 @@ What the witness guarantee rests on, truthfully: the fact of record is the SV wi
 events with ids from the committed testlist entry and codes from the fire-check outcome; a Python test cannot produce
 that record by itself. The Python side keeps the record template-private (`_results`, filled by `check()`; allowed ids
 read in the epilogue from the committed entry of the class's name; codes from the rendered table; an id the table lacks
-fails with the GEN_TEST_FAIL prefix), and `check_test_source` is defense in depth, a source lint that refuses the cheap
-forgeries (assignment to template-assigned names through `self`, calls into or aliases of the verdict record, `getattr`/`setattr`/
-`vars`/`__dict__`/`type(self)` on the test object, class-body assignment to a template method, module-level functions
-that receive the test object and touch its template-owned names, `lib`/template patching, the COV_WITNESS token). It is
-not airtight: it enumerates statement shapes and refuses those; any statement over the record it does not enumerate passes
-(string-built names, exec/importlib, dunder tricks, objects reached through containers or return values, helpers in other
-modules, and shapes nobody has listed yet); that is the residual, caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
+fails with the GEN_TEST_FAIL prefix), and `check_test_source` is defense in depth, a source lint that refuses exactly these statement shapes (the library
+self-test's red list, `lib.REFUSED_FORMS`: at least one refused red source per line, and the self-test fails when this
+list and the table differ):
+
+- a template method other than the four hooks overridden in the test class (directly, through an aliased base, an
+  import alias, a mixin, or a class-body assignment of the method name)
+- check() with a literal outcome
+- fire_check() that records no check
+- fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that
+  does not start with its item's id, not_built missing or not a literal dict, an item both built and declared not
+  built, an item neither built nor declared
+- module-level assignment or setattr() over the test class, the library or the template
+- the test class defined inside a function
+- the COV_WITNESS command issued from test code
+- cycle_clause_true outside a fire_tp_* method
+- layers_required = False without a measured: false testlist entry, or a non-literal value
+- a base class that is not GenTest by name: an unresolvable expression or an imported name
+- the verdict record (_results, results, failures, checks, witness_ids, applied, schedule, reports; reads of reports
+  excepted) called into, aliased, bound by a walrus or tuple target, passed to a callee, captured by a lambda,
+  item-assigned or deleted
+- assignment through self to a template-assigned attribute
+- getattr(), setattr(), vars(), __dict__ or type() on the test object
+- self passed to a module-level helper that touches a template-owned name, directly or through an alias inside the
+  helper
+- self escaping as a bare name: an alias, a loop target or a keyword argument
+
+Everything else passes; the lint is not a guarantee. The guarantee is architectural: the committed testlist ids, the
+fire-check codes and the SV witness ledger. Shapes known to pass today, each an indirection-free statement or a patch
+outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []`,
+attribute-chain writes through template-owned objects (`self.schedule.phases = []`, `self.h.b.evt_eot_seen.value = 1`,
+`self.bridge.cmd = None`, `self.log.info = print`), template patching through an import alias or the full dotted path,
+string-built names, exec/importlib, objects reached through containers or return values, helpers in other modules. The
+lint does not grow past this list (LOG-024c); those shapes are caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
 `GEN_DV_FLOW_RUN` environment marker (`lib.FLOW_RUN_ENV`, exported by every flow job script); a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
 _noid prove the four epilogue paths with a Python-side fake dispatcher.
 

@@ -25,8 +25,6 @@ from dv.auto_dv.tests.gen_test_template import GenTest
 class BootRetire(GenTest):
     name = "gen_test_boot_retire"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
 
     def fire_check(self):
         code = int(self.h.b.evt_eot_code.value)

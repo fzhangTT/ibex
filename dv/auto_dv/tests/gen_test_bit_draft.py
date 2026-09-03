@@ -3,11 +3,10 @@ bitmanip ops the pinned Spike lacks, checked through the shim's C reference (C5.
 
 Items BUILT: TP-BIT-016 (feature F-BIT-016, ACTIVE, no alias): generic grevi / gorci / grev / gorc with
 every W9 control word, W1 operands, W3 rs2 upper bits, plus the pinned aliases rev8 (grevi 24), orc.b
-(gorci 7) and brev8 (draft rev.b = grevi 7). Items BLOCKED, owner TB Infra (T-102 item 4:
-gen_isa_exec_reference in dv/auto_dv/isa/gen_isa_shim.cc serves only grev/grevi/gorc/gorci and lacks
-pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri, bfp, crc32*/crc32c*;
-any other draft op raises uvm_error isa_rd, so no checkable program exists and no fire_tp method is added
-until the shim extension lands): TP-BIT-011 (F-BIT-011: pack/packh/packu with rs2 != x0), TP-BIT-022 /
+(gorci 7) and brev8 (draft rev.b = grevi 7). Items not built, blocker generator growth (the shim's C reference
+gen_isa_exec_reference in dv/auto_dv/isa/gen_isa_shim.cc covers these op groups; this test's generator emits
+grev/gorc forms only, so their programs, expected values and fire_tp methods are still to be written):
+TP-BIT-011 (F-BIT-011: pack/packh/packu with rs2 != x0), TP-BIT-022 /
 TP-BIT-023 (F-BIT-022 / F-BIT-023: slo/sro/sloi/sroi), TP-BIT-024 (F-BIT-024: shfl/unshfl/shfli/unshfli),
 TP-BIT-025 / TP-BIT-026 (F-BIT-025 / F-BIT-026: xperm.n/.b/.h), TP-BIT-027 (F-BIT-027: cmov/cmix),
 TP-BIT-028 / TP-BIT-029 (F-BIT-028 / F-BIT-029: fsl/fsr/fsri), TP-BIT-030 / TP-BIT-031 (F-BIT-030 /
@@ -21,7 +20,7 @@ control-sensitive op (rd != x0, operand neither 0 nor all-ones) per (base, contr
 controls of each of the four bases, the three alias forms, a single-bit operand per base and nonzero
 rs2 upper bits per register base; the extras keep rd = x0, x0 sources and zero operands, whose compares
 are vacuous and counted apart. Knobs: knob:imem_rvalid_delay (the item's Knobs line), varied by the
-template's layers 2/3 when the build consumes it. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). Fire-check per seed (fire_tp_bit_016): every report
+template's layers 2/3 when the build consumes it. Fire-check per seed (fire_tp_bit_016): every report
 word equals the plan's reference value per generic base and for the aliases; every (base, control)
 pair has a control-sensitive op whose rd matched and the matched control-sensitive count reaches the
 floor; each base has a matched single-bit op and each register base a matched op with nonzero rs2
@@ -46,9 +45,6 @@ assert all(k in lib.REGIME_KNOBS for k in ITEM_KNOBS), f"unknown regime knob in 
 class BitDraft(GenTest):
     name = "gen_test_bit_draft"
     schedulable = ITEM_KNOBS
-    # Bring-up state (tier check, measured false): the build has no REGIME_SET consumer, so the layers
-    # are logged not_applied; returns to the default (required) when TB Infra's step 2b lands.
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {
         "TP-BIT-011": "the shim's draft-B references cover this op group since T-102, but this test's generator covers grev/gorc only (growth pending)",

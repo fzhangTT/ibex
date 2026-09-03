@@ -52,7 +52,7 @@ Program: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py at the run seed (te
 {generator: ..., seed: run}`), plan.k report words then tohost TOHOST_PASS; red fixtures `--red
 [--red-item <id>]` re-target one read of the item so exactly its fire-check fails (generator docstring).
 Knobs: the items' Knobs lines (imem_gnt_delay, imem_rvalid_delay, irq_line_mix, debug_req_regime,
-scr_key_delay) are declared schedulable; nothing is pinned. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). declare_bins() is
+scr_key_delay) are declared schedulable; nothing is pinned. declare_bins() is
 the template default (the plan's bins of the six fire_tp items, checked against the rendered manifest in
 finish(); the entry stays unwired until gen_fcov_pkg lands). Always-on checkers relied on: the ISA comparator
 rows isa_pc/isa_insn/isa_trap/isa_rd/isa_mem/isa_prv/isa_pc_next, rvfi_proto, the bus protocol checkers
@@ -134,8 +134,6 @@ class CsrReset(GenTest):
     name = "gen_test_csr_reset"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_line_mix", "knob_debug_req_regime",
                    "knob_scr_key_delay")
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
 

@@ -46,7 +46,7 @@ the flow verdict is FAIL while the cocotb marker is GEN_TEST_PASS, and the progr
 Knobs: the items name program-side region markers (knob:instr_mix csr_heavy, knob:pmp_regime off / mml_on,
 knob:priv_regime alternating / u_heavy) that describe this generated program; they are not scheduled here.
 schedulable = the timing-only regime knobs (bus latencies, outstanding cap, scramble-key delay), which the
-program tolerates. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false).
+program tolerates.
 
 Always-on checkers relied on: the ISA comparator (isa_csr and the other C4.7 rows; the shim runs Spike with
 PMPNumRegions 16, PMPGranularity 0 (4-byte grain, NA4 selectable) and Smepmp, PMP CSRs zeroed at reset),
@@ -93,8 +93,6 @@ def lane_byte(word, lane):
 class PmpCsrWarl(GenTest):
     name = "gen_test_pmp_csr_warl"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
 

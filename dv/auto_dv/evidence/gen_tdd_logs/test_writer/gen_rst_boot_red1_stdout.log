@@ -2,7 +2,7 @@ Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detec
 Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 06:26 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 11:13 2026
      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
@@ -11,7 +11,7 @@ Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Se
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
      0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.tests.gen_test_rst_boot.gen_test_rst_boot
      0.00ns INFO     cocotb.regression                  running gen_test_rst_boot (1/1)
-     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_rst_boot seed=1 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/rst_boot/red1/prog/prog.vmem
+     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_rst_boot seed=1 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/redhead/rst_boot/prog/prog.vmem
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -29,96 +29,101 @@ UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
 GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
 GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
 GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
-GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/rst_boot/red1/prog/prog.vmem tohost=0x80000440
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/redhead/rst_boot/prog/prog.vmem tohost=0x80000440
 GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(127) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/rst_boot/red1/prog/prog.vmem: 249 words, crc32 0x714621e8 verified
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(151) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=1..3(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(152) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=1..3(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
-UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(167) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(177) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/redhead/rst_boot/prog/prog.vmem: 249 words, crc32 0x714621e8 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(207) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(208) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(359) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(359) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(227) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
      5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
    645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_READBACK ok words=64
-   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no REGIME_SET consumer for declared knobs imem_gnt_delay,imem_rvalid_delay,irq_regime,scr_key_delay (layers_required=False, bring-up only)
-   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=-
-   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=0 sched=-
-UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(406) @ 64500: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
-   655.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=60
-  1060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=0 value=0x80000001 cycle=101
-UVM_INFO @ 106000: reporter [GEN_EOT] end-of-test store 0x80000001 at 0x8ffff104 (store 1)
-  1280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=1 value=0x00000000 cycle=123
-  1350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=2 value=0x00000000 cycle=130
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 139500: uvm_test_top.env.sb [isa_rd] rd model=x23/00000000 dut=x23/00000100 (order=21 pc=8000014c insn=7c006bf3 trap=0 intr=0 rd=x23/00000100 mem=fffff840 w0000 r1111 mode=3 cyc=134)
-  1420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=3 value=0x00000100 cycle=137
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 146500: uvm_test_top.env.sb [isa_mem] store data model=00000000 dut=00000100 (order=22 pc=80000150 insn=017fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=141)
-  1490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=4 value=0x00000000 cycle=144
-  1550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=5 value=0x00000000 cycle=150
-  1590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=6 value=0x00000000 cycle=154
-  1640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=7 value=0x00000000 cycle=159
-  1720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=8 value=0x00000000 cycle=167
-  1800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=9 value=0x00000000 cycle=175
-  1860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=10 value=0x00000000 cycle=181
-  1920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=11 value=0x00000000 cycle=187
-  1990.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=12 value=0x00000000 cycle=194
-  2050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=13 value=0x00000000 cycle=200
-  2110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=14 value=0x00000000 cycle=206
-  2190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=15 value=0x00000000 cycle=214
-  2260.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=16 value=0x00000000 cycle=221
-  2310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=17 value=0x00000000 cycle=226
-  2370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=18 value=0x00000000 cycle=232
-  2410.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=19 value=0x00000000 cycle=236
-  2480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=20 value=0x00000000 cycle=243
-  2540.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=21 value=0x00000000 cycle=249
-  2590.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=22 value=0x00000000 cycle=254
-  2650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=23 value=0x00000000 cycle=260
-  2700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=24 value=0x00000000 cycle=265
-  2750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=25 value=0x00000000 cycle=270
-  2820.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=26 value=0x00000000 cycle=277
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 285500: uvm_test_top.env.sb [isa_rd] rd model=x19/f0000000 dut=x19/28001048 (order=69 pc=8000020c insn=7a1079f3 trap=0 intr=0 rd=x19/28001048 mem=fffff85f w0000 r1111 mode=3 cyc=280)
-  2860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=27 value=0x28001048 cycle=281
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 289500: uvm_test_top.env.sb [isa_mem] store data model=f0000000 dut=28001048 (order=70 pc=80000210 insn=013fa023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=284)
-  2910.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=28 value=0x00000000 cycle=286
-  2980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=29 value=0x00000000 cycle=293
-  3020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=30 value=0x00000000 cycle=297
-  3080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=31 value=0x00000000 cycle=303
-  3180.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=32 value=0x00000000 cycle=313
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 350500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000280 dut=80000268 (order=91 pc=80000264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=345)
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 350500: uvm_test_top.env.sb [isa_prv] priv model=0 dut mode=3 (order=91 pc=80000264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=345)
-              370000: Illegal instruction (hart 0) at PC 0x80000294: 0x30002673
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 372500: uvm_test_top.env.sb [isa_prv] priv model=3 dut mode=0 (order=97 pc=80000294 insn=30002673 trap=1 intr=0 rd=x0/00000000 mem=fffffd00 w0000 r1111 mode=0 cyc=367)
-  4000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=33 value=0x00000002 cycle=395
-  4080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=34 value=0x00000080 cycle=403
-  4140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=35 value=0x80000294 cycle=409
-UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(174) @ 425500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000298 dut=800003c0 (order=114 pc=800003bc insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=420)
-  4320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=36 value=0xe2e0b258 cycle=427
-  4440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=37 value=0x00000000 cycle=439
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_EOT code=0x00000001 stores=39 reports=38 retired=120 cycle=448
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=imem_gnt_delay=same_cycle imem_rvalid_delay=long irq_regime=sparse scr_key_delay=delayed
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=1 sched=imem_gnt_delay:same_cycle@c0,imem_rvalid_delay:long@c0,irq_regime:sparse@c0,scr_key_delay:delayed@c0
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(109) @ 64500: uvm_test_top.env.dispatch [GEN_PHASE] phase 1 knob=knob_imem_gnt_delay value=same_cycle cycle=59
+   655.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=imem_gnt_delay value=same_cycle cycle=60
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(109) @ 65500: uvm_test_top.env.dispatch [GEN_PHASE] phase 2 knob=knob_imem_rvalid_delay value=long cycle=60
+   665.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=imem_rvalid_delay value=long cycle=61
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(493) @ 66500: uvm_test_top.env.irq [GEN_IRQ] knob_irq_regime <= sparse
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(109) @ 66500: uvm_test_top.env.dispatch [GEN_PHASE] phase 3 knob=knob_irq_regime value=sparse cycle=61
+   675.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=irq_regime value=sparse cycle=62
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(394) @ 67500: uvm_test_top.env.scrkey [GEN_SCRKEY] key regime <= delayed
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(109) @ 67500: uvm_test_top.env.dispatch [GEN_PHASE] phase 4 knob=knob_scr_key_delay value=delayed cycle=62
+   685.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_PHASE idx=0 trigger=c0 knob=scr_key_delay value=delayed cycle=63
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(683) @ 69000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+   695.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=64
+  1510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=0 value=0x80000001 cycle=146
+UVM_INFO @ 151000: reporter [GEN_EOT] end-of-test store 0x80000001 at 0x8ffff104 (store 1)
+  1880.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=1 value=0x00000000 cycle=183
+  1960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=2 value=0x00000000 cycle=191
+  2170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=3 value=0x00000100 cycle=212
+  2300.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=4 value=0x00000000 cycle=225
+  2370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=5 value=0x00000000 cycle=232
+  2420.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=6 value=0x00000000 cycle=237
+  2580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=7 value=0x00000000 cycle=253
+  2740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=8 value=0x00000000 cycle=269
+  2800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=9 value=0x00000000 cycle=275
+  2950.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=10 value=0x00000000 cycle=290
+  3020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=11 value=0x00000000 cycle=297
+  3100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=12 value=0x00000000 cycle=305
+  3150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=13 value=0x00000000 cycle=310
+  3380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=14 value=0x00000000 cycle=333
+  3440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=15 value=0x00000000 cycle=339
+  3520.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=16 value=0x00000000 cycle=347
+  3620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=17 value=0x00000000 cycle=357
+  3690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=18 value=0x00000000 cycle=364
+  3780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=19 value=0x00000000 cycle=373
+  3860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=20 value=0x00000000 cycle=381
+  4020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=21 value=0x00000000 cycle=397
+  4140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=22 value=0x00000000 cycle=409
+  4210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=23 value=0x00000000 cycle=416
+  4270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=24 value=0x00000000 cycle=422
+  4390.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=25 value=0x00000000 cycle=434
+  4550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=26 value=0x00000000 cycle=450
+  4600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=27 value=0x28001048 cycle=455
+  4660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=28 value=0x00000000 cycle=461
+  4730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=29 value=0x00000000 cycle=468
+  4870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=30 value=0x00000000 cycle=482
+  5030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=31 value=0x00000000 cycle=498
+  5160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=32 value=0x00000000 cycle=511
+              604000: Illegal instruction (hart 0) at PC 0x80000294: 0x30002673
+  6560.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=33 value=0x00000002 cycle=651
+  6790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=34 value=0x00000080 cycle=674
+  6860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=35 value=0x80000294 cycle=681
+  7290.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=36 value=0xe2e0b258 cycle=724
+  7610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=37 value=0x00000000 cycle=756
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_EOT code=0x00000001 stores=39 reports=38 retired=120 cycle=770
 /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
   ret = outcomes.Value(await trigger)
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no consumable knob varied (declared=imem_gnt_delay,imem_rvalid_delay,irq_regime,scr_key_delay, consumed=-)
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_003 ok=True csrr mtvec before any write 0x80000001 (expected boot page | 1 = 0x80000001, +gen_boot_addr 0x80000000)
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_006 ok=False 6/7 report words match: mstatus=0x00000000 (expected 0x00000080) [reports 1..37: mstatus=0x00000000 (expected 0x00000080) mie=0x00000000 trap_mcause=0x00000002 trap_mstatus=0x00000080 trap_mepc=0x80000294 pad_result=0xe2e0b258 unexpected_traps=0x00000000]
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_007 ok=True 30/30 report words match [reports 3..32: cpuctrlsts=0x00000100 mtval=0x00000000 pmpcfg0=0x00000000 pmpaddr10=0x00000000 pmpaddr5=0x00000000 pmpaddr15=0x00000000 pmpaddr0=0x00000000 pmpaddr12=0x00000000 mcause=0x00000000 pmpaddr13=0x00000000 pmpaddr11=0x00000000 pmpaddr4=0x00000000 pmpaddr14=0x00000000 pmpaddr3=0x00000000 pmpcfg3=0x00000000 pmpcfg2=0x00000000 mcounteren=0x00000000 mepc=0x00000000 pmpaddr2=0x00000000 pmpaddr1=0x00000000 mscratch=0x00000000 pmpaddr6=0x00000000 mseccfg=0x00000000 mcountinhibit=0x00000000 tdata1=0x28001048 pmpaddr8=0x00000000 tselect=0x00000000 pmpcfg1=0x00000000 pmpaddr9=0x00000000 pmpaddr7=0x00000000]; mie=0x00000000
-  4530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_BINS n=0 -
-  4530.01ns INFO     cocotb.regression                  gen_test_rst_boot failed
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_schedule_applied ok=True reached 4 of 4 scheduled entries by EOT (cycle 770, retired 120), applied 4 (k=1, source=derived)
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_003 ok=True csrr mtvec before any write 0x80000001 (expected boot page | 1 = 0x80000001, +gen_boot_addr 0x80000000)
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_006 ok=False 6/7 report words of TP-RST-006 match (reports 1..37): mstatus=0x00000000 (expected 0x00000080)
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_INFO TP-RST-006 precondition not applied: irq agent absent (step 2b); the interrupt-line-held clause is not programmed
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_rst_007 ok=True 30/30 report words of TP-RST-007 match (reports 3..32); mie=0x00000000
+  7750.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_BINS n=8 gen_rst_boot_cg.cp_boot_addr.high gen_rst_boot_cg.cp_boot_addr.zero gen_rst_boot_cg.cp_first_event.first_instr_retire gen_rvfi_record_cg.cp_mode.m gen_rvfi_record_cg.cp_mode.u gen_sec_ctrl_inputs_cg.cp_bit8_readback.one gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0
+  7750.01ns INFO     cocotb.regression                  gen_test_rst_boot failed
                                                         Traceback (most recent call last):
-                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_rst_boot.py", line 169, in gen_test_rst_boot
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_rst_boot.py", line 198, in gen_test_rst_boot
                                                             await RstBoot(dut).run()
-                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 339, in run
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 402, in run
                                                             await self.finish()
-                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 318, in finish
-                                                            raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))
-                                                        AssertionError: GEN_TEST_FAIL gen_test_rst_boot: 1 fire-check failure(s): fire_tp_rst_006: 6/7 report words match: mstatus=0x00000000 (expected 0x00000080) [reports 1..37: mstatus=0x00000000 (expected 0x00000080) mie=0x00000000 trap_mcause=0x00000002 trap_mstatus=0x00000080 trap_mepc=0x80000294 pad_result=0xe2e0b258 unexpected_traps=0x00000000]
-  4530.01ns INFO     cocotb.regression                  **************************************************************************************************************
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_test_template.py", line 356, in finish
+                                                            raise AssertionError(lib.fire_fail_line(self.name, self.failures, self.xfail_bug))
+                                                        AssertionError: GEN_TEST_FAIL gen_test_rst_boot: 1 fire-check failure(s): fire_tp_rst_006: 6/7 report words of TP-RST-006 match (reports 1..37): mstatus=0x00000000 (expected 0x00000080)
+  7750.01ns INFO     cocotb.regression                  **************************************************************************************************************
                                                         ** TEST                                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         **************************************************************************************************************
-                                                        ** dv.auto_dv.tests.gen_test_rst_boot.gen_test_rst_boot   FAIL        4530.01           0.08      55009.54  **
+                                                        ** dv.auto_dv.tests.gen_test_rst_boot.gen_test_rst_boot   FAIL        7750.01           0.18      43951.30  **
                                                         **************************************************************************************************************
-                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                       4530.01           0.11      42936.94  **
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                       7750.01           0.21      36774.12  **
                                                         **************************************************************************************************************
                                                         
-$finish at simulation time               453001
-"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 453 attempts, 38 match
-"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 453 attempts, 132 match
+$finish at simulation time               775001
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 775 attempts, 38 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 775 attempts, 148 match
            V C S   S i m u l a t i o n   R e p o r t 
-Time: 4530010 ps
+Time: 7750010 ps
 CPU Time:      0.410 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 06:26:11 2026
+Thu Sep  3 11:13:35 2026

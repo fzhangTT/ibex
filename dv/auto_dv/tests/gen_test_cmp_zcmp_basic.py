@@ -58,7 +58,7 @@ TP-043 F-CMP-043 FOLDED into it; TP-066 F-CMP-065 FOLDED into it), F-CMP-040, F-
 F-CMP-053 FOLDED into it), F-CMP-055, F-CMP-068 (TP-069), F-CMP-070 (TP-073); F-CMP-067 (TP-068) not
 covered. Odd return addresses are left out: rvfi_pc_wdata bit 0 is bug candidate B13 (its _xfail group).
 Knobs: knob_dmem_rvalid_delay, knob_dmem_gnt_delay, knob_imem_rvalid_delay, knob_imem_gnt_delay (the
-items' Knobs lines; all timing-only, no program handler needed). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false).
+items' Knobs lines; all timing-only, no program handler needed).
 Checkers relied on (always on): the ISA comparator with Zcmp micro-op folding (gen_isa_compare rows),
 gen_chk_rvfi_proto, the bus protocol checkers; the fire-checks here are the test-level compare that
 gen_test_plan.md Section 0a assigns to gen_chk_zcmp_seq. declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked against the
@@ -99,8 +99,6 @@ class CmpZcmpBasic(GenTest):
     name = "gen_test_cmp_zcmp_basic"
     # The items' Knobs lines (dmem/imem rvalid and gnt delay regimes), all timing-only.
     schedulable = ("knob_dmem_rvalid_delay", "knob_dmem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_gnt_delay")
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {
         "TP-CMP-068": "needs writable low addresses and the bus records of the event export",

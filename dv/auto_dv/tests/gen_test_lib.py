@@ -17,6 +17,7 @@ from pathlib import Path
 
 from dv.auto_dv.gen_tb import gen_knobs as _gk
 from dv.auto_dv.gen_tb.gen_knobs import CMD, CONSTANTS, KNOB_IDS, PLUSARGS, plusarg
+from dv.auto_dv.flow.gen_flow_const import JOB_ENV_SET as _JOB_ENV_SET
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RISCV_DV_TESTLIST = REPO_ROOT / "dv/auto_dv/stim/gen_riscv_dv_target/gen_testlist.yaml"
@@ -57,8 +58,33 @@ TOHOST_PASS = 1
 TOHOST_FAIL = 3
 
 # CG-REG-007 duration classes (gen_fcov_plan.md Section 3.8): TB-side phase length in cycles.
+# "long" ends at the schedule runner's per-trigger wait budget (GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT): a longer phase would time the wait out.
 DURATION_CLASSES = {"short": (500, 2000), "medium": (2001, 20000), "long": (20001, 100000)}
 DEFAULT_DURATION_WEIGHTS = {"short": 6, "medium": 3, "long": 1}
+
+# Statement shapes check_test_source refuses. The API doc lists exactly these (gen_test_template_api.md) and the self-test proves
+# at least one refused red source per entry; anything not listed passes the lint (LOG-024c: the list does not grow).
+F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, or a class-body assignment of the method name)"
+F_LITERAL = "check() with a literal outcome"
+F_NOCHECK = "fire_check() that records no check"
+F_ITEMS = ("fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that does not start with "
+           "its item's id, not_built missing or not a literal dict, an item both built and declared not built, an item neither built nor declared")
+F_PATCH = "module-level assignment or setattr() over the test class, the library or the template"
+F_NESTED = "the test class defined inside a function"
+F_WITNESS = "the COV_WITNESS command issued from test code"
+F_CYCLE = "cycle_clause_true outside a fire_tp_* method"
+F_LAYERS = "layers_required = False without a measured: false testlist entry, or a non-literal value"
+F_BASE = "a base class that is not GenTest by name: an unresolvable expression or an imported name"
+F_RECORD = ("the verdict record (_results, results, failures, checks, witness_ids, applied, schedule, reports; reads of reports excepted) called into, "
+            "aliased, bound by a walrus or tuple target, passed to a callee, captured by a lambda, item-assigned or deleted")
+F_ASSIGN = "assignment through self to a template-assigned attribute"
+F_INTROSPECT = "getattr(), setattr(), vars(), __dict__ or type() on the test object"
+F_HELPER = "self passed to a module-level helper that touches a template-owned name, directly or through an alias inside the helper"
+F_ESCAPE = "self escaping as a bare name: an alias, a loop target or a keyword argument"
+REFUSED_FORMS = (F_OVERRIDE, F_LITERAL, F_NOCHECK, F_ITEMS, F_PATCH, F_NESTED, F_WITNESS, F_CYCLE, F_LAYERS, F_BASE, F_RECORD, F_ASSIGN,
+                 F_INTROSPECT, F_HELPER, F_ESCAPE)
+API_DOC = "gen_test_template_api.md"
+API_DOC_MARKER = "refuses exactly these statement shapes"
 
 
 def check_ascii(path):
@@ -244,7 +270,7 @@ def program_min_retired(image):
 
 FLOW_TESTLIST = REPO_ROOT / "dv/auto_dv/flow/gen_testlist.yaml"
 STAGED_ENTRIES_ENV = "GEN_TEST_STAGED_ENTRIES"   # developer runs only: path of a staged-entries file (the flow never sets it)
-FLOW_RUN_ENV = "GEN_DV_FLOW_RUN"                # the flow exports it in every job script; a run carrying it refuses the developer variable
+FLOW_RUN_ENV = next(iter(_JOB_ENV_SET))         # the flow's one job marker (gen_flow_const.JOB_ENV_SET); a run carrying it refuses the developer variable
 # COV_WITNESS codes per TP id, rendered by TB Infra with the SV table (plan v2f witness protocol); {} until then.
 WITNESS_IDS = dict(getattr(_gk, "WITNESS_IDS", None) or {})
 # class name -> reason: the only other way than a `measured: false` entry to set layers_required = False.
@@ -312,6 +338,33 @@ def _template_attrs():
             if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id == "self":
                 names.add(tg.attr)
     return frozenset(names | {"results", "witness_ids"})   # retired names stay refused so a stale test cannot revive them
+
+
+def fire_fail_line(name, failures, xfail_bug=None):
+    """The line a failed fire_check() raises; red_expect signatures match against it, so the self-test synthesizes it per check name."""
+    tag = f"GEN_TEST_XFAIL {xfail_bug} " if xfail_bug else "GEN_TEST_FAIL "
+    return tag + f"{name}: {len(failures)} fire-check failure(s): " + " | ".join(failures)
+
+
+def api_doc_forms(path=None):
+    """The refused-form bullets of the API doc: the lines after the marker sentence, a bullet per form, continuation lines indented."""
+    text = Path(path or (REPO_ROOT / "dv/auto_dv/docs" / API_DOC)).read_text()
+    lines = text.splitlines()
+    start = next((i for i, l in enumerate(lines) if API_DOC_MARKER in l), None)
+    assert start is not None, f"GEN_TEST_LIB: {API_DOC} lacks the marker sentence '{API_DOC_MARKER}'"
+    forms, i = [], start + 1
+    while i < len(lines) and i <= start + 6 and not lines[i].startswith("- "):   # the marker sentence may wrap before the list
+        i += 1
+    while i < len(lines):
+        l = lines[i]
+        if l.startswith("- "):
+            forms.append(l[2:].strip())
+        elif l.startswith("  ") and forms and l.strip():
+            forms[-1] += " " + l.strip()
+        else:
+            break
+        i += 1
+    return forms
 
 
 def _gm():
@@ -722,14 +775,16 @@ def _self_test():
         os.unlink(tfp)
     if hasattr(_gk, "REGIME_SET_CONSUMED"):
         assert set(CONSUMED_KNOBS) <= set(REGIME_KNOBS), "rendered REGIME_SET_CONSUMED names an unknown knob"
-    # test-module structure check: the committed tests pass, three red sources are refused
+    # test-module structure check: the committed tests pass; every red source below is refused, and the forms they cover are
+    # exactly REFUSED_FORMS, which the API doc must list verbatim
+    proved = set()
     tests = [f for f in sorted(here.glob("gen_test_*.py")) if f.name not in ("gen_test_lib.py", "gen_test_template.py")]
     for f in tests:
         assert check_test_module(f), f"{f}: no GenTest subclass found"
     base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
-    for red, why in ((base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
-                     (base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),
-                     (base + "    def fire_check(self):\n        pass\n", "never calls")):
+    for form, red, why in ((F_OVERRIDE, base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
+                           (F_LITERAL, base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),
+                           (F_NOCHECK, base + "    def fire_check(self):\n        pass\n", "never calls")):
         accepted = False
         try:
             check_test_source(red, "<red>")
@@ -737,6 +792,7 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
+        proved.add(form)
     assert check_test_source(base + "    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x')\n") == ["T"]
     # parser: the automatic form is read and a commented-out test names no knob
     with tempfile.NamedTemporaryFile("w", suffix=".sv", delete=False) as tf:
@@ -751,14 +807,14 @@ def _self_test():
     imp = "from dv.auto_dv.tests.gen_test_template import GenTest\n"
     entries = {"gen_test_x": {"name": "gen_test_x", "measured": False}, "gen_test_m": {"name": "gen_test_m", "measured": True}}
     look = entries.get
-    for red, why in ((imp + "Base = GenTest\nclass T(Base):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n" + good + "def _f(self):\n    pass\nT.finish = _f\n", "module-level assignment"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n" + good + "setattr(T, 'finish', None)\n", "setattr"),
-                     (imp + "def mk():\n    class T(GenTest):\n        name = 'gen_test_x'\n" + good.replace("\n    ", "\n        ").replace("    def", "        def", 1) + "    return T\n", "inside a function"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        await self.cmd('COV_WITNESS', (1, 0, 0, 0))\n" + good, "COV_WITNESS"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.check('b', self.retired() > 0, 'x', cycle_clause_true=True)\n" + good, "cycle_clause_true outside"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_m'\n    layers_required = False\n" + good, "measured: false"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_none'\n    layers_required = False\n" + good, "measured: false")):
+    for form, red, why in ((F_OVERRIDE, imp + "Base = GenTest\nclass T(Base):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
+                           (F_PATCH, imp + "class T(GenTest):\n    name = 'gen_test_x'\n" + good + "def _f(self):\n    pass\nT.finish = _f\n", "module-level assignment"),
+                           (F_PATCH, imp + "class T(GenTest):\n    name = 'gen_test_x'\n" + good + "setattr(T, 'finish', None)\n", "setattr"),
+                           (F_NESTED, imp + "def mk():\n    class T(GenTest):\n        name = 'gen_test_x'\n" + good.replace("\n    ", "\n        ").replace("    def", "        def", 1) + "    return T\n", "inside a function"),
+                           (F_WITNESS, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        await self.cmd('COV_WITNESS', (1, 0, 0, 0))\n" + good, "COV_WITNESS"),
+                           (F_CYCLE, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.check('b', self.retired() > 0, 'x', cycle_clause_true=True)\n" + good, "cycle_clause_true outside"),
+                           (F_LAYERS, imp + "class T(GenTest):\n    name = 'gen_test_m'\n    layers_required = False\n" + good, "measured: false"),
+                           (F_LAYERS, imp + "class T(GenTest):\n    name = 'gen_test_none'\n    layers_required = False\n" + good, "measured: false")):
         accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
@@ -766,22 +822,23 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
+        proved.add(form)
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required = False\n" + good, "<green>", entry_lookup=look) == ["T"]
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n"
                              "    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x', cycle_clause_true=self.retired() > 1)\n", "<green>") == ["T"]
     assert tp_id_of("fire_tp_csr_001") == "TP-CSR-001" and tp_id_of("fire_tp_bit_016_gorci") == "TP-BIT-016"
     # structure check, third set (retention review): import alias, base expression, imported base, mixin bypass,
     # writes to template-owned names, patching the library, non-literal layers_required
-    for red, why in ((f"from {TEMPLATE_MODULE} import GenTest as G\nclass T(G):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
-                     (imp + "def mk():\n    return GenTest\nclass T(mk()):\n    name = 'gen_test_x'\n" + good, "unresolvable base"),
-                     (imp + "from somewhere import Mixin\nclass T(Mixin, GenTest):\n    name = 'gen_test_x'\n" + good, "unknown or imported base"),
-                     (imp + "class M:\n    async def finish(self):\n        pass\nclass T(M, GenTest):\n    name = 'gen_test_x'\n" + good, "overrides"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.results.append(None)\n" + good, "calls into self.results"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self._results = []\n" + good, "assigns self._results"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.witness_ids = ('TP-X-001',)\n" + good, "assigns self.witness_ids"),
-                     (imp + "from dv.auto_dv.tests import gen_test_lib as lib\nlib.WITNESS_IDS = {}\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "module-level assignment to lib.WITNESS_IDS"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        setattr(self, 'checks', 9)\n" + good, "setattr"),
-                     (imp + "FLAG = False\nclass T(GenTest):\n    name = 'gen_test_x'\n    layers_required = FLAG\n" + good, "literal True or False")):
+    for form, red, why in ((F_OVERRIDE, f"from {TEMPLATE_MODULE} import GenTest as G\nclass T(G):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
+                           (F_BASE, imp + "def mk():\n    return GenTest\nclass T(mk()):\n    name = 'gen_test_x'\n" + good, "unresolvable base"),
+                           (F_BASE, imp + "from somewhere import Mixin\nclass T(Mixin, GenTest):\n    name = 'gen_test_x'\n" + good, "unknown or imported base"),
+                           (F_OVERRIDE, imp + "class M:\n    async def finish(self):\n        pass\nclass T(M, GenTest):\n    name = 'gen_test_x'\n" + good, "overrides"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.results.append(None)\n" + good, "calls into self.results"),
+                           (F_ASSIGN, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self._results = []\n" + good, "assigns self._results"),
+                           (F_ASSIGN, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.witness_ids = ('TP-X-001',)\n" + good, "assigns self.witness_ids"),
+                           (F_PATCH, imp + "from dv.auto_dv.tests import gen_test_lib as lib\nlib.WITNESS_IDS = {}\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "module-level assignment to lib.WITNESS_IDS"),
+                           (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        setattr(self, 'checks', 9)\n" + good, "setattr"),
+                           (F_LAYERS, imp + "FLAG = False\nclass T(GenTest):\n    name = 'gen_test_x'\n    layers_required = FLAG\n" + good, "literal True or False")):
         accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
@@ -789,13 +846,14 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
-    for red, why in ((imp + "def _ok(self):\n    pass\nclass T(GenTest):\n    name = 'gen_test_x'\n    finish = _ok\n" + good, "assigns method name finish"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs = self._results\n" + good, "aliases self._results"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.__dict__['failures'] = []\n" + good, "touches self.__dict__"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        type(self).finish = None\n" + good, "uses type(self"),
-                     (imp + "def _forge(t):\n    t._results.append(1)\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _forge(self)\n" + good, "helper _forge calls into t._results"),
-                     (imp + "def _forge(t):\n    t.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "helper _forge assigns t.failures")):
+        proved.add(form)
+    for form, red, why in ((F_OVERRIDE, imp + "def _ok(self):\n    pass\nclass T(GenTest):\n    name = 'gen_test_x'\n    finish = _ok\n" + good, "assigns method name finish"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs = self._results\n" + good, "aliases self._results"),
+                           (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
+                           (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.__dict__['failures'] = []\n" + good, "touches self.__dict__"),
+                           (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        type(self).finish = None\n" + good, "uses type(self"),
+                           (F_HELPER, imp + "def _forge(t):\n    t._results.append(1)\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _forge(self)\n" + good, "helper _forge calls into t._results"),
+                           (F_HELPER, imp + "def _forge(t):\n    t.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "helper _forge assigns t.failures")):
         accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
@@ -803,16 +861,17 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
-    for red, why in ((imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        s = self\n" + good, "escapes as a bare name"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        for s in (self,):\n            pass\n" + good, "escapes as a bare name"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        (rs := self._results).clear()\n" + good, "bound to a name"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs, = (self._results,)\n" + good, "bound to a name"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        list.append(self._results, 1)\n" + good, "passed to a callee"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        f = lambda: self._results\n" + good, "captured by a lambda"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.failures[:] = []\n" + good, "item assignment into self.failures"),
-                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        del self.failures[:]\n" + good, "del over self.failures"),
-                     (imp + "import x\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        x.forge(t=self)\n" + good, "escapes as a bare name"),
-                     (imp + "def _h(t):\n    u = t\n    u.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "escapes as a bare name")):
+        proved.add(form)
+    for form, red, why in ((F_ESCAPE, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        s = self\n" + good, "escapes as a bare name"),
+                           (F_ESCAPE, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        for s in (self,):\n            pass\n" + good, "escapes as a bare name"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        (rs := self._results).clear()\n" + good, "bound to a name"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs, = (self._results,)\n" + good, "bound to a name"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        list.append(self._results, 1)\n" + good, "passed to a callee"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        f = lambda: self._results\n" + good, "captured by a lambda"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.failures[:] = []\n" + good, "item assignment into self.failures"),
+                           (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        del self.failures[:]\n" + good, "del over self.failures"),
+                           (F_ESCAPE, imp + "import x\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        x.forge(t=self)\n" + good, "escapes as a bare name"),
+                           (F_HELPER, imp + "def _h(t):\n    u = t\n    u.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "escapes as a bare name")):
         accepted = False
         try:
             check_test_source(red, "<red>", entry_lookup=look)
@@ -820,6 +879,7 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
+        proved.add(form)
     assert check_test_source(imp + "def _cmp(t, k):\n    return len(t.reports) > k\nclass T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', _cmp(self, 0), 'x')\n", "<green>") == ["T"]
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required: bool = False\n" + good, "<green>", entry_lookup=look) == ["T"]
     assert check_test_source(imp + "class Mix:\n    def fire_tp_x_002(self):\n        self.check('fire_tp_x_002', self.retired() > 1, 'y')\nclass T(Mix, GenTest):\n    name = 'gen_test_x'\n" + good.replace("self.fire_tp_x_001()", "self.fire_tp_x_001(); self.fire_tp_x_002()"), "<green>") == ["T"]
@@ -840,26 +900,42 @@ def _self_test():
             r = subprocess.run([sys.executable, str(gen), "--seed", "1", "--out", f"{td}/{gen.stem}.S"], cwd=REPO_ROOT, env=env,
                                capture_output=True, text=True, timeout=120)
             assert r.returncode == 0, f"{gen.name} fails as a flow-style script: {(r.stderr.strip().splitlines() or ['?'])[-1][:160]}"
-    # every red entry's signature names a fire id that its test module really records (a check-name prefix or a fire_* method)
+    # every red entry of a test module here: red_expect must match the harness line synthesized (fire_fail_line) from a check name
+    # the module records, as the flow's regex meets it (a boundary after a suffixed id fails here too); and the retained pinned-red
+    # log must pass the flow's own rule (gen_flow_util.red_signature_check): present, harness line matched; stale evidence is
+    # reported until T-153 makes RED-OK mandatory
     import yaml as _yaml
+    sys.path.insert(0, str(REPO_ROOT / "dv/auto_dv/flow"))
+    import gen_flow_util as _fu
+    import gen_flow_const as _fc
+    assert len(_JOB_ENV_SET) == 1 and FLOW_RUN_ENV in _fc.JOB_ENV_SET
     entries = (_yaml.safe_load(FLOW_TESTLIST.read_text()) or {}).get("tests") or []
     staged = os.environ.get(STAGED_ENTRIES_ENV)
     if staged and Path(staged).is_file():
         entries += (_yaml.safe_load(Path(staged).read_text()) or {}).get("tests") or []
+    checked_reds = 0
     for e in entries:
+        modname = e.get("cocotb_module") or ""
+        if not e.get("red_fixture") or not modname.startswith("dv.auto_dv.tests."):
+            continue
         rx = e.get("red_expect") or ""
-        m = re.search(r"\\bfire_([a-z0-9_]+)", rx) or re.search(r"(fire_[a-z0-9_]+)", rx)
-        if not e.get("red_fixture") or not m:
-            continue
-        fid = m.group(0).lstrip("\\b") if m.group(0).startswith("\\b") else m.group(0)
-        fid = fid[2:] if fid.startswith("\\b") else fid
-        mod = here / (e["cocotb_module"].split(".")[-1] + ".py")
-        if not mod.exists():
-            continue
+        mod = here / (modname.split(".")[-1] + ".py")
+        assert rx and mod.exists(), f"red entry {e['name']}: red_expect {rx!r}, module {mod.name} {'present' if mod.exists() else 'missing'}"
         src = mod.read_text()
-        names = set(re.findall(r"self\.check\(\s*['\"](fire_[a-z0-9_]+)['\"]", src)) | set(re.findall(r"def (fire_[a-z0-9_]+)\(", src))
-        assert any(n == fid or n.startswith(fid + "_") for n in names), \
-            f"red entry {e['name']}: red_expect names {fid}, which no check name or fire_* method of {mod.name} carries"
+        tname = re.search(r"^\s+name = ['\"](gen_test_[a-z0-9_]+)['\"]", src, re.M).group(1)
+        r = _fu.red_signature_check(e)
+        assert r is not None, f"red entry {e['name']}: no retained pinned-red log under {'/'.join(_fc.RED_LOG_DIR_REL)}"
+        # recorded check names: the literal ones in the source plus every GEN_TEST_FIRE name the retained pinned-red run recorded
+        names = set(re.findall(r"self\.check\(\s*['\"](fire_[a-z0-9_]+)['\"]", src))
+        names |= set(re.findall(r"GEN_TEST_FIRE (fire_[a-z0-9_]+) ok=", Path(r["log"]).read_text(errors="replace")))
+        assert names, f"red entry {e['name']}: {mod.name} records no check name the self-test can see"
+        assert any(re.search(rx, fire_fail_line(tname, [f"{n}: detail"])) for n in sorted(names)), \
+            f"red entry {e['name']}: red_expect {rx!r} matches no harness line synthesized from the recorded check names {sorted(names)}"
+        assert r["refuse"] is None, f"red entry {e['name']}: {r['refuse']} ({r['log']})"
+        if r["stale_evidence"]:
+            print(f"GEN_TEST_LIB notice: {e['name']}: retained pinned-red log is stale evidence ({r['reason'][:120]})", file=sys.stderr)
+        checked_reds += 1
+    assert checked_reds, "no red entry of a test module here was checked"
     # the fixture header re-types the EOT address: it must equal the rendered map too
     assert check_mmio_map_header(here / "gen_fixtures" / "gen_report_fixture_map.h", {"GEN_EOT_ADDR": "eot_addr"})
     # manifest cross-check: declared == rendered for every committed manifest; stale and missing fail loud
@@ -878,11 +954,11 @@ def _self_test():
     good_items = ("class T(GenTest):\n    name = 'gen_test_cmp_zcb'\n    not_built = {}\n    def fire_check(self):\n        self.fire_tp_cmp_034(); self.fire_tp_cmp_036(); self.fire_tp_cmp_038()\n"
                   + "".join(f"    def fire_tp_cmp_{n}(self):\n        self.check('fire_tp_cmp_{n}', self.retired() > 0, 'x')\n" for n in ("034", "036", "038")))
     assert check_test_source(imp + good_items, "<green>") == ["T"]
-    for red, why in ((imp + good_items.replace("    not_built = {}\n", ""), "needs a literal"),
-                     (imp + good_items.replace("self.fire_tp_cmp_038()", "pass"), "never called from fire_check"),
-                     (imp + good_items.replace("def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038'", "def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_036'"), "does not name its item"),
-                     (imp + good_items.replace("    not_built = {}\n", "    not_built = {'TP-CMP-038': 'x'}\n"), "overlap"),
-                     (imp + good_items.replace("self.fire_tp_cmp_038()", "pass").replace("    def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038', self.retired() > 0, 'x')\n", ""), "unaccounted")):
+    for form, red, why in ((F_ITEMS, imp + good_items.replace("    not_built = {}\n", ""), "needs a literal"),
+                           (F_ITEMS, imp + good_items.replace("self.fire_tp_cmp_038()", "pass"), "never called from fire_check"),
+                           (F_ITEMS, imp + good_items.replace("def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038'", "def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_036'"), "does not name its item"),
+                           (F_ITEMS, imp + good_items.replace("    not_built = {}\n", "    not_built = {'TP-CMP-038': 'x'}\n"), "overlap"),
+                           (F_ITEMS, imp + good_items.replace("self.fire_tp_cmp_038()", "pass").replace("    def fire_tp_cmp_038(self):\n        self.check('fire_tp_cmp_038', self.retired() > 0, 'x')\n", ""), "unaccounted")):
         accepted = False
         try:
             check_test_source(red, "<red>")
@@ -890,6 +966,13 @@ def _self_test():
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
         assert not accepted, f"red source ({why}) accepted"
+        proved.add(form)
+    # the refused forms proven above are exactly REFUSED_FORMS, and the API doc lists them verbatim (bullets after the marker line,
+    # two-space continuation lines joined); the two cannot drift apart
+    assert proved == set(REFUSED_FORMS), f"refused forms without a red source or unlisted: {proved ^ set(REFUSED_FORMS)}"
+    assert api_doc_forms() == list(REFUSED_FORMS), f"API doc list differs from REFUSED_FORMS: {api_doc_forms()}"
+    # the longest CG-REG-007 phase fits the schedule runner's per-trigger wait budget (equal today, named here)
+    assert DURATION_CLASSES["long"][1] <= CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"], "a long phase can outlast the runner's wait budget"
     for declared, why in ((["x.y.z"], "no manifest"),):
         try:
             check_manifest_matches("gen_test_boot_retire", declared); raise AssertionError("missing-manifest case accepted")

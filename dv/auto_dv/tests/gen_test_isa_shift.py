@@ -35,8 +35,7 @@ through the report channel and the record itself rests on the always-on ISA comp
 isa_trap rows) and rvfi_proto, whose uvm_error the flow collects. The U-mode iterations of TP-ISA-010/013 ("U per C-2")
 are not taken: batch-2 programs stay in M-mode by design (M-mode group rule of the batch-2 brief).
 Knobs (the items' Knobs lines): knob:imem_rvalid_delay (all four items), knob:imem_gnt_delay (TP-ISA-011/014);
-schedulable = lib.TIMING_ONLY_KNOBS (the program needs no handler); nothing is pinned. layers_required = False
-(bring-up opt-out, API doc Section 3: the TB has no REGIME_SET consumer at HEAD; the staged entry is measured: false).
+schedulable = lib.TIMING_ONLY_KNOBS (the program needs no handler); nothing is pinned.
 declare_bins() is not overridden: the template declares the plan bins of the four items the fire_tp_isa_* methods name
 (the manifest dv/auto_dv/fcov_expectations/gen_test_isa_shift.fcov.yaml is rendered from this module).
 MODULE=dv.auto_dv.tests.gen_test_isa_shift.
@@ -91,8 +90,6 @@ def _missing(good, ops, key, want, sensitive_only):
 class IsaShift(GenTest):
     name = "gen_test_isa_shift"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
 

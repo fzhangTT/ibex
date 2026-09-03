@@ -467,3 +467,84 @@ retiring (12272 instruction fetches in the 300k cycles of the failing run). Dete
 source hash, plusargs, seed-derived schedule and testbench revision reach the same first-store cycles. Landing 3c makes the wait
 progress-based (template transcript Section 9.2): the failing seed then PASSes at 968492 cycles and the red FAILs on its designed
 item. Recorded by the Orchestrator as LOG-030 (a template defect found by acceptance under live layers). Wave 5 re-files against 3c.
+
+## 10. Landing 3e: pinned reds re-run on the HEAD-equal build, csr_trap_setup at plan v2k, the fixed self-test from a clean archive
+
+Why: Runtime's loader applies every red entry's red_expect to its retained pinned-red log with gen_verdict.decide_lines (the
+reviewer's method, CM11). The retained reds of rst_boot, csr_reset, csr_trap_setup and pmp_csr_warl predated the T-102 comparator
+fixes and carried isa_rd / isa_pc_next UVM_ERROR rows ahead of the harness line, so they decided FAIL on the log itself although the
+same fixtures were RED-OK live in waves 3 and 4; gen_test_boot_retire_red had no retained log. Plan v2k (5f530a8) moved TP-CSR-026,
+TP-CSR-029 and TP-CSR-031 into the new group gen_csr_trap_setup_irq, which left the committed library self-test red (built + not_built
+outside the group). The ruling (LOG-036) keeps TP-CSR-029 built here and moves only 026 and 031 (plan v2l, landed jointly with this
+module): fire_tp_csr_029 stays as at HEAD, not_built is empty, and the manifest is re-rendered against the nine-item group (168 bins;
+the only delta to HEAD is the two removed not_built header lines; the four TP-CSR-035 interrupt bins stay excluded). The two-sided
+guard was checked with that group list (against the committed v2k plan it fails on 029, as LOG-036 records). A 144-bin intermediate
+state (029 removed against v2k) existed in this tree for half an hour and was undone; its runs were not retained.
+
+Build: out_head5 (export of a8dfec4; `git diff --stat a8dfec4 HEAD -- dv/auto_dv/gen_tb dv/auto_dv/tb dv/auto_dv/env dv/auto_dv/isa`
+is empty, so its TB sources equal HEAD), Python root head_export4 (export of HEAD b95d6d2 without dv/auto_dv/tests, so the test modules
+come from this tree). A first attempt with the older Python root head_export3 (a8dfec4) failed to import: the library now reads the flow
+marker from gen_flow_const.JOB_ENV_SET, which that export lacks; those runs were discarded before retention. Programs: the committed
+generators at seed 1 with `--red --red-item <pinned item>` (gen_boot_retire_red.S directed), built by gen_program.py; the csr_trap_setup
+green reuses the seed-1 image of Section 8 (generator unchanged).
+
+| Run (out_head5) | Retained as | Result | GEN_TEST_BINS | UVM_ERROR lines | Verdict (gen_verdict.py --red-fixture, entry red_expect) | md5 (stdout copy) |
+|---|---|---|---|---|---|---|
+| l8_boot_retire_red1 | gen_boot_retire_red1_stdout.log | FAIL: fire_eot_pass_code (and fire_retired_floor) | 0 | 0 | RED-OK | b9efa679b50aa87e37da7ea4fdd547d7 |
+| l8_rst_boot_red1 | gen_rst_boot_red1_stdout.log | FAIL: fire_tp_rst_006 | 8 | 0 | RED-OK | 1ada13feaa1308c7c9346a24701f58e4 |
+| l8_csr_reset_red1 | gen_csr_reset_red1_stdout.log | FAIL: fire_tp_csr_106 | 81 | 0 | RED-OK | ea60016680541abf17557122aaf47125 |
+| l8_csr_trap_setup_red1 | gen_csr_trap_setup_red1_stdout.log | FAIL: fire_tp_csr_036 | 168 | 0 | RED-OK | 6888ee6bb14b4e416fc66433b1ad6f45 |
+| l8_pmp_csr_warl_red1 | gen_pmp_csr_warl_red1_stdout.log | FAIL: fire_tp_pmp_001 | 266 | 0 | RED-OK | 218bd8002efc393f88cdb3dce0034abf |
+| l8_csr_trap_setup_s1 | gen_l8_csr_trap_setup_s1_stdout.log, _sim.log | PASS | 168 | 0 | PASS | 5ad7d0d6de50cda9393627b90f481b68 |
+
+Each run's verdict.txt is retained beside its log (gen_<name>_verdict.txt). `python3 dv/auto_dv/flow/gen_flow_util.py
+--check-red-signatures dv/auto_dv/work/test-writer/gen_testlist_entries.yaml` reads PASS with two STALE rows left (cmp_zca, isa_cti:
+their first collected line is the comparator's uvm_error until TB Infra's rows land; T-153 then enforces RED-OK). The T-102-era copies
+were removed under the retention rule (LOG-024; the manifest header names them); the per-item red excerpts now start with the run
+header line (LOG-034), and the md5 cells of gen_tdd_batch2.md follow the excerpt copies.
+
+Library self-test from a clean archive: `git archive 7f78c41` extracted to a scratch directory (gen_test_lib.py, gen_test_template.py,
+gen_test_bit_draft.py, gen_fcov_manifest.py and gen_testlist.yaml byte-equal to that commit's blobs), `PYTHONPATH=<archive> python3
+dv/auto_dv/tests/gen_test_lib.py --self-test` without the developer variable: PASS (Critic v4 Section 6's closure condition for H-1: the
+working loops refuse every listed red source, the aliased-parameter helper included). On this tree after the 3e edits: PASS in both
+forms (committed entries only; staged entries), with two stale-evidence notices (cmp_zca, isa_cti). Negative check of the new
+red_expect rule: a staged copy of the bit_ratified and bit_draft red entries with the boundary form (`\bfire_tp_bit_014\b`,
+`\bfire_tp_bit_016\b`) fails the self-test on the synthesized harness line (the recorded names are fire_tp_bit_014_ops /
+_pattern and fire_tp_bit_016_gorci).
+
+## 11. Landing 3e: promotion and the layers_required opt-out dropped
+
+The DV Lead's per-entry tier table (dv/auto_dv/work/dv-lead/gen_round0_promotion_table.md) promotes 15 entries (14 smoke, gen_test_bit_draft
+targeted; gen_test_boot_retire stays check) with measured: true, seeds 3 and fcov_expectation_file wired to each class's per-item
+manifest; the red entries stay check / measured: false. The bring-up opt-out `layers_required = False` (class attribute, its comment and the
+docstring sentence) is removed from all 16 built tests, so a declared knob without a REGIME_SET consumer now fails setup as the template
+default demands. Proof that no test trips it: every test at seed 1 on out_head6 (export of ce33b4f) with the modules of this tree and the
+layers applied (GEN_TEST_LAYERS applied, schedule phases logged):
+
+| Run (out_head6) | Result | GEN_TEST_BINS | UVM_ERROR | EOT cycle | phases applied / fire_schedule_applied | SLOW rounds | md5 (gen_<run>_stdout.log) | Note |
+|---|---|---|---|---|---|---|---|---|
+| l9g_boot_retire | PASS | 0 | 0 | 4263 | 6 / yes | 0 | 4a04c574d6191f922cb7d89b4ce4582a |  |
+| l9g_rst_boot | PASS | 8 | 0 | 778 | 4 / yes | 0 | 00eb7e460622ed85482b656a9580e12b |  |
+| l9g_csr_reset | PASS | 81 | 0 | 1438 | 5 / yes | 0 | 8edfec244253785e1a50ba3bb4e82b37 |  |
+| l9g_csr_access | PASS | 80 | 0 | 21090 | 2 / yes | 0 | 102aa761219b7aa74d59c77ae23e14f5 | knob_instr_mix removed from schedulable (program-side knob, no TB consumer) |
+| l9g_csr_trap_setup | PASS | 168 | 0 | 28926 | 2 / yes | 0 | f0031b04ada78331e4152680f5902e28 |  |
+| l9g_cmp_zcb | PASS | 110 | 0 | 6424 | 3 / yes | 0 | 428cf64a931b948f3bae1e894d70ae40 | image rebuilt (the 07:5x image ran away after store 122 under the current image loader; fresh image identical run to l4) |
+| l9g_cmp_zcmp_basic | PASS | 473 | 0 | 755229 | 4 / yes | 3 | afba20a866b9e4e2560bd5f8c7d859fc |  |
+| l9g_bit_draft | PASS | 15 | 0 | 4573 | 1 / yes | 0 | 8f58452679d1cd1d566eb2ad5545d585 | image rebuilt (same stale-image runaway at store 42) |
+| l9g_pmp_csr_warl | PASS | 266 | 0 | 63243 | 6 / yes | 0 | 0bc43991656a2b1de295343c2519fc6d | image rebuilt (the 07:5x image predates the link layout change: no gen_probe_pool symbol) |
+| l9g_cmp_zca | PASS | 337 | 0 | 29797 | 6 / yes | 0 | bec9704b05a3157737f621d394a69d58 |  |
+| l9g_bit_ratified | PASS | 830 | 0 | 23163 | 6 / yes | 0 | 8b95c174d030fc6d960de7c925da3d5a |  |
+| l9g_isa_alu | PASS | 602 | 0 | 212028 | 6 / yes | 0 | 700711cc0d34d9781c21ec2d09824dcc |  |
+| l9g_isa_shift | PASS | 120 | 0 | 9361 | 6 / yes | 0 | abc45fce9977597e3d29f32f6b723054 |  |
+| l9g_isa_cti | PASS | 200 | 0 | 379708 | 6 / yes | 0 | c5d0628495001a10e0ce615ab99db650 |  |
+| l9g_mul_mul | PASS | 338 | 0 | 11191 | 6 / yes | 0 | 58d44699bf138d61b6f866df722d34f0 |  |
+| l9g_mul_div | PASS | 224 | 0 | 11076 | 6 / yes | 0 | 9d5f7807b837a09bd2c0c7db44562b20 | v3 image (filler fix) |
+
+All 16 PASS with every declared knob consumed (phase 0 applies each drawn knob; fire_schedule_applied ok). Two findings from the sweep,
+both fixed in this landing: gen_test_csr_access declared knob_instr_mix, a program-side knob (gen_tb_knobs.yaml: regime_set_consumer
+program) the TB cannot schedule, so the template's consumer check failed it once the opt-out was gone; the knob is no longer declared
+(the docstring says why). Three seed-1 images built at 07:5x UTC (pmp_csr_warl, cmp_zcb, bit_draft) predate the image layout change of
+the program builder and ran away or lacked symbols under the current image loader; rebuilt from the committed generators they pass
+(cmp_zcb: the same 132 stores / 862 retired / cycle 6424 as the l4 run). The flow builds every image fresh per run, so this is a
+local-harness artefact: the older images under batch1/<group>/s1 are not evidence any more. Logs retained as gen_l9g_<group>_stdout.log
+and _sim.log (LOG-034: greens in full).

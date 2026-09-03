@@ -23,6 +23,7 @@ CLI: python3 gen_mul_div_prog.py --seed N --out <file.S> [--red [--red-item TP-M
 """
 import argparse
 import random
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -73,8 +74,10 @@ W7_DIVIDEND = {**{c: 1 for c in DIVIDEND_NAMED}, "pos_rand": 4, "neg_rand": 4}
 W7_DIVISOR = {**{c: 1 for c in DIVISOR_NAMED}, "eq_dividend": 1, "abs_gt_dividend": 1, "pos_rand": 4, "neg_rand": 4}
 W4_REL = {"rd_x0": 1, "all_same": 1, "rs1_eq_rs2": 1, "rs_eq_rd": 2, "distinct": 11}
 X0_SOURCE_ONE_IN = 2
-FILLER_TEMPLATES = ("addi x5, x5, {imm12}", "xori x6, x6, {imm12}", "slli x7, x7, {sh}", "add x5, x6, x7",
-                    "sub x7, x5, x6", "lui x6, {imm20}", "andi x5, x5, {imm12}", "or x6, x6, x7", "nop")
+_FA, _FB, _FC = (f"x{r}" for r in FILLER_REGS)
+FILLER_TEMPLATES = (f"addi {_FA}, {_FA}, {{imm12}}", f"xori {_FB}, {_FB}, {{imm12}}", f"slli {_FC}, {_FC}, {{sh}}", f"add {_FA}, {_FB}, {_FC}",
+                    f"sub {_FC}, {_FA}, {_FB}", f"lui {_FB}, {{imm20}}", f"andi {_FA}, {_FA}, {{imm12}}", f"or {_FB}, {_FB}, {_FC}", "nop")
+assert {int(m) for t in FILLER_TEMPLATES for m in re.findall(r"\bx(\d+)\b", t)} <= set(FILLER_REGS), "a filler template names a non-filler register"
 
 
 def weighted(rng, table):

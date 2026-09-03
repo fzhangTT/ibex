@@ -353,8 +353,7 @@ class GenTest:
         if bins or lib.load_manifest_bins(self.name) is not None:
             lib.check_manifest_matches(self.name, bins)
         if self.failures:
-            tag = f"GEN_TEST_XFAIL {self.xfail_bug} " if self.xfail_bug else "GEN_TEST_FAIL "
-            raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))
+            raise AssertionError(lib.fire_fail_line(self.name, self.failures, self.xfail_bug))
         await self.witness_epilogue()
         self.log.info("GEN_TEST_SLOW_TOTAL rounds=%d budget_cycles=%d", self._slow_rounds, self.program_budget_cycles)
         await self.bridge.finish(timeout_cycles=self.finish_timeout_cycles)

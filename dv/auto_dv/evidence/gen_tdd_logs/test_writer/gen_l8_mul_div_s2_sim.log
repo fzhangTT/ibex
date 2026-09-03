@@ -1,7 +1,7 @@
-Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export2/dv/auto_dv/work/test-writer/out_head4/vcs_simv +vcs+lic+wait +ntb_random_seed=2 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v2_s2/prog/prog.vmem +gen_mem_image_crc32=611cb9b6 +gen_mem_image_words=953 +gen_boot_addr=80000000 +gen_tohost_addr=80000f40 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export2/dv/auto_dv/work/test-writer/out_head4/l7_mul_div_s2/sim.log
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export3/dv/auto_dv/work/test-writer/out_head5/vcs_simv +vcs+lic+wait +ntb_random_seed=2 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v3/s2/prog/prog.vmem +gen_mem_image_crc32=7427b5a6 +gen_mem_image_words=953 +gen_boot_addr=80000000 +gen_tohost_addr=80000f40 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export3/dv/auto_dv/work/test-writer/out_head5/l8_mul_div_s2/sim.log
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 10:31 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 11:13 2026
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -19,10 +19,10 @@ UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
 GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=2 build_config=opentitan pinned_knobs=0 regime_sched=derived
 GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
 GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
-GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v2_s2/prog/prog.vmem tohost=0x80000f40
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v3/s2/prog/prog.vmem tohost=0x80000f40
 GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
 GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(177) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v2_s2/prog/prog.vmem: 953 words, crc32 0x611cb9b6 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(177) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch2/mul_div/v3/s2/prog/prog.vmem: 953 words, crc32 0x7427b5a6 verified
 UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(207) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
 UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(208) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(359) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
@@ -81,5 +81,5 @@ $finish at simulation time             11095001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 11095 attempts, 948 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 110950010 ps
-CPU Time:      0.680 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 10:31:56 2026
+CPU Time:      0.630 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 11:13:35 2026

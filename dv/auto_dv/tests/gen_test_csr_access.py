@@ -42,11 +42,10 @@ skipped store desynchronises the stream and fails the checks (TP-CSR-001: every 
 trap). Red fixtures: `--red --red-item TP-CSR-<nnn>` (or `--red` alone, the seed draws the item) makes
 the program deviate on one intent of that item so exactly its fire_tp method fails.
 
-Knobs: the built items name knob:instr_mix, knob:imem_gnt_delay and knob:imem_rvalid_delay; they
-are declared in `schedulable` (instr_mix is a program-side region marker this program does not
-consume). layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b parked), so
-the layers are logged not_applied; the flag returns to the default when step 2b lands and the entry
-takes its plan tier.
+Knobs: the built items name knob:instr_mix, knob:imem_gnt_delay and knob:imem_rvalid_delay; the two
+fetch-latency knobs are declared in `schedulable`; instr_mix is a program-side region marker
+(gen_tb_knobs.yaml: regime_set_consumer program) that the TB cannot schedule and this program does
+not implement, so it is not declared.
 
 Bins: declare_bins() is the template default, the plan bins of the five fire_tp items (manifest
 dv/auto_dv/fcov_expectations/gen_test_csr_access.fcov.yaml rendered from this module); no covergroup
@@ -78,9 +77,8 @@ def pending_detail(test, item):
 
 class CsrAccess(GenTest):
     name = "gen_test_csr_access"
-    schedulable = ("knob_instr_mix", "knob_imem_gnt_delay", "knob_imem_rvalid_delay")
-    # Bring-up flag (tier check, measured false): no REGIME_SET consumer at HEAD; back to the default with step 2b.
-    layers_required = False
+    # knob_instr_mix is a program-side region marker (regime_set_consumer: program), not a TB regime: not declared here
+    schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {
         "TP-CSR-005": "mret/ecall privilege sequence deferred to the trap batch (comparator convention fixed by T-102)",

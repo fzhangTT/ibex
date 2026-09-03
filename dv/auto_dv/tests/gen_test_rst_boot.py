@@ -41,7 +41,7 @@ one item's intent so exactly fire_tp_rst_003 / 006 / 007 fails (generator docstr
 
 Knobs (the built items' Knobs lines): knob_imem_gnt_delay, knob_imem_rvalid_delay (TP-RST-003),
 knob_irq_regime (TP-RST-006: lines may be driven, mie stays 0, nothing may be taken),
-knob_scr_key_delay (TP-RST-007). layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). declare_bins() is the template
+knob_scr_key_delay (TP-RST-007). declare_bins() is the template
 default (the plan's bins of the three fire_tp items, checked against the rendered manifest in finish()).
 Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
 gen_chk_csr_readback, gen_chk_ibus_proto / gen_chk_dbus_proto, gen_chk_irq (irq_pending_o = 0 with
@@ -144,8 +144,6 @@ def _compare(test, p, item):
 class RstBoot(GenTest):
     name = "gen_test_rst_boot"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_regime", KEY_KNOB)
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
     bins_not_hit = {

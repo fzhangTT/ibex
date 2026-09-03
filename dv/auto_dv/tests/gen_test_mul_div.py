@@ -37,8 +37,7 @@ funct3 with rd = x0 and rd != x0; x0 read back 0 after every rd = x0 form). An r
 fire_program_verdict (not a plan item, so it declares no bins) asserts the program's own verdict: tohost code ==
 lib.TOHOST_PASS, retirements at the end-of-test store >= the program's gen_min_retired floor, report count == the plan's k.
 Knobs (the items' Knobs lines): knob:imem_rvalid_delay, knob:imem_gnt_delay; schedulable = lib.TIMING_ONLY_KNOBS; nothing
-is pinned. layers_required = False (bring-up opt-out, API doc Section 3: the TB has no REGIME_SET consumer at HEAD; the staged
-entry is measured: false).
+is pinned.
 declare_bins() is not overridden: the template declares the plan bins of the ten items the fire_tp_mul_* methods name (the
 manifest is rendered from this module). MODULE=dv.auto_dv.tests.gen_test_mul_div.
 """
@@ -102,8 +101,6 @@ def _pairs(test, item):
 class MulDiv(GenTest):
     name = "gen_test_mul_div"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {"TP-MUL-012": "latency/cycle clause: RVFI cycle / bus records, event export",
                  "TP-MUL-022": "latency/cycle clause: RVFI cycle / bus records, event export"}

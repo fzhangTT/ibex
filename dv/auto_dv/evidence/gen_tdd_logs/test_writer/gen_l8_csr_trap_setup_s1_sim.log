@@ -1,7 +1,7 @@
-Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export2/dv/auto_dv/work/test-writer/out_head4/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_trap_setup/s1/prog/prog.vmem +gen_mem_image_crc32=0e62a96e +gen_mem_image_words=4562 +gen_boot_addr=80000000 +gen_tohost_addr=800045c0 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export2/dv/auto_dv/work/test-writer/out_head4/l7_csr_trap_setup_s1/sim.log
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export3/dv/auto_dv/work/test-writer/out_head5/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/csr_trap_setup/s1/prog/prog.vmem +gen_mem_image_crc32=0e62a96e +gen_mem_image_words=4562 +gen_boot_addr=80000000 +gen_tohost_addr=800045c0 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export3/dv/auto_dv/work/test-writer/out_head5/l8_csr_trap_setup_s1/sim.log
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 10:35 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 11:36 2026
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -75,5 +75,5 @@ $finish at simulation time             28931001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 28931 attempts, 6131 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 289310010 ps
-CPU Time:      1.230 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 10:35:55 2026
+CPU Time:      1.210 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 11:37:01 2026

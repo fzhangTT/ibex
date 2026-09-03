@@ -37,8 +37,7 @@ on one intent of that item (one multiply emitted as another RV32M form; for TP-M
 bit flipped) while the expectation keeps the true program, so exactly that item's fire-check fails; without --red-item
 the seed draws the item.
 Knobs (the items' Knobs lines: knob_imem_rvalid_delay, knob_imem_gnt_delay): schedulable = lib.TIMING_ONLY_KNOBS,
-nothing pinned. layers_required = False (bring-up opt-out, API doc Section 3: the TB has no REGIME_SET consumer at HEAD;
-the staged entry is measured: false). declare_bins() is not overridden: the template declares the plan bins of the eight
+nothing pinned. declare_bins() is not overridden: the template declares the plan bins of the eight
 items the fire_tp_mul_* methods name (the manifest is rendered from this module). MODULE=dv.auto_dv.tests.gen_test_mul_mul.
 """
 import cocotb
@@ -78,8 +77,6 @@ def _compare(test, item, detail):
 class MulMul(GenTest):
     name = "gen_test_mul_mul"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; entry measured: false).
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {"TP-MUL-003": "latency clause: RVFI cycle / bus records, event export"}
 

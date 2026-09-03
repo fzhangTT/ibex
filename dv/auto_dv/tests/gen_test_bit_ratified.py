@@ -36,8 +36,7 @@ op stores its report word(s) straight to the EOT register in plan order. Directe
 one non-vacuous op (rd != x0) per class, case, position or pair an item's fire-check names (prog.wanted()), plus weighted
 random extras with rd = x0 and x0 sources, whose compares are vacuous and counted apart. Knobs: imem gnt / rvalid
 delays (the items' Knobs lines) through lib.TIMING_ONLY_KNOBS, varied by the template's layers 2/3 when the build
-consumes them. layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b parked), so the layers are
-logged not_applied (staged entry measured: false); flips to the default when step 2b lands. Pinned knobs: none.
+consumes them. Pinned knobs: none.
 
 Fire-checks per seed: every non-vacuous op of an item reports its reference value (fire_tp_bit_<nnn>_ops); every
 exhaustive set the item names has a carrier whose report matched (fire_tp_bit_<nnn>_<set>); TP-BIT-021 adds the
@@ -63,9 +62,6 @@ MISA_BITS = {"x_set": (23, 1), "b_clear": (1, 0), "m_set": (12, 1), "c_set": (2,
 class BitRatified(GenTest):
     name = "gen_test_bit_ratified"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up state (tier check, measured false): the build has no REGIME_SET consumer, so the layers
-    # are logged not_applied; returns to the default (required) when TB Infra's step 2b lands.
-    layers_required = False
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {
         "TP-BIT-001": "per-retirement rvfi_trap = 0 over the ENC table is an RVFI record fact (record export, TB Infra) and the U-mode leg leaves M-mode",

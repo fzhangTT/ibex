@@ -357,6 +357,26 @@ counts in their failure lines.
 
 From the fix set of 98c2ade to landing 3c the loops that were meant to prove the structure check refuses forged test sources
 raised the "accepted" error inside the try block, where the following except clause caught it and matched it by the same
-`why` word; they could not fail. Landing 3d records acceptance outside the except clause and asserts it afterwards. Every
-red source listed in the response files is refused by the check as it stands now (self-test PASS with the working loops), so
-no rule was missing, but the claims made between those commits were not proven when they were made.
+`why` word; they could not fail. Landing 3d records acceptance outside the except clause and asserts it afterwards. With the
+loops working, one red source was accepted at the parent commit: a module-level helper that receives the test object and writes
+a template-owned name through a local alias (`def _h(t): u = t; u.failures = []`, called as `_h(self)`); the call-site fixpoint
+rule added in landing 3d refuses it (with that rule disabled the self-test is red), so one rule was missing and was added. Every
+other listed source was refused as claimed; the claims made between those commits were not proven when they were made.
+
+### 9.4 Landing 3e: the refused-form list is one table, proven and documented from it
+
+`lib.REFUSED_FORMS` names the fifteen statement shapes `check_test_source` refuses. Every red source of the self-test carries
+its form label; the self-test asserts that the labels proven refused equal the table and that the API doc's bullet list
+(gen_test_template_api.md, after the sentence "refuses exactly these statement shapes") equals the table verbatim, so the
+documentation and the proof cannot drift. Probed on this tree and listed in the API doc as passing: `for self.failures in
+([],)`, `with open(p) as self.failures`, `*self.failures, = []`, attribute-chain writes through template-owned objects, template
+patching through an import alias or the full dotted path. The list is frozen (LOG-024d): the `del` refusal that landed in 3d
+stays, nothing is added.
+
+Also in 3e: the harness failure line comes from `lib.fire_fail_line` (the template raises it), and the self-test synthesizes it
+per recorded check name (source literals plus the GEN_TEST_FIRE names of the retained pinned-red log) to check every red entry's
+red_expect the way the flow's regex meets it, then applies Runtime's `red_signature_check` to the retained log (present, harness
+line matched; stale evidence reported until T-153); `FLOW_RUN_ENV` reads the flow's `gen_flow_const.JOB_ENV_SET` (one home); the
+self-test names the relation between the longest CG-REG-007 duration class and the schedule runner's per-trigger wait budget
+(equal today, `lib.DURATION_CLASSES`). Self-test PASS on this tree in both forms and from a clean archive of 7f78c41 (batch-1
+transcript Section 10).

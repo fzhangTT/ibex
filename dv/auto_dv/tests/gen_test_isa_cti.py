@@ -24,7 +24,7 @@ default red of seed 1 pins TP-ISA-017 (random.Random("1:red")).
 Fire-checks: fire_tp_isa_015 (every 015 word matches; >= 500 jal, rd classes x0/x1/x5/other, both directions
 near and far, both target alignments read from the image), fire_tp_isa_017 (links equal site + 4 for jal/jalr and
 site + 2 for c.jal/c.jalr, every form at both site alignments), fire_tp_isa_018 (>= 500 jalr, imm classes zero/
-max_pos/min_neg/pos_rand/neg_rand, rs1 from lui/addi and from a load, rd classes), fire_tp_isa_019 (>= 50 odd sums
+max_pos/min_neg/pos_rand/neg_rand, rs1 from lui/addi and from a load, rd classes), fire_tp_isa_019 (at least prog.ODD_PLAN_MIN odd sums
 over jalr/c.jr/c.jalr with both odd constructions landed on the even target, plus even-sum controls; a misaligned
 trap would skip the landing block), fire_tp_isa_020 (jalr rd, rd, imm: old value selects the target, new value is
 the link; write-to-use distances 0..3), fire_tp_isa_023 (>= 2400 branches, every outcome bit as predicted, per op
@@ -42,7 +42,7 @@ out of scope (batch-2 programs stay in M-mode, C-2); TP-ISA-019's run-wide "no m
 Always-on checkers relied on (their uvm_error fails the flow): the ISA comparator rows isa_pc, isa_pc_next,
 isa_insn, isa_rd, isa_trap, isa_prv (mret and the returning handler allowed since T-102), rvfi_proto, and the bus
 protocol checkers. Knobs (items' lines: imem gnt/rvalid, dmem_rvalid): schedulable = lib.TIMING_ONLY_KNOBS, nothing
-pinned; layers_required = False (no REGIME_SET consumer at HEAD; staged entry measured: false). declare_bins() is
+pinned; declare_bins() is
 not overridden: the template declares the plan bins of the eight built items (manifest rendered from this module).
 MODULE=dv.auto_dv.tests.gen_test_isa_cti.
 
@@ -115,8 +115,6 @@ def _words(test, item, bad):
 class IsaCti(GenTest):
     name = "gen_test_isa_cti"
     schedulable = lib.TIMING_ONLY_KNOBS
-    # Bring-up opt-out while no REGIME_SET consumer exists (API doc Section 3; staged entry measured: false).
-    layers_required = False
     # Items of the plan group this test does not check, with the missing component (two-sided against the group).
     not_built = {
         "TP-ISA-016": "needs WP-9: executable code windows at address 0 and the top page for the jal wrap and extremes, and an irq-agent command to break the self-loop",
@@ -191,7 +189,7 @@ class IsaCti(GenTest):
         forms = {u.form for u in odd}
         cons = {prog.odd_construction(u) for u in odd if u.form == "jalr"}
         ok = not bad and len(odd) >= prog.ODD_PLAN_MIN and forms == {"jalr", "c_jr", "c_jalr"} and cons == {"odd_rs1", "odd_imm"} and len(U) > len(odd)
-        self.check("fire_tp_isa_019", ok, f"{len(odd)} odd sums (>= 50) over {sorted(forms)}, constructions {sorted(cons)}, "
+        self.check("fire_tp_isa_019", ok, f"{len(odd)} odd sums (>= {prog.ODD_PLAN_MIN}) over {sorted(forms)}, constructions {sorted(cons)}, "
                    f"{len(U) - len(odd)} even-sum controls, every landing on the even target; {_words(self, prog.I019, bad)}")
 
     def fire_tp_isa_020(self):
