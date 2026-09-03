@@ -84,3 +84,29 @@ file may be loaded on measured runs now; the regenerated file at F-1 comes back 
   measured regression.
 - L-4 The working tree already differs from 4125c36 in all five excl files (655 insertions); the next commit
   lands .el, report and README together, and I re-check on that commit only if the file changes.
+
+
+## 5. Addendum: pass 13 at commit 9ebf2d9 (annotation-only regeneration), judged 2026-09-03T10:03Z
+
+Artifact: dv/auto_dv/excl/gen_exclusions.el at 9ebf2d9, sha256 3a815ffc68358b5e, md5 9b642ef57393d8b3af8de9485a8f6f88
+(as claimed), 2534 lines, 1421 entry lines, 492 annotation groups (381 at 4125c36: the A.4 groups are now split per
+constant term), 41 scopes. Generator 4c546d09cf935663 (1114 lines), README 560ea61a42d47a57, report 4217f64a9d13c21c,
+response file 30095f5f62f3a9c4 (rows CM-8..CM-17 added).
+
+CRITIC VERDICT (9ebf2d9): APPROVE, same terms as section 3 above. This addendum makes the v3 verdict cover both commits.
+
+- Entry-set equality, verified by script: the sorted set of entry lines plus MODULE and CHECKSUM lines is identical
+  between 4125c36 and 9ebf2d9 (0 differing lines). Only ANNOTATION lines changed (626 lines) and the entry order
+  inside some scopes moved with the regrouping (47 sequence differences), which URG does not care about.
+- Rows checked: CM-8 every A.4 annotation names the constant operand, its value and the impossible vector bit (sampled
+  at rtl/ibex_cheriot_ex.sv:362); CM-9 0 citations of work/rtl-arch remain in the file; CM-10 / CM-12 split_neg()
+  binds a negation to one token or one balanced group, self_test() (gen_excl_select.py:481-513, 16 cases) runs at
+  every generation (:863) and stops the run on a failure; I imported the committed generator and ran self_test():
+  passes; CM-15 the explicit LSU range is (618, 623) and :616-617 is now a dead-arm selection (entry unchanged);
+  CM-14 the README COUNTS block (1421 entries, 41 / 492, 21 live in-range, 7 carve-backs, 0 refuted, 3 filter hits)
+  agrees with the report; CM-16 per-module scoping (EX_MOD, MODULE_PARAMS) present; CM-17 the EC-3 fill accepts only
+  dv/auto_dv/evidence/gen_round_<n>/asserts.txt with a measured merge recorded (:874-886) and records the relative path.
+- Strict load pass 13: gen_precheck_urg_pass13.log has 0 UCAPI / Warning / Error lines; the pass-13 dashboard's gated
+  LINE / COND / FSM / BRANCH ratios equal pass 12 (1694/4154, 2547/9319, 6/74, 798/2353), as an entry-identical file must.
+- Lows L-1..L-4 of section 4 stand; L-1 (the "never selected" row) is superseded by the generated COUNTS block, which
+  now states the carve-back and filter counts.
