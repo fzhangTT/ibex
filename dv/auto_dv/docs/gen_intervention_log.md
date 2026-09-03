@@ -1317,3 +1317,8 @@ covergroups_compiled from the compiled SV set, and gen_round refuses to dispatch
 covergroups_compiled is false, so the gap is caught before a 700-second pass rather than after. (B) accepted: relative
 elfiles resolve against the pinned source root and a missing elfile is refused before the first job. A' and B land as one
 reviewed flow touch (T-208) before round 0 is re-declared; the refused run is recorded as a probe (T-207), never as round 0.
+
+## LOG-042e-note - 2026-09-03 - where the T-181 lift landed
+
+LOG-042e says the DV Lead lands the lift in v2r part 1; part 1 (ce21d32) was committed from an earlier list before that
+ruling reached the DV Lead, and the lift landed in v2r part 2 (e93c880). No content consequence.
