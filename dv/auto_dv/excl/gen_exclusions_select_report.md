@@ -25,7 +25,7 @@ BLOCK ibex_decoder [(314, 323), (339, 352), (402, 407), (447, 453), (474, 482), 
     carve-back: :873 Block 169 "1515370181" "illegal_insn = 1'b1;"
 BLOCK ibex_compressed_decoder [(230, 233), (249, 252), (329, 332), (359, 363), (391, 394), (411, 414), (557, 560), (575, 579), (615, 620), (854, 857)]: 11 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_controller [(850, 858), (894, 897), (901, 908), (915, 922), (928, 948), (318, 319), (328, 331)]: 14 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
-BLOCK ibex_load_store_unit [(139, 140), (211, 219), (437, 467), (565, 603), (616, 623), (669, 678)]: 24 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_load_store_unit [(139, 140), (211, 219), (437, 467), (565, 603), (616, 617), (618, 623), (669, 678)]: 24 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_cs_registers [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 2056), (2063, 2067), (2108, 2209), (2218, 2224)]: 17 blocks selected (dead guard); 21 in-range blocks kept in coverage (no dead guard); 3 A.8 carve-backs kept in coverage
     live: :473 Block 22 "1392153817" "csr_rdata_int = mtvec_q;"
     live: :482 Block 25 "4057767857" "csr_rdata_int = mepc_q;"

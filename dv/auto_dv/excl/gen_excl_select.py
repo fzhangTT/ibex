@@ -93,7 +93,7 @@ def ann_T(where, evidence, extra=""):
 
 def ann_P(where, param, evidence):
     return (f"Class P (build-parameter constant, opentitan configuration, values verified against util/ibex_config.py at generation): {where}. {param} is an elaboration "
-            f"constant (dv/auto_dv/work/rtl-arch/gen_param_resolution.md; time-0 config banner). "
+            f"constant (dv/auto_dv/evidence/gen_param_resolution.md; time-0 config banner). "
             f"EC-1 {evidence}; EC-2 expected URG Unreachable; EC-5 strict load. gen_exclusions_draft.md Part C.")
 
 
@@ -149,7 +149,7 @@ EXPLICIT_BLOCK_RANGES = {("ibex_id_stage", (968, 970)), ("ibex_multdiv_fast", (2
                          ("ibex_controller", (990, 993)), ("ibex_load_store_unit", (605, 607)), ("ibex_multdiv_fast", (522, 524)),
                          # case items of states the k-induction proofs show are never held (T022_LSU_NO_CTX, T022_CRX_IDLE):
                          # the cone is the state register, not a guard term
-                         ("ibex_load_store_unit", (565, 603)), ("ibex_load_store_unit", (616, 623))}
+                         ("ibex_load_store_unit", (565, 603)), ("ibex_load_store_unit", (618, 623))}
 
 BLOCKS = [  # (module, [(lo,hi)...], annotation)
     ("ibex_core", [(2223, 2225)], ann_T("rtl/ibex_core.sv:2223-2225 RVFI cap-read arm (resp_is_cap_q)", "T022_LSU_CHERI0", "+define+RVFI builds only.")),
@@ -160,7 +160,7 @@ BLOCKS = [  # (module, [(lo,hi)...], annotation)
      ann_T("rtl/ibex_compressed_decoder.sv the ten (BaseIsa dual && cheriot_enable_i == On) arms (Part C row 36 for :615-620)", "wrapper tie (constant compare)")),
     ("ibex_controller", [(850, 858), (894, 897), (901, 908), (915, 922), (928, 948), (318, 319), (328, 331)],
      ann_T("rtl/ibex_controller.sv CHERIoT exception arms (Part C rows 2-3, 5-10)", "T022_CORE_CHERI0_B, T022_CTRL_CHERI0, T022_CTRL_PRIO0")),
-    ("ibex_load_store_unit", [(139, 140), (211, 219), (437, 467), (565, 603), (616, 623), (669, 678)],
+    ("ibex_load_store_unit", [(139, 140), (211, 219), (437, 467), (565, 603), (616, 617), (618, 623), (669, 678)],
      ann_T("rtl/ibex_load_store_unit.sv cap arms, CTX_* and cap_rx items (Part C rows 14-22, 24-28)", "T022_LSU_CHERI0, T022_LSU_NO_CTX, T022_CRX_IDLE")),
     ("ibex_cs_registers", [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 2056), (2063, 2067), (2108, 2209), (2218, 2224)],
      ann_T("rtl/ibex_cs_registers.sv CHERIoT CSR arms (mtvec/mepc illegal-under-On, MSHWM/MSHWMB/CDBG_CTRL reads, PMP-illegal block, SCR mux, pcc/cap updates, fatal_err set); the else/illegal arms stay live (A.8)", "T022_CSR_CHERI0, T022_CSR_MSHWM0")),
@@ -214,6 +214,27 @@ RE_OFF = re.compile(r'^\(?\s*cheriot_enable_i\s*!=\s*(ibex_pkg::)?IbexMuBiOn\s*\
 RE_NEG = re.compile(r'^\(?\s*[~!]\s*\(?\s*([A-Za-z_][\w.]*)\s*\)?\s*\)?$')
 RE_NAME = re.compile(r'^\(?\s*([A-Za-z_][\w.]*)\s*\)?$')
 RE_ONAND = re.compile(r'cheriot_enable_i\s*==\s*(ibex_pkg::)?IbexMuBiOn')
+
+
+def split_neg(o):
+    """If `o` is a unary negation of ONE operand (`~x`, `!x`, `~(...)` with the group covering the rest),
+    return that operand; `~a && b` is a binary expression and returns None."""
+    m = re.match(r"^[~!]\s*(.+)$", o.strip())
+    if not m:
+        return None
+    rest = m.group(1).strip()
+    if re.match(r"^[\w.\[\]':]+$", rest):
+        return rest
+    if rest.startswith("("):
+        depth = 0
+        for i, c in enumerate(rest):
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    return rest if i == len(rest) - 1 else None
+    return None
 
 
 def strip_outer(s):
@@ -286,7 +307,7 @@ def const_value(operand, _depth=0):
     if EX_MODE:
         # ternary condition / top-level negation keep URG's encoding rules below; plain terms use the
         # module constant table
-        if split_ternary(o) is None and not re.match(r'^[~!]', o):
+        if split_ternary(o) is None and split_neg(o) is None:
             cv = ex_const(o)
             if cv is not None:
                 return 1 - cv
@@ -295,9 +316,9 @@ def const_value(operand, _depth=0):
         # URG encodes a ternary CONDITION by its select; a ternary used as an operand has the value
         # of an arm, which is not the select: only classify at the top level.
         return const_value(sel, _depth + 1) if _depth == 0 else None
-    mneg = re.match(r'^[~!]\s*(.+)$', o)
-    if mneg:
-        inner = const_value(mneg.group(1), _depth + 1)
+    neg = split_neg(o)
+    if neg is not None:
+        inner = const_value(neg, _depth + 1)
         if inner is None:
             return None
         # top-level negation: URG's vector bit is the value of the negated sub-expression itself
@@ -337,7 +358,9 @@ def select_conditions(entries, live_lines_cheriot_ex, report):
         if e.mod == "ibex_cheriot_ex" and e.line in live_lines_cheriot_ex:   # here: the DEAD line map
             out.append((e, list(e.vectors), "A1"))
             continue
+        global EX_MOD
         EX_MODE = (e.mod == "ibex_cheriot_ex")
+        EX_MOD = e.mod
         ops = split_top(strip_outer(expr))
         vals = [const_value(expr, 0)] if len(ops) == 1 else [const_value(o, 1) for o in ops]
         EX_MODE = False
@@ -357,6 +380,9 @@ def select_conditions(entries, live_lines_cheriot_ex, report):
             if any(val is not None and bits[i] == str(val) for i, val in enumerate(vals)):
                 sel.append(v)
         if sel:
+            terms = "; ".join(f"`{strip_outer(o)[:60]}` constant {1 - val} (vector bit {val} impossible)"
+                              for o, val in zip(ops, vals) if val is not None)
+            e.terms = terms
             out.append((e, sel, "A4"))
     report.append(f"Conditions: {sum(1 for _ in out)} condition objects, {sum(len(s) for _, s, _ in out)} vectors selected ({sum(len(s) for _, s, t in out if t == 'A1')} A.1 all-vector, {sum(len(s) for _, s, t in out if t == 'A4')} A.4 impossible-value).")
     if unclassified:
@@ -420,9 +446,9 @@ def ann_ex(reason, line):
 
 
 # ---------------------------------------------------------------------------------------------
-# A.1 (revised after review 42e6f28d..dca91fd2, HIGH): ibex_cheriot_ex objects are excluded only
-# when an enclosing guard is provably dead under the cheriot_enable_i tie (a "dead arm"), never
-# because they are "not on a live list". The constants below are the machine-checked ones.
+# A.1: ibex_cheriot_ex objects are excluded only when an enclosing guard is provably dead under the
+# cheriot_enable_i tie (a "dead arm"); reachable-but-masked logic counts. The constants below are the
+# machine-checked ones.
 # ---------------------------------------------------------------------------------------------
 # 1-bit nets of u_ibex_cheriot_ex that yosys `opt -full` ties to 1'0 with the wrapper tie
 # (dv/auto_dv/work/rtl-arch/t022/model/t022_flat.il `connect` lines, regenerable by
@@ -435,6 +461,10 @@ CHERIOT_EX_CONST0_1BIT = {
     "csr_clr_mie_raw", "csr_op_en_o", "csr_op_en_raw", "csr_set_mie_o", "csr_set_mie_raw",
     "illegal_scr_addr", "instr_is_cheriot_i", "is_cap", "is_load_cap", "is_store_cap", "lsu_cheriot_err_o",
     "perm_vio_slc", "req_exact", "rv32_lsu_err", "scr_legalization"}
+# nets of OTHER modules that carry the same constants (cheriot_ex outputs seen at the consumer's ports)
+MODULE_CONST_ZERO_MULTI = {
+    "ibex_cs_registers": {"cheriot_csr_addr_i", "cheriot_csr_op_i", "cheriot_csr_wdata_i", "cheriot_csr_wcap_i", "cheriot_branch_target_i"},
+}
 # multi-bit inputs/nets of u_ibex_cheriot_ex that the same netlist ties to all-zero (value 0): the
 # decoder assigns them only inside (cheriot_enable_i == On) arms and defaults them to the zero
 # literal (rtl/ibex_decoder.sv:297-303), which the netlist confirms.
@@ -442,12 +472,45 @@ CHERIOT_EX_CONST_ZERO_MULTI = {
     "cheriot_adder_a_sel_i", "cheriot_adder_b_sel_i", "cheriot_cap_field_sel_i", "cheriot_cs2_dec_i",
     "cheriot_imm12_i", "cheriot_imm20_i", "cheriot_imm21_i", "cheriot_operator_i", "cheriot_setaddr_sel_i",
     "cheriot_setbounds_sel_i", "csr_addr_o", "csr_op_o", "cheriot_lsu_wcap", "csc_wcap", "csr_wcap_o",
-    "lsu_wcap_o", "result_cap_o", "rf_rcap_a_i", "rf_rcap_b_i", "ztop_rcap_i",
-    # the same constants seen from ibex_cs_registers (its cheriot_csr_* inputs are cheriot_ex's csr_*_o)
-    "cheriot_csr_addr_i", "cheriot_csr_op_i", "cheriot_csr_wdata_i", "cheriot_csr_wcap_i", "cheriot_branch_target_i"}
+    "lsu_wcap_o", "result_cap_o", "rf_rcap_a_i", "rf_rcap_b_i", "ztop_rcap_i"}
 CHERIOT_EX_EVIDENCE = ("constant under the cheriot_enable_i tie: yosys constant propagation, "
                        "t022_flat.il connect list (gen_t022_regen.sh step 3) and the decoder defaults "
                        "rtl/ibex_decoder.sv:297-303 with CHERIoT-only assignments; T022_DEC_CHERI0, T022_ID_CHERI0")
+
+
+def self_test():
+    """Classifier self-test: negation precedence, ternary and negation vector encodings, scoping."""
+    global EX_MOD
+    EX_MOD = "ibex_cheriot_ex"
+    cases = [
+        (ex_const("~is_cap && debug_mode_i"), None, "unary negation binds to is_cap only: ~0 && x is not constant"),
+        (ex_const("~(is_cap && debug_mode_i)"), 1, "negated group of a constant-0 AND is constant 1"),
+        (ex_const("~is_cap"), 1, "negated constant-0 term"),
+        (ex_const("is_cap | cheriot_operator_i.CJALR"), 0, "OR of constant-0 terms"),
+        (ex_const("(cheriot_enable_i != ibex_pkg::IbexMuBiOn) | instr_is_rv32lsu_i"), 1, "OR with the constant-1 tie compare"),
+        (ex_const("cheriot_setaddr_sel_i == SETADDR_PCC_PCNXT"), 0, "all-zero select compared with a non-zero literal"),
+        (ex_const("debug_mode_i"), None, "a driven pin is not constant"),
+        (const_value("~instr_is_cheriot_i | x", 1), 0, "operand-level: ~0 | x is constant 1, so bit 0 is impossible (the old regex read it as ~(0 | x) and found nothing)"),
+        (const_value("~instr_is_cheriot_i & x", 1), None, "operand-level: ~0 & x is x, not constant (the old regex read it as ~(0 & x) = constant 1 and could kill a live arm)"),
+        (const_value("~instr_is_cheriot_i", 1), 0, "nested negated constant-0 operand: value 0 impossible"),
+        (const_value("( ! ((cheriot_enable_i == ibex_pkg::IbexMuBiOn) || (cheriot_enable_i == ibex_pkg::IbexMuBiOff)) )", 0), 0,
+         "top-level negation is encoded by the inner value: inner constant 1, bit 0 impossible"),
+    ]
+    EX_MOD = "ibex_id_stage"
+    cases += [
+        (ex_const("csr_access_o"), None, "scoping: csr_access_o is constant only inside ibex_cheriot_ex, live in ibex_id_stage"),
+        (ex_const("PMPEnable"), None, "scoping: PMPEnable is not a parameter of ibex_id_stage"),
+    ]
+    EX_MOD = "ibex_cs_registers"
+    cases += [
+        (ex_const("!PMPEnable || ((BaseIsa == BaseIsaRV32IorCHERIoT) && (cheriot_enable_i == IbexMuBiOn))"), 0,
+         "rtl/ibex_cs_registers.sv:707: !1 || (1 && 0) = 0 with the unary negation bound to PMPEnable only"),
+        (ex_const("cheriot_csr_addr_i == CHERIOT_SCR_MTCC"), 0, "cs_registers input tied to cheriot_ex's constant csr_addr_o"),
+    ]
+    EX_MOD = None
+    bad = [f"{why}: got {got!r}, want {want!r}" for got, want, why in cases if got != want]
+    if bad:
+        sys.exit("gen_excl_select self-test FAILED:\n  " + "\n  ".join(bad))
 
 
 def load_enum_values(pkg_paths):
@@ -473,10 +536,30 @@ def load_enum_values(pkg_paths):
                     v = nxt
                 vals[mm.group(1)] = v
                 nxt = v + 1
+    # package parameters / localparams with a literal value (e.g. `parameter logic [4:0] CHERIOT_SCR_MTCC = 5'h1c;`)
+    for pth in pkg_paths:
+        txt = re.sub(r"//[^\n]*", "", Path(pth).read_text())
+        for m in re.finditer(r"^\s*(?:localparam|parameter)\b[^=;]*?\b(\w+)\s*=\s*([0-9]+'[bhd][0-9a-fA-F_]+|\d+)\s*;", txt, re.M):
+            lit = m.group(2)
+            ml = re.match(r"^(\d+)?'([bhd])([0-9a-fA-F_]+)$", lit)
+            vals.setdefault(m.group(1), int(ml.group(3).replace("_", ""), {"b": 2, "h": 16, "d": 10}[ml.group(2)]) if ml else int(lit))
     return vals
 
 
 ENUMS = load_enum_values(["rtl/ibex_cheriot_pkg.sv", "rtl/ibex_pkg.sv"])
+EX_MOD = None   # module whose expression is being classified (set by the callers); scopes the constant tables
+
+
+def load_module_params(rtl_paths):
+    """Module name -> set of its `parameter` names (a bare parameter name is a constant only in its module)."""
+    out = {}
+    for mod, pth in rtl_paths.items():
+        txt = Path(pth).read_text()
+        out[mod] = set(re.findall(r"^\s*parameter\s+[^=;\n]*?\b(\w+)\s*=", txt, re.M))
+    return out
+
+
+MODULE_PARAMS = load_module_params(MODULE_RTL)
 
 
 def load_config():
@@ -511,36 +594,38 @@ def ex_const(expr, _depth=0):
         return 1
     if o in ("1'b0", "0"):
         return 0
-    m = re.match(r"^[~!]\s*(.+)$", o)
-    if m:
-        v = ex_const(m.group(1), _depth + 1)
+    neg = split_neg(o)
+    if neg is not None:
+        v = ex_const(neg, _depth + 1)
         return None if v is None else 1 - v
-    if RE_ON.match(o) or RE_OFF.match(o) is not None and False:
+    if RE_ON.match(o):
         return 0
     if RE_OFF.match(o) or RE_ISOFF.match(o):
         return 1
+    in_ex = (EX_MOD == "ibex_cheriot_ex")
+    zero_multi = (CHERIOT_EX_CONST_ZERO_MULTI if in_ex else set()) | MODULE_CONST_ZERO_MULTI.get(EX_MOD, set())
     m = RE_NAME.match(o)
     if m:
         nm = m.group(1)
         base = nm.split(".")[-1]
-        if nm in CHERIOT_EX_CONST0_1BIT or base in CONST0 or nm.startswith(("cheriot_operator_i.", "cheriot_operator_o.")) \
+        if (in_ex and nm in CHERIOT_EX_CONST0_1BIT) or base in CONST0 or nm.startswith(("cheriot_operator_i.", "cheriot_operator_o.")) \
                 or re.search(r"_en_cheriot$|cheriot_asr_err", base):
             return 0
-        if nm.split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI and "." in nm:
+        if nm.split(".")[0] in zero_multi and "." in nm:
             return 0      # a field of an all-zero struct
-        if nm in PVALS and PVALS[nm] in (0, 1):
-            return PVALS[nm]          # elaboration parameter of the opentitan configuration
+        if nm in PVALS and PVALS[nm] in (0, 1) and nm in MODULE_PARAMS.get(EX_MOD, set()):
+            return PVALS[nm]          # elaboration parameter declared by THIS module
         return None
     m = RE_EQ.match(o)
     if m and m.group(1) in DEFS:      # e.g. RV32B == RV32BFull with RV32B = RV32BOTEarlGrey
         eq = 1 if DEFS[m.group(1)] == m.group(3).split("::")[-1] else 0
         return eq if m.group(2) == "==" else 1 - eq
-    if m and m.group(1) in PVALS:
+    if m and m.group(1) in PVALS and m.group(1) in MODULE_PARAMS.get(EX_MOD, set()):
         lv = lit_value(m.group(3))
         if lv is not None:
             eq = 1 if PVALS[m.group(1)] == lv else 0
             return eq if m.group(2) == "==" else 1 - eq
-    if m and m.group(1).split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI:
+    if m and m.group(1).split(".")[0] in zero_multi:
         lv = lit_value(m.group(3))
         if lv is None:
             return None
@@ -572,7 +657,9 @@ def strip_comment(l):
     return re.sub(r"//.*$", "", l).rstrip()
 
 
-def guard_analysis(rtl_path):
+def guard_analysis(rtl_path, mod=None):
+    global EX_MOD
+    EX_MOD = mod
     """Per RTL line: (dead, reason) from the enclosing if/else/case arms, using the file's indentation
     as the nesting (lowRISC style: bodies indented deeper than their header; chains at equal indent).
     Also returns per header line the ordered chain conditions and per case line the item labels."""
@@ -771,14 +858,33 @@ def main():
     ap.add_argument("--ec3-asserts", help="URG asserts.txt of a MEASURED regression (<outdir>/cov/report/asserts.txt): fills the "
                     "EC-3 fields of the class-D spare-encoding groups from its ATTEMPTS / FAILURES columns and emits them (F-3)")
     ap.add_argument("--ec3-round", default="<round>", help="round tag written into the filled EC-3 fields (e.g. round_1)")
+    ap.add_argument("--readme", help="README whose COUNTS block (between <!-- COUNTS-BEGIN --> and <!-- COUNTS-END -->) is rewritten from this run")
     a = ap.parse_args()
+    self_test()
     # EC-3 fill (F-3): the guarding assertion of each class-D spare-encoding arm must show attempts > 0 and
     # failures == 0 in the measured regression; read from URG's asserts.txt detail rows
     # (columns: ASSERTIONS CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE).
     EC3_GUARDS = ("IbexCtrlStateValid", "IbexLsuStateValid", "IbexMultDivStateValid")
     ec3 = {}
+    ec3_rel = None
     if a.ec3_asserts:
-        for raw in Path(a.ec3_asserts).read_text(errors="replace").splitlines():
+        ap_ = Path(a.ec3_asserts).resolve()
+        root = Path.cwd().resolve()
+        try:
+            ec3_rel = str(ap_.relative_to(root))
+        except ValueError:
+            sys.exit(f"gen_excl_select: EC-3 fill refused: {a.ec3_asserts} is outside the clone")
+        if not re.match(r"^dv/auto_dv/evidence/gen_round_[^/]+/asserts\.txt$", ec3_rel):
+            sys.exit(f"gen_excl_select: EC-3 fill refused: {ec3_rel} is not dv/auto_dv/evidence/gen_round_<n>/asserts.txt")
+        man = ap_.parent / "regress_manifest.yaml"
+        try:
+            import yaml
+            cov = (yaml.safe_load(man.read_text()) or {}).get("coverage") or {}
+        except Exception as exc:
+            sys.exit(f"gen_excl_select: EC-3 fill refused: cannot read {man}: {exc}")
+        if not cov.get("dashboard_txt"):
+            sys.exit(f"gen_excl_select: EC-3 fill refused: {man} has no measured merge (coverage.dashboard_txt empty)")
+        for raw in ap_.read_text(errors="replace").splitlines():
             m = re.match(r"^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$", raw)
             if m and m.group(1).split(".")[-1] in EC3_GUARDS:
                 ec3[m.group(1).split(".")[-1]] = {"attempts": int(m.group(4)), "successes": int(m.group(5)), "failures": int(m.group(6))}
@@ -811,7 +917,7 @@ def main():
         chks[key] = e.chk
         groups.setdefault(key, []).append((ann, lines))
 
-    # class P prose values are read from the configuration, never re-typed (review low 2)
+    # class P values come from the configuration, never re-typed
     pvals, defs = PVALS, DEFS
     cfg_ok = pvals.get("BranchPredictor") == 0 and pvals.get("BranchTargetALU") == 1 and defs.get("RV32B", "") == "RV32BOTEarlGrey"
     if not cfg_ok:
@@ -821,7 +927,7 @@ def main():
     # inside an approved range AND under a dead guard (or the range is an explicit enum-default entry).
     dead_by_mod = {}
     for mod, rtl in MODULE_RTL.items():
-        d, _c, _ci = guard_analysis(rtl)
+        d, _c, _ci = guard_analysis(rtl, mod)
         dead_by_mod[mod] = d
         report.append(f"guard analysis {mod}: {len(d)} dead RTL lines")
     # Blocks
@@ -847,7 +953,7 @@ def main():
         if "TO BE FILLED" in ann and ec3:
             g = next(g for g in ("IbexCtrlStateValid", "IbexLsuStateValid", "IbexMultDivStateValid") if g in ann)
             ann = ann.replace("attempts N, failures 0 in <first measured regression>, TO BE FILLED",
-                              f"attempts {ec3[g]['attempts']}, failures {ec3[g]['failures']} in {a.ec3_round} ({Path(a.ec3_asserts).name})")
+                              f"attempts {ec3[g]['attempts']}, failures {ec3[g]['failures']} in {a.ec3_round} ({ec3_rel})")
         for e in hits:
             add(e, ann, [e.header])
     # Branch vectors
@@ -859,6 +965,8 @@ def main():
         for e in entries:
             if e.metric == "branch" and e.mod == mod and in_ranges(e.line, ranges):
                 cond = e.header.split('"')[3] if e.header.count('"') >= 4 else ""
+                global EX_MOD
+                EX_MOD = mod
                 cv = ex_const(cond)
                 want = 0 if vec_re == TRUE_ARM else (1 if vec_re == FALSE_ARM else None)
                 if want is not None and cv != want:
@@ -872,9 +980,10 @@ def main():
     # guard; conditions: on dead lines every vector, elsewhere the impossible-value vectors (A.4 rule
     # with the module's constant table). Reachable-but-masked logic stays in coverage.
     global EX_MODE
-    dead, chains, case_items = guard_analysis("rtl/ibex_cheriot_ex.sv")
+    dead, chains, case_items = guard_analysis("rtl/ibex_cheriot_ex.sv", "ibex_cheriot_ex")
     report.append(f"CHERIOT_EX guard analysis: {len(dead)} dead RTL lines in rtl/ibex_cheriot_ex.sv (reasons in the per-group annotations)")
     n_b = n_v = 0
+    EX_MOD = "ibex_cheriot_ex"
     for e in entries:
         if e.mod != "ibex_cheriot_ex":
             continue
@@ -886,12 +995,13 @@ def main():
     report.append(f"CHERIOT_EX dead-arm blocks {n_b}, dead-arm branch vectors {n_v}")
     # Conditions (A.4 generic + A.1)
     for e, sel, tag in select_conditions(entries, dead, report):
+        terms = getattr(e, "terms", "")
         if tag == "A1":
             ann = ann_ex(dead[e.line], e.line)
         elif e.mod == "ibex_cheriot_ex":
-            ann = ann_ex("condition vector in which a constant term takes its impossible value", e.line)
+            ann = ann_ex(f"condition vector with a constant operand at its impossible value: {terms}", e.line)
         else:
-            ann = ann_T(f"A.4 condition vectors with a constant-tie operand at its impossible value ({Path(e.file).name if e.file else '?'}:{e.line})", "T022_* (gen_unreachability_evidence.md 4.1 table)")
+            ann = ann_T(f"A.4 condition vectors with a constant-tie operand at its impossible value ({Path(e.file).name if e.file else '?'}:{e.line}): {terms}", "T022_* (gen_unreachability_evidence.md 4.1 table)")
         add(e, ann, sel)
     # Toggles
     for mod, names in TOGGLES.items():
@@ -933,7 +1043,7 @@ def main():
              "// GENERATED by dv/auto_dv/excl/gen_excl_select.py from a `urg -dump full_exclusions` module dump; do not edit by hand.",
              "// Content = gen_exclusions_draft.md v2 (Parts A, C, C.2); README: dv/auto_dv/excl/gen_exclusions_README.md.",
              "// Load: urg ... -elfile gen_exclusions.el -excl_strict (a rejected entry is a finding, never a reason to drop the flag).",
-             (f"// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED, EC-3 fields filled from {a.ec3_asserts} ({a.ec3_round})."
+             (f"// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED, EC-3 fields filled from {ec3_rel} ({a.ec3_round})."
               if a.ec3_asserts else
               "// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED with unfilled EC-3 fields (--allow-unfilled-ec3)."
               if a.allow_unfilled_ec3 else
@@ -973,6 +1083,30 @@ def main():
     report.append(f"A.8 carve-back filter removed {len(carve_hits)} emitted lines" + (":" if carve_hits else " (none reached the emit stage)"))
     report.extend("  - " + d[:200] for d in carve_hits)
     Path(a.report).write_text("\n".join(report) + "\n")
+    if a.readme:
+        import hashlib
+        kinds = {}
+        for l in lines:
+            k = l.split(" ")[0]
+            if k in ("Block", "Branch", "Condition", "Toggle", "Fsm", "State", "Transition", "Assert"):
+                kinds[k] = kinds.get(k, 0) + 1
+        n_live = sum(r.count("\n    live:") for r in report)
+        n_carve = sum(r.count("\n    carve-back:") for r in report)
+        md5 = hashlib.md5(Path(a.out).read_bytes()).hexdigest()
+        block = ["<!-- COUNTS-BEGIN -->",
+                 f"Generated by gen_excl_select.py from the run that produced this file (md5 {md5}); do not edit by hand.",
+                 "", "| Quantity | Value |", "|---|---|",
+                 f"| entry lines | {total} ({', '.join(f'{v} {k}' for k, v in sorted(kinds.items()))}) |",
+                 f"| (module, metric) scopes / annotation groups | {len(groups)} / {sum(1 for l in lines if l.startswith('ANNOTATION_BEGIN'))} |",
+                 f"| in-range shared-module blocks kept in coverage (no dead guard) | {n_live} |",
+                 f"| in-range blocks kept in coverage by the A.8 carve-back table | {n_carve} |",
+                 f"| entries refuted by the strict-load attempts logs and dropped | {len(dropped)} |",
+                 f"| emitted lines removed by the carve-back filter | {len(carve_hits)} |",
+                 "<!-- COUNTS-END -->"]
+        rd = Path(a.readme).read_text()
+        rd = re.sub(r"<!-- COUNTS-BEGIN -->.*?<!-- COUNTS-END -->", "\n".join(block), rd, flags=re.S)
+        Path(a.readme).write_text(rd)
+        report.append(f"README counts block rewritten in {a.readme}")
     print("\n".join(report))
 
 
