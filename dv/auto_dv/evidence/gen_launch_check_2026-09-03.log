@@ -10,4 +10,4 @@ ITEM 9   PASS  fence-string scan clean; ci/reviews/ exactly six files; GUIDE.md 
 ITEM 10  PASS  .mcp.json and .codex/config.toml list exactly the three local MCP servers, no remote
 ITEM 11  PASS  positive-list checks (dv/, docs/, ci/, vendor/, formal/, six doc files)
 ---
-LAUNCH-CHECK: PASS (2026-09-03 1908ddd)
+LAUNCH-CHECK: PASS (2026-09-03 HEAD=de2db21 DV_prompt.txt sha256=94ca484f5e71dc32)

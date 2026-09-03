@@ -47,3 +47,12 @@ and the cross-review skill's fallback clause, reviews use a fresh Opus-class-or-
 session until codex is available again; every artifact header records the model used and the
 raw codex error. Owner action that would restore the preferred path: raise the codex spend cap.
 The Orchestrator re-probes codex before each review and switches back when it answers.
+
+## A-001 - 2026-09-03 - ANSWER (owner ruling on LOG-003, relayed verbatim)
+
+Owner (Forrest Zhang), in the Orchestrator session, 2026-09-03: "Note, if codex is still
+unavailable, use a fable reviewer". Applied: while codex reports the spend cap, cross-model
+reviews run in a fresh `claude -p --model fable` session (Claude Fable 5.1, the same model
+family as the executing session but a separate session with no shared context). Each artifact
+header records the CLI version, the model the run reports, and the codex error that triggered
+the fallback. The Orchestrator re-probes codex before every review.

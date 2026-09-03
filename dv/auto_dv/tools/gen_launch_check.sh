@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Launch-precondition check: DV_prompt.txt Section 12, items 1-11. Exit 0 only when every item passes.
-# Run from the clone root. Output is the evidence record; keep it terse and greppable (ITEM n: PASS|FAIL).
+# Run from the clone root. Output is the evidence record; keep it terse and greppable (`ITEM <n> PASS|FAIL <detail>`).
 set -u
 export LC_ALL=C  # byte-order sort: set comparisons below must not depend on locale collation
 cd "$(git rev-parse --show-toplevel)" || exit 3
@@ -20,8 +20,9 @@ scan_clean() { # scan_clean <path...> -> 0 if none of FENCE_STRINGS appear in an
 chk 1 "no '^- PROPOSED RULING' marker in DV_prompt.txt" test "$(grep -c '^- PROPOSED RULING' DV_prompt.txt)" -eq 0
 # 2
 ok=1; [ -f docs/dv/FENCE.md ] || ok=0
+allow=$(awk '/^## The `ci\/` allowlist/{s=1;next} s&&/^## /{exit} s' docs/dv/FENCE.md 2>/dev/null)
 for n in ci/env.sh ci/setup-venv.sh ci/get-toolchain.sh ci/check_fcov_expectations.py ci/mcp/ ci/reviews/; do
-  grep -Fq -- "$n" docs/dv/FENCE.md 2>/dev/null || { ok=0; echo "  FENCE.md allowlist missing $n" >&2; }; done
+  printf '%s' "$allow" | grep -Fq -- "$n" || { ok=0; echo "  FENCE.md ci/ allowlist section missing $n" >&2; }; done
 chk 2 "FENCE.md exists with ci/ allowlist naming the six required entries" test $ok -eq 1
 # 3
 ok=1; [ -f docs/dv/SIM_RECIPE.md ] || ok=0
@@ -56,10 +57,11 @@ chk 6 "no vendored spike/patches; riscv-dv lock rev == FENCE.md attested rev (em
 chk 7 "dv/auto_dv/.gitignore exists and ignores work/" bash -c '[ -f dv/auto_dv/.gitignore ] && git check-ignore -q dv/auto_dv/work/probe_file'
 # 8
 ok=1
-grep -Eq 'G = [0-9]+(\.[0-9]+)?' DV_prompt.txt && grep -Eq 'N = [0-9]+' DV_prompt.txt || { ok=0; echo "  S4 lacks numeric N/G" >&2; }
+s4=$(awk '/^4\. Goal and how it is measured/{s=1} /^5\. Method/{s=0} s' DV_prompt.txt)
+printf '%s' "$s4" | grep -Eq 'G = [0-9]+(\.[0-9]+)?' && printf '%s' "$s4" | grep -Eq 'N = [0-9]+' || { ok=0; echo "  S4 lacks numeric N/G" >&2; }
 n_rul=$(awk '/^2\. DUT and build configuration/{s=1} /^3\. What you may read/{s=0} s' DV_prompt.txt | grep -c '^- Owner ruling (')
 [ "$n_rul" -eq 2 ] || { ok=0; echo "  S2 has $n_rul 'Owner ruling (' bullets, need 2" >&2; }
-grep -Eq -- "^Owner sign-off: [A-Za-z][^,]+, ${DATE_RE}\s*$" DV_prompt.txt || { ok=0; echo "  sign-off line missing name+date" >&2; }
+awk '/^12\. Launch preconditions/{s=1} s' DV_prompt.txt | grep -Eq -- "^Owner sign-off: [A-Za-z][^,]+, ${DATE_RE}\s*$" || { ok=0; echo "  S12 sign-off line missing name+date" >&2; }
 chk 8 "S4 numeric N and G; S2 two 'Owner ruling (' bullets; signed and dated sign-off line" test $ok -eq 1
 # 9
 ok=1
@@ -95,5 +97,6 @@ for p in ci/jenkins ci/build-spike.sh ci/setup-cosim.sh ci/run-cosim-test.sh ven
 chk 11 "positive-list checks (dv/, docs/, ci/, vendor/, formal/, six doc files)" test $ok -eq 1
 
 echo "---"
-if [ $fail -eq 0 ]; then echo "LAUNCH-CHECK: PASS ($(date +%F) $(git rev-parse --short HEAD))"; else echo "LAUNCH-CHECK: FAIL ($(date +%F) $(git rev-parse --short HEAD))"; fi
+psha=$(sha256sum DV_prompt.txt | cut -c1-16)
+if [ $fail -eq 0 ]; then echo "LAUNCH-CHECK: PASS ($(date +%F) HEAD=$(git rev-parse --short HEAD) DV_prompt.txt sha256=$psha)"; else echo "LAUNCH-CHECK: FAIL ($(date +%F) HEAD=$(git rev-parse --short HEAD) DV_prompt.txt sha256=$psha)"; fi
 exit $fail
