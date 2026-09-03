@@ -625,3 +625,17 @@ Response (gen_fcov.py, own flow touch): `per_test_report` runs the checker's own
 |---|---|---|---|---|---|
 | CM61-L-1 | The CM40-L-1 row still said "pending tb-infra's entry file" although the text landed as Runtime's own touch at af4cf18 | Low | Row updated: done, cites af4cf18 and its review artifact | this file, CM40-L-1 row | text |
 | CM61-I-1 | The description's "(gen_tb_knobs.yaml, read at run time)" names the authority loosely: the test reads the codegen'd mirror KNOB_CONSUMER in dv/auto_dv/gen_tb/gen_knobs.py, whose equality with the yaml the codegen check enforces | Info | The entry text is tb-infra's; the observation is passed to tb-infra for its next entry file, no flow action | - | - |
+
+## T-218 proof (tb-infra's canonical lockstep red excerpts, landing 4 committed at 5b8a0fb)
+
+| # | Item | Proof | Where |
+|---|---|---|---|
+| T218-1 | The loader's lockstep retained-log family (CM40-L-2) covers gen_ut_regime_refuse and gen_ut_witness_foreign once their canonical excerpts exist under dv/auto_dv/evidence/gen_tdd_logs/lockstep/ | `gen_flow_util.py --check-red-signatures dv/auto_dv/flow/gen_testlist.yaml` at 19:27:22Z on content equal to HEAD 1199ae6 (the testlist and gen_tdd_logs tracked and unmodified; both excerpts tracked since 5b8a0fb): `RED-CHECK ok gen_ut_regime_refuse: gen_regime_refuse_red1_stdout_excerpt.log; harness match=True; verdict RED-OK`, `RED-CHECK ok gen_ut_witness_foreign: gen_witness_foreign_red1_stdout_excerpt.log; harness match=True; verdict RED-OK`, 18 ok, one skip (gen_ut_lockstep_forced_red, no retained log under either family name; tb-infra has the covering name), `RED-CHECK: PASS`, exit 0; the Orchestrator reports the same 18 ok from a detached checkout of 5b8a0fb | gen_flow_util.red_log_for / red_signature_check; evidence/gen_tdd_logs/lockstep/ |
+
+## Review of ea3981ff..987fa9a7 (dv/auto_dv/reviews/2026-09-03-claude-diff-ea3981ff-987fa9a7.md, APPROVE: the second fixture), one optional low
+
+| # | Finding | Severity | Response | Where | Proof |
+|---|---|---|---|---|---|
+| CM63-L-1 | The second fixture case asserted the raw report only for cp_op.mul (HIT) and cr_op_rd_x0.mul_no (MISSING), so "keyword bin name intact" was shown on the derived form alone | Low | The raw-report assertion for gen_isa_alu_reg_cg.cp_op.xor (HIT, count 148) added; the case line names it | gen_fcov.py self_test | gen_fcov --self-test 13 ok, both scratch locations |
+| CM63-I-1 | The T215-F2 row cites source paths under tb-infra's untracked work dir; the fixture body's sha256 is what is verifiable | Info | Noted; the fixture header carries the source sha256 and the body reproduces it | - | - |
+| CM63-I-2 | One long sentence in Section 7c | Info | Left as is | - | - |

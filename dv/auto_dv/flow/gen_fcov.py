@@ -537,9 +537,10 @@ def self_test() -> int:
         cond = (got_t == want_t and after_t["status"] == "PASS" and before_t["status"] == "UNHIT"
                 and before_t["bins"]["gen_mul_ops_cg.cr_op_rd_x0.mul_no"]["state"] == "MISSING-FROM-REPORT"
                 and before_t["bins"]["gen_mul_ops_cg.cp_op.mul"]["state"] == "HIT"
+                and before_t["bins"]["gen_isa_alu_reg_cg.cp_op.xor"] == {"state": "HIT", "count": "148"}
                 and stats_t["cross_sections"] == 21 and stats_t["bins_tables_retitled"] == 12 and stats_t["name_collisions"] == 0)
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"TB Infra's sample {CROSS_SAMPLE_TBINFRA.name} through the REAL checker: raw report UNHIT with the cross bin MISSING-FROM-REPORT, derived report PASS 3 of 3 (mul_no HIT 148, mul 185, xor 148); stats {stats_t}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"TB Infra's sample {CROSS_SAMPLE_TBINFRA.name} through the REAL checker: raw report UNHIT with the cross bin MISSING-FROM-REPORT and the plain bins HIT (the keyword bin xor read as xor on both reports), derived report PASS 3 of 3 (mul_no HIT 148, mul 185, xor 148); stats {stats_t}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
