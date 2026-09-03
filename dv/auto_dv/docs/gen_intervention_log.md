@@ -418,3 +418,33 @@ same name with the remediation as its only task; all its files, including the un
 work, remain in the working tree. Counted for the closure report under "generated infrastructure
 requiring review or repair": defects caught by review, gate enforced by the Orchestrator, no human
 repair.
+
+## LOG-014 - 2026-09-03 - NOTE (shared working tree left non-compiling mid-remediation)
+
+Between about 08:45 and 09:02 UTC the `tb-infra` teammate changed the DPI signature in
+`dv/auto_dv/isa/gen_isa_dpi_pkg.sv` (T-068 remediation) while `dv/auto_dv/env/gen_rvfi_pkg.sv:183`
+still called the old one. Runtime's serve of the Test Writer's first requests compiled the shared
+tree in that window and recorded four `NOT_RUN` results (Error-[TFAFTC]; manifests
+`dv/auto_dv/work/runtime/results/test-writer-003`, `-004`). Runtime held the re-filed requests
+behind a compile pre-check and served them on the first green tree (09:02 UTC). No committed state
+was affected. Rule set by the Orchestrator: a teammate changing a package or DPI signature updates
+every call site in the same edit pass, and tells Runtime before and after any pass that must span
+minutes; Runtime pre-checks compile before dispatching any batch. Counted for the closure report as
+process friction caught by the flow (the pre-check), not as a defect in the generated TB.
+
+## LOG-015 - 2026-09-03 - NOTE (milestones: lock-step comparator on LSF; test template red then green; exclusion set under review)
+
+- 09:02 UTC: first LSF runs of the lock-step ISA comparator through the flow
+  (`/proj_soc/user_dev/fzhang/ibex_dv_out/regress_shim_lsf_0904`, `gen_boot_zc` job 10934548 and
+  `gen_ut_lockstep` job 10934549, both PASS; shim library built under the shared out root).
+- 09:03 UTC: Test Writer template proven through the flow: `gen_test_boot_retire_red` FAILs through
+  the fire-check assert (request test-writer-005), `gen_test_boot_retire` PASSes on three seeds
+  (test-writer-006); landed as 746af6f with the API doc, TDD evidence and plan v2.
+- 08:50 UTC: exclusion file draft form landed (dca91fd, 2133 lines from the urg dump). Cross-model
+  review APPROVE-WITH-CHANGES with one high (cheriot_ex A.1 sweep excludes reachable-but-masked
+  logic); Critic REQUEST-CHANGES (M-1: `gen_scr.mstack_epc_cap_q` at `ibex_cs_registers.sv:2130`
+  is live on trap entry yet excluded). The file is blocked from measured use until regenerated with
+  explicit carve-back lists and re-reviewed. Both reviewers caught the same defect class
+  independently: range or sweep selection without a per-object reachability argument.
+- Review wrapper hardened (000df6f, ece187a): scratch HOME, private PID namespace, read-only
+  filesystem except the run directory; the sandbox was verified from inside by the reviewer session.
