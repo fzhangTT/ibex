@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 09:39 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:22 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -71,6 +71,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 
 # 1. Completeness measure (definition; DV_prompt.txt Section 4)
 
+The functional-coverage gate is: the URG functional-group score (equal group weights, computed after ignore_bins, cross bins
+counted per expanded bin) is at or above 80 percent AND the traceability conditions below hold; both totals must pass.
+
 1. Every ACTIVE feature maps to at least one TP item and at least one bin (directly or through an
    ALIAS/FOLDED ID that resolves to it). 2. Every bin maps back to a feature through its covergroup's
    Features field (all of which must be existing F-IDs). 3. Adopted bins (riscv-dv) are counted
@@ -102,9 +105,9 @@ the count.
 | CG-CSR-005 | cr_alias_u_ok | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
 | CG-CSR-005 | cr_alias_u_trap | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
 | CG-CSR-005 | cr_alias_m | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
-| CG-CSR-006 | cr_csr_form_trap | gen_csr_illegal, gen_csr_machine_info |
-| CG-CSR-006 | cr_csr_u | gen_csr_illegal, gen_csr_machine_info |
-| CG-CSR-006 | cr_hartid_val_rd | gen_csr_illegal, gen_csr_machine_info |
+| CG-CSR-006 | cr_csr_form_trap | gen_csr_illegal, gen_csr_machine_ids |
+| CG-CSR-006 | cr_csr_u | gen_csr_illegal, gen_csr_machine_ids |
+| CG-CSR-006 | cr_hartid_val_rd | gen_csr_illegal, gen_csr_machine_ids |
 | CG-CSR-009 | cr_key_rd | gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
 | CG-CSR-010 | cp_pulse | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
 | CG-CSR-010 | cr_op_form_pulse | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
@@ -4488,9 +4491,8 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     rtl/ibex_decoder.sv:711-720)}, boot{(b): rvfi_pc_rdata == {boot_addr_i[31:8], 8'h80}}; ignore_bins
     bp{PC_BP}: BranchPredictor=0 (F-FE-019, structural exclusion)
   - cp_irq_vec_id iff irq_vector = id[4:0] of the vector slot: bins sw{3}, timer{7}, ext{11},
-    fast_0{16}, fast_1{17}, fast_2{18}, fast_3{19}, fast_4{20}, fast_5{21}, fast_6{22}, fast_7{23},
-    fast_8{24}, fast_9{25}, fast_10{26}, fast_11{27}, fast_12{28}, fast_13{29}, fast_14{30},
-    nmi{31} (fast_0..fast_14 = 16 + [0:$bits(irq_fast_i)-1])
+    fast[15]{[16:30]} (array coverpoint, URG form fast[0]..fast[14]: fast[i] = 16 + i for
+    i in [0:$bits(irq_fast_i)-1]), nmi{31}
   - cp_target_bit1 iff (a) = the next record's rvfi_pc_rdata[1] (C-1): bins b0{0}, b1{1}
   - cp_jalr_rs1_bit0 iff (a) && JALR = rvfi_rs1_rdata[0]: bins odd{1}, even{0}
   - cp_debug_trap_slot iff (a) && rvfi_ext_debug_mode && (rvfi_trap || is_ebreak(rvfi_insn)) =
@@ -6851,9 +6853,12 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 - Adopted (riscv-dv): none
 - TP items: TP-REG-027
 
-## Completeness measure (proposal)
+## Completeness measure (adopted; the 80 percent gate is the URG functional-group score after ignore_bins, equal group weights, both totals at or above 80 percent)
 
-Definition the plan uses (DV_prompt Section 4, functional-coverage condition 2):
+The functional-coverage condition passes when the URG functional-group score (per covergroup the
+fraction of its bins hit after ignore_bins, averaged over the covergroups with equal group weights) is
+at or above 80 percent for BOTH the spec-derived total and the adopted total. Adopted definition
+(DV_prompt Section 4, functional-coverage condition 2); the rules that define the inputs:
 
 1. Every feature F-<AREA>-<nnn> in gen_feature_list maps to >= 1 TP item (trace_feat_tp_*.csv,
    `feature,tp_item`) and, through those items, to >= 1 bin (trace_tp_bin_*.csv,

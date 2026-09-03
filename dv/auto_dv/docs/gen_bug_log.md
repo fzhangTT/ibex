@@ -12,6 +12,14 @@ specification and the carrying test-plan items are `expected-fail (Bn)`; where t
 only the Ibex documentation disagrees, the checker follows the RTL and the item is
 `pass (doc mismatch Dn)`.
 
+B-versus-D criterion for a discrepancy between the RTL and the Ibex documentation only (no RISC-V specification text): it is
+a doc defect (D) when the RTL behaviour is a self-consistent, timing-independent convention that the documentation
+mis-describes (a value, an encoding, a count convention, a latency bound: D6 misaligned accesses counted once, D20
+mhpmevent encoding, D21 NMI latency); it is a bug candidate (B) when the RTL behaviour depends on pipeline timing so the
+same program yields different architectural results (B17: the branch count depends on whether a WB access is
+outstanding), or when it violates a documented functional or security intent (B7 dummies in minstret, B16 rd written on
+a bad first beat). The checker follows the RTL for a D and the documentation for a B.
+
 ## 1. Bug candidates (RTL vs specification or documented intent)
 
 ### B1: dret into U-mode leaves mstatus.MPRV set
@@ -69,17 +77,6 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Intended reproducer: Enter debug mode via debug_req_i; assert irq_nm_i; csrr dcsr in the debug program: bit 3 reads 0 (RTL); spec expects 1 while pending.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
-### B6: RECLASSIFIED (Critic C-20): exception taken in debug mode forces priv_lvl to M
-- Status: not a bug (RTL-defined, retained ID)
-- rtl-arch alias: -
-- Features: F-EXC-046
-- Expected-fail TP items: none (TP-EXC-046, TP-DBG-034 expect pass)
-- RTL: rtl/ibex_cs_registers.sv:908
-- Specification / intent: Sdext.adoc:32 (debug mode runs with machine-mode privilege), :51 (privilege-changing instructions in debug mode are UNSPECIFIED)
-- Notes: NOT A BUG: RTL-defined; retained ID only so earlier references resolve; TP-EXC-046 and TP-DBG-034 expect pass
-- Intended reproducer: n/a
-- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
-
 ### B7: Dummy instructions are counted in minstret and in mhpmcounter11/12 (mul/div wait)
 - Status: candidate, reproducer pending
 - rtl-arch alias: BUG-02
@@ -102,17 +99,6 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Intended reproducer: dummy_instr_en=1 with mask for high frequency; loop of cm.push/cm.pop pairs with a checkable stack pattern; compare memory image and registers against the ISA model; a skipped micro-op shows as a missing store or register.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
-### B9: dcsr.cause written 0 if debug_req_i deasserts in the FLUSH cycle before DBG_TAKEN_IF
-- Status: RTL-defined corner under out-of-spec stimulus (debug_req_i pulse shorter than the DECODE->FLUSH span; the debug spec holds haltreq until the hart halts): record only, not a gate item (rtl-arch T-041, Q-007 default); B-id retained
-- rtl-arch alias: -
-- Features: F-DBG-006
-- Expected-fail TP items: none (record-only; informational item: TP-DBG-011)
-- RTL: rtl/ibex_controller.sv:451-533 (debug_cause_d priority and one-cycle skew)
-- Specification / intent: riscv-debug-spec Sdext.adoc (cause field must identify the entry reason)
-- Notes: rtl-arch T-017: confirmed statically for the special-request path only (DECODE -> FLUSH -> DBG_TAKEN_IF); requires a debug_req_i pulse shorter than the DECODE->FLUSH span, which the debug spec forbids (haltreq is held until the hart halts). Classification: RTL-defined corner under out-of-spec stimulus, low severity; the RTL comment at rtl/ibex_controller.sv:515-518 acknowledges the window. Item TP-DBG-011 stays expected-fail only as the documenting test; not a gate item.
-- Intended reproducer: Drive debug_req_i as a pulse that ends exactly in the FLUSH cycle of a trap/mret/CSR-flush instruction; read dcsr in the debug program: cause reads 0 (RTL) vs 3 (spec).
-- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
-
 ### B10: dcsr.cause = 2 (trigger) recorded on an ebreak entry when the next PC matches tdata2
 - Status: candidate, reproducer pending
 - rtl-arch alias: -
@@ -133,17 +119,6 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Specification / intent: doc/03_reference/performance_counters.rst (NumBranchesTaken: taken branches)
 - Notes: rtl-arch T-017 confirmed statically (perf_tbranch_o = branch_set_i; branch_set_raw_d = branch_decision_i | data_ind_timing_i). Decision requested from the DV Lead (T-017 Section 6): treated as a counter bug candidate (the doc defines the event as taken branches); items TP-PMC-043 / TP-BTALU-016 stay expected-fail.
 - Intended reproducer: data_ind_timing=1; 100 never-taken branches; mhpmcounter9 delta: doc 0, RTL 100. Control: data_ind_timing=0.
-- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
-
-### B12: mret from an interrupt handler clears cpuctrlsts.sync_exc_seen, weakening double-fault detection
-- Status: documented behaviour, not a bug candidate: design-weakness note for the security owner (exception_interrupts.rst:191 and cs_registers.rst:556 say sync_exc_seen is cleared when mret is executed; no RISC-V specification covers double-fault detection). Carrying items expect pass with the note (Critic pre-review S-1; rtl-arch T-017 agrees)
-- rtl-arch alias: -
-- Features: F-SEC-025 (canonical); aliases F-EXC-057, F-CSR-091
-- Expected-fail TP items: none after the reclassification (TP-EXC-056, TP-CSR-094, TP-SEC-025 expect pass with a design note)
-- RTL: rtl/ibex_cs_registers.sv:964-965
-- Specification / intent: documented Ibex behaviour: exception_interrupts.rst:191 and cs_registers.rst:556 ("cleared when mret is executed"); no RISC-V specification covers double-fault detection. No owner question is needed (no specification contradiction; the design-weakness note is carried to the closure report and Section 2 row S4)
-- Notes: design weakness for the security owner (a second synchronous exception in the original handler is not detected after an interrupt handler's mret); not a bug candidate; items pass with the note
-- Intended reproducer: Take a synchronous exception (ecall) -> sync_exc_seen=1; in the handler enable MIE and take an interrupt; its mret clears sync_exc_seen; a second sync exception in the original handler does not raise double_fault_seen_o (RTL) vs raises (intent).
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
 ### B13: rvfi_pc_wdata keeps bit 0 for jalr to an odd target while the fetch clears it
@@ -193,7 +168,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 ### B17: HPM counters 8, 11, 12 over-count instructions waiting in ID behind an outstanding WB memory access
 - Status: candidate, reproducer pending (rtl-arch T-053 X-13)
 - rtl-arch alias: BUG-09
-- Features: F-PMC-0xx counter-event entries for NumBranches (8), mul wait (11), div wait (12); cross-ref F-PMC-041 (B11)
+- Features: F-PMC-053 (canonical: counters 8/11/12 over-count an instruction waiting in ID behind an outstanding WB memory access); counter features F-PMC-039 (mhpmcounter8 NumBranches), F-PMC-043 (mhpmcounter11 NumCyclesMulWait), F-PMC-044 (mhpmcounter12 NumCyclesDivWait); cross-ref F-PMC-041 (B11)
 - Expected-fail TP items: TP-PMC-058, TP-PMC-059, TP-PMC-060, TP-BTALU-018
 - RTL: rtl/ibex_id_stage.sv:886-934 (perf_branch_o in FIRST_CYCLE under instr_executing_spec), :1054-1057 (instr_executing_spec lacks ~outstanding_memory_access), :866-869 (state advances only under instr_executing), :1226-1227 (perf_mul_wait_o / perf_div_wait_o count deferred-start cycles)
 - Specification / intent: doc/03_reference/performance_counters.rst:41 ("Number of branches (conditional)"): one count per branch; the RTL counts once per waiting cycle. Counters 7 (jumps) and 9 (taken) are exact (deduped by branch_jump_set_done_q). Direction (DV Lead): bug candidate, checker follows the doc for the waiting class; RTL-defined otherwise.
@@ -214,13 +189,52 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 ### B19: rvfi_trap on illegal ebreak encoding variants (RVFI-only; pending rtl-arch confirmation)
 - Status: candidate, reproducer spec available (rtl-arch confirmed at the RTL, T-053 follow-up; RVFI-only, BUG-04/BUG-10 family; no architectural effect; informational item TP-ISA-057)
 - rtl-arch alias: BUG-11 (gen_bug_reproducer_specs.md)
-- Features: F-ISA-034 (ebreak decode) / F-RVFI trap-record entries; the informational item TP-ISA-057 records the observation
+- Features: F-RVFI-025 (canonical: ebreak that enters debug mode is not reported as a trap; the illegal-variant case is its B19 Note), F-ISA-034 (ebreak decode incl. the rs1/rd != 0 illegal variants); informational item TP-ISA-057
 - Expected-fail TP items: none (informational: TP-ISA-057)
 - RTL: rtl/ibex_decoder.sv:739-740 sets ebrk_insn_o for funct12 0x001 regardless of rs1/rd and :757-759 raises illegal_insn when rs1 or rd != 0 (the illegal block :912-920 does not clear ebrk_insn_o); rtl/ibex_controller.sv:312-332 gives illegal_insn_q priority over ebrk_insn (mcause 2, mtval = encoding, PC to mtvec); rtl/ibex_core.sv:1885-1886 masks rvfi_trap with ~(ebrk_insn & ebreak_into_debug), ebreak_into_debug = dcsr.ebreakm/u per mode (:481)
 - Specification / intent: rvfi.rst: rvfi_trap must be set for an instruction that cannot be decoded as legal
 - Notes: no architectural effect; the comparator treats the record per the decoded illegal-instruction class
 - Intended reproducer: dcsr.ebreakm = 1 (or ebreaku in U-mode); execute .word 0x00100173 (ebreak encoding with rd = x2): RTL shows rvfi_trap = 0 on the record while mcause reads 2 and execution continues at mtvec; with the dcsr bit clear rvfi_trap = 1 (rvfi.rst: rvfi_trap must be set for an illegal instruction). Comparator rule: derive the trap from the pc flow for ebreak encodings with rs1/rd != 0 when ebreakm/u is set (TB Infra: not built yet; a run hitting it shows the known B19 isa_trap signature).
 - Evidence: (none yet)
+
+## 1b. Retained IDs that are not bug candidates (kept so plan and review references resolve)
+
+B6 (RTL-defined: debug mode runs at M privilege, Sdext.adoc:32/:51), B9 (RTL-defined corner reachable only under out-of-spec
+debug_req_i stimulus; record-only, informational item) and B12 (documented behaviour, exception_interrupts.rst:191 and
+cs_registers.rst:556; design-weakness note S4 in Section 2). None carries an expected-fail item.
+
+### B6: RECLASSIFIED (Critic C-20): exception taken in debug mode forces priv_lvl to M
+- Status: not a bug (RTL-defined, retained ID)
+- rtl-arch alias: -
+- Features: F-EXC-046
+- Expected-fail TP items: none (TP-EXC-046, TP-DBG-034 expect pass)
+- RTL: rtl/ibex_cs_registers.sv:908
+- Specification / intent: Sdext.adoc:32 (debug mode runs with machine-mode privilege), :51 (privilege-changing instructions in debug mode are UNSPECIFIED)
+- Notes: NOT A BUG: RTL-defined; retained ID only so earlier references resolve; TP-EXC-046 and TP-DBG-034 expect pass
+- Intended reproducer: n/a
+- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
+
+### B9: dcsr.cause written 0 if debug_req_i deasserts in the FLUSH cycle before DBG_TAKEN_IF
+- Status: RTL-defined corner under out-of-spec stimulus (debug_req_i pulse shorter than the DECODE->FLUSH span; the debug spec holds haltreq until the hart halts): record only, not a gate item (rtl-arch T-041, Q-007 default); B-id retained
+- rtl-arch alias: -
+- Features: F-DBG-006
+- Expected-fail TP items: none (record-only; informational item: TP-DBG-011)
+- RTL: rtl/ibex_controller.sv:451-533 (debug_cause_d priority and one-cycle skew)
+- Specification / intent: riscv-debug-spec Sdext.adoc (cause field must identify the entry reason)
+- Notes: rtl-arch T-017: confirmed statically for the special-request path only (DECODE -> FLUSH -> DBG_TAKEN_IF); requires a debug_req_i pulse shorter than the DECODE->FLUSH span, which the debug spec forbids (haltreq is held until the hart halts). Classification: RTL-defined corner under out-of-spec stimulus, low severity; the RTL comment at rtl/ibex_controller.sv:515-518 acknowledges the window. TP-DBG-011 is the informational (record-only) item; no gate item exists.
+- Intended reproducer: Drive debug_req_i as a pulse that ends exactly in the FLUSH cycle of a trap/mret/CSR-flush instruction; read dcsr in the debug program: cause reads 0 (RTL) vs 3 (spec).
+- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
+
+### B12: mret from an interrupt handler clears cpuctrlsts.sync_exc_seen, weakening double-fault detection
+- Status: documented behaviour, not a bug candidate: design-weakness note for the security owner (exception_interrupts.rst:191 and cs_registers.rst:556 say sync_exc_seen is cleared when mret is executed; no RISC-V specification covers double-fault detection). Carrying items expect pass with the note (Critic pre-review S-1; rtl-arch T-017 agrees)
+- rtl-arch alias: -
+- Features: F-SEC-025 (canonical); aliases F-EXC-057, F-CSR-091
+- Expected-fail TP items: none after the reclassification (TP-EXC-056, TP-CSR-094, TP-SEC-025 expect pass with a design note)
+- RTL: rtl/ibex_cs_registers.sv:964-965
+- Specification / intent: documented Ibex behaviour: exception_interrupts.rst:191 and cs_registers.rst:556 ("cleared when mret is executed"); no RISC-V specification covers double-fault detection. No owner question is needed (no specification contradiction; the design-weakness note is carried to the closure report and Section 2 row S4)
+- Notes: design weakness for the security owner (a second synchronous exception in the original handler is not detected after an interrupt handler's mret); not a bug candidate; items pass with the note
+- Intended reproducer: Take a synchronous exception (ecall) -> sync_exc_seen=1; in the handler enable MIE and take an interrupt; its mret clears sync_exc_seen; a second sync exception in the original handler does not raise double_fault_seen_o (RTL) vs raises (intent).
+- Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
 ## 2. Security-relevant RTL-defined behaviours (owner decision requested, not bugs)
 
@@ -260,6 +274,7 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 | D19 | security.rst dummy_instr_mask table lists 4 of the 8 legal values | security.rst | rtl/ibex_dummy_instr.sv:33-148 | F-DIT-012 |
 
 ## 4. Change log
+- v1g (2026-09-03 10:20 UTC): round-3 lows: B17 feature IDs (F-PMC-053/039/043/044), B19 canonical F-RVFI-025, B9 note aligned to record-only, B6/B9/B12 moved to Section 1b (retained IDs, not bug candidates), B-versus-D criterion stated.
 - v1f (2026-09-03 09:39 UTC): B19 confirmed by rtl-arch as BUG-11 (RTL chain and reproducer spec).
 - v1e (2026-09-03 09:30 UTC): item lists refreshed after plan v2b (B16 items TP-DMEM-064/TP-SEC-040/TP-RVFI-040; B17 items TP-PMC-058/059/060, TP-BTALU-018); B16 canonical feature F-SEC-015; B19 (RVFI-only, OQ-10) added pending rtl-arch confirmation.
 - v1d (2026-09-03 08:52 UTC): B16 (BUG-08, security-relevant, Q-015), B17 (BUG-09), B18 (BUG-10) added from rtl-arch T-053 / TB Infra; D20, D21 added; B12 citation corrected and moved to a Section 2 note (S4).
