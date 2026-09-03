@@ -56,3 +56,77 @@ reviews run in a fresh `claude -p --model fable` session (Claude Fable 5.1, the 
 family as the executing session but a separate session with no shared context). Each artifact
 header records the CLI version, the model the run reports, and the codex error that triggered
 the fallback. The Orchestrator re-probes codex before every review.
+
+## Q-002 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-1 (gen_dut_top parameters; supersedes rtl-arch Q-A/Q-B by consolidating them). ibex_core
+parameters that ibex_top derives from SecureIbex default to 0 on ibex_core. The team intends
+gen_dut_top to mirror ibex_top for the opentitan configuration: MemECC=1 (39-bit bus data),
+DummyInstructions=1, ICacheTweakInfection=1, ResetAll=1, RegFileECC=0 with RegFileDataWidth=32,
+DbgHwBreakNum=1, DmBaseAddr=0x1A110000, DmAddrMask=0xFFF, DmHaltAddr=0x1A110800,
+DmExceptionAddr=0x1A110808, CsrMvendorId=0, CsrMimpId=0, PMP reset values from ibex_pkg.
+Consequence to confirm: with RegFileECC=0 the in-core register-file ECC alert is unreachable (the
+RF ECC of the shipped configuration lives in the lockstep shadow core, outside the DUT), so
+alert_major_internal_o has one live source (PC increment check) and F-SEC-004..006 become negative
+checks. Blocks: the SEC/DIT feature set, bus widths, and the wrapper. Default: mirror ibex_top
+exactly; do not enable RegFileECC.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-003 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-2 (fence confirmation for two non-Ibex specification sources). (a) The draft bitmanip 0.93
+specification (github.com/riscv/riscv-bitmanip) defines the roughly 40 pre-ratification encodings
+RV32BOTEarlGrey enables (F-BIT-016, F-BIT-022..033); (b) the riscv-formal RVFI description
+(github.com/YosysHQ/riscv-formal, docs/rvfi.md) defines the trace fields the ISA-model comparator
+consumes (F-RVFI-001..033). Both are open-source and not Ibex DV collateral, so the DV Lead reads
+DV_prompt.txt Section 3 as allowing them. Blocks: whether the reference model for those
+instructions and the RVFI comparator rules are spec-derived or "RTL-defined reference". Default:
+treat as allowed, clone both into tools/specs with recorded SHAs; if the owner denies, derive from
+rtl/ibex_alu.sv comments and rtl/ibex_core.sv and mark every such feature "RTL-defined reference".
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-004 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-3 (MPRV after dret and in debug mode, B1/B2 above; security-relevant). The RTL leaves
+mstatus.MPRV set when dret resumes into U-mode and honours MPRV for data PMP checks in debug mode
+although dcsr.mprven reads 0; the debug specification requires MPRV cleared on resume to a less-
+privileged mode and ignored in debug mode when mprven=0. Blocks: the PMP privilege model after
+dret and in debug mode, and whether the affected tests count as failures at the Phase 1 gate.
+Default: checkers implement the debug spec, the tests are marked expected-fail, both are logged as
+bug candidates with reproducers, and neither is excluded from the gate without a recorded ruling.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-005 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-4 (dummy instructions and architectural counters, B7). Dummy instructions are counted in
+minstret and in the mul-wait/div-wait HPM counters although security.rst states they have no
+functional impact. Blocks: the minstret/HPM comparison against the ISA model whenever
+cpuctrlsts.dummy_instr_en=1, and the exact-count test design. Default: exact-count checks run with
+dummy_instr_en=0; a directed test with dummies enabled asserts minstret_delta >= retired count and
+records the RTL count; logged as a bug candidate pending ruling.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-006 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-5 (standing checker-direction policy for Section 5.3). For every doc-vs-RTL mismatch where
+the RTL is spec-legal, the team applies dv_principles.md Section 4: the checker follows the RTL and
+the doc mismatch is logged. Blocks: expected values in the CSR, counter and icache-port checkers.
+Default: apply the policy without waiting; the owner may override any single item by naming it.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-007 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-6 (run-scope defaults for DUT inputs that are neither CSR nor bus; DV Lead decision unless the
+owner objects). mcounteren_writable_i tied IbexMuBiOn by default with directed Off and invalid-MuBi
+tests; hart_id_i random per test and constant within a test; fetch_enable_i On after reset with
+directed Off/invalid tests (RTL treats invalid encodings as Off with no alert, F-IMEM-023, recorded
+as a design note); debug_req_i driven as a level held until debug-mode entry, plus one directed
+pulse-drop test for the dcsr.cause=0 window (B9); boot_addr_i random per test, stable through
+reset. Blocks: TB knob defaults and the RST/SEC test-plan rows. Default: as stated.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
