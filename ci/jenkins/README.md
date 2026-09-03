@@ -61,7 +61,7 @@ references two entries by name, the same `TEST=` selection interface used everyw
 flow. A dedicated smoke *gate* run was subsumed into this delivery's compressed schedule: smoke's
 budget timing comes from the nightly-reduced LSF run's evidence
 (`docs/dv/evidence/ws4-nightly-lsf/summary.txt`), which exercises the same script machinery smoke.sh
-wraps — a controller ruling recorded in the plan, not a gap in coverage.
+wraps — a controller ruling recorded in `docs/dv/process-logs/ws4/progress.md`, not a gap in coverage.
 
 ## Dual-suite knob
 

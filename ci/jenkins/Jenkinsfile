@@ -1,7 +1,8 @@
 // Declarative pipeline for the ibex auto-DV fork. Job setup: ci/jenkins/README.md.
 pipeline {
     agent { label 'lsf-submit' }
-    options { timestamps(); buildDiscarder(logRotator(numToKeepStr: '30')); timeout(time: 14, unit: 'HOURS') }
+    // Global bound must cover the worst case of all stages running serially (2 + 10 + 12 = 24h).
+    options { timestamps(); buildDiscarder(logRotator(numToKeepStr: '30')); timeout(time: 24, unit: 'HOURS') }
     parameters {
         booleanParam(name: 'RUN_SMOKE',    defaultValue: true,  description: 'Run the smoke regression')
         booleanParam(name: 'RUN_NIGHTLY',  defaultValue: false, description: 'Run TEST=all at testlist iterations')

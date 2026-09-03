@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Build the lowRISC spike fork the ibex cosim TB links against.
-# Rev pinned to match this repo's flake.nix; dv/cosim/* is written against it.
+# SPIKE_REV below is the pin of record for spike (dv/cosim/* is written
+# against it); flake.nix's spike rev is not maintained in lockstep with it,
+# see the comment there.
 # Requires dtc on PATH — loaded by ci/env.sh.
 # Needs ZIHPM enabled (aadf648d) so U-mode HPM-counter access is gated by
 # mcounteren rather than blanket-disabled, matching ibex's mcounteren support.

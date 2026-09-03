@@ -2,6 +2,11 @@
 
 Plan: docs/superpowers/plans/2026-09-02-ws4-jenkins-lsf.md (codex pre-review rounds: see docs/dv/reviews/).
 
+Gate status: PASS. Compressed gate (Run A, T3/T4) initially hit a real mcounteren_test
+cosim mismatch, root-caused to a stale spike pin, fixed and re-verified 100% PASS; Run B
+(T5, coverage) was 100% PASS throughout. See docs/dv/evidence/ws4-mcounteren-refix/summary.txt,
+docs/dv/evidence/ws4-nightly-lsf/summary.txt, docs/dv/evidence/ws4-coverage/summary.txt.
+
 - [x] T1 common.sh + selftest
 - [x] T2 dual-suite testlist plumbing (metadata.py + Makefile) — gate pending (compressed gate stage)
 - [x] T3 smoke.sh — compressed gate run: subsumed by Run A (nightly.sh with
@@ -25,5 +30,6 @@ Plan: docs/superpowers/plans/2026-09-02-ws4-jenkins-lsf.md (codex pre-review rou
       riscv_arithmetic_basic_test.1, not the full all_riscvdv suite). 100% PASS.
       See docs/dv/evidence/ws4-coverage/summary.txt.
 - [x] T6 Jenkinsfile + README — reviewed separately
-- [ ] T7 tt-regress assessment
+- [x] T7 tt-regress assessment — see docs/dv/tt-regress-assessment.md
+      (commits 1a452d99, 55023012)
 - [x] T8 docs + regress skill update — reviewed separately

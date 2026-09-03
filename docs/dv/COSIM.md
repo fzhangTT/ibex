@@ -233,8 +233,9 @@ additions) are:
 | `0e306ce7` | Allow hardware triggers to go off without using the mmu tlb | commit message states this explicitly: "For our cosimulation env, the Spike mmu TLB functionality is not used" — without it, hardware triggers (used by the debug-trigger CSR setup in `initial_proc_setup()`) would never fire |
 | `6272327d` | Add Internal NMI field in Spike | `set_nmi_int()` |
 | `ce7a9be2` | Hardcode TDATA1 fields to match implemented ibex features | matches `initial_proc_setup()`'s `TM.tdata1_write` hardcoding |
-| `0dc2de5d` | Disable ZIHPM unpriviledged performance counters (to match Ibex implementation) | Ibex has no U-mode HPM access |
+| `0dc2de5d` | Disable ZIHPM unpriviledged performance counters (to match Ibex implementation) | superseded by `aadf648d` below — see there for the current behavior |
 | `f125d93a` | Hardcode MHPM event register wrt. MHPMCounterNum | `mhpm_counter_num`-sized event CSRs |
+| `aadf648d` | Enable ZIHPM unpriviledged performance counters | re-enables ZIHPM (reverses `0dc2de5d`); Ibex supports mcounteren-gated U-mode HPM access, not a blanket disable |
 | `9a6f786a` | Change ebreak instructions to not save pc to mtval | matches Ibex's ebreak behavior |
 | `68edd179` | Rename CPUCTRL to CPUCTRLSTS and add ic_scr_key_valid field | `set_ic_scr_key_valid()`, CPUCTRLSTS double-fault tracking |
 | `9b68f2f9` | Add MCONFIGPTR CSR | Ibex exposes this CSR |

@@ -97,6 +97,10 @@ ci_parse_args() {
         CI_CONFIG="$2"; shift 2 ;;
       --out)
         [ $# -ge 2 ] || _ci_arg_err "--out needs a value."
+        [ -n "$2" ] || _ci_arg_err "--out value must not be empty."
+        case "$2" in
+          *'..'*) _ci_arg_err "Invalid --out value '$2'. Path must not contain '..'." ;;
+        esac
         CI_OUT="$2"; shift 2 ;;
       --jobs)
         [ $# -ge 2 ] || _ci_arg_err "--jobs needs a value."
@@ -228,6 +232,9 @@ ci_lsf_run() { # <out_abs_dir> <bsub argv...>
     jid="$(sed -n 's/.*Job <\([0-9]\+\)> is submitted.*/\1/p' "$CI_LSF_BSUB_LOG" 2>/dev/null | head -n1)"
     [ -n "$jid" ] && break
     if ! kill -0 "$child" 2>/dev/null; then
+      # Child died between our last scan and this check; rescan once more
+      # for output that landed just before exit (mirrors the deadline branch).
+      jid="$(sed -n 's/.*Job <\([0-9]\+\)> is submitted.*/\1/p' "$CI_LSF_BSUB_LOG" 2>/dev/null | head -n1)"
       break
     fi
     if [ "$SECONDS" -ge "$deadline" ]; then

@@ -34,6 +34,19 @@ echo tok123 > "$T/owned/.ci-out-owner"
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=tok123 ci_reserve_out "$T/owned" ); check_status "reserve: matching owner token accepted" 0 $?
 ( CI_JOB_NAME=selftest; source ./common.sh; CI_OWNER_TOKEN=other ci_reserve_out "$T/owned" ); check_status "reserve: mismatched owner token rejected" 1 $?
 
+# --- common.sh: ci_cov_package fail-loud branches ---
+mkdir -p "$T/cov-no-vdb/run/coverage/report"
+: > "$T/cov-no-vdb/run/coverage/report/dashboard.txt"
+out=$( CI_JOB_NAME=selftest; source ./common.sh; ci_cov_package "$T/cov-no-vdb" 2>&1 ); st=$?
+check_status "cov-package: missing merged.vdb exits nonzero" 1 $st
+check "cov-package: missing merged.vdb loud error" "merged.vdb is missing after a passing COV run" "$out"
+
+mkdir -p "$T/cov-no-dashboard/run/coverage"
+: > "$T/cov-no-dashboard/run/coverage/merged.vdb"
+out=$( CI_JOB_NAME=selftest; source ./common.sh; ci_cov_package "$T/cov-no-dashboard" 2>&1 ); st=$?
+check_status "cov-package: missing dashboard.txt exits nonzero" 1 $st
+check "cov-package: missing dashboard.txt loud error" "dashboard.txt is missing after a passing COV run" "$out"
+
 # --- common.sh: _ci_print_cmd quoting (only quote tokens that need it; a
 # quoted token must round-trip through eval back to the identical argv) ---
 pc_out=$( CI_JOB_NAME=selftest; source ./common.sh; _ci_print_cmd echo 'foo "bar baz"' 'span[hosts=1]' 'brace{1,2}' )
@@ -95,6 +108,10 @@ out=$(./smoke.sh --dry-run --out 'out_ci/has space' 2>&1); st=$?
 check_status "smoke: whitespace --out exits 2" 2 $st
 out=$(./smoke.sh --dry-run --out 'out_ci/ws@2/smoke' 2>&1); st=$?
 check_status "smoke: Jenkins @-suffix workspace path accepted" 0 $st
+out=$(./smoke.sh --dry-run --out '' 2>&1); st=$?
+check_status "smoke: empty --out exits 2" 2 $st
+out=$(./smoke.sh --dry-run --out 'a/../b' 2>&1); st=$?
+check_status "smoke: '..' in --out exits 2" 2 $st
 out=$(./smoke.sh --dry-run --testlist '/x/ws@2/tl.yaml' 2>&1); st=$?
 check_status "smoke: @-suffix testlist path accepted" 0 $st
 out=$(./smoke.sh --dry-run --cocotb-module dv.cocotb.gen_irq 2>&1); st=$?
