@@ -1,0 +1,23 @@
+# gen: riscv-dv testlist for the generated TB's own target (dv/auto_dv/stim/gen_riscv_dv_target).
+# Format: vendor/google_riscv-dv/yaml/base_testlist.yaml header. The TB flow uses only the gen
+# step of run.py; assembly/linking is done by the team flow with gen_link.ld and $RISCV_GCC.
+- test: gen_rand_smoke
+  description: >
+    Small random program for the stimulus toolchain proof: integer, M, compressed and ratified
+    Zba/Zbb/Zbc/Zbs instructions; M-mode boot; vectored mtvec aligned to 256 bytes (Ibex forces
+    MODE=01 and BASE[7:2]=0); PMP programmed by the generator; no sub-programs.
+  iterations: 1
+  gen_test: riscv_instr_base_test
+  gen_opts: >
+    +instr_cnt=300
+    +num_of_sub_program=0
+    +boot_mode=m
+    +no_wfi=1
+    +tvec_alignment=8
+    +enable_zba_extension=1
+    +enable_zbb_extension=1
+    +enable_zbc_extension=1
+    +enable_zbs_extension=1
+    +pmp_num_regions=16
+    +pmp_granularity=0
+  rtl_test: gen_none
