@@ -1071,7 +1071,7 @@ tests:
     measured: false
 
   - name: gen_ut_export_dbg_storm
-    description: export under a debug-request storm (mean 200 cycles) on the riscv-dv seed-7 program; observes pin debug_req assert and release (77 lines, 107 debug entries in the rehearsal) and scrkey req / valid (TB Infra T-150)
+    description: export under a debug-request storm on the riscv-dv seed-7 program; observes pin debug_req assert and release and scrkey req / valid (TB Infra T-150)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -1094,7 +1094,7 @@ tests:
     measured: false
 
   - name: gen_ut_export_scrkey_delayed
-    description: export with the scramble-key responder in the delayed regime on the riscv-dv seed-7 program (10 key requests); observes scrkey req and valid with the delayed valid (TB Infra T-150)
+    description: export with the scramble-key responder in the delayed regime on the riscv-dv seed-7 program; observes scrkey req and valid with the delayed valid (TB Infra T-150)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -1117,7 +1117,7 @@ tests:
     measured: false
 
   - name: gen_ut_export_rows_nmi
-    description: two REGIME_SET phases and one NMI_PULSE through the bridge, export read back; observes regime phase and pin irq_nm 1 then 0 (the isa rows are silenced, the model has no NMI emulation; an export observation only) (TB Infra T-150 / CM8-M-3)
+    description: two REGIME_SET phases and one NMI_PULSE through the bridge, export read back with every checker on; observes regime phase and pin irq_nm 1 then 0 (TB Infra T-150 / CM8-M-3)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -1125,7 +1125,6 @@ tests:
       - +gen_fetch_en_at_reset=0
       - +gen_export_file=gen_export.txt
       - +gen_ut_rows_set=regime_nmi
-      - +gen_chk_all=0
     program:
       directed: [dv/auto_dv/stim/gen_directed/gen_irq_directed.S]
       seed: 1
@@ -1161,4 +1160,30 @@ tests:
     expected_fail: false
     keep_artifacts: true
     component: gen_export_sink
+    measured: false
+
+  # TDD red fixture for the dispatcher's REGIME_SET refusal: the test sends REGIME_SET for a knob whose yaml
+  # regime_set_consumer is none and finishes; the run FAILS by design through the collected GEN_CMD_DISPATCH uvm_error.
+  - name: gen_ut_regime_refuse
+    description: REGIME_SET for a knob with no run-time consumer (the first of knob_fetch_enable_regime, knob_icache_ecc_err_rate, knob_mcounteren_writable in name order) must be refused by the dispatcher; a red fixture whose designed failure is the collected refusal (TB Infra T-108 / CM18-I-2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_REGIME_REFUSE_PASS
+    feature_groups: [red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_regime_refuse
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'UVM_ERROR .*\[GEN_CMD_DISPATCH\] REGIME_SET: no run-time consumer for '
+    component: gen_cmd_dispatch
     measured: false
