@@ -1,5 +1,6 @@
-"""Green witness fixture: TP-CMP-036 allowed by the entry, code 7 in the table, command present; the epilogue must issue
-exactly one COV_WITNESS 7 (GEN_TEST_WITNESS id=TP-CMP-036 code=7) and the run PASSes."""
+"""Green witness fixture: TP-CMP-036 allowed by the entry, code 7 in the table, owned by the test's own group, command
+present; the epilogue must issue exactly one cov_witness(TP-CMP-036, gen_cmp_zcb) (GEN_TEST_WITNESS id=TP-CMP-036 code=7
+group=gen_cmp_zcb) and the run PASSes."""
 import cocotb
 
 from gen_ut_witness_base import install_manifest, FAKE_CODE, WitnessBase, patch
@@ -16,4 +17,4 @@ class WitnessOk(WitnessBase):
 @cocotb.test()
 async def gen_ut_witness_ok(dut):
     await WitnessOk(dut).run()
-    assert WitnessOk.issued == [FAKE_CODE], f"GEN_UT: witness codes issued {WitnessOk.issued}, expected [{FAKE_CODE}]"
+    assert WitnessOk.issued == [("TP-CMP-036", "gen_cmp_zcb")], f"GEN_UT: witnesses issued {WitnessOk.issued}, expected [(TP-CMP-036, gen_cmp_zcb)]"

@@ -195,12 +195,16 @@ returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_tr
 branch of its cycle-level clause after that clause passed against the export (False on the RVFI-only
 fallback or a failed clause). `finish()` runs the epilogue AFTER the failure raise and BEFORE the finish
 handshake: for exactly the passed results with `cycle_clause_true`, it maps `fire_tp_x_nnn` to `TP-X-nnn`
-(`lib.tp_id_of`), requires each id in the entry's `witness_ids` (`lib.witness_ids_of(name)`), and issues
-`COV_WITNESS <code>` awaited, code from the rendered `gen_knobs.WITNESS_IDS` table; a foreign id, a
-missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness ...`), and a test that
-never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n>`. No batch-1
-item carries the cycle-clause marker, so no test issues a witness today; the SV side (dispatcher row,
-`GEN_WITNESS_FOREIGN`) is TB Infra's.
+(`lib.tp_id_of`), requires each id in the entry's `witness_ids` (`lib.witness_ids_of(name)`) and each id's
+owner (`lib.WITNESS_GROUP_OF`) to be the test's own plan group (`lib.test_group(name)`), and issues
+`COV_WITNESS <item index> <group index>` awaited through `GenBridge.cov_witness(tp, own group)` (indices from the
+rendered `gen_knobs.WITNESS_IDS` / `WITNESS_GROUPS` tables; the dispatcher refuses an item of another group with
+`GEN_WITNESS_FOREIGN`, so the epilogue passes the issuing test's group, never the item's); a foreign id, an item
+another group owns, a missing table or a missing command fails the run (`GEN_TEST_FAIL <name>: witness ...`), and a
+test that never reaches the epilogue witnesses nothing. Logged as `GEN_TEST_WITNESS id=<tp> code=<n> group=<g>
+group_idx=<i> bins=<count>` (the count is the peek word: distinct witness bins the covergroup holds). No committed
+entry lists `witness_ids` yet (T-226: Runtime's witness_render first), so no test issues a witness today; the SV side
+(dispatcher row, the CG-WIT-001 covergroup, `GEN_WITNESS_FOREIGN`) is built (tb-infra landing 2b, gen_fcov_pkg).
 
 What the witness guarantee rests on, truthfully: the fact of record is the SV witness ledger, which samples on export
 events with ids from the committed testlist entry and codes from the fire-check outcome; a Python test cannot produce

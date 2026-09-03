@@ -278,3 +278,20 @@ Author: test-writer, 2026-09-03 15:3x UTC. Landing 3e carries the rows marked FI
 | CM35-I-1 | info | "finished 17:21Z" while the excerpt headers run 17:21:27Z-17:22:37Z | FIXED (batch-3 touch) | gen_tdd_batch2.md Section 4 reads "finished 17:21-17:22Z". |
 | CM35-I-2 | info | the CM3e heading attributed the id freeze to "Orchestrator ruling in the 3g relay", a git-ignored relay | FIXED (batch-3 touch) | The heading cites LOG-047, the intervention-log record of the ruling. |
 | CM35-I-3 | info | doubled slashes in the source paths of the 13 acc2 manifest rows | FIXED (batch-3 touch) | Normalised in gen_manifest.md (md5 and sizes unchanged). |
+
+## Critic batch-1 v8 (`dv/auto_dv/docs/gen_critic_batch1_v8.md`, on 56e37d7, APPROVE with M-1 owed; rows CR-1v8-* per the Orchestrator's relay)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CR-1v8-M-1 | medium | the committed manifest declared thirteen debug-mode bins the test cannot hit as must-hit | FIXED (T-222, 54f2ee8) | The thirteen are bins_not_hit under rule (g) with the reason; manifest 68 declared, thirteen not_hit header lines, proven current by a green run on a fresh export (Section 14 of gen_tdd_batch1.md; rows CM42-*). |
+| CR-1v8-L-1 | low | the rule "no debug regime for a program without a debug ROM" lived in briefs only; a library-level guard from TB-side facts (gen_tb_knobs.yaml regime_set_consumer plus the program's declared handlers) can refuse a schedulable set the program cannot survive | DEFERRED (the next template touch, design at dv/auto_dv/work/test-writer/gen_template_touch_guard_design.md) | Planned as a structural check in the library self-test, not a 16th lint form (LOG-024d, LOG-050): GenTest gains program_handlers and mie_stays_zero declarations; a schedulable knob whose consumer is dbg needs "dbg" in the handlers, an irq consumer needs "irq" or mie_stays_zero; red fixtures in the self-test (a test scheduling knob_debug_req_regime without a debug ROM is refused) come first; gen_test_rst_boot and gen_test_csr_reset declare mie_stays_zero. |
+| CR-1v8-L-2 | low | the run header stamped the template but not the test module | FIXED (5e6186c) | gen_run_fixture.sh writes test_sha= (the sha256 prefix of the module file Python resolves for MODULE) beside sources_sha= and template_sha=; every run header since the batch-3 touch carries it (gen_tdd_batch1.md Section 15; gen_tdd_batch3.md Section 4). |
+| CR-1v8-L-3 | low | the Knobs sentence of gen_test_csr_reset's docstring left the schedulable set imprecise against the items' Knobs lines | FIXED (5e6186c) | The sentence names debug_req_regime as TP-CSR-108's alone (its debug half not built here) and states the schedulable set as the code has it (imem_gnt_delay, imem_rvalid_delay, irq_line_mix, scr_key_delay). |
+| CR-1v8-L-4 | low | docstring and manifest agreement on the debug-mode bins | FIXED (T-222) | = CR-1v8-M-1 / CM42-MIN-2. |
+| CR-1v8-I-1..I-3 | info | the fix runs were on out_head8 (a knob-set change only); no other test schedules the debug knob; LOG-042e crediting does not apply | STATED | Recorded; the T-222 run is on a fresh export of HEAD (Section 14). |
+
+## Cross-model review of bc311539..54f2ee83 (T-222, APPROVE, `dv/auto_dv/reviews/2026-09-03-claude-diff-bc311539-54f2ee83.md`; relay id CM71-*)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM71-I-1 | info | the same bins_not_hit reason string is repeated thirteen times as a literal, forced by gen_fcov_manifest.py's extractor accepting ast.Constant values only (a shared name would be dropped silently) | STATED | No change (none requested); recorded in gen_tdd_batch1.md Section 15 so a future refactor extends the extractor and adds a self-test case for the shared-name form first. |

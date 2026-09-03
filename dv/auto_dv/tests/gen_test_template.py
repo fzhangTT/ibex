@@ -16,8 +16,8 @@ Run order (fixed; a test changes it only by overriding a hook):
   4. fire_check(): per-seed asserted observables; every failure is collected and raised in one
      AssertionError (the fire-check is the test's own failure mechanism, DV_prompt Section 5).
   5. declare_bins() is logged (GEN_TEST_BINS) and must equal the fcov manifest when the test declares bins.
-  6. finish: checks first, then the witness epilogue (COV_WITNESS for the passed fire_tp_* checks whose
-     cycle-level clause was TRUE, ids from the entry's witness_ids), then the finish handshake
+  6. finish: checks first, then the witness epilogue (COV_WITNESS <item> <group> for the passed fire_tp_* checks
+     whose cycle-level clause was TRUE, ids from the entry's witness_ids, the group the test's own), then the finish handshake
      (TB_CONTRACT Section 2), then PASS_MARKER.
 
 Skeleton of a real test (copy into dv/auto_dv/tests/gen_test_<area>_<topic>.py):
@@ -367,11 +367,13 @@ class GenTest:
         self.log.info("%s %s", self.name, lib.PASS_MARKER)
 
     async def witness_epilogue(self):
-        """COV_WITNESS <code> for exactly the passed fire_tp_* checks whose cycle-level clause was TRUE (plan v2h
-        witness protocol, Critic C-1). The allowed ids come from the committed testlist entry of the CLASS's name
-        (read here, never from an instance attribute), the records from the template-private list check() fills,
-        the codes from the rendered WITNESS_IDS table; a foreign id, a missing table or command, or an id the
-        table lacks fails loud with the GEN_TEST_FAIL prefix. Tests never issue the command."""
+        """COV_WITNESS <item index> <group index> for exactly the passed fire_tp_* checks whose cycle-level clause was
+        TRUE (plan v2h witness protocol, Critic C-1), issued through GenBridge.cov_witness with the test's own plan
+        group as arg1 (the dispatcher refuses an item of another group: GEN_WITNESS_FOREIGN). The allowed ids come
+        from the committed testlist entry of the CLASS's name (read here, never from an instance attribute), the
+        records from the template-private list check() fills, the codes and owner groups from the rendered tables;
+        a foreign id, an item another group owns, a missing table or command, or an id the table lacks fails loud
+        with the GEN_TEST_FAIL prefix. Tests never issue the command."""
         due = [r for r in self._results if r.ok and r.cycle_clause_true]
         if not due:
             return
@@ -381,11 +383,15 @@ class GenTest:
         assert not foreign, f"GEN_TEST_FAIL {self.name}: witness for {foreign} outside the entry's witness_ids {list(allowed)}"
         assert "COV_WITNESS" in lib.CMD and lib.WITNESS_IDS, \
             f"GEN_TEST_FAIL {self.name}: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while {ids} are due"
+        own = lib.test_group(type(self).name)
+        assert own in lib.WITNESS_GROUPS, f"GEN_TEST_FAIL {self.name}: the rendered witness tables know no group {own} while {ids} are due"
         for tp in ids:
             code = lib.WITNESS_IDS.get(tp)
             assert code is not None, f"GEN_TEST_FAIL {self.name}: the rendered WITNESS_IDS table lacks {tp}"
-            await self.cmd("COV_WITNESS", (code, 0, 0, 0))
-            self.log.info("GEN_TEST_WITNESS id=%s code=%d", tp, code)
+            owner = lib.WITNESS_GROUP_OF.get(tp)
+            assert owner == own, f"GEN_TEST_FAIL {self.name}: witness for {tp} owned by {owner}, issued by {own}: a test witnesses only its own group's items"
+            bins = await self.bridge.cov_witness(tp, own)
+            self.log.info("GEN_TEST_WITNESS id=%s code=%d group=%s group_idx=%d bins=%s", tp, code, own, lib.WITNESS_GROUPS[own], bins)
 
     async def run(self):
         await self.setup()

@@ -273,6 +273,9 @@ STAGED_ENTRIES_ENV = "GEN_TEST_STAGED_ENTRIES"   # developer runs only: path of 
 FLOW_RUN_ENV = next(iter(_JOB_ENV_SET))         # the flow's one job marker (gen_flow_const.JOB_ENV_SET); a run carrying it refuses the developer variable
 # COV_WITNESS codes per TP id, rendered by TB Infra with the SV table (plan v2f witness protocol); {} until then.
 WITNESS_IDS = dict(getattr(_gk, "WITNESS_IDS", None) or {})
+# the owner group of every witnessed item and the group index table (COV_WITNESS arg1), rendered with the SV witness ledger
+WITNESS_GROUP_OF = dict(getattr(_gk, "WITNESS_GROUP_OF", None) or {})
+WITNESS_GROUPS = dict(getattr(_gk, "WITNESS_GROUPS", None) or {})
 # class name -> reason: the only other way than a `measured: false` entry to set layers_required = False.
 LAYERS_OPTOUT_ALLOWLIST = {}
 
@@ -292,6 +295,12 @@ def testlist_entry(test_name):
                         print(f"GEN_TEST_LIB: {test_name}: entry taken from the staged file {path} (developer run)", file=sys.stderr)
                     return e
     return None
+
+
+def test_group(test_name):
+    """The plan group a test hosts (gen_test_<x> -> gen_<x>): the manifest generator's derivation, one home."""
+    from dv.auto_dv.tests import gen_fcov_manifest as gm
+    return gm.plan_group_of(test_name)
 
 
 def witness_ids_of(test_name):

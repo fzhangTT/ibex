@@ -385,3 +385,36 @@ line matched; stale evidence reported until T-153); `FLOW_RUN_ENV` reads the flo
 self-test names the relation between the longest CG-REG-007 duration class and the schedule runner's per-trigger wait budget
 (equal today, `lib.DURATION_CLASSES`). Self-test PASS on this tree in both forms and from a clean archive of 7f78c41 (batch-1
 transcript Section 10).
+
+## 10. T-226 (LOG-057): the witness epilogue carries the issuing test's group
+
+Why: the Critic's landing-2b verdict (M-1) found the committed epilogue sending COV_WITNESS with arg1 = 0 while the TB as built
+(docs/gen_component_api_fcov.md Section 7, gen_env_pkg.sv's dispatcher row, gen_fcov_pkg.sv) expects arg1 = the issuing test's group
+index and refuses another group's item with GEN_WITNESS_FOREIGN, so every group but the one at index 0 would have been refused on its
+first real witness; the retained greens never exercised the path (no committed entry lists witness_ids), and the fixture base's
+docstring still said "no SV side exists".
+
+Change: the epilogue resolves the test's own plan group (lib.test_group, the manifest generator's derivation), requires the rendered
+owner of every due item (lib.WITNESS_GROUP_OF) to be that group (a new GEN_TEST_FAIL before the dispatcher's refusal), and issues the
+witness through GenBridge.cov_witness(tp, own group), which sends COV_WITNESS <item index> <group index> from the gen_knobs tables and
+returns the covergroup's distinct-bin count; logged as GEN_TEST_WITNESS id= code= group= group_idx= bins=. gen_test_lib exposes
+WITNESS_GROUP_OF / WITNESS_GROUPS beside WITNESS_IDS. The fixture base replaces the bridge's cov_witness by a recorder (the fixtures'
+fake codes must never reach the SV table now that the dispatcher routes the command), patches the owner and group tables and the
+test's group, and its docstring says so; a fifth fixture, gen_ut_witness_othergroup, is the red of the new owner check. The API
+document's Section 9 paragraph describes the as-built form. No committed entry lists witness_ids until Runtime's witness_render
+accepts them (its part of T-226); the one real witness green follows then.
+
+Runs on out_head14 (export of 2ea81ac; sources sha 893384b8eec4e6d5; template sha d47cc7e90130fe5c, test_sha of the fixture module in each header,
+e.g. 86927ab264008433 for gen_ut_witness_ok), the gen_cmp_zcb seed-1 image built from the export, the export's fixture from the export root:
+
+| Run | Designed outcome | Decisive line | Result | md5 of the retained copy |
+|---|---|---|---|---|
+| t226_witness_ok | green: TP-CMP-036 allowed, code 7, owned by gen_cmp_zcb | `GEN_TEST_WITNESS id=TP-CMP-036 code=7 group=gen_cmp_zcb group_idx=0 bins=0` then GEN_TEST_PASS; the recorder saw [(TP-CMP-036, gen_cmp_zcb)] | PASS | fd498820e72ca6b290444e47ce2ff61a (stdout, in full; sim.log 909966980e2171ed28820d6a2491de0d) |
+| t226_witness_foreign | red: the entry allows TP-CMP-034 only | `AssertionError: GEN_TEST_FAIL gen_ut_witness_foreign: witness for ['TP-CMP-036'] outside the entry's witness_ids ['TP-CMP-034']` | FAIL as designed, nothing issued | cfbdac4db60f1b6c4bd773d5c3b8cada |
+| t226_witness_noid | red: the table lacks the id | `AssertionError: GEN_TEST_FAIL gen_ut_witness_noid: the rendered WITNESS_IDS table lacks TP-CMP-036` | FAIL as designed | 5bd474e8968dcc3d04eb1ae80e7da18d |
+| t226_witness_notable | red: no table, no command | `AssertionError: GEN_TEST_FAIL gen_ut_witness_notable: witness protocol not rendered (CMD COV_WITNESS / WITNESS_IDS) while ['TP-CMP-036'] are due` | FAIL as designed | 554b3d1228bbcfffc3353ae034cf5913 |
+| t226_witness_othergroup | red (new): the rendered owner of TP-CMP-036 is gen_cmp_zcmp_events | `AssertionError: GEN_TEST_FAIL gen_ut_witness_othergroup: witness for TP-CMP-036 owned by gen_cmp_zcmp_events, issued by gen_cmp_zcb: a test witnesses only its own group's items` | FAIL as designed, nothing issued | c0155e3473b39c3d753c9f29ffe37847 |
+| t226_witness_othergroup_unguarded | TDD red of the check: the same fixture on the export's template with the owner assertion removed (gen_t226_unguarded_template.diff) | GEN_TEST_PASS with the foreign owner witnessed | PASS (the check is the difference) | c1797b9b984fa8cf506ed25deafc5b0e |
+
+The library self-test PASSes with the new attributes (the F_PATCH red still refuses a test module assigning lib.WITNESS_IDS; the
+fixtures are not test modules). Verified from a detached archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_t226.log names the HEAD it archived).

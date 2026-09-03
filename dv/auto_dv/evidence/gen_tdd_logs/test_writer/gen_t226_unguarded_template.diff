@@ -1,0 +1,2 @@
+392d391
+<             assert owner == own, f"GEN_TEST_FAIL {self.name}: witness for {tp} owned by {owner}, issued by {own}: a test witnesses only its own group's items"

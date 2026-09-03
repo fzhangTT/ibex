@@ -1,6 +1,8 @@
 """Shared base of the witness-epilogue fixtures (never testlist entries): gen_test_cmp_zcb's test with one fire-check
-claiming a TRUE cycle clause, a fake dispatcher that records COV_WITNESS instead of sending it (no SV side exists), and
-the library tables patched per fixture (WITNESS_IDS, CMD, the entry's witness_ids). Program: the gen_cmp_zcb seed-1 image."""
+claiming a TRUE cycle clause, the bridge's cov_witness replaced by a recorder (the SV dispatcher routes COV_WITNESS to the
+witness covergroup since landing 2b; the fixtures' fake codes must never reach its table), and the library tables patched
+per fixture (WITNESS_IDS, WITNESS_GROUP_OF, WITNESS_GROUPS, the test's group, CMD, the entry's witness_ids). Program: the
+gen_cmp_zcb seed-1 image."""
 from pathlib import Path
 
 import yaml
@@ -29,10 +31,17 @@ def install_manifest(name, drop_last=False):
     return dropped
 
 
-def patch(witness_ids, table, command=True):
-    """Install the fixture's view of the rendered protocol: entry witness_ids, WITNESS_IDS table, COV_WITNESS command."""
+GROUP = "gen_cmp_zcb"          # the fixtures host gen_cmp_zcb's items, so that is their own group
+
+
+def patch(witness_ids, table, command=True, owner_of=None):
+    """Install the fixture's view of the rendered protocol: entry witness_ids, WITNESS_IDS table, the owner group of every
+    id (GROUP unless owner_of says otherwise), the group index table, the test's own group, COV_WITNESS command."""
     lib.witness_ids_of = lambda name: tuple(witness_ids)
     lib.WITNESS_IDS = dict(table)
+    lib.WITNESS_GROUP_OF = dict(owner_of) if owner_of is not None else {tp: GROUP for tp in table}
+    lib.WITNESS_GROUPS = {g: i for i, g in enumerate(sorted({GROUP} | set(lib.WITNESS_GROUP_OF.values())))}
+    lib.test_group = lambda name: GROUP
     lib.CMD = {k: v for k, v in lib.CMD.items() if k != "COV_WITNESS"}
     if command:
         lib.CMD["COV_WITNESS"] = max(lib.CMD.values()) + 1
@@ -43,13 +52,16 @@ class WitnessBase(CmpZcb):
     one witness for TP-CMP-036."""
     issued = None
 
+    def __init__(self, dut):
+        super().__init__(dut)
+        self.bridge.cov_witness = self.record_witness
+
+    async def record_witness(self, tp_item, owner_group, timeout_cycles=200):
+        type(self).issued = (type(self).issued or []) + [(tp_item, owner_group)]
+        self.log.info("GEN_UT_FAKE_DISPATCH COV_WITNESS %s %s recorded", tp_item, owner_group)
+        return 0
+
     def fire_tp_cmp_036(self):
         super().fire_tp_cmp_036()
         self.check("fire_tp_cmp_036_clause", len(self.reports) > 0, "cycle clause proxy TRUE", cycle_clause_true=True)
 
-    async def cmd(self, kind, args=(0, 0, 0, 0), timeout_cycles=200):
-        if kind == "COV_WITNESS":
-            type(self).issued = (type(self).issued or []) + [args[0]]
-            self.log.info("GEN_UT_FAKE_DISPATCH COV_WITNESS code=%d recorded", args[0])
-            return 0
-        return await super().cmd(kind, args, timeout_cycles)
