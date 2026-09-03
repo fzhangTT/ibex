@@ -1042,3 +1042,17 @@ Verified by the Orchestrator: loader PASS, red-signature check PASS exit 0, util
 are exactly the 15 tier/measured/manifest triples, the one gen_ut_lockstep field and the header. Runtime now serves
 the batch-2 acceptance wave test-writer-049..064 (check tier, head mode, pinned to HEAD) and the DV Lead files the
 round-0 request (T-158). Results of items under the T-136/T-137 holds are recorded, not credited.
+
+## LOG-039a - 2026-09-03 - CORRECTION + HOLD (the fcov header fails unmeasured smoke entries; round 0 held)
+
+The cross-model review of the promotion landing (dv/auto_dv/reviews/2026-09-03-claude-diff-59aec18c-18f9ee04.md,
+REQUEST-CHANGES) shows LOG-039's premise was wrong: gen_regress.fcov_policy_failures keys on tier only and never
+reads measured, so with fcov_manifest_required_tiers: [smoke, targeted] the two unmeasured smoke entries gen_boot_zc
+and gen_ut_lockstep (no manifest) are flipped from PASS to FAIL in every smoke-tier regression, and setting
+gen_ut_lockstep to measured: false remedies nothing. Ruling: Runtime lands a fix before any measured round is
+dispatched: fcov_policy_failures skips runs whose entry is measured: false (the LOG-039 intent), with a gen_regress
+self-test case carrying the measured field and the docstring aligned; the 15 promoted entries return to flow-style
+serialisation; the red-check CLI's line and summary builders become functions covered by the self-test. Round 0
+(request round_0, filed 16:10Z) is HELD until that landing is committed and re-reviewed; the batch-2 acceptance wave
+(check tier) is unaffected and continues. The Orchestrator's error: ruling on a described enforcement without a
+grep of the enforcing code.
