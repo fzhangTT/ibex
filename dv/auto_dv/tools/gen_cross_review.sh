@@ -12,7 +12,7 @@ set -euo pipefail
 # Run from a private copy: bash reads scripts incrementally, so an edit to this file while a
 # review is in flight would otherwise be executed at a stale offset.
 if [ -z "${GEN_XR_RELOCATED:-}" ]; then
-  _self_copy=$(mktemp /tmp/gen_cross_review.XXXXXX.sh); cp "$0" "$_self_copy"
+  _xr_root=$(git rev-parse --show-toplevel)/dv/auto_dv/work/orchestrator/review_tmp; mkdir -p "$_xr_root"; _self_copy=$(mktemp "$_xr_root/self.XXXXXX.sh"); cp "$0" "$_self_copy"
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
 trap 'rm -f "$GEN_XR_RELOCATED"' EXIT
@@ -75,7 +75,7 @@ mkdir -p dv/auto_dv/reviews
 ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
 # Never overwrite an earlier round: plan and replan targets keep their basename across rounds.
 _r=2; while [ -e "$ART" ]; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
-PROMPT_F=$(mktemp)
+XR_TMP="$REPO/dv/auto_dv/work/orchestrator/review_tmp"; mkdir -p "$XR_TMP"; PROMPT_F=$(mktemp "$XR_TMP/prompt.XXXXXX")
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.
 ${SCOPE_LINE}
@@ -86,10 +86,11 @@ End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-W
 ${RUBRICS}
 PEOF
 
-RAW=$(mktemp); RC=0
+XR_TMP="$REPO/dv/auto_dv/work/orchestrator/review_tmp"; mkdir -p "$XR_TMP"
+RAW=$(mktemp "$XR_TMP/raw.XXXXXX"); RC=0
 # 60 min: bounded per the site watchdog rule.
 timeout 3600 claude -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
-  --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(cat:*),Bash(ls:*),Bash(sed:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(grep:*)" \
+  --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git rev-parse:*),Bash(git status:*),Bash(git ls-files:*),Bash(ls:*),Bash(wc:*),Bash(sha256sum:*),Bash(md5sum:*),Bash(stat:*),Bash(python3 dv/auto_dv/tools/gen_trace_check.py:*)" \
   --output-format json <"$PROMPT_F" >"$RAW.json" 2>"$RAW.err" || RC=$?
 if [ "$RC" -eq 124 ]; then echo "PROTOCOL ERROR: claude review timed out after 3600s; raw kept at $RAW.json"; exit 1
 elif [ "$RC" -ne 0 ]; then echo "claude -p failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1; fi
@@ -102,8 +103,9 @@ print("MODELS=" + ",".join(sorted((d.get("modelUsage") or {}).keys())))
 print("SESSION=" + str(d.get("session_id")))
 print("IS_ERROR=" + str(d.get("is_error")))
 PY
-RUN_MODEL=$(sed -n 's/^MODELS=//p' "$RAW.meta"); SESSION=$(sed -n 's/^SESSION=//p' "$RAW.meta")
+RUN_MODEL=$(sed -n 's/^MODELS=//p' "$RAW.meta"); SESSION=$(sed -n 's/^SESSION=//p' "$RAW.meta"); IS_ERR=$(sed -n 's/^IS_ERROR=//p' "$RAW.meta")
 [ -n "$RUN_MODEL" ] || { echo "PROTOCOL ERROR: run did not report a model identity"; exit 1; }
+[ "$IS_ERR" = "False" ] || { echo "PROTOCOL ERROR: the run reported is_error=$IS_ERR; raw kept at $RAW"; exit 1; }
 CLI_VER=$(claude --version 2>/dev/null | head -1)
 
 LAST=$(tail -n 1 "$RAW")
@@ -126,7 +128,7 @@ fi
 {
   echo "# Cross-model review - ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; effort: ${EFFORT}; fresh session ${SESSION} (fallback reviewer per owner ruling A-001)"
+  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; tools: read-only allowlist, no write-capable shell prefixes (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
@@ -135,6 +137,6 @@ fi
   echo
   cat "$RAW"
 } >"$ART.tmp" && mv "$ART.tmp" "$ART"
-rm -f "$PROMPT_F" "$RAW.json" "$RAW.err" "$RAW.meta"
+rm -f "$PROMPT_F" "$RAW" "$RAW.json" "$RAW.err" "$RAW.meta"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
