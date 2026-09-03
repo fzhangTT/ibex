@@ -41,8 +41,9 @@ def cm_name(test: str, seed: int) -> str:
 
 
 def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Path, cov_vdb: Path | None,
-            waves: bool, extra_plusargs: list[str]) -> tuple[list[str], dict[str, str]]:
-    """simv argv and the job environment (SIM_DIR, RANDOM_SEED, cocotb variables)."""
+            waves: bool, extra_plusargs: list[str], witness: dict[str, Any] | None) -> tuple[list[str], dict[str, str]]:
+    """simv argv and the job environment (SIM_DIR, RANDOM_SEED, cocotb variables); witness is the run's one
+    rendered witness record (main renders it once, argv and result.yaml share it)."""
     argv = [build["simv"], "+vcs+lic+wait", f"+{C.PLUSARG_NTB_SEED}={seed}"]
     uvm_test = test.get("uvm_test")
     if uvm_test:
@@ -56,7 +57,6 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
     if cov_vdb is not None:
         argv += ["-cm", build["cov_metrics"], "-cm_dir", str(cov_vdb), "-cm_name", cm_name(test["name"], seed),
                  *C.COV_RUNTIME_EXTRA]
-    witness = U.witness_render(test)
     if witness:
         # The witness indices of this entry, rendered from the CSV at the pinned source root (plan WP rows).
         argv.append(witness["plusarg"])
@@ -238,7 +238,8 @@ def main() -> int:
         image_args = S.image_plusargs(program_rec)
         program_rec["image_plusargs"] = image_args
         extra_plusargs = image_args + extra_plusargs
-    argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, extra_plusargs)
+    witness = U.witness_render(test)   # once per run; the loader already validated the ids
+    argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, extra_plusargs, witness)
     mirror_used = check_mirror_for_run(build) if test.get("cocotb_module") else None
     for stale in (C.SIM_LOG, C.SIM_STDOUT_LOG, C.RESULT_YAML, "exit_code", C.LSF_OUT, C.LSF_ERR):
         if (run_dir / stale).exists():
@@ -310,7 +311,7 @@ def main() -> int:
         "banner_seen": res["banner_seen"], "banner": res["banner"], "crash_signature": res.get("crash_signature"),
         "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")),
-        "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": U.witness_render(test),
+        "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": witness,
         "export_header_sources": export_header, "export_sources_emitted": build.get("export_sources_emitted"),
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,

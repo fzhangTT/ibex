@@ -51,6 +51,7 @@ schema_version: 1
 #     list unless it equals that set.
 fcov_manifest_required_tiers: []
 debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every]
+red_expect_policy: [fire_id]
 
 builds:
   gen_smoke:
@@ -300,9 +301,9 @@ tests:
 
   - name: gen_test_boot_retire_red
     description: TDD red fixture of gen_test_boot_retire; the directed program ends with tohost 3 and declares an unreachable retirement floor, so the fire-check must FAIL (verdict RED-OK; evidence dv/auto_dv/evidence/gen_tdd_test_template.md);
-      never a regression test
+      never a regression test; the red program ends with tohost 3, so fire_eot_pass_code is the designed first failure (fire_retired_floor follows)
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\): fire_eot_pass_code'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
