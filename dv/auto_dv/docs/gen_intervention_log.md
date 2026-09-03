@@ -691,3 +691,20 @@ expected cause from the pre-entry record's post_mip & mie and the line vector, c
 expectation, out-of-tree red) in its next landing; until T-136 is committed and reviewed, no interrupt-enabled
 test result counts toward the plan and the irq-entry, priority and NMI items stay unmeasured. The DV Lead
 annotates the affected items; the Test Writer lands interrupt-free batch-2 groups first.
+
+## LOG-026 - 2026-09-03 - RULING (DUT-reported faults are mirrored into the model without a legitimacy check)
+
+The cross-model review of T-102c (dv/auto_dv/reviews/2026-09-03-claude-diff-788c15b2-18470dd8.md, medium 2)
+finds that the comparator arms the model's fault solely because the DUT record says trap on a load or store,
+and then checks only pc_wdata and retired == 0: no cause, tval, or fault-source check exists, so a DUT that
+spuriously faults a legal access is mirrored into the model and passes unless the handler's later mcause or
+mtval read reaches the isa_rd compare. Ruling: 18470dd stays committed (it fixed a false miss and hides no
+existing check); tb-infra adds trap legitimacy to the follow-up landing (T-137: the model is armed only when
+the bus driver's arm list announced an error for that address or the model's PMP state denies the access;
+otherwise the trap record is a fail-loud comparator miss with a named id, with an out-of-tree red where the
+DUT faults a legal access); until T-137 is committed and reviewed, results of tests that inject bus errors or
+rely on PMP denials are consistency-only and do not count toward the plan, and the scoreboard document states
+the limitation. Medium 3 of the same review is T-134 (interrupt splitting a Zcmp sequence): the comparator
+never clears the sequence bookkeeping on interrupt or debug entry, so the restart appends micro-ops and fails
+under a misleading id, or passes silently when isa_mem is knob-silenced; tb-infra settles it in the same
+landing.
