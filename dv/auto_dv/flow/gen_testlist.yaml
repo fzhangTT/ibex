@@ -1187,3 +1187,119 @@ tests:
     red_expect: 'UVM_ERROR .*\[GEN_CMD_DISPATCH\] REGIME_SET: no run-time consumer for '
     component: gen_cmd_dispatch
     measured: false
+
+  - name: gen_ut_witness
+    description: COV_WITNESS (CG-WIT-001) through the bridge; two items of one test group witnessed with their own group, the first twice; the peek word counts the distinct bins the covergroup holds (TB Infra T-179)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_WITNESS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_witness
+    expected_fail: false
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_witness_foreign
+    description: COV_WITNESS for an item of another test's group must be refused by the dispatcher; a red fixture whose designed failure is the collected GEN_WITNESS_FOREIGN error (TB Infra T-179, rule C-2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_WITNESS_FOREIGN_PASS
+    feature_groups: [red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_witness_foreign
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'UVM_ERROR .*\[GEN_WITNESS_FOREIGN\] COV_WITNESS '
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_fetch_en
+    description: fetch_enable_i Off after boot, the drain window and an idle wait, then On to the tohost store; the misc monitor's fetch_en rule judges that no record retires later than GEN_FETCH_EN_DRAIN_CYCLES after the Off edge (TB Infra, landing 2b)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=60
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_FETCH_EN_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_fetch_en
+    expected_fail: false
+    component: gen_misc_monitor
+    measured: false
+
+
+  - name: gen_ut_lockstep_muldiv
+    description: lock-step run of gen_muldiv_directed.S (every M-extension and base R-type ALU operation over the operand-class table, every ordered pair, the plan's register relations, c.mul from its 16-bit encoding); exercises gen_mul_ops_cg, gen_div_ops_cg, gen_isa_alu_reg_cg (TB Infra T-205)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=9000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_muldiv_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_alu
+    description: lock-step run of gen_alu_directed.S (Zba / Zbb / pack, the base shifts in both forms, the OP-IMM ALU operations over the operand-class table and the immediate classes); exercises gen_bit_zba_zbb_ops_cg, gen_isa_alu_imm_cg, gen_isa_shift_cg (TB Infra T-205)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=22000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_alu_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
