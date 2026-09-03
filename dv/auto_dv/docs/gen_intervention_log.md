@@ -1371,3 +1371,13 @@ than the 261 files in tb-infra's list. HEAD was never affected; the Test Writer 
 18:07Z and kept the stale copy under its work dir. tb-infra is asked how its copy step wrote outside its list. Rule: a copy-in
 copies exactly the paths in the landing's file list, and the window is closed only after git status shows no modified
 tracked file outside that list.
+
+## LOG-053 - 2026-09-03 - Unannounced TB edit live in the shared tree (T-205 covergroup work)
+
+Runtime found at 18:11Z that the shared working tree carried tb-infra's uncommitted T-205 covergroup edit (an untracked
+dv/auto_dv/env/gen_fcov_pkg.sv listed by a modified gen_tb.f plus eight modified env/tb files) with no announced window;
+its 18:08:51Z worktree-source probe compiled it unknowingly and that build is discarded as evidence. tb-infra is directed to
+move the work to its out-of-tree copy, restore every touched shared-tree file to HEAD content, remove the untracked files,
+announce CLOSE to Runtime and report the restored list. Rule restated (LOG-014, LOG-017, LOG-045a, LOG-052): TB edits happen
+in out-of-tree copies; the shared tree receives them only as an announced file-list copy-in immediately followed by the
+hand-off. A further unannounced shared-tree edit is recorded as a fence-class process violation in the closure report.
