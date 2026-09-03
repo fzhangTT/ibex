@@ -544,3 +544,19 @@ caught by the first feature tests (counted for the closure report under "generat
 requiring review or repair") and are assigned to tb-infra as T-102 ahead of the export event writers
 and the step-2b re-application. The four green tests proceed to acceptance runs; the four blocked
 tests' requests wait for T-102.
+
+## LOG-019 - 2026-09-03 - NOTE (first acceptance batch: 0 of 8 requests reached PASS or RED-OK; causes split)
+
+11:2x UTC: the first head-mode acceptance batch (four comparator-clean tests, three seeds each, plus
+four red fixtures) at d58bdeb produced no PASS and no RED-OK. Causes, as reported by the Test Writer
+and confirmed from the logs: (1) Test Writer: gen_test_cmp_zcb and gen_test_bit_draft FAIL on every
+seed with "manifest ... differs from declare_bins()": the batch-1 tests return an empty declare_bins()
+while the committed manifests carry the plan's bins; the local greens predate the manifests, so the
+local verification missed the ordering. Fix: the template's default declare_bins() derives the group's
+bins through the manifest generator, an override needs a documented reason, and the cross-check
+semantics are stated in the API doc. (2) Runtime: four requests NOT_RUN from a race in the head-mode
+stage (tree_hash FileNotFoundError while another wave rewrote head_stage_status) and two refused
+because HEAD moved between waves; fix: one pinned HEAD per batch, atomic stage status, no shared
+staging between concurrent waves. Both are defects in generated infrastructure caught by the flow's
+first real batch; neither touches the DUT or the tests' checks. Counted for the closure report under
+"generated infrastructure requiring review or repair". Re-serve after both fixes land.
