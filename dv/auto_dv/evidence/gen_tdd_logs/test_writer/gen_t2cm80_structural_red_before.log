@@ -1,0 +1,6 @@
+# TDD red for CM80-M-2 / L-1 / L-2, 2026-09-03T20:28:28Z: the library of HEAD c030317 (gen_test_lib.py sha256 5f8ed7b5076af2c0) on the reviewer's probes
+M-2 mie_stays_zero with knob_irq_regime and knob_irq_line_mix (with_nmi drawable): ACCEPTED ['T']
+L-1 knob_dmem_intg_err_rate with no handler (a load integrity error is an internal NMI): ACCEPTED ['T']
+L-1 knob_imem_err_rate with no handler (an instruction access fault): ACCEPTED ['T']
+L-2 annotated schedulable skipped: REFUSED: GEN_TEST_LIB: <probe>: class T schedules a regime knob its program cannot survive: knob_irq_regime (consumer irq) needs 
+L-2 decorated class: ACCEPTED ['T']

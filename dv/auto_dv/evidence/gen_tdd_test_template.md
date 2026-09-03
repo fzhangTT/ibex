@@ -464,3 +464,34 @@ two witness paragraphs (CM77-i-2 / i-3), and the id-free wording of the library'
 the rule, not the log entry). Self-found while applying CM77-i-2: the LOG-050 touch's API document came from the head_export14 staging root
 (an archive of 2ea81ac, before T-226) and so 674d026 dropped T-226's rewritten Section 9 witness paragraph; restored here (row SF-TT-1).
 Rule for the staging root: re-archive HEAD after every commit before copying a staged file over the tree.
+
+## 13. The CM80 touch: the regime-handler rule by knob, the NMI hole closed, the run-time check over pins and the supplied schedule
+
+Red first: gen_t2cm80_structural_red_before.log records the library of c030317 accepting the reviewer's probes (knob_irq_regime with
+knob_irq_line_mix under mie_stays_zero; knob_dmem_intg_err_rate and knob_imem_err_rate with no handler; a decorated test class) and refusing
+an annotated `schedulable: tuple = ...` only by accident (the attribute skipped, the template default refused instead).
+
+Change (gen_test_lib.py, gen_test_template.py, gen_test_template_api.md): the rule maps knobs to handlers by name (lib.KNOB_HANDLER: dbg for
+the debug regime; irq for the three irq knobs and knob_dmem_intg_err_rate, whose load integrity error is an internal NMI; exc for the two
+err_rate knobs and knob_imem_intg_err_rate, injected access faults), names each knob's inactive value (quiet, none), and is values-aware:
+lib.regime_handler_violations(knobs, handlers, mie_stays_zero, values) needs nothing for a knob whose only value is inactive, and exempts the
+irq knobs under mie_stays_zero only while no NMI can be driven (knob_irq_regime and knob_irq_line_mix not both in play with active values;
+with_nmi drives irq_nm, which MIE does not mask). The structural reader refuses annotated, tuple or chained assignments of the three names
+and decorated test classes; absent attributes take the GenTest defaults (noted). setup() runs the values-aware form over the class's
+schedulable, every pinned regime knob and every knob of the schedule (derived or supplied through +gen_regime_sched) before any REGIME_SET
+and before the first fetch. Self-test: thirteen red sources, seven green ones, and the values-aware unit cases (quiet + with_nmi accepted,
+storm + with_nmi refused, storm + single accepted, storm + with_nmi with the irq handler accepted).
+
+Runs on out_head14 (export of 2ea81ac), gen_test_csr_reset seed 1028791296 (mie_stays_zero = True, knob_irq_line_mix schedulable, no handler):
+
+| Run | Plusargs | Designed outcome | Decisive line | md5 of the excerpt |
+|---|---|---|---|---|
+| t2cm80_csr_reset_sched_dbg_storm | +gen_regime_sched=debug_req_regime:storm@c0 | refused before the first fetch (no GEN_TEST_RELEASE) | `AssertionError: GEN_TEST_FAIL gen_test_csr_reset: the run's regimes are ones its program cannot survive: knob_debug_req_regime needs a dbg handler the program does not declare` | 6ca8e40c9340854616d8bb23db09ed34 |
+| t2cm80_csr_reset_pin_storm_nmi | +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=with_nmi | refused before the first fetch | `AssertionError: GEN_TEST_FAIL gen_test_csr_reset: the run's regimes are ones its program cannot survive: knob_irq_regime with knob_irq_line_mix: mie_stays_zero exempts the irq knobs only while no NMI can be driven, but events flow and with_` | 32e12bce22388692257fdd7f1cf576e4 |
+| t2cm80_csr_reset_pin_storm_single | +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=single | allowed (no NMI line), PASS | GEN_TEST_PASS | c69c88bb321d693c6aacc6accb543a71 |
+| t2cm80_csr_reset_pin_quiet_nmi | +gen_knob_irq_regime=quiet +gen_knob_irq_line_mix=with_nmi | allowed (no events), PASS | GEN_TEST_PASS | 22b61c70561df1c28ebadead20fded01 |
+| t2cm80_csr_reset_green | none | PASS | GEN_TEST_PASS | 7a2687c8aef9d010363de9ef269cfb6a |
+
+The first version of the run-time check read pins from self.pinned, which lists only the schedulable knobs, so the storm + with_nmi pins
+passed it (a run of this probe set before the fix); the check now reads pins of every regime knob. Verified from a detached archive of HEAD
+with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_cm80.log names the HEAD).

@@ -689,33 +689,64 @@ def check_test_module(path):
     return check_test_source(Path(path).read_text(), path)
 
 
-# Regime knobs whose consumer drives an event the program must survive: a debug request needs a debug ROM in the program, an
-# interrupt line needs a returning handler unless the program keeps mstatus.MIE at 0 for the whole run (the DM window has no
-# program code; a taken interrupt without a handler never returns). HANDLER_OF names the handler each consumer needs.
-HANDLER_OF = {"dbg": "dbg", "irq": "irq"}
-HANDLERS = tuple(sorted(set(HANDLER_OF.values())))
+# Regime knobs whose events a program must be able to survive, by knob: a debug request needs a debug ROM in the DM window ("dbg"),
+# an interrupt line or an internal NMI needs a returning handler ("irq"; the NMI is not masked by mstatus.MIE), an injected bus fault
+# needs a trap handler ("exc": instruction/data access faults, an instruction integrity error). A knob absent here (latencies, the
+# scramble key, program-side markers) needs nothing. INACTIVE_VALUE names the value under which a knob drives no event at all.
+KNOB_HANDLER = {"knob_debug_req_regime": "dbg",
+                "knob_irq_regime": "irq", "knob_irq_line_mix": "irq", "knob_irq_hold": "irq",
+                "knob_imem_err_rate": "exc", "knob_dmem_err_rate": "exc", "knob_imem_intg_err_rate": "exc",
+                "knob_dmem_intg_err_rate": "irq"}
+INACTIVE_VALUE = {"knob_debug_req_regime": "none", "knob_irq_regime": "quiet", "knob_imem_err_rate": "none", "knob_dmem_err_rate": "none",
+                  "knob_imem_intg_err_rate": "none", "knob_dmem_intg_err_rate": "none"}
+NMI_LINE_MIX = "with_nmi"      # the one knob_irq_line_mix value that drives irq_nm
+HANDLERS = tuple(sorted(set(KNOB_HANDLER.values())))
+assert all(k in KNOB_CONSUMER for k in KNOB_HANDLER) and all(INACTIVE_VALUE[k] in PLUSARGS[k]["values"] for k in INACTIVE_VALUE) \
+    and NMI_LINE_MIX in PLUSARGS["knob_irq_line_mix"]["values"], "regime-handler rule: knob table changed under it"
 
 
-def regime_handler_violations(schedulable, program_handlers, mie_stays_zero):
-    """The knobs of `schedulable` a program with `program_handlers` cannot survive (the regime-handler rule); [] when none."""
-    bad = []
-    for knob in schedulable:
-        need = HANDLER_OF.get(KNOB_CONSUMER.get(knob, "none"))
-        if need is None or need in program_handlers:
+def regime_handler_violations(knobs, program_handlers, mie_stays_zero, values=None):
+    """The regime knobs in play that a program with `program_handlers` cannot survive; [] when none. `knobs` are the
+    knobs in play (a class's schedulable; at run time also the pinned knobs and the supplied schedule's); `values` maps a
+    knob to the set of values it takes in the run (None = any value may be drawn, the structural form). A knob whose every
+    value is its INACTIVE_VALUE needs nothing. mie_stays_zero exempts the irq knobs only while no NMI can be driven: an
+    NMI escapes MIE, so knob_irq_regime (events) and knob_irq_line_mix (with_nmi) may not both be in play with active values."""
+    knobs = list(dict.fromkeys(knobs))
+    def vals(k):
+        return set(values.get(k, ())) if values is not None else None
+    def active(k):
+        v = vals(k)
+        return True if v is None or not v else any(x != INACTIVE_VALUE.get(k) for x in v)
+    bad, nmi_said = [], False
+    for k in knobs:
+        need = KNOB_HANDLER.get(k)
+        if need is None or need in program_handlers or not active(k):
             continue
-        if need == "irq" and mie_stays_zero:
+        if need == "irq" and mie_stays_zero and k.startswith("knob_irq_"):
+            events = "knob_irq_regime" in knobs and active("knob_irq_regime")
+            mix = vals("knob_irq_line_mix")
+            nmi_mix = "knob_irq_line_mix" in knobs and (mix is None or not mix or NMI_LINE_MIX in mix)
+            if events and nmi_mix and not nmi_said:
+                bad.append("knob_irq_regime with knob_irq_line_mix: mie_stays_zero exempts the irq knobs only while no NMI can be driven, "
+                           f"but events flow and {NMI_LINE_MIX} is in play (irq_nm is not masked by MIE)")
+                nmi_said = True
             continue
-        bad.append(f"{knob} (consumer {KNOB_CONSUMER[knob]}) needs a {need} handler the program does not declare"
-                   + (" (or mie_stays_zero = True)" if need == "irq" else ""))
+        bad.append(f"{k} needs a {need} handler the program does not declare"
+                   + (" (or mie_stays_zero = True with no NMI in play)" if need == "irq" and k.startswith("knob_irq_") else ""))
     return bad
+
+
+RULE_ATTRS = ("schedulable", "program_handlers", "mie_stays_zero")
 
 
 def check_regime_handlers_source(source, path="<source>"):
     """Structural form of the regime-handler rule over a test module (the library self-test runs it on every committed test): every
-    test class's `schedulable` is a literal tuple of knob names or `lib.TIMING_ONLY_KNOBS` / `GenTest.schedulable`,
-    `program_handlers` a literal tuple drawn from HANDLERS and `mie_stays_zero` a literal True/False (the template defaults
-    apply when absent); a schedulable dbg-consumer knob needs "dbg" in program_handlers, an irq-consumer knob "irq" or
-    mie_stays_zero. Returns the checked class names; refuses with the offending class, knob and missing declaration."""
+    class with a `name` attribute is read by AST: `schedulable` a literal tuple of knob names (module-level constants and name
+    elements resolved), `lib.TIMING_ONLY_KNOBS` or `GenTest.schedulable`; `program_handlers` a literal tuple drawn from HANDLERS;
+    `mie_stays_zero` a literal True/False; absent attributes take the GenTest defaults (a base class's own value is not followed:
+    a conservative refusal at worst, never an evasion). Refused as unreadable: any other value form, an annotated or tuple-target
+    assignment of these names, and a decorated test class (a decorator may rewrite them; setup() is the run-time backstop).
+    Returns the checked class names; refuses with the offending class, knob and missing declaration."""
     import ast
     tree = ast.parse(source, filename=str(path))
     from dv.auto_dv.tests import gen_test_template as _tpl
@@ -733,16 +764,33 @@ def check_regime_handlers_source(source, path="<source>"):
             return None if any(p is None for p in parts) else tuple(x for p in parts for x in p)
         return None
 
+    def names_in(target):
+        if isinstance(target, ast.Name):
+            return {target.id}
+        if isinstance(target, (ast.Tuple, ast.List)):
+            return set().union(*(names_in(e) for e in target.elts))
+        return set()
+
     checked = []
     for cls in tree.body:
         if not isinstance(cls, ast.ClassDef):
             continue
         attrs = {}
         for a in cls.body:
-            if isinstance(a, ast.Assign) and len(a.targets) == 1 and isinstance(a.targets[0], ast.Name):
-                attrs[a.targets[0].id] = a.value
+            if isinstance(a, ast.AnnAssign) and names_in(a.target) & set(RULE_ATTRS):
+                raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: {', '.join(sorted(names_in(a.target) & set(RULE_ATTRS)))} must be a plain assignment "
+                                     f"(annotated at line {a.lineno}) so the regime-handler rule can read it")
+            if isinstance(a, ast.Assign):
+                if len(a.targets) == 1 and isinstance(a.targets[0], ast.Name):
+                    attrs[a.targets[0].id] = a.value
+                elif set().union(*(names_in(t) for t in a.targets)) & set(RULE_ATTRS):
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: {', '.join(sorted(set().union(*(names_in(t) for t in a.targets)) & set(RULE_ATTRS)))} "
+                                         f"must be a plain assignment (tuple or chained target at line {a.lineno}) so the regime-handler rule can read it")
         if "name" not in attrs:
             continue
+        if cls.decorator_list:
+            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} carries a decorator (line {cls.decorator_list[0].lineno}); a decorator may rewrite "
+                                 f"{', '.join(RULE_ATTRS)} behind the regime-handler rule, so test classes are undecorated (setup() re-checks at run time)")
         sched = attrs.get("schedulable")
         if sched is None:
             schedulable = tuple(_tpl.GenTest.schedulable)
@@ -895,22 +943,38 @@ def _self_test():
     for red, why in ((rh_base + "    schedulable = ('knob_imem_gnt_delay', 'knob_debug_req_regime')\n" + rh_tail, "needs a dbg handler"),
                      (rh_base + "    schedulable = ('knob_irq_line_mix',)\n" + rh_tail, "needs a irq handler"),
                      (rh_base + "    schedulable = ('knob_irq_regime',)\n    mie_stays_zero = False\n" + rh_tail, "needs a irq handler"),
+                     (rh_base + "    schedulable = ('knob_irq_regime', 'knob_irq_line_mix')\n    mie_stays_zero = True\n" + rh_tail, "with_nmi is in play"),
+                     (rh_base + "    schedulable = ('knob_dmem_intg_err_rate',)\n    mie_stays_zero = True\n" + rh_tail, "needs a irq handler"),
+                     (rh_base + "    schedulable = ('knob_imem_err_rate',)\n" + rh_tail, "needs a exc handler"),
                      (rh_base + "    schedulable = ('knob_debug_req_regime',)\n    program_handlers = HANDLERS\n" + rh_tail, "program_handlers must be a literal"),
                      (rh_base + "    schedulable = ('knob_irq_regime',)\n    mie_stays_zero = FLAG\n" + rh_tail, "literal True or False"),
                      (rh_base + "    schedulable = KNOBS\n" + rh_tail, "schedulable must be a literal"),
+                     (rh_base + "    schedulable: tuple = ('knob_imem_gnt_delay',)\n" + rh_tail, "plain assignment"),
+                     (rh_base + "    a, schedulable = 1, ('knob_imem_gnt_delay',)\n" + rh_tail, "plain assignment"),
+                     ("from dv.auto_dv.tests.gen_test_template import GenTest\ndef deco(c):\n    return c\n@deco\nclass T(GenTest):\n    name = 'gen_test_x'\n    schedulable = lib.TIMING_ONLY_KNOBS\n" + rh_tail, "carries a decorator"),
                      (rh_base + rh_tail, "needs a dbg handler")):          # the template default schedules every regime knob
         try:
             check_regime_handlers_source(red, "<rh-red>")
             raise AssertionError(f"regime-handler rule accepted a red source ({why})")
         except AssertionError as exc:
             assert why in str(exc), f"regime-handler rule: unexpected message for ({why}): {exc}"
-    for green in (rh_base + "    schedulable = ('knob_irq_regime', 'knob_irq_line_mix')\n    mie_stays_zero = True\n" + rh_tail,
-                  rh_base + "    schedulable = ('knob_debug_req_regime', 'knob_irq_regime')\n    program_handlers = ('dbg', 'irq')\n" + rh_tail,
+    for green in (rh_base + "    schedulable = ('knob_irq_regime', 'knob_irq_hold')\n    mie_stays_zero = True\n" + rh_tail,
+                  rh_base + "    schedulable = ('knob_irq_line_mix',)\n    mie_stays_zero = True\n" + rh_tail,
+                  rh_base + "    schedulable = ('knob_debug_req_regime', 'knob_irq_regime', 'knob_irq_line_mix')\n    program_handlers = ('dbg', 'irq')\n" + rh_tail,
+                  rh_base + "    schedulable = ('knob_imem_err_rate', 'knob_dmem_intg_err_rate')\n    program_handlers = ('exc', 'irq')\n" + rh_tail,
                   rh_base + "    schedulable = lib.TIMING_ONLY_KNOBS\n" + rh_tail,
                   "K = 'knob_scr_key_delay'\nKN = ('knob_imem_gnt_delay', K)\n" + rh_base + "    schedulable = KN\n" + rh_tail,
-                  rh_base + "    program_handlers = ('dbg', 'irq')\n" + rh_tail):
+                  rh_base + "    program_handlers = ('dbg', 'exc', 'irq')\n" + rh_tail):
         assert check_regime_handlers_source(green, "<rh-green>") == ["T"]
+    # the values-aware form: an inactive value needs nothing; the NMI hole needs both events and with_nmi in play
+    both = ("knob_irq_regime", "knob_irq_line_mix")
     assert regime_handler_violations(("knob_debug_req_regime",), (), True) and not regime_handler_violations(("knob_irq_hold",), (), True)
+    assert not regime_handler_violations(("knob_debug_req_regime",), (), False, {"knob_debug_req_regime": {"none"}})
+    assert regime_handler_violations(("knob_debug_req_regime",), (), False, {"knob_debug_req_regime": {"storm"}})
+    assert not regime_handler_violations(both, (), True, {"knob_irq_regime": {"quiet"}, "knob_irq_line_mix": {"with_nmi"}})
+    assert not regime_handler_violations(both, (), True, {"knob_irq_regime": {"storm"}, "knob_irq_line_mix": {"single", "multi"}})
+    assert regime_handler_violations(both, (), True, {"knob_irq_regime": {"storm"}, "knob_irq_line_mix": {"single", "with_nmi"}})
+    assert not regime_handler_violations(both, ("irq",), True, {"knob_irq_regime": {"storm"}, "knob_irq_line_mix": {"with_nmi"}})
     base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
     for form, red, why in ((F_OVERRIDE, base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
                            (F_LITERAL, base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),

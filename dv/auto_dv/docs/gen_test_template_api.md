@@ -60,8 +60,8 @@ Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the l
 | `name` | `gen_test_template` | test name; equals the testlist entry and the manifest stem |
 | (items) | the class's `fire_tp_<area>_<nnn>` methods | `declare_bins()` defaults to the plan's bins of exactly those items (`lib.fire_items`, `lib.plan_bins`, the manifest generator's own code); `gen_fcov_manifest.py --test-module <file> --test <name> --write` renders the same set, so a manifest covers the items the test checks and finish() proves it current at every run |
 | `schedulable` | `lib.REGIME_KNOBS` (all 20 regime knobs) | the knobs the test DECLARES layers 2 and 3 must vary; `lib.TIMING_ONLY_KNOBS` (bus latencies, outstanding cap, scramble-key delay) for a program with no handler for injected errors or events. Only the declared knobs the build consumes (`lib.CONSUMED_KNOBS`, Section 8) are drawn and scheduled |
-| `program_handlers` | `()` | the handlers the program carries, a literal tuple drawn from `lib.HANDLERS` (`"dbg"`: a debug ROM in the DM window, `"irq"`: a returning interrupt handler); with `mie_stays_zero` it gates which regime knobs may be schedulable (LOG-050 rule, Section 9) |
-| `mie_stays_zero` | `False` | literal True when the program never enables interrupts (mstatus.MIE stays 0), so irq-consumer knobs may be scheduled without a handler: lines are driven, nothing is taken |
+| `program_handlers` | `()` | the handlers the program carries, a literal tuple drawn from `lib.HANDLERS` (`"dbg"`: a debug ROM in the DM window, `"irq"`: a returning interrupt handler, the NMI vector included, `"exc"`: a trap handler for injected bus faults); with `mie_stays_zero` it gates which regime knobs may be in play (the regime-handler rule, Section 9) |
+| `mie_stays_zero` | `False` | literal True when the program never enables interrupts (mstatus.MIE stays 0), so the irq knobs may be in play without a handler as long as no NMI can be driven (not knob_irq_regime and knob_irq_line_mix together): lines are driven, nothing is taken |
 | `layers_required` | `True` | a declared knob without a REGIME_SET consumer in the build fails `setup()` (`GEN_TEST_FAIL <name>: declared regime knobs ... have no REGIME_SET consumer in this build`), so a test never runs with its layers silently off; `False` is for bring-up tests only (`measured: false`, reason in the docstring) and logs `GEN_TEST_LAYERS not_applied` instead |
 | `k_range` | `(1, 5)` | inclusive range of the schedule phase count K (CG-REG-007 `cp_phase_count`) |
 | `duration_weights` | `lib.DEFAULT_DURATION_WEIGHTS` (short 6, medium 3, long 1) | class weights of the phase lengths (`lib.DURATION_CLASSES`) |
@@ -192,18 +192,28 @@ False` is accepted only when the class's `name` has a testlist entry with `measu
 test; `cycle_clause_true=` is a keyword of `self.check` inside a `fire_*` method only. Each rule has a
 refused red source in the self-test (three sets of red sources today; the self-test output lists them).
 
-Regime-handler rule (LOG-050, Critic batch-1 v8 L-1): `lib.check_regime_handlers(path)` reads every test class's
-`schedulable` (a literal tuple, `lib.TIMING_ONLY_KNOBS` or `GenTest.schedulable`), `program_handlers` and `mie_stays_zero`
-(literals; the template defaults when absent) and refuses a class that schedules a knob whose `regime_set_consumer`
-(gen_tb_knobs.yaml, rendered as `gen_knobs.KNOB_CONSUMER`) is `dbg` without `"dbg"` in its handlers, or `irq` without
-`"irq"` unless `mie_stays_zero` is True; a non-literal declaration is refused as unreadable. The library self-test runs it
-over every committed test module with seven red sources and five green ones, and `setup()` applies the same rule at run
-time through `lib.regime_handler_violations` (a run that reaches the simulator with an undeclared regime fails
-`GEN_TEST_FAIL <name>: schedules a regime knob its program cannot survive` before the first fetch). It is a structural
-check beside the lint, not a 16th refused form (LOG-024d keeps `REFUSED_FORMS` frozen). The template default
-`schedulable = lib.REGIME_KNOBS` names the irq and dbg consumers, so a test that keeps it must declare both handlers;
-every committed test narrows `schedulable` instead (`lib.TIMING_ONLY_KNOBS` or a literal tuple), and gen_test_rst_boot and
-gen_test_csr_reset, which schedule an irq-consumer knob without a handler, declare `mie_stays_zero = True`.
+Regime-handler rule (LOG-050, Critic batch-1 v8 L-1): a regime knob may be in play only with the handler its events need.
+`lib.KNOB_HANDLER` maps the knobs by name: knob_debug_req_regime needs `"dbg"` (a debug ROM in the DM window); the irq knobs
+(knob_irq_regime, knob_irq_line_mix, knob_irq_hold) and knob_dmem_intg_err_rate (a load integrity error is an internal NMI)
+need `"irq"` (a returning handler at mtvec, the NMI vector included); knob_imem_err_rate, knob_dmem_err_rate and
+knob_imem_intg_err_rate need `"exc"` (a trap handler for the injected access fault). Latencies, the outstanding cap, the
+scramble key and the program-side markers need nothing. `mie_stays_zero = True` exempts the irq knobs only while no NMI can be
+driven: knob_irq_regime (events) and knob_irq_line_mix (`with_nmi` drives irq_nm, which MIE does not mask) may not both be in
+play with active values. `lib.check_regime_handlers(path)` is the structural form: it reads every test class's `schedulable`
+(a literal tuple with module-level constants resolved, `lib.TIMING_ONLY_KNOBS` or `GenTest.schedulable`), `program_handlers`
+(a literal tuple drawn from `lib.HANDLERS`) and `mie_stays_zero` (a literal); an annotated or tuple-target assignment of those
+names, a decorated test class and any other value form are refused as unreadable; absent attributes take the GenTest defaults,
+not a base class's own value (a conservative refusal at worst). The library self-test runs it over every committed test module
+with thirteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and
+before the first fetch: the knobs in play are the class's `schedulable`, the pinned knobs (`+gen_knob_<name>=`) and every knob of
+the schedule (derived, or supplied through `+gen_regime_sched`), each with the values it takes; a knob whose only value is its
+inactive one (`quiet`, `none`) needs nothing, and a run whose regimes the program cannot survive fails
+`GEN_TEST_FAIL <name>: the run's regimes are ones its program cannot survive`. It is a structural check beside the lint, not a
+16th refused form (LOG-024d keeps `REFUSED_FORMS` frozen). The template default `schedulable = lib.REGIME_KNOBS` names the irq,
+dbg and fault-injection knobs, so a test that keeps it must declare all three handlers; every committed test narrows
+`schedulable` instead (`lib.TIMING_ONLY_KNOBS` or a literal tuple), and gen_test_rst_boot (knob_irq_regime) and
+gen_test_csr_reset (knob_irq_line_mix), each without a handler, declare `mie_stays_zero = True` (one irq knob each, so no NMI
+can be drawn; a pin of the other knob to an active value fails the run at setup).
 
 Witness protocol (plan v2f, Critic condition C-1): `self.check(what, ok, detail, cycle_clause_true=False)`
 returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_true=True` only on the TRUE

@@ -82,9 +82,10 @@ class GenTest:
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
     bins_not_hit = {}       # bins of built items the test cannot hit (precondition not applied), with the reason; left out of the manifest
-    # The handlers the program carries ("dbg": a debug ROM in the DM window, "irq": a returning interrupt handler) and whether it
-    # keeps mstatus.MIE at 0 throughout: a test may schedule a dbg-consumer knob only with "dbg", an irq-consumer knob only with
-    # "irq" or mie_stays_zero (lib.regime_handler_violations; the library self-test checks every test module, setup() every run).
+    # The handlers the program carries ("dbg": a debug ROM in the DM window, "irq": a returning interrupt handler, also for the NMI,
+    # "exc": a trap handler for injected bus faults) and whether it keeps mstatus.MIE at 0 throughout: a regime knob may be in play
+    # only with its handler, the irq knobs also under mie_stays_zero while no NMI can be driven (lib.regime_handler_violations; the
+    # library self-test checks every test module, setup() every run with the pinned, drawn and scheduled values).
     program_handlers = ()
     mie_stays_zero = False
 
@@ -225,6 +226,18 @@ class GenTest:
         else:
             self.knobs = lib.draw_knobs(self.seed, self.varied)
             self.schedule = lib.Schedule.derive(self.seed, self.varied, self.k_range, self.duration_weights, self.knobs)
+        # the rule at run time, values-aware: the pinned knobs, the draw and every phase of the schedule (derived or supplied) before any
+        # REGIME_SET or the first fetch; an inactive value (quiet, none) needs nothing, with_nmi with events flowing needs the irq handler
+        pinned_all = [k for k in lib.REGIME_KNOBS if lib.knob_is_pinned(k)]        # a pin outside schedulable is in play too
+        in_play = {k: set() for k in list(self.schedulable) + pinned_all + self.schedule.knobs()}
+        for k in pinned_all:
+            in_play[k].add(lib.plus(k))
+        for k, v in self.knobs.items():
+            in_play.setdefault(k, set()).add(v)
+        for p in self.schedule.phases:
+            in_play.setdefault(p.knob, set()).add(p.value)
+        bad = lib.regime_handler_violations(list(in_play), type(self).program_handlers, type(self).mie_stays_zero, in_play)
+        assert not bad, f"GEN_TEST_FAIL {self.name}: the run's regimes are ones its program cannot survive: " + "; ".join(bad)
         self.log.info("GEN_TEST_KNOBS pinned=%s drawn=%s", ",".join(sorted(self.pinned)) or "-",
                       " ".join(f"{lib.short_knob(k)}={v}" for k, v in sorted(self.knobs.items())) or "-")
         self.log.info("GEN_TEST_SCHED source=%s k=%d sched=%s", self.schedule.source, self.schedule.k,
