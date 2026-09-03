@@ -967,3 +967,12 @@ declared set. The DV Lead runs pass 2 as landing v2m after the joint 3e + v2l co
 the logs under dv/auto_dv/evidence/gen_sunset_pass2/, and cites the tracked paths. Expected: the 86 items gated in
 pass 1 release; the 17 icram-dependent items, TP-PMC-001 and TP-REG-018 stay marked until an icram writer exists.
 Releasing a token changes which witness bins are must-hit; no result enters the Phase 1 numbers through this.
+
+## LOG-036a - 2026-09-03 - RESOLVED (committed library self-test green again at e420c7e)
+
+The joint landing e420c7e (plan v2l plus the Test Writer's gen_test_csr_trap_setup.py and manifest) restores the
+two-sided guard: TP-CSR-029 stays built in gen_csr_trap_setup, only TP-CSR-026 and TP-CSR-031 move to
+gen_csr_trap_setup_irq, and the test's not_built is empty. Verified by the Orchestrator from a detached checkout of
+e420c7e with no environment variable: GEN_TEST_LIB self-test PASS; gen_trace_check.py against the retained pass-1
+manifest PASS with 105 marked. The red window on the committed structure gate ran from 5f530a8 (14:49Z) to e420c7e
+(15:46Z). Rules of LOG-036 stand.
