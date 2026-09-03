@@ -1296,3 +1296,10 @@ slices, misc rules and dbg_dret moving to 2c (T-205); no purpose-4 regression is
 continue. Round 0 is re-declared on the first HEAD whose TB implements the referenced set. The csr_reset failure is a
 separate triage (T-206, Test Writer). Owner notice: the Phase 1 gate's functional-coverage half slips by the covergroup
 implementation time; the code-coverage probe of 37c7ecb is retained.
+
+## LOG-047 - 2026-09-03 - Response-row ids are frozen once a committed review artifact cites them
+
+Ruling recorded for the record (given in the 3g relay, referenced by the CM3e heading of gen_critic_response_batch1.md): a
+response-row id becomes frozen the moment a committed review artifact cites it. The Test Writer's CM3e-* rows stay CM3e-*
+because reviews/2026-09-03-claude-diff-a5f03ff5-1cbbcfcd.md cites "CM3e-I-1"; no relay number replaces them. New rounds get
+a fresh prefix assigned by the Orchestrator per artifact; roles never renumber their own rounds.
