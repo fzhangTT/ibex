@@ -41,11 +41,16 @@ Checked point by point against gen_test_template.py (finish at :323-337, witness
   every item whose rows the build manifest's export_sources lists, in the same change as Runtime's export_sources landing,
   regenerating the plan and the CSV (marked = 0) with the Test Writer regenerating the manifests; a failing tool run
   between the two landings is the expected signal; removal is decided from the build manifest, never from the yaml alone.
-  The tool now prints every sunset message (not the first 60) so the operator has the whole list.
+  The tool now prints every sunset message (not the first 60) so the operator has the whole list. Size the bulk
+  removal for the real number: with the yaml rendering 29 exact rows, 202 of the 220 marked items already have every
+  row rendered, so the first build manifest that lists those rows un-marks about two hundred items, not the twenty
+  the rule estimates from two ibus rows.
 
 ## 3. Tool at b40ff52
 
-Run by me from a clean archive: sunset (C-3): export sources unknown: no --build-manifest given; /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/plan_v2h/dv/auto_dv/tb/gen_tb_knobs.yaml renders 29 exact rows and 0 wildcard rows (absen
+Run by me from a clean archive: PASS, exit 0. Sunset line: export sources unknown (no --build-manifest given); the yaml
+now renders 29 exact rows and 0 wildcard rows (the <name> wildcards of v2g became exact pin / alert / misc / scrkey rows
+with T-102 and the v4b addendum), and the tool reports 202 of 220 marked items have every export row rendered in the yaml and would be checked against a build.
 The changes tighten checks (vocabulary instead of a shape regex; rendered-table equality; a missing build manifest reported
 as unknown; export_sources accepted as strings or {source, event} maps); the sunset and reverse-rule mechanisms of v2g are
 unchanged, so the absence of a cross-model round 8 is consistent with what changed.
