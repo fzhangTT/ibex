@@ -261,6 +261,8 @@ def self_test() -> int:
                 ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
                 ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
                 ("program.generator escaping the clone with ..", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/../../../ci/env.sh", "seed": "run"})),
+                ("an export file value escaping the run directory", lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + ["+gen_export_file=../outside.txt"])),
+                ("an absolute export file value", lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + ["+gen_export_file=/tmp/x.txt"])),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -423,8 +425,13 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             seed = prog.get("seed", C.PROGRAM_SEED_RUN)
             if not (seed == C.PROGRAM_SEED_RUN or isinstance(seed, int)):
                 die(f"{path}: test {t['name']} program.seed must be an integer or {C.PROGRAM_SEED_RUN!r}")
+        export_name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
         for pa in t["plusargs"]:
             name = plusarg_name(pa)
+            if export_name and name == export_name:
+                val = plusarg_value(pa) or ""
+                if not val or Path(val).is_absolute() or ".." in Path(val).parts:
+                    die(f"{path}: test {t['name']} plusarg {pa!r}: the export file must be a plain name inside the run directory")
             if name is None:
                 die(f"{path}: test {t['name']} plusarg {pa!r} is not of the form +name or +name=value")
             if name not in known_plusargs and not name.startswith(C.VCS_PLUSARG_PREFIX):

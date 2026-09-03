@@ -24,7 +24,6 @@ import json
 import os
 import shutil
 import sys
-import time
 from pathlib import Path
 from typing import Any
 
@@ -52,9 +51,10 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
         gen_log = out / "generator.log"
         gen_argv = [sys.executable, str(C.REPO_ROOT / prog["generator"]), "--seed", str(seed), "--out", str(src),
                     *[str(x) for x in (prog.get("generator_args") or [])]]
-        t_invoke = time.time()
         grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.REPO_ROOT, log_path=gen_log, timeout_s=timeout_s, env=env)
-        fresh = src.is_file() and src.stat().st_size > 0 and src.stat().st_mtime >= t_invoke - 1.0
+        # The program directory was emptied just before this invocation, so a present, non-empty source was
+        # written by it (no clock comparison across filesystems).
+        fresh = src.is_file() and src.stat().st_size > 0
         if grc != 0 or gto or not fresh:
             U.die(f"program generator failed (rc={grc}, timed_out={gto}, source written by this invocation={fresh}); see {gen_log}")
         generated = {"generator": prog["generator"], "generator_args": list(prog.get("generator_args") or []),
@@ -126,6 +126,8 @@ def main() -> int:
     a = ap.parse_args()
     if sum(bool(x) for x in (a.riscv_dv_test, a.directed, a.generator)) != 1:
         ap.error("exactly one of --riscv-dv-test / --directed / --generator is required")
+    if a.generator and U.clone_relative_file(a.generator) is None:
+        ap.error(f"--generator {a.generator!r} must be a clone-relative path (no .., no symlink out of the clone) to an existing script")
     prog = {"riscv_dv_test": a.riscv_dv_test, "directed": a.directed, "generator": a.generator,
             "generator_args": a.generator_arg, "seed": a.seed, "spike_check": a.spike_check}
     rec = build_program(prog, a.seed, a.out.resolve(), a.out.resolve() / "gen_program_driver.log")

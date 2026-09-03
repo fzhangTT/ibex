@@ -107,7 +107,11 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
     if not a.local:
         argv.append("--lsf")
     timeout_s = int(t["timeout_s"]) or C.DEFAULT_TIMEOUT_S
-    outer = timeout_s + C.TIMEOUT_GRACE_S + 300 + (0 if a.local else a.pend_allowance_s)
+    # Each program stage (generator, gen_program.py) is bounded by timeout_s inside gen_run.py; the outer
+    # watchdog must leave room for them, else an in-bound stage surfaces as "wrote no result.yaml".
+    prog = t.get("program") or {}
+    stages = (1 if prog else 0) + (1 if prog.get("generator") else 0)
+    outer = timeout_s * (1 + stages) + C.TIMEOUT_GRACE_S + 300 + (0 if a.local else a.pend_allowance_s)
     U.run_bounded(argv, cwd=run_dir, log_path=run_dir / "driver.log", timeout_s=outer)
     res_path = run_dir / C.RESULT_YAML
     if res_path.is_file():
@@ -249,13 +253,20 @@ def prune_exports(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose:
     export_plusarg = export_plusarg_name()
     plan, kept = prune_plan(runs, testlist, purpose, export_plusarg)
     pruned = 0
+    refused = 0
     for r, fname in plan:
         res_path = Path(r["result_yaml"]) if r.get("result_yaml") else None
         if not res_path or not res_path.is_file():
             continue
-        target = res_path.parent / fname
+        run_dir = res_path.parent.resolve()
+        target = (run_dir / fname).resolve()
         stored = U.load_yaml(res_path)
-        if target.is_file():
+        if run_dir not in target.parents:
+            # Containment: the export value names a file inside the run directory or nothing is touched.
+            refused += 1
+            stored["pruned_refused"] = sorted(set(stored.get("pruned_refused") or []) |
+                                              {f"{fname}: resolves outside the run directory ({target})"})
+        elif target.is_file():
             target.unlink()
             pruned += 1
             stored["pruned_artifacts"] = sorted(set(stored.get("pruned_artifacts") or []) | {str(target)})
@@ -264,7 +275,8 @@ def prune_exports(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose:
         U.dump_yaml(stored, res_path)
     return {"rule": "purpose-4 PASS/RED-OK runs lose the export file unless keep_artifacts: true; pruned paths in result.yaml",
             "export_plusarg": export_plusarg, "applies": purpose in C.RETENTION_PRUNE_PURPOSES and bool(export_plusarg),
-            "runs_planned": len(plan), "files_pruned": pruned, "runs_kept_by_keep_artifacts": kept}
+            "runs_planned": len(plan), "files_pruned": pruned, "runs_kept_by_keep_artifacts": kept,
+            "runs_refused_outside_run_dir": refused}
 
 
 def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -348,10 +360,18 @@ def self_test() -> int:
         (d / "gen_p" / "gen_export.txt").write_text("record\n", encoding="utf-8")
         rr2 = [{"test": "gen_p", "verdict": C.VERDICT_PASS, "result_yaml": str(d / "gen_p" / "result.yaml")},
                {"test": "gen_r", "verdict": C.VERDICT_RED_OK, "result_yaml": str(d / "gen_r" / "result.yaml")}]
+        (d / "gen_e").mkdir(); U.dump_yaml({"test": "gen_e", "verdict": "x"}, d / "gen_e" / "result.yaml")
+        (d / "outside.txt").write_text("must survive\n", encoding="utf-8")
+        tl3["tests"].append({"name": "gen_e", "plusargs": ["+gen_export_file=../outside.txt"]})
+        rr2.append({"test": "gen_e", "verdict": C.VERDICT_PASS, "result_yaml": str(d / "gen_e" / "result.yaml")})
         summary_r = prune_exports(rr2, tl3, 4)
+        e_res = U.load_yaml(d / "gen_e" / "result.yaml")
+        cond = (d / "outside.txt").exists() and summary_r["runs_refused_outside_run_dir"] == 1 and e_res.get("pruned_refused") \
+            and "outside the run directory" in e_res["pruned_refused"][0]
+        ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "prune_exports refuses an export value that escapes the run directory (../outside.txt survives, refusal recorded)")
         p_res = U.load_yaml(d / "gen_p" / "result.yaml"); r_res = U.load_yaml(d / "gen_r" / "result.yaml")
         cond = (not (d / "gen_p" / "gen_export.txt").exists() and p_res["pruned_artifacts"] == [str(d / "gen_p" / "gen_export.txt")]
-                and r_res["pruned_artifacts"] == [] and summary_r["files_pruned"] == 1 and summary_r["runs_planned"] == 2
+                and r_res["pruned_artifacts"] == [] and summary_r["files_pruned"] == 1 and summary_r["runs_planned"] == 3
                 and summary_r["applies"] is True)
         ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"prune_exports on disk: file removed and recorded, absent file recorded as empty list: {summary_r['files_pruned']} pruned of {summary_r['runs_planned']} planned")
     print("SELF-TEST:", "PASS" if ok else "FAIL")

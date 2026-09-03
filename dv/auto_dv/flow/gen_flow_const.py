@@ -219,10 +219,10 @@ TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
                       "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect",
                       "keep_artifacts")
-# Retention of the per-run export file (TB Infra export addendum v4, runtime ruling 2026-09-03): purposes 1-3
-# keep every artifact; a purpose-4 regression prunes the file named by the test's export plusarg after the
-# manifest is written, for PASS / RED-OK runs only, unless the entry says keep_artifacts: true; every pruned
-# path is recorded in result.yaml (pruned_artifacts). The plusarg name comes from the SV constants home.
+# Retention of the per-run export file: purposes 1-3 keep every artifact; a purpose-4 regression prunes the
+# file named by the test's export plusarg after the manifest is written, for PASS / RED-OK runs only, unless
+# the entry says keep_artifacts: true; every pruned path is recorded in result.yaml (pruned_artifacts); the
+# file must lie inside the run directory. The plusarg name comes from the SV constants home.
 # The identifier of the export-file plusarg in gen_tb_pkg.sv (the string value is read there, never re-typed).
 SV_PLUSARG_EXPORT_FILE = "PLUSARG_EXPORT_FILE"
 RETENTION_PRUNE_PURPOSES = (4,)

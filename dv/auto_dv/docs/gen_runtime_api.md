@@ -584,8 +584,8 @@ Program forms, exactly one per block: `riscv_dv_test` (the riscv-dv generator bu
 `timeout_s`, PYTHONHASHSEED pinned to 0, into a program directory the flow empties first (a stale source
 or image can never pass for this run's), log
 `<run>/program/generator.log`; the source it writes is then the one directed input of gen_program.py,
-so the seed binding is by construction; the source must exist, be non-empty and be written by this
-invocation, else the run stops). The program record in result.yaml gains `generator`,
+so the seed binding is by construction; the program directory is emptied just before the invocation, so
+a present, non-empty source was written by it, else the run stops). The program record in result.yaml gains `generator`,
 `generator_args`, `generator_command`, `generator_source`, `generator_source_sha256`,
 `generator_wall_s`, `generator_log`. A generator that exits non-zero, times out or writes no source
 stops the run before the simulator, like a failing gen_program.py (the regression records NOT_RUN
@@ -669,6 +669,8 @@ flow never deletes inside a run directory during a regression, and pruning is ne
 to 3 keep every artifact. A purpose-4 regression, after its manifest is written, removes the file named
 by the test entry's export plusarg (`gen_export_file`, read from gen_tb_pkg.sv) from every run whose
 verdict is PASS or RED-OK, unless the entry says `keep_artifacts: true`; every removed path is listed in
-that run's result.yaml under `pruned_artifacts`, and the manifest's `retention` block records the rule,
+that run's result.yaml under `pruned_artifacts` (the export value must be a plain name inside the run
+directory: the loader refuses `..` or absolute values, and the pruner refuses anything that resolves
+outside the run directory, recording it under `pruned_refused`), and the manifest's `retention` block records the rule,
 the plusarg, the planned and pruned counts and the runs spared by `keep_artifacts`. A TB without the
 export knob makes the step a recorded no-op.
