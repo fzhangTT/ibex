@@ -86,6 +86,11 @@ def render(request: str, tag: str, manifest: dict, results_rel: str) -> str:
     return ascii_only("\n".join(L) + "\n")
 
 
+def same_bytes(path: Path, text: str) -> bool:
+    """--check compares the committed file byte for byte (read_bytes, so a CRLF rewrite is a difference)."""
+    return path.exists() and path.read_bytes() == text.encode()
+
+
 def excerpt_for(request: str, tag: str, results_dir: Path = RESULTS_DIR) -> str:
     manifest = yaml.safe_load((results_dir / request / "manifest.yaml").read_text())
     rel = results_dir.relative_to(REPO_ROOT).as_posix() if results_dir.is_relative_to(REPO_ROOT) else str(results_dir)
@@ -128,6 +133,10 @@ def self_test() -> int:
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "output is ASCII (a non-ASCII byte becomes '?')")
     cond = excerpt_name("b3", "test-writer-071") == "gen_acceptance_b3_071_verdict_excerpt.log"
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "excerpt file name")
+    exact, crlf, missing = d / "exact.log", d / "crlf.log", d / "missing.log"
+    exact.write_bytes(text.encode()); crlf.write_bytes(text.replace("\n", "\r\n").encode())
+    cond = same_bytes(exact, text) and not same_bytes(crlf, text) and not same_bytes(missing, text)
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "--check compares bytes: an exact copy is same, a CRLF rewrite and a missing file differ (CM115-I-1)")
     U.remove_tree_guarded(d, (SELFTEST_TMP,), "self-test dir")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
@@ -154,7 +163,7 @@ def main() -> int:
             out.write_text(text)
             print(f"wrote {out} sha256 {digest[:12]}")
         elif a.check:
-            same = out.exists() and out.read_text() == text
+            same = same_bytes(out, text)
             print(f"{'same' if same else 'DIFFERS'} {out} (fresh render sha256 {digest[:12]})")
             rc |= 0 if same else 1
         else:

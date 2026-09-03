@@ -61,7 +61,8 @@ log dv/auto_dv/work/runtime/round_0.log is unmirrored); gen_round.py carries no 
 ## Red before green (self-test cases on fabricated name lists; no repository history needed except case 14)
 
 Cases 1-11 and 13 run in `gen_flow_util.py --self-test`, cases 12 and 14 in `gen_serve_requests.py --self-test`; the red run
-before the implementation (NameError / TypeError on the missing classifier) is retained as
+before the implementation (the NameError of gen_flow_util on the missing classify_delta, and the TypeError of gen_serve_requests
+case 12 indexing the pre-gate string-valued build_input_delta) is retained as
 dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log (manifest row in gen_tdd_logs/flow/gen_manifest.md).
 
 1.  [dv/auto_dv/docs/gen_intervention_log.md]                      -> accept (case 1 of the motivating set)
