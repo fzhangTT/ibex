@@ -864,3 +864,15 @@ gen_excl_f1_pass.py crash when started outside the clone root, hoist it to gen_f
 derived from EVIDENCE_DIR; T-131 row wording; response counts). The LOG-027 hold on the first measured round is
 lifted: Runtime may collect round 0 once the DV Lead requests it, rtl-arch's F-1 pass follows it, and no request
 with an elcheck key of any kind is served in head mode until CM13-M-1 lands.
+
+## LOG-033 - 2026-09-03 - GO (first cycle-clause token removal, sunset pass 1)
+
+Reference for pass 1: Runtime's head-mode build of 2696920 (canary PASS, gen_ut_export probe PASS), manifest
+dv/auto_dv/work/runtime/out/probe_export_1445_v2k/build/gen_tb/build_manifest.yaml, export_sources_emitted 28 rows
+over 7 sources from the export header, export_rows_observed 19 rows; nine declared rows (pin debug_req, the five
+irq pins, regime phase, scrkey req and valid) are unobserved by a single gen_ut_export run and hold their items per
+LOG-028a. The DV Lead lands v2k (CM12 rows, Critic v5 lows, LOG-032 citation) then v2j (row-level observed gate in
+gen_trace_check.py and the driver; retained before/after log; rehearsal on the earlier probe: 115 released, 86
+gated, 105 marked left) as one landing citing this manifest; pass 2 follows T-150's regression. Nothing enters the
+Phase 1 numbers through this: it changes which witness bins are must-hit for the affected tests (rule (f)), and the
+only built test touched, gen_csr_trap_setup, has its two items gated in pass 1.
