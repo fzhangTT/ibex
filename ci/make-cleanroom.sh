@@ -62,6 +62,13 @@ DENY=(
   "doc/03_reference/images/tb*.svg"               # existing TB diagrams
   ".mex/"                                          # full-tree mex graph/wiki; WS6 is full-tree only, may embed fenced content
   ".github"                                        # Zone B CI: re-discloses cosim build/run + directed test names (workflows/actions); Zone A owns its own regression scripts
+  # cleanroom-builder tooling class: these build/verify OTHER clones (this repo's tree,
+  # or a landing branch on the full-tree receiving repo) and are never needed to exist
+  # *inside* a Zone A clone itself.
+  "ci/make-cleanroom.sh"                           # builds a cleanroom from a full tree; a Zone A clone is never itself the source of another export
+  "ci/check-landing.sh"                            # gates a dv/auto_dv/** landing diff on the FULL-TREE receiving repo, not inside a Zone A clone
+  "ci/cleanroom-selftest.sh"                        # tests make-cleanroom.sh; not needed inside a Zone A clone
+  "ci/cleanroom-inventory.txt"                      # the builder's own manifest; not needed inside a Zone A clone
 )
 
 # DV_prompt.txt Section 12 item 9: exact string set, scoped to its exact file list.
@@ -111,13 +118,14 @@ cleanroom_check_deny_absence() {  # <export-root>
   fi
 
   if [ -d "$root/docs/dv" ]; then
-    local f base leftover2=()
+    local f base name is_allowed leftover2=()
     while IFS= read -r -d '' f; do
       base="$(basename "$f")"
-      case "$base" in
-        FENCE.md|SIM_RECIPE.md|TB_CONTRACT.md|dv_principles.md) ;;
-        *) leftover2+=("$f") ;;
-      esac
+      is_allowed=0
+      for name in "${DOCS_DV_ALLOWED[@]}"; do
+        [ "$base" = "$name" ] && { is_allowed=1; break; }
+      done
+      [ "$is_allowed" -eq 0 ] && leftover2+=("$f")
     done < <(find "$root/docs/dv" -mindepth 1 -maxdepth 1 -print0 2>/dev/null)
     if [ "${#leftover2[@]}" -gt 0 ]; then
       err "docs/dv/ has content beyond the Zone A set (${DOCS_DV_ALLOWED[*]}):"
@@ -215,11 +223,16 @@ cleanroom_check_item9_scan() {  # <export-root>
   return "$bad"
 }
 
-# (d2) whole-export scan for the unconditionally-forbidden identifiers.
+# (d2) whole-export scan for the unconditionally-forbidden identifiers. Carve-out:
+# vendor/google_riscv-dv/** is excluded -- it is upstream, fair-game content (fetched
+# pristine and gated by its own precondition-6 checks in _cleanroom_place_riscvdv, not
+# by this scan); its own docs/tests use "core_ibex"/"riscv_arithmetic_basic_test" as
+# worked examples and would otherwise flag permanently regardless of the export's own
+# content.
 cleanroom_check_whole_export_identifiers() {  # <export-root>
   local root="$1" bad=0 id hits
   for id in "${WHOLE_EXPORT_IDENTIFIERS[@]}"; do
-    hits="$(grep -rIFl -- "$id" "$root" 2>/dev/null || true)"
+    hits="$(grep -rIFl --exclude-dir=google_riscv-dv -- "$id" "$root" 2>/dev/null || true)"
     if [ -n "$hits" ]; then
       err "fenced identifier '$id' present in export:"
       echo "$hits" | sed 's/^/  /' >&2
@@ -293,9 +306,13 @@ cleanroom_check_validator() {  # <export-root>
 # Fetch a pristine upstream copy of vendor/google_riscv-dv at the locked rev and place
 # it into the stage, replacing whatever git-archive shipped (the checked-in tree
 # carries local patches -- see the amendment review C3 -- so "pristine" here means
-# fetched fresh, not verified-in-place). Retains vendor/google_riscv-dv.lock.hjson
-# (never touched -- it is the DV_prompt Section 12 precondition-6 anchor); deletes
-# vendor/google_riscv-dv.vendor.hjson (discloses patch_dir).
+# fetched fresh, not verified-in-place). Verifies (a) the fetched commit's SHA equals
+# the locked rev in vendor/google_riscv-dv.lock.hjson exactly (logged), and (b) no file
+# in the fetched tree contains the string "Ibex Specific" -- DV_prompt Section 12
+# precondition 6's own pristine test, and the actual evidence (a checkout-vs-itself
+# diff is tautological and proves nothing about content). Retains
+# vendor/google_riscv-dv.lock.hjson (never touched -- it is the precondition-6 anchor);
+# deletes vendor/google_riscv-dv.vendor.hjson (discloses patch_dir).
 _cleanroom_place_riscvdv() {  # <stage>
   local stage="$1"
   local lock="$REPO_ROOT/vendor/google_riscv-dv.lock.hjson"
@@ -319,16 +336,35 @@ _cleanroom_place_riscvdv() {  # <stage>
         && git init -q \
         && git remote add origin "$url" \
         && timeout 300 git fetch -q --depth 1 origin "$rev" \
-        && git checkout -q FETCH_HEAD -- . \
-        && git diff --quiet FETCH_HEAD -- .
+        && git checkout -q FETCH_HEAD -- .
     ); then ok=1; else ok=0; fi
     if [ "$ok" -ne 1 ]; then
-      err "BLOCKED: could not fetch/verify pristine upstream riscv-dv at $rev from $url."
+      err "BLOCKED: could not fetch pristine upstream riscv-dv at $rev from $url."
       err "Owner must decide: retry the fetch, or omit vendor/google_riscv-dv from the export (amendment change-5 deviation)."
       rm -rf "$tmp"
       return 1
     fi
+
+    local fetched_sha
+    fetched_sha="$(git -C "$tmp" rev-parse FETCH_HEAD)"
+    echo "Fetched riscv-dv commit: $fetched_sha (locked rev: $rev)"
+    if [ "$fetched_sha" != "$rev" ]; then
+      err "fetched riscv-dv commit $fetched_sha does not match the locked rev $rev in vendor/google_riscv-dv.lock.hjson"
+      rm -rf "$tmp"
+      return 1
+    fi
+
     rm -rf "$tmp/.git"
+
+    local patched
+    patched="$(grep -rIFl -- "Ibex Specific" "$tmp" 2>/dev/null || true)"
+    if [ -n "$patched" ]; then
+      err "fetched riscv-dv at $rev contains 'Ibex Specific' (precondition-6 pristine test) -- not pristine:"
+      echo "$patched" | sed 's/^/  /' >&2
+      rm -rf "$tmp"
+      return 1
+    fi
+
     mkdir -p "$(dirname "$cache")"
     mv "$tmp" "$cache"
   fi

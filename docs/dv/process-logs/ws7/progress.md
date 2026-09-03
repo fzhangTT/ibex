@@ -12,6 +12,8 @@ folded per the plan pre-review `docs/dv/reviews/2026-09-02-claude-plan-ws7-expor
       `ci/cleanroom-inventory.txt` + this ledger. Selftest green in `--pre-overlay` mode
       (proves a, b, c, f-partial (deny/artifact canaries; mcp/identifier canaries SKIP — their
       checks are themselves skipped pre-overlay), g; d1/d2/e/h SKIP by design until Task 2/4).
+      **Post-review fix round 1 (see below): full mode (no `--pre-overlay`) is now green
+      end-to-end** — all of a–h and all four named canaries pass against T2's landed overlay.
 - [x] **T2** — Zone A overlay (`ci/cleanroom-overlay/`) — landed (commit `583b4be9`, 36 files),
       concurrent with T1/T3.
 - [x] **T3** — mex (WS6), full tree — landed (commit `b23f4725`), concurrent with T1/T2.
@@ -64,19 +66,9 @@ fold these in:
    the `riscv-dv-verified-on:` dated attestation line that precondition 6 wants in `FENCE.md` is
    not written by this script (FENCE.md is Task 5's file) — the ruling and mechanism are recorded
    here for T5 to close against.
-   **Residual finding for the owner (not fixed by T1, found via a full-mode selftest run after
-   Task 2 landed, not part of T1's required pre-overlay proof):** pristine upstream riscv-dv's own
-   docs (`docs/source/handshake.rst`, `end_to_end_simulation.rst`) hyperlink directly to
-   `github.com/lowRISC/ibex/blob/master/dv/uvm/core_ibex/tests/core_ibex_{base_test,test_lib}.sv`
-   as a worked example — a real disclosure of the existing TB's test filenames, inherent to
-   shipping riscv-dv pristine (patching it would break the verified-empty-diff property). Separately,
-   `riscv_arithmetic_basic_test` also appears in riscv-dv's own stock `yaml/base_testlist.yaml` —
-   this one is benign (the amendment's own "adopted, reference-only" testlist ruling covers a
-   generic upstream example name coinciding with Ibex's adopted test of the same name). The first
-   is a structural tension between "ship riscv-dv pristine" and "no fenced identifiers in the
-   export" with no clean fix inside `make-cleanroom.sh`; it needs an owner ruling (accept as a
-   documented residual risk in FENCE.md, or a targeted, diff-recorded doc redaction that
-   consciously breaks strict pristine-ness).
+   **Superseded by fix round 1 (see below):** the original finding here (pristine riscv-dv's own
+   docs disclosing existing-TB filenames, breaking the whole-export identifier scan permanently)
+   is resolved by carving `vendor/google_riscv-dv/**` out of that one scan — see fix round 1 item 1.
 4. **`.github` deny (Major).** Workflows/actions re-disclosed the cosim build+run and directed
    test names after the three `ci/*cosim*.sh` scripts were denied; added to `DENY` wholesale.
 5. **Identifier check realignment (Major).** Split into `cleanroom_check_item9_scan` (DV_prompt
@@ -122,6 +114,45 @@ two Zone B rubrics already yields exactly six). Confirmed `ci/check_fcov_expecta
 and must not be denied (it is on FENCE.md's `ci/` allowlist, precondition 2); its Zone A variant
 arrives via the file-wise overlay copy once Task 2 supplies it.
 
+## Fix round 1 (post-commit review: 2 Critical, 2 Important, 2 Minor)
+
+1. **[Critical] (d2) whole-export identifier scan now excludes `vendor/google_riscv-dv/**`**
+   (`grep --exclude-dir=google_riscv-dv`). Rationale comment in the code: upstream, fair-game
+   content, gated by its own precondition-6 checks in `_cleanroom_place_riscvdv` (item 4 below),
+   not by this scan. This is what makes full mode pass end-to-end for the first time — the scan
+   was previously detecting riscv-dv's own docs/tests linking `core_ibex`/naming
+   `riscv_arithmetic_basic_test` as worked examples, permanently.
+2. **[Critical] `ci/make-cleanroom.sh`, `ci/check-landing.sh`, `ci/cleanroom-selftest.sh`, and
+   `ci/cleanroom-inventory.txt` were shipping into every export** (no `DENY` entry covered them;
+   `ci/` is not wholesale-denied). None are needed *inside* a Zone A clone — they build/verify
+   *other* clones (this repo's own tree, or a landing branch on the full-tree receiving repo).
+   Added as a labeled class in `DENY` with a class-level comment. (This also means the reviewer's
+   live reproduction — the scan detecting its own literal string arrays — is fixed as a side
+   effect: the scanner script itself no longer ships.)
+3. **[Important]** The canary selftest now asserts each mode's own named check-error substring
+   appears in the log (not just "exit nonzero") — `canary_expect()` in
+   `ci/cleanroom-selftest.sh` maps `deny|artifact|mcp|identifier` to the exact string its intended
+   check emits. A canary caught by the wrong check, or failing for an unrelated reason (e.g. a
+   riscv-dv fetch network hiccup), now fails the selftest instead of passing vacuously.
+4. **[Important]** The pristine-fetch verify was tautological (checkout `FETCH_HEAD`, diff against
+   `FETCH_HEAD` — always empty). Replaced with two independent, meaningful checks: (a) `git
+   rev-parse FETCH_HEAD` equals the locked rev in `vendor/google_riscv-dv.lock.hjson` exactly,
+   logged; (b) no file in the fetched tree contains `Ibex Specific` — DV_prompt §12
+   precondition 6's own pristine test, and the actual evidence of pristine-ness. Item 3's ledger
+   text above and the function's header comment were rewritten to describe what is actually
+   verified.
+5. **[Minor]** `cleanroom_check_deny_absence`'s `docs/dv` membership test now iterates
+   `DOCS_DV_ALLOWED` instead of a hardcoded `case` with the same four names duplicated — single
+   authority.
+6. **[Minor]** `ci/cleanroom-inventory.txt`'s regenerate command now excludes `.mex` (was missing)
+   and its header note says explicitly to keep the exclusion set in sync with `DENY`'s top-level
+   entries in `ci/make-cleanroom.sh`, rather than silently drifting.
+
+**Full-mode selftest is now green end-to-end** (all of a–h, all four canaries, all four
+landing-check sub-cases) — captured at `docs/dv/evidence/ws7-selftest-tdd/t1-fullmode-green.txt`.
+`--pre-overlay` green re-captured at `t1-green.txt` (canary assertions now check the named error
+string too, not just nonzero exit).
+
 ## Deferred (named per the pre-review, not fixed in T1)
 
 - **spec:139's unclassifiable-path rejection**, beyond the top-level inventory tripwire (item 7
@@ -146,10 +177,8 @@ arrives via the file-wise overlay copy once Task 2 supplies it.
 
 - Red→green TDD transcripts: `docs/dv/evidence/ws7-selftest-tdd/t1-red.txt` (real capture: the
   three scripts moved aside, `ci/cleanroom-selftest.sh` invocation fails with "No such file or
-  directory", exit 127) and `t1-green.txt` (`ci/cleanroom-selftest.sh --pre-overlay`, 0 failures).
-- A full (non-`--pre-overlay`) run was also exercised as due diligence once Task 2's overlay
-  landed mid-session (not required for T1's pre-overlay contract): it correctly fails on the
-  riscv-dv pristine-doc disclosure noted above, and all four canary modes plus the landing-check
-  sub-cases behave as designed. Not saved as a t1-*.txt pair (it is not the required pre-overlay
-  proof and the overlay is still moving), but reproducible with
-  `ci/cleanroom-selftest.sh` (no flag).
+  directory", exit 127) and `t1-green.txt` (`ci/cleanroom-selftest.sh --pre-overlay`, 0 failures,
+  re-captured post-fix-round-1 with the named canary-string assertions).
+- `t1-fullmode-green.txt` (`ci/cleanroom-selftest.sh`, no flag): full mode, 0 failures, all of
+  a–h, all four canaries (each caught by its own named check), all four landing-check sub-cases.
+  Captured post-fix-round-1 against T2's landed overlay (commits `583b4be9` + `d3b70285`).

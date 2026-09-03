@@ -4,8 +4,12 @@
 # it here deliberately) -- see docs/superpowers/specs/2026-09-02-zone-a-fence-scope-amendment.md
 # and the WS7 plan pre-review (docs/dv/reviews/2026-09-02-claude-plan-ws7-export-path.md,
 # Major finding "deferred list is incomplete", spec:139 unclassifiable-path property).
-# One entry per line; blank lines and '#' comments are ignored. Regenerate with:
-#   git ls-tree HEAD --name-only | grep -vE '^(formal|\.github)$' | sort
+# One entry per line; blank lines and '#' comments are ignored. The exclusion set below
+# must stay in sync with DENY's own top-level (depth-1) entries in ci/make-cleanroom.sh
+# (currently: formal, .mex/, .github -- ci/make-cleanroom.sh's other DENY entries are
+# all *inside* an already-listed top-level name, e.g. ci/, and so do not change this
+# file). Regenerate with:
+#   git ls-tree HEAD --name-only | grep -vE '^(formal|\.github|\.mex)$' | sort
 .agents
 AGENTS.md
 AI_Transformation_Assigments.md

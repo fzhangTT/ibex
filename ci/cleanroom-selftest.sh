@@ -79,19 +79,33 @@ fi
 
 echo
 echo "== (f) planted canaries (anti-vacuity: CLEANROOM_CANARY=deny|artifact|mcp|identifier) =="
+# Each canary must be caught by its OWN named check, not merely produce some nonzero
+# exit -- a canary caught by the wrong check (or failing for an unrelated reason, e.g.
+# a network hiccup in the riscv-dv fetch) must fail this selftest, not pass vacuously.
+canary_expect() {
+  case "$1" in
+    deny) echo "dv/ has content beyond the dv/auto_dv/ allowlist" ;;
+    artifact) echo "run artifact present in export" ;;
+    mcp) echo "remote (http/url) MCP server entry" ;;
+    identifier) echo "fenced identifier 'riscv_arithmetic_basic_test' present in export" ;;
+  esac
+}
 for c in deny artifact mcp identifier; do
   if [ "$PRE_OVERLAY" = "1" ] && { [ "$c" = "mcp" ] || [ "$c" = "identifier" ]; }; then
     echo "SKIP: (f) canary=$c -- its check ((e) or (d2)) is itself skipped pre-overlay, so this canary has nothing to catch it"
     continue
   fi
+  expect="$(canary_expect "$c")"
   CDEST="$T/export-canary-$c"
   run_build "$CDEST" "$c" >"$T/canary-$c.log" 2>&1
   crc=$?
   cat "$T/canary-$c.log"
-  if [ "$crc" -ne 0 ]; then
-    pass "(f) canary=$c build fails as expected"
-  else
+  if [ "$crc" -eq 0 ]; then
     fail "(f) canary=$c build unexpectedly exited 0"
+  elif grep -qF "$expect" "$T/canary-$c.log"; then
+    pass "(f) canary=$c build fails as expected, caught by its own check ('$expect')"
+  else
+    fail "(f) canary=$c build failed, but NOT with its expected check ('$expect' not found -- wrong check may have caught it, or it failed for an unrelated reason)"
   fi
 done
 

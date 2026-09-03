@@ -1,13 +1,13 @@
 ########## export build + checks (pre-overlay=1) ##########
 == (a) plain export build ==
-Building cleanroom export of 583b4be9d05c0bcaa29b774bd11faf6ee008c293 into /tmp/ibex-cleanroom-stage.VOjdMQ ...
+Building cleanroom export of 6b1fe99fbfb46da0b9cfaf427778933dc81e3536 into /tmp/ibex-cleanroom-stage.4V9jwc ...
 Verifying export ...
 NOTE: CLEANROOM_PRE_OVERLAY=1 skips the item-9 scan, whole-export identifier scan, NO-REMOTE-MCP, and validator checks (Task 2 not landed).
 Verification passed.
 Cleanroom export built.
-  dest:       /tmp/tmp.BFlZz2feyx/export
-  source SHA: 583b4be9d05c0bcaa29b774bd11faf6ee008c293
-  export SHA: f3e03cc8a08f48bbe5af84a2cfa3789f6d82494c
+  dest:       /tmp/tmp.5HyZufnCG5/export
+  source SHA: 6b1fe99fbfb46da0b9cfaf427778933dc81e3536
+  export SHA: 32b9d3a307c65d49787bc646c8dcefbdeb06c486
   verify:     PASS
 PASS: (a) export build exits 0
 PASS: (b) deny-list / default-deny absence
@@ -17,36 +17,36 @@ PASS: inventory tripwire
 SKIP: (d1)/(d2)/(e)/(h) -- --pre-overlay mode (Task 2 overlay not landed; these checks are only meaningful once it has)
 
 == (f) planted canaries (anti-vacuity: CLEANROOM_CANARY=deny|artifact|mcp|identifier) ==
-Building cleanroom export of 583b4be9d05c0bcaa29b774bd11faf6ee008c293 into /tmp/ibex-cleanroom-stage.E0IFds ...
+Building cleanroom export of 6b1fe99fbfb46da0b9cfaf427778933dc81e3536 into /tmp/ibex-cleanroom-stage.VCSCPI ...
 CLEANROOM_CANARY=deny: planting a file under a denied root (dv/uvm/.canary_denied_ref)
 Verifying export ...
 ERROR: dv/ has content beyond the dv/auto_dv/ allowlist:
-  /tmp/ibex-cleanroom-stage.E0IFds/dv/uvm
+  /tmp/ibex-cleanroom-stage.VCSCPI/dv/uvm
 NOTE: CLEANROOM_PRE_OVERLAY=1 skips the item-9 scan, whole-export identifier scan, NO-REMOTE-MCP, and validator checks (Task 2 not landed).
 ERROR: cleanroom export failed verification. DEST was not written.
-PASS: (f) canary=deny build fails as expected
-Building cleanroom export of 583b4be9d05c0bcaa29b774bd11faf6ee008c293 into /tmp/ibex-cleanroom-stage.TKDkxz ...
+PASS: (f) canary=deny build fails as expected, caught by its own check ('dv/ has content beyond the dv/auto_dv/ allowlist')
+Building cleanroom export of 6b1fe99fbfb46da0b9cfaf427778933dc81e3536 into /tmp/ibex-cleanroom-stage.SKGD8t ...
 CLEANROOM_CANARY=artifact: planting a zero-byte artifact (dv/auto_dv/.canary.fsdb)
 Verifying export ...
 ERROR: run artifact present in export:
-  /tmp/ibex-cleanroom-stage.TKDkxz/dv/auto_dv/.canary.fsdb
+  /tmp/ibex-cleanroom-stage.SKGD8t/dv/auto_dv/.canary.fsdb
 NOTE: CLEANROOM_PRE_OVERLAY=1 skips the item-9 scan, whole-export identifier scan, NO-REMOTE-MCP, and validator checks (Task 2 not landed).
 ERROR: cleanroom export failed verification. DEST was not written.
-PASS: (f) canary=artifact build fails as expected
+PASS: (f) canary=artifact build fails as expected, caught by its own check ('run artifact present in export')
 SKIP: (f) canary=mcp -- its check ((e) or (d2)) is itself skipped pre-overlay, so this canary has nothing to catch it
 SKIP: (f) canary=identifier -- its check ((e) or (d2)) is itself skipped pre-overlay, so this canary has nothing to catch it
 
 ########## (g) landing check ##########
 PASS: (g) accepts synthetic dv/auto_dv/gen_foo.sv
-landing check PASSED for range 75ea27140c28cd538e1080cb5a7b81c2be068f26..eaa4ba04cbfdc26f28ff66b3662095e722ba59bd
+landing check PASSED for range 451ace1bda6cb063e41e7043da1ef1b6958250ab..982c9b6add640f1515e78841729252e169d91fa6
 PASS: (g)(i) rejects change outside dv/auto_dv/
-ERROR: landing check FAILED for range 75ea27140c28cd538e1080cb5a7b81c2be068f26..796d5ec95208ff17133a3cda14dbc46dd5921e5e:
+ERROR: landing check FAILED for range 451ace1bda6cb063e41e7043da1ef1b6958250ab..30e685beb70c1e545a1bc1bd6be18a5de0844ded:
   path outside dv/auto_dv/: dv/uvm/leak.sv (status A)
 PASS: (g)(ii) rejects dv/auto_dv/ file without gen_
-ERROR: landing check FAILED for range 75ea27140c28cd538e1080cb5a7b81c2be068f26..06406a0fd6fd641dbc4a0b43d8e047ceec4f3103:
+ERROR: landing check FAILED for range 451ace1bda6cb063e41e7043da1ef1b6958250ab..beff35c79384708f5249eb6cf92f999eba1c3f18:
   added dv/auto_dv/ file 'dv/auto_dv/nogen.sv' does not start with gen_
 PASS: (g)(iii) rejects symlink
-ERROR: landing check FAILED for range 75ea27140c28cd538e1080cb5a7b81c2be068f26..536961b6d4e39b8608a92e88f935d99321dbcc9f:
+ERROR: landing check FAILED for range 451ace1bda6cb063e41e7043da1ef1b6958250ab..eee50f7fed4ac3b34d4fcc4cc0cae9f0b39b73f4:
   symlink touched: dv/auto_dv/gen_link.sv
 
 selftest: 0 failure(s)
