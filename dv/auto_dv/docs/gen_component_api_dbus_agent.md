@@ -14,7 +14,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 Driver of `data_gnt_i`, `data_rvalid_i`, `data_rdata_i[MemDataWidth-1:0]`, `data_err_i`;
 consumer of `data_req_o/we/be/addr/wdata[38:0]/tag_o`. Performs stores into the memory model
 (enabled byte lanes only), serves loads, sinks the MMIO windows, injects bus and integrity
-errors including per-half injection on split misaligned accesses.
+errors including per-half injection on split misaligned accesses. AS BUILT (step 1c): the same `gen_agents_pkg::gen_bus_agent` as the instruction side, instance `dbus_agent` on `gen_bus_if u_dbus_if` (`is_data = 1`): stores are performed into `gen_mem_model` with the byte enables at grant (an errored store still lands unless `+gen_dbus_err_store_perform=0`), loads read the model, the response carries a valid encoding of zero for stores; knobs `+gen_knob_dmem_*` map as on the instruction side, cap fixed at GEN_DBUS_MAX_OUTSTANDING = 2; MMIO windows (signature, irq ack, end-of-test, phase marker) and the tohost watch are the model's.
 
 ## 2. Files (planned) and how to call it
 

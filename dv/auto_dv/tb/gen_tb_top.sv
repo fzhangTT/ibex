@@ -1,8 +1,8 @@
 // gen_tb_top: the VCS -top and cocotb TOPLEVEL of the generated TB (architecture C2). Declares the
 // 19 configuration parameters the opentitan build sets with -pvalue+ and forwards them to gen_dut_top
 // u_dut; instantiates clock/reset, the cocotb bridge (gen_bridge_if u_bridge_if) and, from build step
-// 1c on, the interface agents and RAM models. Build step 1b: DUT inputs that agents will drive are
-// tied to their idle values so the bridge, banner and end-of-test mechanics can be proven alone.
+// 1c on, the bus interfaces with their agents, the icache RAM models and the scramble-key responder;
+// the interrupt/debug pins stay tied idle until their agents land in step 2.
 // Python owns the end of simulation (TB_CONTRACT Section 2): the alive watchdog here fatals when no
 // Python side ever starts; UVM runs gen_base_test with finish_on_completion = 0.
 module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
@@ -106,29 +106,54 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
   logic        rvfi_ext_expanded_insn_valid, rvfi_ext_expanded_insn_last;
   logic [15:0] rvfi_ext_expanded_insn;
 
-  // Step 1b tie-offs (replaced by agents in step 1c: no grant, no response, valid key, no events).
-  assign instr_gnt        = 1'b0;
-  assign instr_rvalid     = 1'b0;
-  assign instr_rdata      = '0;
-  assign instr_err        = 1'b0;
-  assign data_gnt         = 1'b0;
-  assign data_rvalid      = 1'b0;
-  assign data_rdata       = '0;
-  assign data_err         = 1'b0;
-  assign data_tag_i       = 1'b0;
-  for (genvar w = 0; w < IC_NUM_WAYS; w++) begin : g_icram_tie
-    assign ic_tag_rdata[w]  = '0;
-    assign ic_data_rdata[w] = '0;
+  // ---- bus agents (step 1c): the interfaces carry the DUT ports; drivers in gen_agents_pkg ----
+  gen_bus_if #(.DataW(MemDataWidth), .Name("ibus")) u_ibus_if (.clk(clk), .rst_n(rst_n));
+  gen_bus_if #(.DataW(MemDataWidth), .Name("dbus")) u_dbus_if (.clk(clk), .rst_n(rst_n));
+  assign u_ibus_if.req  = instr_req;
+  assign u_ibus_if.addr = instr_addr;
+  assign u_ibus_if.we   = 1'b0;
+  assign u_ibus_if.be   = 4'hF;
+  assign u_ibus_if.wdata = '0;
+  assign instr_gnt    = u_ibus_if.gnt;
+  assign instr_rvalid = u_ibus_if.rvalid;
+  assign instr_rdata  = u_ibus_if.rdata;
+  assign instr_err    = u_ibus_if.err;
+  assign u_dbus_if.req   = data_req;
+  assign u_dbus_if.addr  = data_addr;
+  assign u_dbus_if.we    = data_we;
+  assign u_dbus_if.be    = data_be;
+  assign u_dbus_if.wdata = data_wdata;
+  assign data_gnt     = u_dbus_if.gnt;
+  assign data_rvalid  = u_dbus_if.rvalid;
+  assign data_rdata   = u_dbus_if.rdata;
+  assign data_err     = u_dbus_if.err;
+  assign data_tag_i   = 1'b0;
+
+  // ---- icache RAM models, one per way for tags and data (step 1c) -------------------------------
+  for (genvar w = 0; w < IC_NUM_WAYS; w++) begin : g_icram
+    gen_icache_ram #(.Width(TagSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("tag%0d", w))) u_tag (
+      .clk(clk), .rst_n(rst_n), .req(ic_tag_req[w]), .write(ic_tag_write), .addr(ic_tag_addr),
+      .wdata(ic_tag_wdata), .rdata(ic_tag_rdata[w]));
+    gen_icache_ram #(.Width(LineSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("data%0d", w))) u_data (
+      .clk(clk), .rst_n(rst_n), .req(ic_data_req[w]), .write(ic_data_write), .addr(ic_data_addr),
+      .wdata(ic_data_wdata), .rdata(ic_data_rdata[w]));
   end
-  assign ic_scr_key_valid = 1'b1;
+
+  // ---- scramble-key responder (step 1c) -------------------------------------------------------
+  gen_scrkey_if u_scrkey_if (.clk(clk), .rst_n(rst_n));
+  assign u_scrkey_if.req  = ic_scr_key_req;
+  assign ic_scr_key_valid = u_scrkey_if.valid;
+
+  // Step 2 tie-offs (interrupt and debug agents): no events.
   assign irq_software     = 1'b0;
   assign irq_timer        = 1'b0;
   assign irq_external     = 1'b0;
   assign irq_fast         = '0;
   assign irq_nm           = 1'b0;
   assign debug_req        = 1'b0;
-  assign fetch_enable        = IbexMuBiOn;
-  assign mcounteren_writable = IbexMuBiOn;
+  gen_ctrl_if u_ctrl_if (.clk(clk), .rst_n(rst_n));
+  assign fetch_enable        = u_ctrl_if.fetch_enable;
+  assign mcounteren_writable = u_ctrl_if.mcounteren_writable;
 
   gen_dut_top #(
     .BaseIsa(BaseIsa), .PMPEnable(PMPEnable), .PMPGranularity(PMPGranularity),
@@ -188,6 +213,10 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
 
   initial begin
     uvm_config_db#(virtual gen_bridge_if)::set(null, "*", "bridge_vif", u_bridge_if);
+    uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.ibus_agent*", "vif", u_ibus_if);
+    uvm_config_db#(virtual gen_bus_if)::set(null, "uvm_test_top.env.dbus_agent*", "vif", u_dbus_if);
+    uvm_config_db#(virtual gen_scrkey_if)::set(null, "uvm_test_top.env.scrkey*", "vif", u_scrkey_if);
+    uvm_config_db#(virtual gen_ctrl_if)::set(null, "uvm_test_top.env.ctrl*", "vif", u_ctrl_if);
     run_test();
   end
 endmodule

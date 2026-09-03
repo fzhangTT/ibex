@@ -81,6 +81,17 @@ module gen_ut_mem_model_top;
     check("peek_word entry", m.peek_word(entry), entry_word);
     check("peek_word unmapped is 0 without counting", m.peek_word(32'h20), 32'h0);
     check("unmapped count unchanged by peek", m.unmapped_count, 1);
+    // 7. word watch (tohost / end-of-test): the store lands in RAM AND the handler sees it
+    begin
+      ut_handler wh = new();
+      m.add_watch(entry + 32'd12, wh);
+      m.write_masked(entry + 32'd12, 32'h0000_0001, 4'b1111);
+      check("watched store lands in RAM", m.read32(entry + 32'd12), 32'h1);
+      check("watch handler saw the store", wh.writes, 1);
+      check("watch handler data", wh.last_data, 32'h1);
+      m.write_masked(entry + 32'd16, 32'h5, 4'b1111);
+      check("unwatched store does not call the handler", wh.writes, 1);
+    end
     $display("GEN_UT_MEM_MODEL %s (%0d failures)", fails ? "FAIL" : "PASS", fails);
     $finish;
   end

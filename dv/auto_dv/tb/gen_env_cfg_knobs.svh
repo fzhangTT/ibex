@@ -18,6 +18,8 @@
   bit mem_image_words_set = 1'b0;
   int unsigned mem_readback_words = 64;
   bit mem_readback_words_set = 1'b0;
+  logic [31:0] tohost_addr = 32'h0;
+  bit tohost_addr_set = 1'b0;
   bit mem_unmapped_ok = 1'b0;
   logic [31:0] boot_addr = 32'h80000000;
   bit boot_addr_set = 1'b0;
@@ -31,11 +33,14 @@
   bit fcov_en = 1'b1;
   string icram_init = "random";
   bit icram_init_set = 1'b0;
+  bit fetch_en_at_reset = 1'b1;
   bit key_reset_valid = 1'b1;
   string isa_string = "";
   bit isa_string_set = 1'b0;
   string isa_log = "";
   bit isa_log_set = 1'b0;
+  int unsigned ut_boot_retire = 200;
+  bit ut_boot_retire_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
   bit ibus_gnt_min_set = 1'b0;
   int unsigned ibus_gnt_max = 0;
@@ -190,6 +195,7 @@
     if ($value$plusargs({PLUSARG_MEM_IMAGE_CRC32, "=%h"}, h)) begin mem_image_crc32 = h; mem_image_crc32_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_IMAGE_WORDS, "=%d"}, u)) begin mem_image_words = u; mem_image_words_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_READBACK_WORDS, "=%d"}, u)) begin mem_readback_words = u; mem_readback_words_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_TOHOST_ADDR, "=%h"}, h)) begin tohost_addr = h; tohost_addr_set = 1'b1; end
     if ($value$plusargs({PLUSARG_MEM_UNMAPPED_OK, "=%d"}, u)) mem_unmapped_ok = (u != 0);
     if ($value$plusargs({PLUSARG_BOOT_ADDR, "=%h"}, h)) begin boot_addr = h; boot_addr_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ALIVE_TIMEOUT, "=%d"}, u)) begin alive_timeout = u; alive_timeout_set = 1'b1; end
@@ -198,9 +204,11 @@
     if ($value$plusargs({PLUSARG_RVFI_TRACE, "=%d"}, u)) rvfi_trace = (u != 0);
     if ($value$plusargs({PLUSARG_FCOV_EN, "=%d"}, u)) fcov_en = (u != 0);
     if ($value$plusargs({PLUSARG_ICRAM_INIT, "=%s"}, s)) begin icram_init = s; icram_init_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_FETCH_EN_AT_RESET, "=%d"}, u)) fetch_en_at_reset = (u != 0);
     if ($value$plusargs({PLUSARG_KEY_RESET_VALID, "=%d"}, u)) key_reset_valid = (u != 0);
     if ($value$plusargs({PLUSARG_ISA_STRING, "=%s"}, s)) begin isa_string = s; isa_string_set = 1'b1; end
     if ($value$plusargs({PLUSARG_ISA_LOG, "=%s"}, s)) begin isa_log = s; isa_log_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_BOOT_RETIRE, "=%d"}, u)) begin ut_boot_retire = u; ut_boot_retire_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_RVALID_MIN, "=%d"}, u)) begin ibus_rvalid_min = u; ibus_rvalid_min_set = 1'b1; end

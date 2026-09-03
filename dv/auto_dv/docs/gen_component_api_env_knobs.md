@@ -13,7 +13,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 
 The UVM environment: instantiates the agents, monitors, scoreboard, shim wrapper and coverage;
 holds `gen_env_cfg` (one field per knob) built once from plusargs; implements the three
-randomization layers and command-line regime pinning (DV_prompt Section 6).
+randomization layers and command-line regime pinning (DV_prompt Section 6). AS BUILT (step 1c): `gen_cfg_pkg::gen_env_cfg` with the rendered `gen_env_cfg_knobs.svh`; `gen_env` builds the memory model (image load and digest, MMIO windows, tohost watch), the two bus agents (`gen_bus_cfg::from_env`), the scramble-key and control drivers and the bridge, and connects `bridge.cmd_ap` to `gen_cmd_dispatch` (FETCH_EN -> `gen_ctrl_driver`; MEM_PEEK/MISC consumed; every other kind is a collected `uvm_error` until its consumer lands). New knob `+gen_fetch_en_at_reset` (default 1; 0 holds the core until FETCH_EN so the image read-back precedes execution).
 
 ## 2. Files (planned) and how to call it
 

@@ -1,66 +1,27 @@
-// gen_env_pkg: the UVM environment skeleton of the generated TB (architecture C2, C9): gen_env_cfg
-// (knob fields rendered from gen_tb_knobs.yaml), gen_cmd_item, gen_bridge, gen_env, gen_base_test.
-// Tests differ by Python, not by UVM test class (DV_prompt Section 9); the one UVM test is
-// gen_base_test. Agents, monitors and the scoreboard join this package in build steps 1c and 2.
+// gen_env_pkg: the UVM environment of the generated TB (architecture C2, C9): gen_bridge (cocotb
+// command consumer, MEM_PEEK over the memory model), gen_env (memory model with the image load and
+// digest check, MMIO windows and the tohost watch, the two bus agents, the scramble-key responder) and
+// gen_base_test (plusarg parsing, banner, end-of-test handshake). Tests differ by Python, not by UVM
+// test class (DV_prompt Section 9). Configuration and command item: gen_cfg_pkg; agents: gen_agents_pkg.
 package gen_env_pkg;
   import uvm_pkg::*;
   import gen_tb_pkg::*;
+  import gen_cfg_pkg::*;
+  import gen_mem_pkg::*;
+  import gen_agents_pkg::*;
   `include "uvm_macros.svh"
 
   // ------------------------------------------------------------------------------------------
-  class gen_env_cfg extends uvm_object;
-    `uvm_object_utils(gen_env_cfg)
-    int unsigned seed = 0;   // +ntb_random_seed, echoed in the banner next to Python's RANDOM_SEED
-    `include "gen_env_cfg_knobs.svh"
-    function new(string name = "gen_env_cfg");
-      super.new(name);
-    endfunction
-  endclass
-
-  // ------------------------------------------------------------------------------------------
-  // One bridge command as captured from gen_bridge_if; published to the agents' sequencers.
-  class gen_cmd_item extends uvm_sequence_item;
-    logic [7:0]  kind;
-    logic [31:0] arg [4];
-    logic [15:0] seq;
-    `uvm_object_utils_begin(gen_cmd_item)
-      `uvm_field_int(kind, UVM_ALL_ON)
-      `uvm_field_sarray_int(arg, UVM_ALL_ON)
-      `uvm_field_int(seq, UVM_ALL_ON)
-    `uvm_object_utils_end
-    function new(string name = "gen_cmd_item");
-      super.new(name);
-    endfunction
-    function string kind_name();
-      case (kind)
-        GEN_CMD_IRQ_SET:        return "IRQ_SET";
-        GEN_CMD_IRQ_CLR:        return "IRQ_CLR";
-        GEN_CMD_NMI_PULSE:      return "NMI_PULSE";
-        GEN_CMD_DBG_REQ:        return "DBG_REQ";
-        GEN_CMD_REGIME_SET:     return "REGIME_SET";
-        GEN_CMD_KEY_MODE:       return "KEY_MODE";
-        GEN_CMD_MEM_ERR_ARM:    return "MEM_ERR_ARM";
-        GEN_CMD_ICACHE_ECC_ARM: return "ICACHE_ECC_ARM";
-        GEN_CMD_FETCH_EN:       return "FETCH_EN";
-        GEN_CMD_MEM_PEEK:       return "MEM_PEEK";
-        GEN_CMD_MISC:           return "MISC";
-        default:                return $sformatf("UNKNOWN(%0d)", kind);
-      endcase
-    endfunction
-  endclass
-
-  // ------------------------------------------------------------------------------------------
   // gen_bridge: arms the listener, consumes one command per cmd_valid edge, publishes it on cmd_ap
-  // and toggles cmd_ack the next cycle; MEM_PEEK is answered from a memory read callback that the
-  // memory model registers (step 1c); until then a peek is a collected error, never a silent 0.
+  // and toggles cmd_ack the next cycle; MEM_PEEK is answered from the memory model (peek_word, no
+  // side effects); a peek without a model is a collected error, never a silent 0.
   class gen_bridge extends uvm_component;
     `uvm_component_utils(gen_bridge)
     virtual gen_bridge_if vif;
-    gen_env_cfg cfg;
+    gen_env_cfg   cfg;
+    gen_mem_model mem;
     uvm_analysis_port #(gen_cmd_item) cmd_ap;
     int unsigned consumed = 0;
-    // Memory read hook for MEM_PEEK (set by the memory model in step 1c).
-    typedef logic [31:0] peek_fn_t;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       cmd_ap = new("cmd_ap", this);
@@ -73,14 +34,15 @@ package gen_env_pkg;
         `uvm_fatal("GEN_BRIDGE", "cfg not in uvm_config_db")
     endfunction
     virtual function logic [31:0] peek_word(logic [31:0] addr);
-      `uvm_error("GEN_BRIDGE", $sformatf("MEM_PEEK 0x%08h without a memory model", addr))
-      return 32'h0;
+      if (mem == null) begin
+        `uvm_error("GEN_BRIDGE", $sformatf("MEM_PEEK 0x%08h without a memory model", addr))
+        return 32'h0;
+      end
+      return mem.peek_word(addr);
     endfunction
     task run_phase(uvm_phase phase);
       gen_cmd_item item;
-      logic cmd_valid_q;
       @(posedge vif.clk);
-      cmd_valid_q = vif.cmd_valid;
       vif.listener_armed = 1'b1;
       forever begin
         @(vif.cmd_valid);            // Python toggles the level once per command
@@ -103,18 +65,100 @@ package gen_env_pkg;
   endclass
 
   // ------------------------------------------------------------------------------------------
-  class gen_env extends uvm_env;
-    `uvm_component_utils(gen_env)
-    gen_env_cfg cfg;
-    gen_bridge  bridge;
+  // Bridge command dispatcher: routes each gen_cmd_item to the component that acts on it. Kinds
+  // without a consumer yet (irq/debug agents, regimes, injection arms: step 2) are collected errors so
+  // a test cannot believe it stimulated something that nothing consumed.
+  class gen_cmd_dispatch extends uvm_subscriber #(gen_cmd_item);
+    `uvm_component_utils(gen_cmd_dispatch)
+    gen_ctrl_driver ctrl;
+    int unsigned routed = 0, ignored = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
     endfunction
+    function void write(gen_cmd_item t);
+      case (t.kind)
+        GEN_CMD_FETCH_EN: begin ctrl.set_fetch_en(t.arg[0]); routed++; end
+        GEN_CMD_MEM_PEEK, GEN_CMD_MISC: routed++;   // answered by the bridge / no-op
+        default: begin
+          ignored++;
+          `uvm_error("GEN_CMD_DISPATCH", $sformatf("command %s has no consumer yet", t.kind_name()))
+        end
+      endcase
+    endfunction
+  endclass
+
+  // ------------------------------------------------------------------------------------------
+  class gen_env extends uvm_env;
+    `uvm_component_utils(gen_env)
+    gen_env_cfg       cfg;
+    gen_bridge        bridge;
+    gen_mem_model     mem;
+    gen_bus_agent     ibus_agent;
+    gen_bus_agent     dbus_agent;
+    gen_scrkey_driver scrkey;
+    gen_ctrl_driver   ctrl;
+    gen_cmd_dispatch  dispatch;
+    gen_eot_handler    eot_h;
+    gen_record_handler sig_h, ack_h, phase_h;
+    virtual gen_bridge_if bvif;
+    function new(string name, uvm_component parent);
+      super.new(name, parent);
+    endfunction
+
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg))
         `uvm_fatal("GEN_ENV", "cfg not in uvm_config_db")
+      if (!uvm_config_db#(virtual gen_bridge_if)::get(this, "", "bridge_vif", bvif))
+        `uvm_fatal("GEN_ENV", "bridge_vif not in uvm_config_db")
+      // memory model and image (the only backdoor write; digest verified, C3.3)
+      mem = new("mem");
+      mem.unmapped_ok = cfg.mem_unmapped_ok;
+      if (cfg.mem_image_set) begin
+        int unsigned n = mem.load_vmem(cfg.mem_image);
+        if (!cfg.mem_image_crc32_set || !cfg.mem_image_words_set)
+          `uvm_fatal("MEM_LOAD", "+gen_mem_image needs +gen_mem_image_crc32 and +gen_mem_image_words (sidecar values)")
+        if (!mem.verify_digest(cfg.mem_image_crc32, cfg.mem_image_words))
+          `uvm_fatal("MEM_LOAD", $sformatf("image %s: %0d words loaded, crc32 0x%08h, sidecar says %0d words crc32 0x%08h",
+                     cfg.mem_image, n, mem.crc32_index_word(), cfg.mem_image_words, cfg.mem_image_crc32))
+        `uvm_info("MEM_LOAD", $sformatf("image %s: %0d words, crc32 0x%08h verified", cfg.mem_image, n, cfg.mem_image_crc32), UVM_LOW)
+      end else begin
+        `uvm_warning("MEM_LOAD", "no +gen_mem_image: the core fetches zeros from RAM (bring-up only)")
+      end
+      eot_h   = new(bvif);
+      sig_h   = new("GEN_SIG");
+      ack_h   = new("GEN_IRQ_ACK");
+      phase_h = new("GEN_PHASE_MARK");
+      mem.add_mmio(GEN_MM_SIG_ADDR, 32'h100, sig_h);
+      mem.add_mmio(GEN_MM_IRQ_ACK_ADDR, 32'h4, ack_h);
+      mem.add_mmio(GEN_MM_EOT_ADDR, 32'h4, eot_h);
+      mem.add_mmio(GEN_MM_PHASE_MARK_ADDR, 32'h4, phase_h);
+      if (cfg.tohost_addr_set) mem.add_watch(cfg.tohost_addr, eot_h);
+      // agents
+      ibus_agent = gen_bus_agent::type_id::create("ibus_agent", this);
+      dbus_agent = gen_bus_agent::type_id::create("dbus_agent", this);
+      ibus_agent.cfg = gen_bus_cfg::type_id::create("ibus_cfg"); ibus_agent.cfg.from_env(cfg, 1'b0);
+      dbus_agent.cfg = gen_bus_cfg::type_id::create("dbus_cfg"); dbus_agent.cfg.from_env(cfg, 1'b1);
+      scrkey = gen_scrkey_driver::type_id::create("scrkey", this);
+      ctrl   = gen_ctrl_driver::type_id::create("ctrl", this);
+      dispatch = gen_cmd_dispatch::type_id::create("dispatch", this);
       bridge = gen_bridge::type_id::create("bridge", this);
+      `uvm_info("GEN_ENV", {"ibus: ", ibus_agent.cfg.describe()}, UVM_LOW)
+      `uvm_info("GEN_ENV", {"dbus: ", dbus_agent.cfg.describe()}, UVM_LOW)
+    endfunction
+
+    function void connect_phase(uvm_phase phase);
+      super.connect_phase(phase);
+      ibus_agent.driver.mem = mem;
+      dbus_agent.driver.mem = mem;
+      bridge.mem = mem;
+      dispatch.ctrl = ctrl;
+      bridge.cmd_ap.connect(dispatch.analysis_export);
+    endfunction
+
+    function void report_phase(uvm_phase phase);
+      `uvm_info("GEN_ENV", $sformatf("mem: %0d words, %0d mmio writes, %0d unmapped accesses; eot stores %0d (last code 0x%08h); sig writes %0d; key requests %0d; commands routed %0d ignored %0d",
+                mem.word_count(), mem.mmio_writes, mem.unmapped_count, bvif.evt_eot_count, bvif.evt_eot_code, sig_h.writes, scrkey.requests, dispatch.routed, dispatch.ignored), UVM_LOW)
     endfunction
   endclass
 
@@ -179,8 +223,14 @@ package gen_env_pkg;
 `else
       $display("%s define COCOTB_SIM=0 (pure-SV run: the alive watchdog will fatal unless a test sets alive)", GEN_BANNER_TAG);
 `endif
-      $display("%s alive_timeout=%0d finish_timeout=%0d mem_image=%s", GEN_BANNER_TAG,
-               cfg.alive_timeout, cfg.finish_timeout, cfg.mem_image_set ? cfg.mem_image : "none");
+      $display("%s alive_timeout=%0d finish_timeout=%0d mem_image=%s tohost=%s", GEN_BANNER_TAG,
+               cfg.alive_timeout, cfg.finish_timeout, cfg.mem_image_set ? cfg.mem_image : "none",
+               cfg.tohost_addr_set ? $sformatf("0x%08h", cfg.tohost_addr) : "none");
+      $display("%s knobs imem gnt=%s rvalid=%s err=%s intg=%s cap=%s dmem gnt=%s rvalid=%s err=%s intg=%s key=%s icram_init=%s",
+               GEN_BANNER_TAG, cfg.knob_imem_gnt_delay, cfg.knob_imem_rvalid_delay, cfg.knob_imem_err_rate,
+               cfg.knob_imem_intg_err_rate, cfg.knob_imem_outstanding_cap, cfg.knob_dmem_gnt_delay,
+               cfg.knob_dmem_rvalid_delay, cfg.knob_dmem_err_rate, cfg.knob_dmem_intg_err_rate,
+               cfg.knob_scr_key_delay, cfg.icram_init);
     endfunction
 
     function void end_of_elaboration_phase(uvm_phase phase);
@@ -192,8 +242,8 @@ package gen_env_pkg;
       phase.raise_objection(this, "gen_base_test: waiting for finish_req");
       @(posedge vif.finish_req);
       while (vif.stim_active) @(posedge vif.clk);   // Python's checks complete before we conclude
-      `uvm_info("GEN_BASE_TEST", $sformatf("finish_req seen at cycle %0d, commands consumed %0d",
-                vif.cycle_count, vif.cmds_consumed), UVM_LOW)
+      `uvm_info("GEN_BASE_TEST", $sformatf("finish_req seen at cycle %0d, commands consumed %0d, retired %0d",
+                vif.cycle_count, vif.cmds_consumed, vif.evt_retired_count), UVM_LOW)
       phase.drop_objection(this, "gen_base_test: finish_req");
     endtask
 

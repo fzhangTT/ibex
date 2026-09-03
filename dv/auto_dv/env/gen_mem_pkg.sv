@@ -26,6 +26,7 @@ package gen_mem_pkg;
     string name;
     logic [31:0] mem [int unsigned];      // word index -> word (sparse)
     gen_mmio_window_t windows [$];
+    gen_mmio_handler  watches [int unsigned];   // word index -> handler called AFTER a RAM store lands (tohost)
     bit          unmapped_ok = 1'b0;      // +gen_mem_unmapped_ok: count and answer 0 instead of erroring
     int unsigned unmapped_count = 0;
     int unsigned mmio_writes = 0;
@@ -51,6 +52,11 @@ package gen_mem_pkg;
       gen_mmio_window_t w;
       w.base = base; w.size = size; w.h = h;
       windows.push_back(w);
+    endfunction
+
+    // A watch fires on stores to one RAM word (the store still lands); used for the tohost symbol.
+    function void add_watch(logic [31:0] addr, gen_mmio_handler h);
+      watches[addr >> 2] = h;
     endfunction
 
     // ---- image load: "@<hex word index>" runs of one hex word per line (gen_elf2mem.py) ---------
@@ -139,6 +145,7 @@ package gen_mem_pkg;
       cur = mem.exists(addr >> 2) ? mem[addr >> 2] : 32'h0;
       for (int k = 0; k < 4; k++) if (be[k]) cur[8*k +: 8] = data[8*k +: 8];
       mem[addr >> 2] = cur;
+      if (watches.exists(addr >> 2)) watches[addr >> 2].on_write(addr, cur, be);
     endfunction
     // MEM_PEEK: the stored word without side effects (no MMIO call, no unmapped accounting).
     function logic [31:0] peek_word(logic [31:0] addr);

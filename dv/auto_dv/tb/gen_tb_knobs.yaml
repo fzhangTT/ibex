@@ -16,6 +16,7 @@ plusargs:
   - {name: mem_image_crc32, kind: hex, default: null, desc: CRC-32 over (index, word) pairs from the .sym.json sidecar, recomputed after load}
   - {name: mem_image_words, kind: int, default: null, desc: word count from the sidecar}
   - {name: mem_readback_words, kind: int, default: 64, desc: words Python reads back through MEM_PEEK and compares with the .vmem}
+  - {name: tohost_addr, kind: hex, default: null, desc: address of the program tohost word (sidecar symbol); a store there ends the test with the stored code}
   - {name: mem_unmapped_ok, kind: bool, default: 0, desc: unmapped bus access returns an error response instead of a TB error}
   - {name: boot_addr, kind: hex, default: 0x80000000, desc: boot_addr_i (must match the image entry page)}
   - {name: alive_timeout, kind: int, default: 100000, desc: cycles before the SV alive watchdog fatals (TB_CONTRACT Section 2)}
@@ -24,9 +25,12 @@ plusargs:
   - {name: rvfi_trace, kind: bool, default: 0, desc: write an ASCII RVFI trace file (debug only)}
   - {name: fcov_en, kind: bool, default: 1, desc: instantiate covergroups}
   - {name: icram_init, kind: enum, values: [zero, random], default: random, desc: initial contents of the icache tag/data RAM models}
+  - {name: fetch_en_at_reset, kind: bool, default: 1, desc: fetch_enable_i On out of reset; 0 holds the core until a bridge FETCH_EN command (image read-back happens first)}
   - {name: key_reset_valid, kind: bool, default: 1, desc: ic_scr_key_valid_i high out of reset (ibex_top behaviour)}
   - {name: isa_string, kind: string, default: null, desc: model ISA string override (debug only; the default is GEN_ISA_STRING)}
   - {name: isa_log, kind: string, default: null, desc: model commit log path for debug}
+  # ---- TB unit-test knobs (gen_tests/*) ----
+  - {name: ut_boot_retire, kind: int, default: 200, desc: retirements the boots-and-retires test waits for}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: instruction bus grant latency low bound (cycles)}
   - {name: ibus_gnt_max, kind: int, default: null, desc: instruction bus grant latency high bound}

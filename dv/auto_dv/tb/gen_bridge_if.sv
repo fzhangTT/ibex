@@ -35,7 +35,9 @@ interface gen_bridge_if (
   logic        evt_cycle_hit   = 1'b0;
   logic        evt_irq_taken   = 1'b0;
   logic        evt_dbg_entered = 1'b0;
-  logic        evt_eot_seen    = 1'b0;
+  logic        evt_eot_seen    = 1'b0;   // toggles on every end-of-test store (tohost or the EOT register)
+  logic [31:0] evt_eot_code    = '0;     // the stored value (1 = pass by the riscv-dv/tohost convention)
+  logic [15:0] evt_eot_count   = '0;
   logic [31:0] evt_retired_count = '0;
   logic [15:0] evt_err_count     = '0;
   logic        finish_ack        = 1'b0;

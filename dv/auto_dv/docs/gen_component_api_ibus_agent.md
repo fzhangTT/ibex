@@ -19,17 +19,25 @@ normally (rtl-arch MEM-16).
 
 ## 2. Files (planned) and how to call it
 
-`dv/auto_dv/tb/gen_ibus_if.sv` (interface on the wrapper's instr_* ports), `dv/auto_dv/env/
-gen_ibus_pkg.sv` with `gen_ibus_cfg`, `gen_ibus_item` (regime/error-arm items), `gen_ibus_driver`,
-`gen_ibus_monitor`, `gen_ibus_sequencer`, `gen_ibus_agent`; transaction type `gen_bus_txn`
-{kind=FETCH, addr, data, intg, err, gnt_delay, rvalid_delay, cycle_req, cycle_gnt, cycle_rvalid,
-outstanding_at_gnt, injected}.
+AS BUILT (step 1c): one generic bus agent serves both buses. `dv/auto_dv/tb/gen_bus_if.sv`
+(interface `gen_bus_if #(DataW, Name)` on the wrapper's instr_* or data_* ports; carries the
+`sva_rvalid_legal` self-check and the outstanding counter), `dv/auto_dv/env/gen_agents_pkg.sv` with
+`gen_bus_cfg` (latency windows, cap, injection rates; `from_env()` maps the DV Lead's enum knobs
+`knob_imem_*` to windows and applies numeric overrides), `gen_bus_driver` (reactive slave over
+`gen_mem_model`, acts at the falling edge, publishes completed transactions with its injection facts on
+`ap`), `gen_bus_agent`; transaction type `gen_bus_txn` {kind FETCH/LOAD/STORE, addr, data, intg, be, err,
+injected, gnt_delay, rvalid_delay, cycle_req, cycle_gnt, cycle_rvalid, outstanding_at_gnt}. Instances
+`ibus_agent` and `dbus_agent` in `gen_env`; vifs `uvm_test_top.env.<agent>*.vif`. A separate monitor
+and the sequencer for run-time regime items arrive with the checkers (step 2).
 
-Instantiated by `gen_env`; `gen_ibus_cfg` is built from plusargs by `gen_base_test` and placed in
-`uvm_config_db`; the virtual interface handle comes from `gen_tb_top`. Runtime regime changes and
-error arming arrive as `gen_ibus_item`s on the sequencer from the bridge (REGIME_SET,
-MEM_ERR_ARM). The monitor publishes every transaction on analysis port `ap` (scoreboard, coverage,
-checkers).
+Instantiated by `gen_env`, which builds `gen_bus_cfg` with `from_env(cfg, is_data)` from the
+environment configuration (enum knobs `+gen_knob_imem_gnt_delay` same_cycle 0..0 / short 1..3 / long
+4..32 / random 0..32, `+gen_knob_imem_rvalid_delay` min1 1..1 / short 1..3 / long 4..32 / random 1..32,
+`+gen_knob_imem_err_rate` and `_intg_err_rate` none 0 / rare 2 / frequent 50 per mille,
+`+gen_knob_imem_outstanding_cap` cap1..cap8 bounded by GEN_IBUS_MAX_OUTSTANDING; numeric
+`+gen_ibus_*` overrides win). The virtual interface comes from `gen_tb_top` through `uvm_config_db`.
+Run-time regime changes (REGIME_SET) and error arming (MEM_ERR_ARM) arrive through the bridge
+dispatcher in step 2. Completed transactions are published on `ap` (scoreboard, coverage, checkers).
 
 ## 3. Knobs
 

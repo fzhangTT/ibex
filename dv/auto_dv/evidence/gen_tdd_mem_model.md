@@ -46,3 +46,25 @@ count, byte-masked writes, word alignment of reads, region mapping from the rend
 constants (program, DM, MMIO page mapped; holes and address 0 not), the MMIO handler path for stores
 and reads, the `unmapped_ok` policy (counted, answered 0) and the side-effect-free `peek_word` used by
 MEM_PEEK.
+
+## 3. Word watch (tohost end-of-test), test extended first
+
+The unit test gained the `add_watch` checks (a watched store lands in RAM and calls the handler; an
+unwatched store does not) before the model had the API:
+
+```
+# RED compile (add_watch missing): 2026-09-03T07:39:40Z host=soc-l-11
+Error-[MFNF] Member not found
+dv/auto_dv/tb/unit/gen_ut_mem_model_top.sv, 87
+"m."
+vcs exit=255
+# GREEN compile+run (add_watch): 2026-09-03T07:41:29Z host=soc-l-11
+vcs exit=0
+simv exit=0
+GEN_UT_MEM_MODEL PASS (0 failures)
+OK lines: 29
+```
+
+(`Error-[MFNF] Member not found ... "m."` is the red: `add_watch` did not exist; green run 3: 29 checks
+PASS.) The environment uses the watch for `+gen_tohost_addr` (the program's `tohost` symbol from the
+image sidecar): the store toggles `evt_eot_seen` and records the code in `evt_eot_code`.

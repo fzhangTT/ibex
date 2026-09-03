@@ -14,7 +14,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 The top of the generated TB: declares the 19 opentitan configuration parameters and forwards them
 to `gen_dut_top u_dut`, generates clock and reset, hosts the cocotb bridge, the interface instances
 and (from step 1c) the agents and RAM models, runs the single UVM test `gen_base_test` and owns the
-alive watchdog. Python (cocotb) owns the end of simulation.
+alive watchdog. Python (cocotb) owns the end of simulation. AS BUILT (step 1c): interfaces `u_ibus_if`, `u_dbus_if` (gen_bus_if), `u_scrkey_if`, `u_ctrl_if` (fetch_enable_i, mcounteren_writable_i), the four `gen_icache_ram` instances and the bridge `u_bridge_if`; only the interrupt and debug pins stay tied idle. Milestone: `dv/auto_dv/evidence/gen_tdd_boot_agents.md` (boots and retires on the directed Zc program and a riscv-dv program).
 
 ## 2. Files (planned) and how to call it
 

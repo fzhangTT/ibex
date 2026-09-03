@@ -19,16 +19,26 @@ no separate boot stub or DmHaltAddr alias exists.
 
 ## 2. Files (planned) and how to call it
 
-`dv/auto_dv/env/gen_mem_model.sv` (SV class, one instance in `gen_env`, handle in
-`uvm_config_db` for both agents and the scoreboard). Image producer: `dv/auto_dv/stim/gen_program.py`
--> `prog.vmem` + `prog.sym.json` (format: `dv/auto_dv/stim/gen_elf2mem.py` docstring).
+AS BUILT (step 1c): `dv/auto_dv/env/gen_mem_pkg.sv` (package gen_mem_pkg: `gen_mmio_handler` base
+class with `on_write`/`on_read`, `gen_mem_model` SV class; one instance built by `gen_env`, handles
+passed to both bus drivers and to the bridge for MEM_PEEK). Image producer: `dv/auto_dv/stim/gen_program.py`
+-> `prog.vmem` + `prog.sym.json` (format: `dv/auto_dv/stim/gen_elf2mem.py` docstring); Python view
+`dv/auto_dv/gen_tb/gen_image.py` (plusargs, word dictionary, tohost symbol, seeded read-back sample).
+Unit test `dv/auto_dv/tb/unit/gen_ut_mem_model_top.sv` (+ `.f`), transcript
+`dv/auto_dv/evidence/gen_tdd_mem_model.md`.
 
-`load_vmem(path)` at time 0 ($readmemh into the sparse array), `crc32_index_word()` (IEEE CRC-32,
+`load_vmem(path)` at time 0 (own reader of the `@<index>` runs, returns the word count; the
+`gen_env` build fatals `MEM_LOAD` unless `verify_digest(+gen_mem_image_crc32, +gen_mem_image_words)` holds),
+`crc32_index_word()` (IEEE CRC-32,
 zlib polynomial, init 0xFFFFFFFF, final XOR, over the loaded words in ascending index order, each
 fed as 8 little-endian bytes (index, word), exactly `gen_elf2mem.checksum()`, v2 XM-M3),
 `verify_digest(crc32, count)` (mismatch = `uvm_fatal MEM_LOAD`), `read32(addr)` (also serves the
 bridge's MEM_PEEK), `write_masked(addr, data, be)`,
-`add_mmio(window, handler)`, `symbol(name)` from the sidecar (tohost, signature, entry).
+`add_mmio(base, size, handler)` (windows in `gen_env`: signature at `GEN_MM_SIG_ADDR` 0x100 bytes, irq ack,
+end-of-test register, phase marker), `add_watch(addr, handler)` (a store to a RAM word that also fires
+a handler: the `tohost` symbol from `+gen_tohost_addr`), `is_mapped(addr)` from the rendered `GEN_MM_*`
+regions (program window, DM window, MMIO page), `peek_word(addr)` (MEM_PEEK, no side effects),
+`unmapped_ok` / `unmapped_count`. Symbols are Python's business (`gen_image.py`), not the SV model's.
 
 ## 3. Knobs
 

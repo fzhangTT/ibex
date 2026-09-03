@@ -12,7 +12,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 ## 1. Purpose
 
 Answers the core's one-cycle `ic_scr_key_req_o` pulses on `ic_scr_key_valid_i`, standing in for
-ibex_top's key logic and the OTP key provider.
+ibex_top's key logic and the OTP key provider. AS BUILT (step 1c): `gen_agents_pkg::gen_scrkey_driver` on `dv/auto_dv/tb/gen_scrkey_if.sv` (instance `u_scrkey_if`, vif `uvm_test_top.env.scrkey*`): valid starts at `+gen_key_reset_valid`; on each req pulse it drops valid and raises it again after the regime delay (`+gen_knob_scr_key_delay` immediate = 1 cycle, delayed = `+gen_key_delay_min..max`, withheld_then_valid = `+gen_key_never_cycles` + 1); `requests` counted for the report. The KEY_MODE bridge command and the `scrkey_proto` checker follow in step 2.
 
 ## 2. Files (planned) and how to call it
 

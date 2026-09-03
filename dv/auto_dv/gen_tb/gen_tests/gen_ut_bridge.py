@@ -17,7 +17,7 @@ async def gen_ut_bridge(dut):
     await b.start()
     for i in range(5):
         await b.cmd("MISC", (i, 0xA5A5_0000 | i, 0, 0))
-    await b.cmd("REGIME_SET", (1, 2, 3, 4))
+    await b.cmd("MISC", (1, 2, 3, 4))   # a second kind with a consumer; REGIME_SET gets one in step 2
     c0 = int(h.b.cycle_count.value)
     await b.wait_cycles_until(c0 + 50)
     c1 = int(h.b.cycle_count.value)

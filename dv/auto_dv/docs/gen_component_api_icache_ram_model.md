@@ -18,9 +18,12 @@ the address-derived tweak; the model stores bits verbatim (it replaces ibex_top'
 
 ## 2. Files (planned) and how to call it
 
-`dv/auto_dv/tb/gen_icache_ram.sv` (module, parameters `Width`, `Depth = IC_NUM_LINES`; one
-per way for tags with `TagSizeECC`, one per way for data with `LineSizeECC`), control class
-`gen_icache_ram_ctl` (in `uvm_config_db`), interface `gen_icram_if` for the monitor/checkers.
+AS BUILT (step 1c): `dv/auto_dv/tb/gen_icache_ram.sv` (module `gen_icache_ram #(Width, Depth, Name)`,
+instantiated in `gen_tb_top` generate loop `g_icram[w]` as `u_tag` with `TagSizeECC` and `u_data` with
+`LineSizeECC`, `Depth = IC_NUM_LINES`; prim_ram_1p timing: write at the edge with req & write, read data the
+cycle after req & ~write, held; contents from `+gen_icram_init` (random bitwise fill or zero); counters
+`writes`/`reads`). Planned for step 2: control class `gen_icache_ram_ctl` (ECC injection through
+ICACHE_ECC_ARM) and interface `gen_icram_if` for the icram checkers.
 
 Instantiated in `gen_tb_top` on the wrapper's RAM ports. Injection: `ctl.arm(way, index, kind =
 TAG|DATA, bits = 1|2, when = NEXT_LOOKUP|INDEX_MATCH)`, driven by the bridge command
