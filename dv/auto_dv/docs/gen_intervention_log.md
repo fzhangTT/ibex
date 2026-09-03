@@ -790,3 +790,18 @@ loud as "no retirement"; a program that keeps retiring is waited for up to 16 bu
 counted in the report, then failed as a runaway; the cmp_zcmp_basic tripled-budget hack removed; red fixture
 gen_ut_eot_stall proves the fail path). Batch-2 acceptance (049..062) and the wave-5 re-file run against the
 3c commit. Counted as a template defect found by acceptance under live layers; no DUT finding.
+
+## LOG-024b - 2026-09-03 - GATE HELD (landing 3b + batch 2 at 9988a2f: cross-model REQUEST-CHANGES on one high)
+
+The cross-model review of 040984a..9988a2f (dv/auto_dv/reviews/2026-09-03-claude-diff-040984a6-9988a2f0.md)
+verified the not_built two-sided guard, the fire_tp reachability rule, the bins_not_hit manifests, the csr_access
+consistency compares, the seven lint red sources, the batch-2 fire checks, flow-style generators, 389 retained
+files by md5 and the two unmasked TB rows. It holds the gate on one high: the library self-test is red at this
+HEAD independent of the testlist transient, because the held-back gen_test_bit_draft.py has no not_built and the
+new guard refuses it; the evidence texts that cite the self-test as passing over all 16 tests describe a state
+that does not exist in the committed tree. Three mediums (isa_cti manifest header text is not a fresh render;
+the lint residual is still understated, a bare alias of self defeats every self-rooted rule; the isa_alu retained
+runs predate the 602-bin manifest) and three lows fold into landing 3c together with the LOG-030 template fix
+and bit_draft. LOG-024 stays in force until 3c is committed and re-reviewed. Orchestrator note: holding bit_draft
+out of a landing whose guard covers every test module created the red; a held-back file must be checked against
+the new lint before the commit.
