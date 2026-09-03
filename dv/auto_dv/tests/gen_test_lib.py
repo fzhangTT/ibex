@@ -394,23 +394,58 @@ def check_test_source(source, path="<source>", entry_lookup=None):
         tok = n.value if isinstance(n, ast.Constant) else n.attr if isinstance(n, ast.Attribute) else n.id if isinstance(n, ast.Name) else None
         assert tok != "COV_WITNESS", f"GEN_TEST_LIB: {path}: COV_WITNESS at line {n.lineno}; witnesses are issued by the template's finish() epilogue from fire-check results only"
     template_attrs = _template_attrs()
-    for fn in [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]:   # module-level helpers receiving the test object
-        params = {a.arg for a in fn.args.args + fn.args.kwonlyargs}
-        for c in ast.walk(fn):
-            tgts = (c.targets if isinstance(c, ast.Assign) else [c.target] if isinstance(c, (ast.AugAssign, ast.AnnAssign)) else [])
-            for tg in tgts:
-                if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id in params and tg.attr in template_attrs:
-                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} assigns {tg.value.id}.{tg.attr} at line {c.lineno}; template-owned names are read-only")
-            if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute):
-                chain, first = c.func.value, None
-                while isinstance(chain, (ast.Attribute, ast.Subscript)):
-                    first = chain.attr if isinstance(chain, ast.Attribute) else first
-                    chain = chain.value
-                if isinstance(chain, ast.Name) and chain.id in params and first in RECORD_ATTRS:
-                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} calls into {chain.id}.{first} at line {c.lineno}; the verdict record is read-only")
 
     def is_self_check(c):
         return isinstance(c.func, ast.Attribute) and c.func.attr == "check" and isinstance(c.func.value, ast.Name) and c.func.value.id == "self"
+
+    READ_BUILTINS = {"len", "sorted", "list", "tuple", "enumerate", "zip", "sum", "any", "all", "min", "max", "set", "iter", "reversed", "str", "repr", "bool", "range"}
+    helpers = {n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+    def check_escapes(body, obj_names, where):
+        """`self` (or a helper parameter bound to the test) may only be read through attributes or passed to a module-level
+        helper; binding it to a name, packing it, returning it, capturing it in a lambda, passing it to any other callee, or
+        handing the verdict record to a callee (other than a read-only builtin) is refused; a Subscript target rooted at a
+        template-owned attribute counts as an assignment."""
+        parents = {}
+        for node in ast.walk(body):
+            for ch in ast.iter_child_nodes(node):
+                parents[ch] = node
+        for node in ast.walk(body):
+            if isinstance(node, ast.Name) and node.id in obj_names and isinstance(node.ctx, ast.Load):
+                par = parents.get(node)
+                if isinstance(par, ast.Attribute) and par.value is node:
+                    continue
+                if isinstance(par, ast.Call) and node in par.args and isinstance(par.func, ast.Name) and par.func.id in helpers:
+                    continue
+                if isinstance(par, ast.Call) and par.args and par.args[0] is node and isinstance(par.func, ast.Name) and par.func.id in ("getattr", "setattr", "hasattr") \
+                        and len(par.args) > 1 and isinstance(par.args[1], ast.Constant) and isinstance(par.args[1].value, str) and par.args[1].value not in template_attrs:
+                    continue   # reflective access to the test's own cache attribute by a literal, non-template name
+                if isinstance(par, ast.keyword) and isinstance(parents.get(par), ast.Call) and isinstance(parents[par].func, ast.Name) and parents[par].func.id in helpers:
+                    continue
+                raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the test object escapes as a bare name at line {node.lineno} (bound, packed, returned, captured or passed outside a module-level helper)")
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in obj_names and node.attr in RECORD_ATTRS - {"reports"}:
+                par = parents.get(node)   # the report words are program observations a helper may read; the verdict record is not handed out
+                if isinstance(par, ast.Call) and node in par.args and not (isinstance(par.func, ast.Name) and par.func.id in READ_BUILTINS):
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is passed to a callee at line {node.lineno}")
+                if isinstance(par, ast.keyword):
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is passed to a callee at line {node.lineno}")
+                if isinstance(par, ast.Lambda) or any(isinstance(p2, ast.Lambda) for p2 in _ancestors(node, parents)):
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is captured by a lambda at line {node.lineno}")
+                if isinstance(par, (ast.NamedExpr, ast.Tuple, ast.List, ast.Return, ast.Yield)) or (isinstance(par, ast.Assign) and node is par.value):
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: the verdict record {node.value.id}.{node.attr} is bound to a name at line {node.lineno}")
+            if isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                for tg in (node.targets if isinstance(node, ast.Assign) else [node.target]):
+                    root = tg
+                    while isinstance(root, (ast.Subscript, ast.Attribute)) and not (isinstance(root, ast.Attribute) and isinstance(root.value, ast.Name) and root.value.id in obj_names):
+                        root = root.value
+                    if isinstance(tg, ast.Subscript) and isinstance(root, ast.Attribute) and isinstance(root.value, ast.Name) and root.value.id in obj_names and root.attr in template_attrs:
+                        raise AssertionError(f"GEN_TEST_LIB: {path}: {where}: item assignment into {root.value.id}.{root.attr} at line {node.lineno}; template-owned names are read-only")
+
+    def _ancestors(node, parents):
+        out = []
+        while node in parents:
+            node = parents[node]; out.append(node)
+        return out
 
     def owned(name):
         return name in template_attrs
@@ -423,6 +458,24 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                 methods += local_methods(top[name], seen + (name,))
         return methods
 
+    for fn in [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and not n.decorator_list]:   # module-level helpers (the decorated cocotb entry takes the dut, not the test)
+        params = {a.arg for a in fn.args.args + fn.args.kwonlyargs}
+        # the parameters that stand for the test object: named test/self, or read through a template-owned attribute
+        params = {a for a in params if a in ("test", "self") or any(isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == a
+                                                                    and n.attr in template_attrs for n in ast.walk(fn))}
+        check_escapes(fn, params, f"helper {fn.name}")
+        for c in ast.walk(fn):
+            tgts = (c.targets if isinstance(c, ast.Assign) else [c.target] if isinstance(c, (ast.AugAssign, ast.AnnAssign)) else [])
+            for tg in tgts:
+                if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id in params and tg.attr in template_attrs:
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} assigns {tg.value.id}.{tg.attr} at line {c.lineno}; template-owned names are read-only")
+            if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute):
+                chain, first = c.func.value, None
+                while isinstance(chain, (ast.Attribute, ast.Subscript)):
+                    first = chain.attr if isinstance(chain, ast.Attribute) else first
+                    chain = chain.value
+                if isinstance(chain, ast.Name) and chain.id in params and first in RECORD_ATTRS:
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} calls into {chain.id}.{first} at line {c.lineno}; the verdict record is read-only")
     checked = []
     for cls in tests:
         methods = local_methods(cls)
@@ -496,11 +549,15 @@ def check_test_source(source, path="<source>", entry_lookup=None):
             for c in ast.walk(m):
                 if isinstance(c, ast.Assign) and isinstance(c.value, ast.Attribute) and isinstance(c.value.value, ast.Name) and c.value.value.id == "self" and c.value.attr in RECORD_ATTRS - {"reports"}:   # a read alias of the report words is fine
                     raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} aliases self.{c.value.attr} at line {c.lineno}")
-                if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in ("getattr", "setattr", "delattr", "vars", "type") \
+                if isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in ("getattr", "setattr", "delattr", "hasattr", "vars", "type") \
                         and c.args and isinstance(c.args[0], ast.Name) and c.args[0].id == "self":
-                    raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} uses {c.func.id}(self, ...) at line {c.lineno}")
+                    literal_own = (c.func.id in ("getattr", "setattr", "hasattr") and len(c.args) > 1 and isinstance(c.args[1], ast.Constant)
+                                   and isinstance(c.args[1].value, str) and c.args[1].value not in template_attrs)
+                    assert literal_own, f"GEN_TEST_LIB: {path}: class {cls.name} uses {c.func.id}(self, ...) at line {c.lineno}"
                 if isinstance(c, ast.Attribute) and c.attr in ("__dict__", "__class__") and isinstance(c.value, ast.Name) and c.value.id == "self":
                     raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} touches self.{c.attr} at line {c.lineno}")
+        for m in methods:
+            check_escapes(m, {"self"}, f"class {cls.name}.{m.name}")
         attrs = {}
         for a in cls.body:
             if isinstance(a, ast.Assign):
@@ -713,6 +770,21 @@ def _self_test():
             raise AssertionError(f"red source ({why}) accepted")
         except AssertionError as exc:
             assert why in str(exc), (why, exc)
+    for red, why in ((imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        s = self\n" + good, "escapes as a bare name"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        for s in (self,):\n            pass\n" + good, "escapes as a bare name"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        (rs := self._results).clear()\n" + good, "bound to a name"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs, = (self._results,)\n" + good, "bound to a name"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        list.append(self._results, 1)\n" + good, "passed to a callee"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        f = lambda: self._results\n" + good, "captured by a lambda"),
+                     (imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.failures[:] = []\n" + good, "item assignment into self.failures"),
+                     (imp + "import x\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        x.forge(t=self)\n" + good, "escapes as a bare name"),
+                     (imp + "def _h(t):\n    u = t\n    u.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "escapes as a bare name")):
+        try:
+            check_test_source(red, "<red>", entry_lookup=look)
+            raise AssertionError(f"red source ({why}) accepted")
+        except AssertionError as exc:
+            assert why in str(exc), (why, exc)
+    assert check_test_source(imp + "def _cmp(t, k):\n    return len(t.reports) > k\nclass T(GenTest):\n    name = 'gen_test_x'\n    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', _cmp(self, 0), 'x')\n", "<green>") == ["T"]
     assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    layers_required: bool = False\n" + good, "<green>", entry_lookup=look) == ["T"]
     assert check_test_source(imp + "class Mix:\n    def fire_tp_x_002(self):\n        self.check('fire_tp_x_002', self.retired() > 1, 'y')\nclass T(Mix, GenTest):\n    name = 'gen_test_x'\n" + good.replace("self.fire_tp_x_001()", "self.fire_tp_x_001(); self.fire_tp_x_002()"), "<green>") == ["T"]
     # rule (f) keys on the marker token; the plan's witness CSV must agree row by row
@@ -742,6 +814,9 @@ def _self_test():
         _gm.check_items_two_sided(items, not_built, group, str(f))
         declared = plan_bins(tn, items, not_hit)
         assert check_manifest_matches(tn, declared) or not declared, f"{tn}: {len(declared)} declared, manifest {load_manifest_bins(tn)}"
+        if declared:   # and the committed file is byte-for-byte the current rendering (header lines included)
+            text = _gm.build(tn, items, not_built, not_hit)[0]
+            assert (FCOV_HOME / f"{tn}.fcov.yaml").read_text() == text, f"{tn}: manifest text stale (re-render with --test-module)"
     for mf in sorted(FCOV_HOME.glob("gen_test_*.fcov.yaml")):   # and every committed manifest belongs to a committed test module
         assert (here / (mf.name.replace(".fcov.yaml", ".py"))).exists(), f"manifest without a test module: {mf.name} (render manifests when the test lands)"
     good_items = ("class T(GenTest):\n    name = 'gen_test_cmp_zcb'\n    not_built = {}\n    def fire_check(self):\n        self.fire_tp_cmp_034(); self.fire_tp_cmp_036(); self.fire_tp_cmp_038()\n"

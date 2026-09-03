@@ -21,9 +21,7 @@ control-sensitive op (rd != x0, operand neither 0 nor all-ones) per (base, contr
 controls of each of the four bases, the three alias forms, a single-bit operand per base and nonzero
 rs2 upper bits per register base; the extras keep rd = x0, x0 sources and zero operands, whose compares
 are vacuous and counted apart. Knobs: knob:imem_rvalid_delay (the item's Knobs line), varied by the
-template's layers 2/3 when the build consumes it. layers_required = False: the TB has no REGIME_SET
-consumer at HEAD (step 2b parked), so the layers are logged not_applied (testlist entry measured:
-false); flips to the default when step 2b lands. Fire-check per seed (fire_tp_bit_016): every report
+template's layers 2/3 when the build consumes it. layers_required = False (bring-up opt-out, API doc Section 3; entry measured: false). Fire-check per seed (fire_tp_bit_016): every report
 word equals the plan's reference value per generic base and for the aliases; every (base, control)
 pair has a control-sensitive op whose rd matched and the matched control-sensitive count reaches the
 floor; each base has a matched single-bit op and each register base a matched op with nonzero rs2
@@ -51,6 +49,22 @@ class BitDraft(GenTest):
     # Bring-up state (tier check, measured false): the build has no REGIME_SET consumer, so the layers
     # are logged not_applied; returns to the default (required) when TB Infra's step 2b lands.
     layers_required = False
+    # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    not_built = {
+        "TP-BIT-011": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-022": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-023": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-024": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-025": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-026": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-027": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-028": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-029": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-030": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-031": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-032": "draft-B reference op beyond grev/gorc: not built in this test yet",
+        "TP-BIT-033": "draft-B reference op beyond grev/gorc: not built in this test yet",
+    }
 
     def report_count(self):
         return prog.plan(self.seed).k

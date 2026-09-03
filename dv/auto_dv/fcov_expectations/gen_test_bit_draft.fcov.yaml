@@ -1,3 +1,16 @@
+# not_built TP-BIT-011: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-022: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-023: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-024: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-025: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-026: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-027: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-028: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-029: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-030: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-031: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-032: draft-B reference op beyond grev/gorc: not built in this test yet
+# not_built TP-BIT-033: draft-B reference op beyond grev/gorc: not built in this test yet
 test: gen_test_bit_draft
 owner: test-writer
 bins:

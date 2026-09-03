@@ -11,7 +11,8 @@ Run order (fixed; a test changes it only by overriding a hook):
      from +gen_regime_sched), then FETCH_EN releases the core. Requires +gen_fetch_en_at_reset=0.
   2. stimulus(): the test's body (bridge commands, thresholds, waits); the schedule runner applies
      the remaining phases at their cycle or retirement triggers concurrently.
-  3. wait for the program's end of test (tohost or the EOT register, the evt_eot_seen edge).
+  3. wait for the program's end of test (tohost or the EOT register, the evt_eot_seen edge); a store is late
+     only when retirement stops for one budget (dead) or lags PROGRESS_ROUNDS_MAX budgets (runaway).
   4. fire_check(): per-seed asserted observables; every failure is collected and raised in one
      AssertionError (the fire-check is the test's own failure mechanism, DV_prompt Section 5).
   5. declare_bins() is logged (GEN_TEST_BINS) and must equal the fcov manifest when the test declares bins.
@@ -53,6 +54,9 @@ from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS
 from dv.auto_dv.tests import gen_test_lib as lib
 
 CheckResult = namedtuple("CheckResult", "what ok detail cycle_clause_true")
+# a report store may lag this many program budgets while the core still retires (slow bus regimes stretch a program
+# several times over); beyond it the program is judged a runaway, with no retirement for one budget it is judged dead
+PROGRESS_ROUNDS_MAX = 16
 
 
 class GenTest:
@@ -68,6 +72,7 @@ class GenTest:
     # Cycle budget for the program to reach its end-of-test store; the TB's own largest default
     # budget stands in until a test knows its program better.
     program_budget_cycles = CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"]
+    progress_rounds_max = PROGRESS_ROUNDS_MAX
     finish_timeout_cycles = None   # None = the rendered default of GenBridge.finish
     # Expected-fail tests name their bug id so the failing line carries it (plan Section 4 item 5).
     xfail_bug = None
@@ -105,10 +110,11 @@ class GenTest:
         self.checks = 0            # check() calls; finish() refuses a run with none (silent-pass guard)
         self.failures = []
         self._results = []         # CheckResult per check(); template-owned (the structure check refuses test code touching it)
+        self._slow_rounds = 0      # budgets a report store lagged while the core retired; reported by finish()
         self._cmd_lock = Lock()
         staged = os.environ.get(lib.STAGED_ENTRIES_ENV)
-        assert not (staged and "/runs/" in os.environ.get("SIM_DIR", "")), \
-            f"GEN_TEST: {lib.STAGED_ENTRIES_ENV} is set inside a flow run directory; the variable is for developer runs only"
+        in_flow = "/runs/" in os.environ.get("SIM_DIR", "") or bool(os.environ.get("GEN_DV_FLOW_RUN"))
+        assert not (staged and in_flow), f"GEN_TEST: {lib.STAGED_ENTRIES_ENV} is set inside a flow run; the variable is for developer runs only"
         if staged:
             self.log.info("GEN_TEST_DEV staged entries in use: %s", staged)
         self.log.info("GEN_TEST_SEED test=%s seed=%d image=%s", self.name, self.seed, image_path)
@@ -251,11 +257,23 @@ class GenTest:
         final = self.report_count() + 1
         while self.eot_count() < final:
             seen_before = self.eot_count()
-            try:
-                await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
-            except Exception as exc:
-                raise AssertionError(f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
-                                     f"{self.program_budget_cycles} cycles ({type(exc).__name__})") from None
+            rounds, last_retired = 0, self.retired()
+            while True:   # a store is late only when retirement stopped: bus regimes stretch a program many times over
+                try:
+                    await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
+                    break
+                except Exception as exc:
+                    rounds += 1
+                    self._slow_rounds += 1
+                    now_retired = self.retired()
+                    assert now_retired > last_retired, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen and no retirement "
+                                                        f"for {self.program_budget_cycles} cycles (cycle {self.cycle()}, retired {now_retired}; {type(exc).__name__})")
+                    assert rounds < self.progress_rounds_max, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
+                                                               f"{rounds} x {self.program_budget_cycles} cycles (cycle {self.cycle()}, retired {now_retired}) "
+                                                               f"although the core keeps retiring (runaway program)")
+                    self.log.info("GEN_TEST_SLOW store %d of %d pending after %d x %d cycles, cycle %d, retired %d (bus regimes)", seen_before + 1, final,
+                                  rounds, self.program_budget_cycles, self.cycle(), now_retired)
+                    last_retired = now_retired
             now = self.eot_count()   # read once: the assert and its message describe the same observation
             assert now == seen_before + 1, \
                 f"GEN_TEST: report channel skipped a store ({seen_before} -> {now}); the program stores faster than one edge per store"
@@ -338,6 +356,7 @@ class GenTest:
             tag = f"GEN_TEST_XFAIL {self.xfail_bug} " if self.xfail_bug else "GEN_TEST_FAIL "
             raise AssertionError(tag + f"{self.name}: {len(self.failures)} fire-check failure(s): " + " | ".join(self.failures))
         await self.witness_epilogue()
+        self.log.info("GEN_TEST_SLOW_TOTAL rounds=%d budget_cycles=%d", self._slow_rounds, self.program_budget_cycles)
         await self.bridge.finish(timeout_cycles=self.finish_timeout_cycles)
         self.log.info("%s %s", self.name, lib.PASS_MARKER)
 

@@ -456,3 +456,14 @@ citing d0c0d15/50256f0 and the consistency-compare caveat, and deduplicates the 
 Totals: {'PASS': 12, 'RED-OK': 4}. With waves 3 and 4, seven of the eight batch-1 tests PASS in the flow on three seeds each with UVM_ERROR 0 and their
 pinned red fixtures reach RED-OK on the named fire id; gen_test_cmp_zcmp_basic follows as wave 3b (test-writer-047/048) once the
 import-guard fix is committed.
+
+### 9.2 Acceptance wave 5 (test-writer-047/048, head mode with the step-2b layers live) and its diagnosis
+
+gen_test_cmp_zcmp_basic: seeds 110100884 and 1156253223 PASS (UVM_ERROR 0, GEN_TEST_BINS n=473, 528k and 654k cycles under long bus
+regimes); seed 421987159 and the red (seed 1) FAIL with `end-of-test store 1 of 4133 not seen within 300000 cycles`. Cause: the
+template's fixed per-store budget, not the program and not the testbench; under the drawn regimes (dmem_gnt long, imem_rvalid
+long or random, imem_gnt random) the program's prologue reaches its first report store at cycle 327k to 430k while the core keeps
+retiring (12272 instruction fetches in the 300k cycles of the failing run). Deterministic: the local reproductions with the same
+source hash, plusargs, seed-derived schedule and testbench revision reach the same first-store cycles. Landing 3c makes the wait
+progress-based (template transcript Section 9.2): the failing seed then PASSes at 968492 cycles and the red FAILs on its designed
+item. Recorded by the Orchestrator as LOG-030 (a template defect found by acceptance under live layers). Wave 5 re-files against 3c.

@@ -30,8 +30,8 @@ Register use: x4 holds GEN_MM_EOT_ADDR, x3 the tohost code, x30/x31 belong to th
 (scratch, trap counter); every random rd/rs1/filler register comes from x1, x2, x5..x29.
 
 Operand constraints beyond the plan's C-SWEEP/C-MPRV/C-DUM rules, imposed by the ISA comparator as
-built (dv/auto_dv/isa/gen_isa_shim.cc, dv/auto_dv/env/gen_rvfi_pkg.sv at T-102, commits d0c0d15 and
-50256f0; each lifts when the comparator models the DUT fact):
+built (dv/auto_dv/isa/gen_isa_shim.cc, dv/auto_dv/env/gen_rvfi_pkg.sv; each lifts when the comparator models
+the DUT fact):
 - mcountinhibit.IR is never set (the shim derives a retirement from Spike's minstret delta) and
   mcountinhibit operands stay inside the implemented mask (Spike keeps bits 13..31, Ibex drops them);
 - mstatus.MIE stays 0 (no interrupt entry in a program whose handler skips one 32-bit word) and

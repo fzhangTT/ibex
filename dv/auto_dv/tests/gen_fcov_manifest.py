@@ -307,8 +307,8 @@ def module_items(path):
 
 
 def check_items_two_sided(built, not_built, group, where):
-    """built + not_built == the plan group's items, disjoint (Critic batch-1 v2: a renamed or guarded-away fire method
-    or an unlisted item is an error, never silence). A group without items (bring-up tests) asks nothing."""
+    """built + not_built == the plan group's items, disjoint (a renamed or guarded-away fire method or an unlisted
+    item is an error, never silence). A group without items (bring-up tests) asks nothing."""
     items = set(items_of_group(group, required=False)) if group else set()
     if not items:
         return items

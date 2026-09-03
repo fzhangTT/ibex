@@ -315,3 +315,40 @@ imported base, mixin overriding finish, `self.results.append`, `self._results = 
 module-local mixin adding a fire_tp method); the witness CSV agrees with the marker token row by row; the fixture header equals the
 rendered map; every program generator runs as a flow-style script with no PYTHONPATH. Not exercised in a run: the aliased-base
 and patch refusals are lint (the self-test refuses the module); a runtime sandbox is not claimed (API Section 7).
+
+### 9.1 Layers live on the step-2b build
+
+Build of HEAD with TB Infra's step 2b (REGIME_SET_CONSUMED rendered, id-based dispatcher): head_export2/.../out_head4, rendered knobs
+from the same export. With a real consumer the template draws layer 2 and derives the layer-3 schedule and the dispatcher applies
+every REGIME_SET (no GEN_CMD_DISPATCH error), so `layers_required = False` no longer changes behaviour; the flag is dropped and the
+entries flip to their plan tiers when the Orchestrator lifts the gate.
+
+| Run (out_head4/<dir>) | Phases applied | fire_schedule_applied | Result | UVM_ERROR | md5 (stdout.log) |
+|---|---|---|---|---|---|
+| l4_boot_green_s1 | 6 | ok=True 6/6 | PASS | 0 | c7e799286c61eb6ffa94b4dbe9bcd9d5 |
+| l4_rst_boot_s1 | 4 | ok=True 4/4 | PASS | 0 | 5afdbc501a492a689bf481e7f59b9e73 |
+| l4_cmp_zcb_s1 | 3 | ok=True 3/3 | PASS | 0 | 10d4205321b3ddc5602fadce122937c0 |
+
+### 9.2 Progress-based end-of-test wait (LOG-030; landing 3c)
+
+Acceptance under live layers (wave 5 of batch 1) found the template's fixed per-store budget wrong for slow bus regimes: a program
+whose prologue is long reaches its first report store several hundred thousand cycles late while the core keeps retiring. The wait
+now fails only when retirement stops for one budget (the hang detector) or when a store lags PROGRESS_ROUNDS_MAX budgets while
+the core retires (runaway); every lagging budget logs GEN_TEST_SLOW and finish() reports GEN_TEST_SLOW_TOTAL. Runs on the step-2b
+build out_head4 (layers live) and, for the flow's failing seed, also on the current-HEAD build out_head5:
+
+| Run | Purpose | Decisive line (line no.) | Result | UVM_ERROR | md5 (stdout.log) |
+|---|---|---|---|---|---|
+| l5_eot_stall | red: frozen retirement, a store that never comes (fail within one budget) | 68: `assert now_retired > last_retired, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen and no retirement "` | FAIL as designed | - | 956b1ed588b0ca4208a3f4fa11327399 |
+| l5_eot_runaway | red: the program self-loops after tohost and keeps retiring, a store never comes (fail after the cap) | 72: `AssertionError: GEN_TEST: end-of-test store 5 of 5 not seen within 3 x 5000 cycles (cycle 15084, retired 2150) although the core keeps retiring (runaway program)` | FAIL as designed | - | c152f8ca554c7a81ed5303fa1b1ba0a5 |
+| l5_report_s1 | green: report channel unchanged | 77: `890.00ns INFO cocotb.gen_tb_top gen_ut_report_channel GEN_TEST_PASS` | PASS | 0 | ee9eb5a44eb7ee7e18869dd4796e358f |
+| l5_boot_green_s1 | green: boot_retire with layers applied | 83: `42680.00ns INFO cocotb.gen_tb_top gen_test_boot_retire GEN_TEST_PASS` | PASS | 0 | ccf93bbde2d4beb9d996f066c1000504 |
+| l5_combo_zcmp | cmp_zcmp_basic seed 1 under the wave-5 red's regime combination (first store at cycle 326778) | 4224: `7552340.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 702f627f8d5a4e6551d0ea0a2f92bcf4 |
+| l5_flowred_zcmp | the wave-5 red program (seed 1, --red-item TP-CMP-039) with its schedule: EOT at cycle 756518, then the designed fire-check failure | 4218: `AssertionError: GEN_TEST_FAIL gen_test_cmp_zcmp_basic: 3 fire-check failure(s): fire_tp_cmp_039: 147 scenarios, 2394 report words checked, 1 mismatches; cm.push over 48/4` | FAIL on fire_tp_cmp_039 (RED-OK shape) | - | 7bd45da093a5ae32a5db4d10273880ce |
+| l5_flowseed_zcmp | the wave-5 failing green seed 421987159 with its derived schedule: three GEN_TEST_SLOW budgets, first store at cycle 430153, EOT at 968492 | 4245: `9684970.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 5ca82f317356721c9d8e5a4db1a77fed |
+| l6_flowseed_zcmp | the same seed on the current-HEAD build | 4245: `9684970.00ns INFO cocotb.gen_tb_top gen_test_cmp_zcmp_basic GEN_TEST_PASS` | PASS | 0 | 4d54efe30299110ed5fa50ff4ae27312 |
+
+The two failing wave-5 runs and the local reproductions share the program source hash, the plusargs, the seed-derived schedule
+and the testbench revision; the first report store of that seed's program arrives at cycle 430153 under its drawn regimes, past the
+old fixed 300000-cycle budget, and the run then completes normally. The stall red and the runaway red name the cycle and retirement
+counts in their failure lines.

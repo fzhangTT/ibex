@@ -5,9 +5,11 @@ wrote gen_test_<g>.py, gen_programs/gen_<g>_prog.py and rendered gen_test_<g>.fc
 items, not_built in the header) for g in cmp_zca, bit_ratified, isa_alu, isa_shift, isa_cti, mul_mul, mul_div. Every run below was made
 through dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh against the HEAD-20a66cf build out_head3 (T-102 comparator in, step 2b not
 yet) with GEN_TB_PYROOT = the export (rendered knobs matching the simv) and GEN_TEST_STAGED_ENTRIES (entries measured: false). The
-Test Writer re-verified (13:5x UTC): py_compile, the library self-test (structure check with the not_built two-sided rule, the
+Test Writer re-verified (13:5x UTC) in the working tree: py_compile, the library self-test (structure check with the not_built two-sided rule, the
 fire_tp-called and item-naming rules, flow-style generator runs) over all 16 tests, ASCII, no hierarchical access, every manifest
-unchanged by a --test-module re-render, and every run directory below re-read. Ordering: each red is `plan(seed, red=True, red_item)`
+unchanged by a --test-module re-render, and every run directory below re-read. At the batch-2 commit itself the committed tree's
+self-test was red on gen_test_bit_draft.py (held back without its not_built attribute while the guard already required it); landing
+3c commits that file and the self-test is green on the committed tree from 3c on. Ordering: each red is `plan(seed, red=True, red_item)`
 of the same generator (expectations asserted equal to the green plan), so red-ness does not depend on run order.
 
 ## 1. Summary
@@ -131,7 +133,10 @@ architectural behaviour; their flow verdicts FAIL through uvm_error until the TB
 | b2_mul_div_s1 | PASS | 224 | 0 | a47a954a78cfe798f8476dd52bcfd238 |
 | b2_mul_div_s2 | PASS | 224 | 0 | e016aabf38cf1644100b0e3303e738df |
 
-Red runs print no UVM summary (the cocotb assertion ends the simulation before the UVM report); their sim.log copies are not
+76 per-item red runs in total (one per built item: 21 + 18 + 10 + 4 + 8 + 8 + 10; earlier reports said 66 by mistake). After the
+WP-9 bins_not_hit change gen_test_isa_alu was re-run at seed 1 on the step-2b build with the committed 602-bin manifest:
+out_head4/l5_isa_alu_s1 GEN_TEST_PASS, GEN_TEST_BINS n=602, UVM_ERROR 0 (retained; the 604-bin greens predate the change and are
+superseded as proof of the manifest). Red runs print no UVM summary (the cocotb assertion ends the simulation before the UVM report); their sim.log copies are not
 retained (decisive-log rule). Per-test details (clauses not asserted, dropped clauses with owners, assembler lessons such as GAS
 widening compressed jumps, program sizes) are in each subagent's NOTES under dv/auto_dv/work/test-writer/batch2/<g>/ and in the
 test docstrings.

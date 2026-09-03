@@ -1,7 +1,7 @@
-# not_built TP-ISA-016: memory map: jal extremes +0xFFFFE/-0x100000 exceed the 1 MiB PROG window and the wrap needs a code page at 0 (gen_link.ld, TB Infra); the self-loop exit needs the IRQ_SET codes (gen_knobs codegen)
-# not_built TP-ISA-022: memory map: no text below 0x1000 or in the top 2 KiB for the wrap and rs1 = x0 targets (gen_link.ld PROG 0x80000080..0x80100000, DM 0x1A110800..0x1A111000; TB Infra)
+# not_built TP-ISA-016: needs WP-9: executable code windows at address 0 and the top page for the jal wrap and extremes, and an irq-agent command to break the self-loop
+# not_built TP-ISA-022: needs WP-9: executable code windows at address 0 and the top page for the jalr wrap and rs1 = x0 targets
 # not_built TP-ISA-024: timing clause: bus records / RVFI cycle, event export
-# not_built TP-ISA-026: self-loop exit needs the IRQ_SET codes (gen_knobs codegen) and the wrap needs text near address 0 (gen_link.ld, TB Infra); the +4094/-4096 clause alone would declare the self/wrap bins the test cannot hit
+# not_built TP-ISA-026: needs WP-9: text near address 0 for the branch wrap and an irq-agent command to break the self-loop; the offset-extreme clause alone would declare bins the test cannot hit
 test: gen_test_isa_cti
 owner: test-writer
 bins:

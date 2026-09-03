@@ -11,7 +11,7 @@ back-to-back patterns, one fall-through cm.* per kind after a ret) and computes 
 the Zcmp specification; the program stores RAW observations to the EOT register (report channel), this
 test compares them. Nothing here re-derives the program's intent a second way: report_count() is plan.k;
 the plan pins (pinned pop combinations, the ret rlist, the push repeat count) are the generator's named
-tables, cited there to the plan section. program_budget_cycles is raised for the three push sweeps.
+tables, cited there to the plan section.
 
 Items built (fire_tp_cmp_<nnn>), each on its per-seed architectural observable:
   TP-CMP-039 cm.push over all 48 (rlist, spimm), each >= PUSH_REPEATS times per seed: frame words ==
@@ -105,8 +105,6 @@ class CmpZcmpBasic(GenTest):
     not_built = {
         "TP-CMP-068": "needs writable low addresses and the bus records of the event export",
     }
-    # Three push sweeps plus the pop sweep retire about 2.5x the default budget's worth of instructions.
-    program_budget_cycles = 3 * lib.CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"]
 
     def report_count(self):
         return _plan(self.seed).k
