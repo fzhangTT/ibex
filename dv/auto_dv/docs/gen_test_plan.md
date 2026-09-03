@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:22 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -30,7 +30,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   declared bin fails the run).
 - Tier of a testlist entry: the LOWEST tier among its plan group's items, because the testlist runs a tier-T entry in every
   higher tier too (gen_testlist.yaml header); an entry with no plan group stays at tier check, measured: false. The per-entry
-  ruling for the 16 built tests is dv/auto_dv/evidence/gen_round0_promotion_table.md (applied by landing 3e and Runtime's
+  ruling for the 16 built tests is dv/auto_dv/evidence/gen_round0_promotion_table.md (applied by landing 3e at 7ef16a0 and Runtime's
   promotion landing 3e6f1b2; LOG-024e, LOG-039).
 - Expected: `pass`; `pass (doc mismatch Dn)` where the RTL is spec-legal and the Ibex doc is wrong
   (checker follows the RTL, doc defect logged); `expected-fail (Bn)` where the RTL contradicts a
@@ -190,7 +190,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   credits a priority item (the referee found 448 undecidable priority claims there). Items: TP-IRQ-014/015/016/031 (gen_irq_priority),
   TP-IRQ-038 (gen_irq_nmi), TP-IRQ-045 (gen_irq_nmi_int); their Notes repeat the rule. Not a hold: the items run, their claims are
   counted, only decidable directed or sparse entries credit them.
-- Measurement hold T-181 (Orchestrator LOG-042a): the 3e template's schedule runner applied only the idx=0 knobs at start-up and
+- Measurement hold T-181 (Orchestrator LOG-042a; root cause LOG-042c: the template's EOT wait treated the first report-word store as the
+  end of test, so the runner exited before any mid-run trigger): the 3e template's schedule runner applied only the idx=0 knobs at start-up and
   never a mid-run regime phase, on any test and any tree (Runtime's bisect is identical at 7ef16a0 and d3c6ca8; TB Infra's 2a is
   cleared), so the promotion's layers-live evidence (l9g) exercised the initial phase only; the promoted tests' measured status does
   not depend on it (their items run at the start-up knobs). Until the Test Writer's 3h lands (runner fix with a red and a green
@@ -758,7 +759,7 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 
 ## 1.6 Items under the T-181 measurement hold (generated; group rule 71 items, stimulus-text rule 37 items, union 82 items in 16 groups; no mid-run regime result counts until the schedule runner applies idx > 0 phases, Test Writer 3h)
 
-Groups (items held): gen_reg_knob_sweep (17), gen_pmp_random_regime (10), gen_ic_regime (8), gen_irq_regime (7), gen_xif_random (7), gen_dmem_regime (6), gen_imem_regime (6), gen_reg_inflight (6), gen_exc_regime (4), gen_fe_regime (4), gen_reg_schedule (2), gen_isa_random (1), gen_mul_random (1), gen_xcut_regime_sweep (1), gen_xif_fetch_enable (1), gen_xif_reset (1). Ruling: Section 0 (LOG-042a).
+Groups (items held): gen_reg_knob_sweep (17), gen_pmp_random_regime (10), gen_ic_regime (8), gen_irq_regime (7), gen_xif_random (7), gen_dmem_regime (6), gen_imem_regime (6), gen_reg_inflight (6), gen_exc_regime (4), gen_fe_regime (4), gen_reg_schedule (2), gen_isa_random (1), gen_mul_random (1), gen_xcut_regime_sweep (1), gen_xif_fetch_enable (1), gen_xif_reset (1). Ruling: Section 0 (LOG-042a; root cause LOG-042c).
 
 | Item | Group | Why held |
 |---|---|---|
@@ -16435,10 +16436,10 @@ draw weights of the agent / program generator per transaction.
   response cycle completes too; 1 when the instruction in ID has a load-use hazard; more only with a
   Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [export-rows: alert alert_major_bus; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
 - Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi (entry within <= 2 ordinary records, checker
-- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   follows the RTL; exception_interrupts.rst:87-88 "at most one" is D21), gen_chk_alerts,
   gen_isa_compare; detects a missing alert, an rd write, a synchronous trap, or an NMI outside the
   RTL window
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
 - Expected: pass (doc mismatch D21)
 - Test group: gen_dmem_intg
 - Bins: CG-DMEM-007.cp_class.single, CG-DMEM-007.cp_class.double, CG-DMEM-007.cp_we.load,
@@ -16477,8 +16478,8 @@ draw weights of the agent / program generator per transaction.
   rvfi_rd_addr == 0 / rvfi_ext_rf_wr_suppress == 1 (the beat that completes the access carries the
   error, rtl/ibex_load_store_unit.sv:697-698; C-8); NMI entry within <= 2 ordinary records (C-7).
 - Pass criteria: gen_chk_bus_intg_rsp (per-beat rule: suppression when the completing beat is
-- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   corrupted), gen_chk_nmi, gen_isa_compare
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
 - Expected: pass
 - Test group: gen_dmem_intg
 - Bins: CG-DMEM-007.cp_beat.first, CG-DMEM-007.cp_beat.second, CG-DMEM-007.cp_nmi_mtval.first_ea,
@@ -16973,7 +16974,6 @@ draw weights of the agent / program generator per transaction.
   handler-read mcause 0xFFFFFFE0 and mtval == the unaligned EA follows within <= 2 ordinary records
   (C-7). [export-rows: alert alert_major_bus; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_trap == 0 and the rvfi_ext_nmi_int entry within the record count per C-7 with mcause 0xFFFFFFE0 / mtval read-back)
 - Pass criteria: gen_chk_bus_intg_rsp and gen_isa_compare follow the documented intent
-- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   (doc/03_reference/security.rst:88: the rd write is suppressed): they expect rvfi_rd_addr == 0 /
   rvfi_ext_rf_wr_suppress == 1 and rd unchanged on the load's record. The RTL writes the merged
   word (the first-half status lsu_err_d has no integrity term, rtl/ibex_load_store_unit.sv:514;
@@ -16981,6 +16981,7 @@ draw weights of the agent / program generator per transaction.
   fails: rvfi_rd_addr == rd, rf_wr_suppress == 0. gen_chk_nmi and gen_chk_alerts pass (alert and
   NMI fire as documented). Owner question Q-015 (gen_bug_log.md B16); a ruling "RTL-defined" turns
   this item into `pass (RTL-defined)` with the same bins.
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
 - Expected: expected-fail (B16)
 - Test group: gen_dmem_intg_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DMEM-007.cp_split_corrupt_pattern.first_only, CG-DMEM-007.cr_pattern_x_we.first_only_load,
@@ -22007,11 +22008,11 @@ Stimulus line override the table for that item.
 - Fire-check: >= 5 records with rf_wr_suppress = 1 (>= 2 aligned, >= 2 second-half) and >= 1000
   with 0 including >= 10 data_err_i load traps.
 - Pass criteria: gen_chk_bus_intg_rsp (suppress == 1 iff the record is a load whose COMPLETING
-- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   beat had an integrity error (rvfi_rf_wr_suppress = instr_done_wb & ~rf_we_wb & outstanding_load
   & lsu_load_resp_intg_err, rtl/ibex_core.sv:2384-2385, keyed on the data_intg_err of the current
   rvalid, rtl/ibex_load_store_unit.sv:697-698); 0 on data_err_i traps and stores) ;
   gen_chk_rvfi_proto (rd_addr == 0 when suppress == 1).
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
 - Expected: pass
 - Test group: gen_sec_alert_inject_dbus
 - Bins: CG-RVFI-003.cp_rf_wr_suppress.yes, CG-RVFI-003.cp_rf_wr_suppress.no
