@@ -501,6 +501,8 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   evidence directory `dv/auto_dv/evidence/gen_round_<n>/` (never overwritten): `dashboard.txt`,
   `hierarchy.txt`, `tests.txt`, `hierarchy_dut_rows.txt` (the DUT-scope rows), `groups.txt` and
   `grpinfo.txt` when covergroups exist (else `groups_summary.txt` stating n/a),
+  `asserts.txt` (per-assertion ATTEMPTS / REAL SUCCESSES / FAILURES: the EC-3 evidence rtl-arch's
+  `gen_excl_select.py --ec3-asserts` reads from the committed copy),
   `full_exclusions/fullexclude.<metric>.gz` (the URG dump of this merge, gzip-compressed; a dry
   run copies no dump, its out-tree keeps it), `merge.log` and
   `merge_log_warnings.txt` (counts per Warning/Error/Note class), `build_manifest_<build>.yaml`,
