@@ -11,9 +11,9 @@ Launch markers (seed prompt, Section 12 item 3):
 submission-command: `git push origin cleanroom/<topic>` (see §10) — 2026-09-02
 fence-integrity: PASS — 2026-09-02
 
-The two remaining dated marker lines the seed prompt requires are written by the WS7 execution
-gate ("Task 4") directly below this paragraph, each only after the command it attests has
-actually been run on this site. A missing marker blocks launch by design — never add a marker
+The two remaining dated marker lines the seed prompt requires are stamped by the launch process
+before generation begins, directly below this paragraph, each only after the command it attests
+has actually been run on this site. A missing marker blocks launch by design — never add a marker
 without running its command.
 
 ## 1. Environment contract

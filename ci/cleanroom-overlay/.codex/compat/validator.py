@@ -2,7 +2,7 @@
 """Cross-model compatibility validator (Zone A cleanroom variant: review artifacts live
 under dv/auto_dv/reviews/, and the canonical trust-triad block is the Zone A one).
 
-Contract (see CLAUDE.md / docs/superpowers plans, WS3):
+Contract (see CLAUDE.md):
   - every .claude/skills/<dir>/SKILL.md has well-formed frontmatter whose `name` == <dir>
   - .agents/skills/shared is a symlink whose literal target is ../../.claude/skills and resolves
   - the CRITICAL-INVARIANTS block is byte-identical between CLAUDE.md and AGENTS.md
