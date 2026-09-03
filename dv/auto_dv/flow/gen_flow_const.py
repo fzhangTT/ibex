@@ -104,8 +104,12 @@ VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all"]
 # Verified set from SIM_RECIPE Section 3; cond is the T-010 trial metric (see gen_runtime_api.md).
 COV_METRICS_VERIFIED = "line+tgl+assert+fsm+branch"
 COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
+# Glitch filter: off until the DV Lead rules on -cm_glitch 0 (intervention log LOG-008; trial
+# rtl-arch-001/-002). Flipping this constant changes every measured build; re-measure round 0 after.
+COV_GLITCH_FILTER = False
+COV_GLITCH_FLAGS = ["-cm_glitch", "0"]
 COV_COMPILE_EXTRA = ["-cm_tgl", "portsonly", "-cm_tgl", "structarr", "-cm_report", "noinitial",
-                     "-cm_seqnoconst"]
+                     "-cm_seqnoconst"] + (COV_GLITCH_FLAGS if COV_GLITCH_FILTER else [])
 COV_RUNTIME_EXTRA = ["-cm_log", "/dev/null", "-assert", "nopostproc"]
 COV_DIAG_NOCONST = ["-diag", "noconst"]
 COCOTB_DEFINE = "+define+COCOTB_SIM"

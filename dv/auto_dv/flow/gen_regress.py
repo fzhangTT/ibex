@@ -126,25 +126,48 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
 
 
 def post_fcov_checks(runs: list[dict[str, Any]], testlist: dict[str, Any], outdir: Path) -> None:
-    """Per-test, pre-merge (trust triad rule 3); only after every writer to the vdb finished."""
+    """Per-test, pre-merge (trust triad rule 3), only after every writer to the vdb has finished:
+    each PASS/XFAIL run with a manifest is checked on its own vdb slice; unmet or unverifiable
+    expectations turn the run into FAIL with the distinct reason."""
     for r in runs:
         t = U.test_by_name(testlist, r["test"])
         if not (t.get("fcov_expectation_file") and r.get("vdb")):
             continue
         if r["verdict"] not in (C.VERDICT_PASS, C.VERDICT_XFAIL):
             continue
-        fc = RUN.fcov_check(t, Path(r["vdb"]), int(r["seed"]), Path(r["run_dir"]))
-        r["fcov_check"] = fc
-        if fc["exit_code"] != 0:
-            r["verdict"] = C.VERDICT_FAIL
-            r["reason"] = f"fcov-expectation {fc['status']} (see {fc['log']})"
+        RUN.apply_fcov_check(r, t, Path(r["vdb"]), int(r["seed"]), Path(r["run_dir"]))
         res_path = Path(r["result_yaml"])
         if res_path.is_file():
             stored = U.load_yaml(res_path)
-            stored["fcov_check"] = fc
+            stored["fcov_check"] = r["fcov_check"]
             stored["verdict"] = r["verdict"]
             stored["reason"] = r["reason"]
             U.dump_yaml(stored, res_path)
+
+
+def fcov_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Expectation results per test for the manifest and the dashboard."""
+    per_test: dict[str, dict[str, Any]] = {}
+    for r in runs:
+        fc = r.get("fcov_check") or {}
+        entry = per_test.setdefault(r["test"], {"runs": 0, "checked": 0, "pass": 0, "unmet": 0, "unverifiable": 0,
+                                                "declared_bins": 0, "unmet_bins": []})
+        entry["runs"] += 1
+        if not fc or fc.get("status") == "NO_MANIFEST":
+            continue
+        entry["checked"] += 1
+        entry["declared_bins"] = max(entry["declared_bins"], fc.get("declared", 0))
+        if fc.get("status") == "PASS":
+            entry["pass"] += 1
+        elif fc.get("status") == "UNHIT":
+            entry["unmet"] += 1
+            entry["unmet_bins"] = sorted(set(entry["unmet_bins"]) | set(fc.get("unmet_bins") or []))
+        else:
+            entry["unverifiable"] += 1
+    totals = {"checked": sum(e["checked"] for e in per_test.values()), "pass": sum(e["pass"] for e in per_test.values()),
+              "unmet": sum(e["unmet"] for e in per_test.values()),
+              "unverifiable": sum(e["unverifiable"] for e in per_test.values())}
+    return {"totals": totals, "per_test": per_test}
 
 
 def summarize(runs: list[dict[str, Any]], testlist: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -162,14 +185,21 @@ def summarize(runs: list[dict[str, Any]], testlist: dict[str, Any] | None = None
     return out
 
 
-def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any]) -> None:
-    """A null manifest on a tier the testlist header requires one for is a missing trust-triad artefact."""
+def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any], covergroups_exist: bool) -> None:
+    """A null manifest is a missing trust-triad artefact on (a) every tier the testlist header names
+    and (b) every measured tier as soon as any covergroup exists in the merged report (the policy
+    becomes live with the first covergroup; tier check stays exempt)."""
     required = set(testlist.get("fcov_manifest_required_tiers") or [])
+    if covergroups_exist:
+        required |= set(C.TIERS)
     for r in runs:
         t = U.test_by_name(testlist, r["test"])
         if t["tier"] in required and not t.get("fcov_expectation_file") and r["verdict"] == C.VERDICT_PASS:
             r["verdict"] = C.VERDICT_FAIL
-            r["reason"] = f"no fcov_expectation_file on tier {t['tier']} (fcov_manifest_required_tiers)"
+            r["reason"] = (f"no fcov_expectation_file on tier {t['tier']} while covergroups exist "
+                           "(trust triad rule 3)" if covergroups_exist and t["tier"] not in
+                           set(testlist.get("fcov_manifest_required_tiers") or []) else
+                           f"no fcov_expectation_file on tier {t['tier']} (fcov_manifest_required_tiers)")
 
 
 def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -312,7 +342,6 @@ def main() -> int:
     cov_status = "not_requested"
     if coverage:
         post_fcov_checks(runs, testlist, outdir)
-        fcov_policy_failures(runs, testlist)
         measured_vdbs: list[Path] = []
         unmeasured_vdbs: list[Path] = []
         for bname, b in builds.items():
@@ -344,6 +373,12 @@ def main() -> int:
                                         dut_scopes=dut_scopes, dump_exclusions=dump and not measured_vdbs)
             cov["unmeasured"]["tests"] = sorted({r["test"] for r in runs if not r.get("measured", True)})
         manifest["coverage"] = cov
+        # Covergroups exist once URG reports a GROUP total in any merge of this regression.
+        groups_seen = any((m_.get("totals") or {}).get("group") not in (None, C.NOT_APPLICABLE)
+                          for m_ in (cov, cov.get("unmeasured") or {}))
+        fcov_policy_failures(runs, testlist, groups_seen)
+        manifest["fcov"] = fcov_summary(runs)
+        manifest["fcov"]["covergroups_exist"] = groups_seen
         if cov.get("dashboard_txt"):
             U.log(f"URG dashboard: {cov['dashboard_txt']} totals={cov['totals']}")
         if cov.get("exclusion_violations"):
@@ -353,9 +388,11 @@ def main() -> int:
                     lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])
     U.dump_yaml(manifest, outdir / "manifest.yaml")
     s = manifest["summary"]
+    ft = (manifest.get("fcov") or {}).get("totals") or {}
     U.log(f"done: {s['pass']} pass, {s['fail']} fail, {s['xfail']} xfail, {s['timeout']} timeout, "
-          f"{s['not_run']} not_run of {s['planned']}; {s['runs_without_fcov_manifest']} run(s) without an fcov "
-          f"manifest {s['tests_without_fcov_manifest']}; manifest {outdir / 'manifest.yaml'}")
+          f"{s['not_run']} not_run of {s['planned']}; fcov expectations checked {ft.get('checked', 0)} "
+          f"(unmet {ft.get('unmet', 0)}, unverifiable {ft.get('unverifiable', 0)}); {s['runs_without_fcov_manifest']} "
+          f"run(s) without an fcov manifest {s['tests_without_fcov_manifest']}; manifest {outdir / 'manifest.yaml'}")
     if manifest["lsf_jobs_left"]:
         U.log(f"WARNING: LSF jobs still present with prefix {C.LSF_JOB_PREFIX}: {manifest['lsf_jobs_left']}")
     bad = s["fail"] + s["timeout"] + s["not_run"]

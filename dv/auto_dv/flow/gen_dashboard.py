@@ -162,11 +162,14 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
             if isinstance(r.get("wall_s"), (int, float)):
                 h["wall"].append(float(r["wall_s"]))
     if latest:
-        L.append("| Test | Seed | Verdict | Reason | Wall s | LSF job | Owner | Regression | sim.log |")
-        L.append("|---|---|---|---|---|---|---|---|---|")
+        L.append("| Test | Seed | Verdict | Reason | fcov expectation | Wall s | LSF job | Owner | Regression | sim.log |")
+        L.append("|---|---|---|---|---|---|---|---|---|---|")
         for (t, s), r in sorted(latest.items()):
             lsf = r.get("lsf") or {}
-            L.append(f"| {t} | {s} | {r.get('verdict')} | {str(r.get('reason') or '')[:80]} | {fmt(r.get('wall_s'))} | "
+            fc = r.get("fcov_check") or {}
+            fcov = "no manifest" if not fc or fc.get("status") == "NO_MANIFEST" else \
+                f"{fc.get('status')} {fc.get('hit', 0)}/{fc.get('declared', 0)} bins"
+            L.append(f"| {t} | {s} | {r.get('verdict')} | {str(r.get('reason') or '')[:80]} | {fcov} | {fmt(r.get('wall_s'))} | "
                      f"{lsf.get('job_id') or r.get('lsf_job_id') or '-'} | {r.get('owner') or '-'} | {r['_reg']} | `{r.get('sim_log')}` |")
         L.append("")
         L.append("| Test | Runs | Passing runs | Pass rate % | Mean wall s | Max wall s |")
@@ -181,14 +184,16 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     L.append("## 4. LSF cost per regression")
     L.append("")
-    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | Runs w/o fcov manifest | Status |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    L.append("| Regression | Purpose | Requester | Jobs | CPU s | Wall s (sum) | Slot s | Pend s (sum) | Regression wall s | fcov checked/unmet/unverifiable | Runs w/o fcov manifest | Status |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for m in regs:
         cost = m.get("lsf_cost") or {}
         sm = m.get("summary") or {}
+        ft = ((m.get("fcov") or {}).get("totals")) or {}
+        fcov = f"{ft.get('checked', 0)}/{ft.get('unmet', 0)}/{ft.get('unverifiable', 0)}" if ft else "-"
         L.append(f"| {m.get('tag') or Path(m.get('outdir', '')).name} | {m.get('purpose') or '-'} | {m.get('requester') or '-'} | "
                  f"{cost.get('jobs', '-')} | {fmt(cost.get('cpu_s'))} | {fmt(cost.get('wall_s'))} | {fmt(cost.get('slot_s'))} | "
-                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | {sm.get('runs_without_fcov_manifest', '-')} | {m.get('status')} |")
+                 f"{fmt(cost.get('pend_s'))} | {fmt(m.get('wall_s'))} | {fcov} | {sm.get('runs_without_fcov_manifest', '-')} | {m.get('status')} |")
     L.append("")
     L.append("## 5. Run requests served")
     L.append("")

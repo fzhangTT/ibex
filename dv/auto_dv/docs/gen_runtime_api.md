@@ -113,9 +113,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   never the only one); FAIL on a crash signature (`Segmentation fault|Killed|core dumped|Aborted|Bus
   error|Illegal instruction`) in lsf.err, run.log or sim_stdout.log; otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
   The process exit code is recorded, never decisive.
-- `--fcov-check`: runs `ci/check_fcov_expectations.py --manifest <fcov_expectation_file> --vdb <vdb>
-  --cm-name test_<name>_<seed>` right away (single writer); exit 2 (unhit) or 1 (protocol error)
-  turns a PASS into FAIL. In a regression the check runs after every writer finished (Section 3).
+- `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
+  declared-but-unhit bin or an unverifiable query turns a PASS into FAIL with the reason `fcov
+  expectation unmet` or `fcov expectation unverifiable`. In a regression the check runs after every
+  writer finished (Section 3).
 - `--measured auto|yes|no`: whether the run's coverage enters a measured merge (auto = the testlist
   `measured` flag; a mutation build forces no). A measured coverage run whose plusargs enable a knob
   listed under the testlist header `debug_only_plusargs` is refused in writing (result.yaml NOT_RUN,
@@ -329,6 +330,51 @@ gen_mirror.py --status
 - Probe: test `gen_cocotb_probe` (build `gen_smoke_cocotb`, module
   `dv.auto_dv.flow.gen_cocotb_probe`, `measured: false`) proves the path end to end; evidence
   `dv/auto_dv/evidence/gen_t027_cocotb_lsf.md`.
+
+## 7c. fcov-expectation wiring (trust triad rule 3; gen_fcov.py, ci/check_fcov_expectations.py)
+
+Manifest: `dv/auto_dv/fcov_expectations/<test>.fcov.yaml` (the standing home of
+`dv/auto_dv/contract/README.md`), named in the test's `fcov_expectation_file`:
+
+```
+test: gen_<name>                        # equals the file stem and the testlist entry
+owner: <role slug>
+bins:                                   # gen_<feature>_cg.<coverpoint>.<bin>; gen_ namespace only
+  - gen_regime_cg.cp_regime.bin_fast
+anti_vacuity:                           # one note per declared bin, carried into result.yaml, never interpreted
+  gen_regime_cg.cp_regime.bin_fast: "sampled on the regime-change event only; fast is hit only when the schedule selects it"
+```
+
+`gen_fcov.validate_manifest` enforces: stem == `test` == testlist entry, owner is a role slug,
+bins non-empty, unique, in the `gen_` namespace with three dot-separated parts, one non-empty
+anti-vacuity note per bin, no note for an undeclared bin. `python3 gen_fcov.py --validate` checks
+every manifest under the home. The checker itself reads only `bins:` (its parser stops at the next
+top-level key), keyed `<cg>.<cp>.<bin>` from URG's grpinfo.txt with counts summed across instances
+of the same covergroup (TB Infra's C7 naming: `gen_<feature>_cg`).
+
+Flow step, per test and pre-merge: `gen_fcov.check_test` runs
+`ci/check_fcov_expectations.py --manifest <file> --vdb <the run's vdb> --cm-name test_<name>_<seed>`
+(the checker selects the slice with `urg -tests <vdb minus .vdb>/<cm_name>` and refuses anything but
+exactly one test in the report). In a regression `gen_regress.post_fcov_checks` runs it after every
+writer to the shared vdb has finished; a standalone `gen_run.py --fcov-check` runs it right away
+(single writer). Result: `result.yaml: fcov_check` with status (PASS, UNHIT, PROTOCOL_ERROR,
+NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts, `unmet_bins`, the notes, the
+checker log. A PASS/XFAIL run becomes FAIL with the distinct reason `fcov expectation unmet: ...`
+(declared but unhit) or `fcov expectation unverifiable: ...` (protocol error: unverifiable is not a
+pass). The regression manifest carries `fcov.totals` (checked, pass, unmet, unverifiable) and
+`fcov.per_test`; the dashboard shows the per-test status and the per-regression triple.
+
+Manifest-required policy: a run without a manifest is counted (`summary.runs_without_fcov_manifest`);
+it FAILs on the tiers named in the testlist header `fcov_manifest_required_tiers`, and on every
+measured tier (smoke, targeted, full) as soon as URG reports a GROUP total in any merge of the
+regression (`fcov.covergroups_exist`), so the policy becomes live with the first covergroup. Tier
+check stays exempt.
+
+Proof status: `python3 gen_fcov.py --self-test` drives the REAL checker in `--report-dir` mode on a
+fabricated grpinfo.txt (all-hit PASS, one-unhit UNHIT, absent bin unmet, missing report
+unverifiable) plus the schema rules; the vdb slice selection (`urg -tests`) is exercised on the
+real smoke vdb in `dv/auto_dv/evidence/gen_t045_fcov_wiring.md`; the bin-row parse on a real
+covergroup remains to be proven at the first covergroup.
 
 ## 8. Reproduction recipe
 

@@ -28,6 +28,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import gen_fcov as F
 import gen_flow_const as C
 import gen_flow_util as U
 import gen_mirror as M
@@ -125,16 +126,14 @@ def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: di
     path.chmod(0o755)
 
 
-def fcov_check(test: dict[str, Any], vdb: Path, seed: int, run_dir: Path) -> dict[str, Any]:
-    """Trust-triad rule 3: declared-but-unhit bins fail the run (ci/check_fcov_expectations.py)."""
-    manifest = C.REPO_ROOT / test["fcov_expectation_file"]
-    argv = [sys.executable, str(C.FCOV_CHECKER), "--manifest", str(manifest), "--vdb", str(vdb),
-            "--cm-name", cm_name(test["name"], seed)]
-    log_path = run_dir / "fcov_check.log"
-    r = subprocess.run(argv, capture_output=True, text=True, cwd=C.REPO_ROOT)
-    log_path.write_text(" ".join(argv) + "\n" + r.stdout + r.stderr, encoding="utf-8")
-    return {"exit_code": r.returncode, "log": str(log_path),
-            "status": C.FCOV_EXIT_CODES.get(r.returncode, "UNKNOWN")}
+def apply_fcov_check(result: dict[str, Any], test: dict[str, Any], vdb: Path, seed: int, run_dir: Path) -> None:
+    """Trust-triad rule 3 as a collected mechanism: a declared-but-unhit bin (or an unverifiable
+    query) turns a PASS into FAIL with the distinct reason 'fcov expectation unmet/unverifiable'."""
+    fc = F.check_test(test, vdb, cm_name(test["name"], seed), run_dir)
+    result["fcov_check"] = fc
+    if fc["status"] != "PASS" and result["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL):
+        result["verdict"] = C.VERDICT_FAIL
+        result["reason"] = fc["reason"]
 
 
 def main() -> int:
@@ -273,11 +272,8 @@ def main() -> int:
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used,
     }
     if a.fcov_check and cov_vdb and test.get("fcov_expectation_file"):
-        fc = fcov_check(test, cov_vdb, seed, run_dir)
-        result["fcov_check"] = fc
-        if fc["exit_code"] != 0 and result["verdict"] == C.VERDICT_PASS:
-            result["verdict"] = C.VERDICT_FAIL
-            result["reason"] = f"fcov-expectation {fc['status']} (see {fc['log']})"
+        # Standalone run = single writer to the vdb, so the per-test slice is readable now.
+        apply_fcov_check(result, test, cov_vdb, seed, run_dir)
     U.dump_yaml(result, run_dir / C.RESULT_YAML)
     with run_log.open("a", encoding="utf-8") as lf:
         lf.write(f"GEN_RUN_VERDICT {result['verdict']} reason={result['reason']} wall_s={result['wall_s']} "
