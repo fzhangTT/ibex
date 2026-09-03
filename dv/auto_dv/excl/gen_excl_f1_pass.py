@@ -41,6 +41,13 @@ SEED_ATTEMPTS = [PRECHECK / f"gen_attempts_round0_rebaseline_pass{i}.log" for i 
 DEFAULT_LEAVES = ("u_ibex_core", "u_register_file")   # R-001 gated scopes
 METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert")
 URG_TIMEOUT_S = 900
+VERSION = "1"
+# Per-object join scope of this version; the metrics below are the next steps, listed in every delta.
+JOIN_SCOPE = "Block entries (LINE metric)"
+NEXT_STEPS = ("Branch vectors: join each vector with the branch table row of its line in the plain report",
+              "Condition vectors: join each vector with the cond table row (sub-expression index and values) of its line",
+              "Toggle entries: join each port or field with the toggle table of the module (per bit and edge)",
+              "FSM entries: join each state and transition with the FSM table of the module")
 
 
 def now():
@@ -323,12 +330,18 @@ def write_delta(work, tag, S):
     J = S["join"]
     L += ["## No-op join, Block entries (CM-3 / Critic L-3); per-object table in " + S["join_file"], "",
           "| Class | Count | Meaning |", "|---|---|---|",
-          f"| NO-OP | {J['NO-OP']} | line already Unreachable in the plain report: the entry does not move the denominator |",
+          f"| NO-OP | {J['NO-OP']} | line already unreachable in the plain report: the entry does not move the denominator |",
           f"| EFFECTIVE | {J['EFFECTIVE']} | line 0/N in the plain report: the entry removes the object |",
           f"| UNRESOLVED-REPORT | {J['UNRESOLVED-REPORT']} | no coverage row on that source line in the plain report |",
           f"| UNRESOLVED-DUMP | {J['UNRESOLVED-DUMP']} | entry text not found in the round's module dump |",
           f"| ANOMALY | {J['ANOMALY']} | covered object excluded (must be 0 after a clean strict load) |", "",
-          "Branch, Condition, Toggle and FSM entries are not joined per object by this version; their effect is the gated-row delta above.", ""]
+          "", f"NO-OP entries are KEPT in the file, not dropped: the .el is the only place that states the per-object justification "
+          f"(annotation record), the strict load proves each entry legal either way, and an explicit entry keeps the exclusion when a "
+          f"build's constant analysis (-cm_seqnoconst) decides the line differently. Dropping them would tie the file to one run's "
+          f"unreachable set. The {J['NO-OP']} NO-OP entries therefore change no number in the gated rows.", "",
+          f"## Driver version and next steps", "",
+          f"gen_excl_f1_pass.py version {VERSION}: per-object join for {JOIN_SCOPE} only; Branch, Condition, Toggle and FSM entries "
+          f"act through the gated-row delta above until the joins below exist.", ""] + [f"- next: {n}" for n in NEXT_STEPS] + [""]
     L += ["## Files of this pass", ""] + [f"- {f}" for f in S["files"]]
     p = work / f"gen_f1_{tag}_readme_delta.md"
     p.write_text("\n".join(L) + "\n")
@@ -409,7 +422,8 @@ def main():
     join_file.write_text("\n".join([f"# Block entries of {el.relative_to(ROOT)} joined with the plain report of {tag} (line status before exclusion)", "",
                                     "| Module | RTL line | plain status | class | entry |", "|---|---|---|---|---|"] +
                                    [f"| {r['module']} | {r['line']} | {r['status']} | {r['class']} | `{r['entry'][:100]}` |" for r in join_rows] +
-                                   ["", "Classes: " + ", ".join(f"{k} {v}" for k, v in J.items())]) + "\n")
+                                   ["", "Classes: " + ", ".join(f"{k} {v}" for k, v in J.items()),
+                                    "NO-OP entries are kept in the file for the annotation record (see the README delta)."]) + "\n")
     after = entry_set(el)
     same = after == before["entries"]
     diff_file = work / f"gen_f1_{tag}_entryset_diff.txt"
@@ -428,7 +442,7 @@ def main():
         files += [str(p.relative_to(ROOT)) for p in attempts if p.parent == PRECHECK and tag in p.name]
     cfs = constfiles(round_dir, work)
     files += [c["copy"].replace(str(ROOT) + "/", "") for c in cfs if c["copy"]]
-    S = {"generated_utc": now(), "tag": tag, "pass_label": a.pass_label, "dry_run": a.dry_run, "inputs": inputs, "generator_cmd": gen_cmd,
+    S = {"driver_version": VERSION, "generated_utc": now(), "tag": tag, "pass_label": a.pass_label, "dry_run": a.dry_run, "inputs": inputs, "generator_cmd": gen_cmd,
          "iterations": it, "attempts_used": [str(p.relative_to(ROOT)) for p in attempts], "strict": strict, "plain": plain,
          "gate_without": g0, "gate_with": g1, "el_md5": md5(el), "el_sha256": sha256(el), "el_before": {"md5": before["el_md5"], "sha256": before["el_sha256"]},
          "entry_set_identical_to_before": same, "kinds": kinds(el), "dropped": dropped, "ec3": ec3, "join": J, "join_file": str(join_file.relative_to(ROOT)),
