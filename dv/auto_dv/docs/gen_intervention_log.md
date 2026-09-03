@@ -378,3 +378,16 @@ nudge window, and was stopped at 07:25 UTC and respawned under the same name aga
 working-tree state (agent_team_prompt.txt Section 2, Orchestrator watchdog). All of its files
 under `dv/auto_dv/work/rtl-arch/` are intact and the respawn continues from them. Not a session
 restart; no other role affected.
+
+## LOG-011 - 2026-09-03 - NOTE (milestone: boots and retires)
+
+At 07:50 UTC the team-built testbench top `gen_tb_top` (wrapper `gen_dut_top`, opentitan
+configuration) ran a riscv-dv-generated program (seed 7, with debug section) and a directed
+Zcb/Zcmp program from the team's `gen_program.py` toolchain end to end: image loaded from the
+`+gen_mem_image` plusarg and verified by a 64-word MEM_PEEK read-back against Python's own parse,
+core released by the bridge's FETCH_EN command, 2000 retirements (riscv-dv) and 169 retirements
+(directed) observed on RVFI, tohost store code 1, finish handshake, UVM_ERROR 0, cocotb PASS. No
+checking beyond the TB mechanics yet (the RVFI monitor, Spike shim and scoreboard are build
+step 2). Evidence: `dv/auto_dv/evidence/gen_tdd_boot_agents.md` (red run on the tied-off top
+first); commit 7678f78. Open at this point: the Critic's REQUEST-CHANGES on build steps 1a and 1b
+await a remediation commit, which the Orchestrator has made a gate for step 2.
