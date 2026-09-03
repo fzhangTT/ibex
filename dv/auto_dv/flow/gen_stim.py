@@ -78,10 +78,24 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
 
 
 def image_plusargs(rec: dict[str, Any]) -> list[str]:
-    img, crc = image_plusarg_names()
-    crc_val = rec["crc32"]
-    crc_txt = crc_val if isinstance(crc_val, str) else f"0x{int(crc_val):08x}"
-    return [f"+{img}={rec['vmem']}", f"+{crc}={crc_txt}"]
+    """The image plusarg set the TB expects, produced by TB Infra's own helper
+    dv/auto_dv/gen_tb/gen_image.py (GenImage(<vmem>).plusargs(): image, crc32, word count, boot address,
+    tohost address; names from gen_tb_knobs.yaml) so the keys are never re-typed here. The flow's
+    two-plusarg composition from gen_tb_pkg.sv identifiers is the fallback when that helper is absent."""
+    import importlib
+    if str(C.REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.REPO_ROOT))
+    try:
+        mod = importlib.import_module("dv.auto_dv.gen_tb.gen_image")
+        args = list(mod.GenImage(rec["vmem"]).plusargs())
+        rec["image_plusargs_source"] = "dv/auto_dv/gen_tb/gen_image.py GenImage.plusargs()"
+        return args
+    except ModuleNotFoundError:
+        img, crc = image_plusarg_names()
+        crc_val = rec["crc32"]
+        crc_txt = crc_val if isinstance(crc_val, str) else f"0x{int(crc_val):08x}"
+        rec["image_plusargs_source"] = f"flow fallback from {C.TB_PKG_SV.name} identifiers"
+        return [f"+{img}={rec['vmem']}", f"+{crc}={crc_txt}"]
 
 
 def main() -> int:

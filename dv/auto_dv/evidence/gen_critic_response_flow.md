@@ -115,6 +115,12 @@ One line per finding: FIXED (where, validated by) or DISPUTED (why).
 | self-tests used the shared /tmp for their scratch (F-001 rule) | FIXED | `C.SELFTEST_TMP` (dv/auto_dv/work/runtime/selftest_tmp) is the parent of every self-test temporary directory | self-tests PASS; /tmp untouched |
 | minor: CONFIG_NAME second home in gen_program.py (third in gen_smoke_run.sh) | MITIGATED, owner informed | `gen_stim.py` exports `GEN_BUILD_CONFIG=opentitan` (`C.ENV_BUILD_CONFIG`) into the tool's environment; API Section 7e documents the trade-off; TB Infra (owner of both files) asked to read the variable or keep the documented duplicate | message to tb-infra |
 
+## Defects found by real runs after T-062 (fixed in the same landing)
+
+| Finding | Status | Where | Validation |
+|---|---|---|---|
+| crash-signature scan matched an ISS log line ("12000: Illegal instruction (hart 0) at PC ...") in sim_stdout.log and failed a passing gen_ut_bridge run (tb-infra-002, LSF job 10932403; marker, banner, $finish, cocotb 1/1, UVM_ERROR 0, exit 0 were all clean) | FIXED | `C.CRASH_RE` matches only the shell's process-termination report (`[bash: line N: ]<pid> Segmentation fault/Bus error/Aborted/Illegal instruction/Killed/Terminated [(core dumped)]`, `(core dumped)`, `timeout: sending signal`); `gen_run.py` scans lsf.err and run.log only (the job script's stderr), no longer the simv stdout capture | `gen_verdict.py --self-test`: the real ISS line is pinned as a PASS case, a bare shell kill report and the core-dump report as FAIL cases; tb-infra-002 re-served |
+
 ## Other changes made while closing these findings
 
 - `gen_run.py --measured auto|yes|no` (gen_regress passes it; a mutation build forces no) and

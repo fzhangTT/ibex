@@ -261,8 +261,11 @@ VERDICT_XFAIL = "XFAIL"
 END_MARKER_DEFAULT = "$finish"
 # simv exit codes that do not by themselves fail a clean-log run (0; 124 = coreutils timeout, TIMEOUT).
 EXIT_CODES_CLEAN = (0, 124)
-# Crash signatures scanned in lsf.err and run.log (the simulator dies without a sim.log message).
-CRASH_RE = re.compile(r"Segmentation fault|Killed|core dumped|Aborted|Bus error|Illegal instruction")
+# Crash signatures: the SHELL's process-termination report (job script stderr = lsf.err, or run.log
+# for local runs), never free text. An ISS/TB log line such as "Illegal instruction (hart 0) at PC"
+# must not match (real false positive on gen_ut_bridge, tb-infra-002).
+CRASH_RE = re.compile(r"(^|: )(\d+ )?(Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated)"
+                      r"(\s+\(core dumped\))?\s*(\S*simv\S*|bash|$)|\(core dumped\)|timeout: sending signal")
 # ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).
 FCOV_EXIT_CODES = {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}
 FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 usage/protocol error")

@@ -72,6 +72,20 @@ builds:
     cocotb: true
     extra_vcs_args: ["-cm_glitch", "0"]
 
+  gen_tb:
+    description: gen_tb_top around gen_dut_top (opentitan configuration), UVM env + cocotb bridge, bus agents, icache RAM models, scramble-key responder (TB Infra entry, dv/auto_dv/work/tb-infra/gen_runtime_build_entry_gen_tb.yaml)
+    tb_top: gen_tb_top
+    dut_instance: u_dut
+    cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]
+    info_trees: [u_dut]
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_tb.f
+    defines:
+      - RVFI
+    cocotb: true
+    extra_vcs_args: ["-cm_glitch", "0"]
+
 tests:
   - name: gen_smoke
     description: build/elaboration check (not a regression test); NOP program, checks retirement and no alert
@@ -107,4 +121,45 @@ tests:
     cocotb_module: dv.auto_dv.flow.gen_cocotb_probe
     expected_fail: false
     component: flow
+    measured: false
+
+  - name: gen_ut_bridge
+    description: TB self-test of the cocotb bridge (commands, thresholds, finish handshake); no program (TB Infra)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: []
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_BRIDGE_PASS
+    feature_groups: [bringup, tb]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge
+    expected_fail: false
+    component: gen_bridge
+    measured: false
+
+  - name: gen_boot_zc
+    description: boots-and-retires milestone on the directed Zc program (image digest, MEM_PEEK read-back, retirement threshold, tohost pass code); TB mechanics only (TB Infra)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    # The image plusargs (+gen_mem_image, +gen_mem_image_crc32, +gen_mem_image_words, +gen_boot_addr,
+    # +gen_tohost_addr) are added by the flow from gen_image.GenImage(<vmem>).plusargs() of the program.
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_BOOT_PASS
+    feature_groups: [bringup]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_boot
+    expected_fail: false
+    component: gen_tb_top
     measured: false

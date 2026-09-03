@@ -131,8 +131,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `GEN_CONFIG_BANNER build_config=opentitan` is missing from sim.log (the rule cannot be switched
   off; the banner block is copied into result.yaml); FAIL when the marker is present but neither `$finish` was seen nor the exit code is
   0, or the exit code is neither 0 nor 124 ("unexplained exit code": one more collected mechanism,
-  never the only one); FAIL on a crash signature (`Segmentation fault|Killed|core dumped|Aborted|Bus
-  error|Illegal instruction`) in lsf.err, run.log or sim_stdout.log; otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
+  never the only one); FAIL on the shell's process-termination report in lsf.err or run.log (the job
+  script's stderr: `<pid> Segmentation fault|Bus error|Aborted|Illegal instruction|Killed|Terminated`,
+  `(core dumped)`, `timeout: sending signal`; TB or ISS log text such as "Illegal instruction (hart 0)"
+  never matches); otherwise PASS. `expected_fail: true` turns FAIL into XFAIL and PASS into FAIL (unexpected pass).
   The process exit code is recorded, never decisive.
 - `--fcov-check`: runs the fcov-expectation check (Section 7c) right away (single writer); a
   declared-but-unhit bin or an unverifiable query turns a PASS into FAIL with the reason `fcov

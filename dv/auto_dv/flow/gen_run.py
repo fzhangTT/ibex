@@ -218,7 +218,9 @@ def main() -> int:
         # The image is built on the submit host into the (shared) run dir; the job only reads it.
         program_rec = S.build_program(test["program"], seed, run_dir / C.PROGRAM_DIRNAME,
                                       run_dir / "gen_program_driver.log")
-        extra_plusargs = S.image_plusargs(program_rec) + extra_plusargs
+        image_args = S.image_plusargs(program_rec)
+        program_rec["image_plusargs"] = image_args
+        extra_plusargs = image_args + extra_plusargs
     argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, extra_plusargs)
     mirror_used = check_mirror_for_run(build) if test.get("cocotb_module") else None
     for stale in (C.SIM_LOG, C.SIM_STDOUT_LOG, C.RESULT_YAML, "exit_code", C.LSF_OUT, C.LSF_ERR):
@@ -261,7 +263,7 @@ def main() -> int:
     sim_log = run_dir / C.SIM_LOG
     res = V.decide(sim_log, pass_marker, timed_out, bool(test.get("expected_fail")), rc,
                    extra_logs=[run_dir / C.SIM_STDOUT_LOG], build_config=build["build_config"],
-                   stderr_logs=[run_dir / C.LSF_ERR, run_log, run_dir / C.SIM_STDOUT_LOG])
+                   stderr_logs=[run_dir / C.LSF_ERR, run_log])
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
     result: dict[str, Any] = {
