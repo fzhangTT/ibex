@@ -30,7 +30,7 @@ Gain rule: G = 0.5 points on any gated metric. Max delta: None; shows gain: None
 
 - `dashboard.txt`, `hierarchy.txt`, `tests.txt` (URG text report), `hierarchy_dut_rows.txt` (the DUT-scope rows)
 - `groups.txt` / `grpinfo.txt` when covergroups exist, else `groups_summary.txt` stating n/a
-- `full_exclusions/fullexclude.<metric>` (URG -dump full_exclusions of this merge; the `_module` variants stay in the out-tree)
+- `full_exclusions/`: NOT in this directory. The six `fullexclude.<metric>` files this dry run produced (unmeasured data, 3.1 MB) were removed before the commit and live only in the out-tree `regress_round_0_dryrun/cov_unmeasured/full_exclusions/`; a real round stores gzip copies here
 - `merge.log` and `merge_log_warnings.txt` (counts per Warning/Error/Note class)
 - `build_manifest_<build>.yaml`, `testlist_snapshot.yaml`, `regress_manifest.yaml`, `elfiles/` (exclusion files used)
 

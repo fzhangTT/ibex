@@ -66,6 +66,20 @@ gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb]
 - `--vcs-arg ARG` (repeatable): extra vcs argument for trials.
 - `--cocotb`: Section 4 triple `+define+COCOTB_SIM +vpi -P <outdir>/gen_pli.tab -load $(cocotb-config
   --lib-name-path vpi vcs)`; also implied by `cocotb: true` on the build entry.
+- **Effective `+define` set of a build** (read it from `<outdir>/compile_cmd.sh` or
+  `build_manifest.flag_groups.defines`): `UVM`, `UVM_REGEX_NO_DPI` (SIM_RECIPE Section 2), the
+  build entry's `defines` (today `RVFI`), the configuration macros from `util/ibex_config.py
+  opentitan vcs_opts` (`BaseIsa`, `RV32M`, `RV32B`, `RV32ZC`, `RegFile`), plus `COCOTB_SIM` on cocotb
+  builds. Nothing else: in particular `SIMULATION` is NOT defined (asked by the DV Lead for
+  F-DIT-025). Effect in `vendor/lowrisc_ip/ip/prim/rtl/prim_lfsr.sv:250-278`: without `SIMULATION`
+  the LFSR starts from the fixed `DefaultSeed` parameter (`DefaultSeedLocal = DefaultSeed`, line
+  276); with `SIMULATION` (and not Verilator) an initial block randomizes `DefaultSeedLocal` 70
+  percent of the time through `std::randomize` (seeded by `+ntb_random_seed`, so still reproducible
+  from the run seed) unless `+prim_lfsr_use_default_seed=1`, and prints `%m: DefaultSeed = ...`.
+  `SIMULATION` also gates `prim_double_lfsr.sv:87`, `prim_cdc_rand_delay.sv:27`,
+  `prim_flop_macros.sv:45` and `prim_sparse_fsm_flop.sv:14`. Adding it is a build-flag change
+  (`defines` of the build entry) that the DV Lead decides; the dummy-instruction LFSR
+  (`ibex_dummy_instr`, prim_lfsr) therefore starts from `RndCnstLfsrSeed` in every run today.
 - Outdir: `<out root>/<build>-<utc stamp>` unless `--outdir`; an existing dir is refused unless
   `--force` (fresh outdir per knob change, Section 9). `<out root>/<build>.latest` names the newest.
 - vcs runs with the outdir as its cwd: the filelists are copied there with absolute paths
@@ -276,14 +290,16 @@ machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 ## 7. gen_testlist.yaml (schema)
 
 `schema_version: 1`. Header policies: `fcov_manifest_required_tiers` (list), `debug_only_plusargs`
-(list of knob names). `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
+(list of knob names; each must be a `PLUSARG_*` of gen_tb_pkg.sv, today `gen_dbg_csr_probe` =
+`PLUSARG_DBG_CSR_PROBE`, probe P6). `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
 in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`, `cov_trees` (coverage
 roots below tb_top, default `[dut_instance]`; the single source of the `-cm_hier` scope, Critic
 P-04; the DV Lead rules wrapper versus `[u_dut.u_ibex_core, u_dut.u_register_file]`). `tests[]`: `name` (gen_
 prefix, unique), `description`, `tier`, `build`, `uvm_test` (null for a top without a UVM test
 class; otherwise a class identifier, anything else is rejected), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
 (`dv/auto_dv/fcov_expectations/<name>.fcov.yaml` or null), `timeout_s`, `owner` (role slug),
-optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `component`, `notes`.
+optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `component`, `notes`,
+`measured`, `program` (Section 7e).
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
 owners, a tier-check test that is not `measured: false`, and any plusarg whose name is neither a
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
@@ -416,6 +432,14 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   renders Section 1 from this index; dry runs sit under `dry_runs` and never count.
 - The n/a rule: a metric URG does not report (no column, or `--`) is `n/a` in the row, is not gated,
   and is skipped in the gain computation; it is never written as 0 or 100.
+- Hard rules of a round (cross-model review T-055): the metrics come from the DUT-scope row only,
+  never from the grand total (a missing or unparsed row is a hard error naming the scope); exactly
+  one DUT scope per merge until the DV Lead's P-04 ruling brings a combining rule; the regression
+  must be clean (gen_regress.py exit 0: no FAIL, TIMEOUT or NOT_RUN, merge ok, no strict-exclusion
+  violation) or the round is refused and not indexed; the round number must be the next one in the
+  index; group is gated as "bins >= 80 (traceability not checked here)" and never counts toward the
+  gain; the entry records the regression verdict, `git_dirty_tracked_files` at regression time and
+  the flow's git status at collect time; a dry run copies no full-exclusions dump.
 - Numbers: code metrics from the DUT-scope row of hierarchy.txt (`cov_trees` of the build entry);
   functional coverage (Group) from the grand total (covergroups are TB-side gen_ instances).
 - The DV Lead requests a round through the queue (purpose 4, `tests: full`, `coverage: yes`); the
@@ -425,6 +449,85 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
 - Instrumentation changes such as `-cm_glitch 0` (LOG-008) are adopted, once ruled, as
   `builds.<name>.extra_vcs_args` in gen_testlist.yaml (the single source of the build flag set),
   and round 0 is re-measured under the new set so later gains compare like with like.
+
+## 7e. Program step (gen_stim.py) and the "boots and retires" templates
+
+A test whose stimulus is a program carries a `program:` block; `gen_run.py` builds the image on
+the submit host into `<run dir>/program/` with `dv/auto_dv/stim/gen_program.py` before the job is
+submitted, and appends the image plusargs the memory model declares in `gen_tb_pkg.sv`
+(`PLUSARG_MEM_IMAGE`, `PLUSARG_MEM_IMAGE_CRC32`; their strings are read from the package, and a
+program-driven test refuses to run until both are declared). `result.yaml: program` records the
+tool command, the seed used and its source (`run` or `fixed`), `prog.vmem` with sha256, the
+sidecar and its `checksum.crc32`, the generator build. The compiled riscv-dv generator is shared:
+`riscv_dv_gen_build:` in `dv/auto_dv/work/runtime/gen_site.yaml` (built once, on the shared root).
+
+```
+program:
+  riscv_dv_test: gen_rand_smoke          # entry of dv/auto_dv/stim/gen_riscv_dv_target/gen_testlist.yaml
+  # directed: [dv/auto_dv/stim/gen_directed/<file>.S]   # instead of riscv_dv_test
+  seed: run                              # the run seed (default); an integer pins the program for bring-up
+  extra_args: []                         # passed to gen_program.py verbatim
+  spike_check: false                     # gen_program.py --spike-check
+```
+
+Templates for TB Infra's first milestone ("boots and retires": gen_tb_top with the cocotb triple,
+one riscv-dv program at a fixed seed, purpose 1, tier check, no coverage). Fill in the names; the
+schema is fixed. Names in angle brackets are TB Infra's (from gen_tb_pkg.sv and the component API
+documents); everything else is literal.
+
+Build entry (`gen_testlist.yaml`, under `builds:`):
+
+```
+  gen_tb_top:
+    description: real TB top around gen_dut_top, cocotb master, opentitan configuration
+    tb_top: gen_tb_top
+    dut_instance: u_dut
+    cov_trees: [u_dut]                    # or [u_dut.u_ibex_core, u_dut.u_register_file] per the DV Lead's P-04 ruling
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_tb.f             # TB Infra's TB-side filelist (env, agents, binds, top)
+    defines:
+      - RVFI
+    cocotb: true
+```
+
+Test entry (under `tests:`; tier check because a bring-up milestone is not a regression-tier test):
+
+```
+  - name: gen_boot_retire
+    description: boots gen_tb_top from a riscv-dv program at a fixed seed, retires it, ends through the TB handshake
+    tier: check
+    build: gen_tb_top
+    uvm_test: null                        # or the UVM test class name
+    plusargs: []                          # +<PLUSARG_*> knobs of gen_tb_pkg.sv only; the image plusargs are added by the flow
+    program:
+      riscv_dv_test: gen_rand_smoke
+      seed: 1
+    seeds: [1]
+    fcov_expectation_file: null
+    timeout_s: 1800
+    owner: tb-infra
+    pass_marker: <the TB's end-of-test line, e.g. GEN_TEST_PASS>
+    feature_groups: [bringup]
+    cocotb_module: dv.auto_dv.<path>.<module>   # the cocotb test module (imported from the mirror on LSF)
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+```
+
+Run request (`dv/auto_dv/work/runtime/requests/tb-infra-<seq>.yaml`):
+
+```
+requester: tb-infra
+purpose: 1
+tests: [gen_boot_retire]
+seeds: [1]
+coverage: no
+notes: first boots-and-retires milestone of gen_tb_top; fixed program seed 1; waves not needed
+```
+
+The flow then: syncs the mirror, compiles gen_tb_top with the Section 4 triple against the mirror
+venv, builds the program, runs one LSF job, and writes `results/tb-infra-<seq>/manifest.yaml`.
 
 ## 8. Reproduction recipe
 

@@ -56,7 +56,10 @@ shares `/tmp` with other workspaces.
   `debug-only plusarg(s) ['gen_smoke_intg_flip'] enabled in a measured coverage run (P6); run it
   unmeasured (measured: false or --measured no)`, `lsf: null`; the regression records 1 not_run and
   exits 3 (`coverage merge status 'no_vdb'`). Out-tree
-  `<out root>/regress_t045_p6_refusal/runs/gen_p6_probe_323273637/result.yaml`.
+  `<out root>/regress_t045_p6_refusal/runs/gen_p6_probe_323273637/result.yaml`. The temporary testlist
+  of that run was a working file at the time; a copy now sits in
+  `<out root>/regress_t045_p6_refusal/inputs/testlist_p6.yaml` (sha256 52452481b4fabfb4...), and every
+  later regression retains `testlist_used.yaml` by construction.
 - `python3 gen_regress.py --self-test`: fcov_policy_failures (no covergroup: null manifests pass;
   covergroups exist: smoke null manifest FAILs, tier check exempt; header tier FAILs), fcov_summary
   totals and per-test, summarize counts. `python3 gen_flow_util.py --self-test`: plusarg_enabled

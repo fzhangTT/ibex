@@ -240,6 +240,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         if t_ not in C.ALL_TIERS:
             die(f"{path}: fcov_manifest_required_tiers names unknown tier {t_!r}")
     known_plusargs = set(C.sv_plusarg_names()) | set(C.SIMULATOR_PLUSARGS)
+    for knob in data.get("debug_only_plusargs") or []:
+        if knob not in C.sv_plusarg_names():
+            die(f"{path}: debug_only_plusargs names {knob!r}, which is not a PLUSARG_* of {C.TB_PKG_SV.name} "
+                "(the knob's one origin; TB Infra declares it there first)")
     for bname, b in builds.items():
         for k in C.BUILD_REQUIRED_KEYS:
             if k not in b:
@@ -278,6 +282,18 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         uvm = t.get("uvm_test")
         if uvm is not None and not (isinstance(uvm, str) and re.match(r"^[A-Za-z_]\w*$", uvm)):
             die(f"{path}: test {t['name']} uvm_test must be null or a class identifier, got {uvm!r}")
+        prog = t.get("program")
+        if prog is not None:
+            if not isinstance(prog, dict):
+                die(f"{path}: test {t['name']} program must be a mapping")
+            unknown = set(prog) - set(C.PROGRAM_KEYS)
+            if unknown:
+                die(f"{path}: test {t['name']} program has unknown keys {sorted(unknown)}")
+            if bool(prog.get("riscv_dv_test")) == bool(prog.get("directed")):
+                die(f"{path}: test {t['name']} program needs exactly one of riscv_dv_test / directed")
+            seed = prog.get("seed", C.PROGRAM_SEED_RUN)
+            if not (seed == C.PROGRAM_SEED_RUN or isinstance(seed, int)):
+                die(f"{path}: test {t['name']} program.seed must be an integer or {C.PROGRAM_SEED_RUN!r}")
         for pa in t["plusargs"]:
             name = plusarg_name(pa)
             if name is None:

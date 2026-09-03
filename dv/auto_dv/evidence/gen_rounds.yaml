@@ -83,3 +83,5 @@ dry_runs:
   - fullexclude.fsm
   - fullexclude.line
   - fullexclude.tgl
+  full_exclusions_note: 'dry run: the six listed dump files were removed from the evidence directory before
+    the commit (unmeasured data); they remain in the out-tree regress_round_0_dryrun/cov_unmeasured/full_exclusions'

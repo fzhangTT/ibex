@@ -28,7 +28,9 @@ import gen_flow_const as C
 import gen_flow_util as U
 import gen_cov_report as R
 
-GATED_CODE_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert")
+# Gated code metrics = every URG metric but functional coverage (group), which DV_prompt Section 4
+# gates by two conditions (bins >= 80 AND traceability) and which never enters the gain rule.
+GATED_CODE_METRICS = tuple(m for m in C.URG_METRICS if m != "group")
 WARNING_RE = re.compile(r"^(Warning|Error|Note)-\[([\w-]+)\]")
 
 
@@ -53,16 +55,41 @@ def run_regression(a: argparse.Namespace, tag: str) -> Path:
     U.log(f"gen_regress.py exit {rc} after {wall:.0f}s")
     if not (outdir / "manifest.yaml").is_file():
         U.die(f"no manifest under {outdir}; see {C.WORK_DIR / 'round_regress_driver.log'}")
+    # gen_regress.py: 0 clean; 2 a run FAILed, TIMED OUT or was NOT_RUN; 3 merge failure or strict
+    # exclusion violation. A round is a measurement of a passing regression: anything else is refused.
+    if rc != 0 or timed_out:
+        U.die(f"gen_regress.py exit {rc} (timed_out={timed_out}): the regression is not clean, the round is not "
+              f"indexed; fix and rerun (manifest {outdir / 'manifest.yaml'})")
     return outdir
 
 
+def regression_verdict(man: dict[str, Any]) -> dict[str, Any]:
+    """What gen_regress.py would have exited with, recomputed from the manifest (for --collect)."""
+    s = man.get("summary") or {}
+    cov = man.get("coverage") or {}
+    bad_runs = int(s.get("fail", 0)) + int(s.get("timeout", 0)) + int(s.get("not_run", 0))
+    cov_ok = cov.get("status") in ("ok", "ok_no_measured_tests", None)
+    verdict = "clean" if (bad_runs == 0 and cov_ok and man.get("status") == "done") else "not clean"
+    return {"verdict": verdict, "status": man.get("status"), "bad_runs": bad_runs, "coverage_status": cov.get("status"),
+            "exclusion_violations": cov.get("exclusion_violations") or []}
+
+
 def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
-    """DUT-scope row (code metrics from the DUT instance, group from the grand total), n/a kept."""
+    """DUT-scope row (code metrics from the DUT instance row, group from the grand total), n/a kept.
+    Never falls back to the grand totals: a missing or unparsed DUT row is a hard error, and more
+    than one scope is refused until a combining rule exists (pending DV Lead ruling P-04)."""
     totals = cov.get("totals") or {}
     scopes = cov.get("dut_scope") or {}
-    row: dict[str, Any] = {}
-    first = next(iter(scopes.values()), None) if scopes else None
-    src = first if isinstance(first, dict) and "parse_error" not in first else totals
+    if not scopes:
+        U.die("coverage record has no DUT-scope row (dut_scope empty): the round needs the "
+              "<tb_top>.<dut_instance> row of hierarchy.txt, not the grand total")
+    if len(scopes) > 1:
+        U.die(f"coverage record has {len(scopes)} DUT scopes {sorted(scopes)}: no combining rule exists yet "
+              "(DV Lead ruling P-04 pending); one cov_tree per build until then")
+    scope, src = next(iter(scopes.items()))
+    if not isinstance(src, dict) or "parse_error" in src:
+        U.die(f"DUT-scope row for {scope} could not be parsed: {src.get('parse_error') if isinstance(src, dict) else src}")
+    row: dict[str, Any] = {"scope": scope}
     for m in GATED_CODE_METRICS:
         row[m] = src.get(m, C.NOT_APPLICABLE)
     row["group"] = totals.get("group", C.NOT_APPLICABLE)
@@ -81,7 +108,8 @@ def gain_against(prev: dict[str, Any] | None, cur: dict[str, Any]) -> dict[str, 
         c = cur.get(m)
         p = (prev or {}).get(m)
         deltas[m] = round(c - p, 2) if isinstance(c, float) and isinstance(p, float) else C.NOT_APPLICABLE
-    numeric = [d for d in deltas.values() if isinstance(d, float)]
+    # Gain is defined on the gated code metrics; group (two-condition gate) is reported but not counted.
+    numeric = [deltas[m] for m in GATED_CODE_METRICS if isinstance(deltas[m], float)]
     max_gain = max(numeric) if numeric else None
     return {"deltas": deltas, "max_gain": max_gain,
             "shows_gain": (max_gain is not None and max_gain >= C.ROUND_GAIN_G) if prev else None,
@@ -92,8 +120,12 @@ def gate_status(row: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for m in C.URG_METRICS:
         v = row.get(m)
-        out[m] = "n/a (not reported by URG; excluded from the gate)" if not isinstance(v, float) else \
-            ("PASS" if v >= C.GATE_PCT else "below gate")
+        if not isinstance(v, float):
+            out[m] = "n/a (not reported by URG; excluded from the gate)"
+        elif m == "group":
+            out[m] = ("bins >= 80" if v >= C.GATE_PCT else "bins below 80") + " (traceability not checked here)"
+        else:
+            out[m] = "PASS" if v >= C.GATE_PCT else "below gate"
     return out
 
 
@@ -138,6 +170,18 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     ev = evidence_root / name
     if ev.exists():
         U.die(f"{ev} exists; an evidence directory is never overwritten (pick another --round or --tag)")
+    # Every refusal below happens before anything is written: a refused round leaves no directory.
+    reg_verdict = regression_verdict(man)
+    if reg_verdict["verdict"] != "clean" and not dry_run:
+        U.die(f"regression {outdir} is not clean ({reg_verdict}); a round is indexed only for a clean regression")
+    row = metric_row(cov)
+    if index_path.is_file():
+        index = U.load_yaml(index_path)
+    else:
+        U.log(f"no round index yet; creating {index_path}")
+        index = {"G": C.ROUND_GAIN_G, "N": C.ROUND_NO_GAIN_N, "gate_pct": C.GATE_PCT, "rounds": [], "dry_runs": []}
+    if not dry_run and round_no != len(index["rounds"]):
+        U.die(f"round number {round_no} does not follow the index (next round is {len(index['rounds'])})")
     ev.mkdir(parents=True)
     report = Path(cov.get("report_dir") or "")
     copied: list[str] = []
@@ -178,21 +222,23 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     for e in cov.get("elfiles") or []:
         (ev / "elfiles").mkdir(exist_ok=True)
         shutil.copyfile(e, ev / "elfiles" / Path(e).name)
-    row = metric_row(cov)
-    index = U.load_yaml(index_path) if index_path.is_file() else {"G": C.ROUND_GAIN_G, "N": C.ROUND_NO_GAIN_N,
-                                                                  "gate_pct": C.GATE_PCT, "rounds": [], "dry_runs": []}
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
+    git = man.get("git") or {}
     entry = {"round": round_no, "dry_run": dry_run, "label": label, "date_utc": U.now_utc(), "evidence_dir": str(ev),
-             "regress_outdir": str(outdir), "regress_tag": man.get("tag"), "git_head": (man.get("git") or {}).get("head"),
+             "regress_outdir": str(outdir), "regress_tag": man.get("tag"), "git_head": git.get("head"),
+             "git_dirty_tracked_files": git.get("dirty_tracked_files"), "flow_git_status_now": flow_git_status(),
+             "regression_verdict": reg_verdict,
              "build_config": man.get("build_config"), "source": source, "tests_in_report": (cov.get("totals") or {}).get("tests_in_report"),
              "runs": man.get("summary"), "metrics": row, "gate": gate_status(row), "gain": gain,
              "no_gain_streak": streak, "stopping_rule_fired": (streak >= C.ROUND_NO_GAIN_N) if not dry_run else None,
              "exclusion_files": cov.get("elfiles") or [], "excl_strict": cov.get("excl_strict"),
              "exclusion_violations": cov.get("exclusion_violations") or [], "merge_warnings": wc,
              "testlist": {"path": str(C.TESTLIST_YAML), "sha256": U.sha256_file(C.TESTLIST_YAML)},
-             "testlist_sha256": U.sha256_file(C.TESTLIST_YAML), "copied": copied, "full_exclusions_files": dumped}
+             "testlist_sha256": U.sha256_file(C.TESTLIST_YAML), "copied": copied, "full_exclusions_files": dumped,
+             "full_exclusions_note": ("dry run: dump not copied (stays in the out-tree)" if dry_run else
+                                      "gzip copies in the evidence directory")}
     if dry_run:
         index.setdefault("dry_runs", []).append(entry)
     else:
@@ -201,6 +247,14 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     (ev / "gen_round_summary.md").write_text(render_summary(entry, prev), encoding="utf-8")
     U.log(f"evidence written to {ev}; index {index_path}")
     return ev
+
+
+def flow_git_status() -> list[str]:
+    """Uncommitted state of the flow at collect time (so a round produced from modified or untracked
+    flow files says so)."""
+    import subprocess
+    r = subprocess.run(["git", "status", "--porcelain", "dv/auto_dv/flow"], cwd=C.REPO_ROOT, capture_output=True, text=True)
+    return [l.rstrip() for l in r.stdout.splitlines()]
 
 
 def fmt(v: Any) -> str:
@@ -216,12 +270,15 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
               "unmeasured merge. These numbers are NOT a closure round, do not enter the round counter or the gain",
               "computation, and are listed under `dry_runs` in gen_rounds.yaml. The procedure, not the coverage, is",
               "what this directory proves.", ""]
-    L += [f"Date (UTC): {e['date_utc']}. Build configuration: `{e['build_config']}`. Git HEAD: `{e['git_head']}`.",
+    L += [f"Date (UTC): {e['date_utc']}. Build configuration: `{e['build_config']}`. Git HEAD: `{e['git_head']}` "
+          f"(tracked files dirty at regression time: {e.get('git_dirty_tracked_files')}; flow status at collect time: "
+          f"{e.get('flow_git_status_now') or 'clean'}). Regression verdict: {e.get('regression_verdict', {}).get('verdict')}.",
           f"Regression: `{e['regress_outdir']}` (tag {e['regress_tag']}); source: {e['source']}; tests in report:",
           f"{e['tests_in_report']}; runs: {e['runs']}.", "",
           f"Exclusion files (loaded with -excl_strict={e['excl_strict']}): {e['exclusion_files'] or 'none'};",
           f"strict violations: {e['exclusion_violations'] or 'none'}. Testlist snapshot sha256 `{e['testlist_sha256']}`.", "",
-          "## Metrics (DUT-scope row; n/a = URG did not report the metric: excluded from gate and gain)", "",
+          f"## Metrics (DUT-scope row `{e['metrics'].get('scope')}`; n/a = URG did not report the metric: excluded from gate and gain; "
+          "group is gated by bins >= 80 AND traceability, the latter not checked here, and never counts toward the gain)", "",
           "| Metric | Percent | covered/total | Gate (80) | Delta vs previous round |", "|---|---|---|---|---|"]
     for m in C.URG_METRICS:
         v = e["metrics"].get(m)
@@ -233,7 +290,7 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
           "## Files in this directory", "",
           "- `dashboard.txt`, `hierarchy.txt`, `tests.txt` (URG text report), `hierarchy_dut_rows.txt` (the DUT-scope rows)",
           "- `groups.txt` / `grpinfo.txt` when covergroups exist, else `groups_summary.txt` stating n/a",
-          "- `full_exclusions/fullexclude.<metric>.gz` (URG -dump full_exclusions of this merge, gzip; the `_module` variants stay in the out-tree; a dry run copies no dump)",
+          f"- full_exclusions: {e.get('full_exclusions_note')} (`fullexclude.<metric>.gz`, gzip; the `_module` variants stay in the out-tree)",
           "- `merge.log` and `merge_log_warnings.txt` (counts per Warning/Error/Note class)",
           "- `build_manifest_<build>.yaml`, `testlist_snapshot.yaml`, `regress_manifest.yaml`, `elfiles/` (exclusion files used)", "",
           "## Merge log warning counts", ""] + [f"- {k}: {v}" for k, v in e["merge_warnings"].items()]

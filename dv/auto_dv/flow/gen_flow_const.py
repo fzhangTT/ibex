@@ -52,6 +52,17 @@ def _out_root() -> Path:
 
 
 OUT_DIR = _out_root()
+
+
+def site_value(key: str) -> str | None:
+    """Other site pointers of gen_site.yaml (e.g. riscv_dv_gen_build: a prebuilt riscv-dv generator)."""
+    if SITE_YAML.is_file():
+        m = re.search(rf"^{re.escape(key)}:\s*(\S+)", SITE_YAML.read_text(encoding="utf-8"), re.M)
+        if m:
+            return m.group(1)
+    return None
+
+
 STAGED_ENV_SH = "env.sh"
 ENV_TOOLCHECK_VAR = "IBEX_ENV_TOOLCHECK"
 REQUESTS_DIR = WORK_DIR / "requests"
@@ -183,7 +194,18 @@ ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
-                      "expected_fail", "component", "notes", "measured")
+                      "expected_fail", "component", "notes", "measured", "program")
+# program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
+PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
+PROGRAM_KEYS = ("riscv_dv_test", "directed", "seed", "extra_args", "spike_check")
+PROGRAM_SEED_RUN = "run"
+PROGRAM_DIRNAME = "program"
+PROGRAM_VMEM = "prog.vmem"
+PROGRAM_SIDECAR = "prog.sym.json"
+# gen_tb_pkg.sv identifiers of the image plusargs (TB Infra's mem-model API); the string values
+# are read from the package, never typed here.
+SV_PLUSARG_MEM_IMAGE = "PLUSARG_MEM_IMAGE"
+SV_PLUSARG_MEM_IMAGE_CRC32 = "PLUSARG_MEM_IMAGE_CRC32"
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
 # cov_trees: coverage scope roots below tb_top (default [dut_instance]); the single source of the
 # -cm_hier scope (Critic P-04; the DV Lead rules on wrapper vs core+regfile).

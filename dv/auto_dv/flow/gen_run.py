@@ -32,6 +32,7 @@ import gen_fcov as F
 import gen_flow_const as C
 import gen_flow_util as U
 import gen_mirror as M
+import gen_stim as S
 import gen_verdict as V
 
 
@@ -211,7 +212,14 @@ def main() -> int:
         U.dump_yaml(refusal, run_dir / C.RESULT_YAML)
         U.log(f"{test['name']} seed={seed}: NOT_RUN ({refusal['reason']})")
         return 2
-    argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, a.plusarg)
+    program_rec = None
+    extra_plusargs = list(a.plusarg)
+    if test.get("program"):
+        # The image is built on the submit host into the (shared) run dir; the job only reads it.
+        program_rec = S.build_program(test["program"], seed, run_dir / C.PROGRAM_DIRNAME,
+                                      run_dir / "gen_program_driver.log")
+        extra_plusargs = S.image_plusargs(program_rec) + extra_plusargs
+    argv, env = compose(build, test, seed, run_dir, cov_vdb, a.waves, extra_plusargs)
     mirror_used = check_mirror_for_run(build) if test.get("cocotb_module") else None
     for stale in (C.SIM_LOG, C.SIM_STDOUT_LOG, C.RESULT_YAML, "exit_code", C.LSF_OUT, C.LSF_ERR):
         if (run_dir / stale).exists():
@@ -272,7 +280,7 @@ def main() -> int:
         "measured": measured, "mutation_id": build.get("mutation_id"),
         "expected_fail": bool(test.get("expected_fail")), "owner": test["owner"],
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
-        "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used,
+        "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},
     }
     if a.fcov_check and cov_vdb and test.get("fcov_expectation_file"):

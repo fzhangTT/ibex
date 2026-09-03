@@ -34,11 +34,12 @@ schema_version: 1
 # Policies (flow-enforced):
 #   fcov_manifest_required_tiers: tiers whose tests must carry an fcov_expectation_file once the
 #     first covergroup exists (a null manifest there FAILs the run; Critic P-07). Empty until then.
-#   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: the
-#     CSR-flop debug compare); a measured run enabling one is refused in writing (NOT_RUN).
-#     TB Infra names the knob (declared once in the SV constants home) and I add it here.
+#   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: probe
+#     P6, the CSR debug compare); a measured run enabling one is refused in writing (NOT_RUN).
+#     Every name must be a PLUSARG_* of dv/auto_dv/tb/gen_tb_pkg.sv (the one origin; here
+#     PLUSARG_DBG_CSR_PROBE); load_testlist refuses an undeclared name.
 fcov_manifest_required_tiers: []
-debug_only_plusargs: []
+debug_only_plusargs: [gen_dbg_csr_probe]
 
 builds:
   gen_smoke:

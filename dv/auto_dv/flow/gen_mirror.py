@@ -8,7 +8,9 @@ The submit-host compile keeps using the clone; only runtime artefacts come from 
 cocotb VPI library and libpython of the mirror venv, the Python test modules (PYTHONPATH), spike.
 
 Usage:
-    gen_mirror.py --sync [--venv] [--spike]      # rsync (+ venv, + tools/spike), write the manifest
+    gen_mirror.py --sync [--venv] [--spike]      # rsync (+ venv, + tools/spike), write the manifest;
+                                                 # run --venv once after a fresh mirror (without it the
+                                                 # manifest reports venv MISSING, and cocotb builds refuse)
     gen_mirror.py --check                        # fresh | stale (sources) | stale_venv (lock changed: run --venv); exit 1 unless fresh
     gen_mirror.py --status                       # print the manifest
 """

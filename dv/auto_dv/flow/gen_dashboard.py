@@ -67,17 +67,21 @@ def metric_cell(cov: dict[str, Any], key: str) -> str:
 def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
     """Code metrics from the DUT instance row of hierarchy.txt; functional coverage (GROUP) from
     the grand total, because covergroups are TB-side gen_ instances that never appear under the
-    DUT instance (the Test Writer's gen_ namespace is the whole functional set)."""
+    DUT instance (the Test Writer's gen_ namespace is the whole functional set). No fallback to
+    the grand total for code metrics: a missing DUT row shows n/a with a parse_error note."""
     cov = m.get("coverage") or {}
     totals = cov.get("totals") or {}
     scopes = cov.get("dut_scope") or {}
     row: dict[str, Any] = {}
+    if len(scopes) > 1:
+        # No combining rule for several DUT scopes exists yet (P-04 pending): report n/a, never the first.
+        return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": f"{len(scopes)} DUT scopes, no combining rule"}
     if scopes:
         first = next(iter(scopes.values()))
         if isinstance(first, dict) and "parse_error" not in first:
             row = dict(first)
     if not row:
-        return totals
+        return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": "DUT-scope row missing"}
     row["group"] = totals.get("group", C.NOT_APPLICABLE)
     ratios = dict(row.get("ratios") or {})
     if (totals.get("ratios") or {}).get("group"):
