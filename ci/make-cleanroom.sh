@@ -38,6 +38,21 @@ ALLOW=(
 )
 DOCS_DV_ALLOWED=("FENCE.md" "SIM_RECIPE.md" "TB_CONTRACT.md" "dv_principles.md")  # docs/dv/**: supplied by the overlay
 
+# ci/ is default-deny too (FENCE.md "The ci/ allowlist"), but by enumeration rather
+# than a root-plus-allowlist scheme: everything else under ci/ is already gone via
+# plain DENY below, so this list only has to match what DENY leaves behind, not
+# reconstruct ci/ from nothing.
+CI_ALLOWED=(
+  "env.sh"                      # Zone A variant
+  "setup-venv.sh"
+  "get-toolchain.sh"
+  "check_fcov_expectations.py"  # Zone A variant
+  "mcp"                         # Zone A wrapper variants + probes
+  "reviews"                     # six-file Zone A rubric set; verified separately (cleanroom_check_reviews_set)
+  "requirements-cocotb.txt"
+  "requirements.lock"
+)
+
 # --- plain deny list: paths that must never exist in the export, no exceptions. ---
 # One entry per row of docs/superpowers/specs/2026-09-02-zone-a-fence-scope-amendment.md
 # (dv/** and docs/dv/** moved out of this array -- see ALLOW / DOCS_DV_ALLOWED above);
@@ -94,7 +109,7 @@ ITEM9_STRINGS=(
 # the right scope for that one).
 WHOLE_EXPORT_IDENTIFIERS=(
   "core_ibex" "riscv_arithmetic_basic_test" "mcounteren_test" "spike_cosim"
-  "ibex-cosim" "ibex_cosim"                       # the cosim referee's package/agent identifiers (owner final-check fix set)
+  "ibex-cosim" "ibex_cosim"                       # the cosim referee's package/agent identifiers
 )
 
 # ---- shared check functions; reused by ci/cleanroom-selftest.sh --------------------
@@ -209,6 +224,33 @@ cleanroom_check_reviews_set() {  # <export-root>
   return 0
 }
 
+# FENCE.md "The ci/ allowlist": ci/ is default-deny inside an export -- exactly the
+# CI_ALLOWED top-level entries may exist. Runs unconditionally (true pre- and
+# post-overlay: DENY alone already leaves exactly this set before the overlay ever
+# touches ci/).
+cleanroom_check_ci_set() {  # <export-root>
+  local root="$1"
+  if [ ! -d "$root/ci" ]; then
+    err "export is missing ci/"
+    return 1
+  fi
+  local f base name is_allowed leftover=()
+  while IFS= read -r -d '' f; do
+    base="$(basename "$f")"
+    is_allowed=0
+    for name in "${CI_ALLOWED[@]}"; do
+      [ "$base" = "$name" ] && { is_allowed=1; break; }
+    done
+    [ "$is_allowed" -eq 0 ] && leftover+=("$f")
+  done < <(find "$root/ci" -mindepth 1 -maxdepth 1 -print0 2>/dev/null)
+  if [ "${#leftover[@]}" -gt 0 ]; then
+    err "ci/ has content beyond the FENCE.md allowlist (${CI_ALLOWED[*]}):"
+    printf '  %s\n' "${leftover[@]}" >&2
+    return 1
+  fi
+  return 0
+}
+
 # (d1) DV_prompt Section 12 item 9: exact strings, scoped to its exact file list.
 cleanroom_check_item9_scan() {  # <export-root>
   local root="$1" bad=0 f existing=() s hits
@@ -234,14 +276,19 @@ cleanroom_check_item9_scan() {  # <export-root>
 # pristine and gated by its own precondition-6 checks in _cleanroom_place_riscvdv, not
 # by this scan); its own docs/tests use "core_ibex"/"riscv_arithmetic_basic_test" as
 # worked examples and would otherwise flag permanently regardless of the export's own
-# content.
+# content. The carve-out is anchored to that PATH, not the bare basename -- grep's
+# --exclude-dir matches a directory of that name anywhere in the tree, which would
+# silently exempt an unrelated same-named directory elsewhere in the export.
 cleanroom_check_whole_export_identifiers() {  # <export-root>
-  local root="$1" bad=0 id hits
+  local root="$1" bad=0 id hits filtered
+  local carveout="$root/vendor/google_riscv-dv/"
   for id in "${WHOLE_EXPORT_IDENTIFIERS[@]}"; do
-    hits="$(grep -rIFl --exclude-dir=google_riscv-dv -- "$id" "$root" 2>/dev/null || true)"
-    if [ -n "$hits" ]; then
+    hits="$(grep -rIFl -- "$id" "$root" 2>/dev/null || true)"
+    filtered=""
+    [ -n "$hits" ] && filtered="$(printf '%s\n' "$hits" | grep -vF -- "$carveout" || true)"
+    if [ -n "$filtered" ]; then
       err "fenced identifier '$id' present in export:"
-      echo "$hits" | sed 's/^/  /' >&2
+      echo "$filtered" | sed 's/^/  /' >&2
       bad=1
     fi
   done
@@ -312,13 +359,18 @@ cleanroom_check_validator() {  # <export-root>
 # Fetch a pristine upstream copy of vendor/google_riscv-dv at the locked rev and place
 # it into the stage, replacing whatever git-archive shipped (the checked-in tree
 # carries local patches -- see the amendment review C3 -- so "pristine" here means
-# fetched fresh, not verified-in-place). Verifies (a) the fetched commit's SHA equals
+# fetched fresh, not verified-in-place). Verifies (a) the cached commit's SHA equals
 # the locked rev in vendor/google_riscv-dv.lock.hjson exactly (logged), and (b) no file
-# in the fetched tree contains the string "Ibex Specific" -- DV_prompt Section 12
+# in the cached tree contains the string "Ibex Specific" -- DV_prompt Section 12
 # precondition 6's own pristine test, and the actual evidence (a checkout-vs-itself
-# diff is tautological and proves nothing about content). Retains
+# diff is tautological and proves nothing about content). Both checks run against the
+# cache on EVERY export, cold-fetched or warm, so a warm cache is never trusted
+# blindly: $cache/.git is retained (stripped only from the stage copy below) so
+# FETCH_HEAD is re-derivable here with no network call. Retains
 # vendor/google_riscv-dv.lock.hjson (never touched -- it is the precondition-6 anchor);
-# deletes vendor/google_riscv-dv.vendor.hjson (discloses patch_dir).
+# deletes vendor/google_riscv-dv.vendor.hjson (discloses patch_dir); stamps the
+# verified rev into vendor/google_riscv-dv.verified so the attestation is checkable
+# after the fact, without needing the export's own .git history.
 _cleanroom_place_riscvdv() {  # <stage>
   local stage="$1"
   local lock="$REPO_ROOT/vendor/google_riscv-dv.lock.hjson"
@@ -333,6 +385,13 @@ _cleanroom_place_riscvdv() {  # <stage>
   fi
 
   local cache="${TMPDIR:-/tmp}/ibex-cleanroom-riscvdv-cache/$rev"
+  # A cache built before this function retained .git (or any other unusable cache) is
+  # never trusted -- wipe it and re-fetch rather than skip the checks below.
+  if [ -d "$cache" ] && [ ! -d "$cache/.git" ]; then
+    echo "NOTE: cache at $cache has no .git (stale pre-verification-stamp cache); refetching."
+    rm -rf "$cache"
+  fi
+
   if [ ! -d "$cache" ]; then
     local tmp ok
     tmp="$(mktemp -d "${TMPDIR:-/tmp}/ibex-cleanroom-riscvdv.XXXXXX")" || { err "mktemp failed"; return 1; }
@@ -350,35 +409,36 @@ _cleanroom_place_riscvdv() {  # <stage>
       rm -rf "$tmp"
       return 1
     fi
-
-    local fetched_sha
-    fetched_sha="$(git -C "$tmp" rev-parse FETCH_HEAD)"
-    echo "Fetched riscv-dv commit: $fetched_sha (locked rev: $rev)"
-    if [ "$fetched_sha" != "$rev" ]; then
-      err "fetched riscv-dv commit $fetched_sha does not match the locked rev $rev in vendor/google_riscv-dv.lock.hjson"
-      rm -rf "$tmp"
-      return 1
-    fi
-
-    rm -rf "$tmp/.git"
-
-    local patched
-    patched="$(grep -rIFl -- "Ibex Specific" "$tmp" 2>/dev/null || true)"
-    if [ -n "$patched" ]; then
-      err "fetched riscv-dv at $rev contains 'Ibex Specific' (precondition-6 pristine test) -- not pristine:"
-      echo "$patched" | sed 's/^/  /' >&2
-      rm -rf "$tmp"
-      return 1
-    fi
-
     mkdir -p "$(dirname "$cache")"
     mv "$tmp" "$cache"
+  fi
+
+  local cached_sha
+  cached_sha="$(git -C "$cache" rev-parse FETCH_HEAD 2>/dev/null || true)"
+  if [ -z "$cached_sha" ]; then
+    err "cached riscv-dv at $cache has no recoverable FETCH_HEAD; something is wrong with the cache -- delete it and re-run"
+    return 1
+  fi
+  echo "Verified riscv-dv commit: $cached_sha (locked rev: $rev)"
+  if [ "$cached_sha" != "$rev" ]; then
+    err "cached riscv-dv commit $cached_sha does not match the locked rev $rev in vendor/google_riscv-dv.lock.hjson"
+    return 1
+  fi
+
+  local patched
+  patched="$(grep -rIFl --exclude-dir=.git -- "Ibex Specific" "$cache" 2>/dev/null || true)"
+  if [ -n "$patched" ]; then
+    err "cached riscv-dv at $rev contains 'Ibex Specific' (precondition-6 pristine test) -- not pristine:"
+    echo "$patched" | sed 's/^/  /' >&2
+    return 1
   fi
 
   rm -rf "$stage/vendor/google_riscv-dv"
   mkdir -p "$stage/vendor"
   cp -a "$cache" "$stage/vendor/google_riscv-dv"
+  rm -rf "$stage/vendor/google_riscv-dv/.git"
   rm -f "$stage/vendor/google_riscv-dv.vendor.hjson"
+  printf '%s verified %s\n' "$cached_sha" "$(date +%Y-%m-%d)" > "$stage/vendor/google_riscv-dv.verified"
 }
 
 _cleanroom_apply_deny_with_allow() {  # <stage>
@@ -500,6 +560,7 @@ cleanroom_verify_stage() {  # <stage-dir>
   cleanroom_check_artifact_absence "$stage" || rc=1
   cleanroom_check_inventory "$stage" || rc=1
   cleanroom_check_reviews_set "$stage" || rc=1
+  cleanroom_check_ci_set "$stage" || rc=1
   if [ "${CLEANROOM_PRE_OVERLAY:-0}" = "1" ]; then
     echo "NOTE: CLEANROOM_PRE_OVERLAY=1 skips the item-9 scan, whole-export identifier scan, NO-REMOTE-MCP, and validator checks (Task 2 not landed)."
   else

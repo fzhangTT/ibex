@@ -1,10 +1,13 @@
-WS7 final — DV_prompt.txt Section 12 launch preconditions, items 1-11, run against the
-post-T5 export at /localdev/fzhang/ws/ibex-cleanroom (export SHA 32084c74, source ebf47c1a).
-Run date: 2026-09-02 22:49 EDT. Supersedes the T4 run (section12-checklist.txt),
-whose export (cc114e05, source f9ac6933) is retired gate evidence — the T4 artifacts
-(gen TB files, logs) are committed under docs/dv/evidence/ws7-gate/ and the directory was
-rebuilt with --force. Items 1 and 8 read DV_prompt.txt at the full-tree root
-(owner-delivered, untracked). Verbatim transcription of items 2-9 text: section12-checklist.txt.
+WS7 close-fixwave re-verify — DV_prompt.txt Section 12 launch preconditions, items 1-11, run
+against the post-close-fix export at /localdev/fzhang/ws/ibex-cleanroom (export SHA 0231dbe6,
+source b2c08682). Run date: 2026-09-02 23:20 EDT. Supersedes the prior run recorded at this path
+(export 32084c74, source ebf47c1a), retired after the WS7+WS6 close review's fixes (riscv-dv
+precondition-6 checks hoisted out of the cold-cache branch so they run on every export incl. this
+one; CI_ALLOWED enforcement added; see docs/dv/reviews/2026-09-02-claude-diff-ws7-ws6-close.md).
+Only item 6's sub-checks changed text (new stamp-file line, below); every item's PASS/BLOCKED
+outcome is unchanged from the prior run — same 10 PASS, 1 BLOCKED. Items 1 and 8 read
+DV_prompt.txt at the full-tree root (owner-delivered, untracked). Verbatim transcription of items
+2-9 text: section12-checklist.txt.
 
 == Item 1: no proposed-ruling marker in DV_prompt.txt ==
   grep -c '^- PROPOSED RULING' => 0
@@ -35,6 +38,10 @@ rebuilt with --force. Items 1 and 8 read DV_prompt.txt at the full-tree root
   dated riscv-dv-verified-on line names the lock rev
   states the empty tree diff against upstream
   0 files contain 'Ibex Specific' under vendor/google_riscv-dv/
+  vendor/google_riscv-dv.verified: "71666ebacd69266b1abb7cdbad5e1897ce5884e6 verified 2026-09-02"
+    (matches the lock rev; stamped by this export's own build, not carried over from a prior one —
+    the rev-identity check that produces it now re-runs against the cache on every export, per the
+    close-fixwave fix, instead of only the first time the rev is fetched)
   => PASS
 == Item 7: dv/auto_dv/.gitignore ignores work/ ==
   => PASS

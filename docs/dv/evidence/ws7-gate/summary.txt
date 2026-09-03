@@ -77,3 +77,18 @@ it per SIM_RECIPE (the spike-built-on: site attestation stands, from spike-build
 - section12-final.txt            Section 12 items 1-11 vs the fresh export:
                                  10 PASS, 1 BLOCKED (item 8 owner sign-off — the sole
                                  remaining launch blocker), 0 FAIL
+
+T6 close-fixwave re-verify (2026-09-02, WS7+WS6 close review fixes)
+---------------------------------------------------------------------
+The T5 export above (ebf47c1a, source 32084c74) is SUPERSEDED gate evidence after the close
+review's fixes landed: the riscv-dv precondition-6 checks (fetched/cached SHA == locked rev; no
+'Ibex Specific') are hoisted out of the cold-cache-only branch so they re-run against the cache on
+every export and stamp `vendor/google_riscv-dv.verified`; the whole-export identifier scan's
+carve-out is anchored to the `vendor/google_riscv-dv` path rather than the bare directory
+basename; a `CI_ALLOWED` array plus `cleanroom_check_ci_set` now mechanically enforce FENCE.md's
+`ci/` allowlist (previously true only by coincidence); and the `.mex/AGENTS.md` deny-list mirror
+was regenerated against all 28 current `DENY` rows (was stale at 19). Final export: source
+b2c08682, export SHA 0231dbe6, verify PASS — `export-verify-final.txt` and `section12-final.txt`
+(this directory) were both re-captured against it; the tally is unchanged (10 PASS, 1 BLOCKED).
+Full review: docs/dv/reviews/2026-09-02-claude-diff-ws7-ws6-close.md. Full-mode selftest re-proof:
+docs/dv/evidence/ws7-selftest-tdd/t-closefix-green.txt (0 failures).

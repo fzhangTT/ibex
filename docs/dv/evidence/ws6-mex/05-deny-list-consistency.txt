@@ -1,23 +1,42 @@
+Re-run 2026-09-02 (source b2c08682705c0f2a033badff36bb37872b42d17c) for the WS7+WS6 close
+fixwave, Major finding 1: the prior version of this file claimed a verbatim 19-row/36-entry
+match against a mirror that had gone stale at 19 of 28 rows. `.mex/AGENTS.md`'s "Fence-aware
+scope" section is regenerated in the same fix wave to enumerate all 28 rows (grouped by class,
+each individually backticked) with a date-stamped snapshot and a widened escape-hatch sentence
+that covers plain-DENY additions, not only `dv/*`/`docs/dv/*` ones. This file no longer asserts
+the mirror is a static verbatim copy -- it asserts, and mechanically checks, that every row
+currently in `DENY` is present, backticked, in the committed mirror as of the date below.
+
 Authoritative source: ci/make-cleanroom.sh's actual DENY/ALLOW/DOCS_DV_ALLOWED
 arrays (parsed straight from the script text -- not hand-read/hand-guessed) plus
-`git ls-tree` on dv/ and docs/dv/ (tracked truth, so untracked cruft like stray
-.swp files cannot skew this) and a real glob() expansion of every DENY glob entry
-against the live filesystem. This is the same computation already run live,
-end-to-end, in 09-deny-enum-run.txt (shadow-stage build from `git ls-tree -r`,
-the real _cleanroom_apply_deny_with_allow function sourced from
-ci/make-cleanroom.sh, before/after diff) -- both methods agree on every entry.
+a real glob() expansion of every DENY glob entry against a git-ls-tree-derived
+shadow of the live tracked tree (so untracked cruft cannot skew this). This is
+the same computation already run live, end-to-end, in 09-deny-enum-run.txt
+(shadow-stage build from 'git ls-tree -r', the real _cleanroom_apply_deny_with_allow
+function sourced from ci/make-cleanroom.sh, before/after glob-match counts per row)
+-- both methods agree on every entry.
 
-Authority shape: default-deny for dv/** (allow: ['dv/auto_dv']) and docs/dv/** (allow: ['FENCE.md', 'SIM_RECIPE.md', 'TB_CONTRACT.md', 'dv_principles.md']);
-plain unconditional deny for everything else (19 rows in DENY=(...), 22 after glob
-expansion).
+Snapshot date: 2026-09-02
+DENY array size at HEAD: 28 rows
 
-Authoritative effective-deny set (today's snapshot, fully expanded): 36 entries
-Mirror in .mex/AGENTS.md 'Fence-aware scope' (as committed, fully expanded): 36 entries
+Authority shape: default-deny for dv/** (allow: [dv/auto_dv]) and docs/dv/**
+(allow: [FENCE.md SIM_RECIPE.md TB_CONTRACT.md dv_principles.md]); plain unconditional deny for
+the other 28 rows.
 
-Only in authoritative (missing from mirror): []
-Only in mirror (not in authoritative):        []
-Mirror row(s) as written NOT found verbatim (backticked) in committed .mex/AGENTS.md: []
+-- Checking every DENY row is mirrored, backticked verbatim, in the committed .mex/AGENTS.md --
+RESULT(rows): PASS -- all 28 DENY rows found backticked, verbatim, in .mex/AGENTS.md.
 
-RESULT: PASS -- mirror matches the authoritative effective-deny set exactly (empty
-diff, both pre- and post- glob/brace expansion), and every row as written is
-verified present, verbatim, in the committed .mex/AGENTS.md.
+-- Checking dv/** and docs/dv/** allow lists match the mirror's sub-bullets --
+(no output above this line means both allow lists are fully mirrored)
+
+-- Checking the mirror no longer claims a static/verbatim-only relationship --
+RESULT(claim): PASS -- mirror is enumerated below the array with a snapshot date, not claimed verbatim/static
+
+-- Checking the escape hatch explicitly covers plain-DENY additions (not just dv/*|docs/dv/*) --
+RESULT(hatch): PASS -- escape-hatch sentence names plain-DENY additions explicitly
+
+RESULT: PASS -- every row currently in ci/make-cleanroom.sh's DENY array is mirrored, backticked,
+in the committed .mex/AGENTS.md as of the snapshot date above; the mirror no longer claims to be
+an unconditional verbatim/static copy, and its escape hatch now covers plain-DENY growth as well
+as dv/*|docs/dv/* growth. Regenerate this file (and 09-deny-enum-run.txt) the next time DENY
+grows and the mirror is refreshed to match.

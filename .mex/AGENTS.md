@@ -36,9 +36,11 @@ is procedural, not mechanical:
   fenced thing exists and where, never what it says.
 - **Authority is DEFAULT-DENY, not an enumerated list** (single source of
   truth: `ci/make-cleanroom.sh`; this section is a mirror snapshot, not a
-  substitute — the rule below governs even a `dv/*` or `docs/dv/*` entry added
-  after this file was last updated, before anyone remembers to touch this
-  file):
+  substitute — any path in `ci/make-cleanroom.sh`'s `DENY` array, or under its
+  `dv/**`/`docs/dv/**` default-deny roots, is fenced whether or not it is
+  listed below: the rule governs a `dv/*` or `docs/dv/*` entry, or a plain-DENY
+  row, added after this file was last updated, before anyone remembers to
+  touch this file):
   - `dv/**` — every subdirectory is fenced **except** `dv/auto_dv`. Fenced
     today (a snapshot, mechanically enumerated from the live tree against
     `ci/make-cleanroom.sh`'s actual `ALLOW`/deny logic, not hand-transcribed —
@@ -52,20 +54,40 @@ is procedural, not mechanical:
     `docs/dv/reviews`, `docs/dv/tt-regress-assessment.md`. (`FENCE.md` and
     `SIM_RECIPE.md` do not exist yet at time of writing — the allowlist covers
     them in advance, supplied by the WS7 overlay once it lands.)
-  - **Plain deny** (unconditional, no allowlist; mirrors `ci/make-cleanroom.sh`'s
-    `DENY=(...)` array verbatim): `formal` (repo-root), `vendor/riscv?isa?sim*`
-    (matches `vendor/riscv-isa-sim`, `vendor/riscv_isa_sim.lock.hjson`,
-    `vendor/riscv_isa_sim.vendor.hjson`), `vendor/patches`, `docs/superpowers`,
-    `ci/jenkins`, `ci/build-spike.sh`, `ci/setup-cosim.sh`,
-    `ci/run-cosim-test.sh`, `ci/reviews/fence-integrity.md`,
-    `ci/reviews/test-overlap.md`, the six verification RSTs under `doc/`
-    (`doc/01_overview/verification_overview.rst`,
-    `doc/03_reference/{cosim,coverage_plan,testplan,verification,verification_stages}.rst`),
-    `doc/03_reference/images/tb*.svg`, `.mex/` itself from any future export,
-    and `.github` (re-discloses cosim build/run + directed-test names via its
-    workflows). `vendor/google_riscv-dv` is not plain-denied — the cleanroom
-    export replaces the checked-in (locally patched) tree with a pristine
-    upstream fetch at the locked revision instead, a different mechanism from
+  - **Plain deny** (unconditional, no allowlist; enumerated below against
+    `ci/make-cleanroom.sh`'s `DENY=(...)` array as of 2026-09-02 — 28 rows,
+    mechanically re-derived from the script text, not hand-transcribed, see
+    `docs/dv/evidence/ws6-mex/05-deny-list-consistency.txt` — refresh this
+    list and that evidence pair whenever `DENY` grows; until then, the escape
+    hatch above covers anything added and not yet reflected here):
+    - Process history: `docs/superpowers`, `.mex/` itself from any future
+      export, `.github` (re-discloses cosim build/run + directed-test names
+      via its workflows).
+    - Formal collateral: `formal` (repo-root).
+    - Vendored DV inputs: `vendor/riscv?isa?sim*` (matches
+      `vendor/riscv-isa-sim`, `vendor/riscv_isa_sim.lock.hjson`,
+      `vendor/riscv_isa_sim.vendor.hjson`), `vendor/patches`.
+    - Cosim-referee disclosure: `ci/build-spike.sh`, `ci/setup-cosim.sh`,
+      `ci/run-cosim-test.sh`, `ci/vars.env`, `ci/install-build-deps.sh`,
+      `flake.nix`.
+    - Existing-flow drivers and process helpers: `ci/jenkins`,
+      `ci/lint-commits.sh`.
+    - Evaluator-only rubrics: `ci/reviews/fence-integrity.md`,
+      `ci/reviews/test-overlap.md`.
+    - Verification documentation: the six verification RSTs under `doc/`
+      (`doc/01_overview/verification_overview.rst`,
+      `doc/03_reference/cosim.rst`, `doc/03_reference/coverage_plan.rst`,
+      `doc/03_reference/testplan.rst`, `doc/03_reference/verification.rst`,
+      `doc/03_reference/verification_stages.rst`),
+      `doc/03_reference/images/tb*.svg`.
+    - Builder tooling class (these build/verify OTHER clones and are never
+      needed inside one): `ci/make-cleanroom.sh`, `ci/check-landing.sh`,
+      `ci/cleanroom-selftest.sh`, `ci/cleanroom-inventory.txt`,
+      `ci/cleanroom-overlay`.
+
+    `vendor/google_riscv-dv` is not plain-denied — the cleanroom export
+    replaces the checked-in (locally patched) tree with a pristine upstream
+    fetch at the locked revision instead, a different mechanism from
     deletion, but the same fence intent: never describe the checked-in
     patches.
 - **Known limit (structural, not just procedural):** the code graph's

@@ -62,6 +62,7 @@ check_status "(a) export build exits 0" 0 "$build_rc"
 if [ "$build_rc" -eq 0 ]; then
   check_fn "(b) deny-list / default-deny absence" cleanroom_check_deny_absence "$DEST"
   check_fn "ci/reviews/ is exactly the six-file Zone A set" cleanroom_check_reviews_set "$DEST"
+  check_fn "ci/ is exactly the FENCE.md CI_ALLOWED set" cleanroom_check_ci_set "$DEST"
   check_fn "(c) artifact absence" cleanroom_check_artifact_absence "$DEST"
   check_fn "inventory tripwire" cleanroom_check_inventory "$DEST"
 

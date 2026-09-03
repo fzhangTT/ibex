@@ -50,7 +50,8 @@ Plain-deny classes (one glob per entry in the array):
 
 ## The `ci/` allowlist
 
-Inside an export, `ci/` is default-deny. Exactly these ship and are readable:
+Inside an export, `ci/` is default-deny. Exactly these ship and are readable, enforced by
+`cleanroom_check_ci_set` (the `CI_ALLOWED` array in `ci/make-cleanroom.sh`) on every export:
 
 - `ci/env.sh` (Zone A variant)
 - `ci/setup-venv.sh`
@@ -67,9 +68,13 @@ riscv-dv-verified-on: 2026-09-02 — rev `71666ebacd69266b1abb7cdbad5e1897ce5884
 the `rev` in `vendor/google_riscv-dv.lock.hjson`. The export's `vendor/google_riscv-dv/` tree is
 not the checked-in tree (which carries local patches). The builder fetches upstream
 `chipsalliance/riscv-dv` at exactly this revision and verifies the fetch
-(`_cleanroom_place_riscvdv` in `ci/make-cleanroom.sh`, WS7 T1): the fetched commit SHA must equal
-the locked rev, and no fetched file may contain the local-patch marker. The exported tree is that
-revision, so a tree diff against upstream at that revision is empty.
+(`_cleanroom_place_riscvdv` in `ci/make-cleanroom.sh`, WS7 T1): the cached commit SHA must equal
+the locked rev, and no cached file may contain the local-patch marker. Both checks re-run against
+the cache on every export, cold-fetched or warm, not only the first time the rev is fetched. The
+exported tree is that revision, so a tree diff against upstream at that revision is empty. The
+verified rev and date are also stamped into the export itself at
+`vendor/google_riscv-dv.verified`, so the attestation is checkable after the fact without the
+builder's own cache.
 
 ## Build an export (one command)
 

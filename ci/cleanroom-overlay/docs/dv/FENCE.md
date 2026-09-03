@@ -37,7 +37,8 @@ and in anything you fetch.
 
 ## The `ci/` allowlist
 
-`ci/` is default-deny. Exactly these ship and are readable:
+`ci/` is default-deny, enforced by the builder's `cleanroom_check_ci_set` before this clone was
+committed. Exactly these ship and are readable:
 
 - `ci/env.sh` (Zone A variant)
 - `ci/setup-venv.sh`
@@ -68,9 +69,11 @@ riscv-isa-sim (Spike), cocotb, UVM, and similar (`DV_prompt.txt` Section 3).
 
 riscv-dv-verified-on: 2026-09-02 — rev `71666ebacd69266b1abb7cdbad5e1897ce5884e6`. This equals
 the `rev` in `vendor/google_riscv-dv.lock.hjson`. The export builder fetched upstream
-`chipsalliance/riscv-dv` at exactly this revision and verified the fetch: the fetched commit SHA
-equals the locked rev, and no fetched file carries a local-patch marker. The shipped tree is that
-revision, so a tree diff against upstream at that revision is empty.
+`chipsalliance/riscv-dv` at exactly this revision and verified the fetch: the cached commit SHA
+equals the locked rev, and no cached file carries a local-patch marker. Both checks are re-run
+against the cache on every export the builder makes, not only the first time the rev is fetched.
+The shipped tree is that revision, so a tree diff against upstream at that revision is empty.
+`vendor/google_riscv-dv.verified` in this clone carries the same rev and the verification date.
 
 ## Zone B evaluation protocol
 

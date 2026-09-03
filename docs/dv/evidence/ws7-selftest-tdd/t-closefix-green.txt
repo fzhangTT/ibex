@@ -1,0 +1,75 @@
+########## export build + checks (pre-overlay=0) ##########
+== (a) plain export build ==
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.470dLa ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
+Verifying export ...
+VALIDATOR: PASS
+Verification passed.
+Cleanroom export built.
+  dest:       /tmp/tmp.glGe9143F2/export
+  source SHA: b2c08682705c0f2a033badff36bb37872b42d17c
+  export SHA: f0caefff991ae91f8d13e6ec17b171ce8a26e437
+  verify:     PASS
+PASS: (a) export build exits 0
+PASS: (b) deny-list / default-deny absence
+PASS: ci/reviews/ is exactly the six-file Zone A set
+PASS: ci/ is exactly the FENCE.md CI_ALLOWED set
+PASS: (c) artifact absence
+PASS: inventory tripwire
+PASS: (d1) item-9 scan
+PASS: (d2) whole-export identifier scan
+PASS: (e) no remote mcp
+PASS: (h) exported validator
+
+== (f) planted canaries (anti-vacuity: CLEANROOM_CANARY=deny|artifact|mcp|identifier) ==
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.Du2TB8 ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
+CLEANROOM_CANARY=deny: planting a file under a denied root (dv/uvm/.canary_denied_ref)
+Verifying export ...
+ERROR: dv/ has content beyond the dv/auto_dv/ allowlist:
+  /tmp/ibex-cleanroom-stage.Du2TB8/dv/uvm
+VALIDATOR: PASS
+ERROR: cleanroom export failed verification. DEST was not written.
+PASS: (f) canary=deny build fails as expected, caught by its own check ('dv/ has content beyond the dv/auto_dv/ allowlist')
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.aEu6iD ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
+CLEANROOM_CANARY=artifact: planting a zero-byte artifact (dv/auto_dv/.canary.fsdb)
+Verifying export ...
+ERROR: run artifact present in export:
+  /tmp/ibex-cleanroom-stage.aEu6iD/dv/auto_dv/.canary.fsdb
+VALIDATOR: PASS
+ERROR: cleanroom export failed verification. DEST was not written.
+PASS: (f) canary=artifact build fails as expected, caught by its own check ('run artifact present in export')
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.GHTiUl ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
+CLEANROOM_CANARY=mcp: planting a remote MCP entry in the staged .mcp.json
+Verifying export ...
+ERROR: .mcp.json server list is ["canary","fsdb-mcp-server","siliconpilot","verdi-cov-mcp"], expected exactly ["fsdb-mcp-server","siliconpilot","verdi-cov-mcp"]
+ERROR: .mcp.json has a remote (http/url) MCP server entry
+VALIDATOR: PASS
+ERROR: cleanroom export failed verification. DEST was not written.
+PASS: (f) canary=mcp build fails as expected, caught by its own check ('remote (http/url) MCP server entry')
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.6fxcdR ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
+CLEANROOM_CANARY=identifier: planting a fenced identifier (dv/auto_dv/.canary_fenced_ref)
+Verifying export ...
+ERROR: fenced identifier 'riscv_arithmetic_basic_test' present in export:
+  /tmp/ibex-cleanroom-stage.6fxcdR/dv/auto_dv/.canary_fenced_ref
+VALIDATOR: PASS
+ERROR: cleanroom export failed verification. DEST was not written.
+PASS: (f) canary=identifier build fails as expected, caught by its own check ('fenced identifier 'riscv_arithmetic_basic_test' present in export')
+
+########## (g) landing check ##########
+PASS: (g) accepts synthetic dv/auto_dv/gen_foo.sv
+landing check PASSED for range 07c1214e5c9774f299eca9762afbd15c9bf9e197..b8b5d18b0bc93a8b8344bf60ae0e92001aba9e59
+PASS: (g)(i) rejects change outside dv/auto_dv/
+ERROR: landing check FAILED for range 07c1214e5c9774f299eca9762afbd15c9bf9e197..7290ef47ebf628a76375d14098cbc8cc1cd0a317:
+  path outside dv/auto_dv/: dv/uvm/leak.sv (status A)
+PASS: (g)(ii) rejects dv/auto_dv/ file without gen_
+ERROR: landing check FAILED for range 07c1214e5c9774f299eca9762afbd15c9bf9e197..11ee3ff7f79371019d18d57d72738e06669ac0f3:
+  added dv/auto_dv/ file 'dv/auto_dv/nogen.sv' does not start with gen_
+PASS: (g)(iii) rejects symlink
+ERROR: landing check FAILED for range 07c1214e5c9774f299eca9762afbd15c9bf9e197..d0ed48ba1cdf48c42b39f3026fc52b0acc6bfbee:
+  symlink touched: dv/auto_dv/gen_link.sv
+
+selftest: 0 failure(s)

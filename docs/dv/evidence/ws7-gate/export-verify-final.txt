@@ -1,9 +1,10 @@
-Building cleanroom export of ebf47c1a5b2d3b387582ccda2f114a3783b4eed8 into /tmp/ibex-cleanroom-stage.L0u7aU ...
+Building cleanroom export of b2c08682705c0f2a033badff36bb37872b42d17c into /tmp/ibex-cleanroom-stage.q6aTqf ...
+Verified riscv-dv commit: 71666ebacd69266b1abb7cdbad5e1897ce5884e6 (locked rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6)
 Verifying export ...
 VALIDATOR: PASS
 Verification passed.
 Cleanroom export built.
   dest:       /localdev/fzhang/ws/ibex-cleanroom
-  source SHA: ebf47c1a5b2d3b387582ccda2f114a3783b4eed8
-  export SHA: 32084c74b37c11ed09a9a88c15c9dc2386297104
+  source SHA: b2c08682705c0f2a033badff36bb37872b42d17c
+  export SHA: 0231dbe69bb43bb05a442462ccb6fcc2dfed802c
   verify:     PASS

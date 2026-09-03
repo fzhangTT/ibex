@@ -1,14 +1,19 @@
+Re-run 2026-09-02 (source b2c08682705c0f2a033badff36bb37872b42d17c) for the WS7+WS6 close
+fixwave, Major finding 1 (`.mex/AGENTS.md` deny mirror was stale at 19/28 rows; this evidence
+pair's own "19 rows"/"36 entries" claim no longer held at HEAD). Supersedes the prior run
+recorded at this path (28 DENY rows now vs. 19 then); method unchanged.
+
 === Mechanical deny-set enumeration: run ci/make-cleanroom.sh's ACTUAL logic ===
     (sourced -- per the script's own header comment, sourcing does not run main --
     against a faithful shadow of the live git-tracked tree; not a hand-reconstruction.)
 
 -- building empty-file shadow of every git-tracked path (git ls-tree -r HEAD) --
-shadow file count: 3983
-4488 /tmp/claude-1211405897/-localdev-fzhang-ws-ibex/d72fc555-c008-4308-af1f-6523e86e7bde/scratchpad/before-listing.txt
+shadow file count: 4005
+4511 (before-listing.txt line count)
 
 -- sourcing ci/make-cleanroom.sh and invoking its real _cleanroom_apply_deny_with_allow --
-(function returned 0 -- no error)
-2993 /tmp/claude-1211405897/-localdev-fzhang-ws-ibex/d72fc555-c008-4308-af1f-6523e86e7bde/scratchpad/after-listing.txt
+(function returned 0 -- 0 means no error)
+2922 (after-listing.txt line count)
 
 -- dv/** effective allow after the real run (should be exactly dv/auto_dv) --
 dv/auto_dv
@@ -33,6 +38,7 @@ docs/dv/BUILD_AND_SIM.md
 docs/dv/COSIM.md
 docs/dv/dv_principles.md
 docs/dv/evidence
+docs/dv/FENCE.md
 docs/dv/known-followups.md
 docs/dv/process-logs
 docs/dv/reviews
@@ -40,30 +46,30 @@ docs/dv/TB_CONTRACT.md
 docs/dv/tt-regress-assessment.md
 
 -- spot-check: ci/reviews/ kept exactly the 6 non-Zone-B rubrics --
-ci/reviews/ai-slop-comments.md
-ci/reviews/assertion-integrity.md
-ci/reviews/forces-and-hier-access.md
-ci/reviews/GUIDE.md
-ci/reviews/magic-numbers.md
-ci/reviews/rtl-purity.md
+ai-slop-comments.md
+assertion-integrity.md
+forces-and-hier-access.md
+GUIDE.md
+magic-numbers.md
+rtl-purity.md
 
 -- spot-check: doc/03_reference/*.rst kept (verification RSTs removed) --
-doc/03_reference/cs_registers.rst
-doc/03_reference/debug.rst
-doc/03_reference/exception_interrupts.rst
-doc/03_reference/history.rst
-doc/03_reference/icache.rst
-doc/03_reference/index.rst
-doc/03_reference/instruction_decode_execute.rst
-doc/03_reference/instruction_fetch.rst
-doc/03_reference/load_store_unit.rst
-doc/03_reference/performance_counters.rst
-doc/03_reference/pipeline_details.rst
-doc/03_reference/pmp.rst
-doc/03_reference/register_file.rst
-doc/03_reference/rvfi.rst
-doc/03_reference/security.rst
-doc/03_reference/tracer.rst
+cs_registers.rst
+debug.rst
+exception_interrupts.rst
+history.rst
+icache.rst
+index.rst
+instruction_decode_execute.rst
+instruction_fetch.rst
+load_store_unit.rst
+performance_counters.rst
+pipeline_details.rst
+pmp.rst
+register_file.rst
+rvfi.rst
+security.rst
+tracer.rst
 
 -- spot-check: vendor/riscv?isa?sim* glob matches actually removed (top-level only) --
 vendor/riscv-isa-sim
@@ -72,4 +78,35 @@ vendor/riscv_isa_sim.vendor.hjson
 
 -- spot-check: .github/ removed wholesale --
 (none left -- fully removed, as expected)
+
+-- all 28 DENY rows: real glob match count in the pristine shadow (before) vs the
+   post-deny shadow (after) -- every row must go from >=1 match to exactly 0 --
+ 1: formal                                        before=1   after=0
+ 2: vendor/riscv?isa?sim*                         before=3   after=0
+ 3: vendor/patches                                before=1   after=0
+ 4: docs/superpowers                              before=1   after=0
+ 5: ci/jenkins                                    before=1   after=0
+ 6: ci/build-spike.sh                             before=1   after=0
+ 7: ci/setup-cosim.sh                             before=1   after=0
+ 8: ci/run-cosim-test.sh                          before=1   after=0
+ 9: ci/reviews/fence-integrity.md                 before=1   after=0
+10: ci/reviews/test-overlap.md                    before=1   after=0
+11: doc/01_overview/verification_overview.rst     before=1   after=0
+12: doc/03_reference/cosim.rst                    before=1   after=0
+13: doc/03_reference/coverage_plan.rst            before=1   after=0
+14: doc/03_reference/testplan.rst                 before=1   after=0
+15: doc/03_reference/verification.rst             before=1   after=0
+16: doc/03_reference/verification_stages.rst      before=1   after=0
+17: doc/03_reference/images/tb*.svg               before=2   after=0
+18: .mex/                                         before=1   after=0
+19: .github                                       before=1   after=0
+20: ci/vars.env                                   before=1   after=0
+21: ci/install-build-deps.sh                      before=1   after=0
+22: flake.nix                                     before=1   after=0
+23: ci/lint-commits.sh                            before=1   after=0
+24: ci/make-cleanroom.sh                          before=1   after=0
+25: ci/check-landing.sh                           before=1   after=0
+26: ci/cleanroom-selftest.sh                      before=1   after=0
+27: ci/cleanroom-inventory.txt                    before=1   after=0
+28: ci/cleanroom-overlay                          before=1   after=0
 EXIT=0
