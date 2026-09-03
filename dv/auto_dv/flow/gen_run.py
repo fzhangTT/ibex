@@ -57,8 +57,8 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
     if cov_vdb is not None:
         argv += ["-cm", build["cov_metrics"], "-cm_dir", str(cov_vdb), "-cm_name", cm_name(test["name"], seed),
                  *C.COV_RUNTIME_EXTRA]
-    if witness:
-        # The witness indices of this entry, rendered from the CSV at the pinned source root (plan WP rows).
+    if witness and witness.get("plusarg"):
+        # Only when the SV constants home names a witness plusarg; as built, the test's epilogue issues COV_WITNESS itself.
         argv.append(witness["plusarg"])
     if waves:
         if not build.get("waves"):
@@ -213,8 +213,7 @@ def self_test() -> int:
     case("knob narrowed, header a subset: PASS kept", [f"+{efile}=exp.txt", f"+{esrc}=ibus"], "# gen_export v1 sources=ibus", C.VERDICT_PASS, "decided")
     case("knob narrowed, header names a source the build cannot emit: FAIL", [f"+{efile}=exp.txt", f"+{esrc}=pin"], "# gen_export v1 sources=pin", C.VERDICT_FAIL, "emitted mismatch")
     case("a FAIL stays FAIL with its own reason", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "decided", verdict=C.VERDICT_FAIL)
-    import shutil
-    shutil.rmtree(root, ignore_errors=True)
+    U.remove_selftest_tree(root)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

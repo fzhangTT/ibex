@@ -58,6 +58,12 @@ SECTION_START_RE = re.compile(r"^(Summary for (Variable|Group|Cross)\b|Variables
 BINS_TITLE_RE = re.compile(r"^(Uncovered bins|Covered bins|Bins)\s*$")   # "Bins": urg's title when every bin is covered
 TUPLE_TOKEN_RE = re.compile(r"\[[^\]]*\]|\S+")   # a bracketed component (possibly multi-valued) or a bare token
 CHECKER_MODE = "--report-dir on the variable-form grpinfo.txt derived by gen_fcov (cross rows named by their tuple)"
+# The checker's own per-test urg command and isolation regexes, re-typed here because ci/ is the owner's (Q-017); the
+# self-test parses ci/check_fcov_expectations.py and asserts these copies equal its source, so drift fails loud.
+URG_PER_TEST_ARGV = ("urg", "-full64", "-dir", "<vdb>", "-format", "text", "-report", "<report>", "-tests", "<sel_file>")
+ISOLATION_TOTAL_RE = r"Total tests in report: (\d+)"
+ISOLATION_EXACT_RE_FMT = r"^\S*/{cm}\s*$"
+COLLISION_REFUSE = "derived cross-bin names collide in the variable-form report (the checker would sum their counts)"
 CROSS_SAMPLE = Path(__file__).resolve().parent / "gen_fixtures" / "gen_grpinfo_cross_sample.txt"   # real urg excerpt, header lines say from where
 
 
@@ -159,21 +165,51 @@ def per_test_report(vdb: Path, cm_name: str, workdir: Path) -> tuple[Path | None
     ident = f"{str(vdb)[:-4] if str(vdb).endswith('.vdb') else str(vdb)}/{cm_name}"
     sel_file = workdir / "test_selection.txt"
     sel_file.write_text(ident + "\n", encoding="utf-8")
-    r = subprocess.run(["urg", "-full64", "-dir", str(vdb), "-format", "text", "-report", str(report), "-tests", str(sel_file)],
-                       capture_output=True, text=True)
+    fill = {"<vdb>": str(vdb), "<report>": str(report), "<sel_file>": str(sel_file)}
+    r = subprocess.run([fill.get(tok, tok) for tok in URG_PER_TEST_ARGV], capture_output=True, text=True)
     (workdir / "urg_stdout.log").write_text(r.stdout + r.stderr, encoding="utf-8")
     if not report.is_dir():
         return None, CAUSE_URG_FAILED
     # Isolation first: a selection that names no test of this vdb also yields a report without grpinfo.txt, and that
     # is a wrong cm_name, not a TB without a covergroup.
     tests_txt = (report / "tests.txt").read_text(encoding="utf-8", errors="replace") if (report / "tests.txt").is_file() else ""
-    m = re.search(r"Total tests in report: (\d+)", tests_txt)
-    exact = re.search(rf"^\S*/{re.escape(cm_name)}\s*$", tests_txt, re.M)
+    m = re.search(ISOLATION_TOTAL_RE, tests_txt)
+    exact = re.search(ISOLATION_EXACT_RE_FMT.format(cm=re.escape(cm_name)), tests_txt, re.M)
     if not m or m.group(1) != "1" or not exact:
         return report, f"{CAUSE_ISOLATION}; tests.txt says: {m.group(0) if m else 'unparseable'}"
     if r.returncode != 0 or not (report / "grpinfo.txt").is_file():
         return report, CAUSE_NO_GRPINFO if r.returncode == 0 else CAUSE_URG_FAILED
     return report, None
+
+
+def checker_forms(checker: Path) -> tuple[tuple[str, ...], str, str]:
+    """From ci/check_fcov_expectations.py's source: urg_per_test_report's argv list (str(x) calls as <x>) and its two
+    isolation regexes (the f-string's formatted part as {cm}), for the drift self-test."""
+    import ast
+    tree = ast.parse(checker.read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "urg_per_test_report")
+    argv: tuple[str, ...] = ()
+    regexes: list[str] = []
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Assign) and any(isinstance(x, ast.Name) and x.id == "cmd" for x in node.targets) and isinstance(node.value, ast.List):
+            toks = []
+            for e in node.value.elts:
+                if isinstance(e, ast.Constant):
+                    toks.append(str(e.value))
+                elif isinstance(e, ast.Call) and isinstance(e.func, ast.Name) and e.func.id == "str" and isinstance(e.args[0], ast.Name):
+                    toks.append(f"<{e.args[0].id}>")
+                else:
+                    toks.append("<?>")
+            argv = tuple(toks)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "search" and node.args:
+            a = node.args[0]
+            if isinstance(a, ast.Constant):
+                regexes.append(str(a.value))
+            elif isinstance(a, ast.JoinedStr):
+                regexes.append("".join(str(v.value) if isinstance(v, ast.Constant) else "{cm}" for v in a.values))
+    total = next((r for r in regexes if "Total tests" in r), "")
+    exact = next((r for r in regexes if "{cm}" in r), "")
+    return argv, total, exact
 
 
 def tuple_row(line: str, name_cols: int) -> str | None:
@@ -201,14 +237,18 @@ def derive_variable_form(text: str) -> tuple[str, dict[str, int]]:
     section a table titled `Bins` (urg's title when all bins are covered, which the checker does not read) is
     retitled `Covered bins`. Everything else is copied byte for byte."""
     out: list[str] = []
-    stats = {"cross_sections": 0, "cross_tables": 0, "cross_rows": 0, "bins_tables_retitled": 0}
+    stats: dict[str, Any] = {"cross_sections": 0, "cross_tables": 0, "cross_rows": 0, "bins_tables_retitled": 0,
+                             "name_collisions": 0, "collisions": []}
     in_cross = False
     name_cols: int | None = None      # name columns of the current cross table
     awaiting_header = False           # between a table title and its header line
+    seen: dict[str, str] = {}         # derived name -> source row, per cross section (the checker sums equal keys)
+    cross_name = ""
     for line in text.splitlines():
         m = CROSS_SECTION_RE.match(line)
         if m:
             in_cross, name_cols, awaiting_header = True, None, False
+            seen, cross_name = {}, m.group(1)
             stats["cross_sections"] += 1
             out.append(f"Summary for Variable {m.group(1)}")
             continue
@@ -236,6 +276,12 @@ def derive_variable_form(text: str) -> tuple[str, dict[str, int]]:
                 else:
                     row = tuple_row(line, name_cols)
                     if row is not None:
+                        name = row.split(" ", 1)[0]
+                        if name in seen and seen[name] != line.strip():
+                            stats["name_collisions"] += 1
+                            if len(stats["collisions"]) < 10:
+                                stats["collisions"].append(f"{cross_name}.{name}: {seen[name]!r} and {line.strip()!r}")
+                        seen.setdefault(name, line.strip())
                         out.append(row)
                         stats["cross_rows"] += 1
                         continue
@@ -243,7 +289,17 @@ def derive_variable_form(text: str) -> tuple[str, dict[str, int]]:
     return "\n".join(out) + "\n", stats
 
 
-def derived_report(report: Path) -> tuple[Path, dict[str, int]]:
+def collision_refusal(stats: dict[str, Any]) -> str | None:
+    """Two distinct tuples whose components carry `_` can derive the same name ((a, b_c) and (a_b, c)); the checker
+    would sum their counts and could report HIT for a tuple that was unhit, so a derived report with a collision is
+    refused (FAIL, unverifiable) rather than judged."""
+    n = int(stats.get("name_collisions") or 0)
+    if n == 0:
+        return None
+    return f"{COLLISION_REFUSE}: {n} collision(s), e.g. {stats.get('collisions', [])[:3]}"
+
+
+def derived_report(report: Path) -> tuple[Path, dict[str, Any]]:
     """Write the variable-form report beside the original (grpinfo.txt rewritten; tests.txt and dashboard.txt
     copied for the record); the original report dir is never touched."""
     dst = report.parent / DERIVED_REPORT_DIRNAME
@@ -301,6 +357,16 @@ def check_test(test: dict[str, Any], vdb: Path, cm_name: str, run_dir: Path) -> 
                 "checker_mode": CHECKER_MODE, "anti_vacuity": {b: (data or {}).get("anti_vacuity", {}).get(b) for b in declared},
                 "owner": (data or {}).get("owner"), "reason": f"{REASON_UNVERIFIABLE}: {cause} (see fcov_check.log)"}
     derived, stats = derived_report(report)
+    refusal = collision_refusal(stats)
+    if refusal:
+        log = run_dir / "fcov_check.log"
+        log.write_text(f"derived report refused: {refusal}\nreport: {report}\nderived: {derived}\n", encoding="utf-8")
+        return {"status": "PROTOCOL_ERROR", "exit_code": None, "log": str(log), "bins": {}, "unmet_bins": [],
+                "declared": len(declared), "hit": 0, "cause": refusal, "manifest": str(mpath),
+                "manifest_copy": str(run_dir / "fcov_manifest_used.yaml"), "manifest_sha256": U.sha256_file(mpath),
+                "report_dir": str(report), "derived_report_dir": str(derived), "derived_grpinfo": stats,
+                "checker_mode": CHECKER_MODE, "anti_vacuity": {b: (data or {}).get("anti_vacuity", {}).get(b) for b in declared},
+                "owner": (data or {}).get("owner"), "reason": f"{REASON_UNVERIFIABLE}: {refusal} (see fcov_check.log)"}
     res = run_checker(mpath, None, None, run_dir / "fcov_check.log", report_dir=derived, declared_bins=declared)
     res.update(report_dir=str(report), derived_report_dir=str(derived), derived_grpinfo=stats, checker_mode=CHECKER_MODE)
     res["manifest"] = str(mpath)
@@ -402,7 +468,7 @@ def self_test() -> int:
         before = run_checker(xm, None, None, d / "cross_before.log", report_dir=rep_x)
         after = run_checker(xm, None, None, d / "cross_after.log", report_dir=derived)
         st = {b: after["bins"][b]["state"] for b in bins_x}
-        cond = (stats == {"cross_sections": 2, "cross_tables": 4, "cross_rows": 5, "bins_tables_retitled": 2}
+        cond = (stats == {"cross_sections": 2, "cross_tables": 4, "cross_rows": 5, "bins_tables_retitled": 2, "name_collisions": 0, "collisions": []}
                 and "Summary for Variable cr_extremes" in dtext and "Summary for Cross" not in dtext and "\nBins\n" not in dtext
                 and "c_mul_all_ones_neg_rand 2 1" in dtext and "c_mul_distinct_zero 0 1 1" in dtext and "[mul]   [zero , one] [zero]       --    --       2" in dtext
                 and "[mulh]  [pos_rand , neg_rand] *" in dtext and "c_mul_all_ones_all_ones 0 1 1" in dtext
@@ -416,6 +482,23 @@ def self_test() -> int:
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"cross bins through the REAL checker: MISSING-FROM-REPORT on the original report, on the derived form a bare tuple row is HIT, a bracketed auto row UNHIT, a named row UNHIT, an all-covered 'Bins' table HIT in a cross and in a variable, hole groups left alone; variable sections otherwise byte-identical; original untouched; stats {stats}")
         print("SELF-TEST", "ok " if cond else "BAD", f"derived states: {st}")
+        # CM53-L-1: the re-typed checker forms equal the checker's source.
+        argv_c, total_c, exact_c = checker_forms(C.FCOV_CHECKER)
+        cond = argv_c == URG_PER_TEST_ARGV and total_c == ISOLATION_TOTAL_RE and exact_c == ISOLATION_EXACT_RE_FMT
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"checker drift: the flow's urg argv and isolation regexes equal those parsed from {C.FCOV_CHECKER.name}: {argv_c} {total_c!r} {exact_c!r}")
+        # CM53-L-2: a constructed name collision is counted and refused, a clean report is not.
+        coll = ["Group : gen_tb_top.u_env.u_cov::gen_c_cg", "", "Summary for Cross cr_c", "", "Covered bins", "",
+                "cp_x cp_y COUNT AT LEAST ", "a    b_c  3     1        ", "", "Uncovered bins", "", "cp_x cp_y COUNT AT LEAST NUMBER ",
+                "[a_b] [c]  0     1        1      ", "[d]   [e]  0     1        1      ", "", "----------"]
+        rep_c = d / "report_collision"; rep_c.mkdir()
+        (rep_c / "grpinfo.txt").write_text("\n".join(coll) + "\n", encoding="utf-8")
+        _, stats_c = derived_report(rep_c)
+        r_c = collision_refusal(stats_c)
+        cond = stats_c["name_collisions"] == 1 and stats_c["collisions"] and stats_c["collisions"][0].startswith("cr_c.a_b_c:") \
+            and r_c is not None and COLLISION_REFUSE in r_c and collision_refusal(stats) is None and stats["name_collisions"] == 0
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"cross-name collision: (a, b_c) and (a_b, c) derive one name, counted and refused ({stats_c['name_collisions']}); the fabricated and real reports have none")
         # The real sample: a per-test urg grpinfo.txt excerpt of the flow's own probe (gen_test_mul_mul on the committed covergroups).
         rep_s = d / "report_sample"; rep_s.mkdir()
         shutil.copyfile(CROSS_SAMPLE, rep_s / "grpinfo.txt")
@@ -434,7 +517,8 @@ def self_test() -> int:
         cross_before = {b: before_s["bins"][b]["state"] for b in want if ".cr_" in b}
         cond = (got == want and all(s == "MISSING-FROM-REPORT" for s in cross_before.values())
                 and before_s["bins"]["gen_mul_ops_cg.cp_op.mul"]["state"] == "HIT" and after_s["status"] == "UNHIT"
-                and stats_s["cross_sections"] == 12 and stats_s["bins_tables_retitled"] >= 2 and stats_s["cross_rows"] > 100)
+                and stats_s["cross_sections"] == 12 and stats_s["bins_tables_retitled"] >= 2 and stats_s["cross_rows"] > 100
+                and stats_s["name_collisions"] == 0)
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"real sample {CROSS_SAMPLE.name} through the REAL checker: every cross bin MISSING-FROM-REPORT on the raw report; on the derived form gen_mul_ops_cg.cr_op_rd_x0.mul_no is HIT (count 94), a 'Bins'-table bin HIT, bare and bracketed auto rows HIT/UNHIT, a 3-component row UNHIT, a plain variable bin HIT both times, an absent bin MISSING; stats {stats_s}")
         if not cond:

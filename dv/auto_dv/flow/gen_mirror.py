@@ -70,7 +70,7 @@ def export_head(stage: Path, sha: str | None = None) -> str:
     outside git and is mirrored from the clone separately."""
     sha = sha or head_sha()
     if stage.exists():
-        shutil.rmtree(stage)
+        U.remove_tree_guarded(stage, (C.WORK_DIR, head_family()), "export staging dir")
     stage.mkdir(parents=True)
     specs = git_pathspecs()
     tar = stage.parent / (stage.name + ".tar")
@@ -371,7 +371,7 @@ def status(dst: Path, pinned_head: str | None = None) -> dict[str, Any]:
         stage = Path(tempfile.mkdtemp(prefix="head_stage_status_", dir=C.WORK_DIR))
         sha_now = export_head(stage)
         clone_hash, clone_n = tree_hash(stage)
-        shutil.rmtree(stage, ignore_errors=True)
+        U.remove_tree_guarded(stage, (C.WORK_DIR,), "status staging dir")
         if sha_now != man.get("head_sha"):
             clone_hash = f"HEAD moved to {sha_now}"
     else:
@@ -420,7 +420,7 @@ def self_test() -> int:
         print("SELF-TEST", "ok " if cond else "BAD", f"{rel}: exported bytes == committed bytes, != the working tree's edit ({len(modified)} tracked file(s) differ)")
     else:
         print("SELF-TEST ok  (no tracked file under dv/auto_dv or rtl differs from HEAD right now; the working-tree-invisibility check had nothing to bite on)")
-    shutil.rmtree(stage, ignore_errors=True)
+    U.remove_tree_guarded(stage, (C.WORK_DIR,), "self-test staging dir")
     # Two concurrent exports never share a staging directory: both complete with the same file set.
     import threading
     results: dict[str, int] = {}
@@ -428,7 +428,7 @@ def self_test() -> int:
         d = Path(tempfile.mkdtemp(prefix=f"head_stage_selftest_{tag}_", dir=C.WORK_DIR))
         export_head(d, sha)
         results[tag] = len([p for p in d.rglob("*") if p.is_file()])
-        shutil.rmtree(d, ignore_errors=True)
+        U.remove_tree_guarded(d, (C.WORK_DIR,), "self-test staging dir")
     ts = [threading.Thread(target=worker, args=(t,)) for t in ("a", "b")]
     [t.start() for t in ts]; [t.join() for t in ts]
     cond = results.get("a", -1) == results.get("b", -2) and results.get("a", 0) > 100
@@ -463,8 +463,8 @@ def self_test() -> int:
     cond = keep.is_file() and (dst / "ci" / "env.sh").is_file()
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "two rsyncs with --delete into one tree keep the lease directory at its root")
-    shutil.rmtree(dst, ignore_errors=True); rlog.unlink(missing_ok=True)
-    shutil.rmtree(tiny, ignore_errors=True)
+    U.remove_tree_guarded(dst, (C.WORK_DIR,), "self-test tree"); rlog.unlink(missing_ok=True)
+    U.remove_tree_guarded(tiny, (C.WORK_DIR,), "self-test tree")
     # Leases: a live lease is seen, a dead pid's lease is dropped.
     tree = Path(tempfile.mkdtemp(prefix="head_lease_selftest_", dir=C.WORK_DIR))
     lease = lease_head_tree(tree, "selftest")
@@ -496,7 +496,7 @@ def self_test() -> int:
     cond = fresh_live and live_leases(tree) == [] and not foreign.exists()
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"leases: another host's lease is live while younger than {C.LEASE_MAX_AGE_H} h and dropped after")
-    shutil.rmtree(tree, ignore_errors=True)
+    U.remove_tree_guarded(tree, (C.WORK_DIR,), "self-test tree")
     print("SELF-TEST:", ("PASS" if ok else "FAIL") + (f" ({skipped} case(s) skipped: no mirror_root in this checkout)" if skipped else ""))
     return 0 if ok else 2
 
@@ -543,7 +543,7 @@ def main() -> int:
                 stage = Path(tempfile.mkdtemp(prefix="head_stage_", dir=C.WORK_DIR))
                 export_head(stage, sha)
                 rsync(stage, dst, logs / "rsync.log")
-                shutil.rmtree(stage, ignore_errors=True)
+                U.remove_tree_guarded(stage, (C.WORK_DIR,), "sync staging dir")
                 link_tools(dst, site)
                 U.log(f"HEAD {sha[:12]} synced into {dst}")
             else:

@@ -461,7 +461,7 @@ def self_test() -> int:
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a head-mode canary build of the pinned sha with a covergroup: the purpose-4 request dispatches (accepted)")
     cond = measured_gate([r2], None, pin) == ([], None, {})
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a batch without a purpose-4 request needs no canary build")
-    shutil.rmtree(d, ignore_errors=True)
+    U.remove_selftest_tree(d)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

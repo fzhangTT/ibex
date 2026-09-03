@@ -165,6 +165,11 @@ def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
     return n
 
 
+def remove_selftest_tree(path: Path) -> int:
+    """A self-test removes only what it created under the self-test scratch root (GEN_DV_SELFTEST_TMP or the default)."""
+    return remove_tree_guarded(path, (Path(C.selftest_tmp()),), "self-test dir")
+
+
 def git_head() -> dict[str, Any]:
     def run(args: list[str]) -> str:
         r = subprocess.run(["git", *args], cwd=C.REPO_ROOT, capture_output=True, text=True)
@@ -382,16 +387,23 @@ def self_test() -> int:
     cond = wt.get("TP-BIT-036") == 0 and len(wt) >= 200
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"witness_index from the real CSV: TP-BIT-036 -> {wt.get('TP-BIT-036')}, {len(wt)} ids")
-    fake = {"name": "gen_x", "witness_ids": ["TP-BIT-036", "TP-BIT-042"]}
-    try:
-        rec = witness_render(fake)
-        cond = rec is not None and rec["indices"] == [0, 1] and rec["plusarg"].endswith("=0,1")
-        note = f"rendered {rec['plusarg']} (SV side present)"
-    except SystemExit:
-        cond = witness_plusarg_name() is None
-        note = "refused because the SV side (PLUSARG_WITNESS_IDS) is not landed yet; indices would be [0, 1]"
+    # T-226: the as-built protocol. Two ids of one owner group render (indices, the group's index, no plusarg unless the
+    # TB declares one); an unknown id and ids of two owner groups are refused.
+    w_ids, w_group_of, w_groups = witness_tables()
+    grp = w_group_of["TP-DBG-004"]
+    same = [i for i in w_ids if w_group_of[i] == grp][:2]
+    rec = witness_render({"name": "gen_x", "witness_ids": same})
+    cond = rec is not None and rec["indices"] == [wt[i] for i in same] and rec["owner_group"] == grp and rec["group_index"] == w_groups[grp] \
+        and (rec["plusarg"] is None) == (witness_plusarg_name() is None) and "COV_WITNESS" in rec["protocol"]
+    refused = []
+    for ids in (["TP-NOPE-999"], ["TP-BIT-036", "TP-BIT-042"]):
+        try:
+            witness_render({"name": "gen_x", "witness_ids": ids}); refused.append(False)
+        except SystemExit:
+            refused.append(True)
+    cond = cond and refused == [True, True] and w_group_of["TP-BIT-036"] != w_group_of["TP-BIT-042"]
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"witness_render on two valid ids: {note}")
+    print("SELF-TEST", "ok " if cond else "BAD", f"witness_render (T-226): {same} of {grp} -> indices {rec['indices'] if rec else None}, group index {rec['group_index'] if rec else None}, plusarg {rec['plusarg'] if rec else None}; an unknown id and ids of two owner groups are refused {refused}")
     # export_facts on the real rendered table: exact rows only, every row a (source, event, fields) triple.
     ef = export_facts()
     cond = len(ef["export_sources"]) >= 1 and all(set(r) == {"source", "event", "fields"} for r in ef["export_sources"]) \
@@ -600,7 +612,7 @@ def self_test() -> int:
     cond = [Path(x).name for x in cg] == ["a.sv"] and (Path(cg[0]).is_absolute() != inside if cg else False)
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"sv_covergroup_files: a declaration counts, line and block comments and a .v file do not: {cg}")
-    shutil.rmtree(cgd, ignore_errors=True)
+    remove_selftest_tree(cgd)
     gd = Path(tempfile.mkdtemp(prefix="gen_gate_selftest_", dir=C.selftest_tmp()))
     pin = "a" * 40
     def gate(man: dict[str, Any] | None, pinned: str | None = pin, where: Path = gd) -> str | None:
@@ -629,21 +641,23 @@ def self_test() -> int:
         and facts["manifest_present"] and facts["manifest"] == str(gd / C.BUILD_MANIFEST) and canary_build_facts(None) is None
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "canary_build_facts records path, manifest, source_mode, head_sha and the covergroup facts (None without a canary build)")
-    shutil.rmtree(gd, ignore_errors=True)
+    remove_selftest_tree(gd)
+    # The guard's own case derives its roots from the directory it created, so it holds under any GEN_DV_SELFTEST_TMP.
     rg = Path(tempfile.mkdtemp(prefix="gen_rm_selftest_", dir=C.selftest_tmp()))
-    (rg / "a").mkdir(); (rg / "a" / "f.txt").write_text("x", encoding="utf-8"); (rg / "empty").mkdir()
-    n_full = remove_tree_guarded(rg / "a", (C.WORK_DIR,), "self-test dir")
-    n_empty = remove_tree_guarded(rg / "empty", (C.OUT_DIR, C.WORK_DIR), "self-test dir")
+    (rg / "a").mkdir(); (rg / "a" / "f.txt").write_text("x", encoding="utf-8"); (rg / "empty").mkdir(); (rg / "outside").mkdir()
+    n_full = remove_tree_guarded(rg / "a", (rg.parent,), "self-test dir")
+    n_empty = remove_tree_guarded(rg / "empty", (C.OUT_DIR, rg.parent), "self-test dir")
     refused = []
-    for target, roots in ((Path("/") / "nonexistent_gen_dir", (C.WORK_DIR,)), (rg, (rg,)), (rg / "missing", (C.WORK_DIR,)), (C.REPO_ROOT / "ci" / "env.sh", (C.REPO_ROOT,))):
+    for target, roots in ((rg / "outside", (C.REPO_ROOT / "ci",)), (rg, (rg,)), (rg / "missing", (rg.parent,)), (C.REPO_ROOT / "ci" / "env.sh", (C.REPO_ROOT,))):
         try:
             remove_tree_guarded(target, roots, "self-test dir"); refused.append(False)
         except SystemExit:
             refused.append(True)
-    cond = n_full == 1 and not (rg / "a").exists() and n_empty == 0 and not (rg / "empty").exists() and refused == [True] * 4 and (C.REPO_ROOT / "ci" / "env.sh").is_file()
+    cond = n_full == 1 and not (rg / "a").exists() and n_empty == 0 and not (rg / "empty").exists() and refused == [True] * 4 \
+        and (rg / "outside").is_dir() and (C.REPO_ROOT / "ci" / "env.sh").is_file()
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded (A-002): removes a listed directory under a root and logs its entry count (1, then an empty one), refuses a path outside the roots, a root itself, a missing path and a file: {refused}")
-    shutil.rmtree(rg, ignore_errors=True)
+    print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded (A-002): removes a listed directory under its own root and logs its entry count (1, then an empty one); refuses a path outside the given roots, a root itself, a missing path and a file: {refused}")
+    remove_selftest_tree(rg)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -915,9 +929,30 @@ def witness_plusarg_name() -> str | None:
     return {ident: name for name, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_WITNESS_IDS)
 
 
+def witness_tables() -> tuple[dict[str, int], dict[str, str], dict[str, int]]:
+    """WITNESS_IDS, WITNESS_GROUP_OF and WITNESS_GROUPS from TB Infra's rendered knob table: the tables the bridge's
+    cov_witness call and the covergroup use (COV_WITNESS arg0 = WITNESS_IDS[tp], arg1 = WITNESS_GROUPS[owner group])."""
+    import importlib
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
+    try:
+        knobs = importlib.import_module(C.KNOBS_MODULE)
+    except ModuleNotFoundError as e:
+        die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered witness tables live there")
+    require_under_source_root(knobs, C.KNOBS_MODULE)
+    for attr in ("WITNESS_IDS", "WITNESS_GROUP_OF", "WITNESS_GROUPS"):
+        if not isinstance(getattr(knobs, attr, None), dict):
+            die(f"{C.KNOBS_MODULE} renders no {attr} table (witness protocol not landed)")
+    return knobs.WITNESS_IDS, knobs.WITNESS_GROUP_OF, knobs.WITNESS_GROUPS
+
+
 def witness_render(test: dict[str, Any]) -> dict[str, Any] | None:
-    """The witness record of a test entry: TP ids, their CSV indices, the CSV digest prefix and the rendered
-    plusarg; None when the entry lists no witness_ids."""
+    """The witness record of a test entry, as the TB built the protocol (T-226): the TP ids, their indices (the CSV's
+    index column, equal to the rendered WITNESS_IDS), the one owner group they share and its WITNESS_GROUPS index,
+    which the test's epilogue sends as COV_WITNESS <index> <group>. The TB declares no witness plusarg (the epilogue
+    reads the entry itself), so `plusarg` is None unless the SV constants home names one. None when the entry lists
+    no witness_ids; an id absent from the CSV or the rendered table, a CSV/table index disagreement, or ids of several
+    owner groups (the dispatcher refuses another group's item, GEN_WITNESS_FOREIGN) stop the flow."""
     ids = test.get("witness_ids")
     if not ids:
         return None
@@ -925,12 +960,26 @@ def witness_render(test: dict[str, Any]) -> dict[str, Any] | None:
     missing = [i for i in ids if i not in table]
     if missing:
         die(f"test {test['name']}: witness_ids {missing} are not in {C.WITNESS_CSV.name}")
-    name = witness_plusarg_name()
-    if not name:
-        die(f"test {test['name']} lists witness_ids but {C.TB_PKG_SV.name} declares no {C.SV_PLUSARG_WITNESS_IDS} (SV side not landed)")
+    w_ids, w_group_of, w_groups = witness_tables()
+    unknown = [i for i in ids if i not in w_ids or i not in w_group_of]
+    if unknown:
+        die(f"test {test['name']}: witness_ids {unknown} are not in the rendered WITNESS_IDS / WITNESS_GROUP_OF tables of {C.KNOBS_MODULE}")
+    disagree = [i for i in ids if w_ids[i] != table[i]]
+    if disagree:
+        die(f"test {test['name']}: witness index of {disagree} differs between {C.WITNESS_CSV.name} and the rendered WITNESS_IDS (re-render the knob table)")
+    groups = sorted({w_group_of[i] for i in ids})
+    if len(groups) != 1:
+        die(f"test {test['name']}: witness_ids span the owner groups {groups}; an entry witnesses items of its own group only "
+            f"(the dispatcher refuses another group's item)")
+    group = groups[0]
+    if group not in w_groups:
+        die(f"test {test['name']}: owner group {group} has no WITNESS_GROUPS index")
     indices = [table[i] for i in ids]
-    return {"tp_ids": list(ids), "indices": indices, "csv": str(C.WITNESS_CSV), "csv_sha256": sha256_file(C.WITNESS_CSV),
-            "plusarg": f"+{name}=" + ",".join(str(i) for i in indices)}
+    name = witness_plusarg_name()
+    return {"tp_ids": list(ids), "indices": indices, "owner_group": group, "group_index": w_groups[group],
+            "csv": str(C.WITNESS_CSV), "csv_sha256": sha256_file(C.WITNESS_CSV),
+            "protocol": "COV_WITNESS <index> <group index>, issued by the test's epilogue through the bridge",
+            "plusarg": (f"+{name}=" + ",".join(str(i) for i in indices)) if name else None}
 
 
 def debug_only_from_knobs() -> set[str]:
@@ -1066,7 +1115,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         if w is not None:
             if not isinstance(w, list) or not w or not all(isinstance(x, str) and x for x in w):
                 die(f"{path}: test {t['name']}: witness_ids must be a non-empty list of TP ids")
-            witness_render(t)   # dies on an id absent from the CSV or on a missing SV plusarg
+            witness_render(t)   # dies on an id absent from the CSV or the rendered tables, or on ids of several owner groups
         by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
         export_name, witness_name = by_ident.get(C.SV_PLUSARG_EXPORT_FILE), by_ident.get(C.SV_PLUSARG_WITNESS_IDS)
         for pa in t["plusargs"]:

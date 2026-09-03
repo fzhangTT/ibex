@@ -515,14 +515,18 @@ when the only non-RED-OK logs are allowlisted (summary `PASS (n stale ...)`, per
 RED-OK, so a caller must not read 3 as a refusal; those codes are the CLI's, the loader itself refuses through `die`,
 exit 1, like every other testlist refusal. Head trees carry no evidence and skip the check, so the
 clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
-Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
-resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
-`index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated
-indices>` with the plusarg name read from the SV constants home (`PLUSARG_WITNESS_IDS`), and records `witness
-{tp_ids, indices, csv, csv_sha256 (the full digest), plusarg}` in result.yaml. The loader refuses an entry whose
-TP id is absent from the CSV, an entry that lists the witness plusarg by hand in `plusargs` (the flow renders
-it from `witness_ids`, the CSV stays the one origin), a CSV that lists a TP id twice, and, until TB Infra's SV
-side lands the plusarg, any entry that lists witness_ids at all.
+Witness protocol (ruling 2026-09-03, plan WP rows; as built by TB Infra, T-226): a test entry may list `witness_ids`
+(TP ids). The TB declares no witness plusarg: the test's epilogue issues the bridge command `COV_WITNESS <index>
+<group index>` itself (`gen_bridge.cov_witness`), with arg0 the item's index from `WITNESS_IDS` and arg1 the issuing
+test's owner group from `WITNESS_GROUPS`, both rendered into `gen_knobs.py` from
+`dv/auto_dv/docs/gen_trace_witness_ids.csv`; the dispatcher refuses another group's item (GEN_WITNESS_FOREIGN). The
+flow's `witness_render` validates the entry (loader and run): every id must be in the CSV and in the rendered
+tables with equal indices, and all ids of one entry must belong to one owner group; it records `witness {tp_ids,
+indices, owner_group, group_index, csv, csv_sha256, protocol, plusarg}` in result.yaml (`plusarg` stays None unless
+the SV constants home names `PLUSARG_WITNESS_IDS`, in which case the rendered indices are also passed). Refusals: an
+id absent from the CSV or the tables, a CSV/table index disagreement, ids spanning owner groups, an entry that lists
+the witness plusarg by hand in `plusargs`, a CSV that lists a TP id twice. No committed entry lists `witness_ids`
+yet: they follow once the Test Writer's template epilogue sends the owner group (its part of T-226).
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md)
 
@@ -669,7 +673,13 @@ status (PASS, UNHIT, PROTOCOL_ERROR, NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FRO
 `unmet_bins`, the notes, the checker log, `report_dir` and `derived_report_dir` (both retained in the run dir),
 `derived_grpinfo` (cross_sections, cross_tables, cross_rows rewritten) and `checker_mode`. A urg failure, a report
 without grpinfo.txt (no covergroup compiled) or a failed isolation check is a PROTOCOL_ERROR named in the reason
-before the checker runs. Proof: `gen_fcov.py --self-test` drives the REAL checker on a fabricated report in urg's
+before the checker runs. Two guards: the urg argv and the two isolation regexes the flow re-types (ci/ is the
+owner's, Q-017) are compared by the self-test against the checker's own source (`gen_fcov.checker_forms` parses
+`urg_per_test_report` with `ast`), so drift fails loud; and derived cross-bin names are tracked per cross section,
+because two distinct tuples whose components carry `_` can derive one name ((a, b_c) and (a_b, c)) and the checker
+would sum their counts, so a derived report with a collision is refused (`fcov_check.status: PROTOCOL_ERROR`, reason
+`... derived cross-bin names collide ...`, `derived_grpinfo.name_collisions` and examples recorded) rather than
+judged. Proof: `gen_fcov.py --self-test` drives the REAL checker on a fabricated report in urg's
 forms (bare and bracketed tuple rows, hole groups, `Bins` tables in a cross and in a variable: MISSING-FROM-REPORT on
 the original, HIT / UNHIT on the derived one) and on the real excerpt `dv/auto_dv/flow/gen_fixtures/
 gen_grpinfo_cross_sample.txt` (two groups of the per-test report of the flow's own probe regress_probe_t215_cross,
@@ -877,8 +887,10 @@ the named roots (the out root, the work dir, or the head-mirror family for the t
 otherwise the process dies with the reason. Every removal is logged with its entry count (an empty directory is
 removed with rmdir). Users: the prune of unleased head trees (`gen_mirror.prune_head_mirrors`, which already selects
 only manifest-bearing trees under the family), `gen_regress --force`, `gen_build --force` and the per-run program
-directory of gen_stim. Self-test cleanup of mkdtemp directories is the one exception (temporary paths the test
-created itself). Interactive shell commands follow the same ruling: no `rm` on a variable-built path.
+directory of gen_stim; the staging directories of gen_mirror (export, status, sync) with the work dir as root; and
+every self-test cleanup through `remove_selftest_tree` (root = the self-test scratch root, `GEN_DV_SELFTEST_TMP` or the
+default), so the self-tests pass from any checkout with any scratch location. The only `shutil.rmtree` left in the
+flow is the guard's own. Interactive shell commands follow the same ruling: no `rm` on a variable-built path.
 
 Every regression manifest records `lsf_jobs_left` (this regression's `gen_dv_<tag>_*` jobs still
 active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check (bjobs shows a finished job as RUN for a few seconds after `bsub -K` returns, so a non-empty answer is re-polled every 3 s for up to 15 s before it is recorded); the runtime role runs `bjobs`

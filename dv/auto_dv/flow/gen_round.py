@@ -372,7 +372,7 @@ def self_test() -> int:
     cond = rc == C.ROUND_EXIT_REFUSED and "no build manifest" in msg
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"missing canary build dir refuses: rc {rc}")
-    shutil.rmtree(d, ignore_errors=True)
+    U.remove_selftest_tree(d)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
