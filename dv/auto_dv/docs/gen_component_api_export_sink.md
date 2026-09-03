@@ -169,7 +169,7 @@ not in `gen_bridge_if` yet.
 
 As rendered, the yaml carries every row of the table above as its own exact row (29 rows over 8 sources), one writer
 function per row named `gen_export_line_<source>_<event>` with the fields as named arguments; the yaml, the rendered
-include, `EXPORT_EVENTS` in gen_knobs.py and the addendum's final version-4b table agree row for row (the codegen unit
+include, `EXPORT_EVENTS` in gen_knobs.py and the addendum's version-4c table agree row for row (the codegen unit
 test checks the first three).
 
 ## 3. Knobs

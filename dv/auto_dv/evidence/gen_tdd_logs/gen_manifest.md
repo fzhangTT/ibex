@@ -474,3 +474,21 @@ Each file is a verbatim copy of the run artifact named in the source column (wor
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close_lockstep_zc_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close_lockstep_zc/run_header.txt | 411 | f6394bef0698de681125ceb9ad40b875 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close_lockstep_zc_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close/lockstep_zc/stdout.log | 2443 | cb2bb597bb1c4dd87fe634e9df3d2603 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close_lockstep_zc_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close_lockstep_zc/verdict.txt | 283 | 44e8f88fc40b4654865a022587bfe081 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_s7_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_s7/run_header.txt | 442 | af90c6810a78c6cdd03cace2693cc4f5 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_s7_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close2/export_s7/stdout.log | 2439 | a111b796be91492e0a09083072cda0d2 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_s7_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_s7/verdict.txt | 283 | b71e1eb6f478ccdcfd9bade4d892185a |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_counters_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_zc_counters/run_header.txt | 471 | d7d591a6a25bf53a08e1075c02314ac8 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_counters_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close2/export_zc_counters/stdout.log | 2445 | 71104daf545bff6d59ef575c18da8136 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_counters_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_zc_counters/verdict.txt | 283 | b71e1eb6f478ccdcfd9bade4d892185a |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_t102_gen_export.txt | see the file's header line | 22170 | 7f3570473514c6d851d7da0a66166e83 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_zc/run_header.txt | 439 | df6b79dbaf1156f33f627bded883a680 |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close2/export_zc/stdout.log | 2436 | 0656eef26bba78b86edf059b01b29b5b |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_close2_export_zc_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_export_zc/verdict.txt | 283 | b71e1eb6f478ccdcfd9bade4d892185a |
+| dv/auto_dv/evidence/gen_tdd_logs/export/gen_export_reader_truncated_marker_t102.log | see the file's header line | 585 | bdeaae8f404129a26fe84ce54f14bfa3 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_boot_zc_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_boot_zc/run_header.txt | 403 | 9f275e39795136f71ca123df75dfa074 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_boot_zc_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close2/boot_zc/stdout.log | 2428 | 9dcfba6f881a3b974617107667052009 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_boot_zc_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_boot_zc/verdict.txt | 283 | 44e8f88fc40b4654865a022587bfe081 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_compile_t102.log | see the file's header line | 68339 | eb34908d564f64e08d69984b99fc5ea3 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_lockstep_zc_t102_run_header.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_lockstep_zc/run_header.txt | 411 | 6498fdf55e65cbc9979ab0a701f8efbf |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_lockstep_zc_t102_stdout_excerpt.log | excerpt: dv/auto_dv/work/tb-infra/out_t102/close2/lockstep_zc/stdout.log | 2444 | 75cd2ba86a2cdbdd892ba0005356bfa4 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_close2_lockstep_zc_t102_verdict.txt | dv/auto_dv/work/tb-infra/out_t102/tb/close2_lockstep_zc/verdict.txt | 283 | 44e8f88fc40b4654865a022587bfe081 |

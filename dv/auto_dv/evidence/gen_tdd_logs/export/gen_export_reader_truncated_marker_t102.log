@@ -1,0 +1,5 @@
+# reader check (T-108 low, gen_export.py marker keys) on gen_export_s7_t080d_gen_export.txt marker line 2012 '# flush seq=2 records=2008 retired=2008 markers=0 events=0 cycle=10106'
+intact file, end marker: records 2008
+TRUNCATED 'ed=2008 markers=0 events=0 cyc' -> GEN_EXPORT: marker without cycle= (line 2012): truncated, not a complete marker
+TRUNCATED '# flush seq=2 records=' -> GEN_EXPORT: marker without retired= (line 2012): truncated, not a complete marker
+TRUNCATED '# flush seq=2 records' -> GEN_EXPORT: marker without retired= (line 2012): truncated, not a complete marker

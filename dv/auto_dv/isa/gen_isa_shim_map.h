@@ -7,6 +7,7 @@
 
 #define GEN_MM_BOOT_ADDR_DEFAULT      0x80000000u
 #define GEN_MM_BOOT_PAGE_MASK         0xffffff00u
+#define GEN_MM_BOOT_RESET_OFFSET      0x00000080u
 #define GEN_MM_BOOT_PAGE              0x80000000u
 #define GEN_MM_PROG_SIZE              0x00100000u
 #define GEN_MM_DM_BASE                0x1a110000u

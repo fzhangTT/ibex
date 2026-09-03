@@ -82,7 +82,7 @@ ADDRESSED (text and, where named, code and retained run), NOT ADDRESSED (with th
 | R3-L12 (N4) | "require the event header lines" overstates `read()` | ADDRESSED (text and code, this commit) | `read()` now requires every rendered row of every source in `sources=`; Section 3 rule list states it as built. |
 | R3-N5 | API document says the R line is still formatted with the knob absent | ADDRESSED | gen_component_api_rvfi_monitor.md corrected at 6b3301d. |
 
-## Replan review r4 (`2026-09-03-claude-replan-gen_rvfi_export_addendum-r4.md`, of 6d16d9c, REQUEST-CHANGES)
+## Replan review r4 (`2026-09-03-claude-replan-gen_rvfi_export_addendum-r4.md`, of 6d16d9c, REQUEST-CHANGES; answered by version 4c)
 
 | Row | Finding | Status | Where |
 |---|---|---|---|

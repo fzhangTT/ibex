@@ -152,7 +152,7 @@ def check_link_constants(ld: Path) -> dict:
     dm_mask = sv_param(SV_WRAPPER, "DmAddrMask")
     boot = sv_param(SV_TB_PKG, "GEN_BOOT_ADDR_DEFAULT")
     boot_page = boot & 0xFFFFFF00
-    first_fetch = boot_page | 0x80   # {boot_addr_i[31:8], 8'h80}, rtl/ibex_if_stage.sv:243
+    first_fetch = boot_page | GEN_KNOBS.MEMORY_MAP["boot_reset_offset"]   # {boot_addr_i[31:8], 8'h80}, rtl/ibex_if_stage.sv:243, one origin in the yaml
     dm_budget = dm_base + dm_mask + 1 - dm_halt   # bytes from DmHaltAddr to the end of the DM window
     problems = []
     if "DM" not in regs or "PROG" not in regs:
@@ -166,7 +166,7 @@ def check_link_constants(ld: Path) -> dict:
             problems.append(f"PROG origin 0x{regs['PROG'][0]:08x} != first fetch 0x{first_fetch:08x}")
     if problems:
         sys.exit("gen_link.ld disagrees with the SV parameters: " + "; ".join(problems))
-    return {"boot_page": boot_page, "prog_size": 0x80 + regs["PROG"][1], "dm_base": dm_base,
+    return {"boot_page": boot_page, "prog_size": GEN_KNOBS.MEMORY_MAP["boot_reset_offset"] + regs["PROG"][1], "dm_base": dm_base,
             "dm_size": dm_mask + 1, "dm_halt": dm_halt, "dm_budget": dm_budget}
 
 

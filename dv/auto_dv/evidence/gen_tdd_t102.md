@@ -18,6 +18,8 @@ dv/auto_dv/work/test-writer/out_head/<test>_s1/stdout.log. Classes by first-fail
 | gen_test_csr_trap_setup | 407 | mret isa_pc_next (70) and isa_prv on mret/ecall (46); csrr mstatus 0x80239888 vs 0x00221888 (XS=3 and SD set in the model after an all-ones WARL write) |
 | gen_test_pmp_csr_warl | 532 | mret isa_pc_next (218); isa_prv on mret, U-mode ecall, U-mode faulting loads/stores and illegal CSR accesses (314) |
 
+RTL confirmation: dv/auto_dv/evidence/gen_t102_rtl_facts.md (rtl-arch, rows R1..R8) confirms each convention with
+rtl/ file:line; its R2 adds the ID-done timing (priv_lvl_q takes priv_lvl_d one cycle after the record's capture).
 Root causes found from the code, not guessed: (1) `isa_prv` compared the model's privilege AFTER the step with
 rvfi_mode, which is the mode the instruction executed in (mret: 0 vs 3; a U-mode trap: 3 vs 0). (2) `isa_pc_next` was
 compared on mret/dret records whose `rvfi_pc_wdata` is pc + 4 (plan C-1; the same F-RVFI-010 skip already existed for trap

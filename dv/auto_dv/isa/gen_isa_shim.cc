@@ -233,7 +233,7 @@ void legalize_after_reset() {
   g_ic_scr_key_valid = false;
   // reset values (C5.3a Reset row)
   uint32_t page = g_boot & GEN_MM_BOOT_PAGE_MASK;
-  s->pc = page | 0x80u;
+  s->pc = page | GEN_MM_BOOT_RESET_OFFSET;
   g_proc->put_csr(CSR_MTVEC, page | kResetMtvecMode);
   g_proc->put_csr(CSR_MSTATUS, kMstatusReset);
   for (int i = 0; i < 4; i++) g_proc->put_csr(CSR_PMPCFG0 + i, 0);

@@ -40,7 +40,7 @@ SCHEMA = {
     "export_event": {"source", "event", "fields"},
     "plusarg": {"name", "kind", "default", "default_from", "values", "debug_only", "desc"},
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
-    "memory_map": {"boot_addr_default", "boot_page_mask", "mmio_base", "mmio_size", "registers"},
+    "memory_map": {"boot_addr_default", "boot_page_mask", "boot_reset_offset", "mmio_base", "mmio_size", "registers"},
     "register": {"offset", "size"},
     "regime_windows": {"gnt_delay", "rvalid_delay", "rate_per_mille", "outstanding_cap"},
 }
@@ -304,13 +304,14 @@ def memory_map(src):
     mask = int(mm["boot_page_mask"])
     prog_origin, prog_len = ld_prog_length(LD)
     boot_page = boot & mask
-    if prog_origin != (boot_page | 0x80):
-        die(f"gen_link.ld PROG origin 0x{prog_origin:08x} != first fetch 0x{boot_page | 0x80:08x}")
+    off = int(mm["boot_reset_offset"])
+    if prog_origin != (boot_page | off):
+        die(f"gen_link.ld PROG origin 0x{prog_origin:08x} != first fetch 0x{boot_page | off:08x}")
     dm_base = sv_param(WRAPPER, "DmBaseAddr")
     dm_mask = sv_param(WRAPPER, "DmAddrMask")
     dm_halt = sv_param(WRAPPER, "DmHaltAddr")
     dm_exc = sv_param(WRAPPER, "DmExceptionAddr")
-    out = {"boot_addr_default": boot, "boot_page_mask": mask, "boot_page": boot_page, "prog_size": 0x80 + prog_len,
+    out = {"boot_addr_default": boot, "boot_page_mask": mask, "boot_reset_offset": off, "boot_page": boot_page, "prog_size": off + prog_len,
            "dm_base": dm_base, "dm_size": dm_mask + 1, "dm_halt": dm_halt, "dm_exception": dm_exc,
            "dm_budget": dm_base + dm_mask + 1 - dm_halt,
            "mmio_base": int(mm["mmio_base"]), "mmio_size": int(mm["mmio_size"])}

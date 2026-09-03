@@ -67,9 +67,16 @@ def read(path, seq, counters=False):
         if seq is not None and lines[i].startswith("# flush ") and _kv(lines[i], "# flush ", f"line {i + 1}").get("seq") == str(seq):
             marker_idx = i; break
     assert marker_idx is not None, f"GEN_EXPORT: no complete flush marker with seq={seq} in {path}" if seq is not None else f"GEN_EXPORT: no end marker in {path}"
-    mk = _kv(lines[marker_idx], "# flush " if seq is not None else "# end ", f"line {marker_idx + 1}")
-    flush = Flush(int(mk.get("seq", "0")), int(mk["records"]), int(mk["retired"]), int(mk["markers"]),
-                  int(mk["events"]), int(mk.get("cycle", "0")))   # marker key=value pairs are decimal
+    where = f"line {marker_idx + 1}"
+    mk = _kv(lines[marker_idx], "# flush " if seq is not None else "# end ", where)
+    need = ("seq", "records", "retired", "markers", "events", "cycle") if seq is not None else ("records", "retired", "markers", "events")
+    for k in need:   # a marker cut short by a buffer boundary is not a complete flush
+        assert k in mk, f"GEN_EXPORT: marker without {k}= ({where}): truncated, not a complete marker"
+    def _dec(k):   # marker key=value pairs are decimal
+        assert mk[k].isdigit(), f"GEN_EXPORT: marker {k}={mk[k]!r} is not decimal ({where})"
+        return int(mk[k])
+    flush = Flush(_dec("seq") if seq is not None else 0, _dec("records"), _dec("retired"), _dec("markers"), _dec("events"),
+                  _dec("cycle") if seq is not None else 0)
     assert flush.records == flush.retired, f"GEN_EXPORT: marker records {flush.records} != retired {flush.retired} (the sink and the bridge disagree)"
     Record = namedtuple("Record", fields)
     records, markers, events = [], [], []

@@ -15,11 +15,12 @@ from dv.auto_dv.gen_tb import gen_export
 from dv.auto_dv.gen_tb.gen_bridge import GenBridge
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
-from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, MEMORY_MAP, PLUSARGS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, MEMORY_MAP, PLUSARGS, REGIME_WINDOWS
 
 PASS_MARKER = "GEN_UT_EXPORT_PASS"
-SETTLE_CYCLES = 40   # a store's RVFI record retires after its bus response (max rvalid regime latency 32) plus the pipeline
-FIRST_FETCH_OFFSET = 0x80   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv)
+# a store's RVFI record retires after its bus response (the rendered rvalid window maximum) plus a pipeline margin; too short fails loud (tohost assert)
+SETTLE_CYCLES = max(hi for lo, hi in REGIME_WINDOWS["rvalid_delay"].values()) + 8
+FIRST_FETCH_OFFSET = MEMORY_MAP["boot_reset_offset"]   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv), one origin in the yaml
 MRET_INSN, DRET_INSN = CONSTANTS["GEN_INSN_MRET"], CONSTANTS["GEN_INSN_DRET"]   # their pc_wdata is not the target (plan C-1)
 
 
@@ -32,7 +33,7 @@ def check_records(records, markers, img, eot_count, log):
     assert records, "GEN_UT_EXPORT: no records exported"
     boot_page = img.entry & MEMORY_MAP["boot_page_mask"]
     first_pc = records[0].pc_rdata
-    assert first_pc == boot_page + FIRST_FETCH_OFFSET, f"GEN_UT_EXPORT: first record pc 0x{first_pc:08x} != boot page + 0x80 (0x{boot_page + FIRST_FETCH_OFFSET:08x})"
+    assert first_pc == boot_page + FIRST_FETCH_OFFSET, f"GEN_UT_EXPORT: first record pc 0x{first_pc:08x} != boot page + boot_reset_offset (0x{boot_page + FIRST_FETCH_OFFSET:08x})"
     # the tohost stores as RVFI reports them against the memory model's independent count of the same stores
     # (the bridge's evt_eot_count, read after the flush ack, so it may exceed the flushed prefix but never trail it)
     tohost_stores = [r for r in records if r.mem_wmask != 0 and r.mem_addr == img.tohost]
@@ -77,6 +78,7 @@ async def gen_ut_export(dut):
             bad += 1
     assert bad == 0, f"GEN_UT_EXPORT: {bad} read-back mismatches"
     await b.cmd("FETCH_EN", (1, 0, 0, 0))
+    await b.wait_retired_until(retire_target // 2, timeout_cycles=retire_target * 40 + 2000)   # so the early prefix has records
     seq_early = await b.export_flush()   # an early flush: read(seq) must bind to the flush it names, never to this one
     await b.wait_retired_until(retire_target, timeout_cycles=retire_target * 40 + 2000)
     if img.tohost is not None and int(h.b.evt_eot_count.value) == 0:

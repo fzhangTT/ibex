@@ -26,7 +26,7 @@ numbers below are those of the build each mutation ran on (gen_export_pkg.sv:99 
     mutated:  if (sink != null && sink.enabled && records != 50) sink.write_record(gen_export_record_line(t, cfg.export_counters));
     expected_detector: read(): marker records == retired
     result: CAUGHT: "AssertionError: GEN_EXPORT: marker records 174 != retired 175 (the sink and the bridge disagree)".
-      ablation_control: records==retired rule disabled -> caught next by the order rule; order rule disabled -> caught
+      ablation_control (the single-rule steps are reasoning, not retained runs; retained: all rules disabled PASS, and in attempt 1 two disabled caught by continuity): records==retired rule disabled -> caught next by the order rule; order rule disabled -> caught
       by the fixture's continuity check; all three disabled -> GEN_UT_EXPORT_PASS (SURVIVED). Three independent
       catchers for a dropped record.
 
@@ -36,7 +36,7 @@ numbers below are those of the build each mutation ran on (gen_export_pkg.sv:99 
     mutated:  hold record 50 and write it after record 51 (see gen_mut_export_c_mutation.txt for the full line)
     expected_detector: read(): order strictly +1
     result: CAUGHT: "AssertionError: GEN_EXPORT: order 51 after 49 (line 53)".
-      ablation_control: order rule disabled -> caught by the cycle rule; both disabled -> caught by the fixture's
+      ablation_control (single-rule steps are reasoning, not retained runs, as for MUT-B): order rule disabled -> caught by the cycle rule; both disabled -> caught by the fixture's
       continuity check; all three disabled -> GEN_UT_EXPORT_PASS (SURVIVED).
 
     id: MUT-D (flush marker suppressed, $fflush still done)

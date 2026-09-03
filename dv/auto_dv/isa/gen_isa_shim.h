@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 typedef struct {
-  uint32_t    boot_addr;      // boot_addr_i; pc = {boot[31:8], 0x80}, mtvec = {boot[31:8], 0x01}
+  uint32_t    boot_addr;      // boot_addr_i; pc = {boot[31:8], GEN_MM_BOOT_RESET_OFFSET}, mtvec = {boot[31:8], 0x01}
   uint32_t    hart_id;
   const char* isa_override;   // NULL: GEN_ISA_STRING from gen_isa_shim_map.h
   const char* log_path;       // NULL or "": no commit log

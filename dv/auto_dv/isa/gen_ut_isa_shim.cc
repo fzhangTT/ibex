@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 
   std::puts("-- 1. reset legalization (C5.3a Reset row)");
   check("gen_isa_reset", gen_isa_reset(&cfg) == 0, 1);
-  check("pc = boot page + 0x80", gen_isa_get_pc(), GEN_MM_BOOT_PAGE + 0x80u);
+  check("pc = boot page + boot_reset_offset", gen_isa_get_pc(), GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET);
   check("mtvec = boot page | 1", gen_isa_read_csr(0x305), GEN_MM_BOOT_PAGE | 1u);
   check("mstatus = 0x80 (MPIE, MPP U)", gen_isa_read_csr(0x300), 0x80u);
   check("prv M", gen_isa_get_prv(), 3);
@@ -56,10 +56,10 @@ int main(int argc, char** argv) {
   std::puts("-- 2. the Zc image runs to its tohost store");
   int words = gen_isa_load_vmem(argv[1]);
   check("image words", words > 0, 1);
-  check("entry word j _start", gen_isa_read_word(GEN_MM_BOOT_PAGE + 0x80u), 0x0040006fu);
+  check("entry word j _start", gen_isa_read_word(GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET), 0x0040006fu);
   gen_isa_step_t st{};
   check("step 1 ok", gen_isa_step(&st) == 0, 1);
-  check("step 1 pc_before", st.pc_before, GEN_MM_BOOT_PAGE + 0x80u);
+  check("step 1 pc_before", st.pc_before, GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET);
   check("step 1 insn", st.insn, 0x0040006fu);
   check("step 1 retired", st.retired, 1);
   check("step 1 pc_after = _start (jal +4)", st.pc_after, GEN_MM_BOOT_PAGE + 0x84u);
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
 
   std::puts("-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them");
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
-  const uint32_t scratch = GEN_MM_BOOT_PAGE + 0x80u;
+  const uint32_t scratch = GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET;
   const uint32_t prog[] = {0x12345137u, 0x67810113u,   // lui x2,0x12345 ; addi x2,x2,0x678
                            0x69815093u,                  // grevi x1,x2,24  (rev8, Zbb alias)
                            0x28715193u,                  // gorci x3,x2,7   (orc.b, Zbb alias)

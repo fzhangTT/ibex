@@ -44,7 +44,10 @@ function is expected` (VCS treats `$fflush` as a task; the `void'()` casts were 
 UNRETAINED (the three attempts below and the single-flush green runs `export_zc`, `export_zc_counters`, `export_s7`
 were lost when the mutation runner recompiled with FORCE=1 into the same `out_t080` directory; their identifying
 lines are quoted from the driver output of that session; rule adopted: a build directory holding retained runs is
-never recompiled in place). Attempt 1: a TEST defect, `await` inside a generator expression
+never recompiled in place). The FORCE recompile also changed source (driver log line 2: the `sink.enabled`
+guard was added), so the lost greens ran on a different source than the retained build. In the 10:37Z mutation pass the
+MUT-B/MUT-C sed anchors did not match after that guard was added, so those two runs PASSed with no mutation applied;
+B and C were redone at 10:40-10:41Z (`gen_mut_export_bc_driver.log`) and only those runs count. Attempt 1: a TEST defect, `await` inside a generator expression
 (`TypeError: 'async_generator' object is not iterable`). Attempt 2: the test asserted
 that the last store record is the tohost store and failed with `last store is 0x8000039c <= 0x8000025e`; my first
 reading (a stack push after the tohost store) was WRONG: the flushed prefix ended before the tohost record (attempt 3
@@ -115,7 +118,7 @@ clock on this build: 0.29 s vs 0.26 s (Zc), 0.52 s vs 0.54 s (seed 7) without vs
 (`*_twoflush_t080_*`) remain retained as the hex-marker version. The red-window canary of 10:49Z that closed Runtime's
 LOG-017 report is retained as `gen_canary_*_t080_*` (boot_zc, lockstep_zc, export_zc PASS on the pre-v4b tree).
 
-## 10. Final v4b text (r4 replan REQUEST-CHANGES): exact event rows
+## 10. Version 4c (r4 replan REQUEST-CHANGES, T-104): exact event rows
 
 The r4 replan review (of 6d16d9c) required exact event rows (the plan's sunset input (2)). Change: gen_tb_knobs.yaml renders
 29 rows over 8 sources (pin irq_software/irq_timer/irq_external/irq_nm/debug_req/fetch_enable/mcounteren_writable with
@@ -130,3 +133,15 @@ export_s7 runs on the T-102 build (gen_tdd_logs/export/gen_export_*_t102_*) PASS
 re-rendered gen_tb_pkg.sv. Documents: addendum v4b final (stale text swept, MUT-H relation, Section 9 owner set and
 standing, icram to step (3)), sink API document Section 2, response tables R3 and R4 in
 gen_critic_response_rvfi_export.md.
+
+T-108 lows closed in the same landing: `read()` requires every marker key (seq, records, retired, markers, events, cycle
+on a flush marker; a truncated marker is a GEN_EXPORT completeness FAIL, checked on a synthetic truncation of the retained
+s7 file, gen_tdd_logs/export/gen_export_reader_truncated_marker_t102.log); the first-fetch offset is the rendered
+`boot_reset_offset` of the yaml memory map (GEN_MM_BOOT_RESET_OFFSET in gen_tb_pkg.sv and gen_isa_shim_map.h,
+MEMORY_MAP in gen_knobs.py; the shim, its unit test, gen_ut_export.py and gen_program.py read it; disclosed: the first
+gen_program.py edit used the bare name MEMORY_MAP where the tool holds the module as GEN_KNOBS, so the shared tree's
+gen_program.py failed on import for about two minutes at 11:56Z before the fix; the Zc image regenerated afterwards is
+byte-identical, crc32 cf0cb3b8); SETTLE_CYCLES derives from the
+rendered rvalid window maximum plus a pipeline margin; the early flush is issued after half the retirement target so the
+prefix assertion compares non-empty lists. Decision recorded: gen_ut_export stays a local-driver unit test (no testlist
+entry) until the Test Writer's first export consumer lands; a check-tier entry then follows the gen_ut_bridge pattern.

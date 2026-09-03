@@ -190,6 +190,7 @@ constants:
 memory_map:
   boot_addr_default: 0x80000000
   boot_page_mask: 0xFFFFFF00     # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv)
+  boot_reset_offset: 0x80   # first fetch is {boot[31:8], 8'h80} (rtl/ibex_if_stage.sv:243): the shim's reset pc, the PROG origin check and the export test read it here
   mmio_base: 0x8FFFF000
   mmio_size: 0x1000
   registers:            # offset and size inside the MMIO page

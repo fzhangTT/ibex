@@ -236,6 +236,7 @@ package gen_tb_pkg;
   // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.
   parameter logic [31:0] GEN_MM_BOOT_ADDR_DEFAULT = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_BOOT_PAGE_MASK = 32'hffff_ff00;
+  parameter logic [31:0] GEN_MM_BOOT_RESET_OFFSET = 32'h0000_0080;
   parameter logic [31:0] GEN_MM_BOOT_PAGE = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_PROG_SIZE = 32'h0010_0000;
   parameter logic [31:0] GEN_MM_DM_BASE = 32'h1a11_0000;
@@ -400,7 +401,7 @@ package gen_tb_pkg;
   parameter string GEN_BANNER_TAG = "GEN_CONFIG_BANNER";
 
   // The first fetch is {boot_addr_i[31:8], 8'h80} (rtl/ibex_if_stage.sv:243); gen_link.ld places the
-  // program entry at GEN_MM_BOOT_PAGE + 0x80 (checked by gen_program.py and gen_knobs_codegen.py).
+  // program entry at GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET (checked by gen_program.py and gen_knobs_codegen.py).
 
   // RV32I NOP = addi x0, x0, 0, composed from the ibex_pkg opcode so no encoding is re-typed.
   parameter logic [31:0] GEN_RV32_NOP = {12'd0, 5'd0, 3'b000, 5'd0, OPCODE_OP_IMM};

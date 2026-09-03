@@ -240,6 +240,7 @@ EXPORT_EVENTS = (  # (source, event, fields); one exact event per row
 MEMORY_MAP = {
     "boot_addr_default": 0x80000000,
     "boot_page_mask": 0xffffff00,
+    "boot_reset_offset": 0x00000080,
     "boot_page": 0x80000000,
     "prog_size": 0x00100000,
     "dm_base": 0x1a110000,
