@@ -89,8 +89,15 @@ PEOF
 XR_TMP="$REPO/dv/auto_dv/work/orchestrator/review_tmp"; mkdir -p "$XR_TMP"
 RAW=$(mktemp "$XR_TMP/raw.XXXXXX"); RC=0
 # 60 min: bounded per the site watchdog rule.
-timeout 3600 claude -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
-  --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git rev-parse:*),Bash(git status:*),Bash(git ls-files:*),Bash(ls:*),Bash(wc:*),Bash(sha256sum:*),Bash(md5sum:*),Bash(stat:*),Bash(python3 dv/auto_dv/tools/gen_trace_check.py:*)" \
+# OS-level read-only sandbox (bubblewrap, unprivileged): the whole filesystem is bound read-only, so the
+# reviewer cannot modify the clone whatever the user-level tool permissions allow (mirrors the codex
+# wrapper's --sandbox read-only). Writable: the CLI's own state under $HOME/.claude and this run's
+# output directory. Network stays up for the model API; web tools are disallowed by the fence.
+command -v bwrap >/dev/null || { echo "PROTOCOL ERROR: bwrap (bubblewrap) is required for the read-only reviewer sandbox"; exit 1; }
+SANDBOX=(bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --bind "$XR_TMP" "$XR_TMP" --bind "$HOME/.claude" "$HOME/.claude")
+[ -f "$HOME/.claude.json" ] && SANDBOX+=(--bind "$HOME/.claude.json" "$HOME/.claude.json")
+timeout 3600 "${SANDBOX[@]}" -- claude -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
+  --allowedTools "Read,Grep,Glob,Bash" --disallowedTools "Write,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch,Agent" \
   --output-format json <"$PROMPT_F" >"$RAW.json" 2>"$RAW.err" || RC=$?
 if [ "$RC" -eq 124 ]; then echo "PROTOCOL ERROR: claude review timed out after 3600s; raw kept at $RAW.json"; exit 1
 elif [ "$RC" -ne 0 ]; then echo "claude -p failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1; fi
@@ -128,7 +135,7 @@ fi
 {
   echo "# Cross-model review - ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; tools: read-only allowlist, no write-capable shell prefixes (fallback reviewer per owner ruling A-001)"
+  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap read-only filesystem (writes into the clone fail with EROFS), web tools disallowed (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
