@@ -1,4 +1,4 @@
-# Critic verdict: Phase 1 batch 2, seven tests (light check), commit 5324543 at HEAD 9988a2f
+# Critic verdict: Phase 1 batch 2, seven tests (light check), commit 5324543 as modified by landing 3c (69be96b) and Runtime's testlist (e83614c)
 
 Artifacts (9988a2f; sha256 first 16 hex; lines):
 - tests: gen_test_cmp_zca.py 85d66b481046397c (233); gen_test_bit_ratified.py 928da6e0533d6c30 (244); gen_test_isa_alu.py 38d1590549366534 (336); gen_test_isa_shift.py c2f1da054b0fb0f8 (157); gen_test_isa_cti.py c77e73e44c4b18f8 (245); gen_test_mul_mul.py 9bad57e19bb07168 (159); gen_test_mul_div.py d67a5bbf0f39547c (238)
@@ -53,7 +53,19 @@ One-line verdict: conforming; the findings are record and wording items.
 - I-3 (info, adopted, verified) The commit message of 5324543 says 66 per-item reds; the files and the transcript table carry 76 (21 + 18 + 10 + 3 + 8 + 7 + 9). The files are right.
 - I-2 (info) TP-CMP-001's floor is stated as ">= 3000 retired per seed" (gen_tdd_batch2.md:148-149, docstring :53-54) and as a ">= 5000-instruction stimulus not met" (:150) in the same transcript; the logs show 3762 / 3880. One statement.
 
-## 5. Reconciliation with the cross-model artifact (040984a..9988a2f, covers both landings)
+## 4a. Retarget: what 69be96b and e83614c change for this verdict
+
+- L-1 CLOSED: gen_test_isa_cti.fcov.yaml re-rendered (header reasons now equal the class dict); the self-test compares the whole rendered text of every manifest; my fresh render equals the committed file for all seven batch-2 manifests.
+- L-2 OPEN (record): the 76 excerpt rows still carry full-log md5 values; the transcript now says 76 reds (I-3 closed).
+- L-4 OPEN and sharpened: gen_tdd_batch2.md:138 now claims a retained 602-bin isa_alu green (out_head4/l5_isa_alu_s1); no such file or manifest row exists at 69be96b or e83614c. This is gen_critic_batch1_v4.md M-1; until the run is retained the committed 602-bin declaration has no run.
+- I-1 half closed: e83614c's gen_testlist.yaml carries the 14 batch-2 entries (40 entries), so the committed tree's self-test is green without the developer variable; the flow-level wave (PASS / RED-OK per entry) is still owed.
+- L-3, L-5, L-6, L-7, L-8 and I-2 OPEN: 3c did not touch gen_test_cmp_zca.py, gen_test_isa_cti.py, gen_test_isa_alu.py or gen_mul_div_prog.py, and the TP-CMP-001 floor still appears twice.
+- The progress-based wait of 3c applies to these tests too (PROGRESS_ROUNDS_MAX, GEN_TEST_SLOW); the retained batch-2 runs predate it and ran under the fixed budget, which none of them tripped.
+- Verdict unchanged: APPROVE for the seven tests; the evidence item above is judged in gen_critic_batch1_v4.md.
+
+## 5. Reconciliation with the cross-model artifacts (040984a..9988a2f, then ee2405a..69be96b)
+
+The ee2405a..69be96b artifact is a 0-byte placeholder at 14:32Z UTC (review not finished); its reconciliation follows on signal. The 040984a..9988a2f reconciliation:
 - The cross-model artifact covers both landings and returns REQUEST-CHANGES; on the seven batch-2 tests themselves it finds what I find: intent-derived fire checks through the collected mechanism, no literal ok, reasoned not_built, every one of the 76 per-item reds and 7 default reds tripping its own item first, generators byte-identical across two flow-style runs per seed (its check, not repeated by me), retention 389 of 389, and both TB rows unmasked. Its blocking items are the landing-3b self-test failure (my batch-1 v4 M-1) and two record items below; nothing in it changes my APPROVE for the tests.
 - Its medium 2 (the isa_cti manifest is not a fresh render; the self-test compares bins only) is my L-1 with its improvement adopted. Severity divergence: it holds medium because the transcript's re-render claim is false; I hold low because the bins are equal and the fix is a re-render plus a stronger cross-check.
 - Its medium 4 (no retained run proves the committed 602-bin isa_alu pair) is my L-4. I hold low: the declaration and the manifest are produced by one derivation and the fcov check is unwired, so a run would pass by construction; the record must still be corrected and the next wave shows n=602.
