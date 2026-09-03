@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -56,7 +57,10 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
         argv.append("--spike-check")
     argv += [str(x) for x in (prog.get("extra_args") or [])]
     out.mkdir(parents=True, exist_ok=True)
-    rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s)
+    # The build-configuration name has one home (gen_flow_const.BUILD_CONFIG); it is exported so the
+    # stimulus tool can read it instead of carrying its own constant (owner of gen_program.py decides).
+    env = dict(os.environ, **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
+    rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s, env=env)
     vmem = out / C.PROGRAM_VMEM
     sidecar = out / C.PROGRAM_SIDECAR
     if rc != 0 or timed_out or not vmem.is_file() or not sidecar.is_file():
@@ -89,6 +93,8 @@ def main() -> int:
     ap.add_argument("--spike-check", action="store_true")
     ap.add_argument("--print-plusargs", action="store_true", help="also print the image plusargs (needs the SV names)")
     a = ap.parse_args()
+    if bool(a.riscv_dv_test) == bool(a.directed):
+        ap.error("exactly one of --riscv-dv-test / --directed is required")
     prog = {"riscv_dv_test": a.riscv_dv_test, "directed": a.directed, "seed": a.seed, "spike_check": a.spike_check}
     rec = build_program(prog, a.seed, a.out.resolve(), a.out.resolve() / "gen_program_driver.log")
     for k, v in rec.items():

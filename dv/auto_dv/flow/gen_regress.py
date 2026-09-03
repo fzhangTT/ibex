@@ -409,7 +409,7 @@ def main() -> int:
                           info_scopes=info_scopes)
             cov["build_defines"] = {n: b.get("defines") for n, b in builds.items()}
             cov["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
-            cov["rulings"] = {"scope": C.RULING_SCOPE, "glitch": C.RULING_GLITCH}
+            cov["rulings"] = {"scope": C.ruling_scope_text(dut_scopes, info_scopes), "glitch": C.RULING_GLITCH}
             cov["constfiles"] = {n: b.get("constfile") for n, b in builds.items()}
             cov["measured_tests"] = sorted({r["test"] for r in runs if r.get("measured", True)})
         elif not any(r.get("measured", True) for r in runs):
@@ -426,7 +426,7 @@ def main() -> int:
                                         info_scopes=info_scopes)
             cov["unmeasured"]["tests"] = sorted({r["test"] for r in runs if not r.get("measured", True)})
             cov["unmeasured"]["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
-            cov["unmeasured"]["rulings"] = {"scope": C.RULING_SCOPE, "glitch": C.RULING_GLITCH}
+            cov["unmeasured"]["rulings"] = {"scope": C.ruling_scope_text(dut_scopes, info_scopes), "glitch": C.RULING_GLITCH}
         manifest["coverage"] = cov
         # Covergroups exist once URG reports a GROUP total in any merge of this regression.
         groups_seen = any((m_.get("totals") or {}).get("group") not in (None, C.NOT_APPLICABLE)

@@ -174,6 +174,12 @@ REAL_COCOTB = [
 ]
 
 
+def selftest_tmp():
+    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
+    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
+    return str(C.SELFTEST_TMP)
+
+
 def self_test() -> int:
     """Exercise the REAL decide_lines on real log excerpts; each case names the rule it pins."""
     B = [BANNER]
@@ -208,7 +214,7 @@ def self_test() -> int:
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
     # File-based decide(): the path gen_run.py takes (sim.log, stdout capture, stderr logs on disk).
     import tempfile
-    with tempfile.TemporaryDirectory(prefix="gen_verdict_selftest_") as td:
+    with tempfile.TemporaryDirectory(prefix="gen_verdict_selftest_", dir=selftest_tmp()) as td:
         d = Path(td)
         (d / "sim.log").write_text("\n".join(B + REAL_GREEN) + "\n", encoding="utf-8")
         (d / "sim_stdout.log").write_text("", encoding="utf-8")

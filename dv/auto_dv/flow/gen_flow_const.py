@@ -65,6 +65,7 @@ def site_value(key: str) -> str | None:
 
 STAGED_ENV_SH = "env.sh"
 ENV_TOOLCHECK_VAR = "IBEX_ENV_TOOLCHECK"
+SELFTEST_TMP = WORK_DIR / "selftest_tmp"   # scratch parent of every flow self-test (never the shared /tmp, F-001)
 REQUESTS_DIR = WORK_DIR / "requests"
 RUNNING_DIR = WORK_DIR / "running"
 DONE_DIR = WORK_DIR / "done"
@@ -115,9 +116,9 @@ VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all"]
 # Verified set from SIM_RECIPE Section 3; cond is the T-010 trial metric (see gen_runtime_api.md).
 COV_METRICS_VERIFIED = "line+tgl+assert+fsm+branch"
 COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
-# The glitch filter (-cm_glitch 0, intervention log LOG-008) is NOT a flow constant: once the DV
-# Lead rules, it goes into builds.<name>.extra_vcs_args of gen_testlist.yaml (Critic residual), and
-# round 0 is re-measured under the new flag set.
+# Standing rule: the glitch filter (-cm_glitch 0, ruled in LOG-008) is a build-entry knob
+# (builds.<name>.extra_vcs_args of gen_testlist.yaml), never a flow constant; this list is the
+# SIM_RECIPE Section 3 set only.
 COV_COMPILE_EXTRA = ["-cm_tgl", "portsonly", "-cm_tgl", "structarr", "-cm_report", "noinitial",
                      "-cm_seqnoconst"]
 COV_RUNTIME_EXTRA = ["-cm_log", "/dev/null", "-assert", "nopostproc"]
@@ -207,17 +208,25 @@ PROGRAM_SIDECAR = "prog.sym.json"
 SV_PLUSARG_MEM_IMAGE = "PLUSARG_MEM_IMAGE"
 SV_PLUSARG_MEM_IMAGE_CRC32 = "PLUSARG_MEM_IMAGE_CRC32"
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
-# cov_trees: coverage scope roots below tb_top (default [dut_instance]); the single source of the
-# -cm_hier scope (Critic P-04; the DV Lead rules on wrapper vs core+regfile).
+# cov_trees: the gated coverage roots below tb_top (single source of the -cm_hier scope; ruled:
+# the two inner instances, never nested).
 # info_trees: instrumented and reported informationally (the wrapper), never in the gate numbers.
 BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees", "info_trees")
-# DV Lead rulings applied by the flow (dv/auto_dv/docs/gen_tb_architecture.md Section 5).
-RULING_SCOPE = ("gen_tb_architecture.md Section 5: the gate numbers are the two inner instances u_dut.u_ibex_core and "
-                "u_dut.u_register_file combined per metric (sum of covered and of total objects); the wrapper "
-                "gen_dut_top is reported informationally, never gated")
+# DV Lead rulings applied by the flow (dv/auto_dv/docs/gen_tb_architecture.md Section 5). The scope
+# text names no instance: the names come from the build entry's cov_trees / info_trees (single source).
+RULING_SCOPE_TEMPLATE = ("gen_tb_architecture.md Section 5: the gate numbers are the gated cov_trees {gated} combined "
+                         "per metric (sum of covered and of total objects, percent = 100 x covered / total; the gated "
+                         "trees must not nest); the info_trees {info} are reported informationally, never gated")
 RULING_GLITCH = ("gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 "
                  "(builds.<name>.extra_vcs_args); FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])")
 GLITCH_FLAGS = ("-cm_glitch", "0")
+# Exported to every tool the flow launches (gen_program.py and friends) so the build-configuration
+# name has one home; a tool that reads it instead of its own constant stays in step with the flow.
+ENV_BUILD_CONFIG = "GEN_BUILD_CONFIG"
+
+
+def ruling_scope_text(gated: list[str], info: list[str]) -> str:
+    return RULING_SCOPE_TEMPLATE.format(gated=sorted(gated) or "[none]", info=sorted(info) or "[none]")
 # Testlist header policies: fcov_manifest_required_tiers (P-07), debug_only_plusargs (tb-arch P6).
 TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs")
 # Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).

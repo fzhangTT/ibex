@@ -71,9 +71,13 @@ def run_regression(a: argparse.Namespace, tag: str) -> Path:
 def regression_verdict(man: dict[str, Any]) -> dict[str, Any]:
     """What gen_regress.py would have exited with, recomputed from the manifest (for --collect)."""
     s = man.get("summary") or {}
-    cov = man.get("coverage") or {}
+    cov = man.get("coverage")
     bad_runs = int(s.get("fail", 0)) + int(s.get("timeout", 0)) + int(s.get("not_run", 0))
-    cov_ok = cov.get("status") in ("ok", "ok_no_measured_tests", None)
+    if not isinstance(cov, dict):
+        # No coverage block at all (regression without coverage, or interrupted): nothing to measure.
+        return {"verdict": "unknown", "status": man.get("status"), "bad_runs": bad_runs, "coverage_status": None,
+                "exclusion_violations": []}
+    cov_ok = cov.get("status") in ("ok", "ok_no_measured_tests")
     verdict = "clean" if (bad_runs == 0 and cov_ok and man.get("status") == "done") else "not clean"
     return {"verdict": verdict, "status": man.get("status"), "bad_runs": bad_runs, "coverage_status": cov.get("status"),
             "exclusion_violations": cov.get("exclusion_violations") or []}
@@ -187,6 +191,8 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
         U.die(f"{ev} exists; an evidence directory is never overwritten (pick another --round or --tag)")
     # Every refusal below happens before anything is written: a refused round leaves no directory.
     reg_verdict = regression_verdict(man)
+    if reg_verdict["verdict"] == "unknown":
+        U.die(f"regression {outdir} has no coverage block ({reg_verdict}); nothing to measure, not indexed")
     if reg_verdict["verdict"] != "clean" and not dry_run:
         U.die(f"regression {outdir} is not clean ({reg_verdict}); a round is indexed only for a clean regression")
     row = metric_row(cov)

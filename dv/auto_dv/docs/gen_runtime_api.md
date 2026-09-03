@@ -35,7 +35,8 @@ DV_prompt.txt Section 11 is this directory plus `gen_testlist.yaml`. Evidence th
   the flow or the fcov checker creates lives under the run's out directory (`TMPDIR` is pinned to
   the run dir for the checker). Any accidental listing of a path outside this clone, the shared out
   root or the mirror is a reportable event: record it in STATUS.md and report it to the Orchestrator
-  for the intervention log, without the content.
+  for the intervention log, without the content. Flow self-tests keep their scratch under
+  `dv/auto_dv/work/runtime/selftest_tmp/`.
 - **Constants home.** Paths, plusarg names, log markers, LSF defaults and schema keys live in
   `gen_flow_const.py` only. `python3 gen_flow_const.py --check` proves the plusarg names shared with
   the SV constants home `dv/auto_dv/tb/gen_tb_pkg.sv` are identical.
@@ -216,7 +217,10 @@ gen_regress.py --repro <test> <seed> [--waves]
   `u_dut.u_register_file`); `coverage.gate_row` is the gate number: the gated rows combined per
   metric by summing covered and total objects (from URG's `-show ratios` a/b), percent = 100 x
   covered / total, a metric no gated row reports stays `n/a` (`combine_rows` in gen_cov_report.py;
-  the rule text travels in `gate_row.rule`). `coverage.info_scope[<scope>]` holds the rows of the
+  the rule text travels in `gate_row.rule`). Precondition of the rule: the gated trees are disjoint
+  subtrees (URG hierarchy rows are cumulative over their children, so nested trees would double
+  count); `load_testlist` refuses a build whose `cov_trees` nest (`gen_flow_util.py --self-test`
+  proves it). `coverage.rulings.scope` names the trees from the build entries, never from a constant. `coverage.info_scope[<scope>]` holds the rows of the
   `info_trees` (the wrapper `u_dut`): instrumented and reported, never gated. Functional coverage
   (Group) comes from the grand total. Ratios (covered/total) are kept next to every percentage.
   `coverage.glitch_filter[<build>]` records whether `-cm_glitch 0` was in the build's flag set;
@@ -472,7 +476,10 @@ submitted, and appends the image plusargs the memory model declares in `gen_tb_p
 (`PLUSARG_MEM_IMAGE`, `PLUSARG_MEM_IMAGE_CRC32`; their strings are read from the package, and a
 program-driven test refuses to run until both are declared). `result.yaml: program` records the
 tool command, the seed used and its source (`run` or `fixed`), `prog.vmem` with sha256, the
-sidecar and its `checksum.crc32`, the generator build. The compiled riscv-dv generator is shared:
+sidecar and its `checksum.crc32`, the generator build. The flow exports `GEN_BUILD_CONFIG=opentitan`
+into the tool's environment (the one home of the configuration name is `gen_flow_const.BUILD_CONFIG`);
+`gen_program.py` and `gen_smoke_run.sh` carry their own copy today, so their owner (TB Infra) can
+read the variable instead, or the duplicate stays documented here as a known second home. The compiled riscv-dv generator is shared:
 `riscv_dv_gen_build:` in `dv/auto_dv/work/runtime/gen_site.yaml` (built once, on the shared root).
 
 ```
@@ -496,13 +503,15 @@ Build entry (`gen_testlist.yaml`, under `builds:`):
     description: real TB top around gen_dut_top, cocotb master, opentitan configuration
     tb_top: gen_tb_top
     dut_instance: u_dut
-    cov_trees: [u_dut]                    # or [u_dut.u_ibex_core, u_dut.u_register_file] per the DV Lead's P-04 ruling
+    cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]   # DV Lead ruling: the gated two inner instances (never nested)
+    info_trees: [u_dut]                                       # the wrapper, reported informationally, never gated
     filelists:
       - dv/auto_dv/tb/gen_rtl.f
       - dv/auto_dv/tb/gen_tb.f             # TB Infra's TB-side filelist (env, agents, binds, top)
     defines:
       - RVFI
     cocotb: true
+    extra_vcs_args: ["-cm_glitch", "0"]    # DV Lead ruling LOG-007/008: glitch filter on every measured build
 ```
 
 Test entry (under `tests:`; tier check because a bring-up milestone is not a regression-tier test):

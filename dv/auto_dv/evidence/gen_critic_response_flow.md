@@ -102,6 +102,19 @@ One line per finding: FIXED (where, validated by) or DISPUTED (why).
 | -cm_glitch 0 for every measured build | APPLIED | `extra_vcs_args: ["-cm_glitch", "0"]` on both build entries (per the Critic's residual, not a flow constant; the architecture document's sentence "Runtime makes it the default in gen_flow_const.py" describes the same intent at the testlist level); `build_manifest.glitch_filter`, `coverage.glitch_filter[<build>]`, `coverage.rulings`, round summary states the flag and that FSM is not glitch-filtered | rebaseline merge.log: zero Warning-[UCAPI-CSM], zero RCGLTCH (baseline had 14 and 1); LINE/COND/BRANCH equal the rtl-arch-001 trial numbers |
 | round 0 re-baselined like for like | DONE | `gen_round.py --dry-run --tests gen_smoke --seed-list 330815564 --evidence-name gen_round_0_rebaseline`: `dv/auto_dv/evidence/gen_round_0_rebaseline/` (labelled "check tier, unmeasured until real tests exist; the new like-for-like baseline"), index `dry_runs` entry with `rulings`, `glitch_filter` and the informational row; `gen_round_0_dryrun` stays as the pre-ruling record | LSF job in regress_round_0_rebaseline; dashboard regenerated with the ruling references in its header |
 
+## T-062: cross-model review of the T-055/T-057 range (dv/auto_dv/reviews/2026-09-03-claude-diff-8a8106bd-dc6de881.md), next landing
+
+| Finding | Status | Where | Validation |
+|---|---|---|---|
+| medium: RULING_SCOPE hard-coded the instance names | FIXED | `C.RULING_SCOPE_TEMPLATE` + `ruling_scope_text(gated, info)`; `gen_regress.py` fills it from the builds' cov_scopes / info_scopes; the dashboard header uses the generic text | constants check + regenerated dashboard; the manifest text can no longer disagree with the testlist |
+| medium: boots-and-retires template offered `cov_trees: [u_dut]`, lacked info_trees and the glitch flag | FIXED | gen_runtime_api.md Section 7e template: `cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]`, `info_trees: [u_dut]`, `extra_vcs_args: ["-cm_glitch", "0"]` | text |
+| medium: nested gated trees accepted; combine_rows would double count | FIXED | `gen_flow_util.nested_pairs()`; `load_testlist` refuses a build whose gated trees nest; precondition stated in `combine_rows` docstring, `gate_row.rule` and API Section 3 | `gen_flow_util.py --self-test`: nested pair detected, siblings and prefix-only names (`u_dut.a` vs `u_dut.ab`) accepted, a testlist with `u_dut.u_ibex_core` + `u_dut.u_ibex_core.cs_registers_i` is refused |
+| minor: regression_verdict treated a missing coverage block as clean | FIXED | `gen_round.regression_verdict()` returns `unknown` without a coverage block; `collect()` refuses it | code path |
+| minor: gen_stim.main did not validate its inputs | FIXED | `ap.error` unless exactly one of `--riscv-dv-test` / `--directed` | `gen_stim.py --seed 1 --out x` exits with the usage error |
+| minor: stale comments (glitch constant, dashboard docstring, cov_trees comment) | FIXED | restated as standing rules in gen_flow_const.py and gen_dashboard.py | text |
+| self-tests used the shared /tmp for their scratch (F-001 rule) | FIXED | `C.SELFTEST_TMP` (dv/auto_dv/work/runtime/selftest_tmp) is the parent of every self-test temporary directory | self-tests PASS; /tmp untouched |
+| minor: CONFIG_NAME second home in gen_program.py (third in gen_smoke_run.sh) | MITIGATED, owner informed | `gen_stim.py` exports `GEN_BUILD_CONFIG=opentitan` (`C.ENV_BUILD_CONFIG`) into the tool's environment; API Section 7e documents the trade-off; TB Infra (owner of both files) asked to read the variable or keep the documented duplicate | message to tb-infra |
+
 ## Other changes made while closing these findings
 
 - `gen_run.py --measured auto|yes|no` (gen_regress passes it; a mutation build forces no) and

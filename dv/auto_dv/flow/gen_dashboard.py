@@ -65,10 +65,11 @@ def metric_cell(cov: dict[str, Any], key: str) -> str:
 
 
 def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
-    """Code metrics from the DUT instance row of hierarchy.txt; functional coverage (GROUP) from
-    the grand total, because covergroups are TB-side gen_ instances that never appear under the
-    DUT instance (the Test Writer's gen_ namespace is the whole functional set). No fallback to
-    the grand total for code metrics: a missing DUT row shows n/a with a parse_error note."""
+    """Standing rule (gen_tb_architecture.md Section 5): code metrics from the gate row, the gated
+    cov_trees rows of hierarchy.txt combined by summing covered and total objects; functional
+    coverage (GROUP) from the grand total, because covergroups are TB-side gen_ instances that never
+    appear under the DUT instances. Never the grand total for code metrics: a missing gate row shows
+    n/a with a parse_error note."""
     cov = m.get("coverage") or {}
     if not cov.get("dashboard_txt") and (cov.get("unmeasured") or {}).get("dashboard_txt"):
         cov = cov["unmeasured"]
@@ -106,7 +107,8 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     L.append(f"Generated (UTC): {U.now_utc()}. Build configuration: `{C.BUILD_CONFIG}`. Out root: `{out_root}`.")
     L.append(f"Sources: {len(regs)} regression manifest(s), {len(requests)} run-request result(s). "
-             f"Code-coverage numbers are the gate row: {C.RULING_SCOPE}. Glitch filter: {C.RULING_GLITCH}. "
+             f"Code-coverage numbers are the gate row: {C.RULING_SCOPE_TEMPLATE.format(gated='of each build entry', info='of each build entry')}. "
+             f"Glitch filter: {C.RULING_GLITCH}. "
              "Functional coverage (Group) is the grand total, the gen_ covergroups being TB-side; "
              "`n/a` means URG did not report the metric (never 0 or 100, DV_prompt Section 4). "
              "Ratios are covered/total objects.")

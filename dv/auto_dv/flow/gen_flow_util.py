@@ -195,6 +195,12 @@ def render_fields(text: str, fields: dict[str, str], comment_prefixes: tuple[str
     return body + "\n"
 
 
+def selftest_tmp():
+    """Scratch parent for self-tests: under the runtime work tree, never the shared /tmp (F-001)."""
+    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
+    return str(C.SELFTEST_TMP)
+
+
 def self_test() -> int:
     """Render both checked-in templates and check the Tcl braces survive (review finding, T-010)."""
     ok = True
@@ -219,6 +225,27 @@ def self_test() -> int:
         print("SELF-TEST", "ok " if got == want else "BAD", f"plusarg_enabled({pa!r}) == {want}")
     ok &= plusarg_name("+vcs+finish+1000") == "vcs+finish+1000"
     print("SELF-TEST", "ok " if plusarg_name("+vcs+finish+1000") == "vcs+finish+1000" else "BAD", "plusarg_name keeps + inside vcs+ names")
+    # Gated trees must not nest (combine_rows would double count cumulative URG rows).
+    n1 = nested_pairs(["u_dut.u_ibex_core", "u_dut.u_ibex_core.cs_registers_i"])
+    n2 = nested_pairs(["u_dut.u_ibex_core", "u_dut.u_register_file"])
+    n3 = nested_pairs(["u_dut.a", "u_dut.ab"])
+    cond = n1 == [("u_dut.u_ibex_core", "u_dut.u_ibex_core.cs_registers_i")] and n2 == [] and n3 == []
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"nested gated trees detected, siblings and prefix-only names accepted: {n1} {n2} {n3}")
+    import tempfile
+    import yaml as _y
+    with tempfile.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=selftest_tmp()) as td:
+        t = load_yaml(C.TESTLIST_YAML)
+        t["builds"]["gen_smoke"]["cov_trees"] = ["u_dut.u_ibex_core", "u_dut.u_ibex_core.cs_registers_i"]
+        bad = Path(td) / "testlist_nested.yaml"
+        bad.write_text(_y.safe_dump(t, sort_keys=False), encoding="utf-8")
+        try:
+            load_testlist(bad)
+            cond = False
+        except SystemExit:
+            cond = True
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", "load_testlist refuses a testlist whose gated trees nest")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -259,6 +286,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: build {bname} info_trees must be a list of instance paths below tb_top")
         if info and trees and set(info) & set(trees):
             die(f"{path}: build {bname}: a tree cannot be both gated (cov_trees) and informational (info_trees)")
+        nested = nested_pairs(trees or [])
+        if nested:
+            die(f"{path}: build {bname}: gated cov_trees must not nest (URG hierarchy rows are cumulative over "
+                f"children, the combining rule would double count): {nested}")
     names = set()
     for t in tests:
         for k in C.TEST_REQUIRED_KEYS:
@@ -307,6 +338,16 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                 die(f"{path}: test {t['name']} plusarg {pa!r}: name {name!r} is neither a PLUSARG_* of "
                     f"{C.TB_PKG_SV.name} nor a simulator/UVM plusarg (P-06 single source)")
     return data
+
+
+def nested_pairs(trees: list[str]) -> list[tuple[str, str]]:
+    """(ancestor, descendant) pairs among instance paths; a.b is an ancestor of a.b.c, not of a.bc."""
+    out = []
+    for x in trees:
+        for y in trees:
+            if x != y and y.startswith(x + "."):
+                out.append((x, y))
+    return out
 
 
 def plusarg_name(pa: str) -> str | None:

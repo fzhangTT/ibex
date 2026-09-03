@@ -33,7 +33,10 @@ RATIO_RE = re.compile(r"^\d+/\d+$")
 def combine_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """The gate row over several DUT scopes (DV Lead ruling, gen_tb_architecture.md Section 5): per
     metric, covered and total objects are summed over the rows that report the metric (from URG's
-    -show ratios a/b); percent = 100 * covered / total; a metric no row reports stays n/a."""
+    -show ratios a/b); percent = 100 * covered / total; a metric no row reports stays n/a.
+    PRECONDITION: the scopes are disjoint subtrees (no scope is an ancestor of another); URG's
+    hierarchy rows are cumulative over children, so nested scopes would double count. load_testlist
+    refuses nested cov_trees; this function trusts that."""
     out: dict[str, Any] = {m: C.NOT_APPLICABLE for m in C.URG_METRICS}
     out["score"] = C.NOT_APPLICABLE
     ratios: dict[str, str] = {}
@@ -52,7 +55,8 @@ def combine_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             ratios[m] = f"{cov_sum}/{tot_sum}"
     out["ratios"] = ratios
     out["combined_from"] = [r.get("instance") for r in rows]
-    out["rule"] = "sum of covered and of total objects per metric over the gated scopes; percent = 100 * covered / total"
+    out["rule"] = ("sum of covered and of total objects per metric over the gated scopes (disjoint subtrees, never nested); "
+                   "percent = 100 * covered / total")
     return out
 
 
