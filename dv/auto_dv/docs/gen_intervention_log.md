@@ -955,3 +955,15 @@ record so the irq checker evaluates it, a report-time referee irq_chk.entries_se
 mismatch, both words of a spanning access consumed by take() and announced minus taken reported as an error when
 non-zero, the mutation record carrying the build sha per mutant with MB3/MB6/MB7/MUT-I/J/K re-run on the landed tree
 or labelled as earlier-tree evidence. LOG-037's "every intr record" sentence is corrected by this entry.
+
+## LOG-038 - 2026-09-03 - GO (cycle-clause sunset pass 2)
+
+Reference for pass 2: Runtime's head-mode regression pinned to 979350a (canary_head_t150 PASS; gen_ut_export plus
+the five T-150 export-observing entries gen_ut_export_irq_storm, gen_ut_export_dbg_storm, gen_ut_export_scrkey_delayed,
+gen_ut_export_rows_nmi, gen_ut_export_rows_dbg; six runs PASS, UVM_ERROR 0, LSF jobs 10941862..10941867), build manifest
+/proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml with export_rows_observed
+covering all 28 declared rows (the nine rows pass 1 never observed are first-seen here) and nothing outside the
+declared set. The DV Lead runs pass 2 as landing v2m after the joint 3e + v2l commit, retains the manifest copy and
+the logs under dv/auto_dv/evidence/gen_sunset_pass2/, and cites the tracked paths. Expected: the 86 items gated in
+pass 1 release; the 17 icram-dependent items, TP-PMC-001 and TP-REG-018 stay marked until an icram writer exists.
+Releasing a token changes which witness bins are must-hit; no result enters the Phase 1 numbers through this.
