@@ -50,6 +50,23 @@ changes 1–6, triage tables, and supersession list are the fence-line authority
   touch it (controller ticks).
 - Waves: Tasks 1+2+3 parallel (disjoint files); Task 4 (gate) serial after all three; Task 5 (docs +
   closures) last.
+- **Pre-review folds (APPROVE-WITH-CHANGES, artifact 2026-09-02-claude-plan-ws7-export-path.md)
+  are BINDING on all tasks** — headline items: default-deny inversion (`dv` and `docs/dv` wholesale
+  with explicit ALLOW restores), `vendor/riscv?isa?sim*` glob deny, riscv-dv pristine-upstream fetch
+  (ruling: fetch at lock rev + empty-diff verify + keep lock + drop vendor.hjson; BLOCKED to owner if
+  network fails), `.github` deny, item-9-aligned identifier scans (discovery = self-check =
+  acceptance, one command), canary enum with named failures, `ci/cleanroom-inventory.txt` tripwire
+  (restores spec:139's triage-on-add property), non-empty-DEST guard, `set -euo pipefail`, Zone A
+  variants of `dv_principles.md`/`.codex/compat/validator.py`/`ci/mcp/probes/fsdb_probe.py`, triad
+  mirrors re-anchored to the ZONE A canonical block, `FENCE-ZONE: A` markers in the first ten lines
+  of Zone A CLAUDE.md/AGENTS.md, dated `fence-integrity: PASS` markers, `work/` in
+  `dv/auto_dv/.gitignore`, wrapper rubric-basename literals.
+- Deferred-list additions (named per the review): spec:139 unclassifiable-path rejection is only
+  PARTIALLY restored by the inventory tripwire; spec §WS7 enforcement-stack layer 2 (Zone A
+  permission rules / sandboxing) neither implemented nor previously deferred — now explicitly
+  deferred; amendment change-4 boundary escape cases ("fetch master", "read sibling clone" — the
+  data-reach ruling's own test —, "fetch upstream ibex DV", the fsdb negative control) are what the
+  deferred harness contains; the self-verify covers contents, not boundary behaviour.
 
 ---
 
@@ -220,13 +237,29 @@ changes 1–6, triage tables, and supersession list are the fence-line authority
 - [ ] **Step 1:** `bash ci/make-cleanroom.sh /localdev/fzhang/ws/ibex-cleanroom` — full verify green
   (all checks a–e; canary mode separately re-proven). Save raw verify output.
 - [ ] **Step 2 (the irreducible gate):** in the export, following ONLY `docs/dv/SIM_RECIPE.md`,
-  write a minimal `gen_smoke_tb.sv` (clock gen + `gen_dut_top` instantiation per the amendment's DUT
-  ruling + one bind-free assertion + `$finish`) under `dv/auto_dv/`, compile and run it with VCS via
-  the recipe's commands (fresh out dir inside the export; `timeout 2700`; watchdog). PASS = clean
-  elaboration + simulation exit 0 + the assertion exercised (force a bench-level stimulus toggle).
-  If the recipe is insufficient to get this working WITHOUT consulting fenced docs, that is a
-  RECIPE defect: fix `ci/cleanroom-overlay/docs/dv/SIM_RECIPE.md` (never the fence), re-export,
-  re-run — record each iteration honestly.
+  write a minimal `gen_smoke_tb.sv` + `gen_dut_top.sv` under `dv/auto_dv/`. The wrapper per the
+  amendment's DUT ruling AND the `opentitan` config's reality: instantiate `ibex_core` +
+  `ibex_register_file_ff`; tie `cheriot_enable_i` to `IbexMuBiOff` (the 23 CHERI-touching files are
+  in the compile, out of coverage scope); tie off or stub the ICache RAM ports and answer the
+  scramble-key request as bench equipment (ICache/ICacheECC/ICacheScramble=1 in this config);
+  SecureIbex tie-offs as needed. RTL filelist: drive fusesoc from the shipped `.core` files or
+  assemble by hand from `rtl/**` — the recipe documents the route (TB file lists are excluded from
+  the recipe by the change-6 allowlist, RTL filelists are not). Budget: this is a first-ever
+  hand-rolled elaboration — run as an explicit multi-invocation loop (each invocation
+  `timeout 2700`, watchdog; record every iteration honestly). A recipe insufficiency is a RECIPE
+  defect: fix `ci/cleanroom-overlay/docs/dv/SIM_RECIPE.md` (never the fence), re-export, re-run.
+  PASS = clean elaboration + simulation exit 0 + the assertion exercised (bench-level stimulus
+  toggle). ON PASS: write the dated `executed-on:` marker into
+  `ci/cleanroom-overlay/docs/dv/SIM_RECIPE.md` (precondition 3 — the gate and the precondition are
+  the same artifact).
+- [ ] **Step 2b (upstream spike):** clone upstream `riscv/riscv-isa-sim` (github) into the export's
+  tool area and build it per the recipe (`timeout 3600`, watchdog) — precondition 3's
+  `spike-built-on:` marker requires it built on this site. On success write the dated marker next to
+  `executed-on:`. If the clone/build fails structurally, record BLOCKED state in the ledger and
+  surface to the owner (generation cannot launch without it) — do not fake the marker.
+- [ ] **Step 2c (Section-12 run):** transcribe `DV_prompt.txt` Section 12 items 2–9 into
+  `docs/dv/evidence/ws7-gate/section12-checklist.txt` and RUN each grep-able check against the
+  export; every item PASS (or the named blocker recorded). This is the launch-precondition proof.
 - [ ] **Step 3:** cleanroom mex: `mex setup` inside the export (its own instance; graph/wiki from
   visible files only), `mex check` green; save output.
 - [ ] **Step 4:** Close WS5 gate item 3 in `docs/dv/process-logs/ws5/progress.md`: the export's
@@ -245,15 +278,26 @@ changes 1–6, triage tables, and supersession list are the fence-line authority
 - Modify: `ci/mcp/README.md`, `ci/mcp/{siliconpilot-mcp,fsdb-mcp,verdi-cov-mcp}.sh` header comments,
   `.codex/config.toml` header, `ci/env.sh` MCP-block comment (amendment supersession list: retire
   the "Zone B only / no MCP in cleanroom" wording → "cleanroom ships the three local servers; see
-  FENCE.md"); `CLAUDE.md` Critical Invariant 2 (fence authority now exists: generation sessions
-  permitted only in a verified cleanroom export; `FENCE.md` is the rule file); session handoff.
+  FENCE.md"); `docs/superpowers/specs/2026-09-01-auto-dv-setup-design.md` (the two remaining
+  supersession entries: §WS5 zone-scoping paragraph + gate item; §WS7 enforcement-stack item 2 +
+  "query an MCP" escape case — one-line strike-and-point-at-amendment edits); `CLAUDE.md` **and
+  `AGENTS.md` in the same commit** (Critical Invariant 2: generation sessions permitted only in a
+  verified cleanroom export, `FENCE.md` is the rule file — the validator asserts the invariants
+  block byte-identical across the pair); session handoff.
 
 - [ ] **Step 1:** Write `FENCE.md` (STE): what is fenced and why (point at the deny array as the
-  single list); the one-command export + update-by-re-export workflow; landing workflow
-  (`check-landing.sh` + human review); Zone B evaluation protocol (single evaluation run, nothing
-  returns — mechanical ack only); the honor rules for humans operating both zones; the
-  **deferred-machinery list** (snapshot branch + sync automation, fence.yaml promotion, full escape
-  harness, zoneb-run referee attachment — with the amendment/spec sections that specify each).
+  single list); the **`ci/` allowlist** naming at least `ci/env.sh`, `ci/setup-venv.sh`,
+  `ci/get-toolchain.sh`, `ci/check_fcov_expectations.py`, `ci/mcp/`, `ci/reviews/` (precondition 2);
+  the dated `riscv-dv-verified-on:` line from Task 1's pristine-fetch verification; the one-command
+  export + **update workflow** (export to a NEW dir; `git format-patch`/`git am` the `dv/auto_dv/**`
+  commits across — `check-landing.sh` validates them; the script refuses a non-empty DEST without
+  `--force`); landing workflow (`check-landing.sh` + human review); Zone B evaluation protocol
+  (single evaluation run, nothing returns — mechanical ack only); honor rules; the
+  **deferred-machinery list** (snapshot branch + sync automation; fence.yaml promotion; full escape
+  harness — NAMING its contents: "fetch master", "read sibling clone" [the data-reach ruling's own
+  test], "fetch upstream ibex DV", fsdb negative control; zoneb-run referee attachment; spec §WS7
+  enforcement-stack layer 2 Zone A permission rules; full spec:139 triage-on-add beyond the
+  inventory tripwire — each with its authority section).
 - [ ] **Step 2:** Apply the supersession edits (each one line); validator PASS (CLAUDE.md changed).
 - [ ] **Step 3:** Update the session-2 handoff (WS7+WS6 state, deferred list, the export path
   decision with the owner directive cited).
