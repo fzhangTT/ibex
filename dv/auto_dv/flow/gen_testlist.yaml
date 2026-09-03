@@ -345,16 +345,17 @@ tests:
     measured: false
 
   - name: gen_test_rst_boot_red
-    description: red fixture of gen_test_rst_boot; the generated program stores the mstatus reset read-back with MPIE toggled, so fire_tp_rst_006 must FAIL (RED-OK)
+    description: 'TDD red fixture of gen_test_rst_boot, pinned to TP-RST-006 (generator --red --red-item TP-RST-006): the stored mstatus reset read-back carries MPIE toggled, so exactly fire_tp_rst_006 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\): fire_tp_rst_006'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-RST-006]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -392,16 +393,17 @@ tests:
     measured: false
 
   - name: gen_test_csr_reset_red
-    description: TDD red fixture of gen_test_csr_reset; the program writes mscratch before its reset value is read (one instruction replaced); FAILs by design (RED-OK)
+    description: 'TDD red fixture of gen_test_csr_reset, pinned to TP-CSR-106 (generator --red --red-item TP-CSR-106): one TP-CSR-106 read is re-targeted to a CSR whose reset value differs, so exactly fire_tp_csr_106
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\): fire_tp_csr_106'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-CSR-106]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -439,16 +441,17 @@ tests:
     measured: false
 
   - name: gen_test_csr_access_red
-    description: TDD red fixture of gen_test_csr_access; the first TP-CSR-001 sequence is forced to csrrw with one writable operand bit flipped in the program only, so fire_tp_csr_001 must FAIL (RED-OK)
+    description: 'TDD red fixture of gen_test_csr_access, pinned to TP-CSR-001 (generator --red --red-item TP-CSR-001): one writable operand bit of a TP-CSR-001 sequence is flipped in the program only, so
+      exactly fire_tp_csr_001 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\): fire_tp_csr_001'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_access_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-CSR-001]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -486,17 +489,17 @@ tests:
     measured: false
 
   - name: gen_test_csr_trap_setup_red
-    description: TDD red fixture of gen_test_csr_trap_setup; the program writes one TP-CSR-036 mtvec operand with bit 8 flipped while plan() keeps the intended expectation, so fire_tp_csr_036 FAILs by design
-      (RED-OK)
+    description: 'TDD red fixture of gen_test_csr_trap_setup, pinned to TP-CSR-036 (generator --red --red-item TP-CSR-036): one TP-CSR-036 mtvec operand is written with bit 8 flipped, so exactly fire_tp_csr_036
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\): fire_tp_csr_036'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-CSR-036]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -534,16 +537,17 @@ tests:
     measured: false
 
   - name: gen_test_cmp_zcb_red
-    description: TDD red fixture of gen_test_cmp_zcb; the program emits one Zcb ALU form as a different form while the expectation keeps the true form; FAILs by design (RED-OK)
+    description: 'TDD red fixture of gen_test_cmp_zcb, pinned to TP-CMP-036 (generator --red --red-item TP-CMP-036): one Zcb ALU form is emitted as a different form, so exactly fire_tp_cmp_036 FAILs by design
+      (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\): fire_tp_cmp_036'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcb_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-CMP-036]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -581,16 +585,17 @@ tests:
     measured: false
 
   - name: gen_test_cmp_zcmp_basic_red
-    description: TDD red fixture of gen_test_cmp_zcmp_basic; one plain cm.push is emitted with the other spimm bit while the plan keeps the true expectation (sp_new off by 16); FAILs by design (RED-OK)
+    description: 'TDD red fixture of gen_test_cmp_zcmp_basic, pinned to TP-CMP-039 (generator --red --red-item TP-CMP-039): one plain cm.push is emitted with the other spimm bit (sp_new off by 16; the frame
+      checks 042/043 also trip), so exactly fire_tp_cmp_039 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\): fire_tp_cmp_039'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-CMP-039]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -628,16 +633,17 @@ tests:
     measured: false
 
   - name: gen_test_bit_draft_red
-    description: red fixture of gen_test_bit_draft; the program deviates on one grevi/gorci immediate while the plan keeps the true expectation, so the fire-check must fail (RED-OK)
+    description: 'TDD red fixture of gen_test_bit_draft, pinned to TP-BIT-016 (generator --red --red-item TP-BIT-016): one gorci immediate deviates while the plan keeps the true expectation, so exactly fire_tp_bit_016
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\): fire_tp_bit_016'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_bit_draft_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-BIT-016]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
@@ -675,16 +681,17 @@ tests:
     measured: false
 
   - name: gen_test_pmp_csr_warl_red
-    description: TDD red fixture of gen_test_pmp_csr_warl; the program writes one TP-PMP-001 pmpcfg byte with a flipped A field; FAILs by design (RED-OK)
+    description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure'
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\): fire_tp_pmp_001'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
     plusargs: [+gen_fetch_en_at_reset=0]
     program:
       generator: dv/auto_dv/tests/gen_programs/gen_pmp_csr_warl_prog.py
-      generator_args: [--red]
+      generator_args: [--red, --red-item, TP-PMP-001]
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 1
