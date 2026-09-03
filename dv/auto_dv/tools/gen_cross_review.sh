@@ -12,7 +12,7 @@ set -euo pipefail
 # Run from a private copy: bash reads scripts incrementally, so an edit to this file while a
 # review is in flight would otherwise be executed at a stale offset.
 if [ -z "${GEN_XR_RELOCATED:-}" ]; then
-  _xr_root=$(git rev-parse --show-toplevel)/dv/auto_dv/work/orchestrator/review_tmp; mkdir -p "$_xr_root"; _self_copy=$(mktemp "$_xr_root/self.XXXXXX.sh"); cp "$0" "$_self_copy"
+  _xr_root=$(git rev-parse --show-toplevel)/dv/auto_dv/work/orchestrator/review_self; mkdir -p "$_xr_root"; _self_copy=$(mktemp "$_xr_root/self.XXXXXX.sh"); cp "$0" "$_self_copy"
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
 trap 'rm -f "$GEN_XR_RELOCATED"' EXIT
@@ -37,7 +37,7 @@ probe_codex() {
 }
 
 if [ "$REVIEWER" = codex ] || { [ "$REVIEWER" = auto ] && probe_codex; }; then
-  exec bash "$WRAP" "$MODE" "$@"
+  rm -f "$GEN_XR_RELOCATED"; exec bash "$WRAP" "$MODE" "$@"
 fi
 [ "$REVIEWER" != codex ] || { echo "PROTOCOL ERROR: REVIEWER=codex forced but codex unavailable: $CODEX_ERR" >&2; exit 1; }
 [ -n "$CODEX_ERR" ] || CODEX_ERR="REVIEWER=claude forced by caller"
@@ -75,7 +75,7 @@ mkdir -p dv/auto_dv/reviews
 ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}.md"
 # Never overwrite an earlier round: plan and replan targets keep their basename across rounds.
 _r=2; while [ -e "$ART" ]; do ART="dv/auto_dv/reviews/${DATE}-claude-${NAME}-r${_r}.md"; _r=$((_r+1)); done
-XR_TMP="$REPO/dv/auto_dv/work/orchestrator/review_tmp"; mkdir -p "$XR_TMP"; PROMPT_F=$(mktemp "$XR_TMP/prompt.XXXXXX")
+mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$REPO/dv/auto_dv/work/orchestrator/review_tmp/run.XXXXXX"); PROMPT_F="$XR_TMP/prompt.txt"
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.
 ${SCOPE_LINE}
@@ -86,18 +86,24 @@ End with exactly one line: 'Final verdict: APPROVE' or 'Final verdict: APPROVE-W
 ${RUBRICS}
 PEOF
 
-XR_TMP="$REPO/dv/auto_dv/work/orchestrator/review_tmp"; mkdir -p "$XR_TMP"
-RAW=$(mktemp "$XR_TMP/raw.XXXXXX"); RC=0
+RAW="$XR_TMP/raw"; RC=0
 # 60 min: bounded per the site watchdog rule.
-# OS-level read-only sandbox (bubblewrap, unprivileged): the whole filesystem is bound read-only, so the
-# reviewer cannot modify the clone whatever the user-level tool permissions allow (mirrors the codex
-# wrapper's --sandbox read-only). Writable: the CLI's own state under $HOME/.claude and this run's
-# output directory. Network stays up for the model API; web tools are disallowed by the fence.
+# OS-level sandbox (bubblewrap, unprivileged): the filesystem is bound read-only except this run's own
+# output directory, so the reviewer cannot modify the clone. Network stays open because the model API
+# needs it (a residual the codex sandbox does not have); web tools are disallowed by policy.
 command -v bwrap >/dev/null || { echo "PROTOCOL ERROR: bwrap (bubblewrap) is required for the read-only reviewer sandbox"; exit 1; }
-SANDBOX=(bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --bind "$XR_TMP" "$XR_TMP" --bind "$HOME/.claude" "$HOME/.claude")
-[ -f "$HOME/.claude.json" ] && SANDBOX+=(--bind "$HOME/.claude.json" "$HOME/.claude.json")
-timeout 3600 "${SANDBOX[@]}" -- claude -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
-  --allowedTools "Read,Grep,Glob,Bash" --disallowedTools "Write,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch,Agent" \
+# Scratch HOME for the reviewer: only the CLI's credentials and account state are copied in, so the
+# executing model's settings, global instructions, memory and hooks are neither readable nor writable
+# from the sandbox. The reviewer's tool permissions therefore come from this command line alone.
+RUN_HOME="$XR_TMP/home"; mkdir -p "$RUN_HOME/.claude"
+[ -f "$HOME/.claude.json" ] && cp "$HOME/.claude.json" "$RUN_HOME/.claude.json"
+[ -f "$HOME/.claude/.credentials.json" ] && install -m 600 "$HOME/.claude/.credentials.json" "$RUN_HOME/.claude/.credentials.json"
+# The CLI itself is installed under $HOME on this host; expose that install read-only inside the scratch HOME.
+CLAUDE_BIN=$(readlink -f "$(type -P claude)") || { echo "PROTOCOL ERROR: claude CLI not found"; exit 1; }
+SANDBOX=(bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc --tmpfs /tmp --bind "$XR_TMP" "$XR_TMP" --bind "$RUN_HOME" "$HOME")
+[ -d "$HOME/.local" ] && SANDBOX+=(--ro-bind "$HOME/.local" "$HOME/.local")
+timeout 3600 "${SANDBOX[@]}" -- "$CLAUDE_BIN" -p --model "$MODEL" --effort "$EFFORT" --permission-mode dontAsk \
+  --allowedTools "Read,Grep,Glob,Bash" --disallowedTools "Write,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch,Agent,Workflow" \
   --output-format json <"$PROMPT_F" >"$RAW.json" 2>"$RAW.err" || RC=$?
 if [ "$RC" -eq 124 ]; then echo "PROTOCOL ERROR: claude review timed out after 3600s; raw kept at $RAW.json"; exit 1
 elif [ "$RC" -ne 0 ]; then echo "claude -p failed (rc=$RC)"; cat "$RAW.err" >&2; exit 1; fi
@@ -135,7 +141,7 @@ fi
 {
   echo "# Cross-model review - ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap read-only filesystem (writes into the clone fail with EROFS), web tools disallowed (fallback reviewer per owner ruling A-001)"
+  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap, filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
@@ -144,6 +150,6 @@ fi
   echo
   cat "$RAW"
 } >"$ART.tmp" && mv "$ART.tmp" "$ART"
-rm -f "$PROMPT_F" "$RAW" "$RAW.json" "$RAW.err" "$RAW.meta"
+rm -rf "$XR_TMP"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
