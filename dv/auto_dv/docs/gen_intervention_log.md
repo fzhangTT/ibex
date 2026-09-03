@@ -1152,3 +1152,13 @@ it, but no plan item that needs a mid-run regime change is credited until the ru
 (landing 3h, with 3g): fix the runner, add a red where a scheduled c-triggered entry is not applied (fail loud on the TB
 side as well if the dispatcher was never called), retain a green with idx>0 GEN_TEST_PHASE lines and re-run the 13
 failing acceptance seeds; round 0 dispatches after 3h is committed and reviewed.
+
+## LOG-042b - 2026-09-03 - RULING (plan hold for the schedule-runner defect, Section 1.6)
+
+Until the Test Writer's 3h (the 3e schedule runner applying mid-run phases, with a red and a green showing an idx>0
+phase) is committed and reviewed, the plan holds every item whose stimulus depends on a mid-run regime change: the
+union of a group rule (Test group gen_reg_* or *regime*; preview 71 items in 11 groups, none promoted for round 0) and a
+stimulus-text rule (Stimulus or Preconditions name a mid-run regime change, a layer-3 schedule phase or a knob switched
+during the run, in the plan's own vocabulary); not every Phase-2 item. The DV Lead emits the hold as Section 0 bullet
+T-181 and a generated Section 1.6 whose heading prints the group count, the text count and the union; the hold lifts
+by removing both in the revision that cites the reviewed 3h commit. Round-0 crediting is unaffected by this hold.
