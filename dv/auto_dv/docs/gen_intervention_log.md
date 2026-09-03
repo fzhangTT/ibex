@@ -737,3 +737,16 @@ must stay green under it. No PMP-denial or bus-error test is credited before T-1
 reviewers have passed it. The T-102b medium is closed: the trap-record offset on a Zcmp micro-op is 0 per
 rtl-arch R9 (the Critic's earlier "length 2" is corrected in its verdict), and plan C-1/C-12 must state the
 RTL convention (DV Lead, v2i).
+
+## LOG-028 - 2026-09-03 - RULING (emitted set usable for the sunset except regime and pin until observed)
+
+The cross-model review of step 2 (dv/auto_dv/reviews/2026-09-03-claude-diff-1215244d-4acef549.md,
+APPROVE-WITH-CHANGES) finds that the regime-phase and pin debug_req writers have never been observed emitting
+(zero lines in all analysed runs), that the "active source without a writer" fatal runs only when the export
+is enabled, and that registration is done by gen_env on the writers' behalf so a deleted writer leaves the
+header, manifest and fatal path agreeing on a source nothing emits. Ruling: the emitted set rendered at 4acef54
+may drive the first bulk token removal for items whose export rows come from ibus, dbus, alert, misc and
+scrkey; items whose rows come from regime or pin keep their coverage-only token until tb-infra retains one run
+with a REGIME_SET and a DBG_REQ assert/release with hand-checked first lines (CM8-M-3). tb-infra moves the
+writer fatal ahead of the enabled check, has each writer register its own source, and adds the two bus count
+rules to read() with a mutation each (CM8-M-1, CM8-M-2) in the follow-up landing.
