@@ -22,15 +22,15 @@ Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/mutations/mut003_*` (manifest `
       the agent banner reads "sva_rvalid_legal disabled by knob", cocotb PASS, flow verdict PASS: the mutation
       SURVIVES with the detector disabled, so nothing else in the TB catches it.
     reverted: dv/auto_dv/env/gen_agents_pkg.sv restored from the pre-mutation copy; cmp reports identical
-      (mutations_driver_t068.log line "reverted: identical"; final line "sources identical to pre-mutation").
+      (gen_mutations_driver_t068.log line "reverted: identical"; final line "sources identical to pre-mutation").
 
-Attempt 1 (retained as `mut003_attempt1_*`): the mutation `p.due = cycle` (respond in the grant cycle) did NOT
+Attempt 1 (retained as `gen_mut003_attempt1_*`): the mutation `p.due = cycle` (respond in the grant cycle) did NOT
 fire because the driver's response side runs before its request side within one falling edge, so the response
 came one cycle after the grant, which is legal (0 errors in all three runs). It is kept as evidence that the
 check is not trivially noisy; the recorded mutation above is the one that violates the rule.
 
-Identifying log lines (mut003_isolated_stdout.log, which carries the VCS assertion report, the UVM error and
-the cocotb summary; the same UVM lines are in mut003_isolated_sim.log):
+Identifying log lines (gen_mut003_isolated_stdout.log, which carries the VCS assertion report, the UVM error and
+the cocotb summary; the same UVM lines are in gen_mut003_isolated_sim.log):
 
 ```
 "dv/auto_dv/tb/gen_bus_if.sv", 47: gen_tb_top.u_ibus_if.sva_rvalid_legal: started at 95000ps failed at 95000ps
@@ -40,5 +40,5 @@ UVM_ERROR @ 12500: reporter [sva_rvalid_legal] ibus: rvalid with no outstanding 
 [sva_rvalid_legal]     2
 ** TESTS=1 PASS=1 FAIL=0 SKIP=0
 ```
-Ablation (mut003_ablation_sim.log): `uvm_test_top.env.ibus_agent: sva_rvalid_legal disabled by knob`, `UVM_ERROR :    0`,
+Ablation (gen_mut003_ablation_sim.log): `uvm_test_top.env.ibus_agent: sva_rvalid_legal disabled by knob`, `UVM_ERROR :    0`,
 verdict.txt `verdict: PASS`.

@@ -92,9 +92,9 @@ FAIL, so the run fails through collected mechanisms, never through the exit code
 ## 5. T-068 (2026-09-03): retention audit, the uvm_error path forced red, new guards
 
 Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/bridge/` (manifest `gen_tdd_logs/gen_manifest.md`). The 1b
-logs quoted in Sections 1-4 are retained there as `handles_red.log`, `handles_green.log`, `bridge_red.log`,
-`ut_bridge_red_1b_sim.log`, `ut_bridge_green_1b_*.log`, `neg_noalive_1b_*.log`, `neg_unknown_plusarg_1b_*.log`,
-`neg_bad_enum_1b_*.log`.
+logs quoted in Sections 1-4 are retained there as `gen_handles_red.log`, `gen_handles_green.log`, `gen_bridge_red.log`,
+`gen_ut_bridge_red_1b_sim.log`, `gen_ut_bridge_green_1b_*.log`, `gen_neg_noalive_1b_*.log`, `gen_neg_unknown_plusarg_1b_*.log`,
+`gen_neg_bad_enum_1b_*.log`.
 
 Correction to Section 2: the two compile defects disclosed there (5 UTOPN, 10 ICPD_INIT) have no retained
 compile log; `out_1b_red/compile.log` is the third, clean compile. They are UNRETAINED (the fixes are visible in
@@ -105,7 +105,7 @@ the code: `ibex_cheriot_pkg::cap_t`, `always` in gen_bridge_if).
 The dangerous form for a cocotb-master TB is cocotb PASS with UVM_ERROR > 0. Two runs show it and the flow's
 verdict (`gen_verdict.decide`, the same function `gen_run.py` uses) fails both:
 
-1. Accidental evidence from step 1c (retained `ut_bridge_1c_uvm_error_sim.log` / `_stdout.log`): gen_ut_bridge's
+1. Accidental evidence from step 1c (retained `gen_ut_bridge_1c_uvm_error_sim.log` / `_stdout.log`): gen_ut_bridge's
    REGIME_SET command reached `gen_cmd_dispatch`, which errors on a kind without a consumer:
    ```
    UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(84) @ 5500: uvm_test_top.env.dispatch [GEN_CMD_DISPATCH] command REGIME_SET has no consumer yet
@@ -115,7 +115,7 @@ verdict (`gen_verdict.decide`, the same function `gen_run.py` uses) fails both:
    Verdict on that log (run by the step-1c reviewer and again in T-068): FAIL, uvm_error.
 2. Deliberate run on the T-068 build, `neg_uvm_error_cocotb_pass` (gen_ut_bridge with `+gen_boot_addr=00000000`:
    the first fetch hits the unmapped page, every fetch is a collected `MEM_UNMAPPED` error, the bridge test
-   itself passes). Retained `neg_uvm_error_cocotb_pass_t068_sim.log`, `_stdout.log`, `_verdict.txt`:
+   itself passes). Retained `gen_neg_uvm_error_cocotb_pass_t068_sim.log`, `_stdout.log`, `_verdict.txt`:
    ```
    UVM_ERROR @ 9000: reporter [MEM_UNMAPPED] read of unmapped address 0x00000080
    UVM_ERROR :   23
@@ -131,16 +131,16 @@ verdict (`gen_verdict.decide`, the same function `gen_run.py` uses) fails both:
 
 ### 5.2 New guards proven red on the T-068 build
 
-- Bare bool plusarg (`neg_bare_bool_t068_sim.log`): `+gen_chk_all` without `=`:
+- Bare bool plusarg (`gen_neg_bare_bool_t068_sim.log`): `+gen_chk_all` without `=`:
   `UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(200) @ 0: uvm_test_top [GEN_BARE_PLUSARG] +gen_chk_all needs =0 or =1 (a bare bool plusarg would be a silent no-op)`; verdict FAIL uvm_fatal.
 - Vacuous-pass guard (TB_CONTRACT Section 6): a pure-SV build of gen_tb_top (no `+define+COCOTB_SIM`, no cocotb
-  triple; `dv/auto_dv/work/tb-infra/out_t068_nococotb`, vcs exit 0) run directly (`neg_no_cocotb_t068_sim.log`):
+  triple; `dv/auto_dv/work/tb-infra/out_t068_nococotb`, vcs exit 0) run directly (`gen_neg_no_cocotb_t068_sim.log`):
   `UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(210) @ 0: uvm_test_top [GEN_NO_COCOTB] gen_tb_top tests are cocotb-driven; a pure-SV build of this top would pass vacuously (TB_CONTRACT Section 6)`.
 - The three 1b negatives re-run on the T-068 build with the flow's verdict: `neg_noalive` (`GEN_ALIVE_TIMEOUT:
   Python never set the alive bit within 3000 cycles`, verdict FAIL sv_fatal), `neg_unknown_plusarg` and
   `neg_bad_enum` (UVM_FATAL at 0, verdict FAIL uvm_fatal); the negative module now resolves its handles through
   `GenHandles` and waits with one `Timer` instead of 20000 `ClockCycles`.
-- Green re-run `ut_bridge_green_t068_*`: `GEN_UT_BRIDGE_PASS`, `UVM_ERROR : 0`, `TESTS=1 PASS=1`, verdict PASS.
+- Green re-run `gen_ut_bridge_green_t068_*`: `GEN_UT_BRIDGE_PASS`, `UVM_ERROR : 0`, `TESTS=1 PASS=1`, verdict PASS.
 
 ### 5.3 Behaviour changes in this landing
 

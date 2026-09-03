@@ -13,7 +13,7 @@ Executed 2026-09-03 (T-068); module `dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
 (`+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_<f>=1`: hidden referees inert), `default` (every check on:
 discrimination), `ablation` (`+gen_chk_isa_<f>=0`, mutation applied: survives). Retained logs:
 `dv/auto_dv/evidence/gen_tdd_logs/mutations/mut00N_*`; reverts verified by cmp ("sources identical to
-pre-mutation", mutations_driver_t068.log).
+pre-mutation", gen_mutations_driver_t068.log).
 
     id: MUT-004
     file: dv/auto_dv/env/gen_rvfi_pkg.sv:82 (gen_rvfi_monitor::sample)

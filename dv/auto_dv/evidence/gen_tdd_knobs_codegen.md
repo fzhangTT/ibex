@@ -4,7 +4,7 @@ Component: `dv/auto_dv/tb/gen_tb_knobs.yaml` (source) + `dv/auto_dv/tb/gen_knobs
 (renderer, `--check` mode) -> the GEN_KNOBS block of `dv/auto_dv/tb/gen_tb_pkg.sv`,
 `dv/auto_dv/gen_tb/gen_knobs.py`, `dv/auto_dv/isa/gen_isa_shim_map.h`.
 Test: `dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py` (plain asserts; exit 1 on any failure).
-Logs: `dv/auto_dv/work/tb-infra/tdd/knobs_codegen_red.log`, `knobs_codegen_green.log`.
+Logs: `dv/auto_dv/work/tb-infra/tdd/knobs_codegen_red.log`, `gen_knobs_codegen_green.log`.
 Owner: tb-infra. dv_principles Section 6 rule 1 (the failing check precedes the implementation).
 
 ## 1. Red (test written first; the source and the renderer did not exist)
@@ -163,7 +163,7 @@ exit=0
 
 674 OK lines, 0 FAIL. The refused fixtures are written under `dv/auto_dv/work/tb-infra/ut_scratch/` (repo-local,
 never /tmp) and the stale-target mutations run on a scratch copy of the four rendered files through `--root`.
-Three earlier T-068 runs are retained as `knobs_codegen_t068_attempt1.log` (exit 1: the pkg mutation landed in
+Three earlier T-068 runs are retained as `gen_knobs_codegen_t068_attempt1.log` (exit 1: the pkg mutation landed in
 the hand-written text outside the rendered region, which `--check` preserves by design), `_attempt2.log`
 (StopIteration: the header mutation skipped every `#define` line) and `_attempt3.log` (StopIteration: the
 header literals `0x...u` / `4u` matched no word-bounded integer). All three are defects of the test's mutation
@@ -174,5 +174,5 @@ region.
 
 The remediated TB compiled with the rendered `gen_tb_pkg.sv` / `gen_env_cfg_knobs.svh`:
 `dv/auto_dv/evidence/gen_tdd_logs/boot_agents/compile_t068.log` (last line `vcs exit: 0`, zero `Error-[` lines;
-the VCS flag set is now read from `dv/auto_dv/flow/gen_flow_const.py`, recorded in `config_opts_t068.txt`).
+the VCS flag set is now read from `dv/auto_dv/flow/gen_flow_const.py`, recorded in `gen_config_opts_t068.txt`).
 The time-0 guard did not fire in any T-068 run: the `_PY` mirrors (8, 15, 2147418112) equal the SV expressions.

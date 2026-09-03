@@ -4,7 +4,7 @@ Component: `dv/auto_dv/isa/gen_isa_shim.h` (C ABI), `gen_isa_shim.cc` (implement
 `gen_isa_dpi_pkg.sv` (SV imports), `gen_isa_shim_build.sh` (shared library for VCS, C++ unit test).
 Test: `dv/auto_dv/isa/gen_ut_isa_shim.cc` on the directed Zc image `out_codegen/zc/prog.vmem` (the same
 image the DUT boots in gen_tdd_boot_agents.md). Logs: `dv/auto_dv/work/tb-infra/tdd/isa_shim_red.log`,
-`isa_shim_green.log`, `out_isa/ut_green.log`. Owner: tb-infra.
+`gen_isa_shim_green.log`, `out_isa/ut_green.log`. Owner: tb-infra.
 
 ## 1. Red (header and test written first; no implementation)
 
@@ -81,4 +81,4 @@ GEN_UT_ISA_SHIM PASS (0 failures)
 index order, 4 loads), a single-write step, `fetch_insn(pc_before) == insn` on every step and 0 on an unmapped
 pc. `readelf -d` on the built library shows no RPATH/RUNPATH; a library build into Runtime's shared out root
 (`/proj_soc/user_dev/fzhang/ibex_dv_out/t068_shim_outdir_check/lib`) succeeded. The 2a logs are retained as
-`isa_shim_red.log`, `isa_shim_green.log`, `ut_green_2a.log`.
+`gen_isa_shim_red.log`, `gen_isa_shim_green.log`, `gen_ut_green_2a.log`.

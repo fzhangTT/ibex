@@ -109,8 +109,8 @@ command became a MISC and the run above is clean. REGIME_SET gets its consumer i
 ## 6. T-068 (2026-09-03): retention audit, the assertion shown to fire, re-runs
 
 Retained logs: `dv/auto_dv/evidence/gen_tdd_logs/boot_agents/` (manifest `gen_tdd_logs/gen_manifest.md`): the
-step-1c red (`boot_red_1c_*`, `boot_red.log`), the step-1c greens (`boot_zc_1c_*`, `boot_rdv_s7_1c_*`,
-`compile_1c.log`) and the T-068 runs below.
+step-1c red (`gen_boot_red_1c_*`, `gen_boot_red.log`), the step-1c greens (`gen_boot_zc_1c_*`, `gen_boot_rdv_s7_1c_*`,
+`gen_compile_1c.log`) and the T-068 runs below.
 
 Corrections to Section 2: compile 1 (`Error-[NCE]` in gen_icache_ram.sv) and run 1 (the single read-back
 mismatch at 0x80000398) have no retained artifact; both are UNRETAINED. The fixes are visible in the code
@@ -127,7 +127,7 @@ carries exactly two errors, both `[sva_rvalid_legal]` (`ibus: rvalid with no out
 `cycle 8`), cocotb PASS, flow verdict FAIL (assertion_failure); with `+gen_chk_sva_rvalid_legal=0` the same
 build runs to `UVM_ERROR : 0` and verdict PASS. Logs: `gen_tdd_logs/mutations/mut003_*`. A first attempt
 (`p.due = cycle`) turned out to be a legal one-cycle response and did not fire; it is retained as
-`mut003_attempt1_*`.
+`gen_mut003_attempt1_*`.
 
 ### 6.2 Other corrections in the agents
 
@@ -145,16 +145,16 @@ build runs to `UVM_ERROR : 0` and verdict PASS. Logs: `gen_tdd_logs/mutations/mu
 - MMIO window sizes come from the rendered `GEN_MM_*_SIZE`; the boot-page mask in Python comes from
   `MEMORY_MAP["boot_page_mask"]`; the read-back sample prefers non-zero words.
 - `gen_ut_boot` asserts its precondition: run without `+gen_fetch_en_at_reset=0` it fails at once
-  (`boot_noprecond_t068_stdout.log`: `AssertionError: GEN_UT_BOOT: run with +gen_fetch_en_at_reset=0 (the
+  (`gen_boot_noprecond_t068_stdout.log`: `AssertionError: GEN_UT_BOOT: run with +gen_fetch_en_at_reset=0 (the
   read-back precedes execution)`, verdict FAIL cocotb_summary).
 
-### 6.3 Re-runs on the T-068 build (compile `compile_t068.log`, vcs exit 0, 0 errors)
+### 6.3 Re-runs on the T-068 build (compile `gen_compile_t068.log`, vcs exit 0, 0 errors)
 
 ```
-boot_zc (boot_zc_t068_*): GEN_UT_BOOT read-back ok: 64 words | GEN_UT_BOOT retired 100 (target 100) at cycle 366
+boot_zc (gen_boot_zc_t068_*): GEN_UT_BOOT read-back ok: 64 words | GEN_UT_BOOT retired 100 (target 100) at cycle 366
   | GEN_UT_BOOT tohost code 0x00000001 | GEN_UT_BOOT_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
-boot_rdv_s7 (boot_rdv_s7_t068_*): read-back ok: 64 words | retired 2000 (target 2000) at cycle 10065
+boot_rdv_s7 (gen_boot_rdv_s7_t068_*): read-back ok: 64 words | retired 2000 (target 2000) at cycle 10065
   | tohost code 0x00000001 | GEN_UT_BOOT_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
 ```
-`runs_summary_t068.txt` carries the twelve T-068 runs with their verdicts (the summary columns are now the
+`gen_runs_summary_t068.txt` carries the twelve T-068 runs with their verdicts (the summary columns are now the
 flow's verdict and reason, not a grep of the driver's own).

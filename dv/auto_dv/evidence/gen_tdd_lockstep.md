@@ -121,8 +121,8 @@ Corrections to Sections 2-4 (cross-model 2a mediums 2-4, low 1):
 
 - Attempt 1 (136 collected errors) and attempt 2 (8516 mismatches) have no retained artifact: UNRETAINED.
 - The Section 4 green logs were produced by the pre-fix fold counter (`folded=31`, `compared 179` of 169
-  retirements); they are retained for the record as `lockstep_zc_2a_prefix_sim.log`,
-  `lockstep_s7_2a_prefix_sim.log`, `lockstep_forced_red_2a_prefix_sim.log` and are NOT the green run of the
+  retirements); they are retained for the record as `gen_lockstep_zc_2a_prefix_sim.log`,
+  `gen_lockstep_s7_2a_prefix_sim.log`, `gen_lockstep_forced_red_2a_prefix_sim.log` and are NOT the green run of the
   committed comparator. The ratio check `compared * 100 >= retired * min_ratio` passed on that over-count; the
   test now asserts `consumed == retired` exactly and the knob `+gen_ut_lockstep_min_ratio_pct` is gone.
 - "What green proves" (Section 4) claimed that rd and memory matched for every retired record. At 3be5a34 the
@@ -143,16 +143,16 @@ Corrections to Sections 2-4 (cross-model 2a mediums 2-4, low 1):
 - `32'h305` and `2'b11` are gone (`ibex_pkg::CSR_MTVEC`; the privilege compare uses the RISC-V encoding on both
   sides).
 
-### 5.1 Green runs of the committed comparator (build `compile_t068.log`, vcs exit 0)
+### 5.1 Green runs of the committed comparator (build `gen_compile_t068.log`, vcs exit 0)
 
 ```
-lockstep_zc (lockstep_zc_t068_*; run header 2026-09-03T09:11:00Z, seed 1):
+lockstep_zc (gen_lockstep_zc_t068_*; run header 2026-09-03T09:11:00Z, seed 1):
 UVM_INFO ... [GEN_RVFI_MON] records=169 irq_markers=0
 UVM_INFO ... [GEN_SB] ISA compare: records=148 mismatches=0 folded=21 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=126
 GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001
 GEN_UT_LOCKSTEP_PASS | UVM_ERROR : 0 | TESTS=1 PASS=1 FAIL=0 | verdict: PASS
 
-lockstep_s7 (lockstep_s7_t068_*; 2026-09-03T09:11:08Z, riscv-dv seed-7 program, 29375 words):
+lockstep_s7 (gen_lockstep_s7_t068_*; 2026-09-03T09:11:08Z, riscv-dv seed-7 program, 29375 words):
 UVM_INFO ... [GEN_RVFI_MON] records=2002 irq_markers=0
 UVM_INFO ... [GEN_SB] ISA compare: records=2002 mismatches=0 folded=0 draft_b=0 traps=1 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=1453
 GEN_UT_LOCKSTEP retired 2002 consumed 2002 mismatches 0 tohost 0x00000001
@@ -166,7 +166,7 @@ tohost store), all consumed.
 ### 5.2 Forced red (model without Zc/Zb) with the flow's verdict
 
 ```
-lockstep_forced_red (lockstep_forced_red_t068_*; +gen_isa_string=rv32imc_zicsr_zifencei):
+lockstep_forced_red (gen_lockstep_forced_red_t068_*; +gen_isa_string=rv32imc_zicsr_zifencei):
 GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 676 tohost 0x00000001
 AssertionError: GEN_UT_LOCKSTEP: 676 ISA mismatches | TESTS=1 PASS=0 FAIL=1
 verdict: FAIL | reason: uvm_error at log line 31
