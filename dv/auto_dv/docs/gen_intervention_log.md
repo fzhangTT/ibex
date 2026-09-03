@@ -1278,3 +1278,21 @@ HEAD. Impact: no build compiled the shared tree in the window (out_l1c was built
 the RM1..RM3 results are re-run from a real rtl copy and the tainted ones are not cited; the agent-side mutants MUT-M/MUT-N
 ran before and stand. Standing fix: the copy step dereferences and refuses a non-private rtl directory, and the driver
 compares its own start/end shas. Runtime asked to confirm no worktree-source compile in the window.
+
+## LOG-046 - 2026-09-03 - Round 0 refused: the TB implements no covergroup; probe record only; covergroups become the TB's top item
+
+Round 0 (dispatched 17:29Z head-mode on 37c7ecb behind canary 9110052, LOG-042d) finished at about 17:41Z with 47 runs: 2 PASS
+(gen_boot_zc and gen_ut_lockstep, the entries without manifests) and 45 FAIL, 44 of them "fcov expectation unverifiable:
+per-test urg report has no grpinfo.txt (no covergroup in this vdb)" with covergroups_exist false, and one gen_test_csr_reset
+run failing on cocotb_summary (sim_stdout.log:112). The Orchestrator read the manifest. Cause, confirmed by the DV Lead from
+git grep: the TB carries no SystemVerilog covergroup at HEAD, so every promoted manifest declares bins nothing implements and
+the checker refuses to verify them, which is the intended behaviour of the manifest-required policy (LOG-039, T-178).
+Ruling: gen_round.py's clean rule stands; round 0 as run is refused, with no round evidence and no index entry; Runtime
+retains it as a probe record under dv/auto_dv/evidence/gen_round_0_probe/ (T-207) stating that nothing is credited from it;
+the plan's crediting tool reports every hosted item UNVERIFIED. The functional half of the Phase 1 gate cannot be measured
+until the covergroups referenced by the 16 promoted manifests exist: the DV Lead commits the minimum referenced set ranked
+by bins (T-204); tb-infra implements them with CG-WIT-001 as the core of landing 2b after the T-162 binds, in reviewable
+slices, misc rules and dbg_dret moving to 2c (T-205); no purpose-4 regression is dispatched meanwhile; acceptance waves
+continue. Round 0 is re-declared on the first HEAD whose TB implements the referenced set. The csr_reset failure is a
+separate triage (T-206, Test Writer). Owner notice: the Phase 1 gate's functional-coverage half slips by the covergroup
+implementation time; the code-coverage probe of 37c7ecb is retained.
