@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 21:25 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 21:35 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -1205,7 +1205,7 @@ Conventions
 - Features: F-CSR-021, F-CSR-022, F-CSR-023, F-CSR-024, F-CSR-025, F-CSR-027, F-CSR-028, F-CSR-029,
   F-CSR-030, F-CSR-035, F-CSR-036, F-CSR-037, F-CSR-050, F-CSR-051, F-CSR-052, F-PRV-035, F-PMC-025
   (parent of folded bins hosted here)
-- Sample: a write / read-back pair of a trap-setup CSR (mstatus, misa, mie, mtvec, mcounteren, mstatush, menvcfg, menvcfgh) closed by the sampler's own tracker over RVFI records: the write record retired without trap and the next read record of the same CSR retired; condition: pair closed; anti-vacuity: pairs exist only when the program writes then reads the same CSR, so a hit proves a read-back record exists for that write pattern; the legalised-prediction comparison is not this covergroup's: it rests on the lock-step comparator's isa_rd row on the read-back record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
+- Sample: a write / read-back pair of a trap-setup CSR (mstatus, misa, mie, mtvec, mcounteren, mstatush, menvcfg, menvcfgh) closed by the sampler's own tracker over RVFI records: a write record retired without trap opens a pair for that CSR, the next CSR-op record with rd != x0 to the same CSR closes it (and, being a read-back, reopens), and a second rd = x0 write before any read-back replaces the open pair (n_csr_replaced), so the classified pattern is the last write before the read-back; condition: pair closed; anti-vacuity: pairs exist only when the program writes then reads the same CSR, so a hit proves a read-back record exists for that write pattern; the legalised-prediction comparison is not this covergroup's: it rests on the lock-step comparator's isa_rd row on the read-back record until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
   - cp_csr = pair address: bins mstatus{0x300}, misa{0x301}, mie{0x304}, mtvec{0x305}, mcounteren{0x306}, mstatush{0x310}, menvcfg{0x30A}, menvcfgh{0x31A}
   - cp_op = write op of the pair: bins csrrw{001}, csrrs{010}, csrrc{011}, csrrwi{101}, csrrsi{110}, csrrci{111}
