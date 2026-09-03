@@ -79,11 +79,12 @@ cm.pop / cm.popret / cm.popretz (:686-774):
   at :693 while sp has ALREADY been incremented by the executed CmPopIncrSp: every load is repeated from
   sp + adj + offset, i.e. from above the frame, and the registers receive whatever lies there (the x18 = 800003ff seen in an earlier, unretained run of
   gen_zcmp_directed.S with dummy insertion enabled, whose cm.popret tail at pc 0x8000040a hit this case, is a
-  return-address-like value read from above the frame; that exact value is not in a retained artifact, but the case itself is
-  retained since landing 2c as the red-by-design run lockstep_zcmp_dummy_popret (dv/auto_dv/evidence/gen_tdd_logs/lockstep/
-  gen_fu_l7_lockstep_zcmp_dummy_popret_{run_header.txt, stdout_excerpt.log, verdict.txt}: 9408 comparator rows, first divergence
-  at order 38 on a ret micro-op, x2 model 800003b0 vs DUT 800003d0, i.e. sp incremented one stack frame too far, the double
-  increment of this replay; its per-row mapping is tb-infra's, as for the plain-pop run); the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
+  return-address-like value read from above the frame; that exact value is not in a retained artifact; the retained red-by-design run lockstep_zcmp_dummy_popret
+  (dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l7_lockstep_zcmp_dummy_popret_{run_header.txt, stdout_excerpt.log,
+  verdict.txt}; 9408 UVM_ERROR rows by the excerpt header's grep count, first 12 kept) witnesses the double sp increment of this
+  replay, not the above-frame register corruption: at order 38, on a ret micro-op, only x2 diverges (model 800003b0, DUT
+  800003d0, one stack frame too far); the register values read from above the frame are not among the kept rows; the per-row
+  mapping is tb-infra's, as for the plain-pop run); the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
   run is NOT this case, that program has no popret, see section 6), then sp is incremented a second time and the ret
   executes. This is the only path that corrupts registers that were loaded correctly the first time.
 
@@ -148,7 +149,7 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
 
 - Reproduction status (tb-infra's row mapping of the retained run of dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S,
   four cm.push / cm.pop pairs with rlist 4 / 8 / 12 / 15, plain cm.pop only, dummy_instr_mask 0, reported 2026-09-03;
-  the mapping is dv/auto_dv/evidence/gen_b8_row_mapping.md, landed with 2c, tally table at its lines 37-45): all 27
+  the mapping is dv/auto_dv/evidence/gen_b8_row_mapping.md, tally table at its lines 37-45): all 27
   comparator rows map to a section-3 case; they summarise 33 lost micro-ops, one row covering several losses.
   Tally of lost micro-ops: CmIdle first store lost 2, CmPushStoreReg store lost 11,
   CmPushDecrSp addi lost with full replay 2, CmIdle first load lost 2, CmPopLoadReg load lost 13, CmPopIncrSp addi
@@ -158,10 +159,11 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   stayed stale, pop rl8 loaded it faithfully); no load in that run reads above the frame. Consecutive losses occur
   (pop rl12 lost s0, ra and the addi back to back) because the threshold is lfsr.cnt masked by {dummy_instr_mask,
   ones} (rtl/ibex_dummy_instr.sv:97), so with mask 0 a threshold of 0 right after an insertion inserts again. The
-  CmPopRetRa replay is retained since landing 2c as lockstep_zcmp_dummy_popret (section 3 names the logs; red by design,
-  9408 rows, first divergence at order 38 with sp one frame too high on the ret micro-op, then at order 46 "model wrote 3
-  registers, dut 2" and "model wrote x10/00000000, dut did not", the lost li a0, 0 of a popretz, CmPopZeroA0 case); the
-  x18 = 800003ff value itself is only in the unretained run named in section 3.
+  CmPopRetRa replay is retained as lockstep_zcmp_dummy_popret (section 3 names the logs; red by design, 9408 UVM_ERROR rows
+  by grep count): order 38 shows sp one frame too high on the ret micro-op (the double increment); order 46 shows "model wrote
+  3 registers, dut 2" and "model wrote x10/00000000, dut did not", the lost li a0, 0 of a popretz (CmPopZeroA0 case), while its
+  x2 and load-address mismatches are the same +0x20 sp offset inherited from order 38 (the DUT's push at order 41 stored to
+  800003cc), not a second loss. The x18 = 800003ff value itself is only in the unretained run named in section 3.
 - Assertion status: the TB-side assertion of section 6 is not built; LOG-067 rules it a probe bind behind a knob, tb-infra's
   next touch.
 

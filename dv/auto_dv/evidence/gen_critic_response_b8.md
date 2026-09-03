@@ -1,11 +1,14 @@
-# Response file: reviews of the B8 RTL facts note (dv/auto_dv/evidence/gen_b8_rtl_facts.md; commits 1eb2ede, 53e8468, 7d7be39, 76cd2e5)
+# Response file: reviews of the B8 RTL facts note (dv/auto_dv/evidence/gen_b8_rtl_facts.md; commits 1eb2ede, 53e8468, 7d7be39, 76cd2e5, ae5e58a, 473d85d)
 
 Owner: rtl-arch. Created 2026-09-03T19:14Z ahead of the findings. Rows answer the cross-model reviews of 1eb2ede
 (gen_b8_rtl_facts.md, 140 lines, sha256 5abb0619b8391029), of 53e8468 (154 lines, sha256 eac6bc028e8574b5;
 artifact dv/auto_dv/reviews/2026-09-03-claude-diff-cb173d93-53e84680.md, APPROVE-WITH-CHANGES, committed 68b9af3), of
-7d7be39 (156 lines, 0eab3c5fb895abc2; artifact 2026-09-03-claude-diff-30c8626e-7d7be397.md, CM68 rows), of 76cd2e5 (173 lines,
-6283d7c2b1edec3e; artifact 2026-09-03-claude-diff-2ea81ac4-76cd2e56.md, CM69 rows) and of ae5e58a (175 lines, b33a133f519f;
-CM73 rows). Rule: every
+7d7be39 (156 lines, 0eab3c5fb895abc2; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-30c8626e-7d7be397.md,
+APPROVE-WITH-CHANGES, committed d4b5933, CM68 rows), of 76cd2e5 (173 lines, 6283d7c2b1edec3e; artifact
+dv/auto_dv/reviews/2026-09-03-claude-diff-2ea81ac4-76cd2e56.md, APPROVE-WITH-CHANGES, committed 68253d5, CM69 rows), of
+ae5e58a (175 lines, b33a133f519f; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-03c525ad-ae5e58ab.md,
+APPROVE-WITH-CHANGES, committed 3bbc9e9, CM73 rows) and of 473d85d (182 lines, af35620e393b; artifact
+dv/auto_dv/reviews/2026-09-03-claude-diff-6133c773-473d85df.md, APPROVE-WITH-CHANGES, committed 5cf028e, CM122 rows). Rule: every
 finding gets one row with ADDRESSED or DISPUTED, the changed line in the note (location column: the reviewed
 copy's line numbers and the fixed copy's, the fixed copy being the work file at the hash in the Verdict column),
 and the RTL evidence; a change to
@@ -13,7 +16,7 @@ the note is reported with its new hash for promotion.
 
 ## 1. Findings (filled as they arrive)
 
-Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM64-n = on 53e8468 (eac6bc028e8574b5); CM68-n = on 7d7be39 (0eab3c5fb895abc2); CM69-n = on 76cd2e5 (6283d7c2b1edec3e); CM73-n = on ae5e58a (b33a133f519f).
+Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM64-n = on 53e8468 (eac6bc028e8574b5); CM68-n = on 7d7be39 (0eab3c5fb895abc2); CM69-n = on 76cd2e5 (6283d7c2b1edec3e); CM73-n = on ae5e58a (b33a133f519f); CM122-n = on 473d85d (af35620e393b).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -25,7 +28,7 @@ Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM6
 | CM64-L-1 | cross-model 53e8468 [low] section 5 (reviewed copy 53e8468 lines 114-116; fixed copy lines 116, 121) | restated interrupt rule omitted the third COMMIT site (first move of cm.mvsa01 / cm.mva01s) | ADDRESSED at 0eab3c5fb895abc2 | Rule now lists all three COMMIT-tagged micro-ops with their lines (rtl/ibex_compressed_decoder.sv:744, :760, :790, :818); the COMMIT-window list adds the second move of the pair, benign on restart per section 3. |
 | CM64-L-2 | cross-model 53e8468 [low] CM59 rows, location column | mixed line-number frames (reviewed vs fixed copy) | ADDRESSED (this file) | Every CM59 row now gives both the reviewed copy's line numbers (1eb2ede) and the fixed copy's; the header states the rule. |
 | CM68-M-1 | cross-model 7d7be39 [medium] CM59 rows, location column | three "reviewed copy 1eb2ede" ranges were the review artifact's quoted ranges, not the file's positions | ADDRESSED (this file) | Positions re-derived from `git show 1eb2ede:dv/auto_dv/evidence/gen_b8_rtl_facts.md` (140 lines, 5abb0619b8391029): M-1 lines 107-113, M-2 lines 83-87, L-1 lines 97-99 corrected; L-2 lines 122-123 and L-3 lines 39, 115, 135 confirmed. |
-| CM68-L-1 | cross-model 7d7be39 [low] section 5 (reviewed copy 7d7be39 line 115; fixed copy line 119 at b33a133f519f, the promoted copy; the CM69-i-2 insertion at line 82 moved it from 118) | bare :744 / :760 after a controller citation read as controller lines | ADDRESSED at b33a133f519f | First bare anchor now prefixed rtl/ibex_compressed_decoder.sv:744; :760, :790, :818 follow it in the same sentence. |
+| CM68-L-1 | cross-model 7d7be39 [low] section 5 (reviewed copy 7d7be39 line 115; fixed copy line 119 in the copy promoted at ae5e58a; the CM69-i-2 insertion at line 82 moved it from 118) | bare :744 / :760 after a controller citation read as controller lines | ADDRESSED at b33a133f519f | First bare anchor now prefixed rtl/ibex_compressed_decoder.sv:744; :760, :790, :818 follow it in the same sentence. |
 | CM68-L-2 | cross-model 7d7be39 [low] this file, title and row-id legend | legend and title named only 1eb2ede while the table carries CM64 rows and will carry CM68 / CM69 | ADDRESSED (this file) | Title lists the four reviewed commits; legend gives one entry per row prefix with the commit and its hash. |
 | CM69-m-1 | cross-model 76cd2e5 [minor] section 6 (reviewed copy 76cd2e5 lines 147-150; fixed copy line 149) | "27 divergent rows" followed by a tally summing to 33, units changed silently | ADDRESSED at b33a133f519f | Both units stated: 27 comparator rows, summarising 33 lost micro-ops (one row covers several losses); the tally is labelled as lost micro-ops. |
 | CM69-i-1 | cross-model 76cd2e5 [info] section 6 (reviewed copy 76cd2e5 line 147; fixed copy line 148) | gen_b8_row_mapping.md reference dangles until tb-infra lands it | NOTED (no action) | Pending marker kept as written; the Orchestrator tracks the landing in tb-infra's docs delta. |
@@ -33,9 +36,15 @@ Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM6
 | CM73-L-1 | cross-model ae5e58a [low] response row CM68-L-1 | cited an unpromoted hash (1f9011127e3447ea) and line 118 | ADDRESSED (this file) | Row now cites the promoted copy b33a133f519f and line 119 (the CM69-i-2 insertion at line 82 moved the anchor). |
 | CM73-L-2 | cross-model ae5e58a [low] header (:3-5) | header named only the 1eb2ede and 53e8468 reviews | ADDRESSED (this file) | Header names the 7d7be39 artifact (2026-09-03-claude-diff-30c8626e-7d7be397.md, CM68 rows), the 76cd2e5 artifact (2026-09-03-claude-diff-2ea81ac4-76cd2e56.md, CM69 rows) and the ae5e58a review (CM73 rows). |
 | CM73-I-1 | cross-model ae5e58a [info] response row CM69-i-2 | reviewed-copy range listed only the section-3 lines | ADDRESSED (this file) | Range now lists 80-82 (section 3) and 156 (section 6) of 76cd2e5, with the fixed-copy lines unchanged. |
+| CM122-L-1 | cross-model 473d85d [low] note lines 83, 151, 161 (fixed copy lines 82, 152, 162) | "landed with 2c" wrong for gen_b8_row_mapping.md (added at a9b63ae, landing 5) and landing narration in an RTL note | ADDRESSED at a152cef4a6bf | Landing phrasing removed at all three places; paths cited only (git log --diff-filter=A confirms a9b63ae for the mapping file). |
+| CM122-L-2 | cross-model 473d85d [low] this file, title | title lacked ae5e58a | ADDRESSED (this file) | Title lists 1eb2ede, 53e8468, 7d7be39, 76cd2e5, ae5e58a, 473d85d. |
+| CM122-L-3 | cross-model 473d85d [low] this file, header | ae5e58a review without artifact path or verdict; 7d7be39 / 76cd2e5 artifacts without verdicts | ADDRESSED (this file) | Header names dv/auto_dv/reviews/2026-09-03-claude-diff-03c525ad-ae5e58ab.md (APPROVE-WITH-CHANGES, 3bbc9e9) and gives APPROVE-WITH-CHANGES for the 7d7be39 (d4b5933) and 76cd2e5 (68253d5) artifacts, plus the 473d85d artifact (5cf028e); verdicts read from the artifacts in the 408c92f archive. |
+| CM122-I-1 | cross-model 473d85d [info] note line 84 (fixed copy line 84) | "9408 comparator rows" restated the excerpt's grep count | ADDRESSED at a152cef4a6bf | Now "9408 UVM_ERROR rows by the excerpt header's grep count, first 12 kept". |
+| CM122-I-2 | cross-model 473d85d [info] note line 162 (fixed copy line 166) and section 3 (line 82) | order-46 x2 / load-address mismatches are the inherited +0x20 offset, not a second loss; order 38 witnesses the double sp increment, not above-frame corruption | ADDRESSED at a152cef4a6bf | Both stated: section 3 says the excerpt witnesses the double sp increment (only x2 diverges at order 38) and the above-frame values are not among the kept rows; section 6 attributes order 46's x2 / load-address rows to the inherited offset (DUT push at order 41 to 800003cc). |
+| CM122-I-3 | cross-model 473d85d [info] this file, row CM68-L-1 | "the promoted copy" stale after af35620e393b was promoted | ADDRESSED (this file) | Row says "the copy promoted at ae5e58a". |
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at af35620e393b2e3e: 182 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
+- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at a152cef4a6bf824b: 184 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
 - Non-review change at 6283d7c2b1edec3e: tb-infra's row mapping of the retained reproducer (27 rows, all in section-3 cases) corrected the x18 = 00000000 attribution (a lost s2 store at push rl8 read back faithfully by pop rl8, not the CmPopRetRa replay; 800003ff stays with its source named) and is summarised in section 6; the verdict is unchanged.
 - Non-review change at af35620e393b (landing 2c released it): section 3 and 6 cite the retained popret reproducer lockstep_zcmp_dummy_popret (evidence/gen_tdd_logs/lockstep/gen_fu_l7_lockstep_zcmp_dummy_popret_*), the landed dv/auto_dv/evidence/gen_b8_row_mapping.md replaces the pending marker, and the assertion status (not built, LOG-067 probe bind behind a knob) is stated; verdict unchanged.
