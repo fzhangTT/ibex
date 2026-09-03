@@ -9,7 +9,7 @@ cocotb VPI library and libpython of the mirror venv, the Python test modules (PY
 
 Usage:
     gen_mirror.py --sync [--venv] [--spike]      # rsync (+ venv, + tools/spike), write the manifest
-    gen_mirror.py --check                        # mirror vs clone: fresh or stale (exit 1 if stale)
+    gen_mirror.py --check                        # fresh | stale (sources) | stale_venv (lock changed: run --venv); exit 1 unless fresh
     gen_mirror.py --status                       # print the manifest
 """
 
@@ -34,6 +34,8 @@ MIRROR_GLOB_ITEMS = ["*.core"]
 MIRROR_EXCLUDES = [".git", "__pycache__", "*.pyc", "dv/auto_dv/work", ".venv", "out*", "*.vdb", "*.fsdb"]
 SPIKE_ITEM = "tools/spike"
 MANIFEST_NAME = "gen_mirror_manifest.yaml"
+# The venv is only as fresh as the lock files it was built from (T-027 review).
+VENV_INPUT_FILES = ["ci/requirements.lock", "ci/requirements-cocotb.txt", "ci/setup-venv.sh"]
 # The freshness hash covers only what a compute host CONSUMES at run time: the Python modules
 # (cocotb tests, flow helpers) and the environment scripts. RTL and TB sources are compiled on the
 # submit host from the clone, and documents churn constantly, so they are mirrored but not hashed.
@@ -136,10 +138,19 @@ def build_venv(dst: Path, log: Path) -> dict[str, Any]:
     return info
 
 
+def requirements_hash(root: Path) -> str:
+    h = hashlib.sha256()
+    for rel in VENV_INPUT_FILES:
+        f = root / rel
+        h.update(rel.encode() + b"\0" + (f.read_bytes() if f.is_file() else b"MISSING") + b"\0")
+    return h.hexdigest()
+
+
 def venv_info(dst: Path) -> dict[str, Any]:
     cc = dst / ".venv" / "bin" / "cocotb-config"
     info: dict[str, Any] = {"venv": str(dst / ".venv"), "cocotb_config": str(cc) if cc.is_file() else None,
-                            "cocotb_vpi_lib": None, "libpython": None, "python": None}
+                            "cocotb_vpi_lib": None, "libpython": None, "python": None,
+                            "requirements_sha256": requirements_hash(dst)}
     if cc.is_file():
         r = subprocess.run([str(cc), "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
         lib = r.stdout.strip()
@@ -164,7 +175,11 @@ def status(dst: Path) -> dict[str, Any]:
     clone_hash, clone_n = tree_hash(C.REPO_ROOT)
     mirror_hash, mirror_n = tree_hash(dst)
     state = "fresh" if (clone_hash == man["tree_sha256"] == mirror_hash) else "stale"
+    venv_req = (man.get("venv") or {}).get("requirements_sha256")
+    if state == "fresh" and venv_req != requirements_hash(C.REPO_ROOT):
+        state = "stale_venv"
     return {"state": state, "mirror_root": str(dst), "manifest_sha256": man["tree_sha256"],
+            "venv_requirements_sha256": venv_req, "clone_requirements_sha256": requirements_hash(C.REPO_ROOT),
             "clone_sha256_now": clone_hash, "mirror_sha256_now": mirror_hash, "clone_runtime_files": clone_n,
             "mirror_runtime_files": mirror_n, "mirror_files": man.get("file_count"),
             "git_head": man.get("git", {}).get("head"), "synced_utc": man.get("synced_utc"),
@@ -199,8 +214,8 @@ def main() -> int:
         man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
         man["spike_present"] = rsync_spike(C.REPO_ROOT, dst, logs / "rsync_spike.log") if a.spike \
             else (dst / SPIKE_ITEM / "bin" / "spike").is_file()
-        man["venv"] = build_venv(dst, logs / "venv.log") if a.venv else (venv_info(dst) if (dst / ".venv").is_dir()
-                                                                        else prev.get("venv"))
+        # Without --venv the venv facts (incl. the requirements hash it was BUILT from) carry over.
+        man["venv"] = build_venv(dst, logs / "venv.log") if a.venv else prev.get("venv")
         U.dump_yaml(man, dst / MANIFEST_NAME)
         U.log(f"mirror manifest {dst / MANIFEST_NAME}: {man['file_count']} files, sha256 {man['tree_sha256'][:16]}..., "
               f"git {man['git']['head'][:12]}, venv {'ok' if (man.get('venv') or {}).get('cocotb_vpi_lib') else 'MISSING'}, "

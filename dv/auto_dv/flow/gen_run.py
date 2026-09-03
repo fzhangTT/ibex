@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -55,7 +56,7 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
                  *C.COV_RUNTIME_EXTRA]
     if waves:
         if not build.get("waves"):
-            U.die("waves requested but the build was not compiled with --waves (-debug_access+all -ucli)")
+            U.die("waves requested but the build was not compiled with --waves (-debug_access+all)")
         tcl = run_dir / C.DUMP_TCL
         tcl.write_text(U.render_fields(C.DUMP_TCL_TEMPLATE.read_text(encoding="utf-8"),
                                        {"tb_top": build["tb_top"], "dut_instance": build["dut_instance"],
@@ -83,13 +84,16 @@ def check_mirror_for_run(build: dict[str, Any]) -> dict[str, Any] | None:
     mirror = build.get("mirror")
     if not mirror:
         return None
-    man = M.load_manifest(Path(mirror["root"]))
+    root = Path(mirror["root"])
+    man = M.load_manifest(root)
     if not man:
-        U.die(f"mirror manifest missing under {mirror['root']}")
-    if man.get("tree_sha256") != mirror.get("tree_sha256"):
-        U.die(f"mirror {mirror['root']} changed since the build (tree {man.get('tree_sha256', '')[:12]} vs "
-              f"build {str(mirror.get('tree_sha256'))[:12]}); rebuild or re-sync to the built revision")
-    return {"root": mirror["root"], "tree_sha256": man.get("tree_sha256"), "git_head": (man.get("git") or {}).get("head")}
+        U.die(f"mirror manifest missing under {root}")
+    # Recompute the hash of the mirror tree itself: a manual edit under the mirror must also fail loud.
+    tree_now, _ = M.tree_hash(root)
+    if not (man.get("tree_sha256") == mirror.get("tree_sha256") == tree_now):
+        U.die(f"mirror {root} differs from the build's record (build {str(mirror.get('tree_sha256'))[:12]}, "
+              f"manifest {str(man.get('tree_sha256'))[:12]}, tree now {tree_now[:12]}); rebuild or re-sync")
+    return {"root": str(root), "tree_sha256": tree_now, "git_head": (man.get("git") or {}).get("head")}
 
 
 def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: dict[str, str],
@@ -172,13 +176,25 @@ def main() -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     timeout_s = a.timeout_s or int(test["timeout_s"]) or C.DEFAULT_TIMEOUT_S
 
-    cov_vdb: Path | None = None
-    if build.get("coverage") and not a.no_coverage:
-        cov_vdb = (a.cov_dir or Path(build["build_vdb"])).resolve()
-        cov_vdb.parent.mkdir(parents=True, exist_ok=True)
     measured = bool(test.get("measured", True)) if a.measured == "auto" else (a.measured == "yes")
     if build.get("mutation_id"):
         measured = False
+    cov_vdb: Path | None = None
+    if build.get("coverage") and not a.no_coverage:
+        build_vdb = Path(build["build_vdb"]).resolve()
+        if measured:
+            cov_vdb = (a.cov_dir or build_vdb).resolve()
+        else:
+            # The measured/unmeasured split holds for a standalone run too (T-027 review): an unmeasured
+            # run never writes into the build vdb; default is a seeded copy beside the build.
+            cov_vdb = (a.cov_dir or (Path(build["outdir"]) / C.UNMEASURED_COV_DIRNAME / f"{build['build']}.vdb")).resolve()
+            if cov_vdb == build_vdb:
+                U.die(f"unmeasured run (measured: false / mutation) must not write into the build vdb {build_vdb}; "
+                      "give --cov-dir a separate tree or use --no-coverage")
+            if not cov_vdb.exists():
+                cov_vdb.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(build_vdb, cov_vdb)
+        cov_vdb.parent.mkdir(parents=True, exist_ok=True)
     pass_marker = a.pass_marker or test.get("pass_marker")
     # Debug-only knobs (tb-arch P6) never run in a measured coverage run: refuse in writing.
     debug_only = [n for n in (testlist.get("debug_only_plusargs") or [])

@@ -37,7 +37,7 @@ DV_prompt.txt Section 11 is this directory plus `gen_testlist.yaml`. Evidence th
 ## 1. gen_build.py (compile one TB top)
 
 ```
-gen_build.py --build <name> [--coverage] [--cond] [--diag-noconst] [--cocotb] [--waves]
+gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb] [--waves]
              [--define NAME ...] [--outdir DIR] [--force] [--lsf] [--timeout-s N]
 ```
 
@@ -45,7 +45,8 @@ gen_build.py --build <name> [--coverage] [--cond] [--diag-noconst] [--cocotb] [-
 - Flag set: SIM_RECIPE Section 2 exactly (`-full64 -sverilog -f ... -top ... -ntb_opts uvm-1.2
   +define+UVM +define+UVM_REGEX_NO_DPI`, the `util/ibex_config.py opentitan vcs_opts` output,
   `-timescale=1ns/10ps -licqueue -LDFLAGS -CFLAGS -xlrm uniq_prior_final -lca -kdb`,
-  `-debug_access+pp`, or `-debug_access+all -ucli` with `--waves`).
+  `-debug_access+pp`, or `-debug_access+all` with `--waves`; `-ucli` goes on the simv command line only,
+  VCS X-2025.06 rejects it at compile time).
 - `--coverage`: Section 3 compile flags `-cm line+tgl+assert+fsm+branch -cm_tgl portsonly -cm_tgl
   structarr -cm_report noinitial -cm_seqnoconst -cm_dir <outdir>/build.vdb -cm_hier <outdir>/cm_hier.cfg`.
   The hier file is rendered from the checked-in template `gen_cm_hier.cfg` as
@@ -54,8 +55,8 @@ gen_build.py --build <name> [--coverage] [--cond] [--diag-noconst] [--cocotb] [-
   VCS compiles it and URG reports it for this DUT (COND 37.41 percent, 3579/9566 in the first
   smoke report). `gen_regress.py` uses it by default (`--no-cond` drops it).
 - `-diag noconst` is added to every coverage build (`--no-diag-noconst` drops it): VCS writes
-  `constfile.txt`, the list of every signal it treats as constant and why; the flow moves it from the
-  vcs cwd into the outdir (with the other cwd side files, `.fsm.sch.verilog.xml` and `ucli.key`).
+  `constfile.txt`, the list of every signal it treats as constant and why, into the outdir (vcs runs
+  there; no sweep of the clone root is needed).
 - `--vcs-arg ARG` (repeatable): extra vcs argument for trials.
 - `--cocotb`: Section 4 triple `+define+COCOTB_SIM +vpi -P <outdir>/gen_pli.tab -load $(cocotb-config
   --lib-name-path vpi vcs)`; also implied by `cocotb: true` on the build entry.

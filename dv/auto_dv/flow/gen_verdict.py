@@ -197,6 +197,30 @@ def self_test() -> int:
         flag = "ok " if got == want else "BAD"
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+    # File-based decide(): the path gen_run.py takes (sim.log, stdout capture, stderr logs on disk).
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="gen_verdict_selftest_") as td:
+        d = Path(td)
+        (d / "sim.log").write_text("\n".join(B + REAL_GREEN) + "\n", encoding="utf-8")
+        (d / "sim_stdout.log").write_text("", encoding="utf-8")
+        (d / "lsf.err").write_text("", encoding="utf-8")
+        file_cases = [
+            ("decide(): clean log, rc 0", 0, False, "", C.VERDICT_PASS),
+            ("decide(): clean log, rc 1", 1, False, "", C.VERDICT_FAIL),
+            ("decide(): rc 124 + timed_out", 124, True, "", C.VERDICT_TIMEOUT),
+            ("decide(): clean log, crash in lsf.err", 0, False, "bash: line 1: 4242 Segmentation fault      (core dumped)", C.VERDICT_FAIL),
+        ]
+        for name, rc, timed_out, err_text, want in file_cases:
+            (d / "lsf.err").write_text(err_text + ("\n" if err_text else ""), encoding="utf-8")
+            got = decide(d / "sim.log", "GEN_SMOKE_PASS", timed_out, False, rc, extra_logs=[d / "sim_stdout.log"],
+                         build_config="opentitan", stderr_logs=[d / "lsf.err"])["verdict"]
+            flag = "ok " if got == want else "BAD"
+            ok &= got == want
+            print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+        (d / "sim.log").unlink()
+        got = decide(d / "sim.log", "GEN_SMOKE_PASS", True, False, 124, build_config="opentitan")["verdict"]
+        ok &= got == C.VERDICT_TIMEOUT
+        print(f"SELF-TEST {'ok ' if got == C.VERDICT_TIMEOUT else 'BAD'} decide(): no sim.log + timed_out: want TIMEOUT got {got}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

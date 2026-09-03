@@ -82,7 +82,15 @@ First attempt (job 10930445 on `soc-c-19`, same code path, 05:58 UTC): cocotb lo
 probe passed identically, but the flow verdict said FAIL because the pass marker is emitted by
 Python logging to stdout, which the VCS `-l` log does not capture. Fix: the job script redirects
 simv stdout and stderr to `sim_stdout.log`, and `gen_verdict.decide` scans both files. The
-second run (above) is the one the verdict agrees with.
+second run (above) is the one the verdict agrees with. The first attempt's out-tree is NOT
+retained: the rerun reused the tag `t027_cocotb` with `--force` before the rule "never overwrite
+an outdir that evidence cites" existed. What remains is LSF's record, `bhist -l 10930445`:
+`Job <10930445>, Job Name <gen_dv_regress_t027_cocotb_gen_cocotb_probe_315612868>`, `Thu Sep 3
+01:58:14: Dispatched 1 Task(s) on Host(s) <soc-c-19>`, `01:58:24: Done successfully. The CPU time
+used is 1.2 seconds` (site local time), plus the cocotb lines quoted from its lsf.out in this
+file's first draft (identical to the second run's lines apart from host and pid). Treat the
+FAIL-verdict claim as unretained; the mechanism it describes is proven by the second run and by
+the self-test case "real cocotb probe" in gen_verdict.py.
 
 ## 3. Seed rule, verdict rule
 

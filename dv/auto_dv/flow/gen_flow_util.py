@@ -183,8 +183,8 @@ def derive_seeds(test_name: str, count: int, base_seed: int) -> list[int]:
 
 # --- Templates ------------------------------------------------------------------------------
 def render_fields(text: str, fields: dict[str, str], comment_prefixes: tuple[str, ...] = ("//", "#")) -> str:
-    """Replace {name} tokens for the given names only, leaving every other brace (Tcl, SV) intact;
-    a leftover token of a known name or an unknown {token} fails loud."""
+    """Replace {name} tokens for the given names only, leaving every other brace (Tcl, SV) intact.
+    Fails loud only when a token of a KNOWN name survives; other {word} text is legitimate Tcl/SV."""
     body = "\n".join(l for l in text.splitlines() if not l.lstrip().startswith(comment_prefixes))
     for k, v in fields.items():
         body = body.replace("{" + k + "}", str(v))
