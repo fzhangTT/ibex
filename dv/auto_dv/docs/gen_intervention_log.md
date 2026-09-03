@@ -723,3 +723,17 @@ stays committed (nothing weakens serving of check-tier batches, wave 5 proceeds)
 is collected until the fix landing is committed and re-reviewed; the evidence file names get one constant home
 in gen_flow_const.py consumed by gen_round.py and both excl tools (Runtime and rtl-arch coordinate, one
 landing).
+
+## LOG-026a - 2026-09-03 - RULING SHARPENED (T-137 form, after the Critic's T-102c verdict)
+
+The Critic's T-102c light check (dv/auto_dv/docs/gen_critic_tb_t102c.md, REQUEST-CHANGES on one medium) agrees
+the DUT-driven fault arming is the hole and sharpens LOG-026: before 18470dd Spike's own PMP decided a denial
+independently and a phantom trap was an isa_trap miss; after it a DUT PMP denial the spec does not require, or
+a trap with no cause, is mirrored and accepted as truth, so "consistency-only" understates the loss. Ruling:
+the UNCONDITIONAL arming form is held, not arming as such. T-137 delivers the conditioned form: the model is
+armed only for a bus error the bus driver injected or armed for that address, never for a PMP denial (Spike's
+PMP decides those), with a TB-caused versus unexplained split in the GEN_SB report; the trapping-Zcmp green
+must stay green under it. No PMP-denial or bus-error test is credited before T-137 is committed and both
+reviewers have passed it. The T-102b medium is closed: the trap-record offset on a Zcmp micro-op is 0 per
+rtl-arch R9 (the Critic's earlier "length 2" is corrected in its verdict), and plan C-1/C-12 must state the
+RTL convention (DV Lead, v2i).
