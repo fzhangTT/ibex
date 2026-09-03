@@ -1165,7 +1165,7 @@ tests:
   # TDD red fixture for the dispatcher's REGIME_SET refusal: the test sends REGIME_SET for a knob whose yaml
   # regime_set_consumer is none and finishes; the run FAILS by design through the collected GEN_CMD_DISPATCH uvm_error.
   - name: gen_ut_regime_refuse
-    description: REGIME_SET for a knob with no run-time consumer (the first of knob_fetch_enable_regime, knob_icache_ecc_err_rate, knob_mcounteren_writable in name order) must be refused by the dispatcher; a red fixture whose designed failure is the collected refusal (TB Infra T-108 / CM18-I-2)
+    description: REGIME_SET for the first knob in name order whose regime_set_consumer is none (gen_tb_knobs.yaml, read at run time) must be refused by the dispatcher; a red fixture whose designed failure is the collected refusal (TB Infra T-108)
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
