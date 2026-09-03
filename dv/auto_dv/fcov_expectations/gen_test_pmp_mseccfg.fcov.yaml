@@ -1,0 +1,159 @@
+# not_built TP-PMP-108: the plan's state-machine walk needs a wrapper reset to revisit the low states; the bridge has no reset command (TB ask filed)
+test: gen_test_pmp_mseccfg
+owner: test-writer
+bins:
+  - gen_pmp_mseccfg_cg.cp_csr.mseccfg
+  - gen_pmp_mseccfg_cg.cp_hi_bits.nonzero
+  - gen_pmp_mseccfg_cg.cp_hi_bits.zero
+  - gen_pmp_mseccfg_cg.cp_post.s000
+  - gen_pmp_mseccfg_cg.cp_post.s001
+  - gen_pmp_mseccfg_cg.cp_pre_rlb.p0
+  - gen_pmp_mseccfg_cg.cp_pre_rlb.p1
+  - gen_pmp_mseccfg_cg.cp_wr_rlb.w0
+  - gen_pmp_mseccfg_cg.cp_wr_rlb.w1
+  - gen_pmp_mseccfg_cg.cr_hi_bits.mseccfg_hi_nonzero
+  - gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfg
+  - gen_pmp_mseccfg_cg.cp_csr.mseccfgh
+  - gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrc
+  - gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrs
+  - gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrw
+  - gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfgh
+  - gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfgh
+  - gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfgh
+  - gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfgh
+  - gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfgh
+  - gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfgh
+  - gen_pmp_mseccfg_cg.cp_pre_mml.p0
+  - gen_pmp_mseccfg_cg.cp_pre_mml.p1
+  - gen_pmp_mseccfg_cg.cp_wr_mml.w0
+  - gen_pmp_mseccfg_cg.cp_wr_mml.w1
+  - gen_pmp_mseccfg_cg.cr_mml_trans.mml_0_w0_stay0
+  - gen_pmp_mseccfg_cg.cr_mml_trans.mml_0_w1_set
+  - gen_pmp_mseccfg_cg.cr_mml_trans.mml_1_w0_hold
+  - gen_pmp_mseccfg_cg.cr_mml_trans.mml_1_w1_hold
+  - gen_pmp_mseccfg_cg.cr_op_trans.csrrc_mml_hold
+  - gen_pmp_mseccfg_cg.cr_op_trans.csrrw_mml_hold
+  - gen_pmp_mseccfg_cg.cp_pre_mmwp.p0
+  - gen_pmp_mseccfg_cg.cp_pre_mmwp.p1
+  - gen_pmp_mseccfg_cg.cp_wr_mmwp.w0
+  - gen_pmp_mseccfg_cg.cp_wr_mmwp.w1
+  - gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_0_w0_stay0
+  - gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_0_w1_set
+  - gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_1_w0_hold
+  - gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_1_w1_hold
+  - gen_pmp_mseccfg_cg.cr_op_trans.csrrc_mmwp_hold
+  - gen_pmp_mseccfg_cg.cr_op_trans.csrrw_mmwp_hold
+  - gen_pmp_mseccfg_cg.cp_any_locked.none
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w0_nolock_stay
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_nolock_set
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w0_clear
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w1_hold
+  - gen_pmp_mseccfg_cg.cp_any_locked.some
+  - gen_pmp_mseccfg_cg.cp_locked_off_only.no
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w0_locked_stay
+  - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_locked_blocked
+  - gen_pmp_mseccfg_cg.cr_state_trans.s000_to_s000
+  - gen_pmp_mseccfg_cg.cr_state_trans.s000_to_s001
+  - gen_pmp_mseccfg_cg.cr_state_trans.s001_to_s000
+  - gen_pmp_cfg_write_cg.cp_outcome.ignored_mml_exec
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1001_suppressed
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1010_suppressed
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1011_suppressed
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1101_suppressed
+  - gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb0_suppressed
+  - gen_pmp_cfg_write_cg.cr_suppress_mode.na4
+  - gen_pmp_cfg_write_cg.cr_suppress_mode.napot
+  - gen_pmp_cfg_write_cg.cr_suppress_mode.tor
+  - gen_pmp_cfg_write_cg.cr_suppress_mode.off
+  - gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1000_written
+  - gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1100_written
+  - gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1110_written
+  - gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1111_written
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1001_written
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1010_written
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1011_written
+  - gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1101_written
+  - gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb1_stored
+  - gen_pmp_access_verdict_cg.cr_truth_mml0.c0111_m_load
+  - gen_pmp_access_verdict_cg.cr_truth_mml0.c1110_u_load
+  - gen_pmp_access_verdict_cg.cr_truth_mml1.c0111_m_load
+  - gen_pmp_access_verdict_cg.cr_truth_mml1.c1110_u_load
+  - gen_pmp_recfg_cg.cr_csr_data.mseccfg_mml_now_denied
+anti_vacuity:
+  gen_pmp_mseccfg_cg.cp_csr.mseccfg: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_hi_bits.nonzero: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_hi_bits.zero: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_post.s000: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_post.s001: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_pre_rlb.p0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_pre_rlb.p1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_rlb.w0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_rlb.w1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_hi_bits.mseccfg_hi_nonzero: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_mseccfg_cg.cp_csr.mseccfgh: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrc: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrs: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mseccfgh.mseccfgh_nonzero_csrrw: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_mseccfg_cg.cp_pre_mml.p0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_pre_mml.p1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_mml.w0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_mml.w1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mml_trans.mml_0_w0_stay0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mml_trans.mml_0_w1_set: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mml_trans.mml_1_w0_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mml_trans.mml_1_w1_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_op_trans.csrrc_mml_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_op_trans.csrrw_mml_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_pre_mmwp.p0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_pre_mmwp.p1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_mmwp.w0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_wr_mmwp.w1: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_0_w0_stay0: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_0_w1_set: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_1_w0_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_mmwp_trans.mmwp_1_w1_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_op_trans.csrrc_mmwp_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_op_trans.csrrw_mmwp_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_any_locked.none: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w0_nolock_stay: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_nolock_set: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w0_clear: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w1_hold: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_any_locked.some: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cp_locked_off_only.no: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w0_locked_stay: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_locked_blocked: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_state_trans.s000_to_s000: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_state_trans.s000_to_s001: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_mseccfg_cg.cr_state_trans.s001_to_s000: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_cfg_write_cg.cp_outcome.ignored_mml_exec: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1001_suppressed: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1010_suppressed: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1011_suppressed: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb0_c1101_suppressed: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb0_suppressed: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_suppress_mode.na4: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_suppress_mode.napot: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_suppress_mode.tor: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_suppress_mode.off: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1000_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1100_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1110_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_nonexec_accept.c1111_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1001_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1010_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1011_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_mml_exec_suppress.rlb1_c1101_written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb1_stored: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
+  gen_pmp_access_verdict_cg.cr_truth_mml0.c0111_m_load: "CG-PMP-005: in the reset state (all entries OFF, mseccfg 0) M-mode accesses never sample, so cp_match.nomatch and the cr_nomatch bins are not hit by every instruction of every test; a nomatch hit proves the word was checked against at least one live region (or a no-match rule) and none covered it; a match hit proves a live region of that config decided an access of that type and privilege; the verdict was checked against rvfi_trap / bus activity"
+  gen_pmp_access_verdict_cg.cr_truth_mml0.c1110_u_load: "CG-PMP-005: in the reset state (all entries OFF, mseccfg 0) M-mode accesses never sample, so cp_match.nomatch and the cr_nomatch bins are not hit by every instruction of every test; a nomatch hit proves the word was checked against at least one live region (or a no-match rule) and none covered it; a match hit proves a live region of that config decided an access of that type and privilege; the verdict was checked against rvfi_trap / bus activity"
+  gen_pmp_access_verdict_cg.cr_truth_mml1.c0111_m_load: "CG-PMP-005: in the reset state (all entries OFF, mseccfg 0) M-mode accesses never sample, so cp_match.nomatch and the cr_nomatch bins are not hit by every instruction of every test; a nomatch hit proves the word was checked against at least one live region (or a no-match rule) and none covered it; a match hit proves a live region of that config decided an access of that type and privilege; the verdict was checked against rvfi_trap / bus activity"
+  gen_pmp_access_verdict_cg.cr_truth_mml1.c1110_u_load: "CG-PMP-005: in the reset state (all entries OFF, mseccfg 0) M-mode accesses never sample, so cp_match.nomatch and the cr_nomatch bins are not hit by every instruction of every test; a nomatch hit proves the word was checked against at least one live region (or a no-match rule) and none covered it; a match hit proves a live region of that config decided an access of that type and privilege; the verdict was checked against rvfi_trap / bus activity"
+  gen_pmp_recfg_cg.cr_csr_data.mseccfg_mml_now_denied: "CG-PMP-011: only PMP CSR writes sample; a hit on a now_denied/now_allowed bin proves the write flipped a live verdict and the next instruction's trap/no-trap was checked against the new state; cr_bb of the earlier draft was an identity cross and is retired: the pair outcome lives in the cp_bb bin predicates"
