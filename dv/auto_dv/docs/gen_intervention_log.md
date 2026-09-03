@@ -1581,3 +1581,13 @@ before the ask is filed, and classifies the observed failures against it; (2) th
 component's owner as a question first ("what does the shim do here") and as a task only after the owner confirms the gap.
 rtl-arch's anchors note stands: it records what Ibex does, which the shim must match regardless of who asked. The Test
 Writer re-diagnoses per record class; tb-infra sizes T-235 from the shim as committed.
+
+## LOG-064 - 2026-09-03 - A vacuous gate: zero regeneration commands read as byte-identical
+
+For the B4 joint landing (4a71798) the Orchestrator's pre-launch check parsed the three header invocations into a command
+file, ran each in a detached worktree and gated the review launch on the worktree being clean afterwards. The parse step
+failed silently (a mis-nested heredoc left the command file empty), zero commands ran, the worktree was trivially clean,
+and the gate passed; the review launched with the byte-identical claim unverified. The launch output showed the empty
+command list and the Orchestrator killed the review within two minutes, re-ran the three commands from a fresh worktree
+(three commands, rc 0, worktree clean) and relaunched. Rule added to LOG-048/060/061: a gate that compares state after
+running commands also asserts how many commands ran; "nothing changed" after nothing ran is not a pass.
