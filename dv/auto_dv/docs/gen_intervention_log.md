@@ -1232,3 +1232,14 @@ that need an interrupt-enabled regime, a PMP-denial or bus-error regime, an inte
 remain uncredited (LOG-025, LOG-026a, LOG-037b); the round measures them for consistency only until T-136 and T-137 lift.
 Two lows from the review (cite the committed testlist in gen_tdd_batch1.md Section 10; record the template sha256 in future
 pre-fix red headers) ride with the Test Writer's next touch.
+
+## LOG-044 - 2026-09-03 - Critic plan witness v9 REQUEST-CHANGES: scope of the gate
+
+The Critic's v9 verdict on plan v2p parts 1 and 2 (gen_critic_plan_witness_v9.md) is REQUEST-CHANGES on three mediums:
+the promotion table's held-items column omits TP-CSR-029 (7 held items over 5 groups, T-136: 6, not 6 over 5); the Section
+1.6 stimulus-text rule is stated nowhere in the plan, so the 37 text-rule rows are not regenerable by a reader; the four
+Notes bullets split multi-line Pass criteria bullets (closed at fd632aa, plan v2q). Ruling: the gate applies to crediting,
+not to measurement. Round 0 dispatches as released in LOG-042d and its results are retained as evidence; no plan item is
+credited from round 0 until the DV Lead lands the held column generated from Sections 1.4 and 1.5 and the stated text-rule
+vocabulary that reproduces exactly the 37 rows, and the Critic's re-review reaches APPROVE or APPROVE-WITH-CHANGES. The
+crediting revision (v2r) carries both fixes and the CR9 rows.
