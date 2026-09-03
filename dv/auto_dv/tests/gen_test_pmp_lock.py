@@ -33,13 +33,16 @@ RLB=1 phase (021), the one RLB clear (112), then the RLB=0 items with MML=0, the
 seeds. Dropped clauses, owner plan (no wrapper reset in one run): TP-PMP-112 variant C (a locked TOR at the clear
 would break TP-PMP-019's all-locks-OFF condition later in the same run) and its repeated RLB clears; TP-PMP-019
 runs with the clear set's A=OFF locks present (the bin condition, every locked entry A=OFF, holds); MML is 0 at
-the clear; MMWP is never set. bins_not_hit names the resulting per-seed unreachable bins with the reason.
+the clear; MMWP is never set; TP-PMP-112's adjacent write is the pmpcfg variant on every seed (one clear per power-on,
+so one variant per test). bins_not_hit names the bins whose precondition this test does not apply, with the reason.
 
 Red fixtures (generator --red [--red-item TP-PMP-0nn], one per item, expectations unchanged): at one site a write is
 replaced by a read of the same CSR and the planned state is restored afterwards: 013 a lock-mix word write; 014, 015,
 018 (second half), 019, 020 the lock-setting write so the follow-up write lands; 016, 017, 018 (first half), 021 a
-write that should land; 112 the RLB clear so the adjacent locked write lands. Each red fails exactly its item's
-fire_tp_pmp_<nnn>; the pinned red of the testlist entry is TP-PMP-013 (check name fire_tp_pmp_013).
+write that should land; 112 the RLB clear so the adjacent locked write lands. A site is drawn only where the model says
+the skipped write changes the read-back (013: a write that changes an unlocked lane; the generator asserts it), so each
+red fails exactly its item's fire_tp_pmp_<nnn> and none is vacuous; the pinned red of the testlist entry is TP-PMP-013
+(check name fire_tp_pmp_013).
 
 Knobs: the items name knob:instr_mix csr_heavy (program-side region marker: this program is CSR-heavy by
 construction) and, for 020 and 112, knob:imem_gnt_delay / knob:imem_rvalid_delay random, which are among the
@@ -104,6 +107,16 @@ def changed(reports, idx, pre):
     return w is not None and w != pre
 
 
+def locked(b):
+    """L of a pmpcfg byte read-back (None = no word)."""
+    return b is not None and prog.byte_fields(b)[0] == 1
+
+
+def mode(b):
+    """A of a pmpcfg byte read-back."""
+    return prog.byte_fields(b)[1]
+
+
 class PmpLock(GenTest):
     name = "gen_test_pmp_lock"
     schedulable = lib.TIMING_ONLY_KNOBS
@@ -111,8 +124,7 @@ class PmpLock(GenTest):
     not_built = {}
     # bins of built items one run cannot reach (no wrapper reset: one RLB clear per run, MMWP never set), left out of the manifest
     bins_not_hit = {
-        "gen_pmp_recfg_cg.cp_bb.rlbclr_then_cfg": "one RLB clear per run; the adjacent-write variant is drawn per seed, so neither rlbclr bin is per-seed must-hit",
-        "gen_pmp_recfg_cg.cp_bb.rlbclr_then_addr": "one RLB clear per run; the adjacent-write variant is drawn per seed, so neither rlbclr bin is per-seed must-hit",
+        "gen_pmp_recfg_cg.cp_bb.rlbclr_then_addr": "the write adjacent to the run's one RLB clear is a pmpcfg write here (RLB stays 0 once a lock exists, so one clear per power-on); the pmpaddr variant is not applied by this test",
         "gen_pmp_mseccfg_cg.cr_state_trans.s101_to_s100": "MML is 0 at the run's one RLB clear: the MML=0 items 013/019/020 follow it",
         "gen_pmp_mseccfg_cg.cr_state_trans.s011_to_s010": "MMWP is never set: M-mode default deny needs a full rule set for code, data and the MMIO page",
         "gen_pmp_mseccfg_cg.cr_state_trans.s111_to_s110": "MMWP is never set: M-mode default deny needs a full rule set for code, data and the MMIO page",
@@ -194,8 +206,8 @@ class PmpLock(GenTest):
         entries = {e for _i, e, _f, _a, _p in meta["writes"]}
         forms = {f for _i, _e, f, _a, _p in meta["writes"]}
         ign = sum(1 for i, _e, _f, _a, pre in meta["writes"] if unchanged(plan, self.reports, i, pre))
-        ok = not bad and lock_lane is not None and lock_lane & 0x80 and modes == set(prog.A_MODES) and ign == len(meta["writes"]) and len(meta["writes"]) >= 4
-        self.check("fire_tp_pmp_014", ok, summary(n, bad, f"own lock of entry {meta['own']} read back L=1: {bool(lock_lane and lock_lane & 0x80)}; "
+        ok = not bad and locked(lock_lane) and modes == set(prog.A_MODES) and ign == len(meta["writes"]) and len(meta["writes"]) >= 4
+        self.check("fire_tp_pmp_014", ok, summary(n, bad, f"own lock of entry {meta['own']} read back L=1: {locked(lock_lane)}; "
                                                         f"{len(meta['writes'])} pmpaddr writes to {len(entries)} locked entries (modes {sorted(prog.A_NAMES[a] for a in modes)}, "
                                                         f"ops {sorted(forms)}), {ign} read back unchanged"))
 
@@ -205,7 +217,7 @@ class PmpLock(GenTest):
         n, bad = compare(plan, self.reports, bases_of(self), plan.item_indices("TP-PMP-015"))
         i, t = meta["pair"]
         nb = lane_byte(word(self.reports, meta["lock_idx"]), t % 4)
-        next_locked_tor = nb is not None and nb & 0x80 and ((nb >> 3) & 3) == prog.A_TOR
+        next_locked_tor = locked(nb) and mode(nb) == prog.A_TOR
         addr_ign = sum(1 for idx, _f, pre in meta["addr_writes"] if unchanged(plan, self.reports, idx, pre))
         forms = {f for _i, f, _p in meta["addr_writes"]}
         cidx, lane, pre_b = meta["cfg_i"]
@@ -222,7 +234,7 @@ class PmpLock(GenTest):
         modes = set()
         for idx, _i, e, a, lane_e, cfg_idx, pre in meta["pairs"]:
             nb = lane_byte(word(self.reports, cfg_idx), lane_e)
-            locked_other = nb is not None and nb & 0x80 and ((nb >> 3) & 3) != prog.A_TOR
+            locked_other = locked(nb) and mode(nb) != prog.A_TOR
             modes.add(a)
             good += bool(locked_other and changed(self.reports, idx, pre))
         ok = not bad and meta["pairs"] and good == len(meta["pairs"])
@@ -236,7 +248,7 @@ class PmpLock(GenTest):
         good = 0
         for idx, _i, _e, lane_e, cfg_idx, pre in meta["pairs"]:
             nb = lane_byte(word(self.reports, cfg_idx), lane_e)
-            unlocked_tor = nb is not None and not nb & 0x80 and ((nb >> 3) & 3) == prog.A_TOR
+            unlocked_tor = nb is not None and not locked(nb) and mode(nb) == prog.A_TOR
             good += bool(unlocked_tor and changed(self.reports, idx, pre))
         ok = not bad and meta["pairs"] and good == len(meta["pairs"])
         self.check("fire_tp_pmp_017", ok, summary(n, bad, f"{good}/{len(meta['pairs'])} pmpaddr(i) writes landed under an unlocked TOR entry i+1"))
@@ -249,9 +261,9 @@ class PmpLock(GenTest):
         first = sum(1 for idx, _f, pre in meta["first"] if changed(self.reports, idx, pre))
         lb = lane_byte(word(self.reports, meta["lock_idx"]), e % 4)
         second = sum(1 for idx, _f, pre in meta["second"] if unchanged(plan, self.reports, idx, pre))
-        ok = not bad and e == prog.NUM_REGIONS - 1 and first == len(meta["first"]) and lb is not None and lb & 0x80 and second == len(meta["second"])
+        ok = not bad and e == prog.NUM_REGIONS - 1 and first == len(meta["first"]) and locked(lb) and second == len(meta["second"])
         self.check("fire_tp_pmp_018", ok, summary(n, bad, f"pmpaddr{e}: {first}/{len(meta['first'])} unlocked writes changed, lock read back L=1 "
-                                                        f"({prog.A_NAMES[(lb >> 3) & 3] if lb is not None else '-'}), {second}/{len(meta['second'])} locked writes unchanged"))
+                                                        f"({prog.A_NAMES[mode(lb)] if lb is not None else '-'}), {second}/{len(meta['second'])} locked writes unchanged"))
 
     def fire_tp_pmp_019(self):
         plan = prog.plan(self.seed)
@@ -259,7 +271,7 @@ class PmpLock(GenTest):
         n, bad = compare(plan, self.reports, bases_of(self), plan.item_indices("TP-PMP-019"))
         e = meta["entry"]
         lb = lane_byte(word(self.reports, meta["lock_idx"]), e % 4)
-        locked_off = lb is not None and lb & 0x80 and ((lb >> 3) & 3) == prog.A_OFF
+        locked_off = locked(lb) and mode(lb) == prog.A_OFF
         ign = sum(1 for idx, _c, pre in meta["rewrites"] if unchanged(plan, self.reports, idx, pre))
         ms = word(self.reports, meta["mseccfg_idx"])
         probe = word(self.reports, meta["probe_idx"])
@@ -278,11 +290,11 @@ class PmpLock(GenTest):
         for ep in meta["episodes"]:
             lb = lane_byte(word(self.reports, ep["lock_idx"]), ep["lane"])
             sec = word(self.reports, ep["second_idx"])
-            good += bool(lb is not None and lb & 0x80 and sec is not None and sec == ep["pre_second"] and (ep["kind"] != "rlb" or not sec & prog.MSECCFG_RLB))
+            good += bool(locked(lb) and sec is not None and sec == ep["pre_second"] and (ep["kind"] != "rlb" or not sec & prog.MSECCFG_RLB))
         rows = set()
         for idx, e, _b in meta["lock_events"]:
             lb = lane_byte(word(self.reports, idx), e % 4)
-            if lb is not None and lb & 0x80:
+            if locked(lb):
                 _l, _a, x, w, r = prog.byte_fields(lb)
                 rows.add((r, w, x))
         gaps = sorted({ep["gap"] for ep in meta["episodes"]})
@@ -296,7 +308,7 @@ class PmpLock(GenTest):
         n, bad = compare(plan, self.reports, bases_of(self), plan.item_indices("TP-PMP-021"))
         rlb_words = [word(self.reports, i) for i in meta["rlb_idx"]]
         rlb_on = all(w is not None and w & prog.MSECCFG_RLB for w in rlb_words[:-1]) and rlb_words[-1] is not None and not rlb_words[-1] & prog.MSECCFG_RLB
-        locks = sum(1 for idx, e, _p in meta["lock_writes"] if (lane_byte(word(self.reports, idx), e % 4) or 0) & 0x80)
+        locks = sum(1 for idx, e, _p in meta["lock_writes"] if locked(lane_byte(word(self.reports, idx), e % 4)))
         rw_cfg = [x for x in meta["rewrites"] if x[2] == "cfg"]
         rw_addr = [x for x in meta["rewrites"] if x[2] == "addr"]
         rw_ok = sum(1 for idx, _e, _k, pre in meta["rewrites"] if changed(self.reports, idx, pre))

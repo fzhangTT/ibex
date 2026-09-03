@@ -29,7 +29,8 @@ The state set one seed visits is the path's: mmwp_first {s000 s001 s010 s011 s11
 TP-PMP-108's per-seed visit floor is the path's set, never 8 (the plan's wrapper reset does not exist).
 
 Red fixtures (red=True): the PROGRAM deviates on one intent of one item while the plan keeps the green
-expectations, so exactly that item's fire-check fails. Item and site come from random.Random(f"{seed}:red")
+expectations, so exactly that item's fire-check fails; the seed-drawn item comes from RED_ITEMS (the built items: TP-PMP-108 is
+not built and its deviation is caught by the test's fire_program_verdict integrity compare when named explicitly). Item and site come from random.Random(f"{seed}:red")
 unless red_item names the item. 011/024/108: one lock-free mseccfg write carries the RLB bit flipped, the planned
 state is restored after the reported read-back. 012: one mseccfgh write lands on mseccfg (flipping RLB), restored.
 022/023: the MML (MMWP) set write is emitted after the first clear attempt instead of before it (the attempt's
@@ -589,8 +590,10 @@ class Gen(warl.Gen):
             n, ln = divmod(e, 4)
             b = cfg_byte(1, wchoice(self.rng, W_A_ANY), x, w, r)
             if self.red_here("TP-PMP-030"):
+                pre = self.m.read_cfg(n)
                 self.emit(f"  csrr t1, pmpcfg{n}")
                 self.m.write_cfg(n, self.cfg_word_with(n, ln, b))
+                assert self.m.read_cfg(n) != pre, f"red TP-PMP-030 row {i}: the skipped write changes nothing"
                 idx = self.report_reg("t1", "TP-PMP-030", f"row {i} readback pmpcfg{n}", "abs", self.m.read_cfg(n))
                 self.plan.red_note = f"TP-PMP-030 row {i}: the accepted write of LRWX 1{r}{w}{x} to entry {e} is skipped, read-back idx {idx}"
                 self.restore(pmpcfg(n))
@@ -624,15 +627,26 @@ class Gen(warl.Gen):
             if b is None:
                 b = self.m.cfg[4 * n + ln] if form == "csrrw" else 0
             value |= b << (8 * ln)
+        def deviation(ln):
+            """Deviated byte and word for lane ln: 029 writes its row as an exec row (suppressed instead of stored),
+            027/028 the offending byte with L = 0 (stored instead of suppressed)."""
+            b = offend[ln]
+            dev = cfg_byte(1, (b >> 3) & 3, 1, 0, 0) if item == "TP-PMP-029" else b & 0x7F
+            return dev, (value & ~(0xFF << (8 * ln))) | (dev << (8 * ln))
+        planned = self.m.copy()
+        planned.op(form, pmpcfg(n), value)
+        # a red site only where some offending lane's deviation reads back differently from the planned write (else the red is vacuous)
+        observable = []
+        for ln in sorted(offend):
+            deviated = self.m.copy()
+            deviated.op(form, pmpcfg(n), deviation(ln)[1])
+            if deviated.read_cfg(n) != planned.read_cfg(n):
+                observable.append(ln)
         red_lane = None
-        if self.red_here(item):
-            red_lane = self.red_rng.choice(sorted(offend))
+        if observable and self.red_here(item):
+            red_lane = self.red_rng.choice(observable)
+            dev, dev_value = deviation(red_lane)
             b = offend[red_lane]
-            if item == "TP-PMP-029":
-                dev = cfg_byte(1, (b >> 3) & 3, 1, 0, 0)          # LRWX 1001: suppressed instead of stored
-            else:
-                dev = b & 0x7F                                     # L = 0: stored instead of suppressed
-            dev_value = (value & ~(0xFF << (8 * red_lane))) | (dev << (8 * red_lane))
             self.li("t0", dev_value)
             self.emit(f"  {form} t1, pmpcfg{n}, t0")
             self.m.op(form, pmpcfg(n), value)

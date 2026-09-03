@@ -1,0 +1,32 @@
+# sweep gen_pmp_mseccfg_prog.py from head_export13 (export of export13 = f6b42ea with the batch-3 touch overlaid; generator sha256 672078f2f97512f8): 30 seeds x (plain, --red, 13 --red-item) = 450 runs; a failure is a nonzero exit (the generator asserts the red-deviation observability); started 2026-09-03T19:14:55Z
+seed 1: red_item=TP-PMP-012
+seed 2: red_item=TP-PMP-024
+seed 3: red_item=TP-PMP-025
+seed 4: red_item=TP-PMP-025
+seed 5: red_item=TP-PMP-012
+seed 6: red_item=TP-PMP-025
+seed 7: red_item=TP-PMP-024
+seed 8: red_item=TP-PMP-025
+seed 9: red_item=TP-PMP-023
+seed 10: red_item=TP-PMP-023
+seed 11: red_item=TP-PMP-030
+seed 12: red_item=TP-PMP-026
+seed 13: red_item=TP-PMP-031
+seed 14: red_item=TP-PMP-011
+seed 15: red_item=TP-PMP-025
+seed 16: red_item=TP-PMP-024
+seed 17: red_item=TP-PMP-028
+seed 18: red_item=TP-PMP-026
+seed 19: red_item=TP-PMP-023
+seed 20: red_item=TP-PMP-024
+seed 21: red_item=TP-PMP-031
+seed 22: red_item=TP-PMP-024
+seed 23: red_item=TP-PMP-025
+seed 24: red_item=TP-PMP-025
+seed 25: red_item=TP-PMP-030
+seed 26: red_item=TP-PMP-029
+seed 27: red_item=TP-PMP-026
+seed 28: red_item=TP-PMP-026
+seed 29: red_item=TP-PMP-011
+seed 30: red_item=TP-PMP-028
+SWEEP_DONE runs=450 failures=0 seed_drawn_108=0 failed=[] finished 2026-09-03T19:16:26Z

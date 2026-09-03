@@ -1,0 +1,4 @@
+# probe: the batch-3 touch generator gen_pmp_mseccfg_prog.py (sha256 672078f2f97512f8) with the 027/028/029 site gating removed (the lane drawn from every offending lane, the observability assertion kept; variant sha256 4e1dd56b33ac2d52), run from a detached archive of 24109b8 at 2026-09-03T19:24:55Z: --seed 18 --red --red-item TP-PMP-028
+AssertionError: red TP-PMP-028 w1 pmpcfg2 A=OFF: lane 0 of pmpcfg2: the deviated write reads back as the planned one
+# the gated generator at the same seed and item:
+red_note=TP-PMP-028 w2 pmpcfg3 A=OFF: lane 2 of pmpcfg3 written 0x06 for planned 0x86, read-back idx 150

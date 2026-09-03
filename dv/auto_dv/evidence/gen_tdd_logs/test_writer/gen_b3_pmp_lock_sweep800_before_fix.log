@@ -1,0 +1,4 @@
+# sweep gen_pmp_lock_prog.py from head_export13 (export of export13 = f6b42ea with the batch-3 touch overlaid; generator sha256 7fead94e4693c62a): plan() green and seed-drawn red for seeds 1..400, 200 random 31-bit seeds (random.Random(2026)), 200 flow-derived seeds (gen_flow_util.derive_seeds('gen_test_pmp_lock', 200, 20260903)); every --red-item at seeds 1..60; a failure is a nonzero exit (the generator asserts the red-site observability); started 2026-09-03T19:13:54Z
+seeds: 800 (400 sequential, 200 random 31-bit, 200 flow-derived)
+013 red sites over seeds 1..60 (lock mix of the replaced write):  7 (none lock mix); 53 (some lock mix);
+SWEEP_DONE runs=2200 failures=1 failed_seeds=[ r35] finished 2026-09-03T19:21:32Z

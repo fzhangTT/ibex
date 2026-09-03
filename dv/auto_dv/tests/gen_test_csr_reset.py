@@ -51,8 +51,9 @@ uvm_error until TB Infra lands them; the program dodges no read and this test's 
 Program: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py at the run seed (testlist `program:
 {generator: ..., seed: run}`), plan.k report words then tohost TOHOST_PASS; red fixtures `--red
 [--red-item <id>]` re-target one read of the item so exactly its fire-check fails (generator docstring).
-Knobs: the items' Knobs lines name imem_gnt_delay, imem_rvalid_delay, irq_line_mix, debug_req_regime and
-scr_key_delay; all but debug_req_regime are declared schedulable. The program has no debug handling (no code in the
+Knobs: the items' Knobs lines name imem_gnt_delay, imem_rvalid_delay, irq_line_mix, scr_key_delay and, on TP-CSR-108
+alone, debug_req_regime (the item's debug half, not built here); all but debug_req_regime are declared schedulable. The
+program has no debug handling (no code in the
 DM window), so a debug request regime drawn at start-up halts the core there and the first report store never
 comes; the debug regime stays at its command-line default (none) and the items' debug-mode clauses are the
 not-built clauses above. The thirteen debug-mode bins of TP-CSR-108 (gen_csr_reset_read_cg cp_dbg.dbg, the four

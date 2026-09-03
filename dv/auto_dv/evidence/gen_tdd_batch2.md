@@ -199,7 +199,7 @@ The first acceptance wave (Runtime test-writer-049..055, head mode at d3c6ca8, S
 greens and 8 reds and failed 13 greens on fire_schedule_applied alone: the 3e template's schedule runner never applied a mid-run phase
 (gen_tdd_batch1.md Section 12, LOG-042a/042c). After landing 3h (9500268) the Test Writer re-filed the 13 seeds as six purpose-1 requests
 (test-writer-065..070, explicit seed lists, one per test), which Runtime served as one head-mode pass pinned to 9500268 behind a fresh canary
-(canary_sha 9500268b5275, canary_decision accepted), finished 17:21Z. All 13 PASS: UVM_ERROR 0 on each, GEN_TEST_BINS equal to the committed
+(canary_sha 9500268b5275, canary_decision accepted), finished 17:21-17:22Z. All 13 PASS: UVM_ERROR 0 on each, GEN_TEST_BINS equal to the committed
 manifests (337, 830, 602, 120, 200, 224), fire_schedule_applied ok=True with every reached entry applied and 1 to 17 idx>0 GEN_TEST_PHASE
 lines per seed, GEN_TEST_SLOW_TOTAL rounds 0. With the 11 greens and 8 RED-OK of the d3c6ca8 wave this closes the batch-2 acceptance (T-195).
 

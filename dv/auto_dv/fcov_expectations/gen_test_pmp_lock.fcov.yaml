@@ -1,8 +1,7 @@
 # not_hit gen_pmp_mseccfg_cg.cr_state_trans.s011_to_s010: MMWP is never set: M-mode default deny needs a full rule set for code, data and the MMIO page
 # not_hit gen_pmp_mseccfg_cg.cr_state_trans.s101_to_s100: MML is 0 at the run's one RLB clear: the MML=0 items 013/019/020 follow it
 # not_hit gen_pmp_mseccfg_cg.cr_state_trans.s111_to_s110: MMWP is never set: M-mode default deny needs a full rule set for code, data and the MMIO page
-# not_hit gen_pmp_recfg_cg.cp_bb.rlbclr_then_addr: one RLB clear per run; the adjacent-write variant is drawn per seed, so neither rlbclr bin is per-seed must-hit
-# not_hit gen_pmp_recfg_cg.cp_bb.rlbclr_then_cfg: one RLB clear per run; the adjacent-write variant is drawn per seed, so neither rlbclr bin is per-seed must-hit
+# not_hit gen_pmp_recfg_cg.cp_bb.rlbclr_then_addr: the write adjacent to the run's one RLB clear is a pmpcfg write here (RLB stays 0 once a lock exists, so one clear per power-on); the pmpaddr variant is not applied by this test
 test: gen_test_pmp_lock
 owner: test-writer
 bins:
@@ -55,6 +54,7 @@ bins:
   - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_locked_blocked
   - gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w0_clear
   - gen_pmp_mseccfg_cg.cr_state_trans.s001_to_s000
+  - gen_pmp_recfg_cg.cp_bb.rlbclr_then_cfg
 anti_vacuity:
   gen_pmp_cfg_write_cg.cp_outcome.ignored_lock: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
   gen_pmp_cfg_write_cg.cp_prelock.locked: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the gen_chk_csr_readback model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state and its per-entry outcome was predicted and compared on the following csrr"
@@ -105,3 +105,4 @@ anti_vacuity:
   gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_0_w1_locked_blocked: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
   gen_pmp_mseccfg_cg.cr_rlb_trans.rlb_1_w0_clear: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
   gen_pmp_mseccfg_cg.cr_state_trans.s001_to_s000: "CG-PMP-003: only these two CSRs sample; pre/post state and any_locked come from the readback model, so a hit on a transition bin proves a write attempted that transition under the named lock state and the readback was compared"
+  gen_pmp_recfg_cg.cp_bb.rlbclr_then_cfg: "CG-PMP-011: only PMP CSR writes sample; a hit on a now_denied/now_allowed bin proves the write flipped a live verdict and the next instruction's trap/no-trap was checked against the new state; cr_bb of the earlier draft was an identity cross and is retired: the pair outcome lives in the cp_bb bin predicates"

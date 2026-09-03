@@ -17,8 +17,9 @@ can be set only while no enforced lock exists, MML is sticky. The phase order fo
      then every locked entry is rewritten to L=1/A=OFF (kept) or L=0 (released) so that TP-PMP-019 later
      sees only A=OFF locks
   P2 TP-PMP-112: the one RLB clear (csrw/csrrc/csrrci) with locks present, followed at gap 0 by a write to a
-     locked pmpcfg (variant A) or pmpaddr (variant B), both read back unchanged; more locked writes after
-     1..3 fillers; TP-PMP-021's repeated write after the clear is ignored
+     locked pmpcfg (variant A), read back unchanged; more locked writes after 1..3 fillers; TP-PMP-021's
+     repeated write after the clear is ignored. One clear per power-on (RLB stays 0 once a lock exists) means
+     one adjacent-write variant per test: variant B (pmpaddr) is a rule (g) exclusion of gen_test_pmp_lock
   P3 TP-PMP-013 none-mix write to pmpcfg0 (no lock in the word)
   P4 TP-PMP-019: L=1/A=OFF lock on a fresh entry whose pmpaddr names a probe-pool word; rewrites ignored;
      csrrs mseccfg RLB stays 0 while every locked entry is A=OFF; an M-mode load probe of that word
@@ -41,7 +42,9 @@ stays the green plan. At the drawn site a write is replaced by a read of the sam
 count) and the planned state is restored without a report afterwards: 013 a lock-mix word write (whole-word
 suppression); 014, 015, 018 (second half), 019, 020 the lock-setting write, so the follow-up write lands;
 016, 017, 018 (first half), 021 a write that should land; 112 the RLB clear, so the adjacent locked write
-lands. The red program's retirement floor is the green one.
+lands. A site is eligible only where the model says the skipped write changes the read-back (013: a write that
+changes an unlocked lane; a write to an all-locked word or a no-op RMW is never a site), and csr_op asserts it
+for every skip, so no red is vacuous. The red program's retirement floor is the green one.
 
 CLI: python3 gen_pmp_lock_prog.py --seed N --out <file.S> [--red [--red-item TP-PMP-0nn]] [--summary]
      python3 gen_pmp_lock_prog.py --seed N --check-spike <spike_commits.log> --sym <prog.sym.json>
@@ -59,7 +62,7 @@ from dv.auto_dv.gen_tb.gen_knobs import MEMORY_MAP  # noqa: E402
 from dv.auto_dv.tests.gen_programs.gen_prog_const import (  # noqa: E402
     CSR, PMPADDR_BASE, PMPCFG_BASE, TOHOST_FAIL, TOHOST_PASS, pmpaddr, pmpcfg)
 from dv.auto_dv.tests.gen_programs.gen_pmp_csr_warl_prog import (  # noqa: E402
-    A_NA4, A_NAMES, A_NAPOT, A_OFF, A_TOR, CSR_MSECCFG, FILLER_REGS, MSECCFG_MML, MSECCFG_RLB, NUM_CFG_CSRS,
+    A_NA4, A_NAMES, A_NAPOT, A_OFF, A_TOR, CSR_MSECCFG, FILLER_REGS, MSECCFG_MML, MSECCFG_MMWP, MSECCFG_RLB, NUM_CFG_CSRS,
     NUM_REGIONS, PH_POOL, PH_TEXT_END, SAFE_MAX_WORD, UIMM_FORMS, WINDOW_LO_WORD, Plan, PmpModel, Report,
     bases_from_symbols, byte_fields, cfg_byte, check_spike_log, csr_name, is_addr, is_cfg, wchoice)
 
@@ -74,14 +77,14 @@ TOP_ENTRY = NUM_REGIONS - 1       # TP-PMP-018's entry
 LOCK_ROWS = ((0, 0, 0), (0, 0, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1))
 A_MODES = (A_OFF, A_TOR, A_NA4, A_NAPOT)
 BB_KINDS = ("addr", "cfg", "rlb")             # TP-PMP-020 second-write kinds
-CLR_VARIANTS = ("cfg", "addr")                # TP-PMP-112 adjacent-write variants (C dropped, docstring)
+CLR_VARIANT = "cfg"                            # TP-PMP-112: the write adjacent to the run's one RLB clear (one clear per power-on, one variant per test)
 # Layer-1 distributions from the area's W-PMP-4 table (gen_test_plan.md Section 4.4): op class of a PMP CSR write.
 W_OP = {"csrrw": 50, "csrrs": 25, "csrrc": 25}
 W_MSECCFG_SET = {"csrrw": 40, "csrrs": 40, "csrrsi": 20}
 W_MSECCFG_CLR = {"csrrw": 40, "csrrc": 40, "csrrci": 20}
 POOL_WORDS = 8
 POOL_PATTERN = 0x5A130000         # probe-pool words: pattern | index, distinct and non-degenerate
-MSECCFG_STATE_MASK = MSECCFG_MML | MSECCFG_RLB | 2
+MSECCFG_STATE_MASK = MSECCFG_MML | MSECCFG_MMWP | MSECCFG_RLB
 
 assert NUM_REGIONS >= 8 and NUM_CFG_CSRS == NUM_REGIONS // 4, "gen_pmp_lock_prog: the entry roles need at least 8 regions"
 
@@ -170,6 +173,8 @@ class Gen:
                 self.addr_rel[e] = None
         pre = self.m.read(csr)
         self.m.op(form, csr, operand)
+        if skip:
+            assert self.m.read(csr) != pre, f"red {item} {label}: the skipped write changes nothing, so the deviation is unobservable"
         name = csr_name(csr)
         if form in UIMM_FORMS:
             assert 0 <= operand <= 31, "uimm form needs a 5-bit operand"
@@ -274,12 +279,11 @@ class Gen:
             operand = self.cfg_word_with(n, lane, b)
         elif form == "csrrs":
             operand = (b & ~cur & 0xFF) << (8 * lane)
-            if operand == 0:
-                form, operand = "csrrw", self.cfg_word_with(n, lane, b)
         else:
             operand = (cur & ~b & 0xFF) << (8 * lane)
-            if operand == 0:
-                form, operand = "csrrw", self.cfg_word_with(n, lane, b)
+        # an RMW form that leaves the legalised byte as it is (nothing to set or clear, or a W set without R that legalisation strips) becomes a csrrw of the new byte
+        if form != "csrrw" and self.m.legalise_byte((self.m.combined(form, pmpcfg(n), operand) >> (8 * lane)) & 0xFF) == cur:
+            form, operand = "csrrw", self.cfg_word_with(n, lane, b)
         return self.csr_op(form, pmpcfg(n), operand, item, f"{label} {form}", skip=skip) + (form,)
 
     # --- P0 -------------------------------------------------------------------------------------------------------
@@ -378,7 +382,7 @@ class Gen:
     # --- P2: TP-PMP-112 (the one RLB clear) ----------------------------------------------------------------------
     def p2_rlb_clear(self):
         rng, meta = self.rng, self.plan.items["TP-PMP-112"]
-        variant = rng.choice(CLR_VARIANTS)
+        variant = CLR_VARIANT
         e = rng.choice(self.roles["clear"])
         n, lane = divmod(e, 4)
         form = wchoice(rng, W_MSECCFG_CLR)
@@ -489,8 +493,10 @@ class Gen:
             else:
                 set_bits = [bit for bit in (0, 1, 2, 3, 4) if (self.m.cfg[e] >> bit) & 1]
                 operand |= (1 << self.rng.choice(set_bits)) << (8 * i) if set_bits else 0
+        changed = [e for e in lanes if e not in locked and self.m.legalise_byte((self.m.combined(form, pmpcfg(n), operand) >> (8 * (e % 4))) & 0xFF) != self.m.cfg[e]]
         mix = "all" if len(locked) == 4 else ("none" if not locked else "some")
-        skip = self.site("TP-PMP-013")
+        # a red site only where the write changes an unlocked lane: a write to an all-locked word or a no-op RMW is ignored by the spec, so skipping it is unobservable
+        skip = self.site("TP-PMP-013") if changed else False
         idx, pre = self.csr_op(form, pmpcfg(n), operand, "TP-PMP-013", f"{label} {mix} {form}", skip=skip)
         if skip:
             self.plan.red_note = f"TP-PMP-013: the {form} to pmpcfg{n} ({mix} lock mix) is replaced by a read (idx {idx})"
@@ -564,6 +570,9 @@ class Gen:
             kinds.append(rng.choice(BB_KINDS))
             modes.append(rng.choice(A_MODES))
         gaps = [0, 0, 0] + [rng.choice([rng.randint(1, 3), rng.randint(4, 8)]) for _ in entries[3:]]
+        # a TOR lock right above TP-PMP-015's or TP-PMP-017's TOR entry would freeze that entry's pmpaddr before P6 sets it up: NA4 there instead
+        keep_addr_writable = {self.roles["tor_lock"], self.roles["utor"]}
+        modes = [A_NA4 if (a == A_TOR and e - 1 in keep_addr_writable) else a for e, a in zip(entries, modes)]
         for e, kind, a, gap in zip(entries, kinds, modes, gaps):
             n, lane = divmod(e, 4)
             if a != A_OFF and not self.in_window(e):
@@ -614,6 +623,7 @@ class Gen:
         t = self.roles["tor_lock"]
         i = t - 1
         assert not self.locked(i) and not self.locked(t) and self.m.addr_writable(i)
+        assert self.m.addr_writable(t), f"TP-PMP-015: pmpaddr{t} is frozen by a locked TOR above it, so entry {t} cannot become the locked TOR"
         skip = self.site("TP-PMP-015")
         idx, pre, b = self.lock_entry(t, A_TOR, "TP-PMP-015", f"lock TOR e{t}", skip=skip)
         meta.update({"pair": (i, t), "lock_idx": idx, "lock_byte": b, "addr_writes": [], "cfg_i": None})
@@ -856,14 +866,17 @@ class Gen:
             if e in pool:
                 pool.remove(e)
 
-        roles["ntor"] = rng.choice(roles["clear"])                 # TP-PMP-016: a locked OFF entry above an unlocked one
+        # TP-PMP-016 needs the entry below the locked OFF one unlocked, so a kept lock whose lower neighbour is the other kept lock is not eligible
+        roles["ntor"] = rng.choice([e for e in roles["clear"] if (e - 1) not in roles["clear"]])
+        assert (roles["ntor"] - 1) not in roles["clear"]
         protect(roles["ntor"] - 1)
-        cands = [e for e in pool if e >= 2 and (e - 1) in pool]
+        # the TOR roles stay below the top entry: TP-PMP-018's lock of PMPNumRegions-1 may be a TOR, which would freeze the pmpaddr under it
+        cands = [e for e in pool if 2 <= e < TOP_ENTRY - 1 and (e - 1) in pool]
         roles["utor"] = rng.choice(cands)                          # TP-PMP-017: both entries unlocked
         protect(roles["utor"])
         protect(roles["utor"] - 1)
         unlocked = {roles["ntor"] - 1, roles["utor"], roles["utor"] - 1}
-        cands = [e for e in pool if e >= 2 and ((e - 1) in pool or (e - 1) in unlocked)]
+        cands = [e for e in pool if 2 <= e < TOP_ENTRY - 1 and ((e - 1) in pool or (e - 1) in unlocked)]
         roles["tor_lock"] = rng.choice(cands)                      # TP-PMP-015: locked TOR above an unlocked entry
         protect(roles["tor_lock"])
         protect(roles["tor_lock"] - 1)

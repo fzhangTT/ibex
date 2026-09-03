@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 988, in <module>
+    sys.exit(main())
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 964, in main
+    p = plan(args.seed, args.red, args.red_item)
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 942, in plan
+    p = Gen(seed, red_target=(item, rng.randrange(sites)), floor=green.min_retired).build()
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 889, in build
+    self.p1_rlb_phase()
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 336, in p1_rlb_phase
+    idx, pre, _f = self.rewrite_locked_cfg(e, "TP-PMP-021", "rlb1 rewrite cfg", skip=skip)
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 288, in rewrite_locked_cfg
+    return self.csr_op(form, pmpcfg(n), operand, item, f"{label} {form}", skip=skip) + (form,)
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export13/dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py", line 177, in csr_op
+    assert self.m.read(csr) != pre, f"red {item} {label}: the skipped write changes nothing, so the deviation is unobservable"
+AssertionError: red TP-PMP-021 rlb1 rewrite cfg csrrs: the skipped write changes nothing, so the deviation is unobservable

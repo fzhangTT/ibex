@@ -16,6 +16,13 @@ Group gen_pmp_mseccfg (dv/auto_dv/docs/gen_test_plan.md, AREA PMP). Items built,
 Canonical feature IDs covered (gen_feature_list.md Section 3): F-PMP-021, F-PMP-022, F-PMP-023, F-PMP-024, F-PMP-025,
 F-PMP-026, F-PMP-027, F-PMP-029, F-PMP-030, F-PMP-033. Items not built: TP-PMP-108 (below).
 
+Reds: `--red` deviates one intent of one item so exactly that item's fire_tp method fails; the seed-drawn item comes from the
+built items only (TP-PMP-108 excluded), while an explicit `--red-item TP-PMP-108` deviates a walk read-back and fails through
+fire_program_verdict's integrity compare instead (no fire_tp method exists for a not-built item). Two reachable mseccfg transitions
+the walk never generates, s001->s111 (MML and MMWP set in one write) and s101->s110 (MMWP set and RLB cleared in one write): every
+walk write toggles one bit (rlb_op and the single-bit MML/MMWP set writes), so two-bit transitions do not occur; they belong to
+TP-PMP-108's walk when the item is built with the reset command and are not declared until then.
+
 TP-PMP-108 not built: the plan's walk restarts from a wrapper reset to revisit the low states and asserts all 8 states
 per seed; the bridge has no reset command, so one power-on walks one monotone path (MML and MMWP never clear, RLB never
 returns to 1 once a lock exists with RLB=0): s000->s101, s000->s111, s010->s111 need MML set while RLB goes 0->1, but an
@@ -45,8 +52,8 @@ source of the report count and every expectation. Layout-relative pmpaddr expect
 against it.
 
 Red fixtures (generator --red [--red-item TP-PMP-0nn], one per item, expectations unchanged; the pinned red of
-the entry is TP-PMP-011, check name fire_tp_pmp_011): see the generator docstring; each red fails exactly its
-item's fire_tp_pmp_<nnn>.
+the entry is TP-PMP-011, check name fire_tp_pmp_011): see the generator docstring; each item's red fails exactly its
+item's fire_tp_pmp_<nnn>, and the explicit TP-PMP-108 red fails through fire_program_verdict (Reds, above).
 
 Knobs: the items name program-side markers (knob:instr_mix csr_heavy, knob:pmp_regime mml_on) that describe this
 generated program; they are not scheduled. schedulable = the timing-only regime knobs. Always-on checkers relied on:

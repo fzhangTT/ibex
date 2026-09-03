@@ -556,7 +556,7 @@ and _sim.log (LOG-034: greens in full).
 
 ## 12. Landing 3h: the schedule runner applies mid-run phases (LOG-042a)
 
-Why: the batch-2 acceptance wave (Runtime test-writer-049..055, head mode at d3c6ca8) failed 13 of its 21 greens on
+Why: the batch-2 acceptance wave (Runtime test-writer-049..055, head mode at d3c6ca8) failed 13 of its 24 greens on
 fire_schedule_applied alone ("reached N of M scheduled entries by EOT ..., applied 6, missed [...]"; no other ok=False line in any
 of the 13 logs), and Runtime's bisect probes at 7ef16a0 and d3c6ca8 (probe_t181_bit_ratified_7ef16a0 / _d3c6ca8, gen_test_bit_ratified
 seed 288888690) are identical: six GEN_TEST_PHASE idx=0 lines at cycles 60-65 and none with idx>0.
@@ -711,3 +711,17 @@ rows in gen_manifest.md. Self-tests from the detached archive with the overlay, 
 dv/auto_dv/work/test-writer/head_export13_selftest_t222.log (18:57:00Z-18:57:09Z) reads "GEN_TEST_LIB self-test PASS" and "GEN_FCOV_MANIFEST
 self-test PASS (67 bins for gen_reg_schedule, 1 dropped; 86 excluded coverpoints)", both rc=0, and the committed manifest equals a fresh
 `--test-module` render (diff empty). The library self-test also PASSes in the shared tree at 18:57:20Z.
+
+## 15. Follow-ups folded into the batch-3 touch: the Critic's batch-1 v8 lows on 3k and the T-222 review's info
+
+- v8 L-2 (the run header stamps the template but not the test module): gen_run_fixture.sh now writes `test_sha=` beside `sources_sha=` and
+  `template_sha=`, the sha256 prefix of the test module file Python resolves for MODULE (the first PYROOTS entry carrying it, then the fixtures
+  directory), so a landing whose whole change is one test file is identified in every retained run header. First carried by the batch-3 touch's
+  runs on out_head14 (gen_tdd_batch3.md Section 4: test_sha=29c1be4e19212597 is gen_test_pmp_lock.py of that landing).
+- v8 L-3 (the Knobs sentence claimed the items' Knobs lines name debug_req_regime): gen_test_csr_reset.py says debug_req_regime is TP-CSR-108's
+  alone, the item's debug half not built here. Docstring only; the manifest equals a fresh render.
+- v8 L-1 (a structural guard for regime knobs without handlers, LOG-050): not in this touch; it is the template touch's item (the library refuses
+  a schedulable dbg-consumer knob for a program without debug handling, and an irq-consumer knob for a program without a handler unless MIE is
+  pinned 0; a red fixture proves the refusal), as LOG-050 places it.
+- T-222 review (595fbf5, APPROVE, one info): the reason string is repeated thirteen times because gen_fcov_manifest.py's extractor accepts
+  ast.Constant values only; no change, recorded so a shared constant is not attempted without extending the extractor first.

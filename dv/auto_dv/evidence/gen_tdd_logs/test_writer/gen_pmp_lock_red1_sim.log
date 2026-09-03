@@ -1,7 +1,7 @@
-Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem +gen_mem_image_crc32=00381a03 +gen_mem_image_words=541 +gen_boot_addr=80000000 +gen_tohost_addr=80000880 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export8/dv/auto_dv/work/test-writer/out_head8/b3_pmplock_red_013/sim.log
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export14/dv/auto_dv/work/test-writer/out_head14/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h13/red_013/prog/prog.vmem +gen_mem_image_crc32=f73a4950 +gen_mem_image_words=637 +gen_boot_addr=80000000 +gen_tohost_addr=80000a00 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export14/dv/auto_dv/work/test-writer/out_head14/b3l14_pmplock_red_013/sim.log
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 13:36 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 15:35 2026
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -19,28 +19,48 @@ UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
 GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
 GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
 GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
-GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem tohost=0x80000880
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h13/red_013/prog/prog.vmem tohost=0x80000a00
 GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
 GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(181) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h8/red_013/prog/prog.vmem: 541 words, crc32 0x00381a03 verified
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(211) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(212) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(186) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch3/gen_pmp_lock/h13/red_013/prog/prog.vmem: 637 words, crc32 0xf73a4950 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(218) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(219) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(370) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(370) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
-UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(241) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 64500: uvm_test_top.env.dispatch [GEN_PHASE] phase 1 knob=knob_imem_gnt_delay value=same_cycle cycle=59
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 65500: uvm_test_top.env.dispatch [GEN_PHASE] phase 2 knob=knob_imem_rvalid_delay value=long cycle=60
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 66500: uvm_test_top.env.dispatch [GEN_PHASE] phase 3 knob=knob_imem_outstanding_cap value=cap4 cycle=61
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 67500: uvm_test_top.env.dispatch [GEN_PHASE] phase 4 knob=knob_dmem_gnt_delay value=random cycle=62
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 68500: uvm_test_top.env.dispatch [GEN_PHASE] phase 5 knob=knob_dmem_rvalid_delay value=min1 cycle=63
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(244) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 64500: uvm_test_top.env.dispatch [GEN_PHASE] phase 1 knob=knob_imem_gnt_delay value=same_cycle cycle=59
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 65500: uvm_test_top.env.dispatch [GEN_PHASE] phase 2 knob=knob_imem_rvalid_delay value=long cycle=60
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 66500: uvm_test_top.env.dispatch [GEN_PHASE] phase 3 knob=knob_imem_outstanding_cap value=cap4 cycle=61
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 67500: uvm_test_top.env.dispatch [GEN_PHASE] phase 4 knob=knob_dmem_gnt_delay value=random cycle=62
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 68500: uvm_test_top.env.dispatch [GEN_PHASE] phase 5 knob=knob_dmem_rvalid_delay value=min1 cycle=63
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(410) @ 69500: uvm_test_top.env.scrkey [GEN_SCRKEY] key regime <= withheld_then_valid
-UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(113) @ 69500: uvm_test_top.env.dispatch [GEN_PHASE] phase 6 knob=knob_scr_key_delay value=withheld_then_valid cycle=64
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(115) @ 69500: uvm_test_top.env.dispatch [GEN_PHASE] phase 6 knob=knob_scr_key_delay value=withheld_then_valid cycle=64
 UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 71000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
-UVM_INFO @ 179000: reporter [GEN_EOT] end-of-test store 0x800008c0 at 0x8ffff104 (store 1)
-$finish at simulation time              2914001
-"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 2914 attempts, 85 match
-"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 2914 attempts, 429 match
+UVM_INFO @ 179000: reporter [GEN_EOT] end-of-test store 0x80000a40 at 0x8ffff104 (store 1)
+$finish at simulation time              3207001
+"dv/auto_dv/tb/gen_protocol_props.sv", 182: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 183: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 3207 attempts, 127 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 185: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 207: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 208: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 217: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 218: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 220: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 239: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 240: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 3207 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 249: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 250: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 272: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 295: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 296: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 3207 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 184: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 3207 attempts, 156 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 219: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 3207 attempts, 92 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 3207 attempts, 93 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 3207 attempts, 467 match
            V C S   S i m u l a t i o n   R e p o r t 
-Time: 29140010 ps
-CPU Time:      0.500 seconds;       Data structure size:   8.8Mb
-Thu Sep  3 13:36:39 2026
+Time: 32070010 ps
+CPU Time:      0.600 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 15:35:02 2026
