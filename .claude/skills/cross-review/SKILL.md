@@ -22,6 +22,13 @@ resolved SHAs in the prompt — and the wrapper REFUSES an artifact that does no
 target range (`TARGET: <base>..<head>` line), which is the compensating control. If a future
 CLI version lifts the limitation, switch to the explicit flag and drop the echo check.
 
+## When codex is unavailable (Claude substitute)
+
+Per CLAUDE.md's fallback clause: a fresh Opus-class-or-above Claude session (an unnamed subagent
+with `model: opus`, or `claude -p`) gets the same prompt shape — target manifest echo, rubric set,
+owner focus, single final verdict line. Record in the header: CLI version, model, and WHY codex was
+unavailable (timeout, spend cap, outage) with the raw codex error kept in the artifact.
+
 ## When codex executed (Claude reviews)
 
 Run `claude -p` with: the same rubric set (`cat ci/reviews/GUIDE.md ci/reviews/*.md`), the
