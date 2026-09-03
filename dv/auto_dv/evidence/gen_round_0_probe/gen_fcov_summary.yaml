@@ -1,0 +1,166 @@
+# fcov summary of the round-0 probe of 37c7ecb (byte source: gen_manifest.yaml keys summary, fcov, coverage)
+regression: round_0
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0
+pinned_sha: 37c7ecb6dbe023e6f6b098e932367e339a24735a
+summary:
+  planned: 47
+  pass: 2
+  fail: 45
+  xfail: 0
+  timeout: 0
+  not_run: 0
+  red_ok: 0
+  pass_rate_pct: 4.26
+  runs_without_fcov_manifest: 2
+  tests_without_fcov_manifest:
+  - gen_boot_zc
+  - gen_ut_lockstep
+fcov:
+  totals:
+    checked: 44
+    pass: 0
+    unmet: 0
+    unverifiable: 44
+  per_test:
+    gen_boot_zc:
+      runs: 1
+      checked: 0
+      pass: 0
+      unmet: 0
+      unverifiable: 0
+      declared_bins: 0
+      unmet_bins: []
+    gen_test_bit_draft:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 15
+      unmet_bins: []
+    gen_test_bit_ratified:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 830
+      unmet_bins: []
+    gen_test_cmp_zca:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 337
+      unmet_bins: []
+    gen_test_cmp_zcb:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 110
+      unmet_bins: []
+    gen_test_cmp_zcmp_basic:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 473
+      unmet_bins: []
+    gen_test_csr_access:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 80
+      unmet_bins: []
+    gen_test_csr_reset:
+      runs: 3
+      checked: 2
+      pass: 0
+      unmet: 0
+      unverifiable: 2
+      declared_bins: 81
+      unmet_bins: []
+    gen_test_csr_trap_setup:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 168
+      unmet_bins: []
+    gen_test_isa_alu:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 602
+      unmet_bins: []
+    gen_test_isa_cti:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 200
+      unmet_bins: []
+    gen_test_isa_shift:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 120
+      unmet_bins: []
+    gen_test_mul_div:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 224
+      unmet_bins: []
+    gen_test_mul_mul:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 338
+      unmet_bins: []
+    gen_test_pmp_csr_warl:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 266
+      unmet_bins: []
+    gen_test_rst_boot:
+      runs: 3
+      checked: 3
+      pass: 0
+      unmet: 0
+      unverifiable: 3
+      declared_bins: 8
+      unmet_bins: []
+    gen_ut_lockstep:
+      runs: 1
+      checked: 0
+      pass: 0
+      unmet: 0
+      unverifiable: 0
+      declared_bins: 0
+      unmet_bins: []
+  covergroups_exist: false
+coverage_status:
+  measured_merge: 'failed: urg Error-[URG-OFR], the relative -elfile path was not resolved (cov/merge.log)'
+  elfiles_as_passed:
+  - dv/auto_dv/excl/gen_exclusions.el
+  dashboard_txt: null

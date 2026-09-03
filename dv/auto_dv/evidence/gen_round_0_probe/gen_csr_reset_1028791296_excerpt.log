@@ -1,0 +1,33 @@
+# Decisive excerpt: gen_test_csr_reset seed 1028791296 of the round-0 probe (regress_round_0, pinned 37c7ecb6dbe0)
+# source: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/runs/gen_test_csr_reset_1028791296/sim_stdout.log lines 86-113 of 126; sha256 of the full log: b472b590f3cae9341b4391e6469773b130d4203b3fcf250e25d3a4bc042292e0
+# result.yaml: verdict FAIL, reason: cocotb_summary at sim_stdout.log:112, exit_code 0, wall_s 46.7, LSF job 10944677 on soc-c-15
+# cause class: the test's runaway guard (end-of-test store not seen while the core keeps retiring); test-side, for the Test Writer (T-206)
+#
+14000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 14 x 100000 cycles, cycle 1400065, retired 28798 (bus regimes)
+15000705.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SLOW store 1 of 89 pending after 15 x 100000 cycles, cycle 1500065, retired 30840 (bus regimes)
+16000705.01ns INFO     cocotb.regression                  gen_test_csr_reset failed
+                                                          Traceback (most recent call last):
+                                                            File "/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0/dv/auto_dv/tests/gen_test_template.py", line 270, in wait_eot
+                                                              await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
+                                                            File "/proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/triggers.py", line 1102, in with_timeout
+                                                              raise cocotb.result.SimTimeoutError
+                                                          cocotb.result.SimTimeoutError
+                                                          
+                                                          During handling of the above exception, another exception occurred:
+                                                          
+                                                          Traceback (most recent call last):
+                                                            File "/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0/dv/auto_dv/tests/gen_test_csr_reset.py", line 246, in gen_test_csr_reset
+                                                              await CsrReset(dut).run()
+                                                            File "/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0/dv/auto_dv/tests/gen_test_template.py", line 394, in run
+                                                              await self.wait_eot()
+                                                            File "/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0/dv/auto_dv/tests/gen_test_template.py", line 278, in wait_eot
+                                                              assert rounds < self.progress_rounds_max, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                          AssertionError: GEN_TEST: end-of-test store 1 of 89 not seen within 16 x 100000 cycles (cycle 1600065, retired 32890) although the core keeps retiring (runaway program)
+16000705.01ns INFO     cocotb.regression                  ****************************************************************************************************************
+                                                          ** TEST                                                    STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                          ****************************************************************************************************************
+                                                          ** dv.auto_dv.tests.gen_test_csr_reset.gen_test_csr_reset   FAIL    16000705.01          28.32     564938.06  **
+                                                          ****************************************************************************************************************
+                                                          ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                     16000705.01          28.76     556437.00  **
+                                                          ****************************************************************************************************************

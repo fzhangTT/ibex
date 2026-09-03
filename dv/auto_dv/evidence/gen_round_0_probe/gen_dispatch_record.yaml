@@ -1,0 +1,32 @@
+utc: '2026-09-03T17:28:17Z'
+kind: round_dispatch
+round: 0
+label: Phase 1 gate
+requester: dv-lead
+release: LOG-042d (Orchestrator, 3h review APPROVE at e8ac866)
+canary:
+  test: gen_boot_zc
+  sha: 911005282b0f1d2c3ee6ada695a6b807a4109640
+  outdir: dv/auto_dv/work/runtime/out/canary_head_round0
+  verdict: PASS
+pinned_sha_at_dispatch: 37c7ecb6dbe023e6f6b098e932367e339a24735a
+hold: 'accepted: no mirrored-set delta (gen_mirror.git_pathspecs) between the canary
+  911005282b0f and HEAD at dispatch 37c7ecb6dbe0 (the later commits touch only review/docs
+  paths outside the set)'
+superseded_request_facts:
+  request: dv/auto_dv/work/dv-lead/gen_round0_request.md (filed 16:10Z)
+  head_named: 18f9ee0
+  head_used: 37c7ecb6dbe0 (HEAD at dispatch; carries 9500268 landing 3h and the promotion
+    3e6f1b2)
+  plan_named: 79c2708
+  plan_of_record: fd632aa (DV Lead v2q, per the Orchestrator's release)
+  elfile_named: pass 13 at 9ebf2d9 sha256 3a815ffc68358b5e
+  elfile_used: 'the committed dv/auto_dv/excl/gen_exclusions.el at HEAD, sha256 3a815ffc68358b5e
+    (unchanged: pass 13)'
+command: gen_round.py --round 0 --label "Phase 1 gate" --elfile dv/auto_dv/excl/gen_exclusions.el
+  --requester dv-lead (head mode; gen_regress --tier full --purpose 4)
+outdir_expected: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0
+evidence_expected: dv/auto_dv/evidence/gen_round_0/ + gen_rounds.yaml
+crediting_note: interrupt-enabled, PMP-denial / bus-error, integrity-error and T-137
+  comparator regimes are consistency-only in this round (LOG-025, LOG-026a, LOG-037b);
+  the flow records them as measured, the DV Lead applies the rules
