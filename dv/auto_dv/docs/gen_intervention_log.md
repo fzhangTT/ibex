@@ -670,3 +670,11 @@ ledger sampling on export events with ids from the committed testlist and codes 
 outcome), narrows the lint claim to its real coverage, corrects the two rows, and a recorded re-review
 reaches APPROVE or APPROVE-WITH-CHANGES. The DV Lead's v2i unforgeability sentence must carry the same
 truthful wording before it is committed.
+
+## LOG-024a - 2026-09-03 - CORRECTION (premise of the batch-1 v3 check)
+
+The Orchestrator's instruction to the Critic listed "not_built two-sided guard" as part of landing 3. It is
+not: `git grep not_built d1d68fd -- dv/auto_dv` matches only the Critic's v2 verdict; what landed is
+`plan_bins` returning an empty list with a stderr reason for an all-excluded item set (T-109 M-1), a
+different item. The Critic's v3 M-1 stands as the first medium; landing 3b must carry the actual guard or a
+response row the Critic can judge. Orchestrator error, corrected here.
