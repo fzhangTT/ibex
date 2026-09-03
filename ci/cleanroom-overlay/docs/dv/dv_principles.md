@@ -1,10 +1,12 @@
 # Ibex DV principles
 
+<!-- FENCE-ZONE: A -->
+fence-integrity: PASS — 2026-09-02
+
 Recurring verification best-practices for this repo — the centralized "how we verify" reference
 for humans and agents. It binds hand-written and generated DV equally: tests, TB components,
 checkers, coverage, and the tooling around them. Flow commands live in
-[`BUILD_AND_SIM.md`](BUILD_AND_SIM.md); cosim architecture in [`COSIM.md`](COSIM.md); the
-generated-test interface contract in `TB_CONTRACT.md` (once WS2 lands).
+[`SIM_RECIPE.md`](SIM_RECIPE.md); the cocotb mechanics note in [`TB_CONTRACT.md`](TB_CONTRACT.md).
 
 Boundary rules scope to **the chosen DUT** — the module a TB instantiates as its device under
 test. In the core-level TB that is the ibex core (the examples below assume it); a sub-module TB
@@ -21,9 +23,9 @@ interface-boundary checking (§2) are judged against its interface, not the core
   internal net can silently no-op under VCS visibility rules; if a backdoor is unavoidable,
   verify it took (write → clock → read back → error on mismatch).
 - **If it's a config, program it.** CSR-controlled behavior is set through real CSR-writing
-  instructions in the test program, not by poking DUT state. TB-parameter behavior is set
-  through the config system (`IBEX_CONFIG`, `+define+IBEX_CFG_*`) — and the `TB-CONFIG:` banner
-  exists so every log proves which configuration actually elaborated.
+  instructions in the test program, not by poking DUT state. Build-parameter behavior is set
+  through the config system (`util/ibex_config.py`-emitted defines and parameters) — and the TB
+  prints a config banner at time 0 so every log proves which configuration actually elaborated.
 - **Randomize, don't walk.** A test explores its state space to catch corners, not to confirm
   one path. Randomly select stimulus per iteration with distribution weights; pin a directed
   iteration inside the random stream only to guarantee a specific corner. Never reduce a test
@@ -43,7 +45,7 @@ interface-boundary checking (§2) are judged against its interface, not the core
 ## 2. Checking & correctness
 
 - **Check at the interface boundary; internal signals only when unavoidable.** Prefer checks at
-  module/bus boundaries and architectural state (the cosim comparison is the model: retired
+  module/bus boundaries and architectural state (the ISA-model comparison is the model: retired
   instructions, RF writes, PC). An internal-signal check is fragile to design change and does
   not show end-to-end behavior — when one is unavoidable, make its failure message identify
   itself ("checked signal moved/renamed", not a phantom bug) and pair it with an end-to-end
@@ -60,9 +62,9 @@ interface-boundary checking (§2) are judged against its interface, not the core
   only to observe state must still assert both that it landed and that the value matches; a
   dropped or perturbing read otherwise passes unnoticed.
 - **Fail through a mechanism the flow actually collects.** In the SV-UVM flow, that is
-  `uvm_error`/`uvm_fatal` (scanned by `scripts/check_logs.py` into `trr.yaml`/`regr.log`); in
-  cocotb tests, a Python `assert`/raised exception fails the cocotb test which fails the run. A
-  bare `$display`/log line fails nothing. Know your failure path and prove it once (see §6).
+  `uvm_error`/`uvm_fatal` (collected by your regression flow's log scan); in cocotb tests, a
+  Python `assert`/raised exception fails the cocotb test which fails the run. A bare
+  `$display`/log line fails nothing. Know your failure path and prove it once (see §6).
 - **Predict-and-check.** Per-feature expectations computed from randomized stimulus + sampled
   config, compared against observation. Keep predictors pure and host-testable where possible.
 - **Ground-truth at the waveform for new checkers.** Confirm a new monitor/checker against the
@@ -72,16 +74,16 @@ interface-boundary checking (§2) are judged against its interface, not the core
 ## 3. Scoreboard & infrastructure
 
 - **Passive, always-on checking is the default.** The best check is one a test author cannot
-  forget: derived automatically, applied on every transaction in every test (the cosim referee
-  is the archetype). Active in-test checks exist for (a) "did the targeted scenario actually
-  fire" — the reason the test exists — and (b) checks unique or too costly to run passively.
-  Both layers are needed; a passive floor does not remove a test's duty to check its own
-  driven data and effects.
+  forget: derived automatically, applied on every transaction in every test (an always-on
+  ISA-model referee is the archetype). Active in-test checks exist for (a) "did the targeted
+  scenario actually fire" — the reason the test exists — and (b) checks unique or too costly to
+  run passively. Both layers are needed; a passive floor does not remove a test's duty to check
+  its own driven data and effects.
 - **Always-true invariants live in shared infrastructure; "did it fire" lives in the test.**
 - **No-modify reuse of shared/vendored infra.** riscv-dv and lowrisc_ip are vendored: extend
-  through the extension points (`riscv_dv_extension/`, TB hooks), don't patch vendored code
-  ad-hoc. When a genuine vendor patch is required it goes through `vendor/patches/` with the
-  vendoring flow, never a direct edit.
+  through extension points (riscv-dv's user-extension mechanism, TB hooks), don't patch vendored
+  code ad-hoc. When a genuine vendor patch is required it goes through the vendoring flow, never
+  a direct edit.
 
 ## 4. RTL truth & honesty
 
@@ -91,15 +93,16 @@ interface-boundary checking (§2) are judged against its interface, not the core
   that is a latent-bug candidate — write the test to the intended behavior, mark it as a known
   expected-fail, and drive the fix. DV does not modify RTL to make tests pass.
 - **Don't hide failures.** Never fake-pass, silently down-scope, or paper over something that
-  cannot be driven or checked; surface limitations explicitly (the FCIBH workaround in
-  `BUILD_AND_SIM.md` is the pattern: documented, scoped, with the follow-up named).
+  cannot be driven or checked; surface limitations explicitly (`SIM_RECIPE.md`'s documented VCS
+  gotchas are the pattern: documented, scoped, with the follow-up named).
 - **Evidence over inference.** If a question is answerable from waves, RTL, docs, git history,
   or a quick experiment — check it. State unverified claims as unverified. A mechanism you
   explained but did not observe is a guess.
 - **FCOV: build samplable, prune impossible.** A coverpoint may be built before stimulus can
   hit it (0% marks intent), but genuinely unhittable bins are pruned/`ignore_bins`'d so
   coverage isn't diluted. No duplicate coverpoints — extend, don't re-cover. Beware simulator
-  semantics: `illegal_bins = default sequence` is not portable (see the FCIBH gotcha).
+  semantics: `illegal_bins = default sequence` is not portable (see `SIM_RECIPE.md` §Site
+  gotchas).
 
 ## 5. Tooling & hygiene
 
@@ -118,17 +121,17 @@ interface-boundary checking (§2) are judged against its interface, not the core
   imported: `ibex_pkg` parameters, config fields, one constants home per language domain.
 - **No hardcoded paths — filesystem or hierarchy.** Filesystem paths anchor to the repo root
   or `ci/env.sh`-exported variables. Hierarchical RTL references (SV bind paths, cocotb
-  handles) resolve through one central place per domain (the fcov binds; the cocotb common
-  package), so a rename fails loudly there instead of silently per call-site.
-- **Site realities** (see `BUILD_AND_SIM.md` gotchas): the module command exits nonzero on
+  handles) resolve through one central place per domain (one binds home; one Python handles
+  module), so a rename fails loudly there instead of silently per call-site.
+- **Site realities** (see `SIM_RECIPE.md` gotchas): the module command exits nonzero on
   success; background notifications are unreliable — poll artifacts with deadlines and watchdog
   long-running work; clear `PYTHONPATH` around pip operations.
 
 ## 6. Trust & evidence
 
 Every claim about verification is backed by committed evidence — logs, reports, banners — not
-prose. The `TB-CONFIG:` banner, the evidence files under `docs/dv/evidence/`, and the review
-artifacts under `docs/dv/reviews/` are the standing examples.
+prose. A time-0 config banner, the evidence files under `dv/auto_dv/evidence/`, and the review
+artifacts under `dv/auto_dv/reviews/` are the standing patterns.
 
 <!-- TRUST-TRIAD-CANONICAL-BEGIN -->
 **The trust triad** — required for every new test, checker, assertion, or covergroup, whether
@@ -139,9 +142,9 @@ human-written or generated:
 2. **Mutation-proof** — a new checker or assertion counts only when a named mutation (recorded
    as id, file:line, original, mutated, expected detector) is caught by the NAMED checker with
    hidden referees inert, plus a checker-ablation negative control (checker disabled ⇒ the
-   mutation survives). "Hidden referees inert" operationally: run with `+disable_cosim=1` (cosim
-   mismatches become informational and cannot fail the test) and verify the failure signature in
-   the log belongs to the named checker.
+   mutation survives). "Hidden referees inert" operationally (Zone A): every Zone A check other
+   than the named one is disabled for the evidence run, and the failure signature in the log
+   belongs to the named check (seed prompt, Section 8).
 3. **fcov-expectation** — every new test declares the functional-coverage bins it intends to
    hit; declared-but-unhit bins FAIL the run. Verification is per-test and pre-merge (merged
    databases let one test claim another's bins), generated covergroups live in an isolated
@@ -149,14 +152,10 @@ human-written or generated:
    always-true sample proves nothing).
 <!-- TRUST-TRIAD-CANONICAL-END -->
 
-- **Zone A scoping.** In a Zone A cleanroom clone, where the cosim plusarg above does not exist,
-  "hidden referees inert" means every Zone A check other than the named one is disabled for the
-  evidence run, with the failure signature in the log belonging to the named check (seed prompt,
-  Section 8).
 - **Self-proving checks.** The triad's rules 2 and 3 generalize: a check never exercised to
   fail is not trusted; a stimulus never proven to arrive is not trusted.
 - **Reviewer independence.** The executing model never self-approves — the cross-model review
-  policy in `CLAUDE.md` governs; artifacts live under `docs/dv/reviews/`.
+  policy in `CLAUDE.md` governs; artifacts live under `dv/auto_dv/reviews/`.
 - **No hidden-referee reliance.** Generated DV must carry its own checking and may not lean on
-  referees it cannot see (the cosim demotion rules and the checking obligation live in the
-  spec's fence workstream and `TB_CONTRACT.md` once WS2 lands).
+  referees it cannot see (seed prompt, Sections 3 and 7; the checking obligation is restated in
+  `TB_CONTRACT.md`).

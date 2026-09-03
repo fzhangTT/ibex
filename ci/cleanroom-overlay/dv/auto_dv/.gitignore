@@ -1,0 +1,20 @@
+# Simulation/build junk — never commit raw run products. Evidence is committed as
+# explicit excerpt files, not out-trees.
+out*/
+work/
+csrc/
+simv
+simv.daidir/
+vcs_simv
+vcs_simv.csrc/
+ucli.key
+vc_hdrs.h
+*.fsdb
+*.vpd
+*.vdb
+novas.*
+verdiLog/
+urgReport/
+results.xml
+__pycache__/
+*.pyc

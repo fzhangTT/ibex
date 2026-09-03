@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "siliconpilot":    { "command": "bash", "args": ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh\""] },
+    "fsdb-mcp-server": { "command": "bash", "args": ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh\""] },
+    "verdi-cov-mcp":   { "command": "bash", "args": ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh\""] }
+  }
+}

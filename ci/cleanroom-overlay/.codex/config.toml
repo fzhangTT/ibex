@@ -1,0 +1,22 @@
+# Codex client config — Zone A cleanroom clone. Exactly three LOCAL MCP servers; no remote
+# server ships to Zone A, and adding any MCP server here requires a fence review
+# (docs/dv/FENCE.md). Launch logic lives in ci/mcp/*.sh (single source of truth); entries here
+# only locate those wrappers. startup_timeout_sec raised from the 10s default: covers
+# ci/env.sh's module-load cost and the servers' lazy-import first tools/list.
+project_doc_fallback_filenames = ["CLAUDE.md"]
+project_doc_max_bytes = 65536
+
+[mcp_servers.siliconpilot]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/siliconpilot-mcp.sh\""]
+startup_timeout_sec = 60
+
+[mcp_servers.fsdb-mcp-server]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/fsdb-mcp.sh\""]
+startup_timeout_sec = 60
+
+[mcp_servers.verdi-cov-mcp]
+command = "bash"
+args = ["-c", "exec \"$(git rev-parse --show-toplevel)/ci/mcp/verdi-cov-mcp.sh\""]
+startup_timeout_sec = 60
