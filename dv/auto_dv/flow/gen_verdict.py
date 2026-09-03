@@ -184,21 +184,21 @@ def self_test() -> int:
         ("real timeout (job 10930764): rc 124, no sim.log", [], "GEN_SMOKE_PASS", 124, True, [], False, C.VERDICT_TIMEOUT),
         ("real missing marker (job 10930763)", B + REAL_GREEN, "GEN_NEVER_PRINTED", 0, False, [], True, C.VERDICT_FAIL),
         ("real cocotb probe (job 10930476)", B + REAL_COCOTB, "GEN_COCOTB_PROBE_PASS", 0, False, [], True, C.VERDICT_PASS),
-        ("marker but no $finish and rc 0 (P-02: rc 0 counts as clean end)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_PASS),
-        ("marker but no $finish and no rc (P-02 flipped case 12)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", None, False, [], True, C.VERDICT_FAIL),
-        ("marker, $finish, rc 139 (P-02 unexplained exit code)", B + REAL_GREEN, "GEN_SMOKE_PASS", 139, False, [], True, C.VERDICT_FAIL),
-        ("clean log, crash signature in stderr (P-02)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["bash: line 1: 12345 Segmentation fault      (core dumped) vcs_simv"], True, C.VERDICT_FAIL),
-        ("marker quoted inside a message is not the marker (P-02)", B + ["waiting for GEN_SMOKE_PASS marker", "$finish called"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
-        ("no config banner (P-09)", REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
-        ("wrong config in banner (P-09)", ["GEN_CONFIG_BANNER build_config=small"] + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
-        ("sim.log missing without timeout", [], "GEN_SMOKE_PASS", 1, False, [], False, C.VERDICT_FAIL),
-        ("uvm error count", B + ["--- UVM Report Summary ---", "UVM_FATAL :    0", "UVM_ERROR :    2", "$finish at simulation time 10"], None, 0, False, [], True, C.VERDICT_FAIL),
-        ("uvm clean", B + ["UVM_FATAL :    0", "UVM_ERROR :    0", "$finish at simulation time 10"], None, 0, False, [], True, C.VERDICT_PASS),
-        ("uvm error line", B + ["UVM_ERROR @ 100: uvm_test_top [SB] mismatch", "UVM_ERROR :    1", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
-        ("vcs runtime error", B + ["Error-[FCIBH] Illegal bin hit", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
-        ("cocotb fail summary", B + ["** TESTS=1 PASS=0 FAIL=1 SKIP=0 **", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
-        ("cocotb critical", B + ["CRITICAL Failed to import module", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
-        ("no $finish, no marker", B, None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: marker but no $finish and rc 0 (P-02: rc 0 counts as clean end)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_PASS),
+        ("fabricated: marker but no $finish and no rc (P-02 flipped case 12)", B + ["GEN_SMOKE_PASS"], "GEN_SMOKE_PASS", None, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: marker, $finish, rc 139 (P-02 unexplained exit code)", B + REAL_GREEN, "GEN_SMOKE_PASS", 139, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: clean log, crash signature in stderr (P-02)", B + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, ["bash: line 1: 12345 Segmentation fault      (core dumped) vcs_simv"], True, C.VERDICT_FAIL),
+        ("fabricated: marker quoted inside a message is not the marker (P-02)", B + ["waiting for GEN_SMOKE_PASS marker", "$finish called"], "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: no config banner (P-09)", REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: wrong config in banner (P-09)", ["GEN_CONFIG_BANNER build_config=small"] + REAL_GREEN, "GEN_SMOKE_PASS", 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: sim.log missing without timeout", [], "GEN_SMOKE_PASS", 1, False, [], False, C.VERDICT_FAIL),
+        ("fabricated: uvm error count", B + ["--- UVM Report Summary ---", "UVM_FATAL :    0", "UVM_ERROR :    2", "$finish at simulation time 10"], None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: uvm clean", B + ["UVM_FATAL :    0", "UVM_ERROR :    0", "$finish at simulation time 10"], None, 0, False, [], True, C.VERDICT_PASS),
+        ("fabricated: uvm error line", B + ["UVM_ERROR @ 100: uvm_test_top [SB] mismatch", "UVM_ERROR :    1", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: vcs runtime error", B + ["Error-[FCIBH] Illegal bin hit", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: cocotb fail summary", B + ["** TESTS=1 PASS=0 FAIL=1 SKIP=0 **", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: cocotb critical", B + ["CRITICAL Failed to import module", "$finish called"], None, 0, False, [], True, C.VERDICT_FAIL),
+        ("fabricated: no $finish, no marker", B, None, 0, False, [], True, C.VERDICT_FAIL),
     ]
     ok = True
     for name, lines, marker, rc, timed_out, stderr, present, want in cases:
@@ -214,10 +214,10 @@ def self_test() -> int:
         (d / "sim_stdout.log").write_text("", encoding="utf-8")
         (d / "lsf.err").write_text("", encoding="utf-8")
         file_cases = [
-            ("decide(): clean log, rc 0", 0, False, "", C.VERDICT_PASS),
-            ("decide(): clean log, rc 1", 1, False, "", C.VERDICT_FAIL),
-            ("decide(): rc 124 + timed_out", 124, True, "", C.VERDICT_TIMEOUT),
-            ("decide(): clean log, crash in lsf.err", 0, False, "bash: line 1: 4242 Segmentation fault      (core dumped)", C.VERDICT_FAIL),
+            ("fabricated file: decide(): clean log, rc 0", 0, False, "", C.VERDICT_PASS),
+            ("fabricated file: decide(): clean log, rc 1", 1, False, "", C.VERDICT_FAIL),
+            ("fabricated file: decide(): rc 124 + timed_out", 124, True, "", C.VERDICT_TIMEOUT),
+            ("fabricated file: decide(): clean log, crash in lsf.err", 0, False, "bash: line 1: 4242 Segmentation fault      (core dumped)", C.VERDICT_FAIL),
         ]
         for name, rc, timed_out, err_text, want in file_cases:
             (d / "lsf.err").write_text(err_text + ("\n" if err_text else ""), encoding="utf-8")
@@ -229,18 +229,20 @@ def self_test() -> int:
         (d / "sim.log").unlink()
         got = decide(d / "sim.log", "GEN_SMOKE_PASS", True, False, 124, build_config="opentitan")["verdict"]
         ok &= got == C.VERDICT_TIMEOUT
-        print(f"SELF-TEST {'ok ' if got == C.VERDICT_TIMEOUT else 'BAD'} decide(): no sim.log + timed_out: want TIMEOUT got {got}")
+        print(f"SELF-TEST {'ok ' if got == C.VERDICT_TIMEOUT else 'BAD'} fabricated file: decide(): no sim.log + timed_out: want TIMEOUT got {got}")
     got = decide_lines(REAL_GREEN, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, banner_lines=REAL_GREEN)
     cond = got["verdict"] == C.VERDICT_FAIL and "banner" in got["reason"]
     ok &= cond
-    print(f"SELF-TEST {'ok ' if cond else 'BAD'} banner in the stdout capture only does not count (sim.log has none): {got['verdict']}")
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: banner in the stdout capture only does not count (sim.log has none): {got['verdict']}")
     try:
         scan_log(B + REAL_GREEN, "GEN_SMOKE_PASS", "")
         cond = False
     except ValueError:
         cond = True
     ok &= cond
-    print(f"SELF-TEST {'ok ' if cond else 'BAD'} banner rule not skippable (empty build_config raises)")
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: banner rule not skippable (empty build_config raises)")
+    print("SELF-TEST: cases named 'real ...' are verbatim excerpts of runs on this site (LSF job ids given); "
+          "cases named 'fabricated ...' pin a rule on synthetic text until a real run exists")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

@@ -160,7 +160,7 @@ def self_test() -> int:
                         f"  {cg}.{cp}.bin_b: sampled once per mode switch\n", encoding="utf-8")
         _, problems = validate_manifest(good)
         ok &= not problems
-        print("SELF-TEST", "ok " if not problems else "BAD", "schema accepts a well-formed manifest", problems)
+        print("SELF-TEST", "ok " if not problems else "BAD", "fabricated manifest: schema accepts a well-formed manifest", problems)
         bad = d / "gen_selftest_bad.fcov.yaml"
         bad.write_text(f"test: other\nowner: nobody\nbins:\n  - notgen_cg.{cp}.bin_a\n  - {cg}.{cp}.bin_a\n"
                        f"anti_vacuity: {{}}\n", encoding="utf-8")
@@ -168,29 +168,29 @@ def self_test() -> int:
         want = ["file stem", "role slug", "gen_ namespace", "anti_vacuity note missing"]
         got = all(any(w in p for p in problems) for w in want)
         ok &= got
-        print("SELF-TEST", "ok " if got else "BAD", f"schema rejects stem/owner/namespace/note violations ({len(problems)} problems)")
+        print("SELF-TEST", "ok " if got else "BAD", f"fabricated manifest: schema rejects stem/owner/namespace/note violations ({len(problems)} problems)")
         rep_hit = d / "report_hit"
         fabricate_report(rep_hit, cg, cp, {"bin_a": 3, "bin_b": 1})
         res = run_checker(good, None, None, d / "hit.log", report_dir=rep_hit)
         cond = res["status"] == "PASS" and res["hit"] == 2 and res["unmet_bins"] == []
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"checker PASS on all-hit fixture: {res['status']} hit={res['hit']}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: checker PASS on all-hit fixture: {res['status']} hit={res['hit']}")
         rep_miss = d / "report_miss"
         fabricate_report(rep_miss, cg, cp, {"bin_a": 3, "bin_b": 0})
         res = run_checker(good, None, None, d / "miss.log", report_dir=rep_miss)
         cond = res["status"] == "UNHIT" and res["unmet_bins"] == [f"{cg}.{cp}.bin_b"] and res["reason"].startswith(REASON_UNMET)
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"checker UNHIT on one unhit bin: {res['status']} {res['unmet_bins']} reason={res['reason']}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: checker UNHIT on one unhit bin: {res['status']} {res['unmet_bins']} reason={res['reason']}")
         rep_absent = d / "report_absent"
         fabricate_report(rep_absent, cg, cp, {"bin_a": 3})
         res = run_checker(good, None, None, d / "absent.log", report_dir=rep_absent)
         cond = res["status"] == "UNHIT" and res["bins"].get(f"{cg}.{cp}.bin_b", {}).get("state") == "MISSING-FROM-REPORT"
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"a declared bin absent from the report counts as unmet: {res['bins'].get(f'{cg}.{cp}.bin_b')}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: a declared bin absent from the report counts as unmet: {res['bins'].get(f'{cg}.{cp}.bin_b')}")
         res = run_checker(good, None, None, d / "noreport.log", report_dir=d / "does_not_exist")
         cond = res["status"] == "PROTOCOL_ERROR" and res["reason"].startswith(REASON_UNVERIFIABLE)
         ok &= cond
-        print("SELF-TEST", "ok " if cond else "BAD", f"unverifiable query is not a pass: {res['status']}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: unverifiable query is not a pass: {res['status']}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

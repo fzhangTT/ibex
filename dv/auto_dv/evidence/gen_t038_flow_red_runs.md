@@ -64,8 +64,10 @@ marker rule alone deciding: a clean, finished simulation with the wrong marker i
   (`unexplained exit code <rc>`, `crash signature in stderr: ...`, `config banner ... not found`).
 - The full banner block is copied into `result.yaml` (`banner`), the per-run proof of the
   elaborated configuration.
-- `python3 gen_verdict.py --self-test`: 20 cases, 5 of them the real excerpts above plus the real
-  cocotb lines of job 10930476; the former case "marker but no finish = PASS" is now two cases:
+- `python3 gen_verdict.py --self-test`: 27 cases at this writing (the self-test prints its own count):
+  5 named `real ...` are the verbatim excerpts above plus the real cocotb lines of job 10930476, the
+  other 22 are named `fabricated ...` (rule pins on synthetic text, including 5 file-based decide()
+  cases); the former case "marker but no finish = PASS" is now two cases:
   PASS with exit code 0, FAIL with an unknown exit code.
 
 ## 4. Not yet reachable (stated, not hidden)

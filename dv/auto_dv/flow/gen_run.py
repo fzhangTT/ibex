@@ -273,6 +273,7 @@ def main() -> int:
         "expected_fail": bool(test.get("expected_fail")), "owner": test["owner"],
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used,
+        "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},
     }
     if a.fcov_check and cov_vdb and test.get("fcov_expectation_file"):
         # Standalone run = single writer to the vdb, so the per-test slice is readable now.

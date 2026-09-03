@@ -17,6 +17,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import gzip
 import re
 import shutil
 import sys
@@ -125,14 +126,16 @@ def dut_rows(hier: Path, scopes: list[str]) -> str:
     return "\n".join(out) + "\n" if out else "no DUT row found\n"
 
 
-def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None) -> Path:
+def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
+            evidence_root: Path = C.EVIDENCE_DIR, index_path: Path = C.ROUND_INDEX) -> Path:
+    """evidence_root / index_path default to the committed homes; a self-test points them elsewhere."""
     man = U.load_yaml(outdir / "manifest.yaml")
     cov_all = man.get("coverage") or {}
     # A dry run on the check tier has no measured merge; its unmeasured merge is the source, labelled.
     cov = cov_all if cov_all.get("dashboard_txt") else (cov_all.get("unmeasured") or {})
     source = "measured merge" if cov_all.get("dashboard_txt") else "UNMEASURED merge (dry run / check tier)"
     name = f"{C.ROUND_DIR_PREFIX}{round_no}" + ("_dryrun" if dry_run else "")
-    ev = C.EVIDENCE_DIR / name
+    ev = evidence_root / name
     if ev.exists():
         U.die(f"{ev} exists; an evidence directory is never overwritten (pick another --round or --tag)")
     ev.mkdir(parents=True)
@@ -152,11 +155,14 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None) -> Pa
         (ev / "groups_summary.txt").write_text("no covergroup in this merge: functional coverage n/a\n", encoding="utf-8")
     dump_dir = Path(cov.get("report_dir") or "").parent / C.URG_DUMP_DIRNAME
     dumped = []
-    if dump_dir.is_dir():
+    # The URG dump is several MB of text: a real round keeps it gzip-compressed beside the report;
+    # a dry run (unmeasured data) does not copy it at all, the out-tree keeps it.
+    if dump_dir.is_dir() and not dry_run:
         (ev / "full_exclusions").mkdir()
         for f in sorted(dump_dir.glob("fullexclude.*")):
-            shutil.copyfile(f, ev / "full_exclusions" / f.name)
-            dumped.append(f.name)
+            with f.open("rb") as src, gzip.open(ev / "full_exclusions" / (f.name + ".gz"), "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            dumped.append(f.name + ".gz")
     merge_log = Path(cov.get("merge_log") or "")
     wc = warning_counts(merge_log)
     (ev / "merge_log_warnings.txt").write_text(
@@ -173,8 +179,8 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None) -> Pa
         (ev / "elfiles").mkdir(exist_ok=True)
         shutil.copyfile(e, ev / "elfiles" / Path(e).name)
     row = metric_row(cov)
-    index = U.load_yaml(C.ROUND_INDEX) if C.ROUND_INDEX.is_file() else {"G": C.ROUND_GAIN_G, "N": C.ROUND_NO_GAIN_N,
-                                                                          "gate_pct": C.GATE_PCT, "rounds": [], "dry_runs": []}
+    index = U.load_yaml(index_path) if index_path.is_file() else {"G": C.ROUND_GAIN_G, "N": C.ROUND_NO_GAIN_N,
+                                                                  "gate_pct": C.GATE_PCT, "rounds": [], "dry_runs": []}
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
@@ -185,14 +191,15 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None) -> Pa
              "no_gain_streak": streak, "stopping_rule_fired": (streak >= C.ROUND_NO_GAIN_N) if not dry_run else None,
              "exclusion_files": cov.get("elfiles") or [], "excl_strict": cov.get("excl_strict"),
              "exclusion_violations": cov.get("exclusion_violations") or [], "merge_warnings": wc,
+             "testlist": {"path": str(C.TESTLIST_YAML), "sha256": U.sha256_file(C.TESTLIST_YAML)},
              "testlist_sha256": U.sha256_file(C.TESTLIST_YAML), "copied": copied, "full_exclusions_files": dumped}
     if dry_run:
         index.setdefault("dry_runs", []).append(entry)
     else:
         index["rounds"].append(entry)
-    U.dump_yaml(index, C.ROUND_INDEX)
+    U.dump_yaml(index, index_path)
     (ev / "gen_round_summary.md").write_text(render_summary(entry, prev), encoding="utf-8")
-    U.log(f"evidence written to {ev}; index {C.ROUND_INDEX}")
+    U.log(f"evidence written to {ev}; index {index_path}")
     return ev
 
 
@@ -226,7 +233,7 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
           "## Files in this directory", "",
           "- `dashboard.txt`, `hierarchy.txt`, `tests.txt` (URG text report), `hierarchy_dut_rows.txt` (the DUT-scope rows)",
           "- `groups.txt` / `grpinfo.txt` when covergroups exist, else `groups_summary.txt` stating n/a",
-          "- `full_exclusions/fullexclude.<metric>` (URG -dump full_exclusions of this merge; the `_module` variants stay in the out-tree)",
+          "- `full_exclusions/fullexclude.<metric>.gz` (URG -dump full_exclusions of this merge, gzip; the `_module` variants stay in the out-tree; a dry run copies no dump)",
           "- `merge.log` and `merge_log_warnings.txt` (counts per Warning/Error/Note class)",
           "- `build_manifest_<build>.yaml`, `testlist_snapshot.yaml`, `regress_manifest.yaml`, `elfiles/` (exclusion files used)", "",
           "## Merge log warning counts", ""] + [f"- {k}: {v}" for k, v in e["merge_warnings"].items()]
@@ -248,7 +255,10 @@ def main() -> int:
     ap.add_argument("--requester", default="dv-lead", help="role that requested the measurement")
     ap.add_argument("--timeout-s", type=int, default=6 * 3600)
     ap.add_argument("--force", action="store_true", help="replace an existing regression outdir (never an evidence dir)")
+    ap.add_argument("--evidence-root", type=Path, default=C.EVIDENCE_DIR,
+                    help="self-test only: write the evidence dir and index elsewhere than dv/auto_dv/evidence")
     a = ap.parse_args()
+    index_path = C.ROUND_INDEX if a.evidence_root == C.EVIDENCE_DIR else a.evidence_root / C.ROUND_INDEX.name
     if a.round is None:
         if a.dry_run:
             a.round = 0
@@ -261,7 +271,7 @@ def main() -> int:
     else:
         tag = a.tag or (f"round_{a.round}" + ("_dryrun" if a.dry_run else ""))
         outdir = run_regression(a, tag)
-    ev = collect(outdir, a.round, a.dry_run, a.label)
+    ev = collect(outdir, a.round, a.dry_run, a.label, a.evidence_root, index_path)
     rc, _, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_dashboard.py")], cwd=C.REPO_ROOT,
                              log_path=C.WORK_DIR / "round_dashboard.log", timeout_s=600)
     U.log(f"dashboard regenerated (rc={rc}); evidence {ev}")

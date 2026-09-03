@@ -332,6 +332,7 @@ def main() -> int:
     manifest: dict[str, Any] = {
         "kind": "regression", "tag": a.tag, "request": a.request, "requester": a.requester,
         "out_root": str(C.OUT_DIR), "out_root_fs": U.fs_type(C.OUT_DIR), "site_yaml": str(C.SITE_YAML),
+        "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},
         "mutation": {"id": a.mutation_id, "rtl_root": str(a.rtl_root)} if a.mutation_id else None,
         "purpose": a.purpose, "purpose_text": C.PURPOSES.get(a.purpose) if a.purpose else None,
         "build_config": C.BUILD_CONFIG,

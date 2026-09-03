@@ -193,7 +193,9 @@ gen_regress.py --repro <test> <seed> [--waves]
   wall_s, vdb, lsf}, runs [result.yaml content + result_yaml + run_dir], coverage {merged_vdb,
   report_dir, dashboard_txt, merge_log, urg_rc, urg_cmd, input_vdbs, totals, dut_scope,
   limited_design}, summary {planned, pass, fail, xfail, timeout, not_run, pass_rate_pct}, lsf_cost
-  {jobs, cpu_s, wall_s, pend_s, slot_s, cpu_unknown_jobs}, lsf_jobs_left, git, tools, timing.
+  {jobs, cpu_s, wall_s, pend_s, slot_s, cpu_unknown_jobs}, lsf_jobs_left, git, tools, timing,
+  testlist {path, sha256} (also in every result.yaml and round index entry, so a temporary testlist
+  used for a self-test is identifiable even when the file itself is not retained).
 - **Coverage numbers.** `coverage.totals` is the grand total of `report/dashboard.txt`;
   `coverage.dut_scope[<tb_top>.<dut_instance>]` is the row of the DUT instance in
   `report/hierarchy.txt` and is the gate number (it differs from the grand total only for objects
@@ -396,7 +398,8 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   evidence directory `dv/auto_dv/evidence/gen_round_<n>/` (never overwritten): `dashboard.txt`,
   `hierarchy.txt`, `tests.txt`, `hierarchy_dut_rows.txt` (the DUT-scope rows), `groups.txt` and
   `grpinfo.txt` when covergroups exist (else `groups_summary.txt` stating n/a),
-  `full_exclusions/fullexclude.<metric>` (the URG dump of this merge), `merge.log` and
+  `full_exclusions/fullexclude.<metric>.gz` (the URG dump of this merge, gzip-compressed; a dry
+  run copies no dump, its out-tree keeps it), `merge.log` and
   `merge_log_warnings.txt` (counts per Warning/Error/Note class), `build_manifest_<build>.yaml`,
   `testlist_snapshot.yaml` (with its sha256 in the index), `regress_manifest.yaml`, `elfiles/`, and
   `gen_round_summary.md` (the human-readable page: metrics table, gate status, deltas, gain verdict,
@@ -412,6 +415,11 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   functional coverage (Group) from the grand total (covergroups are TB-side gen_ instances).
 - The DV Lead requests a round through the queue (purpose 4, `tests: full`, `coverage: yes`); the
   runtime role runs `gen_round.py --round <n>` and the Orchestrator commits the evidence directory.
+- `--evidence-root DIR` redirects the evidence directory and index (self-tests only; the committed
+  homes are the defaults).
+- Instrumentation changes such as `-cm_glitch 0` (LOG-008) are adopted, once ruled, as
+  `builds.<name>.extra_vcs_args` in gen_testlist.yaml (the single source of the build flag set),
+  and round 0 is re-measured under the new set so later gains compare like with like.
 
 ## 8. Reproduction recipe
 
