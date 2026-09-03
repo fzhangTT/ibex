@@ -1011,3 +1011,15 @@ under bins_not_hit (rule (g), irq agent absent) so it stays visible as unhit. Ve
 detached checkout: library self-test PASS with no environment variable; trace check PASS with 19 marked. Reviews:
 cross-model running; Critic v8 queued. Two passes (LOG-033, LOG-038) have now moved 201 of the 220 original
 coverage-only items to must-hit; the 19 remaining wait for an icram writer.
+
+## LOG-024e - 2026-09-03 - GATE LIFTED (landing 3e at 7ef16a0: cross-model APPROVE-WITH-CHANGES)
+
+The cross-model review of 7d6e4f4..7ef16a0 (dv/auto_dv/reviews/2026-09-03-claude-diff-7d6e4f4e-7ef16a0a.md) is
+APPROVE-WITH-CHANGES: the mul_div fillers are fixed on the failing path, the red_expect rule is in the decide_lines
+form, the refused-form list is frozen and enumerated, the six pre-T-102 red logs are re-retained, the opt-out is
+dropped from all 16 tests with seed-1 greens. One medium (the rule's negative exists only as a transcript record
+from a staged testlist copy; an in-self-test negative is required) and one low (a history-narrating docstring) go to
+a small Test Writer landing 3f. The LOG-024 gate (held since d1d68fd through LOG-024b/c/d) lifts: Runtime lands the
+tier promotion (T-170, LOG-039) and serves the batch-2 acceptance wave 049..064 as check-tier runs pinned to HEAD;
+the DV Lead requests round 0 after the promotion copy (T-158); the Test Writer may dispatch batch 3 (interrupt-free
+groups first). The T-136/T-137 holds (LOG-037a/b) are unaffected and still gate interrupt-enabled and fault results.
