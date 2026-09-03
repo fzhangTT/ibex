@@ -19,5 +19,10 @@ Files:
 Items left marked after pass 2 (19): the 18 icram-dependent items (17 IC items plus TP-REG-018, whose rows include icram inject),
 which wait for an icram writer, and TP-PMC-001, the one no-export-row item (gen_test_plan.md Section 0, Section 1.3). Pass 1 is under dv/auto_dv/evidence/gen_sunset_pass1/ (LOG-033).
 Runtime's retained run headers, verdicts and stdout of the reference regression sit beside these four files (its gen_manifest.md lists them).
+The group column of gen_token_sunset_released_gated.log reflects the plan at pass 2 (v2l: TP-CSR-029 in gen_csr_trap_setup); an item's group is
+read from the current gen_test_plan.md. The release of the interrupt- and debug-pin rows (TP-ISA-040, TP-MUL-023 and the other items whose
+rows only T-150's storm entries observed) rests on one head-mode regression of 979350a (six runs), as LOG-028a requires (observed once in a
+retained run of the pinned build); a later regression that never observes such a row again is a stimulus regression to triage, not a
+release error.
 Consequence (rule (f)): the released items' witness bins become must-hit bins of their owning tests; the one built test affected is
 gen_test_csr_trap_setup (TP-CSR-029, bin w_tp_csr_029), whose manifest re-render lands in the same commit (LOG-036).

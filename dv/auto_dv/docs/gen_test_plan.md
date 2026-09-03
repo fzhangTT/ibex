@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:35 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -28,6 +28,10 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   the scenario happened; every item has one) / Pass criteria (named checkers) / Expected / Test group /
   Bins (the fcov bins the item must hit; declared per test in the fcov-expectation manifest, an unhit
   declared bin fails the run).
+- Tier of a testlist entry: the LOWEST tier among its plan group's items, because the testlist runs a tier-T entry in every
+  higher tier too (gen_testlist.yaml header); an entry with no plan group stays at tier check, measured: false. The per-entry
+  ruling for the 16 built tests is dv/auto_dv/evidence/gen_round0_promotion_table.md (applied by landing 3e and Runtime's
+  promotion landing 3e6f1b2; LOG-024e, LOG-039).
 - Expected: `pass`; `pass (doc mismatch Dn)` where the RTL is spec-legal and the Ibex doc is wrong
   (checker follows the RTL, doc defect logged); `expected-fail (Bn)` where the RTL contradicts a
   specification (checker follows the spec; logged in gen_bug_log.md; not excluded from the gate without
@@ -39,7 +43,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   the fcov plan); a regime is pinnable from the command line (+gen_knob_<name>=<value>; the layer-3
   schedule derives from the run seed and is reproducible or overridable with
   +gen_regime_sched=<knob>:<value>@r<N>|c<N>,...; there is no separate schedule seed); one run seed
-  drives every source of randomness.
+  drives every source of randomness. The layer-3 schedule's mid-run phases are under the T-181 measurement hold (Section 1.6)
+  until the Test Writer's 3h lands: the 3e runner applied the start-up knobs only (LOG-042a).
 - Every expected-fail item is its own `_xfail` test (one item, one bug id per test): the test's single xfail_bug
   attribute names the candidate whose fix turns it green and its one fire-check attributes the failure; no two
   expected-fail items share a group (gen_prv_debug_b1_xfail / _b2_xfail; gen_csr_debug_csr_b15a_xfail / _b15b_xfail).
@@ -151,6 +156,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   token release), lands in the same commit as the Test Writer's test and manifest change, and the committer runs both self-tests
   (python3 -m dv.auto_dv.tests.gen_test_lib --self-test and python3 dv/auto_dv/tests/gen_fcov_manifest.py --self-test) from a
   detached checkout of the result.
+  Comparator conventions the landing-2a runs surfaced, OWED to TB Infra's 1c and not built (LOG-037c; the 2a implementations are under
+  REQUEST-CHANGES and not credited), cited on the items they decide: (a) an interrupt entry the NMI pre-empts before its handler
+  retires anything has no rvfi_intr record of its own (rtl/ibex_core.sv:2403-2413, rtl/ibex_controller.sv:498; TP-IRQ-079); (b) a
+  load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and keeps its old destination
+  (rtl/ibex_core.sv:2383-2385; TP-DMEM-039/041/064, TP-RVFI-024; acceptance gated on an announced corruption, T-183); (c) the
+  irq_entry bound restarts at each entry (TP-IRQ-001/012/022). NMI and integrity runs are consistency-only until 1c passes.
   Items whose cycle clause anchors on an INTERNAL pipeline instant (ID entry, the FLUSH / IRQ_TAKEN / DBG_TAKEN
   windows, the interrupt decision cycle) cannot use the channel (TB Infra option B): they are reformulated to boundary
   facts (an RVFI record's cycle versus a pin or bus event's cycle) or stay coverage-only through P4-class sampling; the
@@ -173,6 +184,21 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   gen_chk_pmp or a bus-integrity checker (gen_chk_bus_intg_rsp, gen_chk_store_intg), or when it checks a bus-error or
   PMP-denial trap; 246 items in 101 test groups today. Lifted by removing this bullet and Section 1.5 in the
   revision that cites the reviewed T-137 commit.
+- Credit rule for interrupt-priority items (Critic fu1, LOG-037b; Critic fu2a Section 6 adopted as LOG-037e, T-190): an item whose
+  fire check is the priority pick among simultaneously pending lines is credited only from directed or sparse cases in which the
+  contending lines do not move in the checker's decision window (gen_ut_irq's two-entry loop is such a case); the storm test never
+  credits a priority item (the referee found 448 undecidable priority claims there). Items: TP-IRQ-014/015/016/031 (gen_irq_priority),
+  TP-IRQ-038 (gen_irq_nmi), TP-IRQ-045 (gen_irq_nmi_int); their Notes repeat the rule. Not a hold: the items run, their claims are
+  counted, only decidable directed or sparse entries credit them.
+- Measurement hold T-181 (Orchestrator LOG-042a): the 3e template's schedule runner applied only the idx=0 knobs at start-up and
+  never a mid-run regime phase, on any test and any tree (Runtime's bisect is identical at 7ef16a0 and d3c6ca8; TB Infra's 2a is
+  cleared), so the promotion's layers-live evidence (l9g) exercised the initial phase only; the promoted tests' measured status does
+  not depend on it (their items run at the start-up knobs). Until the Test Writer's 3h lands (runner fix with a red and a green
+  showing idx > 0 phases applied, the 13 acceptance seeds re-run) and passes review, NO item whose stimulus is a mid-run regime
+  change is credited: runs may execute and record, nothing enters the Phase 1 numbers. Rule (generated, Section 1.6): an item is
+  under the hold when its Test group is a regime or layer-schedule group (gen_reg_*, *regime*); 82 items in
+  16 test groups today, none of them a promoted round-0 group. Lifted by removing this bullet and Section 1.6 in
+  the revision that cites the reviewed 3h commit.
 - `Expected: informational` means: the item is outside the Phase 1 pass gate; it is its own `_info` test with
   `measured: false`; its checkers stay ON and their verdicts are recorded, not gated; the test asserts only that the
   scenario fired and logs the observation as GEN_TEST_INFO <id>. Reason classes: a downgraded or record-only bug
@@ -200,15 +226,15 @@ Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 4d48d
 
 | Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (4d48d84) |
 |---|---|---|---|
-| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c; T-134 at ce33b4f: an interrupt or debug entry handled before the Zcmp fold). T-137 (a fault armed only for a bus error the driver announced) landed at ce33b4f (gen_rvfi_pkg.sv:448-449 at 4d48d84) and is under REQUEST-CHANGES (LOG-037a: a stale announcement can legitimise a later trap), so its hold stays. isa_pc_next bit-0 convention: the knob +gen_isa_pc_next_mask_b13 exists at 4d48d84 (gen_rvfi_pkg.sv:522-528, default 1, counts b13_odd_jalr; landed ffa9127) and is NOT counted as built here until TB Infra's 1c passes both reviewers (LOG-037a/b); gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); the B13 expected-fail test gen_btalu_hazard_xfail alone runs the raw rule at +gen_isa_pc_next_mask_b13=0. Landing 2a conventions in the comparator, review pending: NMI-pre-empted entries (nmi_preempted, :325) and suppressed loads (rf_wr_suppressed, GPR snapshot :312/:462) |
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c; T-134 at ce33b4f: an interrupt or debug entry handled before the Zcmp fold). T-137 (a fault armed only for a bus error the driver announced) landed at ce33b4f (gen_rvfi_pkg.sv:448-449 at 4d48d84) and is under REQUEST-CHANGES (LOG-037a: a stale announcement can legitimise a later trap), so its hold stays. isa_pc_next bit-0 convention: the knob +gen_isa_pc_next_mask_b13 exists at 4d48d84 (gen_rvfi_pkg.sv:522-528, default 1, counts b13_odd_jalr; landed ffa9127) and is NOT counted as built here until TB Infra's 1c passes both reviewers (LOG-037a/b); gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); the B13 expected-fail test gen_btalu_hazard_xfail alone runs the raw rule at +gen_isa_pc_next_mask_b13=0. Landing 2a conventions in the comparator (nmi_preempted :325; rf_wr_suppressed with the GPR snapshot :312/:462): landed at 4d48d84, review REQUEST-CHANGES (LOG-037c: the pre-emption rule wrote intr into the shared transaction, the suppress undo rested on the DUT's flag alone), NOT credited until 1c |
 | gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | UNBUILT at 4d48d84: neither chk_isa_csr nor chk_csr_readback is consumed by the env (the comparator rows consumed are isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next); CSR read-backs are checked at program level by the tests meanwhile |
 | gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | UNBUILT as checker ids at 4d48d84 (no chk_ibus_proto / chk_ibus_outstanding consumed); the bus driver bounds its own outstanding count (GEN_IBUS_MAX_OUTSTANDING) and gen_bus_if.sv carries the sva_rvalid_legal self-check |
 | gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | UNBUILT as checker ids at 4d48d84 (no chk_dbus_* consumed); the bus driver bounds its own outstanding count (GEN_DBUS_MAX_OUTSTANDING); no split-transaction checker |
 | gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | UNBUILT at 4d48d84 (no chk_dbus_store_intg consumed) |
-| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal built at 4d48d84 (landing 2a, review pending: an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS records outside NMI mode, gen_checkers_pkg.sv:141-145, chk_nmi_internal consumed; mutant MB12); rf_wr_suppress compare built at 4d48d84 (the model undoes the suppressed load's write from a GPR snapshot, gen_rvfi_pkg.sv:312 and :462) |
+| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal landed at 4d48d84 (an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS records outside NMI mode, gen_checkers_pkg.sv:141-145, chk_nmi_internal consumed; mutant MB12), review REQUEST-CHANGES (LOG-037c), NOT credited until 1c; rf_wr_suppress compare landed at 4d48d84 (gen_rvfi_pkg.sv:312 and :462), review REQUEST-CHANGES (LOG-037c: acceptance rests on the DUT's flag alone, T-183 gates it on an announced corruption), NOT credited until 1c |
 | gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 | UNBUILT (pmp_*) |
-| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | irq_pending, irq_masked and the entry bound built; the irq_entry expected-cause rule (T-136: the pre-entry post_mip and mie with the priority order, gen_checkers_pkg.sv:155-168 at 4d48d84) landed at ce33b4f and is under REQUEST-CHANGES (LOG-037a: blind to entries whose handler's first record is a non-last Zcmp micro-op, irq checker entries 0 against scoreboard irq_entries 5), so interrupt-enabled results do not count until 1c passes (Section 1.4). Landing 2a, review pending: the bound restarts at each entry; UNTIL_TAKEN releases only the taken line (gen_agents_pkg.sv:609-611); priority claims undecidable at the sample are counted (priority_undecidable), not credited (LOG-037b) |
-| gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker; since landing 2a the shim emulates external and internal NMIs with the mstack, review pending); nmi_internal built at 4d48d84 (see gen_chk_bus_intg_rsp) |
+| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | irq_pending, irq_masked and the entry bound built; the irq_entry expected-cause rule (T-136: the pre-entry post_mip and mie with the priority order, gen_checkers_pkg.sv:155-168 at 4d48d84) landed at ce33b4f and is under REQUEST-CHANGES (LOG-037a: blind to entries whose handler's first record is a non-last Zcmp micro-op, irq checker entries 0 against scoreboard irq_entries 5), so interrupt-enabled results do not count until 1c passes (Section 1.4). Landing 2a (review REQUEST-CHANGES, LOG-037c, the 1c fixes absent): the bound restarts at each entry; UNTIL_TAKEN releases only the taken line (gen_agents_pkg.sv:609-611); priority claims undecidable at the sample are counted (priority_undecidable), not credited (LOG-037b) |
+| gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker); the shim's NMI emulation with the mstack landed at 4d48d84 under REQUEST-CHANGES (LOG-037c), so NMI runs stay consistency-only until 1c passes; nmi_internal landed at 4d48d84, not credited until 1c (see gen_chk_bus_intg_rsp) |
 | gen_chk_debug | dbg_entry, dbg_masked, dbg_exc, dbg_dret, dbg_trigger (gen_dbg_checker) | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_exc=0, +gen_chk_dbg_dret=0, +gen_chk_dbg_trigger=0 | dbg_entry, dbg_masked built; dbg_exc, dbg_dret, dbg_trigger UNBUILT |
 | gen_chk_alerts | alert_minor, alert_internal, alert_bus (gen_misc_monitor) | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 | built (alert_minor against the RAM-model announcement queue) |
 | gen_chk_icache | icache_ecc, scrkey_proto, icram_inval_sweep, icram_ecc_response | +gen_chk_icache_ecc=0, +gen_chk_scrkey_proto=0, +gen_chk_icram_*=0 | UNBUILT (icram_*, scrkey_proto); note: inject, lookup, tag_write and fill_write are icram EVENT ROW names of the export table and the RAM model's announcement kinds, not checker ids |
@@ -729,6 +755,95 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | TP-XIF-020 | gen_xif_random | Pass criteria name gen_chk_pmp |
 | TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
 | TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
+
+## 1.6 Items under the T-181 measurement hold (generated; group rule 71 items, stimulus-text rule 37 items, union 82 items in 16 groups; no mid-run regime result counts until the schedule runner applies idx > 0 phases, Test Writer 3h)
+
+Groups (items held): gen_reg_knob_sweep (17), gen_pmp_random_regime (10), gen_ic_regime (8), gen_irq_regime (7), gen_xif_random (7), gen_dmem_regime (6), gen_imem_regime (6), gen_reg_inflight (6), gen_exc_regime (4), gen_fe_regime (4), gen_reg_schedule (2), gen_isa_random (1), gen_mul_random (1), gen_xcut_regime_sweep (1), gen_xif_fetch_enable (1), gen_xif_reset (1). Ruling: Section 0 (LOG-042a).
+
+| Item | Group | Why held |
+|---|---|---|
+| TP-ISA-054 | gen_isa_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-MUL-028 | gen_mul_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-EXC-071 | gen_exc_regime | regime / layer-schedule group |
+| TP-EXC-072 | gen_exc_regime | regime / layer-schedule group |
+| TP-EXC-073 | gen_exc_regime | regime / layer-schedule group |
+| TP-EXC-074 | gen_exc_regime | regime / layer-schedule group |
+| TP-IRQ-071 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-072 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-073 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-074 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-075 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-076 | gen_irq_regime | regime / layer-schedule group |
+| TP-IRQ-077 | gen_irq_regime | regime / layer-schedule group |
+| TP-PMP-100 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-101 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-102 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-103 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-104 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-105 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-106 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-107 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-PMP-109 | gen_pmp_random_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-PMP-110 | gen_pmp_random_regime | regime / layer-schedule group |
+| TP-IMEM-031 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IMEM-034 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IMEM-035 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IMEM-036 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IMEM-037 | gen_imem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IMEM-038 | gen_imem_regime | regime / layer-schedule group |
+| TP-DMEM-023 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-DMEM-029 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-DMEM-038 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-DMEM-054 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-DMEM-055 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-DMEM-056 | gen_dmem_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-FE-015 | gen_fe_regime | regime / layer-schedule group |
+| TP-FE-024 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-FE-025 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-FE-028 | gen_fe_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-040 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-041 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-047 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-048 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-049 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-054 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-055 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-IC-056 | gen_ic_regime | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-REG-001 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-002 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-003 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-004 | gen_reg_knob_sweep | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-REG-005 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-006 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-007 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-008 | gen_reg_knob_sweep | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-REG-009 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-010 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-011 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-012 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-013 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-014 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-015 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-016 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-017 | gen_reg_knob_sweep | regime / layer-schedule group |
+| TP-REG-018 | gen_reg_schedule | regime / layer-schedule group and stimulus names a mid-run regime change (layer-3 phase) |
+| TP-REG-019 | gen_reg_schedule | regime / layer-schedule group |
+| TP-REG-020 | gen_reg_inflight | regime / layer-schedule group |
+| TP-REG-021 | gen_reg_inflight | regime / layer-schedule group |
+| TP-REG-022 | gen_reg_inflight | regime / layer-schedule group |
+| TP-REG-023 | gen_reg_inflight | regime / layer-schedule group |
+| TP-REG-024 | gen_reg_inflight | regime / layer-schedule group |
+| TP-REG-025 | gen_reg_inflight | regime / layer-schedule group |
+| TP-XIF-001 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-004 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-007 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-008 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-009 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-011 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-016 | gen_xif_fetch_enable | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-XIF-018 | gen_xif_random | stimulus names a mid-run regime change (layer-3 phase) |
+| TP-REG-026 | gen_xcut_regime_sweep | regime / layer-schedule group |
+| TP-REG-028 | gen_xif_reset | stimulus names a mid-run regime change (layer-3 phase) |
 
 # 2. New checkers requested from TB Infra (beyond the inventory)
 
@@ -8180,6 +8295,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_hold, knob:imem_rvalid_delay, knob:dmem_rvalid_delay
 - Fire-check: the pin monitor records the irq_software_i rise, then RVFI shows a retirement with rvfi_intr == 1 at rvfi_pc_rdata == mtvec base + 0x0C with rvfi_ext_pre_mip[CSR_MSIX_BIT] == 1, and the handler read-back gives mcause 0x80000003 (observable at the irq pins and RVFI).
 - Pass criteria: gen_chk_irq (entry within the bound after the pipeline drains, vector, priority); gen_isa_compare (first handler instruction has rvfi_intr, pc == vector); gen_chk_csr_readback (mcause, mepc == interrupted pc, mtval 0, MPIE/MIE/MPP)
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): the irq_entry bound restarts at every entry, because under a storm a lower-priority line legitimately waits while higher ones keep being taken; not credited until 1c passes with the T-136 fixes (LOG-037a/b), the entry bound alone does not decide this item meanwhile.
 - Expected: pass
 - Test group: gen_irq_lines
 - Bins: CG-IRQ-001.cp_line.software, CG-IRQ-001.cr_line_priv_mie.software_m_mie1, CG-IRQ-001.cr_line_priv_mie.software_u_mie0, CG-IRQ-001.cr_line_priv_mie.software_u_mie1, CG-IRQ-001.cr_line_mepc.software_sequential, CG-IRQ-001.cr_line_marks.software_intr_with_pre_mip, CG-IRQ-001.cr_line_others.software_only_this, CG-IRQ-006.cp_id.id3, CG-IRQ-006.cr_id_base.id3_boot_init, CG-IRQ-006.cr_id_base.id3_sw_aligned, CG-IRQ-006.cr_id_base.id3_sw_legalised, CG-IRQ-006.cr_id_base.id3_upper_half, CG-EXC-012.cr_kind_mtval.irq_zero, CG-EXC-012.cr_kind_mie_priv.irq_mie1_m, CG-EXC-012.cr_kind_bit1.irq_bit1_1, CG-EXC-012.cr_kind_bit1.irq_bit1_0
@@ -8334,6 +8450,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_hold, knob:irq_line_mix
 - Fire-check: the pin monitor shows the line high and irq_pending_o == 1 for >= N retirements with no rvfi_intr while mstatus read-back MIE == 0; the first rvfi_intr follows the csrs/mret retirement with no instruction retired in between and mepc read-back == the instruction after the csrs (or the mret target) (observable at the irq pins, irq_pending_o and RVFI).
 - Pass criteria: gen_chk_irq (no entry while masked; entry bound after enable); gen_isa_compare; gen_chk_csr_readback
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): the irq_entry bound restarts at every entry, because under a storm a lower-priority line legitimately waits while higher ones keep being taken; not credited until 1c passes with the T-136 fixes (LOG-037a/b), the entry bound alone does not decide this item meanwhile.
 - Expected: pass
 - Test group: gen_irq_csr
 - Bins: CG-IRQ-001.cp_mie_global.mie1, CG-IRQ-001.cr_line_priv_mie.external_m_mie1, CG-IRQ-001.cr_line_mepc.software_mret_target, CG-IRQ-003.cr_transition_state.rise_enabled_mie0_m, CG-IRQ-004.cr_ctx_outcome.id_csr_enable_taken, CG-IRQ-004.cr_ctx_outcome.id_mret_taken, CG-IRQ-003.cp_mie_global_edge.set_pending, CG-IRQ-003.cp_mie_global_edge.mret_mpie1_pending
@@ -8362,7 +8479,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix, knob:irq_hold
 - Fire-check: rvfi_ext_pre_mip of the entry has >= 2 bits set that are enabled in mie (>= 2 pending-and-enabled at the decision cycle) and the handler read-back mcause equals the RTL-order winner (fast lowest id > external > software > timer) (observable at RVFI and the irq pins).
 - Pass criteria: gen_chk_irq (priority); gen_isa_compare; gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.fast_external, CG-IRQ-002.cp_set.fast_software, CG-IRQ-002.cp_set.fast_timer, CG-IRQ-002.cp_set.external_software, CG-IRQ-002.cp_set.external_timer, CG-IRQ-002.cp_set.software_timer, CG-IRQ-002.cp_set.three_plus, CG-IRQ-002.cr_set_winner.fast_external_fast, CG-IRQ-002.cr_set_winner.fast_software_fast, CG-IRQ-002.cr_set_winner.fast_timer_fast, CG-IRQ-002.cr_set_winner.external_software_external, CG-IRQ-002.cr_set_winner.external_timer_external, CG-IRQ-002.cr_set_winner.software_timer_software, CG-IRQ-002.cr_set_winner.three_plus_fast, CG-IRQ-002.cr_set_winner.three_plus_external, CG-IRQ-002.cr_late_winner.none_fast, CG-IRQ-002.cr_late_winner.none_external, CG-IRQ-001.cr_line_others.fast_0_others_pending_lower, CG-IRQ-001.cr_line_others.external_others_pending_lower, CG-IRQ-001.cr_line_others.software_others_pending_lower, CG-IRQ-001.cr_line_others.fast_14_others_pending_lower, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-002.cp_late.none, CG-IRQ-001.cp_others.only_this, CG-IRQ-001.cp_others.others_enabled_idle, CG-IRQ-001.cp_others.others_pending_lower
@@ -8377,7 +8494,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix
 - Fire-check: the pin monitor shows >= 2 fast lines high at the decision cycle (rvfi_ext_pre_mip agrees) and the handler read-back mcause == {1'b1, 5'(CSR_MFIX_BIT_LOW + lowest set index)} (observable at RVFI). [export-rows: pin irq_fast] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record has >= 2 fast bits set and the mcause read-back == the lowest id)
 - Pass criteria: gen_chk_irq; gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.fast_fast, CG-IRQ-002.cr_set_winner.fast_fast_fast, CG-IRQ-002.cp_fast_gap.adjacent, CG-IRQ-002.cp_fast_gap.far, CG-IRQ-002.cp_fast_gap.ends, CG-IRQ-002.cr_gap_winner.adjacent_fast, CG-IRQ-002.cr_gap_winner.far_fast, CG-IRQ-002.cr_gap_winner.ends_fast, CG-WIT-001.cp_clause.w_tp_irq_015
@@ -8392,7 +8509,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_hold
 - Fire-check: NUM_IRQ_LINES consecutive entries whose read-back mcause sequence is fast ids CSR_MFIX_BIT_LOW..CSR_MFIX_BIT_HIGH ascending, then ExcCauseIrqExternalM, ExcCauseIrqSoftwareM, ExcCauseIrqTimerM, with the pin monitor confirming that only the acknowledged line dropped between entries (observable at RVFI and the irq pins).
 - Pass criteria: gen_chk_irq (priority order incl. the timer fall-through); gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.all18, CG-IRQ-002.cr_set_winner.all18_fast, CG-IRQ-002.cp_drain.first, CG-IRQ-002.cp_drain.middle, CG-IRQ-002.cp_drain.last18, CG-IRQ-002.cr_drain_winner.first_fast, CG-IRQ-002.cr_drain_winner.middle_fast, CG-IRQ-002.cr_drain_winner.middle_external, CG-IRQ-002.cr_drain_winner.middle_software, CG-IRQ-002.cr_drain_winner.last18_timer
@@ -8477,6 +8594,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:imem_rvalid_delay, knob:irq_line_mix
 - Fire-check: the pin rise happens while the dbus monitor has an outstanding request without rvalid; data_rvalid_i precedes the entry; the load/store retires with its data effect before the rvfi_intr retirement; mepc read-back == the pc of the first NOT-yet-executed instruction = rvfi_pc_wdata of the last record before the entry (C-3 / X-7): ONE record (the load/store) when the pin rose during the GNT wait with the load/store still in ID (halt_if blocks the successor) or with the fetch stalled, TWO records when the pin rose in the RVALID wait with the successor already in ID (stall_wb; rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133; rtl/ibex_wb_stage.sv:115-116, 185); both classes are required (observable at both buses, the irq pins and RVFI). [export-rows: dbus gnt; dbus rvalid; dbus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (and, in the RVALID-wait class, the successor record) precede the rvfi_intr record; mepc read-back == rvfi_pc_wdata of the last record)
 - Pass criteria: gen_isa_compare; gen_chk_irq (entry bound counts the WB drain; mepc predicted from the last retired record, both record counts accepted); gen_chk_dbus_proto
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): the irq_entry bound restarts at every entry, because under a storm a lower-priority line legitimately waits while higher ones keep being taken; not credited until 1c passes with the T-136 fixes (LOG-037a/b), the entry bound alone does not decide this item meanwhile.
 - Expected: pass
 - Test group: gen_irq_timing
 - Bins: CG-IRQ-004.cr_ctx_outcome.id_load_wait_taken, CG-IRQ-004.cr_ctx_outcome.id_store_wait_taken, CG-IRQ-004.cr_ctx_rvalid.id_load_wait_before_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_store_wait_before_rvalid, CG-IRQ-004.cr_ctx_latency.id_load_wait_three_five, CG-IRQ-004.cr_ctx_latency.id_load_wait_six_ten, CG-IRQ-004.cr_ctx_latency.id_load_wait_long, CG-IRQ-004.cp_ctx.id_load_wait, CG-IRQ-004.cp_ctx.id_store_wait, CG-IRQ-004.cp_ctx.fetch_stall_rvalid, CG-IRQ-004.cp_ctx.fetch_stall_gnt, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-004.cp_latency.three_five, CG-IRQ-004.cp_latency.six_ten, CG-IRQ-004.cp_latency.long, CG-IRQ-004.cp_records_to_entry.one, CG-IRQ-004.cp_records_to_entry.two, CG-IRQ-004.cr_ctx_records.id_load_wait_one, CG-IRQ-004.cr_ctx_records.id_load_wait_two, CG-IRQ-004.cr_ctx_records.id_store_wait_one, CG-IRQ-004.cr_ctx_records.id_store_wait_two, CG-WIT-001.cp_clause.w_tp_irq_022
@@ -8603,7 +8721,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix, knob:irq_hold
 - Fire-check: the pin monitor shows B rising (or A dropping) exactly one cycle after the decision cycle identified by the irq monitor (pipe empty with a takeable line) and rvfi_ext_pre_mip shows A only; the read-back mcause is B when B is higher or A dropped, else A; for the +2 offset the cause is A (observable at the irq pins and RVFI). [export-rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record shows A only and the mcause read-back is B / A per class)
 - Pass criteria: gen_chk_irq (cause from the IRQ_TAKEN-cycle lines); gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_late.higher_added, CG-IRQ-002.cp_late.lower_added, CG-IRQ-002.cr_late_winner.higher_added_fast, CG-IRQ-002.cr_late_winner.higher_added_nmi_ext, CG-IRQ-002.cr_late_winner.higher_added_external, CG-IRQ-002.cr_late_winner.lower_added_external, CG-IRQ-002.cr_late_winner.lower_added_software, CG-IRQ-002.cr_late_winner.lower_added_fast, CG-IRQ-004.cp_change_before_taken.higher_added, CG-IRQ-004.cp_change_before_taken.lower_added, CG-IRQ-004.cp_change_before_taken.dropped_winner_other_remains, CG-IRQ-004.cr_pulse_change_outcome.three_plus_higher_added_taken_other_line, CG-IRQ-004.cr_pulse_change_outcome.three_plus_lower_added_taken, CG-IRQ-004.cr_pulse_change_outcome.three_plus_dropped_winner_other_remains_taken_other_line, CG-IRQ-004.cr_ctx_outcome.id_empty_taken_other_line, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_differ, CG-IRQ-001.cr_line_marks.timer_pre_post_mip_differ, CG-WIT-001.cp_clause.w_tp_irq_031
@@ -8702,7 +8820,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix
 - Fire-check: both pins rise in the same cycle (pin monitor), rvfi_ext_pre_mip of the first entry has the regular bit set while rvfi_ext_nmi == 1, the first mcause read-back is 0x8000001F and the second entry (after the mret) has the regular cause (observable at the irq pins and RVFI). [export-rows: pin irq_nm; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the first entry has the regular bit set with rvfi_ext_nmi == 1; mcause read-backs 0x8000001F then the regular cause)
 - Pass criteria: gen_chk_irq (priority); gen_chk_nmi; gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_nmi
 - Bins: CG-IRQ-002.cp_set.nmi_fast, CG-IRQ-002.cp_set.nmi_external, CG-IRQ-002.cp_set.nmi_software, CG-IRQ-002.cp_set.nmi_timer, CG-IRQ-002.cr_set_winner.nmi_fast_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_external_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_software_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_timer_nmi_ext, CG-IRQ-002.cp_winner.nmi_ext, CG-WIT-001.cp_clause.w_tp_irq_038
@@ -8801,7 +8919,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:dmem_err_rate, knob:irq_line_mix, knob:irq_hold
 - Fire-check: irq_nm_i is high in the decision cycle in which the internal NMI pending flag is also set (corrupted response already seen, no entry yet); the first entry has rvfi_ext_nmi == 1 with mcause read-back 0x8000001F and mtval 0; the entry right after the handler's mret has rvfi_ext_nmi_int == 1 with mcause 0xFFFFFFE0 and mtval == the corrupted access address (observable at the irq pins, data bus and RVFI). [export-rows: pin irq_nm; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first entry has rvfi_ext_nmi == 1 and the entry after its mret has rvfi_ext_nmi_int == 1 with the read-backs listed)
 - Pass criteria: gen_chk_nmi (priority, internal flag not cleared by the external entry); gen_chk_bus_intg_rsp; gen_chk_csr_readback
-- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited; per LOG-037e (T-190) only directed or sparse cases in which the contending lines do not move in the checker's decision window credit this item (gen_ut_irq's two-entry loop is such a case), and the storm test never does (448 undecidable claims).
 - Expected: pass
 - Test group: gen_irq_nmi_int
 - Bins: CG-IRQ-008.cp_pending_ctx.ext_nmi_same_cycle, CG-IRQ-008.cr_op_ctx.load_ext_nmi_same_cycle, CG-IRQ-008.cr_op_ctx.store_ext_nmi_same_cycle, CG-IRQ-007.cp_source.both_same_cycle, CG-IRQ-007.cr_source_ctx.both_same_cycle_user_code, CG-IRQ-007.cr_source_ctx.both_same_cycle_exc_handler, CG-IRQ-007.cr_source_ctx.int_ecc_after_mret_still_high, CG-IRQ-002.cp_set.nmi_ext_nmi_int, CG-IRQ-002.cr_set_winner.nmi_ext_nmi_int_nmi_ext, CG-WIT-001.cp_clause.w_tp_irq_045
@@ -9278,6 +9396,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix, knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:dmem_err_rate
 - Fire-check: the ibus monitor shows the vector fetch (base + 4*id) issued and the pin monitor shows irq_nm_i rising after that request and before any retirement at the vector; the next retirement is at base + 0x7C with rvfi_ext_nmi (or rvfi_ext_nmi_int) == 1 and the NMI handler's mepc read-back == base + 4*id (the interrupt vector), mcause read-back in the NMI handler == the NMI cause; after the NMI handler's mret the next retirement is the interrupt vector with rvfi_intr == 0 and the interrupt handler's mcause read-back == the regular cause (restored from mstack) (observable at the instruction bus, irq pins and RVFI). [export-rows: ibus req; pin irq_nm] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the record after the interrupted pc is the NMI handler record (rvfi_ext_nmi) with mepc read-back == base + 4*id; the vector record follows the NMI handler mret with rvfi_intr == 0)
 - Pass criteria: gen_chk_nmi (entry from the vector pc; mstack holds the interrupt's mepc/mcause/mstatus and is restored by the mret); gen_chk_irq (the regular interrupt is not re-taken: MIE == 0 after its entry; the handler runs after the NMI); gen_isa_compare; gen_chk_csr_readback
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): an interrupt entry the NMI pre-empts before its handler retires anything has no rvfi_intr record of its own (rtl/ibex_core.sv:2403-2413: rvfi_intr follows rvfi_set_trap_pc, cleared by the first retirement; rtl/ibex_controller.sv:498: handle_irq excludes nmi_mode_q), so the record after the NMI entry at a vector address without rvfi_intr is that entry. The 2a rule is NOT credited: it wrote intr = 1 into the shared monitor transaction (the export R line and every later subscriber saw what the DUT did not drive) and no retained green exercised it (nmi_preempted = 0 everywhere); 1c carries a local flag and a retained green with nmi_preempted > 0. NMI runs are consistency-only until then.
 - Expected: pass
 - Test group: gen_irq_nmi
 - Bins: CG-IRQ-013.cp_preempt.nmi_ext, CG-IRQ-013.cp_preempt.nmi_int, CG-IRQ-013.cp_window_pos.vector_req_outstanding, CG-IRQ-013.cp_window_pos.vector_word_in_if, CG-IRQ-013.cr_preempt_pos.nmi_ext_vector_req_outstanding, CG-IRQ-013.cr_preempt_pos.nmi_ext_vector_word_in_if, CG-IRQ-013.cr_preempt_pos.nmi_int_vector_req_outstanding, CG-IRQ-013.cr_preempt_line.nmi_ext_software, CG-IRQ-013.cr_preempt_line.nmi_ext_timer, CG-IRQ-013.cr_preempt_line.nmi_ext_external, CG-IRQ-013.cr_preempt_line.nmi_ext_fast, CG-IRQ-013.cr_preempt_resume.nmi_ext_irq_handler_runs, CG-IRQ-013.cr_preempt_resume.nmi_ext_irq_lost_to_second_entry, CG-IRQ-013.cp_resume.irq_handler_runs, CG-IRQ-013.cp_resume.irq_lost_to_second_entry, CG-WIT-001.cp_clause.w_tp_irq_079
@@ -16316,6 +16435,7 @@ draw weights of the agent / program generator per transaction.
   response cycle completes too; 1 when the instruction in ID has a load-use hazard; more only with a
   Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [export-rows: alert alert_major_bus; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
 - Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi (entry within <= 2 ordinary records, checker
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   follows the RTL; exception_interrupts.rst:87-88 "at most one" is D21), gen_chk_alerts,
   gen_isa_compare; detects a missing alert, an rd write, a synchronous trap, or an NMI outside the
   RTL window
@@ -16357,6 +16477,7 @@ draw weights of the agent / program generator per transaction.
   rvfi_rd_addr == 0 / rvfi_ext_rf_wr_suppress == 1 (the beat that completes the access carries the
   error, rtl/ibex_load_store_unit.sv:697-698; C-8); NMI entry within <= 2 ordinary records (C-7).
 - Pass criteria: gen_chk_bus_intg_rsp (per-beat rule: suppression when the completing beat is
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   corrupted), gen_chk_nmi, gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_intg
@@ -16852,6 +16973,7 @@ draw weights of the agent / program generator per transaction.
   handler-read mcause 0xFFFFFFE0 and mtval == the unaligned EA follows within <= 2 ordinary records
   (C-7). [export-rows: alert alert_major_bus; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_trap == 0 and the rvfi_ext_nmi_int entry within the record count per C-7 with mcause 0xFFFFFFE0 / mtval read-back)
 - Pass criteria: gen_chk_bus_intg_rsp and gen_isa_compare follow the documented intent
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   (doc/03_reference/security.rst:88: the rd write is suppressed): they expect rvfi_rd_addr == 0 /
   rvfi_ext_rf_wr_suppress == 1 and rd unchanged on the load's record. The RTL writes the merged
   word (the first-half status lsu_err_d has no integrity term, rtl/ibex_load_store_unit.sv:514;
@@ -21885,6 +22007,7 @@ Stimulus line override the table for that item.
 - Fire-check: >= 5 records with rf_wr_suppress = 1 (>= 2 aligned, >= 2 second-half) and >= 1000
   with 0 including >= 10 data_err_i load traps.
 - Pass criteria: gen_chk_bus_intg_rsp (suppress == 1 iff the record is a load whose COMPLETING
+- Notes: comparator convention OWED to TB Infra's 1c (TB Infra landing 2a at 4d48d84, cross-model REQUEST-CHANGES, LOG-037c; dv/auto_dv/evidence/gen_tdd_step2b.md Section 8): a load whose response carried an integrity error retires with rvfi_ext_rf_wr_suppress = 1 and the DUT keeps the destination's old value (rtl/ibex_core.sv:2383-2385: rvfi_rf_wr_suppress_wb = instr_done_wb and not rf_we_wb_o and outstanding_load_wb and lsu_load_resp_intg_err). The 2a acceptance is NOT credited: it rested on the DUT's flag alone (the model's write undone and the rd compare skipped whenever the DUT asserted it), so a DUT that spuriously drops a load's register write would be accepted; 1c gates the undo on an announced corruption for that load and compares the DUT's rd fields against no write (T-183). Integrity runs are consistency-only until then.
   beat had an integrity error (rvfi_rf_wr_suppress = instr_done_wb & ~rf_we_wb & outstanding_load
   & lsu_load_resp_intg_err, rtl/ibex_core.sv:2384-2385, keyed on the data_intg_err of the current
   rvalid, rtl/ibex_load_store_unit.sv:697-698); 0 on data_err_i traps and stores) ;
@@ -22578,6 +22701,12 @@ reference the knobs by name; this file is the definition.
   DV_prompt Section 6 "Seeds") and echoes it in the time-0 banner, so test name + seed reproduce
   the schedule; supplied, the string is CONSUMED as the schedule (gen_tb_architecture.md 4.2, XM-L5),
   so one schedule replays under another data seed by copying the echoed string.
+- T-181 hold (LOG-042a, 2026-09-03): the 3e template's schedule runner applied only the idx=0 knobs at start-up and never a
+  mid-run phase, on any test and any tree (Runtime bisect identical at 7ef16a0 and d3c6ca8; 2a cleared). The promotion's
+  layers-live evidence (l9g) therefore exercised the initial phase only, which the promoted tests' measured status does not
+  depend on. Items whose stimulus is a mid-run regime change (this area's gen_reg_* groups and every *regime* group,
+  gen_test_plan.md Section 1.6) are not credited until the Test Writer's 3h (runner fix with a red and a green showing
+  idx > 0 phases applied) lands and passes review.
 - Default: the value in force when a test does not enable the schedule (Phase-1 feature-targeted
   tests) and no pin is given. Phase-2 tests draw every knob per phase from the value set
   (uniform unless stated); the default is not favoured, so randomness does not collapse into one

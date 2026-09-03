@@ -18,7 +18,7 @@ Out-tree paths are the shared out root; these copies are the committed record. C
 | dv/auto_dv/evidence/gen_sunset_pass2/gen_build_manifest_979350a.yaml | /proj_soc/user_dev/fzhang/ibex_dv_out/probe_t150_979350a/build/gen_tb/build_manifest.yaml | 14508 | 5f921b491e15f7b24f803024a553baf3 |
 | dv/auto_dv/evidence/gen_sunset_pass2/gen_token_sunset_released_gated.log | dv/auto_dv/tools/gen_token_sunset.py --build-manifest <that manifest> output, captured by the DV Lead landing script | 10968 | 959a4d5bdddd6d89cf07f60fabc65a2f |
 | dv/auto_dv/evidence/gen_sunset_pass2/gen_trace_check_before_after.log | dv/auto_dv/tools/gen_trace_check.py --build-manifest <that manifest> output before and after the removal, captured by the DV Lead landing script | 14958 | db340e53f1ec2dc86f5c38a197b512ea |
-| dv/auto_dv/evidence/gen_sunset_pass2/gen_README.md | written by the DV Lead landing script (names LOG-038 and the four files) | 2599 | e30ace56059b98420cf611fe3d7f6666 |
+| dv/auto_dv/evidence/gen_sunset_pass2/gen_README.md | written by the DV Lead landing script (names LOG-038 and the four files) | 3170 | 671daa3b69a6b76ca510d94f4b7e8e46 |
 
 The last four rows are the DV Lead's pass-2 files (plan v2m, ruling LOG-038): the byte copy of the build manifest named in the
 header, the sunset driver's RELEASED / GATED log, the trace tool's before / after output, and the README; from this landing on the
