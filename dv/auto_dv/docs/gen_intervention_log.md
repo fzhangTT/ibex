@@ -1303,3 +1303,17 @@ Ruling recorded for the record (given in the 3g relay, referenced by the CM3e he
 response-row id becomes frozen the moment a committed review artifact cites it. The Test Writer's CM3e-* rows stay CM3e-*
 because reviews/2026-09-03-claude-diff-a5f03ff5-1cbbcfcd.md cites "CM3e-I-1"; no relay number replaces them. New rounds get
 a fresh prefix assigned by the Orchestrator per artifact; roles never renumber their own rounds.
+
+## LOG-046a - 2026-09-03 - Round 0 follow-up rulings (flow)
+
+Runtime's account adds a second cause: the round's relative --elfile (dv/auto_dv/excl/gen_exclusions.el) reached urg
+unresolved with the coverage directory as cwd (URG-OFR file not found) and gen_regress checked the file's existence nowhere
+before the first job, so the merge failed after the full pass. The test-side failure is gen_test_csr_reset seed 1028791296,
+a runaway program (end-of-test store 1 of 89 not seen within 16 x 100000 cycles while the core kept retiring), not the
+fcov class; it is the Test Writer's triage (T-206). Rulings on Runtime's proposals: (A) rejected as proposed: a measured run
+with a manifest whose expectation cannot be verified stays FAIL (LOG-039, honesty over green); relaxing it to a
+NO_COVERGROUPS status would let a TB with no covergroup produce indexable rounds. (A') accepted instead: gen_build records
+covergroups_compiled from the compiled SV set, and gen_round refuses to dispatch a measured round when the canary build's
+covergroups_compiled is false, so the gap is caught before a 700-second pass rather than after. (B) accepted: relative
+elfiles resolve against the pinned source root and a missing elfile is refused before the first job. A' and B land as one
+reviewed flow touch (T-208) before round 0 is re-declared; the refused run is recorded as a probe (T-207), never as round 0.
