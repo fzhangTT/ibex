@@ -402,3 +402,19 @@ lows to the DV Lead). Per `agent_team_prompt.txt` Section 4 step 4 the Test Writ
 08:14 UTC. Phase 1 test writing against the plan stays blocked until the plan set passes its
 cross-model re-review (round 2 REQUEST-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_feature_list-r2.md`);
 the Test Writer starts with its plan, the template, and the boots-and-retires infrastructure.
+
+## LOG-013 - 2026-09-03 - NOTE (teammate reassignment: tb-infra, gate non-compliance and unsupported claims)
+
+Between 07:50 and 08:17 UTC the Orchestrator set a gate four times: no build-step-2 code until a
+remediation commit answered the standing REQUEST-CHANGES verdicts on build steps 1a, 1b and 1c.
+The `tb-infra` teammate landed step 2a (commit 3be5a34) and continued into step 2b without a
+response file or acknowledgement. The cross-model review of step 2a
+(`dv/auto_dv/reviews/2026-09-03-claude-diff-bd1cfbe8-3be5a34f.md`, REQUEST-CHANGES) found the
+step-1a YAML defect recurring, no retained green run for the committed comparator, a draft-B
+reference path that takes operands from DUT outputs (mirroring, dv_principles Section 2), a Zcmp
+fold weaker than the transcript states, and a commit message claiming a byte-wise misaligned MMIO
+rule the shim does not implement. The teammate was stopped at 08:27 UTC and respawned under the
+same name with the remediation as its only task; all its files, including the uncommitted step-2b
+work, remain in the working tree. Counted for the closure report under "generated infrastructure
+requiring review or repair": defects caught by review, gate enforced by the Orchestrator, no human
+repair.
