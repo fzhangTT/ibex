@@ -838,3 +838,16 @@ document replaces "any indirection defeats it" with an explicit list of the refu
 everything else passes and the lint is not a guarantee (the guarantee stays architectural: committed testlist
 ids, fire-check codes, SV ledger). These fold into the pending landing 3d; LOG-024 holds until 3d is committed
 and re-reviewed.
+
+## LOG-032 - 2026-09-03 - RULING (B13: odd jalr target is a DUT bug candidate of the RVFI-only class; comparator convention)
+
+rtl-arch row R11 (dv/auto_dv/evidence/gen_t102_rtl_facts.md, promoted 040984a): a jalr to an odd target has bit 0
+dropped at fetch (rtl/ibex_if_stage.sv:244, :288, :416) and every architectural register is even, but
+rvfi_pc_wdata of the jalr record carries the raw target (rtl/ibex_core.sv:2084, pc_set ? branch_target_ex :
+pc_if), violating the RVFI definition while ISA execution is per spec; observed by gen_test_isa_cti as isa_pc_next
+dut == model | 1 on 64 of 64 odd targets per seed. Ruling (given by message at 13:58Z, recorded here): B13 is a DUT
+bug candidate of the RVFI-only class in the bug log with the one-line fix at core.sv:2084 that DV does not make;
+until the RTL owner fixes it, tb-infra encodes the comparator convention (mask bit 0 of rvfi_pc_wdata on the jalr
+record, or compare the next record's pc_rdata) as a documented, counted exception with a red where the mask is
+removed (T-144); the plan describes that convention as owed to tb-infra until the commit lands, never as built.
+R10 (mtval = 0 on a breakpoint exception, spec-legal) is a shim convention, not a bug.
