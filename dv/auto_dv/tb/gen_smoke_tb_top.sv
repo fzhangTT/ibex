@@ -276,9 +276,19 @@ module gen_smoke_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
     rst_n = 1'b1;
   end
 
+  // The smoke's retirement check needs the RVFI trace: refuse to run without it rather than pass
+  // on the alert check alone (TB_CONTRACT Section 6 vacuous-pass guard).
+`ifndef RVFI
+  initial $fatal(1, "gen_smoke_tb_top requires +define+RVFI (retirement check would be vacuous)");
+`endif
+
   // Instruction memory: every word is a NOP; same-cycle grant; response one cycle after grant
   // (rvalid never in the grant cycle). One request per cycle keeps the in-order rule trivially.
+  // +gen_smoke_intg_flip=<bit> corrupts one bit of the encoded word (red run of the alert check).
   logic [MemDataWidth-1:0] nop_word;
+  logic [MemDataWidth-1:0] nop_word_drv;
+  int unsigned             intg_flip_bit;
+  logic                    intg_flip_en;
   if (MemECC) begin : g_nop_intg
     prim_secded_inv_39_32_enc u_nop_enc (
       .data_i (GEN_RV32_NOP),
@@ -287,9 +297,14 @@ module gen_smoke_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
   end else begin : g_nop_plain
     assign nop_word = GEN_RV32_NOP;
   end
+  initial begin
+    intg_flip_en = $value$plusargs({PLUSARG_SMOKE_INTG_FLIP, "=%d"}, intg_flip_bit);
+    if (intg_flip_en) $display("GEN_SMOKE: corrupting NOP word bit %0d (expect alert_major_bus_o)", intg_flip_bit);
+  end
+  assign nop_word_drv = intg_flip_en ? (nop_word ^ (MemDataWidth'(1) << intg_flip_bit)) : nop_word;
 
   assign instr_gnt   = instr_req;
-  assign instr_rdata = nop_word;
+  assign instr_rdata = nop_word_drv;
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) instr_rvalid <= 1'b0;
     else        instr_rvalid <= instr_req & instr_gnt;

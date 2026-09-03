@@ -3,10 +3,19 @@
 Owner: tb-infra. Date: 2026-09-03 (05:28-05:36 UTC). Host: this site host, local runs, no LSF,
 `bash -lc` with `ci/env.sh` sourced. Build configuration for the DUT: `opentitan`. Out-tree
 (not committed): `dv/auto_dv/work/tb-infra/out_t023/`. Driver scripts (working files):
-`dv/auto_dv/work/tb-infra/gen_t023_flow.sh` (steps 3-5), `gen_zb_encoding_check.py`.
-Committed deliverables: `dv/auto_dv/stim/gen_riscv_dv_target/` (riscv_core_setting.sv,
-testlist.yaml, gen_link.ld, gen_boot_stub.S, gen_debug_rom_stub.S, user_extension/), and
-`dv/auto_dv/stim/gen_elf2mem.py`. No vendored file was modified.
+`dv/auto_dv/stim/gen_t023_flow.sh` (steps 3-5), `dv/auto_dv/stim/gen_zb_encoding_check.py` (both committed after the review).
+Committed deliverables: `dv/auto_dv/stim/gen_riscv_dv_target/` (gen_riscv_core_setting.sv,
+gen_testlist.yaml, gen_link.ld, gen_boot_stub.S, gen_debug_rom_stub.S, user_extension/gen_user_*;
+the fixed names riscv-dv requires are materialized out-of-tree by `dv/auto_dv/stim/gen_program.py`
+per owner question Q-013's default), `dv/auto_dv/stim/gen_elf2mem.py`, and the two scripts that
+produce the numbers below: `dv/auto_dv/stim/gen_zb_encoding_check.py` (encoding check) and
+`dv/auto_dv/stim/gen_t023_flow.sh` (the T-023 bring-up driver; superseded by `gen_program.py`).
+The reference table is rtl-arch's `gen_rv32b_otearlgrey_encodings.md` (promotion to
+`dv/auto_dv/docs/` requested). No vendored file was modified. Post-execution review
+(APPROVE-WITH-CHANGES) changes applied in T-025: TINFO removed from the CSR list (not implemented
+by rtl/ibex_cs_registers.sv), MHPMCOUNTER3H..12H listed fully, digest changed to CRC-32 over
+(index, word) pairs, byte-granular segment merge, flow-time check of gen_link.ld against the SV
+parameters; see `gen_t025_stim_tooling.md`.
 
 ## 1. riscv-dv generator compiled with VCS (step 1)
 
@@ -19,10 +28,10 @@ cd vendor/google_riscv-dv && python3 run.py --co -si vcs -ct <clone>/dv/auto_dv/
     -o <clone>/dv/auto_dv/work/tb-infra/out_t023/gen --cmp_opts=-licqueue -v
 ```
 
-Effective vcs command line (from out_t023/runpy_co.log):
+Effective vcs command line (line 1 of the generator build's compile.log):
 
 ```
-(see runpy_co.log)
+vcs -file <clone>/vendor/google_riscv-dv/vcs.compile.option.f +incdir+<clone>/dv/auto_dv/stim/gen_riscv_dv_target +incdir+<clone>/dv/auto_dv/stim/gen_riscv_dv_target/user_extension +vcs+lic+wait -f <clone>/vendor/google_riscv-dv/files.f -full64 -l <clone>/dv/auto_dv/work/tb-infra/out_t023/gen/compile.log -LDFLAGS -Wl,--no-as-needed -CFLAGS --std=c99 -fno-extended-identifiers -Mdir=<clone>/dv/auto_dv/work/tb-infra/out_t023/gen/vcs_simv.csrc -o <clone>/dv/auto_dv/work/tb-infra/out_t023/gen/vcs_simv -licqueue
 ```
 
 Result: `CPU time: 10.220 seconds to compile + .169 seconds to elab + .584 seconds to link`; 0 errors; vcs_simv 1.3 MB. Warning classes, all inside the vendored
@@ -40,7 +49,7 @@ Files named by the warnings: `    980 riscv_instr_cover_group.sv;       1 riscv_
 
 ## 2. The team's target directory (step 2)
 
-`dv/auto_dv/stim/gen_riscv_dv_target/riscv_core_setting.sv`, derived from rtl/ibex_pkg.sv and the RISC-V specifications:
+`dv/auto_dv/stim/gen_riscv_dv_target/gen_riscv_core_setting.sv` (materialized as riscv_core_setting.sv), derived from rtl/ibex_pkg.sv and the RISC-V specifications:
 
 ```
 parameter int XLEN = 32;
@@ -139,7 +148,7 @@ Bitmanip mnemonics in the generated program (count): sh1add:10 orn:8 clmulr:7 be
 Assembler acceptance and encoding check against rtl-arch's decoder table
 (`dv/auto_dv/work/rtl-arch/gen_rv32b_otearlgrey_encodings.md`), one instance of every mnemonic
 in that table assembled with `-march=rv32imcb` and its f7/f3/hi5/imm fields compared
-(`out_t023/zb_encoding_check.txt`):
+(`out_t023/zb_encoding_check.txt`; script `dv/auto_dv/stim/gen_zb_encoding_check.py`):
 
 ```
 # march=rv32imcb gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc

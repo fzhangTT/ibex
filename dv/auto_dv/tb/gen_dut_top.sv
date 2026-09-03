@@ -2,14 +2,18 @@
 // ibex_register_file_ff, wired as rtl/ibex_top.sv does, every remaining ibex_core port exposed.
 // No clock gate, lockstep, TRVK, cache RAM or scramble logic: those are ibex_top equipment.
 //
-// Wrapper decisions, each a single parameter or define so an owner answer is a one-line change:
+// Wrapper decisions, each a single parameter or define so an owner answer is a one-line change
+// (owner questions: dv/auto_dv/docs/gen_intervention_log.md Q-002 (revised) covers RegFileECC,
+// ResetAll and RVFI; LOG-004 records the integrity-port representation choice):
 //   RegFileECC = 0          ibex_top's main-core value (rtl/ibex_top.sv:215); RF ECC lives only in
-//                           the out-of-scope lockstep core. Owner question Q-A.
-//   ResetAll = SecureIbex   ibex_top passes Lockstep = SecureIbex (rtl/ibex_top.sv:212-213). Q-B.
-//   +define+RVFI            retirement trace exposed (set by the compile command). Q-C.
+//                           the out-of-scope lockstep core. Q-002.
+//   ResetAll = SecureIbex   ibex_top passes Lockstep = SecureIbex (rtl/ibex_top.sv:212-213). Q-002.
+//   +define+RVFI            retirement trace exposed (set by the compile command). Q-002.
 //   GEN_DUT_SPLIT_INTG      undefined: bus ports exactly as ibex_core declares them (integrity in
 //                           bits [MemDataWidth-1:32]); defined: ibex_top-style data/intg split,
-//                           pure bit-slicing. Owner question Q-1.
+//                           pure bit-slicing. LOG-004.
+//   PMPRstCfg/PMPRstAddr/PMPRstMsecCfg stay at ibex_core's ibex_pkg defaults (all regions OFF),
+//                           the values ibex_top passes; named in the banner.
 //   cheriot_enable_i        tied to IbexMuBiOff internally (Section 2 ruling); test_en_i of the
 //                           register file tied 0 (unused by the FF implementation).
 // The five enum parameters take their defaults from the config script's +define+ values because
@@ -448,6 +452,10 @@ module gen_dut_top import ibex_pkg::*; import ibex_cheriot_pkg::*; #(
     $display("%s CsrMvendorId=0x%08x CsrMimpId=0x%08x cheriot_enable=%s rf_test_en=%0d",
              gen_tb_pkg::GEN_BANNER_TAG, CsrMvendorId, CsrMimpId,
              gen_tb_pkg::gen_mubi_str(CheriotEnable), RfTestEn);
+    $display("%s RndCnstLfsrSeed=0x%08x RndCnstLfsrPerm=0x%040x", gen_tb_pkg::GEN_BANNER_TAG,
+             RndCnstLfsrSeed, RndCnstLfsrPerm);
+    $display("%s PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)",
+             gen_tb_pkg::GEN_BANNER_TAG);
 `ifdef RVFI
     $display("%s RVFI=1", gen_tb_pkg::GEN_BANNER_TAG);
 `else
@@ -460,11 +468,10 @@ module gen_dut_top import ibex_pkg::*; import ibex_cheriot_pkg::*; #(
 `endif
   end
 
-  // Elaboration guard: the ruling names ibex_register_file_ff; other RegFile values are not built.
-  initial begin : g_regfile_guard
-    if (RegFile != RegFileFF) begin
-      $fatal(1, "gen_dut_top: RegFile=%s is not supported; only RegFileFF is the DUT", RegFile.name());
-    end
+  // Elaboration guard (generate-scope elaboration system task, IEEE 1800-2017 20.11): the ruling
+  // names ibex_register_file_ff; other RegFile values are not built.
+  if (RegFile != RegFileFF) begin : g_regfile_guard
+    $fatal(1, "gen_dut_top: only RegFileFF is the DUT; RegFile parameter is not RegFileFF");
   end
 
 endmodule

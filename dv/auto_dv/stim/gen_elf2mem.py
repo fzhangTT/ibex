@@ -9,9 +9,12 @@ Output format (defined here; the TB architecture document section C3.3 refers to
   <base>.sym.json Entry point, PT_LOAD segments (vaddr, size), every global symbol (name ->
                   address), and the image checksum, for the TB (tohost, signature, debug_rom,
                   _start), the shim, and the read-back check.
-  checksum        32-bit sum of all emitted words modulo 2^32 plus the word count; the SV memory
-                  model recomputes both after $readmemh and fatals on mismatch (backdoor loads
-                  must be verified by read-back, DV_prompt.txt Section 6).
+  checksum        {"crc32": CRC-32 (zlib, IEEE) over the emitted (word index, word) pairs in
+                  ascending index order, each pair as 8 little-endian bytes; "count": number of
+                  words}. REQUIREMENT on the consumer: after loading, the SV memory model (and the
+                  ISA shim) must recompute both from what they hold and fatal on mismatch, so the
+                  backdoor load is verified by read-back (DV_prompt.txt Section 6); the digest is
+                  address-dependent, so a word landing at the wrong index is detected.
 No third-party modules: the ELF32 program headers and .symtab are parsed here.
 """
 
@@ -21,6 +24,7 @@ import argparse
 import json
 import struct
 import sys
+import zlib
 from pathlib import Path
 
 PT_LOAD = 1
@@ -74,19 +78,23 @@ def parse_elf32(data: bytes):
 
 
 def to_words(segs):
-    """Merge segments into a dict word_index -> word (little-endian), padding to word bounds."""
-    words = {}
+    """Merge PT_LOAD segments at byte granularity (abutting or word-sharing segments are legal),
+    then pack little-endian words; a byte written twice with different values is an error."""
+    bytes_map = {}
     for vaddr, body in segs:
-        lo = vaddr & ~3
-        hi = (vaddr + len(body) + 3) & ~3
-        buf = bytearray(hi - lo)
-        buf[vaddr - lo:vaddr - lo + len(body)] = body
-        for off in range(0, len(buf), 4):
-            idx = (lo + off) >> 2
-            w = struct.unpack_from("<I", buf, off)[0]
-            if idx in words and words[idx] != w:
-                sys.exit(f"overlapping segments disagree at 0x{(lo + off):08x}")
-            words[idx] = w
+        for i, b in enumerate(body):
+            a = vaddr + i
+            if a in bytes_map and bytes_map[a] != b:
+                sys.exit(f"overlapping segments disagree at 0x{a:08x}")
+            bytes_map[a] = b
+    words = {}
+    for a in bytes_map:
+        idx = a >> 2
+        if idx not in words:
+            words[idx] = 0
+    for idx in words:
+        base = idx << 2
+        words[idx] = sum(bytes_map.get(base + k, 0) << (8 * k) for k in range(4))
     return words
 
 
@@ -102,7 +110,11 @@ def render_vmem(words):
 
 
 def checksum(words):
-    return {"sum32": sum(words.values()) & 0xFFFFFFFF, "count": len(words)}
+    """CRC-32 over (index, word) pairs in ascending index order, 8 LE bytes per pair (see docstring)."""
+    crc = 0
+    for idx in sorted(words):
+        crc = zlib.crc32(struct.pack("<II", idx, words[idx]), crc)
+    return {"crc32": crc & 0xFFFFFFFF, "count": len(words)}
 
 
 def main() -> int:
@@ -119,12 +131,12 @@ def main() -> int:
         "source_elf": str(args.elf),
         "entry": f"0x{entry:08x}",
         "segments": [{"vaddr": f"0x{v:08x}", "size": len(b)} for v, b in segs],
-        "checksum": {k: (f"0x{v:08x}" if k == "sum32" else v) for k, v in checksum(words).items()},
+        "checksum": {k: (f"0x{v:08x}" if k == "crc32" else v) for k, v in checksum(words).items()},
         "symbols": {k: f"0x{v:08x}" for k, v in sorted(symbols.items())},
     }
     base.with_suffix(".sym.json").write_text(json.dumps(meta, indent=2) + "\n")
     cs = checksum(words)
-    print(f"wrote {base}.vmem ({cs['count']} words, sum32 0x{cs['sum32']:08x}) and {base}.sym.json "
+    print(f"wrote {base}.vmem ({cs['count']} words, crc32 0x{cs['crc32']:08x}) and {base}.sym.json "
           f"({len(symbols)} symbols, entry 0x{entry:08x})")
     return 0
 

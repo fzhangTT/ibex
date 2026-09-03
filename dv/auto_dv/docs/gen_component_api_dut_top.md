@@ -58,8 +58,9 @@ printed in the time-0 config banner):
 | `DbgHwBreakNum`, `Dm*Addr`, `RndCnst*`, `CsrMvendorId/MimpId`, `PMPRst*` | ibex_core defaults | the values `ibex_top` passes | none |
 
 `ICacheScramble` is accepted (so the config command applies unchanged) but forwarded nowhere: it
-is not an `ibex_core` parameter; it only selects `ibex_top`'s RAM primitive. The wrapper fatals at
-elaboration unless `RegFile == RegFileFF` (only the FF file is in scope).
+is not an `ibex_core` parameter; it only selects `ibex_top`'s RAM primitive. A generate-scope
+`$fatal` (an elaboration system task) rejects any `RegFile` other than `RegFileFF` (only the FF
+file is in scope).
 
 ## 3. Ports
 
@@ -83,7 +84,7 @@ ruling); the register file's `test_en_i = 1'b0` (unused by the FF implementation
 ## 4. Wave-level behaviour the wrapper adds
 
 None. The wrapper is wiring only: the optional integrity split is bit concatenation, the banner
-is an `initial` `$display`, the `RegFile` guard is an elaboration-time `$fatal`. There is no
+is an `initial` `$display`, the `RegFile` guard is a generate-scope elaboration `$fatal`. There is no
 logic in the DUT hierarchy beyond `ibex_core` and `ibex_register_file_ff`, so the coverage scope
 is `+tree <tb_top>.<dut>.u_ibex_core` and `+tree <tb_top>.<dut>.u_register_file`.
 
@@ -92,7 +93,28 @@ is `+tree <tb_top>.<dut>.u_ibex_core` and `+tree <tb_top>.<dut>.u_register_file`
 At time 0 the wrapper prints one line per parameter value, each starting with
 `gen_tb_pkg::GEN_BANNER_TAG` (`GEN_CONFIG_BANNER`), plus `build_config=<name>` taken from the
 plusarg `+gen_build_config=<name>` (`gen_tb_pkg::PLUSARG_BUILD_CONFIG`; `UNSPECIFIED` when
-absent). A log scanner greps the one tag. Example from the T-005 smoke: see the evidence file.
+absent), the LFSR seed and permutation (`RndCnstLfsrSeed`, `RndCnstLfsrPerm`, which select the
+dummy-instruction sequence), and a line naming the PMP reset parameters as ibex_core defaults.
+A log scanner greps the one tag. Example: `dv/auto_dv/evidence/gen_t029_smoke_red_runs.md`.
+
+## 5a. Smoke contract (gen_smoke_tb_top, compile/elaboration proof only)
+
+`gen_smoke_tb_top` is the T-005/T-010 compile-and-run proof, not a regression-tier test (the real
+TB top replaces it; it carries no coverage expectation and no mutation evidence beyond the red
+runs below). Its pass/fail contract, for the Runtime Manager's log scanner:
+
+| Token / knob | Meaning |
+|---|---|
+| `GEN_SMOKE_PASS` | printed once after the bounded run when both checks held; the ONLY pass token |
+| `GEN_SMOKE_FAIL: no RVFI retirement observed` | `$fatal` (collected as a fatal) when no `rvfi_valid` was seen in the run |
+| `GEN_SMOKE_FAIL: <n> alert cycles observed` | `$fatal` when any of `alert_minor_o`, `alert_major_internal_o`, `alert_major_bus_o` was high in any cycle |
+| `gen_smoke_tb_top requires +define+RVFI` | time-0 `$fatal` when compiled without `+define+RVFI` (vacuous-pass guard) |
+| `+gen_smoke_cycles=<n>` (`PLUSARG_SMOKE_CYCLES`) | post-reset cycles before the checks run (default 3000); `1` is the red run of the retirement check |
+| `+gen_smoke_intg_flip=<bit>` (`PLUSARG_SMOKE_INTG_FLIP`) | flips one bit of the TB-side SECDED NOP word: the red run of the alert check (`alert_major_bus_o` on the first consumed fetch) |
+| `GEN_SMOKE: ...` | informational lines (max_cycles, boot address, final counts); never a verdict |
+
+Pass/fail is decided from the tokens and the collected fatal, never from the exit code (SIM_RECIPE
+Section 5). Red-run evidence for both `$fatal` checks: `dv/auto_dv/evidence/gen_t029_smoke_red_runs.md`.
 
 ## 6. Filelist recipe
 

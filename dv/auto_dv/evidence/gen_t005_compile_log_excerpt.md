@@ -126,3 +126,11 @@ any alert), not by the process exit code.
 - Every warning class listed: two classes, both RTL/flag-originated, accepted above.
 - Time-0 config banner visible: yes (sim.log lines 5-15).
 - Smoke run finishes: yes (`GEN_SMOKE_PASS`, `$finish`).
+
+## 5. T-029 follow-up (2026-09-03 05:54 UTC)
+
+The Critic's dv-principles findings on these files were closed in T-029: the smoke recompiled
+with the same command into a fresh out directory (`out_t029/smoke`) with 0 errors and the same
+two warning classes; the banner gained the LFSR seed/permutation and the PMP reset-parameter line;
+both smoke `$fatal` checks were shown to fire and the green run repeated. Evidence:
+`dv/auto_dv/evidence/gen_t029_smoke_red_runs.md`.

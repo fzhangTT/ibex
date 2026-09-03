@@ -1,4 +1,5 @@
 # gen: riscv-dv testlist for the generated TB's own target (dv/auto_dv/stim/gen_riscv_dv_target).
+# riscv-dv reads it as testlist.yaml from the fixed-name target dir gen_program.py materializes.
 # Format: vendor/google_riscv-dv/yaml/base_testlist.yaml header. The TB flow uses only the gen
 # step of run.py; assembly/linking is done by the team flow with gen_link.ld and $RISCV_GCC.
 - test: gen_rand_smoke

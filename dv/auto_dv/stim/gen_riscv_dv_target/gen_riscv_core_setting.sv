@@ -8,9 +8,9 @@
 //   - Fast interrupts (mie/mip bits 16..30) and the NMI are not riscv-dv interrupt causes: the
 //     TB drives them; the generated vectored table covers ids 1..max_interrupt_vector_num-1.
 //   - VECTORED only: ibex forces mtvec.MODE = 01 and 256-byte alignment (+tvec_alignment=8).
-//   - support_debug_mode = 0 for now: riscv-dv emits its debug ROM inside .text, but ibex
-//     enters debug at the fixed DmHaltAddr; a post-processing step or user-extension override
-//     is needed before generated debug ROMs can be used (gen_link.ld already reserves .debug_rom).
+//   - support_debug_mode = 1: riscv-dv emits its debug ROM inside .text; the team flow
+//     (dv/auto_dv/stim/gen_relocate_debug_rom.py, run by gen_program.py) moves it into the
+//     .debug_rom section that gen_link.ld places at DmHaltAddr with the exception entry at +8.
 
 parameter int XLEN = 32;
 
@@ -36,8 +36,8 @@ bit support_pmp = 1;
 
 bit support_epmp = 1;
 
-// See header: generated debug ROM placement is not yet solved.
-bit support_debug_mode = 0;
+// Generated debug ROM is relocated to DmHaltAddr by the team flow (see header).
+bit support_debug_mode = 1;
 
 // No N extension / user-mode trap delegation in ibex.
 bit support_umode_trap = 0;
@@ -79,7 +79,7 @@ const privileged_reg_t implemented_csr[] = {
     PMPADDR0, PMPADDR1, PMPADDR2, PMPADDR3, PMPADDR4, PMPADDR5, PMPADDR6, PMPADDR7,
     PMPADDR8, PMPADDR9, PMPADDR10, PMPADDR11, PMPADDR12, PMPADDR13, PMPADDR14, PMPADDR15,
     MSECCFG, MSECCFGH,
-    TSELECT, TDATA1, TDATA2, TDATA3, TINFO, MCONTEXT, MSCONTEXT, SCONTEXT,
+    TSELECT, TDATA1, TDATA2, TDATA3, MCONTEXT, MSCONTEXT, SCONTEXT,
     DCSR, DPC, DSCRATCH0, DSCRATCH1,
     MCOUNTINHIBIT,
     MHPMEVENT3, MHPMEVENT4, MHPMEVENT5, MHPMEVENT6, MHPMEVENT7, MHPMEVENT8, MHPMEVENT9,
@@ -87,7 +87,8 @@ const privileged_reg_t implemented_csr[] = {
     MCYCLE, MINSTRET, MCYCLEH, MINSTRETH,
     MHPMCOUNTER3, MHPMCOUNTER4, MHPMCOUNTER5, MHPMCOUNTER6, MHPMCOUNTER7, MHPMCOUNTER8,
     MHPMCOUNTER9, MHPMCOUNTER10, MHPMCOUNTER11, MHPMCOUNTER12,
-    MHPMCOUNTER3H, MHPMCOUNTER12H
+    MHPMCOUNTER3H, MHPMCOUNTER4H, MHPMCOUNTER5H, MHPMCOUNTER6H, MHPMCOUNTER7H, MHPMCOUNTER8H,
+    MHPMCOUNTER9H, MHPMCOUNTER10H, MHPMCOUNTER11H, MHPMCOUNTER12H
 };
 bit [11:0] custom_csr[] = {
 };

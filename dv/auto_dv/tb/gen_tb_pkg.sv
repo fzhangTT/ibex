@@ -6,19 +6,17 @@ package gen_tb_pkg;
   // Plusarg names: declared once here, never as string literals at a call site.
   parameter string PLUSARG_BUILD_CONFIG = "gen_build_config";  // e.g. +gen_build_config=opentitan
   parameter string PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles";  // bounded run length of the smoke
+  // Smoke red-run knob: flip this bit of the TB-side SECDED-encoded NOP word so the core sees an
+  // integrity error (proves the smoke's alert check fires). Absent = no corruption.
+  parameter string PLUSARG_SMOKE_INTG_FLIP = "gen_smoke_intg_flip";
 
   // Every time-0 banner line starts with this tag so a log scanner can grep one token.
   parameter string GEN_BANNER_TAG = "GEN_CONFIG_BANNER";
 
   // TB memory map (test equipment). The first fetch is {boot_addr_i[31:8], 8'h80}
-  // (rtl/ibex_if_stage.sv:243), so a program entry must sit at that offset of the boot page.
+  // (rtl/ibex_if_stage.sv:243); gen_link.ld places the program entry there (checked against this
+  // value by dv/auto_dv/stim/gen_program.py).
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;
-  parameter logic [7:0]  GEN_BOOT_FETCH_OFFSET = 8'h80;
-
-  // Bus integrity: the core wraps 32 data bits with 7 SECDED check bits when MemECC is set
-  // (rtl/ibex_core.sv MemDataWidth = 32 + 7); the check bits sit above the data.
-  parameter int unsigned GEN_DATA_W = 32;
-  parameter int unsigned GEN_INTG_W = 7;
 
   // RV32I NOP = addi x0, x0, 0, composed from the ibex_pkg opcode so no encoding is re-typed.
   parameter logic [31:0] GEN_RV32_NOP = {12'd0, 5'd0, 3'b000, 5'd0, OPCODE_OP_IMM};
