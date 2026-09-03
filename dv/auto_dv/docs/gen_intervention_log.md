@@ -130,3 +130,106 @@ pulse-drop test for the dcsr.cause=0 window (B9); boot_addr_i random per test, s
 reset. Blocks: TB knob defaults and the RST/SEC test-plan rows. Default: as stated.
 
 Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-002 (revised) - 2026-09-03 - QUESTION revision (DV Lead wording, filed verbatim; supersedes the Q-002 text above and absorbs rtl-arch Q-A/Q-B/Q-C)
+
+Q-DL-1 is REVISED to absorb rtl-arch Q-A/Q-B/Q-C, and three questions are added for the
+security-relevant RTL-defined behaviours rtl-arch flagged (gen_behaviour_summaries.md Part A) and
+for tb-infra's owner items (gen_tb_scoping_notes.md section i). tb-infra Q-1 (split `*_intg`
+ports in the wrapper, pure wiring) and Q-2 (no clock gate; core_busy_o exposed) are wrapper
+representation choices that do not move the DUT boundary; the DV Lead decides both as tb-infra
+recommends (split ports; no gate) and records them here, not as owner questions.
+
+Status: pending. Default applied meanwhile.
+
+## Q-002 (revised) - 2026-09-03 - QUESTION revision (DV Lead wording, filed verbatim; supersedes the Q-002 text above and absorbs rtl-arch Q-A/Q-B/Q-C)
+
+Q-DL-1 (revised) gen_dut_top build choices that fix the DUT boundary. The DUT is ibex_core plus
+ibex_register_file_ff; ibex_core parameters that ibex_top derives from SecureIbex default to 0 on
+ibex_core, so the wrapper must set them. The team proposes to mirror ibex_top for the opentitan
+configuration: (a) RegFileECC=0 with RegFileDataWidth=32 (rtl/ibex_top.sv:215,217): the shipped
+integration checks register-file ECC only in the lockstep shadow core, which is outside the DUT,
+so gen_regfile_ecc (rtl/ibex_core.sv:1214-1303) does not elaborate and alert_major_internal_o has
+a single live source, the PC-increment check; setting RegFileECC=1 instead would bring the ECC
+encoder/decoders, a 39-bit register file and the rf_ecc_err alert into the DUT (RegFileDataWidth
+=39, RegFileCapEccWidth=42, WordZeroVal=39'h2A00000000) but departs from the shipped
+configuration; (b) ResetAll=1 (rtl/ibex_top.sv:212-213) so data-path flops reset and coverage
+sampling sees no X; (c) compile with +define+RVFI so the retirement trace exists for the ISA-model
+comparison DV_prompt Section 7 requires (RVFI adds flops and outputs only, reads ibex_core
+internals at rtl/ibex_core.sv:1851-1853 and 2280-2292, and is recorded in the probe register as a
+define-gated DUT interface); (d) MemECC=1 (39-bit bus data), DummyInstructions=1,
+ICacheTweakInfection=1, DbgHwBreakNum=1, Dm* defaults, CsrMvendorId=CsrMimpId=0, PMP reset
+values from ibex_pkg. Decision blocked: T-005 (wrapper), every SEC/DIT/IRQ feature that depends
+on these values (feature list Section 2), bus widths in the memory agents. Default while pending:
+exactly the proposal above; the config banner prints every value.
+
+Status: pending. Default applied meanwhile.
+
+## Q-008 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-7 (MEM-13, security-relevant, RTL-defined). After a PMP fault on the first half of a
+misaligned data access, Ibex still issues the permitted second half on the data bus, so a
+misaligned store that faults performs its second-word write (rtl/ibex_load_store_unit.sv:489-531,
+rtl/ibex_core.sv:1063; F-PMP-087, F-EXC-033). The RISC-V privileged specification permits a
+decomposed misaligned access to be partially performed, so this is not a specification violation;
+OpenTitan-level expectations may still require suppression. Decision blocked: whether the
+scoreboard models the partial write as legal or the checker asserts suppression (expected-fail bug
+candidate). Default: model it as RTL-defined, cover it with bins pmp_fault x {aligned, mis_first,
+mis_second, mis_both} x {load, store}, and log it in the bug log as a security/integration note
+rather than a bug.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-009 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-8 (CTRL-04, security-relevant, RTL-defined). With fetch_enable_i not exactly IbexMuBiOn,
+interrupt and debug entry still update mepc/mcause/dpc and the PC (only the handler fetch is
+blocked), and every invalid MuBi encoding acts as Off with no alert, unlike cheriot_enable_i which
+raises alert_major_internal_o (rtl/ibex_core.sv:644-649, 1339-1351; F-RST-015, F-IMEM-023).
+Decision blocked: whether a checker expects an alert on an invalid fetch_enable_i encoding (would
+fail on current RTL) and whether trap-state changes while fetch is disabled count as a defect.
+Default: check the RTL behaviour as-is, cover both cases, record both as design notes for the
+security owner, no bug filed.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-010 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-9 (MEM-05 / MEM-19, RTL-defined). Neither bus interface defends against an rvalid with no
+outstanding request or an rvalid in the grant cycle; the bus-integrity check runs on such
+responses too (alert plus internal NMI on the data side). Decision blocked: whether the TB ever
+drives protocol-violating responses. Default (DV Lead run-scope decision): passing tests never
+violate the protocol (the memory agents enforce it and a protocol assertion layer checks it);
+one directed informational test per bus demonstrates the RTL response to an unsolicited rvalid
+and is excluded from the pass gate; recorded as a design note.
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## Q-011 - 2026-09-03 - QUESTION (to owner; worded by the DV Lead, filed verbatim by the Orchestrator)
+
+Q-DL-10 (tb-infra Q-7, ISA model). If an Ibex legalisation cannot live in the DPI shim (for
+example the fast-interrupt mie bits 16..30 or mip semantics), may the team carry a local patch
+file against the pinned upstream Spike commit (4ffd6ba860f4190ceac2716fa3c2cf139e85538f)? Decision
+blocked: the shim design and how divergences are documented. Default: allowed as a patch file
+under dv/auto_dv/tools/ with each hunk justified and applied by the build script; never a fork,
+never a fetch of any Ibex-specific Spike; the shim remains the first choice.
+
+Bug candidate added from rtl-arch: B14 (BUG-04): rvfi_id_done suppresses the ID-stage trap record
+when a WB load/store error coincides (rtl/ibex_core.sv:1851-1853; rtl/ibex_controller.sv:336-337),
+so the RVFI stream may lack a trapped instruction. RVFI-only; affects the comparator; unverified
+in simulation. rtl-arch's A.1 does not list B1 (dret leaves MPRV set); asked to verify
+(gen_t003_acceptance.md follow-up 1).
+
+Status: pending. Default stated above applied meanwhile (DV_prompt.txt Section 10).
+
+## LOG-004 - 2026-09-03 - NOTE (wrapper representation decisions)
+
+The DV Lead recorded TB Infra's Q-1 (expose integrity bits as separate *_intg wrapper ports) and
+Q-2 (no clock gate in the wrapper) as wiring choices decided by the DV Lead, not owner questions.
+The pre-execution cross-model review of the T-005 plan
+(dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_scoping_notes.md, finding 1, medium) requires
+the opposite on Q-1: the wrapper exposes instr_rdata_i, data_rdata_i and data_wdata_o exactly as
+ibex_core declares them (MemDataWidth-wide, integrity in bits [38:32]); the split happens in the
+TB bus interface (test equipment). The Orchestrator applied the review finding in the T-005
+assignment; the wrapper therefore stays literal to the DV_prompt.txt Section 2 ruling. Q-2 (no
+clock gate) stands as decided. If the owner wants the split at the DUT boundary, answer here.
