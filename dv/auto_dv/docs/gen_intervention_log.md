@@ -598,3 +598,18 @@ confirmed by rtl-arch (`dv/auto_dv/evidence/gen_t102_rtl_facts.md`). One gap car
 isa_pc_next is skipped on mret and dret records instead of comparing pc_wdata with pc + insn_length
 and verifying the redirect through the next record; the Orchestrator ordered the compare form. Reviews
 (cross-model T-118, Critic) are running on the commit.
+
+## LOG-022 - 2026-09-03 - NOTE (sunset input would have un-marked 202 items for events nothing emits; caught before any token moved)
+
+12:1x UTC: the DV Lead found that Runtime's new build-manifest field export_sources lists the RENDERED
+event table (29 rows at d0c0d15) while the plan's sunset rule (gen_test_plan.md Section 0 C-3, WP-6)
+keys on the rows a build's writers actually EMIT; no event writer is instanced yet, so
+gen_trace_check.py --build-manifest on the first real manifest reports 202 still-marked items with
+every row present and would have removed 202 cycle-clause tokens, turning 202 witness bins into
+unhittable must-hits. The Critic's v2h check noted the same 202 count as a sizing warning. No token was
+removed (the Section 0 operational rule held). Ruling: Runtime adds export_sources_emitted (rows whose
+writer is instanced, from a codegen-rendered active-source list tb-infra provides, cross-checked against
+the export header's sources= at the canary; empty today), export_sources stays the rendered table for
+the codegen cross-check, and the tool fails only on emitted rows. Rides plan v2i; no scoped round.
+Counted for the closure report as a mechanism defect caught by the team's own review before it took
+effect.
