@@ -1502,3 +1502,19 @@ pattern, byte-identical between the copy and the tree or absent from the tree, a
 tree already has modified or untracked is skipped and printed; before every CLOSE, git status --porcelain is asserted to
 show no modified or untracked path outside the list changed since the OPEN, and the assertion output goes into the
 hand-off.
+
+## LOG-058 - 2026-09-03 - Sampler classifier defects: every covergroup sampler gets a classifier unit test
+
+The Critic's tb_l3 verdict (gen_critic_tb_l3.md, REQUEST-CHANGES) and the cross-model review of landing 4 together name
+four classifier defects in the RVFI sampler across two landings: the one-bit cast on the slt equality (fixed in landing 4);
+abs computed as 33'd0 minus the zero-extended operand, so every negative operand out-ranks every non-negative one and the
+divisor and div-by-zero tuples are wrong for mixed-sign pairs; addi_wrap reading the sign of rd_wdata, which is forced to 0
+on rd = x0, so addi x0 with negative operands scores a false wrap; and cp_minstret_once comparing the compressed-retire
+counter captured before the record's own increment, so it measures the previous instruction. In each case the proof
+manifests passed because the bins were hit for the wrong operands, and the reviewers found the defects by reading the
+retained counts against arithmetic. Ruling: from slice 3 on, every covergroup sampler landing carries a classifier unit
+test that drives each classifier with a directed operand table (both signs, zero, x0 destinations, the boundary values the
+plan names) and asserts the bin per row, run as part of GEN_UT_FCOV_CODEGEN or a sibling unit test, so a wrong classifier
+fails before a proof run is retained; a proof manifest alone does not prove a sampler. tb-infra fixes the three open
+classifiers in slice 3 with reds and the new unit test; the Critic's mediums (FM1 rebuilt on the final sampler with its
+ablation retained; the fcov-off red as a real run whose retained report carries no coverage) land with it.
