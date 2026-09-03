@@ -209,7 +209,15 @@ SV_PLUSARG_MEM_IMAGE_CRC32 = "PLUSARG_MEM_IMAGE_CRC32"
 BUILD_REQUIRED_KEYS = ("tb_top", "dut_instance", "filelists")
 # cov_trees: coverage scope roots below tb_top (default [dut_instance]); the single source of the
 # -cm_hier scope (Critic P-04; the DV Lead rules on wrapper vs core+regfile).
-BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees")
+# info_trees: instrumented and reported informationally (the wrapper), never in the gate numbers.
+BUILD_OPTIONAL_KEYS = ("defines", "cocotb", "description", "extra_vcs_args", "cov_trees", "info_trees")
+# DV Lead rulings applied by the flow (dv/auto_dv/docs/gen_tb_architecture.md Section 5).
+RULING_SCOPE = ("gen_tb_architecture.md Section 5: the gate numbers are the two inner instances u_dut.u_ibex_core and "
+                "u_dut.u_register_file combined per metric (sum of covered and of total objects); the wrapper "
+                "gen_dut_top is reported informationally, never gated")
+RULING_GLITCH = ("gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 "
+                 "(builds.<name>.extra_vcs_args); FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])")
+GLITCH_FLAGS = ("-cm_glitch", "0")
 # Testlist header policies: fcov_manifest_required_tiers (P-07), debug_only_plusargs (tb-arch P6).
 TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs")
 # Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).

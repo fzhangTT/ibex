@@ -122,7 +122,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
         # single source of the scope (P-04).
         tmpl = C.CM_HIER_TEMPLATE.read_text(encoding="utf-8")
         hier.write_text("".join(U.render_fields(tmpl, {"tb_top": build["tb_top"], "dut_instance": tree})
-                                for tree in cov_trees(build)), encoding="utf-8")
+                                for tree in cov_trees(build) + info_trees(build)), encoding="utf-8")
         metrics = C.COV_METRICS_WITH_COND if a.cond else C.COV_METRICS_VERIFIED
         groups["coverage"] = ["-cm", metrics, *C.COV_COMPILE_EXTRA,
                               "-cm_dir", str(outdir / C.BUILD_VDB_NAME), "-cm_hier", str(hier)]
@@ -144,11 +144,21 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
 
 
 def cov_trees(build: dict[str, Any]) -> list[str]:
+    """Gated roots (DV Lead ruling: the two inner instances); default the DUT instance."""
     return list(build.get("cov_trees") or [build["dut_instance"]])
+
+
+def info_trees(build: dict[str, Any]) -> list[str]:
+    """Instrumented, reported informationally, never gated (the wrapper)."""
+    return list(build.get("info_trees") or [])
 
 
 def cov_scopes(build: dict[str, Any]) -> list[str]:
     return [f"{build['tb_top']}.{t}" for t in cov_trees(build)]
+
+
+def info_scopes(build: dict[str, Any]) -> list[str]:
+    return [f"{build['tb_top']}.{t}" for t in info_trees(build)]
 
 
 def summarize_compile_log(log: Path) -> dict[str, Any]:
@@ -250,6 +260,8 @@ def main() -> int:
         "coverage": bool(a.coverage), "cov_metrics": (groups.get("coverage") or [None, None])[1],
         "cov_scope": cov_scopes(build)[0] if a.coverage else None,
         "cov_scopes": cov_scopes(build) if a.coverage else [],
+        "info_scopes": info_scopes(build) if a.coverage else [],
+        "glitch_filter": all(f in groups["extra"] for f in C.GLITCH_FLAGS) if a.coverage else None,
         "rtl_root_override": str(a.rtl_root.resolve()) if a.rtl_root else None, "mutation_id": a.mutation_id,
         "rtl_substitutions": a.rtl_substitutions,
         "build_vdb": str(outdir / C.BUILD_VDB_NAME) if a.coverage else None,

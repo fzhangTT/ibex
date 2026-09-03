@@ -80,7 +80,8 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
     return {"dir": str(bdir), "manifest": str(man_path), "status": man.get("status", "failed"),
             "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "lsf": man.get("lsf"),
             "cov_metrics": man.get("cov_metrics"), "defines": man.get("defines"), "constfile": man.get("constfile"),
-            "cov_scope": man.get("cov_scope"), "cov_scopes": man.get("cov_scopes") or [], "vdb": None,
+            "cov_scope": man.get("cov_scope"), "cov_scopes": man.get("cov_scopes") or [],
+            "info_scopes": man.get("info_scopes") or [], "glitch_filter": man.get("glitch_filter"), "vdb": None,
             "mutation_id": man.get("mutation_id"), "rtl_root_override": man.get("rtl_root_override"),
             "rtl_substitutions": man.get("rtl_substitutions"),
             "unmeasured_vdb": str(unmeasured_vdb) if unmeasured_vdb else None}
@@ -400,11 +401,15 @@ def main() -> int:
                                                if r.get("build") == bname):
                 unmeasured_vdbs.append(Path(b["unmeasured_vdb"]))
         dut_scopes = sorted({sc for b in builds.values() for sc in (b.get("cov_scopes") or [b.get("cov_scope")]) if sc})
+        info_scopes = sorted({sc for b in builds.values() for sc in (b.get("info_scopes") or [])})
         dump = a.dump_exclusions or a.purpose == 4
         if measured_vdbs:
             U.log(f"urg merge (measured) of {len(measured_vdbs)} vdb(s)" + (" with exclusion dump" if dump else ""))
-            cov = R.merge(outdir / "cov", sorted(measured_vdbs), a.elfile, dut_scopes=dut_scopes, dump_exclusions=dump)
+            cov = R.merge(outdir / "cov", sorted(measured_vdbs), a.elfile, dut_scopes=dut_scopes, dump_exclusions=dump,
+                          info_scopes=info_scopes)
             cov["build_defines"] = {n: b.get("defines") for n, b in builds.items()}
+            cov["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
+            cov["rulings"] = {"scope": C.RULING_SCOPE, "glitch": C.RULING_GLITCH}
             cov["constfiles"] = {n: b.get("constfile") for n, b in builds.items()}
             cov["measured_tests"] = sorted({r["test"] for r in runs if r.get("measured", True)})
         elif not any(r.get("measured", True) for r in runs):
@@ -417,8 +422,11 @@ def main() -> int:
             U.log(f"urg merge (unmeasured, informational) of {len(unmeasured_vdbs)} vdb(s)")
             # A requested exclusion dump lands on the unmeasured merge when no measured merge exists.
             cov["unmeasured"] = R.merge(outdir / C.UNMEASURED_COV_DIRNAME, sorted(unmeasured_vdbs), None,
-                                        dut_scopes=dut_scopes, dump_exclusions=dump and not measured_vdbs)
+                                        dut_scopes=dut_scopes, dump_exclusions=dump and not measured_vdbs,
+                                        info_scopes=info_scopes)
             cov["unmeasured"]["tests"] = sorted({r["test"] for r in runs if not r.get("measured", True)})
+            cov["unmeasured"]["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
+            cov["unmeasured"]["rulings"] = {"scope": C.RULING_SCOPE, "glitch": C.RULING_GLITCH}
         manifest["coverage"] = cov
         # Covergroups exist once URG reports a GROUP total in any merge of this regression.
         groups_seen = any((m_.get("totals") or {}).get("group") not in (None, C.NOT_APPLICABLE)

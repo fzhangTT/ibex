@@ -254,6 +254,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         trees = b.get("cov_trees")
         if trees is not None and (not isinstance(trees, list) or not trees or not all(isinstance(x, str) for x in trees)):
             die(f"{path}: build {bname} cov_trees must be a non-empty list of instance paths below tb_top")
+        info = b.get("info_trees")
+        if info is not None and (not isinstance(info, list) or not all(isinstance(x, str) for x in info)):
+            die(f"{path}: build {bname} info_trees must be a list of instance paths below tb_top")
+        if info and trees and set(info) & set(trees):
+            die(f"{path}: build {bname}: a tree cannot be both gated (cov_trees) and informational (info_trees)")
     names = set()
     for t in tests:
         for k in C.TEST_REQUIRED_KEYS:

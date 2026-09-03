@@ -210,11 +210,17 @@ gen_regress.py --repro <test> <seed> [--waves]
   {jobs, cpu_s, wall_s, pend_s, slot_s, cpu_unknown_jobs}, lsf_jobs_left, git, tools, timing,
   testlist {path, sha256} (also in every result.yaml and round index entry, so a temporary testlist
   used for a self-test is identifiable even when the file itself is not retained).
-- **Coverage numbers.** `coverage.totals` is the grand total of `report/dashboard.txt`;
-  `coverage.dut_scope[<tb_top>.<dut_instance>]` is the row of the DUT instance in
-  `report/hierarchy.txt` and is the gate number (it differs from the grand total only for objects
-  outside the DUT tree, today the three `uvm_pkg` assertions). A metric URG does not print is `n/a`.
-  Ratios (covered/total) are kept next to every percentage.
+- **Coverage numbers (DV Lead ruling, gen_tb_architecture.md Section 5).** `coverage.totals` is the
+  grand total of `report/dashboard.txt`; `coverage.dut_scope[<scope>]` holds the `hierarchy.txt`
+  row of every gated scope (`cov_trees` of the build: `u_dut.u_ibex_core` and
+  `u_dut.u_register_file`); `coverage.gate_row` is the gate number: the gated rows combined per
+  metric by summing covered and total objects (from URG's `-show ratios` a/b), percent = 100 x
+  covered / total, a metric no gated row reports stays `n/a` (`combine_rows` in gen_cov_report.py;
+  the rule text travels in `gate_row.rule`). `coverage.info_scope[<scope>]` holds the rows of the
+  `info_trees` (the wrapper `u_dut`): instrumented and reported, never gated. Functional coverage
+  (Group) comes from the grand total. Ratios (covered/total) are kept next to every percentage.
+  `coverage.glitch_filter[<build>]` records whether `-cm_glitch 0` was in the build's flag set;
+  `coverage.rulings` carries both ruling references.
 
 ## 4. gen_serve_requests.py (run-request queue)
 
@@ -289,12 +295,17 @@ machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
 ## 7. gen_testlist.yaml (schema)
 
-`schema_version: 1`. Header policies: `fcov_manifest_required_tiers` (list), `debug_only_plusargs`
+Rulings applied in the testlist (single source): every build entry carries `cov_trees:
+[u_dut.u_ibex_core, u_dut.u_register_file]` (gated), `info_trees: [u_dut]` (informational) and
+`extra_vcs_args: ["-cm_glitch", "0"]` (glitch filter for every measured build; VCS reports
+`Warning-[VCM-OPTIGN]` because the filter does not apply to FSM coverage, so FSM is recorded as not
+glitch-filtered). `schema_version: 1`. Header policies: `fcov_manifest_required_tiers` (list), `debug_only_plusargs`
 (list of knob names; each must be a `PLUSARG_*` of gen_tb_pkg.sv, today `gen_dbg_csr_probe` =
 `PLUSARG_DBG_CSR_PROBE`, probe P6). `builds.<name>`: `tb_top`, `dut_instance`, `filelists` (clone-root relative,
-in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`, `cov_trees` (coverage
-roots below tb_top, default `[dut_instance]`; the single source of the `-cm_hier` scope, Critic
-P-04; the DV Lead rules wrapper versus `[u_dut.u_ibex_core, u_dut.u_register_file]`). `tests[]`: `name` (gen_
+in order), optional `defines`, `cocotb`, `description`, `extra_vcs_args`, `cov_trees` (gated
+coverage roots below tb_top, default `[dut_instance]`; the single source of the `-cm_hier` scope;
+ruled: `[u_dut.u_ibex_core, u_dut.u_register_file]`), `info_trees` (instrumented, reported
+informationally, never gated; ruled: `[u_dut]`). `tests[]`: `name` (gen_
 prefix, unique), `description`, `tier`, `build`, `uvm_test` (null for a top without a UVM test
 class; otherwise a class identifier, anything else is rejected), `plusargs` (list of `+name=value`), `seeds` (count or list), `fcov_expectation_file`
 (`dv/auto_dv/fcov_expectations/<name>.fcov.yaml` or null), `timeout_s`, `owner` (role slug),
@@ -432,9 +443,9 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   renders Section 1 from this index; dry runs sit under `dry_runs` and never count.
 - The n/a rule: a metric URG does not report (no column, or `--`) is `n/a` in the row, is not gated,
   and is skipped in the gain computation; it is never written as 0 or 100.
-- Hard rules of a round (cross-model review T-055): the metrics come from the DUT-scope row only,
-  never from the grand total (a missing or unparsed row is a hard error naming the scope); exactly
-  one DUT scope per merge until the DV Lead's P-04 ruling brings a combining rule; the regression
+- Hard rules of a round (cross-model review T-055, DV Lead ruling P-04): the metrics come from the
+  gate row only (the gated scopes combined by the summing rule above), never from the grand total (a
+  missing or unparsed gate row is a hard error naming what is missing); the regression
   must be clean (gen_regress.py exit 0: no FAIL, TIMEOUT or NOT_RUN, merge ok, no strict-exclusion
   violation) or the round is refused and not indexed; the round number must be the next one in the
   index; group is gated as "bins >= 80 (traceability not checked here)" and never counts toward the
@@ -446,9 +457,12 @@ gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a
   runtime role runs `gen_round.py --round <n>` and the Orchestrator commits the evidence directory.
 - `--evidence-root DIR` redirects the evidence directory and index (self-tests only; the committed
   homes are the defaults).
-- Instrumentation changes such as `-cm_glitch 0` (LOG-008) are adopted, once ruled, as
-  `builds.<name>.extra_vcs_args` in gen_testlist.yaml (the single source of the build flag set),
-  and round 0 is re-measured under the new set so later gains compare like with like.
+- Instrumentation changes such as `-cm_glitch 0` (LOG-008, ruled 2026-09-03) live in
+  `builds.<name>.extra_vcs_args` of gen_testlist.yaml (the single source of the build flag set); the
+  round-0 baseline was re-measured under the ruled flag set and scope as `gen_round_0_rebaseline`
+  (check tier, unmeasured until real tests exist) so later gains compare like with like.
+  `gen_round.py --dry-run --tests <t> --seed-list <s> --evidence-name gen_round_0_<suffix>` is the
+  re-baseline form.
 
 ## 7e. Program step (gen_stim.py) and the "boots and retires" templates
 

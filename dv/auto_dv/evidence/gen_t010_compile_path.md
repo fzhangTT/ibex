@@ -137,6 +137,11 @@ fsm/branch numbers, so no TB-top code was instrumented; `gen_dut_top` itself app
 objects only (its ports, 312/2420), as expected for the wrapper that is the DUT by ruling.
 
 Coverage numbers are near-zero-effort smoke numbers (a NOP program); they prove the path only.
+Historical note: these rows predate the DV Lead rulings of 2026-09-03 (gen_tb_architecture.md
+Section 5). The gate numbers are now the two inner instances combined and every measured build
+carries `-cm_glitch 0`; the like-for-like baseline under those rulings is
+`dv/auto_dv/evidence/gen_round_0_rebaseline/` (LINE 38.93, COND 26.63, TOGGLE 6.85, FSM 6.98,
+BRANCH 33.00, ASSERT 80.34 on the gate row).
 
 ## 5. -cm_seqnoconst and the CHERIoT constant-tie cone (rtl-arch exclusion draft Part B.3)
 

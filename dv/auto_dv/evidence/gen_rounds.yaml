@@ -85,3 +85,122 @@ dry_runs:
   - fullexclude.tgl
   full_exclusions_note: 'dry run: the six listed dump files were removed from the evidence directory before
     the commit (unmeasured data); they remain in the out-tree regress_round_0_dryrun/cov_unmeasured/full_exclusions'
+- round: 0
+  dry_run: true
+  label: round-0 re-baseline under the DV Lead rulings (scope = two inner instances combined, -cm_glitch
+    0); check tier, unmeasured until real tests exist; the new like-for-like baseline
+  date_utc: '2026-09-03T07:13:50Z'
+  evidence_dir: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/evidence/gen_round_0_rebaseline
+  regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline
+  regress_tag: round_0_rebaseline
+  git_head: b4ed65103e9d8e74d3edf97d0ce26c1a5d5b82ff
+  git_dirty_tracked_files: true
+  flow_git_status_now:
+  - ' M dv/auto_dv/flow/gen_build.py'
+  - ' M dv/auto_dv/flow/gen_cov_report.py'
+  - ' M dv/auto_dv/flow/gen_dashboard.py'
+  - ' M dv/auto_dv/flow/gen_flow_const.py'
+  - ' M dv/auto_dv/flow/gen_flow_util.py'
+  - ' M dv/auto_dv/flow/gen_regress.py'
+  - ' M dv/auto_dv/flow/gen_round.py'
+  - ' M dv/auto_dv/flow/gen_testlist.yaml'
+  regression_verdict:
+    verdict: clean
+    status: done
+    bad_runs: 0
+    coverage_status: ok_no_measured_tests
+    exclusion_violations: []
+  build_config: opentitan
+  source: UNMEASURED merge (dry run / check tier)
+  tests_in_report: 1
+  runs:
+    planned: 1
+    pass: 1
+    fail: 0
+    xfail: 0
+    timeout: 0
+    not_run: 0
+    pass_rate_pct: 100.0
+    runs_without_fcov_manifest: 1
+    tests_without_fcov_manifest:
+    - gen_smoke
+  metrics:
+    scope: gen_smoke_tb_top.u_dut.u_ibex_core + gen_smoke_tb_top.u_dut.u_register_file
+    combining_rule: sum of covered and of total objects per metric over the gated scopes; percent = 100
+      * covered / total
+    line: 38.93
+    cond: 26.63
+    toggle: 6.85
+    fsm: 6.98
+    branch: 33.0
+    assert: 80.34
+    group: n/a
+    ratios:
+      line: 1694/4351
+      cond: 2547/9566
+      toggle: 1682/24538
+      fsm: 6/86
+      branch: 798/2418
+      assert: 143/178
+    info_scopes:
+      gen_smoke_tb_top.u_dut:
+        line: 38.93
+        cond: 26.63
+        toggle: 7.4
+        fsm: 6.98
+        branch: 33.0
+        assert: 80.34
+        group: n/a
+        ratios:
+          line: 1694/4351
+          cond: 2547/9566
+          toggle: 1994/26958
+          fsm: 6/86
+          branch: 798/2418
+          assert: 143/178
+  gate:
+    line: below gate
+    cond: below gate
+    toggle: below gate
+    fsm: below gate
+    branch: below gate
+    assert: PASS
+    group: n/a (not reported by URG; excluded from the gate)
+  gain:
+    deltas:
+      line: n/a
+      cond: n/a
+      toggle: n/a
+      fsm: n/a
+      branch: n/a
+      assert: n/a
+      group: n/a
+    max_gain: null
+    shows_gain: null
+    G: 0.5
+  no_gain_streak: 0
+  stopping_rule_fired: null
+  glitch_filter:
+    gen_smoke: true
+  rulings:
+    scope: 'gen_tb_architecture.md Section 5: the gate numbers are the two inner instances u_dut.u_ibex_core
+      and u_dut.u_register_file combined per metric (sum of covered and of total objects); the wrapper
+      gen_dut_top is reported informationally, never gated'
+    glitch: 'gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 (builds.<name>.extra_vcs_args);
+      FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])'
+  exclusion_files: []
+  excl_strict: false
+  exclusion_violations: []
+  merge_warnings:
+    Note-[URG-RATIO]: 1
+    Note-[URG-RDG]: 1
+  testlist:
+    path: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_testlist.yaml
+    sha256: 92f70be11f4cbf32f5652a1e935bad204b208a2bd6d185b96265c579d88b1b04
+  testlist_sha256: 92f70be11f4cbf32f5652a1e935bad204b208a2bd6d185b96265c579d88b1b04
+  copied:
+  - dashboard.txt
+  - hierarchy.txt
+  - tests.txt
+  full_exclusions_files: []
+  full_exclusions_note: 'dry run: dump not copied (stays in the out-tree)'

@@ -1,0 +1,12 @@
+Tests
+
+Total Coverage Summary 
+SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT         
+ 31.99   38.93 1694/4351   26.63 2547/9566    7.40 1994/26958    6.98 6/86   33.00 798/2418   79.01 143/181 
+
+
+Total tests in report: 1
+-------------------------------------------------------------------------------
+Data from the following tests was used to generate this report
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/gen_smoke/test_gen_smoke_330815564 
+

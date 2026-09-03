@@ -94,6 +94,14 @@ One line per finding: FIXED (where, validated by) or DISPUTED (why).
 | gen_t010 8a quoted the retired reason string | FIXED | row reworded to the current wording only | text |
 | gen_mirror usage text | FIXED | docstring: run --venv once after a fresh mirror (without it the manifest reports venv MISSING and cocotb builds refuse) | text |
 
+## T-057: DV Lead rulings applied (gen_tb_architecture.md Section 5), same landing
+
+| Item | Status | Where | Validation |
+|---|---|---|---|
+| coverage scope = u_dut.u_ibex_core + u_dut.u_register_file (gated), wrapper informational | APPLIED | `gen_testlist.yaml` build entries: `cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]`, `info_trees: [u_dut]` (single source); `gen_build.py` instruments gated + info trees; `gen_cov_report.merge` parses every row and builds `gate_row` by `combine_rows` (covered and total summed per metric, percent = 100 x covered / total, n/a when no gated row reports the metric); `gen_round.metric_row` and `gen_dashboard.dut_scope_row` use the gate row, the wrapper row is listed as informational | `gen_round_0_rebaseline`: gate row LINE 1694/4351, COND 2547/9566, TOGGLE 1682/24538, FSM 6/86, BRANCH 798/2418, ASSERT 143/178 (= u_ibex_core 142/173 + u_register_file 1/5); wrapper row TOGGLE 1994/26958 (the 312/2420 wrapper port objects the ruling removes from the gate); combine self-check 50/100 + 20/20 = 70/120 = 58.33 |
+| -cm_glitch 0 for every measured build | APPLIED | `extra_vcs_args: ["-cm_glitch", "0"]` on both build entries (per the Critic's residual, not a flow constant; the architecture document's sentence "Runtime makes it the default in gen_flow_const.py" describes the same intent at the testlist level); `build_manifest.glitch_filter`, `coverage.glitch_filter[<build>]`, `coverage.rulings`, round summary states the flag and that FSM is not glitch-filtered | rebaseline merge.log: zero Warning-[UCAPI-CSM], zero RCGLTCH (baseline had 14 and 1); LINE/COND/BRANCH equal the rtl-arch-001 trial numbers |
+| round 0 re-baselined like for like | DONE | `gen_round.py --dry-run --tests gen_smoke --seed-list 330815564 --evidence-name gen_round_0_rebaseline`: `dv/auto_dv/evidence/gen_round_0_rebaseline/` (labelled "check tier, unmeasured until real tests exist; the new like-for-like baseline"), index `dry_runs` entry with `rulings`, `glitch_filter` and the informational row; `gen_round_0_dryrun` stays as the pre-ruling record | LSF job in regress_round_0_rebaseline; dashboard regenerated with the ruling references in its header |
+
 ## Other changes made while closing these findings
 
 - `gen_run.py --measured auto|yes|no` (gen_regress passes it; a mutation build forces no) and

@@ -70,18 +70,21 @@ def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
     DUT instance (the Test Writer's gen_ namespace is the whole functional set). No fallback to
     the grand total for code metrics: a missing DUT row shows n/a with a parse_error note."""
     cov = m.get("coverage") or {}
+    if not cov.get("dashboard_txt") and (cov.get("unmeasured") or {}).get("dashboard_txt"):
+        cov = cov["unmeasured"]
     totals = cov.get("totals") or {}
-    scopes = cov.get("dut_scope") or {}
+    gate = cov.get("gate_row")
     row: dict[str, Any] = {}
-    if len(scopes) > 1:
-        # No combining rule for several DUT scopes exists yet (P-04 pending): report n/a, never the first.
-        return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": f"{len(scopes)} DUT scopes, no combining rule"}
-    if scopes:
-        first = next(iter(scopes.values()))
-        if isinstance(first, dict) and "parse_error" not in first:
-            row = dict(first)
+    if isinstance(gate, dict) and "parse_error" not in gate:
+        row = dict(gate)
+    else:
+        scopes = cov.get("dut_scope") or {}
+        if len(scopes) == 1:
+            first = next(iter(scopes.values()))
+            if isinstance(first, dict) and "parse_error" not in first:
+                row = dict(first)
     if not row:
-        return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": "DUT-scope row missing"}
+        return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": "gate row missing (no combined DUT-scope row)"}
     row["group"] = totals.get("group", C.NOT_APPLICABLE)
     ratios = dict(row.get("ratios") or {})
     if (totals.get("ratios") or {}).get("group"):
@@ -103,8 +106,8 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     L.append(f"Generated (UTC): {U.now_utc()}. Build configuration: `{C.BUILD_CONFIG}`. Out root: `{out_root}`.")
     L.append(f"Sources: {len(regs)} regression manifest(s), {len(requests)} run-request result(s). "
-             "Code-coverage numbers are the URG DUT-scope row (`<tb_top>.<dut_instance>` in hierarchy.txt); "
-             "functional coverage (Group) is the grand total, the gen_ covergroups being TB-side; "
+             f"Code-coverage numbers are the gate row: {C.RULING_SCOPE}. Glitch filter: {C.RULING_GLITCH}. "
+             "Functional coverage (Group) is the grand total, the gen_ covergroups being TB-side; "
              "`n/a` means URG did not report the metric (never 0 or 100, DV_prompt Section 4). "
              "Ratios are covered/total objects.")
     L.append("")

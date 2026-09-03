@@ -10,7 +10,8 @@ URG does not report is recorded as n/a: it is neither gated nor part of the gain
 
 Usage:
     gen_round.py --round <n> [--elfile F ...] [--seeds N] [--base-seed S] [--tag T] [--force]
-    gen_round.py --dry-run [--tag T]     # check tier, unmeasured; evidence dir gen_round_0_dryrun, not a round
+    gen_round.py --dry-run [--tag T] [--tests a,b --seed-list s] [--evidence-name gen_round_0_rebaseline]
+                                         # check tier (or the named tests), unmeasured; not a round
     gen_round.py --collect <regress outdir> --round <n> [--dry-run]   # evidence + index from an existing regression
 """
 
@@ -37,10 +38,14 @@ WARNING_RE = re.compile(r"^(Warning|Error|Note)-\[([\w-]+)\]")
 def run_regression(a: argparse.Namespace, tag: str) -> Path:
     outdir = C.OUT_DIR / f"regress_{tag}"
     argv = [sys.executable, str(C.FLOW_DIR / "gen_regress.py"), "--tag", tag, "--dump-exclusions"]
-    if a.dry_run:
+    if a.tests:
+        argv += ["--tests", a.tests]
+    elif a.dry_run:
         argv += ["--tier", C.CHECK_TIER]
     else:
         argv += ["--tier", "full", "--purpose", "4", "--requester", a.requester]
+    if a.seed_list:
+        argv += ["--seed-list", a.seed_list]
     for e in a.elfile or []:
         argv += ["--elfile", str(e)]
     if a.seeds:
@@ -75,28 +80,30 @@ def regression_verdict(man: dict[str, Any]) -> dict[str, Any]:
 
 
 def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
-    """DUT-scope row (code metrics from the DUT instance row, group from the grand total), n/a kept.
-    Never falls back to the grand totals: a missing or unparsed DUT row is a hard error, and more
-    than one scope is refused until a combining rule exists (pending DV Lead ruling P-04)."""
+    """The gate row: the gated DUT scopes combined per metric (DV Lead ruling, gen_tb_architecture.md
+    Section 5: u_dut.u_ibex_core + u_dut.u_register_file, covered and total objects summed), group from
+    the grand total, n/a kept. Never the grand total for code metrics: a missing or unparsed gate row
+    is a hard error naming what is missing."""
     totals = cov.get("totals") or {}
+    gate = cov.get("gate_row")
     scopes = cov.get("dut_scope") or {}
     if not scopes:
-        U.die("coverage record has no DUT-scope row (dut_scope empty): the round needs the "
-              "<tb_top>.<dut_instance> row of hierarchy.txt, not the grand total")
-    if len(scopes) > 1:
-        U.die(f"coverage record has {len(scopes)} DUT scopes {sorted(scopes)}: no combining rule exists yet "
-              "(DV Lead ruling P-04 pending); one cov_tree per build until then")
-    scope, src = next(iter(scopes.items()))
-    if not isinstance(src, dict) or "parse_error" in src:
-        U.die(f"DUT-scope row for {scope} could not be parsed: {src.get('parse_error') if isinstance(src, dict) else src}")
-    row: dict[str, Any] = {"scope": scope}
+        U.die("coverage record has no gated DUT-scope rows (dut_scope empty): the round needs the cov_trees rows of "
+              "hierarchy.txt, not the grand total")
+    if not isinstance(gate, dict) or "parse_error" in gate:
+        bad = {k: v.get("parse_error") for k, v in scopes.items() if isinstance(v, dict) and "parse_error" in v}
+        U.die(f"gate row not available ({(gate or {}).get('parse_error')}); unparsed scopes: {bad}")
+    row: dict[str, Any] = {"scope": " + ".join(gate.get("combined_from") or sorted(scopes)),
+                           "combining_rule": gate.get("rule")}
     for m in GATED_CODE_METRICS:
-        row[m] = src.get(m, C.NOT_APPLICABLE)
+        row[m] = gate.get(m, C.NOT_APPLICABLE)
     row["group"] = totals.get("group", C.NOT_APPLICABLE)
-    ratios = dict((src.get("ratios") or {}))
+    ratios = dict(gate.get("ratios") or {})
     if (totals.get("ratios") or {}).get("group"):
         ratios["group"] = totals["ratios"]["group"]
     row["ratios"] = ratios
+    row["info_scopes"] = {k: {m: v.get(m) for m in C.URG_METRICS} | {"ratios": v.get("ratios")}
+                          for k, v in (cov.get("info_scope") or {}).items() if isinstance(v, dict)}
     return row
 
 
@@ -159,14 +166,22 @@ def dut_rows(hier: Path, scopes: list[str]) -> str:
 
 
 def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
-            evidence_root: Path = C.EVIDENCE_DIR, index_path: Path = C.ROUND_INDEX) -> Path:
-    """evidence_root / index_path default to the committed homes; a self-test points them elsewhere."""
+            evidence_root: Path = C.EVIDENCE_DIR, index_path: Path = C.ROUND_INDEX,
+            evidence_name: str | None = None) -> Path:
+    """evidence_root / index_path default to the committed homes; a self-test points them elsewhere.
+    evidence_name overrides the directory name (dry runs only, e.g. gen_round_0_rebaseline)."""
     man = U.load_yaml(outdir / "manifest.yaml")
     cov_all = man.get("coverage") or {}
     # A dry run on the check tier has no measured merge; its unmeasured merge is the source, labelled.
     cov = cov_all if cov_all.get("dashboard_txt") else (cov_all.get("unmeasured") or {})
     source = "measured merge" if cov_all.get("dashboard_txt") else "UNMEASURED merge (dry run / check tier)"
     name = f"{C.ROUND_DIR_PREFIX}{round_no}" + ("_dryrun" if dry_run else "")
+    if evidence_name:
+        if not dry_run:
+            U.die("--evidence-name is for dry runs only; real rounds are named gen_round_<n>")
+        if not evidence_name.startswith(C.ROUND_DIR_PREFIX):
+            U.die(f"--evidence-name must start with {C.ROUND_DIR_PREFIX}")
+        name = evidence_name
     ev = evidence_root / name
     if ev.exists():
         U.die(f"{ev} exists; an evidence directory is never overwritten (pick another --round or --tag)")
@@ -233,6 +248,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
              "build_config": man.get("build_config"), "source": source, "tests_in_report": (cov.get("totals") or {}).get("tests_in_report"),
              "runs": man.get("summary"), "metrics": row, "gate": gate_status(row), "gain": gain,
              "no_gain_streak": streak, "stopping_rule_fired": (streak >= C.ROUND_NO_GAIN_N) if not dry_run else None,
+             "glitch_filter": cov.get("glitch_filter"), "rulings": cov.get("rulings"),
              "exclusion_files": cov.get("elfiles") or [], "excl_strict": cov.get("excl_strict"),
              "exclusion_violations": cov.get("exclusion_violations") or [], "merge_warnings": wc,
              "testlist": {"path": str(C.TESTLIST_YAML), "sha256": U.sha256_file(C.TESTLIST_YAML)},
@@ -277,13 +293,25 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
           f"{e['tests_in_report']}; runs: {e['runs']}.", "",
           f"Exclusion files (loaded with -excl_strict={e['excl_strict']}): {e['exclusion_files'] or 'none'};",
           f"strict violations: {e['exclusion_violations'] or 'none'}. Testlist snapshot sha256 `{e['testlist_sha256']}`.", "",
-          f"## Metrics (DUT-scope row `{e['metrics'].get('scope')}`; n/a = URG did not report the metric: excluded from gate and gain; "
-          "group is gated by bins >= 80 AND traceability, the latter not checked here, and never counts toward the gain)", "",
+          f"Rulings applied (gen_tb_architecture.md Section 5): scope = {e.get('rulings', {}).get('scope', 'n/a')}; "
+          f"glitch = {e.get('rulings', {}).get('glitch', 'n/a')}. Glitch filter (-cm_glitch 0) on the builds of this "
+          f"merge: {e.get('glitch_filter')}; FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN]).", "",
+          f"## Metrics (gate row = `{e['metrics'].get('scope')}` combined: {e['metrics'].get('combining_rule')}; "
+          "n/a = URG did not report the metric: excluded from gate and gain; group is gated by bins >= 80 AND "
+          "traceability, the latter not checked here, and never counts toward the gain)", "",
           "| Metric | Percent | covered/total | Gate (80) | Delta vs previous round |", "|---|---|---|---|---|"]
     for m in C.URG_METRICS:
         v = e["metrics"].get(m)
         ratio = (e["metrics"].get("ratios") or {}).get(m, "")
         L.append(f"| {m} | {fmt(v)} | {ratio} | {e['gate'][m]} | {fmt(e['gain']['deltas'][m])} |")
+    info = e["metrics"].get("info_scopes") or {}
+    if info:
+        L += ["", "Informational scopes (instrumented, reported, never gated):", "",
+              "| Scope | " + " | ".join(C.URG_METRICS) + " |", "|---|" + "---|" * len(C.URG_METRICS)]
+        for sc, v in info.items():
+            L.append(f"| `{sc}` | " + " | ".join(
+                (f"{fmt(v.get(m))} ({(v.get('ratios') or {}).get(m, '')})" if isinstance(v.get(m), float) else fmt(v.get(m)))
+                for m in C.URG_METRICS) + " |")
     L += ["", f"Gain rule: G = {C.ROUND_GAIN_G} points on any gated metric. Max delta: {fmt(e['gain']['max_gain'])}; "
           f"shows gain: {e['gain']['shows_gain']} (None when there is no previous round). No-gain streak: "
           f"{e['no_gain_streak']} of N = {C.ROUND_NO_GAIN_N}; stopping rule fired: {e['stopping_rule_fired']}.", "",
@@ -314,6 +342,9 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="replace an existing regression outdir (never an evidence dir)")
     ap.add_argument("--evidence-root", type=Path, default=C.EVIDENCE_DIR,
                     help="self-test only: write the evidence dir and index elsewhere than dv/auto_dv/evidence")
+    ap.add_argument("--evidence-name", help="dry runs only: evidence directory name (gen_round_<n>_<suffix>)")
+    ap.add_argument("--tests", help="dry runs / re-baselines: explicit test list instead of the tier")
+    ap.add_argument("--seed-list", help="explicit seeds for the selected tests")
     a = ap.parse_args()
     index_path = C.ROUND_INDEX if a.evidence_root == C.EVIDENCE_DIR else a.evidence_root / C.ROUND_INDEX.name
     if a.round is None:
@@ -328,7 +359,7 @@ def main() -> int:
     else:
         tag = a.tag or (f"round_{a.round}" + ("_dryrun" if a.dry_run else ""))
         outdir = run_regression(a, tag)
-    ev = collect(outdir, a.round, a.dry_run, a.label, a.evidence_root, index_path)
+    ev = collect(outdir, a.round, a.dry_run, a.label, a.evidence_root, index_path, a.evidence_name)
     rc, _, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_dashboard.py")], cwd=C.REPO_ROOT,
                              log_path=C.WORK_DIR / "round_dashboard.log", timeout_s=600)
     U.log(f"dashboard regenerated (rc={rc}); evidence {ev}")

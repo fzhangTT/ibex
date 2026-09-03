@@ -30,9 +30,35 @@ URG_COLUMN_ALIASES = {"LINE": "line", "COND": "cond", "TOGGLE": "toggle", "FSM":
 RATIO_RE = re.compile(r"^\d+/\d+$")
 
 
+def combine_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """The gate row over several DUT scopes (DV Lead ruling, gen_tb_architecture.md Section 5): per
+    metric, covered and total objects are summed over the rows that report the metric (from URG's
+    -show ratios a/b); percent = 100 * covered / total; a metric no row reports stays n/a."""
+    out: dict[str, Any] = {m: C.NOT_APPLICABLE for m in C.URG_METRICS}
+    out["score"] = C.NOT_APPLICABLE
+    ratios: dict[str, str] = {}
+    for m in C.URG_METRICS:
+        cov_sum = tot_sum = 0
+        seen = False
+        for r in rows:
+            ratio = (r.get("ratios") or {}).get(m)
+            if ratio and RATIO_RE.match(ratio):
+                a, b = ratio.split("/")
+                cov_sum += int(a)
+                tot_sum += int(b)
+                seen = True
+        if seen and tot_sum > 0:
+            out[m] = round(100.0 * cov_sum / tot_sum, 2)
+            ratios[m] = f"{cov_sum}/{tot_sum}"
+    out["ratios"] = ratios
+    out["combined_from"] = [r.get("instance") for r in rows]
+    out["rule"] = "sum of covered and of total objects per metric over the gated scopes; percent = 100 * covered / total"
+    return out
+
+
 def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
           extra: list[str] | None = None, dut_scopes: list[str] | None = None,
-          dump_exclusions: bool = False) -> dict[str, Any]:
+          dump_exclusions: bool = False, info_scopes: list[str] | None = None) -> dict[str, Any]:
     """SIM_RECIPE Section 8 merge. Exclusion files load with -excl_strict (Critic R-5.1): an entry
     that hides a covered or stale object makes the merge FAIL instead of silently dropping it."""
     cov_dir.mkdir(parents=True, exist_ok=True)
@@ -84,6 +110,15 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
     if dash.is_file():
         res["totals"] = parse_dashboard(dash)
         res["dut_scope"] = {s: parse_hierarchy_row(report / "hierarchy.txt", s) for s in (dut_scopes or [])}
+        res["info_scope"] = {s: parse_hierarchy_row(report / "hierarchy.txt", s) for s in (info_scopes or [])}
+        good = [r for r in res["dut_scope"].values() if isinstance(r, dict) and "parse_error" not in r]
+        if dut_scopes and len(good) == len(dut_scopes):
+            res["gate_row"] = combine_rows(good)
+            res["gate_row"]["group"] = res["totals"].get("group", C.NOT_APPLICABLE)
+            if (res["totals"].get("ratios") or {}).get("group"):
+                res["gate_row"]["ratios"]["group"] = res["totals"]["ratios"]["group"]
+        else:
+            res["gate_row"] = {"parse_error": f"{len(dut_scopes or [])} gated scope(s), {len(good)} parsed"}
         res["limited_design"] = "Limited design loaded" in log_text
     return res
 
@@ -195,7 +230,8 @@ def main() -> int:
     m.add_argument("--cov-dir", type=Path, required=True)
     m.add_argument("--vdb", type=Path, action="append", required=True)
     m.add_argument("--elfile", type=Path, action="append")
-    m.add_argument("--dut-scope", action="append", default=[])
+    m.add_argument("--dut-scope", action="append", default=[], help="gated scope (repeat; rows are combined)")
+    m.add_argument("--info-scope", action="append", default=[], help="informational scope (reported, never gated)")
     m.add_argument("--urg-arg", action="append", default=[])
     m.add_argument("--dump-exclusions", action="store_true", help="urg -dump full_exclusions into <cov-dir>/full_exclusions")
     p = sub.add_parser("parse")
@@ -208,10 +244,10 @@ def main() -> int:
     if a.cmd == "merge":
         U.require_env("urg")
         res = merge(a.cov_dir.resolve(), [v.resolve() for v in a.vdb], a.elfile, a.urg_arg, a.dut_scope,
-                    a.dump_exclusions)
+                    a.dump_exclusions, a.info_scope)
         U.dump_yaml(res, a.cov_dir.resolve() / "coverage.yaml")
         print(f"status={res['status']} urg rc={res['urg_rc']} violations={len(res['exclusion_violations'])} "
-              f"totals={res['totals']} dut_scope={res['dut_scope']}")
+              f"totals={res['totals']} dut_scope={res['dut_scope']} gate_row={res.get('gate_row')}")
         return 0 if res["status"] == "ok" else 1
     if a.cmd == "parse":
         print("totals:", parse_dashboard(a.report_dir / C.URG_DASHBOARD_TXT))
