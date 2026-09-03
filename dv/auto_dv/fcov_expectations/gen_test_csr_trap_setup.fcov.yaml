@@ -1,0 +1,416 @@
+test: gen_test_csr_trap_setup
+owner: test-writer
+bins:
+  - gen_csr_trap_setup_warl_cg.cp_csr.mstatus
+  - gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b0
+  - gen_csr_trap_setup_warl_cg.cp_mst_mpie_w.b0
+  - gen_csr_trap_setup_warl_cg.cp_mst_mpie_w.b1
+  - gen_csr_trap_setup_warl_cg.cp_mst_mprv_w.b1
+  - gen_csr_trap_setup_warl_cg.cp_mst_tw_w.b1
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrc
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrci
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrs
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrsi
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrw
+  - gen_csr_trap_setup_warl_cg.cp_op.csrrwi
+  - gen_csr_trap_setup_warl_cg.cp_rd.nonx0
+  - gen_csr_trap_setup_warl_cg.cp_wpat.all0
+  - gen_csr_trap_setup_warl_cg.cp_wpat.illegal_only
+  - gen_csr_trap_setup_warl_cg.cp_wpat.legal_only
+  - gen_csr_trap_setup_warl_cg.cp_wpat.msb_only
+  - gen_csr_trap_setup_warl_cg.cp_wpat.rand
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_illegal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_legal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_msb
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_rand
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.all0
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.mie_mpie
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.mie_only
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.mpie_only
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.mprv_only
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.mprv_tw
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.tw_only
+  - gen_csr_trap_setup_warl_cg.cp_mpp_w.h
+  - gen_csr_trap_setup_warl_cg.cp_mpp_w.m
+  - gen_csr_trap_setup_warl_cg.cp_mpp_w.s
+  - gen_csr_trap_setup_warl_cg.cp_mpp_w.u
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_h_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_h_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_m_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_m_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_s_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_s_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_u_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_u_csrrw
+  - gen_prv_transition_cg.cp_from.m
+  - gen_prv_transition_cg.cp_from.u
+  - gen_prv_transition_cg.cp_to.m
+  - gen_prv_transition_cg.cp_to.u
+  - gen_prv_transition_cg.cp_via.ecall
+  - gen_prv_transition_cg.cp_via.mret
+  - gen_prv_transition_cg.cr_trans.m_m_mret
+  - gen_prv_transition_cg.cr_trans.m_u_mret
+  - gen_prv_transition_cg.cr_trans.u_m_ecall
+  - gen_csr_trap_setup_warl_cg.cp_wpat.all1
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all1
+  - gen_csr_trap_setup_warl_cg.cr_mst_fields.all1
+  - gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b1
+  - gen_csr_write_effect_cg.cp_enable.enables_pending
+  - gen_csr_write_effect_cg.cp_fam.other_flush
+  - gen_csr_write_effect_cg.cp_next.irq_taken
+  - gen_csr_write_effect_cg.cr_enable_next.enables_irq_taken
+  - gen_csr_write_effect_cg.cr_fam_next.other_irq_taken
+  - gen_prv_irq_enable_cg.cp_kind.ext
+  - gen_prv_irq_enable_cg.cp_kind.fast
+  - gen_prv_irq_enable_cg.cp_kind.sw
+  - gen_prv_irq_enable_cg.cp_kind.timer
+  - gen_prv_irq_enable_cg.cp_mie.b1
+  - gen_prv_irq_enable_cg.cp_priv.m
+  - gen_prv_irq_enable_cg.cp_taken.yes
+  - gen_prv_irq_enable_cg.cr_kind_priv.ext_m
+  - gen_prv_irq_enable_cg.cr_kind_priv.fast_m
+  - gen_prv_irq_enable_cg.cr_kind_priv.sw_m
+  - gen_prv_irq_enable_cg.cr_kind_priv.timer_m
+  - gen_prv_irq_enable_cg.cr_priv_mie_taken.m_1_yes
+  - gen_csr_trap_setup_warl_cg.cp_csr.mstatush
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_all1
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_msb
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_rand
+  - gen_csr_reset_read_cg.cp_csr.mstatush
+  - gen_csr_trap_setup_warl_cg.cp_csr.menvcfg
+  - gen_csr_trap_setup_warl_cg.cp_csr.menvcfgh
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_all1
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_msb
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_rand
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_all1
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_msb
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_rand
+  - gen_csr_reset_read_cg.cp_csr.menvcfg
+  - gen_csr_reset_read_cg.cp_csr.menvcfgh
+  - gen_csr_trap_setup_warl_cg.cp_csr.mie
+  - gen_csr_trap_setup_warl_cg.cp_mie_w.all_fast
+  - gen_csr_trap_setup_warl_cg.cp_mie_w.fast_only
+  - gen_csr_trap_setup_warl_cg.cp_mie_w.ro_only
+  - gen_csr_trap_setup_warl_cg.cp_mie_w.std_fast
+  - gen_csr_trap_setup_warl_cg.cp_mie_w.std_only
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_illegal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_legal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_rand
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.allfast_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.both_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.ro_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrw
+  - gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all1
+  - gen_csr_write_effect_cg.cp_enable.none
+  - gen_csr_write_effect_cg.cp_next.alu
+  - gen_csr_write_effect_cg.cp_next.wfi
+  - gen_csr_write_effect_cg.cr_enable_next.none_alu
+  - gen_csr_write_effect_cg.cr_fam_next.other_wfi
+  - gen_prv_wfi_cg.cp_irq_dis_seen.yes
+  - gen_prv_wfi_cg.cp_len.long
+  - gen_prv_wfi_cg.cp_len.short
+  - gen_prv_wfi_cg.cp_wake.dbg_req
+  - gen_prv_wfi_cg.cp_wake.irq_en
+  - gen_prv_wfi_cg.cr_dis_irq.dis_then_dbg
+  - gen_prv_wfi_cg.cr_dis_irq.dis_then_irq_en
+  - gen_prv_wfi_cg.cr_len_wake.long_irq_en
+  - gen_prv_wfi_cg.cr_len_wake.short_irq_en
+  - gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_031
+  - gen_csr_trap_setup_warl_cg.cp_csr.mtvec
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.boot_page
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.high
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.low
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.rand
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrci
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrsi
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrwi
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_legal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_rand
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.boot_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.high_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.high_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.low_csrrw
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrc
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrs
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrw
+  - gen_prv_trap_vector_cg.cp_base.sw_high
+  - gen_prv_trap_vector_cg.cp_base.sw_low
+  - gen_prv_trap_vector_cg.cp_cause.exc
+  - gen_prv_trap_vector_cg.cp_cause.irq_fast
+  - gen_prv_trap_vector_cg.cp_cause.irq_sw
+  - gen_prv_trap_vector_cg.cr_base_cause.high_exc
+  - gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast
+  - gen_prv_trap_vector_cg.cr_base_cause.low_exc
+  - gen_prv_trap_vector_cg.cr_base_cause.low_irq_sw
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_lo_w.nonzero
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_lo_w.zero
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.d00
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.r10
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.r11
+  - gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.v01
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_all0
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_all1
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_illegal
+  - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_msb
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.d00_nz
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.d00_zero
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r10_nz
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r10_zero
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r11_nz
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r11_zero
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.v01_nz
+  - gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.v01_zero
+anti_vacuity:
+  gen_csr_trap_setup_warl_cg.cp_csr.mstatus: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_mpie_w.b0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_mpie_w.b1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_mprv_w.b1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_tw_w.b1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_op.csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_rd.nonx0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_wpat.all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_wpat.illegal_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_wpat.legal_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_wpat.msb_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_wpat.rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatus_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_illegal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_legal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.mie_mpie: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.mie_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.mpie_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.mprv_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.mprv_tw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.tw_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mpp_w.h: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mpp_w.m: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mpp_w.s: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mpp_w.u: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_h_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_h_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_m_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_m_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_s_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_s_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_u_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mpp_op.mpp_u_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_prv_transition_cg.cp_from.m: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cp_from.u: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cp_to.m: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cp_to.u: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cp_via.ecall: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cp_via.mret: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cr_trans.m_m_mret: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cr_trans.m_u_mret: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_prv_transition_cg.cr_trans.u_m_ecall: "CG-PRV-001: ordinary retirements never sample; cp_from is the mode of the event retirement (for (b) and (d) the retirement before the entry), cp_to the mode of the next retirement, and cp_mode_change discriminates same-mode events from mode-changing ones, so a hit on an m_m_* bin proves an M-mode trap was taken into M (not a tautology of the sample condition); gen_isa_compare (mode per retirement) and gen_chk_debug (entries, dret) check the transition itself"
+  gen_csr_trap_setup_warl_cg.cp_wpat.all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mst_fields.all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_write_effect_cg.cp_enable.enables_pending: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cp_fam.other_flush: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cp_next.irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cr_enable_next.enables_irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cr_fam_next.other_irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_prv_irq_enable_cg.cp_kind.ext: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_kind.fast: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_kind.sw: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_kind.timer: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_mie.b1: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_priv.m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cp_taken.yes: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cr_kind_priv.ext_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cr_kind_priv.fast_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cr_kind_priv.sw_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cr_kind_priv.timer_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_prv_irq_enable_cg.cr_priv_mie_taken.m_1_yes: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
+  gen_csr_trap_setup_warl_cg.cp_csr.mstatush: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatush_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_reset_read_cg.cp_csr.mstatush: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_trap_setup_warl_cg.cp_csr.menvcfg: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_csr.menvcfgh: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfg_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.menvcfgh_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_reset_read_cg.cp_csr.menvcfg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.menvcfgh: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_trap_setup_warl_cg.cp_csr.mie: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mie_w.all_fast: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mie_w.fast_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mie_w.ro_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mie_w.std_fast: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mie_w.std_only: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mie_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_illegal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_legal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.allfast_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.both_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.fast_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.ro_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029: "CG-WIT-001: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_write_effect_cg.cp_enable.none: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cp_next.alu: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cp_next.wfi: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cr_enable_next.none_alu: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_csr_write_effect_cg.cr_fam_next.other_wfi: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
+  gen_prv_wfi_cg.cp_irq_dis_seen.yes: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cp_len.long: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cp_len.short: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cp_wake.dbg_req: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cp_wake.irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cr_dis_irq.dis_then_dbg: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cr_dis_irq.dis_then_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cr_len_wake.long_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_prv_wfi_cg.cr_len_wake.short_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
+  gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_031: "CG-WIT-001: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level"
+  gen_csr_trap_setup_warl_cg.cp_csr.mtvec: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.boot_page: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.high: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.low: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_op.mtvec_csrrwi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_legal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_rand: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.boot_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.high_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.high_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.low_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_base_op.rand_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_prv_trap_vector_cg.cp_base.sw_high: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cp_base.sw_low: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cp_cause.exc: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cp_cause.irq_fast: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cp_cause.irq_sw: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cr_base_cause.high_exc: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cr_base_cause.high_irq_fast: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cr_base_cause.low_exc: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cr_base_cause.low_irq_sw: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_lo_w.nonzero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_lo_w.zero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.d00: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.r10: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.r11: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cp_mtvec_mode_w.v01: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_illegal: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_csr_wpat.mtvec_msb: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.d00_nz: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.d00_zero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r10_nz: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r10_zero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r11_nz: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.r11_zero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.v01_nz: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
+  gen_csr_trap_setup_warl_cg.cr_mtvec_mode_lo.v01_zero: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"

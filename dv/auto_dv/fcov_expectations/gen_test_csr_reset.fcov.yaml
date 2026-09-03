@@ -1,0 +1,166 @@
+test: gen_test_csr_reset
+owner: test-writer
+bins:
+  - gen_csr_reset_read_cg.cp_boot_lo.nonzero
+  - gen_csr_reset_read_cg.cp_boot_lo.zero
+  - gen_csr_reset_read_cg.cp_csr.mtvec
+  - gen_csr_reset_read_cg.cp_when.early
+  - gen_csr_reset_read_cg.cp_when.first_insn
+  - gen_csr_reset_read_cg.cr_mtvec_first.mtvec_early_nonzero
+  - gen_csr_reset_read_cg.cr_mtvec_first.mtvec_early_zero
+  - gen_csr_reset_read_cg.cr_mtvec_first.mtvec_first_nonzero
+  - gen_csr_reset_read_cg.cr_mtvec_first.mtvec_first_zero
+  - gen_prv_trap_vector_cg.cp_base.boot_page
+  - gen_prv_trap_vector_cg.cp_cause.exc
+  - gen_prv_trap_vector_cg.cr_base_cause.boot_exc
+  - gen_csr_reset_read_cg.cp_csr.marchid
+  - gen_csr_reset_read_cg.cp_csr.mconfigptr
+  - gen_csr_reset_read_cg.cp_csr.mcounteren
+  - gen_csr_reset_read_cg.cp_csr.menvcfg
+  - gen_csr_reset_read_cg.cp_csr.menvcfgh
+  - gen_csr_reset_read_cg.cp_csr.mhartid
+  - gen_csr_reset_read_cg.cp_csr.mie
+  - gen_csr_reset_read_cg.cp_csr.mimpid
+  - gen_csr_reset_read_cg.cp_csr.misa
+  - gen_csr_reset_read_cg.cp_csr.mstatus
+  - gen_csr_reset_read_cg.cp_csr.mstatush
+  - gen_csr_reset_read_cg.cp_csr.mvendorid
+  - gen_csr_reset_read_cg.cp_dbg.nondbg
+  - gen_csr_reset_read_cg.cr_first_csr.mie_first
+  - gen_csr_reset_read_cg.cr_first_csr.misa_first
+  - gen_csr_reset_read_cg.cr_first_csr.mstatus_first
+  - gen_csr_reset_read_cg.cp_csr.mcause
+  - gen_csr_reset_read_cg.cp_csr.mepc
+  - gen_csr_reset_read_cg.cp_csr.mip
+  - gen_csr_reset_read_cg.cp_csr.mscratch
+  - gen_csr_reset_read_cg.cp_csr.mtval
+  - gen_csr_reset_read_cg.cp_csr.cycle_alias
+  - gen_csr_reset_read_cg.cp_csr.hpm
+  - gen_csr_reset_read_cg.cp_csr.hpm_alias
+  - gen_csr_reset_read_cg.cp_csr.hpm_unimpl
+  - gen_csr_reset_read_cg.cp_csr.hpmh
+  - gen_csr_reset_read_cg.cp_csr.instret_alias
+  - gen_csr_reset_read_cg.cp_csr.mcountinhibit
+  - gen_csr_reset_read_cg.cp_csr.mcycle
+  - gen_csr_reset_read_cg.cp_csr.mcycleh
+  - gen_csr_reset_read_cg.cp_csr.mhpmevent
+  - gen_csr_reset_read_cg.cp_csr.mhpmevent_unimpl
+  - gen_csr_reset_read_cg.cp_csr.minstret
+  - gen_csr_reset_read_cg.cp_csr.minstreth
+  - gen_csr_reset_read_cg.cr_first_csr.mcycle_first
+  - gen_csr_reset_read_cg.cr_first_csr.minstret_first
+  - gen_csr_debug_csr_cg.cp_csr.dcsr
+  - gen_csr_debug_csr_cg.cp_dbg.dbg
+  - gen_csr_debug_csr_cg.cp_trap.ok
+  - gen_csr_debug_csr_cg.cr_csr_dbg_trap.dcsr_dbg_ok
+  - gen_csr_trigger_csr_cg.cp_csr.tdata1
+  - gen_csr_trigger_csr_cg.cp_dbg.nondbg
+  - gen_csr_trigger_csr_cg.cp_form.rd_only
+  - gen_csr_trigger_csr_cg.cr_csr_dbg_form.tdata1_nondbg_rd
+  - gen_csr_reset_read_cg.cp_csr.dcsr
+  - gen_csr_reset_read_cg.cp_csr.dpc
+  - gen_csr_reset_read_cg.cp_csr.dscratch0
+  - gen_csr_reset_read_cg.cp_csr.dscratch1
+  - gen_csr_reset_read_cg.cp_csr.tdata1
+  - gen_csr_reset_read_cg.cp_csr.tdata2
+  - gen_csr_reset_read_cg.cp_csr.tselect
+  - gen_csr_reset_read_cg.cp_dbg.dbg
+  - gen_csr_reset_read_cg.cr_dbg_reset.dcsr_dbg
+  - gen_csr_reset_read_cg.cr_dbg_reset.dpc_dbg
+  - gen_csr_reset_read_cg.cr_dbg_reset.dscratch0_dbg
+  - gen_csr_reset_read_cg.cr_dbg_reset.dscratch1_dbg
+  - gen_csr_cpuctrlsts_cg.cp_key_pin.hi
+  - gen_csr_cpuctrlsts_cg.cp_key_pin.lo
+  - gen_csr_secureseed_cg.cr_form_priv_trap.rd_m_ok
+  - gen_csr_pmp_warl_cg.cp_fam.addr
+  - gen_csr_pmp_warl_cg.cp_fam.cfg
+  - gen_csr_reset_read_cg.cp_csr.cpuctrlsts
+  - gen_csr_reset_read_cg.cp_csr.mseccfg
+  - gen_csr_reset_read_cg.cp_csr.mseccfgh
+  - gen_csr_reset_read_cg.cp_csr.pmpaddr
+  - gen_csr_reset_read_cg.cp_csr.pmpcfg
+  - gen_csr_reset_read_cg.cp_csr.secureseed
+  - gen_csr_reset_read_cg.cp_when.later
+  - gen_csr_reset_read_cg.cr_first_csr.cpuctrlsts_first
+anti_vacuity:
+  gen_csr_reset_read_cg.cp_boot_lo.nonzero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_boot_lo.zero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mtvec: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_when.early: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_when.first_insn: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_mtvec_first.mtvec_early_nonzero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_mtvec_first.mtvec_early_zero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_mtvec_first.mtvec_first_nonzero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_mtvec_first.mtvec_first_zero: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_prv_trap_vector_cg.cp_base.boot_page: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cp_cause.exc: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_prv_trap_vector_cg.cr_base_cause.boot_exc: "CG-PRV-008: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval"
+  gen_csr_reset_read_cg.cp_csr.marchid: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mconfigptr: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mcounteren: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.menvcfg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.menvcfgh: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mhartid: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mie: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mimpid: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.misa: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mstatus: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mstatush: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mvendorid: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_dbg.nondbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.mie_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.misa_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.mstatus_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mcause: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mepc: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mip: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mscratch: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mtval: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.cycle_alias: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.hpm: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.hpm_alias: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.hpm_unimpl: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.hpmh: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.instret_alias: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mcountinhibit: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mcycle: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mcycleh: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mhpmevent: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mhpmevent_unimpl: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.minstret: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.minstreth: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.mcycle_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.minstret_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_debug_csr_cg.cp_csr.dcsr: "CG-CSR-007: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked"
+  gen_csr_debug_csr_cg.cp_dbg.dbg: "CG-CSR-007: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked"
+  gen_csr_debug_csr_cg.cp_trap.ok: "CG-CSR-007: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked"
+  gen_csr_debug_csr_cg.cr_csr_dbg_trap.dcsr_dbg_ok: "CG-CSR-007: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked"
+  gen_csr_trigger_csr_cg.cp_csr.tdata1: "CG-CSR-008: only trigger-CSR accesses sample; a hit proves an access of that form happened in the recorded debug/privilege state so the write-effective / write-ignored prediction was compared on the next read"
+  gen_csr_trigger_csr_cg.cp_dbg.nondbg: "CG-CSR-008: only trigger-CSR accesses sample; a hit proves an access of that form happened in the recorded debug/privilege state so the write-effective / write-ignored prediction was compared on the next read"
+  gen_csr_trigger_csr_cg.cp_form.rd_only: "CG-CSR-008: only trigger-CSR accesses sample; a hit proves an access of that form happened in the recorded debug/privilege state so the write-effective / write-ignored prediction was compared on the next read"
+  gen_csr_trigger_csr_cg.cr_csr_dbg_form.tdata1_nondbg_rd: "CG-CSR-008: only trigger-CSR accesses sample; a hit proves an access of that form happened in the recorded debug/privilege state so the write-effective / write-ignored prediction was compared on the next read"
+  gen_csr_reset_read_cg.cp_csr.dcsr: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.dpc: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.dscratch0: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.dscratch1: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.tdata1: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.tdata2: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.tselect: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_dbg.dbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_dbg_reset.dcsr_dbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_dbg_reset.dpc_dbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_dbg_reset.dscratch0_dbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_dbg_reset.dscratch1_dbg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_cpuctrlsts_cg.cp_key_pin.hi: "CG-CSR-009: each event class is distinct and the sync_exc_seen / double_fault_seen model state is sampled with it, so a hit proves the model saw that transition and gen_chk_double_fault / gen_chk_csr_readback compared the resulting bits"
+  gen_csr_cpuctrlsts_cg.cp_key_pin.lo: "CG-CSR-009: each event class is distinct and the sync_exc_seen / double_fault_seen model state is sampled with it, so a hit proves the model saw that transition and gen_chk_double_fault / gen_chk_csr_readback compared the resulting bits"
+  gen_csr_secureseed_cg.cr_form_priv_trap.rd_m_ok: "CG-CSR-010: only secureseed accesses sample; the boundary form of the write/read distinction is the retirement gap to the next record (a write op flushes, csr_pipe_flush rtl/ibex_id_stage.sv:593-597, a demoted read does not), so a hit on a cr_op_form_gap bin proves that op form retired with the bubble its class implies; the pulse coverpoint comes from the probe candidate below (coverage-only) and a hit on a pulse bin proves the reseed fired for exactly that op form"
+  gen_csr_pmp_warl_cg.cp_fam.addr: "CG-CSR-011: as CG-CSR-002; the entry class is computed from the pre-write PMP state so a hit proves the WARL rule of that class was exercised and compared (PMP semantics themselves belong to the PMP area)"
+  gen_csr_pmp_warl_cg.cp_fam.cfg: "CG-CSR-011: as CG-CSR-002; the entry class is computed from the pre-write PMP state so a hit proves the WARL rule of that class was exercised and compared (PMP semantics themselves belong to the PMP area)"
+  gen_csr_reset_read_cg.cp_csr.cpuctrlsts: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mseccfg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.mseccfgh: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.pmpaddr: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.pmpcfg: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_csr.secureseed: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cp_when.later: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"
+  gen_csr_reset_read_cg.cr_first_csr.cpuctrlsts_first: "CG-CSR-016: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value"

@@ -1,0 +1,962 @@
+test: gen_test_cmp_zcmp_basic
+owner: test-writer
+bins:
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_push
+  - gen_cmp_zcmp_pushpop_cg.cp_order_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r10
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r11
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r12
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r13
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r14
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r15
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r4
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r5
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r6
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r7
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r8
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r9
+  - gen_cmp_zcmp_pushpop_cg.cp_rvfi_tags_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s0
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s1
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s2
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s3
+  - gen_cmp_zcmp_pushpop_cg.cp_uop_count_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_long
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_min1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_mixed
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_short
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s3
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a16
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a32
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a48
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a64
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a112
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a80
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a96
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s3
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popret
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.half
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.odd
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.word
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_half
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_odd
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_word
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popretz
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s0
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s2
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s3
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_half
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_odd
+  - gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_word
+  - gen_cmp_zcmp_pushpop_cg.cr_popret_r4.popret_r4
+  - gen_cmp_zcmp_pushpop_cg.cr_popret_r4.popretz_r4
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ra_deferred
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_long
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_short
+  - gen_cmp_zcmp_mv_cg.cp_b2b.none
+  - gen_cmp_zcmp_mv_cg.cp_insn.cm_mvsa01
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s0
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s1
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s2
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s3
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s4
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s5
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s6
+  - gen_cmp_zcmp_mv_cg.cp_r1s.s7
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s0
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s1
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s2
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s3
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s4
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s5
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s6
+  - gen_cmp_zcmp_mv_cg.cp_r2s.s7
+  - gen_cmp_zcmp_mv_cg.cp_src_values.distinct
+  - gen_cmp_zcmp_mv_cg.cp_uop_count_ok.yes
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s6
+  - gen_cmp_zcmp_mv_cg.cp_insn.cm_mva01s
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s7
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s0
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s1
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s2
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s3
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s4
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s5
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s6
+  - gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s7
+  - gen_cmp_zcmp_mv_cg.cp_equal.no
+  - gen_cmp_zcmp_mv_cg.cp_equal.yes
+  - gen_cmp_zcmp_mv_cg.cp_src_values.same
+  - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_no
+  - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_yes
+  - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_no
+  - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_yes
+  - gen_cmp_zcmp_pushpop_cg.cp_minstret_once.yes
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_long
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_min1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_mixed
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_short
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_long
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_min1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_mixed
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_short
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_long
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_min1
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_mixed
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_short
+  - gen_cmp_zcmp_mv_cg.cp_b2b.mva01s_then_mvsa01
+  - gen_cmp_zcmp_mv_cg.cp_b2b.mvsa01_then_mva01s
+  - gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mva01s_mva01s_then_mvsa01
+  - gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mva01s_mvsa01_then_mva01s
+  - gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mvsa01_mva01s_then_mvsa01
+  - gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mvsa01_mvsa01_then_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_delta_uop.all_one
+  - gen_cmp_zcmp_hazard_cg.cp_delta_uop.some_stall
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.mvsa01_then_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.pop_then_push_b2b
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b
+  - gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.pop_above_max
+  - gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.push_below_zero
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.pop_above_max
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popret_above_max
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popretz_above_max
+  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.push_below_zero
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev
+  - gen_cmp_zcmp_mv_cg.cp_hazard_src.none
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_alu_prev
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_load_prev
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_none
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_alu_prev
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_load_prev
+  - gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_none
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.load_pushed_reg_then_push
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.load_then_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.store_same_slot_then_pop
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.write_pushed_reg_then_push
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r4
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r5_14
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_long
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_min1
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_short
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_long
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_min1
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_short
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_long
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_min1
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_short
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_long
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_min1
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_short
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r15
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r4
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r5_14
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r15
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r4
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r5_14
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r15
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r4
+  - gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r5_14
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mvsa01
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_pop
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popret
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popretz
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_push
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ft_cm
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm
+  - gen_cmp_zcmp_hazard_cg.cp_redirect_once.yes
+  - gen_cmp_zcmp_hazard_cg.cp_ret_once.yes
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mva01s
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mvsa01
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_pop
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popret
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popretz
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_push
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mva01s
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mvsa01
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_pop
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popret
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popretz
+  - gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_push
+anti_vacuity:
+  gen_cmp_zcmp_pushpop_cg.cp_insn.cm_push: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_order_ok.yes: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r10: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r11: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r12: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r13: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r14: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r15: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r4: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r5: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r6: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r7: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r8: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rlist.r9: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_rvfi_tags_ok.yes: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_spimm.s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_spimm.s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_spimm.s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_spimm.s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_uop_count_ok.yes: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_long: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_min1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_mixed: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_short: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r10_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r11_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r12_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r13_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r14_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r15_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r4_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r5_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r6_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r7_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r8_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_push_r9_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a16: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a32: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a48: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a64: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a112: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a80: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a96: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r10_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r11_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r12_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r13_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r14_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r15_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r4_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r5_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r6_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r7_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r8_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_pop_r9_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popret: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_ret_align.half: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_ret_align.odd: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_ret_align.word: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_half: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_odd: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_word: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popretz: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s0: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s2: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s3: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_half: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_odd: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_word: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_popret_r4.popret_r4: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_popret_r4.popretz_r4: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ra_deferred: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_long: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_short: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_mv_cg.cp_b2b.none: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_insn.cm_mvsa01: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r1s.s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_r2s.s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_src_values.distinct: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_uop_count_ok.yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s0_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s1_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s2_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s3_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s4_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s5_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s6_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mvsa01_s7_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_insn.cm_mva01s: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s0_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s1_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s2_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s3_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s4_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s5_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s6_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s0: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s1: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s2: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s3: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s4: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s5: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s6: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_r1_r2.cm_mva01s_s7_s7: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_equal.no: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_equal.yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_src_values.same: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_no: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_no: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_pushpop_cg.cp_minstret_once.yes: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_long: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_min1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_mixed: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_short: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_long: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_min1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_mixed: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_short: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_long: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_min1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_mixed: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_short: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_mv_cg.cp_b2b.mva01s_then_mvsa01: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_b2b.mvsa01_then_mva01s: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mva01s_mva01s_then_mvsa01: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mva01s_mvsa01_then_mva01s: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mvsa01_mva01s_then_mvsa01: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_b2b.cm_mvsa01_mvsa01_then_mva01s: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_hazard_cg.cp_delta_uop.all_one: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_delta_uop.some_stall: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.mvsa01_then_mva01s: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.pop_then_push_b2b: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.pop_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.push_below_zero: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.pop_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popret_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popretz_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.push_below_zero: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
+  gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cp_hazard_src.none: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_alu_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_load_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mva01s_none: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_alu_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_load_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_none: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.load_pushed_reg_then_push: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.load_then_mva01s: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.store_same_slot_then_pop: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.write_pushed_reg_then_push: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r4: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r5_14: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_long: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_min1: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_short: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_long: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_min1: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_short: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_long: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_min1: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_short: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_long: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_min1: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_short: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r15: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r4: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r5_14: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r15: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r4: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r5_14: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r15: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r4: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r5_14: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mva01s: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mvsa01: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_pop: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popret: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popretz: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_push: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ft_cm: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_redirect_once.yes: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cp_ret_once.yes: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mva01s: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mvsa01: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_pop: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popret: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popretz: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_push: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mva01s: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mvsa01: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_pop: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popret: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popretz: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
+  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_push: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"

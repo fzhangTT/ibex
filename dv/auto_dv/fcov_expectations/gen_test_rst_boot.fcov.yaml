@@ -1,0 +1,88 @@
+test: gen_test_rst_boot
+owner: test-writer
+bins:
+  - gen_rst_boot_cg.cp_fetch_en_at_release.off
+  - gen_rst_boot_cg.cp_fetch_en_at_release.on
+  - gen_rst_boot_cg.cp_reset_kind.power_on
+  - gen_rst_boot_cg.cp_boot_addr.high
+  - gen_rst_boot_cg.cp_boot_addr.low
+  - gen_rst_boot_cg.cp_boot_addr.mid
+  - gen_rst_boot_cg.cp_boot_addr.zero
+  - gen_rst_boot_cg.cp_boot_low_byte.zero
+  - gen_rst_boot_cg.cr_boot_kind.high_power_on
+  - gen_rst_boot_cg.cr_boot_kind.low_power_on
+  - gen_rst_boot_cg.cr_boot_kind.mid_power_on
+  - gen_rst_boot_cg.cr_boot_kind.zero_power_on
+  - gen_rst_boot_cg.cr_pending_first.none_first_instr_retire
+  - gen_rst_boot_cg.cp_first_event.first_instr_retire
+  - gen_rst_boot_cg.cp_boot_to_req_cycles.two
+  - gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.in_handler
+  - gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.in_wfi
+  - gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.running
+  - gen_sec_ctrl_inputs_cg.cp_event.boot_addr_change
+  - gen_rst_boot_cg.cp_hart_id.max
+  - gen_rst_boot_cg.cp_hart_id.random
+  - gen_rst_boot_cg.cp_hart_id.zero
+  - gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire
+  - gen_rvfi_record_cg.cp_mode.m
+  - gen_rvfi_record_cg.cp_mode.u
+  - gen_sec_ctrl_inputs_cg.cp_bit8_readback.one
+  - gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero
+  - gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0
+  - gen_rst_boot_cg.cr_fetch_en_first.on_first_instr_retire
+  - gen_sec_core_busy_cg.cp_value.on
+  - gen_rvfi_record_cg.cp_order_step.first
+  - gen_rst_boot_cg.cp_reset_kind.mid_run
+  - gen_sec_crash_dump_cg.cp_trigger.boot
+  - gen_sec_crash_dump_cg.cp_trigger.first_id
+  - gen_sec_crash_dump_cg.cp_trigger.reset
+  - gen_sec_crash_dump_cg.cp_value_class.boot_page
+  - gen_sec_crash_dump_cg.cp_value_class.zero
+  - gen_sec_crash_dump_cg.cr_field_trigger.current_pc_first_id
+  - gen_sec_crash_dump_cg.cr_field_trigger.exception_addr_reset
+  - gen_sec_crash_dump_cg.cr_field_trigger.exception_pc_reset
+  - gen_sec_crash_dump_cg.cr_field_trigger.last_data_addr_reset
+  - gen_sec_crash_dump_cg.cr_field_trigger.next_pc_boot
+anti_vacuity:
+  gen_rst_boot_cg.cp_fetch_en_at_release.off: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_fetch_en_at_release.on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_reset_kind.power_on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_addr.high: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_addr.low: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_addr.mid: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_addr.zero: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_low_byte.zero: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_boot_kind.high_power_on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_boot_kind.low_power_on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_boot_kind.mid_power_on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_boot_kind.zero_power_on: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_pending_first.none_first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_first_event.first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_boot_to_req_cycles.two: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.in_handler: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.in_wfi: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_sec_ctrl_inputs_cg.cp_boot_addr_change_ctx.running: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_sec_ctrl_inputs_cg.cp_event.boot_addr_change: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_rst_boot_cg.cp_hart_id.max: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_hart_id.random: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cp_hart_id.zero: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_rvfi_record_cg.cp_mode.m: "CG-RVFI-001: rvfi_valid is a pulse (one"
+  gen_rvfi_record_cg.cp_mode.u: "CG-RVFI-001: rvfi_valid is a pulse (one"
+  gen_sec_ctrl_inputs_cg.cp_bit8_readback.one: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"
+  gen_rst_boot_cg.cr_fetch_en_first.on_first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_sec_core_busy_cg.cp_value.on: "CG-SEC-006: (a) wfi_txn: the close of a WFI transaction - a retired WFI record, closed when"
+  gen_rvfi_record_cg.cp_order_step.first: "CG-RVFI-001: rvfi_valid is a pulse (one"
+  gen_rst_boot_cg.cp_reset_kind.mid_run: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
+  gen_sec_crash_dump_cg.cp_trigger.boot: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cp_trigger.first_id: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cp_trigger.reset: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cp_value_class.boot_page: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cp_value_class.zero: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cr_field_trigger.current_pc_first_id: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cr_field_trigger.exception_addr_reset: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cr_field_trigger.exception_pc_reset: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cr_field_trigger.last_data_addr_reset: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"
+  gen_sec_crash_dump_cg.cr_field_trigger.next_pc_boot: "CG-SEC-004: a change of any crash_dump_o field (per-field edge), plus every trap-taken event and"

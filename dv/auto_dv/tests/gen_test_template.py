@@ -236,7 +236,7 @@ class GenTest:
         """Collect expected_reports report words (one EOT-register store each), then the end-of-test
         store; every store is one awaited edge, and the store counter proves none was missed."""
         b = self.h.b
-        final = self.expected_reports + 1
+        final = self.report_count() + 1
         while self.eot_count() < final:
             seen_before = self.eot_count()
             try:
@@ -275,6 +275,11 @@ class GenTest:
     def declare_bins(self):
         """Hook: the bins the test intends to hit (same tokens as its fcov manifest); [] before covergroups exist."""
         return []
+
+    def report_count(self):
+        """Hook: number of report words the program stores before its end-of-test store; the default is the
+        class attribute, a generated program returns its plan's count for this seed."""
+        return self.expected_reports
 
     def phase_reached(self, p):
         """A phase's trigger passed when the bridge count it names reached the boundary by the end of test."""

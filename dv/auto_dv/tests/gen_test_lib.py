@@ -241,7 +241,7 @@ def program_min_retired(image):
 
 
 TEMPLATE_PY = Path(__file__).resolve().parent / "gen_test_template.py"
-TEST_HOOKS = ("stimulus", "fire_check", "declare_bins")
+TEST_HOOKS = ("stimulus", "fire_check", "declare_bins", "report_count")
 
 
 def _template_methods():
@@ -296,6 +296,22 @@ def check_test_module(path):
     return check_test_source(Path(path).read_text(), path)
 
 
+MMIO_MAP_H = Path(__file__).resolve().parent / "gen_programs" / "gen_mmio_map.h"
+MMIO_MAP_H_KEYS = {"GEN_MM_SIG_ADDR": "sig_addr", "GEN_MM_IRQ_ACK_ADDR": "irq_ack_addr", "GEN_MM_EOT_ADDR": "eot_addr",
+                   "GEN_MM_PHASE_MARK_ADDR": "phase_mark_addr", "GEN_MM_DM_HALT": "dm_halt", "GEN_MM_DM_EXCEPTION": "dm_exception"}
+
+
+def check_mmio_map_header(path=MMIO_MAP_H):
+    """The assembler header the directed programs include carries exactly the rendered MEMORY_MAP values."""
+    from dv.auto_dv.gen_tb.gen_knobs import MEMORY_MAP
+    got = dict(re.findall(r"^\.set (GEN_MM_\w+), 0x([0-9a-fA-F]+)$", Path(path).read_text(), re.M))
+    for sym, key in MMIO_MAP_H_KEYS.items():
+        assert sym in got, f"GEN_TEST_LIB: {path} lacks {sym}"
+        assert int(got[sym], 16) == MEMORY_MAP[key], f"GEN_TEST_LIB: {path} {sym} = 0x{got[sym]} != MEMORY_MAP[{key}] 0x{MEMORY_MAP[key]:08x}"
+    assert set(got) == set(MMIO_MAP_H_KEYS), f"GEN_TEST_LIB: {path} carries unexpected symbols {sorted(set(got) - set(MMIO_MAP_H_KEYS))}"
+    return True
+
+
 def load_manifest_bins(test_name):
     """Declared bins of dv/auto_dv/fcov_expectations/<test>.fcov.yaml (None when absent)."""
     import yaml
@@ -342,8 +358,9 @@ def _self_test():
     assert riscv_dv_instr_cnt("gen_rand_smoke") == 300
     assert CMD["REGIME_SET"] and CONSTANTS["GEN_CLK_PERIOD_NS"] > 0 and plusarg("regime_sched", "x").startswith("+gen_")
     here = Path(__file__).resolve().parent
-    for f in sorted(here.glob("gen_test_*.py")) + sorted((here / "gen_programs").glob("*.S")):
+    for f in sorted(here.glob("gen_test_*.py")) + sorted((here / "gen_programs").glob("*.S")) + sorted((here / "gen_programs").glob("*.py")) + sorted((here / "gen_programs").glob("*.h")):
         check_ascii(f)
+    check_mmio_map_header()
     # consumed-knob derivation: the SV parse works on a fixture and agrees with the rendered constant when present
     sv_fixture = ('function void apply_knob(int id, int idx);\n  if (name.substr(0, 9) == "knob_imem_") ok = 1;\n'
                   '  else if (name == "knob_scr_key_delay") ok = 1;\nendfunction')

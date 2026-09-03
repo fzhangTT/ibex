@@ -213,7 +213,8 @@ def render(test, rows, notes, names):
     out = [f"test: {test}", f"owner: {OWNER}", "bins:"]
     out += [f"  - {t}" for t, _, _ in tokens]
     out.append("anti_vacuity:")
-    out += [f'  {t}: "{cg}: {n}"' for t, cg, n in tokens]
+    # notes are YAML double-quoted scalars: escape backslashes and double quotes taken from the plan text
+    out += ['  {}: "{}"'.format(t, f"{cg}: {n}".replace("\\", "\\\\").replace('"', '\\"')) for t, cg, n in tokens]
     text = "\n".join(out) + "\n"
     assert all(ord(c) < 128 for c in text), "manifest text is not ASCII"
     return text
