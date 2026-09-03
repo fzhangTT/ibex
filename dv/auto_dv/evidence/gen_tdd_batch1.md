@@ -133,6 +133,11 @@ Reading the table:
 - Green seed 1: out_head/cmp_zcmp_basic_s1/stdout.log:2642: `cocotb.gen_tb_top                  gen_test_cmp_zcmp_basic GEN_TEST_PASS`; UVM_ERROR 0.
 - Green seed 2: out_head/cmp_zcmp_basic_s2/stdout.log:2646: `cocotb.gen_tb_top                  gen_test_cmp_zcmp_basic GEN_TEST_PASS`; UVM_ERROR 0.
 - red_expect `GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure` against the harness's first evidence line: MATCH.
+- B4-R1 (2026-09-03, joint landing with the DV Lead under LOG-036b): the bin gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_yes left this
+  test's manifest (473 -> 472 declared, re-rendered by --test-module on an archive of a9b63ae with the TP-CMP-053 row removed from the
+  trace CSV, header and anti_vacuity lines otherwise unchanged): Ibex executes the reserved cm.mvsa01 encoding with equal sources while
+  the ISA model traps it (gen_bug_log.md B4), so the bin cannot be proven under the comparator and stays TP-CMP-051's expected-fail
+  witness; nothing in the test or its program changes.
 
 ### gen_test_bit_draft
 - Files: dv/auto_dv/tests/gen_test_bit_draft.py, dv/auto_dv/tests/gen_programs/gen_bit_draft_prog.py,

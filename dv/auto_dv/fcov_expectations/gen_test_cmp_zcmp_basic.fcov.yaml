@@ -389,7 +389,6 @@ bins:
   - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_no
   - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_yes
   - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_no
-  - gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_yes
   - gen_cmp_zcmp_pushpop_cg.cp_minstret_once.yes
   - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_long
   - gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_min1
@@ -863,7 +862,6 @@ anti_vacuity:
   gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_no: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
   gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mva01s_yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
   gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_no: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
-  gen_cmp_zcmp_mv_cg.cr_insn_equal.cm_mvsa01_yes: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
   gen_cmp_zcmp_pushpop_cg.cp_minstret_once.yes: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
   gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_long: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
   gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_min1: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"

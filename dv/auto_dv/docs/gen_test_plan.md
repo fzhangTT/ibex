@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 20:08 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 20:24 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -346,7 +346,7 @@ Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is
 
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v2u-on-ab3cb31 --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 49c8e353dffa; landing label v2u-on-ab3cb31 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v2u-on-0c189eb --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 49c8e353dffa; landing label v2u-on-0c189eb (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|
@@ -2828,7 +2828,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Notes: B4 ruling B4-R1: the cross bin CG-CMP-007.cr_insn_equal.cm_mvsa01_yes that the auto expansion listed under this item is not this item's (its stimulus is cm.mva01s; only the reserved cm.mvsa01 encoding hits that bin and a pass test never executes it under lock-step, the ISA model traps it); the CSV row and the bin in gen_test_cmp_zcmp_basic's manifest leave together with the Test Writer's re-render (joint landing, LOG-036b); the bin stays TP-CMP-051's.
 - Expected: pass
 - Test group: gen_cmp_zcmp_basic
-- Bins: CG-CMP-007.cr_insn_equal.auto, CG-CMP-007.cp_src_values.same
+- Bins: CG-CMP-007.cr_insn_equal.auto less cm_mvsa01_yes (B4-R1: TP-CMP-051's witness bin), CG-CMP-007.cp_src_values.same
 
 ### TP-CMP-054: Illegal Zcmp/Zcmt code points in Q2 funct3 101
 - Features: F-CMP-054

@@ -4662,7 +4662,6 @@ TP-CMP-053,CG-CMP-007,cp_src_values,same,0
 TP-CMP-053,CG-CMP-007,cr_insn_equal,cm_mva01s_no,0
 TP-CMP-053,CG-CMP-007,cr_insn_equal,cm_mva01s_yes,0
 TP-CMP-053,CG-CMP-007,cr_insn_equal,cm_mvsa01_no,0
-TP-CMP-053,CG-CMP-007,cr_insn_equal,cm_mvsa01_yes,0
 TP-CMP-054,CG-CMP-004,cp_class,q2_011xx_65_00,0
 TP-CMP-054,CG-CMP-004,cp_class,q2_011xx_65_10,0
 TP-CMP-054,CG-CMP-004,cp_class,q2_101_other,0
