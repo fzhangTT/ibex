@@ -1,4 +1,4 @@
-# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, , 1bccc58 and the CM86 touch)
+# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, 1bccc58, the CM86 touch and 0485a2b)
 
 Owner: rtl-arch. Created 2026-09-03T20:07Z. Rows answer the cross-model review of f2b9272 (113 lines, sha256 daf32811888d;
 verdict APPROVE-WITH-CHANGES, artifact committed d5ddbe2) and any later round on the same note. Rule: every finding gets
@@ -8,7 +8,7 @@ RTL evidence.
 
 ## 1. Findings
 
-Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES); CM86-n = on 1bccc58 (3d68bb055400; artifact committed eca309c, APPROVE-WITH-CHANGES); CM93-n = on the CM86 touch (3c9295ccbce7; artifact committed 8d441c2, REQUEST-CHANGES).
+Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES); CM86-n = on 1bccc58 (3d68bb055400; artifact committed eca309c, APPROVE-WITH-CHANGES); CM93-n = on the CM86 touch (3c9295ccbce7; artifact committed 8d441c2, REQUEST-CHANGES); CM95-n = re-review on 0485a2b (4139db68c97c; artifact committed 29a5c5e, APPROVE-WITH-CHANGES, RC lifted).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -31,7 +31,12 @@ Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n 
 | CM93-H-3 | cross-model CM86-touch [high] section 2 (reviewed copy line 33; fixed copy line 33) | row carried the false clauses and skipped the instr_perf_count_id_o term | ADDRESSED at 4139db68c97c | Row rewritten end to end with the explicit trace (instr_perf_count_id_o -> wb_count_q -> perf_instr_ret_wb), the corrected conclusion, the h-write dropped-increment rule, and the reconciliation with dv/auto_dv/evidence/gen_hpm_event_defs.md:48. |
 | CM93-L-1 | cross-model CM86-touch [low] this file, rows CM76-M-1 and CM86-L-1 | ADDRESSED rows marked an action the RTL does not support | ADDRESSED (this file) | Both rows now read SUPERSEDED with the reason; the CM93 rows above carry the corrected evidence. |
 | CM93-I-1 | cross-model CM86-touch [info] section 2 | Spike excerpt unverifiable from the commit | NOTED (no action) | Excerpt kept, labelled as excerpted with one range. |
+| CM95-L-1 | cross-model 0485a2b [low] section 2 (fixed copy line 33) and section 10 (line 121) | low-write sentence missed the carry corner (pre-write low word 0xFFFFFFFF) | ADDRESSED at 95b0c048ba97 | One clause in each place: Spike bumps then writes, giving {H + 1, V}; Ibex drops the increment and keeps the high word (rtl/ibex_counter.sv:36, :40, :44-47), holding {H, V}; shim subtracts the carry from the high word when the trace shows a retire in the write cycle and the low word was all ones. |
+| CM95-L-2 | cross-model 0485a2b [low] section 2 (line 33) | "back-to-back case" overstated: a register hazard with the load in WB defers the csrw | ADDRESSED at 95b0c048ba97 | Clause added: stall_ld_hz = outstanding_load_wb & hazard holds instr_executing low (rtl/ibex_id_stage.sv:1059-1062, :1120) while outstanding_load_wb stays set through the response cycle (rtl/ibex_wb_stage.sv:193-194), so csrw minstreth, rd_of_load moves to an empty WB and drops nothing. |
+| CM95-I-1 | cross-model 0485a2b [info] section 1 (line 17) | WritebackStage row stated the dropped increment unconditionally | ADDRESSED at 95b0c048ba97 | Row now names the section-2 conditions (not inhibited, WB not empty, no load hazard). |
+| CM95-I-2 | cross-model 0485a2b [info] this file, title | stray comma | ADDRESSED (this file) | Title reads "f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, 1bccc58, the CM86 touch and 0485a2b". |
+| CM95-I-3 | cross-model 0485a2b [info] section 2 | Spike excerpt unverifiable from the commit | NOTED (no action) | As before. |
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 4139db68c97c: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10; CM86 touches sections 2 and 10; CM93 rewrites the minstret / minstreth write row (section 2), both section-10 write bullets and the section-1 WritebackStage row.
+- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 95b0c048ba97: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10; CM86 touches sections 2 and 10; CM93 rewrites the minstret / minstreth write row (section 2), both section-10 write bullets and the section-1 WritebackStage row; CM95 adds the carry corner and the load-hazard clause (sections 1, 2, 10).
