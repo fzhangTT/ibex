@@ -222,3 +222,20 @@ ibex_core declares them (MemDataWidth-wide, integrity in bits [38:32]); the spli
 TB bus interface (test equipment). The Orchestrator applied the review finding in the T-005
 assignment; the wrapper therefore stays literal to the DV_prompt.txt Section 2 ruling. Q-2 (no
 clock gate) stands as decided. If the owner wants the split at the DUT boundary, answer here.
+
+## Q-012 - 2026-09-03 - QUESTION (to owner; site/infra finding worded by the Runtime Manager, filed by the Orchestrator; the DV Lead may amend the wording)
+
+The clone lives on `/localdev`, a local NVMe of the submit host (soc-l-11). LSF compute hosts
+cannot see it (LSF job 10930291 failed for that reason; evidence in
+`dv/auto_dv/evidence/gen_t010_compile_path.md` Section 1). `docs/dv/SIM_RECIPE.md` Section 7
+requires shared storage. Workaround now built into the flow: out-trees live under
+`/proj_soc/user_dev/fzhang/ibex_dv_out` (pointer `dv/auto_dv/work/runtime/gen_site.yaml`,
+override `GEN_DV_OUT_ROOT`), the compile runs on the submit host, and the LSF job is a pure-bash
+script sourcing a copy of `ci/env.sh` staged in the build outdir. Consequence: cocotb runs on
+LSF are blocked until the clone (its `.venv` VPI library and the Python test modules) is on
+shared storage; pure-SV runs are unaffected; cocotb builds compile and run with `--local`.
+Options: (a) move or mirror the clone to shared storage (Runtime Manager's recommendation);
+(b) accept SV-only regressions on LSF plus local cocotb runs. Default applied while pending: the
+team builds a shared-storage mirror (rsync of the clone without .git and out-trees, plus a venv
+created on shared storage from ci/requirements.lock) that LSF jobs use, so option (a) is met
+without moving the owner's working clone. Status: pending.
