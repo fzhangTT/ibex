@@ -31,6 +31,14 @@ import gen_flow_const as C
 import gen_flow_util as U
 
 
+def generator_env() -> dict[str, str]:
+    """Environment of the program stages (generator, gen_program.py): the caller's minus JOB_ENV_UNSET (no PYTHONPATH,
+    so a generator resolves its own repository root), PYTHONHASHSEED pinned, the build-configuration name."""
+    env = {k: v for k, v in os.environ.items() if k not in C.JOB_ENV_UNSET}
+    env.update(PYTHONHASHSEED="0", **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
+    return env
+
+
 def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, timeout_s: int = 1800) -> dict[str, Any]:
     """Run gen_program.py; return the record for result.yaml (paths, digests, seed used)."""
     if not C.PROGRAM_TOOL.is_file():
@@ -42,7 +50,7 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     out.mkdir(parents=True)
     # Pinned hash seed: set iteration and string hashing in a generator or in gen_program.py must not vary the
     # program for one seed. The build-configuration name has one home (gen_flow_const.BUILD_CONFIG).
-    env = dict(os.environ, PYTHONHASHSEED="0", **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
+    env = generator_env()
     generated: dict[str, Any] = {}
     if prog.get("generator"):
         # A per-seed program generator (Test Writer): everything it emits derives from --seed, so the

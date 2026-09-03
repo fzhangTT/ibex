@@ -130,6 +130,8 @@ def write_job_script(path: Path, build: dict[str, Any], argv: list[str], env: di
         "echo \"GEN_RUN_ENV env_sh=" + str(env_sh) + " VIRTUAL_ENV=${VIRTUAL_ENV:-none} "
         f"{C.COCOTB_ENV_LIBPYTHON}=${{{C.COCOTB_ENV_LIBPYTHON}:-none}} python3=$(command -v python3)\"",
         f"cd {shlex.quote(str(run_dir))} || exit 97",
+        # LSF hands the job the submitter's environment; the leaks go before the flow's own exports.
+        *[f"unset {k}" for k in C.JOB_ENV_UNSET],
         *[f"export {k}={v}" if k == "LD_LIBRARY_PATH" else f"export {k}={shlex.quote(v)}" for k, v in env.items()],
         f"echo \"{C.SEED_RECORD_TAG} {C.PLUSARG_NTB_SEED}=${C.ENV_RANDOM_SEED} {C.ENV_RANDOM_SEED}=${C.ENV_RANDOM_SEED} host=$(hostname) utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)\"",
         f"{C.JOB_TIMEOUT_CMD} -k {C.TIMEOUT_GRACE_S} {timeout_s} \\",
@@ -152,6 +154,67 @@ def apply_fcov_check(result: dict[str, Any], test: dict[str, Any], vdb: Path, se
     if fc["status"] != "PASS" and result["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL):
         result["verdict"] = C.VERDICT_FAIL
         result["reason"] = fc["reason"]
+
+
+def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], run_dir: Path) -> list[str] | None:
+    """Export header cross-check (ruling 2026-09-03) on a decided verdict: a run whose argv names an export file must
+    have written it with a header whose sources= set equals the build manifest's emitted set (a subset when the
+    sources knob is narrowed); a PASS/RED-OK that did not is FAIL. Returns the header's sources (None when absent)."""
+    by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
+
+    def plusarg_of(name: str | None) -> str | None:
+        return next((U.plusarg_value(pa) for pa in argv if pa.startswith("+") and U.plusarg_name(pa) == name), None) if name else None
+    export_val = plusarg_of(by_ident.get(C.SV_PLUSARG_EXPORT_FILE))
+    if not export_val:
+        return None
+    header = U.export_header_sources(run_dir / export_val)
+    if res["verdict"] not in (C.VERDICT_PASS, C.VERDICT_RED_OK):
+        return header
+    if header is None:
+        # Naming an export file and writing none (or no header) would dodge the one check on emitted sources.
+        res.update(verdict=C.VERDICT_FAIL, reason=f"export file {export_val} absent or without a gen_export header")
+        return None
+    narrowed = plusarg_of(by_ident.get(C.SV_PLUSARG_EXPORT_SOURCES))
+    err = U.emitted_check(build.get("export_sources_emitted") or [], header,
+                          subset_ok=bool(narrowed) and narrowed != C.EXPORT_SOURCES_ALL)
+    if err:
+        res.update(verdict=C.VERDICT_FAIL, reason=err)
+    return header
+
+
+def self_test() -> int:
+    """export_check against fabricated run directories: absent file, equal sets, mismatch, narrowed subset."""
+    import tempfile
+    ok = True
+    C.SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
+    root = Path(tempfile.mkdtemp(prefix="gen_run_selftest_", dir=C.SELFTEST_TMP))
+    by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
+    efile, esrc = by_ident[C.SV_PLUSARG_EXPORT_FILE], by_ident[C.SV_PLUSARG_EXPORT_SOURCES]
+    emitted = [{"source": "ibus", "event": "x", "fields": []}, {"source": "dbus", "event": "y", "fields": []}]
+    build = {"export_sources_emitted": emitted}
+
+    def case(label: str, argv: list[str], header_line: str | None, expect_verdict: str, expect_reason_has: str = "", verdict: str = C.VERDICT_PASS) -> None:
+        nonlocal ok
+        d = Path(tempfile.mkdtemp(dir=root))
+        if header_line is not None:
+            (d / "exp.txt").write_text(header_line + "\n", encoding="utf-8")
+        res = {"verdict": verdict, "reason": "decided"}
+        export_check(res, build, ["simv", *argv], d)
+        cond = res["verdict"] == expect_verdict and expect_reason_has in res["reason"]
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"{label}: verdict {res['verdict']} ({res['reason'][:90]})")
+    case("no export plusarg: untouched", [], None, C.VERDICT_PASS, "decided")
+    case("export file named, none written: FAIL", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "absent or without a gen_export header")
+    case("file without a gen_export header: FAIL", [f"+{efile}=exp.txt"], "hello", C.VERDICT_FAIL, "absent or without")
+    case("header sources == emitted: PASS kept", [f"+{efile}=exp.txt"], "# gen_export v1 sources=ibus,dbus", C.VERDICT_PASS, "decided")
+    case("header misses an emitted source, knob all: FAIL", [f"+{efile}=exp.txt"], "# gen_export v1 sources=ibus", C.VERDICT_FAIL, "emitted mismatch")
+    case("knob narrowed, header a subset: PASS kept", [f"+{efile}=exp.txt", f"+{esrc}=ibus"], "# gen_export v1 sources=ibus", C.VERDICT_PASS, "decided")
+    case("knob narrowed, header names a source the build cannot emit: FAIL", [f"+{efile}=exp.txt", f"+{esrc}=pin"], "# gen_export v1 sources=pin", C.VERDICT_FAIL, "emitted mismatch")
+    case("a FAIL stays FAIL with its own reason", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "decided", verdict=C.VERDICT_FAIL)
+    import shutil
+    shutil.rmtree(root, ignore_errors=True)
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
 
 
 def main() -> int:
@@ -287,15 +350,7 @@ def main() -> int:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
     # Export header cross-check (ruling 2026-09-03): a run that wrote an export file must agree with the build
     # manifest on which sources emitted; a mismatch fails the run (the canary at that build catches it).
-    export_header: list[str] | None = None
-    export_name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
-    export_val = next((U.plusarg_value(pa) for pa in argv if pa.startswith("+") and U.plusarg_name(pa) == export_name), None) if export_name else None
-    if export_val:
-        export_header = U.export_header_sources(run_dir / export_val)
-        if export_header is not None:
-            err = U.emitted_check(build.get("export_sources_emitted") or [], export_header)
-            if err and res["verdict"] in (C.VERDICT_PASS, C.VERDICT_RED_OK):
-                res.update(verdict=C.VERDICT_FAIL, reason=err)
+    export_header = export_check(res, build, argv, run_dir)
     result: dict[str, Any] = {
         "test": test["name"], "seed": seed, "verdict": res["verdict"], "reason": res["reason"],
         "evidence": res["evidence"], "exit_code": rc, "timed_out": timed_out,
@@ -330,4 +385,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(self_test() if "--self-test" in sys.argv else main())

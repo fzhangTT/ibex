@@ -125,10 +125,13 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
         res["ledger"] = ledger_summary(grpinfo_txt.read_text(encoding="utf-8", errors="replace"), C.LEDGER_COVERGROUPS) \
             if grpinfo_txt.is_file() else ledger_summary("", C.LEDGER_COVERGROUPS)
         # The plan says the ledger exists: a report with covergroups but no ledger row is a broken TB, not a pass.
-        has_groups = res["totals"].get("group") not in (None, C.NOT_APPLICABLE) and bool(rows)
-        if C.LEDGER_REQUIRED and has_groups and not res["group_score"]["ledger_excluded"]:
+        has_group_total = res["totals"].get("group") not in (None, C.NOT_APPLICABLE)
+        if C.LEDGER_REQUIRED and has_group_total and not rows:
             res["status"] = status = "ledger_missing"
-            res["ledger"]["error"] = f"no ledger covergroup ({C.LEDGER_COVERGROUPS} / {C.LEDGER_PLAN_IDS}) among {len(rows)} covergroups"
+            res["ledger"]["error"] = f"URG reports a group score but {groups_txt.name} is absent or has no summary table, so the ledger cannot be told apart"
+        elif C.LEDGER_REQUIRED and has_group_total and not res["group_score"]["ledger_excluded"]:
+            res["status"] = status = "ledger_missing"
+            res["ledger"]["error"] = f"no ledger covergroup {C.LEDGER_COVERGROUPS} among {len(rows)} covergroups"
         if dut_scopes and len(good) == len(dut_scopes):
             res["gate_row"] = combine_rows(good)
             gs = res["group_score"]
@@ -228,7 +231,7 @@ def group_score_excluding(rows: list[dict[str, Any]], excluded: tuple[str, ...])
     """URG's functional score is the weight-averaged covergroup score; recompute it without the excluded names
     (the combining rule of record for the witness ledger)."""
     def is_ledger(name: str) -> bool:
-        return name in excluded or any(pid in name for pid in C.LEDGER_PLAN_IDS)
+        return name in excluded   # by SV covergroup name only (an SV identifier cannot carry a plan id's dash)
     kept = [g for g in rows if not is_ledger(g["name"]) and g["score"] is not None and g["weight"] > 0]
     dropped = sorted({g["name"] for g in rows if is_ledger(g["name"])})
     wsum = sum(g["weight"] for g in kept)
@@ -260,8 +263,8 @@ def ledger_summary(grpinfo_text: str, ledger: tuple[str, ...]) -> dict[str, Any]
         if b and section:
             total += 1
             hit += 1 if int(b.group(2)) > 0 else 0
-    ids = "/".join(C.LEDGER_PLAN_IDS)
-    return {"covergroups": list(ledger), "plan_ids": list(C.LEDGER_PLAN_IDS), "witnessed": hit, "clauses": total,
+    ids = C.LEDGER_PLAN_ID
+    return {"covergroups": list(ledger), "plan_id": C.LEDGER_PLAN_ID, "witnessed": hit, "clauses": total,
             "text": f"witnessed clauses: {hit} of {total} ({ids})" if total else f"witnessed clauses: none in report ({ids})"}
 
 
@@ -373,10 +376,11 @@ def self_test() -> int:
     cond = [g["name"] for g in rows_b] == ["gen_regime_cg", "gen_irq_cg"]
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated groups.txt: only the summary table is parsed, per-group blocks are ignored ({[g['name'] for g in rows_b]})")
-    pid_rows = parse_groups("SCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n  5.00       1  CG-WIT-001_ledger\n")
-    cond = group_score_excluding(pid_rows, C.LEDGER_COVERGROUPS)["ledger_excluded"] == ["CG-WIT-001_ledger"]
+    name_rows = parse_groups("SCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n  5.00       1  gen_wit_cycle_clause_cg\n  7.00       1  gen_wit_lookalike_cg\n")
+    gs = group_score_excluding(name_rows, C.LEDGER_COVERGROUPS)
+    cond = gs["ledger_excluded"] == ["gen_wit_cycle_clause_cg"] and gs["covergroups_scored"] == 2
     ok &= cond
-    print(f"SELF-TEST {'ok ' if cond else 'BAD'} a covergroup carrying the plan id CG-WIT-001 is matched as ledger too")
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} the ledger is matched by its SV covergroup name only; a look-alike name stays in the score ({gs})")
     grp = ("Group : gen_tb_top.u_env.u_cov::gen_wit_cycle_clause_cg\n\nSummary for Variable cp_clause\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\n"
            "w_tp_bit_036 3 1 1\nw_tp_bit_042 1 1 1\n\nUncovered bins\n\nNAME COUNT AT_LEAST NUMBER\nw_tp_bit_043 0 1 1\n\n----------\n"
            "Group : gen_tb_top.u_env.u_cov::gen_regime_cg\n\nSummary for Variable cp_regime\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\nbin_fast 9 1 1\n")

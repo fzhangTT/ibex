@@ -113,8 +113,12 @@ sunset input: the rows whose source is in the codegen-rendered active-source lis
 in the knob table, provided by TB Infra); until that list exists the field is an empty list, never a copy of
 the rendered table (`export_sources_emitted_origin` says which). A run that wrote an export file re-checks
 it: the `sources=` set of the file's first header line must equal the manifest's emitted source set, else the
-run FAILs (`export sources emitted mismatch ...`); result.yaml records `export_header_sources` and the
-manifest's `export_sources_emitted`. The DV Lead's sunset tool fails only on emitted rows.
+run FAILs (`export sources emitted mismatch ...`); when the run narrowed the sources knob (`+gen_export_sources`
+other than `all`) the header may be a subset of the emitted set, never a source the build cannot emit. A run
+whose entry names `+gen_export_file` and that ends PASS or RED-OK without the file, or with a file that has no
+`# gen_export` header, FAILs (`export file <name> absent or without a gen_export header`): not writing the file
+cannot dodge the check. result.yaml records `export_header_sources` and the manifest's
+`export_sources_emitted`. The DV Lead's sunset tool fails only on emitted rows.
 
 ## 2. gen_run.py (one test, one seed)
 
@@ -193,6 +197,11 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
   --self-test` renders both templates and checks them.
 - Products per run dir: `run_cmd.sh` (exact reproduction: `bash run_cmd.sh`), `run.log`, `sim.log`
+- Job environment: `run_cmd.sh` sources the staged (or the mirror's) `ci/env.sh`, then unsets `JOB_ENV_UNSET` (PYTHONPATH,
+  GEN_TEST_STAGED_ENTRIES: LSF hands the job the submitter's environment and the site shell leaks PYTHONPATH, a developer
+  shell may export the harness's staged-entries pointer) and exports the flow's own values (SIM_DIR, RANDOM_SEED, the
+  cocotb variables with PYTHONPATH set to exactly the source root). The same two variables are removed from the
+  program-generator environment (Section 7e).
   (VCS `-l`), `sim_stdout.log` (simv stdout and stderr: cocotb's Python logging and its result
   table bypass `-l`, so the verdict scans both files), `exit_code`, `result.yaml`, and with `--lsf`
   `bsub_cmd.txt`, `lsf.out` (LSF job report: CPU time, run time, host), `lsf.err`.
@@ -319,13 +328,20 @@ next sequence number. `--only <name>` (repeatable) serves only the named pending
 Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per request, but independent
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
-single-test requests turns around in about one request's time. A batch is head-mode: before it the server syncs
-the mirror once from the commit it pins first (`--canary-sha C` names the commit the canary passed on: when S differs
-from C in a mirrored build input (`BUILD_INPUT_PATHS`, `git diff --stat C S`), the batch is left pending for a
-new canary and both shas and the delta are recorded; otherwise `gen_mirror.py --sync --spike --source head --head-sha S` into the
-per-sha head tree; S is passed to every regression of the batch as `--head-sha`, the batch's scope decisions
-read that tree's committed testlist, and S and the tree are recorded in every batch manifest as
-`server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
+single-test requests turns around in about one request's time. Every head-mode purpose-1 request of a pass
+(one or many) forms the pass's batch, and a batch needs the canary: `--canary-sha C` names the commit the
+gen_boot_zc canary passed on and is mandatory (a batch served without it is refused, not served unvouched).
+Before any sync the server pins S = HEAD and decides the hold: with no canary sha, or when S differs from C in a
+mirrored file (`git diff --stat C S -- <pathspecs>`, the pathspecs being exactly the mirrored set
+`MIRROR_ITEMS` + `MIRROR_GLOB_ITEMS` minus `MIRROR_EXCLUDE_PATHS`, from `gen_mirror.git_pathspecs`), the batch is
+left pending for a new canary; either way one record is written under `dv/auto_dv/work/runtime/batches/<utc>_<sha12>.yaml`
+with `decision` (`accepted`, `refused_build_inputs_changed`, `refused_no_canary_sha`), `canary_sha`, `pinned_sha`,
+`delta_pathspecs`, `delta` (the diff --stat text) and the request names; an accepted record gains the sync
+record, the request manifests and `completed_utc`. An accepted batch syncs
+`gen_mirror.py --sync --spike --source head --head-sha S` into the per-sha head tree; S is passed to every
+regression of the batch as `--head-sha`, the batch's scope decisions read that tree's committed testlist, and S,
+C, the decision and the record path are recorded in every request manifest as `server_mirror_sync`
+(`pinned_sha`, `canary_sha`, `canary_decision`, `batch_record`). The server passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
 regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
 request and purposes 2 to 4 are served one at a time in file order, each syncing for itself. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
@@ -369,10 +385,12 @@ recomputes URG's weight-averaged covergroup score from groups.txt without the le
 (`group_score` with `ledger_excluded`), the gate row's GROUP takes that value whenever a ledger row was
 present (else URG's total stands), and the ledger's own bins are reported beside it from grpinfo.txt as
 "witnessed clauses: N of M" (`ledger`, also `gate_row.ledger`). This is the mechanism of record; TB Infra's
-`option.weight = 0` on the covergroup is defence in depth. A ledger row is matched by its SV name or by a
-plan id (`LEDGER_PLAN_IDS`) in its name; only URG's summary table is parsed (the per-group blocks that
-follow are not rows); and because the plan says the ledger exists, a report that carries covergroups but no
-ledger row ends the merge with status `ledger_missing` (`LEDGER_REQUIRED`), which fails the regression like
+`option.weight = 0` on the covergroup is defence in depth. A ledger row is matched by its SV covergroup name
+only (`LEDGER_COVERGROUPS`; an SV identifier cannot carry the plan id's dash, so `LEDGER_PLAN_ID` is a label in
+the ledger text, not a match key); only URG's summary table is parsed (the per-group blocks that
+follow are not rows); and because the plan says the ledger exists, a report whose URG total carries a group
+score but whose groups.txt is absent or has no summary table, or that carries covergroups but no ledger row,
+ends the merge with status `ledger_missing` (`LEDGER_REQUIRED`), which fails the regression like
 an exclusion violation. Pinned by `gen_cov_report.py self-test` on
 fabricated groups.txt and grpinfo.txt excerpts until a covergroup exists on this site.
 
@@ -440,13 +458,16 @@ other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, e
 `expected_fail`; kept out of the pass rate and of coverage).
 Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `GEN_TEST_FAIL` (the test
 harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
-accept any fixture failure. The Test Writer supplies the ids; the policy and the values land together.
+accept any fixture failure. The Test Writer supplies the ids; the header is on and the loader refuses a
+generic signature (and any red fixture without one).
 Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
 resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
 `index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated
 indices>` with the plusarg name read from the SV constants home (`PLUSARG_WITNESS_IDS`), and records `witness
-{tp_ids, indices, csv, csv_sha256, plusarg}` in result.yaml. The loader refuses an entry whose TP id is absent
-from the CSV and, until TB Infra's SV side lands the plusarg, any entry that lists witness_ids at all.
+{tp_ids, indices, csv, csv_sha256 (the full digest), plusarg}` in result.yaml. The loader refuses an entry whose
+TP id is absent from the CSV, an entry that lists the witness plusarg by hand in `plusargs` (the flow renders
+it from `witness_ids`, the CSV stays the one origin), a CSV that lists a TP id twice, and, until TB Infra's SV
+side lands the plusarg, any entry that lists witness_ids at all.
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md)
 
@@ -480,6 +501,12 @@ gen_mirror.py --status
 - The freshness hash covers the files a compute host consumes at run time (`dv/auto_dv/**/*.py`,
   `ci/env.sh`, `ci/setup-venv.sh`, the two requirements files); RTL, TB sources and documents are
   mirrored but not hashed (they are compiled on the submit host and churn constantly).
+- The mirrored set is one list in `gen_flow_const.py` for both modes and for the request server's canary hold:
+  `MIRROR_ITEMS` (rtl, vendor/lowrisc_ip, vendor/google_riscv-dv, util, ci, dv/auto_dv, ibex_configs.yaml,
+  python-requirements.txt), `MIRROR_GLOB_ITEMS` (`*.core`), minus `MIRROR_EXCLUDE_PATHS` (dv/auto_dv/work,
+  dv/auto_dv/reviews, dv/auto_dv/evidence: nothing reads them at build or run time) and the untracked build
+  products `MIRROR_EXCLUDE_PATTERNS`. `gen_mirror.git_pathspecs()` renders it as git pathspecs (`:(glob)`,
+  `:(exclude)`) for the head-mode archive and the hold's diff.
   `gen_regress.py --source head|worktree` chooses the tree a regression builds and runs from. Head mode (the
   default for purpose 4, a tier, or more than one test; a request's `source` field otherwise) syncs a
   pins the commit first (`--head-sha`: the batch's sha, else HEAD now), syncs exactly that commit into its
@@ -520,13 +547,15 @@ batches on different commits do not share a tree either; every sync of the famil
 (`<site root>.sync.lock`). A head tree carries no venv or Spike of its own: its `.venv` and `tools` are
 symlinks to the tools home (the site mirror root), so `ci/env.sh` in the head tree activates the one venv
 built on shared storage. A live consumer (a head-mode regression, a batch) leases its tree
-(`<tree>/.leases/<pid>_<tag>.lease`, released at exit); pruning runs only from the runtime tick
+(`<tree>/.leases/<pid>_<tag>.lease`, released at exit; a lease whose pid this host cannot probe, another
+host's, counts as live for at most `LEASE_MAX_AGE_H`); pruning runs only from the runtime tick
 (`gen_mirror.py --prune`), never from a sync, and removes trees beyond the newest `HEAD_MIRRORS_KEEP` only
 when they are older than `HEAD_MIRRORS_KEEP_HOURS` and carry no live lease. The tools home is rewritten only
 by a worktree-mode `--spike` / `--venv` sync, which refuses while any head tree is leased (`--force-tools`
 overrides); a head-mode `--spike` only requires Spike present. Every manifest records `tools_digest`
-(sha256 over tools/spike/lib and the venv's cocotb VPI library); a build records it in its mirror record and
-every run re-checks it before the simulator, so a tools rewrite under a consumer fails loud. The manifest
+(sha256 over tools/spike/lib and the venv's cocotb VPI library); a build computes the digest of the tools it
+binds to at build time (`mirror.tools_digest`, beside the sync-time `tools_digest_synced`) and every run
+re-checks it before the simulator, so a tools rewrite between sync and build, or under a consumer, fails loud. The manifest
 records `source`, `head_sha` and `tools_home`;
 `--status` computes the source hash from a fresh HEAD export (into a unique temporary staging directory) for
 a head-mode mirror, so a new commit makes it stale; a pinned consumer (a build or run carrying `GEN_DV_HEAD_SHA`)
@@ -664,7 +693,8 @@ Program forms, exactly one per block: `riscv_dv_test` (the riscv-dv generator bu
 `riscv_dv_gen_build` in gen_site.yaml), `directed` (a list of clone-relative sources), or
 `generator` (a clone-relative script the flow runs first as `python3 <generator> --seed <seed> --out
 <run>/program/gen_source.S <generator_args>`, clone root as cwd, each program stage bounded by the run's
-`timeout_s`, PYTHONHASHSEED pinned to 0, into a program directory the flow empties first (a stale source
+`timeout_s`, PYTHONHASHSEED pinned to 0, the environment the flow's own (`JOB_ENV_UNSET` removed: no PYTHONPATH, so a
+generator resolves its own repository root, as gen_test_lib's runner assumes), into a program directory the flow empties first (a stale source
 or image can never pass for this run's), log
 `<run>/program/generator.log`; the source it writes is then the one directed input of gen_program.py,
 so the seed binding is by construction; the program directory is emptied just before the invocation, so

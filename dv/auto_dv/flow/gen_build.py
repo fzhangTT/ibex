@@ -61,7 +61,8 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
     rec = {"root": str(root), "tree_sha256": man.get("tree_sha256"), "git_head": (man.get("git") or {}).get("head"),
            "synced_utc": man.get("synced_utc"), "venv": man.get("venv"), "env_sh": str(root / "ci" / "env.sh"),
            "state_at_build": st["state"], "tools_home": man.get("tools_home") or str(root),
-           "tools_digest": man.get("tools_digest")}
+           # Digest of the tools the simv binds to NOW (not the sync-time record): the run-time re-check compares to this.
+           "tools_digest": M.tools_digest(Path(man.get("tools_home") or root)), "tools_digest_synced": man.get("tools_digest")}
     return lib, rec
 
 

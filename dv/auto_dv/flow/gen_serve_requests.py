@@ -358,11 +358,34 @@ def request_purpose(path: Path) -> int | None:
         return None
 
 
+def resolve_commit(ref: str) -> str:
+    """Full sha of a commit this clone has; an unknown ref stops the server (the canary must name a real commit)."""
+    r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],
+                       capture_output=True, text=True)
+    if r.returncode != 0 or not r.stdout.strip():
+        U.die(f"--canary-sha {ref!r} is not a commit of this clone")
+    return r.stdout.strip()
+
+
 def build_input_delta(sha_a: str, sha_b: str) -> str:
-    """git diff --stat between two commits restricted to the mirrored build inputs (empty when nothing changed)."""
-    r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "diff", "--stat", sha_a, sha_b, "--", *C.BUILD_INPUT_PATHS],
+    """git diff --stat between two commits over the mirrored subset (M.git_pathspecs, the set a head tree is built
+    from); empty when the two trees agree on every mirrored file."""
+    r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "diff", "--stat", sha_a, sha_b, "--", *M.git_pathspecs()],
                        capture_output=True, text=True)
     return r.stdout.strip() if r.returncode == 0 else f"git diff failed: {r.stderr.strip()[:200]}"
+
+
+def write_batch_record(rec: dict[str, Any]) -> Path:
+    """One file per head-mode batch decision (accepted or refused: both shas, the pathspecs, the delta, the requests)."""
+    C.BATCHES_DIR.mkdir(parents=True, exist_ok=True)
+    stem = f"{rec['utc'].replace('-', '').replace(':', '')}_{rec['pinned_sha'][:12]}"
+    p = C.BATCHES_DIR / f"{stem}.yaml"
+    n = 1
+    while p.exists():   # two decisions within one second keep two records
+        n += 1
+        p = C.BATCHES_DIR / f"{stem}_{n}.yaml"
+    U.dump_yaml(rec, p)
+    return p
 
 
 def pinned_testlist(head_tree: Path) -> dict[str, Any]:
@@ -378,32 +401,43 @@ def pinned_testlist(head_tree: Path) -> dict[str, Any]:
 
 def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
                max_concurrent: int, canary_sha: str | None = None) -> int:
-    """One pass over the queue. Independent purpose-1 requests run concurrently (each its own outdir,
-    manifest and LSF accounting) after a single mirror sync for the batch; everything else in file order."""
+    """One pass over the queue. The head-mode purpose-1 requests form the pass's batch: one canary hold, one
+    pinned mirror sync, concurrent regressions (each its own outdir, manifest and LSF accounting); everything
+    else is served in file order, each regression syncing for itself."""
     p1_all = [p for p in pending if request_purpose(p) == 1]
     # Only head-mode purpose-1 requests share the batch (one head-mode mirror); a worktree request is served alone.
     p1 = [p for p in p1_all if request_source(p) == C.SOURCE_MODE_HEAD]
     rest = [p for p in pending if p not in p1]
-    if len(p1) > 1 and not dry_run:
-        # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
+    if p1 and not dry_run:
         batch_sha = M.head_sha()
+        rec: dict[str, Any] = {"utc": U.now_utc(), "requests": [p.stem for p in p1], "pinned_sha": batch_sha,
+                               "canary_sha": canary_sha, "delta_pathspecs": M.git_pathspecs(), "delta": "", "decision": None}
+        # The hold is decided before any sync, so a held batch costs one record per pass and never a re-sync.
+        if canary_sha is None:
+            rec["decision"] = C.CANARY_REFUSED_MISSING
+        else:
+            rec["delta"] = build_input_delta(canary_sha, batch_sha) if canary_sha != batch_sha else ""
+            rec["decision"] = C.CANARY_REFUSED_DELTA if rec["delta"] else C.CANARY_ACCEPTED
+        rec_path = write_batch_record(rec)
+        if rec["decision"] != C.CANARY_ACCEPTED:
+            U.log(f"REFUSING the head-mode batch this pass ({rec['decision']}): canary {str(canary_sha)[:12]} vs HEAD "
+                  f"{batch_sha[:12]}; {len(p1)} request(s) stay pending; record {rec_path}"
+                  + (f"\n{rec['delta']}" if rec["delta"] else ""))
+            for p in rest:
+                serve_one(p, testlist, dry_run, extra_args)
+            return len(rest)
+        # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
         rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD,
                                              "--head-sha", batch_sha],
                                             cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log",
                                             timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         head_tree = M.head_mirror_root(batch_sha)
         synced = M.load_manifest(head_tree) or {}
-        delta = build_input_delta(canary_sha, batch_sha) if canary_sha and canary_sha != batch_sha else ""
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
-                "canary_sha": canary_sha, "canary_to_batch_build_input_delta": delta, "batch": [p.stem for p in p1]}
-        if delta:
-            # The canary vouched for another tree: a build input changed in between, so this pass leaves the
-            # batch pending for a new canary rather than serving it unvouched.
-            U.log(f"REFUSING the batch this pass: build inputs changed between canary {canary_sha[:12]} and HEAD {batch_sha[:12]}:\n{delta}")
-            for p in rest:
-                serve_one(p, testlist, dry_run, extra_args)
-            return len(rest)
+                "pinned_sha": batch_sha, "canary_sha": canary_sha, "canary_decision": rec["decision"],
+                "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in p1], "batch_record": str(rec_path)}
+        manifests: list[Path] = []
         if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s), pinned to {batch_sha[:12]}")
             # Scope decisions for the batch come from the pinned tree's committed testlist, validated by a process
@@ -414,16 +448,18 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
             batch_args = list(extra_args) + ["--no-sync-mirror", "--head-sha", str(sync["head_sha"])]
             try:
                 with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
-                    list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
+                    manifests = list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
             finally:
                 M.release_lease(batch_lease)
         else:
             # Without one good shared sync the batch must not fan out: each regression syncs for itself, in turn.
             sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing itself"
             U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(p1)} purpose-1 request(s)")
-            for p in p1:
-                serve_one(p, testlist, dry_run, extra_args, sync)
-    else:
+            manifests = [serve_one(p, testlist, dry_run, extra_args, sync) for p in p1]
+        rec.update(sync=sync, manifests=[str(m) for m in manifests], completed_utc=U.now_utc())
+        U.dump_yaml(rec, rec_path)
+    elif p1:
+        # Dry run: scope decisions only, no sync and no hold.
         for p in p1:
             serve_one(p, testlist, dry_run, extra_args)
     for p in rest:
@@ -442,13 +478,17 @@ def main() -> int:
     ap.add_argument("--testlist", type=Path, default=C.TESTLIST_YAML)
     ap.add_argument("--only", action="append", default=[], help="serve only the named pending request(s)")
     ap.add_argument("--canary-sha", default=None,
-                    help="commit the canary passed on; a batch whose pinned commit differs in a build input is refused")
+                    help="commit the gen_boot_zc canary passed on: required for every head-mode purpose-1 batch, which is "
+                         "refused (and the refusal recorded under work/runtime/batches/) when it is absent or when a "
+                         "mirrored file differs between that commit and HEAD")
     ap.add_argument("--max-concurrent", type=int, default=C.SERVE_MAX_CONCURRENT_P1,
                     help="independent purpose-1 requests served at once (ruling: purposes 2-4 stay serialized)")
     ap.add_argument("--extra-arg", action="append", default=[],
                     help="gen_regress.py argument the runtime operator adds to every request served in this call "
                          "(recorded in the manifest as operator_extra_args); for knobs a request asked for in notes")
     a = ap.parse_args()
+    if a.canary_sha:
+        a.canary_sha = resolve_commit(a.canary_sha)
     if not a.dry_run:
         U.require_env("vcs", "urg", "bsub")
     testlist = U.load_testlist(a.testlist)

@@ -266,6 +266,8 @@ def self_test() -> int:
                 ("a generic GEN_TEST_FAIL red_expect under red_expect_policy [fire_id]", lambda d: (d.__setitem__("red_expect_policy", ["fire_id"]),
                     d["tests"][0].update(red_fixture=True, measured=False, red_expect="GEN_TEST_FAIL gen_smoke: [0-9]+ fire-check failure"))),
                 ("an unknown red_expect_policy token", lambda d: d.__setitem__("red_expect_policy", ["bogus"])),
+                ("a generic harness signature hidden behind a leading .* (policy fire_id)",
+                 lambda d: [t.update(red_expect=r".*GEN_TEST_FAIL x: [0-9]+ fire-check failure") for t in d["tests"] if t.get("red_fixture")][:1]),
                 ("witness_ids naming a TP id absent from the CSV", lambda d: d["tests"][0].update(witness_ids=["TP-NOPE-999"])),
                 ("witness_ids as a bare string", lambda d: d["tests"][0].update(witness_ids="TP-BIT-036")),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
@@ -333,6 +335,61 @@ def self_test() -> int:
         and "only in header ['ibus']" in (emitted_check([], ["ibus"]) or "") and "only in manifest ['ibus']" in (emitted_check(rows_i, []) or "")
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "emitted_check: equal sets pass (empty and non-empty), a mismatch names the difference both ways")
+    rows_id = rows_i + [{"source": "dbus", "event": "req", "fields": []}]
+    cond = emitted_check(rows_id, ["ibus"], subset_ok=True) is None and emitted_check(rows_id, ["ibus"]) is not None \
+        and "only in header ['pin']" in (emitted_check(rows_id, ["pin"], subset_ok=True) or "")
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "emitted_check: with the sources knob narrowed a header subset passes, a source the build cannot emit still fails; unnarrowed needs equality")
+    with tempfile.TemporaryDirectory(dir=C.SELFTEST_TMP) as td3:
+        dup = Path(td3) / "dup.csv"
+        dup.write_text("index,tp_item\n0,TP-X-001\n1,TP-X-002\n2,TP-X-001\n", encoding="utf-8")
+        saved, C.WITNESS_CSV = C.WITNESS_CSV, dup
+        try:
+            witness_index(); dup_refused = False
+        except SystemExit:
+            dup_refused = True
+        finally:
+            C.WITNESS_CSV = saved
+    cond = dup_refused
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "witness_index: a CSV listing one TP id twice stops the flow")
+    # Job and generator environments: the submitting shell's PYTHONPATH and staged-entries pointer never reach a run.
+    import gen_run as _R
+    import gen_stim as _S
+    with tempfile.TemporaryDirectory(dir=C.SELFTEST_TMP) as td4:
+        js = Path(td4) / "run_cmd.sh"
+        _R.write_job_script(js, {"outdir": td4, "build": "x"}, ["simv"], {"SIM_DIR": td4, "PYTHONPATH": "/root"}, 10, Path(td4))
+        lines = js.read_text(encoding="utf-8").splitlines()
+        unset_at = [i for i, l in enumerate(lines) if l.startswith("unset ")]
+        export_at = [i for i, l in enumerate(lines) if l.startswith("export ") and not l.startswith(f"export {C.ENV_TOOLCHECK_VAR}=")]
+        cond = {l.split()[1] for l in lines if l.startswith("unset ")} == set(C.JOB_ENV_UNSET) and bool(unset_at) and bool(export_at) \
+            and max(unset_at) < min(export_at) and any(l.startswith("export PYTHONPATH=") for l in lines)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"job script unsets {list(C.JOB_ENV_UNSET)} after cd and before the flow's own exports (PYTHONPATH re-exported for cocotb)")
+    saved = {k: os.environ.get(k) for k in C.JOB_ENV_UNSET}
+    try:
+        for k in C.JOB_ENV_UNSET:
+            os.environ[k] = "/leak"
+        genv = _S.generator_env()
+        cond = not any(k in genv for k in C.JOB_ENV_UNSET) and genv.get("PYTHONHASHSEED") == "0" and genv.get(C.ENV_BUILD_CONFIG) == C.BUILD_CONFIG
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "generator environment drops the leaked variables, pins PYTHONHASHSEED and names the build configuration")
+    try:
+        if str(C.SOURCE_ROOT) not in sys.path:
+            sys.path.insert(0, str(C.SOURCE_ROOT))
+        import importlib as _il
+        _tl = _il.import_module("dv.auto_dv.tests.gen_test_lib")
+        cond, note = _tl.STAGED_ENTRIES_ENV in C.JOB_ENV_UNSET, f"gen_test_lib.STAGED_ENTRIES_ENV={_tl.STAGED_ENTRIES_ENV!r}"
+    except Exception as e:  # noqa: BLE001 - the harness module is the Test Writer's; report, do not crash
+        cond, note = False, f"gen_test_lib not importable: {e}"
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"the staged-entries variable the harness reads is in JOB_ENV_UNSET ({note})")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -430,11 +487,12 @@ def export_header_sources(path: Path) -> list[str] | None:
     return [t for t in m.group(1).split(",") if t]
 
 
-def emitted_check(emitted_rows: list[dict[str, Any]], header_sources: list[str]) -> str | None:
-    """The manifest's emitted source set must equal the header's sources= set; the message names the difference."""
+def emitted_check(emitted_rows: list[dict[str, Any]], header_sources: list[str], subset_ok: bool = False) -> str | None:
+    """The header's sources= set must equal the manifest's emitted set; with the sources knob narrowed (subset_ok)
+    the header may be a subset, never a source the build cannot emit. The message names the difference."""
     manifest = {r["source"] for r in emitted_rows or []}
     header = set(header_sources or [])
-    if manifest == header:
+    if manifest == header or (subset_ok and header <= manifest):
         return None
     return (f"export sources emitted mismatch: manifest {sorted(manifest)} vs export header sources= {sorted(header)}"
             f" (only in manifest {sorted(manifest - header)}, only in header {sorted(header - manifest)})")
@@ -452,8 +510,11 @@ def witness_index() -> dict[str, int]:
         die(f"{C.WITNESS_CSV}: needs the columns index and tp_item")
     out: dict[str, int] = {}
     for r in rows:
+        key = r["tp_item"].strip()
+        if key in out:
+            die(f"{C.WITNESS_CSV}: tp_item {key} is listed twice (indices {out[key]} and {r['index']})")
         try:
-            out[r["tp_item"].strip()] = int(r["index"])
+            out[key] = int(r["index"])
         except ValueError:
             die(f"{C.WITNESS_CSV}: row {r!r} has a non-integer index")
     return out
@@ -478,7 +539,7 @@ def witness_render(test: dict[str, Any]) -> dict[str, Any] | None:
     if not name:
         die(f"test {test['name']} lists witness_ids but {C.TB_PKG_SV.name} declares no {C.SV_PLUSARG_WITNESS_IDS} (SV side not landed)")
     indices = [table[i] for i in ids]
-    return {"tp_ids": list(ids), "indices": indices, "csv": str(C.WITNESS_CSV), "csv_sha256": sha256_file(C.WITNESS_CSV)[:12],
+    return {"tp_ids": list(ids), "indices": indices, "csv": str(C.WITNESS_CSV), "csv_sha256": sha256_file(C.WITNESS_CSV),
             "plusarg": f"+{name}=" + ",".join(str(i) for i in indices)}
 
 
@@ -566,9 +627,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             if err:
                 die(f"{path}: test {t['name']}: a red_fixture must declare the evidence line of its designed failure: {err}")
             rx = t["red_expect"]
-            if C.RED_EXPECT_POLICY_FIRE_ID in (data.get("red_expect_policy") or []) and rx.startswith(C.RED_EXPECT_HARNESS_PREFIX) \
+            # The harness prefix anywhere in the regex (a leading .* or an AssertionError: prefix is still the harness line).
+            if C.RED_EXPECT_POLICY_FIRE_ID in (data.get("red_expect_policy") or []) and C.RED_EXPECT_HARNESS_PREFIX in rx \
                     and C.RED_EXPECT_FIRE_TOKEN not in rx:
-                die(f"{path}: test {t['name']}: red_expect {rx!r} starts with {C.RED_EXPECT_HARNESS_PREFIX} but names no "
+                die(f"{path}: test {t['name']}: red_expect {rx!r} matches the {C.RED_EXPECT_HARNESS_PREFIX} harness line but names no "
                     f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
@@ -610,9 +672,12 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             if not isinstance(w, list) or not w or not all(isinstance(x, str) and x for x in w):
                 die(f"{path}: test {t['name']}: witness_ids must be a non-empty list of TP ids")
             witness_render(t)   # dies on an id absent from the CSV or on a missing SV plusarg
-        export_name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
+        by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
+        export_name, witness_name = by_ident.get(C.SV_PLUSARG_EXPORT_FILE), by_ident.get(C.SV_PLUSARG_WITNESS_IDS)
         for pa in t["plusargs"]:
             name = plusarg_name(pa)
+            if witness_name and name == witness_name:
+                die(f"{path}: test {t['name']} plusarg {pa!r}: the witness plusarg is rendered by the flow from witness_ids, never listed by hand")
             if export_name and name == export_name:
                 val = plusarg_value(pa) or ""
                 if not val or Path(val).is_absolute() or ".." in Path(val).parts:
@@ -864,6 +929,9 @@ if __name__ == "__main__":
     if "--dump-testlist" in sys.argv:
         # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
         import json
-        print(json.dumps(load_testlist(Path(sys.argv[sys.argv.index("--dump-testlist") + 1]))))
+        real_stdout, sys.stdout = sys.stdout, sys.stderr   # a log line during the load must not corrupt the JSON
+        data = load_testlist(Path(sys.argv[sys.argv.index("--dump-testlist") + 1]))
+        sys.stdout = real_stdout
+        print(json.dumps(data))
         sys.exit(0)
     sys.exit(self_test() if "--self-test" in sys.argv else 0)

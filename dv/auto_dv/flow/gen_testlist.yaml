@@ -49,6 +49,10 @@ schema_version: 1
 #     The one origin of the property and of the names is TB Infra's rendered knob table
 #     dv/auto_dv/gen_tb/gen_knobs.py (PLUSARGS[...]['debug_only']); load_testlist refuses this
 #     list unless it equals that set.
+#   red_expect_policy: [fire_id] = a red_expect that matches the GEN_TEST_FAIL harness line (the prefix
+#     anywhere in the regex) must name the designed fire_ id (the harness prints it on that line; a
+#     generic signature would accept any fixture failure); the loader refuses the file otherwise.
+#     Non-harness signatures (the UVM_ERROR class of gen_ut_lockstep_forced_red) are outside it.
 fcov_manifest_required_tiers: []
 debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every]
 red_expect_policy: [fire_id]

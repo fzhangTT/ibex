@@ -169,6 +169,11 @@ def dut_rows(hier: Path, scopes: list[str]) -> str:
     return "\n".join(out) + "\n" if out else "no DUT row found\n"
 
 
+def ev_name(name: str) -> str:
+    """Evidence file name under the landing rule: every file a round writes carries the gen_ prefix."""
+    return name if name.startswith(C.ROUND_DIR_PREFIX[:4]) else "gen_" + name
+
+
 def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
             evidence_root: Path = C.EVIDENCE_DIR, index_path: Path = C.ROUND_INDEX,
             evidence_name: str | None = None) -> Path:
@@ -211,15 +216,15 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     for f in ("dashboard.txt", "hierarchy.txt", "tests.txt", "groups.txt", "grpinfo.txt", "asserts.txt"):
         src = report / f
         if src.is_file():
-            shutil.copyfile(src, ev / f)
-            copied.append(f)
+            shutil.copyfile(src, ev / ev_name(f))
+            copied.append(ev_name(f))
     scopes = [b.get("cov_scope") for b in (man.get("builds") or {}).values() if b.get("cov_scope")]
     for b in (man.get("builds") or {}).values():
         scopes += b.get("cov_scopes") or []
     scopes = sorted(set(scopes))
-    (ev / "hierarchy_dut_rows.txt").write_text(dut_rows(report / "hierarchy.txt", scopes), encoding="utf-8")
+    (ev / ev_name("hierarchy_dut_rows.txt")).write_text(dut_rows(report / "hierarchy.txt", scopes), encoding="utf-8")
     if not (report / "groups.txt").is_file():
-        (ev / "groups_summary.txt").write_text("no covergroup in this merge: functional coverage n/a\n", encoding="utf-8")
+        (ev / ev_name("groups_summary.txt")).write_text("no covergroup in this merge: functional coverage n/a\n", encoding="utf-8")
     dump_dir = Path(cov.get("report_dir") or "").parent / C.URG_DUMP_DIRNAME
     dumped = []
     # The URG dump is several MB of text: a real round keeps it gzip-compressed beside the report;
@@ -227,24 +232,24 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     if dump_dir.is_dir() and not dry_run:
         (ev / "full_exclusions").mkdir()
         for f in sorted(dump_dir.glob("fullexclude.*")):
-            with f.open("rb") as src, gzip.open(ev / "full_exclusions" / (f.name + ".gz"), "wb") as dst:
+            with f.open("rb") as src, gzip.open(ev / "full_exclusions" / ev_name(f.name + ".gz"), "wb") as dst:
                 shutil.copyfileobj(src, dst)
-            dumped.append(f.name + ".gz")
+            dumped.append(ev_name(f.name + ".gz"))
     merge_log = Path(cov.get("merge_log") or "")
     wc = warning_counts(merge_log)
-    (ev / "merge_log_warnings.txt").write_text(
+    (ev / ev_name("merge_log_warnings.txt")).write_text(
         "\n".join(f"{k}: {v}" for k, v in wc.items()) + ("\n" if wc else "no Warning/Error/Note lines\n"), encoding="utf-8")
     if merge_log.is_file():
-        shutil.copyfile(merge_log, ev / "merge.log")
+        shutil.copyfile(merge_log, ev / ev_name("merge.log"))
     for bname, b in (man.get("builds") or {}).items():
         bm = Path(b.get("manifest") or "")
         if bm.is_file():
-            shutil.copyfile(bm, ev / f"build_manifest_{bname}.yaml")
-    shutil.copyfile(C.TESTLIST_YAML, ev / "testlist_snapshot.yaml")
-    shutil.copyfile(outdir / "manifest.yaml", ev / "regress_manifest.yaml")
+            shutil.copyfile(bm, ev / ev_name(f"build_manifest_{bname}.yaml"))
+    shutil.copyfile(C.TESTLIST_YAML, ev / ev_name("testlist_snapshot.yaml"))
+    shutil.copyfile(outdir / "manifest.yaml", ev / ev_name("regress_manifest.yaml"))
     for e in cov.get("elfiles") or []:
         (ev / "elfiles").mkdir(exist_ok=True)
-        shutil.copyfile(e, ev / "elfiles" / Path(e).name)
+        shutil.copyfile(e, ev / "elfiles" / ev_name(Path(e).name))
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
@@ -324,11 +329,11 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
           f"shows gain: {e['gain']['shows_gain']} (None when there is no previous round). No-gain streak: "
           f"{e['no_gain_streak']} of N = {C.ROUND_NO_GAIN_N}; stopping rule fired: {e['stopping_rule_fired']}.", "",
           "## Files in this directory", "",
-          "- `dashboard.txt`, `hierarchy.txt`, `tests.txt` (URG text report), `hierarchy_dut_rows.txt` (the DUT-scope rows)",
-          "- `groups.txt` / `grpinfo.txt` when covergroups exist, else `groups_summary.txt` stating n/a",
-          f"- full_exclusions: {e.get('full_exclusions_note')} (`fullexclude.<metric>.gz`, gzip; the `_module` variants stay in the out-tree)",
-          "- `merge.log` and `merge_log_warnings.txt` (counts per Warning/Error/Note class)",
-          "- `build_manifest_<build>.yaml`, `testlist_snapshot.yaml`, `regress_manifest.yaml`, `elfiles/` (exclusion files used)", "",
+          "- `gen_dashboard.txt`, `gen_hierarchy.txt`, `gen_tests.txt` (URG text report), `gen_hierarchy_dut_rows.txt` (the DUT-scope rows)",
+          "- `gen_groups.txt` / `gen_grpinfo.txt` when covergroups exist, else `gen_groups_summary.txt` stating n/a",
+          f"- full_exclusions: {e.get('full_exclusions_note')} (`gen_fullexclude.<metric>.gz`, gzip; the `_module` variants stay in the out-tree)",
+          "- `gen_merge.log` and `gen_merge_log_warnings.txt` (counts per Warning/Error/Note class)",
+          "- `gen_build_manifest_<build>.yaml`, `gen_testlist_snapshot.yaml`, `gen_regress_manifest.yaml`, `elfiles/` (exclusion files used)", "",
           "## Merge log warning counts", ""] + [f"- {k}: {v}" for k, v in e["merge_warnings"].items()]
     if prev:
         L += ["", f"Previous round: {prev['round']} ({prev['date_utc']}, `{prev['evidence_dir']}`)."]

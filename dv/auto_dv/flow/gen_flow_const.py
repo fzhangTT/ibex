@@ -21,6 +21,10 @@ REPO_ROOT = FLOW_DIR.parents[2]
 # the mirror synced from committed HEAD, so a shared working tree mid-edit can never reach a measured run.
 ENV_SOURCE_ROOT = "GEN_DV_SOURCE_ROOT"
 ENV_HEAD_SHA = "GEN_DV_HEAD_SHA"
+# Removed from every simulation job and program-generator environment before the flow's own values are applied:
+# the site shell leaks PYTHONPATH (a cocotb run gets exactly the source root back), and a developer shell's
+# staged-entries pointer (gen_test_lib.STAGED_ENTRIES_ENV) must never reach a flow run.
+JOB_ENV_UNSET = ("PYTHONPATH", "GEN_TEST_STAGED_ENTRIES")
 SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"
@@ -30,10 +34,20 @@ HEAD_MIRROR_SUFFIX = "_head"            # per-sha head trees live beside the wor
 HEAD_MIRRORS_KEEP = 6                   # newest head trees always kept by the prune step
 HEAD_MIRRORS_KEEP_HOURS = 3.0           # head trees younger than this are never pruned
 LEASE_DIRNAME = ".leases"               # a live consumer (regression, batch) leases its head tree here; leased trees are never pruned
-# Mirrored paths that are build inputs: a commit landing between the canary and the batch sync that touches
-# one of them makes the batch refuse (the canary no longer vouches for the tree).
-BUILD_INPUT_PATHS = ("rtl", "vendor", "util", "ci", "dv/auto_dv/tb", "dv/auto_dv/env", "dv/auto_dv/isa", "dv/auto_dv/gen_tb",
-                     "dv/auto_dv/tests", "dv/auto_dv/stim", "dv/auto_dv/flow", "dv/auto_dv/fcov_expectations", "dv/auto_dv/excl")
+LEASE_MAX_AGE_H = 12.0                  # a lease this host cannot probe (another host's pid) counts as live at most this long
+# The mirrored source subset, one list for the worktree rsync, the head-mode git archive and the request server's
+# canary hold (git diff over exactly this set): clone-root-relative items, top-level globs, and the excluded
+# non-inputs that nothing reads at build or run time (queue files, review records, evidence documents).
+MIRROR_ITEMS = ("rtl", "vendor/lowrisc_ip", "vendor/google_riscv-dv", "util", "ci", "dv/auto_dv",
+                "ibex_configs.yaml", "python-requirements.txt")
+MIRROR_GLOB_ITEMS = ("*.core",)
+MIRROR_EXCLUDE_PATHS = ("dv/auto_dv/work", "dv/auto_dv/reviews", "dv/auto_dv/evidence")
+MIRROR_EXCLUDE_PATTERNS = (".git", "__pycache__", "*.pyc", ".venv", "out*", "*.vdb", "*.fsdb")   # untracked build products
+# Head-mode batch decisions (request server): every batch needs the commit a gen_boot_zc canary passed on and is
+# refused, with the record kept, when that commit is missing or differs from HEAD in a mirrored file.
+CANARY_ACCEPTED = "accepted"
+CANARY_REFUSED_DELTA = "refused_build_inputs_changed"
+CANARY_REFUSED_MISSING = "refused_no_canary_sha"
 ENV_SH = REPO_ROOT / "ci" / "env.sh"
 CONFIG_SCRIPT = SOURCE_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = SOURCE_ROOT / "ci" / "check_fcov_expectations.py"
@@ -101,6 +115,7 @@ def selftest_tmp() -> str:
 
 
 REQUESTS_DIR = WORK_DIR / "requests"
+BATCHES_DIR = WORK_DIR / "batches"   # one record per head-mode batch decision (accepted or refused)
 RUNNING_DIR = WORK_DIR / "running"
 DONE_DIR = WORK_DIR / "done"
 RESULTS_DIR = WORK_DIR / "results"
@@ -367,7 +382,7 @@ URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
 # gen_<name>_cg; the committed fcov manifests render gen_wit_cycle_clause_cg). The plan-name alias stays only until
 # TB Infra confirms the SV name in the export addendum v4c Section 9.
 LEDGER_COVERGROUPS = ("gen_wit_cycle_clause_cg", "gen_cg_wit_cycle_clause")
-LEDGER_PLAN_IDS = ("CG-WIT-001",)
+LEDGER_PLAN_ID = "CG-WIT-001"    # label in the ledger text only; the ledger is matched by SV covergroup name
 LEDGER_REQUIRED = True   # a merge that reports covergroups but no ledger row fails loud (the plan says the ledger exists)
 NOT_APPLICABLE = "n/a"
 # Gate and stopping rule (DV_prompt Section 4): 80 percent per gated metric; a round shows gain
@@ -428,3 +443,6 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+SV_PLUSARG_EXPORT_SOURCES = "PLUSARG_EXPORT_SOURCES"   # the sources knob; its "all" value keeps the header/manifest equality rule
+EXPORT_SOURCES_ALL = "all"

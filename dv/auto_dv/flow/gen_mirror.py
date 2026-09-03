@@ -33,12 +33,19 @@ from typing import Any
 import gen_flow_const as C
 import gen_flow_util as U
 
-# Clone subset the compute host needs; paths are clone-root relative (rsync --relative keeps them).
-MIRROR_ITEMS = ["rtl", "vendor/lowrisc_ip", "vendor/google_riscv-dv", "util", "ci", "dv/auto_dv",
-                "ibex_configs.yaml", "python-requirements.txt"]
-MIRROR_GLOB_ITEMS = ["*.core"]
-MIRROR_EXCLUDES = [".git", "__pycache__", "*.pyc", "dv/auto_dv/work", ".venv", "out*", "*.vdb", "*.fsdb"]
 SPIKE_ITEM = "tools/spike"
+
+
+def git_pathspecs() -> list[str]:
+    """The mirrored subset (C.MIRROR_*) as git pathspecs: the one set export_head archives and the request server's
+    canary hold diffs, so a mirrored file cannot change unseen between canary and batch."""
+    specs: list[str] = []
+    # :(glob) keeps a top-level glob such as *.core from matching recursively.
+    for item in [*C.MIRROR_ITEMS, *(f":(glob){g}" for g in C.MIRROR_GLOB_ITEMS)]:
+        r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "ls-files", "--", item], capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            specs.append(item)
+    return specs + [f":(exclude){e}" for e in C.MIRROR_EXCLUDE_PATHS]
 MANIFEST_NAME = "gen_mirror_manifest.yaml"
 # The venv is only as fresh as the lock files it was built from (T-027 review).
 VENV_INPUT_FILES = ["ci/requirements.lock", "ci/requirements-cocotb.txt", "ci/setup-venv.sh"]
@@ -58,19 +65,14 @@ def head_sha() -> str:
 
 
 def export_head(stage: Path, sha: str | None = None) -> str:
-    """Materialize the committed HEAD subset (MIRROR_ITEMS, tracked files only) under stage with git archive:
+    """Materialize the committed HEAD subset (git_pathspecs, tracked files only) under stage with git archive:
     no checkout, no fetch, the working tree untouched. Returns the HEAD sha. tools/spike is a build product
     outside git and is mirrored from the clone separately."""
     sha = sha or head_sha()
     if stage.exists():
         shutil.rmtree(stage)
     stage.mkdir(parents=True)
-    specs: list[str] = []
-    # :(glob) keeps a top-level glob such as *.core from matching recursively.
-    for item in MIRROR_ITEMS + [f":(glob){g}" for g in MIRROR_GLOB_ITEMS]:
-        r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "ls-files", "--", item], capture_output=True, text=True)
-        if r.returncode == 0 and r.stdout.strip():
-            specs.append(item)
+    specs = git_pathspecs()
     tar = stage.parent / (stage.name + ".tar")
     r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "archive", "--format=tar", "-o", str(tar), sha, "--", *specs],
                        capture_output=True, text=True)
@@ -161,7 +163,9 @@ def live_leases(tree: Path) -> list[dict[str, Any]]:
             except OSError:
                 alive = False
         elif pid > 0:
-            alive = True   # another host's process: cannot probe, treat as live
+            # Another host's process cannot be probed: live until the lease outlives every bounded consumer.
+            import time as _t
+            alive = (_t.time() - p.stat().st_mtime) < C.LEASE_MAX_AGE_H * 3600
         if alive:
             out.append(dict(rec, lease=str(p)))
         else:
@@ -220,7 +224,7 @@ def tools_digest(site: Path) -> str | None:
 
 def mirrored_files(root: Path) -> list[Path]:
     files: list[Path] = []
-    for item in MIRROR_ITEMS:
+    for item in C.MIRROR_ITEMS:
         p = root / item
         if p.is_file():
             files.append(p)
@@ -228,9 +232,9 @@ def mirrored_files(root: Path) -> list[Path]:
             for f in sorted(p.rglob("*")):
                 rel = f.relative_to(root)
                 if f.is_file() and not any(part in HASH_SKIP_DIRS or part.endswith(".pyc") for part in rel.parts) \
-                        and "dv/auto_dv/work" not in rel.as_posix():
+                        and not any(rel.as_posix() == e or rel.as_posix().startswith(e + "/") for e in C.MIRROR_EXCLUDE_PATHS):
                     files.append(f)
-    for g in MIRROR_GLOB_ITEMS:
+    for g in C.MIRROR_GLOB_ITEMS:
         files += sorted(root.glob(g))
     return sorted(set(files))
 
@@ -260,10 +264,10 @@ def tree_hash(root: Path) -> tuple[str, int]:
 def rsync(root: Path, dst: Path, log: Path) -> None:
     dst.mkdir(parents=True, exist_ok=True)
     argv = ["rsync", "-a", "--delete", "--delete-excluded", "--relative"]
-    for e in MIRROR_EXCLUDES:
+    for e in (*C.MIRROR_EXCLUDE_PATHS, *C.MIRROR_EXCLUDE_PATTERNS):
         argv += ["--exclude", e]
-    srcs = [f"{root}/./{item}" for item in MIRROR_ITEMS if (root / item).exists()]
-    srcs += [f"{root}/./{p.name}" for g in MIRROR_GLOB_ITEMS for p in sorted(root.glob(g))]
+    srcs = [f"{root}/./{item}" for item in C.MIRROR_ITEMS if (root / item).exists()]
+    srcs += [f"{root}/./{p.name}" for g in C.MIRROR_GLOB_ITEMS for p in sorted(root.glob(g))]
     argv += srcs + [str(dst) + "/"]
     rc, wall, timed_out = U.run_bounded(argv, cwd=root, log_path=log, timeout_s=1800)
     if rc != 0 or timed_out:
@@ -377,6 +381,11 @@ def self_test() -> int:
     cond = (stage / "dv" / "auto_dv" / "flow" / "gen_flow_const.py").is_file() and not (stage / ".git").exists()
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"HEAD {sha[:12]} exported with the flow sources and without .git")
+    present = [e for e in C.MIRROR_EXCLUDE_PATHS if (stage / e).exists()]
+    specs = git_pathspecs()
+    cond = not present and all(f":(exclude){e}" in specs for e in C.MIRROR_EXCLUDE_PATHS) and "dv/auto_dv" in specs
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"the HEAD export carries none of the excluded non-inputs {list(C.MIRROR_EXCLUDE_PATHS)} and the same pathspecs drive the canary diff (present: {present})")
     r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "status", "--porcelain", "--untracked-files=no", "--", "dv/auto_dv", "rtl"],
                        capture_output=True, text=True)
     modified = [l[3:].strip() for l in r.stdout.splitlines() if l[:2].strip() in ("M", "MM", "AM") and not l[3:].startswith("dv/auto_dv/work")]
@@ -418,6 +427,16 @@ def self_test() -> int:
     cond = st_ok["state"] == "fresh" and st_other["state"] == "stale" and "pinned HEAD" in str(st_other["clone_sha256_now"])
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"pinned status: the pinned sha decides (fresh for its sha, stale for another), HEAD now {head_sha()[:12]} irrelevant")
+    # A same-sha re-sync (rsync --delete over the mirrored items) leaves a lease at the tree root alone.
+    dst = Path(tempfile.mkdtemp(prefix="head_tree_selftest_dst_", dir=C.WORK_DIR))
+    (dst / C.LEASE_DIRNAME).mkdir()
+    keep = dst / C.LEASE_DIRNAME / "1_keep.lease"; keep.write_text("pid: 1\n", encoding="utf-8")
+    rlog = C.WORK_DIR / "head_tree_selftest_rsync.log"
+    rsync(tiny, dst, rlog); rsync(tiny, dst, rlog)
+    cond = keep.is_file() and (dst / "ci" / "env.sh").is_file()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "two rsyncs with --delete into one tree keep the lease directory at its root")
+    shutil.rmtree(dst, ignore_errors=True); rlog.unlink(missing_ok=True)
     shutil.rmtree(tiny, ignore_errors=True)
     # Leases: a live lease is seen, a dead pid's lease is dropped.
     tree = Path(tempfile.mkdtemp(prefix="head_lease_selftest_", dir=C.WORK_DIR))
@@ -431,6 +450,16 @@ def self_test() -> int:
     cond = live_leases(tree) == []
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "leases: released lease is gone")
+    # A lease this host cannot probe stays live only up to LEASE_MAX_AGE_H.
+    import time as _time
+    foreign = tree / C.LEASE_DIRNAME / "1_foreign.lease"
+    U.dump_yaml({"pid": 1, "tag": "foreign", "host": "another-host", "started_utc": U.now_utc()}, foreign)
+    fresh_live = [l["tag"] for l in live_leases(tree)] == ["foreign"]
+    old = _time.time() - (C.LEASE_MAX_AGE_H + 1) * 3600
+    os.utime(foreign, (old, old))
+    cond = fresh_live and live_leases(tree) == [] and not foreign.exists()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"leases: another host's lease is live while younger than {C.LEASE_MAX_AGE_H} h and dropped after")
     shutil.rmtree(tree, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
@@ -486,7 +515,7 @@ def main() -> int:
             prev = load_manifest(dst) or {}
             man: dict[str, Any] = {"mirror_root": str(dst), "clone": str(C.REPO_ROOT), "synced_utc": U.now_utc(),
                                    "git": U.git_head(), "source": a.source, "head_sha": sha, "tools_home": str(site),
-                                   "items": MIRROR_ITEMS + MIRROR_GLOB_ITEMS, "excludes": MIRROR_EXCLUDES}
+                                   "items": [*C.MIRROR_ITEMS, *C.MIRROR_GLOB_ITEMS], "excludes": [*C.MIRROR_EXCLUDE_PATHS, *C.MIRROR_EXCLUDE_PATTERNS]}
             man["tree_sha256"], man["runtime_file_count"] = tree_hash(dst)
             man["file_count"] = len(mirrored_files(dst))
             man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
