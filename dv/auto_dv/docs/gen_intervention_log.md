@@ -336,3 +336,12 @@ the run and never touch the shared `/tmp`; the stale `/tmp/fcovexp_*` directory 
 removed. Owner decision requested: whether this exposure changes anything for the runtime role.
 Team judgement: no design, test or coverage content was seen beyond a test name and a summary
 line, and nothing was carried over; work continues meanwhile (DV_prompt.txt Section 10).
+
+## LOG-009 - 2026-09-03 - NOTE (review tooling incident, Orchestrator)
+
+The post-execution review run of commit 24f3dc0 (T-045) aborted with a bash syntax error
+because the Orchestrator edited `dv/auto_dv/tools/gen_cross_review.sh` (target-echo tolerance)
+while that review instance was still executing; bash reads scripts incrementally and executed
+the modified file at a stale offset. No artifact was installed for that run; the review was
+re-run. Fix: the script now executes from a private copy of itself. Recorded because it is a
+process defect in generated tooling caught by the operator, not by review.
