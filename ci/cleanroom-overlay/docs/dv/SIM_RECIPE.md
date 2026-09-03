@@ -16,6 +16,9 @@ before generation begins, directly below this paragraph, each only after the com
 has actually been run on this site. A missing marker blocks launch by design — never add a marker
 without running its command.
 
+executed-on: 2026-09-02 — §2 compile + §5 run executed green in a fresh cleanroom export (gen_smoke_tb + gen_dut_top, opentitan config, VCS; red→green assertion proof)
+spike-built-on: 2026-09-02 — upstream riscv/riscv-isa-sim cloned from github (4ffd6ba860f4190ceac2716fa3c2cf139e85538f) and built on this site (--with-boost=no: system boost 1.66 breaks under gcc-11 C++17)
+
 ## 1. Environment contract
 
 Run every command from a login shell (`bash -lc`) on a site host, and source the environment
@@ -236,3 +239,19 @@ git push origin cleanroom/<topic>
 
 If a submission ever returns content beyond the acknowledgement, treat it as a fence event: stop
 and report through the intervention log.
+
+## 11. Reference model (spike) build
+
+Clone upstream spike and build it in the clone's tool area:
+
+```bash
+git clone --depth 1 https://github.com/riscv/riscv-isa-sim.git tools/riscv-isa-sim
+cd tools/riscv-isa-sim && mkdir -p build && cd build
+../configure --prefix=<clone_root>/tools/spike \
+    --with-boost=no --with-boost-asio=no --with-boost-regex=no
+make -j8 && make install
+```
+
+- Disable boost: the system boost (1.66) does not compile under the gcc-11 C++17 mode that
+  `ci/env.sh` enables. Spike's boost features are optional.
+- Build wall-clock on this site: about 2 minutes with `-j8`.
