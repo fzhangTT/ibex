@@ -1,0 +1,50 @@
+# Cross-model review - committed diff c5b5bc0f..20a66cfd
+
+**Reviewer:** claude CLI 2.1.259 (Claude Code); run-reported model: claude-fable-5-1,claude-haiku-4-5-20251001; requested effort: high (the CLI does not report the effective setting); fresh session 54b7282d-7af4-46d0-932c-5da9dab6a323; sandbox: bubblewrap, working directory = detached read-only checkout of commit 20a66cfdcc33dd31bc5efa2f76b18f7a15f034ae (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)
+**Codex unavailable because:** ERROR: You hit your spend cap set by the owner of your workspace. Ask an owner to increase your spend cap to continue.
+**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob 9bc849d6 (the copy executed; equals the wrapper committed at the reviewed commit); reviewed commit 20a66cfdcc33dd31bc5efa2f76b18f7a15f034ae
+**Date:** 2026-09-03
+**Target:** committed diff c5b5bc0f..20a66cfd (echo at raw line 1)
+
+---
+
+TARGET: c5b5bc0f969d794f00932cc8b421974a996ec539..20a66cfdcc33dd31bc5efa2f76b18f7a15f034ae
+
+Reviewed from the detached checkout of 20a66cf. Scope: the seven Runtime commits (e30b693, 5506f23, a090301, 82edddb, b209299, 0df5cd2, 20a66cf); the other roles' commits in the range were not judged. I read every diff, the surrounding code at HEAD, the API doc, the critic-response tables, and ran the testlist loader read-only from the checkout (26 entries, `red_expect_policy` absent, validates).
+
+**Owner questions, answered against the code**
+
+1. Leases. A regression leases after its head-mode re-exec (`gen_regress.py:476-479`), a batch leases around its pool (`gen_serve_requests.py:412-420`, released in `finally`). A kill leaves the file; `live_leases` drops it by pid probe, but only on the same host; a lease whose `host` differs is treated live forever (`gen_mirror.py:163-164`), so a crashed foreign-host consumer pins its tree indefinitely (conservative, not unsafe). Two batches on one sha get distinct pid-named files. A re-sync of the same sha runs rsync `--delete --relative` into the tree (`gen_mirror.py:259-268`); `.leases` sits at the tree root outside the transferred items and should survive, but no self-test proves it. Standalone head-mode `gen_build`/`gen_run` never lease. The sync-to-lease gap is closed because every sync rewrites the manifest via `os.replace` and refreshes the root mtime.
+2. Delta hold. It blocks only when `--canary-sha` is given (`gen_serve_requests.py:444`, default None); without it the batch is served unvouched with `canary_sha: null`. Nothing in-repo passes the flag. "Build input" is a hand list (`gen_flow_const.py:35-36`), not the mirrored set: `ibex_configs.yaml` (read by `util/ibex_config.py`, `gen_build.py:31`), `*.core`, `python-requirements.txt` and `dv/auto_dv/docs` (the witness CSV `gen_run` renders from) are mirrored but not diffed. In the refusal path the shas and delta are only logged; the `sync` record is discarded (`gen_serve_requests.py:400-406`), so the doc's "both shas and the delta are recorded" (`gen_runtime_api.md:323-325`) is not true for the case that matters.
+3. Export sets. Emitted is `[]` unless `EXPORT_ACTIVE_SOURCES` exists (`gen_flow_util.py:407-413`; not rendered today, verified). The header check FAILs on a set mismatch, but only if the file exists with a header (`gen_run.py:292-297`); a PASS run naming `+gen_export_file` that wrote nothing keeps PASS with `export_header_sources: null`. Today the header `sources=` is empty (no registered writers), so the live proof is a trivially equal empty pair.
+4. Witness rendering. Resolved through the CSV at `SOURCE_ROOT` (`gen_flow_const.py:243`), refused until `PLUSARG_WITNESS_IDS` is in `gen_tb_pkg.sv` (`gen_flow_util.py:477-479`; confirmed absent), digest recorded as a 12-hex prefix (`gen_flow_util.py:481`).
+5. Ledger. `ledger_missing` sets `status` (`gen_cov_report.py:128-131`) and `gen_regress.py:633` fails the regression, so a report with covergroups and no ledger row cannot pass. The plan-id alternative is dead in practice (see finding 6).
+6. Testlist header. It is silent: the Policies block (`gen_testlist.yaml:44-52`) does not mention `red_expect_policy`, eight fixtures now name fire ids while the ninth stays generic (`gen_testlist.yaml:305`), and the API doc still says "the policy and the values land together" (`gen_runtime_api.md:443`), which is now false. Row 3 of T-110 (`gen_critic_response_flow.md:290`) still says the committed testlist is generic.
+
+**Rubrics**: ai-slop-comments PASS (added comments carry intent, ruling anchors and return conditions); rtl-purity PASS (no `rtl/` change); forces-and-hier-access PASS; assertion-integrity PASS (no checker weakened; `feature_groups` and `timeout_s` edits are metadata copied from TB Infra); magic-numbers FAIL (low confidence) on `BUILD_INPUT_PATHS` re-encoding a subset of `MIRROR_ITEMS` by hand, folded into finding 2.
+
+**Findings**
+
+[Major][dv/auto_dv/flow/gen_serve_requests.py:444] The canary delta hold is opt-in and unrecorded on refusal: `--canary-sha` defaults to None, so a head-mode batch without it is served with no hold and only `canary_sha: null` as a trace; on refusal the shas and delta live only in the server log while the doc claims they are recorded - make the canary sha mandatory for head-mode batches (or write `unvouched: true` into every batch manifest), persist the refusal record to a file under the request's result dir, and compute the delta before the batch sync so a held batch does not re-sync every pass.
+
+[Major][dv/auto_dv/flow/gen_flow_const.py:35] `BUILD_INPUT_PATHS` is a hand-maintained subset of the mirrored set: `ibex_configs.yaml`, `*.core`, `python-requirements.txt` and `dv/auto_dv/docs` (the witness CSV) are mirrored inputs that the canary-vs-pinned diff ignores, so a commit touching the config yaml or the CSV between canary and batch passes the hold - derive the diff pathspec from `MIRROR_ITEMS` plus `MIRROR_GLOB_ITEMS` and subtract an explicit, commented list of non-inputs.
+
+[Medium][dv/auto_dv/flow/gen_run.py:294] The header cross-check is skipped without trace when the export file or its header is absent: a PASS run whose entry names `+gen_export_file` but produced no file records `export_header_sources: null` and stays PASS - when `export_val` is set and the verdict is PASS/RED-OK, FAIL with "export file absent" (or at minimum record a reason), so the only check on emitted sources cannot be dodged by not writing the file.
+
+[Medium][dv/auto_dv/flow/gen_testlist.yaml:44] The testlist does not disclose the red_expect_policy state: eight fixtures carry specific fire ids that the loader does not enforce because the header key is absent, the ninth (`gen_test_boot_retire_red`, line 305) is generic, and `gen_runtime_api.md:443` plus T-110 row 3 (`gen_critic_response_flow.md:290`) describe a state that no longer holds - add a Policies comment naming `red_expect_policy` as intentionally absent, why (the boot_retire red signature), and its return condition; correct the doc sentence and row 3.
+
+[Low][dv/auto_dv/flow/gen_flow_util.py:434] `emitted_check` demands set equality between a build-time set and a run-time-filtered header: the SV header lists registered AND enabled sources (`gen_export_pkg.sv:72-73`), filtered by `+gen_export_sources`; once `EXPORT_ACTIVE_SOURCES` lands, any entry narrowing that knob FAILs on a correct run - require equality only when the knob is `all`, else header ⊆ emitted.
+
+[Low][dv/auto_dv/flow/gen_cov_report.py:230] The plan-id match (`"CG-WIT-001" in name`) can never hit a URG covergroup name because SV identifiers cannot contain `-`; the self-test fixture `CG-WIT-001_ledger` is not a legal name, so "matched by SV name or plan id" is dead code presented as a mechanism - drop the plan-id branch and the claim, or match a legal rendering; also note `ledger_missing` needs `groups.txt` rows, so a report with a group total but no `groups.txt` passes silently.
+
+[Low][dv/auto_dv/flow/gen_mirror.py:164] Lease hygiene gaps: a foreign-host lease is live forever (never cleaned after a crash), standalone head-mode `gen_build`/`gen_run` do not lease, and no self-test shows a live lease surviving a same-sha re-sync with rsync `--delete` - add a maximum lease age or heartbeat for leases this host cannot probe, lease in `gen_build`/`gen_run` when they bind a head tree standalone, and add the re-sync-with-lease self-test.
+
+[Low][dv/auto_dv/flow/gen_flow_util.py:481] `csv_sha256` holds a 12-hex prefix under a name that promises a sha256; `witness_index` lets a duplicate `tp_item` row silently win; and once the SV plusarg lands a test can hand-list `+gen_witness_ids=` in `plusargs` (a known plusarg), bypassing the CSV - record the full digest, die on duplicate ids, and refuse the witness plusarg in `plusargs` as the export-file plusarg is handled.
+
+[Low][dv/auto_dv/flow/gen_flow_util.py:712] `--dump-testlist` prints JSON on stdout while `U.log` also prints to stdout (`gen_flow_util.py:41`); any log line emitted during load (none today) breaks `json.loads` in `pinned_testlist` and kills the batch with an unrelated error - write the JSON to a file path argument or send logs to stderr.
+
+[Low][dv/auto_dv/flow/gen_build.py:64] The build records the mirror manifest's sync-time `tools_digest`, not a digest computed at build time, so a tools rewrite between sync and build is invisible to the run-time re-check - compute `M.tools_digest(tools_home)` in `cocotb_lib` at build time and record that.
+
+[Info][dv/auto_dv/flow/gen_testlist.yaml:349] The eight new `red_expect` signatures are proven only by direct runs (`gen_tdd_batch1.md` 8.2); no flow run shows RED-OK against gen_run's first-collected-evidence-line rule, and the four comparator-affected tests still show UVM_ERROR > 0 in 8.1 - run the eight reds through `gen_run` before citing them as RED-OK.
+
+Final verdict: APPROVE-WITH-CHANGES
