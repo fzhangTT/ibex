@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 21:35 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 21:40 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -317,7 +317,7 @@ Conventions
   - cp_imm_class = class(sext(imm12)): bins zero{0}, plus1{1}, minus1{-1}, max_pos{2047}, min_neg{-2048}, pos_rand{[2:2046]}, neg_rand{[-2047:-2]}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
   - cp_rs1_eq_rd = (rs1_addr == rd_addr and rd_addr != 0): bins no{0}, yes{1}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, one{1}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, one{1}, other{default}
   - cp_addi_wrap = sign(rs1) == sign(imm) and sign(result) != sign(rs1), iff addi: bins pos_wrap{rs1 >= 0 and imm > 0 and result < 0}, neg_wrap{rs1 < 0 and imm < 0 and result >= 0}, none{otherwise}
   - cp_slt_case = boundary case, iff op in {slti, sltiu}: bins eq{rs1 == sext(imm)}, slti_intmin_0{slti and rs1 == 0x80000000 and imm == 0}, slti_0_neg{slti and rs1 == 0 and imm < 0}, sltiu_imm_m1{sltiu and imm == -1}, sltiu_seqz{sltiu and imm == 1}, sltiu_ones_m1{sltiu and rs1 == 0xFFFFFFFF and imm == -1}, other{default}
 - Crosses:
@@ -338,7 +338,7 @@ Conventions
   - cp_eq_operands = (rs1_rdata == rs2_rdata): bins no{0}, yes{1}
   - cp_same_regs = register-index relation: bins rs1_eq_rs2{rs1 == rs2 != rd}, all_same{rs1 == rs2 == rd != 0}, rs1_eq_rd{rs1 == rd != rs2}, rs2_eq_rd{rs2 == rd != rs1}, distinct{all different}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, one{1}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, one{1}, other{default}
   - cp_wrap = 33-bit carry/borrow and signed overflow, iff op in {add, sub}: bins add_carry{add and rs1 + rs2 >= 2^32}, add_pos_ovf{add and both operands >= 0 and result < 0}, add_neg_ovf{add and both operands < 0 and result >= 0}, sub_borrow{sub and rs1 <u rs2}, sub_ovf{sub and rs1 == 0x80000000 and rs2 > 0}, none{otherwise}
 - Crosses:
   - cr_op_rs1 = cp_op x cp_rs1_class: bins auto{all combinations}
@@ -360,7 +360,7 @@ Conventions
   - cp_rs2_upper = rvfi_rs2_rdata, iff register form: bins zero{rs2[31:5] == 0}, is32{32}, is33{33}, all_ones{0xFFFFFFFF}, msb_only{0x80000000}, ffffffe0{0xFFFFFFE0}, other_nonzero{default}
   - cp_operand = class(rvfi_rs1_rdata): bins zero{0}, all_ones{0xFFFFFFFF}, msb_only{0x80000000}, lsb_only{1}, neg_rand{bit31 set, not listed}, pos_rand{bit31 clear, not listed}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, all_ones{0xFFFFFFFF}, msb_only{0x80000000}, one{1}, c0000000{0xC0000000}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, all_ones{0xFFFFFFFF}, msb_only{0x80000000}, one{1}, c0000000{0xC0000000}, other{default}
 - Crosses:
   - cr_op_shamt = cp_op x cp_shamt: bins auto{all combinations}
   - cr_op_operand = cp_op x cp_operand: bins auto{all combinations}
@@ -525,7 +525,7 @@ Conventions
   - cp_sign_pair = bit31 of rs1,rs2: bins pp{00}, pn{01}, np{10}, nn{11}
   - cp_same_regs = index relation: bins rs1_eq_rs2{rs1 == rs2 != rd}, all_same{rs1 == rs2 == rd != 0}, rs_eq_rd{rs1 == rd or rs2 == rd, rs1 != rs2}, distinct{default}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, one{1}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, fffffffe{0xFFFFFFFE}, r3fffffff{0x3FFFFFFF}, r40000000{0x40000000}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, one{1}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, fffffffe{0xFFFFFFFE}, r3fffffff{0x3FFFFFFF}, r40000000{0x40000000}, other{default}
   - cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011} (funct3 100..111 are the divides, sampled by CG-MUL-003.cp_op and excluded by this group's condition)
 - Crosses:
   - cr_op_rs1 = cp_op x cp_rs1_class: bins auto{all combinations}
@@ -564,7 +564,7 @@ Conventions
   - cp_divisor = class(rvfi_rs2_rdata): bins zero{0}, one{1}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, two{2}, minus_two{0xFFFFFFFE}, eq_dividend{rs2 == rs1 != 0}, abs_gt_dividend{|rs2| > |rs1|, not listed}, neg_rand{bit31 set, other}, pos_rand{bit31 clear, other}
   - cp_sign_pair = bit31 of rs1,rs2: bins pp{00}, pn{01}, np{10}, nn{11}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, one{1}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, eq_dividend{rd_wdata == rs1_rdata}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, one{1}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, eq_dividend{rd_wdata == rs1_rdata}, other{default}
 - Crosses:
   - cr_op_divisor = cp_op x cp_divisor: bins auto{all combinations}
   - cr_op_dividend = cp_op x cp_dividend: bins auto{all combinations}
@@ -618,7 +618,7 @@ Conventions
 - Features: F-CMP-001, F-CMP-002, F-CMP-004, F-CMP-005, F-CMP-008, F-CMP-010, F-CMP-012, F-CMP-014, F-CMP-016, F-CMP-018, F-CMP-020, F-CMP-021, F-CMP-023, F-CMP-024, F-CMP-026, F-CMP-028, F-CMP-030, F-CMP-032
 - Sample: RVFI retirement; condition: rvfi_trap == 0 and either a decoded Zca instruction (rvfi_insn[1:0] != 11) or, for cp_insn32_straddle only, a 32-bit instruction (rvfi_insn[1:0] == 11); every other coverpoint carries `iff c16` (16-bit retirement) so it never samples on the 32-bit event; anti-vacuity: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length.
 - Coverpoints:
-  - cp_insn = decoded, iff c16: bins c_addi4spn{}, c_lw{}, c_sw{}, c_lwsp{}, c_swsp{}, c_addi{}, c_nop{}, c_jal{}, c_j{}, c_li{}, c_lui{}, c_addi16sp{}, c_srli{}, c_srai{}, c_andi{}, c_sub{}, c_xor{}, c_or{}, c_and{}, c_beqz{}, c_bnez{}, c_slli{}, c_mv{}, c_jr{}, c_add{}, c_jalr{}; HINT code points (c.li / c.lui / c.mv / c.add / c.slli with rd = x0, c.addi with imm 0, c.nop with a non-zero imm) count under their form here, and their HINT semantics (no architectural effect, no trap) are CG-CMP-003's (tb-infra landing-4 L-6 ruling)
+  - cp_insn = decoded, iff c16: bins c_addi4spn{}, c_lw{}, c_sw{}, c_lwsp{}, c_swsp{}, c_addi{}, c_nop{}, c_jal{}, c_j{}, c_li{}, c_lui{}, c_addi16sp{}, c_srli{}, c_srai{}, c_andi{}, c_sub{}, c_xor{}, c_or{}, c_and{}, c_beqz{}, c_bnez{}, c_slli{}, c_mv{}, c_jr{}, c_add{}, c_jalr{}; HINT code points (c.li / c.lui / c.mv / c.add / c.slli with rd = x0, c.addi with imm 0, c.nop with a non-zero imm) count under their form here, and their HINT semantics (no architectural effect, no trap) are CG-CMP-003's (tb-infra landing-4 L-6 ruling, built in landing 6 at 61c97c1)
   - cp_pc_align = rvfi_pc_rdata[1], iff c16: bins word{0}, half{1}
   - cp_next_len = length of the next retired instruction, iff c16: bins n16{16}, n32{32}
   - cp_pc_inc = rvfi_pc_wdata - rvfi_pc_rdata, iff c16 and not a CTI: bins two{2}
@@ -820,7 +820,7 @@ Conventions
   - cp_same_regs = index relation: bins rs1_eq_rs2{rs1 == rs2 != rd}, all_same{rs1 == rs2 == rd != 0}, distinct{default}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
   - cp_sign_pair = bit31 of rs1,rs2: bins pp{00}, pn{01}, np{10}, nn{11}
-  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, other{default}
+  - cp_result_class = class(rvfi_rd_wdata), iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0, so the class is not sampled there; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins zero{0}, all_ones{0xFFFFFFFF}, int_min{0x80000000}, int_max{0x7FFFFFFF}, other{default}
   - cp_wrap = carry out of rs2 + (rs1 << n), iff shNadd: bins no{0}, yes{1}
 - Crosses:
   - cr_op_rs1 = cp_op x cp_rs1_class: bins auto{all combinations}
@@ -839,7 +839,7 @@ Conventions
   - cp_op = instr[31:20]: bins clz{0x600}, ctz{0x601}, cpop{0x602}
   - cp_operand = class(rvfi_rs1_rdata): bins zero{0}, all_ones{0xFFFFFFFF}, msb_only{0x80000000}, lsb_only{1}, single_other{exactly one bit set, not bit 0/31}, alt_5{0x55555555}, alt_a{0xAAAAAAAA}, int_max{0x7FFFFFFF}, rand{default}
   - cp_single_pos = position of the set bit, iff exactly one bit set: bins p0{0}, p1{1}, p2{2}, p3{3}, p4{4}, p5{5}, p6{6}, p7{7}, p8{8}, p9{9}, p10{10}, p11{11}, p12{12}, p13{13}, p14{14}, p15{15}, p16{16}, p17{17}, p18{18}, p19{19}, p20{20}, p21{21}, p22{22}, p23{23}, p24{24}, p25{25}, p26{26}, p27{27}, p28{28}, p29{29}, p30{30}, p31{31}
-  - cp_result = rvfi_rd_wdata, iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0; tb-infra landing-4 H-1(b) ruling, owed to tb-infra landing 6: today every result classifier samples unguarded on rd = x0): bins r0{0}, r1{1}, r16{16}, r31{31}, r32{32}, other{default}
+  - cp_result = rvfi_rd_wdata, iff rvfi_rd_addr != 0 (an rd = x0 record carries no result: the RTL forces rvfi_rd_wdata to 0; tb-infra landing-4 H-1(b) ruling, built in tb-infra landing 6 at 61c97c1): bins r0{0}, r1{1}, r16{16}, r31{31}, r32{32}, other{default}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
 - Crosses:
   - cr_op_operand = cp_op x cp_operand: bins auto{all combinations}
@@ -1220,7 +1220,7 @@ Conventions
   - cp_mtvec_lo_w = written mtvec[7:2] iff (cp_csr == mtvec): bins zero{0}, nonzero{!=0}
   - cp_mtvec_base_w = written mtvec[31:8] class iff (cp_csr == mtvec): bins low{the whole address {mtvec[31:8], 8'b0} < 32'h1000, i.e. mtvec[31:12] == 0: one threshold on the value, as the sampler tests it}, boot_page{== boot_addr_i[31:8]}, high{bit 31 set}, rand{other}
   - cp_mie_w = written mie bit groups iff (cp_csr == mie): bins std_only{bits 3 7 11 only}, fast_only{bits 16+$bits(irq_fast_i)-1:16 only}, std_fast{both}, ro_only{only bits outside MIE_MASK}, all_fast{all $bits(irq_fast_i) fast bits}
-  - cp_mcen_gate = mcounteren_writable_i as driven at the write: the pin value gen_isa_cov reads through its gen_ctrl_if handle when the CSR write record arrives (GEN_CSR_WRITE_TO_RVFI_OFFSET cycles after the write's commit; tb-infra landing 6, in the tree awaiting commit, the plan touch after its commit cites the sha; the committed sampler still reads the run knob, a stated deviation while the pin is run-static per Q-007); the in-run pin command in gen_ctrl_driver is WP-10, NOT BUILT (today the driver sets the pin once in build_phase from the knob), so TP-PMC-057, the only item that moves the pin inside a run, is not built until WP-10 lands, iff (cp_csr == mcounteren): bins on{IbexMuBiOn}, off{IbexMuBiOff}, invalid{other encodings}
+  - cp_mcen_gate = mcounteren_writable_i as driven at the write: the pin value gen_isa_cov reads through its gen_ctrl_if handle when the CSR write record arrives (GEN_CSR_WRITE_TO_RVFI_OFFSET cycles after the write's commit; built in tb-infra landing 6 at 61c97c1: gen_fcov_pkg.sv's ctrl_vif, set by gen_tb_top.sv for uvm_test_top.env.isa_cov); the in-run pin command in gen_ctrl_driver is WP-10, NOT BUILT (today the driver sets the pin once in build_phase from the knob), so TP-PMC-057, the only item that moves the pin inside a run, is not built until WP-10 lands, iff (cp_csr == mcounteren): bins on{IbexMuBiOn}, off{IbexMuBiOff}, invalid{other encodings}
   - cp_mcen_w = written mcounteren bit class iff (cp_csr == mcounteren) (CTR_MASK bits): bins cy{bit 0}, ir{bit 2}, hpm3{bit 3}, hpm4{bit 4}, hpm5{bit 5}, hpm6{bit 6}, hpm7{bit 7}, hpm8{bit 8}, hpm9{bit 9}, hpm10{bit 10}, hpm11{bit 11}, hpm12{bit 12}, tm_ro{bit 1}, hi_ro{bits 31:3+MHPMCounterNum}, all1{all bits}
 - Crosses:
   - cr_csr_op = cp_csr x cp_op: bins mstatus_csrrw{mstatus csrrw}, mstatus_csrrs{mstatus csrrs}, mstatus_csrrc{mstatus csrrc}, mstatus_csrrwi{mstatus csrrwi}, mstatus_csrrsi{mstatus csrrsi}, mstatus_csrrci{mstatus csrrci}, misa_csrrw{misa csrrw}, misa_csrrs{misa csrrs}, misa_csrrc{misa csrrc}, misa_csrrwi{misa csrrwi}, misa_csrrsi{misa csrrsi}, misa_csrrci{misa csrrci}, mie_csrrw{mie csrrw}, mie_csrrs{mie csrrs}, mie_csrrc{mie csrrc}, mie_csrrwi{mie csrrwi}, mie_csrrsi{mie csrrsi}, mie_csrrci{mie csrrci}, mtvec_csrrw{mtvec csrrw}, mtvec_csrrs{mtvec csrrs}, mtvec_csrrc{mtvec csrrc}, mtvec_csrrwi{mtvec csrrwi}, mtvec_csrrsi{mtvec csrrsi}, mtvec_csrrci{mtvec csrrci}, mcounteren_csrrw{mcounteren csrrw}, mcounteren_csrrs{mcounteren csrrs}, mcounteren_csrrc{mcounteren csrrc}, mcounteren_csrrwi{mcounteren csrrwi}, mcounteren_csrrsi{mcounteren csrrsi}, mcounteren_csrrci{mcounteren csrrci}, mstatush_csrrw{mstatush csrrw}, mstatush_csrrs{mstatush csrrs}, mstatush_csrrc{mstatush csrrc}, mstatush_csrrwi{mstatush csrrwi}, mstatush_csrrsi{mstatush csrrsi}, mstatush_csrrci{mstatush csrrci}, menvcfg_csrrw{menvcfg csrrw}, menvcfg_csrrs{menvcfg csrrs}, menvcfg_csrrc{menvcfg csrrc}, menvcfg_csrrwi{menvcfg csrrwi}, menvcfg_csrrsi{menvcfg csrrsi}, menvcfg_csrrci{menvcfg csrrci}, menvcfgh_csrrw{menvcfgh csrrw}, menvcfgh_csrrs{menvcfgh csrrs}, menvcfgh_csrrc{menvcfgh csrrc}, menvcfgh_csrrwi{menvcfgh csrrwi}, menvcfgh_csrrsi{menvcfgh csrrsi}, menvcfgh_csrrci{menvcfgh csrrci}
