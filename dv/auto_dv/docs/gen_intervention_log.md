@@ -319,3 +319,20 @@ evidence audit: each claimed run maps to a distinct retained log whose path, mti
 in-log simulator stamp are consistent with the claimed sequence; identical quoted content across
 two claimed runs is a red flag; the committed excerpt quotes the identifying lines. TB Infra's
 T-036 re-run (committed driver, retained directories, identifying lines) stands as the evidence.
+
+## F-001 - 2026-09-03 - FENCE (exposure event, reported by the Runtime Manager per FENCE.md honor rules; owner decision requested)
+
+At 06:35 UTC, while gathering T-045 evidence, the Runtime Manager listed the fcov checker's
+temporary work directories with a glob of `/tmp/fcovexp_*` to find its own run's directory.
+`ci/check_fcov_expectations.py` creates them with `tempfile.mkdtemp` under `/tmp`, which this host
+shares across workspaces. The newest entry belonged to another workspace's full-tree Ibex DV
+out-tree (a path under `/localdev/fzhang/ws/ibex-ws3/dv/uvm/...`), and the command printed three
+lines of its urg `tests.txt`: one coverage summary line and one test-record identifier naming an
+existing Ibex test. Nothing else there was opened; the content was not used and appears nowhere
+under `dv/auto_dv/` (the Runtime Manager's STATUS and `gen_t045_fcov_wiring.md` Section 3 record
+the event without the content; this entry does likewise). Mitigation already in the flow:
+`gen_fcov.run_checker` sets `TMPDIR` to the run directory so per-test checker reports land beside
+the run and never touch the shared `/tmp`; the stale `/tmp/fcovexp_*` directory of our own was
+removed. Owner decision requested: whether this exposure changes anything for the runtime role.
+Team judgement: no design, test or coverage content was seen beyond a test name and a summary
+line, and nothing was carried over; work continues meanwhile (DV_prompt.txt Section 10).
