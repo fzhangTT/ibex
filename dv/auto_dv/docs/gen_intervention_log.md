@@ -1023,3 +1023,12 @@ a small Test Writer landing 3f. The LOG-024 gate (held since d1d68fd through LOG
 tier promotion (T-170, LOG-039) and serves the batch-2 acceptance wave 049..064 as check-tier runs pinned to HEAD;
 the DV Lead requests round 0 after the promotion copy (T-158); the Test Writer may dispatch batch 3 (interrupt-free
 groups first). The T-136/T-137 holds (LOG-037a/b) are unaffected and still gate interrupt-enabled and fault results.
+
+## LOG-040 - 2026-09-03 - ORCHESTRATOR ERROR (a running review destroyed by housekeeping; relaunched)
+
+While relaunching the v2n + 3f review to correct its focus text, the Orchestrator removed every run directory under
+dv/auto_dv/work/orchestrator/review_tmp/ and pruned worktrees, which destroyed the run directory and detached
+worktree of the v2m review (4e60cc7..d0e6a71) that was still executing; its wrapper ended with "claude -p failed
+(rc=1)" and no verdict. No artifact was written and nothing was committed from it. The v2m review is relaunched with
+the same focus (this note is stated in it). Rule: housekeeping after a kill removes only the killed run's directory
+(by its pid file), never review_tmp/run.* wholesale, while any other review is running.
