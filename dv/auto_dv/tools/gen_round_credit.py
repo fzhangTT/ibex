@@ -4,19 +4,22 @@
 An item of a group hosted by a test in the round is CREDITED when every seed of that test passed (verdict PASS; XFAIL for an
 expected-fail item), its fire check fired in every seed (GEN_TEST_FIRE fire_tp_<area>_<nnn> ok=True in the sim stdout), every
 bin of the item was HIT in the round's fcov checks (a bins_not_hit bin of the test's manifest counts as unhit, rule (g)) and the
-item is under no measurement hold (Sections 1.4 T-136, 1.5 T-137, 1.6 T-181: recorded, not credited). Everything else is
-recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists (T-179).
+item is under no measurement hold (whichever hold sections the plan carries, discovered by gen_plan_holds; a held item is recorded,
+not credited). Red fixtures (names ending in _red, red_fixture / red_expect entries, RED-OK verdicts) host no items. Everything else
+is recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists (T-179).
 
 Usage:
   gen_round_credit.py --regress-manifest <outdir>/manifest.yaml [--plan-dir dv/auto_dv/docs] [--fcov-dir dv/auto_dv/fcov_expectations]
                       [--csv <out.csv>] [--md <out.md>] [--round <n>]
   gen_round_credit.py --self-test        # synthetic runs: credited / held / unhit / fire-fail / not-run cases
 """
-import re, csv, sys, argparse, pathlib, collections, yaml
+import re, csv, sys, argparse, pathlib, collections, hashlib, yaml
 R = pathlib.Path(__file__).resolve()
-while not (R / 'dv/auto_dv/contract').is_dir(): R = R.parent
+while not (R / 'dv/auto_dv/contract').is_dir():
+    if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
+    R = R.parent
+sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold_items  # one home for the hold-section discovery
 WIT_CG_PLAN = 'CG-WIT-001'
-HOLDS = [('1.4', 'T-136'), ('1.5', 'T-137'), ('1.6', 'T-181')]
 
 def load_plan(plan_dir):
     plan = (plan_dir / 'gen_test_plan.md').read_text()
@@ -25,11 +28,7 @@ def load_plan(plan_dir):
         b = m.group(2)
         g = re.search(r'^- Test group: (\S+)', b, re.M); e = re.search(r'^- Expected: ([^\n]*)', b, re.M); t = re.search(r'^- Tier: (\w+)', b, re.M)
         items[m.group(1)] = {'group': g.group(1) if g else '-', 'expected': (e.group(1).strip() if e else ''), 'tier': t.group(1) if t else '?'}
-    holds = {}
-    for sec, tag in HOLDS:
-        m = re.search(r'^## ' + re.escape(sec) + r' .*?\n(.*?)(?=^## |^# |\Z)', plan, re.M | re.S)
-        if not m: continue
-        for row in re.finditer(r'^\| (TP-[A-Z]+-\d{3}) \| \S+ \| [^|]*\|', m.group(1), re.M): holds.setdefault(row.group(1), []).append(tag)
+    holds, _sections = hold_items(plan)
     bins = collections.defaultdict(list)
     with open(plan_dir / 'gen_trace_tp_bin.csv', newline='') as f:
         for r in csv.DictReader(f): bins[r['tp_item']].append((r['covergroup'], r['coverpoint'], r['bin']))
@@ -63,10 +62,15 @@ def tp_of_fire(name):
     """fire_tp_<area>_<nnn>[_suffix] -> TP-<AREA>-<nnn> (the manifest generator's form; an item may have several suffixed checks)."""
     m = re.match(r'fire_tp_([a-z]+)_(\d{3})(?:_|$)', name); return f'TP-{m.group(1).upper()}-{m.group(2)}' if m else None
 
+def is_red_fixture(run):
+    """A red fixture never hosts plan items: name ending in _red, a red_fixture / red_expect entry, or a RED-OK verdict."""
+    return str(run.get('test', '')).endswith('_red') or bool(run.get('red_fixture')) or bool(run.get('red_expect')) or run.get('verdict') == 'RED-OK'
+
 def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
     """runs: list of regression run dicts; fcov_of(test) -> (declared, not_hit); fires_of(run) -> {fire id: ok} or None."""
     by_test = collections.defaultdict(list)
-    for r in runs: by_test[r['test']].append(r)
+    for r in runs:
+        if not is_red_fixture(r): by_test[r['test']].append(r)
     rows = []; groups_seen = set()
     test_of_group = {}
     for test, rs in by_test.items():
@@ -86,7 +90,6 @@ def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
         xfail = it['expected'].startswith('expected-fail')
         run_ok = all(v == ('XFAIL' if xfail else 'PASS') for v in verdicts)
         fires = [fires_of(r) for r in rs]
-        fid = 'fire_tp_' + tid[3:].lower().replace('-', '_')
         seen = [f for f in fires if f is not None and any(tp_of_fire(k) == tid for k in f)]
         fired = len(seen) == len(rs) and all(all(v for k, v in f.items() if tp_of_fire(k) == tid) for f in seen)
         declared, nh = fcov_of(test)
@@ -124,10 +127,10 @@ def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
                      'witness_bins': len(wit_bins), 'witness_marked': 'yes' if marked.get(tid) else 'no', 'hold': ','.join(held), 'status': status})
     return rows, groups_seen
 
-def round_header(man, runs):
+def round_header(man, runs, invocation=''):
     su = man.get('summary') or {}; fc = man.get('fcov') or {}; g = man.get('git') or {}
     head = g.get('head') or g.get('sha') or str(g)[:40]
-    return (f"Regression {man.get('outdir') or man.get('tag')}: status {man.get('status')}, source {man.get('source') or 'head mode'}, git {head}; {len(runs)} runs: pass {su.get('pass')}, "
+    return (invocation + f"Regression {man.get('outdir') or man.get('tag')}: status {man.get('status')}, source {man.get('source') or 'head mode'}, git {head}; {len(runs)} runs: pass {su.get('pass')}, "
             f"fail {su.get('fail')}, xfail {su.get('xfail')}, red_ok {su.get('red_ok')}, timeout {su.get('timeout')}, not_run {su.get('not_run')}; fcov checks {fc.get('totals')}; covergroups_exist {fc.get('covergroups_exist')}; "
             f"clean regression (gen_round.py hard rule): {'yes' if su.get('fail') in (0, '0') and su.get('timeout') in (0, '0') and su.get('not_run') in (0, '0') else 'NO'}.")
 
@@ -179,7 +182,7 @@ def self_test():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--regress-manifest'); ap.add_argument('--plan-dir', default=str(R / 'dv/auto_dv/docs')); ap.add_argument('--fcov-dir', default=str(R / 'dv/auto_dv/fcov_expectations'))
-    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--heading', default=None, help='section title override, e.g. "Round-0 probe crediting (probe of 37c7ecb, LOG-046)"'); ap.add_argument('--self-test', action='store_true')
+    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--plan-sha', default='working tree', help='the plan commit the crediting read (printed in the report header)'); ap.add_argument('--heading', default=None, help='section title override, e.g. "Round-0 probe crediting (probe of 37c7ecb, LOG-046)"'); ap.add_argument('--self-test', action='store_true')
     a = ap.parse_args()
     if a.self_test: sys.exit(self_test())
     if not a.regress_manifest: sys.exit('usage: --regress-manifest <manifest.yaml> or --self-test')
@@ -190,10 +193,18 @@ def main():
     by_test = collections.defaultdict(list)
     for r in runs: by_test[r['test']].append(r)
     tests = [(t, len(rs), '/'.join(sorted({str(r.get('verdict')) for r in rs})), '; '.join(sorted({(r.get('reason') or '-')[:60] for r in rs}))) for t, rs in sorted(by_test.items())]
-    hdr = round_header(man, runs)
+    inv = (f"Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {a.regress_manifest} --plan-sha {a.plan_sha} --round {a.round}"
+           + (f" --heading '{a.heading}'" if a.heading else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan (gen_test_plan.md) at {a.plan_sha}. ")
+    hdr = round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:
-        summ = [l for l in md.splitlines() if not l.startswith('| TP-') and not l.startswith('| Item | Group | Test')]
+        lines = md.splitlines(); summ = []; skip_sep = False
+        for l in lines:
+            if l.startswith('| Item | Group | Test'): skip_sep = True; continue
+            if skip_sep and l.startswith('|---'): skip_sep = False; continue
+            if l.startswith('| TP-'): continue
+            summ.append(l)
+        while summ and not summ[-1].strip(): summ.pop()
         pathlib.Path(a.md).with_name(pathlib.Path(a.md).stem + '_summary.md').write_text('\n'.join(summ).rstrip('\n') + '\n')
     if a.csv:
         with open(a.csv, 'w', newline='') as f:

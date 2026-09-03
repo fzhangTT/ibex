@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 17:59 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 18:12 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -206,7 +206,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   / all phase(s), per phase, each phase, phase_idx, knob transition, regime switch or change; never "schedule" alone, program-region
   phases, micro-op phases or mid-run resets); union 82 items in 16 groups at the lift.
 - Round 0 not yet run clean; probe of 37c7ecb refused (no covergroup in the TB; one runaway-program red in gen_test_csr_reset seed
-  1028791296 under triage); nothing credited (LOG-046; Runtime's probe record dv/auto_dv/evidence/gen_round_0_probe/). The probe
+  1028791296 under triage); nothing credited (LOG-046; Runtime's probe record dv/auto_dv/evidence/gen_round_0_probe/, pending T-207). The probe
   (LOG-042d dispatch, HEAD 37c7ecb, plan of record fd632aa) ran regress_round_0 with 47 runs, 2 PASS (gen_boot_zc,
   gen_ut_lockstep, which host no items) and 45 FAIL: 44 on "fcov expectation unverifiable: per-test urg report has no grpinfo.txt (no
   covergroup in this vdb)" and one runaway program (gen_test_csr_reset seed 1028791296). The TB carries no SystemVerilog covergroup, so
@@ -777,9 +777,11 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
 | TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
 
+Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is retired.
+
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha 56e37d7 --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan (gen_test_plan.md) at 56e37d7. Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|
@@ -815,8 +817,6 @@ Witness bins of hosted items: 2 (unscored until T-179; listed, never credited).
 | gen_test_pmp_csr_warl | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
 | gen_test_rst_boot | 3 | FAIL | fcov expectation unverifiable: per-test urg report has no gr |
 | gen_ut_lockstep | 1 | PASS | no collected failure mechanism; end marker and config banner |
-
-|---|---|---|---|---|---|---|---|---|---|
 
 
 

@@ -11,8 +11,10 @@ Usage: gen_promotion_table.py [--plan-dir dv/auto_dv/docs] [--testlist dv/auto_d
 """
 import re, sys, argparse, pathlib, collections, subprocess, yaml
 R = pathlib.Path(__file__).resolve()
-while not (R / 'dv/auto_dv/contract').is_dir(): R = R.parent
-HOLD_HDR = re.compile(r'^## (1\.\d+) Items under the (T-\d+) measurement hold', re.M)  # the hold sections present in the plan
+while not (R / 'dv/auto_dv/contract').is_dir():
+    if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
+    R = R.parent
+sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold_items  # one home for the hold-section discovery
 TIER_ORDER = {'smoke': 0, 'targeted': 1, 'full': 2}
 # hand-kept notes on not_built clauses (the Test Writer's modules state them); they never affect the held column
 NOTES = {'gen_test_bit_draft': 'TP-BIT-011, 022..033 not_built until the shim extension is confirmed',
@@ -25,11 +27,7 @@ def load_plan(plan_dir):
     for m in re.finditer(r'^### (TP-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)', plan, re.M | re.S):
         b = m.group(2); g = re.search(r'^- Test group: (\S+)', b, re.M); t = re.search(r'^- Tier: (\w+)', b, re.M)
         items[m.group(1)] = (g.group(1) if g else '-', t.group(1) if t else '?')
-    holds = collections.defaultdict(list); sections = []
-    for h in HOLD_HDR.finditer(plan):
-        sec, tag = h.group(1), h.group(2); sections.append(f'{sec} {tag}')
-        m = re.search(r'^## ' + re.escape(sec) + r' .*?\n(.*?)(?=^## |^# |\Z)', plan, re.M | re.S)
-        for row in re.finditer(r'^\| (TP-[A-Z]+-\d{3}) \| \S+ \| [^|]*\|', m.group(1), re.M): holds[row.group(1)].append(tag)
+    holds, secs = hold_items(plan); sections = [f'{sec} {tag}' for sec, tag in secs]
     return items, holds, sections
 
 def main():
