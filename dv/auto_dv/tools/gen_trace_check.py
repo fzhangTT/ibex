@@ -12,7 +12,7 @@ Options (export_sources entries may be "<source> <event>" strings or {source, ev
   --observed-field <key>   manifest key of Runtime's per-row first-seen list (T-140; default export_rows_observed): the sunset
                            un-marks an item only when EVERY export row is observed (LOG-028a); absent list = sunset refused
   --build-manifest <path>  a build's build_manifest.yaml. Its export_sources_emitted list (the rows the build's registered writers
-                           emit; "<source> <event>" strings or {source, event} maps) only BOUNDS the cycle-clause sunset (C-3): it
+                           emit; "<source> <event>" strings or {source, event} maps) only BOUNDS the cycle-clause sunset: it
                            sorts the marked items into renderable / emitted / gated. The observed-row list (--observed-field) DECIDES
                            it: a still-marked item whose export rows are all OBSERVED fails. export_sources (the rendered table)
                            only reports how many marked items are renderable.
@@ -185,7 +185,7 @@ print(f'features {len(feats)} (ACTIVE {len(active)}, ALIAS {sum(1 for s in statu
 print(f'completeness: ACTIVE->TP {len(active)-len(no_tp)}/{len(active)}, ACTIVE->bin (spec-derived and adopted bins only, CG-WIT-001 excluded) {len(active)-len(no_bin)}/{len(active)} (with witness bins counted: {len(active)-len(no_bin_incl_wit)}/{len(active)}), bins->feature {ncg-len(cg_bad)}/{ncg} covergroups (ledger excluded), ACTIVE named by a covergroup {len(active)-len(unnamed)}/{len(active)}, CSV bins declared {len(bins)-len(bin_missing)}/{len(bins)}')
 print(f'witness ledger: {len(wit_bins)} CG-WIT-001 bins excluded from the functional gate and from ACTIVE->bin; spec-derived bins {len(bins)-len(adopted)-len(wit_bins)}, adopted {len(adopted)}; gen_trace_witness_ids.csv {len(witness_csv)} rows, marked {sum(1 for r in witness_csv if r["marked"]=="1")}')
 print(f'cycle-clause marked items {len(marked)} (witness bins excluded from manifests while marked, rule (f)); export rows named {sum(len(v) for v in marked.values())} over {len(set(t for v in marked.values() for t in v))} distinct rows; no-export-row items {sum(1 for v in marked.values() if not v)}')
-print(f'sunset (C-3): {sunset_note}')
+print(f'sunset (cycle-clause tokens against the build): {sunset_note}')
 print(f'coverpoints declared {sum(len(v) for v in cg_cps.values())}, owned by an item {len(owned_cps)}, regression-level (no item) {len(unowned)} (listed in gen_fcov_plan.md Section 1.1; reported, not failed)')
 if errors:
     sunset_msgs = [e for e in errors if e.startswith('sunset:')]; other = [e for e in errors if not e.startswith('sunset:')]

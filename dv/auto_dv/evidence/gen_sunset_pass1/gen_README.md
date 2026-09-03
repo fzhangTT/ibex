@@ -21,7 +21,7 @@ Files:
 Observed rows (19): alert alert_major_bus; alert alert_major_internal; alert alert_minor; alert double_fault_seen; dbus gnt; dbus req; dbus rvalid; ibus gnt; ibus req; ibus rvalid; misc core_busy; misc crash_dump_current_pc; misc crash_dump_exception_addr; misc crash_dump_exception_pc; misc crash_dump_last_data_addr; misc crash_dump_next_pc; misc irq_pending; pin fetch_enable; pin mcounteren_writable.
 Emitted but never observed in that run (9): pin debug_req; pin irq_external; pin irq_fast; pin irq_nm; pin irq_software; pin irq_timer; regime phase; scrkey req; scrkey valid.
 The probe_export_t140 rehearsal reference (head 11413df) carried the identical 19-row observed list.
-Items left marked after pass 1: 105 = 86 gated + 17 icram-dependent + TP-PMC-001 + TP-REG-018 (no export row).
+Items left marked after pass 1: 105 = 86 gated + 18 icram-dependent (17 IC items plus TP-REG-018, whose rows include icram inject) + TP-PMC-001 (no export row).
 Pass 2 follows T-150's regression (LOG-033) and is retained under dv/auto_dv/evidence/gen_sunset_pass2/.
 
 The group column of gen_token_sunset_released_gated.log reflects the plan at pass 1 (v2j, where TP-CSR-029 sat in gen_csr_trap_setup_irq);

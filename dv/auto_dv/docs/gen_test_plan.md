@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:35 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -91,7 +91,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   from the retention review (Orchestrator, 11:5x UTC, restated 12:4x UTC after the cross-model diff review of d1d68fd,
   LOG-024): the witness record's guarantee is that the ids come from the COMMITTED testlist entry (witness_ids), the codes
   from the fire-check outcome (cycle_clause_true set only on the TRUE branch), and the fact of record is the SV witness
-  ledger (gen_wit_cycle_clause_cg) sampling the dispatched COV_WITNESS against the export events, which a Python test cannot
+  ledger (gen_wit_cycle_clause_cg; its SystemVerilog implementation is OWED by TB Infra as T-179, so until it lands the released
+  witness bins are must-hit in the plan and scored by no covergroup: a hold on the witness score, not on the items) sampling the
+  dispatched COV_WITNESS against the export events, which a Python test cannot
   produce; the Python structure check is defence in depth with a named residual: a test module can fake a witness and still
   pass the lint (LOG-024: the reviews built such modules), so the lint is not the guarantee. d1d68fd is cited for the
   committed-testlist rule and the plan_bins guard (verified by the review); the truthful wording of the guarantee, the two-sided
@@ -140,11 +142,15 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   served with gen_ut_export as one head-mode regression pinned to 979350a behind the canary_head_t150 canary, six runs PASS); its
   build manifest, retained as dv/auto_dv/evidence/gen_sunset_pass2/gen_build_manifest_979350a.yaml, observed all 28 declared rows
   and nothing outside them, so the 86 items gated in pass 1 released (36 groups; gen_sunset_pass2/gen_token_sunset_released_gated.log
-  and gen_sunset_pass2/gen_trace_check_before_after.log) and 19 stay marked until an icram writer exists: the 17 icram-dependent items,
-  TP-PMC-001 and TP-REG-018 (no export row). Each pass proceeds with the same command, regenerating the plan and the
+  and gen_sunset_pass2/gen_trace_check_before_after.log) and 19 stay marked: the 18 icram-dependent items (17 IC items plus
+  TP-REG-018, whose rows include icram inject) until an icram writer exists, and TP-PMC-001, the one no-export-row item. Each pass proceeds with the same command, regenerating the plan and the
   witness CSV (marked = 0 for those rows) and the Test Writer regenerating the affected manifests; a failing run of
   gen_trace_check.py between the two landings is the expected signal that the removal is due, not a defect. Token removal
-  is the DV Lead's, decided from the build manifest, never from the yaml alone.
+  is the DV Lead's, decided from the build manifest, never from the yaml alone. Joint-landing rule (LOG-036, LOG-036b): a plan
+  change that moves or removes an item a committed test builds or declares, or that changes which witness bins are must-hit (a
+  token release), lands in the same commit as the Test Writer's test and manifest change, and the committer runs both self-tests
+  (python3 -m dv.auto_dv.tests.gen_test_lib --self-test and python3 dv/auto_dv/tests/gen_fcov_manifest.py --self-test) from a
+  detached checkout of the result.
   Items whose cycle clause anchors on an INTERNAL pipeline instant (ID entry, the FLUSH / IRQ_TAKEN / DBG_TAKEN
   windows, the interrupt decision cycle) cannot use the channel (TB Infra option B): they are reformulated to boundary
   facts (an RVFI record's cycle versus a pin or bus event's cycle) or stay coverage-only through P4-class sampling; the
@@ -190,19 +196,19 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 
 # 0a. Checker-id concordance (plan id -> architecture ids -> knob; DV Lead owns, TB Infra agrees)
 
-Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 67b5971; the component API documents carry the same list); every id has a rendered +gen_chk_<id> knob row in gen_tb_knobs.yaml, consumed only once the checker is built. Column four states the build state at 67b5971 (TB Infra, 13:0x UTC).
+Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 4d48d84 = landing 2a; the component API documents carry the same list); every id has a rendered +gen_chk_<id> knob row in gen_tb_knobs.yaml, consumed only once the checker is built. Column four states the build state at 4d48d84 from the knobs the env and tb consume (grep of cfg.chk_* at that commit) and the files present; a cell that names an open verdict (REQUEST-CHANGES, review pending) is provisional, and the T-136 / T-137 / T-144 cells stay so until TB Infra's 1c passes both reviewers (LOG-037a/b).
 
-| Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (67b5971) |
+| Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (4d48d84) |
 |---|---|---|---|
-| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c) EXCEPT the isa_pc_next bit-0 convention for jump-class records: the bit-0 mask is OWED to TB Infra (T-144), unbuilt at 67b5971 (gen_rvfi_pkg.sv:445-446 compares pc_a != t.pc_wdata with no mask and no knob exists; the same at 5f530a8, :451), so gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); the knob exists at ffa9127 as +gen_isa_pc_next_mask_b13 (default 1, delta 1b; not counted as built here until TB Infra's 1c passes both reviewers, LOG-037a); with it the compare masks bit 0 and the B13 expected-fail test gen_btalu_hazard_xfail alone runs the unmasked rule at +gen_isa_pc_next_mask_b13=0 |
-| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | UNBUILT at 67b5971: neither chk_isa_csr nor chk_csr_readback is consumed by the env (the comparator rows consumed are isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next); CSR read-backs are checked at program level by the tests meanwhile |
-| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | UNBUILT as checker ids at 67b5971 (no chk_ibus_proto / chk_ibus_outstanding consumed); the bus driver bounds its own outstanding count (GEN_IBUS_MAX_OUTSTANDING) and gen_bus_if.sv carries the sva_rvalid_legal self-check |
-| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | UNBUILT as checker ids at 67b5971 (no chk_dbus_* consumed); the bus driver bounds its own outstanding count (GEN_DBUS_MAX_OUTSTANDING); no split-transaction checker |
-| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | UNBUILT at 67b5971 (no chk_dbus_store_intg consumed) |
-| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal UNBUILT (the internal NMI from an injected LSU integrity error: entry, mcause 0x8000001f, mtval); rf_wr_suppress in the comparator |
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c; T-134 at ce33b4f: an interrupt or debug entry handled before the Zcmp fold). T-137 (a fault armed only for a bus error the driver announced) landed at ce33b4f (gen_rvfi_pkg.sv:448-449 at 4d48d84) and is under REQUEST-CHANGES (LOG-037a: a stale announcement can legitimise a later trap), so its hold stays. isa_pc_next bit-0 convention: the knob +gen_isa_pc_next_mask_b13 exists at 4d48d84 (gen_rvfi_pkg.sv:522-528, default 1, counts b13_odd_jalr; landed ffa9127) and is NOT counted as built here until TB Infra's 1c passes both reviewers (LOG-037a/b); gen_test_isa_cti saw 64 rows per seed of dut == model or 1 (bit 0 set) on odd jalr targets (bug candidate B13, an RVFI-only DUT defect, rtl-arch R11); the B13 expected-fail test gen_btalu_hazard_xfail alone runs the raw rule at +gen_isa_pc_next_mask_b13=0. Landing 2a conventions in the comparator, review pending: NMI-pre-empted entries (nmi_preempted, :325) and suppressed loads (rf_wr_suppressed, GPR snapshot :312/:462) |
+| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | UNBUILT at 4d48d84: neither chk_isa_csr nor chk_csr_readback is consumed by the env (the comparator rows consumed are isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next); CSR read-backs are checked at program level by the tests meanwhile |
+| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | UNBUILT as checker ids at 4d48d84 (no chk_ibus_proto / chk_ibus_outstanding consumed); the bus driver bounds its own outstanding count (GEN_IBUS_MAX_OUTSTANDING) and gen_bus_if.sv carries the sva_rvalid_legal self-check |
+| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | UNBUILT as checker ids at 4d48d84 (no chk_dbus_* consumed); the bus driver bounds its own outstanding count (GEN_DBUS_MAX_OUTSTANDING); no split-transaction checker |
+| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | UNBUILT at 4d48d84 (no chk_dbus_store_intg consumed) |
+| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal built at 4d48d84 (landing 2a, review pending: an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS records outside NMI mode, gen_checkers_pkg.sv:141-145, chk_nmi_internal consumed; mutant MB12); rf_wr_suppress compare built at 4d48d84 (the model undoes the suppressed load's write from a GPR snapshot, gen_rvfi_pkg.sv:312 and :462) |
 | gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 | UNBUILT (pmp_*) |
-| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | built; irq_entry checks the entry bound only: the expected-cause rule (pending and enabled at the decision, priority NMI > fast lowest id > external > software > timer) is T-136, and interrupt-enabled results do not count until it is in (Section 0 hold, Section 1.4) |
-| gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker); nmi_internal UNBUILT (separate rule, see gen_chk_bus_intg_rsp) |
+| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | irq_pending, irq_masked and the entry bound built; the irq_entry expected-cause rule (T-136: the pre-entry post_mip and mie with the priority order, gen_checkers_pkg.sv:155-168 at 4d48d84) landed at ce33b4f and is under REQUEST-CHANGES (LOG-037a: blind to entries whose handler's first record is a non-last Zcmp micro-op, irq checker entries 0 against scoreboard irq_entries 5), so interrupt-enabled results do not count until 1c passes (Section 1.4). Landing 2a, review pending: the bound restarts at each entry; UNTIL_TAKEN releases only the taken line (gen_agents_pkg.sv:609-611); priority claims undecidable at the sample are counted (priority_undecidable), not credited (LOG-037b) |
+| gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker; since landing 2a the shim emulates external and internal NMIs with the mstack, review pending); nmi_internal built at 4d48d84 (see gen_chk_bus_intg_rsp) |
 | gen_chk_debug | dbg_entry, dbg_masked, dbg_exc, dbg_dret, dbg_trigger (gen_dbg_checker) | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_exc=0, +gen_chk_dbg_dret=0, +gen_chk_dbg_trigger=0 | dbg_entry, dbg_masked built; dbg_exc, dbg_dret, dbg_trigger UNBUILT |
 | gen_chk_alerts | alert_minor, alert_internal, alert_bus (gen_misc_monitor) | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 | built (alert_minor against the RAM-model announcement queue) |
 | gen_chk_icache | icache_ecc, scrkey_proto, icram_inval_sweep, icram_ecc_response | +gen_chk_icache_ecc=0, +gen_chk_scrkey_proto=0, +gen_chk_icram_*=0 | UNBUILT (icram_*, scrkey_proto); note: inject, lookup, tag_write and fill_write are icram EVENT ROW names of the export table and the RAM model's announcement kinds, not checker ids |
@@ -212,8 +218,8 @@ Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 67b59
 | gen_chk_sleep | core_busy (sleep rows) | +gen_chk_core_busy=0 | UNBUILT |
 | gen_chk_fetch_en | fetch_en | +gen_chk_fetch_en=0 | UNBUILT |
 | gen_chk_cheriot_quiet | data_tag_quiet (data_tag_o never high, gen_misc_monitor); cap-field quiet rows | +gen_chk_data_tag_quiet=0 | data_tag_quiet built; cap-field rows UNBUILT |
-| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) | UNBOUND at 67b5971: no gen_binds.sv exists in the tree (the binds file for the C10 properties is OWED to TB Infra as T-162); only the TB self-check sva_rvalid_legal (gen_bus_if.sv, knob consumed) is built |
-| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 | built (chk_rvfi_proto consumed by gen_rvfi_monitor at 67b5971) |
+| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) | UNBOUND at 4d48d84: no gen_binds.sv exists in the tree (the binds file for the C10 properties is OWED to TB Infra as T-162); only the TB self-check sva_rvalid_legal (gen_bus_if.sv, knob consumed) is built |
+| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 | built (chk_rvfi_proto consumed by gen_rvfi_monitor at 4d48d84) |
 | gen_chk_bitmanip_ref (requested) | C5.5 draft-B reference function compare in the shim | +gen_chk_isa_rd=0 (same row) | built (T-102: draft-B reference extended to the remaining C5.5 ops) |
 | gen_chk_zcmp_seq, gen_chk_timing_isa, gen_chk_trap_timing, gen_chk_csr_flush, gen_chk_exc_flush, gen_chk_regime, gen_chk_reset (requested) | test-level compares in the hosting cocotb test unless TB Infra adds a row (Section 6 of the architecture, "New checkers requested" mapping) | per test | requested |
 | gen_sva_multdiv, gen_sva_csr_excl (requested) | bound assertions in gen_binds.sv (F-MUL-028; CSR exclusion probe) | +gen_chk_sva_multdiv=0, +gen_chk_sva_csr_excl=0 | requested |
@@ -1459,7 +1465,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: how the odd sum is formed, target alignment (word/half), rd, form.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: per seed >= 50 odd sums whose next RVFI entry has rvfi_pc_rdata == (rs1 + imm) & ~1 (even) and rvfi_trap = 0; no trap with mcause 0 anywhere in the run (redirect and LSB clearing derived from RVFI, C-14; when a bus request for the target appears (cache miss or icache_enable = 0) its address is (rs1 + imm) & ~3 because instr_addr_o is word-aligned, rtl/ibex_icache.sv:1037).
-- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008; the mask is TB Infra's T-144, not built at 67b5971, so this item's verdict depends on T-144); gen_chk_ibus_proto (address bits [1:0] always 00).
+- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008; the mask is TB Infra's T-144, its knob landed at ffa9127 and is counted as built after the 1c review, so this item's verdict depends on T-144); gen_chk_ibus_proto (address bits [1:0] always 00).
 - Notes: the T-144 knob landed at ffa9127 (+gen_isa_pc_next_mask_b13, default 1; gen_rvfi_pkg.sv:445-446 at 67b5971 compared the raw pc_wdata); the odd-target clause stays not_built in gen_test_isa_cti until Section 0a records the comparator's mask as built after the 1c review (LOG-037a); the verdict relies on the bit-0 convention of bug candidate B13 (rtl-arch R11).
 - Expected: pass
 - Test group: gen_isa_cti
@@ -22605,7 +22611,7 @@ intent and the DV Lead reconciles them with TB Infra.
 | knob:imem_intg_err_rate | `+gen_knob_imem_intg_err_rate=none|rare|frequent` | ibus agent | rate_per_mille as above; 1-bit / 2-bit flips 50/50 |
 | knob:imem_outstanding_cap | `+gen_knob_imem_outstanding_cap=cap1|cap2|cap4|cap8` | ibus agent | regime_windows.outstanding_cap: 1 / IC_LINE_BEATS / 2*IC_LINE_BEATS / NUM_FB*IC_LINE_BEATS |
 | knob:dmem_gnt_delay, knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:dmem_intg_err_rate | `+gen_knob_dmem_gnt_delay=`, `+gen_knob_dmem_rvalid_delay=`, `+gen_knob_dmem_err_rate=`, `+gen_knob_dmem_intg_err_rate=` (same value sets as the imem knobs) | dbus agent | as ibus; the erroring half of a split pair is drawn 50/50 |
-| knob:irq_regime | `+gen_knob_irq_regime=quiet|sparse|storm` | irq driver | inter-arrival: none / geometric mean ~2000 / mean ~20 cycles |
+| knob:irq_regime | `+gen_knob_irq_regime=quiet|sparse|storm` | irq driver | inter-arrival: none / geometric mean ~2000 / mean ~100 cycles (gen_tb_knobs.yaml regime_windows.irq_event_mean at 4d48d84; at 20 the interrupt program livelocked, landing 2a) |
 | knob:irq_line_mix | `+gen_knob_irq_line_mix=single|multi|fast_only|with_nmi` | irq driver | line mask draw per event |
 | knob:irq_hold | `+gen_knob_irq_hold=until_taken|through_handler|pulse` | irq driver | hold policy UNTIL_TAKEN / UNTIL_ACK / CYCLES(1..3) |
 | knob:debug_req_regime | `+gen_knob_debug_req_regime=none|sparse|storm` | dbg driver | inter-arrival and hold draws |
@@ -22636,7 +22642,7 @@ classes. TB Infra implements the rows as `dist` constraints in the agents' items
 | bus error per response (imem_err_rate, dmem_err_rate) | none / rare / frequent | Bernoulli 0 / ~1/512 / ~1/20; dmem: erroring half of a split pair 50/50 first/second |
 | bus integrity corruption (imem_intg_err_rate, dmem_intg_err_rate) | none / rare / frequent | Bernoulli 0 / ~1/512 / ~1/20 per response; 1-bit vs 2-bit flip 50/50 |
 | ibus outstanding cap (imem_outstanding_cap) | cap1 / cap2 / cap4 / cap8 | grant gated at 1 / IC_LINE_BEATS / 2*IC_LINE_BEATS / NUM_FB*IC_LINE_BEATS beats in flight |
-| irq inter-arrival (irq_regime) | quiet / sparse / storm | none / geometric, mean ~2000 cycles, <= 1 event outstanding / geometric, mean ~20 cycles, overlapping |
+| irq inter-arrival (irq_regime) | quiet / sparse / storm | none / geometric, mean ~2000 cycles, <= 1 event outstanding / geometric, mean ~100 cycles, overlapping |
 | irq lines per event (irq_line_mix) | single / multi / fast_only / with_nmi | 1 line uniform over 3 + $bits(irq_fast_i) / subset of 2..k uniform / 1..$bits(irq_fast_i) fast lines uniform / multi plus irq_nm_i at 25% |
 | irq release (irq_hold) | until_taken / through_handler / pulse | release uniform 0..3 cycles after rvfi_intr / after the MMIO ack store / pulse length uniform 1..3 |
 | debug_req inter-arrival and hold (debug_req_regime) | none / sparse / storm | none / mean ~5000 cycles, hold until debug mode then uniform 0..3 (50% held through dret) / mean ~100 cycles, 20% one-cycle pulses |
@@ -22712,7 +22718,7 @@ Interrupt driver (tb-infra b.5; s6):
 
 - knob:irq_regime {quiet, sparse, storm}; default sparse. Rate of assertion events. quiet: no
   new events (lines already asserted follow their hold policy). sparse: geometric inter-arrival,
-  mean ~2000 cycles, at most one event outstanding. storm: mean ~20 cycles, overlapping events,
+  mean ~2000 cycles, at most one event outstanding. storm: mean ~100 cycles (gen_tb_knobs.yaml regime_windows.irq_event_mean.storm at 4d48d84, TB Infra landing 2a: at a mean of 20 the interrupt program livelocked, every retirement an entry, dv/auto_dv/evidence/gen_tdd_step2b.md Section 8), overlapping events,
   immediate re-assertion after the handler ack (F-IRQ-011 drain by priority, F-IRQ-027 re-trap
   after mret, F-EXC-059 trap storm). Layer 1: inter-arrival draw and per-event line choice.
 - knob:irq_line_mix {single, multi, fast_only, with_nmi}; default multi. Which lines an event

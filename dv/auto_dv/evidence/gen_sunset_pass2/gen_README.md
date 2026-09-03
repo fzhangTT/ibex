@@ -16,8 +16,8 @@ Files:
 - gen_trace_check_before_after.log: dv/auto_dv/tools/gen_trace_check.py --build-manifest <that manifest> before the removal
   (plan v2l: 105 marked items; FAIL, the sunset line names every due item) and after it (19 marked items, PASS).
 
-Items left marked after pass 2 (19): the 17 icram-dependent items, TP-PMC-001 and TP-REG-018 (no export row); they wait for an
-icram writer (gen_test_plan.md Section 0, Section 1.3). Pass 1 is under dv/auto_dv/evidence/gen_sunset_pass1/ (LOG-033).
+Items left marked after pass 2 (19): the 18 icram-dependent items (17 IC items plus TP-REG-018, whose rows include icram inject),
+which wait for an icram writer, and TP-PMC-001, the one no-export-row item (gen_test_plan.md Section 0, Section 1.3). Pass 1 is under dv/auto_dv/evidence/gen_sunset_pass1/ (LOG-033).
 Runtime's retained run headers, verdicts and stdout of the reference regression sit beside these four files (its gen_manifest.md lists them).
 Consequence (rule (f)): the released items' witness bins become must-hit bins of their owning tests; the one built test affected is
 gen_test_csr_trap_setup (TP-CSR-029, bin w_tp_csr_029), whose manifest re-render lands in the same commit (LOG-036).
