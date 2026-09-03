@@ -27,7 +27,8 @@ class MyTest(GenTest):
     schedulable = GenTest.schedulable      # regime knobs layers 2/3 may vary (a subset per test)
     async def stimulus(self): ...          # bridge commands, waits (runs while the program runs)
     def fire_check(self): ...              # self.check("fire_tp_<area>_<nnn>", ok, "detail") per item
-    def declare_bins(self): return [...]   # gen_<feature>_cg.<cp>.<bin>, same tokens as the manifest
+    plan_group = None                      # test-plan group; None: gen_<x> for gen_test_<x>
+    def declare_bins(self): ...            # override only to declare a subset; default lib.plan_bins(name, plan_group)
 
 @cocotb.test()
 async def gen_test_<area>_<topic>(dut):
@@ -48,7 +49,7 @@ Testlist entry: `cocotb_module: dv.auto_dv.tests.gen_test_<area>_<topic>`, `uvm_
 | 3 | `run_schedule()` (forked) + `stimulus()` (forked) | the schedule runner arms the bridge cycle or retirement threshold of the next boundary and applies its entries when reached; it stops when the program ends first. `stimulus()` is the test's body and shares the bridge through `self.cmd()` (a lock serializes the two coroutines) | timeouts are asserts naming the awaited edge |
 | 4 | `wait_eot()` | awaits the `evt_eot_seen` edge (tohost or the EOT MMIO register) within `program_budget_cycles`, records `eot_cycle`/`eot_retired`; then waits for `stimulus()` to return, lets the schedule runner finish a boundary it is applying (a boundary that passes in the end-of-test cycle itself still counts as hit and is applied), and kills the runner | assert on timeout |
 | 5 | `schedule_check()` then `fire_check()` | `self.check(name, ok, detail)` counts the check, logs `GEN_TEST_FIRE <name> ok=<bool> <detail>` and collects failures. `schedule_check()` computes the reached phases from the bridge counts at the end-of-test store (`eot_cycle`, `eot_retired`: a phase is reached when its `c`/`r` boundary is at or below them), and fails when a reached phase is missing from the applied list, when a phase was applied before its boundary, or when the counts differ; with no schedulable knob it logs `GEN_TEST_LAYERS not_applied` and records no check | one `AssertionError` with every failure: `GEN_TEST_FAIL <name>: n fire-check failure(s): ...` (or `GEN_TEST_XFAIL <bug> ...` when `xfail_bug` is set) |
-| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; refuses a run whose `fire_check()` recorded no check (`GEN_TEST_FAIL <name>: fire_check() recorded no check`); cross-checks the declared bins against the test's manifest file when either exists (`lib.check_manifest_matches`); raises the collected failures BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | asserts as named |
+| 6 | `finish()` | logs `GEN_TEST_BINS n=<count> <tokens>`; refuses a run whose `fire_check()` recorded no check (`GEN_TEST_FAIL <name>: fire_check() recorded no check`); checks that the declared bins equal the test's manifest file (`lib.check_manifest_matches`: a stale or missing manifest fails the run with the differing tokens named; only a test that declares no bins and has no manifest skips); raises the collected failures BEFORE the handshake (TB_CONTRACT Section 2); `GenBridge.finish()` (stim_active 0, cmds_consumed == sent, finish_req, finish_ack edge); logs `<name> GEN_TEST_PASS` | asserts as named |
 
 Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the library self-test).
 
@@ -57,6 +58,7 @@ Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the l
 | Attribute | Default | Meaning |
 |---|---|---|
 | `name` | `gen_test_template` | test name; equals the testlist entry and the manifest stem |
+| `plan_group` | `None` (gen_<x> for gen_test_<x>) | test-plan group whose bins `declare_bins()` declares by default, derived by the manifest generator's own code (`gen_fcov_manifest.plan_bins`), so the rendered manifest is proven current at every run |
 | `schedulable` | `lib.REGIME_KNOBS` (all 20 regime knobs) | the knobs the test DECLARES layers 2 and 3 must vary; `lib.TIMING_ONLY_KNOBS` (bus latencies, outstanding cap, scramble-key delay) for a program with no handler for injected errors or events. Only the declared knobs the build consumes (`lib.CONSUMED_KNOBS`, Section 8) are drawn and scheduled |
 | `layers_required` | `True` | a declared knob without a REGIME_SET consumer in the build fails `setup()` (`GEN_TEST_FAIL <name>: declared regime knobs ... have no REGIME_SET consumer in this build`), so a test never runs with its layers silently off; `False` is for bring-up tests only (`measured: false`, reason in the docstring) and logs `GEN_TEST_LAYERS not_applied` instead |
 | `k_range` | `(1, 5)` | inclusive range of the schedule phase count K (CG-REG-007 `cp_phase_count`) |
@@ -97,7 +99,7 @@ MEM_ERR_ARM are NOT in the library: their authority is the step-2b dispatcher, n
 the codegen is asked to render them into `gen_knobs.py`; tests that need them wait), `lib.program_min_retired(image)`
 (riscv-dv `+instr_cnt` of the entry, or the directed program's `gen_min_retired` word),
 `lib.program_symbol_word(image, symbol)`, `lib.riscv_dv_instr_cnt(test)`,
-`lib.load_manifest_bins(test)`, `lib.check_manifest_matches(test, declared)`.
+`lib.plan_bins(test, group)`, `lib.load_manifest_bins(test)`, `lib.check_manifest_matches(test, declared)`.
 
 ## 5. The regime schedule text (+gen_regime_sched)
 
@@ -156,8 +158,9 @@ test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/t
   `GEN_TEST_LAYERS not_applied`. The layers were proven on the step-2b tree (evidence Sections 2-3).
 - Phase accounting is Python's (commands sent and consumed, no dispatcher error); a bridge field
   with the SV phase count is asked of TB Infra so `schedule_check` can compare both sides.
-- No covergroup exists yet: `declare_bins()` returns `[]` and entries carry
-  `fcov_expectation_file: null`; the manifests are wired when `gen_fcov_pkg` lands.
+- No covergroup exists yet: entries carry `fcov_expectation_file: null`; `declare_bins()` already declares
+  the plan's bins and finish() proves the rendered manifest current (red fixtures gen_ut_manifest_missing,
+  gen_ut_manifest_stale under dv/auto_dv/tests/gen_fixtures/); the manifests are wired when `gen_fcov_pkg` lands.
 - Bridge argument codes (IRQ hold policies, line-mask bits, DBG_REQ policies, MEM_ERR_ARM kinds) are
   not in the library: `gen_knobs_codegen.py` is asked to render them (plan Section 6 item 1); until
   then no committed test issues IRQ_SET, IRQ_CLR, NMI_PULSE, DBG_REQ or MEM_ERR_ARM.

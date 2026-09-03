@@ -33,8 +33,8 @@ measured: false until then.
 
 Always-on checkers relied on: the ISA comparator (isa_csr and the other C4.7 rows; the shim runs Spike with
 16 regions, granularity 4 and Smepmp, PMP CSRs zeroed at reset), rvfi_proto, and the bus protocol checkers.
-declare_bins() returns [] because no covergroup exists yet (CG-PMP-001/002/004/005 bins are wired when
-gen_fcov_pkg lands). MODULE=dv.auto_dv.tests.gen_test_pmp_csr_warl, TOPLEVEL=gen_tb_top.
+declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands). MODULE=dv.auto_dv.tests.gen_test_pmp_csr_warl, TOPLEVEL=gen_tb_top.
 """
 import cocotb
 
@@ -87,9 +87,6 @@ class PmpCsrWarl(GenTest):
         self.fire_tp_pmp_006()
         self.fire_tp_pmp_007()
         self.fire_tp_pmp_008()
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet; the manifest is wired when gen_fcov_pkg lands
 
     def fire_program_verdict(self):
         code = int(self.h.b.evt_eot_code.value)

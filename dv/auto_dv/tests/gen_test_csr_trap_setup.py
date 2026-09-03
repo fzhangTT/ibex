@@ -24,8 +24,8 @@ are resolved from the image sidecar). Knobs: knob_imem_gnt_delay and knob_imem_r
 latency regimes the built items name); the irq knobs the items also name (irq_regime, irq_line_mix,
 irq_hold) are excluded because the program has no interrupt handler and the build has no irq agent (they
 belong to the blocked items). layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b
-parked), so the layers are logged not_applied; flips to the default when step 2b lands. declare_bins()
-returns []: no covergroup exists yet (gen_fcov_pkg not landed); the manifest is wired then.
+parked), so the layers are logged not_applied; flips to the default when step 2b lands. declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
 isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol checkers.
 MODULE=dv.auto_dv.tests.gen_test_csr_trap_setup, TOPLEVEL=gen_tb_top.
@@ -140,9 +140,6 @@ class CsrTrapSetup(GenTest):
         self.check("fire_program_integrity", n > 0 and not bad and got >= floor and code == lib.TOHOST_PASS,
                    _detail(n, bad, "program words (unexpected-trap count, last unexpected mcause; expect 0, 0)")
                    + f"; retired {got} (floor {floor}); tohost code 0x{code:08x} (pass = {lib.TOHOST_PASS})")
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet (gen_fcov_pkg not landed); the manifest is wired then
 
 
 @cocotb.test()

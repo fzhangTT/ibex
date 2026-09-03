@@ -179,7 +179,81 @@ dv/auto_dv/work/test-writer/gen_testlist_entries.yaml use `program.generator` (R
 
 ## 5. Limitations
 
-- Two seeds locally; the third seed and the flow verdict come from Runtime's acceptance runs (requests test-writer-009/011/012/013 and reds 017/019/020/021 filed 11:0x UTC; the comparator-blocked eight staged under work/test-writer/batch1/requests_staged/).
+- Two seeds locally; the third seed and the flow verdict come from Runtime's acceptance runs (requests test-writer-009/011/012/013 and reds 017/019/020/021 filed 11:02 UTC; the comparator-blocked eight staged under work/test-writer/batch1/requests_staged/).
 - `layers_required = False` on every batch-1 test (no REGIME_SET consumer at HEAD): layers 2 and 3 are drawn and logged, not applied; entries are `tier: check, measured: false` until step 2b re-lands.
 - Mutation evidence per checker id (plan Section 5) is not part of this transcript; it needs Runtime's `--rtl-root` mutation copies and comes with the mutation batch.
 - No subagent reported a fence event; the Test Writer re-verified compile, the AST structure check, ASCII and the log lines, not every expectation derivation.
+
+## 6. Acceptance wave 1 (Runtime, head mode at d58bdeb, 11:05-11:06 UTC) and the declare_bins defect
+
+Requests test-writer-009/011/012/013 (greens, 3 seeds) and 017/019/020/021 (red fixtures) were served together.
+Manifests: dv/auto_dv/work/runtime/results/test-writer-<seq>/manifest.yaml (run trees under
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_test-writer-<seq>/). None reached PASS or RED-OK:
+
+| Request | Test | Seed | Verdict | Reason (manifest) | Whose |
+|---|---|---|---|---|---|
+| test-writer-009 | gen_test_csr_access | 86614566 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-009 | gen_test_csr_access | 945071090 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-009 | gen_test_csr_access | 1610721211 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-011 | gen_test_cmp_zcb | 198464629 | FAIL | cocotb_summary at sim_stdout.log:201 | Test Writer (declare_bins) |
+| test-writer-011 | gen_test_cmp_zcb | 1669651236 | FAIL | cocotb_summary at sim_stdout.log:207 | Test Writer (declare_bins) |
+| test-writer-011 | gen_test_cmp_zcb | 2083413616 | FAIL | cocotb_summary at sim_stdout.log:197 | Test Writer (declare_bins) |
+| test-writer-012 | gen_test_cmp_zcmp_basic | 14603651 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-012 | gen_test_cmp_zcmp_basic | 708897507 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-012 | gen_test_cmp_zcmp_basic | 883583994 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-013 | gen_test_bit_draft | 513633256 | FAIL | cocotb_summary at sim_stdout.log:117 | Test Writer (declare_bins) |
+| test-writer-013 | gen_test_bit_draft | 762156845 | FAIL | cocotb_summary at sim_stdout.log:119 | Test Writer (declare_bins) |
+| test-writer-013 | gen_test_bit_draft | 912937852 | FAIL | cocotb_summary at sim_stdout.log:122 | Test Writer (declare_bins) |
+| test-writer-017 | gen_test_csr_access_red | 1 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-019 | gen_test_cmp_zcb_red | 1 | NOT_RUN | build gen_tb failed | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-020 | gen_test_cmp_zcmp_basic_red | - | no run | regress_rc 1: mirror is not a head-mode mirror of HEAD 6b3301d (manifest head d58bdeb) | Runtime flow (head-mode stage race / HEAD moved between waves) |
+| test-writer-021 | gen_test_bit_draft_red | - | no run | regress_rc 1: mirror is not a head-mode mirror of HEAD 6b3301d (manifest head d58bdeb) | Runtime flow (head-mode stage race / HEAD moved between waves) |
+
+- Runtime's two: `build gen_tb failed` is gen_mirror.py tree_hash raising FileNotFoundError on
+  head_stage_status/dv/auto_dv/excl/gen_excl_select.py while another wave rewrote the shared stage (regress.log);
+  the two red requests were refused before any run because HEAD moved to 6b3301d between waves (serve.log).
+  Reported to Runtime 11:09 UTC; not a property of the tests.
+- Mine: gen_test_cmp_zcb and gen_test_bit_draft fail on every seed with
+  `AssertionError: GEN_TEST_LIB: manifest of gen_test_cmp_zcb differs from declare_bins()` (run
+  gen_test_cmp_zcb_198464629, sim_stdout.log:195). Cause: every batch-1 test overrode declare_bins() to return [],
+  while the committed manifests carry the plan's bins, and finish() compares the two whenever the manifest file
+  exists. The Section 1 local runs passed because the manifests were rendered (10:53 UTC) after those runs
+  (10:17-10:49 UTC) and no test was re-run afterwards: a verification gap of the Test Writer, recorded here.
+  The program.generator path worked in the same runs (result.yaml: generator_command, generator_source_sha256,
+  seed_source run).
+
+### 6.1 Fix (this landing)
+
+- gen_test_template.py: `declare_bins()` defaults to `lib.plan_bins(self.name, self.plan_group)`, the plan's bins for
+  the test's group (new class attribute `plan_group`, None = gen_<x> for gen_test_<x>), derived by
+  gen_fcov_manifest.plan_bins (the generator's own bins_of_items + bin_tokens; one implementation for the file and
+  the declaration). finish() therefore proves at every run that the rendered manifest is current against the plan.
+- gen_test_lib.check_manifest_matches: a test that declares bins but has no manifest file FAILS (was: silent skip);
+  a mismatch names the counts and the first differing tokens each way.
+- The nine `declare_bins(): return []` overrides (eight batch-1 tests, gen_test_boot_retire) are removed; their
+  docstrings say so. API doc Sections 2, 3 (`plan_group`), 6 and 8 updated.
+- Host check (11:10 UTC): lib.plan_bins(name) equals the committed manifest for all eight batch-1 tests
+  (42/81/83/206/110/479/480/266 tokens, about 0.15 s each); gen_test_boot_retire declares 0 and has no manifest
+  (skip); the two negative calls raise with the new messages. `gen_test_lib.py --self-test` PASS over nine tests;
+  `gen_fcov_manifest.py --self-test` PASS (68 bins, 86 excluded coverpoints).
+
+### 6.2 Red and green, local harness (build out_head, seed 1, gen_cmp_zcb / gen_bit_draft seed-1 images)
+
+Red 1 is the flow itself: the FAIL lines above (test-writer-011/-013). Red 2 and 3 are committed fixtures under
+dv/auto_dv/tests/gen_fixtures/ (never testlist entries): gen_ut_manifest_missing (gen_cmp_zcb's test under a name
+with no manifest) and gen_ut_manifest_stale (its manifest home is the fixture directory, whose
+gen_ut_manifest_stale.fcov.yaml is the gen_cmp_zcb manifest minus its last bin).
+
+| Run (out_head/<dir>/stdout.log) | Decisive line (line no.) | cocotb | md5 | bytes |
+|---|---|---|---|---|
+| declbins_cmp_zcb_s1 | 183: 21240.00ns INFO     cocotb.gen_tb_top                  gen_test_cmp_zcb GEN_TEST_PASS | ** TESTS=1 PASS=1 FAIL=0 SKIP=0 21240.01 0.34 62783.75 ** | bdc42f0a4c77e2aa1edf2a75b0c3dbc3 | 27249 |
+| declbins_bit_draft_s1 | 108: 10530.00ns INFO     cocotb.gen_tb_top                  gen_test_bit_draft GEN_TEST_PASS | ** TESTS=1 PASS=1 FAIL=0 SKIP=0 10530.01 0.35 30364.03 ** | 41d2a3dc3b2c809fdf1bcb6e3ff42926 | 35511 |
+| declbins_manifest_missing | 185: AssertionError: GEN_TEST_LIB: gen_ut_manifest_missing declares 110 bins but has no manifest fcov_expectations/gen_ut_manifest_missing.fcov.yaml (rende | ** TESTS=1 PASS=0 FAIL=1 SKIP=0 21240.01 0.32 67192.77 ** | c998bc3d28c90748429a4d0648885f0a | 26584 |
+| declbins_manifest_stale | 185: AssertionError: GEN_TEST_LIB: manifest of gen_ut_manifest_stale differs from declare_bins(): 109 in the manifest, 110 declared; not in the manifest [' | ** TESTS=1 PASS=0 FAIL=1 SKIP=0 21240.01 0.33 64400.16 ** | 51bb61e3657e672e8387948f07ff00cc | 26561 |
+
+GEN_TEST_BINS lines: cmp_zcb `21240.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=110 gen_cm`, bit_draft `10530.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=480 gen_bi`.
+UVM_ERROR 0 on both greens. The ordering is honest: the flow's red came first (11:06 UTC), the fix and the two fixture
+reds and the two greens followed (11:10-11:12 UTC, all in one harness invocation).
+
+Wave 2: the same eight requests are re-filed against the commit that carries this fix (Section 7 when the manifests
+arrive).

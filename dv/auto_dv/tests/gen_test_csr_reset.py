@@ -33,9 +33,8 @@ random irq pin pattern (IRQ_SET bridge codes not rendered; mip is asserted 0 wit
 TP-CSR-108's debug-mode reads of dcsr/dpc/dscratch0/1 (DBG_REQ bridge codes not rendered,
 rvfi_ext_debug_mode not observable); the "within the first N retirements" ordering facts of 105/106/
 109 (RVFI export). Always-on checkers relied on: the ISA comparator rows isa_pc/isa_insn/isa_trap/
-isa_rd/isa_mem/isa_prv/isa_pc_next, rvfi_proto, the bus protocol checkers (ibus/dbus). declare_bins()
-returns [] because no covergroup exists yet; the CG-CSR-016 bins of the items are wired when
-gen_fcov_pkg lands. MODULE=dv.auto_dv.tests.gen_test_csr_reset, TOPLEVEL=gen_tb_top.
+isa_rd/isa_mem/isa_prv/isa_pc_next, rvfi_proto, the bus protocol checkers (ibus/dbus). declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands). MODULE=dv.auto_dv.tests.gen_test_csr_reset, TOPLEVEL=gen_tb_top.
 """
 import cocotb
 
@@ -165,9 +164,6 @@ class CsrReset(GenTest):
 
     def fire_tp_csr_109(self):
         self.fire_item("TP-CSR-109")
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet (CG-CSR-016 bins are wired when gen_fcov_pkg lands)
 
 
 @cocotb.test()

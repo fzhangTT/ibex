@@ -14,7 +14,7 @@ Run order (fixed; a test changes it only by overriding a hook):
   3. wait for the program's end of test (tohost or the EOT register, the evt_eot_seen edge).
   4. fire_check(): per-seed asserted observables; every failure is collected and raised in one
      AssertionError (the fire-check is the test's own failure mechanism, DV_prompt Section 5).
-  5. declare_bins() is logged (GEN_TEST_BINS) for the cross-check against the fcov manifest.
+  5. declare_bins() is logged (GEN_TEST_BINS) and must equal the fcov manifest when the test declares bins.
   6. finish: checks first, then the finish handshake (TB_CONTRACT Section 2), then PASS_MARKER.
 
 Skeleton of a real test (copy into dv/auto_dv/tests/gen_test_<area>_<topic>.py):
@@ -71,6 +71,7 @@ class GenTest:
     # leaves its value in evt_eot_code, so Python collects them edge by edge into self.reports and
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
+    plan_group = None   # test-plan group whose bins declare_bins() defaults to (None: gen_<x> of gen_test_<x>)
 
     def __init__(self, dut):
         self.dut = dut
@@ -273,8 +274,10 @@ class GenTest:
         raise NotImplementedError("GEN_TEST: fire_check() is the test's own duty")
 
     def declare_bins(self):
-        """Hook: the bins the test intends to hit (same tokens as its fcov manifest); [] before covergroups exist."""
-        return []
+        """Hook: the bins the test intends to hit. Default: the plan's bins for `plan_group` (gen_<x> for
+        gen_test_<x>) through the manifest generator's derivation, so finish() proves the rendered manifest is
+        current against the plan; a test hitting a subset declares that subset."""
+        return lib.plan_bins(self.name, self.plan_group)
 
     def report_count(self):
         """Hook: number of report words the program stores before its end-of-test store; the default is the

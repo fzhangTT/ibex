@@ -81,9 +81,6 @@ class CmpZcb(GenTest):
         ok, detail = _compare(self, prog.ITEM_MUL, f"c_mul {s['mul']} (rsd' == rs2' {s['c_mul_same']}), rsd'/rs2' sweep")
         self.check("fire_tp_cmp_038", ok, detail)
 
-    def declare_bins(self):
-        return []   # no covergroup exists yet; CG-CMP-005 / CG-MUL-001 bins are wired with gen_fcov_pkg
-
 
 @cocotb.test()
 async def gen_test_cmp_zcb(dut):

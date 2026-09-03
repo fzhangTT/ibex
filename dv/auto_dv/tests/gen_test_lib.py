@@ -323,12 +323,27 @@ def load_manifest_bins(test_name):
     return list(data.get("bins") or [])
 
 
+def plan_bins(test_name, group=None):
+    """Bins the plan assigns to the test (default group: gen_test_<x> hosts gen_<x>), derived by the manifest
+    generator's own code so the test's declaration and the rendered file share one implementation."""
+    from dv.auto_dv.tests import gen_fcov_manifest as gm
+    return gm.plan_bins(test_name, group or re.sub(r"^gen_test_", "gen_", test_name))
+
+
 def check_manifest_matches(test_name, declared):
-    """The test's declare_bins() and its manifest file list the same bins (host-side unit check)."""
+    """The test's declare_bins() and its manifest file list the same bins; a test that declares bins must have a
+    rendered manifest (a stale or missing file fails the run, never a silent skip)."""
     bins = load_manifest_bins(test_name)
     if bins is None:
+        assert not declared, (f"GEN_TEST_LIB: {test_name} declares {len(declared)} bins but has no manifest "
+                              f"{FCOV_HOME.name}/{test_name}.fcov.yaml (render it with gen_fcov_manifest.py --write)")
         return False
-    assert sorted(bins) == sorted(declared), f"GEN_TEST_LIB: manifest of {test_name} differs from declare_bins()"
+    missing = sorted(set(declared) - set(bins))
+    extra = sorted(set(bins) - set(declared))
+    assert not missing and not extra, (
+        f"GEN_TEST_LIB: manifest of {test_name} differs from declare_bins(): {len(bins)} in the manifest, "
+        f"{len(declared)} declared; not in the manifest {missing[:3]}, only in the manifest {extra[:3]} "
+        f"(re-render with gen_fcov_manifest.py --write)")
     return True
 
 

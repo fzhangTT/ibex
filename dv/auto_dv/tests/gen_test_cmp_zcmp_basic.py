@@ -52,8 +52,8 @@ REGIME_SET consumer at HEAD (step 2b parked), so the layers are logged not_appli
 when step 2b lands (entry stays tier check, measured false until then).
 Checkers relied on (always on): the ISA comparator with Zcmp micro-op folding (gen_isa_compare rows),
 gen_chk_rvfi_proto, the bus protocol checkers; the fire-checks here are the test-level compare that
-gen_test_plan.md Section 0a assigns to gen_chk_zcmp_seq. declare_bins() is [] because no covergroup
-exists yet (gen_fcov_pkg not landed); the manifest is wired then.
+gen_test_plan.md Section 0a assigns to gen_chk_zcmp_seq. declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands).
 MODULE=dv.auto_dv.tests.gen_test_cmp_zcmp_basic, TOPLEVEL=gen_tb_top.
 """
 import cocotb
@@ -263,9 +263,6 @@ class CmpZcmpBasic(GenTest):
         self.check("fire_tp_cmp_073", words > 0 and not bad and inner == set(prog.CM_KINDS),
                    _detail(scs, words, bad, f"fall-through cm.* kinds {sorted(inner)} (expected all six); expected the ret's "
                                             "target marker and the full effect of the fall-through cm.* executed later"))
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet (gen_fcov_pkg not landed); the CG-CMP-006/007/009 manifest is wired then
 
 
 @cocotb.test()

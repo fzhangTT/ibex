@@ -65,10 +65,14 @@ the table named by its items; the tables are transcribed once into `gen_test_lib
   expands nothing. Each bin's anti-vacuity note is the covergroup's own Sample sentence. Dropped bins
   are listed on stderr for the record. `--self-test` PASS on the DV Lead's working tree:
   gen_reg_schedule 67 bins, informational and probe-gated items yield no manifest, the trace
-  checker's rule accepted and rejected on known names; the excluded-coverpoint count depends on the
-  plan version (122 at 09:00 UTC, 86 at 09:47 UTC) and is recorded with the SHA at the plan-set
-  landing. On the committed tree the generator exits with `GEN_FCOV_MANIFEST_INPUT_VERSION` until
-  that landing; nothing is produced from it before.
+  checker's rule accepted and rejected on known names; the committed tree yields 86 excluded
+  coverpoints (bc9dba9 and later; the self-test prints the SHA). An earlier working-tree figure of
+  122 predates two changes: the auto-cross segmentation rule moved into
+  `dv/auto_dv/tools/gen_trace_check.py` (one implementation, imported by the generator), and the
+  exclusion set became the plan's Section 0 rule (probe-gated P1/P4/P7/P8/P9 coverpoints,
+  informational items, witness bins, and the Section 1.1 regression-level coverpoints, now 74).
+  Before that landing the generator exited with `GEN_FCOV_MANIFEST_INPUT_VERSION`; nothing was
+  produced from it.
 - The Python test declares the same list through `GenTest.declare_bins()` and logs it
   (`GEN_TEST_BINS n=<count>`); `gen_test_lib.check_manifest_matches` is the host-side unit check
   that the test and its manifest agree.

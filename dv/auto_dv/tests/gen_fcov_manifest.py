@@ -146,12 +146,17 @@ def bin_excluded(cg, b, ex_bins):
     return False
 
 
-def items_of_group(group, tps=None):
-    """TP ids whose `- Test group:` line names the group (test plan Section 4 items)."""
+def items_of_group(group, tps=None, required=True):
+    """TP ids whose `- Test group:` line names the group (test plan Section 4 items); [] only when not required."""
     tps = tps or tp_blocks()
     items = [t for t, blk in tps.items() if re.search(rf"^- Test group:\s*{re.escape(group)}\b", blk, re.M)]
-    assert items, f"no test-plan item names group {group}"
+    assert items or not required, f"no test-plan item names group {group}"
     return items
+
+
+def bin_tokens(rows, names):
+    """Manifest bin tokens gen_<x>_cg.<coverpoint>.<bin> of the rows, in row order (the tests declare the same)."""
+    return [f"{impl_cg_name(names[cg])}.{cp}.{b}" for cg, cp, b, _ in rows]
 
 
 def item_excluded(blk):
@@ -206,8 +211,7 @@ def bins_of_items(items, tps, blocks, make_segmentable):
 
 def render(test, rows, notes, names):
     tokens = []
-    for cg, cp, b, adopted in rows:
-        tok = f"{impl_cg_name(names[cg])}.{cp}.{b}"
+    for tok, (cg, cp, b, adopted) in zip(bin_tokens(rows, names), rows):
         note = notes.get(cg, "see the covergroup's Sample line")
         tokens.append((tok, cg, note + ("; adopted from riscv-dv, counted separately" if adopted else "")))
     out = [f"test: {test}", f"owner: {OWNER}", "bins:"]
@@ -225,6 +229,17 @@ def build(test, items):
     blocks = cg_blocks()
     rows, dropped = bins_of_items(items, tps, blocks, load_segmentable())
     return render(test, rows, cg_sample_notes(blocks), plan_cg_names()), rows, dropped
+
+
+def plan_bins(test, group):
+    """The tokens the plan assigns to the test's group, by the same derivation as the manifest; [] when no
+    test-plan item names the group (bring-up tests and fixtures declare nothing)."""
+    tps = tp_blocks()
+    items = items_of_group(group, tps, required=False)
+    if not items:
+        return []
+    rows, _dropped = bins_of_items(items, tps, cg_blocks(), load_segmentable())
+    return bin_tokens(rows, plan_cg_names())
 
 
 def main():

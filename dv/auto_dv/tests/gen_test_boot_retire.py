@@ -36,9 +36,6 @@ class BootRetire(GenTest):
         got = self.retired()
         self.check("fire_retired_floor", got >= floor, f"retired {got} (floor {floor} from the program)")
 
-    def declare_bins(self):
-        return []   # no covergroup exists yet (TB Infra build step 3); the manifest is wired then
-
 
 @cocotb.test()
 async def gen_test_boot_retire(dut):

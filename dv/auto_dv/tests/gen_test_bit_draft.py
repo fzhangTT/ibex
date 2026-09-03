@@ -20,8 +20,8 @@ the template's layers 2/3 when the build consumes it. layers_required = False: t
 consumer at HEAD (step 2b parked), so the layers are logged not_applied; flips to the default when step
 2b lands. Fire-check per seed (fire_tp_bit_016): every report word equals the plan's reference value,
 per op class (grevi, gorci, grev, gorc, the aliases), the retirement floor of the program is reached and
-the end-of-test code is the pass code. declare_bins() returns []: no covergroup exists yet (CG-BIT-004
-is wired when gen_fcov_pkg lands). Always-on checkers relied on: the ISA comparator (isa_rd through the
+the end-of-test code is the pass code. declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands). Always-on checkers relied on: the ISA comparator (isa_rd through the
 shim's grev/gorc reference for the draft controls, Spike for rev8 / orc.b), rvfi_proto, the bus protocol
 checkers. MODULE=dv.auto_dv.tests.gen_test_bit_draft, TOPLEVEL=gen_tb_top.
 """
@@ -75,9 +75,6 @@ class BitDraft(GenTest):
                    f"retired {retired} (program floor {floor}, plan {p.min_retired})")
         code = int(self.h.b.evt_eot_code.value)
         self.check("fire_tp_bit_016_eot", code == lib.TOHOST_PASS, f"tohost code 0x{code:08x} (pass = {lib.TOHOST_PASS})")
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet; CG-BIT-004 bins are declared when gen_fcov_pkg lands
 
 
 @cocotb.test()

@@ -33,8 +33,8 @@ Knobs (the built items' Knobs lines): knob_imem_gnt_delay, knob_imem_rvalid_dela
 knob_irq_regime (TP-RST-006: lines may be driven, mie stays 0, nothing may be taken),
 knob_scr_key_delay (TP-RST-007). layers_required = False: the TB has no REGIME_SET consumer at HEAD
 (step 2b parked), so the layers are logged not_applied; flips to the default when step 2b lands.
-declare_bins() returns [] because no covergroup exists yet (the manifest is wired when gen_fcov_pkg
-lands). Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
+declare_bins() takes the template default (the plan's bins for the group, checked against the
+rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands). Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
 gen_chk_csr_readback, gen_chk_ibus_proto / gen_chk_dbus_proto, gen_chk_irq (irq_pending_o = 0 with
 mie = 0), gen_chk_rvfi_proto.
 MODULE=dv.auto_dv.tests.gen_test_rst_boot, TOPLEVEL=gen_tb_top.
@@ -159,9 +159,6 @@ class RstBoot(GenTest):
         i = p.index("mie")
         mie_ok = i < len(self.reports) and self.reports[i] == 0
         self.check("fire_tp_rst_007", ok and mie_ok, detail + (f"; mie=0x{self.reports[i]:08x}" if i < len(self.reports) else "; mie missing"))
-
-    def declare_bins(self):
-        return []   # no covergroup exists yet (TB Infra build step 3); the manifest is wired then
 
 
 @cocotb.test()

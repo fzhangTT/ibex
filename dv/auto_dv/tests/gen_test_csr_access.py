@@ -103,9 +103,6 @@ class CsrAccess(GenTest):
                    f"{n - len(bad)}/{n} report words as planned over {plan_for(self).counts['TP-CSR-012']} demoted read-only reads "
                    f"(id constants, counter pairs, RO-zero addresses)" + (f"; first mismatch {bad[0]}" if bad else ""))
 
-    def declare_bins(self):
-        return []   # no covergroup exists yet (TB Infra build step 3); the CG-CSR bins are wired with gen_fcov_pkg
-
 
 @cocotb.test()
 async def gen_test_csr_access(dut):
