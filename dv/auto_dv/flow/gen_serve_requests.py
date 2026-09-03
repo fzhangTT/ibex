@@ -370,11 +370,13 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
         rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
                                             cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log",
                                             timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
+        synced = (M.load_manifest(M.mirror_root()) or {}) if M.mirror_root() else {}
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
-                "source": C.SOURCE_MODE_HEAD, "head_sha": M.head_sha(), "batch": [p.stem for p in p1]}
-        if rc == 0 and not timed_out:
+                "source": synced.get("source"), "head_sha": synced.get("head_sha"), "batch": [p.stem for p in p1]}
+        if rc == 0 and not timed_out and sync.get("head_sha"):
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
-            batch_args = list(extra_args) + ["--no-sync-mirror"]
+            # Every regression of the batch is pinned to the commit the batch was synced from.
+            batch_args = list(extra_args) + ["--no-sync-mirror", "--head-sha", str(sync["head_sha"])]
             with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
                 list(pool.map(lambda p: serve_one(p, testlist, dry_run, batch_args, sync), p1))
         else:

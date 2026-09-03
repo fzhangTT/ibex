@@ -397,15 +397,19 @@ def source_bootstrap(a: argparse.Namespace) -> None:
     root = M.mirror_root()
     if root is None:
         U.die("head mode needs a mirror root (gen_site.yaml mirror_root or GEN_DV_MIRROR_ROOT)")
+    synced_now = False
     if not a.no_sync_mirror:
         rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
                                     cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "regress_head_sync.log", timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         if rc != 0:
             U.die(f"gen_mirror.py --sync --spike --source head failed (rc={rc}); see {C.WORK_DIR / 'regress_head_sync.log'}")
+        synced_now = True
     man = M.load_manifest(root) or {}
-    sha = M.head_sha()
+    # The pinned commit: the batch's (--head-sha), else the sha this process just synced, else HEAD now. A
+    # commit landing during a batch must not change which tree the batch runs from.
+    sha = a.head_sha or (man.get("head_sha") if synced_now else None) or M.head_sha()
     if man.get("source") != C.SOURCE_MODE_HEAD or man.get("head_sha") != sha:
-        U.die(f"mirror {root} is not a head-mode mirror of HEAD {sha[:12]} (manifest source {man.get('source')!r}, "
+        U.die(f"mirror {root} is not a head-mode mirror of {sha[:12]} (manifest source {man.get('source')!r}, "
               f"head {str(man.get('head_sha'))[:12]}); run gen_mirror.py --sync --spike --source head")
     env = dict(os.environ, **{C.ENV_SOURCE_ROOT: str(root), C.ENV_HEAD_SHA: sha})
     argv = [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:]]
@@ -413,6 +417,8 @@ def source_bootstrap(a: argparse.Namespace) -> None:
         argv.append("--no-sync-mirror")
     if "--source" not in argv:
         argv += ["--source", C.SOURCE_MODE_HEAD]
+    if "--head-sha" not in argv:
+        argv += ["--head-sha", sha]
     U.log(f"head mode: re-executing with {C.ENV_SOURCE_ROOT}={root} (HEAD {sha[:12]})")
     os.execve(sys.executable, argv, env)
 
@@ -452,6 +458,8 @@ def main() -> int:
     ap.add_argument("--source", choices=C.SOURCE_MODES, default=None,
                     help="head: build and run from committed HEAD through a head-mode mirror (default for purpose 4, "
                          "a tier, or several tests); worktree: the shared working tree (default for one test)")
+    ap.add_argument("--head-sha", default=None,
+                    help="head mode: the commit the mirror must be synced from (a batch pins it; a lone run pins its own sync)")
     ap.add_argument("--no-sync-mirror", action="store_true",
                     help="do not re-sync the shared mirror before cocotb builds (default: sync)")
     ap.add_argument("--allow-local-out-root", action="store_true",

@@ -22,6 +22,7 @@ import hashlib
 import os
 import shutil
 import subprocess
+import tempfile
 import sys
 from pathlib import Path
 from typing import Any
@@ -201,7 +202,7 @@ def load_manifest(dst: Path) -> dict[str, Any] | None:
     return U.load_yaml(p) if p.is_file() else None
 
 
-def status(dst: Path) -> dict[str, Any]:
+def status(dst: Path, pinned_head: str | None = None) -> dict[str, Any]:
     """fresh: mirror manifest hash == source hash now == mirror tree hash now; else stale/missing. The source is
     the working tree for a worktree-mode mirror and a fresh HEAD export for a head-mode one (a new commit
     makes a head-mode mirror stale)."""
@@ -209,8 +210,13 @@ def status(dst: Path) -> dict[str, Any]:
     if not man:
         return {"state": "missing", "mirror_root": str(dst)}
     mode = man.get("source") or C.SOURCE_MODE_WORKTREE
-    if mode == C.SOURCE_MODE_HEAD:
-        stage = C.WORK_DIR / "head_stage_status"
+    if mode == C.SOURCE_MODE_HEAD and pinned_head:
+        # A pinned consumer (a head-mode build or run) asks "is this the mirror of sha X": answered from the
+        # manifest, no re-export, so concurrent consumers never touch a shared staging directory.
+        clone_n = man.get("runtime_file_count")
+        clone_hash = man["tree_sha256"] if man.get("head_sha") == pinned_head else f"pinned HEAD {pinned_head} != mirror head {man.get('head_sha')}"
+    elif mode == C.SOURCE_MODE_HEAD:
+        stage = Path(tempfile.mkdtemp(prefix="head_stage_status_", dir=C.WORK_DIR))
         sha_now = export_head(stage)
         clone_hash, clone_n = tree_hash(stage)
         shutil.rmtree(stage, ignore_errors=True)

@@ -50,7 +50,7 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
     root = M.mirror_root()
     if root is None:
         U.die("cocotb build needs the shared mirror (gen_mirror.py --sync --venv) or --local-cocotb")
-    st = M.status(root)
+    st = M.status(root, pinned_head=os.environ.get(C.ENV_HEAD_SHA))
     if st["state"] != "fresh" and not a.allow_stale_mirror:
         U.die(f"mirror {root} is {st['state']} (clone {st.get('clone_sha256_now', '')[:12]} vs mirror "
               f"{st.get('mirror_sha256_now', '')[:12]}); run gen_mirror.py --sync, or --allow-stale-mirror")
