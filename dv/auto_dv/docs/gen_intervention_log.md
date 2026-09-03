@@ -708,3 +708,18 @@ the limitation. Medium 3 of the same review is T-134 (interrupt splitting a Zcmp
 never clears the sequence bookkeeping on interrupt or debug entry, so the restart appends micro-ops and fails
 under a misleading id, or passes silently when isa_mem is knob-silenced; tb-infra settles it in the same
 landing.
+
+## LOG-027 - 2026-09-03 - GATE (Runtime follow-up e884dd1: cross-model REQUEST-CHANGES; no measured round until re-review)
+
+The cross-model review of 95d4d0e..e884dd1 (dv/auto_dv/reviews/2026-09-03-claude-diff-95d4d0e0-e884dd12.md)
+verified the canary hold, the build-input set, the env scrub and the red_expect trigger, but found one major:
+gen_round.py now writes future round evidence under gen_-prefixed names while the exclusion tools
+(dv/auto_dv/excl/gen_excl_select.py, gen_excl_f1_pass.py) still read asserts.txt and regress_manifest.yaml,
+so the first collected round would break the R-5 exclusion pipeline; plus the serialized fallback after a
+failed shared sync pins HEAD-now unvouched, the T-131 response row overstates the rename (the rebaseline
+directory keeps 10 un-prefixed files), and the new self-test blocks use C.SELFTEST_TMP instead of
+C.selftest_tmp(), so the claimed 51-ok self-test cannot be reproduced from a detached checkout. Ruling: e884dd1
+stays committed (nothing weakens serving of check-tier batches, wave 5 proceeds); no measured round (round 0)
+is collected until the fix landing is committed and re-reviewed; the evidence file names get one constant home
+in gen_flow_const.py consumed by gen_round.py and both excl tools (Runtime and rtl-arch coordinate, one
+landing).
