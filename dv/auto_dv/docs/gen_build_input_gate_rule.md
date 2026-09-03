@@ -61,7 +61,8 @@ log dv/auto_dv/work/runtime/round_0.log is unmirrored); gen_round.py carries no 
 ## Red before green (self-test cases on fabricated name lists; no repository history needed except case 14)
 
 Cases 1-11 and 13 run in `gen_flow_util.py --self-test`, cases 12 and 14 in `gen_serve_requests.py --self-test`; the red run
-before the implementation (NameError / TypeError on the missing classifier) is kept in dv/auto_dv/work/runtime/gate_rule_red.log.
+before the implementation (NameError / TypeError on the missing classifier) is retained as
+dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log (manifest row in gen_tdd_logs/flow/gen_manifest.md).
 
 1.  [dv/auto_dv/docs/gen_intervention_log.md]                      -> accept (case 1 of the motivating set)
 2.  [dv/auto_dv/tools/gen_covergroup_set.py]                        -> accept
@@ -81,7 +82,8 @@ before the implementation (NameError / TypeError on the missing classifier) is k
     decision (the batch record keeps its existing keys and adds these); HEAD..HEAD accepts with empty lists
 13. existence: every listed non-input file resolves to a tracked file (`git ls-files`), and each glob class matches at least one
     tracked file; a listed name that no longer exists fails the self-test (the list cannot rot silently)
-14. real history, guarded (skipped with a printed line when a sha is absent from the clone): 0a07536..1dbb8bf -> accept with
+14. real history, guarded (skipped with a printed line when a sha is absent from the clone; the self-test pins the full 40-character
+    shas so an abbreviation can never turn ambiguous): 0a07536..1dbb8bf -> accept with
     noninputs_changed == [dv/auto_dv/docs/gen_intervention_log.md]; 1dbb8bf..902da1f -> refuse with delta ==
     [dv/auto_dv/docs/gen_fcov_plan.md, dv/auto_dv/docs/gen_feature_list.md, dv/auto_dv/docs/gen_test_plan.md] and
     noninputs_changed == [dv/auto_dv/docs/gen_bug_log.md, dv/auto_dv/tools/gen_covergroup_set.py]

@@ -362,7 +362,8 @@ mirrored set `MIRROR_ITEMS` + `MIRROR_GLOB_ITEMS` minus `MIRROR_EXCLUDE_PATHS` (
 when two decisions fall in one second)
 with `decision` (`accepted`, `refused_build_inputs_changed`, `refused_no_canary_sha`), `canary_sha`, `pinned_sha`,
 `delta_pathspecs`, `delta` (the deciding subset: the build inputs that differ, by name; a rename counts under both names; a failed
-git command refuses with the error as the one entry), `delta_full` (the whole mirrored `git diff --stat`, transparency only),
+git command refuses with the error as the one entry; records written before 3f0d9e5 hold the diff --stat text in `delta` and in the
+request manifests' `canary_to_batch_build_input_delta`, so readers accept both shapes), `delta_full` (the whole mirrored `git diff --stat`, transparency only),
 `noninputs_changed` (the differing files let through), `noninput_list_sha256` (the digest of the non-input list that decided) and
 the request names; an accepted record gains the sync record, the request manifests and `completed_utc`. An accepted batch syncs
 `gen_mirror.py --sync --spike --source head --head-sha S` into the per-sha head tree; S is passed to every

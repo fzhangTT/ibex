@@ -478,17 +478,17 @@ def self_test() -> int:
     cond = set(same) == {"delta", "delta_full", "noninputs_changed", "noninput_list_sha256", "decision"} and same["delta"] == [] \
         and same["noninputs_changed"] == [] and same["decision"] == C.CANARY_ACCEPTED and same["noninput_list_sha256"] == U.noninput_list_sha256()
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 12: build_input_delta returns exactly the five fields; HEAD..HEAD accepts: {same['decision']}")
-    history = (("0a07536", "1dbb8bf", [], ["dv/auto_dv/docs/gen_intervention_log.md"], C.CANARY_ACCEPTED),
-               ("1dbb8bf", "902da1f", ["dv/auto_dv/docs/gen_fcov_plan.md", "dv/auto_dv/docs/gen_feature_list.md", "dv/auto_dv/docs/gen_test_plan.md"],
+    history = (("0a07536d84b7236e423963a46b92ce6a016028aa", "1dbb8bff28bf2acc7a58e341d257b9e4fae86053", [], ["dv/auto_dv/docs/gen_intervention_log.md"], C.CANARY_ACCEPTED),
+               ("1dbb8bff28bf2acc7a58e341d257b9e4fae86053", "902da1f693d84779684d0e4ea6f3f483a8ed960f", ["dv/auto_dv/docs/gen_fcov_plan.md", "dv/auto_dv/docs/gen_feature_list.md", "dv/auto_dv/docs/gen_test_plan.md"],
                 ["dv/auto_dv/docs/gen_bug_log.md", "dv/auto_dv/tools/gen_covergroup_set.py"], C.CANARY_REFUSED_DELTA))
     for a, b, want_delta, want_non, want_decision in history:
         present = all(subprocess.run(["git", "-C", str(C.REPO_ROOT), "cat-file", "-e", f"{x}^{{commit}}"], capture_output=True).returncode == 0 for x in (a, b))
         if not present:
-            print(f"SELF-TEST skip build-input gate case 14 {a}..{b}: a sha is absent from this clone")
+            print(f"SELF-TEST skip build-input gate case 14 {a[:7]}..{b[:7]}: a sha is absent from this clone")
             continue
         got = build_input_delta(a, b)
         cond = got["delta"] == want_delta and got["noninputs_changed"] == want_non and got["decision"] == want_decision and got["delta_full"].strip() != ""
-        ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 14 {a}..{b}: {got['decision']} delta={got['delta']} noninputs={got['noninputs_changed']}")
+        ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 14 {a[:7]}..{b[:7]}: {got['decision']} delta={got['delta']} noninputs={got['noninputs_changed']}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

@@ -21,3 +21,4 @@ evidence: AssertionError: GEN_TEST_FAIL gen_test_pmp_mseccfg: 1 fire-check failu
 sim_stdout.log:264: 101040.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 8 of 13 scheduled entries by EOT (cycle 10099, retired 949), applied 8 (k=3, source=derived)
 sim_stdout.log:279: 101040.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=77 gen_pmp_mseccfg_cg.cp_csr.mseccfg gen_pmp_mseccfg_cg.cp_hi_bits.nonzero gen_pmp_mseccfg_cg.cp_hi_bits.zero gen_pmp_mseccfg_cg.cp_post.s000 gen_pmp_mseccfg_cg.cp_post.s001 gen_pmp_mseccfg ...[3427 more chars]
 sim_stdout.log:288: AssertionError: GEN_TEST_FAIL gen_test_pmp_mseccfg: 1 fire-check failure(s): fire_tp_pmp_011: 11 words compared, 1 mismatches (first: idx 75 [w3 zero readback 0x747] expected 0x00000002 got 0x00000006); 11 mseccfg writes (hi classes ['nonze ...[121 more chars]
+sim.log: no collected line

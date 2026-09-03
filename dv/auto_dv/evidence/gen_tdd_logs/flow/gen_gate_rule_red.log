@@ -1,0 +1,14 @@
+# TDD red for the build-input gate: self-tests with the cases in place and no implementation
+Thu Sep  3 21:33:59 UTC 2026
+## gen_flow_util.py --self-test
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_flow_util.py", line 680, in self_test
+    got = classify_delta(names)
+          ^^^^^^^^^^^^^^
+NameError: name 'classify_delta' is not defined
+rc=1
+## gen_serve_requests.py --self-test
+  File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_serve_requests.py", line 469, in self_test
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 12: build_input_delta returns exactly the five fields; HEAD..HEAD accepts: {same['decision']}")
+                                                                                                                                                                 ~~~~^^^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+rc=1

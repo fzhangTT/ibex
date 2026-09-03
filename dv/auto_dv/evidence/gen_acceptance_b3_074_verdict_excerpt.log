@@ -21,3 +21,4 @@ evidence: AssertionError: GEN_TEST_FAIL gen_test_pmp_lock: 1 fire-check failure(
 sim_stdout.log:175: 30630.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 12 of 25 scheduled entries by EOT (cycle 3058, retired 494), applied 12 (k=5, source=derived)
 sim_stdout.log:188: 30630.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=50 gen_pmp_cfg_write_cg.cp_outcome.ignored_lock gen_pmp_cfg_write_cg.cp_prelock.locked gen_pmp_cfg_write_cg.cp_word_lockmix.all gen_pmp_cfg_write_cg.cp_word_lockmix.none gen_pmp_cfg_write_cg ...[2176 more chars]
 sim_stdout.log:197: AssertionError: GEN_TEST_FAIL gen_test_pmp_lock: 1 fire-check failure(s): fire_tp_pmp_013: 11 words compared, 1 mismatches (first: idx 74 [some some csrrs readback pmpcfg1] expected 0x83109981 got 0x83009981); 10 pmpcfg writes, lock mixes [ ...[139 more chars]
+sim.log: no collected line
