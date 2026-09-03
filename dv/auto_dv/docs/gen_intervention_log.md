@@ -506,3 +506,11 @@ Runtime told before and after (extends LOG-014). tb-infra was told to restore gr
 work; Runtime holds the Test Writer's batch 1 until then. Counted for the closure report as process
 friction caught by the flow, not as a defect in generated TB code, unless the root cause turns out to
 be a committed change.
+
+## LOG-017a - 2026-09-03 - NOTE (red window closed)
+
+10:48 UTC: Runtime's canary on HEAD 1f8186e (T-080 landing 1 with the joint testlist line) is green
+(`dv/auto_dv/work/runtime/out/canary_1048`, gen_boot_zc build ok, run PASS, 32 s, no LSF); tb-infra's
+landed regression set (lock-step zc/s7 with and without the export knob, bridge, boot) is green on the
+same build. Batch 1 is released on arrival of the Test Writer's file list. The root-cause paragraph
+for the 10:39 UTC window is still owed by tb-infra and will be appended here when it arrives.
