@@ -13,6 +13,7 @@ Usage (from a login shell with ci/env.sh sourced, or through --lsf):
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shlex
 import shutil
@@ -28,7 +29,7 @@ import gen_mirror as M
 
 def config_opts() -> list[str]:
     r = subprocess.run([sys.executable, str(C.CONFIG_SCRIPT), C.BUILD_CONFIG, "vcs_opts"],
-                       capture_output=True, text=True, cwd=C.REPO_ROOT)
+                       capture_output=True, text=True, cwd=C.SOURCE_ROOT)
     if r.returncode != 0:
         U.die(f"ibex_config.py failed: {r.stderr.strip()}")
     return shlex.split(r.stdout.strip())
@@ -77,9 +78,9 @@ def absolutize_filelist(src: Path, dst: Path, rtl_root: Path | None = None) -> l
             out.append(raw)
             continue
         if entry.startswith("+incdir+"):
-            entry = "+incdir+" + str((C.REPO_ROOT / entry[len("+incdir+"):]).resolve())
+            entry = "+incdir+" + str((C.SOURCE_ROOT / entry[len("+incdir+"):]).resolve())
         elif not entry.startswith(("+", "-")):
-            orig = (C.REPO_ROOT / entry).resolve()
+            orig = (C.SOURCE_ROOT / entry).resolve()
             chosen = orig
             if rtl_root is not None and (rtl_root / entry).is_file():
                 chosen = (rtl_root / entry).resolve()
@@ -98,7 +99,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     a.rtl_substitutions = []
     for fl in build["filelists"]:
         dst = outdir / Path(fl).name
-        a.rtl_substitutions += absolutize_filelist(C.REPO_ROOT / fl, dst, a.rtl_root)
+        a.rtl_substitutions += absolutize_filelist(C.SOURCE_ROOT / fl, dst, a.rtl_root)
         groups["filelists"] += ["-f", str(dst)]
     if a.rtl_root is not None:
         used = {sub["file"] for sub in a.rtl_substitutions}
@@ -176,7 +177,7 @@ def build_fields(a: argparse.Namespace, outdir: Path) -> dict[str, str]:
     """Placeholders a build entry may use: {outdir}, and {mirror} = the tree the runs execute from
     (the shared mirror; the clone for --local-cocotb builds, whose runs stay on the submit host)."""
     fields = {"outdir": str(outdir)}
-    run_root = C.REPO_ROOT if a.local_cocotb else M.mirror_root()
+    run_root = C.SOURCE_ROOT if a.local_cocotb else M.mirror_root()
     if run_root:
         fields["mirror"] = str(run_root)
     return fields
@@ -201,7 +202,7 @@ def run_pre_build(build: dict[str, Any], outdir: Path, timeout_s: int, fields: d
     for i, tmpl in enumerate(build.get("pre_build") or []):
         cmd = render_build_field("pre_build", tmpl, fields)
         log = outdir / f"pre_build_{i}.log"
-        rc, wall, timed_out = U.run_bounded(["bash", "-c", cmd], cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s)
+        rc, wall, timed_out = U.run_bounded(["bash", "-c", cmd], cwd=C.SOURCE_ROOT, log_path=log, timeout_s=timeout_s)
         rec = {"command": cmd, "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "log": str(log)}
         records.append(rec)
         if rc != 0 or timed_out:
@@ -327,7 +328,9 @@ def main() -> int:
         "dropped_cm_args_no_coverage": a.dropped_cm_args,
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
-        "inputs": U.filelist_digest([C.REPO_ROOT / f for f in build["filelists"]]),
+        "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
+        "source_root": str(C.SOURCE_ROOT), "source_mode": C.SOURCE_MODE_HEAD if os.environ.get(C.ENV_SOURCE_ROOT) else C.SOURCE_MODE_WORKTREE,
+        "head_sha": os.environ.get(C.ENV_HEAD_SHA),
         "staged_env_sh": {"path": str(outdir / C.STAGED_ENV_SH), "sha256": U.sha256_file(C.ENV_SH)},
         "git": U.git_head(), "tools": U.tool_versions(), "started_utc": U.now_utc(),
     }

@@ -49,9 +49,9 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
         # source it writes is the one directed input of the program tool; the seed binding is by construction.
         src = out / C.PROGRAM_GENERATOR_SOURCE
         gen_log = out / "generator.log"
-        gen_argv = [sys.executable, str(C.REPO_ROOT / prog["generator"]), "--seed", str(seed), "--out", str(src),
+        gen_argv = [sys.executable, str(C.SOURCE_ROOT / prog["generator"]), "--seed", str(seed), "--out", str(src),
                     *[str(x) for x in (prog.get("generator_args") or [])]]
-        grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.REPO_ROOT, log_path=gen_log, timeout_s=timeout_s, env=env)
+        grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.SOURCE_ROOT, log_path=gen_log, timeout_s=timeout_s, env=env)
         # The program directory was emptied just before this invocation, so a present, non-empty source was
         # written by it (no clock comparison across filesystems).
         fresh = src.is_file() and src.stat().st_size > 0
@@ -68,14 +68,14 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     elif prog.get("generator"):
         argv += ["--directed", *sources]
     else:
-        argv += ["--directed", *[str(C.REPO_ROOT / d) for d in prog["directed"]]]
+        argv += ["--directed", *[str(C.SOURCE_ROOT / d) for d in prog["directed"]]]
     gen_build = C.site_value("riscv_dv_gen_build")
     if gen_build and prog.get("riscv_dv_test"):
         argv += ["--gen-build", gen_build]
     if prog.get("spike_check"):
         argv.append("--spike-check")
     argv += [str(x) for x in (prog.get("extra_args") or [])]
-    rc, wall, timed_out = U.run_bounded(argv, cwd=C.REPO_ROOT, log_path=log, timeout_s=timeout_s, env=env)
+    rc, wall, timed_out = U.run_bounded(argv, cwd=C.SOURCE_ROOT, log_path=log, timeout_s=timeout_s, env=env)
     vmem = out / C.PROGRAM_VMEM
     sidecar = out / C.PROGRAM_SIDECAR
     if rc != 0 or timed_out or not vmem.is_file() or not sidecar.is_file():
@@ -100,8 +100,8 @@ def image_plusargs(rec: dict[str, Any]) -> list[str]:
     TB rejects any other composition, so a missing helper fails here by name; a missing dependency
     inside the helper propagates unchanged."""
     import importlib
-    if str(C.REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(C.REPO_ROOT))
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
     try:
         mod = importlib.import_module(C.IMAGE_HELPER_MODULE)
     except ModuleNotFoundError as e:

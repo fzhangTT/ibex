@@ -64,7 +64,7 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def filelist_entries(flist: Path, root: Path = C.REPO_ROOT) -> list[Path]:
+def filelist_entries(flist: Path, root: Path = C.SOURCE_ROOT) -> list[Path]:
     """Source files named by a VCS -f file (comments and +incdir+ lines skipped)."""
     files: list[Path] = []
     for raw in flist.read_text(encoding="utf-8").splitlines():
@@ -81,7 +81,7 @@ def filelist_digest(flists: list[Path]) -> dict[str, Any]:
     per_list = {}
     n = 0
     for fl in flists:
-        per_list[str(fl.relative_to(C.REPO_ROOT))] = sha256_file(fl)
+        per_list[str(fl.relative_to(C.SOURCE_ROOT))] = sha256_file(fl)
         for src in filelist_entries(fl):
             if not src.is_file():
                 die(f"{fl}: listed source missing: {src}")
@@ -306,8 +306,8 @@ def clone_relative_file(rel: Any) -> Path | None:
     (.. or a symlink) or names no regular file."""
     if not isinstance(rel, str) or not rel or Path(rel).is_absolute() or ".." in Path(rel).parts:
         return None
-    p = (C.REPO_ROOT / rel).resolve()
-    root = C.REPO_ROOT.resolve()
+    p = (C.SOURCE_ROOT / rel).resolve()
+    root = C.SOURCE_ROOT.resolve()
     return p if p.is_file() and (p == root or root in p.parents) else None
 
 
@@ -315,8 +315,8 @@ def debug_only_from_knobs() -> set[str]:
     """Plusarg names marked debug_only in TB Infra's rendered knob table (gen_knobs.PLUSARGS): the one
     origin of the property and of the names themselves, so no naming rule is re-encoded here."""
     import importlib
-    if str(C.REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(C.REPO_ROOT))
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
     try:
         knobs = importlib.import_module(C.KNOBS_MODULE)
     except ModuleNotFoundError as e:

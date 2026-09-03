@@ -28,6 +28,7 @@ from typing import Any
 
 import gen_flow_const as C
 import gen_flow_util as U
+import gen_mirror as M
 
 TIER_WORDS = {"smoke": "smoke", "targeted": "targeted", "full": "full", "all": "full", "check": "check"}
 
@@ -93,6 +94,12 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
         bva = [bva]
     if not isinstance(bva, list) or not all(isinstance(x, str) for x in bva):
         return None, "build_vcs_args must be a list of strings"
+    source = req.get("source", C.SOURCE_MODE_HEAD)
+    if source not in C.SOURCE_MODES:
+        return None, f"source must be one of {C.SOURCE_MODES}"
+    if purpose == 4 and source != C.SOURCE_MODE_HEAD:
+        return None, "purpose 4 always runs from committed HEAD (source: head)"
+    norm.update(source=source)
     norm.update(purpose=purpose, tests=tests, seeds=seeds, coverage=parse_bool(req["coverage"]),
                 waves=parse_bool(req.get("waves", False)), group=req.get("group"),
                 component=req.get("component"), notes=str(req.get("notes") or ""),
@@ -304,7 +311,8 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
         U.log(f"{name}: elcheck {record['elcheck']['verdict']} -> {manifest_path}")
         return manifest_path
     argv = [sys.executable, str(C.FLOW_DIR / "gen_regress.py"), *args, *(extra_args or []), "--outdir", str(outdir),
-            "--force", "--request", name, "--requester", req["requester"], "--purpose", str(req["purpose"])]
+            "--force", "--request", name, "--requester", req["requester"], "--purpose", str(req["purpose"]),
+            "--source", req.get("source", C.SOURCE_MODE_HEAD)]
     record.update(scope_decision="accepted", regress_cmd=" ".join(argv), regress_outdir=str(outdir),
                   operator_extra_args=list(extra_args or []), server_mirror_sync=server_sync)
     if dry_run:
@@ -333,6 +341,14 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
     return manifest_path
 
 
+def request_source(path: Path) -> str:
+    try:
+        raw = U.load_yaml(path)
+        return str(raw.get("source", C.SOURCE_MODE_HEAD)) if isinstance(raw, dict) else C.SOURCE_MODE_HEAD
+    except (yaml.YAMLError, TypeError, ValueError):
+        return C.SOURCE_MODE_HEAD
+
+
 def request_purpose(path: Path) -> int | None:
     try:
         raw = U.load_yaml(path)
@@ -345,15 +361,17 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                max_concurrent: int) -> int:
     """One pass over the queue. Independent purpose-1 requests run concurrently (each its own outdir,
     manifest and LSF accounting) after a single mirror sync for the batch; everything else in file order."""
-    p1 = [p for p in pending if request_purpose(p) == 1]
+    p1_all = [p for p in pending if request_purpose(p) == 1]
+    # Only head-mode purpose-1 requests share the batch (one head-mode mirror); a worktree request is served alone.
+    p1 = [p for p in p1_all if request_source(p) == C.SOURCE_MODE_HEAD]
     rest = [p for p in pending if p not in p1]
     if len(p1) > 1 and not dry_run:
         # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
-        rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike"],
+        rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
                                             cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log",
                                             timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
-                "batch": [p.stem for p in p1]}
+                "source": C.SOURCE_MODE_HEAD, "head_sha": M.head_sha(), "batch": [p.stem for p in p1]}
         if rc == 0 and not timed_out:
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
             batch_args = list(extra_args) + ["--no-sync-mirror"]

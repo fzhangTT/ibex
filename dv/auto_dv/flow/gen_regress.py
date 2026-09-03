@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures as cf
+import os
 import shutil
 import sys
 import time
@@ -28,6 +29,7 @@ from typing import Any
 
 import gen_flow_const as C
 import gen_flow_util as U
+import gen_mirror as M
 import gen_cov_report as R
 import gen_run as RUN
 
@@ -378,6 +380,43 @@ def self_test() -> int:
     return 0 if ok else 2
 
 
+def resolve_source_mode(a: argparse.Namespace) -> str:
+    if a.source:
+        return a.source
+    many = bool(a.tier) or (a.tests is not None and len([t for t in a.tests.split(",") if t.strip()]) > 1)
+    return C.SOURCE_MODE_HEAD if (a.purpose == 4 or many) else C.SOURCE_MODE_WORKTREE
+
+
+def source_bootstrap(a: argparse.Namespace) -> None:
+    """Head mode: sync the mirror from committed HEAD (unless --no-sync-mirror), require the mirror to be a
+    head-mode mirror of the current HEAD, then re-execute this process with GEN_DV_SOURCE_ROOT set to the
+    mirror so every constant, the testlist and the knob table resolve from the committed tree."""
+    a.source = resolve_source_mode(a)
+    if a.source != C.SOURCE_MODE_HEAD or os.environ.get(C.ENV_SOURCE_ROOT):
+        return
+    root = M.mirror_root()
+    if root is None:
+        U.die("head mode needs a mirror root (gen_site.yaml mirror_root or GEN_DV_MIRROR_ROOT)")
+    if not a.no_sync_mirror:
+        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
+                                    cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "regress_head_sync.log", timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
+        if rc != 0:
+            U.die(f"gen_mirror.py --sync --spike --source head failed (rc={rc}); see {C.WORK_DIR / 'regress_head_sync.log'}")
+    man = M.load_manifest(root) or {}
+    sha = M.head_sha()
+    if man.get("source") != C.SOURCE_MODE_HEAD or man.get("head_sha") != sha:
+        U.die(f"mirror {root} is not a head-mode mirror of HEAD {sha[:12]} (manifest source {man.get('source')!r}, "
+              f"head {str(man.get('head_sha'))[:12]}); run gen_mirror.py --sync --spike --source head")
+    env = dict(os.environ, **{C.ENV_SOURCE_ROOT: str(root), C.ENV_HEAD_SHA: sha})
+    argv = [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:]]
+    if "--no-sync-mirror" not in argv:
+        argv.append("--no-sync-mirror")
+    if "--source" not in argv:
+        argv += ["--source", C.SOURCE_MODE_HEAD]
+    U.log(f"head mode: re-executing with {C.ENV_SOURCE_ROOT}={root} (HEAD {sha[:12]})")
+    os.execve(sys.executable, argv, env)
+
+
 def main() -> int:
     if "--self-test" in sys.argv:
         return self_test()
@@ -410,6 +449,9 @@ def main() -> int:
     ap.add_argument("--dump-exclusions", action="store_true",
                     help="urg -dump full_exclusions at the measured merge (implied by --purpose 4)")
     ap.add_argument("--build-vcs-arg", action="append", help="extra vcs argument for every build (trials)")
+    ap.add_argument("--source", choices=C.SOURCE_MODES, default=None,
+                    help="head: build and run from committed HEAD through a head-mode mirror (default for purpose 4, "
+                         "a tier, or several tests); worktree: the shared working tree (default for one test)")
     ap.add_argument("--no-sync-mirror", action="store_true",
                     help="do not re-sync the shared mirror before cocotb builds (default: sync)")
     ap.add_argument("--allow-local-out-root", action="store_true",
@@ -418,6 +460,7 @@ def main() -> int:
     ap.add_argument("--mutation-id", help="mutation identifier (with --rtl-root); every run is unmeasured")
     ap.add_argument("--force", action="store_true", help="delete an existing outdir")
     a = ap.parse_args()
+    source_bootstrap(a)
     if not (a.tier or a.tests or a.repro):
         ap.error("one of --tier, --tests, --repro is required")
     U.require_env("vcs", "urg", "bsub" if not a.local else "vcs")
@@ -452,6 +495,9 @@ def main() -> int:
                      "copy": str(outdir / "testlist_used.yaml")},
         "mutation": {"id": a.mutation_id, "rtl_root": str(a.rtl_root)} if a.mutation_id else None,
         "purpose": a.purpose, "purpose_text": C.PURPOSES.get(a.purpose) if a.purpose else None,
+        "source": {"mode": a.source, "source_root": str(C.SOURCE_ROOT),
+                   "head_sha": os.environ.get(C.ENV_HEAD_SHA) or U.git_head()["head"],
+                   "worktree_dirty": U.git_head()["dirty_tracked_files"] if a.source == C.SOURCE_MODE_WORKTREE else None},
         "build_config": C.BUILD_CONFIG,
         "scope": {"tier": a.tier, "tests": a.tests, "group": a.group, "repro": a.repro,
                   "seeds_override": a.seeds, "seed_list": a.seed_list, "base_seed": a.base_seed,

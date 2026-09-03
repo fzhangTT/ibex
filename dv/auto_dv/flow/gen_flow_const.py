@@ -16,19 +16,28 @@ from pathlib import Path
 # --- Repository anchors (everything resolves from the clone root) ---------------------------
 FLOW_DIR = Path(__file__).resolve().parent
 REPO_ROOT = FLOW_DIR.parents[2]
+# Source root: the tree that builds, programs, generators, the testlist and the knob table are read
+# from. The clone by default; a head-mode regression re-executes itself with GEN_DV_SOURCE_ROOT set to
+# the mirror synced from committed HEAD, so a shared working tree mid-edit can never reach a measured run.
+ENV_SOURCE_ROOT = "GEN_DV_SOURCE_ROOT"
+ENV_HEAD_SHA = "GEN_DV_HEAD_SHA"
+SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
+SOURCE_MODE_HEAD = "head"
+SOURCE_MODE_WORKTREE = "worktree"
+SOURCE_MODES = (SOURCE_MODE_HEAD, SOURCE_MODE_WORKTREE)
 ENV_SH = REPO_ROOT / "ci" / "env.sh"
-CONFIG_SCRIPT = REPO_ROOT / "util" / "ibex_config.py"
-FCOV_CHECKER = REPO_ROOT / "ci" / "check_fcov_expectations.py"
-TB_DIR = REPO_ROOT / "dv" / "auto_dv" / "tb"
+CONFIG_SCRIPT = SOURCE_ROOT / "util" / "ibex_config.py"
+FCOV_CHECKER = SOURCE_ROOT / "ci" / "check_fcov_expectations.py"
+TB_DIR = SOURCE_ROOT / "dv" / "auto_dv" / "tb"
 TB_PKG_SV = TB_DIR / "gen_tb_pkg.sv"
 # TB Infra's rendered knob table (one origin of the debug_only property and of every plusarg name).
 KNOBS_MODULE = "dv.auto_dv.gen_tb.gen_knobs"
-FCOV_EXPECT_DIR = REPO_ROOT / "dv" / "auto_dv" / "fcov_expectations"
+FCOV_EXPECT_DIR = SOURCE_ROOT / "dv" / "auto_dv" / "fcov_expectations"
 DOCS_DIR = REPO_ROOT / "dv" / "auto_dv" / "docs"
 DASHBOARD_MD = DOCS_DIR / "gen_dashboard.md"
 DASHBOARD_METRICS_MD = DOCS_DIR / "dashboard_metrics.md"
 
-TESTLIST_YAML = FLOW_DIR / "gen_testlist.yaml"
+TESTLIST_YAML = SOURCE_ROOT / "dv" / "auto_dv" / "flow" / "gen_testlist.yaml"
 CM_HIER_TEMPLATE = FLOW_DIR / "gen_cm_hier.cfg"
 PLI_TAB = FLOW_DIR / "gen_pli.tab"
 DUMP_TCL_TEMPLATE = FLOW_DIR / "gen_dump.tcl"
@@ -227,7 +236,7 @@ TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_modul
 SV_PLUSARG_EXPORT_FILE = "PLUSARG_EXPORT_FILE"
 RETENTION_PRUNE_PURPOSES = (4,)
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
-PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
+PROGRAM_TOOL = SOURCE_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
 PROGRAM_KEYS = ("riscv_dv_test", "directed", "generator", "generator_args", "seed", "extra_args", "spike_check")
 PROGRAM_SOURCE_FORMS = ("riscv_dv_test", "directed", "generator")   # exactly one per program block
 PROGRAM_GENERATOR_SOURCE = "gen_source.S"   # the per-seed source a program generator writes into <run>/program/

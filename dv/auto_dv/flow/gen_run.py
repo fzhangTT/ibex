@@ -75,7 +75,7 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
             U.die(f"test {test['name']} is cocotb-driven but build {build['build']} was compiled without --cocotb")
         mirror = build.get("mirror")
         # PYTHONPATH root: the mirror on LSF (the clone is invisible there), the clone for local-cocotb builds.
-        py_root = Path(mirror["root"]) if mirror else C.REPO_ROOT
+        py_root = Path(mirror["root"]) if mirror else C.SOURCE_ROOT
         env.update({C.COCOTB_ENV_MODULE: test["cocotb_module"], "PYTHONPATH": str(py_root),
                     C.COCOTB_ENV_TOPLEVEL: build["tb_top"], C.COCOTB_ENV_TOPLEVEL_LANG: C.COCOTB_TOPLEVEL_LANG})
         if not mirror:
