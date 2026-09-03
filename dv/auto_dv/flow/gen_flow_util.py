@@ -448,6 +448,11 @@ def nested_pairs(trees: list[str]) -> list[tuple[str, str]]:
     return out
 
 
+def plusarg_value(pa: str) -> str | None:
+    """The value of a +name=value plusarg (None for a bare +name)."""
+    return pa.split("=", 1)[1] if "=" in pa else None
+
+
 def plusarg_name(pa: str) -> str | None:
     m = re.match(r"^\+([A-Za-z_][\w+]*)(=.*)?$", pa)
     return m.group(1) if m else None

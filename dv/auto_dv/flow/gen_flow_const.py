@@ -217,7 +217,15 @@ ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",
                       "fcov_expectation_file", "timeout_s", "owner")
 TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_module",
-                      "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect")
+                      "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect",
+                      "keep_artifacts")
+# Retention of the per-run export file (TB Infra export addendum v4, runtime ruling 2026-09-03): purposes 1-3
+# keep every artifact; a purpose-4 regression prunes the file named by the test's export plusarg after the
+# manifest is written, for PASS / RED-OK runs only, unless the entry says keep_artifacts: true; every pruned
+# path is recorded in result.yaml (pruned_artifacts). The plusarg name comes from the SV constants home.
+# The identifier of the export-file plusarg in gen_tb_pkg.sv (the string value is read there, never re-typed).
+SV_PLUSARG_EXPORT_FILE = "PLUSARG_EXPORT_FILE"
+RETENTION_PRUNE_PURPOSES = (4,)
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
 PROGRAM_KEYS = ("riscv_dv_test", "directed", "generator", "generator_args", "seed", "extra_args", "spike_check")

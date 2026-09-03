@@ -663,3 +663,12 @@ the current host (sources the staged env.sh). Through the flow: `gen_regress.py 
 Every regression manifest records `lsf_jobs_left` (this regression's `gen_dv_<tag>_*` jobs still
 active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check (bjobs shows a finished job as RUN for a few seconds after `bsub -K` returns, so a non-empty answer is re-polled every 3 s for up to 15 s before it is recorded); the runtime role runs `bjobs`
 at the end of every task.
+
+Retention of the per-run export file (TB Infra export addendum v4; runtime ruling 2026-09-03): the
+flow never deletes inside a run directory during a regression, and pruning is never silent. Purposes 1
+to 3 keep every artifact. A purpose-4 regression, after its manifest is written, removes the file named
+by the test entry's export plusarg (`gen_export_file`, read from gen_tb_pkg.sv) from every run whose
+verdict is PASS or RED-OK, unless the entry says `keep_artifacts: true`; every removed path is listed in
+that run's result.yaml under `pruned_artifacts`, and the manifest's `retention` block records the rule,
+the plusarg, the planned and pruned counts and the runs spared by `keep_artifacts`. A TB without the
+export knob makes the step a recorded no-op.

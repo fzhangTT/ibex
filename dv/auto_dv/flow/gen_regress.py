@@ -214,6 +214,59 @@ def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any], c
                 U.dump_yaml(stored, res_path)
 
 
+def export_plusarg_name() -> str | None:
+    """The export-file plusarg string as gen_tb_pkg.sv declares it (None when the TB has no such knob)."""
+    by_ident = {ident: name for name, ident in C.sv_plusarg_names().items()}
+    return by_ident.get(C.SV_PLUSARG_EXPORT_FILE)
+
+
+def prune_plan(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose: int | None,
+               export_plusarg: str | None) -> tuple[list[tuple[dict[str, Any], str]], int]:
+    """Retention ruling: which runs lose their export file, and how many were spared by keep_artifacts.
+    Only purposes in RETENTION_PRUNE_PURPOSES, only PASS / RED-OK verdicts, only tests whose entry names an
+    export file through the export plusarg."""
+    plan: list[tuple[dict[str, Any], str]] = []
+    kept = 0
+    if purpose not in C.RETENTION_PRUNE_PURPOSES or not export_plusarg:
+        return plan, kept
+    for r in runs:
+        if r["verdict"] not in (C.VERDICT_PASS, C.VERDICT_RED_OK):
+            continue
+        t = U.test_by_name(testlist, r["test"])
+        files = [U.plusarg_value(pa) for pa in t.get("plusargs") or [] if U.plusarg_name(pa) == export_plusarg]
+        if not files or not files[0]:
+            continue
+        if t.get("keep_artifacts"):
+            kept += 1
+            continue
+        plan.append((r, files[0]))
+    return plan, kept
+
+
+def prune_exports(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose: int | None) -> dict[str, Any]:
+    """Apply the retention ruling after the manifest is written; never silent: every pruned path lands in
+    the run's result.yaml under pruned_artifacts and the count in the manifest."""
+    export_plusarg = export_plusarg_name()
+    plan, kept = prune_plan(runs, testlist, purpose, export_plusarg)
+    pruned = 0
+    for r, fname in plan:
+        res_path = Path(r["result_yaml"]) if r.get("result_yaml") else None
+        if not res_path or not res_path.is_file():
+            continue
+        target = res_path.parent / fname
+        stored = U.load_yaml(res_path)
+        if target.is_file():
+            target.unlink()
+            pruned += 1
+            stored["pruned_artifacts"] = sorted(set(stored.get("pruned_artifacts") or []) | {str(target)})
+        else:
+            stored.setdefault("pruned_artifacts", [])
+        U.dump_yaml(stored, res_path)
+    return {"rule": "purpose-4 PASS/RED-OK runs lose the export file unless keep_artifacts: true; pruned paths in result.yaml",
+            "export_plusarg": export_plusarg, "applies": purpose in C.RETENTION_PRUNE_PURPOSES and bool(export_plusarg),
+            "runs_planned": len(plan), "files_pruned": pruned, "runs_kept_by_keep_artifacts": kept}
+
+
 def lsf_cost(builds: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
     cost = {"jobs": 0, "cpu_s": 0.0, "wall_s": 0.0, "pend_s": 0.0, "slot_s": 0.0, "cpu_unknown_jobs": 0}
     reports = [b.get("lsf") for b in builds.values()] + [r.get("lsf") for r in runs]
@@ -269,6 +322,38 @@ def self_test() -> int:
                     {"test": "gen_f", "verdict": C.VERDICT_FAIL}])
     cond = sm["red_ok"] == 1 and sm["pass"] == 1 and sm["fail"] == 1 and sm["pass_rate_pct"] == 50.0 and sm["planned"] == 3
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"summarize keeps RED-OK out of the pass rate: {sm['red_ok']} red_ok, rate {sm['pass_rate_pct']}")
+    # Retention ruling: purpose 4 only, PASS / RED-OK only, export plusarg named, keep_artifacts spares.
+    tl3 = {"tests": [{"name": "gen_p", "plusargs": ["+gen_export_file=gen_export.txt"]},
+                     {"name": "gen_r", "plusargs": ["+gen_export_file=gen_export.txt"]},
+                     {"name": "gen_f", "plusargs": ["+gen_export_file=gen_export.txt"]},
+                     {"name": "gen_k", "plusargs": ["+gen_export_file=gen_export.txt"], "keep_artifacts": True},
+                     {"name": "gen_n", "plusargs": []}]}
+    rr = [{"test": "gen_p", "verdict": C.VERDICT_PASS}, {"test": "gen_r", "verdict": C.VERDICT_RED_OK},
+          {"test": "gen_f", "verdict": C.VERDICT_FAIL}, {"test": "gen_k", "verdict": C.VERDICT_PASS},
+          {"test": "gen_n", "verdict": C.VERDICT_PASS}]
+    plan, kept = prune_plan(rr, tl3, 4, "gen_export_file")
+    cond = sorted(r["test"] for r, _ in plan) == ["gen_p", "gen_r"] and kept == 1 and all(f == "gen_export.txt" for _, f in plan)
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"prune_plan purpose 4: PASS and RED-OK with an export file pruned, FAIL and no-export untouched, keep_artifacts spares: {[r['test'] for r, _ in plan]} kept={kept}")
+    plan1, kept1 = prune_plan(rr, tl3, 1, "gen_export_file")
+    plan_none, _ = prune_plan(rr, tl3, 4, None)
+    cond = plan1 == [] and kept1 == 0 and plan_none == []
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "prune_plan: purposes 1-3 keep everything; no export knob means nothing to prune")
+    # prune_exports on disk: the file goes, result.yaml records the path; a run without the file records an empty list.
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="gen_regress_selftest_", dir=C.selftest_tmp()) as td:
+        d = Path(td)
+        for name in ("gen_p", "gen_r"):
+            (d / name).mkdir()
+            U.dump_yaml({"test": name, "verdict": "x"}, d / name / "result.yaml")
+        (d / "gen_p" / "gen_export.txt").write_text("record\n", encoding="utf-8")
+        rr2 = [{"test": "gen_p", "verdict": C.VERDICT_PASS, "result_yaml": str(d / "gen_p" / "result.yaml")},
+               {"test": "gen_r", "verdict": C.VERDICT_RED_OK, "result_yaml": str(d / "gen_r" / "result.yaml")}]
+        summary_r = prune_exports(rr2, tl3, 4)
+        p_res = U.load_yaml(d / "gen_p" / "result.yaml"); r_res = U.load_yaml(d / "gen_r" / "result.yaml")
+        cond = (not (d / "gen_p" / "gen_export.txt").exists() and p_res["pruned_artifacts"] == [str(d / "gen_p" / "gen_export.txt")]
+                and r_res["pruned_artifacts"] == [] and summary_r["files_pruned"] == 1 and summary_r["runs_planned"] == 2
+                and summary_r["applies"] is True)
+        ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"prune_exports on disk: file removed and recorded, absent file recorded as empty list: {summary_r['files_pruned']} pruned of {summary_r['runs_planned']} planned")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -450,6 +535,9 @@ def main() -> int:
     manifest.update(runs=runs, summary=summarize(runs), lsf_cost=lsf_cost(builds, runs),
                     finished_utc=U.now_utc(), wall_s=round(time.time() - start, 1), status="done",
                     lsf_jobs_left=U.lsf_jobs_left(U.lsf_job_name(outdir.name, "")) if not a.local else [])
+    U.dump_yaml(manifest, outdir / "manifest.yaml")
+    # Retention ruling: pruning happens only after the manifest exists, and the manifest records what happened.
+    manifest["retention"] = prune_exports(runs, testlist, a.purpose)
     U.dump_yaml(manifest, outdir / "manifest.yaml")
     s = manifest["summary"]
     ft = (manifest.get("fcov") or {}).get("totals") or {}
