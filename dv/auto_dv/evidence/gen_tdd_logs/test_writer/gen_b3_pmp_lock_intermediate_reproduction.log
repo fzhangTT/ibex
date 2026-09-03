@@ -1,0 +1,12 @@
+# 2026-09-03T20:50:22Z reproduction of the pre-fix defects with the reconstructed intermediate generators (sha256 prefixes equal to the sweep / build log headers), run from a detached archive of HEAD 0a07536 with the intermediate source in place of dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py
+== generator 7fead94e4693c62a (sha256 7fead94e4693c62a) ==
+--seed 17: plan() builds (k=81)
+--seed 35 --red: plan() rc=1: AssertionError: red TP-PMP-021 rlb1 rewrite cfg csrrs: the skipped write changes nothing, so the deviation is unobservable
+--seed 7: plan() builds (k=89)
+--seed 29: plan() builds (k=84)
+== generator 429fa9897e7236fa (sha256 429fa9897e7236fa) ==
+--seed 17: plan() rc=1: AssertionError: TP-PMP-015: pmpaddr14 is frozen by a locked TOR above it, so entry 14 cannot become the locked TOR
+--seed 35 --red: plan() builds (red_note=TP-PMP-021: the pmpcfg2 rewrite of locked entry 8 under RLB=1 is replaced by a read (idx 10)k=79)
+--seed 7: plan() builds (k=95)
+--seed 29: plan() builds (k=83)
+# archive generator restored to HEAD's

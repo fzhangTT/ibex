@@ -238,7 +238,7 @@ asks, the ISA comparator does not follow the program.
 | b3_pmc_ctrl_red1 (seed-drawn) | FAIL on fire_tp_pmc_023 alone | 204 | (red run: no UVM summary) |
 
 Blocker (TB), diagnosed against the committed shim (LOG-063; the 04cf523 review's High): dv/auto_dv/isa/gen_isa_shim.cc, unchanged since
-3be5a34 and so identical in the 2ea81ac export out_head14 ran, derives each step's retirement from Spike's minstret delta (minstret0 at :431,
+9e912bb (before 2ea81ac) and so identical in the 2ea81ac export out_head14 ran (its retirement derivation dates from 3be5a34), derives each step's retirement from Spike's minstret delta (minstret0 at :431,
 `retired = minstret1 - minstret0` at :465-466) and, when the delta is 0, synthesises trap = 1 with the current mcause and mtval (:474-477).
 The program holds mcountinhibit.IR = 1 through TP-PMC-023/024/025/033/056, so Spike's minstret stops (the pinned Spike passes 0 to the
 bump while IR is inhibited) and every record executed under the inhibit is reported as a trap with the stale cause 8 of the last ecall while
@@ -260,12 +260,24 @@ set (bits 0, 2..12 writable; bit 1 and 31:13 read 0), the DEFERRED row; (3) the 
 (the writer's +1 in the low word, the WB-inclusive read), which this group's counter writes must respect once the comparator follows the
 program. The DV Lead's plan note stands in the narrower form: TP-PMC-032's criterion "gen_isa_compare (mcause 2)" is satisfiable (the shim
 traps time / timeh), the WARL items' read-backs wait on (2) and (3). Consequence: no testlist entry (the flow verdict would FAIL on the
-comparator); the draft's docstring states the dependency in these terms:
-> by the fire-checks here. gen_isa_compare cannot follow this program yet: the shim derives a retirement from Spike's minstret
-> delta and synthesises a trap record when the delta is 0, so every record executed while mcountinhibit.IR = 1 (023/024/025/033/056
-> hold it) is an isa_trap mismatch, and the mcountinhibit mask the shim defers (Spike keeps bits 13..31) plus Spike's minstret under
-> inhibit and after writes make the counter read-backs isa_rd mismatches; until the shim derives retirement independently of
-> minstret (or models the inhibit) and legalises mcountinhibit, this test has no testlist entry: its fire checks and reds are
-> verified locally (gen_tdd_batch3.md Section 6) and the flow does not run it. declare_bins() takes the template default (the plan's
+comparator); the draft's docstring states the dependency in these sentences (the draft is held under the work directory, so the quote is the
+record until it lands): "gen_isa_compare cannot follow this program yet: the shim derives a retirement from Spike's minstret delta and synthesises
+a trap record when the delta is 0, so every record executed while mcountinhibit.IR = 1 (023/024/025/033/056 hold it) is an isa_trap mismatch,
+and the mcountinhibit mask the shim defers (Spike keeps bits 13..31) plus Spike's minstret under inhibit and after writes make the counter
+read-backs isa_rd mismatches; until the shim derives retirement independently of minstret (or models the inhibit) and legalises
+mcountinhibit, this test has no testlist entry: its fire checks and reds are verified locally (gen_tdd_batch3.md Section 6) and the flow
+does not run it."
 The three files stay under dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/verified_h14/ (the subagent's snapshot beside them in
 draft_18_54Z/) until the shim lands, when the group is re-verified and staged with its pin-off entry.
+
+## 7. Evidence for the Critic's batch3 v2 final lows: the pre-fix defects and the intermediate generators
+
+The two intermediate generators of the batch-3 touch (never committed) are reconstructed from the committed gen_pmp_lock_prog.py by reverting
+the later edits, and their sha256 prefixes equal the ones the retained logs name: 7fead94e4693c62a (the before-fix sweep's header) and
+429fa9897e7236fa (the h13 second-pass build header); both are retained as text. gen_b3_pmp_lock_intermediate_reproduction.log (md5
+1331eb924a455d3586db666ee9ce2e59) runs them from a detached archive: 7fead94e asserts "red TP-PMP-021 rlb1 rewrite cfg
+csrrs: the skipped write changes nothing" at --seed 35 --red (the before-fix sweep's one failure) and builds seeds 7, 17 and 29; 429fa989 aborts
+at seed 17 with "TP-PMP-015: pmpaddr14 is frozen by a locked TOR above it" and builds the others. The pre-fix green failures of seeds 7, 29 and
+35 (out_head13, the 7fead94e generator) are retained as gen_b3_pmp_lock_prefix_green_s7/s29/s35_stdout_excerpt.log (fire_tp_pmp_015 at seed 7,
+fire_tp_pmp_021 at 29 and 35, one ok=False line each), with the first-pass run summary gen_b3_pmp_lock_prefix_run_summary.log. The 800 seeds of
+the sweep are gen_b3_pmp_lock_sweep800_seeds.txt (md5 39d6e98749ba6b847d7ca762c8bd7694).

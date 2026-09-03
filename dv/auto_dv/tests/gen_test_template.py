@@ -232,13 +232,16 @@ class GenTest:
         in_play = {k: set() for k in list(self.schedulable) + pinned_all + self.schedule.knobs()}
         for k in pinned_all:
             in_play[k].add(lib.plus(k))
+        for raw, knob in lib.RAW_FAULT_PLUSARGS.items():    # the per-mille fault plusargs inject the same faults outside any regime knob
+            if lib.plus_int(raw, 0):
+                in_play.setdefault(knob, set()).add("raw")
         for k, v in self.knobs.items():
             in_play.setdefault(k, set()).add(v)
         for p in self.schedule.phases:
             in_play.setdefault(p.knob, set()).add(p.value)
         bad = lib.regime_handler_violations(list(in_play), type(self).program_handlers, type(self).mie_stays_zero, in_play)
         assert not bad, f"GEN_TEST_FAIL {self.name}: the run's regimes are ones its program cannot survive: " + "; ".join(bad)
-        self.log.info("GEN_TEST_KNOBS pinned=%s drawn=%s", ",".join(sorted(self.pinned)) or "-",
+        self.log.info("GEN_TEST_KNOBS pinned=%s drawn=%s", ",".join(sorted(pinned_all)) or "-",
                       " ".join(f"{lib.short_knob(k)}={v}" for k, v in sorted(self.knobs.items())) or "-")
         self.log.info("GEN_TEST_SCHED source=%s k=%d sched=%s", self.schedule.source, self.schedule.k,
                       self.schedule.text() or "-")

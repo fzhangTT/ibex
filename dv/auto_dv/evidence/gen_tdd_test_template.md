@@ -509,3 +509,35 @@ witness fixtures, and states the frozen-list rule instead of a log id. After the
 t.bridge.cov_witness at line 5; an attribute reached through a template-owned name is read-only for a test". Verified from a detached archive
 of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_cm85.log names the HEAD); the shared tree's self-test is red
 at this time on gen_test_csr_access's manifest, stale against the DV Lead's in-progress plan edits, not on this touch.
+
+## 15. The closure touch: an instance rebinding of a template method is refused (CR-T226-M-1)
+
+gen_t226close_lint_probe.log (md5 68980382ec08bf86436c6c8fab77bcb9) runs the Critic's probe on a copy of gen_test_csr_reset.py with one line
+injected into fire_check(): before this touch the lint of HEAD refused self.bridge.cov_witness = fake and self.bridge.cmd = fake (the chain rules
+of 5bb10e7 and ac5853e) but accepted self.cmd = fake (an instance attribute named like a template method is not a template-assigned attribute).
+Change: the class-method walk refuses `self.<method> = ...` for every template method outside the four hooks ("rebinds the template method
+self.cmd on the instance"), the helper branch refuses `t.<method> = ...` the same way, F_OVERRIDE's sentence names the instance rebinding (the
+API doc bullet matches), and a red source joins each list; after the change all three injected lines are refused. Verified from a detached
+archive of HEAD with the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_closure.log names the HEAD).
+
+## 16. The CM88 and CM89 rows: the lint's helper set, plain rule attributes, class keywords, the raw fault plusargs
+
+gen_t2cm88_cm89_lint_probe.log (md5 a5d4bd93b71f965e5244d636c5e7218a) runs the reviewers' probes on the library before and after the change. Before: a decorated
+module-level function given self (`@deco def _h(t): t.bridge = None`, then `t._results.append(1)`) was accepted, because the escape rule's
+helper set included decorated functions while the helper walk excluded them (CM89-M-2); `schedulable += (...)` after a plain assignment and
+a `metaclass=` class keyword passed check_regime_handlers_source (CM88-L-2); the alias `b = self.bridge` followed by `b.cov_witness = None`
+was accepted, as it still is (CM89-M-1: the API doc claimed the opposite). Changes: the escape rule's helper set is the undecorated
+module-level functions, equal to the walked set, so self passed to a decorated function escapes as a bare name (a red source in the F_ESCAPE
+list); check_regime_handlers_source refuses an augmented assignment to a rule attribute and a class keyword on a test class (two red sources
+in the structural list); the self-test asserts the alias shape accepted, the checkable counterpart of the API paragraph, which is rewritten
+to name only shapes that pass (CM89 m-1, l-1, l-2, i-1); the import guard asserts the converse of the knob mapping and the yaml defaults the
+NMI closure relies on (CM88-L-1); setup() weighs the four raw fault plusargs through lib.RAW_FAULT_PLUSARGS, a nonzero value entering the
+run's knobs as the mapped fault knob with the active value raw (CM88-L-3), and the GEN_TEST_KNOBS banner lists every pin in play (CM88-L-5);
+the API doc's pin sentence is made conditional (CM88-L-4) and its NMI gloss covers store responses (CM88-I-1). After the change every probe
+but the alias is refused (the log's second block); the log's third block probes the rule call with the value raw on knob_imem_err_rate (a
+violation without the exc handler, none with it) and on knob_dmem_intg_err_rate (irq); the setup() path is run on out_head14 (the build of the
+2ea81ac export) with the touch's library and template: gen_test_csr_reset seed 1028791296 with +gen_dbus_intg_err_rate=50 is refused before
+the first fetch (knob_dmem_intg_err_rate needs a irq handler), with +gen_dbus_intg_err_rate=0 it passes (a zero rate is inactive), and with
++gen_knob_irq_regime=quiet pinned it passes with the banner naming the pin, pinned=knob_irq_regime, a knob outside the test's schedulable
+(the t2cm88_csr_reset_* excerpts). Verified from a detached archive of HEAD with the touch overlaid
+(dv/auto_dv/work/test-writer/head_final_selftest_closure.log names the HEAD).

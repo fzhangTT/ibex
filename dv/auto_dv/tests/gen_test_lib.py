@@ -64,7 +64,7 @@ DEFAULT_DURATION_WEIGHTS = {"short": 6, "medium": 3, "long": 1}
 
 # Statement shapes check_test_source refuses. The API doc lists exactly these (gen_test_template_api.md) and the self-test proves
 # at least one refused red source per entry; anything not listed passes the lint; the list is frozen (a new refusal is a structural check beside it).
-F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, or a class-body assignment of the method name), or an attribute reached through a template-owned name rebound from a method (an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)"
+F_OVERRIDE = "a template method other than the four hooks overridden in the test class (directly, through an aliased base, an import alias, a mixin, a class-body assignment of the method name, or an instance rebinding from a method or helper, e.g. self.cmd = f), or an attribute reached through a template-owned name rebound from a method (an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)"
 F_LITERAL = "check() with a literal outcome"
 F_NOCHECK = "fire_check() that records no check"
 F_ITEMS = ("fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that does not start with "
@@ -462,7 +462,7 @@ def check_test_source(source, path="<source>", entry_lookup=None):
         return isinstance(c.func, ast.Attribute) and c.func.attr == "check" and isinstance(c.func.value, ast.Name) and c.func.value.id == "self"
 
     READ_BUILTINS = {"len", "sorted", "list", "tuple", "enumerate", "zip", "sum", "any", "all", "min", "max", "set", "iter", "reversed", "str", "repr", "bool", "range"}
-    helpers = {n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    helpers = {n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and not n.decorator_list}   # = helper_defs below: a decorated function is not a helper the test object may reach
 
     def check_escapes(body, obj_names, where):
         """`self` (or a helper parameter bound to the test) may only be read through attributes or passed to a module-level
@@ -556,6 +556,9 @@ def check_test_source(source, path="<source>", entry_lookup=None):
             for tg in tgts:
                 if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id in params and tg.attr in template_attrs:
                     raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} assigns {tg.value.id}.{tg.attr} at line {c.lineno}; template-owned names are read-only")
+                if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id in params and tg.attr in protected:
+                    raise AssertionError(f"GEN_TEST_LIB: {path}: helper {fn.name} rebinds the template method {tg.value.id}.{tg.attr} on the instance at line {c.lineno}; "
+                                         f"a template method is overridden by no test")
                 root, chain = tg, []                    # the same reach as the class-body rule: t.bridge.cov_witness = f inside a helper
                 while isinstance(root, ast.Attribute):
                     chain.append(root.attr)
@@ -592,6 +595,9 @@ def check_test_source(source, path="<source>", entry_lookup=None):
                     for tg in (c.targets if isinstance(c, ast.Assign) else [c.target]):
                         if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id == "self" and owned(tg.attr):
                             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} assigns self.{tg.attr} at line {c.lineno}; template-owned names are read-only for a test")
+                        if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and tg.value.id == "self" and tg.attr in protected:
+                            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} rebinds the template method self.{tg.attr} on the instance at line {c.lineno}; "
+                                                 f"a template method is overridden by no test (F_OVERRIDE)")
                         if isinstance(tg, ast.Attribute) and isinstance(tg.value, ast.Name) and resolve(tg.value.id) in guarded_modules:
                             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} patches {tg.value.id}.{tg.attr} at line {c.lineno}")
                         # an attribute chain rooted at self (self.bridge.cov_witness = f) rebinds a template method behind a template-owned name
@@ -707,9 +713,19 @@ KNOB_HANDLER = {"knob_debug_req_regime": "dbg",
 INACTIVE_VALUE = {"knob_debug_req_regime": "none", "knob_irq_regime": "quiet", "knob_imem_err_rate": "none", "knob_dmem_err_rate": "none",
                   "knob_imem_intg_err_rate": "none", "knob_dmem_intg_err_rate": "none"}
 NMI_LINE_MIX = "with_nmi"      # the one knob_irq_line_mix value that drives irq_nm
+# the per-mille fault plusargs the bus agents honour outside the regime knobs; a nonzero value needs the same handler as the knob
+RAW_FAULT_PLUSARGS = {"ibus_err_rate": "knob_imem_err_rate", "ibus_intg_err_rate": "knob_imem_intg_err_rate",
+                      "dbus_err_rate": "knob_dmem_err_rate", "dbus_intg_err_rate": "knob_dmem_intg_err_rate"}
 HANDLERS = tuple(sorted(set(KNOB_HANDLER.values())))
 assert all(k in KNOB_CONSUMER for k in KNOB_HANDLER) and all(INACTIVE_VALUE[k] in PLUSARGS[k]["values"] for k in INACTIVE_VALUE) \
-    and NMI_LINE_MIX in PLUSARGS["knob_irq_line_mix"]["values"], "regime-handler rule: knob table changed under it"
+    and NMI_LINE_MIX in PLUSARGS["knob_irq_line_mix"]["values"] and all(r in PLUSARGS and k in KNOB_HANDLER for r, k in RAW_FAULT_PLUSARGS.items()), \
+    "regime-handler rule: knob table changed under it"
+# the converse: every irq / dbg consumer and every bus fault-injection knob of the table is mapped, and the defaults the NMI closure and
+# the inactive values rely on hold (the regime quiet, the line mix not with_nmi, the debug regime none)
+assert all(k in KNOB_HANDLER for k, c in KNOB_CONSUMER.items() if c in ("irq", "dbg") or (c == "bus" and "err_rate" in k)), \
+    "regime-handler rule: a consumer knob of the table has no handler mapping"
+assert PLUSARGS["knob_irq_regime"]["default"] == INACTIVE_VALUE["knob_irq_regime"] and PLUSARGS["knob_irq_line_mix"]["default"] != NMI_LINE_MIX \
+    and PLUSARGS["knob_debug_req_regime"]["default"] == INACTIVE_VALUE["knob_debug_req_regime"], "regime-handler rule: knob defaults changed under it"
 
 
 def regime_handler_violations(knobs, program_handlers, mie_stays_zero, values=None):
@@ -793,8 +809,15 @@ def check_regime_handlers_source(source, path="<source>"):
                 elif set().union(*(names_in(t) for t in a.targets)) & set(RULE_ATTRS):
                     raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: {', '.join(sorted(set().union(*(names_in(t) for t in a.targets)) & set(RULE_ATTRS)))} "
                                          f"must be a plain assignment (tuple or chained target at line {a.lineno}) so the regime-handler rule can read it")
+        for a in cls.body:
+            if isinstance(a, ast.AugAssign) and names_in(a.target) & set(RULE_ATTRS):
+                raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name}: {', '.join(sorted(names_in(a.target) & set(RULE_ATTRS)))} must be a plain assignment "
+                                     f"(augmented at line {a.lineno}) so the regime-handler rule can read it")
         if "name" not in attrs:
             continue
+        if cls.keywords:
+            raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} carries a class keyword (line {cls.lineno}; a metaclass may rewrite "
+                                 f"{', '.join(RULE_ATTRS)} behind the regime-handler rule), so test classes take no class keywords (setup() re-checks at run time)")
         if cls.decorator_list:
             raise AssertionError(f"GEN_TEST_LIB: {path}: class {cls.name} carries a decorator (line {cls.decorator_list[0].lineno}); a decorator may rewrite "
                                  f"{', '.join(RULE_ATTRS)} behind the regime-handler rule, so test classes are undecorated (setup() re-checks at run time)")
@@ -958,6 +981,8 @@ def _self_test():
                      (rh_base + "    schedulable = KNOBS\n" + rh_tail, "schedulable must be a literal"),
                      (rh_base + "    schedulable: tuple = ('knob_imem_gnt_delay',)\n" + rh_tail, "plain assignment"),
                      (rh_base + "    a, schedulable = 1, ('knob_imem_gnt_delay',)\n" + rh_tail, "plain assignment"),
+                     (rh_base + "    schedulable = ('knob_imem_gnt_delay',)\n    schedulable += ('knob_debug_req_regime',)\n" + rh_tail, "plain assignment"),
+                     ("from abc import ABCMeta\nfrom dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest, metaclass=ABCMeta):\n    name = 'gen_test_x'\n    schedulable = lib.TIMING_ONLY_KNOBS\n" + rh_tail, "class keyword"),
                      ("from dv.auto_dv.tests.gen_test_template import GenTest\ndef deco(c):\n    return c\n@deco\nclass T(GenTest):\n    name = 'gen_test_x'\n    schedulable = lib.TIMING_ONLY_KNOBS\n" + rh_tail, "carries a decorator"),
                      (rh_base + rh_tail, "needs a dbg handler")):          # the template default schedules every regime knob
         try:
@@ -1006,6 +1031,8 @@ def _self_test():
     # structure check, second set: aliases, module-level writes, nesting, the witness command, the layers opt-out
     good = "    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x')\n"
     imp = "from dv.auto_dv.tests.gen_test_template import GenTest\n"
+    # the alias of a template-owned attribute is a shape the lint does not reach (the API doc lists it); the SV ledger catches the write
+    assert check_test_source(imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        b = self.bridge\n        b.cov_witness = None\n" + good) == ["T"]
     entries = {"gen_test_x": {"name": "gen_test_x", "measured": False}, "gen_test_m": {"name": "gen_test_m", "measured": True}}
     look = entries.get
     for form, red, why in ((F_OVERRIDE, imp + "Base = GenTest\nclass T(Base):\n    name = 'gen_test_x'\n" + good + "    async def finish(self):\n        pass\n", "overrides"),
@@ -1050,12 +1077,15 @@ def _self_test():
         proved.add(form)
     for form, red, why in ((F_OVERRIDE, imp + "def _ok(self):\n    pass\nclass T(GenTest):\n    name = 'gen_test_x'\n    finish = _ok\n" + good, "assigns method name finish"),
                            (F_OVERRIDE, imp + "async def _f(tp, g, timeout_cycles=200):\n    return 0\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.bridge.cov_witness = _f\n" + good, "rebinds self.bridge.cov_witness"),
+                           (F_OVERRIDE, imp + "async def _f(*a, **k):\n    return 0\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.cmd = _f\n" + good, "rebinds the template method self.cmd"),
                            (F_OVERRIDE, imp + "async def _f(*a):\n    return 0\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.bridge.h.b = _f\n" + good, "rebinds self.bridge.h.b"),
                            (F_RECORD, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        rs = self._results\n" + good, "aliases self._results"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        getattr(self, '_results').append(1)\n" + good, "uses getattr(self"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        self.__dict__['failures'] = []\n" + good, "touches self.__dict__"),
                            (F_INTROSPECT, imp + "class T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        type(self).finish = None\n" + good, "uses type(self"),
                            (F_HELPER, imp + "async def _f(*a):\n    return 0\ndef _h(t):\n    t.bridge.cov_witness = _f\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "rebinds t.bridge.cov_witness"),
+                           (F_HELPER, imp + "async def _f(*a, **k):\n    return 0\ndef _h(t):\n    t.cmd = _f\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "rebinds the template method t.cmd"),
+                           (F_ESCAPE, imp + "def deco(f):\n    return f\n@deco\ndef _h(t):\n    t.bridge = None\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _h(self)\n" + good, "escapes as a bare name"),
                            (F_HELPER, imp + "def _forge(t):\n    t._results.append(1)\nclass T(GenTest):\n    name = 'gen_test_x'\n    async def stimulus(self):\n        _forge(self)\n" + good, "helper _forge calls into t._results"),
                            (F_HELPER, imp + "def _forge(t):\n    t.failures = []\nclass T(GenTest):\n    name = 'gen_test_x'\n" + good, "helper _forge assigns t.failures")):
         accepted = False

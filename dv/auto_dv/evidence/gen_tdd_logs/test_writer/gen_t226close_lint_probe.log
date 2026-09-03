@@ -1,0 +1,8 @@
+# CR-T226-M-1 probe, 2026-09-03T20:47:34Z: the lint of HEAD 2f161dd (gen_test_lib.py sha256 2bf1bc93912272d1) on a copy of gen_test_csr_reset.py with one injected line in fire_check()
+self.bridge.cov_witness = fake: REFUSED: <csr_reset+injection>: class CsrReset rebinds self.bridge.cov_witness at line 171; an attribute reached through a template-owned name is read-only for a test
+self.cmd = fake: ACCEPTED (unexpected)
+self.bridge.cmd = fake: REFUSED: <csr_reset+injection>: class CsrReset rebinds self.bridge.cmd at line 171; an attribute reached through a template-owned name is read-only for a test
+# CR-T226-M-1 probe after the fix, 2026-09-03T20:49:11Z: the tree's gen_test_lib.py (sha256 511092bf0e317c1f) on the same injected lines
+self.bridge.cov_witness = fake: REFUSED: <csr_reset+injection>: class CsrReset rebinds self.bridge.cov_witness at line 171; an attribute reached through a template-owned name is read-only for a test
+self.cmd = fake: REFUSED: <csr_reset+injection>: class CsrReset rebinds the template method self.cmd on the instance at line 171; a template method is overridden by no test (F_OVERRIDE)
+self.bridge.cmd = fake: REFUSED: <csr_reset+injection>: class CsrReset rebinds self.bridge.cmd at line 171; an attribute reached through a template-owned name is read-only for a test

@@ -194,7 +194,8 @@ refused red source in the self-test (three sets of red sources today; the self-t
 
 Regime-handler rule (LOG-050, Critic batch-1 v8 L-1): a regime knob may be in play only with the handler its events need.
 `lib.KNOB_HANDLER` maps the knobs by name: knob_debug_req_regime needs `"dbg"` (a debug ROM in the DM window); the irq knobs
-(knob_irq_regime, knob_irq_line_mix, knob_irq_hold) and knob_dmem_intg_err_rate (a load integrity error is an internal NMI)
+(knob_irq_regime, knob_irq_line_mix, knob_irq_hold) and knob_dmem_intg_err_rate (a data-side integrity error, on a load or a store
+response, is an internal NMI)
 need `"irq"` (a returning handler at mtvec, the NMI vector included); knob_imem_err_rate, knob_dmem_err_rate and
 knob_imem_intg_err_rate need `"exc"` (a trap handler for the injected access fault). Latencies, the outstanding cap, the
 scramble key and the program-side markers need nothing. `mie_stays_zero = True` exempts the irq knobs only while no NMI can be
@@ -204,16 +205,20 @@ play with active values. `lib.check_regime_handlers(path)` is the structural for
 (a literal tuple drawn from `lib.HANDLERS`) and `mie_stays_zero` (a literal); an annotated or tuple-target assignment of those
 names, a decorated test class and any other value form are refused as unreadable; absent attributes take the GenTest defaults,
 not a base class's own value (a conservative refusal at worst). The library self-test runs it over every committed test module
-with thirteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and
-before the first fetch: the knobs in play are the class's `schedulable`, the pinned knobs (`+gen_knob_<name>=`) and every knob of
-the schedule (derived, or supplied through `+gen_regime_sched`), each with the values it takes; a knob whose only value is its
-inactive one (`quiet`, `none`) needs nothing, and a run whose regimes the program cannot survive fails
+with fifteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and
+before the first fetch: the knobs in play are the class's `schedulable`, the pinned knobs (`+gen_knob_<name>=`), every knob of
+the schedule (derived, or supplied through `+gen_regime_sched`) and, for the four per-mille fault plusargs the bus agents honour
+outside the regime knobs (`+gen_ibus_err_rate`, `+gen_ibus_intg_err_rate`, `+gen_dbus_err_rate`, `+gen_dbus_intg_err_rate`), the
+fault knob they inject as (`lib.RAW_FAULT_PLUSARGS`, a nonzero value counts as active), each with the values it takes; a knob whose
+only value is its inactive one (`quiet`, `none`) needs nothing, and a run whose regimes the program cannot survive fails
 `GEN_TEST_FAIL <name>: the run's regimes are ones its program cannot survive`. It is a structural check beside the lint, not a
 16th refused form (LOG-024d keeps `REFUSED_FORMS` frozen). The template default `schedulable = lib.REGIME_KNOBS` names the irq,
 dbg and fault-injection knobs, so a test that keeps it must declare all three handlers; every committed test narrows
 `schedulable` instead (`lib.TIMING_ONLY_KNOBS` or a literal tuple), and gen_test_rst_boot (knob_irq_regime) and
 gen_test_csr_reset (knob_irq_line_mix), each without a handler, declare `mie_stays_zero = True` (one irq knob each, so no NMI
-can be drawn; a pin of the other knob to an active value fails the run at setup).
+can be drawn; a pin of the other knob fails the run at setup whenever the drawn or scheduled values of the first are active:
+storm pinned on csr_reset fails only when its drawn or scheduled line mix includes with_nmi, with_nmi pinned on rst_boot only when a
+drawn or scheduled regime is active).
 
 Witness protocol (plan v2f, Critic condition C-1): `self.check(what, ok, detail, cycle_clause_true=False)`
 returns a `CheckResult`; a `fire_tp_<area>_<nnn>` method passes `cycle_clause_true=True` only on the TRUE
@@ -241,8 +246,9 @@ self-test's red list, `lib.REFUSED_FORMS`: at least one refused red source per l
 list and the table differ):
 
 - a template method other than the four hooks overridden in the test class (directly, through an aliased base, an
-  import alias, a mixin, or a class-body assignment of the method name), or an attribute reached through a
-  template-owned name rebound from a method (an attribute chain rooted at self, e.g. self.bridge.cov_witness = f)
+  import alias, a mixin, a class-body assignment of the method name, or an instance rebinding from a method or helper,
+  e.g. self.cmd = f), or an attribute reached through a template-owned name rebound from a method (an attribute chain
+  rooted at self, e.g. self.bridge.cov_witness = f)
 - check() with a literal outcome
 - fire_check() that records no check
 - fire_tp_* items out of step with the plan group: a fire_tp_* method fire_check() never calls, a check name that
@@ -265,12 +271,18 @@ list and the table differ):
 
 Everything else passes; the lint is not a guarantee. The guarantee is architectural: the committed testlist ids, the
 fire-check codes and the SV witness ledger. Shapes known to pass today, each an indirection-free statement or a patch
-outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []`,
-template patching through an import alias or the full dotted path, string-built names, exec/importlib, objects reached
-through containers or return values (`b = self.bridge` is refused as an escape, but `b = [self.bridge][0]` or a helper
-returning it is not), helpers in other modules. The refused-form list is frozen: a new refusal is a structural check beside
-the lint, not a new form; those shapes are caught only by the SV ledger and review. The developer-variable guard in `__init__` recognises a flow run by a `/runs/` run directory or the
-`GEN_DV_FLOW_RUN` environment marker (`lib.FLOW_RUN_ENV`, exported by every flow job script); a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
+outside the enumerated names: `for self.failures in ([],)`, `with open(p) as self.failures`, `*self.failures, = []`; an alias of a
+template-owned attribute and a write through it (`b = self.bridge` then `b.cov_witness = None`; the escape rule covers the bare test
+object and the verdict record, not `bridge`), the same one transformation away in a helper (`_h(self.bridge)` with `def _h(b):
+b.cov_witness = f`, `b = t.bridge` inside a helper, `setattr(t.bridge, 'cov_witness', f)` inside a helper), a dunder call
+(`self.__setattr__('bridge', None)`, `self.bridge.__setattr__(...)`) and a subscript inside a chain (`self.bridge.cmds[0].x = 1`, in
+methods and helpers); template patching through an import alias or the full dotted path, exec/importlib, objects reached through
+containers or return values, and helpers in other modules given an attribute rather than the test object (`forge(self)` with an
+imported `forge` is refused as an escape, `forge(self.bridge)` passes). The refused-form list is frozen: a new refusal is a
+structural check beside the lint, not a new form; those shapes are caught only by the SV ledger and review, and the self-test
+carries the alias shape as a known-passing source so this paragraph stays checkable. The developer-variable guard in `__init__`
+recognises a flow run by a `/runs/` run directory or the `GEN_DV_FLOW_RUN` environment marker (`lib.FLOW_RUN_ENV`, exported by
+every flow job script); a flow layout without either is not covered. Fixtures gen_ut_witness_ok / _foreign / _notable /
 _noid / _othergroup prove the five epilogue paths with a Python-side recorder in place of the bridge's cov_witness.
 
 `run()` logs `GEN_TEST_DRAIN waited cycles=<n>` when the schedule runner was mid-apply at the end of test

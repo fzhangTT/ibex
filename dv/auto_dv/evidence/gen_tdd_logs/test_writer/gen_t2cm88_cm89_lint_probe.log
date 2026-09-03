@@ -1,0 +1,19 @@
+# TDD reds for CM89-m-2 / CM88-L-2 / CM89-m-1, 2026-09-03T20:54:04Z: the tree's gen_test_lib.py (sha256 511092bf0e317c1f) on the reviewers' probes
+CM89-m-2 decorated helper t.bridge = None called with self: ACCEPTED
+CM89-m-2 decorated helper t._results.append(1): ACCEPTED
+CM89-m-1 alias b = self.bridge; b.cov_witness = None (claimed refused): ACCEPTED
+CM88-L-2 schedulable += (...): check_regime_handlers_source ACCEPTED ['T']
+CM88-L-2 metaclass keyword: check_regime_handlers_source ACCEPTED ['T']
+# after the fix, 2026-09-03T20:57:42Z: gen_test_lib.py sha256 f454a800d25fccb9
+CM89-m-2 decorated helper t.bridge = None called with self: REFUSED: GEN_TEST_LIB: <probe>: class T.stimulus: the test object escapes as a bare name at line 10 (bound, packed, returned, captured or passed outside a module-level h
+CM89-m-2 decorated helper t._results.append(1): REFUSED: GEN_TEST_LIB: <probe>: class T.stimulus: the test object escapes as a bare name at line 10 (bound, packed, returned, captured or passed outside a module-level h
+CM89-m-1 alias b = self.bridge; b.cov_witness = None (documented as passing): ACCEPTED
+undecorated helper still allowed (control): ACCEPTED
+CM88-L-2 schedulable += (...): REFUSED: GEN_TEST_LIB: <probe>: class T: schedulable must be a plain assignment (augmented at line 5) so the regime-handler rule can read it
+CM88-L-2 metaclass keyword: REFUSED: GEN_TEST_LIB: <probe>: class T carries a class keyword (line 3; a metaclass may rewrite schedulable, program_handlers, mie_stays_zero behind the regime-handler 
+RAW_FAULT_PLUSARGS {'ibus_err_rate': 'knob_imem_err_rate', 'ibus_intg_err_rate': 'knob_imem_intg_err_rate', 'dbus_err_rate': 'knob_dmem_err_rate', 'dbus_intg_err_rate': 'knob_dmem_intg_err_rate'}
+# rule-level probe of the raw fault plusargs, 2026-09-03T21:01:33Z: a nonzero +gen_ibus_err_rate enters the run's knobs as knob_imem_err_rate = raw
+program_handlers=(): violations=['knob_imem_err_rate needs a exc handler the program does not declare']
+program_handlers=('exc',): violations=[]
+program_handlers=('irq',): violations=['knob_imem_err_rate needs a exc handler the program does not declare']
+dbus_intg (irq handler needed): none=['knob_dmem_intg_err_rate needs a irq handler the program does not declare'] irq=[]
