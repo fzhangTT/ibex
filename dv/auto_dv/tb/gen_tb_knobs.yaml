@@ -239,6 +239,9 @@ export_events:
   - {source: misc, event: crash_dump_exception_pc, fields: [value]}
   - {source: misc, event: crash_dump_exception_addr, fields: [value]}
   - {source: icram, event: inject, fields: [way, index]}
+  - {source: icram, event: lookup, fields: [index]}
+  - {source: icram, event: tag_write, fields: [way, index, valid]}
+  - {source: icram, event: fill_write, fields: [way, index]}
   - {source: scrkey, event: req, fields: [value]}
   - {source: scrkey, event: valid, fields: [value]}
   - {source: regime, event: phase, fields: [knob_id, value_idx, phase_idx]}

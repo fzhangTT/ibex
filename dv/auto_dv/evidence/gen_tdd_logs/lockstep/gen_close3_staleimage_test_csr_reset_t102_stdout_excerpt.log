@@ -1,0 +1,5 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102/close3/test_csr_reset/stdout.log (config banner, first comparator lines, ISA compare summary, UVM report counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+                                                        AssertionError: GEN_TEST_FAIL gen_test_csr_reset: 6 fire-check failure(s): fire_tp_csr_037: 0/1 read-backs in bounds, 1/2 relations hold; mtvec_again got 0x00000000 expected 0x80000001
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                        11070.01           0.27      41390.05  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

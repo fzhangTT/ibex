@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: gen_fail_marker at stdout.log:158
+evidence:                                                         AssertionError: GEN_TEST_FAIL gen_test_csr_reset: 6 fire-check failure(s): fire_tp_csr_037: 0/1 read-backs in bounds, 1/2 relations hold; mtvec_again got 0x00000000 expected 0x80000001 | mtvec first read: mtvec 0x00000000 expected 0x80000001 (b
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

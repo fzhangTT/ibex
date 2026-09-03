@@ -1,0 +1,4 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t102/close3/test_pmp_csr_warl/stdout.log (config banner, first comparator lines, ISA compare summary, UVM report counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                             257360.01           1.12     229686.98  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

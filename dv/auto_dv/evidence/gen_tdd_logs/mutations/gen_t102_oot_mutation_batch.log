@@ -1,0 +1,27 @@
+# T-102 follow-up mutations P10/P11, out-of-tree runs (scratch copies under mut_root/<id>; the shared tree's gen_rvfi_pkg.sv sha256 printed after each)
+12:05:10Z
+P10 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P10/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 0dd85c87f99c314b
+P10_catch_csr_trap_setup: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(194) @ 721500: uvm_test_top.env.sb [isa_pc] pc model=80000404 dut=80000408 (order=213 pc=80000404 insn=00004897 trap=0 intr=0 rd=x17/80004404 mem=80004404 w000
+P10_ablate_csr_trap_setup: verdict: FAIL reason: cocotb_summary at stdout.log:838   first: 
+P10: shared tree untouched: 0dd85c87f99c314b
+P11 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P11/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 0dd85c87f99c314b
+P11_catch_csr_trap_setup: verdict: FAIL reason: cocotb_summary at stdout.log:838   first: 
+P11_ablate_csr_trap_setup: verdict: FAIL reason: cocotb_summary at stdout.log:838   first: 
+P11: shared tree untouched: 0dd85c87f99c314b
+12:06:22Z
+[exited with code 0]
+12:08:56Z
+test2_rst_boot: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test2_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test2_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test2_pmp_csr_warl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+== P10 runs (built mutant root) with the regenerated image
+P10_catch_csr_trap_setup: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  100 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(194) @ 4335500: uvm_test_top.env.sb [isa_pc] pc model=80001700 dut=80001704 (order=1437 pc=80001700 insn=80000237 trap=0 intr=0 rd=x4/80000000 mem=80000000 w00
+P10_ablate_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+== P11 redefined: full out-of-tree build
+P11 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P11/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 0dd85c87f99c314b
+P11_catch_csr_trap_setup: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  100 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 4326500: uvm_test_top.env.sb [isa_pc_next] mret/dret record pc_wdata=1a110968 != pc + 4 (C-1) (order=1436 pc=1a110964 insn=30200073 trap=0 intr=0 rd=x0/
+P11_ablate_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+P11: shared tree untouched: 0dd85c87f99c314b
+12:09:55Z
+[exited with code 0]

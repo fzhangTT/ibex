@@ -78,6 +78,15 @@ endfunction
 function automatic string gen_export_line_icram_inject(int unsigned cycle, int unsigned way, int unsigned index);
   return $sformatf("E %0h icram inject %0h %0h", cycle, way, index);
 endfunction
+function automatic string gen_export_line_icram_lookup(int unsigned cycle, int unsigned index);
+  return $sformatf("E %0h icram lookup %0h", cycle, index);
+endfunction
+function automatic string gen_export_line_icram_tag_write(int unsigned cycle, int unsigned way, int unsigned index, int unsigned valid);
+  return $sformatf("E %0h icram tag_write %0h %0h %0h", cycle, way, index, valid);
+endfunction
+function automatic string gen_export_line_icram_fill_write(int unsigned cycle, int unsigned way, int unsigned index);
+  return $sformatf("E %0h icram fill_write %0h %0h", cycle, way, index);
+endfunction
 function automatic string gen_export_line_scrkey_req(int unsigned cycle, int unsigned value);
   return $sformatf("E %0h scrkey req %0h", cycle, value);
 endfunction

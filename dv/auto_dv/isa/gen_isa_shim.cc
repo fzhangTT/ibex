@@ -108,6 +108,8 @@ class gen_mie_csr_t : public mie_csr_t {   // Ibex's writable mie set (unlogged_
   reg_t write_mask() const noexcept override { return kIbexMieMask; }
 };
 bool g_ic_scr_key_valid = false;   // cpuctrlsts bit 8, DUT status fed by the TB from the record (gen_isa_set_status)
+class gen_cpuctrl_csr_t;
+std::shared_ptr<gen_cpuctrl_csr_t> g_cpuctrl;   // the model's cpuctrlsts, for the hardware-set status bits
 class gen_masked_csr_t : public csr_t {    // secureseed (reads 0) and the mhpmcounter holders the TB syncs
  public:
   gen_masked_csr_t(processor_t* proc, reg_t addr, reg_t mask) : csr_t(proc, addr), mask_(mask) {}
@@ -140,6 +142,7 @@ class gen_cpuctrl_csr_t : public csr_t {   // cpuctrlsts: masked control bits; b
  public:
   gen_cpuctrl_csr_t(processor_t* proc, reg_t addr, reg_t mask) : csr_t(proc, addr), mask_(mask) {}
   reg_t read() const noexcept override { return val_ | (g_ic_scr_key_valid ? 0x100u : 0u); }
+  void set_flags(reg_t set, reg_t clr) { val_ = (val_ | set) & ~clr; }   // hardware-set status bits 6/7 (rtl/ibex_cs_registers.sv:935-943, :964-965)
  protected:
   bool unlogged_write(reg_t val) noexcept override { val_ = val & mask_; return true; }
  private:
@@ -173,12 +176,13 @@ class gen_ibex_ext_t : public extension_t {
   std::vector<insn_desc_t> get_instructions(const processor_t&) override { return {}; }
   std::vector<disasm_insn_t*> get_disasms(const processor_t* = nullptr) override { return {}; }
   std::vector<csr_t_p> get_csrs(processor_t& p) const override {
-    return {std::make_shared<gen_cpuctrl_csr_t>(&p, GEN_CSR_CPUCTRLSTS, kCpuctrlWmask),
-            std::make_shared<gen_masked_csr_t>(&p, GEN_CSR_SECURESEED, 0)};
+    g_cpuctrl = std::make_shared<gen_cpuctrl_csr_t>(&p, GEN_CSR_CPUCTRLSTS, kCpuctrlWmask);
+    return {g_cpuctrl, std::make_shared<gen_masked_csr_t>(&p, GEN_CSR_SECURESEED, 0)};
   }
   const char* name() const override { return "genibex"; }   // no underscore: the ISA parser splits on it
 };
 REGISTER_EXTENSION(genibex, []() { return new gen_ibex_ext_t; })
+constexpr reg_t kCpuctrlSyncExcSeen = 0x40u, kCpuctrlDoubleFaultSeen = 0x80u;   // cpu_ctrl_sts_part_t bits 6 and 7
 
 // ---- model instance ---------------------------------------------------------------------------
 cfg_t g_cfg;
@@ -441,6 +445,11 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap = 1;
     out->trap_cause = csr(CSR_MCAUSE);
     out->trap_tval = csr(CSR_MTVAL);
+    // a synchronous exception sets sync_exc_seen, a second one while it is set also sets double_fault_seen (debug entry is neither)
+    if (g_cpuctrl && !(out->trap_cause & 0x80000000u) && !(!was_debug && s->debug_mode))
+      g_cpuctrl->set_flags(kCpuctrlSyncExcSeen | ((g_cpuctrl->read() & kCpuctrlSyncExcSeen) ? kCpuctrlDoubleFaultSeen : 0u), 0);
+  } else if (g_cpuctrl && out->insn == GEN_INSN_MRET) {
+    g_cpuctrl->set_flags(0, kCpuctrlSyncExcSeen);   // mret clears sync_exc_seen; double_fault_seen stays until software clears it
   }
   for (auto& kv : s->log_reg_write) {
     reg_t key = kv.first;

@@ -21,7 +21,15 @@ per-test generators (dv/auto_dv/tests/gen_programs/gen_<g>_prog.py) built with g
 | P9 | gen_isa_shim.cc: tdata1 view removed (Spike's disabled-trigger 0xf0000000 stands) | gen_test_rst_boot seed 1, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_rd=1` | FAIL (UVM_ERROR 1); first: `isa_rd` rd model=x19/f0000000 dut=x19/28001048 (order 68, pc 80000208, insn 7a1079f3) | `+gen_chk_isa_rd=0`: PASS (UVM_ERROR 0) |
 | P8 | gen_isa_shim.cc: cmix reference computes `(rs1 & rs2) | (rs3 & rs2)` (mask not inverted) | the shim unit test gen_ut_isa_shim (the consumer of the reference functions; no DUT test exercises cmix yet, TP-BIT-027 is the Test Writer's) | FAIL (1 failures): cmix | not applicable (a unit check has no knob); the same build passes with the mutation reverted (green log) |
 
-Summary: 8 of 8 DUT-run mutations caught with the ablation passing; P8 caught by the
+| P10 | gen_rvfi_pkg.sv (scoreboard): the record after an mret is compared with pc_rdata + 4 (a wrong redirect target as reported) | gen_test_csr_trap_setup seed 1, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc=1`, OUT OF TREE | FAIL (UVM_ERROR 100); first: `isa_pc` pc model=80001700 dut=80001704 (order 1437) | `+gen_chk_isa_pc=0`: PASS (UVM_ERROR 0) |
+| P11 | gen_rvfi_pkg.sv: the mret record's pc_wdata is compared off by 4 (a wrong C-1 convention value as reported) | gen_test_csr_trap_setup seed 1, `+gen_chk_all=0 +gen_chk_isa=1 +gen_chk_isa_pc_next=1`, OUT OF TREE | FAIL (UVM_ERROR 100); first: `isa_pc_next` mret/dret record pc_wdata=1a110968 != pc + 4 (order 1436) | `+gen_chk_isa_pc_next=0`: PASS (UVM_ERROR 0) |
+
+Out-of-tree rule (Critic T-080 landing-1 L-1, adopted by the Orchestrator): P10 and P11 were built from a scratch copy of
+dv/auto_dv (every other clone entry symlinked; runner prints the shared tree's gen_rvfi_pkg.sv sha256 after the batch,
+0dd85c87f99c314b unchanged; gen_tdd_logs/mutations/gen_t102_oot_mutation_batch.log). P1..P9 had run in the shared tree
+under the announce-and-revert rule before the L-1 rule reached tb-infra; disclosed here and in README.md.
+
+Summary: 10 of 10 DUT-run mutations (P1..P7, P9, P10, P11) caught with the ablation passing; P8 caught by the
 unit test. P1's message text still prints `prv_b` (the mutation changes only the compared operand), so its first line
 reads "priv model=3 (before the step) dut mode=3" while the compare that fired used the post-step privilege 0.
 Not covered by a mutation: the draft-B references other than cmix (unit-tested with literal vectors in

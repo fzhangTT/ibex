@@ -105,3 +105,29 @@ After the last mutation revert (both files at their pre-mutation sha256, gen_mut
 lockstep_zc, lockstep_s7 and export_zc: all PASS, UVM_ERROR 0 (gen_tdd_logs/<lockstep|export>/gen_close_*_t102_*). The
 retained-log manifest (gen_tdd_logs/gen_manifest.md) carries one row per retained file (bytes, md5, source); no file
 under gen_tdd_logs lacks the gen_ prefix.
+
+## 8. Follow-ups after the d0c0d15 landing (Critic APPROVE with M-1; the Orchestrator's compare rule)
+
+- isa_pc_next no longer skips mret/dret records: it compares `pc_wdata == pc_rdata + insn_len(insn)` (2 for a compressed
+  encoding, rtl-arch R1), the same rule on trap records except fetch faults (cause 1, no fetched length); the redirect
+  target is checked by isa_pc on the following record (model pc after the mret versus `pc_rdata`). Mutations, both built
+  OUT OF TREE (Critic L-1 rule; scratch copy of dv/auto_dv with every other clone entry symlinked, the shared tree's
+  gen_rvfi_pkg.sv sha256 0dd85c87f99c314b printed unchanged after each): P10 reports the record after an mret with
+  pc + 4 -> isa_pc FAIL (UVM_ERROR 100) on gen_test_csr_trap_setup, ablation (`+gen_chk_isa_pc=0`) PASS; P11 reports the
+  mret record's pc_wdata off by 4 -> isa_pc_next FAIL (100), ablation PASS. A first P11 form (the compare deleted) was
+  discarded before any result was used: a deleted compare cannot be caught on a correct DUT, so the mutation must be a
+  reported-value defect.
+- cpuctrlsts bits 6/7 (sync_exc_seen, double_fault_seen, rtl-arch R6 caution): the shim sets and clears them from the
+  model's own trap history; unit test section 7 (two ecalls, then mret: 0x40, 0xC0, 0x80, software clear). This section
+  was written with the implementation, not red-first; its red is R6's statement that the model lacked the bits.
+- M-1 wording (consistency compares, owners) in the scoreboard API document and the comparator comment; three exact
+  icram rows for the plan's round 7 (lookup, tag_write, fill_write) in the yaml, rendered and unit-tested; Section 9 of
+  the addendum aligned to the rulings (version 4c).
+- Closing build dv/auto_dv/work/tb-infra/out_t102/close3 (fresh compile, gen_close3_compile_t102.log): boot_zc, lockstep_zc,
+  lockstep_s7, export_zc PASS; gen_test_rst_boot PASS. gen_test_csr_reset, gen_test_csr_trap_setup and gen_test_pmp_csr_warl
+  first FAILED on the Python side with UVM_ERROR 0 (retained as gen_close3_staleimage_*): the Test Writer edited their
+  generators and tests in the shared tree between 11:55Z and 12:01Z (uncommitted), so my 11:41Z images no longer matched
+  the tests (missing symbols, shifted report words, a store count of 777). With images regenerated from the current
+  generators (gen_close3_test2_*) all four PASS, UVM_ERROR 0, mismatches 0, the pc + length rule exercised by 70 mrets
+  and 157 traps. Shim unit test 159 OK (gen_tdd_logs/isa_shim; the ut3 run is not retained separately, the green log of
+  Section 2 plus this build's compile stand for it).

@@ -48,14 +48,21 @@ association is by order with the response preceding the record.
 | `isa_rd` | GPR write (index, value) == `rvfi_rd_addr/rd_wdata` | ALU operator select (`rtl/ibex_alu.sv`), multiplier/divider (`rtl/ibex_multdiv_fast.sv`), decoder rd/we (`rtl/ibex_decoder.sv`), WB mux (`rtl/ibex_wb_stage.sv`) | `+gen_chk_isa_rd=0` |
 | `isa_mem` | memory access address, size, store data == `rvfi_mem_*` | LSU address/data rotation and byte enables (`rtl/ibex_load_store_unit.sv:138-221`) | `+gen_chk_isa_mem=0` |
 | `isa_prv` | the model's privilege BEFORE the step (`prv_before`) == `rvfi_mode`: rvfi_mode is the mode the instruction executed in, so the post-step privilege is not compared (T-102; the pre-T-102 compare fired on every mret and every U-mode trap) | privilege update on trap/mret (`rtl/ibex_cs_registers.sv:953-993`) | `+gen_chk_isa_prv=0` |
-| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata`; not on trap records (F-RVFI-010) and not on mret/dret records (plan C-1: their `pc_wdata` is pc + 4; the target is checked by the next record's `isa_pc`) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
+| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata`; on trap, mret and dret records the expectation is `pc_rdata + instruction length` instead (plan C-1 / F-RVFI-010, rtl-arch R1: pc_if, 2 for a compressed encoding; a fetch fault, cause 1, has no length and is not compared), and the redirect target is checked by `isa_pc` on the following record (model pc versus its `pc_rdata`) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
 | `isa_csr` | every model CSR write (commit log type 4) == the legalized expectation (C5.3a) or the SPEC value (C5.3b rows); read-backs per C6 | CSR legalization and read mux (`rtl/ibex_cs_registers.sv`) | `+gen_chk_isa_csr=0` |
 
 Model synchronisation before every record step (T-102): the scoreboard hands the record's sampled values to the model
 before stepping it, `gen_isa_set_time(t.ext_mcycle)`, `gen_isa_set_hpm(k, ...)` for the `GEN_MHPM_COUNTER_NUM` counter
 pairs and `gen_isa_set_status(t.ext_ic_scr_key_valid)`. RVFI samples these when the instruction leaves ID
 (rtl/ibex_core.sv:2102-2120), the cycle in which a CSR read of `cycle`, `mhpmcounterN` or `cpuctrlsts` takes its value,
-so the model's read equals the DUT's exactly; the monitor therefore samples the counter words on every record. Draft-B
+so the model's read equals the DUT's exactly; the monitor therefore samples the counter words on every record.
+These reads under `isa_rd` are CONSISTENCY compares (record value == read value), not independent checks of the DUT
+(Critic T-102 M-1): mcycle, minstret and the HPM counters belong to the counter checkers `ctr_mcycle`, `ctr_minstret`,
+`ctr_hpm_exact` and `ctr_hpm_bound` (step 2d, not built at 4c4b9b8), and cpuctrlsts bit 8 to the scramble-key
+responder's `scrkey_proto` status row (record bit 8 versus the driven value at the ID-exit sample, not built); until
+those land, a csrr of these CSRs passing `isa_rd` says nothing about counter or status correctness. The cpuctrlsts bits
+6 and 7 (sync_exc_seen, double_fault_seen) are hardware-set in the DUT and the shim sets them from the model's own trap
+history (rtl/ibex_cs_registers.sv:935-943, :964-965), so a read of them is an independent compare. Draft-B
 records (C5.5): the R4 forms (cmov, cmix, fsl, fsr, fsri) read rs3 = insn[31:27] from the model's register file; the
 record's `rvfi_rs3_addr/rdata` are compared with it under `isa_rd` and the value feeds the reference.
 
@@ -82,7 +89,9 @@ OWED for every id before any isa_* id counts as mutation-proof in a measured reg
 only the forced-red evidence (a model perturbation, not per-field); isa_prv has never fired; their per-field
 proofs are owed with the first U-mode program. Status words per id: isa_pc TB-side partial (forced red) / RTL owed;
 isa_insn TB-side partial / RTL owed; isa_trap TB-side done / RTL owed; isa_rd TB-side done (incl. port-level
-MUT-008) / RTL owed; isa_mem TB-side done / RTL owed; isa_prv none / RTL owed; isa_pc_next TB-side done / RTL owed.
+MUT-008) / RTL owed; isa_mem TB-side done / RTL owed; isa_prv TB-side done (T-102 P1, gen_mut_t102.md) / RTL owed;
+isa_pc_next TB-side done (MUT-008, T-102 P2 and P11) / RTL owed; the mret/dret target check under isa_pc has its own
+mutation (T-102 P10, the record after an mret reported with pc + 4).
 
 ## 6. Failure path and diagnostics
 

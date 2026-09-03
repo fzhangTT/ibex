@@ -1,0 +1,8 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P10/out/P10_ablate_csr_trap_setup/stdout.log (config banner, first comparator lines, ISA compare summary, UVM report counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(399) @ 16728000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=5187 mismatches=0 folded=0 draft_b=0 traps=70 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=4341
+167280.00ns INFO     cocotb.gen_tb_top                  gen_test_csr_trap_setup GEN_TEST_PASS
+UVM_ERROR :    0
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                                 167280.01           1.11     150224.82  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

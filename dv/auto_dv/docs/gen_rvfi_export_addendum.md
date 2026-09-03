@@ -273,6 +273,9 @@ so `read()` builds one namedtuple type per (source, event). Sources are enabled 
 | alert | alert_minor, alert_major_bus, alert_major_internal, double_fault_seen | value | gen_misc_monitor (step 2b) | every value change (a one-cycle pulse is a rise line and a fall line) |
 | misc | irq_pending, core_busy, crash_dump_current_pc, crash_dump_next_pc, crash_dump_last_data_addr, crash_dump_exception_pc, crash_dump_exception_addr (one row each) | value | gen_misc_monitor | every value change (irq_pending_o is the DUT output pin, 26 marked items assert it in a named cycle; core_busy as the MuBi encoding) |
 | icram | inject | way, index | gen_icache_ram (announcement port) | the lookup cycle of an injected ECC error (the expected-alert feed of C3.4) |
+| icram | lookup | index | gen_icache_ram (announcement port) | the cycle a lookup reads the tag and data RAMs of every way at `index` (plan round 7 WP-8: TP-IC-002/004/008/011) |
+| icram | tag_write | way, index, valid | gen_icache_ram (announcement port) | the cycle a tag RAM write lands: a fill writes `valid` = 1, an invalidation writes 0 (TP-IC-004/008/011 and the fill items) |
+| icram | fill_write | way, index | gen_icache_ram (announcement port) | the cycle a data RAM fill write lands (TP-IC-015/023/024/030/031/057) |
 | scrkey | req, valid | value | gen_scrkey_driver | every change of ic_scr_key_req_o / ic_scr_key_valid_i |
 | regime | phase | knob_id, value_idx, phase_idx | gen_cmd_dispatch (REGIME_SET consumer, step 2b) | the cycle a phase is applied |
 
@@ -281,7 +284,9 @@ codegen refuses an event token `<name>`), rendering one function per row, `gen_e
 header carries one `# events` row per rendered row of every registered and enabled source and `read()` requires all
 of them and refuses an `E` line whose (source, event) is not a header row, so a misspelled or unlisted event token is
 a FAIL, never a silent miss; the writer functions
-take the fields as named arguments in the row's order, so the SV side cannot reorder a column; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
+take the fields as named arguments in the row's order, so the SV side cannot reorder a column; the three RAM-port rows
+(lookup, tag_write, fill_write) carry the RAM model's own port facts and their field sets are final when the
+announcement port is built in step (3), any change being a yaml change the codegen unit test and the header check see; a source whose component does not exist yet (irq/dbg drivers, misc monitor, regime dispatcher,
 all step 2b) has its rows rendered and its writer functions present but unused until the component lands, and
 the header's `sources=` lists only sources with a registered writer instance; `read()` accepts an absent source.
 Ordering: `E` lines are written in the cycle of the event in the active region (drivers act at the negedge,
@@ -300,26 +305,33 @@ green; (3) the step-2b sources (pin, alert, misc, regime) land with their compon
 and icram with them (gen_icache_ram.sv:6 defers its announcement hooks, so the port is built in step (3)), each with
 its own red. The plan's RVFI-only fallback rule applies to items whose source arrives in step (3).
 
-## 9. Witness command for the plan's sunset (DV Lead round 4, version 4b)
+## 9. Witness command for the plan's sunset (DV Lead round 4; aligned to plan v2h and the Orchestrator's rulings, version 4c)
 
-A test whose cycle-level clause passed against the export records the fact for coverage: bridge command
-`COV_WITNESS` (appended to `bridge_cmds`; arg0 = the rendered index of the marked test-plan item) routed by
-`gen_cmd_dispatch` to one covergroup, `gen_cg_wit_cycle_clause` (plan id CG-WIT-001, in `gen_fcov_pkg`, build step
-3), whose single coverpoint `cp_clause` has one bin per marked item. The bin list has one origin: the codegen reads
-the rows of `dv/auto_dv/docs/gen_trace_tp_bin.csv` whose covergroup column is `CG-WIT-001` (a new codegen input,
-read like `gen_dut_top.sv` and `gen_link.ld`) and renders `GEN_WIT_IDS` (SV: the item id per index, the bin list)
-and `WIT_IDS` (gen_knobs.py: item id -> index for the Test Writer's template). An index outside the list is a
-collected `uvm_error GEN_CMD_DISPATCH`. Owner-only acceptance (Critic condition C-2): the running test's rendered id
-set reaches the dispatcher as a normal string knob, `+gen_witness_ids=<comma-separated indices>` (yaml `witness_ids`,
-default empty = no id accepted; the testlist entry carries it, rendered by the Test Writer's template from the entry's
-`witness_ids`, the same rendering that feeds `fire_<tp_id>`); an index inside the global list but outside the running
-test's set is a collected `uvm_error GEN_WITNESS_FOREIGN` and no sample. The knob and both checks land with build step
-3, together with the covergroup. Standing of the group (Critic C-4, DV Lead W-1, gen_fcov_plan.md Section 1): weight 0
-in the gate computation and reported beside the score as "witnessed clauses: N of M marked items", never as bins hit
-or features covered. The anti-vacuity claim rests on the Test Writer's host structure check (`check_test_source`,
-Critic C-1: the command is issued only from the `finish()` epilogue for ids whose `fire_<tp_id>` result record has
-`cycle_clause_true` set), not on the TB: the dispatcher cannot tell a true clause from a hand-issued command, it only
-refuses foreign ids. Coverage only: no checker reads it. The bins are excluded from manifests
-while the item carries the plan's marker token and become must-hit when the token is removed (gen_test_plan.md
-Section 0, sunset); the C7 covergroup strategy applies (isolated namespace; anti-vacuity by the host check above,
-so an always-true event cannot hit the bin without a structure-check failure on the host side).
+A test whose cycle-level clause passed against the export records the fact for coverage. Protocol (plan v2h Section 0,
+Critic gen_critic_plan_witness_v1.md C-1..C-5): the template's `finish()` epilogue, before the finish handshake, issues one
+bridge command `COV_WITNESS <index>` (appended to `bridge_cmds`; arg0 = index, args 1..3 zero) for every `fire_<tp_id>`
+whose result record has `cycle_clause_true` set; no other code may issue it (host structure check `check_test_source`,
+C-1). The index is the ROW ORDER (0-based) of `dv/auto_dv/docs/gen_trace_witness_ids.csv` (columns index, tp_item, bin,
+test_group, marked; 220 rows; committed 7ac3744), the single rendering source: the codegen reads it like `gen_dut_top.sv`
+and `gen_link.ld` and renders `GEN_WIT_IDS` (SV: tp_item and bin per index, in file order) and `WITNESS_IDS`
+(gen_knobs.py: tp_item -> index, the table the template reads through gen_test_lib). Dispatch (`gen_cmd_dispatch`): an
+index outside the list is a collected `uvm_error GEN_CMD_DISPATCH`. Owner-only acceptance (C-2): the FLOW renders the
+running test's set into the plusarg `+gen_witness_ids=<comma-separated indices>` (yaml knob `witness_ids`, string,
+default empty = no index accepted) from the testlist entry's `witness_ids` (TP ids) through the CSV at the pinned commit
+(Orchestrator's ruling; Runtime implements the rendering), and an index inside the list but outside that set is a
+collected `uvm_error GEN_WITNESS_FOREIGN` with no sample. Digest guard (plan WP-8): every rendering of the CSV carries
+its sha256 prefix (`GEN_WIT_DIGEST` in SV, `WITNESS_DIGEST` in gen_knobs.py); the flow passes
+`+gen_witness_digest=<prefix>` from the CSV it rendered the set from, and the dispatcher refuses a mismatch with a
+collected `uvm_error GEN_WITNESS_DIGEST` before it accepts any index, so a stale rendering against a newer plan fails
+loud. Covergroup: `gen_wit_cycle_clause_cg` (the architecture's C7 naming rule for plan id CG-WIT-001, plan name
+gen_cg_wit_cycle_clause; declared in `gen_fcov_pkg`, one instance in `gen_env`, handle `wit_cg`; URG lists it under
+that type name), single coverpoint `cp_clause` with one bin `w_<tp_id lower case>` per CSV row in file order, sampled
+by the command. `option.weight = 0` is rendered on it as defence in depth; Runtime's exclusion of the group BY NAME at
+merge and report time is the mechanism of record (Orchestrator's ruling), so it never enters the functional-group
+score and is reported beside it as "witnessed clauses: N of M marked items" (Critic C-4, DV Lead W-1,
+gen_fcov_plan.md Section 1). Coverage only: no checker reads it. The bins are excluded from a test's manifest while
+its item carries the plan's marker token and become must-hit when the token is removed (gen_test_plan.md Section 0,
+sunset: decided from the rendered exact event rows of Section 8 and Runtime's export_sources). The anti-vacuity claim
+rests on the host structure check, not on the TB: the dispatcher cannot tell a true clause from a hand-issued command,
+it refuses foreign indices and stale digests. Everything in this section lands with build step 3 together with the
+covergroup; none of it exists in SV or Python at version 4c.

@@ -1,0 +1,10 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P11/out/P11_catch_csr_trap_setup/stdout.log (config banner, first comparator lines, ISA compare summary, UVM report counts, cocotb result)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 4326500: uvm_test_top.env.sb [isa_pc_next] mret/dret record pc_wdata=1a110968 != pc + 4 (C-1) (order=1436 pc=1a110964 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=4321)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 4431500: uvm_test_top.env.sb [isa_pc_next] mret/dret record pc_wdata=80004368 != pc + 4 (C-1) (order=1465 pc=80004364 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=4426)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(193) @ 4516500: uvm_test_top.env.sb [isa_pc_next] mret/dret record pc_wdata=80004268 != pc + 4 (C-1) (order=1491 pc=80004264 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=4511)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(398) @ 16728000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=5187 mismatches=100 folded=0 draft_b=0 traps=70 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=4341
+167280.00ns INFO     cocotb.gen_tb_top                  gen_test_csr_trap_setup GEN_TEST_PASS
+UVM_ERROR :  100
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                                 167280.01           1.13     148480.59  **

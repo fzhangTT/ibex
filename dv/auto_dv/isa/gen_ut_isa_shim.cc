@@ -290,6 +290,25 @@ int main(int argc, char** argv) {
     check("ecall prv_before = U", st.prv_before, 0);
     check("ecall prv (after) = M", st.prv, 3); }
 
+  std::puts("-- 7. T-102: cpuctrlsts sync_exc_seen / double_fault_seen follow the model's traps (rtl/ibex_cs_registers.sv:935-943, :964-965)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  gen_isa_write_word(scratch, 0x00000073u);                 // ecall in M at the reset pc
+  gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000073u);         // trap vector (mtvec base = boot page): a second ecall
+  gen_isa_write_word(GEN_MM_BOOT_PAGE + 4u, GEN_INSN_MRET);  // mret, entered by set_pc
+  check("flags clear after reset", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0);
+  gen_isa_step(&st);
+  check("first ecall traps", st.trap, 1);
+  check("sync_exc_seen set (bit 6)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0x40u);
+  gen_isa_step(&st);
+  check("second ecall traps", st.trap, 1);
+  check("double_fault_seen set (bit 7)", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0xC0u);
+  gen_isa_set_pc(GEN_MM_BOOT_PAGE + 4u);
+  gen_isa_step(&st);
+  check("mret retires", st.retired, 1);
+  check("mret clears sync_exc_seen, double_fault_seen sticky", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0x80u);
+  gen_isa_write_csr(GEN_CSR_CPUCTRLSTS, 0);
+  check("software clears the status bits", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & 0xC0u, 0);
+
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;
 }

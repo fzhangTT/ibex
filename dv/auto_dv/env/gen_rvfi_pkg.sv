@@ -162,6 +162,10 @@ package gen_rvfi_pkg;
     function bit fld(bit val, bit set);
       return isa_on() && (cfg.chk_all ? val : (set && val));
     endfunction
+    // RVFI reports a compressed instruction in its 16-bit form (zero-extended), so bits [1:0] give the length
+    function int unsigned insn_len(logic [31:0] insn);
+      return (insn[1:0] == 2'b11) ? 4 : 2;
+    endfunction
     // The model is built once the configuration is final: reset values, then the same image as the TB.
     function void start_of_simulation_phase(uvm_phase phase);
       int rc, n;
@@ -327,7 +331,10 @@ package gen_rvfi_pkg;
       end
       dbg_q = t.ext_debug_mode;
       // ---- the record itself: the model's counters and status follow the record's sampled values (ID-exit sample point,
-      //      the cycle a CSR read sees), so csrr of cycle / mhpmcounterN / cpuctrlsts compares exactly
+      //      the cycle a CSR read sees). A csrr of cycle, mhpmcounterN or cpuctrlsts bit 8 under isa_rd is therefore a
+      //      CONSISTENCY compare (record value == read value), not an independent check (Critic T-102 M-1): the counters
+      //      belong to the counter checkers (ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound; step 2d) and bit 8
+      //      to the scramble-key responder's scrkey_proto status row
       gen_isa_set_time(t.ext_mcycle);
       for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
       gen_isa_set_status(t.ext_ic_scr_key_valid);
@@ -342,6 +349,9 @@ package gen_rvfi_pkg;
         traps++;
         if (!(trap && retired == 0))
           miss("isa_trap", $sformatf("dut trapped, model retired %0d trap=%0d cause=%08h", retired, trap, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
+        // trap record: pc_wdata is pc_if = pc + length (F-RVFI-010, C-1); a fetch fault (cause 1) has no fetched length
+        if (trap && cause != 1 && t.pc_wdata != t.pc_rdata + insn_len(t.insn))
+          miss("isa_pc_next", $sformatf("trap record pc_wdata=%08h != pc + %0d (C-1)", t.pc_wdata, insn_len(t.insn)), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end else begin
         if (retired != 1 || trap)
           miss("isa_trap", $sformatf("dut retired, model retired %0d trap=%0d cause=%08h tval=%08h", retired, trap, cause, tval), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
@@ -370,8 +380,12 @@ package gen_rvfi_pkg;
               miss("isa_mem", $sformatf("store data model=%08h dut=%08h", mem_wdata, t.mem_wdata), t, fld(cfg.chk_isa_mem, cfg.chk_isa_mem_set));
           end
         end
-        // mret/dret: rvfi_pc_wdata is the next sequential address, not the target (plan C-1); the target shows on the next record's isa_pc
-        if (t.insn != GEN_INSN_MRET && t.insn != GEN_INSN_DRET && pc_a != t.pc_wdata)
+        // mret/dret records: rvfi_pc_wdata is the next sequential address, never the target (plan C-1, rtl-arch R1), so the
+        // convention itself is checked here and the redirect target on the NEXT record's isa_pc (model pc vs pc_rdata)
+        if (t.insn == GEN_INSN_MRET || t.insn == GEN_INSN_DRET) begin
+          if (t.pc_wdata != t.pc_rdata + insn_len(t.insn))
+            miss("isa_pc_next", $sformatf("mret/dret record pc_wdata=%08h != pc + %0d (C-1)", t.pc_wdata, insn_len(t.insn)), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
+        end else if (pc_a != t.pc_wdata)
           miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end
       // rvfi_mode is the privilege the instruction executed in, so the model's pre-step privilege is compared (both RISC-V encoded)

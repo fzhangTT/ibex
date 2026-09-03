@@ -374,7 +374,7 @@ package gen_tb_pkg;
       "pin": return "# events pin irq_software value\n# events pin irq_timer value\n# events pin irq_external value\n# events pin irq_fast idx,value\n# events pin irq_nm value\n# events pin debug_req value\n# events pin fetch_enable value\n# events pin mcounteren_writable value\n";
       "alert": return "# events alert alert_minor value\n# events alert alert_major_bus value\n# events alert alert_major_internal value\n# events alert double_fault_seen value\n";
       "misc": return "# events misc irq_pending value\n# events misc core_busy value\n# events misc crash_dump_current_pc value\n# events misc crash_dump_next_pc value\n# events misc crash_dump_last_data_addr value\n# events misc crash_dump_exception_pc value\n# events misc crash_dump_exception_addr value\n";
-      "icram": return "# events icram inject way,index\n";
+      "icram": return "# events icram inject way,index\n# events icram lookup index\n# events icram tag_write way,index,valid\n# events icram fill_write way,index\n";
       "scrkey": return "# events scrkey req value\n# events scrkey valid value\n";
       "regime": return "# events regime phase knob_id,value_idx,phase_idx\n";
       default: return "";

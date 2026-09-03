@@ -1,0 +1,11 @@
+# excerpt of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P10/out/P10_catch_csr_trap_setup/stdout.log (config banner, first comparator lines, ISA compare summary, UVM report counts, cocotb result, first Python failure line)
+GEN_CONFIG_BANNER build_config=opentitan
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(194) @ 4335500: uvm_test_top.env.sb [isa_pc] pc model=80001700 dut=80001704 (order=1437 pc=80001700 insn=80000237 trap=0 intr=0 rd=x4/80000000 mem=80000000 w0000 r1111 mode=3 cyc=4330)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(194) @ 4437500: uvm_test_top.env.sb [isa_pc] pc model=8000173c dut=80001740 (order=1466 pc=8000173c insn=30525373 trap=0 intr=0 rd=x6/80004301 mem=fffffcff w0000 r1111 mode=3 cyc=4432)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(194) @ 4522500: uvm_test_top.env.sb [isa_pc] pc model=8000176c dut=80001770 (order=1492 pc=8000176c insn=00003597 trap=0 intr=0 rd=x11/8000476c mem=8000476c w0000 r1111 mode=3 cyc=4517)
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(399) @ 16728000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=5187 mismatches=100 folded=0 draft_b=0 traps=70 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=4341
+167280.00ns INFO     cocotb.gen_tb_top                  gen_test_csr_trap_setup GEN_TEST_PASS
+UVM_ERROR :  100
+UVM_FATAL :    0
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                                 167280.01           1.18     141209.46  **
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
