@@ -335,6 +335,40 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
     return "\n".join(L) + "\n"
 
 
+def check_canary_build(path: Path) -> tuple[int, str]:
+    """The pre-dispatch gate (LOG-046a): the canary regression's build manifest must record covergroups_compiled
+    true; otherwise the measured round is refused here, before any job, with ROUND_EXIT_REFUSED."""
+    man, mp = U.load_build_manifest(path)
+    refusal = U.measured_dispatch_refusal(man, str(mp))
+    if refusal:
+        return C.ROUND_EXIT_REFUSED, "REFUSED: " + refusal
+    return 0, (f"canary build {man.get('build')} ({mp}) records covergroups_compiled true "
+               f"({len(man.get('covergroup_files') or [])} covergroup source(s)); measured dispatch allowed")
+
+
+def self_test() -> int:
+    """check_canary_build on fabricated build manifests (no simulation)."""
+    import tempfile
+    ok = True
+    d = Path(tempfile.mkdtemp(prefix="gen_round_selftest_", dir=C.selftest_tmp()))
+    cases = (("covergroups_compiled false refuses", {"build": "gen_tb", "covergroups_compiled": False}, C.ROUND_EXIT_REFUSED, "covergroups_compiled=False"),
+             ("fact absent (older manifest) refuses", {"build": "gen_tb"}, C.ROUND_EXIT_REFUSED, "covergroups_compiled=absent"),
+             ("covergroups_compiled true dispatches", {"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["a.sv"]}, 0, "measured dispatch allowed"))
+    for label, man, want_rc, want_text in cases:
+        U.dump_yaml(man, d / C.BUILD_MANIFEST)
+        rc, msg = check_canary_build(d)
+        cond = rc == want_rc and want_text in msg and "gen_tb" in msg and (("LOG-046a" in msg) == (want_rc != 0))
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"{label}: rc {rc}: {msg[:110]}")
+    rc, msg = check_canary_build(d / "no_such_build")
+    cond = rc == C.ROUND_EXIT_REFUSED and "absent" in msg
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"missing canary build dir refuses: rc {rc}")
+    shutil.rmtree(d, ignore_errors=True)
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--round", type=int, help="closure round number (0 = Phase 1 gate baseline)")
@@ -348,6 +382,9 @@ def main() -> int:
     ap.add_argument("--requester", default="dv-lead", help="role that requested the measurement")
     ap.add_argument("--timeout-s", type=int, default=6 * 3600)
     ap.add_argument("--force", action="store_true", help="replace an existing regression outdir (never an evidence dir)")
+    ap.add_argument("--canary-build", type=Path,
+                    help="build dir (or build_manifest.yaml) of the canary regression on the pinned commit: a measured "
+                         "round dispatches only when it records covergroups_compiled true (LOG-046a); required for a dispatch")
     ap.add_argument("--evidence-root", type=Path, default=C.EVIDENCE_DIR,
                     help="self-test only: write the evidence dir and index elsewhere than dv/auto_dv/evidence")
     ap.add_argument("--evidence-name", help="dry runs only: evidence directory name (gen_round_<n>_<suffix>)")
@@ -365,6 +402,15 @@ def main() -> int:
     if a.collect:
         outdir = a.collect.resolve()
     else:
+        if not (a.dry_run or a.tests):
+            # A measured round (tier full, purpose 4) never dispatches on a TB without a covergroup.
+            if a.canary_build is None:
+                U.log(f"REFUSED: --canary-build is required for a measured round ({C.MEASURED_DISPATCH_RULE})")
+                return C.ROUND_EXIT_REFUSED
+            rc, msg = check_canary_build(a.canary_build)
+            U.log(msg)
+            if rc:
+                return rc
         tag = a.tag or (f"round_{a.round}" + ("_dryrun" if a.dry_run else ""))
         outdir = run_regression(a, tag)
     ev = collect(outdir, a.round, a.dry_run, a.label, a.evidence_root, index_path, a.evidence_name)
@@ -375,4 +421,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(self_test() if "--self-test" in sys.argv else main())

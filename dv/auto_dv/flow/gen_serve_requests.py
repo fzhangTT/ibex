@@ -259,7 +259,7 @@ def run_elcheck(req: dict[str, Any], outdir: Path) -> dict[str, Any]:
 
 
 def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: list[str] | None = None,
-              server_sync: dict[str, Any] | None = None) -> Path:
+              server_sync: dict[str, Any] | None = None, refusal_override: str | None = None) -> Path:
     name = path.stem
     C.RUNNING_DIR.mkdir(parents=True, exist_ok=True)
     C.DONE_DIR.mkdir(parents=True, exist_ok=True)
@@ -282,6 +282,7 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
         U.log(f"{name}: REFUSED ({err})")
         return manifest_path
     args, refusal, scope = scope_for(req, testlist)
+    refusal = refusal or refusal_override   # a pass-level refusal (the measured-dispatch gate) is recorded like a scope refusal
     record.update(requester=req["requester"], purpose=req["purpose"], purpose_text=C.PURPOSES[req["purpose"]],
                   scope=scope, notes=req["notes"])
     if refusal:
@@ -416,8 +417,47 @@ def partition_pending(pending: list[Path]) -> tuple[list[Path], list[Path], list
     return pinned, p1, [p for p in pinned if p not in p1], [p for p in pending if p not in pinned]
 
 
+def measured_gate(p234: list[Path], canary_build: Path | None) -> tuple[list[Path], str | None, dict[str, Any]]:
+    """Purpose-4 requests of a batch (measured rounds) dispatch only on a canary build that compiled a covergroup
+    (LOG-046a): the purpose-4 subset, the refusal text (None when allowed, or when the batch has none) and the record."""
+    p4 = [p for p in p234 if request_purpose(p) == 4]
+    if not p4:
+        return [], None, {}
+    man, mp = U.load_build_manifest(canary_build) if canary_build else (None, Path("(no --canary-build)"))
+    refusal = U.measured_dispatch_refusal(man, str(mp))
+    return p4, refusal, {"canary_build": str(canary_build) if canary_build else None,
+                         "decision": C.CANARY_REFUSED_NO_COVERGROUPS if refusal else C.CANARY_ACCEPTED, "refusal": refusal}
+
+
+def self_test() -> int:
+    """measured_gate on fabricated requests and canary build manifests (no queue, no simulation)."""
+    import tempfile
+    ok = True
+    d = Path(tempfile.mkdtemp(prefix="gen_serve_selftest_", dir=C.selftest_tmp()))
+    r4, r2 = d / "req4.yaml", d / "req2.yaml"
+    U.dump_yaml({"purpose": 4, "requester": "dv-lead"}, r4)
+    U.dump_yaml({"purpose": 2, "requester": "tb-infra"}, r2)
+    b = d / "canary_build"; b.mkdir()
+    U.dump_yaml({"build": "gen_tb", "covergroups_compiled": False}, b / C.BUILD_MANIFEST)
+    p4, refusal, gate = measured_gate([r2, r4], b)
+    cond = p4 == [r4] and refusal is not None and "covergroups_compiled=False" in refusal and gate["decision"] == C.CANARY_REFUSED_NO_COVERGROUPS
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"canary build without a covergroup: the purpose-4 request is refused, the purpose-2 one is not in the gate: {gate['decision']}")
+    p4, refusal, gate = measured_gate([r2, r4], None)
+    cond = p4 == [r4] and refusal is not None and "(no --canary-build)" in refusal and gate["canary_build"] is None
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "no --canary-build: the purpose-4 request is refused naming the missing argument")
+    U.dump_yaml({"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["x.sv"]}, b / C.BUILD_MANIFEST)
+    p4, refusal, gate = measured_gate([r2, r4], b)
+    cond = p4 == [r4] and refusal is None and gate["decision"] == C.CANARY_ACCEPTED
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "canary build with a covergroup: the purpose-4 request dispatches (accepted)")
+    cond = measured_gate([r2], None) == ([], None, {})
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a batch without a purpose-4 request needs no canary build")
+    shutil.rmtree(d, ignore_errors=True)
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
-               max_concurrent: int, canary_sha: str | None = None) -> int:
+               max_concurrent: int, canary_sha: str | None = None, canary_build: Path | None = None) -> int:
     """One pass over the queue. Every head-mode request that builds (any purpose; a worktree request is served
     alone, an elcheck builds nothing) is pinned to one commit behind the canary hold: the purpose-1 requests
     run concurrently, purposes 2 to 4 follow one at a time on the same pinned tree (a measured round on an
@@ -452,6 +492,11 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
                 "pinned_sha": batch_sha, "canary_sha": canary_sha, "canary_decision": rec["decision"],
                 "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in pinned], "batch_record": str(rec_path)}
+        p4, p4_refusal, gate = measured_gate(p234, canary_build)
+        if p4:
+            sync["measured_dispatch"] = gate
+            if p4_refusal:
+                U.log(f"REFUSING {len(p4)} purpose-4 request(s) ({C.CANARY_REFUSED_NO_COVERGROUPS}): {p4_refusal}")
         manifests: list[Path] = []
         if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(pinned)} head-mode request(s) ({len(p1)} purpose-1), pinned to {batch_sha[:12]}")
@@ -465,7 +510,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                 with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
                     manifests = list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
                 # Purposes 2 to 4 (trials, repros, measured rounds): one at a time on the same pinned tree.
-                manifests += [serve_one(p, head_testlist, dry_run, batch_args, sync) for p in p234]
+                manifests += [serve_one(p, head_testlist, dry_run, batch_args, sync, p4_refusal if p in p4 else None) for p in p234]
             finally:
                 M.release_lease(batch_lease)
         else:
@@ -474,7 +519,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
             sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing the pinned commit itself"
             U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(pinned)} head-mode request(s) pinned to {batch_sha[:12]}")
             pin_args = list(extra_args) + ["--head-sha", batch_sha]
-            manifests = [serve_one(p, testlist, dry_run, pin_args, sync) for p in [*p1, *p234]]
+            manifests = [serve_one(p, testlist, dry_run, pin_args, sync, p4_refusal if p in p4 else None) for p in [*p1, *p234]]
         rec.update(sync=sync, manifests=[str(m) for m in manifests], completed_utc=U.now_utc())
         U.dump_yaml(rec, rec_path)
     elif pinned:
@@ -500,6 +545,9 @@ def main() -> int:
                     help="commit the gen_boot_zc canary passed on: required for every head-mode purpose-1 batch, which is "
                          "refused (and the refusal recorded under work/runtime/batches/) when it is absent or when a "
                          "mirrored file differs between that commit and HEAD")
+    ap.add_argument("--canary-build", type=Path, default=None,
+                    help="build dir (or build_manifest.yaml) of the canary regression: a purpose-4 request is refused "
+                         "(refused_no_covergroups) unless it records covergroups_compiled true (LOG-046a)")
     ap.add_argument("--max-concurrent", type=int, default=C.SERVE_MAX_CONCURRENT_P1,
                     help="independent purpose-1 requests served at once (ruling: purposes 2-4 stay serialized)")
     ap.add_argument("--extra-arg", action="append", default=[],
@@ -514,7 +562,7 @@ def main() -> int:
     deadline = time.time() + a.duration
     served = 0
     while True:
-        served += serve_pass(pending_requests(a.only), testlist, a.dry_run, a.extra_arg, a.max_concurrent, a.canary_sha)
+        served += serve_pass(pending_requests(a.only), testlist, a.dry_run, a.extra_arg, a.max_concurrent, a.canary_sha, a.canary_build)
         if not a.watch or time.time() >= deadline:
             break
         time.sleep(a.interval)
@@ -523,4 +571,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(self_test() if "--self-test" in sys.argv else main())

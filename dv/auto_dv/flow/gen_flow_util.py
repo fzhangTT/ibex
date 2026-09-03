@@ -90,6 +90,37 @@ def filelist_digest(flists: list[Path]) -> dict[str, Any]:
     return {"filelists": per_list, "sources_sha256": combined.hexdigest(), "source_count": n}
 
 
+def sv_covergroup_files(flists: list[Path]) -> list[str]:
+    """Sources of the given -f files that declare a covergroup (comments stripped), relative to the source root when
+    inside it: the build manifest's covergroups_compiled fact."""
+    found: list[str] = []
+    for fl in flists:
+        for src in filelist_entries(fl):
+            if src.suffix not in C.SV_SOURCE_SUFFIXES or not src.is_file():
+                continue
+            text = re.sub(r"/\*.*?\*/", "", src.read_text(encoding="utf-8", errors="replace"), flags=re.S)
+            if any(C.COVERGROUP_DECL_RE.match(l.split("//", 1)[0]) for l in text.splitlines()):
+                found.append(str(src.relative_to(C.SOURCE_ROOT)) if src.is_relative_to(C.SOURCE_ROOT) else str(src))
+    return found
+
+
+def load_build_manifest(path: Path) -> tuple[dict[str, Any] | None, Path]:
+    """A build dir or its build_manifest.yaml -> (manifest or None when absent, the manifest path)."""
+    p = path / C.BUILD_MANIFEST if path.is_dir() else path
+    return (load_yaml(p) if p.is_file() else None), p
+
+
+def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str) -> str | None:
+    """None when the canary build manifest records covergroups_compiled true; else the refusal text naming the build,
+    the manifest and the rule. An absent fact (no manifest, or one older than the record) refuses too."""
+    man = canary_manifest or {}
+    val = man.get("covergroups_compiled")
+    if val is True:
+        return None
+    return (f"measured dispatch refused: canary build {man.get('build') or '?'} ({where}) records covergroups_compiled="
+            f"{'absent' if val is None else val}; {C.MEASURED_DISPATCH_RULE}")
+
+
 def git_head() -> dict[str, Any]:
     def run(args: list[str]) -> str:
         r = subprocess.run(["git", *args], cwd=C.REPO_ROOT, capture_output=True, text=True)
@@ -432,8 +463,26 @@ def self_test() -> int:
             and bad_sig and bad_sig["refuse"] is not None and not bad_sig["harness_match"] and none is None \
             and stale_refused and stale_refused["refuse"] == C.RED_STALE_REFUSE and stale_refused["stale_evidence"] \
             and stale_allowed and stale_allowed["refuse"] is None and stale_allowed["stale_cause"] == C.RED_STALE_TEXT.format(task="T-XXX")
+        # Lockstep family: a TB unit fixture failing through a collected UVM error, retained as an excerpt without a harness line.
+        lk = root.joinpath(*C.RED_LOG_FAMILIES[1][0]); lk.mkdir(parents=True)
+        (lk / "gen_refuse_me_red1_stdout_excerpt.log").write_text(
+            "GEN_CONFIG_BANNER build_config=opentitan\n"
+            "UVM_ERROR dv/auto_dv/env/gen_env_pkg.sv(97) @ 310500: uvm_test_top.env.dispatch [GEN_CMD_DISPATCH] REGIME_SET: no run-time consumer for knob_q (regime_set_consumer none)\n"
+            "UVM_ERROR :    1\n  3115.01ns INFO     cocotb.regression                  gen_ut_refuse_me passed\n"
+            "** TESTS=1 PASS=1 FAIL=0 SKIP=0 **\n", encoding="utf-8")
+        saved_root, C.SOURCE_ROOT = C.SOURCE_ROOT, root
+        try:
+            lk_good = red_signature_check({"name": "gen_ut_refuse_me", "pass_marker": "GEN_UT_REFUSE_ME_PASS", "red_expect": r"UVM_ERROR .*\[GEN_CMD_DISPATCH\] REGIME_SET: no run-time consumer for "})
+            lk_bad = red_signature_check({"name": "gen_ut_refuse_me", "pass_marker": "GEN_UT_REFUSE_ME_PASS", "red_expect": r"UVM_ERROR .*\[GEN_OTHER\]"})
+        finally:
+            C.SOURCE_ROOT = saved_root
+        cond_lk = red_group("gen_ut_refuse_me") == "refuse_me" and red_group("gen_test_x_red") == "x" \
+            and lk_good and lk_good["refuse"] is None and lk_good["verdict"] == C.VERDICT_RED_OK and lk_good["harness_match"] and "GEN_CMD_DISPATCH" in lk_good["harness_line"] \
+            and lk_bad and lk_bad["refuse"] is not None and lk_bad["verdict"] != C.VERDICT_RED_OK and not lk_bad["stale_evidence"]
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "red_signature_check: matching harness line passes (RED-OK), a \\b-anchored id defeated by a suffix is refused, no log -> None, a UVM error ahead of a matching harness line is refused (literal criterion) unless the entry is allowlisted, then stale with its task")
+    ok &= cond_lk
+    print("SELF-TEST", "ok " if cond_lk else "BAD", "lockstep family (gen_ut_ fixture, excerpt without a harness line): RED-OK with the matching red_expect is accepted, a non-matching red_expect is refused, groups strip gen_ut_/gen_test_ and _red")
     # CLI builders: a refused entry prints its refusal alone, an allowlisted stale entry its cause; the summary and exit code follow the counts.
     base = {"log": "/x/gen_q_red1_stdout.log", "harness_match": True, "verdict": C.VERDICT_FAIL, "refuse": None, "stale_evidence": False, "stale_cause": None}
     l_ok = red_check_line("gen_q_red", dict(base, verdict=C.VERDICT_RED_OK))
@@ -495,6 +544,33 @@ def self_test() -> int:
         cond = kept == want_kept and dropped == want_dropped
         ok &= cond
         print(f"SELF-TEST {'ok ' if cond else 'BAD'} drop_cm_args {label}: kept={kept} dropped={dropped}")
+    cgd = Path(tempfile.mkdtemp(prefix="gen_cg_selftest_", dir=C.selftest_tmp()))
+    (cgd / "a.sv").write_text("package p;\n  covergroup gen_x_cg @(posedge clk);\n  endgroup\nendpackage\n")
+    (cgd / "b.sv").write_text("// covergroup gen_y_cg;\nmodule b; endmodule\n")
+    (cgd / "c.sv").write_text("/* covergroup gen_z_cg;\n   endgroup */\nmodule c; endmodule\n")
+    (cgd / "d.svh").write_text("`define GEN_COVERGROUP covergroup_like\n")
+    (cgd / "e.v").write_text("covergroup not_sv;\n")
+    (cgd / "f.f").write_text(f"// comment\n+incdir+{cgd}\n{cgd / 'a.sv'}\n{cgd / 'b.sv'} // trailing\n{cgd / 'c.sv'}\n{cgd / 'd.svh'}\n{cgd / 'e.v'}\n")
+    cg = sv_covergroup_files([cgd / "f.f"])
+    inside = (cgd / "a.sv").resolve().is_relative_to(C.SOURCE_ROOT)
+    cond = [Path(x).name for x in cg] == ["a.sv"] and (Path(cg[0]).is_absolute() != inside if cg else False)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"sv_covergroup_files: a declaration counts, line and block comments and a .v file do not: {cg}")
+    shutil.rmtree(cgd, ignore_errors=True)
+    gd = Path(tempfile.mkdtemp(prefix="gen_gate_selftest_", dir=C.selftest_tmp()))
+    dump_yaml({"build": "gen_tb", "covergroups_compiled": False, "covergroup_files": []}, gd / C.BUILD_MANIFEST)
+    r_false = measured_dispatch_refusal(*load_build_manifest(gd))
+    dump_yaml({"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["dv/auto_dv/tb/x.sv"]}, gd / C.BUILD_MANIFEST)
+    r_true = measured_dispatch_refusal(*load_build_manifest(gd / C.BUILD_MANIFEST))
+    dump_yaml({"build": "gen_tb"}, gd / C.BUILD_MANIFEST)
+    r_absent = measured_dispatch_refusal(*load_build_manifest(gd))
+    r_none = measured_dispatch_refusal(*load_build_manifest(gd / "no_such_dir"))
+    cond = (r_false is not None and "gen_tb" in r_false and "covergroups_compiled=False" in r_false and "LOG-046a" in r_false
+            and r_true is None and r_absent is not None and "covergroups_compiled=absent" in r_absent
+            and r_none is not None and "build ? (" in r_none)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"measured_dispatch_refusal: false refuses naming the build and the rule, true accepts, an absent fact or manifest refuses: {(r_false or '')[:90]}")
+    shutil.rmtree(gd, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -574,21 +650,31 @@ def export_facts() -> dict[str, Any]:
             "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
 
 
-def red_log_for(test_name: str) -> tuple[Path | None, Path | None]:
-    """The retained pinned-red stdout log (and its sim.log sibling when present) of a red fixture under the source
-    root, by the Test Writer's naming; (None, None) when the evidence directory or the log is absent."""
-    d = C.SOURCE_ROOT.joinpath(*C.RED_LOG_DIR_REL)
-    if not d.is_dir():
-        return None, None
-    group = test_name[len(C.RED_TEST_PREFIX):] if test_name.startswith(C.RED_TEST_PREFIX) else test_name
-    if group.endswith(C.RED_TEST_SUFFIX):
-        group = group[: -len(C.RED_TEST_SUFFIX)]
-    for pat in C.RED_LOG_PATTERNS:
-        p = d / pat.format(group=group)
-        if p.is_file():
-            sim = d / C.RED_LOG_SIM_PATTERN.format(group=group)
-            return p, (sim if sim.is_file() else None)
-    return None, None
+def red_group(test_name: str) -> str:
+    """The retained-log group of a red fixture: the test name without its test prefix and the red suffix."""
+    group = test_name
+    for pre in C.RED_TEST_PREFIXES:
+        if group.startswith(pre):
+            group = group[len(pre):]
+            break
+    return group[: -len(C.RED_TEST_SUFFIX)] if group.endswith(C.RED_TEST_SUFFIX) else group
+
+
+def red_log_for(test_name: str) -> tuple[Path | None, Path | None, str | None]:
+    """The retained pinned-red stdout log of a red fixture under the source root (its sim.log sibling when present, and
+    the family's harness-line prefix, None for a family whose designed failure is a collected UVM error), by the first
+    RED_LOG_FAMILIES entry that holds one; (None, None, None) when no family does."""
+    group = red_group(test_name)
+    for dir_rel, patterns, sim_pat, harness in C.RED_LOG_FAMILIES:
+        d = C.SOURCE_ROOT.joinpath(*dir_rel)
+        if not d.is_dir():
+            continue
+        for pat in patterns:
+            p = d / pat.format(group=group)
+            if p.is_file():
+                sim = d / sim_pat.format(group=group) if sim_pat else None
+                return p, (sim if sim is not None and sim.is_file() else None), harness
+    return None, None, None
 
 
 def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
@@ -596,24 +682,32 @@ def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
     red_expect, must come out RED-OK. None when no retained log exists (head trees carry no evidence; a fixture
     without a retained log is not provable here)."""
     import gen_verdict as V
-    stdout, sim = red_log_for(test["name"])
+    stdout, sim, harness_prefix = red_log_for(test["name"])
     if stdout is None:
         return None
     sim_lines = sim.read_text(encoding="utf-8", errors="replace").splitlines() if sim else []
     lines = sim_lines + stdout.read_text(encoding="utf-8", errors="replace").splitlines()
     res = V.decide_lines(lines, test.get("pass_marker"), False, 1, C.BUILD_CONFIG, [], True, False,
                          banner_lines=sim_lines or None, red_fixture=True, red_expect=test.get("red_expect"))
-    # Two checks: the harness line of the retained log (the designed failure the fixture proves) must match the regex,
-    # and the log must come out RED-OK through the verdict (the literal criterion, T-153). A log whose verdict is not
-    # RED-OK is refused unless the entry is on RED_STALE_ALLOWLIST (a live comparator row ahead of the harness line).
-    harness = next((l.strip() for l in lines if C.RED_EXPECT_HARNESS_PREFIX in l), None)
+    # Two checks: the designed-failure line of the retained log must match the regex, and the log must come out RED-OK
+    # through the verdict (the literal criterion, T-153). A log whose verdict is not RED-OK is refused unless the entry
+    # is on RED_STALE_ALLOWLIST (a live comparator row ahead of the harness line). A family without a harness line
+    # (a fixture failing through a collected UVM error) has the verdict's own evidence line as its designed failure,
+    # which RED-OK already requires to match red_expect.
     rx = test.get("red_expect") or ""
-    match = bool(harness and re.search(rx, harness))
+    if harness_prefix:
+        harness = next((l.strip() for l in lines if harness_prefix in l), None)
+        match = bool(harness and re.search(rx, harness))
+        mismatch_text = "red_expect does not match the retained log's harness line"
+    else:
+        harness = str(res.get("evidence") or "").strip() or None
+        match = res["verdict"] == C.VERDICT_RED_OK
+        mismatch_text = "the retained log's collected evidence line does not come out RED-OK with this red_expect"
     stale = bool(match and res["verdict"] != C.VERDICT_RED_OK)
     allow = C.RED_STALE_ALLOWLIST.get(test["name"])
     if not match:
-        refuse = (f"no {C.RED_EXPECT_HARNESS_PREFIX} line in the retained pinned-red log" if not harness
-                  else "red_expect does not match the retained log's harness line")
+        refuse = (f"no {harness_prefix or 'collected evidence'} line in the retained pinned-red log" if not harness
+                  else mismatch_text)
     elif stale and allow is None:
         refuse = C.RED_STALE_REFUSE
     else:

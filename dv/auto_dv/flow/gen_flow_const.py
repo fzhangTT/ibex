@@ -39,6 +39,7 @@ RED_LOG_PATTERNS = ("gen_{group}_red1_stdout.log", "gen_b2_{group}_red1_stdout.l
 RED_LOG_SIM_PATTERN = "gen_{group}_red1_sim.log"
 RED_TEST_PREFIX = "gen_test_"
 RED_TEST_SUFFIX = "_red"
+RED_TEST_PREFIXES = (RED_TEST_PREFIX, "gen_ut_")   # group = the name without one of these and the red suffix
 RED_CHECK_EXIT_REFUSE = 2   # --check-red-signatures: an entry is refused (harness-line mismatch, or a retained log whose verdict is not RED-OK)
 RED_CHECK_EXIT_STALE = 3    # --check-red-signatures: no refusal, but stale retained logs remain (a visible debt)
 # The literal criterion (T-153): the retained pinned-red log, run through the verdict with the entry's red_expect, must
@@ -342,6 +343,14 @@ RED_EXPECT_POLICY_FIRE_ID = "fire_id"
 RED_EXPECT_POLICIES = (RED_EXPECT_POLICY_FIRE_ID,)
 RED_EXPECT_FIRE_TOKEN = "fire_"
 RED_EXPECT_HARNESS_PREFIX = "GEN_TEST_FAIL"
+# Retained pinned-red log families: (evidence dir under the source root, stdout name patterns, sim name pattern or None,
+# harness-line prefix or None). The Test Writer's reds fail through a GEN_TEST_FAIL harness line; a TB unit fixture
+# (lockstep family) fails through a collected UVM error, so its designed-failure line is the verdict's own evidence line.
+RED_LOG_FAMILIES = (
+    (RED_LOG_DIR_REL, RED_LOG_PATTERNS, RED_LOG_SIM_PATTERN, RED_EXPECT_HARNESS_PREFIX),
+    (("dv", "auto_dv", "evidence", "gen_tdd_logs", "lockstep"), ("gen_{group}_red1_stdout_excerpt.log", "gen_{group}_red1_stdout.log"),
+     "gen_{group}_red1_sim.log", None),
+)
 # Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).
 SIMULATOR_PLUSARGS = ("ntb_random_seed", "UVM_TESTNAME", "UVM_VERBOSITY", "UVM_NO_RELNOTES", "UVM_TIMEOUT",
                       "UVM_MAX_QUIT_COUNT")
@@ -390,6 +399,14 @@ CRASH_RE = re.compile(r"(^|: )\s*(\d+\s+)?(Segmentation fault|Bus error|Aborted|
 # ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).
 FCOV_EXIT_CODES = {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}
 FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 usage/protocol error")
+# A measured (purpose-4) dispatch needs a TB that compiles at least one covergroup (ruling LOG-046a): otherwise every fcov
+# manifest is unverifiable and the round is refused after the pass. gen_build records the fact; gen_round and the request
+# server refuse the dispatch before any job when the canary build lacks it.
+COVERGROUP_DECL_RE = re.compile(r"^\s*covergroup\s+[A-Za-z_]\w*")   # a covergroup declaration in comment-stripped SV
+SV_SOURCE_SUFFIXES = (".sv", ".svh")
+MEASURED_DISPATCH_RULE = "LOG-046a: a measured regression dispatches only on a canary build whose manifest records covergroups_compiled true"
+CANARY_REFUSED_NO_COVERGROUPS = "refused_no_covergroups"
+ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (
     ("uvm_fatal", re.compile(r"^UVM_FATAL\s+(?!:\s*0\b)")),

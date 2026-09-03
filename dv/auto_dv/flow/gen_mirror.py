@@ -404,7 +404,9 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD", f"the HEAD export carries none of the excluded non-inputs {list(C.MIRROR_EXCLUDE_PATHS)} and the same pathspecs drive the canary diff (present: {present})")
     r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "status", "--porcelain", "--untracked-files=no", "--", "dv/auto_dv", "rtl"],
                        capture_output=True, text=True)
-    modified = [l[3:].strip() for l in r.stdout.splitlines() if l[:2].strip() in ("M", "MM", "AM") and not l[3:].startswith("dv/auto_dv/work")]
+    # Only a file inside the mirrored set can show the export ignores the working tree; excluded paths never export.
+    modified = [l[3:].strip() for l in r.stdout.splitlines() if l[:2].strip() in ("M", "MM", "AM")
+                and not any(l[3:].strip().startswith(e + "/") for e in C.MIRROR_EXCLUDE_PATHS)]
     if modified:
         rel = modified[0]
         committed = subprocess.run(["git", "-C", str(C.REPO_ROOT), "show", f"{sha}:{rel}"], capture_output=True).stdout

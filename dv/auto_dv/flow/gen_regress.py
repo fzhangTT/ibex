@@ -254,6 +254,16 @@ def fcov_policy_failures(runs: list[dict[str, Any]], testlist: dict[str, Any], c
                 U.dump_yaml(stored, res_path)
 
 
+def resolve_elfile(e: Path) -> Path:
+    """An exclusion file given relative is the pinned source tree's copy (the committed file of the sha under test);
+    an absolute one is taken as given. A missing file refuses the regression before its first job (urg runs with
+    the cov dir as cwd and would only fail at the merge, after the whole pass)."""
+    p = e if e.is_absolute() else C.SOURCE_ROOT / e
+    if not p.is_file():
+        U.die(f"--elfile {e}: no such file (relative paths resolve under the source root {C.SOURCE_ROOT})")
+    return p.resolve()
+
+
 def export_plusarg_name() -> str | None:
     """The export-file plusarg string as gen_tb_pkg.sv declares it (None when the TB has no such knob)."""
     by_ident = {ident: name for name, ident in C.sv_plusarg_names().items()}
@@ -369,6 +379,14 @@ def self_test() -> int:
     sm = summarize(runs())
     cond = sm["runs_without_fcov_manifest"] == 3 and sm["tests_without_fcov_manifest"] == ["gen_a", "gen_b", "gen_d"]
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "summarize counts runs without a manifest")
+    rel = Path("dv") / "auto_dv" / "flow" / "gen_testlist.yaml"
+    cond = resolve_elfile(rel) == (C.SOURCE_ROOT / rel).resolve() and resolve_elfile((C.SOURCE_ROOT / rel).resolve()) == (C.SOURCE_ROOT / rel).resolve()
+    try:
+        resolve_elfile(Path("dv") / "auto_dv" / "excl" / "gen_no_such_file.el"); missing_refused = False
+    except SystemExit:
+        missing_refused = True
+    cond = cond and missing_refused
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "resolve_elfile: relative under the source root, absolute as given, a missing file refuses (SystemExit)")
     sm = summarize([{"test": "gen_red", "verdict": C.VERDICT_RED_OK}, {"test": "gen_p", "verdict": C.VERDICT_PASS},
                     {"test": "gen_f", "verdict": C.VERDICT_FAIL}])
     cond = sm["red_ok"] == 1 and sm["pass"] == 1 and sm["fail"] == 1 and sm["pass_rate_pct"] == 50.0 and sm["planned"] == 3
@@ -512,6 +530,7 @@ def main() -> int:
         atexit.register(M.release_lease, lease)
     if not (a.tier or a.tests or a.repro):
         ap.error("one of --tier, --tests, --repro is required")
+    a.elfile = [resolve_elfile(e) for e in (a.elfile or [])]
     U.require_env("vcs", "urg", "bsub" if not a.local else "vcs")
     U.require_sv_constants()
     if (a.rtl_root is None) != (a.mutation_id is None):

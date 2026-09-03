@@ -96,7 +96,8 @@ gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb]
   `build_manifest.yaml`.
 - `build_manifest.yaml`: build, tb_top, dut_instance, build_config, command, flag_groups (one list per
   group), inputs (sha256 of every filelist, one combined sha256 over all listed sources, source
-  count), staged_env_sh sha256, git (HEAD, branch, dirty flag), tools (vcs, urg, python, cocotb),
+  count), `covergroup_files` and `covergroups_compiled` (the listed .sv/.svh sources that declare a covergroup,
+  comments stripped: the fact the measured-dispatch gate reads, Sections 4 and 7d), staged_env_sh sha256, git (HEAD, branch, dirty flag), tools (vcs, urg, python, cocotb),
   compile_summary (error count and classes, warning classes with counts, compiler version), status
   `ok|failed`, wall_s. `status: ok` requires vcs rc 0, a simv, and zero `Error-[...]` lines.
 
@@ -266,7 +267,10 @@ gen_regress.py --repro <test> <seed> [--waves]
   (`--allow-local-out-root` for single-host debugging); every manifest records `out_root`,
   `out_root_fs` and the site pointer path.
 - `--elfile`: URG exclusion files (the exclusion deliverable) applied at the measured merge with
-  `-excl_strict` (Section 7a). `--dump-exclusions` (implied by `--purpose 4`) writes the
+  `-excl_strict` (Section 7a). A relative path is the pinned source tree's file (head mode: the committed file of
+  the sha under test), an absolute path is taken as given; a missing file refuses the regression before its first
+  job (`gen_regress.resolve_elfile`; urg runs with the cov dir as cwd, so an unresolved relative path would only fail
+  at the merge, after the whole pass). `--dump-exclusions` (implied by `--purpose 4`) writes the
   full-exclusions dump. `--build-vcs-arg` passes an extra vcs argument to every build (trials such
   as `-cm_glitch 0`).
 - `manifest.yaml` (also the results manifest of a run request): kind, tag, request, requester,
@@ -368,6 +372,14 @@ record. Outside the hold, in file order and each syncing for itself: worktree-so
 values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
 they are recorded in the manifest as `operator_extra_args`. Only the runtime role runs this
 script (LSF is exclusive to it).
+
+Measured-dispatch gate (ruling LOG-046a): a purpose-4 request in an accepted batch dispatches only when the canary
+regression's build manifest, named by `--canary-build DIR|build_manifest.yaml`, records `covergroups_compiled: true`
+(`gen_flow_util.measured_dispatch_refusal`); otherwise every purpose-4 request of the pass is refused in writing
+(`scope_decision: refused`, the refusal names the build, the manifest and the rule; the batch record's `sync` carries
+`measured_dispatch: {canary_build, decision: refused_no_covergroups | accepted, refusal}`) while the purpose-1 to -3
+requests of the same batch are served. A TB without a covergroup makes every fcov manifest unverifiable, so the
+refusal lands before the first job instead of after the pass (round 0 of 2026-09-03 was refused after 700 s).
 
 ## 5. gen_dashboard.py (results dashboard)
 
@@ -480,11 +492,14 @@ Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `G
 harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
 accept any fixture failure. The Test Writer supplies the ids; the header is on and the loader refuses a
 generic signature (and any red fixture without one). A signature must also match the fixture's own retained
-pinned-red log when one exists: the loader looks under the source root for the Test Writer's
-`dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_<group>_red1_stdout.log` (or `gen_b2_<group>_...`, `RED_LOG_*`
-constants) and refuses the entry when the log's `GEN_TEST_FAIL` harness line does not match `red_expect` (a
-check id with a suffix defeats a `\b`-anchored id, for example) or when the log does not come out RED-OK through
-the verdict (the literal criterion, T-153: the retained evidence must prove the fixture as the flow judges it).
+pinned-red log when one exists: the loader looks under the source root through `RED_LOG_FAMILIES` (group = the
+name without `gen_test_` or `gen_ut_` and `_red`): the Test Writer's
+`dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_<group>_red1_stdout.log` (or `gen_b2_<group>_...`), whose
+`GEN_TEST_FAIL` harness line must match `red_expect` (a check id with a suffix defeats a `\b`-anchored id, for
+example), and the TB unit fixtures' `dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_<group>_red1_stdout_excerpt.log`
+(or `..._red1_stdout.log`), which have no harness line: their designed failure is the verdict's own collected
+evidence line. In both families the entry is refused when the log does not come out RED-OK through the verdict
+(the literal criterion, T-153: the retained evidence must prove the fixture as the flow judges it).
 The one exception is `RED_STALE_ALLOWLIST` in gen_flow_const.py, entries whose retained log still carries a live
 comparator error ahead of the harness line, keyed by entry name with the blocking task and the removal condition
 (empty today: the last two, isa_cti for T-144 and cmp_zca for R10, left it when the rows landed and the logs were
@@ -662,7 +677,16 @@ covergroup remains to be proven at the first covergroup.
 gen_round.py --round <n> [--label "Phase 1 gate"] [--elfile F ...] [--seeds N] [--base-seed S] [--tag T]
 gen_round.py --dry-run                      # check tier, UNMEASURED; evidence gen_round_0_dryrun; never a round
 gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a regression that already ran
+gen_round.py --round <n> --canary-build <canary build dir>   # required for a measured dispatch (LOG-046a)
 ```
+
+Pre-dispatch gate (ruling LOG-046a): a measured round (tier full, purpose 4; not `--dry-run`, `--tests` or
+`--collect`) requires `--canary-build`, the build dir or build_manifest.yaml of the canary regression on the pinned
+commit, and dispatches only when that manifest records `covergroups_compiled: true`; otherwise `gen_round.py`
+prints `REFUSED: measured dispatch refused: canary build <build> (<manifest>) records covergroups_compiled=<false|absent>;
+LOG-046a: ...` and exits `ROUND_EXIT_REFUSED` (2) before any job (`check_canary_build`, self-tested with
+`gen_round.py --self-test`). The TB without a covergroup that produced 44 unverifiable FAILs in the refused round-0
+probe (evidence/gen_round_0_probe/) is caught here, not after a 700-second pass.
 
 - One round = `gen_regress.py --tier full --purpose 4 --dump-exclusions [--elfile ...]` (coverage with
   cond, every `-elfile` loaded with `-excl_strict`, a strict violation fails the regression), then the
