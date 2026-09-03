@@ -28,7 +28,8 @@ ways, every result class, >= 2000 ops; 002 both wrap signs with the sign flip vi
 1..3), minstret delta == 65 per 64-HINT block (64 HINTs plus the first csrr, plan TP-ISA-004 / rtl-arch T-053),
 mcountinhibit written 0 and read back 0; 005 lui and auipc at both pc[1] values with every imm20
 class and >= 500 each; 006 lui 0xFFFFF -> 0xFFFFF000 and lui 0 -> 0, auipc imm 0 == pc at both alignments, auipc
-carry-out wrap (word < pc) and no-wrap (word >= pc) at both alignments; 007 seven ops x four sign pairs, x rs1/rs2
+address-space wrap (the 33-bit sum pc + sext(imm << 12) past 2^32: imm20 0x7FFFF from pc >= 0x80001000), carry-out
+(word < pc, a negative immediate) and no carry-out, each at both alignments; 007 seven ops x four sign pairs, x rs1/rs2
 classes, x five register relations, equal operands, every result class, >= 3000 ops; 008 add carry, add positive and
 negative signed overflow, sub borrow and sub signed overflow, each confirmed in the word; 009 slt and sltu each with
 equal operands, (INT_MIN, INT_MAX), (INT_MIN, 1) and rs1 = x0 with rs2 zero and nonzero; 052 every cp_writer_class
@@ -46,9 +47,12 @@ export (plan Section 6 item 5, TB Infra ASK 5); this test observes the same fact
 (b) TP-ISA-052 "the sw x0 stores 0 on the data bus" is a bus fact (bus record export, ASK 4); the test reads the stored
 word back through memory instead. (c) TP-ISA-006 "auipc at pc >= 0xFFFFF000" and "lui/auipc from the low page
 (pc < 0x1000)": the program window is MEMORY_MAP boot_page + prog_size (0x80000000 + 1 MiB, gen_link.ld PROG), so no
-program text can run in the high or low page until the TB memory map offers those windows (owner TB Infra / DV Lead);
-the carry-out wrap itself is exercised (pc >= 0x80000000 with imm20 >= 0x80000 wraps), and the CG-ISA-004 bins
-cp_pc_region.high / cp_pc_region.low of the item stay declared but unreachable in this memory map. (d) The "U vs M
+program text can run in the high or low page until the TB memory map offers those windows (WP-9, owner TB Infra / DV
+Lead), and the CG-ISA-004 bins cp_pc_region.high / cp_pc_region.low stay declared not_hit; the address-space wrap that the
+plan's cp_wrap means (the 33-bit sum pc + sext(imm << 12) outside [0, 2^32)) needs no such page: from any pc >= 0x80001000
+an auipc with imm20 0x7FFFF leaves the space, so the program places one per alignment past the first 4 KiB and the fire
+check confirms the wrap from the linked pc; the negative-immediate cases carry out of the 32-bit add (word < pc) without
+leaving the space and are the plan's cp_wrap.no. (d) The "U vs M
 mode 50/50 after an mret" randomization of TP-ISA-001/004/007: batch-2 programs stay in M-mode by design (the C-2 PMP
 prologue and mret return belong to the batch-3 privilege groups). (e) TP-ISA-004 dummy_instr_en = 0 is the cpuctrlsts
 reset value (doc/03_reference/cs_registers.rst) and is neither written nor read back: the flow's standalone Spike check
@@ -251,18 +255,22 @@ class IsaAlu(GenTest):
                    + (f"; {miss}" if miss else "; both alignments and every imm20 class per op seen"))
 
     def fire_tp_isa_006(self):
-        ok, detail = _compare(self, prog.I006, "lui extremes, auipc imm 0, auipc wrap/no-wrap at both alignments")
+        ok, detail = _compare(self, prog.I006, "lui extremes, auipc imm 0, auipc address-space wrap, carry-out and no carry-out at both alignments")
         self.check("fire_tp_isa_006", ok, detail)
         obs = _matched(self, prog.I006)
         lui = {_got(self, o.ridx[0]) for o in obs if o.op == "lui"}
         au = [(o, _pc(self, o), _got(self, o.ridx[0])) for o in obs if o.op == "auipc"]
         eq_pc = {pc & 2 for o, pc, g in au if o.imm == 0 and g == pc}
-        wrap = {pc & 2 for o, pc, g in au if o.imm and g < pc}
-        nowrap = {pc & 2 for o, pc, g in au if o.imm and g >= pc}
+        # the plan's cp_wrap: the 33-bit sum leaves the address space (from this window only a positive immediate can); the
+        # carry-out of the 32-bit add (word < pc) is the negative-immediate case and stays in the space
+        space = {pc & 2 for o, pc, g in au if 0 < o.imm < 0x80000 and pc + (o.imm << 12) >= 1 << 32}
+        carry = {pc & 2 for o, pc, g in au if o.imm and g < pc}
+        nocarry = {pc & 2 for o, pc, g in au if o.imm and g >= pc}
         miss = _missing([("lui word", (0xFFFFF000, 0), lui), ("auipc imm0==pc at pc[1]", (0, 2), eq_pc),
-                         ("auipc wrap at pc[1]", (0, 2), wrap), ("auipc no-wrap at pc[1]", (0, 2), nowrap)])
+                         ("auipc address-space wrap at pc[1]", (0, 2), space), ("auipc carry-out (word < pc) at pc[1]", (0, 2), carry),
+                         ("auipc no carry-out at pc[1]", (0, 2), nocarry)])
         self.check("fire_tp_isa_006_floor", not miss, f"{len(obs)} observed; auipc pcs in 0x{min([pc for _, pc, _ in au] or [0]):08x}.."
-                   + (f"; {miss}" if miss else "; lui 0xFFFFF000/0, auipc == pc, wrap and no-wrap at both alignments seen"))
+                   + (f"; {miss}" if miss else "; lui 0xFFFFF000/0, auipc == pc, address-space wrap, carry-out and no carry-out at both alignments seen"))
 
     def fire_tp_isa_007(self):
         p = _plan(self)

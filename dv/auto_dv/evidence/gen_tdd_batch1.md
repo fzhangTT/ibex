@@ -94,6 +94,11 @@ Reading the table:
 - Green seed 1: out_head/csr_access_s1/stdout.log:991: `cocotb.gen_tb_top                  gen_test_csr_access GEN_TEST_PASS`; UVM_ERROR 0.
 - Green seed 2: out_head/csr_access_s2/stdout.log:991: `cocotb.gen_tb_top                  gen_test_csr_access GEN_TEST_PASS`; UVM_ERROR 0.
 - red_expect `GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure` against the harness's first evidence line: MATCH.
+- L5R-3 (2026-09-03, joint landing with the DV Lead under LOG-036b, committed 812ed54): the CG-CSR-002 Sample line's anti-vacuity
+  clause now claims only that a hit proves a read-back record exists for the write pattern and attributes the legalised-prediction
+  comparison to the comparator's isa_rd row until gen_chk_csr_readback is built, so this test's manifest was re-rendered by
+  --test-module on an archive of 5c0b0c0 with the new plan: 80 declared bins unchanged, the four CG-CSR-002 anti_vacuity
+  strings carry the new clause, header and every other line unchanged; nothing in the test or its program changed.
 
 ### gen_test_csr_trap_setup
 - Files: dv/auto_dv/tests/gen_test_csr_trap_setup.py, dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py,
@@ -107,6 +112,11 @@ Reading the table:
 - Green seed 1: out_head/csr_trap_setup_s1/stdout.log:1252: `cocotb.gen_tb_top                  gen_test_csr_trap_setup GEN_TEST_PASS`; UVM_ERROR 407.
 - Green seed 2: out_head/csr_trap_setup_s2/stdout.log:1318: `cocotb.gen_tb_top                  gen_test_csr_trap_setup GEN_TEST_PASS`; UVM_ERROR 477.
 - red_expect `GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure` against the harness's first evidence line: NO MATCH (first evidence line is the comparator UVM_ERROR; RED-OK waits for T-102).
+- L5R-3 (2026-09-03, joint landing with the DV Lead under LOG-036b, committed 812ed54): the CG-CSR-002 Sample line's anti-vacuity
+  clause now claims only that a hit proves a read-back record exists for the write pattern and attributes the legalised-prediction
+  comparison to the comparator's isa_rd row until gen_chk_csr_readback is built, so this test's manifest was re-rendered by
+  --test-module on an archive of 5c0b0c0 with the new plan: 168 declared bins unchanged, the 151 CG-CSR-002 anti_vacuity
+  strings carry the new clause, header and every other line unchanged; nothing in the test or its program changed.
 
 ### gen_test_cmp_zcb
 - Files: dv/auto_dv/tests/gen_test_cmp_zcb.py, dv/auto_dv/tests/gen_programs/gen_cmp_zcb_prog.py,

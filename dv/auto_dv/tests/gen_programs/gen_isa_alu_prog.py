@@ -581,7 +581,9 @@ def build_u_units(rng):
 
 
 def build_u_ext_units(rng):
-    """TP-ISA-006: lui extremes, auipc imm 0 (rd == pc), auipc carry-out wrap and no-wrap, each at both alignments."""
+    """TP-ISA-006: lui extremes, auipc imm 0 (rd == pc), auipc address-space wrap (imm20 0x7FFFF, placed past the first 4 KiB
+    so the 33-bit sum passes 2^32), carry-out (a negative immediate: word < pc, still inside the space) and no carry-out, each
+    at both alignments."""
     ops = []
     for _ in range(rng.randint(1, 3)):
         ops.append(u_unit(rng, I006, "lui", 0xFFFFF, rd=pick(rng)))
@@ -589,7 +591,10 @@ def build_u_ext_units(rng):
     for al in (0, 2):
         ops.append(u_unit(rng, I006, "auipc", 0, rd=pick(rng), align=al))
         ops.append(u_unit(rng, I006, "auipc", 0x80000 if al == 0 else rng.randint(0x80000, 0xFFFFF), rd=pick(rng), align=al))
-        ops.append(u_unit(rng, I006, "auipc", rng.randint(1, 0x7FFFF), rd=pick(rng), align=al))
+        ops.append(u_unit(rng, I006, "auipc", rng.randint(1, 0x7FE00), rd=pick(rng), align=al))   # no carry-out anywhere in the 1 MiB window
+        space = u_unit(rng, I006, "auipc", 0x7FFFF, rd=pick(rng), align=al)
+        space.tags["space"] = True
+        ops.append(space)
     for _ in range(rng.randint(2, 8)):
         ops.append(u_unit(rng, I006, "auipc", rng.choice((0, rng.randint(0x80000, 0xFFFFF), rng.randint(1, 0x7FFFF))), rd=pick(rng)))
     for o in ops:
@@ -1118,6 +1123,7 @@ def check_coverage(p):
     assert {o.imm for o in ext if o.op == "lui"} >= {0xFFFFF, 0}
     combos = {(o.off & 2, o.tags["wrap"]) for o in ext if o.op == "auipc" and o.imm}
     assert combos == {(0, True), (2, True), (0, False), (2, False)}, f"TP-ISA-006 auipc alignment x wrap {combos}"
+    assert {o.off & 2 for o in ext if o.tags.get("space")} == {0, 2}, "TP-ISA-006 address-space wrap: one pc alignment only"
     assert {o.off & 2 for o in ext if o.op == "auipc" and o.imm == 0} == {0, 2}
     reg = [o for o in ops if o.item == I007]
     assert len(reg) >= N_REG_MIN
@@ -1164,6 +1170,11 @@ def plan(seed, red=False, red_item=None):
              + [[o] for o in build_reg_units(rng)] + [[o] for o in build_wrap_units(rng)] + [[o] for o in build_slt_r_units(rng)]
              + [[o] for o in build_x0w_units(rng, scratch_next)])
     rng.shuffle(units)
+    # the address-space wrap sites need pc >= 0x80001000: they go into the second half of the program (>= 3500 units of >= 4 bytes)
+    space_units = [u for u in units if u[0].tags.get("space")]
+    units = [u for u in units if not u[0].tags.get("space")]
+    for u in space_units:
+        units.insert(rng.randint(len(units) // 2, len(units)), u)
     ops = list(pre)
     for unit in units:
         ops.extend(filler(rng) for _ in range(rng.choice((0, 0, 1, 1, 2))))
@@ -1181,6 +1192,7 @@ def plan(seed, red=False, red_item=None):
     base = MEMORY_MAP["boot_page"]
     red_note = apply_red(rng, ops, red_item, lambda o: base + o.off) if red else ""
     body, sites, insns = render(ops, filler_init)
+    assert all(base + o.off >= 0x80001000 for o in ops if o.tags.get("space")), "TP-ISA-006 address-space wrap site inside the first 4 KiB"
     kinds = [o.kind for o in ops]
     summary = {"imm": kinds.count("imm"), "slt_i": kinds.count("slt_i"), "hint_pairs": kinds.count("hint_pair"),
                "hint_blocks": kinds.count("hint_block"), "u": kinds.count("u"), "reg": kinds.count("reg"),

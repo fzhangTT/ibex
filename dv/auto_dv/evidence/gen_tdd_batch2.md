@@ -228,3 +228,28 @@ and the manifests dv/auto_dv/work/runtime/results/test-writer-065..070/manifest.
 The local re-run of the same 13 seeds on out_head8 before the landing (gen_tdd_batch1.md Section 12, gen_3h_acc_*) agrees seed by seed on the
 reached / applied counts and the idx>0 phase counts (the wave's images are byte-identical to the HEAD generators' output); the flow's runs
 are the acceptance evidence, the local ones the landing's proof.
+
+## 5. TP-ISA-006's address-space wrap in today's window (plan v2w, CM92-M-1; gen_test_isa_alu)
+
+The plan's CG-ISA-004 cp_wrap means the 33-bit sum pc + sext(imm << 12) leaving [0, 2^32). The test's TP-ISA-006 wrap cases were the
+negative-immediate carry-outs (imm20 >= 0x80000, word < pc), which never leave the space from the 0x80000000 window, so cp_wrap.yes,
+cr_auipc_pc.auipc_word_wrap and auipc_half_wrap were unhit (seeds 1..3 of HEAD's generator: 0 address-space wraps among 526..529 auipc
+sites, 248..264 carry-outs, all negative immediates). They are reachable without WP-9: from every pc >= 0x80001000 an auipc with imm20
+0x7FFFF gives pc + 0x7FFFF000 >= 2^32. Reachability probe first (gen_cm92_isa_alu_probe_wrap7ffff_s1_*, md5 bbed95d9cc6ee09c33812614a57999d6 /
+b507164315bed69d822193d92bf69c08): HEAD's generator with its positive case forced to 0x7FFFF, seed 1 on out_head15 (the build of the 812ed54 export,
+before landing 6), retires two wrapped auipc (pc 0x800013d8 -> 0x000003d8, pc 0x800114aa -> 0x000104aa) with UVM_ERROR 0 and
+every fire_tp_isa_006 value matching; only the no-carry floor failed, since the probe replaced that case.
+Change (gen_isa_alu_prog.py 04536ebfc738, gen_test_isa_alu.py 4e8764914f0f): build_u_ext_units emits one auipc imm20 0x7FFFF per pc alignment,
+tagged space, which plan() moves into the second half of the shuffled unit list and asserts at pc >= 0x80001000 after layout; the no-carry
+case is capped at 0x7FE00 so it never wraps inside the 1 MiB window; the negative-immediate cases stay as the carry-out. fire_tp_isa_006's
+floor requires the address-space wrap (33-bit sum >= 2^32, computed from the linked pc) at both alignments beside the carry-out and the
+no carry-out; the docstring's item summary and its (c) clause state the meaning and keep cp_pc_region.high / low under WP-9.
+TDD red first, on out_head16 (the build of an export of 053fa2c, after landing 6; the images rebuilt from that archive): the new floor on
+HEAD's seed-1 program fails "auipc address-space wrap at pc[1] missing [0, 2]"
+(gen_cm92_isa_alu_red_space_floor_s1_stdout_excerpt.log, md5 4c3c6c52fea3f1d1976ddd9c021f6522). Green, same build: seeds 1, 2, 3 with the new generator PASS, UVM_ERROR 0,
+each program with exactly two wrap sites, one per alignment, all above 0x80001000 (gen_cm92_isa_alu_s1_stdout.log and _sim.log in full,
+s2 / s3 excerpts, gen_cm92_isa_alu_wrap_sites.log md5 3954e7b7a509e6a49f3e4fafde3512cd). The placement assert fires for seeds 1..3 when the wrap units are forced to the
+program start (gen_cm92_isa_alu_placement_invariant_probe.log); 63 seeds of the new generator abort nowhere and each carries the two sites
+(gen_cm92_isa_alu_generator_sweep63.log). The manifest rendered from the changed module equals the committed gen_test_isa_alu.fcov.yaml
+byte for byte: no bin moves, the three bins stay declared, cp_pc_region.high / low stay not_hit. Verified from a detached archive of HEAD with
+the touch overlaid (dv/auto_dv/work/test-writer/head_final_selftest_cm92.log names the HEAD).

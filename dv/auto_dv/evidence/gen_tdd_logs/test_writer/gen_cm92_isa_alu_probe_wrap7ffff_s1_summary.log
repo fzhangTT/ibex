@@ -1,0 +1,8 @@
+# CM92-M-1 probe, 2026-09-03T21:22:40Z: gen_isa_alu_prog.py with the TP-ISA-006 positive case forced to imm20 0x7FFFF (probe_gen_isa_alu_prog.py, sha256 97b8bbef8e9c; HEAD generator 4cda592fe1de), seed 1 on out_head15 (export of 812ed54)
+# auipc sites whose 33-bit sum pc + sext(imm << 12) leaves [0, 2^32) (the plan's cp_wrap.yes), from prog.dis:
+pc 0x800013d8 pc[1]=0 imm20 0x7ffff sum 0x1000003d8 -> rd 0x000003d8
+pc 0x800114aa pc[1]=1 imm20 0x7ffff sum 0x1000104aa -> rd 0x000104aa
+# 531 auipc sites in all; raw carries (word < pc) 250
+# run verdict lines:
+                                                         AssertionError: GEN_TEST_FAIL gen_test_isa_alu: 1 fire-check failure(s): fire_tp_isa_006_floor: 19 observed; auipc pcs in 0x800007e6..; auipc no-wrap at pc[1] missing [0, 2]
+# UVM_ERROR lines in sim.log: 0

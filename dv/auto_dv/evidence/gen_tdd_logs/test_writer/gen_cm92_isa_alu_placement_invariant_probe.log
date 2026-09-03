@@ -1,0 +1,8 @@
+# CM92 path B, placement invariant, 2026-09-03T21:28:09Z: the draft generator with the two address-space wrap units inserted at index 0 instead of the second half (mutant sha256 f2f18752081d; draft 04536ebfc738), seeds 1..3:
+AssertionError: TP-ISA-006 address-space wrap site inside the first 4 KiB
+AssertionError: TP-ISA-006 address-space wrap site inside the first 4 KiB
+AssertionError: TP-ISA-006 address-space wrap site inside the first 4 KiB
+# the draft itself, seeds 1..3:
+seed 1: ok
+seed 2: ok
+seed 3: ok
