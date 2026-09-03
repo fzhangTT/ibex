@@ -38,7 +38,7 @@ Gain rule: G = 0.5 points on any gated metric. Max delta: None; shows gain: None
 
 - `gen_dashboard.txt`, `gen_hierarchy.txt`, `gen_tests.txt` (URG text report), `gen_hierarchy_dut_rows.txt` (the DUT-scope rows)
 - `gen_groups.txt` / `gen_grpinfo.txt` when covergroups exist, else `gen_groups_summary.txt` stating n/a
-- full_exclusions: dry run: dump not copied (stays in the out-tree) (`fullexclude.<metric>.gz`, gzip; the `_module` variants stay in the out-tree)
+- full_exclusions: dry run: dump not copied (stays in the out-tree) (`gen_fullexclude.<metric>.gz`, gzip; the `_module` variants stay in the out-tree)
 - `gen_merge.log` and `gen_merge_log_warnings.txt` (counts per Warning/Error/Note class)
 - `gen_build_manifest_<build>.yaml`, `gen_testlist_snapshot.yaml`, `gen_regress_manifest.yaml`, `elfiles/` (exclusion files used)
 

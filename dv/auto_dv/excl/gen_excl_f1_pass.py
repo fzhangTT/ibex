@@ -31,9 +31,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "dv/auto_dv/flow"))
-sys.path.insert(0, str(ROOT / "dv/auto_dv/excl"))
+sys.path.insert(0, str(ROOT / "dv/auto_dv/excl"))   # for the lazy import of the generator's dump parser in block_join()
 import gen_flow_const as C          # round-evidence file names: one home, no literals here
-from gen_excl_select import URG_DUMP_MODULE_PREFIX   # URG's out-tree module dump names, defined once by their parser
 EXCL = ROOT / "dv/auto_dv/excl"
 GEN = EXCL / "gen_excl_select.py"
 EL = EXCL / "gen_exclusions.el"
@@ -99,15 +98,15 @@ def round_inputs(round_dir, dry_run):
         die(f"merged vdb not found: {vdb!r} (manifest {man})")
     dump = None
     for d in cov.get("full_exclusions_dump") or []:
-        if Path(d).name.startswith(URG_DUMP_MODULE_PREFIX):
+        if Path(d).name.startswith(C.URG_DUMP_MODULE_PREFIX):
             dump = Path(d).parent
             break
     if dump is None and report_dir:
         cand = Path(report_dir).parent / C.URG_DUMP_DIRNAME
-        if (cand / f"{URG_DUMP_MODULE_PREFIX}line").is_file():
+        if (cand / f"{C.URG_DUMP_MODULE_PREFIX}line").is_file():
             dump = cand
-    if dump is None or not (dump / f"{URG_DUMP_MODULE_PREFIX}line").is_file():
-        die(f"module dump ({URG_DUMP_MODULE_PREFIX}*) not found beside {report_dir}; the round must run with -dump {C.URG_DUMP_DIRNAME} (purpose 4)")
+    if dump is None or not (dump / f"{C.URG_DUMP_MODULE_PREFIX}line").is_file():
+        die(f"module dump ({C.URG_DUMP_MODULE_PREFIX}*) not found beside {report_dir}; the round must run with -dump {C.URG_DUMP_DIRNAME} (purpose 4)")
     leaves = tuple(k.split(".")[-1] for k in (cov.get("dut_scope") or {}).keys()) or DEFAULT_LEAVES
     return {"manifest": str(man), "measured": measured, "vdb": vdb, "report_dir": report_dir, "dump": str(dump),
             "leaves": leaves, "git_head": m.get("git", {}).get("head") if isinstance(m.get("git"), dict) else None}

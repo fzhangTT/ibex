@@ -360,7 +360,8 @@ C, the decision and the record path are recorded in every request manifest as `s
 (`pinned_sha`, `canary_sha`, `canary_decision`, `batch_record`). The server passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
 regression still pinned to S (`--head-sha S`) and syncing that commit for itself (`server_mirror_sync.batch_serialized`
-says so). Within an accepted batch the purpose-1 requests run concurrently and purposes 2 to 4 (instrumentation
+says so; the scope decisions of that fallback come from the clone's committed testlist, because the pinned tree does
+not exist when the shared sync failed, and each regression re-validates the testlist of the tree it syncs). Within an accepted batch the purpose-1 requests run concurrently and purposes 2 to 4 (instrumentation
 trials, repros, a purpose-4 measured round) follow one at a time on the same pinned tree under the same hold and
 record. Outside the hold, in file order and each syncing for itself: worktree-source requests and elcheck requests. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
 values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
@@ -477,7 +478,14 @@ other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, e
 Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `GEN_TEST_FAIL` (the test
 harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
 accept any fixture failure. The Test Writer supplies the ids; the header is on and the loader refuses a
-generic signature (and any red fixture without one).
+generic signature (and any red fixture without one). A signature must also match the fixture's own retained
+pinned-red log when one exists (review of e83614c): the loader looks under the source root for the Test Writer's
+`dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_<group>_red1_stdout.log` (or `gen_b2_<group>_...`, `RED_LOG_*`
+constants) and refuses the entry when the log's `GEN_TEST_FAIL` harness line does not match `red_expect` (a
+check id with a suffix defeats a `\b`-anchored id, for example). The full verdict of that log is reported beside it
+(`gen_flow_util.py --check-red-signatures [testlist]`): a log that predates a TB fix can carry UVM errors ahead of
+the harness line and shows as STALE, not refused, because the live run decides that; head trees carry no evidence
+and skip the check, so the clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
 Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
 resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own
 `index` column is the value the bridge command COV_WITNESS carries), renders `+gen_witness_ids=<comma-separated
@@ -524,7 +532,11 @@ gen_mirror.py --status
   python-requirements.txt), `MIRROR_GLOB_ITEMS` (`*.core`), minus `MIRROR_EXCLUDE_PATHS` (dv/auto_dv/work,
   dv/auto_dv/reviews, dv/auto_dv/evidence: nothing reads them at build or run time) and the untracked build
   products `MIRROR_EXCLUDE_PATTERNS`. `gen_mirror.git_pathspecs()` renders it as git pathspecs (`:(glob)`,
-  `:(exclude)`) for the head-mode archive and the hold's diff.
+  `:(exclude)`) for the head-mode archive and the hold's diff. Ruling (Orchestrator, 2026-09-03): work, reviews and
+  evidence stay out because they are records about the tree, not inputs to it; the caveat is that anything a build or
+  run reads at run time must be inside the mirrored set. The exclusion tools read `dv/auto_dv/evidence/gen_round_*/`
+  (the EC-3 asserts and the regress manifest) only when a round is collected on the clone, never on a head tree, so
+  this is consistent today; a future run-time reader of evidence/ would have to move that path back into the set.
   `gen_regress.py --source head|worktree` chooses the tree a regression builds and runs from. Head mode (the
   default for purpose 4, a tier, or more than one test; a request's `source` field otherwise) syncs a
   pins the commit first (`--head-sha`: the batch's sha, else HEAD now), syncs exactly that commit into its
@@ -564,7 +576,8 @@ directory, so a worktree sync cannot reach a head-mode consumer by construction,
 batches on different commits do not share a tree either; every sync of the family runs under one lock
 (`<site root>.sync.lock`). A head tree carries no venv or Spike of its own: its `.venv` and `tools` are
 symlinks to the tools home (the site mirror root), so `ci/env.sh` in the head tree activates the one venv
-built on shared storage. A live consumer (a head-mode regression, a batch) leases its tree
+built on shared storage. A live consumer (a head-mode regression, a batch, and a standalone `gen_build.py` or
+`gen_run.py` bound to a head tree, `gen_mirror.lease_if_head_tree`) leases its tree
 (`<tree>/.leases/<pid>_<tag>.lease`, released at exit; a lease whose pid this host cannot probe, another
 host's, counts as live for at most `LEASE_MAX_AGE_H`); pruning runs only from the runtime tick
 (`gen_mirror.py --prune`), never from a sync, and removes trees beyond the newest `HEAD_MIRRORS_KEEP` only

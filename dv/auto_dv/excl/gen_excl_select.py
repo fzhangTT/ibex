@@ -13,10 +13,7 @@ import argparse, re, subprocess, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "flow"))
-import gen_flow_const as C   # round-evidence file names: one home (dv/auto_dv/flow/gen_flow_const.py), no literals here
-
-# URG's own out-tree module dump names (`urg -dump full_exclusions`); this parser is their one home in dv/auto_dv/excl.
-URG_DUMP_MODULE_PREFIX = "fullexclude_module."
+import gen_flow_const as C   # file names and the clone root: one home (dv/auto_dv/flow/gen_flow_const.py), no literals here
 
 METRICS = ["line", "branch", "cond", "tgl", "fsm", "assert"]
 RE_MOD = re.compile(r'^// ANNOTATION: "ModuleName: (\S+)"')
@@ -40,7 +37,7 @@ class Entry:
 def parse(dump_dir):
     entries = []
     for metric in METRICS:
-        p = Path(dump_dir) / f"{URG_DUMP_MODULE_PREFIX}{metric}"
+        p = Path(dump_dir) / f"{C.URG_DUMP_MODULE_PREFIX}{metric}"
         if not p.exists():
             continue
         mod = chk = f = None
@@ -523,7 +520,7 @@ def load_enum_values(pkg_paths):
     """NAME -> integer value for every `typedef enum` literal in the given packages."""
     vals = {}
     for pth in pkg_paths:
-        txt = Path(pth).read_text()
+        txt = (C.REPO_ROOT / pth).read_text()
         for m in re.finditer(r"typedef\s+enum[^{]*\{(.*?)\}\s*(\w+)\s*;", txt, re.S):
             body = re.sub(r"//[^\n]*", "", m.group(1))
             nxt = 0
@@ -544,7 +541,7 @@ def load_enum_values(pkg_paths):
                 nxt = v + 1
     # package parameters / localparams with a literal value (e.g. `parameter logic [4:0] CHERIOT_SCR_MTCC = 5'h1c;`)
     for pth in pkg_paths:
-        txt = re.sub(r"//[^\n]*", "", Path(pth).read_text())
+        txt = re.sub(r"//[^\n]*", "", (C.REPO_ROOT / pth).read_text())
         for m in re.finditer(r"^\s*(?:localparam|parameter)\b[^=;]*?\b(\w+)\s*=\s*([0-9]+'[bhd][0-9a-fA-F_]+|\d+)\s*;", txt, re.M):
             lit = m.group(2)
             ml = re.match(r"^(\d+)?'([bhd])([0-9a-fA-F_]+)$", lit)
@@ -560,7 +557,7 @@ def load_module_params(rtl_paths):
     """Module name -> set of its `parameter` names (a bare parameter name is a constant only in its module)."""
     out = {}
     for mod, pth in rtl_paths.items():
-        txt = Path(pth).read_text()
+        txt = (C.REPO_ROOT / pth).read_text()
         out[mod] = set(re.findall(r"^\s*parameter\s+[^=;\n]*?\b(\w+)\s*=", txt, re.M))
     return out
 
@@ -570,8 +567,8 @@ MODULE_PARAMS = load_module_params(MODULE_RTL)
 
 def load_config():
     """opentitan -pvalue+ integers and +define+ enum names from util/ibex_config.py (never re-typed)."""
-    cfg = subprocess.run([sys.executable, "util/ibex_config.py", "opentitan", "vcs_opts"], check=True,
-                         capture_output=True, text=True).stdout
+    cfg = subprocess.run([sys.executable, str(C.CONFIG_SCRIPT), "opentitan", "vcs_opts"], check=True,
+                         capture_output=True, text=True, cwd=C.REPO_ROOT).stdout
     pvals = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
     defs = {m.group(1): m.group(2).split("::")[-1] for m in re.finditer(r"\+define\+(\w+)=(\S+)", cfg)}
     return pvals, defs
@@ -669,7 +666,7 @@ def guard_analysis(rtl_path, mod=None):
     """Per RTL line: (dead, reason) from the enclosing if/else/case arms, using the file's indentation
     as the nesting (lowRISC style: bodies indented deeper than their header; chains at equal indent).
     Also returns per header line the ordered chain conditions and per case line the item labels."""
-    raw = Path(rtl_path).read_text().split("\n")
+    raw = (C.REPO_ROOT / rtl_path).read_text().split("\n")
     n = len(raw)
     lines = [strip_comment(l) for l in raw]
     # join multi-line headers (an `if (` whose parentheses close on a later line)
@@ -875,7 +872,7 @@ def main():
     ec3_rel = None
     if a.ec3_asserts:
         ap_ = Path(a.ec3_asserts).resolve()
-        root = Path.cwd().resolve()
+        root = C.REPO_ROOT.resolve()
         try:
             ec3_rel = str(ap_.relative_to(root))
         except ValueError:

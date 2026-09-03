@@ -241,6 +241,8 @@ def main() -> int:
                     help="measured run (coverage enters a measured merge): auto = testlist measured flag")
     ap.add_argument("--pass-marker", help="override the testlist pass_marker (red-run evidence only)")
     a = ap.parse_args()
+    if os.environ.get(C.ENV_SOURCE_ROOT):
+        M.lease_if_head_tree(C.SOURCE_ROOT, f'run_{a.test}')   # standalone head-tree consumer: prune must skip the tree
     U.require_sv_constants()
 
     build_manifest = a.build_dir.resolve() / C.BUILD_MANIFEST

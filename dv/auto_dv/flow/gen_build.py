@@ -275,6 +275,8 @@ def main() -> int:
                          "clone-relative layout (e.g. <dir>/rtl/ibex_alu.sv); DV never edits rtl/ in place")
     ap.add_argument("--mutation-id", help="mutation identifier recorded with --rtl-root (required with it)")
     a = ap.parse_args()
+    if os.environ.get(C.ENV_SOURCE_ROOT):
+        M.lease_if_head_tree(C.SOURCE_ROOT, f'build_{a.build}')   # standalone head-tree consumer: prune must skip the tree
     if (a.rtl_root is None) != (a.mutation_id is None):
         ap.error("--rtl-root and --mutation-id go together")
     U.require_sv_constants()

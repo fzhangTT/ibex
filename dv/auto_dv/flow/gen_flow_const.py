@@ -30,6 +30,15 @@ JOB_ENV_SET = {"GEN_DV_FLOW_RUN": "1"}
 # The harness ends every run with this line (LOG-030): n > 0 report stores lagged n program budgets while the core
 # kept retiring (slow bus regimes), so a run can be slow but green; recorded per run so slowness is visible.
 SLOW_TOTAL_RE = r"GEN_TEST_SLOW_TOTAL rounds=(\d+) budget_cycles=(\d+)"
+# Retained pinned-red logs (the Test Writer's TDD evidence): a red fixture's red_expect must turn its own retained log
+# into RED-OK through the verdict, else the signature is refused at load (cross-model review of e83614c). The logs
+# live under the source root, so a head tree (evidence not mirrored) skips the check; the clone and a reviewer's
+# checkout run it. Group = test name without the test prefix and the red suffix.
+RED_LOG_DIR_REL = ("dv", "auto_dv", "evidence", "gen_tdd_logs", "test_writer")
+RED_LOG_PATTERNS = ("gen_{group}_red1_stdout.log", "gen_b2_{group}_red1_stdout.log")
+RED_LOG_SIM_PATTERN = "gen_{group}_red1_sim.log"
+RED_TEST_PREFIX = "gen_test_"
+RED_TEST_SUFFIX = "_red"
 SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"
@@ -197,6 +206,7 @@ URG_DUMP_EXCLUSIONS = ["-dump", "full_exclusions"]
 URG_DUMP_DIRNAME = "full_exclusions"
 URG_DUMP_GLOB = "fullexclude*"
 URG_DUMP_METRIC_GLOB = "fullexclude.*"   # the per-metric dump files a round copies (the _module variants stay in the out-tree)
+URG_DUMP_MODULE_PREFIX = "fullexclude_module."   # URG's per-module dump files, what gen_excl_select.py parses
 # merge.log signatures that make a strict merge FAIL (a covered or stale object was excluded).
 URG_EXCL_VIOLATION_RE = re.compile(r"Warning-\[UCAPI-ILOAD\]|Illegal exclusion attempt|Error-\[UCAPI")
 UNMEASURED_COV_DIRNAME = "cov_unmeasured"
@@ -434,7 +444,7 @@ ROUND_EV_BUILD_MANIFEST_FMT = EVIDENCE_FILE_PREFIX + "build_manifest_{build}.yam
 ROUND_EV_FULL_EXCL_DIR = URG_DUMP_DIRNAME   # holds round_evidence_name(fullexclude.<metric>) + .gz
 ROUND_EV_ELFILES_DIR = "elfiles"
 ROUND_EV_SUMMARY = "gen_round_summary.md"
-ROUND_EC3_ASSERTS_RE = rf"^dv/auto_dv/evidence/{ROUND_DIR_PREFIX}[^/]+/{re.escape(ROUND_EV_ASSERTS)}$"   # the EC-3 input the selector accepts
+ROUND_EC3_ASSERTS_RE = rf"^{re.escape(str(EVIDENCE_DIR.relative_to(REPO_ROOT)))}/{ROUND_DIR_PREFIX}[^/]+/{re.escape(ROUND_EV_ASSERTS)}$"   # the EC-3 input the selector accepts
 
 
 def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:

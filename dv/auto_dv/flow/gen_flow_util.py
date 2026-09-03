@@ -268,6 +268,9 @@ def self_test() -> int:
                 ("a generic GEN_TEST_FAIL red_expect under red_expect_policy [fire_id]", lambda d: (d.__setitem__("red_expect_policy", ["fire_id"]),
                     d["tests"][0].update(red_fixture=True, measured=False, red_expect="GEN_TEST_FAIL gen_smoke: [0-9]+ fire-check failure"))),
                 ("an unknown red_expect_policy token", lambda d: d.__setitem__("red_expect_policy", ["bogus"])),
+                ("a red_expect that does not match its retained pinned-red log's harness line",
+                 lambda d: next(t for t in d["tests"] if t["name"] == "gen_test_csr_access_red").update(red_expect=r"GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_999\b"),
+                 "does not match the retained log's harness line"),
                 ("a generic harness signature hidden behind a leading .* (policy fire_id)",
                  lambda d: next(t for t in d["tests"] if t.get("red_fixture")).update(red_expect=r".*GEN_TEST_FAIL x: [0-9]+ fire-check failure"),
                  "names no fire_ id"),
@@ -400,6 +403,32 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD", f"job script unsets {list(C.JOB_ENV_UNSET)} after cd, exports the flow-run marker {C.JOB_ENV_SET} and then the flow's own values (PYTHONPATH re-exported for cocotb)")
     ok &= cond_slow
     print("SELF-TEST", "ok " if cond_slow else "BAD", f"slow_total: parsed from the first log carrying the line ({st}); None without it")
+    # Retained pinned-red log check on a fabricated evidence root: a suffixed check id defeats a \b-anchored signature.
+    with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td5:
+        root = Path(td5); ev = root.joinpath(*C.RED_LOG_DIR_REL); ev.mkdir(parents=True)
+        (ev / "gen_x_red1_stdout.log").write_text("UVM_INFO fine\nAssertionError: GEN_TEST_FAIL gen_test_x: 1 fire-check failure(s): fire_tp_x_001_ops: 3 ops\n"
+                                                "** TESTS=1 PASS=0 FAIL=1 SKIP=0 **\n", encoding="utf-8")
+        saved_root, C.SOURCE_ROOT = C.SOURCE_ROOT, root
+        try:
+            good = red_signature_check({"name": "gen_test_x_red", "pass_marker": "GEN_TEST_PASS", "red_expect": r"GEN_TEST_FAIL gen_test_x: [0-9]+ fire-check failure\(s\):.*\bfire_tp_x_001"})
+            bad_sig = red_signature_check({"name": "gen_test_x_red", "pass_marker": "GEN_TEST_PASS", "red_expect": r"GEN_TEST_FAIL gen_test_x: [0-9]+ fire-check failure\(s\):.*\bfire_tp_x_001\b"})
+            none = red_signature_check({"name": "gen_test_y_red", "pass_marker": "GEN_TEST_PASS", "red_expect": r"x"})
+        finally:
+            C.SOURCE_ROOT = saved_root
+        cond = good and good["refuse"] is None and good["harness_match"] and good["verdict"] == C.VERDICT_RED_OK \
+            and bad_sig and bad_sig["refuse"] is not None and not bad_sig["harness_match"] and none is None
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "red_signature_check: a signature matching the retained harness line passes (RED-OK), a \\b-anchored id defeated by a suffix is refused, no log -> None")
+    # Request server partition: a head-mode request that merely carries an empty elcheck key builds and is pinned.
+    import gen_serve_requests as _SR
+    with tempfile.TemporaryDirectory(dir=C.selftest_tmp()) as td6:
+        qa = Path(td6) / "a.yaml"; qa.write_text("requester: runtime\npurpose: 1\ntests: [gen_boot_zc]\nseeds: [1]\ncoverage: no\nelcheck:\nnotes: x\n", encoding="utf-8")
+        qb = Path(td6) / "b.yaml"; qb.write_text("requester: rtl-arch\npurpose: 2\ntests: []\nseeds: []\ncoverage: no\nelcheck: {vdb: x, elfile: y}\nnotes: x\n", encoding="utf-8")
+        qc = Path(td6) / "c.yaml"; qc.write_text("requester: runtime\npurpose: 3\ntests: [gen_boot_zc]\nseeds: [1]\ncoverage: no\nsource: worktree\nnotes: x\n", encoding="utf-8")
+        pinned, p1, p234, rest = _SR.partition_pending([qa, qb, qc])
+        cond = pinned == [qa] and p1 == [qa] and p234 == [] and rest == [qb, qc] and not _SR.request_is_elcheck(qa) and _SR.request_is_elcheck(qb)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "partition_pending: an empty elcheck key is not an elcheck (pinned, purpose-1 half); a real elcheck and a worktree request stay outside the hold")
     saved = {k: os.environ.get(k) for k in C.JOB_ENV_UNSET}
     try:
         for k in C.JOB_ENV_UNSET:
@@ -420,10 +449,20 @@ def self_test() -> int:
         import importlib as _il
         _tl = _il.import_module("dv.auto_dv.tests.gen_test_lib")
         cond, note = _tl.STAGED_ENTRIES_ENV in C.JOB_ENV_UNSET, f"gen_test_lib.STAGED_ENTRIES_ENV={_tl.STAGED_ENTRIES_ENV!r}"
+        # The flow-run marker the template's guard reads (gen_test_lib.FLOW_RUN_ENV, lands with the Test Writer's 3d):
+        # once present it must be the variable the job script exports.
+        flow_env = getattr(_tl, "FLOW_RUN_ENV", None)
+        if flow_env is None:
+            marker_ok, marker_note = True, "gen_test_lib.FLOW_RUN_ENV not landed yet; the check engages when it exists"
+        else:
+            marker_ok, marker_note = flow_env in C.JOB_ENV_SET, f"gen_test_lib.FLOW_RUN_ENV={flow_env!r} vs JOB_ENV_SET {sorted(C.JOB_ENV_SET)}"
     except Exception as e:  # noqa: BLE001 - the harness module is the Test Writer's; report, do not crash
         cond, note = False, f"gen_test_lib not importable: {e}"
+        marker_ok, marker_note = False, note
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"the staged-entries variable the harness reads is in JOB_ENV_UNSET ({note})")
+    ok &= marker_ok
+    print("SELF-TEST", "ok " if marker_ok else "BAD", f"the flow-run marker the template's guard reads is the one the job script exports ({marker_note})")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -509,6 +548,48 @@ def export_facts() -> dict[str, Any]:
             "export_sources_declared": declared, "export_sources_declared_origin": origin,
             "export_sources_emitted": [], "export_sources_emitted_origin": C.EXPORT_EMITTED_UNOBSERVED, "export_rows_observed": [],
             "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
+
+
+def red_log_for(test_name: str) -> tuple[Path | None, Path | None]:
+    """The retained pinned-red stdout log (and its sim.log sibling when present) of a red fixture under the source
+    root, by the Test Writer's naming; (None, None) when the evidence directory or the log is absent."""
+    d = C.SOURCE_ROOT.joinpath(*C.RED_LOG_DIR_REL)
+    if not d.is_dir():
+        return None, None
+    group = test_name[len(C.RED_TEST_PREFIX):] if test_name.startswith(C.RED_TEST_PREFIX) else test_name
+    if group.endswith(C.RED_TEST_SUFFIX):
+        group = group[: -len(C.RED_TEST_SUFFIX)]
+    for pat in C.RED_LOG_PATTERNS:
+        p = d / pat.format(group=group)
+        if p.is_file():
+            sim = d / C.RED_LOG_SIM_PATTERN.format(group=group)
+            return p, (sim if sim.is_file() else None)
+    return None, None
+
+
+def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
+    """The reviewer's method: the retained pinned-red log of a red fixture, run through the verdict with the entry's
+    red_expect, must come out RED-OK. None when no retained log exists (head trees carry no evidence; a fixture
+    without a retained log is not provable here)."""
+    import gen_verdict as V
+    stdout, sim = red_log_for(test["name"])
+    if stdout is None:
+        return None
+    sim_lines = sim.read_text(encoding="utf-8", errors="replace").splitlines() if sim else []
+    lines = sim_lines + stdout.read_text(encoding="utf-8", errors="replace").splitlines()
+    res = V.decide_lines(lines, test.get("pass_marker"), False, 1, C.BUILD_CONFIG, [], True, False,
+                         banner_lines=sim_lines or None, red_fixture=True, red_expect=test.get("red_expect"))
+    # The signature rule proper: the harness line of the retained log (the designed failure the fixture proves) must
+    # match the regex. The verdict beside it can still be FAIL when the log predates a TB fix and carries UVM errors
+    # ahead of the harness line (stale evidence, reported, not refused: the live run decides that).
+    harness = next((l.strip() for l in lines if C.RED_EXPECT_HARNESS_PREFIX in l), None)
+    rx = test.get("red_expect") or ""
+    match = bool(harness and re.search(rx, harness))
+    return {"log": str(stdout), "sim_log": str(sim) if sim else None, "verdict": res["verdict"], "reason": res["reason"],
+            "evidence": str(res.get("evidence") or "")[:200], "harness_line": (harness or "")[:200], "harness_match": match,
+            "refuse": (None if match else (f"no {C.RED_EXPECT_HARNESS_PREFIX} line in the retained pinned-red log" if not harness
+                                            else "red_expect does not match the retained log's harness line")),
+            "stale_evidence": bool(match and res["verdict"] != C.VERDICT_RED_OK)}
 
 
 def slow_total(logs: list[Path]) -> dict[str, int] | None:
@@ -716,6 +797,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                     and C.RED_EXPECT_FIRE_TOKEN not in rx:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} matches the {C.RED_EXPECT_HARNESS_PREFIX} harness line but names no "
                     f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
+            # The signature must match the fixture's own retained pinned-red log when one exists (review of e83614c).
+            chk = red_signature_check(t)
+            if chk and chk["refuse"]:
+                die(f"{path}: test {t['name']}: red_expect {rx!r} refused: {chk['refuse']} ({Path(chk['log']).name}: "
+                    f"{chk['harness_line'][:160]!r})")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:
@@ -1010,6 +1096,26 @@ def lsf_jobs_left(prefix: str = C.LSF_JOB_PREFIX, settle_s: float = C.LSF_STATUS
 
 
 if __name__ == "__main__":
+    if "--check-red-signatures" in sys.argv:
+        # Every red fixture of a testlist against its retained pinned-red log; exit 2 when any checked entry is not RED-OK.
+        tl = Path(sys.argv[sys.argv.index("--check-red-signatures") + 1]) if len(sys.argv) > sys.argv.index("--check-red-signatures") + 1 else C.TESTLIST_YAML
+        data = load_yaml(tl)
+        bad = 0
+        for t in data.get("tests", []):
+            if not t.get("red_fixture"):
+                continue
+            chk = red_signature_check(t)
+            if chk is None:
+                print(f"RED-CHECK skip  {t['name']}: no retained pinned-red log")
+                continue
+            ok_ = chk["refuse"] is None
+            bad += 0 if ok_ else 1
+            tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
+            print(f"RED-CHECK {tag} {t['name']}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
+                  + (f"; {chk['refuse']}" if chk["refuse"] else "")
+                  + ("; stale evidence: the verdict's first collected line is not the harness line (log predates a TB fix)" if chk["stale_evidence"] else ""))
+        print("RED-CHECK:", "PASS" if not bad else f"FAIL ({bad} signature(s) do not match their retained log's harness line)")
+        sys.exit(0 if not bad else 2)
     if "--dump-testlist" in sys.argv:
         # Validated testlist as JSON; run with GEN_DV_SOURCE_ROOT set so the validation reads the pinned tree.
         import json

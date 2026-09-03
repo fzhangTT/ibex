@@ -305,7 +305,7 @@ tests:
     description: TDD red fixture of gen_test_boot_retire; the directed program ends with tohost 3 and declares an unreachable retirement floor, so the fire-check must FAIL (verdict RED-OK; evidence dv/auto_dv/evidence/gen_tdd_test_template.md);
       never a regression test; the red program ends with tohost 3, so fire_eot_pass_code is the designed first failure (fire_retired_floor follows)
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\):.*\bfire_eot_pass_code\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\):.*\bfire_eot_pass_code(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -351,7 +351,7 @@ tests:
     description: 'TDD red fixture of gen_test_rst_boot, pinned to TP-RST-006 (generator --red --red-item TP-RST-006): the stored mstatus reset read-back carries MPIE toggled, so exactly fire_tp_rst_006 FAILs
       by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\):.*\bfire_tp_rst_006\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\):.*\bfire_tp_rst_006(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -399,7 +399,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_reset, pinned to TP-CSR-106 (generator --red --red-item TP-CSR-106): one TP-CSR-106 read is re-targeted to a CSR whose reset value differs, so exactly fire_tp_csr_106
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_106\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_106(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -447,7 +447,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_access, pinned to TP-CSR-001 (generator --red --red-item TP-CSR-001): one writable operand bit of a TP-CSR-001 sequence is flipped in the program only, so
       exactly fire_tp_csr_001 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_001\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_001(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -495,7 +495,7 @@ tests:
     description: 'TDD red fixture of gen_test_csr_trap_setup, pinned to TP-CSR-036 (generator --red --red-item TP-CSR-036): one TP-CSR-036 mtvec operand is written with bit 8 flipped, so exactly fire_tp_csr_036
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_036\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_036(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -543,7 +543,7 @@ tests:
     description: 'TDD red fixture of gen_test_cmp_zcb, pinned to TP-CMP-036 (generator --red --red-item TP-CMP-036): one Zcb ALU form is emitted as a different form, so exactly fire_tp_cmp_036 FAILs by design
       (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_036\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_036(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -591,7 +591,7 @@ tests:
     description: 'TDD red fixture of gen_test_cmp_zcmp_basic, pinned to TP-CMP-039 (generator --red --red-item TP-CMP-039): one plain cm.push is emitted with the other spimm bit (sp_new off by 16; the frame
       checks 042/043 also trip), so exactly fire_tp_cmp_039 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_039\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_039(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -639,7 +639,7 @@ tests:
     description: 'TDD red fixture of gen_test_bit_draft, pinned to TP-BIT-016 (generator --red --red-item TP-BIT-016): one gorci immediate deviates while the plan keeps the true expectation, so exactly fire_tp_bit_016
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_016\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_016(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -687,7 +687,7 @@ tests:
     description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_001\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_001(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -712,7 +712,7 @@ tests:
     description: 'TDD red fixture of gen_test_mul_div, pinned to TP-MUL-014 (generator --red --red-item TP-MUL-014): one div/rem pair''s dividend bit 0 is flipped in the program only, so fire_tp_mul_014 FAILs
       by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_mul_div: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_014\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_div: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_014(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -760,7 +760,7 @@ tests:
     description: 'TDD red fixture of gen_test_mul_mul, pinned to TP-MUL-002 (generator --red --red-item TP-MUL-002): one mul is emitted as mulhsu, so fire_tp_mul_002 FAILs by design (RED-OK); every other
       item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_mul_mul: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_002\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_mul: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_002(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -805,10 +805,10 @@ tests:
     measured: false
 
   - name: gen_test_isa_cti_red
-    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design (RED-OK); every
-      other item''s red is retained locally (gen_tdd_batch2.md)'
+    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design; RED-OK once TB
+      Infra''s comparator rows land (until then the first collected evidence line is the comparator''s uvm_error and the flow verdict is FAIL); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_isa_cti: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_017\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_cti: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_017(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -856,7 +856,7 @@ tests:
     description: 'TDD red fixture of gen_test_isa_shift, pinned to TP-ISA-010 (generator --red --red-item TP-ISA-010): one shift-immediate op is emitted as another op of its form, so fire_tp_isa_010 FAILs
       by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_isa_shift: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_010\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_shift: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_010(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -903,7 +903,7 @@ tests:
     description: 'TDD red fixture of gen_test_isa_alu, pinned to TP-ISA-002 (generator --red --red-item TP-ISA-002): the wrap addi is emitted with immediate 0 (no wrap), so fire_tp_isa_002 FAILs by design
       (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_isa_alu: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_002\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_alu: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_002(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -951,7 +951,7 @@ tests:
     description: 'TDD red fixture of gen_test_bit_ratified, pinned to TP-BIT-014 (generator --red --red-item TP-BIT-014): one orc.b source value is loaded so its reference differs, so fire_tp_bit_014 FAILs
       by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_bit_ratified: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_014\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_ratified: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_014(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
@@ -997,9 +997,10 @@ tests:
 
   - name: gen_test_cmp_zca_red
     description: 'TDD red fixture of gen_test_cmp_zca, pinned to TP-CMP-005 (generator --red --red-item TP-CMP-005): one c.swsp immediate is moved so the read-back sees stale data, so fire_tp_cmp_005 FAILs
-      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+      by design; RED-OK once TB Infra''s comparator rows land (until then the first collected evidence line is the comparator''s uvm_error and the flow verdict is FAIL); every other item''s red is retained
+      locally (gen_tdd_batch2.md)'
     red_fixture: true
-    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zca: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_005\b'
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zca: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_005(?!\d)'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test

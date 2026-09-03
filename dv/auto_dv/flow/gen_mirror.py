@@ -146,6 +146,22 @@ def release_lease(p: Path) -> None:
     p.unlink(missing_ok=True)
 
 
+def lease_if_head_tree(tree: Path, tag: str) -> Path | None:
+    """A standalone consumer (gen_build, gen_run) bound to a head tree leases it until exit, like a regression does; None
+    when the tree is not one of the head family (worktree mirror, clone)."""
+    fam = head_family()
+    try:
+        under = fam is not None and Path(tree).resolve().is_relative_to(fam.resolve())
+    except (OSError, ValueError):
+        under = False
+    if not under:
+        return None
+    import atexit
+    lease = lease_head_tree(Path(tree), tag)
+    atexit.register(release_lease, lease)
+    return lease
+
+
 def live_leases(tree: Path) -> list[dict[str, Any]]:
     """Leases whose process is still alive on this host; stale files (dead pid) are removed."""
     out: list[dict[str, Any]] = []
@@ -450,6 +466,15 @@ def self_test() -> int:
     cond = live_leases(tree) == []
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "leases: released lease is gone")
+    # Standalone consumers: a tree outside the head family gets no lease; a real head tree gets one, released at exit.
+    outside = lease_if_head_tree(tree, "selftest_outside")
+    real = head_trees()
+    inside = lease_if_head_tree(real[0], "selftest_inside") if real else None
+    cond = outside is None and (not real or (inside is not None and inside.is_file()))
+    if inside:
+        release_lease(inside)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"lease_if_head_tree: no lease outside the head family, a lease inside it ({real[0].name if real else 'no head tree present'})")
     # A lease this host cannot probe stays live only up to LEASE_MAX_AGE_H.
     import time as _time
     foreign = tree / C.LEASE_DIRNAME / "1_foreign.lease"

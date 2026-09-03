@@ -30,7 +30,7 @@ Gain rule: G = 0.5 points on any gated metric. Max delta: None; shows gain: None
 
 - `gen_dashboard.txt`, `gen_hierarchy.txt`, `gen_tests.txt` (URG text report), `gen_hierarchy_dut_rows.txt` (the DUT-scope rows)
 - `gen_groups.txt` / `gen_grpinfo.txt` when covergroups exist, else `gen_groups_summary.txt` stating n/a
-- `full_exclusions/`: NOT in this directory. The six `fullexclude.<metric>` files this dry run produced (unmeasured data, 3.1 MB) were removed before the commit and live only in the out-tree `regress_round_0_dryrun/cov_unmeasured/full_exclusions/`; a real round stores gzip copies here
+- `full_exclusions/`: NOT in this directory. The six `fullexclude.<metric>` files this dry run produced (their evidence copies, when a real round keeps them, are named `gen_fullexclude.<metric>.gz`) (unmeasured data, 3.1 MB) were removed before the commit and live only in the out-tree `regress_round_0_dryrun/cov_unmeasured/full_exclusions/`; a real round stores gzip copies here
 - `gen_merge.log` and `gen_merge_log_warnings.txt` (counts per Warning/Error/Note class)
 - `gen_build_manifest_<build>.yaml`, `gen_testlist_snapshot.yaml`, `gen_regress_manifest.yaml`, `elfiles/` (exclusion files used)
 

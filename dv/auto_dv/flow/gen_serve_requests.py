@@ -403,9 +403,17 @@ def request_is_elcheck(path: Path) -> bool:
     """A report-only exclusion check builds nothing, so it stays outside the canary hold."""
     try:
         raw = U.load_yaml(path)
-        return isinstance(raw, dict) and "elcheck" in raw
+        return isinstance(raw, dict) and raw.get("elcheck") is not None   # the same test validate() applies
     except (yaml.YAMLError, TypeError, ValueError):
         return False
+
+
+def partition_pending(pending: list[Path]) -> tuple[list[Path], list[Path], list[Path], list[Path]]:
+    """pinned = head-mode requests that build (any purpose, no real elcheck), then its purpose-1 and purpose-2..4
+    halves, then the rest (worktree requests, elchecks)."""
+    pinned = [p for p in pending if request_source(p) == C.SOURCE_MODE_HEAD and not request_is_elcheck(p)]
+    p1 = [p for p in pinned if request_purpose(p) == 1]
+    return pinned, p1, [p for p in pinned if p not in p1], [p for p in pending if p not in pinned]
 
 
 def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
@@ -414,10 +422,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
     alone, an elcheck builds nothing) is pinned to one commit behind the canary hold: the purpose-1 requests
     run concurrently, purposes 2 to 4 follow one at a time on the same pinned tree (a measured round on an
     unvouched HEAD is exactly what the hold exists for); everything else is served in file order."""
-    pinned = [p for p in pending if request_source(p) == C.SOURCE_MODE_HEAD and not request_is_elcheck(p)]
-    p1 = [p for p in pinned if request_purpose(p) == 1]
-    p234 = [p for p in pinned if p not in p1]
-    rest = [p for p in pending if p not in pinned]
+    pinned, p1, p234, rest = partition_pending(pending)
     if pinned and not dry_run:
         batch_sha = M.head_sha()
         rec: dict[str, Any] = {"utc": U.now_utc(), "requests": [p.stem for p in pinned], "pinned_sha": batch_sha,
