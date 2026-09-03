@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 07:56 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 09:39 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -39,6 +39,29 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   its ignore clauses leave; the manifest generator expands them the same way.
 - Layer-1 weights: each area's test-plan header carries the per-agent / per-operand-class weight
   tables (W-*) that its items reference, so DV_prompt Section 6 layer 1 is stated once per class.
+- Code-coverage gate: the scope ruling is gen_tb_architecture.md Section 5 (intervention log Q-014): the
+  two inner instances are gated and combined per metric by the summing rule; the wrapper is informational;
+  -cm_glitch 0 on every measured build (R-002). Functional coverage gate: the URG functional-group score
+  with equal group weights after ignore_bins (cross bins counted per expanded bin), not a flat ratio over
+  declared bins; Section 1 states the conditions.
+- Adoption policy (DV_prompt Section 3, riscv-dv ruling): a bin is "adopted" only when riscv-dv's coverage
+  model was its source (CG-ADOPT-* groups, adopted=1 in the CSV, counted separately). A partition that was
+  derived independently from the ISA text and coincides with a riscv-dv coverpoint is spec-derived and is
+  marked in its covergroup as "coincides with riscv_instr_cover_group.sv <cg>" so the audit is possible;
+  the ISA area's marks record this per coverpoint.
+- Bin naming: array coverpoints use URG's form `name[N]` (e.g. fast[0]..fast[14]) in the plan, the CSV and
+  the manifests, so ci/check_fcov_expectations.py finds them in the vdb by that name.
+- Knob defaults and class windows: the static knob defaults are the TB defaults recorded in
+  dv/auto_dv/tb/gen_tb_knobs.yaml (imem/dmem latency short/short, irq_regime quiet, irq_line_mix single);
+  they govern only runs without a layer-3 schedule (bring-up, unit tests). Every measured run draws its
+  regimes from the seed-derived +gen_regime_sched schedule, whose first phase is drawn from the seed as
+  well (requested from TB Infra), so no measured run depends on the static default. The numeric class
+  windows of the bus knobs (rvalid min1 = 1, short = 2..4, long = 5..32, random = 1..32; gnt same_cycle 0,
+  short 1..3, long 4..32, random 0..32) live in the yaml's regime_windows block and match the REG and
+  bus covergroups' delay bins.
+- Cross-bin references claim their component coverpoint bins: an item that lists `cr_x.a_b` also owns the
+  coverpoint bins a and b for the ownership count; the CSVs list them explicitly where the area author
+  expanded them.
 - Probe candidates: bins that cannot be sampled from the boundary or RVFI name the internal net and
   the boundary alternative; every probe needs a probe-register entry (TB Infra) and Critic approval.
   Candidates so far: P1 dummy-instruction seam nets (dummy_instr_id_o / dummy_instr_wb_o, wrapper
@@ -57,14 +80,99 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
    dv/auto_dv/tools/gen_trace_check.py evaluates 1-3 over gen_feature_list.md, gen_test_plan.md,
    gen_fcov_plan.md and the two CSVs and exits non-zero on any violation.
 
+# 1.1 Coverpoints owned by no test-plan item (regression-level; owner = the group hosting the covergroup)
+
+Generated from the CSVs. These coverpoints are sampled and reported but no per-test manifest is held to
+them; closure treats them as regression-level bins with the named owner group. gen_trace_check.py reports
+the count.
+
+| Covergroup | Coverpoint | Owner group(s) |
+|---|---|---|
+| CG-MUL-002 | cp_dmem_delay | gen_mul_mul, gen_mul_random, gen_mul_timing |
+| CG-MUL-005 | cp_sva_checked | gen_mul_timing |
+| CG-CMP-001 | cp_reg3 | gen_cmp_random, gen_cmp_zca |
+| CG-CMP-006 | cp_dmem_delay | gen_cmp_random, gen_cmp_zcmp_basic, gen_cmp_zcmp_events_xfail, gen_cmp_zcmp_faults |
+| CG-CMP-009 | cp_dmem_delay | gen_cmp_random, gen_cmp_zcmp_basic |
+| CG-BTALU-001 | cp_taken | gen_btalu_basic, gen_btalu_dit, gen_btalu_dit_xfail, gen_btalu_hazard, gen_btalu_perf_b17_xfail, gen_btalu_random, gen_isa_cti |
+| CG-BTALU-001 | cp_target_align | gen_btalu_basic, gen_btalu_dit, gen_btalu_dit_xfail, gen_btalu_hazard, gen_btalu_perf_b17_xfail, gen_btalu_random, gen_isa_cti |
+| CG-BTALU-002 | cp_odd_sum | gen_btalu_basic, gen_btalu_hazard_xfail, gen_btalu_random |
+| CG-BTALU-003 | cp_wb_outstanding | gen_btalu_basic, gen_btalu_hazard, gen_btalu_random |
+| CG-BTALU-003 | cp_wb_error | gen_btalu_basic, gen_btalu_hazard, gen_btalu_random |
+| CG-BTALU-003 | cp_dmem_delay | gen_btalu_basic, gen_btalu_hazard, gen_btalu_random |
+| CG-CSR-005 | cr_alias_u_ok | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
+| CG-CSR-005 | cr_alias_u_trap | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
+| CG-CSR-005 | cr_alias_m | gen_csr_counters, gen_csr_illegal, gen_csr_storm, gen_csr_umode |
+| CG-CSR-006 | cr_csr_form_trap | gen_csr_illegal, gen_csr_machine_info |
+| CG-CSR-006 | cr_csr_u | gen_csr_illegal, gen_csr_machine_info |
+| CG-CSR-006 | cr_hartid_val_rd | gen_csr_illegal, gen_csr_machine_info |
+| CG-CSR-009 | cr_key_rd | gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
+| CG-CSR-010 | cp_pulse | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
+| CG-CSR-010 | cr_op_form_pulse | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
+| CG-CSR-010 | cr_rd_value | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
+| CG-CSR-010 | cr_u | gen_csr_access, gen_csr_cpuctrl, gen_csr_illegal, gen_csr_reset |
+| CG-CSR-013 | cr_carry | gen_csr_counters, gen_csr_storm, gen_csr_trap_handling |
+| CG-CSR-017 | cp_alert_int | gen_csr_storm |
+| CG-CSR-017 | cr_alert_density | gen_csr_storm |
+| CG-PRV-007 | cp_mst_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_xfail, gen_prv_storm |
+| CG-PRV-007 | cp_mst_after_exc | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_xfail, gen_prv_storm |
+| CG-PRV-007 | cr_entry_touched | gen_csr_cpuctrl, gen_csr_debug_csr, gen_csr_debug_csr_xfail, gen_prv_debug, gen_prv_debug_xfail, gen_prv_storm |
+| CG-PRV-008 | cr_fast_id | gen_csr_illegal, gen_csr_reset, gen_csr_trap_handling, gen_csr_trap_setup, gen_prv_debug, gen_prv_illegal, gen_prv_irq, gen_prv_modes, gen_prv_mret, gen_prv_storm |
+| CG-EXC-001 | cp_pc_align | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_lsu_fault, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-001 | cr_cause_pcalign | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_lsu_fault, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-002 | cp_pc_align | gen_exc_double_fault, gen_exc_fetch_fault, gen_exc_mret, gen_exc_priority, gen_exc_regime, gen_exc_sync_causes, gen_exc_zcmp |
+| CG-EXC-002 | cr_flow_align | gen_exc_double_fault, gen_exc_fetch_fault, gen_exc_mret, gen_exc_priority, gen_exc_regime, gen_exc_sync_causes, gen_exc_zcmp |
+| CG-EXC-004 | cp_mepc_align | gen_exc_debug_mode, gen_exc_ebreak_ecall, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-004 | cr_form_align | gen_exc_debug_mode, gen_exc_ebreak_ecall, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-005 | cp_pc_align | gen_exc_double_fault, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-005 | cr_priv_align | gen_exc_double_fault, gen_exc_sync_causes, gen_exc_trap_state |
+| CG-EXC-006 | cp_irq_pending | gen_exc_lsu_fault, gen_exc_priority, gen_exc_regime, gen_exc_sync_causes, gen_exc_zcmp, gen_irq_regime, gen_irq_wfi |
+| CG-EXC-006 | cr_latency_irq | gen_exc_lsu_fault, gen_exc_priority, gen_exc_regime, gen_exc_sync_causes, gen_exc_zcmp, gen_irq_regime, gen_irq_wfi |
+| CG-EXC-007 | cp_irq_also | gen_exc_priority, gen_exc_priority_info |
+| CG-EXC-007 | cr_pair_irq | gen_exc_priority, gen_exc_priority_info |
+| CG-EXC-012 | cp_crash_dump | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_illegal, gen_exc_lsu_fault, gen_exc_mret, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state, gen_exc_zcmp, gen_irq_lines, gen_irq_nmi, gen_irq_nmi_int |
+| CG-EXC-012 | cr_kind_crash | gen_exc_ebreak_ecall, gen_exc_fetch_fault, gen_exc_illegal, gen_exc_lsu_fault, gen_exc_mret, gen_exc_regime, gen_exc_sync_causes, gen_exc_trap_state, gen_exc_zcmp, gen_irq_lines, gen_irq_nmi, gen_irq_nmi_int |
+| CG-IRQ-007 | cp_mepc_align | gen_exc_priority, gen_irq_debug, gen_irq_nmi, gen_irq_nmi_int, gen_irq_regime, gen_irq_reset, gen_irq_wfi |
+| CG-IRQ-007 | cr_source_align | gen_exc_priority, gen_irq_debug, gen_irq_nmi, gen_irq_nmi_int, gen_irq_regime, gen_irq_reset, gen_irq_wfi |
+| CG-PMP-008 | cp_lat | gen_pmp_data_fault, gen_pmp_misaligned, gen_pmp_mprv, gen_pmp_random_regime |
+| CG-PMP-008 | cr_lat | gen_pmp_data_fault, gen_pmp_misaligned, gen_pmp_mprv, gen_pmp_random_regime |
+| CG-PMP-014 | cp_regime | gen_pmp_match_tor, gen_pmp_perm_mml0, gen_pmp_priority, gen_pmp_random_regime, gen_pmp_reset |
+| CG-IMEM-001 | cp_gnt_knob | gen_imem_latency, gen_imem_proto_basic, gen_imem_regime |
+| CG-IMEM-006 | cp_regime | gen_imem_fetch_err, gen_imem_latency, gen_imem_proto_basic, gen_imem_regime |
+| CG-IMEM-007 | cp_gnt_with_req | gen_imem_proto_basic, gen_imem_proto_basic_info |
+| CG-IMEM-007 | cp_gnt_regime | gen_imem_proto_basic, gen_imem_proto_basic_info |
+| CG-DMEM-001 | cp_gnt_knob | gen_dmem_ctx, gen_dmem_err, gen_dmem_latency, gen_dmem_misaligned, gen_dmem_proto_basic, gen_dmem_regime |
+| CG-DMEM-001 | cp_rvalid_knob | gen_dmem_ctx, gen_dmem_err, gen_dmem_latency, gen_dmem_misaligned, gen_dmem_proto_basic, gen_dmem_regime |
+| CG-DMEM-009 | cp_gnt_with_req | gen_dmem_load_data, gen_dmem_proto_basic, gen_dmem_proto_basic_info |
+| CG-DMEM-009 | cp_gnt_regime | gen_dmem_load_data, gen_dmem_proto_basic, gen_dmem_proto_basic_info |
+| CG-FE-004 | cp_dummy_seen | gen_fe_backpressure |
+| CG-IC-002 | cp_key_knob | gen_ic_inval, gen_ic_regime |
+| CG-IC-006 | cp_knob | gen_ic_ecc, gen_ic_regime, gen_ic_replace_info |
+| CG-IC-008 | cp_instr_mix | gen_ic_enable, gen_ic_inval, gen_ic_regime |
+| CG-IC-008 | cp_imem_regime | gen_ic_enable, gen_ic_inval, gen_ic_regime |
+| CG-IC-008 | cp_ecc_knob | gen_ic_enable, gen_ic_inval, gen_ic_regime |
+| CG-IC-008 | cp_key_knob | gen_ic_enable, gen_ic_inval, gen_ic_regime |
+| CG-DIT-002 | cp_dit | gen_dit_random, gen_dit_timing |
+| CG-DIT-003 | cp_dit | gen_dit_timing |
+| CG-DIT-004 | cp_dit | gen_dit_dummy, gen_dit_dummy_events, gen_dit_dummy_events_xfail, gen_dit_dummy_xfail, gen_dit_random |
+| CG-DIT-004 | cp_mask | gen_dit_dummy, gen_dit_dummy_events, gen_dit_dummy_events_xfail, gen_dit_dummy_xfail, gen_dit_random |
+| CG-DIT-005 | cp_dummy_en_at_write | gen_dit_secureseed, gen_dit_timing |
+| CG-SEC-002 | cp_rf_wr_suppress | gen_rvfi_ext_rf_wr_suppress_xfail, gen_sec_alert_inject_dbus, gen_sec_alert_inject_dbus_clean_info, gen_sec_alert_inject_dbus_first_beat_xfail, gen_sec_alert_inject_dbus_info, gen_sec_alert_inject_ibus |
+| CG-SEC-002 | cp_beat_order | gen_rvfi_ext_rf_wr_suppress_xfail, gen_sec_alert_inject_dbus, gen_sec_alert_inject_dbus_clean_info, gen_sec_alert_inject_dbus_first_beat_xfail, gen_sec_alert_inject_dbus_info, gen_sec_alert_inject_ibus |
+| CG-SEC-005 | cp_key_delay | gen_rst_boot, gen_sec_cpuctrlsts, gen_sec_double_fault, gen_sec_inputs_mubi, gen_sec_scr_key |
+| CG-RVFI-002 | cp_trap | gen_dit_timing, gen_rvfi_mem, gen_rvfi_random, gen_rvfi_trap |
+| CG-RVFI-003 | cp_trap | gen_dit_dummy_events, gen_dit_dummy_events_xfail, gen_rst_pending_at_boot, gen_rvfi_ext, gen_rvfi_ext_rf_wr_suppress_xfail, gen_rvfi_random, gen_rvfi_zcmp, gen_sec_alert_inject_dbus, gen_sec_alert_inject_dbus_first_beat_xfail, gen_sec_alerts_neg, gen_sec_scr_key |
+| CG-CHERI-001 | cp_trap | gen_cheri_off_quiet, gen_sec_boundary |
+
+74 regression-level coverpoints of 2278 declared.
+
 # 2. Counts
 
 | Metric | Value |
 |---|---|
 | Covergroups | 207 |
-| Distinct bins referenced by TP items | 15594 |
+| Distinct bins referenced by TP items | 15825 |
 | Adopted bins (riscv-dv, counted separately) | 49 |
-| ACTIVE features with >= 1 bin | 765 |
+| ACTIVE features with >= 1 bin | 705 |
 | Covergroups per area part | isa 40, csr 25, exc_irq 26, pmp 16, dbg_trg_pmc 22, mem_fetch_icache 30, sec_rst_rvfi_cheri 20, xcut 28 |
 
 # 3. Covergroups by area
@@ -72,8 +180,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 # 3.1 Areas ISA, MUL, CMP, BIT, BTALU: Instruction set: RV32I base, M (RV32MSingleCycle), compressed Zca/Zcb/Zcmp, bitmanip RV32BOTEarlGrey, branch target ALU
 
 
-Scope: F-ISA-001..052, F-MUL-001..028, F-CMP-001..070, F-BIT-001..041, F-BTALU-001..015 (206
-features: 172 ACTIVE, 16 ALIAS, 18 FOLDED; source dv/auto_dv/work/dv-lead/parts/gen_part_isa.md).
+Scope: F-ISA-001..052, F-MUL-001..028, F-CMP-001..070, F-BIT-001..041, F-BTALU-001..016 (207
+features: 170 ACTIVE, 19 ALIAS, 18 FOLDED; source dv/auto_dv/work/dv-lead/parts/gen_part_isa.md).
 Features lines below may name ALIAS/FOLDED IDs; they resolve to the canonical / parent ID. Every
 FOLDED feature names the bin of this file that carries it. Companion test plan: tp_isa.md. Build: opentitan (RV32IMC + RV32BOTEarlGrey + Zca/Zcb/Zcmp, BranchTargetALU=1,
 WritebackStage=1, SecureIbex=1, DummyInstructions=1 per Q-002 defaults).
@@ -101,6 +209,34 @@ Conventions
   delta is measured on the CTI itself (its fetch precedes the redirect). wb_busy (dbus monitor)
   = a granted data access without response when this instruction entered ID; the clean crosses
   (cr_*_clean) additionally require wb_busy == no.
+- CTI redirect delta (CG-BTALU-001.cp_delta, CG-BTALU-002.cp_delta; fix 3, rtl-arch T-053
+  TP-ISA-024 / TP-BTALU-012): for a control-transfer instruction the delta bin is the REDIRECT
+  delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(CTI), the cost of the redirected fetch
+  (tp_isa.md header, Timing terms); its guard is `iff redirect_clean` = (icache_enable == 0 in the
+  TB CSR model) and (imem agent pinned to gnt same_cycle / rvalid min1) and (no fill request pending
+  at the CTI's pc_set cycle, ibus monitor) and (target instruction word-aligned or compressed: no
+  bus-word straddle) and (no dummy / mcycle write in the gap) - NOT the successor's fetch_stall,
+  which is yes by construction. Minimum 2 (rtl/ibex_icache.sv:249, :703, :1030-1031;
+  rtl/ibex_if_stage.sv:568-587), 3 for fence.i (the refetch always goes to the bus while
+  inval_block_cache is set, rtl/ibex_icache.sv:1218, :1259-1266); exact 2 is a coverage bin and the
+  checker's pass rule is >= 2. A not-taken branch under data_ind_timing = 0 has no redirect and its
+  bin is its own delta (1).
+- Deferred start (C-9 / X-12; fix 3): the cp_wb_busy / cp_wb_defer coverpoints record that a data
+  access was outstanding when the instruction entered ID and its response arrived after that cycle;
+  the multiplier / divider / two-cycle ALU op then starts in the response cycle (instr_executing
+  needs ~outstanding_memory_access = (outstanding_load_wb | outstanding_store_wb) & ~lsu_resp_valid,
+  rtl/ibex_id_stage.sv:1014-1016, :1059-1062), so the record delta from the access record is own
+  occupancy + W (W = data_rvalid_i cycle - (access ID-exit + 1), 0 for min1); there is no
+  mid-operation hold and no load-result forwarding (rtl/ibex_id_stage.sv:1117-1118). The former
+  names cr_wb_hold / cp_wb_hold / cr_op_wb_hold / cp_hold_cycles / cr_class_hold are renamed
+  cr_wb_defer / cp_wb_defer / cr_op_wb_defer / cp_defer_cycles / cr_class_defer.
+- RVFI insn rule (C-12 / X-14; fix 3): rvfi_insn is the 32-bit expansion for every Zcmp micro-op
+  including the reserved rlist 0..3 encodings (INSTR_EXPANDED tag, rtl/ibex_core.sv:2263-2267;
+  rtl/ibex_compressed_decoder.sv:626, :691); non-expanded compressed instructions (c.ebreak, Zca/Zcb,
+  the other illegal halfwords) are traced as the zero-extended halfword; mtval is always the
+  halfword. Predicates written "rvfi_insn == zero-extended halfword" are class-dependent
+  accordingly (CG-CMP-004.cp_rvfi_insn_ok). core_busy_o (IbexMuBiOff) is the sleep observable; the
+  core has no core_sleep_o (C-5).
 - Programmable state (privilege, cpuctrlsts.data_ind_timing/dummy_instr_en/icache_enable,
   dcsr.*, mstatus.TW, mcountinhibit) is tracked by the TB CSR model from the retired CSR writes on
   RVFI (predict-and-check), never probed. Redirects are derived from RVFI (rvfi_pc_wdata != pc +
@@ -137,12 +273,16 @@ Conventions
   8 = NumBranches, 9 = NumBranchesTaken; the mhpmevent selectors are read-only, :1600-1617) and
   are read through rvfi_ext_mhpmcounters[i - MHPMCOUNTER_BASE] (MHPMCOUNTER_BASE = 3,
   rtl/ibex_core.sv:2108-2126), so nothing is programmed to select them.
-- Adopted bins (Critic pre-review S-9 policy): vendor/google_riscv-dv/** was not read by this
-  subagent and every partition was derived from the ISA text, so the CSV adopted column is 0 for
-  every bin. Where the Critic's adoption check found a partition identical to one in
-  vendor/google_riscv-dv/src/riscv_instr_cover_group.sv, the covergroup's `Adopted (riscv-dv)`
-  line says "partition identical to <riscv-dv coverpoint>, independently derived from the ISA
-  text"; the DV Lead records the policy (tp_isa.md OQ-2).
+- Adopted bins (S-9 policy; Critic M-5 pass done 2026-09-03): vendor/google_riscv-dv/src/
+  riscv_instr_cover_group.sv was read as REFERENCE ONLY and every ISA/MUL/CMP/BIT/BTALU coverpoint
+  of this file was compared with it. No partition in this file was taken from riscv-dv (each was
+  derived from the ISA text or the RTL), so the CSV adopted column is 0 for every bin. Where a
+  partition coincides with a riscv-dv coverpoint the covergroup's `Adopted (riscv-dv)` line names
+  it in the form "coincides with riscv_instr_cover_group.sv <cg>.<cp> (spec-derived, independently
+  derived from the ISA text; adopted=0)"; a refinement (more bins over the same variable) is marked
+  "refines". A partition that duplicates an adopted CG-ADOPT group exactly is counted once there
+  and kept here as a cross operand only (CG-CMP-001.cp_reg3 -> CG-ADOPT-005.cp_c_reg_prime). The DV
+  Lead records the policy (tp_isa.md OQ-2).
 - Never `illegal_bins = default sequence`; no transition bins are used in this file.
 
 ---------------------------------------------------------------------------------------------------
@@ -165,7 +305,7 @@ Conventions
   - cr_op_imm = cp_op x cp_imm_class: bins auto{all combinations}
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
   - cr_slt = cp_op x cp_slt_case: bins auto{all combinations}; ignore ops other than slti/sltiu: cp_slt_case is guarded to compares; ignore slti with the sltiu_* cases and sltiu with the slti_* cases: the case names its op
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_imm_class refines riscv_instr_cover_group.sv addi_cg.cp_imm_sign (pos_rand/neg_rand plus the boundary values) (spec-derived, independently derived from the ISA text; adopted=0); cp_addi_wrap is the overflow subset of addi_cg.cp_sign_cross (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-ISA-001, TP-ISA-002, TP-ISA-003, TP-ISA-004, TP-ISA-054
 
 ### CG-ISA-002: gen_cg_isa_alu_reg
@@ -190,7 +330,7 @@ Conventions
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
   - cr_wrap = cp_op x cp_wrap: bins auto{all combinations}; ignore ops other than add/sub: cp_wrap is guarded; ignore add with the sub_* cases and sub with the add_* cases: the case names its op
   - cr_slt_boundary = cp_op x cp_rs1_class x cp_rs2_class: bins auto{all combinations}; ignore ops other than slt/sltu: boundary semantics belong to compares
-- Adopted (riscv-dv): partition identical to riscv_instr_cover_group.sv cp_sign_cross (cp_sign_pair {pp, pn, np, nn}), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_sign_pair {pp, pn, np, nn} coincides with riscv_instr_cover_group.sv sll_cg/srl_cg/sra_cg.cp_sign_cross (rs1_sign x rs2_sign) and with the rs1/rs2 projection of add_cg/sub_cg.cp_sign_cross (spec-derived, independently derived from the ISA text; adopted=0); the three-operand add/sub sign partition is CG-ADOPT-003.cp_addsub_sign (adopted) and is not repeated here
 - TP items: TP-ISA-007, TP-ISA-008, TP-ISA-009, TP-ISA-004, TP-ISA-052, TP-ISA-054
 
 ### CG-ISA-003: gen_cg_isa_shift
@@ -242,7 +382,8 @@ Conventions
 - TP items: TP-ISA-004, TP-ISA-052, TP-MUL-026, TP-BIT-038, TP-CMP-013, TP-CMP-025, TP-CMP-027, TP-CMP-031
 
 ### CG-ISA-006: gen_cg_isa_jump
-- Features: F-ISA-015, F-ISA-016, F-ISA-017, F-ISA-018, F-ISA-019, F-ISA-020, F-ISA-021, F-ISA-022, F-ISA-052
+- Features: F-ISA-015, F-ISA-016, F-ISA-017, F-ISA-018, F-ISA-019, F-ISA-020, F-ISA-021, F-ISA-022,
+  F-ISA-052, F-BTALU-002, F-BTALU-003 (parent of folded bins hosted here)
 - Sample: RVFI retirement; condition: decoded jal/jalr/c.j/c.jal/c.jr/c.jalr and rvfi_trap == 0; anti-vacuity: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect.
 - Coverpoints:
   - cp_op = decoded: bins jal{JAL}, jalr{JALR f3 000}, c_j{c.j}, c_jal{c.jal}, c_jr{c.jr}, c_jalr{c.jalr}
@@ -263,11 +404,12 @@ Conventions
   - cr_odd = cp_op x cp_target_odd: bins jalr_odd{jalr, yes}, c_jr_odd{c_jr, yes}, c_jalr_odd{c_jalr, yes}; ignore other combinations: only the odd cases are the corner
   - cr_link = cp_op x cp_link_len: bins jal_pc4{jal, pc4}, jalr_pc4{jalr, pc4}, c_jal_pc2{c_jal, pc2}, c_jalr_pc2{c_jalr, pc2}; ignore mismatched lengths: impossible by construction (a hit is a checker failure)
   - cr_zero_page_bwd = cp_op x cp_pc_region x cp_jal_off: bins jal_zero_page_neg{jal, zero_page, neg_rand}; ignore other combinations: covered elsewhere
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_jal_off pos_rand/neg_rand refines riscv_instr_cover_group.sv jal_cg.cp_imm_sign (spec-derived, independently derived from the ISA text; adopted=0); the two-bin direction partition itself is CG-ADOPT-003.cp_imm_sign jal_fwd/jal_bwd (adopted); the jalr link-register pattern is CG-ADOPT-004.cp_ras (adopted)
 - TP items: TP-ISA-015, TP-ISA-016, TP-ISA-017, TP-ISA-018, TP-ISA-019, TP-ISA-020, TP-ISA-022, TP-ISA-053, TP-ISA-054, TP-CMP-010, TP-CMP-011, TP-CMP-028, TP-CMP-032, TP-BTALU-004
 
 ### CG-ISA-007: gen_cg_isa_branch
-- Features: F-ISA-023, F-ISA-024, F-ISA-026, F-ISA-027, F-ISA-052
+- Features: F-ISA-023, F-ISA-024, F-ISA-026, F-ISA-027, F-ISA-052, F-BTALU-001 (parent of folded
+  bins hosted here)
 - Sample: RVFI retirement; condition: decoded BRANCH (funct3 not 010/011) or c.beqz/c.bnez, rvfi_trap == 0; anti-vacuity: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened.
 - Coverpoints:
   - cp_op = decoded: bins beq{000}, bne{001}, blt{100}, bge{101}, bltu{110}, bgeu{111}, c_beqz{c.beqz}, c_bnez{c.bnez}
@@ -282,7 +424,7 @@ Conventions
   - cr_op_align = cp_op x cp_target_align: bins auto{all combinations}
   - cr_wrap = cp_op x cp_wrap: bins auto{all combinations}
 - Cross-reference: branch timing and DIT (cp_delta, cp_dit, cp_fetch_stall, cr_taken_dit_delta, cr_taken_dit_redirect) are owned by CG-BTALU-001; this group owns cp_taken, cp_target_align and cp_wrap, which CG-BTALU-001 repeats operand-only.
-- Adopted (riscv-dv): partition identical to riscv_instr_cover_group.sv cp_branch_hit (cp_taken {no, yes}), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_taken {no, yes} coincides with riscv_instr_cover_group.sv beq_cg..bgeu_cg.cp_branch_hit (spec-derived, independently derived from the ISA text; adopted=0); cp_offset refines their cp_imm_sign (the two-bin direction partition is CG-ADOPT-003.cp_imm_sign branch_fwd/branch_bwd, adopted)
 - TP items: TP-ISA-023, TP-ISA-024, TP-ISA-026, TP-ISA-027, TP-ISA-053, TP-ISA-054, TP-CMP-023, TP-BTALU-001, TP-BTALU-006
 
 ### CG-ISA-008: gen_cg_isa_fence
@@ -298,12 +440,12 @@ Conventions
 - Crosses:
   - cr_fencei = cp_op x cp_icache_en x cp_pc_align: bins auto{all combinations}; ignore fence: no fetch-path effect
 - Cross-reference: fence.i timing (cp_delta d2) is owned by CG-BTALU-002 (cp_type.fence_i x cp_delta); the field coverpoints are guarded to their op, so no op x fields cross is declared (it would repeat the coverpoint).
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_op {fence, fence_i} coincides with riscv_instr_cover_group.sv rv32i_misc_cg.cp_misc bins FENCE / FENCE_I (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-ISA-029, TP-ISA-030, TP-ISA-031, TP-ISA-054, TP-BTALU-012
 
 ### CG-ISA-009: gen_cg_isa_system
 - Features: F-ISA-032, F-ISA-033, F-ISA-034, F-ISA-035, F-ISA-036, F-ISA-037, F-ISA-038, F-ISA-039, F-ISA-040, F-ISA-041, F-ISA-042
-- Sample: RVFI retirement; condition: decoded SYSTEM funct3 000 with funct12 in {0x000, 0x001, 0x302, 0x7b2, 0x105} or c.ebreak; anti-vacuity: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_sleep_o and the handler's mcause read-back; a hit proves the sampled (priv, config, outcome) tuple occurred.
+- Sample: RVFI retirement; condition: decoded SYSTEM funct3 000 with funct12 in {0x000, 0x001, 0x302, 0x7b2, 0x105} or c.ebreak; anti-vacuity: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred.
 - Coverpoints:
   - cp_op = decoded: bins ecall{0x000}, ebreak{0x001}, c_ebreak{0x9002}, mret{0x302}, dret{0x7b2}, wfi{0x105}
   - cp_priv = rvfi_mode: bins m{3}, u{0}
@@ -313,13 +455,16 @@ Conventions
   - cp_tw = mstatus.TW (TB CSR model): bins clr{0}, set{1}
   - cp_outcome = derived: bins exception{rvfi_trap == 1 and handler mcause read-back 8, 11 or 3}, debug_entry{is_ebreak(rvfi_insn) and the next retirement has rvfi_ext_debug_mode == 1 with rvfi_pc_rdata == DmHaltAddr; outside debug mode this record has rvfi_trap == 0 (rtl/ibex_core.sv:1885-1886); on re-entry from debug mode rvfi_trap follows dcsr.ebreakm/ebreaku and is not used}, executed{rvfi_trap == 0 and not debug_entry: mret/dret with next rvfi_pc_rdata == mepc/dpc, or wfi retired}, illegal{rvfi_trap == 1 and mcause read-back == 2}
   - cp_wfi_wake = wake source seen by the pin monitors after a wfi retirement, iff wfi executed: bins irq{irq pin}, nmi{irq_nm_i}, debug{debug_req_i}, pending_at_entry{wake condition already true at wfi}
+  - cp_wfi_resume = the retirement that follows an executed wfi and its wake (RVFI), iff wfi executed: bins handler{the next record has rvfi_intr == 1 (ordinary or NMI handler)}, debug{the next record is at DmHaltAddr with rvfi_ext_debug_mode == 1}, sequential{the next record is the instruction after the wfi}
+  - cp_busy_off = core_busy_o == IbexMuBiOff observed for >= 1 cycle between the wfi record and the wake (misc monitor; C-5: visible only with no outstanding fetch beat, no invalidation and an idle LSU), iff wfi executed with a delayed wake (not pending_at_entry): bins yes{1}
 - Crosses:
   - cr_op_priv_outcome = cp_op x cp_priv x cp_outcome: bins ecall_m_exc{ecall, m, exception}, ecall_u_exc{ecall, u, exception}, ebreak_m_exc{ebreak, m, exception}, ebreak_m_dbg{ebreak, m, debug_entry}, ebreak_u_exc{ebreak, u, exception}, ebreak_u_dbg{ebreak, u, debug_entry}, c_ebreak_m_exc{c_ebreak, m, exception}, c_ebreak_m_dbg{c_ebreak, m, debug_entry}, c_ebreak_u_exc{c_ebreak, u, exception}, c_ebreak_u_dbg{c_ebreak, u, debug_entry}, mret_m_exec{mret, m, executed}, mret_u_illegal{mret, u, illegal}, dret_m_exec{dret, m, executed (debug mode)}, dret_m_illegal{dret, m, illegal}, dret_u_illegal{dret, u, illegal}, wfi_m_exec{wfi, m, executed}, wfi_u_exec{wfi, u, executed (TW = 0)}, wfi_u_illegal{wfi, u, illegal (TW = 1)}; ignore the other 30 triples: ecall/ebreak never execute or decode illegal, mret is legal in M and never executes in U, dret executes only in debug mode (rvfi_mode M) and never in U, wfi never traps with an exception cause and is legal in M
   - cr_ebreak = cp_op x cp_priv x cp_ebreakm x cp_ebreaku x cp_debug_mode x cp_outcome: bins m_ebreakm0_exc{ebreak, m, clr, any, no, exception}, m_ebreakm1_dbg{ebreak, m, set, any, no, debug_entry}, u_ebreaku0_exc{ebreak, u, any, clr, no, exception}, u_ebreaku1_dbg{ebreak, u, any, set, no, debug_entry}, dbg_reentry{ebreak, m, any, any, yes, debug_entry}, c_m_exc{c_ebreak, m, clr, any, no, exception}, c_m_dbg{c_ebreak, m, set, any, no, debug_entry}, c_u_dbg{c_ebreak, u, any, set, no, debug_entry}; ignore other combinations: not corners
   - cr_wfi_tw = cp_op x cp_priv x cp_tw x cp_outcome: bins m_tw0_exec{wfi, m, clr, executed}, m_tw1_exec{wfi, m, set, executed}, u_tw0_exec{wfi, u, clr, executed}, u_tw1_illegal{wfi, u, set, illegal}; ignore other combinations: not wfi or impossible
+  - cr_wfi_priv_resume = cp_priv x cp_wfi_resume: bins m_handler{m, handler}, m_sequential{m, sequential: MIE = 0}, u_handler{u, handler}, m_debug{m, debug}, u_debug{u, debug}; ignore_bins u_sequential: irq_enabled = MIE | (priv == U) (rtl/ibex_controller.sv:490), so a U-mode wake by an enabled line always enters the handler (a hit is a gen_chk_irq failure; C-6 / X-9, rtl-arch T-053 TP-ISA-040)
   - cr_dret = cp_op x cp_debug_mode x cp_priv x cp_outcome: bins dret_dbg_exec{dret, yes, m, executed}, dret_m_illegal{dret, no, m, illegal}, dret_u_illegal{dret, no, u, illegal}; ignore other combinations: not corners
   - cr_mret = cp_op x cp_priv x cp_debug_mode x cp_outcome: bins mret_m_exec{mret, m, no, executed}, mret_u_illegal{mret, u, no, illegal}, mret_dbg_exec{mret, m, yes, executed}; ignore other combinations: not corners
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_op bins ecall / ebreak / mret coincide with riscv_instr_cover_group.sv rv32i_misc_cg.cp_misc and wfi with wfi_cg.cp_misc (spec-derived, independently derived from the ISA text; adopted=0); c_ebreak and dret have no riscv-dv counterpart
 - TP items: TP-ISA-032, TP-ISA-033, TP-ISA-034, TP-ISA-035, TP-ISA-036, TP-ISA-037, TP-ISA-038, TP-ISA-039, TP-ISA-040, TP-ISA-041, TP-ISA-042, TP-ISA-055, TP-CMP-033
 
 ### CG-ISA-010: gen_cg_isa_csr_insn
@@ -341,7 +486,7 @@ Conventions
 
 ### CG-ISA-011: gen_cg_isa_illegal
 - Features: F-ISA-012, F-ISA-021, F-ISA-025, F-ISA-028, F-ISA-031, F-ISA-037, F-ISA-039, F-ISA-041, F-ISA-042, F-ISA-046, F-ISA-047, F-ISA-048, F-ISA-049, F-ISA-050
-- Sample: RVFI retirement; condition: rvfi_trap == 1 and the monitor's decode table classifies rvfi_insn as an illegal encoding (or the handler read-back gives mcause == 2 for mret-in-U / dret / wfi-TW, which are legal encodings); anti-vacuity: trapping retirements are rare and the class comes from the instruction bits, not from the trap; cp_mtval_ok is recorded only when the handler's csrr mtval retires with the predicted value.
+- Sample: RVFI retirement; condition: (rvfi_trap == 1 and the monitor's decode table classifies rvfi_insn as an illegal encoding, or the handler read-back gives mcause == 2 for mret-in-U / dret / wfi-TW, which are legal encodings) or (rvfi_trap == 0 and the record is an ebreak encoding with rs1/rd != 0 whose handler read-back gives mcause == 2: the RVFI quirk of rtl/ibex_core.sv:1885-1886 under dcsr.ebreakm/u, cp_ebreak_variant_trap.trap0_quirk, TP-ISA-057); anti-vacuity: trapping retirements are rare and the class comes from the instruction bits, not from the trap; cp_mtval_ok is recorded only when the handler's csrr mtval retires with the predicted value.
 - Coverpoints:
   - cp_class = decoded: bins shift_imm_bit25{slli with instr[26:25] != 00; srli/srai with instr[26:25] == 01 - the funct3 101 patterns with instr[26] = 1 are legal fsri (F-ISA-012) and are excluded}, jalr_f3{JALR funct3 != 000}, branch_f3{BRANCH funct3 010/011}, load_f3{LOAD funct3 011/110/111}, store_f3{STORE funct3 011/1xx}, misc_mem_f3{MISC-MEM funct3 010..111}, sys_funct12_other{SYSTEM f3 000 funct12 not in the legal five: sret 0x102, uret 0x002, sfence.vma, others}, sys_rs1_nz{legal funct12 with rs1 != 0}, sys_rd_nz{legal funct12 with rd != 0}, csr_f3_100{SYSTEM f3 100}, csr_ro_write{write to addr[11:10] == 11}, mret_in_u{mret, priv U}, dret_no_debug{dret outside debug}, wfi_u_tw1{wfi, U, TW = 1}, opc_load_fp{0x07}, opc_store_fp{0x27}, opc_amo{0x2f}, opc_op32{0x3b}, opc_opimm32{0x1b}, opc_madd{0x43}, opc_msub{0x47}, opc_nmsub{0x4b}, opc_nmadd{0x4f}, opc_op_fp{0x53}, opc_custom0{0x0b}, opc_custom1{0x2b}, opc_custom2{0x5b}, opc_custom3{0x7b}, opc_reserved_other{other 32-bit major opcodes}, all_ones_word{0xFFFFFFFF}, zero_word{32-bit 0x00000000 fetched as two zero halfwords}
   - cp_len = rvfi_insn[1:0]: bins c16{not 11}, w32{11}
@@ -351,12 +496,13 @@ Conventions
   - cp_wb_error = the outstanding access returned data_err_i or PMP fault: bins no{0}, yes{1}
   - cp_priv = rvfi_mode: bins m{3}, u{0}
   - cp_debug_mode = rvfi_ext_debug_mode: bins no{0}, yes{1}
+  - cp_ebreak_variant_trap = rvfi_trap of an ebreak encoding with rs1 != 0 or rd != 0 (SYSTEM f3 000, funct12 0x001; classes sys_rs1_nz / sys_rd_nz), iff that encoding with handler mcause read-back == 2: bins trap1{1: dcsr.ebreakm/ebreaku clear for rvfi_mode}, trap0_quirk{0: dcsr.ebreakm/ebreaku set for rvfi_mode; rtl/ibex_core.sv:1885-1886 masks the record although the illegal exception was taken (RVFI quirk, informational item TP-ISA-057)}
 - Crosses:
   - cr_class_priv = cp_class x cp_priv: bins auto{all combinations}; ignore mret_in_u/m and wfi_u_tw1/m: U-only by definition
   - cr_wb = cp_wb_outstanding x cp_wb_error: bins none_ok{none, no}, load_ok{load, no}, store_ok{store, no}, load_err{load, yes}, store_err{store, yes}; ignore none_err: no access cannot error
   - cr_class_debug = cp_class x cp_debug_mode: bins auto{all combinations}; ignore dret_no_debug/yes, mret_in_u/yes and wfi_u_tw1/yes: debug mode runs at M privilege and is, by definition, not outside debug
-- Adopted (riscv-dv): none
-- TP items: TP-ISA-012, TP-ISA-021, TP-ISA-025, TP-ISA-028, TP-ISA-031, TP-ISA-037, TP-ISA-039, TP-ISA-041, TP-ISA-042, TP-ISA-045, TP-ISA-046, TP-ISA-047, TP-ISA-048, TP-ISA-049, TP-ISA-050, TP-ISA-051, TP-ISA-056
+- Adopted (riscv-dv): the opc_* bins of cp_class coincide with the unimplemented-opcode subset of riscv_instr_cover_group.sv opcode_cg.cp_opcode (spec-derived, independently derived from the ISA text; adopted=0); the other classes have no riscv-dv counterpart
+- TP items: TP-ISA-012, TP-ISA-021, TP-ISA-025, TP-ISA-028, TP-ISA-031, TP-ISA-037, TP-ISA-039, TP-ISA-041, TP-ISA-042, TP-ISA-045, TP-ISA-046, TP-ISA-047, TP-ISA-048, TP-ISA-049, TP-ISA-050, TP-ISA-051, TP-ISA-056, TP-ISA-057
 
 ---------------------------------------------------------------------------------------------------
 ## AREA MUL
@@ -381,25 +527,25 @@ Conventions
   - cr_op_same = cp_op x cp_same_regs: bins auto{all combinations}; ignore c_mul/rs1_eq_rs2 and c_mul/distinct: c.mul has rd == rs1 == rsd' by encoding
   - cr_extremes = cp_op x cp_rs1_class x cp_rs2_class: bins auto{all combinations}; ignore combinations containing pos_rand or neg_rand: only extreme-by-extreme products are the corner
   - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: bins auto{all combinations}
-- Adopted (riscv-dv): partition identical to riscv_instr_cover_group.sv cp_sign_cross (cp_sign_pair), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_sign_pair coincides with riscv_instr_cover_group.sv mul_cg/mulh_cg/mulhsu_cg/mulhu_cg.cp_sign_cross (rs1_sign x rs2_sign) (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-MUL-001, TP-MUL-002, TP-MUL-003, TP-MUL-004, TP-MUL-005, TP-MUL-006, TP-MUL-007, TP-MUL-008, TP-MUL-026, TP-MUL-027, TP-MUL-028, TP-CMP-038
 
 ### CG-MUL-002: gen_cg_mul_timing
 - Features: F-MUL-001, F-MUL-003, F-MUL-009, F-MUL-010, F-MUL-011
-- Sample: RVFI retirement; condition: decoded mul/mulh/mulhsu/mulhu (OP funct7 0000001 funct3 000..011), rvfi_trap == 0, and not the first retirement after reset (the delta and cp_prev need a previous retirement); the coverpoints discriminate on the clean delta (d1 vs d2), the previous retirement's class, the next retirement's dependency and the WB/fetch state, so the sample is never a tautology; anti-vacuity: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed.
+- Sample: RVFI retirement; condition: decoded mul/mulh/mulhsu/mulhu (OP funct7 0000001 funct3 000..011), rvfi_trap == 0, and not the first retirement after reset (the delta and cp_prev need a previous retirement); the coverpoints discriminate on the clean delta (d1 vs d2), the previous retirement's class, the next retirement's dependency and the WB/fetch state, so the sample is never a tautology; anti-vacuity: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W.
 - Coverpoints:
   - cp_op = decoded: bins mul{000}, mulh{001}, mulhsu{010}, mulhu{011}
   - cp_delta = retire delta from the previous retirement, iff gap_clean: bins d1{1}, d2{2}, d3plus{[3:$]}
   - cp_prev = class of the previous retirement: bins alu{single-cycle ALU}, mul{mul}, mulh_class{mulh/mulhsu/mulhu}, load{load}, store{store}, div{div/rem}, branch{branch/jump}, other{default: CSR, fence, system} (no first-instruction class: the first retirement after reset is not sampled)
   - cp_next_dep = the next retirement reads this rd: bins no{0}, yes{1}
-  - cp_wb_busy = dbus monitor: data access outstanding when this instruction entered ID: bins no{0}, yes{1}
+  - cp_wb_busy = dbus monitor: a data access outstanding when this instruction entered ID whose response arrived after that cycle (the multiply then starts in the response cycle, C-9): bins no{0}, yes{1}
   - cp_fetch_stall = ibus monitor: fetch data not available: bins no{0}, yes{1}
   - cp_dmem_delay = dbus monitor rvalid latency class of the outstanding access, iff wb_busy: bins min1{1}, short{[2:4]}, long{[5:$]} [operand-only: canonical CG-REG (xcut) knob:dmem_rvalid_delay]
 - Crosses:
   - cr_op_delta_clean = cp_op x cp_delta x cp_fetch_stall x cp_wb_busy: bins mul_d1{mul, d1, no, no}, mulh_d2{mulh, d2, no, no}, mulhsu_d2{mulhsu, d2, no, no}, mulhu_d2{mulhu, d2, no, no}; ignore other combinations: stall-dependent
   - cr_seq = cp_prev x cp_op: bins auto{all combinations}
   - cr_op_next_dep = cp_op x cp_next_dep: bins auto{all combinations}
-  - cr_wb_hold = cp_op x cp_wb_busy x cp_dmem_delay: bins auto{all combinations}; ignore wb_busy no: guarded
+  - cr_wb_defer = cp_op x cp_wb_busy x cp_dmem_delay: bins auto{all combinations}; ignore wb_busy no: guarded (deferred start behind the outstanding access, C-9; formerly cr_wb_hold)
 - Adopted (riscv-dv): none
 - TP items: TP-MUL-001, TP-MUL-003, TP-MUL-005, TP-MUL-007, TP-MUL-009, TP-MUL-010, TP-MUL-011, TP-MUL-028
 
@@ -420,45 +566,46 @@ Conventions
   - cr_overflow = cp_op x cp_dividend x cp_divisor: bins div_intmin_m1{div, int_min, all_ones}, rem_intmin_m1{rem, int_min, all_ones}, divu_intmin_m1{divu, int_min, all_ones}, remu_intmin_m1{remu, int_min, all_ones}; ignore other combinations: covered by cr_op_divisor
   - cr_op_sign = cp_op x cp_sign_pair: bins auto{all combinations}
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
-- Adopted (riscv-dv): partition identical to riscv_instr_cover_group.sv cp_sign_cross (cp_sign_pair), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_sign_pair coincides with riscv_instr_cover_group.sv div_cg/divu_cg/rem_cg/remu_cg.cp_sign_cross (rs1_sign x rs2_sign) (spec-derived, independently derived from the ISA text; adopted=0); cr_div0 / cr_overflow refine their cp_div_result (div_result classes) (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-MUL-012, TP-MUL-013, TP-MUL-014, TP-MUL-015, TP-MUL-016, TP-MUL-017, TP-MUL-018, TP-MUL-019, TP-MUL-020, TP-MUL-021, TP-MUL-026, TP-MUL-028
 
 ### CG-MUL-004: gen_cg_div_timing
 - Features: F-MUL-012, F-MUL-016, F-MUL-017, F-MUL-022, F-MUL-023, F-MUL-024, F-MUL-025
-- Sample: RVFI retirement; condition: decoded div/divu/rem/remu (OP funct7 0000001 funct3 100..111), rvfi_trap == 0, and not the first retirement after reset (the delta needs a previous retirement); the coverpoints discriminate on the clean delta (d2 vs d37 vs other), DIT, divide-by-zero, the mid-op event, the WB hold and the neighbour classes, so the sample is never a tautology; anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_hold == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op.
+- Sample: RVFI retirement; condition: decoded div/divu/rem/remu (OP funct7 0000001 funct3 100..111), rvfi_trap == 0, and not the first retirement after reset (the delta needs a previous retirement); the coverpoints discriminate on the clean delta (d2 vs d37 vs other), DIT, divide-by-zero, the mid-op event, the deferred start behind an outstanding WB access (C-9: the divider starts in the response cycle, record delta 37 + W / 2 + W; no FINISH hold exists) and the neighbour classes, so the sample is never a tautology; anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op.
 - Coverpoints:
   - cp_op = funct3: bins div{100}, divu{101}, rem{110}, remu{111}
   - cp_dit = cpuctrlsts.data_ind_timing (TB CSR model): bins off{0}, on{1}
   - cp_div0 = (rvfi_rs2_rdata == 0): bins no{0}, yes{1}
   - cp_delta = retire delta from the previous retirement, iff gap_clean: bins d2{2}, d37{37}, other{default}
   - cp_event_mid = pin asserted inside the occupancy window (irq driver / debug driver timestamps vs mcycle window): bins none{0}, irq{irq_* line}, debug_req{debug_req_i}, nmi{irq_nm_i}
-  - cp_wb_hold = dbus monitor: data access outstanding when the divide entered FINISH: bins no{0}, yes{1}
+  - cp_wb_defer = dbus monitor: a data access outstanding when the divide entered ID whose response arrived after that cycle (the divide starts in the response cycle, MD_IDLE -> MD_FINISH 36 cycles later; there is no FINISH hold, C-9; formerly cp_wb_hold): bins no{0}, yes{1}
   - cp_prev = previous retirement class: bins load_dep{load writing rs1 or rs2}, mul{mul class}, div{div class}, alu{ALU}, other{default}
   - cp_next = next retirement class: bins dep_alu{ALU reading rd}, mul{mul class}, div{div class}, other{default}
   - cp_fetch_stall = ibus monitor: bins no{0}, yes{1}
   - cp_irq_latency = cycles from irq assertion to rvfi_intr handler entry, iff event_mid irq: bins le37{[1:37]}, gt37{[38:$]}
 - Crosses:
-  - cr_dit_div0_delta = cp_dit x cp_div0 x cp_delta x cp_fetch_stall x cp_wb_hold: bins dit0_div0_d2{off, yes, d2, no, no}, dit0_nodiv0_d37{off, no, d37, no, no}, dit1_div0_d37{on, yes, d37, no, no}, dit1_nodiv0_d37{on, no, d37, no, no}; ignore other combinations: stall-dependent or contradictory
+  - cr_dit_div0_delta = cp_dit x cp_div0 x cp_delta x cp_fetch_stall x cp_wb_defer: bins dit0_div0_d2{off, yes, d2, no, no}, dit0_nodiv0_d37{off, no, d37, no, no}, dit1_div0_d37{on, yes, d37, no, no}, dit1_nodiv0_d37{on, no, d37, no, no}; ignore other combinations: stall-dependent or contradictory
   - cr_op_event = cp_op x cp_event_mid: bins auto{all combinations}
   - cr_event_div0_dit = cp_event_mid x cp_div0 x cp_dit: bins auto{all combinations}; ignore none: no event
   - cr_prev_op = cp_prev x cp_op: bins auto{all combinations}
   - cr_next_op = cp_next x cp_op: bins auto{all combinations}
-  - cr_op_wb_hold = cp_op x cp_wb_hold: bins auto{all combinations}
+  - cr_op_wb_defer = cp_op x cp_wb_defer: bins auto{all combinations} (formerly cr_op_wb_hold)
   - cr_op_div0 = cp_op x cp_div0 x cp_dit: bins auto{all combinations}
 - Adopted (riscv-dv): none
 - TP items: TP-MUL-012, TP-MUL-016, TP-MUL-017, TP-MUL-022, TP-MUL-023, TP-MUL-024, TP-MUL-025, TP-MUL-028, TP-MUL-029
 
 ### CG-MUL-005: gen_cg_div_fsm_guard
 - Features: F-MUL-028
-- Sample: RVFI retirement; condition: decoded div/divu/rem/remu, rvfi_trap == 0, not the first retirement after reset; cp_div_ctx discriminates plain divides from disturbed ones (six classes), so the sample is never a tautology; cp_sva_checked additionally needs gen_sva_multdiv bound in the build; anti-vacuity: every context class needs a specific preceding or coincident event timestamped by the dbus/irq/debug/ibus monitors against the divide's window, so a hit proves the divide ran under that disturbance; cp_sva_checked is recorded only when the bound assertion evaluated non-vacuously for this divide. The reachability cover of the freeze arc itself (div_en_i == 0 && md_state_q != MD_IDLE) is an SVA cover, not a bin: it is expected to stay unhit (gen_hierarchy_map.md H-D3) and a hit is a finding.
+- Sample: RVFI retirement; condition: decoded div/divu/rem/remu, rvfi_trap == 0, not the first retirement after reset; cp_div_ctx discriminates plain divides from disturbed ones (six classes), so the sample is never a tautology; cp_sva_checked additionally needs gen_sva_multdiv (MD-1..MD-5 of rtl-arch gen_multdiv_bound_props.md) bound in the build; anti-vacuity: every context class needs a specific preceding or coincident event timestamped by the dbus/irq/debug/ibus monitors against the divide's window, so a hit proves the divide ran under that disturbance; cp_sva_checked is recorded only when the bound properties MD-1 / MD-2 / MD-2b (36-cycle full bound, 1-cycle zero fast path, full path under DIT) evaluated non-vacuously for this divide. The hold-attempt cover MD-C4 (md_state_q == MD_FINISH && !multdiv_ready_id_i) and the former freeze-arc cover (div_en_i == 0 && md_state_q != MD_IDLE) are SVA covers, not bins: both are expected to stay unhit (C-9 / H-D3) and a hit is a reachability finding; the freeze-arc assertion is structurally implied by the state-register enable (rtl/ibex_multdiv_fast.sv:99, :101-115) and is not a checker (rtl-arch T-053 TP-MUL-030).
 - Coverpoints:
   - cp_op = funct3: bins div{100}, divu{101}, rem{110}, remu{111}
   - cp_div_ctx = disturbance class: bins plain{none}, slow_wb{preceding load/store response arrives after the divide entered ID}, fault_wb{the divide's first attempt was killed by a fault of the preceding access (trap between that access and the divide's retirement at the same PC)}, irq_mid{irq line asserted inside the divide window}, debug_mid{debug_req_i inside the window}, fetch_err_next{the instruction after the divide carries a fetch error}
   - cp_dit = cpuctrlsts.data_ind_timing (TB CSR model): bins off{0}, on{1}
-  - cp_sva_checked = bound assertion evaluated with no failure for this divide: bins yes{1} [probe-gated (gen_sva_multdiv bind, number assigned by TB Infra), not in manifest]
+  - cp_sva_checked = bound properties MD-1 / MD-2 / MD-2b evaluated non-vacuously with no failure for this divide: bins yes{1} [probe-gated (gen_sva_multdiv bind, probe candidate P8), not in manifest]
 - Crosses:
   - cr_ctx_op = cp_div_ctx x cp_op: bins auto{all combinations}
   - cr_ctx_dit = cp_div_ctx x cp_dit: bins auto{all combinations}
+- Probe status: pending probe-register ruling (candidate P8: gen_sva_multdiv bound on ibex_multdiv_fast div_en_i / md_state_q); coverpoints cp_sva_checked excluded from manifests until ruled
 - Adopted (riscv-dv): none
 - TP items: TP-MUL-030
 
@@ -474,14 +621,14 @@ Conventions
   - cp_next_len = length of the next retired instruction, iff c16: bins n16{16}, n32{32}
   - cp_pc_inc = rvfi_pc_wdata - rvfi_pc_rdata, iff c16 and not a CTI: bins two{2}
   - cp_insn32_straddle = rvfi_pc_rdata[1] of a 32-bit instruction (pc[1] == 1 spans a word boundary), iff rvfi_insn[1:0] == 11: bins no{0}, yes{1}
-  - cp_reg3 = 3-bit register field (x8..x15), iff c16 and CIW/CL/CS/CA/CB format: bins r8{0}, r9{1}, r10{2}, r11{3}, r12{4}, r13{5}, r14{6}, r15{7}
+  - cp_reg3 = 3-bit register field (x8..x15), iff c16 and CIW/CL/CS/CA/CB format: bins r8{0}, r9{1}, r10{2}, r11{3}, r12{4}, r13{5}, r14{6}, r15{7} [operand-only: the partition is counted once in CG-ADOPT-005.cp_c_reg_prime (adopted); used here by cr_insn_reg3]
   - cp_rd_full = 5-bit rd/rs field, iff c16 and CI/CR/CSS format: bins x1{1}, x2{2}, x8_15{[8:15]}, x16_31{[16:31]}, x3_7{[3:7]}
 - Crosses:
   - cr_insn_align = cp_insn x cp_pc_align: bins auto{all combinations}
   - cr_insn_next = cp_insn x cp_next_len: bins auto{all combinations}
   - cr_insn_reg3 = cp_insn x cp_reg3: bins auto{all combinations}; ignore CI/CR/CSS instructions: guarded
   - cr_insn_rdfull = cp_insn x cp_rd_full: bins auto{all combinations}; ignore 3-bit-register formats and c_nop/c_j/c_jal (no 5-bit register field): guarded; ignore c_addi16sp with x1/x3_7/x8_15/x16_31 and c_lui with x2: encoding (c.addi16sp is rd == x2 only, c.lui excludes x2)
-- Adopted (riscv-dv): partition identical to the riscv_instr_cover_group.sv compressed gpr[] bins (cp_reg3 r8..r15), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_reg3 {r8..r15} coincides with the riscv_instr_cover_group.sv compressed gpr[] bins of cp_rd/cp_rs1/cp_rs2 in the CIW_/CL_/CS_/CA_/CB_INSTR_CG_BEGIN macros and duplicates CG-ADOPT-005.cp_c_reg_prime EXACTLY: the partition is counted once in CG-ADOPT-005 (adopted) and cp_reg3 is a cross operand only here (cr_insn_reg3); no direct CSV rows
 - TP items: TP-CMP-001, TP-CMP-002, TP-CMP-004, TP-CMP-005, TP-CMP-008, TP-CMP-010, TP-CMP-012, TP-CMP-014, TP-CMP-016, TP-CMP-018, TP-CMP-020, TP-CMP-021, TP-CMP-023, TP-CMP-024, TP-CMP-026, TP-CMP-028, TP-CMP-030, TP-CMP-032, TP-CMP-070
 
 ### CG-CMP-002: gen_cg_cmp_imm_edges
@@ -517,24 +664,26 @@ Conventions
   - cp_pc_align = rvfi_pc_rdata[1]: bins word{0}, half{1}
 - Crosses:
   - cr_hint_align = cp_hint x cp_pc_align: bins auto{all combinations}
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_hint coincides with riscv_instr_cover_group.sv hint_cg.cp_hint for the nine classes c_nop_nzimm (addi), c_li_x0 (li), c_lui_x0 (lui), c_srli_shamt0 (srli64), c_srai_shamt0 (srai64), c_slli_x0 (slli), c_slli_shamt0 (slli64), c_mv_x0 (mv), c_add_x0 (add) (spec-derived, independently derived from the ISA text; adopted=0); c_addi_imm0, c_slli_x0_shamt0 and the four c_add_x0_ntl_* sub-bins are spec-derived extensions
 - TP items: TP-CMP-009, TP-CMP-013, TP-CMP-015, TP-CMP-019, TP-CMP-025, TP-CMP-027, TP-CMP-031, TP-CMP-070
 
 ### CG-CMP-004: gen_cg_cmp_illegal
-- Features: F-CMP-003, F-CMP-006, F-CMP-007, F-CMP-015, F-CMP-017, F-CMP-019, F-CMP-022, F-CMP-025, F-CMP-029, F-CMP-035, F-CMP-037, F-CMP-044, F-CMP-054, F-CMP-066, F-ISA-049
+- Features: F-CMP-003, F-CMP-006, F-CMP-007, F-CMP-015, F-CMP-017, F-CMP-019, F-CMP-022, F-CMP-025,
+  F-CMP-029, F-CMP-035, F-CMP-037, F-CMP-044, F-CMP-054, F-CMP-066, F-ISA-049, F-EXC-008 (parent of
+  folded bins hosted here)
 - Sample: RVFI retirement; condition: rvfi_insn[1:0] != 11 and rvfi_trap == 1 and the monitor decode table classifies the halfword as illegal; anti-vacuity: the class is derived from the instruction bits; cp_mtval_ok / cp_rvfi_insn_ok are recorded only when the handler read-back and the RVFI field match the prediction.
 - Coverpoints:
   - cp_class = decoded: bins zero_hw{0x0000}, addi4spn_imm0{instr[12:5] == 0, instr != 0}, lwsp_rd0{}, c_fld{}, c_flw{}, c_fsd{}, c_fsw{}, c_fldsp{}, c_flwsp{}, c_fswsp{}, lui_imm0{}, addi16sp_imm0{}, srli_shamt5{}, srai_shamt5{}, slli_shamt5{}, subw{}, addw{}, jr_rs1_0{0x8002}, sh_bit6{}, zcb_ls_1xx{Q0 funct3 100, instr[12:10] 1xx}, zext_w{}, zcb_alu_110{}, zcb_alu_111{}, push_rlist_res{cm.push rlist 0..3}, pop_rlist_res{}, popret_rlist_res{}, popretz_rlist_res{}, q2_101_zcmt{instr[12:8] in the Zcmt cm.jt/cm.jalt space}, q2_101_other{other instr[12:8]}, q2_011xx_65_00{instr[12:10] 011, instr[6:5] 00}, q2_011xx_65_10{instr[12:10] 011, instr[6:5] 10}
   - cp_rlist_res = instr[7:4], iff Zcmp reserved class: bins r0{0}, r1{1}, r2{2}, r3{3}
   - cp_mtval_ok = handler csrr mtval == zero-extended halfword: bins yes{1}
-  - cp_rvfi_insn_ok = rvfi_insn == zero-extended halfword: bins yes{1}
+  - cp_rvfi_insn_ok = rvfi_insn matches the class rule (C-12 / X-14): the zero-extended halfword for every non-expanded class; for push_rlist_res / pop_rlist_res / popret_rlist_res / popretz_rlist_res (tagged INSTR_EXPANDED) rvfi_ext_expanded_insn == the halfword and rvfi_insn == the synthesized 32-bit word: bins yes{1}
   - cp_pc_align = rvfi_pc_rdata[1]: bins word{0}, half{1}
   - cp_priv = rvfi_mode: bins m{3}, u{0}
 - Crosses:
   - cr_class_align = cp_class x cp_pc_align: bins auto{all combinations}
   - cr_zcmp_rlist = cp_class x cp_rlist_res: bins auto{all combinations}; ignore non-Zcmp classes: guarded
   - cr_class_priv = cp_class x cp_priv: bins auto{all combinations}
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): cp_class coincides with riscv_instr_cover_group.sv illegal_compressed_instr_cg.cp_point for zero_hw (c_illegal), addi4spn_imm0 (c_addi4spn), lui_imm0 (c_lui), addi16sp_imm0 (c_addi16sp), jr_rs1_0 (c_jr), lwsp_rd0 (c_lwsp), subw / addw (c_reserv_0 / c_reserv_1) (spec-derived, independently derived from the ISA text; adopted=0); the remaining classes (Zcb / Zcmp / Zcmt reserved space, RV32 FP forms) have no riscv-dv counterpart
 - TP items: TP-ISA-049, TP-ISA-056, TP-CMP-003, TP-CMP-006, TP-CMP-007, TP-CMP-015, TP-CMP-017, TP-CMP-019, TP-CMP-022, TP-CMP-025, TP-CMP-029, TP-CMP-035, TP-CMP-037, TP-CMP-044, TP-CMP-054, TP-CMP-067, TP-CMP-070
 
 ### CG-CMP-005: gen_cg_cmp_zcb
@@ -546,7 +695,7 @@ Conventions
   - cp_uimm_h = uimm, iff c.lhu/c.lh/c.sh: bins u0{0}, u2{2}
   - cp_data_sign = msb of the loaded byte/half, iff c.lbu/c.lhu/c.lh: bins pos{0}, neg{1}
   - cp_alu_operand = class(rvfi_rs1_rdata), iff ALU forms: bins bit7_set{bit 7 set, bit 15 clear}, bit7_clear{bits 7 and 15 clear}, bit15_set{bit 15 set}, zero{0}, all_ones{0xFFFFFFFF}, rand{default}
-  - cp_addr_align = rvfi_mem_addr[0], iff c.lhu/c.lh/c.sh: bins aligned{0}, misaligned{1}
+  - cp_addr_align = rvfi_mem_addr[1:0], iff c.lhu/c.lh/c.sh: bins aligned{00, 10}, mis1{01: misaligned, one word access with be 0110}, mis3{11: crosses the word boundary, split into two bus accesses (rtl/ibex_load_store_unit.sv:403-405)}
   - cp_regs = (rsd' == rs2'), iff c.mul: bins same{1}, distinct{0}
 - Crosses:
   - cr_ls_b = cp_insn x cp_uimm_b: bins auto{all combinations}; ignore non-byte forms: guarded
@@ -606,14 +755,15 @@ Conventions
 - TP items: TP-CMP-050, TP-CMP-051, TP-CMP-052, TP-CMP-053, TP-CMP-055, TP-CMP-066, TP-CMP-069, TP-CMP-071
 
 ### CG-CMP-008: gen_cg_cmp_zcmp_events
-- Features: F-CMP-056, F-CMP-057, F-CMP-058, F-CMP-059, F-CMP-060, F-CMP-061, F-CMP-062, F-CMP-063, F-CMP-064
-- Sample: monitor event "Zcmp sequence disturbed": an expansion is in flight (rvfi_ext_expanded_insn_valid seen without _last for this PC) and one of: a micro-op retires with rvfi_trap == 1; the next retirement has rvfi_intr == 1 or enters debug mode before _last; the dummy-instruction probe fires while the expansion is in flight; also samples the deferred case (event pin asserted mid-sequence, taken only after _last); condition: an expansion is in flight for this PC (rvfi_ext_expanded_insn_valid seen, _last not yet seen) AND one of the listed events is observed (rvfi_trap == 1 on a micro-op; rvfi_intr == 1 or rvfi_ext_debug_mode rising on the next retirement; a pin asserted inside the sequence window; probe P1 firing); anti-vacuity: requires an actual in-flight expansion plus an event, both derived from observed transactions; a hit proves the event landed at the recorded micro-op index/phase.
+- Features: F-CMP-056, F-CMP-057, F-CMP-058, F-CMP-059, F-CMP-060, F-CMP-061, F-CMP-062, F-CMP-063,
+  F-CMP-064, F-CMP-039 (parent of folded bins hosted here)
+- Sample: monitor event "Zcmp sequence disturbed": an expansion is in flight (rvfi_ext_expanded_insn_valid seen without _last for this PC) and one of: a micro-op retires with rvfi_trap == 1; the next retirement has rvfi_intr == 1 or enters debug mode before _last; the dummy-instruction probe fires while the expansion is in flight; also samples the deferred case (event pin asserted mid-sequence, taken only after _last) and the pre-micro-op case (a trigger match on the cm.* PC itself enters debug before micro-op 0: the first debug-ROM record follows the previous instruction's record with no micro-op of that PC in between, X-19 (a)); condition: an expansion is in flight for this PC (rvfi_ext_expanded_insn_valid seen, _last not yet seen) AND one of the listed events is observed (rvfi_trap == 1 on a micro-op; rvfi_intr == 1 or rvfi_ext_debug_mode rising on the next retirement; a pin asserted inside the sequence window; probe P1 firing); anti-vacuity: requires an actual in-flight expansion plus an event, both derived from observed transactions; a hit proves the event landed at the recorded micro-op index/phase.
 - Coverpoints:
   - cp_insn = decoded: bins cm_push{}, cm_pop{}, cm_popret{}, cm_popretz{}, cm_mvsa01{}, cm_mva01s{}
   - cp_event = kind: bins irq{external/timer/software/fast}, nmi{irq_nm_i}, debug_req{debug_req_i}, step{dcsr.step}, trigger{tdata2 match on the cm.* PC or next PC}, store_fault_pmp{}, store_fault_bus{data_err_i}, load_fault_pmp{}, load_fault_bus{}, dummy_inserted{probe P1} [probe-gated (P1), not in manifest: dummy_inserted]
   - cp_uop_idx = index of the micro-op in ID when the event arrived / that faulted: bins i0{0}, i1{1}, i2{2}, i3{3}, i4{4}, i5{5}, i6{6}, i7{7}, i8{8}, i9{9}, i10{10}, i11{11}, i12{12}, i13{13}, i14{14}, i15{15}
-  - cp_phase = phase of that micro-op: bins ls_phase{store/load micro-op}, commit_phase{addi sp / li a0 / first move}, last_uop{final micro-op}
-  - cp_outcome = derived: bins taken_between{event taken before _last, sequence abandoned}, deferred{event taken after _last}, trap_on_uop{micro-op retired with rvfi_trap}
+  - cp_phase = phase of that micro-op: bins ls_phase{store/load micro-op}, commit_phase{addi sp / li a0 / first move}, last_uop{final micro-op}, none{no micro-op in flight: the event pre-empted micro-op 0}
+  - cp_outcome = derived: bins taken_between{event taken before _last, sequence abandoned}, deferred{event taken after _last}, trap_on_uop{micro-op retired with rvfi_trap}, pre_uop0{debug entry before micro-op 0: no micro-op of the cm.* PC retired, dpc = cm.* PC}
   - cp_reexec = after the handler, the same cm.* PC re-executes from micro-op 0 (repeated stores/loads observed): bins yes{1}, na{deferred: no re-execution}
   - cp_mepc_ok = mepc read-back == cm.* PC (taken_between/trap) or == next PC (deferred): bins yes{1}
   - cp_sp_unchanged_ok = x2 unchanged after an abandoned sequence: bins yes{1}
@@ -621,7 +771,7 @@ Conventions
   - cp_mis_half = faulting half of a misaligned micro-op, iff sp misaligned and fault: bins first{first half}, second{second half}
 - Crosses:
   - cr_insn_event = cp_insn x cp_event: bins auto{all combinations}; ignore load faults on cm_push, store faults on pop-family, any fault on mv forms: no such access; the dummy_inserted bins are probe-gated (P1), not in manifest
-  - cr_event_phase_outcome = cp_event x cp_phase x cp_outcome: bins irq_ls_taken{irq, ls_phase, taken_between}, irq_commit_deferred{irq, commit_phase, deferred}, irq_last_deferred{irq, last_uop, deferred}, nmi_ls_taken{nmi, ls_phase, taken_between}, nmi_commit_deferred{nmi, commit_phase, deferred}, debug_ls_deferred{debug_req, ls_phase, deferred}, debug_commit_deferred{debug_req, commit_phase, deferred}, step_deferred{step, last_uop, deferred}, trigger_deferred{trigger, last_uop, deferred}, store_fault_pmp_trap{store_fault_pmp, ls_phase, trap_on_uop}, store_fault_bus_trap{store_fault_bus, ls_phase, trap_on_uop}, load_fault_pmp_trap{load_fault_pmp, ls_phase, trap_on_uop}, load_fault_bus_trap{load_fault_bus, ls_phase, trap_on_uop}, dummy_ls{dummy_inserted, ls_phase, any}, dummy_commit{dummy_inserted, commit_phase, any}; ignore irq/nmi taken in commit_phase and debug taken_between: blocked by the RTL rule (a hit is a checker failure); dummy_ls and dummy_commit are probe-gated (P1), not in manifest
+  - cr_event_phase_outcome = cp_event x cp_phase x cp_outcome: bins irq_ls_taken{irq, ls_phase, taken_between}, irq_commit_deferred{irq, commit_phase, deferred}, irq_last_deferred{irq, last_uop, deferred}, nmi_ls_taken{nmi, ls_phase, taken_between}, nmi_commit_deferred{nmi, commit_phase, deferred}, debug_ls_deferred{debug_req, ls_phase, deferred}, debug_commit_deferred{debug_req, commit_phase, deferred}, step_deferred{step, last_uop, deferred}, trigger_deferred{trigger, last_uop, deferred}, nmi_last_deferred{nmi, last_uop, deferred}, trigger_pre_uop0{trigger, none, pre_uop0}, store_fault_pmp_trap{store_fault_pmp, ls_phase, trap_on_uop}, store_fault_bus_trap{store_fault_bus, ls_phase, trap_on_uop}, load_fault_pmp_trap{load_fault_pmp, ls_phase, trap_on_uop}, load_fault_bus_trap{load_fault_bus, ls_phase, trap_on_uop}, dummy_ls{dummy_inserted, ls_phase, any}, dummy_commit{dummy_inserted, commit_phase, any}; ignore irq/nmi taken in commit_phase and debug taken_between: blocked by the RTL rule (a hit is a checker failure); irq_last_deferred / nmi_last_deferred are the k >= N-2 outcomes of TP-CMP-056 (the LAST micro-op already in ID completes, C-3) and irq_commit_deferred / nmi_commit_deferred those of TP-CMP-057; dummy_ls and dummy_commit are probe-gated (P1), not in manifest
   - cr_fault_idx = cp_event x cp_uop_idx: bins auto{all combinations}; ignore non-fault events: covered by cr_irq_idx; ignore i13/i14/i15 for faults: at most 13 store/load micro-ops (rlist 15) can fault, the later indices are addi/li/ret
   - cr_irq_idx = cp_event x cp_uop_idx: bins auto{all combinations}; ignore events other than irq/nmi/debug_req: covered by cr_fault_idx
   - cr_insn_rlist_event = cp_insn x cp_rlist_class x cp_event: bins auto{all combinations}; ignore mv forms: no rlist; ignore load faults on cm_push and store faults on pop-family: no such access; dummy_inserted bins are probe-gated (P1), not in manifest
@@ -633,7 +783,7 @@ Conventions
 - Features: F-CMP-049, F-CMP-065, F-CMP-068, F-CMP-070
 - Sample: RVFI retirement with rvfi_ext_expanded_insn_last == 1 of any cm.* instruction; condition: the monitor's instruction history identifies one of the listed neighbour patterns; anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed.
 - Coverpoints:
-  - cp_hazard = pattern: bins store_same_slot_then_pop{sw to a slot the following cm.pop loads}, write_pushed_reg_then_push{ALU writes a register the following cm.push stores}, load_pushed_reg_then_push{load into a register the following cm.push stores}, load_then_mva01s{load into r1s'/r2s' then cm.mva01s}, popret_ra_fwd{cm.popret: ra load micro-op then ret}, push_then_pop_b2b{cm.push then cm.pop}, pop_then_push_b2b{cm.pop then cm.push}, popret_then_target{cm.popret then the return target retires next}, popretz_then_target{cm.popretz then the return target retires next}, mvsa01_then_mva01s{}, popret_ft_cm{cm.popret whose PC+2 halfword is a cm.*}, popretz_ft_cm{cm.popretz whose PC+2 halfword is a cm.*}
+  - cp_hazard = pattern: bins store_same_slot_then_pop{sw to a slot the following cm.pop loads}, write_pushed_reg_then_push{ALU writes a register the following cm.push stores}, load_pushed_reg_then_push{load into a register the following cm.push stores}, load_then_mva01s{load into r1s'/r2s' then cm.mva01s}, popret_ra_fwd{retired: see ignore_bins}, popret_ra_deferred{cm.popret/popretz whose ra-load response arrived after the addi micro-op entered ID (dbus monitor): the addi starts deferred and the ret reads ra from the register file, C-9}, push_then_pop_b2b{cm.push then cm.pop}, pop_then_push_b2b{cm.pop then cm.push}, popret_then_target{cm.popret then the return target retires next}, popretz_then_target{cm.popretz then the return target retires next}, mvsa01_then_mva01s{}, popret_ft_cm{cm.popret whose PC+2 halfword is a cm.*}, popretz_ft_cm{cm.popretz whose PC+2 halfword is a cm.*}; ignore_bins popret_ra_fwd: the former 'ra still in WB when the ret enters ID' path does not exist (the addi cannot execute while the load is outstanding, rtl/ibex_id_stage.sv:1059-1062; loads are never forwarded, :1117-1118; rtl-arch T-053 TP-CMP-049)
   - cp_ft_kind = kind of the fall-through cm.* at PC+2, iff popret_ft_cm/popretz_ft_cm: bins cm_push{}, cm_pop{}, cm_popret{}, cm_popretz{}, cm_mvsa01{}, cm_mva01s{}
   - cp_ret_once = exactly one rvfi_ext_expanded_insn_last for the popret/popretz and the next rvfi_pc_rdata == ra target: bins yes{1}
   - cp_redirect_once = one ibus redirect for the ret (ibus monitor), iff icache_enable == 0: bins yes{1}
@@ -642,7 +792,7 @@ Conventions
   - cp_delta_uop = per-micro-op retire delta class over the sequence: bins all_one{every delta 1}, some_stall{a delta > 1}
 - Crosses:
   - cr_hazard_rlist = cp_hazard x cp_rlist_class: bins auto{all combinations}; ignore mvsa01_then_mva01s and load_then_mva01s: mv has no rlist
-  - cr_hazard_delay = cp_hazard x cp_dmem_delay: bins auto{all combinations}; ignore mvsa01_then_mva01s: no data access in the pattern
+  - cr_hazard_delay = cp_hazard x cp_dmem_delay: bins auto{all combinations}; ignore mvsa01_then_mva01s: no data access in the pattern; ignore popret_ra_deferred/min1: with the min1 response the ra data arrives in the cycle the addi enters ID, so no deferral occurs
   - cr_ft_kind = cp_hazard x cp_ft_kind: bins auto{all combinations}; ignore hazards other than popret_ft_cm/popretz_ft_cm: guarded
 - Adopted (riscv-dv): none
 - TP items: TP-CMP-049, TP-CMP-066, TP-CMP-069, TP-CMP-071, TP-CMP-073
@@ -691,7 +841,7 @@ Conventions
   - cr_shadd_wrap = cp_op x cp_wrap: bins auto{all combinations}; ignore non-shNadd: guarded
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
   - cr_op_same = cp_op x cp_same_regs: bins auto{all combinations}; ignore sext_b/sext_h/zext_h with rs1_eq_rs2 and all_same: unary (the rs2 field is the function code or x0)
-- Adopted (riscv-dv): partition identical to riscv_instr_cover_group.sv cp_rs1_eq_rs2 for min/max/minu/maxu (cp_eq_operands), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_eq_operands coincides with riscv_instr_cover_group.sv min_cg/max_cg/minu_cg/maxu_cg.cp_rs1_eq_rs2 (riscv-dv declares the equal bin only; the no bin is added) (spec-derived, independently derived from the ISA text; adopted=0); cp_sign_pair for min/max is the sign projection of their cp_rs1_gt_rs2 comparison (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-BIT-002, TP-BIT-003, TP-BIT-004, TP-BIT-007, TP-BIT-008, TP-BIT-009, TP-BIT-010, TP-BIT-011, TP-BIT-038, TP-BIT-041
 
 ### CG-BIT-002: gen_cg_bit_count
@@ -708,7 +858,7 @@ Conventions
   - cr_op_single = cp_op x cp_single_pos: bins auto{all combinations}
   - cr_op_result = cp_op x cp_result: bins auto{all combinations}
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
-- Adopted (riscv-dv): none
+- Adopted (riscv-dv): none taken; cp_result point bins r1 / r16 / r31 lie inside the adopted range bins of CG-ADOPT-006.cp_bitcount_result (clz_cg/ctz_cg/cpop_cg CP_VALUE_RANGE) and are not the same partition; r0 and r32 are F-BIT-006 boundary bins owned here (cross-reference, S-9)
 - TP items: TP-BIT-005, TP-BIT-006, TP-BIT-038, TP-BIT-041
 
 ### CG-BIT-003: gen_cg_bit_rotate_shiftones
@@ -748,7 +898,7 @@ Conventions
   - cr_lenient = cp_op x cp_bit25: bins grevi_b1{grevi, b1}, gorci_b1{gorci, b1}, shfli_b1{shfli, b1}, unshfli_b1{unshfli, b1}; ignore b0 and register forms: canonical
   - cr_reg_upper = cp_op x cp_rs2_upper: bins auto{all combinations}; ignore immediate forms: guarded
   - cr_op_rd_x0 = cp_op x cp_rd_x0: bins auto{all combinations}
-- Adopted (riscv-dv): partition identical to the riscv_instr_cover_group.sv reverse_mode / shuffle_mode ranges (cp_grev_ctrl c0..c31, cp_shfl_ctrl c0..c15), independently derived from the ISA text; CSV adopted = 0
+- Adopted (riscv-dv): cp_grev_ctrl c0..c31 coincides with riscv_instr_cover_group.sv grev_cg/grevi_cg CP_VALUE_RANGE(reverse_mode, 0, XLEN-1) and cp_shfl_ctrl c0..c15 with shfl_cg/unshfl_cg CP_VALUE_RANGE(shuffle_mode, 0, XLEN/2-1) (spec-derived, independently derived from the ISA text; adopted=0)
 - TP items: TP-BIT-014, TP-BIT-015, TP-BIT-016, TP-BIT-024, TP-BIT-037, TP-BIT-038, TP-BIT-041
 
 ### CG-BIT-005: gen_cg_bit_xperm
@@ -847,7 +997,7 @@ Conventions
 
 ### CG-BIT-010: gen_cg_bit_multicycle_pipe
 - Features: F-BIT-036, F-BIT-039, F-BIT-041, F-BIT-012, F-BIT-027, F-BIT-028, F-BIT-032
-- Sample: RVFI retirement; condition: decoded two-cycle Zb* op (rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32.b/.h/.w/crc32c.b/.h/.w), rvfi_trap == 0, and not the first retirement after reset (the delta and the dependency class need a previous retirement); the coverpoints discriminate on the previous/next retirement's dependency, the pin timestamps inside the op's window, wb_busy and the clean delta, so the sample is never a tautology; anti-vacuity: the dependency class needs a preceding writer of the exact source register, the event class needs a pin assertion timestamped inside the op's two-cycle window, a clean d2 needs gap_clean and wb_busy == no; a hit proves the hazard/event/timing coincided with the op. This group is the single owner of the two-cycle Zb* delta partition (CG-BIT-003/007/008 do not repeat it).
+- Sample: RVFI retirement; condition: decoded two-cycle Zb* op (rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32.b/.h/.w/crc32c.b/.h/.w), rvfi_trap == 0, and not the first retirement after reset (the delta and the dependency class need a previous retirement); the coverpoints discriminate on the previous/next retirement's dependency, the pin timestamps inside the op's window, wb_busy and the clean delta, so the sample is never a tautology; anti-vacuity: the dependency class needs a preceding writer of the exact source register, the event class needs a pin assertion timestamped inside the op's two-cycle window, a clean d2 needs gap_clean and wb_busy == no; a hit proves the hazard/event/timing coincided with the op; cp_defer_cycles records the deferral W of the FIRST cycle behind an outstanding WB access (C-9: the op is held before its first cycle, never in its second, so the record delta is 2 + W). This group is the single owner of the two-cycle Zb* delta partition (CG-BIT-003/007/008 do not repeat it).
 - Coverpoints:
   - cp_op_class = decoded: bins rot{rol/ror/rori}, ternary{cmov/cmix/fsl/fsr/fsri}, crc{crc32*}
   - cp_op = decoded: bins rol{}, ror{}, rori{}, cmov{}, cmix{}, fsl{}, fsr{}, fsri{}, crc32_b{}, crc32_h{}, crc32_w{}, crc32c_b{}, crc32c_h{}, crc32c_w{}
@@ -855,7 +1005,7 @@ Conventions
   - cp_delta = retire delta from the previous retirement, iff gap_clean: bins d2{2}, d3plus{[3:$]}
   - cp_event_mid = pin asserted inside the two-cycle window: bins none{0}, irq{irq line}, debug_req{debug_req_i}, nmi{irq_nm_i}
   - cp_wb_busy = dbus monitor: data access outstanding when the op entered ID: bins no{0}, yes{1}
-  - cp_hold_cycles = retire delta - 2, iff wb_busy: bins h1{1}, h2_4{[2:4]}, h5plus{[5:$]}
+  - cp_defer_cycles = retire delta - 2 = W, the deferral of the first cycle behind the outstanding access (dbus monitor), iff wb_busy: bins h1{1}, h2_4{[2:4]}, h5plus{[5:$]} (formerly cp_hold_cycles)
   - cp_wb_kind = kind of the outstanding access, iff wb_busy: bins load{}, store{}
   - cp_fetch_stall = ibus monitor: bins no{0}, yes{1}
   - cp_rd_x0 = (rvfi_rd_addr == 0): bins no{0}, yes{1}
@@ -864,9 +1014,9 @@ Conventions
   - cr_class_prev = cp_op_class x cp_prev_dep: bins auto{all combinations}; ignore rs3 dependencies for rot/crc: no rs3
   - cr_class_event = cp_op_class x cp_event_mid: bins auto{all combinations}
   - cr_class_wb = cp_op_class x cp_wb_busy: bins auto{all combinations}
-  - cr_class_hold = cp_op_class x cp_hold_cycles x cp_wb_kind: bins auto{all combinations}; ignore wb_busy no: guarded
+  - cr_class_defer = cp_op_class x cp_defer_cycles x cp_wb_kind: bins auto{all combinations}; ignore wb_busy no: guarded (formerly cr_class_hold)
   - cr_class_delta_clean = cp_op_class x cp_delta x cp_fetch_stall x cp_wb_busy: bins rot_d2{rot, d2, no, no}, ternary_d2{ternary, d2, no, no}, crc_d2{crc, d2, no, no}; ignore other combinations: stall-dependent
-  - cr_op_delta_clean = cp_op x cp_delta x cp_wb_busy: bins rol_d2{rol, d2, no}, ror_d2{ror, d2, no}, rori_d2{rori, d2, no}, cmov_d2{cmov, d2, no}, cmix_d2{cmix, d2, no}, fsl_d2{fsl, d2, no}, fsr_d2{fsr, d2, no}, fsri_d2{fsri, d2, no}, crc32_b_d2{crc32_b, d2, no}, crc32_h_d2{crc32_h, d2, no}, crc32_w_d2{crc32_w, d2, no}, crc32c_b_d2{crc32c_b, d2, no}, crc32c_h_d2{crc32c_h, d2, no}, crc32c_w_d2{crc32c_w, d2, no}; ignore d3plus and wb_busy yes: stall-dependent (covered by cr_class_hold)
+  - cr_op_delta_clean = cp_op x cp_delta x cp_wb_busy: bins rol_d2{rol, d2, no}, ror_d2{ror, d2, no}, rori_d2{rori, d2, no}, cmov_d2{cmov, d2, no}, cmix_d2{cmix, d2, no}, fsl_d2{fsl, d2, no}, fsr_d2{fsr, d2, no}, fsri_d2{fsri, d2, no}, crc32_b_d2{crc32_b, d2, no}, crc32_h_d2{crc32_h, d2, no}, crc32_w_d2{crc32_w, d2, no}, crc32c_b_d2{crc32c_b, d2, no}, crc32c_h_d2{crc32c_h, d2, no}, crc32c_w_d2{crc32c_w, d2, no}; ignore d3plus and wb_busy yes: stall-dependent (covered by cr_class_defer)
   - cr_class_next = cp_op_class x cp_next_dep: bins auto{all combinations}
   - cr_class_rd_x0 = cp_op_class x cp_rd_x0: bins auto{all combinations}
 - Adopted (riscv-dv): none
@@ -891,18 +1041,19 @@ Conventions
 
 ### CG-BTALU-001: gen_cg_btalu_branch
 - Features: F-BTALU-001, F-BTALU-005, F-BTALU-006, F-BTALU-007, F-BTALU-009, F-BTALU-015
-- Sample: RVFI retirement; condition: decoded conditional branch (BRANCH funct3 not 010/011, or c.beqz/c.bnez), rvfi_trap == 0, and not the first retirement after reset (the delta needs a previous retirement); the coverpoints discriminate on the clean delta (d1 vs d2), DIT, the redirect, the counter increments and the previous CTI, so the sample is never a tautology; anti-vacuity: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3]; a hit proves the sampled timing/redirect/count tuple was observed.
+- Sample: RVFI retirement; condition: decoded conditional branch (BRANCH funct3 not 010/011, or c.beqz/c.bnez), rvfi_trap == 0, and not the first retirement after reset (the delta needs a previous retirement); the coverpoints discriminate on the redirect delta (d1 vs d2 vs d3plus, conventions), DIT, the redirect, the counter increments, the WB wait and the previous CTI, so the sample is never a tautology; anti-vacuity: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed.
 - Coverpoints:
   - cp_taken = (rvfi_pc_wdata != pc + len): bins no{0}, yes{1} [operand-only: canonical CG-ISA-007.cp_taken]
   - cp_direction = sign of imm: bins fwd{imm > 0}, bwd{imm < 0}, self{imm == 0}
   - cp_target_align = target[1]: bins word{0}, half{1} [operand-only: canonical CG-ISA-007.cp_target_align]
   - cp_distance = |imm|: bins short{[0:62]}, mid{[64:2046]}, far{[2048:4092]}, max_fwd{4094}, max_bwd{4096}
   - cp_dit = cpuctrlsts.data_ind_timing (TB CSR model): bins off{0}, on{1}
-  - cp_delta = retire delta from the previous retirement, iff gap_clean: bins d1{1}, d2{2}, d3plus{[3:$]}
+  - cp_delta = redirect delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(branch) (for a not-taken branch under DIT = 0 this is its own retire delta; conventions), iff redirect_clean: bins d1{1}, d2{2}, d3plus{[3:$]}
   - cp_redirect = ibus monitor saw a non-sequential request (branch target, or a re-request of pc + len under DIT) issued while this branch was in ID, iff icache_enable == 0: bins no{0}, yes{1}
-  - cp_fetch_stall = ibus monitor: bins no{0}, yes{1}
+  - cp_fetch_stall = ibus monitor: the redirect measurement was disturbed (a fill request pending at the pc_set cycle, a 32-bit target straddling a bus word, or an imem response slower than same_cycle/min1 for the target fetch): bins no{0}, yes{1}
   - cp_tbranch_inc = delta of mhpmcounter9 (NumBranchesTaken, hardwired event 9, rtl/ibex_cs_registers.sv:1595; rvfi_ext_mhpmcounters[9 - MHPMCOUNTER_BASE]) over this branch: bins inc0{0}, inc1{1}
-  - cp_branch_inc = delta of mhpmcounter8 (NumBranches, hardwired event 8, :1594; rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE]) over this branch: bins inc1{1}; ignore_bins inc0: every retired conditional branch counts (a hit is a gen_chk_counters failure)
+  - cp_branch_inc = delta of mhpmcounter8 (NumBranches, hardwired event 8, :1594; rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE]) over this branch: bins inc1{1}, inc2plus{[2:$]: the B17 over-count of a branch that waited in ID behind an outstanding WB access, one extra count per waiting cycle}; ignore_bins inc0: every retired conditional branch counts (a hit is a gen_chk_counters failure)
+  - cp_wb_busy = dbus monitor: a data access outstanding when this branch entered ID whose response arrived after that cycle (the branch waits in FIRST_CYCLE with instr_executing = 0, C-10): bins no{0}, yes{1}
   - cp_prev_cti = the previous retirement: bins taken_branch{taken conditional branch}, jump{jal/jalr family/fence.i}, other{default}
 - Crosses:
   - cr_taken_dir_align = cp_taken x cp_direction x cp_target_align: bins auto{all combinations}; ignore self with not-taken: the fall-through of a self-branch is not a target-ALU corner
@@ -911,8 +1062,10 @@ Conventions
   - cr_taken_distance = cp_taken x cp_distance: bins auto{all combinations}
   - cr_perf = cp_taken x cp_dit x cp_tbranch_inc: bins t_dit0_inc1{yes, off, inc1}, nt_dit0_inc0{no, off, inc0}, t_dit1_inc1{yes, on, inc1}, nt_dit1_inc0{no, on, inc0}, nt_dit1_inc1{no, on, inc1}; ignore t_*_inc0 and nt_dit0_inc1: contradict the doc rule (a hit is a checker failure); ignore_bins nt_dit1_inc0: the spec outcome of B11, unreachable on the current RTL (re-enabled as a required bin when B11 is fixed); nt_dit1_inc1 is the B11 witness bin
   - cr_taken_prev = cp_taken x cp_prev_cti: bins auto{all combinations} (back-to-back control transfers seen from the branch: taken_branch = two consecutive taken branches, jump = a jump immediately followed by a branch)
-- Adopted (riscv-dv): none (cp_taken is operand-only here; the partition is marked in CG-ISA-007)
-- TP items: TP-BTALU-001, TP-BTALU-005, TP-BTALU-006, TP-BTALU-007, TP-BTALU-009, TP-BTALU-015, TP-BTALU-016, TP-BTALU-017
+  - cr_perf_wb = cp_wb_busy x cp_branch_inc: bins nowb_inc1{no, inc1}, wb_inc2plus{yes, inc2plus}; ignore nowb_inc2plus: contradicts the RTL rule without a wait (a hit is a gen_chk_counters failure); ignore_bins wb_inc1: the documented outcome of B17 (one count for a waiting branch), unreachable on the current RTL (rtl/ibex_id_stage.sv:886-934, :1054-1057) and re-enabled as the required bin when B17 is fixed; wb_inc2plus is the B17 witness bin (TP-BTALU-018)
+  - cr_tperf_wb = cp_wb_busy x cp_taken x cp_dit x cp_tbranch_inc: bins wb_t_dit0_inc1{yes, yes, off, inc1}, wb_nt_dit0_inc0{yes, no, off, inc0}; ignore other combinations: the no-wait cases are cr_perf, the DIT cases are B11 (cr_perf), and wb_t_dit0_inc0 / wb_nt_dit0_inc1 contradict the dedup rule (branch_jump_set_done_q; a hit is a gen_chk_counters failure); counter 9 (and 7) stay exact under a WB wait (C-10, TP-BTALU-011)
+- Adopted (riscv-dv): none taken (cp_taken and cp_target_align are operand-only here; the partitions are marked in CG-ISA-007); cp_direction {fwd, bwd, self} refines the adopted CG-ADOPT-003.cp_imm_sign branch_fwd/branch_bwd by the self{0} bin (spec-derived; adopted=0)
+- TP items: TP-BTALU-001, TP-BTALU-005, TP-BTALU-006, TP-BTALU-007, TP-BTALU-009, TP-BTALU-011, TP-BTALU-015, TP-BTALU-016, TP-BTALU-017, TP-BTALU-018, TP-ISA-024
 
 ### CG-BTALU-002: gen_cg_btalu_jump
 - Features: F-BTALU-002, F-BTALU-003, F-BTALU-004, F-BTALU-007, F-BTALU-008, F-BTALU-009, F-BTALU-012, F-BTALU-014
@@ -921,11 +1074,11 @@ Conventions
   - cp_type = decoded: bins jal{}, jalr{}, fence_i{}, c_j{}, c_jal{}, c_jr{}, c_jalr{}
   - cp_odd_sum = (rs1 + imm)[0], iff jalr/c.jr/c.jalr: bins no{0}, yes{1} [operand-only: canonical CG-ISA-006.cp_target_odd]
   - cp_pc_wdata_bit0 = rvfi_pc_wdata[0]: bins b0{0}, b1{1}
-  - cp_delta = retire delta from the previous retirement, iff gap_clean: bins d2{2}, d3plus{[3:$]}
+  - cp_delta = redirect delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(jump) (conventions), iff redirect_clean: bins d2{2}, d3plus{[3:$]}
   - cp_seq = this jump and its neighbours: bins br_to_jump{the previous retirement is a taken conditional branch}, jal_to_jalr{this is jalr and the previous retirement is jal}, jalr_to_branch{this is jalr/c.jr/c.jalr and the next retirement is a taken conditional branch}, jump_jump{the next retirement is another jump of this group's set}, jump_to_odd_half{the next rvfi_pc_rdata has bit 1 set and its rvfi_insn[1:0] != 11 (a compressed instruction at a half-word target)}, jump_self{target == own pc}, none{default} (two consecutive taken branches are CG-BTALU-001.cr_taken_prev.yes_taken_branch)
 - Crosses:
   - cr_odd_bit0 = cp_type x cp_odd_sum x cp_pc_wdata_bit0: bins jalr_odd_b1{jalr, yes, b1}, jalr_odd_b0{jalr, yes, b0}, c_jr_odd_b1{c_jr, yes, b1}, c_jr_odd_b0{c_jr, yes, b0}, c_jalr_odd_b1{c_jalr, yes, b1}, c_jalr_odd_b0{c_jalr, yes, b0}; ignore even sums and non-jalr types: bit 0 is always 0 there; ignore_bins jalr_odd_b0, c_jr_odd_b0, c_jalr_odd_b0: the spec outcome of B13 (rvfi_pc_wdata bit 0 cleared), unreachable on the current RTL and re-enabled as required bins when B13 is fixed; the *_odd_b1 bins are the B13 witnesses (TP-BTALU-008)
-  - cr_type_delta = cp_type x cp_delta: bins auto{all combinations}; ignore d3plus: stall-dependent
+  - cr_type_delta = cp_type x cp_delta: bins auto{all combinations}; ignore d3plus for every type except fence_i: stall-dependent; ignore fence_i/d2: unreachable, the pc + 4 refetch always goes to the bus while the invalidation runs (rtl/ibex_icache.sv:1218, :1259-1266), so fence_i_d3plus (exactly 3 under the pinned imem) is fence.i's required bin (TP-BTALU-012; rtl-arch T-053)
   - cr_type_seq = cp_type x cp_seq: bins auto{all combinations}; ignore none: not a corner; ignore jal_to_jalr with types other than jalr, jalr_to_branch with types other than jalr/c_jr/c_jalr, and jump_self with fence_i (target is pc + 4): by definition
 - Adopted (riscv-dv): none
 - TP items: TP-BTALU-002, TP-BTALU-003, TP-BTALU-004, TP-BTALU-007, TP-BTALU-008, TP-BTALU-009, TP-BTALU-012, TP-BTALU-014, TP-BTALU-017, TP-ISA-019
@@ -939,7 +1092,7 @@ Conventions
   - cp_wb_outstanding = dbus monitor when the CTI entered ID: bins none{no access}, load{load outstanding}, store{store outstanding} [operand-only: canonical CG-ISA-011.cp_wb_outstanding]
   - cp_wb_error = the outstanding access faulted (data_err_i or PMP): bins no{0}, yes{1} [operand-only: canonical CG-ISA-011.cp_wb_error]
   - cp_redirect_count = ibus non-sequential requests observed while this CTI was in ID, iff icache_enable == 0 and data_ind_timing == 0: bins zero{0}, one{1}, two{2}; ignore_bins two: never legal (a hit is a gen_chk_ibus_proto failure)
-  - cp_target_fault = the next retirement traps on the target fetch (rvfi_trap == 1 at rvfi_pc_rdata == target, mcause 1): bins none{no trap at the target}, pmp_exec{PMP X denied per the TB PMP model: no ibus request for the target}, bus_err{instr_err_i on the target fetch}
+  - cp_target_fault = the next retirement traps on the target fetch (rvfi_trap == 1 at rvfi_pc_rdata == target, mcause 1): bins none{no trap at the target}, pmp_exec{PMP X denied per the TB PMP model: the target word IS fetched on the bus (PMP never gates instr_req_o, rtl/ibex_if_stage.sv:426-435) and the fault is attached in the IF->ID register}, bus_err{instr_err_i on the target fetch}
   - cp_mtval_target_ok = mtval read-back == target address, iff target_fault: bins yes{1}
   - cp_dmem_delay = dbus monitor rvalid latency class of the outstanding access, iff wb_outstanding: bins min1{1}, short{[2:4]}, long{[5:$]} [operand-only: canonical CG-REG (xcut) knob:dmem_rvalid_delay]
 - Crosses:
@@ -955,11 +1108,12 @@ Conventions
 ## Counts
 
 - Covergroups: 40 (per area {'ISA': 11, 'MUL': 5, 'CMP': 10, 'BIT': 11, 'BTALU': 3})
-- Coverpoints: 296 (of which 9 operand-only, weight 0); crosses: 173 (27 with named bins, 146 `auto`)
-- Coverpoint bins: 1359 declared (`name{...}`; ranges count as one bin each), of which 3 ignore_bins, 2 probe-gated and 24 operand-only (not in any manifest)
-- Cross bins: 156 named cross bins declared (6 ignore_bins / probe-gated) plus 146 `auto` sets that expand to 4286 reachable auto bins (the full product would be 6565; the difference is the ignored combinations written on the cross lines, mirrored by the CSV generator's predicates)
-- Adopted bins: 0 (S-9 policy: identical partitions independently derived are spec-derived; see the conventions and tp_isa.md OQ-2)
-- Trace: trace_feat_tp_isa.csv (332 rows) and trace_tp_bin_isa.csv (10969 rows, covergroup column = CG-ID, every `auto` reference expanded to its reachable bins) were regenerated from tp_isa.md and this file by the fix-2 script; every bin referenced by a TP item exists here and is neither ignored, probe-gated nor operand-only; every F-ID of the area (incl. ALIAS/FOLDED) maps to >= 1 TP item and >= 1 bin; TP/CG ids are consecutive per area; all five files are ASCII.
+- Coverpoints: 300 (of which 10 operand-only, weight 0); crosses: 176 (30 with named bins, 146 `auto`)
+- Coverpoint bins: 1372 declared (`name{...}`; ranges count as one bin each), of which 4 ignore_bins (CG-ISA-005 zcb_alu, CG-BTALU-001 cp_branch_inc.inc0, CG-CMP-009 popret_ra_fwd (fix 3, X-12), CG-BTALU-003 cp_redirect_count.two), 2 probe-gated and 32 operand-only (not in any manifest)
+- Cross bins: 167 named cross bins declared (10 ignore_bins / probe-gated, incl. the fix-3 B17 doc-outcome bin cr_perf_wb.wb_inc1 and the X-9 bin cr_wfi_priv_resume.u_sequential) plus 146 `auto` sets that expand to 4288 reachable auto bins (the ignored combinations written on the cross lines are mirrored by the CSV predicates: fix 3 retired the popret_ra_fwd expansions and fence_i_d2, added popret_ra_deferred x {short, long} and fence_i_d3plus)
+- Adopted bins: 0 (Critic M-5 pass complete: 14 covergroups carry a "coincides with" / "refines" mark against riscv_instr_cover_group.sv, none was taken from it; CG-CMP-001.cp_reg3 is counted once in CG-ADOPT-005 and is a cross operand only here; see the conventions and tp_isa.md OQ-2)
+- Fix 3 (rtl-arch T-053 fold): coverpoints added CG-ISA-009.cp_wfi_resume / cp_busy_off, CG-ISA-011.cp_ebreak_variant_trap, CG-BTALU-001.cp_wb_busy; crosses added CG-ISA-009.cr_wfi_priv_resume, CG-BTALU-001.cr_perf_wb / cr_tperf_wb; bins added CG-CMP-005.cp_addr_align {aligned, mis1, mis3} (replacing aligned/misaligned), CG-CMP-008 cp_phase.none / cp_outcome.pre_uop0 / nmi_last_deferred / trigger_pre_uop0, CG-CMP-009.cp_hazard.popret_ra_deferred, CG-BTALU-001.cp_branch_inc.inc2plus; renamed cr_wb_hold / cp_wb_hold / cr_op_wb_hold / cp_hold_cycles / cr_class_hold -> *_defer; redefined CG-BTALU-001/002.cp_delta as the redirect delta and CG-CMP-004.cp_rvfi_insn_ok as class-dependent.
+- Trace: trace_feat_tp_isa.csv (336 rows) and trace_tp_bin_isa.csv (10985 rows, covergroup column = CG-ID, every `auto` reference expanded to its reachable bins) were updated surgically by the fix-3 script and re-verified: every bin referenced by a TP item exists here and is neither ignored, probe-gated nor operand-only; every CSV row is justified by its item's Bins line; every F-ID of the area (incl. ALIAS/FOLDED) maps to >= 1 TP item and >= 1 bin; TP/CG/F ids are consecutive per area; all five files are ASCII.
 
 ## Probe candidates
 
@@ -981,10 +1135,11 @@ cannot be sampled from the boundary or RVFI:
   minstret (dummies are counted, B7). The DV Lead decides; if P1 is rejected, the three dummy bins
   become ignore_bins with reason "probe P1 rejected".
 
-- CG-MUL-005 (F-MUL-028, TP-MUL-030) relies on the bound SVA module gen_sva_multdiv (assert
-  (div_en_i == 0 && md_state_q != MD_IDLE) |=> $stable(md_state_q); cover the antecedent) inside
-  ibex_multdiv_fast. The freeze arc has no boundary observable; the bind is coverage/assertion-only
-  and no checker depends on it (probe candidate P<n>, number assigned by TB Infra; tp_isa.md OQ-9).
+- CG-MUL-005 (F-MUL-028, TP-MUL-030) relies on the bound SVA module gen_sva_multdiv (rtl-arch
+  gen_multdiv_bound_props.md MD-1..MD-5 bound properties plus the covers MD-C1..MD-C4; the former
+  freeze-arc assertion is structurally implied and kept as a cover only) inside
+  ibex_multdiv_fast. The bounds have no boundary observable beyond the RVFI deltas; the bind is coverage/assertion-only
+  and no checker depends on it (probe candidate P8 (probe register entry needed); tp_isa.md OQ-9). Probe status: pending probe-register ruling; cp_sva_checked is excluded from manifests until ruled.
   cp_sva_checked is the only bin that needs it and is probe-gated (not in manifest) until the bind
   is registered; if the bind is rejected it becomes ignore_bins with reason "probe rejected" and
   TP-MUL-030 keeps its RVFI fire-check.
@@ -1040,6 +1195,12 @@ Conventions
   only writable bits set; illegal_only = only read-only/legalised bits set; msb_only = 0x8000_0000.
 - Bin names are [a-z0-9_]; every bin is written name{meaning}. Cross bins name the combination.
 - Adopted (riscv-dv) is "none" everywhere: the riscv-dv tree is outside this subagent's read scope.
+- Redirect targets (rtl-arch T-053 X-1, tp_csr.md C-1): a trap, mret or dret record carries the next
+  SEQUENTIAL fetch address in rvfi_pc_wdata; every target-class coverpoint (CG-PRV-008.cp_target,
+  CG-PRV-002.cr_mret_target, CG-PRV-007.cr_mret_dbg) is derived from the NEXT record's rvfi_pc_rdata.
+- Probe-gated bins (S-13): CG-CSR-010.cp_pulse and cr_op_form_pulse need probe candidate P7 (PROPOSED,
+  Critic ruling pending); they stay in this file as coverage-only observations, appear in no item's
+  Bins line, no CSV row and no manifest until ruled; the boundary equivalent is cr_op_form_gap.
 - Feature lists may name IDs that gen_part_csr.md marks ALIAS or FOLDED (Status line). Every FOLDED
   entry names the bin here that now carries it; ALIAS IDs resolve to the canonical feature of the
   owning area. No bin was added or removed for the fold: the restated edges already had bins here.
@@ -1061,7 +1222,7 @@ Conventions
 - Crosses:
   - cr_rs1zero_ro = cp_op x cp_rs1 x cp_aclass x cp_trap (read-only address classes only): bins csrrs_x0_info_ok{csrrs zero info_ro ok}, csrrc_x0_info_ok{csrrc zero info_ro ok}, csrrsi_0_info_ok{csrrsi zero info_ro ok}, csrrci_0_info_ok{csrrci zero info_ro ok}, csrrs_x0_alias_ok{csrrs zero alias_impl ok}, csrrc_x0_alias_ok{csrrc zero alias_impl ok}, csrrsi_0_alias_ok{csrrsi zero alias_impl ok}, csrrci_0_alias_ok{csrrci zero alias_impl ok}, csrrs_nz_info_trap{csrrs nonzero info_ro trap}, csrrc_nz_info_trap{csrrc nonzero info_ro trap}, csrrsi_nz_info_trap{csrrsi nonzero info_ro trap}, csrrci_nz_info_trap{csrrci nonzero info_ro trap}, csrrs_nz_alias_trap{csrrs nonzero alias_impl trap}, csrrc_nz_alias_trap{csrrc nonzero alias_impl trap}, csrrw_x0_info_trap{csrrw zero info_ro trap}, csrrwi_0_info_trap{csrrwi zero info_ro trap}, csrrw_x0_alias_trap{csrrw zero alias_impl trap}, csrrwi_0_alias_trap{csrrwi zero alias_impl trap}, csrrw_nz_info_trap{csrrw nonzero info_ro trap}, csrrw_nz_alias_trap{csrrw nonzero alias_impl trap}; ignore csrrs/csrrc/csrrsi/csrrci with zero operand x trap on info_ro/alias_impl in M-mode: demoted to READ, cannot trap; ignore csrrw x ok on read-only classes: always illegal_csr_write
   - cr_rd_x0_write = cp_op x cp_rd x cp_aclass: bins csrrw_rdx0_rw_m{csrrw x0 rw_m}, csrrwi_rdx0_rw_m{csrrwi x0 rw_m}, csrrs_rdx0_rw_m{csrrs x0 rw_m}, csrrc_rdx0_rw_m{csrrc x0 rw_m}, csrrsi_rdx0_rw_m{csrrsi x0 rw_m}, csrrci_rdx0_rw_m{csrrci x0 rw_m}, csrrw_rdx0_info_ro{csrrw x0 info_ro}, csrrw_rdx0_wi_m{csrrw x0 wi_m}, csrrw_rdnz_rw_m{csrrw nonx0 rw_m}
-  - cr_priv_aclass_trap = cp_priv x cp_aclass x cp_trap: bins u_rw_m_trap{u rw_m trap}, u_wi_m_trap{u wi_m trap}, u_trig_trap{u trig trap}, u_pmp_trap{u pmp trap}, u_dbg_only_trap{u dbg_only trap}, u_info_ro_trap{u info_ro trap}, u_alias_impl_ok{u alias_impl ok}, u_alias_impl_trap{u alias_impl trap}, u_alias_unimpl_trap{u alias_unimpl trap}, u_time_trap{u time trap}, u_s_lvl_trap{u s_lvl trap}, u_cheriot_trap{u cheriot trap}, u_hole_lo_trap{u hole_lo trap}, u_hole_m_trap{u hole_m trap}, u_hole_ro_trap{u hole_ro trap}, m_rw_m_ok{m rw_m ok}, m_wi_m_ok{m wi_m ok}, m_trig_ok{m trig ok}, m_pmp_ok{m pmp ok}, m_dbg_only_trap{m dbg_only trap}, m_info_ro_ok{m info_ro ok}, m_alias_impl_ok{m alias_impl ok}, m_alias_unimpl_ok{m alias_unimpl ok}, m_time_trap{m time trap}, m_s_lvl_ok{m s_lvl ok}, m_cheriot_trap{m cheriot trap}, m_hole_lo_trap{m hole_lo trap}, m_hole_m_trap{m hole_m trap}, m_hole_ro_trap{m hole_ro trap}; ignore u x {rw_m, wi_m, trig, pmp, dbg_only, info_ro, s_lvl, cheriot, hole_m} x ok: csr[9:8] > U always traps; ignore m x {time, cheriot, hole_lo, hole_m, hole_ro} x ok: unimplemented addresses always trap
+  - cr_priv_aclass_trap = cp_priv x cp_aclass x cp_trap: bins u_rw_m_trap{u rw_m trap}, u_wi_m_trap{u wi_m trap}, u_trig_trap{u trig trap}, u_pmp_trap{u pmp trap}, u_dbg_only_trap{u dbg_only trap}, u_info_ro_trap{u info_ro trap}, u_alias_impl_ok{u alias_impl ok}, u_alias_impl_trap{u alias_impl trap}, u_alias_unimpl_trap{u alias_unimpl trap}, u_time_trap{u time trap}, u_s_lvl_trap{u s_lvl trap}, u_cheriot_trap{u cheriot trap}, u_hole_lo_trap{u hole_lo trap}, u_hole_m_trap{u hole_m trap}, u_hole_ro_trap{u hole_ro trap}, m_rw_m_ok{m rw_m ok}, m_wi_m_ok{m wi_m ok}, m_trig_ok{m trig ok}, m_pmp_ok{m pmp ok}, m_dbg_only_trap{m dbg_only trap}, m_info_ro_ok{m info_ro ok}, m_alias_impl_ok{m alias_impl ok}, m_alias_unimpl_ok{m alias_unimpl ok}, m_time_trap{m time trap}, m_s_lvl_ok{m s_lvl ok (B3 evidence: scontext at the S-level address 0x5A8 reads 0 from M-mode where Sdtrig requires a trap)}, m_cheriot_trap{m cheriot trap}, m_hole_lo_trap{m hole_lo trap}, m_hole_m_trap{m hole_m trap}, m_hole_ro_trap{m hole_ro trap}; ignore u x {rw_m, wi_m, trig, pmp, dbg_only, info_ro, s_lvl, cheriot, hole_m} x ok: csr[9:8] > U always traps; ignore m x {time, cheriot, hole_lo, hole_m, hole_ro} x ok: unimplemented addresses always trap
   - cr_dbg_access = cp_dbg x cp_aclass x cp_trap: bins dbg_dbgonly_ok{dbg dbg_only ok}, nondbg_dbgonly_trap{nondbg dbg_only trap}, dbg_hole_m_trap{dbg hole_m trap incl 0x7B4..0x7BF}, dbg_trig_ok{dbg trig ok}, dbg_rw_m_ok{dbg rw_m ok}, dbg_info_ro_ok{dbg info_ro ok}; ignore nondbg x dbg_only x ok: illegal_csr_dbg always fires outside debug mode
   - cr_iclass_priv = cp_iclass x cp_priv: bins none_m{none m}, none_u{none u}, priv_u{priv u}, wro_m{wro m}, wro_u{wro u alias write}, unimpl_m{unimpl m}, unimpl_u{unimpl u U-level hole}, dbg_m{dbg m}, multi_u{multi u}, multi_m{multi m}; ignore priv_m: csr[9:8] > M is impossible
   - cr_f3_100 = cp_op x cp_trap (f3_100 only): bins f3_100_trap{f3_100 trap}; ignore f3_100_ok: decoder csr_illegal always fires
@@ -1069,7 +1230,9 @@ Conventions
 - TP items: TP-CSR-001, TP-CSR-002, TP-CSR-003, TP-CSR-004, TP-CSR-005, TP-CSR-009, TP-CSR-011, TP-CSR-012, TP-CSR-013, TP-CSR-014, TP-CSR-015, TP-CSR-016, TP-CSR-017, TP-CSR-018, TP-CSR-021, TP-CSR-049, TP-CSR-055, TP-CSR-056, TP-CSR-057, TP-CSR-080, TP-CSR-083, TP-CSR-098, TP-CSR-104, TP-CSR-110, TP-CSR-111, TP-CSR-112, TP-CSR-116, TP-CSR-117, TP-CSR-118, TP-PRV-033
 
 ### CG-CSR-002: gen_cg_csr_trap_setup_warl
-- Features: F-CSR-021, F-CSR-022, F-CSR-023, F-CSR-024, F-CSR-025, F-CSR-027, F-CSR-028, F-CSR-029, F-CSR-030, F-CSR-035, F-CSR-036, F-CSR-037, F-CSR-050, F-CSR-051, F-CSR-052, F-PRV-035
+- Features: F-CSR-021, F-CSR-022, F-CSR-023, F-CSR-024, F-CSR-025, F-CSR-027, F-CSR-028, F-CSR-029,
+  F-CSR-030, F-CSR-035, F-CSR-036, F-CSR-037, F-CSR-050, F-CSR-051, F-CSR-052, F-PRV-035, F-PMC-025
+  (parent of folded bins hosted here)
 - Sample: gen_chk_csr_readback pair completion for a trap-setup CSR (mstatus, misa, mie, mtvec, mcounteren, mstatush, menvcfg, menvcfgh); condition: pair closed (write retired without trap, read-back retired); anti-vacuity: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back.
 - Coverpoints:
   - cp_csr = pair address: bins mstatus{0x300}, misa{0x301}, mie{0x304}, mtvec{0x305}, mcounteren{0x306}, mstatush{0x310}, menvcfg{0x30A}, menvcfgh{0x31A}
@@ -1122,7 +1285,8 @@ Conventions
 - TP items: TP-CSR-001, TP-CSR-003, TP-CSR-032, TP-CSR-033, TP-CSR-038, TP-CSR-039, TP-CSR-040, TP-CSR-042, TP-CSR-043, TP-CSR-044, TP-CSR-045, TP-CSR-046, TP-CSR-047, TP-CSR-101, TP-CSR-116
 
 ### CG-CSR-004: gen_cg_csr_counter_warl
-- Features: F-CSR-058, F-CSR-059, F-CSR-060, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-070, F-CSR-071, F-CSR-073
+- Features: F-CSR-058, F-CSR-059, F-CSR-060, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-070,
+  F-CSR-071, F-CSR-073, F-PMC-020 (parent of folded bins hosted here)
 - Sample: gen_chk_csr_readback pair completion for a counter-family CSR (0xB00..0xB9F, 0x320, 0x323..0x33F); condition: pair closed; anti-vacuity: as CG-CSR-002; for running counters the prediction includes the elapsed-cycle / retired-instruction delta from gen_chk_counters, so a hit proves both models agreed on that write.
 - Coverpoints:
   - cp_csr = pair address: bins mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm3{0xB03}, hpm4{0xB04}, hpm5{0xB05}, hpm6{0xB06}, hpm7{0xB07}, hpm8{0xB08}, hpm9{0xB09}, hpm10{0xB0A}, hpm11{0xB0B}, hpm12{0xB0C}, hpm3h{0xB83}, hpm4h{0xB84}, hpm5h{0xB85}, hpm6h{0xB86}, hpm7h{0xB87}, hpm8h{0xB88}, hpm9h{0xB89}, hpm10h{0xB8A}, hpm11h{0xB8B}, hpm12h{0xB8C}, hpm_unimpl{0xB03+MHPMCounterNum..0xB1F}, hpm_unimpl_h{0xB83+MHPMCounterNum..0xB9F}, mcountinhibit{0x320}, mhpmevent_impl{0x323..0x322+MHPMCounterNum}, mhpmevent_unimpl{0x323+MHPMCounterNum..0x33F}
@@ -1140,7 +1304,8 @@ Conventions
 - TP items: TP-CSR-058, TP-CSR-059, TP-CSR-060, TP-CSR-061, TP-CSR-062, TP-CSR-064, TP-CSR-066, TP-CSR-069, TP-CSR-070, TP-CSR-071, TP-CSR-073, TP-CSR-101, TP-CSR-120
 
 ### CG-CSR-005: gen_cg_csr_umode_alias
-- Features: F-CSR-015, F-CSR-050, F-CSR-053, F-CSR-054, F-CSR-055, F-CSR-056, F-CSR-057
+- Features: F-CSR-015, F-CSR-050, F-CSR-053, F-CSR-054, F-CSR-055, F-CSR-056, F-CSR-057, F-CSR-011
+  (parent of folded bins hosted here)
 - Sample: rvfi_valid with a CSR instruction to 0xC00..0xC9F (any mode, trapped or not); condition: rvfi_valid && is_csr_insn && addr[11:8] == 0xC && addr[7:5] inside {0, 4}; anti-vacuity: only alias accesses sample; a hit proves an alias of that index was accessed in that mode with that mcounteren state and the recorded outcome.
 - Coverpoints:
   - cp_alias = addr class: bins cycle{0xC00}, cycleh{0xC80}, instret{0xC02}, instreth{0xC82}, hpm3{0xC03}, hpm4{0xC04}, hpm5{0xC05}, hpm6{0xC06}, hpm7{0xC07}, hpm8{0xC08}, hpm9{0xC09}, hpm10{0xC0A}, hpm11{0xC0B}, hpm12{0xC0C}, hpm3h{0xC83}, hpm4h{0xC84}, hpm5h{0xC85}, hpm6h{0xC86}, hpm7h{0xC87}, hpm8h{0xC88}, hpm9h{0xC89}, hpm10h{0xC8A}, hpm11h{0xC8B}, hpm12h{0xC8C}, hpm_unimpl{0xC03+MHPMCounterNum..0xC1F}, hpm_unimpl_h{0xC83+MHPMCounterNum..0xC9F}, time{0xC01}, timeh{0xC81}
@@ -1180,7 +1345,8 @@ Conventions
 - TP items: TP-CSR-011, TP-CSR-013, TP-CSR-019, TP-CSR-020, TP-CSR-110, TP-CSR-111
 
 ### CG-CSR-007: gen_cg_csr_debug_csr
-- Features: F-CSR-017, F-CSR-018, F-CSR-074, F-CSR-075, F-CSR-076, F-CSR-077, F-CSR-078, F-CSR-079
+- Features: F-CSR-017, F-CSR-018, F-CSR-074, F-CSR-075, F-CSR-076, F-CSR-077, F-CSR-078, F-CSR-079,
+  F-DBG-012 (parent of folded bins hosted here)
 - Sample: rvfi_valid with a CSR instruction to 0x7B0..0x7BF (trapped or not) plus, for write pairs in debug mode, the gen_chk_csr_readback pair closure; condition: rvfi_valid && is_csr_insn && addr[11:4] == 0x7B; anti-vacuity: only debug-CSR accesses sample; a hit proves an access of that form happened with the recorded debug-mode state, so the trap/no-trap and WARL result was checked.
 - Coverpoints:
   - cp_csr = addr: bins dcsr{0x7B0}, dpc{0x7B1}, dscratch0{0x7B2}, dscratch1{0x7B3}, hole{0x7B4..0x7BF}
@@ -1211,7 +1377,8 @@ Conventions
 - TP items: TP-CSR-017, TP-CSR-018, TP-CSR-074, TP-CSR-075, TP-CSR-076, TP-CSR-077, TP-CSR-078, TP-CSR-079, TP-CSR-108, TP-CSR-110, TP-CSR-118
 
 ### CG-CSR-008: gen_cg_csr_trigger_csr
-- Features: F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-083, F-CSR-084
+- Features: F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-083, F-CSR-084, F-TRG-007 (parent of folded bins
+  hosted here)
 - Sample: rvfi_valid with a CSR instruction to 0x7A0..0x7A3, 0x7A8, 0x7AA, 0x5A8 (trapped or not); condition: rvfi_valid && is_csr_insn && addr in the trigger set; anti-vacuity: only trigger-CSR accesses sample; a hit proves an access of that form happened in the recorded debug/privilege state so the write-effective / write-ignored prediction was compared on the next read.
 - Coverpoints:
   - cp_csr = addr: bins tselect{0x7A0}, tdata1{0x7A1}, tdata2{0x7A2}, tdata3{0x7A3}, mcontext{0x7A8}, mscontext{0x7AA}, scontext{0x5A8}
@@ -1225,7 +1392,7 @@ Conventions
   - cp_tdata1_exec_w = written tdata1[2] iff (cp_csr == tdata1 && cp_form == wr): bins b0{0}, b1{1}
   - cp_tdata1_other_w = any tdata1 bit other than 2 written 1 iff (cp_csr == tdata1 && cp_form == wr): bins none{0}, some{1}
 - Crosses:
-  - cr_csr_dbg_form = cp_csr x cp_dbg x cp_form (m, ok): bins tselect_nondbg_wr{tselect nondbg wr}, tselect_dbg_wr{tselect dbg wr}, tdata1_nondbg_wr{tdata1 nondbg wr}, tdata1_dbg_wr{tdata1 dbg wr}, tdata2_nondbg_wr{tdata2 nondbg wr}, tdata2_dbg_wr{tdata2 dbg wr}, tdata3_nondbg_wr{tdata3 nondbg wr}, tdata3_dbg_wr{tdata3 dbg wr}, mcontext_nondbg_wr{mcontext nondbg wr}, mscontext_nondbg_wr{mscontext nondbg wr}, scontext_nondbg_wr{scontext nondbg wr}, tselect_nondbg_rd{tselect nondbg rd_only}, tdata1_nondbg_rd{tdata1 nondbg rd_only}, tdata2_nondbg_rd{tdata2 nondbg rd_only}, tdata3_nondbg_rd{tdata3 nondbg rd_only}, mcontext_nondbg_rd{mcontext nondbg rd_only}, mscontext_nondbg_rd{mscontext nondbg rd_only}, scontext_nondbg_rd{scontext nondbg rd_only}, tdata1_dbg_rd{tdata1 dbg rd_only}, tdata2_dbg_rd{tdata2 dbg rd_only}, tselect_dbg_rd{tselect dbg rd_only}
+  - cr_csr_dbg_form = cp_csr x cp_dbg x cp_form (m, ok): bins tselect_nondbg_wr{tselect nondbg wr}, tselect_dbg_wr{tselect dbg wr}, tdata1_nondbg_wr{tdata1 nondbg wr}, tdata1_dbg_wr{tdata1 dbg wr}, tdata2_nondbg_wr{tdata2 nondbg wr}, tdata2_dbg_wr{tdata2 dbg wr}, tdata3_nondbg_wr{tdata3 nondbg wr (B3 evidence)}, tdata3_dbg_wr{tdata3 dbg wr (B3 evidence)}, mcontext_nondbg_wr{mcontext nondbg wr (B3 evidence)}, mscontext_nondbg_wr{mscontext nondbg wr (B3 evidence)}, scontext_nondbg_wr{scontext nondbg wr (B3 evidence)}, tselect_nondbg_rd{tselect nondbg rd_only}, tdata1_nondbg_rd{tdata1 nondbg rd_only}, tdata2_nondbg_rd{tdata2 nondbg rd_only}, tdata3_nondbg_rd{tdata3 nondbg rd_only (B3 evidence)}, mcontext_nondbg_rd{mcontext nondbg rd_only (B3 evidence)}, mscontext_nondbg_rd{mscontext nondbg rd_only (B3 evidence)}, scontext_nondbg_rd{scontext nondbg rd_only (B3 evidence)}, tdata1_dbg_rd{tdata1 dbg rd_only}, tdata2_dbg_rd{tdata2 dbg rd_only}, tselect_dbg_rd{tselect dbg rd_only}
   - cr_csr_u = cp_csr x cp_priv(u) x cp_trap(trap): bins tselect_u{tselect u trap}, tdata1_u{tdata1 u trap}, tdata2_u{tdata2 u trap}, tdata3_u{tdata3 u trap}, mcontext_u{mcontext u trap}, mscontext_u{mscontext u trap}, scontext_u{scontext u trap}
   - cr_csr_op_dbg = cp_csr x cp_op (dbg, wr): bins tselect_csrrw{tselect csrrw}, tselect_csrrs{tselect csrrs}, tselect_csrrc{tselect csrrc}, tselect_csrrwi{tselect csrrwi}, tselect_csrrsi{tselect csrrsi}, tselect_csrrci{tselect csrrci}, tdata1_csrrw{tdata1 csrrw}, tdata1_csrrs{tdata1 csrrs}, tdata1_csrrc{tdata1 csrrc}, tdata1_csrrwi{tdata1 csrrwi}, tdata1_csrrsi{tdata1 csrrsi}, tdata1_csrrci{tdata1 csrrci}, tdata2_csrrw{tdata2 csrrw}, tdata2_csrrs{tdata2 csrrs}, tdata2_csrrc{tdata2 csrrc}, tdata2_csrrwi{tdata2 csrrwi}, tdata2_csrrsi{tdata2 csrrsi}, tdata2_csrrci{tdata2 csrrci}
   - cr_csr_wpat = cp_csr x cp_wpat (wr): bins tselect_rand{tselect rand}, tselect_all1{tselect all1}, tdata1_rand{tdata1 rand}, tdata1_all1{tdata1 all1}, tdata1_all0{tdata1 all0}, tdata1_legal{tdata1 legal_only}, tdata1_illegal{tdata1 illegal_only}, tdata2_rand{tdata2 rand}, tdata2_all1{tdata2 all1}, tdata2_all0{tdata2 all0}, tdata3_all1{tdata3 all1}, mcontext_all1{mcontext all1}, mscontext_all1{mscontext all1}, scontext_all1{scontext all1}
@@ -1235,7 +1402,8 @@ Conventions
 - TP items: TP-CSR-080, TP-CSR-081, TP-CSR-082, TP-CSR-083, TP-CSR-084, TP-CSR-108, TP-CSR-110, TP-CSR-118
 
 ### CG-CSR-009: gen_cg_csr_cpuctrlsts
-- Features: F-CSR-085, F-CSR-086, F-CSR-087, F-CSR-088, F-CSR-089, F-CSR-090, F-CSR-091
+- Features: F-CSR-085, F-CSR-086, F-CSR-087, F-CSR-088, F-CSR-089, F-CSR-090, F-CSR-091, F-SEC-022
+  (parent of folded bins hosted here)
 - Sample: (a) rvfi_valid with a CSR instruction to 0x7C0, (b) a synchronous trap retirement (rvfi_trap with a non-interrupt cause) outside debug mode, (c) an mret retirement, (d) a double_fault_seen_o pulse, (e) an interrupt/NMI/debug entry observed on RVFI; condition: any of a..e; anti-vacuity: each event class is distinct and the sync_exc_seen / double_fault_seen model state is sampled with it, so a hit proves the model saw that transition and gen_chk_double_fault / gen_chk_csr_readback compared the resulting bits.
 - Coverpoints:
   - cp_event = event class: bins sw_rd{CSR read of 0x7C0}, sw_wr{CSR write op to 0x7C0}, hw_sync_set{sync exception taken outside debug}, hw_mret_clr{mret retired}, hw_dbl_pulse{double_fault_seen_o pulse}, hw_irq{interrupt or NMI entry}, hw_dbg{debug entry or exception in debug mode}
@@ -1271,22 +1439,25 @@ Conventions
 
 ### CG-CSR-010: gen_cg_csr_secureseed
 - Features: F-CSR-092, F-CSR-093
-- Sample: rvfi_valid with a CSR instruction to 0x7C1 (trapped or not); condition: rvfi_valid && is_csr_insn && addr == 0x7C1; anti-vacuity: only secureseed accesses sample; the pulse coverpoint comes from the probe candidate below, so a hit on a pulse bin proves the reseed fired for exactly that op form.
+- Sample: rvfi_valid with a CSR instruction to 0x7C1 (trapped or not); condition: rvfi_valid && is_csr_insn && addr == 0x7C1; anti-vacuity: only secureseed accesses sample; the boundary form of the write/read distinction is the retirement gap to the next record (a write op flushes, csr_pipe_flush rtl/ibex_id_stage.sv:593-597, a demoted read does not), so a hit on a cr_op_form_gap bin proves that op form retired with the bubble its class implies; the pulse coverpoint comes from the probe candidate below (coverage-only) and a hit on a pulse bin proves the reseed fired for exactly that op form.
 - Coverpoints:
   - cp_op = rvfi_insn[14:12]: bins csrrw{001}, csrrs{010}, csrrc{011}, csrrwi{101}, csrrsi{110}, csrrci{111}
   - cp_rs1 = rvfi_insn[19:15]: bins zero{0}, nonzero{1..31}
   - cp_form = op form after demotion: bins rd_only{demoted reads}, wr{write ops}
-  - cp_pulse = dummy_instr_seed_en_o observed in the write cycle (probe): bins none{0}, pulse{1}
+  - cp_pulse = dummy_instr_seed_en_o observed in the write cycle (probe-gated P7, not in manifest): bins none{0}, pulse{1}
+  - cp_gap = cycles between this retirement and the next RVFI retirement, measured only with knob:imem_gnt_delay = same_cycle, knob:imem_rvalid_delay = min1, no dummy in the gap and no other stall source (S-4): bins g1{1: no flush, demoted read}, g2plus{>= 2: flush bubble, write op}
   - cp_seed_val = written seed value derived from RVFI iff (cp_form == wr) (csrrw: rs1 value; csrrwi: uimm; csrrs: rs1 value and csrrsi: uimm, because the read value is 0; csrrc/csrrci: 0), i.e. the value csr_wdata_int carries, without a probe: bins zero{0}, all1{0xFFFF_FFFF}, rand{other}
   - cp_dummy_en = cpuctrlsts.dummy_instr_en (CSR model) at the write iff (cp_form == wr): bins off{0}, on{1}
   - cp_priv = rvfi_mode: bins m{3}, u{0}
   - cp_trap = rvfi_trap: bins ok{0}, trap{1}
 - Crosses:
   - cr_op_form_pulse = cp_op x cp_rs1 x cp_pulse: bins csrrw_nz_pulse{csrrw nonzero pulse}, csrrw_x0_pulse{csrrw zero pulse}, csrrwi_0_pulse{csrrwi zero pulse}, csrrwi_nz_pulse{csrrwi nonzero pulse}, csrrs_nz_pulse{csrrs nonzero pulse}, csrrc_nz_pulse{csrrc nonzero pulse}, csrrsi_nz_pulse{csrrsi nonzero pulse}, csrrci_nz_pulse{csrrci nonzero pulse}, csrrs_x0_none{csrrs zero none}, csrrc_x0_none{csrrc zero none}, csrrsi_0_none{csrrsi zero none}, csrrci_0_none{csrrci zero none}; ignore demoted reads x pulse: csr_we_int is 0 for READ; ignore write forms x none in M-mode: the pulse is unconditional on csr_we_int
+  - cr_op_form_gap = cp_op x cp_rs1 x cp_gap (M-mode, no trap): bins csrrw_nz_flush{csrrw nonzero g2plus}, csrrw_x0_flush{csrrw zero g2plus}, csrrwi_0_flush{csrrwi zero g2plus}, csrrwi_nz_flush{csrrwi nonzero g2plus}, csrrs_nz_flush{csrrs nonzero g2plus}, csrrc_nz_flush{csrrc nonzero g2plus}, csrrsi_nz_flush{csrrsi nonzero g2plus}, csrrci_nz_flush{csrrci nonzero g2plus}, csrrs_x0_g1{csrrs zero g1}, csrrc_x0_g1{csrrc zero g1}, csrrsi_0_g1{csrrsi zero g1}, csrrci_0_g1{csrrci zero g1}; ignore write forms x g1: a write op always flushes (rtl/ibex_id_stage.sv:593-597); ignore demoted reads x g2plus: no flush for a READ under the min-latency qualifier
   - cr_seed_en = cp_seed_val x cp_dummy_en (wr): bins zero_on{zero on}, all1_on{all1 on}, rand_on{rand on}, rand_off{rand off}, zero_off{zero off}
   - cr_rd_value: RETIRED (S-7 single-bin cross; replaced by cr_form_priv_trap.rd_m_ok)
   - cr_u: RETIRED (S-7 single-bin cross; replaced by cr_form_priv_trap.rd_u_trap / wr_u_trap)
   - cr_form_priv_trap = cp_form x cp_priv x cp_trap: bins rd_m_ok{rd_only m ok: the read returns 0}, wr_m_ok{wr m ok}, rd_u_trap{rd_only u trap}, wr_u_trap{wr u trap}; ignore m x trap: 0x7C1 is an implemented M-level address, never illegal in M; ignore u x ok: csr[9:8] = 11 always traps in U
+- Probe status: candidate P7 (cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o and csr_wdata_int) is PROPOSED in dv/auto_dv/docs/gen_probe_register.md, Critic ruling pending; cp_pulse and cr_op_form_pulse are coverage-only, excluded from the Bins lines, the CSV and the manifests until ruled (rtl-arch T-053 UNOBSERVABLE rows TP-CSR-002/092/093); cr_op_form_gap is the boundary equivalent the items list
 - Adopted (riscv-dv): none
 - TP items: TP-CSR-002, TP-CSR-092, TP-CSR-093, TP-CSR-109, TP-CSR-110
 
@@ -1326,10 +1497,11 @@ Conventions
   - cr_enable_next = cp_enable x cp_next: bins enables_irq_taken{enables_pending irq_taken}, none_alu{none alu}, none_irq_taken{none irq_taken}
   - cr_fam_op = cp_fam x cp_op: bins mscratch_csrrw{mscratch csrrw}, mscratch_csrrs{mscratch csrrs}, mscratch_csrrc{mscratch csrrc}, mepc_csrrw{mepc csrrw}, mepc_csrrsi{mepc csrrsi}, other_csrrw{other_flush csrrw}, other_csrrs{other_flush csrrs}, other_csrrc{other_flush csrrc}, other_csrrwi{other_flush csrrwi}, other_csrrsi{other_flush csrrsi}, other_csrrci{other_flush csrrci}
 - Adopted (riscv-dv): none
-- TP items: TP-CSR-003, TP-CSR-006, TP-CSR-007, TP-CSR-026, TP-CSR-031, TP-CSR-033, TP-CSR-101, TP-CSR-102, TP-CSR-115, TP-CSR-116, TP-CSR-119
+- TP items: TP-CSR-003, TP-CSR-006, TP-CSR-007, TP-CSR-026, TP-CSR-031, TP-CSR-033, TP-CSR-101, TP-CSR-102, TP-CSR-103, TP-CSR-115, TP-CSR-116, TP-CSR-119
 
 ### CG-CSR-013: gen_cg_csr_counter_race
-- Features: F-CSR-034, F-CSR-060, F-CSR-063, F-CSR-064, F-CSR-065, F-CSR-067, F-CSR-068, F-CSR-070, F-CSR-072, F-CSR-073
+- Features: F-CSR-034, F-CSR-060, F-CSR-063, F-CSR-064, F-CSR-065, F-CSR-067, F-CSR-068, F-CSR-070,
+  F-CSR-072, F-CSR-073, F-PMC-007 (parent of folded bins hosted here)
 - Sample: rvfi_valid with a CSR instruction to mcycle(h), minstret(h), mhpmcounter3..2+MHPMCounterNum(h) or mip; condition: rvfi_valid && is_csr_insn && addr in that set && !rvfi_trap; anti-vacuity: the race coverpoints are derived from rvfi_ext_mcycle / rvfi_ext_mhpmcounters of the writer and of the neighbouring retirements and from the irq pins, so a hit proves the hardware update and the software access were adjacent in the way the bin names, and gen_chk_counters compared the result.
 - Coverpoints:
   - cp_csr = addr class: bins mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm_lo{0xB03..0xB02+MHPMCounterNum}, hpm10{0xB0A}, hpm_hi{0xB83..0xB82+MHPMCounterNum}, mip{0x344}
@@ -1355,7 +1527,7 @@ Conventions
 - Features: F-CSR-009, F-CSR-010, F-CSR-016, F-CSR-018, F-CSR-055, F-CSR-097
 - Sample: rvfi_valid with a CSR instruction whose address is outside the implemented set (CSR-02 list); condition: rvfi_valid && is_csr_insn && !implemented(addr); anti-vacuity: implemented addresses never sample; a hit proves an access to that hole class happened in that mode/form and gen_isa_compare checked the illegal-instruction trap with mtval = encoding.
 - Coverpoints:
-  - cp_range = hole range: bins r000_0ff{0x000..0x0FF}, r100_1ff{0x100..0x1FF}, r200_2ff{0x200..0x2FF}, r302_303{medeleg mideleg}, r307_309{0x307..0x309}, r30b_30f{0x30B..0x30F}, r311_319{0x311..0x319}, r31b_31f{0x31B..0x31F}, r321_322{0x321 0x322}, r345_39f{0x345..0x39F}, r3a4_3af{0x3A4..0x3AF}, r3c0_5a7{0x3C0..0x5A7}, r5a9_746{0x5A9..0x746}, r748_756{0x748..0x756}, r758_79f{0x758..0x79F}, r7a4_7a7{0x7A4..0x7A7}, r7a9{0x7A9}, r7ab_7af{0x7AB..0x7AF}, r7b4_7bf{0x7B4..0x7BF}, r7c2_7ff{0x7C2..0x7FF}, r800_aff{0x800..0xAFF}, rb01{0xB01}, rb81{0xB81}, rbc0{0xBC0}, rbc3{0xBC3}, rbc5_bff{0xBC5..0xBFF}, rc01{time}, rc81{timeh}, rc20_c7f{0xC20..0xC7F}, rca0_f10{0xCA0..0xF10}, rf16_fff{0xF16..0xFFF}, cheriot{0xBC1 0xBC2 0xBC4}
+  - cp_range = hole range: bins r000_0ff{0x000..0x0FF}, r100_1ff{0x100..0x1FF}, r200_2ff{0x200..0x2FF}, r302_303{medeleg mideleg}, r307_309{0x307..0x309}, r30b_30f{0x30B..0x30F}, r311_319{0x311..0x319}, r31b_31f{0x31B..0x31F}, r321_322{0x321 0x322}, r345_39f{0x345..0x39F}, r3a4_3af{0x3A4..0x3AF}, r3c0_5a7{0x3C0..0x5A7}, r5a9_746{0x5A9..0x746}, r748_756{0x748..0x756}, r758_79f{0x758..0x79F}, r7a4_7a7{0x7A4..0x7A7}, r7a9{0x7A9}, r7ab_7af{0x7AB..0x7AF}, r7b4_7bf{0x7B4..0x7BF}, r7c2_7ff{0x7C2..0x7FF}, r800_aff{0x800..0xAFF}, rb01{0xB01}, rb20_b7f{0xB20..0xB7F}, rb81{0xB81}, rba0_bbf{0xBA0..0xBBF}, rbc0{0xBC0}, rbc3{0xBC3}, rbc5_bff{0xBC5..0xBFF}, rc01{time}, rc81{timeh}, rc20_c7f{0xC20..0xC7F}, rca0_f10{0xCA0..0xF10}, rf16_fff{0xF16..0xFFF}, cheriot{0xBC1 0xBC2 0xBC4}
   - cp_class = coarse class: bins lo{0x000..0x2FF}, mhole{holes in 0x3xx 0x7xx 0xBxx}, mid_unpriv{0x400..0x4FF 0x800..0x8FF}, s_h_hole{0x5xx 0x6xx 0x9xx 0xAxx 0xDxx 0xExx holes}, ro_hole{unimplemented [11:10]=11 incl time}, dbg_hole{0x7B4..0x7BF}, cheriot{0xBC1 0xBC2 0xBC4}
   - cp_priv = rvfi_mode: bins m{3}, u{0}
   - cp_form = op form after demotion: bins rd{demoted read}, wr{write op}
@@ -1369,7 +1541,8 @@ Conventions
 - TP items: TP-CSR-009, TP-CSR-010, TP-CSR-014, TP-CSR-016, TP-CSR-018, TP-CSR-055, TP-CSR-098, TP-CSR-112, TP-CSR-116
 
 ### CG-CSR-015: gen_cg_csr_write_cancel
-- Features: F-CSR-008, F-CSR-101, F-CSR-102, F-CSR-103
+- Features: F-CSR-008, F-CSR-101, F-CSR-102, F-CSR-103, F-CSR-009 (parent of folded bins hosted
+  here)
 - Sample: a CSR write instruction that was in ID when a kill condition occurred, detected from RVFI: (a) the retirement immediately preceding it in program order trapped with an LSU error/PMP fault and the CSR instruction retires only after the handler's mret (re-execution), (b) the CSR instruction itself retires with rvfi_trap (fetch error, PMP fetch fault, illegal CSR), (c) debug entry with dpc == the CSR instruction PC; condition: any of a..c; anti-vacuity: an ordinary CSR write never matches; a hit proves the write was in flight when the kill happened, and gen_chk_csr_readback confirms the CSR kept its old value at the next read.
 - Coverpoints:
   - cp_cause = kill cause: bins wb_lsu_err{load/store bus error in WB}, wb_lsu_pmp{load/store PMP fault in WB}, fetch_err{instr_err on the CSR instruction}, fetch_pmp{PMP fetch fault on the CSR instruction}, illegal_csr{illegal CSR access}, dbg_req_before{debug entry with dpc == csr pc}
@@ -1500,7 +1673,7 @@ Conventions
   - cr_ebreak_cause = cp_kind x cp_ebreak_dcsr x cp_mcause x cp_mtval: bins ebreak_dcsr0_3{ebreak b0 brk zero}, c_ebreak_dcsr0_3{c_ebreak b0 brk zero}, ebreak_dcsr1_dbg{ebreak b1 debug entry}, c_ebreak_dcsr1_dbg{c_ebreak b1 debug entry}
   - cr_illegal_mtval = cp_kind x cp_trap(trap) x cp_mcause(ill) x cp_mtval(insn): bins mret_u_mtval{mret}, wfi_tw_mtval{wfi}, dret_mtval{dret}, sret_mtval{sret}, uret_mtval{uret}, sfence_mtval{sfence_vma}, nz_mtval{nz_rs1_rd}
 - Adopted (riscv-dv): none
-- TP items: TP-PRV-009, TP-PRV-015, TP-PRV-016, TP-PRV-019, TP-PRV-020, TP-PRV-021, TP-PRV-024, TP-PRV-027, TP-PRV-036
+- TP items: TP-PRV-009, TP-PRV-015, TP-PRV-016, TP-PRV-019, TP-PRV-020, TP-PRV-021, TP-PRV-024, TP-PRV-027, TP-PRV-036, TP-PRV-039
 
 ### CG-PRV-005: gen_cg_prv_wfi
 - Features: F-PRV-016, F-PRV-017, F-PRV-018, F-PRV-019, F-PRV-020
@@ -1509,17 +1682,17 @@ Conventions
   - cp_priv = rvfi_mode: bins m{3}, u{0}
   - cp_tw = mstatus.TW: bins b0{0}, b1{1}
   - cp_mie = mstatus.MIE: bins b0{0}, b1{1}
-  - cp_wake = wake source: bins irq_en{irq with mie bit set}, nmi{irq_nm_i}, dbg_req{debug_req_i}, step{dcsr.step}, none_pending_before{irq already pending no sleep}
+  - cp_wake = wake source: bins irq_en{irq with mie bit set, incl. already pending at the wfi}, nmi{irq_nm_i}, dbg_req{debug_req_i}, step{dcsr.step = 1 outside debug mode: FLUSH -> DBG_TAKEN_IF, WAIT_SLEEP never entered, rtl/ibex_controller.sv:985-987}, dbg_mode{wfi inside debug mode: one WAIT_SLEEP cycle, SLEEP exits on debug_mode_q, :614-616}; the former none_pending_before bin is dropped (X-8: an already-pending wake still gives the one WAIT_SLEEP cycle, it is irq_en x cp_len.one)
   - cp_irq_dis_seen = an irq pin with mie bit clear toggled during the sleep: bins no{0}, yes{1}
-  - cp_len = cycles with core_busy_o == IbexMuBiOff (ibex_mubi_t, the sleep observable; per gen_tb_architecture.md 8.2 item 1 it is Off in WAIT_SLEEP only while no instruction-bus beat is outstanding, no icache invalidation is active and the LSU is idle, so the sample waits for those conditions): bins zero{0}, short{1..16}, long{>16}
+  - cp_len = cycles with core_busy_o == IbexMuBiOff (ibex_mubi_t, the sleep observable; per gen_tb_architecture.md 8.2 item 1 it is Off in WAIT_SLEEP only while no instruction-bus beat is outstanding, no icache invalidation is active and the LSU is idle, so the sample waits for those conditions): bins zero{0: no Off cycle - only the stepped wfi, which never enters WAIT_SLEEP (X-8)}, one{1: the unconditional WAIT_SLEEP cycle with the wake already true, rtl/ibex_controller.sv:598-604}, short{2..16}, long{>16}
   - cp_post = what follows the wfi: bins irq_taken{handler entry}, resume_next{wfi+4 retires}, dbg_entry{debug entry}, trap_tw{illegal instruction}
   - cp_dbg = rvfi_ext_debug_mode: bins nondbg{0}, dbg{1}
 - Crosses:
   - cr_priv_tw_post = cp_priv x cp_tw x cp_post: bins m_tw0_irq_taken{m b0 irq_taken}, m_tw1_irq_taken{m b1 irq_taken}, m_tw0_resume{m b0 resume_next}, m_tw1_resume{m b1 resume_next}, u_tw0_irq_taken{u b0 irq_taken}, u_tw1_trap{u b1 trap_tw}, m_tw0_dbg{m b0 dbg_entry}, u_tw0_dbg{u b0 dbg_entry}; ignore u_tw1_irq_taken, u_tw1_resume, u_tw1_dbg: TW=1 in U traps immediately; ignore u_tw0_resume: U-mode interrupts are always enabled so a wake by irq is taken
   - cr_mie_post = cp_priv(m) x cp_mie x cp_post: bins m_mie0_resume{b0 resume_next}, m_mie1_irq_taken{b1 irq_taken}, m_mie0_dbg{b0 dbg_entry}, m_mie1_dbg{b1 dbg_entry}
-  - cr_len_wake = cp_len x cp_wake: bins zero_irq_en{zero irq_en}, short_irq_en{short irq_en}, long_irq_en{long irq_en}, long_nmi{long nmi}, short_nmi{short nmi}, long_dbg_req{long dbg_req}, short_dbg_req{short dbg_req}, zero_none_pending{zero none_pending_before}
+  - cr_len_wake = cp_len x cp_wake: bins one_irq_en{one irq_en: wake already pending at the wfi}, short_irq_en{short irq_en}, long_irq_en{long irq_en}, long_nmi{long nmi}, short_nmi{short nmi}, long_dbg_req{long dbg_req}, short_dbg_req{short dbg_req}, zero_step{zero step: C-5 stepped wfi}, one_dbg_mode{one dbg_mode: debug-mode wfi}; ignore zero x irq_en / nmi / dbg_req / dbg_mode: an unstepped wfi always passes through WAIT_SLEEP (one ctrl_busy = 0 cycle, rtl/ibex_controller.sv:598-604); ignore step x one / short / long: the stepped wfi never sleeps
   - cr_dis_irq = cp_irq_dis_seen(yes) x cp_wake: bins dis_then_irq_en{yes irq_en}, dis_then_nmi{yes nmi}, dis_then_dbg{yes dbg_req}
-  - cr_dbg_wfi = cp_dbg(dbg) x cp_len: bins dbg_zero{dbg zero}
+  - cr_dbg_wfi = cp_dbg(dbg) x cp_len: bins dbg_one{dbg one: WAIT_SLEEP entered regardless of debug_mode_q, SLEEP left in the same cycle}; ignore dbg_zero: the debug-mode wfi always shows the one WAIT_SLEEP cycle (X-8; the stepped wfi is outside debug mode); ignore dbg_short and dbg_long: SLEEP exits on debug_mode_q in its first cycle
 - Adopted (riscv-dv): none
 - TP items: TP-CSR-031, TP-PRV-015, TP-PRV-016, TP-PRV-017, TP-PRV-018, TP-PRV-019
 
@@ -1544,10 +1717,13 @@ Conventions
 - TP items: TP-CSR-026, TP-PRV-003, TP-PRV-007, TP-PRV-011, TP-PRV-017, TP-PRV-022, TP-PRV-023, TP-PRV-028, TP-PRV-030, TP-PRV-037, TP-PRV-038
 
 ### CG-PRV-007: gen_cg_prv_debug_priv
-- Features: F-PRV-005, F-PRV-015, F-PRV-025, F-PRV-026, F-PRV-027
-- Sample: (a) debug entry = first retirement with rvfi_ext_debug_mode rising, (b) dret retirement, (c) an exception inside debug mode: a trapped retirement (rvfi_trap = 1) with rvfi_ext_debug_mode == 1 vectoring to DmExceptionAddr, or an ebreak retiring in debug mode (re-entry at DmHaltAddr per rtl/ibex_controller.sv:874-882, no CSR save, identified by next fetch == DmHaltAddr, not by rvfi_trap); condition: any of a..c; anti-vacuity: only debug-related events sample; the dcsr.prv / MPRV / MPP values come from the debug program's own CSR reads (dcsr, mstatus) inside debug mode, so a hit proves a resume of that shape happened and gen_chk_debug / gen_chk_csr_readback checked dcsr/dpc/mstatus.
+- Features: F-PRV-005, F-PRV-015, F-PRV-025, F-PRV-026, F-PRV-027, F-PRV-036, F-DBG-012 (parent of folded bins
+  hosted here)
+- Sample: (a) debug entry = first retirement with rvfi_ext_debug_mode rising, (b) dret retirement, (d) an mret retired with rvfi_ext_debug_mode = 1 (legal: priv is M inside debug mode; PC <- mepc, priv <- MPP, debug_mode stays 1, rtl/ibex_controller.sv:954-960, RTL-defined F-PRV-036), (c) an exception inside debug mode: a trapped retirement (rvfi_trap = 1) with rvfi_ext_debug_mode == 1 vectoring to DmExceptionAddr, or an ebreak retiring in debug mode (re-entry at DmHaltAddr per rtl/ibex_controller.sv:874-882, no CSR save, identified by next fetch == DmHaltAddr, not by rvfi_trap); condition: any of a..c; anti-vacuity: only debug-related events sample; the dcsr.prv / MPRV / MPP values come from the debug program's own CSR reads (dcsr, mstatus) inside debug mode, so a hit proves a resume of that shape happened and gen_chk_debug / gen_chk_csr_readback checked dcsr/dpc/mstatus.
 - Coverpoints:
-  - cp_event = event: bins entry{debug entry}, dret{dret}, exc_in_dbg{exception in debug mode}
+  - cp_event = event: bins entry{debug entry}, dret{dret}, exc_in_dbg{exception in debug mode}, mret_in_dbg{mret retired with rvfi_ext_debug_mode = 1}
+  - cp_mret_dbg_mpp = mstatus.MPP before the debug-mode mret (CSR model, validated by the debug program's csrr) iff (cp_event == mret_in_dbg): bins u{00}, m{11}
+  - cp_mret_dbg_target = class of the next record's rvfi_pc_rdata (= mepc & ~1, C-1) iff (cp_event == mret_in_dbg): bins dm_rom{inside DmBaseAddr..DmBaseAddr + DmAddrMask}, outside{outside the DM window}
   - cp_from = mode before entry iff (cp_event == entry): bins m{3}, u{0}
   - cp_cause = dcsr.cause read in debug mode iff (cp_event == entry): bins ebreak{1}, trigger{2}, haltreq{3}, step{4}
   - cp_prv_written = value the debug program wrote to dcsr.prv before dret iff (cp_event == dret): bins none{no write}, u{00}, s{01}, h{10}, m{11}
@@ -1562,13 +1738,15 @@ Conventions
   - cr_entry_touched: RETIRED (S-3b; cp_mst_touched retired, cr_entry covers the entries)
   - cr_dret_prv = cp_prv_written x cp_prv_at_dret: bins none_m{none m}, none_u{none u}, u_u{u u}, s_u{s u}, h_u{h u}, m_m{m m}; ignore s_m and h_m: legalised to U
   - cr_dret_mprv = cp_prv_at_dret x cp_mprv_at_dret x cp_mpp_at_dret: bins u_1_m{u b1 m B1 core case}, u_1_u{u b1 u}, u_0_u{u b0 u}, u_0_m{u b0 m}, m_1_u{m b1 u}, m_1_m{m b1 m}, m_0_m{m b0 m}, m_0_u{m b0 u}
+  - cr_mret_dbg = cp_mret_dbg_mpp x cp_mret_dbg_target: bins m_dm_rom{m dm_rom}, u_dm_rom{u dm_rom}, m_outside{m outside}, u_outside{u outside: U privilege inside debug mode, RTL-defined}
   - cr_exc_dbg = cp_event(exc_in_dbg) x cp_exc_kind: bins illegal{illegal}, ecall{ecall}, ebreak{ebreak}, ls_fault{ls_fault}, fetch_fault{fetch_fault}, csr_illegal{csr_illegal} (the "M CSRs unchanged" witness moved to gen_chk_debug, S-3b)
 - Adopted (riscv-dv): none
-- TP items: TP-CSR-075, TP-CSR-077, TP-CSR-086, TP-PRV-004, TP-PRV-014, TP-PRV-024, TP-PRV-025, TP-PRV-026, TP-PRV-038
+- TP items: TP-CSR-075, TP-CSR-077, TP-CSR-086, TP-PRV-004, TP-PRV-014, TP-PRV-024, TP-PRV-025, TP-PRV-026, TP-PRV-038, TP-PRV-039
 
 ### CG-PRV-008: gen_cg_prv_trap_vector
-- Features: F-PRV-002, F-PRV-021, F-PRV-022, F-PRV-029, F-PRV-030, F-PRV-031, F-PRV-032
-- Sample: every trap entry (rvfi_pc_wdata of a trapped retirement, or rvfi_intr on the first handler retirement); condition: rvfi_trap || rvfi_intr; anti-vacuity: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (pc of the trapping instruction, of the next one, of the LSU instruction in WB) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval.
+- Features: F-PRV-002, F-PRV-021, F-PRV-022, F-PRV-029, F-PRV-030, F-PRV-031, F-PRV-032, F-CSR-047
+  (parent of folded bins hosted here)
+- Sample: every trap entry (the record following a trapped retirement, whose rvfi_pc_rdata is the vector - C-1: the trapped record's own rvfi_pc_wdata is the sequential fetch address - or rvfi_intr on the first handler retirement); condition: rvfi_trap || rvfi_intr; anti-vacuity: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval.
 - Coverpoints:
   - cp_cause = cause class: bins exc{synchronous exception}, irq_sw{cause 3}, irq_timer{cause 7}, irq_ext{cause 11}, irq_fast{cause 16..30}, nmi_ext{0x8000001F}, nmi_int{0xFFFFFFE0}, dbg_exc{exception in debug mode}
   - cp_fast_id = fast interrupt id iff (cp_cause == irq_fast) (ids 0..$bits(irq_fast_i)-1, generated): bins f0{0}, f1{1}, f2{2}, f3{3}, f4{4}, f5{5}, f6{6}, f7{7}, f8{8}, f9{9}, f10{10}, f11{11}, f12{12}, f13{13}, f14{14}
@@ -1593,18 +1771,20 @@ Conventions
 | Quantity | Count |
 |---|---|
 | covergroups | 25 (CG-CSR-001..017, CG-PRV-001..008) |
-| coverpoints | 206 (16 coverpoints/crosses retired in FIX2 stay listed as RETIRED lines for traceability) |
-| crosses | 118 |
-| coverpoint bins | 896 |
-| cross bins | 1188 |
-| total bins | 2084 |
+| coverpoints | 209 live (+16 coverpoints/crosses retired in FIX2 stay listed as RETIRED lines for traceability) |
+| crosses | 120 |
+| coverpoint bins | 906 |
+| cross bins | 1205 |
+| total bins | 2111 |
 | adopted (riscv-dv) bins | 0 |
-| bins referenced by at least one TP item | 2084 distinct (every non-ignored bin of a coverpoint or cross an item lists) |
-| ignore clauses declared | 50 (each with a reason; never-hit witnesses are checker facts, not bins) |
+| bins referenced by at least one TP item | 1505 distinct listed in Bins lines (3570 CSV rows incl. the constituent coverpoint bins of listed cross bins; the two P7 probe-gated coverpoints are excluded) |
+| ignore clauses declared | 56 (each with a reason; never-hit witnesses are checker facts, not bins) |
 
 Traceability convention for trace_tp_bin_csr.csv: an item row for a cross bin implies rows for the
 constituent coverpoint bins named in that cross bin's description (the CSV lists them explicitly:
-3540 rows after the FIX2 regeneration from the post-ignore bin set, adopted = 0 everywhere).
+3570 rows after the FIX3 delta - 25 P7 probe-gated / X-8-retired rows removed, 55 rows added for
+cr_op_form_gap, the two new hole ranges, TP-CSR-103, TP-PRV-008/018/019 and TP-PRV-039 - from the
+post-ignore bin set, adopted = 0 everywhere).
 Counts and ranges derive from ibex_pkg parameters as defined in the conventions (MHPMCounterNum,
 PMPNumRegions, $bits(irq_fast_i), DbgHwBreakNum); the bin lists above expand them for this build.
 
@@ -1614,13 +1794,14 @@ Bins that cannot be sampled from the DUT boundary or RVFI alone. The DV Lead dec
 named internal signal enters the probe register; each entry gives the boundary alternative used
 if the probe is refused.
 
-- CG-CSR-010.cp_pulse (and every cr_op_form_pulse bin): probe candidate P7 (probe register entry
-  needed; P1-P6 are taken in dv/auto_dv/docs/gen_probe_register.md): cs_registers_i.dummy_instr_seed_en_o
-  and dummy_instr_seed_o (rtl/ibex_cs_registers.sv:1914-1915); coverage and fire-check only, never a
-  checker input (F-CSR-092/093). The reseed has no boundary or RVFI
-  footprint (dummy instructions are not reported on RVFI and their cadence is not deterministic).
-  Alternative if refused: keep the read-back-0 / no-trap / no-flush bins only (cr_form_priv_trap,
-  cp_op x cp_rs1) and drop cp_pulse; TP-CSR-092/093 then lose their pulse fire-check.
+- CG-CSR-010.cp_pulse (and every cr_op_form_pulse bin): probe candidate P7 (PROPOSED in
+  dv/auto_dv/docs/gen_probe_register.md, Critic ruling pending; cp_pulse and cr_op_form_pulse are
+  coverage-only and excluded from the Bins lines, the CSV and the manifests until ruled):
+  cs_registers_i.dummy_instr_seed_en_o and dummy_instr_seed_o (rtl/ibex_cs_registers.sv:1914-1915);
+  never a fire-check or checker input (rtl-arch T-053 UNOBSERVABLE rows TP-CSR-002/092/093). The
+  reseed has no boundary or RVFI footprint (dummy instructions are not reported on RVFI and their
+  cadence is not deterministic). The items assert the boundary form instead: read-back 0, flush
+  bubble for write ops and none for demoted reads (cr_op_form_gap, cr_form_priv_trap).
 - CG-CSR-013.cp_carry_win (cp_carry_win.yes): the exact cycle of the mcycleh write commit is
   internal (cs_registers_i.csr_we_int with csr_addr == MCYCLEH; P6-class net, not requested). Boundary inference used by
   TP-CSR-064: rvfi_ext_mcycle of the retiring writer shows low == 0xFFFF_FFFF and high == written
@@ -1695,11 +1876,34 @@ Conventions
   $bits(irqs_t.irq_fast) + 3.
 - Decision cycle (S-4): the DECODE/FIRST_FETCH cycle N in which handle_irq holds with ID empty, no
   stall, no special request and WB done (rtl/ibex_controller.sv:704-713); IRQ_TAKEN = N + 1, where the
-  LIVE pins decide (CTRL-09). rvfi_ext_irq_valid is registered at N and visible at N + 1
-  (rtl/ibex_core.sv:1963-1968); rvfi_ext_pre_mip is captured when ID first empties, which can precede
-  the WB drain (:1948-1957), so the decision-cycle line vector is the pin monitor's value at
-  (rvfi_ext_irq_valid cycle - 1). RVFI-anchored timestamps are back-dated by one cycle (rvfi_valid is
-  one flop after WB exit, :1868); commit-to-record offsets: 2 (CSR writes), 1 (trap/mret/dret).
+  LIVE pins decide (CTRL-09). N is located from the pipeline state (ID empty per RVFI / the ibus
+  monitor, WB done per the dbus monitor, irq_pending_o with MIE or U-mode), never from the
+  rvfi_ext_irq_valid port: that port is a LEVEL (C-13 / fact-check X-16) whose internal flop is set at
+  N (rtl/ibex_core.sv:1965-1971) and which rises at N + 4 after three RVFI stages (:1992-2002,
+  :2134-2141, :2192-2199; RVFI_STAGES = 2, :1837), stays high until about two cycles after the
+  handler's first instruction enters ID, is not generated when ID emptied before WB drained
+  (captured_valid already set, :1949-1968), never coincides with rvfi_valid, and for a SLEEP wake
+  rises at W + 4 = IRQ_TAKEN + 2; where present it is compared as rise == N + 4. rvfi_ext_pre_mip is
+  captured when ID first empties, which can precede the WB drain (:1949-1957), so it equals the pins
+  at the CAPTURE cycle, not necessarily at N. RVFI-anchored timestamps are back-dated by one cycle
+  (rvfi_valid is one flop after WB exit, :1868); commit-to-record offsets: 2 (CSR writes,
+  GEN_CSR_WRITE_TO_RVFI_OFFSET), 1 (trap/mret/dret, GEN_TRAP_TO_RVFI_OFFSET); an exception commit
+  (pc_set / FLUSH) = trap record - 1. Redirect targets of trap / mret / dret records are the NEXT
+  record's rvfi_pc_rdata (their rvfi_pc_wdata is the next sequential fetch address, C-1 / X-1); only
+  branch / jump records carry the target in rvfi_pc_wdata.
+- ICache blindness (C-14): an ibus observation ("vector fetch", "no fetch at X", "first instr_req_o
+  after On") is valid only when the owning item pins cpuctrlsts.icache_enable = 0 or the RTL forces
+  the icache off (debug mode, the dret cycle, rtl/ibex_cs_registers.sv:1970-1971); the request is
+  issued in the pc_set cycle only when no fill buffer holds an ungranted request
+  (rtl/ibex_icache.sv:703, 764-776, 1030-1031). Bins that need a redirect derive it from RVFI.
+- Internal-NMI latency (C-7 / X-10, D21): up to two ordinary instructions (more records with a Zcmp
+  sequence) retire between the corrupted response and the NMI entry; CG-IRQ-008.cp_taken_after
+  counts them and the first directed integrity-error sim confirms the bound.
+- Trap-record fields (C-12 / X-14, X-15, B18): rvfi_mem_rmask / wmask are 0 on WB-trap records
+  (rtl/ibex_core.sv:2156-2157; rvfi_mem_addr kept, :2164) and carry the garbage decode on ID-trap
+  and non-store records; access kind / size are decoded from rvfi_insn. rvfi_insn is the 32-bit
+  expansion for Zcmp micro-ops (:2263-2267, halfword on rvfi_ext_expanded_insn) and the
+  zero-extended halfword 32'h00009002 for c.ebreak.
 - S-2: an ebreak that enters debug mode retires with rvfi_trap == 0 (rtl/ibex_core.sv:1885-1886); the
   debug path is is_ebreak(rvfi_insn) && !rvfi_trap && next fetch == DmHaltAddr, the exception path
   rvfi_trap == 1.
@@ -1772,9 +1976,9 @@ Conventions
 
 ### CG-EXC-004: gen_cg_exc_ebreak
 - Features: F-EXC-017, F-EXC-018, F-EXC-019, F-EXC-020, F-EXC-021, F-EXC-022
-- Sample: ev_a = retirement or trap record of EBREAK (rvfi_insn == 32'h00100073 after c.ebreak expansion; the debug path retires with rvfi_trap == 0 and the next fetch at DmHaltAddr, S-2); ev_b = each debug-entry event reported by gen_chk_debug with dcsr.cause in {EBREAK, TRIGGER}; ev_c = each configured trigger address reached in IF (tdata2 match candidate from the program listing); condition: one of those events; anti-vacuity: samples only when an ebreak/c.ebreak retired or trapped or a tdata2 address was fetched, so a hit proves the routing decision was exercised.
+- Sample: ev_a = retirement or trap record of EBREAK (rvfi_insn == 32'h00100073, or 32'h00009002 for c.ebreak, which is traced as the zero-extended halfword and never expanded, rtl/ibex_core.sv:2263-2265, X-14 / C-12; the debug path retires with rvfi_trap == 0 and the next fetch at DmHaltAddr, S-2); ev_b = each debug-entry event reported by gen_chk_debug with dcsr.cause in {EBREAK, TRIGGER}; ev_c = each configured trigger address reached in IF (tdata2 match candidate from the program listing); condition: one of those events; anti-vacuity: samples only when an ebreak/c.ebreak retired or trapped or a tdata2 address was fetched, so a hit proves the routing decision was exercised.
 - Coverpoints:
-  - cp_form iff ev_a = encoding form (rvfi_insn before expansion): bins ebreak32{rvfi_insn[1:0] == 3 in the raw fetch word}, c_ebreak16{raw halfword 16'h9002}
+  - cp_form iff ev_a = encoding form (rvfi_insn, C-12): bins ebreak32{rvfi_insn == 32'h00100073}, c_ebreak16{rvfi_insn == 32'h00009002}
   - cp_priv iff ev_a = privilege mode of the instruction (rvfi_mode): bins m, u
   - cp_dcsr_ebreak iff ev_a = {dcsr.ebreakm, dcsr.ebreaku} from the CSR model: bins m0u0, m1u0, m0u1, m1u1
   - cp_outcome iff ev_a = observed outcome: bins exception{cause 3, rvfi_trap == 1}, debug_entry{rvfi_trap == 0, rvfi_ext_debug_mode == 0 on the ebreak, next fetch DmHaltAddr, dcsr.cause = DBG_CAUSE_EBREAK}, debug_reentry{rvfi_ext_debug_mode == 1 on the ebreak: next fetch DmHaltAddr, dcsr/dpc unchanged}
@@ -1809,14 +2013,14 @@ Conventions
 - Features: F-EXC-025, F-EXC-026, F-EXC-027, F-EXC-028, F-EXC-029, F-EXC-030, F-EXC-031, F-EXC-032, F-EXC-033, F-EXC-034, F-EXC-035, F-EXC-036, F-EXC-037, F-EXC-038, F-EXC-039, F-EXC-040, F-EXC-069
 - Sample: ev_a = a trap record with predicted cause 5 or 7, correlated with the dbus monitor transactions of that instruction (request pattern, error response cycle, gnt-to-rvalid latency); ev_b (cp_mis_no_trap only) = a retired misaligned access (two dbus requests for one rvfi_mem_* record) with rvfi_trap == 0; condition: ev_a rvfi_trap && cause in {5,7}, ev_b split access retired; anti-vacuity: only injected data_err_i responses or PMP-denied data accesses give cause 5/7, so a hit of ev_a proves such a fault was taken with the recorded pipeline context; ev_b samples only split accesses, so a hit proves a misaligned access completed without a cause-4/6 trap.
 - Coverpoints:
-  - cp_op iff ev_a = access kind (rvfi_mem_rmask vs rvfi_mem_wmask): bins load, store
+  - cp_op iff ev_a = access kind decoded from rvfi_insn (rvfi_mem_rmask / wmask are zero on WB-trap records, rtl/ibex_core.sv:2156-2157, X-15 / C-12; the dbus record confirms data_we_o): bins load, store
   - cp_source iff ev_a = fault origin (dbus error response vs gen_chk_pmp deny): bins bus_err{data_err_i response}, pmp{D-side PMP deny; no bus request for that half}
   - cp_align iff ev_a = which part of the access faulted: bins aligned{single word}, mis_first{misaligned, first half faults}, mis_second{misaligned, second half faults}, mis_both{both halves fault}
-  - cp_size iff ev_a = access size from the RVFI mask: bins byte, half, word
+  - cp_size iff ev_a = access size from rvfi_insn funct3 (the masks are zero on WB-trap records, C-12): bins byte, half, word
   - cp_zcmp iff ev_a = the faulting access is a Zcmp micro-op: bins none, cm_push_op, cm_pop_op{cm.pop/cm.popret/cm.popretz}
   - cp_op_pos iff (ev_a && cp_zcmp != none) = micro-op index within the Zcmp sequence: bins first, middle, last
   - cp_younger iff ev_a = the instruction in ID when the fault response arrived (next program-order instruction after the faulting one that did not retire before the trap): bins none{ID empty}, alu, branch, jump, load_store, csr_rw, illegal, ecall_ebreak, wfi, mret, fetch_errored
-  - cp_spec_fetch iff ev_a = instr_addr_o hit the younger branch/jump target before the vector (ibus monitor): bins yes, no
+  - cp_spec_fetch iff ev_a = instr_addr_o hit the younger branch/jump target between the branch's ID arrival and the trap commit (ibus monitor, icache off per the owning items; a taken branch / jal / jalr redirects IF in its FIRST ID cycle under instr_executing_spec, rtl/ibex_id_stage.sv:889-941, 1054-1057): bins yes, no{not-taken branch, load-dependent branch / jalr held by stall_ld_hz, or the branch arrived in the error cycle}
   - cp_mtval_class iff ev_a = mtval read-back: bins eq_addr{unaligned effective address}, eq_second_word{(addr & ~3) + 4}
   - cp_resp_latency iff ev_a = gnt-to-rvalid cycles of the erroring response: bins one{1}, short{[2:4]}, long{[5:$]}
   - cp_irq_pending: RETIRED (S-7 single owner): interrupt state at an exception commit is CG-EXC-013.cp_irq_at_commit
@@ -1851,7 +2055,8 @@ Conventions
 - TP items: TP-EXC-006, TP-EXC-012, TP-EXC-015, TP-EXC-035, TP-EXC-040, TP-EXC-065, TP-EXC-072, TP-IRQ-026
 
 ### CG-EXC-008: gen_cg_exc_zcmp
-- Features: F-EXC-015, F-EXC-043, F-EXC-044, F-EXC-045, F-IRQ-020
+- Features: F-EXC-015, F-EXC-043, F-EXC-044, F-EXC-045, F-IRQ-020, F-EXC-003 (parent of folded bins
+  hosted here)
 - Sample: a trap record or interrupt entry whose faulting/interrupted instruction is a Zcmp cm.* (rvfi_ext_expanded_insn_valid seen for that pc, or rvfi_insn is a cm.* encoding), and the Zcmp reserved-rlist illegal trap; condition: cm.* pc identified; anti-vacuity: only cm.push/cm.pop* instructions sample, so a hit proves a sequence was hit by a fault or an interrupt at the recorded micro-op.
 - Coverpoints:
   - cp_seq = Zcmp form (encoding): bins cm_push, cm_pop, cm_popret, cm_popretz
@@ -1875,17 +2080,18 @@ Conventions
   - cp_context = debug context at the event: bins in_debug, not_debug_req_same_cycle, not_debug_step
   - cp_dcsr_prv iff (cp_context == in_debug) = dcsr.prv at the event: bins m, u
   - cp_seen_pre = cpuctrlsts.sync_exc_seen before: bins seen0, seen1
-  - cp_target = first fetch address after the event (ibus monitor): bins dm_exception_addr, dm_halt_addr, mtvec_base
+  - cp_target = rvfi_pc_rdata of the first retirement after the event (RVFI, C-14; in debug mode and at DBG_TAKEN_IF the icache is forced off, so the ibus agrees): bins dm_exception_addr, dm_halt_addr; ignore_bins mtvec_base: the group samples only debug contexts, in which the handler never retires first (in_debug: a checker failure; same-cycle debug request / step: FLUSH -> DBG_TAKEN_IF lands at DmHaltAddr with dpc = the vector, rtl/ibex_controller.sv:985-987; the vector word may be requested speculatively but never retires)
 - Crosses:
   - cr_cause_context = cp_cause x cp_context: bins {fetch_fault_in_debug, illegal_in_debug, load_fault_in_debug, store_fault_in_debug, ecall_in_debug, ebreak_in_debug, fetch_fault_not_debug_req_same_cycle, illegal_not_debug_req_same_cycle, load_fault_not_debug_req_same_cycle, store_fault_not_debug_req_same_cycle, ecall_not_debug_req_same_cycle, illegal_not_debug_step, ecall_not_debug_step, load_fault_not_debug_step}
-  - cr_context_target = cp_context x cp_target: bins {in_debug_dm_exception_addr, in_debug_dm_halt_addr, not_debug_req_same_cycle_dm_halt_addr, not_debug_step_dm_halt_addr}; ignore in_debug x mtvec_base: the handler is never fetched in debug mode (checker failure); ignore not_debug_req_same_cycle/not_debug_step x dm_exception_addr: DmExceptionAddr is reachable from debug mode only
+  - cr_context_target = cp_context x cp_target: bins {in_debug_dm_exception_addr, in_debug_dm_halt_addr, not_debug_req_same_cycle_dm_halt_addr, not_debug_step_dm_halt_addr}; ignore any x mtvec_base: see cp_target; ignore not_debug_req_same_cycle/not_debug_step x dm_exception_addr: DmExceptionAddr is reachable from debug mode only
   - cr_cause_prv = cp_cause x cp_dcsr_prv: bins {illegal_u, ecall_u, load_fault_u, store_fault_u, fetch_fault_u, illegal_m, ecall_m, load_fault_m}
   - cr_context_seen = cp_context x cp_seen_pre: bins {in_debug_seen1, in_debug_seen0, not_debug_req_same_cycle_seen1}
 - Adopted (riscv-dv): none
 - TP items: TP-EXC-019, TP-EXC-045, TP-EXC-046, TP-EXC-047, TP-EXC-048, TP-IRQ-043
 
 ### CG-EXC-010: gen_cg_exc_double_fault
-- Features: F-EXC-047, F-EXC-054, F-EXC-055, F-EXC-056, F-EXC-057, F-EXC-058, F-EXC-059
+- Features: F-EXC-047, F-EXC-054, F-EXC-055, F-EXC-056, F-EXC-057, F-EXC-058, F-EXC-059, F-SEC-022
+  (parent of folded bins hosted here)
 - Sample: every event that moves the gen_chk_double_fault model: trap entries (sync/irq/nmi), retired mret, retired csrw/csrs/csrc cpuctrlsts, and each double_fault_seen_o pulse; condition: model event or output pulse; anti-vacuity: idle cycles never sample, so a hit proves an arming, clearing or pulse event happened and was compared against the model.
 - Coverpoints:
   - cp_event = event kind: bins sync_arm{sync exception with seen 0 -> 1}, sync_double{sync exception with seen = 1: pulse}, irq_seen1{interrupt entry with seen = 1: no pulse, no clear}, nmi_seen1, mret_exc_handler{clears}, mret_irq_in_exc{mret of an interrupt handler nested inside an exception handler: clears sync_exc_seen (documented behaviour, exception_interrupts.rst:191 / cs_registers.rst:556; design-weakness note B12, not a bug candidate)}, mret_nmi_handler{clears}, sw_clear_seen, sw_set_seen, sw_clear_double, sw_set_double_no_pulse, exc_in_debug_seen1{no arm, no pulse}, storm_3plus{>= 3 consecutive vector re-entries}
@@ -1924,7 +2130,8 @@ Conventions
 - TP items: TP-EXC-009, TP-EXC-050, TP-EXC-051, TP-EXC-052, TP-EXC-053, TP-EXC-061, TP-IRQ-028, TP-IRQ-032, TP-IRQ-034, TP-IRQ-035, TP-IRQ-036, TP-IRQ-037
 
 ### CG-EXC-012: gen_cg_exc_trap_csrs
-- Features: F-EXC-001, F-EXC-042, F-EXC-049, F-EXC-063, F-EXC-065, F-EXC-066
+- Features: F-EXC-001, F-EXC-042, F-EXC-049, F-EXC-063, F-EXC-065, F-EXC-066, F-EXC-050 (parent of
+  folded bins hosted here)
 - Sample: completion of the handler read-back set for one trap (gen_chk_csr_readback matches the retired csrr mepc/mcause/mtval/mstatus to the trap), with crash_dump_o and the minstret read-back sampled at that point; condition: read-back set complete; anti-vacuity: samples once per trap whose handler reads the CSRs, so a hit proves the written values were observed and compared.
 - Coverpoints:
   - cp_kind = trap kind (sync exception / interrupt / NMI): bins sync, irq, nmi_ext, nmi_int
@@ -1945,11 +2152,13 @@ Conventions
 - TP items: TP-EXC-001, TP-EXC-003, TP-EXC-013, TP-EXC-022, TP-EXC-023, TP-EXC-024, TP-EXC-030, TP-EXC-041, TP-EXC-049, TP-EXC-063, TP-EXC-066, TP-EXC-067, TP-IRQ-001, TP-IRQ-007, TP-IRQ-013, TP-IRQ-044
 
 ### CG-EXC-013: gen_cg_exc_timing
-- Features: F-EXC-016, F-EXC-035, F-EXC-060, F-EXC-062, F-EXC-069, F-IRQ-021, F-IRQ-022
-- Sample: an exception commit = the cycle of instr_req_o to mtvec base or DmExceptionAddr that the trap record confirms (the record's rvfi_valid is one flop after WB exit, so the record is back-dated by one cycle to the commit, S-4), with the cycle bookkeeping of the dbus/ibus monitors and the irq monitor at the trigger cycle; condition: commit detected; single owner of the exception-side "commit x interrupt pending" coverage (S-7); anti-vacuity: only exception commits sample, so a hit proves a trap was committed with the recorded latency and bus/irq context.
+- Features: F-EXC-016, F-EXC-035, F-EXC-060, F-EXC-062, F-EXC-069, F-IRQ-021, F-IRQ-022, F-EXC-001
+  (parent of folded bins hosted here)
+- Sample: an exception commit = the pc_set / FLUSH cycle = the trap record's cycle - GEN_TRAP_TO_RVFI_OFFSET (1) (S-4; the vector request on the ibus is >= that cycle and bus-visible only with the icache off, C-14, so the record, not the request, anchors the commit), with the cycle bookkeeping of the dbus/ibus monitors and the irq monitor at the trigger cycle; condition: commit detected; single owner of the exception-side "commit x interrupt pending" coverage (S-7); anti-vacuity: only exception commits sample, so a hit proves a trap was committed with the recorded latency and bus/irq context.
 - Coverpoints:
   - cp_exc_stage = stage raising the exception: bins id_cause{fetch fault / illegal / ecall / ebreak}, wb_cause{load / store fault}
-  - cp_latency = cycles from the trigger (ID: the instruction's arrival in ID = ibus delivery + the fixed IF->ID offset, valid only with cpuctrlsts.icache_enable = 0; WB: the error response cycle) to instr_req_o at the vector: bins min{1}, two{2}, three_five{[3:5]}, long{[6:$]}
+  - cp_latency = cycles from the trigger (ID: the instruction's arrival in ID = ibus delivery + the fixed IF->ID offset, valid only with cpuctrlsts.icache_enable = 0; WB: the error response cycle) to the commit (pc_set = trap record - 1): bins min{1}, two{2}, three_five{[3:5]}, long{[6:$]}
+  - cp_vector_req_delay = cycles from the commit to instr_req_o at the vector (ibus monitor; valid only with cpuctrlsts.icache_enable = 0 per the owning items, C-14): bins same_cycle{0}, deferred{[1:$]: a fill buffer held an ungranted prefetch request, rtl/ibex_icache.sv:703, 764-776, 1030-1031}
   - cp_wb_at_id_exc iff (cp_exc_stage == id_cause) = WB content when an ID exception was requested: bins wb_empty, wb_ls_ok, wb_ls_fault_wins
   - cp_irq_at_commit = interrupt state at the commit cycle (irq monitor): bins none{irq_pending_o == 0 && !irq_nm_i}, irq_enabled{irq_pending_o && (MIE || U-mode)}, nmi{irq_nm_i || internal NMI pending}
   - cp_ibus_at_commit = instruction-bus state at the trigger cycle: bins idle, gnt_pending, rvalid_pending
@@ -1967,8 +2176,9 @@ Conventions
 ## Covergroups: IRQ
 
 ### CG-IRQ-001: gen_cg_irq_entry
-- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053, F-IRQ-057, F-IRQ-058
-- Sample: interrupt entry: rvfi_valid && rvfi_intr on the first handler instruction (or an rvfi_ext_irq_valid pulse followed by the handler pc), with the cause from the handler csrr mcause read-back / gen_chk_irq model and the CSR model state before the entry; condition: rvfi_intr or rvfi_ext_irq_valid; anti-vacuity: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry.
+- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053,
+  F-IRQ-057, F-IRQ-058, F-IRQ-045 (parent of folded bins hosted here)
+- Sample: interrupt entry: rvfi_valid && rvfi_intr on the first handler instruction, with the cause from the handler csrr mcause read-back / gen_chk_irq model and the CSR model state before the entry (the rvfi_ext_irq_valid level, C-13, is recorded per entry as a marker, never used as the event); condition: rvfi_intr; anti-vacuity: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry.
 - Coverpoints:
   - cp_line = cause of the entry: bins software{3}, timer{7}, external{11}, fast[15]{[16:30], id = CSR_MFIX_BIT_LOW + index, count = $bits(irqs_t.irq_fast)}, nmi_ext{31}, nmi_int{0xFFFFFFE0}
   - cp_priv_pre = privilege before the entry (rvfi_mode of the last retired instruction / CSR model): bins m, u
@@ -1977,19 +2187,19 @@ Conventions
   - cp_mepc_src = what mepc points at: bins sequential{next sequential pc}, branch_target, jump_target, mret_target, dret_target, wfi_next{wfi + 4}, boot_pc{reset-time NMI}, cm_pc{restart pc of an interrupted Zcmp sequence}
   - cp_u_path iff (cp_priv_pre == u) = how U-mode was reached: bins mret_mpp_u, dret_prv_u
   - cp_u_pending_at_return iff (cp_priv_pre == u) = line state at the return into U: bins already_pending{line pending at the mret/dret}, arrived_later
-  - cp_rvfi_marks = RVFI interrupt markers: bins intr_with_pre_mip{rvfi_intr with rvfi_ext_pre_mip != 0}, irq_valid_pulse{rvfi_ext_irq_valid seen}, pre_post_mip_equal, pre_post_mip_differ, nmi_flag{rvfi_ext_nmi}, nmi_int_flag{rvfi_ext_nmi_int}; ignore_bins exc_handler_first_intr0: unreachable under this group's sample (rvfi_intr is set for interrupt vectors only, rtl/ibex_core.sv:2403-2413, so an exception handler's first instruction never samples here); the negative property is owned by gen_isa_compare (S-3d)
+  - cp_rvfi_marks = RVFI interrupt markers: bins intr_with_pre_mip{rvfi_intr with rvfi_ext_pre_mip != 0}, irq_valid_level{rvfi_ext_irq_valid level seen for the entry, rising at N + 4 with rvfi_valid == 0 throughout (C-13 / X-16)}, irq_valid_absent{entry with no rvfi_ext_irq_valid: ID emptied before WB drained, rtl/ibex_core.sv:1949-1968}, pre_post_mip_equal, pre_post_mip_differ, nmi_flag{rvfi_ext_nmi}, nmi_int_flag{rvfi_ext_nmi_int}; ignore_bins exc_handler_first_intr0: unreachable under this group's sample (rvfi_intr is set for interrupt vectors only, rtl/ibex_core.sv:2403-2413, so an exception handler's first instruction never samples here); the negative property is owned by gen_isa_compare (S-3d)
 - Crosses:
   - cr_line_priv_mie = cp_line x cp_priv_pre x cp_mie_global: bins {software_m_mie1, software_u_mie0, software_u_mie1, timer_m_mie1, timer_u_mie0, timer_u_mie1, external_m_mie1, external_u_mie0, external_u_mie1, fast_0_m_mie1, fast_0_u_mie0, fast_7_u_mie1, fast_14_m_mie1, fast_14_u_mie0, nmi_ext_m_mie0, nmi_ext_m_mie1, nmi_ext_u_mie0, nmi_ext_u_mie1, nmi_int_m_mie0, nmi_int_m_mie1, nmi_int_u_mie0}; ignore {software, timer, external, fast_*} x m x mie0: not taken in M-mode with MIE clear
   - cr_line_mepc = cp_line x cp_mepc_src: bins {software_sequential, timer_branch_target, external_jump_target, fast_3_mret_target, fast_9_dret_target, external_wfi_next, nmi_ext_boot_pc, fast_0_cm_pc, nmi_ext_wfi_next, nmi_int_sequential, software_mret_target, timer_dret_target, fast_14_sequential, external_branch_target}; ignore cp_line != nmi_ext x boot_pc: at reset mie is 0 and no data access has completed, so only the external NMI can be taken before the first instruction
   - cr_upath_pending = cp_u_path x cp_u_pending_at_return x cp_mie_global (U entries only, via the iff of both operands): bins {mret_mpp_u_already_pending_mie0, mret_mpp_u_already_pending_mie1, mret_mpp_u_arrived_later_mie0, mret_mpp_u_arrived_later_mie1, dret_prv_u_already_pending_mie0, dret_prv_u_arrived_later_mie1}
   - cr_line_others = cp_line x cp_others: bins {fast_0_others_pending_lower, external_others_pending_lower, software_others_pending_lower, timer_only_this, fast_14_others_pending_lower, software_only_this, external_others_enabled_idle}
-  - cr_line_marks = cp_line x cp_rvfi_marks: bins {software_intr_with_pre_mip, fast_5_intr_with_pre_mip, nmi_ext_nmi_flag, nmi_int_nmi_int_flag, external_irq_valid_pulse, timer_pre_post_mip_differ}
+  - cr_line_marks = cp_line x cp_rvfi_marks: bins {software_intr_with_pre_mip, fast_5_intr_with_pre_mip, nmi_ext_nmi_flag, nmi_int_nmi_int_flag, external_irq_valid_level, timer_pre_post_mip_differ}
 - Adopted (riscv-dv): none
 - TP items: TP-IRQ-001, TP-IRQ-002, TP-IRQ-003, TP-IRQ-004, TP-IRQ-005, TP-IRQ-006, TP-IRQ-007, TP-IRQ-012, TP-IRQ-013, TP-IRQ-014, TP-IRQ-019, TP-IRQ-021, TP-IRQ-025, TP-IRQ-028, TP-IRQ-029, TP-IRQ-031, TP-IRQ-034, TP-IRQ-044, TP-IRQ-049, TP-IRQ-053, TP-IRQ-057, TP-IRQ-059, TP-IRQ-061, TP-IRQ-062, TP-IRQ-065, TP-IRQ-071, TP-IRQ-074
 
 ### CG-IRQ-002: gen_cg_irq_priority
 - Features: F-IRQ-009, F-IRQ-010, F-IRQ-011, F-IRQ-026, F-IRQ-034, F-IRQ-041, F-IRQ-063
-- Sample: the decision cycle of an interrupt (Conventions: cycle N = rvfi_ext_irq_valid cycle - 1, lines from the pin monitor at N, not rvfi_ext_pre_mip, which is captured when ID first empties and may precede the WB drain, rtl/ibex_core.sv:1948-1957); condition: popcount(pins_at_N & mie) + irq_nm_i + internal-NMI-pending >= 2; anti-vacuity: single-line entries do not sample, so a hit proves a real arbitration between at least two takeable sources.
+- Sample: the decision cycle of an interrupt (Conventions: N located from the pipeline state, C-13; lines from the pin monitor at N, not rvfi_ext_pre_mip, which is captured when ID first empties and may precede the WB drain, rtl/ibex_core.sv:1949-1957); condition: popcount(pins_at_N & mie) + irq_nm_i + internal-NMI-pending >= 2; anti-vacuity: single-line entries do not sample, so a hit proves a real arbitration between at least two takeable sources.
 - Coverpoints:
   - cp_set = which sources contended: bins fast_fast{>= 2 fast lines}, fast_external, fast_software, fast_timer, external_software, external_timer, software_timer, nmi_fast, nmi_external, nmi_software, nmi_timer, nmi_ext_nmi_int, three_plus{>= 3 distinct classes}, all18{all NUM_IRQ_LINES = $bits(irqs_t.irq_fast) + 3 lines pending and enabled}
   - cp_winner = cause taken: bins nmi_ext, nmi_int, fast, external, software, timer
@@ -2022,7 +2232,9 @@ Conventions
 - TP items: TP-IRQ-007, TP-IRQ-008, TP-IRQ-009, TP-IRQ-010, TP-IRQ-011, TP-IRQ-012, TP-IRQ-037, TP-IRQ-043, TP-IRQ-063, TP-IRQ-064, TP-IRQ-070, TP-IRQ-071, TP-IRQ-075, TP-IRQ-077, TP-IRQ-078
 
 ### CG-IRQ-004: gen_cg_irq_timing
-- Features: F-IRQ-016, F-IRQ-017, F-IRQ-018, F-IRQ-019, F-IRQ-020, F-IRQ-021, F-IRQ-022, F-IRQ-023, F-IRQ-024, F-IRQ-025, F-IRQ-026, F-IRQ-059, F-IRQ-060, F-IRQ-064
+- Features: F-IRQ-016, F-IRQ-017, F-IRQ-018, F-IRQ-019, F-IRQ-020, F-IRQ-021, F-IRQ-022, F-IRQ-023,
+  F-IRQ-024, F-IRQ-025, F-IRQ-026, F-IRQ-059, F-IRQ-060, F-IRQ-064, F-EXC-035, F-IRQ-045 (parent of
+  folded bins hosted here)
 - Sample: the first cycle in which an interrupt request becomes takeable (irq monitor: a line pending-and-enabled with MIE or U-mode, or irq_nm rising, outside debug/step/nmi_mode), classified by the pipeline situation of that cycle from the dbus/ibus/RVFI monitors and the program listing (ID occupancy from ibus delivery + the fixed IF->ID offset requires cpuctrlsts.icache_enable = 0, else from RVFI back-dated by one cycle, S-4); the outcome is recorded at the decision cycle N / IRQ_TAKEN N + 1 (Conventions) or at the request's abandonment; condition: one sample per request; anti-vacuity: idle cycles never sample, so a hit proves a request arrived in the named context and its outcome was compared.
 - Coverpoints:
   - cp_ctx = pipeline situation at arrival: bins id_empty, id_alu, id_branch, id_jump, id_load_wait{load waiting for data_rvalid_i}, id_store_wait, id_div, id_mul, id_csr_flush{csr write not touching mie/mstatus/mtvec}, id_csr_enable{csrs mstatus.MIE or csrw/csrs mie enabling this line}, id_csr_disable{write masking this line}, id_csr_mtvec, id_mret, id_dret, id_wfi, id_exc{ecall/ebreak/illegal/fetch-error in ID}, wb_fault_same_cycle{data_err_i response this cycle}, zcmp_expanded, zcmp_commit, first_fetch_wake{FIRST_FETCH after a WFI wake}, reset_release, fetch_stall_gnt{ibus request waiting for gnt}, fetch_stall_rvalid
@@ -2031,8 +2243,10 @@ Conventions
   - cp_latency = cycles from the sample to instr_req_o at the vector: bins two{2}, three_five{[3:5]}, six_ten{[6:10]}, long{[11:$]}
   - cp_pulse_width = cycles the winning line stayed high (pin monitor): bins one{1}, two{2}, three_plus{[3:$], dropped by the driver before any ack}, level_until_ack{held until the handler's ack}
   - cp_change_before_taken = line change between the decision cycle N and IRQ_TAKEN N + 1 (pin monitor): bins stable{same enabled set}, dropped_all{no takeable source left at N + 1}, dropped_winner_other_remains{the N winner is low at N + 1, a lower line remains}, higher_added{a higher-priority line is high at N + 1}, lower_added{a lower-priority line is added at N + 1}
+  - cp_records_to_entry iff (cp_outcome in {taken, taken_other_line}) = ordinary records retired between the request's arrival cycle and the entry (RVFI; the instruction in ID at the arrival completes first and, in the RVALID-wait context, so does the successor already in ID, C-3 / X-7, rtl/ibex_controller.sv:296, 700-713): bins zero{0}, one{1}, two{2}, three_plus{[3:GEN_IRQ_ENTRY_BOUND_RECORDS]: a Zcmp sequence in ID at the arrival}
 - Crosses:
   - cr_ctx_outcome = cp_ctx x cp_outcome: bins {id_empty_taken, id_alu_taken, id_branch_taken, id_jump_taken, id_load_wait_taken, id_store_wait_taken, id_div_taken, id_mul_taken, id_csr_flush_taken, id_csr_enable_taken, id_csr_disable_masked_by_write, id_csr_mtvec_taken, id_mret_taken, id_dret_taken, id_wfi_taken, id_exc_deferred_by_exception, wb_fault_same_cycle_deferred_by_exception, zcmp_expanded_taken, zcmp_commit_taken, first_fetch_wake_taken, reset_release_taken, fetch_stall_gnt_taken, fetch_stall_rvalid_taken, id_empty_withdrawn, id_load_wait_withdrawn, id_empty_taken_other_line, id_div_withdrawn}; ignore id_exc/wb_fault_same_cycle x taken/taken_other_line/withdrawn/masked_by_write: an exception present at the decision wins by definition (deferred_by_exception); ignore id_csr_disable x taken: the write masks the line (masked_by_write, or taken_other_line for another line)
+  - cr_ctx_records = cp_ctx x cp_records_to_entry: bins {id_empty_zero, id_alu_one, id_load_wait_one, id_load_wait_two, id_store_wait_one, id_store_wait_two, fetch_stall_gnt_zero, fetch_stall_rvalid_zero, zcmp_expanded_three_plus}; ignore id_empty x one/two/three_plus: nothing in ID or WB completes; ignore id_load_wait/id_store_wait x zero: the access in WB retires first; ignore id_alu/id_branch/id_jump/id_div/id_mul/id_csr_*/id_mret/id_dret/id_wfi x two/three_plus: one instruction in ID, the successor is blocked by halt_if
   - cr_ctx_rvalid = cp_ctx x cp_rvalid_relation: bins {id_load_wait_same_cycle_as_rvalid, id_load_wait_before_rvalid, id_load_wait_after_rvalid, id_store_wait_same_cycle_as_rvalid, id_store_wait_before_rvalid}
   - cr_ctx_latency = cp_ctx x cp_latency: bins {id_empty_two, id_load_wait_three_five, id_load_wait_six_ten, id_load_wait_long, id_div_long, id_div_six_ten, zcmp_expanded_three_five, zcmp_commit_six_ten, fetch_stall_rvalid_long, first_fetch_wake_two, id_mret_two, id_mret_three_five}
   - cr_pulse_change_outcome = cp_pulse_width x cp_change_before_taken x cp_outcome: bins {one_dropped_all_withdrawn, two_dropped_all_withdrawn, two_stable_taken, level_until_ack_stable_taken, three_plus_higher_added_taken_other_line, three_plus_lower_added_taken, three_plus_dropped_winner_other_remains_taken_other_line, three_plus_stable_taken} (two_dropped_all_withdrawn: the pulse's second cycle is the decision cycle, an instruction occupied ID during its first; two_stable_taken: the pulse's first cycle is the decision cycle, high at N + 1); ignore one x stable/higher_added/lower_added: a one-cycle pulse is low in IRQ_TAKEN (CTRL-09), so it is never stable and never taken; ignore level_until_ack x dropped_all/dropped_winner_other_remains: a level held until the ack cannot drop before IRQ_TAKEN; ignore dropped_all x taken/taken_other_line/masked_by_write and stable x withdrawn/taken_other_line and dropped_winner_other_remains x taken/withdrawn and higher_added x taken: the outcome is fixed by the N + 1 line set (CTRL-09)
@@ -2040,7 +2254,8 @@ Conventions
 - TP items: TP-IRQ-012, TP-IRQ-020, TP-IRQ-021, TP-IRQ-022, TP-IRQ-023, TP-IRQ-024, TP-IRQ-025, TP-IRQ-026, TP-IRQ-027, TP-IRQ-028, TP-IRQ-029, TP-IRQ-030, TP-IRQ-031, TP-IRQ-032, TP-IRQ-049, TP-IRQ-059, TP-IRQ-063, TP-IRQ-064, TP-IRQ-066, TP-IRQ-071, TP-IRQ-072, TP-IRQ-076, TP-IRQ-077
 
 ### CG-IRQ-005: gen_cg_irq_handler_flow
-- Features: F-IRQ-015, F-IRQ-023, F-IRQ-027, F-IRQ-028, F-IRQ-029
+- Features: F-IRQ-015, F-IRQ-023, F-IRQ-027, F-IRQ-028, F-IRQ-029, F-IRQ-016, F-IRQ-012 (parent of
+  folded bins hosted here)
 - Sample: a retired mret whose matching entry was an interrupt (handler return), and each nested interrupt entry (entry depth >= 2 in the gen_chk_irq entry/return stack); condition: handler return or nested entry; anti-vacuity: only handler returns and nested entries sample, so a hit proves the re-trap / nesting behaviour was exercised.
 - Coverpoints:
   - cp_line_at_mret = state of the serviced line at the mret: bins still_high_same, dropped_by_ack, dropped_new_other_pending, masked_in_handler{handler cleared its mie bit while the line stays high}
@@ -2076,7 +2291,7 @@ Conventions
   - cp_mie_pre iff ev_entry = mstatus.MIE before the NMI (CSR model): bins mie0, mie1
   - cp_priv_pre iff ev_entry = privilege before the entry (rvfi_mode / CSR model): bins m, u
   - cp_in_handler iff ev_mret = what happened inside the NMI handler: bins none, nmi_reasserted_ignored, irq_enabled_masked{handler set MIE = 1 with a line pending: not taken}, exc_taken, int_err_pending{integrity error inside the handler}, regular_irq_pending_taken_after_mret, debug_session_nmi_mode_kept{debug entry (debug_req_i / step) and dret inside the NMI handler: pending mip & mie lines and a re-asserted irq_nm_i stay masked until the handler's mret (F-IRQ-066, H-N1)}, debug_session_then_mret_taken{after such a debug session the handler's mret is followed directly by the masked source's entry (regular cause or 32'h8000001F) with no retirement at the mret target (F-IRQ-066)}
-  - cp_mstack iff ev_mret = mstack restore outcome at the exiting mret: bins restore_ok, sw_epc_write_discarded{handler wrote mepc/mcause; mret restored the stacked values}, nested_exc_context_lost{exception inside the handler overwrote mstack}
+  - cp_mstack iff ev_mret = mstack restore outcome at the exiting mret: bins restore_ok, sw_epc_write_discarded{handler wrote mcause (or mepc) with junk; the post-mret read-back is the stacked value}, sw_epc_target_used{handler wrote mepc with a valid address T: the mret jumps to T (the CURRENT mepc_q, rtl/ibex_if_stage.sv:246, rtl/ibex_controller.sv:954-957) while the post-mret mepc/mcause read-back is the stacked value (rtl/ibex_cs_registers.sv:967-975); fact-check Section 5 RTL-defined behaviour}, nested_exc_context_lost{exception inside the handler overwrote mstack}
   - cp_mepc_align: RETIRED (S-7 single owner): CG-EXC-012.cp_mepc_bit1 (nmi_ext/nmi_int bins in cr_kind_bit1)
 - Crosses:
   - cr_source_ctx = cp_source x cp_ctx_pre: bins {ext_user_code, ext_exc_handler, ext_irq_handler, ext_wfi_sleep, ext_reset_release, ext_dret_exit, ext_after_mret_still_high, int_ecc_user_code, int_ecc_exc_handler, int_ecc_irq_handler, int_ecc_after_mret_still_high, ext_exc_vector_first, int_ecc_exc_vector_first, both_same_cycle_user_code, both_same_cycle_exc_handler}; ignore int_ecc/both_same_cycle x wfi_sleep/reset_release: no data access completes in sleep or before the first instruction
@@ -2092,14 +2307,14 @@ Conventions
 - Coverpoints:
   - cp_err_op iff ev_inj = access kind of the corrupted response (dbus monitor): bins load, store
   - cp_err_half iff ev_inj = which part of the access carried the error (dbus monitor): bins aligned, mis_first, mis_second
-  - cp_taken_after iff ev_inj = instructions retired between the error response and the internal-NMI entry: bins zero{0}, one{1}, two_plus{[2:$]: reachable only while the internal NMI is masked, i.e. the error arrives in debug mode or in nmi_mode and the entry waits for the dret/mret (rtl/ibex_controller.sv:498); outside those contexts gen_chk_bus_intg_rsp bounds it to <= 1}
+  - cp_taken_after iff ev_inj = ordinary instructions retired between the error response and the internal-NMI entry (a Zcmp sequence counts as one instruction; its micro-op records are folded): bins zero{0}, one{1}, two{2: the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_controller.sv:404-430, 436, 700-713; C-7 / X-10, doc mismatch D21}, three_plus{[3:$]: reachable only while the internal NMI is masked, i.e. the error arrives in debug mode or in nmi_mode and the entry waits for the dret/mret (rtl/ibex_controller.sv:498)}; outside the masked contexts gen_chk_bus_intg_rsp bounds the count to two (the first directed integrity-error sim confirms, inventory UNVERIFIED-4)
   - cp_pending_ctx iff ev_inj = state when the error arrived: bins idle, second_err_while_pending, ext_nmi_same_cycle, in_nmi_handler, in_debug_mode, in_irq_handler
-  - cp_effects iff ev_inj = side effects observed (alert monitor, RVFI, read-back): bins alert_pulse{alert_major_bus_o in the error cycle}, rf_wr_suppressed{rvfi_ext_rf_wr_suppress on the load}, store_no_rf, mtval_first_addr{after second_err_while_pending: mtval == first error address}
-  - cp_mcause_write iff ev_mcause = software mcause write class (rvfi_rs1_rdata vs read-back): bins c000xx_reads_ffffffe0, w8000xx_reads_same, w20_reads_0, bits29_5_dropped
+  - cp_effects iff ev_inj = side effects observed (alert monitor, RVFI, read-back): bins alert_pulse{alert_major_bus_o in the error cycle}, rf_wr_suppressed{rvfi_ext_rf_wr_suppress on the load: aligned access or misaligned with the error on the SECOND beat; a misaligned load with the error on the FIRST beat writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16, owner TP-DMEM-041), so the bin is not required for that class}, store_no_rf, mtval_first_addr{after second_err_while_pending: mtval == first error address}
+  - cp_mcause_write iff ev_mcause = software mcause write class (rvfi_rs1_rdata vs read-back): bins c000xx_reads_ffffffe0, w8000xx_reads_same, w4000xx_reads_code{wdata[31:30] == 2'b01 sets neither flag: reads {27'b0, code} (rtl/ibex_cs_registers.sv:731-733, X-23)}, w20_reads_0, bits29_5_dropped
 - Crosses:
   - cr_op_half = cp_err_op x cp_err_half: bins {load_aligned, load_mis_first, load_mis_second, store_aligned, store_mis_first, store_mis_second}
   - cr_op_ctx = cp_err_op x cp_pending_ctx: bins {load_idle, load_second_err_while_pending, load_ext_nmi_same_cycle, load_in_nmi_handler, load_in_debug_mode, load_in_irq_handler, store_idle, store_second_err_while_pending, store_in_nmi_handler, store_ext_nmi_same_cycle, store_in_debug_mode}
-  - cr_ctx_taken = cp_pending_ctx x cp_taken_after: bins {idle_zero, idle_one, in_irq_handler_zero, in_irq_handler_one, in_nmi_handler_two_plus, in_debug_mode_two_plus}; ignore idle/second_err_while_pending/ext_nmi_same_cycle/in_irq_handler x two_plus: at most one retirement outside the masked contexts (checker bound); ignore in_nmi_handler/in_debug_mode x zero: the entry waits for the mret/dret, which itself retires
+  - cr_ctx_taken = cp_pending_ctx x cp_taken_after: bins {idle_zero, idle_one, idle_two, in_irq_handler_zero, in_irq_handler_one, in_irq_handler_two, in_nmi_handler_three_plus, in_debug_mode_three_plus}; ignore idle/second_err_while_pending/ext_nmi_same_cycle/in_irq_handler x three_plus: at most two ordinary instructions outside the masked contexts (checker bound, C-7 / D21); ignore in_nmi_handler/in_debug_mode x zero: the entry waits for the mret/dret, which itself retires
   - cr_op_effects = cp_err_op x cp_effects: bins {load_alert_pulse, load_rf_wr_suppressed, store_alert_pulse, store_store_no_rf, load_mtval_first_addr, store_mtval_first_addr}
 - Adopted (riscv-dv): none
 - TP items: TP-IRQ-042, TP-IRQ-044, TP-IRQ-045, TP-IRQ-046, TP-IRQ-047, TP-IRQ-048, TP-IRQ-073, TP-IRQ-075
@@ -2119,7 +2334,7 @@ Conventions
 - Crosses:
   - cr_priv_wake = cp_priv_tw x cp_wake: bins {m_irq_taken, m_irq_local_only, m_nmi_ext, m_nmi_int, m_debug_req, m_debug_req_and_irq, m_in_debug_nop, m_step_nop, m_already_pending, m_masked_line_held, m_none_long, u_tw0_irq_taken, u_tw0_nmi_ext, u_tw0_debug_req, u_tw0_none_long, u_tw0_already_pending}; ignore u_tw1 x any wake: it traps and never sleeps; ignore u_tw0 x irq_local_only: U-mode ignores MIE, so a locally enabled line is taken
   - cr_wake_sleep = cp_wake x cp_sleep_cycles: bins {irq_taken_passthrough, irq_taken_short, irq_taken_medium, irq_taken_long, already_pending_passthrough, in_debug_nop_passthrough, step_nop_passthrough, nmi_ext_medium, nmi_ext_short, debug_req_medium, irq_local_only_short, irq_local_only_medium, none_long_medium, none_long_long}; ignore in_debug_nop/step_nop/already_pending x short/medium/long: nop and pass-through paths never sleep; ignore none_long x passthrough/short: none_long is >= 100 cycles by definition
-  - cr_wake_busy = cp_wake x cp_busy_off: bins {irq_taken_off_seen, none_long_off_seen, in_debug_nop_off_seen, step_nop_off_seen, already_pending_off_seen, already_pending_off_not_seen, irq_local_only_off_seen}
+  - cr_wake_busy = cp_wake x cp_busy_off: bins {irq_taken_off_seen, none_long_off_seen, in_debug_nop_off_seen, step_nop_off_not_seen, already_pending_off_seen, already_pending_off_not_seen, irq_local_only_off_seen}; ignore step_nop x off_seen: the stepped WFI goes FLUSH -> DBG_TAKEN_IF and never reaches WAIT_SLEEP (F-IRQ-051), so core_busy_o never dips
   - cr_wb_priv = cp_wb_at_wfi x cp_priv_tw: bins {empty_m, ls_ok_m, ls_fault_m, ls_fault_u_tw0, empty_u_tw0}
   - cr_disabled_wake = cp_disabled_high x cp_wake: bins {yes_none_long, yes_nmi_ext, yes_debug_req, yes_irq_taken}
   - cr_wake_line = cp_wake x cp_wake_line: bins {irq_taken_software, irq_taken_timer, irq_taken_external, irq_taken_fast, irq_local_only_software, irq_local_only_fast, nmi_ext_nmi}; ignore irq_taken/irq_local_only/masked_line_held x nmi and nmi_ext x non-nmi: the wake class names the line kind (cp_wake_line is undefined for debug/nop/none_long wakes via its iff)
@@ -2128,7 +2343,8 @@ Conventions
 - TP items: TP-EXC-010, TP-IRQ-049, TP-IRQ-050, TP-IRQ-051, TP-IRQ-052, TP-IRQ-053, TP-IRQ-054, TP-IRQ-055, TP-IRQ-056, TP-IRQ-057, TP-IRQ-058, TP-IRQ-066, TP-IRQ-068, TP-IRQ-069, TP-IRQ-074
 
 ### CG-IRQ-010: gen_cg_irq_debug_interplay
-- Features: F-IRQ-024, F-IRQ-037, F-IRQ-038, F-IRQ-039, F-IRQ-050, F-IRQ-051, F-IRQ-066
+- Features: F-IRQ-024, F-IRQ-037, F-IRQ-038, F-IRQ-039, F-IRQ-050, F-IRQ-051, F-IRQ-066, F-IRQ-030
+  (parent of folded bins hosted here)
 - Sample: an interrupt/NMI line pending-and-enabled while rvfi_ext_debug_mode == 1, or while dcsr.step == 1 outside debug mode, and each dret retirement with a pending line; for cp_mode.debug_in_nmi_handler the window is a debug session opened while the gen_chk_nmi model has nmi_mode set (entry after a base + 0x7C vector fetch and before the matching mret); condition: a line asserted inside such a window; anti-vacuity: samples only in debug/step windows with a line asserted, so a hit proves the masking and the post-exit behaviour were exercised.
 - Coverpoints:
   - cp_line = line class (pin monitor): bins irq, nmi_ext, nmi_int
@@ -2170,7 +2386,7 @@ Conventions
 
 ### CG-IRQ-013: gen_cg_irq_entry_window
 - Features: F-IRQ-034, F-IRQ-032, F-IRQ-024, F-IRQ-039, F-IRQ-016
-- Sample: a regular interrupt entry decided (rvfi_ext_irq_valid pulse at N + 1 / the vector fetch on the ibus) that is followed, BEFORE the handler's first retirement, by a second entry: an NMI (next retirement has rvfi_ext_nmi or rvfi_ext_nmi_int with mepc read-back == the interrupt vector) or a debug entry (DmHaltAddr fetch with dpc read-back == the interrupt vector); condition: the preempting source rose between IRQ_TAKEN and the first handler retirement (pin monitor timestamp inside the window; rtl/ibex_core.sv:1949-1957 recaptures for new_debug_req / new_nmi); anti-vacuity: an interrupt entry whose handler retires normally never samples, so a hit proves the IRQ_TAKEN-to-first-retirement window was preempted (S-12 edge).
+- Sample: a regular interrupt entry decided (the vector fetch on the ibus with cpuctrlsts.icache_enable = 0 pinned by its items, C-14; the rvfi_ext_irq_valid level rising at N + 4 is a secondary confirmation, C-13) that is followed, BEFORE the handler's first retirement, by a second entry: an NMI (next retirement has rvfi_ext_nmi or rvfi_ext_nmi_int with mepc read-back == the interrupt vector) or a debug entry (DmHaltAddr fetch with dpc read-back == the interrupt vector); condition: the preempting source rose between IRQ_TAKEN and the first handler retirement (pin monitor timestamp inside the window; rtl/ibex_core.sv:1949-1957 recaptures for new_debug_req / new_nmi); anti-vacuity: an interrupt entry whose handler retires normally never samples, so a hit proves the IRQ_TAKEN-to-first-retirement window was preempted (S-12 edge).
 - Coverpoints:
   - cp_preempt = the preempting source: bins nmi_ext{irq_nm_i}, nmi_int{internal integrity-error NMI from a store response of the interrupted code draining in WB}, debug_req{debug_req_i}
   - cp_window_pos = where in the window the source rose (ibus monitor): bins vector_req_outstanding{vector instr_req_o issued, no rvalid yet}, vector_word_in_if{vector word returned, not yet in ID}
@@ -2188,21 +2404,32 @@ Conventions
 | metric | count |
 |---|---|
 | covergroups | 25 active (CG-EXC-001..013, CG-IRQ-001..011, CG-IRQ-013) + 1 RETIRED (CG-IRQ-012, ID kept) |
-| coverpoints | 151 (retired coverpoint lines not counted) |
-| coverpoint bins | 619 (array bins fast[15] expanded; ignore_bins not counted) |
-| crosses | 101 |
-| cross bins (required, named) | 857 |
+| coverpoints | 153 (retired coverpoint lines not counted) |
+| coverpoint bins | 628 (array bins fast[15] expanded; ignore_bins not counted) |
+| crosses | 102 |
+| cross bins (required, named) | 868 |
 | adopted bins (riscv-dv) | 0 |
+| coverpoints owned by no TP item | 0 (fix 3: every coverpoint has >= 1 CSV row) |
 
 Counts are produced by the fix-2 verification script (parses every `cp_`/`cr_` line, drops RETIRED
 lines and ignore_bins, expands `name[N]`), which also regenerates trace_tp_bin_exc_irq.csv from the
-TP items' Bins lines, so the CSV (1512 rows) and this table agree by construction. Cross bins that are
+TP items' Bins lines, so the CSV (1663 rows) and this table agree by construction. Cross bins that are
 not named as required still exist in the auto-cross and are reported by urg; only the named ones are
 traced. Fix-2 pass (Critic pre-review T-034): S-7 single owners for pc[1]/mepc[1] alignment
 (CG-EXC-012) and exception-commit x interrupt state (CG-EXC-013), CG-IRQ-012 retired, CG-IRQ-013 added
 (IRQ_TAKEN-window pre-emption), MIE global-edge bins (CG-IRQ-003.cp_mie_global_edge), F-IRQ-066 bins
-(CG-IRQ-007 / CG-IRQ-010), cp_taken_after.two_plus made reachable, unreachable-as-written bins turned
+(CG-IRQ-007 / CG-IRQ-010), cp_taken_after.two_plus (fix 3: split into two / three_plus) made reachable, unreachable-as-written bins turned
 into ignore_bins with reasons, per-coverpoint iff guards, impossible cross combinations ignored.
+Fix-3 pass (rtl-arch fact-check T-053, round-2 review residual M-6): rvfi_ext_irq_valid level semantics
+(C-13; CG-IRQ-001 irq_valid_level / irq_valid_absent, CG-IRQ-002 / CG-IRQ-013 samples, Conventions),
+redirect targets from the next record (C-1), exception commit anchored on the trap record with
+CG-EXC-013.cp_vector_req_delay (C-14), CG-IRQ-004.cp_records_to_entry / cr_ctx_records (C-3, X-7),
+CG-IRQ-008.cp_taken_after zero / one / two / three_plus and idle_two (C-7, D21), cp_effects
+rf_wr_suppressed per-beat qualifier (X-11, B16), CG-IRQ-007.cp_mstack.sw_epc_target_used (mret target in
+NMI mode), CG-IRQ-008.cp_mcause_write.w4000xx_reads_code (X-23), CG-EXC-006 cp_op / cp_size decoded from
+rvfi_insn (X-15), CG-EXC-004 c.ebreak trace form (X-14), CG-EXC-009.cp_target from RVFI with mtvec_base
+ignored; the 39 coverpoints owned by no item were given to the items that exercise them (no
+"regression-level" coverpoint remains in this file).
 
 ## Probe candidates
 
@@ -2213,9 +2440,10 @@ Items the DV Lead may want to promote to coverage-only probes if the boundary de
 ambiguous in practice:
 
 - CG-IRQ-004 / CG-IRQ-012 decision cycle ("first takeable cycle", IRQ_TAKEN cycle). Boundary
-  derivation: pipe-empty inference from the ibus monitor and RVFI plus rvfi_ext_irq_valid; the
-  one-cycle handshake (decision, then live capture) is inferred from rvfi_ext_pre_mip vs the pin
-  monitor. Probe fallback: id_stage_i.controller_i.ctrl_fsm_cs == IRQ_TAKEN (rtl/ibex_controller.sv,
+  derivation: pipe-empty inference from the ibus monitor, the dbus monitor and RVFI (the
+  rvfi_ext_irq_valid level rises at N + 4 and is absent when ID emptied before WB drained, C-13); the
+  one-cycle handshake (decision, then live capture) is inferred from the pin monitor at N and N + 1
+  (rvfi_ext_pre_mip is the capture-cycle vector, not the decision-cycle vector). Probe fallback: id_stage_i.controller_i.ctrl_fsm_cs == IRQ_TAKEN (rtl/ibex_controller.sv,
   tb-infra P4, fcov_interrupt_taken hook). Coverage-only; no checker depends on it.
 - CG-IRQ-004.cp_ctx zcmp_expanded vs zcmp_commit and CG-EXC-008.cp_op_pos. Boundary derivation:
   rvfi_ext_expanded_insn_valid/last plus the micro-op class implied by the cm.* encoding (rlist)
@@ -2320,7 +2548,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
   - cr_mml_trans = cp_pre_mml x cp_wr_mml: bins mml_0_w0_stay0{p0, w0: readback 0}, mml_0_w1_set{p0, w1: readback 1}, mml_1_w0_hold{p1, w0: sticky, readback stays 1}, mml_1_w1_hold{p1, w1: readback 1}
   - cr_mmwp_trans = cp_pre_mmwp x cp_wr_mmwp: bins mmwp_0_w0_stay0{p0, w0}, mmwp_0_w1_set{p0, w1}, mmwp_1_w0_hold{p1, w0: sticky}, mmwp_1_w1_hold{p1, w1}
   - cr_rlb_trans = cp_pre_rlb x cp_wr_rlb x cp_any_locked x cp_locked_off_only: bins rlb_0_w1_nolock_set{p0, w1, none: RLB becomes 1}, rlb_0_w1_locked_blocked{p0, w1, some, no: stays 0}, rlb_0_w1_lockedoff_blocked{p0, w1, some, yes: stays 0, an A=OFF lock counts (F-PMP-013)}, rlb_0_w0_nolock_stay{p0, w0, none}, rlb_0_w0_locked_stay{p0, w0, some}, rlb_1_w0_clear{p1, w0, none: any_pmp_entry_locked is masked while RLB=1, the clear succeeds}, rlb_1_w1_hold{p1, w1, none}; ignore_bins rlb_1_x_locked{p1, any, some}: any_pmp_entry_locked is masked by RLB=1 (rtl/ibex_cs_registers.sv:1463,1510)
-  - cr_state_trans = cp_pre x cp_post: bins s000_to_s000{s000 -> s000 (bits mml,mmwp,rlb)}, s000_to_s001{s000 -> s001 (bits mml,mmwp,rlb)}, s000_to_s010{s000 -> s010 (bits mml,mmwp,rlb)}, s000_to_s011{s000 -> s011 (bits mml,mmwp,rlb)}, s000_to_s100{s000 -> s100 (bits mml,mmwp,rlb)}, s000_to_s101{s000 -> s101 (bits mml,mmwp,rlb)}, s000_to_s110{s000 -> s110 (bits mml,mmwp,rlb)}, s000_to_s111{s000 -> s111 (bits mml,mmwp,rlb)}, s001_to_s000{s001 -> s000 (bits mml,mmwp,rlb)}, s001_to_s001{s001 -> s001 (bits mml,mmwp,rlb)}, s001_to_s010{s001 -> s010 (bits mml,mmwp,rlb)}, s001_to_s011{s001 -> s011 (bits mml,mmwp,rlb)}, s001_to_s100{s001 -> s100 (bits mml,mmwp,rlb)}, s001_to_s101{s001 -> s101 (bits mml,mmwp,rlb)}, s001_to_s110{s001 -> s110 (bits mml,mmwp,rlb)}, s001_to_s111{s001 -> s111 (bits mml,mmwp,rlb)}, s010_to_s010{s010 -> s010 (bits mml,mmwp,rlb)}, s010_to_s011{s010 -> s011 (bits mml,mmwp,rlb)}, s010_to_s110{s010 -> s110 (bits mml,mmwp,rlb)}, s010_to_s111{s010 -> s111 (bits mml,mmwp,rlb)}, s011_to_s010{s011 -> s010 (bits mml,mmwp,rlb)}, s011_to_s011{s011 -> s011 (bits mml,mmwp,rlb)}, s011_to_s110{s011 -> s110 (bits mml,mmwp,rlb)}, s011_to_s111{s011 -> s111 (bits mml,mmwp,rlb)}, s100_to_s100{s100 -> s100 (bits mml,mmwp,rlb)}, s100_to_s101{s100 -> s101 (bits mml,mmwp,rlb)}, s100_to_s110{s100 -> s110 (bits mml,mmwp,rlb)}, s100_to_s111{s100 -> s111 (bits mml,mmwp,rlb)}, s101_to_s100{s101 -> s100 (bits mml,mmwp,rlb)}, s101_to_s101{s101 -> s101 (bits mml,mmwp,rlb)}, s101_to_s110{s101 -> s110 (bits mml,mmwp,rlb)}, s101_to_s111{s101 -> s111 (bits mml,mmwp,rlb)}, s110_to_s110{s110 -> s110 (bits mml,mmwp,rlb)}, s110_to_s111{s110 -> s111 (bits mml,mmwp,rlb)}, s111_to_s110{s111 -> s110 (bits mml,mmwp,rlb)}, s111_to_s111{s111 -> s111 (bits mml,mmwp,rlb)}; ignore_bins s_down{any pre with post.mml < pre.mml or post.mmwp < pre.mmwp}: MML and MMWP are sticky; contradicts the readback model
+  - cr_state_trans = cp_pre x cp_post: bins s000_to_s000{s000 -> s000 (bits mml,mmwp,rlb)}, s000_to_s001{s000 -> s001 (bits mml,mmwp,rlb)}, s000_to_s010{s000 -> s010 (bits mml,mmwp,rlb)}, s000_to_s011{s000 -> s011 (bits mml,mmwp,rlb)}, s000_to_s100{s000 -> s100 (bits mml,mmwp,rlb)}, s000_to_s101{s000 -> s101 (bits mml,mmwp,rlb)}, s000_to_s110{s000 -> s110 (bits mml,mmwp,rlb)}, s000_to_s111{s000 -> s111 (bits mml,mmwp,rlb)}, s001_to_s000{s001 -> s000 (bits mml,mmwp,rlb)}, s001_to_s001{s001 -> s001 (bits mml,mmwp,rlb)}, s001_to_s010{s001 -> s010 (bits mml,mmwp,rlb)}, s001_to_s011{s001 -> s011 (bits mml,mmwp,rlb)}, s001_to_s100{s001 -> s100 (bits mml,mmwp,rlb)}, s001_to_s101{s001 -> s101 (bits mml,mmwp,rlb)}, s001_to_s110{s001 -> s110 (bits mml,mmwp,rlb)}, s001_to_s111{s001 -> s111 (bits mml,mmwp,rlb)}, s010_to_s010{s010 -> s010 (bits mml,mmwp,rlb)}, s010_to_s011{s010 -> s011 (bits mml,mmwp,rlb)}, s010_to_s110{s010 -> s110 (bits mml,mmwp,rlb)}, s010_to_s111{s010 -> s111 (bits mml,mmwp,rlb)}, s011_to_s010{s011 -> s010 (bits mml,mmwp,rlb)}, s011_to_s011{s011 -> s011 (bits mml,mmwp,rlb)}, s011_to_s110{s011 -> s110 (bits mml,mmwp,rlb)}, s011_to_s111{s011 -> s111 (bits mml,mmwp,rlb)}, s100_to_s100{s100 -> s100 (bits mml,mmwp,rlb)}, s100_to_s110{s100 -> s110 (bits mml,mmwp,rlb)}, s101_to_s100{s101 -> s100 (bits mml,mmwp,rlb)}, s101_to_s101{s101 -> s101 (bits mml,mmwp,rlb)}, s101_to_s110{s101 -> s110 (bits mml,mmwp,rlb)}, s101_to_s111{s101 -> s111 (bits mml,mmwp,rlb)}, s110_to_s110{s110 -> s110 (bits mml,mmwp,rlb)}, s111_to_s110{s111 -> s110 (bits mml,mmwp,rlb)}, s111_to_s111{s111 -> s111 (bits mml,mmwp,rlb)}; ignore_bins s_down{any pre with post.mml < pre.mml or post.mmwp < pre.mmwp}: MML and MMWP are sticky; contradicts the readback model; ignore_bins rlb_set_under_mml_locked{s100 -> s101, s100 -> s111, s110 -> s111}: RLB 0->1 requires any_pmp_entry_locked == 0 (rtl/ibex_cs_registers.sv:1463, 1514) while M-mode execution under MML=1 requires an L=1 executable rule, so (1,x,0)->(1,x,1) is unreachable outside debug mode (fact-check X-20, TP-PMP-108; debug-ROM variant OQ-PMP-10)
   - cr_mseccfgh = cp_csr x cp_hi_bits x cp_op: bins mseccfgh_nonzero_csrrw{mseccfgh, nonzero, csrrw: readback 0}, mseccfgh_nonzero_csrrs{mseccfgh, nonzero, csrrs: readback 0}, mseccfgh_nonzero_csrrc{mseccfgh, nonzero, csrrc: readback 0}
   - cr_hi_bits = cp_csr x cp_hi_bits: bins mseccfg_hi_nonzero{mseccfg, nonzero: bits 31:3 read back 0}
   - cr_op_trans = cp_op x cp_pre_mml x cp_wr_mml x cp_pre_mmwp x cp_wr_mmwp: bins csrrw_mml_hold{csrrw, pre_mml p1, wr_mml w0, any, any: csrrw attempts a clear, readback keeps 1}, csrrc_mml_hold{csrrc, pre_mml p1, wr_mml w0, any, any}, csrrw_mmwp_hold{csrrw, any, any, pre_mmwp p1, wr_mmwp w0}, csrrc_mmwp_hold{csrrc, any, any, pre_mmwp p1, wr_mmwp w0}; ignore_bins csrrs_x_hold{csrrs, (pre_mml p1 and wr_mml w0) or (pre_mmwp p1 and wr_mmwp w0)}: csrrs cannot clear a set bit: the RMW-combined write bit stays 1 (rewritten from the cross-of-a-cross form, S-7)
@@ -2396,7 +2624,8 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-043, TP-PMP-044, TP-PMP-045, TP-PMP-100, TP-PMP-101, TP-PMP-102, TP-PMP-110
 
 ### CG-PMP-007: gen_cg_pmp_boundary
-- Features: F-PMP-014, F-PMP-035, F-PMP-036, F-PMP-037, F-PMP-038, F-PMP-040, F-PMP-041, F-PMP-043, F-PMP-044, F-PMP-048
+- Features: F-PMP-014, F-PMP-035, F-PMP-036, F-PMP-037, F-PMP-038, F-PMP-040, F-PMP-041, F-PMP-043,
+  F-PMP-044, F-PMP-048, F-PMP-002 (parent of folded bins hosted here)
 - Sample: a CG-PMP-005 check event for which the model identifies a reference region: the deciding region on match, else the enabled region whose first or last byte lies within one granule (2^(PMPGranularity+2) bytes) of the access bytes (nomatch case); condition: such a region exists and has at least one byte in the 32-bit space; anti-vacuity: accesses far from any region edge never sample; a hit proves an access at or across an exact region edge of that mode and the verdict matched the model
 - Coverpoints:
   - cp_mode = reference region A field: bins tor{PMP_MODE_TOR}, na4{PMP_MODE_NA4}, napot{PMP_MODE_NAPOT}
@@ -2407,7 +2636,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
   - cp_tor_zero = iff tor: reference region is entry 0 (lower bound 0): bins no{i > 0}, yes{i == 0}
   - cp_tor_empty = iff tor: pmpaddr(i-1) vs pmpaddr(i): bins nonempty{pmpaddr(i-1) < pmpaddr(i)}; ignore_bins empty_eq{pmpaddr(i-1) == pmpaddr(i)}: an empty region has no edge byte and never matches, so it is never the reference region under this group's condition; covered by CG-PMP-015 (S-7); ignore_bins empty_gt{pmpaddr(i-1) > pmpaddr(i)}: same as empty_eq; CG-PMP-015
   - cp_hi = pmpaddr bits 31:30 (physical 33:32) set on the region bound: bins none{start and bound below 2^32}, bound_hi30{TOR upper bound pmpaddr(i) bit 30 set: the region covers every 32-bit address >= start}, bound_hi31{TOR upper bound pmpaddr(i) bit 31 set}; ignore_bins base_hi30{region start bit 30 set}: a region whose start lies above 2^32 has no byte in the 32-bit space and never matches; unsamplable here; covered by CG-PMP-015 (S-7); ignore_bins base_hi31{region start bit 31 set}: same as base_hi30; CG-PMP-015
-  - cp_prev_cfg = iff tor and i > 0: entry i-1 state: bins prev_off{A == PMP_MODE_OFF}, prev_tor{A == PMP_MODE_TOR}, prev_na{A == PMP_MODE_NA4 or PMP_MODE_NAPOT}, prev_locked{L == 1 (any A)}
+  - cp_prev_cfg = iff tor and i > 0: entry i-1 state: bins prev_off{A == PMP_MODE_OFF}, prev_tor{A == PMP_MODE_TOR}, prev_na{A == PMP_MODE_NA4 or PMP_MODE_NAPOT: sampled on the inside_high / interior / outside probes; the inside_low word pmpaddr(i-1)*4 is decided by entry i-1 itself (anchored at pmpaddr(i-1), rtl/ibex_pmp.sv:163-164; fact-check X-20, TP-PMP-038)}, prev_locked{L == 1 (any A)}
 - Crosses:
   - cr_mode_bclass = cp_mode x cp_bclass: bins tor_inside_low{PMP_MODE_TOR, inside_low}, tor_inside_high{PMP_MODE_TOR, inside_high}, tor_interior{PMP_MODE_TOR, interior}, tor_outside_low{PMP_MODE_TOR, outside_low}, tor_outside_high{PMP_MODE_TOR, outside_high}, tor_straddle_low{PMP_MODE_TOR, straddle_low}, tor_straddle_high{PMP_MODE_TOR, straddle_high}, na4_inside_low{PMP_MODE_NA4, inside_low}, na4_inside_high{PMP_MODE_NA4, inside_high}, na4_interior{PMP_MODE_NA4, interior}, na4_outside_low{PMP_MODE_NA4, outside_low}, na4_outside_high{PMP_MODE_NA4, outside_high}, na4_straddle_low{PMP_MODE_NA4, straddle_low}, na4_straddle_high{PMP_MODE_NA4, straddle_high}, napot_inside_low{PMP_MODE_NAPOT, inside_low}, napot_inside_high{PMP_MODE_NAPOT, inside_high}, napot_interior{PMP_MODE_NAPOT, interior}, napot_outside_low{PMP_MODE_NAPOT, outside_low}, napot_outside_high{PMP_MODE_NAPOT, outside_high}, napot_straddle_low{PMP_MODE_NAPOT, straddle_low}, napot_straddle_high{PMP_MODE_NAPOT, straddle_high}
   - cr_mode_bclass_type = cp_mode x cp_bclass x cp_type: bins tor_inside_low_fetch{PMP_MODE_TOR, inside_low, fetch}, tor_inside_low_load{PMP_MODE_TOR, inside_low, load}, tor_inside_low_store{PMP_MODE_TOR, inside_low, store}, tor_inside_high_fetch{PMP_MODE_TOR, inside_high, fetch}, tor_inside_high_load{PMP_MODE_TOR, inside_high, load}, tor_inside_high_store{PMP_MODE_TOR, inside_high, store}, tor_interior_fetch{PMP_MODE_TOR, interior, fetch}, tor_interior_load{PMP_MODE_TOR, interior, load}, tor_interior_store{PMP_MODE_TOR, interior, store}, tor_outside_low_fetch{PMP_MODE_TOR, outside_low, fetch}, tor_outside_low_load{PMP_MODE_TOR, outside_low, load}, tor_outside_low_store{PMP_MODE_TOR, outside_low, store}, tor_outside_high_fetch{PMP_MODE_TOR, outside_high, fetch}, tor_outside_high_load{PMP_MODE_TOR, outside_high, load}, tor_outside_high_store{PMP_MODE_TOR, outside_high, store}, tor_straddle_low_fetch{PMP_MODE_TOR, straddle_low, fetch}, tor_straddle_low_load{PMP_MODE_TOR, straddle_low, load}, tor_straddle_low_store{PMP_MODE_TOR, straddle_low, store}, tor_straddle_high_fetch{PMP_MODE_TOR, straddle_high, fetch}, tor_straddle_high_load{PMP_MODE_TOR, straddle_high, load}, tor_straddle_high_store{PMP_MODE_TOR, straddle_high, store}, na4_inside_low_fetch{PMP_MODE_NA4, inside_low, fetch}, na4_inside_low_load{PMP_MODE_NA4, inside_low, load}, na4_inside_low_store{PMP_MODE_NA4, inside_low, store}, na4_inside_high_fetch{PMP_MODE_NA4, inside_high, fetch}, na4_inside_high_load{PMP_MODE_NA4, inside_high, load}, na4_inside_high_store{PMP_MODE_NA4, inside_high, store}, na4_interior_fetch{PMP_MODE_NA4, interior, fetch}, na4_interior_load{PMP_MODE_NA4, interior, load}, na4_interior_store{PMP_MODE_NA4, interior, store}, na4_outside_low_fetch{PMP_MODE_NA4, outside_low, fetch}, na4_outside_low_load{PMP_MODE_NA4, outside_low, load}, na4_outside_low_store{PMP_MODE_NA4, outside_low, store}, na4_outside_high_fetch{PMP_MODE_NA4, outside_high, fetch}, na4_outside_high_load{PMP_MODE_NA4, outside_high, load}, na4_outside_high_store{PMP_MODE_NA4, outside_high, store}, na4_straddle_low_fetch{PMP_MODE_NA4, straddle_low, fetch}, na4_straddle_low_load{PMP_MODE_NA4, straddle_low, load}, na4_straddle_low_store{PMP_MODE_NA4, straddle_low, store}, na4_straddle_high_fetch{PMP_MODE_NA4, straddle_high, fetch}, na4_straddle_high_load{PMP_MODE_NA4, straddle_high, load}, na4_straddle_high_store{PMP_MODE_NA4, straddle_high, store}, napot_inside_low_fetch{PMP_MODE_NAPOT, inside_low, fetch}, napot_inside_low_load{PMP_MODE_NAPOT, inside_low, load}, napot_inside_low_store{PMP_MODE_NAPOT, inside_low, store}, napot_inside_high_fetch{PMP_MODE_NAPOT, inside_high, fetch}, napot_inside_high_load{PMP_MODE_NAPOT, inside_high, load}, napot_inside_high_store{PMP_MODE_NAPOT, inside_high, store}, napot_interior_fetch{PMP_MODE_NAPOT, interior, fetch}, napot_interior_load{PMP_MODE_NAPOT, interior, load}, napot_interior_store{PMP_MODE_NAPOT, interior, store}, napot_outside_low_fetch{PMP_MODE_NAPOT, outside_low, fetch}, napot_outside_low_load{PMP_MODE_NAPOT, outside_low, load}, napot_outside_low_store{PMP_MODE_NAPOT, outside_low, store}, napot_outside_high_fetch{PMP_MODE_NAPOT, outside_high, fetch}, napot_outside_high_load{PMP_MODE_NAPOT, outside_high, load}, napot_outside_high_store{PMP_MODE_NAPOT, outside_high, store}, napot_straddle_low_fetch{PMP_MODE_NAPOT, straddle_low, fetch}, napot_straddle_low_load{PMP_MODE_NAPOT, straddle_low, load}, napot_straddle_low_store{PMP_MODE_NAPOT, straddle_low, store}, napot_straddle_high_fetch{PMP_MODE_NAPOT, straddle_high, fetch}, napot_straddle_high_load{PMP_MODE_NAPOT, straddle_high, load}, napot_straddle_high_store{PMP_MODE_NAPOT, straddle_high, store}
@@ -2450,7 +2679,9 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-069, TP-PMP-070, TP-PMP-071, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083, TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089, TP-PMP-103
 
 ### CG-PMP-009: gen_cg_pmp_fetch_fault
-- Features: F-PMP-053, F-PMP-055, F-PMP-065, F-PMP-066, F-PMP-067, F-PMP-068, F-PMP-069, F-PMP-070, F-PMP-078, F-PMP-080, F-PMP-081, F-PMP-093, F-PMP-094
+- Features: F-PMP-053, F-PMP-055, F-PMP-065, F-PMP-066, F-PMP-067, F-PMP-068, F-PMP-069, F-PMP-070,
+  F-PMP-078, F-PMP-080, F-PMP-081, F-PMP-093, F-PMP-094, F-PMP-052 (parent of folded bins hosted
+  here)
 - Sample: rvfi_valid per instruction where the model predicts a fetch denial on pc or pc+2, or the instruction is uncompressed at pc[1] == 1 with a region edge at pc+2, or the instruction is a control-flow target whose word is a region edge; condition: one of the three; anti-vacuity: ordinary permitted sequential instructions never sample; a hit proves a fetch-side PMP decision with the named half pattern was checked for trap, mtval and mepc
 - Coverpoints:
   - cp_pc_align = rvfi_pc_rdata[1:0]: bins a4{00}, a2{10}
@@ -2496,7 +2727,8 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-064, TP-PMP-077, TP-PMP-091, TP-PMP-092, TP-PMP-105
 
 ### CG-PMP-011: gen_cg_pmp_recfg
-- Features: F-PMP-020, F-PMP-033, F-PMP-055, F-PMP-065, F-PMP-092, F-PMP-100
+- Features: F-PMP-020, F-PMP-033, F-PMP-055, F-PMP-065, F-PMP-092, F-PMP-100, F-PMP-007 (parent of
+  folded bins hosted here)
 - Sample: RVFI retire of a PMP CSR write (pmpcfg*/pmpaddr*/mseccfg) with rvfi_trap == 0; the effect fields diff the model verdict for the next retired instruction's pc (and its load/store address) before and after the write; anti-vacuity: only PMP CSR writes sample; a hit on a now_denied/now_allowed bin proves the write flipped a live verdict and the next instruction's trap/no-trap was checked against the new state; cr_bb of the earlier draft was an identity cross and is retired: the pair outcome lives in the cp_bb bin predicates
 - Coverpoints:
   - cp_csr = written CSR and changed field: bins pmpcfg{a pmpcfg field changed}, pmpaddr{a pmpaddr changed}, mseccfg_mml{MML 0->1}, mseccfg_mmwp{MMWP 0->1}, mseccfg_rlb{RLB changed}, mseccfg_none{mseccfg written, no bit changed}
@@ -2517,7 +2749,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 
 ### CG-PMP-012: gen_cg_pmp_priv_mprv
 - Features: F-PMP-072, F-PMP-073, F-PMP-074, F-PMP-075, F-PMP-076, F-PMP-077
-- Sample: a CG-PMP-005 check event (its condition included) for which a privilege-redirection source is live: mstatus.MPRV == 1, or rvfi_ext_debug_mode == 1, or the access is the first fetch / first data access after a privilege-entry event (mret, dret, trap entry, debug entry, reset), or the last mstatus write carried an illegal MPP; anti-vacuity (S-3): M-mode accesses with MPRV=0 outside debug that do not immediately follow a privilege-entry event never sample; a hit on an mprv1 bin proves an access was checked under MPRV redirection and its verdict compared to the model's effective privilege; expected-fail items TP-PMP-073/074 own only observed-RTL-outcome bins (dret_u_kept_rtl, dbg_mprv_mppu_*_fault); the spec-outcome bins are ignore_bins
+- Sample: a CG-PMP-005 check event (its condition included) for which a privilege-redirection source is live: mstatus.MPRV == 1, or rvfi_ext_debug_mode == 1, or the access is the first fetch / first data access after a privilege-entry event (mret, dret, trap entry, debug entry, reset), or the last mstatus write carried an illegal MPP; anti-vacuity (S-3): M-mode accesses with MPRV=0 outside debug that do not immediately follow a privilege-entry event never sample; a hit on an mprv1 bin proves an access was checked under MPRV redirection and its verdict compared to the model's effective privilege; expected-fail items TP-PMP-073/074 own only observed-RTL-outcome bins (dret_u_kept_rtl, dbg_mprv_mppu_*_fault); the spec-outcome bins are ignore_bins; a "U-denied / M-allowed window" is one per tp_pmp.md C-PMP-MONLY (unmatched with MMWP=0 or a matching L=0 RWX=000 entry under MML=0, LRWX=1110 under MML=1; never L=1 RW under MML=0, whose L bit is ignored for U, rtl/ibex_pmp.sv:101-110; fact-check X-20)
 - Coverpoints:
   - cp_type = access type: bins fetch{fetch}, load{load}, store{store}
   - cp_cur = rvfi_mode: bins m{PRIV_LVL_M}, u{PRIV_LVL_U}
@@ -2565,7 +2797,8 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099, TP-PMP-104
 
 ### CG-PMP-014: gen_cg_pmp_table_state
-- Features: F-PMP-015, F-PMP-042, F-PMP-046, F-PMP-047, F-PMP-053, F-PMP-056
+- Features: F-PMP-015, F-PMP-042, F-PMP-046, F-PMP-047, F-PMP-053, F-PMP-056, F-PMP-052 (parent of
+  folded bins hosted here)
 - Sample: RVFI retire of any PMP CSR write (snapshot of the table after the write) and at each regime phase start; condition: at least one instruction retires before the next table change (otherwise the sample is discarded); anti-vacuity: only table changes sample; a hit proves a live configuration with the named shape was run under
 - Coverpoints:
   - cp_active = entries with A != PMP_MODE_OFF: bins n0{0}, n1{1}, n2_4{2..4}, n5_8{5..8}, n9_15{9..PMPNumRegions-1}, n16{PMPNumRegions}
@@ -2659,13 +2892,16 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 | c1110 | deny | allow | allow | deny | allow | allow |
 | c1111 | allow | allow | allow | allow | allow | allow |
 
-### Appendix C: RTL facts this plan rests on (verified for the fix-2 revision)
+### Appendix C: RTL facts this plan rests on (verified for the fix-2 revision; fix-3 additions from the T-053 fact-check marked X-n)
 
 - A CSR write to any PMP CSR raises csr_pipe_flush (rtl/ibex_id_stage.sv:595-597; only mscratch/mepc are exempt). The controller's FLUSH state for a flush-only request asserts halt_if and flush_id and sets no PC (rtl/ibex_controller.sv:816-819, 953-963); the fetch FIFO is cleared only by branch_i (rtl/ibex_prefetch_buffer.sv:78). A word granted on the ibus before the write retires therefore survives the flush and is PMP-checked on pc_if at the IF/ID handoff with the post-write state (rtl/ibex_core.sv:1595-1600). CG-PMP-011.cp_next_src.bus_prefetched and CG-PMP-010.cp_outcome.retired_ok_recfg are reachable; they are observable on the bus only with cpuctrlsts.icache_enable == 0 (TP-PMP-091 pins it, S-4).
 - Every privilege-changing event (mret, dret, trap entry, debug entry) sets the PC, so no word granted under one privilege reaches ID under another: CG-PMP-010.cp_outcome.retired_ok_priv is an ignore_bin.
 - rvfi_trap is 1 for a PMP fault taken in debug mode (rtl/ibex_core.sv:1885-1889: rvfi_trap_id / rvfi_trap_wb carry exc_req regardless of debug_mode); the redirect target is DmExceptionAddr (rtl/ibex_controller.sv:829-831).
 - DmHaltAddr (0x1A110800) and DmExceptionAddr (0x1A110808) both lie inside the DM window DmBaseAddr..DmBaseAddr+DmAddrMask (0x1A110000..0x1A110FFF), which debug mode bypasses (CTRL-34): the halt/exception fetches can never be denied.
 - NAPOT with pmpaddr in {0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF} has base 0 and a 34-bit size >= 2^33 (rtl/ibex_pmp.sv:160-209): address 0 is the region's first byte (inside_low reachable), its last byte lies above 2^32 (inside_high unreachable).
+- (X-1) rvfi_pc_wdata of a trap / mret / dret record is the next sequential fetch address, never the redirect target (rtl/ibex_core.sv:2084); redirect targets are observed as the next record's rvfi_pc_rdata. Bins keyed on a trap target (CG-PMP-009.cr_target.*, CG-PMP-013.cp_phase exc_fetch / post_dret_first) use that form.
+- (X-20) Permission-table specifics: the MML row LRWX=0011 grants READ|WRITE in both modes and denies fetch (rtl/ibex_pmp.sv:66-75: cr_truth_mml1.c0011_u_fetch is a deny bin); no configuration permits a store while denying a load at the same privilege (MML=0 stores W as W&R, rtl/ibex_cs_registers.sv:1444-1445; MML=1 rows granting WRITE grant READ, rtl/ibex_pmp.sv:66-83); under MML=0 the L bit is ignored for U-mode (rtl/ibex_pmp.sv:108-109); RLB 0->1 requires no L=1 entry while RLB=0 (rtl/ibex_cs_registers.sv:1463, 1514), so with MML=1 (M-mode code needs an L=1 executable rule) the transitions (1,x,0)->(1,x,1) are unreachable outside debug mode (CG-PMP-003.cr_state_trans ignore_bins); a NA4/NAPOT entry i-1 is anchored at pmpaddr(i-1) and decides the TOR inside_low word of entry i (rtl/ibex_pmp.sv:163-164).
+- (X-21) The icache is forced off in debug mode and in the dret cycle (rtl/ibex_cs_registers.sv:1970-1971), so DmHaltAddr / DmExceptionAddr / dret-target fetches are always bus-visible; every other ibus-inferred prefetch or "no grant" observation pins cpuctrlsts.icache_enable = 0 (CG-PMP-010 / CG-PMP-011 bus_* and fresh bins) or is the deliberate cache-hit path of TP-PMP-092 / TP-PMP-105.
 
 ## Counts
 
@@ -2673,9 +2909,9 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - coverpoints: 143
 - bins (coverpoint bins, required, post-ignore): 520
 - crosses: 99
-- cross bins (required, post-ignore): 1178
+- cross bins (required, post-ignore): 1175
 - adopted bins: 0 (vendor/google_riscv-dv was not in this subagent's fence; nothing adopted)
-- ignore_bins entries: 65
+- ignore_bins entries: 66
 
 ## Probe candidates
 
@@ -2723,9 +2959,18 @@ Conventions
   follows. W-IRQTAKEN: the cycle of the first ibus request to the interrupt vector (interrupt
   marker offset 2 to its record). W-DBGTAKEN: the cycle of the DmHaltAddr request; the icache is
   disabled while debug_mode_entering is set (rtl/ibex_cs_registers.sv:1970-1971), so every entry
-  fetch reaches the ibus. W-WAITSLEEP(wfi): the cycle after W-FLUSH(wfi) when no entry follows.
+  fetch reaches the ibus. W-WAITSLEEP(wfi): the cycle after W-FLUSH(wfi) when no entry follows
+  (never reached by a stepped wfi, C-5). Same-cycle rule (fact-check TIMING rows TP-TRG-012/020/
+  023/031): the last pre-entry RVFI record (ID exit N -> record N+2; load/store response R -> record
+  R+1) can be output in the SAME cycle as the DmHaltAddr request, so "record X then the DmHaltAddr
+  fetch" is a record-order / at-or-before relation, never a strict cycle order. W-WB(X): the cycles
+  X occupies WB (a one-cycle ALU/CSR instruction: exactly the cycle after its last ID cycle; a
+  load/store: from that cycle to its final response R). A csrr/csrw Y coincides with X in WB only
+  when Y's last ID cycle lies in W-WB(X): back-to-back issue for a one-cycle X (warm icache / fetch
+  already delivered; a slow imem REMOVES the coincidence) or Y held by outstanding_memory_access
+  behind a load/store X (Y commits in cycle R, the deterministic form used by TP-PMC-011/016/024).
   Items whose fire-check needs a redirect-target request cycle pin cpuctrlsts.icache_enable=0
-  (S-4); entry fetches never need it. Where a window is ambiguous the P4 nets (ctrl_fsm_cs,
+  (S-4 / C-14); entry fetches never need it. Where a window is ambiguous the P4 nets (ctrl_fsm_cs,
   fcov_*) are the coverage-only fallback; no checker reads them.
 - Ebreak-into-debug rule (S-2): an ebreak whose ebreakm/ebreaku bit for the current privilege is
   set produces an RVFI record with rvfi_trap = 0 (rtl/ibex_core.sv:1885-1886); the debug path is
@@ -2741,6 +2986,35 @@ Conventions
   256-write sweep after reset release / key valid, so a wfi within 256 cycles of it sees no dip)
   and the LSU is idle in that cycle; otherwise the dip is hidden. Dip bins carry a `hidden`
   class for that case, decoded from the bus monitors.
+- Fix-brief-3 conventions (rtl-arch T-053 fact-check, plan v2b; stated once here, cited as C-n):
+  C-1 the redirect target of a trap / mret / dret record is the NEXT record's rvfi_pc_rdata (or the
+  DmExceptionAddr / vector fetch with the icache off); rvfi_pc_wdata of those records is the next
+  sequential fetch address (rtl/ibex_core.sv:2084 captures pc_if: mret/dret leave ID in DECODE and
+  their pc_set comes one cycle later in FLUSH) and is never asserted as the target; only branch/jump
+  records carry the target. C-3 rvfi_ext_debug_req is the debug_req_i level at the record's IF->ID
+  transfer (rtl/ibex_core.sv:1996-2001), or captured_debug_req when the request arrived on an empty
+  ID (:1949-1957): the instruction in ID when the pin rises reports 0 and completes; an instruction
+  whose transfer comes after the rise never enters ID outside debug mode (halt_if,
+  rtl/ibex_controller.sv:700-708; entry with dpc = its pc and no record for it); the first
+  debug-ROM record reports 1; {req 1, mode 0} is reachable only by a Zcmp micro-op entering ID while
+  enter_debug_mode is masked (rtl/ibex_controller.sv:474-477) or by the sticky capture after a
+  dropped pulse. Debug and interrupt entry need an empty ID and a ready WB (X-7, :296, :700-720):
+  dpc / mepc = pc of the first not-yet-executed instruction = next pc of the last retired record
+  (nominal 2 records after the pin edge, worst case 17). C-5 a stepped wfi never reaches WAIT_SLEEP
+  (FLUSH -> DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987): no core_busy_o dip; the one-cycle dip
+  belongs to an unstepped wfi (port rule) and to a wfi executed in debug mode. C-10 HPM counters 8,
+  11 and 12 over-count an instruction waiting in ID behind an outstanding WB memory access (B17,
+  rtl/ibex_id_stage.sv:886-934, :1054-1057, :1226-1227): the exact classes of CG-PMC-003 carry the
+  precondition "no outstanding WB access when the counted instruction is in ID"; counters 7 and 9
+  are exact (deduped by branch_jump_set_done_q). C-11 mhpmeventN reads 1 << (N - MHPMCOUNTER_BASE)
+  (D20); the selectors are hardwired, nothing programs them. C-12 rvfi_insn is the 32-bit expansion
+  for Zcmp micro-ops (one record per micro-op; halfword on rvfi_ext_expanded_insn; c.ebreak traced
+  as the zero-extended halfword). C-13 rvfi_ext_irq_valid is a LEVEL rising four cycles after the
+  decision cycle and held until about two cycles after the handler's first instruction enters ID;
+  it is the boundary event of an interrupt accepted with no handler record (rvfi_intr is a
+  per-record field). C-14 any bin that infers "in ID" or "no bus fetch of the target" from the
+  instruction bus pins cpuctrlsts.icache_enable = 0 or derives the redirect from RVFI. C-16
+  fire-checks are per-seed assertions on an observable.
 - Cross-operand-only coverpoints: a coverpoint marked "(cross operand only; owner CG-x.cp_y)"
   exists because SV crosses need it inside the same covergroup; its standalone bins are never
   listed in a TP Bins line or the CSV and the closure score takes them from the owner (S-7).
@@ -2765,7 +3039,11 @@ Conventions
 ## DBG covergroups
 
 ### CG-DBG-001: gen_cg_dbg_entry
-- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010, F-DBG-011, F-DBG-025, F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-044, F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-DBG-058, F-DBG-061, F-DBG-064, F-DBG-066, F-DBG-068, F-TRG-010, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019
+- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010,
+  F-DBG-011, F-DBG-025, F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-044, F-DBG-045,
+  F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-DBG-058, F-DBG-061, F-DBG-064, F-DBG-066, F-DBG-068,
+  F-TRG-010, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019, F-DBG-017 (parent of folded bins hosted
+  here)
 - Sample: debug entry = first ibus request to DmHaltAddr while dbg_model.debug_mode==0 (ibus monitor
   event); cause/prv/dpc are taken from the debug-ROM prologue's csrr dcsr / csrr dpc retirements
   (rvfi_rd_wdata) that follow the entry; condition: `dm_halt_fetch && !dbg_model.debug_mode`;
@@ -2775,16 +3053,16 @@ Conventions
 - Coverpoints:
   - cp_cause = dcsr.cause readback: bins ebreak{DBG_CAUSE_EBREAK}, trigger{DBG_CAUSE_TRIGGER}, haltreq{DBG_CAUSE_HALTREQ}, step{DBG_CAUSE_STEP}, none{DBG_CAUSE_NONE}; ignore_bins reserved{5,6,7}: RTL never produces resethaltreq/group/other (CTRL-25). `none` is B9 evidence.
   - cp_prv_before = dcsr.prv readback: bins m{PRIV_LVL_M}, u{PRIV_LVL_U}; ignore_bins s_h{PRIV_LVL_S,PRIV_LVL_H}: no S/H mode, WARL-legalised to U (F-DBG-013).
-  - cp_entry_ctx = dbg_model pipeline context in the decision cycle (window definitions W-*, boundary-derived; the P4 nets are the coverage-only fallback): bins idle{W-DEC of an ordinary instruction, nothing outstanding on either bus}, lsu_wait{load/store granted with rvalid pending (dbus monitor)}, div_wait{multi-cycle divide in EX: RVFI gap open on a div/rem}, zcmp{Zcmp micro-op sequence in progress when the request was first seen (dbus accesses of one cm.* between two records)}, sleep{core in SLEEP after W-WAITSLEEP: a wfi retired with no following record}, reset{no retirement since reset release (FIRST_FETCH)}, flush_exc{W-FLUSH of a trapping instruction}, flush_mret{W-FLUSH(mret)}, flush_csr{W-FLUSH of a flushing CSR write}, flush_wfi{W-FLUSH(wfi) with the request already registered: W-WAITSLEEP never entered (H-C1)}, irq_taken{W-IRQTAKEN}, after_dret{first W-DEC after dret, no retirement in between}, after_trap{first W-DEC after a trap/irq vector fetch, no handler retirement}, after_mret{first W-DEC after mret, no retirement}, ifetch_stall{IF waiting for instr_rvalid_i: a granted fetch without rvalid (ibus monitor) and no record for >= 2 cycles}
+  - cp_entry_ctx = dbg_model pipeline context in the decision cycle (window definitions W-*, boundary-derived; the P4 nets are the coverage-only fallback): bins idle{W-DEC of an ordinary instruction, nothing outstanding on either bus}, lsu_wait{load/store granted with rvalid pending (dbus monitor)}, div_wait{multi-cycle divide in EX: RVFI gap open on a div/rem}, zcmp{Zcmp micro-op sequence in progress when the request was first seen (dbus accesses of one cm.* between two records)}, sleep{core in SLEEP after W-WAITSLEEP: a wfi retired with no following record}, reset{no retirement since reset release (FIRST_FETCH)}, flush_exc{W-FLUSH of a trapping instruction}, flush_mret{W-FLUSH(mret)}, flush_csr{W-FLUSH of a flushing CSR write}, flush_wfi{W-FLUSH(wfi) with a haltreq or the step already registered (enter_debug_mode_prio_q): W-WAITSLEEP never entered (H-C1, C-5)}, irq_taken{W-IRQTAKEN}, after_dret{first W-DEC after dret, no retirement in between}, after_trap{first W-DEC after a trap/irq vector fetch, no handler retirement}, after_mret{first W-DEC after mret, no retirement}, ifetch_stall{IF waiting for instr_rvalid_i: a granted fetch without rvalid (ibus monitor) and no record for >= 2 cycles}
   - cp_dpc_kind = dpc readback vs the RVFI stream: bins next_seq{last retired pc + size}, br_target{taken branch/jump target}, mtvec{trap or interrupt vector}, mret_target{mepc}, ebreak_pc{pc of the ebreak}, trig_pc{== tdata2}, boot{boot_addr_i[31:8],8'h80}, wfi_next{wfi pc + 4}, dret_target{unchanged across an immediate re-halt}
-  - cp_busy_dip = number of consecutive cycles core_busy_o was Off between the last non-debug retirement (or the request, if later) and the DmHaltAddr fetch, classified with the core_busy_o port rule: bins none{0 Off cycles with no masking source active in the W-WAITSLEEP cycle}, hidden{0 Off cycles while a masking source was active in that cycle: an ibus beat outstanding, the icache invalidation sweep active (within 256 cycles of reset release / key valid) or a dbus access outstanding}, one{1}, many{[2:$]}; anti-vacuity: `none` is reachable only through the FLUSH -> DBG_TAKEN_IF override (F-DBG-068), `hidden` only when the bus monitors log the masking source, `one` only when SLEEP is left in its first cycle (F-DBG-044/059 shape), `many` only after a real sleep (F-DBG-009).
+  - cp_busy_dip = number of consecutive cycles core_busy_o was Off between the last non-debug retirement (or the request, if later) and the DmHaltAddr fetch, classified with the core_busy_o port rule: bins none{0 Off cycles with no masking source active in the W-WAITSLEEP cycle}, hidden{0 Off cycles while a masking source was active in that cycle: an ibus beat outstanding, the icache invalidation sweep active (within 256 cycles of reset release / key valid) or a dbus access outstanding}, one{1}, many{[2:$]}; anti-vacuity: `none` is reachable only through the FLUSH -> DBG_TAKEN_IF override (F-DBG-068), `hidden` only when the bus monitors log the masking source, `one` only when SLEEP is left in its first cycle (an unstepped wfi woken by a debug_req_i already high in that cycle, F-DBG-009 / TP-DBG-071 (b), and the debug-mode wfi of F-DBG-059; a stepped wfi never sleeps, C-5), `many` only after a real sleep (F-DBG-009).
 - Crosses:
   - cr_cause_prv = cp_cause x cp_prv_before: bins ebreak_m{ebreak,m}, ebreak_u{ebreak,u}, trigger_m{trigger,m}, trigger_u{trigger,u}, haltreq_m{haltreq,m}, haltreq_u{haltreq,u}, step_m{step,m}, step_u{step,u}; ignore none x *: B9 bin is covered on cp_cause alone.
-  - cr_cause_ctx = cp_cause x cp_entry_ctx: bins haltreq_idle{haltreq,idle}, haltreq_lsu{haltreq,lsu_wait}, haltreq_div{haltreq,div_wait}, haltreq_zcmp{haltreq,zcmp}, haltreq_sleep{haltreq,sleep}, haltreq_reset{haltreq,reset}, haltreq_flush_exc{haltreq,flush_exc}, haltreq_flush_mret{haltreq,flush_mret}, haltreq_flush_csr{haltreq,flush_csr}, haltreq_flush_wfi{haltreq,flush_wfi}, haltreq_irq_taken{haltreq,irq_taken}, haltreq_after_dret{haltreq,after_dret}, haltreq_ifetch{haltreq,ifetch_stall}, step_idle{step,idle}, step_lsu{step,lsu_wait}, step_div{step,div_wait}, step_zcmp{step,zcmp}, step_sleep{step,sleep}, step_flush_exc{step,flush_exc}, step_flush_mret{step,flush_mret}, step_flush_csr{step,flush_csr}, trigger_idle{trigger,idle}, trigger_after_dret{trigger,after_dret}, trigger_after_trap{trigger,after_trap}, trigger_after_mret{trigger,after_mret}, trigger_ifetch{trigger,ifetch_stall}, ebreak_idle{ebreak,idle}; ignore ebreak x {lsu_wait, div_wait, zcmp, sleep, reset, irq_taken, after_*}: ebreak is decided in FLUSH with the pipe drained; ignore trigger x {sleep, reset, zcmp, irq_taken, flush_*}: trigger is a non-priority entry masked in these states (CTRL-24).
+  - cr_cause_ctx = cp_cause x cp_entry_ctx: bins haltreq_idle{haltreq,idle}, haltreq_lsu{haltreq,lsu_wait}, haltreq_div{haltreq,div_wait}, haltreq_zcmp{haltreq,zcmp}, haltreq_sleep{haltreq,sleep}, haltreq_reset{haltreq,reset}, haltreq_flush_exc{haltreq,flush_exc}, haltreq_flush_mret{haltreq,flush_mret}, haltreq_flush_csr{haltreq,flush_csr}, haltreq_flush_wfi{haltreq,flush_wfi}, haltreq_irq_taken{haltreq,irq_taken}, haltreq_after_dret{haltreq,after_dret}, haltreq_ifetch{haltreq,ifetch_stall}, step_idle{step,idle}, step_lsu{step,lsu_wait}, step_div{step,div_wait}, step_zcmp{step,zcmp}, step_flush_exc{step,flush_exc}, step_flush_mret{step,flush_mret}, step_flush_csr{step,flush_csr}, step_flush_wfi{step,flush_wfi}, trigger_idle{trigger,idle}, trigger_after_dret{trigger,after_dret}, trigger_after_trap{trigger,after_trap}, trigger_after_mret{trigger,after_mret}, trigger_ifetch{trigger,ifetch_stall}, ebreak_idle{ebreak,idle}; ignore_bins step_sleep{step,sleep}: a stepped wfi never reaches WAIT_SLEEP / SLEEP (do_single_step_d sets enter_debug_mode_prio_q and FLUSH overrides WAIT_SLEEP with DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987; X-8 / C-5); ignore ebreak x {lsu_wait, div_wait, zcmp, sleep, reset, irq_taken, after_*}: ebreak is decided in FLUSH with the pipe drained; ignore trigger x {sleep, reset, zcmp, irq_taken, flush_*}: trigger is a non-priority entry masked in these states (CTRL-24).
   - cr_cause_dpc = cp_cause x cp_dpc_kind: bins haltreq_next{haltreq,next_seq}, haltreq_br{haltreq,br_target}, haltreq_mtvec{haltreq,mtvec}, haltreq_mret{haltreq,mret_target}, haltreq_boot{haltreq,boot}, haltreq_wfi{haltreq,wfi_next}, haltreq_dret{haltreq,dret_target}, step_next{step,next_seq}, step_br{step,br_target}, step_mtvec{step,mtvec}, step_mret{step,mret_target}, step_wfi{step,wfi_next}, ebreak_pc{ebreak,ebreak_pc}, trigger_pc{trigger,trig_pc}; ignore ebreak x others, trigger x others: dpc is fixed by construction for these causes (a different value is a gen_chk_debug failure).
   - cr_ctx_busy = cp_entry_ctx x cp_busy_dip: bins flush_wfi_none{flush_wfi,none}, sleep_one{sleep,one}, sleep_many{sleep,many}, sleep_hidden{sleep,hidden}; ignore flush_wfi x {one, many, hidden}: the FLUSH -> DBG_TAKEN_IF arc never reaches WAIT_SLEEP (gen_chk_sleep failure); ignore sleep x none: an unmasked zero-length dip after W-WAITSLEEP is a gen_chk_sleep failure; other contexts x *: core_busy_o is high outside WAIT_SLEEP/SLEEP by construction, not covered here.
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-001, TP-DBG-002, TP-DBG-003, TP-DBG-004, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-009, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-015, TP-DBG-016, TP-DBG-022, TP-DBG-024, TP-DBG-042, TP-DBG-043, TP-DBG-044, TP-DBG-045, TP-DBG-046, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-053, TP-DBG-054, TP-DBG-067, TP-DBG-068, TP-DBG-069, TP-DBG-071, TP-TRG-010, TP-TRG-012, TP-TRG-016, TP-TRG-017, TP-TRG-018, TP-TRG-019, TP-TRG-027
+- TP items: TP-DBG-001, TP-DBG-002, TP-DBG-003, TP-DBG-004, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-009, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-015, TP-DBG-016, TP-DBG-020, TP-DBG-022, TP-DBG-024, TP-DBG-030, TP-DBG-042, TP-DBG-043, TP-DBG-045, TP-DBG-046, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-054, TP-DBG-067, TP-DBG-068, TP-DBG-069, TP-DBG-071, TP-TRG-010, TP-TRG-012, TP-TRG-016, TP-TRG-017, TP-TRG-018, TP-TRG-019, TP-TRG-027
 
 ### CG-DBG-002: gen_cg_dbg_req_shape
 - Features: F-DBG-002, F-DBG-005, F-DBG-006, F-DBG-007, F-DBG-008, F-DBG-049, F-DBG-058, F-DBG-068, F-TRG-019
@@ -2801,7 +3079,7 @@ Conventions
   - cr_shape_outcome = cp_shape x cp_outcome: bins held_entered{level_held,entered}, short_dropped{pulse_short,dropped}, short_entered{pulse_short,entered}, flush_entered{pulse_flush,entered}, indebug_ignored{held_in_debug,ignored_in_debug}, dret_rehalt{held_across_dret,rehalt_after_dret}, reset_entered{at_reset,entered}; ignore level_held x dropped: a held request is never dropped (checker failure).
   - cr_coincident_outcome = cp_coincident x cp_outcome: bins irq_entered{irq,entered}, nmi_entered{nmi,entered}, exc_entered{sync_exc,entered}, ebreak_entered{ebreak_dbg,entered}, trigger_entered{trigger,entered}, step_entered{step,entered}, mret_entered{mret,entered}, csr_entered{csr_flush,entered}, wfi_entered{wfi,entered}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-003, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-010, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-030, TP-DBG-054, TP-DBG-068, TP-DBG-071, TP-TRG-019
+- TP items: TP-DBG-001, TP-DBG-003, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-010, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-030, TP-DBG-054, TP-DBG-068, TP-DBG-071, TP-TRG-019
 
 ### CG-DBG-003: gen_cg_dbg_ebreak
 - Features: F-DBG-017, F-DBG-018, F-DBG-019, F-DBG-020, F-DBG-021, F-DBG-022, F-DBG-023, F-DBG-024, F-DBG-025, F-DBG-041, F-DBG-066, F-TRG-020
@@ -2831,7 +3109,8 @@ Conventions
 - TP items: TP-DBG-022, TP-DBG-023, TP-DBG-024, TP-DBG-025, TP-DBG-026, TP-DBG-027, TP-DBG-028, TP-DBG-029, TP-DBG-030, TP-DBG-046, TP-DBG-067, TP-DBG-068, TP-DBG-073, TP-TRG-020
 
 ### CG-DBG-004: gen_cg_dbg_exc_in_debug
-- Features: F-DBG-011, F-DBG-026, F-DBG-027, F-DBG-028, F-DBG-029, F-DBG-030, F-DBG-036, F-DBG-054, F-DBG-055, F-DBG-060, F-DBG-064, F-DBG-067
+- Features: F-DBG-011, F-DBG-026, F-DBG-027, F-DBG-028, F-DBG-029, F-DBG-030, F-DBG-036, F-DBG-054,
+  F-DBG-055, F-DBG-060, F-DBG-064, F-DBG-067, F-PRV-002 (parent of folded bins hosted here)
 - Sample: RVFI item with rvfi_trap && rvfi_ext_debug_mode (synchronous exception inside debug
   mode) that is not an ebreak; target address taken from the next ibus request; condition:
   `rvfi_valid && rvfi_trap && rvfi_ext_debug_mode && !is_ebreak(rvfi_insn)` (an ebreak in debug
@@ -2878,25 +3157,28 @@ Conventions
   - cr_wb_next = cp_wb_pending x cp_next: bins load_run{load,run}, store_run{store,run}, none_run{none,run}
   - cr_step_next = cp_step_at_dret x cp_next: bins on_step{on,step_one}, offafteron_run{off_after_on,run}, offfirst_run{off_first,run}; ignore on x run: a step-armed dret that free-runs is a gen_chk_debug failure; ignore off_* x step_one: a re-entry after one retirement with step = 0 needs another cause (covered by cp_next.rehalt_*).
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-012, TP-DBG-019, TP-DBG-036, TP-DBG-037, TP-DBG-038, TP-DBG-039, TP-DBG-040, TP-DBG-041, TP-DBG-042, TP-DBG-053, TP-DBG-061, TP-DBG-062, TP-DBG-067, TP-DBG-068, TP-DBG-072, TP-TRG-016
+- TP items: TP-DBG-012, TP-DBG-019, TP-DBG-021, TP-DBG-024, TP-DBG-036, TP-DBG-037, TP-DBG-038, TP-DBG-039, TP-DBG-040, TP-DBG-041, TP-DBG-042, TP-DBG-047, TP-DBG-048, TP-DBG-053, TP-DBG-061, TP-DBG-062, TP-DBG-067, TP-DBG-068, TP-DBG-072, TP-TRG-016
 
 ### CG-DBG-006: gen_cg_dbg_step
-- Features: F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-042, F-DBG-043, F-DBG-044, F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-TRG-018, F-PMC-048
+- Features: F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-042, F-DBG-043, F-DBG-044,
+  F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-TRG-018, F-PMC-048, F-DBG-001, F-DBG-017,
+  F-PMC-007 (parent of folded bins hosted here)
 - Sample: debug entry (CG-DBG-001 event) that follows a dret with dbg_model.step_armed==1, where
   step_armed is the post-op value of dcsr.step in the CSR model after the last dcsr write op of the
   preceding debug window (csrrw: wdata[2]; csrrs: old | wdata[2]; csrrc: old & ~wdata[2]),
   confirmed by the dcsr readback where the program reads it; condition: `dm_halt_fetch &&
   step_armed`; anti-vacuity: step_armed is never taken from the raw write data (a csrrc with bit 2
   set clears step, a csrrw with bit 2 clear clears it), so a sample is taken only when the model
-  says the hardware had step = 1 at the dret; the stepped class comes from the zero or one RVFI
-  item between the dret and the re-entry, so a hit proves what was stepped.
+  says the hardware had step = 1 at the dret; the stepped class comes from the zero or one
+  instruction (one record, or the micro-op records of one Zcmp sequence, C-12) between the dret and
+  the re-entry, so a hit proves what was stepped.
 - Coverpoints:
   - cp_stepped = class of the single non-debug instruction (decoded from rvfi_insn, rvfi_pc_wdata, rvfi_mem_*mask and the bus monitors): bins alu{32-bit integer/ALU op, no memory access, no control transfer}, comp{16-bit non-branch}, load_fast{load with rvalid at minimum latency}, load_slow{load with rvalid delayed}, store_slow{store with gnt/rvalid delayed}, div{div/divu/rem/remu}, mulh{mulh/mulhsu/mulhu}, br_taken{conditional branch with rvfi_pc_wdata != pc + size}, br_not{32-bit branch not taken}, c_br_not{c.beqz/c.bnez not taken}, jal{jal/c.jal/c.j}, jalr{jalr/c.jr/c.jalr}, mret{rvfi_insn == MRET}, wfi{rvfi_insn == WFI}, fence_i{rvfi_insn == FENCE.I}, csr_flush{CSR write causing a pipeline flush}, ecall{rvfi_insn == ECALL, rvfi_trap = 1}, illegal{illegal instruction, rvfi_trap = 1}, ebreak_exc{ebreak with ebreakX=0: rvfi_trap = 1}, ebreak_dbg{ebreak with ebreakX=1: rvfi_trap = 0 (S-2)}, zcmp_push{cm.push}, zcmp_pop{cm.pop}, zcmp_popret{cm.popret/popretz}, zcmp_mv{cm.mvsa01/mva01s}, jump_fault_tgt{jump whose target fetch faults}, load_fault{load PMP/bus fault, rvfi_trap = 1}, store_fault{store PMP/bus fault, rvfi_trap = 1}, trig_hit{trigger on the first instruction, zero retirements}
   - cp_prv = privilege of the stepped instruction (rvfi_mode / dcsr.prv): bins m{PRIV_LVL_M}, u{PRIV_LVL_U}
   - cp_pending = interrupt pending during the step window: bins none{irq_pending_o = 0 and irq_nm_i = 0 throughout the window}, irq{enabled interrupt pending (irq_pending_o = 1)}, nmi{irq_nm_i = 1}
-  - cp_haltreq = debug_req_i high during the step: bins no{0}, yes{1}
+  - cp_haltreq = debug_req_i high during the step window (driver log): bins no{0}, yes{1: either the request rose after the stepped instruction entered ID (its record carries rvfi_ext_debug_req = 0, C-3; one retirement, cause 3) or it was already high in the first DECODE after the dret's FLUSH (immediate re-halt with zero retirements, cp_retired.none, TP-DBG-054)}
   - cp_cause = dcsr.cause readback at re-entry (cross operand only; owner CG-DBG-001.cp_cause): bins step{DBG_CAUSE_STEP}, ebreak{DBG_CAUSE_EBREAK}, trigger{DBG_CAUSE_TRIGGER}, haltreq{DBG_CAUSE_HALTREQ}
-  - cp_retired = RVFI items between dret and re-entry: bins none{0 items}, one_ok{1 item with rvfi_trap = 0; includes the ebreak-into-debug record (S-2)}, one_trap{1 item with rvfi_trap = 1}
+  - cp_retired = non-debug instructions between dret and re-entry (an expanded Zcmp sequence is ONE instruction: its micro-op records all carry rvfi_ext_expanded_insn_valid = 1 and only the last rvfi_ext_expanded_insn_last = 1, C-12): bins none{0 instructions: immediate re-halt}, one_ok{1 instruction whose record(s) have rvfi_trap = 0; includes the ebreak-into-debug record (S-2)}, one_trap{1 instruction with rvfi_trap = 1}
   - cp_minstret_delta = minstret readback delta across the step (the debug program reads minstret in every window: TP-PMC-050 only): bins zero{0}, one{1}
 - Crosses:
   - cr_stepped_prv = cp_stepped x cp_prv: bins alu_m{alu,m}, comp_m{comp,m}, loadfast_m{load_fast,m}, loadslow_m{load_slow,m}, storeslow_m{store_slow,m}, div_m{div,m}, mulh_m{mulh,m}, brtaken_m{br_taken,m}, brnot_m{br_not,m}, cbrnot_m{c_br_not,m}, jal_m{jal,m}, jalr_m{jalr,m}, mret_m{mret,m}, wfi_m{wfi,m}, fencei_m{fence_i,m}, csrflush_m{csr_flush,m}, ecall_m{ecall,m}, illegal_m{illegal,m}, ebreakexc_m{ebreak_exc,m}, ebreakdbg_m{ebreak_dbg,m}, push_m{zcmp_push,m}, pop_m{zcmp_pop,m}, popret_m{zcmp_popret,m}, mv_m{zcmp_mv,m}, jumpfault_m{jump_fault_tgt,m}, loadfault_m{load_fault,m}, storefault_m{store_fault,m}, trig_m{trig_hit,m}, alu_u{alu,u}, comp_u{comp,u}, loadslow_u{load_slow,u}, brtaken_u{br_taken,u}, ecall_u{ecall,u}, illegal_u{illegal,u}, ebreakexc_u{ebreak_exc,u}, ebreakdbg_u{ebreak_dbg,u}, wfi_u{wfi,u}, push_u{zcmp_push,u}, trig_u{trig_hit,u}, loadfault_u{load_fault,u}; ignore mret x u: mret in U is an illegal instruction (illegal_u).
@@ -2905,7 +3187,7 @@ Conventions
   - cr_stepped_retired = cp_stepped x cp_retired: bins alu_ok{alu,one_ok}, wfi_ok{wfi,one_ok}, mret_ok{mret,one_ok}, push_ok{zcmp_push,one_ok}, popret_ok{zcmp_popret,one_ok}, ecall_trap{ecall,one_trap}, illegal_trap{illegal,one_trap}, ebreakexc_trap{ebreak_exc,one_trap}, ebreakdbg_ok{ebreak_dbg,one_ok}, loadfault_trap{load_fault,one_trap}, jumpfault_ok{jump_fault_tgt,one_ok}, trig_none{trig_hit,none}; ignore ebreak_dbg x one_trap (the former ebreakdbg_trap, retired): the ebreak-into-debug record has rvfi_trap = 0 (rtl/ibex_core.sv:1885-1886, S-2); a trap record for it is a gen_isa_compare failure.
   - cr_stepped_minstret = cp_stepped x cp_minstret_delta: bins alu_one{alu,one}, wfi_one{wfi,one}, ecall_zero{ecall,zero}, illegal_zero{illegal,zero}, push_one{zcmp_push,one}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-042, TP-DBG-043, TP-DBG-044, TP-DBG-045, TP-DBG-046, TP-DBG-047, TP-DBG-048, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-053, TP-DBG-054, TP-DBG-068, TP-TRG-018, TP-PMC-050
+- TP items: TP-DBG-042, TP-DBG-043, TP-DBG-044, TP-DBG-045, TP-DBG-046, TP-DBG-047, TP-DBG-048, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-053, TP-DBG-054, TP-TRG-018, TP-PMC-050
 
 ### CG-DBG-007: gen_cg_dbg_dcsr_warl
 - Features: F-DBG-012, F-DBG-013, F-DBG-014, F-DBG-015, F-DBG-016, F-DBG-043, F-DBG-057
@@ -2926,11 +3208,11 @@ Conventions
   - cp_readback = per-field readback class against the post-op prediction: bins as_written{writable field (ebreakm, ebreaku, step, prv 00/11) with readback == post-op value}, forced0{hardwired-0 field with post-op value 1: readback 0}, nop0{hardwired-0 field with post-op value 0: readback 0 (witness; not in manifest)}, forced_const{xdebugver reads 4 / cause reads the entry cause whatever the post-op value}, legalised_u{prv post-op 01/10 read 00}
   - cp_op = CSR op: bins rw{csrrw}, rs{csrrs}, rc{csrrc}, rwi{csrrwi}, rsi{csrrsi}, rci{csrrci}
 - Crosses:
-  - cr_bit_rb = cp_bit x cp_readback: bins ebreakm_w{ebreakm,as_written}, ebreaku_w{ebreaku,as_written}, step_w{step,as_written}, ebreaks_w{ebreaks,as_written}, prv_w{prv,as_written}, prv_leg{prv,legalised_u}, stepie_0{stepie,forced0}, stopcount_0{stopcount,forced0}, stoptime_0{stoptime,forced0}, mprven_0{mprven,forced0}, nmip_0{nmip,forced0}, z27_0{z27_16,forced0}, z14_0{z14,forced0}, z5_0{z5,forced0}, cause_c{cause,forced_const}, xdv_c{xdebugver,forced_const}; ignore_bins ebreaks_0{ebreaks,forced0}: the spec-expected readback (core_registers.xml:163-172, hardwired 0 without S-mode) that the RTL cannot produce while B15 stands (rtl/ibex_cs_registers.sv:810-836 stores bit 13); re-enable when B15 is fixed; ignore ebreakm/ebreaku/step x forced0 and hardwired fields x as_written: contradictions are gen_chk_csr_readback failures; ignore * x nop0: witness. The checker's forced-0 field set is {z27_16, z14, ebreaks, stepie, stopcount, stoptime, z5, mprven, nmip} (writable mask 32'h0000_9007 plus prv WARL); ebreaks_w is the B15 evidence bin: the RTL reads bit 13 back as written and the checker fails on it (TP-DBG-018 expected-fail).
+  - cr_bit_rb = cp_bit x cp_readback: bins ebreakm_w{ebreakm,as_written}, ebreaku_w{ebreaku,as_written}, step_w{step,as_written}, ebreaks_w{ebreaks,as_written}, prv_w{prv,as_written}, prv_leg{prv,legalised_u}, stepie_0{stepie,forced0}, stopcount_0{stopcount,forced0}, stoptime_0{stoptime,forced0}, mprven_0{mprven,forced0}, nmip_0{nmip,forced0 (B5 evidence: the RTL hardwires nmip to 0 while an NMI is held pending in debug mode)}, z27_0{z27_16,forced0}, z14_0{z14,forced0}, z5_0{z5,forced0}, cause_c{cause,forced_const}, xdv_c{xdebugver,forced_const}; ignore_bins ebreaks_0{ebreaks,forced0}: the spec-expected readback (core_registers.xml:163-172, hardwired 0 without S-mode) that the RTL cannot produce while B15 stands (rtl/ibex_cs_registers.sv:810-836 stores bit 13); re-enable when B15 is fixed; ignore ebreakm/ebreaku/step x forced0 and hardwired fields x as_written: contradictions are gen_chk_csr_readback failures; ignore * x nop0: witness. The checker's forced-0 field set is {z27_16, z14, ebreaks, stepie, stopcount, stoptime, z5, mprven, nmip} (writable mask 32'h0000_9007 plus prv WARL); ebreaks_w is the B15 evidence bin: the RTL reads bit 13 back as written and the checker fails on it (TP-DBG-018 expected-fail).
   - cr_pattern_op = cp_pattern x cp_op: bins zeros_rw{zeros,rw}, zeros_rc{zeros,rc}, ones_rw{ones,rw}, ones_rs{ones,rs}, ones_rc{ones,rc}, walk_rw{walk1,rw}, walk_rs{walk1,rs}, walk_rc{walk1,rc}, rand_rw{random,rw}, rand_rs{random,rs}, rand_rc{random,rc}, prv_rwi{prv_only,rwi}, prv_rsi{prv_only,rsi}, prv_rci{prv_only,rci}
   - cr_prvw_rb = cp_prv_w x cp_readback: bins s_leg{s,legalised_u}, h_leg{h,legalised_u}, m_w{m,as_written}, u_w{u,as_written}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-017, TP-DBG-018, TP-DBG-019, TP-DBG-020, TP-DBG-021, TP-DBG-048, TP-DBG-062, TP-DBG-068
+- TP items: TP-DBG-018, TP-DBG-019, TP-DBG-020, TP-DBG-068, TP-DBG-073
 
 ### CG-DBG-008: gen_cg_dbg_csr_access
 - Features: F-DBG-012, F-DBG-035, F-DBG-050, F-DBG-051, F-DBG-060
@@ -2951,10 +3233,11 @@ Conventions
   - cr_dpcw_result = cp_dpc_w x cp_result: bins even_ok{even,ok}, odd_ok{odd,ok}
   - cr_scratch_pat_csr = cp_scratch_pat x cp_csr: bins zeros_ds0{zeros,dscratch0}, ones_ds0{ones,dscratch0}, alt_ds0{alt,dscratch0}, rand_ds0{random,dscratch0}, zeros_ds1{zeros,dscratch1}, ones_ds1{ones,dscratch1}, alt_ds1{alt,dscratch1}, rand_ds1{random,dscratch1}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-017, TP-DBG-018, TP-DBG-040, TP-DBG-055, TP-DBG-056, TP-DBG-064, TP-DBG-068
+- TP items: TP-DBG-017, TP-DBG-018, TP-DBG-039, TP-DBG-040, TP-DBG-055, TP-DBG-056, TP-DBG-064, TP-DBG-068
 
 ### CG-DBG-009: gen_cg_dbg_irq_mask
-- Features: F-DBG-002, F-DBG-042, F-DBG-043, F-DBG-056, F-DBG-057, F-DBG-058, F-TRG-025
+- Features: F-DBG-002, F-DBG-042, F-DBG-043, F-DBG-056, F-DBG-057, F-DBG-058, F-TRG-025, F-DBG-001,
+  F-DBG-037 (parent of folded bins hosted here)
 - Sample: one sample per pending episode: an enabled interrupt (irq model: |(pins & mie) with
   mstatus.MIE or U-mode) or irq_nm_i is pending while dbg_model.debug_mode==1 or step_window==1, or
   in the debug-entry decision cycle; closed when the disposition is known (first post-window RVFI
@@ -3024,7 +3307,7 @@ Conventions
   - cr_mret_mpp = cp_insn_class x cp_mret_mpp: bins mret_m{mret,m}, mret_u{mret,u}
   - cr_class_mode = cp_insn_class x cp_mode: bins alu_u{alu,u}, csrdbg_u{csr_dbg,u}, load_u{load,u}, alu_m{alu,m}, dret_m{dret,m}, dret_u{dret,u}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-001, TP-DBG-031, TP-DBG-035, TP-DBG-063, TP-DBG-064, TP-DBG-065, TP-DBG-066, TP-DBG-068, TP-PMC-049
+- TP items: TP-DBG-001, TP-DBG-028, TP-DBG-031, TP-DBG-034, TP-DBG-036, TP-DBG-063, TP-DBG-064, TP-DBG-065, TP-DBG-066, TP-DBG-068, TP-PMC-049
 
 ### CG-DBG-012: gen_cg_dbg_rvfi_flags
 - Features: F-DBG-064, F-DBG-065
@@ -3032,16 +3315,20 @@ Conventions
   req1_mode0, req0_mode1, req1_mode1, u_dbg, trap_dbg, ok_dbg and every cr_flags_mode bin need a
   debug request overlapping a retirement, a debug program or a trap in debug mode; req0_mode0, m
   and ok are hit by every ordinary retirement and are witness bins (not in manifest);
-  anti-vacuity: a hit in req1_mode0 proves the request was visible on a non-debug retirement,
-  which only happens when the pipe was not yet drained.
+  anti-vacuity: rvfi_ext_debug_req is the debug_req_i level at the record's IF->ID transfer (or
+  captured_debug_req, C-3), so a hit in req1_mode0 proves one of the two mechanisms that let an
+  instruction enter ID with the request registered: a Zcmp micro-op during the expansion mask
+  (rtl/ibex_controller.sv:474-477) or the sticky capture after a dropped pulse
+  (rtl/ibex_core.sv:1949-1957); an ordinary instruction never enters ID while debug_req_i is high
+  outside debug mode (halt_if), so "slow memory" alone never produces it.
 - Coverpoints:
-  - cp_flags = {rvfi_ext_debug_req, rvfi_ext_debug_mode}: bins req0_mode0{2'b00 (witness; not in manifest)}, req1_mode0{2'b10}, req0_mode1{2'b01}, req1_mode1{2'b11}
+  - cp_flags = {rvfi_ext_debug_req, rvfi_ext_debug_mode}: bins req0_mode0{2'b00 (witness; not in manifest)}, req1_mode0{2'b10: a Zcmp micro-op entering ID during the mask with debug_req_i high, or the first instruction entering ID after a dropped pulse that landed on an empty ID (TP-DBG-010)}, req0_mode1{2'b01: debug-program record with the request released}, req1_mode1{2'b11: the first debug-ROM record of a held-request entry (raw level or captured_debug_req), or any debug-program record with the request still high}
   - cp_mode_dbg = {rvfi_mode, rvfi_ext_debug_mode} (owner of the mode-in-debug coverpoint; CG-DBG-004/008/011 hold cross-operand copies): bins m_dbg{PRIV_LVL_M,1}, u_dbg{PRIV_LVL_U,1}, m{PRIV_LVL_M,0 (witness; not in manifest)}, u{PRIV_LVL_U,0}
   - cp_trap_dbg = {rvfi_trap, rvfi_ext_debug_mode}: bins trap_dbg{1,1: exception in debug mode or an ebreak re-entry with the enable bit clear (S-2)}, trap{1,0}, ok_dbg{0,1}, ok{0,0 (witness; not in manifest)}
 - Crosses:
   - cr_flags_mode = cp_flags x cp_mode_dbg: bins req1_m{req1_mode0,m}, req1_u{req1_mode0,u}, mode1_m{req0_mode1,m_dbg}, mode1_u{req0_mode1,u_dbg}
 - Adopted (riscv-dv): none
-- TP items: TP-DBG-001, TP-DBG-002, TP-DBG-064, TP-DBG-068, TP-DBG-070
+- TP items: TP-DBG-001, TP-DBG-002, TP-DBG-004, TP-DBG-006, TP-DBG-009, TP-DBG-010, TP-DBG-031, TP-DBG-036, TP-DBG-064, TP-DBG-068, TP-DBG-070
 
 ---------------------------------------------------------------------------------------------------
 
@@ -3062,21 +3349,23 @@ Conventions
   - cp_result = {rvfi_trap, readback relation}: bins ok_applied{write, no trap, readback == the WARL prediction and != the pre-write value}, ok_dropped{write, no trap, readback unchanged}, ok_read{read, no trap}, illegal{rvfi_trap}
   - cp_tsel_w = tselect write data: bins zero{0}, one{1}, big{[2 : 32'hFFFF_FFFE]}, ones{32'hFFFF_FFFF}
   - cp_td1_w = tdata1 write-data class of the non-execute bits: bins zeros{all other bits 0}, ones{all other bits 1}, type_ne2{type field != 2}, dmode0{dmode bit 0}, ldst{load/store bits set}, match_nz{match field != 0}, action0{action field 0}, chain{chain bit}, hit1{bit 20 set}, random{any other value}
-  - cp_td1_exec_w = tdata1 write data bit 2: bins zero{0}, one{1}
+  - cp_td1_exec_w = post-op value of tdata1 bit 2 (csrrw: wdata[2]; csrrs: old_exec | wdata[2]; csrrc: old_exec & ~wdata[2]; the RTL captures the merged value, rtl/ibex_cs_registers.sv:1004-1005, :1788, so a csrrc with all-ones clears execute): bins zero{0}, one{1}
   - cp_td2_w = tdata2 write data: bins zero{0}, ones{32'hFFFF_FFFF}, odd{bit0=1}, halfword{bit1=1,bit0=0}, msb{32'h8000_0000}, random{any other value}
   - cp_td1_rb = tdata1 readback: bins dis{32'h2800_1048}, en{32'h2800_104C}, en_after_hit{32'h2800_104C read in the first debug window after a cause-2 entry: hit (bit 20) still 0, F-TRG-028 folded into F-TRG-003}
 - Crosses:
-  - cr_csr_mode_result = cp_csr x cp_mode x cp_result: bins tsel_dbg_drop{tselect,dbg,ok_dropped}, td1_dbg_app{tdata1,dbg,ok_applied}, td2_dbg_app{tdata2,dbg,ok_applied}, tsel_m_drop{tselect,m,ok_dropped}, td1_m_drop{tdata1,m,ok_dropped}, td2_m_drop{tdata2,m,ok_dropped}, td3_dbg_drop{tdata3,dbg,ok_dropped}, td3_m_drop{tdata3,m,ok_dropped}, mctx_dbg_drop{mcontext,dbg,ok_dropped}, mctx_m_drop{mcontext,m,ok_dropped}, msctx_dbg_drop{mscontext,dbg,ok_dropped}, msctx_m_drop{mscontext,m,ok_dropped}, sctx_dbg_drop{scontext,dbg,ok_dropped}, sctx_m_drop{scontext,m,ok_dropped}, tsel_u_ill{tselect,u,illegal}, td1_u_ill{tdata1,u,illegal}, td2_u_ill{tdata2,u,illegal}, td3_u_ill{tdata3,u,illegal}, mctx_u_ill{mcontext,u,illegal}, msctx_u_ill{mscontext,u,illegal}, sctx_u_ill{scontext,u,illegal}, tinfo_u_ill{tinfo,u,illegal}, tctl_u_ill{tcontrol,u,illegal}, tinfo_dbg_ill{tinfo,dbg,illegal}, tinfo_m_ill{tinfo,m,illegal}, tctl_dbg_ill{tcontrol,dbg,illegal}, tctl_m_ill{tcontrol,m,illegal}, tsel_dbg_rd{tselect,dbg,ok_read}, tsel_m_rd{tselect,m,ok_read}, td1_dbg_rd{tdata1,dbg,ok_read}, td1_m_rd{tdata1,m,ok_read}, td2_dbg_rd{tdata2,dbg,ok_read}, td2_m_rd{tdata2,m,ok_read}, td3_dbg_rd{tdata3,dbg,ok_read}, td3_m_rd{tdata3,m,ok_read}, mctx_dbg_rd{mcontext,dbg,ok_read}, mctx_m_rd{mcontext,m,ok_read}, msctx_dbg_rd{mscontext,dbg,ok_read}, msctx_m_rd{mscontext,m,ok_read}, sctx_dbg_rd{scontext,dbg,ok_read}, sctx_m_rd{scontext,m,ok_read}; ignore tinfo/tcontrol x ok_*: never decoded; ignore tdata3/mcontext/mscontext/scontext x ok_applied: no storage (B3 evidence bins are the *_drop bins); ignore_bins tsel_dbg_app{tselect,dbg,ok_applied}: with DbgHwBreakNum = 1 tselect always reads 0, so no write can change the readback (the former must-hit bin; TP-TRG-001 now requires tsel_dbg_drop).
+  - cr_csr_mode_result = cp_csr x cp_mode x cp_result: bins tsel_dbg_drop{tselect,dbg,ok_dropped}, td1_dbg_app{tdata1,dbg,ok_applied}, td2_dbg_app{tdata2,dbg,ok_applied}, tsel_m_drop{tselect,m,ok_dropped}, td1_m_drop{tdata1,m,ok_dropped}, td2_m_drop{tdata2,m,ok_dropped}, td3_dbg_drop{tdata3,dbg,ok_dropped}, td3_m_drop{tdata3,m,ok_dropped}, mctx_dbg_drop{mcontext,dbg,ok_dropped}, mctx_m_drop{mcontext,m,ok_dropped}, msctx_dbg_drop{mscontext,dbg,ok_dropped}, msctx_m_drop{mscontext,m,ok_dropped}, sctx_dbg_drop{scontext,dbg,ok_dropped}, sctx_m_drop{scontext,m,ok_dropped}, tsel_u_ill{tselect,u,illegal}, td1_u_ill{tdata1,u,illegal}, td2_u_ill{tdata2,u,illegal}, td3_u_ill{tdata3,u,illegal}, mctx_u_ill{mcontext,u,illegal}, msctx_u_ill{mscontext,u,illegal}, sctx_u_ill{scontext,u,illegal}, tinfo_u_ill{tinfo,u,illegal}, tctl_u_ill{tcontrol,u,illegal}, tinfo_dbg_ill{tinfo,dbg,illegal}, tinfo_m_ill{tinfo,m,illegal}, tctl_dbg_ill{tcontrol,dbg,illegal}, tctl_m_ill{tcontrol,m,illegal}, tsel_dbg_rd{tselect,dbg,ok_read}, tsel_m_rd{tselect,m,ok_read}, td1_dbg_rd{tdata1,dbg,ok_read}, td1_m_rd{tdata1,m,ok_read}, td2_dbg_rd{tdata2,dbg,ok_read}, td2_m_rd{tdata2,m,ok_read}, td3_dbg_rd{tdata3,dbg,ok_read}, td3_m_rd{tdata3,m,ok_read}, mctx_dbg_rd{mcontext,dbg,ok_read}, mctx_m_rd{mcontext,m,ok_read}, msctx_dbg_rd{mscontext,dbg,ok_read}, msctx_m_rd{mscontext,m,ok_read}, sctx_dbg_rd{scontext,dbg,ok_read}, sctx_m_rd{scontext,m,ok_read}; ignore tinfo/tcontrol x ok_*: never decoded; ignore tdata3/mcontext/mscontext/scontext x ok_applied: no storage (B3 evidence bins: the tdata3/mcontext/mscontext/scontext *_drop and *_rd bins record the RTL's read-0 / write-drop where Sdtrig expects `illegal`; they are hit by the expected-fail item TP-TRG-008 only); ignore_bins tsel_dbg_app{tselect,dbg,ok_applied}: with DbgHwBreakNum = 1 tselect always reads 0, so no write can change the readback (the former must-hit bin; TP-TRG-001 now requires tsel_dbg_drop).
   - cr_td1_exec_rb = cp_td1_exec_w x cp_td1_rb: bins e0_dis{zero,dis}, e1_en{one,en}; ignore zero x en, one x dis: WARL failure is a gen_chk_csr_readback failure.
   - cr_td1w_exec = cp_td1_w x cp_td1_exec_w: bins zeros_e0{zeros,zero}, zeros_e1{zeros,one}, ones_e0{ones,zero}, ones_e1{ones,one}, type_e1{type_ne2,one}, dmode0_e1{dmode0,one}, ldst_e1{ldst,one}, ldst_e0{ldst,zero}, match_e1{match_nz,one}, action0_e1{action0,one}, chain_e1{chain,one}, hit1_e1{hit1,one}, rand_e0{random,zero}, rand_e1{random,one}
   - cr_tselw_mode = cp_tsel_w x cp_mode: bins zero_dbg{zero,dbg}, one_dbg{one,dbg}, big_dbg{big,dbg}, ones_dbg{ones,dbg}, one_m{one,m}, ones_m{ones,m}
   - cr_td2w_mode = cp_td2_w x cp_mode: bins zero_dbg{zero,dbg}, ones_dbg{ones,dbg}, odd_dbg{odd,dbg}, half_dbg{halfword,dbg}, msb_dbg{msb,dbg}, rand_dbg{random,dbg}, rand_m{random,m}
   - cr_csr_op = cp_csr x cp_op: bins tsel_set{tselect,set}, tsel_clr{tselect,clear}, td1_set{tdata1,set}, td1_clr{tdata1,clear}, td2_set{tdata2,set}, td2_clr{tdata2,clear}, td3_wr{tdata3,write}, mctx_wr{mcontext,write}, msctx_wr{mscontext,write}, sctx_wr{scontext,write}, tinfo_rd{tinfo,read}, tinfo_wr{tinfo,write}, tctl_rd{tcontrol,read}, tctl_wr{tcontrol,write}
 - Adopted (riscv-dv): none
-- TP items: TP-TRG-001, TP-TRG-002, TP-TRG-003, TP-TRG-004, TP-TRG-005, TP-TRG-006, TP-TRG-007, TP-TRG-008, TP-TRG-009, TP-TRG-028, TP-TRG-029, TP-TRG-030, TP-TRG-031
+- TP items: TP-TRG-001, TP-TRG-002, TP-TRG-003, TP-TRG-004, TP-TRG-005, TP-TRG-006, TP-TRG-007, TP-TRG-008, TP-TRG-009, TP-TRG-015, TP-TRG-028, TP-TRG-029, TP-TRG-030, TP-TRG-031
 
 ### CG-TRG-002: gen_cg_trg_fire
-- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019, F-TRG-020, F-TRG-021, F-TRG-022, F-TRG-023, F-TRG-024, F-TRG-025, F-TRG-026, F-TRG-027, F-TRG-030, F-DBG-066
+- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017,
+  F-TRG-018, F-TRG-019, F-TRG-020, F-TRG-021, F-TRG-022, F-TRG-023, F-TRG-024, F-TRG-025, F-TRG-026,
+  F-TRG-027, F-TRG-030, F-DBG-066, F-DBG-001, F-DBG-031 (parent of folded bins hosted here)
 - Sample: one sample each time the TB trigger model (tdata1.execute, tdata2 from the CSR model)
   sees the armed address become the next-to-execute address (derived from RVFI pc_wdata / trap and
   interrupt vectors / dret target / reset boot address), and each cause-2 debug entry; closed when
@@ -3106,7 +3395,7 @@ Conventions
   - cr_cause_dpc = cp_cause_rb x cp_dpc_rel: bins trig_td2{trigger,eq_td2}, trig_ebreakpc{trigger,eq_ebreak_pc}, ebreak_ebreakpc{ebreak,eq_ebreak_pc}; (B10 evidence: trig_ebreakpc, an inconsistent pair)
   - cr_hist_fired = cp_arm_hist x cp_fired: bins first_f{first,fired}, rearmed_f{rearmed,fired}, disarmed_nf{disarmed_after_fire,not_fired}; ignore disarmed_after_fire x fired: a fire with execute = 0 is a gen_chk_debug failure.
 - Adopted (riscv-dv): none
-- TP items: TP-TRG-010, TP-TRG-011, TP-TRG-012, TP-TRG-013, TP-TRG-014, TP-TRG-015, TP-TRG-016, TP-TRG-017, TP-TRG-018, TP-TRG-019, TP-TRG-020, TP-TRG-021, TP-TRG-022, TP-TRG-023, TP-TRG-024, TP-TRG-025, TP-TRG-026, TP-TRG-027, TP-TRG-030, TP-TRG-031, TP-TRG-032, TP-DBG-067
+- TP items: TP-DBG-067, TP-TRG-010, TP-TRG-011, TP-TRG-012, TP-TRG-013, TP-TRG-014, TP-TRG-015, TP-TRG-016, TP-TRG-017, TP-TRG-018, TP-TRG-019, TP-TRG-020, TP-TRG-021, TP-TRG-022, TP-TRG-023, TP-TRG-024, TP-TRG-025, TP-TRG-026, TP-TRG-027, TP-TRG-030, TP-TRG-031, TP-TRG-032
 
 ---------------------------------------------------------------------------------------------------
 
@@ -3136,10 +3425,12 @@ Conventions
   - cr_wr_lobefore = cp_op x cp_lo_before: bins wrhi_near{wr_hi,near_wrap}, wrlo_near{wr_lo,near_wrap}, wrhi_mid{wr_hi,mid}, wrlo_zero{wr_lo,zero}
   - cr_carry_ctx = cp_carry x cp_ctx: bins carry_run{seen,run}, carry_wfi{seen,wfi_sleep}, carry_debug{seen,debug}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-001, TP-PMC-002, TP-PMC-003, TP-PMC-004, TP-PMC-005, TP-PMC-006, TP-PMC-007, TP-PMC-049, TP-PMC-052, TP-PMC-053, TP-PMC-055, TP-PMC-056, TP-DBG-066
+- TP items: TP-DBG-066, TP-PMC-001, TP-PMC-002, TP-PMC-003, TP-PMC-004, TP-PMC-005, TP-PMC-006, TP-PMC-007, TP-PMC-023, TP-PMC-049, TP-PMC-050, TP-PMC-052, TP-PMC-053, TP-PMC-055, TP-PMC-056
 
 ### CG-PMC-002: gen_cg_pmc_minstret
-- Features: F-PMC-007, F-PMC-008, F-PMC-009, F-PMC-010, F-PMC-011, F-PMC-012, F-PMC-013, F-PMC-014, F-PMC-022, F-PMC-046, F-PMC-047, F-PMC-048, F-PMC-050, F-PMC-051, F-PMC-052, F-DBG-063
+- Features: F-PMC-007, F-PMC-008, F-PMC-009, F-PMC-010, F-PMC-011, F-PMC-012, F-PMC-013, F-PMC-014,
+  F-PMC-022, F-PMC-046, F-PMC-047, F-PMC-048, F-PMC-050, F-PMC-051, F-PMC-052, F-DBG-063, F-PMC-001
+  (parent of folded bins hosted here)
 - Sample: RVFI retirement of a CSR access to CSR_MINSTRET / CSR_MINSTRETH (or instret/instreth
   aliases); the window is everything retired since the previous minstret read; condition:
   `rvfi_valid && csr_addr inside {MINSTRET, MINSTRETH, INSTRET, INSTRETH}`; counter-model rule:
@@ -3167,7 +3458,7 @@ Conventions
   - cr_wrap_op = cp_wrap x cp_op: bins carry_rdhi{carry,rd_hi}, carry_rdlo{carry,rd_lo}
   - cr_dummy_delta = cp_dummy_en x cp_delta: bins dumon_gt{on,gt_rvfi}, dumoff_eq{off,eq_rvfi}, dumon_eq{on,eq_rvfi}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-008, TP-PMC-009, TP-PMC-010, TP-PMC-011, TP-PMC-012, TP-PMC-013, TP-PMC-014, TP-PMC-015, TP-PMC-016, TP-PMC-024, TP-PMC-048, TP-PMC-049, TP-PMC-050, TP-PMC-052, TP-PMC-053, TP-PMC-054, TP-PMC-055, TP-DBG-066
+- TP items: TP-DBG-066, TP-PMC-008, TP-PMC-009, TP-PMC-010, TP-PMC-011, TP-PMC-012, TP-PMC-013, TP-PMC-014, TP-PMC-015, TP-PMC-023, TP-PMC-024, TP-PMC-037, TP-PMC-048, TP-PMC-049, TP-PMC-050, TP-PMC-052, TP-PMC-053, TP-PMC-054, TP-PMC-055
 
 ### CG-PMC-003: gen_cg_pmc_hpm_event
 - Features: F-PMC-016, F-PMC-021, F-PMC-023, F-PMC-032, F-PMC-033, F-PMC-034, F-PMC-035, F-PMC-036, F-PMC-037, F-PMC-038, F-PMC-039, F-PMC-040, F-PMC-041, F-PMC-042, F-PMC-043, F-PMC-044, F-PMC-046, F-PMC-047, F-PMC-049, F-DBG-063
@@ -3176,13 +3467,17 @@ Conventions
   `window_end && counter_implemented`; exactness class per index (gen_tb_architecture.md 8.2 item
   2 and C4.6; the `eq` bins are sampled only in the exact classes): exact_rvfi for loads, stores,
   jumps, branches, taken, ret_c (instruction-derived from RVFI; a misaligned load/store counts 1,
-  D6); exact_gap for mul_wait and div_wait (each mulh-class retirement adds 1 (RV32MSingleCycle);
-  each divide adds its RVFI gap minus 1, valid only when the gap is measured from the previous
+  D6; fence.i is a jump for counter 7, rtl/ibex_decoder.sv:711-720; branches (counter 8) are exact
+  only in windows where no branch enters ID while a WB load/store response is outstanding, else the
+  window is bound class: C-10 / B17, the RTL adds one count per waiting cycle); exact_gap for
+  mul_wait and div_wait (each mulh-class retirement adds 1 (RV32MSingleCycle), mul adds 0; each
+  divide adds its RVFI gap minus 1, valid only when the gap is measured from the previous
   retirement and the qualifiers hold: no fetch stall on the divide (icache_enable = 0 pinned or the
   divide already in the prefetch buffer), the previous record is a single-cycle non-memory
-  instruction retired without a WB stall, no dummy instruction in the gap (dummy_instr_en = 0),
-  no mcycle/mcountinhibit write in between; otherwise the window is checked as a bound and `eq`
-  is not sampled); bound for lsu_wait and if_wait (handshake-derived bounds `0 <= delta <= cycles
+  instruction retired without a WB stall (so the mul/div did not wait behind an outstanding WB
+  access: C-10 / B17, the deferred start adds one mul_wait / div_wait count per waiting cycle), no
+  dummy instruction in the gap (dummy_instr_en = 0), no mcycle/mcountinhibit write in between;
+  otherwise the window is checked as a bound and `eq` is not sampled); bound for lsu_wait and if_wait (handshake-derived bounds `0 <= delta <= cycles
   elapsed`, monotonic; `eq` sampled only for TB-constructed single-kind windows whose timing the
   agent fixed); anti-vacuity: the event count is measured independently by gen_chk_counters (dbus
   transactions, RVFI pc_wdata for jumps/branches, rvfi_insn width for compressed, ibus/dbus
@@ -3195,22 +3490,23 @@ Conventions
   - cp_delta_rel = counter delta vs measured events: bins eq{==}, gt{>}, lt{< : only legal for a window containing a same-cycle counter write that drops one event, F-PMC-045}, zero{delta 0 with events > 0}, partial{== events before a mid-window inhibit write plus events after its clearing}
   - cp_inhibit = mcountinhibit[idx] over the window: bins off{0 throughout}, on{1 throughout}, set_mid{written 1 inside the window}, cleared_mid{written 0 inside the window after being 1}
   - cp_dummy_en = cpuctrlsts.dummy_instr_en (CSR model) over the window: bins off{0}, on{1}
-  - cp_variant = dominant event variant of the window (single-kind windows in Phase 1, `mixed` otherwise), decoded from RVFI / dbus / ibus: bins aligned{loads/stores with address aligned to the width}, misaligned{loads/stores crossing a word boundary: two dbus beats}, pmp_denied{loads/stores denied by the PMP model: no dbus request}, straddle_pmp{misaligned access whose second beat is PMP-denied}, bus_err{loads/stores answered with data_err_i}, jal{JAL}, jalr{JALR}, c_j{C.J}, c_jal{C.JAL}, c_jr{C.JR}, c_jalr{C.JALR}, popret{cm.popret/popretz}, b_taken{32-bit branch taken}, b_not{32-bit branch not taken}, c_beqz_taken{c.beqz/c.bnez taken}, c_bnez_not{c.beqz/c.bnez not taken}, dit_on_taken{taken branch with data_ind_timing = 1}, dit_on_not{not-taken branch with data_ind_timing = 1}, c_alu{16-bit non-branch retirements}, zcmp{cm.* sequences}, mul{MUL}, mulh{MULH}, mulhsu{MULHSU}, mulhu{MULHU}, dummy_mul{dummy multiply inserted (probe-gated P1, not in manifest)}, div{DIV}, divu{DIVU}, rem{REM}, remu{REMU}, div_zero{divide by zero}, div_ovf{signed overflow divide}, dummy_div{dummy divide inserted (probe-gated P1, not in manifest)}, rvalid_delay{LSU wait from delayed rvalid}, gnt_delay{LSU wait from delayed gnt}, ld_use_hazard{LSU wait from a load-use dependency}, imem_latency{IF wait from imem latency}, redirect{IF wait after a taken branch/jump}, after_debug{IF wait after a debug entry/dret}, mixed{more than one variant}
+  - cp_variant = dominant event variant of the window (single-kind windows in Phase 1, `mixed` otherwise), decoded from RVFI / dbus / ibus: bins aligned{loads/stores with address aligned to the width}, misaligned{loads/stores crossing a word boundary: two dbus beats}, pmp_denied{loads/stores denied by the PMP model: no dbus request}, straddle_pmp{misaligned access whose second beat is PMP-denied}, bus_err{loads/stores answered with data_err_i}, jal{JAL}, jalr{JALR}, c_j{C.J}, c_jal{C.JAL}, c_jr{C.JR}, c_jalr{C.JALR}, popret{cm.popret/popretz}, fence_i{FENCE.I: decoded as a jump (jump_in_dec / jump_set, rtl/ibex_decoder.sv:711-720), counter 7}, b_taken{32-bit branch taken}, b_not{32-bit branch not taken}, c_beqz_taken{c.beqz/c.bnez taken}, c_bnez_not{c.beqz/c.bnez not taken}, dit_on_taken{taken branch with data_ind_timing = 1}, dit_on_not{not-taken branch with data_ind_timing = 1}, c_alu{16-bit non-branch retirements}, zcmp{cm.* sequences}, mul{MUL}, mulh{MULH}, mulhsu{MULHSU}, mulhu{MULHU}, dummy_mul{dummy multiply inserted (probe-gated P1, not in manifest)}, div{DIV}, divu{DIVU}, rem{REM}, remu{REMU}, div_zero{divide by zero}, div_ovf{signed overflow divide}, dummy_div{dummy divide inserted (probe-gated P1, not in manifest)}, br_wb_wait{conditional branch entering ID while the preceding load/store still awaits its WB response (B17 window; measured count = branches)}, mul_wb_wait{mul / mulh-class entering ID behind an outstanding WB access (B17 window; measured count = mul 0, mulh-class 1)}, div_wb_wait{div / rem entering ID behind an outstanding WB access (B17 window; measured count = DIV_STALL_FULL or DIV_STALL_ZERO per divide)}, rvalid_delay{LSU wait from delayed rvalid}, gnt_delay{window built from one load/store with a delayed gnt and nothing waiting behind it: measured count 0, the access's own grant wait is not in perf_dside_wait (rtl/ibex_id_stage.sv:1135-1136)}, ld_use_hazard{LSU wait from a load-use dependency}, imem_latency{IF wait from imem latency}, redirect{IF wait after a taken branch/jump}, after_debug{IF wait after a debug entry/dret}, mixed{more than one variant}
   - cp_ctx = window context (RVFI flags of the window's records): bins run{no debug flag in the window}, debug{window inside debug mode}, step{window is a single step}
   - cp_dit = cpuctrlsts.data_ind_timing: bins off{0}, on{1}
 - Crosses:
   - cr_idx_events = cp_idx x cp_events: bins lsu_0{lsu_wait,zero}, lsu_1{lsu_wait,one}, lsu_few{lsu_wait,few}, lsu_many{lsu_wait,many}, if_0{if_wait,zero}, if_1{if_wait,one}, if_few{if_wait,few}, if_many{if_wait,many}, ld_0{loads,zero}, ld_1{loads,one}, ld_few{loads,few}, ld_many{loads,many}, ld_wrap{loads,wrap}, st_0{stores,zero}, st_1{stores,one}, st_few{stores,few}, st_many{stores,many}, st_wrap{stores,wrap}, jmp_0{jumps,zero}, jmp_1{jumps,one}, jmp_few{jumps,few}, jmp_many{jumps,many}, jmp_wrap{jumps,wrap}, br_0{branches,zero}, br_1{branches,one}, br_few{branches,few}, br_many{branches,many}, br_wrap{branches,wrap}, tk_0{taken,zero}, tk_1{taken,one}, tk_few{taken,few}, tk_many{taken,many}, rc_0{ret_c,zero}, rc_1{ret_c,one}, rc_few{ret_c,few}, rc_many{ret_c,many}, rc_wrap{ret_c,wrap}, mul_0{mul_wait,zero}, mul_1{mul_wait,one}, mul_few{mul_wait,few}, mul_many{mul_wait,many}, div_0{div_wait,zero}, div_1{div_wait,one: one early-out div/rem by zero with data_ind_timing = 0}, div_few{div_wait,few: 2..15 early-out divides}, div_many{div_wait,many: >= 1 full-latency divide or >= 16 early-outs}; ignore lsu_wait/if_wait/taken/mul_wait/div_wait x wrap: cycle-class counters are wrapped via preload in cr_idx_inhibit items only when cheap; not required.
   - cr_div_shape = cp_idx x cp_div_shape: bins div_none{div_wait,none}, div_early{div_wait,early_only}, div_full1{div_wait,full_one}, div_fullmany{div_wait,full_many}, div_mixed{div_wait,mixed}; ignore other idx x *: cp_div_shape is defined for div_wait only.
   - cr_idx_inhibit = cp_idx x cp_inhibit x cp_delta_rel: bins lsu_inh{lsu_wait,on,zero}, if_inh{if_wait,on,zero}, ld_inh{loads,on,zero}, st_inh{stores,on,zero}, jmp_inh{jumps,on,zero}, br_inh{branches,on,zero}, tk_inh{taken,on,zero}, rc_inh{ret_c,on,zero}, mul_inh{mul_wait,on,zero}, div_inh{div_wait,on,zero}, lsu_eq{lsu_wait,off,eq}, if_eq{if_wait,off,eq}, ld_eq{loads,off,eq}, st_eq{stores,off,eq}, jmp_eq{jumps,off,eq}, br_eq{branches,off,eq}, tk_eq{taken,off,eq}, rc_eq{ret_c,off,eq}, mul_eq{mul_wait,off,eq}, div_eq{div_wait,off,eq}, ld_setmid{loads,set_mid,partial}, st_setmid{stores,set_mid,partial}, br_clrmid{branches,cleared_mid,partial}, rc_setmid{ret_c,set_mid,partial}; ignore set_mid/cleared_mid x eq, on x eq: counting while inhibited is a gen_chk_counters failure.
-  - cr_idx_dummy = cp_idx x cp_dummy_en x cp_delta_rel: bins mul_dum_gt{mul_wait,on,gt}, div_dum_gt{div_wait,on,gt}, mul_dum_eq{mul_wait,off,eq}; (B7 evidence on the wait counters without a probe: an ALU-only window with dummies on has zero program mul/div events, so any delta is `gt`)
-  - cr_variant_rel = cp_variant x cp_delta_rel: bins aligned_eq{aligned,eq}, misaligned_eq{misaligned,eq}, pmpden_eq{pmp_denied,eq}, straddle_eq{straddle_pmp,eq}, buserr_eq{bus_err,eq}, jal_eq{jal,eq}, jalr_eq{jalr,eq}, cj_eq{c_j,eq}, cjal_eq{c_jal,eq}, cjr_eq{c_jr,eq}, cjalr_eq{c_jalr,eq}, popret_eq{popret,eq}, btaken_eq{b_taken,eq}, bnot_eq{b_not,eq}, cbeqz_eq{c_beqz_taken,eq}, cbnez_eq{c_bnez_not,eq}, dittaken_eq{dit_on_taken,eq}, ditnot_gt{dit_on_not,gt}, ditnot_eq{dit_on_not,eq}, calu_eq{c_alu,eq}, zcmp_eq{zcmp,eq}, mul_eq{mul,eq}, mulh_eq{mulh,eq}, mulhsu_eq{mulhsu,eq}, mulhu_eq{mulhu,eq}, dummymul_gt{dummy_mul,gt} (probe-gated P1, not in manifest), div_eq{div,eq}, divu_eq{divu,eq}, rem_eq{rem,eq}, remu_eq{remu,eq}, divzero_eq{div_zero,eq}, divovf_eq{div_ovf,eq}, dummydiv_gt{dummy_div,gt} (probe-gated P1, not in manifest), rvalid_eq{rvalid_delay,eq}, gnt_eq{gnt_delay,eq}, hazard_eq{ld_use_hazard,eq}, imem_eq{imem_latency,eq}, redirect_eq{redirect,eq}, afterdbg_eq{after_debug,eq}, mixed_eq{mixed,eq}; (misaligned_eq is D6 evidence with the RTL count of one; ditnot_gt is B11 evidence on cp_idx taken; dummymul_gt/dummydiv_gt are B7 evidence once P1 is registered; cr_idx_dummy carries the probe-free B7 evidence)
+  - cr_idx_dummy = cp_idx x cp_dummy_en x cp_delta_rel: bins div_dum_gt{div_wait,on,gt}, mul_dum_eq{mul_wait,off,eq}, mul_dum_zero{mul_wait,on,eq}; ignore_bins mul_dum_gt{mul_wait,on,gt}: the dummy multiply is `mul` (funct3 000, rtl/ibex_dummy_instr.sv:124-131), which the RV32MSingleCycle multiplier completes in its first cycle (rtl/ibex_multdiv_fast.sv:203-217), so an ALU-only window with dummies on adds no mul_wait cycles; reachable only through the B17 over-count of a dummy mul behind an outstanding WB access, not required; (B7 evidence on the wait counters without a probe: an ALU-only window with dummies on has zero program div events, so a div_wait delta is `gt` while mul_wait stays 0 (`mul_dum_zero`))
+  - cr_variant_rel = cp_variant x cp_delta_rel: bins aligned_eq{aligned,eq}, misaligned_eq{misaligned,eq}, pmpden_eq{pmp_denied,eq}, straddle_eq{straddle_pmp,eq}, buserr_eq{bus_err,eq}, jal_eq{jal,eq}, jalr_eq{jalr,eq}, cj_eq{c_j,eq}, cjal_eq{c_jal,eq}, cjr_eq{c_jr,eq}, cjalr_eq{c_jalr,eq}, popret_eq{popret,eq}, fencei_eq{fence_i,eq}, btaken_eq{b_taken,eq}, bnot_eq{b_not,eq}, cbeqz_eq{c_beqz_taken,eq}, cbnez_eq{c_bnez_not,eq}, dittaken_eq{dit_on_taken,eq}, ditnot_gt{dit_on_not,gt}, ditnot_eq{dit_on_not,eq}, calu_eq{c_alu,eq}, zcmp_eq{zcmp,eq}, mul_eq{mul,eq}, mulh_eq{mulh,eq}, mulhsu_eq{mulhsu,eq}, mulhu_eq{mulhu,eq}, dummymul_gt{dummy_mul,gt} (probe-gated P1, not in manifest), div_eq{div,eq}, divu_eq{divu,eq}, rem_eq{rem,eq}, remu_eq{remu,eq}, divzero_eq{div_zero,eq}, divovf_eq{div_ovf,eq}, dummydiv_gt{dummy_div,gt} (probe-gated P1, not in manifest), brwait_gt{br_wb_wait,gt}, mulwait_gt{mul_wb_wait,gt}, divwait_gt{div_wb_wait,gt}, rvalid_eq{rvalid_delay,eq}, gnt_eq{gnt_delay,eq}, hazard_eq{ld_use_hazard,eq}, imem_eq{imem_latency,eq}, redirect_eq{redirect,eq}, afterdbg_eq{after_debug,eq}, mixed_eq{mixed,eq}; (misaligned_eq is D6 evidence with the RTL count of one; ditnot_gt is B11 evidence on cp_idx taken; dummymul_gt/dummydiv_gt are B7 evidence once P1 is registered; cr_idx_dummy carries the probe-free B7 evidence; brwait_gt / mulwait_gt / divwait_gt are B17 evidence: the measured count is the doc count and the RTL adds one per cycle the instruction waited in ID behind the outstanding WB access (TP-PMC-058/059/060, expected-fail))
   - cr_idx_ctx = cp_idx x cp_ctx: bins lsu_dbg{lsu_wait,debug}, if_dbg{if_wait,debug}, ld_dbg{loads,debug}, st_dbg{stores,debug}, jmp_dbg{jumps,debug}, br_dbg{branches,debug}, tk_dbg{taken,debug}, rc_dbg{ret_c,debug}, mul_dbg{mul_wait,debug}, div_dbg{div_wait,debug}, ld_step{loads,step}, br_step{branches,step}
   - cr_idx_dit = cp_idx x cp_dit: bins tk_dit1{taken,on}, tk_dit0{taken,off}, br_dit1{branches,on}, br_dit0{branches,off}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-013, TP-PMC-018, TP-PMC-023, TP-PMC-025, TP-PMC-034, TP-PMC-035, TP-PMC-036, TP-PMC-037, TP-PMC-038, TP-PMC-039, TP-PMC-040, TP-PMC-041, TP-PMC-042, TP-PMC-043, TP-PMC-044, TP-PMC-045, TP-PMC-046, TP-PMC-048, TP-PMC-049, TP-PMC-051, TP-PMC-055, TP-PMC-056, TP-DBG-066
+- TP items: TP-DBG-066, TP-PMC-013, TP-PMC-014, TP-PMC-018, TP-PMC-023, TP-PMC-025, TP-PMC-034, TP-PMC-035, TP-PMC-036, TP-PMC-037, TP-PMC-038, TP-PMC-039, TP-PMC-040, TP-PMC-041, TP-PMC-042, TP-PMC-043, TP-PMC-044, TP-PMC-045, TP-PMC-046, TP-PMC-047, TP-PMC-048, TP-PMC-049, TP-PMC-050, TP-PMC-051, TP-PMC-055, TP-PMC-056, TP-PMC-058, TP-PMC-059, TP-PMC-060
 
 ### CG-PMC-004: gen_cg_pmc_hpm_csr
-- Features: F-PMC-015, F-PMC-016, F-PMC-017, F-PMC-018, F-PMC-019, F-PMC-024, F-PMC-045, F-PMC-051
+- Features: F-PMC-015, F-PMC-016, F-PMC-017, F-PMC-018, F-PMC-019, F-PMC-024, F-PMC-045, F-PMC-051,
+  F-PMC-001 (parent of folded bins hosted here)
 - Sample: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],
   [CSR_MHPMCOUNTER3H : CSR_MHPMCOUNTER31H], [CSR_MHPMEVENT3 : CSR_MHPMEVENT31]; closed by the
   following read of the same CSR; condition: `rvfi_valid && csr_addr inside hpm_csr_set`;
@@ -3223,14 +3519,14 @@ Conventions
   - cp_mode = {rvfi_ext_debug_mode, rvfi_mode}: bins m{0, PRIV_LVL_M}, u{0, PRIV_LVL_U}, dbg{1, any}
   - cp_result = {rvfi_trap, readback relation}: bins ok{rvfi_trap = 0}, illegal{rvfi_trap = 1, mcause 2}
   - cp_wdata = CSR write data class: bins zeros{0}, ones{32'hFFFF_FFFF}, random{any other value}
-  - cp_rb = readback class: bins eq_written{implemented low word == written}, zero{reads 0}, const_onehot{mhpmeventN == 1 << N}
+  - cp_rb = readback class: bins eq_written{implemented low word == written}, zero{reads 0}, const_onehot{mhpmeventN == 32'd1 << (N - MHPMCOUNTER_BASE): mhpmevent3 = 0x1 .. mhpmevent12 = 0x200 (rtl/ibex_cs_registers.sv:185, :1602-1619; D20, the doc says 1 << N)}
 - Crosses:
   - cr_idx_reg_op = cp_idx x cp_reg x cp_op: bins fi_lo_rd{first_impl,cnt_lo,read}, fi_lo_wr{first_impl,cnt_lo,write}, fi_hi_rd{first_impl,cnt_hi,read}, fi_hi_wr{first_impl,cnt_hi,write}, fi_ev_rd{first_impl,event,read}, fi_ev_wr{first_impl,event,write}, mi_lo_rd{mid_impl,cnt_lo,read}, mi_lo_wr{mid_impl,cnt_lo,write}, mi_hi_rd{mid_impl,cnt_hi,read}, mi_hi_wr{mid_impl,cnt_hi,write}, mi_ev_rd{mid_impl,event,read}, mi_ev_wr{mid_impl,event,write}, li_lo_rd{last_impl,cnt_lo,read}, li_lo_wr{last_impl,cnt_lo,write}, li_hi_rd{last_impl,cnt_hi,read}, li_hi_wr{last_impl,cnt_hi,write}, li_ev_rd{last_impl,event,read}, li_ev_wr{last_impl,event,write}, fu_lo_rd{first_unimpl,cnt_lo,read}, fu_lo_wr{first_unimpl,cnt_lo,write}, fu_hi_rd{first_unimpl,cnt_hi,read}, fu_hi_wr{first_unimpl,cnt_hi,write}, fu_ev_rd{first_unimpl,event,read}, fu_ev_wr{first_unimpl,event,write}, mu_lo_rd{mid_unimpl,cnt_lo,read}, mu_lo_wr{mid_unimpl,cnt_lo,write}, mu_hi_rd{mid_unimpl,cnt_hi,read}, mu_hi_wr{mid_unimpl,cnt_hi,write}, mu_ev_rd{mid_unimpl,event,read}, mu_ev_wr{mid_unimpl,event,write}, lu_lo_rd{last_unimpl,cnt_lo,read}, lu_lo_wr{last_unimpl,cnt_lo,write}, lu_hi_rd{last_unimpl,cnt_hi,read}, lu_hi_wr{last_unimpl,cnt_hi,write}, lu_ev_rd{last_unimpl,event,read}, lu_ev_wr{last_unimpl,event,write}, fi_lo_set{first_impl,cnt_lo,set}, fi_lo_clr{first_impl,cnt_lo,clear}, fi_hi_set{first_impl,cnt_hi,set}, fi_ev_set{first_impl,event,set}, li_lo_set{last_impl,cnt_lo,set}, li_lo_clr{last_impl,cnt_lo,clear}, li_hi_clr{last_impl,cnt_hi,clear}, li_ev_clr{last_impl,event,clear}, fu_lo_set{first_unimpl,cnt_lo,set}, lu_ev_clr{last_unimpl,event,clear}
   - cr_mode_result = cp_mode x cp_result: bins m_ok{m,ok}, dbg_ok{dbg,ok}, u_ill{u,illegal}; ignore u x ok, m x illegal, dbg x illegal: privilege-check failure is a gen_isa_compare failure.
   - cr_idx_reg_rb = cp_idx x cp_reg x cp_rb: bins fi_lo_eq{first_impl,cnt_lo,eq_written}, mi_lo_eq{mid_impl,cnt_lo,eq_written}, li_lo_eq{last_impl,cnt_lo,eq_written}, fi_hi_0{first_impl,cnt_hi,zero}, mi_hi_0{mid_impl,cnt_hi,zero}, li_hi_0{last_impl,cnt_hi,zero}, fu_lo_0{first_unimpl,cnt_lo,zero}, mu_lo_0{mid_unimpl,cnt_lo,zero}, lu_lo_0{last_unimpl,cnt_lo,zero}, fu_hi_0{first_unimpl,cnt_hi,zero}, lu_hi_0{last_unimpl,cnt_hi,zero}, fi_ev_1h{first_impl,event,const_onehot}, mi_ev_1h{mid_impl,event,const_onehot}, li_ev_1h{last_impl,event,const_onehot}, fu_ev_0{first_unimpl,event,zero}, mu_ev_0{mid_unimpl,event,zero}, lu_ev_0{last_unimpl,event,zero}
   - cr_wdata_reg = cp_wdata x cp_reg: bins z_lo{zeros,cnt_lo}, o_lo{ones,cnt_lo}, r_lo{random,cnt_lo}, z_hi{zeros,cnt_hi}, o_hi{ones,cnt_hi}, r_hi{random,cnt_hi}, z_ev{zeros,event}, o_ev{ones,event}, r_ev{random,event}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-017, TP-PMC-018, TP-PMC-019, TP-PMC-020, TP-PMC-021, TP-PMC-026, TP-PMC-047, TP-PMC-053, TP-PMC-055
+- TP items: TP-PMC-017, TP-PMC-019, TP-PMC-020, TP-PMC-021, TP-PMC-026, TP-PMC-047, TP-PMC-053, TP-PMC-055
 
 ### CG-PMC-005: gen_cg_pmc_ctrl_csr
 - Features: F-PMC-020, F-PMC-021, F-PMC-022, F-PMC-023, F-PMC-024, F-PMC-025, F-PMC-026, F-PMC-031
@@ -3262,10 +3558,11 @@ Conventions
   - cr_reg_pattern_op = cp_reg x cp_pattern x cp_op: bins inh_z_wr{inhibit,zeros,write}, inh_1_wr{inhibit,ones,write}, inh_w_wr{inhibit,walk1,write}, inh_r_wr{inhibit,random,write}, inh_1_set{inhibit,ones,set}, inh_w_set{inhibit,walk1,set}, inh_r_set{inhibit,random,set}, inh_1_clr{inhibit,ones,clear}, inh_w_clr{inhibit,walk1,clear}, inh_r_clr{inhibit,random,clear}, en_z_wr{en,zeros,write}, en_1_wr{en,ones,write}, en_w_wr{en,walk1,write}, en_r_wr{en,random,write}, en_1_set{en,ones,set}, en_w_set{en,walk1,set}, en_r_set{en,random,set}, en_1_clr{en,ones,clear}, en_w_clr{en,walk1,clear}, en_r_clr{en,random,clear}
   - cr_reg_mode_result = cp_reg x cp_mode x cp_result: bins inh_m_ok{inhibit,m,ok}, inh_dbg_ok{inhibit,dbg,ok}, inh_u_ill{inhibit,u,illegal}, en_m_ok{en,m,ok}, en_dbg_ok{en,dbg,ok}, en_u_ill{en,u,illegal}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-022, TP-PMC-023, TP-PMC-024, TP-PMC-025, TP-PMC-026, TP-PMC-027, TP-PMC-028, TP-PMC-033, TP-PMC-055, TP-PMC-057
+- TP items: TP-PMC-022, TP-PMC-026, TP-PMC-027, TP-PMC-028, TP-PMC-032, TP-PMC-033, TP-PMC-055, TP-PMC-057
 
 ### CG-PMC-006: gen_cg_pmc_alias
-- Features: F-PMC-024, F-PMC-027, F-PMC-028, F-PMC-029, F-PMC-030, F-PMC-031
+- Features: F-PMC-024, F-PMC-027, F-PMC-028, F-PMC-029, F-PMC-030, F-PMC-031, F-PMC-021 (parent of
+  folded bins hosted here)
 - Sample: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];
   condition: `rvfi_valid && csr_addr inside alias_set`; anti-vacuity: result from rvfi_trap;
   mcounteren bit from the CSR model at the access; privilege from rvfi_mode; a hit in `u x set x ok`
@@ -3283,28 +3580,33 @@ Conventions
   - cr_write_alias = cp_alias x cp_op x cp_mode: bins cyc_wr_m{cycle,write,m}, cyc_wr_u{cycle,write,u}, ir_set_m{instret,set_nz,m}, hf_clr_m{hpm_first,clr_nz,m}, cych_wr_m{cycleh,write,m}, hhu_wr_m{hpmh_unimpl,write,m}, hu_wr_u{hpm_unimpl,write,u}
   - cr_inhibit_gate = cp_inhibited x cp_en_bit x cp_mode x cp_result: bins inh_set_u_ok{yes,set,u,ok}, noinh_set_u_ok{no,set,u,ok}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-026, TP-PMC-029, TP-PMC-030, TP-PMC-031, TP-PMC-032, TP-PMC-033, TP-PMC-055
+- TP items: TP-PMC-029, TP-PMC-030, TP-PMC-031, TP-PMC-032, TP-PMC-033, TP-PMC-055
 
 ### CG-PMC-007: gen_cg_pmc_write_timing
-- Features: F-PMC-004, F-PMC-005, F-PMC-014, F-PMC-023, F-PMC-045, F-PMC-051
+- Features: F-PMC-004, F-PMC-005, F-PMC-014, F-PMC-023, F-PMC-045, F-PMC-051, F-PMC-021 (parent of
+  folded bins hosted here)
 - Sample: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for
   implemented N), with the same-cycle event state taken from gen_chk_counters' boundary model in the
   write cycle; condition: `rvfi_valid && csr_addr inside counter_csr_set && is_write`; anti-vacuity:
-  the coincidence bins are reached only when the randomized instruction stream places an event in the
-  write cycle; the model records the write-wins evidence (expected value == written, not written+1),
-  so a hit proves the coincidence occurred.
+  the coincidence bins are reached only when the instruction stream places the target's own event
+  in the write cycle (W-WB: `lw ; csrw minstret(h)` or `c.lw ; csrw mhpmcounter10(h)` with the
+  csrw held behind the load's response, or back-to-back issue); the model records the write-wins
+  evidence (expected value == written, not written+1), so a hit proves the coincidence occurred.
+  Structurally (X-18) only mcycle(h), minstret(h) and mhpmcounter10(h) can coincide with their own
+  event: the other events are asserted only while their own instruction is the valid instruction in
+  ID (or while the csrw cannot commit), and the csrw is a different instruction.
 - Coverpoints:
   - cp_target = counter CSR address decoded from rvfi_insn: bins mcycle{CSR_MCYCLE}, mcycleh{CSR_MCYCLEH}, minstret{CSR_MINSTRET}, minstreth{CSR_MINSTRETH}, hpm_lo{[CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER3+MHPMCounterNum-1]}, hpm_hi{[CSR_MHPMCOUNTER3H : CSR_MHPMCOUNTER3H+MHPMCounterNum-1]}
-  - cp_coincident = event of the written counter firing in the write cycle (boundary model of gen_chk_counters; the mcycle tick is always present and is not a bin: the write-wins evidence for mcycle is CG-PMC-001.cp_delta.eq_written): bins none{no event of the target in the write cycle}, retire_in_wb{countable instruction retiring in WB}, lsu_wait_cycle{ID stalled on a dbus response in the write cycle}, if_wait_cycle{ID starved by IF in the write cycle}, load_req{dbus load request in the write cycle}, store_req{dbus store request in the write cycle}, jump{jump decided in the write cycle}, branch{branch decided in the write cycle}
+  - cp_coincident = event of the written counter firing in the write cycle (boundary model of gen_chk_counters; the mcycle tick is always present and is not a bin: the write-wins evidence for mcycle is CG-PMC-001.cp_delta.eq_written): bins none{no event of the target in the write cycle}, retire_in_wb{countable instruction retiring in WB (minstret(h) target)}, retire_c_in_wb{compressed instruction retiring in WB (mhpmcounter10(h) target)}; ignore_bins lsu_wait_cycle{ID stalled on a dbus response in the write cycle}, if_wait_cycle{ID starved by IF in the write cycle}, load_req{dbus load request in the write cycle}, store_req{dbus store request in the write cycle}, jump{jump decided in the write cycle}, branch{branch decided in the write cycle}: unreachable as the event of the WRITTEN counter (X-18: perf_load/perf_store fire in the LSU IDLE arm of the load/store itself, perf_branch/tbranch/jump from the instruction in ID, dside_wait needs outstanding_memory_access which blocks csr_op_en, iside_wait needs ~instr_valid_id; the csrw is a different instruction in ID; rtl/ibex_id_stage.sv:747-749, :889-934, :1135-1136, rtl/ibex_load_store_unit.sv:466-475, rtl/ibex_controller.sv:681-687, rtl/ibex_core.sv:635)
   - cp_inhibited = mcountinhibit bit of the target at the write: bins no{0}, yes{1}
   - cp_then = later behaviour: bins uninhibit_after{inhibit bit cleared later, counting resumed from the written value}, stay{inhibit bit unchanged until the next read}
   - cp_low_all_ones = low word == 32'hFFFF_FFFF in the write cycle (high-half writes): bins yes{low word all ones}, no{any other low word}
 - Crosses:
-  - cr_target_coinc = cp_target x cp_coincident: bins minstret_ret{minstret,retire_in_wb}, minstreth_ret{minstreth,retire_in_wb}, hpm_lsu{hpm_lo,lsu_wait_cycle}, hpm_if{hpm_lo,if_wait_cycle}, hpm_load{hpm_lo,load_req}, hpm_store{hpm_lo,store_req}, hpm_jump{hpm_lo,jump}, hpm_branch{hpm_lo,branch}, hpmh_load{hpm_hi,load_req}, hpm_none{hpm_lo,none}
+  - cr_target_coinc = cp_target x cp_coincident: bins minstret_ret{minstret,retire_in_wb}, minstreth_ret{minstreth,retire_in_wb}, hpm_retc{hpm_lo,retire_c_in_wb}, hpmh_retc{hpm_hi,retire_c_in_wb}, hpm_none{hpm_lo,none}; ignore_bins hpm_lsu{hpm_lo,lsu_wait_cycle}, hpm_if{hpm_lo,if_wait_cycle}, hpm_load{hpm_lo,load_req}, hpm_store{hpm_lo,store_req}, hpm_jump{hpm_lo,jump}, hpm_branch{hpm_lo,branch}, hpmh_load{hpm_hi,load_req}: components unreachable (X-18); hpm_retc / hpmh_retc are hit only with the target mhpmcounter10 / mhpmcounter10h (a compressed retirement in WB is the event of no other counter): an h-half write of a 32-bit counter also asserts `we` and suppresses that cycle's increment (rtl/ibex_counter.sv:35-46, X-17), observable through hpmh_retc
   - cr_target_inh_then = cp_target x cp_inhibited x cp_then: bins mcycle_inh_resume{mcycle,yes,uninhibit_after}, minstret_inh_resume{minstret,yes,uninhibit_after}, hpm_inh_resume{hpm_lo,yes,uninhibit_after}, hpm_noinh{hpm_lo,no,stay}
   - cr_hi_lowones = cp_target x cp_low_all_ones: bins mcycleh_ones{mcycleh,yes}, minstreth_ones{minstreth,yes}, mcycleh_no{mcycleh,no}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-005, TP-PMC-006, TP-PMC-016, TP-PMC-025, TP-PMC-047, TP-PMC-053, TP-PMC-055
+- TP items: TP-PMC-006, TP-PMC-016, TP-PMC-025, TP-PMC-047, TP-PMC-053, TP-PMC-055
 
 ### CG-PMC-008: gen_cg_pmc_rvfi_ext
 - Features: F-PMC-001, F-PMC-015, F-PMC-049
@@ -3327,7 +3629,7 @@ Conventions
   - cr_rel_debug = cp_mcycle_rel x cp_debug: bins inc_dbg{inc_debug,yes}, jump_run{jump_after_write,no}, inh_run{eq_inhibited,no}; ignore inc_debug x no, eq_inhibited/jump_after_write x yes: not sampled (the former inc_run witness bin is retired, S-3b).
   - cr_moved_debug = cp_hpm_moved x cp_debug: bins one_dbg{one,yes}, several_run{several,no}, none_run{none,no}
 - Adopted (riscv-dv): none
-- TP items: TP-PMC-001, TP-PMC-003, TP-PMC-017, TP-PMC-051, TP-PMC-055
+- TP items: TP-PMC-003, TP-PMC-005, TP-PMC-023, TP-PMC-051, TP-PMC-055
 
 ---------------------------------------------------------------------------------------------------
 
@@ -3335,15 +3637,20 @@ Conventions
 - Covergroups: 22
 - Coverpoints: 141 (12 of them cross-operand-only copies; owners CG-DBG-001.cp_cause and
   CG-DBG-012.cp_mode_dbg)
-- Coverpoint bins: 649 legal (12 on cross-operand-only coverpoints, 8 witness / probe-gated
+- Coverpoint bins: 648 legal (12 on cross-operand-only coverpoints, 8 witness / probe-gated
   "not in manifest": req0_mode0, cp_mode_dbg.m, cp_trap_dbg.ok, CG-DBG-007/CG-PMC-005 nop0,
-  dummy_slot, dummy_mul, dummy_div); named ignore_bins: 6 (reserved, s_h, haltreq_step, other,
-  ebreaks_0 (B15 spec-side), tsel_dbg_app (DbgHwBreakNum = 1))
-- Cross bins: 911 legal (3 probe-gated "not in manifest": dummy_f, dummymul_gt, dummydiv_gt)
-- Manifest-eligible bins: 1537 (629 coverpoint + 908 cross); every one is owned by >= 1 TP item
+  dummy_slot, dummy_mul, dummy_div); named ignore_bins: 21 (coverpoint: reserved, s_h,
+  haltreq_step, other, CG-PMC-007.cp_coincident lsu_wait_cycle / if_wait_cycle / load_req /
+  store_req / jump / branch (X-18); cross: ebreaks_0 (B15 spec-side), tsel_dbg_app (DbgHwBreakNum =
+  1), step_sleep (X-8), mul_dum_gt (the dummy mul is single-cycle), hpm_lsu / hpm_if / hpm_load /
+  hpm_store / hpm_jump / hpm_branch / hpmh_load (X-18))
+- Cross bins: 910 legal (3 probe-gated "not in manifest": dummy_f, dummymul_gt, dummydiv_gt)
+- Manifest-eligible bins: 1535 (628 coverpoint + 907 cross); every one is owned by >= 1 TP item
+  (script-verified: every legal bin outside the witness / probe-gated / cross-operand-only sets
+  appears in a TP Bins line or as the component of a listed cross bin)
 - Adopted (riscv-dv) bins: 0
-- Bins referenced by at least one TP item: 1550 distinct (the 1537 manifest-eligible bins plus 13
-  cross-component copies on cross-operand-only / witness coverpoints), 2478 CSV rows
+- Bins referenced by at least one TP item: 1548 distinct (the 1535 manifest-eligible bins plus 13
+  cross-component copies on cross-operand-only / witness coverpoints), 2490 CSV rows
 - Fix-brief-2 changes (Critic pre-review T-034): S-2 rule applied to CG-DBG-003 (sample premise,
   cp_outcome, reenter), CG-DBG-004 (ebreak excluded), CG-DBG-006 (one_ok, ebreakdbg_trap retired
   -> ebreakdbg_ok) and CG-PMC-002 (counter-model rule, has_ebreak_dbg); post-op sampling in
@@ -3363,6 +3670,21 @@ Conventions
   one-cycle core_busy_o dip (F-DBG-044/059); CG-DBG-011.cp_wfi_busy_dip.one and cr_wfi_busy (2 bins);
   CG-TRG-001.cp_td1_rb.en_after_hit carries the folded F-TRG-028. Feature lists keep ALIAS/FOLDED IDs
   (traceability resolves them to the canonical or parent ID).
+- Fix-brief-3 changes (rtl-arch T-053 fact-check, plan v2b): Conventions gained the same-cycle
+  rule, W-WB(X) and the C-1 / C-3 / C-5 / C-10 / C-11 / C-12 / C-13 / C-14 / C-16 statements;
+  CG-DBG-001: flush_wfi covers the stepped wfi, new cr_cause_ctx.step_flush_wfi, step_sleep is an
+  ignore_bin (X-8; sleep_one / sleep_hidden stay reachable through the unstepped wfi woken by
+  debug_req_i, TP-DBG-071 (b)), cp_busy_dip anti-vacuity re-anchored; CG-DBG-006: cp_retired and
+  cp_haltreq predicates (Zcmp = one instruction, C-12; the zero-retirement re-halt, TP-DBG-054);
+  CG-DBG-012: req1_mode0 / req1_mode1 predicates and anti-vacuity per X-6 (C-3); CG-TRG-001:
+  cp_td1_exec_w is the post-op bit (TP-TRG-004), B3 mark extended to the *_rd bins; CG-PMC-003:
+  exactness classes carry the C-10 precondition, new cp_variant fence_i / br_wb_wait / mul_wb_wait /
+  div_wb_wait with fencei_eq and the B17 evidence bins brwait_gt / mulwait_gt / divwait_gt,
+  gnt_delay predicate (count 0), cr_idx_dummy: mul_dum_gt ignored and mul_dum_zero added;
+  CG-PMC-004: const_onehot = 1 << (N - MHPMCOUNTER_BASE) (D20); CG-PMC-007: the six ID-stage
+  coincidence bins and their seven cross bins are ignore_bins (X-18), new retire_c_in_wb with
+  hpm_retc / hpmh_retc (counter 10, X-17); every '- TP items' line regenerated from the items'
+  Bins lines.
 - Note: trace_tp_bin_dbg_trg_pmc.csv lists, for every cross bin an item names, the component
   coverpoint bins that cross bin implies (a cross hit requires them), so each item's rows are the
   full set of bins the fcov-expectation manifest must declare for it.
@@ -3408,7 +3730,10 @@ T-006 subagent output for the area group IMEM, DMEM, FE, IC (156 feature IDs aft
 fixes: F-IMEM-001..032, F-DMEM-001..051, F-FE-001..025, F-IC-001..048; 129 ACTIVE, 11 ALIAS, 16
 FOLDED; ALIAS/FOLDED IDs may still appear in Features lists, traceability resolves them to the
 canonical ID). Companion of tp_mem_fetch_icache.md. Revision 2 folds the Critic pre-review
-(gen_critic_fcov_drafts_prereview_v1.md, S-3/S-5/S-7/S-8/S-12/S-14, M-02/M-04) per README_FIX2_BRIEF.md.
+(gen_critic_fcov_drafts_prereview_v1.md, S-3/S-5/S-7/S-8/S-12/S-14, M-02/M-04) per README_FIX2_BRIEF.md;
+revision 3 folds rtl-arch's RTL fact-check (T-053, gen_tp_parts_rtl_factcheck.md Sections 1 and 3.mem_a /
+3.mem_b) and the round-2 review residuals per README_FIX3_BRIEF.md (the C-n conventions are stated once in
+tp_mem_fetch_icache.md's header).
 Every covergroup lives in the gen_ namespace and samples from the DUT boundary, the memory/RAM/key
 agents' own transaction records, or RVFI. The RAM-model shadow-tag view used by CG-IC-003 and
 CG-FE-002.cp_halves_src is boundary-derived (gen_icache_ram_model mirrors every tag write it receives
@@ -3439,7 +3764,12 @@ guard so it samples only on the event for which it is defined (Critic S-3c). Neg
 passed" outcomes that a checker owns are not bins: they are named in the coverpoint text as the
 checker's property and, where a value bin would be meaningless, an ignore_bins with the checker name
 (Critic S-3b). Bins whose value is a predicate are written name{predicate}; bins whose value is a
-number or range are written name{value}.
+number or range are written name{value}. Redirects and their targets are derived from RVFI (C-1 / C-14:
+the redirect is "the next record's rvfi_pc_rdata != pc + len", its target that next rvfi_pc_rdata;
+rvfi_pc_wdata carries the target only on branch / jump / fence.i records, trap / mret / dret records carry
+the next sequential fetch address there, X-1); a bin that names a bus request for a redirect target is
+qualified by a miss or icache_enable == 0, never inferred for a hit. Bins that credit an open
+bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 
 ---------------------------------------------------------------------------------------------------
 
@@ -3569,8 +3899,9 @@ number or range are written name{value}.
 
 ### CG-IMEM-004: gen_cg_imem_redirect_seq
 - Features: F-IMEM-016, F-IMEM-017, F-IMEM-018, F-IMEM-019, F-IMEM-020, F-IMEM-030
-- Sample: (a) every redirect seen on RVFI (rvfi_valid && (rvfi_pc_wdata != rvfi_pc_rdata + insn
-  length || rvfi_trap), back-dated one cycle); (b) every grant (instr_req_o & instr_gnt_i),
+- Sample: (a) every redirect seen on RVFI (the next record's rvfi_pc_rdata != rvfi_pc_rdata + insn
+  length, or rvfi_trap; trap/mret/dret records carry the next sequential address in rvfi_pc_wdata,
+  C-1; back-dated to the pc_set cycle); (b) every grant (instr_req_o & instr_gnt_i),
   classified by the agent's address-sequence tracker; condition: for (a) the imem agent has at least
   one open or waiting record; anti-vacuity: (a) samples only while bus traffic is in flight or
   waiting across a redirect, so a hit proves stale beats were completed and discarded; (b) sequence
@@ -3613,14 +3944,16 @@ number or range are written name{value}.
   TP-IMEM-035, TP-IMEM-038
 
 ### CG-IMEM-005: gen_cg_imem_gating
-- Features: F-IMEM-021, F-IMEM-022, F-IMEM-023, F-IMEM-024, F-IMEM-025, F-IMEM-026
+- Features: F-IMEM-021, F-IMEM-022, F-IMEM-023, F-IMEM-024, F-IMEM-025, F-IMEM-026, F-RST-010
+  (parent of folded bins hosted here)
 - Sample: (a) fetch-gate closure (fetch_enable_i leaves IbexMuBiOn, or core_busy_o falls to Off
   after a WFI retirement); (b) fetch-gate reopening (fetch_enable_i returns to IbexMuBiOn, or the
   wake after WFI); (c) reset release and the first instr_req_o after it; condition: the event
   happened; anti-vacuity: gate transitions are driven by the test (fetch_enable regime, WFI in the
   program, reset), so a hit proves the gate was exercised with the binned amount of traffic in
-  flight. "No new instr_req_o while gated" (gen_chk_fetch_en / gen_chk_sleep), "no alert on an
-  invalid code" (gen_chk_alerts, Q-DL-8) and "first address == boot_addr_i + 0x80" (gen_isa_compare
+  flight. "No new line lookup while gated and instr_req_o == 0 whenever core_busy_o == Off" (C-4: the
+  un-issued beats of lines open at the closure are legal; gen_chk_fetch_en / gen_chk_sleep), "no
+  alert on an invalid code" (gen_chk_alerts, Q-DL-8) and "first address == boot_addr_i + 0x80" (gen_isa_compare
   / gen_chk_ibus_proto) are checker properties, not bins.
 - Coverpoints:
   - cp_gate_cause iff (a)|(c) = why new requests stopped: bins wfi_sleep{core_busy_o == Off after a
@@ -3631,11 +3964,14 @@ number or range are written name{value}.
     invalid_4{4'h4}, invalid_6{4'h6}, invalid_7{4'h7}, invalid_8{4'h8}, invalid_9{4'h9},
     invalid_b{4'hB}, invalid_c{4'hC}, invalid_d{4'hD}, invalid_e{4'hE}, invalid_f{4'hF} (the
     2**$bits(ibex_mubi_t) - 2 codes other than IbexMuBiOn and IbexMuBiOff)
-  - cp_outstanding_at_gate iff (a) = beats in flight when the gate closed: bins o0{0}, o1_4{[1:4]},
-    o5_8{[5:NUM_FB*IC_LINE_BEATS]}
+  - cp_outstanding_at_gate iff (a) = beats granted and unanswered when the gate closed: bins o0{0},
+    o1_4{[1:4]}, o5_8{[5:NUM_FB*IC_LINE_BEATS]}
+  - cp_beats_issued_after_gate iff (a) = un-issued beats of fill buffers open at the closure that
+    were requested on the bus after it (legal continuation, C-4): bins none{0}, some{[1:$]} (a hit
+    on some proves the checker accepted the continuing beats and forbids only new line lookups)
   - cp_inflight_drain iff (a) && outstanding > 0 = cycles from the gate closure to the last
-    outstanding rvalid (all answered and consumed while gated): bins c1_4{[1:4]}, c5_15{[5:15]},
-    c16p{[16:$]}
+    outstanding rvalid (all answered while gated, beats issued after the closure included; stale
+    beats are discarded, not consumed): bins c1_4{[1:4]}, c5_15{[5:15]}, c16p{[16:$]}
   - cp_resume iff (b) = first retirement after the gate reopened: bins held_pc_no_refetch{
     rvfi_pc_rdata == pc following the last pre-gate retirement, and no new bus request for that word
     (icache_enable pinned 0 by the owning item so a re-fetch is visible on the bus)},
@@ -3670,7 +4006,8 @@ number or range are written name{value}.
     long}, both_slow{long, long}, random{either knob random}
   - cp_pmp_denied_word_on_bus iff the PMP model denies execute at the executing privilege = the agent
     saw the request for the denied word: bins seen{1} (RTL-defined, D9: the request is not gated by
-    PMP; the fault is raised at ID)
+    PMP; the fault is raised at ID; the owning item pins icache_enable = 0 so a hit never hides the
+    request, C-14)
 - Crosses:
   - cr_delivery_x_regime = cp_delivery x cp_regime: bins shadow_both_slow{hit_in_shadow_of_miss,
     both_slow}, straddle_slow_rvalid{straddle_two_records,slow_rvalid}, in_order_fast_fast{
@@ -3820,7 +4157,8 @@ number or range are written name{value}.
   TP-DMEM-016, TP-DMEM-045, TP-DMEM-060
 
 ### CG-DMEM-003: gen_cg_dmem_misaligned
-- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026
+- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026,
+  F-DMEM-008 (parent of folded bins hosted here)
 - Sample: final rvalid of a split access (the agent pairs the two records by the second address ==
   first + 4); condition: the pair closed; anti-vacuity: only split accesses sample; a hit proves
   the binned FSM path and per-beat latencies really occurred and gen_isa_compare checked the
@@ -3856,7 +4194,8 @@ number or range are written name{value}.
   TP-DMEM-017, TP-DMEM-018, TP-DMEM-019, TP-DMEM-020, TP-DMEM-021, TP-DMEM-022, TP-DMEM-023
 
 ### CG-DMEM-004: gen_cg_dmem_split_err
-- Features: F-DMEM-021, F-DMEM-022, F-DMEM-023, F-DMEM-027
+- Features: F-DMEM-021, F-DMEM-022, F-DMEM-023, F-DMEM-027, F-DMEM-015 (parent of folded bins hosted
+  here)
 - Sample: final (or abandoned second) rvalid of a split access with at least one injected error
   (agent record); condition: injected; anti-vacuity: only error-injected splits sample; a hit
   proves the trap, mtval and the second-beat behaviour were checked by gen_isa_compare /
@@ -3874,10 +4213,12 @@ number or range are written name{value}.
     security note S1 of gen_bug_log.md)
   - cp_second_gnt_delay_after_err iff first|both = gnt(second) - the error rvalid cycle: bins d0{0},
     d1_3{[1:3]}, d4p{[4:$]}
-  - cp_handler_ls_waited iff first|both && the second rvalid arrives after the handler's first
-    instruction reached ID: bins yes{1: the handler's first instruction is a load/store and its
-    data_req_o was granted only after the abandoned second rvalid}, not_ls{0: the handler's first
-    instruction is not a load/store}
+  - cp_handler_ls_waited iff first|both = class of the handler's first instruction (the exception
+    itself follows the abandoned second response, X-23, so the handler never overlaps it): bins
+    yes{1: a load/store, its data_req_o granted after the second rvalid}, not_ls{0: not a
+    load/store}
+  - cp_second_rvalid_gap iff first|both = cycles from the errored first rvalid to the second rvalid,
+    with no data_req_o in between (gen_chk_dbus_proto property): bins g1_9{[1:9]}, g10p{[10:$]}
 - Crosses:
   - cr_beat_x_we = cp_err_beat x cp_we: bins first_load{first,load}, first_store{first,store},
     second_load{second,load}, second_store{second,store}, both_load{both,load},
@@ -3939,6 +4280,12 @@ number or range are written name{value}.
     the error cycle: bins yes{1: no data_req_o in the error rvalid cycle}
   - cp_trap_order iff cp_irq_pending_at_err == yes || cp_dbg_req_at_err == yes: bins exc_first{1: the
     mcause 5/7 record precedes the interrupt / debug entry record}
+  - cp_irq_taken_at iff cp_irq_pending_at_err == yes = record after which the pending ordinary
+    interrupt was taken: bins after_mret{the handler's mret record}, after_mie_write{a handler
+    record that set mstatus.MIE}; ignore_bins at_handler_entry{the exception record itself}: the
+    trap entry clears MIE (rtl/ibex_cs_registers.sv:924, C-6), a hit is a gen_chk_irq failure
+  - cp_dbg_entry_after_exc iff cp_dbg_req_at_err == yes: bins before_handler{1: no handler record
+    between the exception record and the DmHaltAddr record (debug_req_i is not MIE-gated)}
   - cp_b14_records iff cp_id_insn traps on its re-execution (informational, TP-DMEM-063 only) =
     number of trap records for the pair: bins two_in_order{2: the WB error's record, then the
     re-executed ID instruction's own record}; ignore_bins one{1}: re-opens B14 (reported by the
@@ -3959,7 +4306,7 @@ number or range are written name{value}.
 - Features: F-DMEM-041, F-DMEM-039
 - Sample: data_rvalid_i with an injected integrity corruption (agent record); condition:
   injected; anti-vacuity: only corrupted responses sample; a hit proves gen_chk_bus_intg_rsp saw
-  the alert, RF suppression and NMI it checks. The alert and suppression bins are qualified by the
+  the alert, the per-beat RF-suppression rule (C-8) and the NMI it checks. The alert and suppression bins are qualified by the
   injection (the stimulus that produces them).
 - Coverpoints:
   - cp_class = flipped bits in data_rdata_i[38:0]: bins single{1}, double{2}
@@ -3969,10 +4316,15 @@ number or range are written name{value}.
   - cp_alert = alert_major_bus_o in the rvalid cycle: bins pulsed{1}; ignore_bins quiet{0}:
     gen_chk_bus_intg_rsp failure
   - cp_rf_suppressed iff load = the load's record has rvfi_rd_addr == 0 (write suppressed) and no
-    rvfi_trap: bins yes{1}
-  - cp_nmi_latency = retirements between the corrupted access's record and the NMI entry record:
-    bins l0{0}, l1{1}, l2p{[2:$]: reachable when the corruption lands in debug mode (NMI deferred to
-    dret, TP-DMEM-043) or while an NMI is already pending or being handled (TP-DMEM-042)}
+    rvfi_trap: bins yes{1: aligned access, or the completing beat corrupted}, no_b16{0: rd written;
+    reachable only for a split load with a first-beat-only corruption (B16 evidence, owned by the
+    expected-fail item TP-DMEM-064; the bin disappears when B16 is fixed)}
+  - cp_nmi_latency = ordinary retirements between the corrupted access's record and the NMI entry
+    record: bins l0{0}, l1{1: the instruction in ID had a load-use hazard}, l2{2: the instruction in
+    ID and the one entering ID in the response cycle both complete (C-7, D21: the pending flag
+    registers one cycle after the rvalid, rtl/ibex_controller.sv:402-438)}, l3p{[3:$]: a Zcmp
+    sequence in ID, a corruption in debug mode (NMI deferred to dret, TP-DMEM-043) or an NMI
+    already pending or being handled (TP-DMEM-042)}
   - cp_nmi_mtval = handler-read mtval vs the access address: bins first_ea{split, first-beat
     corruption: mtval == rvfi_mem_addr}, second_word{split, second-beat corruption: mtval ==
     (rvfi_mem_addr & ~32'h3) + 4}, aligned_ea{aligned access: mtval == rvfi_mem_addr}
@@ -3980,20 +4332,29 @@ number or range are written name{value}.
     ignored{1: exactly one NMI entry, mtval == the first address}
   - cp_nmi_in_debug_deferred iff rvfi_ext_debug_mode at the corrupted access: bins yes{1: the NMI
     entry record follows the dret record}
+  - cp_split_corrupt_pattern iff split access, sampled at the final rvalid of the pair = which beats
+    carried a corruption: bins first_only{first beat only}, second_only{second beat only},
+    both{both beats}
 - Crosses:
-  - cr_class_x_we_x_beat = cp_class x cp_we x cp_beat: bins single_load_first{single,load,first},
-    double_store_single{double,store,single}, double_load_second{double,load,second},
-    single_store_second{single,store,second} (all 12 combinations are possible)
+  - cr_class_x_we_x_beat = cp_class x cp_we x cp_beat: bins single_load_first{single,load,first: B16
+    evidence, owned by TP-DMEM-064}, double_store_single{double,store,single},
+    double_load_second{double,load,second}, single_store_second{single,store,second} (all 12
+    combinations are possible)
+  - cr_pattern_x_we = cp_split_corrupt_pattern x cp_we: bins first_only_load{first_only,load: rd
+    written, B16 evidence, owned by TP-DMEM-064}, first_only_store{first_only,store},
+    second_only_load{second_only,load}, second_only_store{second_only,store}, both_load{both,load},
+    both_store{both,store} (no impossible combination)
   - cr_buserr_x_class = cp_with_bus_err x cp_class: bins both_single{yes,single}, both_double{yes,
     double}
 - Adopted (riscv-dv): none
-- TP items: TP-DMEM-039, TP-DMEM-040, TP-DMEM-041, TP-DMEM-042, TP-DMEM-043
+- TP items: TP-DMEM-039, TP-DMEM-040, TP-DMEM-041, TP-DMEM-042, TP-DMEM-043, TP-DMEM-064
 
 ### CG-DMEM-008: gen_cg_dmem_pipe_ctx
 - Features: F-DMEM-028, F-DMEM-029, F-DMEM-031, F-DMEM-033, F-DMEM-042, F-DMEM-043, F-DMEM-044,
   F-DMEM-045, F-DMEM-046, F-DMEM-047, F-DMEM-051
 - Sample: (a) rvfi_valid of a load/store (Zcmp micro-op records included); (b) a WFI retirement
-  with a data access outstanding; (c) crash_dump_o at each data grant and at each error response;
+  whose predecessor is a load/store and whose record follows that access's final rvalid by exactly
+  2 cycles (the WFI was in ID while the access was outstanding, TIMING); (c) crash_dump_o at each data grant and at each error response;
   (d) each data grant (data_req_o & data_gnt_i); condition: per coverpoint (iff); anti-vacuity:
   each coverpoint's precondition (a prior store to the same address, a dependent consumer, an
   outstanding access at WFI, a PMP denial, a Zcmp expansion) is derived from the program and the
@@ -4005,14 +4366,16 @@ number or range are written name{value}.
     retirements = retirements between that store and this load: bins d1{1}, d2{2}, d3_8{[3:8]}
   - cp_overlap iff same = byte overlap between that store and this load: bins full{every loaded
     byte was written by the store}, partial_byte{one byte overlaps}, partial_half{two bytes overlap}
-  - cp_dep_stall iff (a) && load = the next retirement reads the load's rd: bins yes{1: it does, and
-    its rvfi_valid is the cycle after the load's}, no_consumer{0: the next retirement does not read
-    rd}
-  - cp_dep_x0 iff (a) && load with rd == x0 && the next retirement reads x0: bins yes{1: the consumer
-    retired without waiting for the load data (rvfi_valid gap unchanged versus a non-load)}
-  - cp_wfi_outstanding_hold iff (b) = cycles from the WFI retirement (back-dated) to the last
-    outstanding data rvalid during which core_busy_o stayed On: bins c1_4{[1:4]}, c5_15{[5:15]},
-    c16p{[16:$]}
+  - cp_dep_stall iff (a) && load = the next retirement reads the load's rd (R = the load's final
+    rvalid, load record at R+1): bins yes{1: it does, and its rvfi_valid is at R+3 (two cycles after
+    the load's record: response wait plus the load-use hazard, C-9)}, no_consumer{0: the next
+    retirement does not read rd; its rvfi_valid is at R+2 (every follower waits for the response)}
+  - cp_dep_x0 iff (a) && load with rd == x0 && the next retirement reads x0: bins yes{1: the reader
+    retired at R+2 like an independent follower (it waits for the response but has no hazard: one
+    cycle earlier than a dependent consumer)}
+  - cp_wfi_outstanding_hold iff (b) = cycles from the preceding access's grant to its final rvalid
+    R while the WFI waited in ID (WFI record at R+2) with core_busy_o On throughout: bins c1_4{[1:4]},
+    c5_15{[5:15]}, c16p{[16:$]}
   - cp_pmp_denied iff (a) && rvfi_trap mcause 5/7 attributed to the PMP model = denied access class
     with no data_req_o for the denied word: bins aligned_load{aligned load denied},
     aligned_store{aligned store denied}, mis_first_load{split load, first word denied, second
@@ -4026,18 +4389,25 @@ number or range are written name{value}.
     data_we_o == 1, the rotated upper bytes and the complementary be, and the agent memory holds
     those bytes after the trap (MEM-13 / gen_bug_log.md S1, Q-DL-7 default: RTL-defined, covered):
     bins landed{1}
-  - cp_zcmp_burst iff (a) && rvfi_ext_expanded_insn* marks a Zcmp micro-op record = data
-    transactions produced by one cm.push/cm.pop*: bins n1{1}, n2{2}, n3_6{[3:6]}, n7_13{[7:13]}
+  - cp_zcmp_burst iff (a) && the record carries rvfi_ext_expanded_insn_last = data transactions
+    produced by one cm.push/cm.pop*, summed over its micro-op record group (first expanded record to
+    the _last record; one record per micro-op, C-12): bins n1{1}, n2{2}, n3_6{[3:6]}, n7_13{[7:13]}
   - cp_zcmp_err_pos iff Zcmp record with an injected data_err_i = position of the errored
     transaction in the burst: bins first{1st}, middle{neither 1st nor last}, last{last}
-  - cp_rvfi_mask iff (a) = (rvfi_mem_rmask, rvfi_mem_wmask): bins r_word{rmask 4'b1111},
+  - cp_rvfi_mask iff (a) && !rvfi_trap (decoded load/store records only: non-store records carry
+    rmask 4'b1111 and WB-trap records zero masks, C-12 / B18) = (rvfi_mem_rmask, rvfi_mem_wmask):
+    bins r_word{rmask 4'b1111},
     r_half{rmask 4'b0011}, r_byte{rmask 4'b0001}, w_word{wmask 4'b1111}, w_half{wmask 4'b0011},
     w_byte{wmask 4'b0001}
   - cp_rvfi_mask_unshifted iff (a) && rvfi_mem_addr[1:0] != 0 = the mask equals the size mask
     unshifted: bins yes{1}
-  - cp_crash_last_data_addr iff (c) = crash_dump_o.last_data_addr vs the agent record: bins
-    eq_last_gnt{== the last granted data_addr_o}, frozen_on_err{held at the erroring address through
-    the handler}
+  - cp_crash_last_data_addr iff (c) = crash_dump_o.last_data_addr in the cycle after a grant (or an
+    error response) vs the modelled addr_last (rtl/ibex_load_store_unit.sv:254-266, 478-482, 520,
+    540): bins eq_ea_single_first{== the unaligned EA after a single or first-word grant, PMP fake
+    grants included}, eq_second_word{== the word-aligned second address after a second-half grant},
+    held_until_next_gnt{after an error response the erroring access's address is held until the
+    handler's first data grant}, no_update_second_after_err{unchanged across the second-half grant
+    that follows a first-half error (the only skipped update)}
   - cp_tag_in_at_gnt iff (d) = data_tag_i driven at the grant while data_tag_o == 0: bins in0{0},
     in1{1}; ignore_bins tag_out_one{data_tag_o == 1}: gen_chk_cheriot_quiet failure (F-DMEM-042)
   - cp_rvfi_load_latency iff (a) && load = cycles from the final data_rvalid_i of the load to its
@@ -4097,8 +4467,10 @@ number or range are written name{value}.
 
 ### CG-FE-001: gen_cg_fe_vectors
 - Features: F-FE-002, F-FE-003, F-FE-004, F-FE-005, F-FE-011, F-FE-019, F-FE-001
-- Sample: (a) rvfi_valid where the next PC is not sequential (rvfi_pc_wdata != rvfi_pc_rdata +
-  insn length, traps included); (b) the first retirement after reset; condition: redirect or first
+- Sample: (a) rvfi_valid of a record whose NEXT record's rvfi_pc_rdata != rvfi_pc_rdata + insn
+  length (redirect derived from RVFI, C-1 / C-14; the redirect target is that next rvfi_pc_rdata;
+  trap/mret/dret records carry the next sequential address in rvfi_pc_wdata, X-1); (b) the first
+  retirement after reset; condition: redirect or first
   instruction; anti-vacuity: sequential instructions never sample; a hit proves a redirect of the
   binned kind reached RVFI and gen_isa_compare checked the target. "First pc == boot_addr_i + 0x80",
   "mtvec reset value == {boot_addr_i[31:8], 8'h01}" (gen_chk_csr_readback) and "no mcause-0 trap
@@ -4108,18 +4480,23 @@ number or range are written name{value}.
     top{32'hFFFF_FF00}, random_aligned{any other value with [7:0] == 0}
   - cp_pc_mux iff (a)|(b) = redirect source: bins jump_jal{JAL}, jump_jalr{JALR},
     branch_taken{branch opcode, rvfi_pc_wdata == pc + imm}, exc_vector{rvfi_trap and the next record
-    is not rvfi_intr: rvfi_pc_wdata == {mtvec[31:8], 8'h00}}, irq_vector{the next record has
-    rvfi_intr: rvfi_pc_wdata == {mtvec[31:8], 1'b0, id[4:0], 2'b00}}, eret_mepc{MRET},
-    dret_depc{DRET}, dbg_halt_addr{rvfi_pc_wdata == DmHaltAddr: debug_req_i or ebreak with
-    rvfi_trap == 0 (S-2)}, dbg_exc_addr{rvfi_pc_wdata == DmExceptionAddr}, fencei_next{FENCE.I,
-    rvfi_pc_wdata == pc + 4}, boot{(b): rvfi_pc_rdata == {boot_addr_i[31:8], 8'h80}}; ignore_bins
+    is not rvfi_intr: next rvfi_pc_rdata == {mtvec[31:8], 8'h00}}, irq_vector{the next record has
+    rvfi_intr: next rvfi_pc_rdata == {mtvec[31:8], 1'b0, id[4:0], 2'b00}}, eret_mepc{MRET: next
+    rvfi_pc_rdata == mepc}, dret_depc{DRET: next rvfi_pc_rdata == depc}, dbg_halt_addr{next
+    rvfi_pc_rdata == DmHaltAddr: debug_req_i or ebreak with rvfi_trap == 0 (S-2)}, dbg_exc_addr{next
+    rvfi_pc_rdata == DmExceptionAddr}, fencei_next{FENCE.I, rvfi_pc_wdata == pc + 4 (a jump in ID,
+    rtl/ibex_decoder.sv:711-720)}, boot{(b): rvfi_pc_rdata == {boot_addr_i[31:8], 8'h80}}; ignore_bins
     bp{PC_BP}: BranchPredictor=0 (F-FE-019, structural exclusion)
   - cp_irq_vec_id iff irq_vector = id[4:0] of the vector slot: bins sw{3}, timer{7}, ext{11},
     fast_0{16}, fast_1{17}, fast_2{18}, fast_3{19}, fast_4{20}, fast_5{21}, fast_6{22}, fast_7{23},
     fast_8{24}, fast_9{25}, fast_10{26}, fast_11{27}, fast_12{28}, fast_13{29}, fast_14{30},
     nmi{31} (fast_0..fast_14 = 16 + [0:$bits(irq_fast_i)-1])
-  - cp_target_bit1 iff (a) = rvfi_pc_wdata[1]: bins b0{0}, b1{1}
+  - cp_target_bit1 iff (a) = the next record's rvfi_pc_rdata[1] (C-1): bins b0{0}, b1{1}
   - cp_jalr_rs1_bit0 iff (a) && JALR = rvfi_rs1_rdata[0]: bins odd{1}, even{0}
+  - cp_debug_trap_slot iff (a) && rvfi_ext_debug_mode && (rvfi_trap || is_ebreak(rvfi_insn)) =
+    re-entry slot of a trap taken IN debug mode: bins ebreak_halt{is_ebreak, rvfi_trap == 0 (S-2):
+    next rvfi_pc_rdata == DmHaltAddr regardless of dcsr.ebreakm, rtl/ibex_controller.sv:874-882},
+    exc_dmexc{non-ebreak exception: next rvfi_pc_rdata == DmExceptionAddr}
 - Crosses:
   - cr_mux_x_bit1 = cp_pc_mux x cp_target_bit1: bins jalr_b1{jump_jalr,b1}, branch_b1{branch_taken,
     b1}, eret_b1{eret_mepc,b1}, dret_b1{dret_depc,b1}, jal_b1{jump_jal,b1}, fencei_b1{fencei_next,
@@ -4146,7 +4523,9 @@ number or range are written name{value}.
   - cp_second_word_wait iff same_line|line_cross = cycles the first half waited for the second
     word's arrival (agent record; 0 when the second word arrived first or hit): bins ready{0},
     w1{1}, w2_3{[2:3]}, w4p{[4:$]}
-  - cp_delta = rvfi_pc_wdata - rvfi_pc_rdata: bins plus2{2}, plus4{4}, redirect{any other value}
+  - cp_delta = rvfi_pc_wdata - rvfi_pc_rdata: bins plus2{2}, plus4{4}, redirect{any other value:
+    branch/jump records only; trap/mret/dret records show plus2/plus4 here (X-1) and their redirect
+    is classified in CG-FE-001 from the next record}
   - cp_halves_src iff same_line|line_cross = source of the two halves (bus record present = miss;
     none and the line valid in the shadow-tag view = hit): bins hit_hit{both words hit},
     hit_miss{first word hit, second from the bus}, miss_hit{first from the bus, second hit},
@@ -4173,7 +4552,9 @@ number or range are written name{value}.
 
 ### CG-FE-003: gen_cg_fe_redirect
 - Features: F-FE-013, F-FE-017, F-FE-025, F-FE-012
-- Sample: (a) each redirect on RVFI (as CG-FE-001 (a), back-dated one cycle to the pc_set cycle);
+- Sample: (a) each redirect on RVFI (as CG-FE-001 (a), back-dated to the pc_set cycle: the ID-exit
+  cycle of a branch/jump/fence.i record, the FLUSH cycle one later for trap/mret/dret records,
+  X-1);
   (b) each retirement of a not-taken branch (branch opcode, rvfi_pc_wdata == pc + len); condition:
   the imem agent classified the traffic since the previous redirect; anti-vacuity: the
   discarded-word count is the number of granted words not consumed by any retirement, computed from
@@ -4190,14 +4571,17 @@ number or range are written name{value}.
     non-stale fill buffers between two redirects (F-FE-017); the NUM_FB*IC_LINE_BEATS bound of
     F-IMEM-008 includes stale beats granted before the previous redirect and is covered by
     CG-IMEM-002.cp_outstanding_before
-  - cp_spacing iff (a) = cycles since the previous redirect (pc_set to pc_set): bins s2{2}, s3{3},
-    s4_5{[4:5]}, s6p{[6:$]}; ignore_bins s1{1}: a redirecting instruction stalls ID for at least one
+  - cp_spacing iff (a) = cycles since the previous redirect (pc_set to pc_set): bins s2{2: the
+    predicted GEN_MIN_REDIRECT_SPACING, pinned at bring-up (C-16)}, s3{3}, s4_5{[4:5]}, s6p{[6:$]};
+    ignore_bins s1{1}: a redirecting instruction stalls ID for at least one
     cycle (pipeline_details.rst: Jump 1-N, Branch taken 1-N with BranchTargetALU=1, opentitan
     configuration) and the target enters ID at the earliest two cycles after the redirect (icache
     hit: IC0 lookup in the redirect cycle, IC1 data the next); a spacing of 1 is a gen_isa_compare /
     redirect-model failure
   - cp_target_req_same_cycle iff (a) = instr_req_o with the target word address in the redirect
-    cycle (agent record): bins yes{1}, no_pending_req{0: deferred by an ungranted request}
+    cycle (agent record): bins yes{1}, no_pending_req{0: deferred by an ungranted request; sampled
+    only when the target word has a bus record (miss or icache_enable == 0): with a hit the deferred
+    request is never issued, rtl/ibex_icache.sv:767-769, C-14}
   - cp_branch_not_taken iff (b) = the fall-through word's status when the branch retired: bins
     fallthrough_buffered{1: granted before the branch retired, or hit}, fallthrough_fetched_after{0:
     requested only after the branch retired}
@@ -4224,7 +4608,8 @@ number or range are written name{value}.
   - cp_cause = cause of the window: bins ld_hazard{the retirement ending the window reads the rd of
     the preceding load}, ls_wait{a load/store waited for its data response}, mul_div{multi-cycle
     mul/div in ID}, zcmp_expand{Zcmp micro-op expansion}, csr_flush{CSR write / fence.i pipeline
-    flush}, dummy_gap{one-cycle window with none of the above and no fetch cause: dummy insertion}
+    flush: a csr_flush window is exactly 2 cycles (DECODE(special_req) + one FLUSH cycle,
+    rtl/ibex_controller.sv:815-818)}, dummy_gap{one-cycle window with none of the above and no fetch cause: dummy insertion}
   - cp_outstanding_stopped_growing = the agent's outstanding count during the window while the
     agent had free capacity: bins flat{1: did not rise}, grew{0: rose (prefetch still filling)}
   - cp_words_buffered_at_stall = non-stale granted-not-consumed words at the window start: bins
@@ -4242,7 +4627,8 @@ number or range are written name{value}.
 - TP items: TP-FE-016, TP-FE-017, TP-FE-018
 
 ### CG-FE-005: gen_cg_fe_fault_path
-- Features: F-FE-015, F-FE-016, F-FE-020, F-FE-022, F-FE-023
+- Features: F-FE-015, F-FE-016, F-FE-020, F-FE-022, F-FE-023, F-IMEM-011 (parent of folded bins
+  hosted here)
 - Sample: (a) rvfi_valid & rvfi_trap with mcause 1; (b) a retirement without trap of a compressed
   instruction whose pc + 2 is PMP-denied for the executing privilege (PMP model); (c) every
   sequential retirement (rvfi_pc_wdata == rvfi_pc_rdata + len); (d) every retirement with
@@ -4255,8 +4641,8 @@ number or range are written name{value}.
   - cp_source iff (a): bins bus{bus error, PMP permits}, intg{integrity error, PMP permits}, pmp{PMP
     denial of pc, beat clean}, pmp_plus2{PMP denial of pc + 2 only}, bus_and_pmp{bus error and PMP
     denial on the same word}
-  - cp_next_fetch iff (a) = first instr_addr_o after the trap (agent record): bins
-    exc_vector{{mtvec[31:8], 8'h00}}, dm_exception_addr{DmExceptionAddr}
+  - cp_next_fetch iff (a) = the next record's rvfi_pc_rdata (C-1; not an ibus observation, C-14):
+    bins exc_vector{{mtvec[31:8], 8'h00}}, dm_exception_addr{DmExceptionAddr}
   - cp_in_debug iff (a) = rvfi_ext_debug_mode: bins yes{1}, no{0}
   - cp_len iff (a) = faulting instruction length: bins c16{rvfi_insn[1:0] != 2'b11}, u32{2'b11}
   - cp_errored_payload iff (a) && source in {bus, intg, bus_and_pmp} = decode class of the payload
@@ -4289,7 +4675,9 @@ number or range are written name{value}.
   happen when the program does them; a hit proves the wake source / wrap case occurred.
 - Coverpoints:
   - cp_wake_src iff (a) = what ended the WFI: bins irq{an interrupt line enabled in mie rose},
-    nmi{irq_nm_i}, debug_req{debug_req_i}, step_mode{dcsr.step set: WFI retired as a nop, no sleep}
+    nmi{irq_nm_i}, debug_req{debug_req_i}, step_mode{dcsr.step = 1 outside debug mode: no sleep,
+    FLUSH -> DBG_TAKEN_IF, the next retirement is the debug ROM at DmHaltAddr with dpc == WFI + len
+    (C-5)}, wfi_in_debug{WFI executed in debug mode: SLEEP exits at once on debug_mode_q, wfi = nop}
   - cp_resume_pc iff (a) = first retirement after the WFI: bins wfi_next_buffered{rvfi_pc_rdata ==
     WFI pc + len}, handler{rvfi_pc_rdata == an interrupt / NMI vector or DmHaltAddr}
   - cp_refetch_after_wake iff (a) && icache_enable == 0 (pinned by the owning item so a re-fetch is
@@ -4297,15 +4685,21 @@ number or range are written name{value}.
   - cp_wrap_case iff (b): bins c16_at_fffe{c16 at 32'hFFFF_FFFE}, u32_at_fffc{u32 at 32'hFFFF_FFFC},
     u32_at_fffe_straddle_zero{u32 at 32'hFFFF_FFFE, second half at 32'h0}
   - cp_next_after_wrap iff (b) && the instruction is the last before the wrap: bins zero{rvfi_pc_wdata
-    == 32'h0}
+    == 32'h0: c16 at 32'hFFFF_FFFE or u32 at 32'hFFFF_FFFC}, two{rvfi_pc_wdata == 32'h2: u32 at
+    32'hFFFF_FFFE, 31-bit adder 0x7FFF_FFFF + 2, rtl/ibex_icache.sv:1139-1147}
   - cp_fetch_seq_wrap iff (b): bins yes{1: the agent record shows instr_addr_o 32'hFFFF_FFFC
     followed by 32'h0}
 - Crosses:
   - cr_wake_x_resume = cp_wake_src x cp_resume_pc: bins irq_handler{irq,handler},
-    dbg_handler{debug_req,handler}, step_next{step_mode,wfi_next_buffered}, nmi_handler{nmi,
-    handler}, irq_next{irq,wfi_next_buffered: mstatus.mie == 0, the pending line wakes but is not
-    taken}; ignore_bins nmi x wfi_next_buffered (an NMI is always taken), debug_req x
-    wfi_next_buffered (debug entry always follows), step_mode x handler (a stepped WFI is a nop)
+    dbg_handler{debug_req,handler}, step_dbg{step_mode,handler: DmHaltAddr with dpc == WFI + len},
+    indebug_next{wfi_in_debug,wfi_next_buffered}, nmi_handler{nmi,handler},
+    irq_next{irq,wfi_next_buffered: mstatus.mie == 0, the pending line wakes but is not taken};
+    ignore_bins nmi x wfi_next_buffered (an NMI is always taken), debug_req x wfi_next_buffered
+    (debug entry always follows), step_mode x wfi_next_buffered (a stepped WFI enters debug before
+    the next instruction retires, C-5), wfi_in_debug x handler (a WFI in debug mode is a nop)
+  - cr_wrap_x_next = cp_wrap_case x cp_next_after_wrap: bins c16_zero{c16_at_fffe,zero},
+    u32_fffc_zero{u32_at_fffc,zero}, straddle_two{u32_at_fffe_straddle_zero,two}; ignore_bins
+    c16_at_fffe|u32_at_fffc x two, u32_at_fffe_straddle_zero x zero: the 31-bit adder result
 - Adopted (riscv-dv): none
 - TP items: TP-FE-003, TP-FE-026, TP-FE-027, TP-FE-028, TP-IMEM-022
 
@@ -4335,15 +4729,21 @@ number or range are written name{value}.
     on{1}, off{0}
   - cp_index = ic_tag_addr_o: bins idx0{0}, idx_mid{[1:IC_NUM_LINES-2]}, idx_last{IC_NUM_LINES-1}
   - cp_tag_tweak_effective iff tag write = the raw ic_tag_wdata_o does not decode clean but decodes
-    clean after undoing the index-derived tweak: bins infected{1}, transparent{0: index 0, zero
-    tweak: raw and untweaked both decode clean}
+    clean after undoing the index-derived tweak (the IC_INDEX_W-bit index at bits [7:0] and [21:14]
+    of the 28-bit codeword, ECC bits untouched, rtl/ibex_icache.sv:389-396): bins infected{1},
+    transparent{0: index 0, or an inval / ECC-correction write (tweak 0): raw and untweaked both
+    decode clean}
   - cp_data_tweak_effective iff data write = both 39-bit beats of ic_data_wdata_o decode clean only
-    after undoing the address-derived tweak: bins infected{1}, transparent{0: zero tweak}
+    after undoing the address-derived tweak (the line-aligned address {addr[31:3], 3'b0} on the 32
+    data bits of each beat, bits [31:0] and [70:39], rtl/ibex_icache.sv:329-347): bins infected{1},
+    transparent{0: zero tweak: line address 0, or an inval / ECC-correction write}
   - cp_tag_valid_bit iff tag write = valid bit of the written tag: bins valid{1}, invalid{0}
   - cp_port_contention iff a fill write became eligible (both beats closed, allocation pending) in a
     cycle whose port was used by a lookup read = cycles the write was deferred: bins deferred_1{1},
     deferred_2p{[2:$]}
-  - cp_read_when_disabled iff lookup read = cp_cache_en at the read: bins seen{off}, on{on}
+  - cp_read_when_disabled iff lookup read = cp_cache_en at the read (never during INVAL_CACHE:
+    every sweep cycle is a write at the inval index, rtl/ibex_icache.sv:269-283, 1244): bins
+    seen{off}, on{on}
   - cp_rdata_used_next_cycle iff lookup read = the DUT acted on the model's read data one cycle
     later (hit with no bus record, or an ECC alert): bins yes{1}
 - Crosses:
@@ -4392,11 +4792,14 @@ number or range are written name{value}.
     yes{1: at least one fill tag write while the key was marked invalid} (F-IC-047: the FSM reads
     the key only in OUT_OF_RESET and AWAIT_SCRAMBLE_KEY, rtl/ibex_icache.sv:1225, 1235)
   - cp_reset_to_idle_cycles iff (b) && trigger == reset && the key was valid at reset = cycle index
-    (reset release = 0) of the first INVAL_IDLE cycle: bins min{IC_NUM_LINES+2},
+    (reset release = cycle 0 = OUT_OF_RESET, cycle 1 = AWAIT_SCRAMBLE_KEY, inval writes in cycles
+    2..IC_NUM_LINES+1) of the first INVAL_IDLE cycle: bins min{IC_NUM_LINES+2},
     longer{[IC_NUM_LINES+3:$]}; ignore_bins short{[0:IC_NUM_LINES+1]}: contradicts
     rtl/ibex_icache.sv:1221-1255 (MEM-23: 1 + 1 + IC_NUM_LINES cycles, F-IC-022)
-  - cp_first_alloc_after_sweep iff (b) && complete_all = cycles from the sweep end to the first fill
-    tag write: bins c0_3{[0:3]}, c4p{[4:$]}
+  - cp_first_alloc_after_sweep iff (b) && complete_all = cycles from the last inval write to the
+    first fill tag write: bins c5_8{[5:8]}, c9p{[9:$]}; ignore_bins c0_4{[0:4]}: the first
+    allocating lookup needs INVAL_IDLE (inval_block_cache clears only there, rtl/ibex_icache.sv:1218,
+    1265), then IC1 miss, two grants and rvalids and a fill_ram_req cycle without a lookup (TP-IC-011)
   - cp_fill_inflight_at_inval iff (c) = fill buffers open at the fence.i (none of them allocated
     afterwards): bins n0{0}, n1_2{[1:2]}, n3_4{[3:NUM_FB]}
   - cp_cpuctrlsts_bit8 iff (e) = rvfi_rd_wdata[8] vs the registered ic_scr_key_valid_i: bins
@@ -4446,10 +4849,14 @@ number or range are written name{value}.
   - cp_hit_cadence iff hit_way0|hit_way1 = consecutive hit retirements at one instruction per cycle
     ending here: bins run2_3{[2:3]}, run4p{[4:$]}
   - cp_miss_forward_latency iff miss_alloc_*|miss_no_alloc_* = cycles from instr_rvalid_i of the
-    demanded word to its rvfi_valid: bins l1_2{[1:2]}, l3p{[3:$]}
+    demanded word to its rvfi_valid: bins l3{3: IF output in R, ID R+1, WB R+2, record R+3},
+    l4p{[4:$]: a u32 whose second half is the next beat, or a stalled pipeline}; ignore_bins
+    l1_2{[1:2]}: contradicts the pipeline (rtl/ibex_icache.sv:796-798, 1062, 1068;
+    rtl/ibex_core.sv:1864-1870)
   - cp_priv = rvfi_mode at the lookup: bins m{PRIV_LVL_M}, u{PRIV_LVL_U}
-  - cp_two_ways_same_tag = the shadow view holds the same tag valid in both ways at this index: bins
-    yes{1}
+  - cp_two_ways_same_tag = the shadow view holds the same tag valid in both ways at this index
+    (needs both ways valid before the two lookups and an odd lookup count between them, TP-IC-025):
+    bins yes{1}
 - Crosses:
   - cr_result_x_fill = cp_result x cp_index_fill: bins alloc0_none{miss_alloc_way0,none_valid},
     alloc1_one{miss_alloc_way1,one_valid}, alloc0_one{miss_alloc_way0,one_valid}, evict_both{
@@ -4477,10 +4884,13 @@ number or range are written name{value}.
     both_slow{both >= 4}
   - cp_redirect_during_fill = redirect relative to the fill's grants: bins none{no redirect before
     the second rvalid}, after_beat1_gnt{redirect after the first grant, before the second},
-    after_beat2_gnt{redirect after both grants}, before_any_gnt_cancelled{redirect before any grant:
-    no bus traffic for the line}
-  - cp_written_after_redirect iff after_beat1_gnt|after_beat2_gnt = the stale allocating fill still
-    wrote the line: bins yes{1}, not_alloc{0: disabled, invalidating or errored}
+    after_beat2_gnt{redirect after both grants}, before_any_gnt_cancelled{redirect before any grant,
+    non-caching line (icache_enable == 0 or sweep active): no bus traffic for the line},
+    before_any_gnt_fetched{redirect before any grant, caching line: both beats fetched and the line
+    written (never cancelled: fill_ext_done_d cancels only when ~fill_cache_q,
+    rtl/ibex_icache.sv:767-775)}
+  - cp_written_after_redirect iff after_beat1_gnt|after_beat2_gnt|before_any_gnt_fetched = the stale
+    allocating fill still wrote the line: bins yes{1}, not_alloc{0: disabled, invalidating or errored}
   - cp_busy_buffers iff a fill write (allocation) = fill buffers busy at the allocation (agent count
     of open lines): bins b1{1}, b2{2}, b3{NUM_FB-1}, b4{NUM_FB}
   - cp_saturation_stall iff b4 = no new lookup request while NUM_FB lines were open: bins yes{1}
@@ -4496,16 +4906,19 @@ number or range are written name{value}.
     its data unused}
   - cp_spec_err_ignored iff an injected error on that speculative beat: bins yes{1: no trap}
   - cp_same_line_two_ways iff a second buffer for a line already being filled was allocated: bins
-    yes{1: two fill writes for one (index, tag)}
+    yes{1: two fill writes for one (index, tag) in different ways (both ways valid before, odd
+    lookup count between, TP-IC-025)}, same_way_overwrite{0: both fills landed in the same lowest
+    invalid way (one copy)}
 - Crosses:
   - cr_entry_x_delays = cp_entry_beat x cp_beat_delays: bins w1_both_slow{w1_wrap,both_slow},
     w0_second_slow{w0,second_slow}, w1_first_slow{w1_wrap,first_slow}, w0_both_fast{w0,both_fast}
     (no impossible combination)
   - cr_redirect_x_written = cp_redirect_during_fill x cp_written_after_redirect: bins
     after1_written{after_beat1_gnt,yes}, after2_written{after_beat2_gnt,yes},
-    after1_not_alloc{after_beat1_gnt,not_alloc}; ignore_bins none|before_any_gnt_cancelled x
-    yes|not_alloc: a fill without redirect is not "written after redirect" and a cancelled line has
-    no fill
+    after1_not_alloc{after_beat1_gnt,not_alloc}, before_fetched_written{before_any_gnt_fetched,yes};
+    ignore_bins none|before_any_gnt_cancelled x yes|not_alloc, before_any_gnt_fetched x not_alloc: a
+    fill without redirect is not "written after redirect", a cancelled line has no fill, and a caching
+    line with no grant yet is always written
   - cr_busy_x_delays = cp_busy_buffers x cp_beat_delays: bins b4_both_slow{b4,both_slow},
     b3_first_slow{b3,first_slow}, b1_both_fast{b1,both_fast} (no impossible combination)
 - Adopted (riscv-dv): none
@@ -4526,12 +4939,14 @@ number or range are written name{value}.
     on_to_on{1 -> 1}, off_to_off{0 -> 0}
   - cp_fills_inflight iff (a) = open lines at the write: bins n0{0}, n1_2{[1:2]}, n3_4{[3:NUM_FB]}
   - cp_inflight_alloc_dropped iff on_to_off && n >= 1: bins yes{1: no line open at the write was
-    written afterwards}
+    written from the cycle after the enable drop; at most one fill write in the drop cycle itself is
+    legal (fill_cache_q clears one cycle later, rtl/ibex_icache.sv:744-746, 815-819)}
   - cp_no_backfill iff off_to_on && n >= 1: bins yes{1: no non-caching line open at the write was
     written afterwards}
   - cp_debug iff (b) = debug-mode effect: bins entry_with_en_forced_off{entry with icache_enable
     == 1: lookups pass through, all retirements have bus records}, exit_hits_resume{dret with
-    icache_enable == 1: the next warm lookup hits}, entry_with_en_off{entry with icache_enable == 0}
+    icache_enable == 1: the first warm lookup after the depc line hits (the depc line itself is
+    fetched pass-through in the dret cycle, TP-FE-022)}, entry_with_en_off{entry with icache_enable == 0}
   - cp_priv_access iff (c) = access privilege and outcome: bins m_ok{M-mode access retired},
     u_illegal_insn{U-mode access trapped, mcause 2}
   - cp_old_lines_hit_after_reenable iff off_to_on: bins yes{1: a line cached before the disable
@@ -4571,7 +4986,7 @@ number or range are written name{value}.
   - cp_major_nmi_quiet iff injected: bins yes{1: alert_major_internal_o, alert_major_bus_o and
     rvfi_ext_nmi_int stayed low over the injection window}
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
-    cycle}
+    cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
     non-hitting way}, disabled_cache{icache_enable == 0}, during_invalidation{sweep running},
     uninitialised_data_ram{never-written data line read, no injection}
@@ -4609,15 +5024,22 @@ number or range are written name{value}.
     pending}
   - cp_wfi_after_fencei iff a WFI retired with a sweep running: bins yes{1: core_busy_o Off only
     after the sweep end}
-  - cp_lead_lines iff (b) = (instr_addr_o line - rvfi_pc_rdata line) at the grant: bins l0{0},
-    l1{1}, l2{2}, l3{NUM_FB-1}; ignore_bins l4p{[NUM_FB:$]}: the throttle caps linear prefetch at
-    FB_THRESHOLD+1 = NUM_FB-1 non-stale buffers (F-FE-017, F-IC-038); the NUM_FB-th buffer is
-    allocated only by a branch lookup, which is a redirect target and not a lead
-    (CG-IC-004.cp_busy_buffers.b4 covers it)
+  - cp_lead_lines iff (b) = (instr_addr_o line - line of the last retired rvfi_pc_rdata) at the
+    grant: bins l0{0}, l1{1}, l2{2}, l3{NUM_FB-1}, l4_wb_stall{NUM_FB, sampled iff a data access is
+    outstanding at the grant: the WB-stalled load/store delays the retirement so the RVFI pc lags
+    the ID-consumed word (TIMING convention; against the ID-consumed word the lead never exceeds
+    NUM_FB-1)}; ignore_bins l4_idle{NUM_FB with no data access outstanding}, l5p{[NUM_FB+1:$]}: the
+    throttle caps linear prefetch at FB_THRESHOLD+1 = NUM_FB-1 non-stale buffers (F-FE-017,
+    F-IC-038); the NUM_FB-th buffer is allocated only by a branch lookup, which is a redirect target
+    and not a lead (CG-IC-004.cp_busy_buffers.b4 covers it)
   - cp_throttle_hold iff (b) with more than FB_THRESHOLD lines open: bins yes{1: no new sequential
     lookup was issued}
   - cp_branch_bypasses_throttle iff a branch lookup with NUM_FB-1 non-stale lines open: bins yes{1:
     the lookup was issued and NUM_FB buffers became busy} (F-IC-043)
+  - cp_release_to_next_req iff a new lookup request follows a NUM_FB-open-lines interval = cycles
+    from the oldest line's last rvalid to that request: bins c1_2_off{[1:2], icache_enable == 0},
+    c3_4_caching{[3:4], caching: RAM write, release, lookup, IC1 miss; rtl/ibex_icache.sv:815-822,
+    843-844}; ignore_bins c5p{[5:$]}: gen_chk_ibus_proto failure (TP-IC-052)
   - cp_output_hold iff (c) = cycles the retired word was held at the icache output before ID
     accepted it (agent delivery or hit cycle to ID acceptance, back-dated from RVFI): bins h0{0},
     h1{1}, h2_3{[2:3]}, h4p{[4:$]}
@@ -4670,17 +5092,20 @@ number or range are written name{value}.
 ## Counts
 
 - Covergroups: 30 (IMEM 7, DMEM 9, FE 6, IC 8)
-- Coverpoints and crosses: 301 (of which 14 are cross-operand-only coverpoints with no
+- Coverpoints and crosses: 310 (of which 14 are cross-operand-only coverpoints with no
   closure bin: 12 knob operands and the two driver-rule cp_gnt_with_req; 1 is probe-gated (P1) and
   4 are informational)
-- Coverpoint bins (closure, after ignore_bins): 615
-- Cross bins (named, closure): 378
-- Ignored bins / combinations: 62 ignore_bins clauses
+- Coverpoint bins (closure, after ignore_bins): 638
+- Cross bins (named, closure): 389
+- Ignored bins / combinations: 67 ignore_bins clauses
 - Adopted bins: 0
+- Bug-tied bins (credit an open bug candidate, owned by the expected-fail item TP-DMEM-064): 3
+  (CG-DMEM-007.cp_rf_suppressed.no_b16, cr_pattern_x_we.first_only_load,
+  cr_class_x_we_x_beat.single_load_first; B16)
 - Informational bins (excluded from the closure measure): 8 (CG-IMEM-007.cp_unsolicited_rvalid_case 3,
   CG-DMEM-009.cp_unsolicited_rvalid_case 3, CG-DMEM-006.cp_b14_records 1, CG-IC-006.cp_multiway_mismatch 1)
 - Probe-gated bins (not in any manifest): 1 (CG-FE-004.cp_dummy_seen.yes)
-- Bins referenced by trace_tp_bin_mem_fetch_icache.csv: 1001 distinct bins in 1121 rows;
+- Bins referenced by trace_tp_bin_mem_fetch_icache.csv: 1035 distinct bins in 1161 rows;
   every closure bin above is owned by at least one TP item (no orphans, Critic M-04)
 
 ## Probe candidates
@@ -4747,11 +5172,22 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   so the group's crosses can use it; its standalone bins are not manifest bins and are not in the
   trace CSV (dv_principles Section 4: no duplicate coverpoints). Knob values (knob:*) are cross
   operands here; their bins are owned by fcov_xcut.md CG-REG-*.
-- Probe-gated (P1) bins: all of CG-DIT-004, CG-DIT-005.cp_pattern_changed,
-  CG-RST-004.cp_dummy_adjacent and cr_rd_bank_dummy, CG-RST-002.cp_inflight.dummy_in_id and
-  cr_inflight_len.dummy_in_id_short. They stay in the trace CSV for feature traceability but are
-  NOT manifest (must-hit) bins until the probe register carries P1 (gen_tb_architecture.md 8.3
-  item 5; Critic pre-review S-14).
+- Probe-gated (P1) bins: all of CG-DIT-004 (including the new cp_rs2_val_zero / cr_div_zero),
+  CG-DIT-005.cp_pattern_changed, CG-RST-004.cp_dummy_adjacent and cr_rd_bank_dummy,
+  CG-RST-002.cp_inflight.dummy_in_id and cr_inflight_len.dummy_in_id_short. They stay in the trace
+  CSV for feature traceability but are NOT manifest (must-hit) bins until the probe register
+  carries P1 (gen_tb_architecture.md 8.3 item 5; Critic pre-review S-14).
+- P1 level semantics (rtl-arch fact-check X-22, fix brief 3): dummy_instr_id_o / dummy_instr_wb_o
+  are levels updated only on if_id_pipe_reg_we (rtl/ibex_if_stage.sv:538-544;
+  rtl/ibex_wb_stage.sv:222-241) and hold the last registered value after the dummy left the
+  stage; every P1 sample below is keyed on the insertion EVENT (rising dummy_instr_id_o with
+  if_id_pipe_reg_we) or on the dummy's residency (from the event to the next if_id_pipe_reg_we),
+  never on the held level. A dummy reading x0 gets rf_data_r0_q (the previous dummy's result,
+  rtl/ibex_register_file_ff.sv:159-173), so a zero divisor is an operand value, not the index x0.
+- Fact-check conventions used in the bins (tp header C-1..C-16): rvfi_ext_irq_valid is a level
+  that never coincides with rvfi_valid (C-13); rvfi_ext_debug_req = 1 occurs only on debug-mode
+  records (C-3); the load-suppression rule is per completing beat and the first-beat class is
+  B16 (C-8); the internal NMI may follow up to two ordinary instructions (C-7, D21).
 - Never `illegal_bins = default sequence`; every non-listed value is an explicit bin, an
   ignore_bins with a reason, or left to a named checker (stated). "cfg tracked" = the TB's model of
   cpuctrlsts bits 5:0 updated from retired cpuctrlsts write records (WARL-legalised).
@@ -4765,7 +5201,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 
 ### CG-DIT-001: gen_cg_dit_cpuctrlsts_cfg
 - Features: F-DIT-001, F-DIT-006, F-DIT-008, F-DIT-011, F-DIT-012, F-DIT-023, F-SEC-031, F-SEC-032,
-  F-SEC-033, F-DIT-010
+  F-SEC-033, F-DIT-010, F-CSR-085, F-DIT-002 (parent of folded bins hosted here)
 - Sample: rvfi_valid of a CSR instruction whose csr field == CSR_CPUCTRLSTS, trapped or not;
   condition: rvfi_valid && is_csr_op(rvfi_insn) && csr_addr(rvfi_insn) == ibex_pkg::CSR_CPUCTRLSTS;
   anti-vacuity: only cpuctrlsts accesses sample (a fraction of a percent of records); a hit proves
@@ -4882,9 +5318,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - TP items: TP-DIT-004, TP-DIT-005, TP-DIT-006
 
 ### CG-DIT-004: gen_cg_dit_dummy_insert (P1; probe-gated, not in manifest until the probe register carries P1)
-- Features: F-DIT-009, F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-015, F-DIT-016, F-DIT-017,
-  F-DIT-018, F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-022, F-DIT-023, F-DIT-024, F-DIT-027,
-  F-DIT-028, F-DIT-029, F-DIT-030, F-RVFI-024
+- Features: F-DIT-009, F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-015, F-DIT-016, F-DIT-017, F-DIT-018,
+  F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-022, F-DIT-023, F-DIT-024, F-DIT-027, F-DIT-028, F-DIT-029,
+  F-DIT-030, F-RVFI-024, F-DIT-003 (parent of folded bins hosted here)
 - Sample: (a) insert: rising edge of the wrapper-internal net dummy_instr_id_o while the IF/ID
   register is written; (b) window_close: the close of a test-defined measurement window (>= 200
   retired records, or >= 200 cycles for the fetch_off / wfi_sleep kinds, with the tracked cfg
@@ -4900,19 +5336,28 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_rs1 = rf_raddr_a_o during the dummy iff insert: bins x0{0}, x1_15{[1:15]}, x16{16},
     x17_31{[17:31]}
   - cp_rs2 = rf_raddr_b_o during the dummy iff insert: bins x0{0}, x1_15{[1:15]}, x16{16},
-    x17_31{[17:31]}
+    x17_31{[17:31]} (register INDEX only: x0 read by a dummy returns rf_data_r0_q, the previous
+    dummy's result, rtl/ibex_register_file_ff.sv:159-173, so this coverpoint says nothing about
+    the divisor value)
+  - cp_rs2_val_zero (P1) = the RF read-port B data (rf_rdata_b, wrapper-internal seam net) during
+    the dummy == 0 iff insert && cp_type == div: bins zero{1}, nonzero{0} (the fast-path selector
+    equal_to_zero_i is this value, rtl/ibex_multdiv_fast.sv:434, :445)
   - cp_dit = cfg tracked data_ind_timing at the insertion (cross operand only; owner
     CG-DIT-001.cp_dit) iff insert: bins off{0}, on{1}
   - cp_mask = cfg tracked dummy_instr_mask at the insertion (cross operand only; owner
     CG-DIT-001.cp_mask) iff insert: bins m000{3'd0}, m001{3'd1}, m010{3'd2}, m011{3'd3}, m100{3'd4},
     m101{3'd5}, m110{3'd6}, m111{3'd7}
-  - cp_context = TB context at the insertion cycle iff insert: bins straight{no redirect in the
+  - cp_context = TB context during the dummy's ID residency (from the insertion event to the next
+    if_id_pipe_reg_we; an irq / debug_req edge that lands after the dummy left ID is NOT
+    attributed to it, fact-check N3) iff insert: bins straight{no redirect in the
     previous 2 records, no pending event}, after_taken_branch{previous record a taken branch or
     jump}, irq_pending{irq_pending_o == 1 && mstatus.MIE model == 1}, debug_req_high{debug_req_i
     == 1}, step_active{dcsr.step model == 1 && rvfi_ext_debug_mode == 0}, in_irq_handler{rvfi_intr
     seen since the last mret}, u_mode{rvfi_mode model == PRIV_LVL_U}, in_zcmp{between
     expanded_insn first and last}, hazard_load_wb{a load with rd == rs1 or rs2 of the dummy
-    outstanding in WB}; ignore_bins fetch_stalled{fetch_enable_i != IbexMuBiOn || core_busy_o ==
+    outstanding in WB: no extra stall results, the dummy waits on outstanding_memory_access like
+    any instruction, rtl/ibex_id_stage.sv:1059-1062; fact-check TP-DIT-031}; ignore_bins
+    fetch_stalled{fetch_enable_i != IbexMuBiOn || core_busy_o ==
     IbexMuBiOff in the previous cycle}: unreachable by construction: the insertion counter advances
     only on fetch_valid or an insertion (rtl/ibex_dummy_instr.sv:100-104,115) and dummy_instr_id_o
     is written only with if_id_pipe_reg_we (rtl/ibex_if_stage.sv:538-544), neither of which occurs
@@ -4920,8 +5365,11 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
     cr_window_dummies.fetch_off_none / wfi_sleep_none (TP-DIT-030)
   - cp_back_to_back = previous accepted ID instruction was also a dummy iff insert: bins yes{1},
     no{0}
-  - cp_en_cleared_in_flight = a cpuctrlsts write clearing dummy_instr_en retired while this dummy
-    was in ID or WB iff insert: bins yes{1}, no{0}
+  - cp_en_cleared_in_flight = the cpuctrlsts write clearing dummy_instr_en committed in ID while
+    this dummy was in WB (the dummy's insertion event immediately preceded the write's IF->ID
+    transfer) iff insert: bins yes{1}, no{0}; the "dummy in ID when the write commits" case is
+    unreachable (the csrw occupies ID when it commits and FLUSH halts IF, rtl/ibex_controller.sv:
+    664-679, :816-820; fact-check TP-DIT-025) and is not a bin
   - cp_minstret_excess = minstret delta minus RVFI record count in the window iff window_close:
     bins zero{0}, positive{[1:$]}; ignore_bins negative{[$:-1]}: minstret can never lag the trace
   - cp_dummies_in_window = P1 insert count in the window iff window_close: bins none{0},
@@ -4945,7 +5393,12 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cr_mask_ctx = cp_mask x cp_context: m000_straight, m111_straight, m000_after_taken_branch,
     m000_irq_pending, m000_debug_req_high, m000_step_active, m000_in_zcmp, m000_hazard_load_wb
     (fetch_stalled is excluded through the cp_context ignore)
-  - cr_div_rs2 = cp_type x cp_rs2 x cp_dit: div_x0_on, div_x0_off, div_x17_31_on, div_x1_15_off
+  - cr_div_zero = cp_type x cp_rs2_val_zero x cp_dit iff cp_type == div: div_zero_on{full path
+    forced by DIT}, div_zero_off{fast path, +2}, div_nz_on, div_nz_off{full path, +37}; no
+    ignores (cp_rs2_val_zero is sampled only for div dummies)
+  - (retired: cr_div_rs2 - it encoded the wrong premise "rs2 == x0 => divide by zero" (fact-check
+    TP-DIT-010, X-22); replaced by cr_div_zero on the operand VALUE; the register-index bins stay
+    in cp_rs1 / cp_rs2)
   - cr_window_dummies = cp_window_kind x cp_dummies_in_window: straight_en_few, straight_en_many,
     disabled_none, fetch_off_none, wfi_sleep_none; ignore straight_en_none: the insertion
     threshold is at most 2**TIMEOUT_CNT_W - 1 = 31 fetches (rtl/ibex_dummy_instr.sv:33,97), so a
@@ -4954,6 +5407,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
     ignore fetch_off_few, fetch_off_many, wfi_sleep_few and wfi_sleep_many: insertion while fetch
     is disabled or the core sleeps is the TP-DIT-030 checker error (unreachable by the cp_context
     reason)
+- Probe status: pending probe-register ruling (candidate P9: if_stage_i fcov_dummy_instr_type and the IF/ID
+  pipeline write enable if_id_pipe_reg_we, not among P1's registered nets); coverpoints cp_type and the
+  insert sample event (cp_event.insert and every iff-insert coverpoint) excluded from manifests until ruled
 - Adopted (riscv-dv): none
 - TP items: TP-DIT-010, TP-DIT-012, TP-DIT-014, TP-DIT-016, TP-DIT-017, TP-DIT-018, TP-DIT-019,
   TP-DIT-020, TP-DIT-021, TP-DIT-022, TP-DIT-023, TP-DIT-024, TP-DIT-025, TP-DIT-026, TP-DIT-029,
@@ -4993,8 +5449,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ---------------------------------------------------------------------------------------------------
 
 ### CG-SEC-001: gen_cg_sec_alerts
-- Features: F-SEC-001, F-SEC-002, F-SEC-003, F-SEC-007, F-SEC-008, F-SEC-009, F-SEC-010,
-  F-SEC-011, F-SEC-013, F-SEC-034, F-SEC-035, F-SEC-036, F-DIT-017, F-DIT-022
+- Features: F-SEC-001, F-SEC-002, F-SEC-003, F-SEC-007, F-SEC-008, F-SEC-009, F-SEC-010, F-SEC-011,
+  F-SEC-013, F-SEC-034, F-SEC-035, F-SEC-036, F-DIT-017, F-DIT-022, F-SEC-004 (parent of folded bins
+  hosted here)
 - Sample: (a) alert events: any cycle where an alert output is high; (b) inject: any TB injection
   event; (c) reset_close: the close of a reset window at rst_ni release, and post_reset_close: the
   close of the two-cycle window after release, both sampled ONLY when the window had activity that
@@ -5081,12 +5538,29 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_half = misaligned position of the beat: bins aligned{single-transaction access}, first{first
     transaction of a split access}, second{second transaction}, na{ibus or spurious}
   - cp_nmi_taken = a record with rvfi_ext_nmi_int == 1 follows within the window: bins yes{1},
-    no{0}
-  - cp_nmi_latency iff cp_nmi_taken == yes = instructions retired between the faulting record and
-    the NMI entry: bins same_insn{0}, next_insn{1}; ignore_bins later{[2:$]}: the RTL takes the
-    internal NMI at most one instruction later (checker error if seen)
+    no{0} (no is reachable only for the ibus side: an instruction-side integrity error gives the
+    alert plus a fetch fault, no NMI (D14); every dbus beat with bad check bits, solicited or
+    spurious, raises the internal NMI because mem_resp_intg_err is not qualified by an
+    outstanding access, rtl/ibex_id_stage.sv:613, rtl/ibex_controller.sv:413-417; fact-check
+    TP-SEC-010)
+  - cp_nmi_latency iff cp_nmi_taken == yes = ordinary instructions retired between the corrupted
+    beat's record and the NMI entry (a Zcmp sequence counts as one instruction, its micro-op
+    records folded): bins same_insn{0}, next_insn{1}, two_insn{2}; ignore_bins later{[3:$]}: the
+    pending flag registers one cycle after rvalid and at most one more instruction is accepted
+    into ID in the response cycle (rtl/ibex_controller.sv:402-438; X-10, D21, C-7; checker error
+    if seen)
   - cp_rf_wr_suppress = rvfi_ext_rf_wr_suppress on the answered load/store record (cross operand
     only; owner CG-RVFI-003.cp_rf_wr_suppress) iff dbus && !spurious: bins yes{1}, no{0}
+  - cp_first_beat_rd_written iff dbus && load && cp_half == first = the load record shows
+    rvfi_rd_addr != 0 (the RF was written with merged data although the first beat was corrupt):
+    bins yes{1} (B16 evidence: RTL behaviour, rtl/ibex_load_store_unit.sv:514, :697-698); no{0}
+    is the documented-intent outcome the RTL cannot produce and is not a bin (re-enable on the
+    B16 fix)
+  - cp_beat_order iff dbus && load && cp_half == first = whether the second half was granted
+    before the first beat's response: bins second_granted_before_first_resp{1},
+    second_granted_after_first_resp{0} (decides the NMI mtval: addr_last is already the
+    word-aligned second-half address in the first case, rtl/ibex_load_store_unit.sv:258-266,
+    rtl/ibex_controller.sv:416; fact-check N7)
   - cp_fetch_fault iff ibus = an rvfi_trap record with mcause ExcCauseInstrAccessFault follows for
     that PC: bins yes{1}, no{0}
   - cp_load_size = funct3 size of the answered load: bins byte{lb/lbu}, half{lh/lhu}, word{lw},
@@ -5094,18 +5568,26 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - Crosses:
   - cr_side_op = cp_side x cp_dbus_op: ibus_na, dbus_load, dbus_store, dbus_spurious; ignore
     ibus_load, ibus_store, ibus_spurious and dbus_na: undefined combinations
-  - cr_load_half = cp_dbus_op x cp_half x cp_rf_wr_suppress: load_aligned_yes, load_first_yes,
-    load_second_yes, store_aligned_no, store_first_no, store_second_no; ignore store_*_yes: a
-    store writes no register; ignore load_*_no: a corrupted load response always suppresses
-    (checker error, not coverage); ignore spurious_*_* and *_na_*: cp_rf_wr_suppress is not
-    sampled there
+  - cr_load_half = cp_dbus_op x cp_half x cp_rf_wr_suppress: load_aligned_yes, load_second_yes,
+    load_first_no{B16 evidence: a misaligned load whose FIRST beat was corrupted is NOT
+    suppressed on this RTL, the completing (second) beat being clean; carried by the
+    expected-fail items TP-SEC-040 / TP-RVFI-040 only}, store_aligned_no, store_first_no,
+    store_second_no; ignore load_first_yes: the documented-intent outcome (security.rst:88) that
+    the RTL cannot produce (M-03; re-enable on the B16 fix); ignore load_aligned_no and
+    load_second_no: a corrupted completing beat always suppresses (checker error, not coverage);
+    ignore store_*_yes: a store writes no register; ignore spurious_*_* and *_na_*:
+    cp_rf_wr_suppress is not sampled there
+  - cr_first_beat_order = cp_beat_order x cp_first_beat_rd_written:
+    second_granted_before_first_resp, second_granted_after_first_resp (cp_first_beat_rd_written
+    has the single bin yes, so the cross names carry the order only; B16 evidence)
   - cr_ibus_consumed = cp_side x cp_ibus_consumed x cp_fetch_fault: ibus_executed_yes,
     ibus_discarded_no; ignore ibus_executed_no and ibus_discarded_yes: consumed words fault,
     discarded ones cannot; ignore dbus_*: n/a
   - cr_errbits_side = cp_err_bits x cp_side: single_ibus, double_ibus, multi_ibus, single_dbus,
     double_dbus, multi_dbus
 - Adopted (riscv-dv): none
-- TP items: TP-SEC-007, TP-SEC-008, TP-SEC-009, TP-SEC-010, TP-SEC-011, TP-SEC-012
+- TP items: TP-SEC-007, TP-SEC-008, TP-SEC-009, TP-SEC-010, TP-SEC-011, TP-SEC-012, TP-SEC-040,
+  TP-RVFI-040
 
 ### CG-SEC-003: gen_cg_sec_double_fault
 - Features: F-SEC-022, F-SEC-023, F-SEC-024, F-SEC-025, F-SEC-026
@@ -5164,7 +5646,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_trigger = classified cause of the sample: bins retire{a record retired}, pc_set_branch{jump
     or branch redirect}, pc_set_trap{synchronous exception}, pc_set_irq{interrupt or NMI},
     pc_set_debug{debug entry}, data_req{data_req_o && data_gnt_i}, csr_write{csrw mepc/mtval
-    retired}, reset{rst_ni low}, boot{the BOOT_SET cycle}
+    retired}, reset{rst_ni low}, boot{the BOOT_SET cycle: next_pc takes the boot vector},
+    first_id{the first fetched instruction after a reset enters ID: current_pc (= pc_id) leaves
+    0 for the boot vector, rtl/ibex_if_stage.sv:601, :613; fact-check TP-SEC-031}
   - cp_misaligned = the data request that moved last_data_addr: bins no{aligned access},
     first_half{first transaction of a split access}, second_half{second transaction}, na{other
     fields}
@@ -5173,12 +5657,15 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_value_class = value of the field: bins zero{0}, boot_page{inside {boot_addr_i[31:8], 8'h00}
     .. + 8'hFF}, program{inside the program image}, mmio{inside the TB MMIO window}
 - Crosses:
-  - cr_field_trigger = cp_field x cp_trigger: current_pc_retire, current_pc_boot,
+  - cr_field_trigger = cp_field x cp_trigger: current_pc_retire, current_pc_first_id,
     next_pc_pc_set_branch, next_pc_pc_set_trap, next_pc_pc_set_irq, next_pc_pc_set_debug,
     next_pc_boot, last_data_addr_data_req, last_data_addr_reset, exception_pc_pc_set_trap,
     exception_pc_pc_set_irq, exception_pc_csr_write, exception_pc_reset,
     exception_addr_pc_set_trap, exception_addr_csr_write, exception_addr_reset; ignore
-    last_data_addr_retire, last_data_addr_pc_set_*, last_data_addr_csr_write and
+    current_pc_boot: pc_id stays 0 through RESET, BOOT_SET and FIRST_FETCH and changes only on
+    if_id_pipe_reg_we (rtl/ibex_if_stage.sv:601, :613; X-23), so current_pc never moves in the
+    BOOT_SET cycle; ignore next_pc_first_id, last_data_addr_first_id, exception_pc_first_id and
+    exception_addr_first_id: only pc_id moves at that event; ignore last_data_addr_retire, last_data_addr_pc_set_*, last_data_addr_csr_write and
     last_data_addr_boot: the LSU address moves only on requests or reset; ignore
     exception_*_data_req, exception_*_pc_set_branch, exception_*_boot and exception_*_retire:
     mepc/mtval move only on traps, CSR writes and reset; ignore current_pc_data_req and
@@ -5193,8 +5680,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - TP items: TP-SEC-028, TP-SEC-029, TP-SEC-030, TP-SEC-031, TP-SEC-032
 
 ### CG-SEC-005: gen_cg_sec_ctrl_inputs
-- Features: F-SEC-012, F-SEC-020, F-SEC-021, F-SEC-022, F-SEC-025, F-SEC-031, F-SEC-033,
-  F-RST-003, F-RST-007, F-RST-014, F-RST-025, F-RVFI-020
+- Features: F-SEC-012, F-SEC-020, F-SEC-021, F-SEC-022, F-SEC-025, F-SEC-031, F-SEC-033, F-RST-003,
+  F-RST-007, F-RST-014, F-RST-025, F-RVFI-020, F-CSR-085, F-RST-010 (parent of folded bins hosted
+  here)
 - Sample: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and
   !rvfi_trap; fetch_en_change: a value change of fetch_enable_i; mcounteren_w_change: a value change
   of mcounteren_writable_i; key_req: an ic_scr_key_req_o pulse; key_valid_change: a change of
@@ -5369,9 +5857,13 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
     in_irq_handler{between an irq entry and its mret}, in_nmi_handler{between an NMI entry and
     its mret}, fetch_disabled{fetch_enable_i != IbexMuBiOn}, dummy_in_id{P1: dummy_instr_id_o == 1}
   - cp_reset_len = cycles rst_ni held low: bins one_cycle{1}, short{[2:9]}, long{[10:$]}
-  - cp_post_response = beats returned by the memory models after release for pre-reset requests:
-    bins none{0 beats}, good_intg{>= 1 beat, all check bits valid}, bad_intg{>= 1 beat with
-    corrupted check bits}
+  - cp_post_response = beats for pre-reset requests DRAINED by the memory models while rst_ni = 0
+    (never after release: a post-release late beat is taken by the DUT as the answer to its new
+    request, rtl/ibex_icache.sv:851-852, rtl/ibex_load_store_unit.sv:694-698, and is the
+    out-of-spec S3 stimulus owned by TP-IMEM-040 / TP-SEC-010; fact-check TP-RST-017): bins
+    none{0 beats drained (all dropped)}, good_intg{>= 1 beat drained, all check bits valid},
+    bad_intg{>= 1 beat drained with corrupted check bits (alert_major_bus_o follows it in reset,
+    TP-SEC-036)}
   - cp_outstanding_count = granted-but-unanswered bus beats at the edge (both sides): bins
     zero{0}, one{1}, two{2}, many{[3:$]}
   - (retired: cp_alert_during_reset - owned by CG-SEC-001.cr_window (reset_close_none /
@@ -5434,7 +5926,8 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   TP-RST-029
 
 ### CG-RST-004: gen_cg_rst_regfile
-- Features: F-RST-021, F-RST-022, F-RST-023, F-DIT-015, F-SEC-005
+- Features: F-RST-021, F-RST-022, F-RST-023, F-DIT-015, F-SEC-005, F-SEC-004 (parent of folded bins
+  hosted here)
 - Sample: rvfi_valid with rvfi_trap == 0 and a register-reading or register-writing format;
   condition: rvfi_valid && !rvfi_trap && (rvfi_rs1_addr != 0 || rvfi_rs2_addr != 0 || rvfi_rd_addr
   != 0 || reads_x0_explicitly(rvfi_insn)); anti-vacuity: register traffic is frequent, but the
@@ -5447,7 +5940,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_read_unwritten = rs1 or rs2 register never written since the last reset (model): bins
     yes{1}, no{0}
   - cp_fwd_same_cycle = rs1 or rs2 addr == rd addr of the previous record and gap == 1: bins
-    yes{1}, no{0}
+    yes{1: ALU / CSR / mul / div producer forwarded from the WB flop, rtl/ibex_wb_stage.sv:215},
+    no{0: no dependency, or a LOAD producer, whose result is never forwarded (:212-215): the
+    consumer stalls on stall_ld_hz and the pair has gap 2, fact-check TP-RST-023}
   - cp_dummy_adjacent (P1) = a dummy_instr_wb_o pulse in the cycle before or after this record's
     RF write: bins yes{1}, no{0}
 - Crosses:
@@ -5466,8 +5961,9 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 
 ### CG-RVFI-001: gen_cg_rvfi_record
 - Features: F-RVFI-001, F-RVFI-002, F-RVFI-003, F-RVFI-004, F-RVFI-005, F-RVFI-006, F-RVFI-007,
-  F-RVFI-008, F-RVFI-009, F-RVFI-010, F-RVFI-024, F-RVFI-027, F-RVFI-028, F-RVFI-029,
-  F-RVFI-034, F-RST-006, F-RST-026, F-DIT-016, F-DIT-017, F-SEC-008
+  F-RVFI-008, F-RVFI-009, F-RVFI-010, F-RVFI-024, F-RVFI-027, F-RVFI-028, F-RVFI-029, F-RVFI-034,
+  F-RST-006, F-RST-026, F-DIT-016, F-DIT-017, F-SEC-008, F-SEC-007 (parent of folded bins hosted
+  here)
 - Sample: every rvfi_valid; condition: rvfi_valid; anti-vacuity: rvfi_valid is a pulse (one
   cycle per retired instruction, never continuous), and every coverpoint is a property of the
   record relative to the previous one (continuity, order, gap) or a discriminating record class,
@@ -5540,8 +6036,11 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - cp_offset = rvfi_mem_addr[1:0]: bins o0{0}, o1{1}, o2{2}, o3{3}
   - cp_misaligned = (half && addr[0]) || (word && addr[1:0] != 0): bins no{0}, yes{1}
   - cp_trap = rvfi_trap (cross operand only; owner CG-RVFI-001.cp_trap): bins no{0}, yes{1}
-  - cp_fault_half = which bus transaction faulted (dbus monitor): bins none{no fault}, first{first
-    transaction}, second{second transaction of a split access}
+  - cp_fault_half = which half of the access faulted: from the dbus monitor for a bus error (the
+    errored transaction) and from the TB PMP model for a PMP fault (a PMP-denied second half never
+    reaches the bus: data_req_o = data_req_out & ~pmp_req_err[PMP_D], rtl/ibex_core.sv:1063;
+    fact-check TP-RVFI-017): bins none{no fault}, first{first half}, second{second half of a
+    split access}
   - cp_signed = lb/lh vs lbu/lhu: bins signed{lb, lh}, unsigned{lbu, lhu}, na{word or store}
   - cp_rdata_ext = upper bits of rvfi_mem_rdata for byte/half loads: bins sign_ext_ones{signed
     load, loaded sign bit 1, upper bits all 1}, sign_ext_zeros{signed load, loaded sign bit 0,
@@ -5575,25 +6074,45 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ### CG-RVFI-003: gen_cg_rvfi_ext
 - Features: F-RVFI-016, F-RVFI-017, F-RVFI-018, F-RVFI-019, F-RVFI-020, F-RVFI-021, F-RVFI-022,
   F-RVFI-023, F-RVFI-031, F-RVFI-032, F-SEC-009, F-SEC-015, F-DIT-020
-- Sample: a retired record or an interrupt notification; condition: rvfi_valid ||
-  rvfi_ext_irq_valid; anti-vacuity: both are pulses; the collision bin requires both in one cycle
-  (rare); the pre_mip bins require exactly one line set on a record (the TB drives lines so this
-  happens), so a hit proves the field carried the intended value. The rvfi_ext_pre_mip / nmi /
-  nmi_int / debug_req fields are valid on both events (records and notifications); the other
-  fields are record fields and carry iff rvfi_valid.
+- Sample: a retired record or an interrupt notification, the latter sampled once at the RISING
+  edge of rvfi_ext_irq_valid (a level, C-13 / X-16: it rises at decision + 4 and stays high until
+  about two cycles after the handler's first instruction enters ID); condition: rvfi_valid ||
+  (rvfi_ext_irq_valid && !rvfi_ext_irq_valid_prev); anti-vacuity: rvfi_valid is a pulse and the
+  marker's rising edge is one per notification; the pre_mip bins require exactly one line set on
+  a record (the TB drives lines so this happens), so a hit proves the field carried the intended
+  value. The rvfi_ext_pre_mip / nmi / nmi_int / debug_req fields are valid on both events
+  (records and notifications); the other fields are record fields and carry iff rvfi_valid.
 - Coverpoints:
-  - cp_irq_valid = rvfi_ext_irq_valid: bins no{0}, yes{1}
-  - cp_collision = rvfi_valid && rvfi_ext_irq_valid: bins no{0}, yes{1}
+  - cp_irq_valid = rvfi_ext_irq_valid at the sample: bins no{0: a record}, yes{1: a marker
+    rising edge}
+  - cp_collision = rvfi_valid && rvfi_ext_irq_valid: bins no{0}; ignore_bins yes{1}: unreachable
+    on this RTL (the decision needs ~instr_valid_id & ready_wb, the last pre-interrupt record is
+    out by decision + 1 and the marker rises at decision + 4; rtl/ibex_core.sv:1965-1971,
+    :1985-2004, :2192-2198; fact-check TP-RVFI-035): a hit is the T-044 sva_rvfi_irq_valid_exclusive
+    checker error, not coverage
+  - cp_marker_len iff cp_irq_valid == yes = consecutive high cycles of rvfi_ext_irq_valid from
+    this rising edge: bins one{1: same-cycle gnt and next-cycle rvalid on the handler fetch},
+    two_plus{[2:$]: stage [0] is rewritten only when the handler's first instruction enters ID,
+    rtl/ibex_core.sv:1991-1992}
+  - cp_marker_offset iff cp_irq_valid == yes = cycles from the last pre-interrupt record's
+    rvfi_valid to this rising edge: bins min{GEN_RVFI_IRQ_MARKER_OFFSET (predicted 3; the value
+    is pinned at bring-up, C-16)}, more{[GEN_RVFI_IRQ_MARKER_OFFSET+1:$]: the last record retired
+    earlier than decision + 1}; ignore_bins less{[0:GEN_RVFI_IRQ_MARKER_OFFSET-1]}: would mean a
+    record inside the marker window (X-16; checker error)
+  - cp_entry_marker iff rvfi_valid && rvfi_intr = a marker rising edge was seen since the
+    previous record: bins yes{1}, no{0: ID emptied before WB drained, captured_valid was already
+    set when ready_wb came and no marker was generated, rtl/ibex_core.sv:1965; the handler's
+    first record carries the captured state}
   - cp_nmi = rvfi_ext_nmi: bins no{0}, yes{1}
   - cp_nmi_int = rvfi_ext_nmi_int: bins no{0}, yes{1}
   - cp_debug_req = rvfi_ext_debug_req: bins no{0}, yes{1}
   - cp_debug_mode = rvfi_ext_debug_mode iff rvfi_valid: bins no{0}, yes{1}
   - cp_rf_wr_suppress = rvfi_ext_rf_wr_suppress iff rvfi_valid: bins no{0}, yes{1}
   - cp_pre_mip_line = rvfi_ext_pre_mip decoded: bins none{0}, sw{bit 3 only}, timer{bit 7 only},
-    ext{bit 11 only}, fast_0{bit 16 only}, fast_1{bit 17 only}, fast_2{bit 18 only}, fast_3{bit 19
-    only}, fast_4{bit 20 only}, fast_5{bit 21 only}, fast_6{bit 22 only}, fast_7{bit 23 only},
-    fast_8{bit 24 only}, fast_9{bit 25 only}, fast_10{bit 26 only}, fast_11{bit 27 only},
-    fast_12{bit 28 only}, fast_13{bit 29 only}, fast_14{bit 30 only} (one bin per fast line, i =
+    ext{bit 11 only}, fast[0]{bit 16 only}, fast[1]{bit 17 only}, fast[2]{bit 18 only}, fast[3]{bit 19
+    only}, fast[4]{bit 20 only}, fast[5]{bit 21 only}, fast[6]{bit 22 only}, fast[7]{bit 23 only},
+    fast[8]{bit 24 only}, fast[9]{bit 25 only}, fast[10]{bit 26 only}, fast[11]{bit 27 only},
+    fast[12]{bit 28 only}, fast[13]{bit 29 only}, fast[14]{bit 30 only} (one bin per fast line, i =
     0..$bits(irq_fast_i)-1 at bit 16+i), multi{more than one bit set}; ignore_bins other_bits{any
     bit outside {3, 7, 11, 16..16+$bits(irq_fast_i)-1}}: never driven by the RTL (checker error if
     seen)
@@ -5610,18 +6129,24 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   - (retired: cp_mcycle_monotonic - "rvfi_ext_mcycle increases" is a gen_chk_counters rule on
     every record, not a bin)
 - Crosses:
-  - cr_irq_collision = cp_irq_valid x cp_collision: yes_no, yes_yes, no_no; ignore no_yes: a
-    collision implies irq_valid
+  - cr_irq_collision = cp_irq_valid x cp_collision: yes_no{a marker rising edge with no record in
+    that cycle}, no_no{a record with the marker low}; ignore yes_yes and no_yes: cp_collision.yes
+    is unreachable (see the coverpoint)
   - cr_irq_kind = cp_irq_valid x cp_nmi x cp_nmi_int: yes_no_no{plain interrupt}, yes_yes_no
     {external NMI}, yes_no_yes{internal NMI}; ignore yes_yes_yes: the controller takes one NMI
     at a time (checker error if seen); ignore no_*_*: no notification
-  - cr_dbg = cp_debug_req x cp_debug_mode: yes_no, yes_yes, no_yes, no_no
+  - cr_dbg = cp_debug_req x cp_debug_mode: yes_yes{first debug-ROM record, or a debug-mode record
+    with the pin still high}, no_yes{debug-mode record with the pin released}, no_no{ordinary
+    record}; ignore yes_no: unreachable (C-3 / X-6: halt_if is combinational from debug_req_i,
+    rtl/ibex_controller.sv:700-708, :1020, so no instruction transfers into ID outside debug mode
+    while the pin is high; the captured_debug_req path lands on the first debug-ROM record, which
+    has debug_mode = 1; checker error if seen)
   - cr_expanded_trap = cp_expanded x cp_trap: first_no, mid_no, last_no, first_yes, mid_yes,
     last_yes; ignore none_*: covered by CG-RVFI-001
 - Adopted (riscv-dv): none
-- TP items: TP-DIT-021, TP-DIT-032, TP-SEC-006, TP-SEC-008, TP-SEC-009, TP-RST-024, TP-RST-025,
-  TP-RVFI-019, TP-RVFI-020, TP-RVFI-021, TP-RVFI-022, TP-RVFI-023, TP-RVFI-024, TP-RVFI-025,
-  TP-RVFI-026, TP-RVFI-034, TP-RVFI-035, TP-RVFI-037
+- TP items: TP-DIT-021, TP-DIT-032, TP-SEC-006, TP-SEC-008, TP-SEC-009, TP-SEC-040, TP-RST-024,
+  TP-RST-025, TP-RVFI-019, TP-RVFI-020, TP-RVFI-021, TP-RVFI-022, TP-RVFI-023, TP-RVFI-024,
+  TP-RVFI-025, TP-RVFI-026, TP-RVFI-034, TP-RVFI-035, TP-RVFI-037, TP-RVFI-040
 
 ### CG-RVFI-004: gen_cg_rvfi_trap
 - Features: F-RVFI-005, F-RVFI-013, F-RVFI-015, F-RVFI-025, F-RVFI-026, F-RVFI-027, F-SEC-026,
@@ -5746,16 +6271,19 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ---------------------------------------------------------------------------------------------------
 
 - Covergroups: 20
-- Coverpoints: 167 (of which 10 are cross-operand-only copies, not manifest bins)
-- Crosses: 66
-- Distinct coverpoint bins referenced by TP items: 548
+- Coverpoints: 166 (of which 9 are cross-operand-only copies, not manifest bins; retired
+  coverpoints are not counted)
+- Crosses: 66 (cr_div_rs2 retired; cr_div_zero and cr_first_beat_order added by fix brief 3)
+- Distinct coverpoint bins referenced by TP items: 558
 - Distinct cross bins referenced by TP items: 437
-- Trace CSV rows: 1096 (of which 89 are probe-gated P1 rows, not in any manifest)
+- Trace CSV rows: 1115 (of which 91 are probe-gated P1 rows, not in any manifest)
 - Adopted (riscv-dv) bins: 0
-- TP items: 145 (expected-fail: 3; informational: 1)
-- Method: counts are generated by regen_verify.py from this file's `  - cp_` / `  - cr_` lines and
-  from the Bins lines of tp_sec_rst_rvfi_cheri.md; every CSV row was checked to name a declared,
-  non-ignored, non-cross-operand-only bin of its covergroup.
+- TP items: 147 (expected-fail: 5 = TP-DIT-019, TP-DIT-032, TP-RVFI-013, TP-SEC-040, TP-RVFI-040;
+  informational: 3 = TP-SEC-010, TP-SEC-011, TP-RVFI-039)
+- Method: counts are generated by the fix-brief-3 verify script (scratchpad regen_verify_fix3.py)
+  from this file's `  - cp_` / `  - cr_` lines and from the Bins lines of
+  tp_sec_rst_rvfi_cheri.md; every CSV row was checked to name a declared, non-ignored,
+  non-cross-operand-only bin of its covergroup.
 
 ---------------------------------------------------------------------------------------------------
 ## Probe candidates
@@ -5774,6 +6302,10 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   the bins are probe-gated and NOT in any test manifest until the probe register carries P1
   (gen_tb_architecture.md 8.3 item 5). The fire-checks of TP-DIT-022, TP-DIT-023 and TP-DIT-030
   are boundary-based with P1 as confirmation only. No checker depends on it.
+- P9 (probe candidate, probe register entry needed): if_stage_i fcov_dummy_instr_type and the IF/ID
+  pipeline write enable if_id_pipe_reg_we (rtl/ibex_if_stage.sv:538-544, 817-821) are NOT among P1's
+  registered nets; CG-DIT-004.cp_type and its insert sample event need them. Probe status: pending
+  probe-register ruling; excluded from manifests until ruled (Critic M-7a).
 - rf_we_wb_o / rf_waddr_wb_o (same class of wrapper-internal net): used only inside the P1
   monitor to attribute an RF write to a dummy (waddr == 0 with dummy_instr_wb_o); not needed by
   any bin on its own and never a fire-check (TP-DIT-030's fire-check is boundary-only).
@@ -5791,7 +6323,8 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 Task: T-006 cross-cutting subagent. Companion: tp_xcut.md (test-plan items, knob definitions,
 schedule). Build configuration `opentitan`; DUT gen_dut_top = ibex_core + ibex_register_file_ff
 (README_T006_BRIEF.md). All bins here are sampled at the DUT boundary or on RVFI, except
-CG-XIF-012 (probe candidate P1, see Probe candidates).
+CG-XIF-012 (probe candidate P1, see Probe candidates). Plan v2b conventions C-1..C-16 (tp_xcut.md
+header) apply; S18, S19 and S21 below carry the RTL-timing facts they rest on.
 
 Area prefixes: REG = randomization layers (regime knobs, regime schedule, transitions);
 XIF = cross-interface crosses; ADOPT = bins adopted from riscv-dv's coverage model
@@ -5860,9 +6393,13 @@ ibex_core.
   is exactly one flop after the instruction leaves WB (rvfi_stage_valid_d[1] = rvfi_wb_done,
   rtl/ibex_core.sv:1868), so every retirement-anchored event is back-dated by one cycle
   (`wb_exit` = rvfi_valid cycle - 1) and read cycle-exactly at the pins. Commit-to-record offsets:
-  a CSR write commits GEN_CSR_COMMIT_TO_RVFI_OFFSET = 2 cycles before its record (fixed; a WB stall
-  delays commit and record together), trap/mret/dret records follow their commit by 1, the
-  interrupt marker by 2; a taken CTI redirects (pc_set) in its last ID cycle,
+  a CSR write commits GEN_CSR_WRITE_TO_RVFI_OFFSET = 2 cycles before its record (fixed; a WB stall
+  delays commit and record together); trap/mret/dret records follow their commit (the FLUSH cycle,
+  where pc_set is issued) by GEN_TRAP_TO_RVFI_OFFSET = 1; the interrupt marker rvfi_ext_irq_valid
+  is a LEVEL that rises four cycles after the decision cycle and stays high until about two cycles
+  after the handler's first instruction enters ID (C-13, X-16; not generated when ID emptied before
+  WB drained): no S-state or bin of this area uses it, interrupt entry is anchored on the rvfi_intr
+  record and the vector fetch below; a taken branch/jump redirects (pc_set) in its last ID cycle,
   GEN_RVFI_ID_EXIT_OFFSET = 2 cycles before its record. "Same cycle as X" therefore names one
   back-dated cycle per coverpoint, never a window. `irq_taken_window`: cycles from `wb_exit` of the
   last record before a record with rvfi_intr == 1 to the vector fetch of that handler (first
@@ -5870,18 +6407,38 @@ ibex_core.
   rvfi_ext_nmi_int tell irq from NMI. `debug_entry_window`: likewise up to the first instr_req_o
   for DmHaltAddr. No retirement lies inside either window by definition, so both are exact at the
   boundary; probe P4 is not needed for them.
-- S19 `redirect`: a retirement with rvfi_pc_wdata != rvfi_pc_rdata + insn length (taken
-  branch/jump, mret/dret, trap), derived from RVFI only: no ibus request is required, so icache
-  hits are not blind, and bit 0 of rvfi_pc_wdata is masked (B13). The redirect cycle is the CTI's
-  last ID cycle, rvfi_valid cycle - GEN_RVFI_ID_EXIT_OFFSET (2; bring-up confirms the constant).
+- S19 `redirect`: a record that changes the control flow, derived from RVFI only (no ibus request
+  is required, so icache hits are not blind): (a) a taken branch/jump: rvfi_pc_wdata !=
+  rvfi_pc_rdata + insn length with bit 0 of rvfi_pc_wdata masked (B13), target = rvfi_pc_wdata;
+  (b) a trap record (rvfi_trap = 1) or an S17 mret/dret record: their rvfi_pc_wdata is the NEXT
+  SEQUENTIAL fetch address, never the target (C-1, X-1: rtl/ibex_core.sv:2084 captures pc_if in the
+  DECODE cycle, the PC_EXC / PC_ERET / PC_DRET pc_set comes one cycle later in FLUSH), so the target
+  is the NEXT record's rvfi_pc_rdata (or, with the icache off, the DmExceptionAddr / DmHaltAddr /
+  vector fetch on instr_addr_o). The redirect cycle is the cycle pc_set is issued: for (a) the CTI's
+  last ID cycle, rvfi_valid cycle - GEN_RVFI_ID_EXIT_OFFSET (2); for (b) the FLUSH cycle,
+  rvfi_valid cycle - GEN_TRAP_TO_RVFI_OFFSET (1); bring-up confirms both constants.
 - S20 `dummy_inserted`: dummy_instr_id_o rising (P1 probe candidate; ibex_core port not on the
   gen_dut_top boundary) with dummy type from the RTL fcov_dummy_instr_type net.
+- S21 `ls_outst_at_id_entry(X)` for X a wfi or a CSR write: the record before X is a load/store P
+  (a decoded load/store record, C-12) and X's rvfi_valid cycle == P's rvfi_valid cycle + 1.
+  Derivation: nothing in ID executes or leaves DECODE while a WB memory access is outstanding
+  (instr_executing requires ~outstanding_memory_access, rtl/ibex_id_stage.sv:1059-1062; en_wb_o =
+  instr_done, :1224; a special_req waits for ready_wb_i, rtl/ibex_controller.sv:668-678), so X
+  leaves ID in P's final data_rvalid_i cycle R at the earliest; P's WB exit is R and its record
+  R + 1 (S18); X spends one WB cycle (WB_INSTR_OTHER) and records at R + 2 iff X was in ID at or
+  before R, later otherwise. A one-cycle record spacing therefore proves that P's access was
+  outstanding (or completing, the CG-XIF-003 count rule) in X's first ID cycle. Sub-states from S5
+  on P: `single` (non-split) or `split` (misaligned pair: R is the second half's rvalid, so the
+  second half was the outstanding one). At X's own WB exit the data bus is always idle, which is
+  why CG-XIF-004.cp_pending_at_wfi.data_outst and CG-XIF-009.cp_prev_ls_outst are anchored here
+  (fact-check TP-XIF-004 / TP-XIF-010). RVFI-only, so independent of the icache state (C-14).
 
 Phase log (REG): every agent writes one record per regime phase it applies: {phase_idx, knob,
 applied_value, start_cycle, start_rvfi_order, pinned, first_event_cycle, activity_count}. The
 program-side knobs (instr_mix, priv_regime, pmp_regime) write their record when the region marker
-store (TB MMIO phase-marker register, tb-infra b.8) is observed on the data bus. CG-REG-001..006
-and CG-REG-009 sample a record only at the phase's FIRST regime-relevant event
+store (TB MMIO phase-marker register, tb-infra b.8) is observed on the data bus. CG-REG-001..006,
+CG-REG-009 and CG-REG-010 (run constant: one sample per run) sample a record only at the phase's
+FIRST regime-relevant event
 (`first_event_cycle`, table below), never at the phase start and never per clock: a value bin
 proves the DUT saw >= 1 transaction under that regime, and a `_tr` transition bin (previous
 phase's value -> this phase's value) is credited only when the previous phase also reached its
@@ -5905,6 +6462,7 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 | icache_ecc_err_rate (iff icache_en_q, S12) | rare/frequent: first injection on a lookup with the cache enabled; none: the 64th lookup with the cache enabled and no injection | 64 lookups |
 | scr_key_delay | first ic_scr_key_req_o pulse of the phase (the fence.i or reset that raised it), answered under the regime | - |
 | instr_mix, priv_regime, pmp_regime | first retirement after the region marker store's record; for pmp_regime after the prologue's last PMP CSR write retired | - |
+| mcounteren_writable (run constant, CG-REG-010) | the first retired mcounteren write of the run (S16), pin value read in that write's commit cycle (S18); a run that never writes mcounteren contributes no sample | - |
 
 ## Covergroups
 
@@ -6002,13 +6560,13 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 
 ### CG-REG-007: gen_cg_reg_schedule
 - Features: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022, F-ISA-001, F-PRV-001, F-PMP-006
-- Sample: ONE instant only: the phase-END record of a TB-side phase or program-side region, written when the phase's boundary fires (for the last phase: when the run ends after the phase reached the lower bound of its duration class); the run-constant banner values (schedule length K, number of `+gen_regime_pin` entries, derived-or-supplied schedule) are carried into every phase record, so there is no separate time-0 banner sample and no end-of-run sample; condition: record present && the phase reached its first regime-relevant event (Phase log table); anti-vacuity: a record exists only for a phase the agents consumed (gen_chk_regime asserts banner K == logged phases and measured durations in class), so a hit proves the schedule generator produced and the agents executed that phase under that run configuration; side-specific coverpoints carry `iff rec.side`. Bins map to the umbrella feature of each interface the regimes stress (DV_prompt Section 6 layer 3 is a stimulus rule, not a DUT feature; see Open questions in tp_xcut.md).
+- Sample: ONE instant only: the phase-END record of a TB-side phase or program-side region, written when the phase's boundary fires (for the last phase: when the run ends after the phase reached the lower bound of its duration class); the run-constant banner values (schedule length K, number of pinned knobs, derived-or-supplied schedule) are carried into every phase record, so there is no separate time-0 banner sample and no end-of-run sample; condition: record present && the phase reached its first regime-relevant event (Phase log table); anti-vacuity: a record exists only for a phase the agents consumed (gen_chk_regime asserts banner K == logged phases and measured durations in class), so a hit proves the schedule generator produced and the agents executed that phase under that run configuration; side-specific coverpoints carry `iff rec.side`. Bins map to the umbrella feature of each interface the regimes stress (DV_prompt Section 6 layer 3 is a stimulus rule, not a DUT feature; see Open questions in tp_xcut.md).
 - Coverpoints:
   - cp_phase_count = rec.K (schedule length from the banner, carried in every record) [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022, F-ISA-001, F-PRV-001, F-PMP-006]: bins k1{1}, k2{2}, k3_4{3..4}, k5_plus{>= 5}
   - cp_duration_class = rec.measured_cycles of the phase iff rec.side == tb [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022]: bins short{500..2000 cycles}, medium{2001..20000 cycles}, long{20001..100000 cycles}
   - cp_region_duration_class = rec.measured_retirements of the region iff rec.side == program [F: F-ISA-001, F-PRV-001, F-PMP-006]: bins short{100..500 retired instructions}, medium{501..5000}, long{5001..20000}
   - cp_knobs_changed = number of TB-side knobs whose applied value differs from the previous phase iff rec.side == tb && rec.phase_idx > 0 [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022]: bins one{1}, two_three{2..3}, four_plus{>= 4}
-  - cp_pinned_count = number of `+gen_regime_pin` entries in this run (banner value carried in every record; the coverage-side alias table in tp_xcut.md maps agents to knobs) [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022, F-ISA-001, F-PRV-001, F-PMP-006]: bins none{0}, one{1}, several{2..N_SCHED-1}, all{N_SCHED, where N_SCHED = 19 scheduled knobs: the 17 brief knobs plus imem_intg_err_rate and dmem_intg_err_rate; mcounteren_writable is a run constant, not scheduled}
+  - cp_pinned_count = number of scheduled knobs pinned on the command line in this run (`+gen_knob_<name>=<value>` given explicitly; banner value carried in every record; tp_xcut.md knob table) [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022, F-ISA-001, F-PRV-001, F-PMP-006]: bins none{0}, one{1}, several{2..N_SCHED-1}, all{N_SCHED, where N_SCHED = 19 scheduled knobs: the 17 brief knobs plus imem_intg_err_rate and dmem_intg_err_rate; mcounteren_writable is a run constant, not scheduled}
   - cp_phase_idx = rec.phase_idx [F: F-IMEM-001, F-DMEM-001, F-IRQ-001, F-DBG-001, F-IC-008, F-IMEM-022, F-ISA-001, F-PRV-001, F-PMP-006]: bins first{0}, middle{1..K-2}, last{K-1}
 - Crosses:
   - cr_count_x_dur = cp_phase_count x cp_duration_class: required bins (12): k1_short, k1_medium, k1_long, k2_short, k2_medium, k2_long, k3_4_short, k3_4_medium, k3_4_long, k5_plus_short, k5_plus_medium, k5_plus_long
@@ -6031,15 +6589,17 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 
 ### CG-XIF-001: gen_cg_xif_data_err_x_fetch_irq
 - Features: F-DMEM-021, F-DMEM-022, F-DMEM-023, F-DMEM-030, F-DMEM-036, F-DMEM-037, F-DMEM-038, F-IMEM-008, F-IRQ-017, F-IRQ-022, F-DBG-003, F-EXC-025, F-EXC-027, F-EXC-069
-- Sample: S6 dbus_err_rsp (data_rvalid_i && data_err_i); condition: error response on the data bus; anti-vacuity: error responses exist only at the dmem_err_rate injection rate (zero under `none`), so a hit proves an errored data response returned while the crossed fetch/interrupt state held in the same cycle (all three read at the pins in the data_rvalid_i cycle, no RVFI anchoring involved). Ownership (Critic S-10): this group owns the DV_prompt Section 6 boundary triple "fetch stalled x data error returning x interrupt pending" (cr_fetch_x_async.stalled_irq_pending); CG-EXC-013 (exc_irq) owns the exception-side view of the same coincidence and CG-IRQ-012's copy is dropped by the exc_irq area.
+- Sample: S6 dbus_err_rsp (data_rvalid_i && data_err_i); condition: error response on the data bus; anti-vacuity: error responses exist only at the dmem_err_rate injection rate (zero under `none`), so a hit proves an errored data response returned while the crossed fetch/interrupt state held in the same cycle (all three read at the pins in the data_rvalid_i cycle, no RVFI anchoring involved). Ownership (Critic S-10): this group owns the DV_prompt Section 6 boundary triple "fetch stalled x data error returning x interrupt pending" (cr_fetch_x_async.stalled_irq_pending); CG-EXC-013 (exc_irq) owns the exception-side view of the same coincidence and CG-IRQ-012's copy is dropped by the exc_irq area. Timing premise (C-6, X-9): the coincidence itself is read at the pins in the error cycle; WHEN the asynchronous entry happens is a separate coverpoint (cp_taken_when) attributed by the following records (C-3), because the trap entry clears mstatus.MIE (rtl/ibex_cs_registers.sv:924) and irq_enabled = MIE | (priv == U) (rtl/ibex_controller.sv:490): an ordinary interrupt pending at a synchronous exception is taken only after the fault handler's mret or an MIE write, while an NMI (:498-500) or a debug request is taken in the first empty-ID DECODE after the exception's FLUSH, before the handler's first instruction.
 - Coverpoints:
   - cp_fetch_state = instruction bus state in the error cycle [F: F-IMEM-008, F-DMEM-030]: bins stalled{S2: >= 1 fetch outstanding and no rvalid}, rsp_same_cycle{ibus_outst >= 1 && instr_rvalid_i}, idle{ibus_outst == 0}
   - cp_async = asynchronous requests in the error cycle [F: F-IRQ-017, F-IRQ-022, F-DBG-003, F-EXC-069]: bins none{none of irq_pending_o, irq_nm_i, debug_req_i}, irq_pending{irq_pending_o only}, nmi{irq_nm_i only}, debug_req{debug_req_i only}, multiple{>= 2 of the three}
   - cp_err_half = S6 err_half [F: F-DMEM-021, F-DMEM-022, F-DMEM-023, F-DMEM-036, F-DMEM-037, F-DMEM-038]: bins single{aligned or non-split access}, split_first{first half of a misaligned pair, F-DMEM-021}, split_second{second half, F-DMEM-022}
   - cp_we = data_we_o at the grant of the errored request [F: F-EXC-025, F-EXC-027]: bins load{0}, store{1}
+  - cp_taken_when = when the asynchronous entry happened relative to the fault handler, attributed by the records after the fault's rvfi_trap record (C-3, C-6), iff cp_async != none [F: F-IRQ-017, F-IRQ-022, F-DBG-003, F-EXC-069]: bins before_handler{the record after the trap record is the entry itself: the NMI handler's first record (rvfi_intr = 1, rvfi_ext_nmi) or the first debug-ROM record, with no fault-handler instruction in between (taken in the first empty-ID DECODE after the exception's FLUSH; mepc / dpc read back == mtvec BASE)}, after_mret{the ordinary interrupt's handler record (rvfi_intr = 1) follows the fault handler's mret record (MIE <- MPIE), X-9}, after_mie_write{the handler record follows a retired mstatus write setting MIE inside the fault handler, before its mret}, released{the source deasserted (irq_hold = pulse, or a debug_req_i pulse) before any entry: no entry record within GEN_IRQ_ENTRY_BOUND_RECORDS of the release}
 - Crosses:
   - cr_fetch_x_async = cp_fetch_state x cp_async: required bins (15): stalled_none, stalled_irq_pending, stalled_nmi, stalled_debug_req, stalled_multiple, rsp_same_cycle_none, rsp_same_cycle_irq_pending, rsp_same_cycle_nmi, rsp_same_cycle_debug_req, rsp_same_cycle_multiple, idle_none, idle_irq_pending, idle_nmi, idle_debug_req, idle_multiple
   - cr_half_x_async = cp_err_half x cp_async: required bins (15): single_none, single_irq_pending, single_nmi, single_debug_req, single_multiple, split_first_none, split_first_irq_pending, split_first_nmi, split_first_debug_req, split_first_multiple, split_second_none, split_second_irq_pending, split_second_nmi, split_second_debug_req, split_second_multiple
+  - cr_async_x_taken = cp_async x cp_taken_when: required bins (9): irq_pending_after_mret, irq_pending_after_mie_write, irq_pending_released, nmi_before_handler, nmi_released, debug_req_before_handler, debug_req_released, multiple_before_handler, multiple_released; ignore irq_pending_before_handler: the trap entry clears mstatus.MIE and the fault handler runs in M, so irq_enabled = MIE | (priv == U) is 0 until the mret or an MIE write (X-9, rtl/ibex_cs_registers.sv:924, rtl/ibex_controller.sv:490); ignore nmi_after_mret, nmi_after_mie_write, debug_req_after_mret, debug_req_after_mie_write, multiple_after_mret, multiple_after_mie_write: an NMI (handle_irq, rtl/ibex_controller.sv:498-500) and a debug request ignore MIE and are taken in the first empty-ID DECODE after the FLUSH, before the handler's first instruction, and `multiple` always contains one of them; ignore none_before_handler, none_after_mret, none_after_mie_write, none_released: cp_taken_when is sampled only with an asynchronous source high in the error cycle
 - Adopted (riscv-dv): none
 - TP items: TP-XIF-001
 
@@ -6073,15 +6633,15 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 
 ### CG-XIF-004: gen_cg_xif_wfi_wake
 - Features: F-IRQ-045, F-IRQ-046, F-IRQ-047, F-IRQ-048, F-IRQ-049, F-IRQ-050, F-IRQ-051, F-IRQ-054, F-IRQ-064, F-DMEM-031, F-IC-029, F-RST-015, F-RST-017, F-PRV-016, F-PRV-017, F-PRV-018, F-PRV-019, F-PRV-020, F-FE-021, F-IMEM-021, F-DBG-009, F-DBG-044
-- Sample: the wake instant after a WFI retirement (S17): the core_busy_o Off->On edge when Off lasted >= 2 consecutive cycles (SLEEP entered), otherwise the WB-exit cycle (S18) of the first record after the WFI record; every WFI produces a one-cycle WAIT_SLEEP dip of core_busy_o even with the wake condition already true (misc-monitor core_busy rule, rtl/ibex_controller.sv:598-621), so the dip alone is not sleep; condition: a wfi_retired since the previous sample; anti-vacuity: WFIs are program events (instr_mix all values include them at low weight); a hit proves the sleep/wake path completed with the crossed wake source and pending-transaction state.
+- Sample: the wake instant after a WFI retirement (S17): the core_busy_o Off->On edge when Off lasted >= 2 consecutive cycles (SLEEP entered), otherwise the WB-exit cycle (S18) of the first record after the WFI record. C-5 (X-8): an unstepped WFI gives exactly one ctrl_busy = 0 cycle in WAIT_SLEEP (rtl/ibex_controller.sv:598-604), visible on core_busy_o only with no fetch beat outstanding, no invalidation and an idle LSU (rtl/ibex_core.sv:521), even when the wake condition is already true (SLEEP, :606-621, exits at once); a stepped WFI (dcsr.step = 1, not in debug mode) never reaches WAIT_SLEEP (FLUSH -> DBG_TAKEN_IF, :985-987) and shows no Off cycle at all; so an Off of <= 1 cycle is never sleep; condition: a wfi_retired since the previous sample; anti-vacuity: WFIs are program events (instr_mix all values include them at low weight); a hit proves the sleep/wake path completed with the crossed wake source and pending-transaction state.
 - Coverpoints:
-  - cp_slept = core_busy_o behaviour after the WFI [F: F-IRQ-045, F-IRQ-048, F-IRQ-051, F-DBG-044, F-RST-017, F-DMEM-031]: bins slept{IbexMuBiOff for >= 2 consecutive cycles: SLEEP held}, no_sleep{Off for <= 1 cycle: wake condition already true (F-IRQ-048), dcsr.step or debug mode (F-IRQ-051, F-DBG-044), TW trap, or the dip masked by an outstanding beat (F-RST-017, F-DMEM-031)}
+  - cp_slept = core_busy_o behaviour after the WFI [F: F-IRQ-045, F-IRQ-048, F-IRQ-051, F-DBG-044, F-RST-017, F-DMEM-031]: bins slept{IbexMuBiOff for >= 2 consecutive cycles: SLEEP held}, no_sleep{Off for <= 1 cycle: wake condition already true (F-IRQ-048), debug-mode WFI (WAIT_SLEEP then immediate SLEEP exit, F-DBG-059), stepped WFI (no WAIT_SLEEP at all, core_busy_o never Off, F-IRQ-051 / F-DBG-044), TW trap, or the one-cycle dip masked by an outstanding fetch beat, an invalidation or a busy LSU (F-RST-017, F-DMEM-031)}
   - cp_wake_src = highest-priority source high at the wake instant (debug_req > nmi > irq) [F: F-PRV-020, F-IRQ-047, F-IRQ-049, F-IRQ-050, F-DBG-009, F-RST-015]: bins irq_maskable{irq_pending_o}, nmi{irq_nm_i}, debug_req{debug_req_i}, none_needed{no_sleep with none of the three high: dcsr.step, debug mode or the TW trap}
-  - cp_wake_result = first record after the WFI record [F: F-IRQ-046, F-IRQ-064, F-PRV-016, F-PRV-017, F-PRV-018, F-PRV-019, F-FE-021, F-DBG-044]: bins trap_taken{rvfi_intr = 1}, resumed_no_trap{rvfi_pc_rdata == WFI pc + 4 and rvfi_intr = 0, F-IRQ-046/F-PRV-019}, debug_entered{rvfi_ext_debug_mode = 1 and the WFI record was not: a debug_req_i wake, or the dcsr.step re-entry after a stepped WFI, which is a NOP (rtl/ibex_controller.sv:614-615, F-IRQ-051/F-DBG-044)}, illegal_trap{the WFI record itself has rvfi_trap = 1: U-mode with TW = 1, F-PRV-016}
-  - cp_pending_at_wfi = transactions outstanding in the WFI record's WB-exit cycle [F: F-RST-017, F-DMEM-031, F-IRQ-054, F-IC-029, F-IMEM-021]: bins none{S1 == 0 && S4 == 0 && no S12 invalidation && !S13}, fetch_outst{S1 >= 1, F-RST-017}, data_outst{S4 >= 1, F-DMEM-031/F-IRQ-054}, icache_busy{S12 invalidating or S13 key_withheld, F-IC-029}
+  - cp_wake_result = first record after the WFI record [F: F-IRQ-046, F-IRQ-064, F-PRV-016, F-PRV-017, F-PRV-018, F-PRV-019, F-FE-021, F-DBG-044]: bins trap_taken{rvfi_intr = 1}, resumed_no_trap{rvfi_pc_rdata == WFI pc + 4 and rvfi_intr = 0, F-IRQ-046/F-PRV-019}, debug_entered{rvfi_ext_debug_mode = 1 and the WFI record was not: a debug_req_i wake, or the step entry after a stepped WFI, which goes FLUSH -> DBG_TAKEN_IF without sleeping (rtl/ibex_controller.sv:985-987; dpc = WFI + 4, dcsr.cause = 4; F-IRQ-051/F-DBG-044)}, illegal_trap{the WFI record itself has rvfi_trap = 1: U-mode with TW = 1, F-PRV-016}
+  - cp_pending_at_wfi = activity the WFI had to wait out: fetch and icache state read in the WFI record's WB-exit cycle (S18), the data side at the WFI's ID entry (S21), because at the WFI's own WB exit the data bus is always idle (the wfi is a special_req that waits in DECODE for ready_wb_i, rtl/ibex_controller.sv:668-678, then FLUSH -> WAIT_SLEEP; fact-check TP-XIF-004) [F: F-RST-017, F-DMEM-031, F-IRQ-054, F-IC-029, F-IMEM-021]: bins none{S1 == 0 && !S21 && no S12 invalidation && !S13}, fetch_outst{S1 >= 1 at WB exit, F-RST-017}, data_outst{S21: the WFI entered ID while the preceding load/store's response was outstanding (WFI record == load/store record + 1 cycle), F-DMEM-031/F-IRQ-054}, icache_busy{S12 invalidating or S13 key_withheld at WB exit, F-IC-029}
   - cp_mode_at_wfi = rvfi_mode of the WFI record [F: F-PRV-016, F-PRV-017, F-PRV-018]: bins m{2'b11}, u{2'b00}
 - Crosses:
-  - cr_src_x_result = cp_wake_src x cp_wake_result: required bins (11): irq_maskable_trap_taken, irq_maskable_resumed_no_trap, irq_maskable_debug_entered, nmi_trap_taken, nmi_resumed_no_trap, nmi_debug_entered, debug_req_trap_taken, debug_req_resumed_no_trap, debug_req_debug_entered, none_needed_resumed_no_trap, none_needed_debug_entered{reached only through dcsr.step = 1: the stepped WFI is a NOP and the step re-entry follows with debug_req_i low, F-IRQ-051}; ignore none_needed_trap_taken: with none of irq_pending_o, irq_nm_i, debug_req_i high at the wake instant no interrupt or NMI is pending, so the first record after the WFI cannot carry rvfi_intr (an internal NMI armed by a corrupted load response outstanding at the WFI is CG-XIF-003 nmi_int, not a WFI wake); ignore none_needed_illegal_trap, irq_maskable_illegal_trap, nmi_illegal_trap, debug_req_illegal_trap: the TW illegal-instruction trap is raised on the WFI itself before any sleep or wake, so no wake source is involved (single bin illegal_trap is kept in cr_mode_x_result)
+  - cr_src_x_result = cp_wake_src x cp_wake_result: required bins (11): irq_maskable_trap_taken, irq_maskable_resumed_no_trap, irq_maskable_debug_entered, nmi_trap_taken, nmi_resumed_no_trap, nmi_debug_entered, debug_req_trap_taken, debug_req_resumed_no_trap, debug_req_debug_entered, none_needed_resumed_no_trap, none_needed_debug_entered{reached only through dcsr.step = 1: the stepped WFI goes FLUSH -> DBG_TAKEN_IF (rtl/ibex_controller.sv:985-987, never WAIT_SLEEP) with debug_req_i low, F-IRQ-051 / F-DBG-044}; ignore none_needed_trap_taken: with none of irq_pending_o, irq_nm_i, debug_req_i high at the wake instant no interrupt or NMI is pending, so the first record after the WFI cannot carry rvfi_intr (an internal NMI armed by a corrupted load response outstanding at the WFI is CG-XIF-003 nmi_int, not a WFI wake); ignore none_needed_illegal_trap, irq_maskable_illegal_trap, nmi_illegal_trap, debug_req_illegal_trap: the TW illegal-instruction trap is raised on the WFI itself before any sleep or wake, so no wake source is involved (single bin illegal_trap is kept in cr_mode_x_result)
   - cr_pending_x_src = cp_pending_at_wfi x cp_wake_src: required bins (16): none_irq_maskable, none_nmi, none_debug_req, none_none_needed, fetch_outst_irq_maskable, fetch_outst_nmi, fetch_outst_debug_req, fetch_outst_none_needed, data_outst_irq_maskable, data_outst_nmi, data_outst_debug_req, data_outst_none_needed, icache_busy_irq_maskable, icache_busy_nmi, icache_busy_debug_req, icache_busy_none_needed
   - cr_mode_x_result = cp_mode_at_wfi x cp_wake_result: required bins (7): m_trap_taken, m_resumed_no_trap, m_debug_entered, u_trap_taken, u_resumed_no_trap, u_debug_entered, u_illegal_trap; ignore m_illegal_trap: mstatus.TW does not affect M-mode WFI (F-PRV-017)
 - Adopted (riscv-dv): none
@@ -6121,33 +6681,36 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 
 ### CG-XIF-007: gen_cg_xif_flush_x_irq
 - Features: F-CSR-006, F-CSR-007, F-CSR-008, F-CSR-026, F-CSR-031, F-CSR-033, F-IRQ-023, F-IRQ-024, F-IRQ-029, F-IRQ-038, F-IRQ-059, F-IRQ-060, F-PRV-008, F-PRV-012, F-DBG-056, F-DBG-058, F-EXC-061
-- Sample: retirement record of a flushing CSR write (S16), a non-flushing CSR write, mret or dret (S17) with rvfi_trap = 0; the pins are read in the instruction's COMMIT cycle, back-dated from the record per S18 (rvfi_valid cycle - GEN_CSR_COMMIT_TO_RVFI_OFFSET = 2 for CSR writes, - 1 for mret/dret), which is the flush cycle; condition: such a retirement; anti-vacuity: these instructions retire only when the program executes them and the pins are read cycle-exactly, so a non-`none` bin proves the pipeline flush coincided with a pending asynchronous request.
+- Sample: retirement record of a flushing CSR write (S16), a non-flushing CSR write, mret or dret (S17) with rvfi_trap = 0; the pins are read in the instruction's COMMIT cycle, back-dated from the record per S18 (rvfi_valid cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET = 2 for CSR writes, - GEN_TRAP_TO_RVFI_OFFSET = 1 for mret/dret), which is the flush cycle; condition: such a retirement; anti-vacuity: these instructions retire only when the program executes them and the pins are read cycle-exactly, so a non-`none` bin proves the pipeline flush coincided with a pending asynchronous request.
 - Coverpoints:
   - cp_flush_kind = retired instruction [F: F-CSR-006, F-CSR-007, F-CSR-033, F-EXC-061]: bins csr_irq{write to CSR_MIE / CSR_MSTATUS / CSR_MIP (ibex_pkg), flushing}, csr_other_flush{any other flushing CSR write}, csr_nonflush{CSR_MSCRATCH or CSR_MEPC write, F-CSR-007}, mret{S17 mret_retired}, dret{S17 dret_retired}
   - cp_irq_state = pins in the commit cycle (S18 back-dated) [F: F-IRQ-023, F-IRQ-024, F-IRQ-038, F-CSR-008, F-DBG-056, F-DBG-058]: bins none{none of irq_pending_o, irq_nm_i, debug_req_i}, irq_pending{irq_pending_o only}, nmi{irq_nm_i only}, debug_req{debug_req_i only}, multiple{>= 2}
-  - cp_next = next record [F: F-IRQ-023, F-IRQ-024, F-IRQ-029, F-IRQ-038, F-PRV-008, F-PRV-012, F-CSR-026, F-DBG-056]: bins handler_irq{rvfi_intr = 1, !rvfi_ext_nmi}, handler_nmi{rvfi_intr = 1 with rvfi_ext_nmi or rvfi_ext_nmi_int}, debug_entry{rvfi_ext_debug_mode rises}, sequential{pc == this record's rvfi_pc_wdata}
+  - cp_next = next record [F: F-IRQ-023, F-IRQ-024, F-IRQ-029, F-IRQ-038, F-PRV-008, F-PRV-012, F-CSR-026, F-DBG-056]: bins handler_irq{rvfi_intr = 1, !rvfi_ext_nmi}, handler_nmi{rvfi_intr = 1 with rvfi_ext_nmi or rvfi_ext_nmi_int}, debug_entry{rvfi_ext_debug_mode rises}, sequential{rvfi_pc_rdata == the expected next pc: this record's rvfi_pc_wdata for a CSR write (a non-redirecting record); the mret/dret TARGET (mepc & ~1 / dpc from the CSR model at the commit) for mret/dret, whose own rvfi_pc_wdata is only the next sequential fetch address (C-1, X-1)}
   - cp_enable_effect = irq_pending_o edge in the two cycles BEFORE the record, iff cp_flush_kind == csr_irq: cycle (record - 2) is the commit and (record - 1) the first cycle the new mie value is visible on the pin, so the edge precedes the record (S18; mie writes only: irq_pending_o ignores mstatus.MIE (S7) and mip writes are ignored (D1)) [F: F-IRQ-059, F-IRQ-060, F-CSR-031, F-CSR-026]: bins enables_pending{0 -> 1, F-IRQ-059}, disables_pending{1 -> 0, F-IRQ-060}, neutral{no edge in those two cycles}
-  - cp_mode_to = rvfi_mode of the next record after mret/dret, iff cp_flush_kind in {mret, dret} [F: F-IRQ-029, F-PRV-008, F-PRV-012, F-DBG-056]: bins m{2'b11}, u{2'b00}
+  - cp_mode_to = landing privilege of the mret/dret: mstatus.MPP (mret) / dcsr.prv (dret) from the CSR model at the commit, legalised as the RTL does (rtl/ibex_cs_registers.sv:784-786, :814-815); NOT rvfi_mode of the next record, which reads M whenever that record is a handler entry; iff cp_flush_kind in {mret, dret} [F: F-IRQ-029, F-PRV-008, F-PRV-012, F-DBG-056]: bins m{PRIV_LVL_M}, u{PRIV_LVL_U}
+  - cp_landing_enable = whether an ordinary interrupt is enabled in the landing context, iff cp_flush_kind in {mret, dret} (X-9 / X-15: irq_enabled = MIE | (priv == U), rtl/ibex_controller.sv:490; mret restores MIE <- MPIE, rtl/ibex_cs_registers.sv:953-956; dret leaves MIE unchanged, :949-950) [F: F-IRQ-023, F-IRQ-029, F-PRV-008, F-PRV-012, F-DBG-056]: bins enabled{landing mode U, or landing mode M with the landing MIE = 1 (mret: MPIE = 1; dret: mstatus.MIE = 1)}, disabled{landing mode M with the landing MIE = 0 (mret: MPIE = 0; dret: mstatus.MIE = 0)}
+  - cp_irq_outcome = fate of the pending ordinary interrupt, iff cp_flush_kind in {mret, dret} && cp_irq_state == irq_pending && cp_next in {handler_irq, sequential} [F: F-IRQ-023, F-IRQ-029, F-PRV-008, F-PRV-012]: bins taken{cp_next == handler_irq: taken in the first empty-ID DECODE after the FLUSH, mepc read back == the mret/dret target}, deferred{cp_next == sequential with irq_pending_o still 1 at that record's WB exit}
 - Crosses:
   - cr_kind_x_irq = cp_flush_kind x cp_irq_state: required bins (25): csr_irq_none, csr_irq_irq_pending, csr_irq_nmi, csr_irq_debug_req, csr_irq_multiple, csr_other_flush_none, csr_other_flush_irq_pending, csr_other_flush_nmi, csr_other_flush_debug_req, csr_other_flush_multiple, csr_nonflush_none, csr_nonflush_irq_pending, csr_nonflush_nmi, csr_nonflush_debug_req, csr_nonflush_multiple, mret_none, mret_irq_pending, mret_nmi, mret_debug_req, mret_multiple, dret_none, dret_irq_pending, dret_nmi, dret_debug_req, dret_multiple
   - cr_effect_x_next = cp_enable_effect x cp_next: required bins (11): enables_pending_handler_irq, enables_pending_handler_nmi, enables_pending_debug_entry, enables_pending_sequential, disables_pending_handler_nmi, disables_pending_debug_entry, disables_pending_sequential, neutral_handler_irq, neutral_handler_nmi, neutral_debug_entry, neutral_sequential; ignore disables_pending_handler_irq: when irq_pending_o falls to 0 no maskable interrupt remains to be taken
   - cr_mode_to_x_irq = cp_mode_to x cp_irq_state: required bins (10): m_none, m_irq_pending, m_nmi, m_debug_req, m_multiple, u_none, u_irq_pending, u_nmi, u_debug_req, u_multiple
+  - cr_landing_x_outcome = cp_landing_enable x cp_irq_outcome: required bins (2): enabled_taken, disabled_deferred; ignore enabled_deferred: an enabled pending interrupt is taken before any instruction at the target (empty ID after the FLUSH, rtl/ibex_controller.sv:704-720); ignore disabled_taken: landing in M with MIE = 0 masks ordinary interrupts (X-9 / X-15; the former reading "sequential when MPIE = 0" was wrong in both directions: an mret to U with MPIE = 0 takes the handler, a dret to M with MIE = 0 does not)
 - Adopted (riscv-dv): none
 - TP items: TP-XIF-014, TP-XIF-015
 
 ### CG-XIF-008: gen_cg_xif_fetch_enable_off
 - Features: F-IMEM-022, F-IMEM-023, F-IMEM-024, F-IMEM-025, F-RST-010, F-RST-011, F-RST-012, F-RST-013, F-RST-014, F-RST-015, F-IRQ-056, F-SEC-012, F-DIT-028
-- Sample: fetch_enable_i leaving IbexMuBiOn (S10 falling); one sample per true in-flight flag (`none` only when no flag is true); condition: the Off transition; anti-vacuity: only fetch_enable_regime = toggling produces Off transitions; a hit proves the Off edge coincided with the in-flight state and that the Off window had the recorded content.
+- Sample: fetch_enable_i leaving IbexMuBiOn (S10 falling); one sample per true in-flight flag (`none` only when no flag is true); condition: the Off transition; anti-vacuity: only fetch_enable_regime = toggling produces Off transitions; a hit proves the Off edge coincided with the in-flight state and that the Off window had the recorded content; the window-content coverpoints (cp_off_duration, cp_during_off, cp_retire_after) are filled when the window closes and the first post-window record retires. C-4 (X-5): the Off edge stops only new icache lookups (rtl/ibex_core.sv:648 gates req_i, consumed only by lookup_req_ic0, rtl/ibex_icache.sv:249); the remaining beats of fill buffers allocated before the edge keep requesting (fill_ext_req :756 has no req_i term; a request awaiting grant is held, :764), so instr_req_o inside the window is legal for a line open at the edge and cp_during_off.fetch_req_open_line records it; a request for a NEW line, or any instr_req_o while core_busy_o == Off, is a gen_chk_fetch_en failure, not a bin.
 - Coverpoints:
   - cp_off_encoding = value driven [F: F-IMEM-023, F-RST-014, F-SEC-012]: bins mubi_off{IbexMuBiOff}, invalid_encoding{any other non-On $bits(ibex_mubi_t) value, F-IMEM-023}
   - cp_inflight = DUT state at the Off edge [F: F-IMEM-024, F-RST-010, F-RST-011, F-RST-015, F-DIT-028]: bins none{no flag true}, fetch_outst{S1 >= 1}, data_outst{S4 >= 1, F-RST-011}, split_inflight{S5}, irq_pending{irq_pending_o}, nmi{irq_nm_i}, debug_req{debug_req_i}, sleeping{S9}, in_debug{dbg_mode_q}, zcmp_inflight{S14}
   - cp_off_duration = length of the Off window [F: F-RST-014, F-IMEM-022]: bins one_cycle{1}, short{2..15}, long{16..200}
-  - cp_during_off = events inside the Off window [F: F-RST-015, F-IRQ-056, F-IMEM-024, F-IMEM-022]: bins nothing{none of the three below}, async_rises{irq_pending_o, irq_nm_i or debug_req_i rises, F-RST-015/F-IRQ-056}, data_rsp_returns{data_rvalid_i, F-IMEM-024}, fetch_rsp_returns{instr_rvalid_i}
-  - cp_retire_after = first record after re-enable [F: F-IMEM-025, F-RST-012, F-RST-013, F-IRQ-056]: bins resumed_sequential{pc == held PC, F-IMEM-025 (or the boot vector when the Off window spans a reset release, F-RST-013)}, handler{rvfi_intr = 1}, debug{rvfi_ext_debug_mode rises}
+  - cp_during_off = events inside the Off window [F: F-RST-015, F-IRQ-056, F-IMEM-024, F-IMEM-022]: bins nothing{none of the four below}, async_rises{irq_pending_o, irq_nm_i or debug_req_i rises, F-RST-015/F-IRQ-056}, data_rsp_returns{data_rvalid_i, F-IMEM-024}, fetch_rsp_returns{instr_rvalid_i}, fetch_req_open_line{instr_req_o asserted inside the window for a remaining beat of a line open at the Off edge (address inside an IC_LINE_SIZE-aligned block that had a granted-but-unanswered beat or an asserted request at the edge, beat index increasing), F-IMEM-024 / X-5}
+  - cp_retire_after = first record after re-enable [F: F-IMEM-025, F-RST-012, F-RST-013, F-IRQ-056]: bins resumed_sequential{rvfi_pc_rdata == the held PC = the pc of the first not-yet-executed instruction derived from the last pre-Off record (its rvfi_pc_wdata for a non-redirecting or branch/jump record; the vector / mepc / dpc target for a trap / mret / dret record, C-1), F-IMEM-025 (or the boot vector when the Off window spans a reset release, F-RST-013)}, handler{rvfi_intr = 1}, debug{rvfi_ext_debug_mode rises}
 - Crosses:
   - cr_enc_x_inflight = cp_off_encoding x cp_inflight: required bins (20): mubi_off_none, mubi_off_fetch_outst, mubi_off_data_outst, mubi_off_split_inflight, mubi_off_irq_pending, mubi_off_nmi, mubi_off_debug_req, mubi_off_sleeping, mubi_off_in_debug, mubi_off_zcmp_inflight, invalid_encoding_none, invalid_encoding_fetch_outst, invalid_encoding_data_outst, invalid_encoding_split_inflight, invalid_encoding_irq_pending, invalid_encoding_nmi, invalid_encoding_debug_req, invalid_encoding_sleeping, invalid_encoding_in_debug, invalid_encoding_zcmp_inflight
-  - cr_dur_x_during = cp_off_duration x cp_during_off: required bins (12): one_cycle_nothing, one_cycle_async_rises, one_cycle_data_rsp_returns, one_cycle_fetch_rsp_returns, short_nothing, short_async_rises, short_data_rsp_returns, short_fetch_rsp_returns, long_nothing, long_async_rises, long_data_rsp_returns, long_fetch_rsp_returns
-  - cr_during_x_after = cp_during_off x cp_retire_after: required bins (12): nothing_resumed_sequential, nothing_handler, nothing_debug, async_rises_resumed_sequential, async_rises_handler, async_rises_debug, data_rsp_returns_resumed_sequential, data_rsp_returns_handler, data_rsp_returns_debug, fetch_rsp_returns_resumed_sequential, fetch_rsp_returns_handler, fetch_rsp_returns_debug
+  - cr_dur_x_during = cp_off_duration x cp_during_off: required bins (15): one_cycle_nothing, one_cycle_async_rises, one_cycle_data_rsp_returns, one_cycle_fetch_rsp_returns, one_cycle_fetch_req_open_line, short_nothing, short_async_rises, short_data_rsp_returns, short_fetch_rsp_returns, short_fetch_req_open_line, long_nothing, long_async_rises, long_data_rsp_returns, long_fetch_rsp_returns, long_fetch_req_open_line
+  - cr_during_x_after = cp_during_off x cp_retire_after: required bins (15): nothing_resumed_sequential, nothing_handler, nothing_debug, async_rises_resumed_sequential, async_rises_handler, async_rises_debug, data_rsp_returns_resumed_sequential, data_rsp_returns_handler, data_rsp_returns_debug, fetch_rsp_returns_resumed_sequential, fetch_rsp_returns_handler, fetch_rsp_returns_debug, fetch_req_open_line_resumed_sequential, fetch_req_open_line_handler, fetch_req_open_line_debug
 - Adopted (riscv-dv): none
 - TP items: TP-XIF-016
 
@@ -6157,7 +6720,7 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 - Coverpoints:
   - cp_csr = written register [F: F-PMP-092, F-PMP-100, F-CSR-006]: bins pmpcfg{CSR_PMPCFG0..3}, pmpaddr{CSR_PMPADDR0..PMPNumRegions-1}, mseccfg{CSR_MSECCFG}
   - cp_fetch = S1 in the write's commit cycle (S18) [F: F-PMP-066, F-PMP-079, F-PMP-092, F-PMP-093]: bins fetch_idle{0}, fetch_outst{>= 1: prefetched words that must be re-checked at IF/ID, F-PMP-092}
-  - cp_prev_ls_outst = the previous record was a load/store whose response arrived after that record's WB-exit cycle (the CSR write sat in ID while the access was in WB) [F: F-PMP-086, F-PMP-087, F-PMP-088, F-CSR-008]: bins no{previous record not such an access}, single{non-split access}, split{misaligned pair in flight, F-PMP-086..088}
+  - cp_prev_ls_outst = the CSR write entered ID while the previous record's load/store access was still outstanding in WB, S21 (the CSR write's record follows the load/store record by exactly one cycle; a response "after the predecessor's retirement" is impossible because the record is one cycle after the final rvalid, fact-check TP-XIF-010) [F: F-PMP-086, F-PMP-087, F-PMP-088, F-CSR-008]: bins no{previous record not a load/store, or its response returned before the CSR write entered ID (record spacing > 1 cycle)}, single{S21 with a non-split access}, split{S21 with a misaligned pair: the second half was outstanding when the CSR write entered ID, F-PMP-086..088}
   - cp_verdict_change = effect on the following instructions [F: F-PMP-055, F-PMP-065, F-PMP-066, F-PMP-092, F-PRV-013]: bins next_fetch_now_denied{next record is rvfi_trap with instruction access fault at pc == this record's pc_wdata}, next_data_now_denied{next load/store record faults with no dbus request for that word}, no_change{next records proceed}
   - cp_lock = pmpcfg write setting an L bit [F: F-PMP-100]: bins sets_lock{>= 1 L bit 0 -> 1}, no_lock{no L bit set}
   - cp_icache = S12 icache_en_q [F: F-PMP-093, F-IC-039]: bins enabled{1}, disabled{0}
@@ -6174,10 +6737,10 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 - Sample: rst_ni falling edge after at least one retirement since the previous reset (mid-run reset; the time-0 reset is excluded); one sample per true in-flight flag; condition: mid-run reset; anti-vacuity: mid-run resets are issued only by the reset test group at randomized instants; a hit proves the reset interrupted that state and that the post-release observation followed.
 - Coverpoints:
   - cp_inflight = state at the reset edge [F: F-RST-001, F-RST-018, F-RST-019, F-IC-022, F-DBG-008, F-IRQ-055]: bins idle{no flag true}, fetch_outst{S1 >= 1}, data_outst{S4 >= 1}, split_inflight{S5}, zcmp_inflight{S14}, sleeping{S9}, in_debug{dbg_mode_q}, irq_pending{irq_pending_o}, nmi{irq_nm_i}, debug_req{debug_req_i}, fill_inflight{S12}, key_withheld{S13}, invalidating{S12 invalidating}, fetch_en_off{!S10}
-  - cp_after = observation after release [F: F-RST-008, F-RST-009, F-RST-018, F-RST-024, F-RST-026, F-SEC-035, F-IC-009, F-RVFI-033]: bins first_fetch_boot_vector{instr_addr_o == {boot_addr_i[31:8], 8'h80} within 2 cycles of release, F-RST-002/008}, stale_rsp_after_release{a response for a pre-reset request arrives after release, F-RST-018}, async_pending_at_release{debug_req_i or irq_nm_i high at release, taken in FIRST_FETCH, F-RST-024}
+  - cp_after = observation after release [F: F-RST-008, F-RST-009, F-RST-018, F-RST-024, F-RST-026, F-SEC-035, F-IC-009, F-RVFI-033]: bins first_fetch_boot_vector{instr_addr_o == {boot_addr_i[31:8], 8'h80} within 2 cycles of release, F-RST-002/008}, stale_rsp_after_release{the memory model still owed a response for a pre-reset request at release and DROPPED it (model-side event logged by the model; the DUT never sees it: S3 / Q-010, the LSU and the icache have no outstanding-request qualifier, rtl/ibex_load_store_unit.sv:694-697, so a delivered stale rvalid would be consumed as a response), F-RST-018}, async_pending_at_release{debug_req_i or irq_nm_i high at release, taken in FIRST_FETCH, F-RST-024}
   - cp_reset_len = cycles rst_ni held low [F: F-RST-001, F-SEC-035]: bins short{1..2}, long{3..64}
 - Crosses:
-  - cr_inflight_x_after = cp_inflight x cp_after: required bins (39): idle_first_fetch_boot_vector, idle_async_pending_at_release, fetch_outst_first_fetch_boot_vector, fetch_outst_stale_rsp_after_release, fetch_outst_async_pending_at_release, data_outst_first_fetch_boot_vector, data_outst_stale_rsp_after_release, data_outst_async_pending_at_release, split_inflight_first_fetch_boot_vector, split_inflight_stale_rsp_after_release, split_inflight_async_pending_at_release, zcmp_inflight_first_fetch_boot_vector, zcmp_inflight_stale_rsp_after_release, zcmp_inflight_async_pending_at_release, sleeping_first_fetch_boot_vector, sleeping_async_pending_at_release, in_debug_first_fetch_boot_vector, in_debug_stale_rsp_after_release, in_debug_async_pending_at_release, irq_pending_first_fetch_boot_vector, irq_pending_stale_rsp_after_release, irq_pending_async_pending_at_release, nmi_first_fetch_boot_vector, nmi_stale_rsp_after_release, nmi_async_pending_at_release, debug_req_first_fetch_boot_vector, debug_req_stale_rsp_after_release, debug_req_async_pending_at_release, fill_inflight_first_fetch_boot_vector, fill_inflight_stale_rsp_after_release, fill_inflight_async_pending_at_release, key_withheld_first_fetch_boot_vector, key_withheld_stale_rsp_after_release, key_withheld_async_pending_at_release, invalidating_first_fetch_boot_vector, invalidating_stale_rsp_after_release, invalidating_async_pending_at_release, fetch_en_off_stale_rsp_after_release, fetch_en_off_async_pending_at_release; ignore idle_stale_rsp_after_release, sleeping_stale_rsp_after_release, fetch_en_off_first_fetch_boot_vector: with no transaction outstanding (idle, or asleep which requires no outstanding access) no stale response can arrive; with fetch_enable_i not On at release the boot fetch is gated (F-RST-013) so it cannot appear within the 2-cycle window
+  - cr_inflight_x_after = cp_inflight x cp_after: required bins (39): idle_first_fetch_boot_vector, idle_async_pending_at_release, fetch_outst_first_fetch_boot_vector, fetch_outst_stale_rsp_after_release, fetch_outst_async_pending_at_release, data_outst_first_fetch_boot_vector, data_outst_stale_rsp_after_release, data_outst_async_pending_at_release, split_inflight_first_fetch_boot_vector, split_inflight_stale_rsp_after_release, split_inflight_async_pending_at_release, zcmp_inflight_first_fetch_boot_vector, zcmp_inflight_stale_rsp_after_release, zcmp_inflight_async_pending_at_release, sleeping_first_fetch_boot_vector, sleeping_async_pending_at_release, in_debug_first_fetch_boot_vector, in_debug_stale_rsp_after_release, in_debug_async_pending_at_release, irq_pending_first_fetch_boot_vector, irq_pending_stale_rsp_after_release, irq_pending_async_pending_at_release, nmi_first_fetch_boot_vector, nmi_stale_rsp_after_release, nmi_async_pending_at_release, debug_req_first_fetch_boot_vector, debug_req_stale_rsp_after_release, debug_req_async_pending_at_release, fill_inflight_first_fetch_boot_vector, fill_inflight_stale_rsp_after_release, fill_inflight_async_pending_at_release, key_withheld_first_fetch_boot_vector, key_withheld_stale_rsp_after_release, key_withheld_async_pending_at_release, invalidating_first_fetch_boot_vector, invalidating_stale_rsp_after_release, invalidating_async_pending_at_release, fetch_en_off_stale_rsp_after_release, fetch_en_off_async_pending_at_release; ignore idle_stale_rsp_after_release, sleeping_stale_rsp_after_release, fetch_en_off_first_fetch_boot_vector: with no transaction outstanding (idle, or asleep which requires no outstanding access) no pre-reset response can be owed; with fetch_enable_i not On at release the boot fetch is gated (F-RST-013) so it cannot appear within the 2-cycle window
 - Adopted (riscv-dv): none
 - TP items: TP-XIF-017
 
@@ -6198,13 +6761,14 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 - Features: F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-023, F-DIT-028, F-DIT-029, F-FE-018, F-PMP-094, F-TRG-026
 - Sample: S20 dummy_inserted (probe P1: dummy_instr_id rising on the core-to-register-file seam, dummy type from fcov_dummy_instr_type; P1 is accepted coverage-only in dv/auto_dv/docs/gen_probe_register.md); condition: cpuctrlsts.dummy_instr_en = 1 (program-set) and the LFSR fires; anti-vacuity: dummies are architecturally invisible (no RVFI record, no bus traffic), so only the probe can sample them; a hit proves a dummy was in ID while the crossed boundary state held. Coverage-only; no checker depends on this group. PROBE-GATED (P1), NOT IN MANIFEST: no test lists these bins as must-hit until the probe register carries P1 (gen_tb_architecture.md 8.3 item 5).
 - Coverpoints:
-  - cp_event = boundary state in the insertion cycle [F: F-DIT-021, F-DIT-019, F-DIT-020, F-DIT-029, F-PMP-094, F-TRG-026, F-FE-018]: bins none{no flag true}, redirect{the S19 redirect cycle (rvfi_valid - GEN_RVFI_ID_EXIT_OFFSET) equals the insertion cycle, F-DIT-021}, irq_pending{irq_pending_o, F-DIT-019}, nmi{irq_nm_i}, debug_req{debug_req_i, F-DIT-020}, data_outst_load{S4 >= 1 for a load, F-DIT-029}
+  - cp_event = boundary state in the insertion cycle [F: F-DIT-021, F-DIT-019, F-DIT-020, F-DIT-029, F-PMP-094, F-TRG-026, F-FE-018]: bins none{no flag true}, redirect{the S19 redirect cycle (rvfi_valid - GEN_RVFI_ID_EXIT_OFFSET for a branch/jump, - GEN_TRAP_TO_RVFI_OFFSET for a trap/mret/dret) equals the insertion cycle, F-DIT-021}, irq_pending{irq_pending_o, F-DIT-019}, nmi{irq_nm_i}, debug_req{debug_req_i, F-DIT-020}, data_outst_load{S4 >= 1 for a load, F-DIT-029}
   - cp_dummy_type = fcov_dummy_instr_type [F: F-DIT-011, F-DIT-013]: bins add{DUMMY_ADD}, mul{DUMMY_MUL}, div{DUMMY_DIV}, and_{DUMMY_AND}
   - cp_mask = cpuctrlsts.dummy_instr_mask tracked from retired CSR writes (F-DIT-012) [F: F-DIT-012, F-DIT-023, F-DIT-028]: bins m000{3'b000}, m001{3'b001}, m010{3'b010}, m011{3'b011}, m100{3'b100}, m101{3'b101}, m110{3'b110}, m111{3'b111}
   - cp_mode = S11 mode_q [F: F-DIT-011, F-FE-018]: bins m{2'b11}, u{2'b00}
 - Crosses:
   - cr_event_x_type = cp_event x cp_dummy_type: required bins (24): none_add, none_mul, none_div, none_and_, redirect_add, redirect_mul, redirect_div, redirect_and_, irq_pending_add, irq_pending_mul, irq_pending_div, irq_pending_and_, nmi_add, nmi_mul, nmi_div, nmi_and_, debug_req_add, debug_req_mul, debug_req_div, debug_req_and_, data_outst_load_add, data_outst_load_mul, data_outst_load_div, data_outst_load_and_
   - cr_type_x_mode = cp_dummy_type x cp_mode: required bins (8): add_m, add_u, mul_m, mul_u, div_m, div_u, and__m, and__u
+- Probe status: pending probe-register ruling (candidate P9: fcov_dummy_instr_type, sampled with P1 dummy_instr_id); coverpoints cp_dummy_type, cr_event_x_type, cr_type_x_mode excluded from manifests until ruled
 - Adopted (riscv-dv): none
 - TP items: TP-XIF-021
 
@@ -6365,20 +6929,23 @@ Check script inputs and outputs (proposal for the DV Lead's tooling, `gen_check_
 | Measure | REG | XIF | ADOPT | Total |
 |---|---|---|---|---|
 | covergroups | 10 | 12 | 6 | 28 |
-| coverpoints (cp_*) | 48 | 52 | 9 | 109 |
-| crosses (cr_*) | 15 | 31 | 0 | 46 |
-| bins (coverpoint bins, legal) | 325 | 205 | 54 | 584 |
-| cross bins (legal) | 207 | 460 | 0 | 667 |
+| coverpoints (cp_*) | 48 | 55 | 9 | 112 |
+| crosses (cr_*) | 15 | 33 | 0 | 48 |
+| bins (coverpoint bins, legal) | 325 | 214 | 54 | 593 |
+| cross bins (legal) | 207 | 477 | 0 | 684 |
 | adopted bins (riscv-dv; adopted = 1) | 0 | 0 | 49 | 49 |
 
 Of the REG coverpoint bins, 202 are knob transition bins (every ordered pair of values per knob,
 explicitly enumerated, including the 12 of the two integrity-rate knobs and the 3 cross-reset
 mml_on_to_* transitions; no transition is ignored). Ignored coverpoint bins: 0. Ignored cross
-combinations, each with a reason: 217. Spec-derived bins (adopted = 0): 1202 (535 coverpoint + 667
-cross; the 5 non_link bins of CG-ADOPT-004.cp_ras are spec-derived). Every legal bin is owned by
->= 1 TP item and no CSV row references an ignored bin (trace_tp_bin_xcut.csv has 1251 rows over 56
-items; bins shared by several items appear once per item). Counts come from the verification
-script run over this file's coverpoint and cross lines after ignore_bins.
+combinations, each with a reason: 230 (plan v2b adds the 11 of CG-XIF-001.cr_async_x_taken and the
+2 of CG-XIF-007.cr_landing_x_outcome, both encoding X-9 / X-15). Spec-derived bins (adopted = 0):
+1228 (544 coverpoint + 684 cross; the 5 non_link bins of CG-ADOPT-004.cp_ras are spec-derived).
+Every legal bin is owned by >= 1 TP item and no CSV row references an ignored bin
+(trace_tp_bin_xcut.csv has 1277 rows over 56 items; bins shared by several items appear once per
+item). Counts come from the verification script run over this file's coverpoint and cross lines
+after ignore_bins (plan v2b: 9 coverpoint bins and 17 cross bins added for C-4, C-6 and X-15; none
+removed; the TP-XIF-004 data_outst class was re-anchored, not ignored).
 
 ## Probe candidates
 
@@ -6388,11 +6955,15 @@ script run over this file's coverpoint and cross lines after ignore_bins.
   (F-DIT-016, F-FE-018), so no boundary derivation exists. Coverage-only; recommend the DV Lead
   accept P1 or expose the two ports through gen_dut_top as coverage-only outputs (then it is a
   boundary signal, not a probe).
+- CG-XIF-012.cp_dummy_type (and the crosses cr_event_x_type / cr_type_x_mode): `fcov_dummy_instr_type`
+  (rtl/ibex_if_stage.sv:817-821) is NOT among P1's registered nets: probe candidate P9 (probe register
+  entry needed). Probe status: pending probe-register ruling; excluded from manifests until ruled
+  (Critic M-7a).
 - CG-XIF-002.cp_window, CG-XIF-007 and S11 mode attribution are cycle-exact at the boundary after
   the S18 back-dating fix (rvfi_valid is one flop after WB exit, rtl/ibex_core.sv:1868; commit
   offsets 2 / 1 per gen_tb_architecture.md 8.2), so probe P4 (`ctrl_fsm_cs`, rtl/ibex_pkg.sv:291-
   302, or `fcov_interrupt_taken` / `fcov_debug_entry_if`, rtl/ibex_controller.sv:1085-1095) is NOT
-  requested; the constants GEN_CSR_COMMIT_TO_RVFI_OFFSET and GEN_RVFI_ID_EXIT_OFFSET are confirmed
+  requested; the constants GEN_CSR_WRITE_TO_RVFI_OFFSET, GEN_TRAP_TO_RVFI_OFFSET and GEN_RVFI_ID_EXIT_OFFSET are confirmed
   at bring-up and a directed test pins them (C4.8 exactness table).
 - CG-XIF-012 is probe-gated (P1 accepted coverage-only in gen_probe_register.md): its bins are in
   no fcov-expectation manifest until the register carries P1; TP-XIF-021 marks them so.

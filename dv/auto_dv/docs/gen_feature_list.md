@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 07:56 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 09:39 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -47,29 +47,29 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 
 | Prefix | ACTIVE | ALIAS | FOLDED | Total IDs | ACTIVE edges | New in v2 |
 |---|---|---|---|---|---|---|
-| F-ISA | 39 | 11 | 2 | 52 | 20 | 0 |
+| F-ISA | 38 | 12 | 2 | 52 | 19 | 0 |
 | F-MUL | 25 | 1 | 2 | 28 | 17 | 1 |
 | F-CMP | 62 | 1 | 7 | 70 | 34 | 2 |
-| F-BIT | 38 | 1 | 2 | 41 | 16 | 1 |
-| F-BTALU | 8 | 2 | 5 | 15 | 5 | 0 |
-| F-CSR | 60 | 16 | 27 | 103 | 26 | 0 |
-| F-PRV | 17 | 9 | 9 | 35 | 6 | 0 |
-| F-EXC | 49 | 12 | 8 | 69 | 26 | 0 |
-| F-IRQ | 46 | 8 | 12 | 66 | 33 | 1 |
-| F-PMP | 70 | 8 | 22 | 100 | 33 | 0 |
-| F-DBG | 47 | 8 | 13 | 68 | 30 | 1 |
-| F-TRG | 22 | 0 | 8 | 30 | 12 | 0 |
-| F-PMC | 45 | 0 | 7 | 52 | 21 | 0 |
-| F-IMEM | 25 | 5 | 2 | 32 | 8 | 2 |
-| F-DMEM | 44 | 3 | 4 | 51 | 11 | 4 |
-| F-FE | 20 | 3 | 2 | 25 | 7 | 0 |
+| F-BIT | 37 | 2 | 2 | 41 | 15 | 1 |
+| F-BTALU | 8 | 3 | 5 | 16 | 5 | 0 |
+| F-CSR | 52 | 21 | 30 | 103 | 21 | 0 |
+| F-PRV | 14 | 11 | 11 | 36 | 5 | 0 |
+| F-EXC | 40 | 17 | 12 | 69 | 18 | 0 |
+| F-IRQ | 36 | 10 | 20 | 66 | 23 | 1 |
+| F-PMP | 67 | 8 | 25 | 100 | 30 | 0 |
+| F-DBG | 42 | 11 | 15 | 68 | 26 | 1 |
+| F-TRG | 19 | 0 | 11 | 30 | 9 | 0 |
+| F-PMC | 40 | 2 | 11 | 53 | 16 | 0 |
+| F-IMEM | 23 | 6 | 3 | 32 | 7 | 2 |
+| F-DMEM | 42 | 5 | 4 | 51 | 10 | 4 |
+| F-FE | 19 | 4 | 2 | 25 | 6 | 0 |
 | F-IC | 40 | 0 | 8 | 48 | 15 | 1 |
-| F-DIT | 25 | 1 | 4 | 30 | 16 | 1 |
-| F-SEC | 27 | 4 | 6 | 37 | 12 | 0 |
-| F-RST | 24 | 1 | 2 | 27 | 11 | 0 |
+| F-DIT | 23 | 1 | 6 | 30 | 14 | 1 |
+| F-SEC | 24 | 5 | 8 | 37 | 9 | 0 |
+| F-RST | 22 | 1 | 4 | 27 | 9 | 0 |
 | F-RVFI | 31 | 1 | 2 | 34 | 9 | 1 |
 | F-CHERI | 1 | 0 | 0 | 1 | 0 | 0 |
-| ALL (22 prefixes) | 765 | 95 | 154 | 1014 | 368 | 15 |
+| ALL (22 prefixes) | 705 | 122 | 190 | 1017 | 317 | 15 |
 
 Area code key: ISA base RV32I incl. SYSTEM/MISC-MEM decode; MUL M extension; CMP compressed
 (Zca/Zcb/Zcmp); BIT bitmanip RV32BOTEarlGrey; BTALU branch target ALU; CSR control/status registers;
@@ -99,18 +99,25 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 |---|---|
 | F-BTALU-001 | F-ISA-024 |
 | F-CMP-038 | F-MUL-027 |
+| F-CMP-044 | F-EXC-015 |
+| F-CMP-060 | F-DMEM-047 |
 | F-CSR-002 | F-CSR-012, F-ISA-044 |
 | F-CSR-003 | F-CSR-013, F-ISA-045 |
 | F-CSR-005 | F-ISA-046 |
+| F-CSR-011 | F-PMC-029 |
 | F-CSR-019 | F-SEC-037 |
 | F-CSR-020 | F-RST-005 |
 | F-CSR-021 | F-BIT-040 |
 | F-CSR-024 | F-EXC-053, F-PMP-077 |
 | F-CSR-026 | F-IRQ-059 |
 | F-CSR-032 | F-IRQ-004 |
+| F-CSR-033 | F-IRQ-005 |
 | F-CSR-035 | F-IRQ-013, F-IRQ-014 |
+| F-CSR-060 | F-PMC-022 |
 | F-CSR-085 | F-SEC-031 |
+| F-DBG-004 | F-EXC-048 |
 | F-DBG-012 | F-CSR-074 |
+| F-DBG-013 | F-CSR-077 |
 | F-DBG-016 | F-CSR-076 |
 | F-DBG-017 | F-EXC-019, F-ISA-035 |
 | F-DBG-023 | F-EXC-020 |
@@ -122,34 +129,48 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-EXC-005 | F-IMEM-013, F-PMP-068 |
 | F-EXC-006 | F-IMEM-012, F-PMP-079 |
 | F-EXC-008 | F-ISA-047 |
+| F-EXC-013 | F-ISA-042 |
 | F-EXC-016 | F-ISA-050 |
+| F-EXC-017 | F-DBG-020 |
+| F-EXC-023 | F-PRV-021 |
 | F-EXC-025 | F-DMEM-036 |
 | F-EXC-027 | F-DMEM-037 |
 | F-EXC-035 | F-DMEM-038, F-PMP-085 |
+| F-EXC-055 | F-SEC-024 |
 | F-EXC-067 | F-FE-011, F-ISA-052 |
 | F-IC-011 | F-SEC-021 |
 | F-IC-037 | F-IMEM-018 |
 | F-IC-040 | F-CSR-086, F-DBG-062, F-FE-022, F-SEC-033 |
+| F-IRQ-007 | F-PRV-023 |
 | F-IRQ-008 | F-PRV-024 |
 | F-IRQ-009 | F-PRV-029 |
 | F-IRQ-016 | F-RVFI-029 |
 | F-IRQ-023 | F-PRV-012 |
 | F-IRQ-030 | F-IRQ-033, F-PRV-031 |
 | F-IRQ-032 | F-PRV-011 |
-| F-IRQ-045 | F-PRV-020 |
-| F-IRQ-046 | F-PRV-019 |
-| F-IRQ-053 | F-PRV-018 |
+| F-IRQ-037 | F-DBG-057 |
+| F-IRQ-045 | F-PRV-018, F-PRV-019, F-PRV-020 |
 | F-ISA-034 | F-CMP-033, F-DBG-022, F-EXC-018 |
+| F-MUL-023 | F-BIT-036, F-IRQ-019 |
 | F-PMC-001 | F-CSR-062 |
 | F-PMC-004 | F-CSR-063 |
 | F-PMC-005 | F-CSR-064 |
 | F-PMC-007 | F-CSR-066 |
+| F-PMC-009 | F-CSR-068 |
 | F-PMC-011 | F-DIT-018 |
-| F-PMC-020 | F-CSR-058, F-CSR-060 |
+| F-PMC-015 | F-CSR-069 |
+| F-PMC-016 | F-CSR-070 |
+| F-PMC-018 | F-CSR-061 |
+| F-PMC-020 | F-CSR-058 |
 | F-PMC-025 | F-CSR-050 |
+| F-PMC-039 | F-BTALU-016 |
 | F-PMC-040 | F-BTALU-015 |
+| F-PMP-067 | F-FE-016 |
+| F-PMP-082 | F-DMEM-033 |
 | F-PMP-087 | F-EXC-033 |
+| F-PMP-088 | F-EXC-032 |
 | F-PMP-095 | F-DBG-052 |
+| F-PMP-097 | F-DBG-054 |
 | F-PRV-005 | F-DBG-026, F-PMP-099 |
 | F-PRV-007 | F-EXC-052, F-PMP-074 |
 | F-PRV-010 | F-EXC-010, F-ISA-037 |
@@ -157,17 +178,20 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-PRV-016 | F-EXC-011, F-ISA-041 |
 | F-RST-002 | F-IMEM-026 |
 | F-RST-006 | F-IRQ-065 |
+| F-RST-010 | F-IMEM-022 |
 | F-RST-012 | F-IMEM-025 |
 | F-RST-015 | F-IRQ-056 |
 | F-RST-024 | F-DBG-008 |
 | F-RVFI-018 | F-DBG-065 |
 | F-SEC-007 | F-FE-020 |
-| F-SEC-022 | F-CSR-089, F-EXC-054 |
-| F-SEC-023 | F-DBG-067, F-EXC-047 |
+| F-SEC-022 | F-CSR-089, F-DBG-067, F-EXC-047, F-EXC-054 |
 | F-SEC-025 | F-CSR-091, F-EXC-057 |
 | F-TRG-007 | F-CSR-082 |
+| F-TRG-008 | F-CSR-083 |
+| F-TRG-010 | F-EXC-021 |
+| F-TRG-021 | F-EXC-022 |
 
-69 clusters, 95 aliases.
+93 clusters, 122 aliases.
 
 ## 3.2 Folded edge entries (former edge -> parent bin)
 
@@ -191,6 +215,8 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-BTALU-007 | F-BTALU-003 | CG-ISA-006.cp_target_align.half |
 | F-BTALU-009 | F-BTALU-001 | CG-ISA-007.cp_wrap.yes |
 | F-BTALU-012 | F-ISA-030 | CG-ISA-008.cp_refetch.yes |
+| F-CSR-004 | F-CSR-001 | CG-CSR-001.cr_rd_x0_write.csrrw_rdx0_rw_m, csrrwi_rdx0_rw_m, csrrs_rdx0_rw_m, csrrc_rdx0_rw_m |
+| F-CSR-007 | F-CSR-006 | CG-CSR-012.cr_fam_gap.mscratch_g1, mepc_g1; CG-CSR-012.cr_fam_next.mscratch_csr_rd_same, mepc_csr_rd_same |
 | F-CSR-010 | F-CSR-009 | CG-CSR-014.cp_range.r302_303 |
 | F-CSR-015 | F-CSR-014 | CG-CSR-001.cr_priv_aclass_trap.u_info_ro_trap |
 | F-CSR-022 | F-CSR-021 | CG-CSR-002.cr_csr_wpat.misa_all1 |
@@ -211,50 +237,68 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-CSR-057 | F-CSR-011 | CG-CSR-005.cr_wr_alias.wr_m_trap |
 | F-CSR-059 | F-PMC-020 | CG-CSR-004.cr_csr_inhibit.mcycle_on |
 | F-CSR-067 | F-PMC-007 | CG-CSR-013.cr_minstret_wr.minstret_wr_none |
-| F-CSR-072 | F-CSR-068 | CG-CSR-013.cr_minstret_rd_wb.hpm10_retiring |
+| F-CSR-072 | F-PMC-007 | CG-CSR-013.cr_minstret_rd_wb.hpm10_retiring |
 | F-CSR-075 | F-DBG-012 | CG-CSR-007.cr_csr_wpat_dbg.dcsr_all1 |
 | F-CSR-084 | F-TRG-007 | CG-CSR-008.cr_csr_dbg_form.tdata2_nondbg_wr |
 | F-CSR-087 | F-CSR-085 | CG-CSR-009.cr_mask_en.m0_en |
 | F-CSR-088 | F-CSR-085 | CG-CSR-009.cr_wpat_op.all1_csrrw |
 | F-CSR-090 | F-SEC-022 | CG-CSR-009.cr_dbl_detect.sync_s1_pulse |
+| F-CSR-093 | F-CSR-092 | CG-CSR-010.cr_op_form_gap.csrrs_nz_flush, csrrc_nz_flush, csrrsi_0_g1, csrrci_0_g1; CG-CSR-010.cp_seed_val.zero; the probe-gated cr_op_form_pulse bins are coverage-only |
 | F-CSR-103 | F-CSR-009 | CG-CSR-015.cr_cause_reexec.illegal_no |
 | F-PRV-003 | F-PRV-002 | CG-PRV-002.cr_entry.u_mie0_sync |
 | F-PRV-004 | F-PRV-002 | CG-PRV-002.cr_entry.m_mie0_sync |
 | F-PRV-008 | F-PRV-006 | CG-PRV-002.cr_mret_irq.m_0_pending |
+| F-PRV-009 | F-PRV-006 | CG-PRV-001.cp_from.reset, CG-PRV-001.cr_trans.m_u_mret |
+| F-PRV-014 | F-PRV-013 | CG-PRV-003.cr_eff.m_1_m_load_allow, CG-PRV-003.cr_eff.m_1_m_store_allow |
 | F-PRV-017 | F-PRV-016 | CG-PRV-005.cr_priv_tw_post.m_tw1_resume |
-| F-PRV-026 | F-CSR-077 | CG-PRV-007.cr_dret_prv.s_u |
+| F-PRV-026 | F-DBG-012 | CG-PRV-007.cr_dret_prv.s_u |
 | F-PRV-032 | F-PRV-002 | CG-PRV-008.cr_cause_mepc.exc_pc_wb_younger |
 | F-PRV-033 | F-PRV-001 | CG-PRV-001.cr_trans.u_m_ecall |
 | F-PRV-034 | F-CSR-014 | CG-CSR-001.cr_iclass_priv.wro_u |
 | F-PRV-035 | F-CSR-023 | CG-CSR-002.cr_mst_fields.mprv_tw |
 | F-EXC-024 | F-EXC-023 | CG-EXC-005.cp_priv.u |
 | F-EXC-028 | F-EXC-026 | CG-EXC-006.cr_op_source_align.store_pmp_aligned |
-| F-EXC-034 | F-EXC-030 | CG-EXC-006.cr_align_mtval.mis_both_eq_addr |
+| F-EXC-034 | F-EXC-025 | CG-EXC-006.cr_align_mtval.mis_both_eq_addr |
+| F-EXC-038 | F-EXC-035 | CG-EXC-006.cp_younger.load_store, CG-EXC-006.cr_op_younger.load_load_store |
 | F-EXC-039 | F-EXC-027 | CG-EXC-006.cr_op_source_align.store_bus_err_aligned |
-| F-EXC-040 | F-EXC-038 | CG-EXC-006.cr_op_younger.load_load_store |
+| F-EXC-040 | F-EXC-035 | CG-EXC-006.cr_op_younger.load_load_store |
+| F-EXC-042 | F-EXC-001 | CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_1; CG-EXC-001.cr_cause_priv_ilen.illegal_m_c16 |
+| F-EXC-045 | F-EXC-003 | CG-EXC-002.cp_flow.popret_target, CG-EXC-002.cr_flow_outcome.popret_target_trap; CG-EXC-008.cp_event.fetch_fault_ret_target |
+| F-EXC-051 | F-EXC-050 | CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_1 |
 | F-EXC-058 | F-SEC-022 | CG-EXC-010.cp_first_cause.ecall |
 | F-EXC-062 | F-EXC-001 | CG-EXC-013.cr_stage_latency.id_cause_min |
-| F-EXC-063 | F-EXC-001 | CG-EXC-012.cp_minstret.unchanged_by_trapper |
+| F-EXC-063 | F-EXC-001 | CG-EXC-012.cp_minstret.ir0 |
 | F-IRQ-010 | F-IRQ-009 | CG-IRQ-002.cr_set_winner.fast_fast_fast |
-| F-IRQ-022 | F-EXC-069 | (see parent covergroup) |
-| F-IRQ-027 | F-IRQ-023 | CG-IRQ-005.cr_state_reentry.still_high_same_immediate |
-| F-IRQ-029 | F-IRQ-023 | CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0 |
+| F-IRQ-011 | F-IRQ-009 | CG-IRQ-002.cp_drain.first, middle, last18; CG-IRQ-002.cr_drain_winner.first_fast, middle_fast, middle_external, middle_software, last18_timer |
+| F-IRQ-015 | F-IRQ-012 | CG-IRQ-006.cp_base_class.sw_aligned, sw_legalised; CG-IRQ-005.cp_mtvec_in_handler.rewritten, CG-IRQ-005.cr_nesting_mtvec.depth1_rewritten |
+| F-IRQ-017 | F-IRQ-016 | CG-IRQ-004.cp_ctx.id_load_wait, id_store_wait; CG-IRQ-004.cr_ctx_outcome.id_load_wait_taken, id_store_wait_taken; CG-IRQ-004.cr_ctx_rvalid.id_load_wait_before_rvalid, id_load_wait_same_cycle_as_rvalid, id_load_wait_after_rvalid |
+| F-IRQ-022 | F-EXC-035 | CG-IRQ-004.cr_ctx_outcome.wb_fault_same_cycle_deferred_by_exception |
+| F-IRQ-026 | F-IRQ-009 | CG-IRQ-002.cp_late.higher_added, lower_added; CG-IRQ-002.cr_late_winner.higher_added_fast, higher_added_nmi_ext, higher_added_external, lower_added_external |
+| F-IRQ-027 | F-IRQ-016 | CG-IRQ-005.cr_state_reentry.still_high_same_immediate |
+| F-IRQ-029 | F-IRQ-016 | CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0 |
 | F-IRQ-034 | F-IRQ-009 | CG-IRQ-002.cr_set_winner.nmi_fast_nmi_ext |
-| F-IRQ-038 | F-IRQ-037 | (see parent covergroup) |
+| F-IRQ-038 | F-IRQ-030 | CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn |
+| F-IRQ-046 | F-IRQ-045 | CG-IRQ-009.cp_wake.irq_local_only, CG-IRQ-009.cr_priv_wake.m_irq_local_only |
+| F-IRQ-047 | F-IRQ-045 | CG-IRQ-009.cp_disabled_high.yes, CG-IRQ-009.cr_disabled_wake.yes_none_long, yes_nmi_ext, yes_debug_req, yes_irq_taken |
 | F-IRQ-049 | F-IRQ-045 | CG-IRQ-009.cp_wake.nmi_ext |
-| F-IRQ-052 | F-IRQ-046 | CG-IRQ-009.cp_wake.masked_line_held |
-| F-IRQ-061 | F-IRQ-012 | CG-IRQ-006.cp_id.fast_14 |
-| F-IRQ-062 | F-IRQ-012 | CG-IRQ-006.cp_id.fast_0 |
+| F-IRQ-052 | F-IRQ-045 | CG-IRQ-009.cp_wake.masked_line_held |
+| F-IRQ-053 | F-IRQ-045 | CG-IRQ-009.cp_priv_tw.u_tw0, CG-IRQ-009.cr_priv_wake.u_tw0_irq_taken, u_tw0_nmi_ext, u_tw0_debug_req, u_tw0_none_long, u_tw0_already_pending; CG-IRQ-001.cr_line_priv_mie.software_u_mie0, timer_u_mie0 |
+| F-IRQ-058 | F-IRQ-002 | CG-IRQ-001.cp_mepc_src.branch_target, jump_target, mret_target, dret_target; CG-IRQ-001.cr_line_mepc.timer_branch_target, external_jump_target, fast_3_mret_target, fast_9_dret_target |
+| F-IRQ-061 | F-IRQ-012 | CG-IRQ-006.cp_id.fast[14] |
+| F-IRQ-062 | F-IRQ-012 | CG-IRQ-006.cp_id.fast[0] |
 | F-IRQ-063 | F-IRQ-009 | CG-IRQ-002.cr_drain_winner.last18_timer |
 | F-IRQ-064 | F-IRQ-045 | CG-IRQ-004.cr_ctx_latency.first_fetch_wake_two |
-| F-PMP-005 | F-PMP-004 | CG-PMP-001.cr_rw01_mml.rw01_mml1_stored |
+| F-PMP-003 | F-PMP-001 | CG-PMP-001.cp_res_bits.nonzero, CG-PMP-001.cr_res_op.nonzero_csrrw, nonzero_csrrs, nonzero_csrrc |
+| F-PMP-005 | F-PMP-001 | CG-PMP-001.cr_rw01_mml.rw01_mml1_stored |
 | F-PMP-010 | F-PMP-009 | CG-PMP-002.cr_tor_lock.nl_other_rlb0_written |
 | F-PMP-011 | F-PMP-009 | CG-PMP-002.cr_tor_lock.nu_tor_rlb0_written |
+| F-PMP-017 | F-PMP-016 | CG-PMP-004.cp_dbg.d1, CG-PMP-004.cr_dbg_class.d1_pmpcfg_read_only, d1_pmpcfg_write, d1_pmpaddr_read_only, d1_pmpaddr_write, d1_mseccfg_read_only, d1_mseccfg_write |
 | F-PMP-019 | F-PMP-007 | CG-PMP-001.cr_lockmix_op.some_csrrw |
 | F-PMP-031 | F-PMP-029 | CG-PMP-001.cr_mml_nonexec_accept.c1000_written, CG-PMP-001.cr_mml_nonexec_accept.c1100_written, CG-PMP-001.cr_mml_nonexec_accept.c1110_written, CG-PMP-001.cr_mml_nonexec_accept.c1111_written |
 | F-PMP-032 | F-PMP-029 | CG-PMP-001.cr_mml_exec_suppress.rlb1_c1001_written, CG-PMP-001.cr_mml_exec_suppress.rlb1_c1010_written, CG-PMP-001.cr_mml_exec_suppress.rlb1_c1011_written, CG-PMP-001.cr_mml_exec_suppress.rlb1_c1101_written |
-| F-PMP-039 | F-PMP-014 | CG-PMP-007.cr_hi_mode.napot_base_hi30, CG-PMP-007.cr_hi_mode.napot_base_hi31 |
+| F-PMP-039 | F-PMP-002 | CG-PMP-007.cr_hi_mode.napot_base_hi30, CG-PMP-007.cr_hi_mode.napot_base_hi31 |
 | F-PMP-046 | F-PMP-045 | CG-PMP-006.cp_conflict.low_allow_high_deny, CG-PMP-006.cp_conflict.low_deny_high_allow |
+| F-PMP-053 | F-PMP-052 | CG-PMP-014.cp_all_off_u.yes; CG-PMP-009.cr_priv_cause.u_c1_c16, u_c1_i32 |
 | F-PMP-057 | F-PMP-056 | CG-PMP-005.cr_truth_mml1.c0001_m_fetch, CG-PMP-005.cr_truth_mml1.c0001_m_load, CG-PMP-005.cr_truth_mml1.c0001_m_store, CG-PMP-005.cr_truth_mml1.c0100_m_fetch, CG-PMP-005.cr_truth_mml1.c0100_m_load, CG-PMP-005.cr_truth_mml1.c0100_m_store, CG-PMP-005.cr_truth_mml1.c0101_m_fetch, CG-PMP-005.cr_truth_mml1.c0101_m_load, CG-PMP-005.cr_truth_mml1.c0101_m_store, CG-PMP-005.cr_truth_mml1.c0110_m_fetch, CG-PMP-005.cr_truth_mml1.c0110_m_load, CG-PMP-005.cr_truth_mml1.c0110_m_store, CG-PMP-005.cr_truth_mml1.c0111_m_fetch, CG-PMP-005.cr_truth_mml1.c0111_m_load, CG-PMP-005.cr_truth_mml1.c0111_m_store |
 | F-PMP-058 | F-PMP-056 | CG-PMP-005.cr_truth_mml1.c1001_u_fetch, CG-PMP-005.cr_truth_mml1.c1001_u_load, CG-PMP-005.cr_truth_mml1.c1001_u_store, CG-PMP-005.cr_truth_mml1.c1100_u_fetch, CG-PMP-005.cr_truth_mml1.c1100_u_load, CG-PMP-005.cr_truth_mml1.c1100_u_store, CG-PMP-005.cr_truth_mml1.c1101_u_fetch, CG-PMP-005.cr_truth_mml1.c1101_u_load, CG-PMP-005.cr_truth_mml1.c1101_u_store, CG-PMP-005.cr_truth_mml1.c1110_u_fetch, CG-PMP-005.cr_truth_mml1.c1110_u_load, CG-PMP-005.cr_truth_mml1.c1110_u_store |
 | F-PMP-059 | F-PMP-056 | CG-PMP-005.cr_truth_mml1.c0010_m_fetch, CG-PMP-005.cr_truth_mml1.c0010_m_load, CG-PMP-005.cr_truth_mml1.c0010_m_store, CG-PMP-005.cr_truth_mml1.c0010_u_fetch, CG-PMP-005.cr_truth_mml1.c0010_u_load, CG-PMP-005.cr_truth_mml1.c0010_u_store, CG-PMP-005.cr_truth_mml1.c0011_m_fetch, CG-PMP-005.cr_truth_mml1.c0011_m_load, CG-PMP-005.cr_truth_mml1.c0011_m_store, CG-PMP-005.cr_truth_mml1.c0011_u_fetch, CG-PMP-005.cr_truth_mml1.c0011_u_load, CG-PMP-005.cr_truth_mml1.c0011_u_store |
@@ -268,52 +312,64 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-PMP-084 | F-PMP-082 | CG-PMP-008.cr_lat.aligned_denied_lat2, CG-PMP-008.cr_align_nreq.aligned_denied_n0 |
 | F-PMP-090 | F-PMP-086 | CG-PMP-008.cr_half_align.h16_mis_none_load, CG-PMP-008.cr_half_align.h16_mis_none_store, CG-PMP-008.cr_half_align.h16_mis_first_load, CG-PMP-008.cr_half_align.h16_mis_first_store, CG-PMP-008.cr_half_align.h16_mis_second_load, CG-PMP-008.cr_half_align.h16_mis_second_store, CG-PMP-008.cr_half_align.h16_mis_both_load, CG-PMP-008.cr_half_align.h16_mis_both_store |
 | F-PMP-096 | F-PMP-095 | CG-PMP-013.cr_no_bypass.nodbg_dm_fetch_deny, CG-PMP-013.cr_no_bypass.nodbg_dm_load_deny, CG-PMP-013.cr_no_bypass.nodbg_dm_store_deny |
-| F-PMP-100 | F-PMP-020 | CG-PMP-011.cr_bb.lock_then_addr, CG-PMP-011.cr_bb.lock_then_cfg |
+| F-PMP-100 | F-PMP-007 | CG-PMP-011.cr_bb.lock_then_addr, CG-PMP-011.cr_bb.lock_then_cfg |
 | F-DBG-014 | F-DBG-012 | CG-DBG-007.cr_bit_rb.cause_c |
 | F-DBG-015 | F-DBG-012 | CG-DBG-007.cr_bit_rb.stepie_0, stopcount_0, stoptime_0, mprven_0, nmip_0, z27_0, z14_0, z5_0 |
 | F-DBG-019 | F-DBG-017 | CG-DBG-003.cr_priv_en_outcome.u_off_on_dbg, u_on_on_dbg; CG-DBG-001.cr_cause_prv.ebreak_u |
 | F-DBG-021 | F-DBG-017 | CG-DBG-003.cr_priv_en_outcome.m_off_on_exc, u_on_off_exc |
-| F-DBG-027 | F-PRV-005 | CG-DBG-004.cp_kind.load_pmp, store_pmp, load_bus, store_bus |
-| F-DBG-028 | F-PRV-005 | CG-DBG-004.cp_kind.illegal, illegal_csr |
-| F-DBG-029 | F-PRV-005 | CG-DBG-004.cp_kind.ecall |
-| F-DBG-030 | F-PRV-005 | CG-DBG-004.cp_kind.fetch_pmp, fetch_bus |
+| F-DBG-027 | F-PRV-002 | CG-DBG-004.cp_kind.load_pmp, store_pmp, load_bus, store_bus |
+| F-DBG-028 | F-PRV-002 | CG-DBG-004.cp_kind.illegal, illegal_csr |
+| F-DBG-029 | F-PRV-002 | CG-DBG-004.cp_kind.ecall |
+| F-DBG-030 | F-PRV-002 | CG-DBG-004.cp_kind.fetch_pmp, fetch_bus |
 | F-DBG-034 | F-DBG-031 | CG-DBG-005.cr_prvsrc_target.swu_u, swm_m; CG-DBG-005.cr_prv_next.u_run |
+| F-DBG-038 | F-DBG-037 | CG-DBG-006.cr_stepped_prv.brtaken_m, jal_m, jalr_m; CG-DBG-001.cp_dpc_kind.br_target |
 | F-DBG-039 | F-DBG-037 | CG-DBG-006.cr_stepped_prv.brnot_m, cbrnot_m, comp_m; CG-DBG-001.cr_cause_dpc.step_next |
-| F-DBG-041 | F-DBG-025 | CG-DBG-003.cr_coincident_outcome.step_dbg; CG-DBG-006.cr_stepped_retired.ebreakdbg_trap |
-| F-DBG-043 | F-DBG-042 | CG-DBG-006.cr_pending_cause.nmi_step; CG-DBG-009.cr_src_window.nmi_step |
-| F-DBG-046 | F-DBG-010 | CG-DBG-006.cr_stepped_retired.push_ok, popret_ok; CG-DBG-001.cr_cause_ctx.step_zcmp |
+| F-DBG-041 | F-DBG-017 | CG-DBG-003.cr_coincident_outcome.step_dbg; CG-DBG-006.cr_stepped_retired.ebreakdbg_ok |
+| F-DBG-043 | F-DBG-037 | CG-DBG-006.cr_pending_cause.nmi_step; CG-DBG-009.cr_src_window.nmi_step |
+| F-DBG-046 | F-DBG-001 | CG-DBG-006.cr_stepped_retired.push_ok, popret_ok; CG-DBG-001.cr_cause_ctx.step_zcmp |
+| F-DBG-047 | F-DBG-037 | CG-DBG-006.cr_stepped_prv.loadslow_m, storeslow_m, div_m |
+| F-TRG-002 | F-TRG-001 | CG-TRG-001.cr_csr_mode_result.tsel_m_drop, CG-TRG-001.cr_tselw_mode.one_m, ones_m |
 | F-TRG-011 | F-TRG-010 | CG-TRG-002.cr_exec_fired.off_nf |
 | F-TRG-012 | F-TRG-010 | CG-TRG-002.cr_priv_fired.u_f; CG-DBG-001.cr_cause_prv.trigger_u |
-| F-TRG-016 | F-DBG-066 | CG-DBG-005.cr_prv_next.m_rehalt_trig, u_rehalt_trig; CG-TRG-002.cr_ctx_fired.dret_f |
-| F-TRG-022 | F-TRG-021 | CG-TRG-002.cr_dit_fall.dit1_falltaken_nf, dit1_fallnt_f |
-| F-TRG-025 | F-DBG-002 | CG-TRG-002.cr_coinc_cause.irq_trig, nmi_trig; CG-DBG-009.cr_window_disp.entry_wins |
+| F-TRG-013 | F-TRG-010 | CG-TRG-002.cp_ctx.in_debug, CG-TRG-002.cr_ctx_fired.indebug_nf |
+| F-TRG-014 | F-TRG-010 | CG-TRG-002.cp_ctx.comp2, CG-TRG-002.cr_ctx_fired.comp2_f |
+| F-TRG-016 | F-DBG-031 | CG-DBG-005.cr_prv_next.m_rehalt_trig, u_rehalt_trig; CG-TRG-002.cr_ctx_fired.dret_f |
+| F-TRG-022 | F-TRG-010 | CG-TRG-002.cr_dit_fall.dit1_falltaken_nf, dit1_fallnt_f |
+| F-TRG-025 | F-DBG-001 | CG-TRG-002.cr_coinc_cause.irq_trig, nmi_trig; CG-DBG-009.cr_window_disp.entry_wins |
 | F-TRG-026 | F-TRG-010 | CG-TRG-002.cr_ctx_fired.dummy_f |
 | F-TRG-028 | F-TRG-003 | CG-TRG-001.cp_td1_rb.en_after_hit |
 | F-TRG-030 | F-TRG-010 | CG-TRG-002.cr_ctx_fired.jalr_f, seq32_f, br_f |
 | F-PMC-002 | F-PMC-001 | CG-PMC-001.cr_ctx_delta.wfi_eq, debug_eq |
+| F-PMC-003 | F-PMC-001 | CG-PMC-001.cp_carry.seen, CG-PMC-001.cr_carry_ctx.carry_run |
 | F-PMC-008 | F-PMC-007 | CG-PMC-002.cr_window_delta.selfwr_eq |
+| F-PMC-013 | F-PMC-007 | CG-PMC-002.cp_wrap.carry, CG-PMC-002.cr_wrap_op.carry_rdhi, carry_rdlo |
 | F-PMC-023 | F-PMC-021 | CG-PMC-007.cr_target_inh_then.hpm_inh_resume, mcycle_inh_resume, minstret_inh_resume |
 | F-PMC-031 | F-PMC-021 | CG-PMC-006.cr_inhibit_gate.inh_set_u_ok |
 | F-PMC-035 | F-PMC-034 | CG-PMC-003.cr_variant_rel.pmpden_eq |
+| F-PMC-037 | F-PMC-034 | CG-PMC-003.cp_variant.straddle_pmp, CG-PMC-003.cr_variant_rel.straddle_eq |
 | F-PMC-048 | F-PMC-007 | CG-PMC-002.cr_window_delta.step_one, step_zero; CG-DBG-006.cr_stepped_minstret.alu_one, wfi_one, ecall_zero |
+| F-PMC-051 | F-PMC-001 | CG-PMC-001.cr_op_wdata.wrlo_z, wrlo_1, wrhi_z, wrhi_1; CG-PMC-002.cr_op_wdata.wrlo_z, wrlo_1, wrhi_z, wrhi_1; CG-PMC-004.cr_wdata_reg.z_lo, o_lo, z_hi, o_hi |
 | F-PMC-052 | F-PMC-007 | CG-PMC-002.cr_window_delta.irq_eq |
 | F-IMEM-005 | F-IMEM-001 | CG-IMEM-001.cp_gnt_delay.d16p |
 | F-IMEM-020 | F-IMEM-019 | CG-IMEM-004.cp_seq_kind.end_of_line_stop |
+| F-IMEM-023 | F-RST-010 | CG-IMEM-005.cp_gate_cause.fetch_en_invalid, CG-IMEM-005.cp_fetch_en_code.invalid_0, invalid_f |
 | F-DMEM-005 | F-DMEM-001 | CG-DMEM-001.cp_gnt_delay.d16p |
 | F-DMEM-020 | F-DMEM-014 | CG-DMEM-002.cr_be_x_beat.second_0001 |
-| F-DMEM-023 | F-DMEM-021 | CG-DMEM-004.cp_err_beat.both |
-| F-DMEM-025 | F-DMEM-009 | CG-DMEM-003.cp_path.gnt2_before_rvalid1 |
+| F-DMEM-023 | F-DMEM-015 | CG-DMEM-004.cp_err_beat.both |
+| F-DMEM-025 | F-DMEM-008 | CG-DMEM-003.cp_path.gnt2_before_rvalid1 |
 | F-FE-023 | F-IMEM-011 | CG-FE-005.cp_next_fetch.exc_vector |
 | F-FE-024 | F-FE-012 | CG-FE-004.cp_cause.zcmp_expand |
 | F-IC-009 | F-IC-008 | CG-IC-002.cp_key_req_at_reset.skipped_valid_high |
 | F-IC-015 | F-IC-014 | CG-IC-003.cp_hit_cadence.run4p |
-| F-IC-016 | F-IC-014 | CG-IC-003.cp_miss_forward_latency.l1_2 |
+| F-IC-016 | F-IC-014 | CG-IC-003.cp_miss_forward_latency.l3 |
 | F-IC-018 | F-IC-017 | CG-IC-003.cr_result_x_fill.evict_both |
 | F-IC-032 | F-IC-030 | CG-IC-006.cp_lookups_blocked_next.yes |
-| F-IC-033 | F-IC-030 | CG-IC-006.cr_ram_x_bits_x_way |
+| F-IC-033 | F-IC-030 | CG-IC-006.cp_bits.single, CG-IC-006.cp_bits.double |
 | F-IC-034 | F-IC-030 | CG-IC-006.cp_major_nmi_quiet.yes |
-| F-IC-041 | F-IC-012 | CG-IC-005.cp_effect_latency.next_cycle |
+| F-IC-041 | F-IC-012 | CG-IC-005.cp_effect_latency.next_lookup |
 | F-DIT-004 | F-DIT-003 | CG-DIT-003.cr_latency.div_off_zero_two; CG-DIT-003.cr_div_dit_zero.div_off_zero |
+| F-DIT-007 | F-DIT-002 | CG-DIT-002.cr_dit_taken_c.on_nt_c16, CG-DIT-002.cp_compressed.c16 |
+| F-DIT-009 | F-DIT-003 | CG-DIT-004.cr_type_dit.div_on, div_off; CG-DIT-004.cr_div_zero.div_zero_on, div_zero_off |
 | F-DIT-010 | F-DIT-002 | CG-DIT-002.cr_dit_priv.on_u; CG-DIT-002.cr_dit_priv.off_u; CG-DIT-001.cp_access.u_trap |
 | F-DIT-012 | F-DIT-011 | CG-DIT-001.cp_mask.m000; CG-DIT-001.cp_mask.m001; CG-DIT-001.cp_mask.m010; CG-DIT-001.cp_mask.m011; CG-DIT-001.cp_mask.m100; CG-DIT-001.cp_mask.m101; CG-DIT-001.cp_mask.m110; CG-DIT-001.cp_mask.m111; CG-DIT-001.cr_dummy_mask.on_m000; CG-DIT-001.cr_dummy_mask.on_m001; CG-DIT-001.cr_dummy_mask.on_m010; CG-DIT-001.cr_dummy_mask.on_m011; CG-DIT-001.cr_dummy_mask.on_m100; CG-DIT-001.cr_dummy_mask.on_m101; CG-DIT-001.cr_dummy_mask.on_m110; CG-DIT-001.cr_dummy_mask.on_m111 |
 | F-DIT-024 | F-DIT-013 | CG-DIT-004.cr_type_dit.div_off; CG-DIT-004.cr_type_dit.mul_off; CG-DIT-004.cr_type_dit.add_off; CG-DIT-004.cr_type_dit.and_off |
@@ -322,13 +378,17 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-SEC-008 | F-SEC-007 | CG-RVFI-001.cp_pc_delta.plus2; CG-RVFI-001.cp_pc_delta.plus4; CG-SEC-001.cp_internal_total.zero |
 | F-SEC-012 | F-RST-010 | CG-RST-003.cp_transition.on2inv; CG-SEC-005.cp_fetch_en_val.invalid |
 | F-SEC-016 | F-SEC-003 | CG-SEC-002.cr_side_op.dbus_store; CG-SEC-001.cr_alert_inject.major_bus_dbus_store_intg |
+| F-SEC-023 | F-SEC-022 | CG-SEC-003.cp_debug_mode.yes |
+| F-SEC-030 | F-SEC-027 | CG-SEC-004.cp_debug_mode.yes, CG-SEC-004.cr_exc_debug.exception_pc_yes_no |
 | F-SEC-032 | F-CSR-085 | CG-DIT-001.cp_wr_reserved.bits31_9; CG-DIT-001.cp_wr_reserved.bit8; CG-DIT-001.cp_wr_reserved.both; CG-SEC-005.cp_bits67_readback.b6_1_b7_1 |
+| F-RST-011 | F-RST-010 | CG-XIF-008.cp_inflight.data_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_data_outst; CG-RST-003.cp_pipe_state.id_busy |
+| F-RST-017 | F-RST-016 | CG-SEC-006.cp_hold_cause.fetch_outstanding, CG-SEC-006.cp_off_reason.none |
 | F-RST-025 | F-RST-003 | CG-SEC-005.cp_event.boot_addr_change; CG-SEC-005.cp_boot_addr_change_ctx.running |
 | F-RST-026 | F-RVFI-003 | CG-RVFI-001.cp_order_step.first |
 | F-RVFI-024 | F-DIT-016 | CG-DIT-004.cp_event.insert; CG-RVFI-001.cp_valid_gap.g2 |
 | F-RVFI-033 | F-RST-009 | CG-RST-001.cp_reset_kind.power_on; CG-RST-001.cp_reset_kind.mid_run |
 
-154 folds.
+190 folds.
 
 # 4. Features
 
@@ -717,6 +777,8 @@ Conventions used below:
   RTL-defined: rtl/ibex_controller.sv:870-873, rtl/ibex_pkg.sv:374-377
 - Edge: yes, of F-ISA-032
 - Status: FOLDED into F-ISA-032 (bin CG-ISA-009.cr_op_priv_outcome.ecall_m_exc)
+- Notes: the U-mode iterations need the PMP prologue (X-2): with every PMP entry OFF (reset) an unmatched
+  U access faults (rtl/ibex_pmp.sv:136-139).
 
 ### F-ISA-034: ebreak (and c.ebreak)
 - What: SYSTEM funct12 0x001: breakpoint exception (mcause=3), mepc = PC of ebreak, mtval=0, not
@@ -745,8 +807,10 @@ Conventions used below:
 ### F-ISA-036: mret decode
 - What: SYSTEM funct12 0x302, rs1=rd=0: pipeline flush, pc = mepc, privilege/MIE stack pop
   (CSR semantics owned by the CSR/trap area).
-- Observable at: rvfi_pc_wdata = mepc; instr_addr_o = mepc after the redirect; rvfi_mode of the next
-  retirement = MPP
+- Observable at: the NEXT record's rvfi_pc_rdata = mepc (rvfi_pc_wdata of the mret record is the next
+  sequential fetch address pc + 4, never the target: PC_ERET pc_set happens in FLUSH one cycle after the
+  record's capture, X-1 / C-1); instr_addr_o = mepc when the target is not cached; rvfi_mode of the next
+  retirement = MPP (also for an mret executed in debug mode, rtl/ibex_cs_registers.sv:953-954)
 - Config: mepc, mstatus.MPP/MPIE, privilege mode
 - Source: spec: machine.adoc "Trap-Return Instructions" (norm:xret_op) | RTL-defined:
   rtl/ibex_decoder.sv:742-743, rtl/ibex_controller.sv:954-960
@@ -791,6 +855,10 @@ Conventions used below:
   RTL-defined: rtl/ibex_decoder.sv:748-749, rtl/ibex_controller.sv:287, rtl/ibex_controller.sv:966-968
 - Edge: no
 - Status: ACTIVE
+- Notes: irq_enabled = mstatus.MIE | (priv_mode == U) (rtl/ibex_controller.sv:490): in U-mode an enabled
+  interrupt wakes AND is taken regardless of MIE; only an M-mode wfi with MIE = 0 resumes at the next
+  instruction (X-9). The sleep is visible as core_busy_o == IbexMuBiOff only while no fetch beat is
+  outstanding, no invalidation runs and the LSU is idle (X-8).
 
 ### F-ISA-041: wfi in U-mode with mstatus.TW=1 is illegal
 - What: Alias of F-PRV-016: ISA-decode perspective of wfi in U-mode with mstatus.TW; see the
@@ -802,14 +870,11 @@ Conventions used below:
 - Status: ALIAS of F-PRV-016
 
 ### F-ISA-042: SYSTEM funct3=000 operand and funct12 checks
-- What: ecall/ebreak/mret/dret/wfi with rs1 != 0 or rd != 0 are illegal; any other funct12 (e.g. sret
-  0x102, uret 0x002, sfence.vma 0x09x, custom) is illegal.
-- Observable at: rvfi_trap + csrr read-back of mcause (2) / mtval (= the encoding) on rvfi_rd_wdata
-- Config: none
-- Source: spec: machine.adoc "Trap-Return Instructions" (norm:sret_presence: SRET should raise illegal
-  without S-mode) | RTL-defined: rtl/ibex_decoder.sv:733-758
+- What: Alias of F-EXC-013: ISA perspective (SYSTEM funct3 = 000 with rs1 != 0 or rd != 0, or any
+  funct12 outside the five legal values, is an illegal instruction; illegal wins over ecall/ebreak),
+  see canonical.
 - Edge: yes, of F-ISA-032
-- Status: ACTIVE
+- Status: ALIAS of F-EXC-013
 
 ### F-ISA-043: CSR instruction encodings (Zicsr)
 - What: csrrw/csrrs/csrrc (funct3 001/010/011) use rs1; csrrwi/csrrsi/csrrci (101/110/111) use
@@ -1016,15 +1081,25 @@ Conventions used below:
 - Edge: yes, of F-MUL-003
 - Status: FOLDED into F-MUL-003 (bin CG-MUL-002.cr_seq.auto)
 
-### F-MUL-011: Multiplier result held when WB is not ready
-- What: If the WB stage is busy (outstanding load/store), mult_hold prevents the FSM from advancing and
-  the result is recomputed/held until multdiv_ready_id_i; result unchanged.
-- Observable at: RVFI rvfi_rd_wdata correct after a preceding slow load/store
+### F-MUL-011: Multiplier start deferred behind an outstanding WB memory access (no mid-operation hold)
+- What: While a load/store is outstanding in WB the multiply cannot start: mult_en_id = instr_executing ?
+  mult_en_dec : 0 and instr_executing requires ~outstanding_memory_access (= (outstanding_load_wb |
+  outstanding_store_wb) & ~lsu_resp_valid), so the multiplier is enabled first in the response cycle;
+  multdiv_ready_id_i (= ready_wb_i) is 1 in that cycle, hence mult_hold with mult_en_i = 1 is
+  unreachable and there is no partial result to hold. Observable: record delta from the access record
+  = 1 + W (mul) / 2 + W (mulh class), W = the response delay beyond min1; result unchanged.
+- Observable at: RVFI rvfi_rd_wdata correct and rvfi_ext_mcycle delta 1 + W / 2 + W after a preceding
+  slow load/store (the dbus monitor supplies W)
 - Config: none
-- Source: RTL-defined: rtl/ibex_multdiv_fast.sv:98, rtl/ibex_multdiv_fast.sv:216, rtl/ibex_multdiv_fast.sv:235,
-  rtl/ibex_id_stage.sv:976
+- Source: RTL-defined: rtl/ibex_id_stage.sv:733-734 (mult_en_id gated by instr_executing),
+  rtl/ibex_id_stage.sv:1014-1016 (outstanding_memory_access), rtl/ibex_id_stage.sv:1059-1062
+  (instr_executing), rtl/ibex_id_stage.sv:976 (multdiv_ready_id = ready_wb), rtl/ibex_wb_stage.sv:185,
+  rtl/ibex_multdiv_fast.sv:98, :216, :235 (mult_hold, unreachable while enabled) | fact-check:
+  dv/auto_dv/work/rtl-arch/gen_tp_parts_rtl_factcheck.md X-12; gen_multdiv_bound_props.md Section 1
 - Edge: yes, of F-MUL-003
 - Status: ACTIVE
+- Notes: mechanism corrected by rtl-arch T-053 (X-12): the former "result held by mult_hold" statement
+  described an unreachable path (hierarchy map H-M1).
 
 ### F-MUL-012: div
 - What: signed quotient rounded toward zero; long division: IDLE, ABS_A, ABS_B, 31 COMP iterations,
@@ -1140,23 +1215,41 @@ Conventions used below:
 - Status: ACTIVE
 - Notes: Mechanism text corrected per Critic C-05; edge re-pointed at the base feature (C-13).
 
-### F-MUL-023: Interrupt or debug request during a divide is deferred
-- What: The controller waits for the instruction in ID to finish (id_wb_pending) before IRQ_TAKEN /
-  DBG_TAKEN_IF; a divide therefore adds up to 37 cycles of interrupt latency; mepc = next PC and the
-  divide result is committed.
-- Observable at: RVFI (div retires with rvfi_trap=0, then rvfi_intr on the handler entry), irq_pending_o
-- Config: mie/mstatus.MIE, debug_req_i
-- Source: RTL-defined: rtl/ibex_controller.sv:698-721
+### F-MUL-023: Interrupt, NMI or debug request during a multi-cycle instruction is deferred until it retires
+- What: The controller waits for the instruction in ID to finish (!stall && !id_wb_pending,
+  rtl/ibex_controller.sv:698-721) before IRQ_TAKEN / DBG_TAKEN_IF, so an enabled interrupt, irq_nm_i
+  or debug_req_i arriving during a divide (up to 37 cycles of added latency), a mulh-class op or a
+  two-cycle Zbb/Zbt op (rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32*, F-BIT-012) is deferred: the
+  instruction retires with its full result (rs3 read in the second cycle for the ternary forms), then
+  the trap or debug entry follows with mepc / dpc = the next PC. Canonical for the cluster F-IRQ-019 /
+  F-BIT-036 (Critic M-10).
+- Observable at: RVFI: the multi-cycle op retires (rvfi_trap = 0, rvfi_rd_wdata correct, rvfi_rs3_*
+  populated for ternary ops) before the handler entry (rvfi_intr = 1) or before rvfi_ext_debug_mode
+  rises; csrr read-back of mepc / dpc on rvfi_rd_wdata = the next PC; irq_pending_o high across the op.
+- Config: mie / mstatus.MIE, dcsr.step, debug_req_i; none for the op itself.
+- Source: RTL-defined: rtl/ibex_controller.sv:698-721; rtl/ibex_id_stage.sv:943-947 (stall_alu,
+  MULTI_CYCLE), 954-966 (exit of MULTI_CYCLE), 983
 - Edge: yes, of F-MUL-012
 - Status: ACTIVE
+- Notes: Canonical entry; aliases F-IRQ-019 (IRQ) and F-BIT-036 (bitmanip). The writeback-busy
+  coincidence is F-BIT-041.
 
-### F-MUL-024: Divide result held in FINISH when WB is not ready
-- What: div_hold keeps md_state in MD_FINISH until multdiv_ready_id_i; result unchanged.
-- Observable at: RVFI rvfi_rd_wdata correct when a slow store precedes the divide
-- Config: none
-- Source: RTL-defined: rtl/ibex_multdiv_fast.sv:99, rtl/ibex_multdiv_fast.sv:514-520
+### F-MUL-024: Divider start deferred behind an outstanding WB memory access (no FINISH hold)
+- What: div_en_id = instr_executing ? div_en_dec : 0, so the divider FSM leaves MD_IDLE first in the cycle
+  the outstanding load/store response arrives; MD_FINISH (valid_o) follows exactly 36 cycles later (1 cycle
+  for divide by zero with data_ind_timing = 0) with multdiv_ready_id_i = 1, so div_hold in MD_FINISH is
+  unreachable and the result is never held. Observable: record delta from the access record = 37 + W
+  (2 + W for the fast path), W = the response delay beyond min1; result unchanged.
+- Observable at: RVFI rvfi_rd_wdata correct and rvfi_ext_mcycle delta 37 + W / 2 + W when a slow store or
+  load precedes the divide (the dbus monitor supplies W)
+- Config: cpuctrlsts.data_ind_timing (fast path only when 0)
+- Source: RTL-defined: rtl/ibex_id_stage.sv:733-734, :1014-1016, :1059-1062, :976; rtl/ibex_multdiv_fast.sv:99,
+  :514-520 (div_hold, unreachable while enabled) | fact-check: gen_tp_parts_rtl_factcheck.md X-12;
+  gen_multdiv_bound_props.md MD-1..MD-3
 - Edge: yes, of F-MUL-012
 - Status: ACTIVE
+- Notes: mechanism corrected by rtl-arch T-053 (X-12): the former "held in FINISH" statement described an
+  unreachable path (hierarchy map H-D1).
 
 ### F-MUL-025: Back-to-back multdiv and dependency forwarding
 - What: div followed by a dependent add (forwarding from WB), div followed by mul, mul followed by div,
@@ -1187,20 +1280,26 @@ Conventions used below:
 - Edge: yes, of F-MUL-001
 - Status: ALIAS of F-CMP-038
 
-### F-MUL-028: Divider FSM cannot advance while div_en_i is low (state-freeze arc, assertion feature)
-- What: The divider state register updates only under div_en_internal = div_en_i & ~div_hold, so
-  with div_en_i = 0 and md_state_q != MD_IDLE the FSM must hold its state (neither advance nor
-  reset) and resume where it stopped when div_en_i returns. div_en_i (= div_en_id) drops
-  mid-operation only if instr_executing falls (instr_kill: fetch error, WB exception, controller not
-  running; or outstanding_memory_access / stall_ld_hz), which the hierarchy map argues cannot happen
-  once a divide has started (H-D3, "believed unreachable", listed as unverified). DV asserts it as a
-  bound SVA - antecedent (div_en_i == 0 && md_state_q != MD_IDLE) |=> $stable(md_state_q) - with a
-  cover on the antecedent: a cover hit is a reachability finding, an assertion failure is a bug.
+### F-MUL-028: Divider / multiplier bound properties and the unreachable hold arc (assertion feature)
+- What: The divider state register updates only under div_en_internal = div_en_i & ~div_hold; div_en_i
+  (= div_en_id = instr_executing ? div_en_dec : 0) is 1 only while the divide is the executing
+  instruction in ID and cannot drop mid-operation (a WB access outstanding at the start defers the
+  start instead, X-12), so the freeze-arc property (div_en_i == 0 && md_state_q != MD_IDLE |=>
+  $stable(md_state_q)) is structurally implied by the flop enable and is kept as a COVER only. The
+  assertion content of the feature is rtl-arch's bound set (gen_multdiv_bound_props.md): MD-1 a
+  non-fast-path divide start reaches MD_FINISH with valid_o exactly 36 cycles later (valid_o low in
+  between); MD-2 divide by zero with data_ind_timing = 0 reaches MD_FINISH in the next cycle; MD-2b
+  under data_ind_timing = 1 it takes the full path; MD-3 MD_FINISH implies multdiv_ready_id_i (div_hold
+  never engages while enabled: the X-12 argument, expected never to fire); MD-4 the state arcs; MD-5 MUL
+  valid in its first cycle, MULH class in the second; covers MD-C1..C3 (paths seen) and MD-C4 (hold
+  attempt, expected 0). A cover hit on MD-C4 or the freeze arc is a reachability finding, an MD-1..MD-5
+  failure is a bug.
 - Observable at: rvfi_rd_wdata / rvfi_ext_mcycle of every divide issued under the stimuli that could
-  drop instr_executing (result correct, 37- or 2-cycle latency, exactly one retirement); the arc
-  itself has no boundary observable - probe candidate P<n> (probe register entry needed; TB Infra
-  assigns n): bind into ibex_multdiv_fast on md_state_q and div_en_i (cover + assert, coverage-only,
-  no checker depends on it)
+  disturb it (result correct, 37 + W / 2 + W latency, exactly one retirement); the bounds themselves
+  have no boundary observable - probe candidate P8 (probe register entry needed): bind into
+  u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i on md_state_q, div_en_i, mult_en_i,
+  operator_i, equal_to_zero_i, data_ind_timing_i, multdiv_ready_id_i, valid_o, div_counter_q,
+  mult_state_q (assert + cover, coverage-only, no checker depends on it)
 - Config: cpuctrlsts.data_ind_timing (both values); PMP / data_err_i injection / irq_* / debug_req_i
   / instr_err_i as the disturbing stimuli
 - Source: RTL-defined: rtl/ibex_multdiv_fast.sv:99 (div_en_internal),
@@ -1211,9 +1310,12 @@ Conventions used below:
   1
 - Edge: yes, of F-MUL-012
 - Status: ACTIVE
-- Notes: Added for Critic C-09 item 5 (H-D3). The property is structurally implied by the flop
-  enable; the value of the feature is the reachability cover plus the check that a divide disturbed
-  by any listed event still retires exactly once with the right result.
+- Notes: Added for Critic C-09 item 5 (H-D3); rewritten by fix 3 (rtl-arch T-053 X-12 and
+  gen_multdiv_bound_props.md): the freeze-arc property is structurally implied by the flop enable and
+  the hold arc is unreachable, so the value of the feature is the MD-1..MD-5 bounds (36-cycle divide,
+  1-cycle zero fast path with DIT off, 0/1-cycle multiplier), the MD-C4 / freeze-arc reachability covers
+  and the check that a divide disturbed by any listed event still retires exactly once with the right
+  result and the C-9 delta.
 
 ---------------------------------------------------------------------------------------------------
 ## AREA CMP: compressed instructions (Zca, Zcb, Zcmp)
@@ -1516,9 +1618,11 @@ Conventions used below:
   rvfi_rd_wdata
 - Config: none
 - Source: spec: zcb.adoc "c.lbu", "c.lhu", "c.lh", "c.sb", "c.sh" | RTL-defined:
-  rtl/ibex_compressed_decoder.sv:266-321
+  rtl/ibex_compressed_decoder.sv:266-321, rtl/ibex_load_store_unit.sv:403-405
 - Edge: no
 - Status: ACTIVE
+- Notes: only a halfword at addr[1:0] = 3 splits into two bus accesses; a halfword at addr[1:0] = 1 is
+  misaligned but one word access with be 0110 (rtl/ibex_load_store_unit.sv:403-405; X-23).
 
 ### F-CMP-035: Zcb load/store reserved code points
 - What: c.sh encoding with instr[6]=1 is illegal; Q0 funct3 100 with instr[12:10] = 1xx is illegal.
@@ -1550,7 +1654,11 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-CMP-038: c.mul
-- What: mul rsd', rsd', rs2' (see F-MUL-027).
+- What: c.mul rsd', rs2' (CA format: instr[15:10] = 100111, instr[6:5] = 10, op = 10) expands to mul
+  rsd', rsd', rs2' (rtl/ibex_compressed_decoder.sv:462-471: instr_o = {7'b0000001, rs2', rsd',
+  3'b000, rsd', OPCODE_OP}); the expanded instruction executes in the single-cycle multiplier and
+  writes rsd' (x8..x15). Without Zcb in RV32ZC the encoding is illegal (:468-470). Multiplier-side
+  alias: F-MUL-027.
 - Observable at: RVFI (rvfi_rd_addr in x8..x15, rvfi_rd_wdata, rvfi_insn = the 16-bit encoding)
 - Config: none
 - Source: spec: zcb.adoc "c.mul" | RTL-defined: rtl/ibex_compressed_decoder.sv:462-471
@@ -1624,6 +1732,8 @@ Conventions used below:
   rtl/ibex_compressed_decoder.sv:635-637, rtl/ibex_compressed_decoder.sv:703-705
 - Edge: yes, of F-CMP-039
 - Status: ACTIVE
+- Notes: Canonical for the EXC alias F-EXC-015 (M-10 pass; the RVFI expanded tag on the trap record
+  is verified against rtl/ibex_compressed_decoder.sv:198-207, 626-640).
 
 ### F-CMP-045: cm.pop
 - What: loads registers from highest to ra: lw reg, (stack_adj-4*k)(sp) for k=1..N, then addi sp, sp,
@@ -1667,12 +1777,17 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-CMP-049: cm.popret return target uses the ra just loaded
-- What: the ret micro-op reads x1 written by an earlier load micro-op of the same instruction (value from
-  the WB forwarding path or after a load hazard stall); with rlist=4 the load and the ret are separated
-  only by the addi.
-- Observable at: RVFI rvfi_rs1_rdata of the ret == rvfi_rd_wdata of the ra load; rvfi_pc_wdata
+- What: the ret micro-op reads x1 written by an earlier load micro-op of the same instruction; the value
+  always comes from the register file: the intervening addi micro-op cannot execute while the ra load is
+  outstanding (instr_executing & ~outstanding_memory_access: deferred start, X-12) and loads are never
+  forwarded (rf_rdata_*_fwd uses rf_wdata_fwd_wb, which excludes load data), so by the time the ret
+  enters ID the load has left WB; with rlist=4 the load and the ret are separated only by the addi.
+- Observable at: RVFI rvfi_rs1_rdata of the ret == rvfi_rd_wdata of the ra load; rvfi_pc_wdata; the addi
+  micro-op's record delta 1 + W when the response was late (dbus monitor)
 - Config: none
-- Source: RTL-defined: rtl/ibex_id_stage.sv:1109-1120, rtl/ibex_compressed_decoder.sv:765-772
+- Source: RTL-defined: rtl/ibex_id_stage.sv:1059-1062, rtl/ibex_id_stage.sv:1109-1120 (:1117-1118 no load
+  forwarding), rtl/ibex_compressed_decoder.sv:765-772 | fact-check: gen_tp_parts_rtl_factcheck.md
+  TP-CMP-049 (UNREACHABLE-PRECONDITION corrected)
 - Edge: yes, of F-CMP-047
 - Status: ACTIVE
 
@@ -1743,13 +1858,22 @@ Conventions used below:
   rtl/ibex_if_stage.sv:808-809
 - Edge: no
 - Status: ACTIVE
-- Notes: the reference-model comparison must fold micro-ops into one architectural retire.
+- Notes: the reference-model comparison must fold micro-ops into one architectural retire. RTL-defined
+  fact folded from rtl-arch's fact-check (X-14, Section 5): the rvfi_insn = expansion rule also holds
+  for a trapping micro-op and for the reserved rlist 0..3 encodings (tagged INSTR_EXPANDED,
+  rtl/ibex_compressed_decoder.sv:626, :691), while a non-expanded compressed instruction (c.ebreak,
+  Zca/Zcb, the other illegal halfwords) is traced as the zero-extended halfword; mtval is always the
+  halfword (rtl/ibex_controller.sv:866-868).
 
 ### F-CMP-056: Interrupt during the cm.push store phase
 - What: An interrupt pending while a store micro-op (INSTR_EXPANDED) is in ID is taken between micro-ops:
   IF is halted, the in-flight store completes, IRQ_TAKEN saves mepc = PC of the cm.push (pc_if still
   points at it), the compressed-decoder FSM is reset (flush_expanded), sp is NOT adjusted. After mret the
-  whole cm.push re-executes and repeats the stores.
+  whole cm.push re-executes and repeats the stores. The micro-op in ID when the request arrives completes
+  first (halt_if stops only new entries, X-7); with the pin edge at the RVFI record of store k, stores
+  k+1 (WB) and k+2 (ID) complete, so k+2 or k+3 stores retire, and for k >= N-2 the addi (LAST) can
+  already be in ID: the whole cm.push then completes before the interrupt (mepc = PC + 2, sp adjusted, no
+  re-execution).
 - Observable at: data_req_o/data_addr_o (stores repeated after mret), RVFI (partial micro-op
   sequence, then the handler entry with rvfi_intr = 1); csrr read-back of mepc on rvfi_rd_wdata
 - Config: mie, mstatus.MIE, irq_* inputs
@@ -1761,7 +1885,9 @@ Conventions used below:
 
 ### F-CMP-057: Interrupt during the cm.pop/popret load phase
 - What: same mechanism as F-CMP-056; registers already loaded keep their new values (spec permits), sp
-  unchanged, the ret/li a0 not executed; full re-execution after mret.
+  unchanged, the ret/li a0 not executed; full re-execution after mret. For k >= N-2 the addi sp (COMMIT)
+  is in ID at the pin edge, completes and blocks handle_irq until the ret/LAST retires: the sequence
+  finishes with the ret executed once before the handler (mepc = ra target; X-7).
 - Observable at: RVFI rvfi_rd_wdata of the completed loads, rvfi_intr on the handler entry; csrr
   read-back of mepc on rvfi_rd_wdata
 - Config: mie, mstatus.MIE
@@ -1784,8 +1910,12 @@ Conventions used below:
 
 ### F-CMP-059: Debug request, single step and trigger during a Zcmp sequence
 - What: enter_debug_mode is masked while the ID micro-op is EXPANDED or COMMIT, so debug entry (debug_req_i,
-  dcsr.step, trigger match) waits until the LAST micro-op has retired; dpc = next PC; a single step
-  covers the entire cm.* instruction.
+  dcsr.step, trigger match) waits until the LAST micro-op has retired; dpc = next PC (cm.* PC + 2, or
+  the ra target for cm.popret/popretz since dpc = pc_if after the ret's pc_set); a single step covers
+  the entire cm.* instruction. A trigger on the cm.* PC itself matches pc_if while the PREVIOUS
+  instruction is in ID (the mask reads that instruction's NOT_EXPANDED tag, rtl/ibex_cs_registers.sv:1872)
+  and enters debug BEFORE micro-op 0 with dpc = cm.* PC; only a trigger on the next PC is deferred
+  (X-19).
 - Observable at: rvfi_ext_debug_mode; csrr read-back of dpc on rvfi_rd_wdata in the debug ROM; RVFI
   micro-op count before the debug entry
 - Config: dcsr.step, tdata1/tdata2 (trigger), debug_req_i
@@ -1806,6 +1936,7 @@ Conventions used below:
   rtl/ibex_controller.sv:833-845, rtl/ibex_controller.sv:900-913
 - Edge: yes, of F-CMP-039
 - Status: ACTIVE
+- Notes: Canonical for the DMEM alias F-DMEM-047 (M-10 pass).
 
 ### F-CMP-061: Load access fault on a popped load
 - What: as F-CMP-060 with mcause = 5; registers loaded before the fault retain new values; sp unchanged;
@@ -1868,13 +1999,15 @@ Conventions used below:
 
 ### F-CMP-066: Illegal compressed instruction mtval and rvfi_insn
 - What: Folded into F-ISA-047 (bin CG-CMP-004.cp_mtval_ok.yes): illegal 16-bit encoding: mtval =
-  {16'b0, halfword} and rvfi_insn = the zero-extended halfword, already stated by F-ISA-047
-  (canonical F-EXC-008).
+  {16'b0, halfword} always; rvfi_insn = the zero-extended halfword for every non-expanded encoding, but
+  for the Zcmp reserved rlist 0..3 encodings rvfi_insn is the synthesized 32-bit word with the halfword
+  on rvfi_ext_expanded_insn (INSTR_EXPANDED tag, X-14); already stated by F-ISA-047 (canonical
+  F-EXC-008).
 - Observable at: see F-ISA-047
 - Config: see F-ISA-047
 - Source: spec: machine.adoc "Machine Trap Value (mtval) Register" (shortest of the faulting instruction) |
   RTL-defined: rtl/ibex_controller.sv:864-869, rtl/ibex_decoder.sv:902-905, rtl/ibex_core.sv:2263-2269
-- Edge: yes, of F-ISA-047
+- Edge: yes, of F-EXC-008
 - Status: FOLDED into F-EXC-008 (bin CG-CMP-004.cp_mtval_ok.yes)
 
 ### F-CMP-067: cm.push with sp near address 0 / wrap
@@ -2312,14 +2445,18 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-BIT-033: crc32 corner inputs
-- What: crc32.w(0) = 0 and crc32c.w(0) = 0 (linear operation); crc32.b ignores rs1[31:8]; crc32.h ignores
-  rs1[31:16]; all-ones inputs; known vectors from the RTL equation rd = (rs1 >> n) ^ rev(rev(rs1 << (32-n))
-  cx rev(mu) cx P).
+- What: crc32.w(0) = 0 and crc32c.w(0) = 0 (linear operation); crc32.b/.h results DEPEND on the high bits
+  linearly: rd = clmul_part(rs1[7:0]) ^ (rs1 >> 8) (resp. rs1[15:0], >> 16), the draft's crc32(x, n)
+  that shifts x right n times, so two inputs differing only above bit 8 (16) give results differing by
+  delta >> 8 (>> 16); all-ones inputs; known vectors from the RTL equation rd = (rs1 >> n) ^
+  rev(rev(rs1 << (32-n)) cx rev(mu) cx P).
 - Observable at: RVFI rvfi_rd_wdata
 - Config: none
-- Source: RTL-defined: rtl/ibex_alu.sv:859-881, rtl/ibex_alu.sv:932-938
+- Source: RTL-defined: rtl/ibex_alu.sv:859-881, rtl/ibex_alu.sv:932-938, rtl/ibex_alu.sv:1247-1248
+  (^ (operand_a >> 8 / 16)) | fact-check: gen_tp_parts_rtl_factcheck.md TP-BIT-033
 - Edge: yes, of F-BIT-032
 - Status: ACTIVE
+- Notes: corrected by rtl-arch T-053 (X-23): the former "crc32.b ignores rs1[31:8]" statement was wrong.
 
 ### F-BIT-034: Zbe bcompress / bdecompress are illegal in OTEarlGrey
 - What: Folded into F-BIT-001 (bin CG-BIT-011.cp_illegal_class.bcompress): Zbe bcompress/bdecompress
@@ -2342,26 +2479,12 @@ Conventions used below:
 - Status: FOLDED into F-BIT-001 (bin CG-BIT-011.cp_illegal_class.op32_any)
 
 ### F-BIT-036: Interrupt, NMI or debug request arriving during a two-cycle bitmanip op is deferred
-- What: An enabled interrupt, irq_nm_i or debug_req_i that arrives while a
-  rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* is in its first ID cycle is deferred: the controller
-  waits for the instruction in ID to finish (halt_if while stall or id_wb_pending), the op retires
-  with its full two-cycle result (rs3 read in the second cycle for the ternary forms), then
-  IRQ_TAKEN / DBG_TAKEN_IF follows with mepc / dpc = the next PC. The two-cycle occupancy, the rs3
-  read through the rs1 port and the rvfi_rs3_* reporting themselves are stated by
-  F-BIT-012/027/028/032 and are not re-covered here.
-- Observable at: RVFI: the two-cycle op retires (rvfi_trap = 0, rvfi_rd_wdata correct, rvfi_rs3_*
-  populated for ternary ops) before the handler entry (rvfi_intr = 1) or before rvfi_ext_debug_mode
-  rises; csrr read-back of mepc / dpc on rvfi_rd_wdata = the next PC; irq_pending_o high across the
-  op
-- Config: mie / mstatus.MIE, dcsr.step, debug_req_i; none for the op itself
-- Source: RTL-defined: rtl/ibex_controller.sv:698-721 (wait for !stall && !id_wb_pending before
-  IRQ_TAKEN / DBG_TAKEN_IF), rtl/ibex_id_stage.sv:943-947 (stall_alu, MULTI_CYCLE),
-  rtl/ibex_id_stage.sv:954-966 (exit of MULTI_CYCLE)
+- What: Alias of F-MUL-023: bitmanip perspective (the two-cycle
+  rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* class of the canonical's multi-cycle set, including the
+  rs3 read in the second cycle for the ternary forms), see canonical. The writeback-busy coincidence
+  is F-BIT-041.
 - Edge: yes, of F-BIT-012
-- Status: ACTIVE
-- Notes: Rewritten per Critic C-12 (d): the former text listed checker bullets (stall, rs3 port,
-  RVFI rs3) already carried by the base features; the event coincidence is the distinct stimulus.
-  The writeback-busy coincidence is F-BIT-041.
+- Status: ALIAS of F-MUL-023
 
 ### F-BIT-037: Non-canonical funct7 bits accepted for some OP-IMM bitmanip forms (RTL leniency)
 - What: sloi (instr[31:27]=00100) is accepted with any instr[26:25]; sroi/grevi/gorci/unshfli accept any
@@ -2403,35 +2526,44 @@ Conventions used below:
 - Edge: yes, of F-BIT-001
 - Status: ALIAS of F-CSR-021
 
-### F-BIT-041: Two-cycle bitmanip op held in its second cycle by a busy writeback stage
-- What: When a rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* reaches its second ID cycle while WB still
-  waits for the response of a preceding load or store (ready_wb_i = 0), the ID FSM stays in
-  MULTI_CYCLE (multicycle_done & ready_wb_i is the only exit) and the instruction is held (stall_wb)
-  until the response arrives; the ALU rewrites its intermediate value only in the first cycle, so
-  the held second cycle keeps producing the same result and the register write happens once, on
-  instr_id_done. Analogue of F-MUL-011 / F-MUL-024 for the ALU multicycle class (H-I1).
-- Observable at: RVFI retire spacing (rvfi_ext_mcycle delta of the two-cycle op = 2 + hold cycles)
-  with rvfi_rd_wdata correct and rvfi_rs3_* populated for the ternary forms; exactly one retirement;
-  dbus (data_rvalid_i of the preceding access arrives after the op entered ID, timed by the dbus
-  monitor against the previous retirement)
+### F-BIT-041: Two-cycle bitmanip op deferred in its first cycle by an outstanding WB memory access
+- What: When a rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* enters ID while WB still waits for the response
+  of a preceding load or store, the op is held BEFORE its first cycle: instr_executing requires
+  ~outstanding_memory_access and id_fsm_q advances only under instr_executing, so FIRST_CYCLE executes
+  in the response cycle and MULTI_CYCLE one cycle later, when the access has left WB and ready_wb_i is
+  1 (multicycle_done & ready_wb_i exits at once). The ALU writes its intermediate value once, in the
+  deferred first cycle; the register write happens once, on instr_id_done. Analogue of F-MUL-011 /
+  F-MUL-024 (deferred start) for the ALU multicycle class; a second-cycle hold does not occur.
+- Observable at: RVFI retire spacing (rvfi_ext_mcycle delta of the two-cycle op from the access record
+  = 2 + W, W = the response delay beyond min1) with rvfi_rd_wdata correct and rvfi_rs3_* populated for
+  the ternary forms; exactly one retirement; dbus (data_rvalid_i of the preceding access arrives after
+  the op entered ID, timed by the dbus monitor against the previous retirement)
 - Config: none (the dbus response latency is the stimulus)
-- Source: RTL-defined: rtl/ibex_id_stage.sv:943-947 (first cycle: stall_alu, MULTI_CYCLE),
-  rtl/ibex_id_stage.sv:954-966 (exit only on multicycle_done & ready_wb_i),
-  rtl/ibex_id_stage.sv:1012 (multicycle_done = ex_valid_all for non-LSU ops),
-  rtl/ibex_id_stage.sv:1130-1133 (instr_id_done / stall_wb), rtl/ibex_alu.sv:1235-1239 and
-  rtl/ibex_alu.sv:1252-1256 (imd_val_we only in the first cycle) | map: gen_hierarchy_map.md H-I1
+- Source: RTL-defined: rtl/ibex_id_stage.sv:1054-1062 (instr_executing needs ~outstanding_memory_access),
+  rtl/ibex_id_stage.sv:864-868 (id_fsm_q advances only under instr_executing),
+  rtl/ibex_id_stage.sv:943-947 (first cycle: stall_alu, MULTI_CYCLE), rtl/ibex_id_stage.sv:954-966
+  (exit on multicycle_done & ready_wb_i, reached after the access completed),
+  rtl/ibex_id_stage.sv:1012, rtl/ibex_id_stage.sv:1130-1133, rtl/ibex_alu.sv:1235-1239 and
+  rtl/ibex_alu.sv:1252-1256 (imd_val_we only in the first cycle) | fact-check:
+  gen_tp_parts_rtl_factcheck.md X-12 (TP-BIT-043) | map: gen_hierarchy_map.md H-I1
 - Edge: yes, of F-BIT-012
 - Status: ACTIVE
-- Notes: Added for Critic C-09 item 4 (H-I1).
+- Notes: Added for Critic C-09 item 4 (H-I1); mechanism corrected by rtl-arch T-053 (X-12): the former
+  "held in its second cycle" statement described an unreachable path.
 
 ---------------------------------------------------------------------------------------------------
 ## AREA BTALU: branch target ALU (BranchTargetALU=1)
 
 ### F-BTALU-001: Branch target computed in parallel with the condition
-- What: bt_a = pc_id, bt_b = imm_b_type; branch_target = bt_a + bt_b (33-bit add, carry dropped) while
-  the main ALU evaluates the condition in the same (first) cycle; taken branch: branch_set the same
-  cycle, pc_set to the IF stage, one ID cycle total (stall only for the refetch).
-- Observable at: instr_addr_o (target request), RVFI rvfi_pc_wdata, rvfi_ext_mcycle
+- What: bt_a = pc_id, bt_b = imm_b_type; branch_target = bt_a + bt_b (33-bit add, carry dropped)
+  while the main ALU evaluates the condition in the same (first) cycle; taken branch: branch_set the
+  same cycle, pc_set to the IF stage, one ID cycle total (stall only for the refetch). A not-taken
+  branch with data_ind_timing = 0 does not redirect: branch_set stays 0, no pc_set and no IF flush,
+  rvfi_pc_wdata = pc + len, and the branch completes in FIRST_CYCLE with no stall
+  (rtl/ibex_id_stage.sv:925-928); the taken / not-taken pair is the timing statement that F-ISA-024
+  aliases and F-BTALU-005 folds here.
+- Observable at: instr_addr_o (target request for a taken branch; no non-sequential request for a
+  not-taken one), RVFI rvfi_pc_wdata (target or pc + len), rvfi_ext_mcycle
 - Config: cpuctrlsts.data_ind_timing (see F-BTALU-006)
 - Source: doc: pipeline_details.rst "Branch (Taken)" row (1 - N with Branch Target ALU) |
   RTL-defined: rtl/ibex_decoder.sv:1008-1012, rtl/ibex_id_stage.sv:369-388,
@@ -2542,7 +2674,9 @@ Conventions used below:
 - Edge: yes, of F-BTALU-001
 - Status: ACTIVE
 - Notes: Canonical cause/CSR features: F-EXC-003, F-EXC-004, F-PMP-080; this entry keeps only the
-  CTI-side observable (C-14 rule for fault clusters).
+  CTI-side observable (C-14 rule for fault clusters). PMP never gates instr_req_o
+  (rtl/ibex_if_stage.sv:426-435): the denied target word is fetched on the bus and the fault is attached
+  in the IF->ID register (X-23), so "one request to the target" holds for the PMP case too.
 
 ### F-BTALU-011: branch_set/jump_set issued once while the instruction is held for an outstanding WB access
 - What: when a load/store is outstanding in WB, instr_executing_spec allows the speculative fetch redirect
@@ -2585,13 +2719,40 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-BTALU-015: Branch/jump performance counter events
-- What: Alias of F-PMC-040: branch-target-ALU perspective of the branch/taken-branch/jump event
-  counters (also F-PMC-038 NumJumps and F-PMC-039 NumBranches); see the canonical entry.
+- What: Alias of F-PMC-040: branch-target-ALU perspective of NumBranchesTaken (mhpmcounter9 counts
+  branch_set_i, the BT-ALU redirect, with data_ind_timing = 0), see canonical. Sized to one
+  canonical (Critic L-7): NumBranches (F-PMC-039) and NumJumps (F-PMC-038) are not aliased here;
+  CG-BTALU-001.cp_branch_inc / cp_tbranch_inc are operand-only counters in this area.
 - Observable at: see F-PMC-040 (canonical)
 - Config: see F-PMC-040
 - Source: RTL-defined: rtl/ibex_controller.sv:681-688, rtl/ibex_id_stage.sv:934
 - Edge: yes, of F-BTALU-001
 - Status: ALIAS of F-PMC-040
+- Notes: B17 (gen_bug_log.md; X-13): mhpmcounter8 counts a conditional branch once per cycle it waits in
+  ID behind an outstanding WB access; counters 7 and 9 are exact (deduped by branch_jump_set_done_q).
+  The waiting class is F-BTALU-016 / TP-BTALU-018; exact-count items require no WB wait.
+
+### F-BTALU-016: NumBranches (mhpmcounter8) over-counts a branch waiting in ID behind an outstanding WB access (B17)
+- What: Alias of F-PMC-039 (NumBranches), branch-target-ALU perspective of bug candidate B17: while a
+  load/store is outstanding in WB a conditional branch stays in FIRST_CYCLE (instr_executing = 0) but
+  perf_branch_o is asserted in every such cycle under instr_executing_spec, which lacks the
+  ~outstanding_memory_access term, so mhpmcounter8 advances once per waiting cycle (1 + W per branch
+  instead of the documented 1); branch_set / jump_set are deduped by branch_jump_set_done_q, so
+  mhpmcounter9 (taken) and mhpmcounter7 (jumps) stay exact under the same wait (the F-BTALU-011
+  mechanism). Counters 11/12 (mul/div wait) count the deferred-start cycles the same way (PMC area).
+- Observable at: rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE] delta over the waiting branch and the csrr
+  mhpmcounter8 pair around it (1 + W on the RTL; 1 per doc/03_reference/performance_counters.rst:41);
+  dbus monitor timestamp of the response versus the branch's ID entry
+- Config: mcountinhibit bit 8 clear; slow data-memory responses (knob:dmem_rvalid_delay)
+- Source: doc: doc/03_reference/performance_counters.rst:41 ("Number of branches (conditional)") |
+  RTL-defined: rtl/ibex_id_stage.sv:886-934 (perf_branch_o in FIRST_CYCLE under instr_executing_spec),
+  rtl/ibex_id_stage.sv:1054-1057 (instr_executing_spec), rtl/ibex_id_stage.sv:866-869 (state advances
+  only under instr_executing), rtl/ibex_id_stage.sv:795-815 (branch_jump_set_done_q dedup) | bug log:
+  dv/auto_dv/docs/gen_bug_log.md B17 (rtl-arch BUG-09, fact-check X-13)
+- Edge: yes, of F-BTALU-011
+- Status: ALIAS of F-PMC-039
+- Notes: added by fix 3 (T-053 fold); the carrying item TP-BTALU-018 is expected-fail (B17); the exact
+  class (no WB wait) is TP-BTALU-015 and counter 7/9 exactness under a wait is TP-BTALU-011.
 
 ---------------------------------------------------------------------------------------------------
 
@@ -2616,8 +2777,14 @@ and the PMP reset parameters. See "Candidate owner questions". ShadowCSR is a lo
 Observability conventions used below:
 - "csrr readback" = rvfi_rd_wdata of a CSR read instruction (rvfi_insn shows the encoding).
 - rvfi_trap = 1 on the CSR/SYSTEM instruction that raised an exception; rvfi_intr = 1 on the
-  first handler instruction; rvfi_mode = current privilege (3 = M, 0 = U) of the retiring
-  instruction; rvfi_pc_wdata = next PC (trap vector on a trap).
+  first handler instruction of an INTERRUPT or NMI only (EXC_PC_IRQ entries,
+  rtl/ibex_core.sv:2403-2411; a synchronous-exception handler entry is the record after the
+  trapped record, identified by rvfi_pc_rdata = mtvec BASE); rvfi_mode = current privilege (3 = M,
+  0 = U) of the retiring instruction; rvfi_pc_wdata of a trap / mret / dret record = the next
+  SEQUENTIAL fetch address, never the vector / mepc / dpc (rtl/ibex_core.sv:2084 captures pc_if in
+  the DECODE cycle, the redirecting pc_set comes one cycle later in FLUSH; rtl-arch T-053 X-1): a
+  redirect target is observed as the NEXT record's rvfi_pc_rdata; only branch/jump records carry
+  their target in pc_wdata.
 - RVFI extension fields present on ibex_core (rtl/ibex_core.sv:166-180): rvfi_ext_pre_mip,
   rvfi_ext_post_mip, rvfi_ext_mcycle, rvfi_ext_mhpmcounters[10], rvfi_ext_mhpmcountersh[10],
   rvfi_ext_ic_scr_key_valid, rvfi_ext_rf_wr_suppress, rvfi_ext_nmi, rvfi_ext_nmi_int,
@@ -2632,7 +2799,8 @@ ACTIVE entries count in the completeness measure. `ALIAS of F-x` marks a duplica
 area's perspective (canonical entry named; one-line What). `FOLDED into F-x (bin ...)` marks an
 edge entry that restated its parent (Critic C-12 patterns a-d); the named fcov_csr.md bin now
 carries it. TP items may keep citing ALIAS/FOLDED IDs; traceability resolves them to the canonical
-ID. Doc defects use the canonical D-numbers (D1..D19) and bug candidates the B-numbers (B1..B15).
+ID. Doc defects use the canonical D-numbers (D1..D21, D5 retired) and bug candidates the B-numbers
+(B1..B18) of dv/auto_dv/docs/gen_bug_log.md v1d.
 
 ## Implemented CSR map
 
@@ -2657,7 +2825,7 @@ label. "RO-zero" = reads 0, writes silently ignored (address is in a read/write 
 | 0x310 | mstatush | RO-zero | 0 | | 445 |
 | 0x31A | menvcfgh | RO-zero | 0 | | 449 |
 | 0x320 | mcountinhibit | RW | 0 | bits 12:0 writable except bit 1; bits 31:13 RO-zero | 568 / 846, 1553-1561, 1709-1729 |
-| 0x323-0x32C | mhpmevent3-12 | RO-hardwired | 1 << n (n = 3..12) | writes ignored, no trap | 569-578, 1602-1619 |
+| 0x323-0x32C | mhpmevent3-12 | RO-hardwired | 1 << (n - 3) (n = 3..12: 0x1..0x200; D20, performance_counters.rst says 1 << n) | writes ignored, no trap | 569-578, 1602-1619 |
 | 0x32D-0x33F | mhpmevent13-31 | RO-zero | 0 | | 569-578, 1615-1618 |
 | 0x340 | mscratch | RW | 0 | full 32 bits; write does not flush pipeline | 466 / 792, 1121-1132 |
 | 0x341 | mepc | RW | 0 | bit 0 RO-zero; bit 1 writable; write does not flush pipeline | 478-484 / 729, 796-797, 1089-1100 |
@@ -2712,7 +2880,8 @@ mcause 2 with mtval = instruction bits (rtl/ibex_controller.sv:864-869).
   (csr_op_en = csr_access & instr_executing & instr_id_done).
 - Observable at: csrr read-back on rvfi_rd_wdata: the op's own rd returns the pre-write value and
   the following csrr returns the written value after legalisation; rvfi_insn gives the op class. The
-  internal csr_wdata_int is probe P6 (debug-only aid, never a checker input;
+  internal csr_wdata_int is not an observable: probe candidate P6 (probe register entry needed; P6
+  is accepted only as a debug-only aid, never a checker input,
   dv/auto_dv/docs/gen_probe_register.md).
 - Config: none.
 - Source: spec: tools/specs/riscv-isa-manual/src/unpriv/zicsr.adoc "CSR Instructions" | RTL-defined:
@@ -2748,17 +2917,14 @@ mcause 2 with mtval = instruction bits (rtl/ibex_controller.sv:864-869).
 - Notes: Canonical entry; aliases: F-ISA-045, F-CSR-013.
 
 ### F-CSR-004: csrrw/csrrwi with rd = x0 still reads internally; no CSR has read side effects
-- What: Ibex always performs the read mux; rd = x0 simply discards it. No implemented CSR has a read
-  side effect (secureseed reads 0 without effect), so the spec "shall not read" rule is
-  observationally satisfied.
-- Observable at: rvfi_rd_addr = 0 on the op (no register-file write); csrr read-back on
-  rvfi_rd_wdata of the following read equals the legalised written value; two consecutive csrr of
-  the same CSR return equal values (modulo counter increments).
-- Config: none.
+- What: Folded into F-CSR-001: rd = x0 is one value of the parent's rd field with the parent's
+  outcome (the CSR receives wdata; no implemented CSR has a read side effect, so the spec's "shall
+  not read" rule has no observable content) (v2 edge rule, second pass; Critic M-9); carried by the
+  parent's rd = x0 write bins.
 - Source: spec: zicsr.adoc "CSR Instructions" (csrrw rd = x0) | RTL-defined:
   rtl/ibex_cs_registers.sv:415-717 (read mux is unconditional)
 - Edge: yes, of F-CSR-001
-- Status: ACTIVE
+- Status: FOLDED into F-CSR-001 (bin CG-CSR-001.cr_rd_x0_write.csrrw_rdx0_rw_m, csrrwi_rdx0_rw_m, csrrs_rdx0_rw_m, csrrc_rdx0_rw_m)
 
 ### F-CSR-005: SYSTEM with funct3 = 100 is an illegal instruction
 - What: funct3 = 100 is not a CSR operation; decoder sets csr_illegal, illegal instruction exception
@@ -2787,19 +2953,20 @@ mcause 2 with mtval = instruction bits (rtl/ibex_controller.sv:864-869).
 - Status: ACTIVE
 
 ### F-CSR-007: mscratch and mepc writes do not flush; back-to-back write/read still coherent
-- What: csrrw mscratch immediately followed by csrr mscratch returns the written value with no
-  bubble; same for mepc (bit 0 cleared).
-- Observable at: rvfi_rd_wdata of the second instruction; no refetch on instr_req_o.
-- Config: none.
+- What: Folded into F-CSR-006: the parent's own exception clause ("except mscratch and mepc"); the
+  back-to-back write/read coherence is the negative of the parent's refetch observable (v2 edge
+  rule, second pass; Critic M-9); carried by the parent's family x gap bins.
 - Source: RTL-defined: rtl/ibex_id_stage.sv:593
 - Edge: yes, of F-CSR-006
-- Status: ACTIVE
+- Status: FOLDED into F-CSR-006 (bin CG-CSR-012.cr_fam_gap.mscratch_g1, mepc_g1; CG-CSR-012.cr_fam_next.mscratch_csr_rd_same, mepc_csr_rd_same)
 
 ### F-CSR-008: CSR write in ID is cancelled when the instruction in WB raises a load/store error
 - What: A CSR instruction waits in ID while a memory access is outstanding (instr_executing includes
   ~outstanding_memory_access). If that access returns an error, wb_exception kills the ID
   instruction: no CSR write, no rd write, and the CSR instruction is re-executed after the handler
-  returns. mepc = PC of the load/store (csr_save_wb).
+  returns. mepc = PC of the load/store (csr_save_wb) and mtval = the faulting data address
+  (rtl/ibex_cs_registers.sv:918-922), so a killed write to mepc or mtval is not distinguishable
+  from the trap's own write (TP-CSR-008 excludes both).
 - Observable at: CSR unchanged on readback inside the handler, rvfi_trap on the load/store, csrr
   mepc = load/store PC, the CSR instruction retires later with rvfi_order after mret.
 - Config: PMP or bus error source to make the access fail.
@@ -2828,10 +2995,11 @@ mcause 2 with mtval = instruction bits (rtl/ibex_controller.sv:864-869).
 ### F-CSR-010: Address holes inside implemented ranges are illegal
 - What: Folded into F-CSR-009: the explicit hole list (0x302/0x303, 0x307-0x309, 0x30B-0x30F,
   0x311-0x319, 0x31B-0x31F, 0x321/0x322, 0x345-0x39F, 0x3A4-0x3AF, 0x3C0-0x5A7, 0x5A9-0x746,
-  0x748-0x756, 0x758-0x79F, 0x7A4-0x7A7, 0x7A9, 0x7AB-0x7AF, 0x7B4-0x7BF, 0x7C2-0x7FF, 0xB01, 0xB81,
-  0xBC0, 0xBC3, 0xBC5-0xBFF, 0xC01, 0xC81, 0xCA0-0xF10, 0xF16-0xFFF, 0x000-0x2FF) is the parent's
-  own enumeration with the same trap outcome; carried by every CG-CSR-014.cp_range bin and
-  TP-CSR-010.
+  0x748-0x756, 0x758-0x79F, 0x7A4-0x7A7, 0x7A9, 0x7AB-0x7AF, 0x7B4-0x7BF, 0x7C2-0x7FF, 0x800-0xAFF,
+  0xB01, 0xB20-0xB7F, 0xB81, 0xBA0-0xBBF, 0xBC0, 0xBC3, 0xBC5-0xBFF, 0xC01, 0xC81, 0xC20-0xC7F,
+  0xCA0-0xF10, 0xF16-0xFFF, 0x000-0x2FF; 0x800-0xAFF, 0xB20-0xB7F and 0xBA0-0xBBF added per the
+  rtl-arch T-053 note on TP-CSR-010) is the parent's own enumeration with the same trap outcome;
+  carried by every CG-CSR-014.cp_range bin and TP-CSR-010.
 - Edge: yes, of F-CSR-009
 - Status: FOLDED into F-CSR-009 (bin CG-CSR-014.cp_range.r302_303)
 
@@ -2905,9 +3073,10 @@ mcause 2 with mtval = instruction bits (rtl/ibex_controller.sv:864-869).
 ### F-CSR-018: 0x7B4-0x7BF in debug mode is illegal (unimplemented), 0x7B0-0x7B3 legal
 - What: Only four debug CSRs exist; the rest of the debug-only range falls to the default branch
   even inside debug mode.
-- Observable at: rvfi_trap = 1 with rvfi_ext_debug_mode = 1 and rvfi_pc_wdata = DmExceptionAddr
-  (instr_addr_o fetches DmExceptionAddr) for csrr 0x7B4 in debug mode; outside debug mode the same
-  access traps to mtvec (instr_addr_o = mtvec.BASE).
+- Observable at: rvfi_trap = 1 with rvfi_ext_debug_mode = 1 and the next record's rvfi_pc_rdata =
+  DmExceptionAddr (X-1; instr_addr_o also fetches DmExceptionAddr, the icache is forced off in debug
+  mode) for csrr 0x7B4 in debug mode; outside debug mode the same access traps to mtvec (the next
+  record's rvfi_pc_rdata = mtvec.BASE; instr_addr_o shows it only with the icache disabled, X-21).
 - Config: debug mode.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:702-704
 - Edge: yes, of F-CSR-009
@@ -3062,7 +3231,9 @@ next instruction
 - What: irq_pending_o = |(mip & mie_q) is combinational on the flop output; enabling a bit whose irq
   input is already high raises irq_pending_o the cycle after the write. Disabling all bits in the
   cycle an interrupt becomes pending prevents the interrupt.
-- Observable at: irq_pending_o, rvfi_intr on the next retired instruction.
+- Observable at: irq_pending_o (rises one cycle after the write's commit edge, i.e. one cycle
+  before the write's RVFI record, rtl-arch T-053 row TP-CSR-031), rvfi_intr on the next retired
+  instruction.
 - Config: mstatus.MIE (M-mode) or U-mode.
 - Source: spec: machine.adoc "Machine Interrupt (mip and mie) Registers" | RTL-defined:
   rtl/ibex_cs_registers.sv:1044-1045
@@ -3094,6 +3265,7 @@ next instruction
   RTL-defined: rtl/ibex_cs_registers.sv:772-887 (no CSR_MIP case), rtl/ibex_id_stage.sv:595-597
 - Edge: yes, of F-CSR-032
 - Status: ACTIVE
+- Notes: Canonical for the IRQ alias F-IRQ-005 (M-10 pass).
 
 ### F-CSR-034: mip read samples the irq input level of the read cycle
 - What: With an irq input toggling, csrr mip returns the level in the cycle the read mux is sampled
@@ -3109,8 +3281,9 @@ next instruction
 - What: A write stores wdata[31:8] with bits 7:2 = 0 and MODE = 01. Reset value is 0x1; on the first
   boot fetch (pc_mux == PC_BOOT & pc_set) the register is loaded with {boot_addr_i[31:8], 8'h01}.
   Interrupts vector to BASE + 4*cause, exceptions to BASE.
-- Observable at: rvfi_rd_wdata of csrr mtvec; instr_addr_o of the trap fetch; rvfi_pc_wdata of the
-  trapping instruction.
+- Observable at: rvfi_rd_wdata of csrr mtvec; rvfi_pc_rdata of the first handler record (X-1: the
+  trapping record's rvfi_pc_wdata is the fall-through address); instr_addr_o of the trap fetch only
+  with the icache disabled (X-21).
 - Config: none.
 - Source: spec: machine.adoc "Machine Trap-Vector Base-Address (mtvec) Register" | doc:
   cs_registers.rst "Machine Trap-Vector Base Address (mtvec)"; doc/03_reference/
@@ -3148,7 +3321,7 @@ next instruction
 
 ### F-CSR-039: mepc: bit 0 read-only zero, bit 1 writable (IALIGN = 16), reset 0
 - What: SW write stores {wdata[31:1], 0}. Trap entry writes the faulting PC (see F-CSR-041).
-- Observable at: rvfi_rd_wdata; rvfi_pc_wdata after mret.
+- Observable at: rvfi_rd_wdata; rvfi_pc_rdata of the record after the mret (X-1).
 - Config: none.
 - Source: spec: machine.adoc "Machine Exception Program Counter (mepc) Register" | doc:
   cs_registers.rst "Machine Exception PC (mepc)" | RTL-defined: rtl/ibex_cs_registers.sv:729,
@@ -3271,13 +3444,13 @@ mcounteren_writable_i, reset 0
 - What: Folded into F-CSR-050 (canonical F-PMC-025): the parent's gate variable at its other values
   (IbexMuBiOff and the 14 invalid encodings) - no trap, old value read back; bins off_all1, off_cy,
   invalid_all1, invalid_ir.
-- Edge: yes, of F-CSR-050
+- Edge: yes, of F-PMC-025
 - Status: FOLDED into F-PMC-025 (bin CG-CSR-002.cr_mcen_gate_w.off_all1)
 
 ### F-CSR-052: mcounteren all-ones write reads back 0x0000_1FFD
 - What: Folded into F-CSR-050 (canonical F-PMC-025): 0xFFFF_FFFF -> 0x0000_1FFD is the parent's mask
   at the all-ones pattern.
-- Edge: yes, of F-CSR-050
+- Edge: yes, of F-PMC-025
 - Status: FOLDED into F-PMC-025 (bin CG-CSR-002.cr_mcen_gate_w.on_all1)
 
 ### F-CSR-053: U-mode counter aliases cycle/instret/hpmcounter3-12 (and h) gated per bit by
@@ -3325,7 +3498,7 @@ the read succeeds and equals the M-mode value
 ### F-CSR-057: Write op to a 0xC00-0xC9F alias traps even in M-mode
 - What: Folded into F-CSR-011: a write op to 0xC00-0xC9F is the read-only-range rule (csr[11:10] =
   11) applied to the alias addresses; the x0 forms read per F-CSR-002 (bins wr_m_trap, wr_u_trap).
-- Edge: yes, of F-CSR-053
+- Edge: yes, of F-CSR-011
 - Status: FOLDED into F-CSR-011 (bin CG-CSR-005.cr_wr_alias.wr_m_trap)
 
 ### F-CSR-058: mcountinhibit: 13 implemented bits, bit 1 read-only 0, reset 0 (all counting)
@@ -3339,29 +3512,37 @@ the read succeeds and equals the M-mode value
 - What: Folded into F-CSR-058 (canonical F-PMC-020): 'holds its value, remains writable' is the
   parent's own clause (rtl/ibex_counter.sv:44-50); bins mcycle_on .. hpm12_on and
   CG-CSR-013.cr_cyc_wr.mcycle_wr_on.
-- Edge: yes, of F-CSR-058
+- Edge: yes, of F-PMC-020
 - Status: FOLDED into F-PMC-020 (bin CG-CSR-004.cr_csr_inhibit.mcycle_on)
 
-### F-CSR-060: mcountinhibit all-ones write reads back 0x0000_1FFD; minstret read with inhibit
-set ignores the speculative WB increment
-- What: Alias of F-PMC-020: CSR-area perspective, see canonical; two facts to carry there: an
-  all-ones write reads back 0x0000_1FFD (rtl/ibex_cs_registers.sv:1553-1561) and, with
-  mcountinhibit[2] = 1, an ID-stage minstret read returns the raw flop value without the speculative
-  +1 for the instruction in WB (:1658, 1690-1692;
-  CG-CSR-013.cr_minstret_rd_wb.minstret_inh_retiring).
-- Edge: yes, of F-CSR-058
-- Status: ALIAS of F-PMC-020
-
-### F-CSR-061: mhpmevent3-12 read hardwired one-hot (1 << n); mhpmevent13-31 read 0; writes ignored
-- What: mhpmevent3 = 0x8, ..., mhpmevent12 = 0x1000; any write to 0x323-0x33F is accepted without
-  trap and has no effect.
-- Observable at: rvfi_rd_wdata before/after csrrw mhpmeventN, -1.
-- Config: none.
-- Source: spec: machine.adoc "Hardware Performance Monitor" (mhpmevent WARL; read-only 0 legal) |
-  doc: performance_counters.rst "Event Selector" table | RTL-defined:
-  rtl/ibex_cs_registers.sv:569-578, 1602-1619
-- Edge: no
+### F-CSR-060: minstret read in ID with mcountinhibit[2] = 1 returns the raw flop value without the
+speculative WB increment
+- What: The ID-stage read mux for mhpmcounter[2] is instr_ret_spec_i & ~mcountinhibit[2] ? minstret_next
+  : minstret_raw (rtl/ibex_cs_registers.sv:1658), so with IR inhibited a csrr minstret placed right
+  after a retiring instruction returns the raw flop value (no +1 for the instruction in WB), while the
+  same read with IR = 0 returns the incremented value (F-CSR-068); mhpmcounter10 follows the same rule
+  with mcountinhibit[10] (:1690-1692). The all-ones write-mask fact (read-back 0x0000_1FFD) stays with
+  the canonical F-PMC-020.
+- Observable at: csrr read-back of minstret on rvfi_rd_wdata in the cycle a countable instruction
+  retires in WB: equal to the number of previously retired countable instructions EXCLUDING the one in
+  WB when mcountinhibit[2] = 1 and INCLUDING it when 0; rvfi_order gives the retirement order.
+- Config: mcountinhibit[2] (and [10] for the compressed-instruction counter).
+- Source: RTL-defined: rtl/ibex_cs_registers.sv:1651-1658, 1687-1692
+- Edge: yes, of F-PMC-020
 - Status: ACTIVE
+- Notes: Re-activated (Critic M-10 over-merge): the inhibited speculative read is an RTL-defined
+  behaviour distinct from the write-mask fact of F-PMC-020 and from the uninhibited speculative read
+  F-CSR-068; bin CG-CSR-013.cr_minstret_rd_wb.minstret_inh_retiring (TP-CSR-060; cited by
+  TP-CSR-068). Canonical for the PMC alias F-PMC-022.
+
+### F-CSR-061: mhpmevent3-12 read hardwired one-hot (1 << (n - 3)); mhpmevent13-31 read 0; writes ignored
+- What: Alias of F-PMC-018: CSR-area perspective (mhpmevent3..12 read 1 << (N - 3), i.e. 0x1..0x200,
+  rtl/ibex_cs_registers.sv:185, :1602-1619; performance_counters.rst:133-147 says 1 << N: doc
+  mismatch D20, checker follows the RTL, rtl-arch T-053 X-3; writes to 0x323-0x33F
+  are accepted without trap and without effect; the zero-reading 13..31 selectors are F-PMC-019),
+  see canonical.
+- Edge: no
+- Status: ALIAS of F-PMC-018
 
 ### F-CSR-062: mcycle/mcycleh: 64-bit cycle counter, RW both halves, reset 0
 - What: Alias of F-PMC-001: CSR-area perspective (64-bit mcycle/mcycleh, both halves RW, reset 0, a
@@ -3377,8 +3558,10 @@ lost
 - Status: ALIAS of F-PMC-004
 
 ### F-CSR-064: mcycleh write preserves the low half; carry into mcycleh at low = 0xFFFF_FFFF
-- What: Alias of F-PMC-005: CSR-area perspective (mcycleh write in the carry cycle: low stays
-  0xFFFF_FFFF, high = written value, rtl/ibex_counter.sv:33-47), see canonical.
+- What: Alias of F-PMC-005: CSR-area perspective (mcycleh write in the carry cycle drops only that
+  cycle's increment: the counter is {H, 0xFFFF_FFFF} after the write, the next enabled cycle wraps
+  low and carries into high = H + 1, rtl/ibex_counter.sv:33-47; rtl-arch T-053 row TP-CSR-064), see
+  canonical.
 - Edge: yes, of F-CSR-062
 - Status: ALIAS of F-PMC-005
 
@@ -3389,15 +3572,16 @@ lost
 - Config: none.
 - Source: spec: zicsr.adoc "CSR Instructions" (atomically read-modify-write) | RTL-defined:
   rtl/ibex_cs_registers.sv:1001-1009; rtl/ibex_counter.sv:44-47
-- Edge: yes, of F-CSR-062
+- Edge: yes, of F-PMC-001
 - Status: ACTIVE
-- Notes: Parent F-CSR-062 is ALIAS of F-PMC-001; the edge is F-CSR-001's RMW atomicity under a
-  concurrent hardware increment.
+- Notes: Edge re-pointed to the canonical F-PMC-001 (F-CSR-062 is its CSR-area alias); the edge is
+  F-CSR-001's RMW atomicity under a concurrent hardware increment.
 
 ### F-CSR-066: minstret/minstreth: 64-bit retired-instruction counter; exclusions
 - What: Alias of F-PMC-007: CSR-area perspective (64-bit minstret/minstreth; not counted: trapping
-  instructions, ecall, ebreak, minstret(h) write ops; a Zcmp sequence counts once; reset 0), see
-  canonical. Carries the folded F-CSR-067 (the writer is not counted: csrrw minstret, X ; csrr -> X,
+  instructions, ecall, ebreak, minstret(h) write ops; a Zcmp sequence counts once; a countable
+  instruction retiring from WB in a minstret(h) write's commit cycle loses its increment, we over
+  inc, rtl/ibex_counter.sv:44-45, rtl-arch T-053 X-17; reset 0), see canonical. Carries the folded F-CSR-067 (the writer is not counted: csrrw minstret, X ; csrr -> X,
   CG-CSR-013.cr_minstret_wr.minstret_wr_none).
 - Edge: no
 - Status: ALIAS of F-PMC-007
@@ -3405,49 +3589,31 @@ lost
 ### F-CSR-067: Value read after a minstret write equals the written value (writer not counted)
 - What: Folded into F-CSR-066 (canonical F-PMC-007): 'read after write equals the written value' is
   the parent's minstret_write exclusion (rtl/ibex_id_stage.sv:1213-1219) at one observation.
-- Edge: yes, of F-CSR-066
+- Edge: yes, of F-PMC-007
 - Status: FOLDED into F-PMC-007 (bin CG-CSR-013.cr_minstret_wr.minstret_wr_none)
 
 ### F-CSR-068: minstret read in ID includes the retirement of the instruction still in WB
-- What: With WritebackStage the read mux returns minstret_next when an instruction is retiring in WB
-  in the same cycle (instr_ret_spec), so a csrr immediately after a load returns the count including
-  the load. Same for mhpmcounter10 (compressed retired).
-- Observable at: rvfi_rd_wdata of csrr minstret placed right after a load/store vs. after an ALU op:
-  both equal the number of previously retired instructions.
-- Config: none.
-- Source: spec: zicsr.adoc "CSR Access Ordering" (explicit CSR read returns the state before the
-  instruction) | RTL-defined: rtl/ibex_cs_registers.sv:1651-1658, 1687-1692
-- Edge: yes, of F-CSR-066
-- Status: ACTIVE
-- Notes: Parent F-CSR-066 is ALIAS of F-PMC-007. Carries the folded F-CSR-072 (the same speculative
-  read for mhpmcounter10, CG-CSR-013.cr_minstret_rd_wb.hpm10_retiring).
+- What: Alias of F-PMC-009: CSR-area perspective (a csrr minstret / mhpmcounter10 in ID returns
+  minstret_next when an instruction retires in WB in the same cycle, instr_ret_spec), see canonical.
+  The inhibited read is F-CSR-060 (ACTIVE); the mhpmcounter10 twin F-CSR-072 is folded into
+  F-PMC-007.
+- Edge: yes, of F-PMC-007
+- Status: ALIAS of F-PMC-009
 
 ### F-CSR-069: mhpmcounter3-12: 32-bit event counters; high half reads 0 and writes to it are
 ignored; hardwired event mapping
-- What: 3 = cycles waiting for data memory, 4 = cycles waiting for instruction fetch, 5 = loads, 6 =
-  stores, 7 = jumps, 8 = branches, 9 = taken branches, 10 = compressed instructions retired, 11 =
-  multiply wait cycles, 12 = divide wait cycles. Low half RW; mhpmcounterNh reads 0 and a write to
-  it leaves the low half unchanged.
-- Observable at: rvfi_ext_mhpmcounters[0..9] (= counters 3..12), rvfi_ext_mhpmcountersh (all 0),
-  rvfi_rd_wdata.
-- Config: mcountinhibit[3..12].
-- Source: spec: machine.adoc "Hardware Performance Monitor" (counters WARL, up to 64 bits) | doc:
-  performance_counters.rst tables | RTL-defined: rtl/ibex_cs_registers.sv:1589-1598, 1667-1707;
-  rtl/ibex_counter.sv:33-51, 86-98
+- What: Alias of F-PMC-015: CSR-area perspective (mhpmcounter3-12 are 32-bit event counters with the
+  hardwired event map 3 = data-side wait, 4 = fetch wait, 5 = loads, 6 = stores, 7 = jumps, 8 =
+  branches, 9 = taken branches, 10 = compressed retired, 11 = multiply wait, 12 = divide wait; the h
+  halves read 0 and drop writes), see canonical.
 - Edge: no
-- Status: ACTIVE
-- Notes: Doc defect D16: performance_counters.rst:85-90 parameter text is stale ('NumMHPMCounters'
-  1..8 giving counters 3-10, 'WidthMHPMCounters'); the RTL parameters are MHPMCounterNum (up to 29)
-  and MHPMCounterWidth, and this configuration has 10 counters (3..12).
+- Status: ALIAS of F-PMC-015
 
 ### F-CSR-070: 32-bit mhpmcounter wraps from 0xFFFF_FFFF to 0 with no carry into the h half
-- What: Preload mhpmcounter5 = 0xFFFF_FFFE, execute two loads, read 0x0000_0000 and mhpmcounter5h =
-  0.
-- Observable at: rvfi_rd_wdata, rvfi_ext_mhpmcounters[2].
-- Config: mcountinhibit[5] = 0.
-- Source: RTL-defined: rtl/ibex_counter.sv:30, 86-98
-- Edge: yes, of F-CSR-069
-- Status: ACTIVE
+- What: Alias of F-PMC-016: CSR-area perspective (a 32-bit mhpmcounter wraps from 0xFFFF_FFFF to 0
+  with no carry into the h half), see canonical.
+- Edge: yes, of F-PMC-015
+- Status: ALIAS of F-PMC-016
 
 ### F-CSR-071: mhpmcounter13-31 and their h halves read 0 and ignore writes without trap
 - What: Addresses 0xB0D-0xB1F and 0xB8D-0xB9F are decoded; mhpmcounter[Cnt] is tied to 0 and the
@@ -3456,14 +3622,15 @@ ignored; hardwired event mapping
 - Config: none.
 - Source: spec: machine.adoc "Hardware Performance Monitor" (read-only 0 legal) | RTL-defined:
   rtl/ibex_cs_registers.sv:580-604, 1699-1700, 1716-1718
-- Edge: yes, of F-CSR-069
+- Edge: yes, of F-PMC-015
 - Status: ACTIVE
 
 ### F-CSR-072: mhpmcounter10 (compressed retired) read includes the compressed instruction in WB
-- What: Folded into F-CSR-068: the same speculative-next read (rtl/ibex_cs_registers.sv:1687-1692)
-  for counter 10 (compressed retired); bins hpm10_idle, hpm10_retiring.
-- Edge: yes, of F-CSR-069
-- Status: FOLDED into F-CSR-068 (bin CG-CSR-013.cr_minstret_rd_wb.hpm10_retiring)
+- What: Folded into F-PMC-007 (through F-CSR-068): the same speculative-next read
+  (rtl/ibex_cs_registers.sv:1687-1692) for counter 10 (compressed retired); bins hpm10_idle,
+  hpm10_retiring.
+- Edge: yes, of F-PMC-007
+- Status: FOLDED into F-PMC-007 (bin CG-CSR-013.cr_minstret_rd_wb.hpm10_retiring)
 
 ### F-CSR-073: Write to mhpmcounterNh (N = 3..12) is a no-op for the low half
 - What: counterh_we selects counter_load[31:0] = current low value, so the low half is preserved
@@ -3471,8 +3638,10 @@ ignored; hardwired event mapping
 - Observable at: rvfi_rd_wdata of csrr mhpmcounter3 after csrrw mhpmcounter3h.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_counter.sv:38-47, 86-90
-- Edge: yes, of F-CSR-069
+- Edge: yes, of F-PMC-015
 - Status: ACTIVE
+- Notes: Edge re-pointed to the canonical F-PMC-015 (F-CSR-069 is its CSR-area alias); the distinct
+  fact here is the lost increment in the h-write cycle (the low-half case is F-PMC-045).
 
 ### F-CSR-074: dcsr: debug-only RW register with WARL fields, reset 0x4000_0003
 - What: Alias of F-DBG-012: CSR-area perspective (debug-only RW; xdebugver = 4 and cause read-only;
@@ -3486,7 +3655,7 @@ ignored; hardwired event mapping
 - What: Folded into F-CSR-074 (canonical F-DBG-012): 0xFFFF_FFFF -> 0x4000_B007 | (cause << 6) is
   the parent's WARL mask at the all-ones pattern (RTL-as-is; under B15 bit 13 reads 0, giving
   0x4000_9007).
-- Edge: yes, of F-CSR-074
+- Edge: yes, of F-DBG-012
 - Status: FOLDED into F-DBG-012 (bin CG-CSR-007.cr_csr_wpat_dbg.dcsr_all1)
 
 ### F-CSR-076: dcsr.ebreaks (bit 13) is writable and readable although S-mode does not exist
@@ -3501,19 +3670,14 @@ ignored; hardwired event mapping
 - Status: ALIAS of F-DBG-016
 
 ### F-CSR-077: dcsr.prv WARL: 01 and 10 legalise to 00 (U)
-- What: Writing prv = S or H stores U; a subsequent dret resumes in U-mode.
-- Observable at: rvfi_rd_wdata bits 1:0; rvfi_mode = 0 after dret.
-- Config: debug mode.
-- Source: doc: cs_registers.rst "Debug Control and Status Register (dcsr)" | RTL-defined:
-  rtl/ibex_cs_registers.sv:813-816
-- Edge: yes, of F-CSR-074
-- Status: ACTIVE
-- Notes: Parent F-CSR-074 is ALIAS of F-DBG-012. Carries the folded F-PRV-026 (dcsr.prv written
-  U/S/H before dret resumes in U, CG-PRV-007.cr_dret_prv.u_u / s_u / h_u).
+- What: Alias of F-DBG-013: CSR-area perspective (dcsr.prv = S or H stores U; dret then resumes in
+  U), see canonical. The fold F-PRV-026 now hangs on the canonical's base feature F-DBG-012.
+- Edge: yes, of F-DBG-012
+- Status: ALIAS of F-DBG-013
 
 ### F-CSR-078: dpc: debug-only, bit 0 read-only zero, reset 0
 - What: SW write stores {wdata[31:1], 0}; hardware writes the resume PC on debug entry.
-- Observable at: rvfi_rd_wdata in debug mode; rvfi_pc_wdata of dret.
+- Observable at: rvfi_rd_wdata in debug mode; rvfi_pc_rdata of the record after the dret (X-1).
 - Config: debug mode.
 - Source: doc: cs_registers.rst "Debug PC Register (dpc)" | RTL-defined:
   rtl/ibex_cs_registers.sv:554-557, 746, 838, 916-917, 1207-1218
@@ -3571,26 +3735,18 @@ debug mode
 
 ### F-CSR-083: tdata3 (0x7A3), mcontext (0x7A8), mscontext (0x7AA), scontext (0x5A8) read 0 and
 ignore writes
-- What: Decoded because DbgTriggerEn = 1; no storage. scontext lives at an S-level address, so
-  U-mode access traps (priv class) while the others (M-level) also trap in U-mode.
-- Observable at: rvfi_rd_wdata = 0, rvfi_trap = 0 in M-mode.
-- Config: privilege mode.
-- Source: doc: cs_registers.rst "Trigger Data Register 3 (tdata3)", "Machine Context Register
-  (mcontext)", "Supervisor Context Register (scontext)" | RTL-defined:
-  rtl/ibex_cs_registers.sv:648-663
+- What: Alias of F-TRG-008: CSR-area perspective (tdata3/mcontext/mscontext/scontext are decoded
+  because DbgTriggerEn = 1, have no storage, read 0 and drop writes; bug candidate B3, doc defect
+  D18; TP-CSR-083 stays expected-fail (B3)), see canonical. The U-mode trap on the S-level address
+  0x5A8 is the privilege-class rule F-CSR-014.
 - Edge: no
-- Status: ACTIVE
-- Notes: Doc defect D18: the cs_registers.rst section titled 'Supervisor Context Register
-  (scontext)' (:445-448) gives address 0x7AA (that is mscontext); the table (:49) and the RTL put
-  scontext at 0x5A8. BUG CANDIDATE B3 (owned by TRG, F-TRG-008): Sdtrig.adoc:370 requires an
-  illegal-instruction exception on access to an unimplemented Trigger Module register; the RTL reads
-  0 and ignores writes (rtl/ibex_cs_registers.sv:648-663); TP-CSR-083 is expected-fail (B3).
+- Status: ALIAS of F-TRG-008
 
 ### F-CSR-084: M-mode (non-debug) writes to tselect/tdata1/tdata2 change nothing and do not trap
 - What: Folded into F-CSR-082 (canonical F-TRG-007): 'M-mode writes ignored, no trap, trigger not
   armed' is the parent's debug_mode_i write gate (rtl/ibex_cs_registers.sv:1775-1781); bins
   tselect/tdata1/tdata2_nondbg_wr, cr_tdata1_w.nondbg_e1_none.
-- Edge: yes, of F-CSR-082
+- Edge: yes, of F-TRG-007
 - Status: FOLDED into F-TRG-007 (bin CG-CSR-008.cr_csr_dbg_form.tdata2_nondbg_wr)
 
 ### F-CSR-085: cpuctrlsts (0x7C0): custom M-mode RW register, reset 0, field map
@@ -3651,7 +3807,7 @@ double_fault_seen_o exactly one cycle and sets bit 7; interrupts and debug entry
 - What: Folded into F-CSR-089 (canonical F-SEC-022): the one-cycle pulse and the interrupt/NMI
   exclusion are the parent's clauses; the debug-mode exclusion is F-SEC-023 (bins sync_s1_pulse,
   s1_irq_nopulse, s1_nmi_nopulse, s1_dbg_nopulse, s1_dbgmode_exc_nopulse).
-- Edge: yes, of F-CSR-089
+- Edge: yes, of F-SEC-022
 - Status: FOLDED into F-SEC-022 (bin CG-CSR-009.cr_dbl_detect.sync_s1_pulse)
 
 ### F-CSR-091: Software-set sync_exc_seen followed by any synchronous exception is reported as a
@@ -3667,9 +3823,11 @@ double fault; software-cleared sync_exc_seen inside a handler suppresses detecti
   dummy_instr_seed_en_o for one cycle with dummy_instr_seed_o = csr_wdata_int. The value is not
   stored; any read returns 0. M-mode only (0x7C1 is an M-level address).
 - Observable at: csrr read-back on rvfi_rd_wdata = 0 for every read; rvfi_trap = 0 in M-mode, 1 in
-  U-mode; the reseed pulse has no boundary footprint (dummies are not on RVFI) - probe candidate P7
-  (probe register entry needed): cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o
-  (rtl/ibex_cs_registers.sv:1914-1915), coverage and fire-check only.
+  U-mode; a write op flushes the pipeline (csr_pipe_flush, rtl/ibex_id_stage.sv:593-597) and a
+  demoted read does not; the reseed pulse has no boundary footprint (dummies are not on RVFI) -
+  probe candidate P7 (PROPOSED in gen_probe_register.md, Critic ruling pending):
+  cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o (rtl/ibex_cs_registers.sv:1914-1915),
+  coverage only, never a fire-check or checker input (rtl-arch T-053 UNOBSERVABLE rows).
 - Config: cpuctrlsts.dummy_instr_en for an observable effect.
 - Source: doc: cs_registers.rst "Security Feature Seed Register (secureseed)"; security.rst "Dummy
   Instruction Insertion" | RTL-defined: rtl/ibex_cs_registers.sv:673-675, 1913-1915, 1927-1928
@@ -3678,16 +3836,13 @@ double fault; software-cleared sync_exc_seen inside a handler suppresses detecti
 
 ### F-CSR-093: secureseed RMW semantics: csrrs writes rs1, csrrc writes 0, csrrsi/csrrci with
 uimm = 0 do not reseed
-- What: Because rdata is 0, SET yields wdata and CLEAR yields 0 as the seed value; the READ
-  degradation of x0/uimm = 0 forms produces no seed pulse.
-- Observable at: Boundary first: csrr read-back on rvfi_rd_wdata = 0, rvfi_trap = 0, and a 1-cycle
-  retirement gap (no flush) for the demoted x0 / uimm = 0 forms vs. a flush bubble for the write
-  forms; the seed value and pulse are probe candidate P7 (probe register entry needed):
-  cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o.
-- Config: none.
+- What: Folded into F-CSR-092: the SET/CLEAR and uimm = 0 forms are the parent's own rule ("a CSR
+  write op (WRITE/SET/CLEAR, not READ) pulses the reseed with csr_wdata_int; reads return 0")
+  evaluated per op form: rdata = 0 makes SET carry wdata and CLEAR carry 0, and the demoted x0 /
+  uimm = 0 forms are READs (Critic M-9); carried by the parent's op-form bins.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:1001-1009, 1914-1915; rtl/ibex_decoder.sv:255-258
 - Edge: yes, of F-CSR-092
-- Status: ACTIVE
+- Status: FOLDED into F-CSR-092 (bin CG-CSR-010.cr_op_form_gap.csrrs_nz_flush, csrrc_nz_flush, csrrsi_0_g1, csrrci_0_g1; CG-CSR-010.cp_seed_val.zero; the probe-gated cr_op_form_pulse bins are coverage-only)
 
 ### F-CSR-094: mseccfg (0x747) RW with MML/MMWP/RLB; mseccfgh (0x757) read-only zero; reset 0
 - What: Accessible because PMPEnable = 1 and cheriot Off. Bits 31:3 of mseccfg read 0. mseccfgh
@@ -3799,14 +3954,16 @@ instruction (program-order CSR access ordering)
   raises no exception always completes and a trapping CSR instruction never writes.
 - Observable at: csrr read-back on rvfi_rd_wdata: the handler's reads of mstatus/mepc/mcause/mtval
   show the hardware trap values and the software-written value appears only if the writing
-  instruction retired (rvfi_valid without rvfi_trap); the assertion witness never(csr_we_int &
-  csr_save_cause_i) is internal (P6-class, coverage/witness only, never a checker).
+  instruction retired (rvfi_valid without rvfi_trap). The mutual exclusion itself is internal: probe
+  candidate P6 (probe register entry needed): cs_registers_i.csr_we_int / csr_save_cause_i, witness
+  and assertion coverage only (bound assertion gen_sva_csr_excl in gen_binds.sv), never a checker.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:771, 890-891, 1020-1023; rtl/ibex_controller.sv:
   655, 725-733, 816-845
 - Edge: yes, of F-CSR-100
 - Status: ACTIVE
-- Notes: Candidate assertion for the TB: never (csr_we_int & csr_save_cause_i).
+- Notes: Candidate bound assertion for the TB (gen_binds.sv, assertion coverage, not an observable):
+  never (csr_we_int & csr_save_cause_i).
 
 ### F-CSR-102: CSR access with an instruction fetch error or during a flush does not write the CSR
 - What: instr_kill (fetch error, wb_exception, id_exception, ~controller_run) clears
@@ -3814,7 +3971,9 @@ instruction (program-order CSR access ordering)
   writes (csr_we_int & ~illegal_csr_insn_o).
 - Observable at: csrr read-back on rvfi_rd_wdata unchanged after a CSR instruction that retired with
   rvfi_trap = 1 (fetch error, PMP fetch fault, illegal CSR) or whose pc equals dpc after a debug
-  entry.
+  entry; the debug case exists only when debug_req_i was seen in an empty-ID DECODE cycle before
+  the CSR instruction entered ID: a CSR write already valid in ID completes first and dpc is the
+  next pc (rtl/ibex_controller.sv:296, :700-704; rtl-arch T-053 X-7).
 - Config: none.
 - Source: RTL-defined: rtl/ibex_id_stage.sv:1033-1036, 1059-1062, 747-749;
   rtl/ibex_cs_registers.sv:1020-1023
@@ -3840,14 +3999,17 @@ instruction (program-order CSR access ordering)
 - Edge: no
 - Status: ACTIVE
 - Notes: Carries the folded F-PRV-033 (rvfi_mode of the trapping instruction is its own mode, the
-  handler's first retirement reports M with rvfi_intr = 1, CG-PRV-001.cr_trans.u_m_*).
+  handler's first retirement reports M; rvfi_intr = 1 only for interrupt/NMI entries,
+  rtl/ibex_core.sv:2403-2411, CG-PRV-001.cr_trans.u_m_*).
 
 ### F-PRV-002: Trap entry (exception or interrupt) switches to M-mode and pushes the mstatus stack
 - What: On csr_save_cause (not debug entry, not in debug mode): priv <= M; mstatus.MPIE <= MIE; MIE
   <= 0; MPP <= previous priv; mepc <= exception PC; mcause <= cause; mtval <= value; the nonstandard
   mstack copies of MPIE/MPP/mepc/mcause are saved for NMI recovery.
-- Observable at: rvfi_intr on the first handler instruction with rvfi_mode = 3; csrr mstatus in
-  handler shows MIE = 0, MPIE = old MIE, MPP = old mode; csrr mepc/mcause/mtval.
+- Observable at: the first handler instruction with rvfi_mode = 3 (rvfi_intr = 1 for interrupt/NMI
+  entries; for a synchronous exception it is the record after the trapped record, rvfi_pc_rdata =
+  mtvec BASE, rvfi_intr = 0); csrr mstatus in handler shows MIE = 0, MPIE = old MIE, MPP = old mode;
+  csrr mepc/mcause/mtval.
 - Config: mstatus.MIE, mie (interrupts).
 - Source: spec: machine.adoc "Privilege and Global Interrupt-Enable Stack in mstatus register" |
   doc: cs_registers.rst "Machine Status (mstatus)"; exception_interrupts.rst "Recoverable
@@ -3878,7 +4040,8 @@ double-fault flags
   debug_csr_save skips every M-mode CSR update.
 - Observable at: csrr read-back on rvfi_rd_wdata of mepc/mcause/mtval/mstatus/cpuctrlsts (from debug
   ROM code and after dret) unchanged after an exception executed in debug mode; rvfi_trap = 1 with
-  rvfi_ext_debug_mode = 1 and rvfi_pc_wdata = DmExceptionAddr; double_fault_seen_o silent.
+  rvfi_ext_debug_mode = 1 and the next record's rvfi_pc_rdata = DmExceptionAddr (X-1);
+  double_fault_seen_o silent.
 - Config: debug mode.
 - Source: spec: Sdext.adoc "Debug Mode" (traps do not update mepc, mcause, mtval) | RTL-defined:
   rtl/ibex_cs_registers.sv:908, 918-946; rtl/ibex_controller.sv:831
@@ -3894,8 +4057,9 @@ double-fault flags
 cpuctrlsts.sync_exc_seen <= 0
 - What: Standard xRET semantics with U as the least-privileged supported mode; also clears the
   double-fault tracking flag.
-- Observable at: rvfi_mode of the instruction after mret; rvfi_pc_wdata of mret = mepc; csrr mstatus
-  afterwards (MPIE = 1, MPP = 00, MIE = old MPIE); csrr cpuctrlsts bit 6 = 0.
+- Observable at: rvfi_mode of the instruction after mret; rvfi_pc_rdata of the record after the mret
+  = mepc & ~1 (X-1: the mret record's own rvfi_pc_wdata is mret pc + 4); csrr mstatus afterwards
+  (MPIE = 1, MPP = 00, MIE = old MPIE); csrr cpuctrlsts bit 6 = 0.
 - Config: mstatus.MPP/MPIE, mepc.
 - Source: spec: machine.adoc "Privilege and Global Interrupt-Enable Stack in mstatus register",
   "Trap-Return Instructions" | doc: cs_registers.rst "Machine Status (mstatus)";
@@ -3929,13 +4093,12 @@ then not taken until MIE is set
 - Status: FOLDED into F-PRV-006 (bin CG-PRV-002.cr_mret_irq.m_0_pending)
 
 ### F-PRV-009: mret immediately after reset (MPP = U, mepc = 0) enters U-mode at PC 0
-- What: The reset values MPP = 00, MPIE = 1, mepc = 0 make a bare mret a legal switch to U-mode at
-  address 0 with MIE = 1.
-- Observable at: rvfi_mode = 0 and rvfi_pc_rdata = 0 for the next instruction.
-- Config: none (reset state).
+- What: Folded into F-PRV-006: an mret with the reset values (MPP = U, MPIE = 1, mepc = 0) is one
+  instance of the parent's xRET rule with the parent's rvfi_mode / pc observable (v2 edge rule,
+  second pass; Critic M-9); carried by the parent's transition bins.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:1052-1056, 1089-1100, 953-980
 - Edge: yes, of F-PRV-006
-- Status: ACTIVE
+- Status: FOLDED into F-PRV-006 (bin CG-PRV-001.cp_from.reset, CG-PRV-001.cr_trans.m_u_mret)
 
 ### F-PRV-010: mret executed in U-mode raises illegal instruction (mcause 2, mtval 0x30200073)
 - What: illegal_umode_insn = (priv != M) & mret_insn; the trap goes to M-mode with mepc = the mret
@@ -3951,9 +4114,12 @@ then not taken until MIE is set
 
 ### F-PRV-011: mret while in NMI mode restores MPIE/MPP/mepc/mcause from the nonstandard mstack
 and exits NMI mode
-- What: Alias of F-IRQ-032: PRV-area perspective (mret with nmi_mode_i restores MPIE/MPP/mepc/mcause
-  from the mstack copies and overrides software writes to mepc/mcause inside the NMI handler,
-  rtl/ibex_cs_registers.sv:967-974; owner question Q4), see canonical.
+- What: Alias of F-IRQ-032: PRV-area perspective (mret with nmi_mode_i restores the MPIE/MPP/mepc/
+  mcause CSR VALUES from the mstack copies, overriding software writes to mepc/mcause inside the
+  NMI handler, rtl/ibex_cs_registers.sv:967-975; the JUMP TARGET is the current mepc_q read in the
+  FLUSH cycle, i.e. a software-written mepc, rtl/ibex_if_stage.sv:246, rtl/ibex_cs_registers.sv:1028
+  - RTL-defined, exception_interrupts.rst:93-100 documents only the CSR backup; rtl-arch T-053 X-23
+  / prv_xcut note 5, TP-PRV-010; owner question Q4), see canonical.
 - Edge: yes, of F-PRV-006
 - Status: ALIAS of F-IRQ-032
 
@@ -3978,16 +4144,14 @@ instruction fetches always use the current mode
 - Status: ACTIVE
 
 ### F-PRV-014: MPRV = 1 with MPP = M in M-mode has no effect
-- What: priv_mode_lsu = M either way.
-- Observable at: csrr read-back on rvfi_rd_wdata of mstatus (MPRV = 1, MPP = 11); rvfi_trap = 0 and
-  data_req_o asserted for every load/store to an M-only PMP region, identical to the MPRV = 0 run.
-- Config: mstatus.MPRV/MPP = 11.
+- What: Folded into F-PRV-013: the MPP = M value of the parent's own formula (priv_mode_lsu = MPRV ?
+  MPP : priv gives M either way), same observable as the MPRV = 0 run (Critic M-9); carried by the
+  parent's effective-privilege bins. The PMP-side twin F-PMP-073 is folded into F-PMP-072 the same
+  way.
 - Source: spec: machine.adoc "Memory Privilege in mstatus Register" | RTL-defined:
   rtl/ibex_cs_registers.sv:998
 - Edge: yes, of F-PRV-013
-- Status: ACTIVE
-- Notes: Canonical entry (a distinct scenario from B1 / F-PRV-015: MPP = M, no privilege change);
-  F-PMP-073 states the PMP-side observable.
+- Status: FOLDED into F-PRV-013 (bin CG-PRV-003.cr_eff.m_1_m_load_allow, CG-PRV-003.cr_eff.m_1_m_store_allow)
 
 ### F-PRV-015: dret to U-mode does not clear mstatus.MPRV, so U-mode loads/stores can run with
 MPP (possibly M) privilege
@@ -4035,35 +4199,33 @@ U-mode WFI sleep
 
 ### F-PRV-018: U-mode WFI wake by an enabled interrupt takes the interrupt immediately
 (mepc = wfi PC + 4, MPP = U)
-- What: Alias of F-IRQ-053: PRV-area perspective (U-mode WFI with TW = 0 wakes on an enabled
+- What: Alias of F-IRQ-045: PRV-area perspective (U-mode WFI with TW = 0 wakes on an enabled
   interrupt which is taken at once: mepc = wfi + 4, MPP = U), see canonical.
 - Edge: yes, of F-PRV-016
-- Status: ALIAS of F-IRQ-053
+- Status: ALIAS of F-IRQ-045
 
 ### F-PRV-019: M-mode WFI with MIE = 0 wakes on a pending enabled interrupt but does not trap;
 execution resumes at wfi + 4
-- What: Alias of F-IRQ-046: PRV-area perspective (M-mode WFI with MIE = 0 wakes on mip & mie without
+- What: Alias of F-IRQ-045: PRV-area perspective (M-mode WFI with MIE = 0 wakes on mip & mie without
   trapping and resumes at wfi + 4), see canonical.
 - Edge: yes, of F-PRV-016
-- Status: ALIAS of F-IRQ-046
+- Status: ALIAS of F-IRQ-045
 
 ### F-PRV-020: WFI wake sources are mip & mie (irq_pending), NMI, debug request, debug mode and
 single-step; a disabled interrupt (mie bit 0) does not wake; WFI in debug mode is a NOP
 - What: Alias of F-IRQ-045: PRV-area perspective (wake set = irq_pending | irq_nm | debug_req_i |
   debug_mode | single step, rtl/ibex_controller.sv:615; a disabled line does not wake; WFI in debug
-  mode is a NOP), see canonical.
+  mode still passes through the one unconditional WAIT_SLEEP cycle before SLEEP exits on
+  debug_mode_q, :598-604, :614-616; a stepped WFI never enters WAIT_SLEEP, FLUSH -> DBG_TAKEN_IF
+  :985-987; rtl-arch T-053 X-8), see canonical.
 - Edge: yes, of F-PRV-016
 - Status: ALIAS of F-IRQ-045
 
 ### F-PRV-021: ECALL cause codes: 8 from U-mode, 11 from M-mode; mepc = ecall PC; mtval = 0
-- What: exc_cause = (priv == M) ? 11 : 8; the ecall itself does not retire (not in minstret).
-- Observable at: rvfi_trap = 1; csrr mcause 8/11; csrr mepc = rvfi_pc_rdata of the ecall; csrr mtval
-  = 0.
-- Config: privilege mode.
-- Source: spec: machine.adoc "Environment Call and Breakpoint" | doc: exception_interrupts.rst
-  "Exceptions" | RTL-defined: rtl/ibex_controller.sv:870-873; rtl/ibex_pkg.sv:374-377
+- What: Alias of F-EXC-023: PRV perspective (exc_cause = priv == M ? 11 : 8; mepc = ecall PC; mtval
+  = 0; the ecall itself does not retire and is not counted in minstret), see canonical.
 - Edge: no
-- Status: ACTIVE
+- Status: ALIAS of F-EXC-023
 
 ### F-PRV-022: EBREAK without debug redirection: mcause 3, mepc = ebreak PC, mtval = 0
 - What: When dcsr.ebreakm/ebreaku for the current mode is 0 (and not in debug mode), ebreak/
@@ -4078,21 +4240,18 @@ single-step; a disabled interrupt (mie bit 0) does not wake; WFI in debug mode i
 
 ### F-PRV-023: Interrupt-enable rule: in M-mode interrupts require mstatus.MIE = 1; in U-mode they
 are always enabled
-- What: irq_enabled = MIE | (priv == U); handle_irq also requires not debug mode, not single step,
-  not NMI mode, and not the commit step of an expanded Zcmp sequence.
-- Observable at: rvfi_intr; irq_pending_o (independent of MIE).
-- Config: mstatus.MIE, mie, privilege mode.
-- Source: spec: machine.adoc "Privilege and Global Interrupt-Enable Stack in mstatus register"
-  (interrupts for higher-privilege modes always globally enabled), "Machine Interrupt (mip and mie)
-  Registers" | RTL-defined: rtl/ibex_controller.sv:490, 498-500
+- What: Alias of F-IRQ-007: PRV perspective of the interrupt-enable rule irq_enabled = MIE | (priv
+  == U) (rtl/ibex_controller.sv:490): the M-mode arm is the canonical and the U-mode arm is
+  F-IRQ-008; the other handle_irq masks are owned by F-IRQ-039 (debug mode and single step),
+  F-IRQ-030 (NMI mode) and F-IRQ-020 (Zcmp commit step), see canonical.
 - Edge: no
-- Status: ACTIVE
+- Status: ALIAS of F-IRQ-007
 
 ### F-PRV-024: U-mode with mstatus.MIE = 0 and a pending enabled interrupt: the interrupt is taken
 and MPIE is saved as 0
 - What: Alias of F-IRQ-008: PRV-area perspective (U-mode ignores mstatus.MIE; the handler sees MPIE
   = 0, MPP = 00 when MIE was 0), see canonical.
-- Edge: yes, of F-PRV-023
+- Edge: yes, of F-IRQ-007
 - Status: ALIAS of F-IRQ-008
 
 ### F-PRV-025: DRET outside debug mode raises illegal instruction (mtval 0x7B200073); in debug mode
@@ -4104,10 +4263,10 @@ it restores priv from dcsr.prv and pc from dpc
 - Status: ALIAS of F-DBG-032
 
 ### F-PRV-026: dcsr.prv written to U before dret resumes in U-mode; written to S/H resumes in U
-- What: Folded into F-CSR-077: dcsr.prv WARL (01/10 -> 00) followed by dret is F-CSR-077's own
-  scenario; bins cr_dret_prv.u_u, s_u, h_u, m_m.
-- Edge: yes, of F-PRV-025
-- Status: FOLDED into F-CSR-077 (bin CG-PRV-007.cr_dret_prv.s_u)
+- What: Folded into F-DBG-012 (through F-CSR-077): dcsr.prv WARL (01/10 -> 00) followed by dret is
+  F-CSR-077's own scenario; bins cr_dret_prv.u_u, s_u, h_u, m_m.
+- Edge: yes, of F-DBG-012
+- Status: FOLDED into F-DBG-012 (bin CG-PRV-007.cr_dret_prv.s_u)
 
 ### F-PRV-027: Debug entry records dcsr.prv = current mode and dcsr.cause, writes dpc, switches to
 M-mode and leaves mstatus/mepc/mcause/mtval untouched
@@ -4145,7 +4304,8 @@ first) > external (0x8000_000B) > software (0x8000_0003) > timer (0x8000_0007); 
 (NMI -> BASE + 0x7C), debug exceptions to the debug exception address
 - What: MODE is fixed vectored (F-CSR-035); exception PC selection is EXC_PC_EXC (BASE), EXC_PC_IRQ
   (BASE + 4*id), EXC_PC_DBD/DBG_EXC in debug (debug part).
-- Observable at: rvfi_pc_wdata of the trapping instruction; instr_addr_o.
+- Observable at: rvfi_pc_rdata of the first handler record (X-1); instr_addr_o only with the icache
+  disabled or for DmExceptionAddr (X-21).
 - Config: mtvec.
 - Source: spec: machine.adoc "Machine Trap-Vector Base-Address (mtvec) Register" | doc:
   exception_interrupts.rst (interrupts handled in vectored mode; NMI at +0x7C) | RTL-defined:
@@ -4173,8 +4333,8 @@ instruction in WB even when a younger instruction is in ID
 ### F-PRV-033: Privilege mode of the trapping instruction is what rvfi_mode reports; the handler's
 first instruction reports M
 - What: Folded into F-PRV-001: rvfi_mode reporting (trapping instruction in its own mode, handler
-  entry in M with rvfi_intr) is the parent's observable, not a new stimulus (rtl/ibex_core.sv:2078,
-  1778-1781).
+  entry in M; rvfi_intr only on interrupt/NMI entries) is the parent's observable, not a new stimulus
+  (rtl/ibex_core.sv:2078, 1778-1781, 2403-2411).
 - Edge: yes, of F-PRV-001
 - Status: FOLDED into F-PRV-001 (bin CG-PRV-001.cr_trans.u_m_ecall)
 
@@ -4183,7 +4343,7 @@ first instruction reports M
 - What: Folded into F-CSR-014: every U-mode write form traps by the priv (csr[9:8] != 00) or
   write_ro class, and the 0x000-0x0FF / 0x400-0x4FF / 0x800-0x8FF ranges are unimplemented
   (F-CSR-009); bins cr_iclass_priv.wro_u, priv_u, unimpl_u.
-- Edge: yes, of F-PRV-001
+- Edge: yes, of F-CSR-014
 - Status: FOLDED into F-CSR-014 (bin CG-CSR-001.cr_iclass_priv.wro_u)
 
 ### F-PRV-035: mstatus.TW and MPRV are writable (U-mode implemented); write/readback of each bit
@@ -4192,6 +4352,28 @@ first instruction reports M
   mprv_tw.
 - Edge: yes, of F-CSR-023
 - Status: FOLDED into F-CSR-023 (bin CG-CSR-002.cr_mst_fields.mprv_tw)
+
+### F-PRV-036: mret executed inside debug mode is legal and executes fully while debug_mode stays 1
+- What: Inside debug mode the privilege is M (rtl/ibex_cs_registers.sv:908), so mret is not illegal
+  (illegal_umode_insn needs priv != M, rtl/ibex_id_stage.sv:606-611) and FLUSH executes it fully:
+  PC <- mepc, priv <- MPP, MIE <= MPIE, MPIE <= 1, MPP <= U, MPRV cleared when MPP != M
+  (rtl/ibex_controller.sv:954-960, rtl/ibex_cs_registers.sv:953-980) while debug_mode_q stays 1: the
+  core leaves the debug ROM to mepc and may run at U privilege inside debug mode. Sdext.adoc:51
+  leaves privilege-changing instructions in debug mode UNSPECIFIED (same family as B6): RTL-defined.
+- Observable at: the mret record with rvfi_ext_debug_mode = 1 and rvfi_trap = 0; the next record's
+  rvfi_pc_rdata = mepc & ~1 and rvfi_mode = MPP with rvfi_ext_debug_mode still 1 (X-1); csrr mstatus
+  afterwards; the debug-mode ebreak (re-entry at DmHaltAddr) or exception (DmExceptionAddr) that
+  brings the flow back to the debug ROM.
+- Config: debug mode; mstatus.MPP / mepc written by the debug program.
+- Source: spec: Sdext.adoc "Debug Mode" (:51 UNSPECIFIED) | RTL-defined: rtl/ibex_controller.sv:
+  954-960; rtl/ibex_cs_registers.sv:908, 953-980; rtl/ibex_id_stage.sv:606-611 (rtl-arch T-053
+  fact-check Section 5 / prv_xcut note 6)
+- Edge: yes, of F-PRV-006
+- Status: ACTIVE
+- Notes: A random program that reaches an mret inside debug mode must point mepc back into the debug
+  ROM or accept running outside it in debug mode (TP-PRV-036 constraint); TP-PRV-039 is the directed
+  item (bins CG-PRV-007.cr_mret_dbg.*, CG-PRV-004.cr_kind_priv_trap.mret_dbg_ok). A following dret
+  restores priv from dcsr.prv as usual.
 
 
 # 4.3 Areas EXC, IRQ: Synchronous exceptions; interrupts, NMI, WFI, vectoring
@@ -4302,6 +4484,8 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 - Notes: Doc defect D10 (cs_registers.rst:235): the checker follows the RTL and the ISA spec (mtval
   = faulting address). TP-EXC-001..004/006/044/071 are `Expected: pass (doc mismatch D10)`.
+  Bus/fetch-side counterpart (Critic M-10): F-IMEM-011 owns the beat marking, the travel of the
+  error with the word and the RF/LSU suppression; this entry owns the cause/CSR effect.
 
 ### F-EXC-004: Instruction access fault from PMP fetch violation
 - What: pmp_req_err[PMP_I] on the fetch address is merged into if_instr_err and produces the same
@@ -4439,6 +4623,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   implementation choice) | RTL-defined: rtl/ibex_decoder.sv:730-758; rtl/ibex_controller.sv: 322-327
 - Edge: yes, of F-EXC-008
 - Status: ACTIVE
+- Notes: Canonical for the ISA alias F-ISA-042 (M-10 pass).
 
 ### F-EXC-014: Illegal compressed instruction: mtval holds the 16-bit encoding zero-extended
 - What: For an illegal 16-bit instruction mtval = {16'b0, instr_compressed} and mepc = the
@@ -4453,15 +4638,17 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-EXC-015: Zcmp reserved rlist raises illegal instruction, sequence not started
-- What: cm.push/cm.pop* with rlist <= 3 is reserved; the compressed decoder flags illegal_instr_o on
-  the first micro-op, gets_expanded is gated to INSTR_NOT_EXPANDED for the invalid word, and the
-  trap is a normal illegal instruction with mtval = 16-bit encoding.
-- Observable at: rvfi_trap + csrr read-back of mcause (2) and mtval ([31:16] = 0) on rvfi_rd_wdata;
-  no data_req_o for the sequence; no rvfi_ext_expanded_insn_valid.
-- Config: none
-- Source: RTL-defined: rtl/ibex_compressed_decoder.sv:198-207,635-637,703-705
+- What: Alias of F-CMP-044: EXC perspective (cm.push/cm.pop* with rlist 0..3 is reserved: the
+  compressed decoder flags illegal_instr_o on the first micro-op, the sequence is not started and
+  the trap is a normal illegal instruction with mtval = the zero-extended halfword), see canonical.
+  Correction (RTL rtl/ibex_compressed_decoder.sv:626-640, 198-207): gets_expanded is set to
+  INSTR_EXPANDED before the rlist check and is gated to INSTR_NOT_EXPANDED only by valid_i, so the
+  trap record carries rvfi_ext_expanded_insn_valid = 1, as F-CMP-044 states; the former "no
+  rvfi_ext_expanded_insn_valid" sentence here was wrong. The trap record's rvfi_insn is the 32-bit
+  first micro-op and the 16-bit cm.* word is on rvfi_ext_expanded_insn (rtl/ibex_core.sv:2263-2277;
+  fact-check X-14); mtval = zext16(cm.* word) (rtl/ibex_controller.sv:866-868).
 - Edge: yes, of F-EXC-008
-- Status: ACTIVE
+- Status: ALIAS of F-CMP-044
 
 ### F-EXC-016: Illegal instruction in ID waits for an outstanding WB load/store
 - What: An illegal instruction stalls in ID (stall_mem) while a load/store is outstanding in WB; if
@@ -4494,7 +4681,9 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - What: Alias of F-ISA-034: EXC perspective (c.ebreak 0x9002 takes the same cause-3 / debug-entry
   path as ebreak; mepc/dpc 2-byte aligned), see canonical.
 - Observable at: as F-ISA-034: rvfi_trap + csrr read-back of mcause (3) / mepc on rvfi_rd_wdata, or
-  instr_addr_o = DmHaltAddr; rvfi_insn = 0x00100073 (expanded).
+  instr_addr_o = DmHaltAddr; rvfi_insn = 32'h00009002 (a compressed, non-expanded instruction is
+  traced as the zero-extended halfword, rtl/ibex_core.sv:2263-2265, fact-check X-14; never the
+  expanded 0x00100073).
 - Config: as F-EXC-017.
 - Source: spec machine.adoc "Environment Call and Breakpoint" note (c.ebreak same operation) |
   RTL-defined: rtl/ibex_controller.sv:874-899
@@ -4523,35 +4712,22 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ALIAS of F-DBG-023
 
 ### F-EXC-021: Hardware trigger (instruction address breakpoint) enters debug mode, never a breakpoint exception
-- What: With DbgTriggerEn the tdata1 action field is fixed to 1 (enter debug mode). A match on pc_if
-  (the NEXT instruction) causes DBG_TAKEN_IF before that instruction executes: dpc = the matching
-  PC, dcsr.cause = 2. Cause-3 exceptions are never produced by triggers.
-- Observable at: instr_addr_o = DmHaltAddr; no rvfi_valid for the matched instruction before the
-  debug entry; no rvfi_trap; csrr read-back of dcsr.cause (2) and dpc (= tdata2) on rvfi_rd_wdata in
-  the debug program.
-- Config: tselect, tdata1 (execute enable), tdata2 (address); not in debug mode.
-- Source: spec machine.adoc "Synchronous exception priority" (instruction address breakpoint
-  highest) | RTL-defined: rtl/ibex_cs_registers.sv:1855,1871-1874; rtl/ibex_controller.sv:
-  476-477,519,640-645,704-710
+- What: Alias of F-TRG-010: EXC perspective (a hardware trigger match enters debug mode with
+  dcsr.cause = 2 and dpc = tdata2 and never raises a breakpoint exception; tdata1.action is fixed to
+  1), see canonical.
 - Edge: no
-- Status: ACTIVE
-- Notes: owned by debug area; listed for priority comparison. Consistent with the spec priority
-  table because the matched instruction never reaches decode.
+- Status: ALIAS of F-TRG-010
 
 ### F-EXC-022: Trigger match discarded when control flow changes
-- What: trigger_match_i is not a "priority" debug entry: if the instruction in ID redirects the PC
-  (branch/jump/exception/mret) the matching instruction in IF is squashed and no debug entry occurs.
-- Observable at: no instr_addr_o = DmHaltAddr fetch; rvfi_pc_rdata continues at the redirect target;
-  rvfi_ext_debug_mode stays 0.
-- Config: tdata2 = address of the fall-through instruction after a taken branch.
-- Source: RTL-defined: rtl/ibex_controller.sv:468-477 (comment), 704
-- Edge: yes, of F-EXC-021
-- Status: ACTIVE
+- What: Alias of F-TRG-021: EXC perspective (a trigger match on pc_if is discarded when the
+  instruction in ID redirects the PC, so no debug entry occurs), see canonical.
+- Edge: yes, of F-TRG-010
+- Status: ALIAS of F-TRG-021
 
 ### F-EXC-023: ECALL from M-mode (cause 11) and from U-mode (cause 8)
 - What: ecall raises cause 11 from M-mode and cause 8 from U-mode; mepc = ECALL pc, mtval = 0, priv
-  <- M, mstatus.MPP = the previous privilege (M or U); subsequent M-level CSR accesses in the
-  handler succeed.
+  <- M, mstatus.MPP = the previous privilege (M or U); the ecall itself does not retire (not counted
+  in minstret); subsequent M-level CSR accesses in the handler succeed.
 - Observable at: rvfi_trap on the ecall; csrr read-back on rvfi_rd_wdata of mcause (11 or 8), mepc
   and mstatus.MPP (3 or 0); rvfi_mode of the handler = 3.
 - Config: privilege mode (M or U).
@@ -4561,7 +4737,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Edge: no
 - Status: ACTIVE
 - Notes: F-EXC-024 (U-mode ECALL) is folded here as bin CG-EXC-005.cp_priv.u (Critic C-12 pattern
-  b).
+  b). Canonical for the PRV alias F-PRV-021 (Critic M-10).
 
 ### F-EXC-024: ECALL from U-mode
 - What: Folded into F-EXC-023 (bin CG-EXC-005.cp_priv.u): U-mode ECALL is the parent's privilege
@@ -4577,9 +4753,10 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 ### F-EXC-025: Load access fault from data bus error response
 - What: A load whose response has data_err_i=1 raises cause 5 from the WB stage: mepc = PC of the
   load (pc_wb), mtval = the access address (lsu_addr_last), rd is NOT written.
-- Observable at: rvfi_trap on the load after the data_err_i response; csrr read-back on
-  rvfi_rd_wdata of mcause (5), mepc (= load pc) and mtval (= access address); rvfi_rd_addr = 0 (no
-  RF write).
+- Observable at: rvfi_trap on the load after the data_err_i response (rvfi_mem_addr = the access
+  address, rvfi_mem_rmask = 0 on the WB-trap record, rtl/ibex_core.sv:2156, 2164; fact-check X-15);
+  csrr read-back on rvfi_rd_wdata of mcause (5), mepc (= load pc) and mtval (= access address);
+  rvfi_rd_addr = 0 (no RF write).
 - Config: none
 - Source: spec machine.adoc "Machine Cause (mcause) Register" (code 5), "Machine Trap Value (mtval)
   Register" (faulting address) | doc exception_interrupts.rst code 5; cs_registers.rst "mtval" line
@@ -4606,8 +4783,9 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - What: A store whose response has data_err_i=1 raises cause 7 from WB: mepc = store PC, mtval =
   access address. The store data was already presented on the bus (no rollback).
 - Observable at: data_req_o/data_we_o/data_wdata_o issued for the store (dbus monitor), then
-  rvfi_trap; csrr read-back of mcause (7), mepc and mtval on rvfi_rd_wdata; rvfi_mem_wmask set on
-  the trapped store.
+  rvfi_trap; csrr read-back of mcause (7), mepc and mtval on rvfi_rd_wdata; rvfi_mem_wmask = 0 on
+  the trapped store's WB-trap record (rtl/ibex_core.sv:2157, fact-check X-15; the store is
+  identified by rvfi_insn and the dbus write record).
 - Config: none
 - Source: spec machine.adoc "Machine Cause (mcause) Register" (code 7) | doc
   exception_interrupts.rst code 7 | RTL-defined: rtl/ibex_load_store_unit.sv:747;
@@ -4657,7 +4835,8 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 - Notes: F-EXC-034 (both halves fault) is folded here as bin
   CG-EXC-006.cr_align_mtval.mis_both_eq_addr: the ignored second response is also in error, same
-  single trap and mtval.
+  single trap and mtval. Bus-side view (M-10 pass): F-DMEM-021 owns the second-beat issue and the
+  ignored response; this entry owns the cause/mtval effect.
 
 ### F-EXC-031: Misaligned access, second half faults (bus error)
 - What: The first half completes; the second word's error produces the exception with mtval = the
@@ -4669,17 +4848,16 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   RTL-defined: rtl/ibex_load_store_unit.sv:258,546-560 (555),688,746-747
 - Edge: yes, of F-EXC-025
 - Status: ACTIVE
+- Notes: Bus-side view (Critic M-10): F-DMEM-022 owns which beat of the pair carries data_err_i and
+  the rdata_q capture of the clean first beat; this entry owns the cause/mtval effect.
 
 ### F-EXC-032: Misaligned access, second half PMP-faults
-- What: PMP is checked on both word addresses; a violation only on the second word (region boundary
-  inside the access) is captured as pmp_err for the second part and reported with mtval =
-  second-half word address. The first word's bus access already happened.
-- Observable at: one data_req_o (first half) then none (dbus monitor); rvfi_trap; csrr read-back of
-  mcause (5/7) and mtval (= second-half word address) on rvfi_rd_wdata.
-- Config: PMP region ending on a 4-byte boundary that the access straddles.
-- Source: RTL-defined: rtl/ibex_load_store_unit.sv:512,553,807-810 (fcov ls_mis_pmp_err_2)
+- What: Alias of F-PMP-088: EXC perspective (PMP is checked on both word addresses; a violation on
+  the second word only is reported as cause 5/7 with mtval = the second-half word address after the
+  first word's bus access completed), see canonical. Decision (Critic M-10): PMP owns the per-word
+  bus activity and the mtval address choice, and this entry stated both sides, so it is the alias.
 - Edge: yes, of F-EXC-026
-- Status: ACTIVE
+- Status: ALIAS of F-PMP-088
 
 ### F-EXC-033: Misaligned access, first half PMP-faults
 - What: Alias of F-PMP-087: EXC perspective (misaligned access whose first half is PMP-denied: the
@@ -4694,15 +4872,15 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ALIAS of F-PMP-087
 
 ### F-EXC-034: Misaligned access, both halves fault
-- What: Folded into F-EXC-030 (bin CG-EXC-006.cr_align_mtval.mis_both_eq_addr): both halves faulting
-  is the parent's scenario with the ignored second response also in error; same single trap and
-  mtval.
+- What: Folded into F-EXC-025 (through F-EXC-030) (bin CG-EXC-006.cr_align_mtval.mis_both_eq_addr):
+  both halves faulting is the parent's scenario with the ignored second response also in error; same
+  single trap and mtval.
 - Observable at: single rvfi_trap + csrr read-back of mtval (= unaligned address) on rvfi_rd_wdata;
   two data_req_o.
 - Config: none
 - Source: RTL-defined: rtl/ibex_load_store_unit.sv:514,520,688
 - Edge: yes, of F-EXC-025
-- Status: FOLDED into F-EXC-030 (bin CG-EXC-006.cr_align_mtval.mis_both_eq_addr)
+- Status: FOLDED into F-EXC-025 (bin CG-EXC-006.cr_align_mtval.mis_both_eq_addr)
 
 ### F-EXC-035: Exception from WB (load/store fault) while a younger instruction is in ID
 - What: The WB fault has priority; the ID instruction is killed (instr_kill via wb_exception),
@@ -4729,9 +4907,12 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-EXC-037: WB fault while ID holds a jump/branch (speculative PC redirect)
-- What: Branch/jump requests use instr_executing_spec, which does not factor in an incoming dmem
-  error; a taken branch may briefly drive instr_req_o to its target before FLUSH redirects to the
-  exception vector. Architecturally the branch is not retired.
+- What: Branch/jump requests use instr_executing_spec, which does not factor in an outstanding dmem
+  access or an incoming error; a taken branch / jal / jalr redirects IF to its target in its FIRST ID
+  cycle, before the WB error response, and FLUSH then redirects to the exception vector
+  (rtl/ibex_id_stage.sv:889-941, 1054-1057; fact-check TP-EXC-036 row). A not-taken branch, a
+  load-dependent branch / jalr (stall_ld_hz) and a branch arriving in the error cycle do not
+  redirect. Architecturally the branch is not retired.
 - Observable at: instr_addr_o sequence (younger branch/jump target, then the exception vector) on
   the ibus monitor; rvfi shows only the trapping load/store.
 - Config: none
@@ -4741,22 +4922,20 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-EXC-038: WB fault while ID holds the next load/store
-- What: The younger load/store stalls (outstanding_memory_access) and must not issue a request on
-  the cycle the faulting response arrives; it is killed by wb_exception.
-- Observable at: no data_req_o on or after the data_rvalid_i & data_err_i cycle until the handler's
-  first access (dbus monitor).
-- Config: none
+- What: Folded into F-EXC-035: the parent already states that the killed ID instruction performs no
+  LSU request; a load/store in ID is one row of that statement with the parent's no-data_req_o
+  observable (v2 edge rule, second pass; Critic M-9); carried by the parent's younger-instruction
+  bins.
 - Source: RTL-defined: rtl/ibex_id_stage.sv:1015-1019,1059-1062,1083-1084,1095-1096;
   rtl/ibex_load_store_unit.sv:748-752 (comment)
 - Edge: yes, of F-EXC-035
-- Status: ACTIVE
-- Notes: F-EXC-040 (back-to-back loads, older one faults) is folded here as bin
-  CG-EXC-006.cr_op_younger.load_load_store.
+- Status: FOLDED into F-EXC-035 (bin CG-EXC-006.cp_younger.load_store, CG-EXC-006.cr_op_younger.load_load_store)
 
 ### F-EXC-039: Store fault after the store data has been sent (no rollback)
 - What: Folded into F-EXC-027 (bin CG-EXC-006.cr_op_source_align.store_bus_err_aligned): the store
   data on data_wdata_o before the error response is the parent's own observable ("no rollback").
-- Observable at: data_we_o/data_wdata_o observed before rvfi_trap; rvfi_mem_wmask on the trapped
+- Observable at: data_we_o/data_wdata_o observed before rvfi_trap; rvfi_mem_addr (wmask is 0 on the
+  WB-trap record, X-15) on the trapped
   store.
 - Config: none
 - Source: RTL-defined: rtl/ibex_load_store_unit.sv:747; rtl/ibex_wb_stage.sv:208-209
@@ -4764,13 +4943,14 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: FOLDED into F-EXC-027 (bin CG-EXC-006.cr_op_source_align.store_bus_err_aligned)
 
 ### F-EXC-040: Back-to-back loads where the older one faults
-- What: Folded into F-EXC-038 (bin CG-EXC-006.cr_op_younger.load_load_store): the younger load's
-  request is blocked on the error cycle exactly as the parent states for any younger load/store.
+- What: Folded into F-EXC-035 (through F-EXC-038) (bin CG-EXC-006.cr_op_younger.load_load_store):
+  the younger load's request is blocked on the error cycle exactly as the parent states for any
+  younger load/store.
 - Observable at: exactly one data_req_o for the pair; single rvfi_trap.
 - Config: none
 - Source: RTL-defined: rtl/ibex_controller.sv:336-337; rtl/ibex_id_stage.sv:1015-1019,1059-1062
 - Edge: yes, of F-EXC-035
-- Status: FOLDED into F-EXC-038 (bin CG-EXC-006.cr_op_younger.load_load_store)
+- Status: FOLDED into F-EXC-035 (bin CG-EXC-006.cr_op_younger.load_load_store)
 
 ### F-EXC-041: Exception priority selection (RTL order vs spec table)
 - What: The FLUSH-state cause mux selects exactly one of store_err > load_err > instr_fetch_err >
@@ -4786,14 +4966,13 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   reachable pair.
 
 ### F-EXC-042: Exception on a compressed instruction: mepc alignment
-- What: mepc records the 2-byte-aligned PC; mepc[0] is always 0, mepc[1] is preserved.
-- Observable at: csrr read-back of mepc on rvfi_rd_wdata: mepc[1:0] = 2'b10 for a faulting c.*
-  instruction at pc % 4 == 2 (= rvfi_pc_rdata of the trapped instruction).
-- Config: none
+- What: Folded into F-EXC-001: mepc = the 2-byte-aligned PC of a compressed instruction is the
+  parent's mepc = faulting PC at a pc % 4 == 2 value; mepc[1] writability is F-CSR-039 (v2 edge
+  rule, second pass; Critic M-9); carried by the trap-CSR alignment bins.
 - Source: spec machine.adoc "Machine Exception Program Counter (mepc) Register" (mepc[0] always
   zero; IALIGN=16 keeps bit 1) | RTL-defined: rtl/ibex_cs_registers.sv:729,893-905,928-929
 - Edge: yes, of F-EXC-001
-- Status: ACTIVE
+- Status: FOLDED into F-EXC-001 (bin CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_1; CG-EXC-001.cr_cause_priv_ilen.illegal_m_c16)
 
 ### F-EXC-043: Load/store fault inside a Zcmp cm.push sequence
 - What: All micro-ops of an expanded cm.push share pc_id = PC of the cm.push (IF holds pc_if during
@@ -4820,14 +4999,12 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-EXC-045: Fetch fault on the return target of cm.popret
-- What: The ret micro-op is the LAST op; a fetch error at the return address is attributed to the
-  target instruction (mepc = target), not to the cm.popret.
-- Observable at: rvfi_valid for the cm.popret (retires); rvfi_trap on the target with csrr read-back
-  of mcause (1) and mepc (= ra value) on rvfi_rd_wdata.
-- Config: none
+- What: Folded into F-EXC-003: the fault is attributed to the target instruction by the parent's own
+  rule; the cm.popret return is one control-transfer source (the CTI-side statement is F-BTALU-010)
+  (v2 edge rule, second pass; Critic M-9); carried by the parent's flow bins.
 - Source: RTL-defined: rtl/ibex_compressed_decoder.sv:765-769; rtl/ibex_controller.sv:233
 - Edge: yes, of F-EXC-003
-- Status: ACTIVE
+- Status: FOLDED into F-EXC-003 (bin CG-EXC-002.cp_flow.popret_target, CG-EXC-002.cr_flow_outcome.popret_target_trap; CG-EXC-008.cp_event.fetch_fault_ret_target)
 
 ### F-EXC-046: Exception while in debug mode jumps to DmExceptionAddr; privilege forced to M (RTL-defined)
 - What: Any synchronous exception with debug_mode_q=1 selects EXC_PC_DBG_EXC (DmExceptionAddr);
@@ -4853,28 +5030,22 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   owner question 6 is closed.
 
 ### F-EXC-047: Exception in debug mode does not arm double-fault detection
-- What: Alias of F-SEC-023: EXC perspective (exceptions taken in debug mode neither arm
+- What: Alias of F-SEC-022: EXC perspective (exceptions taken in debug mode neither arm
   sync_exc_seen nor pulse double_fault_seen_o), see canonical.
 - Observable at: as F-SEC-023: double_fault_seen_o stays 0; csrr read-back of cpuctrlsts on
   rvfi_rd_wdata unchanged.
 - Config: debug mode; cpuctrlsts.sync_exc_seen=1 beforehand.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:918,935-945
 - Edge: yes, of F-EXC-054
-- Status: ALIAS of F-SEC-023
+- Status: ALIAS of F-SEC-022
 
 ### F-EXC-048: Exception simultaneous with debug_req or single-step: CSRs updated, then debug entry at the handler
-- What: If debug_req_i (or dcsr.step) is asserted when an exception is in FLUSH, the exception CSRs
-  (mepc/mcause/mtval/mstatus) are written as normal, then the controller goes to DBG_TAKEN_IF
-  instead of executing the handler: dpc = mtvec base (pc_if), dcsr.cause = 3 (haltreq) or 4 (step),
-  PC = DmHaltAddr. EBREAK-into-debug has priority over both.
-- Observable at: instr_addr_o = DmHaltAddr (no handler fetch); csrr read-back on rvfi_rd_wdata in
-  the debug program of dpc (= mtvec base), dcsr.cause (3 or 4), mepc (= faulting pc) and mcause.
-- Config: dcsr.step; debug_req_i.
-- Source: RTL-defined: rtl/ibex_controller.sv:474-475,971-987; rtl/ibex_cs_registers.sv:910-917
+- What: Alias of F-DBG-004: EXC perspective (an exception in FLUSH with debug_req_i or dcsr.step
+  asserted writes mepc/mcause/mtval/mstatus normally and then enters debug mode at the handler: dpc
+  = mtvec base, dcsr.cause 3 or 4, no handler instruction executes; ebreak-into-debug has priority
+  over both), see canonical.
 - Edge: yes, of F-EXC-001
-- Status: ACTIVE
-- Notes: With dcsr.step=1 this is the debug-spec behaviour "stepping an instruction that traps
-  enters debug mode at the trap handler".
+- Status: ALIAS of F-DBG-004
 
 ### F-EXC-049: mstatus/privilege update on trap entry
 - What: On every trap (exception or interrupt) taken outside debug mode: priv <- M, mstatus.MPIE <-
@@ -4892,9 +5063,11 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - What: mret (M-mode) sets PC <- mepc, priv <- MPP, MIE <- MPIE, MPIE <- 1, MPP <- U, and MPRV <- 0
   when MPP != M; the pipeline is flushed (FLUSH state, PC_ERET). Also clears
   cpuctrlsts.sync_exc_seen and exits NMI mode if active.
-- Observable at: instr_addr_o = mepc; rvfi_pc_wdata of the mret = mepc; csrr read-back of mstatus
-  and cpuctrlsts.sync_exc_seen (0) on rvfi_rd_wdata afterwards; rvfi_mode change on the next
-  retirement.
+- Observable at: instr_addr_o = mepc (icache off); the NEXT record's rvfi_pc_rdata = mepc (the mret
+  record's rvfi_pc_wdata is the next sequential fetch address, never mepc: pc_wdata is captured at ID
+  exit while PC_ERET is set one cycle later in FLUSH, rtl/ibex_core.sv:2084,
+  rtl/ibex_controller.sv:954-956; fact-check X-1); csrr read-back of mstatus and
+  cpuctrlsts.sync_exc_seen (0) on rvfi_rd_wdata afterwards; rvfi_mode change on the next retirement.
 - Config: mepc; mstatus.MPP/MPIE/MPRV; nmi_mode.
 - Source: spec machine.adoc "Privilege and Global Interrupt-Enable Stack in mstatus register",
   "Trap-Return Instructions" | doc exception_interrupts.rst line 11, cs_registers.rst line 133 |
@@ -4904,15 +5077,13 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-EXC-051: MRET with mepc[1]=1 (2-byte aligned return)
-- What: mepc bit 0 is always 0; bit 1 is kept, so mret returns to a 2-byte-aligned address
-  (compressed instruction).
-- Observable at: instr_addr_o word fetch and rvfi_pc_rdata = mepc with bit 1 set; csrr read-back of
-  mepc on rvfi_rd_wdata shows bit 0 dropped.
-- Config: mepc written by software with bit0=1 (dropped) and bit1=1 (kept).
+- What: Folded into F-EXC-050: a return to a 2-byte-aligned mepc is the parent's PC <- mepc with
+  mepc[1] = 1 (mepc bit 0 always 0, F-CSR-039), same instr_addr_o / rvfi_pc_rdata observable (v2
+  edge rule, second pass; Critic M-9); carried by the mepc alignment bins (single owner CG-EXC-012).
 - Source: spec machine.adoc "Machine Exception Program Counter (mepc) Register" | RTL-defined:
   rtl/ibex_cs_registers.sv:729
 - Edge: yes, of F-EXC-050
-- Status: ACTIVE
+- Status: FOLDED into F-EXC-050 (bin CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_1)
 
 ### F-EXC-052: MRET clears MPRV only when returning to U-mode
 - What: Alias of F-PRV-007: EXC perspective (mret clears mstatus.MPRV only when MPP = U), see
@@ -4957,8 +5128,9 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   read-back of cpuctrlsts on rvfi_rd_wdata: sync_exc_seen unchanged, double_fault_seen 0.
 - Config: sync_exc_seen=1; pending interrupt with MIE re-enabled in handler.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:935
-- Edge: yes, of F-EXC-054
+- Edge: yes, of F-SEC-022
 - Status: ACTIVE
+- Notes: Canonical for the SEC alias F-SEC-024 (M-10 pass).
 
 ### F-EXC-056: mret from an interrupt handler also clears sync_exc_seen
 - What: Any mret clears sync_exc_seen, including an mret returning from an interrupt taken inside an
@@ -4968,7 +5140,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   cpuctrlsts.sync_exc_seen on rvfi_rd_wdata = 0 after the interrupt handler's mret.
 - Config: MIE re-enabled inside exception handler; pending interrupt.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:953-965
-- Edge: yes, of F-EXC-054
+- Edge: yes, of F-SEC-022
 - Status: ACTIVE
 - Notes: Bug candidate B12: the checker follows the documented intent (an mret that returns from a
   nested interrupt handler must not disarm detection); TP-EXC-056 is expected-fail (B12). Owner
@@ -4992,7 +5164,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   rvfi_rd_wdata.
 - Config: none
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:935-945
-- Edge: yes, of F-EXC-054
+- Edge: yes, of F-SEC-022
 - Status: FOLDED into F-SEC-022 (bin CG-EXC-010.cp_first_cause.ecall)
 
 ### F-EXC-059: Back-to-back exceptions at the handler entry (trap storm)
@@ -5004,7 +5176,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Config: mtvec pointing at faulting memory.
 - Source: spec machine.adoc privstack note on trap handler infinite loops | RTL-defined:
   rtl/ibex_cs_registers.sv:935-945
-- Edge: yes, of F-EXC-054
+- Edge: yes, of F-SEC-022
 - Status: ACTIVE
 
 ### F-EXC-060: Pipeline flush on exception
@@ -5037,23 +5209,26 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   commit latency and the one-shot exception flops are checker bullets (gen_chk_trap_timing) on the
   parent's trap entry, not a distinct stimulus.
 - Observable at: cycle distance from data_rvalid_i & data_err_i (or the ibus delivery of the
-  faulting word) to instr_req_o at the vector; exactly one vector fetch per rvfi_trap.
+  faulting word) to the commit (pc_set = trap record - 1); the vector instr_req_o is >= the commit
+  cycle (issued in the pc_set cycle only when no fill buffer holds an ungranted request,
+  rtl/ibex_icache.sv:703, 764-776, 1030-1031; fact-check TP-EXC-062 row) and bus-visible only with
+  the icache off; exactly one vector fetch per rvfi_trap.
 - Config: none
 - Source: RTL-defined: rtl/ibex_controller.sv:255,263-270,676-678,816-831,1030-1052
 - Edge: yes, of F-EXC-001
 - Status: FOLDED into F-EXC-001 (bin CG-EXC-013.cr_stage_latency.id_cause_min)
 
 ### F-EXC-063: Trapping instructions do not retire or count
-- What: Folded into F-EXC-001 (bin CG-EXC-012.cp_minstret.unchanged_by_trapper): the retire-count
-  exclusion of trapping instructions is a checker bullet on the parent (the counters area owns
-  minstret).
+- What: Folded into F-EXC-001 (bin CG-EXC-012.cp_minstret.ir0: the handler's minstret read-back is
+  compared against the retirement count excluding the trap record): the retire-count exclusion of
+  trapping instructions is a checker bullet on the parent (the counters area owns minstret).
 - Observable at: csrr read-back of minstret on rvfi_rd_wdata before/after the trapping instruction
   (delta 0); rvfi_valid with rvfi_trap = 1.
 - Config: mcountinhibit.
 - Source: spec machine.adoc "Environment Call and Breakpoint" (not considered to retire) |
   RTL-defined: rtl/ibex_id_stage.sv:1218-1220; rtl/ibex_wb_stage.sv:208-209
 - Edge: yes, of F-EXC-001
-- Status: FOLDED into F-EXC-001 (bin CG-EXC-012.cp_minstret.unchanged_by_trapper)
+- Status: FOLDED into F-EXC-001 (bin CG-EXC-012.cp_minstret.ir0)
 
 ### F-EXC-064: rvfi_trap reporting of exceptions
 - What: rvfi_trap is set for ID exceptions (fetch err, illegal, ecall, ebreak) and for WB exceptions
@@ -5064,9 +5239,14 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Source: RTL-defined: rtl/ibex_core.sv:1842-1853,1885-1890
 - Edge: no
 - Status: ACTIVE
-- Notes: Bug candidate B14 (rtl/ibex_core.sv:1851-1853): the ID trap record is dropped when a WB
-  load/store error coincides; TP-EXC-065 is expected-fail (B14). rvfi_intr is never set for
-  exception handlers (F-IRQ-057).
+- Notes: B14 (rtl/ibex_core.sv:1851-1853: the ID trap record is suppressed when a WB load/store
+  error coincides) is downgraded to an RVFI convention note (gen_bug_log.md v1d): the killed ID
+  instruction re-executes and produces its own record; TP-EXC-065 is the informational confirmation.
+  Trap-record fields (fact-check X-14 / X-15, B18): rvfi_mem_rmask / wmask are zero on WB-trap
+  records (:2156-2157, rvfi_mem_addr kept, :2164) and carry the garbage decode on ID-trap records;
+  rvfi_insn is the 32-bit expansion for Zcmp micro-ops (:2263-2267, halfword on
+  rvfi_ext_expanded_insn) and the zero-extended halfword 32'h00009002 for c.ebreak. rvfi_intr is
+  never set for exception handlers (F-IRQ-057).
 
 ### F-EXC-065: mtval is written to zero for ECALL, EBREAK and interrupts
 - What: csr_mtval_o defaults to 0 and is only overridden for fetch faults, illegal instruction,
@@ -5113,12 +5293,17 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 ### F-EXC-069: WB fault while the core waits to take an interrupt or enter debug
 - What: If an interrupt/debug request is pending and ID is empty but WB has an outstanding
   load/store, the controller waits (id_wb_pending); if that access faults the exception path is
-  taken first (exc_req_wb is a special request); the interrupt is then masked by MIE=0 and remains
-  pending, while a debug request is honoured at the handler (F-EXC-048).
+  taken first (exc_req_wb is a special request); an ORDINARY interrupt is then masked by MIE=0 and
+  remains pending until the handler's mret or an MIE write, while an NMI ignores MIE and is taken in
+  the first empty-ID DECODE after the exception's FLUSH, before the handler's first instruction
+  (mepc = mtvec base, the exception's mepc/mcause pushed to mstack; rtl/ibex_controller.sv:498-500,
+  704-713; rtl/ibex_cs_registers.sv:932, 967-975; fact-check X-9), and a debug request is honoured
+  at the handler (F-EXC-048).
 - Observable at: rvfi_trap on the load/store + csrr read-back of mcause (5/7) on rvfi_rd_wdata;
   instr_addr_o = {mtvec[31:8],8'h00} (not the interrupt vector); irq_pending_o stays high; rvfi_intr
-  = 0 on the handler's first instruction (the interrupt is taken only after mret / MIE re-enable; a
-  debug request is honoured at the handler with instr_addr_o = DmHaltAddr).
+  = 0 on the handler's first instruction (an ordinary interrupt is taken only after mret / MIE
+  re-enable; an NMI's rvfi_intr retirement follows the trap record directly with mepc = mtvec base;
+  a debug request is honoured at the handler with instr_addr_o = DmHaltAddr).
 - Config: MIE=1; pending interrupt.
 - Source: RTL-defined: rtl/ibex_controller.sv:290,296,664-679,700-721
 - Edge: yes, of F-EXC-035
@@ -5145,7 +5330,8 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   IRQ_TAKEN: mepc <- pc_if (next instruction to execute), mcause <- interrupt code, mtval <- 0,
   mstatus MPIE<-MIE/MIE<-0/MPP<-priv, priv <- M, PC <- mtvec base + 4*cause.
 - Observable at: instr_addr_o = base + 4*cause; rvfi_intr = 1 on the first handler instruction;
-  rvfi_ext_irq_valid pulse; csrr read-back of mepc/mcause/mstatus on rvfi_rd_wdata.
+  rvfi_ext_irq_valid level (F-IRQ-057, fact-check X-16); csrr read-back of mepc/mcause/mstatus on
+  rvfi_rd_wdata.
 - Config: mie, mstatus.MIE, mtvec base, privilege mode.
 - Source: spec machine.adoc "Machine Interrupt (mip and mie) Registers" (trap conditions), "Machine
   Trap-Vector Base-Address (mtvec) Register" (vectored) | doc exception_interrupts.rst lines 8-10 |
@@ -5181,15 +5367,10 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   returns the raw pin, spec-legal). The TB models mip = pins. Owner question 4.
 
 ### F-IRQ-005: CSR write to mip is silently ignored
-- What: csrrw/csrrs/csrrc to mip (0x344) raises no exception and changes nothing; the read value
-  returned is the pin state.
-- Observable at: no rvfi_trap on the write; csrr read-back of mip on rvfi_rd_wdata = pin state
-  before and after.
-- Config: none
-- Source: spec machine.adoc "Machine Interrupt (mip and mie) Registers" (read-only bits) |
-  RTL-defined: rtl/ibex_cs_registers.sv:771-888 (no CSR_MIP case), 403-406
-- Edge: yes, of F-IRQ-004
-- Status: ACTIVE
+- What: Alias of F-CSR-033: IRQ perspective (a CSR write to mip raises no exception and changes
+  nothing; the read value is the pin state; the write still flushes the pipeline), see canonical.
+- Edge: yes, of F-CSR-032
+- Status: ALIAS of F-CSR-033
 
 ### F-IRQ-006: irq_pending_o output semantics
 - What: irq_pending_o = |(mip & mie): any locally enabled interrupt line, independent of
@@ -5257,16 +5438,13 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: FOLDED into F-IRQ-009 (bin CG-IRQ-002.cr_set_winner.fast_fast_fast)
 
 ### F-IRQ-011: All interrupt lines pending together, drained by priority
-- What: With all 18 lines high and all enabled, the first trap is fast[0]; if the handler clears
-  only its own source and returns, the next taken is fast[1], ..., then external, software, timer
-  (timer is the fall-through else).
-- Observable at: sequence of csrr read-backs of mcause on rvfi_rd_wdata and of instr_addr_o vectors
-  (rvfi_intr per entry) across the successive mrets: fast 0..14, external, software, timer.
-- Config: mie = 0x7FFF_0888; MIE=1.
+- What: Folded into F-IRQ-009: draining all 18 lines by priority is the parent's priority table
+  exercised exhaustively with the parent's mcause / vector observable (v2 edge rule, second pass;
+  Critic M-9); carried by the parent's drain bins.
 - Source: RTL-defined: rtl/ibex_controller.sv:746-758 (757 timer fall-through, 513 timer input
   otherwise unused)
 - Edge: yes, of F-IRQ-009
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-009 (bin CG-IRQ-002.cp_drain.first, middle, last18; CG-IRQ-002.cr_drain_winner.first_fast, middle_fast, middle_external, middle_software, last18_timer)
 
 ### F-IRQ-012: Vectored target address per cause
 - What: PC = {mtvec[31:8], 1'b0, cause[4:0], 2'b00} = base + 4*cause: software base+0x0C, timer
@@ -5280,7 +5458,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Edge: no
 - Status: ACTIVE
 - Notes: F-IRQ-061 (fast 14, base + 0x78) and F-IRQ-062 (fast 0, base + 0x40) are rows of this table
-  folded here (bins CG-IRQ-006.cp_id.fast_14 / fast_0); the full sweep is TP-IRQ-004.
+  folded here (bins CG-IRQ-006.cp_id.fast[14] / fast[0]); the full sweep is TP-IRQ-004.
 
 ### F-IRQ-013: mtvec is WARL: MODE fixed to vectored, BASE 256-byte aligned
 - What: Alias of F-CSR-035: IRQ perspective (mtvec WARL: MODE fixed to vectored, BASE 256-byte
@@ -5307,23 +5485,22 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ALIAS of F-CSR-035
 
 ### F-IRQ-015: Interrupt after a software mtvec write uses the new base
-- What: The CSR write flushes the pipeline (csr_pipe_flush) so an interrupt taken right after
-  vectors to the new base.
-- Observable at: instr_addr_o = new base + 4*cause immediately after the csrw mtvec (rvfi_intr on
-  the first handler instruction).
-- Config: mtvec write with a pending enabled interrupt.
+- What: Folded into F-IRQ-012: the vector after a software mtvec write is the parent's formula with
+  the new base (the write's pipeline flush is F-CSR-006 / F-CSR-035) (v2 edge rule, second pass;
+  Critic M-9); carried by the base-class and handler-rewrite bins.
 - Source: spec machine.adoc mip/mie ("evaluated immediately following ... an explicit write to a CSR
   on which these interrupt trap conditions expressly depend") | RTL-defined:
   rtl/ibex_id_stage.sv:593-597; rtl/ibex_controller.sv:287,704-721
 - Edge: yes, of F-IRQ-012
-- Status: ACTIVE
-- Notes: Edge re-pointed from F-IRQ-013 (now an alias of F-CSR-035) to the vectored-target base
-  feature F-IRQ-012 (Critic C-13).
+- Status: FOLDED into F-IRQ-012 (bin CG-IRQ-006.cp_base_class.sw_aligned, sw_legalised; CG-IRQ-005.cp_mtvec_in_handler.rewritten, CG-IRQ-005.cr_nesting_mtvec.depth1_rewritten)
 
 ### F-IRQ-016: Interrupts are taken only between instructions with an empty pipeline
 - What: IRQ_TAKEN is entered only when ID holds no valid instruction and WB is ready; the
   instruction in ID always completes (including its RF write and memory access) first (assertion
-  PipeEmptyOnIrq).
+  PipeEmptyOnIrq). When the request arrives while a load/store drains in WB with its successor
+  already in ID, that successor completes too, so mepc is the pc of the first not-yet-executed
+  instruction (nominal 2 records after the pin edge, worst case 17; halt_if only blocks IF,
+  rtl/ibex_controller.sv:296, 700-720; fact-check X-7).
 - Observable at: rvfi_valid of the last instruction before the trap (its rvfi_rd_wdata / rvfi_mem_*
   effects complete); csrr read-back of mepc on rvfi_rd_wdata = its successor; rvfi_intr on the first
   handler instruction.
@@ -5335,34 +5512,35 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-IRQ-017: Interrupt arriving while ID is stalled on an LSU access
-- What: halt_if is raised so no new instruction enters ID; the load/store completes (response seen
-  in WB), then IRQ_TAKEN. mepc = the instruction after the load/store.
-- Observable at: data_rvalid_i of the load/store precedes instr_req_o to the vector (instr_addr_o =
-  base + 4*id); csrr read-back of mepc on rvfi_rd_wdata = the instruction after the load/store.
-- Config: slow data_rvalid_i.
+- What: Folded into F-IRQ-016: the parent already states that the instruction in ID completes
+  "including its memory access" before IRQ_TAKEN; the LSU-stall arrival is that row with the
+  parent's mepc observable (v2 edge rule, second pass; Critic M-9); carried by the parent's context
+  bins.
 - Source: RTL-defined: rtl/ibex_controller.sv:698-702,704-721; rtl/ibex_wb_stage.sv:115-116,185
 - Edge: yes, of F-IRQ-016
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-016 (bin CG-IRQ-004.cp_ctx.id_load_wait, id_store_wait; CG-IRQ-004.cr_ctx_outcome.id_load_wait_taken, id_store_wait_taken; CG-IRQ-004.cr_ctx_rvalid.id_load_wait_before_rvalid, id_load_wait_same_cycle_as_rvalid, id_load_wait_after_rvalid)
 
 ### F-IRQ-018: Interrupt taken on the cycle a stall clears
-- What: If the interrupt line rises in the same cycle the stalled instruction finishes, the
-  transition DECODE -> IRQ_TAKEN occurs on the next cycle; the next instruction already in IF is not
-  executed and its PC becomes mepc.
-- Observable at: rvfi_order continuity; csrr read-back of mepc on rvfi_rd_wdata = the pc of the
-  not-yet-executed IF instruction, which retires first after the mret (rvfi_pc_rdata).
+- What: If the interrupt line rises in the cycle the stalled access finishes (data_rvalid_i), the
+  successor already in ID (stalled on ready_wb) completes in that cycle and retires, and DECODE ->
+  IRQ_TAKEN follows once ID is empty: mepc = the pc of the first not-yet-executed instruction (the
+  successor's successor or its target); only when the successor has not reached ID (fetch stall) is
+  mepc = load/store pc + length (rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133;
+  fact-check X-7 / TP-IRQ-023 row).
+- Observable at: rvfi_order continuity; csrr read-back of mepc on rvfi_rd_wdata = rvfi_pc_wdata of
+  the last record before the entry (the first not-yet-executed instruction), which retires first
+  after the mret (rvfi_pc_rdata).
 - Config: none
 - Source: RTL-defined: rtl/ibex_controller.sv:704-721
 - Edge: yes, of F-IRQ-016
 - Status: ACTIVE
 
 ### F-IRQ-019: Interrupt during a multi-cycle ALU/multiply/divide instruction
-- What: The multi-cycle instruction (div, mulh, Zbb multicycle) completes before the trap.
-- Observable at: rvfi_valid for the div/mulh with the correct rvfi_rd_wdata, then the vector fetch
-  (instr_addr_o) with rvfi_intr; csrr read-back of mepc = the next pc.
-- Config: none
-- Source: RTL-defined: rtl/ibex_controller.sv:700-704,1017; rtl/ibex_id_stage.sv:954-966,983
+- What: Alias of F-MUL-023: IRQ perspective (an interrupt or debug request arriving during a
+  multi-cycle instruction is deferred until that instruction retires; mepc = the next PC), see
+  canonical.
 - Edge: yes, of F-IRQ-016
-- Status: ACTIVE
+- Status: ALIAS of F-MUL-023
 
 ### F-IRQ-020: Interrupt during a Zcmp expanded sequence
 - What: handle_irq is blocked during INSTR_EXPANDED_COMMIT micro-ops (sp update, a0 zero) but not
@@ -5396,16 +5574,15 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-IRQ-022: Interrupt in the same cycle as a WB load/store fault: exception wins
-- What: Folded into F-EXC-069 (bin
+- What: Folded into F-EXC-035 (through F-EXC-069) (bin
   CG-IRQ-004.cr_ctx_outcome.wb_fault_same_cycle_deferred_by_exception): the WB-fault-beats-interrupt
   coincidence is F-EXC-069 stated from the IRQ side.
 - Observable at: rvfi_trap on the load/store + csrr read-back of mcause (5/7) on rvfi_rd_wdata;
   rvfi_intr only after mret / MIE re-enable; irq_pending_o stays 1.
 - Config: MIE=1.
 - Source: RTL-defined: rtl/ibex_controller.sv:276,290,676-678
-- Edge: yes, of F-IRQ-016
-- Status: FOLDED into F-EXC-069 (bin
-  CG-IRQ-004.cr_ctx_outcome.wb_fault_same_cycle_deferred_by_exception)
+- Edge: yes, of F-EXC-035
+- Status: FOLDED into F-EXC-035 (bin CG-IRQ-004.cr_ctx_outcome.wb_fault_same_cycle_deferred_by_exception)
 
 ### F-IRQ-023: Interrupt pending during mret
 - What: mret completes (MIE <- MPIE, priv <- MPP, PC <- mepc) and the interrupt is evaluated in the
@@ -5425,7 +5602,9 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 
 ### F-IRQ-024: Interrupt pending during dret
 - What: After dret leaves debug mode, an enabled interrupt is taken before the first instruction at
-  dpc; mepc = dpc; privilege = dcsr.prv restored then MPP = that value.
+  dpc when irq_enabled = mstatus.MIE | (dcsr.prv == U) holds (rtl/ibex_controller.sv:490, 498-500;
+  fact-check X-9): mepc = dpc; privilege = dcsr.prv restored then MPP = that value. With MIE = 0 and
+  dcsr.prv = M execution resumes at dpc and the line stays pending.
 - Observable at: instr_addr_o = dpc then the vector (base + 4*id) with rvfi_intr; csrr read-back of
   mepc (= dpc) and mstatus.MPP (= dcsr.prv) on rvfi_rd_wdata; rvfi_mode.
 - Config: dcsr.prv; MIE; pending source.
@@ -5436,37 +5615,37 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 ### F-IRQ-025: Interrupt request withdrawn before it is taken (no spurious trap)
 - What: The trap decision is re-evaluated in IRQ_TAKEN (if handle_irq); if the line dropped between
   the DECODE decision and IRQ_TAKEN, no pc_set/CSR save happens and the controller returns to
-  DECODE; the only effect is a one-cycle IF bubble.
-- Observable at: no rvfi_intr and no instr_addr_o vector fetch; csrr read-back of
-  mepc/mcause/mstatus on rvfi_rd_wdata unchanged; one-cycle instr_req_o gap (ibus monitor).
+  DECODE after one cycle in IRQ_TAKEN with halt_if (the prefetch buffer keeps fetching, so no ibus
+  bubble is architecturally defined; fact-check TP-IRQ-030 row).
+- Observable at: no rvfi_intr and no instr_addr_o vector fetch (icache off); csrr read-back of
+  mepc/mcause/mstatus on rvfi_rd_wdata unchanged. The decision cycle is inferred from the pipeline
+  state, never from rvfi_ext_irq_valid (a level rising at N + 4, absent when ID emptied before WB
+  drained, F-IRQ-057).
 - Config: MIE=1.
 - Source: RTL-defined: rtl/ibex_controller.sv:729-761
 - Edge: yes, of F-IRQ-002
 - Status: ACTIVE
 
 ### F-IRQ-026: Higher-priority interrupt arriving one cycle before IRQ_TAKEN
-- What: The cause and vector are selected from the lines present in the IRQ_TAKEN cycle, so a
-  higher-priority line arriving after the DECODE decision is the one reported. Lines arriving after
-  IRQ_TAKEN do not change the handler already being fetched (they are taken later if still pending
-  when MIE is re-enabled).
-- Observable at: csrr read-back of mcause on rvfi_rd_wdata vs the cycle-by-cycle irq_*_i pattern
-  (pin monitor); rvfi_ext_pre_mip; instr_addr_o vector.
-- Config: MIE=1.
+- What: Folded into F-IRQ-009: the parent already states that the cause is chosen in the IRQ_TAKEN
+  cycle from the lines present then; a higher-priority line arriving one cycle before is that rule
+  with the parent's mcause observable (v2 edge rule, second pass; Critic M-9); carried by the
+  parent's late-arrival bins.
 - Source: RTL-defined: rtl/ibex_controller.sv:729-758; rtl/ibex_core.sv:1907-1932 (comment)
 - Edge: yes, of F-IRQ-009
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-009 (bin CG-IRQ-002.cp_late.higher_added, lower_added; CG-IRQ-002.cr_late_winner.higher_added_fast, higher_added_nmi_ext, higher_added_external, lower_added_external)
 
 ### F-IRQ-027: Level-sensitive lines held through the handler re-trap after mret
-- What: Folded into F-IRQ-023 (bin CG-IRQ-005.cr_state_reentry.still_high_same_immediate): a level
-  line held through the handler is the parent's "interrupt pending during mret" with the same
-  source.
+- What: Folded into F-IRQ-016 (through F-IRQ-023) (bin
+  CG-IRQ-005.cr_state_reentry.still_high_same_immediate): a level line held through the handler is
+  the parent's "interrupt pending during mret" with the same source.
 - Observable at: repeated instr_addr_o = base + 4*id fetch right after the mret with rvfi_intr; csrr
   read-back of mepc on rvfi_rd_wdata equal across iterations.
 - Config: MIE/MPIE=1.
 - Source: doc exception_interrupts.rst lines 61-62 | RTL-defined: rtl/ibex_cs_registers.sv: 408-412;
   rtl/ibex_controller.sv:704-721
 - Edge: yes, of F-IRQ-016
-- Status: FOLDED into F-IRQ-023 (bin CG-IRQ-005.cr_state_reentry.still_high_same_immediate)
+- Status: FOLDED into F-IRQ-016 (bin CG-IRQ-005.cr_state_reentry.still_high_same_immediate)
 
 ### F-IRQ-028: Software nesting by re-enabling MIE inside a handler
 - What: Hardware clears MIE on entry; if the handler sets MIE=1 (after saving mepc/mstatus) any
@@ -5482,14 +5661,15 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-IRQ-029: Handler returns to U-mode with an interrupt still pending
-- What: Folded into F-IRQ-023 (bin CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0): the
-  parent's MPP variable at U combined with F-IRQ-008 (U-mode ignores MIE).
+- What: Folded into F-IRQ-016 (through F-IRQ-023) (bin
+  CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0): the parent's MPP variable at U
+  combined with F-IRQ-008 (U-mode ignores MIE).
 - Observable at: csrr read-back of mstatus.MPP (0) on rvfi_rd_wdata in the nested handler; rvfi_mode
   0 -> 3 with rvfi_intr; instr_addr_o = mepc then the vector.
 - Config: MPP=U; pending source; MPIE=0.
 - Source: spec machine.adoc privstack | RTL-defined: rtl/ibex_controller.sv:490
 - Edge: yes, of F-IRQ-016
-- Status: FOLDED into F-IRQ-023 (bin CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0)
+- Status: FOLDED into F-IRQ-016 (bin CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0)
 
 ### F-IRQ-030: Non-maskable interrupt (irq_nm_i)
 - What: irq_nm_i is taken regardless of mstatus.MIE and mie: mcause 0x8000_001F, mtval 0, PC = base
@@ -5523,7 +5703,12 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 
 ### F-IRQ-032: mret in NMI mode restores mstatus.MPIE/MPP, mepc and mcause from mstack
 - What: When nmi_mode_i=1, mret restores MPIE/MPP from mstack and rewrites mepc/mcause with the
-  stacked values (the interrupted handler's context), instead of MPIE<-1/MPP<-U.
+  stacked values (the interrupted handler's context), instead of MPIE<-1/MPP<-U. The mret's jump
+  target is the CURRENT mepc_q (PC_ERET = csr_mepc_i, evaluated in FLUSH before the mstack restore
+  commits): a software mepc write inside the NMI handler steers the return while the post-mret
+  mepc/mcause read the stacked values (rtl/ibex_if_stage.sv:246, rtl/ibex_controller.sv:954-957,
+  rtl/ibex_cs_registers.sv:967-975; fact-check Section 5 RTL-defined behaviour; bin
+  CG-IRQ-007.cp_mstack.sw_epc_target_used, TP-IRQ-036).
 - Observable at: csrr read-back of mepc/mcause/mstatus on rvfi_rd_wdata after returning from the NMI
   into an interrupt handler (values of the interrupted handler restored).
 - Config: NMI taken while inside another trap handler.
@@ -5605,7 +5790,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn).
 
 ### F-IRQ-038: NMI pending at dret is taken before the first instruction at dpc
-- What: Folded into F-IRQ-037 (bin
+- What: Folded into F-IRQ-030 (through F-IRQ-037) (bin
   CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn): "NMI taken after dret
   with mepc = dpc" is already the parent's outcome (F-IRQ-024 with the NMI line).
 - Observable at: instr_addr_o = base + 0x7C right after the dpc fetch with rvfi_intr; csrr read-back
@@ -5613,8 +5798,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Config: debug mode exit with irq_nm_i high.
 - Source: RTL-defined: rtl/ibex_controller.sv:961-965,498-500
 - Edge: yes, of F-IRQ-030
-- Status: FOLDED into F-IRQ-037 (bin
-  CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn)
+- Status: FOLDED into F-IRQ-030 (bin CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn)
 
 ### F-IRQ-039: All interrupts (incl. NMI) ignored in debug mode and while single stepping
 - What: Alias of F-DBG-056: IRQ perspective (all interrupts incl. NMI ignored in debug mode and
@@ -5633,7 +5817,14 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   flop and captures lsu_addr_last; it is taken like an NMI: mcause 0xFFFF_FFE0 (irq_int=1, code 0 =
   NMI_INT_CAUSE_ECC), mtval = faulting address, PC = base + 0x7C (irq_int forces the NMI vector),
   nmi_mode set; alert_major_bus_o asserts; a load's RF write is suppressed
-  (rvfi_ext_rf_wr_suppress). Taken at most one instruction after the faulting load.
+  (rvfi_ext_rf_wr_suppress) when the beat that completes the access carries the error; a misaligned
+  load with the error on the FIRST beat still writes rd (rtl/ibex_load_store_unit.sv:514, 697-698;
+  fact-check X-11, bug candidate B16, owner TP-DMEM-041). The pending flag registers one cycle after
+  the corrupted rvalid (rtl/ibex_controller.sv:402-438), so up to TWO ordinary instructions (more
+  records with a Zcmp sequence) can retire between the corrupted response and the NMI entry; the
+  doc's "at most one" (exception_interrupts.rst:87-88) is doc mismatch D21 (fact-check X-10; the
+  first directed integrity-error sim confirms the count, inventory UNVERIFIED-4). TP-IRQ-044 /
+  TP-IRQ-047 are `pass (doc mismatch D21)`.
 - Observable at: alert_major_bus_o; instr_addr_o = base + 0x7C; csrr read-back of mcause
   (0xFFFF_FFE0) / mtval (faulting address) on rvfi_rd_wdata; rvfi_ext_nmi_int;
   rvfi_ext_rf_wr_suppress.
@@ -5686,9 +5877,11 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-IRQ-044: Software write to mcause (WLRL) and the internal-interrupt encoding
-- What: A csrw mcause keeps only bits [31:30] as the {irq_ext, irq_int} flags and bits [4:0] as the
-  code; bits 29:5 are dropped. Writing 0xC000_00xx sets irq_int so the readback is 0xFFFF_FFE0 |
-  code; writing 0x8000_00xx reads back 0x8000_00xx; writing 0x0000_0020 reads 0.
+- What: A csrw mcause decodes wdata[31:30]: 2'b10 sets irq_ext, 2'b11 sets irq_int, 2'b01 and 2'b00
+  set neither (rtl/ibex_cs_registers.sv:731-733; fact-check X-23); bits [4:0] are the code and bits
+  29:5 are dropped. Writing 0xC000_00xx reads 0xFFFF_FFE0 | code; 0x8000_00xx reads back
+  0x8000_00xx; 0x4000_00xx reads {27'b0, code}; 0x0000_0020 reads 0. csrs/csrc operate on the
+  legalised read value.
 - Observable at: csrr read-back of mcause on rvfi_rd_wdata after each csrw.
 - Config: mcause write.
 - Source: spec machine.adoc "Machine Cause (mcause) Register" (WLRL exception code) | RTL- defined:
@@ -5719,25 +5912,25 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   (FIRST_FETCH wake-to-vector latency, bin CG-IRQ-004.cr_ctx_latency.first_fetch_wake_two).
 
 ### F-IRQ-046: WFI wake by a locally enabled but globally disabled interrupt (M-mode, MIE=0)
-- What: mip&mie != 0 wakes the core; since MIE=0 no trap is taken and execution continues at wfi+4.
-- Observable at: rvfi_valid of the instruction after wfi with no rvfi_intr; irq_pending_o=1.
-- Config: mie bit set; MIE=0; priv M.
+- What: Folded into F-IRQ-045: the parent's wake rule already says "if the waking interrupt is
+  globally enabled it is taken ... otherwise execution resumes at wfi+4"; MIE = 0 in M-mode is that
+  otherwise-arm with the same wfi+4 / no-rvfi_intr observable (Critic M-9); carried by the parent's
+  wake bins. F-IRQ-052 (line still held inside a handler) and the PRV alias F-PRV-019 move to the
+  parent.
 - Source: spec machine.adoc "Wait for Interrupt" ("can also be executed when interrupts are disabled
   ... resume ... pc+4") | RTL-defined: rtl/ibex_controller.sv:615,490,498-500
 - Edge: yes, of F-IRQ-045
-- Status: ACTIVE
-- Notes: F-IRQ-052 (wfi inside a handler with the serviced level line still high: immediate resume,
-  no trap) is folded here as bin CG-IRQ-009.cp_wake.masked_line_held.
+- Status: FOLDED into F-IRQ-045 (bin CG-IRQ-009.cp_wake.irq_local_only, CG-IRQ-009.cr_priv_wake.m_irq_local_only)
 
 ### F-IRQ-047: WFI does not wake on an interrupt disabled in mie
-- What: A high irq line whose mie bit is clear does not wake the core; it sleeps until another wake
-  source.
-- Observable at: instr_req_o stays low; core_busy_o off; irq_pending_o=0.
-- Config: mie bit clear for the asserted line.
+- What: Folded into F-IRQ-045: a line whose mie bit is clear is outside the parent's wake condition
+  (irq_pending_i = any mip & mie bit); not waking is the complement of the parent's rule with the
+  parent's sleep observable (v2 edge rule, second pass; Critic M-9); carried by the parent's
+  disabled-line bins.
 - Source: spec machine.adoc "Wait for Interrupt" ("should honor the individual interrupt enables") |
   RTL-defined: rtl/ibex_controller.sv:615; rtl/ibex_cs_registers.sv:1044-1045
 - Edge: yes, of F-IRQ-045
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-045 (bin CG-IRQ-009.cp_disabled_high.yes, CG-IRQ-009.cr_disabled_wake.yes_none_long, yes_nmi_ext, yes_debug_req, yes_irq_taken)
 
 ### F-IRQ-048: WFI with the wake condition already true
 - What: If an enabled interrupt (or NMI/debug_req) is already pending when wfi executes, the core
@@ -5769,49 +5962,48 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Edge: yes, of F-IRQ-045
 - Status: ACTIVE
 
-### F-IRQ-051: WFI in debug mode or with dcsr.step acts as a NOP
-- What: SLEEP exits immediately when debug_mode_q or debug_single_step_i is set: the wfi passes
-  FLUSH -> WAIT_SLEEP -> SLEEP -> FIRST_FETCH without waiting (ctrl_busy_o is 0 only in the
-  WAIT_SLEEP cycle; the SLEEP cycle stays busy in this branch).
-- Observable at: core_busy_o shows at most a one-cycle IbexMuBiOff dip (WAIT_SLEEP) and instr_req_o
-  resumes at wfi + 4 within the pass-through gap; no rvfi_intr; rvfi_valid of the instruction after
-  the wfi (or debug re-entry when stepping). Port rule: core_busy_o = ctrl_busy | if_busy | lsu_busy,
-  so the dip is visible in WAIT_SLEEP only when no instruction-bus beat is outstanding, no icache
-  invalidation is active and the LSU is idle; otherwise core_busy_o stays On and the dip is invisible
-  (a WFI within 256 cycles of reset sees no dip) (gen_tb_architecture.md 8.2 item 1).
-- Config: debug mode; dcsr.step.
+### F-IRQ-051: WFI with dcsr.step = 1 outside debug mode never sleeps (FLUSH -> DBG_TAKEN_IF)
+- What: WFI with dcsr.step = 1 (single-step over wfi, outside debug mode) never sleeps: the wfi
+  is a special request, DECODE goes to FLUSH, and in FLUSH the debug-entry override (enter_debug_mode_prio_q,
+  rtl/ibex_controller.sv:985-987) takes precedence over the WAIT_SLEEP arm (:966-967), so the FSM goes
+  FLUSH -> DBG_TAKEN_IF; core_busy_o stays On and no wake source is needed. (WFI executed inside debug
+  mode does reach WAIT_SLEEP: see F-DBG-059 for the port-level busy rule.)
+- Observable at: after the stepped WFI retires, the next instr_addr_o fetch is DmHaltAddr and the
+  next record carries rvfi_ext_debug_mode = 1; core_busy_o never equals IbexMuBiOff in between; csrr
+  read-back of dpc = WFI + 4, dcsr.cause = 4.
+- Config: dcsr.step = 1; not in debug mode.
 - Source: RTL-defined: rtl/ibex_controller.sv:598-604 (WAIT_SLEEP, ctrl_busy_o = 0), 606-621 (SLEEP:
   busy cleared only in the else branch), 613-616 (comment 614); rtl/ibex_core.sv core_busy_o
   composition (if_busy_o, lsu_busy_o, ctrl_busy)
 - Edge: yes, of F-IRQ-045
 - Status: ACTIVE
-- Notes: The debug-spec behaviour (WFI in debug mode acts as nop) is in the debug area. The
-  one-cycle dip matches Critic C-06 (F-DBG-044/059); the earlier "no core_busy_o drop" wording was
-  wrong. The dip is a ctrl_busy fact; whether core_busy_o shows it depends on if_busy/lsu_busy (the
-  port rule above), so CG-IRQ-009.cp_busy_off has both off_seen and off_not_seen as legal outcomes.
+- Notes: Cross-reference (Critic M-10): the WFI-in-debug-mode case (WAIT_SLEEP reached, ctrl_busy
+  dip visible at core_busy_o only under the port rule) is F-DBG-059; this entry is the step-over-WFI
+  case, which never reaches WAIT_SLEEP, so for cp_wake = step_nop
+  CG-IRQ-009.cp_busy_off.off_not_seen is the only legal outcome (off_seen belongs to in_debug_nop).
+  The DBG-side statement of the same case is F-DBG-044.
 
 ### F-IRQ-052: WFI inside a handler while the level line is still asserted
-- What: Folded into F-IRQ-046 (bin CG-IRQ-009.cp_wake.masked_line_held): a wake by a locally enabled
-  line that is globally masked (MIE = 0 in a handler, or nmi_mode) is the parent's mechanism.
+- What: Folded into F-IRQ-045 (through F-IRQ-046) (bin CG-IRQ-009.cp_wake.masked_line_held): a wake
+  by a locally enabled line that is globally masked (MIE = 0 in a handler, or nmi_mode) is the
+  parent's mechanism.
 - Observable at: rvfi_valid of the instruction after the wfi with no rvfi_intr; no instr_addr_o
   vector fetch; instr_req_o gap in the pass-through class.
 - Config: MIE=0 / nmi_mode; source held high.
 - Source: spec machine.adoc "Wait for Interrupt" (implementation may resume for any reason) |
   RTL-defined: rtl/ibex_controller.sv:615,498
 - Edge: yes, of F-IRQ-045
-- Status: FOLDED into F-IRQ-046 (bin CG-IRQ-009.cp_wake.masked_line_held)
+- Status: FOLDED into F-IRQ-045 (bin CG-IRQ-009.cp_wake.masked_line_held)
 
 ### F-IRQ-053: WFI in U-mode with TW=0
-- What: U-mode wfi sleeps normally; any mie-enabled interrupt wakes and is taken (U-mode always
-  enabled) with MPP=U, mepc = wfi+4. With TW=1 see F-EXC-011.
-- Observable at: instr_req_o low during the sleep, then instr_addr_o = base + 4*id with rvfi_intr;
-  csrr read-back of mstatus.MPP (0) and mepc (= wfi + 4) on rvfi_rd_wdata; rvfi_mode 0 before the
-  wfi, 3 in the handler.
-- Config: priv U; mstatus.TW=0; mie.
+- What: Folded into F-IRQ-045: a U-mode WFI with TW = 0 sleeps and wakes by the parent's rule
+  (U-mode interrupts are always enabled, F-IRQ-008; MPP = U is the trap-entry rule F-PRV-002); the
+  TW = 1 trap is F-EXC-011 (v2 edge rule, second pass; Critic M-9); carried by the parent's
+  privilege x wake bins.
 - Source: spec machine.adoc "Wait for Interrupt" (optionally available to U-mode) | RTL-defined:
   rtl/ibex_id_stage.sv:606-608; rtl/ibex_controller.sv:490,615
 - Edge: yes, of F-IRQ-045
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-045 (bin CG-IRQ-009.cp_priv_tw.u_tw0, CG-IRQ-009.cr_priv_wake.u_tw0_irq_taken, u_tw0_nmi_ext, u_tw0_debug_req, u_tw0_none_long, u_tw0_already_pending; CG-IRQ-001.cr_line_priv_mie.software_u_mie0, timer_u_mie0)
 
 ### F-IRQ-054: WFI with an outstanding WB load/store
 - What: FLUSH is entered only when WB is ready; if the outstanding access faults, the fault is taken
@@ -5842,7 +6034,9 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - What: Alias of F-RST-015: IRQ perspective (interrupt decided while fetch_enable_i is Off: CSR/PC
   state advances, the handler is fetched only after On), see canonical.
 - Observable at: as F-RST-015: no instr_req_o while Off; csrr read-back of mepc/mcause on
-  rvfi_rd_wdata changed; instr_addr_o = vector as the first fetch after fetch_enable_i = On.
+  rvfi_rd_wdata changed; instr_addr_o = vector as the first fetch after fetch_enable_i = On (with
+  cpuctrlsts.icache_enable = 0; a cached vector line issues no request, fact-check X-21) and the
+  first retirement after On is the handler's first instruction (rvfi_intr).
 - Config: fetch_enable_i (MuBi); pending enabled interrupt.
 - Source: doc doc/02_user/integration.rst:323-331 (fetch_enable_i row: pause fetching, halt once
   in-flight instructions have finished; Critic C-04 path fix) | RTL-defined:
@@ -5852,9 +6046,15 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 
 ### F-IRQ-057: RVFI reporting of interrupts
 - What: rvfi_intr is set on the first retired instruction after an interrupt entry (only EXC_PC_IRQ;
-  NOT for synchronous exception entries); rvfi_ext_irq_valid pulses when the pipeline emptied for an
-  interrupt with no retiring instruction; rvfi_ext_pre_mip/post_mip and rvfi_ext_nmi/nmi_int carry
-  the captured line state at the decision cycle.
+  NOT for synchronous exception entries). rvfi_ext_irq_valid is a LEVEL, not a pulse: the internal
+  flop is set at the decision cycle N when ID is empty with WB ready and a new interrupt / NMI /
+  debug request is captured (rtl/ibex_core.sv:1965-1971), the port rises at N + 4 after the three
+  RVFI stages (:1992-2002, :2134-2141, :2192-2199; RVFI_STAGES = 2, :1837) and stays high until about
+  two cycles after the handler's first instruction enters ID; it is not generated when ID emptied
+  before WB drained (captured_valid already set, :1949-1968) and never coincides with rvfi_valid;
+  for a SLEEP wake it rises at W + 4 = IRQ_TAKEN + 2 (fact-check X-16). rvfi_ext_pre_mip/post_mip
+  and rvfi_ext_nmi/nmi_int carry the line state captured when ID first emptied, which can precede
+  the decision cycle while WB drains (:1949-1957).
 - Observable at: rvfi_intr, rvfi_ext_irq_valid, rvfi_ext_pre_mip, rvfi_ext_post_mip, rvfi_ext_nmi,
   rvfi_ext_nmi_int.
 - Config: none
@@ -5862,19 +6062,18 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Edge: no
 - Status: ACTIVE
 - Notes: rvfi_intr is not asserted for exception handlers (rtl/ibex_core.sv:2408 checks EXC_PC_IRQ
-  only); the TB must not use it to detect exception entry.
+  only); the TB must not use it to detect exception entry. The TB never locates the decision cycle
+  from rvfi_ext_irq_valid (the earlier N + 1 / N + 3 offsets were wrong; gen_arch_v2_rtl_factcheck.md
+  2.1 corrected to N + 4, level); TP-IRQ-061 asserts rise == N + 4 and the absent case.
 
 ### F-IRQ-058: mepc for interrupts after a control-flow change
-- What: mepc = pc_if, so an interrupt taken right after a taken branch/jump/mret/dret records the
-  target address, never the fall-through.
-- Observable at: csrr read-back of mepc on rvfi_rd_wdata = the branch/jump/mret/dret target (=
-  rvfi_pc_wdata of the redirecting instruction), never the fall-through; rvfi_intr on the first
-  handler instruction.
-- Config: none
+- What: Folded into F-IRQ-002: mepc = the redirect target is the parent's mepc <- pc_if evaluated
+  after a control transfer, with the parent's mepc read-back observable (v2 edge rule, second pass;
+  Critic M-9); carried by the parent's mepc-source bins.
 - Source: spec machine.adoc "Machine Exception Program Counter (mepc) Register" | RTL-defined:
   rtl/ibex_controller.sv:732; rtl/ibex_cs_registers.sv:895-896
 - Edge: yes, of F-IRQ-002
-- Status: ACTIVE
+- Status: FOLDED into F-IRQ-002 (bin CG-IRQ-001.cp_mepc_src.branch_target, jump_target, mret_target, dret_target; CG-IRQ-001.cr_line_mepc.timer_branch_target, external_jump_target, fast_3_mret_target, fast_9_dret_target)
 
 ### F-IRQ-059: Interrupt immediately after a CSR write that enables it
 - What: Alias of F-CSR-026: IRQ perspective (interrupt taken immediately after the CSR write that
@@ -5899,7 +6098,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 
 ### F-IRQ-061: Fast interrupt 14 vectors adjacent to the NMI vector
-- What: Folded into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast_14): fast 14 (base + 0x78, adjacent to the
+- What: Folded into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast[14]): fast 14 (base + 0x78, adjacent to the
   NMI vector base + 0x7C) is the top row of the parent's vector table.
 - Observable at: instr_addr_o = base + 0x78 (not base + 0x7C); csrr read-back of mcause =
   0x8000_001E on rvfi_rd_wdata.
@@ -5907,17 +6106,17 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Source: RTL-defined: rtl/ibex_controller.sv:746-751; rtl/ibex_if_stage.sv:225-228;
   rtl/ibex_pkg.sv:334-341
 - Edge: yes, of F-IRQ-012
-- Status: FOLDED into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast_14)
+- Status: FOLDED into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast[14])
 
 ### F-IRQ-062: Fast interrupt 0 vector
-- What: Folded into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast_0): fast 0 (base + 0x40) is the bottom row
+- What: Folded into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast[0]): fast 0 (base + 0x40) is the bottom row
   of the parent's fast-interrupt vector range.
 - Observable at: instr_addr_o = base + 0x40; csrr read-back of mcause = 0x8000_0010 on
   rvfi_rd_wdata.
 - Config: mie[16].
 - Source: RTL-defined: rtl/ibex_controller.sv:746-751
 - Edge: yes, of F-IRQ-012
-- Status: FOLDED into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast_0)
+- Status: FOLDED into F-IRQ-012 (bin CG-IRQ-006.cp_id.fast[0])
 
 ### F-IRQ-063: Timer interrupt is the lowest priority and the mux fall-through
 - What: Folded into F-IRQ-009 (bins CG-IRQ-002.cr_drain_winner.last18_timer, cp_winner.timer): the
@@ -5933,8 +6132,10 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - What: Folded into F-IRQ-045 (bin CG-IRQ-004.cr_ctx_latency.first_fetch_wake_two): the fixed
   wake-to-vector latency is a checker bullet (gen_chk_trap_timing) on the parent's wake, not a
   distinct stimulus.
-- Observable at: fixed cycle count from the wake edge on the irq pin to instr_req_o at the vector
-  (instr_addr_o = base + 4*id).
+- Observable at: fixed cycle count from the wake edge on the irq pin (SLEEP, W) to pc_set at
+  IRQ_TAKEN (W + 2, via FIRST_FETCH W + 1; rtl/ibex_controller.sv:606-635, 725-733); the vector
+  instr_req_o (instr_addr_o = base + 4*id) is >= that cycle and constant only with the icache off and
+  an idle bus (fact-check TP-IRQ-066 row; bring-up-pinned constant GEN_WFI_WAKE_TO_VECTOR).
 - Config: none
 - Source: RTL-defined: rtl/ibex_controller.sv:623-646
 - Edge: yes, of F-IRQ-045
@@ -5995,9 +6196,14 @@ FOLDED (parent, bin): F-EXC-024 (023), 028 (026), 034 (030), 039 (027), 040 (038
 fcov_exc_irq.md.
 Canonical entries of this part that other areas alias: F-EXC-005/006/008/016/025/026/027/031/032/
 035/067, F-IRQ-008/009/016/023/030/032/045/046/053 (all cited by TP items of tp_exc_irq.md).
-Doc defects used: D1 (F-IRQ-004), D2 (F-EXC-053), D3 (F-IRQ-044), D10 (F-EXC-003), D12 (F-EXC-009).
-Bug candidates used: B5 (F-IRQ-037), B12 (F-EXC-056), B14 (F-EXC-064); B6 reclassified
-RTL-defined (F-EXC-046).
+Doc defects used: D1 (F-IRQ-004), D2 (F-EXC-053), D3 (F-IRQ-044), D10 (F-EXC-003), D12 (F-EXC-009),
+D21 (F-IRQ-040, fact-check X-10).
+Bug candidates used: B5 (F-IRQ-037), B12 (F-EXC-056, documented behaviour), B14 (F-EXC-064,
+downgraded); B6 reclassified RTL-defined (F-EXC-046); referenced with their owners elsewhere: B16
+(F-IRQ-040, owner TP-DMEM-041), B18 (F-EXC-064, owner RVFI).
+Fix 3 (rtl-arch fact-check T-053): X-1 (F-EXC-050), X-7 (F-IRQ-016/018), X-9 (F-EXC-069, F-IRQ-024),
+X-10/X-11 (F-IRQ-040), X-14/X-15 (F-EXC-015/018/025/027/064), X-16 (F-IRQ-002/025/057), X-23
+(F-IRQ-044), Section 5 RTL-defined behaviour (F-IRQ-032 mret target); no feature added or renumbered.
 
 
 # 4.4 Areas PMP: Physical memory protection and Smepmp (16 regions, G=0)
@@ -6010,7 +6216,9 @@ localparam 0 in rtl/ibex_core.sv:197, so PMP shadow-register alerts cannot occur
 
 Observability note: ibex_core has no rvfi_csr_* ports (rtl/ibex_core.sv:137-176). mcause/mtval/
 mepc and PMP CSR contents are observed through a following csrr whose result appears on
-rvfi_rd_wdata, plus rvfi_trap/rvfi_pc_wdata for the trap itself. Bus-side effects are observed on
+rvfi_rd_wdata, plus rvfi_trap for the trap itself; the trap target is the NEXT record's
+rvfi_pc_rdata (rvfi_pc_wdata of a trap / mret / dret record is the next sequential fetch address,
+rtl/ibex_core.sv:2084; fact-check X-1). Bus-side effects are observed on
 data_req_o/data_addr_o/data_we_o/data_be_o/data_wdata_o and instr_req_o/instr_addr_o.
 
 Status and edge conventions (Critic v1 C-07/C-12/C-13/C-14): every block carries `- Status:`
@@ -6055,14 +6263,13 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: ACTIVE
 
 ### F-PMP-003: pmpcfg reserved bits [6:5] read as zero, writes ignored
-- What: Bits 5 and 6 of each entry config are not stored; they read 0 regardless of what was
-  written.
-- Observable at: rvfi_rd_wdata of csrr pmpcfgN after writing all-ones.
-- Config: none beyond M-mode.
+- What: Folded into F-PMP-001: the parent's read format {L, 2'b00, A, X, W, R} already states that
+  bits 6:5 read 0; writing them is the parent's write with the same read-back observable (v2 edge
+  rule, second pass; Critic M-9); carried by the parent's reserved-bit bins.
 - Source: spec: machine.adoc "Physical Memory Protection CSRs" (all fields WARL) | RTL:
   rtl/ibex_cs_registers.sv:1381-1382, 1429-1446 (only bits 0-4 and 7 are decoded)
 - Edge: yes, of F-PMP-001
-- Status: ACTIVE
+- Status: FOLDED into F-PMP-001 (bin CG-PMP-001.cp_res_bits.nonzero, CG-PMP-001.cr_res_op.nonzero_csrrw, nonzero_csrrs, nonzero_csrrc)
 
 ### F-PMP-004: R/W/X WARL: with MML=0 the reserved R=0,W=1 is legalised to W=0; with MML=1 W is stored as written
 - What: When mseccfg.MML=0 the reserved combination R=0/W=1 is not storable: the written W bit is
@@ -6083,13 +6290,14 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   (former F-PMP-005) is carried by bin CG-PMP-001.cr_rw01_mml.rw01_mml1_stored.
 
 ### F-PMP-005: R/W/X with MML=1: RW=01 stored as written
-- What: Folded into F-PMP-004: the MML=1 arm of the same WARL rule (W stored verbatim).
+- What: Folded into F-PMP-001 (through F-PMP-004): the MML=1 arm of the same WARL rule (W stored
+  verbatim).
 - Observable at: csrr read-back on rvfi_rd_wdata of pmpcfgN (see F-PMP-004).
 - Config: mseccfg.MML=1.
 - Source: spec: machine.adoc "Machine Security Configuration (mseccfg) Register" | RTL:
   rtl/ibex_cs_registers.sv:1444
 - Edge: yes, of F-PMP-001
-- Status: FOLDED into F-PMP-004 (bin CG-PMP-001.cr_rw01_mml.rw01_mml1_stored)
+- Status: FOLDED into F-PMP-001 (bin CG-PMP-001.cr_rw01_mml.rw01_mml1_stored)
 
 ### F-PMP-006: A field encodings OFF/TOR/NA4/NAPOT all selectable at G=0
 - What: A=0 OFF, A=1 TOR, A=2 NA4, A=3 NAPOT are stored as written. NA4 is legal because
@@ -6212,14 +6420,13 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: ACTIVE
 
 ### F-PMP-017: PMP CSRs accessible in debug mode
-- What: Debug mode entry forces priv_lvl to M, so program-buffer code can read/write PMP CSRs;
-  they are not debug-only CSRs (no illegal_csr_dbg gating).
-- Observable at: rvfi_rd_wdata of csrr in debug mode; rvfi_ext_debug_mode=1.
-- Config: debug mode.
+- What: Folded into F-PMP-016: debug mode runs at M privilege (F-PRV-005), so the parent's
+  M-mode-only rule already admits program-buffer accesses; there is no debug-only gating to observe
+  (v2 edge rule, second pass; Critic M-9); carried by the parent's debug-mode access bins.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:908 (priv_lvl_d = M on any exception/debug entry),
   402 (illegal_csr_dbg only for debug CSRs)
 - Edge: yes, of F-PMP-016
-- Status: ACTIVE
+- Status: FOLDED into F-PMP-016 (bin CG-PMP-004.cp_dbg.d1, CG-PMP-004.cr_dbg_class.d1_pmpcfg_read_only, d1_pmpcfg_write, d1_pmpaddr_read_only, d1_pmpaddr_write, d1_mseccfg_read_only, d1_mseccfg_write)
 
 ### F-PMP-018: CSRRS/CSRRC on PMP CSRs read-modify-write through the WARL rules
 - What: For set/clear operations the write value is (rdata | wdata) or (rdata & ~wdata) and is
@@ -6300,6 +6507,9 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Source: spec: machine.adoc mseccfg section (RLB) | RTL: rtl/ibex_cs_registers.sv:1510, 1514
 - Edge: no
 - Status: ACTIVE
+- Notes: (fact-check X-20) RLB 0->1 needs no L=1 entry at all while RLB=0; since M-mode execution
+  under MML=1 needs an L=1 executable rule, the mseccfg transitions (1,x,0)->(1,x,1) are
+  unreachable from M-mode code (TP-PMP-108; CG-PMP-003 ignore_bins; debug-ROM variant OQ-PMP-10).
 
 ### F-PMP-026: RLB sticky-off: with RLB=0 and any L=1 entry (including A=OFF entries) RLB writes are ignored
 - What: any_pmp_entry_locked = |(L & ~RLB); when set the RLB write value is forced to 0.
@@ -6448,12 +6658,13 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: ACTIVE
 
 ### F-PMP-039: NAPOT region with base above 4 GiB never matches
-- What: Folded into F-PMP-014, whose What already states the NA4/NAPOT never-matches rule.
+- What: Folded into F-PMP-002 (through F-PMP-014), whose What already states the NA4/NAPOT
+  never-matches rule.
 - Observable at: rvfi_trap and data_req_o follow the no-match verdict (see F-PMP-014).
 - Config: pmpcfg.A=NAPOT, pmpaddr with bit 30/31 set and few trailing ones.
 - Source: RTL-defined: rtl/ibex_core.sv:1595-1597 ({2'b00, addr}); rtl/ibex_pmp.sv:191-193
-- Edge: yes, of F-PMP-036
-- Status: FOLDED into F-PMP-014 (bin CG-PMP-007.cr_hi_mode.napot_base_hi30, CG-PMP-007.cr_hi_mode.napot_base_hi31)
+- Edge: yes, of F-PMP-002
+- Status: FOLDED into F-PMP-002 (bin CG-PMP-007.cr_hi_mode.napot_base_hi30, CG-PMP-007.cr_hi_mode.napot_base_hi31)
 
 ### F-PMP-040: TOR matches pmpaddr(i-1) <= addr < pmpaddr(i), independent of pmpcfg(i-1)
 - What: For A=TOR the start is pmpaddr(i-1) (whatever entry i-1's mode/lock is) and the end is
@@ -6464,6 +6675,10 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   pmpcfg(i-1)") | RTL: rtl/ibex_pmp.sv:163-164, 194-199, 207-210
 - Edge: no
 - Status: ACTIVE
+- Notes: (fact-check X-20, TP-PMP-038) a NA4/NAPOT entry i-1 is anchored at pmpaddr(i-1)
+  (rtl/ibex_pmp.sv:163-164), so it covers the TOR inside_low word pmpaddr(i-1)*4 and decides it by
+  priority; the TOR probe at that word observes entry i's verdict only when entry i-1 is OFF, TOR
+  or gives the same verdict.
 
 ### F-PMP-041: TOR for entry 0 uses address 0 as lower bound
 - What: pmpcfg0.A=TOR matches any address < pmpaddr0.
@@ -6598,15 +6813,14 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: ACTIVE
 
 ### F-PMP-053: U-mode with all entries OFF: every fetch and data access faults
-- What: After mret to U with no enabled entry, the first U-mode instruction fetch raises an
-  instruction access fault (mepc = target pc); any U-mode load/store would fault too.
-- Observable at: rvfi_trap=1 on the first U-mode instruction, mcause=1, mtval=pc via csrr.
-- Config: all pmpcfg.A=OFF; priv U.
+- What: Folded into F-PMP-052: with every entry OFF nothing matches, so every U-mode fetch and data
+  access takes the parent's U-mode no-match deny with the parent's fault observable (v2 edge rule,
+  second pass; Critic M-9); carried by the all-OFF and U-mode fault bins.
 - Source: spec: machine.adoc "Priority and Matching Logic" (note: "If at least one PMP entry is
   implemented, but all PMP entries' A fields are set to OFF, then all S-mode and U-mode memory
   accesses will fail") | RTL: rtl/ibex_pmp.sv:138, 204
 - Edge: yes, of F-PMP-052
-- Status: ACTIVE
+- Status: FOLDED into F-PMP-052 (bin CG-PMP-014.cp_all_off_u.yes; CG-PMP-009.cr_priv_cause.u_c1_c16, u_c1_i32)
 
 ### F-PMP-054: MMWP=1: M-mode access with no matching entry is denied
 - What: With MMWP set, unmatched M-mode fetches, loads and stores fault (instruction/load/store
@@ -6669,7 +6883,9 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: FOLDED into F-PMP-056 (bin CG-PMP-005.cr_truth_mml1.c1001_u_fetch, CG-PMP-005.cr_truth_mml1.c1001_u_load, CG-PMP-005.cr_truth_mml1.c1001_u_store, CG-PMP-005.cr_truth_mml1.c1100_u_fetch, CG-PMP-005.cr_truth_mml1.c1100_u_load, CG-PMP-005.cr_truth_mml1.c1100_u_store, CG-PMP-005.cr_truth_mml1.c1101_u_fetch, CG-PMP-005.cr_truth_mml1.c1101_u_load, CG-PMP-005.cr_truth_mml1.c1101_u_store, CG-PMP-005.cr_truth_mml1.c1110_u_fetch, CG-PMP-005.cr_truth_mml1.c1110_u_load, CG-PMP-005.cr_truth_mml1.c1110_u_store)
 
 ### F-PMP-059: MML=1 shared data region L=0, RW=01
-- What: Folded into F-PMP-056: rows LRWX=0010/0011 of the Smepmp table.
+- What: Folded into F-PMP-056: rows LRWX=0010/0011 of the Smepmp table. Both rows grant READ (and
+  WRITE per the table) and deny fetch in both modes: a U-mode fetch from an LRWX=0011 window traps
+  (rtl/ibex_pmp.sv:66-75; fact-check X-20, TP-PMP-062).
 - Observable at: rvfi_trap + csrr read-back of mcause 1/5/7 (see F-PMP-056).
 - Config: mseccfg.MML=1; pmpcfg L=0 R=0 W=1, X in {0,1}.
 - Source: spec: smepmp.adoc truth table rows LRWX=0010/0011; machine.adoc mseccfg section (Shared-Region, L not set) | RTL: rtl/ibex_pmp.sv:66-75
@@ -6759,6 +6975,7 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   rtl/ibex_if_stage.sv:426-427
 - Edge: no
 - Status: ACTIVE
+- Notes: Canonical for the FE alias F-FE-016 (M-10 pass).
 
 ### F-PMP-068: Unaligned 32-bit fetch: first half allowed, second half denied gives mtval = pc+2
 - What: Alias of F-EXC-005: PMP perspective, see canonical (the PMP-side mechanism, PMP_I2 on
@@ -6801,6 +7018,10 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   rtl/ibex_core.sv:1597, 1603-1604, 1063; rtl/ibex_load_store_unit.sv:719, 722-724
 - Edge: no
 - Status: ACTIVE
+- Notes: (fact-check X-20) no PMP configuration permits a store while denying a load at the same
+  privilege: under MML=0 W is stored as W&R (rtl/ibex_cs_registers.sv:1444-1445); under MML=1
+  every row granting WRITE also grants READ (rtl/ibex_pmp.sv:66-83). A store-denied window is an
+  R-only row; a load-denied window is a row without R (TP-PMP-069).
 
 ### F-PMP-072: MPRV=1 makes data accesses use MPP privilege for the PMP check; fetch is unaffected
 - What: priv_mode_lsu = MPRV ? MPP : current privilege. In M-mode with MPRV=1, MPP=U loads/stores
@@ -6843,7 +7064,10 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 
 ### F-PMP-075: dret to U-mode does NOT clear MPRV (bug candidate B1)
 - What: Alias of F-PRV-015: PMP perspective, see canonical (B1; the PMP-visible effect is a
-  U-mode load/store to an M-only region that retires with rvfi_trap=0 and data_req_o asserted).
+  U-mode load/store to an M-allowed / U-denied region that retires with rvfi_trap=0 and data_req_o
+  asserted). Such a region is unmatched with MMWP=0 or a matching L=0 RWX=000 entry under MML=0, or
+  LRWX=1110 under MML=1; "L=1 RW under MML=0" is U-accessible (L is ignored for U, rtl/ibex_pmp.sv:
+  101-110) and "MMWP=1 with no U rule" denies M too (fact-check X-20, TP-PMP-073).
 - Observable at: data_req_o asserted and rvfi_trap=0 for a U-mode access to an M-only region after
   dret (see F-PRV-015).
 - Config: debug mode; mstatus.MPRV=1, MPP=M; dcsr.prv=U; then dret.
@@ -6949,6 +7173,10 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   in F-EXC-026 (load) and F-EXC-028 (store). Former F-PMP-083 (no rd write) is bin
   CG-PMP-008.cr_rd.load_c5_none; former F-PMP-084 (2-cycle completion) is bins
   CG-PMP-008.cr_lat.aligned_denied_lat2 (probe candidate) and cr_align_nreq.aligned_denied_n0.
+  Round-2 review M-10 (cluster F-EXC-026 / F-PMP-082 / F-DMEM-033): kept ACTIVE as the PMP-side
+  observable (no data_req_o for the denied word, mtval = EA); F-EXC-026 owns the cause/CSR effect
+  and F-DMEM-033 the bus-error path. Ruling requested from the DV Lead: keep the three-way split
+  or alias this entry to F-EXC-026 (the PMP area then keeps only the bus observable as a bin).
 
 ### F-PMP-083: Denied load does not write the destination register
 - What: Folded into F-PMP-082: a checker bullet of the parent with no distinct stimulus.
@@ -7148,6 +7376,7 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
   rtl/ibex_pmp.sv:239-251
 - Edge: yes, of F-PMP-095
 - Status: ACTIVE
+- Notes: Canonical for the DBG alias F-DBG-054 (M-10 pass).
 
 ### F-PMP-098: Debug mode: 32-bit instruction at the last halfword of the DM range
 - What: For pc = DmBaseAddr + DmAddrMask - 1 (unaligned, uncompressed), PMP_I is bypassed but PMP_I2
@@ -7174,13 +7403,14 @@ doc defect D2 (illegal mstatus.MPP -> U) is canonical in F-CSR-024; F-PMP-075/07
 - Status: ALIAS of F-PRV-005
 
 ### F-PMP-100: Back-to-back PMP CSR writes: lock in write 1 blocks write 2
-- What: Folded into F-PMP-020: the back-to-back sequence is the parent's own statement.
+- What: Folded into F-PMP-007 (through F-PMP-020): the back-to-back sequence is the parent's own
+  statement.
 - Observable at: csrr read-back on rvfi_rd_wdata of pmpaddr(i)/pmpcfg after the sequence (see
   F-PMP-020).
 - Config: RLB=0.
 - Source: RTL: rtl/ibex_cs_registers.sv:1423-1426, 1463, 1474-1481
 - Edge: yes, of F-PMP-007
-- Status: FOLDED into F-PMP-020 (bin CG-PMP-011.cr_bb.lock_then_addr, CG-PMP-011.cr_bb.lock_then_cfg)
+- Status: FOLDED into F-PMP-007 (bin CG-PMP-011.cr_bb.lock_then_addr, CG-PMP-011.cr_bb.lock_then_cfg)
 
 ## Smepmp truth table vs RTL (mseccfg.MML=1)
 
@@ -7258,13 +7488,15 @@ stimulus); the named bin of the parent now carries it. An entry stays `Edge: yes
 names a stimulus condition or timing coincidence the parent does not AND its observable or expected
 outcome differs. Edges point at the base feature (no depth-2 chains). Canonical entries owned by
 this part (other areas alias to them): F-DBG-012/016/017/023/032/050/055/056, F-TRG-007,
-F-PMC-001/004/005/007/011/020/025. Doc defects use the canonical D numbers (D4 tdata1 reset value,
+F-PMC-001/004/005/007/011/020/025/053. Doc defects use the canonical D numbers (D4 tdata1 reset value,
 D6 misaligned counted once, D12 debug.rst trigger CSRs "Debug Mode only", D16
-performance_counters.rst parameter text, D18 cs_registers.rst DbgHwNumLen / scontext 0x7AA; D5 is
+performance_counters.rst parameter text, D18 cs_registers.rst DbgHwNumLen / scontext 0x7AA, D20 mhpmeventN = 1 << (N - 3); D5 is
 RETIRED in favour of B15) and bug candidates the canonical B numbers (B1 dret/MPRV, B2 MPRV in debug
-mode, B3 tdata3/context CSRs read 0, B5 dcsr.nmip, B7 dummies in minstret, B9 dcsr.cause 0 window,
-B10 trigger cause on ebreak entry, B11 NumBranchesTaken under DIT, B15 dcsr.ebreaks writable; B6 is
-reclassified RTL-defined). Observables use the shorthands "csrr read-back on rvfi_rd_wdata" (CSR
+mode, B3 tdata3/context CSRs read 0, B5 dcsr.nmip, B7 dummies in minstret, B10 trigger cause on
+ebreak entry, B11 NumBranchesTaken under DIT, B15 dcsr.ebreaks writable, B17 HPM counters 8/11/12
+over-count behind an outstanding WB access; B6 is reclassified RTL-defined and B9 (dcsr.cause 0
+window under out-of-spec stimulus) is record-only). Fix brief 3 (rtl-arch T-053) corrections are
+marked "fact-check X-n / C-n" in the blocks below. Observables use the shorthands "csrr read-back on rvfi_rd_wdata" (CSR
 state) and "instr_addr_o = <vector>" (trap targets).
 
 ---------------------------------------------------------------------------------------------------
@@ -7308,9 +7540,15 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - What: Debug entry is deferred until the instruction in WB completes (ready_wb_i) and the ID stage
   is empty; IF is halted meanwhile. If the outstanding load/store returns an error, that exception
   is taken first (mepc/mcause/mtval written, PC := mtvec) and debug mode is then entered with dpc :=
-  the trap handler address (see F-DBG-004).
+  the trap handler address (see F-DBG-004). The instruction already in ID behind the load/store (if
+  any) also completes: halt_if only stops IF (rtl/ibex_controller.sv:700-708) and the entry needs
+  id_wb_pending = 0 (:296), so dpc = pc of the first not-yet-executed instruction = next pc of the
+  last retired record, which is "load pc + size" only when nothing had entered ID behind the load
+  (fact-check X-7, C-3).
 - Observable at: data_rvalid_i timing vs. first fetch of DmHaltAddr on instr_addr_o; rvfi of the
-  load/store retires before rvfi_ext_debug_mode goes high; csrr read-back of dpc on rvfi_rd_wdata.
+  load/store (and of the instruction behind it, both with rvfi_ext_debug_req = 0, C-3) retires
+  before rvfi_ext_debug_mode goes high; the first debug-ROM record carries rvfi_ext_debug_req = 1;
+  csrr read-back of dpc on rvfi_rd_wdata == next pc of the last pre-entry record.
 - Config: none (memory model must delay data_gnt_i / data_rvalid_i).
 - Source: spec Sdext.adoc "Halt" | RTL-defined rtl/ibex_controller.sv:700-702 (halt_if while
   id_wb_pending), 704-707, 296 (id_wb_pending)
@@ -7322,9 +7560,12 @@ state) and "instr_addr_o = <vector>" (trap targets).
   debug_req_i is high, the controller goes to FLUSH, performs the exception architecturally (mepc,
   mcause, mtval, mstatus.MIE/MPIE/MPP written, PC := mtvec target), and then goes to DBG_TAKEN_IF
   instead of DECODE: dpc := trap handler address, dcsr.cause := 3. No handler instruction executes.
-- Observable at: rvfi_trap for the faulting instruction; csrr read-back of mepc/mcause on
-  rvfi_rd_wdata; instr_addr_o sequence (mtvec target is fetched, then DmHaltAddr); csrr read-back
-  of dpc == mtvec target.
+- Observable at: rvfi_trap for the faulting instruction X, whose record carries rvfi_ext_debug_req
+  = 0 (the flag is sampled at X's IF->ID transfer, before the rise; fact-check X-6, C-3; a request
+  already high before X's transfer pre-empts X instead: halt_if, plain haltreq entry with dpc = X pc
+  and no record for X); csrr read-back of mepc/mcause on rvfi_rd_wdata; instr_addr_o sequence
+  (mtvec target is fetched, then DmHaltAddr; needs cpuctrlsts.icache_enable = 0, C-14); csrr
+  read-back of dpc == mtvec target; the first debug-ROM record carries rvfi_ext_debug_req = 1.
 - Config: mtvec; the exception type (illegal, ecall, ebreak with ebreakm=0, fetch error,
   load/store).
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" (trap-first semantics stated for step;
@@ -7333,16 +7574,23 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Edge: yes, of F-DBG-001
 - Status: ACTIVE
 - Notes: For haltreq the spec does not mandate whether the exception or the halt is first; RTL
-  always completes the exception. Reference model must match this ordering.
+  always completes the exception. Reference model must match this ordering. Canonical for the EXC
+  alias F-EXC-048 (M-10 pass).
 
 ### F-DBG-005: debug_req_i must be level-held; a short pulse can be dropped
 - What: enter_debug_mode is combinational on debug_req_i and is only acted on when the pipeline is
   idle (DECODE with !stall && !id_wb_pending, or FIRST_FETCH). A pulse that ends while an
   instruction is still in ID/WB is lost; no debug entry happens.
-- Observable at: absence of DmHaltAddr fetch; rvfi_ext_debug_req shows the pulse on the retiring
-  instruction but rvfi_ext_debug_mode stays 0.
+- Observable at: absence of the DmHaltAddr fetch within the entry bound (driver log + ibus monitor).
+  The retiring instruction does NOT show the pulse: rvfi_ext_debug_req is sampled at the IF->ID
+  transfer (fact-check X-6, C-3) and the instruction in ID entered before the pulse. An RVFI trace
+  exists only when ID was EMPTY during the pulse (WB busy): captured_debug_req is sticky
+  (rtl/ibex_core.sv:1949-1957) and the NEXT instruction entering ID reports rvfi_ext_debug_req = 1
+  with rvfi_ext_debug_mode = 0; with an instruction stalled in ID or a divide in ID there is no
+  trace at all.
 - Config: none.
-- Source: RTL-defined rtl/ibex_controller.sv:474-477, 704-722 (no latching of debug_req_i)
+- Source: RTL-defined rtl/ibex_controller.sv:474-477, 704-722 (no latching of debug_req_i in the
+  controller); rtl/ibex_core.sv:1949-1957, 1996-2001 (RVFI-side sticky capture)
 - Edge: yes, of F-DBG-001
 - Status: ACTIVE
 - Notes: Debug spec assumes the DM holds haltreq until the hart reports halted; TB stimulus must
@@ -7358,8 +7606,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Source: RTL-defined rtl/ibex_controller.sv:515-533 (comment acknowledges window), 985-987
 - Edge: yes, of F-DBG-001
 - Status: ACTIVE
-- Notes: Bug candidate B9 (RTL/spec disagreement: cause must be one of the defined values whenever
-  debug mode is entered). Owner question Q1 below.
+- Notes: B9, record-only (gen_bug_log.md v1d): the window needs a debug_req_i pulse shorter than
+  the DECODE -> FLUSH span, which the debug spec forbids (haltreq is held until the hart halts);
+  TP-DBG-011 is the informational `_info` item, never gated. The ecall's record carries
+  rvfi_ext_debug_req = 0 (C-3); the entry is identified from the driver log. Owner question Q1
+  below (Q-007 default applied).
 
 ### F-DBG-007: debug_req_i held high while in debug mode is ignored; re-halts immediately after dret
 - What: enter_debug_mode is gated by ~debug_mode_q, so a held debug_req_i has no effect inside debug
@@ -7521,18 +7772,15 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - What: The U-mode instance of F-DBG-017 (same path, dcsr.prv := 0, dret returns to U); carried by
   the parent's privilege bins.
 - Source: RTL-defined rtl/ibex_controller.sv:481-483; rtl/ibex_cs_registers.sv:909-913
-- Edge: no
+- Edge: yes, of F-DBG-017
 - Status: FOLDED into F-DBG-017 (bin CG-DBG-003.cr_priv_en_outcome.u_off_on_dbg, u_on_on_dbg; CG-DBG-001.cr_cause_prv.ebreak_u)
 
 ### F-DBG-020: ebreak in U-mode with dcsr.ebreaku=0 raises a breakpoint exception into M-mode
-- What: Breakpoint exception taken in M-mode; mstatus.MPP := U; mepc := ebreak PC.
-- Observable at: rvfi_trap; csrr read-back of mcause (3) and mstatus.MPP (0) on rvfi_rd_wdata in the
-  M-mode handler; instr_addr_o == mtvec base.
-- Config: dcsr.ebreaku=0; priv=U.
-- Source: spec machine.adoc "Environment Call and Breakpoint" | RTL-defined
-  rtl/ibex_controller.sv:481-483, 884-897; rtl/ibex_cs_registers.sv:918-931
+- What: Alias of F-EXC-017: DBG perspective (the U-mode / dcsr.ebreaku = 0 row of the breakpoint
+  exception: cause 3 taken in M-mode with mstatus.MPP := U and mepc := the ebreak PC), see
+  canonical.
 - Edge: no
-- Status: ACTIVE
+- Status: ALIAS of F-EXC-017
 
 ### F-DBG-021: ebreak outcome is selected strictly by the current privilege ({ebreakm, ebreaku} x {M, U})
 - What: The cross-setting rows of F-DBG-017's selection rule (ebreakm=1 does not affect a U-mode
@@ -7595,38 +7843,40 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-DBG-027: Load/store access fault raised from WB while in debug mode
 - What: One row of the exception-kind enumeration of F-DBG-026 (alias of the canonical F-PRV-005;
   WB-stage PMP or bus fault in debug mode: instr_addr_o = DmExceptionAddr, no CSR update, rd not
-  written); carried by the parent's kind bins.
+  written); carried by the parent's kind bins. Base feature F-PRV-002 (the former target F-PRV-005
+  is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_controller.sv:313-317 (WB error priority), 827-831, 900-924
-- Edge: yes, of F-DBG-026 (ALIAS of F-PRV-005)
-- Status: FOLDED into F-PRV-005 (bin CG-DBG-004.cp_kind.load_pmp, store_pmp, load_bus, store_bus)
+- Edge: yes, of F-PRV-002
+- Status: FOLDED into F-PRV-002 (bin CG-DBG-004.cp_kind.load_pmp, store_pmp, load_bus, store_bus)
 
 ### F-DBG-028: Illegal instruction in debug mode (including access to a non-existent CSR)
 - What: One row of the exception-kind enumeration of F-DBG-026 (alias of the canonical F-PRV-005;
   illegal instruction in debug mode: instr_addr_o = DmExceptionAddr, mtval not written); carried by
-  the parent's kind bins.
+  the parent's kind bins. Base feature F-PRV-002 (the former target F-PRV-005 is an edge or alias of
+  it).
 - Source: RTL-defined rtl/ibex_controller.sv:864-869 (illegal_insn_prio arm), 827-831
-- Edge: yes, of F-DBG-026 (ALIAS of F-PRV-005)
-- Status: FOLDED into F-PRV-005 (bin CG-DBG-004.cp_kind.illegal, illegal_csr)
+- Edge: yes, of F-PRV-002
+- Status: FOLDED into F-PRV-002 (bin CG-DBG-004.cp_kind.illegal, illegal_csr)
 
 ### F-DBG-029: ecall in debug mode vectors to DmExceptionAddr (spec: UNSPECIFIED)
 - What: One row of the exception-kind enumeration of F-DBG-026 (alias of the canonical F-PRV-005;
   ecall in debug mode, which Sdext.adoc "Debug Mode" item 9 leaves UNSPECIFIED, is treated by the
   RTL as an ordinary exception: instr_addr_o = DmExceptionAddr, no CSR update); carried by the
-  parent's kind bin.
+  parent's kind bin. Base feature F-PRV-002 (the former target F-PRV-005 is an edge or alias of it).
 - Source: spec Sdext.adoc "Debug Mode" item 9 | RTL-defined rtl/ibex_controller.sv:870-873
   (ecall_insn_prio arm), 827-831
-- Edge: yes, of F-DBG-026 (ALIAS of F-PRV-005)
-- Status: FOLDED into F-PRV-005 (bin CG-DBG-004.cp_kind.ecall)
+- Edge: yes, of F-PRV-002
+- Status: FOLDED into F-PRV-002 (bin CG-DBG-004.cp_kind.ecall)
 
 ### F-DBG-030: Instruction fetch error (PMP or bus) in debug mode
 - What: One row of the exception-kind enumeration of F-DBG-026 (alias of the canonical F-PRV-005;
   fetch outside the DM region failing PMP at privilege M, or instr_err_i: instr_addr_o =
   DmExceptionAddr, no mtval/mepc update); carried by the parent's kind bins; the PMP-side statement
-  is F-DBG-054.
+  is F-DBG-054. Base feature F-PRV-002 (the former target F-PRV-005 is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_controller.sv:849-863 (instr_fetch_err_prio arm), 827-831;
   rtl/ibex_core.sv:1587-1600 (fetch PMP channels)
-- Edge: yes, of F-DBG-026 (ALIAS of F-PRV-005)
-- Status: FOLDED into F-PRV-005 (bin CG-DBG-004.cp_kind.fetch_pmp, fetch_bus)
+- Edge: yes, of F-PRV-002
+- Status: FOLDED into F-PRV-002 (bin CG-DBG-004.cp_kind.fetch_pmp, fetch_bus)
 
 ### F-DBG-031: dret resumes: PC := dpc, privilege := dcsr.prv, debug mode exits, pipeline flushed
 - What: dret in debug mode is a special request: FLUSH -> pc_mux PC_DRET (fetch dpc), debug_mode :=
@@ -7634,7 +7884,10 @@ state) and "instr_addr_o = <vector>" (trap targets).
   in minstret). The resume privilege is whatever dcsr.prv holds, including a value written by the
   debugger (former F-DBG-034, now a bin of CG-DBG-005).
 - Observable at: instr_addr_o == dpc; rvfi_ext_debug_mode falls; rvfi_mode of the next retired
-  instruction == dcsr.prv; rvfi_pc_wdata of dret == dpc.
+  instruction == dcsr.prv. rvfi_pc_wdata of the dret record is dret pc + 4, the sequential fetch
+  address (the dret leaves ID in DECODE and PC_DRET is set one cycle later in FLUSH,
+  rtl/ibex_core.sv:2084, rtl/ibex_id_stage.sv:991, :1130, rtl/ibex_controller.sv:957-966; fact-check
+  X-1, C-1): the resume target is the NEXT record's rvfi_pc_rdata == dpc, never the dret's pc_wdata.
 - Config: dpc, dcsr.prv.
 - Source: spec Sdext.adoc "Resume" | doc cs_registers.rst "Debug PC Register (dpc)" | RTL-defined
   rtl/ibex_controller.sv:961-966; rtl/ibex_cs_registers.sv:949-951; rtl/ibex_if_stage.sv:247;
@@ -7705,15 +7958,14 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-DBG-038: Step over a taken branch or jump: dpc = branch/jump target
-- What: The stepped control-transfer instruction completes; pc_if is the target when DBG_TAKEN_IF
-  saves dpc.
-- Observable at: csrr read-back of dpc == target on rvfi_rd_wdata; no rvfi_valid item for the target
-  before rvfi_ext_debug_mode=1.
-- Config: dcsr.step=1.
+- What: Folded into F-DBG-037: dpc = branch/jump target is the parent's own formula dpc := next PC
+  (pc_if) evaluated for a control transfer, with the parent's dpc read-back observable (the
+  sequential value was already folded as F-DBG-039) (v2 edge rule, second pass; Critic M-9); carried
+  by the parent's stepped-kind and dpc bins.
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" | RTL-defined rtl/ibex_controller.sv:
   773 (csr_save_if_o); rtl/ibex_if_stage.sv:420
 - Edge: yes, of F-DBG-037
-- Status: ACTIVE
+- Status: FOLDED into F-DBG-037 (bin CG-DBG-006.cr_stepped_prv.brtaken_m, jal_m, jalr_m; CG-DBG-001.cp_dpc_kind.br_target)
 
 ### F-DBG-039: Step over a not-taken branch and over a compressed instruction: dpc = PC+4 / PC+2
 - What: The parent's default "dpc := next PC" for sequential instructions (2 for a 16-bit
@@ -7740,10 +7992,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 
 ### F-DBG-041: Step over ebreak with ebreakm/ebreaku=1: cause 1 wins over cause 4
 - What: The step instance of F-DBG-025 (ebreak-into-debug in FLUSH with enter_debug_mode_prio_q set
-  goes to DBG_TAKEN_ID: dcsr.cause := 1, dpc := ebreak PC); carried by that entry's bins.
+  goes to DBG_TAKEN_ID: dcsr.cause := 1, dpc := ebreak PC); carried by that entry's bins. Base
+  feature F-DBG-017 (the former target F-DBG-025 is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_controller.sv:978-987, 519-523
-- Edge: yes, of F-DBG-037
-- Status: FOLDED into F-DBG-025 (bin CG-DBG-003.cr_coincident_outcome.step_dbg; CG-DBG-006.cr_stepped_retired.ebreakdbg_trap)
+- Edge: yes, of F-DBG-017
+- Status: FOLDED into F-DBG-017 (bin CG-DBG-003.cr_coincident_outcome.step_dbg; CG-DBG-006.cr_stepped_retired.ebreakdbg_ok)
 
 ### F-DBG-042: Step with an interrupt pending: the interrupt is not taken during the step (stepie=0)
 - What: handle_irq is masked by debug_single_step_i, so with dcsr.step=1 no interrupt (incl. NMI) is
@@ -7762,26 +8015,25 @@ state) and "instr_addr_o = <vector>" (trap targets).
 
 ### F-DBG-043: Step with NMI (irq_nm_i) pending: NMI deferred like other interrupts
 - What: The irq_nm_i instance of F-DBG-042 (handle_irq masks irq_nm with the same
-  debug_single_step_i term; dcsr.nmip reads 0, B5 / F-DBG-057); carried by that entry's bins.
+  debug_single_step_i term; dcsr.nmip reads 0, B5 / F-DBG-057); carried by that entry's bins. Base
+  feature F-DBG-037 (the former target F-DBG-042 is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_controller.sv:498-500; rtl/ibex_cs_registers.sv:825 (nmip forced 0)
 - Edge: yes, of F-DBG-037
-- Status: FOLDED into F-DBG-042 (bin CG-DBG-006.cr_pending_cause.nmi_step; CG-DBG-009.cr_src_window.nmi_step)
+- Status: FOLDED into F-DBG-037 (bin CG-DBG-006.cr_pending_cause.nmi_step; CG-DBG-009.cr_src_window.nmi_step)
 
-### F-DBG-044: Step over WFI: WFI behaves as a nop; dpc = WFI PC + 4; core_busy_o low for exactly one cycle
-- What: WFI goes FLUSH -> WAIT_SLEEP -> SLEEP. WAIT_SLEEP clears ctrl_busy_o for its single cycle
-  (rtl/ibex_controller.sv:598-604). In SLEEP the exit term `irq_nm || irq_pending_i || debug_req_i
-  || debug_mode_q || debug_single_step_i` is true (step set), so the else-branch that clears
-  ctrl_busy_o is not taken and the FSM moves to FIRST_FETCH at once (:606-621); FIRST_FETCH then
-  enters DBG_TAKEN_IF with do_single_step_q still set. ctrl_busy is therefore low for exactly one
-  cycle. No interrupt is needed to leave SLEEP. Port rule (gen_tb_architecture.md 8.2 item 1):
-  core_busy_o = ctrl_busy | if_busy | lsu_busy (rtl/ibex_core.sv:498-521), so the dip reaches
-  core_busy_o only when no instruction-bus beat is outstanding, no icache invalidation is active
-  (the 256-write sweep after reset / key valid) and the LSU is idle in that cycle; otherwise the
-  dip is invisible.
-- Observable at: core_busy_o low for exactly one cycle with instr_req_o low in that cycle when the
-  port rule holds (no ibus beat outstanding, no invalidation sweep, dbus idle; the bus monitors
-  decide), otherwise no dip; instr_addr_o == DmHaltAddr; csrr read-back of dpc (== wfi_pc+4) and
-  dcsr.cause (4) on rvfi_rd_wdata; no dependence on irq_*_i / irq_nm_i.
+### F-DBG-044: Step over WFI: no sleep, direct debug entry from FLUSH; dpc = WFI PC + 4; core_busy_o stays On
+- What: With dcsr.step = 1 outside debug mode, do_single_step_d = 1 for the wfi in DECODE
+  (rtl/ibex_controller.sv:462) and enter_debug_mode_prio_d = 1 (:474-475); wfi is a special request
+  (:287-293) so DECODE goes to FLUSH (:664-677). In FLUSH the `else if (wfi_insn) ctrl_fsm_ns =
+  WAIT_SLEEP` (:966-967) is overridden by `if (enter_debug_mode_prio_q ...) ctrl_fsm_ns =
+  DBG_TAKEN_IF` (:985-987, flop :1046): WAIT_SLEEP and SLEEP are never entered, the core does not
+  sleep, no interrupt is needed, dpc = WFI + 4 and dcsr.cause = 4 (step). ctrl_busy never drops, so
+  core_busy_o stays On throughout (rtl/ibex_core.sv:496-522). (Critic plan-set review M-1 and its
+  Section 5 correction of v1 C-06.)
+- Observable at: rvfi_ext_debug_mode = 1 on the first record after the stepped WFI, whose
+  rvfi_pc_rdata is DmHaltAddr (instr_addr_o fetch of DmHaltAddr follows the WFI directly); csrr
+  read-back of dpc = WFI + 4 and dcsr.cause = 4 on rvfi_rd_wdata; core_busy_o never equals
+  IbexMuBiOff between the WFI retirement and the debug-ROM fetch; no dependence on irq_*_i.
 - Config: dcsr.step=1; mstatus.TW=0 (else WFI in U-mode is illegal and F-DBG-040 applies).
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" ("If the instruction being stepped over
   would normally stall the hart, then instead the instruction is treated as a nop. This includes
@@ -7789,9 +8041,12 @@ state) and "instr_addr_o = <vector>" (trap targets).
   634-646
 - Edge: yes, of F-DBG-037
 - Status: ACTIVE
-- Notes: Critic C-06 correction: the dip is one cycle, not "WAIT_SLEEP/SLEEP". The
-  haltreq-coincident WFI (F-DBG-068) never reaches WAIT_SLEEP at all; the SLEEP wake by debug_req_i
-  (F-DBG-009) has a dip of the full sleep length.
+- Notes: fact-check X-8 / C-5 confirms: NO dip for the stepped WFI (the v1 C-06 one-cycle-dip wording
+  is retired; TP-DBG-049 asserts no Off cycle and CG-DBG-001.cr_cause_ctx.step_sleep is an
+  ignore_bin). The haltreq-coincident WFI (F-DBG-068) never reaches WAIT_SLEEP either; an unstepped
+  WFI woken by debug_req_i (F-DBG-009) shows the one-cycle WAIT_SLEEP dip when the request is
+  already high in the first SLEEP cycle and the full sleep length otherwise; a WFI executed in debug
+  mode (F-DBG-059) shows the one-cycle dip.
 
 ### F-DBG-045: Step over mret: dpc = mepc, dcsr.prv = new privilege (mstatus.MPP)
 - What: mret executes fully in FLUSH (priv := MPP, MIE := MPIE, MPRV cleared if MPP != M), then
@@ -7809,20 +8064,24 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-DBG-046: Step over a Zcmp instruction (cm.push/cm.pop/cm.popret/cm.popretz/cm.mvsa01/cm.mva01s)
 - What: The step instance of F-DBG-010 (enter_debug_mode masked while expanded micro-ops are in ID;
   the whole sequence completes, dpc := next PC or the popret target); carried by that entry's bins.
+  Base feature F-DBG-001 (the former target F-DBG-010 is an edge or alias of it). One RVFI record
+  per micro-op (fact-check X-14, C-12: rvfi_insn = the 32-bit expansion, the halfword on
+  rvfi_ext_expanded_insn, every record with rvfi_ext_debug_mode = 0 and rvfi_ext_expanded_insn_valid
+  = 1, only the last with rvfi_ext_expanded_insn_last = 1); micro-ops entering ID while debug_req_i
+  is high during the mask report rvfi_ext_debug_req = 1 (C-3). The step checker counts the sequence
+  as one instruction (TP-DBG-051).
 - Source: RTL-defined rtl/ibex_controller.sv:473-477; rtl/ibex_id_stage.sv:1218-1220
-- Edge: yes, of F-DBG-037
-- Status: FOLDED into F-DBG-010 (bin CG-DBG-006.cr_stepped_retired.push_ok, popret_ok; CG-DBG-001.cr_cause_ctx.step_zcmp)
+- Edge: yes, of F-DBG-001
+- Status: FOLDED into F-DBG-001 (bin CG-DBG-006.cr_stepped_retired.push_ok, popret_ok; CG-DBG-001.cr_cause_ctx.step_zcmp)
 
 ### F-DBG-047: Step over a load/store with slow memory or a multi-cycle divide
-- What: Debug re-entry waits for the LSU response (WB ready) or for the divider to finish; the
-  result is architecturally committed (rd written / store performed) before dpc is saved.
-- Observable at: rvfi_rd_wdata / data_wdata_o of the stepped instruction; csrr read-back of dpc ==
-  PC+4 on rvfi_rd_wdata.
-- Config: dcsr.step=1; memory model latency; mcountinhibit irrelevant.
+- What: Folded into F-DBG-037: waiting for the LSU response or the divider is the parent's own "once
+  it leaves ID/WB" mechanism; slow memory or a divide is a timing variation with the parent's dpc =
+  PC + 4 outcome (v2 edge rule, second pass; Critic M-9); carried by the parent's stepped-kind bins.
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" | RTL-defined rtl/ibex_controller.sv:
   700-711 (stall || id_wb_pending)
 - Edge: yes, of F-DBG-037
-- Status: ACTIVE
+- Status: FOLDED into F-DBG-037 (bin CG-DBG-006.cr_stepped_prv.loadslow_m, storeslow_m, div_m)
 
 ### F-DBG-048: Step over a jump to an address whose fetch faults: the fault is deferred to the next resume
 - What: The jump completes and debug mode is entered with dpc := target; the fetch error (PMP or
@@ -7838,16 +8097,25 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-DBG-049: Step and debug_req_i both active: cause 3 (haltreq) is recorded, one instruction executes
-- What: debug_cause_d prioritises debug_req_i over do_single_step_d. Entry timing is the same
-  (after the first instruction completes) because both are folded into enter_debug_mode_prio.
-- Observable at: csrr read-back of dcsr.cause == 3 on rvfi_rd_wdata; exactly one rvfi_valid item
-  with rvfi_ext_debug_mode=0 between the two debug windows.
+- What: debug_cause_d prioritises debug_req_i over do_single_step_d (rtl/ibex_controller.sv:519-523).
+  The entry timing depends on when the request is seen (fact-check X-7, C-3): a request already high
+  in the first DECODE after the dret's FLUSH (ID empty) takes DBG_TAKEN_IF at once (:704-708): ZERO
+  instructions retire, dpc unchanged, cause 3 (the F-DBG-007 re-halt arc; the step does not force
+  one instruction). Only a request rising after the stepped instruction entered ID lets that
+  instruction complete: one retirement (its record carries rvfi_ext_debug_req = 0), cause 3, dpc =
+  next pc.
+- Observable at: csrr read-back of dcsr.cause == 3 on rvfi_rd_wdata; zero (request high at the
+  resume) or exactly one (request rising in the stepped instruction's ID window) rvfi_valid item
+  with rvfi_ext_debug_mode=0 between the two debug windows, classified from the driver timestamp
+  (TP-DBG-054).
 - Config: dcsr.step=1; debug_req_i high across the dret.
 - Source: RTL-defined rtl/ibex_controller.sv:519-523, 474-475
 - Edge: yes, of F-DBG-037
 - Status: ACTIVE
-- Notes: Spec leaves the cause choice implementation-defined; the debug spec text says step
-  "regardless of the reason for resuming", so entry after one instruction is the checked property.
+- Notes: Spec leaves the cause choice implementation-defined; the debug spec's step text
+  ("regardless of the reason for resuming") describes the armed step, while haltreq requires the
+  hart to halt "as soon as possible": the zero-instruction re-halt is RTL-defined and both classes
+  are checked (pass).
 
 ### F-DBG-050: Debug CSRs (dcsr, dpc, dscratch0, dscratch1) are accessible only in debug mode; trigger CSRs are not so restricted
 - What: Any CSR access (read or write, any csr op) to 0x7B0-0x7B3 with debug_mode=0 raises an
@@ -7898,18 +8166,17 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Config: PMP denying everything (e.g. MMWP=1 with no regions) in debug mode.
 - Source: RTL-defined rtl/ibex_pmp.sv:239-240 (mask compare); rtl/ibex_core.sv:1587, 1591
   (PMP_I2 = pc_if+2)
-- Edge: yes, of F-DBG-052 (ALIAS of F-PMP-095)
+- Edge: yes, of F-PMP-095
 - Status: ACTIVE
+- Notes: The straddling-instruction case (PMP_I2 checked at DmBaseAddr + DmAddrMask - 1) is stated
+  by F-PMP-098; this entry owns the four boundary addresses.
 
 ### F-DBG-054: PMP still applies in debug mode outside the DM region (fetch with M privilege)
-- What: Fetches are checked with priv_mode_id (M in debug mode); with mseccfg.MMWP=1 and no matching
-  region, or an MML locked region without X for M, the fetch faults and vectors to DmExceptionAddr.
-- Observable at: instr_addr_o == DmExceptionAddr; rvfi_trap; csrr read-back of mcause on
-  rvfi_rd_wdata unchanged.
-- Config: pmpcfg/pmpaddr/mseccfg; debug mode.
-- Source: RTL-defined rtl/ibex_pmp.sv:251; rtl/ibex_core.sv:1599-1604
-- Edge: yes, of F-DBG-052 (ALIAS of F-PMP-095)
-- Status: ACTIVE
+- What: Alias of F-PMP-097: DBG perspective (fetches outside the DM range are PMP-checked with M
+  privilege in debug mode; with MMWP = 1 and no matching region, or an MML locked region without X,
+  the fetch faults and vectors to DmExceptionAddr), see canonical.
+- Edge: yes, of F-PMP-095
+- Status: ALIAS of F-PMP-097
 
 ### F-DBG-055: mstatus.MPRV is honoured for data accesses in debug mode although dcsr.mprven=0 (bug candidate)
 - What: priv_mode_lsu_o = mstatus.mprv ? mstatus.mpp : priv_lvl_q has no debug_mode term. With
@@ -7943,18 +8210,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Notes: Canonical for F-IRQ-039.
 
 ### F-DBG-057: NMI arriving in debug mode: dcsr.nmip stays 0; NMI taken after dret to mtvec+0x7C
-- What: nmip is hardwired 0 so the debugger cannot see the pending NMI. After dret the NMI is taken
-  (nmi_mode entered, mstack saved) with mepc := dpc.
-- Observable at: csrr read-back of dcsr bit 3 == 0 on rvfi_rd_wdata; instr_addr_o == mtvec+0x7C
-  after dret; rvfi_intr on the first item with csrr read-back of mcause == 0x8000001F.
-- Config: irq_nm_i asserted during debug mode.
-- Source: spec Sdext.adoc "Debug Mode" item 3; tools/specs/riscv-debug-spec/xml/core_registers.xml:
-  292-298 (nmip, access R: "When set, there is a Non-Maskable-Interrupt (NMI) pending for the hart")
-  | RTL-defined rtl/ibex_cs_registers.sv:825; rtl/ibex_controller.sv:736-745
+- What: Alias of F-IRQ-037: DBG perspective (dcsr.nmip reads 0 while an NMI is held pending in debug
+  mode, bug candidate B5, core_registers.xml:292-298; after dret the NMI is taken at mtvec + 0x7C
+  with mepc = dpc), see canonical.
 - Edge: yes, of F-DBG-056
-- Status: ACTIVE
-- Notes: nmip hardwired 0 is bug candidate B5 (canonical F-IRQ-037); the nmip claim is supported
-  by core_registers.xml:292-298, not by Sdext.adoc prose (Critic C-22).
+- Status: ALIAS of F-IRQ-037
 
 ### F-DBG-058: debug_req_i arriving while IRQ_TAKEN is in progress: handler entry completes, then debug
 - What: IRQ_TAKEN does not sample debug_req_i; the interrupt CSRs are written and PC := vector. In
@@ -7967,7 +8227,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Edge: yes, of F-DBG-056
 - Status: ACTIVE
 
-### F-DBG-059: WFI executed in debug mode acts as a nop (one-cycle core_busy_o dip)
+### F-DBG-059: WFI executed in debug mode acts as a nop (ctrl_busy dip visible on core_busy_o only when the bus and icache are idle)
 - What: WFI in debug mode goes FLUSH -> WAIT_SLEEP -> SLEEP. WAIT_SLEEP clears ctrl_busy_o for its
   single cycle (rtl/ibex_controller.sv:598-604); in SLEEP the exit term is true because
   debug_mode_q=1, so ctrl_busy_o stays high and the FSM leaves for FIRST_FETCH at once (:606-621,
@@ -7975,16 +8235,20 @@ state) and "instr_addr_o = <vector>" (trap targets).
   debug mode. Port rule (gen_tb_architecture.md 8.2 item 1): core_busy_o = ctrl_busy | if_busy |
   lsu_busy, so the dip reaches core_busy_o only when no instruction-bus beat is outstanding, no
   icache invalidation is active and the LSU is idle in that cycle; otherwise it is invisible.
-- Observable at: core_busy_o low for exactly one cycle (instr_req_o low in that cycle) when the
-  port rule holds (no ibus beat outstanding, no invalidation sweep, dbus idle), otherwise no dip;
-  the next fetch on instr_addr_o is WFI+4 and its retirement carries rvfi_ext_debug_mode=1; no
-  dependence on irq_*_i / irq_nm_i.
+- Observable at: core_busy_o == IbexMuBiOff for exactly one cycle (instr_req_o low in that cycle)
+  only when the port rule holds in that cycle (no instruction-bus beat outstanding, no icache
+  invalidation sweep active, LSU idle: core_busy_o = ctrl_busy | if_busy | lsu_busy,
+  rtl/ibex_core.sv:496-522); otherwise no dip is visible at the port and the ctrl_busy fact is not
+  observable; the next fetch on instr_addr_o is WFI+4 and its retirement carries
+  rvfi_ext_debug_mode=1; no dependence on irq_*_i / irq_nm_i.
 - Config: debug mode.
 - Source: spec Sdext.adoc "Debug Mode" item 8 ("Instructions that place the hart into a stalled
   state act as a nop") | RTL-defined rtl/ibex_controller.sv:598-604, 606-621
 - Edge: no
 - Status: ACTIVE
 - Notes: Critic C-06 correction (the draft said the dip lasted the WAIT_SLEEP and SLEEP cycles).
+  Cross-reference (Critic M-10): the step-over-WFI case outside debug mode never reaches WAIT_SLEEP
+  and keeps core_busy_o On; it is F-IRQ-051 / F-DBG-044, not this entry.
 
 ### F-DBG-060: mret executed in debug mode (spec UNSPECIFIED): RTL performs the mret and stays in debug mode
 - What: mret in debug mode is executed as in M-mode: priv := MPP, MIE := MPIE, MPRV cleared if MPP
@@ -8046,6 +8310,12 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-DBG-065: Alias of F-RVFI-018
 - What: Alias of F-RVFI-018: DBG perspective (rvfi_ext_debug_req / rvfi_ext_debug_mode), see
   canonical.
+- Notes: DBG-side semantics (fact-check X-6, C-3): rvfi_ext_debug_req is the debug_req_i level at
+  the record's IF->ID transfer (rtl/ibex_core.sv:1996-2001), or captured_debug_req when the request
+  arrived on an empty ID (:1949-1957); the instruction in ID at the rise reports 0; the first
+  debug-ROM record reports 1; {req 1, mode 0} is reachable only by a Zcmp micro-op entering ID
+  during the expansion mask (rtl/ibex_controller.sv:474-477) or by the sticky capture after a
+  dropped pulse (TP-DBG-010 / TP-DBG-070).
 - Edge: no
 - Status: ALIAS of F-RVFI-018
 
@@ -8062,11 +8332,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-DBG-067: Alias of F-SEC-023
-- What: Alias of F-SEC-023: DBG perspective (two exceptions in debug mode do not assert the
+- What: Alias of F-SEC-022: DBG perspective (two exceptions in debug mode do not assert the
   ibex_core output double_fault_seen_o nor set cpuctrlsts.sync_exc_seen,
   rtl/ibex_cs_registers.sv:918-946), see canonical.
 - Edge: yes, of F-DBG-026 (ALIAS of F-PRV-005)
-- Status: ALIAS of F-SEC-023
+- Status: ALIAS of F-SEC-022
 
 ### F-DBG-068: debug_req_i sampled in the DECODE cycle of a wfi / mret / flushing CSR write: entry from FLUSH (H-C1 non-exception variants)
 - What: enter_debug_mode_prio_d (debug_req_i & ~debug_mode_q, rtl/ibex_controller.sv:474-475) is
@@ -8077,11 +8347,17 @@ state) and "instr_addr_o = <vector>" (trap targets).
   never entered, core_busy_o never drops, dpc := wfi PC + 4; (mret) the mret completes, dpc := mepc,
   dcsr.prv := old mstatus.MPP, mstatus.MIE := MPIE, MPRV cleared if MPP != M; (CSR flush) dpc :=
   csrw PC + 4 and the CSR write is committed. dcsr.cause := 3. No instruction retires in between.
-  dret is not an instance of this arc: during the dret's DECODE cycle debug_mode_q=1 masks
+  A request already high BEFORE the special instruction's IF->ID transfer does not produce this
+  arc: halt_if blocks the instruction (:700-708) and the RTL takes a plain haltreq entry with dpc =
+  its pc (the instruction executes after dret) (fact-check X-6 / X-7). dret is not an instance of
+  this arc: during the dret's DECODE cycle debug_mode_q=1 masks
   enter_debug_mode_prio_d, so a held debug_req_i re-halts through the DECODE -> DBG_TAKEN_IF arc in
   the first cycle after the flush (F-DBG-007).
-- Observable at: rvfi_ext_debug_req == 1 on the wfi/mret/csrw retirement and no rvfi_valid item
-  between it and the first rvfi_ext_debug_mode=1 item; instr_addr_o == DmHaltAddr; core_busy_o
+- Observable at: the wfi/mret/csrw record carries rvfi_ext_debug_req == 0 (the flag is sampled at
+  its IF->ID transfer, before the rise, rtl/ibex_core.sv:1996-2001; fact-check X-6, C-3) and no
+  rvfi_valid item lies between it and the first rvfi_ext_debug_mode=1 item, which carries
+  rvfi_ext_debug_req == 1; the arc is identified from the driver timestamp inside the
+  instruction's ID window, its record and the DmHaltAddr fetch; instr_addr_o == DmHaltAddr; core_busy_o
   stays high throughout (wfi variant); csrr read-back on rvfi_rd_wdata of dpc (wfi+4 / mepc /
   csrw+4), dcsr (cause 3, prv = old MPP for mret) and mstatus (MIE restored for mret).
 - Config: dcsr.step=0; mstatus.MPP/MPIE and mepc (mret variant); the flushing CSR (mstatus, mie,
@@ -8113,17 +8389,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
   parameter is DbgHwBreakNum (DbgHwNumLen is an internal localparam, rtl/ibex_cs_registers.sv:1755).
 
 ### F-TRG-002: tselect writes from M-mode (not debug mode) are silently ignored
-- What: tselect_we requires debug_mode_i. An M-mode csrw tselect completes without exception and
-  does not change tselect. (Unobservable in value terms with one trigger, but the write must not
-  trap.)
-- Observable at: no rvfi_trap; csrr read-back of tselect on rvfi_rd_wdata == 0.
-- Config: M-mode, debug_mode=0.
+- What: Folded into F-TRG-001: with one trigger tselect always reads 0, so an M-mode write that is
+  dropped is indistinguishable from the parent's WARL store of 0 (same no-trap / read-0 observable)
+  (v2 edge rule, second pass; Critic M-9); carried by the parent's mode x result bins.
 - Source: spec Sdtrig.adoc intro ("M-Mode and Debug Mode accesses to trigger CSRs ... must succeed")
   | RTL-defined rtl/ibex_cs_registers.sv:1775
 - Edge: yes, of F-TRG-001
-- Status: ACTIVE
-- Notes: Sdtrig ties write-ignoring to tdata1.dmode for tdata registers, not tselect; RTL-defined
-  extension. Harmless with a single trigger.
+- Status: FOLDED into F-TRG-001 (bin CG-TRG-001.cr_csr_mode_result.tsel_m_drop, CG-TRG-001.cr_tselw_mode.one_m, ones_m)
 
 ### F-TRG-003: tdata1 (mcontrol) read value: fixed fields plus writable execute bit; reset 0x2800_1048
 - What: tdata1 reads {type=2, dmode=1, maskmax=0, hit=0, select=0, timing=0, sizelo=0, action=1,
@@ -8143,7 +8415,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-TRG-004: tdata1 write in debug mode captures only bit 2 (execute); all other bits are WARL-ignored
 - What: Writing 0xFFFF_FFFF stores execute=1 and reads back 0x2800_104C; writing 0 stores execute=0
   and reads back 0x2800_1048 (non-zero, as Sdtrig requires for a disabled trigger). Writing with
-  type != 2, action != 1, dmode = 0, load/store = 1, match != 0 does not change those fields.
+  type != 2, action != 1, dmode = 0, load/store = 1, match != 0 does not change those fields. The
+  captured bit is the POST-OP value after the set/clear merge with the current tdata1 read value
+  (csrrs: old_exec | wdata[2]; csrrc: old_exec & ~wdata[2]; rtl/ibex_cs_registers.sv:1004-1005,
+  :1788; fact-check TP-TRG-004): a csrrc with all-ones CLEARS execute; readback = 32'h2800_1048 |
+  (post_op[2] << 2).
 - Observable at: csrr read-back of tdata1 on rvfi_rd_wdata.
 - Config: debug mode; tselect=0.
 - Source: spec Sdtrig.adoc "Trigger Module Registers" ("Write 0 to tdata1 ... will result in tdata1
@@ -8233,6 +8509,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_controller.sv:476-477, 704-711, 764-783, 519
 - Edge: no
 - Status: ACTIVE
+- Notes: Canonical for the EXC alias F-EXC-021 (M-10 pass); F-EXC-022 aliases F-TRG-021.
 
 ### F-TRG-011: No match when tdata1.execute=0
 - What: The parent's Config variable (execute) at its disabled value: tmatch_control_q=0 forces
@@ -8251,25 +8528,22 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: FOLDED into F-TRG-010 (bin CG-TRG-002.cr_priv_fired.u_f; CG-DBG-001.cr_cause_prv.trigger_u)
 
 ### F-TRG-013: Triggers do not fire in debug mode
-- What: enter_debug_mode masks trigger_match_i with ~debug_mode_q; executing the instruction at
-  tdata2 inside debug mode proceeds normally.
-- Observable at: rvfi_valid item with rvfi_pc_rdata == tdata2 and rvfi_ext_debug_mode=1; no further
-  DmHaltAddr fetch on instr_addr_o; csrr read-back of dpc/dcsr on rvfi_rd_wdata unchanged.
-- Config: tdata1.execute=1, tdata2 = an address in the debug program.
+- What: Folded into F-TRG-010: "not in debug mode" is a term of the parent's own match condition
+  (trigger_match_i & ~debug_mode_q, rtl/ibex_controller.sv:476-477), so the debug-mode non-fire is
+  the parent's condition evaluated false with the parent's not-fired observable (Critic M-9);
+  carried by the parent's context bins.
 - Source: spec Sdtrig.adoc intro ("Triggers do not fire while in Debug Mode"); Sdext.adoc "Debug
   Mode" item 5 | RTL-defined rtl/ibex_controller.sv:476-477
 - Edge: yes, of F-TRG-010
-- Status: ACTIVE
+- Status: FOLDED into F-TRG-010 (bin CG-TRG-002.cp_ctx.in_debug, CG-TRG-002.cr_ctx_fired.indebug_nf)
 
 ### F-TRG-014: Trigger on a compressed instruction (tdata2 with bit 1 set)
-- What: pc_if compares all 32 bits; a 16-bit instruction at a 2-byte-aligned, non-4-byte-aligned
-  address matches when tdata2[1]=1. dpc := that address.
-- Observable at: csrr read-back of dpc == tdata2 (addr%4 == 2) on rvfi_rd_wdata; instr_addr_o ==
-  DmHaltAddr with no rvfi_valid item for tdata2 before it.
-- Config: tdata2 = PC of a compressed instruction at addr%4 == 2.
+- What: Folded into F-TRG-010: a halfword-aligned tdata2 is one value of the parent's 32-bit pc_if
+  compare with the parent's outcome (dpc = tdata2, DmHaltAddr) (v2 edge rule, second pass; Critic
+  M-9); carried by the parent's context bins.
 - Source: spec Sdtrig.adoc "Address Matches" | RTL-defined rtl/ibex_cs_registers.sv:1872
 - Edge: yes, of F-TRG-010
-- Status: ACTIVE
+- Status: FOLDED into F-TRG-010 (bin CG-TRG-002.cp_ctx.comp2, CG-TRG-002.cr_ctx_fired.comp2_f)
 
 ### F-TRG-015: tdata2 with bit 0 set never matches (all PCs are 2-byte aligned)
 - What: pc_if[0] is always 0, so tdata2[0]=1 disables matching without any read-back change.
@@ -8284,18 +8558,20 @@ state) and "instr_addr_o = <vector>" (trap targets).
 
 ### F-TRG-016: Trigger set on the dret target (dpc): immediate re-entry, cause 2, dpc unchanged
 - What: The trigger half of F-DBG-066 (after dret pc_if == dpc == tdata2 with ID empty: DBG_TAKEN_IF
-  at once, zero retirements, dcsr.cause := 2); carried by that entry's bins.
+  at once, zero retirements, dcsr.cause := 2); carried by that entry's bins. Base feature F-DBG-031
+  (the former target F-DBG-066 is an edge or alias of it).
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" | RTL-defined
   rtl/ibex_controller.sv:476-477, 704-711
-- Edge: yes, of F-TRG-010
-- Status: FOLDED into F-DBG-066 (bin CG-DBG-005.cr_prv_next.m_rehalt_trig, u_rehalt_trig; CG-TRG-002.cr_ctx_fired.dret_f)
+- Edge: yes, of F-DBG-031
+- Status: FOLDED into F-DBG-031 (bin CG-DBG-005.cr_prv_next.m_rehalt_trig, u_rehalt_trig; CG-TRG-002.cr_ctx_fired.dret_f)
 
 ### F-TRG-017: Trigger set on the trap-handler entry address (mtvec target)
 - What: When an exception or interrupt vectors to tdata2, the trigger fires before the first handler
   instruction: mepc/mcause/mtval/mstatus are already updated, dpc := handler address, dcsr.cause :=
   2, dcsr.prv := M.
-- Observable at: rvfi_trap (or rvfi_intr) item, then instr_addr_o sequence vector -> DmHaltAddr with
-  no rvfi_valid item at the vector; csrr read-back on rvfi_rd_wdata of dpc (== vector) and
+- Observable at: the rvfi_trap record (exception variant) or the rvfi_ext_irq_valid level (interrupt
+  / NMI variants: rvfi_intr is a per-record field and no handler record exists; C-13), then
+  instr_addr_o sequence vector -> DmHaltAddr with no rvfi_valid item at the vector; csrr read-back on rvfi_rd_wdata of dpc (== vector) and
   dcsr.cause (2).
 - Config: tdata2 = mtvec base (exceptions) or mtvec base + 4*cause (interrupts); tdata1.execute=1.
 - Source: spec Sdtrig.adoc "Native Triggers" (etrigger/itrigger discussion; for mcontrol the handler
@@ -8357,10 +8633,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-TRG-022: Trigger address on the fall-through of a taken branch with data_ind_timing=1
 - What: F-TRG-021 with the Config variable cpuctrlsts.data_ind_timing at 1 (two-cycle branches,
   branch_set forced, rtl/ibex_id_stage.sv:790-791, 831, 928): same outcome, fires only when the
-  branch is not taken; carried by F-TRG-021's DIT bins.
+  branch is not taken; carried by F-TRG-021's DIT bins. Base feature F-TRG-010 (the former target
+  F-TRG-021 is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_id_stage.sv:790-791, 831, 928; rtl/ibex_controller.sv:704-711
 - Edge: yes, of F-TRG-010
-- Status: FOLDED into F-TRG-021 (bin CG-TRG-002.cr_dit_fall.dit1_falltaken_nf, dit1_fallnt_f)
+- Status: FOLDED into F-TRG-010 (bin CG-TRG-002.cr_dit_fall.dit1_falltaken_nf, dit1_fallnt_f)
 
 ### F-TRG-023: Trigger on a Zcmp instruction address fires before the first micro-op; cannot fire mid-sequence
 - What: The whole cm.* sequence shares one PC; a match on it fires before any micro-op. Once the
@@ -8388,9 +8665,10 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-TRG-025: Trigger match and enabled interrupt pending simultaneously: debug entry wins
 - What: The trigger instance of F-DBG-002 (DECODE evaluates enter_debug_mode, which includes
   trigger_match_i, before handle_irq; rtl/ibex_controller.sv:704-722); carried by that entry's bins.
+  Base feature F-DBG-001 (the former target F-DBG-002 is an edge or alias of it).
 - Source: RTL-defined rtl/ibex_controller.sv:476-477, 704-722
-- Edge: yes, of F-TRG-010
-- Status: FOLDED into F-DBG-002 (bin CG-TRG-002.cr_coinc_cause.irq_trig, nmi_trig; CG-DBG-009.cr_window_disp.entry_wins)
+- Edge: yes, of F-DBG-001
+- Status: FOLDED into F-DBG-001 (bin CG-TRG-002.cr_coinc_cause.irq_trig, nmi_trig; CG-DBG-009.cr_window_disp.entry_wins)
 
 ### F-TRG-026: Trigger match while the IF instruction is a SecureIbex dummy instruction
 - What: A dummy instruction is presented with the PC of the next real instruction
@@ -8474,14 +8752,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: FOLDED into F-PMC-001 (bin CG-PMC-001.cr_ctx_delta.wfi_eq, debug_eq)
 
 ### F-PMC-003: mcycle low-word wrap carries into mcycleh
-- What: 64-bit increment: 0x0000_0000_FFFF_FFFF -> 0x0000_0001_0000_0000. Preload via CSR writes.
-- Observable at: csrr read-back of mcycle/mcycleh on rvfi_rd_wdata (rdcycleh/rdcycle/rdcycleh
-  sequence).
-- Config: write mcycle := 0xFFFF_FFFx, mcycleh := any.
+- What: Folded into F-PMC-001: the low-word carry into mcycleh is the parent's "64-bit register"
+  statement at the 0xFFFF_FFFF boundary with the parent's read-back observable (v2 edge rule, second
+  pass; Critic M-9); carried by the parent's carry bins.
 - Source: spec zicntr.adoc sample code for 64-bit read | RTL-defined rtl/ibex_counter.sv:30
   (CounterWidth=64 add), 99-100
 - Edge: yes, of F-PMC-001
-- Status: ACTIVE
+- Status: FOLDED into F-PMC-001 (bin CG-PMC-001.cp_carry.seen, CG-PMC-001.cr_carry_ctx.carry_run)
 
 ### F-PMC-004: mcycle write while counting: the write wins and the increment for that cycle is lost
 - What: ibex_counter gives we priority over counter_inc_i; the cycle in which the CSR write lands
@@ -8561,6 +8838,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Source: RTL-defined rtl/ibex_cs_registers.sv:1651-1658
 - Edge: yes, of F-PMC-007
 - Status: ACTIVE
+- Notes: Canonical for the CSR alias F-CSR-068 (M-10 pass); the inhibited read is F-CSR-060.
 
 ### F-PMC-010: minstret speculative read when the WB instruction then faults
 - What: If the WB load/store faults, the ID instruction (which may have read minstret including the
@@ -8573,11 +8851,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Edge: yes, of F-PMC-007
 - Status: ACTIVE
 
-### F-PMC-011: SecureIbex dummy instructions increment minstret (and mul/div wait counters) (bug candidate)
+### F-PMC-011: SecureIbex dummy instructions increment minstret and the div-wait counter (bug candidate); the dummy mul adds no mul-wait cycles
 - What: Dummy instructions (ADD/MUL/DIV/AND with rd=x0) inserted by the IF stage pass through ID/WB
-  with instr_perf_count_id=1 (no dummy exclusion), so each dummy increments minstret; dummy MUL/DIV
-  also add to mhpmcounter11/12 stall cycles; mcycle counts their cycles. They are excluded from
-  RVFI.
+  with instr_perf_count_id=1 (no dummy exclusion), so each dummy increments minstret; a dummy DIV
+  adds DIV_STALL_FULL to mhpmcounter12; the dummy MUL is `mul` (funct3 000,
+  rtl/ibex_dummy_instr.sv:124-131), which the RV32MSingleCycle multiplier completes in its first
+  cycle (rtl/ibex_multdiv_fast.sv:203-217), so mhpmcounter11 does not move in an ALU-only window
+  (fact-check TP-PMC-013); mcycle counts their cycles. They are excluded from RVFI.
 - Observable at: csrr read-back of minstret on rvfi_rd_wdata over a code window exceeds the number
   of rvfi_valid items when cpuctrlsts.dummy_instr_en=1; equal when 0.
 - Config: cpuctrlsts.dummy_instr_en, dummy_instr_mask; mcountinhibit.
@@ -8603,13 +8883,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-013: minstret low-word wrap carries into minstreth
-- What: 64-bit counter; preload 0xFFFF_FFFE and execute two instructions.
-- Observable at: csrr read-back on rvfi_rd_wdata: minstret == small value, minstreth == old+1.
-- Config: writes to minstret/minstreth.
+- What: Folded into F-PMC-007: the low-word carry into minstreth is the parent's "64-bit counter"
+  statement at the boundary with the parent's read-back observable (v2 edge rule, second pass;
+  Critic M-9); carried by the parent's wrap bins.
 - Source: spec machine.adoc "Hardware Performance Monitor" | RTL-defined rtl/ibex_counter.sv:30,
   99-100; rtl/ibex_cs_registers.sv:1637-1649
 - Edge: yes, of F-PMC-007
-- Status: ACTIVE
+- Status: FOLDED into F-PMC-007 (bin CG-PMC-002.cp_wrap.carry, CG-PMC-002.cr_wrap_op.carry_rdhi, carry_rdlo)
 
 ### F-PMC-014: minstret write while an instruction retires in WB in the same cycle: write wins
 - What: The retirement of the previous instruction (in WB when the csrw in ID commits) is not added;
@@ -8634,9 +8914,14 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_counter.sv:86-98; rtl/ibex_cs_registers.sv:1667-1697
 - Edge: no
 - Status: ACTIVE
-- Notes: Doc defect D16: performance_counters.rst:85-90 describes parameters WidthMHPMCounters
-  and NumMHPMCounters (1..8, mhpmcounter3..10); the RTL parameters are MHPMCounterWidth and
+- Notes: Doc defect D16: performance_counters.rst:85-90 describes parameters WidthMHPMCounters and
+  NumMHPMCounters (1..8, mhpmcounter3..10); the RTL parameters are MHPMCounterWidth and
   MHPMCounterNum (rtl/ibex_cs_registers.sv:21-22; opentitan: 10 counters, mhpmcounter3..12).
+  Canonical for the CSR alias F-CSR-069 (M-10 pass); F-CSR-071 (13..31 read 0) and F-CSR-073 (h
+  write no-op, increment lost) are edges of this entry. Fact-check X-17: an h-half write still
+  asserts `we`, which reloads the unchanged low word and suppresses that cycle's increment
+  (rtl/ibex_counter.sv:35-49); observable only for counter 10, the one HPM counter whose event can
+  coincide with its own write (X-18, F-PMC-045).
 
 ### F-PMC-016: mhpmcounter3..12 wrap at 2^32 to 0 without carrying into the h half
 - What: 32-bit add; 0xFFFF_FFFF + event -> 0x0000_0000; h half stays 0.
@@ -8646,6 +8931,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Source: RTL-defined rtl/ibex_counter.sv:30, 86-90
 - Edge: yes, of F-PMC-015
 - Status: ACTIVE
+- Notes: Canonical for the CSR alias F-CSR-070 (M-10 pass).
 
 ### F-PMC-017: mhpmcounter13..31 and mhpmcounter13h..31h read zero; writes ignored; no exception (M-mode)
 - What: gen_unimp ties the counter to 0; write enables are unused. Access from M-mode is legal.
@@ -8659,16 +8945,23 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 - Notes: Doc defect D16 (parameter text, see F-PMC-015).
 
-### F-PMC-018: mhpmevent3..12 are hardwired one-hot selectors (bit N set for counter N) and read-only
-- What: mhpmeventN reads 1<<N for N=3..12 (0x8, 0x10, ..., 0x1000). There is no write case:
+### F-PMC-018: mhpmevent3..12 are hardwired one-hot selectors, 1 << (N - MHPMCOUNTER_BASE) for counter N, and read-only (doc says 1 << N: D20)
+- What: mhpmeventN reads 32'd1 << (N - MHPMCOUNTER_BASE) for N=3..12 (mhpmevent3 = 0x1, mhpmevent4 =
+  0x2, ..., mhpmevent12 = 0x200): `mhpmevent[i][i - MHPMCOUNTER_BASE] = 1` with MHPMCOUNTER_BASE = 3
+  (rtl/ibex_cs_registers.sv:185, :1602-1619; fact-check X-3). performance_counters.rst:133-147 says
+  0x8 .. 0x400: doc mismatch D20 (the RTL is spec-legal, the encoding is platform-defined; the
+  checker follows the RTL). The counter-to-event map is fixed and nothing programs a selector
+  (X-4). There is no write case:
   csrw/csrs/ csrc to 0x323-0x32C complete without exception and without effect.
-- Observable at: csrr read-back on rvfi_rd_wdata == 1<<N; no rvfi_trap on write.
+- Observable at: csrr read-back on rvfi_rd_wdata == 1 << (N - 3); no rvfi_trap on write.
 - Config: M-mode.
 - Source: spec machine.adoc "Hardware Performance Monitor" (mhpmevent WARL) | doc
   performance_counters.rst "Parametrization at synthesis time" (event selector table) | RTL-defined
   rtl/ibex_cs_registers.sv:569-578, 1602-1619, 771-887 (no mhpmevent write case)
 - Edge: no
 - Status: ACTIVE
+- Notes: Doc defect D20 (performance_counters.rst:133-147 lists 1 << N); TP-PMC-020 is `pass (doc
+  mismatch D20)`.
 
 ### F-PMC-019: mhpmevent13..31 read zero; writes ignored
 - What: gen_mhpmevent_inactive zeroes selectors above MHPMCOUNTER_BASE+MHPMCounterNum.
@@ -8692,7 +8985,8 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_cs_registers.sv:1553-1560, 1709-1729
 - Edge: no
 - Status: ACTIVE
-- Notes: Canonical for F-CSR-058 and F-CSR-060.
+- Notes: Canonical for F-CSR-058; F-CSR-060 (inhibited speculative minstret read) is a distinct
+  ACTIVE edge of this entry.
 
 ### F-PMC-021: mcountinhibit.CY / IR / HPMn stop the corresponding counter; accessibility unaffected
 - What: counter_inc_i is gated with ~mcountinhibit[N]; the counter holds its value while the bit is
@@ -8711,13 +9005,12 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-022: mcountinhibit.IR=1 also removes the speculative +1 from minstret reads
-- What: mhpmcounter[2] read mux selects minstret_raw when IR is set, so the read equals the stored
-  value even if WB is retiring an instruction that cycle. Same for mhpmcounter10 with HPM10.
-- Observable at: csrr read-back of minstret on rvfi_rd_wdata stable across instructions while IR=1.
-- Config: mcountinhibit.IR=1 / bit 10 = 1.
-- Source: RTL-defined rtl/ibex_cs_registers.sv:1658, 1690-1692
+- What: Alias of F-CSR-060: PMC perspective (mcountinhibit.IR = 1 selects minstret_raw in the ID
+  read mux, so the read excludes the instruction retiring in WB; same for mhpmcounter10 with HPM10),
+  see canonical. Decision note (Critic M-10): the DV Lead re-activated F-CSR-060 as the carrier of
+  this behaviour; this PMC statement was not in the Critic's view and is recorded as its alias.
 - Edge: yes, of F-PMC-021
-- Status: ACTIVE
+- Status: ALIAS of F-CSR-060
 
 ### F-PMC-023: Writing a counter while it is inhibited then un-inhibiting: counting resumes from the written value
 - What: Restates the parent's "holds its value while inhibited, writes still work, resumes when
@@ -8786,16 +9079,11 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-029: Any write to the read-only counter range 0xC00-0xC9F is an illegal instruction (all modes)
-- What: illegal_csr_write flags csr_addr[11:10]==2'b11 with a write op (csrrw, or
-  csrrs/csrrc/csrrsi/ csrrci with rs1/uimm != 0). csrrs x0 / csrrsi 0 are reads and are legal
-  (subject to mcounteren in U-mode).
-- Observable at: rvfi_trap; csrr read-back of mcause (2) and mtval (instruction bits) on
-  rvfi_rd_wdata.
-- Config: privilege M or U.
-- Source: spec machine.adoc "Machine Counter-Enable (mcounteren) Register" (read-only shadows) |
-  RTL-defined rtl/ibex_cs_registers.sv:404, 1011 (csr_wr)
+- What: Alias of F-CSR-011: PMC perspective (a write op to the read-only counter range 0xC00-0xC9F
+  is the csr_addr[11:10] == 11 rule; csrrs x0 / csrrsi 0 are reads and legal, subject to mcounteren
+  in U-mode), see canonical.
 - Edge: yes, of F-PMC-027
-- Status: ACTIVE
+- Status: ALIAS of F-CSR-011
 
 ### F-PMC-030: time / timeh (0xC01 / 0xC81) are not implemented: illegal instruction in all modes
 - What: Not decoded; default illegal. mcounteren.TM is read-only 0 accordingly.
@@ -8813,14 +9101,16 @@ state) and "instr_addr_o = <vector>" (trap targets).
   mcounteren allows" (rtl/ibex_cs_registers.sv:617-618, 1679); carried by the alias gate bin.
 - Source: spec machine.adoc "Machine Counter-Inhibit" | RTL-defined
   rtl/ibex_cs_registers.sv:617-618, 1679
-- Edge: yes, of F-PMC-027
+- Edge: yes, of F-PMC-021
 - Status: FOLDED into F-PMC-021 (bin CG-PMC-006.cr_inhibit_gate.inh_set_u_ok)
 
 ### F-PMC-032: mhpmcounter3 (NumCyclesLSU) counts cycles the ID instruction waits on the data side
 - What: dside_wait = instr_valid_id & ~instr_kill & (outstanding_memory_access | stall_ld_hz):
-  cycles in which the ID/EX instruction is stalled because WB holds an outstanding load/store
-  (waiting for data_rvalid_i / grant) or because of a load-use hazard on the WB load. Counted per
-  cycle, not per access.
+  cycles in which a VALID next instruction sits in ID while WB holds a load/store still awaiting
+  data_rvalid_i, or is stalled by a load-use hazard on the WB load. The access's OWN wait-for-grant
+  cycles in ID (stall_mem: lsu_req_dec & ~lsu_req_done_i) are NOT counted (fact-check TP-PMC-034;
+  rtl/ibex_id_stage.sv:1015-1016, :1095-1096, :1120, :1135-1136) and nothing is counted while ID is
+  empty. Counted per cycle, not per access.
 - Observable at: csrr read-back of mhpmcounter3 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[0]) across a
   load with N-cycle response latency followed by a dependent instruction.
 - Config: mcountinhibit[3]=0; memory latency; instruction mix.
@@ -8840,6 +9130,9 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_cs_registers.sv:1590
 - Edge: no
 - Status: ACTIVE
+- Notes: fact-check TP-PMC-052: the count is independent of the instruction stream (a run of csrr
+  with imem latency moves counter 4), so items asserting "hpm counters unchanged" exclude counter 4
+  or pin a warm icache with back-to-back delivery.
 
 ### F-PMC-034: mhpmcounter5 (NumLoads) counts load instructions once; misaligned loads count once (doc says twice)
 - What: perf_load asserts only in the LSU IDLE state when the first request of a load is issued,
@@ -8882,20 +9175,20 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Notes: Doc defect D6 as F-PMC-034 (owner question Q10).
 
 ### F-PMC-037: Misaligned load/store spanning a PMP boundary: counted once, first half issued, second half faults
-- What: One increment (from the IDLE request); the second request is PMP-denied (data_req_o
-  suppressed) and the instruction takes a load/store access fault after the first beat; minstret
-  does not count it.
-- Observable at: one data_req_o beat; rvfi_trap; csrr read-back on rvfi_rd_wdata of mhpmcounter5/6
-  (+1) and mtval (== faulting second-half address).
-- Config: PMP region boundary at a 4-byte-aligned address; misaligned word access straddling it.
+- What: Folded into F-PMC-034: the parent already states that perf_load/perf_store asserts once from
+  the IDLE request, never from the second (misaligned) request, and also when the request is
+  PMP-denied; a PMP-denied second half is that rule with the fault itself owned by F-PMP-088 (Critic
+  M-9); carried by the parent's straddle bins.
 - Source: RTL-defined rtl/ibex_load_store_unit.sv:468-475, 503-544 (WAIT_RVALID_MIS pmp_err_d for
   the second part)
 - Edge: yes, of F-PMC-034
-- Status: ACTIVE
-- Notes: Stays ACTIVE as the counter-side member of the F-EXC-032 / F-PMP-088 cluster (Critic C-14).
+- Status: FOLDED into F-PMC-034 (bin CG-PMC-003.cp_variant.straddle_pmp, CG-PMC-003.cr_variant_rel.straddle_eq)
 
-### F-PMC-038: mhpmcounter7 (NumJumps) counts jal/jalr (including c.j, c.jal, c.jr, c.jalr, and cm.popret's return jump)
-- What: perf_jump pulses once per jump when the controller sets the PC (jump_set), in DECODE.
+### F-PMC-038: mhpmcounter7 (NumJumps) counts jal/jalr (including c.j, c.jal, c.jr, c.jalr, cm.popret's return jump) and fence.i
+- What: perf_jump pulses once per jump when the controller sets the PC (jump_set, deduped by
+  branch_jump_set_done_q, rtl/ibex_id_stage.sv:806-815), in DECODE. fence.i is implemented as a jump
+  to pc + 4 (jump_in_dec_o / jump_set_o, rtl/ibex_decoder.sv:711-720) and increments NumJumps
+  (fact-check X-23 / TP-PMC-040).
 - Observable at: csrr read-back of mhpmcounter7 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[4]) equals
   the number of retired jal/jalr-class instructions.
 - Config: mcountinhibit[7]=0.
@@ -8906,14 +9199,23 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Notes: mret/dret and exception redirects are not jumps for this counter (pc_set via other paths).
 
 ### F-PMC-039: mhpmcounter8 (NumBranches) counts every conditional branch, taken or not
-- What: perf_branch asserts in the FIRST_CYCLE of a branch in the ID FSM, once per branch.
+- What: perf_branch asserts in the FIRST_CYCLE arm of the ID FSM while the branch is the valid
+  instruction in ID under instr_executing_spec (rtl/ibex_id_stage.sv:886-934). instr_executing_spec
+  lacks the ~outstanding_memory_access term (:1054-1057) while id_fsm_q advances only under
+  instr_executing (:866-869), so the count is exactly one per branch only when the branch enters ID
+  with no WB load/store response outstanding; a branch waiting in ID behind an outstanding access
+  counts once per waiting cycle (fact-check X-13; bug candidate B17, F-PMC-053). Counters 7 and 9
+  are exact (branch_set / jump_set deduped by branch_jump_set_done_q).
 - Observable at: csrr read-back of mhpmcounter8 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[5]) equals
-  the retired beq/bne/blt/bge/bltu/bgeu/c.beqz/c.bnez count.
+  the retired beq/bne/blt/bge/bltu/bgeu/c.beqz/c.bnez count when no branch waited behind an
+  outstanding WB access (C-10 precondition of the exact items).
 - Config: mcountinhibit[8]=0; cpuctrlsts.data_ind_timing either value.
 - Source: doc performance_counters.rst (NumBranches) | RTL-defined rtl/ibex_id_stage.sv:934;
   rtl/ibex_cs_registers.sv:1594
 - Edge: no
 - Status: ACTIVE
+- Notes: the waiting class is carried by F-PMC-053 (expected-fail B17, TP-PMC-058); TP-PMC-041 is
+  the exact-class pass item.
 
 ### F-PMC-040: mhpmcounter9 (NumBranchesTaken) counts taken conditional branches (data_ind_timing=0)
 - What: perf_tbranch = branch_set_i in the controller; with data-independent timing off, branch_set
@@ -8954,11 +9256,16 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-043: mhpmcounter11 (NumCyclesMulWait) counts multiplier stall cycles; with RV32MSingleCycle only mulh/mulhsu/mulhu stall (1 cycle)
-- What: perf_mul_wait = stall_multdiv & mult_en_dec. In the single-cycle multiplier configuration
-  mul completes without stall (0 counted); mulh-class instructions stall one cycle (1 counted each).
-  Dummy MUL instructions (SecureIbex) also count.
+- What: perf_mul_wait = stall_multdiv & mult_en_dec (rtl/ibex_id_stage.sv:1226). In the single-cycle
+  multiplier configuration mul completes without stall (0 counted); mulh-class instructions stall
+  one cycle (1 counted each). These per-instruction constants hold only when the multiply does not
+  wait in ID behind an outstanding WB load/store: mult_en_id = instr_executing ? mult_en_dec : 0
+  (:733), so while outstanding_memory_access holds the multiply does not start, ex_valid stays 0,
+  stall_multdiv = 1 and every waiting cycle is counted, for `mul` too (fact-check X-12 / X-13; B17,
+  F-PMC-053). The dummy MUL (SecureIbex) is `mul` and adds no wait cycle (F-PMC-011).
 - Observable at: csrr read-back of mhpmcounter11 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[8]) ==
-  number of mulh/mulhsu/mulhu executed (+ dummy MULs).
+  number of mulh/mulhsu/mulhu executed, when no multiply waited behind an outstanding WB access
+  (C-10).
 - Config: mcountinhibit[11]=0; cpuctrlsts.dummy_instr_en.
 - Source: doc performance_counters.rst (NumCyclesMulWait) | doc integration.rst RV32M table
   ("RV32MSingleCycle: 1-2 cycle multiplier") | RTL-defined rtl/ibex_id_stage.sv:1226;
@@ -8967,11 +9274,15 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-044: mhpmcounter12 (NumCyclesDivWait) counts iterative divider stall cycles
-- What: perf_div_wait = stall_multdiv & div_en_dec for div/divu/rem/remu (multi-cycle iterative
-  divider, including divide-by-zero and overflow special cases which still iterate). Dummy DIV
-  instructions also count.
+- What: perf_div_wait = stall_multdiv & div_en_dec for div/divu/rem/remu (rtl/ibex_id_stage.sv:1227;
+  iterative divider: DIV_STALL_FULL = 36 stall cycles, DIV_STALL_ZERO = 1 for divide-by-zero with
+  data_ind_timing = 0; signed overflow iterates fully). A divide behind an outstanding WB load/store
+  does not start until the response (div_en_id gated by instr_executing, :734; C-9): its RVFI gap is
+  37 + W and the W deferred-start cycles are counted too (fact-check X-12 / X-13; B17, F-PMC-053).
+  Dummy DIV instructions also count (F-PMC-011).
 - Observable at: csrr read-back of mhpmcounter12 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[9]) per div
-  instruction equals its latency minus 1 (the final non-stall cycle).
+  instruction equals its latency minus 1 (the final non-stall cycle) when the divide did not wait
+  behind an outstanding WB access (C-10).
 - Config: mcountinhibit[12]=0; cpuctrlsts.dummy_instr_en.
 - Source: doc performance_counters.rst (NumCyclesDivWait) | RTL-defined rtl/ibex_id_stage.sv:1227;
   rtl/ibex_cs_registers.sv:1598
@@ -8979,11 +9290,17 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-045: Event counter write while its event fires in the same cycle: write wins, event lost
-- What: Same ibex_counter priority as F-PMC-004 for mhpmcounter3..12; e.g. csrw mhpmcounter3 while
-  WB is waiting on a load drops that cycle's dside_wait increment.
-- Observable at: csrr read-back of mhpmcounterN on rvfi_rd_wdata after the write == written + events
-  after the write cycle (the coincident event is not added); rvfi_ext_mhpmcounters[N-3] on the
-  following retirements.
+- What: Same ibex_counter priority as F-PMC-004 for mhpmcounter3..12. Among the HPM counters the
+  coincidence is structurally reachable only for mhpmcounter10(h) (fact-check X-18): `c.xxx ; csrw
+  mhpmcounter10` with the compressed instruction retiring in WB in the write cycle (c.lw with a
+  delayed response, or back-to-back issue). For counters 3..9, 11, 12 the event is asserted only
+  while its own instruction is the valid instruction in ID (or while the csrw cannot commit:
+  dside_wait needs outstanding_memory_access, which blocks csr_op_en; iside_wait needs
+  ~instr_valid_id) and the csrw is a different instruction, so "csrw mhpmcounter3 while WB waits on
+  a load" never commits in a counted cycle.
+- Observable at: csrr read-back of mhpmcounter10(h) on rvfi_rd_wdata after the write == written +
+  events after the write cycle (the coincident event is not added; an h write also drops it, X-17);
+  rvfi_ext_mhpmcounters[7] on the following retirements (TP-PMC-047).
 - Config: mcountinhibit[N]=0.
 - Source: RTL-defined rtl/ibex_counter.sv:44-50
 - Edge: yes, of F-PMC-015
@@ -8992,8 +9309,10 @@ state) and "instr_addr_o = <vector>" (trap targets).
 ### F-PMC-046: Flushed instructions do not retire and do not count in minstret/NumInstrRetC; already-issued events remain
 - What: Instructions behind a taken branch, exception or debug entry never reach WB (no count). An
   instruction killed by a WB fault (instr_kill) is not counted. Events that were already asserted
-  (perf_load for a request already issued, perf_branch for a branch that then faults in WB order)
-  are not rolled back.
+  (perf_load for a request already issued; perf_branch for a branch that was in ID when the WB load
+  faulted, asserted once per cycle it waited because instr_executing_spec ignores wb_exception and
+  outstanding_memory_access, rtl/ibex_id_stage.sv:1033-1035, :1054-1062 - the B17 class,
+  F-PMC-053 - and then flushed) are not rolled back.
 - Observable at: csrr read-back of minstret on rvfi_rd_wdata == rvfi_valid & ~rvfi_trap count; csrr
   read-back of mhpmcounter5 exceeds the number of retired loads by the number of faulting loads.
 - Config: none.
@@ -9044,13 +9363,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Status: ACTIVE
 
 ### F-PMC-051: All-ones and zero writes to mcycle/minstret/mhpmcounterN are stored exactly (32-bit halves)
-- What: No WARL masking on the low halves; mcycleh/minstreth store 32 bits; mhpmcounterNh discards.
-- Observable at: csrr read-back on rvfi_rd_wdata == 0xFFFF_FFFF / 0.
-- Config: none.
+- What: Folded into F-PMC-001: "stored exactly" for all-ones and zero is a checker bullet on the
+  counter write semantics (F-PMC-006 / F-PMC-015 own the halves; no WARL masking exists) (v2 edge
+  rule, second pass; Critic M-9); carried by the write-pattern bins of the counter groups.
 - Source: spec machine.adoc "Hardware Performance Monitor" (can be written with a given value) |
   RTL-defined rtl/ibex_counter.sv:33-50
 - Edge: yes, of F-PMC-001
-- Status: ACTIVE
+- Status: FOLDED into F-PMC-001 (bin CG-PMC-001.cr_op_wdata.wrlo_z, wrlo_1, wrhi_z, wrhi_1; CG-PMC-002.cr_op_wdata.wrlo_z, wrlo_1, wrhi_z, wrhi_1; CG-PMC-004.cr_wdata_reg.z_lo, o_lo, z_hi, o_hi)
 
 ### F-PMC-052: Interrupt taken and instruction retirement: the interrupted (last) instruction is counted
 - What: The parent's retirement rule across an interrupt (IRQ_TAKEN only with ID empty and WB ready,
@@ -9059,6 +9378,32 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - Source: RTL-defined rtl/ibex_controller.sv:1078-1079 (PipeEmptyOnIrq), 704-722
 - Edge: yes, of F-PMC-007
 - Status: FOLDED into F-PMC-007 (bin CG-PMC-002.cr_window_delta.irq_eq)
+
+### F-PMC-053: HPM counters 8 (NumBranches), 11 (NumCyclesMulWait) and 12 (NumCyclesDivWait) over-count an instruction waiting in ID behind an outstanding WB memory access (bug candidate B17)
+- What: A conditional branch, multiply or divide that enters ID while the preceding load/store still
+  awaits its WB response is held by outstanding_memory_access (instr_executing = 0,
+  rtl/ibex_id_stage.sv:1059-1062), but perf_branch_o is asserted in the FIRST_CYCLE arm under
+  instr_executing_spec, which lacks that term (:886-934, :1054-1057), and perf_mul_wait_o /
+  perf_div_wait_o = stall_multdiv & *_en_dec (:1226-1227) are asserted while the unit has not
+  started (mult_en_id / div_en_id gated by instr_executing, :733-734): each waiting cycle adds one
+  count. Counters 7 (jumps) and 9 (taken) are exact (branch_set / jump_set deduped by
+  branch_jump_set_done_q, :806-815).
+- Observable at: csrr read-back of mhpmcounter8 / 11 / 12 on rvfi_rd_wdata (rvfi_ext_mhpmcounters[5]
+  / [8] / [9]) over a window of `lw ; beq` (`lw ; mul`, `lw ; div`) pairs with the data agent
+  holding rvalid for K cycles: doc count (1 per branch; mul 0 / mulh 1; DIV_STALL_FULL per divide)
+  vs RTL count (+ about K per pair); the control with an ALU instruction between the load and the
+  counted instruction gives the doc count.
+- Config: mcountinhibit[8/11/12]=0; dummy_instr_en=0; knob:dmem_rvalid_delay.
+- Source: doc performance_counters.rst:41 ("Number of branches (conditional)"), NumCyclesMulWait /
+  NumCyclesDivWait rows | RTL-defined rtl/ibex_id_stage.sv:733-734, 866-869, 886-934, 1054-1062,
+  1226-1227 (fact-check X-12 / X-13; rtl-arch gen_bug_reproducer_specs.md BUG-09)
+- Edge: yes, of F-PMC-039 (also qualifies F-PMC-043 / F-PMC-044)
+- Status: ACTIVE
+- Notes: Bug candidate B17 (gen_bug_log.md v1d; DV Lead direction: the checker follows the doc for
+  the waiting class, RTL-defined otherwise). Canonical for the B17 items TP-PMC-058 (counter 8),
+  TP-PMC-059 (counter 11), TP-PMC-060 (counter 12), each expected-fail in its own `_xfail` test;
+  the exact-count items of F-PMC-039/043/044 carry the precondition "no outstanding WB memory access
+  when the counted instruction is in ID" and pass (C-10).
 
 ---------------------------------------------------------------------------------------------------
 
@@ -9096,6 +9441,14 @@ a stimulus condition or timing coincidence the parent does not AND the observabl
 outcome differs. Generate arms: the opentitan config sets BaseIsa = BaseIsaRV32IorCHERIoT
 (ibex_configs.yaml:42), so the elaborated arms are g_pmp_addr_gate (rtl/ibex_core.sv:1589-1593)
 and gen_memcap_rd (rtl/ibex_load_store_unit.sv:701-709); citations below name those arms.
+
+Fact-check fold (README_FIX3_BRIEF.md; rtl-arch T-053, gen_tp_parts_rtl_factcheck.md Sections 1 and
+3.mem_a / 3.mem_b): the What / Observable / Notes of F-IMEM-021/022/023/024/028, F-DMEM-027/028/030/031/
+041/044/045/046, F-FE-004/005/010/012/014/017/021/022/023/025 and F-IC-004/006/007/016/020/021/022/038/
+042/043 are corrected to the RTL as verified there, and the "RTL-defined behaviour" list is extended.
+Convention labels C-n refer to the header of dv/auto_dv/work/dv-lead/parts6/tp_mem_fetch_icache.md. No
+feature ID is added, renumbered or retired by this fold (the new expected-fail item TP-DMEM-064 and the
+doc mismatch D21 attach to F-DMEM-041).
 
 Constants derived from rtl/ibex_pkg.sv:395-416 for this config: IC_SIZE_BYTES=4096, IC_NUM_WAYS=2,
 IC_LINE_SIZE=64 (IC_LINE_BYTES=8, IC_LINE_W=3), IC_NUM_LINES=256, IC_LINE_BEATS=2,
@@ -9232,14 +9585,15 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Edge: yes, of F-IMEM-001
 - Status: ACTIVE
 
-### F-IMEM-011: Bus error on a fetched instruction becomes an instruction access fault at execution
-- What: instr_err_i with rvalid marks the beat as errored in the fill buffer. When that word is
-  delivered to IF the error travels with the instruction (instr_fetch_err) into ID. The exception
-  is raised only when the errored instruction is the valid instruction in ID: mcause = 1
-  (instruction access fault), mtval = PC of the instruction, mepc = PC. Register writes and
-  memory requests of the errored instruction are suppressed.
-- Observable at: rvfi_trap on the faulting instruction, rvfi_pc_wdata of the trap (mtvec base),
-  mcause/mtval via a CSR read in the handler (rvfi_rd_wdata); instr_err_i stimulus
+### F-IMEM-011: Bus error on a fetched instruction travels with the word and is raised only when that word executes
+- What: Bus/fetch-side effect: instr_err_i with rvalid marks that beat errored in the icache fill
+  buffer or the prefetch FIFO; the mark travels with the word through IF into ID (instr_fetch_err),
+  is dropped with the word when the word is discarded before ID (F-EXC-006), and while the errored
+  instruction is the valid instruction in ID its register write and memory request are suppressed.
+  The trap itself (cause 1, mepc = PC, mtval = faulting fetch address, D10) is canonical in F-EXC-003.
+- Observable at: instr_err_i on beat k of the ibus monitor and the RVFI record of exactly the word
+  delivered by that beat carrying rvfi_trap = 1 (beat-to-instruction association); no data_req_o and
+  no rvfi_rd_wdata effect for that record; rvfi_pc_wdata = the trap vector.
 - Config: none
 - Source: spec: tools/specs/riscv-isa-manual/src/unpriv/rv32.adoc "Control Transfer Instructions"
   (norm ia_fault_exc_on_target: fault reported on the target instruction) | doc:
@@ -9249,6 +9603,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   268, 320-321, 849-862; rtl/ibex_pkg.sv:360-361
 - Edge: no
 - Status: ACTIVE
+- Notes: Cross-reference (Critic M-10 cluster F-EXC-003 / F-IMEM-011): this entry keeps the bus- and
+  fetch-side effect (beat marking, travel with the word, RF/LSU suppression) and F-EXC-003 the
+  cause/CSR effect, the same split as F-PMP-082 / F-EXC-026; the fetch-error edges F-IMEM-012..015 and
+  F-FE-016 stay attached here and F-FE-023 is folded here.
 
 ### F-IMEM-012: Error on a speculatively fetched instruction that is never executed causes no exception
 - What: Alias of F-EXC-006: IMEM perspective (instr_err_i on a word discarded before ID), see
@@ -9334,9 +9692,14 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: FOLDED into F-IMEM-019 (bin CG-IMEM-004.cp_seq_kind.end_of_line_stop)
 
 ### F-IMEM-021: No new fetches while the core sleeps (WFI) or fetch is halted
-- What: In WAIT_SLEEP/SLEEP the controller drives instr_req (req_i to the icache) low; the icache
-  makes no new lookups, completes in-flight line fills and then stops. instr_req_o resumes when the
-  core wakes (FIRST_FETCH).
+- What: In WAIT_SLEEP/SLEEP the controller drives instr_req (req_i to the icache) low; req_i stays
+  1 through DECODE and FLUSH (rtl/ibex_controller.sv:541, 600, 609, 623), so lookups made up to the
+  FLUSH cycle and the un-issued beats of every allocated fill buffer are still requested on the bus
+  at and after the WFI's record; the icache makes no new lookups, completes the open lines and then
+  stops. The exact quiet rule is instr_req_o == 0 whenever core_busy_o == Off (core_busy_o includes
+  the icache busy_o = invalidation active or beats outstanding, rtl/ibex_icache.sv:1304; C-4).
+  instr_req_o resumes when the core wakes (FIRST_FETCH drives req_i for one cycle before the
+  IRQ_TAKEN pc_set, so a sequential lookup may precede the vector fetch).
 - Observable at: instr_req_o, core_busy_o
 - Config: none (WFI instruction, mstatus.mie/mie for wake)
 - Source: doc: doc/03_reference/icache.rst "High-level operation" (req_i) and "Detailed
@@ -9346,44 +9709,48 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 
 ### F-IMEM-022: fetch_enable_i gates instruction fetch and execution
-- What: New fetches are only issued while fetch_enable_i == IbexMuBiOn (4'b0101); instr_exec also
-  requires On and forces halt_if in the controller so no new instruction enters ID. With any other
-  value the core stops fetching and halts after in-flight instructions complete.
-- Observable at: instr_req_o, rvfi_valid (stops), core_busy_o
-- Config: none (fetch_enable_i stimulus)
-- Source: doc: doc/02_user/integration.rst "Interfaces" (fetch_enable_i row) | RTL:
-  rtl/ibex_core.sv:644-649; rtl/ibex_controller.sv:996-998; rtl/ibex_pkg.sv:753-760
+- What: Alias of F-RST-010: IMEM perspective (new fetches are issued only while fetch_enable_i ==
+  IbexMuBiOn, instr_exec forces halt_if, any other value stops fetch and halts after in-flight
+  instructions complete; an invalid MuBi code acts as Off without an alert), see canonical. The
+  bus-side in-flight statement is F-IMEM-024; F-IMEM-023 is folded into the canonical.
 - Edge: no
-- Status: ACTIVE
+- Status: ALIAS of F-RST-010
+- Notes: rtl-arch fact-check X-5 (C-4): fetch_enable_i gates only req_i (new lookups,
+  rtl/ibex_core.sv:648); the remaining beats of already allocated fill buffers keep requesting and
+  a request awaiting grant is never withdrawn (rtl/ibex_icache.sv:756, 764-775, 1030-1031). Rule:
+  no new line allocation after the Off edge; instr_req_o == 0 whenever core_busy_o == Off. The ibus
+  protocol checker needs no tolerance for a withdrawn request (the canonical F-RST-010 carries the
+  same rule).
 
 ### F-IMEM-023: Invalid MuBi encoding on fetch_enable_i behaves as Off without an alert
-- What: Values other than IbexMuBiOn (including IbexMuBiOff = 4'b1010 and all 14 invalid codes)
-  are treated identically as "fetch disabled". Unlike cheriot_enable_i, no alert is raised for an
-  invalid fetch_enable_i encoding.
-- Observable at: instr_req_o (low), alert_major_internal_o (stays low)
-- Config: none
+- What: Folded into F-RST-010 (through F-IMEM-022): the parent already states that fetch continues
+  only while fetch_enable_i == IbexMuBiOn and stops for "any other value", which is the invalid-MuBi
+  statement (Critic M-9); the absence of an alert for an invalid code is added to the parent's
+  observable; carried by the parent's gate-cause and code bins.
 - Source: RTL-defined: rtl/ibex_core.sv:648-649 (equality with IbexMuBiOn only); contrast
   rtl/ibex_core.sv:1339-1347 (cheriot_enable_i MuBi check)
-- Edge: yes, of F-IMEM-022
-- Status: ACTIVE
-- Notes: candidate owner question (is silent acceptance of an invalid fetch_enable_i intended in a
-  SecureIbex config?).
+- Edge: yes, of F-RST-010
+- Status: FOLDED into F-RST-010 (bin CG-IMEM-005.cp_gate_cause.fetch_en_invalid, CG-IMEM-005.cp_fetch_en_code.invalid_0, invalid_f)
+- Notes: an invalid code stops new line lookups exactly like Off (C-4: the beats of open lines
+  complete, no request is withdrawn); no alert (Q-DL-8 / Q-009 default).
 
 ### F-IMEM-024: fetch_enable_i deasserted with instructions and bus transactions in flight
 - What: When fetch_enable_i leaves On, the instruction in ID/EX and WB complete (including waiting
-  for an outstanding data response), outstanding instruction fetches on the bus complete, and no
-  new instruction becomes valid in ID; the PC in ID stays at the value it had at disable.
+  for an outstanding data response), the un-issued beats of already allocated fill buffers are still
+  requested and every outstanding fetch completes (no request is withdrawn, C-4), no new line is
+  looked up, and no new instruction becomes valid in ID; the PC in ID stays at the value it had at
+  disable.
 - Observable at: rvfi_valid (last retirements), data_rvalid_i/instr_rvalid_i consumed, instr_req_o
 - Config: none
 - Source: doc: doc/02_user/integration.rst "Interfaces" (fetch_enable_i row) | RTL:
   rtl/ibex_core.sv:1396-1421 (NoExecWhenFetchEnableNotOn assertion)
-- Edge: yes, of F-IMEM-022
+- Edge: yes, of F-RST-010
 - Status: ACTIVE
 
 ### F-IMEM-025: fetch_enable_i re-asserted resumes from the held PC
 - What: Alias of F-RST-012: IMEM perspective (instr_req_o resumes without re-requesting already
   granted words), see canonical.
-- Edge: yes, of F-IMEM-022
+- Edge: yes, of F-RST-010
 - Status: ALIAS of F-RST-012
 
 ### F-IMEM-026: First fetch after reset targets boot_addr_i + 0x80
@@ -9430,6 +9797,8 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Notes: doc defect D9: doc/03_reference/icache.rst "Detailed behaviour" describes an
   instr_pmp_err_i input that squashes the request; that port does not exist in
   rtl/ibex_icache.sv:22-69. The TB memory model must therefore serve fetches from any address.
+  TP-IMEM-030 pins cpuctrlsts.icache_enable = 0 so the denied word's request is never hidden by a
+  cache hit (C-14); the cached case is F-IC-036 / TP-IC-028.
 
 ### F-IMEM-029: No combinational path from instr_gnt_i / instr_rvalid_i to instr_req_o
 - What: instr_req_o depends only on registered fill-buffer state and the lookup grant; grant and
@@ -9715,7 +10084,7 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - What: Folded into F-DMEM-014: F-DMEM-014 already states that the same rotated word is driven on
   both beats of a split store and F-DMEM-011/012 give the per-beat lane selects (pattern c); carried
   by CG-DMEM-002.cr_be_x_beat.* and cr_size_offset_beat_we.*_first_store / *_second_store.
-- Edge: yes, of F-DMEM-015
+- Edge: yes, of F-DMEM-014
 - Status: FOLDED into F-DMEM-014 (bin CG-DMEM-002.cr_be_x_beat.second_0001)
 
 ### F-DMEM-021: Bus error on the first beat of a split access
@@ -9730,6 +10099,7 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   509-522, 540, 555-557, 688-694, 746-747; rtl/ibex_controller.sv:899-926
 - Edge: yes, of F-DMEM-015
 - Status: ACTIVE
+- Notes: Cause-side canonical: F-EXC-030 (mtval = the original unaligned address).
 
 ### F-DMEM-022: Bus error on the second beat of a split access
 - What: Bus-side view of F-EXC-031: the first beat's rvalid is clean (its rdata is captured in
@@ -9748,11 +10118,11 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   within the faulting access for misaligned accesses; the RTL choice (first+4) is RTL-defined.
 
 ### F-DMEM-023: Both beats errored
-- What: Folded into F-DMEM-021: both beats errored has the same outcome as a first-beat error (first
-  error wins, mtval = unaligned address, second response ignored); a row of the parent (pattern a);
-  carried by CG-DMEM-004.cp_err_beat.both and cr_beat_x_mtval.both_ea.
+- What: Folded into F-DMEM-015 (through F-DMEM-021): both beats errored has the same outcome as a
+  first-beat error (first error wins, mtval = unaligned address, second response ignored); a row of
+  the parent (pattern a); carried by CG-DMEM-004.cp_err_beat.both and cr_beat_x_mtval.both_ea.
 - Edge: yes, of F-DMEM-015
-- Status: FOLDED into F-DMEM-021 (bin CG-DMEM-004.cp_err_beat.both)
+- Status: FOLDED into F-DMEM-015 (bin CG-DMEM-004.cp_err_beat.both)
 
 ### F-DMEM-024: Grant delayed on the second beat of a split access
 - What: If the second request is not granted when the first rvalid arrives, the FSM goes
@@ -9765,11 +10135,11 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 
 ### F-DMEM-025: Second grant before first rvalid (both beats in flight)
-- What: Folded into F-DMEM-009: the second grant before the first rvalid (WAIT_RVALID_MIS_GNTS_DONE,
-  data_req_o low) is exactly the scenario F-DMEM-009 describes (pattern c); carried by
-  CG-DMEM-003.cp_path.gnt2_before_rvalid1 and cp_req_low_between.yes.
+- What: Folded into F-DMEM-008 (through F-DMEM-009): the second grant before the first rvalid
+  (WAIT_RVALID_MIS_GNTS_DONE, data_req_o low) is exactly the scenario F-DMEM-009 describes (pattern
+  c); carried by CG-DMEM-003.cp_path.gnt2_before_rvalid1 and cp_req_low_between.yes.
 - Edge: yes, of F-DMEM-008
-- Status: FOLDED into F-DMEM-009 (bin CG-DMEM-003.cp_path.gnt2_before_rvalid1)
+- Status: FOLDED into F-DMEM-008 (bin CG-DMEM-003.cp_path.gnt2_before_rvalid1)
 
 ### F-DMEM-026: First rvalid and second grant in the same cycle
 - What: When data_rvalid_i (first beat) and data_gnt_i (second beat) coincide in WAIT_RVALID_MIS the
@@ -9781,10 +10151,14 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 
 ### F-DMEM-027: New load/store while an abandoned second beat is outstanding is not serviced
-- What: After a first-beat error the pipeline is flushed to the handler; if the handler's first
-  instruction is a load/store, its request is not issued until the LSU FSM returns to IDLE (i.e.
-  until the abandoned second response arrives).
-- Observable at: data_req_o gap after exception; data_rvalid_i consumed
+- What: After a first-beat error the LSU still waits for the second response: load_err_o /
+  store_err_o are qualified by lsu_resp_valid_o = all_resp & (ls_fsm_cs == IDLE), so the error, the
+  exception and the pipeline flush to the handler all follow the FINAL (abandoned second) response
+  (rtl/ibex_load_store_unit.sv:692-694, 746-747). Between the two responses WB holds the next
+  request (no data_req_o); the handler's first load/store, when present, is therefore always issued
+  after the second response, and the handler fetch never precedes it (X-23).
+- Observable at: no data_req_o between the two rvalids; trap record at the earliest one cycle after
+  the second rvalid; data_rvalid_i consumed
 - Config: none
 - Source: doc: doc/03_reference/load_store_unit.rst "Misaligned Accesses" (last sentence) | RTL:
   rtl/ibex_load_store_unit.sv:431-433, 468-470 (a new request is issued only in IDLE), 630-633, 762
@@ -9792,9 +10166,14 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 
 ### F-DMEM-028: Load followed by a dependent instruction stalls until the load data returns
-- What: An instruction in ID reading the destination register of a load in WB stalls (stall_ld_hz)
-  until lsu_resp_valid; non-load WB results are forwarded instead. Reads of x0 never stall.
-- Observable at: rvfi_valid timing; data_rvalid_i to next rvfi_valid latency
+- What: Every instruction after a load/store waits in ID until the response cycle R (stall_mem:
+  instr_executing needs ~outstanding_memory_access, rtl/ibex_id_stage.sv:1059-1062, 1095-1096); a
+  consumer of the load's rd additionally stalls one cycle for the load-use hazard (stall_ld_hz,
+  :1103-1120) because load data is not on the forwarding path (rtl/ibex_wb_stage.sv:212-215: only
+  the WB-flop result rf_wdata_wb_q is forwarded). A reader of x0 after a load to x0 has no hazard
+  and behaves like an independent follower (C-9).
+- Observable at: rvfi_valid timing relative to the load's final data_rvalid_i R: load record R+1,
+  independent or x0-reading follower R+2, dependent consumer R+3
 - Config: none
 - Source: RTL-defined: rtl/ibex_id_stage.sv:1103-1120; rtl/ibex_wb_stage.sv:187-196, 212-215
 - Edge: no
@@ -9818,14 +10197,18 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   rvalid. IF is halted meanwhile. The outstanding transaction therefore always completes before
   the trap, and its result (or error exception) is architecturally visible first.
 - Observable at: irq_* / debug_req_i asserted during an outstanding access; rvfi order (load/store
-  retires, then the trap); data_rvalid_i before the vector fetch on instr_addr_o
+  retires, then the trap); the entry target as the next record's rvfi_pc_rdata (C-1; the vector word
+  may hit in the cache, so no ibus observation, C-14)
 - Config: mstatus.mie, mie, dcsr
 - Source: RTL-defined: rtl/ibex_controller.sv:296, 629-645, 700-721; rtl/ibex_wb_stage.sv:115-116,
   185
 - Edge: no
 - Status: ACTIVE
-- Notes: edge worth its own test: data_err_i on that outstanding access with an IRQ pending
-  (exception must win, then IRQ taken at the handler).
+- Notes: edge worth its own test (TP-DMEM-036): data_err_i on that outstanding access with an IRQ
+  pending: the exception wins; the ordinary IRQ is taken only after the handler's mret or an MIE
+  write, because the trap entry clears mstatus.MIE (rtl/ibex_cs_registers.sv:924;
+  rtl/ibex_controller.sv:490; C-6); a pending debug request enters right after the exception's
+  FLUSH (not MIE-gated).
 
 ### F-DMEM-031: WFI does not sleep the core while a data access is outstanding
 - What: WFI is a special_req; the controller waits for ready_wb (load/store completed) before FLUSH
@@ -9837,6 +10220,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   rtl/ibex_core.sv:498-521; rtl/ibex_load_store_unit.sv:762
 - Edge: no
 - Status: ACTIVE
+- Notes: TIMING (fact-check TP-DMEM-047): the WFI stays in DECODE (retain_id) until ready_wb_i = the
+  response cycle R; its RVFI record is at R+2 and ctrl_busy drops in WAIT_SLEEP at R+2 at the
+  earliest; "WFI retired while the access was outstanding" is unobservable.
 
 ### F-DMEM-032: Combinational path from data_rvalid_i / data_err_i to data_req_o
 - What: A load/store error response suppresses a same-cycle new request: data_err_i with rvalid sets
@@ -9852,17 +10238,11 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   them combinationally from data_req_o) or a zero-delay loop results.
 
 ### F-DMEM-033: PMP-denied data access produces no bus request
-- What: data_req_o at the core boundary is data_req_out & ~pmp_req_err[PMP_D]; a denied access
-  never appears on the bus and the LSU treats pmp_err as an immediate error response (load/store
-  access fault). For a split access a denied first beat still lets the second beat be issued if
-  that one is allowed.
-- Observable at: data_req_o (absent), rvfi_trap (mcause 5/7), mtval
-- Config: pmpcfg/pmpaddr, mseccfg, privilege mode
-- Source: RTL-defined: rtl/ibex_core.sv:1063, 1592-1593 (PMP_D address in g_pmp_addr_gate, the
-  elaborated arm), 1603; rtl/ibex_load_store_unit.sv:491-500, 509-514, 688-694
+- What: Alias of F-PMP-082: DMEM perspective (data_req_o = data_req_out & ~pmp_req_err[PMP_D], so a
+  denied word never appears on the bus and the LSU takes pmp_err as the response), see canonical;
+  the split access whose denied first beat still lets an allowed second beat issue is F-PMP-087.
 - Edge: no
-- Status: ACTIVE
-- Notes: PMP semantics themselves belong to the PMP area; this entry is the interface effect only.
+- Status: ALIAS of F-PMP-082
 
 ### F-DMEM-034: Outputs may change the cycle after grant
 - What: After data_gnt_i the LSU may change data_addr_o, data_we_o, data_be_o and data_wdata_o in the
@@ -9934,9 +10314,15 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - What: With MemECC=1 data_wdata_o is 39 bits ({7 inverted-Hsiao check bits, 32 data}) generated
   per request, and data_rdata_i (39 bits) is checked on every rvalid for loads and stores. A
   mismatch sets load_resp_intg_err/store_resp_intg_err: alert_major_bus_o pulses, the load's
-  register write is suppressed, and an internal NMI (mcause 0xFFFFFFE0, mtval = faulting address)
-  is taken at most one instruction later. With MemECC=0 the ports are 32 bits and none of this
-  exists.
+  register write is suppressed when the error is on the beat that COMPLETES the access (aligned
+  response, or the second beat of a split: lsu_rdata_valid_o = IDLE & rvalid & ~err & ~we &
+  ~data_intg_err, rtl/ibex_load_store_unit.sv:697-698), and an internal NMI (mcause 0xFFFFFFE0,
+  mtval = faulting address) is taken within up to two ordinary records after the access's record
+  (the pending flag registers one cycle after the corrupted rvalid, rtl/ibex_controller.sv:402-438;
+  D21: the doc says at most one instruction). Per-beat rule (X-11, B16): a split LOAD whose FIRST
+  beat alone is corrupted still writes the merged word to rd, because the first-half status
+  lsu_err_d = data_bus_err_i | pmp_err_q has no integrity term (:514); alert and NMI fire as
+  documented. With MemECC=0 the ports are 32 bits and none of this exists.
 - Observable at: data_wdata_o[38:32], alert_major_bus_o, rvfi_ext_nmi_int, rvfi_trap/mcause in the
   NMI handler
 - Config: none
@@ -9953,7 +10339,11 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   (disabled lanes included); the load-side codeword is the coverage-only observation F-DMEM-050. Doc defect D17: doc/03_reference/load_store_unit.rst:34 and :52 list separate
   data_wdata_intg_o[6:0] / data_rdata_intg_i[6:0] ports; at the ibex_core boundary they are bits
   [38:32] of data_wdata_o / data_rdata_i (rtl/ibex_core.sv:84, 86); the split exists only in
-  ibex_top.
+  ibex_top. B16 (gen_bug_log.md, owner question Q-015): the first-beat-only split-load class is the
+  expected-fail item TP-DMEM-064 (checker follows security.rst:88 "the write to the load's
+  destination register will be suppressed"); the aligned and second-beat classes pass (TP-DMEM-039 /
+  TP-DMEM-041) under the per-beat rule. D21: the internal-NMI latency bound is two ordinary records
+  (TP-DMEM-039 is `pass (doc mismatch D21)`).
 
 ### F-DMEM-042: data_tag_o / data_tag_i (CHERIoT capability tag) are inert in RV32 mode
 - What: ibex_core exposes data_tag_o (output) and data_tag_i (input). With cheriot_enable_i Off
@@ -9994,11 +10384,19 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Edge: no
 - Status: ACTIVE
 - Notes: the unshifted mask is a scoreboard convention to know about (do not compare it with
-  data_be_o directly).
+  data_be_o directly). The field rules apply only to decoded load/store records that did not trap:
+  every non-store record carries rmask 4'b1111 and rvfi_mem_addr = the ALU result (B18, RVFI-only,
+  rtl/ibex_core.sv:2085, 2253-2260), and WB-trap records have both masks zeroed
+  (rtl/ibex_core.sv:2156-2157, X-15 / C-12).
 
 ### F-DMEM-045: Last data address is exposed on crash_dump_o
-- What: crash_dump_o.last_data_addr = addr_last (address of the most recent data transaction,
-  frozen on an error to the failing address).
+- What: crash_dump_o.last_data_addr = addr_last_q: updated the cycle after EVERY LSU-side grant
+  (bus grant or PMP fake grant) with the unaligned effective address of a single or first-word
+  access and the word-aligned second address after a second-half grant; it is NOT frozen on error
+  (the handler's first data grant overwrites the erroring address); the only skipped update is the
+  second-half grant that follows a first-half error (rtl/ibex_load_store_unit.sv:254-266, 478-482,
+  520, 540, 743; rtl/ibex_core.sv:1328). The integration.rst wording "frozen on error" does not
+  describe the RTL; the checker follows the RTL.
 - Observable at: crash_dump_o.last_data_addr
 - Config: none
 - Source: doc: doc/02_user/integration.rst "Interfaces" (crash_dump_o row) | RTL:
@@ -10017,18 +10415,18 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Edge: no
 - Status: ACTIVE
 - Notes: the Zc area owns the expansion semantics; listed here so protocol assertions are known
-  to cover bursts and so a bus error inside a push/pop sequence gets a test.
+  to cover bursts and so a bus error inside a push/pop sequence gets a test. Each micro-op passes
+  ID as its own instruction and produces its own RVFI record (rvfi_insn = the 32-bit expansion, the
+  halfword on rvfi_ext_expanded_insn, _last on the final one; rvfi_order advances per micro-op,
+  rtl/ibex_core.sv:2263-2282, X-14 / C-12): a push/pop burst is attributed to the record group,
+  never to one retirement.
 
 ### F-DMEM-047: Bus error inside a Zcmp push/pop sequence
-- What: A data_err_i on one of the expanded stores/loads raises the access fault on that expanded
-  transaction; mepc/mtval and the state of already-completed registers/stack writes are RTL-defined.
-- Observable at: rvfi_trap, mepc, rvfi_ext_expanded_insn_last
-- Config: none
-- Source: RTL-defined: rtl/ibex_controller.sv:826-839; rtl/ibex_if_stage.sv:482-483 (expanded
-  state flushed on exception)
+- What: Alias of F-CMP-060: DMEM perspective (a data_err_i on one expanded store of cm.push raises
+  the access fault on that micro-op with mepc = the cm.push PC and sp unchanged; the popped-load
+  case is F-CMP-061), see canonical.
 - Edge: yes, of F-DMEM-046
-- Status: ACTIVE
-- Notes: candidate owner question (expected mepc for a fault mid-sequence).
+- Status: ALIAS of F-CMP-060
 
 ### F-DMEM-048: Grant is legal only while a request is pending on the data bus (driver rule, passive assertion)
 - What: data_gnt_i has meaning only in a cycle where the boundary data_req_o is high. The LSU takes
@@ -10164,7 +10562,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   jump target from EX, also used for fence.i = PC+4/2), PC_EXC (exception/interrupt vector),
   PC_ERET (mepc), PC_DRET (depc). PC_BP is never selected (BranchPredictor=0). Bit 0 of the target
   is dropped.
-- Observable at: instr_addr_o after each redirect, rvfi_pc_wdata
+- Observable at: the next record's rvfi_pc_rdata (every class); rvfi_pc_wdata only for branch /
+  jump / fence.i records (trap, mret and dret records carry the next sequential fetch address there:
+  rtl/ibex_core.sv:2084 captures pc_if when the instruction leaves ID and their pc_set is one cycle
+  later in FLUSH, X-1 / C-1); instr_addr_o only when the target misses or the cache is off (C-14)
 - Config: mtvec, mepc, depc
 - Source: doc: doc/03_reference/exception_interrupts.rst intro | RTL: rtl/ibex_if_stage.sv:237-253,
   287-288, 416, 922-928; rtl/ibex_pkg.sv:310-315
@@ -10174,9 +10575,13 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 ### F-FE-005: Exception and interrupt vector addresses
 - What: Synchronous exceptions fetch from {mtvec[31:8], 8'h00}; interrupts fetch from
   {mtvec[31:8], 1'b0, irq_id[4:0], 2'b00} (vectored, 4 bytes per ID; internal NMI uses the NMI
-  vector 31); debug entry fetches DmHaltAddr; an exception inside debug mode fetches
-  DmExceptionAddr.
-- Observable at: instr_addr_o after the trap, rvfi_pc_wdata
+  vector 31); debug entry fetches DmHaltAddr; a NON-ebreak exception inside debug mode fetches
+  DmExceptionAddr (exc_pc_mux = EXC_PC_DBG_EXC); an ebreak executed in debug mode re-enters at
+  DmHaltAddr regardless of dcsr.ebreakm (FLUSH -> DBG_TAKEN_ID, rtl/ibex_controller.sv:874-882,
+  X-19).
+- Observable at: the next record's rvfi_pc_rdata (C-1; rvfi_pc_wdata of the trapping record is the
+  next sequential address, X-1); instr_addr_o only for a miss or with the cache forced off (debug
+  mode), C-14
 - Config: mtvec
 - Source: doc: doc/03_reference/exception_interrupts.rst intro (vectored interrupts) | RTL:
   rtl/ibex_if_stage.sv:212-233; rtl/ibex_pkg.sv:328-331
@@ -10231,7 +10636,8 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - What: Targets with bit 1 set start output in the upper half of the fetched word; the icache loads
   the skid buffer if the instruction is uncompressed, or delivers the compressed 16 bits directly.
   addr_i[0] is always 0 (forced by IF).
-- Observable at: rvfi_pc_rdata odd multiples of 2, instr_addr_o word address
+- Observable at: rvfi_pc_rdata odd multiples of 2; instr_addr_o word address only when the target
+  has a bus record (miss or icache_enable = 0, C-14)
 - Config: none
 - Source: doc: doc/03_reference/icache.rst "Detailed behaviour" (branch_i / addr_i alignment) | RTL:
   rtl/ibex_if_stage.sv:288; rtl/ibex_icache.sv:1099, 1105-1115, 1147
@@ -10255,6 +10661,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   rtl/ibex_if_stage.sv:808-809; rtl/ibex_icache.sv:249, 1101, 1136
 - Edge: no
 - Status: ACTIVE
+- Notes: a CSR write with pipeline flush holds IF for exactly 2 cycles (DECODE(special_req) + one
+  FLUSH cycle, no pc_set, rtl/ibex_controller.sv:232, 287, 815-818; rtl/ibex_id_stage.sv:593-597);
+  longer back-pressure windows come from the other causes.
 
 ### F-FE-013: Pipeline flush on any PC redirect discards buffered instructions
 - What: pc_set (branch, jump, exception, interrupt, mret, dret, debug entry/exit, fence.i) asserts
@@ -10272,7 +10681,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 ### F-FE-014: PC wrap-around at the top of the address space
 - What: A compressed instruction at 0xFFFF_FFFE (or an uncompressed one at 0xFFFF_FFFC) is followed
   by PC 0x0000_0000; the icache output counter is a 31-bit adder over addr[31:1] and wraps. An
-  uncompressed instruction at 0xFFFF_FFFE needs the word at 0x0000_0000 as its second half.
+  uncompressed instruction at 0xFFFF_FFFE needs the word at 0x0000_0000 as its second half and is
+  followed by PC 0x0000_0002 (0x7FFF_FFFF + 2 in 31 bits = 1, rtl/ibex_icache.sv:1139-1147); the
+  bus sequence is 0xFFFF_FFFC then 0x0000_0000 in all three cases.
 - Observable at: rvfi_pc_rdata sequence, instr_addr_o (0xFFFFFFFC then 0x00000000)
 - Config: none
 - Source: RTL-defined: rtl/ibex_icache.sv:1142-1147; rtl/ibex_if_stage.sv:679 (PC increment check
@@ -10293,17 +10704,12 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 
 ### F-FE-016: PMP fault on instruction fetch, including the +2 check for straddling instructions
-- What: The PMP instruction channels check pc_if and pc_if+2 with the current privilege; an
-  uncompressed instruction whose second half is in a denied region faults with err_plus2 (mtval =
-  pc+2) unless the first half is also denied (then mtval = pc). A compressed instruction ignores
-  the +2 check.
-- Observable at: rvfi_trap (mcause 1), mtval
-- Config: pmpcfg/pmpaddr, mseccfg, privilege mode
-- Source: RTL-defined: rtl/ibex_core.sv:1590-1600 (PMP_I/PMP_I2 addresses at :1590-1591 in
-  g_pmp_addr_gate, the elaborated arm); rtl/ibex_if_stage.sv:426-435; rtl/ibex_controller.sv:861
+- What: Alias of F-PMP-067: FE perspective (the PMP_I2 channel checks pc_if + 2 for an uncompressed
+  instruction at 4n+2; a denied second half faults with err_plus2 and mtval = pc + 2 unless the
+  first half is also denied, F-PMP-069; a compressed instruction ignores the +2 check), see
+  canonical.
 - Edge: yes, of F-IMEM-011
-- Status: ACTIVE
-- Notes: PMP region semantics are the PMP area's; the fetch-side plumbing is here.
+- Status: ALIAS of F-PMP-067
 
 ### F-FE-017: Speculative prefetch depth beyond the executed stream
 - What: The icache prefetches linearly ahead of ID. The lookup throttle (lookup_throttle =
@@ -10314,7 +10720,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   buffer is allocated only by a branch lookup, which bypasses the throttle (F-IMEM-008 reaches its
   8-beat bound that way). Prefetched words are discarded on redirect.
 - Observable at: instr_addr_o beyond a taken branch/exception PC: sequential grants lead the line of
-  rvfi_pc_rdata by at most 3 lines; granted-not-executed words per redirect (ibus monitor) at most 6
+  the word being consumed into ID by at most 3 lines; against the last retired rvfi_pc_rdata the
+  lead is transiently 4 while a load/store is stalled in WB (the record lags ID consumption by that
+  wait; TIMING, fact-check TP-FE-013 / TP-IC-051) and never 5; granted-not-executed words per
+  redirect (ibus monitor) at most 6
 - Config: none
 - Source: doc: doc/03_reference/instruction_fetch.rst intro ("fetches instructions linearly until it
   is full") | RTL: rtl/ibex_icache.sv:72-74 (FB_THRESHOLD), 211-224, 247-250 (lookup_throttle),
@@ -10356,10 +10765,16 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ALIAS of F-SEC-007
 
 ### F-FE-021: Wake from WFI resumes fetch at the instruction after WFI
-- What: In SLEEP the controller holds instr_req low; an interrupt, NMI, debug request, or being in
-  debug/single-step mode moves to FIRST_FETCH and fetch resumes with the already-buffered next
-  instruction (no re-fetch of the WFI).
-- Observable at: instr_req_o resumes, rvfi_pc_rdata of the next retirement (handler or WFI+4)
+- What: In SLEEP the controller holds instr_req low; an interrupt line enabled in mie (regardless of
+  mstatus.MIE), an NMI, a debug request, or being in debug mode moves to FIRST_FETCH and fetch
+  resumes with the already-buffered next instruction (no re-fetch of the WFI; FIRST_FETCH drives
+  req_i for one cycle, so a sequential prefetch may precede the redirect). A WFI with dcsr.step = 1
+  outside debug mode never sleeps: FLUSH goes to DBG_TAKEN_IF (rtl/ibex_controller.sv:462, 474-475,
+  985-987) and the debug ROM is entered with dpc = WFI + len and no ctrl_busy dip (C-5). A WFI
+  executed in debug mode passes WAIT_SLEEP and SLEEP exits at once on debug_mode_q (wfi = nop), so
+  WFI + len retires next.
+- Observable at: instr_req_o resumes, rvfi_pc_rdata of the next retirement (handler, WFI+len, or
+  DmHaltAddr with dpc == WFI+len for the stepped case)
 - Config: mstatus.mie, mie, dcsr.step
 - Source: spec: tools/specs/riscv-isa-manual/src/priv/machine.adoc "Wait for Interrupt" | RTL:
   rtl/ibex_controller.sv:598-627
@@ -10371,6 +10786,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   canonical.
 - Edge: yes, of F-IC-012
 - Status: ALIAS of F-IC-040
+- Notes: in the dret (FLUSH) cycle debug_mode_i is still 1, so the depc line is looked up
+  pass-through, fetched from the bus from the target word to the line end and not allocated
+  (rtl/ibex_cs_registers.sv:1970-1971; rtl/ibex_controller.sv:960-964; rtl/ibex_icache.sv:266, 683,
+  703, 771-773); hits resume with the next line (TP-FE-022 / TP-IC-030 exempt the depc line).
 
 ### F-FE-023: After a fetch error the next fetch is the trap vector
 - What: Folded into F-IMEM-011: the redirect to the vector after a fetch fault is the parent's own
@@ -10378,6 +10797,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   carried by CG-FE-005.cp_next_fetch.exc_vector / dm_exception_addr.
 - Edge: yes, of F-IMEM-011
 - Status: FOLDED into F-IMEM-011 (bin CG-FE-005.cp_next_fetch.exc_vector)
+- Notes: the vector is observed as the next record's rvfi_pc_rdata (C-1); outside debug mode the
+  vector word may hit and stale beats of open lines may follow the redirect on the bus, so no ibus
+  clause (C-14); in debug mode DmExceptionAddr is always bus-visible.
 
 ### F-FE-024: Zcmp expansion holds the fetch interface
 - What: Folded into F-FE-012: Zcmp expansion is one of the fetch_ready-low causes F-FE-012
@@ -10396,6 +10818,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   Branch (Taken) rows) | RTL: rtl/ibex_icache.sv:703-705, 1030-1037
 - Edge: no
 - Status: ACTIVE
+- Notes: the same-cycle request is the speculative branch request fill_spec_req = branch_i &
+  ~|fill_ext_req: it exists only when no fill buffer has an ungranted request; a target that hits
+  never issues the deferred request (fill_ext_done_d via fill_hit_ic1, rtl/ibex_icache.sv:767-769),
+  so the deferred class is observable only on a miss or with icache_enable = 0 (C-14).
 
 ---------------------------------------------------------------------------------------------------
 
@@ -10438,10 +10864,14 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Edge: no
 - Status: ACTIVE
 
-### F-IC-004: Tag RAM reads happen even with the cache disabled or invalidating (result masked)
+### F-IC-004: Tag RAM reads happen even with the cache disabled (result masked); none during the invalidation sweep
 - What: tag_req_ic0 includes every lookup regardless of icache_enable; lookup_actual (which makes
   IC1 consider the result) is gated by icache_enable and ~inval_block_cache. So ic_tag_req_o /
-  ic_data_req_o pulse on every lookup even in pass-through mode.
+  ic_data_req_o pulse on every lookup in pass-through mode and in OUT_OF_RESET / AWAIT_SCRAMBLE_KEY.
+  During INVAL_CACHE no lookup read happens: every tag-port and data-port cycle of the sweep is a
+  write at the inval index (tag_write_ic0 = fill_grant | inval_write_req | ecc_write_req,
+  data_write_ic0 = tag_write_ic0, rtl/ibex_icache.sv:269-283, 1244; a coinciding lookup only makes
+  the data port write ECC(0), F-IC-028).
 - Observable at: ic_tag_req_o, ic_data_req_o with cpuctrlsts.icache_enable = 0
 - Config: cpuctrlsts.icache_enable
 - Source: RTL-defined: rtl/ibex_icache.sv:249-250, 266, 269, 280, 466-470
@@ -10475,12 +10905,18 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   icache.rst:194-200 matches the RTL)
 - Edge: no
 - Status: ACTIVE
-- Notes: with ICacheTweakInfection=1 the written value is additionally XORed (F-IC-007).
+- Notes: with ICacheTweakInfection=1 the written value is additionally XORed (F-IC-007): tag tweak
+  = the index at bits [7:0] and [21:14] of the 28-bit codeword, data tweak = the line-aligned
+  address on the 32 data bits of each beat (bits [31:0] and [70:39]); ECC bits are never tweaked.
 
 ### F-IC-007: Tweak infection XORs address-derived tweaks into RAM write/read data (ICacheTweakInfection)
 - What: If ICacheTweakInfection=1 (ibex_top sets it = SecureIbex), tag write data is XORed with the
-  tag index and data write data with the line address (addr >> 3) replicated per beat, and the
-  same XOR is undone on read before ECC checking. If 0, no XOR.
+  IC_INDEX_W-bit tag index placed at bits [7:0] and [21:14] of the 28-bit tag codeword (ECC bits
+  untouched, rtl/ibex_icache.sv:389-396), and data write data with the 32-bit line-aligned address
+  {addr[31:3], 3'b0} XORed onto the 32 data bits of each 39-bit beat codeword (bits [31:0] and
+  [70:39] of the 78-bit word, :329-347); invalidation and ECC-correction writes use tweak 0; the
+  same XOR (from the IC0 address / index registered one cycle) is undone on read before ECC
+  checking (:361-368, 406-423). If 0, no XOR.
 - Observable at: ic_tag_wdata_o, ic_data_wdata_o (not a plain ECC codeword when enabled)
 - Config: none
 - Source: doc: doc/03_reference/security.rst "ICache Tweak Infection" | RTL:
@@ -10586,9 +11022,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 ### F-IC-016: Miss data timing: demand beat forwarded directly from the bus
 - What: Folded into F-IC-014: forwarding the demanded beat from the bus is a timing detail of the
   parent's miss path with no distinct stimulus (pattern d); carried by
-  CG-IC-003.cp_miss_forward_latency.
+  CG-IC-003.cp_miss_forward_latency (minimum 3 cycles from the demanded beat's rvalid to
+  rvfi_valid: IF output R, ID R+1, WB R+2, record R+3; TIMING, fact-check TP-IC-020).
 - Edge: yes, of F-IC-014
-- Status: FOLDED into F-IC-014 (bin CG-IC-003.cp_miss_forward_latency.l1_2)
+- Status: FOLDED into F-IC-014 (bin CG-IC-003.cp_miss_forward_latency.l3)
 
 ### F-IC-017: Way selection: first invalid way, else round-robin
 - What: The victim is the lowest-numbered invalid way at that index; if both ways are valid, a
@@ -10623,7 +11060,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - What: A fill buffer that already issued external requests when branch_i arrives is marked stale:
   its output is suppressed, but it still receives its beats and, if it was allocating, still
   writes the line into the cache. A buffer with no external request yet is released without any
-  bus traffic (unless it will be cached).
+  bus traffic only when it will NOT be cached (cache disabled or invalidation active); a caching
+  buffer whose lookup preceded the branch fetches both beats and is allocated even with no grant yet
+  (fill_ext_done_d cancels only when ~fill_cache_q, rtl/ibex_icache.sv:741, 744-746, 767-775).
 - Observable at: instr_rvalid_i after redirect, ic_tag_write_o for a line never executed
 - Config: cpuctrlsts.icache_enable
 - Source: doc: doc/03_reference/icache.rst "Fill buffers" | RTL: rtl/ibex_icache.sv:729-734, 741,
@@ -10633,8 +11072,12 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 
 ### F-IC-021: Same line allocated in both ways after a branch into a line being prefetched
 - What: If the core branches to an address whose line is currently being filled by a stale-able
-  buffer, a second buffer for the same line can be allocated; both may write the line into
-  different ways (multi-way hit later; the hit mux ORs both ways, harmless when contents match).
+  buffer, a second buffer for the same line can be allocated. Each buffer captures its way at its
+  own IC1 (fill_way_q <= sel_way_ic1): with an invalid way at the index both pick the same lowest
+  invalid way and the second fill overwrites the first (one copy); two copies in different ways need
+  both ways already valid at that index (round-robin) and an odd number of valid lookups between
+  the two lookups (the pointer rotates on every lookup_valid_ic1, rtl/ibex_icache.sv:519-535, 914,
+  932-938). A later multi-way hit ORs both ways, harmless when contents match.
 - Observable at: two ic_tag_write_o for the same tag/index in different ways
 - Config: cpuctrlsts.icache_enable = 1
 - Source: doc: doc/03_reference/icache.rst "Performance notes" (second paragraph) and "Detailed
@@ -10650,11 +11093,13 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   and both ic_tag_req_o bits set. Lookups during this time are treated as misses and nothing is
   allocated; fetch proceeds from the bus. The minimum from reset release to INVAL_IDLE is 258
   cycles: 1 (OUT_OF_RESET) + 1 (AWAIT_SCRAMBLE_KEY with the key already valid) + 256 tag writes
-  (MEM-23); the first allocation can therefore not happen before cycle 258 after reset release, and
-  any key delay adds to it.
+  (MEM-23); the first fill write needs a lookup in INVAL_IDLE (inval_block_cache clears only there,
+  rtl/ibex_icache.sv:1218, 1265), an IC1 miss, two grants and rvalids and a RAM cycle free of
+  lookups, so it lands >= 5 cycles after the last inval write (not before cycle 262 after reset
+  release, reset release = cycle 0), and any key delay adds to it.
 - Observable at: ic_tag_req_o = 2'b11, ic_tag_write_o, ic_tag_addr_o counting 0..255,
   ic_tag_wdata_o (valid bit 0), instr_req_o for all fetches meanwhile; first fill write no earlier
-  than 258 cycles after reset release
+  than 262 cycles after reset release (>= 5 cycles after the last inval write)
 - Config: none
 - Source: doc: doc/03_reference/icache.rst "Cache invalidation" and "Detailed behaviour"
   (icache_inval_i paragraph) | RTL: rtl/ibex_icache.sv:255-258, 269-277, 1203-1257 (FSM
@@ -10785,10 +11230,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 ### F-IC-033: Single-bit and double-bit ECC errors are handled identically; no correction
 - What: Folded into F-IC-030: single- versus double-bit injection is a stimulus variable whose
   expected outcome is identical to the parent's (same alert, same invalidation), so it is not a
-  distinct edge; carried by CG-IC-006.cp_bits.single / double and cr_ram_x_bits_x_way (all 8
-  combos).
+  distinct edge; carried by CG-IC-006.cp_bits.single / double (the cross cr_ram_x_bits_x_way covers
+  all 8 combinations).
 - Edge: yes, of F-IC-030
-- Status: FOLDED into F-IC-030 (bin CG-IC-006.cr_ram_x_bits_x_way)
+- Status: FOLDED into F-IC-030 (bin CG-IC-006.cp_bits.single, CG-IC-006.cp_bits.double)
 
 ### F-IC-034: ICache ECC errors do not raise a major alert or an internal NMI
 - What: Folded into F-IC-030: "no major alert and no NMI" is a checker bullet on the parent's
@@ -10839,8 +11284,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   buffers are busy; the count includes the line being output, so linear prefetch never holds more
   than 3 non-stale buffers (F-FE-017). Branches bypass the throttle and can allocate the 4th
   buffer, but never more than NUM_FB=4 busy (lookup_req_ic0 requires ~&fill_busy_q).
-- Observable at: instr_addr_o lead over the line of rvfi_pc_rdata for sequential grants: at most 3
-  lines; a 4th busy buffer only right after a branch lookup (ibus monitor line count)
+- Observable at: instr_addr_o lead over the line of the word consumed into ID for sequential grants:
+  at most 3 lines (against the last retired rvfi_pc_rdata transiently 4 while a load/store is
+  stalled in WB, never 5; TIMING); a 4th busy buffer only right after a branch lookup (ibus monitor
+  line count)
 - Config: none
 - Source: doc: doc/03_reference/icache.rst "Cache Pipeline" ("lookup requests ... naturally
   throttle themselves as fill buffer resources run out") | RTL: rtl/ibex_icache.sv:72-74, 247-250,
@@ -10872,9 +11319,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 ### F-IC-041: icache_enable toggled with fetches in flight (CSR write timing)
 - What: Folded into F-IC-012: the enable taking effect for the next lookup with no stall or flush is
   a timing detail of the CSR write itself; the fills-in-flight coincidence is F-IC-027 (pattern d);
-  carried by CG-IC-005.cp_effect_latency.next_cycle and cp_transition.*.
+  carried by CG-IC-005.cp_effect_latency.next_lookup and cp_transition.*.
 - Edge: yes, of F-IC-012
-- Status: FOLDED into F-IC-012 (bin CG-IC-005.cp_effect_latency.next_cycle)
+- Status: FOLDED into F-IC-012 (bin CG-IC-005.cp_effect_latency.next_lookup)
 
 ### F-IC-042: Multi-way hit is ORed
 - What: If both ways match (possible after F-IC-021), the hit data is the bitwise OR of both ways
@@ -10886,8 +11333,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   rtl/ibex_icache.sv:506-514, 565-585
 - Edge: yes, of F-IC-019
 - Status: ACTIVE
-- Notes: reachable only with self-modifying code without fence.i (software constraint per doc);
-  candidate negative test / owner ruling on whether to stimulate.
+- Notes: reachable only with self-modifying code without fence.i (software constraint per doc) and
+  only after a genuine two-way copy (both ways valid at the index and an odd lookup count between
+  the two lookups of the line, F-IC-021; a cold index yields one copy); TP-IC-038 is informational
+  (own `_info` test, gen_chk_alerts on), candidate owner question 5.
 
 ### F-IC-043: Fill buffer release and reuse
 - What: A fill buffer frees when its RAM write (or non-allocation/hit/error) is done, its output is
@@ -10901,6 +11350,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Source: doc: doc/03_reference/icache.rst "Fill buffers" | RTL: rtl/ibex_icache.sv:713-734
 - Edge: no
 - Status: ACTIVE
+- Notes: release-to-next-request timing (TP-IC-052): with icache_enable = 0 the next new request
+  follows the oldest line's last rvalid within 2 cycles; when caching the stale line is first
+  written to the RAM (fill_ram_req c+1, ram_done c+2, release c+3, lookup c+3, IC1 miss and request
+  c+4; rtl/ibex_icache.sv:815-822, 843-844), so 4 cycles.
 
 ### F-IC-044: Output handshake stability toward IF
 - What: Once valid_o is high, rdata_o/addr_o/err_o/err_plus2_o stay stable until accepted or
@@ -11047,7 +11500,9 @@ the remaining citations were spot-checked with grep -n / cat -n.
   rtl/ibex_id_stage.sv:819-837,497).
 - Observable at: instr_req_o/instr_addr_o (a not-taken branch causes a prefetch flush and a new
   request for PC+4/PC+2), rvfi_pc_wdata (= branch_target_ex when pc_set, rtl/ibex_core.sv:2084),
-  cycle count between consecutive rvfi_valid pulses, mhpmcounter events for branches.
+  cycle count between consecutive rvfi_valid pulses, mhpmcounter events for branches;
+  alert_major_internal_o stays 0 across the redirect (the hardened PC-increment check is disarmed by
+  branch_req, rtl/ibex_if_stage.sv:664-669,688)
 - Config: cpuctrlsts.data_ind_timing.
 - Source: doc: doc/03_reference/security.rst "Data Independent Timing" ("Branches execute
   identically regardless of their taken/not-taken status") | doc:
@@ -11114,15 +11569,14 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 
 ### F-DIT-007: Not-taken compressed branch under DIT redirects to PC+2
-- What: For a 16-bit c.beqz/c.bnez that is not taken with DIT on, the fall-through target is
-  PC+2 and pc_set is asserted; the PC increment check is disarmed by branch_req so no
-  pc_mismatch alert is raised.
-- Observable at: instr_addr_o (re-request of PC+2 word), rvfi_pc_wdata = PC+2, alert_major_internal_o
-  stays 0.
-- Config: cpuctrlsts.data_ind_timing.
+- What: Folded into F-DIT-002: the parent already states that a not-taken branch under DIT asserts
+  pc_set and redirects fetch to the fall-through address "PC+4/PC+2"; the compressed form is the len
+  = 2 value of that statement with the same observable, and the disarmed PC-increment check (no
+  alert) is added to the parent's observable (Critic M-9); carried by the parent's compressed
+  not-taken bins.
 - Source: RTL-defined: rtl/ibex_id_stage.sv:819-837,925-928; rtl/ibex_if_stage.sv:664-669,688
 - Edge: yes, of F-DIT-002
-- Status: ACTIVE
+- Status: FOLDED into F-DIT-002 (bin CG-DIT-002.cr_dit_taken_c.on_nt_c16, CG-DIT-002.cp_compressed.c16)
 
 ### F-DIT-008: DIT has no effect on load/store timing (misaligned accesses still split)
 - What: The LSU has no data_ind_timing input; misaligned accesses still produce two bus
@@ -11135,13 +11589,17 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 
 ### F-DIT-009: Dummy DIV under DIT takes the full division latency
-- What: An inserted dummy DIV (see F-DIT-013) with rs2 selected by the LFSR as x0 (value 0)
-  completes early with DIT off and takes the full latency with DIT on.
-- Observable at: stall between the real instructions surrounding the dummy (rvfi_valid gaps).
-- Config: cpuctrlsts.dummy_instr_en, cpuctrlsts.data_ind_timing.
-- Source: RTL-defined: rtl/ibex_dummy_instr.sv:128-131,144; rtl/ibex_multdiv_fast.sv:434,445
+- What: Folded into F-DIT-003: a dummy DIV is a DIV, so the parent's "never completes early with DIT
+  on" applies to it unchanged; the dummy kind is a stimulus variable with the parent's latency
+  outcome (v2 edge rule, second pass; Critic M-9); carried by the probe-gated (P1/P9) dummy-type
+  bins. The zero-divisor case is a matter of the operand VALUE the LFSR-chosen rs2 register holds,
+  not of the register index: a dummy that reads x0 gets rf_data_r0_q, the previous dummy's result
+  (rtl/ibex_register_file_ff.sv:159-173, :221-224; rtl-arch fact-check X-22), so "rs2 = x0" is
+  not a divide-by-zero premise (TP-DIT-010 corrected).
+- Source: RTL-defined: rtl/ibex_dummy_instr.sv:128-131,144; rtl/ibex_multdiv_fast.sv:434,445;
+  rtl/ibex_register_file_ff.sv:159-173
 - Edge: yes, of F-DIT-003
-- Status: ACTIVE
+- Status: FOLDED into F-DIT-003 (bin CG-DIT-004.cr_type_dit.div_on, div_off; CG-DIT-004.cr_div_zero.div_zero_on, div_zero_off)
 
 ### F-DIT-010: DIT applies in U-mode although cpuctrlsts is M-mode only
 - What: FOLDED into F-DIT-002: data_ind_timing shapes branch and divide timing in U-mode exactly
@@ -11207,8 +11665,12 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Edge: no
 - Status: ACTIVE
 - Notes: SecureIbex with RV32MNone is rejected (rtl/ibex_core.sv:2438). The stall lengths (dummy
-  DIV = the 37-cycle divider latency of D7, MUL/ADD/AND one cycle) are bins of this feature
-  (F-DIT-024 folded).
+  DIV = the 37-cycle divider latency of D7, or the 2-cycle fast path when DIT is off and the
+  divisor VALUE is 0; MUL/ADD/AND one cycle; rtl-arch gen_multdiv_bound_props.md:
+  GEN_DIV_FULL_CYCLES = 36 / GEN_DIV_ZERO_CYCLES = 1 start-to-valid) are bins of this feature
+  (F-DIT-024 folded). Consecutive dummies (threshold 0, F-DIT-027) add their stalls, so an
+  observed extra gap is the sum of the classes of the dummies P1 attributes to it (fact-check
+  TP-DIT-026).
 
 ### F-DIT-014: LFSR reseeding through the secureseed CSR
 - What: A write to secureseed (0x7C1) asserts dummy_instr_seed_en with the CSR write data. The
@@ -11240,7 +11702,13 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 - Notes: Because BaseIsa = RV32IorCHERIoT the RF uses the banked g_cheriot_rf layout even with
   CHERIoT off (x0-x15 in rf_data, x16-x31 in the 35-bit-wide rf_shared flops, rtl/
-  ibex_register_file_ff.sv:88-142,221-224).
+  ibex_register_file_ff.sv:88-142,221-224). RTL-defined behaviour (rtl-arch fact-check X-22, fix
+  brief 3): a dummy instruction that reads x0 sees the PREVIOUS dummy's result, not 0:
+  `rf_data[0] = dummy_instr_id_i ? rf_data_r0_q : WordZeroVal` (rtl/ibex_register_file_ff.sv:
+  159-173), where rf_data_r0_q is written by every dummy (we_data_r0 = we_a_dec[0] &
+  ~waddr_a_i[4] & dummy_instr_wb_i). Real instructions still read x0 as 0. Consequence for the
+  plan: a dummy DIV with rs2 = x0 divides by the last dummy's result, so the zero-divisor
+  (fast-path) class is defined by the operand value (TP-DIT-010); architecturally invisible.
 
 ### F-DIT-016: Dummy instructions are suppressed on RVFI and do not consume rvfi_order
 - What: rvfi_stage_valid_d[0] is gated with ~dummy_instr_id and rvfi_stage_order_d does not
@@ -11252,11 +11720,13 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 
 ### F-DIT-017: Dummy instruction PC and the PC-increment check
-- What: The dummy takes the PC of the next real instruction (the prefetch buffer is stalled), it
-  is flagged not-compressed / not-expanded / no fetch error, and the hardened-PC check is
+- What: The dummy takes the PC of the next real instruction (the prefetch buffer is stalled), is
+  flagged not-compressed / not-expanded / no fetch error, and the hardened PC-increment check is
   disarmed for it (prev_instr_seq_d excludes stall_dummy_instr).
-- Observable at: alert_major_internal_o stays 0 across dummies; rvfi_pc_rdata of the following
-  real instruction equals the dummy's pc_id.
+- Observable at: alert_major_internal_o stays 0 across dummies; rvfi_pc_rdata of consecutive real
+  retirements stays contiguous across an insertion (no PC gap or repeat attributable to the dummy).
+  The dummy's own pc_id and the disarm term are internal: probe candidate P11 (probe register entry
+  needed): if_stage_i pc_id / stall_dummy_instr while dummy_instr_id is set, coverage only.
 - Config: cpuctrlsts.dummy_instr_en.
 - Source: RTL-defined: rtl/ibex_if_stage.sv:526-535,664-669
 - Edge: yes, of F-DIT-011
@@ -11327,10 +11797,14 @@ the remaining citations were spot-checked with grep -n / cat -n.
   a corrupted flop (no decoder exists, rtl/ibex_core.sv:1305-1319); the "never faults" half is the
   distinct expected outcome (a dummy with a fetch error or an illegal encoding cannot exist).
 
-### F-DIT-023: dummy_instr_en cleared while a dummy is in ID or WB
+### F-DIT-023: dummy_instr_en cleared while a dummy is in WB (the in-ID case is unreachable)
 - What: The dummy_instr_id / dummy_instr_wb flags travel with the instruction (registered in IF,
   re-registered in WB) so a dummy already in the pipeline still writes the x0 shadow and is
-  still suppressed on RVFI after software clears the enable.
+  still suppressed on RVFI after software clears the enable. Only the dummy-in-WB case is
+  reachable: the clearing csrw itself occupies ID when it commits and its csr_pipe_flush halts IF
+  (rtl/ibex_controller.sv:664-679,816-820), so no dummy can be in ID at the commit (rtl-arch
+  fact-check TP-DIT-025); the dummy_instr_id_o level may still read 1 afterwards because it is
+  updated only on if_id_pipe_reg_we (rtl/ibex_if_stage.sv:538-544, X-22).
 - Observable at: rvfi_valid (no stray record for the in-flight dummy); rvfi_rs1_rdata / rvfi_rs2_rdata
   of x0 read 0 afterwards.
 - Config: cpuctrlsts.dummy_instr_en toggling.
@@ -11400,10 +11874,14 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - What: Insertion requires id_in_ready and a valid real instruction in IF (if_id_pipe_reg_we);
   with fetch_enable_i not On (halt_if) or in SLEEP/WAIT_SLEEP no dummies enter ID and the
   counter does not advance.
-- Observable at: no rvfi_valid and no instr_req_o while fetch_enable_i != On or core_busy_o ==
-  Off, and no extra gaps once fetch resumes beyond the resume latency (negative check); probe
-  candidate P1 (probe register entry needed; wrapper-internal seam nets): dummy_instr_id_o /
-  dummy_instr_wb_o stay 0 in the window.
+- Observable at: no rvfi_valid and no new icache line allocation while fetch_enable_i != On
+  (remaining beats of open fill buffers are legal, X-5) or core_busy_o == Off, and no extra gaps
+  once fetch resumes beyond the resume latency (negative check); probe candidate P1 (probe
+  register entry needed; wrapper-internal seam nets): zero insertion EVENTS (if_id_pipe_reg_we
+  with insert_dummy_instr) in the window. The dummy_instr_id_o LEVEL is not the observable: it is
+  updated only on if_id_pipe_reg_we and holds 1 for the whole Off window when the last accepted
+  instruction before the edge was a dummy (rtl/ibex_if_stage.sv:538-544; rtl-arch fact-check
+  TP-DIT-030, X-22).
 - Config: cpuctrlsts.dummy_instr_en, fetch_enable_i, WFI.
 - Source: RTL-defined: rtl/ibex_dummy_instr.sv:103-104; rtl/ibex_if_stage.sv:568-570,587;
   rtl/ibex_controller.sv:598-621,996-999
@@ -11411,9 +11889,16 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 
 ### F-DIT-029: Dummy operand hazard against a load in WB
-- What: A dummy whose LFSR-chosen rs1/rs2 equals the rd of a load still in WB stalls on the
+- What: A dummy whose LFSR-chosen rs1/rs2 equals the rd of a load still in WB is subject to the
   load-data hazard exactly like a real instruction (the dummy is a normal ID-stage instruction).
-- Observable at: extra stall cycles between rvfi_valid records that depend on the LFSR value.
+  The hazard adds NO extra cycle: every instruction behind an outstanding load already waits in ID
+  until the response (instr_executing requires ~outstanding_memory_access,
+  rtl/ibex_id_stage.sv:1015-1016,1059-1062), so a dummy after a load adds exactly its own class
+  latency to the post-load gap whether or not it reads the load's rd (rtl-arch fact-check
+  TP-DIT-031, UNOBSERVABLE).
+- Observable at: the post-load gap between rvfi_valid records is bounded by load latency + the
+  dummy's class latency, hazard or not (boundary); the hazard itself is visible only on P1
+  (rf_raddr_a_o / rf_raddr_b_o == the load's rd at the insertion event), coverage only.
 - Config: cpuctrlsts.dummy_instr_en.
 - Source: RTL-defined: rtl/ibex_dummy_instr.sv:144; rtl/ibex_id_stage.sv:1111-1120 (stall_ld_hz =
   outstanding_load_wb & (rf_rd_a_hz | rf_rd_b_hz))
@@ -11502,9 +11987,10 @@ the remaining citations were spot-checked with grep -n / cat -n.
   (rf_ren_x), not being forwarded from WB (~(rf_rd_x_wb_match & rf_write_wb)), while
   instr_valid_id, sets rf_ecc_err_comb -> alert_major_internal_o. No correction is done. With
   RegFileECC=0 (ibex_top's choice) the 32-bit data passes straight through and the term is 0.
-- Observable at: alert_major_internal_o (level while the faulty operand is being read in ID);
-  with RegFileECC=0 (Q-002 default) a negative check: it never fires. rf_wdata_wb_ecc_o /
-  rf_rdata_*_ecc_i are wrapper-internal seam nets (probe candidate class, not observables).
+- Observable at: alert_major_internal_o (level while the faulty operand is being read in ID); with
+  RegFileECC=0 (Q-002 default) a negative check: it never fires. The seam nets rf_wdata_wb_ecc_o /
+  rf_rdata_a_ecc_i / rf_rdata_b_ecc_i are wrapper-internal, not observables: probe candidate P10
+  (probe register entry needed), fault injection and coverage only.
 - Config: none (requires fault injection into the RF flops or the core-RF wires inside the DUT).
 - Source: doc: doc/03_reference/security.rst "Register file ECC" (describes the lockstep-based
   scheme, not the in-core one) | RTL-defined: rtl/ibex_core.sv:47-48,1214-1242,1291-1319;
@@ -11594,9 +12080,11 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - What: The controller has no glitch detector feeding an alert. IbexCtrlStateValid (state is one
   of the ten legal encodings) and IbexExceptionPrioOnehot are SVA checks compiled under
   INC_ASSERT; they do not drive alert_major_internal_o.
-- Observable at: alert_major_internal_o stays 0 (negative check: these checks never reach a
-  port); the simulator's assertion summary for IbexCtrlStateValid / IbexExceptionPrioOnehot
-  (INC_ASSERT build).
+- Observable at: alert_major_internal_o stays 0 (negative check: neither property reaches a port).
+  The FSM-state and priority one-hot properties are assertion coverage, not observables: the RTL
+  assertions IbexCtrlStateValid / IbexExceptionPrioOnehot are compiled under INC_ASSERT and the TB
+  binds its own copies (gen_sva_ctrl_state_valid / gen_sva_exc_prio_onehot in gen_binds.sv) so that
+  the assertion summary and cover counts are collected per run.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_controller.sv:373-383,1104-1106; rtl/ibex_core.sv:1349-1351
 - Edge: no
@@ -11640,15 +12128,33 @@ the remaining citations were spot-checked with grep -n / cat -n.
   the DUT (see F-RST-016).
 
 ### F-SEC-015: Load data write suppressed on a bus integrity error (rf_wr_suppress)
-- What: When a load response arrives with bad check bits the RF write is suppressed
-  (rvfi_ext_rf_wr_suppress = instr_done_wb & ~rf_we_wb_o & outstanding_load_wb &
-  lsu_load_resp_intg_err) while alert_major_bus_o pulses. The instruction still retires.
-- Observable at: rvfi_ext_rf_wr_suppress, rvfi_rd_wdata/rf write absence, alert_major_bus_o.
+- What: When the beat that COMPLETES a load arrives with bad check bits the RF write is suppressed
+  (lsu_rdata_valid_o = IDLE & rvalid & ~err & ~we & ~data_intg_err,
+  rtl/ibex_load_store_unit.sv:697-698; rvfi_ext_rf_wr_suppress = instr_done_wb & ~rf_we_wb_o &
+  outstanding_load_wb & lsu_load_resp_intg_err, rtl/ibex_core.sv:2384-2385) while
+  alert_major_bus_o pulses and the internal NMI is raised. The instruction still retires. Per-beat
+  rule (rtl-arch fact-check X-11): the suppression keys only on the integrity of the completing
+  beat; for a misaligned load whose FIRST beat is corrupted and whose second beat is clean the
+  first-half status has no integrity term (lsu_err_d = data_bus_err_i | pmp_err_q, :514), so the
+  merged data IS written to rd (rf_wr_suppress = 0) while the alert (:756) and the internal NMI
+  still fire.
+- Observable at: rvfi_ext_rf_wr_suppress, rvfi_rd_addr / rvfi_rd_wdata (write present or absent),
+  alert_major_bus_o, the internal-NMI handler record (rvfi_ext_nmi_int).
 - Config: none.
-- Source: doc: doc/03_reference/security.rst "Bus integrity checking" | RTL-defined:
-  rtl/ibex_core.sv:2379-2398,1353
+- Source: doc: doc/03_reference/security.rst:88 "Where load data has bad checkbits the write to
+  the load's destination register will be suppressed" | RTL-defined:
+  rtl/ibex_core.sv:2379-2398,1353; rtl/ibex_load_store_unit.sv:514,697-698,756
 - Edge: no
 - Status: ACTIVE
+- Notes: Bug candidate B16 (rtl-arch BUG-08, bug log v1d; security-relevant, owner question
+  Q-015): the first-beat class contradicts the documented intent (security.rst:88), so the
+  checker follows the doc and the first-beat class is its own expected-fail item (TP-SEC-040;
+  RVFI view TP-RVFI-040); the aligned and second-beat classes pass (TP-SEC-008, TP-RVFI-024).
+  The internal NMI may be taken up to two ordinary instructions after the corrupted response
+  (X-10, D21) and its mtval is lsu_addr_last at the corrupted beat (the word-aligned second-half
+  address when the second half was granted before the first response). gen_bug_log.md B16 names
+  F-SEC-017 as the canonical D-side integrity feature; this entry is the load-suppression feature
+  the bug describes (F-SEC-017 is the spurious-response entry) - alignment item for the DV Lead.
 
 ### F-SEC-016: Store response with a bus integrity error
 - What: FOLDED into F-SEC-003: the lsu_store_resp_intg_err OR term of the parent (a store
@@ -11664,14 +12170,27 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - What: g_check_mem_response gates load/store errors and RF writes with "a response is expected"
   (outstanding_*_wb | expecting_*_resp_id), but alert_major_bus_o uses the raw
   lsu_*_resp_intg_err terms, so a spurious data_rvalid_i with bad check bits still pulses the bus
-  alert while causing no exception and no RF write.
-- Observable at: alert_major_bus_o = 1, rvfi_trap = 0, no RF write.
+  alert while causing no exception and no RF write. The internal NMI is ALSO raised:
+  mem_resp_intg_err (rtl/ibex_id_stage.sv:613) is not qualified by an outstanding access, so the
+  controller's pending flag is set (rtl/ibex_controller.sv:413-417,436) and the handler is
+  entered with mcause 0xFFFFFFE0 and mtval = the stale lsu_addr_last (rtl-arch fact-check
+  TP-SEC-010, WRONG-RTL-FACT).
+- Observable at: alert_major_bus_o = 1, rvfi_trap = 0, no RF write, an internal-NMI handler
+  record (rvfi_ext_nmi_int = 1).
 - Config: none.
-- Source: RTL-defined: rtl/ibex_core.sv:1181-1186,1353; rtl/ibex_load_store_unit.sv:756-757
+- Source: RTL-defined: rtl/ibex_core.sv:1181-1186,1353; rtl/ibex_load_store_unit.sv:756-757;
+  rtl/ibex_id_stage.sv:613; rtl/ibex_controller.sv:413-417,436
 - Edge: yes, of F-SEC-003
 - Status: ACTIVE
 - Notes: The NoMemResponseWithoutPendingAccess assertion (rtl/ibex_core.sv:1390-1391) will fire
-  under INC_ASSERT; such a test must waive it.
+  under INC_ASSERT; such a test must waive it. Out-of-spec stimulus: bug-log S3 (informational
+  item TP-SEC-010, Q-DL-9). Per-beat rule and B16 (bug log v1d names this entry as the canonical
+  D-side integrity feature): suppression of the load's RF write keys only on the integrity of the
+  beat that completes the access (rtl/ibex_load_store_unit.sv:514,697-698; X-11); a misaligned
+  load whose FIRST beat is corrupted writes merged data to rd while the alert and the internal NMI
+  fire - bug candidate B16 (rtl-arch BUG-08, security-relevant, owner question Q-015), carried as
+  the expected-fail items TP-SEC-040 / TP-RVFI-040; the load-suppression feature itself is
+  F-SEC-015.
 
 ### F-SEC-018: Instruction fetch integrity error on a speculative fetch
 - What: instr_intg_err is asserted with instr_rvalid_i for any returned word with bad check bits,
@@ -11733,25 +12252,21 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ACTIVE
 
 ### F-SEC-023: Double fault detection is inactive in debug mode and on debug entry
-- What: Exceptions taken while debug_mode_i is set, and debug-mode entry itself (debug_csr_save_i),
-  do not touch sync_exc_seen, so a fault in the debug ROM/park loop never produces a double
-  fault, and a debug entry between two exceptions does not reset the detector.
-- Observable at: double_fault_seen_o stays 0; cpuctrlsts bits unchanged.
-- Config: debug_req_i, dcsr.
+- What: Folded into F-SEC-022: the parent's arming condition already excludes exceptions taken in
+  debug mode and debug entry itself (csr_save_cause & not debug entry, outside debug mode); the
+  debug case is that condition evaluated false with the parent's double_fault_seen_o = 0 observable
+  (v2 edge rule, second pass; Critic M-9); carried by the debug-mode bins.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:910-918,935-945
 - Edge: yes, of F-SEC-022
-- Status: ACTIVE
+- Status: FOLDED into F-SEC-022 (bin CG-SEC-003.cp_debug_mode.yes)
 
 ### F-SEC-024: Interrupt or NMI between two synchronous exceptions
-- What: Interrupts and NMIs (mcause.irq_ext/irq_int) neither set nor clear sync_exc_seen. A
-  synchronous exception inside an interrupt handler that pre-empted an exception handler before
-  its mret is reported as a double fault; the mret of an NMI handler clears the flag (the mret
-  path clears it in nmi_mode too).
-- Observable at: double_fault_seen_o, cpuctrlsts.sync_exc_seen.
-- Config: mie/mstatus.MIE, irq inputs.
-- Source: RTL-defined: rtl/ibex_cs_registers.sv:935,953-965,967
+- What: Alias of F-EXC-055: SEC perspective (interrupts and NMIs neither set nor clear
+  sync_exc_seen, so a synchronous exception inside an interrupt handler that pre-empted an exception
+  handler is a double fault; the mret of an NMI handler clears the flag, the B12 behaviour stated by
+  F-EXC-056), see canonical.
 - Edge: yes, of F-SEC-022
-- Status: ACTIVE
+- Status: ALIAS of F-EXC-055
 
 ### F-SEC-025: Software-written sync_exc_seen / double_fault_seen
 - What: csrw cpuctrlsts with bit 6 = 1 arms the detector so the next synchronous exception is a
@@ -11808,8 +12323,12 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - What: last_data_addr, exception_pc and exception_addr reset to 0 (addr_last_q, mepc, mtval
   reset values). current_pc/next_pc come from IF-stage PC flops that are reset only when ResetAll
   = 1 (rtl/ibex_if_stage.sv:589-592; parameter rtl/ibex_core.sv:42). With the Q-002 default
-  ResetAll=1 they read 0 in reset and take the boot vector in BOOT_SET; without ResetAll they
-  would be X until the first fetch.
+  ResetAll=1 both read 0 in reset; next_pc (the icache address register loaded by the RESET-state
+  pc_set, rtl/ibex_icache.sv:1147-1160,1193) takes the boot vector in BOOT_SET, while current_pc
+  (= pc_id, rtl/ibex_if_stage.sv:601,613) STAYS 0 through RESET, BOOT_SET and FIRST_FETCH and
+  first changes when the first fetched instruction enters ID (pc_id updates only on
+  if_id_pipe_reg_we; rtl-arch fact-check TP-SEC-031, X-23). Without ResetAll they would be X
+  until the first fetch.
 - Observable at: crash_dump_o during and just after reset.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_load_store_unit.sv:261-262; rtl/ibex_cs_registers.sv:1088-1100,
@@ -11820,13 +12339,13 @@ the remaining citations were spot-checked with grep -n / cat -n.
   crash_dump_o runs from time 0 (F-RST-009, TP-SEC-031).
 
 ### F-SEC-030: crash_dump_o.exception_pc/exception_addr are frozen in debug mode
-- What: Exceptions taken in debug mode do not update mepc/mtval (only dpc/dcsr), so the crash
-  dump keeps the last non-debug exception's values.
-- Observable at: crash_dump_o.exception_pc / exception_addr.
-- Config: debug_req_i, dcsr.
+- What: Folded into F-SEC-027: exception_pc / exception_addr are mepc / mtval by the parent's
+  definition, and exceptions in debug mode do not write them (F-PRV-005); the frozen value is that
+  rule seen through the parent's fields (v2 edge rule, second pass; Critic M-9); carried by the
+  parent's debug-mode bins.
 - Source: RTL-defined: rtl/ibex_cs_registers.sv:910-931
 - Edge: yes, of F-SEC-027
-- Status: ACTIVE
+- Status: FOLDED into F-SEC-027 (bin CG-SEC-004.cp_debug_mode.yes, CG-SEC-004.cr_exc_debug.exception_pc_yes_no)
 
 ### F-SEC-031: cpuctrlsts register layout and access rules
 - What: Alias of F-CSR-085: SEC perspective of the cpuctrlsts (0x7C0) layout and access rules
@@ -11841,19 +12360,19 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Status: ALIAS of F-CSR-085
 
 ### F-SEC-032: cpuctrlsts write with reserved or read-only bits set
-- What: FOLDED into F-SEC-031: writes to bits 31:9 and to bit 8 are dropped (the cast to the
-  8-bit part struct, rtl/ibex_cs_registers.sv:1888-1889; bit 8 is loaded only from
-  ic_scr_key_valid_i, :1938-1949), which the parent already states. Bits 6/7 are plain RW for
-  software: a csrrw/csrrs/csrrc sets or clears them exactly as written (the raw write value is
-  passed through at :1967-1968 and written on every cpuctrlsts write at :874-876;
-  cs_registers.rst:551-557 marks both RW), so a read-modify-write does NOT need to preserve them
-  and the checker models software writes as applied (Critic C-05 correction; software-written
-  bits are F-SEC-025).
+- What: Folded into F-CSR-085 (the canonical of the SEC alias F-SEC-031): writes to bits 31:9 and to
+  bit 8 are dropped (the cast to the 8-bit part struct, rtl/ibex_cs_registers.sv:1888-1889; bit 8 is
+  loaded only from ic_scr_key_valid_i, :1938-1949), which the canonical already states. Bits 6/7 are
+  plain RW for software: a csrrw/csrrs/csrrc sets or clears them exactly as written (the raw write
+  value is passed through at :1967-1968 and written on every cpuctrlsts write at :874-876;
+  cs_registers.rst:551-557 marks both RW), so a read-modify-write does NOT need to preserve them and
+  the checker models software writes as applied (Critic C-05 correction; software-written bits are
+  F-SEC-025).
 - Observable at: csrr read-back on rvfi_rd_wdata of cpuctrlsts.
 - Config: cpuctrlsts writes.
 - Source: doc: doc/03_reference/cs_registers.rst:551-557 (bits 6/7 RW) | RTL-defined:
   rtl/ibex_cs_registers.sv:874-876,1888-1889,1938-1949,1967-1968
-- Edge: yes, of F-SEC-031
+- Edge: yes, of F-CSR-085
 - Status: FOLDED into F-CSR-085 (bin CG-DIT-001.cp_wr_reserved.bits31_9; CG-DIT-001.cp_wr_reserved.bit8; CG-DIT-001.cp_wr_reserved.both; CG-SEC-005.cp_bits67_readback.b6_1_b7_1)
 
 ### F-SEC-033: cpuctrlsts.icache_enable is forced off in debug mode
@@ -12042,7 +12561,11 @@ the remaining citations were spot-checked with grep -n / cat -n.
 ### F-RST-009: Reset values of the ibex_core output ports
 - What: instr_req_o = 0 (controller RESET state, prefetch idle); data_req_o = 0; data_we_o/
   data_be_o/data_addr_o/data_wdata_o/data_tag_o from LSU flops (0; data_tag_o is 0 with CHERIoT
-  off); ic_*_req_o = 0, ic_scr_key_req_o = 0 (icache flops); irq_pending_o = 0 (mie = 0);
+  off); ic_tag_req_o / ic_data_req_o = 0 until INVAL_CACHE; ic_scr_key_req_o is COMBINATIONAL
+  from the reset-state scramble FSM and the pin (OUT_OF_RESET & ~ic_scr_key_valid_i,
+  rtl/ibex_icache.sv:1221-1227,1276): it reads 1 while rst_ni = 0 and in the first post-release
+  cycle whenever the TB holds ic_scr_key_valid_i = 0, and 0 only when the key is driven valid
+  through reset (rtl-arch fact-check TP-RST-001); irq_pending_o = 0 (mie = 0);
   crash_dump_o per F-SEC-029; double_fault_seen_o = 0; alert_*_o = 0 given quiescent inputs
   (F-SEC-035); core_busy_o = IbexMuBiOn (ctrl_busy = 1 in RESET); rvfi_valid = 0, rvfi_mode =
   PRIV_LVL_M, rvfi_ixl = 1, all other rvfi_* = 0 / NULL_CAP; rf_we_wb_o = 0, dummy_instr_*_o =
@@ -12072,17 +12595,28 @@ the remaining citations were spot-checked with grep -n / cat -n.
   rtl/ibex_core.sv:637-657,1394-1421; rtl/ibex_controller.sv:996-999
 - Edge: no
 - Status: ACTIVE
+- Notes: Canonical for the IMEM alias F-IMEM-022 (M-10 pass); carries the folded F-IMEM-023 (invalid
+  MuBi codes act as Off without an alert, alert_major_internal_o stays low, unlike cheriot_enable_i:
+  rtl/ibex_core.sv:648-649 vs 1339-1347; CG-IMEM-005 code bins) and F-RST-011. Candidate owner
+  question kept from F-IMEM-023: is silent acceptance of an invalid fetch_enable_i encoding intended
+  in a SecureIbex configuration? Bus-side rule (rtl-arch fact-check X-5): fetch_enable_i != On
+  stops only NEW icache lookups (req_i reaches only lookup_req_ic0, rtl/ibex_icache.sv:249); the
+  remaining beats of already allocated fill buffers keep requesting (fill_ext_req = fill_busy_q &
+  ~fill_ext_done_d has no req_i term, :756, :1030-1031) and a request awaiting grant is held
+  until gnt, never withdrawn (:764-775); so "no new line allocation after the Off edge, beats of
+  open lines legal, instr_req_o == 0 whenever core_busy_o == Off", and the ibus protocol checker
+  needs no withdrawn-request tolerance.
 
 ### F-RST-011: fetch_enable_i goes Off while an LSU transaction is outstanding
-- What: The load/store in WB (or the second half of a misaligned access in ID) completes: the
-  response is consumed, the RF written, errors taken as exceptions; only IF->ID acceptance stops.
-- Observable at: data_rvalid_i accepted, rvfi_valid for the load/store, then quiet.
-- Config: none.
+- What: Folded into F-RST-010: the parent already states that instructions in ID/EX and WB complete
+  normally including outstanding loads/stores; the LSU-outstanding Off edge is that sentence with
+  the parent's rvfi_valid / core_busy_o observable (the bus-side in-flight statement is F-IMEM-024)
+  (v2 edge rule, second pass; Critic M-9); carried by the in-flight bins.
 - Source: doc: doc/02_user/integration.rst "Interfaces" (fetch_enable_i: "halt once any in-flight
   instructions in the ID/EX and WB stages have finished") | RTL-defined:
   rtl/ibex_controller.sv:996-999,1020; rtl/ibex_core.sv:1181-1186
 - Edge: yes, of F-RST-010
-- Status: ACTIVE
+- Status: FOLDED into F-RST-010 (bin CG-XIF-008.cp_inflight.data_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_data_outst; CG-RST-003.cp_pipe_state.id_busy)
 
 ### F-RST-012: fetch_enable_i Off then On resumes from the held PC
 - What: On re-enable the IF stage delivers the instruction that was held (prefetch buffer / skid
@@ -12149,27 +12683,36 @@ the remaining citations were spot-checked with grep -n / cat -n.
   core_busy_o directly?
 
 ### F-RST-017: core_busy_o stays On during WFI while a fetch is outstanding
-- What: A WFI executed while the prefetch buffer still has a request in flight keeps if_busy
-  high; core_busy_o only drops to Off once the fetch completes (and lsu_busy is 0).
-- Observable at: core_busy_o transitions relative to instr_rvalid_i.
-- Config: WFI.
+- What: Folded into F-RST-016: the parent defines core_busy_o = ctrl_busy | if_busy | lsu_busy, so
+  "stays On while a fetch is outstanding during WFI" is the if_busy term of the parent's formula
+  with the same port observable (Critic M-9); carried by the parent's hold-cause bin.
 - Source: RTL-defined: rtl/ibex_core.sv:496-522; rtl/ibex_if_stage.sv:421
 - Edge: yes, of F-RST-016
-- Status: ACTIVE
+- Status: FOLDED into F-RST-016 (bin CG-SEC-006.cp_hold_cause.fetch_outstanding, CG-SEC-006.cp_off_reason.none)
 
 ### F-RST-018: Mid-run reset assertion with bus transactions outstanding
-- What: Asserting rst_ni mid-run returns all state to reset values immediately; the memory model
-  may still return rvalid for a pre-reset request after release. With SecureIbex the response is
-  ignored for exceptions/RF writes (no outstanding access is tracked), but a bad-integrity
-  response still pulses alert_major_bus_o (F-SEC-017) and the NoMemResponseWithoutPendingAccess
-  assertion fires.
-- Observable at: all outputs at reset values; alert_major_bus_o if the TB returns bad ECC.
+- What: Asserting rst_ni mid-run returns all state to reset values immediately. The DUT cannot
+  tell a late response to a pre-reset request from the answer to a new request (rtl-arch
+  fact-check TP-RST-017): on the I-side any instr_rvalid_i goes to the oldest expecting fill
+  buffer and the boot fetch buffer is allocated in BOOT_SET (rtl/ibex_icache.sv:851-852,700), so
+  a late beat from cycle 1 after release on becomes the boot instruction (bad integrity -> alert
+  AND instruction access fault at the boot vector); on the D-side a data_rvalid_i while a new
+  load/store is outstanding is that access's response (rtl/ibex_load_store_unit.sv:694-698;
+  rtl/ibex_wb_stage.sv:220) and with nothing outstanding the exception/RF-write paths are masked
+  (rtl/ibex_core.sv:1181-1186) but a bad-integrity beat still raises alert_major_bus_o and the
+  internal NMI (F-SEC-017). Responses drained while rst_ni = 0 reach only consumers held in reset
+  (a bad-integrity beat still pulses the combinational alert_major_bus_o, F-SEC-035).
+- Observable at: all outputs at reset values; alert_major_bus_o if the TB drains a bad-ECC beat in
+  reset.
 - Config: none.
-- Source: RTL-defined: rtl/ibex_core.sv:1181-1186,1390-1391; rtl/ibex_load_store_unit.sv:756-757
+- Source: RTL-defined: rtl/ibex_core.sv:1181-1186,1390-1391; rtl/ibex_load_store_unit.sv:694-698,
+  756-757; rtl/ibex_icache.sv:700,851-852; rtl/ibex_wb_stage.sv:220
 - Edge: yes, of F-RST-001
 - Status: ACTIVE
-- Notes: The TB memory model must either drain or drop responses across a reset; record the
-  chosen policy.
+- Notes: The TB memory model must either drain (while rst_ni = 0) or drop responses to pre-reset
+  requests, never return them after release (Q-010); a post-release late response is the
+  unsolicited-response stimulus of bug-log S3 (TP-IMEM-040 / TP-SEC-010 informational items).
+  Recorded policy: TP-RST-017.
 
 ### F-RST-019: Reset during a multi-cycle instruction or a split misaligned access
 - What: Reset during a 37-cycle division, a Zcmp expansion or between the two halves of a
@@ -12228,11 +12771,17 @@ the remaining citations were spot-checked with grep -n / cat -n.
 ### F-RST-023: Same-cycle RF write and read of the same register
 - What: The RF has no write-to-read forwarding; the ID stage forwards WB data itself
   (rf_rd_*_wb_match). Reading a register that WB is writing in the same cycle must return the
-  new value at the architectural level.
-- Observable at: rvfi_rs*_rdata equals the previous instruction's rvfi_rd_wdata.
+  new value at the architectural level. Forwarding covers ALU, CSR, mul and div producers only
+  (rf_wdata_fwd_wb_o = rf_wdata_wb_q, rtl/ibex_wb_stage.sv:212-215: "load data returns too late");
+  a consumer of a LOAD result stalls on stall_ld_hz while the load is in WB
+  (rtl/ibex_id_stage.sv:1114-1120) and reads the RF one cycle after the load's WB, so a load ->
+  consumer record gap is 2, never 1 (rtl-arch fact-check TP-RST-023, TIMING).
+- Observable at: rvfi_rs*_rdata equals the previous instruction's rvfi_rd_wdata (gap 1 for
+  non-load producers, gap 2 for load producers).
 - Config: none.
 - Source: doc: doc/03_reference/register_file.rst "Register File" ("no write to read forwarding
-  path") | RTL-defined: rtl/ibex_register_file_ff.sv:116-126; rtl/ibex_id_stage.sv:1111-1112
+  path") | RTL-defined: rtl/ibex_register_file_ff.sv:116-126; rtl/ibex_id_stage.sv:1111-1120;
+  rtl/ibex_wb_stage.sv:212-215
 - Edge: yes, of F-RST-021
 - Status: ACTIVE
 
@@ -12366,27 +12915,38 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 
 ### F-RVFI-007: rvfi_mode and rvfi_ixl
 - What: rvfi_mode = priv_mode_id sampled at rvfi_id_done (3 = M, 0 = U); rvfi_ixl = CSR_MISA_MXL
-  = 1 (RV32). Reset values are M and 1.
+  = 1 (RV32). Reset values are M and 1. rvfi_mode may change only when the previous record is a
+  trap / mret / dret record or the current record is the first after an interrupt or debug entry:
+  interrupt entry and debug entry from U set priv <- M without a trap record
+  (rtl/ibex_cs_registers.sv:908; the handler / debug-ROM record carries rvfi_intr = 1 or
+  rvfi_ext_debug_mode = 1) and dret restores priv <- dcsr.prv (:950) (rtl-arch fact-check
+  TP-RVFI-007).
 - Observable at: rvfi_mode, rvfi_ixl.
-- Config: privilege mode (mret to U).
-- Source: RTL-defined: rtl/ibex_core.sv:2014-2015,2078-2079; rtl/ibex_pkg.sv:225-229,709
+- Config: privilege mode (mret to U), interrupts and debug entry from U, dret into U.
+- Source: RTL-defined: rtl/ibex_core.sv:2014-2015,2078-2079; rtl/ibex_pkg.sv:225-229,709;
+  rtl/ibex_cs_registers.sv:908,950
 - Edge: no
 - Status: ACTIVE
 
 ### F-RVFI-008: rs1/rs2/rs3 address and read data capture
 - What: rs1/rs2 are captured in the first ID cycle and are zero when the register port is not
   read (rf_ren_a/rf_ren_b); the data is the forwarded operand (multdiv_operand_a/b_ex =
-  rf_rdata_*_fwd) so it reflects a same-cycle WB writeback. rs3 is captured in the second cycle
-  of multi-cycle instructions from port A (rf_raddr_a / multdiv_operand_a) and is zero for
-  single-cycle instructions.
+  rf_rdata_*_fwd) so it reflects a same-cycle WB writeback. rs3 is captured from RF read port A in
+  EVERY non-first ID cycle of a multi-cycle instruction (rtl/ibex_core.sv:2316-2317) and is zero
+  for single-cycle instructions; the decoder drives the rs3 field (instr[31:27]) on port A only
+  for ternary ops (use_rs3, rtl/ibex_decoder.sv:203), so on mulh / div / misaligned load-store /
+  DIT two-cycle branch records rvfi_rs3_addr = the rs1 field and rvfi_rs3_rdata = the rs1 value
+  (rtl-arch fact-check TP-RVFI-009).
 - Observable at: rvfi_rs1_addr/rs2_addr/rs3_addr, rvfi_rs1_rdata/rs2_rdata/rs3_rdata.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_core.sv:2284-2337,760-761 (id_stage operand assign at
-  rtl/ibex_id_stage.sv:760-761)
+  rtl/ibex_id_stage.sv:760-761); rtl/ibex_decoder.sv:203
 - Edge: no
 - Status: ACTIVE
 - Notes: The ISA model comparison must accept rs3 as an Ibex-specific field (used by ternary
-  bitmanip such as cmov/fsl/fsr and by multi-cycle sequences).
+  bitmanip such as cmov/fsl/fsr and by multi-cycle sequences); "rs3_addr != 0" alone does not
+  identify a ternary op: compare rs3 against instr[31:27] only for ternary ops and against rs1 for
+  the other multi-cycle records.
 
 ### F-RVFI-009: rd_addr / rd_wdata capture in WB; zero when no write or rd = x0
 - What: With WritebackStage the output stage captures rd_addr/rd_wdata when the RF write happens
@@ -12401,16 +12961,29 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 ### F-RVFI-010: pc_rdata and pc_wdata
 - What: rvfi_pc_rdata = pc_id at ID done; rvfi_pc_wdata = branch_target_ex if pc_set is asserted
   in that cycle, else pc_if. For jumps/taken branches (and DIT not-taken branches) this is the
-  target; for straight-line code it is the next sequential PC.
-- Observable at: rvfi_pc_rdata, rvfi_pc_wdata.
+  target; for straight-line code it is the next sequential PC. RTL-defined (rtl-arch fact-check
+  X-1): trap, mret and dret records carry the NEXT SEQUENTIAL fetch address (pc_if), never the
+  redirect target: mret/dret leave ID in the DECODE cycle (rtl/ibex_id_stage.sv:991,1130; the
+  controller sets retain_id and decides FLUSH, rtl/ibex_controller.sv:664-680) and their pc_set
+  (PC_ERET / PC_DRET) is issued one cycle later in FLUSH (:953-965); ID-stage trap records are
+  captured in the DECODE cycle through rvfi_flush_next (rtl/ibex_core.sv:1851-1853;
+  rtl/ibex_controller.sv:1122) while PC_EXC is set in FLUSH (:826-833). Only branches and jumps
+  (pc_set in their ID-exit cycle) carry the target; fence.i is a jump to pc + 4
+  (rtl/ibex_decoder.sv:711-720), so its pc_wdata is both its target and the next sequential
+  address.
+- Observable at: rvfi_pc_rdata, rvfi_pc_wdata; a redirect target is observed as the NEXT record's
+  rvfi_pc_rdata (or the DmHaltAddr / DmExceptionAddr / vector fetch on the ibus with the icache
+  off).
 - Config: none.
-- Source: RTL-defined: rtl/ibex_core.sv:2083-2084
+- Source: RTL-defined: rtl/ibex_core.sv:1851-1853,2083-2084; rtl/ibex_controller.sv:664-680,
+  826-833,953-965,1122; rtl/ibex_id_stage.sv:991,1130; rtl/ibex_decoder.sv:711-720
 - Edge: no
 - Status: ACTIVE
-- Notes: For traps, mret, dret and fence.i the PC redirect happens in the controller FLUSH state
-  with pc_mux PC_EXC/PC_ERET/PC_DRET; whether rvfi_id_done for these instructions coincides with
-  that pc_set (giving pc_wdata = branch_target_ex, which is the EX ALU output, not mepc/depc) or
-  precedes it (giving pc_if) is an RTL/Arch question - see Candidate owner questions.
+- Notes: Candidate owner question 6 (pc_wdata of FLUSH-redirect records) is RESOLVED by X-1: the
+  value is pc_if (next sequential fetch address) and is compared as such (TP-RVFI-012); the
+  comparator observes the target on the following record (TB Infra convention C-1). Related:
+  B13 (jalr to an odd target keeps bit 0 in pc_wdata, rtl/ibex_core.sv:2084 with the raw
+  branch_target_ex) stands.
 
 ### F-RVFI-011: mem_addr / rmask / wmask for loads and stores (single record, unshifted mask)
 - What: rvfi_mem_addr = lsu_addr captured in the first ID cycle (the effective, possibly
@@ -12424,7 +12997,16 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Edge: no
 - Status: ACTIVE
 - Notes: The mask is relative to mem_addr, not to the aligned word. An ISA-model comparison that
-  expects word-lane masks must translate.
+  expects word-lane masks must translate. Bug candidate B18 (rtl-arch BUG-10, bug log v1d;
+  RVFI-only, no architectural effect): the mask is derived from lsu_type without an LSU-request
+  qualifier (rtl/ibex_core.sv:2085, :2253-2260; wmask is clean only because data_we_o is
+  decode-qualified), so EVERY non-store record that is not a load (ALU, CSR, branch, jump,
+  ID-stage trap) shows rvfi_mem_rmask = 4'b1111 and rvfi_mem_addr = the ALU adder result (and
+  rvfi_mem_rdata = the previous load's data), whereas rvfi.rst:135-136, 143-144 wants rmask
+  nonzero only for memory operations and addr to hold the accessed location. Masks are zeroed
+  only for WB-trap records (:2156-2157). Consequence: the mask / address rules of
+  gen_chk_rvfi_proto and the comparator apply only to records DECODED as loads or stores
+  (TP-RVFI-014 checker caveat; TP-RVFI-029 for ID-trap records); no expected-fail item.
 
 ### F-RVFI-012: mem_rdata and mem_wdata contents
 - What: rvfi_mem_rdata is the LSU result (rf_wdata_lsu) captured when lsu_resp_valid: already
@@ -12472,16 +13054,30 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 
 ### F-RVFI-016: Interrupt/NMI/debug notification via rvfi_ext_irq_valid and captured state
 - What: When the pipeline has emptied to take an interrupt/NMI (not a debug request) and nothing
-  was captured yet, rvfi_irq_valid pulses and the mip/nmi/nmi_int/debug_req state at the trap
-  decision cycle is pushed up the RVFI pipeline (visible on rvfi_ext_pre_mip, rvfi_ext_nmi,
-  rvfi_ext_nmi_int, rvfi_ext_debug_req together with rvfi_ext_irq_valid). Captured values are
-  cleared when a new instruction enters ID and re-captured for a later debug request or NMI.
-- Observable at: rvfi_ext_irq_valid, rvfi_ext_pre_mip, rvfi_ext_nmi, rvfi_ext_nmi_int,
-  rvfi_ext_debug_req.
+  was captured yet, rvfi_irq_valid is set for one cycle and the mip/nmi/nmi_int/debug_req state
+  at the trap decision cycle is pushed up the RVFI pipeline (visible on rvfi_ext_pre_mip,
+  rvfi_ext_nmi, rvfi_ext_nmi_int, rvfi_ext_debug_req together with rvfi_ext_irq_valid). Captured
+  values are cleared when a new instruction enters ID and re-captured for a later debug request
+  or NMI. RTL-defined level semantics (rtl-arch fact-check X-16): the port rvfi_ext_irq_valid is
+  a LEVEL, not a pulse: it rises four cycles after the decision cycle (rvfi_irq_valid flop
+  :1965-1971, stage [0] :1992-2002, stage [1] :2134-2141, stage [2] = the port :1837 with
+  RVFI_STAGES = 2, :2192-2199), stays high until about two cycles after the handler's first
+  instruction enters ID (stage [0] is rewritten only when a new instruction enters ID; one cycle
+  only with same-cycle gnt and next-cycle rvalid), never coincides with rvfi_valid (the last
+  pre-interrupt record is out by decision + 1) and is NOT generated at all when ID emptied before
+  WB drained (captured_valid already set, :1965): the handler's first record then carries the
+  captured state without a marker.
+- Observable at: rvfi_ext_irq_valid (rising edge = one notification), rvfi_ext_pre_mip,
+  rvfi_ext_nmi, rvfi_ext_nmi_int, rvfi_ext_debug_req.
 - Config: mie/mstatus.MIE, irq inputs, debug_req_i.
-- Source: RTL-defined: rtl/ibex_core.sv:1907-2004,2130-2141,2188-2199
+- Source: RTL-defined: rtl/ibex_core.sv:1837,1907-2004,2130-2141,2188-2199
 - Edge: no
 - Status: ACTIVE
+- Notes: Checkers count marker rising edges (at most one per interrupt entry) and accept an entry
+  without a marker whose handler first record carries the captured state (TP-RVFI-019); the
+  predicted marker offset from the last pre-interrupt record's rvfi_valid is 3 cycles
+  (GEN_RVFI_IRQ_MARKER_OFFSET, pinned at bring-up; gen_arch_v2_rtl_factcheck.md 2.1 corrected from
+  N+3 to N+4 for the decision-to-port offset).
 
 ### F-RVFI-017: rvfi_ext_pre_mip / post_mip bit layout and sampling points
 - What: pre_mip is mip when the instruction entered ID (or the captured value for a trap),
@@ -12495,13 +13091,25 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Status: ACTIVE
 
 ### F-RVFI-018: rvfi_ext_debug_req and rvfi_ext_debug_mode
-- What: debug_req is the raw debug_req_i sampled when the instruction entered ID (or captured at
-  the trap decision); debug_mode is the core's debug_mode flag when the instruction left ID.
+- What: debug_req is the raw debug_req_i sampled at the instruction's IF->ID transfer
+  (instr_valid_id_d & instr_new_id_d, rtl/ibex_core.sv:1996-2001), or captured_debug_req when the
+  request arrived on an empty ID (:1949-1957); debug_mode is the core's debug_mode flag when the
+  instruction left ID. RTL-defined consequences (rtl-arch fact-check X-6): a high debug_req_i lets
+  no new instruction enter ID outside debug mode (DECODE halts IF and enters DBG_TAKEN_IF once ID
+  and WB are empty, rtl/ibex_controller.sv:700-708; halt_if is combinational from the request,
+  :1020), so the instruction in ID when the pin rises reports debug_req = 0 and completes, an
+  instruction whose transfer would follow the rise never enters (entry with dpc = its pc, no
+  record), and the first debug-ROM record reports debug_req = 1 with debug_mode = 1; a record with
+  debug_req = 1 and debug_mode = 0 never exists.
 - Observable at: rvfi_ext_debug_req, rvfi_ext_debug_mode.
 - Config: debug_req_i, dcsr.
-- Source: RTL-defined: rtl/ibex_core.sv:1928,2000-2001,2101,2178
+- Source: RTL-defined: rtl/ibex_core.sv:1928,1949-1957,1996-2001,2101,2178;
+  rtl/ibex_controller.sv:700-708,1020
 - Edge: no
 - Status: ACTIVE
+- Notes: Fire-checks for "entry from FLUSH" key on the driver timestamp, the last record before
+  entry and the DmHaltAddr fetch with no record in between (TB Infra convention C-3); dpc = pc of
+  the first not-yet-executed instruction, derived from the last retired record (X-7).
 
 ### F-RVFI-019: rvfi_ext_mcycle and rvfi_ext_mhpmcounters[0..9]
 - What: Sampled at rvfi_id_done from the live counters: mcycle (64-bit) and mhpmcounter[3..12]
@@ -12523,13 +13131,22 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Status: ACTIVE
 
 ### F-RVFI-021: rvfi_ext_rf_wr_suppress
-- What: Set on a load record whose RF write was suppressed because the response had a bus
-  integrity error (see F-SEC-015); otherwise 0.
-- Observable at: rvfi_ext_rf_wr_suppress with rvfi_valid.
+- What: Set on a load record whose RF write was suppressed because the beat that COMPLETES the
+  load had a bus integrity error (rvfi_rf_wr_suppress_wb = instr_done_wb & ~rf_we_wb_o &
+  outstanding_load_wb & lsu_load_resp_intg_err, rtl/ibex_core.sv:2384-2385, keyed on the
+  data_intg_err of the current rvalid, rtl/ibex_load_store_unit.sv:697-698,756; see F-SEC-015);
+  otherwise 0. Per-beat rule (rtl-arch fact-check X-11): a misaligned load whose FIRST beat is
+  corrupted and whose second beat is clean is written to the RF with the merged data and its
+  record shows rf_wr_suppress = 0 and rvfi_rd_addr = rd (the first-half status lsu_err_d has no
+  integrity term, :514); the flag truthfully reports the un-suppressed write.
+- Observable at: rvfi_ext_rf_wr_suppress with rvfi_valid; rvfi_rd_addr on the same record.
 - Config: none.
-- Source: RTL-defined: rtl/ibex_core.sv:2379-2398
+- Source: RTL-defined: rtl/ibex_core.sv:2379-2398; rtl/ibex_load_store_unit.sv:514,697-698,756
 - Edge: no
 - Status: ACTIVE
+- Notes: Bug candidate B16 (rtl-arch BUG-08, bug log v1d, owner question Q-015): the first-beat
+  class is the expected-fail item TP-RVFI-040 (checker follows security.rst:88: suppress on any
+  bad beat); the aligned and second-beat classes pass (TP-RVFI-024).
 
 ### F-RVFI-022: Zcmp expanded sequences produce one record per micro-op
 - What: Each micro-op of cm.push/cm.pop/cm.popret/cm.popretz/cm.mvsa01/cm.mva01s completes ID
@@ -12575,13 +13192,22 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 
 ### F-RVFI-026: Record of an instruction with a fetch error (bus error, PMP exec fault)
 - What: rvfi_trap = 1 with rvfi_insn = whatever data was captured for the failed fetch (not
-  meaningful), rvfi_pc_rdata = the faulting PC, no register/memory fields.
-- Observable at: rvfi_trap, rvfi_pc_rdata.
+  meaningful), rvfi_pc_rdata = the faulting PC, rvfi_rd_addr / rvfi_rd_wdata = 0. The memory
+  fields are NOT zero: an ID-stage trap record keeps the garbage decode of the faulting word
+  (rvfi_mem_rmask = mask(lsu_type) with the decoder default 2'b00 -> 4'b1111, zeroed only when
+  data_we_o; rvfi_mem_addr = alu_adder_result_ex; rvfi_mem_wdata = the rs2 value; rvfi_mem_rdata =
+  the previous load's data; rtl/ibex_core.sv:2085-2086,1024-1025,2207-2209,2222-2233;
+  rtl/ibex_decoder.sv:285; rtl/ibex_load_store_unit.sv:723); masks are zeroed only for WB traps
+  (:2156-2157) (rtl-arch fact-check X-15 / TP-RVFI-029; same mechanism as B18). mtval is the
+  faulting fetch address (pc or pc + 2, rtl/ibex_controller.sv:859-861; D10).
+- Observable at: rvfi_trap, rvfi_pc_rdata, rvfi_rd_addr = 0.
 - Config: PMP config, instr_err_i.
-- Source: RTL-defined: rtl/ibex_core.sv:1885-1886,2074-2077; rtl/ibex_controller.sv:268-270
+- Source: RTL-defined: rtl/ibex_core.sv:1885-1886,2074-2077,2085-2086,2156-2157;
+  rtl/ibex_controller.sv:268-270,859-861
 - Edge: yes, of F-RVFI-005
 - Status: ACTIVE
-- Notes: Checkers must not compare rvfi_insn for fetch-error records.
+- Notes: Checkers must not compare rvfi_insn or the rvfi_mem_* fields for fetch-error records;
+  only rd_addr / rd_wdata == 0 is checked (TP-RVFI-029).
 
 ### F-RVFI-027: rvfi_mode of a trapping instruction is the mode it executed in
 - What: rvfi_id_done for a trapping instruction happens the cycle before FLUSH (rvfi_flush_next),
@@ -12638,18 +13264,24 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Edge: no
 - Status: ACTIVE
 
-### F-RVFI-032: rvfi_ext_irq_valid coinciding with rvfi_valid
+### F-RVFI-032: rvfi_ext_irq_valid never coincides with rvfi_valid
 - What: The ext fields advance on (rvfi_id_done | irq_valid) at stage 0 and (rvfi_wb_done |
-  irq_valid) at stage 1, so an interrupt notification can be output in the same cycle as a
-  retiring instruction's record; the pre_mip/nmi/debug_req fields then belong to the notification
-  (they are overwritten), and rvfi_ext_irq_valid distinguishes the two.
-- Observable at: rvfi_valid & rvfi_ext_irq_valid same cycle.
+  irq_valid) at stage 1, so structurally a notification and a record could share a stage; on this
+  RTL they never share a cycle at the port (rtl-arch fact-check X-16 / TP-RVFI-035): the
+  interrupt decision needs ~instr_valid_id & ready_wb, so the last pre-interrupt record is out by
+  decision + 1 while the marker passes four flops and rises at decision + 4, and the handler's
+  first record comes one cycle after the marker falls; no instruction retires in between
+  (rtl/ibex_core.sv:1965-1971,1985-2004,2192-2198). The record fields and the notification's
+  pre_mip/nmi/debug_req fields are therefore never overwritten by each other.
+- Observable at: rvfi_valid & rvfi_ext_irq_valid never both high (negative property, T-044
+  sva_rvfi_irq_valid_exclusive).
 - Config: irq inputs.
-- Source: RTL-defined: rtl/ibex_core.sv:2130-2141,2188-2199
+- Source: RTL-defined: rtl/ibex_core.sv:1965-1971,1985-2004,2130-2141,2188-2199
 - Edge: yes, of F-RVFI-016
 - Status: ACTIVE
-- Notes: Checker design must handle the collision; confirm with RTL/Arch whether the retiring
-  record's pre_mip is trustworthy in that cycle.
+- Notes: Candidate owner question 10 (pre_mip on a colliding cycle) is RESOLVED by X-16: no
+  collision exists; the checker keeps the exclusivity assertion (TP-RVFI-035) and TP-RVFI-019
+  counts marker rising edges.
 
 ### F-RVFI-033: RVFI reset values
 - What: FOLDED into F-RST-009: on reset all rvfi_* are 0/NULL_CAP except rvfi_mode = PRIV_LVL_M
@@ -12705,9 +13337,11 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   (I = 1, E = 0).
 - Config: none (cheriot_enable_i tie).
 - Source: RTL-defined: rtl/ibex_core.sv:67,1339-1347; rtl/ibex_pkg.sv:36-39,84-85,378-379,
-  626-628,728,759-760; dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md Part A (authoritative
-  exclusion list); dv/auto_dv/work/rtl-arch/gen_cheriot_carveout.md buckets A-F and gating chain
-  G1-G8; table below
+  626-628,728,759-760; dv/auto_dv/excl/gen_exclusions. REGENERATION STATUS: the exclusion file was regenerated as the pass-12 file at commit 4125c36 (rtl-arch: mstack_epc_cap_q no longer selected, the A.8 carve-back table is an explicit last filter in gen_excl_select.py, every shared-module block needs an approved range AND a dead guard or an explicit cone; README section 5b lists the in-range objects kept live); row 151 below records that state; the full row-for-row re-alignment of this table to the pass-12 file follows the Critic's approval of the regenerated file (it is still under REQUEST-CHANGES review), and until then the other rows reflect the pass-10 file as committed at dca91fd.el (the exclusion deliverable, rtl-arch
+  T-069) with dv/auto_dv/excl/gen_exclusions_README.md (section 2 content table, section 4 refuted
+  entries, section 5 notes) and dv/auto_dv/excl/gen_exclusions_select_report.md;
+  dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md v2 (the source the file is generated from);
+  dv/auto_dv/work/rtl-arch/gen_cheriot_carveout.md buckets A-F and gating chain G1-G8; table below
 - Edge: no
 - Status: ACTIVE
 - Notes: Ports that exist only for CHERIoT and what gen_dut_top must do with them:
@@ -12731,23 +13365,34 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   - ibex_trvk (capability revocation, rtl/ibex_trvk.sv:9-67) is instantiated only in ibex_top
     (rtl/ibex_top.sv:257-272,425-435) - not in the DUT. No trvk reference exists in ibex_core.
 
-Carve-out construct table (mirrors dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md Part A row for
-row; carve-out = dv/auto_dv/work/rtl-arch/gen_cheriot_carveout.md, referenced as buckets A-F, gating
-chain G1-G8 and the F-leak items). Column "Reachable when Off": yes = the construct affects behaviour
-with cheriot_enable_i == IbexMuBiOff and is covered as plain-Ibex behaviour, as a negative check or
-as a constant-value monitor; "yes (live RV32I, never excluded)" = a bucket-F leak or the live half of
-a gated statement, which no exclusion may touch; no = dead with the tie (exclusion candidate).
-Column "Exclusion" names the entry kind of gen_exclusions_draft.md exactly: Block (line metric),
-Branch, Condition, Toggle, FSM, Assert, the A.1 object list, or none. Rules (Critic C-16..C-19):
-gen_exclusions_draft.md is the authoritative exclusion list; this table records the DV consequence
-per row (negative check / constant-value monitor / live coverage); constant nets in "yes (constant
-0)" rows need a toggle exclusion (bucket D). No "no" row contains live RV32I logic; every "no" row
-cites exactly the dead sub-arm or term with its exclusion kind; every bucket-F item (F1-F17)
-appears as live; no block-label exclusion is used where the block holds live or toggling RV32I
-logic (B1, B4, B5, B12, B14, B15). Row count: 165 data rows (the v1 table had 71 rows;
-gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
+Carve-out construct table. Authority statement (fix brief 3): F-CHERI-001 mirrors
+dv/auto_dv/excl/gen_exclusions.el row for row (README section 2 content table plus the per-entry
+annotations); A.1 covers every object whose value or arm requires a CHERIoT-only condition; the 48
+objects refuted by the strict load (README section 4) stay in coverage and are listed as live;
+class-R rows 37-40 stay OUT until EC-4 passes; class-D default arms keep EC-3 placeholders until
+the first measured regression. The file is generated from gen_exclusions_draft.md v2 (Parts A, C,
+C.2) by gen_excl_select.py against the round-0 re-baseline dump; every entry carries the A.0
+annotation (class T / P / D, RTL location, tie chain or parameter, EC set and T022_* pointer); the
+file, never this table, is what urg loads (-excl_strict). Carve-out =
+dv/auto_dv/work/rtl-arch/gen_cheriot_carveout.md, referenced as buckets A-F, gating chain G1-G8 and
+the F-leak items. Column "Reachable when Off": yes = the construct affects behaviour with
+cheriot_enable_i == IbexMuBiOff and is covered as plain-Ibex behaviour, as a negative check or as a
+constant-value monitor; "yes (live RV32I, never excluded)" = a bucket-F leak or the live half of a
+gated statement, which no exclusion may touch; no = dead with the tie (excluded). Column "Exclusion"
+names the gen_exclusions.el entry class exactly: Block (line metric), Branch vector, Condition
+vector, Toggle, Fsm/State/Transition, Assert, the A.1 object list, or none (with the reason: folded
+by VCS, refuted by the strict load, live, or not yet in the file). Rules (Critic C-16..C-19): this
+table records the DV consequence per row (negative check / constant-value monitor / live coverage);
+constant CHERIoT-only ports carry a toggle exclusion (A.5). No "no" row contains live RV32I logic;
+every "no" row cites exactly the dead sub-arm or term with its entry class; every bucket-F item
+(F1-F17) appears as live; the file holds no block-label exclusion where the block holds live or
+toggling RV32I logic (B1, B4, B5, B12, B14, B15): A.3 Blocks are per-object entries (id, checksum,
+text). Row count: 176 data rows (rows 1-165 from the v2 draft alignment; rows 166-176 added by
+fix brief 3 for the README content-table classes P, D, R, the refuted objects and the notes;
+gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 176). Row numbers are
+stable: retired statements are rewritten in place, never renumbered.
 
-| # | File:lines | Construct | Reachable when Off | Exclusion (gen_exclusions_draft.md) | DV consequence |
+| # | File:lines | Construct | Reachable when Off | Exclusion (gen_exclusions.el entry class) | DV consequence |
 |---|---|---|---|---|---|
 | 1 | rtl/ibex_core.sv:17 | imports ibex_cheriot_pkg (types only) | n/a | none (A.2: the package has no coverage objects) | none |
 | 2 | rtl/ibex_core.sv:49,67,85,87,100-102 | CHERIoT-only ports: RegFileCapEccWidth, cheriot_enable_i, data_tag_o, data_tag_i, rf_wcap_ecc_wb_o, rf_rcap_a/b_ecc_i | yes (constant 0 / tie) | Toggle A.5 (ibex_core list) | tie cheriot_enable_i = IbexMuBiOff and data_tag_i = 0 in gen_dut_top; constant-value monitor data_tag_o == 0 (TP-CHERI-003) |
@@ -12771,15 +13416,15 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 20 | rtl/ibex_core.sv:1676-1690,1707-1733,2027-2030,2090-2099,2162-2176 | RVFI capability tracking flops and stage arrays | yes (lines execute; values constant) | none (internal nets; RVFI-only) | constant-value monitor at the six rvfi_*cap ports |
 | 21 | rtl/ibex_if_stage.sv:40,90-91,133,194-197 | cheriot_enable_i, instr_fetch_cheriot_acc/bound_vio_o, pcc_cap_i; cheriot_acc_vio / bound_vio / force_uc nets | yes (constant 0 / tie) | Toggle A.5 (cheriot_enable_i, instr_fetch_cheriot_acc_vio_o, instr_fetch_cheriot_bound_vio_o, pcc_cap_i) | none |
 | 22 | rtl/ibex_if_stage.sv:207-210 | gen_no_cheriot_if | NOT-ELAB | none | none |
-| 23 | rtl/ibex_if_stage.sv:222-228 | exc_pc mux: EXC_PC_EXC / EXC_PC_IRQ ternaries | yes (live RV32I arms: {mtvec[31:8], 8'h00} and the vectored layout) | Branch A.3: CHERIoT arms ({mtvec[31:2], 2'b00}) only | live coverage of trap / interrupt vectors (instr_addr_o = vector; EXC / IRQ areas) |
-| 24 | rtl/ibex_if_stage.sv:368 | .cheriot_force_uc_i(cheriot_force_uc) into the prefetch buffer | yes (constant 0) | no entry in the draft (the connection is not an if_stage port; the prefetch-buffer / fetch-fifo ports are missing from A.5: cross-area request to rtl-arch) | none |
+| 23 | rtl/ibex_if_stage.sv:222-228 | exc_pc mux: EXC_PC_EXC / EXC_PC_IRQ ternaries | yes (live RV32I arms: {mtvec[31:8], 8'h00} and the vectored layout) | none: the constant-select assign-ternary has NO branch object in the dump (VCS folded it, README section 5 item 1; select report "BRANCH ibex_if_stage [(222, 228)]: 0 vectors"); only the A.4 Condition vectors of :222 / :225 with the tie term at its impossible value are in the file | live coverage of trap / interrupt vectors (instr_addr_o = vector; EXC / IRQ areas) |
+| 24 | rtl/ibex_if_stage.sv:368 | .cheriot_force_uc_i(cheriot_force_uc) into the prefetch buffer | yes (constant 0) | none in gen_exclusions.el: the connection is not an if_stage port and the file has no MODULE ibex_prefetch_buffer / ibex_fetch_fifo scope (41 scopes, 13 modules), so the prefetch-buffer / fetch-fifo ports are still missing from A.5 (cross-area request to rtl-arch stands; kept in coverage) | none |
 | 25 | rtl/ibex_if_stage.sv:430 | if_instr_err = bus_err OR pmp_err OR cheriot_acc_vio OR cheriot_bound_vio | yes (live line; two constant OR terms) | Condition A.4 (vectors with a cheriot term = 1) | live coverage of fetch faults (F-RVFI-026) |
 | 26 | rtl/ibex_if_stage.sv:445-446,452-453 | allow_all, hdrm_ok, base_ok (constant 1 with pcc_cap_i = ROOT_DECODED_CAP_TX) | yes (constant 1) | none explicit (internal nets; EC-2 constant analysis where propagated) | none |
 | 27 | rtl/ibex_if_stage.sv:447-449 | instr_hdrm, hdrm_ge4, hdrm_ge2 | yes (toggle with if_instr_addr; dead: consumers gated) | none: bucket F13 toggling nets, listed by name as live, never swept in under the block label | none |
 | 28 | rtl/ibex_if_stage.sv:456-457,464-465,469-472 | cheriot_bound_vio, cheriot_force_uc, cheriot_acc_vio assigns (G7) | yes (constant 0) | Condition A.4 (the `(On)` factor is never 1) | none |
 | 29 | rtl/ibex_if_stage.sv:634-652 | gen_cheriot_vio_regs (g_cheriot_vio_ra with ResetAll=1): flops loaded on if_id_pipe_reg_we | yes (lines execute on every IF->ID transfer; data constant 0; bucket B7) | none on the lines; Toggle A.5 on the two output ports | none |
 | 30 | rtl/ibex_if_stage.sv:495 | .cheriot_enable_i to the compressed decoder | tie | Toggle A.5 (ibex_compressed_decoder cheriot_enable_i) | none |
-| 31 | rtl/ibex_prefetch_buffer.sv:30,104; rtl/ibex_fetch_fifo.sv:32-33,127 | cheriot_force_uc_i port and pass-through; `cheriot_force_uc_i |` term of unaligned_is_compressed (:127) | yes (constant 0 -> standard unaligned-compressed decode) | Condition A.4 by the general rule (CC bucket C fetch_fifo :127 "term CONST 0"); the constant ports are not in the A.5 list (cross-area request); :120 is inside `ifdef DII_SIM (U4) | live coverage of the RV32 unaligned-compressed path (FE area) |
+| 31 | rtl/ibex_prefetch_buffer.sv:30,104; rtl/ibex_fetch_fifo.sv:32-33,127 | cheriot_force_uc_i port and pass-through; `cheriot_force_uc_i |` term of unaligned_is_compressed (:127) | yes (constant 0 -> standard unaligned-compressed decode) | none in gen_exclusions.el: neither module has a scope in the file (the A.4 classifier ran only on the 20 modules with a CHERIoT-named operand in the dump; the :127 vector and the constant ports are not selected); kept in coverage; cross-area request to rtl-arch stands (first measured regression's holes decide, README section 5 item 2 rule); :120 is inside `ifdef DII_SIM (U4) | live coverage of the RV32 unaligned-compressed path (FE area) |
 | 32 | rtl/ibex_id_stage.sv:35,68-69,146,203-226,300,335,340 | CHERIoT ports and constant nets (bucket D) | yes (constant) | Toggle A.5 (id_stage list; NOT instr_is_rv32lsu_id_o, which toggles) | none |
 | 33 | rtl/ibex_id_stage.sv:488,548-573,623-668,719-726 | port wiring of constant CHERIoT nets to decoder / controller | yes (wiring) | none (no coverage objects) | none |
 | 34 | rtl/ibex_id_stage.sv:576 | instr_is_rv32lsu_id_o = lsu_req_dec | yes (live RV32I, never excluded) | none (A.8 v1 item) | live coverage through every load/store |
@@ -12794,7 +13439,7 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 43 | rtl/ibex_id_stage.sv:1142-1160,1199-1200 | gen_no_stall_mem | NOT-ELAB (WritebackStage = 1) | none | none |
 | 44 | rtl/ibex_id_stage.sv:1297-1300 | ASSERT_IF IbexCheriotLoadDisabled / IbexCheriotStoreDisabled / IbexInstrNotCheriot / IbexCheriotExecDisabled | yes (live RV32I checkers; antecedent true; bucket F15) | none (A.7: kept; EC-3 proof objects) | keep enabled in every build (INC_ASSERT); zero failures required |
 | 45 | rtl/ibex_decoder.sv:27,92-119,148,282-303,1459-1476 | CHERIoT ports, default assigns, instr_is_legal_cheriot / cs2 / imm12 / imm20 / imm21 assigns (G1) | yes (constant; the defaults are live lines) | Toggle A.5 (ports); Condition A.4 (:1459-1476 vectors) | none |
-| 46 | rtl/ibex_decoder.sv:202 | raddr_a = cheriot_operator_o.CAUICGP ? 5'h3 : (rs3 / rs1 select) | yes (live RV32I arm incl. the rs3 select) | Branch A.3: CHERIoT arm (5'h3) only (A.8 item 8) | live coverage (rs1 / rs3 reads) |
+| 46 | rtl/ibex_decoder.sv:202 | raddr_a = cheriot_operator_o.CAUICGP ? 5'h3 : (rs3 / rs1 select) | yes (live RV32I arm incl. the rs3 select) | none as a Branch: the assign-ternary has NO branch object (VCS folded it; select report "BRANCH ibex_decoder [(202, 202)]: 0 vectors", README section 5 item 1); the A.4 Condition vectors of :202 with cheriot_operator_o.CAUICGP = 1 are in the file | live coverage (rs1 / rs3 reads; rs3 on port A only for ternary ops, F-RVFI-008) |
 | 47 | rtl/ibex_decoder.sv:211-217 | gen_16_regs ternaries rf_raddr_a_o / rf_raddr_b_o / rf_waddr_o (CheriLimit16Regs) | yes (live RV32I pass-through arms; x16-x31 addressing traverses them; bucket F5) | Branch A.3: masked arms only (A.8 item 8) | live coverage (F-RST-022) |
 | 48 | rtl/ibex_decoder.sv:237-242 | gen_16reg_check_active: illegal_reg_16 = (RV32E || On) && (...) | yes (constant 0; the right-hand sub-terms toggle; bucket B9) | Condition A.4 (:238) | negative check: no illegal-register trap for x16-x31 (F-RST-022) |
 | 49 | rtl/ibex_decoder.sv:314-323 | OPCODE_JAL CHERIoT arm (CJAL) | no | Block A.3; the RV32 jump arm :324-334 is live | live coverage of jal (ISA area) |
@@ -12864,7 +13509,7 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 113 | rtl/ibex_controller.sv:827-831 | FLUSH exception entry for EVERY trap: pc_set_o = 1, pc_mux_o = PC_EXC, exc_pc_mux_o | yes (live RV32I, never excluded; A.8 item 1) | Condition A.4 for the `(On) & cheriot_wb_err_q` sub-term of :827-828 only; no line exclusion | live coverage of every trap entry (instr_addr_o = vector; rvfi_trap) |
 | 114 | rtl/ibex_controller.sv:833-840 | csr_save_id_o / csr_save_wb_o (mepc source select) | yes (live RV32I, never excluded; A.8 item 1) | Condition A.4 for the `(On) & cheriot_wb_err_q` sub-terms only | live coverage (mepc = ID PC vs WB PC; EXC area) |
 | 115 | rtl/ibex_controller.sv:850-858 | instr_fetch_err_prio CHERIoT tag / bound violation arms (ExcCauseCheriFault, csr_mepcc_clrtag_o) | no | Block A.3 (Part C rows 2-3; T022_CORE_CHERI0_B); the else arm :859-862 (instruction access fault, mtval = faulting fetch address, D10) is live | live coverage (F-RVFI-026; EXC area) |
-| 116 | rtl/ibex_controller.sv:866-868 | illegal_insn mtval ternary: (dual & On) ? 32'h0 : instruction bits | yes (live RV32I arm: mtval = instruction bits; bucket F9) | Branch A.3: CHERIoT arm (32'h0) only; NEVER a line exclusion (A.8 item 2) | live coverage (rvfi_trap + csrr read-back of mtval) |
+| 116 | rtl/ibex_controller.sv:866-868 | illegal_insn mtval ternary: (dual & On) ? 32'h0 : instruction bits | yes (live RV32I arm: mtval = instruction bits; bucket F9) | none: the constant-select assign-ternary has NO branch object (VCS folded it; select report "BRANCH ibex_controller [(866, 868)]: 0 vectors", README section 5 item 1); no line exclusion (A.8 item 2) | live coverage (rvfi_trap + csrr read-back of mtval) |
 | 117 | rtl/ibex_controller.sv:894-897 | ebreak mtval = pc_id_i (CHERIoT) | no | Block A.3 (Part C row 5) | none (the RV32I ebreak leaves mtval at its default; EXC area) |
 | 118 | rtl/ibex_controller.sv:901-908 | store_err_prio `if ((On) & lsu_err_is_cheriot_q)` arm | no | Block A.3 (Part C row 6; T022_CTRL_CHERI0) | none |
 | 119 | rtl/ibex_controller.sv:909-913 | store access-fault arm: exc_cause_o = ExcCauseStoreAccessFault, csr_mtval_o = lsu_addr_last_i | yes (live RV32I, never excluded; bucket F9; A.8 item 2) | none | live coverage (F-RVFI-013; EXC area) |
@@ -12875,9 +13520,9 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 124 | rtl/ibex_controller.sv:1068-1075,1125-1131 | gen_cheriot_tieoff (NOT-ELAB); unused-signal sink | n/a | none | none |
 | 125 | rtl/ibex_cs_registers.sv:41,63-79,153-159,263-286,357-369 | CHERIoT ports, capability CSR storage (mepc / mtvec / depc / dscratch caps, mshwm / mshwmb / cdbg_ctrl, pcc_cap), *_en_cheriot declarations | yes (constant) | Toggle A.5 (cs_registers port list; NOT csr_mshwm_new_i, which toggles) | none |
 | 126 | rtl/ibex_cs_registers.sv:377-391 | misa_value_masked: X = (On) || RV32BExtra, I = (cheriot_enable_i != On), E = (On) | yes (constant: X=1, I=1, E=0 = a plain RV32I+B value) | Condition A.4 (:379-389 vectors) | live coverage of csrr misa (F-RST-027, TP-RST-028) |
-| 127 | rtl/ibex_cs_registers.sv:424-426 | CSR_MARCHID ternary | yes (live RV32I arm CSR_MARCHID_VALUE = 22) | Branch A.3: CHERIoT arm (32'hce1) only | live coverage (F-SEC-037 -> F-CSR-019, TP-SEC-038) |
+| 127 | rtl/ibex_cs_registers.sv:424-426 | CSR_MARCHID ternary | yes (live RV32I arm CSR_MARCHID_VALUE = 22) | none: the constant-select assign-ternary has NO branch object (VCS folded it; select report "BRANCH ibex_cs_registers [(424, 426)]: 0 vectors", README section 5 item 1) | live coverage (F-SEC-037 -> F-CSR-019, TP-SEC-038, TP-CHERI-004) |
 | 128 | rtl/ibex_cs_registers.sv:469-475,478-484 | CSR_MTVEC / CSR_MEPC `if ((dual) && (On)) illegal_csr` arms | no | Block A.3; the else arms (csr_rdata_int = mtvec_q / mepc_q) are live | live coverage of mtvec / mepc reads (CSR area) |
-| 129 | rtl/ibex_cs_registers.sv:504-512,516-522 | CSR_MSECCFG / CSR_MSECCFGH: read arms under PMPEnable && !((dual) && (On)); else illegal_csr (:510-512, :519-521) | yes for the read arms (live RV32I); the else arms are UNREACH | NOT in gen_exclusions_draft.md A.3 although the carve-out lists the else arms as UNREACH: cross-area request to rtl-arch (add Block entries for :510-512 and :519-521 or confirm EC-2 marks them Unreachable) | live coverage of mseccfg reads (PMP area) |
+| 129 | rtl/ibex_cs_registers.sv:504-512,516-522 | CSR_MSECCFG / CSR_MSECCFGH: read arms under PMPEnable && !((dual) && (On)); else illegal_csr (:510-512, :519-521) | yes for the read arms (live RV32I); the else arms are UNREACH | NOT in gen_exclusions.el: the cs_registers Block ranges selected are 469-475, 478-484, 678-698, 707-715, 2014-2056, 2063-2067, 2108-2209, 2218-2224 (select report), so :510-512 / :519-521 have no entry although the carve-out lists them as UNREACH; kept in coverage; cross-area request to rtl-arch stands (add the two Blocks or confirm EC-2 marks them Unreachable) | live coverage of mseccfg reads (PMP area) |
 | 130 | rtl/ibex_cs_registers.sv:678-698 | CSR_MSHWM / CSR_MSHWMB / CSR_CDBG_CTRL read arms under (On) | no | Block A.3; the `else illegal_csr = 1` arms are live (reads of 0xBC1 / 0xBC2 / 0xBC4 trap) | negative check TP-CHERI-002 (rvfi_trap + csrr read-back of mcause = 2) |
 | 131 | rtl/ibex_cs_registers.sv:707-715 | PMP-CSR illegal block `if (!PMPEnable || ((dual) && (On)))` | no (UNREACH: PMPEnable = 1 and the tie) | Block A.3 | none (row added for Critic C-18) |
 | 132 | rtl/ibex_cs_registers.sv:736-743 | mtvec_d LSB = ~((dual) & (On)) (vectored mode) | yes (live line; constant term = 1) | Condition A.4 (:741-743) | live coverage (F-RST-004 boot value, TP-RST-003) |
@@ -12898,8 +13543,8 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 147 | rtl/ibex_cs_registers.sv:2059,2061 | pcc_cap_o = pcc_cap_q (constant ROOT_DECODED_CAP_TX); pcc_exc_cap = cheriot_pcc_to_mepc(pcc_cap_q, exception_pc, ...) | yes (pcc_cap_o constant; pcc_exc_cap TOGGLES with exception_pc; bucket F13) | Toggle A.5 (pcc_cap_o); pcc_exc_cap listed by name as live, never swept in under the gen_scr label | none |
 | 148 | rtl/ibex_cs_registers.sv:2063-2067 | pcc_cap_q update `else if (cheriot_enable_i == IbexMuBiOn)` | no | Block A.3 (:2063-2067) | none |
 | 149 | rtl/ibex_cs_registers.sv:2075-2105 | tr_cap / tr_addr / tf_cap / pcc_cap_d (update on csr_save_cause_i / csr_restore_mret_i / dret) | yes (TOGGLE on every trap, mret and dret in RV32I mode; bucket F13) | none: listed by name as live (A.8 v1 items), never excluded by the gen_scr block label | none (values unobservable; the lines are covered by trap traffic) |
-| 150 | rtl/ibex_cs_registers.sv:2108-2125,2133-2209 | *_en_cheriot assigns and the cap flops mtvec_cap / mepc_cap / mtdc_cap / mscratchc_cap / depc_cap / dscratch0/1_cap updated only under *_en_cheriot or (On) | no (all enables constant 0, G6) | Block A.3 (listed as :2108-2209); the mstack_epc_cap_q flop :2126-2132 inside that range is NOT part of it (next row): cross-area request to rtl-arch to state the sub-ranges without :2126-2132 | none |
-| 151 | rtl/ibex_cs_registers.sv:2126-2132 | mstack_epc_cap_q <= mepc_cap when mstack_en (NULL_CAP -> ROOT_CAP_TX on the first NMI) | yes (TOGGLES once on the first NMI in RV32I mode; bucket F13) | none: listed by name as live (A.8 v1 items); must be carved out of the :2108-2209 Block by object | none (unobservable; the line is covered by the first NMI, TP-RST-025 / IRQ area) |
+| 150 | rtl/ibex_cs_registers.sv:2108-2125,2133-2209 | *_en_cheriot assigns and the cap flops mtvec_cap / mepc_cap / mtdc_cap / mscratchc_cap / depc_cap / dscratch0/1_cap updated only under *_en_cheriot or (On) | no for the update arms (all enables constant 0, G6); the RESET arms of these flops execute | Block A.3 per object (the file holds the update-arm Blocks: `mtvec_cap <= cheriot_csr_wcap_i`, `mepc_cap <= gen_scr.pcc_exc_cap`, `mepc_cap <= gen_scr.mstack_epc_cap_q`, `mepc_cap <= cheriot_csr_wcap_i`, mtdc / mscratchc / depc / dscratch0 / dscratch1 `<= cheriot_csr_wcap_i`, `depc_cap <= gen_scr.pcc_exc_cap`); the reset-arm Blocks (mtvec_cap / mepc_cap / mtdc_cap / mscratchc_cap / depc_cap / dscratch0_cap reset values, `cheriot_csr_rdata_o = 32'b0`, `pcc_cap_q <= ...` reset) were REFUTED by the strict load (covered by the NOP smoke) and dropped: live, README section 4 | none -- 4125c36 pass-12: live, not excluded (mstack_en fires on every non-debug trap); README section 5b |
+| 151 | rtl/ibex_cs_registers.sv:2126-2132 | mstack_epc_cap_q <= mepc_cap when mstack_en (NULL_CAP -> ROOT_CAP_TX on the first NMI) | yes (TOGGLES once on the first NMI in RV32I mode: the arm is gated by mstack_en only, rtl/ibex_cs_registers.sv:2129-2131, :933; bucket F13) | FINDING for rtl-arch: gen_exclusions.el pass 8 CONTAINS the Block `gen_scr.mstack_epc_cap_q <= mepc_cap` (MODULE ibex_cs_registers Block 299) as an A.3 entry of the cs_registers annotation; only its reset arm (`<= 35'b0`) was refuted and dropped. The update arm is reachable in RV32I mode (any NMI entry) and the NOP smoke had no NMI, so the strict load could not refute it; the first measured regression with NMIs will (README section 4 rule), but the entry should be dropped from the file now (cross-area request, B.7 rule 1). This row stays "live, never excluded" | none (unobservable; the line is covered by the first NMI, TP-RST-025 / IRQ area) |
 | 152 | rtl/ibex_cs_registers.sv:2212-2224 | cheriot_fatal_err_q set `if ((On) && csr_save_cause_i && ~mtvec_cap.valid)` (:2221-2222) | no (set only when On) | Block A.3 (:2218-2224; T022_CSR_CHERI0); Toggle A.5 (cheriot_fatal_err_o) | negative check: alert_major_internal_o never fires from this source (F-SEC-002) |
 | 153 | rtl/ibex_cs_registers.sv:2229-2257,2259-2260 | gen_no_scr (NOT-ELAB); unused-signal sink | n/a | none | none |
 | 154 | rtl/ibex_register_file_ff.sv:21-46,58-59,69,74,79,84 | header comments, REGCAP_W / CapWidth parameters, cheriot_enable_i, rcap_a_o, rcap_b_o, wcap_a_i | yes (tie / constant) | Toggle A.5 (cheriot_enable_i, rcap_a_o, rcap_b_o, wcap_a_i) | constant-value monitor via rvfi_rs1_rcap / rvfi_rs2_rcap |
@@ -12914,6 +13559,17 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 163 | rtl/ibex_cheriot_pkg.sv:1-965 | capability types, NULL_CAP, encode / decode functions (evaluated inline from shared modules) | n/a (types; functions inlined) | none (A.2: no coverage objects) | none |
 | 164 | rtl/ibex_trvk.sv:9-420 | temporal revocation unit | not instantiated in ibex_core (ibex_top only) | none (A.2 / CC A3) | none (F-SEC-036: not a DUT feature) |
 | 165 | rtl/ibex_pkg.sv:38,84-85,378-379,626-628,728,816-822 | BaseIsaRV32IorCHERIoT, OPCODE_CHERI / OPCODE_AUICGP, ExcCauseCheriFault (28), CSR_MSHWM / MSHWMB / CDBG_CTRL addresses, CSR_MARCHID_CHERIOT_VALUE, CTX_* / CRX_* enum values | n/a (constants); the CTX_* / CRX_* values are the FSM A.6 states | none beyond FSM A.6 | negative checks: mcause never 28; 0xBC1/2/4 trap; marchid = 22 |
+| 166 | rtl/ibex_controller.sv:690-696 | `if (BranchPredictor)` body in DECODE (draft Part C row 12) | NOT-REACH: BranchPredictor = 0 is an elaboration constant of the opentitan configuration (gen_param_resolution.md; time-0 config banner) | Block, class P (build-parameter constant): 1 Block; EC-1 T022_CORE_BP0 PROVED, yosys constant instr_bp_taken_id = 0 (evidence 4.3), EC-2 expected URG Unreachable, EC-5 strict load. The :684 part of Part C row 12 (assign-ternary on the same parameter) has no object (folded, README section 5 item 1) | none (no branch predictor in the DUT; PC_BP mux arm never selected, F-RST-003) |
+| 167 | rtl/ibex_decoder.sv:1342-1344,1348-1350 | BCOMPRESS / BDECOMPRESS multicycle bodies (draft Part C rows 42-43); the case items :1341 / :1347 stay live | NOT-REACH: RV32B = RV32BOTEarlGrey, so `RV32B == RV32BFull` is false (elaboration constant) | Block, class P: 2 Blocks; EC-1 configuration plus the legality case :641-642; EC-2 expected URG Unreachable; EC-5 strict load | none (the encodings trap as illegal in this build: ISA / BIT area) |
+| 168 | rtl/ibex_controller.sv:684; rtl/ibex_id_stage.sv:925-926,936-942 | Part C rows 12 (:684 part), 30 and 32: parameter-select assign-ternaries | live selected arm only | none: VCS folded the parameter select, no branch or condition object exists in the dump (README section 5 item 1; select report 0 vectors for :684 and :936-942) | none (EC-2 by construction) |
+| 169 | rtl/ibex_controller.sv:990-993; rtl/ibex_load_store_unit.sv:605-607; rtl/ibex_multdiv_fast.sv:522-524 | Class D default arms with spare encodings: ctrl_fsm default -> RESET (ctrl_fsm_e 4-bit, 10 named values, 6 spare), ls_fsm default (ls_fsm_e 4-bit, 8 named, 8 spare), md_state default (md_fsm_e 3-bit, 7 named, 1 spare) (draft Part C rows 1, 23, 33) | no: unreachable without fault injection into the state flop; guarded by the RTL assertions IbexCtrlStateValid (rtl/ibex_controller.sv:1104-1106), IbexLsuStateValid (rtl/ibex_load_store_unit.sv:821-824), IbexMultDivStateValid (rtl/ibex_multdiv_fast.sv:532-533) | Block, class D (C.2): 3 Blocks; EC-1 k-induction T022_CTRL_NAMED / T022_LSU_NAMED / T022_MD_NAMED; EC-3 PLACEHOLDER "attempts N, failures 0 in <first measured regression>, TO BE FILLED" until the first measured regression's assertion report (README F-3); the measured merge contains legal-stimulus tiers only (B.7 rule 6); URG emits no separate case-default branch vector here (README section 5 item 5) | assertion coverage: the three state-valid assertions report attempts > 0 and zero failures in every measured run (TP-SEC-015 hosts IbexCtrlStateValid; the LSU / multdiv ones through gen_sva_multdiv MD-4 and the DMEM area) |
+| 170 | rtl/ibex_id_stage.sv:968-970; rtl/ibex_multdiv_fast.sv:238-240; rtl/ibex_icache.sv:1268 | Class D default arms with NO spare encoding: id_fsm default (1-bit enum, 2 named values), mult_fsm default (1-bit, 2 named), inval_state default (2-bit, 4 named) (draft Part C rows 31, 34, 35) | no: unreachable by construction of the enum | Block, class D (C.2): 3 Blocks; EC-1 declaration cite; EC-5 strict load; no EC-3 assertion needed | none |
+| 171 | rtl/ibex_compressed_decoder.sv (Zcmp expander) | Class R rows 37-40 of draft Part C: Zcmp mismatched-state default arms | reachability not yet proved (EC-4: the seven per-state covers must be hit on a full measured regression) | none: OUT of gen_exclusions.el until EC-4 passes (README section 2 last row, F-5); a later inclusion needs a recorded Critic ruling | live coverage until ruled (CMP area Zcmp items; TP-RVFI-025 / TP-RVFI-026 exercise every sequence position) |
+| 172 | rtl/ibex_cheriot_ex.sv (always_comb defaults, `case (cheriot_adder_*_sel_i)` / `if (cheriot_setaddr_sel_i == ...)` statement headers, the `if (!rst_ni)` reset arm and reset-value assignments, zero-value vectors of conditions on constant-0 internal selects; select report "Dropped" list: Blocks 7, 60, 64, 65, 74, 75, 142, 143, Branches 2-8, 15, 17, 21-24, Conditions 49-51, 53, 108, 109, 118-125, 128, 129, 132) | 38 of the 48 refuted A.1 objects | yes: the module's combinational logic runs with cheriot off; only the arm bodies and the 1-value vectors are dead | none (refuted by the strict load of the round-0 re-baseline: covered by the NOP smoke, so dropped from the file and listed here as LIVE; README section 4). This corrects the A.1 wording "everything except the live list" to "every object whose value or arm requires a CHERIoT-only condition" | none (coverage-tool semantics, not RTL findings; the objects count in the denominator) |
+| 173 | rtl/ibex_cs_registers.sv:2014-2224 (reset arms of pcc_cap_q, mtvec_cap, mstack_epc_cap_q (reset), mepc_cap, mtdc_cap, mscratchc_cap, depc_cap, dscratch0_cap, cheriot_fatal_err_q; `cheriot_csr_rdata_o = 32'b0` default; `case (cheriot_csr_addr_i)` header) and the PMP-illegal `if (...)` header at :707 | 10 of the 48 refuted objects (Blocks 273, 275, 292, 297, 302, 311, 316, 321, 328, 335) | yes: reset arms and defaults execute with cheriot off | none (refuted by the strict load; dropped; LIVE; README section 4). The corresponding UPDATE arms remain excluded (row 150) except the live mstack_epc_cap_q update (row 151 finding) | none |
+| 174 | rtl/ibex_id_stage.sv:747; rtl/ibex_core.sv:1343-1344 | id_stage Condition 37 `(csr_access_o & instr_executing & (param & On ? first_cycle : id_done))` (a ternary used as an OPERAND has the value of an arm, not of its select); core Conditions 90/91 `instr_exec & !(On || Off)` (URG encodes a top-level negation by the value of the negated sub-expression) | yes (live condition objects) | none: refuted by the strict load and dropped; the classifier now treats ternaries only at the top level and handles the top-level negation (README section 4); the remaining :1343-1344 vectors with the tie at its impossible value stay in the file (row 11) | live coverage (CSR writes; the cheriot_enable_i MuBi negative check, TP-SEC-017) |
+| 175 | rtl/ibex_controller.sv:268,271,837; rtl/ibex_core.sv:648,649,1405,1414,2289,2290; rtl/ibex_cs_registers.sv:377,739,845,2108,2121,2149,2164,2179,2194,2197; rtl/ibex_decoder.sv:238; rtl/ibex_id_stage.sv:747,1012,1095; rtl/ibex_register_file_ff.sv:221,223; rtl/ibex_wb_stage.sv:115,183,190,193,195 | Conditions that mention a CHERIoT name but were NOT selected by the classifier (select report "manual follow-up" list): mixed-operator parents whose constant sub-term is handled by URG's own sub-condition object, the `cheriot_csr_addr_i == CHERIOT_SCR_*` comparisons (constant ports compared with constants; their lines are already Block-excluded), the mtvec / misa ternaries on the BaseIsa parameter, and the fetch_enable_i / mcounteren_writable_i comparisons | yes (kept in coverage) | none: kept in coverage (README section 5 item 2); the first measured regression's holes decide whether any gets an explicit entry (Critic ruling per entry). The fetch_enable_i vectors (rtl/ibex_core.sv:648, :649, :1414) and mcounteren_writable_i (:845) are DRIVEN pins in the real TB (Q-007) and are never excluded (README section 5 item 3) | live coverage (fetch_enable_i encodings TP-SEC-016 / TP-RST-013; mcounteren_writable_i TP-SEC-019; misa / mtvec TP-RST-028 / TP-RST-003) |
+| 176 | rtl/ibex_cheriot_ex.sv:970; rtl/ibex_cs_registers.sv:377,1020; rtl/ibex_core.sv:1343 | The four glitch-covered cheriot_enable_i tie conditions (Critic N-2 / F-4, LOG-007): covered only by -cm_glitch 1 artefacts | no (constant tie) | Condition vectors, A.4, class T: in the file and loaded strictly under the -cm_glitch 0 build only (R-002 recorded; README section 5 item 3 / F-4) | none (every measured build uses -cm_glitch 0, gen_tb_architecture.md 8.1 item 2) |
 
 Note on rtl/ibex_cheriot_ex.sv:991-994: csr_mshwm_set_o is NOT gated by cheriot_enable_i
 (lsu_req & lsu_we & mshwmb <= addr < mshwm). It is constant 0 only because mshwm/mshwmb reset to
@@ -12922,18 +13578,30 @@ check that mshwm stays 0 is not possible (readable only when On, so unobservable
 accepted. csr_mshwm_new_o (:994) toggles and is never excluded (bucket D / F13).
 
 Note on the exclusion mechanics: the "no" rows and the constant ports of the "yes (constant 0)"
-rows are the objects of the single exclusion cheriot-out-of-scope (gen_exclusions_draft.md A.1
-object list, A.3 Block/Branch, A.4 Condition, A.5 Toggle, A.6 FSM, A.7 Assert; every entry carries
-the A.0 annotation and an evidence pointer). The RTL isolation assertions
-(rtl/ibex_id_stage.sv:1297-1300, rtl/ibex_load_store_unit.sv:833-834,
-rtl/ibex_cs_registers.sv:1996-1997) and the controller one-hot assertion
-(rtl/ibex_controller.sv:377-383) stay enabled as the proof that CHERIoT logic is inert (EC-3);
-only the three vacuous register-file Cheriot*MSBClear assertions are excluded (A.7). Cross-area
-requests raised by this table to rtl-arch: (1) A.3 Block :2108-2209 must be stated as sub-ranges
-that leave out the live mstack_epc_cap_q flop :2126-2132; (2) the CSR_MSECCFG / CSR_MSECCFGH
-illegal else-arms rtl/ibex_cs_registers.sv:510-512, :519-521 are UNREACH in the carve-out but
-have no A.3 entry; (3) the constant ports rtl/ibex_prefetch_buffer.sv:30 and
-rtl/ibex_fetch_fifo.sv:33 (cheriot_force_uc_i) are missing from the A.5 port lists.
+rows are the objects of the single exclusion cheriot-out-of-scope in gen_exclusions.el (pass 8:
+227 Block, 116 Branch vector, 769 Condition vector, 463 Toggle, 2 Fsm + 5 State + 12 Transition,
+3 Assert lines in 41 (module, metric) scopes of 13 modules, 204 annotation groups: 196 class T,
+2 class P, 6 class D; A.1 = 103 Blocks, 112 Branch vectors, 343 Condition vectors, 144 Toggle
+entries of MODULE ibex_cheriot_ex; A.3 = 124 Blocks, 4 Branch vectors; A.4 = 443 vectors in 20
+modules; A.5 = 463 port / struct-field entries; A.6 = ls_fsm_cs 3 states + 7 transitions,
+cap_rx_fsm_q 2 states + 5 transitions; A.7 = 3). Every entry carries the A.0 annotation (class,
+RTL location, tie chain or parameter, EC set, T022_* pointer into dv/auto_dv/evidence/
+gen_t022_formal/). The RTL isolation assertions (rtl/ibex_id_stage.sv:1297-1300,
+rtl/ibex_load_store_unit.sv:833-834, rtl/ibex_cs_registers.sv:1996-1997) and the controller
+one-hot assertion (rtl/ibex_controller.sv:377-383) stay enabled as the proof that CHERIoT logic
+is inert (EC-3); only the three vacuous register-file Cheriot*MSBClear assertions are excluded
+(A.7; honoured per README section 5 item 4). Strict-load status: pass 8 loads against the round-0
+re-baseline with 0 warnings and 0 errors; the file removes nothing the smoke covered (README
+section 3); the first measured regression re-runs the generator against its own dump (F-1) and
+fills the class-D EC-3 fields (F-3). Cross-area requests raised by this table to rtl-arch, restated
+against the file: (1) row 151: the Block `gen_scr.mstack_epc_cap_q <= mepc_cap` is in the file
+although the arm executes on every NMI in RV32I mode (gated by mstack_en only): drop it now rather
+than wait for the first NMI-carrying regression to refute it; (2) the CSR_MSECCFG / CSR_MSECCFGH
+illegal else-arms rtl/ibex_cs_registers.sv:510-512, :519-521 are UNREACH in the carve-out but have
+no Block entry (row 129); (3) the constant ports rtl/ibex_prefetch_buffer.sv:30 and
+rtl/ibex_fetch_fifo.sv:33 (cheriot_force_uc_i) and the fetch_fifo :127 vector have no scope in the
+file (rows 24, 31). Requests (2) and (3) narrow coverage if granted and are Critic rulings per
+entry; request (1) widens it and is a B.7 rule-1 finding.
 
 ---------------------------------------------------------------------------------------------------
 

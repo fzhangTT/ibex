@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 07:56 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 09:39 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -36,10 +36,16 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 - Stimulus rules (DV_prompt.txt Sections 5-6): every DUT input is driven at the boundary; programmable
   configuration is set by instructions and randomized; three randomization layers (per-transaction
   distributions in Stimulus, regime knobs, regime schedule) are exercised and covered (Section REG of
-  the fcov plan); a regime is pinnable from the command line (+gen_knob_<name>=<value>,
-  +gen_regime_seed=<seed>); one run seed drives every source of randomness.
-- Checker inventory (pass criteria vocabulary; TB Infra implements, each with a disable knob
-  +gen_chk_<name>_en=0 for mutation evidence): gen_isa_compare (Spike-based RVFI comparator),
+  the fcov plan); a regime is pinnable from the command line (+gen_knob_<name>=<value>; the layer-3
+  schedule derives from the run seed and is reproducible or overridable with
+  +gen_regime_sched=<knob>:<value>@r<N>|c<N>,...; there is no separate schedule seed); one run seed
+  drives every source of randomness.
+- Expected-fail and informational items are their own tests: their Test group carries the suffix `_xfail`
+  or `_info` and never hosts a pass item, because the flow's expected_fail is a per-test attribute
+  (gen_runtime_api.md) and an XFAIL test would mask a pass item's failure.
+- Checker inventory (pass criteria vocabulary; TB Infra implements each checker with a disable knob
+  +gen_chk_<id>=0 and the isolation form +gen_chk_all=0 +gen_chk_<id>=1 for mutation evidence; the plan's
+  coarse ids map onto the architecture's fine ids through Section 0a): gen_isa_compare (Spike-based RVFI comparator),
   gen_chk_csr_readback, gen_chk_ibus_proto, gen_chk_dbus_proto, gen_chk_store_intg, gen_chk_bus_intg_rsp,
   gen_chk_pmp, gen_chk_irq, gen_chk_nmi, gen_chk_debug, gen_chk_alerts, gen_chk_icache,
   gen_chk_crash_dump, gen_chk_double_fault, gen_chk_counters, gen_chk_sleep, gen_chk_fetch_en,
@@ -49,17 +55,47 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   fire-check (DV_prompt.txt Section 5 step 4). Groups are named gen_<area>_<topic>; the Test Writer
   may split a group but never merges fire-checks.
 
+
+# 0a. Checker-id concordance (plan id -> architecture ids -> knob; DV Lead owns, TB Infra agrees)
+
+| Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) |
+|---|---|---|
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 |
+| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 |
+| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 |
+| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 |
+| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 |
+| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 |
+| gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 |
+| gen_chk_irq | irq_pending, irq_entry | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0 |
+| gen_chk_nmi | irq_entry (NMI vector / mstack rows), nmi_internal | +gen_chk_irq_entry=0, +gen_chk_nmi_internal=0 |
+| gen_chk_debug | dbg_entry, dbg_masked, dbg_trigger | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_trigger=0 |
+| gen_chk_alerts | alert_minor, alert_internal, alert_bus | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 |
+| gen_chk_icache | icache_ecc, scrkey_*, icram_inval_sweep, icram_ecc_response | +gen_chk_icache_ecc=0, +gen_chk_scrkey_*=0, +gen_chk_icram_*=0 |
+| gen_chk_crash_dump | crash_dump | +gen_chk_crash_dump=0 |
+| gen_chk_double_fault | double_fault_seen | +gen_chk_double_fault_seen=0 |
+| gen_chk_counters | ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound | +gen_chk_ctr_*=0 |
+| gen_chk_sleep | core_busy (sleep rows) | +gen_chk_core_busy=0 |
+| gen_chk_fetch_en | fetch_en | +gen_chk_fetch_en=0 |
+| gen_chk_cheriot_quiet | data_tag / cap-field quiet rows of gen_misc_monitor | +gen_chk_cheriot_quiet=0 |
+| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) |
+| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 (TB Infra to add the row) |
+| gen_chk_bitmanip_ref (requested) | C5.5 draft-B reference function compare in the shim | +gen_chk_isa_rd=0 (same row) |
+| gen_chk_zcmp_seq, gen_chk_timing_isa, gen_chk_trap_timing, gen_chk_csr_flush, gen_chk_exc_flush, gen_chk_regime, gen_chk_reset (requested) | test-level compares in the hosting cocotb test unless TB Infra adds a row (Section 6 of the architecture, "New checkers requested" mapping) | per test |
+| gen_sva_multdiv, gen_sva_csr_excl (requested) | bound assertions in gen_binds.sv (F-MUL-028; CSR exclusion probe) | +gen_chk_sva_multdiv=0, +gen_chk_sva_csr_excl=0 |
+Bug candidates whose spec-direction check is a test-level compare (no C5.3b row): B4 (cm.mvsa01 reserved encoding: rvfi_trap expected), B5 (dcsr.nmip read-back), B7 (minstret delta versus rvfi_order delta with dummies on), B9 (dcsr.cause read-back, informational), B10 (dcsr.cause on the ebreak entry), B11 (mhpmcounter9 delta under DIT), B13 (rvfi_pc_wdata bit 0). B1, B2, B3, B15 are C5.3b rows.
+
 # 1. Counts
 
 | Metric | Value |
 |---|---|
-| TP items | 1194 |
-| ACTIVE features covered (of 765) | 765 |
-| Phase 1 / Phase 2 items | 1083 / 111 |
-| Tier smoke / targeted / full | 289 / 793 / 112 |
-| Expected-fail items (bug candidates) | 23 |
-| Test groups | 188 |
-| Covergroups / distinct bins referenced / adopted bins | 207 / 15594 / 49 |
+| TP items | 1203 |
+| ACTIVE features covered (of 705) | 705 |
+| Phase 1 / Phase 2 items | 1092 / 111 |
+| Tier smoke / targeted / full | 289 / 802 / 112 |
+| Expected-fail items (bug candidates) | 29 |
+| Test groups | 226 |
+| Covergroups / distinct bins referenced / adopted bins | 207 / 15825 / 49 |
 
 ## 1.1 Expected-fail items per bug candidate
 
@@ -72,11 +108,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | B5 | 1 | TP-DBG-021 |
 | B7 | 2 | TP-PMC-013, TP-DIT-019 |
 | B8 | 2 | TP-CMP-065, TP-DIT-032 |
-| B9 | 1 | TP-DBG-011 |
 | B10 | 1 | TP-TRG-020 |
 | B11 | 2 | TP-BTALU-016, TP-PMC-043 |
 | B13 | 2 | TP-BTALU-008, TP-RVFI-013 |
 | B15 | 3 | TP-CSR-075, TP-CSR-076, TP-DBG-018 |
+| B16 | 3 | TP-DMEM-064, TP-SEC-040, TP-RVFI-040 |
+| B17 | 4 | TP-BTALU-018, TP-PMC-058, TP-PMC-059, TP-PMC-060 |
 
 # 2. New checkers requested from TB Infra (beyond the inventory)
 
@@ -88,60 +125,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_sva_multdiv | isa |
 | gen_chk_csr_flush | csr |
 | gen_sva_csr_excl | csr |
-| gen_chk_csr_readback | csr, dbg_trg_pmc |
-| gen_chk_pmp | csr, dbg_trg_pmc, pmp |
-| gen_chk_counters | csr, dbg_trg_pmc |
 | gen_chk_trap_timing | exc_irq |
-| gen_chk_irq | exc_irq |
 | gen_chk_exc_flush | exc_irq |
-| gen_chk_nmi | exc_irq, mem_fetch_icache |
-| gen_chk_sleep | dbg_trg_pmc, exc_irq |
-| gen_chk_bus_intg_rsp | exc_irq, mem_fetch_icache |
-| gen_chk_dbus_proto | mem_fetch_icache, pmp |
-| gen_chk_debug | dbg_trg_pmc, sec_rst_rvfi_cheri |
-| gen_test_dbg_haltreq | dbg_trg_pmc |
-| gen_test_dbg_req_shape | dbg_trg_pmc |
-| gen_test_dbg_irq_race | dbg_trg_pmc |
-| gen_test_dbg_irq_mask | dbg_trg_pmc |
-| gen_test_dbg_csr | dbg_trg_pmc |
-| gen_test_dbg_ebreak | dbg_trg_pmc |
-| gen_test_dbg_exc | dbg_trg_pmc |
-| gen_test_dbg_dret | dbg_trg_pmc |
-| gen_test_dbg_step | dbg_trg_pmc |
-| gen_test_dbg_pmp | dbg_trg_pmc |
-| gen_test_dbg_misc | dbg_trg_pmc |
-| gen_test_dbg_random | dbg_trg_pmc |
-| gen_test_trg_csr | dbg_trg_pmc |
-| gen_test_trg_fire | dbg_trg_pmc |
-| gen_test_trg_random | dbg_trg_pmc |
-| gen_test_pmc_mcycle | dbg_trg_pmc |
-| gen_test_pmc_minstret | dbg_trg_pmc |
-| gen_test_pmc_hpm_csr | dbg_trg_pmc |
-| gen_test_pmc_hpm_event | dbg_trg_pmc |
-| gen_test_pmc_ctrl | dbg_trg_pmc |
-| gen_test_pmc_rvfi | dbg_trg_pmc |
-| gen_test_pmc_random | dbg_trg_pmc |
-| gen_test_fe_structure | mem_fetch_icache |
-| gen_test_ic_geometry | mem_fetch_icache |
-| gen_chk_icache | mem_fetch_icache |
-| gen_chk_ibus_proto | mem_fetch_icache |
-| gen_sva_ibus | mem_fetch_icache |
-| gen_sva_dbus | mem_fetch_icache |
-| gen_chk_store_intg | mem_fetch_icache |
-| gen_chk_alerts | mem_fetch_icache, sec_rst_rvfi_cheri |
 | gen_chk_rvfi_proto | sec_rst_rvfi_cheri |
-| gen_test_dit_ | sec_rst_rvfi_cheri |
-| gen_test_dit_branch | sec_rst_rvfi_cheri |
-| gen_test_dit_div | sec_rst_rvfi_cheri |
-| gen_test_dit_mul | sec_rst_rvfi_cheri |
-| gen_test_dit_handover | sec_rst_rvfi_cheri |
-| gen_test_dit_lsu | sec_rst_rvfi_cheri |
-| gen_test_dit_dummy | sec_rst_rvfi_cheri |
-| gen_test_dit_dummy_div | sec_rst_rvfi_cheri |
-| gen_test_dit_seed | sec_rst_rvfi_cheri |
-| gen_test_rst_values | sec_rst_rvfi_cheri |
-| gen_test_rst_boot | sec_rst_rvfi_cheri |
-| gen_chk_crash_dump | sec_rst_rvfi_cheri, xcut |
 | gen_chk_regime | xcut |
 | gen_chk_reset | xcut |
 
@@ -151,12 +137,14 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 |---|---|---|
 | gen_isa_alu | 10 | TP-ISA-001..TP-ISA-052 |
 | gen_isa_shift | 4 | TP-ISA-010..TP-ISA-014 |
-| gen_isa_illegal | 11 | TP-ISA-012..TP-ISA-051 |
+| gen_isa_illegal | 10 | TP-ISA-012..TP-ISA-050 |
 | gen_isa_cti | 12 | TP-ISA-015..TP-ISA-053 |
 | gen_isa_fence | 3 | TP-ISA-029..TP-ISA-031 |
 | gen_isa_system | 10 | TP-ISA-032..TP-ISA-041 |
 | gen_isa_csr_insn | 3 | TP-ISA-043..TP-ISA-045 |
+| gen_isa_illegal_info | 1 | TP-ISA-051..TP-ISA-051 |
 | gen_isa_random | 3 | TP-ISA-054..TP-ISA-056 |
+| gen_isa_illegal_ebreak_info | 1 | TP-ISA-057..TP-ISA-057 |
 | gen_mul_mul | 9 | TP-MUL-001..TP-MUL-027 |
 | gen_mul_timing | 7 | TP-MUL-009..TP-MUL-030 |
 | gen_mul_div | 12 | TP-MUL-012..TP-MUL-026 |
@@ -165,9 +153,11 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_cmp_illegal | 13 | TP-CMP-003..TP-CMP-067 |
 | gen_cmp_hints | 4 | TP-CMP-009..TP-CMP-031 |
 | gen_cmp_zcb | 3 | TP-CMP-034..TP-CMP-038 |
-| gen_cmp_zcmp_basic | 19 | TP-CMP-039..TP-CMP-073 |
-| gen_cmp_zcmp_events | 6 | TP-CMP-056..TP-CMP-065 |
+| gen_cmp_zcmp_basic | 18 | TP-CMP-039..TP-CMP-073 |
+| gen_cmp_zcmp_basic_xfail | 1 | TP-CMP-051..TP-CMP-051 |
+| gen_cmp_zcmp_events | 5 | TP-CMP-056..TP-CMP-064 |
 | gen_cmp_zcmp_faults | 5 | TP-CMP-060..TP-CMP-072 |
+| gen_cmp_zcmp_events_xfail | 1 | TP-CMP-065..TP-CMP-065 |
 | gen_cmp_random | 2 | TP-CMP-070..TP-CMP-071 |
 | gen_bit_ratified | 19 | TP-BIT-001..TP-BIT-040 |
 | gen_bit_draft | 14 | TP-BIT-011..TP-BIT-033 |
@@ -175,36 +165,42 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_bit_illegal | 3 | TP-BIT-034..TP-BIT-037 |
 | gen_bit_random | 2 | TP-BIT-041..TP-BIT-042 |
 | gen_btalu_basic | 9 | TP-BTALU-001..TP-BTALU-014 |
-| gen_btalu_dit | 3 | TP-BTALU-006..TP-BTALU-016 |
-| gen_btalu_hazard | 4 | TP-BTALU-008..TP-BTALU-013 |
+| gen_btalu_dit | 2 | TP-BTALU-006..TP-BTALU-015 |
+| gen_btalu_hazard_xfail | 1 | TP-BTALU-008..TP-BTALU-008 |
+| gen_btalu_hazard | 3 | TP-BTALU-010..TP-BTALU-013 |
+| gen_btalu_dit_xfail | 1 | TP-BTALU-016..TP-BTALU-016 |
 | gen_btalu_random | 1 | TP-BTALU-017..TP-BTALU-017 |
+| gen_btalu_perf_b17_xfail | 1 | TP-BTALU-018..TP-BTALU-018 |
 | gen_csr_access | 6 | TP-CSR-001..TP-CSR-012 |
 | gen_csr_ordering | 7 | TP-CSR-006..TP-CSR-115 |
 | gen_csr_illegal | 10 | TP-CSR-009..TP-CSR-111 |
 | gen_csr_umode | 7 | TP-CSR-015..TP-PRV-033 |
-| gen_csr_debug_csr | 8 | TP-CSR-017..TP-CSR-079 |
+| gen_csr_debug_csr | 6 | TP-CSR-017..TP-CSR-079 |
 | gen_csr_machine_info | 4 | TP-CSR-019..TP-CSR-022 |
 | gen_csr_trap_setup | 11 | TP-CSR-023..TP-CSR-036 |
 | gen_csr_trap_handling | 15 | TP-CSR-032..TP-CSR-114 |
 | gen_csr_reset | 6 | TP-CSR-037..TP-CSR-109 |
 | gen_csr_counters | 20 | TP-CSR-050..TP-CSR-113 |
-| gen_csr_trigger_csr | 5 | TP-CSR-080..TP-CSR-084 |
+| gen_csr_debug_csr_xfail | 2 | TP-CSR-075..TP-CSR-076 |
+| gen_csr_trigger_csr | 4 | TP-CSR-080..TP-CSR-084 |
+| gen_csr_trigger_csr_xfail | 1 | TP-CSR-083..TP-CSR-083 |
 | gen_csr_cpuctrl | 10 | TP-CSR-085..TP-CSR-094 |
 | gen_csr_pmp_warl | 3 | TP-CSR-095..TP-CSR-097 |
 | gen_csr_cheriot_gate | 2 | TP-CSR-098..TP-CSR-099 |
 | gen_csr_storm | 7 | TP-CSR-100..TP-CSR-120 |
 | gen_prv_modes | 4 | TP-PRV-001..TP-PRV-032 |
 | gen_prv_mstatus | 2 | TP-PRV-003..TP-PRV-034 |
-| gen_prv_debug | 6 | TP-PRV-004..TP-PRV-035 |
+| gen_prv_debug | 5 | TP-PRV-004..TP-PRV-039 |
 | gen_prv_mret | 6 | TP-PRV-005..TP-PRV-011 |
 | gen_prv_illegal | 4 | TP-PRV-009..TP-PRV-027 |
 | gen_prv_mprv | 2 | TP-PRV-012..TP-PRV-013 |
+| gen_prv_debug_xfail | 2 | TP-PRV-014..TP-PRV-035 |
 | gen_prv_wfi | 5 | TP-PRV-015..TP-PRV-019 |
 | gen_prv_irq | 5 | TP-PRV-022..TP-PRV-030 |
 | gen_prv_storm | 3 | TP-PRV-036..TP-PRV-038 |
 | gen_exc_sync_causes | 7 | TP-EXC-001..TP-EXC-026 |
 | gen_exc_fetch_fault | 4 | TP-EXC-002..TP-EXC-005 |
-| gen_exc_priority | 7 | TP-EXC-006..TP-EXC-070 |
+| gen_exc_priority | 6 | TP-EXC-006..TP-EXC-070 |
 | gen_exc_illegal | 5 | TP-EXC-008..TP-EXC-013 |
 | gen_exc_zcmp | 4 | TP-EXC-014..TP-EXC-044 |
 | gen_exc_ebreak_ecall | 4 | TP-EXC-017..TP-EXC-021 |
@@ -213,6 +209,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_exc_trap_state | 10 | TP-EXC-041..TP-EXC-069 |
 | gen_exc_mret | 5 | TP-EXC-050..TP-EXC-061 |
 | gen_exc_double_fault | 6 | TP-EXC-054..TP-EXC-059 |
+| gen_exc_priority_info | 1 | TP-EXC-065..TP-EXC-065 |
 | gen_exc_regime | 4 | TP-EXC-071..TP-EXC-074 |
 | gen_irq_lines | 7 | TP-IRQ-001..TP-IRQ-013 |
 | gen_irq_nmi | 8 | TP-IRQ-007..TP-IRQ-079 |
@@ -226,7 +223,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_irq_wfi | 12 | TP-IRQ-049..TP-IRQ-069 |
 | gen_irq_regime | 7 | TP-IRQ-071..TP-IRQ-077 |
 | gen_pmp_csr_warl | 8 | TP-PMP-001..TP-PMP-008 |
-| gen_pmp_debug | 8 | TP-PMP-009..TP-PMP-099 |
+| gen_pmp_debug | 7 | TP-PMP-009..TP-PMP-099 |
 | gen_pmp_reset | 1 | TP-PMP-010..TP-PMP-010 |
 | gen_pmp_mseccfg | 13 | TP-PMP-011..TP-PMP-108 |
 | gen_pmp_lock | 10 | TP-PMP-013..TP-PMP-112 |
@@ -239,48 +236,66 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_pmp_perm_mml1 | 9 | TP-PMP-054..TP-PMP-062 |
 | gen_pmp_fetch_fault | 9 | TP-PMP-064..TP-PMP-079 |
 | gen_pmp_data_fault | 5 | TP-PMP-069..TP-PMP-083 |
-| gen_pmp_mprv | 5 | TP-PMP-070..TP-PMP-075 |
+| gen_pmp_mprv | 4 | TP-PMP-070..TP-PMP-075 |
+| gen_pmp_mprv_xfail | 1 | TP-PMP-073..TP-PMP-073 |
+| gen_pmp_debug_xfail | 1 | TP-PMP-074..TP-PMP-074 |
 | gen_pmp_misaligned | 6 | TP-PMP-084..TP-PMP-089 |
 | gen_pmp_icache_dummy | 2 | TP-PMP-092..TP-PMP-093 |
 | gen_pmp_random_regime | 10 | TP-PMP-100..TP-PMP-110 |
 | gen_pmp_mode_trans | 1 | TP-PMP-111..TP-PMP-111 |
 | gen_dbg_haltreq | 12 | TP-DBG-001..TP-DBG-071 |
-| gen_dbg_irq_mask | 7 | TP-DBG-003..TP-DBG-062 |
-| gen_dbg_req_shape | 4 | TP-DBG-010..TP-DBG-013 |
-| gen_dbg_csr | 7 | TP-DBG-017..TP-DBG-056 |
+| gen_dbg_irq_mask | 6 | TP-DBG-003..TP-DBG-062 |
+| gen_dbg_req_shape | 3 | TP-DBG-010..TP-DBG-013 |
+| gen_dbg_req_shape_info | 1 | TP-DBG-011..TP-DBG-011 |
+| gen_dbg_csr | 6 | TP-DBG-017..TP-DBG-056 |
+| gen_dbg_csr_xfail | 1 | TP-DBG-018..TP-DBG-018 |
+| gen_dbg_irq_mask_xfail | 1 | TP-DBG-021..TP-DBG-021 |
 | gen_dbg_ebreak | 9 | TP-DBG-022..TP-DBG-073 |
 | gen_dbg_random | 2 | TP-DBG-026..TP-DBG-068 |
 | gen_dbg_exc_in_debug | 5 | TP-DBG-031..TP-DBG-035 |
-| gen_dbg_dret | 6 | TP-DBG-036..TP-DBG-067 |
+| gen_dbg_dret | 5 | TP-DBG-036..TP-DBG-067 |
+| gen_dbg_dret_xfail | 1 | TP-DBG-038..TP-DBG-038 |
 | gen_dbg_step | 12 | TP-DBG-042..TP-DBG-072 |
-| gen_dbg_pmp_dm | 4 | TP-DBG-057..TP-DBG-060 |
+| gen_dbg_pmp_dm | 3 | TP-DBG-057..TP-DBG-059 |
+| gen_dbg_pmp_dm_xfail | 1 | TP-DBG-060..TP-DBG-060 |
 | gen_dbg_mode_misc | 5 | TP-DBG-063..TP-DBG-070 |
-| gen_trg_csr | 11 | TP-TRG-001..TP-TRG-029 |
-| gen_trg_fire | 20 | TP-TRG-010..TP-TRG-032 |
+| gen_trg_csr | 10 | TP-TRG-001..TP-TRG-029 |
+| gen_trg_csr_xfail | 1 | TP-TRG-008..TP-TRG-008 |
+| gen_trg_fire | 19 | TP-TRG-010..TP-TRG-032 |
+| gen_trg_fire_xfail | 1 | TP-TRG-020..TP-TRG-020 |
 | gen_trg_random | 1 | TP-TRG-030..TP-TRG-030 |
 | gen_pmc_mcycle | 7 | TP-PMC-001..TP-PMC-007 |
-| gen_pmc_minstret | 12 | TP-PMC-008..TP-PMC-054 |
+| gen_pmc_minstret | 11 | TP-PMC-008..TP-PMC-054 |
+| gen_pmc_minstret_xfail | 1 | TP-PMC-013..TP-PMC-013 |
 | gen_pmc_hpm_csr | 6 | TP-PMC-017..TP-PMC-053 |
-| gen_pmc_hpm_event | 17 | TP-PMC-018..TP-PMC-051 |
+| gen_pmc_hpm_event | 16 | TP-PMC-018..TP-PMC-051 |
 | gen_pmc_ctrl | 14 | TP-PMC-022..TP-PMC-057 |
+| gen_pmc_hpm_event_xfail | 1 | TP-PMC-043..TP-PMC-043 |
 | gen_pmc_random | 1 | TP-PMC-055..TP-PMC-055 |
-| gen_imem_proto_basic | 10 | TP-IMEM-001..TP-IMEM-040 |
+| gen_pmc_hpm_b17_br_xfail | 1 | TP-PMC-058..TP-PMC-058 |
+| gen_pmc_hpm_b17_mul_xfail | 1 | TP-PMC-059..TP-PMC-059 |
+| gen_pmc_hpm_b17_div_xfail | 1 | TP-PMC-060..TP-PMC-060 |
+| gen_imem_proto_basic | 9 | TP-IMEM-001..TP-IMEM-039 |
 | gen_imem_latency | 5 | TP-IMEM-005..TP-IMEM-033 |
 | gen_imem_fetch_err | 7 | TP-IMEM-011..TP-IMEM-030 |
 | gen_imem_redirect | 5 | TP-IMEM-017..TP-IMEM-021 |
 | gen_imem_gating | 5 | TP-IMEM-022..TP-IMEM-026 |
 | gen_imem_boot | 2 | TP-IMEM-027..TP-IMEM-028 |
 | gen_imem_regime | 6 | TP-IMEM-031..TP-IMEM-038 |
-| gen_dmem_proto_basic | 14 | TP-DMEM-001..TP-DMEM-062 |
+| gen_imem_proto_basic_info | 1 | TP-IMEM-040..TP-IMEM-040 |
+| gen_dmem_proto_basic | 13 | TP-DMEM-001..TP-DMEM-059 |
 | gen_dmem_latency | 1 | TP-DMEM-005..TP-DMEM-005 |
 | gen_dmem_be | 7 | TP-DMEM-011..TP-DMEM-060 |
 | gen_dmem_misaligned | 7 | TP-DMEM-016..TP-DMEM-022 |
 | gen_dmem_regime | 6 | TP-DMEM-023..TP-DMEM-056 |
-| gen_dmem_err | 9 | TP-DMEM-024..TP-DMEM-063 |
+| gen_dmem_err | 8 | TP-DMEM-024..TP-DMEM-037 |
 | gen_dmem_load_data | 4 | TP-DMEM-028..TP-DMEM-050 |
 | gen_dmem_ctx | 8 | TP-DMEM-035..TP-DMEM-061 |
 | gen_dmem_intg | 5 | TP-DMEM-039..TP-DMEM-043 |
 | gen_dmem_zcmp | 2 | TP-DMEM-052..TP-DMEM-053 |
+| gen_dmem_proto_basic_info | 1 | TP-DMEM-062..TP-DMEM-062 |
+| gen_dmem_err_info | 1 | TP-DMEM-063..TP-DMEM-063 |
+| gen_dmem_intg_xfail | 1 | TP-DMEM-064..TP-DMEM-064 |
 | gen_fe_boot | 4 | TP-FE-001..TP-FE-027 |
 | gen_fe_redirect | 5 | TP-FE-004..TP-FE-014 |
 | gen_fe_align | 6 | TP-FE-006..TP-FE-011 |
@@ -291,22 +306,27 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_ic_ram | 8 | TP-IC-001..TP-IC-046 |
 | gen_ic_inval | 10 | TP-IC-007..TP-IC-016 |
 | gen_ic_enable | 11 | TP-IC-017..TP-IC-057 |
-| gen_ic_replace | 3 | TP-IC-021..TP-IC-038 |
+| gen_ic_replace | 2 | TP-IC-021..TP-IC-022 |
 | gen_ic_fill | 7 | TP-IC-023..TP-IC-039 |
 | gen_ic_ecc | 6 | TP-IC-035..TP-IC-044 |
+| gen_ic_replace_info | 1 | TP-IC-038..TP-IC-038 |
 | gen_ic_regime | 8 | TP-IC-040..TP-IC-056 |
 | gen_ic_busy | 4 | TP-IC-050..TP-IC-053 |
 | gen_sec_cpuctrlsts | 3 | TP-DIT-001..TP-SEC-034 |
 | gen_dit_timing | 9 | TP-DIT-002..TP-DIT-011 |
-| gen_dit_dummy | 11 | TP-DIT-010..TP-RVFI-027 |
+| gen_dit_dummy | 10 | TP-DIT-010..TP-RVFI-027 |
 | gen_dit_secureseed | 3 | TP-DIT-015..TP-DIT-028 |
-| gen_dit_dummy_events | 10 | TP-DIT-020..TP-DIT-034 |
+| gen_dit_dummy_xfail | 1 | TP-DIT-019..TP-DIT-019 |
+| gen_dit_dummy_events | 9 | TP-DIT-020..TP-DIT-034 |
+| gen_dit_dummy_events_xfail | 1 | TP-DIT-032..TP-DIT-032 |
 | gen_dit_random | 1 | TP-DIT-033..TP-DIT-033 |
 | gen_sec_alert_inject_icache | 1 | TP-SEC-001..TP-SEC-001 |
 | gen_sec_alerts_neg | 8 | TP-SEC-002..TP-SEC-035 |
 | gen_sec_alert_fault_pc | 1 | TP-SEC-004..TP-SEC-004 |
 | gen_sec_alert_inject_ibus | 2 | TP-SEC-007..TP-SEC-012 |
-| gen_sec_alert_inject_dbus | 5 | TP-SEC-008..TP-RVFI-024 |
+| gen_sec_alert_inject_dbus | 3 | TP-SEC-008..TP-RVFI-024 |
+| gen_sec_alert_inject_dbus_info | 1 | TP-SEC-010..TP-SEC-010 |
+| gen_sec_alert_inject_dbus_clean_info | 1 | TP-SEC-011..TP-SEC-011 |
 | gen_sec_inputs_mubi | 2 | TP-SEC-016..TP-SEC-019 |
 | gen_sec_boundary | 5 | TP-SEC-017..TP-RST-028 |
 | gen_rst_sleep | 4 | TP-SEC-018..TP-RVFI-031 |
@@ -316,17 +336,21 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 | gen_rst_boot | 11 | TP-SEC-031..TP-RVFI-036 |
 | gen_rst_midrun_reset | 4 | TP-SEC-036..TP-RST-019 |
 | gen_sec_random | 1 | TP-SEC-039..TP-SEC-039 |
+| gen_sec_alert_inject_dbus_first_beat_xfail | 1 | TP-SEC-040..TP-SEC-040 |
 | gen_rst_fetch_enable | 6 | TP-RST-009..TP-RST-014 |
 | gen_rst_regfile | 3 | TP-RST-021..TP-RST-023 |
 | gen_rst_pending_at_boot | 3 | TP-RST-024..TP-RST-026 |
 | gen_rst_random | 1 | TP-RST-029..TP-RST-029 |
-| gen_rvfi_proto_basic | 12 | TP-RVFI-001..TP-RVFI-038 |
-| gen_rvfi_trap | 8 | TP-RVFI-005..TP-RVFI-039 |
+| gen_rvfi_proto_basic | 11 | TP-RVFI-001..TP-RVFI-038 |
+| gen_rvfi_trap | 7 | TP-RVFI-005..TP-RVFI-030 |
 | gen_rvfi_ext | 8 | TP-RVFI-006..TP-RVFI-035 |
+| gen_rvfi_proto_basic_xfail | 1 | TP-RVFI-013..TP-RVFI-013 |
 | gen_rvfi_mem | 2 | TP-RVFI-014..TP-RVFI-015 |
 | gen_rvfi_zcmp | 2 | TP-RVFI-025..TP-RVFI-026 |
 | gen_cheri_off_quiet | 5 | TP-RVFI-033..TP-CHERI-004 |
 | gen_rvfi_random | 1 | TP-RVFI-037..TP-RVFI-037 |
+| gen_rvfi_trap_info | 1 | TP-RVFI-039..TP-RVFI-039 |
+| gen_rvfi_ext_rf_wr_suppress_xfail | 1 | TP-RVFI-040..TP-RVFI-040 |
 | gen_reg_knob_sweep | 17 | TP-REG-001..TP-REG-017 |
 | gen_reg_schedule | 2 | TP-REG-018..TP-REG-019 |
 | gen_reg_inflight | 6 | TP-REG-020..TP-REG-025 |
@@ -347,8 +371,9 @@ resolves them in gen_reading_report.md or escalates through the Orchestrator).
 # 4.1 Areas ISA, MUL, CMP, BIT, BTALU: Instruction set: RV32I base, M (RV32MSingleCycle), compressed Zca/Zcb/Zcmp, bitmanip RV32BOTEarlGrey, branch target ALU
 
 
-Scope: F-ISA-001..052, F-MUL-001..028, F-CMP-001..070, F-BIT-001..041, F-BTALU-001..015 (206
-features: 172 ACTIVE, 16 ALIAS, 18 FOLDED after the Critic v1 fixes; source
+Scope: F-ISA-001..052, F-MUL-001..028, F-CMP-001..070, F-BIT-001..041, F-BTALU-001..016 (207
+features: 170 ACTIVE, 19 ALIAS, 18 FOLDED after the Critic v1 fixes and the fix-3 fold of rtl-arch's
+T-053 fact-check; source
 dv/auto_dv/work/dv-lead/parts/gen_part_isa.md). Companion coverage plan: fcov_isa.md (bin namespace
 CG-<AREA>-<nnn>.cp_/cr_<name>.<bin>; `auto` = every auto-cross bin).
 
@@ -363,8 +388,11 @@ Conventions used in every item
   index distributions (rd = x0 with weight ~1/16, rs1 == rs2 == rd with weight ~1/16, otherwise
   random x1..x31), plus random surrounding instructions (dependency chains, loads/stores, nops)
   so forwarding and stall paths are exercised. Every Phase-1 item additionally randomizes: PC
-  alignment (2- and 4-byte), privilege (M or U where the instruction is legal in U), unrelated
-  CSR state, and the memory-response regime through the named knobs.
+  alignment (2- and 4-byte), privilege (M or U where the instruction is legal in U; every U
+  iteration runs under the C-2 PMP prologue below), unrelated CSR state, and the memory-response
+  regime through the named knobs (round-2 residual closed for this part: no Phase-1 item here has
+  `Knobs: none`; an item that pins imem/dmem for a measurement says so in Preconditions and still
+  names the pinned knob, so the exception clause is void in this file).
 - Fire-checks are test-level cocotb assertions on the RVFI monitor stream unless another
   observable is named; they prove the scenario fired (asserted, not assumed).
 - Pass criteria name the checkers from the T-006 inventory; new ones (gen_chk_bitmanip_ref,
@@ -379,8 +407,11 @@ Conventions used in every item
   F-CMP-038, F-ISA-034).
 - Bug candidates in this area (dv/auto_dv/docs/gen_bug_log.md): B4 (cm.mvsa01 r1s' == r2s'
   executes), B8 (dummy mid-Zcmp skips a micro-op, needs repro), B11 (not-taken branches counted as
-  taken under data_ind_timing), B13 (rvfi_pc_wdata bit 0 on jalr to odd target). Items for these
-  follow the spec/intent and are expected-fail. B14 (RVFI drops the ID-stage trap record when a WB
+  taken under data_ind_timing), B13 (rvfi_pc_wdata bit 0 on jalr to odd target), B17 (mhpmcounter8
+  counts a conditional branch once per cycle it waits in ID behind an outstanding WB access;
+  TP-BTALU-018). Items for these follow the spec/doc intent, are expected-fail and each is its own
+  `_xfail` test (C-15); the informational items (own `_info` tests) are TP-ISA-051 (B14 record
+  confirmation) and TP-ISA-057 (rvfi_trap quirk on the illegal ebreak variant). B14 (RVFI drops the ID-stage trap record when a WB
   error coincides) is downgraded to an RVFI convention note pending its confirmation simulation:
   the priority behaviour (the WB error outranks the ID exception; the killed ID instruction
   re-executes after the handler and produces its own record then) is the pass item TP-ISA-050 and
@@ -396,7 +427,113 @@ Conventions used in every item
   cpuctrlsts.icache_enable == 0) plus wb_busy == no. Items that measure timing or count ibus
   redirects pin icache_enable = 0 (a cache hit issues no bus request) and exclude that bit from
   random cpuctrlsts writes; every other redirect claim is derived from RVFI (rvfi_pc_wdata != pc +
-  len and the next rvfi_pc_rdata), never from the absence of an ibus request.
+  len and the next rvfi_pc_rdata), never from the absence of an ibus request. For a
+  control-transfer instruction (taken branch, jal/jalr family, fence.i, and every branch under
+  data_ind_timing = 1) the CG-BTALU-001/002 delta bins measure the REDIRECT delta =
+  rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(CTI), the cost of the redirected fetch; its clean
+  condition is the measurement condition (icache_enable = 0 pinned, knob:imem_gnt_delay same_cycle
+  and knob:imem_rvalid_delay min1 pinned, no fill request pending when the CTI is in ID, target
+  instruction word-aligned or compressed so it does not straddle a bus word), not the successor's
+  fetch_stall, which is yes by construction. The minimum redirect delta is 2 (target lookup in the
+  CTI cycle, in ID two cycles later; rtl/ibex_icache.sv:249, :703, :1030-1031;
+  rtl/ibex_if_stage.sv:568-587) but not deterministic even with the cache off (a pending prefetch
+  beat defers the speculative request, a 32-bit target at pc[1] = 1 takes the skid path,
+  :1099-1133): pass rules are `>= 2` and exact 2 is a coverage bin (rtl-arch T-053 TP-ISA-024).
+  fence.i's pc + 4 refetch always goes to the bus while the invalidation runs (inval_block_cache,
+  rtl/ibex_icache.sv:1218, :1259-1266), so its minimum is 3. A not-taken branch under
+  data_ind_timing = 0 has no redirect: its bin is its own delta, 1.
+- RTL conventions adopted from rtl-arch's fact-check (T-053, gen_tp_parts_rtl_factcheck.md
+  Section 1 rules X-n; the DV Lead's numbers C-n), stated once here and cited by the items:
+  - C-1 (X-1): rvfi_pc_wdata of trap, mret and dret records is the next sequential fetch address
+    (rtl/ibex_core.sv:2084 captures pc_if in the record cycle; the PC_EXC / PC_ERET / PC_DRET
+    pc_set happens one cycle later in FLUSH). A redirect target is observed as the NEXT record's
+    rvfi_pc_rdata and pc_wdata of those records is never asserted; only branch and jump records
+    (pc_set in their ID-exit cycle) carry the target in rvfi_pc_wdata.
+  - C-2 (X-2): U-mode PMP prologue. The DUT resets with every PMP entry OFF and an unmatched access
+    faults for priv != M (rtl/ibex_pmp.sv:136-139; PMP reset values in rtl/ibex_pkg.sv). Before the
+    first mret / dret to U the M-mode program prologue programs one U-executable code region (X,
+    covering the U code) and one U-RW data/stack region (R/W, covering the data, the stack and the
+    handler's read-back buffer), both L = 0; the trap handler stays in M. Every item whose
+    Preconditions or Randomized line names U mode, "M/U", "M or U", "privilege" or knob:priv_regime
+    carries this precondition by the phrase "U per C-2" in its Preconditions.
+  - C-3 (X-6/X-7): interrupt and debug entry wait for an empty ID and a ready WB: the instruction
+    (or Zcmp micro-op) already in ID when the request arrives completes first
+    (rtl/ibex_controller.sv:296, :698-720; halt_if blocks only IF); mepc / dpc = pc of the first
+    not-yet-executed instruction, derived from the last retired record (nominal 2 records after the
+    pin edge, worst case 17), never from the pin timestamp alone. Items TP-MUL-023, TP-BIT-036,
+    TP-CMP-056..059.
+  - C-5 (X-8): the DUT port is core_busy_o (ibex_mubi_t; core_sleep_o exists only on ibex_top). It
+    reads IbexMuBiOff in WAIT_SLEEP, or in SLEEP with no wake pending, only while no ibus fill beat
+    is outstanding, no icache invalidation runs and the LSU is idle (rtl/ibex_core.sv:497-518;
+    rtl/ibex_controller.sv:598-621). A wake already pending at the wfi gives no visible Off; wfi
+    fire-checks that need the dip delay the wake past the in-flight prefetch beats. While Off no
+    NEW ibus request is issued (remaining beats of already allocated fill buffers may complete).
+  - C-6 (X-9): irq_enabled = mstatus.MIE | (priv_mode == U) (rtl/ibex_controller.sv:490): in
+    U-mode an mie-enabled interrupt is taken regardless of MIE, so a U-mode wfi woken by an enabled
+    line is ALWAYS followed by the handler; only an M-mode wfi with MIE = 0 resumes at the
+    sequential instruction.
+  - C-9 (X-12): the multiplier, the divider and the two-cycle ALU ops never hold mid-operation
+    behind an outstanding WB memory access: instr_executing requires ~outstanding_memory_access
+    (= (outstanding_load_wb | outstanding_store_wb) & ~lsu_resp_valid,
+    rtl/ibex_id_stage.sv:1014-1016, :1059-1062), mult_en_id / div_en_id are gated by
+    instr_executing (:733-734) and id_fsm_q advances only under it (:866-869), so the unit STARTS
+    in the response cycle; multdiv_ready_id_i (= ready_wb_i) is 1 in that cycle and mult_hold /
+    div_hold (rtl/ibex_multdiv_fast.sv:98-99, :216, :235, :518) are unreachable
+    (gen_multdiv_bound_props.md MD-3; hierarchy map H-D1/H-D3/H-M1 corrected). Observable: with W =
+    data_rvalid_i cycle - (ID-exit cycle of the load/store + 1), i.e. W = 0 for the min1 response,
+    the record delta of the following instruction from the access record is 1 + W (mul,
+    single-cycle ALU), 2 + W (mulh class; rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32*), 37 + W
+    (div/rem: 36-cycle MD_IDLE -> MD_FINISH bound, MD-1) and 2 + W (divide by zero with
+    data_ind_timing = 0: 1-cycle fast path, MD-2; under DIT the full 37 + W, MD-2b). No load result
+    is ever forwarded (rtl/ibex_id_stage.sv:1117-1118). Items TP-MUL-011/024/030, TP-BIT-036/039/043,
+    TP-CMP-049; features F-MUL-011/024/028, F-BIT-041, F-CMP-049.
+  - C-10 (X-13, B17): mhpmcounter8 (NumBranches), 11 (mul wait) and 12 (div wait) count once per
+    cycle an instruction waits in ID behind an outstanding WB access (perf_branch_o in FIRST_CYCLE
+    under instr_executing_spec, rtl/ibex_id_stage.sv:886-934, :1054-1057; perf_mul_wait_o /
+    perf_div_wait_o :1226-1227); counters 7 (jumps) and 9 (taken branches) are exact (deduped by
+    branch_jump_set_done_q). Exact-count items add the precondition "no outstanding WB memory
+    access while the counted branch is in ID" (TP-BTALU-015/016, TP-ISA-023); the waiting class is
+    the expected-fail item TP-BTALU-018 (B17); counter 7/9 exactness under a wait is TP-BTALU-011.
+  - C-11 (X-3/X-4, D20): mhpmeventN is hardwired and reads 1 << (N - 3) (mhpmevent7 = 0x10,
+    mhpmevent8 = 0x20, mhpmevent9 = 0x40; rtl/ibex_cs_registers.sv:185, :1602-1619; the doc says
+    1 << N: doc mismatch D20, checker follows the RTL); the counter-to-event map is fixed
+    (:1574-1599), so no item programs a selector; a csrw mhpmeventN is only a control whose
+    read-back is unchanged.
+  - C-12 (X-14/X-15, B18): rvfi_insn is the 32-bit expansion for every Zcmp micro-op, including a
+    trapping one and the reserved rlist 0..3 encodings, which enter ID tagged INSTR_EXPANDED
+    (rtl/ibex_core.sv:2263-2267; rtl/ibex_compressed_decoder.sv:626, :691); the halfword is on
+    rvfi_ext_expanded_insn. A compressed non-expanded instruction (c.ebreak, every Zca/Zcb form and
+    the non-Zcmp illegal halfwords) is traced as the zero-extended halfword; mtval is always the
+    halfword (rtl/ibex_controller.sv:866-868). rvfi_mem_rmask / wmask are zero on WB-trap records
+    and, on every non-store record, rmask reads 4'b1111 with rvfi_mem_addr = the ALU result (B18,
+    RVFI-only): mask rules apply only to decoded load/store records.
+  - C-14 (X-21): a fire-check or bin that infers "in ID" or "no bus fetch of the target" from the
+    instruction bus pins cpuctrlsts.icache_enable = 0 (excluded from random cpuctrlsts writes) or
+    derives the redirect from RVFI. instr_addr_o is word-aligned ({addr[31:2], 2'b00},
+    rtl/ibex_icache.sv:1037), so a bus address is compared as target & ~3 and the LSB clearing of
+    a jalr target is proven from the next rvfi_pc_rdata. PMP never gates instr_req_o
+    (rtl/ibex_if_stage.sv:426-435): a PMP-denied target IS fetched on the bus and faults in ID.
+  - C-15: Expected values are `pass`, `pass (doc mismatch Dn)`, `expected-fail (Bn)` and
+    `informational (...)`; an expected-fail item is its own `_xfail` test and an informational item
+    its own `_info` test (measured: false, never gated, its checkers run in record mode, the test
+    asserts only that the scenario fired and logs the observation as GEN_TEST_INFO); pass items
+    never disable a checker.
+  - C-16: fire-checks are per-seed assertions on an observable; a timing constant not yet
+    simulated is asserted as "minimum observed value equals the bring-up-pinned constant <name>
+    (predicted N)".
+  - X-23 (minstret, rd = x0): a csrr of minstret/minstreth returns the speculative value that
+    already counts a countable instruction sitting in WB (rtl/ibex_cs_registers.sv:1658,
+    perf_instr_ret_wb_spec), so a csrr-to-csrr delta over a straight-line block of N countable
+    instructions is N + 1 (the first csrr itself retires inside the window) whatever the issue
+    gaps; rvfi_rd_addr and rvfi_rd_wdata are forced to 0 when rd = x0 (rtl/ibex_core.sv:2339-2350).
+  - RVFI quirk (rtl-arch isa_a note; informational item TP-ISA-057): an ebreak encoding with
+    rs1 != 0 or rd != 0 keeps ebrk_insn = 1 while raising illegal_insn (rtl/ibex_decoder.sv:738-758);
+    the controller takes the illegal-instruction exception (illegal_insn_prio first,
+    rtl/ibex_controller.sv:318-324) but rvfi_trap_id masks the record with ~(ebrk_insn &
+    ebreak_into_debug) (rtl/ibex_core.sv:1885-1886), so with dcsr.ebreakm (M) / dcsr.ebreaku (U)
+    set for the current mode the record retires with rvfi_trap = 0 although mcause = 2 is written.
+    Items with dcsr at reset see rvfi_trap = 1; regimes that enable ebreakm/u expect rvfi_trap = 0
+    for that sub-case (TP-ISA-042/056/057).
 - Bins lines: `CG-X.cr_y.auto` expands (in trace_tp_bin_isa.csv) to every reachable auto bin of
   the cross, named by joining the operand bins with `_`, minus the ignores written in
   fcov_isa.md; when the item also lists explicit bins of one of the cross's coverpoints, the
@@ -438,7 +575,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-001
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode after boot; mtvec set to the test handler.
+- Preconditions: M-mode after boot; mtvec set to the test handler; U per C-2.
 - Stimulus: >= 2000 I-type ALU instructions in random order with operand mix over rs1 class (7 classes, weights 1:1:1:1:1:4:4) and imm class (7 classes, same weights); rd/rs1 index mix incl. rd = x0 and rs1 == rd; interleaved with random independent instructions.
 - Randomized: operand values, immediates, register indices, instruction order, PC alignment, U vs M mode (50/50 after a U-mode entry via mret).
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -480,12 +617,12 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-004, F-ISA-051
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; mcountinhibit = 0 so minstret counts.
+- Preconditions: M-mode; mcountinhibit = 0 so minstret counts; U per C-2.
 - Stimulus: every rd-writing 32-bit class with rd = x0 (I-type, shifts incl. the semihosting markers slli x0,x0,0x1f and srai x0,x0,7, R-type, lui, auipc, canonical nop), each followed within 1-3 instructions by a reader of x0 (rs1 or rs2 = x0) whose result depends on x0 being zero; csrr minstret before/after blocks of 64 such hints.
 - Randomized: hint class order, rs1/imm values, distance to the x0 reader, PC alignment, U vs M mode.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 1 RVFI retirement per cp_hint_class bin with rvfi_rd_addr = 0, rvfi_rd_wdata = 0, rvfi_trap = 0; the following reader retires with rvfi_rs*_rdata = 0; minstret delta over each 64-hint block == 64 (handler-free straight-line code, dummy_instr_en = 0).
-- Pass criteria: gen_isa_compare (x0 stays 0, no trap); gen_chk_counters (minstret counts hints); gen_chk_csr_readback.
+- Fire-check: >= 1 RVFI retirement per cp_hint_class bin with rvfi_rd_addr = 0, rvfi_rd_wdata = 0, rvfi_trap = 0; the following reader retires with rvfi_rs*_rdata = 0; minstret delta over each 64-hint block == 65: the 64 hints plus the first csrr itself, which retires inside the window (a csrr reads the speculative value that counts a countable instruction in WB, rtl/ibex_cs_registers.sv:1658, so issue gaps do not change the delta; X-23, rtl-arch T-053 TP-ISA-004); handler-free straight-line code, dummy_instr_en = 0.
+- Pass criteria: gen_isa_compare (x0 stays 0, no trap); gen_chk_counters (minstret counts hints; predicts 65 per block); gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_isa_alu
 - Bins: CG-ISA-005.cp_hint_class.canonical_nop, CG-ISA-005.cp_hint_class.addi_x0_nzimm, CG-ISA-005.cp_hint_class.andi_x0, CG-ISA-005.cp_hint_class.ori_x0, CG-ISA-005.cp_hint_class.xori_x0, CG-ISA-005.cp_hint_class.slti_x0, CG-ISA-005.cp_hint_class.sltiu_x0, CG-ISA-005.cp_hint_class.lui_x0, CG-ISA-005.cp_hint_class.auipc_x0, CG-ISA-005.cp_hint_class.add_x0, CG-ISA-005.cp_hint_class.sub_x0, CG-ISA-005.cp_hint_class.sll_x0, CG-ISA-005.cp_hint_class.srl_x0, CG-ISA-005.cp_hint_class.sra_x0, CG-ISA-005.cp_hint_class.slt_x0, CG-ISA-005.cp_hint_class.sltu_x0, CG-ISA-005.cp_hint_class.xor_x0, CG-ISA-005.cp_hint_class.or_x0, CG-ISA-005.cp_hint_class.and_x0, CG-ISA-005.cp_hint_class.slli_x0_semihost, CG-ISA-005.cp_hint_class.srai_x0_semihost, CG-ISA-005.cp_hint_class.slli_x0_other, CG-ISA-005.cp_hint_class.srli_x0, CG-ISA-005.cp_hint_class.srai_x0_other, CG-ISA-005.cp_x0_read.rs1_zero, CG-ISA-005.cp_x0_read.rs2_zero, CG-ISA-001.cp_rd_x0.yes, CG-ISA-002.cp_rd_x0.yes, CG-ISA-003.cp_rd_x0.yes, CG-ISA-004.cp_rd_x0.yes
@@ -522,7 +659,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-007
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 3000 R-type ops with independent rs1/rs2 operand mixes (7 classes each), sign-pair balance, equal-operand weight 1/8, register-relation mix (rs1 == rs2, all same, rs1 == rd, rs2 == rd, distinct), rd = x0 weight 1/16.
 - Randomized: operands, indices, order, PC alignment, M/U mode.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -564,7 +701,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-010
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 1500 slli/srli/srai with shamt mix (0, 1, 2..30, 31; weights 1:1:4:1) and operand mix (zero, all-ones, msb-only, lsb-only, negative random, positive random).
 - Randomized: shamt, operand, rd/rs1, order, PC alignment, M/U.
 - Knobs: knob:imem_rvalid_delay
@@ -592,7 +729,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-012
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode and U-mode iterations; mtvec set; handler reads mcause/mtval/mepc and skips the instruction; x8 pre-loaded with a random value (rs3 of the srai-pattern fsri).
+- Preconditions: M-mode and U-mode iterations; mtvec set; handler reads mcause/mtval/mepc and skips the instruction; x8 pre-loaded with a random value (rs3 of the srai-pattern fsri); U per C-2.
 - Stimulus: trapping set - slli (instr[31:27] = 00000) with instr[26:25] in {01, 10, 11} and srli/srai (instr[31:27] = 00000 / 01000) with instr[26:25] = 01; fsri-decoded set - the srli/srai bit patterns with instr[26] = 1 (instr[26:25] in {10, 11}), which execute as fsri rd, rs1, rs3 = instr[31:27] (x0 for the srli pattern, x8 for the srai pattern) with shamt = instr[25:20]; lenient control - sloi (instr[31:27] = 00100) with instr[26:25] != 00 (F-BIT-037); legal instr[26:25] = 00 forms as controls; random rd/rs1/shamt[4:0], embedded in random legal code.
 - Randomized: which pattern, rd/rs1/shamt, x8 value, position, privilege.
 - Knobs: knob:imem_rvalid_delay
@@ -606,7 +743,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-013
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 1500 sll/srl/sra with rs2[4:0] mix as TP-ISA-010 and rs2 upper bits zero in this item; operand mix as TP-ISA-010.
 - Randomized: rs2, rs1, indices, order, PC alignment, M/U.
 - Knobs: knob:imem_rvalid_delay
@@ -634,7 +771,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-015
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 500 jal with forward and backward targets to random legal code blocks, rd mix (x0, x1, x5, other), targets at both alignments; the link register consumed by a following jalr or store.
 - Randomized: offset, rd, target alignment, surrounding code, PC alignment, M/U.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -676,7 +813,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-018
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 500 jalr with rs1 loaded by lui/addi or by a preceding load, imm mix (0, positive, negative, +2047, -2048), rd mix, targets at both alignments.
 - Randomized: rs1 value, imm, rd, whether rs1 comes from a load (stall path), M/U.
 - Knobs: knob:imem_rvalid_delay, knob:dmem_rvalid_delay
@@ -694,8 +831,8 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: jalr/c.jr/c.jalr where rs1 + imm is odd (odd rs1 with even imm, even rs1 with odd imm, both odd), target code at the even address; mixed with even-sum controls.
 - Randomized: how the odd sum is formed, target alignment (word/half), rd, form.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: per seed >= 50 odd sums whose next RVFI entry has rvfi_pc_rdata == (rs1 + imm) & ~1 (even) and rvfi_trap = 0; no trap with mcause 0 anywhere in the run (redirect and LSB clearing derived from RVFI; gen_chk_ibus_proto keeps every ibus address bit 0 at 0 when the fetch is on the bus).
-- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008); gen_chk_ibus_proto (address bit 0 always 0).
+- Fire-check: per seed >= 50 odd sums whose next RVFI entry has rvfi_pc_rdata == (rs1 + imm) & ~1 (even) and rvfi_trap = 0; no trap with mcause 0 anywhere in the run (redirect and LSB clearing derived from RVFI, C-14; when a bus request for the target appears (cache miss or icache_enable = 0) its address is (rs1 + imm) & ~3 because instr_addr_o is word-aligned, rtl/ibex_icache.sv:1037).
+- Pass criteria: gen_isa_compare (with rvfi_pc_wdata bit 0 masked per TP-BTALU-008); gen_chk_ibus_proto (address bits [1:0] always 00).
 - Expected: pass
 - Test group: gen_isa_cti
 - Bins: CG-ISA-006.cr_odd.jalr_odd, CG-ISA-006.cr_odd.c_jr_odd, CG-ISA-006.cr_odd.c_jalr_odd, CG-ISA-006.cp_jalr_imm.odd, CG-ISA-006.cp_target_odd.yes, CG-ISA-006.cp_jalr_rs1.other, CG-ISA-006.cr_jalr_rs1_imm.auto
@@ -718,11 +855,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-021
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U mode; handler as TP-ISA-012.
+- Preconditions: M/U mode; handler as TP-ISA-012; U per C-2.
 - Stimulus: opcode 1100111 with funct3 in 001..111 (each value), random rd/rs1/imm, in random code.
 - Randomized: funct3 value, fields, position, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: rvfi_trap = 1 on each such encoding; mcause 2 and mtval = word read back; the retirement after it is the handler's first instruction (rvfi_pc_rdata == mtvec base), never the would-be jalr target (redirect absence derived from RVFI).
+- Fire-check: rvfi_trap = 1 on each such encoding; mcause 2 and mtval = word read back; the retirement after it is the handler's first instruction (rvfi_pc_rdata == mtvec base), never the would-be jalr target (redirect absence derived from RVFI, C-14; jump_set is cleared by illegal_insn, rtl/ibex_decoder.sv:912-917, and the trap record's rvfi_pc_wdata is the next sequential fetch address, not rs1 + imm, and is not asserted: C-1).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_isa_illegal
@@ -746,7 +883,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-023
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; the branch counters are the hardwired mhpmcounter8 (NumBranches) and mhpmcounter9 (NumBranchesTaken) (rtl/ibex_cs_registers.sv:1585-1597; the mhpmevent selectors are read-only, :1600-1617, so nothing is programmed); mcountinhibit bits 8/9 clear (for TP-BTALU-015 reuse).
+- Preconditions: M-mode; the branch counters are the hardwired mhpmcounter8 (NumBranches) and mhpmcounter9 (NumBranchesTaken) (rtl/ibex_cs_registers.sv:1585-1597; the mhpmevent selectors are read-only, :1600-1617, so nothing is programmed; they read 0x20 / 0x40 = 1 << (N - 3), D20, C-11); mcountinhibit bits 8/9 clear (for TP-BTALU-015 reuse); this item asserts no counter value: mhpmcounter8 is exact only while no WB memory access is outstanding when the branch is in ID (C-10, B17; exact class TP-BTALU-015, waiting class TP-BTALU-018); U per C-2.
 - Stimulus: >= 3000 branches, all six ops, operand pairs from the compare-class table (9 classes, weight 1 each except rand 6), forward and backward targets to random code, taken/not-taken balanced by construction.
 - Randomized: operands, offset, direction, target alignment, PC alignment, M/U.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -761,24 +898,24 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; cpuctrlsts.data_ind_timing = 0; cpuctrlsts.icache_enable = 0 pinned for the whole test (the ibus monitor then sees every fetch; excluded from random cpuctrlsts writes) with knob:imem_rvalid_delay pinned to min1 and knob:imem_gnt_delay to same_cycle for the measurement blocks (+gen_regime_pin).
-- Stimulus: branch pairs (taken, not-taken) surrounded by single-cycle ALU ops; the test measures the retire delta from rvfi_ext_mcycle between the branch and its successor.
+- Stimulus: branch pairs (taken, not-taken) surrounded by single-cycle ALU ops; the test measures the redirect delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(branch) (header Timing terms); for the exact-2 sub-check the straight-line code before the branch is fully fetched (no fill request pending in the branch cycle) and the taken target is word-aligned or compressed (a 32-bit target at pc[1] = 1 straddles a bus word and takes the skid path, rtl/ibex_icache.sv:1099-1133).
 - Randomized: op, operands, target distance, alignment, surrounding ALU ops.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 50 not-taken branches with delta = 1 and >= 50 taken branches with delta = 2 observed unstalled (gap_clean, icache_enable = 0); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled).
-- Pass criteria: gen_chk_timing_isa (not-taken delta 1, taken delta >= 2, exact 2 when no fetch stall); gen_isa_compare.
+- Fire-check: >= 50 not-taken branches with redirect delta = 1 and >= 50 taken branches with redirect delta = 2 observed under the measurement condition (icache_enable = 0, imem pinned min1/same_cycle, no pending fill request, non-straddling target: the speculative target request goes out in the branch cycle, rtl/ibex_icache.sv:249, :703, :1030-1031, and the target is in ID two cycles later); taken branches outside the condition are recorded with their delta (>= 2, bin d3plus); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled).
+- Pass criteria: gen_chk_timing_isa (not-taken redirect delta exactly 1 when unstalled; taken >= 2 always, exactly 2 under the measurement condition: exact 2 is a coverage bin, the pass rule is >= 2; rtl-arch T-053 TP-ISA-024 TIMING); gen_isa_compare.
 - Expected: pass
 - Test group: gen_isa_cti
-- Bins: CG-BTALU-001.cr_taken_dit_delta.nt_dit0_d1, CG-BTALU-001.cr_taken_dit_delta.t_dit0_d2, CG-BTALU-001.cp_delta.d1, CG-BTALU-001.cp_delta.d2, CG-BTALU-001.cr_taken_dit_redirect.nt_dit0_noredir
+- Bins: CG-BTALU-001.cr_taken_dit_delta.nt_dit0_d1, CG-BTALU-001.cr_taken_dit_delta.t_dit0_d2, CG-BTALU-001.cp_delta.d1, CG-BTALU-001.cp_delta.d2, CG-BTALU-001.cp_delta.d3plus, CG-BTALU-001.cr_taken_dit_redirect.nt_dit0_noredir
 
 ### TP-ISA-025: Branch funct3 010/011 illegal
 - Features: F-ISA-025
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-012.
+- Preconditions: M/U; handler as TP-ISA-012; U per C-2.
 - Stimulus: opcode 1100011 with funct3 010 and 011, random rs1/rs2 (including equal operands so a wrongly-decoded beq/bne would take the branch), random offset.
 - Randomized: funct3, operands, offset, position, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: rvfi_trap = 1; mcause 2, mtval word read back; the retirement after it is the handler's first instruction (rvfi_pc_rdata == mtvec base), never pc + offset (redirect absence derived from RVFI).
+- Fire-check: rvfi_trap = 1; mcause 2, mtval word read back; the retirement after it is the handler's first instruction (rvfi_pc_rdata == mtvec base), never pc + offset (redirect absence derived from RVFI, C-14; branch_in_dec is cleared by illegal_insn, rtl/ibex_decoder.sv:918, and the trap record's rvfi_pc_wdata is pc_if, not asserted: C-1).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_isa_illegal
@@ -816,7 +953,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-028
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-012; data region mapped and writable.
+- Preconditions: M/U; handler as TP-ISA-012; data region mapped and writable; U per C-2.
 - Stimulus: legal lb/lh/lw/lbu/lhu/sb/sh/sw as controls plus illegal LOAD funct3 011/110/111 and STORE funct3 011/100/101/110/111 with random rs1 pointing at valid memory (so a wrongly-accepted access would be visible on the data bus).
 - Randomized: funct3, address, data, position, privilege.
 - Knobs: knob:dmem_rvalid_delay
@@ -830,7 +967,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-029
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U.
+- Preconditions: M/U; U per C-2.
 - Stimulus: fence with fields from the table (canonical; fence.tso fm = 1000; pred = 0; succ = 0; rs1 != 0; rd != 0; fm other than 0000/1000; random pred/succ) placed between loads/stores whose ordering the ISA model checks; each fence's retire delta measured.
 - Randomized: field values, neighbouring memory ops, privilege, alignment.
 - Knobs: knob:dmem_rvalid_delay
@@ -858,7 +995,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-031
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-ISA-030 plus the trap handler.
+- Preconditions: as TP-ISA-030 plus the trap handler; U per C-2.
 - Stimulus: fence.i with rs1 != 0, rd != 0, imm != 0 and all three nonzero (must behave as TP-ISA-030); MISC-MEM funct3 010..111 with random fields (illegal).
 - Randomized: field values, funct3 for the illegal case, privilege, position.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -886,7 +1023,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-033
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode entered via mret with MPP = U for half the iterations; PMP left open (all regions off is the reset state) so U code can run.
+- Preconditions: U-mode entered via mret with MPP = U for half the iterations; U per C-2: with every PMP entry OFF (the reset state) an unmatched U-mode fetch, load or store FAULTS (rtl/ibex_pmp.sv:136-139, access_fail = mmwp | (priv != M) | ...), so the M-mode prologue programs the U-executable code region and the U-RW data/stack region before the mret (X-2 correction of the former 'PMP left open so U code can run' statement).
 - Stimulus: ecall from U and from M alternating randomly; handler records mcause.
 - Randomized: privilege sequence, position, register state.
 - Knobs: knob:priv_regime
@@ -900,7 +1037,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-034
 - Phase: 1
 - Tier: smoke
-- Preconditions: M/U; dcsr.ebreakm = dcsr.ebreaku = 0 (reset); handler as TP-ISA-032 (mepc += 4 or 2 depending on rvfi_insn length).
+- Preconditions: M/U; dcsr.ebreakm = dcsr.ebreaku = 0 (reset); handler as TP-ISA-032 (mepc += 4 or 2 depending on rvfi_insn length); U per C-2.
 - Stimulus: ebreak and c.ebreak at random positions and alignments; csrr minstret pairs around them.
 - Randomized: form, position, privilege, alignment.
 - Knobs: knob:imem_rvalid_delay
@@ -914,7 +1051,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-035
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug ROM at DmHaltAddr provided by the TB; dcsr.ebreakm/ebreaku programmed inside debug mode (entered via debug_req_i) with csrw dcsr then dret; privilege for the ebreak chosen via mret.
+- Preconditions: debug ROM at DmHaltAddr provided by the TB; dcsr.ebreakm/ebreaku programmed inside debug mode (entered via debug_req_i) with csrw dcsr then dret; privilege for the ebreak chosen via mret; U per C-2.
 - Stimulus: ebreak/c.ebreak in M with ebreakm in {0,1}, in U with ebreaku in {0,1}; ebreak inside the debug ROM itself (re-entry); dret afterwards.
 - Randomized: dcsr configuration, privilege, form, position, alignment.
 - Knobs: knob:debug_req_regime
@@ -928,11 +1065,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-036
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; mepc/mstatus.MPP/MPIE programmed by csrw with random legal values.
+- Preconditions: M-mode; mepc/mstatus.MPP/MPIE programmed by csrw with random legal values; U per C-2.
 - Stimulus: mret to random mepc targets (both alignments, MPP in {M, U}), including mret executed inside debug mode (from the debug ROM) and mret as the first instruction after a trap.
 - Randomized: mepc, MPP, MPIE, alignment, debug-mode context.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: RVFI mret with rvfi_trap = 0 and rvfi_pc_wdata == mepc (as programmed); the next rvfi_pc_rdata == mepc (redirect derived from RVFI); next retirement's rvfi_mode == MPP.
+- Fire-check: RVFI mret with rvfi_trap = 0; the next rvfi_pc_rdata == mepc (as programmed; redirect derived from RVFI. C-1: the mret record's rvfi_pc_wdata is the next sequential fetch address pc + 4, because PC_ERET pc_set happens in FLUSH one cycle after the record's capture, rtl/ibex_core.sv:2084 / rtl/ibex_controller.sv:953-965, and is not asserted); next retirement's rvfi_mode == MPP, also for the debug-ROM mret (csr_restore_mret has no debug_mode qualifier, rtl/ibex_cs_registers.sv:953-954: the debug ROM then runs at MPP, exempt from PMP only inside the DM window, so the debug-mode iterations use MPP = M or have the C-2 regions cover the ROM's data).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (mstatus after mret; CSR-area semantics).
 - Expected: pass
 - Test group: gen_isa_system
@@ -942,11 +1079,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-037
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode via mret; handler reads mcause/mtval.
+- Preconditions: U-mode via mret; handler reads mcause/mtval; U per C-2.
 - Stimulus: mret executed in U-mode at random positions (with random mepc so a wrongly-executed mret would redirect).
 - Randomized: position, mepc, register state.
 - Knobs: knob:priv_regime
-- Fire-check: RVFI mret with rvfi_mode = 0 and rvfi_trap = 1; read-back mcause 2, mtval 0x30200073; the retirement after it is the handler's first instruction, never mepc.
+- Fire-check: RVFI mret with rvfi_mode = 0 and rvfi_trap = 1; read-back mcause 2, mtval 0x30200073; the retirement after it is the handler's first instruction, never mepc (redirect absence derived from RVFI, C-14; the trap record's rvfi_pc_wdata is pc_if and is not asserted, C-1).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_isa_system
@@ -956,11 +1093,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-038
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug mode entered via debug_req_i; dpc/dcsr.prv programmed in the debug ROM with random legal values (prv in {M, U}, dpc at both alignments).
+- Preconditions: debug mode entered via debug_req_i; dpc/dcsr.prv programmed in the debug ROM with random legal values (prv in {M, U}, dpc at both alignments); U per C-2.
 - Stimulus: dret from the debug ROM to dpc.
 - Randomized: dpc, dcsr.prv, code at dpc, debug-entry cause (haltreq vs ebreak vs step).
 - Knobs: knob:debug_req_regime
-- Fire-check: rvfi_ext_debug_mode falls after the dret; the next RVFI entry has rvfi_pc_rdata = dpc and rvfi_mode = dcsr.prv (redirect derived from RVFI).
+- Fire-check: rvfi_ext_debug_mode falls after the dret; the next RVFI entry has rvfi_pc_rdata = dpc and rvfi_mode = dcsr.prv (redirect derived from RVFI; the dret record's rvfi_pc_wdata is the next sequential fetch address and is not asserted, C-1; the icache is forced off in the dret cycle, rtl/ibex_cs_registers.sv:1970-1971, so the dpc fetch is also bus-visible).
 - Pass criteria: gen_chk_debug; gen_isa_compare.
 - Expected: pass
 - Test group: gen_isa_system
@@ -970,7 +1107,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-039
 - Phase: 1
 - Tier: targeted
-- Preconditions: M and U mode, debug mode off; handler as TP-ISA-012.
+- Preconditions: M and U mode, debug mode off; handler as TP-ISA-012; U per C-2.
 - Stimulus: dret in M and in U at random positions.
 - Randomized: privilege, position.
 - Knobs: knob:priv_regime
@@ -984,53 +1121,53 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-040
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode (and U with TW = 0); mie programmed with a random subset of lines; mstatus.MIE randomized (wake happens regardless of MIE; the handler is taken only if MIE).
+- Preconditions: M-mode (and U with TW = 0; U per C-2); mie programmed with a random subset of lines; mstatus.MIE randomized (the wake happens regardless of MIE; whether the handler follows depends on privilege, C-6: irq_enabled = MIE | (priv == U), rtl/ibex_controller.sv:490); for the busy-dip sub-check the wake is scheduled >= GEN_IBUS_MAX_OUTSTANDING + 4 cycles after the wfi record with no icache invalidation pending and the LSU idle (C-5).
 - Stimulus: wfi followed by a wake source chosen per iteration: enabled irq line asserted after a random delay, irq_nm_i, debug_req_i, or an already-pending enabled interrupt at the wfi.
 - Randomized: wake source, delay, mie mask, MIE, privilege (U with TW = 0).
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime
-- Fire-check: RVFI wfi retirement with rvfi_trap = 0; core_sleep_o observed asserted (for the delayed-wake cases) with no RVFI retirement and no ibus request while it is asserted; the next retirement is the handler (rvfi_intr) or the debug ROM or the sequential instruction (MIE = 0), matching the wake source.
-- Pass criteria: gen_chk_sleep; gen_chk_irq; gen_chk_debug; gen_isa_compare (WFI legalization per c.2).
+- Fire-check: RVFI wfi retirement with rvfi_trap = 0; for the delayed-wake cases core_busy_o == IbexMuBiOff for >= 1 cycle between the wfi record and the wake, with no RVFI retirement and no NEW ibus request while Off (remaining beats of already allocated fill buffers may complete; a wake pending at entry gives no Off and asserts only the resume path); the resume path matches privilege and source (C-6, rtl-arch T-053 TP-ISA-040): M-mode with MIE = 1 -> the handler (rvfi_intr = 1 on the next record); M-mode with MIE = 0 -> the sequential instruction after the wfi; U-mode -> ALWAYS the handler for an enabled line whatever MIE (irq_enabled = MIE | (priv == U)); irq_nm_i -> the NMI handler in both modes; debug_req_i -> the debug ROM.
+- Pass criteria: gen_chk_sleep (core_busy_o Off rule of C-5); gen_chk_irq (a U-mode wake always enters the handler, rtl/ibex_controller.sv:490); gen_chk_debug; gen_isa_compare (WFI legalization per c.2).
 - Expected: pass
 - Test group: gen_isa_system
-- Bins: CG-ISA-009.cp_op.wfi, CG-ISA-009.cp_wfi_wake.irq, CG-ISA-009.cp_wfi_wake.nmi, CG-ISA-009.cp_wfi_wake.debug, CG-ISA-009.cp_wfi_wake.pending_at_entry, CG-ISA-009.cr_wfi_tw.m_tw0_exec, CG-ISA-009.cr_wfi_tw.u_tw0_exec
+- Bins: CG-ISA-009.cp_op.wfi, CG-ISA-009.cp_wfi_wake.irq, CG-ISA-009.cp_wfi_wake.nmi, CG-ISA-009.cp_wfi_wake.debug, CG-ISA-009.cp_wfi_wake.pending_at_entry, CG-ISA-009.cr_wfi_tw.m_tw0_exec, CG-ISA-009.cr_wfi_tw.u_tw0_exec, CG-ISA-009.cr_wfi_priv_resume.m_handler, CG-ISA-009.cr_wfi_priv_resume.m_sequential, CG-ISA-009.cr_wfi_priv_resume.u_handler, CG-ISA-009.cp_busy_off.yes
 
 ### TP-ISA-041: wfi in U-mode with mstatus.TW = 1 is illegal
 - Features: F-ISA-041
 - Phase: 1
 - Tier: targeted
-- Preconditions: mstatus.TW programmed 0/1 by csrw in M; U-mode via mret; handler as TP-ISA-012; an interrupt scheduled so a wrongly-sleeping core is woken.
+- Preconditions: mstatus.TW programmed 0/1 by csrw in M; U-mode via mret; handler as TP-ISA-012; an interrupt scheduled so a wrongly-sleeping core is woken; U per C-2.
 - Stimulus: wfi in U with TW = 1 (illegal) and TW = 0 (sleeps); wfi in M with TW = 1 (legal).
 - Randomized: TW, privilege, position, wake delay.
 - Knobs: knob:irq_regime
-- Fire-check: U/TW=1: rvfi_trap = 1, mcause 2, mtval 0x10500073, core_sleep_o never asserted; U/TW=0 and M/TW=1: rvfi_trap = 0 and core_sleep_o asserted.
+- Fire-check: U/TW=1: rvfi_trap = 1, mcause 2, mtval 0x10500073, core_busy_o never Off and the retirement after the trap record is the handler's first instruction; U/TW=0 and M/TW=1: rvfi_trap = 0 and the wfi sleeps: core_busy_o == IbexMuBiOff observed when the wake is delayed past the in-flight prefetch beats (C-5; the wake is scheduled as in TP-ISA-040), otherwise the resume path (the handler, C-6) proves the wake (rtl-arch T-053 TP-ISA-041 TIMING: the DUT port is core_busy_o, an Off is visible only with no outstanding fetch beat, no invalidation and an idle LSU).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_sleep.
 - Expected: pass
 - Test group: gen_isa_system
-- Bins: CG-ISA-009.cr_wfi_tw.u_tw1_illegal, CG-ISA-009.cr_wfi_tw.m_tw1_exec, CG-ISA-009.cr_wfi_tw.u_tw0_exec, CG-ISA-011.cp_class.wfi_u_tw1, CG-ISA-009.cr_op_priv_outcome.wfi_u_illegal
+- Bins: CG-ISA-009.cr_wfi_tw.u_tw1_illegal, CG-ISA-009.cr_wfi_tw.m_tw1_exec, CG-ISA-009.cr_wfi_tw.u_tw0_exec, CG-ISA-011.cp_class.wfi_u_tw1, CG-ISA-009.cr_op_priv_outcome.wfi_u_illegal, CG-ISA-009.cp_busy_off.yes
 
 ### TP-ISA-042: SYSTEM funct3 = 000 operand and funct12 checks
 - Features: F-ISA-042
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-012.
+- Preconditions: M/U; handler as TP-ISA-012; dcsr.ebreakm = dcsr.ebreaku = 0 (reset) so the illegal ebreak variants trap with rvfi_trap = 1 (the ebreakm/u-set sub-case is the RVFI quirk of TP-ISA-057); U per C-2.
 - Stimulus: ecall/ebreak/mret/dret/wfi encodings with rs1 != 0, with rd != 0, and with both nonzero; funct12 in {0x102 sret, 0x002 uret, 0x120..0x13F sfence.vma space, random other} with rs1 = rd = 0.
 - Randomized: which legal base, which field is nonzero and its value, funct12 for the "other" case, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: rvfi_trap = 1 for every variant with mcause 2 and mtval = word; no debug entry (rvfi_ext_debug_mode stays 0), no sleep (core_sleep_o stays 0), and the retirement after it is the handler's first instruction (redirect absence derived from RVFI).
+- Fire-check: rvfi_trap = 1 for every variant with mcause 2 and mtval = word; no debug entry (rvfi_ext_debug_mode stays 0), no sleep (core_busy_o never Off), and the retirement after it is the handler's first instruction (redirect absence derived from RVFI, C-14; in FLUSH the exception arm wins over the mret/dret/wfi arms, rtl/ibex_controller.sv:826-827, :953-968).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_debug; gen_chk_sleep.
 - Expected: pass
 - Test group: gen_isa_illegal
-- Bins: CG-ISA-011.cp_class.sys_funct12_other, CG-ISA-011.cp_class.sys_rs1_nz, CG-ISA-011.cp_class.sys_rd_nz, CG-ISA-009.cp_outcome.illegal
+- Bins: CG-ISA-011.cp_class.sys_funct12_other, CG-ISA-011.cp_class.sys_rs1_nz, CG-ISA-011.cp_class.sys_rd_nz, CG-ISA-009.cp_outcome.illegal, CG-ISA-011.cp_ebreak_variant_trap.trap1
 
 ### TP-ISA-043: CSR instruction encodings (Zicsr)
 - Features: F-ISA-043
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; a set of read-write scratch-like CSRs (mscratch, mtvec, mepc, mie) as targets.
+- Preconditions: M-mode; a set of read-write scratch-like CSRs (mscratch, mtvec, mepc, mie) as targets; U per C-2.
 - Stimulus: csrrw/csrrs/csrrc/csrrwi/csrrsi/csrrci against rw CSRs with random source values/uimm and random rd (including x0), each followed by a csrr read-back; U-mode iterations against user-accessible CSRs (cycle/instret with mcounteren enabled).
 - Randomized: op, CSR from the set, source value, rd, privilege.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: RVFI retirements of all six ops with rvfi_rd_wdata = the pre-write CSR value predicted by the TB CSR model, and the read-back equals the predicted post-write value.
+- Fire-check: RVFI retirements of all six ops; for rd != x0 rvfi_rd_wdata = the pre-write CSR value predicted by the TB CSR model (rd = x0 forces rvfi_rd_addr = rvfi_rd_wdata = 0, rtl/ibex_core.sv:2339-2350, X-23, so the rd = x0 iterations are proven by the read-back alone; rtl-arch T-053 TP-ISA-043); the csrr read-back equals the predicted post-write value.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_isa_csr_insn
@@ -1068,7 +1205,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-046
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-012.
+- Preconditions: M/U; handler as TP-ISA-012; U per C-2.
 - Stimulus: SYSTEM funct3 100 with random csr address (legal and illegal addresses), rs1, rd.
 - Randomized: fields, privilege, position.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1082,7 +1219,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-047
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; mtvec at a random 256-byte-aligned base; handler reads mcause/mtval/mepc; mcountinhibit = 0.
+- Preconditions: M/U; mtvec at a random 256-byte-aligned base; handler reads mcause/mtval/mepc; mcountinhibit = 0; U per C-2.
 - Stimulus: a random mix of every illegal class of CG-ISA-011 (16- and 32-bit) inserted into random code such that the illegal instruction, had it executed, would write a register, perform a data access (rs1 valid pointer), write a CSR, or redirect the PC; csrr minstret pairs around isolated illegal instructions.
 - Randomized: class, fields, position, privilege, alignment.
 - Knobs: knob:imem_rvalid_delay
@@ -1096,11 +1233,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-048
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-047.
+- Preconditions: M/U; handler as TP-ISA-047; U per C-2.
 - Stimulus: 32-bit words with major opcode in {LOAD-FP 0x07, STORE-FP 0x27, AMO 0x2f, OP-32 0x3b, OP-IMM-32 0x1b, MADD 0x43, MSUB 0x47, NMSUB 0x4b, NMADD 0x4f, OP-FP 0x53, custom-0 0x0b, custom-1 0x2b, custom-2 0x5b, custom-3 0x7b, every other reserved 7-bit opcode with [1:0] = 11} and random upper bits.
 - Randomized: opcode, upper 25 bits, privilege, position.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: rvfi_trap = 1 for each opcode class with mcause 2 and mtval = word; no data-bus access and no redirect.
+- Fire-check: rvfi_trap = 1 for each opcode class with mcause 2 and mtval = word; no data-bus access and no redirect (the retirement after the trap record is the handler's first instruction; derived from RVFI, C-14; custom-2 0x5b = OPCODE_CHERI and custom-3 0x7b = OPCODE_AUICGP fall to illegal with cheriot off, rtl/ibex_decoder.sv:791-793, :876-895).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_dbus_proto; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_isa_illegal
@@ -1110,7 +1247,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-049
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-047 (advances mepc by 2 for a 16-bit trap, by 4 otherwise).
+- Preconditions: M/U; handler as TP-ISA-047 (advances mepc by 2 for a 16-bit trap, by 4 otherwise); U per C-2.
 - Stimulus: 0xFFFFFFFF words; 0x0000 halfwords at both alignments; a full 0x00000000 word (two illegal halfwords, the handler skips 2 bytes each time).
 - Randomized: which pattern, alignment, position, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1145,7 +1282,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Fire-check: per seed >= 1 coincidence in which the dbus response with data_err_i (or the PMP fault) arrives after the illegal instruction was fetched (dbus timestamp versus the RVFI order) and the WB access retires with rvfi_trap = 1; then the RVFI stream shows exactly two trap records for the pair, in order: the access (mcause 5/7) and, after the handler's mret, the re-executed illegal instruction (mcause 2). A single record for the pair re-opens B14 (rtl-arch T-041 fact-check row 48).
 - Pass criteria: gen_isa_compare (trap order; the killed ID attempt has no architectural effect, so the ISA model shows the same two traps); the record count is reported by the test, not gated.
 - Expected: informational (B14 confirmation; excluded from the pass gate)
-- Test group: gen_isa_illegal
+- Test group: gen_isa_illegal_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-ISA-011.cr_wb.load_err, CG-ISA-011.cr_wb.store_err
 
 ### TP-ISA-052: Writes to x0 are discarded for every instruction class
@@ -1180,7 +1317,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-001, F-ISA-005, F-ISA-007, F-ISA-010, F-ISA-013, F-ISA-015, F-ISA-018, F-ISA-023, F-ISA-029, F-ISA-043
 - Phase: 2
 - Tier: full
-- Preconditions: random boot configuration (mtvec, mie, mstatus, mcounteren) programmed by the generated program's prologue; privilege regime per knob.
+- Preconditions: random boot configuration (mtvec, mie, mstatus, mcounteren) programmed by the generated program's prologue; privilege regime per knob; U per C-2.
 - Stimulus: riscv-dv generated programs with knob:instr_mix = isa_only (RV32I + Zicsr + Zifencei only), long (>= 20000 instructions) with random data accesses, branches and CSR traffic; memory-response and interrupt regimes scheduled by the cross-cutting regime schedule.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:imem_gnt_delay, knob:imem_rvalid_delay, knob:dmem_gnt_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:priv_regime
@@ -1194,7 +1331,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-032, F-ISA-033, F-ISA-034, F-ISA-036, F-ISA-040, F-ISA-043, F-ISA-044, F-ISA-045
 - Phase: 2
 - Tier: full
-- Preconditions: as TP-ISA-054 with a trap handler that services ecall/ebreak/illegal and returns; debug ROM present.
+- Preconditions: as TP-ISA-054 with a trap handler that services ecall/ebreak/illegal and returns; debug ROM present; U per C-2.
 - Stimulus: riscv-dv programs with knob:instr_mix = csr_heavy plus injected ecall/ebreak/wfi/mret at random points; interrupt storms and sparse debug requests per knobs; privilege alternating.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:irq_regime, knob:irq_line_mix, knob:irq_hold, knob:debug_req_regime, knob:priv_regime
@@ -1208,15 +1345,29 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-012, F-ISA-021, F-ISA-025, F-ISA-028, F-ISA-031, F-ISA-042, F-ISA-046, F-ISA-047, F-ISA-048, F-ISA-049
 - Phase: 2
 - Tier: full
-- Preconditions: as TP-ISA-054 with the skipping trap handler.
+- Preconditions: as TP-ISA-054 with the skipping trap handler; U per C-2.
 - Stimulus: riscv-dv programs (knob:instr_mix = mixed) with 1-2% of instruction slots replaced by a random illegal encoding from the CG-ISA-011 and CG-CMP-004 class tables, in both privilege modes and under all memory regimes.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:priv_regime
-- Fire-check: >= 200 rvfi_trap = 1 retirements with mcause 2 read back, covering >= 20 distinct classes (test histogram).
+- Fire-check: >= 200 rvfi_trap = 1 retirements with mcause 2 read back, covering >= 20 distinct classes (test histogram); under a regime with dcsr.ebreakm/u set for the current mode the illegal ebreak variants (SYSTEM funct12 0x001 with rs1/rd != 0) retire with rvfi_trap = 0 while mcause 2 is read back (RVFI quirk, TP-ISA-057): the histogram counts them by the mcause read-back and gen_isa_compare applies the TP-ISA-057 rule to those records.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_isa_random
 - Bins: CG-ISA-011.cr_class_priv.auto, CG-ISA-011.cr_class_debug.auto, CG-CMP-004.cr_class_priv.auto
+
+### TP-ISA-057: Illegal ebreak variant with dcsr.ebreakm/u set retires with rvfi_trap = 0 (RVFI quirk, informational)
+- Features: F-ISA-042, F-ISA-047
+- Phase: 1
+- Tier: targeted
+- Preconditions: debug ROM at DmHaltAddr; dcsr.ebreakm / dcsr.ebreaku programmed inside debug mode (entered via debug_req_i) then dret; handler as TP-ISA-012 (skips 4 bytes, records mcause/mtval/mepc); M and U iterations (U per C-2).
+- Stimulus: SYSTEM funct3 = 000, funct12 = 0x001 with rs1 != 0, rd != 0 or both nonzero, executed in M with ebreakm in {0, 1} and in U with ebreaku in {0, 1}; canonical ebreak controls (TP-ISA-034/035 behaviour); random legal code around.
+- Randomized: which field is nonzero and its value, privilege, dcsr configuration, position, alignment.
+- Knobs: knob:imem_rvalid_delay, knob:debug_req_regime
+- Fire-check: per seed >= 20 illegal ebreak variants retire under each dcsr configuration; every one is an illegal-instruction exception (handler read-back mcause = 2, mtval = the word, mepc = its pc; no debug entry: rvfi_ext_debug_mode stays 0 and no DmHaltAddr fetch); with the enable clear for the current mode the record has rvfi_trap = 1; with the enable set for the current mode the test records rvfi_trap and logs it as GEN_TEST_INFO (RTL: 0, because rtl/ibex_core.sv:1885-1886 masks rvfi_trap_id with ~(ebrk_insn & ebreak_into_debug) although illegal_insn_prio took the exception, rtl/ibex_controller.sv:318-324, and rtl/ibex_decoder.sv:738-758 keeps ebrk_insn = 1 for the illegal variant).
+- Pass criteria: gen_chk_csr_readback (mcause 2, mtval, mepc; gating); gen_chk_debug (no entry; gating); gen_isa_compare in record mode for the rvfi_trap field of these records (the RVFI convention reports every trapping instruction with rvfi_trap = 1: the observation is reported for the DV Lead's bug-log ruling; RVFI-only, no architectural effect, same class as B18).
+- Expected: informational (RVFI-only quirk, candidate for the bug log; excluded from the pass gate)
+- Test group: gen_isa_illegal_ebreak_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-ISA-011.cp_ebreak_variant_trap.trap0_quirk, CG-ISA-011.cp_ebreak_variant_trap.trap1, CG-ISA-011.cp_class.sys_rs1_nz, CG-ISA-011.cp_class.sys_rd_nz
 
 ---------------------------------------------------------------------------------------------------
 ## AREA MUL
@@ -1225,7 +1376,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-MUL-001
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 2000 mul with independent rs1/rs2 operand mixes (9 classes each, extremes weight 1, random weight 4), sign pairs balanced, register-relation mix, rd = x0 weight 1/16, back-to-back and dependent chains.
 - Randomized: operands, indices, order, PC alignment, M/U.
 - Knobs: knob:imem_rvalid_delay
@@ -1361,19 +1512,19 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Test group: gen_mul_timing
 - Bins: CG-MUL-002.cr_seq.auto, CG-MUL-002.cp_prev.mul, CG-MUL-002.cp_prev.mulh_class, CG-MUL-002.cp_prev.div, CG-MUL-002.cp_prev.alu
 
-### TP-MUL-011: Multiplier result held when WB is not ready
+### TP-MUL-011: Multiplier start deferred behind an outstanding WB memory access (no mid-operation hold)
 - Features: F-MUL-011
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode.
-- Stimulus: load or store with a slow data response (rvalid delayed 2..16 cycles) immediately followed by mul/mulh/mulhsu/mulhu with random operands and an ALU consumer of the result.
-- Randomized: access type, delay, op, operands, whether the mul depends on the load (which becomes a load-use stall instead).
+- Stimulus: load or store (its result unused by the multiply) with the data response delayed W = 1..16 cycles beyond the min1 response, immediately followed by mul/mulh/mulhsu/mulhu with random operands and an ALU consumer of the result; controls with W = 0.
+- Randomized: access type, W, op, operands, whether the multiply depends on the load (which adds a load-use stall, stall_ld_hz, on top of the deferral).
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor confirms the data response arrived after the mul entered ID (mul fetched and retire delayed); RVFI shows the mul result correct and its retire delta > 1 (held).
-- Pass criteria: gen_isa_compare; gen_chk_dbus_proto.
+- Fire-check: dbus monitor timestamps data_rvalid_i of the access W >= 1 cycles after the multiply entered ID (the multiply's fetch data was delivered and the access had left ID before the response); RVFI shows the multiply result correct, exactly one retirement, and its record delta from the access record == 1 + W (mul) or 2 + W (mulh/mulhsu/mulhu): the multiplier does not START until the response cycle (C-9; rtl/ibex_id_stage.sv:733-734, :1014-1016, :1059-1062; multdiv_ready_id_i is 1 in that cycle so mult_hold never engages, rtl/ibex_multdiv_fast.sv:216, :235); a record earlier than the response cycle is a failure (there is no partial progress to hold).
+- Pass criteria: gen_isa_compare (result); gen_chk_dbus_proto; gen_chk_timing_isa (deferred-start rule: delta = own occupancy + W, W from the dbus monitor).
 - Expected: pass
 - Test group: gen_mul_timing
-- Bins: CG-MUL-002.cr_wb_hold.auto, CG-MUL-002.cp_wb_busy.yes, CG-MUL-002.cp_prev.load, CG-MUL-002.cp_prev.store, CG-MUL-002.cp_delta.d3plus
+- Bins: CG-MUL-002.cr_wb_defer.auto, CG-MUL-002.cp_wb_busy.yes, CG-MUL-002.cp_prev.load, CG-MUL-002.cp_prev.store, CG-MUL-002.cp_delta.d3plus
 
 ### TP-MUL-012: div and its 37-cycle latency
 - Features: F-MUL-012
@@ -1384,7 +1535,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: operands, indices, neighbours, alignment.
 - Knobs: knob:imem_rvalid_delay
 - Fire-check: RVFI div retirements with every sign pair; >= 50 div with retire delta exactly 37 unstalled (gap_clean and wb_busy == no).
-- Pass criteria: gen_isa_compare; gen_chk_timing_isa (37 cycles per RTL FSM; doc mismatch D7).
+- Pass criteria: gen_isa_compare; gen_chk_timing_isa (37 ID cycles: MD_IDLE -> MD_FINISH in exactly 36 cycles with valid_o only in cycle S+36, gen_multdiv_bound_props.md MD-1; doc mismatch D7).
 - Expected: pass (doc mismatch D7)
 - Test group: gen_mul_div
 - Bins: CG-MUL-003.cp_op.div, CG-MUL-003.cr_op_sign.auto, CG-MUL-004.cr_dit_div0_delta.dit0_nodiv0_d37, CG-MUL-004.cp_delta.d37, CG-MUL-003.cr_op_dividend.auto
@@ -1440,7 +1591,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: op, dividend, indices, neighbours.
 - Knobs: knob:imem_rvalid_delay
 - Fire-check: RVFI div/divu with rvfi_rs2_rdata = 0 for every dividend class, rvfi_rd_wdata = 0xFFFFFFFF; >= 50 with retire delta 2 unstalled.
-- Pass criteria: gen_isa_compare; gen_chk_timing_isa (2 cycles when DIT off).
+- Pass criteria: gen_isa_compare; gen_chk_timing_isa (2 ID cycles: the 1-cycle MD_IDLE -> MD_FINISH fast path exists only with data_ind_timing = 0, gen_multdiv_bound_props.md MD-2).
 - Expected: pass
 - Test group: gen_mul_div
 - Bins: CG-MUL-003.cr_div0.auto, CG-MUL-003.cp_result_class.all_ones, CG-MUL-004.cr_dit_div0_delta.dit0_div0_d2, CG-MUL-004.cr_op_div0.auto, CG-MUL-004.cp_delta.d2
@@ -1524,7 +1675,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: op, dividend, DIT schedule, indices.
 - Knobs: knob:imem_rvalid_delay
 - Fire-check: under DIT = 1: >= 30 divide-by-zero retirements with delta 37 unstalled and correct results (all-ones / dividend); under DIT = 0 the same ops show delta 2; the cpuctrlsts read-back confirms the DIT value at each measurement.
-- Pass criteria: gen_isa_compare; gen_chk_timing_isa (37 for every divide when DIT = 1); gen_chk_csr_readback.
+- Pass criteria: gen_isa_compare; gen_chk_timing_isa (37 for every divide when DIT = 1: the fast path is disabled by data_ind_timing, MD-2b); gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_mul_div
 - Bins: CG-MUL-004.cr_dit_div0_delta.dit1_div0_d37, CG-MUL-004.cr_dit_div0_delta.dit1_nodiv0_d37, CG-MUL-004.cr_dit_div0_delta.dit0_div0_d2, CG-MUL-004.cp_dit.on, CG-MUL-004.cr_op_div0.auto
@@ -1537,25 +1688,25 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: divides (zero and non-zero divisors) while the irq driver asserts an enabled line, irq_nm_i, or debug_req_i at a random cycle inside the divide's 37-cycle window (the driver is synchronized to the RVFI retirement of the instruction before the divide).
 - Randomized: event kind, cycle offset within the window, op, operands, DIT.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime
-- Fire-check: pin assertion timestamp lies inside the divide's window (between the previous retirement and the divide's retirement); the divide retires with rvfi_trap = 0 and the correct result; the next retirement is the handler (rvfi_intr) or the debug ROM; mepc/dpc read-back == the instruction after the divide; measured irq latency <= 37 + entry cycles.
+- Fire-check: pin assertion timestamp lies inside the divide's window (between the previous retirement and the divide's retirement); the divide retires with rvfi_trap = 0 and the correct result; the next retirement is the handler (rvfi_intr) or the debug ROM; mepc/dpc read-back == the instruction after the divide (C-3: the divide already in ID completes first); measured irq latency <= 37 + entry cycles.
 - Pass criteria: gen_isa_compare; gen_chk_irq (entry after the pipeline drains, mepc); gen_chk_debug (dpc); gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_mul_timing
 - Bins: CG-MUL-004.cr_op_event.auto, CG-MUL-004.cr_event_div0_dit.auto, CG-MUL-004.cp_event_mid.irq, CG-MUL-004.cp_event_mid.debug_req, CG-MUL-004.cp_event_mid.nmi, CG-MUL-004.cp_irq_latency.le37, CG-MUL-004.cp_irq_latency.gt37
 
-### TP-MUL-024: Divide result held in FINISH when WB is not ready
+### TP-MUL-024: Divider start deferred behind an outstanding WB memory access (no FINISH hold)
 - Features: F-MUL-024
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode.
-- Stimulus: store (or load into an unrelated register) with a response delayed 30..60 cycles immediately followed by a divide (zero and non-zero divisors, DIT on/off) and a consumer.
-- Randomized: delay, op, operands, DIT.
+- Stimulus: store (or load into an unrelated register) with the response delayed W = 1..60 cycles beyond min1 (30..60 weighted up so that the deferral exceeds the 36-cycle divide bound) immediately followed by a divide (zero and non-zero divisors, DIT on/off) and a consumer; controls with W = 0.
+- Randomized: W, op, operands, DIT.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor shows the response arriving after the divide's nominal completion (delta > 37 or > 2 respectively); the divide's rvfi_rd_wdata is correct.
-- Pass criteria: gen_isa_compare; gen_chk_dbus_proto.
+- Fire-check: dbus monitor timestamps data_rvalid_i W >= 1 cycles after the divide entered ID; the divide retires exactly once with correct rvfi_rd_wdata and its record delta from the access record == 37 + W (full path: MD_IDLE in the response cycle, MD_FINISH 36 cycles later, gen_multdiv_bound_props.md MD-1) or 2 + W (divide by zero with DIT = 0: 1-cycle fast path, MD-2); the divide never completes before the response (there is no FINISH hold: div_en_i is 0 until the response, C-9, rtl/ibex_id_stage.sv:733-734, :1059-1062; a divide record earlier than the response cycle + 36 / + 1 is a checker failure; rtl-arch T-053 TP-MUL-024).
+- Pass criteria: gen_isa_compare; gen_chk_dbus_proto; gen_chk_timing_isa (37 + W / 2 + W).
 - Expected: pass
 - Test group: gen_mul_timing
-- Bins: CG-MUL-004.cr_op_wb_hold.auto, CG-MUL-004.cp_wb_hold.yes, CG-MUL-004.cp_delta.other
+- Bins: CG-MUL-004.cr_op_wb_defer.auto, CG-MUL-004.cp_wb_defer.yes, CG-MUL-004.cp_delta.other
 
 ### TP-MUL-025: Back-to-back multdiv and dependency forwarding
 - Features: F-MUL-025
@@ -1611,7 +1762,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Pass criteria: gen_isa_compare; gen_chk_irq; gen_chk_debug; gen_chk_dbus_proto.
 - Expected: pass
 - Test group: gen_mul_random
-- Bins: CG-MUL-001.cr_op_rs1.auto, CG-MUL-002.cr_seq.auto, CG-MUL-003.cr_op_divisor.auto, CG-MUL-004.cr_op_event.auto, CG-MUL-004.cr_prev_op.auto, CG-MUL-004.cr_next_op.auto, CG-MUL-001.cr_op_rs2.auto, CG-MUL-001.cr_op_sign.auto, CG-MUL-001.cr_op_same.auto, CG-MUL-002.cp_next_dep.no, CG-MUL-002.cr_op_next_dep.auto, CG-MUL-002.cp_fetch_stall.yes, CG-MUL-003.cp_result_class.other, CG-MUL-003.cr_op_dividend.auto, CG-MUL-004.cp_fetch_stall.yes, CG-MUL-004.cp_wb_hold.no, CG-MUL-004.cr_op_wb_hold.auto
+- Bins: CG-MUL-001.cr_op_rs1.auto, CG-MUL-002.cr_seq.auto, CG-MUL-003.cr_op_divisor.auto, CG-MUL-004.cr_op_event.auto, CG-MUL-004.cr_prev_op.auto, CG-MUL-004.cr_next_op.auto, CG-MUL-001.cr_op_rs2.auto, CG-MUL-001.cr_op_sign.auto, CG-MUL-001.cr_op_same.auto, CG-MUL-002.cp_next_dep.no, CG-MUL-002.cr_op_next_dep.auto, CG-MUL-002.cp_fetch_stall.yes, CG-MUL-003.cp_result_class.other, CG-MUL-003.cr_op_dividend.auto, CG-MUL-004.cp_fetch_stall.yes, CG-MUL-004.cp_wb_defer.no, CG-MUL-004.cr_op_wb_defer.auto
 
 ### TP-MUL-029: Random M-heavy regime with data_ind_timing toggling (Phase 2)
 - Features: F-MUL-012, F-MUL-016, F-MUL-017, F-MUL-022
@@ -1627,16 +1778,16 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Test group: gen_mul_random
 - Bins: CG-MUL-004.cr_op_div0.auto, CG-MUL-004.cr_event_div0_dit.auto, CG-MUL-004.cp_dit.off, CG-MUL-004.cp_dit.on
 
-### TP-MUL-030: Divider FSM freeze arc: bound SVA cover and assertion under instr_executing-dropping stimuli
+### TP-MUL-030: Divider / multiplier bound properties (gen_sva_multdiv MD-1..MD-5) and the unreachable hold arc under instr_executing-dropping stimuli
 - Features: F-MUL-028
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; gen_sva_multdiv bound into ibex_multdiv_fast (probe candidate, coverage/assertion only, OQ-9); PMP region and dbus error injection available; mie/mstatus.MIE set; debug ROM present; cpuctrlsts.data_ind_timing randomized per iteration.
+- Preconditions: M-mode (U iterations per C-2); gen_sva_multdiv (rtl-arch gen_multdiv_bound_props.md Sections 3-4: MD-1 sva_div_full_bound = 36 cycles exact, MD-2 sva_div_zero_fast = 1 cycle, MD-2b sva_div_zero_dit_full, MD-3 sva_div_no_hold, MD-4 sva_div_seq, MD-5 sva_mul_bound; covers MD-C1..MD-C4) bound into u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i (probe candidate P8, coverage/assertion only, OQ-9); PMP region and dbus error injection available; mie/mstatus.MIE set; debug ROM present; cpuctrlsts.data_ind_timing randomized per iteration.
 - Stimulus: div/divu/rem/remu (zero and non-zero divisors) immediately after a slow load/store (rvalid 2..40 cycles), immediately after a faulting load/store (PMP or data_err_i, handler returns to the access), with an enabled irq line / irq_nm_i / debug_req_i asserted inside the divide window, and with the instruction after the divide fetched from a PMP-denied or instr_err_i word; plain divides as controls.
 - Randomized: op, operands, DIT, which disturbance, response delay / cycle offset, fault kind, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:pmp_regime, knob:irq_regime, knob:debug_req_regime, knob:imem_err_rate
-- Fire-check: every divide whose first cycle was observed (previous retirement seen, dbus idle or busy as scheduled) retires exactly once on RVFI with the correct rvfi_rd_wdata, also after a fault-kill and re-execution of the same PC; the test records the gen_sva_multdiv cover count (div_en_i == 0 && md_state_q != MD_IDLE), expected 0 per gen_hierarchy_map.md H-D3 - a nonzero count is logged as a reachability finding, not as a failure; the assertion (|=> $stable(md_state_q)) reports no failure over the run.
-- Pass criteria: gen_sva_multdiv (bound assertion never fails; new); gen_isa_compare; gen_chk_timing_isa (37 / 2 cycles when unstalled); gen_chk_dbus_proto; gen_chk_pmp.
+- Fire-check: every divide whose first cycle was observed (previous retirement seen, dbus idle or busy as scheduled) retires exactly once on RVFI with the correct rvfi_rd_wdata and the C-9 delta (37 + W, or 2 + W for divide by zero with DIT = 0, W = the deferral behind the slow access; 37 / 2 in the plain and event contexts), also after a fault-kill and re-execution of the same PC; when the bind is present the test records the MD-C1..MD-C3 cover counts (>= 1 each per seed: full path, zero fast path, zero under DIT) and the MD-C4 hold-attempt cover count (md_state_q == MD_FINISH && !multdiv_ready_id_i), expected 0 per C-9 / H-D3 - a nonzero MD-C4 count is logged as a reachability finding (GEN_TEST_INFO), not a failure; the slow_wb / fault_wb contexts never start the divide before the response, consistent with the zero count. The former freeze-arc assertion (div_en_i == 0 && md_state_q != MD_IDLE |=> $stable(md_state_q)) is structurally implied by the state-register enable (rtl/ibex_multdiv_fast.sv:99, :101-115) and can never fail, so it is kept as a cover only and is not a checker (rtl-arch T-053 TP-MUL-030).
+- Pass criteria: gen_isa_compare and gen_chk_timing_isa (RVFI clauses: the pass gate; 37 + W / 2 + W); gen_sva_multdiv MD-1..MD-5 (bound assertions with the mutation classes of gen_multdiv_bound_props.md; probe-gated until the bind is registered); gen_chk_dbus_proto; gen_chk_pmp.
 - Expected: pass
 - Test group: gen_mul_timing
 - Bins: CG-MUL-005.cp_div_ctx.plain, CG-MUL-005.cp_div_ctx.slow_wb, CG-MUL-005.cp_div_ctx.fault_wb, CG-MUL-005.cp_div_ctx.irq_mid, CG-MUL-005.cp_div_ctx.debug_mid, CG-MUL-005.cp_div_ctx.fetch_err_next (CG-MUL-005 cp_sva_checked yes is probe-gated until the gen_sva_multdiv bind is registered, not in this manifest), CG-MUL-005.cr_ctx_op.auto, CG-MUL-005.cr_ctx_dit.auto
@@ -1648,7 +1799,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-001
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode.
+- Preconditions: M-mode; U per C-2.
 - Stimulus: >= 5000 instructions with a 50/50 compressed/32-bit mix so 32-bit instructions frequently start at pc[1] = 1 and straddle a word boundary; all Zca instruction kinds present.
 - Randomized: mix ratio per block, instruction kinds, operands, alignment, M/U.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:imem_outstanding_cap
@@ -1676,7 +1827,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-003
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: halfwords with Q0 funct3 000 and instr[12:5] = 0: 0x0000 and nonzero rd' variants (0x0000 | rd' << 2); at both alignments.
 - Randomized: rd' field, alignment, privilege, position.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1718,7 +1869,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-006
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.lwsp x0, uimm(sp) with random uimm; c.swsp x0 controls.
 - Randomized: uimm, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1732,7 +1883,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-007
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: Q0 funct3 001/011/101/111 and Q2 funct3 001/011/111 halfwords with random remaining bits.
 - Randomized: which of the seven, fields, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1844,7 +1995,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-015
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.lui rd, 0 encodings (instr[12] = 0 and instr[6:2] = 0, rd not in {x0, x2}); c.lui x0, nzimm followed by an x0 reader.
 - Randomized: rd, nzimm, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1872,7 +2023,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-017
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.addi16sp with nzimm = 0 (illegal); nzimm -512 and +496; x2 near 0 with negative nzimm (-512, -16, random) and near 0xFFFFFFFF with positive nzimm (496, 16, random) so the result wraps (x2 restored afterwards).
 - Randomized: which case, x2 within the wrap window, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1900,7 +2051,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-019
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.srli/c.srai with instr[12] = 1 (any shamt[4:0]); c.srli/c.srai with shamt = 0 followed by a reader of rd'.
 - Randomized: op, rd', shamt[4:0], operand, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1942,7 +2093,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-022
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: CA-format halfwords with {instr[12], instr[6:5]} = 100 and 101 and random registers.
 - Randomized: which, registers, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1984,7 +2135,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-025
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.slli with instr[12] = 1; c.slli rd, 0; c.slli x0, shamt; c.slli x0, 0; each hint followed by a reader.
 - Randomized: rd, shamt, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2040,7 +2191,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-029
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: the halfword 0x8002 at both alignments.
 - Randomized: alignment, position, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2096,7 +2247,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-033
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-ISA-034/035 (dcsr.ebreakm/ebreaku in both states).
+- Preconditions: as TP-ISA-034/035 (dcsr.ebreakm/ebreaku in both states); U per C-2.
 - Stimulus: c.ebreak (0x9002) at both alignments in M and U with the debug enables in both states.
 - Randomized: alignment, privilege, dcsr configuration.
 - Knobs: knob:debug_req_regime
@@ -2114,8 +2265,8 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: c.sb/c.sh followed by c.lbu/c.lhu/c.lh of the same location over x8..x15, all uimm values (0..3 bytes, 0/2 halves), data with both msb states; bases at all four byte alignments so halfword accesses are also misaligned.
 - Randomized: registers, uimm, base, data.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: RVFI retirements of all five with rvfi_mem_rmask/wmask by size and correct sign/zero extension in rvfi_rd_wdata; every uimm value observed; misaligned halfword accesses split on the data bus.
-- Pass criteria: gen_isa_compare; gen_chk_dbus_proto (byte enables, split).
+- Fire-check: RVFI retirements of all five with rvfi_mem_rmask/wmask by size and correct sign/zero extension in rvfi_rd_wdata; every uimm value observed; a halfword at addr[1:0] = 3 (crossing the word boundary) splits into two bus accesses, while a halfword at addr[1:0] = 1 is misaligned but a single word access with be = 0110 (rtl/ibex_load_store_unit.sv:403-405; rtl-arch T-053 TP-CMP-034).
+- Pass criteria: gen_isa_compare; gen_chk_dbus_proto (byte enables; split only for addr[1:0] = 3).
 - Expected: pass
 - Test group: gen_cmp_zcb
 - Bins: CG-CMP-005.cp_insn.c_lbu, CG-CMP-005.cp_insn.c_lhu, CG-CMP-005.cp_insn.c_lh, CG-CMP-005.cp_insn.c_sb, CG-CMP-005.cp_insn.c_sh, CG-CMP-005.cr_ls_b.auto, CG-CMP-005.cr_ls_h.auto, CG-CMP-005.cr_load_sign.auto, CG-CMP-005.cr_half_misaligned.auto
@@ -2124,7 +2275,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-035
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: c.sh encodings with instr[6] = 1; Q0 funct3 100 with instr[12:10] = 1xx (all four values) and random other bits.
 - Randomized: which, fields, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2152,7 +2303,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-037
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: Q1 funct 100111 with instr[4:2] = 100 (c.zext.w), 110, 111 over random rd'.
 - Randomized: which, rd', alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2250,11 +2401,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-044
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes; x2 valid.
+- Preconditions: M/U; handler skipping 2 bytes; x2 valid; U per C-2.
 - Stimulus: the four instructions with rlist 0, 1, 2, 3 and random spimm.
 - Randomized: instruction, rlist, spimm, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: one RVFI entry with rvfi_trap = 1 and rvfi_ext_expanded_insn_valid = 1; mcause 2, mtval = halfword; no data-bus access; x2 unchanged; the next cm.* instruction expands normally (FSM idle).
+- Fire-check: one RVFI entry with rvfi_trap = 1, rvfi_ext_expanded_insn_valid = 1, rvfi_ext_expanded_insn = the halfword and rvfi_insn = the synthesized 32-bit word (the reserved encoding enters ID tagged INSTR_EXPANDED, C-12 / X-14; the word itself is RTL-defined and not asserted); mcause 2, mtval = halfword; no data-bus access; x2 unchanged; the next cm.* instruction expands normally (FSM idle).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_dbus_proto; gen_chk_zcmp_seq.
 - Expected: pass
 - Test group: gen_cmp_illegal
@@ -2321,14 +2472,14 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: targeted
 - Preconditions: as TP-CMP-047; the ra slot holds a value different from the current x1.
-- Stimulus: cm.popret/cm.popretz with rlist 4 (load and ret separated only by the addi) and larger rlists; data response delays varied so the ra load is sometimes still in WB when the ret enters ID.
+- Stimulus: cm.popret/cm.popretz with rlist 4 (load and ret separated only by the addi) and larger rlists; data response delays varied (W = 0..8 beyond min1) so that the ra load's response often arrives after the addi micro-op entered ID: the addi then starts deferred (C-9) and the ret enters ID only after the load has left WB.
 - Randomized: rlist, spimm, delays, old vs new ra values.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the ret micro-op's rvfi_rs1_rdata equals the ra load micro-op's rvfi_rd_wdata (new value, not the old x1) and rvfi_pc_wdata matches; observed under min1, short and long response classes.
-- Pass criteria: gen_chk_zcmp_seq; gen_isa_compare.
+- Fire-check: the ret micro-op's rvfi_rs1_rdata equals the ra load micro-op's rvfi_rd_wdata (new value, not the old x1) and rvfi_pc_wdata matches; observed under min1, short and long response classes; for the deferred cases (dbus monitor: the ra response arrived after the addi entered ID) the addi record delta from the load record == 1 + W and the ret follows with delta 1. The ret always reads ra from the register file: the intervening addi cannot execute while the load is outstanding (instr_executing & ~outstanding_memory_access, rtl/ibex_id_stage.sv:1059-1062) and loads are never forwarded (:1117-1118), so there is no 'ra still in WB when the ret enters ID' case (rtl-arch T-053 TP-CMP-049 UNREACHABLE-PRECONDITION; the former popret_ra_fwd bin is ignored).
+- Pass criteria: gen_chk_zcmp_seq; gen_isa_compare; gen_chk_timing_isa (addi deferral 1 + W).
 - Expected: pass
 - Test group: gen_cmp_zcmp_basic
-- Bins: CG-CMP-006.cr_popret_r4.popret_r4, CG-CMP-006.cr_popret_r4.popretz_r4, CG-CMP-009.cp_hazard.popret_ra_fwd, CG-CMP-009.cr_hazard_delay.auto
+- Bins: CG-CMP-006.cr_popret_r4.popret_r4, CG-CMP-006.cr_popret_r4.popretz_r4, CG-CMP-009.cp_hazard.popret_ra_deferred, CG-CMP-009.cr_hazard_delay.auto
 
 ### TP-CMP-050: cm.mvsa01
 - Features: F-CMP-050
@@ -2348,14 +2499,14 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-051
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-047.
+- Preconditions: M/U; handler as TP-ISA-047; U per C-2.
 - Stimulus: cm.mvsa01 with r1s' == r2s' for all eight values, a0 != a1, destination pre-loaded with a third value.
 - Randomized: r1s', a0/a1, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: per seed, all eight cm.mvsa01 encodings with r1s' == r2s' reach retirement (RVFI entries with rvfi_ext_expanded_insn = the halfword), asserted; for each the test ASSERTS the spec outcome (rvfi_trap = 1, handler read-back mcause 2, mtval = the halfword, destination unchanged) and logs the RTL outcome (two moves retire, final destination value = a1).
 - Pass criteria: gen_isa_compare with the spec-following expectation (zcmp.adoc norm:cm-mvsa01_res: r1s' != r2s' for a legal encoding; reserved => illegal instruction, mcause 2); the RTL executes both moves (final value = a1) => the assertion and the comparator fail (B4). cm.mva01s has no such constraint and stays in TP-CMP-052.
 - Expected: expected-fail (B4)
-- Test group: gen_cmp_zcmp_basic
+- Test group: gen_cmp_zcmp_basic_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CMP-007.cr_insn_equal.cm_mvsa01_yes, CG-CMP-007.cp_equal.yes
 
 ### TP-CMP-052: cm.mva01s
@@ -2390,7 +2541,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-054
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: Q2 funct3 101 halfwords with instr[12:8] outside {11000, 11010, 11100, 11110, 011xx} (incl. the Zcmt cm.jt/cm.jalt space 000xx) and, within 011xx, instr[6:5] = 00 and 10; random other bits.
 - Randomized: which, bits, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2419,28 +2570,28 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; mie and mstatus.MIE set; handler records mepc and returns with mret (no mepc change); stack region pre-cleared so repeated stores are countable.
-- Stimulus: cm.push with rlist 4..15; the irq driver asserts an enabled line synchronized to the k-th store micro-op's retirement (k random in 0..N-1), also nmi variants; data-response delays varied.
+- Stimulus: cm.push with rlist 4..15; the irq driver asserts an enabled line synchronized to the RVFI record of the k-th store micro-op (k random in 0..N-1; the record lags that micro-op's ID exit by about 2 cycles, so at min latency store k+1 is in WB and store k+2 is in ID at the pin edge), also nmi variants; data-response delays varied.
 - Randomized: rlist, spimm, k, line, delays.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:dmem_rvalid_delay
-- Fire-check: RVFI shows k+1 (or k+2 given the in-flight store) store micro-ops, then the handler's first instruction with rvfi_intr = 1 and mepc read-back = the cm.push PC; no addi sp micro-op before the handler; after mret the full micro-op sequence retires again from store 0; dbus monitor counts the repeated stores.
+- Fire-check: for k <= N-3: RVFI shows k+2 or k+3 store micro-ops (the micro-op in ID at the pin edge completes, C-3 / X-7: halt_if stops only new entries; never k+1), then the handler's first instruction with rvfi_intr = 1 and mepc read-back = the cm.push PC; no addi sp micro-op before the handler; after mret the full micro-op sequence retires again from store 0; dbus monitor counts the repeated stores. For k >= N-2 the addi sp (the LAST micro-op) is already in ID, or enters before IF is halted, and completes: the whole cm.push retires before the handler (deferred outcome, bins irq_last_deferred / nmi_last_deferred), mepc = cm.push PC + 2, sp adjusted, no re-execution; the test classifies each iteration by k and asserts the matching outcome (rtl-arch T-053 TP-CMP-056).
 - Pass criteria: gen_chk_zcmp_seq (partial sequence, sp unchanged, restart from micro-op 0); gen_chk_irq (mepc, entry between micro-ops); gen_isa_compare (folded step after the handler); gen_chk_dbus_proto.
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
-- Bins: CG-CMP-008.cp_insn.cm_push, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.nmi_ls_taken, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes, CG-CMP-008.cr_insn_rlist_event.auto
+- Bins: CG-CMP-008.cp_insn.cm_push, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.nmi_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_last_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_last_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes, CG-CMP-008.cr_insn_rlist_event.auto
 
 ### TP-CMP-057: Interrupt during the cm.pop / cm.popret load phase
 - Features: F-CMP-057
 - Phase: 1
 - Tier: targeted
 - Preconditions: as TP-CMP-056 with a pre-filled frame.
-- Stimulus: cm.pop/cm.popret/cm.popretz with the interrupt synchronized to the k-th load micro-op.
+- Stimulus: cm.pop/cm.popret/cm.popretz with the interrupt synchronized to the RVFI record of the k-th load micro-op (k random in 0..N-1), also nmi variants.
 - Randomized: instruction, rlist, spimm, k, delays.
 - Knobs: knob:irq_regime, knob:dmem_rvalid_delay
-- Fire-check: the loads completed before the interrupt have rvfi_rd_wdata = frame values (registers keep them); no addi/li/ret micro-op before the handler; mepc = cm.* PC; after mret the whole sequence re-executes and the ret happens once.
+- Fire-check: for k <= N-3: k+2 or k+3 loads retire (the micro-op in ID at the pin edge completes, C-3) with rvfi_rd_wdata = frame values (registers keep them); no addi/li/ret micro-op before the handler; mepc = cm.* PC; after mret the whole sequence re-executes and the ret happens once. For k >= N-2 the addi sp (COMMIT) is in ID when the pin rises, completes and blocks handle_irq until the LAST micro-op retires (rtl/ibex_controller.sv:498-500): the sequence finishes, the ret executes once BEFORE the handler and mepc = the ra target (cm.pop: PC + 2) - the deferred outcome (bins irq_commit_deferred / nmi_commit_deferred, cp_reexec.na); the test classifies each iteration by k (rtl-arch T-053 TP-CMP-057).
 - Pass criteria: gen_chk_zcmp_seq; gen_chk_irq; gen_isa_compare.
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
-- Bins: CG-CMP-008.cp_insn.cm_pop, CG-CMP-008.cp_insn.cm_popret, CG-CMP-008.cp_insn.cm_popretz, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes
+- Bins: CG-CMP-008.cp_insn.cm_pop, CG-CMP-008.cp_insn.cm_popret, CG-CMP-008.cp_insn.cm_popretz, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_commit_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_commit_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na
 
 ### TP-CMP-058: Interrupts are blocked during the COMMIT micro-ops
 - Features: F-CMP-058
@@ -2460,15 +2611,15 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-059
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug ROM; dcsr.step programmed in debug mode for the step iterations; tdata1/tdata2 programmed (execute address match on the cm.* PC or the next PC) for the trigger iterations.
+- Preconditions: debug ROM; dcsr.step programmed in debug mode for the step iterations; tdata1/tdata2 programmed inside debug mode (trigger CSRs are writable only there, D12) with an execute address match on the NEXT PC (deferred class) or on the cm.* PC itself (pre-micro-op class) for the trigger iterations.
 - Stimulus: cm.push/pop/popret/popretz/mvsa01/mva01s with debug_req_i asserted synchronized to the k-th micro-op; single-stepping over a cm.* instruction; trigger on the next PC.
 - Randomized: instruction, rlist/spimm, k, debug cause, delays.
 - Knobs: knob:debug_req_regime, knob:dmem_rvalid_delay
-- Fire-check: all micro-ops retire (full sequence on RVFI) before rvfi_ext_debug_mode rises; dpc read-back = next PC (cm.* PC + 2); for step, exactly one architectural instruction (one _last) retired between dret and the debug re-entry.
+- Fire-check: debug_req_i, step and a trigger on the next PC: all micro-ops retire (full sequence on RVFI) before rvfi_ext_debug_mode rises; dpc read-back = the next PC, which is cm.* PC + 2 for cm.push/pop/mvsa01/mva01s and the ra target for cm.popret/popretz (dpc = pc_if after the ret's pc_set, X-19 (b)); for step, exactly one architectural instruction (one _last) retired between dret and the debug re-entry. A trigger on the cm.* PC itself matches pc_if while the PREVIOUS instruction is in ID (the Zcmp mask of rtl/ibex_controller.sv:474-477 reads that instruction's NOT_EXPANDED tag; rtl/ibex_cs_registers.sv:1872) and enters debug BEFORE micro-op 0: no micro-op of that PC retires, dpc = cm.* PC, dcsr.cause = 2 (bin trigger_pre_uop0); after dret the sequence runs from micro-op 0 (rtl-arch T-053 TP-CMP-059).
 - Pass criteria: gen_chk_debug (entry after the sequence, dpc, cause); gen_chk_zcmp_seq; gen_isa_compare.
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
-- Bins: CG-CMP-008.cr_event_phase_outcome.debug_ls_deferred, CG-CMP-008.cr_event_phase_outcome.debug_commit_deferred, CG-CMP-008.cr_event_phase_outcome.step_deferred, CG-CMP-008.cr_event_phase_outcome.trigger_deferred, CG-CMP-008.cp_event.debug_req, CG-CMP-008.cp_event.step, CG-CMP-008.cp_event.trigger, CG-CMP-008.cr_insn_event.auto
+- Bins: CG-CMP-008.cr_event_phase_outcome.debug_ls_deferred, CG-CMP-008.cr_event_phase_outcome.debug_commit_deferred, CG-CMP-008.cr_event_phase_outcome.step_deferred, CG-CMP-008.cr_event_phase_outcome.trigger_deferred, CG-CMP-008.cr_event_phase_outcome.trigger_pre_uop0, CG-CMP-008.cp_event.debug_req, CG-CMP-008.cp_event.step, CG-CMP-008.cp_event.trigger, CG-CMP-008.cr_insn_event.auto
 
 ### TP-CMP-060: PMP store fault on the k-th pushed store
 - Features: F-CMP-060
@@ -2551,7 +2702,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Fire-check: per seed >= 200 completed cm.push/cm.pop sequences retire with dummy_instr_en = 1 (TB CSR model) and csrr minstret pairs around each block show (minstret delta) - (RVFI retirements in the block) >= 20, i.e. >= 20 dummy instructions were inserted (dummies are counted in minstret, bug candidate B7, which makes the insertion count boundary-observable; when probe P1 is registered it additionally timestamps insertions inside expansions); the checker then counts stores/loads per sequence on the dbus.
 - Pass criteria: gen_chk_zcmp_seq (every sequence has exactly N stores/loads and the full register order); gen_chk_dbus_proto; gen_isa_compare. B8 predicts a skipped micro-op.
 - Expected: expected-fail (B8)
-- Test group: gen_cmp_zcmp_events
+- Test group: gen_cmp_zcmp_events_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CMP-006.cp_dummy_en.on, CG-CMP-006.cr_insn_dummy.auto (CG-CMP-008 cp_event dummy_inserted / cr_event_phase_outcome dummy_ls, dummy_commit are probe-gated (P1), not in manifest)
 
 ### TP-CMP-066: Zcmp latency and back-to-back sequences
@@ -2572,11 +2723,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-066
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 2 bytes.
+- Preconditions: M/U; handler skipping 2 bytes; U per C-2.
 - Stimulus: every illegal 16-bit class of CG-CMP-004 at both alignments, in M and U.
 - Randomized: class, bits, alignment, privilege.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: for each retirement rvfi_insn == zero-extended halfword and the handler's mtval == the same value; cp_rvfi_insn_ok and cp_mtval_ok recorded for every class.
+- Fire-check: for each retirement the handler's mtval == the zero-extended halfword; rvfi_insn == the zero-extended halfword for every class except the four Zcmp reserved rlist 0..3 classes (push/pop/popret/popretz_rlist_res), which enter ID tagged INSTR_EXPANDED so that rvfi_insn is the synthesized 32-bit micro-op word and the halfword is on rvfi_ext_expanded_insn (C-12 / X-14; rtl/ibex_core.sv:2264-2268; rtl/ibex_compressed_decoder.sv:626, :691; rtl-arch T-053 TP-CMP-067); cp_rvfi_insn_ok (class-dependent predicate) and cp_mtval_ok recorded for every class.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_cmp_illegal
@@ -2614,7 +2765,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-001, F-CMP-002, F-CMP-004, F-CMP-005, F-CMP-008, F-CMP-010, F-CMP-012, F-CMP-014, F-CMP-016, F-CMP-018, F-CMP-020, F-CMP-021, F-CMP-023, F-CMP-024, F-CMP-026, F-CMP-028, F-CMP-030, F-CMP-032, F-CMP-034, F-CMP-036, F-CMP-038
 - Phase: 2
 - Tier: full
-- Preconditions: random boot configuration; skipping trap handler.
+- Preconditions: random boot configuration; skipping trap handler; U per C-2.
 - Stimulus: riscv-dv programs with knob:instr_mix = compressed_heavy (Zca + Zcb, 70% compressed), 1% HINT code points and 0.5% illegal compressed encodings injected, all memory regimes and privilege alternation.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:imem_gnt_delay, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:priv_regime
@@ -2642,7 +2793,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-CMP-069
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; trap handler reading mcause/mtval/mepc; for the PMP iterations a region without X covering exactly the word that holds the cm.* halfword (re-enabled by the handler before mret); for the bus-error iterations the ibus agent returns instr_err_i for that word once; stack region mapped and pre-cleared; pushed registers pre-loaded.
+- Preconditions: M/U; trap handler reading mcause/mtval/mepc; for the PMP iterations a region without X covering exactly the word that holds the cm.* halfword (re-enabled by the handler before mret); for the bus-error iterations the ibus agent returns instr_err_i for that word once; stack region mapped and pre-cleared; pushed registers pre-loaded; U per C-2.
 - Stimulus: each of cm.push/cm.pop/cm.popret/cm.popretz/cm.mvsa01/cm.mva01s (random rlist/spimm/registers) placed at both halfword alignments, reached sequentially and as a jump target, with the error kind alternating; after the handler clears the error the same PC re-executes (or a different cm.* follows) so the restart from micro-op 0 is observed.
 - Randomized: instruction, rlist/spimm, alignment, error kind, privilege, how the halfword is reached, memory-response regime.
 - Knobs: knob:imem_err_rate, knob:pmp_regime, knob:imem_rvalid_delay
@@ -2679,7 +2830,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-001
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; handler as TP-ISA-047 so a wrongly-illegal encoding is visible and skipped.
+- Preconditions: M-mode; handler as TP-ISA-047 so a wrongly-illegal encoding is visible and skipped; U per C-2.
 - Stimulus: every legal mnemonic of the ENC table (58 rows: register and immediate forms, all canonical funct7 bits) with random operands, each >= 20 times, in random order and both privilege modes.
 - Randomized: operands, register indices, immediates within their legal fields, order, privilege, PC alignment.
 - Knobs: knob:imem_rvalid_delay
@@ -2847,7 +2998,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-013
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 4 bytes for the illegal case.
+- Preconditions: M/U; handler skipping 4 bytes for the illegal case; U per C-2.
 - Stimulus: rol/ror by 0, by 32 (rs2 = 32, 0xFFFFFFE0, 0x80000020), by 31 and by 1 (ror 31 vs rol 1 equality checked by the program); rori with instr[25] = 1 (illegal).
 - Randomized: case, operand, indices, rs2 upper bits, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -2931,7 +3082,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-019
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 4 bytes.
+- Preconditions: M/U; handler skipping 4 bytes; U per C-2.
 - Stimulus: index 0 and 31 for all eight ops; bset on a set bit, bclr on a clear bit, binv twice on the same bit; rs2 = 0xFFFFFFFF and other upper-bit patterns for the register forms; bclri/bseti/binvi/bexti with instr[25] = 1 (illegal).
 - Randomized: case, operand, indices, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -3001,7 +3152,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-024
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 4 bytes for the illegal case.
+- Preconditions: M/U; handler skipping 4 bytes for the illegal case; U per C-2.
 - Stimulus: shfli/unshfli with every control 0..15 (15 = zip/unzip) and shfl/unshfl with rs2[3:0] over 0..15 (upper bits random); operands single-bit and random; the program checks unshfl(shfl(x, c), c) == x; shfli with instr[26] = 1 (illegal).
 - Randomized: control order, operands, indices, rs2 upper bits, privilege.
 - Knobs: knob:imem_rvalid_delay
@@ -3128,10 +3279,10 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode.
-- Stimulus: crc32.w/crc32c.w of 0 (result 0); crc32.b with rs1[31:8] random and rs1[7:0] fixed (result must not depend on the high bits: two instructions differing only above bit 8); crc32.h likewise above bit 16; all-ones inputs; crc32.w vs two crc32.h vs four crc32.b equivalence checked by the program.
+- Stimulus: crc32.w/crc32c.w of 0 (result 0); crc32.b pairs with the same rs1[7:0] and different rs1[31:8] (the results differ by exactly (rs1 ^ rs1') >> 8: result = clmul_part(rs1[7:0]) ^ (rs1 >> 8), rtl/ibex_alu.sv:1247-1248, which is the draft's crc32(x, 8) shifting x right 8 times); crc32.h pairs likewise above bit 16 (delta >> 16); all-ones inputs; crc32.w vs two crc32.h vs four crc32.b equivalence checked by the program.
 - Randomized: fixed low bits, high-bit noise, indices.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: zero inputs observed with rvfi_rd_wdata = 0 for the .w forms; high_only class observed for .b and .h with results equal to the low_only counterpart; all-ones observed; equivalence check passes.
+- Fire-check: zero inputs observed with rvfi_rd_wdata = 0 for the .w forms; high_only and low_only classes observed for .b and .h with the linearity identity crc32.b(x ^ d) == crc32.b(x) ^ (d >> 8) for every d with d[7:0] = 0 (crc32.h: d[15:0] = 0, >> 16) holding on every pair - the results DO depend on the high bits (rtl-arch T-053 TP-BIT-033 corrects the former 'independent of the high bits' check); all-ones observed; equivalence check passes.
 - Pass criteria: gen_chk_bitmanip_ref.
 - Expected: pass
 - Test group: gen_bit_draft
@@ -3141,7 +3292,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-034
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 4 bytes.
+- Preconditions: M/U; handler skipping 4 bytes; U per C-2.
 - Stimulus: OP funct7/funct3 0000100/110 and 0100100/110 with random registers.
 - Randomized: which, registers, privilege, position.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -3155,7 +3306,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-035
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler skipping 4 bytes.
+- Preconditions: M/U; handler skipping 4 bytes; U per C-2.
 - Stimulus: add.uw, sh1add.uw, sh2add.uw, sh3add.uw, rolw, rorw, packw (OP-32 0x3b) and slli.uw, clzw, ctzw, cpopw, roriw (OP-IMM-32 0x1b) encodings with random registers.
 - Randomized: which, registers, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -3173,7 +3324,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* with rd = x0 and rd != x0; irq / debug_req_i / nmi asserted synchronized to the first cycle of the op (from the previous retirement); loads/stores outstanding in WB when the op enters ID.
 - Randomized: op, operands, event kind, WB state, delays.
 - Knobs: knob:irq_regime, knob:debug_req_regime, knob:dmem_rvalid_delay
-- Fire-check: pin assertion timestamped inside the op's two-cycle window; the op retires with rvfi_trap = 0 and the correct result (rvfi_rs3_* populated for ternary ops) before the handler/debug entry; mepc/dpc = next PC; with WB busy the delta is > 2 and the result still correct.
+- Fire-check: pin assertion timestamped inside the op's two-cycle window; the op retires with rvfi_trap = 0 and the correct result (rvfi_rs3_* populated for ternary ops) before the handler/debug entry; mepc/dpc = next PC (C-3); with WB busy the op's first cycle is deferred until the response (C-9), so the delta is 2 + W and the result still correct.
 - Pass criteria: gen_isa_compare / gen_chk_bitmanip_ref; gen_chk_irq; gen_chk_debug; gen_chk_timing_isa.
 - Expected: pass
 - Test group: gen_bit_multicycle
@@ -3183,7 +3334,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-037
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; handler as TP-ISA-047 (records any trap).
+- Preconditions: M/U; handler as TP-ISA-047 (records any trap); U per C-2.
 - Stimulus: sloi with instr[26:25] in {01, 10, 11}; sroi/grevi/gorci/unshfli with instr[25] = 1; shfli with instr[25] = 1; random operands; canonical controls alongside.
 - Randomized: which, fields, operands, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -3212,7 +3363,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode.
-- Stimulus: two-cycle ops whose rs1, rs2 or rs3 was written by the immediately preceding ALU op (forwarding) or by a load still in WB (stall_ld_hz, incl. rs3 read in the second cycle); consumers of the result in the next instruction; data-response delays varied.
+- Stimulus: two-cycle ops whose rs1, rs2 or rs3 was written by the immediately preceding ALU op (forwarding) or by a load still in WB (stall_ld_hz for rs1/rs2; for rs3 the op's first cycle is deferred until the response, C-9, so the second-cycle rs3 read comes from the register file and never stalls on the rs3 port); consumers of the result in the next instruction; data-response delays varied.
 - Randomized: op, which source depends, producer kind, delays, operands.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
 - Fire-check: every cr_class_prev combination observed with rvfi_rs1/rs2/rs3_rdata equal to the producer's rvfi_rd_wdata; next-dependent consumer sees the op's result.
@@ -3239,7 +3390,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BIT-001, F-BIT-002, F-BIT-004, F-BIT-005, F-BIT-007, F-BIT-009, F-BIT-010, F-BIT-011, F-BIT-012, F-BIT-014, F-BIT-015, F-BIT-016, F-BIT-017, F-BIT-018, F-BIT-020, F-BIT-022, F-BIT-024, F-BIT-025, F-BIT-027, F-BIT-028, F-BIT-030, F-BIT-032, F-BIT-038
 - Phase: 2
 - Tier: full
-- Preconditions: random boot configuration; skipping trap handler.
+- Preconditions: random boot configuration; skipping trap handler; U per C-2.
 - Stimulus: riscv-dv programs with knob:instr_mix = bitmanip_heavy: ratified Zba/Zbb/Zbc/Zbs from the generator plus the draft set injected from the ENC table (canonical encodings only) at >= 20% of instructions, mixed with loads/stores and branches; 0.5% illegal Zb*-space encodings.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:priv_regime
@@ -3263,19 +3414,19 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Test group: gen_bit_random
 - Bins: CG-BIT-010.cr_class_event.auto, CG-BIT-010.cr_class_wb.auto, CG-BIT-010.cr_class_prev.auto, CG-BIT-010.cr_class_next.auto, CG-BIT-009.cp_delta.d2plus, CG-BIT-010.cp_fetch_stall.yes
 
-### TP-BIT-043: Two-cycle bitmanip op held in its second cycle by a busy writeback stage
+### TP-BIT-043: Two-cycle bitmanip op deferred in its first cycle by an outstanding WB memory access
 - Features: F-BIT-041
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; cpuctrlsts.icache_enable = 0 pinned for the whole test (the ibus monitor then sees every fetch; excluded from random cpuctrlsts writes) with knob:imem_rvalid_delay pinned to min1 and knob:imem_gnt_delay to same_cycle for the measurement blocks (+gen_regime_pin).
-- Stimulus: load or store with rvalid delayed 3..24 cycles immediately followed by rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* whose operands do not depend on the load (so the hold is WB-busy, not a load-use stall), then a consumer of the result; controls with response delay 1.
-- Randomized: access type, delay, op, operands, rs3 choice, whether a consumer follows.
+- Stimulus: load or store with the response delayed W = 1..24 cycles beyond min1 immediately followed by rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* whose operands do not depend on the load (so the deferral is the outstanding WB access, not a load-use stall), then a consumer of the result; controls with W = 0.
+- Randomized: access type, W, op, operands, rs3 choice, whether a consumer follows.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor timestamps data_rvalid_i of the preceding access after the op entered ID (previous retirement seen before the response); the op retires exactly once with retire delta = 2 + hold cycles and correct rvfi_rd_wdata (rvfi_rs3_* populated for the ternary forms); the consumer's rvfi_rs*_rdata equals it.
-- Pass criteria: gen_isa_compare / gen_chk_bitmanip_ref (result); gen_chk_dbus_proto; gen_chk_timing_isa (delta >= 2 with wb_busy; exactly 2 + hold in the directed cases).
+- Fire-check: dbus monitor timestamps data_rvalid_i of the preceding access W >= 1 cycles after the op entered ID (previous retirement seen before the response); the op retires exactly once with record delta = 2 + W from the access record and correct rvfi_rd_wdata (rvfi_rs3_* populated for the ternary forms); the consumer's rvfi_rs*_rdata equals it. Mechanism (C-9 / X-12, rtl-arch T-053 TP-BIT-043): the op is held BEFORE its first cycle (instr_executing needs ~outstanding_memory_access, rtl/ibex_id_stage.sv:1054-1062; id_fsm_q advances only under instr_executing, :864-868), never in its second cycle - by the time it reaches MULTI_CYCLE the access has completed and ready_wb_i is 1 (:959-965); the ALU's intermediate value is written once, in the deferred first cycle.
+- Pass criteria: gen_isa_compare / gen_chk_bitmanip_ref (result); gen_chk_dbus_proto; gen_chk_timing_isa (delta = 2 + W with W measured by the dbus monitor; a record before the response cycle + 1 is a failure).
 - Expected: pass
 - Test group: gen_bit_multicycle
-- Bins: CG-BIT-010.cr_class_wb.auto, CG-BIT-010.cp_wb_busy.yes, CG-BIT-010.cp_hold_cycles.h1, CG-BIT-010.cp_hold_cycles.h2_4, CG-BIT-010.cp_hold_cycles.h5plus, CG-BIT-010.cr_class_hold.auto, CG-BIT-010.cp_wb_kind.load, CG-BIT-010.cp_wb_kind.store
+- Bins: CG-BIT-010.cr_class_wb.auto, CG-BIT-010.cp_wb_busy.yes, CG-BIT-010.cp_defer_cycles.h1, CG-BIT-010.cp_defer_cycles.h2_4, CG-BIT-010.cp_defer_cycles.h5plus, CG-BIT-010.cr_class_defer.auto, CG-BIT-010.cp_wb_kind.load, CG-BIT-010.cp_wb_kind.store
 
 ---------------------------------------------------------------------------------------------------
 ## AREA BTALU
@@ -3288,11 +3439,11 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: taken and not-taken branches of all six ops in straight-line code bracketed by single-cycle ALU ops, forward/backward, targets at both alignments, distances from short to maximum.
 - Randomized: op, operands, direction, distance, alignment, surrounding ALU ops.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 100 taken branches with retire delta 2 and >= 100 not-taken with delta 1 while the ibus monitor reports no fetch stall; ibus shows the target request issued immediately after the branch fetch (one redirect per taken branch).
-- Pass criteria: gen_chk_timing_isa (taken 2 / not-taken 1 unstalled); gen_isa_compare; gen_chk_ibus_proto.
+- Fire-check: >= 100 taken branches with redirect delta 2 under the measurement condition (header Timing terms: icache off, imem pinned, no pending fill request, non-straddling target) and >= 100 not-taken with delta 1; taken branches outside the condition are recorded with their delta >= 2 (bin d3plus); with icache_enable = 0 pinned the ibus monitor shows exactly one non-sequential request per taken branch, at target & ~3 (instr_addr_o is word-aligned, C-14), issued in the branch cycle when no other fill request is pending (rtl/ibex_icache.sv:703, :1030-1031) and otherwise as soon as the pending beat is granted (rtl-arch T-053 TP-BTALU-001: a warm cache would hide the request, hence the pinned icache_enable = 0).
+- Pass criteria: gen_chk_timing_isa (taken redirect delta >= 2 with exact 2 as the coverage bin; not-taken 1 unstalled); gen_isa_compare; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_btalu_basic
-- Bins: CG-BTALU-001.cr_taken_dit_delta.t_dit0_d2, CG-BTALU-001.cr_taken_dit_delta.nt_dit0_d1, CG-BTALU-001.cr_taken_dir_align.auto, CG-BTALU-001.cr_taken_distance.auto
+- Bins: CG-BTALU-001.cr_taken_dit_delta.t_dit0_d2, CG-BTALU-001.cr_taken_dit_delta.nt_dit0_d1, CG-BTALU-001.cp_delta.d3plus, CG-BTALU-001.cr_taken_dir_align.auto, CG-BTALU-001.cr_taken_distance.auto
 
 ### TP-BTALU-002: jal target via the BTALU in a single cycle
 - Features: F-BTALU-002
@@ -3302,7 +3453,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: jal (rd = x0 and rd != 0) to random targets bracketed by single-cycle ALU ops. The compressed forms c.j/c.jal run in the same harness (their d2 bins).
 - Randomized: offset, rd, alignment.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 100 jal with retire delta 2 unstalled and a single ibus redirect each; link written (rvfi_rd_wdata = pc + 4) on the same retirement.
+- Fire-check: >= 100 jal with redirect delta 2 under the measurement condition (others recorded with delta >= 2) and, with icache_enable = 0 pinned, a single ibus non-sequential request each at target & ~3 (C-14; rtl-arch T-053 TP-BTALU-002); link written (rvfi_rd_wdata = pc + 4) on the same retirement.
 - Pass criteria: gen_chk_timing_isa; gen_isa_compare; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_btalu_basic
@@ -3316,7 +3467,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: jalr/c.jr/c.jalr with rs1 from the RF, from the previous ALU op and from a load, even and odd sums, imm extremes.
 - Randomized: source of rs1, imm, odd/even, alignment.
 - Knobs: knob:imem_rvalid_delay, knob:dmem_rvalid_delay
-- Fire-check: ibus request address == (rs1 + imm) & ~1 for every retirement; delta 2 unstalled for the RF/forwarded cases.
+- Fire-check: for every retirement the next rvfi_pc_rdata == (rs1 + imm) & ~1 (the LSB clearing of rtl/ibex_if_stage.sv:288, proven from RVFI); with icache_enable = 0 pinned the ibus request for the target has address (rs1 + imm) & ~3 (instr_addr_o is word-aligned, rtl/ibex_icache.sv:1037, C-14; rtl-arch T-053 TP-BTALU-003); redirect delta 2 under the measurement condition for the RF/forwarded cases (>= 2 otherwise; the load case adds the load-use stall).
 - Pass criteria: gen_chk_ibus_proto; gen_isa_compare (pc_wdata bit 0 masked); gen_chk_timing_isa.
 - Expected: pass
 - Test group: gen_btalu_basic
@@ -3358,7 +3509,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: taken and not-taken branches under DIT = 1 and DIT = 0 in alternating phases, bracketed by single-cycle ALU ops.
 - Randomized: op, operands, direction, DIT schedule, alignment.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: under DIT = 1: >= 100 not-taken and >= 100 taken branches each with delta 2 unstalled and an ibus redirect request (to pc + len for not-taken); under DIT = 0 the TP-BTALU-001/005 behaviour; at least one DIT transition between two branches.
+- Fire-check: under DIT = 1: >= 100 not-taken and >= 100 taken branches each with redirect delta 2 under the measurement condition (>= 2 otherwise) and an ibus non-sequential request ((pc + len) & ~3 for not-taken, target & ~3 for taken; icache_enable = 0 pinned, C-14; rtl-arch T-053 TP-BTALU-006); under DIT = 0 the TP-BTALU-001/005 behaviour; at least one DIT transition between two branches.
 - Pass criteria: gen_chk_timing_isa (constant 2 under DIT); gen_chk_ibus_proto (redirect on every branch under DIT); gen_isa_compare; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_btalu_dit
@@ -3368,7 +3519,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BTALU-007
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U.
+- Preconditions: M/U; U per C-2.
 - Stimulus: branches and jal with targets at pc[1] = 1 (compressed code), jalr family with odd sums; mixed with word-aligned targets.
 - Randomized: kind, alignment, odd construction, privilege.
 - Knobs: knob:imem_rvalid_delay
@@ -3389,7 +3540,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Fire-check: >= 50 odd-sum jumps retire; for each, the next rvfi_pc_rdata has bit 0 = 0 and the test records rvfi_pc_wdata[0].
 - Pass criteria: gen_isa_compare with the unmasked rule rvfi_pc_wdata == next pc (RVFI intent: pc_wdata is the next architectural PC); the RTL reports bit 0 = 1 => mismatch (cosmetic).
 - Expected: expected-fail (B13)
-- Test group: gen_btalu_hazard
+- Test group: gen_btalu_hazard_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-BTALU-002.cr_odd_bit0.jalr_odd_b1, CG-BTALU-002.cr_odd_bit0.c_jr_odd_b1, CG-BTALU-002.cr_odd_bit0.c_jalr_odd_b1, CG-BTALU-002.cp_pc_wdata_bit0.b1
 
 ### TP-BTALU-009: BTALU carry-out discarded (address wrap)
@@ -3410,12 +3561,12 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BTALU-010
 - Phase: 1
 - Tier: targeted
-- Preconditions: M/U; a PMP region without X covering the target page (cross-ref F-PMP-*), or the ibus agent returning instr_err_i for the target word; handler reads mcause/mtval/mepc and redirects.
+- Preconditions: M/U; a PMP region without X covering the target page (cross-ref F-PMP-*), or the ibus agent returning instr_err_i for the target word; handler reads mcause/mtval/mepc and redirects; cpuctrlsts.icache_enable = 0 pinned (the target-request count is bus-derived; excluded from random cpuctrlsts writes); U per C-2.
 - Stimulus: taken branches, jal and jalr to the faulting target; not-taken branches whose (unreached) target is faulting.
 - Randomized: kind, fault kind, target alignment, privilege.
 - Knobs: knob:imem_err_rate, knob:pmp_regime
-- Fire-check: the transfer retires with rvfi_trap = 0; the next RVFI entry has rvfi_trap = 1 with rvfi_pc_rdata = target; read-back mcause 1, mtval = target, mepc = target; not-taken variants produce no trap.
-- Pass criteria: gen_chk_pmp (fetch denied: no ibus request when PMP denies); gen_chk_ibus_proto; gen_chk_csr_readback; gen_isa_compare.
+- Fire-check: the transfer retires with rvfi_trap = 0; the next RVFI entry has rvfi_trap = 1 with rvfi_pc_rdata = target; read-back mcause 1, mtval = target, mepc = target; not-taken variants produce no trap; with icache_enable = 0 the ibus monitor shows the target word requested once for the taken/jump cases - also for the PMP-denied target - and not at all for the not-taken case.
+- Pass criteria: gen_chk_pmp (the PMP result never gates instr_req_o, rtl/ibex_if_stage.sv:426-435 / rtl/ibex_core.sv:557: the denied target word IS fetched on the bus and the fault is attached in the IF->ID register, so the checker expects the fetch and checks the trap only; C-14, rtl-arch T-053 TP-BTALU-010); gen_chk_ibus_proto (one request to the target for the taken/jump cases, none for not-taken); gen_chk_csr_readback; gen_isa_compare.
 - Expected: pass
 - Test group: gen_btalu_hazard
 - Bins: CG-BTALU-003.cr_cti_fault.auto, CG-BTALU-003.cp_target_fault.pmp_exec, CG-BTALU-003.cp_target_fault.bus_err, CG-BTALU-003.cp_mtval_target_ok.yes
@@ -3425,14 +3576,14 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; for the error iterations a PMP-denied or data_err_i store/load address; handler as TP-ISA-050; cpuctrlsts.icache_enable = 0 pinned and data_ind_timing = 0 (the redirect count is bus-derived).
-- Stimulus: a load or store with a slow response immediately followed by a taken branch, jal or jalr (operands independent of the access); 30% of iterations make the access fault.
-- Randomized: access kind, delay, CTI kind, fault.
+- Stimulus: a load or store with the response delayed W = 1..16 cycles beyond min1 immediately followed by a taken branch, jal or jalr (operands independent of the access), plus not-taken branches as controls; 30% of iterations make the access fault; mcountinhibit = 0 and the test reads mhpmcounter7/9 around each block.
+- Randomized: access kind, W, CTI kind, taken/not-taken, fault.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:dmem_err_rate, knob:pmp_regime
-- Fire-check: no-fault: exactly one ibus redirect for the CTI and the CTI retires after the access; fault: the access retires with rvfi_trap = 1, the CTI never retires (next RVFI entry is the handler), and the redirected fetch is discarded (no retirement from the target before the handler).
-- Pass criteria: gen_chk_ibus_proto (single redirect); gen_isa_compare (CTI absent from the architectural stream on fault); gen_chk_csr_readback; gen_chk_pmp.
+- Fire-check: no-fault: exactly one ibus redirect for the CTI and the CTI retires after the access; fault: the access retires with rvfi_trap = 1, the CTI never retires (next RVFI entry is the handler), and the redirected fetch is discarded (no retirement from the target before the handler); counter exactness under the wait (C-10): mhpmcounter9 delta == 1 for each waiting taken branch and == 0 for each waiting not-taken branch (DIT = 0), mhpmcounter7 delta == 1 for each waiting jal/jalr (both deduped by branch_jump_set_done_q, rtl/ibex_id_stage.sv:795-815); mhpmcounter8 is NOT asserted here because it over-counts the wait (TP-BTALU-018, B17).
+- Pass criteria: gen_chk_ibus_proto (single redirect); gen_isa_compare (CTI absent from the architectural stream on fault); gen_chk_counters (counters 7 and 9 exact under a WB wait; counter 8 excluded from the compare in this test); gen_chk_csr_readback; gen_chk_pmp.
 - Expected: pass
 - Test group: gen_btalu_hazard
-- Bins: CG-BTALU-003.cr_cti_wb.auto, CG-BTALU-003.cr_cti_redirects.auto, CG-BTALU-003.cp_redirect_count.one, CG-BTALU-003.cp_redirect_count.zero
+- Bins: CG-BTALU-003.cr_cti_wb.auto, CG-BTALU-003.cr_cti_redirects.auto, CG-BTALU-003.cp_redirect_count.one, CG-BTALU-003.cp_redirect_count.zero, CG-BTALU-001.cr_tperf_wb.wb_t_dit0_inc1, CG-BTALU-001.cr_tperf_wb.wb_nt_dit0_inc0
 
 ### TP-BTALU-012: fence.i uses the BTALU for pc + 4
 - Features: F-BTALU-012
@@ -3440,10 +3591,10 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Tier: targeted
 - Preconditions: as TP-ISA-030; cpuctrlsts.icache_enable = 0 pinned for the whole test (the ibus monitor then sees every fetch; excluded from random cpuctrlsts writes) with knob:imem_rvalid_delay pinned to min1 and knob:imem_gnt_delay to same_cycle for the measurement blocks (+gen_regime_pin).
 - Stimulus: fence.i at both PC alignments bracketed by single-cycle ALU ops.
-- Randomized: alignment, neighbours (icache_enable = 0 for the timing sub-check; with icache_enable = 1 only the refetch is observed, since fence.i invalidates the cache).
+- Randomized: alignment, neighbours (icache_enable = 0 pinned for the timing sub-check; the refetch is bus-visible with either setting because fence.i blocks the cache during the invalidation).
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: ibus request at exactly pc + 4 after the fence.i (also when pc[1] = 1); rvfi_pc_wdata = pc + 4; delta 2 unstalled (gap_clean, icache_enable = 0).
-- Pass criteria: gen_chk_ibus_proto; gen_chk_timing_isa; gen_isa_compare.
+- Fire-check: ibus request at exactly (pc + 4) & ~3 after the fence.i, always bus-visible (also when pc[1] = 1): fence.i raises icache_inval_o in its first cycle and inval_block_cache stays 1 through the invalidation, so the pc + 4 lookup can never hit (rtl/ibex_decoder.sv:711-722; rtl/ibex_icache.sv:1218, :1259-1266); rvfi_pc_wdata = pc + 4 (fence.i is a jump: pc_set in its ID-exit cycle); redirect delta >= 3 always (2 + the bus fetch latency), exactly 3 under the pinned min1/same_cycle imem (bin fence_i_d3plus; a redirect delta of 2 is a checker failure; rtl-arch T-053 TP-BTALU-012 TIMING).
+- Pass criteria: gen_chk_ibus_proto; gen_chk_timing_isa (fence.i redirect delta >= 3); gen_isa_compare.
 - Expected: pass
 - Test group: gen_btalu_basic
 - Bins: CG-BTALU-002.cp_type.fence_i, CG-BTALU-002.cr_type_delta.auto, CG-ISA-008.cp_pc_align.half, CG-ISA-008.cp_pc_align.word
@@ -3480,35 +3631,35 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Features: F-BTALU-015
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; the event counters are hardwired: mhpmcounter7 = NumJumps, mhpmcounter8 = NumBranches, mhpmcounter9 = NumBranchesTaken (rtl/ibex_cs_registers.sv:1585-1597; the mhpmevent selectors are read-only, :1600-1617, so no mhpmevent write selects them; one csrw mhpmevent7..9 with random data is issued as a control and its read-back must be unchanged); mcountinhibit = 0; data_ind_timing = 0.
+- Preconditions: M-mode; the event counters are hardwired: mhpmcounter7 = NumJumps, mhpmcounter8 = NumBranches, mhpmcounter9 = NumBranchesTaken (rtl/ibex_cs_registers.sv:1585-1597; the mhpmevent selectors are read-only, :1600-1617, so no mhpmevent write selects them; one csrw mhpmevent7..9 with random data is issued as a control and its read-back must be unchanged at 0x10 / 0x20 / 0x40 = 1 << (N - 3), D20, C-11); mcountinhibit = 0; data_ind_timing = 0; no outstanding WB memory access while a counted branch is in ID (C-10, B17): the counted blocks contain no loads/stores, or every load/store is followed by at least two non-branch instructions before the next branch.
 - Stimulus: blocks of N random branches (taken/not-taken mix known to the test), M jumps (jal/jalr/fence.i), read the three counters before and after each block.
 - Randomized: N, M, mix, block contents.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: counter deltas over each block (csrr mhpmcounter7/8/9 pairs): branch = N, taken = number of taken branches in the block (test-known), jump = M (fence.i counted); rvfi_ext_mhpmcounters[7 - 3], [8 - 3], [9 - 3] agree per instruction (rtl/ibex_core.sv:2108-2126).
+- Fire-check: counter deltas over each block (csrr mhpmcounter7/8/9 pairs): branch = N, taken = number of taken branches in the block (test-known), jump = M (fence.i counted); rvfi_ext_mhpmcounters[7 - 3], [8 - 3], [9 - 3] agree per instruction (rtl/ibex_core.sv:2108-2126); the exact counts hold under the no-WB-wait precondition (the waiting class is TP-BTALU-018).
 - Pass criteria: gen_chk_counters; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_btalu_dit
-- Bins: CG-BTALU-001.cr_perf.t_dit0_inc1, CG-BTALU-001.cr_perf.nt_dit0_inc0, CG-BTALU-001.cp_branch_inc.inc1
+- Bins: CG-BTALU-001.cr_perf.t_dit0_inc1, CG-BTALU-001.cr_perf.nt_dit0_inc0, CG-BTALU-001.cp_branch_inc.inc1, CG-BTALU-001.cr_perf_wb.nowb_inc1
 
 ### TP-BTALU-016: Not-taken branches under data_ind_timing = 1 are not counted as taken
 - Features: F-BTALU-015, F-BTALU-006
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-BTALU-015 with data_ind_timing = 1 (cross-ref F-PMC-041 in the PMC area).
+- Preconditions: as TP-BTALU-015 (including the no-WB-wait precondition of C-10, so that mhpmcounter8 stays exact and only the B11 effect on mhpmcounter9 is measured; the B17 waiting class is TP-BTALU-018) with data_ind_timing = 1 (cross-ref F-PMC-041 in the PMC area).
 - Stimulus: blocks of branches with a known number of not-taken branches under DIT = 1; counters read before/after.
 - Randomized: block contents, mix, N.
 - Knobs: knob:imem_rvalid_delay
 - Fire-check: >= 100 not-taken branches under DIT = 1 with the taken-branch counter delta recorded per branch (rvfi_ext_mhpmcounters).
 - Pass criteria: gen_chk_counters following performance_counters.rst (taken-branch counter increments only for taken branches); B11 predicts an increment for not-taken branches under DIT.
 - Expected: expected-fail (B11)
-- Test group: gen_btalu_dit
+- Test group: gen_btalu_dit_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-BTALU-001.cr_perf.nt_dit1_inc1, CG-BTALU-001.cr_perf.t_dit1_inc1 (cr_perf nt_dit1_inc0 is the spec-outcome bin of B11: ignore_bins until B11 is fixed, so not in this manifest)
 
 ### TP-BTALU-017: Random branch-heavy regime (Phase 2)
 - Features: F-BTALU-001, F-BTALU-002, F-BTALU-003, F-BTALU-005, F-BTALU-007, F-BTALU-009, F-BTALU-010, F-BTALU-011, F-BTALU-013, F-BTALU-014
 - Phase: 2
 - Tier: full
-- Preconditions: random boot configuration; PMP sparse regime with some non-executable pages; trap handler.
+- Preconditions: random boot configuration; PMP sparse regime with some non-executable pages; trap handler; U per C-2.
 - Stimulus: riscv-dv programs with knob:instr_mix = branch_heavy (>= 30% branches/jumps, dense loops, compressed targets), under fetch-error and slow-memory regimes; DIT toggled at random intervals.
 - Randomized: everything (seed-driven).
 - Knobs: knob:instr_mix, knob:imem_gnt_delay, knob:imem_rvalid_delay, knob:imem_err_rate, knob:dmem_rvalid_delay, knob:pmp_regime, knob:priv_regime
@@ -3517,6 +3668,20 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Expected: pass
 - Test group: gen_btalu_random
 - Bins: CG-BTALU-001.cr_taken_dir_align.auto, CG-BTALU-001.cr_taken_distance.auto, CG-ISA-006.cr_op_align.auto, CG-BTALU-002.cr_type_seq.auto, CG-BTALU-003.cr_cti_src.auto, CG-BTALU-003.cr_cti_wb.auto, CG-BTALU-001.cp_delta.d3plus, CG-BTALU-001.cp_fetch_stall.yes, CG-BTALU-001.cr_taken_prev.auto, CG-BTALU-002.cp_delta.d3plus
+
+### TP-BTALU-018: NumBranches (mhpmcounter8) over-counts a conditional branch waiting in ID behind an outstanding WB access (B17)
+- Features: F-BTALU-016, F-BTALU-011
+- Phase: 1
+- Tier: targeted
+- Preconditions: M-mode; mcountinhibit = 0; data_ind_timing = 0; cpuctrlsts.icache_enable = 0 pinned for the whole test (the branch's ID-entry cycle is derived from the ibus/dbus monitors; excluded from random cpuctrlsts writes); handler as TP-ISA-050 for the fault iterations.
+- Stimulus: csrr t0, mhpmcounter8; lw/sw (result unused by the branch) with the response delayed W = 1..16 cycles beyond min1; a conditional branch (taken and not-taken, all six ops) immediately after it; csrr t1, mhpmcounter8 (the gen_bug_log.md B17 reproducer); controls with W = 0 and with the branch separated from the access by >= 2 non-branch instructions; some iterations with jal/jalr in place of the branch (counter 7 control).
+- Randomized: W, access kind, op, operands (taken/not-taken), block contents, alignment.
+- Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
+- Fire-check: per seed >= 50 branches whose preceding access's data_rvalid_i is timestamped W >= 1 cycles after the branch entered ID (dbus monitor against the previous retirement and the branch's fetch delivery); each such branch retires exactly once with the correct outcome; the mhpmcounter8 delta over it is recorded from rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE] and the csrr pair; the test ASSERTS the documented count (doc/03_reference/performance_counters.rst:41, one per conditional branch: delta == 1) and logs the RTL count (1 + W: perf_branch_o is asserted in every waiting FIRST_CYCLE under instr_executing_spec, which lacks the ~outstanding_memory_access term, rtl/ibex_id_stage.sv:886-934, :1054-1057, while the state advances only under instr_executing, :866-869); the W = 0 controls give 1; the jal/jalr controls give mhpmcounter7 delta 1.
+- Pass criteria: gen_chk_counters following the doc for counter 8 (one count per retired conditional branch); the RTL gives 1 + W for the waiting class => the assertion fails (B17). Counters 7 and 9 are exact (deduped by branch_jump_set_done_q) and their check under the same wait is the pass item TP-BTALU-011.
+- Expected: expected-fail (B17)
+- Test group: gen_btalu_perf_b17_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-BTALU-001.cr_perf_wb.wb_inc2plus, CG-BTALU-001.cp_branch_inc.inc2plus, CG-BTALU-001.cp_wb_busy.yes
 
 ---------------------------------------------------------------------------------------------------
 ## Test groups
@@ -3529,12 +3694,14 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 |---|---|---|---|---|
 | gen_isa_alu | ISA-001, ISA-002, ISA-003, ISA-004, ISA-005, ISA-006, ISA-007, ISA-008, ISA-009, ISA-052 | 1 | smoke/targeted | short/medium |
 | gen_isa_shift | ISA-010, ISA-011, ISA-013, ISA-014 | 1 | smoke/targeted | short/medium |
-| gen_isa_illegal | ISA-012, ISA-021, ISA-025, ISA-028, ISA-042, ISA-046, ISA-047, ISA-048, ISA-049, ISA-050, ISA-051 | 1 | targeted | medium |
+| gen_isa_illegal | ISA-012, ISA-021, ISA-025, ISA-028, ISA-042, ISA-046, ISA-047, ISA-048, ISA-049, ISA-050 | 1 | targeted | medium |
 | gen_isa_cti | ISA-015, ISA-016, ISA-017, ISA-018, ISA-019, ISA-020, ISA-022, ISA-023, ISA-024, ISA-026, ISA-027, ISA-053 | 1 | smoke/targeted | short/medium |
 | gen_isa_fence | ISA-029, ISA-030, ISA-031 | 1 | targeted | medium |
 | gen_isa_system | ISA-032, ISA-033, ISA-034, ISA-035, ISA-036, ISA-037, ISA-038, ISA-039, ISA-040, ISA-041 | 1 | smoke/targeted | short/medium |
 | gen_isa_csr_insn | ISA-043, ISA-044, ISA-045 | 1 | smoke/targeted | short/medium |
+| gen_isa_illegal_info | ISA-051 | 1 | targeted | medium |
 | gen_isa_random | ISA-054, ISA-055, ISA-056 | 2 | full | long |
+| gen_isa_illegal_ebreak_info | ISA-057 | 1 | targeted | medium |
 | gen_mul_mul | MUL-001, MUL-002, MUL-003, MUL-004, MUL-005, MUL-006, MUL-007, MUL-008, MUL-027 | 1 | smoke/targeted | short/medium |
 | gen_mul_timing | MUL-009, MUL-010, MUL-011, MUL-023, MUL-024, MUL-025, MUL-030 | 1 | targeted | medium |
 | gen_mul_div | MUL-012, MUL-013, MUL-014, MUL-015, MUL-016, MUL-017, MUL-018, MUL-019, MUL-020, MUL-021, MUL-022, MUL-026 | 1 | smoke/targeted | short/medium |
@@ -3543,9 +3710,11 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_cmp_illegal | CMP-003, CMP-006, CMP-007, CMP-015, CMP-019, CMP-022, CMP-025, CMP-029, CMP-035, CMP-037, CMP-044, CMP-054, CMP-067 | 1 | targeted | medium |
 | gen_cmp_hints | CMP-009, CMP-013, CMP-027, CMP-031 | 1 | targeted | medium |
 | gen_cmp_zcb | CMP-034, CMP-036, CMP-038 | 1 | smoke | short |
-| gen_cmp_zcmp_basic | CMP-039, CMP-040, CMP-041, CMP-042, CMP-043, CMP-045, CMP-046, CMP-047, CMP-048, CMP-049, CMP-050, CMP-051, CMP-052, CMP-053, CMP-055, CMP-066, CMP-068, CMP-069, CMP-073 | 1 | smoke/targeted | short/medium |
-| gen_cmp_zcmp_events | CMP-056, CMP-057, CMP-058, CMP-059, CMP-064, CMP-065 | 1 | targeted | medium |
+| gen_cmp_zcmp_basic | CMP-039, CMP-040, CMP-041, CMP-042, CMP-043, CMP-045, CMP-046, CMP-047, CMP-048, CMP-049, CMP-050, CMP-052, CMP-053, CMP-055, CMP-066, CMP-068, CMP-069, CMP-073 | 1 | smoke/targeted | short/medium |
+| gen_cmp_zcmp_basic_xfail | CMP-051 | 1 | targeted | medium |
+| gen_cmp_zcmp_events | CMP-056, CMP-057, CMP-058, CMP-059, CMP-064 | 1 | targeted | medium |
 | gen_cmp_zcmp_faults | CMP-060, CMP-061, CMP-062, CMP-063, CMP-072 | 1 | targeted | medium |
+| gen_cmp_zcmp_events_xfail | CMP-065 | 1 | targeted | medium |
 | gen_cmp_random | CMP-070, CMP-071 | 2 | full | long |
 | gen_bit_ratified | BIT-001, BIT-002, BIT-003, BIT-004, BIT-005, BIT-006, BIT-007, BIT-008, BIT-009, BIT-010, BIT-014, BIT-015, BIT-017, BIT-018, BIT-019, BIT-020, BIT-021, BIT-038, BIT-040 | 1 | smoke/targeted | short/medium |
 | gen_bit_draft | BIT-011, BIT-016, BIT-022, BIT-023, BIT-024, BIT-025, BIT-026, BIT-027, BIT-028, BIT-029, BIT-030, BIT-031, BIT-032, BIT-033 | 1 | targeted | medium |
@@ -3553,13 +3722,18 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_bit_illegal | BIT-034, BIT-035, BIT-037 | 1 | targeted | medium |
 | gen_bit_random | BIT-041, BIT-042 | 2 | full | long |
 | gen_btalu_basic | BTALU-001, BTALU-002, BTALU-003, BTALU-004, BTALU-005, BTALU-007, BTALU-009, BTALU-012, BTALU-014 | 1 | smoke/targeted | short/medium |
-| gen_btalu_dit | BTALU-006, BTALU-015, BTALU-016 | 1 | targeted | medium |
-| gen_btalu_hazard | BTALU-008, BTALU-010, BTALU-011, BTALU-013 | 1 | targeted | medium |
+| gen_btalu_dit | BTALU-006, BTALU-015 | 1 | targeted | medium |
+| gen_btalu_hazard_xfail | BTALU-008 | 1 | targeted | medium |
+| gen_btalu_hazard | BTALU-010, BTALU-011, BTALU-013 | 1 | targeted | medium |
+| gen_btalu_dit_xfail | BTALU-016 | 1 | targeted | medium |
 | gen_btalu_random | BTALU-017 | 2 | full | long |
+| gen_btalu_perf_b17_xfail | BTALU-018 | 1 | targeted | medium |
 
-Expected-fail items (4): TP-CMP-051 (B4), TP-CMP-065 (B8), TP-BTALU-008 (B13), TP-BTALU-016 (B11).
-Informational, excluded from the pass gate (1): TP-ISA-051 (B14 record confirmation). Doc-mismatch
-items (2): TP-MUL-012 (D7), TP-BIT-030 (D8).
+Expected-fail items (5): TP-CMP-051 (B4), TP-CMP-065 (B8), TP-BTALU-008 (B13), TP-BTALU-016 (B11),
+TP-BTALU-018 (B17). Informational, excluded from the pass gate (2): TP-ISA-051 (B14 record
+confirmation), TP-ISA-057 (rvfi_trap quirk on the illegal ebreak variant). Doc-mismatch items (2):
+TP-MUL-012 (D7), TP-BIT-030 (D8); D20 (mhpmevent read value) is cited by TP-ISA-023 / TP-BTALU-015
+without changing their Expected (no value is predicted from the doc).
 
 ## New checkers requested
 
@@ -3580,14 +3754,19 @@ items (2): TP-MUL-012 (D7), TP-BIT-030 (D8).
 - gen_chk_timing_isa: retire-to-retire cycle-delta checker at the RVFI boundary. Inputs: RVFI
   stream (rvfi_ext_mcycle per retirement), ibus monitor fetch_stall flag, dbus monitor wb_busy
   flag, TB CSR model (data_ind_timing). Rules: single-cycle ALU/mul/bfp -> delta 1; mulh-class,
-  rol/ror/rori, cmov/cmix/fsl/fsr/fsri, crc32* -> delta 2; div/rem non-zero divisor -> 37;
-  div/rem by zero -> 2 (DIT = 0) or 37 (DIT = 1); taken branch/jal/jalr/fence.i -> 2, not-taken
-  branch -> 1 (DIT = 0) or 2 (DIT = 1); the delta is measured from the previous retirement
-  (rvfi_ext_mcycle is captured when the instruction leaves ID) and equality is checked only when
-  gap_clean (fetch_stall == 0, dummy_instr_en == 0 over the gap, no mcycle/mcycleh/mcountinhibit
-  write in the gap, icache_enable == 0) and wb_busy == 0, otherwise delta >= expected. Expected
-  constants derive from the RTL FSM (37;
-  doc mismatch D7) and are named once in gen_tb_pkg. Fails via uvm_error; plusarg
+  rol/ror/rori, cmov/cmix/fsl/fsr/fsri, crc32* -> delta 2; div/rem non-zero divisor -> 37 (36-cycle
+  MD_IDLE -> MD_FINISH bound, gen_multdiv_bound_props.md MD-1); div/rem by zero -> 2 (DIT = 0, MD-2)
+  or 37 (DIT = 1, MD-2b); control transfers use the REDIRECT delta (successor - CTI, header Timing
+  terms): taken branch/jal/jalr >= 2 with exact 2 under the measurement condition, fence.i >= 3,
+  not-taken branch 1 (DIT = 0) or >= 2 (DIT = 1); deferred start behind an outstanding WB access
+  (C-9): delta = own occupancy + W with W = the response delay beyond min1 taken from the dbus
+  monitor (mul 1 + W, mulh class and two-cycle Zb* 2 + W, div 37 + W, div-by-zero DIT off 2 + W),
+  and a record earlier than that is a failure (there is no hold to shorten it). The non-CTI delta
+  is measured from the previous retirement (rvfi_ext_mcycle is captured when the instruction leaves
+  ID) and equality is checked only when gap_clean (fetch_stall == 0, dummy_instr_en == 0 over the
+  gap, no mcycle/mcycleh/mcountinhibit write in the gap, icache_enable == 0) and wb_busy == 0 (or
+  W is known), otherwise delta >= expected. Expected constants derive from the RTL FSM (37; doc
+  mismatch D7) and are named once in gen_tb_pkg. Fails via uvm_error; plusarg
   +gen_chk_timing_isa_en=0.
 - gen_chk_zcmp_seq: Zcmp micro-op sequence checker. From the first rvfi_ext_expanded_insn_valid
   of a PC it predicts the full micro-op list (store/load register order highest-first, addresses
@@ -3600,11 +3779,20 @@ items (2): TP-MUL-012 (D7), TP-BIT-030 (D8).
   Needed because the ISA model folds micro-ops into one step (feature-list question 8) and the
   memory order is RTL-defined. Fails via uvm_error; plusarg +gen_chk_zcmp_seq_en=0.
 
-- gen_sva_multdiv: SVA module bound into ibex_multdiv_fast (probe candidate, coverage/assertion only;
-  no checker depends on it): assert (div_en_i == 0 && md_state_q != MD_IDLE) |=> $stable(md_state_q)
-  and cover the antecedent. The cover is expected to stay unhit (gen_hierarchy_map.md H-D3, believed
-  unreachable) and a hit is reported as a reachability finding, not counted as coverage. Needed by
-  TP-MUL-030 (F-MUL-028). Fails via uvm_error on the assertion; plusarg +gen_sva_multdiv_en=0.
+- gen_sva_multdiv: SVA module bound into u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i
+  (probe candidate P8, coverage/assertion only; no checker depends on it), taken from rtl-arch
+  gen_multdiv_bound_props.md Sections 3-4: MD-1 sva_div_full_bound (a non-fast-path divide start
+  reaches MD_FINISH with valid_o exactly 36 cycles later, valid_o low in between; mutation: div_counter
+  init 5'd31 -> 5'd30, exit at 5'd0, MD_LAST -> MD_FINISH skip), MD-2 sva_div_zero_fast (zero divisor
+  with DIT off: MD_FINISH in the next cycle), MD-2b sva_div_zero_dit_full (zero divisor under DIT takes
+  the full path: the SEC_CM guard), MD-3 sva_div_no_hold (MD_FINISH implies multdiv_ready_id_i: the
+  C-9 unreachability argument, expected never to fire; a failure is a finding for rtl-arch), MD-4
+  sva_div_seq (state arcs), MD-5 sva_mul_bound (MUL valid in the same cycle, MULH class in the next),
+  plus the covers MD-C1 full path, MD-C2 zero fast path, MD-C3 zero under DIT (each expected >= 1) and
+  MD-C4 hold attempt (expected 0; a hit is a reachability finding, GEN_TEST_INFO). The former
+  freeze-arc assertion (div_en_i == 0 && md_state_q != MD_IDLE |=> $stable(md_state_q)) is structurally
+  implied by the state-register enable and is kept as a cover only (rtl-arch T-053 TP-MUL-030).
+  Needed by TP-MUL-030 (F-MUL-028). Fails via uvm_error on MD-1..MD-5; plusarg +gen_sva_multdiv_en=0.
 
 ## Open questions
 
@@ -3649,19 +3837,29 @@ items (2): TP-MUL-012 (D7), TP-BIT-030 (D8).
   turns the three probe-gated bins into must-hit bins. Recommended default: accept P1 as a
   wrapper-internal observation (tb-infra section 9 notes it is an ibex_core port), register it, and
   keep dummy_instr_en = 0 in every other Zcmp item until B8 is ruled.
-- OQ-7 (divide latency constant). gen_chk_timing_isa expects 37 cycles (RTL FSM) against
-  pipeline_details.rst's 38. Blocks: the constant in gen_tb_pkg. Recommended default: 37, confirmed
-  on the first TP-MUL-012 run; log D7.
+- OQ-7 (divide latency constant) - RESOLVED by rtl-arch gen_multdiv_bound_props.md (MD-1): 36 cycles
+  MD_IDLE -> MD_FINISH, 37 ID cycles, valid_o only in cycle S+36; divide by zero 1 cycle (2 ID cycles)
+  with DIT off only; no reachable hold. gen_chk_timing_isa uses 37 / 2 and 37 + W / 2 + W behind an
+  outstanding WB access (C-9); D7 logged.
 - OQ-8 (Spike misa/zicntr string for Zb*). The Spike ISA string must be rv32imc_zicsr_zifencei_
   zba_zbb_zbc_zbs_zbkb_zbkx(+zcb+zcmp) so pack/packh/brev8/zip/unzip/xperm4/xperm8 compare in
   Spike; if the pinned Spike lacks Zbkb/Zbkx those rows move to gen_chk_bitmanip_ref. Blocks:
   Pass criteria of TP-BIT-011/024/025/026 and TP-BIT-001. Recommended default: probe the pinned
   Spike once at shim build; route any missing extension to gen_chk_bitmanip_ref and record it.
-- OQ-9 (gen_sva_multdiv bind). TP-MUL-030 needs a bind into ibex_multdiv_fast (md_state_q,
-  div_en_i) - a probe-register entry, coverage/assertion only. Blocks: whether TP-MUL-030 can run
-  in the first regression with its SVA fire-check. Recommended default: register the bind as a
-  probe candidate next to P1; if rejected, TP-MUL-030 keeps its RVFI fire-check and drops
-  CG-MUL-005.cp_sva_checked (ignore_bins, reason "probe rejected").
+- OQ-9 (gen_sva_multdiv bind). TP-MUL-030 needs the bind of rtl-arch's MD-1..MD-5 properties into
+  u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i (nets md_state_q, div_en_i, mult_en_i,
+  operator_i, equal_to_zero_i, data_ind_timing_i, multdiv_ready_id_i, valid_o, div_counter_q,
+  mult_state_q) - probe candidate P8, coverage/assertion only. Blocks: whether TP-MUL-030 can run in
+  the first regression with its SVA sub-checks. Recommended default: register P8 next to P1; if
+  rejected, TP-MUL-030 keeps its RVFI fire-check (the pass gate) and drops CG-MUL-005.cp_sva_checked
+  (ignore_bins, reason "probe rejected").
+- OQ-10 (rvfi_trap quirk on the illegal ebreak variant, TP-ISA-057). rtl/ibex_core.sv:1885-1886
+  masks rvfi_trap with ~(ebrk_insn & ebreak_into_debug) although an ebreak with rs1/rd != 0 is an
+  illegal-instruction exception (illegal_insn_prio first): with dcsr.ebreakm/u set the record shows
+  rvfi_trap = 0 and mcause 2. RVFI-only, same class as B18. Blocks: the comparator's trap rule for
+  these records and whether the bug log gets a B-number. Recommended default: informational item
+  now (TP-ISA-057); the DV Lead opens a B-entry (RVFI-port deviation) and the comparator classifies
+  the record by the mcause read-back until ruled.
 
 
 # 4.2 Areas CSR, PRV: Control and status registers; privilege modes M/U and mstatus semantics
@@ -3688,7 +3886,8 @@ Conventions used in every item
 - Doc-mismatch items follow the RTL and are `pass (doc mismatch D<n>)` with the canonical D-numbers
   of dv/auto_dv/docs/gen_bug_log.md (D1 mip reads raw pins, D2 illegal MPP -> U, D3 mcause
   software-writable, D4 tdata1 reset 0x2800_1048, D12 trigger CSRs readable in M-mode); bug
-  candidates follow the specification and are `expected-fail (B<n>)` (B1, B2, B3, B15). Rulings
+  candidates follow the specification and are `expected-fail (B<n>)` (B1, B2, B3, B15); D20 (mhpmeventN
+  reads 1 << (N - 3), rtl-arch T-053 X-3) is carried by TP-CSR-061/107. Rulings
   applied (gen_bug_log.md; gen_tb_architecture.md 8.1 item 5): B6 (exception in debug mode forces
   priv M) is RTL-defined, Sdext.adoc:51 leaves it UNSPECIFIED, the touching items expect `pass
   (RTL-defined, spec UNSPECIFIED)`; B12 (mret clears sync_exc_seen) is documented behaviour
@@ -3711,6 +3910,58 @@ Conventions used in every item
   run the wfi with the fetch agent idle (no outstanding beat) and no invalidation pending.
 - Fire-checks are per-seed assertions on an observable; regression-wide bin closure is the
   coverage plan's job (fcov_csr.md), never a fire-check.
+- Conventions adopted from rtl-arch's RTL fact-check (dv/auto_dv/work/rtl-arch/gen_tp_parts_rtl_factcheck.md,
+  T-053) and plan v2b (README_FIX3_BRIEF C-rules); items cite them by name:
+  - C-1 (X-1): rvfi_pc_wdata of a trap, mret or dret record is the NEXT SEQUENTIAL fetch address
+    (rtl/ibex_core.sv:2084 captures pc_if in the DECODE cycle; the PC_EXC / PC_ERET / PC_DRET pc_set
+    comes one cycle later in FLUSH, rtl/ibex_controller.sv:829-833, :954-965). A redirect target is
+    observed as the NEXT record's rvfi_pc_rdata (vector, mepc & ~1, dpc, DmExceptionAddr); it is
+    never asserted from the redirecting record's rvfi_pc_wdata. Only branch/jump records carry
+    the target in pc_wdata.
+  - C-2 (X-2): U-mode prologue. The PMP reset table is all OFF and rtl/ibex_pmp.sv:136-139 denies
+    every non-M access that matches no region, so before the first mret (or dret) to U the program
+    programs one U-executable code region (covering the U code and the trap-return path) and one
+    U-RW data/stack/signature region. Every item that runs U-mode code carries this precondition
+    by the reference "C-2 U-mode prologue".
+  - C-3 (X-7): interrupt and debug entry wait for an empty ID and a ready WB
+    (rtl/ibex_controller.sv:296, :700-720): the instruction already valid in ID when the request
+    arrives completes first; mepc / dpc = pc of the first not-yet-executed instruction, derived
+    from the last retired record, never from the pin timestamp alone.
+  - C-5 (X-8): an unstepped wfi always gives exactly one ctrl_busy = 0 cycle in WAIT_SLEEP
+    (rtl/ibex_controller.sv:598-604, unconditional, also with the wake already true and also in
+    debug mode); it is visible on core_busy_o only with no fetch beat outstanding, no icache
+    invalidation and an idle LSU. A stepped wfi (dcsr.step = 1, not in debug mode) never reaches
+    WAIT_SLEEP: FLUSH is overridden to DBG_TAKEN_IF (:985-987), core_busy_o stays IbexMuBiOn.
+  - C-11 (X-3, D20): mhpmeventN reads 1 << (N - 3) (mhpmevent3 = 0x1 .. mhpmevent12 = 0x200,
+    rtl/ibex_cs_registers.sv:185, :1602-1619); the checker follows the RTL. Event selectors are
+    hardwired: no item programs a selector.
+  - C-14 (X-21): an ibus observation of a redirect target ("the vector fetch appears on
+    instr_addr_o") holds only with cpuctrlsts.icache_enable = 0 (a warm target hits in the cache
+    with no bus request, rtl/ibex_icache.sv:703, :1030-1031) or for DmHaltAddr / DmExceptionAddr /
+    dret targets (icache forced off in debug mode, rtl/ibex_cs_registers.sv:1970-1971); items that
+    need the bus form pin icache_enable = 0 and exclude bit 0 from random cpuctrlsts writes,
+    otherwise they use the RVFI form of C-1.
+  - C-MPRV (fact-check csr_a note on TP-CSR-023/025): priv_mode_lsu_o = mprv ? mpp : priv_lvl_q
+    (rtl/ibex_cs_registers.sv:998), so a retired mstatus write with MPRV = 1 and MPP != 11 makes
+    the following M-mode loads/stores U-privileged and PMP-denied with no region; items that write
+    random mstatus values either pair MPRV = 1 only with MPP = 11 or restore mstatus before the
+    next data access (signature write).
+  - C-SWEEP (fact-check TP-CSR-004/095/101): a random operand sweep over "every writable CSR"
+    excludes mseccfg (MML/MMWP are sticky, rtl/ibex_cs_registers.sv:1505-1506, and with the reset
+    PMP table MMWP = 1 denies every M access and MML = 1 denies M fetch, rtl/ibex_pmp.sv:138-139;
+    TP-CSR-095/096 own mseccfg with the locked-region prologue), writes pmpcfg with L = 0 (a locked
+    entry applies to M-mode and freezes later pmpcfg/pmpaddr writes, :1423-1426, :1475-1477) and
+    pmpaddr values outside the program's code/data/signature ranges, and applies C-MPRV to mstatus.
+  - C-DUM (Q-005, B7, round-2 finding on TP-CSR-066): exact minstret / event-counter checks need
+    cpuctrlsts.dummy_instr_en = 0; every item whose pass criteria include gen_chk_counters keeps
+    dummies off and forces bit 2 = 0 in its random cpuctrlsts operands; dummies are enabled only in
+    TP-CSR-085/087/088/092, whose pass criteria carry no exact counter check (the dummies-on counter
+    case is TP-PMC-013, expected-fail B7). No pass item "counts dummies if enabled".
+  - Probe-gated bins (S-13): the secureseed reseed pulse (probe candidate P7, PROPOSED in
+    dv/auto_dv/docs/gen_probe_register.md, Critic ruling pending) is coverage-only; the bins that
+    need it (CG-CSR-010.cp_pulse, cr_op_form_pulse) are not in any item's Bins line, not in
+    trace_tp_bin_csr.csv and not in a manifest until ruled; the items assert the boundary form
+    (read-back 0, flush bubble for write ops, none for demoted reads).
 - Parameter-derived constants (ibex_pkg / wrapper parameters; the literals in parentheses are this
   build's values): HPM_IDX = 3..2+MHPMCounterNum (3..12); HPM_UNIMPL_IDX = 3+MHPMCounterNum..31
   (13..31); CTR_MASK = ((1 << (3 + MHPMCounterNum)) - 1) & ~(1 << 1) (0x1FFD, mcounteren and
@@ -3763,15 +4014,15 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-002
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; mscratch, mie, mcountinhibit, cpuctrlsts loaded with random values; cpuctrlsts.dummy_instr_en random.
+- Preconditions: M-mode; mscratch, mie, mcountinhibit, cpuctrlsts loaded with random values with bit 2 forced 0 (cpuctrlsts.dummy_instr_en = 0: the exact minstret check needs dummies off, C-DUM / B7).
 - Stimulus: csrrs rd, csr, x0 / csrrc rd, csr, x0 / csrrsi rd, csr, 0 / csrrci rd, csr, 0 uniformly over the four forms against mscratch, mie, mcountinhibit, cpuctrlsts, secureseed and minstret, each immediately followed by an ALU instruction dependent on rd and by csrr of the same CSR; 100 sequences per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: form, CSR, rd, surrounding instruction mix, memory latency knobs.
 - Knobs: knob:imem_rvalid_delay, knob:instr_mix
-- Fire-check: RVFI shows the demoted form (funct3 in {2,3,6,7}, rs1 field 0) with rvfi_trap = 0 and rvfi_rd_wdata == CSR value; the following csrr returns the unchanged value; the retirement gap between the demoted op and the next instruction is 1 cycle (no flush bubble) in >= 90% of cases with knob:imem_rvalid_delay = min1.
-- Pass criteria: gen_chk_csr_readback (CSR unchanged); gen_chk_csr_flush (no flush bubble for demoted reads); gen_chk_counters (minstret counts the demoted read of minstret); cocotb fire-check on secureseed pulse absence via the CG-CSR-010 probe
+- Fire-check: RVFI shows the demoted form (funct3 in {2,3,6,7}, rs1 field 0) with rvfi_trap = 0 and rvfi_rd_wdata == CSR value; the following csrr returns the unchanged value; the retirement gap between the demoted op and the next instruction is 1 cycle (no flush bubble) in >= 90% of cases with knob:imem_rvalid_delay = min1; for the secureseed forms the gap is 1 as well (a demoted form is a READ: csr_pipe_flush needs a write op, rtl/ibex_id_stage.sv:593-597).
+- Pass criteria: gen_chk_csr_readback (CSR unchanged); gen_chk_csr_flush (no flush bubble for demoted reads); gen_chk_counters (minstret counts the demoted read of minstret); the absence of a reseed pulse for the demoted secureseed forms is internal (P7 probe-gated, coverage-only, never a pass-gate check): the boundary form is the gap-1 / read-back-0 observation
 - Expected: pass
 - Test group: gen_csr_access
-- Bins: CG-CSR-001.cp_rs1.zero, CG-CSR-001.cr_rd_x0_write.csrrs_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrc_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrsi_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrci_rdx0_rw_m, CG-CSR-010.cr_op_form_pulse.csrrs_x0_none, CG-CSR-010.cr_op_form_pulse.csrrc_x0_none, CG-CSR-010.cr_op_form_pulse.csrrsi_0_none, CG-CSR-010.cr_op_form_pulse.csrrci_0_none
+- Bins: CG-CSR-001.cp_rs1.zero, CG-CSR-001.cr_rd_x0_write.csrrs_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrc_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrsi_rdx0_rw_m, CG-CSR-001.cr_rd_x0_write.csrrci_rdx0_rw_m, CG-CSR-010.cr_op_form_gap.csrrs_x0_g1, CG-CSR-010.cr_op_form_gap.csrrc_x0_g1, CG-CSR-010.cr_op_form_gap.csrrsi_0_g1, CG-CSR-010.cr_op_form_gap.csrrci_0_g1
 
 ### TP-CSR-003: csrrw/csrrwi with rs1 = x0 / uimm = 0 is a real write of zero
 - Features: F-CSR-003
@@ -3792,7 +4043,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode.
-- Stimulus: csrrw x0, csr, rs1 / csrrwi x0, csr, uimm against every writable CSR in the Implemented CSR map (mstatus, mie, mtvec, mcounteren, mcountinhibit, mscratch, mepc, mcause, mtval, mcycle(h), minstret(h), mhpmcounter3..(2+MHPMCounterNum), mseccfg, pmpcfg0..3, pmpaddr0..15, cpuctrlsts, secureseed) then csrr; also csrrs x0, csr, x0 reads of every CSR twice in a row to show reads have no side effect (second read equals first modulo counter increment). Weights: per the Layer-1 weight tables unless stated.
+- Stimulus: csrrw x0, csr, rs1 / csrrwi x0, csr, uimm against every writable CSR in the Implemented CSR map (mstatus, mie, mtvec, mcounteren, mcountinhibit, mscratch, mepc, mcause, mtval, mcycle(h), minstret(h), mhpmcounter3..(2+MHPMCounterNum), pmpcfg0..3, pmpaddr0..15, cpuctrlsts, secureseed; mseccfg excluded per C-SWEEP: MML/MMWP are sticky and with the reset PMP table deny the sweep's own fetches and data accesses, rtl/ibex_cs_registers.sv:1505-1506, rtl/ibex_pmp.sv:138-139, TP-CSR-095/096 own it) then csrr; operand constraints (C-SWEEP, C-MPRV, C-DUM): mstatus operands pair MPRV = 1 only with MPP = 11, pmpcfg operands carry L = 0 and pmpaddr values stay outside the program's code/data/signature ranges, cpuctrlsts operands carry bit 2 = 0 and bit 0 per C-14; also csrrs x0, csr, x0 reads of every CSR twice in a row to show reads have no side effect (second read equals first modulo counter increment). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: CSR order, operand value class (rand / legal_only / all1), interleaving.
 - Knobs: knob:instr_mix
 - Fire-check: RVFI retirements with rd field 0 and funct3 in {1,5} for each listed address; rvfi_rd_addr = 0 and no register-file write; read-back equals the legalised written value.
@@ -3805,7 +4056,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-005
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode or U-mode (50/50); trap handler installed.
+- Preconditions: M-mode or U-mode (50/50); trap handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 32-bit words with opcode 0x73, funct3 = 100, random rd/rs1 and random 12-bit imm (including implemented CSR addresses and holes); 40 per seed, embedded in random ALU code. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: rd, rs1, imm, privilege mode, position.
 - Knobs: knob:priv_regime
@@ -3833,11 +4084,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-007
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; knob:imem_rvalid_delay = min1 for the timing half of the seeds.
+- Preconditions: M-mode; knob:imem_gnt_delay = same_cycle and knob:imem_rvalid_delay = min1 for the timing half of the seeds (a delayed grant on a cache miss lengthens the gap without any RTL fault; fact-check note on TP-CSR-007).
 - Stimulus: csrrw mscratch, rs1 ; csrr rd, mscratch and csrrw mepc, rs1 ; csrr rd, mepc adjacent pairs, 100 per seed; rs1 values uniform (odd values included for mepc); 30% of pairs replace the read by an mret (mepc) or by a load using rd as address base (mscratch).
 - Randomized: values, registers, alternation of mscratch/mepc, unrelated code before the pair.
-- Knobs: knob:imem_rvalid_delay
-- Fire-check: rvfi shows the read retiring one cycle after the write (gap = 1) in every pair when knob:imem_rvalid_delay = min1; read-back equals the written value (mepc bit 0 cleared).
+- Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
+- Fire-check: rvfi shows the read retiring one cycle after the write (gap = 1) in every pair when knob:imem_gnt_delay = same_cycle and knob:imem_rvalid_delay = min1 (no dummy in the gap, S-4); read-back equals the written value (mepc bit 0 cleared).
 - Pass criteria: gen_chk_csr_flush (no bubble for mscratch/mepc); gen_chk_csr_readback; gen_isa_compare (mret target = written mepc & ~1)
 - Expected: pass
 - Test group: gen_csr_ordering
@@ -3848,7 +4099,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; data agent armed to return data_err_i on a chosen load/store address (50%) or a PMP region denying that address (50%); CSR pre-loaded with a known value; handler returns to the CSR instruction (mepc + 4 skip of the faulting access is NOT done: handler re-executes from mepc after fixing the PMP / disarming the error, or skips the access with mepc += 4 for the bus-error variant).
-- Stimulus: lw/sw to the faulting address immediately followed by a CSR write op (uniform over 6 ops) to a random RW CSR (mscratch, mie, mtval, mcountinhibit, mepc excluded); 40 per seed. Weights: per the Layer-1 weight tables unless stated.
+- Stimulus: lw/sw to the faulting address immediately followed by a CSR write op (uniform over 6 ops) to a random RW CSR (mscratch, mie, mcountinhibit; mepc AND mtval excluded: the load/store trap writes both, mepc = the access pc and mtval = lsu_addr_last, rtl/ibex_cs_registers.sv:918-922, rtl/ibex_controller.sv:910-911/:924-925, so their handler read-back is the trap value, not the pre-load value); 40 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: load vs store, error source (bus vs PMP), CSR, op, operand, alignment of the access (aligned / misaligned).
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:pmp_regime
 - Fire-check: rvfi_trap on the load/store with mepc read in the handler == its PC; the CSR instruction has no RVFI retirement before the handler entry and retires after mret (rvfi_order increasing); the handler's csrr of the CSR returns the pre-load value.
@@ -3861,7 +4112,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-009, F-CSR-103
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode and U-mode halves; handler installed; minstret read before and after.
+- Preconditions: M-mode and U-mode halves; handler installed; minstret read before and after. C-2 U-mode prologue before the first entry to U.
 - Stimulus: CSR instructions (uniform over 6 ops, read and write forms) to addresses drawn uniformly from the unimplemented set (F-CSR-010 list), rd pre-loaded with a sentinel; 100 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: address, op, rd, rs1, privilege mode.
 - Knobs: knob:priv_regime
@@ -3875,25 +4126,25 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-010
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode (all holes) and U-mode (subset); handler installed and counting traps per address.
-- Stimulus: one csrrs rd, addr, x0 (read form) and one csrrw x0, addr, rs1 (write form) to every address of every hole range in the F-CSR-010 list (0x302/0x303, 0x307..0x309, 0x30B..0x30F, 0x311..0x319, 0x31B..0x31F, 0x321/0x322, 0x345..0x39F, 0x3A4..0x3AF, 0x3C0..0x5A7, 0x5A9..0x746, 0x748..0x756, 0x758..0x79F, 0x7A4..0x7A7, 0x7A9, 0x7AB..0x7AF, 0x7B4..0x7BF, 0x7C2..0x7FF, 0xB01, 0xB81, 0xBC0, 0xBC3, 0xBC5..0xBFF, 0xC01, 0xC81, 0xC20..0xC7F, 0xCA0..0xF10, 0xF16..0xFFF, 0x000..0x2FF); the sweep is split over seeds by a random stride so each seed covers about 1/8 of the addresses and 8 seeds cover all. Weights: per the Layer-1 weight tables unless stated.
+- Preconditions: M-mode (all holes) and U-mode (subset); handler installed and counting traps per address. C-2 U-mode prologue before the first entry to U.
+- Stimulus: one csrrs rd, addr, x0 (read form) and one csrrw x0, addr, rs1 (write form) to every address of every hole range in the F-CSR-010 list (0x302/0x303, 0x307..0x309, 0x30B..0x30F, 0x311..0x319, 0x31B..0x31F, 0x321/0x322, 0x345..0x39F, 0x3A4..0x3AF, 0x3C0..0x5A7, 0x5A9..0x746, 0x748..0x756, 0x758..0x79F, 0x7A4..0x7A7, 0x7A9, 0x7AB..0x7AF, 0x7B4..0x7BF, 0x7C2..0x7FF, 0x800..0xAFF, 0xB01, 0xB20..0xB7F, 0xB81, 0xBA0..0xBBF, 0xBC0, 0xBC3, 0xBC5..0xBFF, 0xC01, 0xC81, 0xC20..0xC7F, 0xCA0..0xF10, 0xF16..0xFFF, 0x000..0x2FF; 0xB20..0xB7F / 0xBA0..0xBBF (no mhpmcounter above 31 exists) and 0x800..0xAFF were missing from the list, fact-check note on TP-CSR-010, every listed range hits the default arm rtl/ibex_cs_registers.sv:702-703); the sweep is split over seeds by a random stride so each seed covers about 1/8 of the addresses and 8 seeds cover all. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: stride/offset, rd/rs1, order, privilege mode for the U-mode subset; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
 - Fire-check: per seed, per-address trap count == 2 in the signature for every address of the seed's stride subset (about 1/8 of the hole addresses; the subset list is part of the signature so a skipped address is detected).
 - Pass criteria: gen_isa_compare (trap with mcause 2 and mtval = encoding on every access); gen_chk_csr_readback (no implemented CSR changed by any hole write)
 - Expected: pass
 - Test group: gen_csr_illegal
-- Bins: CG-CSR-014.cp_range.r000_0ff, CG-CSR-014.cp_range.r100_1ff, CG-CSR-014.cp_range.r200_2ff, CG-CSR-014.cp_range.r302_303, CG-CSR-014.cp_range.r307_309, CG-CSR-014.cp_range.r30b_30f, CG-CSR-014.cp_range.r311_319, CG-CSR-014.cp_range.r31b_31f, CG-CSR-014.cp_range.r321_322, CG-CSR-014.cp_range.r345_39f, CG-CSR-014.cp_range.r3a4_3af, CG-CSR-014.cp_range.r3c0_5a7, CG-CSR-014.cp_range.r5a9_746, CG-CSR-014.cp_range.r748_756, CG-CSR-014.cp_range.r758_79f, CG-CSR-014.cp_range.r7a4_7a7, CG-CSR-014.cp_range.r7a9, CG-CSR-014.cp_range.r7ab_7af, CG-CSR-014.cp_range.r7b4_7bf, CG-CSR-014.cp_range.r7c2_7ff, CG-CSR-014.cp_range.r800_aff, CG-CSR-014.cp_range.rb01, CG-CSR-014.cp_range.rb81, CG-CSR-014.cp_range.rbc0, CG-CSR-014.cp_range.rbc3, CG-CSR-014.cp_range.rbc5_bff, CG-CSR-014.cp_range.rc01, CG-CSR-014.cp_range.rc81, CG-CSR-014.cp_range.rc20_c7f, CG-CSR-014.cp_range.rca0_f10, CG-CSR-014.cp_range.rf16_fff, CG-CSR-014.cr_class_priv_form.sh_m_rd, CG-CSR-014.cr_class_priv_form.sh_m_wr, CG-CSR-014.cr_class_priv_form.ro_m_rd, CG-CSR-014.cr_class_priv_form.ro_m_wr, CG-CSR-014.cr_class_priv_form.lo_m_wr, CG-CSR-014.cr_class_priv_form.mid_m_rd, CG-CSR-014.cr_class_priv_form.mid_m_wr, CG-CSR-014.cr_class_priv_form.dbg_m_rd, CG-CSR-014.cr_class_priv_form.dbg_m_wr
+- Bins: CG-CSR-014.cp_range.r000_0ff, CG-CSR-014.cp_range.r100_1ff, CG-CSR-014.cp_range.r200_2ff, CG-CSR-014.cp_range.r302_303, CG-CSR-014.cp_range.r307_309, CG-CSR-014.cp_range.r30b_30f, CG-CSR-014.cp_range.r311_319, CG-CSR-014.cp_range.r31b_31f, CG-CSR-014.cp_range.r321_322, CG-CSR-014.cp_range.r345_39f, CG-CSR-014.cp_range.r3a4_3af, CG-CSR-014.cp_range.r3c0_5a7, CG-CSR-014.cp_range.r5a9_746, CG-CSR-014.cp_range.r748_756, CG-CSR-014.cp_range.r758_79f, CG-CSR-014.cp_range.r7a4_7a7, CG-CSR-014.cp_range.r7a9, CG-CSR-014.cp_range.r7ab_7af, CG-CSR-014.cp_range.r7b4_7bf, CG-CSR-014.cp_range.r7c2_7ff, CG-CSR-014.cp_range.r800_aff, CG-CSR-014.cp_range.rb01, CG-CSR-014.cp_range.rb81, CG-CSR-014.cp_range.rbc0, CG-CSR-014.cp_range.rbc3, CG-CSR-014.cp_range.rbc5_bff, CG-CSR-014.cp_range.rc01, CG-CSR-014.cp_range.rc81, CG-CSR-014.cp_range.rc20_c7f, CG-CSR-014.cp_range.rca0_f10, CG-CSR-014.cp_range.rf16_fff, CG-CSR-014.cr_class_priv_form.sh_m_rd, CG-CSR-014.cr_class_priv_form.sh_m_wr, CG-CSR-014.cr_class_priv_form.ro_m_rd, CG-CSR-014.cr_class_priv_form.ro_m_wr, CG-CSR-014.cr_class_priv_form.lo_m_wr, CG-CSR-014.cr_class_priv_form.mid_m_rd, CG-CSR-014.cr_class_priv_form.mid_m_wr, CG-CSR-014.cr_class_priv_form.dbg_m_rd, CG-CSR-014.cr_class_priv_form.dbg_m_wr, CG-CSR-014.cp_range.rb20_b7f, CG-CSR-014.cp_range.rba0_bbf
 
 ### TP-CSR-011: Write op to a read-only address range raises illegal instruction in M-mode
 - Features: F-CSR-011
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode; handler installed.
-- Stimulus: write forms (csrrw/csrrs/csrrc with rs1 != x0, csrrwi/csrrsi/csrrci with uimm != 0) to mvendorid, marchid, mimpid, mhartid, mconfigptr, cycle, cycleh, instret, instreth, hpmcounter3..(2+MHPMCounterNum)(h), hpmcounter(3+MHPMCounterNum)..31 and to unimplemented 0xCxx/0xFxx addresses; 120 per seed; each trap followed by a csrrs x0 read of the same address showing no change. Weights: per the Layer-1 weight tables unless stated.
+- Stimulus: write forms (csrrw/csrrs/csrrc with rs1 != x0, csrrwi/csrrsi/csrrci with uimm != 0) to mvendorid, marchid, mimpid, mhartid, mconfigptr, cycle, cycleh, instret, instreth, hpmcounter3..(2+MHPMCounterNum)(h), hpmcounter(3+MHPMCounterNum)..31 and to unimplemented 0xCxx/0xFxx addresses; 120 per seed; each trap followed by a csrrs x0 read of the same address (implemented RO address: retires without trap and shows no change; unimplemented 0xCxx/0xFxx address: the demoted read traps too through the default arm illegal_csr, rtl/ibex_cs_registers.sv:702-703). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand, address (weighted 60% implemented RO, 40% unimplemented RO), rd.
 - Knobs: knob:instr_mix
-- Fire-check: rvfi_trap = 1 with mcause 2 and mtval = encoding for every write form; the following read retires without trap.
+- Fire-check: rvfi_trap = 1 with mcause 2 and mtval = encoding for every write form; the following demoted read retires without trap for the implemented RO addresses and traps (second mcause 2 with its own encoding) for the unimplemented ones, so the per-pair trap count is 1 or 2 by address class.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (RO values unchanged: mhartid == hart_id_i, marchid == 0x16)
 - Expected: pass
 - Test group: gen_csr_illegal
@@ -3931,7 +4182,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-014, F-PRV-034
 - Phase: 1
 - Tier: targeted
-- Preconditions: mtvec handler installed in M; enter U via csrw mstatus (MPP=U) + mret; mcounteren random.
+- Preconditions: mtvec handler installed in M; enter U via csrw mstatus (MPP=U) + mret; mcounteren random. C-2 U-mode prologue before the first entry to U.
 - Stimulus: in U-mode, CSR instructions (uniform over 6 ops, read and write forms) to addresses with csr[9:8] != 00 drawn 50% from implemented M-level CSRs (every row of the CSR map incl. 0x5A8 scontext, 0x7A0..0x7AA, 0x7B0..0x7B3, 0x7C0/0x7C1, PMP CSRs) and 50% from S/H-level addresses (0x1xx, 0x2xx, 0x5xx, 0x6xx, 0x9xx, 0xAxx, 0xDxx, 0xExx); each trap returns to U via the handler's mret; 150 per seed; every write form to any address in U is also covered (0xC00 with mcounteren[0]=1 as the wro_u case).
 - Randomized: address, op, form, rd, U-mode filler code, mcounteren.
 - Knobs: knob:priv_regime
@@ -3945,7 +4196,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-015
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcounteren[0] = 1 (gate On), mcounteren[2] random; enter U-mode.
+- Preconditions: mcounteren[0] = 1 (gate On), mcounteren[2] random; enter U-mode. C-2 U-mode prologue before the first entry to U.
 - Stimulus: alternating csrr t0, mcycle (0xB00), csrr t0, mhartid (0xF14), csrr t0, mstatus (0x300) and csrr t0, cycle (0xC00), csrr t0, instret (0xC02) in U-mode; 40 alternations per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order, rd, mcounteren[2], filler.
 - Knobs: knob:priv_regime
@@ -3959,7 +4210,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-016
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode for the priv combinations, M-mode for unimplemented+RO; handler counts entries.
+- Preconditions: U-mode for the priv combinations, M-mode for unimplemented+RO; handler counts entries. C-2 U-mode prologue before the first entry to U.
 - Stimulus: (a) U-mode csrrw to 0xF11 (priv + write_ro), (b) U-mode csrr dcsr (priv + dbg), (c) M-mode csrrw to 0xF16 (unimpl + write_ro), (d) U-mode csrrw to 0xC01 time (unimpl + write_ro, no priv), (e) U-mode csrrw to 0x7B4 (priv + unimpl); 20 of each per seed with random operands. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op among write forms, rd/rs1, order, privilege entry path; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
@@ -3991,7 +4242,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: in debug mode, csrrs rd, addr, x0 and csrrw x0, addr, rs1 for every addr in 0x7B4..0x7BF (12 addresses x 2 forms), interleaved with legal dscratch0 accesses; the same 24 accesses outside debug mode in M. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order, rd/rs1, debug entry point, interleaving.
 - Knobs: knob:debug_req_regime
-- Fire-check: for each 0x7B4..0x7BF access in debug mode rvfi_trap = 1 with rvfi_ext_debug_mode = 1 and rvfi_pc_wdata == DmExceptionAddr; dscratch0 accesses in between retire without trap; outside debug mode the same addresses trap to mtvec.
+- Fire-check: for each 0x7B4..0x7BF access in debug mode rvfi_trap = 1 with rvfi_ext_debug_mode = 1 and the NEXT record's rvfi_pc_rdata == DmExceptionAddr (C-1: the trapping record's rvfi_pc_wdata is the sequential fetch head, rtl/ibex_core.sv:2084; the DmExceptionAddr fetch is also bus-visible on instr_addr_o because the icache is forced off in debug mode, C-14); dscratch0 accesses in between retire without trap; outside debug mode the same addresses trap to mtvec.
 - Pass criteria: gen_chk_debug (exception in debug mode -> DmExceptionAddr, no mepc/mcause update; the exception keeps priv_lvl at M, rtl/ibex_cs_registers.sv:908, RTL-defined per gen_bug_log.md B6 / Critic C-20 since Sdext.adoc:51 leaves it UNSPECIFIED); gen_isa_compare (outside-debug traps)
 - Expected: pass (RTL-defined, spec UNSPECIFIED; B6 ruling C-20)
 - Test group: gen_csr_debug_csr
@@ -4058,7 +4309,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode; irq pins low (so MIE writes have no side effect) for 80% of seeds, one pending disabled irq for the rest.
-- Stimulus: write ops (6 ops uniform) to mstatus with operand classes: rand 40%, legal_only 20% (bits 3, 7, 11, 12, 17, 21), illegal_only 15% (all other bits), all1 10%, all0 10%, msb_only 5%; each followed by csrr mstatus; MPP written value uniform over 00/01/10/11; 200 pairs per seed; MPP=U writes are not followed by mret in this item.
+- Stimulus: write ops (6 ops uniform) to mstatus with operand classes: rand 40%, legal_only 20% (bits 3, 7, 11, 12, 17, 21), illegal_only 15% (all other bits), all1 10%, all0 10%, msb_only 5%; each followed by csrr mstatus; MPP written value uniform over 00/01/10/11; 200 pairs per seed; MPP=U writes are not followed by mret in this item; a pair that leaves MPRV = 1 with MPP != 11 is followed by a csrrw mstatus restoring MPRV = 0 before the next data access (C-MPRV: the signature store would otherwise be U-privileged and PMP-denied).
 - Randomized: op, operand class and value, rd, filler, irq presence.
 - Knobs: knob:irq_regime
 - Fire-check: read-back pairs for every op and pattern class on RVFI; at least one pair per written MPP value; at least one pair each with TW=1 and MPRV=1 written.
@@ -4071,7 +4322,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-024
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; mepc set to a U-mode code block that immediately executes ecall; handler installed.
+- Preconditions: M-mode; mepc set to a U-mode code block that immediately executes ecall; handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrw/csrrs mstatus with MPP = 01 or 10 (other fields random legal), csrr mstatus, then mret; the U-mode block does ecall back; 30 rounds per seed; also MPP = 11 rounds (mret stays in M) and MPP = 00 rounds as controls. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP value among the four, op (csrrw vs csrrs vs csrrwi where the immediate can reach bit 11 only through rs1 -> csrrw/csrrs only for bits 12:11), other mstatus fields, mepc target; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
@@ -4173,7 +4424,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: (a) csrrs mie, <bit of the high pin> ; csrr mie ; then an ALU marker: irq_pending_o must rise the cycle after the write commits; (b) wfi with the pin high but mie bit clear, then the TB observes sleep, then raises debug_req_i / another enabled pin to end it (wake by disabled pin must not happen); (c) csrrc mie, <bit> in the cycle window where the pin rises (TB raises the pin 0..3 cycles around the write retirement): no interrupt taken when the bit is cleared first, and every (c) write is followed by csrr mie (the read-back the fire-check compares); 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: pin, MIE, timing offset of the pin edge, op form.
 - Knobs: knob:irq_hold, knob:irq_line_mix
-- Fire-check: (a) irq_pending_o edge within 2 cycles after the mie write retirement; (b) core_busy_o == IbexMuBiOff for >= 8 cycles with the disabled pin high, then wake by the enabled source; (c) rvfi_intr present iff the read-back of mie still has the bit set.
+- Fire-check: (a) irq_pending_o (= |(mip & mie_q), combinational on the flop, rtl/ibex_cs_registers.sv:1044-1045) rises in the cycle after the write's commit edge, i.e. ONE cycle BEFORE the write's RVFI record (record = commit + GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, gen_tb_architecture.md 8.2): the TB back-dates the record by the offset and asserts the edge at commit + 1; (b) core_busy_o == IbexMuBiOff for >= 8 cycles with the disabled pin high, then wake by the enabled source; (c) two legal orders (C-3 / X-7, rtl/ibex_controller.sv:296, :704): a pin already high in an empty-ID DECODE cycle before the csrrc enters ID is taken FIRST (rvfi_intr with handler mepc == the csrrc pc; the csrrc retires after mret and the read-back shows the bit cleared), while a pin rising once the csrrc is valid in ID never pre-empts it (no rvfi_intr, bit cleared); so: an rvfi_intr whose handler mepc != the csrrc pc occurs iff the read-back still has the bit set, and an rvfi_intr with mepc == the csrrc pc is the legal early-entry order.
 - Pass criteria: gen_chk_irq (irq_pending_o == |(pins & mie) every cycle); gen_chk_sleep (no wake by a disabled pin); gen_isa_compare
 - Expected: pass
 - Test group: gen_csr_trap_setup
@@ -4229,7 +4480,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: csrrw/csrrs/csrrc/csrrwi/csrrsi/csrrci mtvec with operand = handler base | random bits 7:0 (MODE 00/01/10/11, bits 7:2 random), csrr mtvec, then ecall (exception -> BASE) or an enabled interrupt (-> BASE + 4*id); 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: base, low byte, op, trap kind, irq id.
 - Knobs: knob:irq_line_mix
-- Fire-check: read-back == (operand & 0xFFFF_FF00) | 1; rvfi_pc_wdata of the trapping instruction (or first handler pc) == BASE for ecall and BASE + 4*id for the interrupt.
+- Fire-check: read-back == (operand & 0xFFFF_FF00) | 1; the first handler record's rvfi_pc_rdata == BASE for ecall and BASE + 4*id for the interrupt (C-1: the trapping record's rvfi_pc_wdata is the fall-through pc_if, never the vector, rtl/ibex_core.sv:2084, rtl/ibex_controller.sv:829-833).
 - Pass criteria: gen_chk_csr_readback; gen_isa_compare (trap target pc); gen_chk_irq (vector)
 - Expected: pass
 - Test group: gen_csr_trap_setup
@@ -4299,7 +4550,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: csrrw mepc, T|1 ; csrr mepc ; mret ; the target block records its arrival; 20 rounds per seed with T varying (T = 0x2 variant with code at address 2 included when the memory map allows, otherwise random 4k+2 addresses). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: T, op (csrrw/csrrsi to set bit 0), surrounding code; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: read-back == T & ~1 (bit 1 preserved); rvfi_pc_wdata of the mret == T & ~1 and the next retirement has rvfi_pc_rdata == T & ~1.
+- Fire-check: read-back == T & ~1 (bit 1 preserved); the next retirement after the mret has rvfi_pc_rdata == T & ~1 (C-1: the mret record is captured in DECODE with pc_set = 0 and its rvfi_pc_wdata is mret pc + 4, rtl/ibex_core.sv:2084, rtl/ibex_controller.sv:954-957).
 - Pass criteria: gen_chk_csr_readback; gen_isa_compare (mret target)
 - Expected: pass
 - Test group: gen_csr_trap_handling
@@ -4309,7 +4560,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-041, F-PRV-032
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode and U-mode; mie/MIE set for the interrupt case; data agent error / PMP deny for the load-store case; handler records mepc and the TB records rvfi_pc_rdata of the trapping / next instruction.
+- Preconditions: M-mode and U-mode; mie/MIE set for the interrupt case; data agent error / PMP deny for the load-store case; handler records mepc and the TB records rvfi_pc_rdata of the trapping / next instruction. C-2 U-mode prologue before the first entry to U.
 - Stimulus: (a) interrupt raised while an ALU sequence runs; (b) illegal instruction, ecall, ebreak, illegal CSR, fetch error (instr_err_i on a random word); (c) lw/sw with bus error or PMP fault with a younger ALU/CSR instruction fetched behind it; 30 of each per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: class, position, younger instruction kind, privilege mode, latency knobs.
 - Knobs: knob:irq_regime, knob:dmem_err_rate, knob:imem_err_rate, knob:pmp_regime
@@ -4393,7 +4644,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-047
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode and U-mode; handler reads mtval and records rvfi_insn of the trapping instruction via the TB.
+- Preconditions: M-mode and U-mode; handler reads mtval and records rvfi_insn of the trapping instruction via the TB. C-2 U-mode prologue before the first entry to U.
 - Stimulus: (a) 6 ops with rand/all1/all0/msb operands to mtval followed by csrr, 80 pairs per seed; (b) traps of each class: illegal 32-bit instruction, illegal CSR, ecall, ebreak, interrupt, instruction access fault (instr_err_i on a 32-bit instruction whose second half faults included), load/store access fault (bus error and PMP), integrity-error NMI (handled by the security area; here only the mtval read). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, value, trap class, faulting address, privilege mode.
 - Knobs: knob:imem_err_rate, knob:dmem_err_rate, knob:pmp_regime, knob:irq_regime
@@ -4407,7 +4658,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-048
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode or U-mode; handler installed.
+- Preconditions: M-mode or U-mode; handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 16-bit illegal encodings (0x0000, reserved C-quadrant encodings from the compressed decoder's illegal set, c.ebreak excluded) placed at 2-byte and 4-byte alignments, 40 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: encoding, alignment, mode, filler.
 - Knobs: knob:instr_mix
@@ -4421,7 +4672,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-049
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode and U-mode; handler decodes mtval[31:20] and records it.
+- Preconditions: M-mode and U-mode; handler decodes mtval[31:20] and records it. C-2 U-mode prologue before the first entry to U.
 - Stimulus: illegal CSR accesses of each class (priv, write_ro, unimpl, dbg) with random rd/rs1/op; 80 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: class, address, op, rd, rs1, mode.
 - Knobs: knob:priv_regime
@@ -4435,7 +4686,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-050
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcounteren_writable_i = IbexMuBiOn (pin driven by the TB); M-mode.
+- Preconditions: mcounteren_writable_i = IbexMuBiOn (pin driven by the TB); M-mode. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 6 ops with rand/legal_only/illegal_only/all1/all0/msb operands and single-bit operands for each of bits 0, 1, 2, 3..(2+MHPMCounterNum), (3+MHPMCounterNum)..31 to mcounteren, each followed by csrr; 150 pairs per seed; afterwards a U-mode alias read proves the effect of the final value (TP-CSR-053 checks the full matrix). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand, rd, final value; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
@@ -4449,7 +4700,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-051
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcounteren_writable_i driven per test to IbexMuBiOff (4'b1010) or an invalid encoding (uniform over the 14 non-On/Off values); a directed variant switches the pin from On to Off mid-test after a first write.
+- Preconditions: mcounteren_writable_i driven per test to IbexMuBiOff (4'b1010) or an invalid encoding (uniform over the 14 non-On/Off values); a directed variant switches the pin from On to Off mid-test after a first write. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 6 ops with all1/rand/legal operands to mcounteren, each followed by csrr and by a U-mode read of cycle (must trap while the register stays 0); 60 pairs per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: pin encoding, op, operand, rd; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
@@ -4477,7 +4728,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-053
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcounteren = CTR_MASK (0x1FFD) (all implemented bits) via gate On; counters running (mcountinhibit = 0) in half the seeds, all inhibited in the other half (exact equality then).
+- Preconditions: mcounteren = CTR_MASK (0x1FFD) (all implemented bits) via gate On; counters running (mcountinhibit = 0) in half the seeds, all inhibited in the other half (exact equality then). C-2 U-mode prologue before the first entry to U.
 - Stimulus: in M-mode read mcycle/minstret/mhpmcounterN then enter U-mode and read cycle/instret/hpmcounterN (and the h halves) for every N in 3..(2+MHPMCounterNum) (MHPMCounterNum), then ecall back and read the M-mode names again; 5 rounds per seed with random loads/stores/branches between rounds so hpm counters move. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order of aliases, filler mix, inhibit state, rd.
 - Knobs: knob:instr_mix
@@ -4491,7 +4742,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-054
 - Phase: 1
 - Tier: targeted
-- Preconditions: gate On; handler returns to U after each trap and records the trapping address.
+- Preconditions: gate On; handler returns to U after each trap and records the trapping address. C-2 U-mode prologue before the first entry to U.
 - Stimulus: for each x in {0, 2, 3..(2+MHPMCounterNum)}: csrrw mcounteren, 1<<x in M, enter U, read every alias y in {cycle, instret, hpmcounter3..(2+MHPMCounterNum)} and their h halves in random order, ecall back; (2 + MHPMCounterNum) x 2 x (2 + MHPMCounterNum) = 288 U-mode reads per seed (one full matrix), plus a mcounteren = 0 round. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order of x and y, rd, filler in U-mode.
 - Knobs: knob:priv_regime
@@ -4505,7 +4756,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-055
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcounteren random (incl. bit 1 write attempt); M and U modes.
+- Preconditions: mcounteren random (incl. bit 1 write attempt); M and U modes. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrs rd, time, x0 and csrrs rd, timeh, x0 (and write forms) in M-mode and in U-mode, 20 each per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: form, rd, mode, mcounteren.
 - Knobs: knob:priv_regime
@@ -4519,7 +4770,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-056
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcounteren = CTR_MASK (0x1FFD) (every implemented bit set) so only the unimplemented indices can trap; M and U.
+- Preconditions: mcounteren = CTR_MASK (0x1FFD) (every implemented bit set) so only the unimplemented indices can trap; M and U. C-2 U-mode prologue before the first entry to U.
 - Stimulus: demoted reads of every 0xC03+MHPMCounterNum..0xC1F and 0xC83+MHPMCounterNum..0xC9F address in M-mode (2 x (29 - MHPMCounterNum) = 38 reads) and in U-mode (38 reads); 2 passes per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order, rd, form.
 - Knobs: knob:priv_regime
@@ -4533,7 +4784,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-057
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode (and U-mode with mcounteren bit set for the wro_u case).
+- Preconditions: M-mode (and U-mode with mcounteren bit set for the wro_u case). C-2 U-mode prologue before the first entry to U.
 - Stimulus: for each alias in 0xC00..0xC0C / 0xC80..0xC8C: csrrw rd, alias, rs1 (trap), csrrs rd, alias, rs1!=x0 (trap), csrrci rd, alias, 1 (trap), csrrs rd, alias, x0 (read); 100 accesses per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: alias, form, rd, rs1, mode.
 - Knobs: knob:priv_regime
@@ -4585,7 +4836,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Test group: gen_csr_counters
 - Bins: CG-CSR-004.cr_fam_wpat.mcinh_all1, CG-CSR-004.cr_mcinh_w_op.all1_csrrw, CG-CSR-004.cr_mcinh_w_op.all1_csrrs, CG-CSR-013.cr_minstret_rd_wb.minstret_inh_retiring, CG-CSR-013.cr_minstret_rd_wb.minstret_retiring
 
-### TP-CSR-061: mhpmevent3..(2+MHPMCounterNum) read hardwired one-hot (1 << n); mhpmevent(3+MHPMCounterNum)..31 read 0; writes ignored
+### TP-CSR-061: mhpmevent3..(2+MHPMCounterNum) read hardwired one-hot (1 << (n - 3)); mhpmevent(3+MHPMCounterNum)..31 read 0; writes ignored
 - Features: F-CSR-061
 - Phase: 1
 - Tier: smoke
@@ -4593,9 +4844,9 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: csrr of every 0x323..0x33F at boot; 6 ops with all1/all0/rand operands to each, followed by csrr; one full sweep per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand, order, rd; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: rvfi_trap = 0 on all accesses; read-back == 1 << n for n = 3..(2+MHPMCounterNum) and 0 for (3+MHPMCounterNum)..31 before and after the writes.
-- Pass criteria: gen_chk_csr_readback
-- Expected: pass
+- Fire-check: rvfi_trap = 0 on all accesses; read-back == 1 << (n - 3) for n = 3..(2+MHPMCounterNum) (mhpmevent3 = 0x1 .. mhpmevent12 = 0x200: mhpmevent[i][i - MHPMCOUNTER_BASE] = 1, rtl/ibex_cs_registers.sv:185, :1602-1619; C-11) and 0 for (3+MHPMCounterNum)..31 before and after the writes.
+- Pass criteria: gen_chk_csr_readback (checker follows the RTL value 1 << (n - 3); performance_counters.rst:133-147 says 1 << n: doc mismatch D20)
+- Expected: pass (doc mismatch D20)
 - Test group: gen_csr_counters
 - Bins: CG-CSR-004.cr_fam_op.mhpmev_csrrw, CG-CSR-004.cr_fam_op.mhpmev_csrrs, CG-CSR-004.cr_fam_op.mhpmev_csrrc, CG-CSR-004.cr_fam_op.mhpmev_csrrwi, CG-CSR-004.cr_fam_op.mhpmev_csrrsi, CG-CSR-004.cr_fam_op.mhpmev_csrrci, CG-CSR-004.cr_fam_wpat.mhpmev_rand, CG-CSR-004.cr_fam_wpat.mhpmev_all1, CG-CSR-004.cr_fam_wpat.mhpmev_all0, CG-CSR-004.cp_csr.mhpmevent_impl, CG-CSR-004.cp_csr.mhpmevent_unimpl, CG-CSR-016.cp_csr.mhpmevent, CG-CSR-016.cp_csr.mhpmevent_unimpl
 
@@ -4635,7 +4886,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: (a) csrrw mcycle, 0xFFFF_FFF0 then 16+ cycles of nops then csrr mcycleh (== old + 1) and csrr mcycle (wrapped); (b) csrrw mcycle, 0xFFFF_FFFF - d for d swept 0..12 across seeds, then csrrw mcycleh, H timed so that for some d the write lands in the carry cycle, then csrr both halves; 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: d, H, filler, op.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: (a) mcycleh read-back == H_old + 1 and mcycle read-back small; (b) for the seed hitting the carry cycle (inferred from rvfi_ext_mcycle of the mcycleh writer showing low == 0xFFFF_FFFF and high == H) the low half read-back == 0xFFFF_FFFF + elapsed (no wrap in that cycle) and high == H (no +1); for other d high == H and low wrapped normally.
+- Fire-check: (a) mcycleh read-back == H_old + 1 and mcycle read-back small; (b) for the seed hitting the carry cycle (inferred from rvfi_ext_mcycle of the mcycleh writer showing low == 0xFFFF_FFFF and high == H_old) the write drops only THAT cycle's increment (we has priority and the low half is kept, rtl/ibex_counter.sv:35-45): the counter is {H, 0xFFFF_FFFF} after the write, the next enabled cycle wraps low to 0 and carries into high, so the read-backs show high == H + 1 and low == (cycles since the write) - 1; for other d the carry either preceded the write (high == H, low already wrapped) or follows it later (high == H + 1 once low wraps).
 - Pass criteria: gen_chk_counters (64-bit model with write priority); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_csr_counters
@@ -4649,7 +4900,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: csrrs t0, mcycle, mask ; csrr t1, mcycle and csrrc variants, 80 rounds per seed with random masks incl. masks touching the low bits that change every cycle; also on mcycleh and minstret. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mask, op, counter, gap.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: t1 == ((t0 | mask) or (t0 & ~mask)) + elapsed cycles between the two retirements exactly, i.e. no increment interleaved between the read and the write of the RMW.
+- Fire-check: t1 == ((t0 | mask) or (t0 & ~mask)) + (retirement gap - 1) exactly for mcycle/mcycleh: the RMW commits at the csrrs ID-exit edge and wins over that cycle's increment (rtl/ibex_counter.sv:35-45), the csrr samples counter_q in its own ID cycle and the retirement distance equals the ID-exit distance for these two ordinary instructions (write cycle contributing 0, same rule as TP-CSR-063; measured with knob:imem_rvalid_delay = min1 and no dummy in the gap, S-4); for the minstret variant the elapsed term is the number of countable retirements between the two (the csrrs is a minstret write op and not counted); no increment interleaves between the read and the write of the RMW.
 - Pass criteria: gen_chk_counters; gen_chk_csr_readback (RMW atomicity)
 - Expected: pass
 - Test group: gen_csr_counters
@@ -4659,11 +4910,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-066
 - Phase: 1
 - Tier: smoke
-- Preconditions: mcountinhibit[2] = 0; minstret preloaded (incl. near 2^32 for the carry).
+- Preconditions: mcountinhibit[2] = 0; minstret preloaded (incl. near 2^32 for the carry); cpuctrlsts.dummy_instr_en = 0 (C-DUM) for the whole block (Q-005 default: exact minstret counts only with dummies off; the dummies-on case is TP-PMC-013, expected-fail B7)
 - Stimulus: blocks of random instructions including ecall, ebreak (dcsr.ebreakm = 0), illegal instructions, illegal CSR accesses, faulting loads/stores, a fetch error, csrrw minstret, Zcmp push/pop sequences, wfi (woken by irq), fence.i, mret, dret (from debug), and CSR reads of minstret; minstret read at block start and end; 20 blocks per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: block composition, preload, filler.
 - Knobs: knob:instr_mix, knob:dmem_err_rate, knob:imem_err_rate
-- Fire-check: end read - start read == number of RVFI retirements in the block with rvfi_trap = 0 excluding ecall/ebreak (the exception path with rvfi_trap = 1 and the ebreak-into-debug record with rvfi_trap = 0, S-2) and minstret(h) write ops and counting each Zcmp sequence once, plus dummy instructions (SEC area, B7) if enabled; carry into minstreth observed when preloaded near 2^32.
+- Fire-check: end read - start read == number of RVFI retirements in the block with rvfi_trap = 0 excluding ecall/ebreak (the exception path with rvfi_trap = 1 and the ebreak-into-debug record with rvfi_trap = 0, S-2) and minstret(h) write ops, counting each Zcmp sequence once, and MINUS one per minstret(h) write op whose preceding countable instruction retires from WB in the write's commit cycle (we has priority over the increment, rtl/ibex_counter.sv:44-45, perf_instr_ret_wb rtl/ibex_wb_stage.sv:208; e.g. add ; csrrw minstret adjacency at minimum latency, fact-check TP-CSR-066); dummies are off (C-DUM), so no dummy term exists; carry into minstreth observed when preloaded near 2^32.
 - Pass criteria: gen_chk_counters (minstret == RVFI-derived count with the exclusion list); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_csr_counters
@@ -4684,7 +4935,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Bins: CG-CSR-013.cr_minstret_wr.minstret_wr_coincide, CG-CSR-013.cr_minstret_wr.minstret_wr_none, CG-CSR-013.cr_minstret_wr.minstreth_wr_coincide
 
 ### TP-CSR-068: minstret read in ID includes the retirement of the instruction still in WB
-- Features: F-CSR-068
+- Features: F-CSR-068, F-CSR-060
 - Phase: 1
 - Tier: targeted
 - Preconditions: mcountinhibit[2] = 0; data agent latency randomized so the load is or is not still in WB when the csrr is in ID.
@@ -4792,28 +5043,28 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: the all-ones write and set pairs retire in debug mode (rvfi_ext_debug_mode = 1, rvfi_trap = 0) with the read-back pairs closed and cause matching the entry stimulus; prv == 11 (M) after all-ones; bit 3 (nmip) excluded from the compare (B5, owner TP-DBG-021).
 - Pass criteria: gen_chk_csr_readback predicting 0x4000_9007 | (cause << 6) (bit 13 = 0 per core_registers.xml:163-172) - fails on current RTL, which returns 0x4000_B007 | (cause << 6) (rtl/ibex_cs_registers.sv:810-836); the all-ones legalisation of every other field is guarded by TP-CSR-074 (patterns with bit 13 cleared), so this expected-fail masks no other regression; gen_chk_debug (cause) - passes
 - Expected: expected-fail (B15)
-- Test group: gen_csr_debug_csr
+- Test group: gen_csr_debug_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CSR-007.cr_csr_wpat_dbg.dcsr_all1, CG-CSR-007.cr_dcsr_bits.all1, CG-CSR-007.cr_prv_w_op.prv_m_csrrw, CG-PRV-007.cp_cause.haltreq, CG-PRV-007.cp_cause.ebreak, CG-PRV-007.cp_cause.step, CG-PRV-007.cp_cause.trigger
 
 ### TP-CSR-076: dcsr.ebreaks (bit 13) must read 0 without S-mode; current RTL stores it (B15)
 - Features: F-CSR-076
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug mode.
+- Preconditions: debug mode. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrs dcsr, 0x2000 ; csrr ; csrrc dcsr, 0x2000 ; csrr ; csrrw with bit 13 alone; 20 rounds per seed; then dret and an ebreak in M/U to show no functional effect (ebreak behaviour per ebreakm/ebreaku only). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, other bits, round order.
 - Knobs: knob:debug_req_regime
 - Fire-check: RVFI shows the bit-13 set/clear/write pairs retiring in debug mode (rvfi_ext_debug_mode = 1, rvfi_trap = 0) with the read-back pairs closed; the following ebreak outside debug traps (rvfi_trap = 1, mcause 3) or enters debug (rvfi_trap = 0, next fetch == DmHaltAddr, S-2) according to ebreakm/ebreaku only.
 - Pass criteria: gen_chk_csr_readback with the B15 spec expectation (tools/specs/riscv-debug-spec/xml/core_registers.xml:163-172: ebreaks is hardwired to 0 when the hart has no S-mode, so read-back bit 13 == 0 after every write) - fails on current RTL, which stores the bit (rtl/ibex_cs_registers.sv:811-835); gen_chk_debug (ebreak behaviour independent of bit 13; functional impact nil, rtl/ibex_controller.sv:481-483) - passes
 - Expected: expected-fail (B15)
-- Test group: gen_csr_debug_csr
+- Test group: gen_csr_debug_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CSR-007.cr_dcsr_bits.ebreaks_only, CG-CSR-007.cp_dcsr_ebreaks_w.b1, CG-CSR-007.cp_dcsr_ebreaks_w.b0, CG-CSR-007.cr_csr_op_dbg.dcsr_csrrs, CG-CSR-007.cr_csr_op_dbg.dcsr_csrrc
 
 ### TP-CSR-077: dcsr.prv WARL: 01 and 10 legalise to 00 (U); dret then resumes in U
 - Features: F-CSR-077
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug mode entered from M (dcsr.prv reads 11); dpc set by the debug program to a U-safe code block that ecalls back.
+- Preconditions: debug mode entered from M (dcsr.prv reads 11); dpc set by the debug program to a U-safe code block that ecalls back. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrw dcsr, (dcsr & ~3) | prv for prv uniform over 00/01/10/11 (also csrrs/csrrsi setting prv bits, csrrc clearing them), csrr dcsr, dret; 24 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: prv value, op, dpc target, entry cause.
 - Knobs: knob:debug_req_regime
@@ -4897,14 +5148,14 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-083
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode, debug mode and U-mode rounds.
+- Preconditions: M-mode, debug mode and U-mode rounds. C-2 U-mode prologue before the first entry to U.
 - Stimulus: read and write forms (6 ops, all1/rand operands) to 0x7A3, 0x7A8, 0x7AA, 0x5A8 in M-mode and debug mode, followed by csrr; the same in U-mode (all trap); 80 accesses per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand, address, mode, rd.
 - Knobs: knob:priv_regime, knob:debug_req_regime
 - Fire-check: RVFI shows the M/debug-mode accesses retiring and the U-mode accesses trapping with mcause 2; the M-mode read-back is recorded.
 - Pass criteria: gen_isa_compare with the Sdtrig rule that unimplemented trigger CSRs raise illegal-instruction (checker follows the spec, so the M-mode no-trap read-0 behaviour of the RTL fails); gen_chk_csr_readback (value 0 when the access completes); U-mode traps pass either way
 - Expected: expected-fail (B3)
-- Test group: gen_csr_trigger_csr
+- Test group: gen_csr_trigger_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-CSR-008.cr_csr_dbg_form.tdata3_nondbg_wr, CG-CSR-008.cr_csr_dbg_form.tdata3_dbg_wr, CG-CSR-008.cr_csr_dbg_form.mcontext_nondbg_wr, CG-CSR-008.cr_csr_dbg_form.mscontext_nondbg_wr, CG-CSR-008.cr_csr_dbg_form.scontext_nondbg_wr, CG-CSR-008.cr_csr_dbg_form.tdata3_nondbg_rd, CG-CSR-008.cr_csr_dbg_form.mcontext_nondbg_rd, CG-CSR-008.cr_csr_dbg_form.mscontext_nondbg_rd, CG-CSR-008.cr_csr_dbg_form.scontext_nondbg_rd, CG-CSR-008.cr_csr_wpat.tdata3_all1, CG-CSR-008.cr_csr_wpat.mcontext_all1, CG-CSR-008.cr_csr_wpat.mscontext_all1, CG-CSR-008.cr_csr_wpat.scontext_all1, CG-CSR-008.cr_csr_u.tdata3_u, CG-CSR-008.cr_csr_u.mcontext_u, CG-CSR-008.cr_csr_u.mscontext_u, CG-CSR-008.cr_csr_u.scontext_u, CG-CSR-001.cr_priv_aclass_trap.m_s_lvl_ok, CG-CSR-001.cr_priv_aclass_trap.u_s_lvl_trap, CG-CSR-016.cp_csr.scontext, CG-CSR-016.cp_csr.tdata3, CG-CSR-016.cp_csr.mcontext, CG-CSR-016.cp_csr.mscontext
 
 ### TP-CSR-084: M-mode (non-debug) writes to tselect/tdata1/tdata2 change nothing and arm no trigger
@@ -4981,7 +5232,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-089
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; handler reads cpuctrlsts on entry and before mret; double_fault_seen_o monitored.
+- Preconditions: M-mode; handler reads cpuctrlsts on entry and before mret; double_fault_seen_o monitored. C-2 U-mode prologue before the first entry to U.
 - Stimulus: (a) random synchronous exception (ecall, illegal, illegal CSR, ebreak with dcsr.ebreakm/u = 0, load fault) from M or U, handler reads bit 6 (== 1), mret, program reads bit 6 (== 0); (b) inside the handler a second synchronous exception (nested handler) -> bit 7 set and pulse; the nested handler clears bit 7 by software; (c) an interrupt or NMI while bit 6 = 1 -> no pulse, bit 7 unchanged; 30 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: exception kind, mode, nesting depth, irq timing.
 - Knobs: knob:irq_regime, knob:priv_regime, knob:dmem_err_rate
@@ -5023,15 +5274,15 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-092
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; DummyInstructions = 1; cpuctrlsts.dummy_instr_en random (on/off).
+- Preconditions: M-mode; DummyInstructions = 1; cpuctrlsts.dummy_instr_en random (on/off). C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrw/csrrwi/csrrs/csrrc/csrrsi/csrrci secureseed with random / zero / all-ones values, each followed by csrr secureseed; 80 writes per seed; in U-mode the access traps. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, value, dummy_instr_en, rd.
 - Knobs: knob:instr_mix
-- Fire-check: read-back == 0 for every read; the probe candidate (cs_registers dummy_instr_seed_en_o) shows one pulse per write op with seed data == the RVFI-derived written value (csrrw/csrrwi: rs1 / uimm; csrrs/csrrsi: rs1 / uimm because the read value is 0; csrrc/csrrci: 0); U-mode access traps.
-- Pass criteria: gen_chk_csr_readback (reads 0, no trap in M); cocotb fire-check on the seed pulse (probe, DV Lead decision); gen_isa_compare (U trap)
+- Fire-check: read-back == 0 for every read; every write op retires with rvfi_trap = 0 and a retirement gap >= 2 (csr_pipe_flush applies to secureseed write ops, rtl/ibex_id_stage.sv:593-597) while the demoted read forms retire with gap 1 (measured at knob:imem_rvalid_delay = min1); U-mode access traps. The reseed pulse itself (cs_registers_i.dummy_instr_seed_en_o with dummy_instr_seed_o == the RVFI-derived written value: csrrw/csrrwi rs1 / uimm; csrrs/csrrsi rs1 / uimm because the read value is 0; csrrc/csrrci 0; rtl/ibex_cs_registers.sv:1914-1915) is internal and probe-gated (P7 PROPOSED, Critic ruling pending): coverage-only, never a fire-check or pass-gate check (fact-check UNOBSERVABLE row).
+- Pass criteria: gen_chk_csr_readback (reads 0, no trap in M); gen_chk_csr_flush (flush bubble after every write op, none after a demoted read); gen_isa_compare (U trap)
 - Expected: pass
 - Test group: gen_csr_cpuctrl
-- Bins: CG-CSR-010.cr_op_form_pulse.csrrw_nz_pulse, CG-CSR-010.cr_op_form_pulse.csrrw_x0_pulse, CG-CSR-010.cr_op_form_pulse.csrrwi_0_pulse, CG-CSR-010.cr_op_form_pulse.csrrwi_nz_pulse, CG-CSR-010.cr_seed_en.zero_on, CG-CSR-010.cr_seed_en.all1_on, CG-CSR-010.cr_seed_en.rand_on, CG-CSR-010.cr_seed_en.rand_off, CG-CSR-010.cr_seed_en.zero_off, CG-CSR-010.cr_form_priv_trap.rd_m_ok, CG-CSR-010.cr_form_priv_trap.wr_u_trap, CG-CSR-010.cr_form_priv_trap.rd_u_trap, CG-CSR-010.cr_form_priv_trap.wr_m_ok, CG-CSR-016.cp_csr.secureseed, CG-CSR-010.cp_form.rd_only, CG-CSR-010.cp_form.wr, CG-CSR-010.cp_priv.m, CG-CSR-010.cp_trap.ok
+- Bins: CG-CSR-010.cr_op_form_gap.csrrw_nz_flush, CG-CSR-010.cr_op_form_gap.csrrw_x0_flush, CG-CSR-010.cr_op_form_gap.csrrwi_0_flush, CG-CSR-010.cr_op_form_gap.csrrwi_nz_flush, CG-CSR-010.cr_seed_en.zero_on, CG-CSR-010.cr_seed_en.all1_on, CG-CSR-010.cr_seed_en.rand_on, CG-CSR-010.cr_seed_en.rand_off, CG-CSR-010.cr_seed_en.zero_off, CG-CSR-010.cr_form_priv_trap.rd_m_ok, CG-CSR-010.cr_form_priv_trap.wr_u_trap, CG-CSR-010.cr_form_priv_trap.rd_u_trap, CG-CSR-010.cr_form_priv_trap.wr_m_ok, CG-CSR-016.cp_csr.secureseed, CG-CSR-010.cp_form.rd_only, CG-CSR-010.cp_form.wr, CG-CSR-010.cp_priv.m, CG-CSR-010.cp_trap.ok
 
 ### TP-CSR-093: secureseed RMW semantics: csrrs writes rs1, csrrc writes 0, uimm = 0 forms do not reseed
 - Features: F-CSR-093
@@ -5041,11 +5292,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: csrrs secureseed, rs1 (seed == rs1 because rdata = 0); csrrc secureseed, rs1 (seed == 0); csrrsi/csrrci with uimm != 0 (seed == uimm / 0); csrrs/csrrc x0 and csrrsi/csrrci 0 (no pulse); 60 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, rs1 value, uimm, rd; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: probe shows pulse with seed == rs1 for set, == 0 for clear, no pulse for the demoted forms; read-back always 0.
-- Pass criteria: cocotb fire-check on the probe; gen_chk_csr_readback; gen_chk_csr_flush (no flush for the demoted forms)
+- Fire-check: read-back always 0; the set/clear write forms retire with a flush bubble (gap >= 2) and the demoted x0 / uimm = 0 forms with gap 1 (knob:imem_rvalid_delay = min1); the RMW value the write carries (rs1 for csrrs, uimm for csrrsi, 0 for csrrc/csrrci because rdata = 0, rtl/ibex_cs_registers.sv:1003-1009) has no boundary footprint: its pulse is the P7 probe-gated coverage observation, not a fire-check (fact-check UNOBSERVABLE row).
+- Pass criteria: gen_chk_csr_readback (0); gen_chk_csr_flush (flush for the write forms, none for the demoted forms); gen_isa_compare (no trap in M)
 - Expected: pass
 - Test group: gen_csr_cpuctrl
-- Bins: CG-CSR-010.cr_op_form_pulse.csrrs_nz_pulse, CG-CSR-010.cr_op_form_pulse.csrrc_nz_pulse, CG-CSR-010.cr_op_form_pulse.csrrsi_nz_pulse, CG-CSR-010.cr_op_form_pulse.csrrci_nz_pulse, CG-CSR-010.cr_op_form_pulse.csrrs_x0_none, CG-CSR-010.cr_op_form_pulse.csrrc_x0_none, CG-CSR-010.cr_op_form_pulse.csrrsi_0_none, CG-CSR-010.cr_op_form_pulse.csrrci_0_none
+- Bins: CG-CSR-010.cr_op_form_gap.csrrs_nz_flush, CG-CSR-010.cr_op_form_gap.csrrc_nz_flush, CG-CSR-010.cr_op_form_gap.csrrsi_nz_flush, CG-CSR-010.cr_op_form_gap.csrrci_nz_flush, CG-CSR-010.cr_op_form_gap.csrrs_x0_g1, CG-CSR-010.cr_op_form_gap.csrrc_x0_g1, CG-CSR-010.cr_op_form_gap.csrrsi_0_g1, CG-CSR-010.cr_op_form_gap.csrrci_0_g1, CG-CSR-010.cp_seed_val.zero, CG-CSR-010.cp_form.rd_only, CG-CSR-010.cp_form.wr
 
 ### TP-CSR-094: mret from an interrupt handler clears cpuctrlsts.sync_exc_seen (B12: documented behaviour, design-weakness note)
 - Features: F-CSR-089, F-PRV-006
@@ -5065,7 +5316,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-094
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; no PMP region locked (fresh reset state).
+- Preconditions: M-mode; prologue before any mseccfg write (fact-check UNREACHABLE row; rtl/ibex_pmp.sv:136-139: with no matching region MMWP = 1 denies every M access and MML = 1 denies M fetch): a LOCKED M-executable code region ({L = 1, R/W/X} in an is_mml_m_exec_cfg encoding 001/010/011/101, rtl/ibex_cs_registers.sv:164-176) covering the program and handler, written BEFORE MML so pmp_cfg_wr_suppress (:1467-1469) cannot block it, and a LOCKED shared-RW data region (L = 1, R = 1, W = 1, X = 0) covering data/stack/signature; no other region locked. Because these entries are locked with RLB = 0, later RLB 0 -> 1 writes read back 0 (any_pmp_entry_locked, :1514) and the sticky model predicts it; the RLB-set-without-lock class is TP-CSR-096.
 - Stimulus: 6 ops with rand/legal_only(bits 2:0)/illegal_only(31:3)/all1/all0 operands to mseccfg and mseccfgh, each followed by csrr; MML/MMWP stickiness makes later writes depend on earlier ones, so each seed starts from reset; 60 pairs per seed (PMP semantics excluded). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand order, rd; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
@@ -5093,7 +5344,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-096
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; MML/RLB state randomized per seed (reset, MML=1, RLB=1); the region covering the program is never locked away.
+- Preconditions: M-mode; MML/RLB state randomized per seed (reset, MML=1, RLB=1); with MML = 1 the region keeping the program executable is a LOCKED entry with an M-exec encoding ({R,W,X} in 001/010/011/101 with L = 1, is_mml_m_exec_cfg rtl/ibex_cs_registers.sv:164-176) written BEFORE mseccfg.MML is set (pmp_cfg_wr_suppress :1467-1469 blocks adding such entries afterwards unless RLB = 1; fact-check note on TP-CSR-097); the regions covering the program and its data are never locked away or overwritten by the sweep.
 - Stimulus: 6 ops with rand/legal/illegal(bits 6:5)/all1/all0 operands to each pmpcfg register (per-entry classes: OFF/TOR/NA4/NAPOT modes, W=1 R=0 with MML=0, locked entries, MML-suppressed M-executable locked entries) and to every pmpaddr (writable, locked_self, locked_tor_next, rlb_unlock), each followed by csrr; 200 pairs per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: register (PMPNumRegions-derived), entry values, lock pattern, op, rd.
 - Knobs: knob:pmp_regime
@@ -5107,7 +5358,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-097
 - Phase: 1
 - Tier: smoke
-- Preconditions: cheriot_enable_i tied IbexMuBiOff in the wrapper; M and U modes.
+- Preconditions: cheriot_enable_i tied IbexMuBiOff in the wrapper; M and U modes. C-2 U-mode prologue before the first entry to U.
 - Stimulus: read and write forms (6 ops) to 0xBC1, 0xBC2, 0xBC4 in M-mode and U-mode; 60 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: address, op, rd, rs1, mode.
 - Knobs: knob:priv_regime
@@ -5135,7 +5386,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-099
 - Phase: 2
 - Tier: full
-- Preconditions: knob:instr_mix = csr_heavy; all CSR families written continuously; no fault injection on the register file or PC.
+- Preconditions: knob:instr_mix = csr_heavy; all CSR families written continuously; no fault injection on the register file or PC. C-2 U-mode prologue before the first entry to U.
 - Stimulus: CSR storm of >= 20k CSR instructions across every implemented address with random ops/operands, in M and U, incl. illegal accesses; alert_major_internal_o sampled every cycle. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: everything in the storm; regime schedule by the cross-cutting subagent.
 - Knobs: knob:instr_mix, knob:priv_regime
@@ -5150,7 +5401,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode (plus debug mode for the debug CSRs); gate On for mcounteren.
-- Stimulus: one sweep per seed over every writable CSR in the map: csrrw X ; csrr (adjacent), csrrw X ; 3 unrelated instructions ; csrr, csrrs mask ; csrr, csrrc mask ; csrr; X and mask random per CSR; counters handled with the elapsed model. Weights: per the Layer-1 weight tables unless stated.
+- Stimulus: one sweep per seed over every writable CSR in the map: csrrw X ; csrr (adjacent), csrrw X ; 3 unrelated instructions ; csrr, csrrs mask ; csrr, csrrc mask ; csrr; X and mask random per CSR; counters handled with the elapsed model; operand constraints for the three hazard families (C-SWEEP, C-MPRV, C-DUM; fact-check UNREACHABLE row): mseccfg X and masks restricted to {0, RLB} (MML/MMWP stickiness with the reset PMP table would fault the sweep's own fetches, rtl/ibex_cs_registers.sv:1505-1506, rtl/ibex_pmp.sv:138-139; TP-CSR-095/096 own MML/MMWP), mstatus X pairs MPRV = 1 only with MPP = 11 (priv_mode_lsu_o :998), pmpcfg X carries L = 0 (:1423-1426, :1475-1477) with pmpaddr values outside the program's ranges, cpuctrlsts X carries bit 2 = 0 and bit 0 per C-14. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: X, mask, spacing, sweep order.
 - Knobs: knob:instr_mix
 - Fire-check: per seed a closed read-back pair on RVFI for every writable CSR of the map (the sweep completes within one seed; the signature lists the CSRs swept); rvfi_order strictly increasing.
@@ -5163,12 +5414,12 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-101
 - Phase: 1
 - Tier: targeted
-- Preconditions: M and U; irq storm running; handler reads mstatus/mepc/mcause/mtval on entry.
+- Preconditions: M and U; irq storm running; handler reads mstatus/mepc/mcause/mtval on entry. C-2 U-mode prologue before the first entry to U.
 - Stimulus: CSR writes to mstatus/mepc/mcause/mtval placed randomly in code while interrupts arrive (knob:irq_regime = storm) and while illegal CSR accesses are interleaved; 300 CSR writes per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: CSR, operand, irq timing, illegal-access density.
 - Knobs: knob:irq_regime, knob:irq_hold, knob:instr_mix
-- Fire-check: for every interrupt whose entry follows a CSR write of mstatus/mepc/mcause/mtval within 3 retirements, the handler-read values are the hardware trap values (MIE 0, MPIE/MPP per the interrupted context, mepc = next pc, mcause = irq) and the software value is visible only after mret; every trapped CSR write leaves the CSR unchanged.
-- Pass criteria: gen_isa_compare (trap values win); gen_chk_csr_readback (no write on trap; SW values restored view after mret is the SW value only if the write retired); gen_sva_csr_excl (probe assertion never(csr_we_int && csr_save_cause_i), DV Lead decision)
+- Fire-check: for every interrupt whose entry follows a retired CSR write of mstatus/mepc/mcause/mtval within 3 retirements, the handler-read values are the hardware trap values (MIE 0, MPIE/MPP per the interrupted context, mepc = next pc, mcause = irq, mtval = 0), and per field after the handler's mret (rtl/ibex_cs_registers.sv:918-930, :953-979; fact-check TP-CSR-102): a software mepc/mcause/mtval value written before the entry is LOST (the entry overwrites it and mret writes none of them outside NMI mode, so the post-mret csrr returns the trap values); of mstatus only MIE returns through mret (MIE <= MPIE), mret forces MPIE = 1 and MPP = U and clears MPRV when MPP != M, while TW is untouched by both entry and mret (a software TW value survives); every trapped CSR write leaves the CSR unchanged.
+- Pass criteria: gen_isa_compare (trap values win); gen_chk_csr_readback (no write on trap; post-mret prediction per field as in the fire-check: a retired software write to mepc/mcause/mtval is visible only if no trap entry intervened); gen_sva_csr_excl (probe assertion never(csr_we_int && csr_save_cause_i), DV Lead decision)
 - Expected: pass
 - Test group: gen_csr_ordering
 - Bins: CG-CSR-015.cr_cause_fam.illegal_flush, CG-CSR-015.cr_cause_reexec.illegal_no, CG-CSR-015.cr_cause_reexec.illegal_yes, CG-CSR-012.cr_fam_next.other_irq_taken, CG-CSR-012.cr_enable_next.none_irq_taken, CG-CSR-015.cr_cause_op.illegal_csrrw, CG-CSR-015.cr_cause_op.illegal_csrrs, CG-CSR-015.cr_cause_op.illegal_csrrci
@@ -5181,17 +5432,17 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: CSR write ops (6 ops) to mscratch/mie/mtval/mcountinhibit/cpuctrlsts preceded by random code; the fault/debug event hits the CSR instruction itself; 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: CSR, op, kill cause, alignment offset.
 - Knobs: knob:imem_err_rate, knob:pmp_regime, knob:debug_req_regime
-- Fire-check: fetch-error rounds: rvfi_trap = 1 on the CSR instruction (cause 1, mtval = pc) and the handler read of the CSR shows the old value; debug rounds: dpc read in debug mode == the CSR instruction pc and the CSR still holds the old value; after dret/mret the CSR instruction retires and the new value is read.
+- Fire-check: fetch-error rounds: rvfi_trap = 1 on the CSR instruction (cause 1, mtval = pc) and the handler read of the CSR shows the old value; debug rounds (C-3 / X-7, rtl/ibex_controller.sv:296, :700-704, :985-986: a valid instruction in ID is never pre-empted by debug_req_i) depend on the alignment offset and the sweep must produce both per seed: (i) request seen in a DECODE cycle with ID empty before the CSR instruction arrives -> dpc == the CSR instruction pc, the debug ROM's read of the CSR returns the OLD value, and after dret the CSR instruction retires and the new value is read; (ii) request landing while the CSR write is valid in ID -> the write COMPLETES (its record precedes the debug ROM's first record), dpc == the pc of the next instruction and the debug ROM's read returns the NEW value; fetch-error rounds are unchanged.
 - Pass criteria: gen_chk_csr_readback; gen_isa_compare; gen_chk_debug (dpc)
 - Expected: pass
 - Test group: gen_csr_ordering
-- Bins: CG-CSR-015.cr_cause_fam.fetch_err_flush, CG-CSR-015.cr_cause_fam.fetch_pmp_flush, CG-CSR-015.cr_cause_fam.dbg_before_flush, CG-CSR-015.cr_cause_fam.dbg_before_mscratch, CG-CSR-015.cr_cause_fam.lsu_pmp_mscratch, CG-CSR-015.cr_cause_reexec.fetch_err_yes, CG-CSR-015.cr_cause_reexec.fetch_pmp_yes, CG-CSR-015.cr_cause_reexec.dbg_before_yes
+- Bins: CG-CSR-015.cr_cause_fam.fetch_err_flush, CG-CSR-015.cr_cause_fam.fetch_pmp_flush, CG-CSR-015.cr_cause_fam.dbg_before_flush, CG-CSR-015.cr_cause_fam.dbg_before_mscratch, CG-CSR-015.cr_cause_fam.lsu_pmp_mscratch, CG-CSR-015.cr_cause_reexec.fetch_err_yes, CG-CSR-015.cr_cause_reexec.fetch_pmp_yes, CG-CSR-015.cr_cause_reexec.dbg_before_yes, CG-CSR-012.cr_fam_next.other_dbg_entry
 
 ### TP-CSR-104: Illegal CSR access is excluded from minstret and leaves rd unchanged
 - Features: F-CSR-103
 - Phase: 1
 - Tier: smoke
-- Preconditions: M and U; rd pre-loaded with a sentinel; minstret read before/after via the handler.
+- Preconditions: M and U; rd pre-loaded with a sentinel; minstret read before/after via the handler. C-2 U-mode prologue before the first entry to U.
 - Stimulus: illegal CSR accesses of every class with rd in x1..x31, 100 per seed; the handler stores rd and minstret to the signature. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: class, address, op, rd, sentinel, mode.
 - Knobs: knob:priv_regime
@@ -5237,9 +5488,9 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: first instructions read mcycle, mcycleh, minstret, minstreth, mhpmcounter3..(2+MHPMCounterNum) (and h), mhpmcounter(3+MHPMCounterNum)..31 sample, mcountinhibit, mhpmevent3..(2+MHPMCounterNum), mhpmevent(3+MHPMCounterNum)..31 sample, plus cycle/instret/hpmcounter aliases in M; the TB counts cycles from reset release. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: order, rd.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: reads retire without trap; mcycle read-back == cycles since reset release within the boot latency bound the TB computes; minstret == retirements so far; hpm counters small; mcycleh/minstreth 0; mcountinhibit 0; mhpmevent one-hot.
+- Fire-check: reads retire without trap; mcycle read-back == cycles since reset release within the boot latency bound the TB computes; minstret == retirements so far; hpm counters small; mcycleh/minstreth 0; mcountinhibit 0; mhpmevent one-hot 1 << (n - 3) (C-11, D20).
 - Pass criteria: gen_chk_counters (reset 0 then counting from reset); gen_chk_csr_readback
-- Expected: pass
+- Expected: pass (doc mismatch D20)
 - Test group: gen_csr_reset
 - Bins: CG-CSR-016.cp_csr.mcycle, CG-CSR-016.cp_csr.mcycleh, CG-CSR-016.cp_csr.minstret, CG-CSR-016.cp_csr.minstreth, CG-CSR-016.cp_csr.hpm, CG-CSR-016.cp_csr.hpmh, CG-CSR-016.cp_csr.hpm_unimpl, CG-CSR-016.cp_csr.mcountinhibit, CG-CSR-016.cp_csr.mhpmevent, CG-CSR-016.cp_csr.mhpmevent_unimpl, CG-CSR-016.cp_csr.cycle_alias, CG-CSR-016.cp_csr.instret_alias, CG-CSR-016.cp_csr.hpm_alias, CG-CSR-016.cr_first_csr.mcycle_first, CG-CSR-016.cr_first_csr.minstret_first
 
@@ -5275,7 +5526,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-014, F-CSR-015, F-CSR-017, F-CSR-083, F-CSR-097
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode entered via mret; handler returns to U after each trap; mcounteren random.
+- Preconditions: U-mode entered via mret; handler returns to U after each trap; mcounteren random. C-2 U-mode prologue before the first entry to U.
 - Stimulus: for every implemented address with csr[9:8] != 00 (every row of the CSR map incl. pmpcfg/pmpaddr, mseccfg, tselect/tdata*, mcontext/mscontext/scontext, dcsr/dpc/dscratch, cpuctrlsts/secureseed, all counters, all machine-info CSRs, mshwm/mshwmb/cdbg_ctrl) one demoted read and one write form; the sweep is split across seeds by a random stride. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: stride, op, rd, rs1, filler.
 - Knobs: knob:priv_regime
@@ -5303,7 +5554,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-009, F-CSR-010, F-CSR-016
 - Phase: 2
 - Tier: full
-- Preconditions: knob:instr_mix = csr_heavy with an illegal-address weight of 30%; knob:priv_regime = alternating.
+- Preconditions: knob:instr_mix = csr_heavy with an illegal-address weight of 30%; knob:priv_regime = alternating. C-2 U-mode prologue before the first entry to U.
 - Stimulus: random CSR instructions where the address is drawn 30% from the unimplemented set, 20% from read-only addresses with write forms, 50% from implemented RW CSRs; handler returns after each trap; >= 5000 CSR instructions per seed.
 - Randomized: everything; regime schedule by the cross-cutting subagent.
 - Knobs: knob:instr_mix, knob:priv_regime, knob:imem_rvalid_delay
@@ -5345,7 +5596,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-006, F-CSR-100
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode (debug mode for dcsr/dpc/dscratch pairs).
+- Preconditions: M-mode (debug mode for dcsr/dpc/dscratch pairs); C-2 U-mode prologue before the first entry to U (mcounteren pair).
 - Stimulus: for every writable CSR family: write then an instruction whose behaviour depends on the write (mstatus.MIE -> pending irq; mie -> irq_pending_o; mtvec -> ecall; mcountinhibit -> csrr counter; mcounteren -> U-mode alias read after mret; pmpcfg/pmpaddr -> load; mseccfg -> PMP check; cpuctrlsts.icache -> fetch pattern; cpuctrlsts.dit -> branch timing is EX-area, here read-back only; mscratch/mepc -> csrr/mret (no flush); mcycle/minstret -> csrr; dpc -> dret); 15 pairs per family per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: family, operands, distance 0..1, latencies.
 - Knobs: knob:imem_rvalid_delay, knob:irq_regime, knob:pmp_regime
@@ -5373,7 +5624,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-014, F-CSR-053, F-CSR-054, F-PRV-034
 - Phase: 2
 - Tier: full
-- Preconditions: knob:instr_mix = csr_heavy; knob:priv_regime = alternating (mret to U every 50..500 instructions, ecall back); mcounteren re-randomized on each return to M.
+- Preconditions: knob:instr_mix = csr_heavy; knob:priv_regime = alternating (mret to U every 50..500 instructions, ecall back); mcounteren re-randomized on each return to M. C-2 U-mode prologue before the first entry to U.
 - Stimulus: as TP-CSR-116 but with U-mode phases in which the generator issues alias reads (legal and illegal per the current mcounteren) and a low share of M-level accesses (all trap); >= 10k CSR instructions per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: everything; mcounteren per phase.
 - Knobs: knob:instr_mix, knob:priv_regime, knob:irq_regime
@@ -5387,7 +5638,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-CSR-017, F-CSR-074, F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-084
 - Phase: 2
 - Tier: full
-- Preconditions: knob:instr_mix = csr_heavy; knob:debug_req_regime = sparse or storm; debug ROM program performs random debug-CSR and trigger-CSR accesses then dret (step/ebreak bits restored).
+- Preconditions: knob:instr_mix = csr_heavy; knob:debug_req_regime = sparse or storm; debug ROM program performs random debug-CSR and trigger-CSR accesses then dret (step/ebreak bits restored). C-2 U-mode prologue before the first entry to U.
 - Stimulus: M/U program with CSR storm; the debug ROM issues 8..64 random CSR accesses per entry to dcsr/dpc/dscratch/tselect/tdata1/tdata2 and to normal CSRs; >= 50 debug entries per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: everything incl. entry cause (haltreq, ebreakm/u, step).
 - Knobs: knob:instr_mix, knob:debug_req_regime, knob:priv_regime
@@ -5431,11 +5682,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-001, F-PRV-033
 - Phase: 1
 - Tier: smoke
-- Preconditions: fresh reset.
-- Stimulus: first instructions read misa (U bit 20 = 1, S bit 18 = 0) and mstatus; then mret to U (MPP = U by reset) and an ecall from U; 5 rounds per seed with random U-mode code length. Weights: per the Layer-1 weight tables unless stated.
+- Preconditions: fresh reset; C-2 U-mode prologue (pmpcfg/pmpaddr writes only) before the mret to U.
+- Stimulus: first instructions read misa (U bit 20 = 1, S bit 18 = 0) and mstatus; the C-2 prologue programs the U-executable code region and the U-RW data region (mstatus keeps its reset MPP = U, MPIE = 1; mepc is written to the U block); then mret to U and an ecall from U; 5 rounds per seed with random U-mode code length. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: U-mode code, rd; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: rvfi_mode == 3 for every retirement before the first mret; == 0 for the U-mode block; the ecall retires with rvfi_mode = 0 and rvfi_trap = 1; the first handler retirement has rvfi_mode = 3 and rvfi_intr = 1; no retirement ever reports mode 1 or 2.
+- Fire-check: rvfi_mode == 3 for every retirement before the first mret; == 0 for the U-mode block; the ecall retires with rvfi_mode = 0 and rvfi_trap = 1; the first handler retirement (the record after the ecall record, rvfi_pc_rdata == mtvec BASE, C-1) has rvfi_mode = 3 and rvfi_intr = 0 (rvfi_intr is set only for interrupt/NMI entries, EXC_PC_IRQ, rtl/ibex_core.sv:2403-2411; fact-check TP-PRV-001); no retirement ever reports mode 1 or 2.
 - Pass criteria: gen_isa_compare (mode per retirement); gen_chk_csr_readback (misa bits)
 - Expected: pass
 - Test group: gen_prv_modes
@@ -5445,7 +5696,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-002, F-PRV-003, F-PRV-032
 - Phase: 1
 - Tier: smoke
-- Preconditions: M and U rounds with MIE randomized (M) and interrupts armed for the irq rounds; handler reads mstatus, mepc, mcause, mtval on entry.
+- Preconditions: M and U rounds with MIE randomized (M) and interrupts armed for the irq rounds; handler reads mstatus, mepc, mcause, mtval on entry. C-2 U-mode prologue before the first entry to U.
 - Stimulus: exceptions (ecall, ebreak with dcsr.ebreakm/u = 0, illegal, illegal CSR, load fault, fetch fault) and interrupts (all lines) from M and from U; 60 traps per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: trap kind, mode, MIE, filler.
 - Knobs: knob:irq_regime, knob:priv_regime, knob:dmem_err_rate, knob:imem_err_rate
@@ -5477,7 +5728,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: one debug-mode exception per entry, 5 entries per seed; after dret the program re-reads the five CSRs. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: exception kind, pre-loaded values, entry point.
 - Knobs: knob:debug_req_regime, knob:dmem_err_rate
-- Fire-check: the debug-mode exception retires with rvfi_trap = 1, rvfi_ext_debug_mode = 1 and rvfi_pc_wdata == DmExceptionAddr; the ebreak case retires with rvfi_ext_debug_mode = 1 and next fetch == DmHaltAddr (identified by the fetch address, not by rvfi_trap, whose mask covers ebreak_into_debug only, rtl/ibex_core.sv:1885-1886; S-2); rvfi_mode == 3 for every debug-mode retirement (B6: RTL-defined); post-dret reads equal the pre-entry values; double_fault_seen_o never pulses.
+- Fire-check: the debug-mode exception retires with rvfi_trap = 1, rvfi_ext_debug_mode = 1 and the NEXT record's rvfi_pc_rdata == DmExceptionAddr (C-1; the DmExceptionAddr fetch is also always bus-visible on instr_addr_o because the icache is forced off in debug mode, C-14); the ebreak case retires with rvfi_ext_debug_mode = 1 and next fetch == DmHaltAddr (identified by the fetch address, not by rvfi_trap, whose mask covers ebreak_into_debug only, rtl/ibex_core.sv:1885-1886; S-2); rvfi_mode == 3 for every debug-mode retirement (B6: RTL-defined); post-dret reads equal the pre-entry values; double_fault_seen_o never pulses.
 - Pass criteria: gen_chk_debug (DmExceptionAddr, no M-CSR update); gen_chk_csr_readback; gen_chk_double_fault
 - Expected: pass (RTL-defined, spec UNSPECIFIED; B6 ruling C-20 for the M privilege of the debug-mode exception)
 - Test group: gen_prv_debug
@@ -5487,11 +5738,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-006
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; mstatus MPP/MPIE/MIE randomized by csrrw before each mret; mepc set to a target block; cpuctrlsts bit 6 set by a prior exception or by software.
+- Preconditions: M-mode; mstatus MPP/MPIE/MIE randomized by csrrw before each mret; mepc set to a target block; cpuctrlsts bit 6 set by a prior exception or by software. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrw mstatus, rand(MPP in {U, M}, MPIE, MIE, MPRV, TW) ; csrrw mepc, target ; mret ; target block reads mstatus (after ecall if in U) and cpuctrlsts; 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP, MPIE, MIE, MPRV, TW, target (2-byte and 4-byte aligned), filler.
 - Knobs: knob:priv_regime
-- Fire-check: rvfi_pc_wdata of the mret == mepc & ~1; the next retirement's rvfi_mode == MPP; mstatus afterwards shows MIE == old MPIE, MPIE == 1, MPP == 00; cpuctrlsts bit 6 == 0.
+- Fire-check: the next retirement after the mret has rvfi_pc_rdata == mepc & ~1 and rvfi_mode == MPP (C-1: the mret record's rvfi_pc_wdata is mret pc + 4, rtl/ibex_core.sv:2084, rtl/ibex_controller.sv:954-957); mstatus afterwards shows MIE == old MPIE, MPIE == 1, MPP == 00; cpuctrlsts bit 6 == 0.
 - Pass criteria: gen_isa_compare (mode, pc, mstatus); gen_chk_csr_readback; gen_chk_double_fault (bit 6 cleared)
 - Expected: pass
 - Test group: gen_prv_mret
@@ -5501,7 +5752,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-007
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; MPRV = 1 written; MPP = U or M; PMP region set up so a U-privilege data access to a chosen address faults while M privilege passes.
+- Preconditions: M-mode; MPRV = 1 written; MPP = U or M; C-2 U-mode prologue (U-executable code region for the U block and its ecall, U-RW stack/signature region; without it the first U fetch faults, rtl/ibex_pmp.sv:136-139, fact-check note 4) plus the region under test, set up so a U-privilege data access to the chosen address faults while M privilege passes.
 - Stimulus: csrrs mstatus, MPRV|MPP ; mret ; (U case) load to the chosen address then ecall, handler reads mstatus; (M case) load to the chosen address (must pass with MPRV = 1 MPP = M) then read mstatus; the U case alternates loads and stores; 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP, address, MPIE, filler.
 - Knobs: knob:pmp_regime
@@ -5515,7 +5766,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-008
 - Phase: 1
 - Tier: targeted
-- Preconditions: enabled irq pin held high; MPIE = 0 written; MPP = M or U.
+- Preconditions: enabled irq pin held high; MPIE = 0 written; MPP = M or U. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrw mstatus (MPIE = 0, MPP) ; mret ; target block of 20 ALU instructions then csrrsi mstatus, 8 (M case) or ecall (U case); 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP, irq line, filler length.
 - Knobs: knob:irq_hold, knob:irq_line_mix
@@ -5529,21 +5780,21 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-009
 - Phase: 1
 - Tier: targeted
-- Preconditions: fresh reset; instruction memory populated at address 0 with a U-mode block (ecall after N instructions); mtvec = boot page handler.
-- Stimulus: mret as the first instruction (variant: after 1..8 non-CSR instructions); the U block ecalls back; handler reads mstatus. Weights: per the Layer-1 weight tables unless stated.
+- Preconditions: fresh reset; mtvec = boot page handler; two variants: (a) PMP variant: the leading instructions are the C-2 U-mode prologue (pmpcfg/pmpaddr writes only; mstatus and mepc stay at their reset values MPP = U, MPIE = 1, mepc = 0) granting U execute at address 0 and a U-RW data region, and instruction memory holds a U-mode block at address 0 that ecalls after N instructions; (b) no-PMP variant: no PMP write at all before the mret (fact-check TP-PRV-008: with the reset PMP table the U fetch at address 0 matches no region and faults).
+- Stimulus: (a) mret after the prologue (variant: 1..8 extra non-CSR instructions before it); the U block at 0 ecalls back; the handler reads mstatus. (b) mret as the first instruction or after 1..8 non-CSR instructions: the first U-mode fetch at address 0 takes an instruction access fault (cause 1, mtval = 0, rtl/ibex_pmp.sv:136-139, rtl/ibex_if_stage.sv:426-430) and the handler reads mcause/mtval/mepc/mstatus. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: number of leading instructions, U block length; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: rvfi_pc_wdata of the mret == 0; next retirement rvfi_pc_rdata == 0 with rvfi_mode == 0; handler mstatus shows MPP == 00 and MPIE == 1 (MIE was 1 in U).
-- Pass criteria: gen_isa_compare
+- Fire-check: (a) the next record after the mret has rvfi_pc_rdata == 0, rvfi_mode == 0 and rvfi_trap == 0 (C-1: the mret record's rvfi_pc_wdata is mret pc + 4, not the target); the ecall retires and the handler mstatus shows MPP == 00 and MPIE == 1 (MIE was 1 in U). (b) the next record after the mret is the fetch-fault record: rvfi_pc_rdata == 0, rvfi_mode == 0, rvfi_trap == 1; the handler reads mcause == 1, mtval == 0, mepc == 0, MPP == 00.
+- Pass criteria: gen_isa_compare; gen_chk_pmp (variant b: no-match instruction access fault in U)
 - Expected: pass
 - Test group: gen_prv_mret
-- Bins: CG-PRV-001.cr_trans.m_u_mret, CG-PRV-002.cr_mret.u_1_0, CG-PRV-002.cr_mret_target.u_b0, CG-PRV-002.cr_entry.u_mie1_sync
+- Bins: CG-PRV-001.cr_trans.m_u_mret, CG-PRV-002.cr_mret.u_1_0, CG-PRV-002.cr_mret_target.u_b0, CG-PRV-002.cr_entry.u_mie1_sync, CG-PRV-001.cr_trans.u_m_fetch_fault, CG-PRV-001.cp_u_exit.fetch_fault
 
 ### TP-PRV-009: mret executed in U-mode raises illegal instruction (mcause 2, mtval 0x30200073)
 - Features: F-PRV-010
 - Phase: 1
 - Tier: smoke
-- Preconditions: U-mode; handler installed.
+- Preconditions: U-mode; handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: mret in U-mode at random points in U code, 30 per seed; handler records mcause/mtval/mepc and returns past it. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: position, surrounding code.
 - Knobs: knob:priv_regime
@@ -5557,12 +5808,12 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-011
 - Phase: 1
 - Tier: targeted
-- Preconditions: an exception handler (mcause = ecall) is executing with known mstatus/mepc/mcause when the TB asserts irq_nm_i; the NMI handler optionally writes mepc/mcause (software values differing from the saved ones).
-- Stimulus: ecall from M or U -> handler -> NMI -> NMI handler (reads mcause = 0x8000_001F, optionally csrrw mepc/mcause) -> mret -> back in the exception handler reads mepc/mcause/mstatus -> mret; 30 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
+- Preconditions: an exception handler (mcause = ecall) is executing with known mstatus/mepc/mcause when the TB asserts irq_nm_i; in the sw-write rounds the NMI handler writes mepc = L (an M-mode landing pad that reads mepc/mcause/mstatus and jumps back into the exception handler) and mcause = a software value; C-2 U-mode prologue for the rounds whose original trap comes from U.
+- Stimulus: ecall from M or U -> handler -> NMI -> NMI handler (reads mcause = 0x8000_001F, optionally csrrw mepc, L and csrrw mcause, SW) -> mret -> landing pad L (sw-write rounds) or directly the interrupted handler pc (other rounds); the code after the NMI's mret reads mepc/mcause/mstatus, then the exception handler mrets; 30 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode of the original trap, whether the NMI handler writes mepc/mcause, delay of the NMI, MIE state.
 - Knobs: knob:irq_line_mix, knob:irq_regime
-- Fire-check: after the NMI's mret the exception handler reads mepc == the ecall pc and mcause == 8/11 (not the software values), mstatus MPP/MPIE == the values at NMI entry; rvfi_pc_wdata of the NMI mret == the interrupted handler pc (mstack epc), not the software-written mepc.
-- Pass criteria: gen_chk_nmi (mstack save/restore); gen_isa_compare with the mstack model; gen_chk_csr_readback
+- Fire-check: the record after the NMI's mret has rvfi_pc_rdata == L in the sw-write rounds and == the interrupted handler pc otherwise (the mret in NMI mode jumps to the CURRENT mepc_q: PC_ERET reads csr_mepc_i in the FLUSH cycle, rtl/ibex_if_stage.sv:246, rtl/ibex_cs_registers.sv:1028; C-1: never asserted from the mret record's rvfi_pc_wdata); the csrr after the mret returns mepc == the ecall pc and mcause == 8/11 (the CSR VALUES are restored from mstack at the mret edge, rtl/ibex_cs_registers.sv:967-975, overriding the software values) and mstatus MPP/MPIE == the values at NMI entry.
+- Pass criteria: gen_chk_nmi (mstack save/restore of the CSR values); gen_isa_compare with the mstack model (jump target = current mepc_q: RTL-defined, exception_interrupts.rst:93-100 documents only the CSR backup; feature note F-PRV-011, fact-check X-23 / prv_xcut note 5); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_prv_mret
 - Bins: CG-PRV-002.cr_nmi_mret.nmi_sw_no, CG-PRV-002.cr_nmi_mret.nmi_sw_yes, CG-PRV-002.cr_nmi_mret.nonnmi_sw_no, CG-PRV-002.cr_entry.m_mie0_nmi, CG-PRV-002.cr_entry.m_mie1_nmi, CG-PRV-001.cr_trans.m_m_nmi
@@ -5571,7 +5822,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-012
 - Phase: 1
 - Tier: targeted
-- Preconditions: inside a handler with MPIE = 1 (or MPP = U); an irq pin raised by the TB while in the handler; mie bit set.
+- Preconditions: inside a handler with MPIE = 1 (or MPP = U); an irq pin raised by the TB while in the handler; mie bit set. C-2 U-mode prologue before the first entry to U.
 - Stimulus: mret with the interrupt pending; 40 rounds per seed over MPP in {U, M}, all irq lines. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP, line, timing of the pin relative to the mret fetch.
 - Knobs: knob:irq_hold, knob:irq_line_mix
@@ -5613,21 +5864,21 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-015
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode program sets MPRV = 1, MPP = M (also MPP = U variant); PMP: an M-only data region readable from M, not from U; debug_req_i asserted; debug ROM sets dcsr.prv = U, dpc = a U-mode block, executes dret; the U block loads from the M-only region then ecalls; handler reads mstatus.
+- Preconditions: M-mode program sets MPRV = 1, MPP = M (also MPP = U variant); PMP: the C-2 U-mode prologue (U-executable code region for the U block, U-RW stack/signature region; fact-check note 4) plus an M-only data region readable from M, not from U; debug_req_i asserted; debug ROM sets dcsr.prv = U, dpc = a U-mode block, executes dret; the U block loads from the M-only region then ecalls; handler reads mstatus.
 - Stimulus: 30 rounds per seed; control rounds with MPRV = 0 (MPP = M or U kept across the dret). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP (M/U), address in the M-only region, load vs store, dpc target.
 - Knobs: knob:debug_req_regime, knob:pmp_regime
 - Fire-check: first post-dret retirement has rvfi_mode = 0; the U-mode load to the M-only region retires without trap on current RTL (MPRV kept, MPP = M) and the handler reads mstatus bit 17 == 1; control rounds fault.
 - Pass criteria: gen_chk_pmp following Sdext (MPRV cleared on resume to a less-privileged mode: the U-mode load must fault) - fails on current RTL; gen_chk_csr_readback (spec model MPRV = 0 after dret to U) - fails; gen_chk_debug (dret target and mode) - passes
 - Expected: expected-fail (B1)
-- Test group: gen_prv_debug
+- Test group: gen_prv_debug_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-PRV-003.cr_eff.u_1_m_load_allow, CG-PRV-003.cr_eff.u_1_m_store_allow, CG-PRV-003.cr_eff.u_1_u_load_fault, CG-PRV-003.cr_after_dret.dret_m_only_allow, CG-PRV-003.cr_after_dret.dret_m_only_fault, CG-PRV-003.cr_after_dret.dret_u_rw_allow, CG-PRV-003.cr_after_dret.dret_no_region_fault, CG-PRV-007.cr_dret_mprv.u_1_m, CG-PRV-007.cr_dret_mprv.u_1_u, CG-PRV-007.cr_dret_mprv.u_0_m, CG-PRV-007.cr_dret_mprv.u_0_u, CG-PRV-001.cr_trans.dbg_u_dret, CG-PRV-003.cr_eff.u_0_m_load_allow
 
 ### TP-PRV-015: mstatus.TW = 1 makes WFI in U-mode an immediate illegal instruction; TW = 0 lets U-mode WFI sleep
 - Features: F-PRV-016
 - Phase: 1
 - Tier: targeted
-- Preconditions: TW randomized per round; U-mode entered via mret; for TW = 0 rounds an enabled irq pin is raised by the TB after a random sleep length.
+- Preconditions: TW randomized per round; U-mode entered via mret; for TW = 0 rounds an enabled irq pin is raised by the TB after a random sleep length. C-2 U-mode prologue before the first entry to U.
 - Stimulus: wfi in U-mode, 40 rounds per seed (half TW = 1, half TW = 0). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: TW, irq line, sleep length, code around the wfi.
 - Knobs: knob:irq_hold, knob:irq_line_mix
@@ -5655,7 +5906,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-018
 - Phase: 1
 - Tier: targeted
-- Preconditions: TW = 0; U-mode; mie bit set; MIE random (irrelevant in U).
+- Preconditions: TW = 0; U-mode; mie bit set; MIE random (irrelevant in U). C-2 U-mode prologue before the first entry to U.
 - Stimulus: wfi in U followed by a marker instruction; the TB raises the irq after 1..200 cycles; 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: irq line, delay, MIE, marker.
 - Knobs: knob:irq_hold, knob:irq_line_mix
@@ -5673,31 +5924,31 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: wfi ; marker ; the TB raises the irq after a random delay (incl. 0 = already pending before the wfi); 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: irq line, delay, marker.
 - Knobs: knob:irq_hold
-- Fire-check: no rvfi_intr; the marker retires after the wfi with the gap equal to the sleep length; irq_pending_o == 1 at wake; for delay 0 core_busy_o stays IbexMuBiOn.
+- Fire-check: no rvfi_intr; the marker retires after the wfi with the gap equal to the sleep length; irq_pending_o == 1 at wake; for delay 0 (interrupt already pending at the wfi) core_busy_o == IbexMuBiOff for exactly ONE cycle when observable (the unconditional WAIT_SLEEP cycle, rtl/ibex_controller.sv:598-604; SLEEP exits in the same cycle on irq_pending_i, :606-621; C-5), measured with the fetch agent idle, no invalidation and an idle LSU, and never longer.
 - Pass criteria: gen_chk_sleep (wake on mip & mie irrespective of MIE); gen_chk_irq (no entry); gen_isa_compare
 - Expected: pass
 - Test group: gen_prv_wfi
-- Bins: CG-PRV-005.cr_mie_post.m_mie0_resume, CG-PRV-005.cr_mie_post.m_mie1_irq_taken, CG-PRV-005.cr_priv_tw_post.m_tw0_resume, CG-PRV-005.cr_len_wake.zero_irq_en, CG-PRV-005.cr_len_wake.zero_none_pending
+- Bins: CG-PRV-005.cr_mie_post.m_mie0_resume, CG-PRV-005.cr_mie_post.m_mie1_irq_taken, CG-PRV-005.cr_priv_tw_post.m_tw0_resume, CG-PRV-005.cr_len_wake.one_irq_en
 
 ### TP-PRV-019: WFI wake sources (mip & mie, NMI, debug request, step); a disabled interrupt does not wake; WFI in debug mode is a NOP
 - Features: F-PRV-020
 - Phase: 1
 - Tier: targeted
-- Preconditions: M or U; mie configured so one pin is enabled and another disabled; dcsr.step set in the step rounds (via debug ROM).
-- Stimulus: wfi; the TB first toggles the disabled pin (must not wake), then after a random hold ends the sleep with one of: enabled pin, irq_nm_i, debug_req_i; separately wfi executed inside the debug ROM (must not sleep) and wfi with dcsr.step = 1 after dret (single-step: no sleep); 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
+- Preconditions: M or U; mie configured so one pin is enabled and another disabled; dcsr.step set in the step rounds (via debug ROM). C-2 U-mode prologue before the first entry to U.
+- Stimulus: wfi; the TB first toggles the disabled pin (must not wake), then after a random hold ends the sleep with one of: enabled pin, irq_nm_i, debug_req_i; separately wfi executed inside the debug ROM (one WAIT_SLEEP cycle, then SLEEP exits on debug_mode_q: no sleep period) and wfi with dcsr.step = 1 after dret (FLUSH -> DBG_TAKEN_IF, WAIT_SLEEP never entered, C-5); 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, pins, wake source, hold length.
 - Knobs: knob:irq_line_mix, knob:debug_req_regime
-- Fire-check: core_busy_o stays IbexMuBiOff across the disabled-pin toggle and irq_pending_o stays 0; the sleep ends within 3 cycles of the chosen source; debug-mode wfi retires with core_busy_o staying IbexMuBiOn.
+- Fire-check: core_busy_o stays IbexMuBiOff across the disabled-pin toggle and irq_pending_o stays 0; the sleep ends within 3 cycles of the chosen source; debug-mode wfi: core_busy_o == IbexMuBiOff for at most ONE cycle (WAIT_SLEEP is entered regardless of debug_mode_q, rtl/ibex_controller.sv:598-604, :614-616) with no bus idle period; stepped wfi: core_busy_o stays IbexMuBiOn (enter_debug_mode_prio_q overrides FLUSH to DBG_TAKEN_IF, :985-987) and the next fetch is DmHaltAddr (fact-check TP-PRV-019, C-5).
 - Pass criteria: gen_chk_sleep (wake set exactly {irq_pending, nmi, debug_req, debug_mode, step}); gen_chk_debug; gen_chk_nmi
 - Expected: pass
 - Test group: gen_prv_wfi
-- Bins: CG-PRV-005.cr_dis_irq.dis_then_irq_en, CG-PRV-005.cr_dis_irq.dis_then_nmi, CG-PRV-005.cr_dis_irq.dis_then_dbg, CG-PRV-005.cr_len_wake.long_nmi, CG-PRV-005.cr_len_wake.short_nmi, CG-PRV-005.cr_len_wake.long_dbg_req, CG-PRV-005.cr_len_wake.short_dbg_req, CG-PRV-005.cr_priv_tw_post.m_tw0_dbg, CG-PRV-005.cr_priv_tw_post.u_tw0_dbg, CG-PRV-005.cr_mie_post.m_mie0_dbg, CG-PRV-005.cr_mie_post.m_mie1_dbg, CG-PRV-005.cr_dbg_wfi.dbg_zero, CG-PRV-004.cr_kind_priv_trap.wfi_dbg_ok, CG-PRV-005.cp_wake.step
+- Bins: CG-PRV-005.cr_dis_irq.dis_then_irq_en, CG-PRV-005.cr_dis_irq.dis_then_nmi, CG-PRV-005.cr_dis_irq.dis_then_dbg, CG-PRV-005.cr_len_wake.long_nmi, CG-PRV-005.cr_len_wake.short_nmi, CG-PRV-005.cr_len_wake.long_dbg_req, CG-PRV-005.cr_len_wake.short_dbg_req, CG-PRV-005.cr_priv_tw_post.m_tw0_dbg, CG-PRV-005.cr_priv_tw_post.u_tw0_dbg, CG-PRV-005.cr_mie_post.m_mie0_dbg, CG-PRV-005.cr_mie_post.m_mie1_dbg, CG-PRV-005.cr_dbg_wfi.dbg_one, CG-PRV-005.cr_len_wake.zero_step, CG-PRV-004.cr_kind_priv_trap.wfi_dbg_ok, CG-PRV-005.cp_wake.step
 
 ### TP-PRV-020: ECALL cause codes: 8 from U-mode, 11 from M-mode; mepc = ecall pc; mtval = 0
 - Features: F-PRV-021
 - Phase: 1
 - Tier: smoke
-- Preconditions: M and U; handler records mcause/mepc/mtval.
+- Preconditions: M and U; handler records mcause/mepc/mtval. C-2 U-mode prologue before the first entry to U.
 - Stimulus: ecall at random points in M and U code, 40 per seed; minstret bracketing reads. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, position.
 - Knobs: knob:priv_regime
@@ -5711,7 +5962,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-022
 - Phase: 1
 - Tier: smoke
-- Preconditions: dcsr.ebreakm = ebreaku = 0 (reset state, or explicitly cleared in debug mode); M and U.
+- Preconditions: dcsr.ebreakm = ebreaku = 0 (reset state, or explicitly cleared in debug mode); M and U. C-2 U-mode prologue before the first entry to U.
 - Stimulus: ebreak and c.ebreak at random points, 40 per seed; a round with ebreakm/ebreaku = 1 (set via the debug ROM) shows debug entry instead, and in that round the debug ROM executes csrr dcsr before dret (DBG area owns the details). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, encoding (32/16-bit), position.
 - Knobs: knob:priv_regime
@@ -5725,7 +5976,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-023
 - Phase: 1
 - Tier: smoke
-- Preconditions: mie bit set for a random line; MIE randomized; U-mode phases entered with MIE = 0 and MIE = 1.
+- Preconditions: mie bit set for a random line; MIE randomized; U-mode phases entered with MIE = 0 and MIE = 1. C-2 U-mode prologue before the first entry to U.
 - Stimulus: the TB raises the line during M-mode code with MIE = 0 (not taken until MIE set), MIE = 1 (taken), and during U-mode code with either MIE (taken); 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: line, MIE, mode, timing.
 - Knobs: knob:irq_regime, knob:priv_regime
@@ -5739,7 +5990,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-024
 - Phase: 1
 - Tier: targeted
-- Preconditions: mret to U with MPIE = 0 (so MIE = 0 in U); mie bit set; pin raised by the TB.
+- Preconditions: mret to U with MPIE = 0 (so MIE = 0 in U); mie bit set; pin raised by the TB. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 30 rounds per seed; the handler reads mstatus. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: line, delay, U code.
 - Knobs: knob:irq_hold
@@ -5753,11 +6004,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-025
 - Phase: 1
 - Tier: smoke
-- Preconditions: M and U for the illegal case; debug mode via debug_req_i for the legal case.
+- Preconditions: M and U for the illegal case; debug mode via debug_req_i for the legal case. C-2 U-mode prologue before the first entry to U.
 - Stimulus: dret in M and in U (30 per seed); debug entries with dcsr.prv left as entered (M or U) and dpc left or rewritten; dret; 10 entries per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, position, entry mode, dpc rewrite.
 - Knobs: knob:debug_req_regime, knob:priv_regime
-- Fire-check: outside debug: rvfi_trap = 1, mcause 2, mtval 0x7B20_0073; in debug: rvfi_pc_wdata of dret == dpc and the next retirement's rvfi_mode == dcsr.prv with rvfi_ext_debug_mode = 0.
+- Fire-check: outside debug: rvfi_trap = 1, mcause 2, mtval 0x7B20_0073; in debug: the next retirement after the dret has rvfi_pc_rdata == dpc (C-1: the dret record's rvfi_pc_wdata is dret pc + 4, rtl/ibex_controller.sv:961-965) and rvfi_mode == dcsr.prv with rvfi_ext_debug_mode = 0.
 - Pass criteria: gen_isa_compare (illegal); gen_chk_debug (resume)
 - Expected: pass
 - Test group: gen_prv_debug
@@ -5767,7 +6018,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-026
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug mode entered from M; dpc points to a U-safe block that ecalls.
+- Preconditions: debug mode entered from M; dpc points to a U-safe block that ecalls. C-2 U-mode prologue before the first entry to U.
 - Stimulus: debug ROM writes dcsr.prv uniform over 00/01/10/11 then dret; 24 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: prv, op form, dpc.
 - Knobs: knob:debug_req_regime
@@ -5781,7 +6032,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-027
 - Phase: 1
 - Tier: targeted
-- Preconditions: mstatus/mepc/mcause/mtval loaded with random values and read before entry; entries from M and U via haltreq, ebreak (ebreakm/u = 1), step and trigger (tdata2 = a U/M pc, execute = 1).
+- Preconditions: mstatus/mepc/mcause/mtval loaded with random values and read before entry; entries from M and U via haltreq, ebreak (ebreakm/u = 1), step and trigger (tdata2 = a U/M pc, execute = 1). C-2 U-mode prologue before the first entry to U.
 - Stimulus: 4 causes x 2 modes = 8 entries per seed; the debug ROM reads dcsr, dpc and the four M CSRs. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: pre-loaded values, entry pc, cause order.
 - Knobs: knob:debug_req_regime
@@ -5795,7 +6046,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-028
 - Phase: 1
 - Tier: targeted
-- Preconditions: M and U; handler installed.
+- Preconditions: M and U; handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: 32-bit SYSTEM words with funct3 = 000: imm 0x102 (sret), 0x002 (uret), funct7 0001001 with random rs1/rs2 (sfence.vma), random other imm with rs1 = rd = 0, and the five legal imm values with random nonzero rs1 or rd; 120 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: encoding class, fields, mode.
 - Knobs: knob:priv_regime
@@ -5809,7 +6060,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-029
 - Phase: 1
 - Tier: targeted
-- Preconditions: MIE = 1, mie = all legal bits; handler records mcause and clears the taken line through the TB mailbox.
+- Preconditions: MIE = 1, mie = all legal bits; handler records mcause and clears the taken line through the TB mailbox. C-2 U-mode prologue before the first entry to U.
 - Stimulus: the TB raises random subsets of the NUM_IRQ_LINES = 18 lines simultaneously (incl. all fast lines together, each fast id alone, ext+sw+timer together), and irq_nm_i alone; 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: subset, mode (M/U), timing.
 - Knobs: knob:irq_line_mix, knob:irq_regime
@@ -5823,11 +6074,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-030
 - Phase: 1
 - Tier: smoke
-- Preconditions: mtvec BASE randomized among the prepared handler copies (boot page, low, high); debug mode for the debug-exception case.
+- Preconditions: mtvec BASE randomized among the prepared handler copies (boot page, low, high); debug mode for the debug-exception case; cpuctrlsts.icache_enable = 0 in half the seeds (bus-visible vector fetch, C-14) and 1 in the other half (RVFI-only observation).
 - Stimulus: one exception, one interrupt of each class, one NMI (external), one internal NMI (integrity error injected by the data agent) and one debug-mode exception per BASE; 3 BASE values per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: BASE, exception kind, irq id, timing.
 - Knobs: knob:irq_line_mix, knob:dmem_err_rate
-- Fire-check: rvfi_pc_wdata of the trapping instruction / first handler pc == BASE, BASE + 4*id, BASE + 0x7C, DmExceptionAddr respectively; instr_addr_o shows the same fetch address.
+- Fire-check: the first handler record's rvfi_pc_rdata == BASE, BASE + 4*id, BASE + 0x7C, DmExceptionAddr respectively (C-1: the trapping record's rvfi_pc_wdata is never the vector); the vector fetch is asserted on instr_addr_o only in the icache_enable = 0 seeds (C-14: a warm vector hits in the cache with no bus request, rtl/ibex_icache.sv:703, :1030-1031; fact-check UNOBSERVABLE row) and always for DmExceptionAddr (icache forced off in debug mode).
 - Pass criteria: gen_isa_compare; gen_chk_irq; gen_chk_nmi; gen_chk_bus_intg_rsp (internal NMI cause 0xFFFF_FFE0); gen_chk_debug
 - Expected: pass
 - Test group: gen_prv_irq
@@ -5837,7 +6088,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-031
 - Phase: 1
 - Tier: targeted
-- Preconditions: MIE = 0 and mie = 0 in half the rounds; M or U; an enabled irq pin raised during the NMI handler in some rounds; a second irq_nm_i pulse during the handler in others.
+- Preconditions: MIE = 0 and mie = 0 in half the rounds; M or U; an enabled irq pin raised during the NMI handler in some rounds; a second irq_nm_i pulse during the handler in others. C-2 U-mode prologue before the first entry to U.
 - Stimulus: irq_nm_i pulse; NMI handler reads mstatus/mcause/mepc, spins for a random time, mret; 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, MIE/mie, secondary events, handler length.
 - Knobs: knob:irq_line_mix, knob:irq_regime
@@ -5851,7 +6102,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-032
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-CSR-041 with emphasis on the pc_wb case: a load/store followed by a younger CSR write or ALU instruction already in ID when the error returns (long dmem latency).
+- Preconditions: as TP-CSR-041 with emphasis on the pc_wb case: a load/store followed by a younger CSR write or ALU instruction already in ID when the error returns (long dmem latency). C-2 U-mode prologue before the first entry to U.
 - Stimulus: 60 load/store faults per seed with long data latency and a dependent/independent younger instruction; 30 interrupts; 30 synchronous exceptions. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: latency, younger instruction kind, fault source (bus/PMP), mode.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:pmp_regime, knob:irq_regime
@@ -5865,11 +6116,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-033
 - Phase: 1
 - Tier: smoke
-- Preconditions: U-mode code with a trap; M-mode handler.
+- Preconditions: U-mode code with a trap; M-mode handler. C-2 U-mode prologue before the first entry to U.
 - Stimulus: ecall/illegal/ebreak (ebreaku = 0)/interrupt from U, 40 per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: trap kind, position.
 - Knobs: knob:priv_regime, knob:irq_regime
-- Fire-check: the trapping retirement has rvfi_mode = 0 and rvfi_trap = 1 (interrupt: last U retirement mode 0), the handler entry retirement has rvfi_mode = 3 and rvfi_intr = 1.
+- Fire-check: the trapping retirement has rvfi_mode = 0 and rvfi_trap = 1 (interrupt: last U retirement mode 0), the handler entry retirement (rvfi_pc_rdata == mtvec BASE for ecall/illegal/ebreak, BASE + 4*id for the interrupt, C-1) has rvfi_mode = 3; rvfi_intr = 1 only in the interrupt round (EXC_PC_IRQ entries, rtl/ibex_core.sv:2403-2411) and 0 in the synchronous rounds (fact-check TP-PRV-032).
 - Pass criteria: gen_isa_compare (mode sequence)
 - Expected: pass
 - Test group: gen_prv_modes
@@ -5879,7 +6130,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-034
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode; mcounteren = CTR_MASK (0x1FFD); handler installed.
+- Preconditions: U-mode; mcounteren = CTR_MASK (0x1FFD); handler installed. C-2 U-mode prologue before the first entry to U.
 - Stimulus: write forms to every address class from U (0x000..0xFFF sampled by stride: user-level holes 0x0xx/0x4xx/0x8xx/0xCxx incl. legal alias addresses, S/H/M levels), plus demoted reads of the legal aliases; 300 accesses per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: address, op, rd, stride.
 - Knobs: knob:priv_regime
@@ -5894,7 +6145,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode.
-- Stimulus: csrrs/csrrc/csrrw toggling bit 21 and bit 17 individually and together while the other implemented fields hold random values; 60 pairs per seed. Weights: per the Layer-1 weight tables unless stated.
+- Stimulus: csrrs/csrrc/csrrw toggling bit 21 and bit 17 individually and together while the other implemented fields hold random values; 60 pairs per seed; a write leaving MPRV = 1 with MPP != 11 is followed by a restoring csrrw mstatus before the next data access (C-MPRV). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, other fields, order; fetch-latency regime (knobs).
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay
 - Fire-check: read-back bits 21 and 17 follow each write independently; the other fields unchanged by TW/MPRV-only writes.
@@ -5914,14 +6165,14 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: with MPRV = 1 MPP = U the debug-mode load to a non-U-accessible address produces no data_req_o and the PC goes to DmExceptionAddr (rvfi_trap in debug mode); the control load passes.
 - Pass criteria: gen_chk_pmp following Sdext (mprven = 0: MPRV ignored in debug mode, the load must pass) - fails on current RTL; gen_chk_debug (DmExceptionAddr) - passes
 - Expected: expected-fail (B2)
-- Test group: gen_prv_debug
+- Test group: gen_prv_debug_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-PRV-003.cr_dbg_mprv.dbg_1_u_fault, CG-PRV-003.cr_dbg_mprv.dbg_1_u_allow, CG-PRV-003.cr_dbg_mprv.dbg_0_u_allow, CG-PRV-003.cr_dbg_mprv.dbg_0_m_allow, CG-PRV-003.cr_dbg_mprv.dbg_1_m_allow
 
 ### TP-PRV-036: Privilege transition sequences M->U->M, U->M->U and mixed exits under knob:priv_regime = alternating
 - Features: F-PRV-001, F-PRV-002, F-PRV-006, F-PRV-023
 - Phase: 2
 - Tier: full
-- Preconditions: knob:priv_regime = alternating; knob:instr_mix = mixed; all U-exit causes enabled by the generator (ecall, ebreak, illegal opcode, illegal CSR, fetch fault, load/store fault, irq, NMI, debug request, step, trigger, wfi with TW, mret in U, dret in U).
+- Preconditions: knob:priv_regime = alternating; knob:instr_mix = mixed; all U-exit causes enabled by the generator (ecall, ebreak, illegal opcode, illegal CSR, fetch fault, load/store fault, irq, NMI, debug request, step, trigger, wfi with TW, mret in U, dret in U); an mret inside debug mode (bin mret_dbg_ok) is generated only with mepc pointing back into the debug ROM: it is legal and executes fully while debug_mode stays 1 (F-PRV-036, TP-PRV-039; fact-check prv_xcut note 6). C-2 U-mode prologue before the first entry to U.
 - Stimulus: >= 500 mode transitions per seed; every U-exit cause weighted >= 3%.
 - Randomized: everything; regime schedule by the cross-cutting subagent.
 - Knobs: knob:priv_regime, knob:instr_mix, knob:irq_regime, knob:debug_req_regime, knob:pmp_regime
@@ -5935,7 +6186,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-023, F-PRV-024, F-PRV-029
 - Phase: 2
 - Tier: full
-- Preconditions: knob:priv_regime = u_heavy; knob:irq_regime = storm; knob:irq_line_mix = multi; handlers randomly re-enable MIE and return to U or M.
+- Preconditions: knob:priv_regime = u_heavy; knob:irq_regime = storm; knob:irq_line_mix = multi; handlers randomly re-enable MIE and return to U or M. C-2 U-mode prologue before the first entry to U.
 - Stimulus: >= 2000 interrupt entries per seed, >= 50% from U.
 - Randomized: everything.
 - Knobs: knob:priv_regime, knob:irq_regime, knob:irq_line_mix, knob:irq_hold
@@ -5949,7 +6200,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Features: F-PRV-025, F-PRV-026, F-PRV-027
 - Phase: 2
 - Tier: full
-- Preconditions: knob:priv_regime = alternating; knob:debug_req_regime = storm; debug ROM randomizes dcsr.prv/dpc and occasionally executes an exception before dret.
+- Preconditions: knob:priv_regime = alternating; knob:debug_req_regime = storm; debug ROM randomizes dcsr.prv/dpc and occasionally executes an exception before dret. C-2 U-mode prologue before the first entry to U.
 - Stimulus: >= 300 debug entries per seed with random entry causes. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: everything.
 - Knobs: knob:priv_regime, knob:debug_req_regime, knob:irq_regime
@@ -5958,6 +6209,20 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Expected: pass
 - Test group: gen_prv_storm
 - Bins: CG-PRV-007.cr_entry.m_haltreq, CG-PRV-007.cr_entry.u_haltreq, CG-PRV-007.cr_dret_prv.none_m, CG-PRV-007.cr_dret_prv.none_u, CG-PRV-007.cr_dret_mprv.m_1_u, CG-PRV-007.cr_dret_mprv.m_1_m, CG-PRV-007.cr_dret_mprv.m_0_m, CG-PRV-007.cr_dret_mprv.m_0_u, CG-PRV-007.cr_exc_dbg.illegal, CG-PRV-006.cr_block.blocked_dbg, CG-PRV-006.cr_block.blocked_step, CG-PRV-001.cr_trans.dbg_dbg_exc, CG-PRV-001.cp_seq3.m_d_m, CG-PRV-001.cp_seq3.u_d_m
+
+### TP-PRV-039: mret executed inside debug mode is legal: PC <- mepc, priv <- MPP, mstatus restored, debug_mode stays 1 (RTL-defined)
+- Features: F-PRV-036
+- Phase: 1
+- Tier: targeted
+- Preconditions: debug mode entered from M or U via debug_req_i (C-2 U-mode prologue for the U rounds); the debug ROM writes mepc = T (inside the DM window DmBaseAddr..DmBaseAddr + DmAddrMask in half the rounds, an ordinary code block outside it in the other half), mstatus.MPP = M or U and a random MPIE; the block at T executes 1..8 ALU instructions and returns to the debug ROM: MPP = M rounds end with ebreak (inside debug mode it re-enters the debug ROM at DmHaltAddr with no CSR save, rtl/ibex_controller.sv:874-882), MPP = U rounds end with ecall (an exception in debug mode vectors to DmExceptionAddr with priv <- M and no M-CSR update, rtl/ibex_cs_registers.sv:908, :918; B6 ruling C-20; the TB's DmExceptionAddr stub jumps back to the debug ROM); the debug ROM then restores dcsr.prv/dpc and drets.
+- Stimulus: 24 rounds per seed over MPP x target class x entry mode. Weights: per the Layer-1 weight tables unless stated.
+- Randomized: MPP, MPIE, T, block length, entry mode, entry cause.
+- Knobs: knob:debug_req_regime, knob:priv_regime
+- Fire-check: the mret retires with rvfi_ext_debug_mode = 1 and rvfi_trap = 0 (priv is M inside debug mode, rtl/ibex_cs_registers.sv:908, so illegal_umode_insn is 0, rtl/ibex_id_stage.sv:606-611); the next record has rvfi_pc_rdata == T & ~1 (C-1), rvfi_ext_debug_mode == 1 and rvfi_mode == MPP; MPP = M rounds: the ebreak record has rvfi_trap = 0 and the next fetch / record is DmHaltAddr; MPP = U rounds: the ecall record has rvfi_trap = 1, rvfi_mode = 0, rvfi_ext_debug_mode = 1 and the next record's rvfi_pc_rdata == DmExceptionAddr; the debug ROM's csrr mstatus then shows MIE == old MPIE, MPIE == 1, MPP == 00 (MPRV cleared when MPP was U); after dret the resumed code runs at dcsr.prv with rvfi_ext_debug_mode = 0.
+- Pass criteria: gen_isa_compare (mode / pc sequence with debug_mode held through the mret; the ISA model executes the mret normally); gen_chk_debug (debug_mode stays 1 across the mret, re-entry at DmHaltAddr / DmExceptionAddr, dret target); gen_chk_csr_readback (mstatus after the mret per rtl/ibex_cs_registers.sv:953-980)
+- Expected: pass
+- Test group: gen_prv_debug
+- Bins: CG-PRV-007.cr_mret_dbg.m_dm_rom, CG-PRV-007.cr_mret_dbg.u_dm_rom, CG-PRV-007.cr_mret_dbg.m_outside, CG-PRV-007.cr_mret_dbg.u_outside, CG-PRV-007.cp_event.mret_in_dbg, CG-PRV-004.cr_kind_priv_trap.mret_dbg_ok, CG-PRV-004.cr_kind_priv_trap.ecall_dbg_trap
 
 ## Test groups
 
@@ -5971,8 +6236,10 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_csr_trap_handling | TP-CSR-032, 033, 034, 038, 039, 040, 041, 042, 043, 044, 045, 046, 047, 048, 114 | 1 | smoke/targeted | short |
 | gen_csr_counters | TP-CSR-050, 051, 052, 058, 059, 060, 061, 062, 063, 064, 065, 066, 067, 068, 069, 070, 071, 072, 073, 113 | 1 | smoke/targeted | medium |
 | gen_csr_umode | TP-CSR-015, 053, 054, 055, 056, 057, TP-PRV-033 | 1 | smoke/targeted | short |
-| gen_csr_debug_csr | TP-CSR-017, 018, 074, 075, 076, 077, 078, 079 | 1 | targeted | medium |
-| gen_csr_trigger_csr | TP-CSR-080, 081, 082, 083, 084 | 1 | smoke/targeted | short |
+| gen_csr_debug_csr | TP-CSR-017, 018, 074, 077, 078, 079 | 1 | targeted | medium |
+| gen_csr_debug_csr_xfail | TP-CSR-075, 076 | 1 | targeted | medium |
+| gen_csr_trigger_csr | TP-CSR-080, 081, 082, 084 | 1 | smoke/targeted | short |
+| gen_csr_trigger_csr_xfail | TP-CSR-083 | 1 | targeted | short |
 | gen_csr_cpuctrl | TP-CSR-085, 086, 087, 088, 089, 090, 091, 092, 093, 094 | 1 | smoke/targeted | medium |
 | gen_csr_pmp_warl | TP-CSR-095, 096, 097 | 1 | smoke/targeted | short |
 | gen_csr_cheriot_gate | TP-CSR-098, 099 | 1 | smoke | short |
@@ -5985,19 +6252,28 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_prv_wfi | TP-PRV-015, 016, 017, 018, 019 | 1 | smoke/targeted | medium |
 | gen_prv_illegal | TP-PRV-009, 020, 021, 027 | 1 | smoke/targeted | short |
 | gen_prv_irq | TP-PRV-022, 023, 028, 029, 030 | 1 | smoke/targeted | medium |
-| gen_prv_debug | TP-PRV-004, 014, 024, 025, 026, 035 | 1 | smoke/targeted | medium |
+| gen_prv_debug | TP-PRV-004, 024, 025, 026, 039 | 1 | smoke/targeted | medium |
+| gen_prv_debug_xfail | TP-PRV-014, 035 | 1 | targeted | medium |
 | gen_prv_storm | TP-PRV-036, 037, 038 | 2 | full | long |
 
 Expected-fail items: TP-CSR-075 and TP-CSR-076 (B15), TP-CSR-083 (B3), TP-PRV-014 (B1),
 TP-PRV-035 (B2). TP-CSR-075 joins the B15 list because an all-ones write necessarily sets bit 13
 (gen_bug_log.md B15 row to be extended by the DV Lead).
 Doc-mismatch items (pass, RTL followed): TP-CSR-017 (D12), TP-CSR-024 (D2), TP-CSR-032 (D1),
-TP-CSR-042/043/044/045/046 (D3), TP-CSR-081, TP-CSR-084 and TP-CSR-108 (D4).
-RTL-defined items (B6 ruling C-20, pass): TP-CSR-018, TP-PRV-004, TP-PRV-026.
+TP-CSR-042/043/044/045/046 (D3), TP-CSR-061 and TP-CSR-107 (D20), TP-CSR-081, TP-CSR-084 and TP-CSR-108 (D4).
+RTL-defined items (B6 ruling C-20, pass): TP-CSR-018, TP-PRV-004, TP-PRV-026, TP-PRV-039 (mret inside debug
+mode, F-PRV-036); RTL-defined NMI-mode mret target (jump to the current mepc_q, CSR values from mstack):
+TP-PRV-010 (F-PRV-011 note).
+Fact-check (T-053) fold: X-1 applied to TP-CSR-018/035/040 and TP-PRV-004/005/008/010/024/029; X-2 to
+TP-PRV-001/006/008/014 and every U-mode item (C-2 reference); X-3/D20 to TP-CSR-061/107; X-7 to
+TP-CSR-031/103; X-8 to TP-PRV-018/019; X-17 to TP-CSR-064/065/066; UNREACHABLE rows TP-CSR-004/095/101
+constrained (C-SWEEP); UNOBSERVABLE rows TP-CSR-002/092/093 (P7 probe-gated, boundary form) and
+TP-PRV-029 (C-14); mtval excluded from TP-CSR-008; TP-CSR-011 conditioned on the implemented set;
+TP-CSR-102 restated per field.
 Documented behaviour with a design-weakness note (B12, pass): TP-CSR-094.
 B5 (dcsr.nmip): owner item TP-DBG-021; TP-CSR-074/075/108 exclude bit 3 from their compare.
 Canonical feature IDs owned by this area group (F-CSR-002/003/005/019/020/024/026/032/035/085/099,
-F-PRV-005/007/010/014/015/016) are each cited directly by at least one item above; items that cite
+F-PRV-005/007/010/014/015/016/036) are each cited directly by at least one item above; items that cite
 an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the canonical entry.
 
 ## New checkers requested
@@ -6006,7 +6282,7 @@ an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the c
   retirement; asserts a retirement gap >= 2 cycles (FLUSH) for every CSR except mscratch/mepc and
   a gap of exactly 1 cycle for mscratch/mepc when the fetch agent is at min latency and no other
   stall source is active (memory latency, WB drain); also asserts no bubble after a demoted read.
-  Used by TP-CSR-002/003/006/007/021/033/093/101/115. Mutation class: csr_pipe_flush condition
+  Used by TP-CSR-002/003/006/007/021/033/092/093/101/115. Mutation class: csr_pipe_flush condition
   (rtl/ibex_id_stage.sv:593-597).
 - gen_sva_csr_excl (probe assertion, DV Lead decision): never (cs_registers_i.csr_we_int &&
   cs_registers_i.csr_save_cause_i). Internal-signal assertion; used only by TP-CSR-102 as a
@@ -6022,7 +6298,10 @@ an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the c
 - gen_chk_counters extension request: "write wins over increment in the write cycle" for every
   counter, the minstret/hpm10 speculative-read rule, and the minstret exclusion list (ecall,
   ebreak, the ebreak-into-debug record with rvfi_trap = 0 (S-2), trapping instructions, minstret(h)
-  write ops, Zcmp once, dummies per SEC ruling).
+  write ops, Zcmp once, dummies off per C-DUM), the write-cycle rule "a countable instruction
+  retiring from WB in a minstret(h) write's commit cycle loses its increment" (X-17, TP-CSR-066),
+  the counterh-write-in-the-carry-cycle rule of TP-CSR-064 and the RMW "+ (gap - 1)" rule of
+  TP-CSR-065.
 
 ## Open questions
 
@@ -6040,10 +6319,11 @@ an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the c
   input mid-test. Recommended default: allowed in that one directed test only, changed while the
   core spins on a mailbox; constant within every other test.
 - OQ-CSR-4 (secureseed pulse probe): the only observation of the reseed is
-  cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o (fcov Probe candidates). Blocked:
-  fire-checks of TP-CSR-092/093 and CG-CSR-010.cp_pulse. Recommended default: admit the probe to
-  the probe register for fire-check and coverage only; pass criteria stay at the boundary
-  (read-back 0, no trap, no flush for demoted forms).
+  cs_registers_i.dummy_instr_seed_en_o / dummy_instr_seed_o (fcov Probe candidates), now probe
+  candidate P7 (PROPOSED in gen_probe_register.md, Critic ruling pending). Nothing is blocked any
+  more: TP-CSR-002/092/093 assert the boundary form (read-back 0, flush bubble for write ops, none
+  for demoted forms, CG-CSR-010.cr_op_form_gap) and the pulse bins are coverage-only, outside the
+  Bins lines, the CSV and the manifests until ruled. Recommended default: accept P7 coverage-only.
 - OQ-CSR-5 (Spike divergences): mie fast bits, mtvec mask, misa constant, mcause storage,
   mcounteren gate, dcsr, custom CSRs and trigger CSRs diverge from upstream Spike (tb-infra c.3).
   Blocked: whether gen_isa_compare masks CSR-derived state or the shim legalises. Recommended
@@ -6082,8 +6362,52 @@ Conventions used in every item
   prediction (ibex_core has no rvfi_csr_* ports).
 - Exception-side terms: "trap record" = rvfi_valid && rvfi_trap; "vector fetch" = instr_req_o
   with instr_addr_o == {mtvec[31:8], 8'h00} (exceptions) or mtvec base + 4*id (interrupts),
-  seen by the ibus monitor. "Interrupt entry" = rvfi_intr on the first handler instruction (or
-  an rvfi_ext_irq_valid pulse) with the handler pc.
+  seen by the ibus monitor (bus-visible only with cpuctrlsts.icache_enable = 0, and issued in the
+  pc_set cycle only when no fill buffer holds an ungranted request, rtl/ibex_icache.sv:703,
+  764-776, 1030-1031; C-14). "Interrupt entry" = rvfi_intr on the first handler instruction with
+  the handler pc; the rvfi_ext_irq_valid LEVEL (C-13) is a secondary marker, never the entry
+  timestamp.
+- C-1 (X-1) redirect targets: rvfi_pc_wdata of trap, mret and dret records is the next sequential
+  fetch address (pc_if captured at ID exit, rtl/ibex_core.sv:2084, while pc_set follows in FLUSH,
+  rtl/ibex_controller.sv:826-833, 953-965) and is never asserted as the target. The target of a
+  trap / mret / dret is observed as the NEXT record's rvfi_pc_rdata (or the DmExceptionAddr /
+  vector fetch with the icache off); only branch and jump records carry the target in pc_wdata.
+- C-3 (X-7) entry timing: interrupt and debug entry wait for an empty ID and a ready WB
+  (rtl/ibex_controller.sv:296, 700-720; halt_if only blocks IF); the instruction already in ID when
+  the request arrives completes first, so mepc / dpc = pc of the first NOT-yet-executed instruction,
+  derived from the last retired record (its rvfi_pc_wdata for ordinary / branch / jump records, the
+  mepc / dpc read-back for mret / dret records), never from the pin timestamp alone; nominal 2
+  records after the pin edge, worst case 17 (GEN_IRQ_ENTRY_BOUND_RECORDS). Fire-checks key on the
+  driver timestamp, the last record before the entry and the vector / DmHaltAddr fetch (icache off)
+  with no record in between.
+- C-6 (X-9) after a synchronous exception MIE is cleared (rtl/ibex_cs_registers.sv:924) and
+  irq_enabled = MIE | (priv == U) (rtl/ibex_controller.sv:490), so a pending ORDINARY interrupt is
+  taken only after the handler's mret or an MIE write; an NMI ignores MIE (:498-500) and is taken in
+  the first empty-ID DECODE after the exception's FLUSH, before the handler's first instruction
+  (mepc = mtvec base; the exception's mepc / mcause go to mstack).
+- C-7 (X-10, D21) the internal-NMI pending flag registers one cycle after the corrupted rvalid
+  (rtl/ibex_controller.sv:402-438): up to TWO ordinary instructions (more records with a Zcmp
+  sequence) can retire between the corrupted response and the NMI entry; the doc's "at most one"
+  (exception_interrupts.rst:87-88) is D21, the checker follows the RTL and the first directed
+  integrity-error sim confirms the count (inventory UNVERIFIED-4).
+- C-12 (X-14 / X-15, B18) RVFI record rules: rvfi_insn is the 32-bit expansion for Zcmp micro-ops
+  (rtl/ibex_core.sv:2263-2267; the 16-bit word is on rvfi_ext_expanded_insn); c.ebreak is traced as
+  the zero-extended halfword 32'h00009002, so is_ebreak(rvfi_insn) accepts 32'h00100073 and
+  32'h00009002; rvfi_mem_rmask / wmask are 0 on WB-trap records (:2156-2157; rvfi_mem_addr is kept,
+  :2164) and carry the garbage decode on ID-trap and non-store records (B18): mask rules apply only
+  to decoded load/store records, and access kind / size come from rvfi_insn.
+- C-13 (X-16) rvfi_ext_irq_valid is a LEVEL, not a pulse: the internal flop is set at the decision
+  cycle N (rtl/ibex_core.sv:1965-1971), the port rises at N + 4 after three RVFI stages
+  (:1992-2002, :2134-2141, :2192-2199) and stays high until about two cycles after the handler's
+  first instruction enters ID; it is NOT generated when ID emptied before WB drained
+  (captured_valid already set) and never coincides with rvfi_valid; for a SLEEP wake the port rises
+  at W + 4 = IRQ_TAKEN + 2. No item or checker infers N from the port: N is inferred from the
+  pipeline state (ID empty per RVFI / the ibus monitor, WB done per the dbus monitor,
+  irq_pending_o with MIE or U-mode) and the port, where present, is compared as rise == N + 4.
+- C-15 / C-16: Expected values are `pass`, `pass (doc mismatch Dn)`, `expected-fail (Bn)` and
+  `informational (...)`; an informational item is its own `_info` test. Fire-checks are per-seed
+  assertions on an observable; a timing constant not yet simulated is asserted as "minimum
+  observed value equals the bring-up-pinned constant <name> (predicted N)".
 - Three randomization layers: per-transaction distributions are in Stimulus/Randomized; regime
   knobs are named in Knobs (bins owned by the cross-cutting subagent); the regime schedule is
   owned by the cross-cutting subagent and only referenced.
@@ -6092,8 +6416,9 @@ Conventions used in every item
   (cs_registers.rst:246); D2 illegal mstatus.MPP legalises to U (doc says M, :138); D3 mcause
   software-writable (doc marks R, :213); D10 mtval carries the fetch address on an instruction
   access fault (cs_registers.rst:235 says 0); D12 trigger CSRs tselect/tdata* are accessible from
-  M-mode (debug.rst:54-55 says Debug Mode only). D5 (dcsr.ebreaks) is RETIRED in favour of bug
-  candidate B15 (DBG/CSR areas).
+  M-mode (debug.rst:54-55 says Debug Mode only); D21 up to two ordinary instructions retire between a
+  corrupted data response and the internal NMI (exception_interrupts.rst:87-88 says at most one; C-7).
+  D5 (dcsr.ebreaks) is RETIRED in favour of bug candidate B15 (DBG/CSR areas).
 - Bug candidates touching this area (status per dv/auto_dv/docs/gen_bug_log.md): B5 (dcsr.nmip
   hardwired 0; core_registers.xml:292-298) has ONE owner item, TP-DBG-021 (dbg area); TP-IRQ-041
   excludes dcsr bit 3 from its compare and expects pass. B12 (mret from an interrupt handler clears
@@ -6102,19 +6427,30 @@ Conventions used in every item
   record when a WB error coincides, rtl/ibex_core.sv:1851-1853) is downgraded to an RVFI convention note
   pending its confirmation simulation: TP-EXC-035 carries the priority behaviour (pass) and TP-EXC-065 the
   record confirmation (informational, excluded from the pass gate). B6 (exception in debug mode forces priv
-  M) is RTL-defined (Sdext.adoc:32/:51, Critic C-20): TP-EXC-046 expects pass. No item in this file is
-  expected-fail.
+  M) is RTL-defined (Sdext.adoc:32/:51, Critic C-20): TP-EXC-046 expects pass. B16 (a misaligned load
+  with an integrity error on the FIRST beat writes rd, X-11) is owned by TP-DMEM-041 / TP-SEC-008 /
+  TP-RVFI-024 (first-beat class expected-fail): TP-IRQ-044 asserts rvfi_ext_rf_wr_suppress only for the
+  aligned and second-beat classes and alert + internal NMI for every class. B18 (rmask / addr garbage on
+  non-store records) is RVFI-owned; C-12 applies here. D21 (internal-NMI latency, C-7) is used by
+  TP-IRQ-044 / 047. No item in this file is expected-fail.
 - S-2: an ebreak that enters debug mode retires with rvfi_trap == 0 (rtl/ibex_core.sv:1885-1886). The
-  debug path is is_ebreak(rvfi_insn) && !rvfi_trap && next fetch == DmHaltAddr; the exception path is
-  rvfi_trap == 1. Fire-checks here use that rule (TP-EXC-018, TP-EXC-019, TP-EXC-064).
+  debug path is is_ebreak(rvfi_insn) && !rvfi_trap && next fetch == DmHaltAddr (is_ebreak accepts
+  32'h00100073 and the c.ebreak halfword 32'h00009002, C-12); the exception path is rvfi_trap == 1.
+  Fire-checks here use that rule (TP-EXC-017, TP-EXC-018, TP-EXC-019, TP-EXC-064).
 - S-4 timing: with the instruction cache enabled a word can reach ID without an instruction-bus
   transaction, so every fire-check that infers "in ID" or "delivered" from the ibus monitor pins
   cpuctrlsts.icache_enable = 0 in its Preconditions and excludes icache_enable from the random cpuctrlsts
-  field set (TP-EXC-015, 034, 035, 040, 062, TP-IRQ-021, 026, 064); redirects are otherwise derived from
-  RVFI (rvfi_pc_wdata != pc + len). RVFI-anchored events are back-dated by one cycle (rvfi_valid is one
-  flop after WB exit, rtl/ibex_core.sv:1868); commit-to-record offsets are 2 (CSR writes) and 1
-  (trap/mret/dret). The interrupt decision cycle N and IRQ_TAKEN N + 1 are defined in fcov_exc_irq.md
-  Conventions (CTRL-09: the live pins at N + 1 decide; a one-cycle pulse is never taken).
+  field set (TP-EXC-015, 034, 035, 036, 040, 050, 062, TP-IRQ-021, 026, 039, 060, 064, 066, 079, 080);
+  redirects are otherwise derived from RVFI (branches / jumps: rvfi_pc_wdata != pc + len; trap / mret /
+  dret: the next record's rvfi_pc_rdata, C-1). RVFI-anchored events are back-dated by one cycle
+  (rvfi_valid is one flop after WB exit, rtl/ibex_core.sv:1868); commit-to-record offsets are 2 (CSR
+  writes, GEN_CSR_WRITE_TO_RVFI_OFFSET) and 1 (trap/mret/dret, GEN_TRAP_TO_RVFI_OFFSET); a csrr's read
+  value is sampled at its ID exit = record - GEN_RVFI_ID_EXIT_OFFSET (2). The interrupt decision cycle N
+  and IRQ_TAKEN N + 1 are defined in fcov_exc_irq.md Conventions (CTRL-09: the live pins at N + 1
+  decide; a one-cycle pulse is never taken); rvfi_ext_irq_valid rises at N + 4 (C-13). "Vector fetch"
+  cycle claims are exact only with the icache off and gnt delay 0: exception-side timing is measured to
+  the commit (pc_set = trap record - GEN_TRAP_TO_RVFI_OFFSET) and the bus request is >= the commit cycle
+  (a held prefetch request defers it, rtl/ibex_icache.sv:764-776).
 - core_busy_o port rule (gen_tb_architecture.md 8.2 item 1): in WAIT_SLEEP/SLEEP core_busy_o == Off iff
   no instruction-bus beat is outstanding, no icache invalidation is active and the LSU is idle; otherwise
   the ctrl_busy dip is invisible. WFI items treat "Off not seen" as legal when a fetch beat was outstanding.
@@ -6158,7 +6494,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (trap taken iff predicted, next pc == mtvec base, no rvfi_intr); gen_chk_csr_readback (mcause 1, mepc X, mtval X, MPIE<-MIE, MIE<-0, MPP<-priv); gen_chk_ibus_proto
 - Expected: pass (doc mismatch D10)
 - Test group: gen_exc_sync_causes
-- Bins: CG-EXC-001.cp_cause.fetch_fault, CG-EXC-001.cr_cause_priv_ilen.fetch_fault_m_w32, CG-EXC-001.cr_cause_priv_ilen.fetch_fault_u_c16, CG-EXC-001.cr_cause_mtvec.fetch_fault_sw_aligned, CG-EXC-001.cr_cause_mtvec.fetch_fault_boot_init, CG-EXC-001.cr_cause_mie.fetch_fault_mie1, CG-EXC-002.cr_source_half.bus_err_first, CG-EXC-002.cr_flow_outcome.sequential_trap, CG-EXC-002.cr_flow_outcome.jump_target_trap, CG-EXC-002.cr_illegal_source.clean_bus_err, CG-EXC-002.cr_half_ilen.first_c16, CG-EXC-002.cr_half_ilen.first_w32, CG-EXC-002.cr_flow_outcome.mret_target_trap, CG-EXC-002.cr_flow_outcome.dret_target_trap, CG-EXC-012.cr_kind_mtval.sync_pc
+- Bins: CG-EXC-001.cp_cause.fetch_fault, CG-EXC-001.cr_cause_priv_ilen.fetch_fault_m_w32, CG-EXC-001.cr_cause_priv_ilen.fetch_fault_u_c16, CG-EXC-001.cr_cause_mtvec.fetch_fault_sw_aligned, CG-EXC-001.cr_cause_mtvec.fetch_fault_boot_init, CG-EXC-001.cr_cause_mie.fetch_fault_mie1, CG-EXC-002.cr_source_half.bus_err_first, CG-EXC-002.cr_flow_outcome.sequential_trap, CG-EXC-002.cr_flow_outcome.jump_target_trap, CG-EXC-002.cr_illegal_source.clean_bus_err, CG-EXC-002.cr_half_ilen.first_c16, CG-EXC-002.cr_half_ilen.first_w32, CG-EXC-002.cr_flow_outcome.mret_target_trap, CG-EXC-002.cr_flow_outcome.dret_target_trap, CG-EXC-012.cr_kind_mtval.sync_pc, CG-EXC-001.cp_priv.m, CG-EXC-001.cp_priv.u, CG-EXC-001.cp_ilen.c16, CG-EXC-001.cp_ilen.w32, CG-EXC-002.cp_ilen.c16, CG-EXC-002.cp_ilen.w32
 
 ### TP-EXC-002: Instruction access fault from a PMP fetch violation
 - Features: F-EXC-004
@@ -6214,7 +6550,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (no unpredicted trap; rvfi_order continuity); gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_exc_fetch_fault
-- Bins: CG-EXC-002.cp_outcome.discarded_branch, CG-EXC-002.cp_outcome.discarded_jump, CG-EXC-002.cp_outcome.discarded_exception, CG-EXC-002.cp_outcome.discarded_mret, CG-EXC-002.cp_outcome.discarded_irq, CG-EXC-002.cp_outcome.discarded_debug, CG-EXC-002.cp_outcome.discarded_dret, CG-EXC-002.cr_outcome_depth.discarded_branch_one, CG-EXC-002.cr_outcome_depth.discarded_branch_two_three, CG-EXC-002.cr_outcome_depth.discarded_jump_four_plus, CG-EXC-002.cr_outcome_depth.discarded_exception_one, CG-EXC-002.cr_outcome_depth.discarded_irq_two_three, CG-EXC-002.cr_flow_outcome.sequential_discarded_irq, CG-EXC-002.cr_flow_outcome.sequential_discarded_branch, CG-EXC-002.cr_flow_outcome.sequential_discarded_exception, CG-EXC-002.cr_flow_outcome.sequential_discarded_jump, CG-EXC-002.cr_flow_outcome.sequential_discarded_mret, CG-EXC-002.cr_flow_outcome.sequential_discarded_debug, CG-EXC-002.cr_flow_outcome.sequential_discarded_dret
+- Bins: CG-EXC-002.cp_outcome.discarded_branch, CG-EXC-002.cp_outcome.discarded_jump, CG-EXC-002.cp_outcome.discarded_exception, CG-EXC-002.cp_outcome.discarded_mret, CG-EXC-002.cp_outcome.discarded_irq, CG-EXC-002.cp_outcome.discarded_debug, CG-EXC-002.cp_outcome.discarded_dret, CG-EXC-002.cr_outcome_depth.discarded_branch_one, CG-EXC-002.cr_outcome_depth.discarded_branch_two_three, CG-EXC-002.cr_outcome_depth.discarded_jump_four_plus, CG-EXC-002.cr_outcome_depth.discarded_exception_one, CG-EXC-002.cr_outcome_depth.discarded_irq_two_three, CG-EXC-002.cr_flow_outcome.sequential_discarded_irq, CG-EXC-002.cr_flow_outcome.sequential_discarded_branch, CG-EXC-002.cr_flow_outcome.sequential_discarded_exception, CG-EXC-002.cr_flow_outcome.sequential_discarded_jump, CG-EXC-002.cr_flow_outcome.sequential_discarded_mret, CG-EXC-002.cr_flow_outcome.sequential_discarded_debug, CG-EXC-002.cr_flow_outcome.sequential_discarded_dret, CG-EXC-002.cp_prefetch_depth.one, CG-EXC-002.cp_prefetch_depth.two_three, CG-EXC-002.cp_prefetch_depth.four_plus
 
 ### TP-EXC-006: Fetch-errored word that also decodes as illegal reports cause 1
 - Features: F-EXC-007, F-EXC-041
@@ -6242,7 +6578,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (trap iff predicted); gen_chk_csr_readback (mcause 2, mtval == encoding, mepc == pc)
 - Expected: pass
 - Test group: gen_exc_sync_causes
-- Bins: CG-EXC-001.cp_cause.illegal, CG-EXC-003.cp_kind.decoder_reject, CG-EXC-003.cr_kind_ilen.decoder_reject_c16, CG-EXC-003.cr_kind_ilen.decoder_reject_w32, CG-EXC-003.cr_kind_priv.decoder_reject_m, CG-EXC-003.cr_kind_priv.decoder_reject_u, CG-EXC-003.cr_kind_mtval.decoder_reject_full32, CG-EXC-003.cr_kind_wb.decoder_reject_wb_empty, CG-EXC-001.cr_cause_priv_ilen.illegal_u_c16, CG-EXC-001.cr_cause_priv_ilen.illegal_m_w32, CG-EXC-001.cr_cause_priv_ilen.illegal_m_c16, CG-EXC-001.cr_cause_priv_ilen.illegal_u_w32, CG-EXC-001.cr_cause_mtvec.illegal_boot_init, CG-EXC-001.cr_cause_mtvec.illegal_sw_aligned, CG-EXC-001.cr_cause_mtvec.illegal_sw_legalised, CG-EXC-001.cr_cause_mie.illegal_mie0, CG-EXC-001.cr_cause_mie.illegal_mie1
+- Bins: CG-EXC-001.cp_cause.illegal, CG-EXC-003.cp_kind.decoder_reject, CG-EXC-003.cr_kind_ilen.decoder_reject_c16, CG-EXC-003.cr_kind_ilen.decoder_reject_w32, CG-EXC-003.cr_kind_priv.decoder_reject_m, CG-EXC-003.cr_kind_priv.decoder_reject_u, CG-EXC-003.cr_kind_mtval.decoder_reject_full32, CG-EXC-003.cr_kind_wb.decoder_reject_wb_empty, CG-EXC-001.cr_cause_priv_ilen.illegal_u_c16, CG-EXC-001.cr_cause_priv_ilen.illegal_m_w32, CG-EXC-001.cr_cause_priv_ilen.illegal_m_c16, CG-EXC-001.cr_cause_priv_ilen.illegal_u_w32, CG-EXC-001.cr_cause_mtvec.illegal_boot_init, CG-EXC-001.cr_cause_mtvec.illegal_sw_aligned, CG-EXC-001.cr_cause_mtvec.illegal_sw_legalised, CG-EXC-001.cr_cause_mie.illegal_mie0, CG-EXC-001.cr_cause_mie.illegal_mie1, CG-EXC-003.cp_ilen.c16, CG-EXC-003.cp_ilen.w32, CG-EXC-003.cp_priv.m, CG-EXC-003.cp_priv.u
 
 ### TP-EXC-008: Illegal instruction from CSR access checks
 - Features: F-EXC-009
@@ -6312,7 +6648,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_debug (no debug entry)
 - Expected: pass
 - Test group: gen_exc_priority
-- Bins: CG-EXC-003.cp_kind.system_rs1rd_nonzero, CG-EXC-003.cr_kind_ilen.system_rs1rd_nonzero_w32, CG-EXC-003.cr_kind_priv.system_rs1rd_nonzero_m, CG-EXC-003.cr_kind_priv.system_rs1rd_nonzero_u, CG-EXC-003.cr_sub_priv.ecall_enc_m, CG-EXC-003.cr_sub_priv.ecall_enc_u, CG-EXC-003.cr_sub_priv.ebreak_enc_m, CG-EXC-003.cr_sub_priv.ebreak_enc_u, CG-EXC-003.cr_sub_priv.mret_enc_m, CG-EXC-003.cr_sub_priv.wfi_enc_m, CG-EXC-003.cr_sub_priv.wfi_enc_u, CG-EXC-003.cr_sub_priv.dret_enc_m, CG-EXC-007.cr_pair_winner.illegal_ecall_illegal, CG-EXC-007.cr_pair_winner.illegal_ebreak_illegal, CG-EXC-007.cr_pair_kind.illegal_ecall_system_rs1rd, CG-EXC-007.cr_pair_kind.illegal_ebreak_system_rs1rd, CG-EXC-013.cr_stage_irq.id_cause_irq_enabled
+- Bins: CG-EXC-003.cp_kind.system_rs1rd_nonzero, CG-EXC-003.cr_kind_ilen.system_rs1rd_nonzero_w32, CG-EXC-003.cr_kind_priv.system_rs1rd_nonzero_m, CG-EXC-003.cr_kind_priv.system_rs1rd_nonzero_u, CG-EXC-003.cr_sub_priv.ecall_enc_m, CG-EXC-003.cr_sub_priv.ecall_enc_u, CG-EXC-003.cr_sub_priv.ebreak_enc_m, CG-EXC-003.cr_sub_priv.ebreak_enc_u, CG-EXC-003.cr_sub_priv.mret_enc_m, CG-EXC-003.cr_sub_priv.wfi_enc_m, CG-EXC-003.cr_sub_priv.wfi_enc_u, CG-EXC-003.cr_sub_priv.dret_enc_m, CG-EXC-007.cr_pair_winner.illegal_ecall_illegal, CG-EXC-007.cr_pair_winner.illegal_ebreak_illegal, CG-EXC-007.cr_pair_kind.illegal_ecall_system_rs1rd, CG-EXC-007.cr_pair_kind.illegal_ebreak_system_rs1rd, CG-EXC-013.cr_stage_irq.id_cause_irq_enabled, CG-EXC-003.cp_system_sub.ecall_enc, CG-EXC-003.cp_system_sub.ebreak_enc, CG-EXC-003.cp_system_sub.mret_enc, CG-EXC-003.cp_system_sub.wfi_enc, CG-EXC-003.cp_system_sub.dret_enc, CG-EXC-007.cp_illegal_kind.system_rs1rd
 
 ### TP-EXC-013: Illegal compressed instruction: mtval holds the 16-bit encoding zero-extended
 - Features: F-EXC-014
@@ -6336,7 +6672,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: cm.push / cm.pop / cm.popret / cm.popretz encodings with rlist in {0..3} (reserved) injected between valid Zcmp sequences; handler reads mcause/mtval.
 - Randomized: which cm.* form, rlist value 0..3, spimm, privilege, alignment.
 - Knobs: knob:instr_mix
-- Fire-check: a trap record with the 16-bit cm.* encoding and handler read-back mcause 2, mtval[31:16] == 0, and the dbus monitor shows no data_req_o between the fetch of that word and the vector fetch (observable at RVFI and the data bus).
+- Fire-check: a trap record whose rvfi_ext_expanded_insn is the 16-bit cm.* encoding with rvfi_ext_expanded_insn_valid == 1 (rvfi_insn is the 32-bit first micro-op: a reserved-rlist cm.* keeps gets_expanded = INSTR_EXPANDED while illegal_instr_o is set, rtl/ibex_compressed_decoder.sv:626,635-637, rtl/ibex_core.sv:2263-2277; X-14 / C-12) and handler read-back mcause 2, mtval == zext16(cm.* word) (rtl/ibex_controller.sv:866-868), and the dbus monitor shows no data_req_o between the fetch of that word and the trap record (observable at RVFI and the data bus).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_dbus_proto (no request)
 - Expected: pass
 - Test group: gen_exc_zcmp
@@ -6368,7 +6704,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback; gen_chk_debug (no debug entry)
 - Expected: pass
 - Test group: gen_exc_sync_causes
-- Bins: CG-EXC-001.cp_cause.breakpoint, CG-EXC-004.cp_form.ebreak32, CG-EXC-004.cp_outcome.exception, CG-EXC-004.cr_priv_dcsr_outcome.m_m0u0_exception, CG-EXC-004.cr_priv_dcsr_outcome.m_m0u1_exception, CG-EXC-004.cr_priv_dcsr_outcome.u_m0u0_exception, CG-EXC-004.cr_priv_dcsr_outcome.u_m1u0_exception, CG-EXC-004.cr_form_outcome.ebreak32_exception, CG-EXC-012.cp_mepc_bit1.bit1_0, CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-001.cr_cause_priv_ilen.breakpoint_m_w32, CG-EXC-001.cr_cause_priv_ilen.breakpoint_u_w32, CG-EXC-001.cr_cause_mtvec.breakpoint_boot_init, CG-EXC-001.cr_cause_mtvec.breakpoint_sw_aligned, CG-EXC-001.cr_cause_mtvec.breakpoint_sw_legalised, CG-EXC-001.cr_cause_mie.breakpoint_mie0, CG-EXC-001.cr_cause_mie.breakpoint_mie1
+- Bins: CG-EXC-001.cp_cause.breakpoint, CG-EXC-004.cp_form.ebreak32, CG-EXC-004.cp_outcome.exception, CG-EXC-004.cr_priv_dcsr_outcome.m_m0u0_exception, CG-EXC-004.cr_priv_dcsr_outcome.m_m0u1_exception, CG-EXC-004.cr_priv_dcsr_outcome.u_m0u0_exception, CG-EXC-004.cr_priv_dcsr_outcome.u_m1u0_exception, CG-EXC-004.cr_form_outcome.ebreak32_exception, CG-EXC-012.cp_mepc_bit1.bit1_0, CG-EXC-012.cp_mepc_bit1.bit1_1, CG-EXC-001.cr_cause_priv_ilen.breakpoint_m_w32, CG-EXC-001.cr_cause_priv_ilen.breakpoint_u_w32, CG-EXC-001.cr_cause_mtvec.breakpoint_boot_init, CG-EXC-001.cr_cause_mtvec.breakpoint_sw_aligned, CG-EXC-001.cr_cause_mtvec.breakpoint_sw_legalised, CG-EXC-001.cr_cause_mie.breakpoint_mie0, CG-EXC-001.cr_cause_mie.breakpoint_mie1, CG-EXC-004.cp_priv.m, CG-EXC-004.cp_priv.u, CG-EXC-004.cp_dcsr_ebreak.m0u0, CG-EXC-004.cp_dcsr_ebreak.m0u1, CG-EXC-004.cp_dcsr_ebreak.m1u0
 
 ### TP-EXC-017: C.EBREAK behaves as EBREAK
 - Features: F-EXC-018
@@ -6378,7 +6714,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: c.ebreak (0x9002) at word- and half-aligned positions.
 - Randomized: alignment, privilege, dcsr bits (exception outcome), mtvec class.
 - Knobs: knob:instr_mix
-- Fire-check: a trap record with rvfi_insn == 0x00100073 (expanded) whose rvfi_pc_rdata is the c.ebreak address and handler read-back mcause 3, mepc[1] == pc[1] (observable at RVFI).
+- Fire-check: a trap record with rvfi_insn == 32'h00009002 (a compressed, non-expanded instruction is traced as the zero-extended halfword, rtl/ibex_core.sv:2263-2265, X-14 / C-12; never the expanded 32'h00100073) whose rvfi_pc_rdata is the c.ebreak address and handler read-back mcause 3, mepc[1] == pc[1]; the debug-entry outcome (dcsr bit set) uses the S-2 rule with the same halfword (observable at RVFI).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_ebreak_ecall
@@ -6396,7 +6732,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_debug (dcsr.cause/dpc/prv, DmHaltAddr); gen_isa_compare (no trap record, mode); gen_chk_csr_readback (mepc/mcause/mtval unchanged)
 - Expected: pass
 - Test group: gen_exc_ebreak_ecall
-- Bins: CG-EXC-004.cp_outcome.debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.m_m1u0_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.m_m1u1_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.u_m0u1_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.u_m1u1_debug_entry, CG-EXC-004.cr_form_outcome.ebreak32_debug_entry, CG-EXC-004.cr_form_outcome.c_ebreak16_debug_entry
+- Bins: CG-EXC-004.cp_outcome.debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.m_m1u0_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.m_m1u1_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.u_m0u1_debug_entry, CG-EXC-004.cr_priv_dcsr_outcome.u_m1u1_debug_entry, CG-EXC-004.cr_form_outcome.ebreak32_debug_entry, CG-EXC-004.cr_form_outcome.c_ebreak16_debug_entry, CG-EXC-004.cp_dcsr_ebreak.m1u0, CG-EXC-004.cp_dcsr_ebreak.m0u1, CG-EXC-004.cp_dcsr_ebreak.m1u1
 
 ### TP-EXC-019: EBREAK while already in debug mode re-enters at DmHaltAddr without CSR update
 - Features: F-EXC-020
@@ -6410,7 +6746,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_debug; gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_debug_mode
-- Bins: CG-EXC-004.cp_outcome.debug_reentry, CG-EXC-004.cr_form_outcome.ebreak32_debug_reentry, CG-EXC-004.cr_form_outcome.c_ebreak16_debug_reentry, CG-EXC-009.cr_cause_context.ebreak_in_debug, CG-EXC-009.cr_context_target.in_debug_dm_halt_addr
+- Bins: CG-EXC-004.cp_outcome.debug_reentry, CG-EXC-004.cr_form_outcome.ebreak32_debug_reentry, CG-EXC-004.cr_form_outcome.c_ebreak16_debug_reentry, CG-EXC-009.cr_cause_context.ebreak_in_debug, CG-EXC-009.cr_context_target.in_debug_dm_halt_addr, CG-EXC-009.cp_cause.ebreak, CG-EXC-009.cp_target.dm_halt_addr
 
 ### TP-EXC-020: Hardware trigger enters debug mode and never raises a breakpoint exception
 - Features: F-EXC-021
@@ -6434,7 +6770,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the redirecting instruction executes while the tdata2 word sits in IF; later in the program the tdata2 address is executed legitimately as a control (trigger must then fire).
 - Randomized: redirect kind, distance between redirect and tdata2 word, privilege, imem latency.
 - Knobs: knob:imem_rvalid_delay, knob:priv_regime
-- Fire-check: the ibus monitor shows the tdata2 word fetched, the preceding retirement is the redirect (rvfi_pc_wdata != pc + len, or a trap record / mret), the redirect target retires next, and no DmHaltAddr fetch occurs before that; the later legitimate execution produces the DmHaltAddr fetch (observable at the instruction bus and RVFI).
+- Fire-check: the ibus monitor shows the tdata2 word fetched, the preceding retirement is the redirect (a branch / jump with rvfi_pc_wdata != pc + len, or a trap record / an mret identified by rvfi_insn whose target is the next record's rvfi_pc_rdata, C-1), the redirect target retires next, and no DmHaltAddr fetch occurs before that; the later legitimate execution produces the DmHaltAddr fetch (observable at the instruction bus and RVFI).
 - Pass criteria: gen_chk_debug (no entry on the squashed match; entry on the control); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_ebreak_ecall
@@ -6452,7 +6788,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_sync_causes
-- Bins: CG-EXC-001.cp_cause.ecall_m, CG-EXC-005.cp_priv.m, CG-EXC-005.cr_priv_mtval.m_was_zero, CG-EXC-005.cr_priv_mtval.m_was_nonzero, CG-EXC-012.cr_kind_bit1.sync_bit1_0, CG-EXC-012.cr_kind_bit1.sync_bit1_1, CG-EXC-005.cr_priv_mie.m_mie0, CG-EXC-005.cr_priv_mie.m_mie1, CG-EXC-001.cr_cause_priv_ilen.ecall_m_m_w32, CG-EXC-001.cr_cause_mtvec.ecall_m_boot_init, CG-EXC-001.cr_cause_mtvec.ecall_m_sw_aligned, CG-EXC-001.cr_cause_mtvec.ecall_m_sw_legalised, CG-EXC-001.cr_cause_mie.ecall_m_mie0, CG-EXC-001.cr_cause_mie.ecall_m_mie1, CG-EXC-012.cr_kind_mie_priv.sync_mie0_m, CG-EXC-012.cr_kind_mie_priv.sync_mie1_m
+- Bins: CG-EXC-001.cp_cause.ecall_m, CG-EXC-005.cp_priv.m, CG-EXC-005.cr_priv_mtval.m_was_zero, CG-EXC-005.cr_priv_mtval.m_was_nonzero, CG-EXC-012.cr_kind_bit1.sync_bit1_0, CG-EXC-012.cr_kind_bit1.sync_bit1_1, CG-EXC-005.cr_priv_mie.m_mie0, CG-EXC-005.cr_priv_mie.m_mie1, CG-EXC-001.cr_cause_priv_ilen.ecall_m_m_w32, CG-EXC-001.cr_cause_mtvec.ecall_m_boot_init, CG-EXC-001.cr_cause_mtvec.ecall_m_sw_aligned, CG-EXC-001.cr_cause_mtvec.ecall_m_sw_legalised, CG-EXC-001.cr_cause_mie.ecall_m_mie0, CG-EXC-001.cr_cause_mie.ecall_m_mie1, CG-EXC-012.cr_kind_mie_priv.sync_mie0_m, CG-EXC-012.cr_kind_mie_priv.sync_mie1_m, CG-EXC-005.cp_mie_pre.mie0, CG-EXC-005.cp_mie_pre.mie1
 
 ### TP-EXC-023: ECALL from U-mode
 - Features: F-EXC-024
@@ -6476,11 +6812,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: random loads (lb/lbu/lh/lhu/lw, c.lw, c.lwsp) to aligned TB memory; the dmem agent returns data_err_i=1 on the response of one selected load (random gnt/rvalid latency); the handler reads mepc/mcause/mtval and a later instruction stores rd to a TB mailbox.
 - Randomized: load kind and size, rd, address, response latency, privilege, mtvec class, MIE, position.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor records a read request to A whose response carries data_err_i=1, and RVFI shows a trap record for the load with rvfi_mem_addr == A and rvfi_mem_rmask != 0 (observable at the data bus and RVFI).
+- Fire-check: the dbus monitor records a read request to A whose response carries data_err_i=1, and RVFI shows a trap record for the load (rvfi_insn decodes as the load) with rvfi_mem_addr == A and rvfi_mem_rmask == 0 (masks are zeroed on WB-trap records, rtl/ibex_core.sv:2156, X-15 / C-12; the access is identified by rvfi_insn and the dbus record, never by the mask) (observable at the data bus and RVFI).
 - Pass criteria: gen_isa_compare (trap on the load, rd not written); gen_chk_csr_readback (mcause 5, mepc == load pc, mtval == A); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_sync_causes
-- Bins: CG-EXC-001.cp_cause.load_fault, CG-EXC-006.cp_op.load, CG-EXC-006.cr_op_source_align.load_bus_err_aligned, CG-EXC-006.cr_align_size.aligned_byte, CG-EXC-006.cr_align_size.aligned_half, CG-EXC-006.cr_align_size.aligned_word, CG-EXC-006.cr_op_size_source.load_byte_bus_err, CG-EXC-006.cr_op_size_source.load_half_bus_err, CG-EXC-006.cr_op_size_source.load_word_bus_err, CG-EXC-006.cr_align_mtval.aligned_eq_addr, CG-EXC-006.cr_source_pattern.bus_err_aligned_single_req, CG-EXC-006.cp_resp_latency.one, CG-EXC-001.cr_cause_priv_ilen.load_fault_m_w32, CG-EXC-001.cr_cause_priv_ilen.load_fault_u_c16, CG-EXC-001.cr_cause_priv_ilen.load_fault_m_c16, CG-EXC-001.cr_cause_priv_ilen.load_fault_u_w32, CG-EXC-001.cr_cause_mtvec.load_fault_boot_init, CG-EXC-001.cr_cause_mtvec.load_fault_sw_aligned, CG-EXC-001.cr_cause_mtvec.load_fault_sw_legalised, CG-EXC-001.cr_cause_mie.load_fault_mie0, CG-EXC-001.cr_cause_mie.load_fault_mie1, CG-EXC-012.cr_kind_bit1.sync_bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_0, CG-EXC-012.cr_kind_mtval.sync_data_addr
+- Bins: CG-EXC-001.cp_cause.load_fault, CG-EXC-006.cp_op.load, CG-EXC-006.cr_op_source_align.load_bus_err_aligned, CG-EXC-006.cr_align_size.aligned_byte, CG-EXC-006.cr_align_size.aligned_half, CG-EXC-006.cr_align_size.aligned_word, CG-EXC-006.cr_op_size_source.load_byte_bus_err, CG-EXC-006.cr_op_size_source.load_half_bus_err, CG-EXC-006.cr_op_size_source.load_word_bus_err, CG-EXC-006.cr_align_mtval.aligned_eq_addr, CG-EXC-006.cr_source_pattern.bus_err_aligned_single_req, CG-EXC-006.cp_resp_latency.one, CG-EXC-001.cr_cause_priv_ilen.load_fault_m_w32, CG-EXC-001.cr_cause_priv_ilen.load_fault_u_c16, CG-EXC-001.cr_cause_priv_ilen.load_fault_m_c16, CG-EXC-001.cr_cause_priv_ilen.load_fault_u_w32, CG-EXC-001.cr_cause_mtvec.load_fault_boot_init, CG-EXC-001.cr_cause_mtvec.load_fault_sw_aligned, CG-EXC-001.cr_cause_mtvec.load_fault_sw_legalised, CG-EXC-001.cr_cause_mie.load_fault_mie0, CG-EXC-001.cr_cause_mie.load_fault_mie1, CG-EXC-012.cr_kind_bit1.sync_bit1_1, CG-EXC-012.cr_kind_bit1.sync_bit1_0, CG-EXC-012.cr_kind_mtval.sync_data_addr, CG-EXC-006.cp_size.byte, CG-EXC-006.cp_size.half, CG-EXC-006.cp_size.word, CG-EXC-006.cp_zcmp.none, CG-EXC-006.cp_mtval_class.eq_addr
 
 ### TP-EXC-025: Load access fault from PMP (no bus request issued)
 - Features: F-EXC-026
@@ -6504,7 +6840,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: random stores (sb/sh/sw, c.sw, c.swsp); the dmem agent returns data_err_i=1 on one selected store response.
 - Randomized: store kind and size, data, address, response latency, privilege, mtvec class, MIE.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor records a write request (data_we_o, data_be_o, data_wdata_o) to A whose response carries data_err_i=1, then a trap record for the store with rvfi_mem_wmask != 0 (observable at the data bus and RVFI).
+- Fire-check: the dbus monitor records a write request (data_we_o, data_be_o, data_wdata_o) to A whose response carries data_err_i=1, then a trap record for the store (rvfi_insn decodes as the store) with rvfi_mem_addr == A and rvfi_mem_wmask == 0 (zeroed on WB-trap records, rtl/ibex_core.sv:2157, X-15 / C-12) (observable at the data bus and RVFI).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (mcause 7, mepc == store pc, mtval == A); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_sync_causes
@@ -6564,7 +6900,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (rd not written for loads); gen_chk_csr_readback (mtval == second word address)
 - Expected: pass
 - Test group: gen_exc_lsu_fault
-- Bins: CG-EXC-006.cp_align.mis_second, CG-EXC-006.cr_op_source_align.load_bus_err_mis_second, CG-EXC-006.cr_op_source_align.store_bus_err_mis_second, CG-EXC-006.cr_align_size.mis_second_half, CG-EXC-006.cr_align_size.mis_second_word, CG-EXC-006.cr_align_mtval.mis_second_eq_second_word, CG-EXC-006.cr_source_pattern.bus_err_mis_second_two_reqs, CG-EXC-012.cr_kind_mtval.sync_data_addr_second
+- Bins: CG-EXC-006.cp_align.mis_second, CG-EXC-006.cr_op_source_align.load_bus_err_mis_second, CG-EXC-006.cr_op_source_align.store_bus_err_mis_second, CG-EXC-006.cr_align_size.mis_second_half, CG-EXC-006.cr_align_size.mis_second_word, CG-EXC-006.cr_align_mtval.mis_second_eq_second_word, CG-EXC-006.cr_source_pattern.bus_err_mis_second_two_reqs, CG-EXC-012.cr_kind_mtval.sync_data_addr_second, CG-EXC-006.cp_mtval_class.eq_second_word
 
 ### TP-EXC-031: Misaligned access, second half PMP-faults
 - Features: F-EXC-032
@@ -6620,7 +6956,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (younger not retired, single architectural effect); gen_chk_exc_flush (no data_req_o and no CSR side effect from the killed instruction); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_lsu_fault
-- Bins: CG-EXC-006.cr_op_younger.load_alu, CG-EXC-006.cr_op_younger.store_alu, CG-EXC-006.cr_op_younger.load_csr_rw, CG-EXC-006.cr_op_younger.store_csr_rw, CG-EXC-006.cr_op_younger.load_none, CG-EXC-006.cr_op_younger.store_none, CG-EXC-013.cr_stage_killed.wb_cause_one, CG-EXC-013.cr_stage_killed.wb_cause_none, CG-EXC-013.cr_stage_latency.wb_cause_min, CG-EXC-001.cr_cause_killed.load_fault_one, CG-EXC-001.cr_cause_killed.store_fault_one, CG-EXC-006.cr_op_younger.load_mret, CG-EXC-006.cr_op_younger.store_mret
+- Bins: CG-EXC-006.cr_op_younger.load_alu, CG-EXC-006.cr_op_younger.store_alu, CG-EXC-006.cr_op_younger.load_csr_rw, CG-EXC-006.cr_op_younger.store_csr_rw, CG-EXC-006.cr_op_younger.load_none, CG-EXC-006.cr_op_younger.store_none, CG-EXC-013.cr_stage_killed.wb_cause_one, CG-EXC-013.cr_stage_killed.wb_cause_none, CG-EXC-013.cr_stage_latency.wb_cause_min, CG-EXC-001.cr_cause_killed.load_fault_one, CG-EXC-001.cr_cause_killed.store_fault_one, CG-EXC-006.cr_op_younger.load_mret, CG-EXC-006.cr_op_younger.store_mret, CG-EXC-006.cp_younger.none, CG-EXC-006.cp_younger.alu, CG-EXC-006.cp_younger.csr_rw, CG-EXC-006.cp_younger.mret, CG-EXC-013.cp_killed_younger.none, CG-EXC-013.cp_killed_younger.one
 
 ### TP-EXC-035: WB fault while the ID instruction would itself trap: only the WB fault is reported
 - Features: F-EXC-036, F-EXC-041
@@ -6634,7 +6970,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (cause 5/7, not 1/2/3/8/11)
 - Expected: pass
 - Test group: gen_exc_priority
-- Bins: CG-EXC-007.cr_pair_winner.st_fetch_store_fault, CG-EXC-007.cr_pair_winner.st_ecall_store_fault, CG-EXC-007.cr_pair_winner.st_ebreak_store_fault, CG-EXC-007.cr_pair_winner.ld_fetch_load_fault, CG-EXC-007.cr_pair_winner.ld_ecall_load_fault, CG-EXC-007.cr_pair_winner.ld_ebreak_load_fault, CG-EXC-006.cr_op_younger.load_illegal, CG-EXC-006.cr_op_younger.store_illegal, CG-EXC-006.cr_op_younger.load_ecall_ebreak, CG-EXC-006.cr_op_younger.store_ecall_ebreak, CG-EXC-006.cr_op_younger.load_fetch_errored, CG-EXC-006.cr_op_younger.store_fetch_errored, CG-EXC-013.cr_stage_irq.wb_cause_none
+- Bins: CG-EXC-007.cr_pair_winner.st_fetch_store_fault, CG-EXC-007.cr_pair_winner.st_ecall_store_fault, CG-EXC-007.cr_pair_winner.st_ebreak_store_fault, CG-EXC-007.cr_pair_winner.ld_fetch_load_fault, CG-EXC-007.cr_pair_winner.ld_ecall_load_fault, CG-EXC-007.cr_pair_winner.ld_ebreak_load_fault, CG-EXC-006.cr_op_younger.load_illegal, CG-EXC-006.cr_op_younger.store_illegal, CG-EXC-006.cr_op_younger.load_ecall_ebreak, CG-EXC-006.cr_op_younger.store_ecall_ebreak, CG-EXC-006.cr_op_younger.load_fetch_errored, CG-EXC-006.cr_op_younger.store_fetch_errored, CG-EXC-013.cr_stage_irq.wb_cause_none, CG-EXC-006.cp_younger.illegal, CG-EXC-006.cp_younger.ecall_ebreak, CG-EXC-006.cp_younger.fetch_errored
 
 ### TP-EXC-036: WB fault while ID holds a branch or jump (speculative redirect then vector)
 - Features: F-EXC-037
@@ -6644,11 +6980,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a faulting load/store followed by a taken branch, a not-taken branch, jal or jalr; the dmem response is delayed so the branch is in ID at the error cycle.
 - Randomized: branch kind and target, taken/not-taken, delays, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: the branch word was delivered before the dbus error cycle; the ibus monitor records whether instr_addr_o hit the branch/jump target between the error cycle and the vector fetch (both outcomes covered); RVFI shows no retirement of the branch before the trap record (observable at both buses and RVFI).
+- Fire-check: the branch word was delivered before the dbus error cycle (cpuctrlsts.icache_enable = 0 as in TP-EXC-034); the ibus monitor records whether instr_addr_o hit the branch/jump target in the window from the branch's ID arrival (delivery + the fixed IF->ID offset) to the trap commit (branch_set / jump_set use instr_executing_spec, rtl/ibex_id_stage.sv:889-941, 1054-1057, so a taken branch / jal / jalr redirects IF in its FIRST ID cycle, before the WB error response; the 'no' outcomes are a not-taken branch, a load-dependent branch / jalr held by stall_ld_hz, and a branch arriving in the error cycle) (both outcomes covered); RVFI shows no retirement of the branch before the trap record (observable at both buses and RVFI).
 - Pass criteria: gen_isa_compare (branch not retired, re-executed after mret); gen_chk_ibus_proto (any speculative request is protocol-legal and completed)
 - Expected: pass
 - Test group: gen_exc_lsu_fault
-- Bins: CG-EXC-006.cr_op_younger.load_branch, CG-EXC-006.cr_op_younger.store_branch, CG-EXC-006.cr_op_younger.load_jump, CG-EXC-006.cr_op_younger.store_jump, CG-EXC-006.cr_younger_spec.branch_yes, CG-EXC-006.cr_younger_spec.branch_no, CG-EXC-006.cr_younger_spec.jump_yes, CG-EXC-006.cr_younger_spec.jump_no
+- Bins: CG-EXC-006.cr_op_younger.load_branch, CG-EXC-006.cr_op_younger.store_branch, CG-EXC-006.cr_op_younger.load_jump, CG-EXC-006.cr_op_younger.store_jump, CG-EXC-006.cr_younger_spec.branch_yes, CG-EXC-006.cr_younger_spec.branch_no, CG-EXC-006.cr_younger_spec.jump_yes, CG-EXC-006.cr_younger_spec.jump_no, CG-EXC-006.cp_younger.branch, CG-EXC-006.cp_younger.jump, CG-EXC-006.cp_spec_fetch.yes, CG-EXC-006.cp_spec_fetch.no
 
 ### TP-EXC-037: WB fault while ID holds the next load/store: no request on or after the error cycle
 - Features: F-EXC-038
@@ -6662,7 +6998,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_exc_flush (no request from the killed access); gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_lsu_fault
-- Bins: CG-EXC-006.cr_op_younger.load_load_store, CG-EXC-006.cr_op_younger.store_load_store, CG-EXC-006.cp_resp_latency.short, CG-EXC-006.cp_resp_latency.long
+- Bins: CG-EXC-006.cr_op_younger.load_load_store, CG-EXC-006.cr_op_younger.store_load_store, CG-EXC-006.cp_resp_latency.short, CG-EXC-006.cp_resp_latency.long, CG-EXC-006.cp_younger.load_store
 
 ### TP-EXC-038: Back-to-back loads where the older one faults
 - Features: F-EXC-040
@@ -6704,7 +7040,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (winner cause, mtval per winner)
 - Expected: pass
 - Test group: gen_exc_priority
-- Bins: CG-EXC-007.cp_pair.st_fetch, CG-EXC-007.cp_pair.st_illegal, CG-EXC-007.cp_pair.st_ecall, CG-EXC-007.cp_pair.st_ebreak, CG-EXC-007.cp_pair.ld_fetch, CG-EXC-007.cp_pair.ld_illegal, CG-EXC-007.cp_pair.ld_ecall, CG-EXC-007.cp_pair.ld_ebreak, CG-EXC-007.cp_pair.fetch_illegal, CG-EXC-007.cp_pair.fetch_ecall, CG-EXC-007.cp_pair.fetch_ebreak, CG-EXC-007.cp_pair.illegal_ecall, CG-EXC-007.cp_pair.illegal_ebreak, CG-EXC-007.cp_pair.triple_wb_fetch_illegal, CG-EXC-007.cp_winner.store_fault, CG-EXC-007.cp_winner.load_fault, CG-EXC-007.cp_winner.fetch_fault, CG-EXC-007.cp_winner.illegal, CG-EXC-007.cr_pair_winner.triple_wb_fetch_illegal_store_fault, CG-EXC-007.cr_pair_winner.triple_wb_fetch_illegal_load_fault, CG-EXC-007.cr_pair_winner.fetch_ecall_fetch_fault, CG-EXC-007.cr_pair_winner.fetch_ebreak_fetch_fault, CG-EXC-007.cr_pair_kind.ld_illegal_decoder, CG-EXC-007.cr_pair_kind.st_illegal_csr_check, CG-EXC-013.cr_stage_irq.wb_cause_irq_enabled, CG-EXC-013.cr_stage_irq.id_cause_irq_enabled
+- Bins: CG-EXC-007.cp_pair.st_fetch, CG-EXC-007.cp_pair.st_illegal, CG-EXC-007.cp_pair.st_ecall, CG-EXC-007.cp_pair.st_ebreak, CG-EXC-007.cp_pair.ld_fetch, CG-EXC-007.cp_pair.ld_illegal, CG-EXC-007.cp_pair.ld_ecall, CG-EXC-007.cp_pair.ld_ebreak, CG-EXC-007.cp_pair.fetch_illegal, CG-EXC-007.cp_pair.fetch_ecall, CG-EXC-007.cp_pair.fetch_ebreak, CG-EXC-007.cp_pair.illegal_ecall, CG-EXC-007.cp_pair.illegal_ebreak, CG-EXC-007.cp_pair.triple_wb_fetch_illegal, CG-EXC-007.cp_winner.store_fault, CG-EXC-007.cp_winner.load_fault, CG-EXC-007.cp_winner.fetch_fault, CG-EXC-007.cp_winner.illegal, CG-EXC-007.cr_pair_winner.triple_wb_fetch_illegal_store_fault, CG-EXC-007.cr_pair_winner.triple_wb_fetch_illegal_load_fault, CG-EXC-007.cr_pair_winner.fetch_ecall_fetch_fault, CG-EXC-007.cr_pair_winner.fetch_ebreak_fetch_fault, CG-EXC-007.cr_pair_kind.ld_illegal_decoder, CG-EXC-007.cr_pair_kind.st_illegal_csr_check, CG-EXC-013.cr_stage_irq.wb_cause_irq_enabled, CG-EXC-013.cr_stage_irq.id_cause_irq_enabled, CG-EXC-007.cp_illegal_kind.decoder, CG-EXC-007.cp_illegal_kind.csr_check
 
 ### TP-EXC-041: Exception on a compressed instruction: mepc keeps bit 1, bit 0 is zero
 - Features: F-EXC-042
@@ -6732,7 +7068,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (mepc, mtval, sp unchanged, re-execution); gen_chk_csr_readback; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_zcmp
-- Bins: CG-EXC-008.cp_seq.cm_push, CG-EXC-008.cr_seq_event.cm_push_store_fault, CG-EXC-008.cr_event_pos.store_fault_first, CG-EXC-008.cr_event_pos.store_fault_middle, CG-EXC-008.cr_event_pos.store_fault_last, CG-EXC-008.cr_event_rlist.store_fault_r4, CG-EXC-008.cr_event_rlist.store_fault_r12_15, CG-EXC-008.cr_event_after.store_fault_reexecuted_from_first, CG-EXC-008.cr_event_after.store_fault_handler_advanced_mepc, CG-EXC-006.cr_op_zcmp.store_cm_push_op_first, CG-EXC-006.cr_op_zcmp.store_cm_push_op_middle, CG-EXC-006.cr_op_zcmp.store_cm_push_op_last
+- Bins: CG-EXC-008.cp_seq.cm_push, CG-EXC-008.cr_seq_event.cm_push_store_fault, CG-EXC-008.cr_event_pos.store_fault_first, CG-EXC-008.cr_event_pos.store_fault_middle, CG-EXC-008.cr_event_pos.store_fault_last, CG-EXC-008.cr_event_rlist.store_fault_r4, CG-EXC-008.cr_event_rlist.store_fault_r12_15, CG-EXC-008.cr_event_after.store_fault_reexecuted_from_first, CG-EXC-008.cr_event_after.store_fault_handler_advanced_mepc, CG-EXC-006.cr_op_zcmp.store_cm_push_op_first, CG-EXC-006.cr_op_zcmp.store_cm_push_op_middle, CG-EXC-006.cr_op_zcmp.store_cm_push_op_last, CG-EXC-008.cp_op_pos.first, CG-EXC-008.cp_op_pos.middle, CG-EXC-008.cp_op_pos.last, CG-EXC-008.cp_after_mret.reexecuted_from_first, CG-EXC-008.cp_after_mret.handler_advanced_mepc, CG-EXC-006.cp_zcmp.cm_push_op, CG-EXC-006.cp_op_pos.first, CG-EXC-006.cp_op_pos.middle, CG-EXC-006.cp_op_pos.last
 
 ### TP-EXC-043: Load fault inside a Zcmp cm.pop / cm.popret / cm.popretz sequence
 - Features: F-EXC-044
@@ -6746,7 +7082,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (sp intact, no ret executed, restartable); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_zcmp
-- Bins: CG-EXC-008.cp_seq.cm_pop, CG-EXC-008.cp_seq.cm_popret, CG-EXC-008.cp_seq.cm_popretz, CG-EXC-008.cr_seq_event.cm_pop_load_fault, CG-EXC-008.cr_seq_event.cm_popret_load_fault, CG-EXC-008.cr_seq_event.cm_popretz_load_fault, CG-EXC-008.cr_event_pos.load_fault_first, CG-EXC-008.cr_event_pos.load_fault_middle, CG-EXC-008.cr_event_pos.load_fault_last, CG-EXC-008.cr_event_rlist.load_fault_r4, CG-EXC-008.cr_event_rlist.load_fault_r12_15, CG-EXC-008.cr_event_after.load_fault_reexecuted_from_first, CG-EXC-008.cr_event_after.load_fault_handler_advanced_mepc, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_first, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_middle, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_last
+- Bins: CG-EXC-008.cp_seq.cm_pop, CG-EXC-008.cp_seq.cm_popret, CG-EXC-008.cp_seq.cm_popretz, CG-EXC-008.cr_seq_event.cm_pop_load_fault, CG-EXC-008.cr_seq_event.cm_popret_load_fault, CG-EXC-008.cr_seq_event.cm_popretz_load_fault, CG-EXC-008.cr_event_pos.load_fault_first, CG-EXC-008.cr_event_pos.load_fault_middle, CG-EXC-008.cr_event_pos.load_fault_last, CG-EXC-008.cr_event_rlist.load_fault_r4, CG-EXC-008.cr_event_rlist.load_fault_r12_15, CG-EXC-008.cr_event_after.load_fault_reexecuted_from_first, CG-EXC-008.cr_event_after.load_fault_handler_advanced_mepc, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_first, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_middle, CG-EXC-006.cr_op_zcmp.load_cm_pop_op_last, CG-EXC-006.cp_zcmp.cm_pop_op
 
 ### TP-EXC-044: Fetch fault at the return target of cm.popret / cm.popretz is attributed to the target
 - Features: F-EXC-045
@@ -6774,7 +7110,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_debug (DmExceptionAddr, debug mode retained); gen_chk_csr_readback (no change); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_debug_mode
-- Bins: CG-EXC-009.cp_context.in_debug, CG-EXC-009.cr_cause_context.fetch_fault_in_debug, CG-EXC-009.cr_cause_context.illegal_in_debug, CG-EXC-009.cr_cause_context.load_fault_in_debug, CG-EXC-009.cr_cause_context.store_fault_in_debug, CG-EXC-009.cr_cause_context.ecall_in_debug, CG-EXC-009.cr_context_target.in_debug_dm_exception_addr, CG-EXC-009.cr_cause_prv.illegal_m, CG-EXC-009.cr_cause_prv.ecall_m, CG-EXC-009.cr_cause_prv.load_fault_m
+- Bins: CG-EXC-009.cp_context.in_debug, CG-EXC-009.cr_cause_context.fetch_fault_in_debug, CG-EXC-009.cr_cause_context.illegal_in_debug, CG-EXC-009.cr_cause_context.load_fault_in_debug, CG-EXC-009.cr_cause_context.store_fault_in_debug, CG-EXC-009.cr_cause_context.ecall_in_debug, CG-EXC-009.cr_context_target.in_debug_dm_exception_addr, CG-EXC-009.cr_cause_prv.illegal_m, CG-EXC-009.cr_cause_prv.ecall_m, CG-EXC-009.cr_cause_prv.load_fault_m, CG-EXC-009.cp_cause.fetch_fault, CG-EXC-009.cp_cause.illegal, CG-EXC-009.cp_cause.load_fault, CG-EXC-009.cp_cause.store_fault, CG-EXC-009.cp_cause.ecall, CG-EXC-009.cp_target.dm_exception_addr
 
 ### TP-EXC-046: Privilege after an exception in debug mode with dcsr.prv = U: the RTL forces M until dret (RTL-defined, spec UNSPECIFIED)
 - Features: F-EXC-046
@@ -6802,7 +7138,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_double_fault (no pulse, model unchanged); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_debug_mode
-- Bins: CG-EXC-009.cr_context_seen.in_debug_seen1, CG-EXC-009.cr_context_seen.in_debug_seen0, CG-EXC-010.cp_event.exc_in_debug_seen1
+- Bins: CG-EXC-009.cr_context_seen.in_debug_seen1, CG-EXC-009.cr_context_seen.in_debug_seen0, CG-EXC-010.cp_event.exc_in_debug_seen1, CG-EXC-009.cp_seen_pre.seen0, CG-EXC-009.cp_seen_pre.seen1
 
 ### TP-EXC-048: Exception with a simultaneous debug request or single step: CSRs written, debug entry at the handler
 - Features: F-EXC-048
@@ -6816,7 +7152,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_debug (cause, dpc); gen_chk_csr_readback (trap CSRs written); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_debug_mode
-- Bins: CG-EXC-009.cp_context.not_debug_req_same_cycle, CG-EXC-009.cp_context.not_debug_step, CG-EXC-009.cr_cause_context.fetch_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.illegal_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.load_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.store_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.ecall_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.illegal_not_debug_step, CG-EXC-009.cr_cause_context.ecall_not_debug_step, CG-EXC-009.cr_cause_context.load_fault_not_debug_step, CG-EXC-009.cr_context_target.not_debug_req_same_cycle_dm_halt_addr, CG-EXC-009.cr_context_target.not_debug_step_dm_halt_addr, CG-EXC-009.cr_context_seen.not_debug_req_same_cycle_seen1
+- Bins: CG-EXC-009.cp_context.not_debug_req_same_cycle, CG-EXC-009.cp_context.not_debug_step, CG-EXC-009.cr_cause_context.fetch_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.illegal_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.load_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.store_fault_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.ecall_not_debug_req_same_cycle, CG-EXC-009.cr_cause_context.illegal_not_debug_step, CG-EXC-009.cr_cause_context.ecall_not_debug_step, CG-EXC-009.cr_cause_context.load_fault_not_debug_step, CG-EXC-009.cr_context_target.not_debug_req_same_cycle_dm_halt_addr, CG-EXC-009.cr_context_target.not_debug_step_dm_halt_addr, CG-EXC-009.cr_context_seen.not_debug_req_same_cycle_seen1, CG-EXC-009.cp_target.dm_halt_addr
 
 ### TP-EXC-049: Trap-entry mstatus update (MPIE<-MIE, MIE<-0, MPP<-priv; MPRV/TW kept) verified by read-back
 - Features: F-EXC-049, F-EXC-001
@@ -6830,21 +7166,21 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_csr_readback (MPIE == old MIE, MIE == 0, MPP == old priv, MPRV and TW unchanged); gen_isa_compare (mode == M in the handler)
 - Expected: pass
 - Test group: gen_exc_trap_state
-- Bins: CG-EXC-012.cr_kind_mie_priv.sync_mie0_m, CG-EXC-012.cr_kind_mie_priv.sync_mie1_m, CG-EXC-012.cr_kind_mie_priv.sync_mie0_u, CG-EXC-012.cr_kind_mie_priv.sync_mie1_u, CG-EXC-012.cr_kind_mie_priv.irq_mie1_m, CG-EXC-012.cr_kind_mie_priv.irq_mie0_u, CG-EXC-012.cr_kind_mie_priv.irq_mie1_u, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie0_m, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie1_m, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie0_u, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie1_u, CG-EXC-012.cr_kind_kept.sync_mprv1_kept, CG-EXC-012.cr_kind_kept.sync_tw1_kept, CG-EXC-012.cr_kind_kept.irq_mprv1_kept, CG-EXC-012.cr_kind_kept.irq_tw1_kept, CG-EXC-012.cr_kind_kept.nmi_ext_mprv1_kept, CG-EXC-012.cr_kind_kept.sync_both_zero, CG-EXC-001.cp_prev_mie.mie0, CG-EXC-001.cp_prev_mie.mie1
+- Bins: CG-EXC-012.cr_kind_mie_priv.sync_mie0_m, CG-EXC-012.cr_kind_mie_priv.sync_mie1_m, CG-EXC-012.cr_kind_mie_priv.sync_mie0_u, CG-EXC-012.cr_kind_mie_priv.sync_mie1_u, CG-EXC-012.cr_kind_mie_priv.irq_mie1_m, CG-EXC-012.cr_kind_mie_priv.irq_mie0_u, CG-EXC-012.cr_kind_mie_priv.irq_mie1_u, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie0_m, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie1_m, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie0_u, CG-EXC-012.cr_kind_mie_priv.nmi_ext_mie1_u, CG-EXC-012.cr_kind_kept.sync_mprv1_kept, CG-EXC-012.cr_kind_kept.sync_tw1_kept, CG-EXC-012.cr_kind_kept.irq_mprv1_kept, CG-EXC-012.cr_kind_kept.irq_tw1_kept, CG-EXC-012.cr_kind_kept.nmi_ext_mprv1_kept, CG-EXC-012.cr_kind_kept.sync_both_zero, CG-EXC-001.cp_prev_mie.mie0, CG-EXC-001.cp_prev_mie.mie1, CG-EXC-012.cp_kept.mprv1_kept, CG-EXC-012.cp_kept.tw1_kept, CG-EXC-012.cp_kept.both_zero, CG-EXC-012.cp_old_mie.mie0, CG-EXC-012.cp_old_mie.mie1, CG-EXC-012.cp_old_priv.m, CG-EXC-012.cp_old_priv.u
 
 ### TP-EXC-050: MRET returns to mepc, restores privilege and MIE, sets MPIE and MPP <- U, flushes prefetched words
 - Features: F-EXC-050, F-EXC-061
 - Phase: 1
 - Tier: smoke
-- Preconditions: a trap handler (exception or interrupt) or a plain M-mode program with mepc/mstatus written by software; MPP in {M, U}, MPIE random.
+- Preconditions: a trap handler (exception or interrupt) or a plain M-mode program with mepc/mstatus written by software; MPP in {M, U}, MPIE random; cpuctrlsts.icache_enable = 0 (pinned; excluded from the random cpuctrlsts field set, S-4 / C-14: the fall-through word count is an ibus observation).
 - Stimulus: mret; the code after the mret in memory is a recognizable "must-not-execute" block (stores to a TB mailbox); the return target reads mstatus and stores it.
 - Randomized: context (exception handler, interrupt handler, plain), MPP, MPIE, mepc target alignment, prefetch depth (imem latency), privilege of the target.
 - Knobs: knob:imem_rvalid_delay, knob:imem_outstanding_cap
-- Fire-check: the mret retires with rvfi_pc_wdata == mepc (read back before), the next retirement is at mepc with rvfi_mode == old MPP, the ibus monitor shows >= 1 fall-through word fetched after the mret that never retires (one_plus iterations), and the mstatus read-back after the return shows MIE == old MPIE, MPIE == 1, MPP == U (observable at RVFI and the instruction bus).
+- Fire-check: the mret retires (rvfi_insn == 32'h30200073; its rvfi_pc_wdata is the next sequential fetch address, never mepc: pc_wdata is captured at ID exit while PC_ERET is set one cycle later in FLUSH, rtl/ibex_core.sv:2084, rtl/ibex_id_stage.sv:991,1130, rtl/ibex_controller.sv:954-956; C-1 / X-1) and the next retirement has rvfi_pc_rdata == mepc (read back before) with rvfi_mode == old MPP; the ibus monitor shows >= 1 fall-through word fetched after the mret that never retires (one_plus iterations), and the mstatus read-back after the return shows MIE == old MPIE, MPIE == 1, MPP == U (observable at RVFI and the instruction bus).
 - Pass criteria: gen_isa_compare (pc, mode, no retirement of fall-through words); gen_chk_csr_readback; gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_exc_mret
-- Bins: CG-EXC-011.cp_priv_at.m, CG-EXC-011.cr_priv_mpp.m_m, CG-EXC-011.cr_priv_mpp.m_u, CG-EXC-011.cr_context_pending.exc_handler_none, CG-EXC-011.cr_context_pending.irq_handler_none, CG-EXC-011.cr_context_pending.plain_none, CG-EXC-011.cr_context_prefetch.exc_handler_one_plus, CG-EXC-011.cr_context_prefetch.irq_handler_one_plus, CG-EXC-011.cr_context_prefetch.plain_one_plus, CG-EXC-011.cp_mpie.mpie0, CG-EXC-011.cp_mpie.mpie1
+- Bins: CG-EXC-011.cp_priv_at.m, CG-EXC-011.cr_priv_mpp.m_m, CG-EXC-011.cr_priv_mpp.m_u, CG-EXC-011.cr_context_pending.exc_handler_none, CG-EXC-011.cr_context_pending.irq_handler_none, CG-EXC-011.cr_context_pending.plain_none, CG-EXC-011.cr_context_prefetch.exc_handler_one_plus, CG-EXC-011.cr_context_prefetch.irq_handler_one_plus, CG-EXC-011.cr_context_prefetch.plain_one_plus, CG-EXC-011.cp_mpie.mpie0, CG-EXC-011.cp_mpie.mpie1, CG-EXC-011.cp_pending_at.none
 
 ### TP-EXC-051: MRET with mepc[1] = 1 returns to a 2-byte-aligned target; software writes drop mepc[0]
 - Features: F-EXC-051
@@ -6854,7 +7190,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: (a) traps on instructions at addr%4 == 2 followed by mret; (b) software csrw mepc with bit 0 set and bit 1 random, csrr mepc read-back, then mret to that address (a 16-bit instruction is placed there).
 - Randomized: context, bit 1, target instruction, privilege.
 - Knobs: knob:instr_mix
-- Fire-check: mepc read-back has bit 0 == 0 and bit 1 == the intended value; the mret retirement's rvfi_pc_wdata and the next rvfi_pc_rdata equal that value (observable at RVFI).
+- Fire-check: mepc read-back has bit 0 == 0 and bit 1 == the intended value (rtl/ibex_cs_registers.sv:729); the next rvfi_pc_rdata after the mret retirement equals that value (the mret record's rvfi_pc_wdata is the fall-through address, C-1 / X-1, and is not compared) (observable at RVFI).
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (WARL legalisation of mepc[0])
 - Expected: pass
 - Test group: gen_exc_mret
@@ -6896,11 +7232,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: exception A (random cause) whose handler, after 0..20 instructions and a cpuctrlsts read, raises exception B (random cause); B's handler reads cpuctrlsts, clears double_fault_seen by csrw, and unwinds; the second-level handler is placed so it does not itself fault.
 - Randomized: causes A and B, gap length, privilege of A, mtvec class.
 - Knobs: knob:instr_mix
-- Fire-check: two trap records with no mret retirement between them, a double_fault_seen_o pulse exactly one cycle wide in the cycle of B's vector fetch (monitor), and cpuctrlsts read-back in B's handler with bits 7:6 == 2'b11 (observable at double_fault_seen_o and RVFI).
+- Fire-check: two trap records with no mret retirement between them, a double_fault_seen_o pulse exactly one cycle wide in B's commit cycle = B's trap record cycle - GEN_TRAP_TO_RVFI_OFFSET (the FLUSH / pc_set cycle with csr_save_cause_i, rtl/ibex_cs_registers.sv:941-943, rtl/ibex_controller.sv:827-845; not anchored to B's vector fetch, which is ICache-blind and deferred by a held prefetch request, C-14), and cpuctrlsts read-back in B's handler with bits 7:6 == 2'b11 (observable at double_fault_seen_o and RVFI).
 - Pass criteria: gen_chk_double_fault (pulse-for-pulse vs model; read-back bits); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_double_fault
-- Bins: CG-EXC-010.cp_event.sync_arm, CG-EXC-010.cp_event.sync_double, CG-EXC-010.cp_event.mret_exc_handler, CG-EXC-010.cr_event_readback.sync_double_pulse_then_read1, CG-EXC-010.cr_event_readback.sync_arm_seen_read1_in_handler, CG-EXC-010.cr_event_readback.mret_exc_handler_seen_read0_after_mret, CG-EXC-010.cr_first_second.illegal_illegal, CG-EXC-010.cr_first_second.illegal_ecall, CG-EXC-010.cr_first_second.illegal_load_fault, CG-EXC-010.cr_first_second.illegal_store_fault, CG-EXC-010.cr_first_second.load_fault_illegal, CG-EXC-010.cr_first_second.load_fault_load_fault, CG-EXC-010.cr_first_second.store_fault_store_fault, CG-EXC-010.cr_first_second.fetch_fault_illegal, CG-EXC-010.cr_first_second.fetch_fault_fetch_fault, CG-EXC-010.cr_first_second.fetch_fault_load_fault, CG-EXC-010.cr_first_second.breakpoint_illegal, CG-EXC-010.cr_first_second.illegal_breakpoint, CG-EXC-010.cr_first_second.breakpoint_breakpoint, CG-EXC-010.cr_first_second.load_fault_ecall, CG-EXC-010.cr_first_second.store_fault_ecall, CG-EXC-010.cr_event_gap.sync_double_few, CG-EXC-010.cr_event_gap.sync_double_many, CG-EXC-010.cp_readback.pulse_then_read1, CG-EXC-010.cp_readback.seen_read1_in_handler, CG-EXC-010.cp_readback.seen_read0_after_mret
+- Bins: CG-EXC-010.cp_event.sync_arm, CG-EXC-010.cp_event.sync_double, CG-EXC-010.cp_event.mret_exc_handler, CG-EXC-010.cr_event_readback.sync_double_pulse_then_read1, CG-EXC-010.cr_event_readback.sync_arm_seen_read1_in_handler, CG-EXC-010.cr_event_readback.mret_exc_handler_seen_read0_after_mret, CG-EXC-010.cr_first_second.illegal_illegal, CG-EXC-010.cr_first_second.illegal_ecall, CG-EXC-010.cr_first_second.illegal_load_fault, CG-EXC-010.cr_first_second.illegal_store_fault, CG-EXC-010.cr_first_second.load_fault_illegal, CG-EXC-010.cr_first_second.load_fault_load_fault, CG-EXC-010.cr_first_second.store_fault_store_fault, CG-EXC-010.cr_first_second.fetch_fault_illegal, CG-EXC-010.cr_first_second.fetch_fault_fetch_fault, CG-EXC-010.cr_first_second.fetch_fault_load_fault, CG-EXC-010.cr_first_second.breakpoint_illegal, CG-EXC-010.cr_first_second.illegal_breakpoint, CG-EXC-010.cr_first_second.breakpoint_breakpoint, CG-EXC-010.cr_first_second.load_fault_ecall, CG-EXC-010.cr_first_second.store_fault_ecall, CG-EXC-010.cr_event_gap.sync_double_few, CG-EXC-010.cr_event_gap.sync_double_many, CG-EXC-010.cp_readback.pulse_then_read1, CG-EXC-010.cp_readback.seen_read1_in_handler, CG-EXC-010.cp_readback.seen_read0_after_mret, CG-EXC-010.cp_second_cause.fetch_fault, CG-EXC-010.cp_second_cause.illegal, CG-EXC-010.cp_second_cause.breakpoint, CG-EXC-010.cp_second_cause.load_fault, CG-EXC-010.cp_second_cause.store_fault, CG-EXC-010.cp_second_cause.ecall
 
 ### TP-EXC-055: Interrupts and NMIs neither arm nor trigger double-fault detection
 - Features: F-EXC-055
@@ -6956,7 +7292,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_double_fault; gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_double_fault
-- Bins: CG-EXC-010.cr_first_second.ecall_illegal, CG-EXC-010.cr_first_second.ecall_ecall, CG-EXC-010.cr_first_second.ecall_load_fault, CG-EXC-010.cr_first_second.ecall_store_fault, CG-EXC-010.cr_first_second.ecall_fetch_fault, CG-EXC-005.cr_priv_seen.m_seen0, CG-EXC-005.cr_priv_seen.m_seen1, CG-EXC-005.cr_priv_seen.u_seen0, CG-EXC-005.cr_priv_seen.u_seen1, CG-EXC-005.cp_seen_pre.seen1
+- Bins: CG-EXC-010.cp_first_cause.ecall, CG-EXC-010.cr_first_second.ecall_illegal, CG-EXC-010.cr_first_second.ecall_ecall, CG-EXC-010.cr_first_second.ecall_load_fault, CG-EXC-010.cr_first_second.ecall_store_fault, CG-EXC-010.cr_first_second.ecall_fetch_fault, CG-EXC-005.cr_priv_seen.m_seen0, CG-EXC-005.cr_priv_seen.m_seen1, CG-EXC-005.cr_priv_seen.u_seen0, CG-EXC-005.cr_priv_seen.u_seen1, CG-EXC-005.cp_seen_pre.seen1
 
 ### TP-EXC-059: Trap storm: the first handler instruction itself faults repeatedly, no deadlock
 - Features: F-EXC-059
@@ -7008,11 +7344,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: ID-stage exceptions (illegal, ecall, ebreak, fetch fault) with WB empty, with a non-faulting load/store outstanding (dmem delay 1..12), and WB faults with random response latency; imem gnt/rvalid latencies swept.
 - Randomized: cause, WB state, delays, privilege, mtvec class.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_gnt_delay, knob:imem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the TB measures the cycle distance from the trigger (ibus delivery of the trapping word + the fixed IF->ID offset with the icache disabled, or the dbus error response) to the vector fetch and records it per stage; exactly one vector fetch per trap record (observable at both buses and RVFI).
-- Pass criteria: gen_chk_trap_timing (ID cause: vector fetch one cycle after the trigger when WB is empty, else one cycle after the last data_rvalid_i; WB cause: one cycle after the error response; never two vector fetches for one trap); gen_isa_compare
+- Fire-check: the TB measures the cycle distance from the trigger (ibus delivery of the trapping word + the fixed IF->ID offset with the icache disabled, or the dbus error response) to the commit (pc_set cycle = trap record - GEN_TRAP_TO_RVFI_OFFSET) and records it per stage, plus the distance from the commit to the vector request on the ibus; exactly one vector fetch per trap record (observable at both buses and RVFI).
+- Pass criteria: gen_chk_trap_timing (pc_set = trigger + 1 in all three arms, DECODE -> FLUSH, rtl/ibex_controller.sv:676-677, 827-830: ID cause with WB empty, ID cause after the last data_rvalid_i of the outstanding access, WB cause after the error response; the vector request is issued in the pc_set cycle only when no fill buffer holds an ungranted request, otherwise after that grant (rtl/ibex_icache.sv:703, 764-776, 1030-1031), so the commit-to-request distance is asserted as >= 0 with its minimum observed value equal to the bring-up-pinned constant GEN_VECTOR_REQ_AFTER_PC_SET (predicted 0 with knob:imem_gnt_delay same_cycle); never two vector fetches for one trap); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_trap_state
-- Bins: CG-EXC-013.cp_exc_stage.id_cause, CG-EXC-013.cp_exc_stage.wb_cause, CG-EXC-013.cr_stage_latency.id_cause_min, CG-EXC-013.cr_stage_latency.id_cause_two, CG-EXC-013.cr_stage_latency.wb_cause_min, CG-EXC-013.cr_stage_dbus.id_cause_idle, CG-EXC-013.cr_stage_dbus.id_cause_gnt_pending, CG-EXC-013.cr_stage_irq.id_cause_none, CG-EXC-013.cr_stage_irq.wb_cause_none, CG-EXC-013.cr_stage_dbus.wb_cause_idle, CG-EXC-001.cp_younger_killed.none, CG-EXC-013.cp_latency.min, CG-EXC-013.cp_latency.two, CG-EXC-013.cp_latency.three_five, CG-EXC-013.cp_latency.long
+- Bins: CG-EXC-013.cp_exc_stage.id_cause, CG-EXC-013.cp_exc_stage.wb_cause, CG-EXC-013.cr_stage_latency.id_cause_min, CG-EXC-013.cr_stage_latency.id_cause_two, CG-EXC-013.cr_stage_latency.wb_cause_min, CG-EXC-013.cr_stage_dbus.id_cause_idle, CG-EXC-013.cr_stage_dbus.id_cause_gnt_pending, CG-EXC-013.cr_stage_irq.id_cause_none, CG-EXC-013.cr_stage_irq.wb_cause_none, CG-EXC-013.cr_stage_dbus.wb_cause_idle, CG-EXC-001.cp_younger_killed.none, CG-EXC-013.cp_latency.min, CG-EXC-013.cp_latency.two, CG-EXC-013.cp_latency.three_five, CG-EXC-013.cp_latency.long, CG-EXC-013.cp_vector_req_delay.same_cycle, CG-EXC-013.cp_vector_req_delay.deferred, CG-EXC-013.cp_dbus_at_commit.idle, CG-EXC-013.cp_dbus_at_commit.gnt_pending, CG-EXC-013.cp_dbus_at_commit.rvalid_pending
 
 ### TP-EXC-063: Trapping instructions do not retire and are not counted in minstret
 - Features: F-EXC-063
@@ -7053,7 +7389,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Fire-check: the collision is present (ID arrival of the ID cause, icache disabled as in TP-EXC-035, at or before the dbus error response cycle) and RVFI shows TWO trap records in order: the load/store's record (mcause 5/7 read back) now, and the killed ID instruction's own trap record after the handler's mret when it re-executes; rvfi_order is continuous across both (observable via the memory agents' error timing and RVFI).
 - Pass criteria: gen_isa_compare (comparator policy per gen_tb_architecture.md 8.1 item 5: the WB error's record now, the killed instruction's record after re-execution; a single record for the pair re-opens B14). The priority behaviour itself (WB error outranks the ID exception, the ID instruction is killed and re-executes) is the pass-gate item TP-EXC-035.
 - Expected: informational (B14 confirmation; excluded from the pass gate)
-- Test group: gen_exc_priority
+- Test group: gen_exc_priority_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-EXC-007.cr_pair_winner.ld_ecall_load_fault, CG-EXC-007.cr_pair_winner.st_ecall_store_fault, CG-EXC-007.cr_pair_winner.ld_illegal_load_fault, CG-EXC-007.cr_pair_winner.st_illegal_store_fault
 
 ### TP-EXC-066: mtval is written to zero for ECALL, EBREAK and every interrupt
@@ -7113,18 +7449,18 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Bins: CG-EXC-001.cr_cause_mie.illegal_mie0, CG-EXC-001.cr_cause_mie.illegal_mie1, CG-EXC-001.cr_cause_mie.ecall_m_mie0, CG-EXC-001.cr_cause_mie.load_fault_mie0, CG-EXC-001.cr_cause_mie.fetch_fault_mie0, CG-EXC-001.cp_mtvec_class.boot_init, CG-EXC-001.cp_mtvec_class.sw_aligned, CG-EXC-001.cp_mtvec_class.sw_legalised
 
 ### TP-EXC-070: WB fault while the core waits to take an interrupt with the fetch stalled (three conditions in one cycle)
-- Features: F-EXC-069
+- Features: F-EXC-069, F-IRQ-035
 - Phase: 1
 - Tier: targeted
 - Preconditions: mstatus.MIE = 1 (or U-mode), one or more mie bits set; mtvec random class.
 - Stimulus: a load or store is issued and the imem agent stalls the fetch of the following instruction (gnt delayed or rvalid delayed by 4..16 cycles) so ID empties while WB waits; during the wait the irq driver raises an enabled line (or irq_nm_i, or debug_req_i in the debug variant); the dmem agent then returns the response with data_err_i=1 (latency 1..12) while the line is still high and the fetch is still stalled.
 - Randomized: load vs store, which line (single/multi/NMI), imem stall kind and length, dmem latency, privilege, mtvec class.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:irq_regime, knob:irq_line_mix, knob:irq_hold
-- Fire-check: in the dbus error response cycle the TB asserts all three at once: (1) data_rvalid_i && data_err_i, (2) irq_pending_o == 1 with MIE or U-mode (or irq_nm_i), (3) the ibus monitor has an outstanding fetch without rvalid (or without gnt); then RVFI shows a trap record with mcause 5/7 before any interrupt entry, irq_pending_o stays 1 through the handler, and the interrupt entry (or the debug entry at the handler for the debug variant) follows the handler's mret (observable at both buses, irq_pending_o and RVFI).
-- Pass criteria: gen_isa_compare (exception first, then interrupt); gen_chk_irq (irq_pending_o model; entry bound after the mret); gen_chk_csr_readback; gen_chk_debug (debug variant: dpc == mtvec base)
+- Fire-check: in the dbus error response cycle the TB asserts all three at once: (1) data_rvalid_i && data_err_i, (2) irq_pending_o == 1 with MIE or U-mode (or irq_nm_i), (3) the ibus monitor has an outstanding fetch without rvalid (or without gnt); then RVFI shows a trap record with mcause 5/7 before any interrupt entry; ordinary-line variant: irq_pending_o stays 1 through the handler and the interrupt entry follows the handler's mret (MIE was cleared by the trap, C-6 / X-9; a handler that re-enables MIE takes it at once instead); NMI variant: the NMI entry (rvfi_intr with rvfi_ext_nmi, mepc read-back == mtvec base) is the retirement right after the trap record, before any retirement at mtvec base, and the exception handler runs only after the NMI handler's mret with its mepc/mcause restored from mstack (rtl/ibex_controller.sv:498-500, 704-713, 736-745; rtl/ibex_cs_registers.sv:932, 967-975): order trap(5/7) -> NMI handler -> mret -> exception handler at mtvec base -> mret -> resume; debug variant: the debug entry lands at the handler with dpc == mtvec base (FLUSH -> DBG_TAKEN_IF, :985-986) (observable at both buses, irq_pending_o and RVFI).
+- Pass criteria: gen_isa_compare (exception first, then interrupt / NMI in the stated order); gen_chk_irq (irq_pending_o model; ordinary entry only after the mret or an MIE write); gen_chk_nmi (NMI variant: entry at the vector before the handler's first instruction, mstack restore); gen_chk_csr_readback; gen_chk_debug (debug variant: dpc == mtvec base)
 - Expected: pass
 - Test group: gen_exc_priority
-- Bins: CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_rvalid_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_gnt_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_idle, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_nmi_rvalid_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_none_rvalid_pending, CG-EXC-013.cr_stage_irq.wb_cause_irq_enabled, CG-EXC-013.cr_stage_irq.wb_cause_nmi, CG-EXC-013.cp_ibus_at_commit.rvalid_pending, CG-EXC-013.cp_ibus_at_commit.gnt_pending, CG-EXC-013.cp_irq_at_commit.irq_enabled, CG-EXC-013.cp_irq_at_commit.nmi, CG-EXC-006.cp_resp_latency.one, CG-EXC-006.cp_resp_latency.short, CG-EXC-006.cp_resp_latency.long
+- Bins: CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_rvalid_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_gnt_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_irq_enabled_idle, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_nmi_rvalid_pending, CG-EXC-013.cr_wb_irq_ibus.wb_ls_fault_wins_none_rvalid_pending, CG-EXC-013.cr_stage_irq.wb_cause_irq_enabled, CG-EXC-013.cr_stage_irq.wb_cause_nmi, CG-EXC-013.cp_ibus_at_commit.rvalid_pending, CG-EXC-013.cp_ibus_at_commit.gnt_pending, CG-EXC-013.cp_irq_at_commit.irq_enabled, CG-EXC-013.cp_irq_at_commit.nmi, CG-EXC-006.cp_resp_latency.one, CG-EXC-006.cp_resp_latency.short, CG-EXC-006.cp_resp_latency.long, CG-IRQ-007.cp_ctx_pre.exc_vector_first, CG-IRQ-007.cr_source_ctx.ext_exc_vector_first
 
 ### TP-EXC-071: Random regime: mixed exceptions under bus-error and latency regimes
 - Features: F-EXC-001, F-EXC-003, F-EXC-008, F-EXC-025, F-EXC-027, F-EXC-041, F-EXC-062
@@ -7238,7 +7574,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq (vectored target base + 4*id); gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_lines
-- Bins: CG-IRQ-001.cp_line.fast_0, CG-IRQ-001.cp_line.fast_1, CG-IRQ-001.cp_line.fast_2, CG-IRQ-001.cp_line.fast_3, CG-IRQ-001.cp_line.fast_4, CG-IRQ-001.cp_line.fast_5, CG-IRQ-001.cp_line.fast_6, CG-IRQ-001.cp_line.fast_7, CG-IRQ-001.cp_line.fast_8, CG-IRQ-001.cp_line.fast_9, CG-IRQ-001.cp_line.fast_10, CG-IRQ-001.cp_line.fast_11, CG-IRQ-001.cp_line.fast_12, CG-IRQ-001.cp_line.fast_13, CG-IRQ-001.cp_line.fast_14, CG-IRQ-006.cp_id.fast_0, CG-IRQ-006.cp_id.fast_1, CG-IRQ-006.cp_id.fast_2, CG-IRQ-006.cp_id.fast_3, CG-IRQ-006.cp_id.fast_4, CG-IRQ-006.cp_id.fast_5, CG-IRQ-006.cp_id.fast_6, CG-IRQ-006.cp_id.fast_7, CG-IRQ-006.cp_id.fast_8, CG-IRQ-006.cp_id.fast_9, CG-IRQ-006.cp_id.fast_10, CG-IRQ-006.cp_id.fast_11, CG-IRQ-006.cp_id.fast_12, CG-IRQ-006.cp_id.fast_13, CG-IRQ-006.cp_id.fast_14, CG-IRQ-001.cr_line_priv_mie.fast_7_u_mie1, CG-IRQ-001.cr_line_marks.fast_5_intr_with_pre_mip, CG-IRQ-001.cr_line_mepc.fast_14_sequential, CG-IRQ-006.cr_id_base.fast_7_sw_aligned
+- Bins: CG-IRQ-001.cp_line.fast[0], CG-IRQ-001.cp_line.fast[1], CG-IRQ-001.cp_line.fast[2], CG-IRQ-001.cp_line.fast[3], CG-IRQ-001.cp_line.fast[4], CG-IRQ-001.cp_line.fast[5], CG-IRQ-001.cp_line.fast[6], CG-IRQ-001.cp_line.fast[7], CG-IRQ-001.cp_line.fast[8], CG-IRQ-001.cp_line.fast[9], CG-IRQ-001.cp_line.fast[10], CG-IRQ-001.cp_line.fast[11], CG-IRQ-001.cp_line.fast[12], CG-IRQ-001.cp_line.fast[13], CG-IRQ-001.cp_line.fast[14], CG-IRQ-006.cp_id.fast[0], CG-IRQ-006.cp_id.fast[1], CG-IRQ-006.cp_id.fast[2], CG-IRQ-006.cp_id.fast[3], CG-IRQ-006.cp_id.fast[4], CG-IRQ-006.cp_id.fast[5], CG-IRQ-006.cp_id.fast[6], CG-IRQ-006.cp_id.fast[7], CG-IRQ-006.cp_id.fast[8], CG-IRQ-006.cp_id.fast[9], CG-IRQ-006.cp_id.fast[10], CG-IRQ-006.cp_id.fast[11], CG-IRQ-006.cp_id.fast[12], CG-IRQ-006.cp_id.fast[13], CG-IRQ-006.cp_id.fast[14], CG-IRQ-001.cr_line_priv_mie.fast_7_u_mie1, CG-IRQ-001.cr_line_marks.fast_5_intr_with_pre_mip, CG-IRQ-001.cr_line_mepc.fast_14_sequential, CG-IRQ-006.cr_id_base.fast_7_sw_aligned
 
 ### TP-IRQ-005: Fast interrupt 0: mie bit 16, mcause 0x80000010, vector base + 0x40
 - Features: F-IRQ-062
@@ -7252,7 +7588,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq; gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_lines
-- Bins: CG-IRQ-001.cp_line.fast_0, CG-IRQ-001.cr_line_priv_mie.fast_0_m_mie1, CG-IRQ-001.cr_line_priv_mie.fast_0_u_mie0, CG-IRQ-006.cr_id_base.fast_0_boot_init, CG-IRQ-006.cr_id_base.fast_0_sw_legalised
+- Bins: CG-IRQ-001.cp_line.fast[0], CG-IRQ-001.cr_line_priv_mie.fast_0_m_mie1, CG-IRQ-001.cr_line_priv_mie.fast_0_u_mie0, CG-IRQ-006.cr_id_base.fast_0_boot_init, CG-IRQ-006.cr_id_base.fast_0_sw_legalised
 
 ### TP-IRQ-006: Fast interrupt 14: mie bit 30, mcause 0x8000001E, vector base + 0x78 (adjacent to the NMI vector)
 - Features: F-IRQ-061
@@ -7266,7 +7602,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq; gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_lines
-- Bins: CG-IRQ-001.cp_line.fast_14, CG-IRQ-001.cr_line_priv_mie.fast_14_m_mie1, CG-IRQ-001.cr_line_priv_mie.fast_14_u_mie0, CG-IRQ-006.cr_id_base.fast_14_sw_aligned, CG-IRQ-006.cr_id_base.fast_14_upper_half
+- Bins: CG-IRQ-001.cp_line.fast[14], CG-IRQ-001.cr_line_priv_mie.fast_14_m_mie1, CG-IRQ-001.cr_line_priv_mie.fast_14_u_mie0, CG-IRQ-006.cr_id_base.fast_14_sw_aligned, CG-IRQ-006.cr_id_base.fast_14_upper_half
 
 ### TP-IRQ-007: External NMI entry: taken regardless of mie/MIE, mcause 0x8000001F, vector base + 0x7C, mtval 0
 - Features: F-IRQ-030
@@ -7280,7 +7616,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_nmi (entry, cause, mstack save); gen_chk_irq (irq_pending_o excludes irq_nm_i); gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_nmi
-- Bins: CG-IRQ-001.cp_line.nmi_ext, CG-IRQ-001.cr_line_priv_mie.nmi_ext_m_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_ext_m_mie1, CG-IRQ-001.cr_line_priv_mie.nmi_ext_u_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_ext_u_mie1, CG-IRQ-001.cr_line_marks.nmi_ext_nmi_flag, CG-IRQ-006.cp_id.id31_ext, CG-IRQ-006.cr_id_base.id31_ext_boot_init, CG-IRQ-006.cr_id_base.id31_ext_sw_legalised, CG-IRQ-006.cr_id_base.id31_ext_upper_half, CG-IRQ-007.cp_source.ext, CG-IRQ-007.cr_source_ctx.ext_user_code, CG-IRQ-007.cr_ctx_priv_mie.user_code_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.user_code_m_mie1, CG-IRQ-007.cr_ctx_priv_mie.user_code_u_mie0, CG-IRQ-007.cr_ctx_priv_mie.user_code_u_mie1, CG-EXC-012.cr_kind_bit1.nmi_ext_bit1_0, CG-EXC-012.cr_kind_bit1.nmi_ext_bit1_1, CG-EXC-012.cr_kind_mtval.nmi_ext_zero, CG-IRQ-003.cp_transition.nmi_only_rise
+- Bins: CG-IRQ-001.cp_line.nmi_ext, CG-IRQ-001.cr_line_priv_mie.nmi_ext_m_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_ext_m_mie1, CG-IRQ-001.cr_line_priv_mie.nmi_ext_u_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_ext_u_mie1, CG-IRQ-001.cr_line_marks.nmi_ext_nmi_flag, CG-IRQ-006.cp_id.id31_ext, CG-IRQ-006.cr_id_base.id31_ext_boot_init, CG-IRQ-006.cr_id_base.id31_ext_sw_legalised, CG-IRQ-006.cr_id_base.id31_ext_upper_half, CG-IRQ-007.cp_source.ext, CG-IRQ-007.cr_source_ctx.ext_user_code, CG-IRQ-007.cr_ctx_priv_mie.user_code_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.user_code_m_mie1, CG-IRQ-007.cr_ctx_priv_mie.user_code_u_mie0, CG-IRQ-007.cr_ctx_priv_mie.user_code_u_mie1, CG-EXC-012.cr_kind_bit1.nmi_ext_bit1_0, CG-EXC-012.cr_kind_bit1.nmi_ext_bit1_1, CG-EXC-012.cr_kind_mtval.nmi_ext_zero, CG-IRQ-003.cp_transition.nmi_only_rise, CG-IRQ-007.cp_mie_pre.mie0, CG-IRQ-007.cp_mie_pre.mie1, CG-IRQ-007.cp_priv_pre.m, CG-IRQ-007.cp_priv_pre.u
 
 ### TP-IRQ-008: mie CSR: bits CSR_MSIX_BIT/CSR_MTIX_BIT/CSR_MEIX_BIT and [CSR_MFIX_BIT_HIGH:CSR_MFIX_BIT_LOW] writable, all others read-only zero, reset 0
 - Features: F-IRQ-003
@@ -7304,7 +7640,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the irq driver holds random line patterns (software/timer/external/fast subsets) level for a window; inside the window the program executes csrr mip (several times) and stores the results.
 - Randomized: line pattern, mie mask, timing of the reads relative to line changes.
 - Knobs: knob:irq_line_mix
-- Fire-check: the pin monitor shows >= 1 line high with its mie bit clear during the csrr mip retirement cycle, and rvfi_rd_wdata of that csrr equals the pin vector placed at bits 3/7/11/30:16 (observable at the irq pins and RVFI).
+- Fire-check: the pin monitor shows >= 1 line high with its mie bit clear in the csrr's ID-exit cycle = its record cycle - GEN_RVFI_ID_EXIT_OFFSET (2) (the combinational mip read is latched into WB at instr_id_done, rtl/ibex_cs_registers.sv:408-412, 495-501; rtl/ibex_id_stage.sv:1130), and rvfi_rd_wdata of that csrr equals the pin vector of THAT cycle placed at bits 3/7/11/30:16 (observable at the irq pins and RVFI).
 - Pass criteria: gen_chk_irq (mip read-back == pins; checker follows the RTL and the RISC-V spec); gen_chk_csr_readback
 - Expected: pass (doc mismatch D1)
 - Test group: gen_irq_csr
@@ -7336,7 +7672,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq (irq_pending_o == |(pins & mie) cycle-exactly; mie updates at the CSR-write commit edge)
 - Expected: pass
 - Test group: gen_irq_csr
-- Bins: CG-IRQ-003.cp_transition.rise_enabled, CG-IRQ-003.cp_transition.rise_disabled, CG-IRQ-003.cp_transition.rise_enabled_other_high, CG-IRQ-003.cp_transition.fall_last, CG-IRQ-003.cp_transition.fall_not_last, CG-IRQ-003.cp_transition.mie_set_pin_high, CG-IRQ-003.cp_transition.mie_clear_pin_high, CG-IRQ-003.cp_transition.nmi_only_rise, CG-IRQ-003.cr_transition_state.rise_enabled_mie0_m, CG-IRQ-003.cr_transition_state.rise_enabled_mie1_m, CG-IRQ-003.cr_transition_state.rise_enabled_u_mode, CG-IRQ-003.cr_transition_state.rise_enabled_debug_mode, CG-IRQ-003.cr_transition_state.rise_enabled_nmi_mode, CG-IRQ-003.cr_transition_state.rise_enabled_step, CG-IRQ-003.cr_transition_state.rise_enabled_sleep, CG-IRQ-003.cr_transition_state.fall_last_mie0_m, CG-IRQ-003.cr_transition_state.fall_last_mie1_m, CG-IRQ-003.cr_transition_state.fall_last_debug_mode, CG-IRQ-003.cr_transition_state.mie_clear_pin_high_mie1_m, CG-IRQ-003.cr_transition_state.mie_set_pin_high_mie0_m, CG-IRQ-003.cr_transition_state.mie_set_pin_high_mie1_m, CG-IRQ-003.cr_transition_state.nmi_only_rise_mie1_m, CG-IRQ-003.cr_transition_state.nmi_only_rise_sleep, CG-IRQ-003.cr_transition_state.rise_disabled_mie1_m, CG-IRQ-003.cr_transition_state.rise_disabled_sleep, CG-IRQ-003.cr_transition_line.rise_enabled_software, CG-IRQ-003.cr_transition_line.rise_enabled_timer, CG-IRQ-003.cr_transition_line.rise_enabled_external, CG-IRQ-003.cr_transition_line.rise_enabled_fast_low, CG-IRQ-003.cr_transition_line.rise_enabled_fast_mid, CG-IRQ-003.cr_transition_line.rise_enabled_fast_high, CG-IRQ-003.cr_transition_line.fall_last_software, CG-IRQ-003.cr_transition_line.fall_last_timer, CG-IRQ-003.cr_transition_line.fall_last_external, CG-IRQ-003.cr_transition_line.fall_last_fast_low, CG-IRQ-003.cr_transition_line.fall_last_fast_high, CG-IRQ-003.cr_transition_line.rise_disabled_fast_mid, CG-IRQ-003.cr_transition_line.mie_clear_pin_high_external
+- Bins: CG-IRQ-003.cp_transition.rise_enabled, CG-IRQ-003.cp_transition.rise_disabled, CG-IRQ-003.cp_transition.rise_enabled_other_high, CG-IRQ-003.cp_transition.fall_last, CG-IRQ-003.cp_transition.fall_not_last, CG-IRQ-003.cp_transition.mie_set_pin_high, CG-IRQ-003.cp_transition.mie_clear_pin_high, CG-IRQ-003.cp_transition.nmi_only_rise, CG-IRQ-003.cr_transition_state.rise_enabled_mie0_m, CG-IRQ-003.cr_transition_state.rise_enabled_mie1_m, CG-IRQ-003.cr_transition_state.rise_enabled_u_mode, CG-IRQ-003.cr_transition_state.rise_enabled_debug_mode, CG-IRQ-003.cr_transition_state.rise_enabled_nmi_mode, CG-IRQ-003.cr_transition_state.rise_enabled_step, CG-IRQ-003.cr_transition_state.rise_enabled_sleep, CG-IRQ-003.cr_transition_state.fall_last_mie0_m, CG-IRQ-003.cr_transition_state.fall_last_mie1_m, CG-IRQ-003.cr_transition_state.fall_last_debug_mode, CG-IRQ-003.cr_transition_state.mie_clear_pin_high_mie1_m, CG-IRQ-003.cr_transition_state.mie_set_pin_high_mie0_m, CG-IRQ-003.cr_transition_state.mie_set_pin_high_mie1_m, CG-IRQ-003.cr_transition_state.nmi_only_rise_mie1_m, CG-IRQ-003.cr_transition_state.nmi_only_rise_sleep, CG-IRQ-003.cr_transition_state.rise_disabled_mie1_m, CG-IRQ-003.cr_transition_state.rise_disabled_sleep, CG-IRQ-003.cr_transition_line.rise_enabled_software, CG-IRQ-003.cr_transition_line.rise_enabled_timer, CG-IRQ-003.cr_transition_line.rise_enabled_external, CG-IRQ-003.cr_transition_line.rise_enabled_fast_low, CG-IRQ-003.cr_transition_line.rise_enabled_fast_mid, CG-IRQ-003.cr_transition_line.rise_enabled_fast_high, CG-IRQ-003.cr_transition_line.fall_last_software, CG-IRQ-003.cr_transition_line.fall_last_timer, CG-IRQ-003.cr_transition_line.fall_last_external, CG-IRQ-003.cr_transition_line.fall_last_fast_low, CG-IRQ-003.cr_transition_line.fall_last_fast_high, CG-IRQ-003.cr_transition_line.rise_disabled_fast_mid, CG-IRQ-003.cr_transition_line.mie_clear_pin_high_external, CG-IRQ-003.cp_line_kind.software, CG-IRQ-003.cp_line_kind.timer, CG-IRQ-003.cp_line_kind.external, CG-IRQ-003.cp_line_kind.fast_low, CG-IRQ-003.cp_line_kind.fast_mid, CG-IRQ-003.cp_line_kind.fast_high
 
 ### TP-IRQ-012: Global enable in M-mode: pending with MIE = 0, taken as soon as MIE becomes 1
 - Features: F-IRQ-007
@@ -7378,7 +7714,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq (priority); gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_priority
-- Bins: CG-IRQ-002.cp_set.fast_external, CG-IRQ-002.cp_set.fast_software, CG-IRQ-002.cp_set.fast_timer, CG-IRQ-002.cp_set.external_software, CG-IRQ-002.cp_set.external_timer, CG-IRQ-002.cp_set.software_timer, CG-IRQ-002.cp_set.three_plus, CG-IRQ-002.cr_set_winner.fast_external_fast, CG-IRQ-002.cr_set_winner.fast_software_fast, CG-IRQ-002.cr_set_winner.fast_timer_fast, CG-IRQ-002.cr_set_winner.external_software_external, CG-IRQ-002.cr_set_winner.external_timer_external, CG-IRQ-002.cr_set_winner.software_timer_software, CG-IRQ-002.cr_set_winner.three_plus_fast, CG-IRQ-002.cr_set_winner.three_plus_external, CG-IRQ-002.cr_late_winner.none_fast, CG-IRQ-002.cr_late_winner.none_external, CG-IRQ-001.cr_line_others.fast_0_others_pending_lower, CG-IRQ-001.cr_line_others.external_others_pending_lower, CG-IRQ-001.cr_line_others.software_others_pending_lower, CG-IRQ-001.cr_line_others.fast_14_others_pending_lower, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-002.cp_late.none
+- Bins: CG-IRQ-002.cp_set.fast_external, CG-IRQ-002.cp_set.fast_software, CG-IRQ-002.cp_set.fast_timer, CG-IRQ-002.cp_set.external_software, CG-IRQ-002.cp_set.external_timer, CG-IRQ-002.cp_set.software_timer, CG-IRQ-002.cp_set.three_plus, CG-IRQ-002.cr_set_winner.fast_external_fast, CG-IRQ-002.cr_set_winner.fast_software_fast, CG-IRQ-002.cr_set_winner.fast_timer_fast, CG-IRQ-002.cr_set_winner.external_software_external, CG-IRQ-002.cr_set_winner.external_timer_external, CG-IRQ-002.cr_set_winner.software_timer_software, CG-IRQ-002.cr_set_winner.three_plus_fast, CG-IRQ-002.cr_set_winner.three_plus_external, CG-IRQ-002.cr_late_winner.none_fast, CG-IRQ-002.cr_late_winner.none_external, CG-IRQ-001.cr_line_others.fast_0_others_pending_lower, CG-IRQ-001.cr_line_others.external_others_pending_lower, CG-IRQ-001.cr_line_others.software_others_pending_lower, CG-IRQ-001.cr_line_others.fast_14_others_pending_lower, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-002.cp_late.none, CG-IRQ-001.cp_others.only_this, CG-IRQ-001.cp_others.others_enabled_idle, CG-IRQ-001.cp_others.others_pending_lower
 
 ### TP-IRQ-015: Multiple fast interrupts pending: the lowest index wins
 - Features: F-IRQ-010
@@ -7476,7 +7812,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare (precise interrupt: no partial effect, mepc); gen_chk_irq
 - Expected: pass
 - Test group: gen_irq_timing
-- Bins: CG-IRQ-004.cr_ctx_outcome.id_empty_taken, CG-IRQ-004.cr_ctx_outcome.id_alu_taken, CG-IRQ-004.cr_ctx_outcome.id_branch_taken, CG-IRQ-004.cr_ctx_outcome.id_jump_taken, CG-IRQ-004.cr_ctx_latency.id_empty_two, CG-IRQ-001.cp_mepc_src.sequential, CG-IRQ-001.cr_line_mepc.external_branch_target, CG-IRQ-004.cr_pulse_change_outcome.two_stable_taken, CG-IRQ-004.cr_pulse_change_outcome.three_plus_stable_taken, CG-IRQ-004.cr_pulse_change_outcome.level_until_ack_stable_taken, CG-IRQ-004.cp_latency.two
+- Bins: CG-IRQ-004.cr_ctx_outcome.id_empty_taken, CG-IRQ-004.cr_ctx_outcome.id_alu_taken, CG-IRQ-004.cr_ctx_outcome.id_branch_taken, CG-IRQ-004.cr_ctx_outcome.id_jump_taken, CG-IRQ-004.cr_ctx_latency.id_empty_two, CG-IRQ-001.cp_mepc_src.sequential, CG-IRQ-001.cr_line_mepc.external_branch_target, CG-IRQ-004.cr_pulse_change_outcome.two_stable_taken, CG-IRQ-004.cr_pulse_change_outcome.three_plus_stable_taken, CG-IRQ-004.cr_pulse_change_outcome.level_until_ack_stable_taken, CG-IRQ-004.cp_latency.two, CG-IRQ-004.cp_records_to_entry.zero, CG-IRQ-004.cr_ctx_records.id_empty_zero, CG-IRQ-004.cr_ctx_records.id_alu_one
 
 ### TP-IRQ-022: Interrupt arriving while ID is stalled on a load/store: the access completes, then the trap
 - Features: F-IRQ-017
@@ -7486,11 +7822,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: loads/stores with dmem gnt or rvalid delayed 2..24 cycles; the line rises during the wait (single line, several lines, or with the fetch also stalled by the imem agent).
 - Randomized: load vs store, delays on both buses, line set, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:imem_rvalid_delay, knob:irq_line_mix
-- Fire-check: the pin rise happens while the dbus monitor has an outstanding request without rvalid; data_rvalid_i precedes the vector fetch; the load/store retires with its data effect before the rvfi_intr retirement; mepc read-back == the load/store's successor (observable at both buses, the irq pins and RVFI).
-- Pass criteria: gen_isa_compare; gen_chk_irq (entry bound counts the WB drain); gen_chk_dbus_proto
+- Fire-check: the pin rise happens while the dbus monitor has an outstanding request without rvalid; data_rvalid_i precedes the entry; the load/store retires with its data effect before the rvfi_intr retirement; mepc read-back == the pc of the first NOT-yet-executed instruction = rvfi_pc_wdata of the last record before the entry (C-3 / X-7): ONE record (the load/store) when the pin rose during the GNT wait with the load/store still in ID (halt_if blocks the successor) or with the fetch stalled, TWO records when the pin rose in the RVALID wait with the successor already in ID (stall_wb; rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133; rtl/ibex_wb_stage.sv:115-116, 185); both classes are required (observable at both buses, the irq pins and RVFI).
+- Pass criteria: gen_isa_compare; gen_chk_irq (entry bound counts the WB drain; mepc predicted from the last retired record, both record counts accepted); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_irq_timing
-- Bins: CG-IRQ-004.cr_ctx_outcome.id_load_wait_taken, CG-IRQ-004.cr_ctx_outcome.id_store_wait_taken, CG-IRQ-004.cr_ctx_rvalid.id_load_wait_before_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_store_wait_before_rvalid, CG-IRQ-004.cr_ctx_latency.id_load_wait_three_five, CG-IRQ-004.cr_ctx_latency.id_load_wait_six_ten, CG-IRQ-004.cr_ctx_latency.id_load_wait_long, CG-IRQ-004.cp_ctx.id_load_wait, CG-IRQ-004.cp_ctx.id_store_wait, CG-IRQ-004.cp_ctx.fetch_stall_rvalid, CG-IRQ-004.cp_ctx.fetch_stall_gnt, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-004.cp_latency.three_five, CG-IRQ-004.cp_latency.six_ten, CG-IRQ-004.cp_latency.long
+- Bins: CG-IRQ-004.cr_ctx_outcome.id_load_wait_taken, CG-IRQ-004.cr_ctx_outcome.id_store_wait_taken, CG-IRQ-004.cr_ctx_rvalid.id_load_wait_before_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_store_wait_before_rvalid, CG-IRQ-004.cr_ctx_latency.id_load_wait_three_five, CG-IRQ-004.cr_ctx_latency.id_load_wait_six_ten, CG-IRQ-004.cr_ctx_latency.id_load_wait_long, CG-IRQ-004.cp_ctx.id_load_wait, CG-IRQ-004.cp_ctx.id_store_wait, CG-IRQ-004.cp_ctx.fetch_stall_rvalid, CG-IRQ-004.cp_ctx.fetch_stall_gnt, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-004.cp_latency.three_five, CG-IRQ-004.cp_latency.six_ten, CG-IRQ-004.cp_latency.long, CG-IRQ-004.cp_records_to_entry.one, CG-IRQ-004.cp_records_to_entry.two, CG-IRQ-004.cr_ctx_records.id_load_wait_one, CG-IRQ-004.cr_ctx_records.id_load_wait_two, CG-IRQ-004.cr_ctx_records.id_store_wait_one, CG-IRQ-004.cr_ctx_records.id_store_wait_two
 
 ### TP-IRQ-023: Interrupt arriving in the cycle a load's data_rvalid_i returns
 - Features: F-IRQ-018
@@ -7500,18 +7836,18 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent exposes the scheduled rvalid cycle of a load/store; the irq driver asserts the line in exactly that cycle, and sweeps -1/+1 cycles for the before/after classes.
 - Randomized: load vs store, delay, line, privilege, offset in {-1, 0, +1}.
 - Knobs: knob:dmem_rvalid_delay, knob:irq_line_mix
-- Fire-check: the pin monitor rise cycle equals the dbus monitor rvalid cycle (same-cycle class), the load/store retires, and the next retirement is the handler's first instruction with mepc read-back == the load/store pc + length (observable at the data bus, irq pins and RVFI).
-- Pass criteria: gen_isa_compare; gen_chk_irq (fixed entry latency from the stall clearing)
+- Fire-check: the pin monitor rise cycle equals the dbus monitor rvalid cycle (same-cycle class; -1 / +1 for the neighbour classes), the load/store retires, and mepc read-back == the pc of the first not-yet-executed instruction predicted from the RVFI stream (C-3 / X-7): with the successor already in ID (stalled on ready_wb) it completes in the rvalid cycle and retires too, so the handler's first instruction is the SECOND retirement after the pin and mepc == the successor's successor (or its target); only with the fetch stalled (successor not yet in ID) is the handler the next retirement with mepc == load/store pc + length (rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133) (observable at the data bus, irq pins and RVFI).
+- Pass criteria: gen_isa_compare; gen_chk_irq (fixed entry latency from the stall clearing; mepc from the RVFI stream, never from the load/store pc)
 - Expected: pass
 - Test group: gen_irq_timing
-- Bins: CG-IRQ-004.cr_ctx_rvalid.id_load_wait_same_cycle_as_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_store_wait_same_cycle_as_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_load_wait_after_rvalid, CG-IRQ-004.cp_rvalid_relation.same_cycle_as_rvalid, CG-IRQ-004.cp_rvalid_relation.before_rvalid, CG-IRQ-004.cp_rvalid_relation.after_rvalid
+- Bins: CG-IRQ-004.cr_ctx_rvalid.id_load_wait_same_cycle_as_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_store_wait_same_cycle_as_rvalid, CG-IRQ-004.cr_ctx_rvalid.id_load_wait_after_rvalid, CG-IRQ-004.cp_rvalid_relation.same_cycle_as_rvalid, CG-IRQ-004.cp_rvalid_relation.before_rvalid, CG-IRQ-004.cp_rvalid_relation.after_rvalid, CG-IRQ-004.cr_ctx_records.id_load_wait_two, CG-IRQ-004.cr_ctx_records.id_store_wait_two, CG-IRQ-004.cr_ctx_records.id_load_wait_one
 
 ### TP-IRQ-024: Interrupt during a multi-cycle divide or multiply completes the instruction first
 - Features: F-IRQ-019
 - Phase: 1
 - Tier: targeted
 - Preconditions: MIE = 1 or U-mode; enabled lines.
-- Stimulus: div/divu/rem/remu (37-cycle) and mulh/mulhsu/mulhu with random operands; the line rises 1..35 cycles after the instruction enters ID.
+- Stimulus: div/divu/rem/remu (37-cycle) and mulh/mulhsu/mulhu with random operands; the line rises 1..35 cycles after a divide enters ID and in the first or second cycle of a mulh* (two-cycle in RV32MSingleCycle; fact-check 3.irq owner note on TP-IRQ-024).
 - Randomized: instruction, operands (incl. divide by zero, overflow), rise offset, line, privilege.
 - Knobs: knob:instr_mix, knob:irq_regime
 - Fire-check: the pin rise occurs after the ibus delivered the div/mul word and before its retirement; the div/mul retires with the correct rvfi_rd_wdata before the rvfi_intr retirement; mepc read-back == its successor (observable at the irq pins, instruction bus and RVFI).
@@ -7574,21 +7910,21 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq (evaluation right after mret); gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_handler
-- Bins: CG-IRQ-004.cr_ctx_outcome.id_mret_taken, CG-IRQ-004.cr_ctx_latency.id_mret_two, CG-IRQ-004.cr_ctx_latency.id_mret_three_five, CG-EXC-011.cr_context_pending.exc_handler_irq_enabled, CG-EXC-011.cr_context_pending.irq_handler_irq_enabled, CG-EXC-011.cr_context_pending.exc_handler_irq_disabled, CG-EXC-011.cr_context_pending.irq_handler_irq_disabled, CG-EXC-011.cr_context_pending.plain_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie0_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie1_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie0_irq_disabled, CG-EXC-011.cr_mpp_pending.m_irq_enabled, CG-EXC-011.cr_mpp_pending.m_irq_disabled, CG-IRQ-001.cr_line_mepc.fast_3_mret_target, CG-IRQ-005.cr_nesting_mtvec.depth1_unchanged, CG-EXC-011.cr_context_pending.exc_handler_nmi, CG-EXC-011.cr_context_pending.irq_handler_nmi, CG-EXC-011.cr_mpp_pending.u_nmi, CG-EXC-011.cr_mpp_pending.m_nmi, CG-IRQ-003.cp_mie_global_edge.mret_mpie1_pending, CG-IRQ-003.cp_mie_global_edge.mret_mpie0_pending
+- Bins: CG-IRQ-004.cr_ctx_outcome.id_mret_taken, CG-IRQ-004.cr_ctx_latency.id_mret_two, CG-IRQ-004.cr_ctx_latency.id_mret_three_five, CG-EXC-011.cr_context_pending.exc_handler_irq_enabled, CG-EXC-011.cr_context_pending.irq_handler_irq_enabled, CG-EXC-011.cr_context_pending.exc_handler_irq_disabled, CG-EXC-011.cr_context_pending.irq_handler_irq_disabled, CG-EXC-011.cr_context_pending.plain_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie0_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie1_irq_enabled, CG-EXC-011.cr_mpie_pending.mpie0_irq_disabled, CG-EXC-011.cr_mpp_pending.m_irq_enabled, CG-EXC-011.cr_mpp_pending.m_irq_disabled, CG-IRQ-001.cr_line_mepc.fast_3_mret_target, CG-IRQ-005.cr_nesting_mtvec.depth1_unchanged, CG-EXC-011.cr_context_pending.exc_handler_nmi, CG-EXC-011.cr_context_pending.irq_handler_nmi, CG-EXC-011.cr_mpp_pending.u_nmi, CG-EXC-011.cr_mpp_pending.m_nmi, CG-IRQ-003.cp_mie_global_edge.mret_mpie1_pending, CG-IRQ-003.cp_mie_global_edge.mret_mpie0_pending, CG-EXC-011.cp_pending_at.irq_enabled, CG-EXC-011.cp_pending_at.irq_disabled, CG-EXC-011.cp_pending_at.nmi
 
 ### TP-IRQ-029: Interrupt pending during dret: taken before the first instruction at dpc
 - Features: F-IRQ-024
 - Phase: 1
 - Tier: targeted
-- Preconditions: debug mode entered via debug_req_i from M or U (dcsr.prv accordingly); MIE random; a line pending-and-enabled during the debug session (ignored there).
-- Stimulus: dret with the line held.
+- Preconditions: debug mode entered via debug_req_i from M or U (dcsr.prv accordingly); a line pending-and-enabled during the debug session (ignored there); taken arm: mstatus.MIE == 1 or dcsr.prv == U (irq_enabled = MIE | (priv == U), rtl/ibex_controller.sv:490, 498-500; C-6 / X-9); not-taken arm (control): MIE == 0 with dcsr.prv == M.
+- Stimulus: dret with the line held; arm mix per iteration taken 70 / not-taken 30.
 - Randomized: dcsr.prv, MIE, line, dpc, debug program length.
 - Knobs: knob:debug_req_regime, knob:irq_hold
-- Fire-check: the line is high while rvfi_ext_debug_mode == 1 with no rvfi_intr, the dret retires, and the next retirement is the handler's first instruction with mepc read-back == dpc and MPP == dcsr.prv (observable at the irq pins and RVFI).
-- Pass criteria: gen_chk_irq; gen_chk_debug; gen_isa_compare; gen_chk_csr_readback
+- Fire-check: the line is high while rvfi_ext_debug_mode == 1 with no rvfi_intr and the dret retires; taken arm: the next retirement is the handler's first instruction with mepc read-back == dpc and MPP == dcsr.prv; not-taken arm (MIE == 0, prv M): the next retirement is the instruction at dpc with rvfi_intr == 0 while irq_pending_o == 1, and the entry follows a later csrs mstatus.MIE (observable at the irq pins, irq_pending_o and RVFI).
+- Pass criteria: gen_chk_irq (entry after dret iff MIE == 1 or priv == U); gen_chk_debug; gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_debug
-- Bins: CG-IRQ-004.cr_ctx_outcome.id_dret_taken, CG-IRQ-001.cr_line_mepc.fast_9_dret_target, CG-IRQ-001.cr_line_mepc.timer_dret_target, CG-IRQ-001.cr_upath_pending.dret_prv_u_already_pending_mie0, CG-IRQ-001.cr_upath_pending.dret_prv_u_arrived_later_mie1, CG-IRQ-010.cr_line_mode_post.irq_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_prv.irq_u, CG-IRQ-010.cr_line_prv.irq_m, CG-IRQ-010.cr_dur_post.held_through_exit_taken_before_first_insn, CG-IRQ-010.cr_line_exit.irq_dret, CG-IRQ-010.cr_mode_exit.debug_mode_dret, CG-IRQ-001.cp_mepc_src.dret_target
+- Bins: CG-IRQ-004.cr_ctx_outcome.id_dret_taken, CG-IRQ-001.cr_line_mepc.fast_9_dret_target, CG-IRQ-001.cr_line_mepc.timer_dret_target, CG-IRQ-001.cr_upath_pending.dret_prv_u_already_pending_mie0, CG-IRQ-001.cr_upath_pending.dret_prv_u_arrived_later_mie1, CG-IRQ-010.cr_line_mode_post.irq_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_prv.irq_u, CG-IRQ-010.cr_line_prv.irq_m, CG-IRQ-010.cr_dur_post.held_through_exit_taken_before_first_insn, CG-IRQ-010.cr_line_exit.irq_dret, CG-IRQ-010.cr_mode_exit.debug_mode_dret, CG-IRQ-001.cp_mepc_src.dret_target, CG-IRQ-010.cr_line_mode_post.irq_debug_mode_not_taken, CG-IRQ-010.cp_dcsr_prv.m, CG-IRQ-010.cp_dcsr_prv.u, CG-IRQ-010.cp_line.irq
 
 ### TP-IRQ-030: Interrupt request withdrawn before it is taken: no spurious trap
 - Features: F-IRQ-025
@@ -7598,7 +7934,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the irq driver produces 1- and 2-cycle pulses swept against the retirement of the last instruction (RVFI back-dated by one cycle, S-4) so that the pulse's LAST high cycle is the decision cycle N: a one-cycle pulse landing on N, or a two-cycle pulse whose first cycle passed with an instruction still in ID and whose second cycle is N; both are low in IRQ_TAKEN N + 1 and are withdrawn (CTRL-09). A two-cycle pulse whose FIRST cycle is N is high at N + 1 and IS taken: those iterations are the control (CG-IRQ-004.cr_pulse_change_outcome.two_stable_taken, TP-IRQ-021). Also pulses during a load wait and during a divide.
 - Randomized: pulse width, offset, line, pipeline context, privilege.
 - Knobs: knob:irq_hold, knob:dmem_rvalid_delay
-- Fire-check: the pin monitor shows a pulse of width 1 or 2 whose last high cycle is a decision cycle (irq_pending_o == 1 with MIE or U-mode, ID empty and WB done per the RVFI/dbus monitors: the rvfi_ext_irq_valid pulse appears at N + 1) and which is low at N + 1; no rvfi_intr within the next 8 cycles, the mepc/mcause read-backs are unchanged, and the ibus monitor shows a fetch bubble of at most one cycle (observable at the irq pins, irq_pending_o, instruction bus and RVFI).
+- Fire-check: the pin monitor shows a pulse of width 1 or 2 whose last high cycle is a decision cycle N inferred from the pipeline state (irq_pending_o == 1 with MIE or U-mode, ID empty and WB done per the RVFI / dbus monitors; C-13: rvfi_ext_irq_valid is a level rising at N + 4 where generated and is absent when ID emptied before WB drained, e.g. the load-wait context after a gnt wait, rtl/ibex_core.sv:1949-1968, so it is recorded and never used to locate N) and which is low at N + 1; no rvfi_intr within the next 8 cycles and the mepc/mcause read-backs are unchanged (the prefetch buffer keeps fetching under halt_if, so no ibus bubble is asserted) (observable at the irq pins, irq_pending_o and RVFI).
 - Pass criteria: gen_chk_irq (entry iff a takeable line is present in the IRQ_TAKEN cycle N + 1; a two-cycle pulse starting at N is taken); gen_isa_compare (no unpredicted entry); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_timing
@@ -7630,7 +7966,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq; gen_isa_compare; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_handler
-- Bins: CG-IRQ-005.cp_line_at_mret.still_high_same, CG-IRQ-005.cr_state_reentry.still_high_same_immediate, CG-IRQ-005.cr_state_mpp.still_high_same_u, CG-IRQ-005.cr_state_mpp.still_high_same_m, CG-IRQ-005.cp_line_at_mret.masked_in_handler, CG-IRQ-005.cr_state_reentry.masked_in_handler_none, CG-EXC-011.cr_context_pending.irq_handler_irq_enabled, CG-IRQ-005.cr_state_reentry.still_high_same_immediate, CG-IRQ-004.cp_pulse_width.level_until_ack
+- Bins: CG-IRQ-005.cp_line_at_mret.still_high_same, CG-IRQ-005.cr_state_reentry.still_high_same_immediate, CG-IRQ-005.cr_state_mpp.still_high_same_u, CG-IRQ-005.cr_state_mpp.still_high_same_m, CG-IRQ-005.cp_line_at_mret.masked_in_handler, CG-IRQ-005.cr_state_reentry.masked_in_handler_none, CG-EXC-011.cr_context_pending.irq_handler_irq_enabled, CG-IRQ-005.cr_state_reentry.still_high_same_immediate, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-005.cp_reentry.immediate, CG-IRQ-005.cp_reentry.later, CG-IRQ-005.cp_reentry.none
 
 ### TP-IRQ-033: Software nesting: MIE re-enabled inside a handler admits lower, equal and higher priority lines
 - Features: F-IRQ-028
@@ -7658,7 +7994,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_irq; gen_isa_compare (mode); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_handler
-- Bins: CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0, CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie1, CG-IRQ-001.cr_upath_pending.mret_mpp_u_arrived_later_mie1, CG-IRQ-001.cp_u_path.mret_mpp_u, CG-EXC-011.cr_mpp_pending.u_irq_enabled, CG-EXC-011.cr_mpp_pending.u_irq_disabled, CG-IRQ-005.cr_state_mpp.dropped_new_other_pending_u, CG-IRQ-005.cr_state_mpp.dropped_by_ack_u, CG-IRQ-005.cr_state_mpp.dropped_by_ack_m, CG-IRQ-005.cr_state_reentry.dropped_new_other_pending_immediate, CG-IRQ-005.cr_state_reentry.dropped_by_ack_none, CG-IRQ-005.cr_state_reentry.dropped_by_ack_later, CG-IRQ-005.cp_mpp_restored.u
+- Bins: CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie0, CG-IRQ-001.cr_upath_pending.mret_mpp_u_already_pending_mie1, CG-IRQ-001.cr_upath_pending.mret_mpp_u_arrived_later_mie1, CG-IRQ-001.cp_u_path.mret_mpp_u, CG-EXC-011.cr_mpp_pending.u_irq_enabled, CG-EXC-011.cr_mpp_pending.u_irq_disabled, CG-IRQ-005.cr_state_mpp.dropped_new_other_pending_u, CG-IRQ-005.cr_state_mpp.dropped_by_ack_u, CG-IRQ-005.cr_state_mpp.dropped_by_ack_m, CG-IRQ-005.cr_state_reentry.dropped_new_other_pending_immediate, CG-IRQ-005.cr_state_reentry.dropped_by_ack_none, CG-IRQ-005.cr_state_reentry.dropped_by_ack_later, CG-IRQ-005.cp_mpp_restored.u, CG-IRQ-001.cp_u_pending_at_return.already_pending, CG-IRQ-001.cp_u_pending_at_return.arrived_later
 
 ### TP-IRQ-035: Nested NMI not supported: NMI ignored in NMI mode, re-taken after mret
 - Features: F-IRQ-031
@@ -7668,7 +8004,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: irq_nm_i held / re-pulsed inside the NMI handler; mret with the line still high.
 - Randomized: hold vs re-pulse, N, privilege of the interrupted code, mie/MIE.
 - Knobs: knob:irq_hold, knob:irq_line_mix
-- Fire-check: irq_nm_i is high (or rises) while gen_chk_nmi is in NMI mode and no fetch at mtvec base + 0x7C occurs until the handler's mret; after the mret the next retirement is the NMI handler's first instruction again (mepc read-back == the mret target) (observable at the irq pins, instruction bus and RVFI).
+- Fire-check: irq_nm_i is high (or rises) while gen_chk_nmi is in NMI mode and no retirement with rvfi_intr occurs between the NMI entry and the handler's mret (RVFI, rtl/ibex_core.sv:2405-2409; the ibus form 'no fetch at base + 0x7C' is ICache-blind, C-14); after the mret the next retirement is the NMI handler's first instruction again (rvfi_intr, mepc read-back == the mret target) (observable at the irq pins and RVFI).
 - Pass criteria: gen_chk_nmi (nested NMI ignored; re-entry after mret); gen_isa_compare
 - Expected: pass
 - Test group: gen_irq_nmi
@@ -7679,20 +8015,20 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Phase: 1
 - Tier: targeted
 - Preconditions: an exception or interrupt handler is running (its mepc/mcause/mstatus recorded by read-back); MIE random.
-- Stimulus: irq_nm_i inside that handler; the NMI handler optionally writes mepc/mcause with junk (must be discarded by the restore), then mret; the outer handler re-reads mepc/mcause/mstatus.
+- Stimulus: irq_nm_i inside that handler; the NMI handler optionally (a) writes mcause with junk, or (b) writes mepc with a VALID trampoline address T inside the NMI handler code (the mret jumps to the CURRENT mepc_q = T, rtl/ibex_if_stage.sv:246, rtl/ibex_controller.sv:954-957; only the CSR values come from mstack, rtl/ibex_cs_registers.sv:967-975; fact-check Section 5 RTL-defined behaviour), where T re-reads mepc/mcause and jumps to the interrupted handler's mepc; then mret; the outer handler re-reads mepc/mcause/mstatus.
 - Randomized: outer handler kind, junk writes, timing, privilege before the outer trap.
 - Knobs: knob:irq_line_mix, knob:irq_regime
-- Fire-check: the NMI entry happens with the gen_chk_irq stack depth >= 1 (inside a handler), and after the NMI handler's mret the outer handler's read-back of mepc/mcause/MPIE/MPP equals the values recorded before the NMI, including the junk-write variant (observable at RVFI).
-- Pass criteria: gen_chk_nmi (mstack save/restore); gen_chk_csr_readback
+- Fire-check: the NMI entry happens with the gen_chk_irq stack depth >= 1 (inside a handler), and after the NMI handler's mret the read-back of mepc/mcause/MPIE/MPP equals the values recorded before the NMI, including both write variants; in variant (b) the record after the mret has rvfi_pc_rdata == T (the software-written mepc is the jump target) while the post-mret mepc read-back is the stacked outer value (observable at RVFI).
+- Pass criteria: gen_chk_nmi (mstack save/restore; mret target = current mepc_q); gen_isa_compare (next pc == T in variant b); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_nmi
-- Bins: CG-IRQ-007.cp_mstack.restore_ok, CG-IRQ-007.cp_mstack.sw_epc_write_discarded, CG-IRQ-007.cr_handler_mstack.none_restore_ok, CG-IRQ-007.cr_handler_mstack.none_sw_epc_write_discarded, CG-IRQ-007.cr_source_ctx.ext_exc_handler, CG-IRQ-007.cr_source_ctx.ext_irq_handler, CG-IRQ-007.cr_ctx_priv_mie.exc_handler_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.irq_handler_m_mie0, CG-EXC-011.cr_context_pending.nmi_handler_none, CG-EXC-011.cp_context.nmi_handler
+- Bins: CG-IRQ-007.cp_mstack.restore_ok, CG-IRQ-007.cp_mstack.sw_epc_write_discarded, CG-IRQ-007.cr_handler_mstack.none_restore_ok, CG-IRQ-007.cr_handler_mstack.none_sw_epc_write_discarded, CG-IRQ-007.cr_source_ctx.ext_exc_handler, CG-IRQ-007.cr_source_ctx.ext_irq_handler, CG-IRQ-007.cr_ctx_priv_mie.exc_handler_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.irq_handler_m_mie0, CG-EXC-011.cr_context_pending.nmi_handler_none, CG-EXC-011.cp_context.nmi_handler, CG-IRQ-007.cp_mstack.sw_epc_target_used
 
 ### TP-IRQ-037: Regular interrupts are masked while in NMI mode even with MIE set by software
 - Features: F-IRQ-033
 - Phase: 1
 - Tier: targeted
-- Preconditions: NMI handler that executes csrs mstatus.MIE with mie bits set.
+- Preconditions: NMI handler that executes csrs mstatus.MIE with mie bits set; the pre-NMI state has mstatus.MIE == 1 or runs in U-mode (after the mret mie <- mpie = the MIE at NMI entry, so the regular line is taken after the mret only then; C-6).
 - Stimulus: an enabled regular line is asserted before or during the NMI handler; the NMI handler runs >= N instructions after setting MIE, then mret.
 - Randomized: line, timing, N, privilege before the NMI.
 - Knobs: knob:irq_line_mix, knob:irq_hold
@@ -7720,11 +8056,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Features: F-IRQ-035
 - Phase: 1
 - Tier: targeted
-- Preconditions: mtvec random class; exception handler records mepc/mcause.
-- Stimulus: the driver aligns irq_nm_i to the exception commit cycle (ibus delivery of the trapping word / dbus error response, offset sweep 0..2); variants with an internal NMI (integrity error) instead of irq_nm_i.
+- Preconditions: mtvec random class; exception handler records mepc/mcause; cpuctrlsts.icache_enable = 0 (pinned; excluded from the random cpuctrlsts field set, S-4 / C-14: the ibus-aligned variants).
+- Stimulus: the driver aligns irq_nm_i to the exception commit cycle (dbus error response for WB causes; ibus delivery of the trapping word + the fixed IF->ID offset for ID causes with the icache off; offset sweep 0..2); variants with an internal NMI (integrity error) instead of irq_nm_i.
 - Randomized: cause, offset, NMI source, privilege.
 - Knobs: knob:imem_rvalid_delay, knob:dmem_err_rate
-- Fire-check: irq_nm_i rises in the exception's vector-fetch cycle; the trap record is followed by an NMI entry with mepc read-back == mtvec base and no retirement at mtvec base in between; after the NMI handler's mret the exception handler runs and its mepc/mcause read-back equals the exception's (observable at the irq pins, instruction bus and RVFI).
+- Fire-check: irq_nm_i rises in the exception's commit cycle (trap record - GEN_TRAP_TO_RVFI_OFFSET) or the cycle before / after it (offset class recorded); the trap record is followed by an NMI entry (rvfi_intr, rvfi_ext_nmi / nmi_int) with mepc read-back == mtvec base and no retirement at mtvec base in between (special_req blocks the IRQ path, the NMI is taken in the empty DECODE after FLUSH, rtl/ibex_controller.sv:287-293, 655-676, 704-713; C-6); after the NMI handler's mret the exception handler runs and its mepc/mcause read-back equals the exception's (mstack) (observable at the irq pins, data bus and RVFI).
 - Pass criteria: gen_isa_compare (exception then NMI); gen_chk_nmi (mstack restore); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_nmi
@@ -7770,7 +8106,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_nmi; gen_chk_debug; gen_chk_bus_intg_rsp (variant b); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_debug
-- Bins: CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_mode_post.nmi_int_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_prv.nmi_ext_u, CG-IRQ-010.cr_line_prv.nmi_ext_m, CG-IRQ-010.cr_line_exit.nmi_ext_dret, CG-IRQ-007.cr_source_ctx.ext_dret_exit, CG-IRQ-007.cr_ctx_priv_mie.dret_exit_u_mie0, CG-IRQ-007.cp_ctx_pre.dret_exit, CG-IRQ-008.cr_op_ctx.load_in_debug_mode, CG-IRQ-008.cr_op_ctx.store_in_debug_mode, CG-IRQ-008.cp_pending_ctx.in_debug_mode, CG-IRQ-008.cp_taken_after.two_plus, CG-IRQ-008.cr_ctx_taken.in_debug_mode_two_plus
+- Bins: CG-IRQ-010.cr_line_mode_post.nmi_ext_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_mode_post.nmi_int_debug_mode_taken_before_first_insn, CG-IRQ-010.cr_line_prv.nmi_ext_u, CG-IRQ-010.cr_line_prv.nmi_ext_m, CG-IRQ-010.cr_line_exit.nmi_ext_dret, CG-IRQ-007.cr_source_ctx.ext_dret_exit, CG-IRQ-007.cr_ctx_priv_mie.dret_exit_u_mie0, CG-IRQ-007.cp_ctx_pre.dret_exit, CG-IRQ-008.cr_op_ctx.load_in_debug_mode, CG-IRQ-008.cr_op_ctx.store_in_debug_mode, CG-IRQ-008.cp_pending_ctx.in_debug_mode, CG-IRQ-008.cp_taken_after.three_plus, CG-IRQ-008.cr_ctx_taken.in_debug_mode_three_plus, CG-IRQ-010.cp_line.nmi_ext, CG-IRQ-010.cp_line.nmi_int
 
 ### TP-IRQ-043: All interrupts including the NMI are ignored in debug mode and while single-stepping; dcsr.stepie reads 0
 - Features: F-IRQ-039
@@ -7794,11 +8130,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent corrupts the integrity bits (data_rdata_intg_i, 1..7 random bit flips) of the response of one selected load or store (aligned, and misaligned first/second half); the NMI handler at base + 0x7C reads mcause/mtval/mepc; for loads the program later stores rd to a mailbox.
 - Randomized: load vs store, size, alignment, flipped bits, response latency, privilege, position, MIE.
 - Knobs: knob:dmem_err_rate, knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most one further retirement precedes an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C; the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for loads the load's RVFI record has rvfi_ext_rf_wr_suppress == 1 (observable at the data bus, alert_major_bus_o and RVFI).
-- Pass criteria: gen_chk_bus_intg_rsp (alert, suppression, NMI with cause and mtval, latency bound); gen_chk_nmi; gen_chk_alerts; gen_chk_csr_readback; gen_isa_compare (rd not written)
-- Expected: pass
+- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most TWO further ordinary instructions (more records only when the second is a Zcmp sequence) retire before an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C (the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_load_store_unit.sv:756-757, rtl/ibex_controller.sv:404-430, 436, 498, 700-713; C-7 / X-10: the count classes zero / one / two are all required and the doc's 'at most one' is D21); the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for aligned loads and misaligned loads whose SECOND beat carries the error the load's RVFI record has rvfi_ext_rf_wr_suppress == 1; for a misaligned load whose FIRST beat carries the error the RTL writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16: the rd outcome is asserted by its owner TP-DMEM-041, here only alert + NMI are asserted for that class) (observable at the data bus, alert_major_bus_o and RVFI).
+- Pass criteria: gen_chk_bus_intg_rsp (alert, suppression for the aligned / second-beat classes, NMI with cause and mtval, latency bound of two ordinary instructions per C-7); gen_chk_nmi; gen_chk_alerts; gen_chk_csr_readback; gen_isa_compare (rd not written in the aligned / second-beat classes; the first-beat class follows TP-DMEM-041's B16 direction and is not compared here)
+- Expected: pass (doc mismatch D21)
 - Test group: gen_irq_nmi_int
-- Bins: CG-IRQ-008.cp_err_op.load, CG-IRQ-008.cp_err_op.store, CG-IRQ-008.cr_op_half.load_aligned, CG-IRQ-008.cr_op_half.load_mis_first, CG-IRQ-008.cr_op_half.load_mis_second, CG-IRQ-008.cr_op_half.store_aligned, CG-IRQ-008.cr_op_half.store_mis_first, CG-IRQ-008.cr_op_half.store_mis_second, CG-IRQ-008.cr_ctx_taken.idle_zero, CG-IRQ-008.cr_ctx_taken.idle_one, CG-IRQ-008.cr_op_effects.load_alert_pulse, CG-IRQ-008.cr_op_effects.load_rf_wr_suppressed, CG-IRQ-008.cr_op_effects.store_alert_pulse, CG-IRQ-008.cr_op_effects.store_store_no_rf, CG-IRQ-008.cr_op_ctx.load_idle, CG-IRQ-008.cr_op_ctx.store_idle, CG-IRQ-001.cp_line.nmi_int, CG-IRQ-001.cr_line_priv_mie.nmi_int_m_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_int_m_mie1, CG-IRQ-001.cr_line_priv_mie.nmi_int_u_mie0, CG-IRQ-001.cr_line_marks.nmi_int_nmi_int_flag, CG-IRQ-001.cr_line_mepc.nmi_int_sequential, CG-IRQ-007.cp_source.int_ecc, CG-IRQ-007.cr_source_ctx.int_ecc_user_code, CG-EXC-012.cr_kind_bit1.nmi_int_bit1_0, CG-EXC-012.cr_kind_bit1.nmi_int_bit1_1, CG-EXC-012.cr_kind_mtval.nmi_int_data_addr, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie0_m, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie1_m, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie1_u
+- Bins: CG-IRQ-008.cp_err_op.load, CG-IRQ-008.cp_err_op.store, CG-IRQ-008.cr_op_half.load_aligned, CG-IRQ-008.cr_op_half.load_mis_first, CG-IRQ-008.cr_op_half.load_mis_second, CG-IRQ-008.cr_op_half.store_aligned, CG-IRQ-008.cr_op_half.store_mis_first, CG-IRQ-008.cr_op_half.store_mis_second, CG-IRQ-008.cr_ctx_taken.idle_zero, CG-IRQ-008.cr_ctx_taken.idle_one, CG-IRQ-008.cr_ctx_taken.idle_two, CG-IRQ-008.cp_taken_after.zero, CG-IRQ-008.cp_taken_after.one, CG-IRQ-008.cp_taken_after.two, CG-IRQ-008.cp_err_half.aligned, CG-IRQ-008.cp_err_half.mis_first, CG-IRQ-008.cp_err_half.mis_second, CG-IRQ-008.cr_op_effects.load_alert_pulse, CG-IRQ-008.cr_op_effects.load_rf_wr_suppressed, CG-IRQ-008.cr_op_effects.store_alert_pulse, CG-IRQ-008.cr_op_effects.store_store_no_rf, CG-IRQ-008.cr_op_ctx.load_idle, CG-IRQ-008.cr_op_ctx.store_idle, CG-IRQ-001.cp_line.nmi_int, CG-IRQ-001.cr_line_priv_mie.nmi_int_m_mie0, CG-IRQ-001.cr_line_priv_mie.nmi_int_m_mie1, CG-IRQ-001.cr_line_priv_mie.nmi_int_u_mie0, CG-IRQ-001.cr_line_marks.nmi_int_nmi_int_flag, CG-IRQ-001.cr_line_mepc.nmi_int_sequential, CG-IRQ-007.cp_source.int_ecc, CG-IRQ-007.cr_source_ctx.int_ecc_user_code, CG-EXC-012.cr_kind_bit1.nmi_int_bit1_0, CG-EXC-012.cr_kind_bit1.nmi_int_bit1_1, CG-EXC-012.cr_kind_mtval.nmi_int_data_addr, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie0_m, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie1_m, CG-EXC-012.cr_kind_mie_priv.nmi_int_mie1_u
 
 ### TP-IRQ-045: Internal and external NMI pending together: external first, internal after its mret
 - Features: F-IRQ-041
@@ -7836,25 +8172,25 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent corrupts a response inside (a) the external NMI handler, (b) an interrupt handler, (c) an exception handler.
 - Randomized: variant, position inside the handler, load vs store.
 - Knobs: knob:dmem_err_rate, knob:irq_line_mix
-- Fire-check: (a) the corrupted response occurs while gen_chk_nmi is in NMI mode, alert pulses, no base + 0x7C fetch until the handler's mret, then immediate re-entry with rvfi_ext_nmi_int == 1 and mcause 0xFFFFFFE0; (b)/(c) the internal NMI is taken within one retirement of the corrupted response (observable at the data bus, alert_major_bus_o, instruction bus and RVFI).
+- Fire-check: (a) the corrupted response occurs while gen_chk_nmi is in NMI mode, alert pulses, no rvfi_intr retirement until the handler's mret (RVFI; the ibus form is ICache-blind, C-14), then immediate re-entry with rvfi_ext_nmi_int == 1 and mcause 0xFFFFFFE0; (b)/(c) the internal NMI is taken within TWO ordinary instructions of the corrupted response (C-7 / X-10, D21) (observable at the data bus, alert_major_bus_o and RVFI).
 - Pass criteria: gen_chk_bus_intg_rsp; gen_chk_nmi; gen_chk_alerts
-- Expected: pass
+- Expected: pass (doc mismatch D21)
 - Test group: gen_irq_nmi_int
-- Bins: CG-IRQ-008.cp_pending_ctx.in_nmi_handler, CG-IRQ-008.cr_op_ctx.load_in_nmi_handler, CG-IRQ-008.cr_op_ctx.store_in_nmi_handler, CG-IRQ-008.cr_op_ctx.load_in_irq_handler, CG-IRQ-008.cr_ctx_taken.in_irq_handler_zero, CG-IRQ-008.cr_ctx_taken.in_irq_handler_one, CG-IRQ-008.cr_ctx_taken.in_nmi_handler_two_plus, CG-IRQ-007.cp_in_handler.int_err_pending, CG-IRQ-007.cr_handler_mstack.int_err_pending_restore_ok, CG-IRQ-007.cr_source_ctx.int_ecc_irq_handler, CG-IRQ-007.cr_source_ctx.int_ecc_exc_handler
+- Bins: CG-IRQ-008.cp_pending_ctx.in_nmi_handler, CG-IRQ-008.cr_op_ctx.load_in_nmi_handler, CG-IRQ-008.cr_op_ctx.store_in_nmi_handler, CG-IRQ-008.cr_op_ctx.load_in_irq_handler, CG-IRQ-008.cr_ctx_taken.in_irq_handler_zero, CG-IRQ-008.cr_ctx_taken.in_irq_handler_one, CG-IRQ-008.cr_ctx_taken.in_nmi_handler_three_plus, CG-IRQ-008.cr_ctx_taken.in_irq_handler_two, CG-IRQ-007.cp_in_handler.int_err_pending, CG-IRQ-007.cr_handler_mstack.int_err_pending_restore_ok, CG-IRQ-007.cr_source_ctx.int_ecc_irq_handler, CG-IRQ-007.cr_source_ctx.int_ecc_exc_handler
 
 ### TP-IRQ-048: Software write to mcause: WLRL bits and the internal-interrupt encoding
 - Features: F-IRQ-044
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode.
-- Stimulus: csrw/csrs/csrc mcause with 0xC00000xx, 0x800000xx, 0x00000020, values with bits 29:5 set, and random values, each followed by csrr mcause.
+- Stimulus: csrw/csrs/csrc mcause with 0xC00000xx, 0x800000xx, 0x400000xx, 0x00000020, values with bits 29:5 set, and random values, each followed by csrr mcause (csrs/csrc operate on the legalised READ value, so only csrw presents wdata[31:30] == 01 or bits 29:5 directly; csrs of bit 30 on a 0x800000xx value yields 11 -> irq_int).
 - Randomized: values and forms, order.
 - Knobs: knob:instr_mix
-- Fire-check: each mcause write retirement is followed by a read-back equal to the RTL rule ({irq_ext, irq_int} = wdata[31:30], code = wdata[4:0]; irq_int set reads 0xFFFFFFE0 | code) (observable at RVFI).
+- Fire-check: each mcause write retirement is followed by a read-back equal to the RTL rule (irq_ext = (wdata[31:30] == 2'b10), irq_int = (wdata[31:30] == 2'b11), code = wdata[4:0], rtl/ibex_cs_registers.sv:731-733, 487-489; wdata[31:30] == 2'b01 sets NEITHER flag and reads {27'b0, code}; irq_int reads 0xFFFFFFE0 | code) (observable at RVFI).
 - Pass criteria: gen_chk_csr_readback (checker follows the RTL: mcause is writable)
 - Expected: pass (doc mismatch D3)
 - Test group: gen_irq_nmi_int
-- Bins: CG-IRQ-008.cp_mcause_write.c000xx_reads_ffffffe0, CG-IRQ-008.cp_mcause_write.w8000xx_reads_same, CG-IRQ-008.cp_mcause_write.w20_reads_0, CG-IRQ-008.cp_mcause_write.bits29_5_dropped
+- Bins: CG-IRQ-008.cp_mcause_write.c000xx_reads_ffffffe0, CG-IRQ-008.cp_mcause_write.w8000xx_reads_same, CG-IRQ-008.cp_mcause_write.w20_reads_0, CG-IRQ-008.cp_mcause_write.bits29_5_dropped, CG-IRQ-008.cp_mcause_write.w4000xx_reads_code
 
 ### TP-IRQ-049: WFI sleeps, instr_req_o stops, core_busy_o goes Off, wake on an enabled interrupt with mepc = wfi + 4
 - Features: F-IRQ-045
@@ -7868,7 +8204,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_sleep (Off during sleep, no requests, wake only on a wake source); gen_chk_irq; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_wfi
-- Bins: CG-IRQ-009.cp_priv_tw.m, CG-IRQ-009.cp_wake.irq_taken, CG-IRQ-009.cr_priv_wake.m_irq_taken, CG-IRQ-009.cr_wake_sleep.irq_taken_short, CG-IRQ-009.cr_wake_sleep.irq_taken_medium, CG-IRQ-009.cr_wake_sleep.irq_taken_long, CG-IRQ-009.cr_wake_busy.irq_taken_off_seen, CG-IRQ-009.cr_wake_line.irq_taken_software, CG-IRQ-009.cr_wake_line.irq_taken_timer, CG-IRQ-009.cr_wake_line.irq_taken_external, CG-IRQ-009.cr_wake_line.irq_taken_fast, CG-IRQ-009.cr_wb_priv.empty_m, CG-IRQ-009.cr_wb_priv.ls_ok_m, CG-IRQ-009.cp_disabled_high.no, CG-IRQ-001.cr_line_mepc.external_wfi_next, CG-IRQ-001.cp_mepc_src.wfi_next, CG-IRQ-004.cr_ctx_outcome.id_wfi_taken
+- Bins: CG-IRQ-009.cp_priv_tw.m, CG-IRQ-009.cp_wake.irq_taken, CG-IRQ-009.cr_priv_wake.m_irq_taken, CG-IRQ-009.cr_wake_sleep.irq_taken_short, CG-IRQ-009.cr_wake_sleep.irq_taken_medium, CG-IRQ-009.cr_wake_sleep.irq_taken_long, CG-IRQ-009.cr_wake_busy.irq_taken_off_seen, CG-IRQ-009.cr_wake_line.irq_taken_software, CG-IRQ-009.cr_wake_line.irq_taken_timer, CG-IRQ-009.cr_wake_line.irq_taken_external, CG-IRQ-009.cr_wake_line.irq_taken_fast, CG-IRQ-009.cr_wb_priv.empty_m, CG-IRQ-009.cr_wb_priv.ls_ok_m, CG-IRQ-009.cp_disabled_high.no, CG-IRQ-001.cr_line_mepc.external_wfi_next, CG-IRQ-001.cp_mepc_src.wfi_next, CG-IRQ-004.cr_ctx_outcome.id_wfi_taken, CG-IRQ-009.cp_wake_line.software, CG-IRQ-009.cp_wake_line.timer, CG-IRQ-009.cp_wake_line.external, CG-IRQ-009.cp_wake_line.fast
 
 ### TP-IRQ-050: WFI wakes on a locally enabled but globally disabled interrupt and resumes without a trap
 - Features: F-IRQ-046
@@ -7924,7 +8260,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_sleep; gen_chk_nmi; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_wfi
-- Bins: CG-IRQ-009.cp_wake.nmi_ext, CG-IRQ-009.cp_wake.nmi_int, CG-IRQ-009.cr_priv_wake.m_nmi_ext, CG-IRQ-009.cr_priv_wake.m_nmi_int, CG-IRQ-009.cr_priv_wake.u_tw0_nmi_ext, CG-IRQ-009.cr_wake_sleep.nmi_ext_medium, CG-IRQ-009.cr_wake_sleep.nmi_ext_short, CG-IRQ-009.cr_wake_line.nmi_ext_nmi, CG-IRQ-007.cr_source_ctx.ext_wfi_sleep, CG-IRQ-007.cr_ctx_priv_mie.wfi_sleep_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.wfi_sleep_u_mie1, CG-IRQ-007.cp_ctx_pre.wfi_sleep, CG-IRQ-001.cr_line_mepc.nmi_ext_wfi_next
+- Bins: CG-IRQ-009.cp_wake.nmi_ext, CG-IRQ-009.cp_wake.nmi_int, CG-IRQ-009.cr_priv_wake.m_nmi_ext, CG-IRQ-009.cr_priv_wake.m_nmi_int, CG-IRQ-009.cr_priv_wake.u_tw0_nmi_ext, CG-IRQ-009.cr_wake_sleep.nmi_ext_medium, CG-IRQ-009.cr_wake_sleep.nmi_ext_short, CG-IRQ-009.cr_wake_line.nmi_ext_nmi, CG-IRQ-007.cr_source_ctx.ext_wfi_sleep, CG-IRQ-007.cr_ctx_priv_mie.wfi_sleep_m_mie0, CG-IRQ-007.cr_ctx_priv_mie.wfi_sleep_u_mie1, CG-IRQ-007.cp_ctx_pre.wfi_sleep, CG-IRQ-001.cr_line_mepc.nmi_ext_wfi_next, CG-IRQ-009.cp_wake_line.nmi
 
 ### TP-IRQ-054: WFI woken by debug_req_i; debug entry beats a simultaneous enabled interrupt
 - Features: F-IRQ-050
@@ -7994,7 +8330,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_isa_compare; gen_chk_sleep; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_wfi
-- Bins: CG-IRQ-009.cp_wb_at_wfi.ls_ok, CG-IRQ-009.cp_wb_at_wfi.ls_fault, CG-IRQ-009.cr_wb_priv.ls_fault_m, CG-IRQ-009.cr_wb_priv.ls_fault_u_tw0, CG-IRQ-009.cr_wb_priv.ls_ok_m, CG-EXC-006.cr_op_younger.load_wfi, CG-EXC-006.cr_op_younger.store_wfi
+- Bins: CG-IRQ-009.cp_wb_at_wfi.ls_ok, CG-IRQ-009.cp_wb_at_wfi.ls_fault, CG-IRQ-009.cr_wb_priv.ls_fault_m, CG-IRQ-009.cr_wb_priv.ls_fault_u_tw0, CG-IRQ-009.cr_wb_priv.ls_ok_m, CG-EXC-006.cr_op_younger.load_wfi, CG-EXC-006.cr_op_younger.store_wfi, CG-EXC-006.cp_younger.wfi
 
 ### TP-IRQ-059: Interrupt state at reset release: regular lines only pending, NMI taken before the first instruction, debug beats NMI
 - Features: F-IRQ-055, F-IRQ-065
@@ -8014,11 +8350,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Features: F-IRQ-056
 - Phase: 1
 - Tier: targeted
-- Preconditions: MIE = 1, mie enables the line; fetch_enable_i driven to a valid Off encoding for a window of 20..500 cycles at a random point (the in-flight instruction completes).
+- Preconditions: MIE = 1, mie enables the line; cpuctrlsts.icache_enable = 0 (pinned; excluded from the random cpuctrlsts field set, S-4 / C-14: the 'first instr_req_o after On' observation); fetch_enable_i driven to a valid Off encoding for a window of 20..500 cycles at a random point (the in-flight instruction completes).
 - Stimulus: (a) the line is pending before the Off window; (b) the line rises during the window; (c) irq_nm_i rises during the window; (d) nothing pending (control); then fetch_enable_i returns to On.
 - Randomized: variant, window length, line, privilege.
 - Knobs: knob:fetch_enable_regime, knob:irq_line_mix
-- Fire-check: the fetch_enable monitor shows the Off window with no new instr_req_o and no retirement inside it while irq_pending_o == 1 (a-c); the first instr_req_o after On is the vector address and the handler read-back mepc equals the pc of the next unexecuted instruction at the disable point; in (d) the first fetch after On resumes the program (observable at fetch_enable_i, instruction bus, irq_pending_o and RVFI).
+- Fire-check: the fetch_enable monitor shows the Off window with no new instr_req_o and no retirement inside it while irq_pending_o == 1 (a-c); the first instr_req_o after On is the vector address (icache off) and the first retirement after On is the handler's first instruction (rvfi_intr, rvfi_pc_rdata == the vector) with mepc read-back == the pc of the next unexecuted instruction at the disable point; in (d) the first fetch and the first retirement after On resume the program (observable at fetch_enable_i, instruction bus, irq_pending_o and RVFI).
 - Pass criteria: gen_chk_fetch_en (no fetch/retirement while Off); gen_chk_irq (entry decided while Off; vector on resume, RTL-defined per Q-DL-8 default); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_reset
@@ -8029,14 +8365,14 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Phase: 1
 - Tier: targeted
 - Preconditions: as TP-IRQ-001 / TP-IRQ-007 / TP-IRQ-044 plus synchronous exceptions for the negative case.
-- Stimulus: regular interrupts (some arriving while the pipeline is already empty so rvfi_ext_irq_valid pulses), external and internal NMIs, lines changing between the decision cycle and the first handler retirement, and exceptions.
+- Stimulus: regular interrupts in three timing classes: (i) arriving with ID empty and WB done (rvfi_ext_irq_valid generated), (ii) arriving while a load/store drains in WB after ID emptied (no rvfi_ext_irq_valid at all: captured_valid is already set, rtl/ibex_core.sv:1949-1968), (iii) level-held lines (pre_mip stable); external and internal NMIs; lines changing between the capture cycle and the first handler retirement; exceptions for the negative case.
 - Randomized: line, timing, cause, privilege.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:dmem_err_rate
-- Fire-check: per interrupt entry rvfi_intr == 1 exactly on the first handler retirement and rvfi_ext_pre_mip equals the pin vector recorded by the pin monitor at the decision cycle; >= 1 rvfi_ext_irq_valid pulse observed with no retirement in the same cycle; rvfi_ext_nmi / rvfi_ext_nmi_int set on the NMI entries; per exception entry the first handler retirement has rvfi_intr == 0 (observable at RVFI and the irq pins).
+- Fire-check: per interrupt entry rvfi_intr == 1 exactly on the first handler retirement and rvfi_ext_pre_mip equals the pin vector recorded by the pin monitor at the CAPTURE cycle (the first cycle with ID empty and new_irq, which precedes the decision cycle N whenever WB was still draining, rtl/ibex_core.sv:1949-1957; equality with the pins at N is asserted only for level-held lines); class (i): the rvfi_ext_irq_valid LEVEL rises at N + 4 (C-13 / X-16) with rvfi_valid == 0 in every high cycle and falls about two cycles after the handler's first instruction enters ID; class (ii): no rvfi_ext_irq_valid between the last pre-entry record and the handler's first record; rvfi_ext_nmi / rvfi_ext_nmi_int set on the NMI entries; per exception entry the first handler retirement has rvfi_intr == 0 (observable at RVFI and the irq pins).
 - Pass criteria: gen_isa_compare (consumes these fields; mismatch flagged; the negative property rvfi_intr == 0 on an exception handler's first instruction is the checker's, not a bin, S-3b); gen_chk_irq
 - Expected: pass
 - Test group: gen_irq_handler
-- Bins: CG-IRQ-001.cp_rvfi_marks.intr_with_pre_mip, CG-IRQ-001.cp_rvfi_marks.irq_valid_pulse, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_equal, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_differ, CG-IRQ-001.cp_rvfi_marks.nmi_flag, CG-IRQ-001.cp_rvfi_marks.nmi_int_flag, CG-IRQ-001.cr_line_marks.external_irq_valid_pulse
+- Bins: CG-IRQ-001.cp_rvfi_marks.intr_with_pre_mip, CG-IRQ-001.cp_rvfi_marks.irq_valid_level, CG-IRQ-001.cp_rvfi_marks.irq_valid_absent, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_equal, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_differ, CG-IRQ-001.cp_rvfi_marks.nmi_flag, CG-IRQ-001.cp_rvfi_marks.nmi_int_flag, CG-IRQ-001.cr_line_marks.external_irq_valid_level
 
 ### TP-IRQ-062: mepc for interrupts after a control-flow change records the target, never the fall-through
 - Features: F-IRQ-058
@@ -8046,7 +8382,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the line is raised so that the last instruction before the entry is a taken branch, jal/jalr, mret or dret (driver aligned to the ibus delivery of that instruction).
 - Randomized: redirect kind and target, line, privilege.
 - Knobs: knob:irq_regime, knob:imem_rvalid_delay
-- Fire-check: the last retirement before the rvfi_intr entry is a redirect with rvfi_pc_wdata == T != pc + length, and the handler read-back mepc == T (observable at RVFI).
+- Fire-check: the last retirement before the rvfi_intr entry is a redirect: a branch / jump with rvfi_pc_wdata == T != pc + length, or an mret / dret identified by rvfi_insn whose target T is the mepc / dpc value read back before the return (their records carry the next sequential fetch address in rvfi_pc_wdata, C-1 / X-1); the handler read-back mepc == T (observable at RVFI).
 - Pass criteria: gen_chk_csr_readback; gen_isa_compare
 - Expected: pass
 - Test group: gen_irq_handler
@@ -8098,12 +8434,12 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Features: F-IRQ-064
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-IRQ-049.
+- Preconditions: as TP-IRQ-049; cpuctrlsts.icache_enable = 0 (pinned; excluded from the random cpuctrlsts field set, S-4 / C-14: the vector request is bus-visible and undeferred only with the icache off and an idle bus).
 - Stimulus: wfi sleeps; an enabled line rises; latency from the rise to the vector fetch is measured over many iterations with different sleep lengths and lines.
 - Randomized: sleep length, line, privilege.
 - Knobs: knob:irq_line_mix
-- Fire-check: sleep observed (core_busy_o Off); the pin rise is followed by the vector fetch after a constant number of cycles across iterations (the TB records the distribution) and the entry has mepc read-back == wfi + 4 (observable at core_busy_o, irq pins, instruction bus and RVFI).
-- Pass criteria: gen_chk_sleep; gen_chk_irq (wake-to-vector bound); gen_chk_csr_readback
+- Fire-check: sleep observed (core_busy_o Off); per seed the minimum observed pin-rise-to-vector-request distance equals the bring-up-pinned constant GEN_WFI_WAKE_TO_VECTOR (predicted 2: SLEEP at the rise cycle W -> FIRST_FETCH W + 1 -> IRQ_TAKEN / pc_set W + 2, rtl/ibex_controller.sv:606-635, 725-733; the request is issued in the pc_set cycle only when no fill buffer holds an ungranted request), the distribution is recorded, and the entry has mepc read-back == wfi + 4; the rvfi_ext_irq_valid level of a sleep wake rises at W + 4 (C-13) (observable at core_busy_o, irq pins, instruction bus and RVFI).
+- Pass criteria: gen_chk_sleep; gen_chk_irq (wake-to-vector bound: pc_set = W + 2 exact, vector request >= pc_set); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_timing
 - Bins: CG-IRQ-004.cp_ctx.first_fetch_wake, CG-IRQ-004.cr_ctx_outcome.first_fetch_wake_taken, CG-IRQ-004.cr_ctx_latency.first_fetch_wake_two, CG-IRQ-009.cr_wake_sleep.irq_taken_passthrough
@@ -8148,7 +8484,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Pass criteria: gen_chk_sleep (no sleep with step set); gen_chk_debug (step cause, dpc); gen_chk_irq (masked while stepping)
 - Expected: pass
 - Test group: gen_irq_wfi
-- Bins: CG-IRQ-009.cp_wake.step_nop, CG-IRQ-009.cr_priv_wake.m_step_nop, CG-IRQ-009.cr_wake_sleep.step_nop_passthrough, CG-IRQ-009.cr_wake_busy.step_nop_off_seen, CG-IRQ-010.cp_exit_kind.step_complete, CG-IRQ-010.cr_line_exit.irq_step_complete
+- Bins: CG-IRQ-009.cp_wake.step_nop, CG-IRQ-009.cr_priv_wake.m_step_nop, CG-IRQ-009.cr_wake_sleep.step_nop_passthrough, CG-IRQ-009.cr_wake_busy.step_nop_off_not_seen, CG-IRQ-010.cp_exit_kind.step_complete, CG-IRQ-010.cr_line_exit.irq_step_complete
 
 ### TP-IRQ-070: irq_pending_o is unaffected by mstatus.MIE toggles and follows mie toggles while a pin is held
 - Features: F-IRQ-006, F-IRQ-007
@@ -8311,7 +8647,8 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 | gen_exc_sync_causes | TP-EXC-001, 007, 016, 022, 023, 024, 026 | 1 | smoke | short |
 | gen_exc_fetch_fault | TP-EXC-002, 003, 004, 005 | 1 | targeted | short |
 | gen_exc_illegal | TP-EXC-008, 009, 010, 011, 013 | 1 | targeted | short |
-| gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 065 (informational), 070 | 1 | targeted | medium |
+| gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 070 | 1 | targeted | medium |
+| gen_exc_priority_info | TP-EXC-065 (informational; own `_info` test, C-15) | 1 | targeted | short |
 | gen_exc_ebreak_ecall | TP-EXC-017, 018, 020, 021 | 1 | targeted | short |
 | gen_exc_zcmp | TP-EXC-014, 042, 043, 044 | 1 | targeted | medium |
 | gen_exc_lsu_fault | TP-EXC-025, 027, 028, 029, 030, 031, 032, 033, 034, 036, 037, 038, 039 | 1 | targeted | medium |
@@ -8337,13 +8674,17 @@ drivers, deep stalls); long > 10 min per seed (random regimes, multi-seed).
 
 ## New checkers requested
 
-- gen_chk_trap_timing: cycle bounds for trap commit. ID-stage cause: the vector fetch (instr_req_o
-  to mtvec base / DmExceptionAddr) appears exactly one cycle after the trigger when WB is empty,
-  else one cycle after the last data_rvalid_i of the outstanding access; WB cause: one cycle after
-  the error response; exactly one vector fetch per trap record (exception request flops cleared in
-  FLUSH); interrupt wake-to-vector latency after a WFI wake is a constant. Used by TP-EXC-015,
-  TP-EXC-062, TP-EXC-071, TP-IRQ-066. gen_chk_irq only bounds interrupt entry; nothing bounds
-  exception commit today.
+- gen_chk_trap_timing: cycle bounds for trap commit, anchored on the commit (pc_set / FLUSH cycle =
+  trap record - GEN_TRAP_TO_RVFI_OFFSET), never on the ibus request (C-14). ID-stage cause: the
+  commit is exactly one cycle after the trigger when WB is empty, else one cycle after the last
+  data_rvalid_i of the outstanding access; WB cause: one cycle after the error response
+  (rtl/ibex_controller.sv:676-677, 827-830). The vector request (instr_req_o to mtvec base /
+  DmExceptionAddr, icache off) is >= the commit cycle; its minimum distance is pinned at bring-up
+  (GEN_VECTOR_REQ_AFTER_PC_SET, predicted 0; a held prefetch request defers it,
+  rtl/ibex_icache.sv:764-776). Exactly one vector fetch per trap record (exception request flops
+  cleared in FLUSH). WFI wake: pc_set at W + 2 (GEN_WFI_WAKE_TO_VECTOR, predicted 2). Used by
+  TP-EXC-015, TP-EXC-062, TP-EXC-071, TP-IRQ-066. gen_chk_irq only bounds interrupt entry; nothing
+  bounds exception commit today.
 - gen_chk_exc_flush: quietness of killed instructions. Between a WB fault response (or any trap
   commit) and the handler's first data access no data_req_o is issued that is not attributable to
   a retired instruction, and no CSR side effect of the killed ID instruction is visible in the
@@ -8353,13 +8694,23 @@ drivers, deep stalls); long > 10 min per seed (random regimes, multi-seed).
   lines in the IRQ_TAKEN cycle (decision + 1) so a withdrawn request predicts no trap and a late
   higher-priority line predicts the new cause (CTRL-09), (b) model irq_enabled = MIE | (priv == U),
   (c) wait for the WB drain and block during Zcmp INSTR_EXPANDED_COMMIT micro-ops (CTRL-39), (d)
-  compare irq_pending_o cycle-exactly (combinational, mie_q updates at the write commit edge).
+  compare irq_pending_o cycle-exactly (combinational, mie_q updates at the write commit edge), (e)
+  derive mepc from the last retired record (C-3 / X-7: the instruction in ID at the request
+  completes; nominal 2 records after the pin edge, worst case 17) and never locate the decision
+  cycle from rvfi_ext_irq_valid (a level rising at N + 4, absent when ID emptied before WB drained,
+  C-13), (f) after a synchronous exception predict an ordinary entry only after the mret or an MIE
+  write and an NMI entry before the handler's first instruction (C-6).
   gen_chk_nmi must model the single-entry mstack exactly as the RTL (pushed on every trap,
-  restored only by mret in nmi_mode; overwritten by a nested trap, F-IRQ-036) and the internal-NMI
-  pending flag (set on any corrupted load or store response, cleared only on an entry with
-  irq_nm_i low). gen_chk_sleep must accept the nop-path core_busy_o Off pulse (CTRL-42) and the
+  restored only by mret in nmi_mode; overwritten by a nested trap, F-IRQ-036), the mret target in
+  NMI mode = the CURRENT mepc_q with only the CSR values restored from mstack (TP-IRQ-036), and the
+  internal-NMI pending flag (set one cycle after any corrupted load or store response, cleared only
+  on an entry with irq_nm_i low; up to two ordinary instructions retire before the entry, C-7 /
+  D21). gen_chk_sleep must accept the nop-path core_busy_o Off pulse (CTRL-42) and the
   >= 4-cycle WFI bubble, and use the wake predicate |(mip & mie) | irq_nm | debug_req | debug_mode
-  | step. gen_chk_bus_intg_rsp must treat store-response integrity errors as NMI sources (CTRL-12).
+  | step. gen_chk_bus_intg_rsp must treat store-response integrity errors as NMI sources (CTRL-12), bound
+  the internal-NMI entry to two ordinary instructions after the corrupted response (C-7, D21) and
+  require rvfi_ext_rf_wr_suppress only for aligned and second-beat load errors (X-11, B16: the
+  first-beat class is owned by TP-DMEM-041).
 
 ## Open questions
 
@@ -8401,6 +8752,15 @@ drivers, deep stalls); long > 10 min per seed (random regimes, multi-seed).
    iteration. Blocks: agent API (same class as Open question 7). Recommended default: allowed as a
    boundary stimulus choice; with the icache enabled the vector may hit, so these items also pin
    cpuctrlsts.icache_enable = 0 through the interrupt handler table's first use.
+10. D21 confirmation (C-7). The internal-NMI bound of two ordinary instructions after the corrupted
+   response is RTL-derived (rtl/ibex_controller.sv:402-438) and not yet simulated; the first directed
+   integrity-error run (TP-IRQ-044, smoke) pins it. Blocks: nothing. Recommended default: keep
+   TP-IRQ-044 / 047 at `pass (doc mismatch D21)`; if the sim shows at most one, D21 is withdrawn and
+   CG-IRQ-008 idle_two / in_irq_handler_two / cp_taken_after.two become ignore_bins.
+11. Bring-up-pinned timing constants introduced by this fix (C-16): GEN_VECTOR_REQ_AFTER_PC_SET
+   (predicted 0) and GEN_WFI_WAKE_TO_VECTOR (predicted 2). Blocks: TB Infra adding them to the
+   constants home (gen_tb_architecture.md C11). Recommended default: record the first measured
+   values as the constants; a larger value is a TB finding, never a DUT failure.
 
 
 # 4.4 Areas PMP: Physical memory protection and Smepmp (16 regions, G=0)
@@ -8417,6 +8777,13 @@ Conventions used below:
 - Spike (gen_isa_compare) must be configured with pmpregions=PMPNumRegions and granularity 2^(PMPGranularity+2), PMP CSRs zeroed at reset to match ibex_pkg, and the Ibex WARL legalisations (RW=01 -> W=0 under MML=0, pmpcfg bits 6:5 zero, full 32-bit pmpaddr storage, mseccfgh zero) applied in the shim (owner question Q1 default).
 - Fix-2 conventions (Critic pre-review T-034): every fire-check is a per-seed assertion on an RVFI/bus observable (never "every bin hit over the regression"); items that infer a prefetch from an ibus grant pin cpuctrlsts.icache_enable = 0 and exclude it from random cpuctrlsts writes (S-4); every debug-mode item that is not a B2 carrier pins mstatus.MPRV = 0 for the debug episode (B1/B2 isolation); the expected-fail items TP-PMP-073/074 own only bins that encode the observed RTL outcome; literals for the region count, top index and granule are written as PMPNumRegions, PMPNumRegions-1/-2 and 2^(PMPGranularity+2); Bins patterns are expanded against the post-ignore bin set of fcov_pmp.md to produce trace_tp_bin_pmp.csv.
 - Verified RTL facts the items rely on are listed in fcov_pmp.md Appendix C (CSR flush retains the fetch FIFO; privilege changes always redirect; rvfi_trap = 1 for debug-mode PMP faults; DmHaltAddr/DmExceptionAddr inside the bypassed DM window; NAPOT whole-space encodings have base 0).
+- Fix-3 conventions (rtl-arch RTL fact-check T-053, plan v2b; the X-n tags are its Section 1 rules):
+  - C-2 (X-2) U-mode PMP prologue: the DUT resets with every PMP entry OFF and an unmatched U-mode access faults (rtl/ibex_pmp.sv:136-139), so before the first mret (or dret) to U the M-mode prologue programs the minimum region set: one U-executable code region covering the U program, one U-RW data/stack region, and the M-mode trap vector and handler reachable under the same table (under MML=1 through an L=1 executable rule; under MML=0 unmatched with MMWP=0 or any M-allowed rule). Every item whose Stimulus or Randomized field executes in U-mode carries this precondition by the token "C-2" at the start of its Preconditions; the prologue regions are placed away from the item's probe windows so they never decide a probe. Deliberate exceptions, stated in the item: TP-PMP-051 and TP-PMP-107 program no U region (the first U fetch faults by design); TP-PMP-032 and TP-PMP-050 program the C-2 regions and leave only the probe windows uncovered.
+  - C-1 (X-1) Redirect targets (trap vector, mret / dret target, DmHaltAddr, DmExceptionAddr) are observed as the NEXT record's rvfi_pc_rdata; rvfi_pc_wdata of a trap / mret / dret record is the next sequential fetch address (rtl/ibex_core.sv:2084) and is never asserted as the target; mepc / mtval / dpc are read back by csrr. Only branch / jump records carry the target in rvfi_pc_wdata.
+  - C-14 (X-21) ICache blindness: a fire-check that infers a prefetch, a speculative grant or "no bus fetch of the target" from instr_req_o / instr_gnt_i pins cpuctrlsts.icache_enable = 0 (excluded from random cpuctrlsts writes) or derives the redirect from RVFI (C-1). Two deliberate icache-on exceptions: TP-PMP-092 and TP-PMP-105 exercise the cache-hit path itself; their "no grant" inference is anchored on a loop re-entered by a redirect (the fetch FIFO is cleared by branch_i, rtl/ibex_prefetch_buffer.sv:78), so a hit is the only remaining source of the word. DmHaltAddr / DmExceptionAddr fetches need no pin: the icache is forced off in debug mode and in the dret cycle (rtl/ibex_cs_registers.sv:1970-1971), so they are always bus-visible.
+  - C-PMP-MONLY (X-20) "M-allowed / U-denied data window" (TP-PMP-070..075, CG-PMP-012): under MML=0 either an unmatched window with MMWP=0 (rtl/ibex_pmp.sv:138: M allowed by default, U denied) or a matching L=0 entry with RWX=000 (rtl/ibex_pmp.sv:101-110: M allowed through ~lock, U denied by the RWX check); under MML=1 a matching L=1 RW=11 X=0 row (LRWX=1110: M read/write, U denied). Never "L=1 with RW under MML=0": the L bit is ignored for U-mode when MML=0 (orig_perm_check), so that window is U-accessible; never "MMWP=1 with no U rule": an unmatched window then denies M too. The "U-allowed / M-denied" contrast window is a matching L=0 rule under MML=1 (LRWX=0110 or 0111).
+  - C-15 / C-16: Expected values are pass | pass (doc mismatch Dn) | expected-fail (Bn) | informational (...); an expected-fail item is its own _xfail test (TP-PMP-073 gen_pmp_mprv_xfail, TP-PMP-074 gen_pmp_debug_xfail; no informational item in this area); fire-checks are per-seed assertions on an observable; closure of a bin set over the run set belongs to the coverage manifests, never to a fire-check (clauses removed from TP-PMP-054 / TP-PMP-108).
+  - X-20 facts folded into the items: no PMP configuration permits a store while denying a load at the same privilege (MML=0 stores W as W&R, rtl/ibex_cs_registers.sv:1444-1445; under MML=1 every row granting WRITE also grants READ, rtl/ibex_pmp.sv:66-83) (TP-PMP-069); the MML row LRWX=0011 is the shared read/write data encoding and denies fetch in both modes (rtl/ibex_pmp.sv:66-75) (TP-PMP-062); a NA4/NAPOT entry i-1 is anchored at pmpaddr(i-1) and decides the TOR inside_low word pmpaddr(i-1)*4 by priority (rtl/ibex_pmp.sv:163-164) (TP-PMP-038); RLB 0->1 needs any_pmp_entry_locked == 0, i.e. no L=1 entry while RLB=0 (rtl/ibex_cs_registers.sv:1463, 1514), and M-mode execution under MML=1 needs an L=1 executable rule, so the three mseccfg transitions (1,x,0)->(1,x,1) are unreachable outside debug mode (TP-PMP-108; CG-PMP-003.cr_state_trans ignore_bins s100_to_s101 / s100_to_s111 / s110_to_s111).
 
 ## Layer-1 weight tables (per-transaction distributions referenced by the Phase 2 items; S-6)
 
@@ -8503,7 +8870,7 @@ Conventions used below:
 - Features: F-PMP-006
 - Phase: 1
 - Tier: smoke
-- Preconditions: M-mode; entries unlocked; MML=0.
+- Preconditions: C-2; M-mode; entries unlocked; MML=0.
 - Stimulus: For each entry write each of the four A encodings in random order with random RWX and pmpaddr; csrr readback; after each configuration a probe load/store/fetch pair is issued at the entry's word and at the neighbouring word from U-mode (mret to a U stub) so that NA4 (matches one word) is distinguishable from OFF (matches nothing) and NAPOT (matches >= 2 words).
 - Randomized: entry, RWX, pmpaddr, order of A values, probe addresses, probe type.
 - Knobs: knob:instr_mix csr_heavy, knob:priv_regime alternating
@@ -8531,7 +8898,7 @@ Conventions used below:
 - Features: F-PMP-016
 - Phase: 1
 - Tier: targeted
-- Preconditions: U-mode entered by mret (MPP=U) with a U-executable region and a U-accessible stack configured; M-mode trap handler records mcause and skips the instruction.
+- Preconditions: C-2; U-mode entered by mret (MPP=U) with a U-executable region and a U-accessible stack configured; M-mode trap handler records mcause and skips the instruction.
 - Stimulus: U-mode code executes random PMP CSR reads and writes across all four CSR classes and all op forms (read-only forms included); after return to M, M code reads back every PMP CSR.
 - Randomized: CSR, op form, values, position of the attempts in a random U program.
 - Knobs: knob:priv_regime u_heavy, knob:instr_mix csr_heavy
@@ -8545,7 +8912,7 @@ Conventions used below:
 - Features: F-PMP-017
 - Phase: 1
 - Tier: targeted
-- Preconditions: mstatus.MPRV = 0 for the debug episode (B2 isolation); Debug ROM at DmHaltAddr in TB memory; debug entry via debug_req_i from M or U mode; RLB set by the debug code before it locks anything so the table is recoverable.
+- Preconditions: C-2; mstatus.MPRV = 0 for the debug episode (B2 isolation); Debug ROM at DmHaltAddr in TB memory; debug entry via debug_req_i from M or U mode; RLB set by the debug code before it locks anything so the table is recoverable.
 - Stimulus: Debug ROM code writes random legal pmpcfg/pmpaddr/mseccfg values and reads back all four CSR classes (read-only forms too), then dret; entry from both M and U.
 - Randomized: values, CSR order, entry privilege, timing of debug_req_i.
 - Knobs: knob:debug_req_regime sparse, knob:priv_regime alternating
@@ -8853,7 +9220,7 @@ Conventions used below:
 - Features: F-PMP-033
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; table populated under MML=0 with mixed L/RWX rows including entries whose RW=01 write was legalised to 00 and an L=1 X=1 rule covering the code and an L=1 RW rule covering the data.
+- Preconditions: C-2; M-mode; table populated under MML=0 with mixed L/RWX rows including entries whose RW=01 write was legalised to 00 and an L=1 X=1 rule covering the code and an L=1 RW rule covering the data.
 - Stimulus: csrr all pmpcfg/pmpaddr; csrw mseccfg MML=1; csrr all again (identical); probe M-mode load to an L=0 RWX=111 region (allowed before, denied after) and U-mode load to an L=1 RW region (allowed before, denied after).
 - Randomized: table contents, probe addresses, order.
 - Knobs: knob:instr_mix csr_heavy, knob:pmp_regime mml_on
@@ -8867,7 +9234,7 @@ Conventions used below:
 - Features: F-PMP-034
 - Phase: 1
 - Tier: targeted
-- Preconditions: Entries with A=OFF whose pmpaddr (as NA4/NAPOT/TOR shadow) would cover the probe addresses; no other entry matches those addresses; U stub reachable via mret; MML = 0, MMWP = 0.
+- Preconditions: C-2; Entries with A=OFF whose pmpaddr (as NA4/NAPOT/TOR shadow) would cover the probe addresses; no other entry matches those addresses; U stub reachable via mret; MML = 0, MMWP = 0.
 - Stimulus: Fetch/load/store probes at the shadow addresses from U (expect no-match deny) and from M (expect no-match allow); OFF entries at random indices with random RWX/L.
 - Randomized: entry index, shadow mode, pmpaddr, probe type, order.
 - Knobs: knob:priv_regime alternating
@@ -8881,7 +9248,7 @@ Conventions used below:
 - Features: F-PMP-035, F-PMP-048
 - Phase: 1
 - Tier: targeted
-- Preconditions: NA4 entry i at a random word W with random RWX/L; privilege and MML chosen per seed so that the region's verdict differs from the outside verdict (e.g. U-mode with no other match, or a wider lower-priority region with opposite permission).
+- Preconditions: C-2; NA4 entry i at a random word W with random RWX/L; privilege and MML chosen per seed so that the region's verdict differs from the outside verdict (e.g. U-mode with no other match, or a wider lower-priority region with opposite permission).
 - Stimulus: Data: byte at W (inside_low), byte at W+3 (inside_high), bytes at W+1/W+2 and a misaligned halfword at W+1 (interior), halfword at W+2, word at W, byte at W-1 (outside_low), byte at W+4 (outside_high), misaligned word at W+2 and W-2 (straddle); fetch: c16 at W and W+2, i32 at W, i32 at W+2 (straddle_high) and W-2 (straddle_low); loads and stores both.
 - Randomized: W, i, RWX/L, privilege, MML, size order.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -8895,7 +9262,7 @@ Conventions used below:
 - Features: F-PMP-036
 - Phase: 1
 - Tier: targeted
-- Preconditions: NAPOT entry with k trailing ones (size 2^(3+k)) and random naturally aligned base; permissions/privilege chosen so the region's verdict differs from outside; TB memory backs every address (sparse model).
+- Preconditions: C-2; NAPOT entry with k trailing ones (size 2^(3+k)) and random naturally aligned base; permissions/privilege chosen so the region's verdict differs from outside; TB memory backs every address (sparse model).
 - Stimulus: Per iteration k drawn from a distribution covering every size class (k0, k1, k2 20% each; k3..7 15%; k8..17 10%; k18..28 5%; k29..32 10%; for k >= 29 the region starts at address 0 and only the inside_low edge (address 0, OQ-PMP-4 sparse memory) exists in the 32-bit space; for k >= 30 the region's last byte lies above 2^32); accesses at base (inside_low), base+size-1 (inside_high, byte), base-1 (outside_low), base+size (outside_high), for load, store and fetch (fetch edges use a c16 at the last halfword and an i32 that straddles the upper edge).
 - Randomized: k, base, RWX/L, privilege, access type/size order.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -8909,7 +9276,7 @@ Conventions used below:
 - Features: F-PMP-037
 - Phase: 1
 - Tier: targeted
-- Preconditions: NAPOT entry with pmpaddr[0] = 0 (k = 0), random base; verdict inside differs from outside.
+- Preconditions: C-2; NAPOT entry with pmpaddr[0] = 0 (k = 0), random base; verdict inside differs from outside.
 - Stimulus: Accesses to both words of the region (all sizes) and to the words immediately below and above; loads, stores and fetches (c16 pairs and i32 at each word).
 - Randomized: base, entry index, RWX/L, privilege.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -8923,7 +9290,7 @@ Conventions used below:
 - Features: F-PMP-038
 - Phase: 1
 - Tier: targeted
-- Preconditions: Single NAPOT entry with pmpaddr in {0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF}; permission variants allow and deny; U-mode probes (so a deny is visible against no-match deny by using RWX=111 vs RWX=000 variants).
+- Preconditions: C-2; Single NAPOT entry with pmpaddr in {0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF}; permission variants allow and deny; U-mode probes (so a deny is visible against no-match deny by using RWX=111 vs RWX=000 variants).
 - Stimulus: Random addresses across the 32-bit space including 0x00000000 and 0xFFFFFFFC for load/store/fetch; per variant the verdict is uniform over all addresses.
 - Randomized: pmpaddr variant, RWX, addresses, privilege, MML.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -8937,7 +9304,7 @@ Conventions used below:
 - Features: F-PMP-039, F-PMP-014
 - Phase: 1
 - Tier: targeted
-- Preconditions: Entry with pmpaddr bit 30 and/or 31 set and a mask that does not cover those bits (NA4, or NAPOT with few trailing ones); a second, higher-index region gives a distinguishable default verdict.
+- Preconditions: C-2; Entry with pmpaddr bit 30 and/or 31 set and a mask that does not cover those bits (NA4, or NAPOT with few trailing ones); a second, higher-index region gives a distinguishable default verdict.
 - Stimulus: Accesses at the 32-bit alias of the base (pmpaddr[29:0] << 2, the alias range of the NA4 word or of the NAPOT region truncated to 32 bits): first byte, last byte and interior of the alias range, plus the bytes around it; loads/stores/fetches in M and U; the fallback rule is a higher-index matching entry in half the seeds and the default (no match) in the other half.
 - Randomized: hi bit pattern, k, alias address, privilege.
 - Knobs: knob:priv_regime alternating
@@ -8951,11 +9318,11 @@ Conventions used below:
 - Features: F-PMP-040
 - Phase: 1
 - Tier: targeted
-- Preconditions: TOR entry i (i >= 1) with pmpaddr(i-1) < pmpaddr(i); entry i-1 in each of OFF, TOR, NA4/NAPOT, and locked variants (its own range placed elsewhere or empty so it does not decide the probes).
+- Preconditions: C-2; TOR entry i (i >= 1) with pmpaddr(i-1) < pmpaddr(i); entry i-1 in each of OFF, TOR, NA4/NAPOT and locked variants. OFF / TOR / locked-TOR variants: entry i-1's own range placed elsewhere or empty so it decides no probe. NA4 / NAPOT (and locked-NA) variants: entry i-1 is anchored at pmpaddr(i-1) (rtl/ibex_pmp.sv:163-164) and therefore covers the inside_low word pmpaddr(i-1)*4 and decides that probe by priority (X-20, fact-check TP-PMP-038); entry i-1 is given the same RWX/L verdict as entry i for the probe's type and privilege so the observable verdict at inside_low is unchanged, and the NAPOT size is chosen so that the inside_high / outside_high / interior probes lie outside entry i-1.
 - Stimulus: Probes at pmpaddr(i-1)*4 (inside_low), pmpaddr(i)*4-1 (inside_high), pmpaddr(i-1)*4-1 (outside_low), pmpaddr(i)*4 (outside_high), interior; load/store/fetch; sizes random.
 - Randomized: i, bounds, entry i-1 configuration, RWX/L, privilege.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
-- Fire-check: RVFI: the four edge probes retire with the TOR verdict for each entry i-1 configuration.
+- Fire-check: RVFI, per seed: the four edge probes retire with the model verdict for each entry i-1 configuration; for the NA variants the model attributes inside_low to entry i-1 (equal verdict by construction) and inside_high / outside_low / outside_high / interior to entry i, so cr_prev_cfg.tor_prev_na is sampled on those probes.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement)
 - Expected: pass
 - Test group: gen_pmp_match_tor
@@ -8965,7 +9332,7 @@ Conventions used below:
 - Features: F-PMP-041
 - Phase: 1
 - Tier: targeted
-- Preconditions: pmpcfg0.A = TOR with random pmpaddr0 > 0; other entries do not cover the probes.
+- Preconditions: C-2; pmpcfg0.A = TOR with random pmpaddr0 > 0; other entries do not cover the probes.
 - Stimulus: Probes at address 0 (inside_low; a data access; fetch from 0 in seeds where the boot vector allows it), pmpaddr0*4-4 and -1 (inside_high), pmpaddr0*4 (outside_high), interior; load/store/fetch.
 - Randomized: pmpaddr0, RWX/L, privilege, sizes.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -8979,7 +9346,7 @@ Conventions used below:
 - Features: F-PMP-042
 - Phase: 1
 - Tier: targeted
-- Preconditions: TOR entry i with pmpaddr(i-1) == pmpaddr(i) (empty_eq) or pmpaddr(i-1) > pmpaddr(i) (empty_gt), including entry 0 with pmpaddr0 = 0; a lower-priority rule or the default gives the reference verdict.
+- Preconditions: C-2; TOR entry i with pmpaddr(i-1) == pmpaddr(i) (empty_eq) or pmpaddr(i-1) > pmpaddr(i) (empty_gt), including entry 0 with pmpaddr0 = 0; a lower-priority rule or the default gives the reference verdict.
 - Stimulus: Probes at the first byte, last byte and interior of the alias range [pmpaddr(i)*4, pmpaddr(i-1)*4] (a single word for the empty_eq case) and at both bounds; load/store/fetch; M and U; the fallback is a higher-index matching entry in half the seeds and the default in the other half.
 - Randomized: i, bounds, RWX/L of the empty entry, privilege.
 - Knobs: knob:priv_regime alternating
@@ -8993,7 +9360,7 @@ Conventions used below:
 - Features: F-PMP-043
 - Phase: 1
 - Tier: targeted
-- Preconditions: TOR entry i with random bounds (word-aligned by construction); permissions so that inside and outside verdicts differ.
+- Preconditions: C-2; TOR entry i with random bounds (word-aligned by construction); permissions so that inside and outside verdicts differ.
 - Stimulus: Byte at pmpaddr(i-1)*4 and pmpaddr(i)*4-1 (inside), byte at pmpaddr(i-1)*4-1 and pmpaddr(i)*4 (outside); misaligned words/halfwords spanning each bound (straddle_low/straddle_high) as loads and stores; i32 fetch at bound-2 (straddle); c16 at the last halfword.
 - Randomized: i, bounds, RWX/L, privilege, size mix.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
@@ -9007,7 +9374,7 @@ Conventions used below:
 - Features: F-PMP-044, F-PMP-014
 - Phase: 1
 - Tier: targeted
-- Preconditions: TOR entry i with pmpaddr(i) bit 30/31 set (upper hi) and random lower bound; second variant with pmpaddr(i-1) bit 30/31 set (lower hi).
+- Preconditions: C-2; TOR entry i with pmpaddr(i) bit 30/31 set (upper hi) and random lower bound; second variant with pmpaddr(i-1) bit 30/31 set (lower hi).
 - Stimulus: Upper-hi variant: probes below the lower bound, at the lower bound (inside_low), interior and high in the 32-bit space (0xFFFFFFF0..0xFFFFFFFC); lower-hi variant: probes at the first byte, last byte and interior of the alias range of the lower bound (fcov CG-PMP-015.cp_kind.tor_base_hi); load/store/fetch; M and U.
 - Randomized: which hi bit, lower bound, RWX/L, privilege.
 - Knobs: knob:priv_regime alternating
@@ -9021,7 +9388,7 @@ Conventions used below:
 - Features: F-PMP-045
 - Phase: 1
 - Tier: targeted
-- Preconditions: Two to six entries covering a common address window with random modes; index distance between the two lowest drawn from {1, 2..3, 4..7, 8..PMPNumRegions-1}; permissions random.
+- Preconditions: C-2; Two to six entries covering a common address window with random modes; index distance between the two lowest drawn from {1, 2..3, 4..7, 8..PMPNumRegions-1}; permissions random.
 - Stimulus: Fetch/load/store probes inside the common window and in the parts covered by only some entries; M and U; MML random.
 - Randomized: indices, modes, permissions, window, privilege, MML.
 - Knobs: knob:priv_regime alternating, knob:pmp_regime dense
@@ -9035,7 +9402,7 @@ Conventions used below:
 - Features: F-PMP-046
 - Phase: 1
 - Tier: targeted
-- Preconditions: Exactly two overlapping entries j < k with opposite verdicts for the probe type/privilege; mode pairs TOR/TOR, TOR/NA, NA/TOR, NA/NA; MML 0 and 1.
+- Preconditions: C-2; Exactly two overlapping entries j < k with opposite verdicts for the probe type/privilege; mode pairs TOR/TOR, TOR/NA, NA/TOR, NA/NA; MML 0 and 1.
 - Stimulus: Fetch/load/store probes in the overlap; both conflict directions; M and U.
 - Randomized: j, k, modes, which side allows, privilege, MML, probe type.
 - Knobs: knob:priv_regime alternating, knob:pmp_regime dense
@@ -9049,7 +9416,7 @@ Conventions used below:
 - Features: F-PMP-047
 - Phase: 1
 - Tier: targeted
-- Preconditions: Variant A: only entry PMPNumRegions-1 configured (each mode; TOR with pmpaddr(PMPNumRegions-2) as base). Variant B: entry PMPNumRegions-1 overlaps a lower entry with the opposite verdict.
+- Preconditions: C-2; Variant A: only entry PMPNumRegions-1 configured (each mode; TOR with pmpaddr(PMPNumRegions-2) as base). Variant B: entry PMPNumRegions-1 overlaps a lower entry with the opposite verdict.
 - Stimulus: Fetch/load/store probes inside and at the edges of entry PMPNumRegions-1's region; M and U.
 - Randomized: mode, permissions, pmpaddr(PMPNumRegions-2)/(PMPNumRegions-1), privilege, overlap partner index.
 - Knobs: knob:priv_regime alternating
@@ -9063,7 +9430,7 @@ Conventions used below:
 - Features: F-PMP-045, F-PMP-047
 - Phase: 1
 - Tier: targeted
-- Preconditions: Per iteration a single entry i in {0..PMPNumRegions-1} with a random mode covers the probe window; no other entry overlaps.
+- Preconditions: C-2; Per iteration a single entry i in {0..PMPNumRegions-1} with a random mode covers the probe window; no other entry overlaps.
 - Stimulus: Fetch/load/store probes in the window; permissions random; M and U; all i over the seeds.
 - Randomized: i, mode, permissions, window, privilege, MML (with survivable L=1 rules when set).
 - Knobs: knob:priv_regime alternating
@@ -9105,7 +9472,7 @@ Conventions used below:
 - Features: F-PMP-051
 - Phase: 1
 - Tier: smoke
-- Preconditions: MML = 0; entries with every RWX and both L values covering U code/data windows; U-mode via mret; handler in M.
+- Preconditions: C-2; MML = 0; entries with every RWX and both L values covering U code/data windows; U-mode via mret; handler in M.
 - Stimulus: U-mode fetch/load/store probes for every row.
 - Randomized: rows, L, modes, windows.
 - Knobs: knob:priv_regime u_heavy, knob:instr_mix ls_heavy
@@ -9119,7 +9486,7 @@ Conventions used below:
 - Features: F-PMP-052
 - Phase: 1
 - Tier: smoke
-- Preconditions: MML = 0, MMWP = 0; at least one active region elsewhere (so the checks are non-trivial and sample CG-PMP-005); probe windows uncovered; U stub executable region for the U case.
+- Preconditions: C-2; MML = 0, MMWP = 0; at least one active region elsewhere (so the checks are non-trivial and sample CG-PMP-005); probe windows uncovered; U stub executable region for the U case.
 - Stimulus: M fetch/load/store in uncovered windows (allowed); U load/store to uncovered data and jump to an uncovered code window (denied).
 - Randomized: regions, windows, probe types.
 - Knobs: knob:priv_regime alternating
@@ -9133,7 +9500,7 @@ Conventions used below:
 - Features: F-PMP-053
 - Phase: 1
 - Tier: targeted
-- Preconditions: All pmpcfg.A = OFF (reset state or explicitly cleared); mepc pointing to a random U target; MPP = U.
+- Preconditions: No C-2 prologue by design (the item is the all-OFF U fault); all pmpcfg.A = OFF (reset state or explicitly cleared); mepc pointing to a random U target; MPP = U.
 - Stimulus: mret to U; handler records mcause/mtval/mepc; repeat with different targets and with a U load/store as the would-be first instruction.
 - Randomized: target address, prior M activity, number of repetitions.
 - Knobs: knob:priv_regime alternating
@@ -9161,11 +9528,11 @@ Conventions used below:
 - Features: F-PMP-055
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 0; code window not covered by any entry; handler code covered.
+- Preconditions: MML = 0; code window not covered by any entry; handler code covered; cpuctrlsts.icache_enable = 0 (pinned, excluded from random cpuctrlsts writes) so the prefetch of the word after the csrw is visible as an ibus grant (C-14).
 - Stimulus: csrw mseccfg MMWP=1 followed immediately by a plain instruction at pc+4 (also variants where the next instruction is a load/store to a covered address, and where the csrw is the last halfword before a region edge).
 - Randomized: filler before the csrw, what follows, imem timing.
 - Knobs: knob:imem_gnt_delay random, knob:imem_rvalid_delay random, knob:instr_mix csr_heavy
-- Fire-check: RVFI: the csrw retires trap = 0; the next retired instruction has rvfi_trap = 1, mcause 1, mtval = its pc; ibus monitor shows that word was fetched before the csrw retired (prefetched) in at least one seed.
+- Fire-check: RVFI, per seed: the csrw retires trap = 0; the next retired instruction has rvfi_trap = 1, mcause 1, mtval = its pc; in at least one iteration per seed the ibus grant of that word precedes the csrw's retire (prefetched, C-14) and in at least one it follows it (fresh fetch).
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_pmp_recfg
@@ -9175,11 +9542,11 @@ Conventions used below:
 - Features: F-PMP-056
 - Phase: 1
 - Tier: full
-- Preconditions: MML = 1 (RLB = 1 while programming so executable locked rows can be written, then RLB cleared in half the seeds); handler and stack covered by suitable L=1 rules; U stub reachable via mret.
+- Preconditions: C-2; MML = 1 (RLB = 1 while programming so executable locked rows can be written, then RLB cleared in half the seeds); handler and stack covered by suitable L=1 rules; U stub reachable via mret.
 - Stimulus: Per iteration the table is randomized (all PMPNumRegions entries, random modes, random LRWX with every row weighted equally) and a random sequence of fetch/load/store probes is issued from M and U into windows decided by known rows; probes with random operands/sizes.
 - Randomized: table, rows, windows, probe order, privilege, MMWP.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating, knob:instr_mix ls_heavy
-- Fire-check: RVFI, per seed: at least 200 probes retire whose word the model attributes to a matching region under MML=1 (csrr mseccfg shows bit 0 = 1), covering both privileges and all three access types, with at least one denied and one allowed probe per (privilege, type) pair; each probe's trap/no-trap and bus behaviour equals the truth-table verdict of its (row, privilege, type); the 96-bin cross closes over the seed set (coverage, not the fire-check).
+- Fire-check: RVFI, per seed: at least 200 probes retire whose word the model attributes to a matching region under MML=1 (csrr mseccfg shows bit 0 = 1), covering both privileges and all three access types, with at least one denied and one allowed probe per (privilege, type) pair; each probe's trap/no-trap and bus behaviour equals the truth-table verdict of its (row, privilege, type) (the 96-bin cross closes through the coverage manifest, C-16).
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement)
 - Expected: pass
 - Test group: gen_pmp_perm_mml1
@@ -9203,7 +9570,7 @@ Conventions used below:
 - Features: F-PMP-058
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; entries with L=1 and RWX in {001,100,101,110} covering U probe windows (written under RLB=1).
+- Preconditions: C-2; MML = 1; entries with L=1 and RWX in {001,100,101,110} covering U probe windows (written under RLB=1).
 - Stimulus: U-mode fetch/load/store probes for each row.
 - Randomized: row, mode, window.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime u_heavy
@@ -9217,7 +9584,7 @@ Conventions used below:
 - Features: F-PMP-059
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; entries L=0,R=0,W=1 with X=0 and X=1 covering data windows and a code window.
+- Preconditions: C-2; MML = 1; entries L=0,R=0,W=1 with X=0 and X=1 covering data windows and a code window.
 - Stimulus: M and U loads/stores; M and U jumps into the window (fetch).
 - Randomized: X, mode, window, sizes.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating
@@ -9231,7 +9598,7 @@ Conventions used below:
 - Features: F-PMP-060
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; entries L=1,R=0,W=1 with X=0 and X=1 (written under RLB=1) covering a code window that also holds data.
+- Preconditions: C-2; MML = 1; entries L=1,R=0,W=1 with X=0 and X=1 (written under RLB=1) covering a code window that also holds data.
 - Stimulus: M and U fetch (jump in, execute, return), loads and stores to the window.
 - Randomized: X, mode, window.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating
@@ -9245,7 +9612,7 @@ Conventions used below:
 - Features: F-PMP-061
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; entry L=1,RWX=111 covering a window.
+- Preconditions: C-2; MML = 1; entry L=1,RWX=111 covering a window.
 - Stimulus: M and U loads (ok), stores (trap 7), fetches (trap 1).
 - Randomized: mode, window, sizes.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating
@@ -9259,7 +9626,7 @@ Conventions used below:
 - Features: F-PMP-062
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; entries RWX=000 with L=0 and L=1 covering windows.
+- Preconditions: C-2; MML = 1; entries RWX=000 with L=0 and L=1 covering windows.
 - Stimulus: M and U fetch/load/store probes.
 - Randomized: L, mode, window.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating
@@ -9287,15 +9654,15 @@ Conventions used below:
 - Features: F-PMP-064
 - Phase: 1
 - Tier: targeted
-- Preconditions: MML = 1; L=0 entries with X=1 (RWX 001, 011, 101, 111) covering a code window.
-- Stimulus: M jump into the window; U jump into the same window (allowed) for contrast.
+- Preconditions: C-2; MML = 1; L=0 entries with X=1 (RWX 001, 011, 101, 111) covering a code window.
+- Stimulus: M jump into the window (denied for every row); U jump into the same window for contrast: allowed for rows 001, 101, 111, denied for row 011 (LRWX=0011 is the shared read/write data encoding, {L,X}=01 grants READ|WRITE only, rtl/ibex_pmp.sv:66-75; X-20).
 - Randomized: row, mode, window.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating
-- Fire-check: RVFI: M fetch traps cause 1 with mtval = target; U fetch retires trap = 0.
+- Fire-check: RVFI, per seed: the M fetch traps cause 1 with mtval = target for every row; the U fetch retires trap = 0 for rows 001 / 101 / 111 and traps cause 1 for row 011.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement)
 - Expected: pass
 - Test group: gen_pmp_perm_mml1
-- Bins: CG-PMP-005.cr_truth_mml1.c0*_m_fetch, CG-PMP-005.cr_truth_mml1.c0001_u_fetch, CG-PMP-005.cr_truth_mml1.c0111_u_fetch
+- Bins: CG-PMP-005.cr_truth_mml1.c0*_m_fetch, CG-PMP-005.cr_truth_mml1.c0001_u_fetch, CG-PMP-005.cr_truth_mml1.c0101_u_fetch, CG-PMP-005.cr_truth_mml1.c0111_u_fetch, CG-PMP-005.cr_truth_mml1.c0011_u_fetch
 
 ### TP-PMP-063: Setting MML while executing from an L=0 or unmatched region faults the next fetch
 - Features: F-PMP-065
@@ -9315,7 +9682,7 @@ Conventions used below:
 - Features: F-PMP-066
 - Phase: 1
 - Tier: smoke
-- Preconditions: Regions leaving a code window non-executable for the current privilege; M and U; cpuctrlsts.icache_enable = 0 (pinned, excluded from random cpuctrlsts writes) so every fetch of the denied word is visible as an ibus grant (S-4); dummy_instr_en = 0.
+- Preconditions: C-2; Regions leaving a code window non-executable for the current privilege; M and U; cpuctrlsts.icache_enable = 0 (pinned, excluded from random cpuctrlsts writes) so every fetch of the denied word is visible as an ibus grant (S-4); dummy_instr_en = 0.
 - Stimulus: Jump into the denied window; also straight-line execution running off the end of an executable region into a denied one.
 - Randomized: window, privilege, entry point, imem timing.
 - Knobs: knob:imem_gnt_delay random, knob:imem_rvalid_delay random, knob:priv_regime alternating
@@ -9329,7 +9696,7 @@ Conventions used below:
 - Features: F-PMP-067
 - Phase: 1
 - Tier: targeted
-- Preconditions: Region edge at 4n+4 with the lower word executable and the upper word not; code placed so an uncompressed instruction starts at 4n+2 (variant A), or a compressed instruction starts at 4n+2 followed by code elsewhere (variant B); control variant C: an uncompressed instruction at 4n+2 with both words executable.
+- Preconditions: C-2; Region edge at 4n+4 with the lower word executable and the upper word not; code placed so an uncompressed instruction starts at 4n+2 (variant A), or a compressed instruction starts at 4n+2 followed by code elsewhere (variant B); control variant C: an uncompressed instruction at 4n+2 with both words executable.
 - Stimulus: Execute through the edge; variant A traps, variant B retires and jumps away, variant C retires.
 - Randomized: edge address, privilege, mode of the two regions, imem timing.
 - Knobs: knob:instr_mix compressed_heavy, knob:imem_gnt_delay random
@@ -9343,7 +9710,7 @@ Conventions used below:
 - Features: F-PMP-068, F-EXC-005, F-PMP-067
 - Phase: 1
 - Tier: targeted
-- Preconditions: As TP-PMP-065 variant A; M and U.
+- Preconditions: C-2; As TP-PMP-065 variant A; M and U.
 - Stimulus: Execute the straddling instruction; handler reads mcause/mepc/mtval.
 - Randomized: edge, privilege, region modes, imem timing.
 - Knobs: knob:imem_gnt_delay random, knob:imem_rvalid_delay random, knob:priv_regime alternating
@@ -9357,7 +9724,7 @@ Conventions used below:
 - Features: F-PMP-069
 - Phase: 1
 - Tier: targeted
-- Preconditions: Edge at 4n+4 with the lower word non-executable and the upper word executable (fd_sa) or also non-executable (both_deny); straddling 32-bit instruction at 4n+2 reached by a jump.
+- Preconditions: C-2; Edge at 4n+4 with the lower word non-executable and the upper word executable (fd_sa) or also non-executable (both_deny); straddling 32-bit instruction at 4n+2 reached by a jump.
 - Stimulus: Jump to the straddling instruction; handler reads mcause/mtval.
 - Randomized: edge, privilege, second-word permission, imem timing.
 - Knobs: knob:imem_gnt_delay random, knob:priv_regime alternating
@@ -9371,7 +9738,7 @@ Conventions used below:
 - Features: F-PMP-070
 - Phase: 1
 - Tier: targeted
-- Preconditions: TB memory backs 0xFFFFFFFC..0xFFFFFFFF and 0x00000000..3; entry covering the top word executable; entry 0 region covering address 0 executable (variant A) or not (variant B).
+- Preconditions: C-2; TB memory backs 0xFFFFFFFC..0xFFFFFFFF and 0x00000000..3; entry covering the top word executable; entry 0 region covering address 0 executable (variant A) or not (variant B).
 - Stimulus: Jump to 0xFFFFFFFE holding the lower half of a 32-bit instruction whose upper half is at address 0.
 - Randomized: variant, privilege, entry indices.
 - Knobs: none
@@ -9385,11 +9752,11 @@ Conventions used below:
 - Features: F-PMP-071
 - Phase: 1
 - Tier: smoke
-- Preconditions: Regions with R-only, W-only (via RW=11 with MML=0 and X random, or shared rows under MML=1) and RW covering data windows; M and U; MPRV random.
+- Preconditions: C-2; data windows of three classes: R-only (loads ok, stores trap 7: MML=0 RWX=100/101 for U, or L=1 RWX=100/101 for M; MML=1 L=0 rows 0100/0101 for U, L=1 rows 1100/1101 for M), load-denied (loads trap 5: a row without R, RWX=000/001 with the L value that binds the tested privilege; under MML=1 also an L-mismatch row), and RW (both ok). No PMP configuration permits a store while denying a load at the same privilege (MML=0 stores W as W&R, rtl/ibex_cs_registers.sv:1444-1445; under MML=1 every row granting WRITE also grants READ, rtl/ibex_pmp.sv:66-83; X-20), so the store-denied case uses the R-only class and the load-denied case a no-R row. M and U; MPRV random.
 - Stimulus: Byte/halfword/word loads and stores at random offsets inside the windows (aligned and misaligned within one word), both modes.
 - Randomized: offsets, sizes, rows, modes, privilege.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating
-- Fire-check: RVFI: loads into W-only windows trap 5 and stores into R-only windows trap 7 with mtval = the byte address; permitted accesses appear on the dbus with the word-aligned address and correct data_be_o.
+- Fire-check: RVFI, per seed: loads into load-denied (no-R) windows trap 5 and stores into R-only windows trap 7 with mtval = the byte address (the store's companion load into the same R-only window retires trap = 0); permitted accesses appear on the dbus with the word-aligned address and correct data_be_o.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_dbus_proto (be/address alignment)
 - Expected: pass
 - Test group: gen_pmp_data_fault
@@ -9399,7 +9766,7 @@ Conventions used below:
 - Features: F-PMP-072
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; mstatus.MPRV = 1, MPP = U; regions: an M-only data window (L=1 under MML=0 with RW, or unmatched with MMWP=0) a U-accessible window and a U-allowed/M-denied window (MML=1 L=0 rule, in the MML seeds); code executable for M only.
+- Preconditions: M-mode; mstatus.MPRV = 1, MPP = U; regions: an M-allowed / U-denied data window per C-PMP-MONLY (unmatched with MMWP=0 or a matching L=0 RWX=000 entry under MML=0; LRWX=1110 under MML=1; never L=1 RW under MML=0, X-20), a U-accessible window and, in the MML seeds, a U-allowed / M-denied window (MML=1 L=0 rule); code executable for M (under MML=1 an L=1 executable rule).
 - Stimulus: Loads/stores to the M-only window (trap 5/7 as U) and to the U window (ok); fetches continue from M-only code (no trap).
 - Randomized: windows, rows, MML, sizes, order; MPRV toggled by csrrs/csrrc during the sequence.
 - Knobs: knob:instr_mix ls_heavy
@@ -9413,7 +9780,7 @@ Conventions used below:
 - Features: F-PMP-073
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; MPRV = 1, MPP = M; regions as TP-PMP-070 plus a window denied for M (L=1 RWX=000 under MML=0) so that faults taken as M are observed.
+- Preconditions: M-mode; MPRV = 1, MPP = M; regions as TP-PMP-070 (C-PMP-MONLY) plus a window denied for M (a matching L=1 RWX=000 entry under MML=0, or an L=0 rule / unmatched with MMWP=1 under MML=1) so that faults taken as M are observed.
 - Stimulus: Same probes as TP-PMP-070.
 - Randomized: as TP-PMP-070.
 - Knobs: knob:instr_mix ls_heavy
@@ -9427,7 +9794,7 @@ Conventions used below:
 - Features: F-PMP-074, F-PRV-007
 - Phase: 1
 - Tier: targeted
-- Preconditions: MPRV = 1 set before mret; MPP = U (variant A) or M (variant B); U window and M-only data window configured.
+- Preconditions: C-2; MPRV = 1 set before mret; MPP = U (variant A) or M (variant B); a U window and an M-allowed / U-denied data window per C-PMP-MONLY configured.
 - Stimulus: Variant A: mret to U, U loads/stores to the U window (ok) and M-only window (trap), trap back to M, csrr mstatus. Variant B: mret to M, csrr mstatus shows MPRV still 1, a load to the M-only window with MPP now U (mret sets MPP=U) traps as U.
 - Randomized: windows, MML, sizes, order.
 - Knobs: knob:priv_regime alternating, knob:instr_mix ls_heavy
@@ -9441,14 +9808,14 @@ Conventions used below:
 - Features: F-PMP-075, F-PRV-015
 - Phase: 1
 - Tier: targeted
-- Preconditions: Debug entry from M with MPRV = 1, MPP = M; debug code sets dcsr.prv = U and dpc to a U code window (variant A); control variant B: MPRV = 1, MPP = U before entry, debug code sets dcsr.prv = M; an M-allowed/U-denied data window (L=1 RW under MML=0, or MMWP with no U rule).
+- Preconditions: C-2 (the U code window and U stack of variant A); debug entry from M with MPRV = 1, MPP = M; debug code sets dcsr.prv = U and dpc to the U code window (variant A); control variant B: MPRV = 1, MPP = U before entry, debug code sets dcsr.prv = M; an M-allowed / U-denied data window per C-PMP-MONLY (unmatched with MMWP=0 or a matching L=0 RWX=000 entry under MML=0; LRWX=1110 under MML=1). Not "L=1 RW under MML=0" (U-accessible: L is ignored for U when MML=0) and not "MMWP=1 with no U rule" (denies M as well), otherwise neither the Sdext-predicted trap nor the RTL contrast is observable (X-20, fact-check TP-PMP-073).
 - Stimulus: Variant A: dret to U; the U code loads from and stores to the M-only window and then to a U window; ecall back to M reads mstatus. Variant B: dret to M; the M code loads from the M-only window (checked as U through MPP=U: trap), then csrr mstatus.
 - Randomized: windows, MML/MMWP, order, debug_req_i timing.
 - Knobs: knob:debug_req_regime sparse, knob:priv_regime alternating
 - Fire-check: RVFI, per seed: variant A: dret retires (rvfi_ext_debug_mode falls), the next retire has rvfi_mode = 0; the first U load/store to the M-only window is observed on RVFI (the checker predicts trap 5/7 per Sdext; the RTL retires it with rvfi_trap = 0 and the access on the dbus: the observed outcome bin dret_u_kept_rtl). Variant B: the first M load after dret traps 5 (MPRV kept, MPP = U) and csrr mstatus shows MPRV = 1.
 - Pass criteria: gen_chk_pmp with the Sdext resume rule (MPRV cleared on dret to a lower privilege): predicts trap; gen_chk_debug; gen_isa_compare (Spike clears MPRV)
 - Expected: expected-fail (B1); the listed bins encode the observed RTL outcome (dret_u_kept_rtl); the Sdext-outcome bin dret_u_cleared_spec is an ignore_bin until the RTL fix (M-03)
-- Test group: gen_pmp_mprv
+- Test group: gen_pmp_mprv_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-PMP-012.cr_after_ret.dret_u_kept_rtl_load, CG-PMP-012.cr_after_ret.dret_u_kept_rtl_store, CG-PMP-012.cr_after_ret.dret_m_kept_load, CG-PMP-012.cr_after_ret.dret_m_kept_store, CG-PMP-012.cp_mprv_after.dret_u_kept_rtl, CG-PMP-012.cp_mprv_after.dret_m_kept, CG-PMP-012.cp_entry.dret_u, CG-PMP-012.cp_entry.dret_m, CG-PMP-012.cr_u_entry.u_dret_u_load, CG-PMP-012.cr_u_entry.u_dret_u_store, CG-PMP-012.cr_u_entry.u_dret_u_fetch
 
 ### TP-PMP-074: MPRV honoured for debug-mode loads/stores although dcsr.mprven reads 0
@@ -9462,14 +9829,14 @@ Conventions used below:
 - Fire-check: RVFI, per seed: an rvfi_ext_debug_mode = 1 load and store to the window are observed with csrr dcsr showing mprven = 0 and csrr mstatus showing MPRV=1/MPP=U; the checker predicts M-mode rules (no fault); the RTL retires them with rvfi_trap = 1 and the next fetch at DmExceptionAddr (the observed outcome bins *_fault); the MPRV = 0 contrast run retires them trap = 0.
 - Pass criteria: gen_chk_pmp with the Sdext mprven=0 rule (MPRV ignored in debug mode): predicts allow; gen_chk_debug (no DmExceptionAddr redirect expected)
 - Expected: expected-fail (B2); the listed bins encode the observed RTL outcome; the Sdext mprven=0 outcome (dbg_mprv_mppu_*_ok) is an ignore_bin until the RTL fix (M-03); the CG-PMP-013 debug bins are owned by the MPRV=0 items
-- Test group: gen_pmp_debug
+- Test group: gen_pmp_debug_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-PMP-012.cr_dbg_mprv.dbg_mprv_mppu_load_fault, CG-PMP-012.cr_dbg_mprv.dbg_mprv_mppu_store_fault, CG-PMP-012.cp_dbg.d1, CG-PMP-012.cp_uvm.u_deny_m_allow, CG-PMP-012.cp_obs.fault
 
 ### TP-PMP-075: Illegal mstatus.MPP write stores U; with MPRV=1 data is then checked as U
 - Features: F-PMP-077, F-CSR-024
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; M-only data window; MPRV = 1.
+- Preconditions: M-mode; an M-allowed / U-denied data window per C-PMP-MONLY; MPRV = 1.
 - Stimulus: csrw mstatus with MPP = 01 or 10 (other fields legal); csrr mstatus; load/store to the M-only window (trap as U); then MPP = M and repeat (ok).
 - Randomized: illegal value, window, other mstatus bits.
 - Knobs: knob:instr_mix csr_heavy
@@ -9483,7 +9850,7 @@ Conventions used below:
 - Features: F-PMP-078
 - Phase: 1
 - Tier: smoke
-- Preconditions: Denied code window for the current privilege; instructions placed there are loads/stores/ALU with destination registers and memory targets that would be observable.
+- Preconditions: C-2; Denied code window for the current privilege; instructions placed there are loads/stores/ALU with destination registers and memory targets that would be observable.
 - Stimulus: Run into the window sequentially and by jump; M and U; compressed and 32-bit instructions; handler reads mcause/mepc/mtval and the would-be destination registers.
 - Randomized: window, instruction kinds, privilege, alignment, imem timing.
 - Knobs: knob:priv_regime alternating, knob:instr_mix mixed, knob:imem_gnt_delay random
@@ -9497,7 +9864,7 @@ Conventions used below:
 - Features: F-PMP-079, F-EXC-006, F-PMP-066
 - Phase: 1
 - Tier: targeted
-- Preconditions: Denied region immediately following a taken branch/jump, a trapping instruction, or mret/dret redirect (the sequential prefetch runs into it); cpuctrlsts.icache_enable = 0 (pinned) so the speculative grant is visible on the ibus (S-4).
+- Preconditions: C-2; Denied region immediately following a taken branch/jump, a trapping instruction, or mret/dret redirect (the sequential prefetch runs into it); cpuctrlsts.icache_enable = 0 (pinned) so the speculative grant is visible on the ibus (S-4).
 - Stimulus: Taken branches (both directions), jal/jalr, ecall, mret placed as the last instruction before the denied region; imem timing so the prefetcher has issued the denied word before the redirect.
 - Randomized: redirect kind, distance to the edge, imem timing, privilege.
 - Knobs: knob:imem_gnt_delay same_cycle, knob:imem_rvalid_delay min1, knob:instr_mix branch_heavy
@@ -9511,11 +9878,11 @@ Conventions used below:
 - Features: F-PMP-080
 - Phase: 1
 - Tier: targeted
-- Preconditions: Denied code window; control flow into it by branch, jal/jalr, mret (to U and to M), trap entry (mtvec pointing into a denied window in a seed variant, with a second trap vector recovered via the double-fault path only if the DV Lead allows), and dret (dpc in denied window).
+- Preconditions: C-2; Denied code window; control flow into it by branch, jal/jalr, mret (to U and to M), trap entry (mtvec pointing into a denied window in a seed variant, with a second trap vector recovered via the double-fault path only if the DV Lead allows), and dret (dpc in denied window).
 - Stimulus: Each redirect kind targets the window; handler records mepc/mtval.
 - Randomized: kind, target offset (aligned/unaligned), privilege.
 - Knobs: knob:priv_regime alternating, knob:instr_mix branch_heavy, knob:debug_req_regime sparse
-- Fire-check: RVFI: the instruction at the target retires with rvfi_trap = 1, mcause 1, mepc = target for each redirect kind.
+- Fire-check: RVFI, per seed: for each redirect kind the record following the redirecting record has rvfi_pc_rdata = target (C-1: the redirecting trap / mret / dret record's rvfi_pc_wdata is not the target) and retires with rvfi_trap = 1, mcause 1, mepc = target (csrr in the handler).
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_debug (dret case)
 - Expected: pass
 - Test group: gen_pmp_fetch_fault
@@ -9525,11 +9892,11 @@ Conventions used below:
 - Features: F-PMP-081
 - Phase: 1
 - Tier: targeted
-- Preconditions: Denied code words with instr_err_i injected by the memory agent on the first or second word of straddling and aligned instructions; also bus error on a permitted first word with the second word PMP-denied.
+- Preconditions: C-2; denied code words with instr_err_i injected by the memory agent on the first or second word of straddling and aligned instructions; also a bus error on a permitted first word with the second word PMP-denied: for that case the imem agent returns a known uncompressed encoding (bits [1:0] = 11) together with the error response, because the plus2 decision is decoded from the erroneous if_instr_rdata (rtl/ibex_if_stage.sv:485-501) and would otherwise be data-dependent (fact-check note TP-PMP-079).
 - Stimulus: Execute into the words; handler records mcause/mtval.
 - Randomized: which word errs, PMP verdict per half, alignment, privilege.
 - Knobs: knob:imem_err_rate frequent, knob:imem_gnt_delay random
-- Fire-check: RVFI: rvfi_trap = 1, mcause 1; mtval = pc when the first half is PMP-denied (bus error on either word), mtval = pc+2 for a permitted first half with an error only on the second word.
+- Fire-check: RVFI, per seed: rvfi_trap = 1, mcause 1; mtval = pc when the first half is PMP-denied (bus error on either word; err_plus2 is masked only by a first-half PMP error, rtl/ibex_if_stage.sv:434-435); mtval = pc+2 for a permitted first half with an error only on the second word; mtval = pc+2 for a permitted first word that errors on the bus with a PMP-denied second word (the agent's uncompressed pattern makes plus2 = 1).
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_pmp_fetch_fault
@@ -9539,7 +9906,7 @@ Conventions used below:
 - Features: F-PMP-082
 - Phase: 1
 - Tier: smoke
-- Preconditions: Data windows denied for the access type/privilege (all combinations of R/W bits, L, MML, MMWP, priv).
+- Preconditions: C-2; Data windows denied for the access type/privilege (all combinations of R/W bits, L, MML, MMWP, priv).
 - Stimulus: Byte/halfword/word loads and stores (aligned within one word) to denied windows, randomly interleaved with permitted accesses and ALU code.
 - Randomized: window, size, offset, type, privilege, MPRV, dmem timing.
 - Knobs: knob:instr_mix ls_heavy, knob:priv_regime alternating, knob:dmem_gnt_delay random, knob:dmem_rvalid_delay random
@@ -9553,7 +9920,7 @@ Conventions used below:
 - Features: F-PMP-083
 - Phase: 1
 - Tier: targeted
-- Preconditions: Denied data window (no R for the effective privilege).
+- Preconditions: C-2; Denied data window (no R for the effective privilege).
 - Stimulus: Loads of all sizes with random rd (x1..x31) preloaded with a known value; handler reads rd.
 - Randomized: rd, size, window, privilege.
 - Knobs: knob:instr_mix ls_heavy
@@ -9581,7 +9948,7 @@ Conventions used below:
 - Features: F-PMP-085, F-EXC-035, F-PMP-082
 - Phase: 1
 - Tier: targeted
-- Preconditions: Denied data window; the instruction after the load/store is (a) in a denied fetch region, (b) an illegal instruction, (c) ecall/ebreak; dbus timing so the load/store is in WB while the next is in ID.
+- Preconditions: C-2; Denied data window; the instruction after the load/store is (a) in a denied fetch region, (b) an illegal instruction, (c) ecall/ebreak; dbus timing so the load/store is in WB while the next is in ID.
 - Stimulus: Sequences load/store-to-denied followed by each kind; handler records mcause/mepc.
 - Randomized: kind, sizes, privilege, dmem timing.
 - Knobs: knob:dmem_gnt_delay random, knob:dmem_rvalid_delay random, knob:instr_mix ls_heavy
@@ -9595,7 +9962,7 @@ Conventions used below:
 - Features: F-PMP-086
 - Phase: 1
 - Tier: targeted
-- Preconditions: Region edge at a word boundary with both sides permitted (same or different regions); loads and stores.
+- Preconditions: C-2; Region edge at a word boundary with both sides permitted (same or different regions); loads and stores.
 - Stimulus: Word accesses at offsets 1/2/3 and halfword at offset 3 straddling the edge; permitted both sides.
 - Randomized: edge, offsets, type, regions on each side, privilege, dmem timing.
 - Knobs: knob:instr_mix ls_heavy, knob:dmem_gnt_delay random, knob:dmem_rvalid_delay random
@@ -9609,7 +9976,7 @@ Conventions used below:
 - Features: F-PMP-087
 - Phase: 1
 - Tier: targeted
-- Preconditions: Region edge at base+4: base word denied, base+4 permitted; loads and stores; TB memory initialised to a known pattern at base+4.
+- Preconditions: C-2; Region edge at base+4: base word denied, base+4 permitted; loads and stores; TB memory initialised to a known pattern at base+4.
 - Stimulus: Misaligned words at base+1/2/3 and halfword at base+3; stores carry random data.
 - Randomized: edge, offset, type, data, privilege, dmem timing.
 - Knobs: knob:instr_mix ls_heavy, knob:dmem_gnt_delay random, knob:dmem_rvalid_delay random
@@ -9623,7 +9990,7 @@ Conventions used below:
 - Features: F-PMP-088
 - Phase: 1
 - Tier: targeted
-- Preconditions: Region edge at base+4: base word permitted, base+4 denied.
+- Preconditions: C-2; Region edge at base+4: base word permitted, base+4 denied.
 - Stimulus: Misaligned words and halfword-at-3 loads and stores across the edge.
 - Randomized: edge, offset, type, data, privilege, dmem timing.
 - Knobs: knob:instr_mix ls_heavy, knob:dmem_gnt_delay random, knob:dmem_rvalid_delay random
@@ -9637,7 +10004,7 @@ Conventions used below:
 - Features: F-PMP-089
 - Phase: 1
 - Tier: targeted
-- Preconditions: Both words denied (same region, or two different denied regions with the edge between).
+- Preconditions: C-2; Both words denied (same region, or two different denied regions with the edge between).
 - Stimulus: Misaligned words and halfword-at-3 loads and stores.
 - Randomized: edge, offset, type, one-region vs two-region denial, privilege, dmem timing.
 - Knobs: knob:instr_mix ls_heavy, knob:dmem_gnt_delay random
@@ -9651,7 +10018,7 @@ Conventions used below:
 - Features: F-PMP-090
 - Phase: 1
 - Tier: targeted
-- Preconditions: Region edge at 4n+4 with each of the four permission patterns (none/first/second/both denied).
+- Preconditions: C-2; Region edge at 4n+4 with each of the four permission patterns (none/first/second/both denied).
 - Stimulus: Halfword loads and stores at 4n+3.
 - Randomized: edge, pattern, type, data, privilege.
 - Knobs: knob:instr_mix ls_heavy
@@ -9679,7 +10046,7 @@ Conventions used below:
 - Features: F-PMP-092
 - Phase: 1
 - Tier: smoke
-- Preconditions: Table state such that a single pmpcfg or pmpaddr write flips the verdict of the immediately following instruction (fetch) or of the load/store that follows (data), in both directions (allow->deny, deny->allow).
+- Preconditions: C-2; Table state such that a single pmpcfg or pmpaddr write flips the verdict of the immediately following instruction (fetch) or of the load/store that follows (data), in both directions (allow->deny, deny->allow).
 - Stimulus: csrw pmpcfg/pmpaddr followed at gap 0, 1..3 and >= 4 instructions by the affected fetch or load/store; both directions; control writes that change no live verdict (an RLB-only mseccfg write, a no-change mseccfg rewrite, a pmpaddr write to an idle entry); handler recovers.
 - Randomized: which CSR, direction, gap, imem/dmem timing, privilege.
 - Knobs: knob:imem_gnt_delay random, knob:imem_rvalid_delay random, knob:dmem_gnt_delay random, knob:instr_mix csr_heavy
@@ -9693,7 +10060,7 @@ Conventions used below:
 - Features: F-PMP-092, F-PMP-066
 - Phase: 1
 - Tier: targeted
-- Preconditions: cpuctrlsts.icache_enable = 0 (pinned for the whole test and excluded from random cpuctrlsts writes) so the prefetch of the word after the csrw is visible as an ibus grant (S-4); imem timing tuned so the prefetch buffer has already been granted that word before the csrw retires (same-cycle grant, min rvalid); a table where the csrw changes that word's verdict. RTL basis (fcov Appendix C): the CSR flush asserts halt_if/flush_id only and sets no PC, so the granted word stays in the fetch FIFO and is PMP-checked on pc_if at the IF/ID handoff with the post-write state.
+- Preconditions: C-2; cpuctrlsts.icache_enable = 0 (pinned for the whole test and excluded from random cpuctrlsts writes) so the prefetch of the word after the csrw is visible as an ibus grant (S-4); imem timing tuned so the prefetch buffer has already been granted that word before the csrw retires (same-cycle grant, min rvalid); a table where the csrw changes that word's verdict. RTL basis (fcov Appendix C): the CSR flush asserts halt_if/flush_id only and sets no PC, so the granted word stays in the fetch FIFO and is PMP-checked on pc_if at the IF/ID handoff with the post-write state.
 - Stimulus: csrw pmpcfg/pmpaddr/mseccfg that makes the next word denied (variant A) or allowed (variant B, the word was denied when fetched).
 - Randomized: CSR, direction, filler, outstanding cap, privilege.
 - Knobs: knob:imem_gnt_delay same_cycle, knob:imem_rvalid_delay min1, knob:imem_outstanding_cap 2, knob:instr_mix csr_heavy
@@ -9707,7 +10074,7 @@ Conventions used below:
 - Features: F-PMP-093
 - Phase: 1
 - Tier: targeted
-- Preconditions: icache enabled (cpuctrlsts.icache_enable = 1) and scramble key valid; a code loop fetched once while denied (trap) or once while allowed, then the PMP table changed and the loop re-executed without FENCE.I.
+- Preconditions: icache enabled (cpuctrlsts.icache_enable = 1; deliberate C-14 exception: the item is the cache-hit path) and scramble key valid; a code loop fetched once while denied (trap) or once while allowed, then the PMP table changed and the loop re-entered by a redirect (the fetch FIFO is cleared by branch_i, so a hit is the only remaining source of the loop words) without FENCE.I.
 - Stimulus: Loop body executed before and after a pmpcfg change in both directions; also a privilege change (mret) between executions; the first execution of a denied loop either faults (retired_fault) or is discarded by a redirect placed just before it (discarded), so both first-encounter classes precede a later cache hit.
 - Randomized: loop address/size, direction, entry used, imem timing.
 - Knobs: knob:scr_key_delay immediate, knob:imem_gnt_delay random, knob:icache_ecc_err_rate none
@@ -9721,7 +10088,7 @@ Conventions used below:
 - Features: F-PMP-094
 - Phase: 1
 - Tier: targeted
-- Preconditions: cpuctrlsts.dummy_instr_en = 1 with mask giving frequent insertion; denied code windows entered sequentially and by jump; M and U.
+- Preconditions: C-2; cpuctrlsts.dummy_instr_en = 1 with mask giving frequent insertion; denied code windows entered sequentially and by jump; M and U.
 - Stimulus: Execute into denied windows at aligned and 4n+2 entry points under dummy insertion.
 - Randomized: dummy mask/seed, window, entry alignment, privilege.
 - Knobs: knob:instr_mix mixed, knob:priv_regime alternating
@@ -9735,7 +10102,7 @@ Conventions used below:
 - Features: F-PMP-095
 - Phase: 1
 - Tier: targeted
-- Preconditions: mstatus.MPRV = 0 for the whole debug episode (B2 isolation); table denying the DM window (DmBaseAddr..+DmAddrMask) for M and U, with MML/MMWP in each of {none, mmwp, mml, both}; debug ROM at DmHaltAddr executes 32-bit and compressed code, including code at 4n+2, and performs loads/stores inside the window.
+- Preconditions: C-2; mstatus.MPRV = 0 for the whole debug episode (B2 isolation); table denying the DM window (DmBaseAddr..+DmAddrMask) for M and U, with MML/MMWP in each of {none, mmwp, mml, both}; debug ROM at DmHaltAddr executes 32-bit and compressed code, including code at 4n+2, and performs loads/stores inside the window.
 - Stimulus: debug_req_i from M and U; the ROM runs, accesses the window, then dret.
 - Randomized: mseccfg state, ROM layout, entry privilege, debug_req_i timing.
 - Knobs: knob:debug_req_regime sparse, knob:priv_regime alternating
@@ -9749,7 +10116,7 @@ Conventions used below:
 - Features: F-PMP-096
 - Phase: 1
 - Tier: targeted
-- Preconditions: Table denying the DM window; not in debug mode (rvfi_ext_debug_mode = 0); M and U.
+- Preconditions: C-2; Table denying the DM window; not in debug mode (rvfi_ext_debug_mode = 0); M and U.
 - Stimulus: Jump into the window; loads/stores to it.
 - Randomized: privilege, mseccfg, sizes.
 - Knobs: knob:priv_regime alternating
@@ -9767,7 +10134,7 @@ Conventions used below:
 - Stimulus: ROM jumps/loads/stores to each target class; the exception path returns to DmExceptionAddr.
 - Randomized: target class, mseccfg, sizes.
 - Knobs: knob:debug_req_regime sparse
-- Fire-check: RVFI: rvfi_ext_debug_mode = 1 access to a denied target has rvfi_trap = 1 and the next fetch is at DmExceptionAddr (ibus monitor); allowed targets retire trap = 0.
+- Fire-check: RVFI, per seed: an rvfi_ext_debug_mode = 1 access to a denied target has rvfi_trap = 1 and the next record's rvfi_pc_rdata = DmExceptionAddr (C-1; the ibus fetch of DmExceptionAddr is also visible: the icache is forced off in debug mode, C-14); allowed targets retire trap = 0.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_debug (DmExceptionAddr redirect)
 - Expected: pass
 - Test group: gen_pmp_debug
@@ -9781,7 +10148,7 @@ Conventions used below:
 - Stimulus: Execute through the top of the window.
 - Randomized: mseccfg variant, ROM padding.
 - Knobs: knob:debug_req_regime sparse
-- Fire-check: RVFI: that instruction retires with rvfi_trap = 1 in debug mode and the next fetch is DmExceptionAddr; a compressed instruction at the same address in a control seed retires trap = 0.
+- Fire-check: RVFI, per seed: that instruction retires with rvfi_trap = 1 in debug mode and the next record's rvfi_pc_rdata = DmExceptionAddr (C-1; bus-visible fetch, C-14); a compressed instruction at the same address in a control seed retires trap = 0.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_debug
 - Expected: pass
 - Test group: gen_pmp_debug
@@ -9795,7 +10162,7 @@ Conventions used below:
 - Stimulus: Denied fetch (jump) and denied load/store from the ROM; ROM at DmExceptionAddr reads mcause/mepc/mtval and drets.
 - Randomized: access kind, preloaded values, mseccfg.
 - Knobs: knob:debug_req_regime sparse
-- Fire-check: ibus monitor: fetch at DmExceptionAddr after the faulting access; RVFI: csrr mcause/mepc/mtval inside debug mode return the preloaded values.
+- Fire-check: RVFI, per seed: the record following the faulting access has rvfi_pc_rdata = DmExceptionAddr (C-1; the ibus fetch is also visible, icache forced off in debug mode, C-14); csrr mcause/mepc/mtval inside debug mode return the preloaded values.
 - Pass criteria: gen_chk_debug; gen_chk_csr_readback (trap CSRs unchanged); gen_chk_pmp
 - Expected: pass
 - Test group: gen_pmp_debug
@@ -9805,11 +10172,11 @@ Conventions used below:
 - Features: F-PMP-095, F-PMP-096
 - Phase: 1
 - Tier: targeted
-- Preconditions: mstatus.MPRV = 0 for the debug episode (B2 isolation); table denying the DM window and (variant) denying the dret target for the resume privilege.
+- Preconditions: C-2; mstatus.MPRV = 0 for the debug episode (B2 isolation); table denying the DM window and (variant) denying the dret target for the resume privilege.
 - Stimulus: debug_req_i entry; ROM immediately drets to a target that is denied (variant A) or allowed (variant B) for dcsr.prv.
 - Randomized: dcsr.prv, target, mseccfg, debug_req_i timing relative to instruction boundaries.
 - Knobs: knob:debug_req_regime sparse, knob:priv_regime alternating
-- Fire-check: RVFI: the first debug-mode retire is at DmHaltAddr with trap = 0 although the window is denied; after dret the first non-debug retire traps (variant A, cause 1, mepc = dpc) or not (variant B).
+- Fire-check: RVFI, per seed: the first debug-mode record has rvfi_pc_rdata = DmHaltAddr with trap = 0 although the window is denied; the record following the dret has rvfi_pc_rdata = dpc (C-1) and traps (variant A, cause 1, mepc = dpc by csrr) or not (variant B).
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_debug
 - Expected: pass
 - Test group: gen_pmp_debug
@@ -9819,7 +10186,7 @@ Conventions used below:
 - Features: F-PMP-001, F-PMP-002, F-PMP-045, F-PMP-046, F-PMP-047, F-PMP-052, F-PMP-092
 - Phase: 2
 - Tier: full
-- Preconditions: Whole PMP table randomized per regime phase (1..4 active entries for sparse, 5..PMPNumRegions for dense; modes and permissions random per W-PMP-1; locks drawn among the ACTIVE entries only, so the sparse regime never carries more than 4 locked entries; code/stack always reachable for M); trap handlers reconfigure the table on faults and continue (W-PMP-4).
+- Preconditions: C-2; Whole PMP table randomized per regime phase (1..4 active entries for sparse, 5..PMPNumRegions for dense; modes and permissions random per W-PMP-1; locks drawn among the ACTIVE entries only, so the sparse regime never carries more than 4 locked entries; code/stack always reachable for M); trap handlers reconfigure the table on faults and continue (W-PMP-4).
 - Stimulus: riscv-dv-style programs with random loads/stores/jumps across the map (W-PMP-2); handlers randomly rewrite pmpcfg/pmpaddr (W-PMP-4); MML kept 0 in these regimes.
 - Randomized: table per phase, program, handler rewrites, privilege schedule.
 - Knobs: knob:pmp_regime sparse, knob:pmp_regime dense, knob:priv_regime alternating, knob:instr_mix ls_heavy
@@ -9833,7 +10200,7 @@ Conventions used below:
 - Features: F-PMP-056, F-PMP-057, F-PMP-058, F-PMP-059, F-PMP-060, F-PMP-061, F-PMP-062, F-PMP-063, F-PMP-064
 - Phase: 2
 - Tier: full
-- Preconditions: Regime sets RLB=1, programs a random table with L=1 executable rules for the handler, sets MML (and MMWP randomly), optionally clears RLB.
+- Preconditions: C-2; Regime sets RLB=1, programs a random table with L=1 executable rules for the handler, sets MML (and MMWP randomly), optionally clears RLB.
 - Stimulus: Random M/U programs (W-PMP-2, W-PMP-3) with handler-driven table changes (W-PMP-4, subject to the suppression rules); table geometry per W-PMP-1 with all 16 LRWX rows.
 - Randomized: table, MMWP, RLB, program, privilege schedule.
 - Knobs: knob:pmp_regime mml_on, knob:priv_regime alternating, knob:instr_mix ls_heavy
@@ -9847,7 +10214,7 @@ Conventions used below:
 - Features: F-PMP-072, F-PMP-074, F-PMP-052, F-PMP-053
 - Phase: 2
 - Tier: full
-- Preconditions: Random table; handlers randomly toggle MPRV/MPP before mret; U phases with and without covering rules.
+- Preconditions: C-2; Random table; handlers randomly toggle MPRV/MPP before mret; U phases with and without covering rules.
 - Stimulus: Random programs alternating M and U via mret/ecall (W-PMP-3); loads/stores under MPRV (W-PMP-2); handlers per W-PMP-4.
 - Randomized: table, MPRV/MPP schedule, program.
 - Knobs: knob:priv_regime alternating, knob:pmp_regime dense, knob:instr_mix ls_heavy
@@ -9875,11 +10242,11 @@ Conventions used below:
 - Features: F-PMP-017, F-PMP-095, F-PMP-096, F-PMP-097, F-PMP-099
 - Phase: 2
 - Tier: full
-- Preconditions: Random table (DM window randomly denied/allowed); mstatus.MPRV = 0 throughout (B2 isolation); debug ROM performs random PMP CSR accesses and random loads/stores in and out of the window (W-PMP-5).
+- Preconditions: C-2; Random table (DM window randomly denied/allowed); mstatus.MPRV = 0 throughout (B2 isolation); debug ROM performs random PMP CSR accesses and random loads/stores in and out of the window (W-PMP-5).
 - Stimulus: debug_req_i storm during random M/U programs (W-PMP-2, W-PMP-3).
 - Randomized: table, ROM actions, debug timing, privilege.
 - Knobs: knob:debug_req_regime storm, knob:pmp_regime dense, knob:priv_regime alternating
-- Fire-check: RVFI, per seed: at least 5 debug episodes, each with an in-window access retiring trap = 0 while the non-debug rules deny it; at least one out-of-window denied access with rvfi_trap = 1 followed by an ibus fetch at DmExceptionAddr and at least one out-of-window allowed access retiring trap = 0.
+- Fire-check: RVFI, per seed: at least 5 debug episodes, each with an in-window access retiring trap = 0 while the non-debug rules deny it; at least one out-of-window denied access with rvfi_trap = 1 whose next record has rvfi_pc_rdata = DmExceptionAddr (C-1; bus-visible fetch, C-14) and at least one out-of-window allowed access retiring trap = 0.
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_debug; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_pmp_random_regime
@@ -9889,7 +10256,7 @@ Conventions used below:
 - Features: F-PMP-093, F-PMP-094, F-PMP-079
 - Phase: 2
 - Tier: full
-- Preconditions: cpuctrlsts dummy_instr_en = 1 (random mask), icache enabled, random table changed by handlers.
+- Preconditions: cpuctrlsts dummy_instr_en = 1 (random mask), icache enabled (deliberate C-14 exception: the cache-hit inference is anchored on loops re-entered by a redirect), random table changed by handlers.
 - Stimulus: Random branch-heavy programs re-executing loops across PMP changes (W-PMP-2 for the data side; handler rewrites per W-PMP-4).
 - Randomized: table, dummy mask/seed, program, imem timing.
 - Knobs: knob:instr_mix branch_heavy, knob:pmp_regime sparse, knob:scr_key_delay immediate, knob:imem_gnt_delay random
@@ -9903,7 +10270,7 @@ Conventions used below:
 - Features: F-PMP-047, F-PMP-001, F-PMP-002, F-PMP-045
 - Phase: 2
 - Tier: full
-- Preconditions: Every entry programmed active (modes random, TOR chains allowed) with random permissions; variant with every entry locked (RLB=1 first, then RLB cleared); code/stack reachable.
+- Preconditions: C-2; Every entry programmed active (modes random, TOR chains allowed) with random permissions; variant with every entry locked (RLB=1 first, then RLB cleared); code/stack reachable.
 - Stimulus: Random programs (W-PMP-2, W-PMP-3); handlers modify unlocked entries only (W-PMP-4).
 - Randomized: table, locks, program, privilege.
 - Knobs: knob:pmp_regime dense, knob:priv_regime alternating, knob:instr_mix mixed
@@ -9917,7 +10284,7 @@ Conventions used below:
 - Features: F-PMP-052, F-PMP-053, F-PMP-015
 - Phase: 2
 - Tier: full
-- Preconditions: No PMP CSR written (reset state) or table explicitly all OFF; mseccfg 0.
+- Preconditions: No C-2 prologue by design (every U entry faults); no PMP CSR written (reset state) or table explicitly all OFF; mseccfg 0.
 - Stimulus: Random M programs with occasional mret to U (W-PMP-3; the first U instruction faults every time).
 - Randomized: program, U targets.
 - Knobs: knob:pmp_regime off, knob:priv_regime alternating, knob:instr_mix mixed
@@ -9931,11 +10298,11 @@ Conventions used below:
 - Features: F-PMP-021, F-PMP-023, F-PMP-024, F-PMP-025, F-PMP-026, F-PMP-027
 - Phase: 1
 - Tier: targeted
-- Preconditions: Table with an L=1 exec rule for code and L=1 RW rule for data programmed under RLB=1 (so any state is survivable); other locks toggled to enable/disable the RLB sticky-off.
+- Preconditions: M-mode. RLB 0->1 requires any_pmp_entry_locked == 0, i.e. no L=1 entry while RLB=0 (rtl/ibex_cs_registers.sv:1463, 1514; X-20), so the walk uses two table shapes: (a) MML=0 states (0,x,y): code and data rules are L=0 entries (or unmatched with MMWP=0), all L bits 0, so every RLB transition is reachable; locks are added only to exercise the sticky-off arcs and are cleared under RLB=1 or by the wrapper reset; (b) MML=1 states (1,x,y): M-mode execution needs an L=1 executable rule (all M-exec rows 1001/1010/1011/1101 are L=1), programmed under RLB=1 immediately before MML is set; from (1,x,1) clearing RLB is permanent and the three transitions (1,x,0)->(1,x,1) (s100->s101, s100->s111, s110->s111) are unreachable from M-mode code: 33 of the 36 legal (pre, post) transitions are walkable (the three are CG-PMP-003 ignore_bins; a debug-ROM variant with an all-L=0 table is OQ-PMP-10).
 - Stimulus: Random walk of mseccfg writes (csrrw/csrrs/csrrc) from each of the 8 states with random written values; the walk restarts from reset (wrapper reset) to revisit low states; csrr after every write.
 - Randomized: walk order, values, op class, lock presence.
 - Knobs: knob:instr_mix csr_heavy
-- Fire-check: RVFI, per seed: every write + readback pair's post state equals the model's; the walk visits all 8 states within the seed (reset restarts included) and at least 16 of its writes change the state; the 36 legal (pre, post) transitions close over the seed set (coverage, not the fire-check).
+- Fire-check: RVFI, per seed: every write + readback pair's post state equals the model's; the walk visits all 8 states within the seed (wrapper-reset restarts included) and at least 16 of its writes change the state; at least one RLB 0->1 write retires from an all-L=0 table with readback bit CSR_MSECCFG_RLB_BIT = 1 and at least one RLB 0->1 write is blocked by an L=1 entry (bit stays 0); at least one write attempting (1,x,0)->(1,x,1) retires with the RLB bit still 0 (the M-exec rule is locked).
 - Pass criteria: gen_chk_csr_readback (predicted WARL-legalised value vs csrr readback on rvfi_rd_wdata); gen_isa_compare (rd value and trap agreement)
 - Expected: pass
 - Test group: gen_pmp_mseccfg
@@ -9959,7 +10326,7 @@ Conventions used below:
 - Features: F-PMP-045, F-PMP-046, F-PMP-047
 - Phase: 2
 - Tier: full
-- Preconditions: Dense random tables biased to create 2..6-way overlaps with random index distances and mode pairs, including entry PMPNumRegions-1 as the overridden one.
+- Preconditions: C-2; Dense random tables biased to create 2..6-way overlaps with random index distances and mode pairs, including entry PMPNumRegions-1 as the overridden one.
 - Stimulus: Random programs whose data/code windows are placed in the overlaps (W-PMP-2; geometry per W-PMP-1 with the overlap bias).
 - Randomized: table geometry, program, privilege, MML.
 - Knobs: knob:pmp_regime dense, knob:priv_regime alternating, knob:instr_mix ls_heavy
@@ -9973,7 +10340,7 @@ Conventions used below:
 - Features: F-PMP-006, F-PMP-001, F-PMP-092
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; entry i unlocked; a probe window W (data and code) that entry i's geometry covers in every mode (TOR bounds around W, NA4 on W's word, NAPOT covering W) with pmpaddr rewritten alongside each mode change; the rest of the table gives W the opposite default verdict so that each mode change is observable; MML random with survivable rules.
+- Preconditions: C-2 (for the U probes); M-mode; entry i unlocked and not one of the C-2 / survivable rules; a probe window W (data and code) that entry i's geometry covers in every mode (TOR bounds around W, NA4 on W's word, NAPOT covering W) with pmpaddr rewritten alongside each mode change; the rest of the table gives W the opposite default verdict so that each mode change is observable; MML random with survivable rules (under MML=1 the code rule is L=1 executable and, with RLB=0, entry i is written with a non-M-executable row or under RLB=1, since an M-executable L=1 write is suppressed, TP-PMP-027).
 - Stimulus: For entry i the program walks A along an Eulerian circuit of the 12 (old, new) mode pairs (for example OFF->TOR->NA4->NAPOT->OFF->NA4->TOR->NAPOT->TOR->OFF->NAPOT->NA4->OFF, start rotated per seed) with one pmpcfg write per arc; between writes a load, a store and a fetch probe into W (and one just outside it) retire so the entry is live before and after every change; 1..PMPNumRegions entries per seed.
 - Randomized: i, W, circuit rotation, RWX per step, privilege of the probes (M and U), filler, imem/dmem timing.
 - Knobs: knob:instr_mix csr_heavy, knob:priv_regime alternating, knob:imem_gnt_delay random
@@ -9987,7 +10354,7 @@ Conventions used below:
 - Features: F-PMP-027, F-PMP-028, F-PMP-007, F-PMP-008, F-PMP-009
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; mseccfg.RLB = 1; 1..PMPNumRegions entries locked (L=1, random A including OFF, one of them a TOR entry i+1 with an unlocked entry i below it) under RLB=1; MML random with survivable rules; the table state is recovered by a wrapper reset between iterations.
+- Preconditions: M-mode; mseccfg.RLB = 1; 1..PMPNumRegions entries locked (L=1, random A including OFF, one of them a TOR entry i+1 with an unlocked entry i below it) under RLB=1; MML random with survivable rules (under MML=1 the L=1 executable code rule is itself one of the locked entries); the table state is recovered by a wrapper reset between iterations. The RLB 1->0 clear is always reachable (any_pmp_entry_locked is masked while RLB=1, rtl/ibex_cs_registers.sv:1463); the later RLB set is blocked as long as one L=1 entry remains (X-20).
 - Stimulus: csrw/csrrc mseccfg clearing RLB (locked entries exist, so the clear is permanent) followed at gap 0 (adjacent rvfi_order) by one of: csrw pmpcfg of a locked entry (variant A), csrw pmpaddr of a locked entry (variant B), csrw pmpaddr(i) below the locked TOR entry (variant C); csrr readbacks; then a csrrs mseccfg RLB attempt (blocked); repeated with 1..3 filler instructions between the two writes.
 - Randomized: locked subset and modes, variant, values, op class of both writes, gap, MML.
 - Knobs: knob:instr_mix csr_heavy, knob:imem_gnt_delay random, knob:imem_rvalid_delay random
@@ -10004,7 +10371,8 @@ Conventions used below:
 |---|---|---|---|---|
 | gen_pmp_csr_warl | TP-PMP-001, TP-PMP-002, TP-PMP-003, TP-PMP-004, TP-PMP-005, TP-PMP-006, TP-PMP-007, TP-PMP-008 | 1 | smoke/targeted | short |
 | gen_pmp_data_fault | TP-PMP-069, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083 | 1 | smoke/targeted | medium |
-| gen_pmp_debug | TP-PMP-009, TP-PMP-074, TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099 | 1 | targeted | medium |
+| gen_pmp_debug | TP-PMP-009, TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099 | 1 | targeted | medium |
+| gen_pmp_debug_xfail | TP-PMP-074 (expected-fail B2, own test) | 1 | targeted | medium |
 | gen_pmp_fetch_fault | TP-PMP-064, TP-PMP-065, TP-PMP-066, TP-PMP-067, TP-PMP-068, TP-PMP-076, TP-PMP-077, TP-PMP-078, TP-PMP-079 | 1 | smoke/targeted | medium |
 | gen_pmp_icache_dummy | TP-PMP-092, TP-PMP-093 | 1 | targeted | medium |
 | gen_pmp_lock | TP-PMP-013, TP-PMP-014, TP-PMP-015, TP-PMP-016, TP-PMP-017, TP-PMP-018, TP-PMP-019, TP-PMP-020, TP-PMP-021, TP-PMP-112 | 1 | targeted | short |
@@ -10013,7 +10381,8 @@ Conventions used below:
 | gen_pmp_match_napot | TP-PMP-034, TP-PMP-035, TP-PMP-036, TP-PMP-037 | 1 | targeted | medium |
 | gen_pmp_match_tor | TP-PMP-038, TP-PMP-039, TP-PMP-040, TP-PMP-041, TP-PMP-042 | 1 | targeted | medium |
 | gen_pmp_misaligned | TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089 | 1 | targeted | medium |
-| gen_pmp_mprv | TP-PMP-070, TP-PMP-071, TP-PMP-072, TP-PMP-073, TP-PMP-075 | 1 | targeted | medium |
+| gen_pmp_mprv | TP-PMP-070, TP-PMP-071, TP-PMP-072, TP-PMP-075 | 1 | targeted | medium |
+| gen_pmp_mprv_xfail | TP-PMP-073 (expected-fail B1, own test) | 1 | targeted | medium |
 | gen_pmp_mseccfg | TP-PMP-011, TP-PMP-012, TP-PMP-022, TP-PMP-023, TP-PMP-024, TP-PMP-025, TP-PMP-026, TP-PMP-027, TP-PMP-028, TP-PMP-029, TP-PMP-030, TP-PMP-031, TP-PMP-108 | 1 | targeted | short |
 | gen_pmp_perm_mml0 | TP-PMP-047, TP-PMP-048, TP-PMP-049, TP-PMP-050, TP-PMP-051, TP-PMP-052 | 1 | smoke/targeted | medium |
 | gen_pmp_perm_mml1 | TP-PMP-054, TP-PMP-055, TP-PMP-056, TP-PMP-057, TP-PMP-058, TP-PMP-059, TP-PMP-060, TP-PMP-061, TP-PMP-062 | 1 | full/targeted | medium |
@@ -10034,13 +10403,14 @@ Conventions used below:
 
 - OQ-PMP-1 (Q-DL-7 / F-PMP-087): the second word of a misaligned store whose first word is PMP-denied is written to memory. Decision blocked: whether gen_chk_pmp asserts suppression (expected-fail) or models the partial write. Recommended default: model the RTL (spec permits non-atomic decomposition), keep TP-PMP-085 as pass, record a security/integration note.
 - OQ-PMP-2 (B1/B2, F-PMP-075/076): TP-PMP-073 and TP-PMP-074 are expected-fail with the checker following Sdext. Decision blocked: whether the debug-area items sharing these bug candidates use the same model so the two areas do not disagree. Recommended default: one shared MPRV rule in gen_chk_pmp, owned by this area, referenced by the DBG items.
-- OQ-PMP-3 (D numbering): gen_reading_report.md Section 5.3 lists doc mismatches without D-numbers; TP-PMP-075 cites the illegal-MPP entry as D2 by list position. Decision blocked: the canonical D-number. Recommended default: DV Lead assigns numbers in Section 5.3 order and this file is renumbered mechanically.
+- OQ-PMP-3 (D numbering): RESOLVED by gen_bug_log.md v1d: the illegal-MPP legalisation is canonical D2; TP-PMP-075 cites it.
 - OQ-PMP-4 (memory map): TP-PMP-036/039/068 need TB memory at address 0, the top word 0xFFFFFFFC and arbitrary NAPOT bases. Decision blocked: whether the memory agents are sparse (any address backed). Recommended default: sparse memory model with a default fill; the boot region and DM window are fixed, everything else is backed on demand.
 - OQ-PMP-5 (F-PMP-084 latency bin): the two-cycle fake-response latency is not observable at the boundary. Decision blocked: accept the probe listed under Probe candidates or drop the bin. Recommended default: keep the probe (read-only, define-gated), because it is the only witness that a denied access never waits for the bus agent.
 - OQ-PMP-6 (Q2 of the feature list): directed per-row Smepmp tests vs the 96-bin covergroup. Recommended default kept here: TP-PMP-054 (random, all 96 bins mandatory) plus the directed sanity items TP-PMP-055..062, one per truth-table row group.
 - OQ-PMP-7 (TP-PMP-078 exc_entry variant): a trap vector inside a PMP-denied region produces a fetch fault on trap entry and then a double fault. Decision blocked: whether the item may exercise this (it ends the program) or only records the first fault and resets. Recommended default: run it as the last scenario of a seed and end the test on the double-fault (cross-check with gen_chk_double_fault).
 - OQ-PMP-8 (Critic pre-review pmp section vs RTL, TP-PMP-091 / CG-PMP-010 / CG-PMP-011): the Critic states that every PMP CSR write flushes the pipeline so the pre-fetched word is discarded. The RTL reading in this revision (fcov_pmp.md Appendix C): csr_pipe_flush (rtl/ibex_id_stage.sv:595-597) drives a FLUSH state that asserts halt_if/flush_id and sets no PC (rtl/ibex_controller.sv:816-819, 953-963); the fetch FIFO is cleared only by branch_i (rtl/ibex_prefetch_buffer.sv:78), so the granted word is retained and PMP-checked on pc_if at the IF/ID handoff with the post-write state. Decision blocked: which reading the DV Lead / Critic accept. Recommended default: keep TP-PMP-091 and the bus_prefetched / retired_ok_recfg bins as written (icache_enable pinned to 0 so the grant is visible, S-4); one directed simulation settles it and, if the Critic is right, the bins become ignore_bins and TP-PMP-091 is rewritten to the discard behaviour.
 - OQ-PMP-9 (CG-PMP-007.cr_napot_k_bclass k30/k31/k32_inside_low, TP-PMP-036): the Critic's M-03 row range (488-492, 513-517) also covered k30/k31_inside_low; those bins are kept because the NAPOT decode gives base 0 for these encodings (rtl/ibex_pmp.sv:160-209), so an access at address 0 is inside_low (needs the sparse memory of OQ-PMP-4). Only the inside_high bins (region last byte above 2^32) are ignored. Decision blocked: confirm the reading; default as stated.
+- OQ-PMP-10 (TP-PMP-108 / CG-PMP-003, fact-check X-20): the three mseccfg transitions (1,x,0)->(1,x,1) are unreachable from M-mode code (RLB can be re-set only with no L=1 entry, while M-mode execution under MML=1 needs an L=1 executable rule). They are reachable only from debug-ROM code in the DM window (PMP bypass) after clearing every L bit under RLB=1. Decision blocked: whether to add a debug-ROM walk variant (next free item, gen_pmp_debug group) or leave the three bins as ignore_bins. Recommended default: ignore_bins with the RTL reason (done here); add the variant only if the closure report needs the arcs.
 
 
 # 4.5 Areas DBG, TRG, PMC: External debug (Sdext), triggers (Sdtrig), performance counters
@@ -10060,14 +10430,21 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Three randomization layers: per-transaction distributions are in Stimulus; regime knobs are
   named in Knobs (bins owned by the cross-cutting subagent); the regime schedule is the
   cross-cutting subagent's, referenced as "schedule" where relevant.
-- Expected values: `expected-fail (B<n>)` means the checker follows the specification and the RTL is
-  known to differ (bug candidate B<n>, canonical numbering of the fix brief: B1 dret/MPRV, B2 MPRV
-  in debug mode, B3 tdata3/context CSRs read 0, B5 dcsr.nmip, B7 dummies in minstret, B9 dcsr.cause
-  0 window, B10 trigger cause on ebreak entry, B11 NumBranchesTaken under DIT, B15 dcsr.ebreaks
-  writable; B6 is reclassified RTL-defined and has no expected-fail item). `pass (doc mismatch
-  D<n>)` uses the canonical doc-defect numbers: D4 tdata1 reset 0x2800_1048, D6 misaligned counted
-  once, D12 debug.rst trigger CSRs "Debug Mode only", D16 performance_counters.rst parameter text,
-  D18 cs_registers.rst DbgHwNumLen / scontext 0x7AA (D5 is RETIRED in favour of B15).
+- Expected values (C-15): `pass`, `pass (doc mismatch D<n>)`, `expected-fail (B<n>)`,
+  `informational (...)`. `expected-fail (B<n>)` means the checker follows the specification (or the
+  documented intent) and the RTL is known to differ (bug candidate B<n>, canonical numbering of
+  gen_bug_log.md v1d: B1 dret/MPRV, B2 MPRV in debug mode, B3 tdata3/context CSRs read 0, B5
+  dcsr.nmip, B7 dummies in minstret, B10 trigger cause on ebreak entry, B11 NumBranchesTaken under
+  DIT, B15 dcsr.ebreaks writable, B17 HPM counters 8/11/12 over-count behind an outstanding WB
+  access; B6 is reclassified RTL-defined and B9 (dcsr.cause 0 window, out-of-spec stimulus) is
+  record-only: neither has an expected-fail item). An expected-fail item is its own `_xfail` test
+  and an informational item its own `_info` test (measured: false, never gated, its checkers run in
+  record mode, the test asserts only that the scenario fired and logs the observation as
+  GEN_TEST_INFO); items marked `pass` never disable a checker. `pass (doc mismatch D<n>)` uses the
+  canonical doc-defect numbers: D4 tdata1 reset 0x2800_1048, D6 misaligned counted once, D12
+  debug.rst trigger CSRs "Debug Mode only", D16 performance_counters.rst parameter text, D18
+  cs_registers.rst DbgHwNumLen / scontext 0x7AA, D20 mhpmeventN = 1 << (N - 3) (D5 is RETIRED in
+  favour of B15).
 - Feature citations may name ALIAS/FOLDED IDs of gen_part_dbg_trg_pmc.md; traceability resolves
   them to the canonical or parent ID.
 - Q-005 default (Section 6, Q-DL-4): exact-count counter items run with
@@ -10088,6 +10465,31 @@ fcov_dbg_trg_pmc.md. Conventions:
   ctrl_busy fact; it is visible on core_busy_o only when no ibus beat is outstanding, no icache
   invalidation sweep is active and the LSU is idle in that cycle; gen_chk_sleep applies the rule
   and the dip bins carry a `hidden` class.
+- Fix-brief-3 conventions (rtl-arch T-053 fact-check, plan v2b; the full statements are in
+  fcov_dbg_trg_pmc.md Conventions and are cited as C-n): C-1 the redirect target of a trap / mret /
+  dret record is observed as the NEXT record's rvfi_pc_rdata (or the DmHaltAddr / DmExceptionAddr /
+  vector fetch); rvfi_pc_wdata of such a record is the next sequential fetch address and is never
+  asserted as the target. C-3 rvfi_ext_debug_req is sampled at the instruction's IF->ID transfer
+  (or is captured_debug_req when the request arrived on an empty ID): the instruction in ID when
+  debug_req_i rises carries 0 and completes; an instruction whose transfer would come after the
+  rise never enters ID (halt_if; entry with dpc = its pc and no record: the "pre-empted" class of
+  the sweep items); the first debug-ROM record carries 1; entry waits for an empty ID and a ready
+  WB, so dpc / mepc = pc of the first not-yet-executed instruction = next pc of the last retired
+  record. Entry-from-FLUSH fire-checks therefore key on the driver timestamp inside W-DEC(X), X's
+  record and the DmHaltAddr fetch with no record in between, never on the flag of X's record. C-5
+  a stepped wfi never reaches WAIT_SLEEP (FLUSH -> DBG_TAKEN_IF): no core_busy_o dip. C-10 HPM
+  counters 8, 11, 12 over-count an instruction waiting in ID behind an outstanding WB memory
+  access (B17): exact-count items carry the precondition "no outstanding WB memory access when the
+  counted instruction is in ID" (in a program: the branch / mul / div is not the instruction
+  directly behind a load/store whose response may still be pending, or an ALU instruction separates
+  them); TP-PMC-058/059/060 assert the doc count in the waiting case and are expected-fail (B17).
+  C-11 mhpmeventN reads 1 << (N - MHPMCOUNTER_BASE) (D20); no item programs a selector. C-12 one
+  RVFI record per Zcmp micro-op with rvfi_insn = the 32-bit expansion. C-13 rvfi_ext_irq_valid is a
+  level, the boundary event of an interrupt accepted with no handler record. C-14 a fire-check that
+  needs the request for a redirect target pins cpuctrlsts.icache_enable = 0. C-16 fire-checks are
+  per-seed assertions. Same-cycle rule: the last pre-entry record may be output in the cycle of the
+  DmHaltAddr request, so "record then fetch" is record order / at-or-before (W-DBGTAKEN); W-WB(X)
+  (fcov Conventions) defines the read/write-coincidence windows of TP-PMC-011/016/024.
 - minstret checks need a minstret read: only items whose program reads minstret carry minstret
   bins and gen_chk_counters minstret claims; DBG items cite the PMC item that checks the counter
   effect of their scenario. mhpmcounter and mcycle effects are visible per retirement on
@@ -10192,99 +10594,125 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_dbg_irq_mask
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_idle, CG-DBG-002.cr_coincident_outcome.irq_entered, CG-DBG-002.cr_coincident_outcome.nmi_entered, CG-DBG-009.cr_window_disp.entry_wins, CG-DBG-009.cr_src_window.sw_entry, CG-DBG-009.cr_src_window.ext_entry, CG-DBG-009.cr_src_window.fast_entry, CG-DBG-009.cr_src_window.nmi_entry
 
-### TP-DBG-004: Halt request while a load/store is outstanding in WB: entry deferred until rvalid
+### TP-DBG-004: Halt request while a load/store is outstanding in WB: entry deferred until rvalid; the instruction already in ID behind it completes too
 - Features: F-DBG-003
 - Phase: 1
 - Tier: targeted
-- Preconditions: M or U mode; data memory agent in a slow regime.
+- Preconditions: M or U mode (U per the PMP prologue convention C-2); data memory agent in a slow
+  regime.
 - Stimulus: load/store-heavy program; debug_req_i asserted (held) in a cycle where the dbus
   monitor reports a granted request without rvalid (driver waits for that condition, then asserts
-  within 0..2 cycles).
+  within 0..2 cycles). In 50% of iterations the successor of the load/store is already in ID at the
+  rise (fetch delivered), in 50% ID is empty at the rise (imem slow), so both "one more instruction
+  completes behind the load" and "nothing behind the load" occur.
 - Randomized: load vs store (50/50), misaligned (20%), rvalid delay in [2:20], whether a dependent
-  instruction follows the load (load-use hazard 40%).
-- Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:instr_mix
+  instruction follows the load (load-use hazard 40%), successor in ID at the rise (50%); weights:
+  W5, W7.
+- Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:imem_rvalid_delay, knob:instr_mix
 - Fire-check: data_rvalid_i for the outstanding access is observed after debug_req_i rose and
-  before the DmHaltAddr fetch (dbus monitor timestamps; gen_test_dbg_haltreq).
-- Pass criteria: gen_chk_debug (the load/store retires on RVFI before rvfi_ext_debug_mode rises;
-  dpc == pc after it); gen_chk_dbus_proto; gen_isa_compare (rd written by the load).
+  before the DmHaltAddr fetch (dbus monitor timestamps); the load/store record and, when the
+  successor was in ID at the rise, the successor's record (rvfi_ext_debug_req = 0 on both, C-3)
+  precede the DmHaltAddr fetch with no other record in between; the first debug-ROM record carries
+  rvfi_ext_debug_req = 1; both successor classes occur per seed (gen_test_dbg_haltreq).
+- Pass criteria: gen_chk_debug (entry only once ID is empty and WB ready, rtl/ibex_controller.sv:296,
+  :700-708; dpc == next pc of the last RVFI record before the entry, which is "load pc + size" only
+  when nothing had entered ID behind the load (X-7); cause 3); gen_chk_dbus_proto; gen_isa_compare
+  (rd written by the load; the successor's result committed).
 - Expected: pass
 - Test group: gen_dbg_haltreq
-- Bins: CG-DBG-001.cr_cause_ctx.haltreq_lsu, CG-DBG-012.cp_flags.req1_mode0, CG-DBG-012.cr_flags_mode.req1_m
+- Bins: CG-DBG-001.cr_cause_ctx.haltreq_lsu, CG-DBG-001.cr_cause_dpc.haltreq_next, CG-DBG-012.cp_flags.req1_mode1
 
 ### TP-DBG-005: Halt request while the outstanding load/store returns an error: exception first, then debug with dpc = handler
 - Features: F-DBG-003, F-DBG-004
 - Phase: 1
 - Tier: targeted
 - Preconditions: mtvec set; data agent programmed to return data_err_i on a chosen access (or a
-  PMP region denying it); debug ROM installed.
+  PMP region denying it); debug ROM installed; cpuctrlsts.icache_enable=0 (C-14: the mtvec-target
+  request identifies W-FLUSH; the handler is cached after the first iteration otherwise).
 - Stimulus: as TP-DBG-004 but the outstanding access is the erroring one; debug_req_i held.
 - Randomized: bus error vs PMP fault, load vs store, misaligned first/second half error; weights: W7, W12.
 - Knobs: knob:dmem_err_rate, knob:dmem_rvalid_delay, knob:pmp_regime
-- Fire-check: RVFI item with rvfi_trap for the load/store, then the ibus fetches the mtvec target
-  and then DmHaltAddr with no retirement between (gen_test_dbg_haltreq).
+- Fire-check: RVFI item with rvfi_trap for the load/store (rvfi_ext_debug_req = 0 on it, C-3), then
+  the ibus fetches the mtvec target and then DmHaltAddr with no retirement between (record order,
+  same-cycle rule); the first debug-ROM record carries rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq).
 - Pass criteria: gen_chk_debug (dpc == mtvec target, cause 3, prv M); gen_isa_compare (mepc,
   mcause 5/7, mtval == address as the ISA model predicts); gen_chk_pmp for the PMP variant.
 - Expected: pass
 - Test group: gen_dbg_haltreq
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_exc, CG-DBG-001.cr_cause_dpc.haltreq_mtvec, CG-DBG-002.cr_coincident_outcome.exc_entered
 
-### TP-DBG-006: Halt request coincident with a synchronous exception from ID (illegal, ecall, ebreak with ebreakm=0, fetch error)
+### TP-DBG-006: Halt request rising while a trapping instruction is in ID (illegal, ecall, ebreak with ebreakm=0, fetch error): exception first, entry from W-FLUSH with dpc = handler
 - Features: F-DBG-004
 - Phase: 1
 - Tier: targeted
 - Preconditions: dcsr.ebreakm=0/ebreaku=0; mtvec set; instruction memory agent can inject
   instr_err_i on a chosen address; cpuctrlsts.icache_enable=0 (the driver keys on the ibus fetch of
-  the instruction, S-4).
-- Stimulus: program places the trapping instruction at a random position; debug_req_i rises in
-  W-DEC of that instruction (driver triggers on the ibus fetch of its address plus a randomized
-  0..2 cycle offset) and is held.
-- Randomized: exception type (illegal 30%, ecall 30%, ebreak 20%, fetch error 20%); privilege M/U.
+  the instruction and the vector request identifies W-FLUSH, S-4 / C-14); U-mode iterations use the
+  PMP prologue convention (C-2).
+- Stimulus: program places the trapping instruction X at a random position; debug_req_i rises in
+  W-DEC(X) (driver triggers on the ibus fetch of X's address plus a randomized 0..2 cycle offset;
+  the window is back-dated from X's record) and is held. Iterations whose rise precedes X's IF->ID
+  transfer pre-empt X (halt_if, rtl/ibex_controller.sv:700-708: no record for X, plain haltreq
+  entry with dpc == X pc, trap CSRs unchanged) and are classified "pre-empted".
+- Randomized: exception type (illegal 30%, ecall 30%, ebreak 20%, fetch error 20%); privilege M/U;
+  rise offset; weights: W3, W12, W13.
 - Knobs: knob:imem_err_rate, knob:priv_regime, knob:debug_req_regime
-- Fire-check: rvfi_trap on the trapping instruction with debug_req_i sampled high in that cycle
-  (rvfi_ext_debug_req==1 on that item) and the next fetch after the vector is DmHaltAddr with no
-  handler retirement (gen_test_dbg_haltreq).
-- Pass criteria: gen_chk_debug (dpc == mtvec target, cause 3, dcsr.prv==M); gen_isa_compare
+- Fire-check: per seed >= 1 iteration per exception type in which X's record has rvfi_trap = 1 and
+  rvfi_ext_debug_req = 0 (sampled at X's transfer, before the rise, C-3), the driver timestamp of
+  the rise lies inside W-DEC(X), the ibus requests the mtvec target and then DmHaltAddr with no
+  record in between, and the first debug-ROM record carries rvfi_ext_debug_req = 1; >= 1
+  pre-empted iteration is classified (gen_test_dbg_haltreq).
+- Pass criteria: gen_chk_debug (dpc == mtvec target, cause 3, dcsr.prv == M; pre-empted class: dpc
+  == X pc, cause 3, mepc/mcause unchanged and X traps after dret); gen_isa_compare
   (mepc/mcause/mtval/mstatus per exception).
 - Expected: pass
 - Test group: gen_dbg_haltreq
-- Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_exc, CG-DBG-001.cr_cause_dpc.haltreq_mtvec, CG-DBG-002.cr_coincident_outcome.exc_entered, CG-DBG-012.cp_trap_dbg.trap
+- Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_exc, CG-DBG-001.cr_cause_dpc.haltreq_mtvec, CG-DBG-002.cr_coincident_outcome.exc_entered, CG-DBG-012.cp_trap_dbg.trap, CG-DBG-012.cp_flags.req1_mode1
 
-### TP-DBG-007: Halt request coincident with mret: mret completes, dpc = mepc, dcsr.prv = new privilege
+### TP-DBG-007: Halt request rising while mret is in ID: mret completes, entry from W-FLUSH(mret), dpc = mepc, dcsr.prv = new privilege
 - Features: F-DBG-001, F-DBG-004, F-DBG-068
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; mepc random aligned address in the program; mstatus.MPP random (M or U);
-  PMP permits the U target when MPP=U; icache_enable=0 (as TP-DBG-006).
+  PMP permits the U target when MPP=U (C-2); icache_enable=0 (as TP-DBG-006).
 - Stimulus: mret at a random position; debug_req_i rises in W-DEC(mret) (as in TP-DBG-006) and is
-  held.
-- Randomized: MPP value, MPIE value, mepc target (aligned 2 or 4); weights: W3, W13.
+  held. Iterations whose rise precedes the mret's IF->ID transfer pre-empt the mret (haltreq entry
+  with dpc == mret pc, mret not executed, mstatus unchanged) and are classified "pre-empted".
+- Randomized: MPP value, MPIE value, mepc target (aligned 2 or 4), rise offset; weights: W3, W13.
 - Knobs: knob:priv_regime, knob:debug_req_regime
-- Fire-check: RVFI retirement of mret with rvfi_ext_debug_req==1 followed by the DmHaltAddr fetch
-  with no retirement in between (gen_test_dbg_haltreq).
-- Pass criteria: gen_chk_debug (dpc == mepc, dcsr.prv == old MPP, cause 3; entry from W-FLUSH(mret), i.e.
-  no rvfi item between the mret and the DmHaltAddr fetch: H-C1 arc, F-DBG-068); gen_isa_compare
-  (mstatus.MIE := MPIE, MPP := U, MPRV cleared if MPP != M).
+- Fire-check: per seed >= 1 iteration with the mret record (rvfi_ext_debug_req = 0, C-3), the rise
+  timestamp inside W-DEC(mret) and the DmHaltAddr fetch with no record in between (H-C1 arc,
+  F-DBG-068); the first debug-ROM record carries rvfi_ext_debug_req = 1; the resume target is
+  observed as the mailbox dpc, never as the mret record's rvfi_pc_wdata (which is mret pc + 4, C-1)
+  (gen_test_dbg_haltreq).
+- Pass criteria: gen_chk_debug (dpc == mepc, dcsr.prv == old MPP, cause 3; pre-empted class: dpc ==
+  mret pc, dcsr.prv == M, mstatus unchanged); gen_isa_compare (mstatus.MIE := MPIE, MPP := U, MPRV
+  cleared if MPP != M).
 - Expected: pass
 - Test group: gen_dbg_haltreq
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_mret, CG-DBG-001.cr_cause_dpc.haltreq_mret, CG-DBG-001.cr_cause_prv.haltreq_u, CG-DBG-002.cr_coincident_outcome.mret_entered
 
-### TP-DBG-008: Halt request coincident with a CSR-write pipeline flush or a WFI: entry from W-FLUSH of the special request; the WFI never sleeps
+### TP-DBG-008: Halt request rising while a flushing CSR write or a WFI is in ID: entry from W-FLUSH of the special request; the WFI never sleeps
 - Features: F-DBG-001, F-DBG-068
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; CSR write targets that flush (mstatus, mie, mtvec, cpuctrlsts, pmpcfg*);
   for the WFI variant mstatus.MIE random; icache_enable=0 (as TP-DBG-006).
-- Stimulus: the special instruction at a random position; debug_req_i rises in its W-DEC and is
-  held; for WFI no interrupt is pending.
-- Randomized: CSR target (uniform over the flushing set) vs WFI (30%); write data.
+- Stimulus: the special instruction X at a random position; debug_req_i rises in W-DEC(X) and is
+  held; for WFI no interrupt is pending. Iterations whose rise precedes X's IF->ID transfer
+  pre-empt X (haltreq entry with dpc == X pc, X not executed) and are classified "pre-empted".
+- Randomized: CSR target (uniform over the flushing set) vs WFI (30%); write data; rise offset;
+  weights: W2, W13.
 - Knobs: knob:debug_req_regime, knob:instr_mix
-- Fire-check: RVFI retirement of the csrw/wfi with rvfi_ext_debug_req==1 then DmHaltAddr fetch with
-  no other retirement; for WFI core_busy_o is sampled high in every cycle between the wfi retirement
-  and the DmHaltAddr fetch (the W-FLUSH -> W-DBGTAKEN arc, no W-WAITSLEEP cycle, F-DBG-068)
-  (gen_test_dbg_haltreq).
-- Pass criteria: gen_chk_debug (dpc == csrw pc + 4 / wfi pc + 4, cause 3); gen_chk_sleep (no sleep
-  window at all: core_busy_o never Off; a request arriving one or more cycles later is TP-DBG-071 /
-  TP-DBG-014); gen_isa_compare (the flushing CSR write is committed).
+- Fire-check: per seed >= 1 csrw and >= 1 wfi iteration with X's record (rvfi_ext_debug_req = 0,
+  C-3), the rise timestamp inside W-DEC(X) and the DmHaltAddr fetch with no other record in
+  between; for WFI core_busy_o is sampled On in every cycle between the wfi record and the
+  DmHaltAddr fetch (the W-FLUSH -> W-DBGTAKEN arc, no W-WAITSLEEP cycle, F-DBG-068); the first
+  debug-ROM record carries rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq).
+- Pass criteria: gen_chk_debug (dpc == csrw pc + 4 / wfi pc + 4, cause 3; pre-empted class: dpc ==
+  X pc, the CSR write not committed); gen_chk_sleep (no sleep window at all: core_busy_o never Off;
+  a request arriving one or more cycles later is TP-DBG-071 / TP-DBG-014); gen_isa_compare (the
+  flushing CSR write is committed).
 - Expected: pass
 - Test group: gen_dbg_haltreq
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_csr, CG-DBG-001.cr_cause_dpc.haltreq_next, CG-DBG-002.cr_coincident_outcome.csr_entered, CG-DBG-002.cr_coincident_outcome.wfi_entered, CG-DBG-001.cr_cause_ctx.haltreq_flush_wfi, CG-DBG-001.cr_ctx_busy.flush_wfi_none, CG-DBG-001.cr_cause_dpc.haltreq_wfi
@@ -10293,33 +10721,45 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-DBG-001
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; rd of the div not x0.
+- Preconditions: M-mode; rd of the div not x0; icache_enable=0 (the driver anchors on the ibus
+  fetch of the divide, S-4).
 - Stimulus: div/divu/rem/remu (and mulh-class) with random operands incl. divide-by-zero and
-  overflow; debug_req_i rises 1..30 cycles after the ibus fetch of the divide and is held.
-- Randomized: opcode, operands, request offset (uniform over the divide latency).
+  overflow; debug_req_i rises 1..30 cycles after the ibus fetch of the divide and is held. Rises
+  before the divide's IF->ID transfer pre-empt it (haltreq entry with dpc == div pc, no divide
+  record); rises inside W-DEC(div) let it complete (C-3).
+- Randomized: opcode, operands, request offset (uniform over the divide latency); weights: W9, W13.
 - Knobs: knob:instr_mix, knob:debug_req_regime
-- Fire-check: RVFI shows the divide retired (rvfi_rd_wdata == quotient/remainder) with
-  rvfi_ext_debug_req==1 and the DmHaltAddr fetch follows with no other retirement
-  (gen_test_dbg_haltreq).
-- Pass criteria: gen_chk_debug (dpc == div pc + 4); gen_isa_compare (result value).
+- Fire-check: per seed >= 1 iteration in which the divide record (rvfi_rd_wdata == quotient /
+  remainder, rvfi_ext_debug_req = 0 because the rise came after its transfer, C-3) is followed by
+  the DmHaltAddr fetch with no other record in between and the rise timestamp lies inside
+  W-DEC(div) (back-dated from the record: DIV_STALL_FULL + 1 cycles); the first debug-ROM record
+  carries rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq).
+- Pass criteria: gen_chk_debug (dpc == div pc + 4; pre-empted class: dpc == div pc); gen_isa_compare
+  (result value).
 - Expected: pass
 - Test group: gen_dbg_haltreq
-- Bins: CG-DBG-001.cr_cause_ctx.haltreq_div, CG-DBG-001.cr_cause_dpc.haltreq_next, CG-DBG-012.cp_flags.req1_mode0
+- Bins: CG-DBG-001.cr_cause_ctx.haltreq_div, CG-DBG-001.cr_cause_dpc.haltreq_next, CG-DBG-012.cp_flags.req1_mode1
 
 ### TP-DBG-010: A short debug_req_i pulse that ends before the pipeline drains is dropped
 - Features: F-DBG-005
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; data agent slow so that an instruction is guaranteed to be in ID/WB.
-- Stimulus: debug_req_i pulse of 1..3 cycles placed while a load is waiting for rvalid (dbus
-  monitor condition) or a divide is running; then normal execution continues for >= 50 retirements
-  before an optional held request.
-- Randomized: pulse width, placement (LSU wait 50%, divide 30%, ID stall on imem 20%); whether a
-  second pulse lands when the pipe is idle (control: it must enter).
-- Knobs: knob:debug_req_regime, knob:dmem_rvalid_delay
-- Fire-check: rvfi_ext_debug_req==1 on the retiring instruction while no DmHaltAddr fetch occurs
-  within the entry bound (17 RVFI records after the pulse, gen_tb_architecture.md 8.2 item 5)
-  (gen_test_dbg_req_shape); the control pulse produces an entry within the same bound.
+- Stimulus: debug_req_i pulse of 1..3 cycles placed (a) while a load is waiting for rvalid with
+  ID empty (imem slow: the successor has not been transferred; halt_if then keeps ID empty for the
+  pulse), (b) while a load is waiting for rvalid with its successor already in ID, or (c) while a
+  divide is running in ID; then normal execution continues for >= 50 retirements before an
+  optional held request (control: it must enter).
+- Randomized: pulse width, placement ((a) 40%, (b) 30%, (c) 30%); whether the control pulse lands
+  when the pipe is idle; weights: W5, W13.
+- Knobs: knob:debug_req_regime, knob:dmem_rvalid_delay, knob:imem_rvalid_delay
+- Fire-check: for every dropped pulse no DmHaltAddr fetch occurs within the entry bound (17 RVFI
+  records after the pulse, gen_tb_architecture.md 8.2 item 5; driver log + ibus monitor); in
+  placement (a) the next instruction entering ID carries rvfi_ext_debug_req = 1 with
+  rvfi_ext_debug_mode = 0 (the sticky captured_debug_req of rtl/ibex_core.sv:1949-1957, C-3) and
+  still no entry follows; in (b) and (c) no RVFI trace of the pulse exists (the instruction in ID
+  entered before the pulse) and only the absence of the fetch is asserted; the control pulse
+  produces an entry within the same bound (gen_test_dbg_req_shape).
 - Pass criteria: gen_chk_debug (no entry for the dropped pulse; entry for the idle-time pulse);
   gen_isa_compare (program unaffected).
 - Expected: pass
@@ -10331,20 +10771,23 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Phase: 1
 - Tier: targeted
 - Preconditions: dcsr.step=0; mtvec set; a trapping instruction (ecall) at a known address;
-  icache_enable=0 (the mtvec-target request identifies W-FLUSH).
+  icache_enable=0 (the mtvec-target request identifies W-FLUSH, C-14).
 - Stimulus: debug_req_i rises in W-DEC(ecall) (ibus-fetch-triggered, as in TP-DBG-006) and falls
   exactly one cycle later, in W-FLUSH(ecall) (the cycle of the first ibus request to the mtvec
   target); the driver sweeps the fall offset over [0:3] cycles so the exact window is hit in a
-  fraction of iterations.
+  fraction of iterations. The pulse is shorter than the debug spec allows (haltreq is held until the
+  hart halts): out-of-spec stimulus, B9 record-only.
 - Randomized: fall offset; trapping instruction (ecall/illegal); privilege; weights: W3, W12, W13.
 - Knobs: knob:debug_req_regime
-- Fire-check: an entry (DmHaltAddr fetch) occurs whose preceding retirement carries
-  rvfi_ext_debug_req==1 while the request was already low in the entry cycle (driver log), and the
-  mailbox dcsr.cause field is read (gen_test_dbg_req_shape).
-- Pass criteria: gen_chk_debug follows Sdext: every debug entry records a defined cause (1..4);
-  cause==0 is a failure. gen_isa_compare unaffected.
-- Expected: expected-fail (B9)
-- Test group: gen_dbg_req_shape
+- Fire-check: an entry (DmHaltAddr fetch) occurs whose preceding record is the ecall's trap record
+  (rvfi_ext_debug_req = 0 on it: the rise came after its transfer, C-3), the driver log shows the
+  rise inside W-DEC(ecall) and the fall in W-FLUSH(ecall) (the request already low in the entry
+  cycle), and the mailbox dcsr.cause field is read (gen_test_dbg_req_shape).
+- Pass criteria: gen_chk_debug in record mode (Sdext: every debug entry records a defined cause
+  1..4; the RTL records 0 here, rtl/ibex_controller.sv:519-533, :985-987); the observed cause is
+  logged as GEN_TEST_INFO. gen_isa_compare unaffected.
+- Expected: informational (B9: RTL-defined corner under out-of-spec debug_req_i stimulus; value recorded, not a gate item; Q-007 default and gen_bug_reproducer_specs.md)
+- Test group: gen_dbg_req_shape_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DBG-001.cp_cause.none, CG-DBG-002.cr_shape_outcome.flush_entered, CG-DBG-002.cp_shape.pulse_flush
 
 ### TP-DBG-012: debug_req_i held while in debug mode is ignored; still high at dret it re-halts before any instruction
@@ -10432,12 +10875,16 @@ fcov_dbg_trg_pmc.md. Conventions:
   fetched the vector address then DmHaltAddr; mailbox dpc == vector (gen_test_dbg_irq_race).
 - Pass criteria: gen_chk_irq (mepc/mcause written, MIE cleared); gen_chk_debug (dpc == vector,
   cause 3, prv M); after dret the handler's first instruction retires with rvfi_intr==0 (the
-  interrupt CSRs are already set).
+  interrupt CSRs are already set). Note (fact-check N3): the FIRST debug-ROM record of this entry
+  carries rvfi_intr = 1 (rvfi_set_trap_pc_q is set by the IRQ_TAKEN pc_set and cleared only by the
+  next rvfi_id_done, rtl/ibex_core.sv:2403-2413); gen_chk_irq's "no rvfi_intr while debug_mode"
+  rule excepts this arc (TP-DBG-003 / TP-DBG-061 keep the rule for entries that did not follow
+  W-IRQTAKEN).
 - Expected: pass
 - Test group: gen_dbg_irq_mask
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_irq_taken, CG-DBG-001.cr_cause_dpc.haltreq_mtvec, CG-DBG-009.cr_window_disp.irqtaken_handler, CG-DBG-009.cr_src_window.ext_irqtaken, CG-DBG-009.cr_src_window.fast_irqtaken
 
-### TP-DBG-017: dcsr reset value 0x4000_0003 and layout read in the first debug window
+### TP-DBG-017: dcsr layout and constant fields read in the first debug window (reset 0x4000_0003 is never observable as such: the entry rewrites cause and prv, so the first read is 0x4000_00C3 from M / 0x4000_00C0 from U)
 - Features: F-DBG-012
 - Phase: 1
 - Tier: smoke
@@ -10474,7 +10921,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   Functional impact nil (rtl/ibex_controller.sv:481-483 never reads it). The bit-13 sub-check is
   separately disable-able after an owner ruling.
 - Expected: expected-fail (B15)
-- Test group: gen_dbg_csr
+- Test group: gen_dbg_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DBG-007.cr_bit_rb.ebreakm_w, CG-DBG-007.cr_bit_rb.ebreaku_w, CG-DBG-007.cr_bit_rb.step_w, CG-DBG-007.cr_bit_rb.ebreaks_w, CG-DBG-007.cr_bit_rb.prv_w, CG-DBG-007.cr_bit_rb.stepie_0, CG-DBG-007.cr_bit_rb.stopcount_0, CG-DBG-007.cr_bit_rb.stoptime_0, CG-DBG-007.cr_bit_rb.mprven_0, CG-DBG-007.cr_bit_rb.nmip_0, CG-DBG-007.cr_bit_rb.z27_0, CG-DBG-007.cr_bit_rb.z14_0, CG-DBG-007.cr_bit_rb.z5_0, CG-DBG-007.cr_bit_rb.xdv_c, CG-DBG-007.cr_pattern_op.zeros_rw, CG-DBG-007.cr_pattern_op.zeros_rc, CG-DBG-007.cr_pattern_op.ones_rw, CG-DBG-007.cr_pattern_op.ones_rs, CG-DBG-007.cr_pattern_op.ones_rc, CG-DBG-007.cr_pattern_op.walk_rw, CG-DBG-007.cr_pattern_op.walk_rs, CG-DBG-007.cr_pattern_op.walk_rc, CG-DBG-007.cr_pattern_op.rand_rw, CG-DBG-007.cr_pattern_op.rand_rs, CG-DBG-007.cr_pattern_op.rand_rc, CG-DBG-008.cr_csr_op.dcsr_wr, CG-DBG-008.cr_csr_op.dcsr_set, CG-DBG-008.cr_csr_op.dcsr_clr
 
 ### TP-DBG-019: dcsr.prv is WARL over {M,U}: writes of S (01) and H (10) read back U and dret resumes in U
@@ -10529,7 +10976,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   TP-DBG-048, TP-DBG-062, TP-IRQ-041 and the CSR items exclude dcsr bit 3 from their compare and
   cite this item.
 - Expected: expected-fail (B5)
-- Test group: gen_dbg_irq_mask
+- Test group: gen_dbg_irq_mask_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DBG-009.cr_src_window.nmi_debug, CG-DBG-009.cr_window_disp.debug_taken, CG-DBG-005.cr_prv_next.m_nmi
 
 ### TP-DBG-022: ebreak in M-mode with dcsr.ebreakm=1 enters debug mode (cause 1, dpc = ebreak pc, no exception CSRs)
@@ -10672,18 +11119,25 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_dbg_ebreak
 - Bins: CG-DBG-003.cr_coincident_outcome.wbfault_discarded, CG-DBG-003.cp_outcome.discarded, CG-DBG-003.cp_coincident.wb_fault
 
-### TP-DBG-030: ebreak (ebreakm=1) and debug_req_i in the same cycle: ebreak wins (cause 1, dpc = ebreak pc)
+### TP-DBG-030: ebreak (ebreakm=1) with debug_req_i rising while the ebreak is in ID: ebreak wins (cause 1, dpc = ebreak pc); a request high before its transfer pre-empts it (cause 3)
 - Features: F-DBG-025
 - Phase: 1
 - Tier: targeted
-- Preconditions: ebreakm=1 (or ebreaku=1 in U).
-- Stimulus: debug_req_i rises in W-DEC(ebreak) (ibus-fetch triggered with icache_enable=0, offset
-  sweep 0..2) and is held.
+- Preconditions: ebreakm=1 (or ebreaku=1 in U, C-2).
+- Stimulus: debug_req_i rises around the ebreak's IF->ID transfer (ibus-fetch triggered with
+  icache_enable=0, offset sweep -1..+2 cycles) and is held. Rises inside W-DEC(ebreak) let the
+  ebreak execute: FLUSH takes DBG_TAKEN_ID with cause EBREAK (rtl/ibex_controller.sv:874-882,
+  :985-987); rises before the transfer block the ebreak (halt_if): plain haltreq entry, cause 3,
+  dpc == ebreak pc, no ebreak record ("pre-empted" class).
 - Randomized: offset, privilege, ebreak form; weights: W3, W13.
 - Knobs: knob:debug_req_regime
-- Fire-check: the ebreak RVFI item has rvfi_ext_debug_req==1 and the mailbox dcsr.cause is
-  captured (gen_test_dbg_ebreak).
-- Pass criteria: gen_chk_debug (cause 1, dpc == ebreak pc, not ebreak pc + size).
+- Fire-check: per seed >= 1 "ebreak wins" iteration: ebreak record with rvfi_trap = 0 (S-2) and
+  rvfi_ext_debug_req = 0 (C-3), the rise timestamp inside W-DEC(ebreak), then the DmHaltAddr fetch
+  with no record in between and the mailbox dcsr.cause captured; and >= 1 pre-empted iteration
+  (no ebreak record before the DmHaltAddr fetch) (gen_test_dbg_ebreak).
+- Pass criteria: gen_chk_debug ("ebreak wins": cause 1, dpc == ebreak pc, not ebreak pc + size;
+  pre-empted: cause 3, dpc == ebreak pc, the ebreak executes after dret unless the debug program
+  advances dpc).
 - Expected: pass
 - Test group: gen_dbg_ebreak
 - Bins: CG-DBG-003.cr_coincident_outcome.haltreq_dbg, CG-DBG-002.cr_coincident_outcome.ebreak_entered, CG-DBG-001.cr_cause_dpc.ebreak_pc
@@ -10799,8 +11253,10 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Stimulus: debug body of random length, then dret; program continues.
 - Randomized: entry privilege, body length, dpc alignment; weights: W3, W7, W10.
 - Knobs: knob:priv_regime
-- Fire-check: RVFI retirement of dret with rvfi_ext_debug_mode==1 and rvfi_pc_wdata == dpc, and the
-  next retirement has rvfi_ext_debug_mode==0 at pc == dpc (gen_test_dbg_dret).
+- Fire-check: RVFI retirement of dret with rvfi_ext_debug_mode==1 followed by a retirement with
+  rvfi_ext_debug_mode==0 whose rvfi_pc_rdata == dpc (C-1: the dret record's rvfi_pc_wdata is dret
+  pc + 4, the sequential fetch address, rtl/ibex_core.sv:2084, and is not asserted)
+  (gen_test_dbg_dret).
 - Pass criteria: gen_chk_debug (resume address and privilege, debug_mode falls); gen_isa_compare
   (rvfi_mode of the next instruction == dcsr.prv; register state continuous); the minstret
   effect (dret counted) is checked by TP-PMC-049.
@@ -10842,7 +11298,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   gen_chk_csr_readback expect mstatus.MPRV==0 after dret. gen_isa_compare with the shim
   implementing the spec rule.
 - Expected: expected-fail (B1)
-- Test group: gen_dbg_dret
+- Test group: gen_dbg_dret_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DBG-005.cr_prv_mprv.u_on, CG-DBG-005.cr_prv_mprv.m_on, CG-DBG-005.cr_prv_mprv.u_off, CG-DBG-010.cr_b1.b1_load_ok, CG-DBG-010.cr_b1.b1_store_ok, CG-DBG-010.cp_phase.post_dret_u_mprv
 
 ### TP-DBG-039: Debugger-modified dcsr.prv changes the resume privilege; M-only accesses then trap in U
@@ -10911,7 +11367,8 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:imem_rvalid_delay, knob:priv_regime, knob:instr_mix
 - Fire-check: between two DmHaltAddr fetches exactly one RVFI item has rvfi_ext_debug_mode==0 and
   the mailbox cause==4 (gen_test_dbg_step).
-- Pass criteria: gen_chk_debug (one retirement per step, dpc == pc of the following instruction,
+- Pass criteria: gen_chk_debug (one instruction per step, where a Zcmp sequence's micro-op records
+  count as one instruction (C-12, TP-DBG-051); dpc == pc of the following instruction,
   cause 4, prv == mode of the stepped instruction); gen_isa_compare; minstret +1 per step is
   checked by TP-PMC-050 (its debug program reads minstret).
 - Expected: pass
@@ -10955,7 +11412,8 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Phase: 1
 - Tier: targeted
 - Preconditions: step armed; ebreakm/ebreaku=0 for the ebreak variant; mtvec set; PMP/bus error
-  configured for the load/store fault variant.
+  configured for the load/store fault variant; cpuctrlsts.icache_enable=0 (C-14: the handler is
+  executed after every resume and would otherwise be cached, hiding the vector request).
 - Stimulus: stepped instruction is ecall / illegal / ebreak (exception) / faulting load or store /
   fetch of a faulting address reached sequentially.
 - Randomized: kind (uniform), privilege M/U at the step, vectoring mode.
@@ -10974,14 +11432,23 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-DBG-041
 - Phase: 1
 - Tier: targeted
-- Preconditions: step armed; ebreakm=1 (M) or ebreaku=1 (U).
+- Preconditions: step armed; ebreakm=1 (M) or ebreaku=1 (U); icache_enable=0 for the haltreq variant
+  (the ebreak's fetch anchors the driver).
 - Stimulus: stepped instruction is ebreak or c.ebreak; the debug epilogue advances dpc and keeps
-  step set for the next step; in 30% of iterations debug_req_i is also held across the step.
-- Randomized: privilege, form, coincident debug_req_i.
-- Knobs: knob:priv_regime
-- Fire-check: stepped ebreak RVFI item with rvfi_trap == 0 (debug path, S-2 rule) then DmHaltAddr;
-  mailbox cause==1 and dpc == ebreak pc (gen_test_dbg_step).
-- Pass criteria: gen_chk_debug (cause 1, dpc == ebreak pc not +size); gen_isa_compare.
+  step set for the next step. In 30% of iterations debug_req_i is also driven: it rises in
+  W-DEC(ebreak), i.e. after the ebreak's IF->ID transfer (anchored on the ebreak's ibus fetch), and
+  is held. A request already high in the first DECODE after the dret's FLUSH would re-halt at once
+  with cause 3, dpc unchanged and no ebreak record (the TP-DBG-012 / TP-DBG-054 arc,
+  rtl/ibex_controller.sv:700-708); such iterations are classified "re-halt" and excluded from the
+  cause-1 assertion.
+- Randomized: privilege, form, coincident debug_req_i and its offset; weights: W3, W13.
+- Knobs: knob:priv_regime, knob:debug_req_regime
+- Fire-check: stepped ebreak RVFI item with rvfi_trap == 0 (debug path, S-2 rule; rvfi_ext_debug_req
+  = 0 on it even in the haltreq variant, C-3) then DmHaltAddr with no record in between; mailbox
+  cause==1 and dpc == ebreak pc; per seed >= 1 haltreq-variant iteration with the rise timestamp
+  inside W-DEC(ebreak) (gen_test_dbg_step).
+- Pass criteria: gen_chk_debug (cause 1, dpc == ebreak pc not +size; re-halt class: cause 3, dpc
+  unchanged, zero retirements); gen_isa_compare.
 - Expected: pass
 - Test group: gen_dbg_step
 - Bins: CG-DBG-006.cr_stepped_prv.ebreakdbg_m, CG-DBG-006.cr_stepped_prv.ebreakdbg_u, CG-DBG-006.cr_stepped_retired.ebreakdbg_ok, CG-DBG-001.cp_cause.ebreak, CG-DBG-006.cr_haltreq_cause.yes_ebreak, CG-DBG-003.cr_coincident_outcome.step_dbg, CG-DBG-001.cr_cause_dpc.ebreak_pc
@@ -11024,29 +11491,34 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_dbg_irq_mask
 - Bins: CG-DBG-006.cr_pending_cause.nmi_step, CG-DBG-009.cr_src_window.nmi_step, CG-DBG-005.cr_prv_next.m_nmi
 
-### TP-DBG-049: Step over WFI: WFI acts as a nop, dpc = wfi pc + 4, core_busy_o dips for exactly one cycle when the port rule allows it
+### TP-DBG-049: Step over WFI: WFI acts as a nop, dpc = wfi pc + 4, no sleep and no core_busy_o dip (FLUSH -> DBG_TAKEN_IF)
 - Features: F-DBG-044
 - Phase: 1
 - Tier: targeted
-- Preconditions: step armed; mstatus.TW=0; no interrupt pending (irq_pending_o==0); >= 256 cycles
-  after reset release / key valid (invalidation sweep finished).
+- Preconditions: step armed; mstatus.TW=0; interrupt pending state random (irq_pending_o 0 or 1:
+  neither is needed, the stepped WFI never sleeps); >= 256 cycles after reset release / key valid
+  (so an Off cycle, if the RTL produced one, could not be masked by the invalidation sweep).
 - Stimulus: stepped instruction is wfi in M or U mode; the imem regime alternates between minimum
-  latency (no fetch beat outstanding at W-WAITSLEEP(wfi): the dip is visible) and slow (a prefetch
-  beat outstanding: the dip is hidden by if_busy).
-- Randomized: privilege, mstatus.MIE, instructions around the wfi, imem latency; weights: W3, W5.
+  latency and slow so that both "no fetch beat outstanding" and "prefetch beat outstanding" occur
+  around the wfi (core_busy_o must stay On in both).
+- Randomized: privilege, mstatus.MIE, irq line pending or not, instructions around the wfi, imem
+  latency; weights: W3, W5.
 - Knobs: knob:irq_regime, knob:imem_rvalid_delay
-- Fire-check: the stepped RVFI item is wfi (rvfi_insn==0x10500073) and the DmHaltAddr fetch follows
-  within DBG_ENTRY_BOUND_CYCLES; per seed >= 1 iteration with core_busy_o Off for exactly 1 cycle
-  (no ibus beat outstanding, no dbus access outstanding in W-WAITSLEEP(wfi)) and >= 1 iteration
-  with the dip hidden (an ibus beat outstanding, logged by the ibus monitor) (gen_test_dbg_step).
-- Pass criteria: gen_chk_debug (dpc == wfi pc + 4, cause 4); gen_chk_sleep applies the core_busy_o
-  port rule (gen_tb_architecture.md 8.2 item 1): exactly one Off cycle when no masking source is
-  active (WAIT_SLEEP clears ctrl_busy_o, SLEEP stays busy because debug_single_step_i is set,
-  rtl/ibex_controller.sv:598-621; no wake source needed), otherwise no Off cycle; wfi counted in
-  minstret is checked by TP-PMC-050.
+- Fire-check: the stepped WFI record (rvfi_insn == 0x10500073, rvfi_ext_debug_mode = 0) is followed
+  by an instr_addr_o fetch of DmHaltAddr with no intervening retirement (record order), the next
+  record carries rvfi_ext_debug_mode = 1, and core_busy_o never equals IbexMuBiOff between the WFI
+  record and the DmHaltAddr fetch, in >= 1 iteration with no ibus beat outstanding at the WFI's
+  FLUSH cycle (so a WAIT_SLEEP dip could not have been hidden by if_busy) and >= 1 with a beat
+  outstanding; dpc read-back == wfi pc + 4 and dcsr.cause == 4 (gen_test_dbg_step).
+- Pass criteria: gen_chk_debug (dpc == wfi pc + 4, cause 4); gen_chk_sleep in the "no Off cycle"
+  profile (C-5 / X-8: do_single_step_d sets enter_debug_mode_prio_q and FLUSH overrides
+  `ctrl_fsm_ns = WAIT_SLEEP` with DBG_TAKEN_IF, rtl/ibex_controller.sv:969-970, :985-987; WAIT_SLEEP
+  and SLEEP are never entered, so the one-cycle dip of an unstepped wfi (TP-DBG-071 (b), TP-DBG-014)
+  and of a debug-mode wfi (TP-DBG-063) does not occur here; any Off cycle is a failure); wfi
+  counted in minstret is checked by TP-PMC-050.
 - Expected: pass
 - Test group: gen_dbg_step
-- Bins: CG-DBG-006.cr_stepped_prv.wfi_m, CG-DBG-006.cr_stepped_prv.wfi_u, CG-DBG-006.cr_stepped_retired.wfi_ok, CG-DBG-001.cr_cause_dpc.step_wfi, CG-DBG-001.cr_cause_ctx.step_sleep, CG-DBG-001.cr_ctx_busy.sleep_one, CG-DBG-001.cr_ctx_busy.sleep_hidden
+- Bins: CG-DBG-006.cr_stepped_prv.wfi_m, CG-DBG-006.cr_stepped_prv.wfi_u, CG-DBG-006.cr_stepped_retired.wfi_ok, CG-DBG-001.cr_cause_dpc.step_wfi, CG-DBG-001.cr_cause_ctx.step_flush_wfi, CG-DBG-001.cr_ctx_busy.flush_wfi_none
 
 ### TP-DBG-050: Step over mret: dpc = mepc, dcsr.prv = mstatus.MPP, mstatus.MIE restored
 - Features: F-DBG-045
@@ -11057,8 +11529,10 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Stimulus: stepped instruction is mret.
 - Randomized: MPP, MPIE, mepc; weights: W3, W13.
 - Knobs: knob:priv_regime
-- Fire-check: stepped RVFI item is mret with rvfi_pc_wdata == mepc and the mailbox dpc == mepc,
-  dcsr.prv == MPP (gen_test_dbg_step).
+- Fire-check: the stepped RVFI item is the mret (rvfi_insn == MRET, rvfi_ext_debug_mode = 0)
+  followed by the DmHaltAddr fetch with no record in between, and the mailbox dpc == mepc,
+  dcsr.prv == MPP (gen_test_dbg_step). The mret record's rvfi_pc_wdata is mret pc + 4 (pc_set with
+  PC_ERET happens in FLUSH, after the ID exit, C-1) and is not asserted; the resume target is dpc.
 - Pass criteria: gen_chk_debug (dpc, prv); gen_isa_compare (mstatus after mret: MIE=MPIE, MPP=U,
   MPRV cleared if MPP!=M); gen_chk_csr_readback.
 - Expected: pass
@@ -11074,9 +11548,13 @@ fcov_dbg_trg_pmc.md. Conventions:
   cm.mva01s with random rlist.
 - Randomized: opcode (uniform), rlist, spimm, privilege, rvalid delay.
 - Knobs: knob:dmem_rvalid_delay, knob:priv_regime
-- Fire-check: exactly one RVFI item (rvfi_ext_expanded_insn_last) between the debug windows and
-  all N stack accesses on the dbus before the DmHaltAddr fetch (gen_test_dbg_step).
-- Pass criteria: gen_chk_debug (dpc == next pc or ra target for popret/popretz, cause 4);
+- Fire-check: the records between the debug windows are exactly the micro-op records of ONE cm.*
+  sequence (C-12 / X-14: one rvfi_valid per micro-op, each with rvfi_ext_debug_mode = 0,
+  rvfi_ext_expanded_insn_valid = 1 and rvfi_insn = the 32-bit expansion, the halfword on
+  rvfi_ext_expanded_insn, only the last with rvfi_ext_expanded_insn_last = 1), and all N stack
+  accesses are on the dbus at or before the DmHaltAddr fetch (same-cycle rule) (gen_test_dbg_step).
+- Pass criteria: gen_chk_debug (dpc == next pc or ra target for popret/popretz, cause 4; the
+  "one instruction per step" rule counts the expanded sequence as one instruction, TP-DBG-042);
   gen_isa_compare (registers/stack); gen_chk_counters (NumLoads/NumStores +N on
   rvfi_ext_mhpmcounters); minstret +1 is checked by TP-PMC-050.
 - Expected: pass
@@ -11120,21 +11598,31 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_dbg_step
 - Bins: CG-DBG-006.cr_stepped_prv.jumpfault_m, CG-DBG-006.cr_stepped_retired.jumpfault_ok, CG-DBG-005.cr_prv_next.m_fault, CG-DBG-005.cr_prv_next.u_fault, CG-DBG-005.cr_dpcsrc_next.hw_fault
 
-### TP-DBG-054: Step and debug_req_i both active across the dret: one instruction executes, cause 3 (haltreq) recorded
+### TP-DBG-054: Step and debug_req_i both active across the dret: a request already high at the resume re-halts with zero instructions (cause 3); a request rising after the stepped instruction entered ID lets it execute (cause 3)
 - Features: F-DBG-049
 - Phase: 1
 - Tier: targeted
-- Preconditions: step armed.
-- Stimulus: debug_req_i asserted 0..3 cycles before the dret retires and held through the re-entry.
-- Randomized: assertion offset, stepped instruction class (ALU/load/branch), privilege; weights: W3, W6, W13.
+- Preconditions: step armed; icache_enable=0 (the stepped instruction's fetch anchors the driver
+  for class (b)).
+- Stimulus: two classes, each >= 30% of the iterations: (a) debug_req_i asserted 0..3 cycles before
+  the dret's record and held: it is high in the first DECODE after the dret's FLUSH (ID empty) and
+  the RTL takes DBG_TAKEN_IF at once (rtl/ibex_controller.sv:704-708): zero instructions retire,
+  dpc unchanged, cause 3 (the TP-DBG-012 re-halt arc; the step does not force one instruction);
+  (b) debug_req_i rises in W-DEC of the stepped instruction X (after its IF->ID transfer) and is
+  held: X retires (its record carries rvfi_ext_debug_req = 0, C-3) and the entry records cause 3 by
+  the priority haltreq > step (:519-523) with dpc == next pc.
+- Randomized: class and offset, stepped instruction class (ALU/load/branch), privilege; weights:
+  W3, W6, W13.
 - Knobs: knob:debug_req_regime
-- Fire-check: exactly one non-debug RVFI item between the windows with rvfi_ext_debug_req==1 and
-  the mailbox cause==3 (gen_test_dbg_step).
-- Pass criteria: gen_chk_debug (exactly one retirement - Sdext: step happens regardless of the
-  resume reason; cause 3 per RTL priority haltreq > step, dpc == next pc).
+- Fire-check: per seed >= 1 iteration of each class, identified from the driver timestamp, the
+  records between the two DmHaltAddr fetches (none for (a); exactly X's for (b), rvfi_ext_debug_req
+  = 0 on it) and the mailbox cause == 3 in both (gen_test_dbg_step).
+- Pass criteria: gen_chk_debug ((a): zero retirements, cause 3, dpc unchanged - RTL-defined: Sdext
+  requires the hart to halt "as soon as possible" on haltreq and does not owe the step; (b): exactly
+  one retirement, cause 3, dpc == next pc).
 - Expected: pass
 - Test group: gen_dbg_step
-- Bins: CG-DBG-006.cr_haltreq_cause.yes_haltreq, CG-DBG-002.cr_coincident_outcome.step_entered, CG-DBG-001.cp_cause.haltreq
+- Bins: CG-DBG-006.cr_haltreq_cause.yes_haltreq, CG-DBG-002.cr_coincident_outcome.step_entered, CG-DBG-001.cp_cause.haltreq, CG-DBG-002.cr_shape_outcome.dret_rehalt, CG-DBG-006.cp_retired.none
 
 ### TP-DBG-055: dcsr/dpc/dscratch0/dscratch1 accesses outside debug mode raise illegal instruction in M-mode and U-mode
 - Features: F-DBG-050
@@ -11254,7 +11742,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   page access must be performed (dbus request, no trap). gen_chk_debug (no DmExceptionAddr
   expected). Control MPRV=0 must pass on the RTL.
 - Expected: expected-fail (B2)
-- Test group: gen_dbg_pmp_dm
+- Test group: gen_dbg_pmp_dm_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DBG-010.cr_lsu_priv.l_umprv_far_fault, CG-DBG-010.cr_lsu_priv.s_umprv_far_fault, CG-DBG-010.cr_lsu_priv.l_m_far_ok, CG-DBG-010.cr_lsu_priv.l_umprv_dm_ok, CG-DBG-004.cr_kind_mprv.loadpmp_mprv_u, CG-DBG-004.cr_kind_mprv.storepmp_mprv_u
 
 ### TP-DBG-061: All interrupts are ignored in debug mode and taken after dret before any instruction (mepc = dpc)
@@ -11403,7 +11891,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Preconditions: random mixed program (riscv-dv-style with M/U sections); debug ROM with a
   randomized body (CSR reads/writes of dcsr/dpc/dscratch/tdata*, loads/stores in and out of the DM
   window, occasional wfi/ecall, no mret per Q-005 default), random dcsr.ebreakm/ebreaku/step and
-  trigger arming per window.
+  trigger arming per window; the program contains cm.push/cm.pop sequences and the debug_req
+  driver emits 10% short pulses: the two mechanisms that produce rvfi_ext_debug_req = 1 on a
+  non-debug record (C-3).
 - Stimulus: debug_req driver in the sparse or storm regime with held requests (and 10% short
   pulses as allowed drops); irq driver in the sparse regime; memory agents in random regimes.
 - Randomized: everything per seed; the regime schedule is the cross-cutting subagent's.
@@ -11434,21 +11924,32 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_dbg_haltreq
 - Bins: CG-DBG-001.cr_cause_ctx.haltreq_ifetch, CG-DBG-001.cr_cause_dpc.haltreq_next
 
-### TP-DBG-070: RVFI debug extension flags: rvfi_ext_debug_req and rvfi_ext_debug_mode track the request level and the mode of every retirement
+### TP-DBG-070: RVFI debug extension flags: rvfi_ext_debug_req is the request level at the instruction's IF->ID transfer (or the sticky capture), rvfi_ext_debug_mode the mode of every retirement
 - Features: F-DBG-065
 - Phase: 1
 - Tier: targeted
-- Preconditions: random program with debug windows (haltreq and ebreak entries) and trapping
-  instructions inside and outside debug mode.
-- Stimulus: debug_req_i held across retirements (slow memory so retirements happen while the
-  request is high), released inside and outside debug windows.
-- Randomized: request timing, program, trap positions; weights: W6, W13.
+- Preconditions: random program with debug windows (haltreq and ebreak entries), trapping
+  instructions inside and outside debug mode, cm.push/cm.pop sequences in M and U sections (C-2).
+- Stimulus: debug_req_i held across debug windows and released inside and outside them (req0_mode1
+  / req1_mode1); the {req 1, mode 0} combination is constructed deliberately by the two mechanisms
+  of C-3: (i) a 1..3 cycle pulse while a load waits in WB with ID empty (the TP-DBG-010 placement
+  (a): the next instruction entering ID reports the sticky captured_debug_req) and (ii) a held
+  request rising during a cm.push / cm.pop expansion (enter_debug_mode is masked while
+  instr_gets_expanded is EXPANDED / EXPANDED_COMMIT, rtl/ibex_controller.sv:474-477, so the
+  remaining micro-ops enter ID with the request high and report 1; the entry follows the sequence).
+  Slow memory alone never produces it: outside debug mode an ordinary instruction cannot enter ID
+  while debug_req_i is high (halt_if).
+- Randomized: request timing, program, trap positions, mechanism (i) vs (ii), privilege of the
+  constructed record; weights: W3, W6, W13.
 - Knobs: knob:debug_req_regime, knob:dmem_rvalid_delay
 - Fire-check: all four {req, mode} flag combinations and all four {trap, mode} combinations occur
-  in one seed (gen_test_dbg_misc).
+  in one seed, with req1_mode0 produced by (i) or (ii) at least once each in M and once in U
+  (gen_test_dbg_misc).
 - Pass criteria: gen_isa_compare / RVFI monitor (rvfi_ext_debug_mode == dbg_model.debug_mode for
-  each item; rvfi_ext_debug_req == the driver level in the cycle the instruction was in ID; no RVFI
-  item for the entry itself); gen_chk_debug.
+  each item; rvfi_ext_debug_req == the debug_req_i level in the cycle before the instruction's first
+  ID cycle, or captured_debug_req when the request was first seen with ID empty
+  (rtl/ibex_core.sv:1752, :1949-1957, :1996-2001; C-3); the first debug-ROM record of a held-request
+  entry carries 1; no RVFI item for the entry itself); gen_chk_debug.
 - Expected: pass
 - Test group: gen_dbg_mode_misc
 - Bins: CG-DBG-012.cp_flags.req1_mode0, CG-DBG-012.cp_flags.req0_mode1, CG-DBG-012.cp_flags.req1_mode1, CG-DBG-012.cr_flags_mode.req1_m, CG-DBG-012.cr_flags_mode.req1_u, CG-DBG-012.cr_flags_mode.mode1_m, CG-DBG-012.cp_trap_dbg.trap_dbg, CG-DBG-012.cp_trap_dbg.trap, CG-DBG-012.cp_trap_dbg.ok_dbg
@@ -11461,28 +11962,36 @@ fcov_dbg_trg_pmc.md. Conventions:
   (irq_pending_o==0) so the wfi would really sleep; for dret the core is in a debug window with a
   held debug_req_i re-asserted at the offset; icache_enable=0 (the ibus fetch of the instruction
   anchors the driver); >= 256 cycles after reset release / key valid.
-- Stimulus: one special instruction (wfi 40%, mret 20%, flushing csrw 20%, dret 20%) at a random
-  position; debug_req_i rises at offset k relative to the first W-DEC cycle of the instruction
-  (back-dated from its record), k drawn uniformly from {-2, -1, 0, +1, +2, +3, +8}, and is held.
-- Randomized: instruction kind, offset k, mret MPP/MPIE/mepc, CSR target, neighbours.
+- Stimulus: one special instruction X (wfi 40%, mret 20%, flushing csrw 20%, dret 20%) at a random
+  position; debug_req_i rises at offset k relative to the first W-DEC cycle of X (back-dated from
+  its record), k drawn uniformly from {-2, -1, 0, +1, +2, +3, +8}, and is held.
+- Randomized: instruction kind, offset k, mret MPP/MPIE/mepc, CSR target, neighbours; weights:
+  W3, W13.
 - Knobs: knob:debug_req_regime, knob:instr_mix, knob:imem_gnt_delay
-- Fire-check: gen_test_dbg_haltreq classifies each iteration from the boundary trace: (a) k <= 0 and
-  wfi/mret/csrw: the special instruction retires with rvfi_ext_debug_req==1 and the DmHaltAddr fetch
-  follows with core_busy_o never Off (W-FLUSH -> W-DBGTAKEN); (b) k >= +1 and wfi: W-WAITSLEEP(wfi)
-  is reached and, with no masking source active (port rule), core_busy_o is Off for exactly one
-  cycle when debug_req_i is already high in the first SLEEP cycle, otherwise for one cycle plus one
-  per un-woken SLEEP cycle, then the DmHaltAddr fetch (SLEEP wake, F-DBG-009); with a masking
-  source active (an ibus beat outstanding, logged) the dip is hidden and the iteration is classed
-  (b)-hidden; (c) dret at any k: zero non-debug retirements between the two windows (W-DEC(dret) ->
-  W-DBGTAKEN re-halt, F-DBG-007). Each of (a), (b) with a one-cycle dip, (b) with a dip >= 2,
-  (b)-hidden and (c) must occur at least once per seed.
-- Pass criteria: gen_chk_debug (cause 3; dpc == wfi pc + 4 / mepc / csrw pc + 4 / dret target;
-  dcsr.prv == old MPP for mret); gen_chk_sleep (core_busy_o profile per class: none / exactly one /
-  k cycles; no bus request while Off); gen_isa_compare (mret and CSR side effects committed;
-  stream continuous).
+- Fire-check: gen_test_dbg_haltreq classifies each iteration from the boundary trace (driver
+  timestamp, records, DmHaltAddr fetch): (a0) k < 0 and wfi/mret/csrw: the request is high before
+  X's IF->ID transfer, halt_if blocks X: no record for X, plain haltreq entry with dpc == X pc, X
+  executes after dret ("pre-empted", C-3); (a) k = 0: X retires (its record carries
+  rvfi_ext_debug_req = 0) and the DmHaltAddr fetch follows with no record in between and
+  core_busy_o never Off (W-FLUSH -> W-DBGTAKEN); (b) k >= +1 and wfi: W-WAITSLEEP(wfi) is reached
+  and, with no masking source active (port rule), core_busy_o is Off for exactly one cycle when
+  debug_req_i is already high in the first SLEEP cycle (SLEEP stays busy with a wake term true,
+  rtl/ibex_controller.sv:606-621), otherwise for one cycle plus one per un-woken SLEEP cycle, then
+  the DmHaltAddr fetch (SLEEP wake, F-DBG-009); with a masking source active (an ibus beat
+  outstanding, logged) the dip is hidden and the iteration is classed (b)-hidden; (c) dret: with the
+  request high in the first empty-ID DECODE after the dret's FLUSH zero non-debug instructions
+  retire between the two windows (W-DEC(dret) -> W-DBGTAKEN re-halt, F-DBG-007); with a later rise
+  (k = +3 / +8 and low imem latency) the resumed program retires >= 1 instruction before the
+  re-halt ("(c)-run", dpc == next unretired pc). Each of (a0), (a), (b) with a one-cycle dip, (b)
+  with a dip >= 2, (b)-hidden, (c) and (c)-run must occur at least once per seed.
+- Pass criteria: gen_chk_debug (cause 3; dpc == wfi pc + 4 / mepc / csrw pc + 4 / dret target or
+  the next unretired pc for (c)-run; X pc for (a0); dcsr.prv == old MPP for mret in (a));
+  gen_chk_sleep (core_busy_o profile per class: none / exactly one / k cycles; no bus request while
+  Off); gen_isa_compare (mret and CSR side effects committed in (a), not in (a0); stream
+  continuous).
 - Expected: pass
 - Test group: gen_dbg_haltreq
-- Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_wfi, CG-DBG-001.cr_cause_ctx.haltreq_flush_mret, CG-DBG-001.cr_cause_ctx.haltreq_flush_csr, CG-DBG-001.cr_cause_ctx.haltreq_sleep, CG-DBG-001.cr_cause_ctx.haltreq_after_dret, CG-DBG-001.cr_ctx_busy.flush_wfi_none, CG-DBG-001.cr_ctx_busy.sleep_one, CG-DBG-001.cr_ctx_busy.sleep_many, CG-DBG-001.cr_cause_dpc.haltreq_wfi, CG-DBG-001.cr_cause_dpc.haltreq_mret, CG-DBG-001.cr_cause_dpc.haltreq_dret, CG-DBG-002.cr_coincident_outcome.wfi_entered, CG-DBG-002.cr_coincident_outcome.mret_entered, CG-DBG-002.cr_coincident_outcome.csr_entered, CG-DBG-002.cr_shape_outcome.dret_rehalt, CG-DBG-001.cr_ctx_busy.sleep_hidden
+- Bins: CG-DBG-001.cr_cause_ctx.haltreq_flush_wfi, CG-DBG-001.cr_cause_ctx.haltreq_flush_mret, CG-DBG-001.cr_cause_ctx.haltreq_flush_csr, CG-DBG-001.cr_cause_ctx.haltreq_sleep, CG-DBG-001.cr_cause_ctx.haltreq_after_dret, CG-DBG-001.cr_cause_ctx.haltreq_idle, CG-DBG-001.cr_ctx_busy.flush_wfi_none, CG-DBG-001.cr_ctx_busy.sleep_one, CG-DBG-001.cr_ctx_busy.sleep_many, CG-DBG-001.cr_cause_dpc.haltreq_wfi, CG-DBG-001.cr_cause_dpc.haltreq_mret, CG-DBG-001.cr_cause_dpc.haltreq_dret, CG-DBG-001.cr_cause_dpc.haltreq_next, CG-DBG-002.cr_coincident_outcome.wfi_entered, CG-DBG-002.cr_coincident_outcome.mret_entered, CG-DBG-002.cr_coincident_outcome.csr_entered, CG-DBG-002.cr_shape_outcome.dret_rehalt, CG-DBG-001.cr_ctx_busy.sleep_hidden
 
 ### TP-DBG-072: Step disarmed (dcsr.step 1 -> 0) in the last step window: the next dret free-runs with no re-entry
 - Features: F-DBG-037, F-DBG-065
@@ -11589,11 +12098,14 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Stimulus: tdata1 writes with data classes {all zeros, all ones, execute only, type!=2, dmode=0,
   load/store bits, match!=0, action=0, chain, hit bit, random} each with execute bit 0 or 1, using
   csrrw/csrrs/csrrc; csrr tdata1 after each.
-- Randomized: class order, execute bit, ops, random data; weights: W1, W2, W6, W13.
+- Randomized: class order, execute bit, ops, random data, the execute value already held before
+  each write (so csrrs/csrrc merge both ways); weights: W1, W2, W6, W13.
 - Knobs: none
 - Fire-check: mailbox log has >= 1 write per class with readback (gen_test_trg_csr).
-- Pass criteria: gen_chk_csr_readback (readback == 32'h2800_1048 | (wdata[2] << 2)); tdata2
-  unchanged by tdata1 writes.
+- Pass criteria: gen_chk_csr_readback (readback == 32'h2800_1048 | (post_op[2] << 2), where
+  post_op[2] is the set/clear-merged bit the RTL captures (csrrw: wdata[2]; csrrs: old_exec |
+  wdata[2]; csrrc: old_exec & ~wdata[2]; rtl/ibex_cs_registers.sv:1004-1005, :1788): a csrrc with
+  all-ones CLEARS execute although wdata[2] = 1); tdata2 unchanged by tdata1 writes.
 - Expected: pass
 - Test group: gen_trg_csr
 - Bins: CG-TRG-001.cr_td1_exec_rb.e0_dis, CG-TRG-001.cr_td1_exec_rb.e1_en, CG-TRG-001.cr_td1w_exec.zeros_e0, CG-TRG-001.cr_td1w_exec.zeros_e1, CG-TRG-001.cr_td1w_exec.ones_e0, CG-TRG-001.cr_td1w_exec.ones_e1, CG-TRG-001.cr_td1w_exec.type_e1, CG-TRG-001.cr_td1w_exec.dmode0_e1, CG-TRG-001.cr_td1w_exec.ldst_e1, CG-TRG-001.cr_td1w_exec.ldst_e0, CG-TRG-001.cr_td1w_exec.match_e1, CG-TRG-001.cr_td1w_exec.action0_e1, CG-TRG-001.cr_td1w_exec.chain_e1, CG-TRG-001.cr_td1w_exec.hit1_e1, CG-TRG-001.cr_td1w_exec.rand_e0, CG-TRG-001.cr_td1w_exec.rand_e1, CG-TRG-001.cr_csr_mode_result.td1_dbg_app, CG-TRG-001.cr_csr_op.td1_set, CG-TRG-001.cr_csr_op.td1_clr
@@ -11663,7 +12175,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   default in the reading report proposes following the doc; until the ruling the item is
   expected-fail with the Ibex-doc behaviour recorded.
 - Expected: expected-fail (B3)
-- Test group: gen_trg_csr
+- Test group: gen_trg_csr_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-TRG-001.cr_csr_mode_result.td3_dbg_drop, CG-TRG-001.cr_csr_mode_result.td3_m_drop, CG-TRG-001.cr_csr_mode_result.mctx_dbg_drop, CG-TRG-001.cr_csr_mode_result.mctx_m_drop, CG-TRG-001.cr_csr_mode_result.msctx_dbg_drop, CG-TRG-001.cr_csr_mode_result.msctx_m_drop, CG-TRG-001.cr_csr_mode_result.sctx_dbg_drop, CG-TRG-001.cr_csr_mode_result.sctx_m_drop, CG-TRG-001.cr_csr_mode_result.td3_dbg_rd, CG-TRG-001.cr_csr_mode_result.td3_m_rd, CG-TRG-001.cr_csr_mode_result.mctx_dbg_rd, CG-TRG-001.cr_csr_mode_result.mctx_m_rd, CG-TRG-001.cr_csr_mode_result.msctx_dbg_rd, CG-TRG-001.cr_csr_mode_result.msctx_m_rd, CG-TRG-001.cr_csr_mode_result.sctx_dbg_rd, CG-TRG-001.cr_csr_mode_result.sctx_m_rd, CG-TRG-001.cr_csr_op.td3_wr, CG-TRG-001.cr_csr_op.mctx_wr, CG-TRG-001.cr_csr_op.msctx_wr, CG-TRG-001.cr_csr_op.sctx_wr
 
 ### TP-TRG-009: tinfo (0x7A4) and tcontrol (0x7A5) are not implemented: illegal instruction in M and debug mode
@@ -11723,7 +12235,8 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Stimulus: mret to U; the U program reaches tdata2.
 - Randomized: A within the U section, U program mix, PMP layout; weights: W6, W13.
 - Knobs: knob:priv_regime, knob:pmp_regime
-- Fire-check: the retirement before the DmHaltAddr fetch has rvfi_mode==U and the mailbox has
+- Fire-check: the last record at or before the DmHaltAddr fetch (record order; the last pre-entry
+  record can be output in the fetch's cycle, same-cycle rule) has rvfi_mode==U and the mailbox has
   cause==2, prv==0 (gen_test_trg_fire).
 - Pass criteria: gen_chk_debug (prv U, dpc == tdata2); gen_isa_compare; gen_chk_pmp.
 - Expected: pass
@@ -11804,9 +12317,11 @@ fcov_dbg_trg_pmc.md. Conventions:
   before an mret (the trigger fires on the mret-return target after the mret retires).
 - Randomized: variant (uniform), interrupt line, trapping instruction, mret target.
 - Knobs: knob:irq_line_mix, knob:irq_hold
-- Fire-check: rvfi_trap item (or rvfi_intr on no item: the interrupt is accepted with no handler
-  retirement) followed by the DmHaltAddr fetch with no handler retirement; mailbox cause==2, dpc ==
-  handler address (gen_test_trg_fire).
+- Fire-check: exception variant: the rvfi_trap record; interrupt / NMI variants: the
+  rvfi_ext_irq_valid marker (C-13: a level rising four cycles after the accept decision with the
+  pipeline empty; rvfi_intr is a per-record field and no handler record exists); in all variants
+  the DmHaltAddr fetch follows with no handler retirement; mailbox cause==2, dpc == handler address
+  (gen_test_trg_fire).
 - Pass criteria: gen_chk_debug (dpc == vector, prv M); gen_isa_compare / gen_chk_irq / gen_chk_nmi
   (mepc/mcause/mstatus already updated at entry; handler runs after dret).
 - Expected: pass
@@ -11858,12 +12373,14 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Randomized: ebreak form (16/32-bit), privilege, code around the ebreak; weights: W3, W6.
 - Knobs: knob:priv_regime
 - Fire-check: RVFI ebreak item with rvfi_trap == 0 (into-debug record, S-2 rule) followed by the
-  DmHaltAddr fetch; mailbox dpc == ebreak pc and tdata2 == ebreak pc + size (gen_test_trg_fire).
+  DmHaltAddr fetch in record order (the ebreak record and the DBG_TAKEN_ID request can share a
+  cycle, same-cycle rule); mailbox dpc == ebreak pc and tdata2 == ebreak pc + size
+  (gen_test_trg_fire).
 - Pass criteria: gen_chk_debug follows Sdext/Sdtrig (a trigger fires only when its instruction is
   attempted; the entry cause for an ebreak entry is 1): expected cause==1 whenever dpc == the ebreak
   pc. Q-007 default: keep the scenario in the regression.
 - Expected: expected-fail (B10)
-- Test group: gen_trg_fire
+- Test group: gen_trg_fire_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-TRG-002.cr_coinc_cause.ebreakprev_trig, CG-TRG-002.cr_cause_dpc.trig_ebreakpc, CG-TRG-002.cr_cause_dpc.ebreak_ebreakpc, CG-DBG-003.cr_coincident_outcome.trignext_dbg, CG-TRG-002.cp_ctx.ebreak_next
 
 ### TP-TRG-021: Trigger address on the fall-through of a taken branch does not fire; on the fall-through of a not-taken branch it fires (data_ind_timing=0)
@@ -11912,8 +12429,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:instr_mix, knob:dmem_rvalid_delay
 - Fire-check: variant A: no dbus request for the stack accesses before the DmHaltAddr fetch and no
   rvfi_ext_expanded_insn_* item; variant B: all N accesses on the dbus and the
-  rvfi_ext_expanded_insn_last item before the DmHaltAddr fetch, dpc == successor (or ra target for
-  popret) (gen_test_trg_fire).
+  rvfi_ext_expanded_insn_last item at or before the DmHaltAddr fetch (the last micro-op's record
+  appears at R+1 = the DBG_TAKEN_IF request cycle when it is a store, same-cycle rule), dpc ==
+  successor (or ra target for popret) (gen_test_trg_fire).
 - Pass criteria: gen_chk_debug (dpc, no partial sequence); gen_isa_compare (register/stack
   state); gen_chk_dbus_proto.
 - Expected: pass
@@ -12057,8 +12575,9 @@ fcov_dbg_trg_pmc.md. Conventions:
   disarms.
 - Randomized: jalr vs branch, addr, distance, register holding the target; weights: W6, W13.
 - Knobs: knob:instr_mix
-- Fire-check: RVFI shows the jalr/branch retiring with rvfi_pc_wdata == addr and then the DmHaltAddr
-  fetch with dpc == addr; instructions before it retired normally (gen_test_trg_fire).
+- Fire-check: RVFI shows the jalr/branch retiring with rvfi_pc_wdata == addr (a branch/jump record
+  does carry its target, C-1) and the DmHaltAddr fetch at or after that record (same-cycle rule)
+  with dpc == addr; instructions before it retired normally (gen_test_trg_fire).
 - Pass criteria: gen_chk_debug; gen_chk_csr_readback (tdata1 0x2800_1048 after the zero write,
   0x2800_104C after arming); gen_isa_compare.
 - Expected: pass
@@ -12272,12 +12791,20 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Phase: 1
 - Tier: targeted
 - Preconditions: dummy_instr_en=0; IR=0.
-- Stimulus: runs of 2..8 consecutive csrr minstret (and instret alias in M), and ALU;csrr pairs
-  with random stalls before them (slow imem so the ALU is in WB when the csrr is in ID).
-- Randomized: run length, stall pattern, alias vs M address, minstreth reads mixed in; weights: W5, W10, W13.
-- Knobs: knob:imem_rvalid_delay
-- Fire-check: the dbg_model WB tracker reports >= 1 read issued while a countable instruction was
-  in WB and >= 1 with WB empty (gen_test_pmc_minstret).
+- Stimulus: runs of 2..8 consecutive csrr minstret (and instret alias in M), and two constructions
+  of the W-WB coincidence (fcov Conventions): `lw ; csrr minstret` with the dmem rvalid delayed so
+  the csrr is held in ID by outstanding_memory_access and commits in the load's response cycle
+  with the load retiring in WB (instr_ret_spec_i = 1, rtl/ibex_cs_registers.sv:1658, deterministic),
+  and `add ; csrr minstret` issued back-to-back from a warm icache (the add is in WB for exactly
+  the cycle after its ID exit, rtl/ibex_wb_stage.sv:115, :206: a slow imem REMOVES this coincidence,
+  it does not create it).
+- Randomized: run length, alias vs M address, minstreth reads mixed in, dmem delay, construction;
+  weights: W5, W10, W13.
+- Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
+- Fire-check: the dbg_model WB tracker (RVFI order + dbus timing) reports >= 1 read issued while a
+  countable instruction was in WB (the `lw ; csrr` form: the csrr's record follows the load's by
+  one and the load's response cycle equals the csrr's commit cycle) and >= 1 with WB empty
+  (gen_test_pmc_minstret).
 - Pass criteria: gen_chk_counters (each read == number of prior retirements, i.e. consecutive
   reads differ by exactly 1 regardless of timing); gen_isa_compare (Spike sequential semantics
   match).
@@ -12302,13 +12829,14 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_minstret
 - Bins: CG-PMC-002.cr_coherence_op.faulting_rd, CG-PMC-002.cr_window_delta.lsfault_eq, CG-PMC-002.cp_coherence.wb_faulting
 
-### TP-PMC-013: SecureIbex dummy instructions increment minstret and the mul/div wait counters (doc: no functional impact)
+### TP-PMC-013: SecureIbex dummy instructions increment minstret and the div-wait counter (doc: no functional impact); the dummy mul adds no mul-wait cycles
 - Features: F-PMC-011
 - Phase: 1
 - Tier: targeted
 - Preconditions: cpuctrlsts.dummy_instr_en=1, dummy_instr_mask random; mcountinhibit=0.
 - Stimulus: straight-line ALU windows of 200..5000 instructions bounded by reads of minstret,
-  mhpmcounter11 and mhpmcounter12; control window with dummy_instr_en=0.
+  mhpmcounter11 and mhpmcounter12; control window with dummy_instr_en=0. No load/store in the
+  windows, so no dummy can wait behind an outstanding WB access (C-10).
 - Randomized: mask, window length, secureseed writes; weights: W2, W10.
 - Knobs: knob:instr_mix
 - Fire-check: with dummy_instr_en readback == 1 over a warm straight-line ALU window of >= 200
@@ -12318,11 +12846,15 @@ fcov_dbg_trg_pmc.md. Conventions:
   (gen_test_pmc_minstret). Dummy-type bins (dummy_mul / dummy_div) are probe-gated (P1) and not in
   the manifest.
 - Pass criteria: gen_chk_counters follows the documented intent (Q-005 / Q-DL-4 default): minstret
-  delta == RVFI retired count and mhpmcounter11/12 deltas == mulh/div stall cycles of the program's
-  own instructions (0 for an ALU window); the RTL count is recorded. Control window must pass.
+  delta == RVFI retired count and mhpmcounter12 delta == div stall cycles of the program's own
+  instructions (0 for an ALU window); the RTL count is recorded (minstret + number of dummies;
+  mhpmcounter12 + DIV_STALL_FULL per dummy DIV). mhpmcounter11 delta == 0 is a PASS assertion in
+  both windows: the dummy multiply is `mul` (funct3 000, rtl/ibex_dummy_instr.sv:124-131), which the
+  RV32MSingleCycle multiplier completes in its first cycle (rtl/ibex_multdiv_fast.sv:203-217), so it
+  adds no mul_wait cycle. Control window must pass.
 - Expected: expected-fail (B7)
-- Test group: gen_pmc_minstret
-- Bins: CG-PMC-002.cr_window_delta.dummy_gt, CG-PMC-002.cr_window_delta.dummy_eq, CG-PMC-002.cr_dummy_delta.dumon_gt, CG-PMC-002.cr_dummy_delta.dumon_eq, CG-PMC-003.cr_idx_dummy.mul_dum_gt, CG-PMC-003.cr_idx_dummy.div_dum_gt, CG-PMC-003.cr_idx_dummy.mul_dum_eq
+- Test group: gen_pmc_minstret_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-PMC-002.cr_window_delta.dummy_gt, CG-PMC-002.cr_window_delta.dummy_eq, CG-PMC-002.cr_dummy_delta.dumon_gt, CG-PMC-002.cr_dummy_delta.dumon_eq, CG-PMC-003.cr_idx_dummy.div_dum_gt, CG-PMC-003.cr_idx_dummy.mul_dum_eq, CG-PMC-003.cr_idx_dummy.mul_dum_zero
 
 ### TP-PMC-014: Zcmp sequences count as one retired instruction and one compressed instruction; their loads/stores count individually
 - Features: F-PMC-012
@@ -12360,13 +12892,18 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-PMC-014
 - Phase: 1
 - Tier: targeted
-- Preconditions: dummy_instr_en=0; slow imem so the preceding ALU instruction is in WB when the
-  csrw commits.
-- Stimulus: `add ; csrw minstret(h)` with random values; then a read.
-- Randomized: value, half, stall pattern; minstreth preload at all-ones low word (20%).
-- Knobs: knob:imem_rvalid_delay
-- Fire-check: the WB tracker reports a countable instruction retiring in the csrw commit cycle
-  for >= 1 write (gen_test_pmc_minstret).
+- Preconditions: dummy_instr_en=0.
+- Stimulus: `lw ; csrw minstret(h)` with the dmem rvalid delayed: csr_op_en waits for instr_id_done
+  = en_wb & ready_wb (rtl/ibex_id_stage.sv:747-749, :1059-1062, :1130), so the write commits exactly
+  in the load's retire cycle and `we` wins over the increment (rtl/ibex_counter.sv:35-46); a
+  back-to-back `add ; csrw minstret(h)` from a warm icache is the second construction (W-WB: the
+  add is in WB only in the cycle after its ID exit; a slow imem removes the coincidence); then a
+  read.
+- Randomized: value, half, construction, dmem delay; minstreth preload at all-ones low word (20%);
+  weights: W2, W5.
+- Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
+- Fire-check: the WB tracker (RVFI order + dbus response timing) reports a countable instruction
+  retiring in the csrw commit cycle for >= 1 write of each half (gen_test_pmc_minstret).
 - Pass criteria: gen_chk_counters (readback == written exactly, then + later retirements).
 - Expected: pass
 - Test group: gen_pmc_minstret
@@ -12383,9 +12920,13 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:instr_mix
 - Fire-check: >= 1 hi write and >= 1 lo write per implemented counter with readbacks
   (gen_test_pmc_hpm_csr).
-- Pass criteria: gen_chk_csr_readback (h == 0 always; lo == written (+ events since));
-  gen_chk_counters; RVFI rvfi_ext_mhpmcountersh all zero (gen_isa_compare shim masks hpm to 32
-  bits).
+- Pass criteria: gen_chk_csr_readback (h == 0 always; lo == written (+ events since)); the h-half
+  write is value-wise ignored but still asserts `we`, which reloads the unchanged low word and
+  SUPPRESSES that cycle's increment (rtl/ibex_counter.sv:35-49, X-17): the readback model drops the
+  event of the h-write cycle, reachable only for N = 10 (`c.xxx ; csrw mhpmcounter10h` with the
+  compressed retirement in WB in the write cycle, TP-PMC-047) and structurally unreachable for the
+  other indices (X-18); gen_chk_counters; RVFI rvfi_ext_mhpmcountersh all zero (gen_isa_compare
+  shim masks hpm to 32 bits).
 - Expected: pass
 - Test group: gen_pmc_hpm_csr
 - Bins: CG-PMC-004.cr_idx_reg_rb.fi_lo_eq, CG-PMC-004.cr_idx_reg_rb.mi_lo_eq, CG-PMC-004.cr_idx_reg_rb.li_lo_eq, CG-PMC-004.cr_idx_reg_rb.fi_hi_0, CG-PMC-004.cr_idx_reg_rb.mi_hi_0, CG-PMC-004.cr_idx_reg_rb.li_hi_0, CG-PMC-004.cr_idx_reg_op.fi_hi_wr, CG-PMC-004.cr_idx_reg_op.mi_hi_wr, CG-PMC-004.cr_idx_reg_op.li_hi_wr, CG-PMC-004.cr_idx_reg_op.fi_hi_rd, CG-PMC-004.cr_idx_reg_op.mi_hi_rd, CG-PMC-004.cr_idx_reg_op.li_hi_rd, CG-PMC-004.cr_idx_reg_op.fi_lo_rd, CG-PMC-004.cr_idx_reg_op.fi_lo_wr, CG-PMC-004.cr_idx_reg_op.mi_lo_rd, CG-PMC-004.cr_idx_reg_op.mi_lo_wr, CG-PMC-004.cr_idx_reg_op.li_lo_rd, CG-PMC-004.cr_idx_reg_op.li_lo_wr, CG-PMC-004.cr_idx_reg_op.fi_hi_set, CG-PMC-004.cr_idx_reg_op.li_hi_clr, CG-PMC-004.cr_idx_reg_op.fi_lo_set, CG-PMC-004.cr_idx_reg_op.fi_lo_clr, CG-PMC-004.cr_idx_reg_op.li_lo_set, CG-PMC-004.cr_idx_reg_op.li_lo_clr
@@ -12394,7 +12935,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-PMC-016
 - Phase: 1
 - Tier: targeted
-- Preconditions: counter N preloaded to 0xFFFF_FFFF - k (k in [0:8]); mcountinhibit[N]=0.
+- Preconditions: counter N preloaded to 0xFFFF_FFFF - k (k in [0:8]); mcountinhibit[N]=0;
+  dummy_instr_en=0; for the branches variant no branch is issued directly behind a load/store
+  whose response may be outstanding (an ALU instruction separates them: exact class, C-10).
 - Stimulus: k+1..k+20 events of counter N's class (loads / stores / jumps / branches / compressed
   instructions), then reads of mhpmcounterN and mhpmcounterNh.
 - Randomized: N in {loads, stores, jumps, branches, ret_c}, k, event kinds; weights: W10.
@@ -12423,7 +12966,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_hpm_csr
 - Bins: CG-PMC-004.cr_idx_reg_rb.fu_lo_0, CG-PMC-004.cr_idx_reg_rb.mu_lo_0, CG-PMC-004.cr_idx_reg_rb.lu_lo_0, CG-PMC-004.cr_idx_reg_rb.fu_hi_0, CG-PMC-004.cr_idx_reg_rb.lu_hi_0, CG-PMC-004.cr_idx_reg_op.fu_lo_rd, CG-PMC-004.cr_idx_reg_op.fu_lo_wr, CG-PMC-004.cr_idx_reg_op.fu_hi_rd, CG-PMC-004.cr_idx_reg_op.fu_hi_wr, CG-PMC-004.cr_idx_reg_op.mu_lo_rd, CG-PMC-004.cr_idx_reg_op.mu_lo_wr, CG-PMC-004.cr_idx_reg_op.mu_hi_rd, CG-PMC-004.cr_idx_reg_op.mu_hi_wr, CG-PMC-004.cr_idx_reg_op.lu_lo_rd, CG-PMC-004.cr_idx_reg_op.lu_lo_wr, CG-PMC-004.cr_idx_reg_op.lu_hi_rd, CG-PMC-004.cr_idx_reg_op.lu_hi_wr, CG-PMC-004.cr_idx_reg_op.fu_lo_set, CG-PMC-004.cr_mode_result.dbg_ok
 
-### TP-PMC-020: The implemented mhpmeventN read the hardwired one-hot selectors (1 << N) and ignore writes
+### TP-PMC-020: The implemented mhpmeventN read the hardwired one-hot selectors 1 << (N - MHPMCOUNTER_BASE) and ignore writes (doc says 1 << N: D20)
 - Features: F-PMC-018
 - Phase: 1
 - Tier: smoke
@@ -12433,9 +12976,12 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Randomized: N order, ops, values; weights: W1, W2, W10, W13.
 - Knobs: knob:instr_mix
 - Fire-check: RVFI read items for first/middle/last implemented event CSRs (gen_test_pmc_hpm_csr).
-- Pass criteria: gen_chk_csr_readback (mhpmeventN == 32'd1 << N; unchanged after writes, no trap);
-  gen_isa_compare (shim: mhpmevent writes masked).
-- Expected: pass
+- Pass criteria: gen_chk_csr_readback (mhpmeventN == 32'd1 << (N - MHPMCOUNTER_BASE): mhpmevent3 =
+  0x1 .. mhpmevent12 = 0x200, rtl/ibex_cs_registers.sv:185, :1602-1619; unchanged after writes, no
+  trap; the checker follows the RTL, performance_counters.rst:133-147 says 0x8 .. 0x400); the
+  selectors are hardwired, no item programs one (C-11); gen_isa_compare (shim: mhpmevent constants
+  1 << (N - 3), writes masked).
+- Expected: pass (doc mismatch D20)
 - Test group: gen_pmc_hpm_csr
 - Bins: CG-PMC-004.cr_idx_reg_rb.fi_ev_1h, CG-PMC-004.cr_idx_reg_rb.mi_ev_1h, CG-PMC-004.cr_idx_reg_rb.li_ev_1h, CG-PMC-004.cr_idx_reg_op.fi_ev_rd, CG-PMC-004.cr_idx_reg_op.fi_ev_wr, CG-PMC-004.cr_idx_reg_op.mi_ev_rd, CG-PMC-004.cr_idx_reg_op.mi_ev_wr, CG-PMC-004.cr_idx_reg_op.li_ev_rd, CG-PMC-004.cr_idx_reg_op.li_ev_wr, CG-PMC-004.cr_idx_reg_op.fi_ev_set, CG-PMC-004.cr_idx_reg_op.li_ev_clr
 
@@ -12483,8 +13029,11 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:instr_mix, knob:imem_rvalid_delay, knob:dmem_rvalid_delay
 - Fire-check: per bit, the window's independent event count for the inhibited counter is >= 5
   while its delta is 0, and the other counters moved (gen_test_pmc_ctrl).
-- Pass criteria: gen_chk_counters (inhibited counter delta 0, others == events; inhibit takes
-  effect from the cycle after the csrw); gen_chk_csr_readback.
+- Pass criteria: gen_chk_counters (inhibited counter delta 0; the others per their exactness class:
+  counters 5..10 == events, counters 8 / 11 / 12 exact only in windows where no branch / mul / div
+  entered ID behind an outstanding WB load/store (C-10: the window generator separates them by an
+  ALU instruction, else the window is bound class), counters 3 / 4 bound class (0 <= delta <=
+  cycles); inhibit takes effect from the cycle after the csrw); gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_pmc_ctrl
 - Bins: CG-PMC-003.cr_idx_inhibit.lsu_inh, CG-PMC-003.cr_idx_inhibit.if_inh, CG-PMC-003.cr_idx_inhibit.ld_inh, CG-PMC-003.cr_idx_inhibit.st_inh, CG-PMC-003.cr_idx_inhibit.jmp_inh, CG-PMC-003.cr_idx_inhibit.br_inh, CG-PMC-003.cr_idx_inhibit.tk_inh, CG-PMC-003.cr_idx_inhibit.rc_inh, CG-PMC-003.cr_idx_inhibit.mul_inh, CG-PMC-003.cr_idx_inhibit.div_inh, CG-PMC-001.cr_ctx_delta.inh_zero, CG-PMC-008.cr_rel_debug.inh_run, CG-PMC-002.cp_inhibit_ir.on, CG-PMC-003.cp_inhibit.on
@@ -12494,13 +13043,16 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Phase: 1
 - Tier: targeted
 - Preconditions: dummy_instr_en=0; IR=1 (and bit 10 = 1 in a variant).
-- Stimulus: `add ; csrr minstret` pairs with the add in WB during the read (slow imem), and
-  back-to-back csrr minstret runs.
-- Randomized: stall pattern, run length, variant; weights: W5, W10.
-- Knobs: knob:imem_rvalid_delay
-- Fire-check: WB tracker reports >= 1 read with a countable instruction in WB while IR==1
-  (gen_test_pmc_ctrl).
-- Pass criteria: gen_chk_counters (all reads return the same frozen value); gen_isa_compare.
+- Stimulus: `lw ; csrr minstret` with the dmem rvalid delayed so the csrr commits in the load's
+  retire cycle (W-WB, the deterministic coincidence; the `c.lw ; csrr mhpmcounter10` form for the
+  HPM10 variant), back-to-back `add ; csrr minstret` from a warm icache, and back-to-back csrr
+  minstret runs.
+- Randomized: construction, dmem delay, run length, variant; weights: W5, W10.
+- Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
+- Fire-check: WB tracker reports >= 1 read with a countable instruction in WB while IR==1 (the `lw ;
+  csrr` form: the csrr's commit cycle equals the load's response cycle) (gen_test_pmc_ctrl).
+- Pass criteria: gen_chk_counters (all reads return the same frozen value: the speculative +1 is
+  gated by ~mcountinhibit, rtl/ibex_cs_registers.sv:1658, :1690-1692); gen_isa_compare.
 - Expected: pass
 - Test group: gen_pmc_ctrl
 - Bins: CG-PMC-002.cr_inhibit_coh.on_retiring, CG-PMC-002.cr_inhibit_coh.off_retiring, CG-PMC-002.cp_inhibit_ir.on
@@ -12657,15 +13209,19 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_ctrl
 - Bins: CG-PMC-006.cr_inhibit_gate.inh_set_u_ok, CG-PMC-006.cr_inhibit_gate.noinh_set_u_ok, CG-PMC-005.cp_reg.en
 
-### TP-PMC-034: mhpmcounter3 (NumCyclesLSU) counts cycles the ID instruction waits on the data side (rvalid delay, grant delay, load-use hazard)
+### TP-PMC-034: mhpmcounter3 (NumCyclesLSU) counts cycles the next instruction waits in ID on the data side (rvalid delay of the WB access, load-use hazard); the access's own grant wait is not counted
 - Features: F-PMC-032
 - Phase: 1
 - Tier: targeted
 - Preconditions: mcountinhibit[3]=0; dummy_instr_en=0.
 - Stimulus: windows bounded by mhpmcounter3 reads containing: a load with rvalid delay D followed
-  by a dependent ALU (hazard), a load followed by an independent ALU, a store with grant delay G,
+  by a dependent ALU (hazard), a load followed by an independent ALU, a store with grant delay G
+  and nothing waiting behind it (measured count 0: perf_dside_wait = instr_valid & ~instr_kill &
+  (outstanding_memory_access | stall_ld_hz), and the access's own wait-for-grant cycles in ID
+  (stall_mem) are not in it, rtl/ibex_id_stage.sv:1015-1016, :1095-1096, :1120, :1135-1136),
   back-to-back loads; the TB counts stall cycles from the dbus handshake timing and the RVFI
-  retirement gaps.
+  retirement gaps: cycles a VALID next instruction sits in ID while the WB access awaits rvalid,
+  plus load-use hazard stalls.
 - Randomized: D, G in [0:20], dependency, window mix, misaligned accesses; weights: W5, W7, W10.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:instr_mix
 - Fire-check: >= 1 window with independently measured LSU-wait cycles == 0, == 1, in [2:15] and
@@ -12673,7 +13229,8 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Pass criteria: gen_chk_counters in the bound class for lsu_wait (gen_tb_architecture.md C4.6
   ctr_hpm_bound: 0 <= delta <= cycles elapsed, monotonic) with the exact compare enabled only for
   the TB-constructed single-kind windows whose dbus timing the agent fixed (the `eq` bins are
-  sampled only there; CG-PMC-003 exactness classes).
+  sampled only there; CG-PMC-003 exactness classes); the gnt_delay window expects delta == 0
+  unless a WB access is also outstanding.
 - Expected: pass
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_idx_events.lsu_0, CG-PMC-003.cr_idx_events.lsu_1, CG-PMC-003.cr_idx_events.lsu_few, CG-PMC-003.cr_idx_events.lsu_many, CG-PMC-003.cr_variant_rel.rvalid_eq, CG-PMC-003.cr_variant_rel.gnt_eq, CG-PMC-003.cr_variant_rel.hazard_eq, CG-PMC-003.cr_idx_inhibit.lsu_eq
@@ -12762,35 +13319,43 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_variant_rel.straddle_eq
 
-### TP-PMC-040: mhpmcounter7 (NumJumps) counts jal/jalr and their compressed forms and the cm.popret return; mret/dret/traps are not jumps
+### TP-PMC-040: mhpmcounter7 (NumJumps) counts jal/jalr and their compressed forms, the cm.popret return and fence.i (decoded as a jump); mret/dret/traps are not jumps
 - Features: F-PMC-038
 - Phase: 1
 - Tier: targeted
 - Preconditions: mcountinhibit[7]=0; dummy_instr_en=0.
-- Stimulus: windows with jal, jalr, c.j, c.jal, c.jr, c.jalr, cm.popret plus mret/dret/ecall
-  distractors, bounded by mhpmcounter7 reads.
+- Stimulus: windows with jal, jalr, c.j, c.jal, c.jr, c.jalr, cm.popret and fence.i (implemented as
+  a jump to pc + 4: jump_in_dec / jump_set, rtl/ibex_decoder.sv:711-720, rtl/ibex_controller.sv:
+  681-687, X-23) plus mret/dret/ecall distractors, bounded by mhpmcounter7 reads.
 - Randomized: mix and counts (0, 1, few, many), targets; weights: W6, W10, W13.
 - Knobs: knob:instr_mix
 - Fire-check: RVFI jump count per window derived from rvfi_insn decode is known and windows of
   each count class exist (gen_test_pmc_hpm_event).
-- Pass criteria: gen_chk_counters (delta == jump-class retirements incl. popret; distractors
-  excluded).
+- Pass criteria: gen_chk_counters (delta == jump-class retirements incl. popret and fence.i, each
+  counted once (jump_set deduped by branch_jump_set_done_q, rtl/ibex_id_stage.sv:806-815);
+  distractors excluded).
 - Expected: pass
 - Test group: gen_pmc_hpm_event
-- Bins: CG-PMC-003.cr_idx_events.jmp_0, CG-PMC-003.cr_idx_events.jmp_1, CG-PMC-003.cr_idx_events.jmp_few, CG-PMC-003.cr_idx_events.jmp_many, CG-PMC-003.cr_variant_rel.jal_eq, CG-PMC-003.cr_variant_rel.jalr_eq, CG-PMC-003.cr_variant_rel.cj_eq, CG-PMC-003.cr_variant_rel.cjal_eq, CG-PMC-003.cr_variant_rel.cjr_eq, CG-PMC-003.cr_variant_rel.cjalr_eq, CG-PMC-003.cr_variant_rel.popret_eq, CG-PMC-003.cr_idx_inhibit.jmp_eq
+- Bins: CG-PMC-003.cr_idx_events.jmp_0, CG-PMC-003.cr_idx_events.jmp_1, CG-PMC-003.cr_idx_events.jmp_few, CG-PMC-003.cr_idx_events.jmp_many, CG-PMC-003.cr_variant_rel.jal_eq, CG-PMC-003.cr_variant_rel.jalr_eq, CG-PMC-003.cr_variant_rel.cj_eq, CG-PMC-003.cr_variant_rel.cjal_eq, CG-PMC-003.cr_variant_rel.cjr_eq, CG-PMC-003.cr_variant_rel.cjalr_eq, CG-PMC-003.cr_variant_rel.popret_eq, CG-PMC-003.cr_variant_rel.fencei_eq, CG-PMC-003.cr_idx_inhibit.jmp_eq
 
-### TP-PMC-041: mhpmcounter8 (NumBranches) counts every conditional branch, taken or not, with data_ind_timing 0 and 1
+### TP-PMC-041: mhpmcounter8 (NumBranches) counts every conditional branch once, taken or not, with data_ind_timing 0 and 1, when the branch enters ID with no WB memory access outstanding
 - Features: F-PMC-039
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcountinhibit[8]=0; dummy_instr_en=0; cpuctrlsts.data_ind_timing random.
+- Preconditions: mcountinhibit[8]=0; dummy_instr_en=0; cpuctrlsts.data_ind_timing random; no
+  outstanding WB memory access when a branch is in ID (C-10 / B17): every branch of the window is
+  separated from the preceding load/store by >= 1 single-cycle non-memory instruction, or the
+  window has no loads/stores; the boundary model confirms per branch (its back-dated ID entry is
+  after the previous dbus response).
 - Stimulus: windows with beq/bne/blt/bge/bltu/bgeu/c.beqz/c.bnez with random outcomes bounded by
   mhpmcounter8 reads.
-- Randomized: counts, taken ratio, DIT; weights: W10.
+- Randomized: counts, taken ratio, DIT, ALU/load spacing; weights: W10.
 - Knobs: knob:instr_mix
-- Fire-check: RVFI branch count per window (decoded) with both outcomes present
-  (gen_test_pmc_hpm_event).
-- Pass criteria: gen_chk_counters (delta == branch retirements regardless of outcome and DIT).
+- Fire-check: RVFI branch count per window (decoded) with both outcomes present, and the boundary
+  model logs no branch in ID with a WB access outstanding (gen_test_pmc_hpm_event).
+- Pass criteria: gen_chk_counters (delta == branch retirements regardless of outcome and DIT:
+  perf_branch_o is asserted in the FIRST_CYCLE arm, exactly once when the branch is not held in ID
+  by outstanding_memory_access, rtl/ibex_id_stage.sv:886-934; the waiting case is TP-PMC-058).
 - Expected: pass
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_idx_events.br_0, CG-PMC-003.cr_idx_events.br_1, CG-PMC-003.cr_idx_events.br_few, CG-PMC-003.cr_idx_events.br_many, CG-PMC-003.cr_variant_rel.btaken_eq, CG-PMC-003.cr_variant_rel.bnot_eq, CG-PMC-003.cr_variant_rel.cbeqz_eq, CG-PMC-003.cr_variant_rel.cbnez_eq, CG-PMC-003.cr_idx_inhibit.br_eq, CG-PMC-003.cr_idx_dit.br_dit0, CG-PMC-003.cr_idx_dit.br_dit1
@@ -12826,7 +13391,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Pass criteria: gen_chk_counters follows the doc (Q-009 default): mhpmcounter9 delta == taken
   branches; the RTL delta (== mhpmcounter8 delta) is recorded. Control window with DIT=0 must pass.
 - Expected: expected-fail (B11)
-- Test group: gen_pmc_hpm_event
+- Test group: gen_pmc_hpm_event_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-PMC-003.cr_variant_rel.dittaken_eq, CG-PMC-003.cr_variant_rel.ditnot_gt, CG-PMC-003.cr_variant_rel.ditnot_eq, CG-PMC-003.cr_idx_dit.tk_dit1, CG-PMC-003.cp_dit.on
 
 ### TP-PMC-044: mhpmcounter10 (NumInstrRetC) counts retired 16-bit instructions with the same exclusions as minstret; Zcmp counts once
@@ -12847,20 +13412,25 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_idx_events.rc_0, CG-PMC-003.cr_idx_events.rc_1, CG-PMC-003.cr_idx_events.rc_few, CG-PMC-003.cr_idx_events.rc_many, CG-PMC-003.cr_variant_rel.calu_eq, CG-PMC-003.cr_variant_rel.zcmp_eq, CG-PMC-003.cr_idx_inhibit.rc_eq
 
-### TP-PMC-045: mhpmcounter11 (NumCyclesMulWait) counts multiplier stall cycles: mul 0, mulh/mulhsu/mulhu 1 each (RV32MSingleCycle)
+### TP-PMC-045: mhpmcounter11 (NumCyclesMulWait) counts multiplier stall cycles: mul 0, mulh/mulhsu/mulhu 1 each (RV32MSingleCycle) when the multiply enters ID with no WB memory access outstanding
 - Features: F-PMC-043
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcountinhibit[11]=0; dummy_instr_en=0.
+- Preconditions: mcountinhibit[11]=0; dummy_instr_en=0; no outstanding WB memory access when a
+  multiply is in ID (C-10 / B17: mult_en_id = instr_executing ? mult_en_dec : 0, rtl/ibex_id_stage.sv:733,
+  so a multiply behind an outstanding load/store does not start and perf_mul_wait_o counts every
+  waiting cycle, for `mul` too): every mul/mulh of the window is separated from the preceding
+  load/store by >= 1 single-cycle non-memory instruction (the TP-PMC-046 qualifier), confirmed by
+  the boundary model; no mcycle/mcountinhibit write in the window.
 - Stimulus: windows with N mul and M mulh-class instructions with random operands bounded by
-  mhpmcounter11 reads.
-- Randomized: N, M (0, 1, few, many), operands, interleaving with loads; weights: W9, W10.
+  mhpmcounter11 reads; loads interleaved only with the ALU spacing above.
+- Randomized: N, M (0, 1, few, many), operands, spacing; weights: W9, W10.
 - Knobs: knob:instr_mix
 - Fire-check: RVFI decode gives the mulh-class count per window; windows with M == 0 and N > 0
-  exist (gen_test_pmc_hpm_event).
+  exist; the boundary model logs no multiply in ID with a WB access outstanding
+  (gen_test_pmc_hpm_event).
 - Pass criteria: gen_chk_counters exact_gap class (each mulh-class retirement adds exactly 1; mul
-  adds 0; exact when dummy_instr_en=0 and no mcycle/mcountinhibit write is in the window, else
-  bound).
+  adds 0; exact under the preconditions above, else bound; the waiting case is TP-PMC-059).
 - Expected: pass
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_idx_events.mul_0, CG-PMC-003.cr_idx_events.mul_1, CG-PMC-003.cr_idx_events.mul_few, CG-PMC-003.cr_idx_events.mul_many, CG-PMC-003.cr_variant_rel.mul_eq, CG-PMC-003.cr_variant_rel.mulh_eq, CG-PMC-003.cr_variant_rel.mulhsu_eq, CG-PMC-003.cr_variant_rel.mulhu_eq, CG-PMC-003.cr_idx_inhibit.mul_eq
@@ -12877,8 +13447,10 @@ fcov_dbg_trg_pmc.md. Conventions:
   each divide's stall count as its RVFI gap from the previous retirement minus 1 (S-4: deltas from
   the previous retirement only) under the qualifiers: icache_enable=0 pinned and the divide's fetch
   already delivered (no fetch stall), the previous record a single-cycle non-memory instruction
-  retired without a WB stall, dummy_instr_en=0 (no dummy in the gap), no mcycle/mcountinhibit write
-  in between; a window in which a qualifier fails is checked as a bound.
+  retired without a WB stall (so the divide did not wait behind an outstanding WB access: C-10 /
+  B17, the deferred start adds one div_wait count per waiting cycle, TP-PMC-060), dummy_instr_en=0
+  (no dummy in the gap), no mcycle/mcountinhibit write in between; a window in which a qualifier
+  fails is checked as a bound.
 - Randomized: opcode, operands, data_ind_timing, counts (0, 1 early-out, 2..15 early-outs, 1 full,
   >= 2 full, mixed); weights: W9, W10, W13.
 - Knobs: knob:instr_mix
@@ -12892,40 +13464,52 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-003.cr_idx_events.div_0, CG-PMC-003.cr_idx_events.div_1, CG-PMC-003.cr_idx_events.div_few, CG-PMC-003.cr_idx_events.div_many, CG-PMC-003.cr_variant_rel.div_eq, CG-PMC-003.cr_variant_rel.divu_eq, CG-PMC-003.cr_variant_rel.rem_eq, CG-PMC-003.cr_variant_rel.remu_eq, CG-PMC-003.cr_variant_rel.divzero_eq, CG-PMC-003.cr_variant_rel.divovf_eq, CG-PMC-003.cr_idx_inhibit.div_eq, CG-PMC-003.cr_div_shape.div_early, CG-PMC-003.cr_div_shape.div_full1, CG-PMC-003.cr_div_shape.div_fullmany, CG-PMC-003.cr_div_shape.div_mixed, CG-PMC-003.cr_div_shape.div_none
 
-### TP-PMC-047: Event counter written in the cycle its event fires: the write wins and that event is lost
+### TP-PMC-047: Event counter written in the cycle its event fires: the write wins and that event is lost (reachable for mhpmcounter10(h) only)
 - Features: F-PMC-045
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcountinhibit[N]=0; dummy_instr_en=0; slow dmem for the LSU-wait variant.
-- Stimulus: csrw mhpmcounterN placed so that N's event fires in the write cycle: N=3 with a load
-  waiting in WB; N=5/6 with a load/store issued in the same cycle (the csrw follows the load
-  directly); N=7/8 with a jump/branch adjacent to the csrw (the event fires in DECODE, so the TB
-  sweeps the relative position 0..2 and the coincidence occurs in a fraction of iterations); N=4
-  with an IF starvation cycle; then a read. The bounding window read pair is placed around the
-  write so the window model sees delta < events for the lost event.
-- Randomized: N, position sweep, value; weights: W2, W10, W13.
+- Preconditions: mcountinhibit[N]=0; dummy_instr_en=0; slow dmem for the deterministic construction.
+- Stimulus: the only HPM counter whose own event can fire in the cycle of its write is
+  mhpmcounter10 (NumInstrRetC): `c.lw ; csrw mhpmcounter10` (and `csrw mhpmcounter10h`) with the
+  dmem rvalid delayed so the csrw is held in ID and commits in the c.lw's retire cycle, when the
+  compressed retirement in WB asserts the counter-10 event (W-WB; rtl/ibex_wb_stage.sv:206-210);
+  the back-to-back `c.add ; csrw mhpmcounter10` form from a warm icache is the second construction.
+  For N = 3..9, 11, 12 the coincidence is structurally unreachable (X-18: perf_load / perf_store fire
+  in the LSU IDLE arm of the load/store itself, perf_branch / tbranch / jump / mul_wait / div_wait
+  are asserted from the instruction in ID, dside_wait needs outstanding_memory_access which blocks
+  csr_op_en, iside_wait needs ~instr_valid_id; the csrw is a different instruction), so control
+  writes of those counters land with no event (hpm_none). The bounding read pair is placed around
+  the write so the window model sees delta < events for the lost event (counter 10).
+- Randomized: half (lo / h), construction, value, dmem delay, control counter index; weights: W2,
+  W5, W13.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:instr_mix
-- Fire-check: the boundary model logs the event in the write cycle for >= 1 iteration per N class
-  (gen_test_pmc_hpm_csr).
-- Pass criteria: gen_chk_counters (readback == written + events after the write cycle only).
+- Fire-check: the boundary model logs a compressed retirement in the write cycle for >= 1 lo write
+  and >= 1 h write of mhpmcounter10 (the csrw's commit cycle equals the c.lw's response cycle), and
+  >= 1 control write of another counter with no event in its write cycle (gen_test_pmc_hpm_csr).
+- Pass criteria: gen_chk_counters (readback == written + events after the write cycle only; for the
+  h write: low word unchanged and the coincident event lost, X-17).
 - Expected: pass
 - Test group: gen_pmc_hpm_csr
-- Bins: CG-PMC-003.cp_delta_rel.lt, CG-PMC-007.cr_target_coinc.hpm_lsu, CG-PMC-007.cr_target_coinc.hpm_if, CG-PMC-007.cr_target_coinc.hpm_load, CG-PMC-007.cr_target_coinc.hpm_store, CG-PMC-007.cr_target_coinc.hpm_jump, CG-PMC-007.cr_target_coinc.hpm_branch, CG-PMC-007.cr_target_coinc.hpmh_load, CG-PMC-007.cr_target_coinc.hpm_none, CG-PMC-004.cr_idx_reg_op.fi_lo_wr, CG-PMC-004.cr_idx_reg_op.li_lo_wr
+- Bins: CG-PMC-003.cp_delta_rel.lt, CG-PMC-007.cr_target_coinc.hpm_retc, CG-PMC-007.cr_target_coinc.hpmh_retc, CG-PMC-007.cr_target_coinc.hpm_none, CG-PMC-004.cr_idx_reg_op.mi_lo_wr, CG-PMC-004.cr_idx_reg_op.mi_hi_wr, CG-PMC-004.cr_idx_reg_op.fi_lo_wr, CG-PMC-004.cr_idx_reg_op.li_lo_wr
 
 ### TP-PMC-048: Flushed instructions do not retire or count; already-issued events (perf_load of a faulting load, perf_branch) are not rolled back
 - Features: F-PMC-046
 - Phase: 1
 - Tier: targeted
 - Preconditions: dummy_instr_en=0; PMP/bus error on chosen loads; handler skips.
-- Stimulus: windows with: a faulting load followed by 3 ALU instructions (flushed), a taken branch
-  with 3 fall-through instructions fetched, an exception with fetched-but-not-executed successors;
-  reads of minstret, mhpmcounter5, mhpmcounter8, mhpmcounter10.
+- Stimulus: windows with: a faulting load followed by 3 ALU instructions (flushed; never a branch,
+  mul or div directly behind the faulting load: an instruction waiting in ID behind the outstanding
+  load is the B17 class of TP-PMC-058/059/060), a taken branch with 3 fall-through instructions
+  fetched, an exception with fetched-but-not-executed successors; reads of minstret, mhpmcounter5,
+  mhpmcounter8, mhpmcounter10.
 - Randomized: fault source, window composition; weights: W10, W12, W13.
 - Knobs: knob:dmem_err_rate, knob:pmp_regime, knob:imem_rvalid_delay
 - Fire-check: RVFI shows no items for the flushed successors and rvfi_trap on the load
   (gen_test_pmc_hpm_event).
 - Pass criteria: gen_chk_counters (minstret/mhpmcounter10 count only RVFI retirements;
-  mhpmcounter5 == loads issued incl. the faulting one; mhpmcounter8 == branches retired).
+  mhpmcounter5 == loads issued incl. the faulting one; mhpmcounter8 == branches issued, each of
+  which entered ID with no WB access outstanding (C-10) and therefore counted exactly once,
+  rtl/ibex_id_stage.sv:889-934).
 - Expected: pass
 - Test group: gen_pmc_hpm_event
 - Bins: CG-PMC-002.cr_window_delta.lsfault_eq, CG-PMC-002.cr_window_delta.fetchfault_eq, CG-PMC-003.cr_variant_rel.buserr_eq, CG-PMC-003.cr_variant_rel.pmpden_eq
@@ -12935,7 +13519,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Phase: 1
 - Tier: targeted
 - Preconditions: mcountinhibit=0; dummy_instr_en=0; debug program with reads of all counters at
-  start/end and a known body (loads/stores/jumps/branches/compressed/mulh/div).
+  start/end and a known body (loads/stores/jumps/branches/compressed/mulh/div) ordered so that no
+  branch / mul / div is directly behind a load/store (C-10: exact class for counters 8 / 11 / 12;
+  bodies that violate the spacing are checked as bounds for those three).
 - Stimulus: haltreq; debug body; dret; reads after dret.
 - Randomized: body mix/length, entry cause (haltreq/ebreak/step), privilege; weights: W3, W6, W10.
 - Knobs: knob:debug_req_regime
@@ -12995,8 +13581,11 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:instr_mix
 - Fire-check: a run of >= 5 consecutive read-only retirements with minstret read at both ends
   (gen_test_pmc_minstret).
-- Pass criteria: gen_chk_counters (minstret delta == run length; hpm counters unchanged except
-  those whose events the reads themselves cause: none; mcycle == cycles).
+- Pass criteria: gen_chk_counters (minstret delta == run length; hpm counters 3 and 5..12
+  unchanged (the reads cause none of their events); mhpmcounter4 (NumCyclesIF) is excluded from the
+  "unchanged" set: perf_iside_wait = id_in_ready & ~instr_valid_id counts every fetch bubble of the
+  run whatever the instructions are (rtl/ibex_core.sv:635), bound class 0 <= delta <= cycles;
+  mcycle == cycles).
 - Expected: pass
 - Test group: gen_pmc_minstret
 - Bins: CG-PMC-001.cp_op.rd_lo, CG-PMC-002.cr_window_delta.plain_eq, CG-PMC-001.cr_ctx_delta.run_eq, CG-PMC-002.cr_coherence_op.retiring_rd
@@ -13047,8 +13636,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:instr_mix, knob:priv_regime, knob:irq_regime, knob:debug_req_regime, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:pmp_regime
 - Fire-check: per seed >= 20 counter read pairs with >= 3 distinct inhibit masks and >= 1 U-mode
   alias trap and >= 1 legal U-mode alias read (gen_test_pmc_random).
-- Pass criteria: gen_chk_counters (all counters), gen_chk_csr_readback, gen_isa_compare,
-  gen_chk_irq, gen_chk_debug.
+- Pass criteria: gen_chk_counters (all counters; per window the boundary model classifies counters
+  8 / 11 / 12 as exact only when no branch / mul / div entered ID behind an outstanding WB access,
+  else bound, C-10), gen_chk_csr_readback, gen_isa_compare, gen_chk_irq, gen_chk_debug.
 - Expected: pass
 - Test group: gen_pmc_random
 - Bins: CG-PMC-003.cr_variant_rel.mixed_eq, CG-PMC-003.cr_idx_events.ld_many, CG-PMC-003.cr_idx_events.st_many, CG-PMC-003.cr_idx_events.jmp_many, CG-PMC-003.cr_idx_events.br_many, CG-PMC-003.cr_idx_events.rc_many, CG-PMC-002.cr_window_delta.plain_eq, CG-PMC-001.cr_ctx_delta.run_eq, CG-PMC-004.cr_idx_reg_op.mi_lo_rd, CG-PMC-005.cr_reg_pattern_op.inh_r_wr, CG-PMC-005.cr_reg_pattern_op.en_r_wr, CG-PMC-006.cr_alias_gate.hm_u_set_ok, CG-PMC-006.cr_alias_gate.hm_u_clr_ill, CG-PMC-007.cr_target_coinc.hpm_none, CG-PMC-008.cr_moved_debug.several_run, CG-PMC-002.cp_window.has_debug, CG-PMC-003.cp_ctx.run
@@ -13057,7 +13647,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-PMC-021, F-PMC-001
 - Phase: 1
 - Tier: targeted
-- Preconditions: dummy_instr_en=0; mcountinhibit=0 at the window start.
+- Preconditions: dummy_instr_en=0; mcountinhibit=0 at the window start; in the branches variant
+  every branch is separated from the preceding load/store by an ALU instruction (exact class,
+  C-10).
 - Stimulus: window bounded by reads of mcycle and of mhpmcounterN (N in {loads, stores, branches,
   ret_c}): E1 events of N's class, csrs mcountinhibit with bit N (and CY in a variant) set, E2
   events, optionally csrc clearing the bit, E3 events, then the closing reads; the boundary model
@@ -13095,6 +13687,84 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Test group: gen_pmc_ctrl
 - Bins: CG-PMC-005.cr_pin_tr_effect.en_ontooff_drop, CG-PMC-005.cr_pin_tr_effect.en_offtoon_app, CG-PMC-005.cr_pin_tr_effect.en_ontoinv_drop, CG-PMC-005.cr_pin_tr_effect.en_invtoon_app
 
+### TP-PMC-058: mhpmcounter8 (NumBranches) for a conditional branch that waits in ID behind an outstanding WB load/store: the doc count is one per branch, the RTL adds one per waiting cycle
+- Features: F-PMC-053, F-PMC-039
+- Phase: 1
+- Tier: targeted
+- Preconditions: mcountinhibit[8]=0; dummy_instr_en=0; cpuctrlsts.data_ind_timing random; dmem
+  agent with rvalid delay K in [2:20] on the chosen access.
+- Stimulus: windows bounded by mhpmcounter8 reads containing `lw/sw ; b<cond>` pairs in which the
+  branch enters ID while the load/store response is still outstanding (the branch's ID entry,
+  back-dated from its record, precedes the dbus rvalid of the preceding access), random outcomes;
+  a control window places one ALU instruction between the access and the branch (the exact class
+  of TP-PMC-041). Reproducer of gen_bug_log.md B17.
+- Randomized: K, load vs store, branch opcode and outcome, DIT, number of pairs per window;
+  weights: W5, W10.
+- Knobs: knob:dmem_rvalid_delay, knob:instr_mix
+- Fire-check: per seed >= 1 window in which the boundary model logs >= 1 branch entering ID with a
+  WB access outstanding for >= 2 further cycles (dbus timestamps against the branch's back-dated ID
+  entry), and the control window shows delta == branches (gen_test_pmc_hpm_event).
+- Pass criteria: gen_chk_counters follows performance_counters.rst:41 ("Number of branches
+  (conditional)"): delta == branch count of the window; the RTL delta (branches + the cycles each
+  branch waited in ID: perf_branch_o is asserted in the FIRST_CYCLE arm under instr_executing_spec,
+  which lacks ~outstanding_memory_access, while id_fsm_q advances only under instr_executing,
+  rtl/ibex_id_stage.sv:886-934, :1054-1062, :866-869) is recorded. Control window must pass.
+- Expected: expected-fail (B17)
+- Test group: gen_pmc_hpm_b17_br_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-PMC-003.cr_variant_rel.brwait_gt
+
+### TP-PMC-059: mhpmcounter11 (NumCyclesMulWait) for a mul / mulh that waits in ID behind an outstanding WB load/store: the doc count is the multiply's own stall (mul 0, mulh-class 1), the RTL adds one per waiting cycle
+- Features: F-PMC-053, F-PMC-043
+- Phase: 1
+- Tier: targeted
+- Preconditions: mcountinhibit[11]=0; dummy_instr_en=0; dmem agent with rvalid delay K in [2:20] on
+  the chosen access.
+- Stimulus: windows bounded by mhpmcounter11 reads containing `lw/sw ; mul|mulh|mulhsu|mulhu` pairs
+  in which the multiply enters ID while the access is outstanding (mult_en_id = instr_executing ?
+  mult_en_dec : 0, rtl/ibex_id_stage.sv:733, so the multiply does not start; ex_valid stays 0,
+  stall_multdiv = 1 and perf_mul_wait_o = stall_multdiv & mult_en_dec counts every waiting cycle,
+  :910-918, :1226); a control window with one ALU instruction between the access and the multiply
+  (the exact class of TP-PMC-045).
+- Randomized: K, load vs store, mul vs mulh-class, operands, pairs per window; weights: W5, W9, W10.
+- Knobs: knob:dmem_rvalid_delay, knob:instr_mix
+- Fire-check: per seed >= 1 window in which the boundary model logs >= 1 multiply entering ID with
+  a WB access outstanding for >= 2 further cycles, and the control window shows delta == mulh-class
+  count (gen_test_pmc_hpm_event).
+- Pass criteria: gen_chk_counters follows the documented event (performance_counters.rst
+  NumCyclesMulWait: cycles the multiplier is busy, i.e. mul 0 and mulh-class 1 with
+  RV32MSingleCycle): delta == mulh-class count of the window; the RTL delta (+ the cycles each
+  multiply waited in ID, for `mul` too) is recorded. Control window must pass.
+- Expected: expected-fail (B17)
+- Test group: gen_pmc_hpm_b17_mul_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-PMC-003.cr_variant_rel.mulwait_gt
+
+### TP-PMC-060: mhpmcounter12 (NumCyclesDivWait) for a divide that waits in ID behind an outstanding WB load/store: the doc count is the divider's own stall (DIV_STALL_FULL / DIV_STALL_ZERO), the RTL adds one per waiting cycle
+- Features: F-PMC-053, F-PMC-044
+- Phase: 1
+- Tier: targeted
+- Preconditions: mcountinhibit[12]=0; dummy_instr_en=0; icache_enable=0 (no fetch stall on the
+  divide, the TP-PMC-046 qualifier); dmem agent with rvalid delay K in [2:20] on the chosen access.
+- Stimulus: windows bounded by mhpmcounter12 reads containing `lw/sw ; div|divu|rem|remu` pairs in
+  which the divide enters ID while the access is outstanding (div_en_id gated by instr_executing,
+  rtl/ibex_id_stage.sv:734: the divide starts only at the response, so its RVFI gap from the
+  previous record is DIV_STALL_FULL + 1 + W (C-9) and perf_div_wait_o counts the W deferred-start
+  cycles too, :1227); divide-by-zero with data_ind_timing = 0 (DIV_STALL_ZERO) in 20%; a control
+  window with one ALU instruction between the access and the divide (the exact class of
+  TP-PMC-046).
+- Randomized: K, load vs store, opcode, operands incl. zero divisor, pairs per window; weights: W5,
+  W9, W10.
+- Knobs: knob:dmem_rvalid_delay, knob:instr_mix
+- Fire-check: per seed >= 1 window in which the boundary model logs >= 1 divide entering ID with a
+  WB access outstanding for W >= 2 further cycles (the divide's RVFI gap exceeds DIV_STALL_FULL + 1
+  by W), and the control window shows delta == DIV_STALL_FULL / DIV_STALL_ZERO per divide
+  (gen_test_pmc_hpm_event).
+- Pass criteria: gen_chk_counters follows the documented event (performance_counters.rst
+  NumCyclesDivWait: cycles the divider is busy): delta == sum over the divides of DIV_STALL_FULL or
+  DIV_STALL_ZERO; the RTL delta (+ W per waiting divide) is recorded. Control window must pass.
+- Expected: expected-fail (B17)
+- Test group: gen_pmc_hpm_b17_div_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-PMC-003.cr_variant_rel.divwait_gt
+
 ---------------------------------------------------------------------------------------------------
 
 ## Test groups
@@ -13102,25 +13772,37 @@ fcov_dbg_trg_pmc.md. Conventions:
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_dbg_haltreq | TP-DBG-001, 002, 004, 005, 006, 007, 008, 009, 014, 015, 069, 071 | 1 | smoke/targeted | short |
-| gen_dbg_req_shape | TP-DBG-010, 011, 012, 013 | 1 | targeted | short |
-| gen_dbg_irq_mask | TP-DBG-003, 016, 021, 047, 048, 061, 062 | 1 | smoke/targeted | short |
-| gen_dbg_csr | TP-DBG-017, 018, 019, 020, 040, 055, 056 | 1 | smoke/targeted | short |
+| gen_dbg_irq_mask | TP-DBG-003, 016, 047, 048, 061, 062 | 1 | smoke/targeted | short |
+| gen_dbg_req_shape | TP-DBG-010, 012, 013 | 1 | targeted | short |
+| gen_dbg_csr | TP-DBG-017, 019, 020, 040, 055, 056 | 1 | smoke/targeted | short |
 | gen_dbg_ebreak | TP-DBG-022, 023, 024, 025, 027, 028, 029, 030, 073 | 1 | smoke/targeted | short |
-| gen_dbg_exc_in_debug | TP-DBG-031, 032, 033, 034, 035 | 1 | smoke/targeted | short |
-| gen_dbg_dret | TP-DBG-036, 037, 038, 039, 041, 067 | 1 | smoke/targeted | short |
-| gen_dbg_step | TP-DBG-042, 043, 044, 045, 046, 049, 050, 051, 052, 053, 054, 072 | 1 | smoke/targeted | medium |
-| gen_dbg_pmp_dm | TP-DBG-057, 058, 059, 060 | 1 | targeted | short |
-| gen_dbg_mode_misc | TP-DBG-063, 064, 065, 066, 070 | 1 | targeted | short |
 | gen_dbg_random | TP-DBG-026, 068 | 2 | full | long |
-| gen_trg_csr | TP-TRG-001, 002, 003, 004, 005, 006, 007, 008, 009, 028, 029 | 1 | smoke/targeted | short |
-| gen_trg_fire | TP-TRG-010, 011, 012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 031, 032 | 1 | smoke/targeted/full | medium |
-| gen_trg_random | TP-TRG-030 | 2 | full | long |
+| gen_dbg_exc_in_debug | TP-DBG-031, 032, 033, 034, 035 | 1 | smoke/targeted | short |
+| gen_dbg_dret | TP-DBG-036, 037, 039, 041, 067 | 1 | smoke/targeted | short |
+| gen_dbg_step | TP-DBG-042, 043, 044, 045, 046, 049, 050, 051, 052, 053, 054, 072 | 1 | smoke/targeted | medium |
+| gen_dbg_pmp_dm | TP-DBG-057, 058, 059 | 1 | targeted | short |
+| gen_dbg_mode_misc | TP-DBG-063, 064, 065, 066, 070 | 1 | targeted | short |
 | gen_pmc_mcycle | TP-PMC-001, 002, 003, 004, 005, 006, 007 | 1 | smoke/targeted | short |
-| gen_pmc_minstret | TP-PMC-008, 009, 010, 011, 012, 013, 014, 015, 016, 050, 052, 054 | 1 | smoke/targeted | medium |
+| gen_pmc_minstret | TP-PMC-008, 009, 010, 011, 012, 014, 015, 016, 050, 052, 054 | 1 | smoke/targeted | medium |
 | gen_pmc_hpm_csr | TP-PMC-017, 019, 020, 021, 047, 053 | 1 | smoke/targeted | short |
-| gen_pmc_hpm_event | TP-PMC-018, 034, 035, 036, 037, 038, 039, 040, 041, 042, 043, 044, 045, 046, 048, 049, 051 | 1 | smoke/targeted | medium |
+| gen_pmc_hpm_event | TP-PMC-018, 034, 035, 036, 037, 038, 039, 040, 041, 042, 044, 045, 046, 048, 049, 051 | 1 | smoke/targeted | medium |
 | gen_pmc_ctrl | TP-PMC-022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 056, 057 | 1 | smoke/targeted | short |
 | gen_pmc_random | TP-PMC-055 | 2 | full | long |
+| gen_trg_csr | TP-TRG-001, 002, 003, 004, 005, 006, 007, 009, 028, 029 | 1 | smoke/targeted | short |
+| gen_trg_fire | TP-TRG-010, 011, 012, 013, 014, 015, 016, 017, 018, 019, 021, 022, 023, 024, 025, 026, 027, 031, 032 | 1 | smoke/targeted/full | medium |
+| gen_trg_random | TP-TRG-030 | 2 | full | long |
+| gen_dbg_req_shape_info | TP-DBG-011 | 1 | targeted | short |
+| gen_dbg_csr_xfail | TP-DBG-018 | 1 | targeted | short |
+| gen_dbg_irq_mask_xfail | TP-DBG-021 | 1 | targeted | short |
+| gen_dbg_dret_xfail | TP-DBG-038 | 1 | targeted | short |
+| gen_dbg_pmp_dm_xfail | TP-DBG-060 | 1 | targeted | short |
+| gen_pmc_minstret_xfail | TP-PMC-013 | 1 | targeted | short |
+| gen_pmc_hpm_event_xfail | TP-PMC-043 | 1 | targeted | short |
+| gen_pmc_hpm_b17_br_xfail | TP-PMC-058 | 1 | targeted | short |
+| gen_pmc_hpm_b17_mul_xfail | TP-PMC-059 | 1 | targeted | short |
+| gen_pmc_hpm_b17_div_xfail | TP-PMC-060 | 1 | targeted | short |
+| gen_trg_csr_xfail | TP-TRG-008 | 1 | targeted | short |
+| gen_trg_fire_xfail | TP-TRG-020 | 1 | targeted | short |
 
 Runtime classes: short < 2 min per seed on the verified flow; medium 2-10 min (slow-memory
 regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA model).
@@ -13131,8 +13813,15 @@ regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA
   gen_chk_debug: needs the "dbg_model" state (debug_mode, step_armed from the post-op dcsr.step, WB
   occupancy, pipeline context via the W-* window definitions) shared with the covergroups; must expose cause/dpc predictions for the FLUSH-entry cases
   (dpc = vector / mepc / wfi+4 / csrw+4, incl. the H-C1 override of WAIT_SLEEP), the RTL cause
-  priority (trigger > ebreak > haltreq > step) and the spec-side asserts for B9 and B10 as
-  separately disable-able sub-checks (B6 is RTL-defined: no spec-side assert). - gen_chk_pmp: must
+  priority (trigger > ebreak > haltreq > step) and the spec-side assert for B10 as a separately
+  disable-able sub-check (B6 is RTL-defined: no spec-side assert; B9 is record-only, TP-DBG-011
+  `_info`); the rvfi_ext_debug_req rule of C-3 (the flag of the last pre-entry record is 0, the
+  first debug-ROM record carries 1; the entry arc is decided from the driver timestamp, the last
+  record and the DmHaltAddr fetch with no record in between); the "pre-empted" class of the sweep
+  items (a request high before an instruction's IF->ID transfer blocks it: dpc = its pc, no
+  record); "one instruction per step" with a Zcmp sequence counted as one (C-12); the TP-DBG-054
+  classes (zero retirements when the request is already high at the resume); the same-cycle rule
+  (record order, never a strict cycle order, for "record then DmHaltAddr fetch"). - gen_chk_pmp: must
   implement the Sdext rules for B1 (clear MPRV on dret to < M) and B2 (ignore MPRV in debug mode
   with mprven=0) as the checked behaviour, with a knob to switch to RTL behaviour after an owner
   ruling; the DM-window bypass keyed on registered debug_mode. - gen_chk_counters: needs (a) the
@@ -13140,14 +13829,27 @@ regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA
   write-wins cycle rule (F-PMC-004/005/014/045), (c) the speculative +1 read rule (F-PMC-009/022),
   (d) misaligned = 1 (D6), (e) DIT-taken rule per doc for B11, (f) the per-index exactness classes of
   CG-PMC-003 (exact_rvfi 5..10, exact_gap 11/12 under the S-4 qualifiers, bound 3/4; bound mode for
-  minstret with dummies on), (g) the ebreak-into-debug record (rvfi_trap = 0) is not counted (S-2). - gen_chk_csr_readback: WARL masks for dcsr (bits
+  minstret with dummies on), (g) the ebreak-into-debug record (rvfi_trap = 0) is not counted (S-2),
+  (h) C-10 / B17: counters 8 / 11 / 12 are exact only for windows in which no branch / mul / div
+  entered ID behind an outstanding WB memory access (the boundary model decides per window from the
+  back-dated ID entry vs the dbus response); for the `_xfail` items TP-PMC-058/059/060 the checker
+  asserts the doc count and records the RTL count, (i) fence.i is a jump for counter 7 (X-23),
+  (j) the access's own grant wait is not in counter 3 and counter 4 counts fetch bubbles whatever
+  the instruction stream (TP-PMC-034 / TP-PMC-052), (k) an h-half counter write suppresses that
+  cycle's increment (X-17; observable for counter 10 only, X-18), (l) mhpmeventN = 1 << (N - 3)
+  (D20); the dummy multiply adds no mul_wait cycle (TP-PMC-013). - gen_chk_csr_readback: WARL masks for dcsr (bits
   15,12,2,1:0 + prv legalisation; bit 13 expected 0, B15 disable-able sub-check), dpc bit 0, tselect
   -> 0, tdata1 -> 0x2800_1048 | exec<<2 (D4), tdata2 full, HPM_CTRL_MASK-shaped mcountinhibit/mcounteren (bit 1
   forced 0), mcounteren gated by the sampled pin value; the spec-side nmip expectation (B5,
   core_registers.xml:292-298) as a disable-able sub-check. - gen_chk_sleep: must distinguish "no Off
   cycle" (H-C1 wfi), "exactly one Off cycle" (step / debug mode wfi: WAIT_SLEEP only) and "k Off
   cycles" (real sleep) profiles of core_busy_o and apply the port rule (a dip masked by if_busy /
-  lsu_busy is classed hidden, never a failure). - gen_isa_compare shim (tb-infra c.3): debug-mode
+  lsu_busy is classed hidden, never a failure); the stepped wfi (TP-DBG-049) is in the "no Off
+  cycle" profile (C-5), the debug-mode wfi (TP-DBG-063) and the unstepped wfi woken in its first
+  SLEEP cycle (TP-DBG-071 (b)) in the "exactly one" profile. - gen_chk_irq: except the first
+  debug-ROM record after a W-IRQTAKEN entry from the "no rvfi_intr while debug_mode" rule
+  (TP-DBG-016, fact-check N3); use the rvfi_ext_irq_valid level (C-13) as the accept marker when no
+  handler record exists (TP-TRG-017). - gen_isa_compare shim (tb-infra c.3): debug-mode
   emulation (entry causes, dret, ebreak-into- debug, DmExceptionAddr redirects, mret-in-debug
   modelled as RTL per Q-005), trigger model (single execute trigger, dmode writes), counter masks
   (32-bit hpm, HPM_CTRL_MASK mcounteren, mhpmevent constants, indices above HPM_LAST read 0).
@@ -13241,6 +13943,83 @@ assert "no re-fetch on the bus" of a word that could hit in the cache pin cpuctr
 0 in their Preconditions (TP-IMEM-026, TP-FE-026) and exclude bit 0 from random cpuctrlsts writes.
 Bins named `cp_<knob>.<value>` do not exist in this area: knob values appear only as cross operands
 (fcov_mem_fetch_icache.md conventions; the knob bins are fcov_xcut.md CG-REG-*).
+
+Conventions folded from rtl-arch's RTL fact-check (T-053, dv/auto_dv/work/rtl-arch/
+gen_tp_parts_rtl_factcheck.md Section 1; README_FIX3_BRIEF.md C-n labels) and applied by reference in the
+items below:
+- C-1 (X-1): the redirect target of a trap / mret / dret record is observed as the NEXT record's
+  rvfi_pc_rdata; rvfi_pc_wdata of those records is the next sequential fetch address (rtl/ibex_core.sv:2084
+  captures pc_if when the instruction leaves ID; their pc_set is one cycle later in FLUSH) and is never
+  asserted as the target. Only branch / jump / fence.i records carry the target in rvfi_pc_wdata.
+- C-2 (X-2): every item that runs code in U-mode ("M or U", knob:priv_regime u_heavy / alternating)
+  carries the U-mode prologue precondition: before the first mret to U the program programs one
+  U-executable code region and one U-RW data/stack region (the PMP reset table is all OFF; an unmatched
+  U access faults, rtl/ibex_pmp.sv:136-139).
+- C-3 (X-6/X-7): interrupt and debug entry wait for an empty ID and a ready WB; the instruction already
+  in ID when the request arrives completes first; mepc / dpc = pc of the first not-yet-executed
+  instruction, derived from the last retired record (nominal 2 records after the pin edge, worst case
+  17). Fire-checks key on the driver timestamp, the last record before entry and the vector / DmHaltAddr
+  as the next record's rvfi_pc_rdata with no record in between.
+- C-4 (X-5): fetch_enable_i != IbexMuBiOn (and WFI sleep) stops only NEW icache lookups (req_i,
+  rtl/ibex_core.sv:648; rtl/ibex_icache.sv:249); the remaining beats of already allocated fill buffers
+  keep requesting and a request awaiting grant is never withdrawn (rtl/ibex_icache.sv:756, 764-775,
+  1030-1031). Rule asserted by the gating items: "no new line allocation after the Off edge; instr_req_o
+  == 0 whenever core_busy_o == Off" (core_busy_o includes the icache busy_o = invalidation active or
+  beats outstanding, rtl/ibex_icache.sv:1304). The ibus protocol checker needs no tolerance for a
+  withdrawn request.
+- C-5 (X-8): a stepped WFI (dcsr.step = 1, not in debug mode) never reaches WAIT_SLEEP (FLUSH ->
+  DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987); an unstepped WFI gives exactly one ctrl_busy = 0 cycle
+  in WAIT_SLEEP, visible on core_busy_o only with no fetch beat outstanding, no invalidation and an idle
+  LSU; a WFI executed IN debug mode passes WAIT_SLEEP and SLEEP exits at once (debug_mode_q), wfi = nop.
+- C-6 (X-9): after a synchronous exception the trap entry clears mstatus.MIE, so a pending ORDINARY
+  interrupt is taken only after the handler's mret or an MIE write; an NMI ignores MIE and a debug
+  request is not MIE-gated either (taken in the first empty-ID DECODE after the exception's FLUSH,
+  before the handler's first instruction).
+- C-7 (X-10, D21): up to two ordinary records (more with a Zcmp sequence in ID) may follow the
+  corrupted load's record before the internal-NMI entry; exception_interrupts.rst:87-88 "at most one"
+  is the doc mismatch D21 (checker follows the RTL; the first directed integrity-error sim confirms).
+- C-8 (X-11, B16): a misaligned load with an integrity error on the FIRST beat only writes the merged
+  word to rd (alert and NMI fire): that class is its own expected-fail item TP-DMEM-064 (B16, checker
+  follows security.rst:88); the aligned and second-beat classes pass (TP-DMEM-039 / TP-DMEM-041).
+- C-9 (X-12): every instruction after a load waits in ID until the response cycle (instr_executing needs
+  ~outstanding_memory_access, rtl/ibex_id_stage.sv:1059-1062); load data is not forwarded
+  (rtl/ibex_wb_stage.sv:212-215), so a dependent consumer completes one cycle later still: the
+  observable is the deferred completion (record deltas), never a mid-operation hold.
+- C-12 (X-14/X-15, B18): each Zcmp micro-op passes ID as its own instruction and produces its own RVFI
+  record (rvfi_insn = the 32-bit expansion, the halfword on rvfi_ext_expanded_insn, _last on the final
+  one, rvfi_order advancing per micro-op); rvfi_mem_rmask / wmask are zero on WB-trap records; on
+  non-store records rmask is 4'b1111 and rvfi_mem_addr is the ALU result (B18, RVFI-only): the RVFI
+  memory-field rules of this area apply only to decoded load/store records that did not trap.
+- C-14 (ICache blindness, X-21): a bus request for a redirect target exists only as the speculative
+  request of the pc_set cycle when no fill buffer has an ungranted request (fill_spec_req,
+  rtl/ibex_icache.sv:703, 1030-1031) and never when the target hits. Any fire-check or bin that infers
+  "the target word was requested" or "no bus fetch of the target" from the instruction bus either pins
+  cpuctrlsts.icache_enable = 0 (bit 0 excluded from random cpuctrlsts writes) or derives the redirect
+  from RVFI (rvfi_pc_wdata != pc + len for branches / jumps; the next record's rvfi_pc_rdata otherwise).
+  Always bus-visible: the dret target's line (icache forced off in the dret cycle), the DmHaltAddr /
+  in-debug DmExceptionAddr fetches (rtl/ibex_cs_registers.sv:1970-1971) and the post-fence.i fetch (the
+  sweep blocks hits).
+- C-15: Expected values are `pass`, `pass (doc mismatch Dn)`, `expected-fail (Bn)` and
+  `informational (...)`. An informational item is its own `_info` test (measured: false, never gated;
+  its checkers run in record mode; the test asserts only that the scenario fired and logs the
+  observation as GEN_TEST_INFO); an expected-fail item is its own `_xfail` test. A pass item never
+  disables a checker (TP-IC-038 is therefore informational; the area's expected-fail item is
+  TP-DMEM-064).
+- C-16: fire-checks are per-seed assertions on an observable; a timing constant not yet simulated is
+  asserted as "minimum observed value equals the bring-up-pinned constant <name> (predicted N)"
+  (TP-FE-015: GEN_MIN_REDIRECT_SPACING, predicted 2).
+- TIMING windows (fact-check 3.mem_a / 3.mem_b TIMING rows): the prefetch "lead" is bounded against the
+  word consumed into ID; measured against the last retired rvfi_pc_rdata it is transiently NUM_FB lines
+  while a load/store is stalled in WB (the record lags ID consumption by that wait), so the RVFI-based
+  bound is NUM_FB-1 with the data bus idle and NUM_FB with a data access outstanding (TP-FE-013,
+  TP-IC-051). Reset-sweep counting convention: reset release = cycle 0 = OUT_OF_RESET, cycle 1 =
+  AWAIT_SCRAMBLE_KEY, inval writes in cycles 2..IC_NUM_LINES+1, first INVAL_IDLE cycle IC_NUM_LINES+2,
+  first fill write >= 5 cycles after the last inval write (TP-IC-008 / TP-IC-011). Miss-forward latency
+  from the demanded beat's rvalid R to its rvfi_valid is 3 at minimum (IF output R, ID R+1, WB R+2,
+  record R+3; TP-IC-020). A follower of a load records at R+2, a dependent consumer at R+3, the load
+  itself at R+1 (TP-DMEM-044); a WFI behind an outstanding access records at R+2 (TP-DMEM-047).
+Bug / doc references added by this fold: B16 (first-beat integrity write, TP-DMEM-064), D21 (internal-NMI
+latency, TP-DMEM-039).
 
 ## Layer-1 weight tables
 
@@ -13597,9 +14376,9 @@ draw weights of the agent / program generator per transaction.
 - Tier: smoke
 - Preconditions: icache_enable random per seed
 - Stimulus: rvalid latency 8..30 so that taken branches, traps (ecall) and interrupts (irq_timer_i
-  pulse train) occur with 1..NUM_FB*IC_LINE_BEATS beats outstanding; the agent answers every granted
-  beat after the
-  redirect.
+  raised and held until the entry is observed: a one-cycle pulse is never taken, CTRL-09 / Q-007)
+  occur with 1..NUM_FB*IC_LINE_BEATS beats outstanding; the agent answers every granted beat after
+  the redirect.
 - Randomized: redirect kind, outstanding depth, latency, program
 - Knobs: knob:imem_rvalid_delay (long), knob:irq_regime (sparse), knob:instr_mix (branch_heavy)
 - Fire-check: agent record shows >= 30 redirects (RVFI non-sequential pc) with outstanding >= 2
@@ -13644,9 +14423,11 @@ draw weights of the agent / program generator per transaction.
   agent injects instr_err_i on the speculative beat of a hitting target.
 - Randomized: loop size, latency, error injection on the speculative beat
 - Knobs: knob:imem_rvalid_delay (random), knob:imem_err_rate (rare)
-- Fire-check: agent record: per warm iteration exactly one bus request (the branch target word)
-  while the RVFI instructions of the loop body have no other bus records; the response was
-  consumed (outstanding decremented) and, when errored, no trap occurred.
+- Fire-check: agent record: from the third warm iteration on, exactly one bus request per
+  iteration (the branch-target word; iterations 1-2 may show none when a still-requesting post-loop
+  miss suppressed the speculative request in the branch cycle, rtl/ibex_icache.sv:703, C-14) while
+  the RVFI instructions of the loop body have no other bus records; the response was consumed
+  (outstanding decremented) and, when errored, no trap occurred.
 - Pass criteria: gen_chk_icache (hits produce no bus fetch except the speculative branch word),
   gen_chk_ibus_proto, gen_isa_compare; detects a hit that re-fetches, or an error on the
   speculative hit beat raising a fault
@@ -13692,43 +14473,61 @@ draw weights of the agent / program generator per transaction.
 - Bins: CG-IMEM-004.cp_seq_kind.end_of_line_stop, CG-IMEM-004.cr_seq_x_en.stop_off,
   CG-IMEM-004.cr_seq_x_en.target_off, CG-IMEM-004.cr_seq_x_en.next_line_off, CG-IMEM-004.cp_cache_en.off
 
-### TP-IMEM-022: WFI: no new instruction requests while asleep; in-flight beats complete
+### TP-IMEM-022: WFI: no new line lookups once asleep; beats of open lines complete; instr_req_o == 0 whenever core_busy_o == Off
 - Features: F-IMEM-021
 - Phase: 1
 - Tier: smoke
 - Preconditions: mstatus.mie/mie set for one enabled line; WFI in the program with rvalid latency
   8..40 so beats are outstanding at the WFI
 - Stimulus: WFI every 50..500 instructions; the interrupt driver raises the enabled line 5..200
-  cycles after core_busy_o goes Off.
+  cycles after core_busy_o goes Off and holds it until the entry is observed.
 - Randomized: latency, wake delay, which line, program
 - Knobs: knob:imem_rvalid_delay (long), knob:irq_regime (sparse)
-- Fire-check: agent record: after the WFI retired, outstanding beats drained to 0 with no new
-  request until the wake; core_busy_o Off observed; first request after wake is the handler vector.
-- Pass criteria: gen_chk_sleep (no instr_req_o while asleep), gen_chk_ibus_proto, gen_isa_compare;
-  detects a fetch issued during sleep or a lost in-flight beat
+- Fire-check: agent record: after the WFI's record (record cycle = WAIT_SLEEP; the controller's
+  req_i stays 1 through DECODE and FLUSH, rtl/ibex_controller.sv:541, 600, 609, 623) no NEW line is
+  looked up (no request to a line not already open at the record cycle) until the wake, while the
+  un-issued beats of lines open at that cycle are still requested and answered (C-4; outstanding
+  drains to 0 and stays 0); core_busy_o Off observed for >= 1 cycle and instr_req_o == 0 in every
+  cycle with core_busy_o == Off; the first retirement after the wake is the handler's first
+  instruction (RVFI, C-1). Not asserted: "the first request after the wake is the handler vector"
+  (FIRST_FETCH drives req_i for one cycle before IRQ_TAKEN's pc_set, so a sequential lookup may
+  precede the vector fetch, rtl/ibex_controller.sv:622-649).
+- Pass criteria: gen_chk_sleep (instr_req_o == 0 whenever core_busy_o == Off; no new line lookup
+  after the WFI record), gen_chk_ibus_proto (no withdrawn request), gen_isa_compare; detects a
+  fetch issued during sleep or a lost in-flight beat
 - Expected: pass
 - Test group: gen_imem_gating
 - Bins: CG-IMEM-005.cp_gate_cause.wfi_sleep, CG-IMEM-005.cp_outstanding_at_gate.o1_4,
   CG-IMEM-005.cp_inflight_drain.c5_15, CG-IMEM-005.cp_inflight_drain.c16p,
+  CG-IMEM-005.cp_beats_issued_after_gate.some, CG-IMEM-005.cp_beats_issued_after_gate.none,
   CG-IMEM-005.cr_cause_x_outstanding.wfi_o1_4, CG-IMEM-005.cp_resume.handler_pc, CG-FE-006.cp_wake_src.irq
 
-### TP-IMEM-023: fetch_enable_i Off stops new requests and retirement
+### TP-IMEM-023: fetch_enable_i Off stops new line lookups and retirement; open lines complete their beats
 - Features: F-IMEM-022
 - Phase: 1
 - Tier: smoke
 - Preconditions: none
 - Stimulus: fetch_enable_i toggled On->Off for 20..2000 cycles at random points, including while
-  the agent holds 1..NUM_FB*IC_LINE_BEATS beats outstanding.
+  the agent holds 1..NUM_FB*IC_LINE_BEATS beats outstanding and while a fill buffer still has
+  un-issued beats.
 - Randomized: toggle points, hold length, latencies
 - Knobs: knob:fetch_enable_regime (toggling), knob:imem_rvalid_delay
-- Fire-check: >= 10 Off windows; in each, rvfi_valid stops within the in-flight instructions and
-  no new instr_req_o (agent: no new address) appears until On; outstanding beats were answered.
-- Pass criteria: gen_chk_fetch_en, gen_chk_ibus_proto, gen_isa_compare; detects a fetch or
+- Fire-check: >= 10 Off windows; in each: rvfi_valid stops within the in-flight instructions (the
+  instructions in ID and WB at the edge complete, then no record until On); no NEW line lookup after
+  the Off edge (agent: no request to a line not open at the edge, allowing the lookup made in the
+  last On cycle, which reaches the bus one cycle later on a miss; rtl/ibex_core.sv:648 gates only
+  req_i); the un-issued beats of open lines are still requested and answered (no request withdrawn,
+  rtl/ibex_icache.sv:756, 764-775; C-4); the outstanding count drains to 0 and stays 0 until On;
+  instr_req_o == 0 in every cycle with core_busy_o == Off.
+- Pass criteria: gen_chk_fetch_en (no new line allocation after the Off edge; no retirement beyond
+  the in-flight instructions; instr_req_o == 0 whenever core_busy_o == Off), gen_chk_ibus_proto (no
+  withdrawn request: no tolerance needed), gen_isa_compare; detects a new line lookup or a
   retirement while Off
 - Expected: pass
 - Test group: gen_imem_gating
 - Bins: CG-IMEM-005.cp_gate_cause.fetch_en_off, CG-IMEM-005.cp_fetch_en_code.off,
   CG-IMEM-005.cp_outstanding_at_gate.o5_8, CG-IMEM-005.cp_outstanding_at_gate.o0,
+  CG-IMEM-005.cp_beats_issued_after_gate.some, CG-IMEM-005.cp_beats_issued_after_gate.none,
   CG-IMEM-005.cr_cause_x_outstanding.fen_off_o5_8, CG-IMEM-005.cr_cause_x_outstanding.fen_off_o1_4
 
 ### TP-IMEM-024: Invalid MuBi encodings on fetch_enable_i behave as Off without an alert
@@ -13742,8 +14541,10 @@ draw weights of the agent / program generator per transaction.
 - Randomized: code order, window length, program state at the toggle
 - Knobs: knob:fetch_enable_regime (toggling)
 - Fire-check: per seed all 14 invalid codes observed on the pin (driver record); during each, no
-  new instr_req_o address and no rvfi_valid beyond in-flight instructions; alert_major_internal_o
-  low throughout (Q-DL-8: the absence of the alert is gen_chk_alerts' check, not a bin).
+  new line lookup after the edge (the un-issued beats of open lines still complete, as
+  TP-IMEM-023 / C-4), instr_req_o == 0 whenever core_busy_o == Off, and no rvfi_valid beyond the
+  in-flight instructions; alert_major_internal_o low throughout (Q-DL-8: the absence of the alert
+  is gen_chk_alerts' check, not a bin).
 - Pass criteria: gen_chk_fetch_en (invalid == Off), gen_chk_alerts (no alert; Q-DL-8 default: RTL
   as-is); detects an invalid code treated as On, or an alert
 - Expected: pass
@@ -13856,12 +14657,15 @@ draw weights of the agent / program generator per transaction.
 - Phase: 1
 - Tier: targeted
 - Preconditions: PMP region denying execute over a code window for U-mode (and, in some seeds,
-  M-mode with a locked region); program jumps into the window
+  M-mode with a locked region); U-mode seeds carry the C-2 prologue; program jumps into the
+  window; cpuctrlsts.icache_enable = 0 pinned for this item (bit 0 excluded from random cpuctrlsts
+  writes, C-14) so the denied word's request is never hidden by a cache hit (the cached case is
+  TP-IC-028)
 - Stimulus: jump into the denied window; 50% of seeds also inject instr_err_i on that word.
 - Randomized: region geometry, privilege, error injection
 - Knobs: knob:pmp_regime (sparse), knob:priv_regime
-- Fire-check: agent record shows the request for the denied word granted and answered; RVFI trap
-  mcause 1 on that pc.
+- Fire-check: agent record shows the request for the denied word granted and answered (every fetch
+  is bus-visible with the cache off); RVFI trap mcause 1 on that pc.
 - Pass criteria: gen_chk_pmp (fault expected), gen_chk_ibus_proto (request present: checker
   follows the RTL, doc mismatch D9), gen_isa_compare; detects a PMP-gated instr_req_o
 - Expected: pass (doc mismatch D9)
@@ -14055,7 +14859,7 @@ draw weights of the agent / program generator per transaction.
 - Pass criteria: none gating (recorded as a design note, MEM-19); observations logged by
   gen_chk_ibus_proto in informational mode
 - Expected: informational (excluded from the pass gate)
-- Test group: gen_imem_proto_basic (informational entry)
+- Test group: gen_imem_proto_basic_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0) (informational entry)
 - Bins: CG-IMEM-007.cp_unsolicited_rvalid_case.no_expecting_buffer_ignored,
   CG-IMEM-007.cp_unsolicited_rvalid_case.expecting_buffer_consumed_shift,
   CG-IMEM-007.cp_unsolicited_rvalid_case.bad_secded_alert
@@ -14542,7 +15346,7 @@ draw weights of the agent / program generator per transaction.
 - Bins: CG-DMEM-004.cp_err_beat.both, CG-DMEM-004.cr_beat_x_we.both_load, CG-DMEM-004.cr_beat_x_we.both_store,
   CG-DMEM-004.cr_beat_x_mtval.both_ea
 
-### TP-DMEM-027: Handler load/store waits for the abandoned second response
+### TP-DMEM-027: No new data request between the two responses of an errored split access; the trap follows the abandoned second response
 - Features: F-DMEM-027
 - Phase: 1
 - Tier: targeted
@@ -14550,13 +15354,20 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: first-beat error (TP-DMEM-024) with the second beat's rvalid delayed 10..60 cycles.
 - Randomized: handler first instruction, delay
 - Knobs: knob:dmem_err_rate (rare), knob:dmem_rvalid_delay (long)
-- Fire-check: agent record: >= 10 cases where the handler's first load/store request appeared only
-  after the abandoned second rvalid (gnt(handler) > rvalid(second)) while the handler's pc had
-  already been fetched (imem record) >= 5 cycles earlier.
-- Pass criteria: gen_chk_dbus_proto (no third request while the FSM is not IDLE), gen_isa_compare
+- Fire-check: agent record: >= 10 first-beat errors with the second rvalid >= 10 cycles after the
+  first; in each, no data_req_o between the errored first rvalid and the second rvalid (WB holds
+  the next request until lsu_resp_valid, which fires only at the FINAL response:
+  rtl/ibex_load_store_unit.sv:692-694, 746-747), the trap record (mcause 5/7, handler-read mtval
+  == unaligned EA) is at the earliest one cycle after the second rvalid (back-dated), and, when the
+  handler's first instruction is a load/store, its request is granted after the second rvalid.
+  Not asserted: "the handler's pc was fetched before the second rvalid" (the exception itself
+  follows the final response, so the handler fetch cannot precede it).
+- Pass criteria: gen_chk_dbus_proto (no third request while the LSU FSM is not IDLE; the error is
+  reported at the final response only), gen_isa_compare (trap record timing and mtval)
 - Expected: pass
 - Test group: gen_dmem_err
-- Bins: CG-DMEM-004.cp_handler_ls_waited.yes, CG-DMEM-004.cp_handler_ls_waited.not_ls
+- Bins: CG-DMEM-004.cp_handler_ls_waited.yes, CG-DMEM-004.cp_handler_ls_waited.not_ls,
+  CG-DMEM-004.cp_second_rvalid_gap.g1_9, CG-DMEM-004.cp_second_rvalid_gap.g10p
 
 ### TP-DMEM-028: Sign and zero extension for lb/lbu/lh/lhu at every offset
 - Features: F-DMEM-019
@@ -14715,8 +15526,10 @@ draw weights of the agent / program generator per transaction.
 - Randomized: load/store, line, latency, irq vs debug
 - Knobs: knob:dmem_rvalid_delay (long), knob:irq_regime (sparse), knob:debug_req_regime (sparse)
 - Fire-check: >= 20 cases (irq) and >= 10 (debug) where the pin rose while outstanding == 1; RVFI
-  order: the load/store retires (rd written / memory updated) before the trap/debug entry; the
-  vector fetch on instr_addr_o appears after the data rvalid.
+  order: the load/store retires (rd written / memory updated) before the trap / debug entry (C-3:
+  the entry waits for the empty ID and the ready WB), and the entry's target (interrupt vector /
+  DmHaltAddr) is the NEXT record's rvfi_pc_rdata after the last pre-entry record (C-1). No ibus
+  clause: the vector word may hit in the cache (C-14).
 - Pass criteria: gen_isa_compare (order), gen_chk_irq, gen_chk_debug, gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_dmem_ctx
@@ -14727,18 +15540,29 @@ draw weights of the agent / program generator per transaction.
 - Features: F-DMEM-030, F-DMEM-036, F-DMEM-037
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-DMEM-035; handlers record mcause
+- Preconditions: as TP-DMEM-035; handlers record mcause; the exception handler does not write
+  mstatus.MIE (80% of seeds) or sets MIE early in the handler (20%), and ends with mret
 - Stimulus: as TP-DMEM-035 plus data_err_i on that access.
-- Randomized: as TP-DMEM-035
+- Randomized: as TP-DMEM-035, handler MIE variant
 - Knobs: knob:dmem_err_rate (rare), knob:irq_regime (sparse), knob:debug_req_regime (sparse)
-- Fire-check: >= 10 cases per (cause, irq) and >= 5 per (cause, debug); RVFI: exception trap first
-  (mcause 5/7), then the interrupt taken at the handler's first instruction / debug entry.
-- Pass criteria: gen_isa_compare, gen_chk_irq, gen_chk_debug
+- Fire-check: >= 10 cases per (cause, irq) and >= 5 per (cause, debug); RVFI: the exception trap
+  record first (mcause 5/7). irq half: the pending ordinary interrupt is NOT taken at the handler's
+  first instruction (the trap entry clears mstatus.MIE, rtl/ibex_cs_registers.sv:907-927;
+  irq_enabled = MIE in M-mode, rtl/ibex_controller.sv:490; C-6): the interrupt entry record
+  follows the handler's mret record (no-MIE-write variant) or the handler's MIE-write record
+  (MIE-write variant), with the vector as the next record's rvfi_pc_rdata (C-1). debug half: the
+  debug entry (DmHaltAddr as the next record's rvfi_pc_rdata) follows the exception's FLUSH with
+  no handler instruction retired in between (debug_req_i is not MIE-gated) and handler-read dpc ==
+  the mtvec exception target.
+- Pass criteria: gen_isa_compare, gen_chk_irq (entry only after MIE is restored or written),
+  gen_chk_debug
 - Expected: pass
 - Test group: gen_dmem_ctx
 - Bins: CG-DMEM-006.cp_irq_pending_at_err.yes, CG-DMEM-006.cp_dbg_req_at_err.yes,
   CG-DMEM-006.cr_cause_x_irq.load_irq, CG-DMEM-006.cr_cause_x_irq.store_irq,
-  CG-DMEM-006.cr_cause_x_dbg.load_dbg, CG-DMEM-006.cr_cause_x_dbg.store_dbg, CG-DMEM-006.cp_trap_order.exc_first
+  CG-DMEM-006.cr_cause_x_dbg.load_dbg, CG-DMEM-006.cr_cause_x_dbg.store_dbg, CG-DMEM-006.cp_trap_order.exc_first,
+  CG-DMEM-006.cp_irq_taken_at.after_mret, CG-DMEM-006.cp_irq_taken_at.after_mie_write,
+  CG-DMEM-006.cp_dbg_entry_after_exc.before_handler
 
 ### TP-DMEM-037: Error response suppresses a same-cycle back-to-back request
 - Features: F-DMEM-032
@@ -14774,26 +15598,34 @@ draw weights of the agent / program generator per transaction.
   CG-DMEM-004.cp_err_beat.second, CG-DMEM-004.cp_err_beat.both, CG-DMEM-001.cr_gnt_delay_x_knob.d1_short,
   CG-DMEM-001.cr_gnt_delay_x_knob.d2_3_short
 
-### TP-DMEM-039: Load response integrity error: major alert, RF write suppressed, internal NMI
+### TP-DMEM-039: Load response integrity error (aligned): major alert, RF write suppressed, internal NMI within two records
 - Features: F-DMEM-041
 - Phase: 1
 - Tier: targeted
 - Preconditions: NMI handler installed (vector 31) recording mcause/mtval via stores; rd preloaded
 - Stimulus: agent corrupts data_rdata_i[38:32] (single bit 50%, double bit 50%; weights: W-DMEM-ERR
   integrity classes) on aligned load responses, 1 in 50..500; data_err_i low.
-- Randomized: class, size, rd, latency, next instructions (including a load/store right after)
+- Randomized: class, size, rd, latency, next instructions (including a load/store right after, an
+  instruction with a load-use hazard on rd, and an independent instruction)
 - Knobs: knob:dmem_err_rate (rare; integrity sub-class), knob:instr_mix
 - Fire-check: >= 20 corruptions; for each: alert_major_bus_o high in the rvalid cycle, the load
-  retires without trap and rd is unchanged (rvfi_rd_wdata absent), and an NMI entry with
-  handler-read mcause 0xFFFFFFE0 and mtval == the load address within <= 1 further retirement.
-- Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi, gen_chk_alerts, gen_isa_compare; detects a
-  missing alert, an rd write, a synchronous trap, or an NMI outside the documented window
-- Expected: pass
+  retires without trap with rvfi_rd_addr == 0 / rvfi_ext_rf_wr_suppress == 1 (aligned access: the
+  completing beat carries the error, rtl/ibex_load_store_unit.sv:697-698), and an NMI entry with
+  handler-read mcause 0xFFFFFFE0 and mtval == the load address within <= 2 further ordinary records
+  after the load's record (C-7: the pending flag registers one cycle after the corrupted rvalid,
+  rtl/ibex_controller.sv:402-438; the instruction in ID completes and the one entering ID in the
+  response cycle completes too; 1 when the instruction in ID has a load-use hazard; more only with a
+  Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records.
+- Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi (entry within <= 2 ordinary records, checker
+  follows the RTL; exception_interrupts.rst:87-88 "at most one" is D21), gen_chk_alerts,
+  gen_isa_compare; detects a missing alert, an rd write, a synchronous trap, or an NMI outside the
+  RTL window
+- Expected: pass (doc mismatch D21)
 - Test group: gen_dmem_intg
 - Bins: CG-DMEM-007.cp_class.single, CG-DMEM-007.cp_class.double, CG-DMEM-007.cp_we.load,
   CG-DMEM-007.cp_beat.single, CG-DMEM-007.cp_alert.pulsed, CG-DMEM-007.cp_rf_suppressed.yes,
-  CG-DMEM-007.cp_nmi_latency.l0, CG-DMEM-007.cp_nmi_latency.l1, CG-DMEM-007.cp_nmi_mtval.aligned_ea,
-  CG-DMEM-007.cp_with_bus_err.no
+  CG-DMEM-007.cp_nmi_latency.l0, CG-DMEM-007.cp_nmi_latency.l1, CG-DMEM-007.cp_nmi_latency.l2,
+  CG-DMEM-007.cp_nmi_mtval.aligned_ea, CG-DMEM-007.cp_with_bus_err.no
 
 ### TP-DMEM-040: Store response integrity error: alert and NMI, store considered complete
 - Features: F-DMEM-041, F-DMEM-039
@@ -14810,24 +15642,32 @@ draw weights of the agent / program generator per transaction.
 - Test group: gen_dmem_intg
 - Bins: CG-DMEM-007.cp_we.store, CG-DMEM-007.cr_class_x_we_x_beat.double_store_single
 
-### TP-DMEM-041: Integrity errors on the beats of a split access; NMI mtval per beat
+### TP-DMEM-041: Integrity errors on the beats of a split access; NMI mtval per beat; rd suppressed when the completing beat is corrupted
 - Features: F-DMEM-041
 - Phase: 1
 - Tier: targeted
 - Preconditions: as TP-DMEM-039
-- Stimulus: corruption on the first beat only, the second beat only, or both, of split loads and
-  stores.
-- Randomized: beat, class, type
+- Stimulus: corruption on the second beat only, or on both beats, of split loads and stores, and on
+  the first beat only of split STORES (the first-beat-only split LOAD is the expected-fail item
+  TP-DMEM-064, B16); per-beat rvalid delays random.
+- Randomized: beat pattern, class, type, offset, size
 - Knobs: knob:dmem_err_rate (rare; integrity sub-class), knob:dmem_rvalid_delay (random)
-- Fire-check: >= 10 per (beat, we) cell; handler-read mtval == unaligned EA for a first-beat
-  corruption and == second word address for a second-beat corruption; load rd unchanged in all
-  cases.
-- Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi, gen_isa_compare
+- Fire-check: >= 10 per (pattern, we) cell of {first_only x store, second_only x load, second_only
+  x store, both x load, both x store}; handler-read mtval == unaligned EA for a first-beat or
+  both-beat corruption and == second word address for a second-beat corruption; for the load cells
+  rvfi_rd_addr == 0 / rvfi_ext_rf_wr_suppress == 1 (the beat that completes the access carries the
+  error, rtl/ibex_load_store_unit.sv:697-698; C-8); NMI entry within <= 2 ordinary records (C-7).
+- Pass criteria: gen_chk_bus_intg_rsp (per-beat rule: suppression when the completing beat is
+  corrupted), gen_chk_nmi, gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_intg
 - Bins: CG-DMEM-007.cp_beat.first, CG-DMEM-007.cp_beat.second, CG-DMEM-007.cp_nmi_mtval.first_ea,
-  CG-DMEM-007.cp_nmi_mtval.second_word, CG-DMEM-007.cr_class_x_we_x_beat.single_load_first,
-  CG-DMEM-007.cr_class_x_we_x_beat.double_load_second, CG-DMEM-007.cr_class_x_we_x_beat.single_store_second
+  CG-DMEM-007.cp_nmi_mtval.second_word, CG-DMEM-007.cp_split_corrupt_pattern.first_only,
+  CG-DMEM-007.cp_split_corrupt_pattern.second_only, CG-DMEM-007.cp_split_corrupt_pattern.both,
+  CG-DMEM-007.cr_pattern_x_we.first_only_store, CG-DMEM-007.cr_pattern_x_we.second_only_load,
+  CG-DMEM-007.cr_pattern_x_we.second_only_store, CG-DMEM-007.cr_pattern_x_we.both_load,
+  CG-DMEM-007.cr_pattern_x_we.both_store, CG-DMEM-007.cr_class_x_we_x_beat.double_load_second,
+  CG-DMEM-007.cr_class_x_we_x_beat.single_store_second
 
 ### TP-DMEM-042: Integrity error together with a bus error; second corruption while the NMI is pending
 - Features: F-DMEM-041
@@ -14861,22 +15701,27 @@ draw weights of the agent / program generator per transaction.
 - Pass criteria: gen_chk_bus_intg_rsp, gen_chk_debug, gen_chk_nmi
 - Expected: pass
 - Test group: gen_dmem_intg
-- Bins: CG-DMEM-007.cp_nmi_in_debug_deferred.yes, CG-DMEM-007.cp_nmi_latency.l2p
+- Bins: CG-DMEM-007.cp_nmi_in_debug_deferred.yes, CG-DMEM-007.cp_nmi_latency.l3p
 
-### TP-DMEM-044: Load followed by a dependent instruction stalls until the data returns
+### TP-DMEM-044: Every instruction after a load waits for the response; a dependent consumer completes one cycle later
 - Features: F-DMEM-028
 - Phase: 1
 - Tier: smoke
 - Preconditions: none
-- Stimulus: load then a consumer of rd in the next instruction (50%), a consumer of x0 loaded by a
-  load to x0 (10%), an independent instruction (40%); rvalid latency 1..20.
+- Stimulus: load then a consumer of rd in the next instruction (50%), a reader of x0 after a load to
+  x0 (10%), an independent instruction (40%); rvalid latency 1..20.
 - Randomized: consumer type, latency
 - Knobs: knob:dmem_rvalid_delay (random)
-- Fire-check: >= 50 dependent pairs where the load's rvfi_valid is exactly one cycle after the
-  agent's final rvalid (F-DMEM-051) and the consumer's rvfi_valid is the cycle after the load's
-  (held in ID until the data returned), and >= 10 x0 pairs where the consumer retired without
-  waiting (its rvfi_valid gap unchanged versus a non-load predecessor).
-- Pass criteria: gen_isa_compare (consumer reads the loaded value), gen_chk_dbus_proto
+- Fire-check: with R = the agent's final rvalid cycle of the load and the load's rvfi_valid at R+1
+  (F-DMEM-051): >= 50 dependent pairs whose consumer's rvfi_valid is at R+3 (it waits in ID for the
+  response, stall_mem, and one more cycle for the load-use hazard, stall_ld_hz,
+  rtl/ibex_id_stage.sv:1095-1096, 1103-1120; load data is not forwarded, rtl/ibex_wb_stage.sv:212-215,
+  C-9); >= 20 independent followers with rvfi_valid at R+2 (every instruction after a load waits in
+  ID until the response cycle); >= 10 x0 pairs whose reader retires at R+2 like an independent
+  follower (it waits for the response but has no hazard: one cycle earlier than a dependent
+  consumer).
+- Pass criteria: gen_isa_compare (consumer reads the loaded value), gen_chk_dbus_proto (record
+  deltas per follower class)
 - Expected: pass
 - Test group: gen_dmem_ctx
 - Bins: CG-DMEM-008.cp_dep_stall.yes, CG-DMEM-008.cp_dep_stall.no_consumer, CG-DMEM-008.cp_dep_x0.yes
@@ -14932,9 +15777,14 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: load/store immediately followed by WFI with rvalid latency 10..60.
 - Randomized: load/store, latency, wake time
 - Knobs: knob:dmem_rvalid_delay (long), knob:irq_regime (sparse)
-- Fire-check: >= 20 WFIs retired while the agent had the access outstanding; core_busy_o stayed On
-  until the rvalid cycle (>= 5 of them for >= 16 cycles) and went Off only afterwards.
-- Pass criteria: gen_chk_sleep (core_busy_o vs outstanding), gen_isa_compare
+- Fire-check: >= 20 WFIs that were in ID while the agent had the preceding access outstanding: the
+  WFI stays in DECODE (retain_id) until ready_wb_i = the final rvalid cycle R, so its RVFI record is
+  at R+2 (rtl/ibex_controller.sv:664-678; rtl/ibex_id_stage.sv:1130) and never before R; core_busy_o
+  stayed On from the access's grant to R (>= 5 cases with >= 16 cycles) and went Off at the earliest
+  in R+2 (WAIT_SLEEP), only with no fetch beat outstanding, no invalidation and an idle LSU (C-5,
+  gen_tb_architecture.md 8.2 item 1). Not asserted: "WFI retired while the access was outstanding"
+  (unreachable: the record follows the response).
+- Pass criteria: gen_chk_sleep (core_busy_o vs outstanding; WFI record at R+2), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_ctx
 - Bins: CG-DMEM-008.cp_wfi_outstanding_hold.c5_15, CG-DMEM-008.cp_wfi_outstanding_hold.c16p
@@ -14993,27 +15843,40 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:instr_mix (ls_heavy)
 - Fire-check: >= 20 retirements per mask class and >= 50 with rvfi_mem_addr[1:0] != 0.
 - Pass criteria: gen_isa_compare (rvfi_mem_addr == EA, masks by size unshifted, wdata == rs2,
-  rdata == extended result); detects an RVFI field convention drift
+  rdata == extended result), applied only to decoded load/store records that did not trap (C-12:
+  on non-store records rmask is 4'b1111 and rvfi_mem_addr is the ALU result, B18; on WB-trap
+  records both masks are zero, X-15); detects an RVFI field convention drift
 - Expected: pass
 - Test group: gen_dmem_load_data
 - Bins: CG-DMEM-008.cp_rvfi_mask.r_word, CG-DMEM-008.cp_rvfi_mask.r_half, CG-DMEM-008.cp_rvfi_mask.r_byte,
   CG-DMEM-008.cp_rvfi_mask.w_word, CG-DMEM-008.cp_rvfi_mask.w_half, CG-DMEM-008.cp_rvfi_mask.w_byte,
   CG-DMEM-008.cp_rvfi_mask_unshifted.yes
 
-### TP-DMEM-051: crash_dump_o.last_data_addr tracks the last data transaction and freezes on error
+### TP-DMEM-051: crash_dump_o.last_data_addr tracks addr_last: updated the cycle after every data grant, not frozen on error
 - Features: F-DMEM-045
 - Phase: 1
 - Tier: targeted
 - Preconditions: none
-- Stimulus: ls_heavy traffic with occasional data_err_i; crash_dump_o sampled every cycle.
-- Randomized: addresses, error timing
-- Knobs: knob:dmem_err_rate (rare)
-- Fire-check: >= 200 grants after which crash_dump_o.last_data_addr equalled the agent's last
-  granted address, and >= 10 errors after which it held the failing address through the handler.
-- Pass criteria: gen_chk_crash_dump; detects a stale or wrong last_data_addr
+- Stimulus: ls_heavy traffic with misaligned accesses, occasional data_err_i (single and first-beat
+  of a split) and PMP-denied accesses; crash_dump_o sampled every cycle.
+- Randomized: addresses, offsets, error timing, handler first instruction (load/store or not)
+- Knobs: knob:dmem_err_rate (rare), knob:pmp_regime (sparse)
+- Fire-check: >= 200 grants after which, in the next cycle, crash_dump_o.last_data_addr equalled the
+  modelled addr_last: the unaligned effective address (rvfi_mem_addr) after a single or first-word
+  grant and the word-aligned second address after a second-half grant (>= 20 of each split class;
+  rtl/ibex_load_store_unit.sv:254-266, 478-482, 520, 540; rtl/ibex_core.sv:1328), PMP-denied
+  accesses included (the LSU's fake grant updates it, >= 5); >= 10 error responses after which the
+  value held the erroring access's address until the handler's first data grant (any grant, error
+  or not) overwrote it; >= 5 first-half errors where the following second-half grant did NOT update
+  it (the only skipped update, :520/:540).
+- Pass criteria: gen_chk_crash_dump (model per the rule above); detects a stale or wrong
+  last_data_addr
 - Expected: pass
 - Test group: gen_dmem_ctx
-- Bins: CG-DMEM-008.cp_crash_last_data_addr.eq_last_gnt, CG-DMEM-008.cp_crash_last_data_addr.frozen_on_err
+- Bins: CG-DMEM-008.cp_crash_last_data_addr.eq_ea_single_first,
+  CG-DMEM-008.cp_crash_last_data_addr.eq_second_word,
+  CG-DMEM-008.cp_crash_last_data_addr.held_until_next_gnt,
+  CG-DMEM-008.cp_crash_last_data_addr.no_update_second_after_err
 
 ### TP-DMEM-052: Zcmp push/pop bursts obey the data protocol
 - Features: F-DMEM-046
@@ -15025,8 +15888,10 @@ draw weights of the agent / program generator per transaction.
 - Randomized: rlist, delays, irq timing
 - Knobs: knob:instr_mix (compressed_heavy), knob:dmem_gnt_delay (random), knob:dmem_rvalid_delay
   (random), knob:irq_regime (sparse)
-- Fire-check: >= 10 bursts per length class {1, 2, 3-6, 7-13} attributed to one rvfi retirement
-  (rvfi_ext_expanded_insn*).
+- Fire-check: >= 10 bursts per length class {1, 2, 3-6, 7-13}, each attributed to the record group
+  of one cm.push/cm.pop* (from the first record with rvfi_ext_expanded_insn_valid to the record
+  with rvfi_ext_expanded_insn_last: one RVFI record per micro-op, rvfi_order advancing per
+  micro-op, C-12; a burst is never attributed to a single retirement).
 - Pass criteria: gen_chk_dbus_proto (every burst transaction follows the rules), gen_isa_compare
   (stack contents, registers)
 - Expected: pass
@@ -15042,8 +15907,9 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: data_err_i injected on the first, a middle, or the last transaction of a burst.
 - Randomized: position, rlist, push vs pop
 - Knobs: knob:dmem_err_rate (rare)
-- Fire-check: >= 5 injections per position class; rvfi_trap on the expanded transaction with
-  mcause 5/7 and mtval == that transaction's address.
+- Fire-check: >= 5 injections per position class; rvfi_trap on the micro-op record of the errored
+  transaction (each micro-op has its own record, C-12) with mcause 5/7 and mtval == that
+  transaction's address.
 - Pass criteria: gen_isa_compare (ISS behaviour for the equivalent expanded sequence; divergence
   in mepc / partial-progress state is a review item, not a failure, until the owner rules)
 - Expected: pass
@@ -15239,7 +16105,7 @@ draw weights of the agent / program generator per transaction.
 - Pass criteria: none gating (recorded as a design note, MEM-05/19); observations logged by
   gen_chk_dbus_proto / gen_chk_bus_intg_rsp in informational mode
 - Expected: informational (excluded from the pass gate)
-- Test group: gen_dmem_proto_basic (informational entry)
+- Test group: gen_dmem_proto_basic_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0) (informational entry)
 - Bins: CG-DMEM-009.cp_unsolicited_rvalid_case.no_outstanding_ignored,
   CG-DMEM-009.cp_unsolicited_rvalid_case.grant_cycle_consumed,
   CG-DMEM-009.cp_unsolicited_rvalid_case.bad_secded_alert
@@ -15263,8 +16129,37 @@ draw weights of the agent / program generator per transaction.
   pair (informational mode for the RVFI record count only; the priority behaviour is gated by
   TP-DMEM-034)
 - Expected: informational (B14 confirmation; excluded from the pass gate)
-- Test group: gen_dmem_err (informational entry)
+- Test group: gen_dmem_err_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0) (informational entry)
 - Bins: CG-DMEM-006.cp_b14_records.two_in_order
+
+### TP-DMEM-064: Misaligned load with an integrity error on the first beat only: rd is written (B16, expected-fail)
+- Features: F-DMEM-041
+- Phase: 1
+- Tier: targeted
+- Preconditions: as TP-DMEM-039; rd preloaded with a sentinel the handler stores out
+- Stimulus: split loads (lw at offsets 1/2/3, lh/lhu at offset 3; weights: W-LS misaligned share)
+  whose FIRST beat's response carries an integrity corruption (single bit 50%, double bit 50%) and
+  whose second beat is clean; both beats data_err_i = 0; per-beat gnt/rvalid delays random.
+  Control (TP-DMEM-041): the same access with the SECOND beat corrupted suppresses the write.
+- Randomized: offset, size, class, rd, delays, following instruction
+- Knobs: knob:dmem_err_rate (rare; integrity sub-class), knob:dmem_rvalid_delay (random)
+- Fire-check: >= 10 first-beat-only corrupted split loads; for each: alert_major_bus_o pulses in
+  the first beat's rvalid cycle, the load's record has rvfi_trap == 0, and an NMI entry with
+  handler-read mcause 0xFFFFFFE0 and mtval == the unaligned EA follows within <= 2 ordinary records
+  (C-7).
+- Pass criteria: gen_chk_bus_intg_rsp and gen_isa_compare follow the documented intent
+  (doc/03_reference/security.rst:88: the rd write is suppressed): they expect rvfi_rd_addr == 0 /
+  rvfi_ext_rf_wr_suppress == 1 and rd unchanged on the load's record. The RTL writes the merged
+  word (the first-half status lsu_err_d has no integrity term, rtl/ibex_load_store_unit.sv:514;
+  the RF write is gated only by the completing beat's data_intg_err, :697-698), so the compare
+  fails: rvfi_rd_addr == rd, rf_wr_suppress == 0. gen_chk_nmi and gen_chk_alerts pass (alert and
+  NMI fire as documented). Owner question Q-015 (gen_bug_log.md B16); a ruling "RTL-defined" turns
+  this item into `pass (RTL-defined)` with the same bins.
+- Expected: expected-fail (B16)
+- Test group: gen_dmem_intg_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-DMEM-007.cp_split_corrupt_pattern.first_only, CG-DMEM-007.cr_pattern_x_we.first_only_load,
+  CG-DMEM-007.cr_class_x_we_x_beat.single_load_first, CG-DMEM-007.cp_rf_suppressed.no_b16,
+  CG-DMEM-007.cp_nmi_mtval.first_ea, CG-DMEM-007.cp_beat.first, CG-DMEM-007.cp_we.load
 
 ---------------------------------------------------------------------------------------------------
 
@@ -15331,9 +16226,14 @@ draw weights of the agent / program generator per transaction.
   fence.i (weights: W-REDIRECT).
 - Randomized: mix, targets, timing
 - Knobs: knob:instr_mix (mixed), knob:irq_regime (sparse), knob:debug_req_regime (sparse)
-- Fire-check: >= 5 redirects per pc_mux class on RVFI, each with instr_addr_o == target word
-  address in the agent record.
-- Pass criteria: gen_isa_compare (rvfi_pc_wdata and next rvfi_pc_rdata), gen_chk_ibus_proto
+- Fire-check: >= 5 redirects per pc_mux class on RVFI (redirect = the next record's rvfi_pc_rdata
+  != pc + len, C-1/C-14); the target is checked as the NEXT record's rvfi_pc_rdata for every class
+  and additionally as rvfi_pc_wdata for the jal / jalr / branch / fence.i classes (trap, mret and
+  dret records carry the next sequential fetch address in rvfi_pc_wdata, X-1). No ibus clause: the
+  target word has a bus record only on a miss or for the always-bus-visible dret / dbg_halt /
+  fence.i classes (C-14).
+- Pass criteria: gen_isa_compare (rvfi_pc_wdata for branches/jumps; next rvfi_pc_rdata for
+  trap/mret/dret, C-1), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_redirect
 - Bins: CG-FE-001.cp_pc_mux.jump_jal, CG-FE-001.cp_pc_mux.jump_jalr, CG-FE-001.cp_pc_mux.branch_taken,
@@ -15346,14 +16246,20 @@ draw weights of the agent / program generator per transaction.
 - Phase: 1
 - Tier: smoke
 - Preconditions: mtvec from boot; handlers at every vector slot record the slot they were entered
-  through; debug ROM stub at DmHaltAddr; an exception raised inside debug mode
+  through; debug ROM stub at DmHaltAddr and a stub at DmExceptionAddr; the debug program raises a
+  NON-ebreak exception (ecall / illegal / instr_err_i word) in some seeds and executes an ebreak in
+  others (an ebreak executed in debug mode re-enters at DmHaltAddr regardless of dcsr.ebreakm,
+  rtl/ibex_controller.sv:874-882, X-19; it never reaches DmExceptionAddr)
 - Stimulus: ecall/illegal (sync), software/timer/external/each fast line, internal NMI (integrity
-  error), external NMI, debug_req_i, ebreak in debug with dcsr.ebreakm
-- Randomized: which lines, timing
+  error), external NMI, debug_req_i, ecall / illegal / fetch error inside the debug program, ebreak
+  inside the debug program
+- Randomized: which lines, timing, in-debug exception kind
 - Knobs: knob:irq_line_mix (multi, fast_only, with_nmi), knob:debug_req_regime (sparse)
-- Fire-check: instr_addr_o after each trap equals the expected slot (agent record) for every vector
-  class including >= 1 per fast line and DmExceptionAddr for the in-debug exception.
-- Pass criteria: gen_isa_compare, gen_chk_irq, gen_chk_debug, gen_chk_ibus_proto
+- Fire-check: for every vector class the slot reached is the NEXT record's rvfi_pc_rdata after the
+  trapping / interrupted record (C-1; no ibus clause, C-14), including >= 1 per fast line;
+  DmExceptionAddr for >= 1 non-ebreak exception in debug mode and DmHaltAddr for >= 1 ebreak in
+  debug mode (S-2: rvfi_trap == 0 on that ebreak record).
+- Pass criteria: gen_isa_compare, gen_chk_irq, gen_chk_debug
 - Expected: pass
 - Test group: gen_fe_redirect
 - Bins: CG-FE-001.cp_irq_vec_id.sw, CG-FE-001.cp_irq_vec_id.timer, CG-FE-001.cp_irq_vec_id.ext,
@@ -15362,7 +16268,8 @@ draw weights of the agent / program generator per transaction.
   CG-FE-001.cp_irq_vec_id.fast_6, CG-FE-001.cp_irq_vec_id.fast_7, CG-FE-001.cp_irq_vec_id.fast_8,
   CG-FE-001.cp_irq_vec_id.fast_9, CG-FE-001.cp_irq_vec_id.fast_10, CG-FE-001.cp_irq_vec_id.fast_11,
   CG-FE-001.cp_irq_vec_id.fast_12, CG-FE-001.cp_irq_vec_id.fast_13, CG-FE-001.cp_irq_vec_id.fast_14,
-  CG-FE-001.cp_irq_vec_id.nmi, CG-FE-001.cp_pc_mux.dbg_exc_addr
+  CG-FE-001.cp_irq_vec_id.nmi, CG-FE-001.cp_pc_mux.dbg_exc_addr,
+  CG-FE-001.cp_debug_trap_slot.exc_dmexc, CG-FE-001.cp_debug_trap_slot.ebreak_halt
 
 ### TP-FE-006: Compressed alignment: PC advances by 2 or 4
 - Features: F-FE-006
@@ -15404,8 +16311,9 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: as TP-FE-007 with the second word's rvalid delayed 1..40 cycles relative to the first.
 - Randomized: delay, program
 - Knobs: knob:imem_rvalid_delay (long, random)
-- Fire-check: >= 50 straddles where no rvfi_valid occurred between the first word's arrival and
-  the second word's rvalid (wait >= 4 cycles), then the instruction retired.
+- Fire-check: >= 50 straddles where no rvfi_valid with rvfi_pc_rdata >= the straddling pc occurred
+  between the first word's arrival and the second word's rvalid (wait >= 4 cycles; older
+  instructions already in ID/WB may retire during the wait), then the instruction retired.
 - Pass criteria: gen_isa_compare (no phantom retirement), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_align
@@ -15442,8 +16350,10 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: jal/jalr/branches whose targets have bit 1 set; the target is c16 (50%) or u32 (50%).
 - Randomized: kind, target length, latencies
 - Knobs: knob:instr_mix (branch_heavy)
-- Fire-check: >= 100 redirects to pc[1]=1 per target length; instr_addr_o of the target request is
-  the containing word.
+- Fire-check: >= 100 redirects to pc[1]=1 per target length (RVFI: the next record's
+  rvfi_pc_rdata[1] == 1, C-1); the containing-word clause (instr_addr_o == target & ~32'h3) is
+  asserted only for targets that have a bus record (miss, or the always-bus-visible classes), never
+  inferred for a hit (C-14).
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_align
@@ -15504,10 +16414,14 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: agent record shows >= 10 redirects with 4..(NUM_FB-1)*IC_LINE_BEATS discarded granted
   words (the maximum linear prefetch can hold: NUM_FB-1 non-stale buffers x IC_LINE_BEATS beats,
   F-FE-017), never more than (NUM_FB-1)*IC_LINE_BEATS, including requests past the program image end
-  served by the agent; >= 10 sequential grants with a lead of NUM_FB-1 lines over the retiring PC and
-  none with NUM_FB.
+  served by the agent; >= 10 sequential grants with a lead of NUM_FB-1 lines over the line of the
+  last retired rvfi_pc_rdata with the data bus idle at the grant, none with NUM_FB while the data
+  bus is idle, and never NUM_FB+1 (TIMING convention: the lead is bounded against the word consumed
+  into ID; against the retiring pc it is transiently NUM_FB while a load/store is stalled in WB,
+  because the record lags the ID consumption by that wait).
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto (outstanding <= NUM_FB*IC_LINE_BEATS; sequential
-  lead <= NUM_FB-1 lines)
+  lead <= NUM_FB-1 lines against the retiring pc with no data access outstanding, <= NUM_FB with one
+  outstanding)
 - Expected: pass
 - Test group: gen_fe_redirect
 - Bins: CG-FE-003.cp_discarded_words.n4_6, CG-FE-003.cr_kind_x_discarded.branch_n4_6,
@@ -15517,7 +16431,9 @@ draw weights of the agent / program generator per transaction.
 - Features: F-FE-025
 - Phase: 1
 - Tier: targeted
-- Preconditions: none
+- Preconditions: none; the deferred class (no_pending_req) is counted only for targets that have a
+  bus record (miss or icache_enable = 0): with a hit the deferred request is never issued
+  (fill_ext_done_d via fill_hit_ic1, rtl/ibex_icache.sv:767-769; C-14)
 - Stimulus: taken branches when no request is pending (gnt same-cycle, fast rvalid) and when one
   is pending (slow gnt).
 - Randomized: latencies, program
@@ -15541,10 +16457,12 @@ draw weights of the agent / program generator per transaction.
 - Randomized: sequence, targets, regime
 - Knobs: knob:instr_mix (branch_heavy), knob:imem_gnt_delay, knob:imem_rvalid_delay,
   knob:irq_regime (sparse)
-- Fire-check: >= 50 redirects with spacing 2 cycles (the minimum: a jump or a taken branch with
-  BranchTargetALU=1 stalls ID one cycle, pipeline_details.rst, and the hitting target enters ID the
-  cycle after) and >= 50 with spacing 3; no redirect pair with spacing 1 (a spacing of 1 is a
-  redirect-model failure).
+- Fire-check: the minimum observed redirect-to-redirect spacing equals the bring-up-pinned constant
+  GEN_MIN_REDIRECT_SPACING (predicted 2: a jump or a taken branch with BranchTargetALU=1 stalls ID
+  one cycle, pipeline_details.rst, and the hitting target enters ID the cycle after: lookup t, IC1
+  t+1, ID t+2, pc_set t+2), recorded and pinned to the measured value at bring-up (C-16); >= 50
+  redirects at the minimum spacing and >= 50 at minimum+1; no redirect pair with spacing 1 (a
+  spacing of 1 is a redirect-model failure).
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_regime
@@ -15561,8 +16479,12 @@ draw weights of the agent / program generator per transaction.
   pipeline flush; fast fetch bus.
 - Randomized: stall cause, length
 - Knobs: knob:instr_mix (m_heavy, ls_heavy), knob:dmem_rvalid_delay (long)
-- Fire-check: >= 10 stall windows per cause of >= 4 cycles during which the agent's outstanding
-  count and granted-not-consumed count stopped growing while the agent had free capacity.
+- Fire-check: >= 10 stall windows of >= 4 cycles per cause in {ld_hazard, ls_wait, mul_div} and
+  >= 10 windows of exactly 2 cycles for csr_flush (a CSR write with pipeline flush holds IF for
+  DECODE(special_req) + one FLUSH cycle only, rtl/ibex_controller.sv:232, 287, 815-818;
+  rtl/ibex_id_stage.sv:593-597; a longer csr_flush window is unreachable), during which the
+  agent's outstanding count and granted-not-consumed count stopped growing while the agent had free
+  capacity.
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_backpressure
@@ -15674,8 +16596,12 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:debug_req_regime (sparse)
 - Fire-check: every debug-mode retirement has an agent bus record, >= 10 of them for words whose
   line was valid in the shadow-tag view before entry (the cache was bypassed, not merely cold); no
-  fill write in debug mode (ram model, gen_chk_icache check); after dret the loop hits again (no bus
-  record).
+  fill write after the entry cycle (ram model, gen_chk_icache check; at most one fill write in the
+  icache_enable drop cycle itself, TP-IC-031); after dret the loop hits again (no bus record) from
+  the first line AFTER the depc line: in the dret (FLUSH) cycle debug_mode_i is still 1, so the
+  depc line is looked up pass-through, fetched from the bus from the target word to the line end
+  and not allocated (rtl/ibex_cs_registers.sv:1970-1971; rtl/ibex_controller.sv:960-964;
+  rtl/ibex_icache.sv:266, 683, 703, 771-773); its words are exempt from the no-bus-record check.
 - Pass criteria: gen_chk_icache, gen_chk_debug, gen_isa_compare
 - Expected: pass
 - Test group: gen_fe_fault
@@ -15690,8 +16616,11 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: instr_err_i on executed words in M-mode, U-mode and debug mode.
 - Randomized: mode, victim
 - Knobs: knob:imem_err_rate (rare), knob:debug_req_regime (sparse), knob:priv_regime
-- Fire-check: >= 20 faults outside debug whose next instr_addr_o after the trap == exception vector
-  and >= 5 inside debug with next == DmExceptionAddr.
+- Fire-check: >= 20 faults outside debug whose NEXT RVFI record has rvfi_pc_rdata == the exception
+  vector (C-1; no ibus clause: the vector word may hit and stale beats of open lines may follow the
+  redirect on the bus, C-14) and >= 5 inside debug whose next record is at DmExceptionAddr (always
+  bus-visible: the icache is forced off in debug mode; the agent record of that request is also
+  asserted).
 - Pass criteria: gen_chk_ibus_proto, gen_isa_compare, gen_chk_debug
 - Expected: pass
 - Test group: gen_fe_fault
@@ -15728,27 +16657,37 @@ draw weights of the agent / program generator per transaction.
 - Bins: CG-FE-005.cr_source_x_debug.pmp_dbg, CG-FE-005.cr_source_x_debug.intg_dbg,
   CG-FE-005.cp_source.bus_and_pmp
 
-### TP-FE-026: Wake from WFI resumes at the instruction after WFI
+### TP-FE-026: Wake from WFI resumes at the instruction after WFI; stepped WFI enters debug without sleeping
 - Features: F-FE-021
 - Phase: 1
 - Tier: smoke
 - Preconditions: mstatus.mie/mie per case; dcsr.step in the step case; cpuctrlsts.icache_enable = 0
   pinned (bit 0 excluded from random cpuctrlsts writes) so a re-fetch of the word after WFI would be
-  visible on the bus (Critic S-4)
+  visible on the bus (Critic S-4 / C-14)
 - Stimulus: WFI woken by (a) an interrupt line enabled in mie with mstatus.mie = 1 (taken), (b)
-  irq_nm_i, (c) debug_req_i, (d) WFI executed with dcsr.step set (acts as nop), (e) an interrupt line
-  enabled in mie with mstatus.mie = 0 (wakes, not taken).
+  irq_nm_i, (c) debug_req_i, (d) WFI executed IN debug mode (program-buffer WFI: SLEEP exits at once
+  on debug_mode_q, wfi = nop), (e) an interrupt line enabled in mie with mstatus.mie = 0 (wakes, not
+  taken), (f) WFI executed with dcsr.step = 1 outside debug mode (never sleeps: FLUSH ->
+  DBG_TAKEN_IF, rtl/ibex_controller.sv:462, 474-475, 985-987; C-5).
 - Randomized: case, timing
 - Knobs: knob:irq_regime (sparse), knob:irq_line_mix (with_nmi), knob:debug_req_regime (sparse)
-- Fire-check: >= 10 wakes per source; the first retirement is the handler (a/b/c) or WFI+len (d/e);
-  the agent shows no re-fetch of the word after WFI (already buffered) in >= 10 cases per source.
-- Pass criteria: gen_isa_compare, gen_chk_sleep, gen_chk_ibus_proto
+- Fire-check: >= 10 wakes per source; the first retirement after the WFI record is the handler
+  (a/b/c), WFI+len (d/e), or the debug ROM at DmHaltAddr with handler-read dpc == WFI+len and no
+  core_busy_o Off cycle (f); the agent shows no re-fetch of the word after WFI (already buffered) in
+  >= 10 cases per source, bounded to the wake-to-handler window and exempting the FIRST_FETCH
+  sequential prefetch (instr_req_o is 1 for that cycle, so a new sequential lookup of the next
+  un-looked-up line may precede the redirect, rtl/ibex_controller.sv:622-649) and, on the mret
+  return to WFI+len, the speculative branch fetch of that word (rtl/ibex_icache.sv:703).
+- Pass criteria: gen_isa_compare, gen_chk_sleep (no Off cycle for (f)), gen_chk_debug (dpc for
+  (f)), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_sleep
 - Bins: CG-FE-006.cp_wake_src.irq, CG-FE-006.cp_wake_src.nmi, CG-FE-006.cp_wake_src.debug_req,
-  CG-FE-006.cp_wake_src.step_mode, CG-FE-006.cp_resume_pc.handler, CG-FE-006.cp_resume_pc.wfi_next_buffered,
-  CG-FE-006.cp_refetch_after_wake.no, CG-FE-006.cr_wake_x_resume.irq_handler, CG-FE-006.cr_wake_x_resume.dbg_handler,
-  CG-FE-006.cr_wake_x_resume.step_next, CG-FE-006.cr_wake_x_resume.nmi_handler, CG-FE-006.cr_wake_x_resume.irq_next
+  CG-FE-006.cp_wake_src.step_mode, CG-FE-006.cp_wake_src.wfi_in_debug, CG-FE-006.cp_resume_pc.handler,
+  CG-FE-006.cp_resume_pc.wfi_next_buffered, CG-FE-006.cp_refetch_after_wake.no,
+  CG-FE-006.cr_wake_x_resume.irq_handler, CG-FE-006.cr_wake_x_resume.dbg_handler,
+  CG-FE-006.cr_wake_x_resume.step_dbg, CG-FE-006.cr_wake_x_resume.indebug_next,
+  CG-FE-006.cr_wake_x_resume.nmi_handler, CG-FE-006.cr_wake_x_resume.irq_next
 
 ### TP-FE-027: PC wrap-around at the top of the address space
 - Features: F-FE-014
@@ -15759,13 +16698,17 @@ draw weights of the agent / program generator per transaction.
   half at 0x0000_0000.
 - Randomized: case, following code
 - Knobs: knob:imem_rvalid_delay (random)
-- Fire-check: >= 5 per case; rvfi_pc_wdata == 0 after the wrap instruction; agent record shows
-  instr_addr_o 0xFFFF_FFFC then 0x0000_0000.
+- Fire-check: >= 5 per case; the next record's rvfi_pc_rdata (and rvfi_pc_wdata of the wrap
+  instruction, a sequential record) is 0x0000_0000 for (a) and (b) and 0x0000_0002 for (c)
+  (output_addr_incr = 0x7FFF_FFFF + 2 in 31 bits, rtl/ibex_icache.sv:1139-1147: the second half
+  occupies bytes 0-1); agent record shows instr_addr_o 0xFFFF_FFFC then 0x0000_0000 for all three.
 - Pass criteria: gen_isa_compare (RTL-defined wrap, spec silent), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_boot
 - Bins: CG-FE-006.cp_wrap_case.c16_at_fffe, CG-FE-006.cp_wrap_case.u32_at_fffc,
-  CG-FE-006.cp_wrap_case.u32_at_fffe_straddle_zero, CG-FE-006.cp_next_after_wrap.zero, CG-FE-006.cp_fetch_seq_wrap.yes
+  CG-FE-006.cp_wrap_case.u32_at_fffe_straddle_zero, CG-FE-006.cp_next_after_wrap.zero,
+  CG-FE-006.cp_next_after_wrap.two, CG-FE-006.cr_wrap_x_next.c16_zero, CG-FE-006.cr_wrap_x_next.u32_fffc_zero,
+  CG-FE-006.cr_wrap_x_next.straddle_two, CG-FE-006.cp_fetch_seq_wrap.yes
 
 ### TP-FE-028: Wake sources crossed with fetch regimes
 - Features: F-FE-021, F-FE-014
@@ -15832,17 +16775,23 @@ draw weights of the agent / program generator per transaction.
 - Test group: gen_ic_ram
 - Bins: CG-IC-001.cp_data_op.lookup_both
 
-### TP-IC-004: RAM reads issued even with the cache disabled or invalidating
+### TP-IC-004: RAM lookup reads issued with the cache disabled (result masked); none during the invalidation sweep
 - Features: F-IC-004
 - Phase: 1
 - Tier: targeted
-- Preconditions: icache_enable = 0 (and during the reset / fence.i sweep)
-- Stimulus: any program.
-- Randomized: program
-- Knobs: knob:instr_mix (mixed)
-- Fire-check: >= 100 lookup reads on ic_tag_req_o/ic_data_req_o while the tracked enable is 0 (or
-  the sweep active), each followed by a bus request for the same word.
-- Pass criteria: gen_chk_icache (reads legal when disabled; no allocation), gen_chk_ibus_proto
+- Preconditions: icache_enable = 0 (pass-through) for the masked-read clause; the OUT_OF_RESET /
+  AWAIT_SCRAMBLE_KEY cycles (delayed key) also issue masked reads
+- Stimulus: any program; some seeds with a delayed key and with fence.i sweeps.
+- Randomized: program, key delay
+- Knobs: knob:instr_mix (mixed), knob:scr_key_delay (immediate, delayed)
+- Fire-check: >= 100 lookup reads on ic_tag_req_o/ic_data_req_o while the tracked enable is 0 (the
+  result is masked: lookup_actual_ic0 = 0, rtl/ibex_icache.sv:266), each followed by a bus request
+  for the same word; >= 1 complete sweep per seed during which NO lookup read occurred: every
+  tag-port and data-port cycle of INVAL_CACHE is a write at the inval index (tag_write_ic0 =
+  fill_grant | inval_write_req | ecc_write_req, data_write_ic0 = tag_write_ic0, index muxed to
+  inval_index_q, rtl/ibex_icache.sv:269-283, 1244).
+- Pass criteria: gen_chk_icache (reads legal when disabled; no allocation; no lookup read during a
+  sweep), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_ram
 - Bins: CG-IC-001.cp_read_when_disabled.seen, CG-IC-001.cr_tagop_x_en.lookup_off, CG-IC-001.cp_cache_en.off
@@ -15870,8 +16819,13 @@ draw weights of the agent / program generator per transaction.
 - Tier: smoke
 - Preconditions: icache_enable = 1
 - Stimulus: fills over random addresses (both index and tag bits varied); the ram model undoes the
-  address-derived tweak (index for tags, addr>>3 replicated per beat for data) and decodes the
-  inverted 28/22 and 39/32 codes.
+  address-derived tweak and decodes the inverted 28/22 and 39/32 codes. Tweak layout
+  (rtl/ibex_icache.sv:329-347, 361-368, 389-396, 406-423): tag = the IC_INDEX_W-bit index placed at
+  bits [7:0] and [21:14] of the 28-bit tag codeword (ECC bits [27:22] untouched); data = the
+  line-aligned 32-bit address {addr[31:3], 3'b0} XORed onto the 32 DATA bits of each 39-bit beat
+  codeword (bits [31:0] and [70:39] of the 78-bit word, ECC bits untouched); invalidation and
+  ECC-correction writes use tweak 0; the read-side untweak uses the IC0 address / index registered
+  one cycle.
 - Randomized: addresses, words
 - Knobs: knob:instr_mix (mixed)
 - Fire-check: >= 500 tag writes and >= 500 data writes decoded with the tweak undone; >= 100 of the
@@ -15894,8 +16848,11 @@ draw weights of the agent / program generator per transaction.
 - Randomized: delays, fence.i spacing
 - Knobs: knob:scr_key_delay (immediate, delayed)
 - Fire-check: one ic_scr_key_req_o pulse in the first cycle after reset and exactly one per fence.i
-  (agent record; never two consecutive pulses), each followed by a sweep after valid rose; no
-  fill/inval tag write while valid was low with the request pending (gen_chk_icache checks).
+  that lands in INVAL_IDLE or INVAL_CACHE (agent record; never two consecutive pulses; a fence.i
+  landing in AWAIT_SCRAMBLE_KEY gives no pulse and is classified by the key/sweep timeline, not
+  assumed absent, rtl/ibex_icache.sv:1229-1240, TP-IC-013), each followed by a sweep after valid
+  rose; no fill/inval tag write while valid was low with the request pending (gen_chk_icache
+  checks).
 - Pass criteria: gen_chk_icache (pulse rules, no tag write while valid low), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_inval
@@ -15913,8 +16870,11 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: reset release; program runs >= 300 cycles before the first fence.i.
 - Randomized: program
 - Knobs: knob:scr_key_delay (immediate)
-- Fire-check: no ic_scr_key_req_o in the first 300 cycles and the sweep started in cycle 2 after
-  reset (first inval write index 0).
+- Fire-check: no ic_scr_key_req_o in the first 300 cycles and the first inval write (index 0) lands
+  in cycle 2 (counting convention: reset release = cycle 0 = OUT_OF_RESET, cycle 1 =
+  AWAIT_SCRAMBLE_KEY with valid = 1 -> INVAL_CACHE, cycle 2 = first write; the last write, index
+  IC_NUM_LINES-1, in cycle IC_NUM_LINES+1; first INVAL_IDLE cycle = IC_NUM_LINES+2, TP-IC-011;
+  rtl/ibex_icache.sv:1221-1246, 1274-1280).
 - Pass criteria: gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_inval
@@ -15964,17 +16924,21 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, key delay
 - Knobs: knob:scr_key_delay (immediate, delayed)
 - Fire-check: ram model records tag writes with both way bits, valid=0, indices 0..IC_NUM_LINES-1 in
-  order one per cycle; >= 50 retirements during the sweep, all with bus records; the first fill write
-  occurs after the write of index IC_NUM_LINES-1 and never earlier than IC_NUM_LINES+2 cycles after
-  reset release (1 OUT_OF_RESET + 1 AWAIT_SCRAMBLE_KEY + IC_NUM_LINES writes, MEM-23; the
-  immediate-key seeds hit exactly IC_NUM_LINES+2, delayed-key seeds more).
-- Pass criteria: gen_chk_icache (sweep completeness, no allocation during, IC_NUM_LINES+2-cycle
-  minimum), gen_isa_compare
+  order one per cycle, the first in cycle 2 and the last in cycle IC_NUM_LINES+1 (reset release =
+  cycle 0, TP-IC-008 convention; 1 OUT_OF_RESET + 1 AWAIT_SCRAMBLE_KEY + IC_NUM_LINES writes,
+  MEM-23), so the first INVAL_IDLE cycle is IC_NUM_LINES+2 (immediate-key seeds hit exactly
+  IC_NUM_LINES+2 on cp_reset_to_idle_cycles.min, delayed-key seeds more); >= 50 retirements during
+  the sweep, all with bus records; the first fill write occurs >= 5 cycles after the last inval
+  write (the first allocating lookup needs INVAL_IDLE: inval_block_cache clears only there,
+  rtl/ibex_icache.sv:1218, 1265; then IC1 miss, two grants and two rvalids, and a fill_ram_req
+  cycle without a lookup, :249, 262-266, 815-819, 843-844) and never in the sweep.
+- Pass criteria: gen_chk_icache (sweep completeness and timing per the convention; no allocation
+  during the sweep; first fill write >= 5 cycles after the last inval write), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_inval
 - Bins: CG-IC-002.cp_sweep.complete_all, CG-IC-002.cp_retire_during_sweep.r20p,
-  CG-IC-002.cp_retire_during_sweep.r1_19, CG-IC-002.cp_first_alloc_after_sweep.c0_3,
-  CG-IC-002.cp_first_alloc_after_sweep.c4p,
+  CG-IC-002.cp_retire_during_sweep.r1_19, CG-IC-002.cp_first_alloc_after_sweep.c5_8,
+  CG-IC-002.cp_first_alloc_after_sweep.c9p,
   CG-IC-002.cp_reset_to_idle_cycles.min, CG-IC-002.cp_reset_to_idle_cycles.longer,
   CG-IC-001.cp_tag_op.inval_write_both, CG-IC-001.cp_tag_valid_bit.invalid, CG-IC-001.cr_index_x_tagop.idx0_inval,
   CG-IC-001.cr_index_x_tagop.idxlast_inval, CG-IC-001.cr_tagop_x_en.inval_on, CG-IC-001.cr_tagop_x_en.inval_off,
@@ -16038,8 +17002,10 @@ draw weights of the agent / program generator per transaction.
   lines are open at the fence.i.
 - Randomized: latency, open lines
 - Knobs: knob:imem_rvalid_delay (long), knob:scr_key_delay (immediate)
-- Fire-check: >= 10 fence.i with >= 1 open line (agent count); those lines' beats were all answered
-  and no fill write for them appeared (ram model), only sweep writes.
+- Fire-check: >= 10 fence.i with >= 1 open line (agent count); those lines' already-granted or held
+  beats were answered and their un-issued beats cancelled (the lines are stale and non-caching from
+  the next cycle, rtl/ibex_icache.sv:771-775), and no fill write for them appeared (ram model),
+  only sweep writes.
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_inval
@@ -16122,12 +17088,15 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: jump into a cold line; rvalid latency 5..30.
 - Randomized: latency, target word
 - Knobs: knob:imem_rvalid_delay (long)
-- Fire-check: >= 30 misses where rvfi_valid of the target instruction follows the agent's rvalid
-  within 1..2 cycles (forwarded, not waiting for the RAM write).
+- Fire-check: >= 30 misses where rvfi_valid of the target instruction follows the agent's rvalid of
+  the demanded beat R by exactly 3 cycles (forwarded, not waiting for the RAM write: IF output in
+  R, ID in R+1, WB in R+2, record in R+3; rtl/ibex_icache.sv:796-798, 1062, 1068;
+  rtl/ibex_core.sv:1864-1870) with the pipeline empty, and >= 10 u32 targets whose second half is
+  the next beat with 4 or more cycles.
 - Pass criteria: gen_isa_compare, gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_enable
-- Bins: CG-IC-003.cp_miss_forward_latency.l1_2, CG-IC-003.cp_miss_forward_latency.l3p
+- Bins: CG-IC-003.cp_miss_forward_latency.l3, CG-IC-003.cp_miss_forward_latency.l4p
 
 ### TP-IC-021: Way selection: lowest invalid way first, then round-robin
 - Features: F-IC-017
@@ -16183,43 +17152,60 @@ draw weights of the agent / program generator per transaction.
   CG-IC-004.cr_entry_x_delays.w1_both_slow, CG-IC-004.cr_entry_x_delays.w0_second_slow,
   CG-IC-004.cr_entry_x_delays.w1_first_slow, CG-IC-004.cr_entry_x_delays.w0_both_fast
 
-### TP-IC-024: Branch redirect during a fill: completes and is still written when allocating
+### TP-IC-024: Branch redirect during a fill: a caching line completes and is still written; only a non-caching line is cancelled
 - Features: F-IC-020
 - Phase: 1
 - Tier: targeted
-- Preconditions: icache_enable = 1
+- Preconditions: icache_enable = 1 for the caching classes; the cancelled class needs a non-caching
+  line (icache_enable = 0 seeds, or a fence.i sweep in progress): with caching on, fill_ext_done_d
+  cancels only when ~fill_cache_q, so a stale miss line fetches both beats and is allocated even
+  with no grant yet (rtl/ibex_icache.sv:741, 744-746, 767-775)
 - Stimulus: cold sequential code with a taken branch placed so the redirect lands after the first
-  or the second grant of a prefetched line (rvalid latency 5..40), and before any grant of a
-  line whose lookup was just made.
-- Randomized: branch position, latency
-- Knobs: knob:imem_rvalid_delay (long), knob:instr_mix (branch_heavy)
-- Fire-check: >= 20 fills per redirect class {after_beat1_gnt, after_beat2_gnt} whose beats were
-  answered and a fill write followed although no instruction of the line retired; >= 10 lines
-  cancelled with no bus traffic (before_any_gnt).
+  or the second grant of a prefetched line (rvalid latency 5..40), or before any grant of a line
+  whose lookup was just made; 30% of seeds with icache_enable = 0 or a fence.i shortly before.
+- Randomized: branch position, latency, cache state
+- Knobs: knob:imem_rvalid_delay (long), knob:instr_mix (branch_heavy), knob:scr_key_delay (immediate)
+- Fire-check: >= 20 caching fills per redirect class {after_beat1_gnt, after_beat2_gnt} whose beats
+  were answered and a fill write followed although no instruction of the line retired; >= 10
+  caching lines whose lookup preceded the branch with NO grant yet at the redirect that still
+  fetched both beats and were written (never cancelled); >= 10 non-caching lines (icache_enable = 0
+  or sweep active) cancelled before any grant with no bus traffic (un-issued beats stop; held or
+  granted ones complete).
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto, gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_fill
 - Bins: CG-IC-004.cp_redirect_during_fill.after_beat1_gnt, CG-IC-004.cp_redirect_during_fill.after_beat2_gnt,
-  CG-IC-004.cp_redirect_during_fill.before_any_gnt_cancelled, CG-IC-004.cp_redirect_during_fill.none,
+  CG-IC-004.cp_redirect_during_fill.before_any_gnt_cancelled, CG-IC-004.cp_redirect_during_fill.before_any_gnt_fetched,
+  CG-IC-004.cp_redirect_during_fill.none,
   CG-IC-004.cp_written_after_redirect.yes, CG-IC-004.cr_redirect_x_written.after1_written,
-  CG-IC-004.cr_redirect_x_written.after2_written, CG-IC-004.cr_redirect_x_written.after1_not_alloc
+  CG-IC-004.cr_redirect_x_written.after2_written, CG-IC-004.cr_redirect_x_written.after1_not_alloc,
+  CG-IC-004.cr_redirect_x_written.before_fetched_written
 
 ### TP-IC-025: Same line allocated in both ways after a branch into a line being prefetched
 - Features: F-IC-021
 - Phase: 1
 - Tier: targeted
-- Preconditions: icache_enable = 1
+- Preconditions: icache_enable = 1; both ways at the index of line L are valid before the two
+  lookups (the index is warmed with two other lines first) so round-robin assigns different ways,
+  and an odd number of valid lookups falls between the sequential lookup of L and the branch lookup
+  of L (the round-robin pointer rotates on every lookup_valid_ic1 and each buffer captures its way
+  at its own IC1, fill_way_q <= sel_way_ic1, rtl/ibex_icache.sv:519-535, 914, 932-938); with an
+  invalid way at the index both in-flight fills pick the same lowest invalid way and only one copy
+  results (control class)
 - Stimulus: sequential code prefetching line L (slow rvalid) with a jump into L before its fill
-  completes; contents unchanged (no self-modification).
-- Randomized: timing, latency
+  completes, 1 or 3 intervening line lookups; contents unchanged (no self-modification); control
+  seeds leave one way at the index invalid.
+- Randomized: timing, latency, intervening lookup count, control vs two-way
 - Knobs: knob:imem_rvalid_delay (long)
 - Fire-check: >= 5 cases where the ram model records two fill writes for the same (index, tag) in
-  different ways; later hits on L execute correctly.
-- Pass criteria: gen_chk_icache (informational: multi-way hit benign with identical contents),
-  gen_isa_compare
+  different ways; >= 5 control cases where the two fills land in the SAME way (one copy); later hits
+  on L execute correctly.
+- Pass criteria: gen_chk_icache (gating: the two fill writes carry identical data; later lookups of
+  L hit and execute correctly), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_fill
-- Bins: CG-IC-004.cp_same_line_two_ways.yes, CG-IC-003.cp_two_ways_same_tag.yes
+- Bins: CG-IC-004.cp_same_line_two_ways.yes, CG-IC-004.cp_same_line_two_ways.same_way_overwrite,
+  CG-IC-003.cp_two_ways_same_tag.yes
 
 ### TP-IC-026: Every branch issues a speculative bus request even when the target hits
 - Features: F-IC-037
@@ -16304,7 +17290,9 @@ draw weights of the agent / program generator per transaction.
 - Randomized: entry kind, debug program
 - Knobs: knob:debug_req_regime (sparse)
 - Fire-check: all debug-mode retirements have bus records; the ram model shows lookup reads but no
-  fill write during debug; after dret >= 10 hits on the pre-debug lines.
+  fill write after the entry cycle (at most one in the icache_enable drop cycle, TP-IC-031); after
+  dret >= 10 hits on the pre-debug lines, the depc line excluded (fetched pass-through in the dret
+  cycle, TP-FE-022).
 - Pass criteria: gen_chk_icache, gen_chk_debug
 - Expected: pass
 - Test group: gen_ic_enable
@@ -16321,7 +17309,10 @@ draw weights of the agent / program generator per transaction.
 - Randomized: latency, position
 - Knobs: knob:imem_rvalid_delay (long)
 - Fire-check: >= 10 clears with >= 1 open line whose beats were answered and no fill write
-  followed.
+  followed from the cycle after the enable drop (a fill whose both beats had already been received
+  may still win the RAM port in the drop cycle itself: fill_ram_req checks fill_cache_q, which
+  clears one cycle later, rtl/ibex_icache.sv:744-746, 815-819; at most one fill write in that
+  cycle is legal and the checker starts one cycle later).
 - Pass criteria: gen_chk_icache, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_ic_enable
@@ -16428,7 +17419,9 @@ draw weights of the agent / program generator per transaction.
 - Randomized: as above
 - Knobs: knob:icache_ecc_err_rate (rare)
 - Fire-check: >= 20 injections where the cycle after the alert carries a tag write and no lookup
-  read on any port, then lookups resume.
+  read on any port (the data port may carry a WRITE of ECC(0) to the ECC index/ways in that cycle,
+  data_req_ic0 = lookup_req_ic0 | fill_req_ic0 with fill_ram_arb 0, rtl/ibex_icache.sv:280,
+  1000-1011; the ram model does not flag it), then lookups resume.
 - Pass criteria: gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_ecc
@@ -16437,19 +17430,24 @@ draw weights of the agent / program generator per transaction.
 ### TP-IC-038: Multi-way hit is ORed (informational, software-constraint violation)
 - Features: F-IC-042
 - Phase: 1
-- Tier: targeted
-- Preconditions: icache_enable = 1; owner default (candidate question 5): informational, excluded
-  from the pass gate
-- Stimulus: create a two-way copy of a line (TP-IC-025), then store different words to that line
-  without fence.i and re-prefetch it into the second way; execute the line.
-- Randomized: which words differ
+- Tier: targeted (informational)
+- Preconditions: icache_enable = 1; the two-way copy of the line is produced by the corrected
+  TP-IC-025 recipe (both ways valid at the index and an odd number of lookups between the two
+  lookups of L; the cold-index stimulus overwrites the same way and never yields two copies,
+  rtl/ibex_icache.sv:534-535, 932-938); owner default (candidate question 5): informational,
+  excluded from the pass gate
+- Stimulus: create the two-way copy, with a store changing words of that line landing between the
+  two fills' beats (before the second fill's RAM write) and no fence.i; execute the line.
+- Randomized: which words differ, store timing
 - Knobs: none
 - Fire-check: ram model shadow shows both ways valid with the same tag and differing data before
-  the lookup (>= 3 cases).
-- Pass criteria: gen_chk_icache in informational mode (records alert_minor_o or a wrong rvfi_insn;
-  no pass/fail), gen_chk_alerts suppressed for this test
-- Expected: pass
-- Test group: gen_ic_replace
+  the lookup (>= 3 cases); the test asserts only that the scenario fired and logs the observation
+  (alert_minor_o or a wrong rvfi_insn) as GEN_TEST_INFO.
+- Pass criteria: none gating (C-15); gen_chk_icache runs in record mode for this test; gen_chk_alerts
+  stays ON, fed by the ram model's record of the multi-way lookup as an expected alert_minor_o
+  source (no suppression switch)
+- Expected: informational (excluded from the pass gate)
+- Test group: gen_ic_replace_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0) (informational entry)
 - Bins: CG-IC-006.cp_multiway_mismatch.alert_or_wrong, CG-IC-003.cp_two_ways_same_tag.yes
 
 ### TP-IC-039: Line fill with each beat delayed independently
@@ -16655,31 +17653,41 @@ draw weights of the agent / program generator per transaction.
 - Stimulus: straight-line cold code with a slow ID (div chain) and fast bus; branch-heavy sections.
 - Randomized: program, latencies
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1), knob:instr_mix (m_heavy)
-- Fire-check: agent record: sequential-grant lead of 2 and NUM_FB-1 lines each reached >= 10 times,
-  never NUM_FB (FB_THRESHOLD = NUM_FB-2 counting the line being output, F-FE-017/F-IC-038); >= 10
-  cases of a branch lookup issued with NUM_FB-1 lines open, each producing NUM_FB busy buffers.
-- Pass criteria: gen_chk_ibus_proto (sequential lead <= NUM_FB-1 lines; busy buffers <= NUM_FB),
-  gen_isa_compare
+- Fire-check: agent record: sequential-grant lead of 2 and NUM_FB-1 lines over the line of the
+  last retired rvfi_pc_rdata each reached >= 10 times with the data bus idle at the grant; a lead
+  of NUM_FB observed only while a data access was outstanding at the grant (>= 5 such grants; the
+  WB-stalled load/store delays the retirement so the RVFI pc lags the ID-consumed word, TIMING
+  convention) and never with the data bus idle; never NUM_FB+1 (FB_THRESHOLD = NUM_FB-2 counting
+  the line being output, F-FE-017/F-IC-038); >= 10 cases of a branch lookup issued with NUM_FB-1
+  lines open, each producing NUM_FB busy buffers.
+- Pass criteria: gen_chk_ibus_proto (sequential lead <= NUM_FB-1 lines with no data access
+  outstanding, <= NUM_FB with one outstanding; busy buffers <= NUM_FB), gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_busy
 - Bins: CG-IC-007.cp_lead_lines.l0, CG-IC-007.cp_lead_lines.l1, CG-IC-007.cp_lead_lines.l2, CG-IC-007.cp_lead_lines.l3,
-  CG-IC-007.cp_throttle_hold.yes, CG-IC-007.cp_branch_bypasses_throttle.yes, CG-IC-004.cp_busy_buffers.b4
+  CG-IC-007.cp_lead_lines.l4_wb_stall, CG-IC-007.cp_throttle_hold.yes,
+  CG-IC-007.cp_branch_bypasses_throttle.yes, CG-IC-004.cp_busy_buffers.b4
 
 ### TP-IC-052: Fill-buffer saturation under slow responses stalls new lookups until the oldest frees
 - Features: F-IC-043
 - Phase: 1
 - Tier: targeted
-- Preconditions: none
+- Preconditions: icache_enable random per seed (both release-timing classes)
 - Stimulus: as TP-IC-027 (NUM_FB-1 lines in flight, then a taken branch) with rvalid latency
   100..300.
-- Randomized: latency, branch position
+- Randomized: latency, branch position, cache enable
 - Knobs: knob:imem_rvalid_delay (long)
 - Fire-check: >= 5 intervals of >= 100 cycles with NUM_FB open lines (entered via the branch lookup)
-  and no new request; the next new request follows the oldest line's completion within 2 cycles.
-- Pass criteria: gen_chk_ibus_proto, gen_isa_compare
+  and no new request; the next new request follows the oldest line's last rvalid c within 2 cycles
+  when icache_enable = 0 and within 4 cycles when caching (the stale line is first written to the
+  RAM: fill_ram_req granted c+1, ram_done c+2, buffer released c+3, lookup c+3, IC1 miss and
+  request c+4; rtl/ibex_icache.sv:249, 729-734, 815-822, 843-844); >= 3 intervals per class.
+- Pass criteria: gen_chk_ibus_proto (release-to-next-request bound 2 / 4 per cache state),
+  gen_isa_compare
 - Expected: pass
 - Test group: gen_ic_busy
-- Bins: CG-IC-004.cp_saturation_stall.yes, CG-IC-007.cp_throttle_hold.yes
+- Bins: CG-IC-004.cp_saturation_stall.yes, CG-IC-007.cp_throttle_hold.yes,
+  CG-IC-007.cp_release_to_next_req.c1_2_off, CG-IC-007.cp_release_to_next_req.c3_4_caching
 
 ### TP-IC-053: Output handshake stability toward IF (indirect)
 - Features: F-IC-044
@@ -16761,8 +17769,12 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:instr_mix (branch_heavy), knob:imem_rvalid_delay
 - Fire-check: >= 10 disable/enable pairs; during the disabled window every retirement has a bus
   record and the ram model shows no fill write and no invalidation write; after the re-enable the
-  first pass over the warm loop produces no instr_req_o for its words (except the branch-target
-  speculative word, F-IC-037) while RVFI retires them.
+  warm loop is entered by a jump taken after the enable is effective (the enable takes effect one
+  cycle after the csrw commits and the csrw causes a 2-cycle IF halt with no pc_set,
+  rtl/ibex_controller.sv:287; lookups made before the enable rose, up to 3 lines ahead, are
+  pass-through and have bus records, so the first ~3 lines after the csrw are exempt) and its first
+  pass produces no instr_req_o for its words (except the branch-target speculative word, F-IC-037)
+  while RVFI retires them.
 - Pass criteria: gen_chk_icache (no invalidation or allocation while disabled; hits after
   re-enable), gen_isa_compare
 - Expected: pass
@@ -16790,6 +17802,7 @@ draw weights of the agent / program generator per transaction.
 | gen_dmem_load_data | 4: TP-DMEM-028, TP-DMEM-030..031, TP-DMEM-050 | 1 | smoke/targeted | medium |
 | gen_dmem_ctx | 8: TP-DMEM-035..036, TP-DMEM-044, TP-DMEM-046..048, TP-DMEM-051, TP-DMEM-061 | 1 | smoke/targeted | medium |
 | gen_dmem_intg | 5: TP-DMEM-039..043 | 1 | targeted | medium |
+| gen_dmem_intg_xfail | 1: TP-DMEM-064 (expected-fail, B16; own test) | 1 | targeted | medium |
 | gen_dmem_zcmp | 2: TP-DMEM-052..053 | 1 | targeted | medium |
 | gen_fe_boot | 4: TP-FE-001..003, TP-FE-027 | 1 | smoke/targeted | medium |
 | gen_fe_redirect | 5: TP-FE-004..005, TP-FE-012..014 | 1 | smoke/targeted | medium |
@@ -16801,14 +17814,17 @@ draw weights of the agent / program generator per transaction.
 | gen_ic_ram | 8: TP-IC-001..006, TP-IC-045..046 | 1 | smoke/targeted | medium |
 | gen_ic_inval | 10: TP-IC-007..016 | 1 | smoke/targeted | medium |
 | gen_ic_enable | 11: TP-IC-017..020, TP-IC-029..034, TP-IC-057 | 1 | smoke/targeted | medium |
-| gen_ic_replace | 3: TP-IC-021..022, TP-IC-038 | 1 | targeted | medium |
+| gen_ic_replace | 2: TP-IC-021..022 | 1 | targeted | medium |
+| gen_ic_replace_info | 1: TP-IC-038 (informational; own test) | 1 | targeted | medium |
 | gen_ic_fill | 7: TP-IC-023..028, TP-IC-039 | 1 | smoke/targeted | medium |
 | gen_ic_ecc | 6: TP-IC-035..037, TP-IC-042..044 | 1 | smoke/targeted | medium |
 | gen_ic_regime | 8: TP-IC-040..041, TP-IC-047..049, TP-IC-054..056 | 2 | full | long |
 | gen_ic_busy | 4: TP-IC-050..053 | 1 | smoke/targeted | medium |
 
-Total: 188 items in 32 groups; TP-IMEM-040, TP-DMEM-062 (Q-DL-9 unsolicited-rvalid demonstrations, one
-per bus) and TP-DMEM-063 (B14 two-record confirmation) are informational and outside the pass gate.
+Total: 189 items in 34 groups; TP-IMEM-040, TP-DMEM-062 (Q-DL-9 unsolicited-rvalid demonstrations, one
+per bus), TP-DMEM-063 (B14 two-record confirmation) and TP-IC-038 (multi-way hit, software-constraint
+violation) are informational and outside the pass gate, each its own `_info` test; TP-DMEM-064 (B16) is the
+area's only expected-fail item and its own `_xfail` test (C-15).
 
 ## New checkers requested
 
@@ -16821,8 +17837,11 @@ per bus) and TP-DMEM-063 (B14 two-record confirmation) are informational and out
 - gen_chk_icache extensions (not new checkers, but capabilities the plan assumes): (a) a shadow
   tag view built from the tag writes the RAM model receives, giving hit/miss/way/validity per
   lookup (CG-IC-003, CG-FE-002.cp_halves_src); (b) write-side ECC decode with the address-derived
-  tweak undone (MEM-B.3 correction); (c) an "informational" mode for TP-IC-038 (multi-way hit)
-  and for the Q-DL-9 unsolicited-rvalid demonstration tests that are excluded from the pass gate.
+  tweak undone (MEM-B.3 correction); (c) a record mode for the informational tests (TP-IC-038
+  multi-way hit, the Q-DL-9 unsolicited-rvalid demonstrations), which are excluded from the pass
+  gate (C-15); (d) the sweep rule "no lookup read during INVAL_CACHE; at most one fill write in the
+  icache_enable drop cycle; the depc line is pass-through in the dret cycle" (TP-IC-004/031,
+  TP-FE-022).
 - gen_chk_ibus_proto extensions: address-sequence tracker (line_base + ((entry+k) mod
   IC_LINE_BEATS)*4, no wrap when not caching), granted-not-consumed word accounting (discarded
   words per redirect, prefetch lead in lines), outstanding-depth history (max since last redirect).
@@ -16840,7 +17859,23 @@ per bus) and TP-DMEM-063 (B14 two-record confirmation) are informational and out
   D-side Q-DL-9 demonstration), mirroring the I-side mode used by TP-IMEM-040.
 - gen_chk_alerts: needs an expected-alert feed from gen_icache_ram_model (injection record) so
   alert_minor_o is checked as "exactly one pulse per injected error on a valid hit / real lookup,
-  none otherwise", and a per-test suppression switch for TP-IC-038.
+  none otherwise"; the same feed marks the TP-IC-038 multi-way lookup as an expected alert_minor_o
+  source (gen_chk_alerts stays ON in that informational test; no suppression switch).
+- gen_chk_bus_intg_rsp: per-beat rule (C-8): RF suppression is expected only when the beat that
+  completes the access carries the integrity error; the first-beat-only split-load class is checked
+  in the documented direction (security.rst:88) by the expected-fail item TP-DMEM-064 (B16).
+- gen_chk_nmi: internal-NMI entry bound of <= 2 ordinary records after the corrupted access's record
+  (C-7, D21); more only for a Zcmp sequence in ID, a corruption in debug mode or an NMI already
+  pending.
+- gen_chk_fetch_en / gen_chk_sleep: the exact quiet rule is "no new line allocation after the Off
+  edge; instr_req_o == 0 whenever core_busy_o == Off" (C-4); gen_chk_ibus_proto needs no tolerance
+  for a withdrawn request.
+- gen_chk_crash_dump: last_data_addr model = addr_last_q (unaligned EA after a single / first-word
+  grant, word-aligned second address after a second-half grant, PMP fake grants included, not
+  frozen on error; the only skipped update is the second-half grant after a first-half error).
+- gen_chk_ibus_proto: prefetch-lead bound against the last retired pc of NUM_FB-1 lines with the
+  data bus idle and NUM_FB with a data access outstanding (TIMING convention, TP-FE-013/TP-IC-051);
+  release-to-next-request bound 2 (cache off) / 4 (caching) cycles (TP-IC-052).
 
 ## Open questions
 
@@ -16849,9 +17884,11 @@ per bus) and TP-DMEM-063 (B14 two-record confirmation) are informational and out
    the branch-lookup path (3 stale lines + the target line), which TP-IMEM-008 drives directly.
    CG-IMEM-002.cp_outstanding_before.o8 / cp_max_outstanding.m8 stay required bins.
 2. Multi-way hit stimulation via self-modifying code without fence.i (candidate owner question 5;
-   F-IC-021, F-IC-042). Blocks: whether TP-IC-038 is in the pass gate. Recommended default:
-   informational only (as written), excluded from the gate, CG-IC-006.cp_multiway_mismatch kept
-   as an informational bin.
+   F-IC-021, F-IC-042). Blocks: whether TP-IC-038 is in the pass gate. Applied (round-2 review
+   finding, C-15): TP-IC-038 is `informational (excluded from the pass gate)` in its own `_info`
+   test (gen_ic_replace_info) with gen_chk_alerts ON (expected-alert feed, no suppression);
+   CG-IC-006.cp_multiway_mismatch kept as an informational bin; the two-way copy needs the
+   corrected TP-IC-025 recipe (both ways valid, odd lookup count between the two lookups).
 3. Expected architectural state for a bus error inside a Zcmp push/pop sequence (candidate owner
    question 6; F-DMEM-047). Blocks: the pass criterion of TP-DMEM-053. Recommended default:
    compare against the ISS on the equivalent expanded sequence; divergences in mepc / partial
@@ -16879,6 +17916,11 @@ per bus) and TP-DMEM-063 (B14 two-record confirmation) are informational and out
    sampling of that bin and the strictness of the TP-FE-017 fire-check. Recommended default:
    accept the wrapper-internal net as a P1 probe (read-only, documented in the probe register);
    without it the bin is dropped and TP-FE-017 keeps only the timing-gap fire-check.
+9. B16 direction (owner question Q-015, gen_bug_log.md). TP-DMEM-064 follows the documented intent
+   (security.rst:88: the rd write of a load with bad checkbits is suppressed) and is expected-fail; a
+   ruling that the first-beat write is RTL-defined turns it into `pass (RTL-defined)` with the same
+   bins, and the per-beat rule stays in gen_chk_bus_intg_rsp. Blocks: nothing (the item is its own
+   `_xfail` test).
 
 
 # 4.7 Areas DIT, SEC, RST, RVFI, CHERI: Dummy instructions and data-independent timing, alerts and countermeasures, reset and boot, RVFI trace, CHERIoT carve-out
@@ -16898,10 +17940,14 @@ fcov_sec_rst_rvfi_cheri.md. Conventions:
   inside gen_dut_top) and the if_stage fcov nets fcov_dummy_instr_type / fcov_insert_dummy_instr.
   Used for coverage only; every checker below works from the boundary or RVFI
   (tb-infra e, P1; rtl-arch s9 confirms they are wrapper nets, not RTL probes).
-- Doc mismatches use the canonical D-numbers of the fix brief (D1..D19). Used here: D4 (tdata1
-  reset 0x2800_1048, TP-RST-007), D11 (security.rst "early completion of multiplication by
-  zero/one is removed" has no RTL counterpart, F-DIT-005, TP-DIT-006), D19 (security.rst
-  dummy_instr_mask table lists 4 of the 8 legal values, F-DIT-011, TP-DIT-013).
+- Doc mismatches use the canonical D-numbers of dv/auto_dv/docs/gen_bug_log.md (D1..D21, D5
+  retired). Used here: D4 (tdata1 reset 0x2800_1048, TP-RST-007), D10 (mtval of an instruction
+  access fault is the faulting fetch address, not 0, TP-SEC-007), D11 (security.rst "early
+  completion of multiplication by zero/one is removed" has no RTL counterpart, F-DIT-005,
+  TP-DIT-006), D13 (a fence.i while a scramble-key request is pending raises no second request,
+  TP-SEC-020), D19 (security.rst dummy_instr_mask table lists 4 of the 8 legal values and gives
+  no interval for the other four, F-DIT-011, TP-DIT-013), D21 (up to two instructions retire
+  between a corrupted data response and the internal NMI, TP-SEC-008).
 - Injected integrity errors: the memory agents corrupt the 7 check bits of a 39-bit rdata beat on
   request (single-bit, double-bit or multi-bit flip). No existing knob names the rate; items use
   knob:imem_err_rate / knob:dmem_err_rate for the bus-error regime and ask for an integrity
@@ -16924,10 +17970,88 @@ fcov_sec_rst_rvfi_cheri.md. Conventions:
   CSR-write flush and no redirect precede it (fcov_sec_rst_rvfi_cheri.md header, S-4). Every
   cpuctrlsts write flushes the pipe and re-fetches the following instruction (csr_pipe_flush,
   rtl/ibex_id_stage.sv:593-597).
-- Bug-candidate status follows dv/auto_dv/docs/gen_bug_log.md: B7 (TP-DIT-019), B8 (TP-DIT-032)
-  and B13 (TP-RVFI-013) are expected-fail; B12 is documented behaviour with a design-weakness note
+- Bug-candidate status follows dv/auto_dv/docs/gen_bug_log.md: B7 (TP-DIT-019), B8 (TP-DIT-032),
+  B13 (TP-RVFI-013) and B16 (TP-SEC-040, TP-RVFI-040: the first-beat class of a misaligned load
+  integrity error) are expected-fail; B12 is documented behaviour with a design-weakness note
   (TP-SEC-025 passes); B14 is an RVFI convention note pending its confirmation run (TP-RVFI-018 is
-  the pass item for the priority behaviour, TP-RVFI-039 the informational confirmation).
+  the pass item for the priority behaviour, TP-RVFI-039 the informational confirmation); B18 is an
+  RVFI-only deviation (rmask / mem_addr garbage on non-store records) recorded on TP-RVFI-014 and
+  TP-RVFI-029, where the mask rules apply only to decoded load/store records.
+- Conventions from rtl-arch's RTL fact-check (dv/auto_dv/work/rtl-arch/gen_tp_parts_rtl_factcheck.md,
+  T-053; fix brief 3), stated once here and cited by the items as C-n / X-n:
+  - C-1 (X-1) rvfi_pc_wdata of trap, mret and dret records is the next sequential fetch address
+    (pc_if in the ID-exit cycle: their pc_set is issued one cycle later in FLUSH,
+    rtl/ibex_core.sv:2084; rtl/ibex_controller.sv:826-833, :953-965); only branch and jump records
+    carry the target. A redirect target is observed as the NEXT record's rvfi_pc_rdata (or the
+    DmHaltAddr / DmExceptionAddr / vector fetch with the icache off). fence.i is a jump to pc + 4
+    (rtl/ibex_decoder.sv:711-720), so its pc_wdata is both its target and the next sequential
+    address.
+  - C-3 (X-6/X-7) Interrupt and debug entry wait for an empty ID and a ready WB: the instruction
+    already in ID when the request arrives completes first; mepc / dpc = pc of the first
+    not-yet-executed instruction, derived from the last retired record (nominal 2 records after
+    the pin edge, worst case 17). rvfi_ext_debug_req is sampled at the instruction's IF->ID
+    transfer, or captured when the request arrived on an empty ID (rtl/ibex_core.sv:1949-1957,
+    :1996-2001): the instruction in ID at the rise carries 0 and completes; a high debug_req_i
+    lets no new instruction enter ID outside debug mode (halt_if, rtl/ibex_controller.sv:700-708,
+    :1020); the first debug-ROM record carries 1. Fire-checks key on the driver timestamp, the
+    last record before entry and the DmHaltAddr / vector fetch with no record in between.
+  - C-4 (X-5) fetch_enable_i != On stops only new icache lookups (req_i, rtl/ibex_icache.sv:249);
+    the remaining beats of already allocated fill buffers keep requesting (fill_ext_req has no
+    req_i term, :756, :1030-1031) and a request awaiting grant is never withdrawn (:764-775).
+    Rule: no new line allocation after the Off edge; beats of lines whose first beat was requested
+    before the edge are legal (up to NUM_FB busy buffers, two beats per line with the cache off);
+    instr_req_o == 0 whenever core_busy_o == Off. The ibus protocol checker needs no
+    withdrawn-request tolerance (the earlier note "request withdrawn" is refuted by rtl-arch).
+    In-flight instructions (ID, WB, a whole Zcmp sequence) still retire after the edge.
+  - C-7 (X-10, D21) The internal-NMI pending flag registers one cycle after the corrupted rvalid
+    (rtl/ibex_controller.sv:402-438) and entry waits for ID/WB to drain, so up to TWO ordinary
+    instructions (a Zcmp sequence counts as one; its micro-op records are folded) can retire
+    between the corrupted response's record and the handler: the doc's "at most one" is D21; the
+    checker follows the RTL and the first directed integrity-error sim pins the count.
+  - C-8 (X-11, B16) A misaligned load whose FIRST beat carries an integrity error still writes rd
+    with the merged data (the first-half status lsu_err_d = data_bus_err_i | pmp_err_q has no
+    integrity term, rtl/ibex_load_store_unit.sv:514; the RF write is gated only by the integrity
+    of the completing beat, :697-698); the alert (:756) and the internal NMI fire. The first-beat
+    class is its own expected-fail (B16) item (checker follows security.rst:88); the aligned and
+    second-beat classes pass. mtval of the internal NMI is lsu_addr_last at the corrupted beat
+    (the word-aligned second-half address when the second half was granted before the first
+    response, rtl/ibex_controller.sv:416, :438; rtl/ibex_load_store_unit.sv:258-266).
+  - C-12 (X-14/X-15, B18) rvfi_insn is the 32-bit expansion for Zcmp micro-ops (halfword on
+    rvfi_ext_expanded_insn); c.ebreak is traced as the zero-extended halfword; rvfi_mem_rmask /
+    wmask are zero on WB-trap records (rtl/ibex_core.sv:2156-2157); on every other non-store
+    record (ALU, CSR, branch, jump, ID-stage trap) rmask is 4'b1111 and rvfi_mem_addr is the ALU
+    adder result (B18, RVFI-only; rtl/ibex_core.sv:2085, :2253-2260 vs rvfi.rst:135-136,
+    143-144): mask and address rules apply only to records decoded as loads or stores.
+  - C-13 (X-16) rvfi_ext_irq_valid is a LEVEL, not a pulse: it rises four cycles after the
+    interrupt decision cycle (rvfi_irq_valid flop, then stages [0], [1], [2];
+    rtl/ibex_core.sv:1965-1971, :1992-2002, :2134-2141, :2192-2199), stays high until about two
+    cycles after the handler's first instruction enters ID (one cycle only with same-cycle gnt and
+    next-cycle rvalid), never coincides with rvfi_valid (the last pre-interrupt record is out by
+    decision + 1) and is NOT generated when ID emptied before WB drained (captured_valid already
+    set, :1965). Items count rising edges and accept an entry without a marker whose handler's
+    first record carries the captured state. Bring-up pins GEN_RVFI_IRQ_MARKER_OFFSET (predicted
+    3 cycles from the last pre-interrupt record's rvfi_valid to the marker's rising edge, C-16).
+  - C-15 Expected values: `pass`, `pass (doc mismatch Dn)`, `expected-fail (Bn)`,
+    `informational (...)`. An informational item is its own `_info` test (measured: false, never
+    gated; its checkers run in record mode; the test asserts only that the scenario fired and logs
+    the observation as GEN_TEST_INFO). An expected-fail item is its own `_xfail` test. A pass item
+    never disables a checker.
+  - C-16 Fire-checks are per-seed assertions on an observable, never "over the run set"; a timing
+    constant not yet simulated is asserted as "minimum observed value equals the bring-up-pinned
+    constant <name> (predicted N)"; bin closure is left to the manifests.
+  - Divider constants (rtl-arch gen_multdiv_bound_props.md, gen_sva_multdiv): a divide that does
+    not take the fast path reaches valid_o exactly GEN_DIV_FULL_CYCLES = 36 cycles after its start
+    (37 ID cycles, RVFI delta 37 under Q-TIME); the divide-by-zero fast path exists only with DIT
+    off and gives valid_o GEN_DIV_ZERO_CYCLES = 1 cycle after the start (2 ID cycles, RVFI delta
+    2); mul 1 cycle, mulh-class 2 cycles with no operand dependence; a divider or multiplier hold
+    is unreachable (X-12: the unit does not start while a WB memory access is outstanding, MD-3).
+  - P1 level semantics (X-22): dummy_instr_id_o / dummy_instr_wb_o are levels updated only on
+    if_id_pipe_reg_we (rtl/ibex_if_stage.sv:538-544; rtl/ibex_wb_stage.sv:222-241) and hold the
+    last registered value after the dummy left the stage; P1 coverage samples the insertion EVENT
+    (rising dummy_instr_id_o with if_id_pipe_reg_we) and the dummy's residency, never the held
+    level. A dummy that reads x0 gets rf_data_r0_q, the previous dummy's result, not 0
+    (rtl/ibex_register_file_ff.sv:159-173): a zero divisor is an operand VALUE, not the register
+    index x0.
 
 ---------------------------------------------------------------------------------------------------
 ## Layer-1 weight tables
@@ -17044,9 +18168,10 @@ Stimulus line override the table for that item.
 - Fire-check: >= 20 retired div-class records with rs2 = 0 and DIT on, each with the next record's
   gap measured.
 - Pass criteria: gen_test_dit_div (cocotb): every div-class instruction under DIT shows gap 37
-  since the previous record (Q-TIME; the divider's full latency, D7 / EX-03) regardless of rs2 = 0
-  or overflow, i.e. no early completion ; gen_isa_compare (result -1 / dividend for divide by zero)
-  ; gen_chk_counters (div-wait event count).
+  since the previous record (Q-TIME; GEN_DIV_FULL_CYCLES = 36 start-to-valid = 37 ID cycles, D7 /
+  EX-03; divider constants, header) regardless of rs2 = 0 or overflow, i.e. no early completion ;
+  gen_isa_compare (result -1 / dividend for divide by zero) ; gen_chk_counters (div-wait event
+  count: 36 per divide, X-13 exact class).
 - Expected: pass
 - Test group: gen_dit_timing
 - Bins: CG-DIT-003.cr_div_dit_zero.div_on_zero, CG-DIT-003.cr_div_dit_zero.div_on_nz,
@@ -17069,9 +18194,10 @@ Stimulus line override the table for that item.
 - Fire-check: both windows retire >= 8 divide-by-zero records (rvfi_rs2_rdata == 0) and the DIT
   state differs between the windows (tracked from cpuctrlsts writes).
 - Pass criteria: gen_test_dit_div (cocotb): window A (DIT off) gap for divide by zero is 2 since
-  the previous record (MD_IDLE -> MD_FINISH early completion, rtl/ibex_multdiv_fast.sv:434,514-517)
-  and window B (DIT on) gap is 37, equal to the non-zero-divisor latency (Q-TIME) ; gen_isa_compare
-  (rvfi_rd_wdata identical in both windows).
+  the previous record (MD_IDLE -> MD_FINISH early completion, rtl/ibex_multdiv_fast.sv:434,514-517;
+  GEN_DIV_ZERO_CYCLES = 1 start-to-valid) and window B (DIT on) gap is 37, equal to the
+  non-zero-divisor latency (Q-TIME; divider constants, header) ; gen_isa_compare (rvfi_rd_wdata
+  identical in both windows).
 - Expected: pass
 - Test group: gen_dit_timing
 - Bins: CG-DIT-003.cr_div_dit_zero.div_off_zero, CG-DIT-003.cr_latency.div_off_zero_two,
@@ -17120,8 +18246,11 @@ Stimulus line override the table for that item.
 - Fire-check: >= 10 RVFI pairs (cpuctrlsts write, next record a branch or div) with the toggle
   in each direction, gap between them measured.
 - Pass criteria: gen_test_dit_handover (cocotb): every cpuctrlsts write flushes the pipe and
-  re-fetches the follower (csr_pipe_flush, rtl/ibex_id_stage.sv:593-597), so the follower's gap =
-  re-fetch latency + its own ID residency; the re-fetch latency is measured from control pairs (a
+  re-fetches the follower (csr_pipe_flush, rtl/ibex_id_stage.sv:593-597; the controller sets
+  retain_id / halt_if in the commit cycle and IF resumes two cycles later, so a single-cycle
+  follower shows a gap of about 3: csrw commits at N, record N + 2, follower enters ID at N + 3,
+  record N + 5; fact-check N1), so the follower's gap = re-fetch latency + its own ID residency;
+  the re-fetch latency is measured from control pairs (a
   cpuctrlsts write that does not change bit 1, same imem regime) and subtracted: the follower shows
   the residency of the NEW DIT value (div by zero after off->on: 37 cycles instead of 2; not-taken
   branch after on->off: 1 cycle instead of 2, rtl/ibex_id_stage.sv:925-928) ; gen_isa_compare.
@@ -17173,29 +18302,36 @@ Stimulus line override the table for that item.
 - Bins: CG-RVFI-002.cp_misaligned.yes, CG-RVFI-002.cp_misaligned.no,
   CG-DIT-001.cr_dit_next.off2on_load_store, CG-DIT-001.cr_dit_next.on2off_load_store
 
-### TP-DIT-010: Dummy DIV with rs2 = x0 takes the full latency under DIT
+### TP-DIT-010: Dummy DIV with a zero divisor takes the full latency under DIT
 - Features: F-DIT-009
 - Phase: 1
 - Tier: targeted
 - Preconditions: cpuctrlsts.dummy_instr_en = 1, mask = 000, data_ind_timing = 1 (window B) and
-  0 (window A); program is straight-line ALU code (no div/mul of its own).
-- Stimulus: 2000+ real instructions per window so the LFSR produces dummy DIVs with rs2 = x0
-  (probability 1/4 type x 1/32 operand per insertion).
-- Randomized: secureseed value written before each window (drives the LFSR sequence), filler mix,
-  window order.
+  0 (window A); program is straight-line ALU code (no div/mul of its own) that holds a random
+  subset of 8..16 registers at 0 for the whole window (so the LFSR-chosen rs2 is a zero VALUE
+  with probability about 1/4 .. 1/2 per dummy DIV). A dummy that reads x0 does NOT read 0: it
+  reads rf_data_r0_q, the previous dummy's result (rtl/ibex_register_file_ff.sv:159-173,
+  :221-224; X-22, P1 level semantics in the header), so the x0 index is not a zero-divisor case.
+- Stimulus: 2000+ real instructions per window so the LFSR produces dummy DIVs (probability 1/4 per
+  insertion) whose rs2 register holds 0 (fast-path candidates with DIT off) or a nonzero value.
+- Randomized: secureseed value written before each window (drives the LFSR sequence), which
+  registers hold 0, filler mix, window order.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
-- Fire-check: P1 fcov_dummy_instr_type == DIV with rf_raddr_b_o == 0 observed in both windows
-  (coverage-only probe); boundary fire-check: in window B at least one gap between consecutive
-  RVFI records of straight-line code exceeds the full divider latency while window A shows only
-  short and full-latency gaps.
-- Pass criteria: gen_test_dit_dummy_div (cocotb): in window B no gap of "fast divide" length
-  attributable to a dummy DIV exists (all dummy-DIV gaps are full latency); in window A both
-  lengths occur ; gen_isa_compare (no architectural effect).
+- Fire-check: P1 (coverage-only): >= 3 dummy DIV insertion events per window whose rs2 operand
+  value (the RF read-port B data during the dummy) is 0 and >= 3 whose value is nonzero;
+  boundary fire-check: in window B every extra gap attributable to a single dummy DIV is the full
+  latency (+37, divider constants in the header) while window A shows both the fast (+2) and the
+  full (+37) class.
+- Pass criteria: gen_test_dit_dummy_div (cocotb): in window B no gap of "fast divide" length (+2)
+  attributable to a dummy exists (every dummy-DIV gap is +37: DIT forces the full path,
+  rtl/ibex_multdiv_fast.sv:434, :445); in window A both lengths occur and the fast class occurs
+  only when the P1 operand value was 0 ; gen_isa_compare (no architectural effect).
 - Expected: pass
 - Test group: gen_dit_dummy
-- Bins: CG-DIT-004.cr_div_rs2.div_x0_on, CG-DIT-004.cr_div_rs2.div_x0_off,
-  CG-DIT-004.cr_type_dit.div_on, CG-DIT-004.cr_type_dit.div_off, CG-DIT-001.cp_dummy_en.on,
-  CG-DIT-004.cr_div_rs2.div_x17_31_on, CG-DIT-004.cr_div_rs2.div_x1_15_off
+- Bins: CG-DIT-004.cr_div_zero.div_zero_on, CG-DIT-004.cr_div_zero.div_zero_off,
+  CG-DIT-004.cr_div_zero.div_nz_on, CG-DIT-004.cr_div_zero.div_nz_off,
+  CG-DIT-004.cp_rs2_val_zero.zero, CG-DIT-004.cp_rs2_val_zero.nonzero,
+  CG-DIT-004.cr_type_dit.div_on, CG-DIT-004.cr_type_dit.div_off, CG-DIT-001.cp_dummy_en.on
 
 ### TP-DIT-011: DIT applies in U-mode; cpuctrlsts is M-mode only
 - Features: F-DIT-010
@@ -17231,7 +18367,9 @@ Stimulus line override the table for that item.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1), knob:icache_ecc_err_rate
   (none)
 - Fire-check: window B shows >= 5 gaps > 1 between consecutive single-cycle ALU records; windows A
-  and C show none (gap == 1 everywhere).
+  and C show none (gap == 1 everywhere except the window-boundary record that follows each
+  cpuctrlsts write, whose gap is about 3 because of the csr_pipe_flush, fact-check N1; that record
+  is excluded from the gap == 1 rule).
 - Pass criteria: gen_test_dit_dummy (cocotb) fire-check itself ; gen_isa_compare (every record
   matches; no extra records) ; gen_chk_counters run with the B7 tolerance (see TP-DIT-019).
 - Expected: pass
@@ -17255,11 +18393,14 @@ Stimulus line override the table for that item.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
 - Fire-check: each window retires >= 2000 records with its mask value in effect (tracked from the
   cpuctrlsts write record) and >= 10 dummy gaps observed per window (P1 count confirms).
-- Pass criteria: gen_test_dit_dummy (cocotb): the mean number of real instructions between
-  dummy events is within the interval implied by the mask (000: <= 4, 001: <= 8, 011: <= 16, 111:
-  <= 32; the four non-contiguous masks 010/100/101/110 are checked only for "dummies occur and
-  interval <= 32") ; gen_isa_compare.
-- Expected: pass (doc mismatch D19: the masks 010/100/101/110 are legal but undocumented)
+- Pass criteria: gen_test_dit_dummy (cocotb): the number of real instructions between two dummy
+  events equals the LFSR threshold (threshold = lfsr.cnt & {mask, 2'b11},
+  rtl/ibex_dummy_instr.sv:97; 0 = back-to-back), so every observed interval lies in the mask's
+  threshold set: 000 {0..3}, 001 {0..7}, 011 {0..15}, 111 {0..31} (i.e. <= 3 / 7 / 15 / 31; the
+  doc says 0-4 / 8 / 16 / 32), 010 {0..3, 8..11}, 100 {0..3, 16..19}, 101 {0..3, 8..11, 16..19,
+  24..27}, 110 {0..3, 16..19, 24..27}; an interval outside the set is an error ; gen_isa_compare.
+- Expected: pass (doc mismatch D19: security.rst:62 calls the masks 010/100/101/110 legal with a
+  "less predictable impact" and gives no interval for them; its table lists 4 of the 8 values)
 - Test group: gen_dit_dummy
 - Bins: CG-DIT-001.cr_dummy_mask.on_m000, CG-DIT-001.cr_dummy_mask.on_m001,
   CG-DIT-001.cr_dummy_mask.on_m010, CG-DIT-001.cr_dummy_mask.on_m011,
@@ -17279,8 +18420,9 @@ Stimulus line override the table for that item.
 - Randomized: register contents, seeds, DIT.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
 - Fire-check: P1 fcov_dummy_instr_type shows all four types and rf_raddr_a_o/rf_raddr_b_o cover
-  x0, x1..x15, x16 and x17..x31 while dummy_instr_id_o = 1 (coverage-only); boundary fire-check:
-  gap histogram contains 1-cycle extra gaps (ADD/AND/MUL) and full-latency gaps (DIV).
+  x0, x1..x15, x16 and x17..x31 at the insertion events (P1 level semantics, header; coverage-only);
+  boundary fire-check: gap histogram contains 1-cycle extra gaps (ADD/AND/MUL) and full-latency
+  gaps (DIV).
 - Pass criteria: gen_isa_compare (no register, x0 included, changes; next records' rs values
   unchanged) ; gen_chk_alerts (no alert) ; gen_test_dit_dummy (gap classes).
 - Expected: pass
@@ -17375,8 +18517,9 @@ Stimulus line override the table for that item.
 - Features: F-DIT-018
 - Phase: 1
 - Tier: targeted
-- Preconditions: dummy_instr_en = 1, mask 000; mcountinhibit = 0; mhpmevent selecting mul_wait /
-  div_wait on two counters.
+- Preconditions: dummy_instr_en = 1, mask 000; mcountinhibit = 0; the hardwired event counters
+  mhpmcounter11 (mul wait) and mhpmcounter12 (div wait) are read (X-4: no selector is
+  programmable; mhpmeventN reads 1 << (N - 3), D20).
 - Stimulus: csrr minstret; N (64..1024) nops or ALU instructions; csrr minstret; same for the HPM
   counters; repeated with dummies disabled as the control.
 - Randomized: N, filler, seed, counter selection.
@@ -17386,9 +18529,13 @@ Stimulus line override the table for that item.
 - Pass criteria: gen_chk_counters in spec direction: minstret delta == number of RVFI records
   between the reads (security.rst: no functional impact) -> fails on this RTL (delta exceeds by
   the dummy count); the item records the RTL count (delta - records) and asserts it equals the
-  P1 dummy count as the documenting check ; gen_isa_compare on everything except minstret.
+  P1 dummy count as the documenting check; for the wait counters the RTL fact is that a dummy
+  MUL never adds a mul_wait cycle (RV32MSingleCycle MUL completes in its first ID cycle, no
+  stall_multdiv, rtl/ibex_id_stage.sv:910-918, :1226-1227) while every dummy DIV adds 36 div_wait
+  cycles: the mhpmcounter12 excess equals 36 x the P1 dummy-DIV count and the mhpmcounter11 excess
+  is 0 ; gen_isa_compare on everything except minstret.
 - Expected: expected-fail (B7)
-- Test group: gen_dit_dummy
+- Test group: gen_dit_dummy_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DIT-004.cp_minstret_excess.positive, CG-DIT-004.cp_minstret_excess.zero,
   CG-DIT-004.cp_event.window_close
 
@@ -17402,7 +18549,8 @@ Stimulus line override the table for that item.
   (sparse regime) so that some assertions coincide with dummy_instr_id_o.
 - Randomized: irq line, assertion cycle, hold policy, mask, seed.
 - Knobs: knob:irq_regime (sparse), knob:irq_line_mix (multi), knob:irq_hold (until_taken)
-- Fire-check: P1: >= 5 irq assertions sampled while dummy_instr_id_o = 1 (coverage-only);
+- Fire-check: P1: >= 5 irq assertions landing inside a dummy's ID residency (between its insertion
+  event and the next if_id_pipe_reg_we; P1 level semantics, header) (coverage-only);
   boundary: >= 5 handler entries (rvfi_intr = 1) whose previous record's gap exceeds the plain
   interrupt-entry latency measured with dummies disabled, and mepc (read in the handler) equals
   the pc_rdata of the first post-handler record.
@@ -17424,15 +18572,17 @@ Stimulus line override the table for that item.
   coincide with dummy_instr_id_o.
 - Randomized: assertion cycle, seed, mask, code mix.
 - Knobs: knob:debug_req_regime (sparse), knob:imem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: P1: >= 5 debug_req_i assertions while dummy_instr_id_o = 1 (coverage-only);
+- Fire-check: P1: >= 5 debug_req_i assertions landing inside a dummy's ID residency (between its
+  insertion event and the next if_id_pipe_reg_we; P1 level semantics, header) (coverage-only);
   boundary: >= 5 debug entries (rvfi_ext_debug_mode rising) with dcsr.cause = haltreq whose dpc
-  equals the pc_rdata of the first record after dret.
+  equals the pc_rdata of the first record after dret and whose first debug-ROM record carries
+  rvfi_ext_debug_req = 1 (C-3).
 - Pass criteria: gen_chk_debug (entry to DmHaltAddr, dpc, dcsr.cause) ; gen_chk_rvfi_proto (no
   record for the dummy) ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_dit_dummy_events
 - Bins: CG-DIT-004.cp_context.debug_req_high, CG-DIT-004.cr_mask_ctx.m000_debug_req_high,
-  CG-RVFI-003.cr_dbg.yes_no, CG-RVFI-003.cr_dbg.no_yes
+  CG-RVFI-003.cr_dbg.yes_yes, CG-RVFI-003.cr_dbg.no_yes
 
 ### TP-DIT-022: Single step that consumes only a dummy instruction (directed, documents RTL)
 - Features: F-DIT-020
@@ -17445,8 +18595,8 @@ Stimulus line override the table for that item.
 - Randomized: seed, code after dret, mask (000/001).
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
 - Fire-check: at least one step cycle where the debug ROM logs dpc(n+1) == dpc(n) and no RVFI
-  record with rvfi_ext_debug_mode = 0 occurred between the dret and the re-entry (P1 confirms
-  dummy_instr_id_o during that window).
+  record with rvfi_ext_debug_mode = 0 occurred between the dret and the re-entry (P1 confirms a
+  dummy insertion event in that window; P1 level semantics, header).
 - Pass criteria: gen_chk_debug in RTL-documenting mode: a step re-entry with dpc unchanged and
   zero non-debug records is accepted only when P1 shows a dummy in that window (otherwise error);
   dcsr.cause = step ; gen_chk_rvfi_proto.
@@ -17498,21 +18648,28 @@ Stimulus line override the table for that item.
 - Bins: CG-SEC-001.cp_internal_total.zero, CG-DIT-004.cp_context.u_mode,
   CG-RVFI-004.cp_cause.load_fault
 
-### TP-DIT-025: dummy_instr_en cleared while a dummy is in ID or WB
+### TP-DIT-025: dummy_instr_en cleared while a dummy is in WB (the in-ID case is unreachable)
 - Features: F-DIT-023
 - Phase: 1
 - Tier: targeted
 - Preconditions: dummy_instr_en = 1, mask 000.
 - Stimulus: csrc cpuctrlsts (clearing bit 2) placed after 1..6 straight-line instructions,
   repeated 300 times with reseeds so that the clearing write sometimes follows a dummy directly
-  (dummy in WB) or is itself preceded by an insertion (dummy in ID when the write commits).
+  (the dummy is in WB when the write commits in ID). "A dummy in ID when the write commits" cannot
+  happen (fact-check, UNREACHABLE-PRECONDITION): the csrw itself occupies ID when it commits, the
+  controller sets retain_id / halt_if in that cycle and FLUSH halts IF the next
+  (rtl/ibex_controller.sv:664-679, :816-820), so nothing enters ID until two cycles later, when
+  dummy_instr_en is already 0; the level dummy_instr_id_o may still read 1 then (P1 level
+  semantics, header) but no insertion event occurs.
 - Randomized: distance, seed, mask, ALU filler.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
-- Fire-check: P1: >= 5 cases with dummy_instr_wb_o = 1 in the cycle the cpuctrlsts write
-  retires and >= 5 with dummy_instr_id_o = 1 in that cycle (coverage-only); boundary: >= 5
-  cpuctrlsts-clear records whose immediately preceding gap > 1.
+- Fire-check: P1: >= 5 cases where a dummy insertion event immediately precedes the cpuctrlsts
+  write's IF->ID transfer, i.e. dummy_instr_wb_o = 1 with WB valid in the cycle the write commits
+  (coverage-only); boundary: >= 5 cpuctrlsts-clear records whose own gap since the previous
+  record is > 1 (the preceding dummy's stall).
 - Pass criteria: gen_chk_rvfi_proto (no stray record) ; gen_isa_compare (x0 reads 0 afterwards)
-  ; gen_chk_alerts.
+  ; gen_chk_alerts ; gen_test_dit_dummy: no insertion event after the write's record (the first
+  post-flush instruction is never a dummy).
 - Expected: pass
 - Test group: gen_dit_dummy_events
 - Bins: CG-DIT-004.cp_en_cleared_in_flight.yes, CG-DIT-004.cp_en_cleared_in_flight.no,
@@ -17526,11 +18683,15 @@ Stimulus line override the table for that item.
 - Stimulus: 4000 straight-line single-cycle ALU instructions with imem same_cycle/min1.
 - Randomized: seed, mask (000/001), filler.
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
-- Fire-check: gap histogram of the window has mass at exactly three extra-gap classes: +1
-  (ADD/AND/MUL), fast divide (dummy DIV with rs2 = x0 or rs2 register holding 0) and full divide;
-  P1 type confirms the class of each (coverage-only).
-- Pass criteria: gen_test_dit_dummy (cocotb): no gap class other than {1, 1+1, 1+fast_div,
-  1+full_div} appears in the window ; gen_isa_compare.
+- Fire-check: the gap histogram of the window has mass at the three single-dummy extra-gap
+  classes: +1 (ADD/AND/MUL), +2 (fast divide: a dummy DIV whose rs2 VALUE is 0, DIT off) and +37
+  (full divide); P1 attributes each extra gap to its insertion events and types (coverage-only).
+  Threshold 0 is legal for every mask (rtl/ibex_dummy_instr.sv:97-115), so consecutive dummies
+  occur (TP-DIT-029) and their stalls add up.
+- Pass criteria: gen_test_dit_dummy (cocotb): every extra gap equals the SUM over the P1-attributed
+  consecutive dummies of their class latencies (ADD/AND/MUL 1, fast DIV 2, full DIV 37: e.g. +2
+  for two ADDs, +3, +38, +39 are legal sums); a gap that P1 attributes to exactly one dummy is in
+  {+1, +2, +37} and its class matches the P1 type and rs2 value ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_dit_dummy
 - Bins: CG-DIT-004.cr_type_dit.div_off, CG-DIT-004.cr_type_dit.mul_off, CG-DIT-004.cp_type.add,
@@ -17580,8 +18741,10 @@ Stimulus line override the table for that item.
   tracked cfg; (b) csrrs/csrrc x0 records; (c) >= 2 rvfi_trap records in mode U with cause
   illegal; (d) >= 4 csrr records with rvfi_rd_wdata == 0.
 - Pass criteria: gen_test_dit_seed (cocotb): (a) pattern differs from the no-write control; (b)
-  pattern identical across the read-only op ; gen_isa_compare ((c) trap, (d) value 0) ;
-  gen_chk_csr_readback.
+  pattern identical across the read-only op (csrrs/csrrc with rs1 = x0 and csrrsi/csrrci with
+  uimm = 0 decode as CSR_OP_READ, rtl/ibex_decoder.sv:250-259: csr_we_int = 0, no reseed and no
+  csr_pipe_flush, so the two windows are timing-comparable; fact-check N9) ; gen_isa_compare
+  ((c) trap, (d) value 0) ; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_dit_secureseed
 - Bins: CG-DIT-005.cr_effect_dummy.write_off, CG-DIT-005.cr_effect_dummy.read_only_on,
@@ -17616,12 +18779,18 @@ Stimulus line override the table for that item.
 - Knobs: knob:fetch_enable_regime (toggling), knob:irq_regime (sparse)
 - Fire-check: boundary: a fetch_enable_i != IbexMuBiOn window and a core_busy_o == IbexMuBiOff
   window each observed for >= 200 cycles with dummy_instr_en = 1 in the tracked cfg, with no RVFI
-  record and no instr_req_o inside either window; P1 dummy_instr_id_o = 0 throughout both windows
-  is coverage-only confirmation (the P1 monitor's rf_we_wb_o view is a wrapper-internal net, not a
-  boundary fire-check); this item's CG-DIT-004 bins are probe-gated (P1), not in the manifest.
-- Pass criteria: gen_chk_fetch_en (no retirements/requests while Off) ; gen_chk_sleep ;
-  gen_isa_compare (no architectural effect after the windows) ; the P1 monitor asserts zero
-  insertions in both windows (coverage-only evidence, noted as such).
+  record and no new line allocation on the ibus inside either window (remaining beats of open
+  fill buffers are legal after the Off edge, C-4); P1 shows zero insertion EVENTS (rising
+  dummy_instr_id_o with if_id_pipe_reg_we) in both windows as coverage-only confirmation. The
+  held LEVEL is not the observable: if the last instruction accepted before the Off edge was a
+  dummy (about 1/(1 + mean threshold), ~40 percent with mask 000) dummy_instr_id_o reads 1 for
+  the whole Off window with ID empty (rtl/ibex_if_stage.sv:538-544; X-22, P1 level semantics in
+  the header); the WFI window is unaffected because the WFI is the last registered instruction.
+  This item's CG-DIT-004 bins are probe-gated (P1), not in the manifest.
+- Pass criteria: gen_chk_fetch_en (no retirements and no new line allocation while Off, C-4) ;
+  gen_chk_sleep ; gen_isa_compare (no architectural effect after the windows) ; the P1 monitor
+  counts insertion events (fcov_insert_dummy_instr & id_in_ready, or rising edges) and asserts
+  zero in both windows (coverage-only evidence, noted as such).
 - Expected: pass
 - Test group: gen_dit_dummy_events
 - Bins: CG-DIT-004.cr_window_dummies.fetch_off_none, CG-DIT-004.cr_window_dummies.wfi_sleep_none,
@@ -17635,13 +18804,22 @@ Stimulus line override the table for that item.
 - Preconditions: dummy_instr_en = 1, mask 000.
 - Stimulus: loads with long dmem rvalid delay (so the load sits in WB) followed by single-cycle
   ALU instructions that do not depend on the load; dummies inserted after the load may pick the
-  load's rd as rs1/rs2 (probability ~1/16 per dummy).
+  load's rd as rs1/rs2 (probability ~1/16 per dummy). RTL fact (fact-check, UNOBSERVABLE):
+  instr_executing requires ~outstanding_memory_access (rtl/ibex_id_stage.sv:1015-1016,
+  :1059-1062), so EVERY instruction behind an outstanding load waits in ID until the response,
+  hazard or not; the dummy adds exactly +1 to the post-load gap whether or not it reads the
+  load's rd. The hazard itself therefore has no boundary signature and is P1 / rf_raddr
+  coverage only (probe-gated, not in the manifest).
 - Randomized: load rd, delay, seed, filler.
 - Knobs: knob:dmem_rvalid_delay (long), knob:dmem_gnt_delay (short)
-- Fire-check: P1: >= 5 dummies with rf_raddr_a_o or rf_raddr_b_o == the outstanding load's rd
-  while dummy_instr_id_o = 1 (coverage-only); boundary: >= 5 cases where the record after the
-  load shows a gap longer than the load latency alone although it does not depend on the load.
-- Pass criteria: gen_isa_compare ; gen_chk_dbus_proto ; gen_chk_rvfi_proto.
+- Fire-check: boundary: >= 5 loads whose following record shows a gap of exactly (load latency
+  + 1), i.e. one dummy behind the load and no further stall; P1 (coverage-only): >= 5 of those
+  dummies have rf_raddr_a_o or rf_raddr_b_o == the outstanding load's rd at their insertion event
+  (P1 level semantics, header).
+- Pass criteria: gen_test_dit_dummy (cocotb): the post-load gap never exceeds load latency + the
+  dummy's class latency (1 for ADD/AND/MUL, 2 or 37 for DIV), with or without the operand hazard
+  (no extra stall_ld_hz cycle: the wait is already covered by outstanding_memory_access) ;
+  gen_isa_compare ; gen_chk_dbus_proto ; gen_chk_rvfi_proto.
 - Expected: pass
 - Test group: gen_dit_dummy_events
 - Bins: CG-DIT-004.cp_context.hazard_load_wb, CG-DIT-004.cr_mask_ctx.m000_hazard_load_wb
@@ -17664,7 +18842,7 @@ Stimulus line override the table for that item.
   -> fails if a micro-op is skipped (B8) ; gen_chk_rvfi_proto (expanded_insn_last exactly once
   per sequence).
 - Expected: expected-fail (B8)
-- Test group: gen_dit_dummy_events
+- Test group: gen_dit_dummy_events_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DIT-004.cp_context.in_zcmp, CG-DIT-004.cr_mask_ctx.m000_in_zcmp,
   CG-RVFI-003.cp_expanded.mid
 
@@ -17682,8 +18860,11 @@ Stimulus line override the table for that item.
   knob:fetch_enable_regime, knob:priv_regime, knob:pmp_regime, knob:imem_gnt_delay,
   knob:imem_rvalid_delay, knob:dmem_gnt_delay, knob:dmem_rvalid_delay, knob:imem_err_rate,
   knob:dmem_err_rate, knob:icache_ecc_err_rate, knob:scr_key_delay
-- Fire-check: cpuctrlsts write records show all four (dit, dummy_en) combinations and all eight
-  masks in the run set; P1 insert count > 0 in every dummy-enabled regime.
+- Fire-check: per seed: >= 3 cpuctrlsts re-randomisations retired (RVFI records of the writes)
+  spanning >= 2 distinct (dit, dummy_en) combinations, and in every dummy-enabled regime of the
+  seed >= 1 extra gap in straight-line code (P1 insertion-event count > 0 as coverage-only
+  confirmation); closure of the four (dit, dummy_en) combinations and the eight masks is left to
+  the CG-DIT-001 manifest (C-16).
 - Pass criteria: gen_isa_compare ; gen_chk_rvfi_proto ; gen_chk_alerts ; gen_chk_counters
   (minstret excluded when dummies enabled, Q-DL-4) ; gen_chk_irq ; gen_chk_debug.
 - Expected: pass
@@ -17708,9 +18889,11 @@ Stimulus line override the table for that item.
   knob:debug_req_regime (sparse), knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
 - Fire-check: >= 5 handler entries (rvfi_intr = 1) whose gap from the last pre-interrupt record
   exceeds the plain entry latency by >= 30 cycles (only a dummy DIV can add that much in
-  straight-line ALU code); P1 confirms fcov_dummy_instr_type == DIV with dummy_instr_id_o = 1 in
-  the irq assertion cycle (coverage-only); >= 2 debug entries with the same signature.
-- Pass criteria: gen_chk_irq (entry latency <= plain latency + 37 cycles; mepc read in the handler
+  straight-line ALU code); P1 confirms a DIV insertion event at most 37 cycles before the irq
+  assertion with no later if_id_pipe_reg_we (the dummy DIV still occupies ID; P1 level semantics,
+  header) (coverage-only); >= 2 debug entries with the same signature.
+- Pass criteria: gen_chk_irq (entry latency <= plain latency + 37 cycles (divider constants,
+  header); mepc read in the handler
   == rvfi_pc_rdata of the first post-handler record) ; gen_chk_rvfi_proto (no record between the
   last pre-irq record and the handler; rvfi_intr on the handler's first record only) ;
   gen_chk_debug (dpc == next real PC for the debug variant) ; gen_isa_compare.
@@ -17733,15 +18916,21 @@ Stimulus line override the table for that item.
 - Preconditions: cpuctrlsts.icache_enable = 1; scramble key valid; a loop body that is re-executed
   so lines are hit from the cache.
 - Stimulus: the tag/data RAM models flip 1 or 2 bits of a stored word (tag or data, random way)
-  before a lookup that will hit it; 5-40 injections per run spaced >= 20 cycles.
+  before a lookup that will hit it; 5-40 injections per run spaced >= 20 cycles; the corrupted
+  line is never the target of a loop back-edge in the cycle after the erroring lookup (a second
+  lookup of the same line before the invalidation write would pulse a second time,
+  rtl/ibex_icache.sv:249-251, :585, :593-601; fact-check N5), so the corrupted line holds
+  sequential code and the loop branches elsewhere.
 - Randomized: tag vs data RAM, way, bit positions (single/double), injection timing relative to
   the lookup, loop size (fits in cache).
 - Knobs: knob:icache_ecc_err_rate (rare), knob:imem_gnt_delay, knob:imem_rvalid_delay
 - Fire-check: >= 5 injection events each followed within a bounded window by an alert_minor_o
   pulse (TB injection log correlated with the alert monitor).
-- Pass criteria: gen_chk_alerts (exactly one 1-cycle alert_minor_o pulse per injected error; no
-  pulse otherwise) ; gen_chk_icache (line invalidated and refilled from the bus after the alert) ;
-  gen_isa_compare (program result unaffected).
+- Pass criteria: gen_chk_alerts (exactly one 1-cycle alert_minor_o pulse per injected error, in
+  the IC1 cycle of the erroring lookup (GEN_ICACHE_ECC_WINDOW = 1) with the invalidation write one
+  cycle later; no pulse otherwise; a data error on a way that does not hit is never flagged,
+  rtl/ibex_icache.sv:585) ; gen_chk_icache (line invalidated and refilled from the bus after the
+  alert) ; gen_isa_compare (program result unaffected).
 - Expected: pass
 - Test group: gen_sec_alert_inject_icache
 - Bins: CG-SEC-001.cr_alert_inject.minor_icache_ecc, CG-SEC-001.cp_minor_count_per_inject.one,
@@ -17869,9 +19058,11 @@ Stimulus line override the table for that item.
   instruction access fault (1); alert_major_bus_o pulse in the beat's rvalid cycle.
 - Pass criteria: gen_chk_bus_intg_rsp (one alert pulse per corrupted beat, aligned to
   instr_rvalid_i) ; gen_chk_nmi / gen_chk_irq (NO internal NMI: no record with rvfi_ext_nmi_int,
-  mcause never the internal-NMI encoding {irq_ext 1, irq_int 1, lower_cause 0} = 0xFFFFFFE0 in the run) ; gen_isa_compare (fetch fault trap, mtval = 0 per Ibex,
-  handler flow) ; gen_chk_alerts.
-- Expected: pass
+  mcause never the internal-NMI encoding {irq_ext 1, irq_int 1, lower_cause 0} = 0xFFFFFFE0 in the run) ; gen_isa_compare (fetch fault trap; mtval = the faulting
+  fetch address: pc_id, or pc_id + 2 when the second half of a straddling 32-bit fetch carried the
+  error, rtl/ibex_controller.sv:859-861 (D10: cs_registers.rst:235 says 0); handler flow) ;
+  gen_chk_alerts.
+- Expected: pass (doc mismatch D10)
 - Test group: gen_sec_alert_inject_ibus
 - Bins: CG-SEC-002.cr_side_op.ibus_na, CG-SEC-002.cr_ibus_consumed.ibus_executed_yes,
   CG-SEC-002.cr_errbits_side.single_ibus, CG-SEC-002.cr_errbits_side.double_ibus,
@@ -17882,36 +19073,50 @@ Stimulus line override the table for that item.
   CG-SEC-002.cp_load_size.na, CG-SEC-002.cr_errbits_side.multi_ibus,
   CG-SEC-002.cp_err_bits.single, CG-SEC-002.cp_err_bits.double, CG-SEC-002.cp_err_bits.multi
 
-### TP-SEC-008: Data-side load integrity error: alert, internal NMI and RF write suppression
+### TP-SEC-008: Data-side load integrity error on the completing beat: alert, internal NMI and RF write suppression
 - Features: F-SEC-003, F-SEC-015
 - Phase: 1
 - Tier: targeted
 - Preconditions: mtvec handler at base+0x7C logs mcause/mtval/mepc and mrets; mstatus.MIE random
-  (NMI is unmaskable).
-- Stimulus: the dmem agent corrupts the check bits of load responses (word/half/byte, aligned and
-  misaligned first/second half), 5-30 per run; loads target registers holding known values so
-  suppression is visible.
-- Randomized: load size/offset/sign, rd, corruption class, dmem delays, MIE, privilege mode.
+  (NMI is unmaskable). Only the beat that COMPLETES the load is corrupted: an aligned load's
+  single beat or the SECOND beat of a misaligned load (C-8: suppression keys on the integrity of
+  the completing beat, rtl/ibex_load_store_unit.sv:697-698, rtl/ibex_core.sv:2384-2385). The
+  first-beat class of a misaligned load is TP-SEC-040 (expected-fail, B16) and is excluded here.
+- Stimulus: the dmem agent corrupts the check bits of load responses (word/half/byte; aligned, or
+  the second half of a misaligned access), 5-30 per run; loads target registers holding known
+  values so suppression is visible; the instruction stream after each corrupted load is varied
+  (single-cycle ALU, a load-use dependent instruction, a Zcmp sequence) so the NMI-entry distance
+  takes every value.
+- Randomized: load size/offset/sign, rd, corruption class, dmem delays, MIE, privilege mode, the
+  instruction(s) following the load.
 - Knobs: knob:dmem_err_rate (rare), knob:dmem_gnt_delay, knob:dmem_rvalid_delay,
   knob:priv_regime
-- Fire-check: >= 5 corrupted load responses each followed by (a) alert_major_bus_o pulse in the
-  rvalid cycle, (b) the load's RVFI record with rvfi_ext_rf_wr_suppress = 1, (c) a handler entry
-  record with rvfi_intr = 1 and rvfi_ext_nmi_int = 1 within one instruction.
-- Pass criteria: gen_chk_bus_intg_rsp (alert, suppression, NMI mcause = the internal-NMI encoding 0xFFFFFFE0 {irq_ext 1, irq_int 1}, mtval = faulting
-  address, vector base+0x7C, taken at most one instruction later) ; gen_chk_nmi (mstack save/
-  restore across the handler's mret) ; gen_isa_compare with the rd value legalised to "unchanged"
-  (rvfi_rd_addr = 0 on the suppressed load, rd keeps its old value) ; gen_chk_alerts.
-- Expected: pass
+- Fire-check: >= 5 corrupted completing beats (>= 2 aligned, >= 2 second-half) each followed by
+  (a) an alert_major_bus_o pulse in the rvalid cycle, (b) the load's RVFI record with
+  rvfi_ext_rf_wr_suppress = 1 and rvfi_rd_addr = 0, (c) a handler entry record with rvfi_intr = 1
+  and rvfi_ext_nmi_int = 1 after 0, 1 or 2 ordinary instructions (C-7); per seed the minimum and
+  maximum observed distance are recorded (the first directed sim pins the D21 count).
+- Pass criteria: gen_chk_bus_intg_rsp (alert; suppression; NMI mcause = the internal-NMI encoding
+  0xFFFFFFE0 {irq_ext 1, irq_int 1}; mtval = lsu_addr_last at the corrupted beat, i.e. the
+  effective address for an aligned load and the word-aligned second-half address for a misaligned
+  one (C-8, fact-check N7); vector base+0x7C; the handler is entered after at most two ordinary
+  instructions, a Zcmp sequence counting as one (C-7: the pending flag registers one cycle after
+  rvalid, rtl/ibex_controller.sv:402-438, and entry waits for ID/WB to drain, :296, :700-721);
+  more is an error) ; gen_chk_nmi (mstack save/restore across the handler's mret) ;
+  gen_isa_compare with the rd value legalised to "unchanged" (rvfi_rd_addr = 0 on the suppressed
+  load, rd keeps its old value) ; gen_chk_alerts.
+- Expected: pass (doc mismatch D21)
 - Test group: gen_sec_alert_inject_dbus
 - Bins: CG-SEC-002.cr_side_op.dbus_load, CG-SEC-002.cr_load_half.load_aligned_yes,
-  CG-SEC-002.cr_load_half.load_first_yes, CG-SEC-002.cr_load_half.load_second_yes,
+  CG-SEC-002.cr_load_half.load_second_yes,
   CG-SEC-002.cp_nmi_taken.yes, CG-SEC-002.cp_nmi_latency.same_insn, CG-SEC-002.cp_nmi_latency.next_insn,
+  CG-SEC-002.cp_nmi_latency.two_insn,
   CG-SEC-002.cp_load_size.byte, CG-SEC-002.cp_load_size.half, CG-SEC-002.cp_load_size.word,
   CG-SEC-002.cr_errbits_side.single_dbus, CG-SEC-002.cr_errbits_side.double_dbus,
   CG-SEC-002.cr_errbits_side.multi_dbus, CG-SEC-001.cr_alert_inject.major_bus_dbus_load_intg,
   CG-RVFI-003.cp_rf_wr_suppress.yes, CG-RVFI-003.cr_irq_kind.yes_no_yes,
   CG-SEC-002.cp_side.dbus, CG-SEC-002.cp_dbus_op.load, CG-SEC-002.cp_half.aligned,
-  CG-SEC-002.cp_half.first, CG-SEC-002.cp_half.second, CG-SEC-002.cp_ibus_consumed.na
+  CG-SEC-002.cp_half.second, CG-SEC-002.cp_ibus_consumed.na
 
 ### TP-SEC-009: Store response with a bus integrity error
 - Features: F-SEC-016
@@ -17945,13 +19150,18 @@ Stimulus line override the table for that item.
 - Knobs: knob:dmem_gnt_delay, knob:dmem_rvalid_delay
 - Fire-check: >= 3 injection events with zero outstanding requests (dbus monitor state) and an
   alert_major_bus_o pulse in the same cycle.
-- Pass criteria: gen_chk_bus_intg_rsp in informational mode: alert pulse present; no rvfi_trap, no
-  RF write, no NMI record attributable to the event ; gen_isa_compare. Per Q-DL-9 the item is
-  excluded from the pass gate and recorded as a design note.
-- Expected: pass (informational, Q-DL-9: excluded from the pass gate)
-- Test group: gen_sec_alert_inject_dbus
+- Pass criteria: gen_chk_bus_intg_rsp in record mode (C-15): alert pulse present; no rvfi_trap and
+  no RF write (the exception and RF-write paths are gated by an outstanding access,
+  rtl/ibex_core.sv:1181-1186); the internal NMI IS taken (mem_resp_intg_err is not qualified by
+  an outstanding access, rtl/ibex_id_stage.sv:613; rtl/ibex_controller.sv:413-417, :436): a
+  handler entry record with rvfi_ext_nmi_int = 1, mcause 0xFFFFFFE0 and mtval = the stale
+  lsu_addr_last (the last address the LSU issued, not the spurious beat's) is logged as
+  GEN_TEST_INFO ; gen_isa_compare. Per Q-DL-9 / bug-log S3 the item is excluded from the pass
+  gate and recorded as a design note (Q-010 text: "alert plus internal NMI").
+- Expected: informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate)
+- Test group: gen_sec_alert_inject_dbus_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-SEC-002.cr_side_op.dbus_spurious, CG-SEC-001.cr_alert_inject.major_bus_spurious_dbus_intg,
-  CG-SEC-002.cp_nmi_taken.no,
+  CG-SEC-002.cp_nmi_taken.yes,
   CG-SEC-001.cp_inject_kind.spurious_dbus_intg
 
 ### TP-SEC-011: Unsolicited data response without integrity error is ignored (informational)
@@ -17966,9 +19176,13 @@ Stimulus line override the table for that item.
 - Fire-check: >= 3 unsolicited responses (>= 1 with data_err_i = 1) logged by the dbus monitor
   with zero outstanding requests.
 - Pass criteria: gen_chk_alerts (no alert) ; gen_isa_compare (no trap, no RF write, program
-  unaffected) ; gen_chk_rvfi_proto. Informational per Q-DL-9.
-- Expected: pass (informational, Q-DL-9: excluded from the pass gate)
-- Test group: gen_sec_alert_inject_dbus
+  unaffected: g_check_mem_response masks lsu_load_err / lsu_store_err / rf_we_lsu when no access
+  is outstanding, rtl/ibex_core.sv:1181-1186 (SecureIbex only); the raw lsu_resp_valid still
+  reaches WB as wb_done / perf gating, rtl/ibex_wb_stage.sv:115-116, :208-209, harmless with no
+  load/store in WB, which the precondition guarantees; fact-check N10) ; gen_chk_rvfi_proto, all
+  in record mode (C-15). Informational per Q-DL-9 / S3.
+- Expected: informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate)
+- Test group: gen_sec_alert_inject_dbus_clean_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-SEC-002.cp_dbus_op.spurious, CG-SEC-001.cr_alert_inject.none_spurious_dbus_clean,
   CG-SEC-001.cp_inject_kind.spurious_dbus_clean, CG-SEC-001.cp_alert.none
 
@@ -18067,8 +19281,12 @@ Stimulus line override the table for that item.
 - Knobs: knob:fetch_enable_regime (toggling), knob:instr_mix
 - Fire-check: >= 15 distinct non-On values (IbexMuBiOff and the 14 invalid encodings) observed on fetch_enable_i each held >= 50 cycles while
   the program was mid-run (RVFI active before and after).
-- Pass criteria: gen_chk_fetch_en (no new instr_req_o and no new retirement while the value is not
-  exactly On; resumption on On) ; gen_chk_alerts (no alert on any encoding).
+- Pass criteria: gen_chk_fetch_en (C-4: no new icache line allocation while the value is not
+  exactly On, the remaining beats of already allocated fill buffers being legal and never
+  withdrawn; instr_req_o == 0 whenever core_busy_o == Off; no new retirement beyond the
+  instructions already in ID/WB; resumption on On; identical behaviour for Off and every invalid
+  encoding) ; gen_chk_ibus_proto (req held until gnt, no withdrawn-request tolerance needed) ;
+  gen_chk_alerts (no alert on any encoding, rtl/ibex_core.sv:1350-1353 has no fetch_enable term).
 - Expected: pass
 - Test group: gen_sec_inputs_mubi
 - Bins: CG-SEC-005.cp_fetch_en_val.invalid, CG-SEC-005.cp_fetch_en_val.off,
@@ -18145,12 +19363,21 @@ Stimulus line override the table for that item.
   key is still pending, fence.i in debug mode and with icache disabled.
 - Randomized: key delay class, number of fence.i, poll loop length, cache enable at the time.
 - Knobs: knob:scr_key_delay (immediate / delayed / withheld_then_valid), knob:imem_gnt_delay
-- Fire-check: >= 5 ic_scr_key_req_o pulses observed with ic_scr_key_valid_i dropping and rising
-  again; >= 1 csrr cpuctrlsts record with bit 8 = 0 and >= 1 with bit 8 = 1 in the same run.
-- Pass criteria: gen_chk_icache (handshake rule: req is a single-cycle pulse, valid drops after
-  req, cache not used until valid) ; gen_chk_csr_readback (bit 8 == ic_scr_key_valid_i delayed
-  by one cycle; rvfi_ext_ic_scr_key_valid consistent with the read value) ; gen_isa_compare.
-- Expected: pass
+- Fire-check: >= 5 ic_scr_key_req_o pulses observed with the responder dropping and re-raising
+  ic_scr_key_valid_i; >= 1 fence.i retired while a key request is still pending; >= 1 csrr
+  cpuctrlsts record with bit 8 = 0 and >= 1 with bit 8 = 1 in the same run.
+- Pass criteria: gen_chk_icache (handshake rule per rtl/ibex_icache.sv:1208-1270, fact-check N6:
+  ic_scr_key_req_o is a single-cycle pulse per key request; out of reset it pulses only if
+  ic_scr_key_valid_i is LOW in the OUT_OF_RESET cycle (:1225-1227; a responder holding valid high
+  from reset sees no reset pulse); a fence.i arriving in AWAIT_SCRAMBLE_KEY is ignored (no second
+  pulse, :1229-1240; D13) while a fence.i during INVAL_CACHE or INVAL_IDLE pulses req and returns
+  to AWAIT (:1248-1252, :1260-1262); the FSM does not consult icache_enable or debug mode, so a
+  fence.i with the cache disabled or in debug mode still requests a key; "valid drops after req"
+  is the TB responder's behaviour (knob:scr_key_delay), not a DUT rule; the cache serves no
+  lookup until valid) ; gen_chk_csr_readback (bit 8 == ic_scr_key_valid_i delayed by one cycle,
+  rtl/ibex_cs_registers.sv:1938-1949; rvfi_ext_ic_scr_key_valid consistent with the read value) ;
+  gen_isa_compare.
+- Expected: pass (doc mismatch D13)
 - Test group: gen_sec_scr_key
 - Bins: CG-SEC-005.cr_key.immediate_one, CG-SEC-005.cr_key.delayed_zero,
   CG-SEC-005.cr_key.delayed_one, CG-SEC-005.cr_key.withheld_then_valid_zero,
@@ -18406,17 +19633,22 @@ Stimulus line override the table for that item.
   first 3 cycles after release.
 - Randomized: reset timing (mid-run), boot_addr_i.
 - Knobs: knob:imem_gnt_delay, knob:imem_rvalid_delay (boot fetch timing across the resets)
-- Fire-check: >= 2 reset events (power-on plus mid-run) with samples taken in the reset window.
+- Fire-check: >= 2 reset events (power-on plus mid-run) with samples taken in the reset window and
+  in every cycle up to the first instruction's entry into ID.
 - Pass criteria: gen_chk_crash_dump (last_data_addr, exception_pc, exception_addr == 0 during
-  reset; current_pc/next_pc known (not X) and equal to the boot vector by the BOOT_SET cycle) ;
+  reset; current_pc and next_pc known (not X, ResetAll = 1) and 0 during reset; next_pc (= the
+  icache address register loaded by the RESET-state pc_set, rtl/ibex_icache.sv:1147-1160, :1193)
+  equals the boot vector by the BOOT_SET cycle; current_pc (= pc_id) STAYS 0 through RESET,
+  BOOT_SET and FIRST_FETCH and first changes to the boot vector when the first fetched instruction
+  enters ID (pc_id updates only on if_id_pipe_reg_we, rtl/ibex_if_stage.sv:601, :613; X-23)) ;
   X-checker on all five fields from the first cycle.
 - Expected: pass
 - Test group: gen_rst_boot
 - Bins: CG-SEC-004.cr_field_trigger.exception_pc_reset, CG-SEC-004.cr_field_trigger.exception_addr_reset,
-  CG-SEC-004.cr_field_trigger.last_data_addr_reset, CG-SEC-004.cr_field_trigger.current_pc_boot,
+  CG-SEC-004.cr_field_trigger.last_data_addr_reset, CG-SEC-004.cr_field_trigger.current_pc_first_id,
   CG-SEC-004.cr_field_trigger.next_pc_boot, CG-SEC-004.cp_value_class.zero,
   CG-SEC-004.cp_value_class.boot_page,
-  CG-SEC-004.cp_trigger.reset, CG-SEC-004.cp_trigger.boot
+  CG-SEC-004.cp_trigger.reset, CG-SEC-004.cp_trigger.boot, CG-SEC-004.cp_trigger.first_id
 
 ### TP-SEC-032: crash_dump_o exception fields frozen by exceptions taken in debug mode
 - Features: F-SEC-030
@@ -18574,16 +19806,60 @@ Stimulus line override the table for that item.
 - Knobs: knob:icache_ecc_err_rate, knob:imem_err_rate, knob:dmem_err_rate, knob:irq_regime,
   knob:debug_req_regime, knob:fetch_enable_regime, knob:instr_mix, knob:priv_regime,
   knob:pmp_regime, knob:scr_key_delay
-- Fire-check: the run set contains >= 100 injections of each kind and >= 1M cycles without
-  injection.
-- Pass criteria: gen_chk_alerts ; gen_chk_bus_intg_rsp ; gen_chk_icache ; gen_chk_nmi ;
-  gen_isa_compare.
+- Fire-check: per seed: >= 1 injection of every kind enabled by the seed's knobs
+  (knob:icache_ecc_err_rate / knob:imem_err_rate / knob:dmem_err_rate != none), each answered by
+  its alert within the checker window, and >= 100k injection-free cycles in which all three alert
+  outputs stay 0; closure of the kind x phase bins is left to the CG-SEC-001 manifest (C-16).
+- Pass criteria: gen_chk_alerts ; gen_chk_bus_intg_rsp (per-beat rule C-8: a first-beat corrupted
+  misaligned load is classified and reported as the B16 class, never counted as a checker pass) ;
+  gen_chk_icache ; gen_chk_nmi ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_sec_random
 - Bins: CG-SEC-001.cr_alert_phase.major_bus_fetch_disabled, CG-SEC-001.cr_alert_phase.minor_in_debug,
   CG-SEC-001.cp_inject_kind.icache_ecc, CG-SEC-001.cp_inject_kind.ibus_intg,
   CG-SEC-001.cp_inject_kind.dbus_load_intg, CG-SEC-001.cp_inject_kind.dbus_store_intg,
   CG-SEC-001.cp_phase.fetch_disabled, CG-SEC-001.cp_phase.in_debug, CG-SEC-001.cp_phase.in_wfi
+
+### TP-SEC-040: Misaligned load with an integrity error on the FIRST beat: rd is written (B16)
+- Features: F-SEC-015, F-SEC-003
+- Phase: 1
+- Tier: targeted
+- Preconditions: as TP-SEC-008 (NMI handler at base+0x7C logging mcause/mtval/mepc); M-mode or
+  U-mode with the U data region programmed (C-2 convention); the dmem agent corrupts the check
+  bits of the FIRST rvalid beat of a misaligned load only (word at 4n+2 / 4n+1 / 4n+3, half at
+  4n+3), both beats data_err_i = 0; the second beat is clean.
+- Stimulus: lw / lh / lhu with a word-aligned base and a misaligned offset, rd holding a known
+  value, 5-20 first-beat injections per run; the control class (SECOND beat corrupted) runs in the
+  same program so the two classes are compared side by side (bug log B16 reproducer, rtl-arch
+  BUG-08).
+- Randomized: size, offset, rd, base register, corruption class (single/double/multi-bit),
+  dmem gnt / rvalid delays (so the second half is granted before or after the first response:
+  both orders, which decide the NMI mtval per C-8), privilege, MIE.
+- Weights: W-LS, W-INTG
+- Knobs: knob:dmem_err_rate (rare), knob:dmem_gnt_delay, knob:dmem_rvalid_delay,
+  knob:priv_regime
+- Fire-check: >= 5 first-beat-corrupted misaligned loads, each with (a) an alert_major_bus_o
+  pulse in the first beat's rvalid cycle, (b) the load's RVFI record retired, (c) an internal-NMI
+  handler entry record (rvfi_intr = 1, rvfi_ext_nmi_int = 1) after at most two ordinary
+  instructions (C-7); >= 2 control loads with the second beat corrupted in the same run.
+- Pass criteria: gen_chk_bus_intg_rsp in the documented-intent direction (security.rst:88: "Where
+  load data has bad checkbits the write to the load's destination register will be suppressed"):
+  the load record must show rvfi_ext_rf_wr_suppress = 1 and rvfi_rd_addr = 0 and the RF must keep
+  rd's old value -> FAILS on this RTL, which writes the merged data (rvfi_rd_addr = rd,
+  rf_wr_suppress = 0; first-half status lsu_err_d = data_bus_err_i | pmp_err_q has no integrity
+  term, rtl/ibex_load_store_unit.sv:514; the RF write is gated only by the completing beat's
+  data_intg_err, :697-698; rtl/ibex_core.sv:2384-2385); the alert (:756) and the internal NMI
+  (rtl/ibex_controller.sv:402-438; mtval = lsu_addr_last per C-8 / N7) are checked as pass
+  conditions and are expected to fire; the control (second-beat) loads suppress the write in both
+  directions ; gen_chk_alerts ; gen_chk_nmi. Security-relevant: owner question Q-015; the item
+  records the leak of corrupt merged data into rd as the B16 evidence.
+- Expected: expected-fail (B16)
+- Test group: gen_sec_alert_inject_dbus_first_beat_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-SEC-002.cr_load_half.load_first_no, CG-SEC-002.cp_half.first,
+  CG-SEC-002.cp_nmi_taken.yes, CG-SEC-002.cp_first_beat_rd_written.yes,
+  CG-SEC-002.cr_first_beat_order.second_granted_before_first_resp,
+  CG-SEC-002.cr_first_beat_order.second_granted_after_first_resp,
+  CG-SEC-001.cr_alert_inject.major_bus_dbus_load_intg, CG-RVFI-003.cp_rf_wr_suppress.no
 
 ---------------------------------------------------------------------------------------------------
 ## RST: reset and boot
@@ -18603,10 +19879,15 @@ Stimulus line override the table for that item.
 - Fire-check: >= 1 sample of every output taken while rst_ni = 0 (monitor counts per port) and
   one in the first post-release cycle.
 - Pass criteria: cocotb gen_test_rst_values: instr_req_o = 0, data_req_o = 0, data_we_o/be/addr/
-  wdata/tag = 0, ic_*_req_o = 0, ic_scr_key_req_o = 0, irq_pending_o = 0, double_fault_seen_o =
-  0, alert_* = 0, core_busy_o = IbexMuBiOn, crash_dump_o per TP-SEC-031, rvfi_valid = 0,
-  rvfi_mode = 3, rvfi_ixl = 1, all other rvfi_* = 0; X-checker on every output from time 0
-  (ResetAll = 1) ; gen_chk_ibus_proto / gen_chk_dbus_proto (no request during reset).
+  wdata/tag = 0, ic_tag_req_o / ic_data_req_o = 0 (until INVAL_CACHE starts after the key is
+  seen), ic_scr_key_req_o == ~ic_scr_key_valid_i (combinational from the OUT_OF_RESET state and
+  the pin, rtl/ibex_icache.sv:1221-1227, :1276: it reads 1 while rst_ni = 0 and in the first
+  post-release cycle whenever the TB holds ic_scr_key_valid_i = 0; 0 only when the TB drives the
+  key valid through reset), irq_pending_o = 0, double_fault_seen_o = 0, alert_* = 0 (the bus
+  alert is combinational and stays 0 only because no bad-integrity rvalid is driven, F-SEC-035),
+  core_busy_o = IbexMuBiOn, crash_dump_o per TP-SEC-031, rvfi_valid = 0, rvfi_mode = 3,
+  rvfi_ixl = 1, all other rvfi_* = 0; X-checker on every output from time 0 (ResetAll = 1) ;
+  gen_chk_ibus_proto / gen_chk_dbus_proto (no request during reset).
 - Expected: pass
 - Test group: gen_rst_boot
 - Bins: CG-RST-001.cp_reset_kind.power_on, CG-RST-001.cp_fetch_en_at_release.on,
@@ -18683,9 +19964,11 @@ Stimulus line override the table for that item.
 - Randomized: values (incl. 0 and 0xFFFFFFFF), change timing.
 - Knobs: knob:imem_gnt_delay, knob:instr_mix
 - Fire-check: >= 3 csrr mhartid records with distinct rd values matching the hart_id_i value in the
-  cycle of the read.
-- Pass criteria: gen_chk_csr_readback (predicted from the pin value at the read) ; gen_isa_compare
-  with the shim's mhartid updated from the pin.
+  ID cycle of the read (record cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET = 2 for a single-cycle csrr;
+  mhartid is read combinationally in ID, rtl/ibex_cs_registers.sv:430); the TB holds hart_id_i
+  stable for >= 3 cycles around each read so the sample is unambiguous.
+- Pass criteria: gen_chk_csr_readback (predicted from the pin value in the read's ID cycle) ;
+  gen_isa_compare with the shim's mhartid updated from the pin.
 - Expected: pass
 - Test group: gen_rst_boot
 - Bins: CG-RST-001.cp_hart_id.zero, CG-RST-001.cp_hart_id.max, CG-RST-001.cp_hart_id.random
@@ -18743,11 +20026,14 @@ Stimulus line override the table for that item.
 - Stimulus: reset release; cycle-stamped ibus monitor.
 - Randomized: boot_addr_i, imem grant delay.
 - Knobs: knob:imem_gnt_delay
-- Fire-check: instr_req_o rises exactly in the second cycle after rst_ni release (BOOT_SET) with
-  the boot vector; core_busy_o == On from the first cycle; the first rvfi_valid arrives at (grant
-  + rvalid latency of the boot fetch) + 3 cycles (BOOT_SET, the single FIRST_FETCH cycle, DECODE,
-  then ID/WB) for every knob:imem_gnt_delay value: the DECODE entry does not move with the imem
-  latency.
+- Fire-check: instr_req_o rises exactly in the second cycle after rst_ni release (BOOT_SET; cycle
+  convention: the release cycle itself, controller state RESET, is cycle 1, so BOOT_SET is cycle
+  2; the icache raises the speculative boot request in that same BOOT_SET cycle,
+  rtl/ibex_icache.sv:1030-1031, cache disabled) with the boot vector; core_busy_o == On from the
+  first cycle; with the boot rvalid in cycle R the boot instruction bypasses to valid_o in R
+  (:1062, :796-798), is in ID at R + 1 and its rvfi_valid comes at R + 3 for every
+  knob:imem_gnt_delay value, provided the boot instruction is single-cycle (completes ID in its
+  first cycle): the DECODE entry does not move with the imem latency.
 - Pass criteria: cocotb gen_test_rst_boot (cycle count: FIRST_FETCH lasts one cycle because
   id_in_ready_o = 1 in an empty pipe, rtl/ibex_controller.sv:623-626, :1020, and DECODE from
   cycle 3 waits for the instruction, CTRL-03; Critic C-06 correction of the v1 statement) ;
@@ -18768,12 +20054,18 @@ Stimulus line override the table for that item.
 - Weights: W-RST
 - Knobs: knob:fetch_enable_regime (toggling), knob:instr_mix, knob:imem_gnt_delay,
   knob:dmem_rvalid_delay
-- Fire-check: >= 5 Off windows each with >= 20 cycles; the number of RVFI records retired after
-  the Off edge is recorded (0, 1 or 2 depending on the pipe state) and at least one window with
-  each count occurs across the run set.
-- Pass criteria: gen_chk_fetch_en (no new instr_req_o after the Off edge except one already
-  granted; retirements after the edge <= instructions already in ID/WB (bounded by 2, or by the
-  Zcmp micro-ops of the instruction in ID); none after that; resumption on On) ; gen_isa_compare.
+- Fire-check: per seed: >= 5 Off windows each with >= 20 cycles; for every window the number of
+  RVFI records retired after the Off edge (0, 1 or 2 ordinary instructions, or the micro-ops of
+  the Zcmp sequence in ID) is recorded together with the pre-edge pipe state derived from RVFI and
+  the bus monitors, and >= 1 window per seed has the pipe non-empty at the edge (count >= 1);
+  closure of the count x state bins is left to the CG-RST-003 manifest (C-16).
+- Pass criteria: gen_chk_fetch_en (C-4: no new icache line allocation after the Off edge; the
+  remaining beats of lines whose first beat was requested before the edge are legal and never
+  withdrawn (up to NUM_FB = 4 busy fill buffers, two beats per line with the cache off,
+  rtl/ibex_icache.sv:249, :756, :1030-1031); instr_req_o == 0 whenever core_busy_o == Off;
+  retirements after the edge <= instructions already in ID/WB (bounded by 2, or by the Zcmp
+  micro-ops of the instruction in ID, rtl/ibex_controller.sv:996-999); none after that;
+  resumption on On) ; gen_chk_ibus_proto (req held until gnt) ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_rst_fetch_enable
 - Bins: CG-RST-003.cr_trans_pipe.on2off_empty, CG-RST-003.cr_trans_pipe.on2off_id_busy,
@@ -18819,7 +20111,8 @@ Stimulus line override the table for that item.
 - Knobs: knob:fetch_enable_regime (toggling), knob:imem_outstanding_cap, knob:imem_rvalid_delay
 - Fire-check: >= 5 On edges after which the next record's rvfi_pc_rdata equals the previous
   record's rvfi_pc_wdata and the ibus monitor saw no re-request of a word already granted before
-  the Off edge.
+  the Off edge (the beats requested after the edge complete open fill-buffer lines for words not
+  previously granted, C-4, so "no re-request of a granted word" holds).
 - Pass criteria: gen_chk_rvfi_proto (pc continuity across the pause) ; gen_chk_ibus_proto (no
   duplicate request) ; gen_chk_fetch_en.
 - Expected: pass
@@ -18901,7 +20194,10 @@ Stimulus line override the table for that item.
 - Phase: 1
 - Tier: targeted
 - Preconditions: WFI executed in M-mode (MIE random) and in U-mode (TW = 0); mie configured with
-  random lines.
+  random lines; every WFI of this item is placed after the reset invalidation sweep has ended
+  (>= 258 cycles after the key-valid edge) and not inside a fence.i sweep, because core_busy_o
+  stays On while the icache invalidation is active (rtl/ibex_icache.sv:1304 inval_active;
+  gen_tb_architecture.md 8.2 item 1) and would hide the Off dip (that case is TP-RST-016).
 - Stimulus: WFI with no pending source, then after 50..5000 cycles one of: enabled irq (mie bit
   set, MIE 0 or 1), irq_nm_i, debug_req_i; also WFI with a source already pending, WFI in debug
   mode (debug ROM) and WFI with dcsr.step set (immediate wake).
@@ -18961,21 +20257,38 @@ Stimulus line override the table for that item.
 - Phase: 1
 - Tier: targeted
 - Preconditions: program running with deep imem prefetch and dmem delays; the memory models
-  follow a recorded policy for responses crossing a reset (drain with valid or corrupted
-  integrity, or drop).
+  follow a recorded policy for responses to pre-reset requests: DRAIN them while rst_ni = 0 (with
+  valid or corrupted check bits) or DROP them; never return them after release. Reason
+  (fact-check TP-RST-017, WRONG-RTL-FACT): the DUT cannot tell a late response from the answer to
+  its new request: any instr_rvalid_i goes to the oldest expecting fill buffer and the boot fetch
+  buffer is allocated in BOOT_SET (rtl/ibex_icache.sv:851-852, :700), so a late beat from cycle 1
+  after release on becomes the boot instruction (bad integrity -> alert AND instruction access
+  fault at the boot vector); a data_rvalid_i while a new load/store is outstanding is that
+  access's response (rtl/ibex_load_store_unit.sv:694-698; rtl/ibex_wb_stage.sv:220), and a bad-
+  integrity beat with no access outstanding still raises the alert and the internal NMI
+  (TP-SEC-010 class). Only an I-side beat in cycle 0 after release is harmless. Post-release late
+  responses are therefore the out-of-spec unsolicited-response stimulus of bug-log S3, owned by
+  TP-IMEM-040 (I-side) and TP-SEC-010 / TP-SEC-011 (D-side), never driven here.
 - Stimulus: rst_ni asserted for 1..50 cycles with 0..8 fetch beats and 0..2 data responses
-  outstanding; after release the models return 0..N late responses.
-- Randomized: reset timing/length, outstanding counts, late-response policy, boot_addr_i (may
-  change across the reset).
+  outstanding; while rst_ni = 0 the models drain 0..N of the outstanding responses (valid or
+  corrupted check bits) and drop the rest.
+- Randomized: reset timing/length, outstanding counts, drain-vs-drop policy and the integrity of
+  the drained beats, boot_addr_i (may change across the reset).
 - Weights: W-RST, W-BOOT
 - Knobs: knob:imem_rvalid_delay (long), knob:imem_outstanding_cap, knob:dmem_rvalid_delay (long),
   knob:dmem_err_rate
 - Fire-check: >= 5 resets with >= 1 fetch beat outstanding and >= 3 with a data response
-  outstanding (monitors), >= 2 with a late response returned after release.
+  outstanding (monitors), >= 2 with >= 1 response drained inside the reset window and >= 2 with
+  every outstanding response dropped; no beat is returned after release for a pre-reset request
+  (monitor assertion).
 - Pass criteria: cocotb gen_test_rst_values (all outputs at reset values within the assert cycle
-  and until the boot request) ; gen_chk_alerts (bad-integrity late response -> alert_major_bus_o
-  only; valid late response -> nothing) ; gen_isa_compare restarted at the boot vector (no RF
-  write, no trap from the late response) ; gen_chk_rvfi_proto (rvfi_order restarts at 1).
+  and until the boot request; the drained beats reach only consumers held in reset) ;
+  gen_chk_alerts (a drained beat with bad check bits pulses alert_major_bus_o while rst_ni = 0,
+  combinational, F-SEC-035 / TP-SEC-036 rule; a valid drained beat -> nothing; alert_minor_o and
+  alert_major_internal_o stay 0) ; gen_isa_compare restarted at the boot vector (no RF write, no
+  trap, no NMI attributable to a drained response) ; gen_chk_rvfi_proto (rvfi_order restarts at
+  1). The "alert_* = 0 in reset" check of TP-RST-001 / TP-RVFI-036 applies only to runs whose
+  drain policy keeps the check bits valid; runs that drain corrupted beats are TP-SEC-036 hosts.
 - Expected: pass
 - Test group: gen_rst_midrun_reset
 - Bins: CG-RST-002.cr_inflight_resp.fetch_outstanding_good_intg, CG-RST-002.cr_inflight_resp.load_outstanding_good_intg,
@@ -19104,13 +20417,22 @@ Stimulus line override the table for that item.
 - Tier: targeted
 - Preconditions: none.
 - Stimulus: back-to-back dependent pairs (write rd, then read it as rs1/rs2 in the next
-  instruction) for ALU results and for load results with dmem delay chosen so the load's WB
-  coincides with the consumer's ID; registers from all banks.
+  instruction) for ALU, CSR, mul and div producers (their result is forwarded from the WB flop,
+  rf_wdata_fwd_wb_o = rf_wdata_wb_q, rtl/ibex_wb_stage.sv:212-215) and for load producers with
+  the dmem delay chosen so the load's response returns while the consumer waits in ID; registers
+  from all banks. RTL fact (fact-check TP-RST-023, TIMING): load results are NEVER forwarded
+  ("load data returns too late"): the dependent consumer stalls on stall_ld_hz while the load is
+  in WB (rtl/ibex_id_stage.sv:1114-1120) and reads the RF one cycle after the load's WB, so a
+  load -> consumer record gap is 2, never 1; only ALU / CSR / mul / div producers give gap-1
+  forwarding pairs.
 - Randomized: producer kind (ALU/load/mul/div/csr), consumer kind, register, delay.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_gnt_delay (same_cycle)
 - Fire-check: >= 200 consecutive record pairs where record n+1 reads (rs1 or rs2) the rd of
-  record n and the RVFI gap is 1 (same-cycle forwarding case), across x1..x15, x16, x17..x31.
-- Pass criteria: gen_isa_compare (rs rdata == previous rd wdata) ; gen_chk_rvfi_proto.
+  record n and the RVFI gap is 1 (same-cycle forwarding case, non-load producers), across x1..x15,
+  x16, x17..x31; >= 50 load -> dependent-consumer pairs, every one with gap exactly 2 (the
+  stall_ld_hz cycle) and none with gap 1.
+- Pass criteria: gen_isa_compare (rs rdata == previous rd wdata for every pair) ;
+  gen_chk_rvfi_proto ; gen_test_rst_regfile (cocotb): no load -> consumer pair with gap 1.
 - Expected: pass
 - Test group: gen_rst_regfile
 - Bins: CG-RST-004.cr_fwd_bank.yes_x1_15, CG-RST-004.cr_fwd_bank.yes_x16, CG-RST-004.cr_fwd_bank.yes_x17_31,
@@ -19216,8 +20538,11 @@ Stimulus line override the table for that item.
 - Weights: all tables
 - Knobs: knob:fetch_enable_regime, knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime,
   knob:instr_mix, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:imem_outstanding_cap
-- Fire-check: >= 50 mid-run resets in the run set with every cp_inflight bin of CG-RST-002 hit.
-- Pass criteria: cocotb gen_test_rst_values ; gen_chk_fetch_en ; gen_isa_compare (restart) ;
+- Fire-check: per seed: >= 1 mid-run reset with the pre-reset pipe state (the CG-RST-002
+  cp_inflight class derived from RVFI and the bus monitors at the reset edge) recorded, followed
+  by a boot at the re-randomised boot_addr_i and a first record with rvfi_order = 1; closure of
+  the cp_inflight bins is left to the CG-RST-002 manifest (C-16).
+- Pass criteria: cocotb gen_test_rst_values ; gen_chk_fetch_en (C-4) ; gen_isa_compare (restart) ;
   gen_chk_rvfi_proto ; gen_chk_alerts.
 - Expected: pass
 - Test group: gen_rst_random
@@ -19351,11 +20676,17 @@ Stimulus line override the table for that item.
 - Fire-check: >= 20 records with rvfi_intr = 1 following irq entries, >= 3 following NMIs, and >=
   20 exception-handler first records, >= 5 debug-entry first records, each with rvfi_intr = 0.
 - Pass criteria: gen_chk_rvfi_proto in the RTL-defined direction: rvfi_intr = 1 iff the record is
-  the first after an interrupt/NMI entry (rvfi_ext_irq_valid seen since the previous record);
-  exception handler / debug entry records have rvfi_intr = 0 although pc_rdata != previous
-  pc_wdata. Deviation from rvfi.rst ("first instruction of a trap handler, i.e. pc discontinuity")
-  is recorded as RTL-defined per the feature list; gen_isa_compare consumes rvfi_intr with the
-  Ibex meaning.
+  the first to complete ID after an interrupt/NMI vector fetch (rvfi_set_trap_pc_q,
+  rtl/ibex_core.sv:2403-2413), identified from the entry itself (driver timestamp, vector fetch,
+  the rvfi_ext_irq_valid rising edge when the marker exists, C-13); exception handler / debug
+  entry records have rvfi_intr = 0 although pc_rdata != previous pc_wdata. Corner (fact-check
+  TP-RVFI-006 note): a debug_req_i that lands in the 1-2 cycles between IRQ_TAKEN and the
+  handler's first ID cycle enters DBG_TAKEN_IF on the still-empty pipe, so the debug-ROM's first
+  record carries rvfi_intr = 1 (with mepc = the interrupt vector); the rule therefore reads
+  "rvfi_intr = 1 iff an interrupt/NMI vector was set since the previous record", not "debug-entry
+  first records have rvfi_intr = 0". Deviation from rvfi.rst ("first instruction of a trap
+  handler, i.e. pc discontinuity") is recorded as RTL-defined per the feature list;
+  gen_isa_compare consumes rvfi_intr with the Ibex meaning.
 - Expected: pass
 - Test group: gen_rvfi_ext
 - Bins: CG-RVFI-001.cr_intr_cont.yes_discontinuous_intr, CG-RVFI-001.cr_intr_cont.no_discontinuous_after_trap,
@@ -19368,13 +20699,21 @@ Stimulus line override the table for that item.
 - Phase: 1
 - Tier: smoke
 - Preconditions: U-mode reachable via mret with MPP = U; PMP permits U code.
-- Stimulus: alternating M/U windows with traps back to M.
-- Randomized: window lengths, trap causes.
-- Knobs: knob:priv_regime (alternating), knob:pmp_regime (sparse)
+- Stimulus: alternating M/U windows with traps back to M, interrupts taken in U-mode, debug
+  entries from U-mode and dret into U-mode (dcsr.prv = U written in the debug ROM).
+- Randomized: window lengths, trap causes, irq / debug timing.
+- Knobs: knob:priv_regime (alternating), knob:pmp_regime (sparse), knob:irq_regime (sparse),
+  knob:debug_req_regime (sparse)
 - Fire-check: >= 1000 records with rvfi_mode = 3 and >= 1000 with rvfi_mode = 0; rvfi_ixl == 1 on
-  every record.
+  every record; >= 3 mode changes of each kind: trap record -> handler, mret -> U, U record ->
+  interrupt handler record (rvfi_intr = 1, no trap record), U record -> first debug-ROM record
+  (rvfi_ext_debug_mode = 1, no trap record), dret record -> U record.
 - Pass criteria: gen_isa_compare (mode per record) ; gen_chk_rvfi_proto (mode in {0, 3}; ixl ==
-  1; mode changes only across trap/mret records).
+  1; rvfi_mode may change only when the previous record is a trap / mret / dret record or the
+  current record is the first after an interrupt or debug entry (fact-check TP-RVFI-007:
+  interrupt entry and debug entry from U set priv <- M without a trap record,
+  rtl/ibex_cs_registers.sv:908; dret restores priv <- dcsr.prv, :950; rvfi_mode is sampled at
+  ID exit, rtl/ibex_core.sv:2078)).
 - Expected: pass
 - Test group: gen_rvfi_proto_basic
 - Bins: CG-RVFI-001.cp_mode.m, CG-RVFI-001.cp_mode.u, CG-RVFI-001.cr_mode_trap.u_no,
@@ -19408,11 +20747,19 @@ Stimulus line override the table for that item.
   instructions.
 - Randomized: opcode, registers (rs3 from all banks), values.
 - Knobs: knob:instr_mix (bitmanip_heavy)
-- Fire-check: >= 100 records with rvfi_rs3_addr != 0 (ternary ops) and >= 1000 single-cycle
-  records with rs3_addr == 0.
+- Fire-check: >= 100 ternary records whose rvfi_rs3_addr equals the encoded rs3 field
+  (instr[31:27]) with rs3_rdata = that register's value; >= 100 non-ternary multi-cycle records
+  (mulh-class, div-class, misaligned load/store, DIT branch) whose rvfi_rs3_addr equals the rs1
+  field; >= 1000 single-cycle records with rs3_addr == 0.
 - Pass criteria: gen_chk_rvfi_proto (rs3_rdata == 0 when rs3_addr == 0; rs3_addr == 0 on
-  single-cycle instructions) ; gen_isa_compare with rs3 treated as an Ibex-specific field
-  (compared against the model's register value for the decoded rs3 of ternary ops).
+  single-cycle instructions; RTL rule (fact-check TP-RVFI-009): rvfi_rs3_addr / rs3_rdata are
+  captured from RF read port A in every non-first ID cycle (rtl/ibex_core.sv:2316-2317) and the
+  decoder drives the rs3 field on port A only for ternary ops (use_rs3, rtl/ibex_decoder.sv:203),
+  so on ternary records rs3 == instr[31:27] and its value, while on other multi-cycle records
+  rs3_addr == the rs1 field and rs3_rdata == the rs1 value; "rs3_addr != 0" alone does not mean
+  ternary) ; gen_isa_compare with rs3 treated as an Ibex-specific field (compared against the
+  model's register value for the decoded rs3 of ternary ops, against rs1 for the other
+  multi-cycle records).
 - Expected: pass
 - Test group: gen_rvfi_proto_basic
 - Bins: CG-RVFI-001.cp_rs3.zero, CG-RVFI-001.cp_rs3.nonzero
@@ -19457,19 +20804,29 @@ Stimulus line override the table for that item.
   CG-RVFI-001.cp_pc_delta.jump_back, CG-RVFI-001.cp_pc_continuity.continuous,
   CG-RVFI-001.cr_intr_cont.no_continuous
 
-### TP-RVFI-012: pc_wdata on FLUSH redirects (trap, mret, dret, fence.i): continuity checked, value not
+### TP-RVFI-012: pc_wdata on FLUSH redirects (trap, mret, dret, fence.i): next sequential address; the target is the next record's pc_rdata
 - Features: F-RVFI-010
 - Phase: 1
 - Tier: targeted
 - Preconditions: none.
-- Stimulus: traps of every cause, mret from M to M and to U, dret from the debug ROM, fence.i.
+- Stimulus: traps of every cause (ID-stage and WB-stage), mret from M to M and to U, dret from the
+  debug ROM, fence.i.
 - Randomized: causes, targets.
 - Weights: W-CAUSE
 - Knobs: knob:pmp_regime, knob:priv_regime, knob:debug_req_regime (sparse)
 - Fire-check: >= 20 records each of mret, dret, fence.i and trap, each followed by the next record.
-- Pass criteria: gen_chk_rvfi_proto (pc_rdata of the following record equals the model's target:
-  mepc / dpc / pc+4 / vector; pc_wdata of the redirect record is logged but NOT compared per
-  Q-DL default 6) ; gen_isa_compare with pc_wdata masked on these records.
+- Pass criteria: gen_chk_rvfi_proto (C-1 / X-1: rvfi_pc_wdata of a trap, mret or dret record is the
+  NEXT SEQUENTIAL fetch address, never the redirect target: rtl/ibex_core.sv:2084 captures
+  `pc_set ? branch_target_ex : pc_if` in the ID-exit cycle, and for these records pc_set (PC_EXC /
+  PC_ERET / PC_DRET) is issued one cycle later in FLUSH (rtl/ibex_controller.sv:826-833,
+  :953-965; ID-stage trap records are captured through rvfi_flush_next in the DECODE cycle,
+  rtl/ibex_core.sv:1851-1853); so pc_wdata == the fetch address following pc_rdata in the
+  undisturbed fetch stream (pc_rdata + insn length; for a fence.i, a jump to pc + 4
+  (rtl/ibex_decoder.sv:711-720), the target and the next sequential address coincide); the
+  redirect target is observed as the following record's pc_rdata == the model's mepc / dpc /
+  vector (or the DmExceptionAddr / vector fetch on the ibus with the icache off, C-14)) ;
+  gen_isa_compare with pc_wdata compared to pc_rdata + length on these records (Q-DL default 6
+  closed by X-1; the redirect-record pc_wdata is no longer masked).
 - Expected: pass
 - Test group: gen_rvfi_proto_basic
 - Bins: CG-RVFI-001.cp_pc_delta.redirect_other, CG-RVFI-001.cp_pc_continuity.discontinuous_after_flush_redirect,
@@ -19490,7 +20847,7 @@ Stimulus line override the table for that item.
   next instruction, i.e. bit 0 clear) -> fails on this RTL (bit 0 set) ; gen_isa_compare on
   pc_rdata continuity passes.
 - Expected: expected-fail (B13)
-- Test group: gen_rvfi_proto_basic
+- Test group: gen_rvfi_proto_basic_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-RVFI-001.cp_pc_delta.jump_fwd, CG-RVFI-001.cp_pc_delta.jump_back
 
 ### TP-RVFI-014: mem_addr / rmask / wmask per size and byte offset, single record for misaligned
@@ -19504,9 +20861,19 @@ Stimulus line override the table for that item.
 - Knobs: knob:instr_mix (ls_heavy), knob:dmem_gnt_delay, knob:dmem_rvalid_delay
 - Fire-check: all 24 (dir x size x offset) combinations observed >= 5 times; the dbus monitor
   shows two transactions for each misaligned record.
-- Pass criteria: gen_chk_rvfi_proto (rmask/wmask == {byte 0001, half 0011, word 1111} at bit 0
-  regardless of offset; exactly one of rmask/wmask nonzero; mem_addr == the effective byte
-  address; one record per misaligned access) ; gen_isa_compare (address + size + data rule).
+- Pass criteria: gen_chk_rvfi_proto (on records decoded as loads or stores: rmask/wmask == {byte
+  0001, half 0011, word 1111} at bit 0 regardless of offset; exactly one of rmask/wmask nonzero;
+  mem_addr == the effective byte address; one record per misaligned access) ; gen_isa_compare
+  (address + size + data rule). Checker caveat (C-12, B18, fact-check TP-RVFI-014 note): the
+  mask and address rules are applied ONLY after classifying the record by its decoded opcode.
+  Every non-store record that is not a load (ALU, CSR, branch, jump, ID-stage trap) carries
+  rvfi_mem_rmask = 4'b1111 (rvfi_mem_mask_int defaults from lsu_type 2'b00,
+  rtl/ibex_core.sv:2085, :2253-2260; zeroed only when data_we_o = 1), rvfi_mem_addr = the ALU
+  adder result and rvfi_mem_rdata = the previous load's data; rvfi.rst:135-136, 143-144 wants
+  rmask nonzero only for memory operations. This RVFI-only deviation is bug-log B18 (rtl-arch
+  BUG-10, observed in TB Infra's first lock-step run); it has no architectural effect and no
+  expected-fail item: the RVFI protocol item records it and the comparator classifies records
+  by opcode.
 - Expected: pass
 - Test group: gen_rvfi_mem
 - Bins: CG-RVFI-002.cr_dir_size_off.load_byte_o0, CG-RVFI-002.cr_dir_size_off.load_byte_o1,
@@ -19564,9 +20931,13 @@ Stimulus line override the table for that item.
 - Knobs: knob:pmp_regime (dense), knob:dmem_err_rate (rare), knob:priv_regime
 - Fire-check: >= 20 trap records from loads and >= 20 from stores, from both PMP and bus-error
   sources.
-- Pass criteria: gen_chk_rvfi_proto (rvfi_trap = 1; rmask = wmask = 0; rd_addr = rd_wdata = 0;
-  mem_addr == effective address) ; gen_isa_compare (trap cause 5/7; mtval == address; no RF
-  write) ; gen_chk_pmp.
+- Pass criteria: gen_chk_rvfi_proto (rvfi_trap = 1; rmask = wmask = 0 (WB-trap records are the
+  ones whose masks the RTL zeroes, rtl/ibex_core.sv:2156-2157, C-12); rd_addr = rd_wdata = 0;
+  mem_addr == effective address) ; gen_isa_compare (trap cause 5/7; mtval == lsu_addr_last
+  (rtl/ibex_controller.sv:910-911, :924-925): the effective address for an aligned access, the
+  word-aligned SECOND address when the second half of a misaligned access faulted, and the
+  MEM-13 / Q-008 value for a first-half PMP fault (PMP area); mtval is NOT rvfi_mem_addr for
+  misaligned accesses, fact-check TP-RVFI-016 note; no RF write) ; gen_chk_pmp.
 - Expected: pass
 - Test group: gen_rvfi_trap
 - Bins: CG-RVFI-002.cr_trap_half.load_yes_none, CG-RVFI-002.cr_trap_half.store_yes_none,
@@ -19586,12 +20957,17 @@ Stimulus line override the table for that item.
 - Stimulus: misaligned loads/stores straddling the boundary or with the second response errored.
 - Randomized: direction, size (half/word), boundary placement, error source.
 - Knobs: knob:pmp_regime (sparse), knob:dmem_err_rate (rare)
-- Fire-check: >= 10 misaligned records with rvfi_trap = 1 where the dbus monitor shows the first
-  transaction completed without error and the second faulted (and for stores the first-half write
-  reached memory).
+- Fire-check: >= 10 misaligned records with rvfi_trap = 1 whose first transaction completed
+  without error on the dbus (for stores the first-half write reached memory) and whose second
+  half faulted: for the data_err_i source the dbus monitor shows the errored second transaction;
+  for the PMP source the second half NEVER reaches the bus (data_req_o = data_req_out &
+  ~pmp_req_err[PMP_D], rtl/ibex_core.sv:1063; fact-check TP-RVFI-017, UNOBSERVABLE), so the
+  PMP case is identified by "first half completed, no second request issued, rvfi_trap = 1 with
+  mcause 5/7 and the TB PMP model denying the second-half address". >= 5 of each source.
 - Pass criteria: gen_chk_rvfi_proto (single record; mem_addr == first (misaligned) address; masks
   0) ; gen_isa_compare with the Q-DL-7 policy (memory compared after the handler; the partial
-  first-half write is an accepted RTL detail) ; gen_chk_dbus_proto.
+  first-half write is an accepted RTL detail; mtval = the word-aligned second-half address per
+  TP-RVFI-016) ; gen_chk_dbus_proto (no second request for the PMP source) ; gen_chk_pmp.
 - Expected: pass
 - Test group: gen_rvfi_trap
 - Bins: CG-RVFI-002.cr_trap_half.load_yes_second, CG-RVFI-002.cr_trap_half.store_yes_second,
@@ -19628,28 +21004,47 @@ Stimulus line override the table for that item.
   CG-RVFI-004.cr_wb_coincident.id_no_no, CG-RVFI-004.cp_coincident_wb_err.yes,
   CG-RVFI-004.cp_coincident_wb_err.no, CG-RVFI-004.cp_missing_record.no
 
-### TP-RVFI-019: rvfi_ext_irq_valid pulses with the captured mip/nmi/nmi_int/debug_req state
+### TP-RVFI-019: rvfi_ext_irq_valid is a level announcing the interrupt entry with the captured mip/nmi/nmi_int/debug_req state
 - Features: F-RVFI-016
 - Phase: 1
 - Tier: targeted
 - Preconditions: interrupts enabled; NMI handler; integrity injection for internal NMI.
-- Stimulus: interrupts arriving with the pipeline idle (during WFI, after a fence) and busy
-  (mid straight-line code); external and internal NMIs; debug requests.
-- Randomized: timing, lines, source.
+- Stimulus: interrupts arriving with the pipeline idle (during WFI, after a fence) and busy (mid
+  straight-line code, and with a load outstanding in WB so that ID empties before WB drains);
+  external and internal NMIs; debug requests (which never raise the marker: rvfi_irq_valid needs
+  ~new_debug_req, rtl/ibex_core.sv:1965).
+- Randomized: timing, lines, source, dmem latency of the load preceding the interrupt.
 - Knobs: knob:irq_regime (sparse), knob:irq_line_mix (with_nmi), knob:dmem_err_rate (rare),
-  knob:debug_req_regime (sparse)
-- Fire-check: >= 20 rvfi_ext_irq_valid pulses (>= 5 with no rvfi_valid in the same cycle, >= 5
-  coinciding), with rvfi_ext_pre_mip nonzero for irq cases, rvfi_ext_nmi for external NMIs,
-  rvfi_ext_nmi_int for internal ones.
-- Pass criteria: gen_chk_irq (every interrupt entry is announced by exactly one irq_valid pulse
-  before or with the handler's first record; the captured pre_mip contains the taken line) ;
-  gen_chk_nmi ; gen_isa_compare (the shim takes the interrupt at the announced boundary).
+  knob:debug_req_regime (sparse), knob:dmem_rvalid_delay
+- Fire-check: >= 20 rising edges of rvfi_ext_irq_valid, each with rvfi_valid low on every cycle of
+  the marker's high window and followed by a handler first record (rvfi_intr = 1) one cycle after
+  the marker falls; rvfi_ext_pre_mip nonzero (containing the taken line) for irq cases,
+  rvfi_ext_nmi for external NMIs, rvfi_ext_nmi_int for internal ones; >= 3 high windows of length
+  1 (same-cycle gnt, next-cycle rvalid on the handler fetch) and >= 3 longer than 1; >= 3
+  interrupt entries WITHOUT a marker (ID emptied before WB drained: the irq arrived while a load
+  was outstanding in WB, so captured_valid was already set when ready_wb came, :1965) whose
+  handler first record carries the captured pre_mip / nmi state; per seed the minimum observed
+  distance from the last pre-interrupt record's rvfi_valid to the marker's rising edge equals the
+  bring-up-pinned constant GEN_RVFI_IRQ_MARKER_OFFSET (predicted 3: record at decision + 1, marker
+  at decision + 4; C-13, C-16).
+- Pass criteria: gen_chk_irq (C-13 / X-16: rvfi_ext_irq_valid is a LEVEL that rises at decision +
+  4 (rvfi_irq_valid flop, stage [0], [1], [2], rtl/ibex_core.sv:1965-1971, :1992-2002,
+  :2134-2141, :2192-2199), stays high until about two cycles after the handler's first
+  instruction enters ID (stage [0] is rewritten only when a new instruction enters ID) and never
+  coincides with rvfi_valid; every interrupt entry is announced by AT MOST ONE marker rising edge,
+  and an entry without a marker is legal only when ID emptied before WB drained; the captured
+  pre_mip contains the taken line either on the marker or on the handler's first record) ;
+  gen_chk_nmi ; gen_isa_compare (the shim takes the interrupt at the announced boundary, or at the
+  handler's first record when no marker was generated).
 - Expected: pass
 - Test group: gen_rvfi_ext
-- Bins: CG-RVFI-003.cr_irq_collision.yes_no, CG-RVFI-003.cr_irq_collision.yes_yes,
+- Bins: CG-RVFI-003.cr_irq_collision.yes_no,
   CG-RVFI-003.cr_irq_collision.no_no, CG-RVFI-003.cr_irq_kind.yes_no_no, CG-RVFI-003.cr_irq_kind.yes_yes_no,
   CG-RVFI-003.cr_irq_kind.yes_no_yes,
-  CG-RVFI-003.cp_irq_valid.yes, CG-RVFI-003.cp_irq_valid.no
+  CG-RVFI-003.cp_irq_valid.yes, CG-RVFI-003.cp_irq_valid.no, CG-RVFI-003.cp_marker_len.one,
+  CG-RVFI-003.cp_marker_len.two_plus, CG-RVFI-003.cp_entry_marker.yes,
+  CG-RVFI-003.cp_entry_marker.no, CG-RVFI-003.cp_marker_offset.min,
+  CG-RVFI-003.cp_marker_offset.more
 
 ### TP-RVFI-020: rvfi_ext_pre_mip / post_mip bit layout and sampling points
 - Features: F-RVFI-017
@@ -19666,15 +21061,20 @@ Stimulus line override the table for that item.
 - Fire-check: records with exactly one bit set in pre_mip for every one of the 18 positions (3, 7,
   11, 16..30) and >= 20 records with post_mip != pre_mip.
 - Pass criteria: gen_chk_irq (pre_mip == pins when the instruction entered ID, post_mip == pins
-  when it left ID, both with the bit map {3, 7, 11, 30:16}; all other bits 0) ; gen_isa_compare.
+  when it left ID, both with the bit map {3, 7, 11, 30:16}; all other bits 0; exemption
+  (fact-check TP-RVFI-020, TIMING): on the handler's first record after an interrupt or NMI entry
+  rvfi_ext_pre_mip is captured_mip from the trap-decision cycle (that instruction enters ID with
+  instr_valid_id = 0 and captured_valid = 1, rtl/ibex_core.sv:1991-1994), so that record is
+  compared against the taken line as in TP-RVFI-019, not against the pins at its ID entry) ;
+  gen_isa_compare.
 - Expected: pass
 - Test group: gen_rvfi_ext
 - Bins: CG-RVFI-003.cp_pre_mip_line.sw, CG-RVFI-003.cp_pre_mip_line.timer, CG-RVFI-003.cp_pre_mip_line.ext,
-  CG-RVFI-003.cp_pre_mip_line.fast_0, CG-RVFI-003.cp_pre_mip_line.fast_1, CG-RVFI-003.cp_pre_mip_line.fast_2,
-  CG-RVFI-003.cp_pre_mip_line.fast_3, CG-RVFI-003.cp_pre_mip_line.fast_4, CG-RVFI-003.cp_pre_mip_line.fast_5,
-  CG-RVFI-003.cp_pre_mip_line.fast_6, CG-RVFI-003.cp_pre_mip_line.fast_7, CG-RVFI-003.cp_pre_mip_line.fast_8,
-  CG-RVFI-003.cp_pre_mip_line.fast_9, CG-RVFI-003.cp_pre_mip_line.fast_10, CG-RVFI-003.cp_pre_mip_line.fast_11,
-  CG-RVFI-003.cp_pre_mip_line.fast_12, CG-RVFI-003.cp_pre_mip_line.fast_13, CG-RVFI-003.cp_pre_mip_line.fast_14,
+  CG-RVFI-003.cp_pre_mip_line.fast[0], CG-RVFI-003.cp_pre_mip_line.fast[1], CG-RVFI-003.cp_pre_mip_line.fast[2],
+  CG-RVFI-003.cp_pre_mip_line.fast[3], CG-RVFI-003.cp_pre_mip_line.fast[4], CG-RVFI-003.cp_pre_mip_line.fast[5],
+  CG-RVFI-003.cp_pre_mip_line.fast[6], CG-RVFI-003.cp_pre_mip_line.fast[7], CG-RVFI-003.cp_pre_mip_line.fast[8],
+  CG-RVFI-003.cp_pre_mip_line.fast[9], CG-RVFI-003.cp_pre_mip_line.fast[10], CG-RVFI-003.cp_pre_mip_line.fast[11],
+  CG-RVFI-003.cp_pre_mip_line.fast[12], CG-RVFI-003.cp_pre_mip_line.fast[13], CG-RVFI-003.cp_pre_mip_line.fast[14],
   CG-RVFI-003.cp_pre_mip_line.multi, CG-RVFI-003.cp_pre_mip_line.none, CG-RVFI-003.cp_post_mip_diff.changed,
   CG-RVFI-003.cp_post_mip_diff.same
 
@@ -19683,31 +21083,49 @@ Stimulus line override the table for that item.
 - Phase: 1
 - Tier: targeted
 - Preconditions: debug ROM with dret; debug_req_i level policy.
-- Stimulus: debug requests during straight-line code, during handlers, while in debug mode
-  (ignored), with dcsr.step.
-- Randomized: timing, step.
-- Knobs: knob:debug_req_regime (sparse)
-- Fire-check: >= 10 records with debug_req = 1 and debug_mode = 0 (request seen, entry pending),
-  >= 100 with debug_mode = 1 (debug ROM), >= 5 with both.
-- Pass criteria: gen_chk_debug (debug_req on a record == debug_req_i when it entered ID or the
-  captured value; debug_mode == the core's debug state when it left ID: the first debug-ROM record
-  has debug_mode = 1, the first post-dret record 0) ; gen_isa_compare.
+- Stimulus: debug requests during straight-line code, during handlers, while a load is
+  outstanding in WB (request arriving on an empty ID), while in debug mode (ignored), with
+  dcsr.step; the pin is released at a random point inside the debug ROM (level policy until the
+  hart halts, then random release).
+- Randomized: timing, step, release point.
+- Knobs: knob:debug_req_regime (sparse), knob:dmem_rvalid_delay
+- Fire-check: >= 10 debug entries via debug_req_i, each with: the record in ID at the pin's rise
+  carrying rvfi_ext_debug_req = 0 and completing (its dpc-relation: dpc read in the debug ROM ==
+  the pc_rdata of the first post-dret record, C-3), no record between it and the first debug-ROM
+  record, and the first debug-ROM record carrying debug_req = 1 and debug_mode = 1; >= 100 records
+  with debug_mode = 1; >= 5 debug-ROM records with the pin already released (debug_req = 0,
+  debug_mode = 1); >= 3 entries whose request arrived on an empty ID (captured_debug_req path).
+- Pass criteria: gen_chk_debug (C-3 / X-6: rvfi_ext_debug_req is sampled at the instruction's
+  IF->ID transfer with the live pin, or from captured_debug_req when the request arrived on an
+  empty ID (rtl/ibex_core.sv:1949-1957, :1996-2001); a high debug_req_i lets no new instruction
+  transfer into ID outside debug mode because halt_if is combinational from the request
+  (rtl/ibex_controller.sv:700-708, :1020), so a record with debug_req = 1 and debug_mode = 0
+  never exists: the instruction in ID at the rise reports 0 and completes, an instruction whose
+  transfer would follow the rise never enters (entry with dpc = its pc, no record), and the first
+  debug-ROM record reports 1; debug_mode == the core's debug state when the instruction left ID:
+  the first debug-ROM record has debug_mode = 1, the first post-dret record 0) ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_rvfi_ext
-- Bins: CG-RVFI-003.cr_dbg.yes_no, CG-RVFI-003.cr_dbg.yes_yes, CG-RVFI-003.cr_dbg.no_yes, CG-RVFI-003.cr_dbg.no_no,
+- Bins: CG-RVFI-003.cr_dbg.yes_yes, CG-RVFI-003.cr_dbg.no_yes, CG-RVFI-003.cr_dbg.no_no,
   CG-RVFI-003.cp_debug_req.yes, CG-RVFI-003.cp_debug_req.no
 
 ### TP-RVFI-022: rvfi_ext_mcycle and rvfi_ext_mhpmcounters[0..MHPMCounterNum-1]
 - Features: F-RVFI-019
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcountinhibit random; mhpmevent3..12 programmed to distinct events.
-- Stimulus: mixed program with csrr mcycle/mhpmcounterN interleaved so RVFI ext values can be
-  cross-checked against CSR reads.
-- Randomized: event selection, inhibit bits, program.
+- Preconditions: mcountinhibit random per window (bit 0 = CY toggled between windows); the
+  mhpmcounter3..12 event map is hardwired (X-4: 3 LSU busy, 4 ifetch wait, 5 loads, 6 stores,
+  7 jumps, 8 branches, 9 taken branches, 10 compressed retired, 11 mul wait, 12 div wait,
+  rtl/ibex_cs_registers.sv:1574-1599; mhpmeventN reads 1 << (N - 3), D20; nothing is programmed).
+- Stimulus: mixed program (loads, stores, jumps, branches, compressed, mul, div) with csrr
+  mcycle/mhpmcounterN interleaved so RVFI ext values can be cross-checked against CSR reads.
+- Randomized: inhibit bits per window, program.
 - Knobs: knob:instr_mix (mixed), knob:dmem_rvalid_delay
-- Fire-check: rvfi_ext_mcycle strictly increasing across >= 10k records; every one of the 10
-  mhpmcounters index nonzero on some record; >= 10 csrr mhpmcounterN records to compare.
+- Fire-check: rvfi_ext_mcycle strictly increasing across >= 5k consecutive records retired with
+  mcountinhibit.CY = 0 and non-decreasing across >= 1k records retired with CY = 1 (mcycle
+  increments only while mcountinhibit[0] = 0, rtl/ibex_cs_registers.sv:1627; fact-check
+  TP-RVFI-022); every one of the 10 mhpmcounters indexes nonzero on some record; >= 10 csrr
+  mhpmcounterN records to compare.
 - Pass criteria: gen_chk_counters (ext values equal the counter model at ID completion; a csrr of
   the same counter retiring next reads a value >= the ext value) ; gen_isa_compare on the CSR reads.
 - Expected: pass
@@ -19733,20 +21151,24 @@ Stimulus line override the table for that item.
 - Bins: CG-RVFI-003.cp_key_valid.zero, CG-RVFI-003.cp_key_valid.one, CG-SEC-005.cp_rvfi_ext_key_valid.zero,
   CG-SEC-005.cp_rvfi_ext_key_valid.one
 
-### TP-RVFI-024: rvfi_ext_rf_wr_suppress set only on integrity-suppressed loads
+### TP-RVFI-024: rvfi_ext_rf_wr_suppress set only on loads whose completing beat had an integrity error
 - Features: F-RVFI-021
 - Phase: 1
 - Tier: targeted
-- Preconditions: as TP-SEC-008.
-- Stimulus: injected load integrity errors plus normal loads, stores and errored (data_err_i)
-  loads.
+- Preconditions: as TP-SEC-008: the injected integrity errors hit only the beat that completes
+  the load (aligned, or the second half of a misaligned load); the first-beat class is
+  TP-RVFI-040 (expected-fail, B16), excluded here (C-8).
+- Stimulus: injected load integrity errors on completing beats plus normal loads, stores and
+  errored (data_err_i) loads.
 - Randomized: as TP-SEC-008.
 - Knobs: knob:dmem_err_rate (rare), knob:dmem_rvalid_delay
-- Fire-check: >= 5 records with rf_wr_suppress = 1 and >= 1000 with 0 including >= 10 data_err_i
-  load traps.
-- Pass criteria: gen_chk_bus_intg_rsp (suppress == 1 iff the record is a load whose response had
-  an integrity error; 0 on data_err_i traps and stores) ; gen_chk_rvfi_proto (rd_addr == 0 when
-  suppress == 1).
+- Fire-check: >= 5 records with rf_wr_suppress = 1 (>= 2 aligned, >= 2 second-half) and >= 1000
+  with 0 including >= 10 data_err_i load traps.
+- Pass criteria: gen_chk_bus_intg_rsp (suppress == 1 iff the record is a load whose COMPLETING
+  beat had an integrity error (rvfi_rf_wr_suppress = instr_done_wb & ~rf_we_wb & outstanding_load
+  & lsu_load_resp_intg_err, rtl/ibex_core.sv:2384-2385, keyed on the data_intg_err of the current
+  rvalid, rtl/ibex_load_store_unit.sv:697-698); 0 on data_err_i traps and stores) ;
+  gen_chk_rvfi_proto (rd_addr == 0 when suppress == 1).
 - Expected: pass
 - Test group: gen_sec_alert_inject_dbus
 - Bins: CG-RVFI-003.cp_rf_wr_suppress.yes, CG-RVFI-003.cp_rf_wr_suppress.no
@@ -19834,7 +21256,14 @@ Stimulus line override the table for that item.
 - Knobs: knob:pmp_regime (dense), knob:imem_err_rate (rare)
 - Fire-check: >= 10 trap records with mcause = 1 from each source.
 - Pass criteria: gen_isa_compare with rvfi_insn masked on fetch-fault records (pc_rdata ==
-  faulting PC, no register/memory fields) ; gen_chk_pmp ; gen_chk_rvfi_proto (rd/mem fields 0).
+  faulting PC; mtval = the faulting fetch address, pc or pc + 2, D10) ; gen_chk_pmp ;
+  gen_chk_rvfi_proto (rd_addr = rd_wdata = 0 only; the mem fields are MASKED: an ID-stage trap
+  record keeps the garbage decode of the faulting word, rvfi_mem_rmask = 4'b1111 (default from
+  lsu_type 2'b00, zeroed only when data_we_o = lsu_we), rvfi_mem_addr = the ALU adder result,
+  rvfi_mem_wdata = the rs2 value and rvfi_mem_rdata = the previous load's data
+  (rtl/ibex_core.sv:2085-2086, :1024-1025, :2207-2209, :2222-2233; rtl/ibex_decoder.sv:285;
+  rtl/ibex_load_store_unit.sv:723); masks are zeroed only for WB traps (:2156-2157); C-12, B18,
+  fact-check TP-RVFI-029).
 - Expected: pass
 - Test group: gen_rvfi_trap
 - Bins: CG-RVFI-004.cp_insn_meaningful.fetch_error_na, CG-RVFI-004.cp_insn_meaningful.yes,
@@ -19923,35 +21352,49 @@ Stimulus line override the table for that item.
 - Bins: CG-RVFI-003.cp_nmi.yes, CG-RVFI-003.cp_nmi.no, CG-RVFI-003.cp_nmi_int.yes, CG-RVFI-003.cp_nmi_int.no,
   CG-RVFI-003.cr_irq_kind.yes_yes_no, CG-RVFI-003.cr_irq_kind.yes_no_yes
 
-### TP-RVFI-035: rvfi_ext_irq_valid in the same cycle as a retiring record
+### TP-RVFI-035: rvfi_ext_irq_valid never coincides with a retiring record (negative check)
 - Features: F-RVFI-032
 - Phase: 1
 - Tier: targeted
 - Preconditions: interrupts enabled.
-- Stimulus: interrupt asserted so that the pipeline-empty decision cycle coincides with the WB
-  completion of the last pre-interrupt instruction (sweep the assertion cycle over a window
-  around loads of varying latency).
+- Stimulus: interrupt asserted so that the pipeline-empty decision cycle lands as close as
+  possible to the WB completion of the last pre-interrupt instruction (sweep the assertion cycle
+  over a window around loads of varying latency); also the pipeline-idle case (WFI, fence).
 - Randomized: latency, line, instruction before the interrupt.
 - Knobs: knob:irq_regime (sparse), knob:dmem_rvalid_delay
-- Fire-check: >= 10 cycles with rvfi_valid & rvfi_ext_irq_valid both high.
-- Pass criteria: gen_chk_irq (the interrupt is still announced exactly once; the retiring record's
-  rd/mem/pc fields are intact; its pre_mip/nmi/debug_req are NOT compared on the colliding cycle,
-  Q-DL default 10) ; gen_isa_compare.
+- Fire-check: >= 10 interrupt entries whose marker rising edge was observed, with the last
+  pre-interrupt record's rvfi_valid at most GEN_RVFI_IRQ_MARKER_OFFSET cycles before it in >= 3
+  of them (the closest achievable spacing); per seed the minimum observed spacing equals the
+  bring-up-pinned constant GEN_RVFI_IRQ_MARKER_OFFSET (predicted 3, C-13 / C-16).
+- Pass criteria: T-044 property sva_rvfi_irq_valid_exclusive / gen_chk_irq: rvfi_valid and
+  rvfi_ext_irq_valid are NEVER both high in the same cycle (fact-check TP-RVFI-035,
+  UNREACHABLE-PRECONDITION, X-16: the decision needs ~instr_valid_id & ready_wb, so the last
+  pre-interrupt record is out by decision + 1 while the marker passes four flops and rises at
+  decision + 4, and the handler's first record comes one cycle after the marker falls; no
+  instruction retires in between, rtl/ibex_core.sv:1965-1971, :1985-2004, :2192-2198); the
+  interrupt is still announced at most once; the record fields and the marker's pre_mip / nmi /
+  debug_req are both trustworthy because they never share a cycle (Q-DL default 10 closed by
+  X-16) ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_rvfi_ext
-- Bins: CG-RVFI-003.cr_irq_collision.yes_yes, CG-RVFI-003.cp_collision.yes, CG-RVFI-003.cp_collision.no
+- Bins: CG-RVFI-003.cr_irq_collision.yes_no, CG-RVFI-003.cp_collision.no,
+  CG-RVFI-003.cp_marker_offset.min, CG-RVFI-003.cp_entry_marker.yes
 
 ### TP-RVFI-036: RVFI reset values
 - Features: F-RVFI-033
 - Phase: 1
 - Tier: smoke
-- Preconditions: as TP-RST-001.
+- Preconditions: as TP-RST-001, in particular QUIESCENT interrupt and debug inputs through reset
+  and until the first record: a pending irq_nm_i, an enabled irq or debug_req_i at release drives
+  the rvfi_ext_irq_valid / pre_mip / nmi / debug_req outputs before the first rvfi_valid
+  (TP-RST-024 / TP-RST-025 rely on that), so the "all other rvfi_* = 0" rule holds only for this
+  quiescent class (fact-check TP-RVFI-036 note).
 - Stimulus: power-on and mid-run resets; rvfi_* sampled during reset.
 - Randomized: as TP-RST-001.
 - Knobs: knob:fetch_enable_regime, knob:imem_gnt_delay (as TP-RST-001)
-- Fire-check: >= 2 reset windows sampled.
+- Fire-check: >= 2 reset windows sampled with the interrupt and debug pins low throughout.
 - Pass criteria: cocotb gen_test_rst_values (rvfi_valid = 0, rvfi_mode = 3, rvfi_ixl = 1, all
-  other rvfi_* = 0 during reset and until the first record) ; X-checker.
+  other rvfi_* = 0 / NULL_CAP during reset and until the first record) ; X-checker.
 - Expected: pass
 - Test group: gen_rst_boot
 - Bins: CG-RST-001.cp_reset_kind.power_on, CG-RST-001.cp_reset_kind.mid_run
@@ -19969,7 +21412,9 @@ Stimulus line override the table for that item.
   knob:fetch_enable_regime, knob:priv_regime, knob:pmp_regime, knob:imem_gnt_delay,
   knob:imem_rvalid_delay, knob:imem_err_rate, knob:imem_outstanding_cap, knob:dmem_gnt_delay,
   knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:icache_ecc_err_rate, knob:scr_key_delay
-- Fire-check: >= 5M records over the run set; every cp bin of CG-RVFI-001 hit.
+- Fire-check: per seed: >= 50k records retired with gen_chk_rvfi_proto and gen_isa_compare active
+  and >= 1 of each record class the seed's knobs enable (trap, interrupt entry, Zcmp micro-op,
+  load/store, U-mode) observed; closure of the CG-RVFI-001 bins is left to the manifest (C-16).
 - Pass criteria: gen_chk_rvfi_proto ; gen_isa_compare.
 - Expected: pass
 - Test group: gen_rvfi_random
@@ -20024,9 +21469,36 @@ Stimulus line override the table for that item.
   rtl-arch T-041 fact-check row 48); until the confirmation simulation is recorded the item is
   informational and excluded from the pass gate.
 - Expected: informational (B14 confirmation; excluded from the pass gate)
-- Test group: gen_rvfi_trap
+- Test group: gen_rvfi_trap_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-RVFI-004.cr_wb_coincident.wb_yes_no, CG-RVFI-004.cp_retrace_cause.illegal,
   CG-RVFI-004.cp_retrace_cause.ecall, CG-RVFI-004.cp_retrace_cause.ebreak
+
+### TP-RVFI-040: rvfi_ext_rf_wr_suppress on a misaligned load whose FIRST beat had an integrity error (B16)
+- Features: F-RVFI-021
+- Phase: 1
+- Tier: targeted
+- Preconditions: as TP-SEC-040 (shared stimulus class: the FIRST rvalid beat of a misaligned load
+  corrupted, the second beat clean, both beats data_err_i = 0).
+- Stimulus: as TP-SEC-040; plus the control class (second beat corrupted) in the same program.
+- Randomized: as TP-SEC-040.
+- Weights: W-LS, W-INTG
+- Knobs: knob:dmem_err_rate (rare), knob:dmem_gnt_delay, knob:dmem_rvalid_delay
+- Fire-check: >= 5 first-beat-corrupted misaligned load records retired (each with its
+  alert_major_bus_o pulse and internal-NMI entry, as TP-SEC-040) and >= 2 control records
+  (second beat corrupted) with rvfi_ext_rf_wr_suppress = 1.
+- Pass criteria: gen_chk_bus_intg_rsp in the documented-intent direction (security.rst:88): the
+  record of a load whose response had an integrity error on ANY beat must show
+  rvfi_ext_rf_wr_suppress = 1 and rvfi_rd_addr = 0 -> FAILS on this RTL for the first-beat class:
+  rvfi_rf_wr_suppress_wb keys on lsu_load_resp_intg_err of the CURRENT rvalid
+  (rtl/ibex_core.sv:2384-2385; rtl/ibex_load_store_unit.sv:697-698, :756) and the first-half
+  status latched for a misaligned load has no integrity term (:514), so the record shows
+  rf_wr_suppress = 0 and rvfi_rd_addr = rd with the merged data (C-8); the control class
+  suppresses in both directions ; gen_chk_rvfi_proto (rd_addr == 0 iff suppress == 1: consistent
+  on this RTL, i.e. the RVFI flag truthfully reports the un-suppressed write).
+- Expected: expected-fail (B16)
+- Test group: gen_rvfi_ext_rf_wr_suppress_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-SEC-002.cr_load_half.load_first_no, CG-SEC-002.cp_first_beat_rd_written.yes,
+  CG-RVFI-003.cp_rf_wr_suppress.no, CG-SEC-002.cp_half.first
 
 ---------------------------------------------------------------------------------------------------
 ## CHERI: CHERIoT carve-out (exclusion cheriot-out-of-scope) - single item group gen_cheri_off_quiet
@@ -20106,7 +21578,8 @@ Stimulus line override the table for that item.
 - Knobs: knob:instr_mix (ls_heavy)
 - Fire-check: >= 1000 store transactions on the dbus and >= 10k records sampled by the checker.
 - Pass criteria: gen_chk_cheriot_quiet (data_tag_o == 0 on every data_req_o cycle; rvfi cap fields
-  0/NULL_CAP; rvfi_mem_is_cap 0) ; gen_chk_dbus_proto.
+  0/NULL_CAP, one value: NULL_CAP = '{default: '0}, rtl/ibex_cheriot_pkg.sv:144, so the checker
+  compares every capability field against all-zero; rvfi_mem_is_cap 0) ; gen_chk_dbus_proto.
 - Expected: pass
 - Test group: gen_cheri_off_quiet
 - Bins: CG-CHERI-001.cp_tag_zero_run.yes, CG-CHERI-001.cp_caps_zero_run.yes,
@@ -20129,11 +21602,15 @@ Stimulus line override the table for that item.
   CG-CHERI-001.cr_kind_mode_trap.id_marchid_m_no, CG-CHERI-001.cr_kind_mode_trap.id_misa_m_no,
   CG-RVFI-001.cp_trap.no
 
-Note on the carve-out: dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md (rtl-arch) is the
-authoritative exclusion list; the F-CHERI-001 table mirrors it row for row and records the DV
-consequence per row (negative check / constant-value monitor / live coverage). Constant nets in
-its "yes (constant 0)" rows carry a toggle exclusion (bucket D), the "no" rows carry the Block /
-Branch / Condition / FSM / Assert entries, and every bucket-F leak is live: F1 x16..x31 in the
+Note on the carve-out: dv/auto_dv/excl/gen_exclusions.el (rtl-arch, T-069; README
+dv/auto_dv/excl/gen_exclusions_README.md) is the exclusion deliverable; the F-CHERI-001 table
+mirrors it row for row (README section 2 content table plus the per-entry annotations) and records
+the DV consequence per row (negative check / constant-value monitor / live coverage). The 48
+objects refuted by the strict load (README section 4) stay in coverage and are listed as live;
+class-R rows 37-40 stay OUT until EC-4 passes; class-D default arms keep EC-3 placeholders until
+the first measured regression. Constant nets in the "yes (constant 0)" rows carry a toggle
+exclusion (A.5), the "no" rows carry the Block / Branch / Condition / FSM / Assert entries, and
+every bucket-F leak is live: F1 x16..x31 in the
 shared bank and x16 with dummies -> TP-RST-022 / TP-DIT-014; F5 CheriLimit16Regs muxes ->
 TP-RST-022; F8 CSR *_en_combi / *_d_combi muxes -> CSR / DBG areas; F9 RV32I mtval arms ->
 TP-RVFI-016 / EXC area; F10 RVFI trap suppression -> TP-RVFI-018 (priority, pass) / TP-RVFI-039 (B14 confirmation, informational); F11 instr_kill -> every
@@ -20150,15 +21627,23 @@ TP-CHERI-002.
 |---|---|---|---|---|
 | gen_sec_cpuctrlsts | TP-DIT-001, TP-SEC-033, TP-SEC-034 | 1 | smoke/targeted | short |
 | gen_dit_timing | TP-DIT-002..009, TP-DIT-011 | 1 | targeted | medium |
-| gen_dit_dummy | TP-DIT-010, 012, 013, 014, 016, 017, 018, 019, 026, 029, TP-RVFI-027 | 1 | smoke/targeted | medium |
-| gen_dit_dummy_events | TP-DIT-020..025, 030, 031, 032, 034 | 1 | targeted | medium |
+| gen_dit_dummy | TP-DIT-010, 012, 013, 014, 016, 017, 018, 026, 029, TP-RVFI-027 | 1 | smoke/targeted | medium |
+| gen_dit_dummy_xfail | TP-DIT-019 (expected-fail B7, own test) | 1 | targeted | short |
+| gen_dit_dummy_events_xfail | TP-DIT-032 (expected-fail B8, own test) | 1 | targeted | short |
+| gen_rvfi_proto_basic_xfail | TP-RVFI-013 (expected-fail B13, own test) | 1 | targeted | short |
+| gen_rvfi_trap_info | TP-RVFI-039 (informational B14 confirmation, own test) | 1 | targeted | short |
+| gen_dit_dummy_events | TP-DIT-020..025, 030, 031, 034 | 1 | targeted | medium |
 | gen_dit_secureseed | TP-DIT-015, 027, 028 | 1 | targeted | short |
 | gen_dit_random | TP-DIT-033 | 2 | full | long |
 | gen_sec_alert_inject_icache | TP-SEC-001 | 1 | targeted | medium |
 | gen_sec_alerts_neg | TP-SEC-002, 003, 005, 006, 013, 014, 015, 035 | 1 | smoke/targeted/full | long |
 | gen_sec_alert_fault_pc | TP-SEC-004 | 1 | targeted (mutation evidence) | short |
 | gen_sec_alert_inject_ibus | TP-SEC-007, 012 | 1 | targeted | medium |
-| gen_sec_alert_inject_dbus | TP-SEC-008, 009, 010, 011, TP-RVFI-024 | 1 | targeted | medium |
+| gen_sec_alert_inject_dbus | TP-SEC-008, 009, TP-RVFI-024 (completing-beat classes) | 1 | targeted | medium |
+| gen_sec_alert_inject_dbus_info | TP-SEC-010 (informational, own test) | 1 | targeted | short |
+| gen_sec_alert_inject_dbus_clean_info | TP-SEC-011 (informational, own test) | 1 | targeted | short |
+| gen_sec_alert_inject_dbus_first_beat_xfail | TP-SEC-040 (expected-fail B16, own test) | 1 | targeted | short |
+| gen_rvfi_ext_rf_wr_suppress_xfail | TP-RVFI-040 (expected-fail B16, own test) | 1 | targeted | short |
 | gen_sec_inputs_mubi | TP-SEC-016, 019 | 1 | targeted | short |
 | gen_sec_boundary | TP-SEC-017, 037, 038, TP-RST-020, TP-RST-028 | 1 | smoke | short |
 | gen_sec_scr_key | TP-SEC-020, TP-RVFI-023 | 1 | targeted | short |
@@ -20172,8 +21657,8 @@ TP-CHERI-002.
 | gen_rst_regfile | TP-RST-021, 022, 023 | 1 | targeted | short |
 | gen_rst_pending_at_boot | TP-RST-024, 025, 026 | 1 | targeted | short |
 | gen_rst_random | TP-RST-029 | 2 | full | long |
-| gen_rvfi_proto_basic | TP-RVFI-001..004, 007..013, 038 | 1 | smoke/targeted | short |
-| gen_rvfi_trap | TP-RVFI-005, 016, 017, 018, 028, 029, 030, 039 (informational) | 1 | targeted | medium |
+| gen_rvfi_proto_basic | TP-RVFI-001..004, 007..012, 038 | 1 | smoke/targeted | short |
+| gen_rvfi_trap | TP-RVFI-005, 016, 017, 018, 028, 029, 030 | 1 | targeted | medium |
 | gen_rvfi_ext | TP-RVFI-006, 019, 020, 021, 022, 032, 034, 035 | 1 | targeted | medium |
 | gen_rvfi_mem | TP-RVFI-014, 015 | 1 | targeted | short |
 | gen_rvfi_zcmp | TP-RVFI-025, 026 | 1 | targeted | short |
@@ -20188,12 +21673,22 @@ TP-CHERI-002.
   model. Rules: rvfi_order increments by exactly 1 (64-bit) and restarts at 1 after reset;
   rvfi_valid is a one-cycle pulse per order value; pc_rdata[n+1] == pc_wdata[n] unless rvfi_intr
   on n+1, a trap record at n, a debug entry between them, or a FLUSH-redirect record (mret, dret,
-  fence.i, trap) at n (Q-DL default 6: pc_wdata of those records is logged, not compared);
-  rd_wdata == 0 when rd_addr == 0; rd_addr == 0 on trap records; rs*_rdata == 0 when rs*_addr ==
-  0; rs3_addr == 0 on single-cycle instructions; exactly one of rmask/wmask nonzero on a non-trap
-  load/store record and both 0 on trap records; mask values only {0001, 0011, 1111} at bit 0;
-  insn[31:16] == 0 when insn[1:0] != 11; rvfi_halt == 0; rvfi_ixl == 1; rvfi_mode in {0, 3};
-  rvfi_intr == 1 iff the record is the first after an interrupt/NMI entry (RTL-defined meaning);
+  trap) at n, whose pc_wdata is the next sequential fetch address (C-1 / X-1: compared as
+  pc_rdata + length, never as the target; the target is pc_rdata[n+1]; fence.i's pc_wdata is
+  pc + 4 either way); rd_wdata == 0 when rd_addr == 0; rd_addr == 0 on trap records; rs*_rdata
+  == 0 when rs*_addr == 0; rs3_addr == 0 on single-cycle instructions, == instr[31:27] on ternary
+  records and == the rs1 field on other multi-cycle records (TP-RVFI-009); on records DECODED as
+  loads or stores exactly one of rmask/wmask is nonzero when rvfi_trap = 0 and both are 0 on
+  WB-trap records, mask values only {0001, 0011, 1111} at bit 0 and mem_addr == the effective
+  address; on every other record (ALU, CSR, branch, jump, ID-stage trap) the mem fields are
+  ignored (rmask = 4'b1111 and addr = the ALU result are the B18 garbage, C-12); insn[31:16] == 0
+  when insn[1:0] != 11; rvfi_halt == 0; rvfi_ixl == 1; rvfi_mode in {0, 3} and changes only after
+  a trap / mret / dret record or on the first record after an interrupt or debug entry
+  (TP-RVFI-007); rvfi_intr == 1 iff an interrupt/NMI vector was set since the previous record
+  (RTL-defined meaning; a debug entry landing between IRQ_TAKEN and the handler's first ID cycle
+  puts the flag on the debug-ROM's first record, TP-RVFI-006); rvfi_ext_irq_valid is a level that
+  never coincides with rvfi_valid and rises at most once per interrupt entry (C-13);
+  rvfi_ext_debug_req = 1 never occurs with rvfi_ext_debug_mode = 0 (C-3);
   no record carries the dummy encoding class at a PC outside the program image (dummies never on
   RVFI); expanded_insn_last exactly once per Zcmp sequence with the same pc_rdata on every
   micro-op; exactly one rd write per record, from the source implied by the instruction class
@@ -20209,6 +21704,15 @@ TP-CHERI-002.
 - gen_chk_alerts extension: per-injection accounting (exactly one alert_minor_o pulse per
   injected ICache ECC error; alert_major_bus_o pulse count == corrupted rvalid beat count) and
   the in-reset rule (bus alert may follow corrupted beats during reset; the other two never).
+- gen_chk_bus_intg_rsp per-beat rule (C-8, B16): the load-suppression prediction keys on the beat
+  that COMPLETES the access; a misaligned load with only its first beat corrupted is classified as
+  the B16 class (documented intent: suppress; RTL: rd written), reported through the expected-fail
+  items TP-SEC-040 / TP-RVFI-040 and never counted as a pass elsewhere; the internal-NMI latency
+  bound is two ordinary instructions (C-7, D21) and its mtval is lsu_addr_last at the corrupted
+  beat.
+- gen_chk_fetch_en rule (C-4): no new icache line allocation after the Off edge; remaining beats
+  of open fill buffers are legal; instr_req_o == 0 whenever core_busy_o == Off; gen_chk_ibus_proto
+  keeps "req held until gnt" with no fetch_enable tolerance.
 - gen_chk_debug extension: "RTL-documenting" mode for the step-consumes-a-dummy case (accept a
   step re-entry with unchanged dpc only when P1 shows a dummy) and for trap/debug entry while
   fetch is disabled (Q-DL-8).
@@ -20256,6 +21760,22 @@ TP-CHERI-002.
    deterministic part of TP-DIT-027 (b). Recommended default: Runtime states whether
    +define+SIMULATION is in the compile command; if it is, the regression passes
    +prim_lfsr_use_default_seed=1.
+9. RESOLVED by rtl-arch X-1 (C-1): Q-DL default 6 (pc_wdata of trap / mret / dret / fence.i
+   records logged, not compared) is closed; pc_wdata of those records is the next sequential fetch
+   address and is compared as such (TP-RVFI-012); the redirect target is the next record's
+   pc_rdata.
+10. RESOLVED by rtl-arch X-16 (C-13): Q-DL default 10 (pre_mip not compared on a cycle where
+    rvfi_valid and rvfi_ext_irq_valid coincide) is moot: the two never coincide; TP-RVFI-035 is
+    the negative check and TP-RVFI-019 counts marker rising edges.
+11. B16 owner question Q-015 (security-relevant, bug log v1d): the first-beat class of a
+    misaligned load integrity error writes merged data to rd. Blocks: nothing in the plan
+    (TP-SEC-040 / TP-RVFI-040 are expected-fail with the checker following security.rst:88);
+    the ruling decides whether the class becomes RTL-defined. Recommended default: keep
+    expected-fail until ruled.
+12. B16 canonical feature: gen_bug_log.md B16 names "F-SEC-017" as the canonical D-side integrity
+    feature, but F-SEC-017 is the spurious-response entry; the load-suppression feature is
+    F-SEC-015 (RVFI view F-RVFI-021). This part cites B16 on F-SEC-015, F-SEC-017 and F-RVFI-021;
+    the DV Lead should point the bug-log Features field at F-SEC-015.
 
 
 # 4.8 Areas REG, XIF, ADOPT: Randomization layers (regime knobs and schedule), cross-interface crosses, bins adopted from riscv-dv
@@ -20272,21 +21792,67 @@ distributions live in each agent and are cited per knob below; regime knobs and 
 schedule are defined here) and the global set of cross-interface crosses. Area subagents
 reference the knobs by name; this file is the definition.
 
+## Conventions applied in this part (plan v2b; README_FIX3_BRIEF.md C-1..C-16, rtl-arch T-053 X-rules)
+
+- C-1 (X-1) A redirect target of a trap / mret / dret record is observed as the NEXT record's
+  rvfi_pc_rdata (or the DmExceptionAddr / DmHaltAddr / vector fetch with the icache off); the
+  rvfi_pc_wdata of those records is the next sequential fetch address and is never asserted as the
+  target. Only branch/jump records carry the target in rvfi_pc_wdata (fcov_xcut.md S19).
+- C-3 (X-6/X-7) Interrupt and debug entry wait for an empty ID and a ready WB: the instruction
+  already in ID when the request arrives completes first; mepc / dpc = pc of the first
+  not-yet-executed instruction, derived from the last retired record (nominal 2 records after the
+  pin edge, worst case GEN_IRQ_ENTRY_BOUND_RECORDS / GEN_DBG_ENTRY_BOUND_RECORDS = 17). Every XIF
+  "same cycle" cross samples the coincidence at the pins (S18 back-dated) and attributes the
+  outcome by the next record(s); "dpc = next pc" in an item means this rule.
+- C-4 (X-5) fetch_enable_i != On stops only NEW icache lookups (rtl/ibex_core.sv:648 gates req_i,
+  consumed only by lookup_req_ic0, rtl/ibex_icache.sv:249): the remaining beats of fill buffers
+  allocated before the Off edge keep requesting (fill_ext_req :756 has no req_i term; a request
+  awaiting grant is held, :764). Checker rule (gen_chk_fetch_en): no new line allocation after the
+  Off edge (every instr_req_o inside the Off window addresses a remaining beat of a line open at the
+  edge); no request is ever withdrawn; instr_req_o == 0 whenever core_busy_o == Off; no retirement
+  after the in-flight instructions drain.
+- C-5 (X-8) A stepped WFI (dcsr.step = 1, not in debug mode) never reaches WAIT_SLEEP (FLUSH ->
+  DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987) and core_busy_o stays On; an unstepped WFI gives
+  exactly one ctrl_busy = 0 cycle in WAIT_SLEEP (:598-604), visible on core_busy_o only with no
+  fetch beat outstanding, no invalidation and an idle LSU. A dip of <= 1 cycle is never sleep.
+- C-6 (X-9) A synchronous exception clears mstatus.MIE at the trap entry
+  (rtl/ibex_cs_registers.sv:924) and irq_enabled = MIE | (priv == U) (rtl/ibex_controller.sv:490):
+  a pending ORDINARY interrupt is taken only after the handler's mret (MIE <- MPIE) or an explicit
+  MIE write; an NMI ignores MIE (:498-500, outside NMI mode) and a debug request ignores it too:
+  both are taken in the first empty-ID DECODE after the exception's FLUSH, before the handler's
+  first instruction.
+- C-7 (X-10, D21) Up to two ordinary records (more with Zcmp) may follow a corrupted load's record
+  before the internal-NMI marker; checkers follow the RTL.
+- C-8 (X-11, B16) A misaligned LOAD whose FIRST beat carries an integrity error still writes rd
+  (alert and internal NMI fire); the rd-write rule for that class is B16, owned by the mem area's
+  expected-fail split of TP-DMEM-041. Items here that inject data integrity errors (TP-REG-026,
+  TP-XIF-003) do not gate on rvfi_ext_rf_wr_suppress for a corrupted first beat.
+- C-13 (X-16) rvfi_ext_irq_valid is a LEVEL rising four cycles after the decision cycle, not a
+  pulse; no S-state, fire-check or bin of this area uses it: interrupt entry is anchored on the
+  rvfi_intr record and the vector fetch (fcov_xcut.md S18).
+- C-14 A fire-check that infers "in ID" or "no bus fetch of the target" from the instruction bus
+  pins cpuctrlsts.icache_enable = 0 or derives the redirect from RVFI; "outstanding at ID entry"
+  (TP-XIF-004, TP-XIF-010) is derived from RVFI record spacing only (fcov_xcut.md S21).
+- C-15/C-16 Every item of this area is `pass` (no expected-fail or informational item); every
+  fire-check is a per-seed assertion on an observable.
+
 ## Part 1: regime knobs (layer 2) and the regime schedule (layer 3)
 
 ### Knob conventions
 
 - Name: `knob:<name>`; value set as listed; one value is in force per phase (TB-side knobs) or
   per program region (program-side knobs: instr_mix, priv_regime, pmp_regime).
-- Command-line controls are TB Infra's (gen_tb_architecture.md Section 4.2, gen_component_api_
-  env_knobs.md; `gen_knobs.py` codegen is the single source of names): layer 2 per test
-  `+gen_<agent>_regime=<name>`; pinning `+gen_regime_pin=<agent>:<regime>[,...]` holds the named
-  regimes for the whole run (every phase and region) and overrides the schedule; the schedule
-  generator removes a pinned agent from its draws and the agent logs `pinned = 1` in its phase-log
-  record; pinning any subset of agents is legal. Layer 3 `+gen_regime_sched=<agent>:<regime>@r<N>|
-  c<N>,...` (r = retirement-count trigger, c = cycle-count trigger). The names `knob:<name>` and
-  `+gen_knob_<name>` used in this file and in fcov_xcut.md are COVERAGE-SIDE ALIASES (mapping table
-  below); `+gen_knob_<name>` never appears on a command line.
+- Command-line controls are the codegen forms only (gen_tb_architecture.md 8.3 item 4 and 8.3a;
+  single source dv/auto_dv/tb/gen_tb_knobs.yaml, rendered by gen_knobs_codegen.py): layer 2
+  `+gen_knob_<name>=<value>` (one plusarg per knob, 20 regime knobs, value strings identical to the
+  bin names of the knob definitions below); a knob given on the command line is PINNED: it holds
+  that value for the whole run (every phase and region), the schedule generator removes it from its
+  draws and the agent logs `pinned = 1` in its phase-log record; pinning any subset of knobs is
+  legal. Layer 3 `+gen_regime_sched=<knob>:<value>@r<N>|c<N>,...` (r = retirement-count trigger,
+  c = cycle-count trigger). There is no schedule seed plusarg, no per-agent regime plusarg and no
+  separate pin plusarg; the retired forms appear nowhere in this area. The numeric layer-1 window
+  overrides of gen_tb_knobs.yaml (`+gen_ibus_gnt_min/max`, `+gen_dbus_rvalid_min/max`,
+  `+gen_ibus_err_rate`, ...) are TB Infra debug knobs and are never used by a plan item.
 - Regime schedule seed: none of its own. Absent `+gen_regime_sched`, Python derives the schedule
   deterministically from the single run seed (RANDOM_SEED = +ntb_random_seed = program seed,
   DV_prompt Section 6 "Seeds") and echoes it in the time-0 banner, so test name + seed reproduce
@@ -20303,32 +21869,39 @@ reference the knobs by name; this file is the definition.
   Layer-1 weight tables below; layer 2 selects the distribution; layer 3 (the schedule) selects
   the sequence of layer-2 values.
 
-### Layer-2/3 command-line names and the coverage-side alias table
+### Layer-2/3 command-line names (knob table)
 
-A knob is a coverage projection of an agent regime: one TB Infra regime sets several knobs, and
-TB Infra's regime name sets are coarser than the knob value sets in places. The table is the
-single mapping (gen_tb_architecture.md 8.3 item 4; the DV Lead records it in
-gen_component_api_env_knobs.md, TB Infra freezes the regime names in gen_knobs.py). Where a knob
-value has no TB Infra regime yet ("proposed"), the coverage class is measured from the agent's
-echoed distribution until the regime exists.
+The command-line name of every knob is its codegen plusarg `+gen_knob_<name>=<value>`
+(gen_tb_knobs.yaml, kind enum; the value strings ARE the bin names below), the schedule is
+`+gen_regime_sched`, and the CG-REG-* covergroups sample the value the agent APPLIED. The table
+lists, per knob, the plusarg, the agent that consumes it and the layer-1 window it selects
+(regime_windows in gen_tb_knobs.yaml; numeric overrides exist as TB Infra debug plusargs only).
+Program-side knobs are consumed by the Python program generator, which writes the region tuple to
+the phase-marker register; their region boundaries are program markers, not `+gen_regime_sched`
+triggers. NOTE (Q-11): gen_tb_knobs.yaml renders the absent-plusarg defaults short / short / quiet /
+single for imem_gnt_delay, imem_rvalid_delay (dmem likewise), irq_regime and irq_line_mix where the
+knob definitions below say random / random / sparse / multi; the plan defaults are the Phase-1
+intent and the DV Lead reconciles them with TB Infra.
 
-| knob (coverage alias) | `<agent>` | TB Infra plusarg and regime names | projection rule (regime -> knob value) |
+| knob | plusarg (codegen) | consumer | layer-1 window selected |
 |---|---|---|---|
-| knob:imem_gnt_delay | ibus | `+gen_ibus_regime=fast|slow|bursty|stall|err_heavy|intg_err` (+gen_ibus_gnt_min/max) | class of the regime's grant window: [0,0] same_cycle (fast); [1,3] short; [4,32] with 10% [33,128] long (slow, stall); mixed weights random (bursty, err_heavy, intg_err) |
-| knob:imem_rvalid_delay | ibus | same (+gen_ibus_rvalid_min/max) | class of the response window: [1,1] min1 (fast); [1,3] short; [4,128] long (slow); mixed random (bursty) |
-| knob:imem_err_rate | ibus | same (+gen_ibus_err_rate, per mille) | 0 none; ~2 per mille rare; ~50 per mille frequent (err_heavy) |
-| knob:imem_outstanding_cap | ibus | same (+gen_ibus_max_outstanding) | 1 cap1 (stall); IC_LINE_BEATS cap2; 2*IC_LINE_BEATS cap4; NUM_FB*IC_LINE_BEATS cap8 (fast, slow, bursty) |
-| knob:imem_intg_err_rate | ibus | same (+gen_ibus_intg_err_rate, +gen_ibus_intg_bits) | 0 none; ~2 per mille rare; ~50 per mille frequent (intg_err) |
-| knob:dmem_gnt_delay, knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:dmem_intg_err_rate | dbus | `+gen_dbus_regime=fast|slow|bursty|stall|err_heavy|intg_err|mis_err_first|mis_err_second` (+gen_dbus_gnt_min/max, _rvalid_min/max, _err_rate, _err_half, _intg_err_rate) | as ibus; mis_err_first / mis_err_second -> dmem_err_rate frequent with +gen_dbus_err_half fixed to that half |
-| knob:irq_regime | irq | `+gen_irq_regime=quiet|sparse|storm|nested|nmi_mix` (+gen_irq_min_gap) | quiet -> quiet; sparse -> sparse; storm, nested, nmi_mix -> storm |
-| knob:irq_line_mix | irq | same (line mask of gen_irq_item) | mask draw of the regime: one line -> single; 2..k lines -> multi; mask restricted to irq_fast_i -> fast_only (proposed regime option); nmi_mix -> with_nmi |
-| knob:irq_hold | irq | same (hold_policy of gen_irq_item: CYCLES(n) / UNTIL_ACK / UNTIL_TAKEN / STICKY; +gen_irq_hold_min/max) | UNTIL_TAKEN -> until_taken; UNTIL_ACK -> through_handler; CYCLES(1..3) -> pulse |
-| knob:debug_req_regime | dbg | `+gen_dbg_regime=none|sparse|dense|step_mix` (+gen_dbg_hold_min/max) | none -> none; sparse, step_mix -> sparse; dense -> storm |
-| knob:fetch_enable_regime | fe (fetch_enable driver) | proposed `+gen_fe_regime=always_on|toggling` (no TB Infra table yet; the misc monitor carries the fetch_en checker only) | identity |
-| knob:icache_ecc_err_rate | icram | `+gen_icram_ecc_rate=<per_mille>` (+gen_icram_ecc_bits) | 0 none; ~0.5 per mille rare; ~20 per mille frequent |
-| knob:scr_key_delay | key | `+gen_key_regime=immediate|short|long|never_window` (+gen_key_delay_min/max, +gen_key_never_cycles) | immediate -> immediate; short -> delayed; long, never_window (never_cycles in 201..2000) -> withheld_then_valid |
-| knob:instr_mix, knob:priv_regime, knob:pmp_regime | program (Python generator) | gen_tests program-generator options, names frozen with the Test Writer (proposed `--gen_instr_mix`, `--gen_priv_regime`, `--gen_pmp_regime`); region boundaries are the program's own marker stores, not `+gen_regime_sched` triggers | identity |
-| knob:mcounteren_writable | tie (run constant) | proposed `+gen_mcounteren_writable=on|off|invalid` (wrapper pin tie) | identity; not scheduled and not pinnable through +gen_regime_pin |
+| knob:imem_gnt_delay | `+gen_knob_imem_gnt_delay=same_cycle|short|long|random` | ibus agent | regime_windows.gnt_delay: [0,0] / [1,3] / [4,32] with 10% [33,128] / mix 40-40-20 |
+| knob:imem_rvalid_delay | `+gen_knob_imem_rvalid_delay=min1|short|long|random` | ibus agent | regime_windows.rvalid_delay: [1,1] / [1,3] / [4,32] with 10% [33,128] / mix |
+| knob:imem_err_rate | `+gen_knob_imem_err_rate=none|rare|frequent` | ibus agent | regime_windows.rate_per_mille: 0 / ~2 / ~50 per mille |
+| knob:imem_intg_err_rate | `+gen_knob_imem_intg_err_rate=none|rare|frequent` | ibus agent | rate_per_mille as above; 1-bit / 2-bit flips 50/50 |
+| knob:imem_outstanding_cap | `+gen_knob_imem_outstanding_cap=cap1|cap2|cap4|cap8` | ibus agent | regime_windows.outstanding_cap: 1 / IC_LINE_BEATS / 2*IC_LINE_BEATS / NUM_FB*IC_LINE_BEATS |
+| knob:dmem_gnt_delay, knob:dmem_rvalid_delay, knob:dmem_err_rate, knob:dmem_intg_err_rate | `+gen_knob_dmem_gnt_delay=`, `+gen_knob_dmem_rvalid_delay=`, `+gen_knob_dmem_err_rate=`, `+gen_knob_dmem_intg_err_rate=` (same value sets as the imem knobs) | dbus agent | as ibus; the erroring half of a split pair is drawn 50/50 |
+| knob:irq_regime | `+gen_knob_irq_regime=quiet|sparse|storm` | irq driver | inter-arrival: none / geometric mean ~2000 / mean ~20 cycles |
+| knob:irq_line_mix | `+gen_knob_irq_line_mix=single|multi|fast_only|with_nmi` | irq driver | line mask draw per event |
+| knob:irq_hold | `+gen_knob_irq_hold=until_taken|through_handler|pulse` | irq driver | hold policy UNTIL_TAKEN / UNTIL_ACK / CYCLES(1..3) |
+| knob:debug_req_regime | `+gen_knob_debug_req_regime=none|sparse|storm` | dbg driver | inter-arrival and hold draws |
+| knob:fetch_enable_regime | `+gen_knob_fetch_enable_regime=always_on|toggling` | fetch_enable driver (misc monitor side) | Off windows 1..200 cycles, gap mean ~1000 |
+| knob:icache_ecc_err_rate | `+gen_knob_icache_ecc_err_rate=none|rare|frequent` | icache RAM models | per-lookup injection 0 / ~0.5 / ~20 per mille |
+| knob:scr_key_delay | `+gen_knob_scr_key_delay=immediate|delayed|withheld_then_valid` | scramble-key responder | valid low 1 / 2..200 / 201..2000 cycles |
+| knob:instr_mix | `+gen_knob_instr_mix=isa_only|m_heavy|compressed_heavy|bitmanip_heavy|csr_heavy|ls_heavy|branch_heavy|mixed` | program generator (region marker) | riscv-dv category weights |
+| knob:priv_regime | `+gen_knob_priv_regime=m_only|u_heavy|alternating` | program generator (region marker) | privilege switch schedule |
+| knob:pmp_regime | `+gen_knob_pmp_regime=off|sparse|dense|mml_on` | program generator (region marker) | region-prologue PMP table |
+| knob:mcounteren_writable | `+gen_knob_mcounteren_writable=on|off|invalid` | wrapper pin tie (run constant) | IbexMuBiOn / IbexMuBiOff / a random other $bits(ibex_mubi_t) encoding; not scheduled |
 
 ### Layer-1 weight tables (per-transaction distributions referenced by every item)
 
@@ -20415,8 +21988,11 @@ Data memory agent (tb-infra b.2; protocol s3 driver rules 1-8):
 - knob:dmem_intg_err_rate {none, rare, frequent}; default none (DV Lead addition; Q-1 resolved).
   Probability that data_rdata_i[38:32] is corrupted on a load or store response (1 or 2 bits,
   50/50; +gen_dbus_intg_err_rate per mille, regime intg_err). none: 0. rare: ~1/512. frequent:
-  ~1/20. Effect: alert_major_bus_o and the internal NMI (mcause 0xFFFFFFE0) with rf_wr_suppress
-  (F-IRQ-040, F-SEC-015/016, F-DMEM-041). Layer 1: per-response Bernoulli draw and bit pattern.
+  ~1/20. Effect: alert_major_bus_o and the internal NMI (mcause 0xFFFFFFE0; up to two ordinary
+  records may retire before its marker, D21 / C-7); rd is suppressed only when the COMPLETING beat
+  carries the error: a corrupted FIRST beat of a misaligned load writes rd (B16, C-8; the class is
+  owned by the mem area's expected-fail split of TP-DMEM-041) (F-IRQ-040, F-SEC-015/016,
+  F-DMEM-041). Layer 1: per-response Bernoulli draw and bit pattern.
 
 Interrupt driver (tb-infra b.5; s6):
 
@@ -20473,7 +22049,7 @@ Wrapper pin ties (run constants, not scheduled):
 
 - knob:mcounteren_writable {on, off, invalid}; default on (DV Lead addition). MuBi value tied to
   mcounteren_writable_i for the whole run: IbexMuBiOn, IbexMuBiOff, or a random other
-  $bits(ibex_mubi_t) encoding (proposed plusarg +gen_mcounteren_writable). Writes to mcounteren
+  $bits(ibex_mubi_t) encoding (plusarg `+gen_knob_mcounteren_writable`). Writes to mcounteren
   land only when the pin is exactly IbexMuBiOn (rtl/ibex_cs_registers.sv:845, F-SEC-020,
   F-PMC-025); the class is sampled at the first retired mcounteren write (CG-REG-010).
 
@@ -20697,8 +22273,8 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: sweep schedule over knob:fetch_enable_regime (K >= 2); Off encoding 80% IbexMuBiOff / 20% invalid
 - Randomized: value order, Off window lengths and gaps, encoding, seed
 - Knobs: knob:fetch_enable_regime
-- Fire-check: phase log shows both values applied; under toggling the fetch_enable monitor counted >= 3 Off windows including >= 1 invalid encoding, and RVFI shows no retirement inside any Off window after the in-flight instructions drained
-- Pass criteria: gen_chk_fetch_en (no new instr_req_o and no retirement while Off; resume from the held PC; every non-On encoding acts as Off, F-RST-014/F-SEC-012); gen_chk_alerts (no alert for an invalid encoding); gen_isa_compare; gen_chk_regime
+- Fire-check: phase log shows both values applied; under toggling the fetch_enable monitor counted >= 3 Off windows including >= 1 invalid encoding; RVFI shows no retirement inside any Off window after the in-flight instructions drained; every instr_req_o inside an Off window addresses a remaining beat of a line open at the Off edge (C-4 / X-5: a line with a granted-but-unanswered beat or an asserted request at the edge; beat index strictly increasing inside the line, at most IC_LINE_BEATS beats per line and NUM_FB lines); and >= 1 Off window per seed contained such a continuing beat (the X-5 behaviour was exercised, not merely permitted)
+- Pass criteria: gen_chk_fetch_en (C-4 rule: no new line allocation after the Off edge, remaining beats of open lines legal and never withdrawn, instr_req_o == 0 whenever core_busy_o == Off, no retirement while Off after the drain; resume from the held PC (C-1: the pc of the first not-yet-executed instruction derived from the last pre-Off record); every non-On encoding acts as Off, F-RST-014/F-SEC-012); gen_chk_ibus_proto (req held until gnt across the Off edge, no withdrawn request); gen_chk_alerts (no alert for an invalid encoding); gen_isa_compare; gen_chk_regime
 - Expected: pass
 - Test group: gen_reg_knob_sweep
 - Bins: CG-REG-004.cp_fetch_enable_regime.always_on, CG-REG-004.cp_fetch_enable_regime.toggling, CG-REG-004.cp_fetch_enable_regime_tr.always_on_to_toggling, CG-REG-004.cp_fetch_enable_regime_tr.toggling_to_always_on
@@ -20792,10 +22368,10 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Phase: 1
 - Tier: smoke
 - Preconditions: none
-- Stimulus: a random schedule (K >= 2) with a random subset of agents pinned by +gen_regime_pin=<agent>:<regime>[,...] (subset size drawn from {1, several, all} agents; a K = 1 run covers cp_phase_count.k1); the unpinned agents keep changing
+- Stimulus: a random schedule (K >= 2) with a random subset of the N_SCHED = 19 scheduled knobs pinned by giving `+gen_knob_<name>=<value>` on the command line (subset size drawn from {1, several, all}; a K = 1 run covers cp_phase_count.k1); the unpinned knobs keep changing
 - Randomized: pinned subset, pinned values, schedule, seed
 - Knobs: knob:imem_gnt_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:debug_req_regime, knob:scr_key_delay
-- Fire-check: for every pinned agent the phase log shows applied_value == the pinned regime's knob values with pinned = 1 in every phase and zero transitions, AND the per-phase MEASURED statistic class (TP-REG-001..013 definitions) is identical in every phase and matches the pinned value; for >= 1 unpinned knob the log shows >= 1 transition with a changed measured class (so the pin is not achieved by a one-phase schedule); the time-0 banner lists every `+gen_regime_pin` entry and the schedule string (derived or supplied)
+- Fire-check: for every pinned knob the phase log shows applied_value == the pinned value with pinned = 1 in every phase and zero transitions, AND the per-phase MEASURED statistic class (TP-REG-001..013 definitions) is identical in every phase and matches the pinned value; for >= 1 unpinned knob the log shows >= 1 transition with a changed measured class (so the pin is not achieved by a one-phase schedule); the time-0 banner lists every pinned `+gen_knob_<name>` and the schedule string (derived or supplied)
 - Pass criteria: gen_chk_regime (pinned value constant, unpinned knobs follow the schedule); a second run with the identical command line (test name + seed, or the echoed `+gen_regime_sched` string) yields a byte-identical phase log (regress skill repro step); gen_isa_compare
 - Expected: pass
 - Test group: gen_reg_schedule
@@ -20892,14 +22468,14 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Phase: 2
 - Tier: full
 - Preconditions: mie/mstatus.MIE enable the driver's lines; access-fault handler resumes past the faulting load/store
-- Stimulus: random regime with imem_rvalid_delay in {long, random}, dmem_err_rate in {rare, frequent}, irq_regime in {sparse, storm}, irq_hold in {until_taken, through_handler}; ls_heavy or mixed regions with misaligned accesses; debug_req_regime sparse in some phases
+- Stimulus: random regime with imem_rvalid_delay in {long, random}, dmem_err_rate in {rare, frequent}, irq_regime in {sparse, storm}, irq_hold in {until_taken, through_handler} in most phases and pulse in some (released bins); ls_heavy or mixed regions with misaligned accesses; debug_req_regime sparse in most phases and storm in some; the access-fault handler sets mstatus.MIE = 1 before its mret in a random 30% of its invocations (after_mie_write bins)
 - Randomized: all knobs per phase, addresses, alignment, lines, seed
 - Knobs: knob:imem_rvalid_delay, knob:dmem_err_rate, knob:irq_regime, knob:irq_hold, knob:debug_req_regime
-- Fire-check: >= 1 cycle with data_rvalid_i && data_err_i while ibus_outst >= 1 && !instr_rvalid_i && irq_pending_o (dbus + ibus monitors + pin, same cycle, no RVFI anchoring); the following records show the access fault taken first and the interrupt handler entered after it (rvfi_trap then rvfi_intr). Ownership (Critic S-10): this item and CG-XIF-001 own the DV_prompt Section 6 boundary triple; the exception-side view is CG-EXC-013 (exc_irq) and CG-IRQ-012's copy is dropped by the exc_irq area
-- Pass criteria: gen_isa_compare (exception wins over the interrupt, mepc/mcause/mtval); gen_chk_irq (interrupt taken at the handler entry, not lost); gen_chk_dbus_proto; gen_chk_ibus_proto
+- Fire-check: >= 1 cycle with data_rvalid_i && data_err_i while ibus_outst >= 1 && !instr_rvalid_i && irq_pending_o (dbus + ibus monitors + pin, same cycle, no RVFI anchoring); the outcome is attributed by the following records (C-3, C-6 / X-9): the access fault is taken first (rvfi_trap record, then the fault handler's first record at mtvec BASE with rvfi_intr = 0: rvfi_intr marks only interrupt/NMI entries, X-23) and, with the line held, the ordinary interrupt's handler record (rvfi_intr = 1) follows the fault handler's mret record (MIE <- MPIE) or a retired mstatus write setting MIE inside the fault handler, never before (MIE is cleared at the trap entry); per seed >= 1 such after_mret sequence; and when irq_nm_i (or debug_req_i) was high in the error cycle, the NMI handler record (rvfi_intr = 1, rvfi_ext_nmi; csrr read-back mepc == mtvec BASE) or the first debug-ROM record (dpc read back == mtvec BASE) follows the trap record with NO record in between (taken in the first empty-ID DECODE after the exception's FLUSH). Ownership (Critic S-10): this item and CG-XIF-001 own the DV_prompt Section 6 boundary triple; the exception-side view is CG-EXC-013 (exc_irq) and CG-IRQ-012's copy is dropped by the exc_irq area
+- Pass criteria: gen_isa_compare (exception wins over the interrupt, mepc/mcause/mtval); gen_chk_irq (the held ordinary interrupt is not lost and its entry bound is anchored at the fault handler's mret or MIE-setting write, not at the fault or the pin edge; an NMI's bound is anchored at the fault's trap record); gen_chk_nmi; gen_chk_debug (dpc = mtvec BASE for a debug entry before the handler); gen_chk_dbus_proto; gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_xif_random
-- Bins: CG-XIF-001.cp_fetch_state.stalled, CG-XIF-001.cp_fetch_state.rsp_same_cycle, CG-XIF-001.cp_fetch_state.idle, CG-XIF-001.cp_async.none, CG-XIF-001.cp_async.irq_pending, CG-XIF-001.cp_async.nmi, CG-XIF-001.cp_async.debug_req, CG-XIF-001.cp_async.multiple, CG-XIF-001.cp_err_half.single, CG-XIF-001.cp_err_half.split_first, CG-XIF-001.cp_err_half.split_second, CG-XIF-001.cp_we.load, CG-XIF-001.cp_we.store, CG-XIF-001.cr_fetch_x_async.stalled_none, CG-XIF-001.cr_fetch_x_async.stalled_irq_pending, CG-XIF-001.cr_fetch_x_async.stalled_nmi, CG-XIF-001.cr_fetch_x_async.stalled_debug_req, CG-XIF-001.cr_fetch_x_async.stalled_multiple, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_none, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_irq_pending, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_nmi, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_debug_req, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_multiple, CG-XIF-001.cr_fetch_x_async.idle_none, CG-XIF-001.cr_fetch_x_async.idle_irq_pending, CG-XIF-001.cr_fetch_x_async.idle_nmi, CG-XIF-001.cr_fetch_x_async.idle_debug_req, CG-XIF-001.cr_fetch_x_async.idle_multiple, CG-XIF-001.cr_half_x_async.single_none, CG-XIF-001.cr_half_x_async.single_irq_pending, CG-XIF-001.cr_half_x_async.single_nmi, CG-XIF-001.cr_half_x_async.single_debug_req, CG-XIF-001.cr_half_x_async.single_multiple, CG-XIF-001.cr_half_x_async.split_first_none, CG-XIF-001.cr_half_x_async.split_first_irq_pending, CG-XIF-001.cr_half_x_async.split_first_nmi, CG-XIF-001.cr_half_x_async.split_first_debug_req, CG-XIF-001.cr_half_x_async.split_first_multiple, CG-XIF-001.cr_half_x_async.split_second_none, CG-XIF-001.cr_half_x_async.split_second_irq_pending, CG-XIF-001.cr_half_x_async.split_second_nmi, CG-XIF-001.cr_half_x_async.split_second_debug_req, CG-XIF-001.cr_half_x_async.split_second_multiple
+- Bins: CG-XIF-001.cp_fetch_state.stalled, CG-XIF-001.cp_fetch_state.rsp_same_cycle, CG-XIF-001.cp_fetch_state.idle, CG-XIF-001.cp_async.none, CG-XIF-001.cp_async.irq_pending, CG-XIF-001.cp_async.nmi, CG-XIF-001.cp_async.debug_req, CG-XIF-001.cp_async.multiple, CG-XIF-001.cp_err_half.single, CG-XIF-001.cp_err_half.split_first, CG-XIF-001.cp_err_half.split_second, CG-XIF-001.cp_we.load, CG-XIF-001.cp_we.store, CG-XIF-001.cr_fetch_x_async.stalled_none, CG-XIF-001.cr_fetch_x_async.stalled_irq_pending, CG-XIF-001.cr_fetch_x_async.stalled_nmi, CG-XIF-001.cr_fetch_x_async.stalled_debug_req, CG-XIF-001.cr_fetch_x_async.stalled_multiple, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_none, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_irq_pending, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_nmi, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_debug_req, CG-XIF-001.cr_fetch_x_async.rsp_same_cycle_multiple, CG-XIF-001.cr_fetch_x_async.idle_none, CG-XIF-001.cr_fetch_x_async.idle_irq_pending, CG-XIF-001.cr_fetch_x_async.idle_nmi, CG-XIF-001.cr_fetch_x_async.idle_debug_req, CG-XIF-001.cr_fetch_x_async.idle_multiple, CG-XIF-001.cr_half_x_async.single_none, CG-XIF-001.cr_half_x_async.single_irq_pending, CG-XIF-001.cr_half_x_async.single_nmi, CG-XIF-001.cr_half_x_async.single_debug_req, CG-XIF-001.cr_half_x_async.single_multiple, CG-XIF-001.cr_half_x_async.split_first_none, CG-XIF-001.cr_half_x_async.split_first_irq_pending, CG-XIF-001.cr_half_x_async.split_first_nmi, CG-XIF-001.cr_half_x_async.split_first_debug_req, CG-XIF-001.cr_half_x_async.split_first_multiple, CG-XIF-001.cr_half_x_async.split_second_none, CG-XIF-001.cr_half_x_async.split_second_irq_pending, CG-XIF-001.cr_half_x_async.split_second_nmi, CG-XIF-001.cr_half_x_async.split_second_debug_req, CG-XIF-001.cr_half_x_async.split_second_multiple, CG-XIF-001.cp_taken_when.before_handler, CG-XIF-001.cp_taken_when.after_mret, CG-XIF-001.cp_taken_when.after_mie_write, CG-XIF-001.cp_taken_when.released, CG-XIF-001.cr_async_x_taken.irq_pending_after_mret, CG-XIF-001.cr_async_x_taken.irq_pending_after_mie_write, CG-XIF-001.cr_async_x_taken.irq_pending_released, CG-XIF-001.cr_async_x_taken.nmi_before_handler, CG-XIF-001.cr_async_x_taken.nmi_released, CG-XIF-001.cr_async_x_taken.debug_req_before_handler, CG-XIF-001.cr_async_x_taken.debug_req_released, CG-XIF-001.cr_async_x_taken.multiple_before_handler, CG-XIF-001.cr_async_x_taken.multiple_released
 
 ### TP-XIF-002: data access outstanding x debug_req_i
 - Features: F-DMEM-030, F-DBG-003, F-DBG-004, F-EXC-069, F-DMEM-025
@@ -20910,7 +22486,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Randomized: arrival instant relative to the access, load/store, error, seed
 - Knobs: knob:dmem_rvalid_delay, knob:debug_req_regime, knob:dmem_err_rate
 - Fire-check: >= 1 debug_req_i rising edge with dbus_outst >= 1; RVFI shows the load/store record (or its fault record) before the first rvfi_ext_debug_mode = 1 record, and data_rvalid_i precedes the DmHaltAddr fetch on instr_addr_o
-- Pass criteria: gen_chk_debug (entry deferred until WB drains; dpc = next pc, or the trap vector when the access faulted); gen_isa_compare; gen_chk_dbus_proto
+- Pass criteria: gen_chk_debug (entry deferred until WB drains; dpc = pc of the first not-yet-executed instruction derived from the last retired record (C-3), or the trap vector when the access faulted); gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_xif_random
 - Bins: CG-XIF-003.cp_async_src.debug_req, CG-XIF-003.cp_dbus_state.single_outst, CG-XIF-003.cp_dbus_state.split_first_outst, CG-XIF-003.cp_dbus_state.split_both_outst, CG-XIF-003.cp_dbus_state.split_second_outst, CG-XIF-003.cp_rsp_outcome.ok, CG-XIF-003.cp_rsp_outcome.err, CG-XIF-003.cp_we.load, CG-XIF-003.cp_we.store, CG-XIF-003.cr_src_x_state.debug_req_single_outst, CG-XIF-003.cr_src_x_outcome_x_we.debug_req_ok_load, CG-XIF-003.cr_src_x_outcome_x_we.debug_req_ok_store, CG-XIF-003.cr_src_x_outcome_x_we.debug_req_err_load, CG-XIF-003.cr_src_x_outcome_x_we.debug_req_err_store
@@ -20923,8 +22499,8 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_line_mix = with_nmi, dmem_rvalid_delay in {long, random}; per-transaction rdata_intg corruption on ~1/1000 responses
 - Randomized: NMI arrival instant, which access is corrupted, load/store, seed
 - Knobs: knob:irq_line_mix, knob:dmem_rvalid_delay, knob:irq_regime
-- Fire-check: >= 1 irq_nm_i rising edge with dbus_outst >= 1 (external) and >= 1 alert_major_bus_o pulse on the corrupted first-half response of a misaligned pair while its second half is still outstanding (internal; the only reachable in-flight state for nmi_int, CG-XIF-003 count rule); the outstanding access completes before the NMI handler's first record (rvfi_ext_nmi / rvfi_ext_nmi_int)
-- Pass criteria: gen_chk_nmi (cause 0x8000001F, mstack save/restore); gen_chk_bus_intg_rsp (internal NMI cause 0xFFFFFFE0, mtval, rf_wr_suppress, alert pulse); gen_isa_compare; gen_chk_dbus_proto
+- Fire-check: >= 1 irq_nm_i rising edge with dbus_outst >= 1 (external) and >= 1 alert_major_bus_o pulse on the corrupted first-half response of a misaligned pair while its second half is still outstanding (internal; the only reachable in-flight state for nmi_int, CG-XIF-003 count rule); the outstanding access completes before the NMI handler's first record (rvfi_ext_nmi / rvfi_ext_nmi_int; for the internal NMI 0..2 ordinary records may retire between the corrupted access's record and the marker, D21 / C-7)
+- Pass criteria: gen_chk_nmi (cause 0x8000001F, mstack save/restore); gen_chk_bus_intg_rsp (internal NMI cause 0xFFFFFFE0, mtval, alert pulse; rvfi_ext_rf_wr_suppress = 1 is required only when the COMPLETING beat carries the error: the in-flight nmi_int case here corrupts the FIRST beat of a misaligned load, which writes rd (B16, C-8), recorded here and gated only by the mem area's expected-fail item); gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_xif_random
 - Bins: CG-XIF-003.cp_async_src.nmi_ext, CG-XIF-003.cp_async_src.nmi_int, CG-XIF-003.cr_src_x_state.nmi_ext_single_outst, CG-XIF-003.cr_src_x_state.nmi_ext_split_first_outst, CG-XIF-003.cr_src_x_state.nmi_ext_split_both_outst, CG-XIF-003.cr_src_x_state.nmi_ext_split_second_outst, CG-XIF-003.cr_src_x_state.nmi_int_split_both_outst, CG-XIF-003.cr_src_x_outcome_x_we.nmi_ext_ok_load, CG-XIF-003.cr_src_x_outcome_x_we.nmi_ext_ok_store, CG-XIF-003.cr_src_x_outcome_x_we.nmi_ext_err_load, CG-XIF-003.cr_src_x_outcome_x_we.nmi_ext_err_store, CG-XIF-003.cr_src_x_outcome_x_we.nmi_int_ok_load, CG-XIF-003.cr_src_x_outcome_x_we.nmi_int_ok_store, CG-XIF-003.cr_src_x_outcome_x_we.nmi_int_err_load, CG-XIF-003.cr_src_x_outcome_x_we.nmi_int_err_store
@@ -20937,8 +22513,8 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_regime in {sparse, storm}, irq_line_mix = with_nmi in some phases, debug_req_regime sparse, imem_rvalid_delay long (fetch outstanding at WFI), dmem_rvalid_delay long (data outstanding at WFI), scr_key_delay = withheld_then_valid with fence.i just before WFI (icache busy), fetch_enable_regime toggling in some phases
 - Randomized: wake source, pending state, mode, MIE/TW, seed
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:scr_key_delay, knob:fetch_enable_regime
-- Fire-check: >= 1 WFI retirement after which core_busy_o was IbexMuBiOff for >= 2 consecutive cycles (SLEEP, not the one-cycle WAIT_SLEEP dip every WFI produces) and a wake edge followed for each source class {irq_maskable, nmi, debug_req}; >= 1 WFI retired with ibus_outst >= 1 and >= 1 with dbus_outst >= 1 (core_busy_o stayed On until they drained); >= 1 WFI that never slept (Off <= 1 cycle) because the wake condition was already true; >= 1 stepped WFI (dcsr.step = 1) whose next record is the step re-entry with debug_req_i low (CG-XIF-004.cr_src_x_result.none_needed_debug_entered)
-- Pass criteria: gen_chk_sleep / core_busy rule (Off beyond the one-cycle dip only with nothing outstanding and no wake term; no instr_req_o while Off; wake only on irq/nmi/debug); gen_chk_irq; gen_chk_nmi; gen_chk_debug; gen_isa_compare (resume pc = WFI + 4, trap or no trap per MIE/mode)
+- Fire-check: >= 1 WFI retirement after which core_busy_o was IbexMuBiOff for >= 2 consecutive cycles (SLEEP held; the single WAIT_SLEEP Off cycle of an unstepped WFI is not sleep, C-5) and a wake edge followed for each source class {irq_maskable, nmi, debug_req}; >= 1 WFI retired with ibus_outst >= 1 in its WB-exit cycle (S18) and >= 1 WFI that entered ID while the preceding load/store's response was still outstanding (S21: the WFI record follows the load/store record by exactly one cycle; at the WFI's own WB exit the data bus is always idle because the wfi waits in DECODE for ready_wb_i, rtl/ibex_controller.sv:668-678, fact-check TP-XIF-004), in both cases core_busy_o stayed On until the beat / response drained; >= 1 WFI that never slept (Off <= 1 cycle) because the wake condition was already true; >= 1 stepped WFI (dcsr.step = 1) with core_busy_o never Off between its record and the DmHaltAddr fetch and whose next record is the debug-ROM entry with debug_req_i low (FLUSH -> DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987; CG-XIF-004.cr_src_x_result.none_needed_debug_entered)
+- Pass criteria: gen_chk_sleep / core_busy rule (C-5: Off beyond the one WAIT_SLEEP cycle only with nothing outstanding and no wake term; the one-cycle dip only with no fetch beat outstanding, no invalidation and an idle LSU; no Off cycle at all for a stepped WFI; instr_req_o == 0 whenever core_busy_o == Off; wake only on irq/nmi/debug); gen_chk_irq; gen_chk_nmi; gen_chk_debug; gen_isa_compare (resume pc = WFI + 4, trap or no trap per MIE/mode)
 - Expected: pass
 - Test group: gen_xif_random
 - Bins: CG-XIF-004.cp_slept.slept, CG-XIF-004.cp_slept.no_sleep, CG-XIF-004.cp_wake_src.irq_maskable, CG-XIF-004.cp_wake_src.nmi, CG-XIF-004.cp_wake_src.debug_req, CG-XIF-004.cp_wake_src.none_needed, CG-XIF-004.cp_wake_result.trap_taken, CG-XIF-004.cp_wake_result.resumed_no_trap, CG-XIF-004.cp_wake_result.debug_entered, CG-XIF-004.cp_wake_result.illegal_trap, CG-XIF-004.cp_pending_at_wfi.none, CG-XIF-004.cp_pending_at_wfi.fetch_outst, CG-XIF-004.cp_pending_at_wfi.data_outst, CG-XIF-004.cp_pending_at_wfi.icache_busy, CG-XIF-004.cp_mode_at_wfi.m, CG-XIF-004.cp_mode_at_wfi.u, CG-XIF-004.cr_src_x_result.irq_maskable_trap_taken, CG-XIF-004.cr_src_x_result.irq_maskable_resumed_no_trap, CG-XIF-004.cr_src_x_result.irq_maskable_debug_entered, CG-XIF-004.cr_src_x_result.nmi_trap_taken, CG-XIF-004.cr_src_x_result.nmi_resumed_no_trap, CG-XIF-004.cr_src_x_result.nmi_debug_entered, CG-XIF-004.cr_src_x_result.debug_req_trap_taken, CG-XIF-004.cr_src_x_result.debug_req_resumed_no_trap, CG-XIF-004.cr_src_x_result.debug_req_debug_entered, CG-XIF-004.cr_src_x_result.none_needed_resumed_no_trap, CG-XIF-004.cr_src_x_result.none_needed_debug_entered, CG-XIF-004.cr_pending_x_src.none_irq_maskable, CG-XIF-004.cr_pending_x_src.none_nmi, CG-XIF-004.cr_pending_x_src.none_debug_req, CG-XIF-004.cr_pending_x_src.none_none_needed, CG-XIF-004.cr_pending_x_src.fetch_outst_irq_maskable, CG-XIF-004.cr_pending_x_src.fetch_outst_nmi, CG-XIF-004.cr_pending_x_src.fetch_outst_debug_req, CG-XIF-004.cr_pending_x_src.fetch_outst_none_needed, CG-XIF-004.cr_pending_x_src.data_outst_irq_maskable, CG-XIF-004.cr_pending_x_src.data_outst_nmi, CG-XIF-004.cr_pending_x_src.data_outst_debug_req, CG-XIF-004.cr_pending_x_src.data_outst_none_needed, CG-XIF-004.cr_pending_x_src.icache_busy_irq_maskable, CG-XIF-004.cr_pending_x_src.icache_busy_nmi, CG-XIF-004.cr_pending_x_src.icache_busy_debug_req, CG-XIF-004.cr_pending_x_src.icache_busy_none_needed, CG-XIF-004.cr_mode_x_result.m_trap_taken, CG-XIF-004.cr_mode_x_result.m_resumed_no_trap, CG-XIF-004.cr_mode_x_result.m_debug_entered, CG-XIF-004.cr_mode_x_result.u_trap_taken, CG-XIF-004.cr_mode_x_result.u_resumed_no_trap, CG-XIF-004.cr_mode_x_result.u_debug_entered, CG-XIF-004.cr_mode_x_result.u_illegal_trap
@@ -20994,7 +22570,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Randomized: arrival instant relative to the two halves, load/store, error half, seed
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:irq_regime, knob:dmem_err_rate
 - Fire-check: >= 1 irq_pending_o rising edge while dbus_outst >= 1, including >= 1 while a misaligned pair is in flight in each of the three split sub-states (S5); both halves complete on the bus before the handler's vector fetch and the RVFI record of the access precedes the rvfi_intr record
-- Pass criteria: gen_isa_compare (mepc = instruction after the load/store; data assembled correctly; exception wins if a half errors); gen_chk_irq; gen_chk_dbus_proto (both halves issued and answered)
+- Pass criteria: gen_isa_compare (mepc = pc of the first not-yet-executed instruction derived from the last retired record, C-3: an instruction that had already entered ID behind the load/store completes first; data assembled correctly; exception wins if a half errors); gen_chk_irq; gen_chk_dbus_proto (both halves issued and answered)
 - Expected: pass
 - Test group: gen_xif_random
 - Bins: CG-XIF-003.cp_async_src.irq_maskable, CG-XIF-003.cr_src_x_state.irq_maskable_single_outst, CG-XIF-003.cr_src_x_state.irq_maskable_split_first_outst, CG-XIF-003.cr_src_x_state.irq_maskable_split_both_outst, CG-XIF-003.cr_src_x_state.irq_maskable_split_second_outst, CG-XIF-003.cr_src_x_outcome_x_we.irq_maskable_ok_load, CG-XIF-003.cr_src_x_outcome_x_we.irq_maskable_ok_store, CG-XIF-003.cr_src_x_outcome_x_we.irq_maskable_err_load, CG-XIF-003.cr_src_x_outcome_x_we.irq_maskable_err_store
@@ -21008,7 +22584,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Randomized: arrival instant, split sub-state, load/store, seed
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:debug_req_regime
 - Fire-check: >= 1 debug_req_i rising edge while a misaligned pair is in flight in each split sub-state; both halves complete before the DmHaltAddr fetch and the access's RVFI record precedes the first debug-mode record
-- Pass criteria: gen_chk_debug (dpc = next pc; entry after WB drains); gen_isa_compare; gen_chk_dbus_proto
+- Pass criteria: gen_chk_debug (dpc = pc of the first not-yet-executed instruction, C-3; entry after WB drains); gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_xif_random
 - Bins: CG-XIF-003.cr_src_x_state.debug_req_split_first_outst, CG-XIF-003.cr_src_x_state.debug_req_split_both_outst, CG-XIF-003.cr_src_x_state.debug_req_split_second_outst
@@ -21021,7 +22597,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with dmem_rvalid_delay long so the pair is still outstanding when the CSR write sits in ID; dmem_err_rate rare (WB error cancels the CSR write, F-CSR-008)
 - Randomized: which CSR, new verdict, error half, seed
 - Knobs: knob:dmem_rvalid_delay, knob:pmp_regime, knob:dmem_err_rate
-- Fire-check: >= 1 retired PMP CSR write whose predecessor record is a misaligned load/store whose second-half response arrived after the predecessor's retirement (S5 timestamps vs RVFI); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back)
+- Fire-check: >= 1 retired PMP CSR write that entered ID while its predecessor misaligned load/store's second half was still outstanding (S21: the CSR write's record follows the pair's record by exactly one cycle; the pair's record is one cycle after its second-half data_rvalid_i, so a response "after the predecessor's retirement" is impossible and the class is anchored at ID entry, S-4 back-dating, fact-check TP-XIF-010); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back)
 - Pass criteria: gen_chk_csr_readback (value written once; cancelled write leaves the old value); gen_chk_pmp (next access checked against the new configuration); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_random
@@ -21077,7 +22653,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_regime storm, irq_hold through_handler, irq_line_mix multi
 - Randomized: CSR, value, arrival instant, seed
 - Knobs: knob:irq_regime, knob:irq_hold, knob:irq_line_mix, knob:instr_mix
-- Fire-check: >= 1 flushing CSR write whose commit cycle (its RVFI record cycle - GEN_CSR_COMMIT_TO_RVFI_OFFSET = 2, S18) has irq_pending_o = 1, >= 1 non-flushing (mscratch/mepc) write likewise, >= 1 mie write after which irq_pending_o rose in the cycle BEFORE the write's RVFI record (record - 1: the mie update is visible on the pin one cycle after the commit, so the edge precedes the record; a window "after the record" never samples) and the next record is the handler, and >= 1 mie write after which it fell in that cycle and the next record is sequential
+- Fire-check: >= 1 flushing CSR write whose commit cycle (its RVFI record cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, S18) has irq_pending_o = 1, >= 1 non-flushing (mscratch/mepc) write likewise, >= 1 mie write after which irq_pending_o rose in the cycle BEFORE the write's RVFI record (record - 1: the mie update is visible on the pin one cycle after the commit, so the edge precedes the record; a window "after the record" never samples) and the next record is the handler, and >= 1 mie write after which it fell in that cycle and the next record is sequential
 - Pass criteria: gen_chk_csr_readback (written value visible to the next read); gen_chk_irq (irq_pending_o follows mie the cycle after the commit, i.e. one cycle before the record; handler entry after an enabling write with no instruction in between); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_random
@@ -21091,11 +22667,11 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_regime storm, irq_line_mix with_nmi, irq_hold through_handler (line still high at mret), debug_req_regime sparse with 50% held through dret
 - Randomized: return mode, MPIE, arrival instant, seed
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:irq_hold, knob:debug_req_regime, knob:priv_regime
-- Fire-check: >= 1 mret and >= 1 dret retirement with irq_pending_o = 1, >= 1 each with irq_nm_i = 1 and >= 1 each with debug_req_i = 1 in the retirement cycle; the next record is the handler / debug entry with mepc or dpc equal to the mret/dret target, or sequential when MPIE = 0 (mret) with the interrupt still pending
-- Pass criteria: gen_isa_compare (mret/dret semantics, mepc/dpc of the re-taken trap, mode); gen_chk_irq; gen_chk_nmi; gen_chk_debug
+- Fire-check: >= 1 mret and >= 1 dret retirement with irq_pending_o = 1, >= 1 each with irq_nm_i = 1 and >= 1 each with debug_req_i = 1 in the commit (FLUSH) cycle (S18: record - GEN_TRAP_TO_RVFI_OFFSET); the outcome is attributed by the next record (C-3): with debug_req_i high the first debug-ROM record follows with dpc read back == the mret/dret target; with irq_nm_i high the NMI handler record (rvfi_intr = 1, rvfi_ext_nmi) follows with mepc read back == the target regardless of MIE; with only an ordinary interrupt pending the handler record follows (mepc read back == the target) iff the landing context enables it (rtl/ibex_controller.sv:490 irq_enabled = MIE | priv == U): after mret always when MPP = U, and when MPP = M only with the restored MIE = MPIE = 1; after dret always when dcsr.prv = U, and when prv = M only with mstatus.MIE = 1; otherwise the next record is sequential at the target (rvfi_pc_rdata == mepc & ~1 / dpc, C-1: the mret/dret record's own rvfi_pc_wdata is not the target) with irq_pending_o still 1; per seed >= 1 mret to M with MPIE = 0 -> sequential, >= 1 mret to U with MPIE = 0 -> handler, >= 1 dret to M with MIE = 0 -> sequential
+- Pass criteria: gen_isa_compare (mret/dret semantics, mepc/dpc of the re-taken trap, mode); gen_chk_irq (entry iff irq_enabled in the landing context; no entry when landing in M with MIE = 0, no deferral when landing in U or in M with MIE = 1); gen_chk_nmi; gen_chk_debug
 - Expected: pass
 - Test group: gen_xif_random
-- Bins: CG-XIF-007.cp_flush_kind.mret, CG-XIF-007.cp_flush_kind.dret, CG-XIF-007.cp_mode_to.m, CG-XIF-007.cp_mode_to.u, CG-XIF-007.cr_kind_x_irq.mret_none, CG-XIF-007.cr_kind_x_irq.mret_irq_pending, CG-XIF-007.cr_kind_x_irq.mret_nmi, CG-XIF-007.cr_kind_x_irq.mret_debug_req, CG-XIF-007.cr_kind_x_irq.mret_multiple, CG-XIF-007.cr_kind_x_irq.dret_none, CG-XIF-007.cr_kind_x_irq.dret_irq_pending, CG-XIF-007.cr_kind_x_irq.dret_nmi, CG-XIF-007.cr_kind_x_irq.dret_debug_req, CG-XIF-007.cr_kind_x_irq.dret_multiple, CG-XIF-007.cr_mode_to_x_irq.m_none, CG-XIF-007.cr_mode_to_x_irq.m_irq_pending, CG-XIF-007.cr_mode_to_x_irq.m_nmi, CG-XIF-007.cr_mode_to_x_irq.m_debug_req, CG-XIF-007.cr_mode_to_x_irq.m_multiple, CG-XIF-007.cr_mode_to_x_irq.u_none, CG-XIF-007.cr_mode_to_x_irq.u_irq_pending, CG-XIF-007.cr_mode_to_x_irq.u_nmi, CG-XIF-007.cr_mode_to_x_irq.u_debug_req, CG-XIF-007.cr_mode_to_x_irq.u_multiple
+- Bins: CG-XIF-007.cp_flush_kind.mret, CG-XIF-007.cp_flush_kind.dret, CG-XIF-007.cp_mode_to.m, CG-XIF-007.cp_mode_to.u, CG-XIF-007.cr_kind_x_irq.mret_none, CG-XIF-007.cr_kind_x_irq.mret_irq_pending, CG-XIF-007.cr_kind_x_irq.mret_nmi, CG-XIF-007.cr_kind_x_irq.mret_debug_req, CG-XIF-007.cr_kind_x_irq.mret_multiple, CG-XIF-007.cr_kind_x_irq.dret_none, CG-XIF-007.cr_kind_x_irq.dret_irq_pending, CG-XIF-007.cr_kind_x_irq.dret_nmi, CG-XIF-007.cr_kind_x_irq.dret_debug_req, CG-XIF-007.cr_kind_x_irq.dret_multiple, CG-XIF-007.cr_mode_to_x_irq.m_none, CG-XIF-007.cr_mode_to_x_irq.m_irq_pending, CG-XIF-007.cr_mode_to_x_irq.m_nmi, CG-XIF-007.cr_mode_to_x_irq.m_debug_req, CG-XIF-007.cr_mode_to_x_irq.m_multiple, CG-XIF-007.cr_mode_to_x_irq.u_none, CG-XIF-007.cr_mode_to_x_irq.u_irq_pending, CG-XIF-007.cr_mode_to_x_irq.u_nmi, CG-XIF-007.cr_mode_to_x_irq.u_debug_req, CG-XIF-007.cr_mode_to_x_irq.u_multiple, CG-XIF-007.cp_landing_enable.enabled, CG-XIF-007.cp_landing_enable.disabled, CG-XIF-007.cp_irq_outcome.taken, CG-XIF-007.cp_irq_outcome.deferred, CG-XIF-007.cr_landing_x_outcome.enabled_taken, CG-XIF-007.cr_landing_x_outcome.disabled_deferred
 
 ### TP-XIF-016: fetch_enable_i Off x outstanding transactions and pending requests
 - Features: F-IMEM-022, F-IMEM-023, F-IMEM-024, F-IMEM-025, F-RST-010, F-RST-011, F-RST-012, F-RST-013, F-RST-014, F-RST-015, F-IRQ-056, F-SEC-012, F-DIT-028
@@ -21105,22 +22681,22 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with fetch_enable_regime = toggling in most phases, imem/dmem rvalid delays long, irq_regime sparse, debug_req_regime sparse, WFI in the program, compressed_heavy regions
 - Randomized: Off instant, Off length and encoding, in-flight state, seed
 - Knobs: knob:fetch_enable_regime, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:debug_req_regime
-- Fire-check: >= 1 Off edge for each in-flight class of CG-XIF-008.cp_inflight (except none) observed by the monitors in the edge cycle; the in-flight transactions complete on the bus during the Off window, no new instr_req_o and no retirement occurs after the drained instructions, and the first record after re-enable is the held PC, the handler or the debug ROM
-- Pass criteria: gen_chk_fetch_en (no fetch/retire while Off; resume from held PC; invalid encoding = Off); gen_chk_alerts (no alert on invalid encoding); gen_chk_irq / gen_chk_debug (trap state may advance while Off; handler fetched after re-enable); gen_isa_compare
+- Fire-check: >= 1 Off edge for each in-flight class of CG-XIF-008.cp_inflight (except none) observed by the monitors in the edge cycle; the in-flight transactions complete on the bus during the Off window; every instr_req_o inside the Off window addresses a remaining beat of a line open at the edge (C-4 / X-5: fill_ext_req has no req_i term, so allocated lines keep requesting and a held request is never withdrawn), no new line is allocated, instr_req_o == 0 whenever core_busy_o == Off, no retirement occurs after the drained instructions, and the first record after re-enable is the held PC (C-1: the first not-yet-executed instruction derived from the last pre-Off record), the handler or the debug ROM; per seed >= 1 Off window with >= 1 continuing beat of an open line (CG-XIF-008.cp_during_off.fetch_req_open_line)
+- Pass criteria: gen_chk_fetch_en (C-4 rule: no new line allocation after the Off edge, remaining beats of open lines legal, no withdrawn request, instr_req_o == 0 whenever core_busy_o == Off, no retirement after the drain; resume from the held PC; invalid encoding = Off); gen_chk_ibus_proto (req held until gnt across the edge); gen_chk_alerts (no alert on invalid encoding); gen_chk_irq / gen_chk_debug (trap state may advance while Off; handler fetched after re-enable); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_fetch_enable
-- Bins: CG-XIF-008.cp_off_encoding.mubi_off, CG-XIF-008.cp_off_encoding.invalid_encoding, CG-XIF-008.cp_inflight.none, CG-XIF-008.cp_inflight.fetch_outst, CG-XIF-008.cp_inflight.data_outst, CG-XIF-008.cp_inflight.split_inflight, CG-XIF-008.cp_inflight.irq_pending, CG-XIF-008.cp_inflight.nmi, CG-XIF-008.cp_inflight.debug_req, CG-XIF-008.cp_inflight.sleeping, CG-XIF-008.cp_inflight.in_debug, CG-XIF-008.cp_inflight.zcmp_inflight, CG-XIF-008.cp_off_duration.one_cycle, CG-XIF-008.cp_off_duration.short, CG-XIF-008.cp_off_duration.long, CG-XIF-008.cp_during_off.nothing, CG-XIF-008.cp_during_off.async_rises, CG-XIF-008.cp_during_off.data_rsp_returns, CG-XIF-008.cp_during_off.fetch_rsp_returns, CG-XIF-008.cp_retire_after.resumed_sequential, CG-XIF-008.cp_retire_after.handler, CG-XIF-008.cp_retire_after.debug, CG-XIF-008.cr_enc_x_inflight.mubi_off_none, CG-XIF-008.cr_enc_x_inflight.mubi_off_fetch_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_data_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_split_inflight, CG-XIF-008.cr_enc_x_inflight.mubi_off_irq_pending, CG-XIF-008.cr_enc_x_inflight.mubi_off_nmi, CG-XIF-008.cr_enc_x_inflight.mubi_off_debug_req, CG-XIF-008.cr_enc_x_inflight.mubi_off_sleeping, CG-XIF-008.cr_enc_x_inflight.mubi_off_in_debug, CG-XIF-008.cr_enc_x_inflight.mubi_off_zcmp_inflight, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_none, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_fetch_outst, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_data_outst, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_split_inflight, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_irq_pending, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_nmi, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_debug_req, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_sleeping, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_in_debug, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_zcmp_inflight, CG-XIF-008.cr_dur_x_during.one_cycle_nothing, CG-XIF-008.cr_dur_x_during.one_cycle_async_rises, CG-XIF-008.cr_dur_x_during.one_cycle_data_rsp_returns, CG-XIF-008.cr_dur_x_during.one_cycle_fetch_rsp_returns, CG-XIF-008.cr_dur_x_during.short_nothing, CG-XIF-008.cr_dur_x_during.short_async_rises, CG-XIF-008.cr_dur_x_during.short_data_rsp_returns, CG-XIF-008.cr_dur_x_during.short_fetch_rsp_returns, CG-XIF-008.cr_dur_x_during.long_nothing, CG-XIF-008.cr_dur_x_during.long_async_rises, CG-XIF-008.cr_dur_x_during.long_data_rsp_returns, CG-XIF-008.cr_dur_x_during.long_fetch_rsp_returns, CG-XIF-008.cr_during_x_after.nothing_resumed_sequential, CG-XIF-008.cr_during_x_after.nothing_handler, CG-XIF-008.cr_during_x_after.nothing_debug, CG-XIF-008.cr_during_x_after.async_rises_resumed_sequential, CG-XIF-008.cr_during_x_after.async_rises_handler, CG-XIF-008.cr_during_x_after.async_rises_debug, CG-XIF-008.cr_during_x_after.data_rsp_returns_resumed_sequential, CG-XIF-008.cr_during_x_after.data_rsp_returns_handler, CG-XIF-008.cr_during_x_after.data_rsp_returns_debug, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_resumed_sequential, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_handler, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_debug
+- Bins: CG-XIF-008.cp_off_encoding.mubi_off, CG-XIF-008.cp_off_encoding.invalid_encoding, CG-XIF-008.cp_inflight.none, CG-XIF-008.cp_inflight.fetch_outst, CG-XIF-008.cp_inflight.data_outst, CG-XIF-008.cp_inflight.split_inflight, CG-XIF-008.cp_inflight.irq_pending, CG-XIF-008.cp_inflight.nmi, CG-XIF-008.cp_inflight.debug_req, CG-XIF-008.cp_inflight.sleeping, CG-XIF-008.cp_inflight.in_debug, CG-XIF-008.cp_inflight.zcmp_inflight, CG-XIF-008.cp_off_duration.one_cycle, CG-XIF-008.cp_off_duration.short, CG-XIF-008.cp_off_duration.long, CG-XIF-008.cp_during_off.nothing, CG-XIF-008.cp_during_off.async_rises, CG-XIF-008.cp_during_off.data_rsp_returns, CG-XIF-008.cp_during_off.fetch_rsp_returns, CG-XIF-008.cp_retire_after.resumed_sequential, CG-XIF-008.cp_retire_after.handler, CG-XIF-008.cp_retire_after.debug, CG-XIF-008.cr_enc_x_inflight.mubi_off_none, CG-XIF-008.cr_enc_x_inflight.mubi_off_fetch_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_data_outst, CG-XIF-008.cr_enc_x_inflight.mubi_off_split_inflight, CG-XIF-008.cr_enc_x_inflight.mubi_off_irq_pending, CG-XIF-008.cr_enc_x_inflight.mubi_off_nmi, CG-XIF-008.cr_enc_x_inflight.mubi_off_debug_req, CG-XIF-008.cr_enc_x_inflight.mubi_off_sleeping, CG-XIF-008.cr_enc_x_inflight.mubi_off_in_debug, CG-XIF-008.cr_enc_x_inflight.mubi_off_zcmp_inflight, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_none, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_fetch_outst, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_data_outst, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_split_inflight, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_irq_pending, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_nmi, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_debug_req, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_sleeping, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_in_debug, CG-XIF-008.cr_enc_x_inflight.invalid_encoding_zcmp_inflight, CG-XIF-008.cr_dur_x_during.one_cycle_nothing, CG-XIF-008.cr_dur_x_during.one_cycle_async_rises, CG-XIF-008.cr_dur_x_during.one_cycle_data_rsp_returns, CG-XIF-008.cr_dur_x_during.one_cycle_fetch_rsp_returns, CG-XIF-008.cr_dur_x_during.short_nothing, CG-XIF-008.cr_dur_x_during.short_async_rises, CG-XIF-008.cr_dur_x_during.short_data_rsp_returns, CG-XIF-008.cr_dur_x_during.short_fetch_rsp_returns, CG-XIF-008.cr_dur_x_during.long_nothing, CG-XIF-008.cr_dur_x_during.long_async_rises, CG-XIF-008.cr_dur_x_during.long_data_rsp_returns, CG-XIF-008.cr_dur_x_during.long_fetch_rsp_returns, CG-XIF-008.cr_during_x_after.nothing_resumed_sequential, CG-XIF-008.cr_during_x_after.nothing_handler, CG-XIF-008.cr_during_x_after.nothing_debug, CG-XIF-008.cr_during_x_after.async_rises_resumed_sequential, CG-XIF-008.cr_during_x_after.async_rises_handler, CG-XIF-008.cr_during_x_after.async_rises_debug, CG-XIF-008.cr_during_x_after.data_rsp_returns_resumed_sequential, CG-XIF-008.cr_during_x_after.data_rsp_returns_handler, CG-XIF-008.cr_during_x_after.data_rsp_returns_debug, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_resumed_sequential, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_handler, CG-XIF-008.cr_during_x_after.fetch_rsp_returns_debug, CG-XIF-008.cp_during_off.fetch_req_open_line, CG-XIF-008.cr_dur_x_during.one_cycle_fetch_req_open_line, CG-XIF-008.cr_dur_x_during.short_fetch_req_open_line, CG-XIF-008.cr_dur_x_during.long_fetch_req_open_line, CG-XIF-008.cr_during_x_after.fetch_req_open_line_resumed_sequential, CG-XIF-008.cr_during_x_after.fetch_req_open_line_handler, CG-XIF-008.cr_during_x_after.fetch_req_open_line_debug
 
 ### TP-XIF-017: reset asserted mid-run x each in-flight class
 - Features: F-RST-001, F-RST-008, F-RST-009, F-RST-018, F-RST-019, F-RST-024, F-RST-026, F-SEC-035, F-IC-009, F-IC-022, F-DBG-008, F-IRQ-055, F-RVFI-033
 - Phase: 2
 - Tier: full
 - Preconditions: none (the program is re-booted after each reset from boot_addr_i + 0x80)
-- Stimulus: rst_ni asserted at randomized instants (1..64 cycles low) chosen to land in each in-flight class (the reset test samples the monitors and fires when a target class is observed); memory model drains or drops pre-reset responses per the recorded policy (F-RST-018 note); debug_req_i / irq_nm_i randomly held across release
+- Stimulus: rst_ni asserted at randomized instants (1..64 cycles low) chosen to land in each in-flight class (the reset test samples the monitors and fires when a target class is observed); the memory model DROPS every response still owed for a pre-reset request at release (S3 / Q-010: the LSU and the icache have no outstanding-request qualifier, rtl/ibex_load_store_unit.sv:694-697, so an unsolicited rvalid after release would be consumed as a response: rf_we pulse, a spurious access fault on data_err_i, alert_major_bus_o on bad integrity; responses delivered while rst_ni is still low are harmless and may be drained); debug_req_i / irq_nm_i randomly held across release
 - Randomized: reset instant, length, in-flight class, hold across release, seed
 - Knobs: knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:debug_req_regime, knob:scr_key_delay, knob:fetch_enable_regime
-- Fire-check: >= 1 mid-run reset per in-flight class of CG-XIF-010.cp_inflight observed in the falling-edge cycle; after release the first instr_addr_o is the boot vector within 2 cycles (fetch on), all outputs sit at reset values in the first cycle, and any stale response is ignored (no RVFI record, no RF write)
-- Pass criteria: gen_chk_reset (new: reset values of every output, boot fetch, stale-response policy); gen_chk_alerts (alert_major_bus_o only if the stale response carried bad integrity); gen_chk_crash_dump (reset values); gen_isa_compare (restart from the reset state)
+- Fire-check: >= 1 mid-run reset per in-flight class of CG-XIF-010.cp_inflight observed in the falling-edge cycle; after release the first instr_addr_o is the boot vector within 2 cycles (fetch on), all outputs sit at reset values in the first cycle, and the dbus/ibus monitors see zero rvalid pulses between release and the first post-reset grant on that bus; per seed the model logged >= 1 dropped pre-reset response (CG-XIF-010.cp_after.stale_rsp_after_release samples that DROP event, never a delivery: the RTL would consume a stale response, fact-check TP-XIF-017)
+- Pass criteria: gen_chk_reset (new: reset values of every output, boot fetch, stale-response DROP policy: no rvalid on either bus without a post-reset grant); gen_chk_alerts (no alert_major_bus_o after release: nothing stale reaches the DUT); gen_chk_crash_dump (reset values); gen_isa_compare (restart from the reset state)
 - Expected: pass
 - Test group: gen_xif_reset
 - Bins: CG-XIF-010.cp_inflight.idle, CG-XIF-010.cp_inflight.fetch_outst, CG-XIF-010.cp_inflight.data_outst, CG-XIF-010.cp_inflight.split_inflight, CG-XIF-010.cp_inflight.zcmp_inflight, CG-XIF-010.cp_inflight.sleeping, CG-XIF-010.cp_inflight.in_debug, CG-XIF-010.cp_inflight.irq_pending, CG-XIF-010.cp_inflight.nmi, CG-XIF-010.cp_inflight.debug_req, CG-XIF-010.cp_inflight.fill_inflight, CG-XIF-010.cp_inflight.key_withheld, CG-XIF-010.cp_inflight.invalidating, CG-XIF-010.cp_inflight.fetch_en_off, CG-XIF-010.cp_after.first_fetch_boot_vector, CG-XIF-010.cp_after.stale_rsp_after_release, CG-XIF-010.cp_after.async_pending_at_release, CG-XIF-010.cp_reset_len.short, CG-XIF-010.cp_reset_len.long, CG-XIF-010.cr_inflight_x_after.idle_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.idle_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.fetch_outst_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.fetch_outst_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.fetch_outst_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.data_outst_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.data_outst_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.data_outst_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.split_inflight_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.split_inflight_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.split_inflight_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.zcmp_inflight_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.zcmp_inflight_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.zcmp_inflight_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.sleeping_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.sleeping_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.in_debug_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.in_debug_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.in_debug_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.irq_pending_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.irq_pending_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.irq_pending_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.nmi_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.nmi_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.nmi_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.debug_req_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.debug_req_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.debug_req_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.fill_inflight_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.fill_inflight_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.fill_inflight_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.key_withheld_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.key_withheld_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.key_withheld_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.invalidating_first_fetch_boot_vector, CG-XIF-010.cr_inflight_x_after.invalidating_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.invalidating_async_pending_at_release, CG-XIF-010.cr_inflight_x_after.fetch_en_off_stale_rsp_after_release, CG-XIF-010.cr_inflight_x_after.fetch_en_off_async_pending_at_release
@@ -21296,11 +22872,13 @@ where the generated program stores the region tuple to the TB phase-marker regis
   responses on that bus; MEASURED per such phase: none -> zero corrupted beats and zero
   alert_major_bus_o pulses attributable to that bus; rare -> corrupted/total in [1/2048, 1/128];
   frequent -> in [1/80, 1/5]; every corrupted beat is followed by an alert_major_bus_o pulse in
-  its response cycle (I-side exact; D-side within GEN_ALERT_BUS_WINDOW); the sweep visits every
-  ordered pair of consecutive values per knob (K >= 7)
+  its response cycle (both sides same-cycle exact, GEN_ALERT_BUS_WINDOW = 0, gen_tb_architecture.md
+  8.2 item 3); the sweep visits every ordered pair of consecutive values per knob (K >= 7)
 - Pass criteria: gen_chk_bus_intg_rsp (alert_major_bus_o per injection; D-side internal NMI with
-  mcause 0xFFFFFFE0 and rvfi_ext_rf_wr_suppress; I-side fetch fault, no NMI per D14); gen_chk_alerts;
-  gen_chk_regime
+  mcause 0xFFFFFFE0 within 0..2 ordinary records (D21 / C-7) and rvfi_ext_rf_wr_suppress = 1 when the
+  COMPLETING beat carries the error; a corrupted FIRST beat of a misaligned load is the B16 class
+  (C-8): recorded here, gated only by the mem area's expected-fail item; I-side fetch fault, no NMI
+  per D14); gen_chk_alerts; gen_chk_regime
 - Expected: pass
 - Test group: gen_xcut_regime_sweep
 - Bins: CG-REG-009.cp_imem_intg_rate.none, CG-REG-009.cp_imem_intg_rate.rare, CG-REG-009.cp_imem_intg_rate.frequent, CG-REG-009.cp_imem_intg_rate_tr.none_to_rare, CG-REG-009.cp_imem_intg_rate_tr.none_to_frequent, CG-REG-009.cp_imem_intg_rate_tr.rare_to_none, CG-REG-009.cp_imem_intg_rate_tr.rare_to_frequent, CG-REG-009.cp_imem_intg_rate_tr.frequent_to_none, CG-REG-009.cp_imem_intg_rate_tr.frequent_to_rare, CG-REG-009.cp_dmem_intg_rate.none, CG-REG-009.cp_dmem_intg_rate.rare, CG-REG-009.cp_dmem_intg_rate.frequent, CG-REG-009.cp_dmem_intg_rate_tr.none_to_rare, CG-REG-009.cp_dmem_intg_rate_tr.none_to_frequent, CG-REG-009.cp_dmem_intg_rate_tr.rare_to_none, CG-REG-009.cp_dmem_intg_rate_tr.rare_to_frequent, CG-REG-009.cp_dmem_intg_rate_tr.frequent_to_none, CG-REG-009.cp_dmem_intg_rate_tr.frequent_to_rare, CG-REG-009.cr_intg_rates.none_none, CG-REG-009.cr_intg_rates.none_rare, CG-REG-009.cr_intg_rates.none_frequent, CG-REG-009.cr_intg_rates.rare_none, CG-REG-009.cr_intg_rates.rare_rare, CG-REG-009.cr_intg_rates.rare_frequent, CG-REG-009.cr_intg_rates.frequent_none, CG-REG-009.cr_intg_rates.frequent_rare, CG-REG-009.cr_intg_rates.frequent_frequent
@@ -21362,8 +22940,9 @@ where the generated program stores the region tuple to the TB phase-marker regis
   TP-REG fire-check and by the pinning/reproduction rule.
 - gen_chk_reset: after a mid-run rst_ni assertion, every DUT output is at its reset value in the
   first cycle after release (F-RST-009), the first fetch is the boot vector when fetch is enabled
-  (F-RST-002), pre-reset responses are ignored per the recorded memory-model policy (F-RST-018),
-  and the abandoned instruction leaves no RVFI record (F-RST-019). Needed by TP-XIF-017; the
+  (F-RST-002), every response owed for a pre-reset request is DROPPED by the memory model at
+  release and none reaches the DUT (F-RST-018; S3 / Q-010: the RTL has no outstanding-request
+  qualifier), and the abandoned instruction leaves no RVFI record (F-RST-019). Needed by TP-XIF-017; the
   existing inventory has no reset checker (gen_chk_crash_dump covers only the dump fields).
 
 ## Open questions
@@ -21399,13 +22978,21 @@ where the generated program stores the region tuple to the TB phase-marker regis
   CSR-write / mret-dret commit cycles are record - 2 / record - 1 (gen_tb_architecture.md 8.2).
   "Same cycle" now names one back-dated cycle per coverpoint (S18); the only windows left are the
   entry windows, which are exact at the boundary; probe P4 is not requested.
-- Q-8 Per-knob fire-checks require a single run to visit every value (sweep schedule with K >=
-  number of values), selected by the test name (gen_reg_knob_sweep) and emitted by the test's
-  Python as an explicit `+gen_regime_sched` string; no plusarg exists beyond TB Infra's
-  `+gen_<agent>_regime`, `+gen_regime_pin` and `+gen_regime_sched` (the fcov plan's
-  `+gen_knob_<name>` are aliases, mapping table above). Blocked: TB Infra freezing the regime
-  names and the proposed `+gen_fe_regime` / `+gen_mcounteren_writable` / program-generator
-  option names in gen_knobs.py. Recommended default: adopt the mapping table as written.
+- Q-8 RESOLVED (gen_tb_architecture.md 8.3 item 4 / 8.3a; gen_tb_knobs.yaml): the command-line
+  forms are the codegen ones only, `+gen_knob_<name>=<value>` (a knob given on the command line is
+  the pin: held for the whole run) and `+gen_regime_sched=<knob>:<value>@r<N>|c<N>,...`; there is
+  no schedule-seed plusarg, no per-agent regime plusarg and no separate pin plusarg. Per-knob
+  fire-checks require a single run to visit every value (sweep schedule with K >= number of
+  values), selected by the test name (gen_reg_knob_sweep) and emitted by the test's Python as an
+  explicit `+gen_regime_sched` string. The program-side knobs reach the generator as the same
+  `+gen_knob_<name>` values forwarded by the test's Python (option names frozen with the Test
+  Writer).
+- Q-11 Absent-plusarg defaults: gen_tb_knobs.yaml renders short / short / quiet / single for
+  imem_gnt_delay, imem_rvalid_delay (dmem likewise), irq_regime and irq_line_mix; the knob
+  definitions above say random / random / sparse / multi (the Phase-1 intent: no collapse into
+  the typical case). Blocked: which side changes. Recommended default: the yaml adopts the plan
+  defaults (a Phase-1 test that does not enable the schedule then still sees mixed latencies and
+  sparse interrupts); until then Phase-1 tests pin the plan default explicitly.
 - Q-9 Random runs in gen_xif_random and gen_xif_dummy can hit bug candidates owned by other areas
   (B2 MPRV in debug mode via TP-XIF-020; B8 dummy mid-Zcmp via TP-XIF-021; B9 dcsr.cause 0 window
   via debug_req_regime = storm pulses; B6 is RTL-defined per gen_bug_log.md and its items expect

@@ -448,3 +448,23 @@ process friction caught by the flow (the pre-check), not as a defect in the gene
   independently: range or sweep selection without a per-object reachability argument.
 - Review wrapper hardened (000df6f, ece187a): scratch HOME, private PID namespace, read-only
   filesystem except the run directory; the sandbox was verified from inside by the reviewer session.
+
+## Q-015 - 2026-09-03 - QUESTION (to owner; security-relevant RTL behaviour, B16 / rtl-arch BUG-08; wording by the DV Lead)
+
+Q-015 (B16 / BUG-08; security-relevant; same shape as Q-008). A misaligned load whose FIRST bus beat
+carries a bus-integrity error still writes the merged data to its destination register: the LSU latches
+the first-half status without an integrity term (rtl/ibex_load_store_unit.sv:514) and gates the register
+write only on the integrity of the beat that completes the access (:697-698), while the alert
+(alert_major_bus_o, :756) and the internal NMI (rtl/ibex_controller.sv:402-438) do fire. The Ibex
+security documentation states the opposite intent: "Where load data has bad checkbits the write to the
+load's destination register will be suppressed" (doc/03_reference/security.rst:88). No RISC-V
+specification covers the feature. Under dv_principles.md Section 4 the RTL is less complete than the
+documented intent, so the team treats it as a bug candidate: the checker follows the documented intent
+(register write suppressed), the carrying test-plan items are expected-fail for the first-beat class
+only (aligned loads and second-beat errors agree between RTL and doc and pass), and the candidate is
+logged with its reproducer (dv/auto_dv/docs/gen_bug_log.md B16; dv/auto_dv/work/rtl-arch/
+gen_bug_reproducer_specs.md BUG-08). Decision blocked: whether this counts as a defect to report to the
+RTL owner (a corrupted value reaches architectural state before the NMI handler runs) or as accepted
+behaviour because the NMI and alert still fire; and whether the affected items stay in the Phase 1 gate
+as expected-fail. Default applied while pending: bug candidate, spec/doc direction, expected-fail for the
+first-beat class, not excluded from the gate without a recorded ruling.

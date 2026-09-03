@@ -29,3 +29,18 @@ the v1 document and TB Infra's version 3 sections (sha256 prefix b9a3cc16eccec31
 Items recorded for other roles: TB Infra removes the three retired regime-knob names still present in v3 C9
 (Section 6 preamble and 8.3 item 4); the checker-id concordance requested by the Critic's plan-set review lives in
 gen_test_plan.md Section 0a (plan v2a). SIMULATION define ruling (stays undefined) recorded in 8.1 item 6.
+
+## v1b (lows of the scoped re-review and the Critic's part 2, no re-review required) and v1c (re-embed + Section 9)
+
+| Finding | Status | Where / how |
+|---|---|---|
+| replan review low: GEN_ICACHE_ECC_WINDOW has two anchors | fixed (v1b) | 8.2 and 8.3a define the one event the constant bounds (lookup request to alert_minor_o = 1); the invalidation write is checked as alert + 1, no second constant; TB Infra's C4.8 (T-068 revision, embedded in v1c) uses the same anchor |
+| replan review low: Section 6 preamble contradicts itself on the heading shift | fixed (v1b) | one statement: two levels |
+| replan review low: 8.1 numbering 1,2,3,4,6,5; 8.2 item 7 reference | fixed (v1b) | SIMULATION is item 5, checker direction item 6; 8.2 item 7 points at 8.1 item 6 |
+| replan review low: Section 2.1 and C5.3b bug-id naming | fixed (v1b) for 2.1; C5.3b is TB Infra text | 2.1 names B1/BUG-06, B2/BUG-01, B3, B5, B15/BUG-03; a note before 8.3a asks TB Infra to align C5.3b in its next revision |
+| replan review low: Inputs row lacks the components v2 verdict | fixed (v1b) | Inputs row lists evidence/gen_critic_tb_arch_components_v2.md, docs/gen_critic_tb_architecture_v2.md and the replan review |
+| replan review medium: API docs and C9 carry retired knob names | fixed by TB Infra (T-068) and re-embedded (v1c) | Section 6 now embeds the T-068 revision (sha256 prefix in the header); no retired knob name remains in the document |
+| Critic part 2 v2 lows L-1..L-8 | fixed (v1a/v1b) | see the v1a table above; L-3 fidelity repeated for the T-068 revision in v1c (flattened embed contains the source text: True) |
+| new: T-080 RVFI record export addendum v2 | accepted and embedded (v1c) | Section 9 verbatim; acceptance note 8.5 (one clarification: `I` lines once per rising edge of the irq_valid level); the Orchestrator's cross-model replan review of the addendum precedes code |
+| v1d: sections re-embedded at TB Infra's current revision (sha256 prefix de5bc9573c84255b, incl. the C3.4/C4.2 expected-alert feed); committed docs/gen_rvfi_export_addendum.md (4c0ba11) embedded as Section 9 and the standalone file reduced to a pointer per the Orchestrator | done (v1d) | header status; Section 6 preamble; Section 9; docs/gen_rvfi_export_addendum.md pointer |
+| v1e (2026-09-03 09:40 UTC): Section 9 re-embedded from TB Infra's addendum version 2a (sha256 prefix f17d0e7897773549): one I line per rising edge of rvfi_ext_irq_valid at the rise cycle, level semantics stated (X-16 / C-13), Section 6 resolution; TB Infra disclosed that the step-2a monitor publishes ap_irq per high cycle (never fired; fixed in the T-080 build) | done (v1e) | Section 9; header status |
