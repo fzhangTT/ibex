@@ -1,0 +1,83 @@
+WS7 gate — DV_prompt.txt Section 12 launch preconditions, items 2-9, transcribed and RUN
+against the export at /localdev/fzhang/ws/ibex-cleanroom (export SHA cc114e05, source f9ac6933).
+Run date: 2026-09-02 22:14 EDT. DV_prompt.txt read at the full-tree root (owner-delivered, untracked).
+
+TRANSCRIPTION (items 2-9, verbatim from DV_prompt.txt lines 322-360)
+--------------------------------------------------------------------
+2. `docs/dv/FENCE.md` exists and carries a `ci/` allowlist that names at least `ci/env.sh`,
+   `ci/setup-venv.sh`, `ci/get-toolchain.sh`, `ci/check_fcov_expectations.py`, `ci/mcp/`, and
+   `ci/reviews/`.
+3. `docs/dv/SIM_RECIPE.md` exists and carries four dated marker lines, each with a date in
+   YYYY-MM-DD form: `executed-on:` beside its compile-and-run command; `submission-command:`
+   naming the Zone B submission command; `spike-built-on:` attesting that upstream
+   `riscv/riscv-isa-sim` was cloned over the network and built on this site; and
+   `fence-integrity: PASS`, attesting that the document holds no test names, testlist schema,
+   cosim attachment mechanics, fcov bind wiring, or `metadata.pickle` internals.
+4. `docs/dv/TB_CONTRACT.md` in this clone is the Zone A variant: it contains none of the strings
+   item 9 scans for, and carries a dated `fence-integrity: PASS` line attesting that it names no
+   existing-TB module, event, manifest path, or log-scanner behaviour.
+5. `CLAUDE.md` and `AGENTS.md` in this clone are the Zone A variants: the first ten lines of each
+   contain the marker `FENCE-ZONE: A`, and both pass the item 9 scan. `docs/dv/dv_principles.md`
+   is present, its Section 6 contains the phrase `Zone A` (the scoping sentence for "hidden
+   referees inert"), and it carries a dated `fence-integrity: PASS` line attesting that it names
+   no existing test, TB module, or DV path other than the ones Section 3 maps.
+6. No path matching `vendor/riscv?isa?sim*` exists in the clone: not the directory, not the
+   lock file, not the vendor description (the team fetches upstream Spike itself, Section 7).
+   `vendor/patches/` is absent (item 11); the `rev` in `vendor/google_riscv-dv.lock.hjson` equals
+   the revision named on a dated `riscv-dv-verified-on:` line in `docs/dv/FENCE.md` whose text
+   states that a tree diff against upstream at that revision was empty; and no file under
+   `vendor/google_riscv-dv/` contains the string `Ibex Specific`.
+7. `dv/auto_dv/.gitignore` exists and ignores `work/`.
+8. Section 4 states numeric values for N and G, Section 2 contains two bullets that begin
+   "Owner ruling (", and the sign-off line at the end of this section carries a name and a date
+   in YYYY-MM-DD form.
+9. No file under `.claude/skills/`, `.claude/agents/`, `ci/env.sh`, `ci/mcp/`, `ci/reviews/`,
+   `CLAUDE.md`, `AGENTS.md`, `.codex/config.toml`, `docs/dv/TB_CONTRACT.md`, or
+   `docs/dv/SIM_RECIPE.md` contains any of the strings `dv/uvm/core_ibex`, `core_ibex`,
+   `BUILD_AND_SIM.md`, `COSIM.md`, `disable_cosim`, `FCOV_NO_DEFAULT_SEQUENCE`, `metadata.pickle`,
+   `docs/dv/reviews/`, `ci/reviews/test-overlap`, or `ci/reviews/fence-integrity`. `ci/reviews/`
+   contains exactly six files: `GUIDE.md` and the five rubrics `ai-slop-comments.md`,
+   `rtl-purity.md`, `magic-numbers.md`, `forces-and-hier-access.md`, `assertion-integrity.md`;
+   `GUIDE.md` carries a dated `fence-integrity: PASS` line attesting that the five rubrics name no
+   existing test, TB module, plusarg, or solved-gotcha identifier. The file
+   `.claude/skills/cross-review/scripts/run_codex_review.sh` contains each of the five rubric
+   basenames other than `GUIDE.md` literally, does not contain the string `ci/reviews/*.md`, and
+   contains the string `dv/auto_dv/reviews/`.
+
+RESULTS (each check executed against the export; script: grep/ls per item)
+--------------------------------------------------------------------------
+== Item 2: docs/dv/FENCE.md exists with ci/ allowlist naming the six entries ==
+  => BLOCKED — docs/dv/FENCE.md does not exist yet: it is WS7 Task 5's deliverable (fail-closed until then per CLAUDE.md invariant 2)
+== Item 3: SIM_RECIPE.md carries four dated marker lines ==
+  found: executed-on: (dated)
+  found: submission-command: (dated)
+  found: spike-built-on: (dated)
+  found: fence-integrity: (dated)
+  => PASS
+== Item 4: TB_CONTRACT.md is Zone A variant (item-9 clean + dated fence-integrity) ==
+  => PASS
+== Item 5: CLAUDE.md/AGENTS.md Zone A markers; dv_principles.md Zone A scoping ==
+  => PASS
+== Item 6: vendor hygiene (riscv?isa?sim absent, patches absent, riscv-dv pristine, lock-rev attestation) ==
+  no vendor/riscv?isa?sim* path
+  vendor/patches absent
+  0 files contain 'Ibex Specific' under vendor/google_riscv-dv/
+  lock rev: 71666ebacd69266b1abb7cdbad5e1897ce5884e6; riscv-dv-verified-on attestation BLOCKED on FENCE.md (WS7 Task 5)
+  => PASS except lock-rev attestation sub-check: BLOCKED on FENCE.md (Task 5)
+== Item 7: dv/auto_dv/.gitignore ignores work/ ==
+  => PASS
+== Item 8: seed prompt self-checks (N, G numeric; two Section-2 owner rulings; signed sign-off) ==
+  G stated (0.5)
+  N stated (5)
+  2 'Owner ruling (' bullets
+  sign-off line is still the unsigned template
+  => BLOCKED — owner sign-off not yet recorded in DV_prompt.txt (owner action before launch)
+== Item 9: identifier scan over the named file set; ci/reviews six-file set; run_codex_review.sh contents ==
+  ci/reviews/ holds exactly 6 files
+  => PASS
+
+TALLY: items 3,4,5,7,9 PASS; item 6 PASS except its lock-rev-attestation sub-check
+(BLOCKED on docs/dv/FENCE.md — WS7 Task 5 deliverable); item 2 BLOCKED (same named
+blocker: FENCE.md is Task 5's file; fail-closed per CLAUDE.md invariant 2); item 8
+BLOCKED (owner sign-off line in DV_prompt.txt is still the unsigned template — owner
+action required before generation launch).

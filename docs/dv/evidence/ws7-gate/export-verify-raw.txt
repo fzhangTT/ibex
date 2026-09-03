@@ -1,0 +1,9 @@
+Building cleanroom export of f9ac693385c9ce89784fc4e17417423f6977227e into /tmp/ibex-cleanroom-stage.V621Lu ...
+Verifying export ...
+VALIDATOR: PASS
+Verification passed.
+Cleanroom export built.
+  dest:       /localdev/fzhang/ws/ibex-cleanroom
+  source SHA: f9ac693385c9ce89784fc4e17417423f6977227e
+  export SHA: cc114e053e8cc60d6752716cbca50949fe7f61a9
+  verify:     PASS

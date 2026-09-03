@@ -1,0 +1,65 @@
+WS7 gate (Task 4) — evidence summary
+=====================================
+Date: 2026-09-02. Task: .superpowers/sdd/2026-09-02-ws7-knowledge-fence/task-4-brief.md.
+Branch: fzhang/auto-dv-setup.
+
+SHAs
+----
+- Full-tree source HEAD at export time:  f9ac693385c9ce89784fc4e17417423f6977227e
+- Export single commit:                  cc114e053e8cc60d6752716cbca50949fe7f61a9
+- Export destination:                    /localdev/fzhang/ws/ibex-cleanroom
+  (no stale directory existed from earlier sessions — `ls` confirmed absent before the run,
+  so nothing was removed and no unlanded work was at risk)
+- Upstream spike (riscv/riscv-isa-sim):  4ffd6ba860f4190ceac2716fa3c2cf139e85538f
+- riscv-dv lock rev shipped pristine:    71666ebacd69266b1abb7cdbad5e1897ce5884e6
+  (0 files under vendor/google_riscv-dv/ contain "Ibex Specific")
+
+Tool versions
+-------------
+- VCS: X-2025.06-SP2 (site install, /tools_vendor/synopsys/vcs/X-2025.06-SP2)
+- spike: 1.1.1-dev (built from the SHA above, installed at <export>/tools/spike)
+- mex-agent: 0.8.0 on Node v24.14.0 (site build with sqlite fts5; the Node-24 PATH-prepend
+  workaround from docs/dv/evidence/ws6-mex/summary.txt applies to the cleanroom instance too)
+
+Wall-clocks
+-----------
+- Step 1 export+verify:            2 s (riscv-dv fetch served from the rev cache)
+- Full-mode selftest rerun:        ~4 min (all checks, 4 canaries, 4 landing sub-cases)
+- Step 2 VCS compile (each):       13–16 s; sim (each): 2 s
+- Step 2b spike build:             125 s (after the boost-off retry; first attempt failed in 41 s)
+- Step 3 cleanroom mex setup:      ~19 min (population agent); mex check: 4 s, 100/100 clean
+- Whole task: well inside the ~3 h budget; VCS license peak: 1 compile at a time.
+
+Step 2 — iteration count (the recipe-quality finding)
+-----------------------------------------------------
+Compile-to-green iterations: 1 (clean elaboration + passing sim on the first VCS invocation).
+Zero recipe insufficiencies were hit; no SIM_RECIPE fix/re-export cycles were needed. Total VCS
+invocations over the whole step: 5 — (1) green, (2) red stimulus toggle, (3) temporary debug
+probe, (4) red re-capture after the $sampled action-block fix, (5) final green. The probe/fix
+pair is a TB reporting defect found by the red run (action block printed post-edge values, not
+the sampled ones the property checked) — the check itself discriminated correctly from the
+start; see redgreen-transcript.txt.
+
+Fence discipline record
+-----------------------
+Inside the export, only cleanroom files were consulted: docs/dv/SIM_RECIPE.md,
+docs/dv/TB_CONTRACT.md, rtl/*.sv, *.core files, util/ibex_config.py (executed),
+vendor/lowrisc_ip (RTL deps), dv/auto_dv/.gitignore. Full-tree files touched for the TB work:
+none. Full-tree files read for non-TB steps (all allowed): the task brief, ci/make-cleanroom.sh
+(infra), docs/dv/evidence/ws6-mex/summary.txt (infra evidence, per brief), DV_prompt.txt
+(Section 12, per brief), the two process ledgers. dv/uvm/**, BUILD_AND_SIM.md, COSIM.md were
+never opened. New export files self-scanned against the fenced-identifier set: clean.
+
+Files in this bundle
+--------------------
+- export-verify-raw.txt          Step 1 raw `ci/make-cleanroom.sh` output (verify PASS)
+- selftest-fullmode-rerun.txt    canary/selftest re-proof (0 failures)
+- check-e-no-remote-mcp.txt      explicit check-(e) citation for the WS5 gate-item-3 closure
+- gen_dut_top.sv, gen_smoke_tb.sv, gen_rtl_filelist.f, gen_tb_filelist.f
+                                 the TB exactly as-run (reproducibility record)
+- compile-log-excerpt.txt        green compile+sim excerpts (0 error lines)
+- sim-green.log                  full green sim log (seed 1)
+- redgreen-transcript.txt        the discrimination proof
+- spike-build.txt                Step 2b build record (incl. the boost gotcha)
+- section12-checklist.txt        Step 2c transcription + executed results
+- cleanroom-mex-check.txt        Step 3 `mex check` output from the export's own instance

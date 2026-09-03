@@ -1,0 +1,14 @@
+== GREEN compile excerpt (export: dv/auto_dv/out_gate/compile.log), invocation exit 0, wall 13s ==
+485:Top Level Modules:
+486-       uvm_custom_install_verdi_recording
+487-       gen_smoke_tb
+617:CPU time: 6.806 seconds to compile + .231 seconds to elab + .721 seconds to link
+Error-line count: 0
+VCS: X-2025.06-SP2 (from tool path in log: /tools_vendor/synopsys/vcs/X-2025.06-SP2)
+
+== GREEN sim excerpt (run1/sim.log), exit 0, wall 2s, seed 1 ==
+GEN_SMOKE: seed = 1
+GEN_SMOKE: fetch enabled at 29500
+GEN_SMOKE: magic store observed with expected value 0x000005a5 at 33500
+GEN_SMOKE: check evaluated 1 time(s), fail_count = 0
+GEN_SMOKE: TEST PASSED

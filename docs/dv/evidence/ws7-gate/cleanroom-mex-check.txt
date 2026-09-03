@@ -1,0 +1,20 @@
+WS7 gate — Step 3: the cleanroom export's own mex instance
+Run date: 2026-09-02 22:23 EDT. mex-agent 0.8.0, Node v24.14.0 (fts5 workaround per docs/dv/evidence/ws6-mex/summary.txt).
+
+mex setup: exit 0. Scaffold + code graph + wiki built INSIDE the export from visible files
+only (population agent ran in the export root). Wall: ~19 min end-to-end (dominated by the
+scaffold-population agent). Setup wrote .mex/{graph.db,wiki.db,context/*,patterns/*},
+appended the mex anchor block to the export's CLAUDE.md (+10 lines; FENCE-ZONE: A marker and
+item-9 identifier scan re-verified clean after the append), and added the mex-inbox/mex-relay
+skills.
+
+No fence configuration exists or was needed in this instance — nothing fenced ships in the
+export, so fence-safety is by construction (spec §WS6). Verified: .mex/AGENTS.md carries no
+deny-list mirror (its fence mentions restate the Zone A CLAUDE.md rules from visible files);
+.mex/ROUTER.md correctly notes FENCE.md/DV_prompt are absent from the export.
+
+== mex check (raw) ==
+Drift score: 100/100 — 0 errors, 0 warnings, 0 info
+19 files checked
+graph fresh · 0 source changes (0 added, 0 modified, 0 deleted)
+MEX_CHECK_EXIT=0 wall=4s

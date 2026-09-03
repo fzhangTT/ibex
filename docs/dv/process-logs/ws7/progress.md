@@ -17,8 +17,50 @@ folded per the plan pre-review `docs/dv/reviews/2026-09-02-claude-plan-ws7-expor
 - [x] **T2** — Zone A overlay (`ci/cleanroom-overlay/`) — landed (commit `583b4be9`, 36 files),
       concurrent with T1/T3.
 - [x] **T3** — mex (WS6), full tree — landed (commit `b23f4725`), concurrent with T1/T2.
-- [ ] **T4** — GATE: export, verify, compile+run, cleanroom mex (serial, after 1–3).
+- [x] **T4** — GATE: export, verify, compile+run, cleanroom mex (serial, after 1–3). Results
+      in the "T4 gate results" section below; evidence: `docs/dv/evidence/ws7-gate/`.
 - [ ] **T5** — `docs/dv/FENCE.md` + supersessions + close-out docs.
+
+## T4 gate results (2026-09-02)
+
+- **Step 1 (export + verify):** fresh export of `f9ac6933` to `/localdev/fzhang/ws/ibex-cleanroom`
+  (no stale dir existed — verified absent before the run), export SHA `cc114e05`, verify PASS
+  (all checks; raw output `ws7-gate/export-verify-raw.txt`). Canary/selftest separately re-proven:
+  full-mode `ci/cleanroom-selftest.sh` rerun green — a–h, all four canaries each caught by its own
+  named check, all landing-check sub-cases (`ws7-gate/selftest-fullmode-rerun.txt`).
+- **Step 2 (the irreducible gate): PASS on compile invocation 1.** Following only the export's
+  `docs/dv/SIM_RECIPE.md` + `TB_CONTRACT.md` + RTL/.core files, wrote `dv/auto_dv/gen_dut_top.sv`
+  (ibex_core + ibex_register_file_ff mirroring ibex_top wiring; ICache RAM stub + scramble-key
+  answer + MemECC encoders as bench equipment; `cheriot_enable_i = IbexMuBiOff`) and
+  `gen_smoke_tb.sv` (3-instruction ROM, magic-store SVA check) + two hand-derived filelists,
+  opentitan config via `util/ibex_config.py opentitan vcs_opts`. Clean elaboration and
+  TEST PASSED sim (exit 0, seed 1) on the FIRST VCS invocation — zero recipe insufficiencies hit;
+  no fence files consulted. Red→green: stimulus immediate toggled 0x5A5→0x2A5, assertion
+  `a_gen_magic_store_value` fired (captured), restored, green re-proven
+  (`ws7-gate/redgreen-transcript.txt`). One TB defect found and fixed during the red run: the SVA
+  action block printed post-edge values instead of `$sampled()` — check itself was always correct.
+  5 VCS compiles total (green, red, debug probe, red re-capture, final green), 13–16s each.
+  `executed-on: 2026-09-02` stamped in `ci/cleanroom-overlay/docs/dv/SIM_RECIPE.md` (+ the
+  export's copy, kept in sync).
+- **Step 2b (upstream spike): PASS.** `riscv/riscv-isa-sim` cloned from github at
+  `4ffd6ba860f4190ceac2716fa3c2cf139e85538f`, built + installed under the export's `tools/spike`
+  (wall 125s). One site gotcha: default configure picks up system boost 1.66, which does not
+  compile under gcc-11 C++17 — rebuilt `--with-boost=no --with-boost-asio=no --with-boost-regex=no`;
+  recorded as new SIM_RECIPE §11 (recipe improvement, not a gate failure).
+  `spike-built-on: 2026-09-02` stamped next to `executed-on:`.
+- **Step 2c (Section-12 items 2–9):** transcribed + run (`ws7-gate/section12-checklist.txt`).
+  Items 3, 4, 5, 7, 9 PASS. Item 6 PASS except its lock-rev-attestation sub-check (BLOCKED on
+  `docs/dv/FENCE.md` — T5's deliverable). Item 2 BLOCKED (same named blocker: FENCE.md is T5).
+  Item 8 BLOCKED (DV_prompt.txt owner sign-off line is still the unsigned template — owner
+  action). No unnamed blockers.
+- **Step 3 (cleanroom mex): PASS.** `mex setup` ran inside the export (its own instance, Node-24
+  fts5 workaround as on the full tree); graph + wiki built from visible files only, population
+  agent in the export root, ~19 min. `mex check`: **100/100 — 0 errors, 0 warnings, 0 info**
+  (19 files). No fence config exists or was needed — verified structurally
+  (`ws7-gate/cleanroom-mex-check.txt`); the export CLAUDE.md's Zone A marker and item-9 scan
+  re-verified clean after mex's anchor append.
+- **Step 4 (WS5 closure):** gate item 3 closed against the amendment's replacement criterion,
+  citing check (e) + `ws7-gate/check-e-no-remote-mcp.txt`; WS5 ledger flipped PARTIAL → DONE.
 
 ## Carried rulings (from the plan / pre-flight conflict scan)
 

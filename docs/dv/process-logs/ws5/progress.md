@@ -83,10 +83,14 @@ Pre-execution gate: codex APPROVE round 5 (docs/dv/reviews/2026-09-02-codex-plan
 
 Gate part 1 (T3) and gate part 2 (T4) are both closed. Gate item 3 remains open per below.
 
-PENDING-WS7: gate item 3 (the cleanroom clone demonstrates *no* MCP servers configured) cannot be
-proven before WS7 exists. WS5 does not close DONE from this plan; end-state stays
-**PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7** until WS7's plan produces that
-evidence and flips this line.
+Gate item 3 — CLOSED by WS7 T4 (2026-09-02), against the amendment's replacement criterion (the
+export's client configs list exactly the three local servers and no remote ones — not "no MCP
+servers", which the amendment replaced). Evidence: `ci/make-cleanroom.sh` verify check (e) ran
+green inside the WS7 gate export (source f9ac6933, export cc114e05), and the explicit citation
+capture `docs/dv/evidence/ws7-gate/check-e-no-remote-mcp.txt` shows `.mcp.json` keys exactly
+`["fsdb-mcp-server","siliconpilot","verdi-cov-mcp"]` with zero http/url entries, and
+`.codex/config.toml` with exactly the three `[mcp_servers.*]` sections and zero url/http entries.
+WS5 end-state flips **PARTIAL → DONE**.
 
 Note: `ci/mcp/probes/fsdb_probe.py` was committed re-runnable but not re-executed in the fix wave —
 the `out_ws5_waves` artifacts it needs were already cleaned; its T4 gate evidence stands in
@@ -96,4 +100,4 @@ review of the full range is the workstream-close gate.
 
 WS5 CLOSED (2026-09-02): codex post-execution APPROVE over d04e5bba..9f2f6c39 after 3 fix rounds
 (docs/dv/reviews/2026-09-02-codex-diff-d04e5bba-9f2f6c39.md; superseded rounds -round1/2/3).
-Workstream end-state: PARTIAL — gate item 3 (cleanroom no-MCP demo) pending WS7.
+Workstream end-state: DONE — gate item 3 closed by WS7 T4 (see above), 2026-09-02.
