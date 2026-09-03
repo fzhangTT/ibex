@@ -18,7 +18,9 @@ mis-describes (a value, an encoding, a count convention, a latency bound: D6 mis
 mhpmevent encoding, D21 NMI latency); it is a bug candidate (B) when the RTL behaviour depends on pipeline timing so the
 same program yields different architectural results (B17: the branch count depends on whether a WB access is
 outstanding), or when it violates a documented functional or security intent (B7 dummies in minstret, B16 rd written on
-a bad first beat). The checker follows the RTL for a D and the documentation for a B.
+a bad first beat, B11: NumBranchesTaken counts an event the doc excludes, a not-taken branch, under one configuration,
+which is a wrong event and not a convention, unlike D6 where the doc merely mis-states the RTL's uniform counting
+convention for misaligned accesses). The checker follows the RTL for a D and the documentation for a B.
 
 ## 1. Bug candidates (RTL vs specification or documented intent)
 
@@ -117,7 +119,7 @@ a bad first beat). The checker follows the RTL for a D and the documentation for
 - Expected-fail TP items: TP-PMC-043, TP-BTALU-016
 - RTL: rtl/ibex_id_stage.sv:790-791,815,831,928 (branch_set forced for all branches under DIT)
 - Specification / intent: doc/03_reference/performance_counters.rst (NumBranchesTaken: taken branches)
-- Notes: rtl-arch T-017 confirmed statically (perf_tbranch_o = branch_set_i; branch_set_raw_d = branch_decision_i | data_ind_timing_i). Decision requested from the DV Lead (T-017 Section 6): treated as a counter bug candidate (the doc defines the event as taken branches); items TP-PMC-043 / TP-BTALU-016 stay expected-fail.
+- Notes: rtl-arch T-017 confirmed statically (perf_tbranch_o = branch_set_i; branch_set_raw_d = branch_decision_i | data_ind_timing_i). Decision requested from the DV Lead (T-017 Section 6): treated as a counter bug candidate (the doc defines the event as taken branches); items TP-PMC-043 / TP-BTALU-016 stay expected-fail. Classified B, not D, by the criterion above (wrong event under a configuration, not a mis-described convention; contrast D6).
 - Intended reproducer: data_ind_timing=1; 100 never-taken branches; mhpmcounter9 delta: doc 0, RTL 100. Control: data_ind_timing=0.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
@@ -274,6 +276,7 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 | D19 | security.rst dummy_instr_mask table lists 4 of the 8 legal values | security.rst | rtl/ibex_dummy_instr.sv:33-148 | F-DIT-012 |
 
 ## 4. Change log
+- v1h (2026-09-03 UTC): B11 cites the B-versus-D criterion (round-4 low); criterion text names B11 and D6.
 - v1g (2026-09-03 10:20 UTC): round-3 lows: B17 feature IDs (F-PMC-053/039/043/044), B19 canonical F-RVFI-025, B9 note aligned to record-only, B6/B9/B12 moved to Section 1b (retained IDs, not bug candidates), B-versus-D criterion stated.
 - v1f (2026-09-03 09:39 UTC): B19 confirmed by rtl-arch as BUG-11 (RTL chain and reproducer spec).
 - v1e (2026-09-03 09:30 UTC): item lists refreshed after plan v2b (B16 items TP-DMEM-064/TP-SEC-040/TP-RVFI-040; B17 items TP-PMC-058/059/060, TP-BTALU-018); B16 canonical feature F-SEC-015; B19 (RVFI-only, OQ-10) added pending rtl-arch confirmation.

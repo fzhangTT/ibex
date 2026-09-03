@@ -71,6 +71,8 @@ for lst, msg in [(no_tp, 'ACTIVE feature without TP item'), (no_bin, 'ACTIVE fea
     errors += [f'{msg}: {x}' for x in lst]
 print(f'features {len(feats)} (ACTIVE {len(active)}, ALIAS {sum(1 for s in status.values() if s=="ALIAS")}, FOLDED {sum(1 for s in status.values() if s=="FOLDED")}); TP items {len(tps)}; covergroups {len(cgs)}; bins referenced {len(bins)} (adopted {len(adopted)}, spec-derived {len(bins)-len(adopted)})')
 print(f'completeness: ACTIVE->TP {len(active)-len(no_tp)}/{len(active)}, ACTIVE->bin {len(active)-len(no_bin)}/{len(active)}, bins->feature {len(cgs)-len(cg_bad)}/{len(cgs)} covergroups, CSV bins declared {len(bins)-len(bin_missing)}/{len(bins)}')
+marked = [tid for tid, b in tps.items() if '[CYCLE-CLAUSE coverage-only until the event export lands]' in b]
+print(f'cycle-clause marked items {len(marked)} (witness bins CG-WIT-001 excluded from manifests while marked; sunset per gen_test_plan.md Section 0)')
 print(f'coverpoints declared {sum(len(v) for v in cg_cps.values())}, owned by an item {len(owned_cps)}, regression-level (no item) {len(unowned)} (listed in gen_fcov_plan.md Section 1.1; reported, not failed)')
 if errors:
     print(f'FAIL: {len(errors)} violations'); [print('  ' + e) for e in errors[:60]]; sys.exit(1)

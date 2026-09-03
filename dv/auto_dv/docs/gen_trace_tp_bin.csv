@@ -1554,6 +1554,7 @@ TP-BIT-036,CG-BIT-010,cr_class_rd_x0,ternary_yes,0
 TP-BIT-036,CG-BIT-010,cr_class_wb,crc_yes,0
 TP-BIT-036,CG-BIT-010,cr_class_wb,rot_yes,0
 TP-BIT-036,CG-BIT-010,cr_class_wb,ternary_yes,0
+TP-BIT-036,CG-WIT-001,cp_clause,w_tp_bit_036,0
 TP-BIT-037,CG-BIT-003,cp_sloi_bits,b01,0
 TP-BIT-037,CG-BIT-003,cp_sloi_bits,b10,0
 TP-BIT-037,CG-BIT-003,cp_sloi_bits,b11,0
@@ -3024,6 +3025,7 @@ TP-BIT-042,CG-BIT-010,cr_class_wb,rot_no,0
 TP-BIT-042,CG-BIT-010,cr_class_wb,rot_yes,0
 TP-BIT-042,CG-BIT-010,cr_class_wb,ternary_no,0
 TP-BIT-042,CG-BIT-010,cr_class_wb,ternary_yes,0
+TP-BIT-042,CG-WIT-001,cp_clause,w_tp_bit_042,0
 TP-BIT-043,CG-BIT-010,cp_defer_cycles,h1,0
 TP-BIT-043,CG-BIT-010,cp_defer_cycles,h2_4,0
 TP-BIT-043,CG-BIT-010,cp_defer_cycles,h5plus,0
@@ -3054,6 +3056,7 @@ TP-BIT-043,CG-BIT-010,cr_class_defer,ternary_h5plus_store,0
 TP-BIT-043,CG-BIT-010,cr_class_wb,crc_yes,0
 TP-BIT-043,CG-BIT-010,cr_class_wb,rot_yes,0
 TP-BIT-043,CG-BIT-010,cr_class_wb,ternary_yes,0
+TP-BIT-043,CG-WIT-001,cp_clause,w_tp_bit_043,0
 TP-BTALU-001,CG-BTALU-001,cp_delta,d1,0
 TP-BTALU-001,CG-BTALU-001,cp_delta,d2,0
 TP-BTALU-001,CG-BTALU-001,cp_delta,d3plus,0
@@ -3089,6 +3092,7 @@ TP-BTALU-001,CG-BTALU-001,cr_taken_distance,yes_mid,0
 TP-BTALU-001,CG-BTALU-001,cr_taken_distance,yes_short,0
 TP-BTALU-001,CG-BTALU-001,cr_taken_dit_delta,nt_dit0_d1,0
 TP-BTALU-001,CG-BTALU-001,cr_taken_dit_delta,t_dit0_d2,0
+TP-BTALU-001,CG-WIT-001,cp_clause,w_tp_btalu_001,0
 TP-BTALU-002,CG-BTALU-002,cp_delta,d2,0
 TP-BTALU-002,CG-BTALU-002,cp_seq,none,0
 TP-BTALU-002,CG-BTALU-002,cp_type,c_j,0
@@ -3277,6 +3281,7 @@ TP-BTALU-012,CG-BTALU-002,cp_type,fence_i,0
 TP-BTALU-012,CG-BTALU-002,cr_type_delta,fence_i_d3plus,0
 TP-BTALU-012,CG-ISA-008,cp_pc_align,half,0
 TP-BTALU-012,CG-ISA-008,cp_pc_align,word,0
+TP-BTALU-012,CG-WIT-001,cp_clause,w_tp_btalu_012,0
 TP-BTALU-013,CG-BTALU-003,cp_cti,branch_not_taken,0
 TP-BTALU-013,CG-BTALU-003,cp_cti,branch_taken,0
 TP-BTALU-013,CG-BTALU-003,cp_cti,jalr,0
@@ -3495,6 +3500,7 @@ TP-BTALU-017,CG-ISA-006,cr_op_align,jalr_word,0
 TP-BTALU-018,CG-BTALU-001,cp_branch_inc,inc2plus,0
 TP-BTALU-018,CG-BTALU-001,cp_wb_busy,yes,0
 TP-BTALU-018,CG-BTALU-001,cr_perf_wb,wb_inc2plus,0
+TP-BTALU-018,CG-WIT-001,cp_clause,w_tp_btalu_018,0
 TP-CHERI-001,CG-CHERI-001,cp_funct3,f0,0
 TP-CHERI-001,CG-CHERI-001,cp_funct3,f1,0
 TP-CHERI-001,CG-CHERI-001,cp_funct3,f2,0
@@ -4851,6 +4857,7 @@ TP-CMP-057,CG-CMP-008,cr_irq_idx,nmi_i6,0
 TP-CMP-057,CG-CMP-008,cr_irq_idx,nmi_i7,0
 TP-CMP-057,CG-CMP-008,cr_irq_idx,nmi_i8,0
 TP-CMP-057,CG-CMP-008,cr_irq_idx,nmi_i9,0
+TP-CMP-057,CG-WIT-001,cp_clause,w_tp_cmp_057,0
 TP-CMP-058,CG-CMP-008,cp_event,irq,0
 TP-CMP-058,CG-CMP-008,cp_event,nmi,0
 TP-CMP-058,CG-CMP-008,cp_insn,cm_mva01s,0
@@ -4862,6 +4869,7 @@ TP-CMP-058,CG-CMP-008,cp_reexec,na,0
 TP-CMP-058,CG-CMP-008,cr_event_phase_outcome,irq_commit_deferred,0
 TP-CMP-058,CG-CMP-008,cr_event_phase_outcome,irq_last_deferred,0
 TP-CMP-058,CG-CMP-008,cr_event_phase_outcome,nmi_commit_deferred,0
+TP-CMP-058,CG-WIT-001,cp_clause,w_tp_cmp_058,0
 TP-CMP-059,CG-CMP-008,cp_event,debug_req,0
 TP-CMP-059,CG-CMP-008,cp_event,step,0
 TP-CMP-059,CG-CMP-008,cp_event,trigger,0
@@ -7310,6 +7318,7 @@ TP-CSR-029,CG-CSR-002,cr_mie_w_op,std_csrrci,0
 TP-CSR-029,CG-CSR-002,cr_mie_w_op,std_csrrs,0
 TP-CSR-029,CG-CSR-002,cr_mie_w_op,std_csrrsi,0
 TP-CSR-029,CG-CSR-002,cr_mie_w_op,std_csrrw,0
+TP-CSR-029,CG-WIT-001,cp_clause,w_tp_csr_029,0
 TP-CSR-030,CG-CSR-002,cp_csr,mie,0
 TP-CSR-030,CG-CSR-002,cp_mie_w,std_fast,0
 TP-CSR-030,CG-CSR-002,cp_op,csrrw,0
@@ -7338,6 +7347,7 @@ TP-CSR-031,CG-PRV-005,cr_dis_irq,dis_then_dbg,0
 TP-CSR-031,CG-PRV-005,cr_dis_irq,dis_then_irq_en,0
 TP-CSR-031,CG-PRV-005,cr_len_wake,long_irq_en,0
 TP-CSR-031,CG-PRV-005,cr_len_wake,short_irq_en,0
+TP-CSR-031,CG-WIT-001,cp_clause,w_tp_csr_031,0
 TP-CSR-032,CG-CSR-003,cp_mip_pins,ext,0
 TP-CSR-032,CG-CSR-003,cp_mip_pins,fast_any,0
 TP-CSR-032,CG-CSR-003,cp_mip_pins,multi,0
@@ -7394,6 +7404,7 @@ TP-CSR-034,CG-CSR-013,cr_mip_rd,at_differ,0
 TP-CSR-034,CG-CSR-013,cr_mip_rd,at_equal,0
 TP-CSR-034,CG-CSR-013,cr_mip_rd,before_differ,0
 TP-CSR-034,CG-CSR-013,cr_mip_rd,before_equal,0
+TP-CSR-034,CG-WIT-001,cp_clause,w_tp_csr_034,0
 TP-CSR-035,CG-CSR-002,cp_csr,mtvec,0
 TP-CSR-035,CG-CSR-002,cp_mtvec_base_w,boot_page,0
 TP-CSR-035,CG-CSR-002,cp_mtvec_base_w,high,0
@@ -8569,6 +8580,7 @@ TP-CSR-085,CG-CSR-009,cr_wpat_op,rand_csrrc,0
 TP-CSR-085,CG-CSR-009,cr_wpat_op,rand_csrrs,0
 TP-CSR-085,CG-CSR-009,cr_wpat_op,rand_csrrw,0
 TP-CSR-085,CG-CSR-016,cp_csr,cpuctrlsts,0
+TP-CSR-085,CG-WIT-001,cp_clause,w_tp_csr_085,0
 TP-CSR-086,CG-CSR-009,cp_icache_w,b0,0
 TP-CSR-086,CG-CSR-009,cp_icache_w,b1,0
 TP-CSR-086,CG-CSR-009,cr_ic_dit,ic1_dit0,0
@@ -8634,6 +8646,7 @@ TP-CSR-090,CG-CSR-009,cr_dbl_detect,s1_dbgmode_exc_nopulse,0
 TP-CSR-090,CG-CSR-009,cr_dbl_detect,s1_irq_nopulse,0
 TP-CSR-090,CG-CSR-009,cr_dbl_detect,s1_nmi_nopulse,0
 TP-CSR-090,CG-CSR-009,cr_dbl_detect,sync_s1_pulse,0
+TP-CSR-090,CG-WIT-001,cp_clause,w_tp_csr_090,0
 TP-CSR-091,CG-CSR-009,cp_dbl_state,d0,0
 TP-CSR-091,CG-CSR-009,cp_dbl_state,d1,0
 TP-CSR-091,CG-CSR-009,cp_dbl_w,b0,0
@@ -8886,6 +8899,7 @@ TP-CSR-100,CG-CSR-017,cp_trap_density,some,0
 TP-CSR-100,CG-CSR-017,cr_density_priv,high_mixed,0
 TP-CSR-100,CG-CSR-017,cr_distinct_density,many_high,0
 TP-CSR-100,CG-CSR-017,cr_trap_density,high_some,0
+TP-CSR-100,CG-WIT-001,cp_clause,w_tp_csr_100,0
 TP-CSR-101,CG-CSR-002,cp_csr,mcounteren,0
 TP-CSR-101,CG-CSR-002,cp_csr,mie,0
 TP-CSR-101,CG-CSR-002,cp_csr,mstatus,0
@@ -9403,12 +9417,14 @@ TP-DBG-003,CG-DBG-009,cr_src_window,fast_entry,0
 TP-DBG-003,CG-DBG-009,cr_src_window,nmi_entry,0
 TP-DBG-003,CG-DBG-009,cr_src_window,sw_entry,0
 TP-DBG-003,CG-DBG-009,cr_window_disp,entry_wins,0
+TP-DBG-003,CG-WIT-001,cp_clause,w_tp_dbg_003,0
 TP-DBG-004,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-004,CG-DBG-001,cp_dpc_kind,next_seq,0
 TP-DBG-004,CG-DBG-001,cp_entry_ctx,lsu_wait,0
 TP-DBG-004,CG-DBG-001,cr_cause_ctx,haltreq_lsu,0
 TP-DBG-004,CG-DBG-001,cr_cause_dpc,haltreq_next,0
 TP-DBG-004,CG-DBG-012,cp_flags,req1_mode1,0
+TP-DBG-004,CG-WIT-001,cp_clause,w_tp_dbg_004,0
 TP-DBG-005,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-005,CG-DBG-001,cp_dpc_kind,mtvec,0
 TP-DBG-005,CG-DBG-001,cp_entry_ctx,flush_exc,0
@@ -9417,6 +9433,7 @@ TP-DBG-005,CG-DBG-001,cr_cause_dpc,haltreq_mtvec,0
 TP-DBG-005,CG-DBG-002,cp_coincident,sync_exc,0
 TP-DBG-005,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-005,CG-DBG-002,cr_coincident_outcome,exc_entered,0
+TP-DBG-005,CG-WIT-001,cp_clause,w_tp_dbg_005,0
 TP-DBG-006,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-006,CG-DBG-001,cp_dpc_kind,mtvec,0
 TP-DBG-006,CG-DBG-001,cp_entry_ctx,flush_exc,0
@@ -9427,6 +9444,7 @@ TP-DBG-006,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-006,CG-DBG-002,cr_coincident_outcome,exc_entered,0
 TP-DBG-006,CG-DBG-012,cp_flags,req1_mode1,0
 TP-DBG-006,CG-DBG-012,cp_trap_dbg,trap,0
+TP-DBG-006,CG-WIT-001,cp_clause,w_tp_dbg_006,0
 TP-DBG-007,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-007,CG-DBG-001,cp_dpc_kind,mret_target,0
 TP-DBG-007,CG-DBG-001,cp_entry_ctx,flush_mret,0
@@ -9437,6 +9455,7 @@ TP-DBG-007,CG-DBG-001,cr_cause_prv,haltreq_u,0
 TP-DBG-007,CG-DBG-002,cp_coincident,mret,0
 TP-DBG-007,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-007,CG-DBG-002,cr_coincident_outcome,mret_entered,0
+TP-DBG-007,CG-WIT-001,cp_clause,w_tp_dbg_007,0
 TP-DBG-008,CG-DBG-001,cp_busy_dip,none,0
 TP-DBG-008,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-008,CG-DBG-001,cp_dpc_kind,next_seq,0
@@ -9453,12 +9472,14 @@ TP-DBG-008,CG-DBG-002,cp_coincident,wfi,0
 TP-DBG-008,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-008,CG-DBG-002,cr_coincident_outcome,csr_entered,0
 TP-DBG-008,CG-DBG-002,cr_coincident_outcome,wfi_entered,0
+TP-DBG-008,CG-WIT-001,cp_clause,w_tp_dbg_008,0
 TP-DBG-009,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-009,CG-DBG-001,cp_dpc_kind,next_seq,0
 TP-DBG-009,CG-DBG-001,cp_entry_ctx,div_wait,0
 TP-DBG-009,CG-DBG-001,cr_cause_ctx,haltreq_div,0
 TP-DBG-009,CG-DBG-001,cr_cause_dpc,haltreq_next,0
 TP-DBG-009,CG-DBG-012,cp_flags,req1_mode1,0
+TP-DBG-009,CG-WIT-001,cp_clause,w_tp_dbg_009,0
 TP-DBG-010,CG-DBG-002,cp_outcome,dropped,0
 TP-DBG-010,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-010,CG-DBG-002,cp_shape,pulse_short,0
@@ -9469,6 +9490,7 @@ TP-DBG-011,CG-DBG-001,cp_cause,none,0
 TP-DBG-011,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-011,CG-DBG-002,cp_shape,pulse_flush,0
 TP-DBG-011,CG-DBG-002,cr_shape_outcome,flush_entered,0
+TP-DBG-011,CG-WIT-001,cp_clause,w_tp_dbg_011,0
 TP-DBG-012,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-012,CG-DBG-001,cp_dpc_kind,dret_target,0
 TP-DBG-012,CG-DBG-001,cp_entry_ctx,after_dret,0
@@ -9501,6 +9523,7 @@ TP-DBG-014,CG-DBG-001,cr_cause_dpc,haltreq_wfi,0
 TP-DBG-014,CG-DBG-002,cp_coincident,wfi,0
 TP-DBG-014,CG-DBG-002,cp_outcome,entered,0
 TP-DBG-014,CG-DBG-002,cr_coincident_outcome,wfi_entered,0
+TP-DBG-014,CG-WIT-001,cp_clause,w_tp_dbg_014,0
 TP-DBG-015,CG-DBG-001,cp_cause,haltreq,0
 TP-DBG-015,CG-DBG-001,cp_dpc_kind,br_target,0
 TP-DBG-015,CG-DBG-001,cp_dpc_kind,next_seq,0
@@ -9630,6 +9653,7 @@ TP-DBG-021,CG-DBG-009,cp_src,nmi,0
 TP-DBG-021,CG-DBG-009,cp_window,debug,0
 TP-DBG-021,CG-DBG-009,cr_src_window,nmi_debug,0
 TP-DBG-021,CG-DBG-009,cr_window_disp,debug_taken,0
+TP-DBG-021,CG-WIT-001,cp_clause,w_tp_dbg_021,0
 TP-DBG-022,CG-DBG-001,cp_cause,ebreak,0
 TP-DBG-022,CG-DBG-001,cp_dpc_kind,ebreak_pc,0
 TP-DBG-022,CG-DBG-001,cp_entry_ctx,idle,0
@@ -9720,6 +9744,7 @@ TP-DBG-030,CG-DBG-002,cr_coincident_outcome,ebreak_entered,0
 TP-DBG-030,CG-DBG-003,cp_coincident,haltreq,0
 TP-DBG-030,CG-DBG-003,cp_outcome,dbg_entry,0
 TP-DBG-030,CG-DBG-003,cr_coincident_outcome,haltreq_dbg,0
+TP-DBG-030,CG-WIT-001,cp_clause,w_tp_dbg_030,0
 TP-DBG-031,CG-DBG-004,cp_dret_pending,none,0
 TP-DBG-031,CG-DBG-004,cp_kind,ecall,0
 TP-DBG-031,CG-DBG-004,cp_kind,illegal,0
@@ -9970,6 +9995,7 @@ TP-DBG-046,CG-DBG-006,cr_haltreq_cause,yes_ebreak,0
 TP-DBG-046,CG-DBG-006,cr_stepped_prv,ebreakdbg_m,0
 TP-DBG-046,CG-DBG-006,cr_stepped_prv,ebreakdbg_u,0
 TP-DBG-046,CG-DBG-006,cr_stepped_retired,ebreakdbg_ok,0
+TP-DBG-046,CG-WIT-001,cp_clause,w_tp_dbg_046,0
 TP-DBG-047,CG-DBG-005,cp_next,irq_first,0
 TP-DBG-047,CG-DBG-005,cp_prv_target,m,0
 TP-DBG-047,CG-DBG-005,cp_prv_target,u,0
@@ -10014,6 +10040,7 @@ TP-DBG-049,CG-DBG-006,cp_stepped,wfi,0
 TP-DBG-049,CG-DBG-006,cr_stepped_prv,wfi_m,0
 TP-DBG-049,CG-DBG-006,cr_stepped_prv,wfi_u,0
 TP-DBG-049,CG-DBG-006,cr_stepped_retired,wfi_ok,0
+TP-DBG-049,CG-WIT-001,cp_clause,w_tp_dbg_049,0
 TP-DBG-050,CG-DBG-001,cp_cause,step,0
 TP-DBG-050,CG-DBG-001,cp_dpc_kind,mret_target,0
 TP-DBG-050,CG-DBG-001,cp_entry_ctx,flush_mret,0
@@ -10043,6 +10070,7 @@ TP-DBG-051,CG-DBG-006,cr_stepped_prv,push_m,0
 TP-DBG-051,CG-DBG-006,cr_stepped_prv,push_u,0
 TP-DBG-051,CG-DBG-006,cr_stepped_retired,popret_ok,0
 TP-DBG-051,CG-DBG-006,cr_stepped_retired,push_ok,0
+TP-DBG-051,CG-WIT-001,cp_clause,w_tp_dbg_051,0
 TP-DBG-052,CG-DBG-001,cp_cause,step,0
 TP-DBG-052,CG-DBG-001,cp_entry_ctx,div_wait,0
 TP-DBG-052,CG-DBG-001,cp_entry_ctx,lsu_wait,0
@@ -10084,6 +10112,7 @@ TP-DBG-054,CG-DBG-006,cp_cause,haltreq,0
 TP-DBG-054,CG-DBG-006,cp_haltreq,yes,0
 TP-DBG-054,CG-DBG-006,cp_retired,none,0
 TP-DBG-054,CG-DBG-006,cr_haltreq_cause,yes_haltreq,0
+TP-DBG-054,CG-WIT-001,cp_clause,w_tp_dbg_054,0
 TP-DBG-055,CG-DBG-008,cp_csr,dcsr,0
 TP-DBG-055,CG-DBG-008,cp_csr,dpc,0
 TP-DBG-055,CG-DBG-008,cp_csr,dscratch0,0
@@ -10233,6 +10262,7 @@ TP-DBG-061,CG-DBG-009,cr_src_window,sw_debug,0
 TP-DBG-061,CG-DBG-009,cr_src_window,timer_debug,0
 TP-DBG-061,CG-DBG-009,cr_window_disp,debug_pending,0
 TP-DBG-061,CG-DBG-009,cr_window_disp,debug_taken,0
+TP-DBG-061,CG-WIT-001,cp_clause,w_tp_dbg_061,0
 TP-DBG-062,CG-DBG-005,cp_next,nmi_first,0
 TP-DBG-062,CG-DBG-005,cp_prv_target,m,0
 TP-DBG-062,CG-DBG-005,cp_prv_target,u,0
@@ -10256,6 +10286,7 @@ TP-DBG-063,CG-DBG-011,cr_wfi_busy,irq_hidden,0
 TP-DBG-063,CG-DBG-011,cr_wfi_busy,irq_one,0
 TP-DBG-063,CG-DBG-011,cr_wfi_busy,none_hidden,0
 TP-DBG-063,CG-DBG-011,cr_wfi_busy,none_one,0
+TP-DBG-063,CG-WIT-001,cp_clause,w_tp_dbg_063,0
 TP-DBG-064,CG-DBG-004,cp_kind,illegal_csr,0
 TP-DBG-064,CG-DBG-004,cp_priv_in_debug,u,0
 TP-DBG-064,CG-DBG-004,cr_kind_priv,illegalcsr_u,0
@@ -10413,6 +10444,7 @@ TP-DBG-071,CG-DBG-002,cr_coincident_outcome,csr_entered,0
 TP-DBG-071,CG-DBG-002,cr_coincident_outcome,mret_entered,0
 TP-DBG-071,CG-DBG-002,cr_coincident_outcome,wfi_entered,0
 TP-DBG-071,CG-DBG-002,cr_shape_outcome,dret_rehalt,0
+TP-DBG-071,CG-WIT-001,cp_clause,w_tp_dbg_071,0
 TP-DBG-072,CG-DBG-005,cp_next,run,0
 TP-DBG-072,CG-DBG-005,cp_next,step_one,0
 TP-DBG-072,CG-DBG-005,cp_step_at_dret,off_after_on,0
@@ -10694,6 +10726,7 @@ TP-DMEM-002,CG-DMEM-001,cp_gnt_delay,d4_15,0
 TP-DMEM-002,CG-DMEM-001,cr_delay_x_beat,d16p_second,0
 TP-DMEM-002,CG-DMEM-001,cr_delay_x_beat,d4_15_single,0
 TP-DMEM-002,CG-DMEM-001,cr_gnt_delay_x_knob,d4_15_long,0
+TP-DMEM-002,CG-WIT-001,cp_clause,w_tp_dmem_002,0
 TP-DMEM-003,CG-DMEM-001,cp_addr_lsb,aligned,0
 TP-DMEM-003,CG-DMEM-002,cp_offset,o0,0
 TP-DMEM-003,CG-DMEM-002,cp_offset,o1,0
@@ -10705,22 +10738,27 @@ TP-DMEM-004,CG-DMEM-001,cr_depth_x_beat,one_second,0
 TP-DMEM-004,CG-DMEM-001,cr_depth_x_beat,one_single,0
 TP-DMEM-004,CG-DMEM-001,cr_gnt_delay_x_knob,d0_same,0
 TP-DMEM-004,CG-DMEM-003,cp_beat2_gnt_delay,d0,0
+TP-DMEM-004,CG-WIT-001,cp_clause,w_tp_dmem_004,0
 TP-DMEM-005,CG-DMEM-001,cp_gnt_delay,d16p,0
 TP-DMEM-005,CG-DMEM-001,cr_gnt_delay_x_knob,d0_random,0
 TP-DMEM-005,CG-DMEM-001,cr_gnt_delay_x_knob,d16p_long,0
 TP-DMEM-005,CG-DMEM-001,cr_gnt_delay_x_knob,d16p_random,0
 TP-DMEM-005,CG-DMEM-003,cp_beat2_gnt_delay,d4p,0
+TP-DMEM-005,CG-WIT-001,cp_clause,w_tp_dmem_005,0
 TP-DMEM-006,CG-DMEM-001,cp_rvalid_delay,d1,0
 TP-DMEM-006,CG-DMEM-001,cp_rvalid_delay,d2_3,0
 TP-DMEM-006,CG-DMEM-001,cr_rvalid_delay_x_knob,d1_min1,0
 TP-DMEM-006,CG-DMEM-001,cr_rvalid_delay_x_knob,d1_random,0
+TP-DMEM-006,CG-WIT-001,cp_clause,w_tp_dmem_006,0
 TP-DMEM-007,CG-DMEM-001,cp_rvalid_delay,d4_15,0
 TP-DMEM-007,CG-DMEM-001,cr_rvalid_delay_x_knob,d2_3_short,0
+TP-DMEM-007,CG-WIT-001,cp_clause,w_tp_dmem_007,0
 TP-DMEM-008,CG-DMEM-001,cp_beat,single,0
 TP-DMEM-008,CG-DMEM-001,cp_outstanding_before,o1,0
 TP-DMEM-008,CG-DMEM-001,cp_req_with_prev_rvalid,yes,0
 TP-DMEM-008,CG-DMEM-001,cr_b2b_x_we,b2b_load,0
 TP-DMEM-008,CG-DMEM-001,cr_b2b_x_we,b2b_store,0
+TP-DMEM-008,CG-WIT-001,cp_clause,w_tp_dmem_008,0
 TP-DMEM-009,CG-DMEM-001,cp_beat,first,0
 TP-DMEM-009,CG-DMEM-001,cp_beat,second,0
 TP-DMEM-009,CG-DMEM-001,cp_outstanding_before,o2,0
@@ -10827,18 +10865,22 @@ TP-DMEM-019,CG-DMEM-003,cp_beat2_rvalid_delay,d4p,0
 TP-DMEM-019,CG-DMEM-003,cr_delays,all_slow,0
 TP-DMEM-019,CG-DMEM-003,cr_delays,fast_slow_fast,0
 TP-DMEM-019,CG-DMEM-003,cr_delays,slow_fast_slow,0
+TP-DMEM-019,CG-WIT-001,cp_clause,w_tp_dmem_019,0
 TP-DMEM-020,CG-DMEM-001,cr_delay_x_beat,d1_second,0
 TP-DMEM-020,CG-DMEM-003,cp_beat2_gnt_delay,d4p,0
 TP-DMEM-020,CG-DMEM-003,cp_path,gnt2_after_rvalid1,0
 TP-DMEM-020,CG-DMEM-003,cr_type_x_path,lhu_o3_wait_gnt,0
 TP-DMEM-020,CG-DMEM-003,cr_type_x_path,sw_o1_wait_gnt,0
+TP-DMEM-020,CG-WIT-001,cp_clause,w_tp_dmem_020,0
 TP-DMEM-021,CG-DMEM-003,cp_gnts_done_dwell,c4p,0
 TP-DMEM-021,CG-DMEM-003,cp_path,gnt2_before_rvalid1,0
 TP-DMEM-021,CG-DMEM-003,cr_type_x_path,lw_o3_gnts_done,0
 TP-DMEM-021,CG-DMEM-003,cr_type_x_path,sh_o3_gnts_done,0
+TP-DMEM-021,CG-WIT-001,cp_clause,w_tp_dmem_021,0
 TP-DMEM-022,CG-DMEM-003,cp_path,gnt2_same_cycle_rvalid1,0
 TP-DMEM-022,CG-DMEM-003,cr_type_x_path,lh_o3_same,0
 TP-DMEM-022,CG-DMEM-003,cr_type_x_path,sw_o2_same,0
+TP-DMEM-022,CG-WIT-001,cp_clause,w_tp_dmem_022,0
 TP-DMEM-023,CG-DMEM-001,cr_gnt_delay_x_knob,d0_random,0
 TP-DMEM-023,CG-DMEM-001,cr_rvalid_delay_x_knob,d16p_random,0
 TP-DMEM-023,CG-DMEM-003,cr_type_x_path,lh_o3_same,0
@@ -10868,6 +10910,7 @@ TP-DMEM-027,CG-DMEM-004,cp_handler_ls_waited,not_ls,0
 TP-DMEM-027,CG-DMEM-004,cp_handler_ls_waited,yes,0
 TP-DMEM-027,CG-DMEM-004,cp_second_rvalid_gap,g10p,0
 TP-DMEM-027,CG-DMEM-004,cp_second_rvalid_gap,g1_9,0
+TP-DMEM-027,CG-WIT-001,cp_clause,w_tp_dmem_027,0
 TP-DMEM-028,CG-DMEM-005,cp_insn,lb,0
 TP-DMEM-028,CG-DMEM-005,cp_insn,lbu,0
 TP-DMEM-028,CG-DMEM-005,cp_insn,lh,0
@@ -10956,6 +10999,7 @@ TP-DMEM-034,CG-DMEM-006,cr_cause_x_id,load_wfi,0
 TP-DMEM-034,CG-DMEM-006,cr_cause_x_id,store_ebreak,0
 TP-DMEM-034,CG-DMEM-006,cr_cause_x_id,store_fetch_err,0
 TP-DMEM-034,CG-DMEM-006,cr_cause_x_id,store_illegal,0
+TP-DMEM-034,CG-WIT-001,cp_clause,w_tp_dmem_034,0
 TP-DMEM-035,CG-DMEM-001,cp_rvalid_delay,d16p,0
 TP-DMEM-035,CG-DMEM-006,cp_dbg_req_at_err,no,0
 TP-DMEM-035,CG-DMEM-006,cp_irq_pending_at_err,no,0
@@ -10971,6 +11015,7 @@ TP-DMEM-036,CG-DMEM-006,cr_cause_x_irq,load_irq,0
 TP-DMEM-036,CG-DMEM-006,cr_cause_x_irq,store_irq,0
 TP-DMEM-037,CG-DMEM-001,cp_req_with_prev_rvalid,no,0
 TP-DMEM-037,CG-DMEM-006,cp_next_req_suppressed,yes,0
+TP-DMEM-037,CG-WIT-001,cp_clause,w_tp_dmem_037,0
 TP-DMEM-038,CG-DMEM-001,cr_gnt_delay_x_knob,d1_short,0
 TP-DMEM-038,CG-DMEM-001,cr_gnt_delay_x_knob,d2_3_short,0
 TP-DMEM-038,CG-DMEM-004,cp_err_beat,both,0
@@ -10989,6 +11034,7 @@ TP-DMEM-039,CG-DMEM-007,cp_nmi_mtval,aligned_ea,0
 TP-DMEM-039,CG-DMEM-007,cp_rf_suppressed,yes,0
 TP-DMEM-039,CG-DMEM-007,cp_we,load,0
 TP-DMEM-039,CG-DMEM-007,cp_with_bus_err,no,0
+TP-DMEM-039,CG-WIT-001,cp_clause,w_tp_dmem_039,0
 TP-DMEM-040,CG-DMEM-007,cp_we,store,0
 TP-DMEM-040,CG-DMEM-007,cr_class_x_we_x_beat,double_store_single,0
 TP-DMEM-041,CG-DMEM-007,cp_beat,first,0
@@ -11014,6 +11060,7 @@ TP-DMEM-043,CG-DMEM-007,cp_nmi_latency,l3p,0
 TP-DMEM-044,CG-DMEM-008,cp_dep_stall,no_consumer,0
 TP-DMEM-044,CG-DMEM-008,cp_dep_stall,yes,0
 TP-DMEM-044,CG-DMEM-008,cp_dep_x0,yes,0
+TP-DMEM-044,CG-WIT-001,cp_clause,w_tp_dmem_044,0
 TP-DMEM-045,CG-DMEM-002,cp_load_wdata_intg_valid,valid,0
 TP-DMEM-045,CG-DMEM-002,cp_we,load,0
 TP-DMEM-045,CG-DMEM-002,cr_load_intg_x_size,valid_byte,0
@@ -11029,8 +11076,10 @@ TP-DMEM-046,CG-DMEM-008,cr_distance_x_overlap,d1_full,0
 TP-DMEM-046,CG-DMEM-008,cr_distance_x_overlap,d1_partial_byte,0
 TP-DMEM-046,CG-DMEM-008,cr_distance_x_overlap,d2_partial_half,0
 TP-DMEM-046,CG-DMEM-008,cr_distance_x_overlap,d3_8_full,0
+TP-DMEM-046,CG-WIT-001,cp_clause,w_tp_dmem_046,0
 TP-DMEM-047,CG-DMEM-008,cp_wfi_outstanding_hold,c16p,0
 TP-DMEM-047,CG-DMEM-008,cp_wfi_outstanding_hold,c5_15,0
+TP-DMEM-047,CG-WIT-001,cp_clause,w_tp_dmem_047,0
 TP-DMEM-048,CG-DMEM-008,cp_pmp_denied,aligned_load,0
 TP-DMEM-048,CG-DMEM-008,cp_pmp_denied,aligned_store,0
 TP-DMEM-048,CG-DMEM-008,cp_pmp_denied,mis_both_load,0
@@ -11043,6 +11092,7 @@ TP-DMEM-048,CG-DMEM-008,cp_pmp_second_half_issued,yes,0
 TP-DMEM-048,CG-DMEM-008,cp_pmp_second_half_store_landed,landed,0
 TP-DMEM-049,CG-DMEM-008,cp_tag_in_at_gnt,in0,0
 TP-DMEM-049,CG-DMEM-008,cp_tag_in_at_gnt,in1,0
+TP-DMEM-049,CG-WIT-001,cp_clause,w_tp_dmem_049,0
 TP-DMEM-050,CG-DMEM-008,cp_rvfi_mask,r_byte,0
 TP-DMEM-050,CG-DMEM-008,cp_rvfi_mask,r_half,0
 TP-DMEM-050,CG-DMEM-008,cp_rvfi_mask,r_word,0
@@ -11054,6 +11104,7 @@ TP-DMEM-051,CG-DMEM-008,cp_crash_last_data_addr,eq_ea_single_first,0
 TP-DMEM-051,CG-DMEM-008,cp_crash_last_data_addr,eq_second_word,0
 TP-DMEM-051,CG-DMEM-008,cp_crash_last_data_addr,held_until_next_gnt,0
 TP-DMEM-051,CG-DMEM-008,cp_crash_last_data_addr,no_update_second_after_err,0
+TP-DMEM-051,CG-WIT-001,cp_clause,w_tp_dmem_051,0
 TP-DMEM-052,CG-DMEM-008,cp_zcmp_burst,n1,0
 TP-DMEM-052,CG-DMEM-008,cp_zcmp_burst,n2,0
 TP-DMEM-052,CG-DMEM-008,cp_zcmp_burst,n3_6,0
@@ -11079,16 +11130,20 @@ TP-DMEM-056,CG-DMEM-001,cr_rvalid_delay_x_knob,d16p_long,0
 TP-DMEM-056,CG-DMEM-001,cr_rvalid_delay_x_knob,d16p_random,0
 TP-DMEM-056,CG-DMEM-001,cr_rvalid_delay_x_knob,d1_random,0
 TP-DMEM-056,CG-DMEM-001,cr_rvalid_delay_x_knob,d4_15_long,0
+TP-DMEM-056,CG-WIT-001,cp_clause,w_tp_dmem_056,0
 TP-DMEM-057,CG-DMEM-001,cp_payload_changed_after_gnt,changed,0
 TP-DMEM-057,CG-DMEM-001,cp_payload_changed_after_gnt,same,0
+TP-DMEM-057,CG-WIT-001,cp_clause,w_tp_dmem_057,0
 TP-DMEM-058,CG-DMEM-009,cp_no_gnt_on_pmp_denied,yes,0
 TP-DMEM-058,CG-DMEM-009,cr_gnt_x_regime,req_long,0
 TP-DMEM-058,CG-DMEM-009,cr_gnt_x_regime,req_random,0
 TP-DMEM-058,CG-DMEM-009,cr_gnt_x_regime,req_same,0
 TP-DMEM-058,CG-DMEM-009,cr_gnt_x_regime,req_short,0
+TP-DMEM-058,CG-WIT-001,cp_clause,w_tp_dmem_058,0
 TP-DMEM-059,CG-DMEM-009,cp_rdata_store_resp,fixed,0
 TP-DMEM-059,CG-DMEM-009,cp_rdata_store_resp,random,0
 TP-DMEM-059,CG-DMEM-009,cp_rdata_x_between_rvalid,yes,0
+TP-DMEM-059,CG-WIT-001,cp_clause,w_tp_dmem_059,0
 TP-DMEM-060,CG-DMEM-002,cp_disabled_lane_nonzero,seen,0
 TP-DMEM-060,CG-DMEM-002,cp_load_wdata_intg_valid,valid,0
 TP-DMEM-060,CG-DMEM-002,cp_masked_recompute_differs,yes,0
@@ -11096,10 +11151,13 @@ TP-DMEM-061,CG-DMEM-008,cp_load_then_alu_b2b,yes,0
 TP-DMEM-061,CG-DMEM-008,cp_rvfi_load_latency,one,0
 TP-DMEM-061,CG-DMEM-008,cp_wb_source,lsu_load,0
 TP-DMEM-061,CG-DMEM-008,cp_wb_source,wb_flop,0
+TP-DMEM-061,CG-WIT-001,cp_clause,w_tp_dmem_061,0
 TP-DMEM-062,CG-DMEM-009,cp_unsolicited_rvalid_case,bad_secded_alert,0
 TP-DMEM-062,CG-DMEM-009,cp_unsolicited_rvalid_case,grant_cycle_consumed,0
 TP-DMEM-062,CG-DMEM-009,cp_unsolicited_rvalid_case,no_outstanding_ignored,0
+TP-DMEM-062,CG-WIT-001,cp_clause,w_tp_dmem_062,0
 TP-DMEM-063,CG-DMEM-006,cp_b14_records,two_in_order,0
+TP-DMEM-063,CG-WIT-001,cp_clause,w_tp_dmem_063,0
 TP-DMEM-064,CG-DMEM-007,cp_beat,first,0
 TP-DMEM-064,CG-DMEM-007,cp_nmi_mtval,first_ea,0
 TP-DMEM-064,CG-DMEM-007,cp_rf_suppressed,no_b16,0
@@ -11107,6 +11165,7 @@ TP-DMEM-064,CG-DMEM-007,cp_split_corrupt_pattern,first_only,0
 TP-DMEM-064,CG-DMEM-007,cp_we,load,0
 TP-DMEM-064,CG-DMEM-007,cr_class_x_we_x_beat,single_load_first,0
 TP-DMEM-064,CG-DMEM-007,cr_pattern_x_we,first_only_load,0
+TP-DMEM-064,CG-WIT-001,cp_clause,w_tp_dmem_064,0
 TP-EXC-001,CG-EXC-001,cp_cause,fetch_fault,0
 TP-EXC-001,CG-EXC-001,cp_ilen,c16,0
 TP-EXC-001,CG-EXC-001,cp_ilen,w32,0
@@ -11282,6 +11341,7 @@ TP-EXC-015,CG-EXC-013,cp_wb_at_id_exc,wb_ls_ok,0
 TP-EXC-015,CG-EXC-013,cr_stage_dbus,id_cause_rvalid_pending,0
 TP-EXC-015,CG-EXC-013,cr_stage_latency,id_cause_long,0
 TP-EXC-015,CG-EXC-013,cr_stage_latency,id_cause_three_five,0
+TP-EXC-015,CG-WIT-001,cp_clause,w_tp_exc_015,0
 TP-EXC-016,CG-EXC-001,cp_cause,breakpoint,0
 TP-EXC-016,CG-EXC-001,cr_cause_mie,breakpoint_mie0,0
 TP-EXC-016,CG-EXC-001,cr_cause_mie,breakpoint_mie1,0
@@ -11481,6 +11541,7 @@ TP-EXC-034,CG-EXC-013,cp_killed_younger,one,0
 TP-EXC-034,CG-EXC-013,cr_stage_killed,wb_cause_none,0
 TP-EXC-034,CG-EXC-013,cr_stage_killed,wb_cause_one,0
 TP-EXC-034,CG-EXC-013,cr_stage_latency,wb_cause_min,0
+TP-EXC-034,CG-WIT-001,cp_clause,w_tp_exc_034,0
 TP-EXC-035,CG-EXC-006,cp_younger,ecall_ebreak,0
 TP-EXC-035,CG-EXC-006,cp_younger,fetch_errored,0
 TP-EXC-035,CG-EXC-006,cp_younger,illegal,0
@@ -11497,6 +11558,7 @@ TP-EXC-035,CG-EXC-007,cr_pair_winner,st_ebreak_store_fault,0
 TP-EXC-035,CG-EXC-007,cr_pair_winner,st_ecall_store_fault,0
 TP-EXC-035,CG-EXC-007,cr_pair_winner,st_fetch_store_fault,0
 TP-EXC-035,CG-EXC-013,cr_stage_irq,wb_cause_none,0
+TP-EXC-035,CG-WIT-001,cp_clause,w_tp_exc_035,0
 TP-EXC-036,CG-EXC-006,cp_spec_fetch,no,0
 TP-EXC-036,CG-EXC-006,cp_spec_fetch,yes,0
 TP-EXC-036,CG-EXC-006,cp_younger,branch,0
@@ -11509,15 +11571,18 @@ TP-EXC-036,CG-EXC-006,cr_younger_spec,branch_no,0
 TP-EXC-036,CG-EXC-006,cr_younger_spec,branch_yes,0
 TP-EXC-036,CG-EXC-006,cr_younger_spec,jump_no,0
 TP-EXC-036,CG-EXC-006,cr_younger_spec,jump_yes,0
+TP-EXC-036,CG-WIT-001,cp_clause,w_tp_exc_036,0
 TP-EXC-037,CG-EXC-006,cp_resp_latency,long,0
 TP-EXC-037,CG-EXC-006,cp_resp_latency,short,0
 TP-EXC-037,CG-EXC-006,cp_younger,load_store,0
 TP-EXC-037,CG-EXC-006,cr_op_younger,load_load_store,0
 TP-EXC-037,CG-EXC-006,cr_op_younger,store_load_store,0
+TP-EXC-037,CG-WIT-001,cp_clause,w_tp_exc_037,0
 TP-EXC-038,CG-EXC-006,cp_resp_latency,long,0
 TP-EXC-038,CG-EXC-006,cp_resp_latency,one,0
 TP-EXC-038,CG-EXC-006,cp_resp_latency,short,0
 TP-EXC-038,CG-EXC-006,cr_op_younger,load_load_store,0
+TP-EXC-038,CG-WIT-001,cp_clause,w_tp_exc_038,0
 TP-EXC-039,CG-EXC-006,cp_bus_pattern,single_req,0
 TP-EXC-039,CG-EXC-006,cp_bus_pattern,two_reqs,0
 TP-EXC-039,CG-EXC-006,cr_op_size_source,store_word_bus_err,0
@@ -11551,6 +11616,7 @@ TP-EXC-040,CG-EXC-007,cr_pair_winner,triple_wb_fetch_illegal_load_fault,0
 TP-EXC-040,CG-EXC-007,cr_pair_winner,triple_wb_fetch_illegal_store_fault,0
 TP-EXC-040,CG-EXC-013,cr_stage_irq,id_cause_irq_enabled,0
 TP-EXC-040,CG-EXC-013,cr_stage_irq,wb_cause_irq_enabled,0
+TP-EXC-040,CG-WIT-001,cp_clause,w_tp_exc_040,0
 TP-EXC-041,CG-EXC-012,cp_mepc_bit1,bit1_0,0
 TP-EXC-041,CG-EXC-012,cp_mepc_bit1,bit1_1,0
 TP-EXC-041,CG-EXC-012,cr_kind_bit1,sync_bit1_0,0
@@ -11677,6 +11743,7 @@ TP-EXC-050,CG-EXC-011,cr_context_prefetch,irq_handler_one_plus,0
 TP-EXC-050,CG-EXC-011,cr_context_prefetch,plain_one_plus,0
 TP-EXC-050,CG-EXC-011,cr_priv_mpp,m_m,0
 TP-EXC-050,CG-EXC-011,cr_priv_mpp,m_u,0
+TP-EXC-050,CG-WIT-001,cp_clause,w_tp_exc_050,0
 TP-EXC-051,CG-EXC-011,cp_mepc_bits,sw_bit0_dropped,0
 TP-EXC-051,CG-EXC-011,cr_bits_context,sw_bit0_dropped_plain,0
 TP-EXC-051,CG-EXC-012,cp_mepc_bit1,bit1_0,0
@@ -11727,9 +11794,11 @@ TP-EXC-054,CG-EXC-010,cr_first_second,load_fault_illegal,0
 TP-EXC-054,CG-EXC-010,cr_first_second,load_fault_load_fault,0
 TP-EXC-054,CG-EXC-010,cr_first_second,store_fault_ecall,0
 TP-EXC-054,CG-EXC-010,cr_first_second,store_fault_store_fault,0
+TP-EXC-054,CG-WIT-001,cp_clause,w_tp_exc_054,0
 TP-EXC-055,CG-EXC-010,cp_event,irq_seen1,0
 TP-EXC-055,CG-EXC-010,cp_event,nmi_seen1,0
 TP-EXC-055,CG-EXC-010,cr_event_gap,irq_seen1_few,0
+TP-EXC-055,CG-WIT-001,cp_clause,w_tp_exc_055,0
 TP-EXC-056,CG-EXC-010,cp_event,mret_irq_in_exc,0
 TP-EXC-057,CG-EXC-010,cp_event,sw_clear_double,0
 TP-EXC-057,CG-EXC-010,cp_event,sw_clear_seen,0
@@ -11737,6 +11806,7 @@ TP-EXC-057,CG-EXC-010,cp_event,sw_set_double_no_pulse,0
 TP-EXC-057,CG-EXC-010,cp_event,sw_set_seen,0
 TP-EXC-057,CG-EXC-010,cp_readback,sw_cleared_then_read0,0
 TP-EXC-057,CG-EXC-010,cr_event_readback,sw_clear_double_sw_cleared_then_read0,0
+TP-EXC-057,CG-WIT-001,cp_clause,w_tp_exc_057,0
 TP-EXC-058,CG-EXC-005,cp_seen_pre,seen1,0
 TP-EXC-058,CG-EXC-005,cr_priv_seen,m_seen0,0
 TP-EXC-058,CG-EXC-005,cr_priv_seen,m_seen1,0
@@ -11786,6 +11856,7 @@ TP-EXC-062,CG-EXC-013,cr_stage_irq,wb_cause_none,0
 TP-EXC-062,CG-EXC-013,cr_stage_latency,id_cause_min,0
 TP-EXC-062,CG-EXC-013,cr_stage_latency,id_cause_two,0
 TP-EXC-062,CG-EXC-013,cr_stage_latency,wb_cause_min,0
+TP-EXC-062,CG-WIT-001,cp_clause,w_tp_exc_062,0
 TP-EXC-063,CG-EXC-001,cp_cause,ecall_m,0
 TP-EXC-063,CG-EXC-001,cp_cause,load_fault,0
 TP-EXC-063,CG-EXC-012,cp_minstret,ir0,0
@@ -11802,6 +11873,7 @@ TP-EXC-065,CG-EXC-007,cr_pair_winner,ld_ecall_load_fault,0
 TP-EXC-065,CG-EXC-007,cr_pair_winner,ld_illegal_load_fault,0
 TP-EXC-065,CG-EXC-007,cr_pair_winner,st_ecall_store_fault,0
 TP-EXC-065,CG-EXC-007,cr_pair_winner,st_illegal_store_fault,0
+TP-EXC-065,CG-WIT-001,cp_clause,w_tp_exc_065,0
 TP-EXC-066,CG-EXC-005,cp_mtval_pre,was_nonzero,0
 TP-EXC-066,CG-EXC-012,cp_mtval_class,zero,0
 TP-EXC-066,CG-EXC-012,cr_kind_mtval,irq_zero,0
@@ -11836,6 +11908,7 @@ TP-EXC-070,CG-EXC-013,cr_wb_irq_ibus,wb_ls_fault_wins_nmi_rvalid_pending,0
 TP-EXC-070,CG-EXC-013,cr_wb_irq_ibus,wb_ls_fault_wins_none_rvalid_pending,0
 TP-EXC-070,CG-IRQ-007,cp_ctx_pre,exc_vector_first,0
 TP-EXC-070,CG-IRQ-007,cr_source_ctx,ext_exc_vector_first,0
+TP-EXC-070,CG-WIT-001,cp_clause,w_tp_exc_070,0
 TP-EXC-071,CG-EXC-001,cr_cause_mtvec,fetch_fault_sw_legalised,0
 TP-EXC-071,CG-EXC-001,cr_cause_mtvec,store_fault_sw_legalised,0
 TP-EXC-071,CG-EXC-001,cr_cause_priv_ilen,fetch_fault_u_c16,0
@@ -11859,6 +11932,7 @@ TP-EXC-072,CG-EXC-013,cr_stage_irq,wb_cause_irq_enabled,0
 TP-EXC-072,CG-EXC-013,cr_stage_irq,wb_cause_nmi,0
 TP-EXC-072,CG-EXC-013,cr_wb_irq_ibus,wb_empty_irq_enabled_idle,0
 TP-EXC-072,CG-EXC-013,cr_wb_irq_ibus,wb_ls_ok_irq_enabled_rvalid_pending,0
+TP-EXC-072,CG-WIT-001,cp_clause,w_tp_exc_072,0
 TP-EXC-073,CG-EXC-002,cr_illegal_source,clean_pmp,0
 TP-EXC-073,CG-EXC-002,cr_source_half,pmp_first,0
 TP-EXC-073,CG-EXC-006,cr_op_source_align,load_pmp_aligned,0
@@ -11937,6 +12011,7 @@ TP-FE-008,CG-FE-002,cp_second_word_wait,w4p,0
 TP-FE-008,CG-FE-002,cr_straddle_x_wait,cross_w1,0
 TP-FE-008,CG-FE-002,cr_straddle_x_wait,cross_w4p,0
 TP-FE-008,CG-FE-002,cr_straddle_x_wait,same_w1,0
+TP-FE-008,CG-WIT-001,cp_clause,w_tp_fe_008,0
 TP-FE-009,CG-FE-002,cp_halves_src,bus_bus_disabled,0
 TP-FE-009,CG-FE-002,cp_halves_src,hit_hit,0
 TP-FE-009,CG-FE-002,cp_halves_src,hit_miss,0
@@ -11980,13 +12055,16 @@ TP-FE-012,CG-FE-003,cp_kind,mret,0
 TP-FE-012,CG-FE-003,cp_spec_err_discarded,no,0
 TP-FE-012,CG-FE-003,cr_kind_x_discarded,dbg_entry_n2_3,0
 TP-FE-012,CG-FE-003,cr_kind_x_discarded,mret_n1,0
+TP-FE-012,CG-WIT-001,cp_clause,w_tp_fe_012,0
 TP-FE-013,CG-FE-003,cp_discarded_words,n0,0
 TP-FE-013,CG-FE-003,cp_discarded_words,n4_6,0
 TP-FE-013,CG-FE-003,cr_kind_x_discarded,branch_n4_6,0
 TP-FE-013,CG-FE-003,cr_kind_x_discarded,exc_n2_3,0
 TP-FE-013,CG-FE-003,cr_kind_x_discarded,jalr_n0,0
+TP-FE-013,CG-WIT-001,cp_clause,w_tp_fe_013,0
 TP-FE-014,CG-FE-003,cp_target_req_same_cycle,no_pending_req,0
 TP-FE-014,CG-FE-003,cp_target_req_same_cycle,yes,0
+TP-FE-014,CG-WIT-001,cp_clause,w_tp_fe_014,0
 TP-FE-015,CG-FE-003,cp_spacing,s2,0
 TP-FE-015,CG-FE-003,cp_spacing,s3,0
 TP-FE-015,CG-FE-003,cp_spacing,s4_5,0
@@ -12010,10 +12088,12 @@ TP-FE-016,CG-FE-004,cp_words_buffered_at_stall,n5_6,0
 TP-FE-016,CG-FE-004,cr_cause_x_buffered,ld_hazard_n1_2,0
 TP-FE-016,CG-FE-004,cr_cause_x_buffered,ls_wait_n3_4,0
 TP-FE-016,CG-FE-004,cr_cause_x_buffered,mul_div_full,0
+TP-FE-016,CG-WIT-001,cp_clause,w_tp_fe_016,0
 TP-FE-017,CG-FE-004,cp_cause,dummy_gap,0
 TP-FE-017,CG-FE-004,cp_stall_len,l1,0
 TP-FE-017,CG-FE-004,cp_words_buffered_at_stall,n0,0
 TP-FE-017,CG-FE-004,cp_words_buffered_at_stall,n1_2,0
+TP-FE-017,CG-WIT-001,cp_clause,w_tp_fe_017,0
 TP-FE-018,CG-FE-004,cp_cause,zcmp_expand,0
 TP-FE-018,CG-FE-004,cr_cause_x_buffered,zcmp_full,0
 TP-FE-019,CG-FE-005,cp_errored_payload,csr_write,0
@@ -12038,6 +12118,7 @@ TP-FE-022,CG-FE-005,cp_debug_fetch,cold_line,0
 TP-FE-022,CG-FE-005,cp_debug_fetch,warm_line_bypassed,0
 TP-FE-022,CG-IC-005,cp_debug,entry_with_en_forced_off,0
 TP-FE-022,CG-IC-005,cp_debug,exit_hits_resume,0
+TP-FE-022,CG-WIT-001,cp_clause,w_tp_fe_022,0
 TP-FE-023,CG-FE-001,cp_pc_mux,exc_vector,0
 TP-FE-023,CG-FE-005,cp_in_debug,no,0
 TP-FE-023,CG-FE-005,cp_in_debug,yes,0
@@ -12063,6 +12144,7 @@ TP-FE-026,CG-FE-006,cr_wake_x_resume,irq_handler,0
 TP-FE-026,CG-FE-006,cr_wake_x_resume,irq_next,0
 TP-FE-026,CG-FE-006,cr_wake_x_resume,nmi_handler,0
 TP-FE-026,CG-FE-006,cr_wake_x_resume,step_dbg,0
+TP-FE-026,CG-WIT-001,cp_clause,w_tp_fe_026,0
 TP-FE-027,CG-FE-006,cp_fetch_seq_wrap,yes,0
 TP-FE-027,CG-FE-006,cp_next_after_wrap,two,0
 TP-FE-027,CG-FE-006,cp_next_after_wrap,zero,0
@@ -12080,10 +12162,13 @@ TP-IC-001,CG-IC-001,cp_index,idx_last,0
 TP-IC-001,CG-IC-001,cp_index,idx_mid,0
 TP-IC-002,CG-IC-001,cp_rdata_used_next_cycle,yes,0
 TP-IC-002,CG-IC-001,cp_tag_op,lookup_both,0
+TP-IC-002,CG-WIT-001,cp_clause,w_tp_ic_002,0
 TP-IC-003,CG-IC-001,cp_data_op,lookup_both,0
+TP-IC-003,CG-WIT-001,cp_clause,w_tp_ic_003,0
 TP-IC-004,CG-IC-001,cp_cache_en,off,0
 TP-IC-004,CG-IC-001,cp_read_when_disabled,seen,0
 TP-IC-004,CG-IC-001,cr_tagop_x_en,lookup_off,0
+TP-IC-004,CG-WIT-001,cp_clause,w_tp_ic_004,0
 TP-IC-005,CG-IC-001,cp_cache_en,on,0
 TP-IC-005,CG-IC-001,cp_data_op,fill_write_way0,0
 TP-IC-005,CG-IC-001,cp_data_op,fill_write_way1,0
@@ -12093,6 +12178,7 @@ TP-IC-005,CG-IC-001,cp_tag_valid_bit,valid,0
 TP-IC-005,CG-IC-001,cr_index_x_tagop,idxlast_fill,0
 TP-IC-005,CG-IC-001,cr_tagop_x_en,fill0_on,0
 TP-IC-005,CG-IC-001,cr_tagop_x_en,fill1_on,0
+TP-IC-005,CG-WIT-001,cp_clause,w_tp_ic_005,0
 TP-IC-006,CG-IC-001,cp_data_tweak_effective,infected,0
 TP-IC-006,CG-IC-001,cp_data_tweak_effective,transparent,0
 TP-IC-006,CG-IC-001,cp_tag_tweak_effective,infected,0
@@ -12110,7 +12196,9 @@ TP-IC-007,CG-IC-002,cr_delay_x_knob,k2_15_delayed,0
 TP-IC-007,CG-IC-002,cr_trigger_x_delay,fencei_k0_1,0
 TP-IC-007,CG-IC-002,cr_trigger_x_delay,fencei_k2_15,0
 TP-IC-007,CG-IC-002,cr_trigger_x_delay,reset_k0_1,0
+TP-IC-007,CG-WIT-001,cp_clause,w_tp_ic_007,0
 TP-IC-008,CG-IC-002,cp_key_req_at_reset,skipped_valid_high,0
+TP-IC-008,CG-WIT-001,cp_clause,w_tp_ic_008,0
 TP-IC-009,CG-IC-002,cp_cpuctrlsts_bit8,match_0,0
 TP-IC-009,CG-IC-002,cp_key_delay,never_in_test,0
 TP-IC-009,CG-IC-002,cr_delay_x_knob,never_withheld,0
@@ -12135,6 +12223,7 @@ TP-IC-011,CG-IC-002,cp_retire_during_sweep,r20p,0
 TP-IC-011,CG-IC-002,cp_sweep,complete_all,0
 TP-IC-011,CG-IC-003,cp_result,miss_no_alloc_invalidating,0
 TP-IC-011,CG-IC-008,cp_fetch_src,bus_sweep,0
+TP-IC-011,CG-WIT-001,cp_clause,w_tp_ic_011,0
 TP-IC-012,CG-IC-002,cp_fencei_state,idle,0
 TP-IC-012,CG-IC-002,cp_new_code_after_fencei,yes,0
 TP-IC-012,CG-IC-002,cp_trigger,fencei_from_idle,0
@@ -12150,6 +12239,7 @@ TP-IC-015,CG-IC-002,cp_fill_inflight_at_inval,n1_2,0
 TP-IC-015,CG-IC-002,cp_fill_inflight_at_inval,n3_4,0
 TP-IC-015,CG-IC-002,cr_state_x_inflight,idle_n3_4,0
 TP-IC-015,CG-IC-002,cr_state_x_inflight,restart_n1_2,0
+TP-IC-015,CG-WIT-001,cp_clause,w_tp_ic_015,0
 TP-IC-016,CG-IC-002,cp_fill_write_after_unsolicited_drop,yes,0
 TP-IC-016,CG-IC-002,cp_key_delay,k256p,0
 TP-IC-016,CG-IC-002,cp_valid_dropped_unsolicited,yes,0
@@ -12171,8 +12261,10 @@ TP-IC-018,CG-IC-008,cp_fetch_src,bus_miss,0
 TP-IC-018,CG-IC-008,cp_fetch_src,cache_hit,0
 TP-IC-019,CG-IC-003,cp_hit_cadence,run2_3,0
 TP-IC-019,CG-IC-003,cp_hit_cadence,run4p,0
+TP-IC-019,CG-WIT-001,cp_clause,w_tp_ic_019,0
 TP-IC-020,CG-IC-003,cp_miss_forward_latency,l3,0
 TP-IC-020,CG-IC-003,cp_miss_forward_latency,l4p,0
+TP-IC-020,CG-WIT-001,cp_clause,w_tp_ic_020,0
 TP-IC-021,CG-IC-003,cp_index_fill,both_valid,0
 TP-IC-021,CG-IC-003,cp_index_fill,none_valid,0
 TP-IC-021,CG-IC-003,cp_index_fill,one_valid,0
@@ -12194,6 +12286,7 @@ TP-IC-023,CG-IC-004,cr_entry_x_delays,w0_both_fast,0
 TP-IC-023,CG-IC-004,cr_entry_x_delays,w0_second_slow,0
 TP-IC-023,CG-IC-004,cr_entry_x_delays,w1_both_slow,0
 TP-IC-023,CG-IC-004,cr_entry_x_delays,w1_first_slow,0
+TP-IC-023,CG-WIT-001,cp_clause,w_tp_ic_023,0
 TP-IC-024,CG-IC-004,cp_redirect_during_fill,after_beat1_gnt,0
 TP-IC-024,CG-IC-004,cp_redirect_during_fill,after_beat2_gnt,0
 TP-IC-024,CG-IC-004,cp_redirect_during_fill,before_any_gnt_cancelled,0
@@ -12204,6 +12297,7 @@ TP-IC-024,CG-IC-004,cr_redirect_x_written,after1_not_alloc,0
 TP-IC-024,CG-IC-004,cr_redirect_x_written,after1_written,0
 TP-IC-024,CG-IC-004,cr_redirect_x_written,after2_written,0
 TP-IC-024,CG-IC-004,cr_redirect_x_written,before_fetched_written,0
+TP-IC-024,CG-WIT-001,cp_clause,w_tp_ic_024,0
 TP-IC-025,CG-IC-003,cp_two_ways_same_tag,yes,0
 TP-IC-025,CG-IC-004,cp_same_line_two_ways,same_way_overwrite,0
 TP-IC-025,CG-IC-004,cp_same_line_two_ways,yes,0
@@ -12230,6 +12324,7 @@ TP-IC-030,CG-IC-001,cr_tagop_x_en,lookup_off,0
 TP-IC-030,CG-IC-005,cp_debug,entry_with_en_forced_off,0
 TP-IC-030,CG-IC-005,cp_debug,entry_with_en_off,0
 TP-IC-030,CG-IC-005,cp_debug,exit_hits_resume,0
+TP-IC-030,CG-WIT-001,cp_clause,w_tp_ic_030,0
 TP-IC-031,CG-IC-005,cp_fills_inflight,n0,0
 TP-IC-031,CG-IC-005,cp_fills_inflight,n1_2,0
 TP-IC-031,CG-IC-005,cp_fills_inflight,n3_4,0
@@ -12237,6 +12332,7 @@ TP-IC-031,CG-IC-005,cp_inflight_alloc_dropped,yes,0
 TP-IC-031,CG-IC-005,cp_transition,on_to_off,0
 TP-IC-031,CG-IC-005,cr_trans_x_inflight,off_n0,0
 TP-IC-031,CG-IC-005,cr_trans_x_inflight,off_n3_4,0
+TP-IC-031,CG-WIT-001,cp_clause,w_tp_ic_031,0
 TP-IC-032,CG-IC-005,cp_no_backfill,yes,0
 TP-IC-032,CG-IC-005,cp_old_lines_hit_after_reenable,yes,0
 TP-IC-032,CG-IC-005,cr_trans_x_inflight,on_n1_2,0
@@ -12262,6 +12358,7 @@ TP-IC-035,CG-IC-006,cr_ram_x_bits_x_way,tag_double_way1,0
 TP-IC-035,CG-IC-006,cr_ram_x_bits_x_way,tag_single_way0,0
 TP-IC-035,CG-IC-006,cr_ram_x_bits_x_way,tag_single_way1,0
 TP-IC-035,CG-IC-006,cr_ram_x_inval,tag_all,0
+TP-IC-035,CG-WIT-001,cp_clause,w_tp_ic_035,0
 TP-IC-036,CG-IC-001,cp_tag_op,ecc_write_way0,0
 TP-IC-036,CG-IC-001,cp_tag_op,ecc_write_way1,0
 TP-IC-036,CG-IC-001,cr_tagop_x_en,ecc0_on,0
@@ -12277,8 +12374,10 @@ TP-IC-036,CG-IC-006,cr_ram_x_bits_x_way,data_double_way1,0
 TP-IC-036,CG-IC-006,cr_ram_x_bits_x_way,data_single_way0,0
 TP-IC-036,CG-IC-006,cr_ram_x_bits_x_way,data_single_way1,0
 TP-IC-036,CG-IC-006,cr_ram_x_inval,data_hit,0
+TP-IC-036,CG-WIT-001,cp_clause,w_tp_ic_036,0
 TP-IC-037,CG-IC-003,cp_result,miss_ecc_forced,0
 TP-IC-037,CG-IC-006,cp_lookups_blocked_next,yes,0
+TP-IC-037,CG-WIT-001,cp_clause,w_tp_ic_037,0
 TP-IC-038,CG-IC-003,cp_two_ways_same_tag,yes,0
 TP-IC-038,CG-IC-006,cp_multiway_mismatch,alert_or_wrong,0
 TP-IC-039,CG-IC-004,cp_beat_delays,both_slow,0
@@ -12304,9 +12403,11 @@ TP-IC-044,CG-IC-006,cp_no_alert_case,uninitialised_data_ram,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,unused_way_data,0
 TP-IC-045,CG-IC-001,cp_port_contention,deferred_1,0
 TP-IC-045,CG-IC-001,cp_port_contention,deferred_2p,0
+TP-IC-045,CG-WIT-001,cp_clause,w_tp_ic_045,0
 TP-IC-046,CG-IC-001,cp_data_op,inval_zero_write_both,0
 TP-IC-046,CG-IC-001,cp_data_tweak_effective,infected,0
 TP-IC-046,CG-IC-001,cp_data_tweak_effective,transparent,0
+TP-IC-046,CG-WIT-001,cp_clause,w_tp_ic_046,0
 TP-IC-047,CG-IC-002,cp_fencei_state,await_key_ignored,0
 TP-IC-047,CG-IC-002,cr_trigger_x_delay,fencei_k0_1,0
 TP-IC-047,CG-IC-002,cr_trigger_x_delay,restart_k16_255,0
@@ -12335,14 +12436,17 @@ TP-IC-051,CG-IC-007,cp_lead_lines,l2,0
 TP-IC-051,CG-IC-007,cp_lead_lines,l3,0
 TP-IC-051,CG-IC-007,cp_lead_lines,l4_wb_stall,0
 TP-IC-051,CG-IC-007,cp_throttle_hold,yes,0
+TP-IC-051,CG-WIT-001,cp_clause,w_tp_ic_051,0
 TP-IC-052,CG-IC-004,cp_saturation_stall,yes,0
 TP-IC-052,CG-IC-007,cp_release_to_next_req,c1_2_off,0
 TP-IC-052,CG-IC-007,cp_release_to_next_req,c3_4_caching,0
 TP-IC-052,CG-IC-007,cp_throttle_hold,yes,0
+TP-IC-052,CG-WIT-001,cp_clause,w_tp_ic_052,0
 TP-IC-053,CG-IC-007,cp_output_hold,h0,0
 TP-IC-053,CG-IC-007,cp_output_hold,h1,0
 TP-IC-053,CG-IC-007,cp_output_hold,h2_3,0
 TP-IC-053,CG-IC-007,cp_output_hold,h4p,0
+TP-IC-053,CG-WIT-001,cp_clause,w_tp_ic_053,0
 TP-IC-054,CG-IC-008,cr_src_x_mix,await_ls,0
 TP-IC-054,CG-IC-008,cr_src_x_mix,disabled_compressed,0
 TP-IC-054,CG-IC-008,cr_src_x_mix,hit_bitmanip,0
@@ -12374,10 +12478,12 @@ TP-IC-057,CG-IC-005,cp_off_window,short,0
 TP-IC-057,CG-IC-005,cp_old_lines_hit_after_reenable,yes,0
 TP-IC-057,CG-IC-005,cr_off_window_x_hit,long_hit,0
 TP-IC-057,CG-IC-005,cr_off_window_x_hit,short_hit,0
+TP-IC-057,CG-WIT-001,cp_clause,w_tp_ic_057,0
 TP-IMEM-001,CG-IMEM-001,cp_gnt_delay,d1,0
 TP-IMEM-001,CG-IMEM-001,cp_gnt_delay,d16p,0
 TP-IMEM-001,CG-IMEM-001,cp_gnt_delay,d2_3,0
 TP-IMEM-001,CG-IMEM-001,cp_gnt_delay,d4_15,0
+TP-IMEM-001,CG-WIT-001,cp_clause,w_tp_imem_001,0
 TP-IMEM-002,CG-FE-002,cp_pc_bit1,b1,0
 TP-IMEM-002,CG-IMEM-001,cp_addr_lsb,aligned,0
 TP-IMEM-002,CG-IMEM-001,cp_beat,w0,0
@@ -12386,16 +12492,20 @@ TP-IMEM-003,CG-IMEM-001,cp_gnt_delay,d4_15,0
 TP-IMEM-003,CG-IMEM-001,cr_delay_x_knob,d4_15_long,0
 TP-IMEM-003,CG-IMEM-004,cp_redirect_to_gnt_wait,w4p,0
 TP-IMEM-003,CG-IMEM-004,cp_ungranted_req_at_redirect,yes,0
+TP-IMEM-003,CG-WIT-001,cp_clause,w_tp_imem_003,0
 TP-IMEM-004,CG-IMEM-001,cp_gnt_delay,d0,0
 TP-IMEM-004,CG-IMEM-001,cr_delay_x_knob,d0_same,0
+TP-IMEM-004,CG-WIT-001,cp_clause,w_tp_imem_004,0
 TP-IMEM-005,CG-IMEM-001,cp_gnt_delay,d16p,0
 TP-IMEM-005,CG-IMEM-001,cr_delay_x_knob,d0_random,0
 TP-IMEM-005,CG-IMEM-001,cr_delay_x_knob,d16p_long,0
 TP-IMEM-005,CG-IMEM-001,cr_delay_x_knob,d16p_random,0
 TP-IMEM-005,CG-IMEM-001,cr_delay_x_knob,d4_15_random,0
+TP-IMEM-005,CG-WIT-001,cp_clause,w_tp_imem_005,0
 TP-IMEM-006,CG-IMEM-002,cp_err_class,none,0
 TP-IMEM-006,CG-IMEM-002,cp_rvalid_delay,d1,0
 TP-IMEM-006,CG-IMEM-002,cp_rvalid_delay,d2_3,0
+TP-IMEM-006,CG-WIT-001,cp_clause,w_tp_imem_006,0
 TP-IMEM-007,CG-IMEM-001,cp_b2b,no,0
 TP-IMEM-007,CG-IMEM-001,cp_b2b,yes,0
 TP-IMEM-007,CG-IMEM-001,cr_b2b_x_beat,b2b_w0,0
@@ -12403,6 +12513,7 @@ TP-IMEM-007,CG-IMEM-001,cr_b2b_x_beat,b2b_w1,0
 TP-IMEM-007,CG-IMEM-002,cp_rvalid_delay,d1,0
 TP-IMEM-007,CG-IMEM-002,cp_rvalid_with_req,no,0
 TP-IMEM-007,CG-IMEM-002,cp_rvalid_with_req,yes,0
+TP-IMEM-007,CG-WIT-001,cp_clause,w_tp_imem_007,0
 TP-IMEM-008,CG-IMEM-002,cp_max_outstanding,m5_7,0
 TP-IMEM-008,CG-IMEM-002,cp_max_outstanding,m8,0
 TP-IMEM-008,CG-IMEM-002,cp_outstanding_before,o5,0
@@ -12413,6 +12524,7 @@ TP-IMEM-008,CG-IMEM-002,cr_held_x_depth,held_o1,0
 TP-IMEM-008,CG-IMEM-002,cr_held_x_depth,held_o2,0
 TP-IMEM-008,CG-IMEM-002,cr_held_x_depth,held_o4,0
 TP-IMEM-008,CG-IMEM-002,cr_held_x_depth,no_req_o8,0
+TP-IMEM-008,CG-WIT-001,cp_clause,w_tp_imem_008,0
 TP-IMEM-009,CG-IMEM-002,cp_outstanding_before,o3,0
 TP-IMEM-009,CG-IMEM-002,cp_outstanding_before,o4,0
 TP-IMEM-009,CG-IMEM-002,cp_rvalid_delay,d4_15,0
@@ -12424,6 +12536,7 @@ TP-IMEM-010,CG-IMEM-002,cp_burst,b5p,0
 TP-IMEM-010,CG-IMEM-002,cp_rvalid_delay,d16p,0
 TP-IMEM-010,CG-IMEM-002,cr_delay_x_burst,fast_burst,0
 TP-IMEM-010,CG-IMEM-002,cr_delay_x_burst,slow_then_burst,0
+TP-IMEM-010,CG-WIT-001,cp_clause,w_tp_imem_010,0
 TP-IMEM-011,CG-FE-005,cp_errored_payload,other,0
 TP-IMEM-011,CG-FE-005,cp_errored_payload,rd_write,0
 TP-IMEM-011,CG-FE-005,cp_source,bus,0
@@ -12452,6 +12565,7 @@ TP-IMEM-014,CG-IMEM-003,cp_half,first_half,0
 TP-IMEM-014,CG-IMEM-003,cr_half_x_class,both_bus,0
 TP-IMEM-014,CG-IMEM-003,cr_half_x_mtval,both_pc,0
 TP-IMEM-014,CG-IMEM-003,cr_half_x_mtval,first_pc,0
+TP-IMEM-014,CG-WIT-001,cp_clause,w_tp_imem_014,0
 TP-IMEM-015,CG-IC-004,cp_err_line,not_cached,0
 TP-IMEM-015,CG-IMEM-003,cp_line_not_cached,refetch,0
 TP-IMEM-016,CG-FE-005,cp_source,intg,0
@@ -12464,6 +12578,7 @@ TP-IMEM-016,CG-IMEM-003,cp_source,intg,0
 TP-IMEM-016,CG-IMEM-003,cr_half_x_class,c16_intg,0
 TP-IMEM-016,CG-IMEM-003,cr_half_x_class,first_intg,0
 TP-IMEM-016,CG-IMEM-003,cr_outcome_x_class,spec_intg,0
+TP-IMEM-016,CG-WIT-001,cp_clause,w_tp_imem_016,0
 TP-IMEM-017,CG-IMEM-004,cp_kind,branch,0
 TP-IMEM-017,CG-IMEM-004,cp_kind,exc,0
 TP-IMEM-017,CG-IMEM-004,cp_kind,irq,0
@@ -12473,6 +12588,7 @@ TP-IMEM-017,CG-IMEM-004,cp_outstanding_at_redirect,o5_8,0
 TP-IMEM-017,CG-IMEM-004,cr_kind_x_outstanding,branch_deep,0
 TP-IMEM-017,CG-IMEM-004,cr_kind_x_outstanding,exc_o2,0
 TP-IMEM-017,CG-IMEM-004,cr_kind_x_outstanding,irq_o1,0
+TP-IMEM-017,CG-WIT-001,cp_clause,w_tp_imem_017,0
 TP-IMEM-018,CG-FE-003,cp_target_req_same_cycle,no_pending_req,0
 TP-IMEM-018,CG-IMEM-004,cp_kind,jal,0
 TP-IMEM-018,CG-IMEM-004,cp_kind,jalr,0
@@ -12481,6 +12597,7 @@ TP-IMEM-018,CG-IMEM-004,cp_redirect_to_gnt_wait,w2_3,0
 TP-IMEM-018,CG-IMEM-004,cp_redirect_to_gnt_wait,w4p,0
 TP-IMEM-018,CG-IMEM-004,cp_ungranted_req_at_redirect,no,0
 TP-IMEM-018,CG-IMEM-004,cp_ungranted_req_at_redirect,yes,0
+TP-IMEM-018,CG-WIT-001,cp_clause,w_tp_imem_018,0
 TP-IMEM-019,CG-IC-003,cp_hit_bus_traffic,spec_branch_only,0
 TP-IMEM-019,CG-IC-004,cp_spec_branch_req,yes,0
 TP-IMEM-019,CG-IC-004,cp_spec_err_ignored,yes,0
@@ -12509,6 +12626,7 @@ TP-IMEM-022,CG-IMEM-005,cp_inflight_drain,c5_15,0
 TP-IMEM-022,CG-IMEM-005,cp_outstanding_at_gate,o1_4,0
 TP-IMEM-022,CG-IMEM-005,cp_resume,handler_pc,0
 TP-IMEM-022,CG-IMEM-005,cr_cause_x_outstanding,wfi_o1_4,0
+TP-IMEM-022,CG-WIT-001,cp_clause,w_tp_imem_022,0
 TP-IMEM-023,CG-IMEM-005,cp_beats_issued_after_gate,none,0
 TP-IMEM-023,CG-IMEM-005,cp_beats_issued_after_gate,some,0
 TP-IMEM-023,CG-IMEM-005,cp_fetch_en_code,off,0
@@ -12517,6 +12635,7 @@ TP-IMEM-023,CG-IMEM-005,cp_outstanding_at_gate,o0,0
 TP-IMEM-023,CG-IMEM-005,cp_outstanding_at_gate,o5_8,0
 TP-IMEM-023,CG-IMEM-005,cr_cause_x_outstanding,fen_off_o1_4,0
 TP-IMEM-023,CG-IMEM-005,cr_cause_x_outstanding,fen_off_o5_8,0
+TP-IMEM-023,CG-WIT-001,cp_clause,w_tp_imem_023,0
 TP-IMEM-024,CG-IMEM-005,cp_fetch_en_code,invalid_0,0
 TP-IMEM-024,CG-IMEM-005,cp_fetch_en_code,invalid_1,0
 TP-IMEM-024,CG-IMEM-005,cp_fetch_en_code,invalid_2,0
@@ -12537,6 +12656,7 @@ TP-IMEM-025,CG-IMEM-005,cp_gate_cause,fetch_en_off,0
 TP-IMEM-025,CG-IMEM-005,cp_inflight_drain,c1_4,0
 TP-IMEM-025,CG-IMEM-005,cp_inflight_drain,c5_15,0
 TP-IMEM-025,CG-IMEM-005,cp_outstanding_at_gate,o1_4,0
+TP-IMEM-025,CG-WIT-001,cp_clause,w_tp_imem_025,0
 TP-IMEM-026,CG-IMEM-005,cp_fetch_en_code,on,0
 TP-IMEM-026,CG-IMEM-005,cp_resume,held_pc_no_refetch,0
 TP-IMEM-027,CG-FE-001,cp_boot_class,low_ram,0
@@ -12545,6 +12665,7 @@ TP-IMEM-027,CG-IMEM-005,cp_boot_class,random_aligned,0
 TP-IMEM-027,CG-IMEM-005,cp_first_req_cycle,c1,0
 TP-IMEM-027,CG-IMEM-005,cp_first_req_cycle,c2p,0
 TP-IMEM-027,CG-IMEM-005,cp_gate_cause,reset_state,0
+TP-IMEM-027,CG-WIT-001,cp_clause,w_tp_imem_027,0
 TP-IMEM-028,CG-FE-001,cp_boot_class,top,0
 TP-IMEM-028,CG-FE-001,cp_boot_class,zero,0
 TP-IMEM-028,CG-IMEM-005,cp_boot_class,low_ram,0
@@ -12567,6 +12688,7 @@ TP-IMEM-032,CG-IMEM-006,cr_delivery_x_regime,shadow_both_slow,0
 TP-IMEM-033,CG-FE-002,cp_second_word_wait,w4p,0
 TP-IMEM-033,CG-IMEM-006,cp_delivery,straddle_two_records,0
 TP-IMEM-033,CG-IMEM-006,cr_delivery_x_regime,straddle_slow_rvalid,0
+TP-IMEM-033,CG-WIT-001,cp_clause,w_tp_imem_033,0
 TP-IMEM-034,CG-IMEM-003,cp_outcome,hit_spec_ignored_no_trap,0
 TP-IMEM-034,CG-IMEM-003,cp_outcome,spec_discarded_no_trap,0
 TP-IMEM-034,CG-IMEM-003,cp_outcome,stale_after_redirect_no_trap,0
@@ -12586,6 +12708,7 @@ TP-IMEM-036,CG-IMEM-001,cr_delay_x_knob,d4_15_long,0
 TP-IMEM-036,CG-IMEM-006,cr_delivery_x_regime,in_order_fast_fast,0
 TP-IMEM-036,CG-IMEM-006,cr_delivery_x_regime,in_order_slow_gnt,0
 TP-IMEM-036,CG-IMEM-006,cr_delivery_x_regime,target_slow_gnt,0
+TP-IMEM-036,CG-WIT-001,cp_clause,w_tp_imem_036,0
 TP-IMEM-037,CG-IMEM-002,cp_err_class,bus_err,0
 TP-IMEM-037,CG-IMEM-002,cp_err_class,intg_double,0
 TP-IMEM-037,CG-IMEM-002,cp_err_class,intg_single,0
@@ -12602,6 +12725,7 @@ TP-IMEM-037,CG-IMEM-002,cr_held_x_depth,held_o1,0
 TP-IMEM-037,CG-IMEM-002,cr_held_x_depth,held_o2,0
 TP-IMEM-037,CG-IMEM-002,cr_held_x_depth,held_o4,0
 TP-IMEM-037,CG-IMEM-002,cr_held_x_depth,held_o5_7,0
+TP-IMEM-037,CG-WIT-001,cp_clause,w_tp_imem_037,0
 TP-IMEM-038,CG-IC-005,cr_trans_x_inflight,off_n3_4,0
 TP-IMEM-038,CG-IC-005,cr_trans_x_inflight,on_n1_2,0
 TP-IMEM-038,CG-IMEM-004,cp_cache_en,on,0
@@ -12612,9 +12736,11 @@ TP-IMEM-039,CG-IMEM-007,cr_gnt_x_regime,req_long,0
 TP-IMEM-039,CG-IMEM-007,cr_gnt_x_regime,req_random,0
 TP-IMEM-039,CG-IMEM-007,cr_gnt_x_regime,req_same,0
 TP-IMEM-039,CG-IMEM-007,cr_gnt_x_regime,req_short,0
+TP-IMEM-039,CG-WIT-001,cp_clause,w_tp_imem_039,0
 TP-IMEM-040,CG-IMEM-007,cp_unsolicited_rvalid_case,bad_secded_alert,0
 TP-IMEM-040,CG-IMEM-007,cp_unsolicited_rvalid_case,expecting_buffer_consumed_shift,0
 TP-IMEM-040,CG-IMEM-007,cp_unsolicited_rvalid_case,no_expecting_buffer_ignored,0
+TP-IMEM-040,CG-WIT-001,cp_clause,w_tp_imem_040,0
 TP-IRQ-001,CG-EXC-012,cr_kind_bit1,irq_bit1_0,0
 TP-IRQ-001,CG-EXC-012,cr_kind_bit1,irq_bit1_1,0
 TP-IRQ-001,CG-EXC-012,cr_kind_mie_priv,irq_mie1_m,0
@@ -12729,6 +12855,7 @@ TP-IRQ-009,CG-IRQ-003,cp_mip_access,read_partial_mie,0
 TP-IRQ-009,CG-IRQ-003,cr_access_state,read_all_low_mie1_m,0
 TP-IRQ-009,CG-IRQ-003,cr_access_state,read_mie0_pins_high_mie0_m,0
 TP-IRQ-009,CG-IRQ-003,cr_access_state,read_partial_mie_mie1_m,0
+TP-IRQ-009,CG-WIT-001,cp_clause,w_tp_irq_009,0
 TP-IRQ-010,CG-IRQ-003,cp_mip_access,write_csrrc_ignored,0
 TP-IRQ-010,CG-IRQ-003,cp_mip_access,write_csrrs_ignored,0
 TP-IRQ-010,CG-IRQ-003,cp_mip_access,write_csrrw_ignored,0
@@ -12779,6 +12906,7 @@ TP-IRQ-011,CG-IRQ-003,cr_transition_state,rise_enabled_nmi_mode,0
 TP-IRQ-011,CG-IRQ-003,cr_transition_state,rise_enabled_sleep,0
 TP-IRQ-011,CG-IRQ-003,cr_transition_state,rise_enabled_step,0
 TP-IRQ-011,CG-IRQ-003,cr_transition_state,rise_enabled_u_mode,0
+TP-IRQ-011,CG-WIT-001,cp_clause,w_tp_irq_011,0
 TP-IRQ-012,CG-IRQ-001,cp_mie_global,mie1,0
 TP-IRQ-012,CG-IRQ-001,cr_line_mepc,software_mret_target,0
 TP-IRQ-012,CG-IRQ-001,cr_line_priv_mie,external_m_mie1,0
@@ -12830,6 +12958,7 @@ TP-IRQ-015,CG-IRQ-002,cr_gap_winner,adjacent_fast,0
 TP-IRQ-015,CG-IRQ-002,cr_gap_winner,ends_fast,0
 TP-IRQ-015,CG-IRQ-002,cr_gap_winner,far_fast,0
 TP-IRQ-015,CG-IRQ-002,cr_set_winner,fast_fast_fast,0
+TP-IRQ-015,CG-WIT-001,cp_clause,w_tp_irq_015,0
 TP-IRQ-016,CG-IRQ-002,cp_drain,first,0
 TP-IRQ-016,CG-IRQ-002,cp_drain,last18,0
 TP-IRQ-016,CG-IRQ-002,cp_drain,middle,0
@@ -12880,6 +13009,7 @@ TP-IRQ-021,CG-IRQ-004,cr_ctx_records,id_empty_zero,0
 TP-IRQ-021,CG-IRQ-004,cr_pulse_change_outcome,level_until_ack_stable_taken,0
 TP-IRQ-021,CG-IRQ-004,cr_pulse_change_outcome,three_plus_stable_taken,0
 TP-IRQ-021,CG-IRQ-004,cr_pulse_change_outcome,two_stable_taken,0
+TP-IRQ-021,CG-WIT-001,cp_clause,w_tp_irq_021,0
 TP-IRQ-022,CG-IRQ-004,cp_ctx,fetch_stall_gnt,0
 TP-IRQ-022,CG-IRQ-004,cp_ctx,fetch_stall_rvalid,0
 TP-IRQ-022,CG-IRQ-004,cp_ctx,id_load_wait,0
@@ -12901,6 +13031,7 @@ TP-IRQ-022,CG-IRQ-004,cr_ctx_records,id_store_wait_one,0
 TP-IRQ-022,CG-IRQ-004,cr_ctx_records,id_store_wait_two,0
 TP-IRQ-022,CG-IRQ-004,cr_ctx_rvalid,id_load_wait_before_rvalid,0
 TP-IRQ-022,CG-IRQ-004,cr_ctx_rvalid,id_store_wait_before_rvalid,0
+TP-IRQ-022,CG-WIT-001,cp_clause,w_tp_irq_022,0
 TP-IRQ-023,CG-IRQ-004,cp_rvalid_relation,after_rvalid,0
 TP-IRQ-023,CG-IRQ-004,cp_rvalid_relation,before_rvalid,0
 TP-IRQ-023,CG-IRQ-004,cp_rvalid_relation,same_cycle_as_rvalid,0
@@ -12910,10 +13041,12 @@ TP-IRQ-023,CG-IRQ-004,cr_ctx_records,id_store_wait_two,0
 TP-IRQ-023,CG-IRQ-004,cr_ctx_rvalid,id_load_wait_after_rvalid,0
 TP-IRQ-023,CG-IRQ-004,cr_ctx_rvalid,id_load_wait_same_cycle_as_rvalid,0
 TP-IRQ-023,CG-IRQ-004,cr_ctx_rvalid,id_store_wait_same_cycle_as_rvalid,0
+TP-IRQ-023,CG-WIT-001,cp_clause,w_tp_irq_023,0
 TP-IRQ-024,CG-IRQ-004,cr_ctx_latency,id_div_long,0
 TP-IRQ-024,CG-IRQ-004,cr_ctx_latency,id_div_six_ten,0
 TP-IRQ-024,CG-IRQ-004,cr_ctx_outcome,id_div_taken,0
 TP-IRQ-024,CG-IRQ-004,cr_ctx_outcome,id_mul_taken,0
+TP-IRQ-024,CG-WIT-001,cp_clause,w_tp_irq_024,0
 TP-IRQ-025,CG-EXC-008,cp_event,irq_during_commit_deferred,0
 TP-IRQ-025,CG-EXC-008,cp_event,irq_during_expanded,0
 TP-IRQ-025,CG-EXC-008,cr_event_after,irq_during_expanded_reexecuted_from_first,0
@@ -12937,10 +13070,12 @@ TP-IRQ-025,CG-IRQ-004,cr_ctx_latency,zcmp_commit_six_ten,0
 TP-IRQ-025,CG-IRQ-004,cr_ctx_latency,zcmp_expanded_three_five,0
 TP-IRQ-025,CG-IRQ-004,cr_ctx_outcome,zcmp_commit_taken,0
 TP-IRQ-025,CG-IRQ-004,cr_ctx_outcome,zcmp_expanded_taken,0
+TP-IRQ-025,CG-WIT-001,cp_clause,w_tp_irq_025,0
 TP-IRQ-026,CG-EXC-013,cr_stage_irq,id_cause_irq_enabled,0
 TP-IRQ-026,CG-EXC-013,cr_wb_irq_ibus,wb_empty_irq_enabled_idle,0
 TP-IRQ-026,CG-IRQ-004,cp_outcome,deferred_by_exception,0
 TP-IRQ-026,CG-IRQ-004,cr_ctx_outcome,id_exc_deferred_by_exception,0
+TP-IRQ-026,CG-WIT-001,cp_clause,w_tp_irq_026,0
 TP-IRQ-027,CG-EXC-013,cp_ibus_at_commit,idle,0
 TP-IRQ-027,CG-EXC-013,cr_stage_irq,wb_cause_irq_enabled,0
 TP-IRQ-027,CG-EXC-013,cr_wb_irq_ibus,wb_ls_fault_wins_irq_enabled_gnt_pending,0
@@ -12948,6 +13083,7 @@ TP-IRQ-027,CG-EXC-013,cr_wb_irq_ibus,wb_ls_fault_wins_irq_enabled_idle,0
 TP-IRQ-027,CG-EXC-013,cr_wb_irq_ibus,wb_ls_fault_wins_irq_enabled_rvalid_pending,0
 TP-IRQ-027,CG-IRQ-004,cp_ctx,wb_fault_same_cycle,0
 TP-IRQ-027,CG-IRQ-004,cr_ctx_outcome,wb_fault_same_cycle_deferred_by_exception,0
+TP-IRQ-027,CG-WIT-001,cp_clause,w_tp_irq_027,0
 TP-IRQ-028,CG-EXC-011,cp_pending_at,irq_disabled,0
 TP-IRQ-028,CG-EXC-011,cp_pending_at,irq_enabled,0
 TP-IRQ-028,CG-EXC-011,cp_pending_at,nmi,0
@@ -12998,6 +13134,7 @@ TP-IRQ-030,CG-IRQ-004,cr_ctx_outcome,id_load_wait_withdrawn,0
 TP-IRQ-030,CG-IRQ-004,cr_pulse_change_outcome,one_dropped_all_withdrawn,0
 TP-IRQ-030,CG-IRQ-004,cr_pulse_change_outcome,two_dropped_all_withdrawn,0
 TP-IRQ-030,CG-IRQ-004,cr_pulse_change_outcome,two_stable_taken,0
+TP-IRQ-030,CG-WIT-001,cp_clause,w_tp_irq_030,0
 TP-IRQ-031,CG-IRQ-001,cp_rvfi_marks,pre_post_mip_differ,0
 TP-IRQ-031,CG-IRQ-001,cr_line_marks,timer_pre_post_mip_differ,0
 TP-IRQ-031,CG-IRQ-002,cp_late,higher_added,0
@@ -13015,6 +13152,7 @@ TP-IRQ-031,CG-IRQ-004,cr_ctx_outcome,id_empty_taken_other_line,0
 TP-IRQ-031,CG-IRQ-004,cr_pulse_change_outcome,three_plus_dropped_winner_other_remains_taken_other_line,0
 TP-IRQ-031,CG-IRQ-004,cr_pulse_change_outcome,three_plus_higher_added_taken_other_line,0
 TP-IRQ-031,CG-IRQ-004,cr_pulse_change_outcome,three_plus_lower_added_taken,0
+TP-IRQ-031,CG-WIT-001,cp_clause,w_tp_irq_031,0
 TP-IRQ-032,CG-EXC-011,cr_context_pending,irq_handler_irq_enabled,0
 TP-IRQ-032,CG-IRQ-004,cp_pulse_width,level_until_ack,0
 TP-IRQ-032,CG-IRQ-005,cp_line_at_mret,masked_in_handler,0
@@ -13082,12 +13220,14 @@ TP-IRQ-038,CG-IRQ-002,cr_set_winner,nmi_external_nmi_ext,0
 TP-IRQ-038,CG-IRQ-002,cr_set_winner,nmi_fast_nmi_ext,0
 TP-IRQ-038,CG-IRQ-002,cr_set_winner,nmi_software_nmi_ext,0
 TP-IRQ-038,CG-IRQ-002,cr_set_winner,nmi_timer_nmi_ext,0
+TP-IRQ-038,CG-WIT-001,cp_clause,w_tp_irq_038,0
 TP-IRQ-039,CG-EXC-013,cr_stage_irq,id_cause_nmi,0
 TP-IRQ-039,CG-EXC-013,cr_stage_irq,wb_cause_nmi,0
 TP-IRQ-039,CG-IRQ-007,cp_ctx_pre,exc_vector_first,0
 TP-IRQ-039,CG-IRQ-007,cr_ctx_priv_mie,exc_handler_m_mie0,0
 TP-IRQ-039,CG-IRQ-007,cr_source_ctx,ext_exc_vector_first,0
 TP-IRQ-039,CG-IRQ-007,cr_source_ctx,int_ecc_exc_vector_first,0
+TP-IRQ-039,CG-WIT-001,cp_clause,w_tp_irq_039,0
 TP-IRQ-040,CG-IRQ-007,cp_in_handler,exc_taken,0
 TP-IRQ-040,CG-IRQ-007,cp_mstack,nested_exc_context_lost,0
 TP-IRQ-040,CG-IRQ-007,cr_handler_mstack,exc_taken_nested_exc_context_lost,0
@@ -13096,6 +13236,7 @@ TP-IRQ-041,CG-IRQ-010,cp_nmip_read,read_with_nmi_high,0
 TP-IRQ-041,CG-IRQ-010,cp_nmip_read,read_with_nmi_low,0
 TP-IRQ-041,CG-IRQ-010,cr_dur_post,dropped_before_exit_not_taken,0
 TP-IRQ-041,CG-IRQ-010,cr_line_mode_post,nmi_ext_debug_mode_not_taken,0
+TP-IRQ-041,CG-WIT-001,cp_clause,w_tp_irq_041,0
 TP-IRQ-042,CG-IRQ-007,cp_ctx_pre,dret_exit,0
 TP-IRQ-042,CG-IRQ-007,cr_ctx_priv_mie,dret_exit_u_mie0,0
 TP-IRQ-042,CG-IRQ-007,cr_source_ctx,ext_dret_exit,0
@@ -13160,6 +13301,7 @@ TP-IRQ-044,CG-IRQ-008,cr_op_half,load_mis_second,0
 TP-IRQ-044,CG-IRQ-008,cr_op_half,store_aligned,0
 TP-IRQ-044,CG-IRQ-008,cr_op_half,store_mis_first,0
 TP-IRQ-044,CG-IRQ-008,cr_op_half,store_mis_second,0
+TP-IRQ-044,CG-WIT-001,cp_clause,w_tp_irq_044,0
 TP-IRQ-045,CG-IRQ-002,cp_set,nmi_ext_nmi_int,0
 TP-IRQ-045,CG-IRQ-002,cr_set_winner,nmi_ext_nmi_int_nmi_ext,0
 TP-IRQ-045,CG-IRQ-007,cp_source,both_same_cycle,0
@@ -13169,6 +13311,7 @@ TP-IRQ-045,CG-IRQ-007,cr_source_ctx,int_ecc_after_mret_still_high,0
 TP-IRQ-045,CG-IRQ-008,cp_pending_ctx,ext_nmi_same_cycle,0
 TP-IRQ-045,CG-IRQ-008,cr_op_ctx,load_ext_nmi_same_cycle,0
 TP-IRQ-045,CG-IRQ-008,cr_op_ctx,store_ext_nmi_same_cycle,0
+TP-IRQ-045,CG-WIT-001,cp_clause,w_tp_irq_045,0
 TP-IRQ-046,CG-IRQ-008,cp_effects,mtval_first_addr,0
 TP-IRQ-046,CG-IRQ-008,cp_pending_ctx,second_err_while_pending,0
 TP-IRQ-046,CG-IRQ-008,cr_op_ctx,load_second_err_while_pending,0
@@ -13213,6 +13356,7 @@ TP-IRQ-049,CG-IRQ-009,cr_wake_sleep,irq_taken_medium,0
 TP-IRQ-049,CG-IRQ-009,cr_wake_sleep,irq_taken_short,0
 TP-IRQ-049,CG-IRQ-009,cr_wb_priv,empty_m,0
 TP-IRQ-049,CG-IRQ-009,cr_wb_priv,ls_ok_m,0
+TP-IRQ-049,CG-WIT-001,cp_clause,w_tp_irq_049,0
 TP-IRQ-050,CG-IRQ-009,cp_wake,irq_local_only,0
 TP-IRQ-050,CG-IRQ-009,cr_priv_wake,m_irq_local_only,0
 TP-IRQ-050,CG-IRQ-009,cr_wake_busy,irq_local_only_off_seen,0
@@ -13220,6 +13364,7 @@ TP-IRQ-050,CG-IRQ-009,cr_wake_line,irq_local_only_fast,0
 TP-IRQ-050,CG-IRQ-009,cr_wake_line,irq_local_only_software,0
 TP-IRQ-050,CG-IRQ-009,cr_wake_sleep,irq_local_only_medium,0
 TP-IRQ-050,CG-IRQ-009,cr_wake_sleep,irq_local_only_short,0
+TP-IRQ-050,CG-WIT-001,cp_clause,w_tp_irq_050,0
 TP-IRQ-051,CG-IRQ-009,cp_disabled_high,yes,0
 TP-IRQ-051,CG-IRQ-009,cp_wake,none_long,0
 TP-IRQ-051,CG-IRQ-009,cr_disabled_wake,yes_debug_req,0
@@ -13230,6 +13375,7 @@ TP-IRQ-051,CG-IRQ-009,cr_priv_wake,m_none_long,0
 TP-IRQ-051,CG-IRQ-009,cr_wake_busy,none_long_off_seen,0
 TP-IRQ-051,CG-IRQ-009,cr_wake_sleep,none_long_long,0
 TP-IRQ-051,CG-IRQ-009,cr_wake_sleep,none_long_medium,0
+TP-IRQ-051,CG-WIT-001,cp_clause,w_tp_irq_051,0
 TP-IRQ-052,CG-IRQ-009,cp_sleep_cycles,passthrough,0
 TP-IRQ-052,CG-IRQ-009,cp_wake,already_pending,0
 TP-IRQ-052,CG-IRQ-009,cr_priv_wake,m_already_pending,0
@@ -13237,6 +13383,7 @@ TP-IRQ-052,CG-IRQ-009,cr_priv_wake,u_tw0_already_pending,0
 TP-IRQ-052,CG-IRQ-009,cr_wake_busy,already_pending_off_not_seen,0
 TP-IRQ-052,CG-IRQ-009,cr_wake_busy,already_pending_off_seen,0
 TP-IRQ-052,CG-IRQ-009,cr_wake_sleep,already_pending_passthrough,0
+TP-IRQ-052,CG-WIT-001,cp_clause,w_tp_irq_052,0
 TP-IRQ-053,CG-IRQ-001,cr_line_mepc,nmi_ext_wfi_next,0
 TP-IRQ-053,CG-IRQ-007,cp_ctx_pre,wfi_sleep,0
 TP-IRQ-053,CG-IRQ-007,cr_ctx_priv_mie,wfi_sleep_m_mie0,0
@@ -13251,6 +13398,7 @@ TP-IRQ-053,CG-IRQ-009,cr_priv_wake,u_tw0_nmi_ext,0
 TP-IRQ-053,CG-IRQ-009,cr_wake_line,nmi_ext_nmi,0
 TP-IRQ-053,CG-IRQ-009,cr_wake_sleep,nmi_ext_medium,0
 TP-IRQ-053,CG-IRQ-009,cr_wake_sleep,nmi_ext_short,0
+TP-IRQ-053,CG-WIT-001,cp_clause,w_tp_irq_053,0
 TP-IRQ-054,CG-IRQ-009,cp_wake,debug_req,0
 TP-IRQ-054,CG-IRQ-009,cp_wake,debug_req_and_irq,0
 TP-IRQ-054,CG-IRQ-009,cr_priv_wake,m_debug_req,0
@@ -13258,12 +13406,14 @@ TP-IRQ-054,CG-IRQ-009,cr_priv_wake,m_debug_req_and_irq,0
 TP-IRQ-054,CG-IRQ-009,cr_priv_wake,u_tw0_debug_req,0
 TP-IRQ-054,CG-IRQ-009,cr_wake_sleep,debug_req_medium,0
 TP-IRQ-054,CG-IRQ-010,cr_line_mode_post,irq_debug_mode_taken_before_first_insn,0
+TP-IRQ-054,CG-WIT-001,cp_clause,w_tp_irq_054,0
 TP-IRQ-055,CG-IRQ-009,cp_mcycle,no_sleep,0
 TP-IRQ-055,CG-IRQ-009,cp_wake,in_debug_nop,0
 TP-IRQ-055,CG-IRQ-009,cr_priv_wake,m_in_debug_nop,0
 TP-IRQ-055,CG-IRQ-009,cr_wake_busy,in_debug_nop_off_seen,0
 TP-IRQ-055,CG-IRQ-009,cr_wake_mcycle,in_debug_nop_no_sleep,0
 TP-IRQ-055,CG-IRQ-009,cr_wake_sleep,in_debug_nop_passthrough,0
+TP-IRQ-055,CG-WIT-001,cp_clause,w_tp_irq_055,0
 TP-IRQ-056,CG-IRQ-009,cp_wake,masked_line_held,0
 TP-IRQ-056,CG-IRQ-009,cr_priv_wake,m_masked_line_held,0
 TP-IRQ-057,CG-IRQ-001,cr_line_priv_mie,fast_7_u_mie1,0
@@ -13271,6 +13421,7 @@ TP-IRQ-057,CG-IRQ-009,cp_priv_tw,u_tw0,0
 TP-IRQ-057,CG-IRQ-009,cr_priv_wake,u_tw0_irq_taken,0
 TP-IRQ-057,CG-IRQ-009,cr_priv_wake,u_tw0_none_long,0
 TP-IRQ-057,CG-IRQ-009,cr_wb_priv,empty_u_tw0,0
+TP-IRQ-057,CG-WIT-001,cp_clause,w_tp_irq_057,0
 TP-IRQ-058,CG-EXC-006,cp_younger,wfi,0
 TP-IRQ-058,CG-EXC-006,cr_op_younger,load_wfi,0
 TP-IRQ-058,CG-EXC-006,cr_op_younger,store_wfi,0
@@ -13301,6 +13452,7 @@ TP-IRQ-059,CG-IRQ-011,cr_lines_first,nmi_and_regular_nmi_before_insn,0
 TP-IRQ-059,CG-IRQ-011,cr_lines_first,nmi_only_nmi_before_insn,0
 TP-IRQ-059,CG-IRQ-011,cr_lines_first,none_boot_insn,0
 TP-IRQ-059,CG-IRQ-011,cr_lines_first,regular_only_boot_insn,0
+TP-IRQ-059,CG-WIT-001,cp_clause,w_tp_irq_059,0
 TP-IRQ-060,CG-IRQ-011,cp_fetch_off,irq_arrives_while_off,0
 TP-IRQ-060,CG-IRQ-011,cp_fetch_off,irq_pending_while_off_csr_updated,0
 TP-IRQ-060,CG-IRQ-011,cp_fetch_off,nmi_while_off,0
@@ -13319,6 +13471,7 @@ TP-IRQ-061,CG-IRQ-001,cp_rvfi_marks,nmi_int_flag,0
 TP-IRQ-061,CG-IRQ-001,cp_rvfi_marks,pre_post_mip_differ,0
 TP-IRQ-061,CG-IRQ-001,cp_rvfi_marks,pre_post_mip_equal,0
 TP-IRQ-061,CG-IRQ-001,cr_line_marks,external_irq_valid_level,0
+TP-IRQ-061,CG-WIT-001,cp_clause,w_tp_irq_061,0
 TP-IRQ-062,CG-IRQ-001,cp_mepc_src,branch_target,0
 TP-IRQ-062,CG-IRQ-001,cp_mepc_src,dret_target,0
 TP-IRQ-062,CG-IRQ-001,cp_mepc_src,jump_target,0
@@ -13338,6 +13491,7 @@ TP-IRQ-064,CG-IRQ-003,cr_transition_state,mie_clear_pin_high_mie1_m,0
 TP-IRQ-064,CG-IRQ-004,cp_ctx,id_csr_disable,0
 TP-IRQ-064,CG-IRQ-004,cp_outcome,masked_by_write,0
 TP-IRQ-064,CG-IRQ-004,cr_ctx_outcome,id_csr_disable_masked_by_write,0
+TP-IRQ-064,CG-WIT-001,cp_clause,w_tp_irq_064,0
 TP-IRQ-065,CG-IRQ-001,cr_line_others,timer_only_this,0
 TP-IRQ-065,CG-IRQ-002,cp_winner,timer,0
 TP-IRQ-065,CG-IRQ-002,cr_drain_winner,last18_timer,0
@@ -13348,6 +13502,7 @@ TP-IRQ-066,CG-IRQ-004,cp_ctx,first_fetch_wake,0
 TP-IRQ-066,CG-IRQ-004,cr_ctx_latency,first_fetch_wake_two,0
 TP-IRQ-066,CG-IRQ-004,cr_ctx_outcome,first_fetch_wake_taken,0
 TP-IRQ-066,CG-IRQ-009,cr_wake_sleep,irq_taken_passthrough,0
+TP-IRQ-066,CG-WIT-001,cp_clause,w_tp_irq_066,0
 TP-IRQ-067,CG-IRQ-011,cp_boot_mret,to_u_mie1,0
 TP-IRQ-067,CG-IRQ-011,cp_reset_reads,mie_0,0
 TP-IRQ-067,CG-IRQ-011,cp_reset_reads,mstatus_0x80,0
@@ -13359,6 +13514,7 @@ TP-IRQ-068,CG-IRQ-009,cp_sleep_cycles,medium,0
 TP-IRQ-068,CG-IRQ-009,cp_sleep_cycles,short,0
 TP-IRQ-068,CG-IRQ-009,cr_wake_mcycle,irq_taken_counted_through_sleep,0
 TP-IRQ-068,CG-IRQ-009,cr_wake_mcycle,none_long_counted_through_sleep,0
+TP-IRQ-068,CG-WIT-001,cp_clause,w_tp_irq_068,0
 TP-IRQ-069,CG-IRQ-009,cp_wake,step_nop,0
 TP-IRQ-069,CG-IRQ-009,cr_priv_wake,m_step_nop,0
 TP-IRQ-069,CG-IRQ-009,cr_wake_busy,step_nop_off_not_seen,0
@@ -13379,6 +13535,7 @@ TP-IRQ-070,CG-IRQ-003,cp_state,u_mode,0
 TP-IRQ-070,CG-IRQ-003,cr_transition_line,mie_clear_pin_high_external,0
 TP-IRQ-070,CG-IRQ-003,cr_transition_state,mie_clear_pin_high_mie1_m,0
 TP-IRQ-070,CG-IRQ-003,cr_transition_state,mie_set_pin_high_mie0_m,0
+TP-IRQ-070,CG-WIT-001,cp_clause,w_tp_irq_070,0
 TP-IRQ-071,CG-IRQ-001,cr_line_priv_mie,external_u_mie1,0
 TP-IRQ-071,CG-IRQ-001,cr_line_priv_mie,fast_14_m_mie1,0
 TP-IRQ-071,CG-IRQ-001,cr_line_priv_mie,timer_u_mie1,0
@@ -13409,6 +13566,7 @@ TP-IRQ-072,CG-IRQ-004,cp_ctx,fetch_stall_rvalid,0
 TP-IRQ-072,CG-IRQ-004,cr_ctx_latency,fetch_stall_rvalid_long,0
 TP-IRQ-072,CG-IRQ-004,cr_ctx_outcome,fetch_stall_gnt_taken,0
 TP-IRQ-072,CG-IRQ-004,cr_ctx_outcome,fetch_stall_rvalid_taken,0
+TP-IRQ-072,CG-WIT-001,cp_clause,w_tp_irq_072,0
 TP-IRQ-073,CG-IRQ-002,cp_set,nmi_ext_nmi_int,0
 TP-IRQ-073,CG-IRQ-002,cp_winner,nmi_int,0
 TP-IRQ-073,CG-IRQ-002,cr_set_winner,nmi_fast_nmi_ext,0
@@ -13420,6 +13578,7 @@ TP-IRQ-073,CG-IRQ-008,cr_ctx_taken,in_irq_handler_one,0
 TP-IRQ-073,CG-IRQ-008,cr_ctx_taken,in_irq_handler_zero,0
 TP-IRQ-073,CG-IRQ-008,cr_op_ctx,load_in_irq_handler,0
 TP-IRQ-073,CG-IRQ-008,cr_op_half,store_mis_second,0
+TP-IRQ-073,CG-WIT-001,cp_clause,w_tp_irq_073,0
 TP-IRQ-074,CG-IRQ-001,cp_u_path,dret_prv_u,0
 TP-IRQ-074,CG-IRQ-001,cr_line_priv_mie,external_u_mie1,0
 TP-IRQ-074,CG-IRQ-001,cr_line_priv_mie,fast_7_u_mie1,0
@@ -13465,6 +13624,7 @@ TP-IRQ-077,CG-IRQ-004,cr_ctx_outcome,id_csr_enable_taken,0
 TP-IRQ-077,CG-IRQ-004,cr_ctx_outcome,id_csr_flush_taken,0
 TP-IRQ-077,CG-IRQ-004,cr_ctx_outcome,id_csr_mtvec_taken,0
 TP-IRQ-077,CG-IRQ-005,cr_nesting_mtvec,depth1_rewritten,0
+TP-IRQ-077,CG-WIT-001,cp_clause,w_tp_irq_077,0
 TP-IRQ-078,CG-IRQ-003,cr_transition_state,rise_enabled_nmi_mode,0
 TP-IRQ-078,CG-IRQ-007,cp_in_handler,debug_session_nmi_mode_kept,0
 TP-IRQ-078,CG-IRQ-007,cp_in_handler,debug_session_then_mret_taken,0
@@ -13481,6 +13641,7 @@ TP-IRQ-078,CG-IRQ-010,cr_line_mode_post,nmi_ext_debug_in_nmi_handler_not_taken,0
 TP-IRQ-078,CG-IRQ-010,cr_line_mode_post,nmi_ext_debug_in_nmi_handler_taken_after_nmi_mret,0
 TP-IRQ-078,CG-IRQ-010,cr_mode_exit,debug_in_nmi_handler_dret,0
 TP-IRQ-078,CG-IRQ-010,cr_mode_exit,debug_in_nmi_handler_step_complete,0
+TP-IRQ-078,CG-WIT-001,cp_clause,w_tp_irq_078,0
 TP-IRQ-079,CG-IRQ-013,cp_preempt,nmi_ext,0
 TP-IRQ-079,CG-IRQ-013,cp_preempt,nmi_int,0
 TP-IRQ-079,CG-IRQ-013,cp_resume,irq_handler_runs,0
@@ -13496,6 +13657,7 @@ TP-IRQ-079,CG-IRQ-013,cr_preempt_pos,nmi_ext_vector_word_in_if,0
 TP-IRQ-079,CG-IRQ-013,cr_preempt_pos,nmi_int_vector_req_outstanding,0
 TP-IRQ-079,CG-IRQ-013,cr_preempt_resume,nmi_ext_irq_handler_runs,0
 TP-IRQ-079,CG-IRQ-013,cr_preempt_resume,nmi_ext_irq_lost_to_second_entry,0
+TP-IRQ-079,CG-WIT-001,cp_clause,w_tp_irq_079,0
 TP-IRQ-080,CG-IRQ-013,cp_line,external,0
 TP-IRQ-080,CG-IRQ-013,cp_line,fast,0
 TP-IRQ-080,CG-IRQ-013,cp_line,software,0
@@ -13507,6 +13669,7 @@ TP-IRQ-080,CG-IRQ-013,cr_preempt_line,debug_req_software,0
 TP-IRQ-080,CG-IRQ-013,cr_preempt_pos,debug_req_vector_req_outstanding,0
 TP-IRQ-080,CG-IRQ-013,cr_preempt_pos,debug_req_vector_word_in_if,0
 TP-IRQ-080,CG-IRQ-013,cr_preempt_resume,debug_req_irq_handler_runs,0
+TP-IRQ-080,CG-WIT-001,cp_clause,w_tp_irq_080,0
 TP-ISA-001,CG-ISA-001,cp_addi_wrap,none,0
 TP-ISA-001,CG-ISA-001,cp_imm_class,max_pos,0
 TP-ISA-001,CG-ISA-001,cp_imm_class,min_neg,0
@@ -14518,6 +14681,7 @@ TP-ISA-024,CG-BTALU-001,cp_redirect,no,0
 TP-ISA-024,CG-BTALU-001,cr_taken_dit_delta,nt_dit0_d1,0
 TP-ISA-024,CG-BTALU-001,cr_taken_dit_delta,t_dit0_d2,0
 TP-ISA-024,CG-BTALU-001,cr_taken_dit_redirect,nt_dit0_noredir,0
+TP-ISA-024,CG-WIT-001,cp_clause,w_tp_isa_024,0
 TP-ISA-025,CG-ISA-011,cp_class,branch_f3,0
 TP-ISA-025,CG-ISA-011,cp_priv,m,0
 TP-ISA-025,CG-ISA-011,cp_priv,u,0
@@ -14789,6 +14953,7 @@ TP-ISA-040,CG-ISA-009,cr_wfi_priv_resume,m_sequential,0
 TP-ISA-040,CG-ISA-009,cr_wfi_priv_resume,u_handler,0
 TP-ISA-040,CG-ISA-009,cr_wfi_tw,m_tw0_exec,0
 TP-ISA-040,CG-ISA-009,cr_wfi_tw,u_tw0_exec,0
+TP-ISA-040,CG-WIT-001,cp_clause,w_tp_isa_040,0
 TP-ISA-041,CG-ISA-009,cp_busy_off,yes,0
 TP-ISA-041,CG-ISA-009,cp_op,wfi,0
 TP-ISA-041,CG-ISA-009,cp_outcome,executed,0
@@ -15017,6 +15182,7 @@ TP-ISA-051,CG-ISA-011,cp_wb_outstanding,load,0
 TP-ISA-051,CG-ISA-011,cp_wb_outstanding,store,0
 TP-ISA-051,CG-ISA-011,cr_wb,load_err,0
 TP-ISA-051,CG-ISA-011,cr_wb,store_err,0
+TP-ISA-051,CG-WIT-001,cp_clause,w_tp_isa_051,0
 TP-ISA-052,CG-ISA-005,cp_hint_class,other,0
 TP-ISA-052,CG-ISA-005,cp_writer_class,alu_imm,0
 TP-ISA-052,CG-ISA-005,cp_writer_class,alu_reg,0
@@ -16984,6 +17150,7 @@ TP-MUL-011,CG-MUL-002,cr_wb_defer,mulhsu_yes_short,0
 TP-MUL-011,CG-MUL-002,cr_wb_defer,mulhu_yes_long,0
 TP-MUL-011,CG-MUL-002,cr_wb_defer,mulhu_yes_min1,0
 TP-MUL-011,CG-MUL-002,cr_wb_defer,mulhu_yes_short,0
+TP-MUL-011,CG-WIT-001,cp_clause,w_tp_mul_011,0
 TP-MUL-012,CG-MUL-003,cp_dividend,all_ones,0
 TP-MUL-012,CG-MUL-003,cp_dividend,int_max,0
 TP-MUL-012,CG-MUL-003,cp_dividend,int_min,0
@@ -17439,6 +17606,7 @@ TP-MUL-023,CG-MUL-004,cr_op_event,rem_nmi,0
 TP-MUL-023,CG-MUL-004,cr_op_event,remu_debug_req,0
 TP-MUL-023,CG-MUL-004,cr_op_event,remu_irq,0
 TP-MUL-023,CG-MUL-004,cr_op_event,remu_nmi,0
+TP-MUL-023,CG-WIT-001,cp_clause,w_tp_mul_023,0
 TP-MUL-024,CG-MUL-004,cp_delta,other,0
 TP-MUL-024,CG-MUL-004,cp_op,div,0
 TP-MUL-024,CG-MUL-004,cp_op,divu,0
@@ -17449,6 +17617,7 @@ TP-MUL-024,CG-MUL-004,cr_op_wb_defer,div_yes,0
 TP-MUL-024,CG-MUL-004,cr_op_wb_defer,divu_yes,0
 TP-MUL-024,CG-MUL-004,cr_op_wb_defer,rem_yes,0
 TP-MUL-024,CG-MUL-004,cr_op_wb_defer,remu_yes,0
+TP-MUL-024,CG-WIT-001,cp_clause,w_tp_mul_024,0
 TP-MUL-025,CG-MUL-004,cp_next,dep_alu,0
 TP-MUL-025,CG-MUL-004,cp_op,div,0
 TP-MUL-025,CG-MUL-004,cp_op,divu,0
@@ -17988,11 +18157,13 @@ TP-PMC-001,CG-PMC-001,cp_delta,eq_cycles,0
 TP-PMC-001,CG-PMC-001,cp_op,rd_hi,0
 TP-PMC-001,CG-PMC-001,cp_op,rd_lo,0
 TP-PMC-001,CG-PMC-001,cr_ctx_delta,run_eq,0
+TP-PMC-001,CG-WIT-001,cp_clause,w_tp_pmc_001,0
 TP-PMC-002,CG-PMC-001,cp_carry,seen,0
 TP-PMC-002,CG-PMC-001,cp_ctx,wfi_sleep,0
 TP-PMC-002,CG-PMC-001,cp_delta,eq_cycles,0
 TP-PMC-002,CG-PMC-001,cr_carry_ctx,carry_wfi,0
 TP-PMC-002,CG-PMC-001,cr_ctx_delta,wfi_eq,0
+TP-PMC-002,CG-WIT-001,cp_clause,w_tp_pmc_002,0
 TP-PMC-003,CG-PMC-001,cp_carry,seen,0
 TP-PMC-003,CG-PMC-001,cp_ctx,debug,0
 TP-PMC-003,CG-PMC-001,cp_ctx,step,0
@@ -18107,6 +18278,7 @@ TP-PMC-011,CG-PMC-002,cr_coherence_op,empty_rd,0
 TP-PMC-011,CG-PMC-002,cr_coherence_op,retiring_rd,0
 TP-PMC-011,CG-PMC-002,cr_coherence_op,retiring_rdhi,0
 TP-PMC-011,CG-PMC-002,cr_inhibit_coh,off_retiring,0
+TP-PMC-011,CG-WIT-001,cp_clause,w_tp_pmc_011,0
 TP-PMC-012,CG-PMC-002,cp_coherence,wb_faulting,0
 TP-PMC-012,CG-PMC-002,cp_delta,eq_rvfi,0
 TP-PMC-012,CG-PMC-002,cp_op,rd_lo,0
@@ -18130,6 +18302,7 @@ TP-PMC-013,CG-PMC-003,cp_idx,mul_wait,0
 TP-PMC-013,CG-PMC-003,cr_idx_dummy,div_dum_gt,0
 TP-PMC-013,CG-PMC-003,cr_idx_dummy,mul_dum_eq,0
 TP-PMC-013,CG-PMC-003,cr_idx_dummy,mul_dum_zero,0
+TP-PMC-013,CG-WIT-001,cp_clause,w_tp_pmc_013,0
 TP-PMC-014,CG-PMC-002,cp_delta,eq_rvfi,0
 TP-PMC-014,CG-PMC-002,cp_window,has_zcmp,0
 TP-PMC-014,CG-PMC-002,cr_window_delta,zcmp_eq,0
@@ -18155,6 +18328,7 @@ TP-PMC-016,CG-PMC-007,cp_target,minstreth,0
 TP-PMC-016,CG-PMC-007,cr_hi_lowones,minstreth_ones,0
 TP-PMC-016,CG-PMC-007,cr_target_coinc,minstret_ret,0
 TP-PMC-016,CG-PMC-007,cr_target_coinc,minstreth_ret,0
+TP-PMC-016,CG-WIT-001,cp_clause,w_tp_pmc_016,0
 TP-PMC-017,CG-PMC-004,cp_idx,first_impl,0
 TP-PMC-017,CG-PMC-004,cp_idx,last_impl,0
 TP-PMC-017,CG-PMC-004,cp_idx,mid_impl,0
@@ -18351,6 +18525,7 @@ TP-PMC-024,CG-PMC-002,cp_inhibit_ir,off,0
 TP-PMC-024,CG-PMC-002,cp_inhibit_ir,on,0
 TP-PMC-024,CG-PMC-002,cr_inhibit_coh,off_retiring,0
 TP-PMC-024,CG-PMC-002,cr_inhibit_coh,on_retiring,0
+TP-PMC-024,CG-WIT-001,cp_clause,w_tp_pmc_024,0
 TP-PMC-025,CG-PMC-003,cp_delta_rel,eq,0
 TP-PMC-025,CG-PMC-003,cp_idx,loads,0
 TP-PMC-025,CG-PMC-003,cp_inhibit,off,0
@@ -18430,6 +18605,7 @@ TP-PMC-028,CG-PMC-005,cp_reg,en,0
 TP-PMC-028,CG-PMC-005,cr_en_pin_effect,en_inv_drop,0
 TP-PMC-028,CG-PMC-005,cr_en_pin_effect,en_off_drop,0
 TP-PMC-028,CG-PMC-005,cr_en_pin_effect,en_on_app,0
+TP-PMC-028,CG-WIT-001,cp_clause,w_tp_pmc_028,0
 TP-PMC-029,CG-PMC-006,cp_alias,cycle,0
 TP-PMC-029,CG-PMC-006,cp_alias,cycleh,0
 TP-PMC-029,CG-PMC-006,cp_alias,hpm_first,0
@@ -18556,6 +18732,7 @@ TP-PMC-034,CG-PMC-003,cr_idx_inhibit,lsu_eq,0
 TP-PMC-034,CG-PMC-003,cr_variant_rel,gnt_eq,0
 TP-PMC-034,CG-PMC-003,cr_variant_rel,hazard_eq,0
 TP-PMC-034,CG-PMC-003,cr_variant_rel,rvalid_eq,0
+TP-PMC-034,CG-WIT-001,cp_clause,w_tp_pmc_034,0
 TP-PMC-035,CG-PMC-003,cp_delta_rel,eq,0
 TP-PMC-035,CG-PMC-003,cp_events,few,0
 TP-PMC-035,CG-PMC-003,cp_events,many,0
@@ -18786,6 +18963,7 @@ TP-PMC-047,CG-PMC-007,cp_target,hpm_lo,0
 TP-PMC-047,CG-PMC-007,cr_target_coinc,hpm_none,0
 TP-PMC-047,CG-PMC-007,cr_target_coinc,hpm_retc,0
 TP-PMC-047,CG-PMC-007,cr_target_coinc,hpmh_retc,0
+TP-PMC-047,CG-WIT-001,cp_clause,w_tp_pmc_047,0
 TP-PMC-048,CG-PMC-002,cp_delta,eq_rvfi,0
 TP-PMC-048,CG-PMC-002,cp_window,has_fetch_fault,0
 TP-PMC-048,CG-PMC-002,cp_window,has_ls_fault,0
@@ -18995,12 +19173,15 @@ TP-PMC-057,CG-PMC-005,cr_pin_tr_effect,en_ontooff_drop,0
 TP-PMC-058,CG-PMC-003,cp_delta_rel,gt,0
 TP-PMC-058,CG-PMC-003,cp_variant,br_wb_wait,0
 TP-PMC-058,CG-PMC-003,cr_variant_rel,brwait_gt,0
+TP-PMC-058,CG-WIT-001,cp_clause,w_tp_pmc_058,0
 TP-PMC-059,CG-PMC-003,cp_delta_rel,gt,0
 TP-PMC-059,CG-PMC-003,cp_variant,mul_wb_wait,0
 TP-PMC-059,CG-PMC-003,cr_variant_rel,mulwait_gt,0
+TP-PMC-059,CG-WIT-001,cp_clause,w_tp_pmc_059,0
 TP-PMC-060,CG-PMC-003,cp_delta_rel,gt,0
 TP-PMC-060,CG-PMC-003,cp_variant,div_wb_wait,0
 TP-PMC-060,CG-PMC-003,cr_variant_rel,divwait_gt,0
+TP-PMC-060,CG-WIT-001,cp_clause,w_tp_pmc_060,0
 TP-PMP-001,CG-PMP-001,cp_entry,e0,0
 TP-PMP-001,CG-PMP-001,cp_entry,e1,0
 TP-PMP-001,CG-PMP-001,cp_entry,e10,0
@@ -20131,6 +20312,7 @@ TP-PMP-053,CG-PMP-011,cp_self,mmwp_self_fault,0
 TP-PMP-053,CG-PMP-011,cr_csr_data,mseccfg_mmwp_now_denied,0
 TP-PMP-053,CG-PMP-011,cr_csr_fetch,mseccfg_mmwp_now_denied,0
 TP-PMP-053,CG-PMP-011,cr_self,mmwp_self_fault_g0,0
+TP-PMP-053,CG-WIT-001,cp_clause,w_tp_pmp_053,0
 TP-PMP-054,CG-PMP-005,cp_lrwx,c0000,0
 TP-PMP-054,CG-PMP-005,cp_lrwx,c0001,0
 TP-PMP-054,CG-PMP-005,cp_lrwx,c0010,0
@@ -20510,6 +20692,7 @@ TP-PMP-077,CG-PMP-010,cr_discard_reason,discarded_exc,0
 TP-PMP-077,CG-PMP-010,cr_discard_reason,discarded_jump,0
 TP-PMP-077,CG-PMP-010,cr_outcome_priv,discarded_m,0
 TP-PMP-077,CG-PMP-010,cr_outcome_priv,discarded_u,0
+TP-PMP-077,CG-WIT-001,cp_clause,w_tp_pmp_077,0
 TP-PMP-078,CG-PMP-009,cp_target,branch,0
 TP-PMP-078,CG-PMP-009,cp_target,dret,0
 TP-PMP-078,CG-PMP-009,cp_target,exc_entry,0
@@ -20557,6 +20740,7 @@ TP-PMP-081,CG-PMP-008,cp_rd,none,0
 TP-PMP-081,CG-PMP-008,cr_rd,load_c5_none,0
 TP-PMP-082,CG-PMP-008,cp_nreq,n0,0
 TP-PMP-082,CG-PMP-008,cr_align_nreq,aligned_denied_n0,0
+TP-PMP-082,CG-WIT-001,cp_clause,w_tp_pmp_082,0
 TP-PMP-083,CG-PMP-008,cp_next_exc,ecall_ebreak,0
 TP-PMP-083,CG-PMP-008,cp_next_exc,fetch_fault,0
 TP-PMP-083,CG-PMP-008,cp_next_exc,illegal,0
@@ -20653,6 +20837,7 @@ TP-PMP-091,CG-PMP-011,cr_src_fetch,bus_prefetched_now_allowed,0
 TP-PMP-091,CG-PMP-011,cr_src_fetch,bus_prefetched_now_denied,0
 TP-PMP-091,CG-PMP-011,cr_src_fetch,fresh_now_allowed,0
 TP-PMP-091,CG-PMP-011,cr_src_fetch,fresh_now_denied,0
+TP-PMP-091,CG-WIT-001,cp_clause,w_tp_pmp_091,0
 TP-PMP-092,CG-PMP-009,cp_src,cache_hit,0
 TP-PMP-092,CG-PMP-009,cr_src,cache_hit_c1,0
 TP-PMP-092,CG-PMP-009,cr_src,cache_hit_none,0
@@ -21089,6 +21274,7 @@ TP-PMP-105,CG-PMP-010,cr_hit_outcome,discarded_then_hit_fault,0
 TP-PMP-105,CG-PMP-010,cr_hit_outcome,discarded_then_hit_ok,0
 TP-PMP-105,CG-PMP-010,cr_hit_outcome,fault_then_hit_fault,0
 TP-PMP-105,CG-PMP-010,cr_hit_outcome,fault_then_hit_ok,0
+TP-PMP-105,CG-WIT-001,cp_clause,w_tp_pmp_105,0
 TP-PMP-106,CG-PMP-005,cr_region_mode,r0_na4,0
 TP-PMP-106,CG-PMP-005,cr_region_mode,r0_napot,0
 TP-PMP-106,CG-PMP-005,cr_region_mode,r0_tor,0
@@ -21875,6 +22061,7 @@ TP-PRV-018,CG-PRV-005,cr_len_wake,one_irq_en,0
 TP-PRV-018,CG-PRV-005,cr_mie_post,m_mie0_resume,0
 TP-PRV-018,CG-PRV-005,cr_mie_post,m_mie1_irq_taken,0
 TP-PRV-018,CG-PRV-005,cr_priv_tw_post,m_tw0_resume,0
+TP-PRV-018,CG-WIT-001,cp_clause,w_tp_prv_018,0
 TP-PRV-019,CG-PRV-004,cp_dbg,dbg,0
 TP-PRV-019,CG-PRV-004,cp_kind,wfi,0
 TP-PRV-019,CG-PRV-004,cp_priv,m,0
@@ -21909,6 +22096,7 @@ TP-PRV-019,CG-PRV-005,cr_mie_post,m_mie0_dbg,0
 TP-PRV-019,CG-PRV-005,cr_mie_post,m_mie1_dbg,0
 TP-PRV-019,CG-PRV-005,cr_priv_tw_post,m_tw0_dbg,0
 TP-PRV-019,CG-PRV-005,cr_priv_tw_post,u_tw0_dbg,0
+TP-PRV-019,CG-WIT-001,cp_clause,w_tp_prv_019,0
 TP-PRV-020,CG-PRV-001,cp_from,m,0
 TP-PRV-020,CG-PRV-001,cp_from,u,0
 TP-PRV-020,CG-PRV-001,cp_seq3,m_u_m,0
@@ -22392,6 +22580,7 @@ TP-REG-001,CG-REG-001,cr_gnt_x_rvalid,short_long,0
 TP-REG-001,CG-REG-001,cr_gnt_x_rvalid,short_min1,0
 TP-REG-001,CG-REG-001,cr_gnt_x_rvalid,short_random,0
 TP-REG-001,CG-REG-001,cr_gnt_x_rvalid,short_short,0
+TP-REG-001,CG-WIT-001,cp_clause,w_tp_reg_001,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay,long,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay,min1,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay,random,0
@@ -22408,6 +22597,7 @@ TP-REG-002,CG-REG-001,cp_imem_rvalid_delay_tr,random_to_short,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay_tr,short_to_long,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay_tr,short_to_min1,0
 TP-REG-002,CG-REG-001,cp_imem_rvalid_delay_tr,short_to_random,0
+TP-REG-002,CG-WIT-001,cp_clause,w_tp_reg_002,0
 TP-REG-003,CG-REG-001,cp_imem_err_rate,frequent,0
 TP-REG-003,CG-REG-001,cp_imem_err_rate,none,0
 TP-REG-003,CG-REG-001,cp_imem_err_rate,rare,0
@@ -22477,6 +22667,7 @@ TP-REG-005,CG-REG-002,cr_gnt_x_rvalid,short_long,0
 TP-REG-005,CG-REG-002,cr_gnt_x_rvalid,short_min1,0
 TP-REG-005,CG-REG-002,cr_gnt_x_rvalid,short_random,0
 TP-REG-005,CG-REG-002,cr_gnt_x_rvalid,short_short,0
+TP-REG-005,CG-WIT-001,cp_clause,w_tp_reg_005,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay,long,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay,min1,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay,random,0
@@ -22493,6 +22684,7 @@ TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay_tr,random_to_short,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay_tr,short_to_long,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay_tr,short_to_min1,0
 TP-REG-006,CG-REG-002,cp_dmem_rvalid_delay_tr,short_to_random,0
+TP-REG-006,CG-WIT-001,cp_clause,w_tp_reg_006,0
 TP-REG-007,CG-REG-002,cp_dmem_err_rate,frequent,0
 TP-REG-007,CG-REG-002,cp_dmem_err_rate,none,0
 TP-REG-007,CG-REG-002,cp_dmem_err_rate,rare,0
@@ -22531,6 +22723,7 @@ TP-REG-008,CG-REG-003,cr_regime_x_mix,storm_fast_only,0
 TP-REG-008,CG-REG-003,cr_regime_x_mix,storm_multi,0
 TP-REG-008,CG-REG-003,cr_regime_x_mix,storm_single,0
 TP-REG-008,CG-REG-003,cr_regime_x_mix,storm_with_nmi,0
+TP-REG-008,CG-WIT-001,cp_clause,w_tp_reg_008,0
 TP-REG-009,CG-REG-003,cp_irq_line_mix,fast_only,0
 TP-REG-009,CG-REG-003,cp_irq_line_mix,multi,0
 TP-REG-009,CG-REG-003,cp_irq_line_mix,single,0
@@ -22562,6 +22755,7 @@ TP-REG-010,CG-REG-003,cr_regime_x_hold,sparse_until_taken,0
 TP-REG-010,CG-REG-003,cr_regime_x_hold,storm_pulse,0
 TP-REG-010,CG-REG-003,cr_regime_x_hold,storm_through_handler,0
 TP-REG-010,CG-REG-003,cr_regime_x_hold,storm_until_taken,0
+TP-REG-010,CG-WIT-001,cp_clause,w_tp_reg_010,0
 TP-REG-011,CG-REG-004,cp_debug_req_regime,none,0
 TP-REG-011,CG-REG-004,cp_debug_req_regime,sparse,0
 TP-REG-011,CG-REG-004,cp_debug_req_regime,storm,0
@@ -22577,10 +22771,12 @@ TP-REG-011,CG-REG-004,cr_dbg_x_fe,sparse_always_on,0
 TP-REG-011,CG-REG-004,cr_dbg_x_fe,sparse_toggling,0
 TP-REG-011,CG-REG-004,cr_dbg_x_fe,storm_always_on,0
 TP-REG-011,CG-REG-004,cr_dbg_x_fe,storm_toggling,0
+TP-REG-011,CG-WIT-001,cp_clause,w_tp_reg_011,0
 TP-REG-012,CG-REG-004,cp_fetch_enable_regime,always_on,0
 TP-REG-012,CG-REG-004,cp_fetch_enable_regime,toggling,0
 TP-REG-012,CG-REG-004,cp_fetch_enable_regime_tr,always_on_to_toggling,0
 TP-REG-012,CG-REG-004,cp_fetch_enable_regime_tr,toggling_to_always_on,0
+TP-REG-012,CG-WIT-001,cp_clause,w_tp_reg_012,0
 TP-REG-013,CG-REG-005,cp_icache_ecc_err_rate,frequent,0
 TP-REG-013,CG-REG-005,cp_icache_ecc_err_rate,none,0
 TP-REG-013,CG-REG-005,cp_icache_ecc_err_rate,rare,0
@@ -22780,6 +22976,7 @@ TP-REG-018,CG-REG-008,cp_knob_group,icache,0
 TP-REG-018,CG-REG-008,cp_knob_group,imem,0
 TP-REG-018,CG-REG-008,cp_knob_group,irq,0
 TP-REG-018,CG-REG-008,cp_knob_group,program,0
+TP-REG-018,CG-WIT-001,cp_clause,w_tp_reg_018,0
 TP-REG-019,CG-REG-007,cp_phase_count,k1,0
 TP-REG-019,CG-REG-007,cp_pinned_count,all,0
 TP-REG-019,CG-REG-007,cp_pinned_count,none,0
@@ -22808,6 +23005,7 @@ TP-REG-020,CG-REG-008,cr_knob_x_inflight,imem_gnt_delay_fetch_outstanding,0
 TP-REG-020,CG-REG-008,cr_knob_x_inflight,imem_intg_err_rate_fetch_outstanding,0
 TP-REG-020,CG-REG-008,cr_knob_x_inflight,imem_outstanding_cap_fetch_outstanding,0
 TP-REG-020,CG-REG-008,cr_knob_x_inflight,imem_rvalid_delay_fetch_outstanding,0
+TP-REG-020,CG-WIT-001,cp_clause,w_tp_reg_020,0
 TP-REG-021,CG-REG-008,cp_inflight_event,data_outstanding,0
 TP-REG-021,CG-REG-008,cr_group_x_inflight,dbg_fe_data_outstanding,0
 TP-REG-021,CG-REG-008,cr_group_x_inflight,dmem_data_outstanding,0
@@ -22818,6 +23016,7 @@ TP-REG-021,CG-REG-008,cr_knob_x_inflight,dmem_err_rate_data_outstanding,0
 TP-REG-021,CG-REG-008,cr_knob_x_inflight,dmem_gnt_delay_data_outstanding,0
 TP-REG-021,CG-REG-008,cr_knob_x_inflight,dmem_intg_err_rate_data_outstanding,0
 TP-REG-021,CG-REG-008,cr_knob_x_inflight,dmem_rvalid_delay_data_outstanding,0
+TP-REG-021,CG-WIT-001,cp_clause,w_tp_reg_021,0
 TP-REG-022,CG-REG-008,cp_inflight_event,irq_pending,0
 TP-REG-022,CG-REG-008,cr_group_x_inflight,dbg_fe_irq_pending,0
 TP-REG-022,CG-REG-008,cr_group_x_inflight,dmem_irq_pending,0
@@ -22838,6 +23037,7 @@ TP-REG-023,CG-REG-008,cr_knob_x_inflight,debug_req_regime_in_wfi,0
 TP-REG-023,CG-REG-008,cr_knob_x_inflight,fetch_enable_regime_in_wfi,0
 TP-REG-023,CG-REG-008,cr_knob_x_inflight,irq_line_mix_in_wfi,0
 TP-REG-023,CG-REG-008,cr_knob_x_inflight,irq_regime_in_wfi,0
+TP-REG-023,CG-WIT-001,cp_clause,w_tp_reg_023,0
 TP-REG-024,CG-REG-008,cp_inflight_event,in_debug,0
 TP-REG-024,CG-REG-008,cr_group_x_inflight,dbg_fe_in_debug,0
 TP-REG-024,CG-REG-008,cr_group_x_inflight,dmem_in_debug,0
@@ -22886,9 +23086,11 @@ TP-REG-026,CG-REG-009,cr_intg_rates,none_rare,0
 TP-REG-026,CG-REG-009,cr_intg_rates,rare_frequent,0
 TP-REG-026,CG-REG-009,cr_intg_rates,rare_none,0
 TP-REG-026,CG-REG-009,cr_intg_rates,rare_rare,0
+TP-REG-026,CG-WIT-001,cp_clause,w_tp_reg_026,0
 TP-REG-027,CG-REG-010,cp_mcounteren_writable,invalid,0
 TP-REG-027,CG-REG-010,cp_mcounteren_writable,off,0
 TP-REG-027,CG-REG-010,cp_mcounteren_writable,on,0
+TP-REG-027,CG-WIT-001,cp_clause,w_tp_reg_027,0
 TP-REG-028,CG-REG-006,cp_pmp_regime_tr,mml_on_to_dense,0
 TP-REG-028,CG-REG-006,cp_pmp_regime_tr,mml_on_to_off,0
 TP-REG-028,CG-REG-006,cp_pmp_regime_tr,mml_on_to_sparse,0
@@ -23960,6 +24162,7 @@ TP-TRG-019,CG-DBG-002,cr_coincident_outcome,trigger_entered,0
 TP-TRG-019,CG-TRG-002,cp_cause_rb,trigger,0
 TP-TRG-019,CG-TRG-002,cp_coincident,haltreq,0
 TP-TRG-019,CG-TRG-002,cr_coinc_cause,haltreq_trig,0
+TP-TRG-019,CG-WIT-001,cp_clause,w_tp_trg_019,0
 TP-TRG-020,CG-DBG-003,cp_coincident,trig_next,0
 TP-TRG-020,CG-DBG-003,cp_outcome,dbg_entry,0
 TP-TRG-020,CG-DBG-003,cr_coincident_outcome,trignext_dbg,0
@@ -23992,6 +24195,7 @@ TP-TRG-023,CG-TRG-002,cp_ctx,zcmp_next,0
 TP-TRG-023,CG-TRG-002,cp_fired,fired,0
 TP-TRG-023,CG-TRG-002,cr_ctx_fired,zfirst_f,0
 TP-TRG-023,CG-TRG-002,cr_ctx_fired,znext_f,0
+TP-TRG-023,CG-WIT-001,cp_clause,w_tp_trg_023,0
 TP-TRG-024,CG-TRG-002,cp_ctx,fault_addr,0
 TP-TRG-024,CG-TRG-002,cp_fired,fired,0
 TP-TRG-024,CG-TRG-002,cr_ctx_fired,fault_f,0
@@ -24003,17 +24207,20 @@ TP-TRG-025,CG-TRG-002,cp_coincident,irq,0
 TP-TRG-025,CG-TRG-002,cp_coincident,nmi,0
 TP-TRG-025,CG-TRG-002,cr_coinc_cause,irq_trig,0
 TP-TRG-025,CG-TRG-002,cr_coinc_cause,nmi_trig,0
+TP-TRG-025,CG-WIT-001,cp_clause,w_tp_trg_025,0
 TP-TRG-026,CG-TRG-002,cp_ctx,seq32,0
 TP-TRG-026,CG-TRG-002,cp_exec,on,0
 TP-TRG-026,CG-TRG-002,cp_fired,fired,0
 TP-TRG-026,CG-TRG-002,cr_ctx_fired,seq32_f,0
 TP-TRG-026,CG-TRG-002,cr_exec_fired,on_f,0
+TP-TRG-026,CG-WIT-001,cp_clause,w_tp_trg_026,0
 TP-TRG-027,CG-DBG-001,cp_cause,trigger,0
 TP-TRG-027,CG-DBG-001,cp_entry_ctx,ifetch_stall,0
 TP-TRG-027,CG-DBG-001,cr_cause_ctx,trigger_ifetch,0
 TP-TRG-027,CG-TRG-002,cp_ctx,ibus_stall,0
 TP-TRG-027,CG-TRG-002,cp_fired,fired,0
 TP-TRG-027,CG-TRG-002,cr_ctx_fired,stall_f,0
+TP-TRG-027,CG-WIT-001,cp_clause,w_tp_trg_027,0
 TP-TRG-028,CG-TRG-001,cp_csr,tdata1,0
 TP-TRG-028,CG-TRG-001,cp_mode,dbg,0
 TP-TRG-028,CG-TRG-001,cp_result,ok_read,0
@@ -24086,6 +24293,7 @@ TP-TRG-032,CG-TRG-002,cr_exec_fired,on_f,0
 TP-TRG-032,CG-TRG-002,cr_hist_fired,disarmed_nf,0
 TP-TRG-032,CG-TRG-002,cr_hist_fired,first_f,0
 TP-TRG-032,CG-TRG-002,cr_hist_fired,rearmed_f,0
+TP-XIF-001,CG-WIT-001,cp_clause,w_tp_xif_001,0
 TP-XIF-001,CG-XIF-001,cp_async,debug_req,0
 TP-XIF-001,CG-XIF-001,cp_async,irq_pending,0
 TP-XIF-001,CG-XIF-001,cp_async,multiple,0
@@ -24142,6 +24350,7 @@ TP-XIF-001,CG-XIF-001,cr_half_x_async,split_second_irq_pending,0
 TP-XIF-001,CG-XIF-001,cr_half_x_async,split_second_multiple,0
 TP-XIF-001,CG-XIF-001,cr_half_x_async,split_second_nmi,0
 TP-XIF-001,CG-XIF-001,cr_half_x_async,split_second_none,0
+TP-XIF-002,CG-WIT-001,cp_clause,w_tp_xif_002,0
 TP-XIF-002,CG-XIF-003,cp_async_src,debug_req,0
 TP-XIF-002,CG-XIF-003,cp_dbus_state,single_outst,0
 TP-XIF-002,CG-XIF-003,cp_dbus_state,split_both_outst,0
@@ -24156,6 +24365,7 @@ TP-XIF-002,CG-XIF-003,cr_src_x_outcome_x_we,debug_req_err_store,0
 TP-XIF-002,CG-XIF-003,cr_src_x_outcome_x_we,debug_req_ok_load,0
 TP-XIF-002,CG-XIF-003,cr_src_x_outcome_x_we,debug_req_ok_store,0
 TP-XIF-002,CG-XIF-003,cr_src_x_state,debug_req_single_outst,0
+TP-XIF-003,CG-WIT-001,cp_clause,w_tp_xif_003,0
 TP-XIF-003,CG-XIF-003,cp_async_src,nmi_ext,0
 TP-XIF-003,CG-XIF-003,cp_async_src,nmi_int,0
 TP-XIF-003,CG-XIF-003,cr_src_x_outcome_x_we,nmi_ext_err_load,0
@@ -24171,6 +24381,7 @@ TP-XIF-003,CG-XIF-003,cr_src_x_state,nmi_ext_split_both_outst,0
 TP-XIF-003,CG-XIF-003,cr_src_x_state,nmi_ext_split_first_outst,0
 TP-XIF-003,CG-XIF-003,cr_src_x_state,nmi_ext_split_second_outst,0
 TP-XIF-003,CG-XIF-003,cr_src_x_state,nmi_int_split_both_outst,0
+TP-XIF-004,CG-WIT-001,cp_clause,w_tp_xif_004,0
 TP-XIF-004,CG-XIF-004,cp_mode_at_wfi,m,0
 TP-XIF-004,CG-XIF-004,cp_mode_at_wfi,u,0
 TP-XIF-004,CG-XIF-004,cp_pending_at_wfi,data_outst,0
@@ -24294,6 +24505,7 @@ TP-XIF-007,CG-XIF-005,cr_redirect_x_stale_err,completed_err_two_to_line,0
 TP-XIF-007,CG-XIF-005,cr_redirect_x_stale_err,completed_ok_multi_line,0
 TP-XIF-007,CG-XIF-005,cr_redirect_x_stale_err,completed_ok_one_beat_outst,0
 TP-XIF-007,CG-XIF-005,cr_redirect_x_stale_err,completed_ok_two_to_line,0
+TP-XIF-008,CG-WIT-001,cp_clause,w_tp_xif_008,0
 TP-XIF-008,CG-XIF-003,cp_async_src,irq_maskable,0
 TP-XIF-008,CG-XIF-003,cr_src_x_outcome_x_we,irq_maskable_err_load,0
 TP-XIF-008,CG-XIF-003,cr_src_x_outcome_x_we,irq_maskable_err_store,0
@@ -24303,9 +24515,11 @@ TP-XIF-008,CG-XIF-003,cr_src_x_state,irq_maskable_single_outst,0
 TP-XIF-008,CG-XIF-003,cr_src_x_state,irq_maskable_split_both_outst,0
 TP-XIF-008,CG-XIF-003,cr_src_x_state,irq_maskable_split_first_outst,0
 TP-XIF-008,CG-XIF-003,cr_src_x_state,irq_maskable_split_second_outst,0
+TP-XIF-009,CG-WIT-001,cp_clause,w_tp_xif_009,0
 TP-XIF-009,CG-XIF-003,cr_src_x_state,debug_req_split_both_outst,0
 TP-XIF-009,CG-XIF-003,cr_src_x_state,debug_req_split_first_outst,0
 TP-XIF-009,CG-XIF-003,cr_src_x_state,debug_req_split_second_outst,0
+TP-XIF-010,CG-WIT-001,cp_clause,w_tp_xif_010,0
 TP-XIF-010,CG-XIF-009,cp_prev_ls_outst,no,0
 TP-XIF-010,CG-XIF-009,cp_prev_ls_outst,single,0
 TP-XIF-010,CG-XIF-009,cp_prev_ls_outst,split,0
@@ -24318,6 +24532,7 @@ TP-XIF-010,CG-XIF-009,cr_prev_ls_x_csr,single_pmpcfg,0
 TP-XIF-010,CG-XIF-009,cr_prev_ls_x_csr,split_mseccfg,0
 TP-XIF-010,CG-XIF-009,cr_prev_ls_x_csr,split_pmpaddr,0
 TP-XIF-010,CG-XIF-009,cr_prev_ls_x_csr,split_pmpcfg,0
+TP-XIF-011,CG-WIT-001,cp_clause,w_tp_xif_011,0
 TP-XIF-011,CG-XIF-006,cp_event,irq_maskable,0
 TP-XIF-011,CG-XIF-006,cp_event,nmi,0
 TP-XIF-011,CG-XIF-006,cp_outcome,completed_then_event,0
@@ -24353,6 +24568,7 @@ TP-XIF-011,CG-XIF-006,cr_phase_x_irq,last_irq_maskable,0
 TP-XIF-011,CG-XIF-006,cr_phase_x_irq,last_nmi,0
 TP-XIF-011,CG-XIF-006,cr_phase_x_irq,middle_irq_maskable,0
 TP-XIF-011,CG-XIF-006,cr_phase_x_irq,middle_nmi,0
+TP-XIF-012,CG-WIT-001,cp_clause,w_tp_xif_012,0
 TP-XIF-012,CG-XIF-006,cp_event,debug_req,0
 TP-XIF-012,CG-XIF-006,cp_event,step,0
 TP-XIF-012,CG-XIF-006,cr_event_x_outcome,debug_req_completed_then_event,0
@@ -24384,6 +24600,7 @@ TP-XIF-013,CG-XIF-006,cr_kind_x_event,popretz_bus_err_load,0
 TP-XIF-013,CG-XIF-006,cr_kind_x_event,popretz_pmp_fault,0
 TP-XIF-013,CG-XIF-006,cr_kind_x_event,push_bus_err_store,0
 TP-XIF-013,CG-XIF-006,cr_kind_x_event,push_pmp_fault,0
+TP-XIF-014,CG-WIT-001,cp_clause,w_tp_xif_014,0
 TP-XIF-014,CG-XIF-007,cp_enable_effect,disables_pending,0
 TP-XIF-014,CG-XIF-007,cp_enable_effect,enables_pending,0
 TP-XIF-014,CG-XIF-007,cp_enable_effect,neutral,0
@@ -24425,6 +24642,7 @@ TP-XIF-014,CG-XIF-007,cr_kind_x_irq,csr_other_flush_irq_pending,0
 TP-XIF-014,CG-XIF-007,cr_kind_x_irq,csr_other_flush_multiple,0
 TP-XIF-014,CG-XIF-007,cr_kind_x_irq,csr_other_flush_nmi,0
 TP-XIF-014,CG-XIF-007,cr_kind_x_irq,csr_other_flush_none,0
+TP-XIF-015,CG-WIT-001,cp_clause,w_tp_xif_015,0
 TP-XIF-015,CG-XIF-007,cp_flush_kind,dret,0
 TP-XIF-015,CG-XIF-007,cp_flush_kind,mret,0
 TP-XIF-015,CG-XIF-007,cp_irq_outcome,deferred,0
@@ -24455,6 +24673,7 @@ TP-XIF-015,CG-XIF-007,cr_mode_to_x_irq,u_irq_pending,0
 TP-XIF-015,CG-XIF-007,cr_mode_to_x_irq,u_multiple,0
 TP-XIF-015,CG-XIF-007,cr_mode_to_x_irq,u_nmi,0
 TP-XIF-015,CG-XIF-007,cr_mode_to_x_irq,u_none,0
+TP-XIF-016,CG-WIT-001,cp_clause,w_tp_xif_016,0
 TP-XIF-016,CG-XIF-008,cp_during_off,async_rises,0
 TP-XIF-016,CG-XIF-008,cp_during_off,data_rsp_returns,0
 TP-XIF-016,CG-XIF-008,cp_during_off,fetch_req_open_line,0
@@ -24528,6 +24747,7 @@ TP-XIF-016,CG-XIF-008,cr_enc_x_inflight,mubi_off_none,0
 TP-XIF-016,CG-XIF-008,cr_enc_x_inflight,mubi_off_sleeping,0
 TP-XIF-016,CG-XIF-008,cr_enc_x_inflight,mubi_off_split_inflight,0
 TP-XIF-016,CG-XIF-008,cr_enc_x_inflight,mubi_off_zcmp_inflight,0
+TP-XIF-017,CG-WIT-001,cp_clause,w_tp_xif_017,0
 TP-XIF-017,CG-XIF-010,cp_after,async_pending_at_release,0
 TP-XIF-017,CG-XIF-010,cp_after,first_fetch_boot_vector,0
 TP-XIF-017,CG-XIF-010,cp_after,stale_rsp_after_release,0

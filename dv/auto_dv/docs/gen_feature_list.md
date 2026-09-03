@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 10:27 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 10:40 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -34,9 +34,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   otherwise it is folded. Edges point at base features only (no depth-2 chains).
 - "Source: RTL-defined" marks behaviour no specification or Ibex document describes; every such item
   is listed for the RTL/Arch Engineer in the reading report and needs a behaviour summary.
-- Doc defects are cited as D1..D19 and bug candidates as B1..B15; both are defined in
-  dv/auto_dv/docs/gen_bug_log.md (the single list). B6 is retained as an ID but reclassified
-  RTL-defined (not a bug).
+- Doc defects are cited as D1..D21 and bug candidates as B1..B19; both are defined in
+  dv/auto_dv/docs/gen_bug_log.md (the single list; Section 1b holds the retained IDs B6, B9 and B12 that are
+  not bug candidates).
 - Observability caveat: `ibex_core` exposes no `rvfi_csr_*` ports (verified by grep). Internal nets
   are never observables; where a bin needs one, the entry says "probe candidate P<n> (probe register
   entry needed)" and names the boundary alternative first.
@@ -78,8 +78,8 @@ memory protection + Smepmp; DBG external debug; TRG triggers; PMC performance co
 instruction bus protocol; DMEM data bus protocol + LSU; FE fetch stage; IC instruction cache; DIT
 dummy instructions + data-independent timing; SEC alerts and countermeasures; RST reset and boot;
 RVFI trace interface; CHERI CHERIoT carve-out (F-CHERI-001, exclusion name "cheriot-out-of-scope";
-its table mirrors dv/auto_dv/work/rtl-arch/gen_exclusions_draft.md, which is the authoritative
-exclusion list).
+its table mirrors dv/auto_dv/excl/gen_exclusions.el at 9ebf2d9 row for row, the file urg loads; the
+rtl-arch draft is the file's source, never the authority).
 
 # 2. Wrapper-parameter assumptions
 
@@ -13344,13 +13344,15 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Source: RTL-defined: rtl/ibex_core.sv:67,1339-1347; rtl/ibex_pkg.sv:36-39,84-85,378-379,
   626-628,728,759-760; dv/auto_dv/excl/gen_exclusions.el as committed at 9ebf2d9 (pass 13; the
   exclusion deliverable, rtl-arch T-069; entry set identical to 4125c36; Critic approval of the file
-  pending, it changes no row) with dv/auto_dv/excl/gen_exclusions_README (md5 9b642ef57393d8b3af8de9485a8f6f88; Critic verdict APPROVE in draft form, dv/auto_dv/docs/gen_critic_exclusions_v3.md line 15, F-1 and F-3 open until the first measured regression; rtl-arch sends the delta).md (section 2 content
+  pending, it changes no row) with dv/auto_dv/excl/gen_exclusions_README.md (section 2 content
   table, section 4 refuted entries, section 5 notes, 5a soundness, 5b in-range objects kept live,
   6 Critic conditions, 7 EC-3 fill procedure) and dv/auto_dv/excl/gen_exclusions_select_report.md
   of the same run; dv/auto_dv/evidence/gen_exclusions_draft_v2.md (the source the file is generated
   from); dv/auto_dv/evidence/gen_cheriot_carveout.md buckets A-F and gating chain G1-G8; table below
 - Edge: no
 - Status: ACTIVE
+- Exclusion authority: dv/auto_dv/excl/gen_exclusions.el at 9ebf2d9 (md5 9b642ef57393d8b3af8de9485a8f6f88), the file urg loads, with its README dv/auto_dv/excl/gen_exclusions_README.md; the rtl-arch draft is the file's source, never the authority.
+- Exclusion verdict: Critic APPROVE in draft form (dv/auto_dv/docs/gen_critic_exclusions_v3.md line 15); final-file conditions F-1 and F-3 stay open until the first measured regression, whose delta rtl-arch sends.
 - Notes: Ports that exist only for CHERIoT and what gen_dut_top must do with them:
   - cheriot_enable_i (rtl/ibex_core.sv:67; also on ibex_register_file_ff:69): tie both to
     IbexMuBiOff = 4'b1010. Any other value than On/Off raises alert_major_internal_o while
