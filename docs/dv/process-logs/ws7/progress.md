@@ -263,3 +263,12 @@ string too, not just nonzero exit).
 - `t1-fullmode-green.txt` (`ci/cleanroom-selftest.sh`, no flag): full mode, 0 failures, all of
   a–h, all four canaries (each caught by its own named check), all four landing-check sub-cases.
   Captured post-fix-round-1 against T2's landed overlay (commits `583b4be9` + `d3b70285`).
+
+WS7+WS6 CLOSED (2026-09-02): post-execution review APPROVE-WITH-CHANGES over 2bfea931..07ed7ded
+(docs/dv/reviews/2026-09-02-claude-diff-ws7-ws6-close.md, opus fallback, sanity-scoped per owner
+directive); all with-changes items fixed in 316aff74 and verified addressed by scoped re-review
+(mex mirror rule-widened + regenerated; riscv-dv precondition-6 checks run every export with a
+.verified stamp in the export; CI_ALLOWED enforcement). Final export 0231dbe6 (source b2c08682):
+verify green, Section-12 at 10 PASS / 1 BLOCKED — the sole remaining launch blocker is the owner
+signature on DV_prompt.txt:375. Deferred machinery: docs/dv/FENCE.md §Deferred. Open owner call:
+shared IBEX_TOOLS_DIR physically holds the cosim ISS (advisory-layer exposure, ledgered).

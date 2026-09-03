@@ -86,3 +86,14 @@ is authoritative between updates).
 - **ChipSmart** (`riscv/ChipSmart`, clone at /localdev/fzhang/ws/ChipSmart) is the siliconpilot
   skill library; a curated selective import into .claude/skills/ is in flight — only skills that
   serve the ibex stack (VCS/UVM/riscv-dv/cocotb; no bazel/bzsim/simscope/DFT/fault).
+
+## Final state (end of session 2)
+ALL WORKSTREAMS DONE: WS1-WS3 (session 1), WS4 (Jenkins+LSF, incl. dual-suite plumbing + spike-pin
+fix), WS5 (MCP, DONE after WS7 closed its gate item), WS6 (mex, both trees), WS7 (export-path
+cleanroom fence — owner-directed re-cut from the snapshot design; v1 design preserved at 86eba26e
+and in FENCE.md §Deferred). Setup playbook committed. Fence amendment v2.1 BINDING.
+Generation sessions are PERMITTED (CLAUDE.md Critical Invariant 2 lifted) inside a verified export.
+THE ONE REMAINING LAUNCH BLOCKER: owner signature on DV_prompt.txt:375 (Section 12 item 8).
+Open owner call: shared IBEX_TOOLS_DIR holds the cosim ISS (visible to Zone A ls; advisory layer).
+Post-merge note: first full TEST=all against the bumped spike pin confirms the ZIHPM fix at scale.
+codex remains spend-capped; opus fallback authorized and used for all reviews after the cap.
