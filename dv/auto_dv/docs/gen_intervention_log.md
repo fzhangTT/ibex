@@ -750,3 +750,19 @@ scrkey; items whose rows come from regime or pin keep their coverage-only token 
 with a REGIME_SET and a DBG_REQ assert/release with hand-checked first lines (CM8-M-3). tb-infra moves the
 writer fatal ahead of the enabled check, has each writer register its own source, and adds the two bus count
 rules to read() with a mutation each (CM8-M-1, CM8-M-2) in the follow-up landing.
+
+## LOG-028a - 2026-09-03 - RULING SHARPENED (sunset input = observed rows, exclusion by row)
+
+The Critic's step-2 verdict Section 7 (dv/auto_dv/docs/gen_critic_rvfi_export_s2.md) shows LOG-028 was too
+coarse in both directions: the emitted set as rendered from the yaml is a declaration, which is what the sunset
+was designed not to trust; and excluding whole sources (regime, pin) would hold 84 items, 58 of them on rows the
+retained runs did observe. The rows never observed in any retained run are exactly three: regime phase, pin
+debug_req and pin irq_nm (55 items name one of them; irq_nm alone 33). Ruling: (1) the sunset input is the set
+of rows OBSERVED in a retained run of the pinned build: Runtime produces a per-row first-seen list from the
+canary export files (row, first run, first line) beside export_sources_emitted, and derives the emitted set from
+the canary run's header rows rather than the yaml (T-140); the DV Lead's gen_trace_check.py reads the first-seen
+list and un-marks an item only when every one of its export rows is observed (v2i tool patch extended, v2j
+driven by it); (2) exclusion is by row, not by source: the three unobserved rows hold their 55 items until a
+retained run shows them; (3) tb-infra makes writers register the rows they emit and the sink fatal at
+elaboration on an emitted row with no registered writer (T-141, with CM8-M-1/M-2). Supersedes the source-level
+wording of LOG-028; the M-1 fix (read export_sources_emitted, not export_sources) lands with v2i.
