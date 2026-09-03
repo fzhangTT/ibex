@@ -1,10 +1,10 @@
 # Zone A fence scope amendment: fence the collateral, not the tools
 
-**Status:** v2, revised 2026-09-02 after cross-model review
-(`docs/dv/reviews/2026-09-02-claude-plan-zone-a-fence-scope-amendment.md`, REQUEST-CHANGES; v1 at
-commit 91460209). Proposed by the owner (fzhang). Amends the design spec
-(`2026-09-01-auto-dv-setup-design.md`) §WS5 zone scoping and §WS7. Binding once a re-review reaches
-APPROVE/APPROVE-WITH-CHANGES.
+**Status:** v2.1, 2026-09-02 — BINDING. v1 (owner-proposed, commit 91460209) reviewed
+REQUEST-CHANGES; v2 (cb35bb86) re-reviewed **APPROVE-WITH-CHANGES**
+(`docs/dv/reviews/2026-09-02-claude-plan-zone-a-fence-scope-amendment{,-v2}.md`); this revision
+folds the re-review's with-changes items. Amends the design spec
+(`2026-09-01-auto-dv-setup-design.md`) §WS5 zone scoping and §WS7.
 
 ## Decision
 
@@ -24,7 +24,11 @@ has nothing fenced to read.
 
 Without waveform and coverage-database access, the RTL/Arch agent cannot debug and the closure loop
 cannot read its own holes. Fencing the tools would cripple the experiment to protect data that
-isolation-by-construction already protects.
+isolation-by-construction already protects. The shipped tree already disagrees with the old rule:
+`DV_prompt.txt` (Section on exclusion arguments) *requires* the siliconpilot `cone_of_influence`
+MCP tool for every control-vs-data exclusion argument, and spec:154's design rule ("if Zone A code
+cannot compile without fenced sources, fix the contract, never grant a fence exception") is the same
+fence-the-data-not-the-tooling instinct applied to compilation.
 
 **Owner ruling (2026-09-02) on tool data-reach:** no mechanical path-enforcement layer is added to
 the MCP wrappers or hooks. A freshly cloned cleanroom workspace contains no fenced FSDB, VDB, or
@@ -59,7 +63,10 @@ tools at the cleanroom's own out-tree.
    Zone A docs, not `BUILD_AND_SIM.md`/`ci/reviews/`), `.claude/agents/ibex-debug-analyzer.md`,
    `.claude/agents/ibex-test-generator.md`, `CLAUDE.md` **and `AGENTS.md` as a pair** (the
    validator asserts them together; codex teammates in Zone A need the delegator),
-   `.codex/config.toml` (Zone A variant: three local servers, no atlassian), and
+   `.codex/config.toml` (Zone A variant: three local servers, no atlassian), `ci/env.sh` (Zone A
+   variant: the lowRISC-spike-fork/cosim disclosure — `SPIKE_INSTALL`, `ci/build-spike.sh`
+   references — removed; MCP exports kept), `ci/mcp/README.md` (Zone A variant: the
+   `dv/uvm/core_ibex` worked example replaced), and
    `docs/dv/TB_CONTRACT.md` — the Zone A variant is a **positive-list rewrite**, not a redaction:
    seeding, handshake pattern, failure path, ASCII-only logging, with no existing-TB module names,
    event names, manifest paths, or `check_logs.py` behavior.
@@ -68,10 +75,18 @@ tools at the cleanroom's own out-tree.
    rewritten against `dv/auto_dv/` homes (central handles/binds homes named for the generated TB,
    not `dv/uvm/core_ibex` paths); `assertion-integrity` with the Zone A inert-referee sentence.
    `fence-integrity` and `test-overlap` are Zone B / evaluator rubrics and do not ship to Zone A.
+   The mechanical acceptance check for changes 2 and 3 is `DV_prompt.txt` Section 12 item 9, whose
+   string and file lists are extended to match: `AGENTS.md` and `.codex/config.toml` join the
+   scanned set, and the wrapper's asserted Zone A rubric list is itself checked.
 4. **Escape tests** are adjusted to what the rulings make true:
    - the snapshot/clone contains no fenced artifacts: the suite scans the full clone (history
      included) for `*.fsdb`, `*.vdb`, fenced paths, and testlist/fcov identifiers — run products
-     cannot enter a snapshot, and the sync validator already rejects unclassifiable paths;
+     cannot enter a snapshot, and the sync validator rejects unclassifiable paths (spec:139; that
+     validator and this escape case land together in WS7);
+   - spec:163's "read sibling clone" case is **retained and is the escape test for the tool
+     data-reach ruling** (the ruling's premise is the clone boundary — this probe tests it), along
+     with the retained "fetch master" and "fetch upstream ibex DV" cases; only "query an MCP" is
+     replaced;
    - a Zone A session has **no remote MCP configured** (positive assertion against the Zone A
      `.mcp.json`/`.codex/config.toml`; replaces the spec's old "query an MCP" case);
    - a skill in Zone A must not resolve a fenced document path;
@@ -84,9 +99,10 @@ tools at the cleanroom's own out-tree.
    `CLAUDE.md`+`AGENTS.md` and `TB_CONTRACT.md` variants (the latter also fence-integrity-checked);
    pristine upstream `vendor/google_riscv-dv` at the locked revision; **`vendor/riscv-isa-sim`
    absent from the snapshot** (see triage below); and `dv/auto_dv/.gitignore`. Until these exist,
-   CLAUDE.md Critical Invariant 2 applies: no generation session. (`DV_prompt.txt:308-309`, which
-   words the riscv-isa-sim item as "pristine upstream at the locked revision", is corrected to
-   "absent" as part of implementing this amendment.)
+   CLAUDE.md Critical Invariant 2 applies: no generation session. (`DV_prompt.txt` Section 12
+   precondition 6 bundles both vendors as "pristine upstream at their locked revisions"; it is
+   split as part of implementing this amendment — riscv-dv stays "pristine upstream at the locked
+   revision", riscv-isa-sim becomes "absent".)
 6. **`docs/dv/SIM_RECIPE.md` content allowlist** (it is a derived document distilled from fenced
    flow files, so its content is bounded): VCS compile/elaboration mechanics and flags, run/env
    contract, LSF submission, coverage-merge/URG reporting, site gotchas, the Zone B submission
@@ -115,6 +131,8 @@ Under-fenced or unclassified collateral (add to the manifest as denied):
 | OpenTitan `hw/ip/rv_core_ibex/dv/**` and its testplans | Ibex DV in an integrator repo, not a fork; the DV prompt's "any fork" wording misses it | add to the prompt's deny wording |
 | CHERIoT-Ibex `dv/**` | a fork with its own DV; a likely web-search hit because the `opentitan` config's base ISA names CHERIoT | deny (URL/web guidance) |
 | rendered Ibex docs on readthedocs | include the fenced verification pages; the URL deny is right, and the design pages are available locally | keep URL deny |
+| `ci/jenkins/**` | names existing tests (`testdata/regr_pass.log`, smoke defaults), testlists, and drives the existing flow (`common.sh`, `check_testlist_knob.sh`) | deny; Zone A owns its own regression scripts (see Consequence) |
+| `ci/build-spike.sh`, `ci/setup-cosim.sh`, `ci/run-cosim-test.sh` | build and exercise the Zone B cosim (lowRISC Spike fork) — with `vendor/riscv-isa-sim` absent, a shipped `build-spike.sh` still discloses that a spike cosim referee exists and how it is built | deny |
 
 Consistent as written, kept for the record: `dv/**` tests, testlists, `fcov/`, `env/`, `dv/cosim/`;
 the six verification RSTs under `doc/`; `vendor/patches/**`; human fcov bin names never returned
