@@ -876,3 +876,13 @@ gen_trace_check.py and the driver; retained before/after log; rehearsal on the e
 gated, 105 marked left) as one landing citing this manifest; pass 2 follows T-150's regression. Nothing enters the
 Phase 1 numbers through this: it changes which witness bins are must-hit for the affected tests (rule (f)), and the
 only built test touched, gen_csr_trap_setup, has its two items gated in pass 1.
+
+## LOG-034 - 2026-09-03 - RULING (retained-log excerpts for per-item red runs)
+
+Retention rule for the Test Writer's per-item red runs, given by message during the batch-1 remediation and
+recorded here because the manifest header cited LOG-024 for it: a per-item red run is retained as a decisive-line
+excerpt (the GEN_TEST_FAIL harness line with the fire id, the collected-failure lines that precede it, the UVM
+summary or its absence, and the run header naming build, seed and plusargs), listed in gen_manifest.md with the
+md5 of the excerpt file; full stdout and sim logs are retained for every green run, for every default red, and for
+any red whose verdict a reviewer disputes. The excerpt must carry the line a reviewer needs to reproduce the
+flow's verdict with gen_verdict.decide_lines; an excerpt that does not is treated as unretained.
