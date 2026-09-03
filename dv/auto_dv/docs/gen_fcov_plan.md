@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:58 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 11:34 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -34,7 +34,9 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 - Manifest rule: a test's fcov-expectation manifest lists only closure bins. Excluded from manifests
   until the probe register carries the probe: bins marked probe-gated (P1 or P4) in an area's "Probe
   candidates" section or in an item's `- Manifest:` field; informational bins (items with
-  `Expected: informational`); witness bins retained for traceability. The isa area references
+  `Expected: informational`); bug-witness bins named in the plan (retained for traceability); (f) the ledger
+  bins of CG-WIT-001 whose item carries the marker token (column marked = 1 of gen_trace_witness_ids.csv) are excluded
+  from the owning test's manifest and become must-hit when the token is removed (gen_test_plan.md Section 0, sunset). The isa area references
   auto-cross bins as `_`-joined operand names (`cr_x.a_b`) restricted to the reachable combinations
   its ignore clauses leave; the manifest generator expands them the same way.
 - Layer-1 weights: each area's test-plan header carries the per-agent / per-operand-class weight
@@ -677,9 +679,7 @@ Conventions
 - TP items: TP-CMP-009, TP-CMP-013, TP-CMP-015, TP-CMP-019, TP-CMP-025, TP-CMP-027, TP-CMP-031, TP-CMP-070
 
 ### CG-CMP-004: gen_cg_cmp_illegal
-- Features: F-CMP-003, F-CMP-006, F-CMP-007, F-CMP-015, F-CMP-017, F-CMP-019, F-CMP-022, F-CMP-025,
-  F-CMP-029, F-CMP-035, F-CMP-037, F-CMP-044, F-CMP-054, F-CMP-066, F-ISA-049, F-EXC-008 (parent of
-  folded bins hosted here)
+- Features: F-CMP-003, F-CMP-006, F-CMP-007, F-CMP-015, F-CMP-017, F-CMP-019, F-CMP-022, F-CMP-025, F-CMP-029, F-CMP-035, F-CMP-037, F-CMP-044, F-CMP-054, F-CMP-066, F-ISA-049, F-EXC-008
 - Sample: RVFI retirement; condition: rvfi_insn[1:0] != 11 and rvfi_trap == 1 and the monitor decode table classifies the halfword as illegal; anti-vacuity: the class is derived from the instruction bits; cp_mtval_ok / cp_rvfi_insn_ok are recorded only when the handler read-back and the RVFI field match the prediction.
 - Coverpoints:
   - cp_class = decoded: bins zero_hw{0x0000}, addi4spn_imm0{instr[12:5] == 0, instr != 0}, lwsp_rd0{}, c_fld{}, c_flw{}, c_fsd{}, c_fsw{}, c_fldsp{}, c_flwsp{}, c_fswsp{}, lui_imm0{}, addi16sp_imm0{}, srli_shamt5{}, srai_shamt5{}, slli_shamt5{}, subw{}, addw{}, jr_rs1_0{0x8002}, sh_bit6{}, zcb_ls_1xx{Q0 funct3 100, instr[12:10] 1xx}, zext_w{}, zcb_alu_110{}, zcb_alu_111{}, push_rlist_res{cm.push rlist 0..3}, pop_rlist_res{}, popret_rlist_res{}, popretz_rlist_res{}, q2_101_zcmt{instr[12:8] in the Zcmt cm.jt/cm.jalt space}, q2_101_other{other instr[12:8]}, q2_011xx_65_00{instr[12:10] 011, instr[6:5] 00}, q2_011xx_65_10{instr[12:10] 011, instr[6:5] 10}
@@ -1294,8 +1294,7 @@ Conventions
 - TP items: TP-CSR-001, TP-CSR-003, TP-CSR-032, TP-CSR-033, TP-CSR-038, TP-CSR-039, TP-CSR-040, TP-CSR-042, TP-CSR-043, TP-CSR-044, TP-CSR-045, TP-CSR-046, TP-CSR-047, TP-CSR-101, TP-CSR-116
 
 ### CG-CSR-004: gen_cg_csr_counter_warl
-- Features: F-CSR-058, F-CSR-059, F-CSR-060, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-070,
-  F-CSR-071, F-CSR-073, F-PMC-020 (parent of folded bins hosted here)
+- Features: F-CSR-058, F-CSR-059, F-CSR-060, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-070, F-CSR-071, F-CSR-073, F-PMC-020
 - Sample: gen_chk_csr_readback pair completion for a counter-family CSR (0xB00..0xB9F, 0x320, 0x323..0x33F); condition: pair closed; anti-vacuity: as CG-CSR-002; for running counters the prediction includes the elapsed-cycle / retired-instruction delta from gen_chk_counters, so a hit proves both models agreed on that write.
 - Coverpoints:
   - cp_csr = pair address: bins mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm3{0xB03}, hpm4{0xB04}, hpm5{0xB05}, hpm6{0xB06}, hpm7{0xB07}, hpm8{0xB08}, hpm9{0xB09}, hpm10{0xB0A}, hpm11{0xB0B}, hpm12{0xB0C}, hpm3h{0xB83}, hpm4h{0xB84}, hpm5h{0xB85}, hpm6h{0xB86}, hpm7h{0xB87}, hpm8h{0xB88}, hpm9h{0xB89}, hpm10h{0xB8A}, hpm11h{0xB8B}, hpm12h{0xB8C}, hpm_unimpl{0xB03+MHPMCounterNum..0xB1F}, hpm_unimpl_h{0xB83+MHPMCounterNum..0xB9F}, mcountinhibit{0x320}, mhpmevent_impl{0x323..0x322+MHPMCounterNum}, mhpmevent_unimpl{0x323+MHPMCounterNum..0x33F}
@@ -1509,8 +1508,7 @@ Conventions
 - TP items: TP-CSR-003, TP-CSR-006, TP-CSR-007, TP-CSR-026, TP-CSR-031, TP-CSR-033, TP-CSR-101, TP-CSR-102, TP-CSR-103, TP-CSR-115, TP-CSR-116, TP-CSR-119
 
 ### CG-CSR-013: gen_cg_csr_counter_race
-- Features: F-CSR-034, F-CSR-060, F-CSR-063, F-CSR-064, F-CSR-065, F-CSR-067, F-CSR-068, F-CSR-070,
-  F-CSR-072, F-CSR-073, F-PMC-007 (parent of folded bins hosted here)
+- Features: F-CSR-034, F-CSR-060, F-CSR-063, F-CSR-064, F-CSR-065, F-CSR-067, F-CSR-068, F-CSR-070, F-CSR-072, F-CSR-073, F-PMC-007
 - Sample: rvfi_valid with a CSR instruction to mcycle(h), minstret(h), mhpmcounter3..2+MHPMCounterNum(h) or mip; condition: rvfi_valid && is_csr_insn && addr in that set && !rvfi_trap; anti-vacuity: the race coverpoints are derived from rvfi_ext_mcycle / rvfi_ext_mhpmcounters of the writer and of the neighbouring retirements and from the irq pins, so a hit proves the hardware update and the software access were adjacent in the way the bin names, and gen_chk_counters compared the result.
 - Coverpoints:
   - cp_csr = addr class: bins mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm_lo{0xB03..0xB02+MHPMCounterNum}, hpm10{0xB0A}, hpm_hi{0xB83..0xB82+MHPMCounterNum}, mip{0x344}
@@ -1566,7 +1564,7 @@ Conventions
 - TP items: TP-CSR-008, TP-CSR-102, TP-CSR-103, TP-CSR-104
 
 ### CG-CSR-016: gen_cg_csr_reset_read
-- Features: F-CSR-019, F-CSR-020, F-CSR-021, F-CSR-023, F-CSR-029, F-CSR-032, F-CSR-035, F-CSR-037, F-CSR-038, F-CSR-039, F-CSR-042, F-CSR-047, F-CSR-050, F-CSR-058, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-074, F-CSR-078, F-CSR-079, F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-085, F-CSR-092, F-CSR-094, F-CSR-096, F-CSR-098
+- Features: F-CSR-019, F-CSR-020, F-CSR-021, F-CSR-023, F-CSR-029, F-CSR-032, F-CSR-035, F-CSR-037, F-CSR-038, F-CSR-039, F-CSR-042, F-CSR-047, F-CSR-050, F-CSR-058, F-CSR-061, F-CSR-062, F-CSR-066, F-CSR-069, F-CSR-074, F-CSR-078, F-CSR-079, F-CSR-080, F-CSR-081, F-CSR-082, F-CSR-085, F-CSR-092, F-CSR-094, F-CSR-096, F-CSR-098, F-CSR-071
 - Sample: the first CSR read of an address after reset, before any software write to that address (TB tracks per-address first-write); condition: rvfi_valid && is_csr_insn && !rvfi_trap && first_read_before_write(addr); anti-vacuity: at most one sample per address per reset; a hit proves the reset value of that CSR was read back and compared by gen_chk_csr_readback against the ibex_pkg / parameter reset value.
 - Coverpoints:
   - cp_csr = address class: bins mstatus{0x300}, misa{0x301}, mie{0x304}, mtvec{0x305}, mcounteren{0x306}, mstatush{0x310}, menvcfg{0x30A}, menvcfgh{0x31A}, mcountinhibit{0x320}, mhpmevent{0x323..0x322+MHPMCounterNum}, mhpmevent_unimpl{0x323+MHPMCounterNum..0x33F}, mscratch{0x340}, mepc{0x341}, mcause{0x342}, mtval{0x343}, mip{0x344}, pmpcfg{0x3A0..0x3A3}, pmpaddr{0x3B0..0x3BF}, scontext{0x5A8}, mseccfg{0x747}, mseccfgh{0x757}, tselect{0x7A0}, tdata1{0x7A1}, tdata2{0x7A2}, tdata3{0x7A3}, mcontext{0x7A8}, mscontext{0x7AA}, dcsr{0x7B0}, dpc{0x7B1}, dscratch0{0x7B2}, dscratch1{0x7B3}, cpuctrlsts{0x7C0}, secureseed{0x7C1}, mcycle{0xB00}, mcycleh{0xB80}, minstret{0xB02}, minstreth{0xB82}, hpm{0xB03..0xB02+MHPMCounterNum}, hpmh{0xB83..0xB82+MHPMCounterNum}, hpm_unimpl{0xB03+MHPMCounterNum..0xB1F 0xB83+MHPMCounterNum..0xB9F}, cycle_alias{0xC00 0xC80}, instret_alias{0xC02 0xC82}, hpm_alias{0xC03..0xC02+MHPMCounterNum 0xC83..0xC82+MHPMCounterNum}, mvendorid{0xF11}, marchid{0xF12}, mimpid{0xF13}, mhartid{0xF14}, mconfigptr{0xF15}
@@ -1753,8 +1751,7 @@ Conventions
 - TP items: TP-CSR-075, TP-CSR-077, TP-CSR-086, TP-PRV-004, TP-PRV-014, TP-PRV-024, TP-PRV-025, TP-PRV-026, TP-PRV-038, TP-PRV-039
 
 ### CG-PRV-008: gen_cg_prv_trap_vector
-- Features: F-PRV-002, F-PRV-021, F-PRV-022, F-PRV-029, F-PRV-030, F-PRV-031, F-PRV-032, F-CSR-047
-  (parent of folded bins hosted here)
+- Features: F-PRV-002, F-PRV-021, F-PRV-022, F-PRV-029, F-PRV-030, F-PRV-031, F-PRV-032, F-CSR-047, F-CSR-041
 - Sample: every trap entry (the record following a trapped retirement, whose rvfi_pc_rdata is the vector - C-1: the trapped record's own rvfi_pc_wdata is the sequential fetch address - or rvfi_intr on the first handler retirement); condition: rvfi_trap || rvfi_intr; anti-vacuity: ordinary retirements never sample; the target, mepc source and mtval class are computed from RVFI (rvfi_pc_rdata of the next record for the target; pc of the trapping instruction, of the next one, of the LSU instruction in WB for mepc) and the handler's CSR reads, so a hit proves a trap of that class vectored as named and gen_isa_compare compared pc/mepc/mcause/mtval.
 - Coverpoints:
   - cp_cause = cause class: bins exc{synchronous exception}, irq_sw{cause 3}, irq_timer{cause 7}, irq_ext{cause 11}, irq_fast{cause 16..30}, nmi_ext{0x8000001F}, nmi_int{0xFFFFFFE0}, dbg_exc{exception in debug mode}
@@ -2185,7 +2182,7 @@ Conventions
 ## Covergroups: IRQ
 
 ### CG-IRQ-001: gen_cg_irq_entry
-- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053,, F-IRQ-057
+- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053, F-IRQ-057
   F-IRQ-057, F-IRQ-058, F-IRQ-045 (parent of folded bins hosted here)
 - Sample: interrupt entry: rvfi_valid && rvfi_intr on the first handler instruction, with the cause from the handler csrr mcause read-back / gen_chk_irq model and the CSR model state before the entry (the rvfi_ext_irq_valid level, C-13, is recorded per entry as a marker, never used as the event); condition: rvfi_intr; anti-vacuity: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry.
 - Coverpoints:
@@ -2633,8 +2630,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-043, TP-PMP-044, TP-PMP-045, TP-PMP-100, TP-PMP-101, TP-PMP-102, TP-PMP-110
 
 ### CG-PMP-007: gen_cg_pmp_boundary
-- Features: F-PMP-014, F-PMP-035, F-PMP-036, F-PMP-037, F-PMP-038, F-PMP-040, F-PMP-041, F-PMP-043,
-  F-PMP-044, F-PMP-048, F-PMP-002 (parent of folded bins hosted here)
+- Features: F-PMP-014, F-PMP-035, F-PMP-036, F-PMP-037, F-PMP-038, F-PMP-040, F-PMP-041, F-PMP-043, F-PMP-044, F-PMP-048, F-PMP-002
 - Sample: a CG-PMP-005 check event for which the model identifies a reference region: the deciding region on match, else the enabled region whose first or last byte lies within one granule (2^(PMPGranularity+2) bytes) of the access bytes (nomatch case); condition: such a region exists and has at least one byte in the 32-bit space; anti-vacuity: accesses far from any region edge never sample; a hit proves an access at or across an exact region edge of that mode and the verdict matched the model
 - Coverpoints:
   - cp_mode = reference region A field: bins tor{PMP_MODE_TOR}, na4{PMP_MODE_NA4}, napot{PMP_MODE_NAPOT}
@@ -2688,9 +2684,7 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 - TP items: TP-PMP-069, TP-PMP-070, TP-PMP-071, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083, TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089, TP-PMP-103
 
 ### CG-PMP-009: gen_cg_pmp_fetch_fault
-- Features: F-PMP-053, F-PMP-055, F-PMP-065, F-PMP-066, F-PMP-067, F-PMP-068, F-PMP-069, F-PMP-070,
-  F-PMP-078, F-PMP-080, F-PMP-081, F-PMP-093, F-PMP-094, F-PMP-052 (parent of folded bins hosted
-  here)
+- Features: F-PMP-053, F-PMP-055, F-PMP-065, F-PMP-066, F-PMP-067, F-PMP-068, F-PMP-069, F-PMP-070, F-PMP-078, F-PMP-080, F-PMP-081, F-PMP-093, F-PMP-094, F-PMP-052
 - Sample: rvfi_valid per instruction where the model predicts a fetch denial on pc or pc+2, or the instruction is uncompressed at pc[1] == 1 with a region edge at pc+2, or the instruction is a control-flow target whose word is a region edge; condition: one of the three; anti-vacuity: ordinary permitted sequential instructions never sample; a hit proves a fetch-side PMP decision with the named half pattern was checked for trap, mtval and mepc
 - Coverpoints:
   - cp_pc_align = rvfi_pc_rdata[1:0]: bins a4{00}, a2{10}
@@ -3048,11 +3042,7 @@ Conventions
 ## DBG covergroups
 
 ### CG-DBG-001: gen_cg_dbg_entry
-- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010,, F-TRG-027
-  F-DBG-011, F-DBG-025, F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-044, F-DBG-045,
-  F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-DBG-058, F-DBG-061, F-DBG-064, F-DBG-066, F-DBG-068,
-  F-TRG-010, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019, F-DBG-017 (parent of folded bins hosted
-  here)
+- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010, F-TRG-027, F-DBG-011, F-DBG-025, F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-044, F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-DBG-058, F-DBG-061, F-DBG-064, F-DBG-066, F-DBG-068, F-TRG-010, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019, F-DBG-017
 - Sample: debug entry = first ibus request to DmHaltAddr while dbg_model.debug_mode==0 (ibus monitor
   event); cause/prv/dpc are taken from the debug-ROM prologue's csrr dcsr / csrr dpc retirements
   (rvfi_rd_wdata) that follow the entry; condition: `dm_halt_fetch && !dbg_model.debug_mode`;
@@ -3074,7 +3064,7 @@ Conventions
 - TP items: TP-DBG-001, TP-DBG-002, TP-DBG-003, TP-DBG-004, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-009, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-015, TP-DBG-016, TP-DBG-020, TP-DBG-022, TP-DBG-024, TP-DBG-030, TP-DBG-042, TP-DBG-043, TP-DBG-045, TP-DBG-046, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-054, TP-DBG-067, TP-DBG-068, TP-DBG-069, TP-DBG-071, TP-TRG-010, TP-TRG-012, TP-TRG-016, TP-TRG-017, TP-TRG-018, TP-TRG-019, TP-TRG-027
 
 ### CG-DBG-002: gen_cg_dbg_req_shape
-- Features: F-DBG-002, F-DBG-005, F-DBG-006, F-DBG-007, F-DBG-008, F-DBG-049, F-DBG-058, F-DBG-068, F-TRG-019
+- Features: F-DBG-002, F-DBG-005, F-DBG-006, F-DBG-007, F-DBG-008, F-DBG-049, F-DBG-058, F-DBG-068, F-TRG-019, F-DBG-061
 - Sample: every debug_req_i rising edge seen by the debug_req driver monitor, sampled when its
   outcome is known (entry observed, or the bounded no-entry window expired); condition:
   `debug_req_rise && outcome_known`; anti-vacuity: the driver randomizes the pulse shape, so both
@@ -3091,7 +3081,7 @@ Conventions
 - TP items: TP-DBG-001, TP-DBG-003, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-010, TP-DBG-011, TP-DBG-012, TP-DBG-013, TP-DBG-014, TP-DBG-030, TP-DBG-054, TP-DBG-068, TP-DBG-071, TP-TRG-019
 
 ### CG-DBG-003: gen_cg_dbg_ebreak
-- Features: F-DBG-017, F-DBG-018, F-DBG-019, F-DBG-020, F-DBG-021, F-DBG-022, F-DBG-023, F-DBG-024, F-DBG-025, F-DBG-041, F-DBG-066, F-TRG-020
+- Features: F-DBG-017, F-DBG-018, F-DBG-019, F-DBG-020, F-DBG-021, F-DBG-022, F-DBG-023, F-DBG-024, F-DBG-025, F-DBG-041, F-DBG-066, F-TRG-020, F-DBG-061
 - Sample: RVFI item whose rvfi_insn is ebreak or c.ebreak, plus the WB-fault-discard case detected by
   the dbg_model (ebreak in ID when WB faults, ebreak later re-executed); condition:
   `rvfi_valid && is_ebreak(rvfi_insn)`; the record carries rvfi_trap = 1 on the exception path and
@@ -3118,8 +3108,7 @@ Conventions
 - TP items: TP-DBG-022, TP-DBG-023, TP-DBG-024, TP-DBG-025, TP-DBG-026, TP-DBG-027, TP-DBG-028, TP-DBG-029, TP-DBG-030, TP-DBG-046, TP-DBG-067, TP-DBG-068, TP-DBG-073, TP-TRG-020
 
 ### CG-DBG-004: gen_cg_dbg_exc_in_debug
-- Features: F-DBG-011, F-DBG-026, F-DBG-027, F-DBG-028, F-DBG-029, F-DBG-030, F-DBG-036, F-DBG-054,
-  F-DBG-055, F-DBG-060, F-DBG-064, F-DBG-067, F-PRV-002 (parent of folded bins hosted here)
+- Features: F-DBG-011, F-DBG-026, F-DBG-027, F-DBG-028, F-DBG-029, F-DBG-030, F-DBG-036, F-DBG-054, F-DBG-055, F-DBG-060, F-DBG-064, F-DBG-067, F-PRV-002, F-DBG-061
 - Sample: RVFI item with rvfi_trap && rvfi_ext_debug_mode (synchronous exception inside debug
   mode) that is not an ebreak; target address taken from the next ibus request; condition:
   `rvfi_valid && rvfi_trap && rvfi_ext_debug_mode && !is_ebreak(rvfi_insn)` (an ebreak in debug
@@ -3142,7 +3131,7 @@ Conventions
 - TP items: TP-DBG-031, TP-DBG-032, TP-DBG-033, TP-DBG-034, TP-DBG-035, TP-DBG-041, TP-DBG-059, TP-DBG-060, TP-DBG-064, TP-DBG-068
 
 ### CG-DBG-005: gen_cg_dbg_dret
-- Features: F-DBG-007, F-DBG-013, F-DBG-031, F-DBG-032, F-DBG-033, F-DBG-034, F-DBG-035, F-DBG-036, F-DBG-042, F-DBG-056, F-DBG-057, F-DBG-066, F-TRG-016
+- Features: F-DBG-007, F-DBG-013, F-DBG-031, F-DBG-032, F-DBG-033, F-DBG-034, F-DBG-035, F-DBG-036, F-DBG-042, F-DBG-056, F-DBG-057, F-DBG-066, F-TRG-016, F-DBG-048, F-DBG-061
 - Sample: RVFI item with rvfi_insn == 32'h7B200073 (dret), legal (in debug mode, no trap) or
   illegal (outside debug mode, rvfi_trap); the `next` bin is closed when the following RVFI/bus
   event is observed; condition: `rvfi_valid && rvfi_insn == DRET`; anti-vacuity: dret occurs only
@@ -3169,9 +3158,7 @@ Conventions
 - TP items: TP-DBG-012, TP-DBG-019, TP-DBG-021, TP-DBG-024, TP-DBG-036, TP-DBG-037, TP-DBG-038, TP-DBG-039, TP-DBG-040, TP-DBG-041, TP-DBG-042, TP-DBG-047, TP-DBG-048, TP-DBG-053, TP-DBG-061, TP-DBG-062, TP-DBG-067, TP-DBG-068, TP-DBG-072, TP-TRG-016
 
 ### CG-DBG-006: gen_cg_dbg_step
-- Features: F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-042, F-DBG-043, F-DBG-044,
-  F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-TRG-018, F-PMC-048, F-DBG-001, F-DBG-017,
-  F-PMC-007 (parent of folded bins hosted here)
+- Features: F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-042, F-DBG-043, F-DBG-044, F-DBG-045, F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-TRG-018, F-PMC-048, F-DBG-001, F-DBG-017, F-PMC-007
 - Sample: debug entry (CG-DBG-001 event) that follows a dret with dbg_model.step_armed==1, where
   step_armed is the post-op value of dcsr.step in the CSR model after the last dcsr write op of the
   preceding debug window (csrrw: wdata[2]; csrrs: old | wdata[2]; csrrc: old & ~wdata[2]),
@@ -3199,7 +3186,7 @@ Conventions
 - TP items: TP-DBG-042, TP-DBG-043, TP-DBG-044, TP-DBG-045, TP-DBG-046, TP-DBG-047, TP-DBG-048, TP-DBG-049, TP-DBG-050, TP-DBG-051, TP-DBG-052, TP-DBG-053, TP-DBG-054, TP-TRG-018, TP-PMC-050
 
 ### CG-DBG-007: gen_cg_dbg_dcsr_warl
-- Features: F-DBG-012, F-DBG-013, F-DBG-014, F-DBG-015, F-DBG-016, F-DBG-043, F-DBG-057
+- Features: F-DBG-012, F-DBG-013, F-DBG-014, F-DBG-015, F-DBG-016, F-DBG-043, F-DBG-057, F-DBG-061
 - Sample: RVFI retirement of a CSR write op (csrrw/csrrwi always; csrrs/csrrc and immediate forms
   with a non-zero source) to CSR_DCSR in debug mode, closed by the following csrr dcsr readback;
   one sample per (write op, dcsr field) pair over the 15 fields of cp_bit, where the model computes
@@ -3224,7 +3211,7 @@ Conventions
 - TP items: TP-DBG-018, TP-DBG-019, TP-DBG-020, TP-DBG-068, TP-DBG-073
 
 ### CG-DBG-008: gen_cg_dbg_csr_access
-- Features: F-DBG-012, F-DBG-035, F-DBG-050, F-DBG-051, F-DBG-060
+- Features: F-DBG-012, F-DBG-035, F-DBG-050, F-DBG-051, F-DBG-060, F-DBG-061
 - Sample: RVFI item whose rvfi_insn is a CSR access to CSR_DCSR, CSR_DPC, CSR_DSCRATCH0 or CSR_DSCRATCH1;
   condition: `rvfi_valid && csr_addr inside {CSR_DCSR, CSR_DPC, CSR_DSCRATCH0, CSR_DSCRATCH1}`;
   anti-vacuity: the result bin comes from rvfi_trap vs rvfi_rd_wdata and the mode from rvfi_mode /
@@ -3245,8 +3232,7 @@ Conventions
 - TP items: TP-DBG-017, TP-DBG-018, TP-DBG-039, TP-DBG-040, TP-DBG-055, TP-DBG-056, TP-DBG-064, TP-DBG-068
 
 ### CG-DBG-009: gen_cg_dbg_irq_mask
-- Features: F-DBG-002, F-DBG-042, F-DBG-043, F-DBG-056, F-DBG-057, F-DBG-058, F-TRG-025, F-DBG-001,
-  F-DBG-037 (parent of folded bins hosted here)
+- Features: F-DBG-002, F-DBG-042, F-DBG-043, F-DBG-056, F-DBG-057, F-DBG-058, F-TRG-025, F-DBG-001, F-DBG-037, F-DBG-061
 - Sample: one sample per pending episode: an enabled interrupt (irq model: |(pins & mie) with
   mstatus.MIE or U-mode) or irq_nm_i is pending while dbg_model.debug_mode==1 or step_window==1, or
   in the debug-entry decision cycle; closed when the disposition is known (first post-window RVFI
@@ -3267,7 +3253,7 @@ Conventions
 - TP items: TP-DBG-003, TP-DBG-016, TP-DBG-021, TP-DBG-047, TP-DBG-048, TP-DBG-061, TP-DBG-062, TP-DBG-068, TP-TRG-025
 
 ### CG-DBG-010: gen_cg_dbg_pmp_dm
-- Features: F-DBG-027, F-DBG-030, F-DBG-033, F-DBG-052, F-DBG-053, F-DBG-054, F-DBG-055
+- Features: F-DBG-027, F-DBG-030, F-DBG-033, F-DBG-052, F-DBG-053, F-DBG-054, F-DBG-055, F-DBG-061
 - Sample: every fetch word (ibus request) and every data access (dbus request, or a PMP-model-denied
   access with the request suppressed and rvfi_trap) while dbg_model.debug_mode==1, plus data
   accesses in the post-dret window with MPRV still set (B1); condition: `(ibus_req || dbus_req ||
@@ -3290,7 +3276,7 @@ Conventions
 - TP items: TP-DBG-032, TP-DBG-033, TP-DBG-038, TP-DBG-057, TP-DBG-058, TP-DBG-059, TP-DBG-060, TP-DBG-064, TP-DBG-068
 
 ### CG-DBG-011: gen_cg_dbg_mode_misc
-- Features: F-DBG-011, F-DBG-059, F-DBG-060, F-DBG-062, F-DBG-063, F-DBG-064, F-DBG-067
+- Features: F-DBG-011, F-DBG-059, F-DBG-060, F-DBG-062, F-DBG-063, F-DBG-064, F-DBG-067, F-DBG-061
 - Sample: three events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement with
   rvfi_ext_debug_mode==1 (debug-program instruction) drives cp_insn_class, cp_wfi_pending,
   cp_mret_mpp, cp_mode and cp_wfi_busy_dip (`iff rvfi_evt`); (b) each ibus request while
@@ -3319,7 +3305,7 @@ Conventions
 - TP items: TP-DBG-001, TP-DBG-028, TP-DBG-031, TP-DBG-034, TP-DBG-036, TP-DBG-063, TP-DBG-064, TP-DBG-065, TP-DBG-066, TP-DBG-068, TP-PMC-049
 
 ### CG-DBG-012: gen_cg_dbg_rvfi_flags
-- Features: F-DBG-064, F-DBG-065
+- Features: F-DBG-064, F-DBG-065, F-DBG-061
 - Sample: every rvfi_valid; condition: `rvfi_valid`; discriminating condition (S-3a): the bins
   req1_mode0, req0_mode1, req1_mode1, u_dbg, trap_dbg, ok_dbg and every cr_flags_mode bin need a
   debug request overlapping a retirement, a debug program or a trap in debug mode; req0_mode0, m
@@ -3372,9 +3358,7 @@ Conventions
 - TP items: TP-TRG-001, TP-TRG-002, TP-TRG-003, TP-TRG-004, TP-TRG-005, TP-TRG-006, TP-TRG-007, TP-TRG-008, TP-TRG-009, TP-TRG-015, TP-TRG-028, TP-TRG-029, TP-TRG-030, TP-TRG-031
 
 ### CG-TRG-002: gen_cg_trg_fire
-- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017,, F-TRG-027
-  F-TRG-018, F-TRG-019, F-TRG-020, F-TRG-021, F-TRG-022, F-TRG-023, F-TRG-024, F-TRG-025, F-TRG-026,
-  F-TRG-027, F-TRG-030, F-DBG-066, F-DBG-001, F-DBG-031 (parent of folded bins hosted here)
+- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017, F-TRG-027, F-TRG-018, F-TRG-019, F-TRG-020, F-TRG-021, F-TRG-022, F-TRG-023, F-TRG-024, F-TRG-025, F-TRG-026, F-TRG-027, F-TRG-030, F-DBG-066, F-DBG-001, F-DBG-031
 - Sample: one sample each time the TB trigger model (tdata1.execute, tdata2 from the CSR model)
   sees the armed address become the next-to-execute address (derived from RVFI pc_wdata / trap and
   interrupt vectors / dret target / reset boot address), and each cause-2 debug entry; closed when
@@ -4057,7 +4041,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 ## DMEM covergroups
 
 ### CG-DMEM-001: gen_cg_dmem_handshake
-- Features: F-DMEM-001, F-DMEM-002, F-DMEM-003, F-DMEM-004, F-DMEM-005, F-DMEM-006, F-DMEM-007,, F-DMEM-009, F-DMEM-034
+- Features: F-DMEM-001, F-DMEM-002, F-DMEM-003, F-DMEM-004, F-DMEM-005, F-DMEM-006, F-DMEM-007, F-DMEM-009, F-DMEM-034
   F-DMEM-008, F-DMEM-009, F-DMEM-010, F-DMEM-034, F-DMEM-035
 - Sample: data_rvalid_i (one sample per completed transaction; the agent record carries the issue,
   grant and rvalid cycles and the grant-cycle payload); condition: agent record matched in order;
@@ -4108,8 +4092,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   TP-DMEM-038, TP-DMEM-056, TP-DMEM-057
 
 ### CG-DMEM-002: gen_cg_dmem_be_lanes
-- Features: F-DMEM-011, F-DMEM-012, F-DMEM-013, F-DMEM-014, F-DMEM-020, F-DMEM-035, F-DMEM-041,
-  F-DMEM-050
+- Features: F-DMEM-011, F-DMEM-012, F-DMEM-013, F-DMEM-014, F-DMEM-020, F-DMEM-035, F-DMEM-041, F-DMEM-050
 - Sample: data_req_o & data_gnt_i; condition: agent record open; anti-vacuity: one sample per
   address phase; a hit proves the binned (size, offset, beat) produced the binned be pattern and
   the lane check of gen_chk_dbus_proto ran on it. Store-integrity correctness (zero syndrome of
@@ -4166,7 +4149,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   TP-DMEM-016, TP-DMEM-045, TP-DMEM-060
 
 ### CG-DMEM-003: gen_cg_dmem_misaligned
-- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026,, F-DMEM-009
+- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026, F-DMEM-009
   F-DMEM-008 (parent of folded bins hosted here)
 - Sample: final rvalid of a split access (the agent pairs the two records by the second address ==
   first + 4); condition: the pair closed; anti-vacuity: only split accesses sample; a hit proves
@@ -4359,7 +4342,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - TP items: TP-DMEM-039, TP-DMEM-040, TP-DMEM-041, TP-DMEM-042, TP-DMEM-043, TP-DMEM-064
 
 ### CG-DMEM-008: gen_cg_dmem_pipe_ctx
-- Features: F-DMEM-028, F-DMEM-029, F-DMEM-031, F-DMEM-033, F-DMEM-042, F-DMEM-043, F-DMEM-044,, F-DMEM-045, F-DMEM-051
+- Features: F-DMEM-028, F-DMEM-029, F-DMEM-031, F-DMEM-033, F-DMEM-042, F-DMEM-043, F-DMEM-044, F-DMEM-045, F-DMEM-051
   F-DMEM-045, F-DMEM-046, F-DMEM-047, F-DMEM-051
 - Sample: (a) rvfi_valid of a load/store (Zcmp micro-op records included); (b) a WFI retirement
   whose predecessor is a load/store and whose record follows that access's final rvalid by exactly
@@ -4716,7 +4699,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 ## IC covergroups
 
 ### CG-IC-001: gen_cg_ic_ram_ports
-- Features: F-IC-001, F-IC-002, F-IC-003, F-IC-004, F-IC-005, F-IC-006, F-IC-007, F-IC-028,, F-IC-045, F-IC-046
+- Features: F-IC-001, F-IC-002, F-IC-003, F-IC-004, F-IC-005, F-IC-006, F-IC-007, F-IC-028, F-IC-045, F-IC-046
   F-IC-045, F-IC-046
 - Sample: (a) any cycle with |ic_tag_req_o; (b) any cycle with |ic_data_req_o (gen_icache_ram_model
   port monitor); condition: request on that port; anti-vacuity: idle cycles never sample;
@@ -4770,8 +4753,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   TP-IC-018, TP-IC-030, TP-IC-035, TP-IC-036, TP-IC-045, TP-IC-046
 
 ### CG-IC-002: gen_cg_ic_inval_key
-- Features: F-IC-008, F-IC-009, F-IC-010, F-IC-011, F-IC-022, F-IC-023, F-IC-024, F-IC-025,
-  F-IC-026, F-IC-047
+- Features: F-IC-008, F-IC-009, F-IC-010, F-IC-011, F-IC-022, F-IC-023, F-IC-024, F-IC-025, F-IC-026, F-IC-047
 - Sample: (a) ic_scr_key_req_o pulse; (b) end of an invalidation sweep (tag write to index
   IC_NUM_LINES-1 with valid 0 after a sweep start) or its abandonment; (c) each fence.i on RVFI;
   (d) an edge of ic_scr_key_valid_i; (e) each csrr cpuctrlsts on RVFI; (f) reset release;
@@ -5326,9 +5308,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - TP items: TP-DIT-004, TP-DIT-005, TP-DIT-006
 
 ### CG-DIT-004: gen_cg_dit_dummy_insert (P1; probe-gated, not in manifest until the probe register carries P1)
-- Features: F-DIT-009, F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-015, F-DIT-016, F-DIT-017, F-DIT-018,
-  F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-022, F-DIT-023, F-DIT-024, F-DIT-027, F-DIT-028, F-DIT-029,
-  F-DIT-030, F-RVFI-024, F-DIT-003 (parent of folded bins hosted here)
+- Features: F-DIT-009, F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-015, F-DIT-016, F-DIT-017, F-DIT-018, F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-022, F-DIT-023, F-DIT-024, F-DIT-027, F-DIT-028, F-DIT-029, F-DIT-030, F-RVFI-024, F-DIT-003
 - Sample: (a) insert: rising edge of the wrapper-internal net dummy_instr_id_o while the IF/ID
   register is written; (b) window_close: the close of a test-defined measurement window (>= 200
   retired records, or >= 200 cycles for the fetch_off / wfi_sleep kinds, with the tracked cfg
@@ -5457,9 +5437,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ---------------------------------------------------------------------------------------------------
 
 ### CG-SEC-001: gen_cg_sec_alerts
-- Features: F-SEC-001, F-SEC-002, F-SEC-003, F-SEC-007, F-SEC-008, F-SEC-009, F-SEC-010, F-SEC-011,
-  F-SEC-013, F-SEC-034, F-SEC-035, F-SEC-036, F-DIT-017, F-DIT-022, F-SEC-004 (parent of folded bins
-  hosted here)
+- Features: F-SEC-001, F-SEC-002, F-SEC-003, F-SEC-007, F-SEC-008, F-SEC-009, F-SEC-010, F-SEC-011, F-SEC-013, F-SEC-034, F-SEC-035, F-SEC-036, F-DIT-017, F-DIT-022, F-SEC-004, F-RST-020
 - Sample: (a) alert events: any cycle where an alert output is high; (b) inject: any TB injection
   event; (c) reset_close: the close of a reset window at rst_ni release, and post_reset_close: the
   close of the two-cycle window after release, both sampled ONLY when the window had activity that
@@ -5688,9 +5666,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - TP items: TP-SEC-028, TP-SEC-029, TP-SEC-030, TP-SEC-031, TP-SEC-032
 
 ### CG-SEC-005: gen_cg_sec_ctrl_inputs
-- Features: F-SEC-012, F-SEC-020, F-SEC-021, F-SEC-022, F-SEC-025, F-SEC-031, F-SEC-033, F-RST-003,
-  F-RST-007, F-RST-014, F-RST-025, F-RVFI-020, F-CSR-085, F-RST-010 (parent of folded bins hosted
-  here)
+- Features: F-SEC-012, F-SEC-020, F-SEC-021, F-SEC-022, F-SEC-025, F-SEC-031, F-SEC-033, F-RST-003, F-RST-007, F-RST-014, F-RST-025, F-RVFI-020, F-CSR-085, F-RST-010
 - Sample: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and
   !rvfi_trap; fetch_en_change: a value change of fetch_enable_i; mcounteren_w_change: a value change
   of mcounteren_writable_i; key_req: an ic_scr_key_req_o pulse; key_valid_change: a change of
@@ -5934,8 +5910,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   TP-RST-029
 
 ### CG-RST-004: gen_cg_rst_regfile
-- Features: F-RST-021, F-RST-022, F-RST-023, F-DIT-015, F-SEC-005, F-SEC-004 (parent of folded bins
-  hosted here)
+- Features: F-RST-021, F-RST-022, F-RST-023, F-DIT-015, F-SEC-005, F-SEC-004, F-RVFI-008
 - Sample: rvfi_valid with rvfi_trap == 0 and a register-reading or register-writing format;
   condition: rvfi_valid && !rvfi_trap && (rvfi_rs1_addr != 0 || rvfi_rs2_addr != 0 || rvfi_rd_addr
   != 0 || reads_x0_explicitly(rvfi_insn)); anti-vacuity: register traffic is frequent, but the
@@ -5968,10 +5943,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ---------------------------------------------------------------------------------------------------
 
 ### CG-RVFI-001: gen_cg_rvfi_record
-- Features: F-RVFI-001, F-RVFI-002, F-RVFI-003, F-RVFI-004, F-RVFI-005, F-RVFI-006, F-RVFI-007,
-  F-RVFI-008, F-RVFI-009, F-RVFI-010, F-RVFI-024, F-RVFI-027, F-RVFI-028, F-RVFI-029, F-RVFI-034,
-  F-RST-006, F-RST-026, F-DIT-016, F-DIT-017, F-SEC-008, F-SEC-007 (parent of folded bins hosted
-  here)
+- Features: F-RVFI-001, F-RVFI-002, F-RVFI-003, F-RVFI-004, F-RVFI-005, F-RVFI-006, F-RVFI-007, F-RVFI-008, F-RVFI-009, F-RVFI-010, F-RVFI-024, F-RVFI-027, F-RVFI-028, F-RVFI-029, F-RVFI-034, F-RST-006, F-RST-026, F-DIT-016, F-DIT-017, F-SEC-008, F-SEC-007, F-DIT-030
 - Sample: every rvfi_valid; condition: rvfi_valid; anti-vacuity: rvfi_valid is a pulse (one
   cycle per retired instruction, never continuous), and every coverpoint is a property of the
   record relative to the previous one (continuity, order, gap) or a discriminating record class,
@@ -6033,7 +6005,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   TP-RVFI-032, TP-RVFI-037, TP-RVFI-038, TP-CHERI-001, TP-CHERI-004
 
 ### CG-RVFI-002: gen_cg_rvfi_mem
-- Features: F-RVFI-011, F-RVFI-012, F-RVFI-013, F-RVFI-014, F-RVFI-021, F-DIT-008
+- Features: F-RVFI-011, F-RVFI-012, F-RVFI-013, F-RVFI-014, F-RVFI-021, F-DIT-008, F-RVFI-009
 - Sample: rvfi_valid where the instruction is a load or store (decoded from rvfi_insn, so trap
   records with zeroed masks are included); condition: rvfi_valid && is_load_store(rvfi_insn);
   anti-vacuity: only memory instructions sample; offset/misaligned/fault-half come from
@@ -6080,8 +6052,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 - TP items: TP-DIT-009, TP-RVFI-014, TP-RVFI-015, TP-RVFI-016, TP-RVFI-017, TP-RVFI-037
 
 ### CG-RVFI-003: gen_cg_rvfi_ext
-- Features: F-RVFI-016, F-RVFI-017, F-RVFI-018, F-RVFI-019, F-RVFI-020, F-RVFI-021, F-RVFI-022,
-  F-RVFI-023, F-RVFI-031, F-RVFI-032, F-SEC-009, F-SEC-015, F-DIT-020
+- Features: F-RVFI-016, F-RVFI-017, F-RVFI-018, F-RVFI-019, F-RVFI-020, F-RVFI-021, F-RVFI-022, F-RVFI-023, F-RVFI-031, F-RVFI-032, F-SEC-009, F-SEC-015, F-DIT-020, F-RVFI-009
 - Sample: a retired record or an interrupt notification, the latter sampled once at the RISING
   edge of rvfi_ext_irq_valid (a level, C-13 / X-16: it rises at decision + 4 and stays high until
   about two cycles after the handler's first instruction enters ID); condition: rvfi_valid ||
@@ -6157,8 +6128,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
   TP-RVFI-025, TP-RVFI-026, TP-RVFI-034, TP-RVFI-035, TP-RVFI-037, TP-RVFI-040
 
 ### CG-RVFI-004: gen_cg_rvfi_trap
-- Features: F-RVFI-005, F-RVFI-013, F-RVFI-015, F-RVFI-025, F-RVFI-026, F-RVFI-027, F-SEC-026,
-  F-DIT-022
+- Features: F-RVFI-005, F-RVFI-013, F-RVFI-015, F-RVFI-025, F-RVFI-026, F-RVFI-027, F-SEC-026, F-DIT-022
 - Sample: a trap record, or an ebreak record (trapped or entering debug mode), plus the TB model
   event "ID exception requested in the same cycle as a WB exception" (derived from the timing of
   two consecutive program instructions, for the coincidence bins); condition: rvfi_valid &&
@@ -6220,7 +6190,7 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
 ---------------------------------------------------------------------------------------------------
 
 ### CG-CHERI-001: gen_cg_cheri_off
-- Features: F-CHERI-001, F-RVFI-030, F-SEC-037, F-RST-027, F-SEC-013
+- Features: F-CHERI-001, F-RVFI-030, F-SEC-037, F-RST-027, F-SEC-013, F-SEC-036, F-RST-020
 - Sample: (a) rvfi_valid of an instruction with opcode OPCODE_CHERI or OPCODE_AUICGP, or a CSR op
   whose csr field is in 12'hBC0..12'hBCF (the CHERIoT SCR range: CSR_MSHWM, CSR_MSHWMB,
   CSR_CDBG_CTRL and the unimplemented neighbours); (b) rvfi_valid of a CSR read of CSR_MARCHID or
@@ -6992,14 +6962,16 @@ removed; the TP-XIF-004 data_outst class was re-anchored, not ignored).
 
 ### CG-WIT-001: gen_cg_wit_cycle_clause
 - Features: none (ledger of fire-check results: the bins map to the marked TP items below, not to DUT features; excluded from traceability condition 2 by gen_trace_check.py)
-- Sample: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level
-  clause was asserted TRUE against the event export (gen_export.py E lines); condition: the command carries the id of a
-  marked item; anti-vacuity: a bin is hit only by the test that owns the item and only after the cycle-level clause
-  passed (a test that drops or weakens the clause never issues the command), so a hit proves the cycle-level fact was
-  asserted, not merely that the test ran. The bins are excluded from manifests while the item carries the marker token
-  [CYCLE-CLAUSE coverage-only until the event export lands]; when the item's event source is in the build the marker is removed and the bin becomes a declared,
-  must-hit bin of the owning test (the sunset): a marked test whose source has landed but still lacks the clause fails
-  its manifest.
+- Sample: the bridge command COV_WITNESS <index> issued by the test TEMPLATE's finish() epilogue (before the finish
+  handshake) for every fire_tp_<id> result record whose cycle_clause_true field is set, index = the row of the item in
+  gen_trace_witness_ids.csv; a hit RECORDS that the owning test's epilogue issued the command for an id whose fire_tp_<id>
+  record had cycle_clause_true; the clause's truth is enforced by the host rules C-1 (check_test_source: no direct
+  fire_tp_* call and no COV_WITNESS outside the template) and C-2 (the dispatcher accepts only indices of the running
+  test's rendered set, GEN_WITNESS_FOREIGN otherwise; an index outside the global list is GEN_CMD_DISPATCH), not by the
+  sampler. Manifest rule (f): the bin is excluded from the owning test's manifest while the item carries the marker token
+  [CYCLE-CLAUSE coverage-only until the event export lands] (column marked of gen_trace_witness_ids.csv); when the token
+  is removed (sunset, gen_test_plan.md Section 0) the bin becomes a declared, must-hit bin of the owning test: a test whose
+  export rows have landed but still lacks the clause fails its manifest.
 - Coverpoints:
   - cp_clause = witnessed tp_id: bins w_tp_isa_024{COV_WITNESS TP-ISA-024}, w_tp_isa_040{COV_WITNESS TP-ISA-040}, w_tp_isa_051{COV_WITNESS TP-ISA-051}, w_tp_mul_011{COV_WITNESS TP-MUL-011}, w_tp_mul_023{COV_WITNESS TP-MUL-023}, w_tp_mul_024{COV_WITNESS TP-MUL-024}, w_tp_cmp_057{COV_WITNESS TP-CMP-057}, w_tp_cmp_058{COV_WITNESS TP-CMP-058}, w_tp_bit_036{COV_WITNESS TP-BIT-036}, w_tp_bit_042{COV_WITNESS TP-BIT-042}, w_tp_bit_043{COV_WITNESS TP-BIT-043}, w_tp_btalu_001{COV_WITNESS TP-BTALU-001}, w_tp_btalu_012{COV_WITNESS TP-BTALU-012}, w_tp_btalu_018{COV_WITNESS TP-BTALU-018}, w_tp_csr_029{COV_WITNESS TP-CSR-029}, w_tp_csr_031{COV_WITNESS TP-CSR-031}, w_tp_csr_034{COV_WITNESS TP-CSR-034}, w_tp_csr_085{COV_WITNESS TP-CSR-085}, w_tp_csr_090{COV_WITNESS TP-CSR-090}, w_tp_csr_100{COV_WITNESS TP-CSR-100}, w_tp_prv_018{COV_WITNESS TP-PRV-018}, w_tp_prv_019{COV_WITNESS TP-PRV-019}, w_tp_exc_015{COV_WITNESS TP-EXC-015}, w_tp_exc_034{COV_WITNESS TP-EXC-034}, w_tp_exc_035{COV_WITNESS TP-EXC-035}, w_tp_exc_036{COV_WITNESS TP-EXC-036}, w_tp_exc_037{COV_WITNESS TP-EXC-037}, w_tp_exc_038{COV_WITNESS TP-EXC-038}, w_tp_exc_040{COV_WITNESS TP-EXC-040}, w_tp_exc_050{COV_WITNESS TP-EXC-050}, w_tp_exc_054{COV_WITNESS TP-EXC-054}, w_tp_exc_055{COV_WITNESS TP-EXC-055}, w_tp_exc_057{COV_WITNESS TP-EXC-057}, w_tp_exc_062{COV_WITNESS TP-EXC-062}, w_tp_exc_065{COV_WITNESS TP-EXC-065}, w_tp_exc_070{COV_WITNESS TP-EXC-070}, w_tp_exc_072{COV_WITNESS TP-EXC-072}, w_tp_irq_009{COV_WITNESS TP-IRQ-009}, w_tp_irq_011{COV_WITNESS TP-IRQ-011}, w_tp_irq_015{COV_WITNESS TP-IRQ-015}, w_tp_irq_021{COV_WITNESS TP-IRQ-021}, w_tp_irq_022{COV_WITNESS TP-IRQ-022}, w_tp_irq_023{COV_WITNESS TP-IRQ-023}, w_tp_irq_024{COV_WITNESS TP-IRQ-024}, w_tp_irq_025{COV_WITNESS TP-IRQ-025}, w_tp_irq_026{COV_WITNESS TP-IRQ-026}, w_tp_irq_027{COV_WITNESS TP-IRQ-027}, w_tp_irq_030{COV_WITNESS TP-IRQ-030}, w_tp_irq_031{COV_WITNESS TP-IRQ-031}, w_tp_irq_038{COV_WITNESS TP-IRQ-038}, w_tp_irq_039{COV_WITNESS TP-IRQ-039}, w_tp_irq_041{COV_WITNESS TP-IRQ-041}, w_tp_irq_044{COV_WITNESS TP-IRQ-044}, w_tp_irq_045{COV_WITNESS TP-IRQ-045}, w_tp_irq_049{COV_WITNESS TP-IRQ-049}, w_tp_irq_050{COV_WITNESS TP-IRQ-050}, w_tp_irq_051{COV_WITNESS TP-IRQ-051}, w_tp_irq_052{COV_WITNESS TP-IRQ-052}, w_tp_irq_053{COV_WITNESS TP-IRQ-053}, w_tp_irq_054{COV_WITNESS TP-IRQ-054}, w_tp_irq_055{COV_WITNESS TP-IRQ-055}, w_tp_irq_057{COV_WITNESS TP-IRQ-057}, w_tp_irq_059{COV_WITNESS TP-IRQ-059}, w_tp_irq_061{COV_WITNESS TP-IRQ-061}, w_tp_irq_064{COV_WITNESS TP-IRQ-064}, w_tp_irq_066{COV_WITNESS TP-IRQ-066}, w_tp_irq_068{COV_WITNESS TP-IRQ-068}, w_tp_irq_070{COV_WITNESS TP-IRQ-070}, w_tp_irq_072{COV_WITNESS TP-IRQ-072}, w_tp_irq_073{COV_WITNESS TP-IRQ-073}, w_tp_irq_077{COV_WITNESS TP-IRQ-077}, w_tp_irq_078{COV_WITNESS TP-IRQ-078}, w_tp_irq_079{COV_WITNESS TP-IRQ-079}, w_tp_irq_080{COV_WITNESS TP-IRQ-080}, w_tp_pmp_053{COV_WITNESS TP-PMP-053}, w_tp_pmp_077{COV_WITNESS TP-PMP-077}, w_tp_pmp_082{COV_WITNESS TP-PMP-082}, w_tp_pmp_091{COV_WITNESS TP-PMP-091}, w_tp_pmp_105{COV_WITNESS TP-PMP-105}, w_tp_dbg_003{COV_WITNESS TP-DBG-003}, w_tp_dbg_004{COV_WITNESS TP-DBG-004}, w_tp_dbg_005{COV_WITNESS TP-DBG-005}, w_tp_dbg_006{COV_WITNESS TP-DBG-006}, w_tp_dbg_007{COV_WITNESS TP-DBG-007}, w_tp_dbg_008{COV_WITNESS TP-DBG-008}, w_tp_dbg_009{COV_WITNESS TP-DBG-009}, w_tp_dbg_011{COV_WITNESS TP-DBG-011}, w_tp_dbg_014{COV_WITNESS TP-DBG-014}, w_tp_dbg_021{COV_WITNESS TP-DBG-021}, w_tp_dbg_030{COV_WITNESS TP-DBG-030}, w_tp_dbg_046{COV_WITNESS TP-DBG-046}, w_tp_dbg_049{COV_WITNESS TP-DBG-049}, w_tp_dbg_051{COV_WITNESS TP-DBG-051}, w_tp_dbg_054{COV_WITNESS TP-DBG-054}, w_tp_dbg_061{COV_WITNESS TP-DBG-061}, w_tp_dbg_063{COV_WITNESS TP-DBG-063}, w_tp_dbg_071{COV_WITNESS TP-DBG-071}, w_tp_trg_019{COV_WITNESS TP-TRG-019}, w_tp_trg_023{COV_WITNESS TP-TRG-023}, w_tp_trg_025{COV_WITNESS TP-TRG-025}, w_tp_trg_026{COV_WITNESS TP-TRG-026}, w_tp_trg_027{COV_WITNESS TP-TRG-027}, w_tp_pmc_001{COV_WITNESS TP-PMC-001}, w_tp_pmc_002{COV_WITNESS TP-PMC-002}, w_tp_pmc_011{COV_WITNESS TP-PMC-011}, w_tp_pmc_013{COV_WITNESS TP-PMC-013}, w_tp_pmc_016{COV_WITNESS TP-PMC-016}, w_tp_pmc_024{COV_WITNESS TP-PMC-024}, w_tp_pmc_028{COV_WITNESS TP-PMC-028}, w_tp_pmc_034{COV_WITNESS TP-PMC-034}, w_tp_pmc_047{COV_WITNESS TP-PMC-047}, w_tp_pmc_058{COV_WITNESS TP-PMC-058}, w_tp_pmc_059{COV_WITNESS TP-PMC-059}, w_tp_pmc_060{COV_WITNESS TP-PMC-060}, w_tp_imem_001{COV_WITNESS TP-IMEM-001}, w_tp_imem_003{COV_WITNESS TP-IMEM-003}, w_tp_imem_004{COV_WITNESS TP-IMEM-004}, w_tp_imem_005{COV_WITNESS TP-IMEM-005}, w_tp_imem_006{COV_WITNESS TP-IMEM-006}, w_tp_imem_007{COV_WITNESS TP-IMEM-007}, w_tp_imem_008{COV_WITNESS TP-IMEM-008}, w_tp_imem_010{COV_WITNESS TP-IMEM-010}, w_tp_imem_014{COV_WITNESS TP-IMEM-014}, w_tp_imem_016{COV_WITNESS TP-IMEM-016}, w_tp_imem_017{COV_WITNESS TP-IMEM-017}, w_tp_imem_018{COV_WITNESS TP-IMEM-018}, w_tp_imem_022{COV_WITNESS TP-IMEM-022}, w_tp_imem_023{COV_WITNESS TP-IMEM-023}, w_tp_imem_025{COV_WITNESS TP-IMEM-025}, w_tp_imem_027{COV_WITNESS TP-IMEM-027}, w_tp_imem_033{COV_WITNESS TP-IMEM-033}, w_tp_imem_036{COV_WITNESS TP-IMEM-036}, w_tp_imem_037{COV_WITNESS TP-IMEM-037}, w_tp_imem_039{COV_WITNESS TP-IMEM-039}, w_tp_imem_040{COV_WITNESS TP-IMEM-040}, w_tp_dmem_002{COV_WITNESS TP-DMEM-002}, w_tp_dmem_004{COV_WITNESS TP-DMEM-004}, w_tp_dmem_005{COV_WITNESS TP-DMEM-005}, w_tp_dmem_006{COV_WITNESS TP-DMEM-006}, w_tp_dmem_007{COV_WITNESS TP-DMEM-007}, w_tp_dmem_008{COV_WITNESS TP-DMEM-008}, w_tp_dmem_019{COV_WITNESS TP-DMEM-019}, w_tp_dmem_020{COV_WITNESS TP-DMEM-020}, w_tp_dmem_021{COV_WITNESS TP-DMEM-021}, w_tp_dmem_022{COV_WITNESS TP-DMEM-022}, w_tp_dmem_027{COV_WITNESS TP-DMEM-027}, w_tp_dmem_034{COV_WITNESS TP-DMEM-034}, w_tp_dmem_037{COV_WITNESS TP-DMEM-037}, w_tp_dmem_039{COV_WITNESS TP-DMEM-039}, w_tp_dmem_044{COV_WITNESS TP-DMEM-044}, w_tp_dmem_046{COV_WITNESS TP-DMEM-046}, w_tp_dmem_047{COV_WITNESS TP-DMEM-047}, w_tp_dmem_049{COV_WITNESS TP-DMEM-049}, w_tp_dmem_051{COV_WITNESS TP-DMEM-051}, w_tp_dmem_056{COV_WITNESS TP-DMEM-056}, w_tp_dmem_057{COV_WITNESS TP-DMEM-057}, w_tp_dmem_058{COV_WITNESS TP-DMEM-058}, w_tp_dmem_059{COV_WITNESS TP-DMEM-059}, w_tp_dmem_061{COV_WITNESS TP-DMEM-061}, w_tp_dmem_062{COV_WITNESS TP-DMEM-062}, w_tp_dmem_063{COV_WITNESS TP-DMEM-063}, w_tp_dmem_064{COV_WITNESS TP-DMEM-064}, w_tp_fe_008{COV_WITNESS TP-FE-008}, w_tp_fe_012{COV_WITNESS TP-FE-012}, w_tp_fe_013{COV_WITNESS TP-FE-013}, w_tp_fe_014{COV_WITNESS TP-FE-014}, w_tp_fe_016{COV_WITNESS TP-FE-016}, w_tp_fe_017{COV_WITNESS TP-FE-017}, w_tp_fe_022{COV_WITNESS TP-FE-022}, w_tp_fe_026{COV_WITNESS TP-FE-026}, w_tp_ic_002{COV_WITNESS TP-IC-002}, w_tp_ic_003{COV_WITNESS TP-IC-003}, w_tp_ic_004{COV_WITNESS TP-IC-004}, w_tp_ic_005{COV_WITNESS TP-IC-005}, w_tp_ic_007{COV_WITNESS TP-IC-007}, w_tp_ic_008{COV_WITNESS TP-IC-008}, w_tp_ic_011{COV_WITNESS TP-IC-011}, w_tp_ic_015{COV_WITNESS TP-IC-015}, w_tp_ic_019{COV_WITNESS TP-IC-019}, w_tp_ic_020{COV_WITNESS TP-IC-020}, w_tp_ic_023{COV_WITNESS TP-IC-023}, w_tp_ic_024{COV_WITNESS TP-IC-024}, w_tp_ic_030{COV_WITNESS TP-IC-030}, w_tp_ic_031{COV_WITNESS TP-IC-031}, w_tp_ic_035{COV_WITNESS TP-IC-035}, w_tp_ic_036{COV_WITNESS TP-IC-036}, w_tp_ic_037{COV_WITNESS TP-IC-037}, w_tp_ic_045{COV_WITNESS TP-IC-045}, w_tp_ic_046{COV_WITNESS TP-IC-046}, w_tp_ic_051{COV_WITNESS TP-IC-051}, w_tp_ic_052{COV_WITNESS TP-IC-052}, w_tp_ic_053{COV_WITNESS TP-IC-053}, w_tp_ic_057{COV_WITNESS TP-IC-057}, w_tp_reg_001{COV_WITNESS TP-REG-001}, w_tp_reg_002{COV_WITNESS TP-REG-002}, w_tp_reg_005{COV_WITNESS TP-REG-005}, w_tp_reg_006{COV_WITNESS TP-REG-006}, w_tp_reg_008{COV_WITNESS TP-REG-008}, w_tp_reg_010{COV_WITNESS TP-REG-010}, w_tp_reg_011{COV_WITNESS TP-REG-011}, w_tp_reg_012{COV_WITNESS TP-REG-012}, w_tp_reg_018{COV_WITNESS TP-REG-018}, w_tp_reg_020{COV_WITNESS TP-REG-020}, w_tp_reg_021{COV_WITNESS TP-REG-021}, w_tp_reg_023{COV_WITNESS TP-REG-023}, w_tp_xif_001{COV_WITNESS TP-XIF-001}, w_tp_xif_002{COV_WITNESS TP-XIF-002}, w_tp_xif_003{COV_WITNESS TP-XIF-003}, w_tp_xif_004{COV_WITNESS TP-XIF-004}, w_tp_xif_008{COV_WITNESS TP-XIF-008}, w_tp_xif_009{COV_WITNESS TP-XIF-009}, w_tp_xif_010{COV_WITNESS TP-XIF-010}, w_tp_xif_011{COV_WITNESS TP-XIF-011}, w_tp_xif_012{COV_WITNESS TP-XIF-012}, w_tp_xif_014{COV_WITNESS TP-XIF-014}, w_tp_xif_015{COV_WITNESS TP-XIF-015}, w_tp_xif_016{COV_WITNESS TP-XIF-016}, w_tp_xif_017{COV_WITNESS TP-XIF-017}, w_tp_reg_026{COV_WITNESS TP-REG-026}, w_tp_reg_027{COV_WITNESS TP-REG-027}
 - Crosses: none
