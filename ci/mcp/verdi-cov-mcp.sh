@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # verdi-cov-mcp launcher; pinned path exported by ci/env.sh (IBEX_MCP_VERDI_COV).
-# Needs VERDI_HOME; ci/env.sh exports it. Zone B only — never ship to the cleanroom (spec WS5/WS7).
+# Needs VERDI_HOME; ci/env.sh exports it. The cleanroom ships the three local servers (Zone A
+# wrapper variant); see docs/dv/FENCE.md.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export IBEX_ENV_TOOLCHECK=off  # servers need no simulator toolchain (rationale: ci/mcp/README.md)

@@ -25,8 +25,8 @@ the Critical Invariants block below, mirrored verbatim and hash-checked by
 1. The executing model never self-approves: plans get a pre-execution review and diffs get a
    post-execution review by the other model; a `REQUEST-CHANGES` verdict blocks progress until a
    recorded re-review reaches `APPROVE`/`APPROVE-WITH-CHANGES`.
-2. Knowledge-fence: generation sessions must not read fenced DV collateral. Fence rules live in
-   `docs/dv/FENCE.md` once WS7 lands; until a fence authority exists, generation sessions are
-   NOT permitted at all (fail closed), and infra sessions never paste fenced content into
-   allowed files.
+2. Knowledge-fence: generation sessions are permitted ONLY inside a verified cleanroom export —
+   built by `ci/make-cleanroom.sh`, self-verify green. `docs/dv/FENCE.md` is the fence rule file.
+   Infra sessions in this full tree are contaminated by design: they never do generation, and
+   they never paste fenced content into allowed files.
 <!-- CRITICAL-INVARIANTS-END -->

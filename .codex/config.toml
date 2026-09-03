@@ -1,9 +1,9 @@
-# Codex client config for the ibex auto-dv fork. MCP servers below (WS5); Zone B / full tree only.
+# Codex client config for the ibex auto-dv fork (full tree). MCP servers below (WS5).
 project_doc_fallback_filenames = ["CLAUDE.md"]
 project_doc_max_bytes = 65536
 
-# MCP servers (WS5). Zone B / full tree ONLY — the WS7 cleanroom snapshot ships a
-# no-MCP variant of this file (spec §WS5 zone scoping). Launch logic lives in
+# MCP servers (WS5). The cleanroom ships the three local servers via its own Zone A
+# variant of this file (no atlassian); see docs/dv/FENCE.md. Launch logic lives in
 # ci/mcp/*.sh (single source of truth); entries here only locate those wrappers.
 # startup_timeout_sec raised from the 10s default: covers ci/env.sh's module-load cost and
 # fsdb-mcp-server's lazy-import first tools/list (~15-20s, Task 1 finding).

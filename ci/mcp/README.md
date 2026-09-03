@@ -41,10 +41,9 @@ failed all three local servers — a WS5 T3 gate finding
 
 ## Zone scoping
 
-This MCP set is **Zone B / full-tree only**. `fsdb-mcp-server` and `verdi-cov-mcp` can read blind
-evaluation data, and `siliconpilot --workspace` is not a sandbox — so the cleanroom ships its own
-agent configs with **no MCP servers** (WS7's snapshot replaces `.mcp.json`/`.codex/config.toml` with
-Zone A variants). Any future Zone A MCP addition requires a fence review.
+The cleanroom ships the three local servers (Zone A wrapper/config variants; the remote atlassian
+server stays Zone B only) — see `docs/dv/FENCE.md`. Any future Zone A MCP addition requires a
+fence review.
 
 ## Wave-dump policy
 

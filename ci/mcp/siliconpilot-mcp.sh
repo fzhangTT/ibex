@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # siliconpilot-mcp launcher; pinned path exported by ci/env.sh (IBEX_MCP_SILICONPILOT).
 # No VERDI_HOME dependency — only needs the IBEX_MCP_SILICONPILOT export from ci/env.sh.
-# Zone B only — never ship to the cleanroom (spec WS5/WS7).
+# The cleanroom ships the three local servers (Zone A wrapper variant); see docs/dv/FENCE.md.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export IBEX_ENV_TOOLCHECK=off  # servers need no simulator toolchain (rationale: ci/mcp/README.md)

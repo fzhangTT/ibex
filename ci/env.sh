@@ -28,7 +28,7 @@ module load synopsys/licenses/2.3 2>/dev/null || true
 module load synopsys/vcs/X-2025.06-SP2 2>/dev/null || true
 export VERDI_HOME="${VERDI_HOME:-/tools_vendor/synopsys/verdi/X-2025.06-SP2}"
 
-# --- MCP server installs (WS5; Zone B only — the cleanroom ships no MCP configs) ---
+# --- MCP server installs (WS5; the cleanroom ships the three local servers — see docs/dv/FENCE.md) ---
 # Exact pins recorded here; wrappers in ci/mcp/ consume these (dv_principles §5).
 export IBEX_MCP_SILICONPILOT=/tools_risc/tt/siliconpilot/0.18.1/bin/siliconpilot-mcp  # pinned 0.18.1
 export IBEX_MCP_FSDB_SERVER=/tools_soc/tt/fsdb-mcp-server/0.2.6/start_server.sh       # pinned 0.2.6
