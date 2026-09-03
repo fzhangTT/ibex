@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 18:47 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 19:42 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -110,7 +110,7 @@ the count.
 | CG-MUL-002 | cp_dmem_delay | gen_mul_mul, gen_mul_random, gen_mul_timing |
 | CG-MUL-005 | cp_sva_checked | gen_mul_timing |
 | CG-CMP-001 | cp_reg3 | gen_cmp_random, gen_cmp_zca |
-| CG-CMP-006 | cp_dmem_delay | gen_cmp_random, gen_cmp_zcmp_basic, gen_cmp_zcmp_events_xfail, gen_cmp_zcmp_faults |
+| CG-CMP-006 | cp_dmem_delay | gen_cmp_random, gen_cmp_zcmp_basic, gen_cmp_zcmp_events_xfail, gen_cmp_zcmp_faults, gen_cmp_zcmp_irq_dummy_xfail |
 | CG-CMP-009 | cp_dmem_delay | gen_cmp_random, gen_cmp_zcmp_basic |
 | CG-BTALU-001 | cp_taken | gen_btalu_basic, gen_btalu_dit, gen_btalu_dit_xfail, gen_btalu_hazard, gen_btalu_perf_b17_xfail, gen_btalu_random, gen_isa_cti |
 | CG-BTALU-001 | cp_target_align | gen_btalu_basic, gen_btalu_dit, gen_btalu_dit_xfail, gen_btalu_hazard, gen_btalu_perf_b17_xfail, gen_btalu_random, gen_isa_cti |
@@ -189,7 +189,7 @@ the count.
 | Metric | Value |
 |---|---|
 | Covergroups (spec-derived and adopted; the ledger CG-WIT-001 is counted separately) | 207 |
-| Distinct bins referenced by TP items (spec-derived and adopted) | 15825 |
+| Distinct bins referenced by TP items (spec-derived and adopted) | 15829 |
 | Witnessed-clause ledger bins (CG-WIT-001; outside the score, the bin total and traceability condition 2) | 220 |
 | Adopted bins (riscv-dv, counted separately) | 49 |
 | ACTIVE features with >= 1 bin | 705 |
@@ -727,7 +727,7 @@ Conventions
   - cr_popret_r4 = cp_insn x cp_rlist: bins popret_r4{cm_popret, r4}, popretz_r4{cm_popretz, r4}; ignore other combinations: covered by cr_insn_rlist_spimm
   - cr_insn_dummy = cp_insn x cp_dummy_en: bins auto{all combinations} (a completed sequence under dummy insertion pressure, boundary-derived: the B8 stimulus condition of TP-CMP-065)
 - Adopted (riscv-dv): none
-- TP items: TP-CMP-039, TP-CMP-040, TP-CMP-041, TP-CMP-042, TP-CMP-043, TP-CMP-045, TP-CMP-046, TP-CMP-047, TP-CMP-048, TP-CMP-049, TP-CMP-055, TP-CMP-063, TP-CMP-065, TP-CMP-066, TP-CMP-068, TP-CMP-071
+- TP items: TP-CMP-039, TP-CMP-040, TP-CMP-041, TP-CMP-042, TP-CMP-043, TP-CMP-045, TP-CMP-046, TP-CMP-047, TP-CMP-048, TP-CMP-049, TP-CMP-055, TP-CMP-063, TP-CMP-065, TP-CMP-066, TP-CMP-068, TP-CMP-071, TP-CMP-074
 ### CG-CMP-007: gen_cg_cmp_zcmp_mv
 - Features: F-CMP-050, F-CMP-051, F-CMP-052, F-CMP-053, F-CMP-065, F-CMP-068
 - Sample: RVFI retirement; condition: rvfi_ext_expanded_insn_last == 1 and the synthesized rvfi_insn decodes as cm.mvsa01/cm.mva01s (both micro-ops collected since the first rvfi_ext_expanded_insn_valid of this PC); anti-vacuity: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair.
@@ -746,7 +746,7 @@ Conventions
   - cr_insn_hazard = cp_insn x cp_hazard_src: bins auto{all combinations}
   - cr_insn_b2b = cp_insn x cp_b2b: bins auto{all combinations}; ignore none: not a corner
 - Adopted (riscv-dv): none
-- TP items: TP-CMP-050, TP-CMP-051, TP-CMP-052, TP-CMP-053, TP-CMP-055, TP-CMP-066, TP-CMP-069, TP-CMP-071
+- TP items: TP-CMP-050, TP-CMP-051, TP-CMP-052, TP-CMP-053, TP-CMP-055, TP-CMP-065, TP-CMP-066, TP-CMP-069, TP-CMP-071
 ### CG-CMP-008: gen_cg_cmp_zcmp_events
 - Features: F-CMP-056, F-CMP-057, F-CMP-058, F-CMP-059, F-CMP-060, F-CMP-061, F-CMP-062, F-CMP-063,
   F-CMP-064, F-CMP-039 (parent of folded bins hosted here)
@@ -764,13 +764,13 @@ Conventions
   - cp_mis_half = faulting half of a misaligned micro-op, iff sp misaligned and fault: bins first{first half}, second{second half}
 - Crosses:
   - cr_insn_event = cp_insn x cp_event: bins auto{all combinations}; ignore load faults on cm_push, store faults on pop-family, any fault on mv forms: no such access; the dummy_inserted bins are probe-gated (P1), not in manifest
-  - cr_event_phase_outcome = cp_event x cp_phase x cp_outcome: bins irq_ls_taken{irq, ls_phase, taken_between}, irq_commit_deferred{irq, commit_phase, deferred}, irq_last_deferred{irq, last_uop, deferred}, nmi_ls_taken{nmi, ls_phase, taken_between}, nmi_commit_deferred{nmi, commit_phase, deferred}, debug_ls_deferred{debug_req, ls_phase, deferred}, debug_commit_deferred{debug_req, commit_phase, deferred}, step_deferred{step, last_uop, deferred}, trigger_deferred{trigger, last_uop, deferred}, nmi_last_deferred{nmi, last_uop, deferred}, trigger_pre_uop0{trigger, none, pre_uop0}, store_fault_pmp_trap{store_fault_pmp, ls_phase, trap_on_uop}, store_fault_bus_trap{store_fault_bus, ls_phase, trap_on_uop}, load_fault_pmp_trap{load_fault_pmp, ls_phase, trap_on_uop}, load_fault_bus_trap{load_fault_bus, ls_phase, trap_on_uop}, dummy_ls{dummy_inserted, ls_phase, any}, dummy_commit{dummy_inserted, commit_phase, any}; ignore irq/nmi taken in commit_phase and debug taken_between: blocked by the RTL rule (a hit is a checker failure); irq_last_deferred / nmi_last_deferred are the k >= N-2 outcomes of TP-CMP-056 (the LAST micro-op already in ID completes, C-3) and irq_commit_deferred / nmi_commit_deferred those of TP-CMP-057; dummy_ls and dummy_commit are probe-gated (P1), not in manifest
+  - cr_event_phase_outcome = cp_event x cp_phase x cp_outcome: bins irq_ls_taken{irq, ls_phase, taken_between}, irq_commit_deferred{irq, commit_phase, deferred}, irq_last_deferred{irq, last_uop, deferred}, nmi_ls_taken{nmi, ls_phase, taken_between}, nmi_commit_deferred{nmi, commit_phase, deferred}, debug_ls_deferred{debug_req, ls_phase, deferred}, debug_commit_deferred{debug_req, commit_phase, deferred}, step_deferred{step, last_uop, deferred}, trigger_deferred{trigger, last_uop, deferred}, nmi_last_deferred{nmi, last_uop, deferred}, trigger_pre_uop0{trigger, none, pre_uop0}, store_fault_pmp_trap{store_fault_pmp, ls_phase, trap_on_uop}, store_fault_bus_trap{store_fault_bus, ls_phase, trap_on_uop}, load_fault_pmp_trap{load_fault_pmp, ls_phase, trap_on_uop}, load_fault_bus_trap{load_fault_bus, ls_phase, trap_on_uop}, dummy_ls{dummy_inserted, ls_phase, any}, dummy_commit{dummy_inserted, commit_phase, any}, irq_commit_taken{irq, commit_phase, taken_between}, nmi_commit_taken{nmi, commit_phase, taken_between}, debug_ls_taken{debug_req, ls_phase, taken_between}, debug_commit_taken{debug_req, commit_phase, taken_between} (B8 witnesses, TP-CMP-074: with dummy_instr_en = 0 the RTL rule blocks them and a hit is a checker failure; a dummy in ID carries INSTR_NOT_EXPANDED, rtl/ibex_if_stage.sv:528, and passes the gates rtl/ibex_controller.sv:474-477, :498-500); irq_last_deferred / nmi_last_deferred are the k >= N-2 outcomes of TP-CMP-056 (the LAST micro-op already in ID completes, C-3) and irq_commit_deferred / nmi_commit_deferred those of TP-CMP-057; dummy_ls and dummy_commit are probe-gated (P1), not in manifest
   - cr_fault_idx = cp_event x cp_uop_idx: bins auto{all combinations}; ignore non-fault events: covered by cr_irq_idx; ignore i13/i14/i15 for faults: at most 13 store/load micro-ops (rlist 15) can fault, the later indices are addi/li/ret
   - cr_irq_idx = cp_event x cp_uop_idx: bins auto{all combinations}; ignore events other than irq/nmi/debug_req: covered by cr_fault_idx
   - cr_insn_rlist_event = cp_insn x cp_rlist_class x cp_event: bins auto{all combinations}; ignore mv forms: no rlist; ignore load faults on cm_push and store faults on pop-family: no such access; dummy_inserted bins are probe-gated (P1), not in manifest
   - cr_mis_fault = cp_event x cp_mis_half: bins auto{all combinations}; ignore non-fault events: guarded
 - Adopted (riscv-dv): none
-- TP items: TP-CMP-056, TP-CMP-057, TP-CMP-058, TP-CMP-059, TP-CMP-060, TP-CMP-061, TP-CMP-062, TP-CMP-063, TP-CMP-064, TP-CMP-071
+- TP items: TP-CMP-056, TP-CMP-057, TP-CMP-058, TP-CMP-059, TP-CMP-060, TP-CMP-061, TP-CMP-062, TP-CMP-063, TP-CMP-064, TP-CMP-071, TP-CMP-074
 ### CG-CMP-009: gen_cg_cmp_zcmp_hazard
 - Features: F-CMP-049, F-CMP-065, F-CMP-068, F-CMP-070
 - Sample: RVFI retirement with rvfi_ext_expanded_insn_last == 1 of any cm.* instruction; condition: the monitor's instruction history identifies one of the listed neighbour patterns; anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed.

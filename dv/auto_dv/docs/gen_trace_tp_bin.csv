@@ -5119,6 +5119,8 @@ TP-CMP-065,CG-CMP-006,cr_insn_dummy,cm_pop_on,0
 TP-CMP-065,CG-CMP-006,cr_insn_dummy,cm_popret_on,0
 TP-CMP-065,CG-CMP-006,cr_insn_dummy,cm_popretz_on,0
 TP-CMP-065,CG-CMP-006,cr_insn_dummy,cm_push_on,0
+TP-CMP-065,CG-CMP-007,cp_insn,cm_mva01s,0
+TP-CMP-065,CG-CMP-007,cp_insn,cm_mvsa01,0
 TP-CMP-066,CG-CMP-006,cp_insn,cm_pop,0
 TP-CMP-066,CG-CMP-006,cp_insn,cm_popret,0
 TP-CMP-066,CG-CMP-006,cp_insn,cm_popretz,0
@@ -6640,6 +6642,17 @@ TP-CMP-073,CG-CMP-009,cr_ft_kind,popretz_ft_cm_cm_pop,0
 TP-CMP-073,CG-CMP-009,cr_ft_kind,popretz_ft_cm_cm_popret,0
 TP-CMP-073,CG-CMP-009,cr_ft_kind,popretz_ft_cm_cm_popretz,0
 TP-CMP-073,CG-CMP-009,cr_ft_kind,popretz_ft_cm_cm_push,0
+TP-CMP-074,CG-CMP-006,cp_dummy_en,on,0
+TP-CMP-074,CG-CMP-008,cp_event,debug_req,0
+TP-CMP-074,CG-CMP-008,cp_event,irq,0
+TP-CMP-074,CG-CMP-008,cp_event,nmi,0
+TP-CMP-074,CG-CMP-008,cp_outcome,taken_between,0
+TP-CMP-074,CG-CMP-008,cp_phase,commit_phase,0
+TP-CMP-074,CG-CMP-008,cp_reexec,yes,0
+TP-CMP-074,CG-CMP-008,cr_event_phase_outcome,debug_commit_taken,0
+TP-CMP-074,CG-CMP-008,cr_event_phase_outcome,debug_ls_taken,0
+TP-CMP-074,CG-CMP-008,cr_event_phase_outcome,irq_commit_taken,0
+TP-CMP-074,CG-CMP-008,cr_event_phase_outcome,nmi_commit_taken,0
 TP-CSR-001,CG-CSR-001,cp_aclass,rw_m,0
 TP-CSR-001,CG-CSR-001,cp_iclass,none,0
 TP-CSR-001,CG-CSR-001,cp_op,csrrc,0

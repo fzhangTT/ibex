@@ -9,7 +9,7 @@ plan's hold tables (whichever hold sections the plan carries at generation; a li
 
 Usage: gen_promotion_table.py [--plan-dir dv/auto_dv/docs] [--testlist dv/auto_dv/flow/gen_testlist.yaml] [--out <path>] [--plan-sha <sha>]
 """
-import re, sys, argparse, pathlib, collections, subprocess, hashlib, yaml
+import re, sys, argparse, pathlib, collections, hashlib, yaml
 R = pathlib.Path(__file__).resolve()
 while not (R / 'dv/auto_dv/contract').is_dir():
     if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')

@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 18:47 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 19:42 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -34,7 +34,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   otherwise it is folded. Edges point at base features only (no depth-2 chains).
 - "Source: RTL-defined" marks behaviour no specification or Ibex document describes; every such item
   is listed for the RTL/Arch Engineer in the reading report and needs a behaviour summary.
-- Doc defects are cited as D1..D21 and bug candidates as B1..B19; both are defined in
+- Doc defects are cited as D1..D21 and bug candidates as B1..B20; both are defined in
   dv/auto_dv/docs/gen_bug_log.md (the single list; Section 1b holds the retained IDs B6, B9 and B12 that are
   not bug candidates).
 - Observability caveat: `ibex_core` exposes no `rvfi_csr_*` ports (verified by grep). Internal nets
@@ -1975,7 +1975,8 @@ Conventions used below:
 - What: With SecureIbex dummy instructions enabled (cpuctrlsts.dummy_instr_en=1) the IF stage may
   substitute a dummy instruction into ID on a cycle where id_in_ready_i=1. The compressed decoder FSM
   advances on the same id_in_ready_i (not qualified by insert_dummy_instr), so the micro-op it was
-  presenting that cycle is skipped (e.g. one store of cm.push or one load of cm.pop is lost).
+  presenting that cycle is skipped (e.g. one store of cm.push or one load of cm.pop is lost); a dummy on the LAST
+  micro-op returns the FSM to idle with the cm.* halfword still buffered and the whole expansion replays.
 - Observable at: data_req_o/data_addr_o (a store or load missing), RVFI micro-op count,
   rvfi_ext_expanded_insn sequence
 - Config: cpuctrlsts.dummy_instr_en, cpuctrlsts.dummy_instr_mask (frequency)
@@ -1983,9 +1984,11 @@ Conventions used below:
   rtl/ibex_dummy_instr.sv:103-104, rtl/ibex_dummy_instr.sv:115, rtl/ibex_compressed_decoder.sv:658-672
 - Edge: yes, of F-CMP-039
 - Status: ACTIVE
-- Notes: static analysis only, not simulated. Requires DummyInstructions=1 in gen_dut_top (ibex_top derives
-  it from SecureIbex, rtl/ibex_top.sv:214). Recommend a directed test with dummy_instr_mask giving the
-  highest insertion rate and cm.push {ra,s0-s11}.
+- Notes: reproduced deterministically by tb-infra (program dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S, slice 2) and
+  explained by rtl-arch (dv/auto_dv/evidence/gen_b8_rtl_facts.md, 1eb2ede): the micro-op of the insertion cycle is discarded;
+  a replay doubles cm.push stores and, for cm.popret / cm.popretz, reloads from above the frame after the sp increment; the
+  dummy's INSTR_NOT_EXPANDED tag admits an interrupt (commit phase) or a debug request mid-expansion (TP-CMP-074).
+  gen_bug_log.md B8. Requires DummyInstructions=1 in gen_dut_top (ibex_top derives it from SecureIbex, rtl/ibex_top.sv:214).
 
 ### F-CMP-065: Zcmp latency and back-to-back sequences
 - What: Folded into F-CMP-039 (bin CG-CMP-006.cr_insn_delay.auto): micro-op count N+1/N+2/N+3/2,

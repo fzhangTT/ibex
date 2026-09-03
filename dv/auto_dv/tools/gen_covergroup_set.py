@@ -26,7 +26,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--testlist', default=str(R / 'dv/auto_dv/flow/gen_testlist.yaml')); ap.add_argument('--fcov-dir', default=str(FCOV_HOME))
     ap.add_argument('--fcov-plan', default=str(R / 'dv/auto_dv/docs/gen_fcov_plan.md')); ap.add_argument('--md', default=str(R / 'dv/auto_dv/evidence/gen_round0_covergroup_set.md'))
-    ap.add_argument('--csv', default=str(R / 'dv/auto_dv/evidence/gen_round0_covergroup_set.csv')); ap.add_argument('--plan-sha', default='working tree')
+    ap.add_argument('--csv', default=str(R / 'dv/auto_dv/evidence/gen_round0_covergroup_set.csv')); ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the header; not a claim about which commit was read (the header prints the input digest)')
     a = ap.parse_args()
     plan = pathlib.Path(a.fcov_plan).read_text()
     dig = hashlib.sha256(); dig.update(plan.encode()); dig.update(pathlib.Path(a.testlist).read_bytes())

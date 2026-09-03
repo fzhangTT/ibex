@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 18:47 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 19:42 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -264,15 +264,15 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 
 | Metric | Value |
 |---|---|
-| TP items | 1204 |
+| TP items | 1205 |
 | ACTIVE features covered (of 705) | 705 |
-| Phase 1 / Phase 2 items | 1093 / 111 |
-| Tier smoke / targeted / full | 289 / 803 / 112 |
-| Expected-fail items (bug candidates) | 30 |
+| Phase 1 / Phase 2 items | 1094 / 111 |
+| Tier smoke / targeted / full | 289 / 804 / 112 |
+| Expected-fail items (bug candidates) | 31 |
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
-| Items outside the Phase 1 pass gate (expected-fail + informational) of 1204 | 41 |
-| Test groups | 230 |
-| Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15825 / 49 |
+| Items outside the Phase 1 pass gate (expected-fail + informational) of 1205 | 42 |
+| Test groups | 231 |
+| Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15829 / 49 |
 | Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 19 marked items |
 
 ## 1.1 Expected-fail items per bug candidate
@@ -285,7 +285,7 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | B4 | 1 | TP-CMP-051 |
 | B5 | 1 | TP-DBG-021 |
 | B7 | 2 | TP-PMC-013, TP-DIT-019 |
-| B8 | 2 | TP-CMP-065, TP-DIT-032 |
+| B8 | 3 | TP-CMP-065, TP-CMP-074, TP-DIT-032 |
 | B10 | 1 | TP-TRG-020 |
 | B11 | 2 | TP-BTALU-016, TP-PMC-043 |
 | B13 | 2 | TP-BTALU-008, TP-RVFI-013 |
@@ -346,7 +346,7 @@ Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is
 
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte: python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha part-4c-on-7f36cd9 --round 0 --heading 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)'; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 5b254f5998bc; landing label part-4c-on-7f36cd9 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v2t-on-d4b5933 --round 0 --heading-id round0-probe; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 3e948ca97bec; landing label v2t-on-d4b5933 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|
@@ -445,6 +445,7 @@ Per test (every run of the regression, red fixtures included; the item table bel
 | gen_cmp_zcmp_faults | 5 | TP-CMP-060..TP-CMP-072 |
 | gen_cmp_zcmp_events_xfail | 1 | TP-CMP-065..TP-CMP-065 |
 | gen_cmp_random | 2 | TP-CMP-070..TP-CMP-071 |
+| gen_cmp_zcmp_irq_dummy_xfail | 1 | TP-CMP-074..TP-CMP-074 |
 | gen_bit_ratified | 19 | TP-BIT-001..TP-BIT-040 |
 | gen_bit_draft | 14 | TP-BIT-011..TP-BIT-033 |
 | gen_bit_multicycle | 5 | TP-BIT-012..TP-BIT-043 |
@@ -2987,14 +2988,15 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; cpuctrlsts.dummy_instr_en = 1 with dummy_instr_mask giving the highest insertion rate (programmed by csrw; cross-ref F-DIT-*/SEC dummy features); stack pre-cleared; probe P1 (dummy_instr_id_o wrapper net) is coverage-only and not yet registered, so the CG-CMP-008 dummy_* bins are probe-gated and not in this item's manifest (OQ-6).
-- Stimulus: many cm.push {ra, s0-s11} and cm.pop/cm.popret sequences with random data-response regimes so insertion cycles land inside sequences.
-- Randomized: rlist/spimm, contents, response regime, secureseed writes.
+- Stimulus: many cm.push {ra, s0-s11} and cm.pop/cm.popret sequences with random data-response regimes so insertion cycles land inside sequences; interleaved cm.mvsa01 / cm.mva01s pairs with distinct operand values (a dummy on the FIRST move is never replayed because the second move carries LAST, so r1s' (mvsa01) or a0 (mva01s) stays permanently unwritten, facts file Section 3; a dummy on the second move replays benignly).
+- Randomized: rlist/spimm, contents, response regime, mv register pairs and operand values, secureseed writes.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
 - Fire-check: per seed >= 200 completed cm.push/cm.pop sequences retire with dummy_instr_en = 1 (TB CSR model) and csrr minstret pairs around each block show (minstret delta) - (RVFI retirements in the block) >= 20, i.e. >= 20 dummy instructions were inserted (dummies are counted in minstret, bug candidate B7, which makes the insertion count boundary-observable; when probe P1 is registered it additionally timestamps insertions inside expansions); the checker then counts stores/loads per sequence on the dbus.
 - Pass criteria: gen_chk_zcmp_seq (every sequence has exactly N stores/loads and the full register order); gen_chk_dbus_proto; gen_isa_compare. B8 predicts a skipped micro-op.
+- Notes: B8 reproduced deterministically (tb-infra landing 4, T-205 slice 2, committed 5b8a0fb: program dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S and the logs dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_{run_header.txt,verdict.txt,stdout_excerpt.log,export.txt}; the committed run header reads module gen_ut_lockstep, seed 1, build_sources_sha256 893384b8eec4e6d5) and explained (dv/auto_dv/evidence/gen_b8_rtl_facts.md (rtl-arch T-225: 1eb2ede, CM59 fixes 53e8468, CM64 fixes 7d7be39, tb-infra's 27-row mapping folded 76cd2e5; cross-model APPROVE-WITH-CHANGES 68b9af3 on the CM59 copy)): four push / pop pairs after enabling dummies diverge on 27 lock-step rows; the wrong x18 after the pop is the s2 store lost at the rlist-8 push and the pop's faithful load of the stale slot, the doubled stores are a cm.push replay after a dummy landed on its sp decrement, and the missing load records are loads that never happened (facts file Sections 3-4 and tb-infra's 27-row mapping: one cause, no RVFI-only candidate; the popret / popretz replay from above the frame is owed a reproducer variant); this item stays expected-fail (B8) in its own test until the RTL fix (owner item); the interrupt / debug exposure of the same mechanism is TP-CMP-074. Reproducer clause for the mv pair (review refinement on the facts file): gen_isa_compare reports the stale r1s' / a0 after a dummy on the first move; no run yet. Dummies increment minstret (facts file Section 4 as corrected; B7), which this item's fire-check already relies on.
 - Expected: expected-fail (B8)
 - Test group: gen_cmp_zcmp_events_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
-- Bins: CG-CMP-006.cp_dummy_en.on, CG-CMP-006.cr_insn_dummy.auto (CG-CMP-008 cp_event dummy_inserted / cr_event_phase_outcome dummy_ls, dummy_commit are probe-gated (P1), not in manifest)
+- Bins: CG-CMP-006.cp_dummy_en.on, CG-CMP-006.cr_insn_dummy.auto, CG-CMP-007.cp_insn.cm_mvsa01, CG-CMP-007.cp_insn.cm_mva01s (CG-CMP-008 cp_event dummy_inserted / cr_event_phase_outcome dummy_ls, dummy_commit are probe-gated (P1), not in manifest)
 
 ### TP-CMP-066: Zcmp latency and back-to-back sequences
 - Features: F-CMP-065
@@ -3107,6 +3109,20 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Expected: pass
 - Test group: gen_cmp_zcmp_basic
 - Bins: CG-CMP-009.cp_hazard.popret_ft_cm, CG-CMP-009.cp_hazard.popretz_ft_cm, CG-CMP-009.cr_ft_kind.auto, CG-CMP-009.cp_ret_once.yes, CG-CMP-009.cp_redirect_once.yes
+
+### TP-CMP-074: Interrupt or debug request taken on a dummy instruction inside a Zcmp expansion (B8 secondary exposure)
+- Features: F-CMP-064; cross-ref F-IRQ-020, F-DBG-010
+- Phase: 1
+- Tier: targeted
+- Preconditions: M-mode; cpuctrlsts.dummy_instr_en = 1 with dummy_instr_mask giving the highest insertion rate (csrw, as TP-CMP-065); mstatus.MIE = 1 and mie enabling the storm lines; stack pre-cleared with a recognisable pattern; the controller holds an expansion together only while the ID instruction carries the EXPANDED or COMMIT tag (interrupts: COMMIT only, rtl/ibex_controller.sv:474-477; debug: both, :498-500) and a dummy in ID carries INSTR_NOT_EXPANDED (rtl/ibex_if_stage.sv:528), so an event pending in the insertion cycle is taken mid-expansion (dv/auto_dv/evidence/gen_b8_rtl_facts.md Section 5, 1eb2ede; stated from the RTL, not reproduced).
+- Stimulus: the TP-CMP-065 program (many cm.push / cm.pop / cm.popret / cm.popretz over rlist 4..15 with a checkable stack pattern) under the interrupt storm regime (all lines; the handler reads mepc and x2, then mret) and, in a second half, under the debug_req_i regime (the debug ROM reads dpc and x2, then dret); random data-response regimes so insertions and pending events land inside expansions.
+- Randomized: rlist/spimm, contents, response regime, irq line mix and inter-arrival, debug_req spacing, secureseed writes.
+- Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime
+- Fire-check: per seed >= 200 completed cm.* sequences retire with dummy_instr_en = 1 (TB CSR model) and >= 20 dummies were inserted (the minstret-minus-RVFI count of TP-CMP-065); >= 5 interrupt or debug entries have mepc / dpc equal to a cm.* PC of which at least one micro-op had retired (RVFI: records with rvfi_ext_expanded_insn_valid and no _last for that PC, then a record with rvfi_intr = 1 or rvfi_ext_debug_mode rising); the entries after the sp-adjust micro-op retired (commit phase) are the B8 sample and are counted apart.
+- Pass criteria: gen_chk_zcmp_seq (an abandoned expansion leaves x2 unchanged and re-executes from micro-op 0 with the full store/load order; a completed sequence has exactly N stores/loads); gen_chk_irq (mepc = cm.* PC only with x2 unchanged, never in the commit phase); gen_chk_debug (dpc likewise); gen_isa_compare. B8 predicts entries taken on a dummy inside the COMMIT window of cm.popret / cm.popretz (x2 already incremented): after mret / dret the expansion replays its loads from above the frame and increments sp a second time; a debug entry on a dummy at any other position restarts the expansion after dret (idempotent for cm.push and for the pop family before the sp increment, but forbidden by the design's gate); the dummies-off controls are TP-CMP-058 (interrupts deferred past the commit phase) and TP-CMP-059 (debug deferred).
+- Expected: expected-fail (B8)
+- Test group: gen_cmp_zcmp_irq_dummy_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Bins: CG-CMP-006.cp_dummy_en.on, CG-CMP-008.cr_event_phase_outcome.irq_commit_taken, CG-CMP-008.cr_event_phase_outcome.nmi_commit_taken, CG-CMP-008.cr_event_phase_outcome.debug_ls_taken, CG-CMP-008.cr_event_phase_outcome.debug_commit_taken, CG-CMP-008.cp_event.irq, CG-CMP-008.cp_event.nmi, CG-CMP-008.cp_event.debug_req, CG-CMP-008.cp_phase.commit_phase, CG-CMP-008.cp_outcome.taken_between, CG-CMP-008.cp_reexec.yes
 
 ---------------------------------------------------------------------------------------------------
 ## AREA BIT
@@ -4019,6 +4035,7 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_cmp_zcmp_events | TP-CMP-056, 057, 058, 059, 064 | 1 | targeted | medium |
 | gen_cmp_zcmp_faults | TP-CMP-060, 061, 062, 063, 072 | 1 | targeted | medium |
 | gen_cmp_zcmp_events_xfail | TP-CMP-065 | 1 | targeted | medium |
+| gen_cmp_zcmp_irq_dummy_xfail | TP-CMP-074 | 1 | targeted | medium |
 | gen_cmp_random | TP-CMP-070, 071 | 2 | full | long |
 | gen_bit_ratified | TP-BIT-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 014, 015, 017, 018, 019, 020, 021, 038, 040 | 1 | smoke/targeted | short/medium |
 | gen_bit_draft | TP-BIT-011, 016, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033 | 1 | targeted | medium |
@@ -5809,7 +5826,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Knobs: knob:debug_req_regime
 - Fire-check: the M-mode tselect/tdata1/tdata2 reads retire without trap; the debug-mode reads retire with rvfi_ext_debug_mode = 1 before any write to those CSRs.
 - Pass criteria: gen_chk_csr_readback (dcsr 0x4000_0003 | cause<<6 with cause = 3 haltreq, dpc = interrupted pc, dscratch 0, tselect 0, tdata1 0x2800_1048, tdata2 0); bit 3 (nmip) of dcsr excluded from the compare (B5, owner TP-DBG-021) and bit 13 == 0; gen_chk_debug
-- Notes: debug-mode bins (Test Writer 3k, T-206; the 3k review's enumeration; DV Lead decision under rule (g), part 4b, worded as a decision in part 4c): gen_test_csr_reset has no debug handling and no longer schedules the debug regime, so this item's debug-mode bins are DECIDED to go under bins_not_hit with that reason, the complete set: gen_csr_reset_read_cg (CG-CSR-016) cp_dbg.dbg, cr_dbg_reset.dcsr_dbg, cr_dbg_reset.dpc_dbg, cr_dbg_reset.dscratch0_dbg, cr_dbg_reset.dscratch1_dbg, cp_csr.dcsr, cp_csr.dpc, cp_csr.dscratch0, cp_csr.dscratch1; gen_csr_debug_csr_cg (CG-CSR-007) cp_csr.dcsr, cp_trap.ok, cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok. The manifest re-render that carries these thirteen bins under bins_not_hit is the Test Writer's T-222 (not yet landed: the committed manifest declares all thirteen as expected-hit); the next plan touch cites its sha. The CG-CSR-007 bins stay co-owned with TP-CSR-017 (gen_csr_debug_csr, a debug-capable group) and are hit there once that test exists; the CG-CSR-016 first-debug-entry reads wait for a debug-ROM program in this test. No bin moves.
+- Notes: debug-mode bins (Test Writer 3k, T-206; the 3k review's enumeration; DV Lead decision under rule (g), part 4b, worded as a decision in part 4c): gen_test_csr_reset has no debug handling and no longer schedules the debug regime, so this item's debug-mode bins are DECIDED to go under bins_not_hit with that reason, the complete set: gen_csr_reset_read_cg (CG-CSR-016) cp_dbg.dbg, cr_dbg_reset.dcsr_dbg, cr_dbg_reset.dpc_dbg, cr_dbg_reset.dscratch0_dbg, cr_dbg_reset.dscratch1_dbg, cp_csr.dcsr, cp_csr.dpc, cp_csr.dscratch0, cp_csr.dscratch1; gen_csr_debug_csr_cg (CG-CSR-007) cp_csr.dcsr, cp_trap.ok, cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok. The manifest re-render that carries these thirteen bins under bins_not_hit is the Test Writer's T-222, landed at 54f2ee8. The CG-CSR-007 bins stay co-owned with TP-CSR-017 (gen_csr_debug_csr, a debug-capable group) and are hit there once that test exists; the CG-CSR-016 first-debug-entry reads wait for a debug-ROM program in this test. No bin moves.
 - Expected: pass (doc mismatch D4)
 - Test group: gen_csr_reset
 - Bins: CG-CSR-016.cp_csr.tselect, CG-CSR-016.cp_csr.tdata1, CG-CSR-016.cp_csr.tdata2, CG-CSR-016.cp_csr.dcsr, CG-CSR-016.cp_csr.dpc, CG-CSR-016.cp_csr.dscratch0, CG-CSR-016.cp_csr.dscratch1, CG-CSR-016.cr_dbg_reset.dcsr_dbg, CG-CSR-016.cr_dbg_reset.dpc_dbg, CG-CSR-016.cr_dbg_reset.dscratch0_dbg, CG-CSR-016.cr_dbg_reset.dscratch1_dbg, CG-CSR-007.cr_csr_dbg_trap.dcsr_dbg_ok, CG-CSR-008.cr_csr_dbg_form.tdata1_nondbg_rd, CG-CSR-016.cp_dbg.dbg
@@ -19226,6 +19243,7 @@ Stimulus line override the table for that item.
   (count of records with expanded_insn_valid == number implied by rlist), memory effects complete
   -> fails if a micro-op is skipped (B8) ; gen_chk_rvfi_proto (expanded_insn_last exactly once
   per sequence).
+- Notes: B8 reproduced deterministically (tb-infra landing 4, T-205 slice 2, committed 5b8a0fb: program dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S and the logs dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_{run_header.txt,verdict.txt,stdout_excerpt.log,export.txt}; the committed run header reads module gen_ut_lockstep, seed 1, build_sources_sha256 893384b8eec4e6d5) and explained (dv/auto_dv/evidence/gen_b8_rtl_facts.md (rtl-arch T-225: 1eb2ede, CM59 fixes 53e8468, CM64 fixes 7d7be39, tb-infra's 27-row mapping folded 76cd2e5; cross-model APPROVE-WITH-CHANGES 68b9af3 on the CM59 copy)); see gen_bug_log.md B8; this item stays expected-fail (B8).
 - Expected: expected-fail (B8)
 - Test group: gen_dit_dummy_events_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-DIT-004.cp_context.in_zcmp, CG-DIT-004.cr_mask_ctx.m000_in_zcmp,
@@ -20788,6 +20806,7 @@ Stimulus line override the table for that item.
 - Fire-check: >= 200 records writing x16 and >= 200 reading it, >= 100 each for x31 and for
   x17..x30, with >= 20 x16 writes adjacent (P1) to a dummy.
 - Pass criteria: gen_isa_compare (all 32 bits of every x16..x31 read match) ; gen_chk_rvfi_proto.
+- Notes: B8 constraint: while dummies are enabled the Zcmp push/pop forms are excluded (a dummy inserted inside a Zcmp expansion discards a micro-op or replays the expansion, B8, reproduced and explained, gen_bug_log.md B8); the Zcmp forms run in the dummies-off half only, and the dummy-adjacency clauses use the non-Zcmp forms; dummy-with-Zcmp is TP-CMP-065 / TP-DIT-032 / TP-CMP-074's (expected-fail).
 - Expected: pass
 - Test group: gen_rst_regfile
 - Bins: CG-RST-004.cp_rd_bank.x16, CG-RST-004.cp_rd_bank.x17_31, CG-RST-004.cp_rd_bank.x1_15,
