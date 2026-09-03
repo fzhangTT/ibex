@@ -33,3 +33,9 @@ docs/dv/evidence/ws4-nightly-lsf/summary.txt, docs/dv/evidence/ws4-coverage/summ
 - [x] T7 tt-regress assessment — see docs/dv/tt-regress-assessment.md
       (commits 1a452d99, 55023012)
 - [x] T8 docs + regress skill update — reviewed separately
+
+WS4 CLOSED (2026-09-02): post-execution review APPROVE over fc86a077..799e510b (WS4 pathspec) —
+docs/dv/reviews/2026-09-02-claude-diff-ws4-fc86a077-799e510b.md (opus fallback, sanity-scoped per
+owner directive; identity in artifact). Deferred follow-up (review nit, non-gating): three negative
+case-match selftest checks (selftest.sh:67,85,132) should gate on the preceding command's success so
+an absent/crashing script cannot emit their PASS lines.
