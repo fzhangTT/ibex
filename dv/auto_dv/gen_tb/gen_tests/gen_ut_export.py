@@ -25,6 +25,10 @@ MRET_INSN, DRET_INSN = CONSTANTS["GEN_INSN_MRET"], CONSTANTS["GEN_INSN_DRET"]   
 # cycles between the FETCH_EN(1) pin line and cycle_count read after the ack edge: the dispatcher acks in the ReadWrite region
 # after posedge N (cycle_count = N), the ctrl driver acts at the following negedge and stamps N, so the offset is 0 (MUT-H)
 FETCH_EN_LINE_OFFSET = 0
+# cycles between the misc crash_dump_current_pc line carrying a record's pc (crash_dump_o.current_pc = pc_id, rtl/ibex_core.sv:1326,
+# sampled by the misc monitor at the posedge and stamped with cycle_count) and that record's cycle: the first instruction after
+# reset is a plain jump, one cycle in ID and one in WB, so its record follows the line by 2 (asserted on the first record; MUT-L)
+MISC_CURRENT_PC_LINE_OFFSET = 2
 
 
 def plus(name, default=None):
@@ -39,6 +43,13 @@ def check_events(data, fetch_en_ack_cycle, log):
     for bus in ("ibus", "dbus"):
         if bus in enabled:
             assert any(e.source == bus and e.event == "gnt" for e in data.events), f"GEN_UT_EXPORT: no E {bus} gnt line"
+    if "misc" in enabled and data.records and MISC_CURRENT_PC_LINE_OFFSET is not None:
+        r0 = data.records[0]
+        pcs = [e for e in data.events if e.source == "misc" and e.event == "crash_dump_current_pc" and e.fields[0] == r0.pc_rdata]
+        assert pcs, f"GEN_UT_EXPORT: no misc crash_dump_current_pc line carries the first record's pc 0x{r0.pc_rdata:08x}"
+        delta = r0.cycle - pcs[0].cycle
+        log.info("GEN_UT_EXPORT first record cycle %d, its crash_dump_current_pc line at cycle %d, offset %d", r0.cycle, pcs[0].cycle, delta)
+        assert delta == MISC_CURRENT_PC_LINE_OFFSET, f"GEN_UT_EXPORT: crash_dump_current_pc line offset {delta} != {MISC_CURRENT_PC_LINE_OFFSET} (record cycle {r0.cycle}, line cycle {pcs[0].cycle})"
     if "pin" in enabled:
         fe = [e for e in data.events if e.source == "pin" and e.event == "fetch_enable"]
         assert len(fe) >= 2, f"GEN_UT_EXPORT: {len(fe)} fetch_enable lines, expected the reset level and the FETCH_EN change"

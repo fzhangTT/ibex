@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:33
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 402500: uvm_test_top.env.irq_chk [irq_entry] lines 00005 raised at cycle 225 (order 20) not taken within 17 records (now order 38, mie 7fff0888 mstatus 00000088)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

@@ -15,9 +15,11 @@ Drives `irq_software_i`, `irq_timer_i`, `irq_external_i`, `irq_fast_i[14:0]` and
 as levels with randomized timing and hold policies; the source of every interrupt stimulus. AS BUILT (step 2b, T-090):
 `gen_agents_pkg::gen_irq_driver` on `dv/auto_dv/tb/gen_irq_if.sv` (instance `u_irq_if`; line numbering 0 software,
 1 timer, 2 external, 3..17 fast[0..14], 18 nm), acting at the falling edge: IRQ_SET (arg0 line mask, arg1 hold policy
-CYCLES / UNTIL_ACK / UNTIL_TAKEN / STICKY, arg2 cycles), IRQ_CLR (mask), NMI_PULSE (cycles), UNTIL_TAKEN released on the
-next `evt_irq_taken` edge, UNTIL_ACK on a store to the irq-ack MMIO register; the regime engine draws events for
-`knob_irq_regime` sparse / storm (means 2000 / 20 cycles from the yaml `regime_windows.irq_event_mean`, read through the rendered `gen_regime_scalar`) with lines from `knob_irq_line_mix` and the policy from
+CYCLES / UNTIL_ACK / UNTIL_TAKEN / STICKY, arg2 cycles), IRQ_CLR (mask), NMI_PULSE (cycles), UNTIL_TAKEN released
+only for the line the DUT took (the next `evt_irq_taken` edge together with the scoreboard's `evt_irq_taken_cause`, the
+entry's vector cause; 31 = the nm line), so the other held lines stay pending for their own entries (Critic T-090 L-4,
+landing 2a; red first: gen_ut_irq's two-line mask now expects two entries), UNTIL_ACK on a store to the irq-ack MMIO register; the regime engine draws events for
+`knob_irq_regime` sparse / storm (means 2000 / 100 cycles from the yaml `regime_windows.irq_event_mean`, read through the rendered `gen_regime_scalar`; storm was 20 until lines stayed pending until taken, when 20 livelocked the program: 4196 of 4550 retirements were entries) with lines from `knob_irq_line_mix` and the policy from
 `knob_irq_hold`, all three switched at run time by REGIME_SET; every change is published as `gen_irq_evt` with its cycle.
 
 ## 2. Files (planned) and how to call it
@@ -44,7 +46,7 @@ sequences; every line edge is published on `ap` with its cycle for gen_irq_check
 
 Lines change on the clock edge after the command. UNTIL_ACK releases the line the cycle after
 the handler's store to the ack register (riscv-dv handler tail through the user-extension
-`gen_plic_section`, planned); UNTIL_TAKEN releases after `rvfi_intr` of the matching cause;
+`gen_plic_section`, planned); UNTIL_TAKEN releases the taken line after the `rvfi_intr` record whose vector names it;
 a one-cycle pulse is a deliberate "may be missed" stimulus; STICKY leaves the line asserted so
 software must mask it. Ibex's `mip` is read-only, so a riscv-dv `csrw mip` does not clear a level.
 

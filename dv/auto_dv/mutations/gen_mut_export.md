@@ -97,3 +97,14 @@ without the mutation is every green run of the landing.
 
 Exact edits: MUT-I original `if (ev_on()) begin / req_stamp = sink.cycle(); / sink.write_event(cfg.is_data ? gen_export_line_dbus_req(req_stamp, vif.addr, req_we(), req_be()) : gen_export_line_ibus_req(req_stamp, vif.addr, req_we(), req_be())); / end`, mutated `if (ev_on()) begin / req_stamp = sink.cycle();   // MUT-I: the req writer is silent / end`; MUT-J original `if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_rvalid(sink.cycle(), p.addr, p.we, p.err, p.intg_bad, pend.size()) : gen_export_line_ibus_rvalid(...));`, mutated `;   // MUT-J: the rvalid writer is silent`; MUT-K as in the table.
 The MUT-G row's citation of gen_mut_export_gh_batches.log is now backed by the retained file (with the checksum lines).
+
+## MUT-L: the misc stamp rule of gen_ut_export (landing 2a, Critic step-2 L-4)
+
+| Id | Mutation | Catching run | Catch result | Ablation |
+|---|---|---|---|---|
+| MUT-L | gen_checkers_pkg.sv (gen_misc_monitor::write_changes): the `misc crash_dump_current_pc` line carries the PREVIOUS sample's value (`ev_init ? cd_cur_q : current_pc`), so the line for a pc appears one change late with a correct stamp | gen_ut_export zc, `+gen_chk_all=0` | FAIL: `AssertionError: GEN_UT_EXPORT: crash_dump_current_pc line offset -5 != 2 (record cycle 70, line cycle 75)` | gen_ut_export.py `MISC_CURRENT_PC_LINE_OFFSET = None`: PASS |
+
+Two forms discarded and recorded: (1) the stamp shifted by one (`c + 1`) is caught, but its ablation FAILS too, on read()'s
+non-decreasing-cycle rule (the other rows of the same posedge keep stamp c), so the proof was not the stamp rule's; (2) the
+misc monitor sampling at the negedge is not a defect (the value-stamp pairs are identical) and passed both runs. The stale
+value is the class the rule owns: a right-ordered file whose misc row lags the record it describes.

@@ -247,7 +247,10 @@ None: the export is observation only and carries no pass/fail check of its own (
 knob). The consumer checks are the tests'. Format-internal presence rules in `read()` (T-141, one mutation each): per
 enabled bus `#req - #gnt` is 0 or 1 (MUT-I) and `0 <= #gnt - #rvalid <= GEN_<BUS>_MAX_OUTSTANDING` (MUT-J), beside
 the `#gnt == <bus>_grants` marker rule (MUT-G), so a silent req or rvalid writer is visible from the file alone. As
-built in `gen_ut_export.py`: the header field list equals the rendered list; the marker's `records` equals its
+built in `gen_ut_export.py`: the misc stamp rule (Critic step-2 L-4, landing 2a): the `misc crash_dump_current_pc` line
+carrying the first record's pc_rdata is stamped `MISC_CURRENT_PC_LINE_OFFSET` = 2 cycles before that record
+(crash_dump_o.current_pc = pc_id, the boot jump spends one cycle in ID and one in WB; MUT-L is the misc writer reporting
+the previous sample's value); the header field list equals the rendered list; the marker's `records` equals its
 `retired` and the parsed `R` count (through `read()`); `order` increments by one and every line has its header's field
 count (through `read()`); two flushes are issued and the
 early flush's records are a prefix of the final one; the bridge's `evt_retired_count` read after the ack is `>=`

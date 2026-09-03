@@ -342,6 +342,67 @@ int main(int argc, char** argv) {
   check("ecall in debug mode retires nothing", st.retired, 0);
   check("ecall in debug mode leaves sync_exc_seen clear", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
 
+  std::puts("-- 10. NMI emulation: an external NMI enters at mtvec base + 0x7C with mcause 0x8000001F, mepc = pc, mtval 0, MIE saved (rtl/ibex_cs_registers.sv:905-945)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t nmi_vec = GEN_MM_BOOT_PAGE + 0x7Cu;   // mtvec base is the boot page after reset
+    gen_isa_write_word(scratch, 0x00000013u);            // the interrupted instruction (nop)
+    gen_isa_write_word(scratch + 4u, 0x00000013u);
+    gen_isa_write_word(nmi_vec, GEN_INSN_MRET);          // the NMI handler: mret
+    gen_isa_write_csr(CSR_MSTATUS, 0x88u);               // MIE = 1, MPIE = 1 (MPP U)
+    gen_isa_write_csr(CSR_MEPC, 0x1234u); gen_isa_write_csr(CSR_MCAUSE, 0x2u);   // an outer handler's context to be stacked
+    gen_isa_arm_async(0, 0, 1, 0, 0, 1);                  // external NMI pending
+    gen_isa_step(&st);
+    check("nmi entry retires nothing", st.retired, 0);
+    check("nmi entry is a trap step", st.trap, 1);
+    check("nmi mcause 0x8000001F", st.trap_cause, 0x8000001Fu);
+    check("nmi mtval 0", st.trap_tval, 0);
+    check("nmi mepc = interrupted pc", gen_isa_read_csr(CSR_MEPC), scratch);
+    check("nmi pc = mtvec base + 0x7C", st.pc_after, nmi_vec);
+    check("nmi prv M", st.prv, 3);
+    check("nmi mstatus: MIE 0, MPIE = old MIE, MPP = M", gen_isa_read_csr(CSR_MSTATUS) & 0x1888u, 0x1880u);
+    gen_isa_step(&st);                                     // the handler's mret
+    check("mret from NMI retires", st.retired, 1);
+    check("mret returns to the interrupted pc", st.pc_after, scratch);
+    check("mret restores mepc from the mstack (outer handler's 0x1234)", gen_isa_read_csr(CSR_MEPC), 0x1234u);
+    check("mret restores mcause from the mstack (outer handler's 2)", gen_isa_read_csr(CSR_MCAUSE), 0x2u);
+    check("mret restores MPIE/MPP from the mstack (MPIE 1, MPP U), MIE re-enabled", gen_isa_read_csr(CSR_MSTATUS) & 0x1888u, 0x88u); }
+
+  std::puts("-- 11. NMI emulation: an internal NMI (integrity error) carries mcause 0xFFFFFFE0 and mtval = the corrupted address");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t nmi_vec = GEN_MM_BOOT_PAGE + 0x7Cu;
+    gen_isa_write_word(scratch, 0x00000013u);
+    gen_isa_write_word(nmi_vec, GEN_INSN_MRET);
+    gen_isa_arm_async(0, 0x80001230u, 0, 1, 0, 1);        // internal NMI with the corrupted address as mtval
+    gen_isa_step(&st);
+    check("internal nmi is a trap step", st.trap, 1);
+    check("internal nmi mcause 0xFFFFFFE0", st.trap_cause, 0xFFFFFFE0u);
+    check("internal nmi mtval = corrupted address", st.trap_tval, 0x80001230u);
+    check("internal nmi pc = mtvec base + 0x7C", st.pc_after, nmi_vec);
+    gen_isa_step(&st);
+    check("mret from internal NMI returns", st.pc_after, scratch); }
+
+  std::puts("-- 12. NMI emulation: an NMI inside a trap handler stacks the handler's context; the handler continues after the NMI's mret");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t nmi_vec = GEN_MM_BOOT_PAGE + 0x7Cu;
+    gen_isa_write_word(scratch, 0x00000073u);            // ecall at the reset pc -> trap handler at mtvec base
+    gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000013u);   // handler: nop (interrupted by the NMI)
+    gen_isa_write_word(GEN_MM_BOOT_PAGE + 4u, GEN_INSN_MRET);   // handler: mret back to the ecall's mepc
+    gen_isa_write_word(nmi_vec, GEN_INSN_MRET);
+    gen_isa_step(&st);
+    check("ecall traps into the handler", st.trap_cause, 11);
+    check("handler mepc = ecall pc", gen_isa_read_csr(CSR_MEPC), scratch);
+    gen_isa_step(&st);                                     // handler nop
+    gen_isa_arm_async(0, 0, 1, 0, 0, 1);
+    gen_isa_step(&st);                                     // NMI entry inside the handler
+    check("nested nmi mepc = handler pc", gen_isa_read_csr(CSR_MEPC), GEN_MM_BOOT_PAGE + 4u);
+    check("nested nmi mcause", gen_isa_read_csr(CSR_MCAUSE), 0x8000001Fu);
+    gen_isa_step(&st);                                     // NMI handler's mret
+    check("nmi mret resumes the handler", st.pc_after, GEN_MM_BOOT_PAGE + 4u);
+    check("nmi mret restored the handler's mepc (the ecall pc)", gen_isa_read_csr(CSR_MEPC), scratch);
+    check("nmi mret restored the handler's mcause (11)", gen_isa_read_csr(CSR_MCAUSE), 11);
+    gen_isa_step(&st);                                     // handler's mret
+    check("handler mret returns to the ecall pc", st.pc_after, scratch); }
+
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;
 }

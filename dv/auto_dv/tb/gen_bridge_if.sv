@@ -34,6 +34,7 @@ interface gen_bridge_if (
   logic        evt_retired_hit = 1'b0;  // toggles when retired_count >= target after an arm edge
   logic        evt_cycle_hit   = 1'b0;
   logic        evt_irq_taken   = 1'b0;
+  logic [4:0]  evt_irq_taken_cause = '0;   // the vector cause of the last interrupt entry (31 = NMI), written by the scoreboard
   logic        evt_dbg_entered = 1'b0;
   logic        evt_eot_seen    = 1'b0;   // toggles on every end-of-test store (tohost or the EOT register)
   logic [31:0] evt_eot_code    = '0;     // the stored value (1 = pass by the riscv-dv/tohost convention)

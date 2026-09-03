@@ -37,7 +37,7 @@ package gen_isa_dpi_pkg;
                                                              input int unsigned rs2, input int unsigned rs3,
                                                              output int unsigned rd);
   import "DPI-C" context function int gen_isa_is_draft_b(input int unsigned insn);
-  import "DPI-C" context function void gen_isa_arm_async(input int unsigned pre_mip, input int unsigned taken_cause,
+  import "DPI-C" context function void gen_isa_arm_async(input int unsigned pre_mip, input int unsigned nmi_mtval,
                                                          input int nmi, input int nmi_int, input int debug_req,
                                                          input int irq_valid);
   import "DPI-C" context function void gen_isa_arm_fault(input int kind, input int unsigned addr, input int unsigned size);

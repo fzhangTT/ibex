@@ -174,8 +174,10 @@ package gen_rvfi_pkg;
     bit          model_ready = 0;
     bit          in_seq = 0;
     gen_rvfi_txn seq_first;
-    int unsigned seq_len = 0, seq_splits = 0, faults_armed = 0, faults_unannounced = 0, breakpoints = 0, b13_odd_jalr = 0;
+    int unsigned seq_len = 0, seq_splits = 0, faults_armed = 0, faults_unannounced = 0, breakpoints = 0, b13_odd_jalr = 0, rf_wr_suppressed = 0;
     int          entry_cause = -1;   // the current record's vector-derived interrupt cause, published with the model state
+    bit          after_nmi_entry = 0;   // the previous record was an NMI entry: a vector-address record without intr is a pre-empted entry
+    int unsigned nmi_preempted = 0;
     bit          dbg_q = 0, dret_q = 0;
     uvm_analysis_port #(gen_model_state) ap_state;
     function new(string name, uvm_component parent);
@@ -307,12 +309,24 @@ package gen_rvfi_pkg;
       int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect;
+      logic [31:0] gpr_before [32];   // snapshot for a suppressed register write (any encoding of the load)
       bit is_seq = 0, dbg_entry = 0;
       if (!model_ready) return;
       // ---- asynchronous entries before this record (C5.2) come before the Zcmp fold: the handler's first record can
       //      itself be a micro-op, and an entry inside a sequence drops its partial micro-ops (the sequence restarts, R9)
       dbg_entry = t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT;   // a request held through dret re-enters at once
       dbg_q = t.ext_debug_mode; dret_q = (t.insn == GEN_INSN_DRET);
+      // an interrupt entry the NMI pre-empted before the handler retired anything has no record of its own: the NMI's mepc
+      // points into the handler, and the record after the NMI entry sits at a vector address without rvfi_intr (the flag
+      // went to the NMI record). The model, back from the NMI's mret in the pre-entry state, takes that interrupt now.
+      if (after_nmi_entry && !t.intr && !t.trap) begin
+        logic [31:0] base_v = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;
+        if (t.pc_rdata >= base_v && t.pc_rdata < base_v + 32'd4 * ibex_pkg::ExcCauseIrqNm.lower_cause && gen_isa_get_pc() != t.pc_rdata) begin
+          t.intr = 1'b1; nmi_preempted++;
+          `uvm_info("GEN_SB", $sformatf("interrupt entry to %08h pre-empted by the NMI (no rvfi_intr of its own): entering it at order %0d", t.pc_rdata, t.order), UVM_LOW)
+        end
+      end
+      after_nmi_entry = 0;
       if (in_seq && (t.intr || dbg_entry)) begin
         seq_splits++; in_seq = 0;
         `uvm_info("GEN_SB", $sformatf("Zcmp sequence at pc %08h split by %s entry (order %0d): %0d folded micro-ops dropped",
@@ -328,9 +342,16 @@ package gen_rvfi_pkg;
         logic [31:0] base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;   // mtvec[7:0] read as 8'h01 (rtl/ibex_cs_registers.sv)
         logic [31:0] inj = t.ext_pre_mip;
         int unsigned cause = (t.pc_rdata - base) >> 2;
+        bit nmi_vec = (t.pc_rdata >= base && cause == ibex_pkg::ExcCauseIrqNm.lower_cause);
+        // an NMI-vector entry: the external pin (the record's nmi sample) outranks the internal cause, whose mtval is the
+        // address of the corruption that set the DUT's pending bit (announced by the driver); the model emulates the entry
+        bit nmi_ext = nmi_vec && t.ext_nmi, nmi_int = nmi_vec && !t.ext_nmi;
+        logic [31:0] nmi_mtval = nmi_int ? gen_bus_err_log::take_intg() : 32'h0;
         if (t.pc_rdata >= base && cause < ibex_pkg::ExcCauseIrqNm.lower_cause) inj = 32'h1 << cause;
         entry_cause = (t.pc_rdata >= base && cause <= ibex_pkg::ExcCauseIrqNm.lower_cause) ? int'(cause) : -1;
-        gen_isa_arm_async(inj, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
+        bvif.evt_irq_taken_cause = entry_cause < 0 ? 5'd0 : entry_cause[4:0];
+        after_nmi_entry = nmi_vec;
+        gen_isa_arm_async(inj, nmi_mtval, nmi_ext, nmi_int, 1'b0, 1'b1);
         if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
         irq_entries++;
         if (retired != 0 || !cause[31])
@@ -432,7 +453,14 @@ package gen_rvfi_pkg;
                                         t.insn[6:0] == ibex_pkg::OPCODE_STORE ? "store" : "load", t.mem_addr, t.order), UVM_LOW)
         end
       end
+      // a suppressed register write (a load whose response carried an integrity error, rtl/ibex_core.sv rvfi_ext_rf_wr_suppress):
+      // the DUT keeps the destination's old value and raises the internal NMI; the model saw the clean word, so its write is
+      // undone after the step and the rd compare is skipped for this record
+      if (t.ext_rf_wr_suppress && !is_seq) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
+      if (t.ext_rf_wr_suppress && !is_seq && rd_we && rd_addr != 0) begin
+        gen_isa_write_gpr(rd_addr, gpr_before[rd_addr]); rf_wr_suppressed++; rd_we = 0;
+      end
       compared++;
       bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
       if (pc_b != pc_expect)
@@ -509,8 +537,8 @@ package gen_rvfi_pkg;
     endfunction
 
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_SB", $sformatf("ISA compare: records=%0d mismatches=%0d folded=%0d draft_b=%0d traps=%0d breakpoints=%0d irq_entries=%0d dbg_entries=%0d zcmp_splits=%0d faults_armed=%0d faults_unannounced=%0d bus_err_announced=%0d b13_odd_jalr=%0d rvfi_rmask_on_nonload=%0d",
-                compared, mismatches, folded, draft_b, traps, breakpoints, irq_entries, dbg_entries, seq_splits, faults_armed, faults_unannounced, gen_bus_err_log::announced, b13_odd_jalr, rmask_nonload), UVM_LOW)
+      `uvm_info("GEN_SB", $sformatf("ISA compare: records=%0d mismatches=%0d folded=%0d draft_b=%0d traps=%0d breakpoints=%0d irq_entries=%0d dbg_entries=%0d zcmp_splits=%0d faults_armed=%0d faults_unannounced=%0d bus_err_announced=%0d b13_odd_jalr=%0d rf_wr_suppressed=%0d nmi_preempted=%0d rvfi_rmask_on_nonload=%0d",
+                compared, mismatches, folded, draft_b, traps, breakpoints, irq_entries, dbg_entries, seq_splits, faults_armed, faults_unannounced, gen_bus_err_log::announced, b13_odd_jalr, rf_wr_suppressed, nmi_preempted, rmask_nonload), UVM_LOW)
     endfunction
   endclass
 endpackage

@@ -1,0 +1,27 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+start 16:01:08Z l2 tree: 9a84fce4df0caf2c c907f91cd753ea46 b56ab4f403f1d951 d55deeb92777d47b 
+MB12 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB12/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 9a84fce4df0caf2c
+MB12_catch_boot_s7_intg: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   28 first: 
+MB12_ablate_boot_s7_intg: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB12: shared tree untouched: 7ecbb8a2c5156d41
+MUTL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTL/dv/auto_dv/env/gen_checkers_pkg.sv; original sha256 c907f91cd753ea46
+MUTL_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTL_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTL/dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py; original sha256 d55deeb92777d47b
+MUTL_ablate_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTL: shared tree untouched: 9a84fce4df0caf2c 9fc697394be5c378 d55deeb92777d47b 
+P13 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/P13/dv/auto_dv/isa/gen_isa_shim.cc; original sha256 b56ab4f403f1d951
+P13_catch_lockstep_pmpdeny: verdict: FAIL reason: uvm_error at sim.log:33   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(248) @ 131500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=18 pc=8000013a insn=000e2e83 trap=1 intr=0 rd=x0/000000
+P13_ablate_lockstep_pmpdeny: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+P13: shared tree untouched: 7ecbb8a2c5156d41
+end 16:02:29Z l2 tree: 9a84fce4df0caf2c c907f91cd753ea46 b56ab4f403f1d951 d55deeb92777d47b 

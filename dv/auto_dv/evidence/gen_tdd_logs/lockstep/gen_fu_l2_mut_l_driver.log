@@ -1,0 +1,5 @@
+MUTL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTL/dv/auto_dv/env/gen_checkers_pkg.sv; original sha256 c907f91cd753ea46
+MUTL_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:60   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTL_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTL/dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py; original sha256 d55deeb92777d47b
+MUTL_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTL: shared tree untouched: 9a84fce4df0caf2c 9fc697394be5c378 d55deeb92777d47b 

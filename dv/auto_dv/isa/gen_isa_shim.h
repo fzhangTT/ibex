@@ -67,8 +67,8 @@ uint32_t gen_isa_get_prv(void);
 int      gen_isa_is_draft_b(uint32_t insn);   // 1 when the model cannot execute the op and gen_isa_exec_reference serves it
 // Draft-B (Zbp/Zbr/Zbt/Zbf) reference execution (C5.5): 0 = handled and *rd written, 1 = not a draft-B op.
 int      gen_isa_exec_reference(uint32_t insn, uint32_t rs1, uint32_t rs2, uint32_t rs3, uint32_t* rd);
-void     gen_isa_arm_async(uint32_t pre_mip, uint32_t taken_cause, int32_t nmi, int32_t nmi_int,
-                           int32_t debug_req, int32_t irq_valid);
+void     gen_isa_arm_async(uint32_t pre_mip, uint32_t nmi_mtval, int32_t nmi, int32_t nmi_int,
+                           int32_t debug_req, int32_t irq_valid);   // nmi / nmi_int: the next step is the NMI entry (mtval = nmi_mtval when internal)
 void     gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size);
 void     gen_isa_set_time(uint64_t mcycle);                          // mcycle from the record's rvfi_ext_mcycle, before its step
 void     gen_isa_set_hpm(int32_t idx, uint32_t lo, uint32_t hi);      // mhpmcounter(3+idx) from the record's counter words, before its step

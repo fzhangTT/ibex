@@ -24,6 +24,7 @@ ablation run headers, verdicts and stdout excerpts (gen_tdd_logs/mutations/gen_t
 | MB9 | gen_tb_top.sv: the observed data_tag_o pin is inverted | gen_ut_boot on the Zc image, row data_tag_quiet | FAIL (UVM_ERROR 544: `data_tag_o high at cycle 0` and every cycle) | `+gen_chk_data_tag_quiet=0`: PASS (UVM_ERROR 0) |
 | MB10 | gen_tb_top.sv: the observed alert_minor pin is inverted | gen_ut_boot on the Zc image, row alert_minor | FAIL (UVM_ERROR 544: `alert_minor_o high at cycle 0 without an announced ECC injection`) | `+gen_chk_alert_minor=0`: PASS (UVM_ERROR 0) |
 | MB11 | gen_tb_top.sv: the observed double_fault_seen pin is inverted (a pulse every cycle) | gen_ut_boot on the seed-7 image (one synchronous trap at order 466), row double_fault | FAIL (UVM_ERROR 2: `double_fault_seen_o pulse at cycle 1754 for a first synchronous trap (order 466)`) | `+gen_chk_double_fault=0`: PASS (UVM_ERROR 0) |
+| MB12 | gen_agents_pkg.sv (gen_bus_driver): a data-side integrity corruption is announced (`note_intg`) but the response word stays clean, so the DUT raises no internal NMI | gen_ut_boot on the seed-7 image, `+gen_knob_dmem_intg_err_rate=frequent`, row nmi_internal (landing 2a) | FAIL (UVM_ERROR 28: `no internal NMI entry within 4 records outside NMI mode of the integrity corruption announced at order N`) | `+gen_chk_nmi_internal=0`: PASS (UVM_ERROR 0) |
 
 Exact edits (dv_principles Section 6 rule 2; line numbers in the landed tree; `/` joins the lines of a multi-line edit):
 
@@ -40,6 +41,7 @@ Exact edits (dv_principles Section 6 rule 2; line numbers in the landed tree; `/
 | MB9 | `dv/auto_dv/tb/gen_tb_top.sv:181` | `assign u_misc_if.data_tag_o           = data_tag_o;` | `assign u_misc_if.data_tag_o           = ~data_tag_o;   // MB9: the observed data_tag_o pin inverted` |
 | MB10 | `dv/auto_dv/tb/gen_tb_top.sv:177` | `assign u_misc_if.alert_minor          = alert_minor;` | `assign u_misc_if.alert_minor          = ~alert_minor;   // MB10: the observed alert_minor pin inverted` |
 | MB11 | `dv/auto_dv/tb/gen_tb_top.sv:180` | `assign u_misc_if.double_fault_seen    = double_fault_seen;` | `assign u_misc_if.double_fault_seen    = ~double_fault_seen;   // MB11: the observed double_fault_seen pin inverted` |
+| MB12 | `dv/auto_dv/env/gen_agents_pkg.sv` (the intg_bad branch of gen_bus_driver) | `flipped[b1] = ~flipped[b1]; / if (cfg.is_data) gen_bus_err_log::note_intg(p.addr);` | `if (cfg.is_data) gen_bus_err_log::note_intg(p.addr);   // MB12: the corruption is announced, the word stays clean` (the flip removed) |
 
 Discarded form MB1a (recorded, not counted): the irq driver publishing its levels but never driving the pins. Both runs
 PASS with the rows on: gen_irq_checker reads the interface pins, so a driver that lies about its own pins is invisible to
@@ -54,7 +56,8 @@ and the knobs silence only the isa_* rows (gen_e_lockstep_zc_isaoff_t090 shows t
 +gen_chk_all=0). Tree state per mutant (Critic T-090 L-1): MB1 and MB2 ran against the 67b5971 tree (12:38-12:40Z); MB3
 and MB4 first ran against the 12:34Z pre-build-e tree and were re-run on the follow-up tree with the same counts (159,
 541); MB5..MB11 and MUT-I/J/K ran against the follow-up tree (batch 14:54-14:59Z, five shas printed unchanged), MB5 once
-more against the landed tree after the NMI-classification edits of gen_tdd_step2b.md Section 7a (the only edits between the two;
+more against the landed tree; MB12 (with P13 and MUT-L) ran against the landing-2a tree (gen_fu_l2_oot_mutation_batch.log, four shas
+printed unchanged), each mutant built from an out-of-tree copy of that tree after the NMI-classification edits of gen_tdd_step2b.md Section 7a (the only edits between the two;
 gen_fu_mb5h_oot_mutation_batch.log).
 
 Rows without a red, all seven named (Critic T-090 L-8): irq_masked, dbg_masked and nmi_entry have NO mutation (they need

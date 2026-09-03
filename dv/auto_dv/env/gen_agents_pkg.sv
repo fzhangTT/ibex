@@ -318,7 +318,7 @@ package gen_agents_pkg;
               int b1 = $urandom_range(data_w - 1, 0);
               logic [38:0] flipped = {p.intg, p.word};
               flipped[b1] = ~flipped[b1];
-              if (cfg.is_data) gen_bus_err_log::note_intg();
+              if (cfg.is_data) gen_bus_err_log::note_intg(p.addr);
               if (cfg.intg_bits > 1) begin
                 int b2 = (b1 + 1 + $urandom_range(data_w - 2, 0)) % data_w;
                 flipped[b2] = ~flipped[b2];
@@ -471,9 +471,30 @@ package gen_agents_pkg;
   // gen_irq_driver (C3.6): levels on the interrupt pins from bridge commands (IRQ_SET mask, hold policy,
   // hold cycles; IRQ_CLR mask; NMI_PULSE cycles) and from the regime engine (knob_irq_regime quiet /
   // sparse / storm, knob_irq_line_mix, knob_irq_hold). Hold policies: CYCLES(n) releases after n cycles,
-  // UNTIL_TAKEN releases every line held with that policy on the next interrupt entry (evt_irq_taken), STICKY
+  // UNTIL_TAKEN releases the line the DUT took on its own entry (evt_irq_taken and the entry's vector cause), STICKY
   // never releases, UNTIL_ACK releases on the handler's store to the irq-ack register (memory-model hook).
   // Acts at the falling edge like every driver; every change is published on ap with its cycle.
+  // Interrupt-line bit i (0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm) -> mie/mip bit position
+  function automatic int gen_irq_mie_bit(int line);
+    if (line == 0) return ibex_pkg::CSR_MSIX_BIT;
+    if (line == 1) return ibex_pkg::CSR_MTIX_BIT;
+    if (line == 2) return ibex_pkg::CSR_MEIX_BIT;
+    if (line <= 17) return ibex_pkg::CSR_MFIX_BIT_LOW + (line - 3);
+    return -1;
+  endfunction
+  // mcause lower_cause of an interrupt entry -> line bit (-1: not a line, e.g. NMI)
+  function automatic int gen_irq_line_of_cause(int unsigned lower_cause);
+    for (int l = 0; l < 18; l++) if (gen_irq_mie_bit(l) == lower_cause) return l;
+    return -1;
+  endfunction
+  // controller priority (rtl/ibex_controller.sv exc_cause_o chain and gen_mfip_id): lowest fast id, then external,
+  // software, timer; NMI outranks all and is handled apart. Smaller rank wins.
+  function automatic int gen_irq_rank(int line);
+    if (line >= 3) return line - 3;
+    if (line == 2) return 15;
+    if (line == 0) return 16;
+    return 17;
+  endfunction
   class gen_irq_driver extends uvm_component;
     `uvm_component_utils(gen_irq_driver)
     virtual gen_irq_if    vif;
@@ -583,8 +604,11 @@ package gen_agents_pkg;
             if (hold_left[i] == 0) rel[i] = 1'b1;
           end
           if (bvif.evt_irq_taken != taken_q) begin
+            // only the line the DUT took is released: the entry's vector cause (31 = the nm line) names it, so the other
+            // held lines stay pending for their own entries, as a real source would
+            int taken_line = (bvif.evt_irq_taken_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) ? 18 : gen_irq_line_of_cause(bvif.evt_irq_taken_cause);
             taken_q = bvif.evt_irq_taken;
-            for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_TAKEN) rel[i] = 1'b1;
+            if (taken_line >= 0 && level[taken_line] && hold_of[taken_line] == GEN_IRQ_HOLD_UNTIL_TAKEN) rel[taken_line] = 1'b1;
           end
           if (rel != 0) cmd_clr(rel);
         end

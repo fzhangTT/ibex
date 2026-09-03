@@ -49,6 +49,13 @@ constexpr uint32_t kResetMtvecMode = 1u;
 std::unordered_map<uint32_t, uint32_t> g_mem;   // word index -> word
 struct armed_fault_t { int kind; uint32_t addr; uint32_t size; bool armed; };
 armed_fault_t g_fault{0, 0, 0, false};
+// NMI emulation (Spike has none): the entry the way rtl/ibex_cs_registers.sv:905-945 performs it, one recoverable level
+// of mstack (MPIE, MPP, mepc, mcause) restored by the mret that leaves NMI mode (:967-974)
+struct armed_nmi_t { bool armed; bool internal; uint32_t mtval; };
+struct mstack_t    { uint32_t mpie, mpp, mepc, mcause; };
+armed_nmi_t g_nmi{false, false, 0};
+mstack_t    g_mstack{0, 0, 0, 0};
+bool        g_nmi_mode = false;
 
 bool mapped(uint32_t a) {
   return (a >= GEN_MM_BOOT_PAGE && a - GEN_MM_BOOT_PAGE < GEN_MM_PROG_SIZE) ||
@@ -374,6 +381,7 @@ int gen_isa_reset(const gen_isa_cfg_t* cfg) {
     g_proc->enable_log_commits();          // the step bookkeeping needs the commit log even when not written out
     legalize_after_reset();
     g_fault.armed = false;
+    g_nmi = {false, false, 0}; g_nmi_mode = false;
     g_csr_writes.clear();
     g_reg_writes.clear();
     g_mem_writes.clear();
@@ -426,6 +434,22 @@ int gen_isa_step(gen_isa_step_t* out) {
   s->log_mem_write.clear();
   out->prv_before = (uint32_t)s->prv;
   bool was_debug = s->debug_mode;
+  if (g_nmi.armed) {
+    // NMI entry (rtl/ibex_cs_registers.sv:905-945 with csr_mcause irq_ext / irq_int): no instruction executes
+    uint32_t mst = csr(CSR_MSTATUS);
+    g_mstack = {(mst >> 7) & 1u, (mst >> 11) & 3u, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MIE | MSTATUS_MPIE | MSTATUS_MPP)) | (((mst >> 3) & 1u) << 7) | ((uint32_t)s->prv << 11));
+    g_proc->put_csr(CSR_MEPC, out->pc_before);
+    g_proc->put_csr(CSR_MCAUSE, g_nmi.internal ? 0xFFFFFFE0u : 0x8000001Fu);
+    g_proc->put_csr(CSR_MTVAL, g_nmi.internal ? g_nmi.mtval : 0u);
+    g_proc->set_privilege(PRV_M, false);
+    s->pc = (sreg_t)(int32_t)((csr(CSR_MTVEC) & ~0xFFu) | 0x7Cu);
+    g_nmi = {false, false, 0}; g_nmi_mode = true;
+    out->insn = 0; out->retired = 0; out->trap = 1;
+    out->trap_cause = csr(CSR_MCAUSE); out->trap_tval = csr(CSR_MTVAL);
+    out->pc_after = (uint32_t)s->pc; out->prv = (uint32_t)s->prv;
+    return 0;
+  }
   try {
     g_proc->step(1);
   } catch (std::exception& e) {
@@ -458,6 +482,14 @@ int gen_isa_step(gen_isa_step_t* out) {
       g_cpuctrl->set_flags(kCpuctrlSyncExcSeen | ((g_cpuctrl->read() & kCpuctrlSyncExcSeen) ? kCpuctrlDoubleFaultSeen : 0u), 0);
   } else if (g_cpuctrl && out->insn == GEN_INSN_MRET) {
     g_cpuctrl->set_flags(0, kCpuctrlSyncExcSeen);   // mret clears sync_exc_seen; double_fault_seen stays until software clears it
+  }
+  if (out->retired == 1 && out->insn == GEN_INSN_MRET && g_nmi_mode) {
+    // leaving NMI mode: MPIE / MPP / mepc / mcause come back from the mstack (rtl/ibex_cs_registers.sv:967-974)
+    uint32_t mst = csr(CSR_MSTATUS);
+    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MPIE | MSTATUS_MPP)) | (g_mstack.mpie << 7) | (g_mstack.mpp << 11));
+    g_proc->put_csr(CSR_MEPC, g_mstack.mepc);
+    g_proc->put_csr(CSR_MCAUSE, g_mstack.mcause);
+    g_nmi_mode = false;
   }
   for (auto& kv : s->log_reg_write) {
     reg_t key = kv.first;
@@ -589,9 +621,10 @@ int gen_isa_exec_reference(uint32_t insn, uint32_t rs1, uint32_t rs2, uint32_t r
   return 1;
 }
 
-void gen_isa_arm_async(uint32_t pre_mip, uint32_t, int32_t, int32_t, int32_t debug_req, int32_t) {
+void gen_isa_arm_async(uint32_t pre_mip, uint32_t nmi_mtval, int32_t nmi, int32_t nmi_int, int32_t debug_req, int32_t) {
   if (!g_proc) return;
   st()->mip->backdoor_write_with_mask(kMipInjectMask, pre_mip);
+  if (nmi || nmi_int) g_nmi = {true, nmi == 0, nmi_mtval};   // the external pin outranks the internal cause (rtl/ibex_controller.sv:737-739)
   if (debug_req) g_proc->halt_request = processor_t::HR_REGULAR;
 }
 void gen_isa_arm_fault(int32_t kind, uint32_t addr, uint32_t size) { g_fault = {kind, addr, size, true}; }

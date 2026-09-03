@@ -28,7 +28,8 @@ ISA model fault and the NMI/alert checkers. AS BUILT (T-137): gen_bus_driver ann
 injects on the data bus (armed by MEM_ERR_ARM kind `GEN_MEM_ERR_ARM_KIND_ERR`, or drawn by the `err_rate` regime) to
 `gen_tb_pkg::gen_bus_err_log` (word address; the last 256), and the scoreboard arms the model's fault only for an
 announced word and consumes the announcement; data-side integrity corruptions (`GEN_MEM_ERR_ARM_KIND_INTG`,
-`intg_err_rate`) are counted apart (`intg_announced`): they raise alert_major_bus and an internal NMI rather than a
+`intg_err_rate`) are announced apart (`note_intg(addr)`: `intg_announced` and the address of the corruption that set
+the DUT's pending bit, consumed by the scoreboard at the internal-NMI entry as the model's mtval): they raise alert_major_bus and an internal NMI rather than a
 bus-error trap, and the irq checker accepts an NMI-vector entry without a pin NMI only after such a corruption. The
 GEN_SB report's `bus_err_announced` is the error count.
 

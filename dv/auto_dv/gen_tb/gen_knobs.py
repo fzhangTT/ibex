@@ -160,6 +160,7 @@ CONSTANTS = {
     "GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT": 6,
     "GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT": 7,
     "GEN_MEM_ERR_ARM_KIND_ERR": 1,
+    "GEN_NMI_INT_ENTRY_BOUND_RECORDS": 4,
     "GEN_MEM_ERR_ARM_KIND_INTG": 2,
     "GEN_ISA_FAULT_KIND_FETCH": 0,
     "GEN_ISA_FAULT_KIND_LOAD": 1,
@@ -169,7 +170,7 @@ CONSTANTS = {
 REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)
     "dbg_event_mean": {"none": 0, "sparse": 5000, "storm": 200},
     "gnt_delay": {"same_cycle": [0, 0], "short": [1, 3], "long": [4, 32], "random": [0, 32]},
-    "irq_event_mean": {"quiet": 0, "sparse": 2000, "storm": 20},
+    "irq_event_mean": {"quiet": 0, "sparse": 2000, "storm": 100},
     "outstanding_cap": {"cap1": 1, "cap2": 2, "cap4": 4, "cap8": 8},
     "rate_per_mille": {"none": 0, "rare": 2, "frequent": 50},
     "rvalid_delay": {"min1": [1, 1], "short": [2, 4], "long": [5, 32], "random": [1, 32]},

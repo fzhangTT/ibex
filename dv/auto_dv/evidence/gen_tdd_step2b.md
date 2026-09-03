@@ -188,3 +188,45 @@ mismatches 0, alert_bus hits 181 / mismatches 0; the storm, ut_irq and every oth
 ablation PASS). Consequence for the plan: a run injecting integrity errors is still consistency-only for the model (no NMI
 emulation, isa rows silenced in such runs); the internal-NMI entry is now checked for legitimacy (an announced corruption
 since the last entry) but not for its latency or its mcause / mtval read-back (nmi_internal, not built).
+
+## 8. Landing 2a: taken-line release, NMI emulation, nmi_internal, the PMP-denial red, the misc stamp rule
+
+Developed out of tree (a scratch copy of dv/auto_dv with the clone symlinked around it) while the shared tree waited for
+the delta-1b commit, then applied under one announced window. Builds in the copy: l2/b (first full set), l2/c (the
+NMI-pre-empted entry rule), l2/d (the GPR snapshot undo and the storm mean; sources sha256 156eb9357b79552e). Applied to the
+shared tree under one window and rebuilt there as dv/auto_dv/work/tb-infra/out_fu2/l (the same sources sha256, 23 runs PASS,
+regime_refuse FAIL by design, gen_fu_out_fu2_l_driver.log). Retained as gen_tdd_logs/lockstep/gen_fu_l2_* (the copy's runs,
+reds included) and gen_fu_l_* (the landed tree's set).
+
+- CR5-L-4 (UNTIL_TAKEN released every held line on any entry): the scoreboard writes the entry's vector cause to the
+  bridge (`evt_irq_taken_cause`) and the irq driver releases only that line (31 = the nm line); the line-to-bit helpers moved
+  to gen_agents_pkg. Red first on build out_fu2/j (gen_fu_j_red_ut_irq_two_entries_*): gen_ut_irq's two-line mask fast14 +
+  fast0 requires two entries, the second was never taken (`entry 2 of fast14+fast0 not taken within 4000 cycles`); green
+  in the copy (entry 1 at cycle 2738, entry 2 at 2749, 6 entries, 0 mismatches). Consequences measured on the storm run:
+  `expectations released` 415 -> 0; and at the old storm mean of 20 cycles the program livelocked (4196 of 4550
+  retirements were entries, 353 loop records in 45k cycles; build l2/c export), so `regime_windows.irq_event_mean.storm`
+  is 100 (an entry every ~30 cycles; 573 entries in 3588 records, 0 mismatches). The irq checker's bound restarts at every
+  entry: a lower-priority line legitimately waits while higher ones keep being taken (43 false bound failures on l2/b).
+- Shim NMI emulation: unit test sections 10-12 (external entry with MIE / MPIE / MPP / mepc / mtval and the mstack restore
+  on mret, internal entry with mtval, an NMI nested in a trap handler) red 16 failures (gen_fu_l2_ut_isa_shim_red_nmi.log)
+  then green 204 OK (gen_fu_l2_ut_isa_shim_green_nmi.log). The scoreboard arms the entry from the record's vector and
+  `ext_nmi` sample; the DPI argument `taken_cause` (unused) became `nmi_mtval`. Green: rows_nmi with the isa rows ON (1
+  entry, 0 mismatches), the with-NMI storm (175 entries, 1 NMI, 0 mismatches; on l2/c with the old mean 1850 entries, 35
+  NMIs, 0 mismatches), the integrity run with EVERY checker and isa row on (gen_fu_l2_intg_s7_allchk_*: 54 internal NMIs
+  accepted, 0 cause mismatches, 0 nmi_internal bound failures, 83 suppressed loads mirrored, 0 mismatches). Two comparator
+  rules the runs demanded: (1) an interrupt entry the NMI pre-empts before its handler retires anything has no record of
+  its own (the NMI's mepc points into the handler), so the record after the NMI entry that sits at a vector address without
+  `rvfi_intr` is that entry and the model takes it there (`nmi_preempted`, 2 in the l2/c storm; 6053 misses without the
+  rule); (2) a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress` and the DUT keeps the
+  destination's old value, so the model's write is undone from a GPR snapshot taken before the step (decoding rd from the
+  compressed form is what a first attempt got wrong: 3309 misses; 1560 before the rule).
+- nmi_internal: an announced corruption (the announcement now carries the address, `note_intg(addr)` / `take_intg()`) must
+  produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS (4) records outside NMI mode; mutant MB12 (a
+  corruption announced but not injected) fires it.
+- PMP denial: gen_pmp_deny_directed.S green (20 traps, all model-decided, 0 mismatches, tohost 1; first on build
+  out_fu2/j as gen_fu_j_pmp_deny_probe_*, then in the copy); the Critic's red P13 (the model loses pmpaddr0 after every
+  step, so its PMP entry never covers the buffer): `isa_trap dut trapped, model retired 1` with the referees inert.
+- CS2-L-4: gen_ut_export asserts the misc stamp relation (MISC_CURRENT_PC_LINE_OFFSET = 2: crash_dump_o.current_pc = pc_id,
+  the boot jump spends one cycle in ID and one in WB; measured 2 on records 0..3 of the retained Zc export); mutant MUT-L
+  (the misc writer reports the previous sample's value; the stamp-shift form was also caught by read()'s cycle rule and
+  a negedge sample is not a defect, both recorded in gen_mut_export.md).

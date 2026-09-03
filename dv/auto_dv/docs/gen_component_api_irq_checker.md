@@ -45,8 +45,19 @@ mcause 0xFFFFFFE0 / mtval read-back are the not-yet-built `nmi_internal` rule's.
 decision is therefore accepted through the driver's event (the Critic's T-090 Section 6 question). Entries whose
 priority claim could not be decided because a candidate line moved inside the window are counted (`priority
 undecidable` in the GEN_IRQ_CHK report) instead of errored, so the frequency of the approximation is evidence. The entry
-then clears only the expectations that named the taken line (or the NMI), and a driver release voids the expectation of
-the released line (`expectations released`): a pulse the DUT never sampled owes no entry. Mutation MB5 (the entry
+then clears only the expectations that named the taken line (or the NMI) and restarts the bound of the others (a
+lower-priority line legitimately waits while higher ones keep being taken; the priority rule judges each entry, the bound
+measures the quiet time after the last entry), and a driver release voids the expectation of the released line
+(`expectations released`): a pulse the DUT never sampled owes no entry.
+
+`nmi_internal` (landing 2a): an announced data-side integrity corruption (gen_bus_driver, `gen_bus_err_log::note_intg(addr)`)
+must produce the internal NMI entry within `GEN_NMI_INT_ENTRY_BOUND_RECORDS` (yaml constant, 4; observed 2-3) records spent
+outside NMI mode; NMI mode runs from an NMI-vector entry to the executed mret that closes it (nested traps inside it counted
+by depth, rtl/ibex_controller.sv:391-430, :958-960). The entry's legitimacy is the acceptance rule above; its mcause
+(0xFFFFFFE0) and mtval (the address of the corruption that set the DUT's pending bit, `take_intg()`) are compared by the
+model, which emulates the NMI entry (gen_component_api_isa_shim.md). Mutant MB12 (a corruption announced but not injected)
+fires the bound; the integrity run with every checker on (gen_fu_l2_intg_s7_allchk_*) shows 54 internal NMIs accepted, 0
+cause mismatches, 0 bound failures. Mutation MB5 (the entry
 record's vector shifted by one cause) is caught by this rule with the referees inert (gen_mut_step2b.md).
 
 ## 2. Files (planned) and how to call it
@@ -91,7 +102,7 @@ records (class bound).
 |---|---|---|
 | (i) the taken line was pending and enabled at the DUT's decision | BUILT (T-136, EITHER set) | `check_entry_cause`, MB5 |
 | (ii) the taken line was the highest-priority pending line | BUILT (T-136, THROUGHOUT set; undecidable entries counted) | `check_entry_cause` |
-| (iii) `nmi_internal` | NOT BUILT | needs the integrity-error NMI program |
+| (iii) `nmi_internal` | BUILT (landing 2a: legitimacy on an announced corruption, latency bound outside NMI mode; mcause / mtval through the model's NMI emulation) | `check_entry_cause`, write_state; MB12 |
 | (iv) reds for `irq_masked` / `dbg_masked` | NOT BUILT | need a program masking MIE / entering debug with a line pending |
 | (v) dbg checker `dbg_exc` / `dbg_dret` / `dbg_trigger` | NOT BUILT | need the C6 CSR read-back records |
 | misc `crash_dump`, `core_busy`, `fetch_en` | NOT BUILT | misc monitor |

@@ -157,8 +157,11 @@ regime_windows:
   rvalid_delay:   {min1: [1, 1], short: [2, 4], long: [5, 32], random: [1, 32]}
   rate_per_mille: {none: 0, rare: 2, frequent: 50}
   outstanding_cap: {cap1: 1, cap2: 2, cap4: 4, cap8: 8}
-  # mean cycles between autonomous irq/debug regime events (0 = none), keyed by the regime knobs' values
-  irq_event_mean: {quiet: 0, sparse: 2000, storm: 20}
+  # mean cycles between autonomous irq/debug regime events (0 = none), keyed by the regime knobs' values. A held line stays
+  # pending until its own entry (UNTIL_TAKEN releases only the taken line), so the storm mean must stay above the core's
+  # service cost per entry (about 11 cycles) times the lines per event (up to 4): 20 livelocked the program, 100 keeps an
+  # entry every ~30 cycles with the main program progressing.
+  irq_event_mean: {quiet: 0, sparse: 2000, storm: 100}
   dbg_event_mean: {none: 0, sparse: 5000, storm: 200}
 
 # Constants: `sv` is the SystemVerilog right-hand side when it must reference ibex_pkg; `value` is the
@@ -192,6 +195,7 @@ constants:
   - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
   - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
   - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}
+  - {name: GEN_NMI_INT_ENTRY_BOUND_RECORDS, value: 4, sv_type: int unsigned, desc: "records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)"}
   - {name: GEN_MEM_ERR_ARM_KIND_INTG, value: 2, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response"}
   - {name: GEN_ISA_FAULT_KIND_FETCH, value: 0, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: instruction fetch (shim fault_hits)"}
   - {name: GEN_ISA_FAULT_KIND_LOAD, value: 1, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: load"}

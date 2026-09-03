@@ -1,0 +1,41 @@
+# excerpt of scratch l2_root/dv/auto_dv/work/tb-infra/l2/b/lockstep_irq_storm/stdout.log (landing 2a reds on copy build l2/b: bound failures under the taken-line release, the NMI-pre-empted entry, the un-mirrored suppressed load; UVM_ERROR lines counted by grep: 43, first 12 kept)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=2 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/irqp/prog.vmem tohost=0x800002d0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=storm line_mix=multi hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(211) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(212) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(239) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(131) @ 0: uvm_test_top.env.sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 402500: uvm_test_top.env.irq_chk [irq_entry] lines 00005 raised at cycle 225 (order 20) not taken within 17 records (now order 38, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 1281500: uvm_test_top.env.irq_chk [irq_entry] lines 02004 raised at cycle 1097 (order 107) not taken within 17 records (now order 125, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 1922500: uvm_test_top.env.irq_chk [irq_entry] lines 00003 raised at cycle 1731 (order 168) not taken within 17 records (now order 186, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 3958500: uvm_test_top.env.irq_chk [irq_entry] lines 00003 raised at cycle 3774 (order 380) not taken within 17 records (now order 398, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 4014500: uvm_test_top.env.irq_chk [irq_entry] lines 00003 raised at cycle 3824 (order 385) not taken within 17 records (now order 403, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 4024500: uvm_test_top.env.irq_chk [irq_entry] lines 20002 raised at cycle 3830 (order 386) not taken within 17 records (now order 404, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 4155500: uvm_test_top.env.irq_chk [irq_entry] lines 0c006 raised at cycle 3964 (order 398) not taken within 17 records (now order 416, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 5898500: uvm_test_top.env.irq_chk [irq_entry] lines 20004 raised at cycle 5722 (order 570) not taken within 17 records (now order 588, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 6534500: uvm_test_top.env.irq_chk [irq_entry] lines 00005 raised at cycle 6343 (order 632) not taken within 17 records (now order 650, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 11160500: uvm_test_top.env.irq_chk [irq_entry] lines 06400 raised at cycle 10970 (order 1112) not taken within 17 records (now order 1130, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 11194500: uvm_test_top.env.irq_chk [irq_entry] lines 01002 raised at cycle 11002 (order 1115) not taken within 17 records (now order 1133, mie 7fff0888 mstatus 00000088)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(122) @ 11329500: uvm_test_top.env.irq_chk [irq_entry] lines 10004 raised at cycle 11151 (order 1129) not taken within 17 records (now order 1147, mie 7fff0888 mstatus 00000088)
+449685.01ns INFO     cocotb.regression                  gen_ut_lockstep failed
+                                                            raise AssertionError(f"GEN_UT_LOCKSTEP: no tohost store ({type(exc).__name__})") from None
+                                                        AssertionError: GEN_UT_LOCKSTEP: no tohost store (SimTimeoutError)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                            449685.01           0.89     506061.67  **

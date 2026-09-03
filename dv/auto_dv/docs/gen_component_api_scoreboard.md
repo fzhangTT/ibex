@@ -80,7 +80,17 @@ the record's pre_mip), so lines raised between the DUT's decision and the record
 refuses an entry that is not pending and enabled (isa_trap), and the decision-time pending fact and the priority among
 simultaneously pending lines are the irq checker's `irq_entry` cause rule (T-136, gen_component_api_irq_checker.md
 Section 1), evaluated on every intr record from the previous record's `post_mip`, the entry record's `pre_mip` and the
-driver's events. On an ordinary record the pending bits that are ENABLED (M-mode with
+driver's events. An NMI-vector entry (cause 31) is emulated by the model (landing 2a): the record's `ext_nmi` sample
+decides external (mcause 0x8000001F) against internal (0xFFFFFFE0, mtval = the announced corruption's address from
+`gen_bus_err_log::take_intg()`), and the shim performs the entry and the mstack restore on the closing mret
+(gen_component_api_isa_shim.md), so NMI-enabled and integrity-error runs are full lock-step compares, no longer
+consistency-only. An interrupt entry the NMI pre-empted before its handler retired anything leaves no record of its own:
+the record after the NMI entry then sits at a vector address without `rvfi_intr`, and the model takes that interrupt at
+that record (`nmi_preempted` in the report; 2 in the with-NMI storm). The entry's vector cause is also written to the
+bridge (`evt_irq_taken_cause`) for the irq driver's release rule. A load whose response carried an integrity error retires
+with `rvfi_ext_rf_wr_suppress`: the DUT keeps the destination's old value, the model saw the clean word, so its write is
+undone from a GPR snapshot taken before the step and the rd compare is skipped for that record (`rf_wr_suppressed`; 83 in
+the integrity run). On an ordinary record the pending bits that are ENABLED (M-mode with
 MIE, or U-mode) are withheld from the model, because the DUT retired that instruction before taking them and Spike would
 take them first; disabled pending bits are injected so a mip read compares. A debug request held through dret re-enters
 debug on the very next record: the entry rule is `pc_rdata == DmHaltAddr` with `ext_debug_mode` and either the previous
@@ -99,7 +109,10 @@ on every data-bus error it injects; the announcement is consumed by the arming, 
 word). Otherwise the model decides alone: a PMP denial is Spike's own decision from the same CSR writes, and a DUT fault
 on an access nobody corrupted is an isa_trap miss (`dut trapped, model retired 1`). The GEN_SB report splits the trap
 records into `faults_armed` (TB-caused) and `faults_unannounced` (the model decided) beside `bus_err_announced`; an
-unannounced count above zero in a run without PMP denials is itself a finding. Stated limitations: the arming trusts the
+unannounced count above zero in a run without PMP denials is itself a finding. PMP denials: gen_pmp_deny_directed.S (a
+locked NAPOT entry without R/W/X over a data buffer, ten load / store rounds into it) is green with 20 model-decided traps
+and 0 mismatches (gen_fu_l2_pmp_deny_*), and mutant P13 (the model loses pmpaddr0 after every step, out of tree) is the
+Critic's red: `isa_trap dut trapped, model retired 1` with the referees inert. Stated limitations: the arming trusts the
 driver's announcement (a word both injected and legitimately faulting is armed once); instruction-side faults are never
 armed (the model's fetch fault is its own decision from its memory map); data-side integrity corruptions are announced
 separately (`gen_bus_err_log::intg_announced`) for the irq checker's internal-NMI classification, never for arming (they

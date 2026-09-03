@@ -16,6 +16,7 @@ from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
 PASS_MARKER = "GEN_UT_IRQ_PASS"
 HOLD_UNTIL_TAKEN = 2
 LINES = [("fast3", 1 << (3 + 3)), ("external", 1 << 2), ("software", 1 << 0), ("timer", 1 << 1), ("fast14+fast0", (1 << (3 + 14)) | (1 << 3))]
+# every raised line is taken in its own entry: a mask of n lines yields n entries (UNTIL_TAKEN releases only the taken line)
 
 
 def plus(name, default=None):
@@ -46,9 +47,10 @@ async def gen_ut_irq(dut):
     for name, mask in LINES:
         base = int(h.b.evt_retired_count.value)
         await b.cmd("IRQ_SET", (mask, HOLD_UNTIL_TAKEN, 0, 0))
-        ok = await taken_within(h, 4000)
-        log.info("GEN_UT_IRQ line %s mask 0x%05x taken=%s at cycle %d", name, mask, ok, int(h.b.cycle_count.value))
-        assert ok, f"GEN_UT_IRQ: interrupt on {name} not taken within 4000 cycles"
+        for k in range(bin(mask).count("1")):
+            ok = await taken_within(h, 4000)
+            log.info("GEN_UT_IRQ line %s mask 0x%05x entry %d taken=%s at cycle %d", name, mask, k + 1, ok, int(h.b.cycle_count.value))
+            assert ok, f"GEN_UT_IRQ: entry {k + 1} of {name} not taken within 4000 cycles"
         taken += 1
         await b.wait_retired_until(base + 60, timeout_cycles=20000)   # let the handler run and mret
     mism = int(h.b.evt_isa_mismatch.value)

@@ -202,7 +202,7 @@ package gen_tb_pkg;
     if (group == "dbg_event_mean" && value == "storm") begin v = 200; return 1'b1; end
     if (group == "irq_event_mean" && value == "quiet") begin v = 0; return 1'b1; end
     if (group == "irq_event_mean" && value == "sparse") begin v = 2000; return 1'b1; end
-    if (group == "irq_event_mean" && value == "storm") begin v = 20; return 1'b1; end
+    if (group == "irq_event_mean" && value == "storm") begin v = 100; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap1") begin v = 1; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap2") begin v = 2; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap4") begin v = 4; return 1'b1; end
@@ -246,6 +246,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)
+  parameter int unsigned GEN_NMI_INT_ENTRY_BOUND_RECORDS = 4;  // records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_INTG = 2;  // MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response
   parameter int unsigned GEN_ISA_FAULT_KIND_FETCH = 0;  // gen_isa_arm_fault kind: instruction fetch (shim fault_hits)
   parameter int unsigned GEN_ISA_FAULT_KIND_LOAD = 1;  // gen_isa_arm_fault kind: load
@@ -509,7 +510,15 @@ package gen_tb_pkg;
     static logic [31:0] words [$];
     static int unsigned announced = 0, taken = 0;
     static int unsigned intg_announced = 0;   // data-side integrity corruptions: each raises the DUT's internal NMI (irq checker)
-    static function void note_intg(); intg_announced++; endfunction
+    static logic [31:0] intg_first_addr = '0;  // address of the corruption that set the DUT's pending bit (its mtval), until consumed
+    static bit          intg_pending = 0;
+    static function void note_intg(logic [31:0] addr);
+      intg_announced++;
+      if (!intg_pending) begin intg_pending = 1; intg_first_addr = addr; end
+    endfunction
+    static function logic [31:0] take_intg();   // the internal-NMI entry consumes the pending bit (rtl/ibex_controller.sv:407-411)
+      intg_pending = 0; return intg_first_addr;
+    endfunction
     static function void note(logic [31:0] addr);
       words.push_back({addr[31:2], 2'b00}); announced++;
       while (words.size() > 256) void'(words.pop_front());

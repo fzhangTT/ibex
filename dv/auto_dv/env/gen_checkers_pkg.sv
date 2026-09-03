@@ -19,27 +19,7 @@ package gen_checkers_pkg;
     return cfg.chk_all ? val : (set && val);
   endfunction
 
-  // Interrupt-line bit i (0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm) -> mie/mip bit position
-  function automatic int gen_irq_mie_bit(int line);
-    if (line == 0) return ibex_pkg::CSR_MSIX_BIT;
-    if (line == 1) return ibex_pkg::CSR_MTIX_BIT;
-    if (line == 2) return ibex_pkg::CSR_MEIX_BIT;
-    if (line <= 17) return ibex_pkg::CSR_MFIX_BIT_LOW + (line - 3);
-    return -1;
-  endfunction
-  // mcause lower_cause of an interrupt entry -> line bit (-1: not a line, e.g. NMI)
-  function automatic int gen_irq_line_of_cause(int unsigned lower_cause);
-    for (int l = 0; l < 18; l++) if (gen_irq_mie_bit(l) == lower_cause) return l;
-    return -1;
-  endfunction
-  // controller priority (rtl/ibex_controller.sv exc_cause_o chain and gen_mfip_id): lowest fast id, then external,
-  // software, timer; NMI outranks all and is handled apart. Smaller rank wins.
-  function automatic int gen_irq_rank(int line);
-    if (line >= 3) return line - 3;
-    if (line == 2) return 15;
-    if (line == 0) return 16;
-    return 17;
-  endfunction
+  // gen_irq_mie_bit / gen_irq_line_of_cause / gen_irq_rank live in gen_agents_pkg (the driver's release rule uses them too)
 
   // ------------------------------------------------------------------------------------------
   class gen_irq_checker extends uvm_component;
@@ -73,6 +53,13 @@ package gen_checkers_pkg;
     // is legitimate when a corruption was announced since the last such entry consumed the bit. Announcements up to the
     // previous record are consumed by the entry (a corruption between that record and the entry may justify the next one).
     int unsigned intg_at_last = 0, intg_consumed = 0;
+    // nmi_internal: an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS
+    // records spent outside NMI mode (the DUT takes no NMI inside NMI mode); NMI mode runs from the NMI-vector entry to
+    // the mret that closes it, nested traps inside it counted by depth
+    bit nmi_mode = 0, intg_wait = 0;
+    int nmi_depth = 0;
+    int unsigned intg_wait_records = 0, nmi_internal_fail = 0;
+    logic [63:0] intg_wait_order = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       imp_state = new("imp_state", this);
@@ -113,8 +100,12 @@ package gen_checkers_pkg;
         entries_seen++;
         if (is_nmi) nmi_seen++;
         if (have_st) check_entry_cause(st, is_nmi, line);
-        // the entry clears the expectations that named the taken line (or the NMI); the others stay under the bound
-        foreach (expects[i]) if (!((is_nmi && expects[i].nmi) || (line >= 0 && expects[i].lines[line]))) keep.push_back(expects[i]);
+        // the entry clears the expectations that named the taken line (or the NMI); the others stay, and their bound
+        // restarts here: a lower-priority line legitimately waits while higher ones keep being taken (the priority rule
+        // above judges each entry), so the bound measures the quiet time after the last entry
+        foreach (expects[i]) if (!((is_nmi && expects[i].nmi) || (line >= 0 && expects[i].lines[line]))) begin
+          expects[i].order_at = st.order; keep.push_back(expects[i]);
+        end
         expects = keep;
         // irq_masked: an entry while M-mode with MIE clear and not an NMI (the state BEFORE the entry)
         if (have_st && !is_nmi && last_st.prv == ibex_pkg::PRIV_LVL_M && !last_st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && !last_st.debug_mode &&
@@ -138,6 +129,20 @@ package gen_checkers_pkg;
           end
           expects.delete(i);
           break;
+        end
+      end
+      // NMI mode and the internal-NMI latency bound
+      if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) begin nmi_mode = 1; nmi_depth = 0; end
+      else if (nmi_mode && (st.is_trap || st.is_intr)) nmi_depth++;
+      else if (nmi_mode && st.is_mret && !st.is_trap) begin if (nmi_depth > 0) nmi_depth--; else nmi_mode = 0; end
+      if (!intg_wait && gen_bus_err_log::intg_announced > intg_at_last) begin intg_wait = 1; intg_wait_order = st.order; intg_wait_records = 0; end
+      else if (intg_wait && !nmi_mode) begin
+        intg_wait_records++;
+        if (intg_wait_records > GEN_NMI_INT_ENTRY_BOUND_RECORDS) begin
+          nmi_internal_fail++; intg_wait = 0;
+          if (gen_chk_en(cfg, cfg.chk_nmi_internal, cfg.chk_nmi_internal_set))
+            `uvm_error("nmi_internal", $sformatf("no internal NMI entry within %0d records outside NMI mode of the integrity corruption announced at order %0d (now order %0d)",
+                                                  GEN_NMI_INT_ENTRY_BOUND_RECORDS, intg_wait_order, st.order))
         end
       end
       last_st = st; have_st = 1; last_rec_cycle = st.cycle;
@@ -172,9 +177,9 @@ package gen_checkers_pkg;
       cause_checked++;
       if (is_nmi) begin
         // an NMI-vector entry with no pin NMI in the window is the internal NMI of a TB-injected data-side integrity error
-        // (accepted and counted; the one-instruction latency rule is nmi_internal's, not built); otherwise a phantom NMI
+        // (accepted and counted; its latency is the nmi_internal rule in write_state); otherwise a phantom NMI
         if (!nmi_either && gen_bus_err_log::intg_announced > intg_consumed) begin
-          nmi_internal_entries++; intg_consumed = intg_at_last;
+          nmi_internal_entries++; intg_consumed = intg_at_last; intg_wait = 0;
         end else if (!nmi_either) why = "NMI entry without a pending NMI pin or an injected integrity error since the last NMI entry";
       end else if (line < 0) begin
         why = "cause is not an interrupt line";
@@ -235,8 +240,8 @@ package gen_checkers_pkg;
       end
     endtask
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d",
-                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size()), UVM_LOW)
+      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d",
+                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail), UVM_LOW)
     endfunction
   endclass
 
