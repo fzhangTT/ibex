@@ -239,3 +239,17 @@ Options: (a) move or mirror the clone to shared storage (Runtime Manager's recom
 team builds a shared-storage mirror (rsync of the clone without .git and out-trees, plus a venv
 created on shared storage from ci/requirements.lock) that LSF jobs use, so option (a) is met
 without moving the owner's working clone. Status: pending.
+
+## Q-013 - 2026-09-03 - QUESTION (to owner; landing-rule mechanics, worded by the Orchestrator)
+
+Tool-mandated filenames versus the `gen_` prefix rule. The riscv-dv generator requires fixed
+names inside a target directory (`riscv_core_setting.sv`, `testlist.yaml`,
+`user_extension/user_define.h`, `user_extension/user_extension.svh`, `user_extension/user_init.s`;
+included by name from the vendored generator sources). The T-023 commit placed them under
+`dv/auto_dv/stim/gen_riscv_dv_target/` without the prefix; the post-execution review
+(`dv/auto_dv/reviews/2026-09-03-claude-diff-0b9c93c7-0b8d60b4.md`, major finding 3) flags that
+FENCE.md's landing rule exempts only `.gitignore` and `contract/**`. Question: does the landing
+check accept tool-mandated fixed filenames inside a `gen_`-prefixed directory? Default applied
+while pending: the committed sources are renamed with the `gen_` prefix and the program driver
+materializes the fixed-name target directory out-of-tree at flow time, so the tree passes the
+strict reading either way. Status: pending.
