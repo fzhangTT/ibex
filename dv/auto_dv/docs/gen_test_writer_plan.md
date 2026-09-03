@@ -61,10 +61,14 @@ the table named by its items; the tables are transcribed once into `gen_test_lib
   only if it segments into declared bin words of its covergroup by the `segmentable` rule of
   `dv/auto_dv/tools/gen_trace_check.py`, which the generator loads from that file's source (never a
   second implementation), so the manifest and the plan cannot drift; a bin that fails the rule stops
-  the generator. Each bin's anti-vacuity note is the covergroup's own Sample sentence. Dropped bins
-  are listed on stderr for the record. `--self-test` PASS: gen_reg_schedule 67 bins, informational
-  and probe-gated items yield no manifest, 122 excluded coverpoints, the trace checker's rule
-  accepted and rejected on known names.
+  the generator. The CSV already lists every auto-cross bin expanded; the generator validates, it
+  expands nothing. Each bin's anti-vacuity note is the covergroup's own Sample sentence. Dropped bins
+  are listed on stderr for the record. `--self-test` PASS on the DV Lead's working tree:
+  gen_reg_schedule 67 bins, informational and probe-gated items yield no manifest, the trace
+  checker's rule accepted and rejected on known names; the excluded-coverpoint count depends on the
+  plan version (122 at 09:00 UTC, 86 at 09:47 UTC) and is recorded with the SHA at the plan-set
+  landing. On the committed tree the generator exits with `GEN_FCOV_MANIFEST_INPUT_VERSION` until
+  that landing; nothing is produced from it before.
 - The Python test declares the same list through `GenTest.declare_bins()` and logs it
   (`GEN_TEST_BINS n=<count>`); `gen_test_lib.check_manifest_matches` is the host-side unit check
   that the test and its manifest agree.
@@ -191,8 +195,18 @@ Items the Test Writer needs from TB Infra (queued by the Orchestrator after T-06
    09:29 UTC) meets the requirements; Test Writer comments (09:31 UTC): the per-record
    `ext_mhpmcounters` are needed in v1 behind `+gen_rvfi_export_counters=1` (PMC/DIT/BTALU
    fire-checks read them), the flush marker must carry the bridge retirement count sampled at the
-   same instant, and the `I` lines carry `ext_debug_req`/`ext_debug_mode`. When it lands, `GenTest`
-   issues the flush after the end-of-test edge and exposes `self.records`.
+   same instant, and the `I` lines carry `ext_debug_req`/`ext_debug_mode`. Addendum version 2 (09:33 UTC)
+   adopted all three (header `counters=<0|1>` with the field list matching; markers `records=<n> retired=<r>`;
+   I lines with the debug flags; header names seed and image); it now waits for the DV Lead's acceptance,
+   the replan review and the T-068 landing. Version 3 (09:52 UTC, `dv/auto_dv/docs/gen_rvfi_export_addendum.md`,
+   embedded in the architecture as Section 9): the knob is opt-in per testlist entry
+   (`+gen_rvfi_export=gen_rvfi_records.txt` on tests that consume records), `gen_rvfi_export.read()`
+   is the enforcing parser (prefix before the last complete flush marker, `records == retired`,
+   order strictly +1, field count per line), all 34 `gen_rvfi_txn` fields per R line with the 20 hpm
+   words under `+gen_rvfi_export_counters=1`, rendered `RVFI_EXPORT_FIELDS` /
+   `RVFI_EXPORT_COUNTER_FIELDS`. When it lands, `GenTest` adds the knob for tests that declare they
+   need records, issues the flush after the end-of-test edge and exposes `self.records` through
+   `read()` (never its own line parser).
 
 ## 7. First real test and the template proof (this task)
 

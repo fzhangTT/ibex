@@ -202,6 +202,47 @@ the named messages `GEN_FCOV_MANIFEST_INPUT_VERSION: ... defines 0 segmentable()
 `... has no Section 1.1 ...` (fixtures/head_inputs, run 09:23 UTC). The DV Lead's plan-set landing SHA
 is recorded in the response file when it lands.
 
+## 7. Second-round fixes (cross-model AWC of 98c2ade and the Critic's v1 on 746af6f; response rows R2-* and M-*/L-*)
+
+Where the quoted lines live (Critic L-4): every `GEN_TEST_*`, `AssertionError` and `TESTS=` line quoted
+in this file is in the run's `stdout.log` (`sim_stdout.log` in Runtime's out-trees); `sim.log` holds the
+UVM lines and the `Command:`/compiler stamp used for identity. The tables below identify each run by
+its `stdout.log` mtime (local, UTC-4) and md5.
+
+Build `out_head/` (HEAD 4c0ba11 working tree, no REGIME_SET consumer), riscv-dv seed-1 program
+(`prog_s1`, end-of-test store at cycle 1924), fixtures under `dv/auto_dv/work/test-writer/fixtures/`.
+
+EOT-cycle race probe (R2-4), `gen_ut_sched_sound` with `+gen_regime_sched=imem_gnt_delay:long@c0,imem_gnt_delay:short@c<N>`:
+
+| Step | Run | stdout.log mtime | md5 | Decisive line | cocotb |
+|---|---|---|---|---|---|
+| pre-fix | prefix_race_c1923 | 05:45:09.46 | dd89066f42d2753b98041630e9bc1aac | `GEN_TEST_PHASE idx=1 trigger=c1923 ... cycle=1924`; `fire_schedule_applied ok=True reached 2 of 2 ... applied 2` | PASS |
+| pre-fix (defect) | prefix_race_c1924 | 05:45:11.38 | a54bdd22674e1898f50f5f3085307e79 | `fire_schedule_applied ok=False reached 2 of 2 ... applied 1, missed ['imem_gnt_delay:short@c1924']` (the boundary and the end-of-test store fell in the same cycle; the runner lost the race) | FAIL (spurious) |
+| pre-fix | prefix_race_c1925 | 05:45:13.45 | c3443e249d10af245d5c88dd50074e5d | `fire_schedule_applied ok=True reached 1 of 2 ... applied 1` (c1925 not reached) | PASS |
+| post-fix | postfix2_race_c1924 | 05:47:54.58 | 307ee1152c449b825b4019ba3555c365 | `GEN_TEST_PHASE idx=1 trigger=c1924 ... cycle=1924`; `fire_schedule_applied ok=True reached 2 of 2 ... applied 2` | PASS |
+
+New guards and paths (M-3, L-1) and the regressions after the second round:
+
+| Step | Run | stdout.log mtime | md5 | Decisive line | cocotb |
+|---|---|---|---|---|---|
+| red (M-3) | postfix2_layers_required | 05:47:57.55 | 6ae6482152edb6eb91f43ed3c84384a7 | `AssertionError: GEN_TEST_FAIL gen_ut_layers_required: declared regime knobs imem_gnt_delay,imem_rvalid_delay,imem_err_rate,imem_intg_err_rate,imem_outstanding_cap have no REGIME_SET consumer in this build (layers_required); ...` at setup, before any fetch | FAIL |
+| red (L-1) | postfix2_stim_raises | 05:48:00.50 | ac2b7282fd47a4c27f39d6432e0f3524 | `AssertionError: GEN_TEST_FAIL gen_ut_stim_raises: deliberate failure inside the forked stimulus()` (cocotb aborts the test on a failing background task) | FAIL |
+| red (M-1) | postfix2_sched_vacuous | 05:48:04.31 | 488abce66a67b65ae059744b77b740ef | `fire_schedule_applied ok=False ... applied 1, missed ['imem_gnt_delay:short@c200']` | FAIL |
+| green (M-1) | postfix2_sched_sound | 05:48:06.79 | 88d9cbbc99f15e96c2878375919c4a51 | `fire_schedule_applied ok=True reached 2 of 2 ... applied 2` | PASS |
+| red (M-2) | postfix2_zero_check | 05:48:08.73 | 2d9870052aa3677db018c9a4ff0a9325 | `AssertionError: GEN_TEST_FAIL gen_ut_zero_check: fire_check() recorded no check ...` | FAIL |
+| regression | postfix2_boot_green_s1 | 05:48:10.56 | a4e4fa6386701744352030b554403486 | `GEN_TEST_LAYERS not_applied reason=no REGIME_SET consumer for declared knobs imem_gnt_delay,... (layers_required=False, bring-up only)`; `fire_eot_pass_code ok=True`; `fire_retired_floor ok=True retired 550 (floor 300 ...)` | PASS |
+| regression | postfix2_boot_red_s1 | 05:48:12.21 | 3f02fbb0cd061886a07537d2f654a387 | `AssertionError: GEN_TEST_FAIL gen_test_boot_retire: 2 fire-check failure(s): ...` | FAIL |
+| regression | postfix2_report_s1 | 05:48:14.02 | ba4c1425a62e85c7bdb9ca8a7fcc3ea9 | `fire_report_count ok=True reports 3 (expected 3)` | PASS |
+
+Host side: `gen_test_lib --self-test` PASS (`consumed knobs now: none; checked tests:
+['gen_test_boot_retire.py']`; the consumed-knob parse proven on an SV fixture and on a file without
+`apply_knob`; three red test sources refused by the structure check); `gen_fcov_manifest --self-test`
+PASS on the DV Lead's working tree (`86 excluded coverpoints` at 09:47 UTC; 122 at 09:00 UTC: the
+number follows the plan version). At the plan-set landing (HEAD bc9dba9, 09:52 UTC) the self-test
+prints `inputs at git HEAD bc9dba9; working-tree modified inputs: none` and `PASS (67 bins for
+gen_reg_schedule, 0 dropped; 86 excluded coverpoints)`: the generator runs from the committed tree
+from that SHA on.
+
 ## 5. Limitations recorded
 
 - Layer 3 at run time was exercised on seed 3 only in this set (seed 1 drew K=1; seed 2's boundaries

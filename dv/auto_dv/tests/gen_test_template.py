@@ -41,7 +41,7 @@ MODULE=dv.auto_dv.tests.gen_test_<area>_<topic>, TOPLEVEL=gen_tb_top, RANDOM_SEE
 import os
 
 import cocotb
-from cocotb.triggers import Edge, First, Lock, with_timeout
+from cocotb.triggers import Edge, Event, First, Lock, with_timeout
 
 from dv.auto_dv.gen_tb.gen_bridge import GenBridge
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
@@ -52,8 +52,11 @@ from dv.auto_dv.tests import gen_test_lib as lib
 
 class GenTest:
     name = "gen_test_template"
-    # Regime knobs this test lets layers 2 and 3 vary (pinned ones are removed at run time).
-    schedulable = lib.SCHEDULABLE_KNOBS
+    # Regime knobs this test DECLARES layers 2 and 3 must vary (pinned ones are removed at run time).
+    # A declared knob without a REGIME_SET consumer in the build fails setup unless layers_required is
+    # False (bring-up tests only, with the reason in the docstring; never a measured test).
+    schedulable = lib.REGIME_KNOBS
+    layers_required = True
     # Layer-3 phase count range and duration-class weights (CG-REG-007 bins k1..k5_plus, short..long).
     k_range = (1, 5)
     duration_weights = None
@@ -82,7 +85,10 @@ class GenTest:
         self.rng = lib.sub_rng(self.seed, "test")
         self.period_ns = CONSTANTS["GEN_CLK_PERIOD_NS"]
         self.pinned = [n for n in self.schedulable if lib.knob_is_pinned(n)]
-        self.varied = [n for n in self.schedulable if n not in self.pinned]
+        self.unconsumed = [n for n in self.schedulable if n not in self.pinned and n not in lib.CONSUMED_KNOBS]
+        self.varied = [n for n in self.schedulable if n not in self.pinned and n in lib.CONSUMED_KNOBS]
+        self._applying = False
+        self._drained = Event()
         self.knobs = {}
         self.schedule = None
         self.applied = []          # Phase objects applied through REGIME_SET, in order
@@ -134,14 +140,16 @@ class GenTest:
         b.evt_cycle_target.value = count & 0xFFFFFFFF
         b.evt_cycle_arm.value = 0 if int(b.evt_cycle_arm.value) else 1
         budget = timeout_cycles if timeout_cycles is not None else max(count - self.cycle(), 0) + 100
-        return await self._edge_or_eot(b.evt_cycle_hit, budget, f"evt_cycle_hit for cycle {count}")
+        hit = await self._edge_or_eot(b.evt_cycle_hit, budget, f"evt_cycle_hit for cycle {count}")
+        return hit or count <= self.cycle()   # the boundary passed in the end-of-test cycle itself
 
     async def wait_retired(self, count, timeout_cycles):
         """Arm the bridge retirement threshold at the absolute count; False if the program ended first."""
         b = self.h.b
         b.evt_retired_target.value = count & 0xFFFFFFFF
         b.evt_retired_arm.value = 0 if int(b.evt_retired_arm.value) else 1
-        return await self._edge_or_eot(b.evt_retired_hit, timeout_cycles, f"evt_retired_hit for {count} retirements")
+        hit = await self._edge_or_eot(b.evt_retired_hit, timeout_cycles, f"evt_retired_hit for {count} retirements")
+        return hit or count <= self.retired()
 
     async def wait_event(self, name, timeout_cycles):
         """Await one edge of a monitor event bit (evt_irq_taken, evt_dbg_entered); False if the program ended first."""
@@ -171,6 +179,12 @@ class GenTest:
     async def apply_layers(self):
         """Layer 2 then layer 3: phase 0 of the schedule carries the layer-2 draw; a supplied
         +gen_regime_sched replaces both (architecture C9, XM-L5)."""
+        if self.unconsumed:
+            names = ",".join(lib.short_knob(n) for n in self.unconsumed)
+            if self.layers_required:
+                raise AssertionError(f"GEN_TEST_FAIL {self.name}: declared regime knobs {names} have no REGIME_SET consumer in this build "
+                                     "(layers_required); a test never runs with its layers silently off")
+            self.log.info("GEN_TEST_LAYERS not_applied reason=no REGIME_SET consumer for declared knobs %s (layers_required=False, bring-up only)", names)
         supplied = lib.plus("regime_sched")
         if supplied:
             self.schedule = lib.Schedule.parse(supplied)
@@ -206,9 +220,13 @@ class GenTest:
                 reached = await self.wait_retired(p.count, timeout_cycles=self.program_budget_cycles)
             if not reached:
                 break
+            self._applying = True
+            self._drained.clear()
             while i < len(pending) and (pending[i].kind, pending[i].count) == (p.kind, p.count):
                 await self.apply_phase(pending[i])
                 i += 1
+            self._applying = False
+            self._drained.set()
 
     async def stimulus(self):
         """Hook: the scenario's stimulus (bridge commands, waits). Default: the program alone."""
@@ -269,8 +287,9 @@ class GenTest:
         phase and the check fails. With no schedulable knob the layers are recorded as not applied
         and the check is a logged no-op, never a silent pass."""
         if not self.schedule.phases:
-            self.log.info("GEN_TEST_LAYERS not_applied reason=no schedulable knob for this test (schedulable=%s)",
-                          ",".join(lib.short_knob(n) for n in self.schedulable) or "-")
+            self.log.info("GEN_TEST_LAYERS not_applied reason=no consumable knob varied (declared=%s, consumed=%s)",
+                          ",".join(lib.short_knob(n) for n in self.schedulable) or "-",
+                          ",".join(lib.short_knob(n) for n in lib.CONSUMED_KNOBS) or "-")
             return
         reached = [p for p in self.schedule.phases if self.phase_reached(p)]
         applied = set(id(p) for p in self.applied)
@@ -304,6 +323,11 @@ class GenTest:
             await with_timeout(stim_task.join(), self.program_budget_cycles * self.period_ns, "ns")
         except Exception as exc:
             raise AssertionError(f"GEN_TEST: stimulus() did not finish after the end of test ({type(exc).__name__})") from None
+        if self._applying:   # a boundary reached in the end-of-test cycle is still being applied
+            try:
+                await with_timeout(self._drained.wait(), self.program_budget_cycles * self.period_ns, "ns")
+            except Exception as exc:
+                raise AssertionError(f"GEN_TEST: the schedule runner did not finish its last boundary ({type(exc).__name__})") from None
         sched_task.kill()
         self.schedule_check()
         self.fire_check()

@@ -12,10 +12,12 @@ excluded are (a) the bins of informational items (`- Expected: informational`), 
 item whose `- Manifest:` field says `not in manifest` (probe-gated items), (c) bins of a coverpoint
 whose plan line carries `not in manifest` (probe-gated coverpoints), (d) bins named as a bug witness
 in the plan (`<bin> is the B<n> witness bin`, `the <bins> are the B<n> witnesses`), (e) the
-regression-level coverpoints of gen_fcov_plan.md Section 1.1 (owned by no item). A `_`-joined cross
-bin is accepted only if it segments into declared bin words of its covergroup by the very
-`segmentable` rule of dv/auto_dv/tools/gen_trace_check.py (loaded from that file's source, never
-re-implemented here); a bin that fails it is a plan-vs-CSV drift and stops the generator.
+regression-level coverpoints of gen_fcov_plan.md Section 1.1 (owned by no item). The CSV already
+lists every auto-cross bin expanded; the generator EXPANDS NOTHING, it validates each `_`-joined cross
+bin against the very `segmentable` rule of dv/auto_dv/tools/gen_trace_check.py (loaded from that
+file's source, never re-implemented here); a bin that fails it is a plan-vs-CSV drift and stops the
+generator. The excluded-coverpoint count printed by --self-test depends on the plan version in the
+tree (recorded with the SHA in the evidence).
 
 Plan covergroup ids (CG-<AREA>-<nnn>) map to implementation names through the plan header
 `### CG-<AREA>-<nnn>: gen_cg_<area>_<name>` and the architecture rule (Section 5): plan

@@ -14,6 +14,7 @@ import re
 import sys
 from pathlib import Path
 
+from dv.auto_dv.gen_tb import gen_knobs as _gk
 from dv.auto_dv.gen_tb.gen_knobs import CMD, CONSTANTS, KNOB_IDS, PLUSARGS, plusarg
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -22,23 +23,36 @@ FCOV_HOME = REPO_ROOT / "dv/auto_dv/fcov_expectations"
 PASS_MARKER = "GEN_TEST_PASS"
 KNOB_PREFIX = "knob_"
 
-# Regime knobs with a REGIME_SET consumer in gen_env_pkg::gen_cmd_dispatch; every other knob is a
-# collected uvm_error there, so only these are schedulable at run time. HEAD has no consumer (TB
-# Infra's step 2b is parked under work/tb-infra/step2b_wip during T-068): set both tuples to the
-# step-2b set (prefixes knob_imem_, knob_dmem_, knob_irq_; names knob_debug_req_regime,
-# knob_scr_key_delay) when it lands, and to every knob when the remaining consumers land.
-REGIME_SET_CONSUMED_PREFIXES = ()
-REGIME_SET_CONSUMED_NAMES = ()
-SCHEDULABLE_KNOBS = tuple(n for n in KNOB_IDS
-                          if n.startswith(REGIME_SET_CONSUMED_PREFIXES) or n in REGIME_SET_CONSUMED_NAMES)
-# Regime knobs whose values only shift bus and key timing; a program needs no handler for them.
-TIMING_ONLY_CANDIDATES = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_outstanding_cap",
-                          "knob_dmem_gnt_delay", "knob_dmem_rvalid_delay", "knob_scr_key_delay")
-TIMING_ONLY_KNOBS = tuple(n for n in TIMING_ONLY_CANDIDATES if n in SCHEDULABLE_KNOBS)
+REGIME_KNOBS = tuple(KNOB_IDS)   # every layer-2/3 knob (the 20 of gen_tb_knobs.yaml)
+GEN_ENV_PKG = REPO_ROOT / "dv/auto_dv/env/gen_env_pkg.sv"
 
-# Bridge argument encodings (IRQ line-mask bits, IRQ/DBG hold-policy codes, MEM_ERR_ARM kinds) are
-# NOT mirrored here: their authority is the step-2b SV dispatcher, which is not in the tree, and the
-# codegen is asked to render them into gen_knobs.py (plan Section 6 item 1). Tests that need them wait.
+
+def consumed_knobs_from_sv(path=GEN_ENV_PKG):
+    """Regime knobs the build's REGIME_SET dispatcher consumes, read from gen_cmd_dispatch::apply_knob in
+    gen_env_pkg.sv (prefix tests `name.substr(...) == "knob_x_"` and exact tests `name == "knob_x"`); an
+    absent apply_knob means no consumer. Stands in until gen_knobs_codegen.py renders REGIME_SET_CONSUMED."""
+    text = path.read_text()
+    m = re.search(r"function\s+void\s+apply_knob\b(.*?)endfunction", text, re.S)
+    if not m:
+        return ()
+    body = m.group(1)
+    prefixes = re.findall(r'name\.substr\([^)]*\)\s*==\s*"(knob_\w+?_)"', body)
+    exact = re.findall(r'name\s*==\s*"(knob_\w+)"', body)
+    return tuple(n for n in REGIME_KNOBS if n in exact or any(n.startswith(px) for px in prefixes))
+
+
+# Knobs with a REGIME_SET consumer in this tree: the rendered constant when the codegen provides it
+# (TB Infra renders REGIME_SET_CONSUMED from gen_tb_knobs.yaml in the same commit as the new dispatcher,
+# whose guard uses the same rendering), else parsed from the parked step-2b dispatcher idiom; the parser
+# is the pre-codegen fallback only and is not consulted once the constant exists.
+CONSUMED_KNOBS = tuple(_gk.REGIME_SET_CONSUMED) if hasattr(_gk, "REGIME_SET_CONSUMED") else consumed_knobs_from_sv()
+SCHEDULABLE_KNOBS = CONSUMED_KNOBS
+# Regime knobs whose values only shift bus and key timing; a program needs no handler for them.
+TIMING_ONLY_KNOBS = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_outstanding_cap",
+                     "knob_dmem_gnt_delay", "knob_dmem_rvalid_delay", "knob_scr_key_delay")
+# End-of-test codes of the riscv-dv / tohost convention (gen_program.py, gen_directed/gen_zc_directed.S).
+TOHOST_PASS = 1
+TOHOST_FAIL = 3
 
 # CG-REG-007 duration classes (gen_fcov_plan.md Section 3.8): TB-side phase length in cycles.
 DURATION_CLASSES = {"short": (500, 2000), "medium": (2001, 20000), "long": (20001, 100000)}
@@ -226,6 +240,62 @@ def program_min_retired(image):
     return program_symbol_word(image, "gen_min_retired")
 
 
+TEMPLATE_PY = Path(__file__).resolve().parent / "gen_test_template.py"
+TEST_HOOKS = ("stimulus", "fire_check", "declare_bins")
+
+
+def _template_methods():
+    import ast
+    tree = ast.parse(TEMPLATE_PY.read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == "GenTest":
+            return {n.name for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    raise AssertionError(f"GEN_TEST_LIB: no class GenTest in {TEMPLATE_PY}")
+
+
+def check_test_source(source, path="<source>"):
+    """Host-side structure check of a test module: every GenTest subclass overrides only the hooks
+    (stimulus, fire_check, declare_bins) and per-item fire_* methods, never run/finish/check/setup or
+    any other template method; at least one self.check(...) call exists and no check passes a literal
+    as its ok argument. Returns the checked class names; raises AssertionError on a violation."""
+    import ast
+    tree = ast.parse(source, filename=str(path))
+    protected = _template_methods() - set(TEST_HOOKS)
+    classes = {n.name: n for n in tree.body if isinstance(n, ast.ClassDef)}
+
+    def is_gentest(cls, seen=()):
+        for b in cls.bases:
+            name = b.id if isinstance(b, ast.Name) else (b.attr if isinstance(b, ast.Attribute) else "")
+            if name == "GenTest":
+                return True
+            if name in classes and name not in seen and is_gentest(classes[name], seen + (name,)):
+                return True
+        return False
+
+    checked = []
+    for cls in classes.values():
+        if cls.name == "GenTest" or not is_gentest(cls):
+            continue
+        methods = [n for n in cls.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        bad = [m.name for m in methods if m.name in protected]
+        assert not bad, f"GEN_TEST_LIB: {path}: class {cls.name} overrides template method(s) {bad}; only {TEST_HOOKS} and fire_* are hooks"
+        extra = [m.name for m in methods if m.name not in TEST_HOOKS and not m.name.startswith("fire_")]
+        assert not extra, f"GEN_TEST_LIB: {path}: class {cls.name} defines non-hook method(s) {extra}"
+        calls = [n for n in ast.walk(cls) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                 and n.func.attr == "check" and isinstance(n.func.value, ast.Name) and n.func.value.id == "self"]
+        assert calls, f"GEN_TEST_LIB: {path}: class {cls.name} never calls self.check(...)"
+        for c in calls:
+            ok = c.args[1] if len(c.args) > 1 else next((k.value for k in c.keywords if k.arg == "ok"), None)
+            assert ok is not None and not isinstance(ok, ast.Constant), \
+                f"GEN_TEST_LIB: {path}: class {cls.name} passes a literal as the ok argument of self.check at line {c.lineno}"
+        checked.append(cls.name)
+    return checked
+
+
+def check_test_module(path):
+    return check_test_source(Path(path).read_text(), path)
+
+
 def load_manifest_bins(test_name):
     """Declared bins of dv/auto_dv/fcov_expectations/<test>.fcov.yaml (None when absent)."""
     import yaml
@@ -248,7 +318,7 @@ def check_manifest_matches(test_name, declared):
 
 def _self_test():
     seed = 12345
-    names = list(TIMING_ONLY_CANDIDATES)   # the mechanics are tested independent of the consumer gate
+    names = list(TIMING_ONLY_KNOBS)   # the mechanics are tested independent of the consumer gate
     empty = Schedule.derive(seed, [])
     assert empty.k == 0 and empty.text() == "" and empty.phases == [], "empty schedule"
     s1 = Schedule.derive(seed, names)
@@ -274,7 +344,35 @@ def _self_test():
     here = Path(__file__).resolve().parent
     for f in sorted(here.glob("gen_test_*.py")) + sorted((here / "gen_programs").glob("*.S")):
         check_ascii(f)
-    print(f"GEN_TEST_LIB self-test PASS (schedule k={s1.k}: {s1.text()})")
+    # consumed-knob derivation: the SV parse works on a fixture and agrees with the rendered constant when present
+    sv_fixture = ('function void apply_knob(int id, int idx);\n  if (name.substr(0, 9) == "knob_imem_") ok = 1;\n'
+                  '  else if (name == "knob_scr_key_delay") ok = 1;\nendfunction')
+    import tempfile, os
+    with tempfile.NamedTemporaryFile("w", suffix=".sv", delete=False) as tf:
+        tf.write(sv_fixture); tfp = Path(tf.name)
+    try:
+        got = consumed_knobs_from_sv(tfp)
+        assert set(got) == {n for n in REGIME_KNOBS if n.startswith("knob_imem_")} | {"knob_scr_key_delay"}, got
+        assert consumed_knobs_from_sv(TEMPLATE_PY) == (), "a file without apply_knob must yield no consumer"
+    finally:
+        os.unlink(tfp)
+    if hasattr(_gk, "REGIME_SET_CONSUMED"):
+        assert set(CONSUMED_KNOBS) <= set(REGIME_KNOBS), "rendered REGIME_SET_CONSUMED names an unknown knob"
+    # test-module structure check: the committed tests pass, three red sources are refused
+    tests = [f for f in sorted(here.glob("gen_test_*.py")) if f.name not in ("gen_test_lib.py", "gen_test_template.py")]
+    for f in tests:
+        assert check_test_module(f), f"{f}: no GenTest subclass found"
+    base = "from dv.auto_dv.tests.gen_test_template import GenTest\nclass T(GenTest):\n    name = 'gen_test_x'\n"
+    for red, why in ((base + "    def fire_check(self):\n        self.check('a', self.retired() > 0, 'x')\n    async def finish(self):\n        pass\n", "overrides"),
+                     (base + "    def fire_check(self):\n        self.check('a', True, 'x')\n", "literal"),
+                     (base + "    def fire_check(self):\n        pass\n", "never calls")):
+        try:
+            check_test_source(red, "<red>")
+            raise AssertionError(f"red source ({why}) accepted")
+        except AssertionError as exc:
+            assert why in str(exc), exc
+    assert check_test_source(base + "    def fire_check(self):\n        self.fire_tp_x_001()\n    def fire_tp_x_001(self):\n        self.check('a', self.retired() > 0, 'x')\n") == ["T"]
+    print(f"GEN_TEST_LIB self-test PASS (consumed knobs now: {list(CONSUMED_KNOBS) or 'none'}; checked tests: {[f.name for f in tests]}; schedule k={s1.k}: {s1.text()})")
     return 0
 
 
