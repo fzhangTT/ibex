@@ -38,11 +38,11 @@ One block per mutation, kept as evidence next to the checker it proves (mutation
 
 - `gen_mut_sva_rvalid_legal.md`: MUT-003, the bus-interface stimulus-legality self-check (T-068).
 - `gen_mut_isa_fields.md`: MUT-004..MUT-007, per-field discrimination and ablation of the ISA comparator ids (T-068).
-- `gen_mut_export.md`: MUT-A..MUT-F, the record export's consumer checks (read() rules and the test's content checks) against producer mutations (T-080).
+- `gen_mut_export.md`: MUT-A..MUT-K, the record and event export's consumer checks (read() rules and the test's content checks) against producer mutations (T-080; MUT-I/J the bus count rules and MUT-K the writer-registration fatal, T-141).
 - Rule (Critic T-080 landing-1 L-1, adopted by the Orchestrator 2026-09-03): a mutant is built from an OUT-OF-TREE copy of
   dv/auto_dv (every other clone entry symlinked, the copy under the owner's scratch area), never by editing the shared
   working tree, so another role can never compile a live mutation; the runner records the shared tree's checksum after
   the batch. Disclosed: T-102's P1..P9 ran in the shared tree under the announce-and-revert rule before the L-1 rule
   reached tb-infra (every revert byte-checked); P10 onward use the out-of-tree runner.
-- `gen_mut_step2b.md`: MB1..MB4, the step-2b agents and boundary checkers (irq_entry, dbg_entry, alert_bus, irq_pending) with the TB-side defect each catches, out of tree (T-090).
-- `gen_mut_t102.md`: P1..P11, the comparator conventions and shim legalization of T-102 (pre-step privilege, mret/dret pc_next, counter and status syncs, Ibex CSR views, one draft-B reference) caught by the named isa_* row with hidden referees inert, each with its ablation.
+- `gen_mut_step2b.md`: MB1..MB11, the step-2b agents and boundary checkers (irq_entry, dbg_entry, alert_bus, irq_pending, then the follow-up landing's irq_entry cause rule, isa_trap on a legal store, isa_rd on a split Zcmp sequence, and the four never-high rules alert_internal / data_tag_quiet / alert_minor / double_fault) with the TB-side defect each catches, out of tree (T-090, T-134, T-136, T-137).
+- `gen_mut_t102.md`: P1..P12, the comparator conventions and shim legalization of T-102 (pre-step privilege, mret/dret pc_next, counter and status syncs, Ibex CSR views, one draft-B reference) caught by the named isa_* row with hidden referees inert, each with its ablation.

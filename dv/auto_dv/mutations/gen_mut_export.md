@@ -1,6 +1,6 @@
 # MUT-A..MUT-F: the record export's consumer checks (gen_export.read, gen_ut_export) proven against mutations
 
-Format: dv/auto_dv/mutations/README.md. The export (architecture Section 9, dv/auto_dv/docs/gen_rvfi_export_addendum.md)
+Format: dv/auto_dv/mutations/gen_README.md. The export (architecture Section 9, dv/auto_dv/docs/gen_rvfi_export_addendum.md)
 is observation only; its consumer checks live in the Python reader `dv/auto_dv/gen_tb/gen_export.py` (`read(path,
 seq)`: count, order, cycle, header and marker rules) and in the test `gen_tb/gen_tests/gen_ut_export.py` (content
 checks derived from the program). Each mutation below is a source edit of the SV producer, compiled into its own
@@ -80,3 +80,20 @@ Not yet covered (arrive with build step (2), the event lines): MUT-G dropped eve
 Both mutants are built from a scratch copy of dv/auto_dv (gen_tdd_logs/mutations/gen_mut_export_MUT{G,H}_*); the ablation
 is a second edit of the same copy (Python only, no recompile) so the catch and the ablation run on one build. The shared
 tree's gen_agents_pkg.sv / gen_export.py / gen_ut_export.py checksums are printed unchanged after each mutant.
+
+## MUT-I, MUT-J, MUT-K: the T-141 presence rules and the writer-registration fatal (follow-up landing, 2026-09-03)
+
+Out of tree as above (scratch mut_root/MUTI, MUTJ, MUTK; batch log gen_tdd_logs/mutations/gen_fu_oot_mutation_batch.log
+prints the shared tree's five source shas at start and end, unchanged). Vehicle for MUT-I / MUT-J: gen_ut_export on the Zc
+image with `+gen_chk_all=0` (the format rules are read()'s, no UVM knob applies); the ablation is a Python-side edit of
+gen_export.py that turns the one rule off, on the same mutated build. MUT-K has no ablation knob: a fatal; the same build
+without the mutation is every green run of the landing.
+
+| Id | Mutation | Catching run | Catch result | Ablation |
+|---|---|---|---|---|
+| MUT-I | gen_agents_pkg.sv:291 (gen_bus_driver): the E req line is never written (`req_stamp` still taken) | gen_ut_export zc | FAIL: `AssertionError: GEN_EXPORT: ibus: 0 E req lines against 154 E gnt lines (at most one request awaits its grant; MUT-I)` | gen_export.py rule `n_req - n in (0, 1)` replaced by `pass`: PASS |
+| MUT-J | gen_agents_pkg.sv:275 (gen_bus_driver): the E rvalid line is never written | gen_ut_export zc | FAIL: `AssertionError: GEN_EXPORT: ibus: 154 E gnt lines against 0 E rvalid lines (outstanding responses must stay within 0..8; MUT-J)` | gen_export.py rule `0 <= n - n_rv <= BUS_MAX_OUTSTANDING[bus]` replaced by `pass`: PASS |
+| MUT-K | gen_agents_pkg.sv:404 (gen_scrkey_driver): `sink.register_row("scrkey", "req"); sink.register_row("scrkey", "valid");` removed | gen_ut_boot zc WITHOUT `+gen_export_file`, and once more with it | FAIL both: `UVM_FATAL gen_export_pkg.sv(100) @ 0: sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)` | none (fatal); the unmutated build's runs pass |
+
+Exact edits: MUT-I original `if (ev_on()) begin / req_stamp = sink.cycle(); / sink.write_event(cfg.is_data ? gen_export_line_dbus_req(req_stamp, vif.addr, req_we(), req_be()) : gen_export_line_ibus_req(req_stamp, vif.addr, req_we(), req_be())); / end`, mutated `if (ev_on()) begin / req_stamp = sink.cycle();   // MUT-I: the req writer is silent / end`; MUT-J original `if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_rvalid(sink.cycle(), p.addr, p.we, p.err, p.intg_bad, pend.size()) : gen_export_line_ibus_rvalid(...));`, mutated `;   // MUT-J: the rvalid writer is silent`; MUT-K as in the table.
+The MUT-G row's citation of gen_mut_export_gh_batches.log is now backed by the retained file (with the checksum lines).

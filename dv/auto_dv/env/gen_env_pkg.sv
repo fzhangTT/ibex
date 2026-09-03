@@ -84,6 +84,10 @@ package gen_env_pkg;
     function new(string name, uvm_component parent);
       super.new(name, parent);
     endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);
+      super.end_of_elaboration_phase(phase);
+      if (sink != null) sink.register_row("regime", "phase");
+    endfunction
     // REGIME_SET: arg0 = knob id (GEN_KNOB_ID_*), arg1 = value index. The rendered predicate decides which knobs have a
     // run-time consumer (yaml regime_set_consumer); a knob without one is a collected error, never a silent no-op.
     function void apply_knob(int id, int idx);
@@ -118,7 +122,7 @@ package gen_env_pkg;
         GEN_CMD_DBG_REQ:      begin dbg.cmd(t.arg[0][0], t.arg[1], t.arg[2]); routed++; end
         GEN_CMD_REGIME_SET:   begin apply_knob(t.arg[0], t.arg[1]); routed++; end
         GEN_CMD_KEY_MODE:     begin scrkey.set_regime(gen_knob_value(GEN_KNOB_ID_SCR_KEY_DELAY, t.arg[0])); routed++; end
-        GEN_CMD_MEM_ERR_ARM: begin   // arg0 bus (0 ibus, 1 dbus), arg1 lo, arg2 hi, arg3 = kind (1 err, 2 intg) | count << 8
+        GEN_CMD_MEM_ERR_ARM: begin   // arg0 bus (0 ibus, 1 dbus), arg1 lo, arg2 hi, arg3 = kind (GEN_MEM_ERR_ARM_KIND_ERR / _INTG) | count << 8
           if (t.arg[0] == 0) ibus.driver.arm_err(t.arg[3][7:0], t.arg[1], t.arg[2], t.arg[3][31:8] == 0 ? 1 : t.arg[3][31:8]);
           else               dbus.driver.arm_err(t.arg[3][7:0], t.arg[1], t.arg[2], t.arg[3][31:8] == 0 ? 1 : t.arg[3][31:8]);
           routed++;
@@ -220,11 +224,10 @@ package gen_env_pkg;
       dispatch.ibus = ibus_agent; dispatch.dbus = dbus_agent;
       ack_h.irq = irq;
       rvfi_mon.sink = sink;
-      // event writers: the sink handle and the source registration (the yaml's active list must match this set)
+      // event writers get the sink handle; each registers the rows it emits in its end_of_elaboration_phase and the sink
+      // checks the emitted set (yaml export_active_sources) against the registrations in every run (T-141)
       ibus_agent.driver.sink = sink; dbus_agent.driver.sink = sink; ctrl.sink = sink; scrkey.sink = sink;
       irq.sink = sink; dbg.sink = sink; misc_mon.sink = sink;
-      sink.register_source("ibus"); sink.register_source("dbus"); sink.register_source("pin"); sink.register_source("scrkey");
-      sink.register_source("alert"); sink.register_source("misc"); sink.register_source("regime");
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
       sb.ap_state.connect(irq_chk.imp_state);

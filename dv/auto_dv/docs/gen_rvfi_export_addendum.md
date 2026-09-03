@@ -24,7 +24,7 @@ Writer's template adds it when the test declares that it consumes records); an e
 and runs no export code. A bridge command `EXPORT_FLUSH` (appended to `bridge_cmds`, so existing codes keep their
 values) makes the sink write a flush marker and `$fflush` before the bridge acks, so Python parses a complete
 prefix of the file inside its checks, before the finish handshake (TB_CONTRACT Section 2 ordering). The Python
-side is one module, `dv/auto_dv/gen_tb/gen_export.py`: `read(path, seq, counters=False)` returns the records, markers
+side is one module, `dv/auto_dv/gen_tb/gen_export.py`: `read(path, seq, counters=False, sources="all")` returns the records, markers
 and events of the prefix ending at the flush marker with sequence `seq`, requires the header's `counters=` flag to
 agree with the caller, enforces the format rules of Section 3 (including the I-line count), and fails loud
 (AssertionError, the only Python-side failure mechanism) on any violation.
@@ -38,7 +38,7 @@ agree with the caller, enforces the format rules of Section 3 (including the I-l
 R <field values in header order, hex without prefix, flags 0/1>            one line per retired record
 I <cycle> <ext_pre_mip> <ext_post_mip> <ext_nmi> <ext_nmi_int> <ext_debug_req> <ext_debug_mode>   one line per RISING EDGE of rvfi_ext_irq_valid, at the rise cycle
 E <cycle> <source> <event> <field values in the row's order>                   one line per boundary event (Section 8)
-# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h> cycle=<c>   written by EXPORT_FLUSH; s = the flush sequence number the command returns; r, g, h = the bridge's evt_retired_count / evt_ibus_grants / evt_dbus_grants read in the same call (version 2: the grant fields are present on both markers and required by read())art)
+# flush seq=<s> records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h> cycle=<c>   written by EXPORT_FLUSH; s = the flush sequence number the command returns; r, g, h = the bridge's evt_retired_count / evt_ibus_grants / evt_dbus_grants read in the same call (version 2: the grant fields are present on both markers and required by read())
 # end records=<n> retired=<r> markers=<m> events=<e> ibus_grants=<g> dbus_grants=<h>   written in extract_phase (Section 3)
 ```
 
@@ -158,7 +158,7 @@ default line stays about 220 bytes.
 | `gen_export_sink` (new env component) | env/gen_env_pkg.sv (or its own gen_export_pkg.sv) | owns the fd: header lines, flush marker with the same-instant counts, `$ferror`, end marker and `$fclose` in extract_phase; `write_record` / `write_marker` / `write_event` for every writer |
 | `gen_rvfi_monitor` R/I writer | env/gen_rvfi_pkg.sv | one R line per record through the rendered writer function, one I line per rising edge |
 | event writers (built, version 4d) | gen_agents_pkg (bus drivers: req / gnt / rvalid; key responder: req / valid; ctrl driver: fetch_enable / mcounteren_writable; irq driver: the irq lines; dbg driver: debug_req), gen_checkers_pkg::gen_misc_monitor (alert and misc rows), gen_cmd_dispatch (regime phase); gen_icache_ram announcements not yet | one call of the rendered writer function per event through `sink.write_event`, stamped with `sink.cycle()`; the pin, alert and misc writers also emit the level at reset release, so a consumer knows the starting value |
-| `dv/auto_dv/gen_tb/gen_export.py` | Python reader: `read(path, seq, counters=False) -> Export(header, records, markers, events, flush)`; field access by name from `EXPORT_RECORD_FIELDS` and `EXPORT_EVENTS`; enforces Section 3 | ASCII only |
+| `dv/auto_dv/gen_tb/gen_export.py` | Python reader: `read(path, seq, counters=False, sources="all") -> Export(header, records, markers, events, flush)`; field access by name from `EXPORT_RECORD_FIELDS` and `EXPORT_EVENTS`; enforces Section 3 | ASCII only |
 | `GenBridge.export_flush()` | gen_bridge.py | issues EXPORT_FLUSH and returns the flush sequence number from `peek_data`; the test passes it to `read(path, seq)` |
 | API documents | `gen_component_api_rvfi_monitor.md` Sections 3, 6 and a new Section 8 (record lines); a new `gen_component_api_export_sink.md` (the sink, the event table, the knobs, guarantees, cost); one sentence in each writer's API document naming its event rows | |
 

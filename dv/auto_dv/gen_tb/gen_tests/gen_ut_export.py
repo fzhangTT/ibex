@@ -22,8 +22,8 @@ PASS_MARKER = "GEN_UT_EXPORT_PASS"
 SETTLE_CYCLES = max(hi for lo, hi in REGIME_WINDOWS["rvalid_delay"].values()) + 8
 FIRST_FETCH_OFFSET = MEMORY_MAP["boot_reset_offset"]   # the first fetch is {boot_addr[31:8], 8'h80} (rtl/ibex_if_stage.sv), one origin in the yaml
 MRET_INSN, DRET_INSN = CONSTANTS["GEN_INSN_MRET"], CONSTANTS["GEN_INSN_DRET"]   # their pc_wdata is not the target (plan C-1)
-# cycles between the FETCH_EN(1) pin line (the driver acts at the negedge) and cycle_count read after the ack edge; recorded
-# at the first green run of the event part (build out_t080s2/a: 0 on all four runs), asserted exactly since (addendum Section 5, MUT-H).
+# cycles between the FETCH_EN(1) pin line and cycle_count read after the ack edge: the dispatcher acks in the ReadWrite region
+# after posedge N (cycle_count = N), the ctrl driver acts at the following negedge and stamps N, so the offset is 0 (MUT-H)
 FETCH_EN_LINE_OFFSET = 0
 
 

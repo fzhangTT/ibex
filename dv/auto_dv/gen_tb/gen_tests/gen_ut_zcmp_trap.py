@@ -13,10 +13,10 @@ from dv.auto_dv.gen_tb import gen_export
 from dv.auto_dv.gen_tb.gen_bridge import GenBridge
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
-from dv.auto_dv.gen_tb.gen_knobs import PLUSARGS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
 
 PASS_MARKER = "GEN_UT_ZCMP_TRAP_PASS"
-ARM_BUS_ERR = 1          # MEM_ERR_ARM arg3[7:0]: kind 1 = bus error (gen_bus_driver::arm_err)
+ARM_BUS_ERR = CONSTANTS["GEN_MEM_ERR_ARM_KIND_ERR"]   # MEM_ERR_ARM arg3[7:0]
 PUSH_BYTES = 16          # cm.push {ra, s0-s2}, spimm 0: four words below the stack top
 
 

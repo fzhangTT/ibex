@@ -1,6 +1,6 @@
 # MUT-004..MUT-007: per-field discrimination of the ISA comparator ids (gen_scoreboard)
 
-Format: dv/auto_dv/mutations/README.md. These are TB-side mutations of the RVFI monitor's `sample()`
+Format: dv/auto_dv/mutations/gen_README.md. These are TB-side mutations of the RVFI monitor's `sample()`
 (`dv/auto_dv/env/gen_rvfi_pkg.sv`, class gen_rvfi_monitor): each corrupts ONE field of every record handed to
 the scoreboard, standing in for a DUT that gets exactly that field wrong. They prove (a) that the named field
 id fires and no other id does (discrimination), and (b) that `+gen_chk_isa_<field>=0` silences exactly it

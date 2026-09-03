@@ -62,6 +62,9 @@ package gen_rvfi_pkg;
     logic [31:0] pc_after, insn;
     logic [31:0] mie, mstatus, mcause, mepc, mtval, dcsr;
     logic [1:0]  prv;            // privilege after the record
+    logic [31:0] pre_mip, post_mip;   // the record's rvfi_ext mip samples
+    bit          nmi_pend, nmi_int_pend;
+    int          entry_cause;         // interrupt entry: the cause the DUT's vector names (31 = NMI); -1 otherwise
     bit          is_trap, is_intr, is_mret, is_dret, debug_mode, wrote_mie, wrote_mstatus;
     `uvm_object_utils_begin(gen_model_state)
       `uvm_field_int(order, UVM_ALL_ON)
@@ -171,6 +174,8 @@ package gen_rvfi_pkg;
     bit          model_ready = 0;
     bit          in_seq = 0;
     gen_rvfi_txn seq_first;
+    int unsigned seq_len = 0, seq_splits = 0, faults_armed = 0, faults_unannounced = 0, breakpoints = 0, b13_odd_jalr = 0;
+    int          entry_cause = -1;   // the current record's vector-derived interrupt cause, published with the model state
     bit          dbg_q = 0, dret_q = 0;
     uvm_analysis_port #(gen_model_state) ap_state;
     function new(string name, uvm_component parent);
@@ -186,6 +191,8 @@ package gen_rvfi_pkg;
       st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
       st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR);
       st.is_trap = t.trap; st.is_intr = t.intr; st.debug_mode = t.ext_debug_mode;
+      st.pre_mip = t.ext_pre_mip; st.post_mip = t.ext_post_mip; st.nmi_pend = t.ext_nmi; st.nmi_int_pend = t.ext_nmi_int;
+      st.entry_cause = entry_cause; entry_cause = -1;
       st.is_mret = (t.insn == GEN_INSN_MRET); st.is_dret = (t.insn == GEN_INSN_DRET);
       for (int i = 0; i < csr_n; i++) if (gen_isa_csr_write(i, a, v) == 0) begin
         if (a == ibex_pkg::CSR_MIE) st.wrote_mie = 1;
@@ -207,6 +214,11 @@ package gen_rvfi_pkg;
     // RVFI reports a compressed instruction in its 16-bit form (zero-extended), so bits [1:0] give the length
     function int unsigned insn_len(logic [31:0] insn);
       return (insn[1:0] == 2'b11) ? 4 : 2;
+    endfunction
+    // jalr in either encoding (c.jr / c.jalr are reported in their 16-bit form: funct4 100x, rs1 != 0, rs2 = 0)
+    function bit is_jalr(logic [31:0] insn);
+      if (insn[1:0] == 2'b11) return insn[6:0] == ibex_pkg::OPCODE_JALR;
+      return insn[1:0] == 2'b10 && insn[15:13] == 3'b100 && insn[6:2] == 5'd0 && insn[11:7] != 5'd0;
     endfunction
     // The model is built once the configuration is final: reset values, then the same image as the TB.
     function void start_of_simulation_phase(uvm_phase phase);
@@ -254,12 +266,13 @@ package gen_rvfi_pkg;
     logic [31:0] seq_rd [int unsigned];
     logic [31:0] seq_st_addr [$], seq_st_data [$], seq_ld_addr [$];
     function void seq_note(gen_rvfi_txn t);
+      seq_len++;
       if (t.rd_addr != 0 && !t.ext_rf_wr_suppress) seq_rd[t.rd_addr] = t.rd_wdata;
       if (t.mem_wmask != 0) begin seq_st_addr.push_back(t.mem_addr); seq_st_data.push_back(t.mem_wdata); end
       if (t.insn[6:0] == ibex_pkg::OPCODE_LOAD) seq_ld_addr.push_back(t.mem_addr);
     endfunction
     function void seq_reset(gen_rvfi_txn t);
-      in_seq = 1; seq_first = t; seq_rd.delete(); seq_st_addr.delete(); seq_st_data.delete(); seq_ld_addr.delete();
+      in_seq = 1; seq_first = t; seq_len = 0; seq_rd.delete(); seq_st_addr.delete(); seq_st_data.delete(); seq_ld_addr.delete();
     endfunction
     // C5.2 union compare after the model stepped the whole cm.* instruction (ids isa_rd, isa_mem)
     function void compare_seq_union(gen_rvfi_txn t, int reg_writes, int mem_w, int mem_r);
@@ -294,8 +307,43 @@ package gen_rvfi_pkg;
       int unsigned pc_b, pc_a, insn, cause, tval, rd_addr, rd_wdata, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect;
-      bit is_seq = 0;
+      bit is_seq = 0, dbg_entry = 0;
       if (!model_ready) return;
+      // ---- asynchronous entries before this record (C5.2) come before the Zcmp fold: the handler's first record can
+      //      itself be a micro-op, and an entry inside a sequence drops its partial micro-ops (the sequence restarts, R9)
+      dbg_entry = t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT;   // a request held through dret re-enters at once
+      dbg_q = t.ext_debug_mode; dret_q = (t.insn == GEN_INSN_DRET);
+      if (in_seq && (t.intr || dbg_entry)) begin
+        seq_splits++; in_seq = 0;
+        `uvm_info("GEN_SB", $sformatf("Zcmp sequence at pc %08h split by %s entry (order %0d): %0d folded micro-ops dropped",
+                                      seq_first.pc_rdata, t.intr ? "interrupt" : "debug", t.order, seq_len), UVM_LOW)
+      end
+      if (t.intr) begin
+        // The DUT's vector names the interrupt it took (vectored mtvec: handler pc = base + 4 * cause) and the model is
+        // offered exactly that bit: the record's pre_mip is sampled when the handler's first instruction is in ID,
+        // after the decision, and a line released or raised in between (UNTIL_TAKEN releases every held line on any
+        // entry) makes pre_mip an unreliable record of the decision-time set. Spike still refuses an entry that is
+        // not enabled (isa_trap); that the taken line was pending at the decision, and the priority among pending
+        // lines, are boundary rules for the irq checker (owed), not the model's choice. Cause 31 (NMI) keeps pre_mip.
+        logic [31:0] base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;   // mtvec[7:0] read as 8'h01 (rtl/ibex_cs_registers.sv)
+        logic [31:0] inj = t.ext_pre_mip;
+        int unsigned cause = (t.pc_rdata - base) >> 2;
+        if (t.pc_rdata >= base && cause < ibex_pkg::ExcCauseIrqNm.lower_cause) inj = 32'h1 << cause;
+        entry_cause = (t.pc_rdata >= base && cause <= ibex_pkg::ExcCauseIrqNm.lower_cause) ? int'(cause) : -1;
+        gen_isa_arm_async(inj, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
+        irq_entries++;
+        if (retired != 0 || !cause[31])
+          miss("isa_trap", $sformatf("interrupt entry expected, model retired %0d cause %08h", retired, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
+        if (pc_a != t.pc_rdata)
+          miss("isa_pc", $sformatf("interrupt vector model=%08h dut=%08h", pc_a, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
+      end else if (dbg_entry) begin
+        gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b1, 1'b0);
+        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
+        dbg_entries++;
+        if (retired != 0 || pc_a != GEN_MM_DM_HALT)
+          miss("isa_pc", $sformatf("debug entry expected at DmHaltAddr, model retired %0d pc=%08h", retired, pc_a), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
+      end
       // ---- Zcmp: micro-op records fold to the last one (C5.1/C5.2); the unions are compared on that record
       if (t.ext_exp_valid && !t.ext_exp_last && !t.trap) begin   // a trapping micro-op ends the sequence and is compared below
         if (!in_seq) seq_reset(t);
@@ -353,41 +401,15 @@ package gen_rvfi_pkg;
         gen_isa_set_pc(model_pc + 4);
         return;
       end
-      // ---- asynchronous entries before this record (C5.2): interrupt marker / debug request
-      if (t.intr) begin
-        // The DUT's vector names the interrupt it took (vectored mtvec: handler pc = base + 4 * cause) and the model is
-        // offered exactly that bit: the record's pre_mip is sampled when the handler's first instruction is in ID,
-        // after the decision, and a line released or raised in between (UNTIL_TAKEN releases every held line on any
-        // entry) makes pre_mip an unreliable record of the decision-time set. Spike still refuses an entry that is
-        // not enabled (isa_trap); that the taken line was pending at the decision, and the priority among pending
-        // lines, are boundary rules for the irq checker (owed), not the model's choice. Cause 31 (NMI) keeps pre_mip.
-        logic [31:0] base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;
-        logic [31:0] inj = t.ext_pre_mip;
-        int unsigned cause = (t.pc_rdata - base) >> 2;
-        if (t.pc_rdata >= base && cause < 31) inj = 32'h1 << cause;
-        gen_isa_arm_async(inj, 32'h0, t.ext_nmi, t.ext_nmi_int, 1'b0, 1'b1);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
-        irq_entries++;
-        if (retired != 0 || !cause[31])
-          miss("isa_trap", $sformatf("interrupt entry expected, model retired %0d cause %08h", retired, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
-        if (pc_a != t.pc_rdata)
-          miss("isa_pc", $sformatf("interrupt vector model=%08h dut=%08h", pc_a, t.pc_rdata), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
-      end else if (t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT) begin   // a request held through dret re-enters at once
-        gen_isa_arm_async(t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b1, 1'b0);
-        if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
-        dbg_entries++;
-        if (retired != 0 || pc_a != GEN_MM_DM_HALT)
-          miss("isa_pc", $sformatf("debug entry expected at DmHaltAddr, model retired %0d pc=%08h", retired, pc_a), t, fld(cfg.chk_isa_pc, cfg.chk_isa_pc_set));
-      end else begin
+      if (!t.intr && !dbg_entry) begin
         // an ordinary record: pending bits the DUT saw and still retired past are withheld from the model when they are
         // enabled (M-mode with MIE, or U-mode), since Spike would take them before this instruction; the entry itself
         // comes with the next record's intr and its own pre_mip
         logic [31:0] mie_m = gen_isa_read_csr(ibex_pkg::CSR_MIE);
         logic [31:0] mst_m = gen_isa_read_csr(ibex_pkg::CSR_MSTATUS);
-        bit ien = (gen_isa_get_prv() != 3) || mst_m[3];
+        bit ien = (gen_isa_get_prv() != ibex_pkg::PRIV_LVL_M) || mst_m[ibex_pkg::CSR_MSTATUS_MIE_BIT];
         gen_isa_arm_async(ien ? (t.ext_pre_mip & ~mie_m) : t.ext_pre_mip, 32'h0, 1'b0, 1'b0, 1'b0, 1'b0);
       end
-      dbg_q = t.ext_debug_mode; dret_q = (t.insn == GEN_INSN_DRET);
       // ---- the record itself: the model's counters and status follow the record's sampled values (ID-exit sample point,
       //      the cycle a CSR read sees). A csrr of cycle, mhpmcounterN or cpuctrlsts bit 8 under isa_rd is therefore a
       //      CONSISTENCY compare (record value == read value), not an independent check (Critic T-102 M-1): the counters
@@ -396,10 +418,20 @@ package gen_rvfi_pkg;
       gen_isa_set_time(t.ext_mcycle);
       for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
       gen_isa_set_status(t.ext_ic_scr_key_valid);
-      // a trapping memory access: the DUT's bus error (injected, armed or a PMP denial) becomes the model's fault on the
-      // same bytes for this one step (kinds: 1 load, 2 store; size from funct3), so both sides take the access fault
-      if (t.trap && (t.insn[6:0] == ibex_pkg::OPCODE_STORE || t.insn[6:0] == ibex_pkg::OPCODE_LOAD))
-        gen_isa_arm_fault(t.insn[6:0] == ibex_pkg::OPCODE_STORE ? 2 : 1, t.mem_addr, 32'h1 << t.insn[13:12]);
+      // a trapping memory access: only a bus error the data-bus driver announced for that word becomes the model's fault on
+      // the same bytes for this one step (size from funct3); otherwise the model decides alone, so a PMP denial faults on
+      // both sides and a DUT fault on an access nobody corrupted is an isa_trap miss (T-137)
+      if (t.trap && (t.insn[6:0] == ibex_pkg::OPCODE_STORE || t.insn[6:0] == ibex_pkg::OPCODE_LOAD)) begin
+        int unsigned bytes = 32'h1 << t.insn[13:12];
+        if (gen_bus_err_log::take(t.mem_addr, bytes)) begin
+          faults_armed++;
+          gen_isa_arm_fault(t.insn[6:0] == ibex_pkg::OPCODE_STORE ? GEN_ISA_FAULT_KIND_STORE : GEN_ISA_FAULT_KIND_LOAD, t.mem_addr, bytes);
+        end else begin
+          faults_unannounced++;
+          `uvm_info("GEN_SB", $sformatf("%s trap at %08h (order %0d) without a TB-injected error: the model decides",
+                                        t.insn[6:0] == ibex_pkg::OPCODE_STORE ? "store" : "load", t.mem_addr, t.order), UVM_LOW)
+        end
+      end
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
       compared++;
       bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
@@ -412,9 +444,20 @@ package gen_rvfi_pkg;
         if (!(trap && retired == 0))
           miss("isa_trap", $sformatf("dut trapped, model retired %0d trap=%0d cause=%08h", retired, trap, cause), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
         // trap record: pc_wdata is pc_if = pc + length (F-RVFI-010, C-1); a fetch fault (cause 1) has no fetched length;
-        // an aborted Zcmp sequence restarts from its own pc, so its offset is 0 (observed T-102c, plan C-12)
+        // an aborted Zcmp sequence restarts from its own pc, so its offset is 0 (plan C-12, rtl-arch R9)
         if (trap && cause != 1 && t.pc_wdata != t.pc_rdata + (t.ext_exp_valid ? 0 : insn_len(t.insn)))
           miss("isa_pc_next", $sformatf("trap record pc_wdata=%08h != pc + %0d (C-1%s)", t.pc_wdata, t.ext_exp_valid ? 0 : insn_len(t.insn), t.ext_exp_valid ? ", aborted Zcmp restarts" : ""), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
+        // a trapping Zcmp sequence: the accesses and register writes completed before the fault are compared as the union
+        // (both sides store the highest register of rlist first: rtl/ibex_compressed_decoder.sv:626-660, Spike cm_push.h)
+        if (is_seq) compare_seq_union(t, reg_n, mem_w, mem_r);
+        // breakpoint exception: mepc is the [c.]ebreak's own pc and mtval is 0 (rtl-arch R10; the shim mirrors Ibex's 0)
+        if (trap && cause == ibex_pkg::ExcCauseBreakpoint.lower_cause) begin
+          breakpoints++;
+          if (gen_isa_read_csr(ibex_pkg::CSR_MEPC) != t.pc_rdata)
+            miss("isa_trap", $sformatf("breakpoint mepc model=%08h != pc %08h (R10)", gen_isa_read_csr(ibex_pkg::CSR_MEPC), t.pc_rdata), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
+          if (tval != 0)
+            miss("isa_trap", $sformatf("breakpoint mtval model=%08h != 0 (R10)", tval), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
+        end
       end else begin
         if (retired != 1 || trap)
           miss("isa_trap", $sformatf("dut retired, model retired %0d trap=%0d cause=%08h tval=%08h", retired, trap, cause, tval), t, fld(cfg.chk_isa_trap, cfg.chk_isa_trap_set));
@@ -448,6 +491,12 @@ package gen_rvfi_pkg;
         if (t.insn == GEN_INSN_MRET || t.insn == GEN_INSN_DRET) begin
           if (t.pc_wdata != t.pc_rdata + insn_len(t.insn))
             miss("isa_pc_next", $sformatf("mret/dret record pc_wdata=%08h != pc + %0d (C-1)", t.pc_wdata, insn_len(t.insn)), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
+        end else if (is_jalr(t.insn) && t.pc_wdata[0]) begin
+          // B13 (rtl-arch R11): rvfi_pc_wdata carries the raw rs1 + imm of a jalr while the core fetches the even address
+          // (rtl/ibex_core.sv:2084); bit 0 is masked and the record counted until the RTL fix
+          b13_odd_jalr++;
+          if (pc_a != {t.pc_wdata[31:1], 1'b0})
+            miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h (bit 0 masked, B13)", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
         end else if (pc_a != t.pc_wdata)
           miss("isa_pc_next", $sformatf("pc_next model=%08h dut=%08h", pc_a, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
       end
@@ -459,8 +508,8 @@ package gen_rvfi_pkg;
     endfunction
 
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_SB", $sformatf("ISA compare: records=%0d mismatches=%0d folded=%0d draft_b=%0d traps=%0d irq_entries=%0d dbg_entries=%0d rvfi_rmask_on_nonload=%0d",
-                compared, mismatches, folded, draft_b, traps, irq_entries, dbg_entries, rmask_nonload), UVM_LOW)
+      `uvm_info("GEN_SB", $sformatf("ISA compare: records=%0d mismatches=%0d folded=%0d draft_b=%0d traps=%0d breakpoints=%0d irq_entries=%0d dbg_entries=%0d zcmp_splits=%0d faults_armed=%0d faults_unannounced=%0d bus_err_announced=%0d b13_odd_jalr=%0d rvfi_rmask_on_nonload=%0d",
+                compared, mismatches, folded, draft_b, traps, breakpoints, irq_entries, dbg_entries, seq_splits, faults_armed, faults_unannounced, gen_bus_err_log::announced, b13_odd_jalr, rmask_nonload), UVM_LOW)
     endfunction
   endclass
 endpackage

@@ -21,11 +21,24 @@ package gen_checkers_pkg;
 
   // Interrupt-line bit i (0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm) -> mie/mip bit position
   function automatic int gen_irq_mie_bit(int line);
-    if (line == 0) return 3;
-    if (line == 1) return 7;
-    if (line == 2) return 11;
-    if (line <= 17) return 16 + (line - 3);
+    if (line == 0) return ibex_pkg::CSR_MSIX_BIT;
+    if (line == 1) return ibex_pkg::CSR_MTIX_BIT;
+    if (line == 2) return ibex_pkg::CSR_MEIX_BIT;
+    if (line <= 17) return ibex_pkg::CSR_MFIX_BIT_LOW + (line - 3);
     return -1;
+  endfunction
+  // mcause lower_cause of an interrupt entry -> line bit (-1: not a line, e.g. NMI)
+  function automatic int gen_irq_line_of_cause(int unsigned lower_cause);
+    for (int l = 0; l < 18; l++) if (gen_irq_mie_bit(l) == lower_cause) return l;
+    return -1;
+  endfunction
+  // controller priority (rtl/ibex_controller.sv exc_cause_o chain and gen_mfip_id): lowest fast id, then external,
+  // software, timer; NMI outranks all and is handled apart. Smaller rank wins.
+  function automatic int gen_irq_rank(int line);
+    if (line >= 3) return line - 3;
+    if (line == 2) return 15;
+    if (line == 0) return 16;
+    return 17;
   endfunction
 
   // ------------------------------------------------------------------------------------------
@@ -48,6 +61,18 @@ package gen_checkers_pkg;
     gen_model_state last_st;
     bit have_st = 0;
     int unsigned checked_cycles = 0, entries_seen = 0, expect_fail = 0, pending_mismatch = 0, nmi_seen = 0;
+    int unsigned cause_checked = 0, cause_mismatch = 0;
+    // lines the driver raised / released since the last record, and during the record before it: a line raised after the
+    // previous record's post_mip sample but before that record retired is in neither mip sample, so two records of driver
+    // events feed the decision window
+    logic [17:0] raised_since = '0, released_since = '0, raised_prev = '0, released_prev = '0;
+    bit nmi_raised_since = 0, nmi_released_since = 0, nmi_raised_prev = 0, nmi_released_prev = 0;
+    int unsigned priority_undecidable = 0, expect_released = 0, nmi_internal_entries = 0;
+    // the DUT's internal-NMI pending bit (rtl/ibex_controller.sv:391-430): set by any data-response integrity error, cleared
+    // by an NMI entry taken without an external NMI, not taken while in NMI mode; so an NMI-vector entry without a pin NMI
+    // is legitimate when a corruption was announced since the last such entry consumed the bit. Announcements up to the
+    // previous record are consumed by the entry (a corruption between that record and the entry may justify the next one).
+    int unsigned intg_at_last = 0, intg_consumed = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
       imp_state = new("imp_state", this);
@@ -80,12 +105,20 @@ package gen_checkers_pkg;
         while (mie_hist.size() > 64) void'(mie_hist.pop_front());
       end
       if (st.is_intr) begin
+        // the taken cause is the one the DUT's vector names (the model's mcause is stale when the model did not take the
+        // entry, e.g. an NMI it does not emulate); vector 31 is the NMI (external pin or internal, from an integrity error)
+        bit is_nmi = (st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause);
+        int line = (is_nmi || st.entry_cause < 0) ? -1 : gen_irq_line_of_cause(st.entry_cause);
+        expect_t keep [$];
         entries_seen++;
-        // an entry satisfies every open expectation whose line is in the taken set (any line: the model compared the cause)
-        expects.delete();
+        if (is_nmi) nmi_seen++;
+        if (have_st) check_entry_cause(st, is_nmi, line);
+        // the entry clears the expectations that named the taken line (or the NMI); the others stay under the bound
+        foreach (expects[i]) if (!((is_nmi && expects[i].nmi) || (line >= 0 && expects[i].lines[line]))) keep.push_back(expects[i]);
+        expects = keep;
         // irq_masked: an entry while M-mode with MIE clear and not an NMI (the state BEFORE the entry)
-        if (have_st && !st.mcause[30] && st.mcause[31] && last_st.prv == 2'b11 && !last_st.mstatus[3] && !last_st.debug_mode &&
-            gen_chk_en(cfg, cfg.chk_irq_masked, cfg.chk_irq_masked_set) && (st.mcause & 32'h7fffffff) != 31)
+        if (have_st && !is_nmi && last_st.prv == ibex_pkg::PRIV_LVL_M && !last_st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && !last_st.debug_mode &&
+            gen_chk_en(cfg, cfg.chk_irq_masked, cfg.chk_irq_masked_set))
           `uvm_error("irq_masked", $sformatf("interrupt entry (mcause %08h) while MIE=0 in M-mode at order %0d", st.mcause, st.order))
       end
       // entry bound: expectations older than GEN_IRQ_ENTRY_BOUND_RECORDS records
@@ -96,7 +129,7 @@ package gen_checkers_pkg;
           logic [17:0] pins = vif.lines();
           for (int l = 0; l < 18; l++) if (expects[i].lines[l] && pins[l] && st.mie[gen_irq_mie_bit(l)]) still = 1;
           if (expects[i].nmi) still = vif.nm;
-          if (still && (expects[i].nmi || st.mstatus[3] || st.prv != 2'b11) && !st.debug_mode) begin
+          if (still && (expects[i].nmi || st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || st.prv != ibex_pkg::PRIV_LVL_M) && !st.debug_mode) begin
             expect_fail++;
             if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, expects[i].nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
               `uvm_error(expects[i].nmi ? "nmi_entry" : "irq_entry",
@@ -108,10 +141,74 @@ package gen_checkers_pkg;
         end
       end
       last_st = st; have_st = 1; last_rec_cycle = st.cycle;
-      if (st.is_intr && st.mcause == 32'h8000001f) nmi_seen++;
+      raised_prev = raised_since; released_prev = released_since; nmi_raised_prev = nmi_raised_since; nmi_released_prev = nmi_released_since;
+      intg_at_last = gen_bus_err_log::intg_announced;
+      raised_since = '0; released_since = '0; nmi_raised_since = 0; nmi_released_since = 0;
+    endfunction
+
+    // T-136: the taken cause must be the highest-priority interrupt that was pending and enabled at the decision. The
+    // decision lies between the previous record's post_mip and the entry record's pre_mip: a line in both samples was
+    // surely pending; a line in either sample, or raised by the driver in the window, may have been.
+    function void check_entry_cause(gen_model_state st, bit is_nmi, int line);
+      logic [31:0] raised = '0, changed = '0;
+      logic [31:0] either, both;
+      logic [17:0] r_win = raised_since | raised_prev, c_win = raised_since | raised_prev | released_since | released_prev;
+      bit nmi_r_win = nmi_raised_since || nmi_raised_prev, nmi_c_win = nmi_r_win || nmi_released_since || nmi_released_prev;
+      bit nmi_either, nmi_both;
+      string why = "";
+      for (int l = 0; l < 18; l++) begin
+        if (r_win[l]) raised[gen_irq_mie_bit(l)] = 1'b1;
+        if (c_win[l]) changed[gen_irq_mie_bit(l)] = 1'b1;
+      end
+      either = (last_st.post_mip | st.pre_mip | raised) & last_st.mie;
+      // a line the driver moved inside the window (released after the previous record, raised again before this one) has
+      // no known level at the decision: it makes no priority claim and is counted instead
+      both = last_st.post_mip & st.pre_mip & last_st.mie & ~changed;
+      if ((last_st.post_mip & st.pre_mip & last_st.mie & changed) != 0) priority_undecidable++;
+      // the NMI pin in either record sample or a driver raise (the record's own internal-NMI level is the DUT's
+      // self-report and counts for nothing; the injected corruption is the evidence for an internal NMI)
+      nmi_either = last_st.nmi_pend || st.nmi_pend || nmi_r_win;
+      nmi_both = last_st.nmi_pend && st.nmi_pend && !nmi_c_win;
+      cause_checked++;
+      if (is_nmi) begin
+        // an NMI-vector entry with no pin NMI in the window is the internal NMI of a TB-injected data-side integrity error
+        // (accepted and counted; the one-instruction latency rule is nmi_internal's, not built); otherwise a phantom NMI
+        if (!nmi_either && gen_bus_err_log::intg_announced > intg_consumed) begin
+          nmi_internal_entries++; intg_consumed = intg_at_last;
+        end else if (!nmi_either) why = "NMI entry without a pending NMI pin or an injected integrity error since the last NMI entry";
+      end else if (line < 0) begin
+        why = "cause is not an interrupt line";
+      end else if (!either[gen_irq_mie_bit(line)]) begin
+        why = "taken line was not pending-and-enabled";
+      end else if (nmi_both) begin
+        why = "an NMI pending throughout outranks it";
+      end else begin
+        for (int l = 0; l < 18; l++)
+          if (both[gen_irq_mie_bit(l)] && gen_irq_rank(l) < gen_irq_rank(line)) why = $sformatf("line %0d pending throughout outranks it", l);
+      end
+      if (why != "") begin
+        cause_mismatch++;
+        if (gen_chk_en(cfg, is_nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, is_nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
+          `uvm_error(is_nmi ? "nmi_entry" : "irq_entry",
+                     $sformatf("entry mcause %08h at order %0d: %s (pending-and-enabled either %08h both %08h, nmi either %0b both %0b)",
+                               st.mcause, st.order, why, either, both, nmi_either, nmi_both))
+      end
     endfunction
 
     function void write_evt(gen_irq_evt e);
+      if (e.level) begin
+        raised_since |= e.changed[17:0]; if (e.changed[18]) nmi_raised_since = 1;
+      end else begin
+        // a line the driver takes back before the DUT took it owes no entry: open expectations drop that line
+        expect_t keep [$];
+        released_since |= e.changed[17:0]; if (e.changed[18]) nmi_released_since = 1;
+        foreach (expects[i]) begin
+          expects[i].lines &= ~{1'b0, e.changed[17:0]};
+          if (e.changed[18]) expects[i].nmi = 0;
+          if (expects[i].lines[17:0] != 0 || expects[i].nmi) keep.push_back(expects[i]); else expect_released++;
+        end
+        expects = keep;
+      end
       if (e.level && have_st) begin
         expect_t x;
         x.order_at = last_st.order; x.cycle = e.cycle; x.lines = e.changed; x.nmi = e.changed[18];
@@ -138,8 +235,8 @@ package gen_checkers_pkg;
       end
     endtask
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d bound failures=%0d open expectations=%0d",
-                checked_cycles, pending_mismatch, entries_seen, nmi_seen, expect_fail, expects.size()), UVM_LOW)
+      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d",
+                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size()), UVM_LOW)
     endfunction
   endclass
 
@@ -163,7 +260,7 @@ package gen_checkers_pkg;
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_DBG_CHK", "cfg not in uvm_config_db")
     endfunction
     function void write_evt(gen_irq_evt e);
-      if (e.level && have_st && !dbg_q) begin req_open = 1; req_order = last_order; req_cycle = e.cycle; end
+      if (e.level && have_st && !dbg_q && !req_open) begin req_open = 1; req_order = last_order; req_cycle = e.cycle; end   // the first open request keeps the bound
     endfunction
     function void write_state(gen_model_state st);
       if (st.debug_mode && (!dbg_q || dret_q)) begin   // a request held through dret re-enters at once
@@ -191,7 +288,8 @@ package gen_checkers_pkg;
   // Observed outputs: alert_internal (always 0 with RegFileECC = 0), data_tag_quiet, alert_bus (exact:
   // high in the rvalid cycle of a corrupted response and never otherwise), double_fault (a pulse exactly
   // GEN_TRAP_TO_RVFI_OFFSET cycles before a synchronous trap record that follows an earlier synchronous
-  // trap with no mret between them; no other pulses).
+  // trap with no mret between them; no other pulses; an exception taken in debug mode sets nothing,
+  // rtl/ibex_cs_registers.sv:918).
   class gen_misc_monitor extends uvm_component;
     `uvm_component_utils(gen_misc_monitor)
     virtual gen_misc_if misc;
@@ -243,9 +341,19 @@ package gen_checkers_pkg;
       if (!uvm_config_db#(virtual gen_bus_if)::get(this, "", "dbus_vif", dbus)) `uvm_fatal("GEN_MISC", "dbus_vif not in uvm_config_db")
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_MISC", "cfg not in uvm_config_db")
     endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);
+      super.end_of_elaboration_phase(phase);
+      if (sink == null) return;
+      sink.register_row("alert", "alert_minor"); sink.register_row("alert", "alert_major_bus");
+      sink.register_row("alert", "alert_major_internal"); sink.register_row("alert", "double_fault_seen");
+      sink.register_row("misc", "irq_pending"); sink.register_row("misc", "core_busy");
+      sink.register_row("misc", "crash_dump_current_pc"); sink.register_row("misc", "crash_dump_next_pc");
+      sink.register_row("misc", "crash_dump_last_data_addr"); sink.register_row("misc", "crash_dump_exception_pc");
+      sink.register_row("misc", "crash_dump_exception_addr");
+    endfunction
     function void write_state(gen_model_state st);
-      if (st.is_mret) sync_seen = 0;
-      if (st.is_trap && !st.is_intr) begin
+      if (st.is_mret && !st.is_trap) sync_seen = 0;
+      if (st.is_trap && !st.is_intr && !st.debug_mode) begin
         int unsigned want = st.cycle - GEN_TRAP_TO_RVFI_OFFSET;
         bit found = 0;
         sync_traps++;

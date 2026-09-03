@@ -1,0 +1,2 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_t080s2/a/red_zcmp_irq_storm/stdout.log (first T-134 attempt under storm: the program never reached tohost, interrupts every ~20 cycles restart each Zcmp sequence before it completes; not a comparator red, kept as the reason for the sparse regime)
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages

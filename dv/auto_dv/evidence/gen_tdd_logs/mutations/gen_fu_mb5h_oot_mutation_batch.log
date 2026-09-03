@@ -1,0 +1,18 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+start 15:17:06Z shared tree: 927a2ff7bd37746a 35ade6980f93d615 234ef90f31a65a5d ef3bc16a9ed47589 9fc697394be5c378 
+MB5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB5/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 927a2ff7bd37746a
+MB5_catch_ut_irq_dir: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    5 first: 
+MB5_ablate_ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB5: shared tree untouched: 927a2ff7bd37746a
+end 15:17:32Z shared tree: 927a2ff7bd37746a 35ade6980f93d615 234ef90f31a65a5d ef3bc16a9ed47589 9fc697394be5c378 

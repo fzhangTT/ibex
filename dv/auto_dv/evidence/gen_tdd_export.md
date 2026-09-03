@@ -169,8 +169,9 @@ header before any rule, which is a version refusal, not a red of the writers. Th
 therefore the content of the first green (below) and the two mutations MUT-G / MUT-H.
 
 First green (build out_t080s2/a, compile clean on the first try; gen_tdd_logs/export/gen_s2a_*): export_zc 175 records,
-902 E lines (ibus req 155 / gnt 154 / rvalid 153: one response pending at the flush; dbus 29/29/29; the four alert rows and
-misc irq_pending/core_busy once each at reset release; crash_dump_current_pc 151 and next_pc 165; pin fetch_enable at
+902 E lines (ibus req 155 / gnt 154 / rvalid 153: one response pending at the flush; dbus 29/29/29; 13 lines at cycle 0:
+the four alert rows, the seven misc rows (irq_pending, core_busy and the five crash_dump fields) and the two ctrl pins;
+crash_dump_current_pc 151 and next_pc 165 in total; pin fetch_enable at
 cycle 0 = MuBiOff and at cycle 60 = MuBiOn, mcounteren_writable at 0); export_s7 2008 records, 15765 E lines incl. scrkey
 req/valid 10 each; export_irq_storm 3939 records, 47672 E lines incl. irq_fast 6327, irq_pending 1722; export_zc_counters
 PASS; the canary (boot_zc, lockstep_zc, lockstep_s7) PASS. Content facts checked by hand and retained
@@ -187,3 +188,41 @@ caught by read()'s gnt-count rule (`GEN_EXPORT: 153 E ibus gnt lines, marker say
 asserted; a restricted run (`+gen_export_sources=ibus,pin`) PASS with the header sources= equal to the restricted list
 (gen_s2a_export_zc_ibusonly_*). Window closed on build out_t080s2/a; the follow-up landing (T-134 / T-136 / T-137 and the
 review rows) starts in the same tree.
+
+## 12. T-141: writers register their rows, the sink fatals in every run, the bus count rules, the never-observed rows
+
+Cross-model CM8-M-1 / M-2 / M-3 and the Critic's step-2 Section 7 (LOG-028a). Built (dv/auto_dv/env/gen_export_pkg.sv,
+gen_agents_pkg.sv, gen_checkers_pkg.sv, gen_env_pkg.sv, gen_knobs_codegen.py, gen_export.py):
+- each writer instance calls `sink.register_row(source, event)` for every row it emits in its own end_of_elaboration_phase
+  (bus driver: req / gnt / rvalid; ctrl: fetch_enable / mcounteren_writable; irq driver: the five irq rows; debug driver:
+  debug_req; misc monitor: the four alert and seven misc rows; key responder: req / valid; dispatcher: regime phase);
+  gen_env's seven `register_source` calls are gone;
+- the codegen renders `GEN_EXPORT_ROWS` (every source/event, yaml order) and `gen_export_row_header(source, ev)`; the
+  sink walks the list at start of simulation BEFORE the enabled test and fatals on a row of an active source with no
+  registered writer, so a build with a silent writer fails every run, export knob or not; the header's sources= and
+  `# events` rows are derived from the registered rows (a deleted writer changes the header);
+- `read()` gains the two presence rules per enabled bus: #req - #gnt in {0, 1}, 0 <= #gnt - #rvalid <= the bus's
+  outstanding cap; `+gen_export_sources` naming an inactive source is a uvm_warning; a yaml without export_active_sources
+  dies with a message (fixture in the codegen unit test, gen_fu_knobs_codegen_ut.log).
+Red: the sink fatal has its red as mutant MUT-K (the key responder never registers: `emitted row scrkey/req has no
+registered writer in this build`, in a run without +gen_export_file and in one with it); the count rules as MUT-I (silent
+req writer) and MUT-J (silent rvalid writer), each with a Python ablation (gen_mut_export.md).
+Green on out_fu2/h: export_zc (175 records, 902 events at flush 2), export_s7 (2008 records, 15765 events) pass the new
+rules; every other run of the set passes the every-run registration check by construction.
+Never-observed rows (CM8-M-3, Critic s2 M-2, LOG-028a): new test gen_ut_export_rows.py (knob `+gen_ut_rows_set`) issues two
+REGIME_SET on knob_imem_gnt_delay (short, then long) and one DBG_REQ (assert, CYCLES policy 60) or one NMI_PULSE (4
+cycles), reads the export and requires one regime phase line per REGIME_SET with (knob_id, value_idx, phase_idx) as
+issued and a 1-then-0 pair of the pin row. Retained (gen_tdd_logs/lockstep/gen_fu_h_rows_*, export excerpts
+gen_tdd_logs/export/gen_fu_h_rows_*_export_excerpt.txt), first lines hand-checked against the component reports:
+- rows_dbg_s7 (seed-7 image, debug ROM): `E 23b regime phase 0 1 1` and `E 45f regime phase 0 2 2` against the dispatcher's
+  `GEN_PHASE phase 1 ... cycle=571` (0x23b) and `phase 2 ... cycle=1119` (0x45f); `E 23b pin debug_req 1` (the DBG_REQ
+  dispatched in the same cycle as the first REGIME_SET: commands are event-driven, not clocked) and `E 277 pin debug_req 0`
+  at 0x277 = 631 = 571 + 60, the hold the command asked for; 4 debug entries; 316 records, 1611 events, 0 mismatches.
+- rows_nmi_irqp (interrupt program, vector 31 = mret): `E 3d5 regime phase 0 1 1` (GEN_PHASE cycle=981) and `E 5d5 regime
+  phase 0 2 2` (1493); `E 3d5 pin irq_nm 1` and `E 3d9 pin irq_nm 0` (4 cycles, the NMI_PULSE argument); 310 records, 2340
+  events. Run with `+gen_chk_all=0`: the model has no NMI emulation (shim document Section 4a, DEFERRED), so the NMI entry
+  is 58 isa misses in the unsilenced run (out_fu2/b rows_nmi_irqp, FAIL, not retained as green); this run is an export
+  observation only and says nothing about the DUT's NMI entry.
+Doc corrections of the review lows: addendum line 41 garble, the read() signature with `sources` (addendum :27, :161 and
+the sink document), the "version 1" heading, the FETCH_EN_LINE_OFFSET comment now states the derivation (ack in the
+ReadWrite region after posedge N, the driver acts at the next negedge and stamps N).

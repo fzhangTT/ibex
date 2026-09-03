@@ -31,6 +31,10 @@ case "$MODE" in
     mapfile -d '' VCS_FLAGS < <(flow_flags) || { echo "gen_flow_const.py flag read failed" >&2; exit 1; }
     [ "${#VCS_FLAGS[@]}" -gt 0 ] || { echo "gen_flow_const.py returned no flags" >&2; exit 1; }
     echo "config opts: $CFG_OPTS" > "$OUT/config_opts.txt"
+    # the identity of the sources this simv was built from: one sha256 per TB file and one over the list (run headers carry the latter)
+    find dv/auto_dv/env dv/auto_dv/tb dv/auto_dv/isa dv/auto_dv/gen_tb -type f \( -name '*.sv' -o -name '*.svh' -o -name '*.f' -o -name '*.cc' -o -name '*.h' -o -name '*.py' -o -name '*.yaml' -o -name '*.sh' \) -not -path '*/__pycache__/*' | sort | xargs sha256sum > "$OUT/sources_sha256.txt"
+    SRC_SHA="$(sha256sum "$OUT/sources_sha256.txt" | cut -c1-16)"
+    echo "sources sha256 (dv/auto_dv env, tb, isa, gen_tb): $SRC_SHA" | tee -a "$OUT/config_opts.txt"
     printf 'flow flags:'; printf ' %q' "${VCS_FLAGS[@]}"; echo
     { printf 'flow flags:'; printf ' %q' "${VCS_FLAGS[@]}"; echo; } >> "$OUT/config_opts.txt"
     # the ISA shim shared library (Spike behind DPI) goes next to the simv; VCS links it via -LDFLAGS. The shim
@@ -48,6 +52,7 @@ case "$MODE" in
         -l "$OUT/compile.log"
     rc=$?
     for f in ucli.key vc_hdrs.h; do [ -e "$ROOT/$f" ] && mv -f "$ROOT/$f" "$OUT/"; done
+    echo "sources sha256: $SRC_SHA" >> "$OUT/compile.log"
     echo "vcs exit: $rc" | tee -a "$OUT/compile.log"
     exit $rc ;;
   run)
@@ -58,7 +63,8 @@ case "$MODE" in
     ARG_BUILD_CONFIG="$(sv_string dv/auto_dv/tb/gen_tb_pkg.sv PLUSARG_BUILD_CONFIG)"
     # the shim has no baked rpath for spike: the run exports the library dirs like the flow's runtime_lib_dirs
     export LD_LIBRARY_PATH="$OUT/lib:$ROOT/tools/spike/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    echo "# run $NAME: $(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname) seed=$SEED module=$MODULE plusargs=[$*]" > "$dir/run_header.txt"
+    SRC_SHA="$( [ -f "$OUT/sources_sha256.txt" ] && sha256sum "$OUT/sources_sha256.txt" | cut -c1-16 || echo unknown)"
+    echo "# run $NAME: $(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname) seed=$SEED module=$MODULE build_sources_sha256=$SRC_SHA plusargs=[$*]" > "$dir/run_header.txt"
     ( cd "$dir" && env SIM_DIR="$dir" MODULE="$MODULE" PYTHONPATH="$ROOT" LIBPYTHON_LOC="$LIBPY" \
         RANDOM_SEED="$SEED" TOPLEVEL=gen_tb_top TOPLEVEL_LANG=verilog \
         "$OUT/vcs_simv" +vcs+lic+wait +ntb_random_seed="$SEED" +UVM_TESTNAME=gen_base_test \

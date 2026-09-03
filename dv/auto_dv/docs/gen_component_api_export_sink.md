@@ -28,12 +28,17 @@ the RVFI monitor and the event writers hand in as ready-formatted strings (`writ
 `write_event`, each counting into `records`, `markers`, `events`), writes the flush marker in `flush_export()`
 (returns the flush sequence number, which the dispatcher places in `peek_data`), and writes the end marker,
 `$fflush`es, checks `$ferror` and `$fclose`s in `extract_phase`. `$ferror` is checked after every `$fflush` of a flush
-marker and at the end. Event sources register through `register_source(name)` and gate every line through
-`source_on(name)`; the header's `sources=` field is the yaml's ACTIVE list (`export_active_sources`, rendered
-`GEN_EXPORT_ACTIVE_SOURCES` / `EXPORT_ACTIVE_SOURCES`, the set Runtime records as `export_sources_emitted`) intersected
-with `+gen_export_sources`, in yaml order; a writer registering an inactive source, or an active source without a
-registered writer, is `uvm_fatal GEN_EXPORT` at start of simulation, so the header equals the manifest's emitted set by
-construction (a restricting knob makes it a subset). Since the step-2 landing (format version 2) every source but icram
+marker and at the end. Every writer instance registers the (source, event) rows it emits through
+`register_row(source, event)` in its own `end_of_elaboration_phase` (T-141; gen_env only hands out the sink handle) and
+gates every line through `source_on(name)`. At start of simulation, in EVERY run (export knob on or off, since the
+emitted set is a build property), the sink walks the rendered row list `GEN_EXPORT_ROWS` and fatals on a row of an
+active source (yaml `export_active_sources`, rendered `GEN_EXPORT_ACTIVE_SOURCES` / `EXPORT_ACTIVE_SOURCES`, the set
+Runtime records as `export_sources_emitted`) with no registered writer; `register_row` fatals on an unknown row or a row
+of an inactive source. The header's `sources=` field is the active sources that registered a row, intersected with
+`+gen_export_sources`, in yaml order, and its `# events` rows are exactly the registered rows of those sources
+(`gen_export_row_header(source, event)`), so a deleted writer changes the header and fails Runtime's emitted-set check
+and `read()`'s header rule instead of leaving header, manifest and fatal path agreeing on a row nothing emits. A
+`+gen_export_sources` value naming a known but inactive source (icram) is a `uvm_warning`. Since the step-2 landing (format version 2) every source but icram
 has its writers connected: the bus drivers (req, gnt, rvalid), the key responder (req, valid), the ctrl driver
 (fetch_enable, mcounteren_writable), the irq and debug drivers (pin lines), gen_misc_monitor (alert and misc rows) and the
 regime dispatcher (phase); the pin, alert and misc writers also emit the level at reset release. `sink.cycle()` (the
@@ -46,7 +51,7 @@ names are the field names, so the SV side cannot reorder a column. The addendum'
 include `gen_export_fields.svh` and the sink methods `line(kind, text)` and `flush()` (its Section 2 names the two
 rendered includes); as built these are the two rendered includes named above and the methods `write_record` /
 `write_marker` / `write_event` and `flush_export()`. The
-Python reader is `dv/auto_dv/gen_tb/gen_export.py` (`read(path, seq, counters=False)`), the bridge wrapper is
+Python reader is `dv/auto_dv/gen_tb/gen_export.py` (`read(path, seq, counters=False, sources="all")`, `sources` = the run's `+gen_export_sources` value), the bridge wrapper is
 `GenBridge.export_flush()` (`dv/auto_dv/gen_tb/gen_bridge.py`), and the consumer test is
 `dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py`.
 
@@ -55,8 +60,10 @@ Python reader is `dv/auto_dv/gen_tb/gen_export.py` (`read(path, seq, counters=Fa
 SV: `dv/auto_dv/env/gen_export_pkg.sv` (package `gen_export_pkg`, class `gen_export_sink`; includes the rendered
 `dv/auto_dv/env/gen_export_event_lines.svh`); `dv/auto_dv/env/gen_export_record_line.svh` (rendered; included inside
 `gen_rvfi_pkg` after `gen_rvfi_txn`). Both includes, the `gen_tb_pkg` strings `GEN_EXPORT_RECORD_FIELDS`,
-`GEN_EXPORT_COUNTER_FIELDS`, `GEN_EXPORT_SOURCES` and the functions `gen_export_source_known(s)` and
-`gen_export_event_header(source)` (the `# events` rows of one source, newline-terminated), and the Python tuples
+`GEN_EXPORT_COUNTER_FIELDS`, `GEN_EXPORT_SOURCES`, `GEN_EXPORT_ACTIVE_SOURCES`, `GEN_EXPORT_ROWS` (every
+`source/event` row, yaml order) and the functions `gen_export_source_known(s)`, `gen_export_source_active(s)`,
+`gen_export_event_header(source)` (the `# events` rows of one source, newline-terminated) and
+`gen_export_row_header(source, ev)` (one row's header line; empty for an unknown row), and the Python tuples
 `EXPORT_RECORD_FIELDS`, `EXPORT_COUNTER_FIELDS`, `EXPORT_SOURCES`, `EXPORT_EVENTS` in `dv/auto_dv/gen_tb/gen_knobs.py`
 are rendered by `dv/auto_dv/tb/gen_knobs_codegen.py` from the yaml keys `export_record_fields`,
 `export_counter_fields` and `export_events` of `dv/auto_dv/tb/gen_tb_knobs.yaml` (one origin for the column order;
@@ -65,8 +72,9 @@ line function). Wiring (`gen_env_pkg.sv`): `gen_env` creates `sink`, and `connec
 `dispatch.sink` and `dispatch.bvif`; the dispatcher route is `GEN_CMD_EXPORT_FLUSH: bvif.peek_data =
 sink.flush_export()`.
 
-SV writer contract (an event source, when it lands): call `sink.register_source("ibus")` once at build or connect
-time (an unknown name is `uvm_fatal GEN_EXPORT`), then per event `if (sink.source_on("ibus"))
+SV writer contract: in the writer's `end_of_elaboration_phase`, when `sink != null`, call `sink.register_row("ibus",
+"req")` once per row it emits (an unknown row, or a row of a source the yaml calls inactive, is `uvm_fatal GEN_EXPORT`;
+the sink fatals at start of simulation on any active row nobody registered), then per event `if (sink.source_on("ibus"))
 sink.write_event(gen_export_line_ibus_gnt(cycle, addr, we, be, req_cycle, outstanding_after));` (no formatting cost
 when the source is off); the request rise is `gen_export_line_ibus_req(cycle, addr, we, be)`. The `cycle` argument
 is the one cycle base of Section 4 (the bridge's `cycle_count` through `sink.cycle()`, planned with the event part).
@@ -86,7 +94,7 @@ alone decide the namedtuple, as built the reader asserts `counters=` equals the 
 reads to the `# end` marker (post-run diagnostics only, never the basis of a pass). `read()` has no simulator access
 and every failure is an `AssertionError` whose message starts with `GEN_EXPORT:`.
 
-### 2a. File format (version 1)
+### 2a. File format (version 2)
 
 ```
 # gen_export v2 seed=<n> build_config=<name> counters=<0|1> sources=<csv of active sources enabled by the knob> fields=<csv of R field names>
@@ -236,9 +244,12 @@ level): `export_record_fields`, `export_counter_fields`, `export_events`.
 ## 5. Checkers
 
 None: the export is observation only and carries no pass/fail check of its own (no checker id, no `+gen_chk_`
-knob). The consumer checks are the tests'. As built in `gen_ut_export.py`: the header field list equals the
-rendered list; the marker's `records` equals its `retired` and the parsed `R` count (through `read()`); `order`
-increments by one and every line has its header's field count (through `read()`); two flushes are issued and the
+knob). The consumer checks are the tests'. Format-internal presence rules in `read()` (T-141, one mutation each): per
+enabled bus `#req - #gnt` is 0 or 1 (MUT-I) and `0 <= #gnt - #rvalid <= GEN_<BUS>_MAX_OUTSTANDING` (MUT-J), beside
+the `#gnt == <bus>_grants` marker rule (MUT-G), so a silent req or rvalid writer is visible from the file alone. As
+built in `gen_ut_export.py`: the header field list equals the rendered list; the marker's `records` equals its
+`retired` and the parsed `R` count (through `read()`); `order` increments by one and every line has its header's field
+count (through `read()`); two flushes are issued and the
 early flush's records are a prefix of the final one; the bridge's `evt_retired_count` read after the ack is `>=`
 the marker's `retired`; the first record's `pc_rdata` is the boot page + 0x80; every `R` store to the tohost
 address carries the value 1 and their count does not exceed the memory model's independent `evt_eot_count`; pc
@@ -251,9 +262,11 @@ of `cm.push` / `cm.pop` encodings in `ext_exp_insn` is not among the built check
 ## 6. Failure path and diagnostics
 
 - `uvm_fatal GEN_EXPORT`: `cfg` or `bridge_vif` missing from `uvm_config_db` (build); `+gen_export_sources` names a
-  source outside `GEN_EXPORT_SOURCES` (build; the message lists the known set); `register_source` with an unknown
-  name; the export file cannot be opened (`$fopen` returns 0; never a silent run without a file); `EXPORT_FLUSH`
+  source outside `GEN_EXPORT_SOURCES` (build; the message lists the known set); `register_row` with an unknown row or
+  a row of an inactive source; an active row with no registered writer at start of simulation, in every run (`emitted
+  row <source>/<event> has no registered writer in this build`; MUT-K); the export file cannot be opened (`$fopen` returns 0; never a silent run without a file); `EXPORT_FLUSH`
   issued without `+gen_export_file`.
+- `uvm_warning GEN_EXPORT`: `+gen_export_sources` names a known source that has no writer in this build (icram).
 - `uvm_error GEN_EXPORT`: `$ferror` non-zero after a flush (`write error after flush: <text>`) or at the end
   (`write error at end: <text>`).
 - Python `AssertionError` from `read()` (message prefix `GEN_EXPORT:`; the rule that failed is named in the text,
@@ -317,9 +330,10 @@ mechanism in `dv/auto_dv/docs/gen_runtime_api.md` Section 9. The file lives in t
 
 ## 9. At build
 
-Open items of this landing (the event part, build step 2): connect the bus, ctrl, scrkey and icram writers (register
-the source, gate with `source_on`, one line function call per event, the stamp through `sink.cycle()`), add the
-bridge grant counters and the marker's `ibus_grants=` / `dbus_grants=` fields with the matching `read()` rule, run
-MUT-G and MUT-H; then the step-2b sources with their components and the `COV_WITNESS` command with CG-WIT-001 (build
-step 3), each with its own red run. The consumer-side helper that the Test Writer's template wraps builds its
+Done: the bus, ctrl, scrkey, irq, debug, misc and regime writers with per-row registration (T-141), the grant
+counters and marker fields with `read()`'s gnt rule (MUT-G), the stamp rule (MUT-H), the bus count rules (MUT-I,
+MUT-J), the registration fatal (MUT-K) and the retained runs of the regime phase, pin debug_req and pin irq_nm rows
+(gen_ut_export_rows, CM8-M-3). Open: the icram writers with the RAM model's port (build step 3), the `COV_WITNESS`
+command with CG-WIT-001, and a stamp rule for the misc/alert rows (first crash_dump_current_pc line against the first R
+record; Critic step-2 L-4). The consumer-side helper that the Test Writer's template wraps builds its
 namedtuples from `read()` (Section 2), never from a re-typed column list.

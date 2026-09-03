@@ -158,3 +158,28 @@ Green (build dv/auto_dv/work/tb-infra/out_t102c/a, gen_tdd_logs/lockstep/gen_t10
 export_zc, gen_ut_irq, gen_ut_dbg, lock-step under interrupt storm, the four batch-1 tests: all PASS, UVM_ERROR 0; shim
 unit test 159 OK (gen_t102c_green_ut_isa_shim.log); codegen unit test PASS with the two new refused fixtures. Mutation P12
 (the trap record's pc_wdata reported off by 2 on the trapping-Zcmp run, out of tree): see gen_mut_t102.md.
+
+## 10. Follow-up after T-102c (cross-model 788c15b2-18470dd8 AWC, Critic gen_critic_tb_t102c.md REQUEST-CHANGES M-1)
+
+- M-1 / CM6-M-2 (fault arming mirrored the DUT): conditioned form built (T-137, LOG-026a): the model is armed only for a
+  data-bus error gen_bus_driver announced through `gen_tb_pkg::gen_bus_err_log` (word address, consumed by the arming);
+  a PMP denial is Spike's own decision; a DUT fault on an access nobody corrupted is an isa_trap miss. GEN_SB reports
+  faults_armed / faults_unannounced / bus_err_announced. Trapping-Zcmp green preserved (gen_fu_h_zcmp_trap_*: 1 trap, armed
+  1, unannounced 0). Red MB6 (a legal store reported as a trap): `isa_trap dut trapped, model retired 1` with the
+  referees inert, ablation PASS (gen_mut_step2b.md). Not built: a red on a PMP-denial program with a dropped model CSR
+  write (the Critic's alternative form); the arming code path is the same, and no PMP-denial program exists yet.
+- CM6-M-1 / CR6-L-1 (union compare claimed on trap records): built; the ordered store compare is sound because both sides
+  store the highest rlist register first (rtl/ibex_compressed_decoder.sv:626-660 "store the register at the top of rlist
+  ... work our way down"; Spike cm_push.h iterates i from Sn(11) down to 0). Exercised by the trapping-Zcmp green.
+- CM6-M-3 / CR6-L-2 = T-134 (Section 7 of gen_tdd_step2b.md): red 425 misses, green 4 splits, mutant MB7.
+- CM6-L-1 / CR6-L-5 (intr on a folded micro-op): entries are handled before the fold; the directed case is
+  gen_zcmp_irq_directed.S (every vector entry is a cm.push, 5 entries in the green run).
+- CM6-L-2 / CR6-L-3: the P12 row now describes the mutation as run (offset rule re-typed to insn_len; catch text pc + 4).
+- CM6-L-3 / CR6-L-6: the "2019 misses" count is retained as a counted line in gen_red_zcmp_trap_t102c_stdout_excerpt.log.
+- CM6-L-4 / CR6-L-7: CSR_MTVEC in the unit test. CR6-L-4: unit test section 9 (ecall inside debug mode sets no flag).
+  CM6-I-1: cfg_int_param states the no-inherits assumption. CM6-I-2: ARM_BUS_ERR reads the rendered
+  GEN_MEM_ERR_ARM_KIND_ERR; GEN_MEM_ERR_ARM_KIND_* / GEN_ISA_FAULT_KIND_* rendered for SV, Python and the shim. CM6 nit:
+  the provenance tag dropped from the offset comment. CR6-I-1: gen_tb_local.sh stamps every compile and run header with a
+  sha256 over the TB sources (`sources sha256:` in compile.log, `build_sources_sha256=` in run_header.txt).
+- rtl-arch R10 / R11 (T-144): breakpoint mtval 0 and mepc == pc (shim + comparator, unit red then green), jalr bit-0 mask
+  counted as b13_odd_jalr (red 80 misses then green): Section 7 of gen_tdd_step2b.md and gen_component_api_scoreboard.md.

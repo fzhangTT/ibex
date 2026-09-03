@@ -1,0 +1,25 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+start 13:34:42Z
+MB5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB5/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 a23c8a40fc15d544
+MB5_catch_ut_irq_dir: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    5 first: 
+MB5_ablate_ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB5: shared tree untouched: a23c8a40fc15d544
+MB6 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB6/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 a23c8a40fc15d544
+MB6_catch_boot_s7: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(240) @ 1782500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=469 pc=80001782 insn=0088a023 trap=1 intr=0 rd=x0/0000
+MB6_ablate_boot_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB6: shared tree untouched: a23c8a40fc15d544
+MB7 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB7/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 a23c8a40fc15d544
+MB7_catch_boot_zcirq_sparse: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    8 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 5311500: uvm_test_top.env.sb [isa_rd] Zcmp union: model wrote 1 registers, dut 3 (order=1148 pc=80000248 insn=ff010113 trap=0 intr=0 rd=x2/80000310 mem=
+MB7_ablate_boot_zcirq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB7: shared tree untouched: a23c8a40fc15d544
+end 13:36:05Z

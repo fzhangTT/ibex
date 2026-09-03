@@ -40,6 +40,7 @@ plusargs:
   - {name: export_flush_every, kind: int, default: 0, debug_only: true, desc: "flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)"}
   # ---- TB unit-test knobs (gen_tests/*) ----
   - {name: ut_boot_retire, kind: int, default: 200, desc: "retirements the boots-and-retires test waits for"}
+  - {name: ut_rows_set, kind: enum, values: [regime_nmi, regime_dbg], default: regime_nmi, desc: "gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
   - {name: ibus_gnt_max, kind: int, default: null, desc: "instruction bus grant latency high bound"}
@@ -155,6 +156,9 @@ regime_windows:
   rvalid_delay:   {min1: [1, 1], short: [2, 4], long: [5, 32], random: [1, 32]}
   rate_per_mille: {none: 0, rare: 2, frequent: 50}
   outstanding_cap: {cap1: 1, cap2: 2, cap4: 4, cap8: 8}
+  # mean cycles between autonomous irq/debug regime events (0 = none), keyed by the regime knobs' values
+  irq_event_mean: {quiet: 0, sparse: 2000, storm: 20}
+  dbg_event_mean: {none: 0, sparse: 5000, storm: 200}
 
 # Constants: `sv` is the SystemVerilog right-hand side when it must reference ibex_pkg; `value` is the
 # integer for Python and C when the value is a literal; `derive` names a renderer derivation that computes
@@ -186,6 +190,11 @@ constants:
   - {name: GEN_TDATA1_IBEX_RDATA, value: 0x28001048, sv_type: "logic [31:0]", desc: "tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render"}
   - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
   - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
+  - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}
+  - {name: GEN_MEM_ERR_ARM_KIND_INTG, value: 2, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response"}
+  - {name: GEN_ISA_FAULT_KIND_FETCH, value: 0, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: instruction fetch (shim fault_hits)"}
+  - {name: GEN_ISA_FAULT_KIND_LOAD, value: 1, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: load"}
+  - {name: GEN_ISA_FAULT_KIND_STORE, value: 2, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: store"}
 
 # TB memory map (test equipment). DM windows are read from gen_dut_top.sv parameters and the
 # program window from gen_riscv_dv_target/gen_link.ld at generation time; the MMIO page and its

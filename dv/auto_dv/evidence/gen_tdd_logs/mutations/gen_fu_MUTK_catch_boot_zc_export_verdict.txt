@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_fatal at sim.log:31
+evidence: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)
+uvm_counts: {'INFO': 7, 'WARNING': 0, 'ERROR': 0, 'FATAL': 1}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

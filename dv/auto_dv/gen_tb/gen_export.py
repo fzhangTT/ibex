@@ -3,7 +3,9 @@ parses the prefix of the file that ends at the flush marker carrying `seq` (the 
 enforces the format rules: header field list equal to the rendered EXPORT_RECORD_FIELDS (plus the counter fields
 when the header says counters=1), one `# events` row per (source, event) of the enabled sources, `records ==
 retired` in the marker, R-line count == records, E-line count == events, E <bus> gnt count == the marker's
-<bus>_grants for each enabled bus (format version 2), order strictly +1 across R lines,
+<bus>_grants for each enabled bus (format version 2), per enabled bus #req - #gnt in {0, 1} (one request at most
+awaits its grant) and 0 <= #gnt - #rvalid <= the bus's outstanding cap (T-141 presence rules: a dropped req or rvalid
+writer is visible from the file alone), order strictly +1 across R lines,
 non-decreasing cycle across all lines, field count per line equal to its header row, hex-only tokens. Every
 violation is an AssertionError (the only Python-side failure mechanism). Radix: every R/I/E value is hex without
 prefix; every marker key=value pair (flush, end) and the header's seed= and counters= are decimal. No simulator
@@ -11,7 +13,10 @@ access; pure file parsing; ASCII only."""
 from collections import namedtuple
 from pathlib import Path
 
-from dv.auto_dv.gen_tb.gen_knobs import EXPORT_ACTIVE_SOURCES, EXPORT_COUNTER_FIELDS, EXPORT_EVENTS, EXPORT_RECORD_FIELDS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, EXPORT_ACTIVE_SOURCES, EXPORT_COUNTER_FIELDS, EXPORT_EVENTS, EXPORT_RECORD_FIELDS
+
+# grants in flight a bus can hold (the drivers' caps): the bound of #gnt - #rvalid at any flush
+BUS_MAX_OUTSTANDING = {"ibus": CONSTANTS["GEN_IBUS_MAX_OUTSTANDING"], "dbus": CONSTANTS["GEN_DBUS_MAX_OUTSTANDING"]}
 
 Marker = namedtuple("Marker", "cycle ext_pre_mip ext_post_mip ext_nmi ext_nmi_int ext_debug_req ext_debug_mode")
 Flush = namedtuple("Flush", "seq records retired markers events ibus_grants dbus_grants cycle")
@@ -123,4 +128,8 @@ def read(path, seq, counters=False, sources="all"):
         if bus in enabled:
             n = sum(1 for e in events if e.source == bus and e.event == "gnt")
             assert n == grants, f"GEN_EXPORT: {n} E {bus} gnt lines, marker says {bus}_grants={grants}"
+            n_req = sum(1 for e in events if e.source == bus and e.event == "req")
+            n_rv = sum(1 for e in events if e.source == bus and e.event == "rvalid")
+            assert n_req - n in (0, 1), f"GEN_EXPORT: {bus}: {n_req} E req lines against {n} E gnt lines (at most one request awaits its grant; MUT-I)"
+            assert 0 <= n - n_rv <= BUS_MAX_OUTSTANDING[bus], f"GEN_EXPORT: {bus}: {n} E gnt lines against {n_rv} E rvalid lines (outstanding responses must stay within 0..{BUS_MAX_OUTSTANDING[bus]}; MUT-J)"
     return Export(hdr, records, markers, events, flush)

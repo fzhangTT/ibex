@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
   check("csrw mtvec retires", st.retired, 1);
   check("mtvec legalized: BASE[7:2] = 0, MODE 1", gen_isa_read_csr(CSR_MTVEC), 0x80001201u);   // 0x80001234 -> BASE 0x80001200
   check("csr write list has mtvec", st.csr_writes >= 1, 1);
-  { uint32_t a = 0, v = 0; gen_isa_csr_write(0, &a, &v); check("csr write 0 is mtvec", a, 0x305); check("csr write 0 value legalized", v, 0x80001201u); }
+  { uint32_t a = 0, v = 0; gen_isa_csr_write(0, &a, &v); check("csr write 0 is mtvec", a, CSR_MTVEC); check("csr write 0 value legalized", v, 0x80001201u); }
   gen_isa_step(&st); gen_isa_step(&st);
   check("mie fast bit 16 sticks", gen_isa_read_csr(CSR_MIE), 0x10000u);
   gen_isa_step(&st); gen_isa_step(&st);
@@ -310,6 +310,37 @@ int main(int argc, char** argv) {
   check("mret clears sync_exc_seen, double_fault_seen sticky", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, kDouble);
   gen_isa_write_csr(GEN_CSR_CPUCTRLSTS, 0);
   check("software clears the status bits", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
+
+  std::puts("-- 8. R10: a breakpoint exception writes mepc = the [c.]ebreak pc and mtval = 0 (rtl/ibex_controller.sv:550, :882-899)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  gen_isa_write_word(scratch, 0x00100073u);                  // ebreak
+  gen_isa_write_word(scratch + 4u, 0x00019002u);             // c.ebreak ; c.nop
+  gen_isa_write_word(GEN_MM_BOOT_PAGE, 0x00000013u);          // trap vector: nop
+  gen_isa_step(&st);
+  check("ebreak traps", st.trap, 1);
+  check("ebreak cause 3 (breakpoint)", st.trap_cause, 3);
+  check("ebreak mtval = 0 (Ibex, spec-legal)", st.trap_tval, 0);
+  check("ebreak mtval CSR = 0", gen_isa_read_csr(CSR_MTVAL), 0);
+  check("ebreak mepc = its own pc", gen_isa_read_csr(CSR_MEPC), scratch);
+  gen_isa_set_pc(scratch + 4u);
+  gen_isa_step(&st);
+  check("c.ebreak traps", st.trap, 1);
+  check("c.ebreak cause 3", st.trap_cause, 3);
+  check("c.ebreak mtval = 0", st.trap_tval, 0);
+  check("c.ebreak mepc = its own pc (2-byte aligned)", gen_isa_read_csr(CSR_MEPC), scratch + 4u);
+
+  std::puts("-- 9. CR6-L-4: an exception taken in debug mode sets neither sync_exc_seen nor double_fault_seen (rtl/ibex_cs_registers.sv:918)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  gen_isa_write_word(scratch, 0x00000013u);                  // nop at the reset pc; the debug request pre-empts it
+  gen_isa_write_word(GEN_MM_DM_HALT, 0x00000073u);            // the debug ROM's first instruction: an ecall inside debug mode
+  gen_isa_arm_async(0, 0, 0, 0, 1, 0);                       // debug_req
+  gen_isa_step(&st);
+  check("debug entry retires nothing", st.retired, 0);
+  check("debug entry parks the pc at DmHaltAddr", st.pc_after, GEN_MM_DM_HALT);
+  check("flags clear after the entry", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
+  gen_isa_step(&st);
+  check("ecall in debug mode retires nothing", st.retired, 0);
+  check("ecall in debug mode leaves sync_exc_seen clear", gen_isa_read_csr(GEN_CSR_CPUCTRLSTS) & kFlags, 0);
 
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;

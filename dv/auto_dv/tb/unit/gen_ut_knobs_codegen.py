@@ -73,6 +73,14 @@ def refused_fixtures(text):
     yield ("unknown register key", text.replace("eot_addr: {offset: 0x104, size: 0x4}",
                                                 "eot_addr: {offset: 0x104, sise: 0x4}", 1), "unknown key(s) sise")
     yield ("unknown top-level key", text + "\nregime_windowz: {}\n", "top level: unknown key(s) regime_windowz")
+    yield ("regime knob without regime_set_consumer refused", text.replace(
+        ", regime_set_consumer: none, desc: \"icache RAM ECC injection regime\"", ", desc: \"icache RAM ECC injection regime\"", 1),
+        "regime_set_consumer must be one of")
+    yield ("unknown regime_set_consumer refused", text.replace(
+        "regime_set_consumer: none, desc: \"icache RAM ECC injection regime\"", "regime_set_consumer: nobody, desc: \"icache RAM ECC injection regime\"", 1),
+        "regime_set_consumer must be one of")
+    yield ("missing export_active_sources refused", text.replace("export_active_sources: [ibus, dbus, pin, alert, misc, scrkey, regime]\n", "", 1),
+           "missing export_active_sources")
     yield ("regime window value outside the enum set", text.replace("rate_per_mille: {none: 0, rare: 2, frequent: 50}",
                                                                    "rate_per_mille: {none: 0, rare: 2, often: 50}", 1),
            "regime_windows.rate_per_mille")
@@ -232,6 +240,11 @@ def main():
     check("python EXPORT_ACTIVE_SOURCES equals yaml", list(m.EXPORT_ACTIVE_SOURCES) == list(src["export_active_sources"]))
     check("active sources are a subset of the event sources", set(src["export_active_sources"]) <= {r["source"] for r in ev})
     check("pkg renders GEN_EXPORT_ACTIVE_SOURCES and gen_export_source_active", f'GEN_EXPORT_ACTIVE_SOURCES = "{",".join(src["export_active_sources"])}"' in pkg and "function automatic bit gen_export_source_active" in pkg)
+    rows_csv = ",".join(r["source"] + "/" + r["event"] for r in ev)
+    check("pkg renders GEN_EXPORT_ROWS in yaml order", 'GEN_EXPORT_ROWS = "' + rows_csv + '"' in pkg)
+    check("pkg has gen_export_row_header", "function automatic string gen_export_row_header(string source, string ev)" in pkg)
+    for row in ev:
+        check(f"pkg row header case for {row['source']}/{row['event']}", f'"{row["source"]}/{row["event"]}": return "# events {row["source"]} {row["event"]} {",".join(row["fields"])}' in pkg)
     for n in ("export_file", "export_counters", "export_sources", "export_flush_every"):
         check(f"export knob {n} present", n in names)
     check("export_flush_every is debug_only", "export_flush_every" in dbg_only)

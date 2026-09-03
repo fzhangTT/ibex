@@ -1,0 +1,42 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_fu2/a/red_jalr_odd_r11_v2/stdout.log (build out_fu2/a, the inherited tree before this instance's edits: the R11 red (no bit-0 mask) and the T-136 red under storm (131 false outranks, 36 false bound failures); UVM_ERROR lines counted by grep: 80, first 12 kept)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/jalrodd/prog.vmem tohost=0x80000288
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(207) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(208) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(231) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(690) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 108500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000124 dut=80000125 (order=11 pc=8000011e insn=00030067 trap=0 intr=0 rd=x0/00000000 mem=80000122 w0000 r1111 mode=3 cyc=103)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 123500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000134 dut=80000135 (order=15 pc=8000012e insn=00138067 trap=0 intr=0 rd=x0/00000000 mem=80000132 w0000 r1111 mode=3 cyc=118)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 137500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000144 dut=80000145 (order=20 pc=80000140 insn=ffee00e7 trap=0 intr=0 rd=x1/80000144 mem=80000144 w0000 r1111 mode=3 cyc=132)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 153500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000155 (order=25 pc=80000150 insn=00008e82 trap=0 intr=0 rd=x0/00000000 mem=80000152 w0000 r1111 mode=3 cyc=148)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 181500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000124 dut=80000125 (order=31 pc=8000011e insn=00030067 trap=0 intr=0 rd=x0/00000000 mem=80000122 w0000 r1111 mode=3 cyc=176)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 193500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000134 dut=80000135 (order=35 pc=8000012e insn=00138067 trap=0 intr=0 rd=x0/00000000 mem=80000132 w0000 r1111 mode=3 cyc=188)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 214500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000144 dut=80000145 (order=40 pc=80000140 insn=ffee00e7 trap=0 intr=0 rd=x1/80000144 mem=80000144 w0000 r1111 mode=3 cyc=209)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 228500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000155 (order=45 pc=80000150 insn=00008e82 trap=0 intr=0 rd=x0/00000000 mem=80000152 w0000 r1111 mode=3 cyc=223)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 249500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000124 dut=80000125 (order=51 pc=8000011e insn=00030067 trap=0 intr=0 rd=x0/00000000 mem=80000122 w0000 r1111 mode=3 cyc=244)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 264500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000134 dut=80000135 (order=55 pc=8000012e insn=00138067 trap=0 intr=0 rd=x0/00000000 mem=80000132 w0000 r1111 mode=3 cyc=259)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 282500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000144 dut=80000145 (order=60 pc=80000140 insn=ffee00e7 trap=0 intr=0 rd=x1/80000144 mem=80000144 w0000 r1111 mode=3 cyc=277)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(238) @ 296500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000155 (order=65 pc=80000150 insn=00008e82 trap=0 intr=0 rd=x0/00000000 mem=80000152 w0000 r1111 mode=3 cyc=291)
+UVM_INFO @ 1546000: reporter [GEN_EOT] end-of-test store 0x00000001 at 0x80000288 (store 1)
+ 15505.00ns INFO     cocotb.gen_tb_top                  GEN_UT_LOCKSTEP retired 411 consumed 411 mismatches 80 tohost 0x00000001
+ 15505.01ns INFO     cocotb.regression                  gen_ut_lockstep failed
+                                                            assert mism == 0, f"GEN_UT_LOCKSTEP: {mism} ISA mismatches"
+                                                        AssertionError: GEN_UT_LOCKSTEP: 80 ISA mismatches
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                             15505.01           0.08     189641.25  **

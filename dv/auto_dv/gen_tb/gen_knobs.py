@@ -33,6 +33,7 @@ PLUSARGS = {
     "export_sources": {"plusarg": "gen_export_sources", "kind": "string", "default": 'all', "values": None, "debug_only": False, "desc": 'comma-separated event sources written to the export (all = every source with a registered writer)'},
     "export_flush_every": {"plusarg": "gen_export_flush_every", "kind": "int", "default": 0, "values": None, "debug_only": True, "desc": 'flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)'},
     "ut_boot_retire": {"plusarg": "gen_ut_boot_retire", "kind": "int", "default": 200, "values": None, "debug_only": False, "desc": 'retirements the boots-and-retires test waits for'},
+    "ut_rows_set": {"plusarg": "gen_ut_rows_set", "kind": "enum", "default": 'regime_nmi', "values": ['regime_nmi', 'regime_dbg'], "debug_only": False, "desc": 'gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)'},
     "ibus_gnt_min": {"plusarg": "gen_ibus_gnt_min", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency low bound (cycles)'},
     "ibus_gnt_max": {"plusarg": "gen_ibus_gnt_max", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus grant latency high bound'},
     "ibus_rvalid_min": {"plusarg": "gen_ibus_rvalid_min", "kind": "int", "default": None, "values": None, "debug_only": False, "desc": 'instruction bus response latency low bound (hard floor 1)'},
@@ -157,10 +158,17 @@ CONSTANTS = {
     "GEN_TDATA1_IBEX_RDATA": 671092808,
     "GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT": 6,
     "GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT": 7,
+    "GEN_MEM_ERR_ARM_KIND_ERR": 1,
+    "GEN_MEM_ERR_ARM_KIND_INTG": 2,
+    "GEN_ISA_FAULT_KIND_FETCH": 0,
+    "GEN_ISA_FAULT_KIND_LOAD": 1,
+    "GEN_ISA_FAULT_KIND_STORE": 2,
 }
 
 REGIME_WINDOWS = {  # group -> value -> [lo, hi] (latencies) or scalar (rates per mille, caps)
+    "dbg_event_mean": {"none": 0, "sparse": 5000, "storm": 200},
     "gnt_delay": {"same_cycle": [0, 0], "short": [1, 3], "long": [4, 32], "random": [0, 32]},
+    "irq_event_mean": {"quiet": 0, "sparse": 2000, "storm": 20},
     "outstanding_cap": {"cap1": 1, "cap2": 2, "cap4": 4, "cap8": 8},
     "rate_per_mille": {"none": 0, "rare": 2, "frequent": 50},
     "rvalid_delay": {"min1": [1, 1], "short": [2, 4], "long": [5, 32], "random": [1, 32]},

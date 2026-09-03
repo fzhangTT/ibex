@@ -1,0 +1,17 @@
+# excerpt of dv/auto_dv/work/tb-infra/out_fu2/h/export_zc/gen_export.txt (header rows, then every E regime phase / pin debug_req / pin irq_nm line, then the markers)
+# gen_export v2 seed=1 build_config=opentitan counters=0 sources=ibus,dbus,pin,alert,misc,scrkey,regime fields=order,pc_rdata,pc_wdata,insn,trap,halt,intr,mode,ixl,rs1_addr,rs1_rdata,rs2_addr,rs2_rdata,rs3_addr,rs3_rdata,rd_addr,rd_wdata,mem_addr,mem_rmask,mem_wmask,mem_rdata,mem_wdata,ext_pre_mip,ext_post_mip,ext_nmi,ext_nmi_int,ext_debug_req,ext_debug_mode,ext_rf_wr_suppress,ext_ic_scr_key_valid,ext_irq_valid,ext_exp_valid,ext_exp_insn,ext_exp_last,ext_mcycle,cycle
+# image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem
+# events ibus req addr,we,be
+# events ibus gnt addr,we,be,req_cycle,outstanding_after
+# events ibus rvalid addr,we,err,intg_injected,outstanding_after
+# events dbus req addr,we,be
+# events dbus gnt addr,we,be,req_cycle,outstanding_after
+# events dbus rvalid addr,we,err,intg_injected,outstanding_after
+# events pin irq_software value
+# events pin irq_timer value
+# events pin irq_external value
+# events pin irq_fast idx,value
+... (R/I/E lines elided except the rows below)
+# flush seq=1 records=50 retired=50 markers=0 events=268 ibus_grants=40 dbus_grants=12 cycle=233
+# flush seq=2 records=175 retired=175 markers=0 events=902 ibus_grants=154 dbus_grants=29 cycle=585
+# end records=175 retired=175 markers=0 events=904 ibus_grants=154 dbus_grants=29

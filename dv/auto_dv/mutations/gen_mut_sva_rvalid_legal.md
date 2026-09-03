@@ -1,6 +1,6 @@
 # MUT-003: sva_rvalid_legal (gen_bus_if) caught with hidden referees inert; ablation control
 
-Format: dv/auto_dv/mutations/README.md. The check under proof is the TB self-check `sva_rvalid_legal`
+Format: dv/auto_dv/mutations/gen_README.md. The check under proof is the TB self-check `sva_rvalid_legal`
 (`dv/auto_dv/tb/gen_bus_if.sv`, property p_rvalid_legal: `rvalid |-> outstanding > 0`, reported as
 `uvm_report_error("sva_rvalid_legal", ...)`), knob `+gen_chk_sva_rvalid_legal` through
 `chk_rvalid_legal_en` (set in `gen_agents_pkg::gen_bus_agent::build_phase` with the `+gen_chk_all` isolation

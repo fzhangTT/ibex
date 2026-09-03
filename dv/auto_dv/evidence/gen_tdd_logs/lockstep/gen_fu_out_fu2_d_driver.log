@@ -1,0 +1,35 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+start 15:01:06Z sources sha256: bf5264d38af99b6f
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc_isaoff: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+green_zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+zcmp_trap: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_dbg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+green_jalr_odd_r11: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+regime_refuse_zc: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=2
+alert_bus_intg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_nmi_irqp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_dbg_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_rst_boot: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_csr_reset: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_csr_trap_setup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+test_pmp_csr_warl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 15:01:53Z

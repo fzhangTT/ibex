@@ -6,3 +6,4 @@ UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(234) @ 88500: sb [isa_rd] rd model=x2/8
 UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(234) @ 88500: sb [isa_mem] store model=1 dut wmask=0000 (order=18 pc=80000200 insn=30200073 trap=0 intr=0 rd=x0/00000000 mem=fffffcfe w0000 r1111 mode=3 cyc=83)
                                                         ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                               36685.01           0.13     275453.56  **
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+# count (CM6-L-3): grep -c 'UVM_ERROR ' on the source stdout.log = 2019, all of them [isa_*] comparator misses (the run ended before the UVM report, so no 'UVM_ERROR :' summary line exists)

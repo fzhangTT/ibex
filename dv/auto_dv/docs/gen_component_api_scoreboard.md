@@ -44,11 +44,11 @@ association is by order with the response preceding the record.
 |---|---|---|---|
 | `isa_pc` | model pc before the step == `rvfi_pc_rdata` (exact per record) | fetch/branch target: `rtl/ibex_if_stage.sv` pc mux, `rtl/ibex_ex_block.sv` branch target ALU | `+gen_chk_isa_pc=0` |
 | `isa_insn` | model instruction bits == `rvfi_insn` | compressed decoder expansion (`rtl/ibex_compressed_decoder.sv`), fetch data path | `+gen_chk_isa_insn=0` |
-| `isa_trap` | model trap <=> `rvfi_trap`; cause per handler read-back | controller exception cause select (`rtl/ibex_controller.sv:299-337, 900-927`), decoder illegal detection | `+gen_chk_isa_trap=0` |
+| `isa_trap` | model trap <=> `rvfi_trap`; cause per handler read-back; on a breakpoint record (cause 3) the model's mepc == pc and mtval == 0 (R10); a load/store trap arms the model's fault only for a driver-announced bus error (T-137) | controller exception cause select (`rtl/ibex_controller.sv:299-337, 900-927`), decoder illegal detection | `+gen_chk_isa_trap=0` |
 | `isa_rd` | GPR write (index, value) == `rvfi_rd_addr/rd_wdata` | ALU operator select (`rtl/ibex_alu.sv`), multiplier/divider (`rtl/ibex_multdiv_fast.sv`), decoder rd/we (`rtl/ibex_decoder.sv`), WB mux (`rtl/ibex_wb_stage.sv`) | `+gen_chk_isa_rd=0` |
 | `isa_mem` | memory access address, size, store data == `rvfi_mem_*` | LSU address/data rotation and byte enables (`rtl/ibex_load_store_unit.sv:138-221`) | `+gen_chk_isa_mem=0` |
 | `isa_prv` | the model's privilege BEFORE the step (`prv_before`) == `rvfi_mode`: rvfi_mode is the mode the instruction executed in, so the post-step privilege is not compared (T-102; the pre-T-102 compare fired on every mret and every U-mode trap) | privilege update on trap/mret (`rtl/ibex_cs_registers.sv:953-993`) | `+gen_chk_isa_prv=0` |
-| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata`; on trap, mret and dret records the expectation is `pc_rdata + instruction length` instead (plan C-1 / F-RVFI-010, rtl-arch R1: pc_if, 2 for a compressed encoding; a fetch fault, cause 1, has no length and is not compared), and the redirect target is checked by `isa_pc` on the following record (model pc versus its `pc_rdata`) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
+| `isa_pc_next` | model pc after the step == `rvfi_pc_wdata`; on trap, mret and dret records the expectation is `pc_rdata + instruction length` instead (plan C-1 / F-RVFI-010, rtl-arch R1: pc_if, 2 for a compressed encoding; a fetch fault, cause 1, has no length and is not compared), and the redirect target is checked by `isa_pc` on the following record (model pc versus its `pc_rdata`); on jalr / c.jr / c.jalr records bit 0 of `rvfi_pc_wdata` is masked and counted (B13, rtl-arch R11) | pc increment / redirect (`rtl/ibex_if_stage.sv`) | `+gen_chk_isa_pc_next=0` |
 | `isa_csr` | every model CSR write (commit log type 4) == the legalized expectation (C5.3a) or the SPEC value (C5.3b rows); read-backs per C6 | CSR legalization and read mux (`rtl/ibex_cs_registers.sv`) | `+gen_chk_isa_csr=0` |
 
 Model synchronisation before every record step (T-102): the scoreboard hands the record's sampled values to the model
@@ -76,24 +76,54 @@ record's `rvfi_rs3_addr/rdata` are compared with it under `isa_rd` and the value
 Asynchronous entries (step 2b, T-090, found on the first interrupt-enabled and debug-storm programs): on a record with
 `rvfi_intr` the model is offered exactly the interrupt the DUT's vector names (handler pc = mtvec base + 4 * cause, from
 the record's pre_mip), so lines raised between the DUT's decision and the record cannot divert the model; Spike still
-refuses an entry that is not pending and enabled (isa_trap), and the priority among simultaneously pending lines is a
-boundary rule for the irq checker (not built yet). On an ordinary record the pending bits that are ENABLED (M-mode with
+refuses an entry that is not pending and enabled (isa_trap), and the decision-time pending fact and the priority among
+simultaneously pending lines are the irq checker's `irq_entry` cause rule (T-136, gen_component_api_irq_checker.md
+Section 1), evaluated on every intr record from the previous record's `post_mip`, the entry record's `pre_mip` and the
+driver's events. On an ordinary record the pending bits that are ENABLED (M-mode with
 MIE, or U-mode) are withheld from the model, because the DUT retired that instruction before taking them and Spike would
 take them first; disabled pending bits are injected so a mip read compares. A debug request held through dret re-enters
 debug on the very next record: the entry rule is `pc_rdata == DmHaltAddr` with `ext_debug_mode` and either the previous
-record outside debug mode or the previous record a dret.
+record outside debug mode or the previous record a dret. Entries are handled BEFORE the Zcmp fold (T-134): a handler
+whose first record is a non-last Zcmp micro-op still steps the entry first, and an interrupt or debug entry inside an
+open sequence drops the partial micro-ops, since the DUT restarts the sequence from its first micro-op after mret
+(rtl-arch R9 (c)); the drops are counted as `zcmp_splits` in the GEN_SB report and logged with the sequence pc. Known
+limit of the withholding rule (Critic T-090 L-7): a `csrr mip` that retires inside the one-record window with an
+enabled pending bit reads the bit on the DUT while the model never saw it, an isa_rd miss (0 of 3934 storm records so
+far); the miss names the record, so it is loud, not silent.
 
-Trapping memory accesses and Zcmp sequences (T-102c): a trap record of a load or store arms the model's bus fault on the
-record's address and size for that one step (`gen_isa_arm_fault`), so an injected, armed or PMP-denied access faults on
-both sides; a trapping Zcmp micro-op ends the sequence early (it is compared as the sequence's last record, the model steps
-the whole instruction with the fault armed and its completed stores are compared as the union), and its `pc_wdata` is
-its own pc, since the aborted sequence restarts from the first micro-op (observed on gen_zcmp_trap_directed.S; the
-trap-record rule uses offset 0 when `rvfi_ext_expanded_insn_valid` is set, `insn_len(insn)` otherwise).
+Trapping memory accesses (T-102c, conditioned by T-137, ruling LOG-026a): a trap record of a load or store arms the
+model's bus fault on the record's address and size for that one step (`gen_isa_arm_fault`) ONLY when the data-bus driver
+announced an injected or armed error response for that word (`gen_tb_pkg::gen_bus_err_log`, written by gen_bus_driver
+on every data-bus error it injects; the announcement is consumed by the arming, a misaligned access matches either
+word). Otherwise the model decides alone: a PMP denial is Spike's own decision from the same CSR writes, and a DUT fault
+on an access nobody corrupted is an isa_trap miss (`dut trapped, model retired 1`). The GEN_SB report splits the trap
+records into `faults_armed` (TB-caused) and `faults_unannounced` (the model decided) beside `bus_err_announced`; an
+unannounced count above zero in a run without PMP denials is itself a finding. Stated limitations: the arming trusts the
+driver's announcement (a word both injected and legitimately faulting is armed once); instruction-side faults are never
+armed (the model's fetch fault is its own decision from its memory map); data-side integrity corruptions are announced
+separately (`gen_bus_err_log::intg_announced`) for the irq checker's internal-NMI classification, never for arming (they
+raise alert_major_bus and an internal NMI, not a bus-error trap). Red for the conditioned form: MB6 in
+dv/auto_dv/mutations/gen_mut_step2b.md (a legal store reported as a trap is an isa_trap miss).
+
+Zcmp sequences: a trapping Zcmp micro-op ends the sequence early (it is compared as the sequence's last record, the model
+steps the whole instruction with the fault armed, and the accesses and register writes completed before the fault are
+compared as the union; both sides store the highest register of rlist first, rtl/ibex_compressed_decoder.sv:626-660 and
+Spike's cm_push.h, so the ordered store compare holds), and its `pc_wdata` is its own pc, since the aborted sequence
+restarts from the first micro-op (rtl-arch R9; the trap-record rule uses offset 0 when `rvfi_ext_expanded_insn_valid`
+is set, `insn_len(insn)` otherwise). Breakpoint exceptions (rtl-arch R10): Ibex writes mtval 0 on [c.]ebreak (spec-legal;
+the pc arm is CHERIoT-only), the shim mirrors it, and on a cause-3 trap record the comparator requires the model's mepc
+to equal the record's pc and its mtval to be 0 under isa_trap (counted as `breakpoints`); a shim convention, not a DUT
+finding. Odd jalr targets (rtl-arch R11, bug candidate B13 in the DV Lead's log): `rvfi_pc_wdata` of a jalr / c.jr /
+c.jalr record carries the raw rs1 + imm with bit 0 set while the core fetches the even address (rtl/ibex_core.sv:2084);
+`isa_pc_next` masks bit 0 on exactly those records and counts them as `b13_odd_jalr` (a documented exception; the red
+with the mask absent is gen_tdd_logs/lockstep/gen_red_jalr_odd_r11_*); any other odd `pc_wdata` still fails.
 
 Model-state publication (step 2b, T-090): after every compared record the scoreboard publishes one `gen_model_state`
 on `ap_state` (order, cycle, model pc after the step, insn, mie / mstatus / mcause / mepc / mtval / dcsr read from the
 model, privilege after the record, trap / interrupt / mret / dret / debug flags, and whether the record wrote mie or
-mstatus); `gen_irq_checker`, `gen_dbg_checker` and `gen_misc_monitor` consume it and never read the shim directly.
+mstatus, and for an interrupt entry `entry_cause`, the cause the DUT's vector names, 31 for the NMI, -1 otherwise, so the
+irq checker classifies the entry from the DUT's own evidence even when the model did not take it); `gen_irq_checker`,
+`gen_dbg_checker` and `gen_misc_monitor` consume it and never read the shim directly.
 
 ### 5a. Mutation classes per id
 

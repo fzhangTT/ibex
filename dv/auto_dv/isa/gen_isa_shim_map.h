@@ -51,6 +51,11 @@
 #define GEN_TDATA1_IBEX_RDATA              671092808u
 #define GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT   6u
 #define GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT 7u
+#define GEN_MEM_ERR_ARM_KIND_ERR           1u
+#define GEN_MEM_ERR_ARM_KIND_INTG          2u
+#define GEN_ISA_FAULT_KIND_FETCH           0u
+#define GEN_ISA_FAULT_KIND_LOAD            1u
+#define GEN_ISA_FAULT_KIND_STORE           2u
 
 #define GEN_CMD_IRQ_SET                      1u
 #define GEN_CMD_IRQ_CLR                      2u

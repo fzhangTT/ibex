@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:33
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(384) @ 72500: uvm_test_top.env.misc_mon [alert_bus] cycle 67: alert_major_bus_o=0 expected 1 (ibus rvalid 1 corrupt 1, dbus rvalid 0 corrupt 0)
+uvm_counts: {'INFO': 22, 'WARNING': 0, 'ERROR': 159, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

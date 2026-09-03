@@ -37,6 +37,7 @@ package gen_tb_pkg;
   parameter string PLUSARG_EXPORT_SOURCES = "gen_export_sources";  // string, default all: comma-separated event sources written to the export (all = every source with a registered writer)
   parameter string PLUSARG_EXPORT_FLUSH_EVERY = "gen_export_flush_every";  // int, default 0 [debug-only]: flush the export file every n records for triage of abnormal ends (0 = only on EXPORT_FLUSH)
   parameter string PLUSARG_UT_BOOT_RETIRE = "gen_ut_boot_retire";  // int, default 200: retirements the boots-and-retires test waits for
+  parameter string PLUSARG_UT_ROWS_SET = "gen_ut_rows_set";  // enum, default regime_nmi: gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)
   parameter string PLUSARG_IBUS_GNT_MIN = "gen_ibus_gnt_min";  // int, default unset: instruction bus grant latency low bound (cycles)
   parameter string PLUSARG_IBUS_GNT_MAX = "gen_ibus_gnt_max";  // int, default unset: instruction bus grant latency high bound
   parameter string PLUSARG_IBUS_RVALID_MIN = "gen_ibus_rvalid_min";  // int, default unset: instruction bus response latency low bound (hard floor 1)
@@ -136,6 +137,8 @@ package gen_tb_pkg;
   // Enumerated knob value sets and defaults (DV Lead regime knobs and TB enums).
   parameter string GEN_ENUM_ICRAM_INIT_VALUES = "zero,random";
   parameter string GEN_ENUM_ICRAM_INIT_DEFAULT = "random";
+  parameter string GEN_ENUM_UT_ROWS_SET_VALUES = "regime_nmi,regime_dbg";
+  parameter string GEN_ENUM_UT_ROWS_SET_DEFAULT = "regime_nmi";
   parameter string GEN_ENUM_DBUS_ERR_HALF_VALUES = "first,second,both,any";
   parameter string GEN_ENUM_DBUS_ERR_HALF_DEFAULT = "any";
   parameter string GEN_ENUM_KNOB_IMEM_GNT_DELAY_VALUES = "same_cycle,short,long,random";
@@ -193,6 +196,12 @@ package gen_tb_pkg;
   endfunction
   function automatic bit gen_regime_scalar(string group, string value, output int unsigned v);
     v = 0;
+    if (group == "dbg_event_mean" && value == "none") begin v = 0; return 1'b1; end
+    if (group == "dbg_event_mean" && value == "sparse") begin v = 5000; return 1'b1; end
+    if (group == "dbg_event_mean" && value == "storm") begin v = 200; return 1'b1; end
+    if (group == "irq_event_mean" && value == "quiet") begin v = 0; return 1'b1; end
+    if (group == "irq_event_mean" && value == "sparse") begin v = 2000; return 1'b1; end
+    if (group == "irq_event_mean" && value == "storm") begin v = 20; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap1") begin v = 1; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap2") begin v = 2; return 1'b1; end
     if (group == "outstanding_cap" && value == "cap4") begin v = 4; return 1'b1; end
@@ -235,6 +244,11 @@ package gen_tb_pkg;
   parameter logic [31:0] GEN_TDATA1_IBEX_RDATA = 671092808;  // tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
+  parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)
+  parameter int unsigned GEN_MEM_ERR_ARM_KIND_INTG = 2;  // MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response
+  parameter int unsigned GEN_ISA_FAULT_KIND_FETCH = 0;  // gen_isa_arm_fault kind: instruction fetch (shim fault_hits)
+  parameter int unsigned GEN_ISA_FAULT_KIND_LOAD = 1;  // gen_isa_arm_fault kind: load
+  parameter int unsigned GEN_ISA_FAULT_KIND_STORE = 2;  // gen_isa_arm_fault kind: store
   // TB memory map: DM windows from gen_dut_top.sv, program window from gen_link.ld, MMIO page from the yaml.
   parameter logic [31:0] GEN_MM_BOOT_ADDR_DEFAULT = 32'h8000_0000;
   parameter logic [31:0] GEN_MM_BOOT_PAGE_MASK = 32'hffff_ff00;
@@ -421,10 +435,49 @@ package gen_tb_pkg;
       default: return "";
     endcase
   endfunction
+  parameter string GEN_EXPORT_ROWS = "ibus/req,ibus/gnt,ibus/rvalid,dbus/req,dbus/gnt,dbus/rvalid,pin/irq_software,pin/irq_timer,pin/irq_external,pin/irq_fast,pin/irq_nm,pin/debug_req,pin/fetch_enable,pin/mcounteren_writable,alert/alert_minor,alert/alert_major_bus,alert/alert_major_internal,alert/double_fault_seen,misc/irq_pending,misc/core_busy,misc/crash_dump_current_pc,misc/crash_dump_next_pc,misc/crash_dump_last_data_addr,misc/crash_dump_exception_pc,misc/crash_dump_exception_addr,icram/inject,icram/lookup,icram/tag_write,icram/fill_write,scrkey/req,scrkey/valid,regime/phase";  // every (source, event) row, yaml order
+  // The `# events <source> <event> <fields>` header row of ONE (source, event), newline-terminated; empty when unknown.
+  function automatic string gen_export_row_header(string source, string ev);
+    case ({source, "/", ev})
+      "ibus/req": return "# events ibus req addr,we,be\n";
+      "ibus/gnt": return "# events ibus gnt addr,we,be,req_cycle,outstanding_after\n";
+      "ibus/rvalid": return "# events ibus rvalid addr,we,err,intg_injected,outstanding_after\n";
+      "dbus/req": return "# events dbus req addr,we,be\n";
+      "dbus/gnt": return "# events dbus gnt addr,we,be,req_cycle,outstanding_after\n";
+      "dbus/rvalid": return "# events dbus rvalid addr,we,err,intg_injected,outstanding_after\n";
+      "pin/irq_software": return "# events pin irq_software value\n";
+      "pin/irq_timer": return "# events pin irq_timer value\n";
+      "pin/irq_external": return "# events pin irq_external value\n";
+      "pin/irq_fast": return "# events pin irq_fast idx,value\n";
+      "pin/irq_nm": return "# events pin irq_nm value\n";
+      "pin/debug_req": return "# events pin debug_req value\n";
+      "pin/fetch_enable": return "# events pin fetch_enable value\n";
+      "pin/mcounteren_writable": return "# events pin mcounteren_writable value\n";
+      "alert/alert_minor": return "# events alert alert_minor value\n";
+      "alert/alert_major_bus": return "# events alert alert_major_bus value\n";
+      "alert/alert_major_internal": return "# events alert alert_major_internal value\n";
+      "alert/double_fault_seen": return "# events alert double_fault_seen value\n";
+      "misc/irq_pending": return "# events misc irq_pending value\n";
+      "misc/core_busy": return "# events misc core_busy value\n";
+      "misc/crash_dump_current_pc": return "# events misc crash_dump_current_pc value\n";
+      "misc/crash_dump_next_pc": return "# events misc crash_dump_next_pc value\n";
+      "misc/crash_dump_last_data_addr": return "# events misc crash_dump_last_data_addr value\n";
+      "misc/crash_dump_exception_pc": return "# events misc crash_dump_exception_pc value\n";
+      "misc/crash_dump_exception_addr": return "# events misc crash_dump_exception_addr value\n";
+      "icram/inject": return "# events icram inject way,index\n";
+      "icram/lookup": return "# events icram lookup index\n";
+      "icram/tag_write": return "# events icram tag_write way,index,valid\n";
+      "icram/fill_write": return "# events icram fill_write way,index\n";
+      "scrkey/req": return "# events scrkey req value\n";
+      "scrkey/valid": return "# events scrkey valid value\n";
+      "regime/phase": return "# events regime phase knob_id,value_idx,phase_idx\n";
+      default: return "";
+    endcase
+  endfunction
   // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).
   function automatic bit gen_is_known_plusarg(string name);
     case (name)
-      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_hart_id", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_string", "gen_isa_log", "gen_export_file", "gen_export_counters", "gen_export_sources", "gen_export_flush_every", "gen_ut_boot_retire", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_hart_id", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_string", "gen_isa_log", "gen_export_file", "gen_export_counters", "gen_export_sources", "gen_export_flush_every", "gen_ut_boot_retire", "gen_ut_rows_set", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
       default: return 1'b0;
     endcase
   endfunction
@@ -445,6 +498,29 @@ package gen_tb_pkg;
     static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind);
       q.push_back('{cycle, way, index, kind});
       while (q.size() > 256) void'(q.pop_front());
+    endfunction
+  endclass
+
+  // TB-injected data-bus errors (word addresses) and integrity corruptions announced by gen_bus_driver. The scoreboard arms
+  // the model's fault only for an announced word, so a DUT fault on an access nobody corrupted fails as isa_trap (T-137);
+  // the irq checker accepts an NMI-vector entry without a pin NMI only after an announced corruption (internal NMI).
+  class gen_bus_err_log;
+    static logic [31:0] words [$];
+    static int unsigned announced = 0, taken = 0;
+    static int unsigned intg_announced = 0;   // data-side integrity corruptions: each raises the DUT's internal NMI (irq checker)
+    static function void note_intg(); intg_announced++; endfunction
+    static function void note(logic [31:0] addr);
+      words.push_back({addr[31:2], 2'b00}); announced++;
+      while (words.size() > 256) void'(words.pop_front());
+    endfunction
+    // consumes the announcement for the word of addr (or the next word of a misaligned access)
+    static function bit take(logic [31:0] addr, int unsigned bytes);
+      logic [31:0] w0 = {addr[31:2], 2'b00};
+      bit spans_two = (int'(addr[1:0]) + bytes) > 4;
+      foreach (words[i]) if (words[i] == w0 || (spans_two && words[i] == w0 + 4)) begin
+        words.delete(i); taken++; return 1'b1;
+      end
+      return 1'b0;
     endfunction
   endclass
 

@@ -1,0 +1,21 @@
+# T-080 step-2 mutation batches MUT-G / MUT-H (out of tree; the shared tree's checksums printed after each)
+13:06:14Z
+export_zc_pinned: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_s7_pinned: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+export_zc_ibusonly: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+== MUT-G / MUT-H out of tree
+MUTG applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTG/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 4e3c236e077b6978
+MUTG: compile FAILED
+MUTH applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTH/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 4e3c236e077b6978
+MUTH_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:60   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTH_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTH/dv/auto_dv/gen_tb/gen_tests/gen_ut_export.py; original sha256 6d1a59efa146bef9
+MUTH_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTH: shared tree untouched: 4e3c236e077b6978 a0ba1c7c21a82f4d 6d1a59efa146bef9 
+13:07:13Z
+13:07:59Z
+MUTG applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTG/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 4e3c236e077b6978
+MUTG_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTG_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTG/dv/auto_dv/gen_tb/gen_export.py; original sha256 a0ba1c7c21a82f4d
+MUTG_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTG: shared tree untouched: 4e3c236e077b6978 a0ba1c7c21a82f4d 6d1a59efa146bef9 
+13:08:29Z

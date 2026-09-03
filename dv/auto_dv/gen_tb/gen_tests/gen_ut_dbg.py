@@ -1,7 +1,6 @@
-"""Debug-request path test (build step 2b): boot a riscv-dv program with a debug ROM (dret), request
-debug entry through the bridge (DBG_REQ with the UNTIL_DEBUG_MODE hold policy), expect the entry
-(evt_dbg_entered edge within the bound), the ROM to run and return, and zero ISA mismatches. Written
-before the debug agent existed (TDD). Hold policies: 0 CYCLES(arg1), 1 UNTIL_DEBUG_MODE, 2 STICKY.
+"""Debug-request path: boot a program with a debug ROM that drets, request debug entry through the bridge
+(DBG_REQ, UNTIL_DEBUG_MODE hold) and require the entry (evt_dbg_entered edge within the bound), the ROM's
+return, and zero ISA mismatches. Hold policies: 0 CYCLES(arg1), 1 UNTIL_DEBUG_MODE, 2 STICKY.
 MODULE=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg, TOPLEVEL=gen_tb_top."""
 import os
 

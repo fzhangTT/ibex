@@ -76,17 +76,17 @@ class gen_simif_t : public simif_t {
   explicit gen_simif_t(const cfg_t& cfg) : cfg_(cfg) { debug_mmu = nullptr; }
   char* addr_to_mem(reg_t) override { return nullptr; }          // everything is MMIO (C5.4)
   bool mmio_fetch(reg_t paddr, size_t len, uint8_t* bytes) override {
-    if (!mapped((uint32_t)paddr) || fault_hits(0, (uint32_t)paddr, len)) return false;
+    if (!mapped((uint32_t)paddr) || fault_hits(GEN_ISA_FAULT_KIND_FETCH, (uint32_t)paddr, len)) return false;
     for (size_t i = 0; i < len; i++) bytes[i] = mem_rd8((uint32_t)paddr + i);
     return true;
   }
   bool mmio_load(reg_t paddr, size_t len, uint8_t* bytes) override {
-    if (!mapped((uint32_t)paddr) || fault_hits(1, (uint32_t)paddr, len)) return false;
+    if (!mapped((uint32_t)paddr) || fault_hits(GEN_ISA_FAULT_KIND_LOAD, (uint32_t)paddr, len)) return false;
     for (size_t i = 0; i < len; i++) bytes[i] = mem_rd8((uint32_t)paddr + i);
     return true;
   }
   bool mmio_store(reg_t paddr, size_t len, const uint8_t* bytes) override {
-    if (!mapped((uint32_t)paddr) || fault_hits(2, (uint32_t)paddr, len)) return false;
+    if (!mapped((uint32_t)paddr) || fault_hits(GEN_ISA_FAULT_KIND_STORE, (uint32_t)paddr, len)) return false;
     for (size_t i = 0; i < len; i++) mem_wr8((uint32_t)paddr + i, bytes[i]);
     return true;
   }
@@ -446,6 +446,12 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap = 1;
     out->trap_cause = csr(CSR_MCAUSE);
     out->trap_tval = csr(CSR_MTVAL);
+    // Ibex writes mtval 0 on a [c.]ebreak breakpoint exception (rtl/ibex_controller.sv:550; the pc arm is CHERIoT-only),
+    // one of the two spec-legal values; Spike writes the pc (rtl-arch R10)
+    if (!was_debug && out->trap_cause == CAUSE_BREAKPOINT) {
+      g_proc->put_csr(CSR_MTVAL, 0);
+      out->trap_tval = 0;
+    }
     // a synchronous exception outside debug mode sets sync_exc_seen, a second one while it is set also sets
     // double_fault_seen; debug entry and exceptions taken in debug mode set nothing (rtl/ibex_cs_registers.sv:914-943)
     if (g_cpuctrl && !(out->trap_cause & 0x80000000u) && !was_debug && !s->debug_mode)

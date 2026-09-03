@@ -1,0 +1,64 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+start 14:54:12Z shared tree: f749420e147f53e9 7f8d3c5fb7a54294 2388878ef08aa626 ef3bc16a9ed47589 9fc697394be5c378 
+MB3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB3/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 7f8d3c5fb7a54294
+MB3_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  159 first: 
+MB3_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB3: shared tree untouched: f749420e147f53e9
+MB4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB4/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB4_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  541 first: 
+MB4_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB4: shared tree untouched: f749420e147f53e9
+MB5 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB5/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 f749420e147f53e9
+MB5_catch_ut_irq_dir: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    5 first: 
+MB5_ablate_ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB5: shared tree untouched: f749420e147f53e9
+MB6 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB6/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 f749420e147f53e9
+MB6_catch_boot_s7: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(245) @ 1782500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=469 pc=80001782 insn=0088a023 trap=1 intr=0 rd=x0/0000
+MB6_ablate_boot_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB6: shared tree untouched: f749420e147f53e9
+MB7 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB7/dv/auto_dv/env/gen_rvfi_pkg.sv; original sha256 f749420e147f53e9
+MB7_catch_boot_zcirq_sparse: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    8 first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(243) @ 5311500: uvm_test_top.env.sb [isa_rd] Zcmp union: model wrote 1 registers, dut 3 (order=1148 pc=80000248 insn=ff010113 trap=0 intr=0 rd=x2/80000310 mem=
+MB7_ablate_boot_zcirq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB7: shared tree untouched: f749420e147f53e9
+MB8 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB8/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB8_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  544 first: 
+MB8_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB8: shared tree untouched: f749420e147f53e9
+MB9 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB9/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB9_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  544 first: 
+MB9_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB9: shared tree untouched: f749420e147f53e9
+MB10 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB10/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB10_catch_boot_zc: verdict: FAIL reason: uvm_error at sim.log:32  UVM_ERROR :  544 first: 
+MB10_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB10: shared tree untouched: f749420e147f53e9
+MB11 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MB11/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef3bc16a9ed47589
+MB11_catch_boot_s7: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :    2 first: 
+MB11_ablate_boot_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MB11: shared tree untouched: f749420e147f53e9
+MUTI applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTI/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 7f8d3c5fb7a54294
+MUTI_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTI_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTI/dv/auto_dv/gen_tb/gen_export.py; original sha256 9fc697394be5c378
+MUTI_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTI: shared tree untouched: 7f8d3c5fb7a54294 9fc697394be5c378 b0b65dc1cb559828 
+MUTJ applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTJ/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 7f8d3c5fb7a54294
+MUTJ_catch_zc: verdict: FAIL reason: cocotb_summary at stdout.log:59   first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTJ_ABL applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTJ/dv/auto_dv/gen_tb/gen_export.py; original sha256 9fc697394be5c378
+MUTJ_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first:      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+MUTJ: shared tree untouched: 7f8d3c5fb7a54294 9fc697394be5c378 b0b65dc1cb559828 
+MUTK applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTK/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 7f8d3c5fb7a54294
+MUTK_catch_boot_zc_noexport: verdict: FAIL reason: uvm_fatal at sim.log:31  fatal: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)
+MUTK_catch_boot_zc_export: verdict: FAIL reason: uvm_fatal at sim.log:31  fatal: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no registered writer in this build (export_active_sources lists scrkey)
+MUTK: shared tree untouched: 7f8d3c5fb7a54294
+end 14:59:35Z shared tree: f749420e147f53e9 7f8d3c5fb7a54294 2388878ef08aa626 ef3bc16a9ed47589 9fc697394be5c378 

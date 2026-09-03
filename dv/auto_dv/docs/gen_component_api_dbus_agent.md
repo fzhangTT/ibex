@@ -24,7 +24,13 @@ transaction `gen_bus_txn` with kind LOAD/STORE and `injected`.
 
 As gen_ibus_agent (config in `uvm_config_db`, sequencer fed by the bridge for REGIME_SET and
 MEM_ERR_ARM). Every injected error is published with `injected = 1` so the scoreboard arms the
-ISA model fault and the NMI/alert checkers.
+ISA model fault and the NMI/alert checkers. AS BUILT (T-137): gen_bus_driver announces every bus-error response it
+injects on the data bus (armed by MEM_ERR_ARM kind `GEN_MEM_ERR_ARM_KIND_ERR`, or drawn by the `err_rate` regime) to
+`gen_tb_pkg::gen_bus_err_log` (word address; the last 256), and the scoreboard arms the model's fault only for an
+announced word and consumes the announcement; data-side integrity corruptions (`GEN_MEM_ERR_ARM_KIND_INTG`,
+`intg_err_rate`) are counted apart (`intg_announced`): they raise alert_major_bus and an internal NMI rather than a
+bus-error trap, and the irq checker accepts an NMI-vector entry without a pin NMI only after such a corruption. The
+GEN_SB report's `bus_err_announced` is the error count.
 
 ## 3. Knobs
 

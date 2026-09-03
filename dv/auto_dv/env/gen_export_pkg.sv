@@ -1,7 +1,8 @@
 // gen_export_pkg: the record and event export (architecture Section 9, T-080). gen_export_sink is the ONE writer of the
 // export file: header, R/I/E lines handed in by the RVFI monitor and the event writers, flush markers carrying the
 // same-instant (records, retired, grant) counts, the end marker in extract_phase. Marker key=value pairs are decimal, every R/I/E value is hex.
-// Format version 2 (T-080 step 2): the markers carry ibus_grants= dbus_grants= and the header's sources= is the yaml's active list.
+// Format version 2 (T-080 step 2): the markers carry ibus_grants= dbus_grants= and the header's sources= and # events rows
+// are the rows the writer instances registered (T-141), which the sink requires to cover the yaml's active list.
 // Line text comes from the rendered functions
 // (gen_export_event_lines.svh here, gen_export_record_line.svh in gen_rvfi_pkg), so the column order is the yaml's.
 package gen_export_pkg;
@@ -19,7 +20,7 @@ package gen_export_pkg;
     bit          enabled = 0;
     int unsigned records = 0, markers = 0, events = 0, flushes = 0;
     bit          src_enabled [string];   // +gen_export_sources (all = every known source)
-    string       registered [$];         // sources with a writer instance
+    string       rows_registered [$];    // "source/event" rows announced by writer instances
     string       active_on [$];          // active sources enabled by the knob, header order
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -39,6 +40,7 @@ package gen_export_pkg;
           if (i == s.len() || s[i] == ",") begin
             string name = s.substr(start, i - 1);
             if (!gen_export_source_known(name)) `uvm_fatal("GEN_EXPORT", {"+", PLUSARG_EXPORT_SOURCES, " names an unknown source ", name, " (known: ", GEN_EXPORT_SOURCES, ")"})
+            if (!gen_export_source_active(name)) `uvm_warning("GEN_EXPORT", {"+", PLUSARG_EXPORT_SOURCES, " names ", name, ", a source without a writer in this build (export_active_sources); it gets no lines"})
             src_enabled[name] = 1'b1;
             start = i + 1;
           end
@@ -54,18 +56,49 @@ package gen_export_pkg;
       end
     endfunction
 
-    // A writer announces its source once (connect time). The header's sources= is the yaml's active list (rendered
-    // GEN_EXPORT_ACTIVE_SOURCES, the set Runtime records as emitted) intersected with +gen_export_sources; a writer for a
-    // source the yaml calls inactive, or an active source without a writer, is a fatal at start of simulation.
-    function void register_source(string s);
-      if (!gen_export_source_known(s)) `uvm_fatal("GEN_EXPORT", {"unknown export source ", s})
-      if (!gen_export_source_active(s)) `uvm_fatal("GEN_EXPORT", {"writer registered for ", s, " but export_active_sources says it has none (yaml)"})
-      foreach (registered[i]) if (registered[i] == s) return;
-      registered.push_back(s);
+    // A writer announces every (source, event) row it emits (its end_of_elaboration_phase). The header lists exactly the
+    // registered rows of the knob-enabled active sources, so a deleted writer changes the header and fails Runtime's
+    // emitted-set check; a row of an active source (yaml export_active_sources, the set Runtime records as emitted) with no
+    // registered writer is a fatal at start of simulation in EVERY run, export on or off (T-141).
+    function void register_row(string source, string ev);
+      string key = {source, "/", ev};
+      if (gen_export_row_header(source, ev) == "") `uvm_fatal("GEN_EXPORT", {"unknown export row ", key})
+      if (!gen_export_source_active(source)) `uvm_fatal("GEN_EXPORT", {"writer registered row ", key, " but export_active_sources says ", source, " has no writer (yaml)"})
+      foreach (rows_registered[i]) if (rows_registered[i] == key) return;
+      rows_registered.push_back(key);
     endfunction
-    function bit is_registered(string s);
-      foreach (registered[i]) if (registered[i] == s) return 1'b1;
+    function bit is_row_registered(string source, string ev);
+      string key = {source, "/", ev};
+      foreach (rows_registered[i]) if (rows_registered[i] == key) return 1'b1;
       return 1'b0;
+    endfunction
+    function bit is_registered(string s);   // the source has at least one registered row
+      foreach (rows_registered[i]) if (rows_registered[i].substr(0, s.len()) == {s, "/"}) return 1'b1;
+      return 1'b0;
+    endfunction
+    static function void split_csv(string s, ref string out [$]);
+      int start = 0;
+      out.delete();
+      for (int i = 0; i <= s.len(); i++) if (i == s.len() || s[i] == ",") begin
+        out.push_back(s.substr(start, i - 1));
+        start = i + 1;
+      end
+    endfunction
+    static function void split_row(string key, output string source, output string ev);
+      for (int i = 0; i < key.len(); i++) if (key[i] == "/") begin
+        source = key.substr(0, i - 1); ev = key.substr(i + 1, key.len() - 1); return;
+      end
+      source = key; ev = "";
+    endfunction
+    // the emitted set is a build property: checked before the enabled test so a build without +gen_export_file fatals too
+    function void check_registered_rows();
+      string rows [$], src, ev;
+      split_csv(GEN_EXPORT_ROWS, rows);
+      foreach (rows[i]) begin
+        split_row(rows[i], src, ev);
+        if (gen_export_source_active(src) && !is_row_registered(src, ev))
+          `uvm_fatal("GEN_EXPORT", {"emitted row ", rows[i], " has no registered writer in this build (export_active_sources lists ", src, ")"})
+      end
     endfunction
     // the one cycle base of every E line (the bridge's posedge counter; a driver at the negedge stamps the cycle just passed)
     function int unsigned cycle();
@@ -77,25 +110,24 @@ package gen_export_pkg;
     endfunction
 
     function void start_of_simulation_phase(uvm_phase phase);
-      string srcs = "";
+      string srcs = "", act [$], rows [$], src, ev;
       super.start_of_simulation_phase(phase);
+      check_registered_rows();
       if (!enabled) return;
       fd = $fopen(cfg.export_file, "w");
       if (fd == 0) `uvm_fatal("GEN_EXPORT", {"cannot open export file ", cfg.export_file})
-      begin   // sources= from the rendered active list, in its order; every active source must have registered a writer
-        int start = 0;
-        string a = GEN_EXPORT_ACTIVE_SOURCES;
-        for (int i = 0; i <= a.len(); i++) if (i == a.len() || a[i] == ",") begin
-          string s = a.substr(start, i - 1);
-          start = i + 1;
-          if (!is_registered(s)) `uvm_fatal("GEN_EXPORT", {"active source ", s, " has no registered writer in this build"})
-          if (source_on(s)) begin srcs = {srcs, srcs == "" ? "" : ",", s}; active_on.push_back(s); end
-        end
-      end
+      // sources= : the active sources (yaml order) that registered a row and are knob-enabled; the # events rows are the
+      // registered rows of those sources in the yaml's row order
+      split_csv(GEN_EXPORT_ACTIVE_SOURCES, act);
+      foreach (act[i]) if (is_registered(act[i]) && source_on(act[i])) begin srcs = {srcs, srcs == "" ? "" : ",", act[i]}; active_on.push_back(act[i]); end
       $fwrite(fd, "# gen_export v2 seed=%0d build_config=%s counters=%0d sources=%s fields=%s%s%s\n", cfg.seed, cfg.build_config,
               cfg.export_counters, srcs, GEN_EXPORT_RECORD_FIELDS, cfg.export_counters ? "," : "", cfg.export_counters ? GEN_EXPORT_COUNTER_FIELDS : "");
       $fwrite(fd, "# image %s\n", cfg.mem_image_set ? cfg.mem_image : "none");
-      foreach (active_on[i]) $fwrite(fd, "%s", gen_export_event_header(active_on[i]));
+      split_csv(GEN_EXPORT_ROWS, rows);
+      foreach (rows[i]) begin
+        split_row(rows[i], src, ev);
+        if (is_row_registered(src, ev)) foreach (active_on[j]) if (active_on[j] == src) $fwrite(fd, "%s", gen_export_row_header(src, ev));
+      end
       `uvm_info("GEN_EXPORT", {"export file ", cfg.export_file, " open; sources: ", srcs == "" ? "(none)" : srcs}, UVM_LOW)
     endfunction
 

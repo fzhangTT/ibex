@@ -1,9 +1,7 @@
-"""Interrupt path test (build step 2b): boot a riscv-dv program (it has an mtvec table whose handlers
-mret), then raise lines through the bridge (IRQ_SET with the UNTIL_TAKEN hold policy) and expect each to
-be taken (evt_irq_taken edge within the bound) while the ISA comparator stays at zero mismatches (the
-model takes the same interrupt from the record's pre_mip). Written before the irq agent existed (TDD).
-Line mask bits: 0 software, 1 timer, 2 external, 3..17 fast[0..14], 18 nm. Hold policies: 0 CYCLES(arg2),
-1 UNTIL_ACK, 2 UNTIL_TAKEN, 3 STICKY. Plusargs as gen_ut_lockstep.
+"""Interrupt path: boot a program whose mtvec table handlers mret with interrupts enabled, raise lines through
+the bridge (IRQ_SET, UNTIL_TAKEN hold) and require each to be taken (evt_irq_taken edge within the bound) with
+zero ISA mismatches. Line mask bits: 0 software, 1 timer, 2 external, 3..17 fast[0..14], 18 nm. Hold policies:
+0 CYCLES(arg2), 1 UNTIL_ACK, 2 UNTIL_TAKEN, 3 STICKY. Plusargs as gen_ut_lockstep.
 MODULE=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq, TOPLEVEL=gen_tb_top."""
 import os
 

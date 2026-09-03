@@ -44,7 +44,7 @@ SCHEMA = {
     "constant": {"name", "value", "derive", "sv", "sv_type", "desc"},
     "memory_map": {"boot_addr_default", "boot_page_mask", "boot_reset_offset", "mmio_base", "mmio_size", "registers"},
     "register": {"offset", "size"},
-    "regime_windows": {"gnt_delay", "rvalid_delay", "rate_per_mille", "outstanding_cap"},
+    "regime_windows": {"gnt_delay", "rvalid_delay", "rate_per_mille", "outstanding_cap", "irq_event_mean", "dbg_event_mean"},
 }
 # regime window group -> the enum knobs whose value set must equal the group's keys
 WINDOW_KNOBS = {
@@ -52,6 +52,8 @@ WINDOW_KNOBS = {
     "rvalid_delay": ("knob_imem_rvalid_delay", "knob_dmem_rvalid_delay"),
     "rate_per_mille": ("knob_imem_err_rate", "knob_imem_intg_err_rate", "knob_dmem_err_rate", "knob_dmem_intg_err_rate"),
     "outstanding_cap": ("knob_imem_outstanding_cap",),
+    "irq_event_mean": ("knob_irq_regime",),
+    "dbg_event_mean": ("knob_debug_req_regime",),
 }
 RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
 DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask", "csr_marchid_value", "csr_addr_cpuctrlsts",
@@ -118,7 +120,8 @@ def sv_tdata1_rdata(path):
 
 
 def cfg_int_param(path, config, name):
-    """An integer parameter of one build configuration in ibex_configs.yaml."""
+    """An integer parameter of one build configuration in ibex_configs.yaml, read from the block itself (no configuration
+    uses `inherits:` today; a block that did would have to be resolved through util/ibex_config.py instead)."""
     import yaml as _yaml
     cfgs = _yaml.safe_load(path.read_text())
     if config not in cfgs or name not in cfgs[config]:
@@ -264,6 +267,8 @@ def load(src_path=SRC):
         seen.add((row["source"], row["event"]))
         if not isinstance(row["fields"], list) or not row["fields"] or any(not re.fullmatch(r"[a-z][a-z0-9_]*", str(f)) for f in row["fields"]):
             die(f"export_events {row['source']}/{row['event']}: fields must be a non-empty list of lower_case names")
+    if "export_active_sources" not in src:
+        die("missing export_active_sources (the sources whose writers are instanced in this build)")
     act = src["export_active_sources"]
     if not isinstance(act, list) or len(set(act)) != len(act) or any(a not in export_sources(src) for a in act):
         die(f"export_active_sources must list distinct sources of export_events, got {act}")
@@ -510,6 +515,18 @@ def render_sv_region(src, mm, cvals):
     for srcname in export_sources(src):
         rows = "".join(f'# events {r["source"]} {r["event"]} {",".join(r["fields"])}\\n' for r in src["export_events"] if r["source"] == srcname)
         L.append(f'      "{srcname}": return "{rows}";')
+    L.append('      default: return "";')
+    L.append("    endcase")
+    L.append("  endfunction")
+    rows_csv = ",".join(r["source"] + "/" + r["event"] for r in src["export_events"])
+    L.append('  parameter string GEN_EXPORT_ROWS = "' + rows_csv + '";  // every (source, event) row, yaml order')
+    L.append("  // The `# events <source> <event> <fields>` header row of ONE (source, event), newline-terminated; empty when unknown.")
+    L.append("  function automatic string gen_export_row_header(string source, string ev);")
+    L.append('    case ({source, "/", ev})')
+    for r in src["export_events"]:
+        key = r["source"] + "/" + r["event"]
+        hdr = "# events " + r["source"] + " " + r["event"] + " " + ",".join(r["fields"]) + "\\n"
+        L.append('      "' + key + '": return "' + hdr + '";')
     L.append('      default: return "";')
     L.append("    endcase")
     L.append("  endfunction")

@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:32
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(166) @ 135500: uvm_test_top.env.irq_chk [irq_entry] entry mcause 80000015 at order 10: line 6 pending throughout outranks it (pending-and-enabled either 39e80080 both 39e80080, nmi either 0 both 0)
+uvm_counts: {'INFO': 21, 'WARNING': 0, 'ERROR': 167, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

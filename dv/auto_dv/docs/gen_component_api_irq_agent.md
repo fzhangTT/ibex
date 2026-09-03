@@ -17,7 +17,7 @@ as levels with randomized timing and hold policies; the source of every interrup
 1 timer, 2 external, 3..17 fast[0..14], 18 nm), acting at the falling edge: IRQ_SET (arg0 line mask, arg1 hold policy
 CYCLES / UNTIL_ACK / UNTIL_TAKEN / STICKY, arg2 cycles), IRQ_CLR (mask), NMI_PULSE (cycles), UNTIL_TAKEN released on the
 next `evt_irq_taken` edge, UNTIL_ACK on a store to the irq-ack MMIO register; the regime engine draws events for
-`knob_irq_regime` sparse (mean 2000 cycles) / storm (mean 20) with lines from `knob_irq_line_mix` and the policy from
+`knob_irq_regime` sparse / storm (means 2000 / 20 cycles from the yaml `regime_windows.irq_event_mean`, read through the rendered `gen_regime_scalar`) with lines from `knob_irq_line_mix` and the policy from
 `knob_irq_hold`, all three switched at run time by REGIME_SET; every change is published as `gen_irq_evt` with its cycle.
 
 ## 2. Files (planned) and how to call it

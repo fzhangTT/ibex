@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:33
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(358) @ 1760500: uvm_test_top.env.misc_mon [double_fault] double_fault_seen_o pulse at cycle 1754 for a first synchronous trap (order 466)
+uvm_counts: {'INFO': 22, 'WARNING': 0, 'ERROR': 2, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

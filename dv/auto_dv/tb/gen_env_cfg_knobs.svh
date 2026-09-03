@@ -59,6 +59,8 @@
   bit export_flush_every_set = 1'b0;
   int unsigned ut_boot_retire = 200;
   bit ut_boot_retire_set = 1'b0;
+  string ut_rows_set = "regime_nmi";
+  bit ut_rows_set_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
   bit ibus_gnt_min_set = 1'b0;
   int unsigned ibus_gnt_max = 0;
@@ -282,6 +284,7 @@
     if ($value$plusargs({PLUSARG_EXPORT_SOURCES, "=%s"}, s)) begin export_sources = s; export_sources_set = 1'b1; end
     if ($value$plusargs({PLUSARG_EXPORT_FLUSH_EVERY, "=%d"}, u)) begin export_flush_every = u; export_flush_every_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_BOOT_RETIRE, "=%d"}, u)) begin ut_boot_retire = u; ut_boot_retire_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_ROWS_SET, "=%s"}, s)) begin ut_rows_set = s; ut_rows_set_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_RVALID_MIN, "=%d"}, u)) begin ibus_rvalid_min = u; ibus_rvalid_min_set = 1'b1; end
@@ -383,6 +386,7 @@
   // Enumerated knobs must hold one of their yaml values; msg names the first offender.
   function bit validate(output string msg);
     if (!gen_str_in_csv(icram_init, GEN_ENUM_ICRAM_INIT_VALUES)) begin msg = {"+", PLUSARG_ICRAM_INIT, "=", icram_init, " not in ", GEN_ENUM_ICRAM_INIT_VALUES}; return 1'b0; end
+    if (!gen_str_in_csv(ut_rows_set, GEN_ENUM_UT_ROWS_SET_VALUES)) begin msg = {"+", PLUSARG_UT_ROWS_SET, "=", ut_rows_set, " not in ", GEN_ENUM_UT_ROWS_SET_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(dbus_err_half, GEN_ENUM_DBUS_ERR_HALF_VALUES)) begin msg = {"+", PLUSARG_DBUS_ERR_HALF, "=", dbus_err_half, " not in ", GEN_ENUM_DBUS_ERR_HALF_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_imem_gnt_delay, GEN_ENUM_KNOB_IMEM_GNT_DELAY_VALUES)) begin msg = {"+", PLUSARG_KNOB_IMEM_GNT_DELAY, "=", knob_imem_gnt_delay, " not in ", GEN_ENUM_KNOB_IMEM_GNT_DELAY_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_imem_rvalid_delay, GEN_ENUM_KNOB_IMEM_RVALID_DELAY_VALUES)) begin msg = {"+", PLUSARG_KNOB_IMEM_RVALID_DELAY, "=", knob_imem_rvalid_delay, " not in ", GEN_ENUM_KNOB_IMEM_RVALID_DELAY_VALUES}; return 1'b0; end

@@ -1,0 +1,928 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+OK   yaml source exists
+OK   codegen exists
+OK   codegen --check passes
+OK   plusarg names unique
+OK   yaml parses with no spurious plusarg keys (every desc quoted)
+OK   pkg declares PLUSARG_BUILD_CONFIG once
+OK   pkg declares PLUSARG_SMOKE_CYCLES once
+OK   pkg declares PLUSARG_SMOKE_INTG_FLIP once
+OK   pkg declares PLUSARG_DBG_CSR_PROBE once
+OK   pkg declares PLUSARG_MEM_IMAGE once
+OK   pkg declares PLUSARG_MEM_IMAGE_CRC32 once
+OK   pkg declares PLUSARG_MEM_IMAGE_WORDS once
+OK   pkg declares PLUSARG_MEM_READBACK_WORDS once
+OK   pkg declares PLUSARG_TOHOST_ADDR once
+OK   pkg declares PLUSARG_MEM_UNMAPPED_OK once
+OK   pkg declares PLUSARG_BOOT_ADDR once
+OK   pkg declares PLUSARG_HART_ID once
+OK   pkg declares PLUSARG_ALIVE_TIMEOUT once
+OK   pkg declares PLUSARG_FINISH_TIMEOUT once
+OK   pkg declares PLUSARG_REGIME_SCHED once
+OK   pkg declares PLUSARG_RVFI_TRACE once
+OK   pkg declares PLUSARG_FCOV_EN once
+OK   pkg declares PLUSARG_ICRAM_INIT once
+OK   enum icram_init has >= 2 values
+OK   enum icram_init default is a value
+OK   pkg carries values of icram_init
+OK   pkg declares PLUSARG_FETCH_EN_AT_RESET once
+OK   pkg declares PLUSARG_KEY_RESET_VALID once
+OK   pkg declares PLUSARG_SB_TRACE once
+OK   pkg declares PLUSARG_ISA_STRING once
+OK   pkg declares PLUSARG_ISA_LOG once
+OK   pkg declares PLUSARG_EXPORT_FILE once
+OK   pkg declares PLUSARG_EXPORT_COUNTERS once
+OK   pkg declares PLUSARG_EXPORT_SOURCES once
+OK   pkg declares PLUSARG_EXPORT_FLUSH_EVERY once
+OK   pkg declares PLUSARG_UT_BOOT_RETIRE once
+OK   pkg declares PLUSARG_UT_ROWS_SET once
+OK   enum ut_rows_set has >= 2 values
+OK   enum ut_rows_set default is a value
+OK   pkg carries values of ut_rows_set
+OK   pkg declares PLUSARG_IBUS_GNT_MIN once
+OK   pkg declares PLUSARG_IBUS_GNT_MAX once
+OK   pkg declares PLUSARG_IBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_IBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_IBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_IBUS_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_IBUS_INTG_BITS once
+OK   pkg declares PLUSARG_IBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_GNT_MIN once
+OK   pkg declares PLUSARG_DBUS_GNT_MAX once
+OK   pkg declares PLUSARG_DBUS_RVALID_MIN once
+OK   pkg declares PLUSARG_DBUS_RVALID_MAX once
+OK   pkg declares PLUSARG_DBUS_MAX_OUTSTANDING once
+OK   pkg declares PLUSARG_DBUS_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_ERR_RATE once
+OK   pkg declares PLUSARG_DBUS_INTG_BITS once
+OK   pkg declares PLUSARG_DBUS_ERR_WINDOW once
+OK   pkg declares PLUSARG_DBUS_ERR_HALF once
+OK   enum dbus_err_half has >= 2 values
+OK   enum dbus_err_half default is a value
+OK   pkg carries values of dbus_err_half
+OK   pkg declares PLUSARG_DBUS_ERR_STORE_PERFORM once
+OK   pkg declares PLUSARG_KEY_DELAY_MIN once
+OK   pkg declares PLUSARG_KEY_DELAY_MAX once
+OK   pkg declares PLUSARG_KEY_NEVER_CYCLES once
+OK   pkg declares PLUSARG_IRQ_MIN_GAP once
+OK   pkg declares PLUSARG_IRQ_HOLD_MIN once
+OK   pkg declares PLUSARG_IRQ_HOLD_MAX once
+OK   pkg declares PLUSARG_DBG_HOLD_MIN once
+OK   pkg declares PLUSARG_DBG_HOLD_MAX once
+OK   pkg declares PLUSARG_KNOB_IMEM_GNT_DELAY once
+OK   enum knob_imem_gnt_delay has >= 2 values
+OK   enum knob_imem_gnt_delay default is a value
+OK   pkg carries values of knob_imem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_RVALID_DELAY once
+OK   enum knob_imem_rvalid_delay has >= 2 values
+OK   enum knob_imem_rvalid_delay default is a value
+OK   pkg carries values of knob_imem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_IMEM_ERR_RATE once
+OK   enum knob_imem_err_rate has >= 2 values
+OK   enum knob_imem_err_rate default is a value
+OK   pkg carries values of knob_imem_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_INTG_ERR_RATE once
+OK   enum knob_imem_intg_err_rate has >= 2 values
+OK   enum knob_imem_intg_err_rate default is a value
+OK   pkg carries values of knob_imem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IMEM_OUTSTANDING_CAP once
+OK   enum knob_imem_outstanding_cap has >= 2 values
+OK   enum knob_imem_outstanding_cap default is a value
+OK   pkg carries values of knob_imem_outstanding_cap
+OK   pkg declares PLUSARG_KNOB_DMEM_GNT_DELAY once
+OK   enum knob_dmem_gnt_delay has >= 2 values
+OK   enum knob_dmem_gnt_delay default is a value
+OK   pkg carries values of knob_dmem_gnt_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_RVALID_DELAY once
+OK   enum knob_dmem_rvalid_delay has >= 2 values
+OK   enum knob_dmem_rvalid_delay default is a value
+OK   pkg carries values of knob_dmem_rvalid_delay
+OK   pkg declares PLUSARG_KNOB_DMEM_ERR_RATE once
+OK   enum knob_dmem_err_rate has >= 2 values
+OK   enum knob_dmem_err_rate default is a value
+OK   pkg carries values of knob_dmem_err_rate
+OK   pkg declares PLUSARG_KNOB_DMEM_INTG_ERR_RATE once
+OK   enum knob_dmem_intg_err_rate has >= 2 values
+OK   enum knob_dmem_intg_err_rate default is a value
+OK   pkg carries values of knob_dmem_intg_err_rate
+OK   pkg declares PLUSARG_KNOB_IRQ_REGIME once
+OK   enum knob_irq_regime has >= 2 values
+OK   enum knob_irq_regime default is a value
+OK   pkg carries values of knob_irq_regime
+OK   pkg declares PLUSARG_KNOB_IRQ_LINE_MIX once
+OK   enum knob_irq_line_mix has >= 2 values
+OK   enum knob_irq_line_mix default is a value
+OK   pkg carries values of knob_irq_line_mix
+OK   pkg declares PLUSARG_KNOB_IRQ_HOLD once
+OK   enum knob_irq_hold has >= 2 values
+OK   enum knob_irq_hold default is a value
+OK   pkg carries values of knob_irq_hold
+OK   pkg declares PLUSARG_KNOB_DEBUG_REQ_REGIME once
+OK   enum knob_debug_req_regime has >= 2 values
+OK   enum knob_debug_req_regime default is a value
+OK   pkg carries values of knob_debug_req_regime
+OK   pkg declares PLUSARG_KNOB_SCR_KEY_DELAY once
+OK   enum knob_scr_key_delay has >= 2 values
+OK   enum knob_scr_key_delay default is a value
+OK   pkg carries values of knob_scr_key_delay
+OK   pkg declares PLUSARG_KNOB_ICACHE_ECC_ERR_RATE once
+OK   enum knob_icache_ecc_err_rate has >= 2 values
+OK   enum knob_icache_ecc_err_rate default is a value
+OK   pkg carries values of knob_icache_ecc_err_rate
+OK   pkg declares PLUSARG_KNOB_FETCH_ENABLE_REGIME once
+OK   enum knob_fetch_enable_regime has >= 2 values
+OK   enum knob_fetch_enable_regime default is a value
+OK   pkg carries values of knob_fetch_enable_regime
+OK   pkg declares PLUSARG_KNOB_MCOUNTEREN_WRITABLE once
+OK   enum knob_mcounteren_writable has >= 2 values
+OK   enum knob_mcounteren_writable default is a value
+OK   pkg carries values of knob_mcounteren_writable
+OK   pkg declares PLUSARG_KNOB_INSTR_MIX once
+OK   enum knob_instr_mix has >= 2 values
+OK   enum knob_instr_mix default is a value
+OK   pkg carries values of knob_instr_mix
+OK   pkg declares PLUSARG_KNOB_PRIV_REGIME once
+OK   enum knob_priv_regime has >= 2 values
+OK   enum knob_priv_regime default is a value
+OK   pkg carries values of knob_priv_regime
+OK   pkg declares PLUSARG_KNOB_PMP_REGIME once
+OK   enum knob_pmp_regime has >= 2 values
+OK   enum knob_pmp_regime default is a value
+OK   pkg carries values of knob_pmp_regime
+OK   pkg declares PLUSARG_CHK_ALL once
+OK   pkg declares PLUSARG_CHK_IBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_IBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_SVA_RVALID_LEGAL once
+OK   pkg declares PLUSARG_CHK_DBUS_PROTO once
+OK   pkg declares PLUSARG_CHK_DBUS_OUTSTANDING once
+OK   pkg declares PLUSARG_CHK_DBUS_SPLIT once
+OK   pkg declares PLUSARG_CHK_DBUS_STORE_INTG once
+OK   pkg declares PLUSARG_CHK_ICRAM_WRITE_ECC once
+OK   pkg declares PLUSARG_CHK_ICRAM_INVAL_SWEEP once
+OK   pkg declares PLUSARG_CHK_ICRAM_ECC_RESPONSE once
+OK   pkg declares PLUSARG_CHK_SCRKEY_PROTO once
+OK   pkg declares PLUSARG_CHK_ALERT_MINOR once
+OK   pkg declares PLUSARG_CHK_ALERT_BUS once
+OK   pkg declares PLUSARG_CHK_ALERT_INTERNAL once
+OK   pkg declares PLUSARG_CHK_CRASH_DUMP once
+OK   pkg declares PLUSARG_CHK_DOUBLE_FAULT once
+OK   pkg declares PLUSARG_CHK_CORE_BUSY once
+OK   pkg declares PLUSARG_CHK_DATA_TAG_QUIET once
+OK   pkg declares PLUSARG_CHK_FETCH_EN once
+OK   pkg declares PLUSARG_CHK_IRQ_PENDING once
+OK   pkg declares PLUSARG_CHK_IRQ_ENTRY once
+OK   pkg declares PLUSARG_CHK_IRQ_MASKED once
+OK   pkg declares PLUSARG_CHK_NMI_ENTRY once
+OK   pkg declares PLUSARG_CHK_NMI_INTERNAL once
+OK   pkg declares PLUSARG_CHK_DBG_ENTRY once
+OK   pkg declares PLUSARG_CHK_DBG_EXC once
+OK   pkg declares PLUSARG_CHK_DBG_MASKED once
+OK   pkg declares PLUSARG_CHK_DBG_DRET once
+OK   pkg declares PLUSARG_CHK_DBG_TRIGGER once
+OK   pkg declares PLUSARG_CHK_CTR_MCYCLE once
+OK   pkg declares PLUSARG_CHK_CTR_MINSTRET once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_EXACT once
+OK   pkg declares PLUSARG_CHK_CTR_HPM_BOUND once
+OK   pkg declares PLUSARG_CHK_PMP_DATA once
+OK   pkg declares PLUSARG_CHK_PMP_FETCH once
+OK   pkg declares PLUSARG_CHK_ISA once
+OK   pkg declares PLUSARG_CHK_ISA_PC once
+OK   pkg declares PLUSARG_CHK_ISA_INSN once
+OK   pkg declares PLUSARG_CHK_ISA_TRAP once
+OK   pkg declares PLUSARG_CHK_ISA_RD once
+OK   pkg declares PLUSARG_CHK_ISA_MEM once
+OK   pkg declares PLUSARG_CHK_ISA_PRV once
+OK   pkg declares PLUSARG_CHK_ISA_PC_NEXT once
+OK   pkg declares PLUSARG_CHK_ISA_CSR once
+OK   pkg declares PLUSARG_CHK_RVFI_PROTO once
+OK   pkg declares PLUSARG_CHK_T022_NEVER once
+OK   pkg declares PLUSARG_CHK_BRIDGE_ACCOUNTING once
+OK   no PLUSARG_ outside the generated region
+OK   hart_id knob present (C1)
+OK   ut_lockstep_min_ratio_pct removed (exact consumed-records check)
+OK   dbg_csr_probe is debug_only
+OK   rvfi_trace is debug_only
+OK   isa_string is debug_only
+OK   isa_log is debug_only
+OK   sb_trace is debug_only
+OK   Runtime debug_only_plusargs lists gen_dbg_csr_probe
+OK   Runtime debug_only_plusargs lists gen_rvfi_trace
+OK   Runtime debug_only_plusargs lists gen_sb_trace
+OK   Runtime debug_only_plusargs lists gen_isa_string
+OK   Runtime debug_only_plusargs lists gen_isa_log
+OK   Runtime debug_only_plusargs lists gen_export_flush_every
+OK   regime knob knob_imem_gnt_delay present as enum
+OK   regime knob knob_imem_rvalid_delay present as enum
+OK   regime knob knob_imem_err_rate present as enum
+OK   regime knob knob_imem_intg_err_rate present as enum
+OK   regime knob knob_imem_outstanding_cap present as enum
+OK   regime knob knob_dmem_gnt_delay present as enum
+OK   regime knob knob_dmem_rvalid_delay present as enum
+OK   regime knob knob_dmem_err_rate present as enum
+OK   regime knob knob_dmem_intg_err_rate present as enum
+OK   regime knob knob_irq_regime present as enum
+OK   regime knob knob_irq_line_mix present as enum
+OK   regime knob knob_irq_hold present as enum
+OK   regime knob knob_debug_req_regime present as enum
+OK   regime knob knob_scr_key_delay present as enum
+OK   regime knob knob_icache_ecc_err_rate present as enum
+OK   regime knob knob_fetch_enable_regime present as enum
+OK   regime knob knob_mcounteren_writable present as enum
+OK   regime knob knob_instr_mix present as enum
+OK   regime knob knob_priv_regime present as enum
+OK   regime knob knob_pmp_regime present as enum
+OK   regime_windows.gnt_delay keys equal values of knob_imem_gnt_delay
+OK   regime_windows.gnt_delay keys equal values of knob_dmem_gnt_delay
+OK   regime_windows.rvalid_delay keys equal values of knob_imem_rvalid_delay
+OK   regime_windows.rvalid_delay keys equal values of knob_dmem_rvalid_delay
+OK   regime_windows.rate_per_mille keys equal values of knob_imem_err_rate
+OK   regime_windows.rate_per_mille keys equal values of knob_dmem_err_rate
+OK   regime_windows.outstanding_cap keys equal values of knob_imem_outstanding_cap
+OK   rvalid classes align with the fcov plan (min1 1, short 2..4, long 5..)
+OK   pkg has gen_regime_window()
+OK   pkg has gen_regime_scalar()
+OK   pkg renders rvalid window min1
+OK   pkg renders rvalid window short
+OK   pkg renders rvalid window long
+OK   pkg renders rvalid window random
+OK   gen_knobs.py exists
+OK   python PLUSARGS has every name
+OK   python ISA_STRING equals yaml
+OK   python knob values match yaml
+OK   python REGIME_WINDOWS equals yaml
+OK   python DEBUG_ONLY equals yaml
+OK   header exists
+OK   header ISA string equals yaml
+OK   header carries boot_addr_default
+OK   pkg carries GEN_MM_BOOT_ADDR_DEFAULT
+OK   header carries boot_page_mask
+OK   pkg carries GEN_MM_BOOT_PAGE_MASK
+OK   header carries boot_reset_offset
+OK   pkg carries GEN_MM_BOOT_RESET_OFFSET
+OK   header carries boot_page
+OK   pkg carries GEN_MM_BOOT_PAGE
+OK   header carries prog_size
+OK   pkg carries GEN_MM_PROG_SIZE
+OK   header carries dm_base
+OK   pkg carries GEN_MM_DM_BASE
+OK   header carries dm_size
+OK   pkg carries GEN_MM_DM_SIZE
+OK   header carries dm_halt
+OK   pkg carries GEN_MM_DM_HALT
+OK   header carries dm_exception
+OK   pkg carries GEN_MM_DM_EXCEPTION
+OK   header carries dm_budget
+OK   pkg carries GEN_MM_DM_BUDGET
+OK   header carries mmio_base
+OK   pkg carries GEN_MM_MMIO_BASE
+OK   header carries mmio_size
+OK   pkg carries GEN_MM_MMIO_SIZE
+OK   header carries sig_addr
+OK   pkg carries GEN_MM_SIG_ADDR
+OK   header carries sig_size
+OK   pkg carries GEN_MM_SIG_SIZE
+OK   header carries irq_ack_addr
+OK   pkg carries GEN_MM_IRQ_ACK_ADDR
+OK   header carries irq_ack_size
+OK   pkg carries GEN_MM_IRQ_ACK_SIZE
+OK   header carries eot_addr
+OK   pkg carries GEN_MM_EOT_ADDR
+OK   header carries eot_size
+OK   pkg carries GEN_MM_EOT_SIZE
+OK   header carries phase_mark_addr
+OK   pkg carries GEN_MM_PHASE_MARK_ADDR
+OK   header carries phase_mark_size
+OK   pkg carries GEN_MM_PHASE_MARK_SIZE
+OK   memory map renders sig_size
+OK   memory map renders irq_ack_size
+OK   memory map renders eot_size
+OK   memory map renders phase_mark_size
+OK   memory map carries boot_page_mask
+OK   memory map dm_base agrees with gen_program
+OK   memory map dm_size agrees with gen_program
+OK   memory map dm_halt agrees with gen_program
+OK   memory map boot_page agrees with gen_program
+OK   memory map prog_size agrees with gen_program
+OK   gen_program ISA string equals yaml
+OK   MMIO page outside program and DM windows
+OK   pkg declares constant GEN_ICACHE_NUM_FB
+OK   header carries GEN_ICACHE_NUM_FB
+OK   python CONSTANTS[GEN_ICACHE_NUM_FB] equals yaml
+OK   pkg declares constant GEN_IBUS_MAX_OUTSTANDING
+OK   header carries GEN_IBUS_MAX_OUTSTANDING
+OK   pkg renders GEN_IBUS_MAX_OUTSTANDING_PY mirror
+OK   pkg declares constant GEN_DBUS_MAX_OUTSTANDING
+OK   header carries GEN_DBUS_MAX_OUTSTANDING
+OK   python CONSTANTS[GEN_DBUS_MAX_OUTSTANDING] equals yaml
+OK   pkg declares constant GEN_CSR_WRITE_TO_RVFI_OFFSET
+OK   header carries GEN_CSR_WRITE_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_CSR_WRITE_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_TRAP_TO_RVFI_OFFSET
+OK   header carries GEN_TRAP_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_TRAP_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_IRQ_MARKER_TO_RVFI_OFFSET
+OK   header carries GEN_IRQ_MARKER_TO_RVFI_OFFSET
+OK   python CONSTANTS[GEN_IRQ_MARKER_TO_RVFI_OFFSET] equals yaml
+OK   pkg declares constant GEN_RVFI_ID_EXIT_OFFSET
+OK   header carries GEN_RVFI_ID_EXIT_OFFSET
+OK   python CONSTANTS[GEN_RVFI_ID_EXIT_OFFSET] equals yaml
+OK   pkg declares constant GEN_ICACHE_ECC_WINDOW
+OK   header carries GEN_ICACHE_ECC_WINDOW
+OK   python CONSTANTS[GEN_ICACHE_ECC_WINDOW] equals yaml
+OK   pkg declares constant GEN_IRQ_ENTRY_BOUND_RECORDS
+OK   header carries GEN_IRQ_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_IRQ_ENTRY_BOUND_RECORDS] equals yaml
+OK   pkg declares constant GEN_DBG_ENTRY_BOUND_RECORDS
+OK   header carries GEN_DBG_ENTRY_BOUND_RECORDS
+OK   python CONSTANTS[GEN_DBG_ENTRY_BOUND_RECORDS] equals yaml
+OK   pkg declares constant GEN_CLK_PERIOD_NS
+OK   header carries GEN_CLK_PERIOD_NS
+OK   python CONSTANTS[GEN_CLK_PERIOD_NS] equals yaml
+OK   pkg declares constant GEN_MEM_READBACK_WORDS_DEFAULT
+OK   header carries GEN_MEM_READBACK_WORDS_DEFAULT
+OK   python CONSTANTS[GEN_MEM_READBACK_WORDS_DEFAULT] equals yaml
+OK   pkg declares constant GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   header carries GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   python CONSTANTS[GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT] equals yaml
+OK   pkg declares constant GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   header carries GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   python CONSTANTS[GEN_FINISH_TIMEOUT_CYCLES_DEFAULT] equals yaml
+OK   pkg declares constant GEN_IRQ_FAST_W
+OK   header carries GEN_IRQ_FAST_W
+OK   pkg renders GEN_IRQ_FAST_W_PY mirror
+OK   pkg declares constant GEN_IRQ_FAST_MASK
+OK   header carries GEN_IRQ_FAST_MASK
+OK   pkg renders GEN_IRQ_FAST_MASK_PY mirror
+OK   pkg declares constant GEN_CSR_MARCHID_VALUE
+OK   header carries GEN_CSR_MARCHID_VALUE
+OK   pkg renders GEN_CSR_MARCHID_VALUE_PY mirror
+OK   pkg declares constant GEN_CSR_CPUCTRLSTS
+OK   header carries GEN_CSR_CPUCTRLSTS
+OK   pkg renders GEN_CSR_CPUCTRLSTS_PY mirror
+OK   pkg declares constant GEN_CSR_SECURESEED
+OK   header carries GEN_CSR_SECURESEED
+OK   pkg renders GEN_CSR_SECURESEED_PY mirror
+OK   pkg declares constant GEN_MHPM_COUNTER_NUM
+OK   header carries GEN_MHPM_COUNTER_NUM
+OK   python CONSTANTS[GEN_MHPM_COUNTER_NUM] equals yaml
+OK   pkg declares constant GEN_INSN_MRET
+OK   header carries GEN_INSN_MRET
+OK   python CONSTANTS[GEN_INSN_MRET] equals yaml
+OK   pkg declares constant GEN_INSN_DRET
+OK   header carries GEN_INSN_DRET
+OK   python CONSTANTS[GEN_INSN_DRET] equals yaml
+OK   pkg declares constant GEN_TDATA1_IBEX_RDATA
+OK   header carries GEN_TDATA1_IBEX_RDATA
+OK   python CONSTANTS[GEN_TDATA1_IBEX_RDATA] equals yaml
+OK   pkg declares constant GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT
+OK   header carries GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT
+OK   python CONSTANTS[GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT] equals yaml
+OK   pkg declares constant GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT
+OK   header carries GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT
+OK   python CONSTANTS[GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT] equals yaml
+OK   pkg declares constant GEN_MEM_ERR_ARM_KIND_ERR
+OK   header carries GEN_MEM_ERR_ARM_KIND_ERR
+OK   python CONSTANTS[GEN_MEM_ERR_ARM_KIND_ERR] equals yaml
+OK   pkg declares constant GEN_MEM_ERR_ARM_KIND_INTG
+OK   header carries GEN_MEM_ERR_ARM_KIND_INTG
+OK   python CONSTANTS[GEN_MEM_ERR_ARM_KIND_INTG] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_FETCH
+OK   header carries GEN_ISA_FAULT_KIND_FETCH
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_FETCH] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_LOAD
+OK   header carries GEN_ISA_FAULT_KIND_LOAD
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_LOAD] equals yaml
+OK   pkg declares constant GEN_ISA_FAULT_KIND_STORE
+OK   header carries GEN_ISA_FAULT_KIND_STORE
+OK   python CONSTANTS[GEN_ISA_FAULT_KIND_STORE] equals yaml
+OK   derived GEN_IBUS_MAX_OUTSTANDING == GEN_ICACHE_NUM_FB * IC_LINE_BEATS (ibex_pkg parse)
+OK   derived GEN_IRQ_FAST_W == irq_fast width (ibex_pkg parse)
+OK   derived GEN_IRQ_FAST_MASK == ((1 << w) - 1) << 16
+OK   boot_addr default from memory_map.boot_addr_default
+OK   mem_readback_words default from GEN_MEM_READBACK_WORDS_DEFAULT
+OK   alive_timeout default from GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT
+OK   finish_timeout default from GEN_FINISH_TIMEOUT_CYCLES_DEFAULT
+OK   yaml has bridge_cmds
+OK   pkg declares GEN_CMD_IRQ_SET = 1
+OK   pkg gen_cmd_name maps 1 to IRQ_SET
+OK   pkg declares GEN_CMD_IRQ_CLR = 2
+OK   pkg gen_cmd_name maps 2 to IRQ_CLR
+OK   pkg declares GEN_CMD_NMI_PULSE = 3
+OK   pkg gen_cmd_name maps 3 to NMI_PULSE
+OK   pkg declares GEN_CMD_DBG_REQ = 4
+OK   pkg gen_cmd_name maps 4 to DBG_REQ
+OK   pkg declares GEN_CMD_REGIME_SET = 5
+OK   pkg gen_cmd_name maps 5 to REGIME_SET
+OK   pkg declares GEN_CMD_KEY_MODE = 6
+OK   pkg gen_cmd_name maps 6 to KEY_MODE
+OK   pkg declares GEN_CMD_MEM_ERR_ARM = 7
+OK   pkg gen_cmd_name maps 7 to MEM_ERR_ARM
+OK   pkg declares GEN_CMD_ICACHE_ECC_ARM = 8
+OK   pkg gen_cmd_name maps 8 to ICACHE_ECC_ARM
+OK   pkg declares GEN_CMD_FETCH_EN = 9
+OK   pkg gen_cmd_name maps 9 to FETCH_EN
+OK   pkg declares GEN_CMD_MEM_PEEK = 10
+OK   pkg gen_cmd_name maps 10 to MEM_PEEK
+OK   pkg declares GEN_CMD_MISC = 11
+OK   pkg gen_cmd_name maps 11 to MISC
+OK   pkg declares GEN_CMD_EXPORT_FLUSH = 12
+OK   pkg gen_cmd_name maps 12 to EXPORT_FLUSH
+OK   python CMD codes match
+OK   pkg declares GEN_KNOB_ID_IMEM_GNT_DELAY = 0
+OK   pkg declares GEN_KNOB_ID_IMEM_RVALID_DELAY = 1
+OK   pkg declares GEN_KNOB_ID_IMEM_ERR_RATE = 2
+OK   pkg declares GEN_KNOB_ID_IMEM_INTG_ERR_RATE = 3
+OK   pkg declares GEN_KNOB_ID_IMEM_OUTSTANDING_CAP = 4
+OK   pkg declares GEN_KNOB_ID_DMEM_GNT_DELAY = 5
+OK   pkg declares GEN_KNOB_ID_DMEM_RVALID_DELAY = 6
+OK   pkg declares GEN_KNOB_ID_DMEM_ERR_RATE = 7
+OK   pkg declares GEN_KNOB_ID_DMEM_INTG_ERR_RATE = 8
+OK   pkg declares GEN_KNOB_ID_IRQ_REGIME = 9
+OK   pkg declares GEN_KNOB_ID_IRQ_LINE_MIX = 10
+OK   pkg declares GEN_KNOB_ID_IRQ_HOLD = 11
+OK   pkg declares GEN_KNOB_ID_DEBUG_REQ_REGIME = 12
+OK   pkg declares GEN_KNOB_ID_SCR_KEY_DELAY = 13
+OK   pkg declares GEN_KNOB_ID_ICACHE_ECC_ERR_RATE = 14
+OK   pkg declares GEN_KNOB_ID_FETCH_ENABLE_REGIME = 15
+OK   pkg declares GEN_KNOB_ID_MCOUNTEREN_WRITABLE = 16
+OK   pkg declares GEN_KNOB_ID_INSTR_MIX = 17
+OK   pkg declares GEN_KNOB_ID_PRIV_REGIME = 18
+OK   pkg declares GEN_KNOB_ID_PMP_REGIME = 19
+OK   python KNOB_IDS matches
+OK   pkg renders GEN_EXPORT_RECORD_FIELDS
+OK   pkg renders GEN_EXPORT_COUNTER_FIELDS
+OK   pkg has gen_export_source_known and gen_export_event_header
+OK   record field order is a gen_rvfi_txn member
+OK   record field pc_rdata is a gen_rvfi_txn member
+OK   record field pc_wdata is a gen_rvfi_txn member
+OK   record field insn is a gen_rvfi_txn member
+OK   record field trap is a gen_rvfi_txn member
+OK   record field halt is a gen_rvfi_txn member
+OK   record field intr is a gen_rvfi_txn member
+OK   record field mode is a gen_rvfi_txn member
+OK   record field ixl is a gen_rvfi_txn member
+OK   record field rs1_addr is a gen_rvfi_txn member
+OK   record field rs1_rdata is a gen_rvfi_txn member
+OK   record field rs2_addr is a gen_rvfi_txn member
+OK   record field rs2_rdata is a gen_rvfi_txn member
+OK   record field rs3_addr is a gen_rvfi_txn member
+OK   record field rs3_rdata is a gen_rvfi_txn member
+OK   record field rd_addr is a gen_rvfi_txn member
+OK   record field rd_wdata is a gen_rvfi_txn member
+OK   record field mem_addr is a gen_rvfi_txn member
+OK   record field mem_rmask is a gen_rvfi_txn member
+OK   record field mem_wmask is a gen_rvfi_txn member
+OK   record field mem_rdata is a gen_rvfi_txn member
+OK   record field mem_wdata is a gen_rvfi_txn member
+OK   record field ext_pre_mip is a gen_rvfi_txn member
+OK   record field ext_post_mip is a gen_rvfi_txn member
+OK   record field ext_nmi is a gen_rvfi_txn member
+OK   record field ext_nmi_int is a gen_rvfi_txn member
+OK   record field ext_debug_req is a gen_rvfi_txn member
+OK   record field ext_debug_mode is a gen_rvfi_txn member
+OK   record field ext_rf_wr_suppress is a gen_rvfi_txn member
+OK   record field ext_ic_scr_key_valid is a gen_rvfi_txn member
+OK   record field ext_irq_valid is a gen_rvfi_txn member
+OK   record field ext_exp_valid is a gen_rvfi_txn member
+OK   record field ext_exp_insn is a gen_rvfi_txn member
+OK   record field ext_exp_last is a gen_rvfi_txn member
+OK   record field ext_mcycle is a gen_rvfi_txn member
+OK   record field cycle is a gen_rvfi_txn member
+OK   counter fields are 10 + 10
+OK   record-line include lists every field in order
+OK   event include defines gen_export_line_ibus_req
+OK   pkg event header names ibus/req
+OK   event include defines gen_export_line_ibus_gnt
+OK   pkg event header names ibus/gnt
+OK   event include defines gen_export_line_ibus_rvalid
+OK   pkg event header names ibus/rvalid
+OK   event include defines gen_export_line_dbus_req
+OK   pkg event header names dbus/req
+OK   event include defines gen_export_line_dbus_gnt
+OK   pkg event header names dbus/gnt
+OK   event include defines gen_export_line_dbus_rvalid
+OK   pkg event header names dbus/rvalid
+OK   event include defines gen_export_line_pin_irq_software
+OK   pkg event header names pin/irq_software
+OK   event include defines gen_export_line_pin_irq_timer
+OK   pkg event header names pin/irq_timer
+OK   event include defines gen_export_line_pin_irq_external
+OK   pkg event header names pin/irq_external
+OK   event include defines gen_export_line_pin_irq_fast
+OK   pkg event header names pin/irq_fast
+OK   event include defines gen_export_line_pin_irq_nm
+OK   pkg event header names pin/irq_nm
+OK   event include defines gen_export_line_pin_debug_req
+OK   pkg event header names pin/debug_req
+OK   event include defines gen_export_line_pin_fetch_enable
+OK   pkg event header names pin/fetch_enable
+OK   event include defines gen_export_line_pin_mcounteren_writable
+OK   pkg event header names pin/mcounteren_writable
+OK   event include defines gen_export_line_alert_alert_minor
+OK   pkg event header names alert/alert_minor
+OK   event include defines gen_export_line_alert_alert_major_bus
+OK   pkg event header names alert/alert_major_bus
+OK   event include defines gen_export_line_alert_alert_major_internal
+OK   pkg event header names alert/alert_major_internal
+OK   event include defines gen_export_line_alert_double_fault_seen
+OK   pkg event header names alert/double_fault_seen
+OK   event include defines gen_export_line_misc_irq_pending
+OK   pkg event header names misc/irq_pending
+OK   event include defines gen_export_line_misc_core_busy
+OK   pkg event header names misc/core_busy
+OK   event include defines gen_export_line_misc_crash_dump_current_pc
+OK   pkg event header names misc/crash_dump_current_pc
+OK   event include defines gen_export_line_misc_crash_dump_next_pc
+OK   pkg event header names misc/crash_dump_next_pc
+OK   event include defines gen_export_line_misc_crash_dump_last_data_addr
+OK   pkg event header names misc/crash_dump_last_data_addr
+OK   event include defines gen_export_line_misc_crash_dump_exception_pc
+OK   pkg event header names misc/crash_dump_exception_pc
+OK   event include defines gen_export_line_misc_crash_dump_exception_addr
+OK   pkg event header names misc/crash_dump_exception_addr
+OK   event include defines gen_export_line_icram_inject
+OK   pkg event header names icram/inject
+OK   event include defines gen_export_line_icram_lookup
+OK   pkg event header names icram/lookup
+OK   event include defines gen_export_line_icram_tag_write
+OK   pkg event header names icram/tag_write
+OK   event include defines gen_export_line_icram_fill_write
+OK   pkg event header names icram/fill_write
+OK   event include defines gen_export_line_scrkey_req
+OK   pkg event header names scrkey/req
+OK   event include defines gen_export_line_scrkey_valid
+OK   pkg event header names scrkey/valid
+OK   event include defines gen_export_line_regime_phase
+OK   pkg event header names regime/phase
+OK   python EXPORT_RECORD_FIELDS equals yaml
+OK   python EXPORT_COUNTER_FIELDS equals yaml
+OK   python EXPORT_EVENTS equals yaml
+OK   every knob_* names a regime_set_consumer
+OK   python REGIME_SET_CONSUMED equals the yaml run-time consumers
+OK   python KNOB_CONSUMER equals yaml
+OK   pkg has gen_knob_regime_set_consumed and gen_knob_consumer
+OK   python EXPORT_ACTIVE_SOURCES equals yaml
+OK   active sources are a subset of the event sources
+OK   pkg renders GEN_EXPORT_ACTIVE_SOURCES and gen_export_source_active
+OK   pkg renders GEN_EXPORT_ROWS in yaml order
+OK   pkg has gen_export_row_header
+OK   pkg row header case for ibus/req
+OK   pkg row header case for ibus/gnt
+OK   pkg row header case for ibus/rvalid
+OK   pkg row header case for dbus/req
+OK   pkg row header case for dbus/gnt
+OK   pkg row header case for dbus/rvalid
+OK   pkg row header case for pin/irq_software
+OK   pkg row header case for pin/irq_timer
+OK   pkg row header case for pin/irq_external
+OK   pkg row header case for pin/irq_fast
+OK   pkg row header case for pin/irq_nm
+OK   pkg row header case for pin/debug_req
+OK   pkg row header case for pin/fetch_enable
+OK   pkg row header case for pin/mcounteren_writable
+OK   pkg row header case for alert/alert_minor
+OK   pkg row header case for alert/alert_major_bus
+OK   pkg row header case for alert/alert_major_internal
+OK   pkg row header case for alert/double_fault_seen
+OK   pkg row header case for misc/irq_pending
+OK   pkg row header case for misc/core_busy
+OK   pkg row header case for misc/crash_dump_current_pc
+OK   pkg row header case for misc/crash_dump_next_pc
+OK   pkg row header case for misc/crash_dump_last_data_addr
+OK   pkg row header case for misc/crash_dump_exception_pc
+OK   pkg row header case for misc/crash_dump_exception_addr
+OK   pkg row header case for icram/inject
+OK   pkg row header case for icram/lookup
+OK   pkg row header case for icram/tag_write
+OK   pkg row header case for icram/fill_write
+OK   pkg row header case for scrkey/req
+OK   pkg row header case for scrkey/valid
+OK   pkg row header case for regime/phase
+OK   export knob export_file present
+OK   export knob export_counters present
+OK   export knob export_sources present
+OK   export knob export_flush_every present
+OK   export_flush_every is debug_only
+OK   EXPORT_FLUSH is a bridge command
+OK   pkg has gen_knob_value()
+OK   pkg has gen_knob_name()
+OK   pkg has gen_is_known_plusarg
+OK   known-plusarg list covers every name
+OK   pkg has gen_is_bool_plusarg
+OK   bool-plusarg list covers every bool knob
+OK   env cfg include exists
+OK   cfg field for build_config
+OK   cfg parses PLUSARG_BUILD_CONFIG
+OK   cfg field for smoke_cycles
+OK   cfg parses PLUSARG_SMOKE_CYCLES
+OK   cfg field for smoke_intg_flip
+OK   cfg parses PLUSARG_SMOKE_INTG_FLIP
+OK   cfg field for dbg_csr_probe
+OK   cfg parses PLUSARG_DBG_CSR_PROBE
+OK   cfg field for mem_image
+OK   cfg parses PLUSARG_MEM_IMAGE
+OK   cfg field for mem_image_crc32
+OK   cfg parses PLUSARG_MEM_IMAGE_CRC32
+OK   cfg field for mem_image_words
+OK   cfg parses PLUSARG_MEM_IMAGE_WORDS
+OK   cfg field for mem_readback_words
+OK   cfg parses PLUSARG_MEM_READBACK_WORDS
+OK   cfg field for tohost_addr
+OK   cfg parses PLUSARG_TOHOST_ADDR
+OK   cfg field for mem_unmapped_ok
+OK   cfg parses PLUSARG_MEM_UNMAPPED_OK
+OK   cfg field for boot_addr
+OK   cfg parses PLUSARG_BOOT_ADDR
+OK   cfg field for hart_id
+OK   cfg parses PLUSARG_HART_ID
+OK   cfg field for alive_timeout
+OK   cfg parses PLUSARG_ALIVE_TIMEOUT
+OK   cfg field for finish_timeout
+OK   cfg parses PLUSARG_FINISH_TIMEOUT
+OK   cfg field for regime_sched
+OK   cfg parses PLUSARG_REGIME_SCHED
+OK   cfg field for rvfi_trace
+OK   cfg parses PLUSARG_RVFI_TRACE
+OK   cfg field for fcov_en
+OK   cfg parses PLUSARG_FCOV_EN
+OK   cfg field for icram_init
+OK   cfg parses PLUSARG_ICRAM_INIT
+OK   cfg field for fetch_en_at_reset
+OK   cfg parses PLUSARG_FETCH_EN_AT_RESET
+OK   cfg field for key_reset_valid
+OK   cfg parses PLUSARG_KEY_RESET_VALID
+OK   cfg field for sb_trace
+OK   cfg parses PLUSARG_SB_TRACE
+OK   cfg field for isa_string
+OK   cfg parses PLUSARG_ISA_STRING
+OK   cfg field for isa_log
+OK   cfg parses PLUSARG_ISA_LOG
+OK   cfg field for export_file
+OK   cfg parses PLUSARG_EXPORT_FILE
+OK   cfg field for export_counters
+OK   cfg parses PLUSARG_EXPORT_COUNTERS
+OK   cfg field for export_sources
+OK   cfg parses PLUSARG_EXPORT_SOURCES
+OK   cfg field for export_flush_every
+OK   cfg parses PLUSARG_EXPORT_FLUSH_EVERY
+OK   cfg field for ut_boot_retire
+OK   cfg parses PLUSARG_UT_BOOT_RETIRE
+OK   cfg field for ut_rows_set
+OK   cfg parses PLUSARG_UT_ROWS_SET
+OK   cfg field for ibus_gnt_min
+OK   cfg parses PLUSARG_IBUS_GNT_MIN
+OK   cfg field for ibus_gnt_max
+OK   cfg parses PLUSARG_IBUS_GNT_MAX
+OK   cfg field for ibus_rvalid_min
+OK   cfg parses PLUSARG_IBUS_RVALID_MIN
+OK   cfg field for ibus_rvalid_max
+OK   cfg parses PLUSARG_IBUS_RVALID_MAX
+OK   cfg field for ibus_max_outstanding
+OK   cfg parses PLUSARG_IBUS_MAX_OUTSTANDING
+OK   cfg field for ibus_err_rate
+OK   cfg parses PLUSARG_IBUS_ERR_RATE
+OK   cfg field for ibus_intg_err_rate
+OK   cfg parses PLUSARG_IBUS_INTG_ERR_RATE
+OK   cfg field for ibus_intg_bits
+OK   cfg parses PLUSARG_IBUS_INTG_BITS
+OK   cfg field for ibus_err_window
+OK   cfg parses PLUSARG_IBUS_ERR_WINDOW
+OK   cfg field for dbus_gnt_min
+OK   cfg parses PLUSARG_DBUS_GNT_MIN
+OK   cfg field for dbus_gnt_max
+OK   cfg parses PLUSARG_DBUS_GNT_MAX
+OK   cfg field for dbus_rvalid_min
+OK   cfg parses PLUSARG_DBUS_RVALID_MIN
+OK   cfg field for dbus_rvalid_max
+OK   cfg parses PLUSARG_DBUS_RVALID_MAX
+OK   cfg field for dbus_max_outstanding
+OK   cfg parses PLUSARG_DBUS_MAX_OUTSTANDING
+OK   cfg field for dbus_err_rate
+OK   cfg parses PLUSARG_DBUS_ERR_RATE
+OK   cfg field for dbus_intg_err_rate
+OK   cfg parses PLUSARG_DBUS_INTG_ERR_RATE
+OK   cfg field for dbus_intg_bits
+OK   cfg parses PLUSARG_DBUS_INTG_BITS
+OK   cfg field for dbus_err_window
+OK   cfg parses PLUSARG_DBUS_ERR_WINDOW
+OK   cfg field for dbus_err_half
+OK   cfg parses PLUSARG_DBUS_ERR_HALF
+OK   cfg field for dbus_err_store_perform
+OK   cfg parses PLUSARG_DBUS_ERR_STORE_PERFORM
+OK   cfg field for key_delay_min
+OK   cfg parses PLUSARG_KEY_DELAY_MIN
+OK   cfg field for key_delay_max
+OK   cfg parses PLUSARG_KEY_DELAY_MAX
+OK   cfg field for key_never_cycles
+OK   cfg parses PLUSARG_KEY_NEVER_CYCLES
+OK   cfg field for irq_min_gap
+OK   cfg parses PLUSARG_IRQ_MIN_GAP
+OK   cfg field for irq_hold_min
+OK   cfg parses PLUSARG_IRQ_HOLD_MIN
+OK   cfg field for irq_hold_max
+OK   cfg parses PLUSARG_IRQ_HOLD_MAX
+OK   cfg field for dbg_hold_min
+OK   cfg parses PLUSARG_DBG_HOLD_MIN
+OK   cfg field for dbg_hold_max
+OK   cfg parses PLUSARG_DBG_HOLD_MAX
+OK   cfg field for knob_imem_gnt_delay
+OK   cfg parses PLUSARG_KNOB_IMEM_GNT_DELAY
+OK   cfg field for knob_imem_rvalid_delay
+OK   cfg parses PLUSARG_KNOB_IMEM_RVALID_DELAY
+OK   cfg field for knob_imem_err_rate
+OK   cfg parses PLUSARG_KNOB_IMEM_ERR_RATE
+OK   cfg field for knob_imem_intg_err_rate
+OK   cfg parses PLUSARG_KNOB_IMEM_INTG_ERR_RATE
+OK   cfg field for knob_imem_outstanding_cap
+OK   cfg parses PLUSARG_KNOB_IMEM_OUTSTANDING_CAP
+OK   cfg field for knob_dmem_gnt_delay
+OK   cfg parses PLUSARG_KNOB_DMEM_GNT_DELAY
+OK   cfg field for knob_dmem_rvalid_delay
+OK   cfg parses PLUSARG_KNOB_DMEM_RVALID_DELAY
+OK   cfg field for knob_dmem_err_rate
+OK   cfg parses PLUSARG_KNOB_DMEM_ERR_RATE
+OK   cfg field for knob_dmem_intg_err_rate
+OK   cfg parses PLUSARG_KNOB_DMEM_INTG_ERR_RATE
+OK   cfg field for knob_irq_regime
+OK   cfg parses PLUSARG_KNOB_IRQ_REGIME
+OK   cfg field for knob_irq_line_mix
+OK   cfg parses PLUSARG_KNOB_IRQ_LINE_MIX
+OK   cfg field for knob_irq_hold
+OK   cfg parses PLUSARG_KNOB_IRQ_HOLD
+OK   cfg field for knob_debug_req_regime
+OK   cfg parses PLUSARG_KNOB_DEBUG_REQ_REGIME
+OK   cfg field for knob_scr_key_delay
+OK   cfg parses PLUSARG_KNOB_SCR_KEY_DELAY
+OK   cfg field for knob_icache_ecc_err_rate
+OK   cfg parses PLUSARG_KNOB_ICACHE_ECC_ERR_RATE
+OK   cfg field for knob_fetch_enable_regime
+OK   cfg parses PLUSARG_KNOB_FETCH_ENABLE_REGIME
+OK   cfg field for knob_mcounteren_writable
+OK   cfg parses PLUSARG_KNOB_MCOUNTEREN_WRITABLE
+OK   cfg field for knob_instr_mix
+OK   cfg parses PLUSARG_KNOB_INSTR_MIX
+OK   cfg field for knob_priv_regime
+OK   cfg parses PLUSARG_KNOB_PRIV_REGIME
+OK   cfg field for knob_pmp_regime
+OK   cfg parses PLUSARG_KNOB_PMP_REGIME
+OK   cfg field for chk_all
+OK   cfg parses PLUSARG_CHK_ALL
+OK   cfg field for chk_ibus_proto
+OK   cfg parses PLUSARG_CHK_IBUS_PROTO
+OK   cfg field for chk_ibus_outstanding
+OK   cfg parses PLUSARG_CHK_IBUS_OUTSTANDING
+OK   cfg field for chk_sva_rvalid_legal
+OK   cfg parses PLUSARG_CHK_SVA_RVALID_LEGAL
+OK   cfg field for chk_dbus_proto
+OK   cfg parses PLUSARG_CHK_DBUS_PROTO
+OK   cfg field for chk_dbus_outstanding
+OK   cfg parses PLUSARG_CHK_DBUS_OUTSTANDING
+OK   cfg field for chk_dbus_split
+OK   cfg parses PLUSARG_CHK_DBUS_SPLIT
+OK   cfg field for chk_dbus_store_intg
+OK   cfg parses PLUSARG_CHK_DBUS_STORE_INTG
+OK   cfg field for chk_icram_write_ecc
+OK   cfg parses PLUSARG_CHK_ICRAM_WRITE_ECC
+OK   cfg field for chk_icram_inval_sweep
+OK   cfg parses PLUSARG_CHK_ICRAM_INVAL_SWEEP
+OK   cfg field for chk_icram_ecc_response
+OK   cfg parses PLUSARG_CHK_ICRAM_ECC_RESPONSE
+OK   cfg field for chk_scrkey_proto
+OK   cfg parses PLUSARG_CHK_SCRKEY_PROTO
+OK   cfg field for chk_alert_minor
+OK   cfg parses PLUSARG_CHK_ALERT_MINOR
+OK   cfg field for chk_alert_bus
+OK   cfg parses PLUSARG_CHK_ALERT_BUS
+OK   cfg field for chk_alert_internal
+OK   cfg parses PLUSARG_CHK_ALERT_INTERNAL
+OK   cfg field for chk_crash_dump
+OK   cfg parses PLUSARG_CHK_CRASH_DUMP
+OK   cfg field for chk_double_fault
+OK   cfg parses PLUSARG_CHK_DOUBLE_FAULT
+OK   cfg field for chk_core_busy
+OK   cfg parses PLUSARG_CHK_CORE_BUSY
+OK   cfg field for chk_data_tag_quiet
+OK   cfg parses PLUSARG_CHK_DATA_TAG_QUIET
+OK   cfg field for chk_fetch_en
+OK   cfg parses PLUSARG_CHK_FETCH_EN
+OK   cfg field for chk_irq_pending
+OK   cfg parses PLUSARG_CHK_IRQ_PENDING
+OK   cfg field for chk_irq_entry
+OK   cfg parses PLUSARG_CHK_IRQ_ENTRY
+OK   cfg field for chk_irq_masked
+OK   cfg parses PLUSARG_CHK_IRQ_MASKED
+OK   cfg field for chk_nmi_entry
+OK   cfg parses PLUSARG_CHK_NMI_ENTRY
+OK   cfg field for chk_nmi_internal
+OK   cfg parses PLUSARG_CHK_NMI_INTERNAL
+OK   cfg field for chk_dbg_entry
+OK   cfg parses PLUSARG_CHK_DBG_ENTRY
+OK   cfg field for chk_dbg_exc
+OK   cfg parses PLUSARG_CHK_DBG_EXC
+OK   cfg field for chk_dbg_masked
+OK   cfg parses PLUSARG_CHK_DBG_MASKED
+OK   cfg field for chk_dbg_dret
+OK   cfg parses PLUSARG_CHK_DBG_DRET
+OK   cfg field for chk_dbg_trigger
+OK   cfg parses PLUSARG_CHK_DBG_TRIGGER
+OK   cfg field for chk_ctr_mcycle
+OK   cfg parses PLUSARG_CHK_CTR_MCYCLE
+OK   cfg field for chk_ctr_minstret
+OK   cfg parses PLUSARG_CHK_CTR_MINSTRET
+OK   cfg field for chk_ctr_hpm_exact
+OK   cfg parses PLUSARG_CHK_CTR_HPM_EXACT
+OK   cfg field for chk_ctr_hpm_bound
+OK   cfg parses PLUSARG_CHK_CTR_HPM_BOUND
+OK   cfg field for chk_pmp_data
+OK   cfg parses PLUSARG_CHK_PMP_DATA
+OK   cfg field for chk_pmp_fetch
+OK   cfg parses PLUSARG_CHK_PMP_FETCH
+OK   cfg field for chk_isa
+OK   cfg parses PLUSARG_CHK_ISA
+OK   cfg field for chk_isa_pc
+OK   cfg parses PLUSARG_CHK_ISA_PC
+OK   cfg field for chk_isa_insn
+OK   cfg parses PLUSARG_CHK_ISA_INSN
+OK   cfg field for chk_isa_trap
+OK   cfg parses PLUSARG_CHK_ISA_TRAP
+OK   cfg field for chk_isa_rd
+OK   cfg parses PLUSARG_CHK_ISA_RD
+OK   cfg field for chk_isa_mem
+OK   cfg parses PLUSARG_CHK_ISA_MEM
+OK   cfg field for chk_isa_prv
+OK   cfg parses PLUSARG_CHK_ISA_PRV
+OK   cfg field for chk_isa_pc_next
+OK   cfg parses PLUSARG_CHK_ISA_PC_NEXT
+OK   cfg field for chk_isa_csr
+OK   cfg parses PLUSARG_CHK_ISA_CSR
+OK   cfg field for chk_rvfi_proto
+OK   cfg parses PLUSARG_CHK_RVFI_PROTO
+OK   cfg field for chk_t022_never
+OK   cfg parses PLUSARG_CHK_T022_NEVER
+OK   cfg field for chk_bridge_accounting
+OK   cfg parses PLUSARG_CHK_BRIDGE_ACCOUNTING
+OK   cfg has parse_plusargs
+OK   cfg validates enum values
+OK   cfg boot_addr default resolved to the memory-map literal
+OK   fixture differs from the source (unknown plusarg key)
+OK   loader refuses: unknown plusarg key
+OK   fixture differs from the source (unquoted comma in desc)
+OK   loader refuses: unquoted comma in desc
+OK   fixture differs from the source (unknown constant key)
+OK   loader refuses: unknown constant key
+OK   fixture differs from the source (unknown memory_map key)
+OK   loader refuses: unknown memory_map key
+OK   fixture differs from the source (unknown register key)
+OK   loader refuses: unknown register key
+OK   fixture differs from the source (unknown top-level key)
+OK   loader refuses: unknown top-level key
+OK   fixture differs from the source (regime knob without regime_set_consumer refused)
+OK   loader refuses: regime knob without regime_set_consumer refused
+OK   fixture differs from the source (unknown regime_set_consumer refused)
+OK   loader refuses: unknown regime_set_consumer refused
+OK   fixture differs from the source (missing export_active_sources refused)
+OK   loader refuses: missing export_active_sources refused
+OK   fixture differs from the source (regime window value outside the enum set)
+OK   loader refuses: regime window value outside the enum set
+OK   fixture differs from the source (unknown derivation)
+OK   loader refuses: unknown derivation
+OK   fixture differs from the source (export event row with an unknown key)
+OK   loader refuses: export event row with an unknown key
+OK   fixture differs from the source (tdata1 literal differing from the RTL refused)
+OK   loader refuses: tdata1 literal differing from the RTL refused
+OK   fixture differs from the source (MHPMCounterNum literal differing from the build configuration refused)
+OK   loader refuses: MHPMCounterNum literal differing from the build configuration refused
+OK   fixture differs from the source (active source outside the event table refused)
+OK   loader refuses: active source outside the event table refused
+OK   fixture differs from the source (export event wildcard row refused)
+OK   loader refuses: export event wildcard row refused
+OK   fixture differs from the source (default and default_from together)
+OK   loader refuses: default and default_from together
+OK   --check passes on the fresh scratch copy
+OK   --check fails on a mutated dv/auto_dv/tb/gen_tb_pkg.sv
+OK   --check passes again after restoring dv/auto_dv/tb/gen_tb_pkg.sv
+OK   --check fails on a mutated dv/auto_dv/tb/gen_env_cfg_knobs.svh
+OK   --check passes again after restoring dv/auto_dv/tb/gen_env_cfg_knobs.svh
+OK   --check fails on a mutated dv/auto_dv/gen_tb/gen_knobs.py
+OK   --check passes again after restoring dv/auto_dv/gen_tb/gen_knobs.py
+OK   --check fails on a mutated dv/auto_dv/isa/gen_isa_shim_map.h
+OK   --check passes again after restoring dv/auto_dv/isa/gen_isa_shim_map.h
+OK   --check fails on a mutated dv/auto_dv/env/gen_export_record_line.svh
+OK   --check passes again after restoring dv/auto_dv/env/gen_export_record_line.svh
+OK   --check fails on a mutated dv/auto_dv/env/gen_export_event_lines.svh
+OK   --check passes again after restoring dv/auto_dv/env/gen_export_event_lines.svh
+OK   --check passes on the restored scratch copy
+GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+codegen exit 0

@@ -927,3 +927,15 @@ checkout after every landing that touches gen_test_plan.md, the trace CSVs or dv
 (026 and 031 removed from its not_built, manifest re-rendered) land as one joint commit. T-153 re-retain scope is
 four logs (rst_boot, csr_reset, csr_trap_setup, pmp_csr_warl); isa_cti and cmp_zca stay STALE for a different cause
 (comparator rows pending T-144 and the R10 shim row) and the check must label the cause.
+
+## LOG-037 - 2026-09-03 - NOTE (tb-infra follow-up landing 1: three findings from running the inherited checker rules)
+
+tb-infra's follow-up landing (T-134, T-136, T-137, T-141, R10/R11 rows, all CM5/CR5/CM6/CR6/CM8/CS2 rows) reports:
+(1) the inherited T-136 rule was unsound in three ways found only by running it (driver-released-and-re-raised
+lines; raises between the previous record's post_mip sample and its retirement; classification from the model's
+stale mcause on NMIs the model does not emulate); the landed rule is documented in gen_component_api_irq_checker.md
+Section 1, with measured costs in the storm run (371 undecidable priority claims, 415 released expectations from
+UNTIL_TAKEN releasing untaken lines; landing 2 narrows it to the taken line). (2) Internal NMIs from injected
+integrity errors are legitimised by the driver's announcement (rtl/ibex_controller.sv:391-430), never by the DUT's
+own rvfi_ext_nmi_int. (3) The shim has no NMI emulation, so NMI-enabled results stay consistency-only for the model
+until landing 2. T-136's LOG-025 hold and T-137's LOG-026a hold lift only when both reviewers pass this landing.
