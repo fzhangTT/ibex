@@ -1392,3 +1392,19 @@ LOG-053 is withdrawn: tb-infra committed no violation. The Orchestrator erred by
 reported file set against the pending landing list it already held; rule for the Orchestrator: a shared-tree finding is
 compared with every open hand-off before it is logged. The interval between a window's CLOSE and the Orchestrator's commit
 is part of the window; teammates treat the shared tree as read-only for builds until the commit announcement.
+
+## LOG-054 - 2026-09-03 - The fcov checker cannot see cross bins; the flow derives a variable-form report (T-215)
+
+tb-infra's first rendered covergroups (gen_mul_ops_cg, gen_div_ops_cg, gen_isa_alu_reg_cg, 824 named bins, sampled from the
+RVFI record over a 10206-record lock-step run) show that ci/check_fcov_expectations.py reports every cross bin as
+MISSING-FROM-REPORT: urg's grpinfo.txt lists a cross under "Summary for Cross <cr>" (the checker matches only "Summary for
+Variable <cp>") and its Covered bins table gives the component tuple per row, never the user-defined bin name, while the
+manifests name cross bins as the tuple joined with "_". About two thirds of the 3792 referenced bins are crosses, so every
+promoted manifest would fail on its crosses even with the covergroups in place. Ruling: ci/ is the owner's and is not edited
+here (owner item Q-017 records the gap for the upstream checker); Runtime's gen_fcov.py derives, beside the original
+grpinfo.txt, a variable-form report in which each "Summary for Cross" becomes a variable section whose bin rows are
+<col1>_<col2>[_<col3>] with the row's count, and calls the checker on the derived report; the original is retained and the
+derivation is covered by a unit test on the sample grpinfo.txt tb-infra provides from its probe vdb (T-215). The DV Lead
+records the naming convention (cross bin = component tuple joined by "_"; SV-keyword bin names render as escaped identifiers
+that urg reports plainly) in the fcov plan. tb-infra keeps rendering crosses as designed; interim proof manifests may use
+variable bins only until T-215 lands, and the landing manifests are the real ones.
