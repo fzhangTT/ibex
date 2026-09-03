@@ -76,7 +76,7 @@ core   0: 3 0x800025b2 (0x203f2923) mem 0x800027c0 0x00000001
 ```
 
 The ROM is linked and loaded at DmHaltAddr; it is not executed here because standalone Spike has
-no debug request source (the TB's debug agent exercises it). Sidecar: seed 7, steps
+no debug request source (the TB's debug agent exercises it). Sidecar (pre-CRC digest: this run predates the CRC-32 change; the current digest is in Section 6): seed 7, steps
 ['generate', 'debug_rom_relocate', 'link', 'image', 'spike_check'], debug_rom = program, entry 0x80000080, 29396 words,
 sum32 0xefe41d6b.
 
@@ -200,3 +200,26 @@ same plusargs as Section 1) OK with steps generator_compile, generate, debug_rom
 image, spike_check (29396 words, crc32 0xa768741f, Spike exit 0, 14464 commit lines); the
 materialized `gen_build/target/` holds riscv_core_setting.sv, testlist.yaml and
 user_extension/{user_define.h, user_init.s, user_extension.svh}; generator compile 0 errors.
+
+## 7. Changes from the T-025/T-029 post-execution review (T-036, 06:20-06:24 UTC)
+
+Review: `dv/auto_dv/reviews/2026-09-03-claude-diff-881a771a-3c623e54.md` (APPROVE-WITH-CHANGES).
+The major (unsupported green re-run claim) is closed in `gen_t029_smoke_red_runs.md`, rewritten
+from real artifacts produced by the now-committed driver `dv/auto_dv/tb/gen_smoke_run.sh`.
+
+| Finding | Change in gen_program.py / target |
+|---|---|
+| medium: program not bound to the seed | `generate()` runs the compiled generator into a PRIVATE per-run directory `<out>/gen_run/` (symlinks to the build's `vcs_simv` and `vcs_simv.daidir`, its own materialized target, its own `asm_test/` and `seed.yaml`), requires exactly one `.S`, and cross-checks riscv-dv's recorded seed (`seed.yaml`: `<test>_0: '<n>'`) against `--seed`, failing loud on mismatch; the sidecar records `seed_used` |
+| minor: `has_debug_rom` substring | now a `^\s*\.section\s+\.debug_rom` directive match |
+| minor: DM budget | `check_link_constants` also checks `DM LENGTH == DmBaseAddr + DmAddrMask + 1 - DmHaltAddr` (0x800) and `check_debug_rom_budget` measures the linked `.debug_rom` PT_LOAD size against it (recorded as `debug_rom_bytes`); the testlist caps `+num_debug_sub_program=0` and documents the budget for the Test Writer |
+| minor: driver uncommitted | `dv/auto_dv/tb/gen_smoke_run.sh` (green/red/red/green sequence, per-run dirs, `runs_summary.txt`) |
+| minor: re-typed Spike windows and tool path | `-m` windows derived from `DmBaseAddr`, `DmAddrMask`, `GEN_BOOT_ADDR_DEFAULT` and the ld `PROG LENGTH` (`spike_mem_opts`), recorded in the sidecar as `memory_map`; Spike path overridable with `GEN_SPIKE_BIN`; one ISA string (now with `zca_zcb_zcmp`) used for every standalone run and destined for the shim's generated header |
+| minor: encodings table provenance | rtl-arch promoted it to `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md`; the T-023 evidence and `gen_zb_encoding_check.py` cite that path |
+| info: pre-CRC digest in Section 1 | marked as the pre-CRC run |
+
+Re-proof (`out_t036/stim/`): seed 7 debug program (`+gen_debug_section=1 +num_debug_sub_program=1`):
+seed_used 7, debug ROM 1748 bytes of the 0x800 budget, 29375 words,
+crc32 0x5c209be0, Spike exit 0 (14464 commit lines); seed 8 same test:
+seed_used 8, a different program (29007 words, crc32 0xceb54a21), Spike exit
+0; directed Zc program: crc32 0xcf0cb3b8, Spike exit 0. Each run's `gen_run/seed.yaml`
+holds its own seed; memory map recorded as {'boot_page': '0x80000000', 'prog_size': '0x100000', 'dm_base': '0x1a110000', 'dm_size': '0x1000', 'dm_halt': '0x1a110800', 'dm_budget': '0x800'}.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Which bitmanip mnemonics the lowRISC gcc 10.2 assembler accepts under -march=rv32imcb, and whether
-the emitted encodings match the RTL decoder table (rtl-arch's gen_rv32b_otearlgrey_encodings.md,
+the emitted encodings match the RTL decoder table (dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md,
 ENC; the expected fields below are transcribed from its rows 1-3). Evidence:
 dv/auto_dv/evidence/gen_t023_stimulus_toolchain.md. Usage (ci/env.sh sourced):
     python3 dv/auto_dv/stim/gen_zb_encoding_check.py <workdir>

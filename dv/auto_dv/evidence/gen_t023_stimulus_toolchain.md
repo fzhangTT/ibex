@@ -10,8 +10,8 @@ the fixed names riscv-dv requires are materialized out-of-tree by `dv/auto_dv/st
 per owner question Q-013's default), `dv/auto_dv/stim/gen_elf2mem.py`, and the two scripts that
 produce the numbers below: `dv/auto_dv/stim/gen_zb_encoding_check.py` (encoding check) and
 `dv/auto_dv/stim/gen_t023_flow.sh` (the T-023 bring-up driver; superseded by `gen_program.py`).
-The reference table is rtl-arch's `gen_rv32b_otearlgrey_encodings.md` (promotion to
-`dv/auto_dv/docs/` requested). No vendored file was modified. Post-execution review
+The reference table is `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` (promoted by rtl-arch
+from its working file; same body). No vendored file was modified. Post-execution review
 (APPROVE-WITH-CHANGES) changes applied in T-025: TINFO removed from the CSR list (not implemented
 by rtl/ibex_cs_registers.sv), MHPMCOUNTER3H..12H listed fully, digest changed to CRC-32 over
 (index, word) pairs, byte-granular segment merge, flow-time check of gen_link.ld against the SV
@@ -146,7 +146,7 @@ Entry and start of the program (objdump):
 Bitmanip mnemonics in the generated program (count): sh1add:10 orn:8 clmulr:7 bexti:7 sext.b:6 sh3add:5 min:5 binv:5 sext.h:4 rori:4 rol:4 minu:4 max:4 clz:4 clmul:4 andn:4 sh2add:3 maxu:3 xnor:2 ror:2 cpop:2 bseti:2 binvi:2 bext:2 bclri:2 ctz:1 clmulh:1 bset:1 bclr:1
 
 Assembler acceptance and encoding check against rtl-arch's decoder table
-(`dv/auto_dv/work/rtl-arch/gen_rv32b_otearlgrey_encodings.md`), one instance of every mnemonic
+(`dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md`), one instance of every mnemonic
 in that table assembled with `-march=rv32imcb` and its f7/f3/hi5/imm fields compared
 (`out_t023/zb_encoding_check.txt`; script `dv/auto_dv/stim/gen_zb_encoding_check.py`):
 

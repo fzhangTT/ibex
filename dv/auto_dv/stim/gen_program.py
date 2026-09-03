@@ -46,11 +46,14 @@ TARGET_STATIC = ["gen_link.ld", "gen_boot_stub.S", "gen_debug_rom_stub.S"]
 SV_WRAPPER = ROOT / "dv/auto_dv/tb/gen_dut_top.sv"
 SV_TB_PKG = ROOT / "dv/auto_dv/tb/gen_tb_pkg.sv"
 RISCV_DV = ROOT / "vendor/google_riscv-dv"
-SPIKE = ROOT / "tools/spike/bin/spike"
-# Spike ISA string for this DUT (SN/architecture sections C5): ratified extensions the model has.
-SPIKE_ISA = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zcb_zcmp_zicntr_zihpm_zicclsm"
-SPIKE_OPTS = ["--priv=mu", "--pmpregions=16", "--pmpgranularity=4", "--triggers=1",
-              "-m0x1a110000:0x1000,0x80000000:0x100000"]
+# Spike binary: tools/spike from SIM_RECIPE Section 11, overridable for a differently placed build.
+SPIKE = Path(os.environ.get("GEN_SPIKE_BIN", str(ROOT / "tools/spike/bin/spike")))
+# The one ISA string for the model (lock-step shim and standalone runs alike; the knobs codegen will
+# emit it into gen_isa_shim_map.h, until then this is the single definition): the ratified
+# extensions of RV32IMC + Zba/Zbb/Zbc/Zbs + Zca/Zcb/Zcmp, counters, misaligned support.
+SPIKE_ISA = "rv32imc_zicsr_zifencei_zba_zbb_zbc_zbs_zca_zcb_zcmp_zicntr_zihpm_zicclsm"
+# Memory windows are derived from the SV parameters and gen_link.ld at run time (spike_mem_opts()).
+SPIKE_OPTS = ["--priv=mu", "--pmpregions=16", "--pmpgranularity=4", "--triggers=1"]
 GCC_ISA = "rv32imcb"   # lowRISC gcc 10.2: draft-B march, accepts the ratified Zb* mnemonics
 GCC_ABI = "ilp32"
 
@@ -99,20 +102,58 @@ def sv_param(path: Path, name: str) -> int:
     return int(m.group(1).replace("_", ""), 16)
 
 
-def check_link_constants(ld: Path) -> None:
-    """gen_link.ld's MEMORY origins must equal the SV parameters they mirror; fail loud otherwise."""
+def ld_regions(ld: Path) -> dict:
+    """MEMORY regions of gen_link.ld: name -> (origin, length)."""
     text = ld.read_text()
-    origins = {m.group(1): int(m.group(2), 16) for m in re.finditer(r"^\s*(\w+)\s*\(\w+\)\s*:\s*ORIGIN\s*=\s*0x([0-9A-Fa-f]+)", text, re.M)}
+    regs = {}
+    for m in re.finditer(r"^\s*(\w+)\s*\(\w+\)\s*:\s*ORIGIN\s*=\s*0x([0-9A-Fa-f]+)\s*,\s*LENGTH\s*=\s*0x([0-9A-Fa-f]+)", text, re.M):
+        regs[m.group(1)] = (int(m.group(2), 16), int(m.group(3), 16))
+    return regs
+
+
+def check_link_constants(ld: Path) -> dict:
+    """gen_link.ld's MEMORY regions must match the SV parameters they mirror; fail loud otherwise.
+    Returns the derived memory map (boot page base, program window size, DM base/size, DM budget)."""
+    regs = ld_regions(ld)
     dm_halt = sv_param(SV_WRAPPER, "DmHaltAddr")
+    dm_base = sv_param(SV_WRAPPER, "DmBaseAddr")
+    dm_mask = sv_param(SV_WRAPPER, "DmAddrMask")
     boot = sv_param(SV_TB_PKG, "GEN_BOOT_ADDR_DEFAULT")
-    first_fetch = (boot & 0xFFFFFF00) | 0x80   # {boot_addr_i[31:8], 8'h80}, rtl/ibex_if_stage.sv:243
+    boot_page = boot & 0xFFFFFF00
+    first_fetch = boot_page | 0x80   # {boot_addr_i[31:8], 8'h80}, rtl/ibex_if_stage.sv:243
+    dm_budget = dm_base + dm_mask + 1 - dm_halt   # bytes from DmHaltAddr to the end of the DM window
     problems = []
-    if origins.get("DM") != dm_halt:
-        problems.append(f"DM origin 0x{origins.get('DM', 0):08x} != DmHaltAddr 0x{dm_halt:08x}")
-    if origins.get("PROG") != first_fetch:
-        problems.append(f"PROG origin 0x{origins.get('PROG', 0):08x} != first fetch 0x{first_fetch:08x}")
+    if "DM" not in regs or "PROG" not in regs:
+        problems.append("MEMORY regions DM and PROG not both found")
+    else:
+        if regs["DM"][0] != dm_halt:
+            problems.append(f"DM origin 0x{regs['DM'][0]:08x} != DmHaltAddr 0x{dm_halt:08x}")
+        if regs["DM"][1] != dm_budget:
+            problems.append(f"DM LENGTH 0x{regs['DM'][1]:x} != DmBaseAddr+DmAddrMask+1-DmHaltAddr 0x{dm_budget:x}")
+        if regs["PROG"][0] != first_fetch:
+            problems.append(f"PROG origin 0x{regs['PROG'][0]:08x} != first fetch 0x{first_fetch:08x}")
     if problems:
         sys.exit("gen_link.ld disagrees with the SV parameters: " + "; ".join(problems))
+    return {"boot_page": boot_page, "prog_size": 0x80 + regs["PROG"][1], "dm_base": dm_base,
+            "dm_size": dm_mask + 1, "dm_halt": dm_halt, "dm_budget": dm_budget}
+
+
+def spike_mem_opts(mm: dict) -> str:
+    """-m windows for Spike from the same map (4 KiB aligned by construction of the SV parameters)."""
+    return f"-m0x{mm['dm_base']:x}:0x{mm['dm_size']:x},0x{mm['boot_page']:x}:0x{mm['prog_size']:x}"
+
+
+def check_debug_rom_budget(elf: Path, mm: dict) -> int:
+    """The linked .debug_rom must fit the DM budget (the linker also refuses overflow; this gives the
+    Test Writer a clear message and records the size). Returns the ROM size in bytes."""
+    sys.path.insert(0, str(HERE))
+    import gen_elf2mem  # noqa: E402
+    _entry, segs, _syms = gen_elf2mem.parse_elf32(elf.read_bytes())
+    rom = [len(body) for vaddr, body in segs if vaddr == mm["dm_halt"]]
+    size = rom[0] if rom else 0
+    if size > mm["dm_budget"]:
+        sys.exit(f"debug ROM 0x{size:x} bytes exceeds the DM budget 0x{mm['dm_budget']:x}")
+    return size
 
 
 def build_generator(gen_build: Path, log: Path) -> None:
@@ -124,20 +165,37 @@ def build_generator(gen_build: Path, log: Path) -> None:
         sys.exit("generator compile failed")
 
 
-def generate(test: str, seed: int, gen_build: Path, sim_opts: str, log: Path) -> Path:
-    target = materialize_target(gen_build / "target")
+def generate(test: str, seed: int, gen_build: Path, gen_run: Path, sim_opts: str, log: Path) -> tuple[Path, int]:
+    """Run the compiled generator into a PRIVATE per-run directory so concurrent seeds never share
+    an asm_test/ or seed.yaml; return the .S and the seed riscv-dv recorded for it."""
+    if gen_run.exists():
+        shutil.rmtree(gen_run)
+    gen_run.mkdir(parents=True)
+    for name in ("vcs_simv", "vcs_simv.daidir"):
+        (gen_run / name).symlink_to(gen_build / name)
+    target = materialize_target(gen_run / "target")
     cmd = [sys.executable, "run.py", "--so", "-si", "vcs", "-ct", str(target),
            "-ext", str(target / "user_extension"), "--isa", "rv32imc_zba_zbb_zbc_zbs",
-           "--mabi", GCC_ABI, "-o", str(gen_build), "-tn", test, "--seed", str(seed),
+           "--mabi", GCC_ABI, "-o", str(gen_run), "-tn", test, "--seed", str(seed),
            "-s", "gen", "--noclean"]
     if sim_opts:
         cmd.append(f"--sim_opts={sim_opts}")
     if run(cmd, log, cwd=RISCV_DV):
         sys.exit("generation failed")
-    asms = sorted((gen_build / "asm_test").glob(f"{test}_*.S"), key=lambda p: p.stat().st_mtime)
-    if not asms:
-        sys.exit(f"no assembly produced for {test}")
-    return asms[-1]
+    asms = sorted((gen_run / "asm_test").glob(f"{test}_*.S"))
+    if len(asms) != 1:
+        sys.exit(f"expected exactly one {test}_*.S in {gen_run / 'asm_test'}, found {len(asms)}")
+    # Seed binding: riscv-dv records the seed it used per test in <out>/seed.yaml; it must be ours.
+    seed_yaml = gen_run / "seed.yaml"
+    if not seed_yaml.is_file():
+        sys.exit(f"{seed_yaml} missing: cannot prove which seed generated {asms[0].name}")
+    m = re.search(rf"^{re.escape(asms[0].stem)}:\s*'?(\d+)'?\s*$", seed_yaml.read_text(), re.M)
+    if not m:
+        sys.exit(f"{seed_yaml} has no entry for {asms[0].stem}")
+    used = int(m.group(1))
+    if used != seed:
+        sys.exit(f"seed mismatch: requested {seed}, riscv-dv used {used} for {asms[0].name}")
+    return asms[0], used
 
 
 def main() -> int:
@@ -172,10 +230,12 @@ def main() -> int:
         if not (gen_build / "vcs_simv").exists():
             build_generator(gen_build, out / "gen_compile.log")
             sidecar_extra["steps"].append("generator_compile")
-        asm = generate(args.test, args.seed, gen_build, args.sim_opts, out / "gen_run.log")
+        asm, seed_used = generate(args.test, args.seed, gen_build, out / "gen_run", args.sim_opts,
+                                  out / "gen_run.log")
         shutil.copy(asm, prog_s)
         sidecar_extra["steps"].append("generate")
         sidecar_extra["generator_build"] = str(gen_build)
+        sidecar_extra["seed_used"] = seed_used   # cross-checked against --seed by generate()
         if not args.no_debug_rom_reloc:
             if run([sys.executable, str(HERE / "gen_relocate_debug_rom.py"), str(prog_s), "--in-place"],
                    out / "reloc.log"):
@@ -191,12 +251,13 @@ def main() -> int:
         sidecar_extra["steps"].append("directed")
 
     # Step 2: assemble + link (after checking the linker script against the SV memory map)
-    check_link_constants(TARGET_SRC / "gen_link.ld")
+    mm = check_link_constants(TARGET_SRC / "gen_link.ld")
+    sidecar_extra["memory_map"] = {k: f"0x{v:x}" for k, v in mm.items()}
     inc_dir = materialize_target(out / "target") / "user_extension"
     elf = out / "prog.elf"
     # A program that carries its own .debug_rom (relocated riscv-dv ROM or a directed one) must
     # not also link the default stub, or the two would both claim DmHaltAddr.
-    has_debug_rom = any(".debug_rom" in p.read_text() for p in sources)
+    has_debug_rom = any(re.search(r"^\s*\.section\s+\.debug_rom\b", p.read_text(), re.M) for p in sources)
     stubs = [] if args.no_stubs else [TARGET_SRC / "gen_boot_stub.S"] + (
         [] if has_debug_rom else [TARGET_SRC / "gen_debug_rom_stub.S"])
     sidecar_extra["debug_rom"] = "program" if has_debug_rom else ("none" if args.no_stubs else "stub")
@@ -208,6 +269,7 @@ def main() -> int:
     if run(cmd, out / "gcc.log"):
         sys.exit("assemble/link failed")
     sidecar_extra["steps"].append("link")
+    sidecar_extra["debug_rom_bytes"] = check_debug_rom_budget(elf, mm)
     with open(out / "prog.dis", "w") as f:
         subprocess.run([tool("objdump"), "-d", str(elf)], stdout=f, check=False)
     with open(out / "prog.nm", "w") as f:
@@ -228,10 +290,11 @@ def main() -> int:
     # Step 4: optional Spike sanity run
     if args.spike_check:
         if not SPIKE.exists():
-            sys.exit(f"{SPIKE} missing; build it per docs/dv/SIM_RECIPE.md Section 11")
+            sys.exit(f"{SPIKE} missing; build it per docs/dv/SIM_RECIPE.md Section 11 or set GEN_SPIKE_BIN")
         entry = meta["entry"]
         cmd = ["timeout", str(args.spike_timeout), str(SPIKE), f"--isa={args.spike_isa}", *SPIKE_OPTS,
-               f"--pc={entry}", "--log-commits", f"--log={out / 'spike_commits.log'}", str(elf)]
+               spike_mem_opts(mm), f"--pc={entry}", "--log-commits",
+               f"--log={out / 'spike_commits.log'}", str(elf)]
         rc = run(cmd, out / "spike_stdout.log")
         meta["spike_check"] = {"exit": rc, "commit_lines": sum(1 for _ in open(out / "spike_commits.log"))
                                if (out / "spike_commits.log").exists() else 0}

@@ -1,0 +1,71 @@
+# Component API: gen_bridge (cocotb-to-UVM bridge)
+
+Owner: tb-infra. Status: skeleton written before the code (T-031, 2026-09-03; regenerated for the v2 component sections after the Critic's review); items marked
+"at build" are completed when the component lands (component SV opens after the TB architecture
+review). Source: `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` C2; DV_prompt.txt deliverable 4 (TB architecture document,
+component API documents). Conventions (shared by every component document): every runtime
+knob is a plusarg whose name is a `parameter string` in `gen_tb_pkg` (column 2 below) and a
+generated Python constant of the same value; every checker fails through `uvm_error` with its
+id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checker,
+`+gen_chk_all=0 +gen_chk_<id>=1` isolates one for mutation evidence (DV_prompt Section 8).
+
+## 1. Purpose
+
+The single object cocotb touches besides the alive/finish bits: a register-like SV interface
+through which Python hands commands (interrupt, debug, regime, key mode, error arming) to the UVM
+sequencers and receives event flags, without per-cycle polling on either side.
+
+## 2. Files (planned) and how to call it
+
+`dv/auto_dv/tb/gen_bridge_if.sv` (interface, instantiated in gen_tb_top), `dv/auto_dv/env/
+gen_bridge.sv` (UVM component holding sequencer handles from `uvm_config_db`), `gen_tb/
+gen_bridge.py` (Python side; handles from `gen_handles.py`).
+
+Python: set `alive`; await `listener_armed`; raise `stim_active`; per command write `cmd_kind`,
+`cmd_arg[0..3]`, `cmd_seq`, toggle `cmd_valid`, await the `cmd_ack` edge; await `evt_*` edges
+instead of polling; before finishing compare `cmds_consumed` with the sent count, drop
+`stim_active`, raise `finish_req`, await `finish_ack` with a caller-sized timeout. SV: `always
+@(posedge cmd_valid)` captures the fields and pushes a `gen_cmd_item` to the addressed sequencer.
+
+## 3. Knobs
+
+| Plusarg | gen_tb_pkg name | Meaning | Default |
+|---|---|---|---|
+| `+gen_alive_timeout=<cycles>` | `PLUSARG_ALIVE_TIMEOUT` | SV `$fatal` if `alive` is still 0 after this many cycles (TB_CONTRACT Section 2) | GEN_ALIVE_TIMEOUT_CYCLES |
+| `+gen_finish_timeout=<cycles>` | `PLUSARG_FINISH_TIMEOUT` | default finish-handshake budget (Python overrides per test) | gen_tb_pkg constant |
+
+## 4. Wave-level behaviour
+
+Register map: `alive`, `stim_active`, `cmd_valid`, `cmd_kind[7:0]` (IRQ_SET, IRQ_CLR, NMI_PULSE,
+DBG_REQ, REGIME_SET, KEY_MODE, MEM_ERR_ARM, ICACHE_ECC_ARM, FETCH_EN, MEM_PEEK, MISC), `cmd_arg[3:0][31:0]`,
+`cmd_seq[15:0]`, `cmd_ack`, `cmd_ack_seq[15:0]`, `peek_data[31:0]` (memory word answered with the ack of
+a MEM_PEEK whose `cmd_arg[0]` is the word address; the image read-back path, v2 XM-M4), `listener_armed`, `cmds_consumed[15:0]`,
+`evt_retired_target[31:0]` and `evt_cycle_target[31:0]` (Python writes thresholds), `evt_thresh_hit`
+(single-bit toggle SV raises when a threshold is reached; the only thing Python awaits for a
+threshold, A-01), `evt_irq_taken`, `evt_dbg_entered`, `evt_eot_seen` (single-bit toggles),
+`evt_retired_count[31:0]` and `evt_err_count[15:0]` (read once at finish, never awaited),
+`finish_req`, `finish_ack`. `cmd_valid` is a level toggled by Python; SV captures the fields in
+that delta and toggles `cmd_ack` the next cycle; two commands need two edges. No bridge signal is
+a DUT signal.
+
+## 5. Checkers
+
+| Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
+|---|---|---|---|
+| `bridge_accounting` | `cmds_consumed` equals Python's sent count at finish; every `cmd_seq` observed exactly once | n/a (TB self-check, TB_CONTRACT Section 5) | `+gen_chk_bridge_accounting=0` |
+
+## 6. Failure path and diagnostics
+
+`$fatal` alive watchdog; `uvm_error bridge_accounting`; Python `assert` on ack timeout (fails the
+cocotb test). Every Python-side string that may be logged or raised is pure ASCII (TB_CONTRACT
+Section 4); the gen_tests template enforces it. No per-cycle Python polling exists anywhere in the
+TB (A-01).
+
+## 7. Coverage hooks
+
+Command kinds and regime ids sampled into `gen_regime_cg` (layer-3 coverage).
+
+## 8. At build
+
+Fix the kind encodings and argument layouts in the knobs YAML so SV, Python and the shim share
+them.
