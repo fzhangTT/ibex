@@ -13,8 +13,9 @@ set -euo pipefail
 # review is in flight would otherwise be executed at a stale offset.
 if [ -z "${GEN_XR_RELOCATED:-}" ]; then
   _self_copy=$(mktemp /tmp/gen_cross_review.XXXXXX.sh); cp "$0" "$_self_copy"
-  GEN_XR_RELOCATED=1 GEN_XR_ORIG="$0" exec bash "$_self_copy" "$@"
+  GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
+trap 'rm -f "$GEN_XR_RELOCATED"' EXIT
 REPO=$(git rev-parse --show-toplevel); cd "$REPO"
 MODE=${1:?plan|diff|replan}; shift
 DATE=$(date +%Y-%m-%d)
