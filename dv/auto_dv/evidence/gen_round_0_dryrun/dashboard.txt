@@ -1,0 +1,28 @@
+Dashboard
+
+Date: Thu Sep  3 02:49:46 2026
+
+User: fzhang
+
+Version: X-2025.06-SP2
+Command line: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merged.vdb -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merge.log -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke.vdb -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke_cocotb.vdb -dump full_exclusions
+Number of tests: 2
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT         
+ 37.82   55.09 2397/4351   37.41 3579/9566    7.40 1994/26958    6.98 6/86   41.03 992/2418   79.01 143/181 
+
+
+-------------------------------------------------------------------------------
+Hierarchical coverage data for top-level instances 
+SCORE   LINE              COND              TOGGLE             FSM            BRANCH           ASSERT          NAME             
+ 38.04   55.09 2397/4351   37.41 3579/9566    7.40 1994/26958    6.98 6/86     41.03 992/2418   80.34 143/178  gen_smoke_tb_top 
+  0.00  --     --         --     --         --     --          --     --      --     --          0.00 0/3      uvm_pkg          
+
+
+-------------------------------------------------------------------------------
+Total Module Definition Coverage Summary 
+SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT        
+ 35.29   51.16 1948/3808   36.98 3259/8813    8.42 1699/20168    6.98 6/86   38.38 836/2178   69.84 88/126 
+

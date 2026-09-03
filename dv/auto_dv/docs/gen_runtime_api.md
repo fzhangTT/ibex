@@ -383,6 +383,36 @@ unverifiable) plus the schema rules; the vdb slice selection (`urg -tests`) is e
 real smoke vdb in `dv/auto_dv/evidence/gen_t045_fcov_wiring.md`; the bin-row parse on a real
 covergroup remains to be proven at the first covergroup.
 
+## 7d. gen_round.py (Phase 1 gate and closure-round measurement; DV_prompt Sections 4 and 5)
+
+```
+gen_round.py --round <n> [--label "Phase 1 gate"] [--elfile F ...] [--seeds N] [--base-seed S] [--tag T]
+gen_round.py --dry-run                      # check tier, UNMEASURED; evidence gen_round_0_dryrun; never a round
+gen_round.py --collect <regress outdir> --round <n>    # evidence + index from a regression that already ran
+```
+
+- One round = `gen_regress.py --tier full --purpose 4 --dump-exclusions [--elfile ...]` (coverage with
+  cond, every `-elfile` loaded with `-excl_strict`, a strict violation fails the regression), then the
+  evidence directory `dv/auto_dv/evidence/gen_round_<n>/` (never overwritten): `dashboard.txt`,
+  `hierarchy.txt`, `tests.txt`, `hierarchy_dut_rows.txt` (the DUT-scope rows), `groups.txt` and
+  `grpinfo.txt` when covergroups exist (else `groups_summary.txt` stating n/a),
+  `full_exclusions/fullexclude.<metric>` (the URG dump of this merge), `merge.log` and
+  `merge_log_warnings.txt` (counts per Warning/Error/Note class), `build_manifest_<build>.yaml`,
+  `testlist_snapshot.yaml` (with its sha256 in the index), `regress_manifest.yaml`, `elfiles/`, and
+  `gen_round_summary.md` (the human-readable page: metrics table, gate status, deltas, gain verdict,
+  streak).
+- Round index `dv/auto_dv/evidence/gen_rounds.yaml`: G, N, gate percent, then one entry per round
+  (metrics, gate per metric, per-metric deltas against the previous round, `max_gain`, `shows_gain`
+  when `max_gain >= G`, `no_gain_streak`, `stopping_rule_fired` when the streak reaches N, exclusion
+  files and strict violations, merge warning counts, git HEAD, testlist sha256). `gen_dashboard.py`
+  renders Section 1 from this index; dry runs sit under `dry_runs` and never count.
+- The n/a rule: a metric URG does not report (no column, or `--`) is `n/a` in the row, is not gated,
+  and is skipped in the gain computation; it is never written as 0 or 100.
+- Numbers: code metrics from the DUT-scope row of hierarchy.txt (`cov_trees` of the build entry);
+  functional coverage (Group) from the grand total (covergroups are TB-side gen_ instances).
+- The DV Lead requests a round through the queue (purpose 4, `tests: full`, `coverage: yes`); the
+  runtime role runs `gen_round.py --round <n>` and the Orchestrator commits the evidence directory.
+
 ## 8. Reproduction recipe
 
 From any manifest: `bash <run_dir>/run_cmd.sh` reruns the exact simv command with the same seed on

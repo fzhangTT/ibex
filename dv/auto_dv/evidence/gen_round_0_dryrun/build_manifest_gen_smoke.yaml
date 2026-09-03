@@ -1,0 +1,146 @@
+build: gen_smoke
+description: gen_smoke_tb_top around gen_dut_top, pure SV, opentitan configuration
+tb_top: gen_smoke_tb_top
+dut_instance: u_dut
+build_config: opentitan
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke
+simv: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/vcs_simv
+compile_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/compile.log
+coverage: true
+cov_metrics: line+cond+tgl+assert+fsm+branch
+cov_scope: gen_smoke_tb_top.u_dut
+cov_scopes:
+- gen_smoke_tb_top.u_dut
+rtl_root_override: null
+mutation_id: null
+rtl_substitutions: []
+build_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/build.vdb
+cocotb: false
+waves: false
+mirror: null
+defines: &id001
+- +define+RVFI
+constfile: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/constfile.txt
+command: vcs -full64 -sverilog -f /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/gen_rtl.f
+  -f /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/gen_smoke_tb.f -top
+  gen_smoke_tb_top -ntb_opts uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI +define+RVFI +define+BaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT
+  -pvalue+RV32E=0 +define+RV32M=ibex_pkg::RV32MSingleCycle +define+RV32B=ibex_pkg::RV32BOTEarlGrey +define+RV32ZC=ibex_pkg::RV32ZcaZcbZcmp
+  +define+RegFile=ibex_pkg::RegFileFF -pvalue+BranchTargetALU=1 -pvalue+WritebackStage=1 -pvalue+ICache=1
+  -pvalue+ICacheECC=1 -pvalue+ICacheScramble=1 -pvalue+BranchPredictor=0 -pvalue+DbgTriggerEn=1 -pvalue+SecureIbex=1
+  -pvalue+PMPEnable=1 -pvalue+PMPGranularity=0 -pvalue+PMPNumRegions=16 -pvalue+MHPMCounterNum=10 -pvalue+MHPMCounterWidth=32
+  -timescale=1ns/10ps -licqueue -LDFLAGS -Wl,--no-as-needed -CFLAGS '--std=c99 -fno-extended-identifiers'
+  -xlrm uniq_prior_final -lca -kdb -Mdir=/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/vcs_simv.csrc
+  -o /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/vcs_simv -debug_access+pp
+  -cm line+cond+tgl+assert+fsm+branch -cm_tgl portsonly -cm_tgl structarr -cm_report noinitial -cm_seqnoconst
+  -cm_dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/build.vdb -cm_hier
+  /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/cm_hier.cfg -diag noconst
+  -l /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/compile.log
+flag_groups:
+  base:
+  - -full64
+  - -sverilog
+  filelists:
+  - -f
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/gen_rtl.f
+  - -f
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/gen_smoke_tb.f
+  top:
+  - -top
+  - gen_smoke_tb_top
+  uvm:
+  - -ntb_opts
+  - uvm-1.2
+  - +define+UVM
+  - +define+UVM_REGEX_NO_DPI
+  defines: *id001
+  config:
+  - +define+BaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT
+  - -pvalue+RV32E=0
+  - +define+RV32M=ibex_pkg::RV32MSingleCycle
+  - +define+RV32B=ibex_pkg::RV32BOTEarlGrey
+  - +define+RV32ZC=ibex_pkg::RV32ZcaZcbZcmp
+  - +define+RegFile=ibex_pkg::RegFileFF
+  - -pvalue+BranchTargetALU=1
+  - -pvalue+WritebackStage=1
+  - -pvalue+ICache=1
+  - -pvalue+ICacheECC=1
+  - -pvalue+ICacheScramble=1
+  - -pvalue+BranchPredictor=0
+  - -pvalue+DbgTriggerEn=1
+  - -pvalue+SecureIbex=1
+  - -pvalue+PMPEnable=1
+  - -pvalue+PMPGranularity=0
+  - -pvalue+PMPNumRegions=16
+  - -pvalue+MHPMCounterNum=10
+  - -pvalue+MHPMCounterWidth=32
+  common:
+  - -timescale=1ns/10ps
+  - -licqueue
+  - -LDFLAGS
+  - -Wl,--no-as-needed
+  - -CFLAGS
+  - --std=c99 -fno-extended-identifiers
+  - -xlrm
+  - uniq_prior_final
+  - -lca
+  - -kdb
+  output:
+  - -Mdir=/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/vcs_simv.csrc
+  - -o
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/vcs_simv
+  debug:
+  - -debug_access+pp
+  coverage:
+  - -cm
+  - line+cond+tgl+assert+fsm+branch
+  - -cm_tgl
+  - portsonly
+  - -cm_tgl
+  - structarr
+  - -cm_report
+  - noinitial
+  - -cm_seqnoconst
+  - -cm_dir
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/build.vdb
+  - -cm_hier
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/cm_hier.cfg
+  - -diag
+  - noconst
+  extra: []
+  log:
+  - -l
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/compile.log
+inputs:
+  filelists:
+    dv/auto_dv/tb/gen_rtl.f: c6381fc0c3163d7b58891c26876ae8e7ebf1728c301b0fe298f3dae5f509b1f3
+    dv/auto_dv/tb/gen_smoke_tb.f: 0d78d609ee52105eae9c9b203d5cafb1b1e4fafd52fca9ff9f6fa518e1514792
+  sources_sha256: a2194c7af9c88b3f32e233192f1e82093f27515b0961599d9860ded2b5d9fd9e
+  source_count: 95
+staged_env_sh:
+  path: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/env.sh
+  sha256: bf1452b462e62f24735791e70c7086ecdcc59251051fdc9d330fe0cc9692ccfc
+git:
+  head: 57e9d2ad114d777a7c4f41b283bf635d611e719c
+  branch: cleanroom/run-a
+  dirty_tracked_files: true
+tools:
+  vcs: VCS X-2025.06-SP2_Full64
+  urg: X-2025.06-SP2
+  python: 3.12.10
+  cocotb: 1.9.2
+  vcs_home: /tools_vendor/synopsys/vcs/X-2025.06-SP2
+started_utc: '2026-09-03T06:48:50Z'
+vcs_rc: 0
+wall_s: 20.6
+timed_out: false
+compile_summary:
+  error_count: 0
+  error_classes: []
+  warning_classes:
+    LCA_FEATURES_ENABLED: 1
+    SIOB: 32
+  elab_ok: true
+  compiler_version: X-2025.06-SP2_Full64
+  cm_hier_note: true
+status: ok
+finished_utc: '2026-09-03T06:49:10Z'

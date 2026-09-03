@@ -1,0 +1,85 @@
+G: 0.5
+N: 5
+gate_pct: 80.0
+rounds: []
+dry_runs:
+- round: 0
+  dry_run: true
+  label: T-052 dry run of the measurement procedure (check tier, unmeasured)
+  date_utc: '2026-09-03T06:49:46Z'
+  evidence_dir: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/evidence/gen_round_0_dryrun
+  regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun
+  regress_tag: round_0_dryrun
+  git_head: 57e9d2ad114d777a7c4f41b283bf635d611e719c
+  build_config: opentitan
+  source: UNMEASURED merge (dry run / check tier)
+  tests_in_report: 2
+  runs:
+    planned: 2
+    pass: 2
+    fail: 0
+    xfail: 0
+    timeout: 0
+    not_run: 0
+    pass_rate_pct: 100.0
+    runs_without_fcov_manifest: 2
+    tests_without_fcov_manifest:
+    - gen_cocotb_probe
+    - gen_smoke
+  metrics:
+    line: 55.09
+    cond: 37.41
+    toggle: 7.4
+    fsm: 6.98
+    branch: 41.03
+    assert: 80.34
+    group: n/a
+    ratios:
+      line: 2397/4351
+      cond: 3579/9566
+      toggle: 1994/26958
+      fsm: 6/86
+      branch: 992/2418
+      assert: 143/178
+  gate:
+    line: below gate
+    cond: below gate
+    toggle: below gate
+    fsm: below gate
+    branch: below gate
+    assert: PASS
+    group: n/a (not reported by URG; excluded from the gate)
+  gain:
+    deltas:
+      line: n/a
+      cond: n/a
+      toggle: n/a
+      fsm: n/a
+      branch: n/a
+      assert: n/a
+      group: n/a
+    max_gain: null
+    shows_gain: null
+    G: 0.5
+  no_gain_streak: 0
+  stopping_rule_fired: null
+  exclusion_files: []
+  excl_strict: false
+  exclusion_violations: []
+  merge_warnings:
+    Note-[UCAPI-RCGLTCH]: 1
+    Note-[URG-RATIO]: 1
+    Note-[URG-RDG]: 1
+    Warning-[UCAPI-CSM]: 14
+  testlist_sha256: eb9e0ff3b00100c37d9fe21845bacb9e41582a441993a6017ef6e2ac7b2bcb16
+  copied:
+  - dashboard.txt
+  - hierarchy.txt
+  - tests.txt
+  full_exclusions_files:
+  - fullexclude.assert
+  - fullexclude.branch
+  - fullexclude.cond
+  - fullexclude.fsm
+  - fullexclude.line
+  - fullexclude.tgl

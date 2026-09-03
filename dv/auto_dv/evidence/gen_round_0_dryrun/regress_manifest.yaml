@@ -1,0 +1,362 @@
+kind: regression
+tag: round_0_dryrun
+request: null
+requester: null
+out_root: /proj_soc/user_dev/fzhang/ibex_dv_out
+out_root_fs: wekafs
+site_yaml: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/gen_site.yaml
+mutation: null
+purpose: null
+purpose_text: null
+build_config: opentitan
+scope:
+  tier: check
+  tests: null
+  group: null
+  repro: null
+  seeds_override: null
+  seed_list: null
+  base_seed: 52
+  coverage: true
+  cond: true
+  waves: false
+  local: false
+  max_parallel: 8
+planned_runs:
+- test: gen_smoke
+  seed: 703932661
+  build: gen_smoke
+- test: gen_cocotb_probe
+  seed: 1165104701
+  build: gen_smoke_cocotb
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun
+regress_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/regress.log
+git:
+  head: 57e9d2ad114d777a7c4f41b283bf635d611e719c
+  branch: cleanroom/run-a
+  dirty_tracked_files: true
+tools:
+  vcs: VCS X-2025.06-SP2_Full64
+  urg: X-2025.06-SP2
+  python: 3.12.10
+  cocotb: 1.9.2
+  vcs_home: /tools_vendor/synopsys/vcs/X-2025.06-SP2
+started_utc: '2026-09-03T06:48:47Z'
+status: done
+mirror_sync:
+  rc: 0
+  wall_s: 0.8
+builds:
+  gen_smoke:
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke
+    manifest: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/build_manifest.yaml
+    status: ok
+    rc: 0
+    wall_s: 22.2
+    timed_out: false
+    lsf: null
+    cov_metrics: line+cond+tgl+assert+fsm+branch
+    defines:
+    - +define+RVFI
+    constfile: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/constfile.txt
+    cov_scope: gen_smoke_tb_top.u_dut
+    cov_scopes:
+    - gen_smoke_tb_top.u_dut
+    vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke/build.vdb
+    mutation_id: null
+    rtl_root_override: null
+    rtl_substitutions: []
+    unmeasured_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke.vdb
+  gen_smoke_cocotb:
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke_cocotb
+    manifest: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke_cocotb/build_manifest.yaml
+    status: ok
+    rc: 0
+    wall_s: 20.9
+    timed_out: false
+    lsf: null
+    cov_metrics: line+cond+tgl+assert+fsm+branch
+    defines:
+    - +define+RVFI
+    constfile: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke_cocotb/constfile.txt
+    cov_scope: gen_smoke_tb_top.u_dut
+    cov_scopes:
+    - gen_smoke_tb_top.u_dut
+    vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke_cocotb/build.vdb
+    mutation_id: null
+    rtl_root_override: null
+    rtl_substitutions: []
+    unmeasured_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke_cocotb.vdb
+runs:
+- test: gen_cocotb_probe
+  seed: 1165104701
+  verdict: PASS
+  reason: no collected failure mechanism; end marker and config banner present
+  evidence: ''
+  exit_code: 0
+  timed_out: false
+  wall_s: 11.5
+  started_utc: '2026-09-03T06:49:31Z'
+  finished_utc: '2026-09-03T06:49:43Z'
+  build: gen_smoke_cocotb
+  build_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke_cocotb
+  build_config: opentitan
+  run_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701
+  sim_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701/sim.log
+  run_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701/run.log
+  run_cmd: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701/run_cmd.sh
+  sim_stdout_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701/sim_stdout.log
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke_cocotb.vdb
+  cm_name: test_gen_cocotb_probe_1165104701
+  waves: null
+  uvm_counts: {}
+  cocotb_summary:
+    tests: 1
+    passed: 1
+    failed: 0
+    skipped: 0
+  finish_seen: true
+  marker_seen: true
+  pass_marker: GEN_COCOTB_PROBE_PASS
+  banner_seen: true
+  banner:
+  - GEN_CONFIG_BANNER build_config=opentitan
+  - GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp
+    RegFile=RegFileFF
+  - GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+  - GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+  - GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+  - GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+  - GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28
+    LineSizeECC=78
+  - GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+  - GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+  - GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+  - GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst
+    (ibex_core defaults, all regions OFF)
+  - GEN_CONFIG_BANNER RVFI=1
+  - GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+  crash_signature: null
+  measured: false
+  mutation_id: null
+  expected_fail: false
+  owner: runtime
+  fcov_expectation_file: null
+  fcov_check: null
+  lsf:
+    job_id: '10931487'
+    host: soc-c-12
+    queue: regress
+    slots: 1
+    bsub_rc: 0
+    killed_reason: null
+    pend_s: 0.5
+    wall_s: 11.5
+    cpu_s: 1.04
+    max_mem: null
+    lsf_run_s: 14.0
+  cocotb_module: dv.auto_dv.flow.gen_cocotb_probe
+  mirror:
+    root: /proj_soc/user_dev/fzhang/ibex_dv_mirror
+    tree_sha256: b9707e853e0572db2c347f5e7e587a46dc0ba3511f9f21877d19fb262617bd9a
+    git_head: 57e9d2ad114d777a7c4f41b283bf635d611e719c
+  result_yaml: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_cocotb_probe_1165104701/result.yaml
+- test: gen_smoke
+  seed: 703932661
+  verdict: PASS
+  reason: no collected failure mechanism; end marker and config banner present
+  evidence: ''
+  exit_code: 0
+  timed_out: false
+  wall_s: 11.5
+  started_utc: '2026-09-03T06:49:31Z'
+  finished_utc: '2026-09-03T06:49:43Z'
+  build: gen_smoke
+  build_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/build/gen_smoke
+  build_config: opentitan
+  run_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661
+  sim_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661/sim.log
+  run_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661/run.log
+  run_cmd: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661/run_cmd.sh
+  sim_stdout_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661/sim_stdout.log
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke.vdb
+  cm_name: test_gen_smoke_703932661
+  waves: null
+  uvm_counts: {}
+  cocotb_summary: null
+  finish_seen: true
+  marker_seen: true
+  pass_marker: GEN_SMOKE_PASS
+  banner_seen: true
+  banner:
+  - GEN_CONFIG_BANNER build_config=opentitan
+  - GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp
+    RegFile=RegFileFF
+  - GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+  - GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+  - GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+  - GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+  - GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28
+    LineSizeECC=78
+  - GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+  - GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+  - GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+  - GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst
+    (ibex_core defaults, all regions OFF)
+  - GEN_CONFIG_BANNER RVFI=1
+  - GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+  crash_signature: null
+  measured: false
+  mutation_id: null
+  expected_fail: false
+  owner: tb-infra
+  fcov_expectation_file: null
+  fcov_check: null
+  lsf:
+    job_id: '10931486'
+    host: soc-c-15
+    queue: regress
+    slots: 1
+    bsub_rc: 0
+    killed_reason: null
+    pend_s: 0.5
+    wall_s: 11.5
+    cpu_s: 1.15
+    max_mem: null
+    lsf_run_s: 14.0
+  cocotb_module: null
+  mirror: null
+  result_yaml: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/runs/gen_smoke_703932661/result.yaml
+summary:
+  planned: 2
+  pass: 2
+  fail: 0
+  xfail: 0
+  timeout: 0
+  not_run: 0
+  pass_rate_pct: 100.0
+  runs_without_fcov_manifest: 2
+  tests_without_fcov_manifest:
+  - gen_cocotb_probe
+  - gen_smoke
+coverage:
+  status: ok_no_measured_tests
+  urg_rc: null
+  totals: {}
+  dut_scope: {}
+  note: 'every selected test is measured: false; no measured merge'
+  unmeasured:
+    status: ok
+    merged_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merged.vdb
+    report_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/report
+    dashboard_txt: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/report/dashboard.txt
+    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merge.log
+    urg_rc: 0
+    urg_wall_s: 2.6
+    urg_timed_out: false
+    urg_cmd: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merged.vdb
+      -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/report -log
+      /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/merge.log -show ratios
+      -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke.vdb -dir
+      /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke_cocotb.vdb
+      -dump full_exclusions
+    input_vdbs:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke.vdb
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/gen_smoke_cocotb.vdb
+    elfiles: []
+    excl_strict: false
+    exclusion_violations: []
+    full_exclusions_dump:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.assert
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.branch
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.cond
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.fsm
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.line
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude.tgl
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.assert
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.branch
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.cond
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.fsm
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.line
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_dryrun/cov_unmeasured/full_exclusions/fullexclude_module.tgl
+    totals:
+      line: 55.09
+      cond: 37.41
+      toggle: 7.4
+      fsm: 6.98
+      branch: 41.03
+      assert: 79.01
+      group: n/a
+      score: 37.82
+      ratios:
+        line: 2397/4351
+        cond: 3579/9566
+        toggle: 1994/26958
+        fsm: 6/86
+        branch: 992/2418
+        assert: 143/181
+      tests_in_report: 2
+      columns_reported:
+      - line
+      - cond
+      - toggle
+      - fsm
+      - branch
+      - assert
+    dut_scope:
+      gen_smoke_tb_top.u_dut:
+        line: 55.09
+        cond: 37.41
+        toggle: 7.4
+        fsm: 6.98
+        branch: 41.03
+        assert: 80.34
+        group: n/a
+        score: 38.04
+        ratios:
+          line: 2397/4351
+          cond: 3579/9566
+          toggle: 1994/26958
+          fsm: 6/86
+          branch: 992/2418
+          assert: 143/178
+        instance: gen_smoke_tb_top.u_dut
+    limited_design: false
+    tests:
+    - gen_cocotb_probe
+    - gen_smoke
+fcov:
+  totals:
+    checked: 0
+    pass: 0
+    unmet: 0
+    unverifiable: 0
+  per_test:
+    gen_cocotb_probe:
+      runs: 1
+      checked: 0
+      pass: 0
+      unmet: 0
+      unverifiable: 0
+      declared_bins: 0
+      unmet_bins: []
+    gen_smoke:
+      runs: 1
+      checked: 0
+      pass: 0
+      unmet: 0
+      unverifiable: 0
+      declared_bins: 0
+      unmet_bins: []
+  covergroups_exist: false
+lsf_cost:
+  jobs: 2
+  cpu_s: 2.2
+  wall_s: 23.0
+  pend_s: 1.0
+  slot_s: 23.0
+  cpu_unknown_jobs: 0
+finished_utc: '2026-09-03T06:49:46Z'
+wall_s: 60.2
+lsf_jobs_left:
+- '10931486'

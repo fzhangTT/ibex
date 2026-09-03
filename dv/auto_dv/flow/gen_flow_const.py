@@ -245,6 +245,15 @@ FINISH_RE = re.compile(r"^\$finish (at simulation time|called)")
 # --- URG dashboard metrics (DV_prompt Section 4: six code metrics + functional) --------------
 URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
 NOT_APPLICABLE = "n/a"
+# Gate and stopping rule (DV_prompt Section 4): 80 percent per gated metric; a round shows gain
+# when a gated metric improves by at least G points; stop after N consecutive rounds without gain.
+# A metric URG does not report is n/a: excluded from the gate and from the gain computation.
+GATE_PCT = 80.0
+ROUND_GAIN_G = 0.5
+ROUND_NO_GAIN_N = 5
+EVIDENCE_DIR = REPO_ROOT / "dv" / "auto_dv" / "evidence"
+ROUND_INDEX = EVIDENCE_DIR / "gen_rounds.yaml"
+ROUND_DIR_PREFIX = "gen_round_"
 
 
 def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:

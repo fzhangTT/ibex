@@ -104,10 +104,46 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
              "`n/a` means URG did not report the metric (never 0 or 100, DV_prompt Section 4). "
              "Ratios are covered/total objects.")
     L.append("")
-    rounds = [m for m in regs if m.get("purpose") == 4 and m.get("status") == "done"]
-    L.append("## 1. Closure rounds")
+    L.append("## 1. Closure rounds (from dv/auto_dv/evidence/gen_rounds.yaml, written by gen_round.py)")
     L.append("")
-    L.append(f"Closure-round count (purpose-4 full regressions with coverage): **{len(rounds)}**.")
+    index = U.load_yaml(C.ROUND_INDEX) if C.ROUND_INDEX.is_file() else None
+    if index is not None:
+        rnds = index.get("rounds") or []
+        L.append(f"Closure-round count: **{len(rnds)}**. Gate {C.GATE_PCT} percent per gated metric; gain rule G = "
+                 f"{index.get('G', C.ROUND_GAIN_G)} points on any gated metric; stop after N = {index.get('N', C.ROUND_NO_GAIN_N)} "
+                 f"rounds without gain. n/a = URG did not report the metric (excluded from gate and gain).")
+        L.append("")
+        if rnds:
+            L.append("| Round | Label | Date (UTC) | Runs pass/planned | Line | Cond | Toggle | FSM | Branch | Assert | Group | Max gain (pts) | Shows gain | No-gain streak | Evidence |")
+            L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+            for e in rnds:
+                mt = e.get("metrics") or {}
+                g = e.get("gain") or {}
+                L.append(f"| {e['round']} | {e.get('label') or '-'} | {e['date_utc']} | "
+                         f"{(e.get('runs') or {}).get('pass', '-')}/{(e.get('runs') or {}).get('planned', '-')} | "
+                         + " | ".join(metric_cell(mt, k) for k in C.URG_METRICS)
+                         + f" | {fmt(g.get('max_gain'))} | {g.get('shows_gain')} | {e.get('no_gain_streak')} | `{e['evidence_dir']}` |")
+            last = rnds[-1]
+            L.append("")
+            L.append(f"Stopping rule fired: **{last.get('stopping_rule_fired')}** (after round {last['round']}).")
+        else:
+            L.append("No closure round has run yet.")
+        drs = index.get("dry_runs") or []
+        if drs:
+            L.append("")
+            L.append("Dry runs of the procedure (UNMEASURED, check tier; not rounds, not counted):")
+            L.append("")
+            L.append("| Dry run | Date (UTC) | Source | Line | Cond | Toggle | FSM | Branch | Assert | Group | Evidence |")
+            L.append("|---|---|---|---|---|---|---|---|---|---|---|")
+            for e in drs:
+                mt = e.get("metrics") or {}
+                L.append(f"| {e.get('regress_tag')} | {e['date_utc']} | {e.get('source')} | "
+                         + " | ".join(metric_cell(mt, k) for k in C.URG_METRICS) + f" | `{e['evidence_dir']}` |")
+        L.append("")
+    rounds = [m for m in regs if m.get("purpose") == 4 and m.get("status") == "done"]
+    L.append("### 1a. Purpose-4 regressions seen in the out root (cross-check of the index)")
+    L.append("")
+    L.append(f"Purpose-4 full regressions with coverage in the out root: **{len(rounds)}**.")
     L.append("")
     if rounds:
         L.append("| Round | Tag / request | Started (UTC) | Runs pass/fail/total | Line | Cond | Toggle | FSM | Branch | Assert | Group | Gain vs prev (max pp) | LSF jobs | LSF CPU s | LSF slot s |")
@@ -128,7 +164,7 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
                      + f" | {gain} | {cost.get('jobs', '-')} | {fmt(cost.get('cpu_s'))} | {fmt(cost.get('slot_s'))} |")
             prev = cov
     else:
-        L.append("No closure round has run yet.")
+        L.append("None yet.")
     L.append("")
     L.append("## 2. Coverage per regression (every coverage-bearing run, newest last)")
     L.append("")
