@@ -100,6 +100,13 @@ gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb]
   compile_summary (error count and classes, warning classes with counts, compiler version), status
   `ok|failed`, wall_s. `status: ok` requires vcs rc 0, a simv, and zero `Error-[...]` lines.
 
+Export facts (plan sunset trigger C-3, agreed with the DV Lead): every build manifest carries `export_sources`,
+a list of `{source, event, fields}` rows copied one for one from the rendered knob table's EXPORT_EVENTS
+(exact rows only; a wildcard row fails the build), `export_source_names`, `export_knobs` (`gen_export_*`
+plusargs with their compiled defaults) and `export_record_fields`; the regression manifest mirrors
+`export_sources` and `export_knobs` under `builds.<name>`. The table is read from the source root (the
+committed tree in head mode), never re-typed. `gen_flow_util.export_facts` is the reader.
+
 ## 2. gen_run.py (one test, one seed)
 
 ```

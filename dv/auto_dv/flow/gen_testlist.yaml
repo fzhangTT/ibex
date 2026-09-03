@@ -229,6 +229,29 @@ tests:
     component: gen_isa_shim
     measured: false
 
+  - name: gen_ut_export
+    description: record and event export test (TB Infra T-080) running the lock-step boot flow with +gen_export_file, two flushes and a read-back of the export file bound to the flush sequence; checks the rendered field list, record counts, first-fetch pc, tohost stores and pc continuity
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_export_file=gen_export.txt
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: [bringup, export]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    component: gen_export_pkg
+    measured: false
+
   # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)
   - name: gen_test_boot_retire
     description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; the timing-only regime knobs are drawn and scheduled from the seed only when the build has a REGIME_SET consumer (none at HEAD, logged GEN_TEST_LAYERS not_applied) (Test Writer)

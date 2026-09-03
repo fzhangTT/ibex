@@ -290,6 +290,13 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "red_expect_policy [fire_id] accepts signatures that name a fire_ id")
+    # export_facts on the real rendered table: exact rows only, every row a (source, event, fields) triple.
+    ef = export_facts()
+    cond = len(ef["export_sources"]) >= 1 and all(set(r) == {"source", "event", "fields"} for r in ef["export_sources"]) \
+        and not any("*" in r["source"] or "*" in r["event"] for r in ef["export_sources"]) \
+        and "gen_export_file" in ef["export_knobs"]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"export_facts from the rendered table: {len(ef['export_sources'])} exact rows over sources {ef['export_source_names']}, knobs {sorted(ef['export_knobs'])}")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -333,6 +340,36 @@ def require_under_source_root(mod: Any, name: str) -> None:
     root = C.SOURCE_ROOT.resolve()
     if not f or root not in Path(f).resolve().parents:
         die(f"{name} was imported from {f!r}, not from the source root {root}")
+
+
+def knobs_module() -> Any:
+    """TB Infra's rendered knob table imported from the source root (and verified to live there)."""
+    import importlib
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
+    try:
+        knobs = importlib.import_module(C.KNOBS_MODULE)
+    except ModuleNotFoundError as e:
+        die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered knob table is the origin of knobs and export events")
+    require_under_source_root(knobs, C.KNOBS_MODULE)
+    return knobs
+
+
+def export_facts() -> dict[str, Any]:
+    """What a build of this source tree can export, copied row for row from the rendered table (plan sunset
+    trigger C-3): export_sources = [{source, event, fields}] (one exact event per row, no wildcards) and
+    export_knobs = {plusarg: compiled default} for the gen_export_* knobs."""
+    k = knobs_module()
+    rows = [{"source": str(r[0]), "event": str(r[1]), "fields": [str(f) for f in (r[2] if len(r) > 2 else [])]}
+            for r in getattr(k, "EXPORT_EVENTS", ())]
+    bad = [r for r in rows if "*" in r["source"] or "*" in r["event"]]
+    if bad:
+        die(f"rendered EXPORT_EVENTS still carries wildcard rows {bad}; the exact table is required")
+    # PLUSARGS is keyed by knob name; the plusarg string sits in each row.
+    knobs = {p["plusarg"]: p.get("default") for p in getattr(k, "PLUSARGS", {}).values()
+             if isinstance(p, dict) and str(p.get("plusarg", "")).startswith("gen_export")}
+    return {"export_sources": rows, "export_source_names": sorted({r["source"] for r in rows}),
+            "export_knobs": knobs, "export_record_fields": list(getattr(k, "EXPORT_RECORD_FIELDS", ()))}
 
 
 def debug_only_from_knobs() -> set[str]:
