@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 15:56 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 16:01 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -4326,6 +4326,11 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 
 ---------------------------------------------------------------------------------------------------
 ## Test groups
+
+Runtime class: short = a few thousand instructions, one seed sweep of a smoke item; medium = the
+corner-heavy Phase-1 items (directed-in-random with handler traffic); long = Phase-2 random
+regimes (>= 20000 instructions per seed, multiple regimes per run).
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_isa_alu | TP-ISA-001, 002, 003, 004, 005, 006, 007, 008, 009, 052 | 1 | smoke/targeted | short/medium |
@@ -4364,6 +4369,12 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 | gen_btalu_dit_xfail | TP-BTALU-016 | 1 | targeted | medium |
 | gen_btalu_random | TP-BTALU-017 | 2 | full | long |
 | gen_btalu_perf_b17_xfail | TP-BTALU-018 | 1 | targeted | medium |
+
+Expected-fail items (5): TP-CMP-051 (B4), TP-CMP-065 (B8), TP-BTALU-008 (B13), TP-BTALU-016 (B11),
+TP-BTALU-018 (B17). Informational, excluded from the pass gate (2): TP-ISA-051 (B14 record
+confirmation), TP-ISA-057 (rvfi_trap quirk on the illegal ebreak variant). Doc-mismatch items (2):
+TP-MUL-012 (D7), TP-BIT-030 (D8); D20 (mhpmevent read value) is cited by TP-ISA-023 / TP-BTALU-015
+without changing their Expected (no value is predicted from the doc).
 
 ## New checkers requested
 
@@ -6855,6 +6866,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Bins: CG-PRV-007.cr_mret_dbg.m_dm_rom, CG-PRV-007.cr_mret_dbg.u_dm_rom, CG-PRV-007.cr_mret_dbg.m_outside, CG-PRV-007.cr_mret_dbg.u_outside, CG-PRV-007.cp_event.mret_in_dbg, CG-PRV-004.cr_kind_priv_trap.mret_dbg_ok, CG-PRV-004.cr_kind_priv_trap.ecall_dbg_trap
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_csr_access | TP-CSR-001, 002, 003, 004, 005, 012 | 1 | smoke/targeted | short |
@@ -6887,6 +6899,26 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_csr_debug_csr_b15b_xfail | TP-CSR-076 | 1 | targeted | - |
 | gen_prv_debug_b1_xfail | TP-PRV-014 | 1 | targeted | - |
 | gen_prv_debug_b2_xfail | TP-PRV-035 | 1 | targeted | - |
+
+Expected-fail items: TP-CSR-075 and TP-CSR-076 (B15), TP-CSR-083 (B3), TP-PRV-014 (B1),
+TP-PRV-035 (B2). TP-CSR-075 joins the B15 list because an all-ones write necessarily sets bit 13
+(gen_bug_log.md B15 row to be extended by the DV Lead).
+Doc-mismatch items (pass, RTL followed): TP-CSR-017 (D12), TP-CSR-024 (D2), TP-CSR-032 (D1),
+TP-CSR-042/043/044/045/046 (D3), TP-CSR-061 and TP-CSR-107 (D20), TP-CSR-081, TP-CSR-084 and TP-CSR-108 (D4).
+RTL-defined items (B6 ruling C-20, pass): TP-CSR-018, TP-PRV-004, TP-PRV-026, TP-PRV-039 (mret inside debug
+mode, F-PRV-036); RTL-defined NMI-mode mret target (jump to the current mepc_q, CSR values from mstack):
+TP-PRV-010 (F-PRV-011 note).
+Fact-check (T-053) fold: X-1 applied to TP-CSR-018/035/040 and TP-PRV-004/005/008/010/024/029; X-2 to
+TP-PRV-001/006/008/014 and every U-mode item (C-2 reference); X-3/D20 to TP-CSR-061/107; X-7 to
+TP-CSR-031/103; X-8 to TP-PRV-018/019; X-17 to TP-CSR-064/065/066; UNREACHABLE rows TP-CSR-004/095/101
+constrained (C-SWEEP); UNOBSERVABLE rows TP-CSR-002/092/093 (P7 probe-gated, boundary form) and
+TP-PRV-029 (C-14); mtval excluded from TP-CSR-008; TP-CSR-011 conditioned on the implemented set;
+TP-CSR-102 restated per field.
+Documented behaviour with a design-weakness note (B12, pass): TP-CSR-094.
+B5 (dcsr.nmip): owner item TP-DBG-021; TP-CSR-074/075/108 exclude bit 3 from their compare.
+Canonical feature IDs owned by this area group (F-CSR-002/003/005/019/020/024/026/032/035/085/099,
+F-PRV-005/007/010/014/015/016/036) are each cited directly by at least one item above; items that cite
+an ALIAS or FOLDED ID (per the Status lines in gen_part_csr.md) resolve to the canonical entry.
 
 ## New checkers requested
 
@@ -8324,6 +8356,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix, knob:irq_hold
 - Fire-check: rvfi_ext_pre_mip of the entry has >= 2 bits set that are enabled in mie (>= 2 pending-and-enabled at the decision cycle) and the handler read-back mcause equals the RTL-order winner (fast lowest id > external > software > timer) (observable at RVFI and the irq pins).
 - Pass criteria: gen_chk_irq (priority); gen_isa_compare; gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.fast_external, CG-IRQ-002.cp_set.fast_software, CG-IRQ-002.cp_set.fast_timer, CG-IRQ-002.cp_set.external_software, CG-IRQ-002.cp_set.external_timer, CG-IRQ-002.cp_set.software_timer, CG-IRQ-002.cp_set.three_plus, CG-IRQ-002.cr_set_winner.fast_external_fast, CG-IRQ-002.cr_set_winner.fast_software_fast, CG-IRQ-002.cr_set_winner.fast_timer_fast, CG-IRQ-002.cr_set_winner.external_software_external, CG-IRQ-002.cr_set_winner.external_timer_external, CG-IRQ-002.cr_set_winner.software_timer_software, CG-IRQ-002.cr_set_winner.three_plus_fast, CG-IRQ-002.cr_set_winner.three_plus_external, CG-IRQ-002.cr_late_winner.none_fast, CG-IRQ-002.cr_late_winner.none_external, CG-IRQ-001.cr_line_others.fast_0_others_pending_lower, CG-IRQ-001.cr_line_others.external_others_pending_lower, CG-IRQ-001.cr_line_others.software_others_pending_lower, CG-IRQ-001.cr_line_others.fast_14_others_pending_lower, CG-IRQ-004.cp_pulse_width.level_until_ack, CG-IRQ-002.cp_late.none, CG-IRQ-001.cp_others.only_this, CG-IRQ-001.cp_others.others_enabled_idle, CG-IRQ-001.cp_others.others_pending_lower
@@ -8338,6 +8371,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix
 - Fire-check: the pin monitor shows >= 2 fast lines high at the decision cycle (rvfi_ext_pre_mip agrees) and the handler read-back mcause == {1'b1, 5'(CSR_MFIX_BIT_LOW + lowest set index)} (observable at RVFI). [export-rows: pin irq_fast] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record has >= 2 fast bits set and the mcause read-back == the lowest id)
 - Pass criteria: gen_chk_irq; gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.fast_fast, CG-IRQ-002.cr_set_winner.fast_fast_fast, CG-IRQ-002.cp_fast_gap.adjacent, CG-IRQ-002.cp_fast_gap.far, CG-IRQ-002.cp_fast_gap.ends, CG-IRQ-002.cr_gap_winner.adjacent_fast, CG-IRQ-002.cr_gap_winner.far_fast, CG-IRQ-002.cr_gap_winner.ends_fast, CG-WIT-001.cp_clause.w_tp_irq_015
@@ -8352,6 +8386,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_hold
 - Fire-check: NUM_IRQ_LINES consecutive entries whose read-back mcause sequence is fast ids CSR_MFIX_BIT_LOW..CSR_MFIX_BIT_HIGH ascending, then ExcCauseIrqExternalM, ExcCauseIrqSoftwareM, ExcCauseIrqTimerM, with the pin monitor confirming that only the acknowledged line dropped between entries (observable at RVFI and the irq pins).
 - Pass criteria: gen_chk_irq (priority order incl. the timer fall-through); gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_set.all18, CG-IRQ-002.cr_set_winner.all18_fast, CG-IRQ-002.cp_drain.first, CG-IRQ-002.cp_drain.middle, CG-IRQ-002.cp_drain.last18, CG-IRQ-002.cr_drain_winner.first_fast, CG-IRQ-002.cr_drain_winner.middle_fast, CG-IRQ-002.cr_drain_winner.middle_external, CG-IRQ-002.cr_drain_winner.middle_software, CG-IRQ-002.cr_drain_winner.last18_timer
@@ -8562,6 +8597,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix, knob:irq_hold
 - Fire-check: the pin monitor shows B rising (or A dropping) exactly one cycle after the decision cycle identified by the irq monitor (pipe empty with a takeable line) and rvfi_ext_pre_mip shows A only; the read-back mcause is B when B is higher or A dropped, else A; for the +2 offset the cause is A (observable at the irq pins and RVFI). [export-rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc irq_pending] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record shows A only and the mcause read-back is B / A per class)
 - Pass criteria: gen_chk_irq (cause from the IRQ_TAKEN-cycle lines); gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_priority
 - Bins: CG-IRQ-002.cp_late.higher_added, CG-IRQ-002.cp_late.lower_added, CG-IRQ-002.cr_late_winner.higher_added_fast, CG-IRQ-002.cr_late_winner.higher_added_nmi_ext, CG-IRQ-002.cr_late_winner.higher_added_external, CG-IRQ-002.cr_late_winner.lower_added_external, CG-IRQ-002.cr_late_winner.lower_added_software, CG-IRQ-002.cr_late_winner.lower_added_fast, CG-IRQ-004.cp_change_before_taken.higher_added, CG-IRQ-004.cp_change_before_taken.lower_added, CG-IRQ-004.cp_change_before_taken.dropped_winner_other_remains, CG-IRQ-004.cr_pulse_change_outcome.three_plus_higher_added_taken_other_line, CG-IRQ-004.cr_pulse_change_outcome.three_plus_lower_added_taken, CG-IRQ-004.cr_pulse_change_outcome.three_plus_dropped_winner_other_remains_taken_other_line, CG-IRQ-004.cr_ctx_outcome.id_empty_taken_other_line, CG-IRQ-001.cp_rvfi_marks.pre_post_mip_differ, CG-IRQ-001.cr_line_marks.timer_pre_post_mip_differ, CG-WIT-001.cp_clause.w_tp_irq_031
@@ -8660,6 +8696,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:irq_line_mix
 - Fire-check: both pins rise in the same cycle (pin monitor), rvfi_ext_pre_mip of the first entry has the regular bit set while rvfi_ext_nmi == 1, the first mcause read-back is 0x8000001F and the second entry (after the mret) has the regular cause (observable at the irq pins and RVFI). [export-rows: pin irq_nm; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the first entry has the regular bit set with rvfi_ext_nmi == 1; mcause read-backs 0x8000001F then the regular cause)
 - Pass criteria: gen_chk_irq (priority); gen_chk_nmi; gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_nmi
 - Bins: CG-IRQ-002.cp_set.nmi_fast, CG-IRQ-002.cp_set.nmi_external, CG-IRQ-002.cp_set.nmi_software, CG-IRQ-002.cp_set.nmi_timer, CG-IRQ-002.cr_set_winner.nmi_fast_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_external_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_software_nmi_ext, CG-IRQ-002.cr_set_winner.nmi_timer_nmi_ext, CG-IRQ-002.cp_winner.nmi_ext, CG-WIT-001.cp_clause.w_tp_irq_038
@@ -8758,6 +8795,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Knobs: knob:dmem_err_rate, knob:irq_line_mix, knob:irq_hold
 - Fire-check: irq_nm_i is high in the decision cycle in which the internal NMI pending flag is also set (corrupted response already seen, no entry yet); the first entry has rvfi_ext_nmi == 1 with mcause read-back 0x8000001F and mtval 0; the entry right after the handler's mret has rvfi_ext_nmi_int == 1 with mcause 0xFFFFFFE0 and mtval == the corrupted access address (observable at the irq pins, data bus and RVFI). [export-rows: pin irq_nm; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first entry has rvfi_ext_nmi == 1 and the entry after its mret has rvfi_ext_nmi_int == 1 with the read-backs listed)
 - Pass criteria: gen_chk_nmi (priority, internal flag not cleared by the external entry); gen_chk_bus_intg_rsp; gen_chk_csr_readback
+- Notes: credit rule (Critic fu1, LOG-037b): this item is credited only from interrupt entries whose expected-cause claim was decidable (one pending-and-enabled line, or the priority order resolves the set); entries undecidable at the decision sample (the T-136 storm run had 371 of 919) are counted, not credited.
 - Expected: pass
 - Test group: gen_irq_nmi_int
 - Bins: CG-IRQ-008.cp_pending_ctx.ext_nmi_same_cycle, CG-IRQ-008.cr_op_ctx.load_ext_nmi_same_cycle, CG-IRQ-008.cr_op_ctx.store_ext_nmi_same_cycle, CG-IRQ-007.cp_source.both_same_cycle, CG-IRQ-007.cr_source_ctx.both_same_cycle_user_code, CG-IRQ-007.cr_source_ctx.both_same_cycle_exc_handler, CG-IRQ-007.cr_source_ctx.int_ecc_after_mret_still_high, CG-IRQ-002.cp_set.nmi_ext_nmi_int, CG-IRQ-002.cr_set_winner.nmi_ext_nmi_int_nmi_ext, CG-WIT-001.cp_clause.w_tp_irq_045
@@ -9279,6 +9317,37 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 | gen_irq_debug | TP-IRQ-029, 041, 042, 043, 078, 080 | 1 | targeted | medium |
 | gen_irq_reset | TP-IRQ-019, 059, 060, 067 | 1 | targeted | short |
 | gen_irq_regime | TP-IRQ-071, 072, 073, 074, 075, 076, 077 | 2 | full | long |
+
+
+| group | items | phase | tier | runtime class |
+|---|---|---|---|---|
+| gen_exc_sync_causes | TP-EXC-001, 007, 016, 022, 023, 024, 026 | 1 | smoke | short |
+| gen_exc_fetch_fault | TP-EXC-002, 003, 004, 005 | 1 | targeted | short |
+| gen_exc_illegal | TP-EXC-008, 009, 010, 011, 013 | 1 | targeted | short |
+| gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 070 | 1 | targeted | medium |
+| gen_exc_priority_info | TP-EXC-065 (informational; own `_info` test, C-15) | 1 | targeted | short |
+| gen_exc_ebreak_ecall | TP-EXC-017, 018, 020, 021 | 1 | targeted | short |
+| gen_exc_zcmp | TP-EXC-014, 042, 043, 044 | 1 | targeted | medium |
+| gen_exc_lsu_fault | TP-EXC-025, 027, 028, 029, 030, 031, 032, 033, 034, 036, 037, 038, 039 | 1 | targeted | medium |
+| gen_exc_debug_mode | TP-EXC-019, 045, 046, 047, 048 | 1 | targeted | medium |
+| gen_exc_trap_state | TP-EXC-041, 049, 060, 062, 063, 064, 066, 067, 068, 069 | 1 | targeted | short |
+| gen_exc_mret | TP-EXC-050, 051, 052, 053, 061 | 1 | smoke (050) / targeted | short |
+| gen_exc_double_fault | TP-EXC-054, 055, 056, 057, 058, 059 | 1 | smoke (054) / targeted | short |
+| gen_exc_regime | TP-EXC-071, 072, 073, 074 | 2 | full | long |
+| gen_irq_lines | TP-IRQ-001, 002, 003, 004, 005, 006, 013 | 1 | smoke (001-004) / targeted | short |
+| gen_irq_csr | TP-IRQ-008, 009, 010, 011, 012, 017, 018, 020, 070 | 1 | targeted | short |
+| gen_irq_priority | TP-IRQ-014, 015, 016, 031, 065 | 1 | targeted | short |
+| gen_irq_timing | TP-IRQ-021, 022, 023, 024, 025, 026, 027, 030, 063, 064, 066 | 1 | targeted | medium |
+| gen_irq_handler | TP-IRQ-028, 032, 033, 034, 061, 062 | 1 | targeted | short |
+| gen_irq_nmi | TP-IRQ-007, 035, 036, 037, 038, 039, 040, 079 | 1 | smoke (007) / targeted | short |
+| gen_irq_nmi_int | TP-IRQ-044, 045, 046, 047, 048 | 1 | smoke (044) / targeted | medium |
+| gen_irq_wfi | TP-IRQ-049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 068, 069 | 1 | smoke (049) / targeted | medium |
+| gen_irq_debug | TP-IRQ-029, 041, 042, 043, 078, 080 | 1 | targeted | medium |
+| gen_irq_reset | TP-IRQ-019, 059, 060, 067 | 1 | targeted | short |
+| gen_irq_regime | TP-IRQ-071, 072, 073, 074, 075, 076, 077 | 2 | full | long |
+
+Runtime classes: short < 2 min per seed; medium 2-10 min per seed (many iterations, aligned
+drivers, deep stalls); long > 10 min per seed (random regimes, multi-seed).
 
 ## New checkers requested
 
@@ -10997,6 +11066,31 @@ Conventions used below:
 | gen_pmp_priority | TP-PMP-043, 044, 045, 046 | 1 | targeted | medium |
 | gen_pmp_random_regime | TP-PMP-100, 101, 102, 103, 104, 105, 106, 107, 109, 110 | 2 | full | long |
 | gen_pmp_recfg | TP-PMP-053, 063, 090, 091 | 1 | smoke/targeted | medium |
+| gen_pmp_reset | TP-PMP-010 | 1 | smoke | short |
+
+
+| group | items | phase | tier | estimated runtime class |
+|---|---|---|---|---|
+| gen_pmp_csr_warl | TP-PMP-001, TP-PMP-002, TP-PMP-003, TP-PMP-004, TP-PMP-005, TP-PMP-006, TP-PMP-007, TP-PMP-008 | 1 | smoke/targeted | short |
+| gen_pmp_data_fault | TP-PMP-069, TP-PMP-080, TP-PMP-081, TP-PMP-082, TP-PMP-083 | 1 | smoke/targeted | medium |
+| gen_pmp_debug | TP-PMP-009, TP-PMP-094, TP-PMP-095, TP-PMP-096, TP-PMP-097, TP-PMP-098, TP-PMP-099 | 1 | targeted | medium |
+| gen_pmp_debug_xfail | TP-PMP-074 (expected-fail B2, own test) | 1 | targeted | medium |
+| gen_pmp_fetch_fault | TP-PMP-064, TP-PMP-065, TP-PMP-066, TP-PMP-067, TP-PMP-068, TP-PMP-076, TP-PMP-077, TP-PMP-078, TP-PMP-079 | 1 | smoke/targeted | medium |
+| gen_pmp_icache_dummy | TP-PMP-092, TP-PMP-093 | 1 | targeted | medium |
+| gen_pmp_lock | TP-PMP-013, TP-PMP-014, TP-PMP-015, TP-PMP-016, TP-PMP-017, TP-PMP-018, TP-PMP-019, TP-PMP-020, TP-PMP-021, TP-PMP-112 | 1 | targeted | short |
+| gen_pmp_mode_trans | TP-PMP-111 | 1 | targeted | medium |
+| gen_pmp_match_na4 | TP-PMP-032, TP-PMP-033 | 1 | targeted | medium |
+| gen_pmp_match_napot | TP-PMP-034, TP-PMP-035, TP-PMP-036, TP-PMP-037 | 1 | targeted | medium |
+| gen_pmp_match_tor | TP-PMP-038, TP-PMP-039, TP-PMP-040, TP-PMP-041, TP-PMP-042 | 1 | targeted | medium |
+| gen_pmp_misaligned | TP-PMP-084, TP-PMP-085, TP-PMP-086, TP-PMP-087, TP-PMP-088, TP-PMP-089 | 1 | targeted | medium |
+| gen_pmp_mprv | TP-PMP-070, TP-PMP-071, TP-PMP-072, TP-PMP-075 | 1 | targeted | medium |
+| gen_pmp_mprv_xfail | TP-PMP-073 (expected-fail B1, own test) | 1 | targeted | medium |
+| gen_pmp_mseccfg | TP-PMP-011, TP-PMP-012, TP-PMP-022, TP-PMP-023, TP-PMP-024, TP-PMP-025, TP-PMP-026, TP-PMP-027, TP-PMP-028, TP-PMP-029, TP-PMP-030, TP-PMP-031, TP-PMP-108 | 1 | targeted | short |
+| gen_pmp_perm_mml0 | TP-PMP-047, TP-PMP-048, TP-PMP-049, TP-PMP-050, TP-PMP-051, TP-PMP-052 | 1 | smoke/targeted | medium |
+| gen_pmp_perm_mml1 | TP-PMP-054, TP-PMP-055, TP-PMP-056, TP-PMP-057, TP-PMP-058, TP-PMP-059, TP-PMP-060, TP-PMP-061, TP-PMP-062 | 1 | full/targeted | medium |
+| gen_pmp_priority | TP-PMP-043, TP-PMP-044, TP-PMP-045, TP-PMP-046 | 1 | targeted | medium |
+| gen_pmp_random_regime | TP-PMP-100, TP-PMP-101, TP-PMP-102, TP-PMP-103, TP-PMP-104, TP-PMP-105, TP-PMP-106, TP-PMP-107, TP-PMP-109, TP-PMP-110 | 2 | full | long |
+| gen_pmp_recfg | TP-PMP-053, TP-PMP-063, TP-PMP-090, TP-PMP-091 | 1 | smoke/targeted | medium |
 | gen_pmp_reset | TP-PMP-010 | 1 | smoke | short |
 
 ## New checkers requested
@@ -14407,6 +14501,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Bins: CG-PMC-003.cp_variant.fence_i, CG-PMC-003.cr_variant_rel.fencei_gt
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_dbg_haltreq | TP-DBG-001, 002, 004, 005, 006, 007, 008, 009, 014, 015, 069, 071 | 1 | smoke/targeted | short |
@@ -14442,6 +14537,9 @@ fcov_dbg_trg_pmc.md. Conventions:
 | gen_trg_csr_xfail | TP-TRG-008 | 1 | targeted | short |
 | gen_trg_fire_xfail | TP-TRG-020 | 1 | targeted | short |
 | gen_pmc_hpm_b20_fencei_xfail | TP-PMC-061 | 1 | targeted | - |
+
+Runtime classes: short < 2 min per seed on the verified flow; medium 2-10 min (slow-memory
+regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA model).
 
 ## New checkers requested
 
@@ -18441,6 +18539,7 @@ draw weights of the agent / program generator per transaction.
   CG-IC-005.cp_off_window.long, CG-IC-005.cr_off_window_x_hit.long_hit, CG-IC-005.cr_off_window_x_hit.short_hit, CG-WIT-001.cp_clause.w_tp_ic_057
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_imem_proto_basic | TP-IMEM-001, 002, 003, 004, 006, 007, 009, 029, 039 | 1 | smoke | short |
@@ -18480,6 +18579,11 @@ draw weights of the agent / program generator per transaction.
 | gen_imem_proto_basic_info | TP-IMEM-040 | 2 | targeted | - |
 | gen_dmem_proto_basic_info | TP-DMEM-062 | 2 | targeted | - |
 | gen_dmem_err_info | TP-DMEM-063 | 1 | targeted | - |
+
+Total: 189 items in 34 groups; TP-IMEM-040, TP-DMEM-062 (Q-DL-9 unsolicited-rvalid demonstrations, one
+per bus), TP-DMEM-063 (B14 two-record confirmation) and TP-IC-038 (multi-way hit, software-constraint
+violation) are informational and outside the pass gate, each its own `_info` test; TP-DMEM-064 (B16) is the
+area's only expected-fail item and its own `_xfail` test (C-15).
 
 ## New checkers requested
 
@@ -22282,6 +22386,8 @@ TP-CHERI-002.
 
 ---------------------------------------------------------------------------------------------------
 ## Test groups
+---------------------------------------------------------------------------------------------------
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_sec_cpuctrlsts | TP-DIT-001; TP-SEC-033, 034 | 1 | smoke/targeted | short |
@@ -22324,6 +22430,7 @@ TP-CHERI-002.
 | gen_rvfi_random | TP-RVFI-037 | 2 | full | long |
 | gen_cheri_off_quiet | TP-CHERI-001, 002, 003, 004; TP-RVFI-033 | 1 | smoke/targeted | short |
 
+---------------------------------------------------------------------------------------------------
 ## New checkers requested
 ---------------------------------------------------------------------------------------------------
 
@@ -23575,6 +23682,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Bins: CG-REG-006.cp_pmp_regime_tr.mml_on_to_off, CG-REG-006.cp_pmp_regime_tr.mml_on_to_sparse, CG-REG-006.cp_pmp_regime_tr.mml_on_to_dense
 
 ## Test groups
+
 | Group | Items | Phase | Tier | Runtime class |
 |---|---|---|---|---|
 | gen_reg_knob_sweep | TP-REG-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014, 015, 016, 017 | 1 | targeted | medium (one sweep run per knob; K >= number of values) |

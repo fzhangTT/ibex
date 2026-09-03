@@ -20,7 +20,7 @@ dv/auto_dv/evidence/gen_sunset_pass<n>/ with the landing). The plan parts it edi
 import os, sys, re, pathlib, shutil, subprocess, yaml
 R = next(p for p in pathlib.Path(__file__).resolve().parents if (p / 'dv/auto_dv/contract').is_dir()); W = R / 'dv/auto_dv/work/dv-lead'
 S = pathlib.Path(os.environ.get('GEN_SCRATCH', str(W / 'scratch_sunset')))  # rehearsal copies; never the docs directory
-TOKEN = '[CYCLE-CLAUSE coverage-only until the event export lands]'
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, present as row_present  # one definition (CM20-L-4)
 AREAS = ['isa', 'csr', 'exc_irq', 'pmp', 'dbg_trg_pmc', 'mem_fetch_icache', 'sec_rst_rvfi_cheri', 'xcut']
 args = sys.argv[1:]; manifest = None; dry = '--dry' in args; rehearse = '--rehearse' in args
 if '--build-manifest' in args: manifest = pathlib.Path(args[args.index('--build-manifest') + 1])
@@ -32,7 +32,7 @@ if (obs_override is not None or excl_override is not None) and not (dry or rehea
 man = yaml.safe_load(open(manifest)) or {}
 if 'export_sources_emitted' not in man: sys.exit('manifest has no export_sources_emitted field: nothing sunsets on the rendered table')
 emitted = {(x['row'] if isinstance(x, dict) and 'row' in x else (f"{x['source']} {x['event']}" if isinstance(x, dict) else str(x))) for x in (man['export_sources_emitted'] or [])}
-def present(tok): return any(re.fullmatch(r'pin irq_fast\d*', r) for r in emitted) if tok == 'pin irq_fast' else tok in emitted
+def present(tok): return row_present(tok, emitted)
 def split_rows(txt):
     out = []; depth = 0; cur = ''
     for ch in txt:
@@ -48,7 +48,7 @@ if obs_override is not None: observed = {r.strip() for r in obs_override.split('
 elif excl_override is not None: observed = emitted - {r.strip() for r in excl_override.split(';') if r.strip()}; obs_origin = 'rehearsal override: emitted minus --exclude-rows'
 elif obs_field in man: observed = rowset(man[obs_field]); obs_origin = f'manifest key {obs_field}'
 else: sys.exit(f'SUNSET REFUSED: the manifest has export_sources_emitted ({len(emitted)} rows) but no observed-row list ({obs_field}, T-140); no item loses its token on a declaration')
-def observed_ok(tok): return any(re.fullmatch(r'pin irq_fast\d*', r) for r in observed) if tok == 'pin irq_fast' else tok in observed
+def observed_ok(tok): return row_present(tok, observed)
 plan = []; gated = []
 for a in AREAS:
     p = W / f'parts6/tp_{a}.md'; t = p.read_text(); edits = []

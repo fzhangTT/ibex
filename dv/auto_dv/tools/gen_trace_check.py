@@ -20,6 +20,7 @@ Options (export_sources entries may be "<source> <event>" strings or {source, ev
 """
 import re, csv, sys, argparse, collections, pathlib
 R = pathlib.Path(__file__).resolve().parents[1]; D = R / 'docs'
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_marker import TOKEN, WILDCARD_TOKENS, present  # one definition (CM20-L-4)
 ap = argparse.ArgumentParser()
 ap.add_argument('--knobs', default=str(R / 'tb' / 'gen_tb_knobs.yaml'))
 ap.add_argument('--build-manifest', default=None)
@@ -28,7 +29,6 @@ ap.add_argument('--build-manifest', default=None)
 ap.add_argument('--observed-field', default='export_rows_observed', help='manifest key of the observed-row list (T-140)')
 ap.add_argument('--exclude-rows', default=None, help='rehearsal only, refused when the manifest carries the observed list: treat the emitted rows minus these (semicolon-separated) as the observed list')
 args = ap.parse_args()
-TOKEN = '[CYCLE-CLAUSE coverage-only until the event export lands]'
 def blocks(text, prefix):
     return {m.group(1): m.group(2) for m in re.finditer(r'^### (' + prefix + r'-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)', text, re.M | re.S)}
 fl = (D/'gen_feature_list.md').read_text(); tp = (D/'gen_test_plan.md').read_text(); fc = (D/'gen_fcov_plan.md').read_text()
@@ -108,7 +108,6 @@ def split_rows(txt):
     if cur.strip(): out.append(cur.strip())
     return out
 PLAN_DEMANDED_ROWS = {'icram lookup', 'icram tag_write', 'icram fill_write'}  # gen_test_plan.md Section 0, WP-8
-WILDCARD_TOKENS = {'pin irq_fast'}  # stands for any irq_fast<n> row
 tok_check = []
 marked = {}; wit_errors = []
 for tid, b in tps.items():
@@ -150,9 +149,6 @@ for row in knobs.get('export_events', []):
 VOCAB = yaml_rows | PLAN_DEMANDED_ROWS | WILDCARD_TOKENS  # a yaml row cannot drift from the list: the list is the yaml
 for tid, tok in tok_check:
     if tok not in VOCAB: wit_errors.append(f'{tid}: export row "{tok}" is neither a rendered yaml row nor a plan-demanded row (gen_test_plan.md Section 0)')
-def present(tok, rows):
-    if tok == 'pin irq_fast': return any(re.fullmatch(r'pin irq_fast\d*', r) for r in rows)
-    return tok in rows
 in_yaml = [tid for tid, rows in marked.items() if rows and all(present(t, yaml_rows) for t in rows)]
 sunset_fail = []; export_sources = None; sunset_note = ''
 if args.build_manifest and not pathlib.Path(args.build_manifest).exists():
@@ -168,7 +164,7 @@ elif args.build_manifest:
         if args.exclude_rows is not None: observed = export_sources - {r.strip() for r in args.exclude_rows.split(';') if r.strip()}; obs_origin = 'REHEARSAL (no observed list in the manifest): emitted minus --exclude-rows; this run cannot gate a sunset'
         elif args.observed_field in man: observed = rowset(man[args.observed_field]); obs_origin = f'manifest key {args.observed_field}'
         else: observed = None; obs_origin = f'no observed-row list ({args.observed_field}, T-140): sunset refused, no item un-marks on a declaration'
-        obs_ok = (lambda t: any(re.fullmatch(r'pin irq_fast\d*', r) for r in observed) if t == 'pin irq_fast' else t in observed) if observed is not None else (lambda t: False)
+        obs_ok = (lambda t: present(t, observed)) if observed is not None else (lambda t: False)
         sunset_fail = [tid for tid, rows in marked.items() if rows and all(obs_ok(t) for t in rows)]
         sunset_gated = [tid for tid, rows in marked.items() if rows and all(present(t, export_sources) for t in rows) and not all(obs_ok(t) for t in rows)]
         renderable = len([tid for tid, rows in marked.items() if rows and rendered is not None and all(present(t, rendered) for t in rows)])
