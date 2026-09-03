@@ -1088,3 +1088,22 @@ needed. The relaunched 2a review is running. rtl-arch reports that the times it 
 were estimates that drifted hours ahead of the clock (the file mtimes were on cadence); from 16:29Z its stamps come
 from date -u. The same drift was reported earlier by tb-infra (LOG-031 period). Rule for all roles: stamps come from
 the clock, never from an estimate; the watchdog reads mtimes and is unaffected.
+
+## LOG-042 - 2026-09-03 - HOLD (batch-2 acceptance wave: 13 of 24 greens fail the template's schedule check; round 0 held for the triage)
+
+The batch-2 acceptance wave test-writer-049..064 (head mode pinned to d3c6ca8, served 16:17-16:29Z, survived the login
+expiry) gives 11 PASS, 13 FAIL, 8 RED-OK, 0 NOT_RUN; every run's GEN_TEST_BINS equals its committed manifest, UVM_ERROR
+0 on every PASS, every red RED-OK on its pinned fire id (cmp_zca and isa_cti reds included), cmp_zcmp_basic 3 of 3 PASS
+with slow_total rounds 3, 3, 1 as LOG-030 intends. Every one of the 13 FAILs carries one signature, the template's
+fire_schedule_applied check ("reached N of M scheduled entries by EOT, applied 6, missed [layer entries such as
+imem_outstanding_cap:cap8@c1871, dmem_rvalid_delay:random@c16270, scr_key_delay:withheld_then_valid@c158]"): cmp_zca
+1/3, bit_ratified 0/3, isa_alu 1/3, isa_shift 2/3, isa_cti 1/3, mul_div 0/3, mul_mul 3/3. The same tests passed at
+seed 1 on a local ce33b4f export before landing 2a (7ef16a0's l9g proofs); the wave ran on a tree carrying 2a
+(taken-line-only release, storm mean 100). "applied 6" on every failing run points at a cap or a stop in the
+dispatcher or the schedule runner rather than at the DUT; whether the drawn schedule is applied by the TB or is
+unreachable within the program is the triage question. Ruling: the Test Writer leads the triage with tb-infra
+(reproduce one failing seed locally on d3c6ca8, read the GEN_CMD_DISPATCH and GEN_TEST_PHASE lines, decide whether the
+template's check, the schedule draw or a layer driver is wrong; a fix lands as the Test Writer's or tb-infra's next
+landing with a red); round 0 stays held until both the T-178 review and this triage conclude, because a measured
+round whose smoke tier fails on a TB-side schedule check would not be a Phase 1 gate baseline. LOG-024 remains lifted;
+the wave counts as batch-2 acceptance evidence for the 11 greens and 8 reds only.
