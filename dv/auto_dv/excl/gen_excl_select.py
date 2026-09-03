@@ -113,6 +113,44 @@ def ann_D2b(where, statereg, spare, guard, proof):
 # ---------------------------------------------------------------------------------------------
 # Selection spec = gen_exclusions_draft.md Parts A.3-A.7, C.2, C rows 12/30/32/42-43
 # ---------------------------------------------------------------------------------------------
+# A.8 carve-backs (draft v2 A.8 and its v1 list): objects that are LIVE in RV32I mode and must never be
+# selected whatever range or predicate would pick them. Signature regexes are matched against the
+# dump entry line; ranges are RTL lines. Applied as the last filter over every shared-module entry.
+CARVE_BACK = {
+    # mstack_epc_cap_q updates on every non-debug trap (mstack_en, :933); pcc_cap_d / tf_cap / tr_cap /
+    # pcc_exc_cap are live NETS (no toggle object under portsonly) whose gated consumers stay excludable
+    "ibex_cs_registers": {"sig": [r"mstack_epc_cap_q", r"_combi\b"], "lines": []},
+    "ibex_controller": {"sig": [r"illegal_insn_d\s*="], "lines": [(827, 840), (909, 914), (923, 926)]},
+    "ibex_id_stage": {"sig": [r"instr_kill", r"instr_is_rv32lsu_id"], "lines": [(1033, 1036)]},
+    "ibex_core": {"sig": [r"rvfi_id_done\s*=", r"branch_target_ex\s*=", r"alert_major_internal_o\s*="], "lines": [(1851, 1853)]},
+    "ibex_load_store_unit": {"sig": [r"resp_is_cap_q\s*<=", r"resp_lc_clrperm_q\s*<="], "lines": [(650, 653), (664, 667)]},
+    "ibex_decoder": {"sig": [r"illegal_insn\s*=\s*1'b1;"], "lines": []},
+    "ibex_register_file_ff": {"sig": [r"rf_shared\[", r"wshared_data", r"we_shared_r0", r"rf_shared_r0_q", r"rcap_r0", r"we_data_r0", r"rf_data_r0_q"], "lines": []},
+    "ibex_cheriot_ex": {"sig": [r"csr_mshwm_new_o"], "lines": [(699, 737), (943, 960), (970, 973), (991, 994)]},
+}
+
+
+def carved_back(mod, line_text, rtl_line):
+    cb = CARVE_BACK.get(mod)
+    if not cb:
+        return False
+    if rtl_line is not None and in_ranges(rtl_line, cb["lines"]):
+        return True
+    return any(re.search(rx, line_text) for rx in cb["sig"])
+
+
+MODULE_RTL = {"ibex_core": "rtl/ibex_core.sv", "ibex_id_stage": "rtl/ibex_id_stage.sv", "ibex_decoder": "rtl/ibex_decoder.sv",
+              "ibex_compressed_decoder": "rtl/ibex_compressed_decoder.sv", "ibex_controller": "rtl/ibex_controller.sv",
+              "ibex_load_store_unit": "rtl/ibex_load_store_unit.sv", "ibex_cs_registers": "rtl/ibex_cs_registers.sv",
+              "ibex_if_stage": "rtl/ibex_if_stage.sv", "ibex_wb_stage": "rtl/ibex_wb_stage.sv", "ibex_multdiv_fast": "rtl/ibex_multdiv_fast.sv",
+              "ibex_icache": "rtl/ibex_icache.sv", "ibex_register_file_ff": "rtl/ibex_register_file_ff.sv", "ibex_cheriot_ex": "rtl/ibex_cheriot_ex.sv"}
+# class-D 2a default arms: the guard analysis cannot see the enum width, the enum declaration is the cone
+EXPLICIT_BLOCK_RANGES = {("ibex_id_stage", (968, 970)), ("ibex_multdiv_fast", (238, 240)), ("ibex_icache", (1268, 1268)),
+                         ("ibex_controller", (990, 993)), ("ibex_load_store_unit", (605, 607)), ("ibex_multdiv_fast", (522, 524)),
+                         # case items of states the k-induction proofs show are never held (T022_LSU_NO_CTX, T022_CRX_IDLE):
+                         # the cone is the state register, not a guard term
+                         ("ibex_load_store_unit", (565, 603)), ("ibex_load_store_unit", (616, 623))}
+
 BLOCKS = [  # (module, [(lo,hi)...], annotation)
     ("ibex_core", [(2223, 2225)], ann_T("rtl/ibex_core.sv:2223-2225 RVFI cap-read arm (resp_is_cap_q)", "T022_LSU_CHERI0", "+define+RVFI builds only.")),
     ("ibex_id_stage", [(901, 908)], ann_T("rtl/ibex_id_stage.sv:901-908 cheriot_lsu_req_dec case item (Part C row 29)", "T022_ID_CHERI0, T022_DEC_CHERI0")),
@@ -404,7 +442,9 @@ CHERIOT_EX_CONST_ZERO_MULTI = {
     "cheriot_adder_a_sel_i", "cheriot_adder_b_sel_i", "cheriot_cap_field_sel_i", "cheriot_cs2_dec_i",
     "cheriot_imm12_i", "cheriot_imm20_i", "cheriot_imm21_i", "cheriot_operator_i", "cheriot_setaddr_sel_i",
     "cheriot_setbounds_sel_i", "csr_addr_o", "csr_op_o", "cheriot_lsu_wcap", "csc_wcap", "csr_wcap_o",
-    "lsu_wcap_o", "result_cap_o", "rf_rcap_a_i", "rf_rcap_b_i", "ztop_rcap_i"}
+    "lsu_wcap_o", "result_cap_o", "rf_rcap_a_i", "rf_rcap_b_i", "ztop_rcap_i",
+    # the same constants seen from ibex_cs_registers (its cheriot_csr_* inputs are cheriot_ex's csr_*_o)
+    "cheriot_csr_addr_i", "cheriot_csr_op_i", "cheriot_csr_wdata_i", "cheriot_csr_wcap_i", "cheriot_branch_target_i"}
 CHERIOT_EX_EVIDENCE = ("constant under the cheriot_enable_i tie: yosys constant propagation, "
                        "t022_flat.il connect list (gen_t022_regen.sh step 3) and the decoder defaults "
                        "rtl/ibex_decoder.sv:297-303 with CHERIoT-only assignments; T022_DEC_CHERI0, T022_ID_CHERI0")
@@ -437,6 +477,18 @@ def load_enum_values(pkg_paths):
 
 
 ENUMS = load_enum_values(["rtl/ibex_cheriot_pkg.sv", "rtl/ibex_pkg.sv"])
+
+
+def load_config():
+    """opentitan -pvalue+ integers and +define+ enum names from util/ibex_config.py (never re-typed)."""
+    cfg = subprocess.run([sys.executable, "util/ibex_config.py", "opentitan", "vcs_opts"], check=True,
+                         capture_output=True, text=True).stdout
+    pvals = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
+    defs = {m.group(1): m.group(2).split("::")[-1] for m in re.finditer(r"\+define\+(\w+)=(\S+)", cfg)}
+    return pvals, defs
+
+
+PVALS, DEFS = load_config()
 RE_EQ = re.compile(r"^\(?\s*([\w.]+)\s*(==|!=)\s*([\w:']+)\s*\)?$")
 
 
@@ -470,12 +522,24 @@ def ex_const(expr, _depth=0):
     m = RE_NAME.match(o)
     if m:
         nm = m.group(1)
-        if nm in CHERIOT_EX_CONST0_1BIT or nm.split(".")[-1] in CONST0 or nm.startswith("cheriot_operator_i."):
+        base = nm.split(".")[-1]
+        if nm in CHERIOT_EX_CONST0_1BIT or base in CONST0 or nm.startswith(("cheriot_operator_i.", "cheriot_operator_o.")) \
+                or re.search(r"_en_cheriot$|cheriot_asr_err", base):
             return 0
         if nm.split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI and "." in nm:
             return 0      # a field of an all-zero struct
+        if nm in PVALS and PVALS[nm] in (0, 1):
+            return PVALS[nm]          # elaboration parameter of the opentitan configuration
         return None
     m = RE_EQ.match(o)
+    if m and m.group(1) in DEFS:      # e.g. RV32B == RV32BFull with RV32B = RV32BOTEarlGrey
+        eq = 1 if DEFS[m.group(1)] == m.group(3).split("::")[-1] else 0
+        return eq if m.group(2) == "==" else 1 - eq
+    if m and m.group(1) in PVALS:
+        lv = lit_value(m.group(3))
+        if lv is not None:
+            eq = 1 if PVALS[m.group(1)] == lv else 0
+            return eq if m.group(2) == "==" else 1 - eq
     if m and m.group(1).split(".")[0] in CHERIOT_EX_CONST_ZERO_MULTI:
         lv = lit_value(m.group(3))
         if lv is None:
@@ -704,7 +768,25 @@ def main():
     ap.add_argument("--attempts", action="append", default=[], help="URG attempts.log of a strict load; listed objects are refuted and dropped")
     ap.add_argument("--allow-unfilled-ec3", action="store_true",
                     help="emit the three class-D spare-encoding default arms although their EC-3 attempts/failures are not filled (F-3 open)")
+    ap.add_argument("--ec3-asserts", help="URG asserts.txt of a MEASURED regression (<outdir>/cov/report/asserts.txt): fills the "
+                    "EC-3 fields of the class-D spare-encoding groups from its ATTEMPTS / FAILURES columns and emits them (F-3)")
+    ap.add_argument("--ec3-round", default="<round>", help="round tag written into the filled EC-3 fields (e.g. round_1)")
     a = ap.parse_args()
+    # EC-3 fill (F-3): the guarding assertion of each class-D spare-encoding arm must show attempts > 0 and
+    # failures == 0 in the measured regression; read from URG's asserts.txt detail rows
+    # (columns: ASSERTIONS CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE).
+    EC3_GUARDS = ("IbexCtrlStateValid", "IbexLsuStateValid", "IbexMultDivStateValid")
+    ec3 = {}
+    if a.ec3_asserts:
+        for raw in Path(a.ec3_asserts).read_text(errors="replace").splitlines():
+            m = re.match(r"^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$", raw)
+            if m and m.group(1).split(".")[-1] in EC3_GUARDS:
+                ec3[m.group(1).split(".")[-1]] = {"attempts": int(m.group(4)), "successes": int(m.group(5)), "failures": int(m.group(6))}
+        missing = [g for g in EC3_GUARDS if g not in ec3]
+        bad = [g for g, v in ec3.items() if v["attempts"] == 0 or v["failures"] != 0]
+        if missing or bad:
+            sys.exit(f"gen_excl_select: EC-3 fill refused: missing {missing}; attempts 0 or failures != 0 for {bad} (from {a.ec3_asserts})")
+        a.allow_unfilled_ec3 = True   # the fields are filled below; the groups may be emitted
     refuted = set()          # (module, exact entry line)
     refuted_heads = set()    # (module, "Kind id") for bare-header (whole object) attempts
     for att in a.attempts:
@@ -730,21 +812,42 @@ def main():
         groups.setdefault(key, []).append((ann, lines))
 
     # class P prose values are read from the configuration, never re-typed (review low 2)
-    cfg = subprocess.run([sys.executable, "util/ibex_config.py", "opentitan", "vcs_opts"], check=True,
-                         capture_output=True, text=True).stdout
-    pvals = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
-    defs = {m.group(1): m.group(2) for m in re.finditer(r"\+define\+(\w+)=(\S+)", cfg)}
-    cfg_ok = pvals.get("BranchPredictor") == 0 and pvals.get("BranchTargetALU") == 1 and defs.get("RV32B", "").endswith("RV32BOTEarlGrey")
+    pvals, defs = PVALS, DEFS
+    cfg_ok = pvals.get("BranchPredictor") == 0 and pvals.get("BranchTargetALU") == 1 and defs.get("RV32B", "") == "RV32BOTEarlGrey"
     if not cfg_ok:
         sys.exit(f"gen_excl_select: opentitan configuration differs from the class-P assumptions: {pvals.get('BranchPredictor')=} {pvals.get('BranchTargetALU')=} RV32B={defs.get('RV32B')}")
     report.append(f"config check: BranchPredictor={pvals['BranchPredictor']} BranchTargetALU={pvals['BranchTargetALU']} RV32B={defs['RV32B']} (util/ibex_config.py opentitan vcs_opts)")
+    # Guard analysis of every shared module that has Block ranges: a Block is selected only when it is
+    # inside an approved range AND under a dead guard (or the range is an explicit enum-default entry).
+    dead_by_mod = {}
+    for mod, rtl in MODULE_RTL.items():
+        d, _c, _ci = guard_analysis(rtl)
+        dead_by_mod[mod] = d
+        report.append(f"guard analysis {mod}: {len(d)} dead RTL lines")
     # Blocks
     for mod, ranges, ann in BLOCKS:
         if "TO BE FILLED" in ann and not a.allow_unfilled_ec3:
             report.append(f"BLOCK {mod} {ranges}: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)")
             continue
-        hits = [e for e in entries if e.metric == "line" and e.mod == mod and in_ranges(e.line, ranges) and not RE_STMT_HDR.match(e.header)]
-        report.append(f"BLOCK {mod} {ranges}: {len(hits)} blocks")
+        explicit_ranges = [r for r in ranges if (mod, tuple(r)) in EXPLICIT_BLOCK_RANGES]
+        explicit = bool(explicit_ranges)
+        cand = [e for e in entries if e.metric == "line" and e.mod == mod and in_ranges(e.line, ranges) and not RE_STMT_HDR.match(e.header)]
+        hits, live, carved = [], [], []
+        for e in cand:
+            if carved_back(mod, e.header, e.line):
+                carved.append(e); continue
+            if in_ranges(e.line, explicit_ranges) or e.line in dead_by_mod.get(mod, {}):
+                hits.append(e)
+            else:
+                live.append(e)
+        report.append(f"BLOCK {mod} {ranges}: {len(hits)} blocks selected" + (" (explicit enum-default entry)" if explicit else " (dead guard)")
+                      + f"; {len(live)} in-range blocks kept in coverage (no dead guard); {len(carved)} A.8 carve-backs kept in coverage"
+                      + ("".join(f"\n    live: :{e.line} {e.header[:80]}" for e in live) if live else "")
+                      + ("".join(f"\n    carve-back: :{e.line} {e.header[:80]}" for e in carved) if carved else ""))
+        if "TO BE FILLED" in ann and ec3:
+            g = next(g for g in ("IbexCtrlStateValid", "IbexLsuStateValid", "IbexMultDivStateValid") if g in ann)
+            ann = ann.replace("attempts N, failures 0 in <first measured regression>, TO BE FILLED",
+                              f"attempts {ec3[g]['attempts']}, failures {ec3[g]['failures']} in {a.ec3_round} ({Path(a.ec3_asserts).name})")
         for e in hits:
             add(e, ann, [e.header])
     # Branch vectors
@@ -755,7 +858,13 @@ def main():
             continue
         for e in entries:
             if e.metric == "branch" and e.mod == mod and in_ranges(e.line, ranges):
-                sel = [v for v in e.vectors if re.search(vec_re, v)]
+                cond = e.header.split('"')[3] if e.header.count('"') >= 4 else ""
+                cv = ex_const(cond)
+                want = 0 if vec_re == TRUE_ARM else (1 if vec_re == FALSE_ARM else None)
+                if want is not None and cv != want:
+                    report.append(f"BRANCH {mod} :{e.line} skipped: select `{cond[:70]}` is not constant {want} by the guard predicate (value {cv})")
+                    continue
+                sel = [v for v in e.vectors if re.search(vec_re, v) and not carved_back(mod, v, e.line)]
                 if sel:
                     add(e, ann, sel); n += len(sel)   # vectors only: a bare header would exclude every arm
         report.append(f"BRANCH {mod} {ranges} /{vec_re}/: {n} vectors")
@@ -824,11 +933,14 @@ def main():
              "// GENERATED by dv/auto_dv/excl/gen_excl_select.py from a `urg -dump full_exclusions` module dump; do not edit by hand.",
              "// Content = gen_exclusions_draft.md v2 (Parts A, C, C.2); README: dv/auto_dv/excl/gen_exclusions_README.md.",
              "// Load: urg ... -elfile gen_exclusions.el -excl_strict (a rejected entry is a finding, never a reason to drop the flag).",
-             ("// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED with unfilled EC-3 fields (--allow-unfilled-ec3)."
+             (f"// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED, EC-3 fields filled from {a.ec3_asserts} ({a.ec3_round})."
+              if a.ec3_asserts else
+              "// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): INCLUDED with unfilled EC-3 fields (--allow-unfilled-ec3)."
               if a.allow_unfilled_ec3 else
               "// Class-D spare-encoding default arms (ctrl_fsm, ls_fsm, md_state): HELD OUT until the first measured regression fills their EC-3 fields (Critic F-3)."), ""]
     total = 0
     dropped = []
+    carve_hits = []
     for (mod, metric) in sorted(groups, key=lambda k: (k[0], order[k[1]])):
         scope = [f'CHECKSUM: "{chks[(mod, metric)]}"', f"MODULE: {mod}"]
         byann = {}
@@ -841,8 +953,9 @@ def main():
                     return True
                 head = " ".join(t.split('"')[0].split()[:2])   # e.g. `Branch 33` / `Condition 40`
                 return (mod, head) in refuted_heads
-            keep = [l for l in ls if not is_refuted(l)]
+            keep = [l for l in ls if not is_refuted(l) and not carved_back(mod, l, None)]
             dropped.extend(f"{mod}: {l}" for l in ls if is_refuted(l))
+            carve_hits.extend(f"{mod}: {l}" for l in ls if carved_back(mod, l, None) and not is_refuted(l))
             if not keep:
                 continue
             scope.append(f'ANNOTATION_BEGIN: "{ann}"')
@@ -857,6 +970,8 @@ def main():
     if dropped:
         report.append(f"Dropped {len(dropped)} entries refuted by a strict load (covered in the reference vdb; kept in coverage):")
         report.extend("  - " + d[:200] for d in dropped)
+    report.append(f"A.8 carve-back filter removed {len(carve_hits)} emitted lines" + (":" if carve_hits else " (none reached the emit stage)"))
+    report.extend("  - " + d[:200] for d in carve_hits)
     Path(a.report).write_text("\n".join(report) + "\n")
     print("\n".join(report))
 

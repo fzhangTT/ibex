@@ -2,22 +2,63 @@
 dump: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/full_exclusions
 parsed entries: 8437
 
-config check: BranchPredictor=0 BranchTargetALU=1 RV32B=ibex_pkg::RV32BOTEarlGrey (util/ibex_config.py opentitan vcs_opts)
-BLOCK ibex_core [(2223, 2225)]: 1 blocks
-BLOCK ibex_id_stage [(901, 908)]: 2 blocks
-BLOCK ibex_decoder [(314, 323), (339, 352), (402, 407), (447, 453), (474, 482), (793, 876), (883, 891)]: 40 blocks
-BLOCK ibex_compressed_decoder [(230, 233), (249, 252), (329, 332), (359, 363), (391, 394), (411, 414), (557, 560), (575, 579), (615, 620), (854, 857)]: 11 blocks
-BLOCK ibex_controller [(850, 858), (894, 897), (901, 908), (915, 922), (928, 948), (318, 319), (328, 331)]: 14 blocks
-BLOCK ibex_load_store_unit [(139, 140), (211, 219), (437, 467), (565, 603), (616, 623), (669, 678)]: 24 blocks
-BLOCK ibex_cs_registers [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 2056), (2063, 2067), (2108, 2209), (2218, 2224)]: 41 blocks
-BLOCK ibex_controller [(690, 696)]: 1 blocks
-BLOCK ibex_decoder [(1342, 1344), (1348, 1350)]: 2 blocks
+config check: BranchPredictor=0 BranchTargetALU=1 RV32B=RV32BOTEarlGrey (util/ibex_config.py opentitan vcs_opts)
+guard analysis ibex_core: 2 dead RTL lines
+guard analysis ibex_id_stage: 11 dead RTL lines
+guard analysis ibex_decoder: 150 dead RTL lines
+guard analysis ibex_compressed_decoder: 33 dead RTL lines
+guard analysis ibex_controller: 44 dead RTL lines
+guard analysis ibex_load_store_unit: 59 dead RTL lines
+guard analysis ibex_cs_registers: 37 dead RTL lines
+guard analysis ibex_if_stage: 85 dead RTL lines
+guard analysis ibex_wb_stage: 0 dead RTL lines
+guard analysis ibex_multdiv_fast: 0 dead RTL lines
+guard analysis ibex_icache: 0 dead RTL lines
+guard analysis ibex_register_file_ff: 2 dead RTL lines
+guard analysis ibex_cheriot_ex: 265 dead RTL lines
+BLOCK ibex_core [(2223, 2225)]: 1 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_id_stage [(901, 908)]: 2 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_decoder [(314, 323), (339, 352), (402, 407), (447, 453), (474, 482), (793, 876), (883, 891)]: 36 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 4 A.8 carve-backs kept in coverage
+    carve-back: :351 Block 18 "2452896486" "illegal_insn = 1'b1;"
+    carve-back: :824 Block 148 "1906098644" "illegal_insn = 1'b1;"
+    carve-back: :856 Block 164 "689554920" "illegal_insn = 1'b1;"
+    carve-back: :873 Block 169 "1515370181" "illegal_insn = 1'b1;"
+BLOCK ibex_compressed_decoder [(230, 233), (249, 252), (329, 332), (359, 363), (391, 394), (411, 414), (557, 560), (575, 579), (615, 620), (854, 857)]: 11 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_controller [(850, 858), (894, 897), (901, 908), (915, 922), (928, 948), (318, 319), (328, 331)]: 14 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_load_store_unit [(139, 140), (211, 219), (437, 467), (565, 603), (616, 623), (669, 678)]: 24 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_cs_registers [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 2056), (2063, 2067), (2108, 2209), (2218, 2224)]: 17 blocks selected (dead guard); 21 in-range blocks kept in coverage (no dead guard); 3 A.8 carve-backs kept in coverage
+    live: :473 Block 22 "1392153817" "csr_rdata_int = mtvec_q;"
+    live: :482 Block 25 "4057767857" "csr_rdata_int = mepc_q;"
+    live: :682 Block 76 "3370698267" "illegal_csr = 1'b1;"
+    live: :690 Block 79 "2568516718" "illegal_csr = 1'b1;"
+    live: :698 Block 82 "4048553032" "illegal_csr = 1'b1;"
+    live: :2018 Block 266 "3904788274" "cheriot_csr_rdata_o = (debug_mode_i ? depc_q : '0);"
+    live: :2023 Block 267 "3348321698" "cheriot_csr_rdata_o = (debug_mode_i ? dscratch0_q : '0);
+    live: :2028 Block 268 "3839399327" "cheriot_csr_rdata_o = (debug_mode_i ? dscratch1_q : '0);
+    live: :2033 Block 269 "2583875407" "cheriot_csr_rdata_o = mtvec_q;"
+    live: :2038 Block 270 "1321462793" "cheriot_csr_rdata_o = gen_scr.mtdc_data;"
+    live: :2043 Block 271 "236585115" "cheriot_csr_rdata_o = gen_scr.mscratchc_data;"
+    live: :2048 Block 272 "4096631128" "cheriot_csr_rdata_o = mepc_q;"
+    live: :2053 Block 273 "2749661524" "cheriot_csr_rdata_o = 32'b0;"
+    live: :2065 Block 275 "4291899431" "pcc_cap_q <= 112'b10000000000000000000000000000000000000
+    live: :2114 Block 292 "2707070097" "mtvec_cap <= 35'b00101011110001111100000000000000000;"
+    live: :2136 Block 302 "3536564520" "mepc_cap <= 35'b00101011110001111100000000000000000;"
+    live: :2155 Block 311 "3315413595" "gen_scr.mtdc_cap <= 35'b00101111110001111100000000000000
+    live: :2170 Block 316 "746695531" "gen_scr.mscratchc_cap <= 35'b0010100111000111110000000000
+    live: :2185 Block 321 "2244136683" "depc_cap <= 35'b0;"
+    live: :2203 Block 328 "2252920583" "dscratch0_cap <= 35'b0;"
+    live: :2220 Block 335 "4238278554" "gen_scr.cheriot_fatal_err_q <= 1'b0;"
+    carve-back: :2128 Block 297 "268972480" "gen_scr.mstack_epc_cap_q <= 35'b0;"
+    carve-back: :2130 Block 299 "1318991522" "gen_scr.mstack_epc_cap_q <= mepc_cap;"
+    carve-back: :2142 Block 306 "3777635196" "mepc_cap <= gen_scr.mstack_epc_cap_q;"
+BLOCK ibex_controller [(690, 696)]: 1 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_decoder [(1342, 1344), (1348, 1350)]: 2 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_controller [(990, 993)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
 BLOCK ibex_load_store_unit [(605, 607)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
 BLOCK ibex_multdiv_fast [(522, 524)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
-BLOCK ibex_id_stage [(968, 970)]: 1 blocks
-BLOCK ibex_multdiv_fast [(238, 240)]: 1 blocks
-BLOCK ibex_icache [(1268, 1268)]: 1 blocks
+BLOCK ibex_id_stage [(968, 970)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_multdiv_fast [(238, 240)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_icache [(1268, 1268)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BRANCH ibex_core [(1000, 1001)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 1 vectors
 BRANCH ibex_core [(1590, 1593), (1627, 1630)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 6 vectors
 BRANCH ibex_if_stage [(222, 228)] /\) 1"$|[a-zA-Z_\]\)] 1"$/: 0 vectors
@@ -97,15 +138,8 @@ FSM ibex_load_store_unit.ls_fsm_cs: 10 states+transitions
 FSM ibex_load_store_unit.cap_rx_fsm_q: 7 states+transitions
 ASSERT ibex_register_file_ff: 3 of 3 found: ['g_cheriot_rf.CheriotRaddrAMSBClear', 'g_cheriot_rf.CheriotRaddrBMSBClear', 'g_cheriot_rf.CheriotWaddrMSBClear']
 
-Emitted 1442 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
-Dropped 10 entries refuted by a strict load (covered in the reference vdb; kept in coverage):
-  - ibex_cs_registers: Block 273 "2749661524" "cheriot_csr_rdata_o = 32'b0;"
-  - ibex_cs_registers: Block 275 "4291899431" "pcc_cap_q <= 112'b1000000000000000000000000000000000000000000000000000000000000000000011110101100101011110001111100000000000000000;"
-  - ibex_cs_registers: Block 292 "2707070097" "mtvec_cap <= 35'b00101011110001111100000000000000000;"
-  - ibex_cs_registers: Block 297 "268972480" "gen_scr.mstack_epc_cap_q <= 35'b0;"
-  - ibex_cs_registers: Block 302 "3536564520" "mepc_cap <= 35'b00101011110001111100000000000000000;"
-  - ibex_cs_registers: Block 311 "3315413595" "gen_scr.mtdc_cap <= 35'b00101111110001111100000000000000000;"
-  - ibex_cs_registers: Block 316 "746695531" "gen_scr.mscratchc_cap <= 35'b00101001110001111100000000000000000;"
-  - ibex_cs_registers: Block 321 "2244136683" "depc_cap <= 35'b0;"
-  - ibex_cs_registers: Block 328 "2252920583" "dscratch0_cap <= 35'b0;"
-  - ibex_cs_registers: Block 335 "4238278554" "gen_scr.cheriot_fatal_err_q <= 1'b0;"
+Emitted 1421 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
+A.8 carve-back filter removed 3 emitted lines:
+  - ibex_register_file_ff: Condition 67 "2391767907" "(g_cheriot_rf.cheriot_enabled ? ((raddr_a_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_a_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1
+  - ibex_register_file_ff: Condition 70 "2882321518" "(g_cheriot_rf.cheriot_enabled ? ((raddr_b_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_b_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1
+  - ibex_register_file_ff: Condition 74 "2362779018" "(g_cheriot_rf.cheriot_enabled ? g_cheriot_rf.g_dummy_r0.we_data_r0 : (((!RV32E)) && g_cheriot_rf.we_a_dec[0] && waddr_a_i[4])) 1 -1" (2 "1")

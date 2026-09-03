@@ -1,8 +1,8 @@
 # gen_exclusions.el -- the coverage exclusion file (draft form, ahead of the first measured regression)
 
-Owner: rtl-arch (T-069, 2026-09-03; revised 09:15Z after the cross-model review of dca91fd,
-dv/auto_dv/reviews/2026-09-03-claude-diff-42e6f28d-dca91fd2.md; answers in
-dv/auto_dv/evidence/gen_critic_response_exclusions.md). Build configuration: opentitan; DUT gen_dut_top
+Owner: rtl-arch (T-069, 2026-09-03; revised 09:22Z after the cross-model review of dca91fd,
+dv/auto_dv/reviews/2026-09-03-claude-diff-42e6f28d-dca91fd2.md, and the Critic's REQUEST-CHANGES on it,
+dv/auto_dv/work/critic/gen_critic_exclusions_v1.md; answers in dv/auto_dv/evidence/gen_critic_response_exclusions.md). Build configuration: opentitan; DUT gen_dut_top
 with the gated coverage trees u_dut.u_ibex_core and u_dut.u_register_file (Q-014 / R-001).
 
 Authority chain (every path below is committed; what each contributes):
@@ -49,17 +49,26 @@ python3 dv/auto_dv/excl/gen_excl_select.py \
 Selection rules, in the order the script applies them:
 1. Configuration guard: `util/ibex_config.py opentitan vcs_opts` must give BranchPredictor = 0,
    BranchTargetALU = 1 and RV32B = RV32BOTEarlGrey (the class-P assumptions); otherwise the run stops.
-2. A.3 Blocks and true-arm Branch vectors in the shared modules, by RTL line range from the draft;
-   statement headers (`if (`, `case (`) inside a range are never selected because they execute with
-   their enclosing scope.
-3. ibex_cheriot_ex (A.1, revised): a GUARD ANALYSIS of rtl/ibex_cheriot_ex.sv computes, for every
-   line, the enclosing if / else-if / else / case arms (the file's indentation is the nesting) and
+2. A.3 Blocks and true-arm Branch vectors in the shared modules. The draft's RTL line ranges only
+   SCOPE the search: a Block is selected when it is inside an approved range AND the guard analysis
+   of rule 3 (run on every module) finds it under a dead arm; statement headers (`if (`, `case (`)
+   are never selected because they execute with their enclosing scope. Two kinds of range are
+   explicit instead, with their cone stated in the annotation: the enum default arms (the cone is
+   the enum declaration) and the case items of FSM states the k-induction proofs show are never held
+   (LSU :565-603 CTX_*, :616-623 cap_rx_fsm; cone = the state register, proofs T022_LSU_NO_CTX,
+   T022_CRX_IDLE). A true-arm Branch vector is selected only when its select is constant 0 by the
+   same predicate. Finally an explicit A.8 CARVE-BACK table (draft A.8 and its v1 list: module,
+   signature regex or line range) is applied as the LAST filter over every emitted line, and every
+   hit is reported; the selection report also lists every in-range block the predicate kept live.
+3. GUARD ANALYSIS (ibex_cheriot_ex A.1 revised, and rule 2 for every shared module): the script
+   computes, for every line of the module's RTL, the enclosing if / else-if / else / case arms (the file's indentation is the nesting) and
    marks a line dead when an enclosing arm requires a constant-0 term or follows a constant-1 one.
    The constants are machine-checked: the 1-bit nets and all-zero multi-bit inputs that yosys
    `opt -full` ties to zero under the wrapper tie (t022_flat.il connect list, regenerable by
    gen_t022_formal/gen_t022_regen.sh step 3) plus the decoder defaults rtl/ibex_decoder.sv:297-303
-   whose only other assignments are inside (cheriot_enable_i == On) arms; enum literals are read from
-   rtl/ibex_cheriot_pkg.sv. Dead lines give Block entries and whole Condition objects; Branch vectors
+   whose only other assignments are inside (cheriot_enable_i == On) arms, the CONST0 tie-chain names,
+   the *_en_cheriot / cheriot_csr_* nets of cs_registers, the opentitan parameters (util/ibex_config.py)
+   and the RV32B define; enum literals are read from rtl/ibex_cheriot_pkg.sv and rtl/ibex_pkg.sv. Dead lines give Block entries and whole Condition objects; Branch vectors
    are selected per arm (a `case (1'b1)` item on a constant-0 operator bit, an `if` arm on a
    constant-0 term, an item of a `case` on an all-zero selector whose label is not 0). Everything
    else in the module, in particular the reachable-but-masked checking logic (check_rv32 :699-737,
@@ -93,7 +102,7 @@ its own dump (F-1).
 | Rule | Entries in the file | Notes |
 |---|---|---|
 | A.1 ibex_cheriot_ex dead arms | 75 Blocks, 66 Branch vectors, 119 Condition vectors (whole objects on dead lines) | 265 dead RTL lines found by the guard analysis; the module's live logic (about 60 percent of its statements) counts |
-| A.3 Blocks / true-arm Branch vectors in the shared modules | 129 Blocks (incl. class P and the three class-D 2a arms), 17 Branch vectors | CHERIoT arm bodies; assign-ternaries with a constant select have no object (section 5) |
+| A.3 Blocks / true-arm Branch vectors in the shared modules | 111 Blocks (incl. class P and the three class-D 2a arms), 17 Branch vectors | in-range AND dead-guard (or explicit cone); 26 in-range blocks kept live by the predicate and 13 A.8 carve-backs, all listed in the selection report |
 | A.4 Condition vectors | 551 vectors in 20 modules | impossible-value vectors only |
 | A.5 Toggle | 463 port / struct-field entries | constant CHERIoT-only ports |
 | A.6 FSM | 2 Fsm headers, 5 State, 12 Transition | explicit (constant analysis does not cover FSM) |
@@ -101,9 +110,10 @@ its own dump (F-1).
 | Class D spare-encoding arms (rows 1, 23, 33) | 0 (held out) | emitted only with --allow-unfilled-ec3 after the EC-3 fields are filled |
 | A.8 carve-backs, class R rows 37-40 | 0 | never selected |
 
-Totals (pass 10 file, md5 3b67ac6f909ac21d83609c9239399e68): 204 Block, 83 Branch-vector, 670
+Totals (pass 12 file, md5 73fa4c3ba87878c5f5a429261ee5861a): 186 Block, 83 Branch-vector, 667
 Condition-vector, 463 Toggle, 2 Fsm + 5 State + 12 Transition, 3 Assert lines in 41 (module, metric)
-scopes, 384 annotation groups; 10 entries refuted by the strict load and dropped.
+scopes, 381 annotation groups; 10 entries refuted by the strict load and dropped; 3 emitted lines
+removed by the carve-back filter (register-file ternary vectors on rcap_r0 / rf_shared, section 5).
 
 ## 3. Strict-load record
 
@@ -115,33 +125,42 @@ regress_round_0_rebaseline/cov_unmeasured/merged.vdb; logs under gen_precheck/):
 | 1 | first generation (dca91fd lineage) | UCAPI-ILOAD, 285 covered objects attempted: bare Branch/Condition headers exclude the whole object; statement headers execute with their scope |
 | 2-4 | vectors only; headers skipped; vector-encoding fixes | 60, 38, 1 attempts (the --attempts inputs) |
 | 8 | dca91fd file | clean (kept as the record of the reviewed commit) |
-| 9-10 | this file (guard analysis, EC-3 hold-out, config guard) | 0 warnings, 0 errors, no attempts.log (gen_precheck_urg_pass10.log, gen_precheck_dashboard_pass10.txt) |
+| 9-10 | cheriot_ex guard analysis, EC-3 hold-out, config guard (file recorded by rtl-arch-005) | 0 warnings, 0 errors, no attempts.log |
+| 11-12 | this file: guard analysis on every shared module, A.8 carve-back filter (Critic M-1) | 0 warnings, 0 errors, no attempts.log (gen_precheck_urg_pass12.log, gen_precheck_dashboard_pass12.txt) |
 
 Gated rows (u_dut.u_ibex_core + u_dut.u_register_file per R-001, summed from the URG hierarchy rows
-of the pass-10 report and of dv/auto_dv/evidence/gen_round_0_rebaseline/hierarchy.txt):
+of the pass-12 report and of dv/auto_dv/evidence/gen_round_0_rebaseline/hierarchy.txt):
 
 | Metric | without the file | with this file | objects removed | entries emitted | note |
 |---|---|---|---|---|---|
-| LINE | 1694/4351 | 1694/4134 | 217 | 204 Blocks | a Block can span several source lines; Blocks on lines VCS already marks unreachable are no-ops |
-| COND | 2547/9566 | 2547/9319 | 247 | 670 vectors | most tie-chain vectors are already Unreachable by constant analysis (-cm_seqnoconst): entries for them are no-ops |
+| LINE | 1694/4351 | 1694/4154 | 197 | 186 Blocks | a Block can span several source lines; Blocks on lines VCS already marks unreachable are no-ops |
+| COND | 2547/9566 | 2547/9319 | 247 | 667 vectors | most tie-chain vectors are already Unreachable by constant analysis (-cm_seqnoconst): entries for them are no-ops |
 | TOGGLE | 1682/24538 | 1682/20596 | 3942 | 463 ports/fields | toggle objects are per bit and per edge |
 | FSM | 6/86 | 6/74 | 12 | 12 Transition (+5 State) | URG scores transitions only; states are listed, not counted |
 | BRANCH | 798/2418 | 798/2353 | 65 | 83 vectors | vectors already Unreachable are no-ops |
 | ASSERT | 143/178 | 143/175 | 3 | 3 | the three register-file assertions (URG's top summary row 143/178 nets out no-attempt assertions and does not move) |
 
-URG status-token census of the pass-10 text report (modinfo.txt), per metric: LINE excluded 847 /
+URG status-token census of the pass-10 text report (the shared-module change of pass 11-12 moves 18 Blocks; the census was not redone) (modinfo.txt), per metric: LINE excluded 847 /
 unreachable 1115 (baseline 1107); BRANCH excluded 244 / unreachable 373; TOGGLE excluded 828 /
 unreachable 179 (baseline 190); ASSERT excluded 3; FSM excluded 18 rows. The "excluded" rows count
 source lines / vector rows (several per URG object) and include objects that constant analysis had
 already removed from the denominator, which is why they exceed the "objects removed" column. A
 per-object join of the dump, the .el and the report (both carry line numbers) is the follow-up that
-turns this census into an exact no-op list (response file, finding M-2).
+turns this census into an exact no-op list (response file, finding CM-3).
 
-Flow records (Runtime Manager, purpose-2 elcheck): dca91fd file: runtime-007 (pre-flight) and
-dv/auto_dv/work/runtime/results/rtl-arch-004/manifest.yaml (formal; urg rc 0, 0 violations, gated
-row LINE 1694/4057 COND 2547/9220 TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2320 ASSERT 143/175). This
-file: request dv/auto_dv/work/runtime/requests/rtl-arch-005.yaml filed 09:13Z; its manifest path is
-appended here when served. rtl-arch-003 was refused in writing (no report-only request kind at 08:50Z).
+Flow records (Runtime Manager, purpose-2 elcheck; times verbatim from the manifests):
+- rtl-arch-003 (received 2026-09-03T08:50:30Z): refused in writing, reason `invalid request: tests must
+  be a non-empty list, a comma list, or a tier word (empty only with elcheck)` (the request lacked the
+  `elcheck` mapping).
+- runtime-007 (pre-flight) and dv/auto_dv/work/runtime/results/rtl-arch-004/manifest.yaml (received
+  08:58:25Z, finished 08:58:31Z): the dca91fd file, urg rc 0, 0 violations, gated row LINE 1694/4057
+  COND 2547/9220 TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2320 ASSERT 143/175.
+- dv/auto_dv/work/runtime/results/rtl-arch-005/manifest.yaml (received 09:13:43Z, finished 09:13:52Z):
+  the pass-10 file (sha256 e43c2dcb50ffd9a23655c11a56e01ca263b321e44cc3029db764579015636039), verdict ok,
+  urg rc 0 on both merges, 0 violations, empty merge_warnings, gated row LINE 1694/4134 COND 2547/9319
+  TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2353 ASSERT 143/175, excluded counts 217/247/3942/12/65/3.
+- rtl-arch-006 (this file, pass 12): request dv/auto_dv/work/runtime/requests/rtl-arch-006.yaml; its
+  manifest path is appended here when served.
 
 ## 4. Refuted entries (covered in the round-0 re-baseline; dropped, kept in coverage)
 
@@ -152,7 +171,12 @@ with their enclosing scope; reset arms execute at reset; a ternary used as an op
 an arm, not of its select; a top-level negation is encoded by its inner value. The dca91fd A.1 sweep
 ("everything in u_ibex_cheriot_ex not on the live list") is gone: the review showed it excluded
 reachable-but-masked logic under an unreachability claim; the guard analysis of section 1 rule 3
-replaces it and the annotations now name the dead guard.
+replaces it and the annotations now name the dead guard. The Critic's M-1 (rtl/ibex_cs_registers.sv:2130
+`mstack_epc_cap_q <= mepc_cap`, live on every non-debug trap, selected by the A.3 range in dca91fd) showed
+the same defect class in the shared modules; rule 2 now requires a dead guard inside the range and the
+A.8 carve-back table is a last filter. The predicate also uncovered two dca91fd exclusions nobody had
+flagged: cs_registers :473 `csr_rdata_int = mtvec_q` and :482 `csr_rdata_int = mepc_q`, the live RV32I
+else arms of the On-gated illegal check; both are back in coverage.
 
 ## 5. Notes for the reviewers
 
@@ -176,6 +200,44 @@ replaces it and the annotations now name the dead guard.
    section 1).
 6. MODULE scopes are exact for this DUT (one instance per module under u_dut); the assertion entries
    demonstrate it (reported under the instance path).
+7. Kept in coverage although arguably dead (conservative side of the predicate and the carve-back
+   filter): cs_registers :2142 `mepc_cap <= gen_scr.mstack_epc_cap_q` (dead guard `(On) && mret && nmi`,
+   removed because its text matches the mstack_epc_cap_q carve-back); the SCR read-mux case items
+   :2018-2048 (selector cheriot_csr_addr_i is constant 0, but the indentation-based analysis did not
+   resolve that case statement); three register-file Condition vectors on the `cheriot_enabled ? rcap_r0
+   / rf_shared[...]` ternaries (select constant 0, text matches the shared-net carve-backs). Candidates for
+   explicit entries with their cone at the first measured regression; none is a correctness risk.
+
+## 5b. In-range objects the predicate keeps in coverage (with the reason each is live)
+
+Every one of these sits inside a draft A.3 range and is NOT excluded; the selection report prints the
+same list under "live:" / "carve-back:". None carries a Class T annotation any more.
+
+| RTL object | Why it is reachable in RV32I mode (the cone) |
+|---|---|
+| rtl/ibex_cs_registers.sv:473 `csr_rdata_int = mtvec_q;`, :482 `csr_rdata_int = mepc_q;` | else arms of `if ((dual) && (cheriot_enable_i == On)) illegal_csr`: every RV32I read of mtvec / mepc executes them (excluded in dca91fd; found by the predicate) |
+| rtl/ibex_cs_registers.sv:682, :690, :698 `illegal_csr = 1'b1;` | else arms of the MSHWM / MSHWMB / CDBG_CTRL read cases: a read of 0xBC1/0xBC2/0xBC4 traps (draft A.8, feature CHERI off-behaviour) |
+| rtl/ibex_cs_registers.sv:2018-2053 SCR read-mux items and default | `case (cheriot_csr_addr_i)`: the selector is constant 0 (cheriot_ex csr_addr_o), so only the default arm executes; the indentation-based analysis did not resolve this case statement, the items stay in coverage (candidates for explicit entries at the first measured regression) |
+| rtl/ibex_cs_registers.sv:2065, :2114, :2136, :2155, :2170, :2185, :2203, :2220 reset-value assignments | `if (!rst_ni)` arms execute at every reset |
+| rtl/ibex_cs_registers.sv:2128, :2130 `mstack_epc_cap_q <= ...` | reset arm; `else if (mstack_en)` with mstack_en set on every non-debug trap entry (:933): live shadow-capability update (Critic CR-M-1, draft A.8) |
+| rtl/ibex_cs_registers.sv:2142 `mepc_cap <= gen_scr.mstack_epc_cap_q;` | guard `(On) && csr_restore_mret_i && nmi_mode_i` is dead, but the statement text matches the mstack_epc_cap_q carve-back; kept in coverage on the conservative side |
+| rtl/ibex_decoder.sv:351, :824, :856, :873 `illegal_insn = 1'b1;` | the `else` arms of the CJALR / OPCODE_CHERI / OPCODE_AUICGP checks: reached by the illegal-encoding tests (draft A.8 items 2 and 8) |
+| rtl/ibex_load_store_unit.sv:575, :589, :601 `ls_fsm_ns = IDLE;`, :619, :623 `cap_rx_fsm_d = ...` | inside the never-held CTX_* / CRX_WAIT_* case items: EXCLUDED under the explicit never-held-state cone (T022_LSU_NO_CTX, T022_CRX_IDLE), listed here because the guard predicate alone would not have selected them |
+| rtl/ibex_register_file_ff.sv Condition vectors on `cheriot_enabled ? rcap_r0 / rf_shared[...]` ternaries (3) | select constant 0 (excludable) but the vector text matches the shared-net carve-backs; kept in coverage on the conservative side |
+| rtl/ibex_cheriot_ex.sv check_rv32 :699-737, the all-false arms of check_cheriot :753-863, err_cause_comb :922, shared_adder defaults, always_comb defaults, reset arms | no dead guard: reachable RV32I checking logic whose result is masked downstream (cross-model CM-1); counts |
+
+## 5a. Soundness of each selection rule (why an emitted object cannot be reachable)
+
+| Rule | Predicate | Why it is sound | Residual risk and its check |
+|---|---|---|---|
+| A.3 / P Blocks (rule 2) | inside an approved range AND every enclosing arm chain has an arm whose condition is constant 0, or follows an arm whose condition is constant 1 | a statement executes only when every enclosing arm is taken; an arm whose condition is a constant-0 expression (tie compare, netlist-constant net, CONST0 tie-chain net, *_en_cheriot, opentitan parameter, RV32B define) is never taken | the constant table: netlist constants are machine-checked (yosys), CONST0 names are k-induction proved (T022_*), parameters come from util/ibex_config.py at generation; the indentation nesting is checked by the strict load (a misparse that marks a live arm dead is refuted as covered once any test executes it) |
+| explicit ranges (rule 2) | enum default arms; case items of never-held FSM states | full enum encoding leaves no default value; T022_LSU_NO_CTX / T022_CRX_IDLE prove the states never held | fault injection into the state register is out of the measured regressions (B.7 rule 6) |
+| A.1 ibex_cheriot_ex (rule 3) | same guard predicate with the module's own constant table | as rule 2 | reachable-but-masked logic has no dead guard and therefore counts |
+| A.4 Condition vectors (rule 4) | a vector in which an operand that is constant takes the value it cannot take | URG vector bits are operand values; the constant operand never shows the other value | the encoding conventions (top-level negation / ternary) were validated by the strict load in passes 1-4; the fetch_enable_i / mcounteren_writable_i pins are excluded from the constant table by name |
+| A.5 Toggle (rule 5) | explicit constant-port list | ports tied or proved constant (bucket D, T022_CORE_CHERI0/_B, T022_RF_CAP0) | a port that toggles is refuted as covered by the strict load |
+| A.6 FSM, A.7 Assert (rule 6) | explicit lists | never-held states (proofs above); vacuous assertions with a constant-0 antecedent | as above |
+| carve-back filter | explicit A.8 table | removes any live object the predicates might still pick; hits are reported | none (it only removes) |
+| --attempts | URG-refuted objects dropped | a covered object is reachable by definition | none |
 
 ## 6. Critic final-file conditions (gen_critic_exclusions_draft_v2.md section 5) -- checklist
 
@@ -186,8 +248,38 @@ replaces it and the annotations now name the dead guard.
 | F-3 | EC-3 attempts/failures filled for the three guarded default arms | OPEN, and the file no longer carries the unfilled groups: they are held out until the first measured regression's assertion report supplies the numbers (--allow-unfilled-ec3 then emits them with the fields filled) | assertion report of the first measured regression (IbexCtrlStateValid, IbexLsuStateValid, IbexMultDivStateValid) |
 | F-4 | LOG-007 decision recorded; glitch-covered tie Conditions only under -cm_glitch 0 | MET (R-002; four cheriot_enable_i conditions in; fetch_enable_i ones absent by design) | - |
 | F-5 | class R rows 37-40 absent unless EC-4 passed | MET: absent | stays absent until the seven per-state covers are hit on a full measured regression |
-| F-6 | every entry carries the A.0 annotation; A.1 object list reproduced, not summarised | MET: 384 annotation groups; every ibex_cheriot_ex group names its dead guard and constant term (review HIGH fixed) | - |
-| F-7 | no entry outside the 43 rows, the six C.2 default arms and the A.1 object list | MET by construction of the selection rules; the refuted-and-dropped list narrows, never widens | - |
+| F-6 | every entry carries the A.0 annotation; A.1 object list reproduced, not summarised | MET: 381 annotation groups; every ibex_cheriot_ex group names its dead guard and constant term (cross-model HIGH); every shared-module Block sits under a dead guard or an explicit cone (Critic M-1) | Critic re-review |
+| F-7 | no entry outside the 43 rows, the six C.2 default arms and the A.1 object list | MET: the A.8 carve-back table is the last filter and mstack_epc_cap_q (Critic M-1) is no longer in the file; the refuted-and-dropped list narrows, never widens | Critic re-review |
+
+## 7. EC-3 fill at the first measured regression (mechanical procedure for F-3)
+
+Inputs, per the Runtime flow (dv/auto_dv/docs/gen_runtime_api.md, gen_round.py): a measured round writes
+its URG report to `<out_root>/regress_round_<n>/cov/report/` (out_root from dv/auto_dv/work/runtime/
+gen_site.yaml, today /proj_soc/user_dev/fzhang/ibex_dv_out) and records `coverage.report_dir` in
+`dv/auto_dv/evidence/gen_round_<n>/regress_manifest.yaml`; the evidence directory copies dashboard.txt,
+hierarchy.txt, tests.txt, groups.txt and grpinfo.txt but NOT asserts.txt (ask to Runtime: add
+`asserts.txt` to the copied set so the fill cites a committed file).
+
+Fields read: in `<report_dir>/asserts.txt`, section "Detail Report for Assertions", the rows whose
+name ends in IbexCtrlStateValid (rtl/ibex_controller.sv:1104-1106), IbexLsuStateValid
+(rtl/ibex_load_store_unit.sv:821-824), IbexMultDivStateValid (rtl/ibex_multdiv_fast.sv:532-533); the
+columns are `ASSERTIONS CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE`; EC-3 requires
+ATTEMPTS > 0 and FAILURES == 0 for each of the three (REAL SUCCESSES is recorded too).
+
+Command (the only way the three class-D spare-encoding groups enter the file):
+
+```
+python3 dv/auto_dv/excl/gen_excl_select.py --dump <report_dir>/../full_exclusions \
+  --out dv/auto_dv/excl/gen_exclusions.el --report dv/auto_dv/excl/gen_exclusions_select_report.md \
+  --attempts <the strict-load attempts logs in force> \
+  --ec3-asserts <report_dir>/asserts.txt --ec3-round round_<n>
+```
+
+The generator refuses the fill (exit non-zero, names the assertion) when a row is missing, ATTEMPTS is
+0 or FAILURES is not 0; when it fills, each of the three annotations reads "attempts A, failures 0 in
+round_<n> (asserts.txt)" and the .el header line states the source. Then: strict load of the new file
+against that round's merged vdb (F-1/EC-5), the round's `-dump full_exclusions` and constfile.txt
+copied beside the .el (B.7 rule 3), Critic re-review of the file.
 
 Pending EC-3 / EC-5 from the first measured regression, this file is the exclusion deliverable in
 draft form; the Critic approves the file, not this README.

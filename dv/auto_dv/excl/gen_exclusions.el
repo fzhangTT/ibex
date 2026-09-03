@@ -1305,28 +1305,14 @@ CHECKSUM: "20161745 3452470394"
 MODULE: ibex_cs_registers
 ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2026-09-02); gen_dut_top ties ibex_core.cheriot_enable_i to ibex_pkg::IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206). Class T (constant tie). rtl/ibex_cs_registers.sv CHERIoT CSR arms (mtvec/mepc illegal-under-On, MSHWM/MSHWMB/CDBG_CTRL reads, PMP-illegal block, SCR mux, pcc/cap updates, fatal_err set); the else/illegal arms stay live (A.8). Reachable only with cheriot_enable_i == IbexMuBiOn. EC-1 k-induction PASS T022_CSR_CHERI0, T022_CSR_MSHWM0 (dv/auto_dv/evidence/gen_t022_formal/, gen_unreachability_evidence.md 4.1/4.2); EC-2 constfile; EC-3 IbexCheriot*Disabled assertions; EC-5 strict load."
 Block 21 "347518172" "illegal_csr = 1'b1;"
-Block 22 "1392153817" "csr_rdata_int = mtvec_q;"
 Block 24 "264380990" "illegal_csr = 1'b1;"
-Block 25 "4057767857" "csr_rdata_int = mepc_q;"
 Block 75 "1012915963" "csr_rdata_int = mshwm_q;"
-Block 76 "3370698267" "illegal_csr = 1'b1;"
 Block 78 "199316972" "csr_rdata_int = mshwmb_q;"
-Block 79 "2568516718" "illegal_csr = 1'b1;"
 Block 81 "567081646" "csr_rdata_int = cdbg_ctrl_q;"
-Block 82 "4048553032" "illegal_csr = 1'b1;"
 Block 86 "65121561" "illegal_csr = 1'b1;"
-Block 266 "3904788274" "cheriot_csr_rdata_o = (debug_mode_i ? depc_q : '0);"
-Block 267 "3348321698" "cheriot_csr_rdata_o = (debug_mode_i ? dscratch0_q : '0);"
-Block 268 "3839399327" "cheriot_csr_rdata_o = (debug_mode_i ? dscratch1_q : '0);"
-Block 269 "2583875407" "cheriot_csr_rdata_o = mtvec_q;"
-Block 270 "1321462793" "cheriot_csr_rdata_o = gen_scr.mtdc_data;"
-Block 271 "236585115" "cheriot_csr_rdata_o = gen_scr.mscratchc_data;"
-Block 272 "4096631128" "cheriot_csr_rdata_o = mepc_q;"
 Block 277 "1688287912" "pcc_cap_q <= pcc_cap_d;"
 Block 294 "4115632353" "mtvec_cap <= cheriot_csr_wcap_i;"
-Block 299 "1318991522" "gen_scr.mstack_epc_cap_q <= mepc_cap;"
 Block 304 "3956039090" "mepc_cap <= gen_scr.pcc_exc_cap;"
-Block 306 "3777635196" "mepc_cap <= gen_scr.mstack_epc_cap_q;"
 Block 308 "743171677" "mepc_cap <= cheriot_csr_wcap_i;"
 Block 313 "3770761550" "gen_scr.mtdc_cap <= cheriot_csr_wcap_i;"
 Block 318 "2591665392" "gen_scr.mscratchc_cap <= cheriot_csr_wcap_i;"
@@ -1595,7 +1581,6 @@ ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2
 Block 9 "371341365" "cheriot_operator_o.CJAL = 1'b1;"
 Block 15 "2474997691" "cheriot_operator_o.CJALR = 1'b1;"
 Block 17 "722017016" "instr_is_cheriot_o = 1'b1;"
-Block 18 "2452896486" "illegal_insn = 1'b1;"
 Block 35 "648728314" "cheriot_operator_o.CSTORE_CAP = (~illegal_c_insn_i);"
 Block 50 "2709011646" "cheriot_operator_o.CLOAD_CAP = 1'b1;"
 Block 55 "3444227322" "cheriot_operator_o.CAUIPCC = 1'b1;"
@@ -1612,7 +1597,6 @@ Block 144 "2700483840" "cheriot_operator_o.CCLEAR_TAG = 1'b1;"
 Block 145 "1206716652" "cheriot_operator_o.CGET_FIELD = 1'b1;"
 Block 146 "863229906" "cheriot_operator_o.CGET_FIELD = 1'b1;"
 Block 147 "943491077" "cheriot_operator_o.CGET_FIELD = 1'b1;"
-Block 148 "1906098644" "illegal_insn = 1'b1;"
 Block 150 "3362948202" "cheriot_operator_o.CCSR_RW = 1'b1;"
 Block 151 "542567606" "rf_ren_b_o = 1'b1;"
 Block 152 "1825119094" "cheriot_operator_o.CSET_BOUNDS = 1'b1;"
@@ -1627,10 +1611,8 @@ Block 160 "427510628" "cheriot_operator_o.CSUB_CAP = 1'b1;"
 Block 161 "1294023228" "cheriot_operator_o.CSET_HIGH = 1'b1;"
 Block 162 "751508704" "cheriot_operator_o.CIS_SUBSET = 1'b1;"
 Block 163 "1505328664" "cheriot_operator_o.CIS_EQUAL = 1'b1;"
-Block 164 "689554920" "illegal_insn = 1'b1;"
 Block 166 "3331373471" "cheriot_operator_o.CINC_ADDR_IMM = 1'b1;"
 Block 168 "2541837962" "cheriot_operator_o.CSET_BOUNDS_IMM = 1'b1;"
-Block 169 "1515370181" "illegal_insn = 1'b1;"
 Block 172 "164316353" "cheriot_operator_o.CAUICGP = 1'b1;"
 ANNOTATION_END
 ANNOTATION_BEGIN: "Class P (build-parameter constant, opentitan configuration, values verified against util/ibex_config.py at generation): rtl/ibex_decoder.sv:1342-1344, :1348-1350 BCOMPRESS/BDECOMPRESS multicycle bodies (Part C rows 42-43; the case items :1341/:1347 stay live). RV32B = RV32BOTEarlGrey (RV32B == RV32BFull is false) is an elaboration constant (dv/auto_dv/work/rtl-arch/gen_param_resolution.md; time-0 config banner). EC-1 configuration + legality case :641-642; EC-2 expected URG Unreachable; EC-5 strict load. gen_exclusions_draft.md Part C."
@@ -2219,15 +2201,6 @@ Condition 64 "216852016" "(raddr_a_i[4] && ((!g_cheriot_rf.cheriot_enabled))) 1 
 ANNOTATION_END
 ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2026-09-02); gen_dut_top ties ibex_core.cheriot_enable_i to ibex_pkg::IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206). Class T (constant tie). A.4 condition vectors with a constant-tie operand at its impossible value (ibex_register_file_ff.sv:223). Reachable only with cheriot_enable_i == IbexMuBiOn. EC-1 k-induction PASS T022_* (gen_unreachability_evidence.md 4.1 table) (dv/auto_dv/evidence/gen_t022_formal/, gen_unreachability_evidence.md 4.1/4.2); EC-2 constfile; EC-3 IbexCheriot*Disabled assertions; EC-5 strict load."
 Condition 66 "39126227" "(raddr_b_i[4] && ((!g_cheriot_rf.cheriot_enabled))) 1 -1" (2 "10")
-ANNOTATION_END
-ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2026-09-02); gen_dut_top ties ibex_core.cheriot_enable_i to ibex_pkg::IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206). Class T (constant tie). A.4 condition vectors with a constant-tie operand at its impossible value (ibex_register_file_ff.sv:227). Reachable only with cheriot_enable_i == IbexMuBiOn. EC-1 k-induction PASS T022_* (gen_unreachability_evidence.md 4.1 table) (dv/auto_dv/evidence/gen_t022_formal/, gen_unreachability_evidence.md 4.1/4.2); EC-2 constfile; EC-3 IbexCheriot*Disabled assertions; EC-5 strict load."
-Condition 67 "2391767907" "(g_cheriot_rf.cheriot_enabled ? ((raddr_a_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_a_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1")
-ANNOTATION_END
-ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2026-09-02); gen_dut_top ties ibex_core.cheriot_enable_i to ibex_pkg::IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206). Class T (constant tie). A.4 condition vectors with a constant-tie operand at its impossible value (ibex_register_file_ff.sv:229). Reachable only with cheriot_enable_i == IbexMuBiOn. EC-1 k-induction PASS T022_* (gen_unreachability_evidence.md 4.1 table) (dv/auto_dv/evidence/gen_t022_formal/, gen_unreachability_evidence.md 4.1/4.2); EC-2 constfile; EC-3 IbexCheriot*Disabled assertions; EC-5 strict load."
-Condition 70 "2882321518" "(g_cheriot_rf.cheriot_enabled ? ((raddr_b_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_b_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1")
-ANNOTATION_END
-ANNOTATION_BEGIN: "cheriot-out-of-scope: owner ruling DV_prompt.txt Section 2 (2026-09-02); gen_dut_top ties ibex_core.cheriot_enable_i to ibex_pkg::IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206). Class T (constant tie). A.4 condition vectors with a constant-tie operand at its impossible value (ibex_register_file_ff.sv:160). Reachable only with cheriot_enable_i == IbexMuBiOn. EC-1 k-induction PASS T022_* (gen_unreachability_evidence.md 4.1 table) (dv/auto_dv/evidence/gen_t022_formal/, gen_unreachability_evidence.md 4.1/4.2); EC-2 constfile; EC-3 IbexCheriot*Disabled assertions; EC-5 strict load."
-Condition 74 "2362779018" "(g_cheriot_rf.cheriot_enabled ? g_cheriot_rf.g_dummy_r0.we_data_r0 : (((!RV32E)) && g_cheriot_rf.we_a_dec[0] && waddr_a_i[4])) 1 -1" (2 "1")
 ANNOTATION_END
 
 CHECKSUM: "837370406 2246190091"
