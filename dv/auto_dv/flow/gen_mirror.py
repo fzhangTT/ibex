@@ -216,8 +216,11 @@ def prune_head_mirrors() -> dict[str, Any]:
         if _t.time() - p.stat().st_mtime < C.HEAD_MIRRORS_KEEP_HOURS * 3600:
             result["kept_recent"].append(p.name)
             continue
-        shutil.rmtree(p, ignore_errors=True)
-        shutil.rmtree(p.parent / (p.name + "_logs"), ignore_errors=True)
+        # A-002: only a manifest-bearing tree under the head family is removed, and the removal is logged with its size.
+        fam = head_family()
+        U.remove_tree_guarded(p, (fam,), "head tree")
+        if (p.parent / (p.name + "_logs")).is_dir():
+            U.remove_tree_guarded(p.parent / (p.name + "_logs"), (fam,), "head tree logs")
         result["removed"].append(p.name)
     return result
 

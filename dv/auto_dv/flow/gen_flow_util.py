@@ -144,6 +144,27 @@ def canary_build_facts(path: Path | None) -> dict[str, Any] | None:
             C.COVERGROUPS_DECLARED_KEY: man.get(C.COVERGROUPS_DECLARED_KEY), "covergroup_files": man.get("covergroup_files")}
 
 
+def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
+    """The flow's only way to delete a directory it computed (owner ruling A-002): the path must exist, be a directory
+    and lie under one of the given roots (the out root, the work dir, the head-mirror family), else die; what is
+    removed is logged with its entry count. Returns that count (0 for an empty directory, removed with rmdir)."""
+    p = path.resolve()
+    under = [r for r in roots if r is not None and (p == Path(r).resolve() or Path(r).resolve() in p.parents)]
+    if not under:
+        die(f"refusing to remove {what} {p}: not under any of {[str(r) for r in roots if r is not None]} (A-002)")
+    if p in {Path(r).resolve() for r in roots if r is not None}:
+        die(f"refusing to remove {what} {p}: it is a root itself (A-002)")
+    if not p.is_dir():
+        die(f"refusing to remove {what} {p}: not an existing directory (A-002)")
+    n = sum(1 for _ in p.rglob("*"))
+    if n == 0:
+        p.rmdir()
+    else:
+        shutil.rmtree(p)
+    log(f"removed {what} {p} ({n} entries) under {under[0]}")
+    return n
+
+
 def git_head() -> dict[str, Any]:
     def run(args: list[str]) -> str:
         r = subprocess.run(["git", *args], cwd=C.REPO_ROOT, capture_output=True, text=True)
@@ -609,6 +630,20 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "canary_build_facts records path, manifest, source_mode, head_sha and the covergroup facts (None without a canary build)")
     shutil.rmtree(gd, ignore_errors=True)
+    rg = Path(tempfile.mkdtemp(prefix="gen_rm_selftest_", dir=C.selftest_tmp()))
+    (rg / "a").mkdir(); (rg / "a" / "f.txt").write_text("x", encoding="utf-8"); (rg / "empty").mkdir()
+    n_full = remove_tree_guarded(rg / "a", (C.WORK_DIR,), "self-test dir")
+    n_empty = remove_tree_guarded(rg / "empty", (C.OUT_DIR, C.WORK_DIR), "self-test dir")
+    refused = []
+    for target, roots in ((Path("/") / "nonexistent_gen_dir", (C.WORK_DIR,)), (rg, (rg,)), (rg / "missing", (C.WORK_DIR,)), (C.REPO_ROOT / "ci" / "env.sh", (C.REPO_ROOT,))):
+        try:
+            remove_tree_guarded(target, roots, "self-test dir"); refused.append(False)
+        except SystemExit:
+            refused.append(True)
+    cond = n_full == 1 and not (rg / "a").exists() and n_empty == 0 and not (rg / "empty").exists() and refused == [True] * 4 and (C.REPO_ROOT / "ci" / "env.sh").is_file()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded (A-002): removes a listed directory under a root and logs its entry count (1, then an empty one), refuses a path outside the roots, a root itself, a missing path and a file: {refused}")
+    shutil.rmtree(rg, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

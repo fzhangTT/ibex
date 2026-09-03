@@ -555,7 +555,7 @@ def main() -> int:
     if outdir.exists():
         if not a.force:
             U.die(f"{outdir} exists (fresh outdir per regression; --force to replace)")
-        shutil.rmtree(outdir)
+        U.remove_tree_guarded(outdir, (C.OUT_DIR, C.WORK_DIR), "regression outdir (--force)")
     outdir.mkdir(parents=True)
     shutil.copyfile(a.testlist, outdir / "testlist_used.yaml")
     manifest: dict[str, Any] = {

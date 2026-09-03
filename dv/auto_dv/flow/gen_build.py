@@ -288,7 +288,7 @@ def main() -> int:
     if outdir.exists():
         if not a.force:
             U.die(f"{outdir} exists; fresh outdir per build (SIM_RECIPE Section 9) or --force")
-        shutil.rmtree(outdir)
+        U.remove_tree_guarded(outdir, (C.OUT_DIR, C.WORK_DIR), "build outdir (--force)")
     outdir.mkdir(parents=True)
 
     if a.lsf:

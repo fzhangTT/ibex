@@ -871,6 +871,15 @@ the current host (sources the staged env.sh). Through the flow: `gen_regress.py 
 
 ## 9. Cleanup rule
 
+Owner ruling A-002 (2026-09-03): the flow deletes a computed directory only through
+`gen_flow_util.remove_tree_guarded(path, roots, what)`: the path must exist, be a directory and lie under one of
+the named roots (the out root, the work dir, or the head-mirror family for the tick's prune), never a root itself;
+otherwise the process dies with the reason. Every removal is logged with its entry count (an empty directory is
+removed with rmdir). Users: the prune of unleased head trees (`gen_mirror.prune_head_mirrors`, which already selects
+only manifest-bearing trees under the family), `gen_regress --force`, `gen_build --force` and the per-run program
+directory of gen_stim. Self-test cleanup of mkdtemp directories is the one exception (temporary paths the test
+created itself). Interactive shell commands follow the same ruling: no `rm` on a variable-built path.
+
 Every regression manifest records `lsf_jobs_left` (this regression's `gen_dv_<tag>_*` jobs still
 active in `bjobs`: PEND, RUN or suspended; DONE and EXIT rows do not count); it must be empty. `gen_flow_util.lsf_jobs_left()` is the check (bjobs shows a finished job as RUN for a few seconds after `bsub -K` returns, so a non-empty answer is re-polled every 3 s for up to 15 s before it is recorded); the runtime role runs `bjobs`
 at the end of every task.

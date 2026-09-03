@@ -46,7 +46,7 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     seed = run_seed if prog.get("seed", C.PROGRAM_SEED_RUN) == C.PROGRAM_SEED_RUN else int(prog["seed"])
     # A fresh program directory every time: nothing stale (a previous source or image) can pass for this run's.
     if out.exists():
-        shutil.rmtree(out)
+        U.remove_tree_guarded(out, (C.OUT_DIR, C.WORK_DIR), "program dir")
     out.mkdir(parents=True)
     # Pinned hash seed: set iteration and string hashing in a generator or in gen_program.py must not vary the
     # program for one seed. The build-configuration name has one home (gen_flow_const.BUILD_CONFIG).
