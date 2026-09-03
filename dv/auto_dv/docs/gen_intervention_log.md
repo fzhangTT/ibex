@@ -1605,3 +1605,16 @@ composed only from the hand-off note's content list, and each item in it is conf
 or a retained artifact named for each) before the commit; an item the Orchestrator expected but the note does not list is
 asked about, never assumed. The classifier fixes (Critic tb_l3 H-1(b)/(c), CM66-MAJ-1) and the LOG-058 unit test remain
 owed and go into landing 6 ahead of any new covergroup; no proof credit rests on the affected bins until then.
+
+## LOG-066 - 2026-09-03 - Committed review artifacts edited in place by the Critic, twice; restored; hashed files are frozen
+
+Twice today the Critic appended a later judgement to a committed verdict file instead of writing a new one: Section 7 of
+gen_critic_tb_l2b.md (the 2b lift, refused; the Critic restored the file and wrote gen_critic_tb_l2b_v2.md), and Sections
+5-7 of gen_critic_t226.md (the LOG-050 and CM77 touches judged with T-226), written after the Critic had sent the file's
+hash and the Orchestrator had committed it at 2f161dd; the extension crossed the Orchestrator's stop message. The
+Orchestrator saved the extended text byte for byte under the Critic's work dir (gen_critic_t226_extended_20_49Z.md) and
+restored the committed file in the shared tree; the Critic writes the extension as gen_critic_t226_v2.md with its own
+header. Rules: (1) a verdict file is frozen the moment its hash is sent; every later finding on the same target is a new
+file (v2, v3) with its own header and verdict line; (2) when a committed artifact turns up modified in the shared tree,
+the Orchestrator preserves the modification in the author's work dir and restores the committed bytes, then tells the
+author; the shared tree never carries an edited review artifact while other roles verify against HEAD.
