@@ -492,7 +492,8 @@ re-retained); such an entry is reported
 logs are re-retained. `gen_flow_util.py --check-red-signatures [testlist]` lists every red with the harness match
 and the verdict; exit codes: `RED_CHECK_EXIT_REFUSE` = 2 when any entry would be refused, `RED_CHECK_EXIT_STALE` = 3
 when the only non-RED-OK logs are allowlisted (summary `PASS (n stale ...)`, per task), 0 when every checked log is
-RED-OK, so a caller must not read 3 as a refusal. Head trees carry no evidence and skip the check, so the
+RED-OK, so a caller must not read 3 as a refusal; those codes are the CLI's, the loader itself refuses through `die`,
+exit 1, like every other testlist refusal. Head trees carry no evidence and skip the check, so the
 clone-side load (the server, a worktree run, a reviewer's checkout) is where it bites.
 Witness protocol (ruling 2026-09-03, plan WP rows): a test entry may list `witness_ids` (TP ids). The flow
 resolves them through `dv/auto_dv/docs/gen_trace_witness_ids.csv` at the pinned source root (the CSV's own

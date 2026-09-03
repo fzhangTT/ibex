@@ -1124,6 +1124,7 @@ if __name__ == "__main__":
         data = load_yaml(tl)
         bad = stale = 0
         causes: dict[str, int] = {}
+        refused: dict[str, int] = {}
         for t in data.get("tests", []):
             if not t.get("red_fixture"):
                 continue
@@ -1132,15 +1133,18 @@ if __name__ == "__main__":
                 print(f"RED-CHECK skip  {t['name']}: no retained pinned-red log")
                 continue
             ok_ = chk["refuse"] is None
-            bad += 0 if ok_ else 1
+            if not ok_:
+                bad += 1
+                kind = "harness-line mismatch" if chk["refuse"] != C.RED_STALE_REFUSE else "retained log not RED-OK"
+                refused[kind] = refused.get(kind, 0) + 1
             if ok_ and chk["stale_evidence"]:
                 stale += 1
                 causes[chk["stale_cause"]] = causes.get(chk["stale_cause"], 0) + 1
             tag = "ok  " if ok_ and not chk["stale_evidence"] else ("STALE" if ok_ else "FAIL")
             print(f"RED-CHECK {tag} {t['name']}: {Path(chk['log']).name}; harness match={chk['harness_match']}; verdict {chk['verdict']}"
                   + (f"; {chk['refuse']}" if chk["refuse"] else "")
-                  + (f"; {chk['stale_cause']} (the verdict's first collected line is not the harness line)" if chk["stale_evidence"] else ""))
-        verdict = (f"FAIL ({bad} signature(s) do not match their retained log's harness line)" if bad
+                  + (f"; {chk['stale_cause']} (the verdict's first collected line is not the harness line)" if chk["stale_cause"] else ""))
+        verdict = (f"FAIL ({bad} red entry(ies) refused: " + "; ".join(f"{n} {k}" for k, n in sorted(refused.items())) + ")" if bad
                    else (f"PASS ({stale} stale retained log(s), the literal verdict criterion is not met yet: "
                          + "; ".join(f"{n} {c}" for c, n in sorted(causes.items())) + ")" if stale else "PASS"))
         print("RED-CHECK:", verdict)

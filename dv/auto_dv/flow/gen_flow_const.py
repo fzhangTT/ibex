@@ -39,7 +39,7 @@ RED_LOG_PATTERNS = ("gen_{group}_red1_stdout.log", "gen_b2_{group}_red1_stdout.l
 RED_LOG_SIM_PATTERN = "gen_{group}_red1_sim.log"
 RED_TEST_PREFIX = "gen_test_"
 RED_TEST_SUFFIX = "_red"
-RED_CHECK_EXIT_REFUSE = 2   # --check-red-signatures: a signature does not match its retained log's harness line
+RED_CHECK_EXIT_REFUSE = 2   # --check-red-signatures: an entry is refused (harness-line mismatch, or a retained log whose verdict is not RED-OK)
 RED_CHECK_EXIT_STALE = 3    # --check-red-signatures: no refusal, but stale retained logs remain (a visible debt)
 # The literal criterion (T-153): the retained pinned-red log, run through the verdict with the entry's red_expect, must
 # come out RED-OK, else the entry is refused at load. The one exception is this allowlist of entries whose retained log
