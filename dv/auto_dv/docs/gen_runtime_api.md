@@ -255,6 +255,7 @@ seq = integer. Fields:
 | group (optional) | string | tier targeted: feature-group filter |
 | build_vcs_args (optional) | list of strings | purpose 2 only: extra vcs arguments for an instrumentation trial (for example `["-cm_glitch 0"]`); refused under any other purpose because a measurement never changes the flag set |
 | dump_exclusions (optional) | yes/no | add `urg -dump full_exclusions` to the merge (purpose 4 does it anyway) |
+| elcheck (optional) | mapping `{vdb, elfile[, build]}` | purpose 2 only, with `tests: []` and `seeds: []`: report-only strict load of an exclusion file against an existing vdb (no simulation); scopes come from the build manifest of the regression the vdb belongs to (`build` names it when that regression has several) |
 
 Purpose and the scope it allows (a larger scope is refused in writing, in the manifest):
 
@@ -262,6 +263,7 @@ Purpose and the scope it allows (a larger scope is refused in writing, in the ma
 |---|---|---|
 | 1 bring-up of one test | exactly one named test, at most 5 seeds | a tier word, several tests, more seeds |
 | 2 TB component change | smoke tier + every test whose `component` matches + the mutation-evidence tests of that component (`feature_groups: [mutation]`) + explicitly named tests | `tests: full`; no component and no test |
+| 2 with `elcheck` | two URG merges of the named vdb through `gen_cov_report.merge`, one with the exclusion file (`-excl_strict`, `-dump full_exclusions`) and one without, same gated and informational scopes; manifest `elcheck` carries both results, `merge_warnings`, `exclusion_violations`, `excluded_counts_gate_row` (denominators the file removed per metric) and a verdict `ok`/`failed` | tests or seeds non-empty; no component; a purpose other than 2 |
 | 3 failure reproduction | one test, one explicit seed, no coverage, waves optional | anything else |
 | 4 Phase 1 gate or closure round | `tests: full` with `coverage: yes`, requester dv-lead or orchestrator | another tier, coverage no, another requester (route through the DV Lead) |
 
@@ -271,7 +273,19 @@ Life cycle: `requests/` -> `running/` -> `done/`; results in
 runs (test, seed, verdict, reason, sim_log, run_log, run_cmd, vdb, cm_name, waves, wall_s,
 lsf_job_id), builds, coverage (report_dir, dashboard_txt, totals, dut_scope), summary, lsf_cost.
 The requester is told the manifest path by message. `--once` (default) serves what is pending and
-exits; `--watch` polls. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
+exits; `--watch` polls. Every manifest records `out_root` (the out root in force for that serve). A
+file that does not parse as YAML is refused in writing like any other invalid request (the parse
+error is the refusal reason; the raw text is the echo); a refused name is consumed, re-file under the
+next sequence number. `--only <name>` (repeatable) serves only the named pending requests.
+
+Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per request, but independent
+purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
+each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
+single-test requests turns around in about one request's time. Before such a batch the server syncs
+the mirror once (`gen_mirror.py --sync --spike`, recorded in every batch manifest as
+`server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
+on the mirror tree; a lone purpose-1 request and purposes 2 to 4 are served one at a time in file
+order, each syncing for itself. `--extra-arg=<gen_regress argument>` (repeatable, `=` syntax because the
 values start with dashes) lets the runtime operator add knobs a request asked for in its notes;
 they are recorded in the manifest as `operator_extra_args`. Only the runtime role runs this
 script (LSF is exclusive to it).
@@ -303,6 +317,12 @@ gen_cov_report.py unreachable --report-dir DIR --module <rtl module>
 parser reads). `unreachable` counts URG "Unreachable" marks (constant analysis, `-cm_seqnoconst`)
 in one module's section of `modinfo.txt`, per line rows, condition vectors and toggle rows: the
 machine evidence rtl-arch's exclusion draft Part B.3 asks for.
+
+Exclusion markers: when an exclusion file is loaded URG appends `(x)` to an instance name that
+carries exclusions and `(X)` to one that carries them below; `parse_hierarchy_row` strips the marker
+(recorded as `excl_marker`) so the gated rows still parse. Pinned on real excerpts by
+`gen_cov_report.py self-test` (found by the first elcheck: with the marker unhandled, every gated row
+was a parse_error and a measured round with the file loaded would have died).
 
 ## 6a. Build mechanics beyond vcs: pre_build, extra_ldflags, runtime_lib_dirs
 

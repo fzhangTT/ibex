@@ -181,24 +181,40 @@ def parse_dashboard(dash: Path) -> dict[str, Any]:
     return {"parse_error": "no 'Total Coverage Summary' section"}
 
 
-def parse_hierarchy_row(hier: Path, scope: str) -> dict[str, Any]:
-    """Row of the instance <scope> (matched on its leaf name) in hierarchy.txt."""
+# URG suffixes an instance name with (x) when exclusions apply to it and (X) when they apply below it.
+URG_EXCL_MARKERS = ("(x)", "(X)")
+
+
+def parse_hierarchy_rows(text: str, scope: str) -> dict[str, Any]:
+    """Row of the instance <scope> (matched on its leaf name, exclusion marker stripped) in hierarchy text."""
     leaf = scope.split(".")[-1]
-    if not hier.is_file():
-        return {"parse_error": f"{hier} missing"}
     cols: list[str] = []
-    for line in hier.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in text.splitlines():
         toks = line.split()
         if not toks:
             continue
         if all(t in URG_COLUMN_ALIASES for t in toks):
             cols = toks
             continue
-        if cols and toks[-1] == leaf:
+        name, marker = toks[-1], None
+        for m in URG_EXCL_MARKERS:
+            if name.endswith(m):
+                name, marker = name[:-len(m)], m
+        if cols and name == leaf:
             out = _parse_row(cols, toks[:-1])
             out["instance"] = scope
+            out["excl_marker"] = marker
             return out
-    return {"parse_error": f"instance {scope} (leaf {leaf}) not found in {hier}"}
+    return {"parse_error": f"instance {scope} (leaf {leaf}) not found"}
+
+
+def parse_hierarchy_row(hier: Path, scope: str) -> dict[str, Any]:
+    if not hier.is_file():
+        return {"parse_error": f"{hier} missing"}
+    out = parse_hierarchy_rows(hier.read_text(encoding="utf-8", errors="replace"), scope)
+    if "parse_error" in out:
+        out["parse_error"] += f" in {hier}"
+    return out
 
 
 def module_section(report_dir: Path, module: str) -> str:
@@ -227,6 +243,38 @@ def unreachable_summary(report_dir: Path, module: str) -> dict[str, Any]:
             "toggle_rows_unreachable": tgl_unreach}
 
 
+# Real hierarchy.txt excerpts (regress_req_runtime-004, 2026-09-03 08:50Z): the same instance row without and
+# with an exclusion file loaded; URG appends (x) to an instance that carries exclusions.
+REAL_HIER_PLAIN = """    SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT
+     31.97   37.81 1596/4221   26.62 2504/9407    6.92 1678/24236    6.98 6/86   31.43 726/2310   82.08 142/173  u_ibex_core
+"""
+REAL_HIER_EXCL = """    SCORE   LINE              COND              TOGGLE             FSM          BRANCH           ASSERT
+     33.25   40.64 1596/3927   27.63 2504/9061    8.24 1678/20364    8.11 6/74   32.82 726/2212   82.08 142/173  u_ibex_core(x)
+"""
+
+
+def self_test() -> int:
+    ok = True
+    plain = parse_hierarchy_rows(REAL_HIER_PLAIN, "gen_smoke_tb_top.u_dut.u_ibex_core")
+    excl = parse_hierarchy_rows(REAL_HIER_EXCL, "gen_smoke_tb_top.u_dut.u_ibex_core")
+    for name, row, want_line, want_marker in (("real row without exclusions", plain, "1596/4221", None),
+                                              ("real row with exclusions, (x) marker", excl, "1596/3927", "(x)")):
+        cond = "parse_error" not in row and row["ratios"]["line"] == want_line and row.get("excl_marker") == want_marker
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} {name}: {row.get('parse_error') or row['ratios']['line']} marker={row.get('excl_marker')}")
+    miss = parse_hierarchy_rows(REAL_HIER_EXCL, "gen_smoke_tb_top.u_dut.u_register_file")
+    cond = "parse_error" in miss
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} an absent instance is a parse_error, never a silent row")
+    comb = combine_rows([plain, excl])
+    cond = comb["ratios"]["line"] == "3192/8148"
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} combine_rows sums covered/total: {comb['ratios']['line']}")
+    print("SELF-TEST: rows named 'real ...' are verbatim hierarchy.txt excerpts of regress_req_runtime-004")
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -241,6 +289,7 @@ def main() -> int:
     p = sub.add_parser("parse")
     p.add_argument("--report-dir", type=Path, required=True)
     p.add_argument("--dut-scope", action="append", default=[])
+    sub.add_parser("self-test", help="hierarchy row parsing on real URG excerpts (with and without exclusion markers)")
     u = sub.add_parser("unreachable")
     u.add_argument("--report-dir", type=Path, required=True)
     u.add_argument("--module", required=True)
@@ -253,6 +302,8 @@ def main() -> int:
         print(f"status={res['status']} urg rc={res['urg_rc']} violations={len(res['exclusion_violations'])} "
               f"totals={res['totals']} dut_scope={res['dut_scope']} gate_row={res.get('gate_row')}")
         return 0 if res["status"] == "ok" else 1
+    if a.cmd == "self-test":
+        return self_test()
     if a.cmd == "parse":
         print("totals:", parse_dashboard(a.report_dir / C.URG_DASHBOARD_TXT))
         for s in a.dut_scope:

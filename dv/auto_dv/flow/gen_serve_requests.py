@@ -16,13 +16,17 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures as cf
 import os
 import shutil
 import sys
 import time
 from pathlib import Path
+
+import yaml
 from typing import Any
 
+import gen_cov_report as R
 import gen_flow_const as C
 import gen_flow_util as U
 
@@ -35,9 +39,10 @@ def parse_bool(v: Any) -> bool:
     return str(v).strip().lower() in ("yes", "y", "true", "1", "on")
 
 
-def pending_requests() -> list[Path]:
+def pending_requests(only: list[str] | None = None) -> list[Path]:
     C.REQUESTS_DIR.mkdir(parents=True, exist_ok=True)
-    files = [p for p in C.REQUESTS_DIR.iterdir() if p.is_file() and C.REQUEST_NAME_RE.match(p.name)]
+    files = [p for p in C.REQUESTS_DIR.iterdir() if p.is_file() and C.REQUEST_NAME_RE.match(p.name)
+             and (not only or p.stem in only)]
     return sorted(files, key=lambda p: (p.stat().st_mtime, p.name))
 
 
@@ -58,11 +63,20 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
         return None, "purpose must be an integer 1..4"
     if purpose not in C.PURPOSES:
         return None, f"purpose {purpose} not in {sorted(C.PURPOSES)}"
+    elcheck = req.get("elcheck")
+    if elcheck is not None:
+        if purpose != 2:
+            return None, "elcheck (report-only exclusion check) is a purpose-2 request"
+        if not isinstance(elcheck, dict) or set(elcheck) - set(C.ELCHECK_KEYS) or not all(k in elcheck for k in C.ELCHECK_REQUIRED_KEYS):
+            return None, f"elcheck must be a mapping with keys {C.ELCHECK_REQUIRED_KEYS} (optional: {C.ELCHECK_OPTIONAL_KEYS})"
+        for k in C.ELCHECK_REQUIRED_KEYS:
+            if not Path(elcheck[k]).is_file() and not Path(elcheck[k]).is_dir():
+                return None, f"elcheck.{k} {elcheck[k]!r} does not exist"
     tests = req["tests"]
     if isinstance(tests, str):
         tests = [t.strip() for t in tests.split(",") if t.strip()]
-    if not isinstance(tests, list) or not tests:
-        return None, "tests must be a non-empty list, a comma list, or a tier word"
+    if not isinstance(tests, list) or (not tests and elcheck is None):
+        return None, "tests must be a non-empty list, a comma list, or a tier word (empty only with elcheck)"
     seeds = req["seeds"]
     if isinstance(seeds, str) and seeds.strip().isdigit():
         seeds = int(seeds)
@@ -70,6 +84,8 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
         seeds = [U.parse_seed(s.strip()) for s in seeds.split(",") if s.strip()]
     if not isinstance(seeds, (int, list)):
         return None, "seeds must be a count or an explicit list"
+    if elcheck is not None and (tests or seeds):
+        return None, "elcheck runs no simulation: tests and seeds must be empty"
     norm = dict(req)
     bva = req.get("build_vcs_args") or []
     if isinstance(bva, str):
@@ -79,7 +95,8 @@ def validate(req: Any, name: str) -> tuple[dict[str, Any] | None, str | None]:
     norm.update(purpose=purpose, tests=tests, seeds=seeds, coverage=parse_bool(req["coverage"]),
                 waves=parse_bool(req.get("waves", False)), group=req.get("group"),
                 component=req.get("component"), notes=str(req.get("notes") or ""),
-                build_vcs_args=bva, dump_exclusions=parse_bool(req.get("dump_exclusions", False)))
+                build_vcs_args=bva, dump_exclusions=parse_bool(req.get("dump_exclusions", False)),
+                elcheck=elcheck)
     return norm, None
 
 
@@ -91,6 +108,12 @@ def scope_for(req: dict[str, Any], testlist: dict[str, Any]) -> tuple[list[str] 
     tier = TIER_WORDS.get(tests[0].lower()) if len(tests) == 1 and tests[0].lower() in TIER_WORDS else None
     known = {t["name"] for t in testlist["tests"]}
     explicit = [] if tier else tests
+    if req.get("elcheck") is not None:
+        if not req.get("component"):
+            return None, "purpose 2 needs a component (elcheck: name the exclusion file's component)", \
+                {"purpose": p, "kind": "elcheck"}
+        return [], None, {"purpose": p, "kind": "elcheck", "component": req["component"],
+                          "vdb": req["elcheck"]["vdb"], "elfile": req["elcheck"]["elfile"], "tests": [], "seed_count": 0}
     unknown = [t for t in explicit if t not in known and not t.startswith("component:")]
     if unknown:
         return None, f"unknown test(s) {unknown}; see gen_testlist.yaml", {}
@@ -160,17 +183,68 @@ def scope_for(req: dict[str, Any], testlist: dict[str, Any]) -> tuple[list[str] 
     return args, None, scope
 
 
-def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: list[str] | None = None) -> Path:
+def scopes_for_vdb(vdb: Path, build_name: str | None) -> tuple[list[str], list[str], str]:
+    """The gated and informational scopes of the build that produced a vdb: read from the build manifest
+    of the regression the vdb belongs to (walk up to its manifest.yaml), never re-typed."""
+    for parent in vdb.resolve().parents:
+        man = parent / "manifest.yaml"
+        if man.is_file():
+            reg = U.load_yaml(man)
+            builds = reg.get("builds") or {}
+            name = build_name or (next(iter(builds)) if len(builds) == 1 else None)
+            if name not in builds:
+                U.die(f"elcheck: regression {man} has builds {sorted(builds)}; name one with elcheck.build")
+            bman = U.load_yaml(Path(builds[name]["manifest"]))
+            return list(bman.get("cov_scopes") or []), list(bman.get("info_scopes") or []), str(builds[name]["manifest"])
+    U.die(f"elcheck: no regression manifest.yaml above {vdb}")
+
+
+def merge_warnings(merge_log: str) -> list[str]:
+    p = Path(merge_log)
+    return [l.rstrip() for l in p.read_text(encoding="utf-8", errors="replace").splitlines()
+            if l.startswith("Warning-[") or l.startswith("Error-[")] if p.is_file() else []
+
+
+def run_elcheck(req: dict[str, Any], outdir: Path) -> dict[str, Any]:
+    """Report-only strict load of an exclusion file against an existing vdb through the flow's URG wrapper:
+    one merge with the file (-excl_strict, full_exclusions dump) and one without, same scopes."""
+    vdb = Path(req["elcheck"]["vdb"]).resolve()
+    elfile = Path(req["elcheck"]["elfile"]).resolve()
+    dut, info, bman = scopes_for_vdb(vdb, req["elcheck"].get("build"))
+    with_el = R.merge(outdir / "cov_elcheck", [vdb], [elfile], None, dut, True, info)
+    without = R.merge(outdir / "cov_plain", [vdb], None, None, dut, False, info)
+    for res in (with_el, without):
+        res["merge_warnings"] = merge_warnings(res["merge_log"])
+    # Per-metric excluded counts: the denominators the exclusion file removed from the gated rows.
+    excluded: dict[str, Any] = {}
+    gw, gwo = with_el.get("gate_row") or {}, without.get("gate_row") or {}
+    if "ratios" in gw and "ratios" in gwo:
+        for metric, r_with in gw["ratios"].items():
+            r_wo = gwo["ratios"].get(metric)
+            if r_wo and "/" in r_with and "/" in r_wo:
+                excluded[metric] = int(r_wo.split("/")[1]) - int(r_with.split("/")[1])
+    return {"kind": "elcheck", "vdb": str(vdb), "elfile": str(elfile), "elfile_sha256": U.sha256_file(elfile),
+            "scopes_from": bman, "dut_scopes": dut, "info_scopes": info, "with_elfile": with_el,
+            "without_elfile": without, "excluded_counts_gate_row": excluded,
+            "verdict": "ok" if with_el["status"] == "ok" and not with_el["exclusion_violations"] else "failed"}
+
+
+def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: list[str] | None = None,
+              server_sync: dict[str, Any] | None = None) -> Path:
     name = path.stem
     C.RUNNING_DIR.mkdir(parents=True, exist_ok=True)
     C.DONE_DIR.mkdir(parents=True, exist_ok=True)
     result_dir = C.RESULTS_DIR / name
     result_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = result_dir / C.RESULTS_MANIFEST
-    raw = U.load_yaml(path)
-    req, err = validate(raw, path.name)
+    try:
+        raw = U.load_yaml(path)
+        req, err = validate(raw, path.name)
+    except yaml.YAMLError as e:
+        # A file that does not parse is refused in writing like any other invalid request, never a crash.
+        raw, req, err = path.read_text(encoding="utf-8", errors="replace"), None, f"YAML parse error: {e}"
     record: dict[str, Any] = {"request": name, "request_file": str(path), "received_utc": U.now_utc(),
-                              "request_echo": raw}
+                              "request_echo": raw, "out_root": str(C.OUT_DIR)}
     if err:
         record.update(scope_decision="refused", refusal_reason=f"invalid request: {err}", status="done")
         if not dry_run:
@@ -189,10 +263,26 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
         U.log(f"{name}: REFUSED ({refusal})")
         return manifest_path
     outdir = C.OUT_DIR / f"regress_req_{name}"
+    if scope.get("kind") == "elcheck":
+        record.update(scope_decision="accepted", status="running", elcheck_outdir=str(outdir))
+        if dry_run:
+            U.log(f"{name}: ACCEPT -> elcheck {scope['elfile']} against {scope['vdb']}")
+            return manifest_path
+        running = C.RUNNING_DIR / path.name
+        shutil.move(str(path), str(running))
+        U.dump_yaml(record, manifest_path)
+        t0 = time.time()
+        outdir.mkdir(parents=True, exist_ok=True)
+        record["elcheck"] = run_elcheck(req, outdir)
+        record.update(status="done", serve_wall_s=round(time.time() - t0, 1), finished_utc=U.now_utc())
+        U.dump_yaml(record, manifest_path)
+        shutil.move(str(running), str(C.DONE_DIR / path.name))
+        U.log(f"{name}: elcheck {record['elcheck']['verdict']} -> {manifest_path}")
+        return manifest_path
     argv = [sys.executable, str(C.FLOW_DIR / "gen_regress.py"), *args, *(extra_args or []), "--outdir", str(outdir),
             "--force", "--request", name, "--requester", req["requester"], "--purpose", str(req["purpose"])]
     record.update(scope_decision="accepted", regress_cmd=" ".join(argv), regress_outdir=str(outdir),
-                  operator_extra_args=list(extra_args or []))
+                  operator_extra_args=list(extra_args or []), server_mirror_sync=server_sync)
     if dry_run:
         U.log(f"{name}: ACCEPT -> {' '.join(args)}")
         return manifest_path
@@ -219,6 +309,37 @@ def serve_one(path: Path, testlist: dict[str, Any], dry_run: bool, extra_args: l
     return manifest_path
 
 
+def request_purpose(path: Path) -> int | None:
+    try:
+        raw = U.load_yaml(path)
+        return int(raw.get("purpose")) if isinstance(raw, dict) else None
+    except (yaml.YAMLError, TypeError, ValueError):
+        return None
+
+
+def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, extra_args: list[str],
+               max_concurrent: int) -> int:
+    """One pass over the queue. Independent purpose-1 requests run concurrently (each its own outdir,
+    manifest and LSF accounting) after a single mirror sync for the batch; everything else in file order."""
+    p1 = [p for p in pending if request_purpose(p) == 1]
+    rest = [p for p in pending if p not in p1]
+    if len(p1) > 1 and not dry_run:
+        # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
+        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike"],
+                                    cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log", timeout_s=1800)
+        sync = {"rc": rc, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(), "batch": [p.stem for p in p1]}
+        U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
+        batch_args = list(extra_args) + (["--no-sync-mirror"] if rc == 0 else [])
+        with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
+            list(pool.map(lambda p: serve_one(p, testlist, dry_run, batch_args, sync), p1))
+    else:
+        for p in p1:
+            serve_one(p, testlist, dry_run, extra_args)
+    for p in rest:
+        serve_one(p, testlist, dry_run, extra_args)
+    return len(pending)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = ap.add_mutually_exclusive_group()
@@ -228,6 +349,9 @@ def main() -> int:
     ap.add_argument("--interval", type=int, default=30)
     ap.add_argument("--duration", type=int, default=3600)
     ap.add_argument("--testlist", type=Path, default=C.TESTLIST_YAML)
+    ap.add_argument("--only", action="append", default=[], help="serve only the named pending request(s)")
+    ap.add_argument("--max-concurrent", type=int, default=C.SERVE_MAX_CONCURRENT_P1,
+                    help="independent purpose-1 requests served at once (ruling: purposes 2-4 stay serialized)")
     ap.add_argument("--extra-arg", action="append", default=[],
                     help="gen_regress.py argument the runtime operator adds to every request served in this call "
                          "(recorded in the manifest as operator_extra_args); for knobs a request asked for in notes")
@@ -238,9 +362,7 @@ def main() -> int:
     deadline = time.time() + a.duration
     served = 0
     while True:
-        for p in pending_requests():
-            serve_one(p, testlist, a.dry_run, a.extra_arg)
-            served += 1
+        served += serve_pass(pending_requests(a.only), testlist, a.dry_run, a.extra_arg, a.max_concurrent)
         if not a.watch or time.time() >= deadline:
             break
         time.sleep(a.interval)

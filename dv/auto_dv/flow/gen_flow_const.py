@@ -263,6 +263,11 @@ PURPOSE1_MAX_SEEDS = 5
 PURPOSE3_SEEDS = 1
 PURPOSE4_REQUESTERS = ("dv-lead", "orchestrator")
 RESULTS_MANIFEST = "manifest.yaml"
+SERVE_MAX_CONCURRENT_P1 = 4           # independent purpose-1 requests served at once (ruling 2026-09-03)
+# Report-only exclusion check (purpose 2, no simulation): strict load of an exclusion file against an existing vdb.
+ELCHECK_REQUIRED_KEYS = ("vdb", "elfile")
+ELCHECK_OPTIONAL_KEYS = ("build",)
+ELCHECK_KEYS = ELCHECK_REQUIRED_KEYS + ELCHECK_OPTIONAL_KEYS
 
 # --- Verdicts -------------------------------------------------------------------------------
 VERDICT_PASS = "PASS"
