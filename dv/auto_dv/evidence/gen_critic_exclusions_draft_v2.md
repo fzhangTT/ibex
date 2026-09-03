@@ -167,3 +167,12 @@ runs/<job>/ carry status, implicit_declarations.txt (0 for core5) and smt2_asser
 recipe. This satisfies N-1 and condition F-2 in substance. At audit time the directory was untracked (git status "??"):
 F-2 is met when it is committed. This verdict and its v1 are copied to dv/auto_dv/evidence/ as the cited rulings
 (R-1..R-5, E-01..E-05, F-1..F-7), per the standing rule.
+
+## Addendum (2026-09-03 08:18Z): condition F-2 met
+
+Verified at HEAD bd1cfbe: dv/auto_dv/evidence/gen_t022_formal/ is committed with 113 tracked files, every file name
+gen_-prefixed; runs/t022_core5/gen_logfile.txt ends "successful proof by k-induction" / "DONE (PASS, rc=0)" (SBY stamp
+1:54:04); sources/gen_t022_assertions_extract.txt resolves 27 distinct T022_* names; gen_t022_formal_README.md carries the
+regeneration commands (gen_t022_regen.sh) and the job-to-class mapping (Section 5). F-2 is met. The remaining conditions
+for the final file, F-1, F-3, F-4, F-5, F-6 and F-7, are checked against dv/auto_dv/excl/gen_exclusions.el (rtl-arch's
+draft, T-069) at the first measured regression.

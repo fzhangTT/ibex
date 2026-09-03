@@ -47,10 +47,11 @@ I-1 The DV Lead discloses (Section 6 preamble, 8.3 item 4) that v3 C9 still name
 `+gen_regime_pin` and `+gen_regime_seed` once each; Section 4.2 is authoritative. TB Infra removes them in the next v3
 revision; re-adoption then repeats the hash-and-diff.
 
-I-2 Section 7 and 8.1 say the glitch filter is applied through `extra_vcs_args` on both testlist build entries, never a
-flow constant; at review time gen_testlist.yaml carries `-cm_glitch` in `extra_vcs_args` on 3 build entries. My
-T-040 condition F-4 (the flag present in every measured compile command and stated in every report header) is checked at
-the first measured regression, not here.
+I-2 Section 7 and 8.1 say the glitch filter is applied through `extra_vcs_args` on "both" testlist build entries, never a
+flow constant. At review time gen_testlist.yaml has three build entries (gen_smoke, gen_smoke_cocotb and the new gen_tb)
+and every one carries `extra_vcs_args: ["-cm_glitch", "0"]`; "both" predates the gen_tb build and can become "every" at
+the next edit. My T-040 condition F-4 (the flag present in every measured compile command and stated in every report
+header) is checked at the first measured regression, not here.
 
 I-3 8.1 item 6 records the `SIMULATION` ruling (stays undefined; Runtime confirmed the effective define set) and the TB
 banner prints the define either way (gen_env_pkg.sv banner), which is the right pairing of ruling and evidence.
