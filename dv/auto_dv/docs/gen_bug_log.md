@@ -16,7 +16,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 
 ### B1: dret into U-mode leaves mstatus.MPRV set
 - Status: candidate, reproducer pending
-- rtl-arch alias: -
+- rtl-arch alias: BUG-06 (added by rtl-arch T-017; static confirmation against Sdext.adoc:202)
 - Features: F-PRV-015 (canonical); aliases F-DBG-033, F-PMP-075
 - Expected-fail TP items: TP-PRV-014, TP-DBG-038, TP-PMP-073
 - RTL: rtl/ibex_cs_registers.sv:949-951 (csr_restore_dret_i restores priv_lvl only; compare mret :953-959 which clears MPRV when MPP != M)
@@ -64,7 +64,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Features: F-IRQ-037 (canonical)
 - Expected-fail TP items: TP-DBG-021, TP-IRQ-041
 - RTL: rtl/ibex_cs_registers.sv:825
-- Specification / intent: riscv-debug-spec xml/core_registers.xml:292-298 (nmip, access R: set when an NMI is pending; reliability implementation-dependent)
+- Specification / intent: tools/specs/riscv-debug-spec/xml/core_registers.xml:292-298 (nmip, access R: set when an NMI is pending; reliability implementation-dependent). The generated field table is absent from the clone but the XML source is on disk.
 - Notes: low; read-only status field never reports
 - Intended reproducer: Enter debug mode via debug_req_i; assert irq_nm_i; csrr dcsr in the debug program: bit 3 reads 0 (RTL); spec expects 1 while pending.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
@@ -93,12 +93,12 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 
 ### B8: Dummy instruction inserted mid-Zcmp sequence may skip a micro-op (static reading)
 - Status: candidate, reproducer pending
-- rtl-arch alias: -
+- rtl-arch alias: BUG-07 (rtl-arch T-017: CONFIRMED reachable by static analysis; highest-value finding: architectural-state corruption with dummy instructions enabled, a shipped-configuration feature)
 - Features: F-CMP-064; cross-ref F-DIT-032 item
 - Expected-fail TP items: TP-CMP-065, TP-DIT-032
 - RTL: rtl/ibex_if_stage.sv:493 (compressed-decoder id_in_ready not qualified by insert_dummy_instr)
 - Specification / intent: Zcmp atomicity intent (zc.adoc push/pop sequences); Ibex doc silent
-- Notes: needs directed repro before filing
+- Notes: confirmed statically by rtl-arch (chain: expander FSM advances on id_in_ready_i & ~pc_set_i, rtl/ibex_if_stage.sv:493, unqualified by insert_dummy_instr; dummy_cnt counts micro-ops; the micro-op emitted in the insertion cycle is never executed: cm.push omits one store, cm.pop omits one load or the sp adjust). Fix direction for the RTL owner: gate the expander with ~insert_dummy_instr or block insertion while gets_expanded != NOT_EXPANDED. One directed sim demonstrates it (T-041 reproducer spec).
 - Intended reproducer: dummy_instr_en=1 with mask for high frequency; loop of cm.push/cm.pop pairs with a checkable stack pattern; compare memory image and registers against the ISA model; a skipped micro-op shows as a missing store or register.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
@@ -109,7 +109,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Expected-fail TP items: TP-DBG-011
 - RTL: rtl/ibex_controller.sv:451-533 (debug_cause_d priority and one-cycle skew)
 - Specification / intent: riscv-debug-spec Sdext.adoc (cause field must identify the entry reason)
-- Notes: needs directed repro; debug_req_i is a level in real systems
+- Notes: rtl-arch T-017: confirmed statically for the special-request path only (DECODE -> FLUSH -> DBG_TAKEN_IF); requires a debug_req_i pulse shorter than the DECODE->FLUSH span, which the debug spec forbids (haltreq is held until the hart halts). Classification: RTL-defined corner under out-of-spec stimulus, low severity; the RTL comment at rtl/ibex_controller.sv:515-518 acknowledges the window. Item TP-DBG-011 stays expected-fail only as the documenting test; not a gate item.
 - Intended reproducer: Drive debug_req_i as a pulse that ends exactly in the FLUSH cycle of a trap/mret/CSR-flush instruction; read dcsr in the debug program: cause reads 0 (RTL) vs 3 (spec).
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
@@ -120,7 +120,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Expected-fail TP items: TP-TRG-020
 - RTL: rtl/ibex_controller.sv:519-523
 - Specification / intent: riscv-debug-spec Sdext (cause 1 for ebreak) / Sdtrig (trigger fires on the matched instruction, not on the instruction before it)
-- Notes: needs directed repro
+- Notes: rtl-arch T-017: confirmed statically (trigger_match evaluated on pc_if every cycle; during the FLUSH cycle of an ebreak-into-debug pc_if holds the next address). Arming happens inside the debug ROM (trigger CSRs writable only in debug mode); T-041 reproducer spec.
 - Intended reproducer: tdata1 execute trigger armed at address A; ebreak at A-4 with dcsr.ebreakm=1: dpc = A-4 but dcsr.cause reads 2 (RTL) vs 1 (spec).
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
@@ -131,15 +131,15 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Expected-fail TP items: TP-PMC-043, TP-BTALU-016
 - RTL: rtl/ibex_id_stage.sv:790-791,815,831,928 (branch_set forced for all branches under DIT)
 - Specification / intent: doc/03_reference/performance_counters.rst (NumBranchesTaken: taken branches)
-- Notes: needs directed repro
+- Notes: rtl-arch T-017 confirmed statically (perf_tbranch_o = branch_set_i; branch_set_raw_d = branch_decision_i | data_ind_timing_i). Decision requested from the DV Lead (T-017 Section 6): treated as a counter bug candidate (the doc defines the event as taken branches); items TP-PMC-043 / TP-BTALU-016 stay expected-fail.
 - Intended reproducer: data_ind_timing=1; 100 never-taken branches; mhpmcounter9 delta: doc 0, RTL 100. Control: data_ind_timing=0.
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
 ### B12: mret from an interrupt handler clears cpuctrlsts.sync_exc_seen, weakening double-fault detection
-- Status: candidate, reproducer pending
+- Status: documented behaviour, not a bug candidate: design-weakness note for the security owner (exception_interrupts.rst:191 and cs_registers.rst:556 say sync_exc_seen is cleared when mret is executed; no RISC-V specification covers double-fault detection). Carrying items expect pass with the note (Critic pre-review S-1; rtl-arch T-017 agrees)
 - rtl-arch alias: -
 - Features: F-SEC-025 (canonical); aliases F-EXC-057, F-CSR-091
-- Expected-fail TP items: TP-CSR-094, TP-EXC-056, TP-SEC-025
+- Expected-fail TP items: none after the reclassification (TP-EXC-056, TP-CSR-094, TP-SEC-025 expect pass with a design note)
 - RTL: rtl/ibex_cs_registers.sv:964-965
 - Specification / intent: doc/03_reference/security.rst double-fault detection intent (sync_exc_seen armed until the synchronous handler returns)
 - Notes: design weakness; owner ruling requested (Q-DL-3 policy)
@@ -158,10 +158,10 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Evidence: (none yet; a committed sim log and, where useful, a waveform excerpt under dv/auto_dv/evidence/ close this field)
 
 ### B14: RVFI drops the ID-stage trap record when a WB load/store error coincides
-- Status: candidate, reproducer pending
+- Status: downgraded to an RVFI convention note pending the confirmation simulation (rtl-arch T-041, fact-check row 48): the WB error has priority in FLUSH, the killed ID instruction re-executes after the handler and then produces its own record, so suppressing its record is correct; the confirmation program must show two trap records in order; one record re-opens it
 - rtl-arch alias: BUG-04
 - Features: F-RVFI-018 (canonical); cross-refs F-EXC-065 item, F-DMEM-034 item, F-ISA-051 item
-- Expected-fail TP items: TP-EXC-065, TP-ISA-051, TP-DMEM-034, TP-RVFI-018
+- Expected-fail TP items: none as gate items after the downgrade; the carrying items (TP-ISA-051, TP-EXC-065, TP-DMEM-034, TP-RVFI-018) are split in the consolidation into the priority behaviour (pass) and the RVFI-record confirmation (informational until the sim)
 - RTL: rtl/ibex_core.sv:1851-1853 (rvfi_id_done suppresses when wb_exception_o); rtl/ibex_controller.sv:336-337
 - Specification / intent: RVFI convention: every trapping instruction is reported (rtl/ibex_core.sv:1843-1849 comment; rvfi.rst rvfi_trap)
 - Notes: RVFI-only; affects the comparator, not architectural state; unverified in simulation
@@ -214,4 +214,5 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 | D19 | security.rst dummy_instr_mask table lists 4 of the 8 legal values | security.rst | rtl/ibex_dummy_instr.sv:33-148 | F-DIT-012 |
 
 ## 4. Change log
+- v1a (2026-09-03): folded rtl-arch T-017 (BUG-06 = B1, BUG-07 = B8 confirmed reachable, B9 out-of-spec stimulus, B10/B11 confirmed) and T-041 (BUG-04/B14 downgraded pending sim); B12 reclassified as documented behaviour with a design note (Critic pre-review S-1).
 - v1 (2026-09-03): opened with B1..B15 (B6 reclassified per Critic C-20; B15 added per C-21; B5 re-cited per C-22), S1..S3, D1..D19 (D5 retired).
