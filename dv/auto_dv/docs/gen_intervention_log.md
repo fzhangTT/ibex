@@ -654,3 +654,19 @@ gen_cmp_zcmp_basic_prog.py imports gen_prog_const through the package path
 PYTHONPATH. Totals: 21 of 24 green runs PASS, 7 of 8 reds RED-OK, 6 NOT_RUN (one generator). Counted
 as a Test Writer defect caught by head-mode serving; fix and wave 5 assigned. All runs are check-tier,
 measured: false.
+
+## LOG-024 - 2026-09-03 - GATE (Test Writer landing 3 at d1d68fd: cross-model REQUEST-CHANGES, headline claim defeated)
+
+The cross-model review of 53b0fce..d1d68fd (dv/auto_dv/reviews/2026-09-03-claude-diff-53b0fcef-d1d68fd4.md)
+verified the mechanical remediation (committed-testlist rule, plan_bins two-sided guard, cmp_zcmp_basic
+sys.path guard, fixtures, 278-row retention pass) but constructed fifteen test modules that fake a witness or
+a pass and all pass the structure check, because the lint inspects only the literal `self.<name>` spelling
+inside class-body methods; the module-level helper pattern every committed test uses defeats it. Two response
+rows also record work not present at that commit (CR-T102-1 csr_access reads; CM-B1-L-2/L-3 "eight
+docstrings" with two files unchanged). Ruling: the landing stays committed (nothing in it weakens checking)
+but the gate holds: no layers_required drop, no measured: true flip, no batch-2 acceptance until landing 3b
+re-states the witness guarantee truthfully (the lint is defense in depth; the fact of record is the SV
+ledger sampling on export events with ids from the committed testlist and codes from the fire-check
+outcome), narrows the lint claim to its real coverage, corrects the two rows, and a recorded re-review
+reaches APPROVE or APPROVE-WITH-CHANGES. The DV Lead's v2i unforgeability sentence must carry the same
+truthful wording before it is committed.
