@@ -65,8 +65,8 @@ and M-1a of my T-102 verdict are otherwise closed as asked.
 - Its medium is the same defect as my M-1 (insn_len on Zcmp last-micro-op records reads the expanded encoding), found
   independently on both sides; the required change above stands.
 - Two of its lows I adopt after checking: (a) the RTL sets sync_exc_seen only when the exception is not a debug-mode
-  save and the core is not already in debug mode (rtl/ibex_cs_registers.sv:912-936, both debug_csr_save_i and
-  debug_mode_i gate the set, confirmed), while the shim excludes only the debug ENTRY case, so an exception taken while already in
+  save and the core is not already in debug mode (rtl/ibex_cs_registers.sv:910 `if (debug_csr_save_i)` ... :918 `else if (!debug_mode_i)`, so a
+  debug-mode save and an exception inside debug mode both bypass the set; confirmed), while the shim excludes only the debug ENTRY case, so an exception taken while already in
   debug mode sets the model's bit 6 and not the DUT's: a false isa_rd miss on a later cpuctrlsts read in a debug test.
   Add the in-debug-mode exclusion (L-3). (b) The section-7 unit-test green ("159 OK") has no retained log under
   gen_tdd_logs/isa_shim/ at this commit; my section 1 statement rests on the source of the checks, not on a run. Retain
