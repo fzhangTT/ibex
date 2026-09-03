@@ -1,3 +1,4 @@
+# not_built TP-CSR-005: mret/ecall privilege sequence deferred to the trap batch (comparator convention fixed by T-102)
 test: gen_test_csr_access
 owner: test-writer
 bins:

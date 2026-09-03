@@ -1,10 +1,18 @@
+# not_built TP-RST-001: first fetch address: needs the bus records of the event export
+# not_built TP-RST-002: boot bus facts: needs the bus records of the event export
+# not_built TP-RST-004: reset pin sequencing: needs the pin records of the event export
+# not_built TP-RST-005: reset pin sequencing: needs the pin records of the event export
+# not_built TP-RST-008: boot bus facts: needs the bus records of the event export
+# not_built TP-RST-027: reset-time bus/pin facts: needs the event export
+# not_built TP-RVFI-036: RVFI record fact: needs the record export
+# not_built TP-SEC-031: alert pin behaviour at reset: needs the event export (pin records)
+# not_hit gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire: irq agent absent: no interrupt line is driven
 test: gen_test_rst_boot
 owner: test-writer
 bins:
   - gen_rst_boot_cg.cp_boot_addr.high
   - gen_rst_boot_cg.cp_boot_addr.zero
   - gen_rst_boot_cg.cp_first_event.first_instr_retire
-  - gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire
   - gen_rvfi_record_cg.cp_mode.m
   - gen_rvfi_record_cg.cp_mode.u
   - gen_sec_ctrl_inputs_cg.cp_bit8_readback.one
@@ -14,7 +22,6 @@ anti_vacuity:
   gen_rst_boot_cg.cp_boot_addr.high: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
   gen_rst_boot_cg.cp_boot_addr.zero: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
   gen_rst_boot_cg.cp_first_event.first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
-  gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire: "CG-RST-001: rst_ni release, closed when the first post-reset event is classified (first retired"
   gen_rvfi_record_cg.cp_mode.m: "CG-RVFI-001: rvfi_valid is a pulse (one"
   gen_rvfi_record_cg.cp_mode.u: "CG-RVFI-001: rvfi_valid is a pulse (one"
   gen_sec_ctrl_inputs_cg.cp_bit8_readback.one: "CG-SEC-005: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and"

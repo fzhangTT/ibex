@@ -1,3 +1,4 @@
+# not_built TP-CMP-068: needs writable low addresses and the bus records of the event export
 test: gen_test_cmp_zcmp_basic
 owner: test-writer
 bins:
