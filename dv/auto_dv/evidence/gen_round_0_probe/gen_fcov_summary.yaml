@@ -1,7 +1,7 @@
-# fcov summary of the round-0 probe of 37c7ecb. The keys summary and fcov reproduce the manifest keys of the same name
-# (re-serialized from gen_manifest.yaml, content-equal, not byte copies). coverage_status_derived is DERIVED: its first
-# block quotes the manifest's coverage block (status urg_failed, urg_rc 1); the URG-OFR cause is read from cov/merge.log,
-# retained beside this file as gen_merge_log_excerpt.log.
+# fcov record of the round-0 probe of 37c7ecb. The keys summary, fcov and coverage reproduce the manifest keys of the same name
+# whole (re-serialized from gen_manifest.yaml, content-equal, asserted at write; not byte copies of its text). coverage
+# includes the measured merge (status urg_failed, urg_rc 1) and the unmeasured sub-block (status ok, urg_rc 0, the code-coverage
+# totals of gen_boot_zc). merge_cause_derived is the one DERIVED entry: the URG-OFR cause read from the retained merge log.
 regression: round_0
 outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0
 pinned_sha: 37c7ecb6dbe023e6f6b098e932367e339a24735a
@@ -162,15 +162,201 @@ fcov:
       declared_bins: 0
       unmet_bins: []
   covergroups_exist: false
-coverage_status_derived:
-  from_manifest_coverage:
-    status: urg_failed
-    urg_rc: 1
+coverage:
+  status: urg_failed
+  merged_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merged.vdb
+  report_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/report
+  dashboard_txt: null
+  merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log
+  urg_rc: 1
+  urg_wall_s: 2.1
+  urg_timed_out: false
+  urg_cmd: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merged.vdb -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/report
+    -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/build/gen_tb/build.vdb
+    -elfile dv/auto_dv/excl/gen_exclusions.el -excl_strict -dump full_exclusions
+  input_vdbs:
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/build/gen_tb/build.vdb
+  elfiles:
+  - dv/auto_dv/excl/gen_exclusions.el
+  excl_strict: true
+  exclusion_violations: []
+  full_exclusions_dump: []
+  totals: {}
+  dut_scope: {}
+  build_defines:
+    gen_tb:
+    - +define+RVFI
+  glitch_filter:
+    gen_tb: true
+  rulings:
+    scope: 'gen_tb_architecture.md Section 5: the gate numbers are the gated cov_trees [''gen_tb_top.u_dut.u_ibex_core'',
+      ''gen_tb_top.u_dut.u_register_file''] combined per metric (sum of covered and of total objects, percent = 100 x covered
+      / total; the gated trees must not nest); the info_trees [''gen_tb_top.u_dut''] are reported informationally, never gated'
+    glitch: 'gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 (builds.<name>.extra_vcs_args);
+      FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])'
+  constfiles:
+    gen_tb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/build/gen_tb/constfile.txt
+  measured_tests:
+  - gen_test_bit_draft
+  - gen_test_bit_ratified
+  - gen_test_cmp_zca
+  - gen_test_cmp_zcb
+  - gen_test_cmp_zcmp_basic
+  - gen_test_csr_access
+  - gen_test_csr_reset
+  - gen_test_csr_trap_setup
+  - gen_test_isa_alu
+  - gen_test_isa_cti
+  - gen_test_isa_shift
+  - gen_test_mul_div
+  - gen_test_mul_mul
+  - gen_test_pmp_csr_warl
+  - gen_test_rst_boot
+  unmeasured:
+    status: ok
+    merged_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/merged.vdb
+    report_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/report
+    dashboard_txt: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/report/dashboard.txt
+    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/merge.log
+    urg_rc: 0
+    urg_wall_s: 2.8
     urg_timed_out: false
-    elfiles_as_passed:
-    - dv/auto_dv/excl/gen_exclusions.el
-    excl_strict: true
-    dashboard_txt: null
-    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov/merge.log
-  from_merge_log: 'Error-[URG-OFR] Failed to open file ''dv/auto_dv/excl/gen_exclusions.el'': the relative -elfile path reached
-    urg unresolved with the cov dir as cwd (retained here as gen_merge_log_excerpt.log; a flow defect, fixed by T-208 B)'
+    urg_cmd: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/merged.vdb
+      -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/merge.log
+      -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/gen_tb.vdb
+    input_vdbs:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/cov_unmeasured/gen_tb.vdb
+    elfiles: []
+    excl_strict: false
+    exclusion_violations: []
+    full_exclusions_dump: []
+    totals:
+      line: 61.21
+      cond: 37.13
+      toggle: 44.92
+      fsm: 25.58
+      branch: 50.62
+      assert: 88.65
+      group: n/a
+      score: 51.35
+      ratios:
+        line: 2665/4354
+        cond: 3569/9611
+        toggle: 12396/27598
+        fsm: 22/86
+        branch: 1227/2424
+        assert: 164/185
+      tests_in_report: 2
+      columns_reported:
+      - line
+      - cond
+      - toggle
+      - fsm
+      - branch
+      - assert
+    dut_scope:
+      gen_tb_top.u_dut.u_ibex_core:
+        line: 60.39
+        cond: 36.58
+        toggle: 44.78
+        fsm: 25.58
+        branch: 49.09
+        assert: 91.33
+        group: n/a
+        score: 51.29
+        ratios:
+          line: 2551/4224
+          cond: 3458/9452
+          toggle: 11055/24686
+          fsm: 22/86
+          branch: 1137/2316
+          assert: 158/173
+        instance: gen_tb_top.u_dut.u_ibex_core
+        excl_marker: null
+      gen_tb_top.u_dut.u_register_file:
+        line: 87.69
+        cond: 69.81
+        toggle: 75.17
+        fsm: n/a
+        branch: 83.33
+        assert: 20.0
+        group: n/a
+        score: 67.2
+        ratios:
+          line: 114/130
+          cond: 111/159
+          toggle: 227/302
+          branch: 90/108
+          assert: 1/5
+        instance: gen_tb_top.u_dut.u_register_file
+        excl_marker: null
+    info_scope:
+      gen_tb_top.u_dut:
+        line: 61.21
+        cond: 37.13
+        toggle: 44.92
+        fsm: 25.58
+        branch: 50.62
+        assert: 89.33
+        group: n/a
+        score: 51.46
+        ratios:
+          line: 2665/4354
+          cond: 3569/9611
+          toggle: 12396/27598
+          fsm: 22/86
+          branch: 1227/2424
+          assert: 159/178
+        instance: gen_tb_top.u_dut
+        excl_marker: null
+    group_score:
+      score: null
+      covergroups_scored: 0
+      ledger_excluded: []
+      urg_total: n/a
+    ledger:
+      covergroups:
+      - gen_wit_cycle_clause_cg
+      - gen_cg_wit_cycle_clause
+      plan_id: CG-WIT-001
+      witnessed: 0
+      clauses: 0
+      text: 'witnessed clauses: none in report (CG-WIT-001)'
+    gate_row:
+      line: 61.21
+      cond: 37.13
+      toggle: 45.15
+      fsm: 25.58
+      branch: 50.62
+      assert: 89.33
+      group: n/a
+      score: n/a
+      ratios:
+        line: 2665/4354
+        cond: 3569/9611
+        toggle: 11282/24988
+        fsm: 22/86
+        branch: 1227/2424
+        assert: 159/178
+      combined_from:
+      - gen_tb_top.u_dut.u_ibex_core
+      - gen_tb_top.u_dut.u_register_file
+      rule: sum of covered and of total objects per metric over the gated scopes (disjoint subtrees, never nested); percent
+        = 100 * covered / total
+      ledger: 'witnessed clauses: none in report (CG-WIT-001)'
+    limited_design: false
+    tests:
+    - gen_boot_zc
+    - gen_ut_lockstep
+    glitch_filter:
+      gen_tb: true
+    rulings:
+      scope: 'gen_tb_architecture.md Section 5: the gate numbers are the gated cov_trees [''gen_tb_top.u_dut.u_ibex_core'',
+        ''gen_tb_top.u_dut.u_register_file''] combined per metric (sum of covered and of total objects, percent = 100 x covered
+        / total; the gated trees must not nest); the info_trees [''gen_tb_top.u_dut''] are reported informationally, never
+        gated'
+      glitch: 'gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 (builds.<name>.extra_vcs_args);
+        FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])'
+merge_cause_derived: 'from cov/merge.log (retained here as gen_merge_log_excerpt.log): Error-[URG-OFR] Failed to open file
+  ''dv/auto_dv/excl/gen_exclusions.el'', the relative -elfile path reached urg unresolved with the cov dir as cwd; a flow
+  defect, fixed by T-208 B'

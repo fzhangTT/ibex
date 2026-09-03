@@ -92,14 +92,14 @@ def filelist_digest(flists: list[Path]) -> dict[str, Any]:
 
 def sv_covergroup_files(flists: list[Path]) -> list[str]:
     """Sources of the given -f files that declare a covergroup (comments stripped), relative to the source root when
-    inside it: the build manifest's covergroups_compiled fact."""
+    inside it: the build manifest's covergroups_declared fact (lexical: comments stripped, ifdefs not evaluated)."""
     found: list[str] = []
     for fl in flists:
         for src in filelist_entries(fl):
             if src.suffix not in C.SV_SOURCE_SUFFIXES or not src.is_file():
                 continue
             text = re.sub(r"/\*.*?\*/", "", src.read_text(encoding="utf-8", errors="replace"), flags=re.S)
-            if any(C.COVERGROUP_DECL_RE.match(l.split("//", 1)[0]) for l in text.splitlines()):
+            if any(C.COVERGROUP_DECL_RE.search(l.split("//", 1)[0]) for l in text.splitlines()):
                 found.append(str(src.relative_to(C.SOURCE_ROOT)) if src.is_relative_to(C.SOURCE_ROOT) else str(src))
     return found
 
@@ -110,15 +110,38 @@ def load_build_manifest(path: Path) -> tuple[dict[str, Any] | None, Path]:
     return (load_yaml(p) if p.is_file() else None), p
 
 
-def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str) -> str | None:
-    """None when the canary build manifest records covergroups_compiled true; else the refusal text naming the build,
-    the manifest and the rule. An absent fact (no manifest, or one older than the record) refuses too."""
+def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str, pinned_sha: str | None) -> str | None:
+    """None when the canary build manifest is a head-mode build of the pinned commit and records covergroups_declared
+    true; else the refusal text naming the failed condition, the build, the manifest and the rule. A worktree build
+    (its covergroups may be an in-progress edit), a head build of another commit, an absent fact (no manifest, or one
+    older than the record) and a missing pin all refuse."""
     man = canary_manifest or {}
-    val = man.get("covergroups_compiled")
-    if val is True:
+    head = f"canary build {man.get('build') or '?'} ({where})"
+    if not man:
+        why = "has no build manifest"
+    elif man.get("source_mode") != C.SOURCE_MODE_HEAD:
+        why = f"is a {man.get('source_mode') or 'unknown'}-mode build, not a head-mode build of the pinned commit"
+    elif not pinned_sha:
+        why = "cannot be bound: no pinned commit given"
+    elif str(man.get("head_sha") or "") != pinned_sha:
+        why = f"is the head-mode build of {str(man.get('head_sha') or '?')[:12]}, not of the pinned {pinned_sha[:12]}"
+    else:
+        val = man.get(C.COVERGROUPS_DECLARED_KEY)
+        if val is True:
+            return None
+        why = f"records {C.COVERGROUPS_DECLARED_KEY}={'absent' if val is None else val}"
+    return f"measured dispatch refused: {head} {why}; {C.MEASURED_DISPATCH_RULE}"
+
+
+def canary_build_facts(path: Path | None) -> dict[str, Any] | None:
+    """The gate's inputs as a record for manifests and evidence: the build dir, its manifest path and the facts read."""
+    if path is None:
         return None
-    return (f"measured dispatch refused: canary build {man.get('build') or '?'} ({where}) records covergroups_compiled="
-            f"{'absent' if val is None else val}; {C.MEASURED_DISPATCH_RULE}")
+    man, mp = load_build_manifest(path)
+    man = man or {}
+    return {"path": str(path), "manifest": str(mp), "manifest_present": bool(man), "build": man.get("build"),
+            "source_mode": man.get("source_mode"), "head_sha": man.get("head_sha"),
+            C.COVERGROUPS_DECLARED_KEY: man.get(C.COVERGROUPS_DECLARED_KEY), "covergroup_files": man.get("covergroup_files")}
 
 
 def git_head() -> dict[str, Any]:
@@ -558,18 +581,33 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD", f"sv_covergroup_files: a declaration counts, line and block comments and a .v file do not: {cg}")
     shutil.rmtree(cgd, ignore_errors=True)
     gd = Path(tempfile.mkdtemp(prefix="gen_gate_selftest_", dir=C.selftest_tmp()))
-    dump_yaml({"build": "gen_tb", "covergroups_compiled": False, "covergroup_files": []}, gd / C.BUILD_MANIFEST)
-    r_false = measured_dispatch_refusal(*load_build_manifest(gd))
-    dump_yaml({"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["dv/auto_dv/tb/x.sv"]}, gd / C.BUILD_MANIFEST)
-    r_true = measured_dispatch_refusal(*load_build_manifest(gd / C.BUILD_MANIFEST))
-    dump_yaml({"build": "gen_tb"}, gd / C.BUILD_MANIFEST)
-    r_absent = measured_dispatch_refusal(*load_build_manifest(gd))
-    r_none = measured_dispatch_refusal(*load_build_manifest(gd / "no_such_dir"))
-    cond = (r_false is not None and "gen_tb" in r_false and "covergroups_compiled=False" in r_false and "LOG-046a" in r_false
-            and r_true is None and r_absent is not None and "covergroups_compiled=absent" in r_absent
-            and r_none is not None and "build ? (" in r_none)
+    pin = "a" * 40
+    def gate(man: dict[str, Any] | None, pinned: str | None = pin, where: Path = gd) -> str | None:
+        if man is not None:
+            dump_yaml(man, gd / C.BUILD_MANIFEST)
+        return measured_dispatch_refusal(*load_build_manifest(where), pinned)
+    head_ok = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["dv/auto_dv/env/x.sv"]}
+    r_true = gate(head_ok)
+    r_false = gate(dict(head_ok, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}))
+    r_absent = gate({"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin})
+    r_worktree = gate(dict(head_ok, source_mode=C.SOURCE_MODE_WORKTREE))
+    r_other = gate(dict(head_ok, head_sha="b" * 40))
+    r_nopin = gate(head_ok, pinned=None)
+    r_none = gate(None, where=gd / "no_such_dir")
+    cond = (r_true is None
+            and r_false is not None and "gen_tb" in r_false and f"{C.COVERGROUPS_DECLARED_KEY}=False" in r_false and "LOG-046a" in r_false
+            and r_absent is not None and f"{C.COVERGROUPS_DECLARED_KEY}=absent" in r_absent
+            and r_worktree is not None and "worktree-mode build" in r_worktree
+            and r_other is not None and "not of the pinned" in r_other and pin[:12] in r_other
+            and r_nopin is not None and "no pinned commit" in r_nopin
+            and r_none is not None and "no build manifest" in r_none)
     ok &= cond
-    print("SELF-TEST", "ok " if cond else "BAD", f"measured_dispatch_refusal: false refuses naming the build and the rule, true accepts, an absent fact or manifest refuses: {(r_false or '')[:90]}")
+    print("SELF-TEST", "ok " if cond else "BAD", f"measured_dispatch_refusal: a head build of the pin with a covergroup passes; false or absent fact, a worktree build, a head build of another sha, no pin, no manifest refuse naming the condition: {(r_worktree or '')[:100]}")
+    facts = canary_build_facts(gd)
+    cond = facts is not None and facts["head_sha"] == pin and facts["source_mode"] == C.SOURCE_MODE_HEAD and facts[C.COVERGROUPS_DECLARED_KEY] is True \
+        and facts["manifest_present"] and facts["manifest"] == str(gd / C.BUILD_MANIFEST) and canary_build_facts(None) is None
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "canary_build_facts records path, manifest, source_mode, head_sha and the covergroup facts (None without a canary build)")
     shutil.rmtree(gd, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
@@ -680,7 +718,8 @@ def red_log_for(test_name: str) -> tuple[Path | None, Path | None, str | None]:
 def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
     """The reviewer's method: the retained pinned-red log of a red fixture, run through the verdict with the entry's
     red_expect, must come out RED-OK. None when no retained log exists (head trees carry no evidence; a fixture
-    without a retained log is not provable here)."""
+    without a retained log is not provable here). For a family without a harness line the match IS the RED-OK
+    verdict, so such an entry is never stale and RED_STALE_ALLOWLIST cannot apply to it."""
     import gen_verdict as V
     stdout, sim, harness_prefix = red_log_for(test["name"])
     if stdout is None:

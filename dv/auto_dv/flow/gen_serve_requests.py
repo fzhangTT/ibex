@@ -417,15 +417,17 @@ def partition_pending(pending: list[Path]) -> tuple[list[Path], list[Path], list
     return pinned, p1, [p for p in pinned if p not in p1], [p for p in pending if p not in pinned]
 
 
-def measured_gate(p234: list[Path], canary_build: Path | None) -> tuple[list[Path], str | None, dict[str, Any]]:
-    """Purpose-4 requests of a batch (measured rounds) dispatch only on a canary build that compiled a covergroup
-    (LOG-046a): the purpose-4 subset, the refusal text (None when allowed, or when the batch has none) and the record."""
+def measured_gate(p234: list[Path], canary_build: Path | None, pinned_sha: str | None) -> tuple[list[Path], str | None, dict[str, Any]]:
+    """Purpose-4 requests of a batch (measured rounds) dispatch only on a head-mode canary build of the batch's pinned
+    commit that declares a covergroup (LOG-046a): the purpose-4 subset, the refusal text (None when allowed, or when
+    the batch has none) and the record with the facts read."""
     p4 = [p for p in p234 if request_purpose(p) == 4]
     if not p4:
         return [], None, {}
     man, mp = U.load_build_manifest(canary_build) if canary_build else (None, Path("(no --canary-build)"))
-    refusal = U.measured_dispatch_refusal(man, str(mp))
-    return p4, refusal, {"canary_build": str(canary_build) if canary_build else None,
+    refusal = U.measured_dispatch_refusal(man, str(mp), pinned_sha)
+    return p4, refusal, {"canary_build": str(canary_build) if canary_build else None, "pinned_sha": pinned_sha,
+                         "facts": U.canary_build_facts(canary_build),
                          "decision": C.CANARY_REFUSED_NO_COVERGROUPS if refusal else C.CANARY_ACCEPTED, "refusal": refusal}
 
 
@@ -438,18 +440,26 @@ def self_test() -> int:
     U.dump_yaml({"purpose": 4, "requester": "dv-lead"}, r4)
     U.dump_yaml({"purpose": 2, "requester": "tb-infra"}, r2)
     b = d / "canary_build"; b.mkdir()
-    U.dump_yaml({"build": "gen_tb", "covergroups_compiled": False}, b / C.BUILD_MANIFEST)
-    p4, refusal, gate = measured_gate([r2, r4], b)
-    cond = p4 == [r4] and refusal is not None and "covergroups_compiled=False" in refusal and gate["decision"] == C.CANARY_REFUSED_NO_COVERGROUPS
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"canary build without a covergroup: the purpose-4 request is refused, the purpose-2 one is not in the gate: {gate['decision']}")
-    p4, refusal, gate = measured_gate([r2, r4], None)
-    cond = p4 == [r4] and refusal is not None and "(no --canary-build)" in refusal and gate["canary_build"] is None
+    pin = "e" * 40
+    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["x.sv"]}
+    U.dump_yaml(dict(head, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}), b / C.BUILD_MANIFEST)
+    p4, refusal, gate = measured_gate([r2, r4], b, pin)
+    cond = p4 == [r4] and refusal is not None and f"{C.COVERGROUPS_DECLARED_KEY}=False" in refusal and gate["decision"] == C.CANARY_REFUSED_NO_COVERGROUPS and gate["facts"]["head_sha"] == pin
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"canary build without a covergroup: the purpose-4 request is refused, the purpose-2 one is not in the gate, the facts are recorded: {gate['decision']}")
+    p4, refusal, gate = measured_gate([r2, r4], None, pin)
+    cond = p4 == [r4] and refusal is not None and "(no --canary-build)" in refusal and gate["canary_build"] is None and gate["facts"] is None
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "no --canary-build: the purpose-4 request is refused naming the missing argument")
-    U.dump_yaml({"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["x.sv"]}, b / C.BUILD_MANIFEST)
-    p4, refusal, gate = measured_gate([r2, r4], b)
+    U.dump_yaml(dict(head, source_mode=C.SOURCE_MODE_WORKTREE), b / C.BUILD_MANIFEST)
+    _, r_wt, _ = measured_gate([r4], b, pin)
+    U.dump_yaml(dict(head, head_sha="f" * 40), b / C.BUILD_MANIFEST)
+    _, r_other, _ = measured_gate([r4], b, pin)
+    cond = r_wt is not None and "worktree-mode build" in r_wt and r_other is not None and "not of the pinned" in r_other
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a worktree canary build and a head build of another sha refuse the purpose-4 request (CM46-M-1)")
+    U.dump_yaml(head, b / C.BUILD_MANIFEST)
+    p4, refusal, gate = measured_gate([r2, r4], b, pin)
     cond = p4 == [r4] and refusal is None and gate["decision"] == C.CANARY_ACCEPTED
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "canary build with a covergroup: the purpose-4 request dispatches (accepted)")
-    cond = measured_gate([r2], None) == ([], None, {})
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a head-mode canary build of the pinned sha with a covergroup: the purpose-4 request dispatches (accepted)")
+    cond = measured_gate([r2], None, pin) == ([], None, {})
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a batch without a purpose-4 request needs no canary build")
     shutil.rmtree(d, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
@@ -492,7 +502,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                 "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
                 "pinned_sha": batch_sha, "canary_sha": canary_sha, "canary_decision": rec["decision"],
                 "canary_to_batch_build_input_delta": rec["delta"], "batch": [p.stem for p in pinned], "batch_record": str(rec_path)}
-        p4, p4_refusal, gate = measured_gate(p234, canary_build)
+        p4, p4_refusal, gate = measured_gate(p234, canary_build, batch_sha)
         if p4:
             sync["measured_dispatch"] = gate
             if p4_refusal:
@@ -510,7 +520,8 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
                 with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
                     manifests = list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
                 # Purposes 2 to 4 (trials, repros, measured rounds): one at a time on the same pinned tree.
-                manifests += [serve_one(p, head_testlist, dry_run, batch_args, sync, p4_refusal if p in p4 else None) for p in p234]
+                p4_args = batch_args + (["--canary-build", str(canary_build)] if canary_build else [])
+                manifests += [serve_one(p, head_testlist, dry_run, p4_args if p in p4 else batch_args, sync, p4_refusal if p in p4 else None) for p in p234]
             finally:
                 M.release_lease(batch_lease)
         else:
@@ -519,7 +530,8 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
             sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing the pinned commit itself"
             U.log(f"WARNING: batch mirror sync rc={rc} timed_out={timed_out}; serializing {len(pinned)} head-mode request(s) pinned to {batch_sha[:12]}")
             pin_args = list(extra_args) + ["--head-sha", batch_sha]
-            manifests = [serve_one(p, testlist, dry_run, pin_args, sync, p4_refusal if p in p4 else None) for p in [*p1, *p234]]
+            p4_pin_args = pin_args + (["--canary-build", str(canary_build)] if canary_build else [])
+            manifests = [serve_one(p, testlist, dry_run, p4_pin_args if p in p4 else pin_args, sync, p4_refusal if p in p4 else None) for p in [*p1, *p234]]
         rec.update(sync=sync, manifests=[str(m) for m in manifests], completed_utc=U.now_utc())
         U.dump_yaml(rec, rec_path)
     elif pinned:
@@ -547,7 +559,7 @@ def main() -> int:
                          "mirrored file differs between that commit and HEAD")
     ap.add_argument("--canary-build", type=Path, default=None,
                     help="build dir (or build_manifest.yaml) of the canary regression: a purpose-4 request is refused "
-                         "(refused_no_covergroups) unless it records covergroups_compiled true (LOG-046a)")
+                         "(refused_no_covergroups) unless it is a head-mode build of the batch's pinned commit recording covergroups_declared true (LOG-046a)")
     ap.add_argument("--max-concurrent", type=int, default=C.SERVE_MAX_CONCURRENT_P1,
                     help="independent purpose-1 requests served at once (ruling: purposes 2-4 stay serialized)")
     ap.add_argument("--extra-arg", action="append", default=[],

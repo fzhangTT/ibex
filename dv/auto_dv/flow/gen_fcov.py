@@ -5,6 +5,14 @@ FAILS the run. The verdict is ci/check_fcov_expectations.py's (per test, pre-mer
 own vdb slice via `urg -tests <vdb minus .vdb>/<cm_name>`); this module validates the manifest
 schema, drives the checker, parses its per-bin lines and carries the anti-vacuity notes through.
 
+Cross bins (LOG-054): urg's grpinfo.txt lists a cross under `Summary for Cross <cr>` and names each
+row by its component tuple (one column per coverpoint, then COUNT AT LEAST), never by a bin name; the
+checker reads only `Summary for Variable` sections with NAME COUNT rows. This module runs the per-test
+urg report itself (the checker's own command and isolation check), derives a variable-form grpinfo.txt
+beside the original (each cross section becomes a variable section whose rows carry the tuple joined
+with `_`, the manifests' cross-bin names; variable sections are copied unchanged) and calls the checker
+with --report-dir on the derived report. Both files stay in the run dir and the result names them.
+
 Manifest schema (`<test>.fcov.yaml`, file stem == test name):
     test: gen_<name>                      # must equal the file stem
     owner: <role slug>
@@ -41,6 +49,16 @@ RESULT_LINE_RE = re.compile(r"^FCOV-EXPECTATION: (\S+) = (HIT|UNHIT|MISSING-FROM
 STATUS_BY_EXIT = C.FCOV_EXIT_CODES
 REASON_UNMET = "fcov expectation unmet"
 REASON_UNVERIFIABLE = "fcov expectation unverifiable"
+CAUSE_NO_GRPINFO = "per-test urg report has no grpinfo.txt (no covergroup in this vdb)"
+CAUSE_URG_FAILED = "per-test urg report failed"
+CAUSE_ISOLATION = "per-test isolation not confirmed (want exactly 1 test = the run's cm_name in tests.txt)"
+DERIVED_REPORT_DIRNAME = "urgReport_variable_form"
+CROSS_SECTION_RE = re.compile(r"^Summary for Cross (\S+)\s*$")
+SECTION_START_RE = re.compile(r"^(Summary for (Variable|Group|Cross)\b|Variables for Group\b|Group : )")
+BINS_TITLE_RE = re.compile(r"^(Uncovered bins|Covered bins|Bins)\s*$")   # "Bins": urg's title when every bin is covered
+TUPLE_TOKEN_RE = re.compile(r"\[[^\]]*\]|\S+")   # a bracketed component (possibly multi-valued) or a bare token
+CHECKER_MODE = "--report-dir on the variable-form grpinfo.txt derived by gen_fcov (cross rows named by their tuple)"
+CROSS_SAMPLE = Path(__file__).resolve().parent / "gen_fixtures" / "gen_grpinfo_cross_sample.txt"   # real urg excerpt, header lines say from where
 
 
 def manifest_path(test: dict[str, Any]) -> Path | None:
@@ -133,14 +151,119 @@ def run_checker(manifest: Path, vdb: Path | None, cm_name: str | None, log_path:
              else f"{REASON_UNVERIFIABLE}: {cause or f'checker exit {r.returncode}'} (see {log_path.name})")}
 
 
+def per_test_report(vdb: Path, cm_name: str, workdir: Path) -> tuple[Path | None, str | None]:
+    """The checker's own per-test urg report (`urg -tests <vdb minus .vdb>/<cm_name>`, text format) and its
+    isolation check, run here so the report can be rewritten before the checker reads it. Returns (report dir or
+    None, cause or None); urg's output is kept in the work dir."""
+    report = workdir / "urgReport"
+    ident = f"{str(vdb)[:-4] if str(vdb).endswith('.vdb') else str(vdb)}/{cm_name}"
+    sel_file = workdir / "test_selection.txt"
+    sel_file.write_text(ident + "\n", encoding="utf-8")
+    r = subprocess.run(["urg", "-full64", "-dir", str(vdb), "-format", "text", "-report", str(report), "-tests", str(sel_file)],
+                       capture_output=True, text=True)
+    (workdir / "urg_stdout.log").write_text(r.stdout + r.stderr, encoding="utf-8")
+    if not report.is_dir():
+        return None, CAUSE_URG_FAILED
+    # Isolation first: a selection that names no test of this vdb also yields a report without grpinfo.txt, and that
+    # is a wrong cm_name, not a TB without a covergroup.
+    tests_txt = (report / "tests.txt").read_text(encoding="utf-8", errors="replace") if (report / "tests.txt").is_file() else ""
+    m = re.search(r"Total tests in report: (\d+)", tests_txt)
+    exact = re.search(rf"^\S*/{re.escape(cm_name)}\s*$", tests_txt, re.M)
+    if not m or m.group(1) != "1" or not exact:
+        return report, f"{CAUSE_ISOLATION}; tests.txt says: {m.group(0) if m else 'unparseable'}"
+    if r.returncode != 0 or not (report / "grpinfo.txt").is_file():
+        return report, CAUSE_NO_GRPINFO if r.returncode == 0 else CAUSE_URG_FAILED
+    return report, None
+
+
+def tuple_row(line: str, name_cols: int) -> str | None:
+    """One bin row of a tuple-form table as a NAME row, or None for a line that is not one single bin: a hole group
+    (multi-valued `[a , b]` or `*` components, `--` counts) or a stray line. Auto-generated cross bins print their
+    components bracketed (`[c_mul] [distinct] 0 1 1`) or bare (`c_mul pos_rand all_ones 1 1`); the name is the
+    components joined with `_`, the manifests' cross-bin naming."""
+    toks = TUPLE_TOKEN_RE.findall(line)
+    if len(toks) <= name_cols or not toks[name_cols].isdigit():
+        return None
+    names = []
+    for tok in toks[:name_cols]:
+        inner = tok[1:-1].strip() if tok.startswith("[") and tok.endswith("]") else tok
+        if not inner or "," in inner or inner == "*":
+            return None
+        names.append(inner)
+    return "_".join(names) + " " + " ".join(toks[name_cols:])
+
+
+def derive_variable_form(text: str) -> tuple[str, dict[str, int]]:
+    """The variable-form grpinfo.txt the checker can read. Cross sections: `Summary for Cross <cr>` becomes
+    `Summary for Variable <cr>`, and in each bins table the header's name columns (those before COUNT) collapse into
+    one NAME column whose value is the row's components joined with `_` (a one-column NAME table keeps its names), the
+    count columns following, single-spaced; hole-group rows stay as they are (the checker ignores them). In every
+    section a table titled `Bins` (urg's title when all bins are covered, which the checker does not read) is
+    retitled `Covered bins`. Everything else is copied byte for byte."""
+    out: list[str] = []
+    stats = {"cross_sections": 0, "cross_tables": 0, "cross_rows": 0, "bins_tables_retitled": 0}
+    in_cross = False
+    name_cols: int | None = None      # name columns of the current cross table
+    awaiting_header = False           # between a table title and its header line
+    for line in text.splitlines():
+        m = CROSS_SECTION_RE.match(line)
+        if m:
+            in_cross, name_cols, awaiting_header = True, None, False
+            stats["cross_sections"] += 1
+            out.append(f"Summary for Variable {m.group(1)}")
+            continue
+        if in_cross and SECTION_START_RE.match(line):
+            in_cross, name_cols, awaiting_header = False, None, False
+        title = BINS_TITLE_RE.match(line)
+        if title and title.group(1) == "Bins":
+            stats["bins_tables_retitled"] += 1
+            line = "Covered bins"
+        if in_cross:
+            toks = line.split()
+            if title:
+                name_cols, awaiting_header = None, True
+                stats["cross_tables"] += 1
+            elif awaiting_header and toks:
+                if "COUNT" in toks and toks.index("COUNT") >= 1:
+                    name_cols = toks.index("COUNT")
+                    out.append("NAME " + " ".join(toks[name_cols:]))
+                    awaiting_header = False
+                    continue
+                awaiting_header = False   # a table without a COUNT header is left as it is
+            elif name_cols is not None:
+                if not toks:
+                    name_cols = None      # a blank line ends the table
+                else:
+                    row = tuple_row(line, name_cols)
+                    if row is not None:
+                        out.append(row)
+                        stats["cross_rows"] += 1
+                        continue
+        out.append(line)
+    return "\n".join(out) + "\n", stats
+
+
+def derived_report(report: Path) -> tuple[Path, dict[str, int]]:
+    """Write the variable-form report beside the original (grpinfo.txt rewritten; tests.txt and dashboard.txt
+    copied for the record); the original report dir is never touched."""
+    dst = report.parent / DERIVED_REPORT_DIRNAME
+    dst.mkdir(exist_ok=True)
+    text, stats = derive_variable_form((report / "grpinfo.txt").read_text(encoding="utf-8", errors="replace"))
+    (dst / "grpinfo.txt").write_text(text, encoding="utf-8")
+    for name in ("tests.txt", "dashboard.txt"):
+        if (report / name).is_file():
+            shutil.copyfile(report / name, dst / name)
+    return dst, stats
+
+
 def protocol_cause(checker_output: str, run_dir: Path) -> str:
     """Name the cause of a checker protocol error from what is on disk (the checker's own message
     quotes urg's tail, which does not say what was missing)."""
     if "urg per-test report failed" in checker_output:
         reports = sorted(run_dir.glob("fcovexp_*/urgReport"))
         if reports and not (reports[-1] / "grpinfo.txt").is_file():
-            return "per-test urg report has no grpinfo.txt (no covergroup in this vdb)"
-        return "per-test urg report failed"
+            return CAUSE_NO_GRPINFO
+        return CAUSE_URG_FAILED
     if "per-test isolation not confirmed" in checker_output:
         return "per-test isolation not confirmed by the checker"
     if "no covergroup bin rows parsed" in checker_output:
@@ -165,7 +288,21 @@ def check_test(test: dict[str, Any], vdb: Path, cm_name: str, run_dir: Path) -> 
                 "reason": f"{REASON_UNVERIFIABLE}: manifest schema violation ({problems[0]})"}
     # Retain the manifest as used beside the run: the proof never rests on an uncommitted working file.
     shutil.copyfile(mpath, run_dir / "fcov_manifest_used.yaml")
-    res = run_checker(mpath, vdb, cm_name, run_dir / "fcov_check.log", declared_bins=list((data or {}).get("bins", [])))
+    declared = list((data or {}).get("bins", []))
+    work = Path(tempfile.mkdtemp(prefix="fcovexp_", dir=run_dir))
+    report, cause = per_test_report(vdb, cm_name, work)
+    if cause:
+        log = run_dir / "fcov_check.log"
+        log.write_text(f"per-test urg report: {cause}\nurg output: {work / 'urg_stdout.log'}\n", encoding="utf-8")
+        return {"status": "PROTOCOL_ERROR", "exit_code": None, "log": str(log), "bins": {}, "unmet_bins": [],
+                "declared": len(declared), "hit": 0, "cause": cause, "manifest": str(mpath),
+                "manifest_copy": str(run_dir / "fcov_manifest_used.yaml"), "manifest_sha256": U.sha256_file(mpath),
+                "report_dir": str(report) if report else None, "derived_report_dir": None, "derived_grpinfo": None,
+                "checker_mode": CHECKER_MODE, "anti_vacuity": {b: (data or {}).get("anti_vacuity", {}).get(b) for b in declared},
+                "owner": (data or {}).get("owner"), "reason": f"{REASON_UNVERIFIABLE}: {cause} (see fcov_check.log)"}
+    derived, stats = derived_report(report)
+    res = run_checker(mpath, None, None, run_dir / "fcov_check.log", report_dir=derived, declared_bins=declared)
+    res.update(report_dir=str(report), derived_report_dir=str(derived), derived_grpinfo=stats, checker_mode=CHECKER_MODE)
     res["manifest"] = str(mpath)
     res["manifest_copy"] = str(run_dir / "fcov_manifest_used.yaml")
     res["manifest_sha256"] = U.sha256_file(mpath)
@@ -238,6 +375,70 @@ def self_test() -> int:
         cond = res["status"] == "PROTOCOL_ERROR" and res["reason"].startswith(REASON_UNVERIFIABLE) and res["declared"] == 2
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: unverifiable query is not a pass and keeps declared=2: {res['status']} declared={res['declared']}")
+        # Cross bins (LOG-054): a fabricated grpinfo.txt in urg's tuple form, derived to the variable form, through the REAL checker.
+        var_block = ["Summary for Variable cp_op", "", "Covered bins", "", "NAME  COUNT AT LEAST NUMBER ", "c_mul 5     1        1      ", "", "----------"]
+        var_full = ["Summary for Variable cp_full", "", "Bins", "", "NAME  COUNT AT LEAST ", "hit_a 4     1        ", "", "----------"]
+        cross_block = ["Summary for Cross cr_extremes", "", "Samples crossed: cp_op cp_rs1_class cp_rs2_class",
+                       "CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING ", "User Defined Cross Bins            3        1         2       66.67           ", "",
+                       "Automatically Generated Cross Bins for cr_extremes", "", "Element holes", "",
+                       "cp_op   cp_rs1_class          cp_rs2_class COUNT AT LEAST NUMBER ", "[mulh]  [pos_rand , neg_rand] *            --    --       6      ", "",
+                       "Uncovered bins", "", "cp_op   cp_rs1_class cp_rs2_class COUNT AT LEAST NUMBER ", "[c_mul] [distinct]   [zero]       0     1        1      ",
+                       "[mul]   [zero , one] [zero]       --    --       2      ", "",
+                       "Covered bins", "", "cp_op cp_rs1_class cp_rs2_class COUNT AT LEAST ", "c_mul all_ones     neg_rand     2     1        ",
+                       "c_mul zero         pos_rand     7     1        ", "",
+                       "User Defined Cross Bins for cr_extremes", "", "Uncovered bins", "", "NAME                    COUNT AT LEAST NUMBER ",
+                       "c_mul_all_ones_all_ones 0     1        1      ", "", "----------"]
+        cross_full = ["Summary for Cross cr_full", "", "CATEGORY                EXPECTED UNCOVERED COVERED PERCENT MISSING ", "User Defined Cross Bins 1        0         1       100.00          ", "",
+                      "User Defined Cross Bins for cr_full", "", "Bins", "", "NAME            COUNT AT LEAST ", "mul_all_ones    7     1        ", "", "----------"]
+        rep_x = d / "report_cross"; rep_x.mkdir()
+        (rep_x / "grpinfo.txt").write_text("\n".join(["Group : gen_tb_top.u_env.u_cov::gen_x_cg", ""] + var_block + [""] + cross_block + [""] + var_block + [""] + cross_full + [""] + var_full) + "\n", encoding="utf-8")
+        (rep_x / "tests.txt").write_text("Total tests in report: 1\n/x/build/test_gen_x_1\n", encoding="utf-8")
+        derived, stats = derived_report(rep_x)
+        dtext = (derived / "grpinfo.txt").read_text(encoding="utf-8")
+        xm = d / "gen_selftest_x.fcov.yaml"
+        bins_x = ["gen_x_cg.cp_op.c_mul", "gen_x_cg.cr_extremes.c_mul_all_ones_neg_rand", "gen_x_cg.cr_extremes.c_mul_all_ones_all_ones",
+                  "gen_x_cg.cr_extremes.c_mul_distinct_zero", "gen_x_cg.cr_full.mul_all_ones", "gen_x_cg.cp_full.hit_a"]
+        xm.write_text("test: gen_selftest_x\nowner: runtime\nbins:\n" + "".join(f"  - {b}\n" for b in bins_x) + "anti_vacuity:\n" + "".join(f"  {b}: x\n" for b in bins_x), encoding="utf-8")
+        before = run_checker(xm, None, None, d / "cross_before.log", report_dir=rep_x)
+        after = run_checker(xm, None, None, d / "cross_after.log", report_dir=derived)
+        st = {b: after["bins"][b]["state"] for b in bins_x}
+        cond = (stats == {"cross_sections": 2, "cross_tables": 4, "cross_rows": 5, "bins_tables_retitled": 2}
+                and "Summary for Variable cr_extremes" in dtext and "Summary for Cross" not in dtext and "\nBins\n" not in dtext
+                and "c_mul_all_ones_neg_rand 2 1" in dtext and "c_mul_distinct_zero 0 1 1" in dtext and "[mul]   [zero , one] [zero]       --    --       2" in dtext
+                and "[mulh]  [pos_rand , neg_rand] *" in dtext and "c_mul_all_ones_all_ones 0 1 1" in dtext
+                and dtext.count("\n".join(var_block)) == 2 and (derived / "tests.txt").is_file() and (rep_x / "grpinfo.txt").read_text(encoding="utf-8").count("Summary for Cross") == 2
+                and before["bins"]["gen_x_cg.cr_extremes.c_mul_all_ones_neg_rand"]["state"] == "MISSING-FROM-REPORT"
+                and before["bins"]["gen_x_cg.cr_full.mul_all_ones"]["state"] == "MISSING-FROM-REPORT" and before["bins"]["gen_x_cg.cp_full.hit_a"]["state"] == "MISSING-FROM-REPORT"
+                and after["bins"]["gen_x_cg.cr_extremes.c_mul_all_ones_neg_rand"] == {"state": "HIT", "count": "2"}
+                and st == {"gen_x_cg.cp_op.c_mul": "HIT", "gen_x_cg.cr_extremes.c_mul_all_ones_neg_rand": "HIT", "gen_x_cg.cr_extremes.c_mul_all_ones_all_ones": "UNHIT",
+                           "gen_x_cg.cr_extremes.c_mul_distinct_zero": "UNHIT", "gen_x_cg.cr_full.mul_all_ones": "HIT", "gen_x_cg.cp_full.hit_a": "HIT"}
+                and after["status"] == "UNHIT")
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"cross bins through the REAL checker: MISSING-FROM-REPORT on the original report, on the derived form a bare tuple row is HIT, a bracketed auto row UNHIT, a named row UNHIT, an all-covered 'Bins' table HIT in a cross and in a variable, hole groups left alone; variable sections otherwise byte-identical; original untouched; stats {stats}")
+        print("SELF-TEST", "ok " if cond else "BAD", f"derived states: {st}")
+        # The real sample: a per-test urg grpinfo.txt excerpt of the flow's own probe (gen_test_mul_mul on the committed covergroups).
+        rep_s = d / "report_sample"; rep_s.mkdir()
+        shutil.copyfile(CROSS_SAMPLE, rep_s / "grpinfo.txt")
+        (rep_s / "tests.txt").write_text("Total tests in report: 1\n/x/build/test_gen_test_mul_mul_250519699\n", encoding="utf-8")
+        derived_s, stats_s = derived_report(rep_s)
+        want = {"gen_mul_ops_cg.cr_op_rd_x0.mul_no": ("HIT", "94"), "gen_mul_ops_cg.cr_op_rd_x0.c_mul_yes": ("UNHIT", "0"),
+                "gen_mul_ops_cg.cr_op_rs1.mul_all_ones": ("HIT", "10"), "gen_mul_ops_cg.cr_op_same.mul_distinct": ("HIT", "80"),
+                "gen_mul_ops_cg.cr_op_same.mulh_all_same": ("UNHIT", "0"), "gen_mul_ops_cg.cr_op_same.c_mul_distinct": ("UNHIT", "0"),
+                "gen_mul_ops_cg.cr_extremes.c_mul_pos_rand_all_ones": ("HIT", "1"), "gen_isa_shift_cg.cr_sra_sign.sra_msb_only_s0": ("UNHIT", "0"),
+                "gen_mul_ops_cg.cp_op.mul": ("HIT", None), "gen_mul_ops_cg.cr_op_same.no_such_bin": ("MISSING-FROM-REPORT", "n/a")}
+        sm = d / "gen_selftest_sample.fcov.yaml"
+        sm.write_text("test: gen_selftest_sample\nowner: runtime\nbins:\n" + "".join(f"  - {b}\n" for b in want) + "anti_vacuity:\n" + "".join(f"  {b}: x\n" for b in want), encoding="utf-8")
+        before_s = run_checker(sm, None, None, d / "sample_before.log", report_dir=rep_s)
+        after_s = run_checker(sm, None, None, d / "sample_after.log", report_dir=derived_s)
+        got = {b: (after_s["bins"][b]["state"], after_s["bins"][b]["count"] if want[b][1] is not None else None) for b in want}
+        cross_before = {b: before_s["bins"][b]["state"] for b in want if ".cr_" in b}
+        cond = (got == want and all(s == "MISSING-FROM-REPORT" for s in cross_before.values())
+                and before_s["bins"]["gen_mul_ops_cg.cp_op.mul"]["state"] == "HIT" and after_s["status"] == "UNHIT"
+                and stats_s["cross_sections"] == 12 and stats_s["bins_tables_retitled"] >= 2 and stats_s["cross_rows"] > 100)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"real sample {CROSS_SAMPLE.name} through the REAL checker: every cross bin MISSING-FROM-REPORT on the raw report; on the derived form gen_mul_ops_cg.cr_op_rd_x0.mul_no is HIT (count 94), a 'Bins'-table bin HIT, bare and bracketed auto rows HIT/UNHIT, a 3-component row UNHIT, a plain variable bin HIT both times, an absent bin MISSING; stats {stats_s}")
+        if not cond:
+            print("   got:", got, "| cross before:", cross_before)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

@@ -514,6 +514,8 @@ def main() -> int:
                          "a tier, or several tests); worktree: the shared working tree (default for one test)")
     ap.add_argument("--head-sha", default=None,
                     help="head mode: the commit the mirror must be synced from (a batch pins it; a lone run pins its own sync)")
+    ap.add_argument("--canary-build", type=Path, default=None,
+                    help="the canary build the dispatcher gated this measured regression on (LOG-046a): its facts are recorded")
     ap.add_argument("--no-sync-mirror", action="store_true",
                     help="do not re-sync the shared mirror before cocotb builds (default: sync)")
     ap.add_argument("--allow-local-out-root", action="store_true",
@@ -572,6 +574,7 @@ def main() -> int:
                   "coverage": coverage, "cond": coverage and not a.no_cond, "waves": a.waves,
                   "local": a.local, "max_parallel": a.max_parallel},
         "planned_runs": [{"test": t["name"], "seed": s, "build": t["build"]} for t, s in plan],
+        "canary_build": U.canary_build_facts(a.canary_build),
         "outdir": str(outdir), "regress_log": str(outdir / "regress.log"),
         "git": U.git_head(), "tools": U.tool_versions(), "started_utc": U.now_utc(), "status": "running",
     }

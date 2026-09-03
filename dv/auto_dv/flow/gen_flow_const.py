@@ -399,12 +399,16 @@ CRASH_RE = re.compile(r"(^|: )\s*(\d+\s+)?(Segmentation fault|Bus error|Aborted|
 # ci/check_fcov_expectations.py exit codes (its module docstring: 0 all hit; 2 unhit; 1 protocol error).
 FCOV_EXIT_CODES = {0: "PASS", 2: "UNHIT", 1: "PROTOCOL_ERROR"}
 FCOV_DOCSTRING_ANCHORS = ("0 all declared bins hit", "2 declared-but-unhit", "1 usage/protocol error")
-# A measured (purpose-4) dispatch needs a TB that compiles at least one covergroup (ruling LOG-046a): otherwise every fcov
-# manifest is unverifiable and the round is refused after the pass. gen_build records the fact; gen_round and the request
-# server refuse the dispatch before any job when the canary build lacks it.
-COVERGROUP_DECL_RE = re.compile(r"^\s*covergroup\s+[A-Za-z_]\w*")   # a covergroup declaration in comment-stripped SV
+# A measured (purpose-4) dispatch needs a TB that declares at least one covergroup (ruling LOG-046a): otherwise every fcov
+# manifest is unverifiable and the round is refused after the pass. gen_build records the lexical fact (a `covergroup`
+# declaration in the compiled .sv/.svh sources, comments stripped; an ifdef'd-out declaration still counts, hence
+# "declared", not "compiled"); gen_round and the request server refuse the dispatch before any job unless the canary
+# build is a head-mode build of the very commit the round pins and records the fact true.
+COVERGROUP_DECL_RE = re.compile(r"(?<![\w$])covergroup\s+[A-Za-z_]\w*")   # a covergroup declaration anywhere on a comment-stripped SV line
 SV_SOURCE_SUFFIXES = (".sv", ".svh")
-MEASURED_DISPATCH_RULE = "LOG-046a: a measured regression dispatches only on a canary build whose manifest records covergroups_compiled true"
+COVERGROUPS_DECLARED_KEY = "covergroups_declared"
+MEASURED_DISPATCH_RULE = ("LOG-046a: a measured regression dispatches only on a head-mode canary build of the pinned commit whose "
+                          "manifest records covergroups_declared true (a covergroup declaration in the compiled SV sources)")
 CANARY_REFUSED_NO_COVERGROUPS = "refused_no_covergroups"
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.

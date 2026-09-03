@@ -96,8 +96,9 @@ gen_build.py --build <name> [--coverage] [--cond] [--no-diag-noconst] [--cocotb]
   `build_manifest.yaml`.
 - `build_manifest.yaml`: build, tb_top, dut_instance, build_config, command, flag_groups (one list per
   group), inputs (sha256 of every filelist, one combined sha256 over all listed sources, source
-  count), `covergroup_files` and `covergroups_compiled` (the listed .sv/.svh sources that declare a covergroup,
-  comments stripped: the fact the measured-dispatch gate reads, Sections 4 and 7d), staged_env_sh sha256, git (HEAD, branch, dirty flag), tools (vcs, urg, python, cocotb),
+  count), `covergroup_files` and `covergroups_declared` (the listed .sv/.svh sources with a `covergroup` declaration
+  anywhere on a comment-stripped line: a lexical fact, ifdefs are not evaluated, hence "declared"; with `source_mode`
+  and `head_sha` it is what the measured-dispatch gate reads, Sections 4 and 7d), staged_env_sh sha256, git (HEAD, branch, dirty flag), tools (vcs, urg, python, cocotb),
   compile_summary (error count and classes, warning classes with counts, compiler version), status
   `ok|failed`, wall_s. `status: ok` requires vcs rc 0, a simv, and zero `Error-[...]` lines.
 
@@ -374,10 +375,13 @@ they are recorded in the manifest as `operator_extra_args`. Only the runtime rol
 script (LSF is exclusive to it).
 
 Measured-dispatch gate (ruling LOG-046a): a purpose-4 request in an accepted batch dispatches only when the canary
-regression's build manifest, named by `--canary-build DIR|build_manifest.yaml`, records `covergroups_compiled: true`
+regression's build manifest, named by `--canary-build DIR|build_manifest.yaml`, is a head-mode build (`source_mode: head`)
+of the batch's pinned commit (`head_sha` equal to `pinned_sha`; a worktree build may carry an in-progress covergroup and a
+head build of another commit proves nothing about this one) and records `covergroups_declared: true`
 (`gen_flow_util.measured_dispatch_refusal`); otherwise every purpose-4 request of the pass is refused in writing
 (`scope_decision: refused`, the refusal names the build, the manifest and the rule; the batch record's `sync` carries
-`measured_dispatch: {canary_build, decision: refused_no_covergroups | accepted, refusal}`) while the purpose-1 to -3
+`measured_dispatch: {canary_build, pinned_sha, facts, decision: refused_no_covergroups | accepted, refusal}`, and each
+purpose-4 regression receives `--canary-build` so its own manifest records the same `canary_build` facts) while the purpose-1 to -3
 requests of the same batch are served. A TB without a covergroup makes every fcov manifest unverifiable, so the
 refusal lands before the first job instead of after the pass (round 0 of 2026-09-03 was refused after 700 s).
 
@@ -643,14 +647,36 @@ every manifest under the home. The checker itself reads only `bins:` (its parser
 top-level key), keyed `<cg>.<cp>.<bin>` from URG's grpinfo.txt with counts summed across instances
 of the same covergroup (TB Infra's C7 naming: `gen_<feature>_cg`).
 
-Flow step, per test and pre-merge: `gen_fcov.check_test` runs
-`ci/check_fcov_expectations.py --manifest <file> --vdb <the run's vdb> --cm-name test_<name>_<seed>`
-(the checker selects the slice with `urg -tests <vdb minus .vdb>/<cm_name>` and refuses anything but
-exactly one test in the report). In a regression `gen_regress.post_fcov_checks` runs it after every
-writer to the shared vdb has finished; a standalone `gen_run.py --fcov-check` runs it right away
-(single writer). Result: `result.yaml: fcov_check` with status (PASS, UNHIT, PROTOCOL_ERROR,
-NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts, `unmet_bins`, the notes, the
-checker log. A PASS/XFAIL run becomes FAIL with the distinct reason `fcov expectation unmet: ...`
+Flow step, per test and pre-merge: `gen_fcov.check_test` first produces the per-test urg report itself
+(`gen_fcov.per_test_report`: the checker's own command, `urg -full64 -dir <the run's vdb> -format text -report
+<run>/fcovexp_*/urgReport -tests <vdb minus .vdb>/test_<name>_<seed>`, and the checker's isolation check, exactly
+one test = the run's cm_name in tests.txt; a second run recorded under the same cm_name REPLACES that test's covergroup data
+in the vdb, which is why the flow's cm_name is `test_<name>_<seed>`, unique per run), then derives the variable-form report beside it
+(`fcovexp_*/urgReport_variable_form/`, ruling LOG-054 / T-215: urg lists a cross under `Summary for Cross <cr>` with
+rows named by the component tuple, one column per coverpoint before COUNT, never by a bin name, and the checker
+reads only `Summary for Variable` sections; the derived grpinfo.txt turns every cross section into a variable
+section whose bins-table rows are the row's components joined with `_` followed by the count columns, the
+manifests' cross-bin naming: user-defined cross bins print by name (one NAME column, kept), auto-generated cross
+bins print as component tuples, bare when covered (`c_mul pos_rand all_ones 1 1`) and bracketed when uncovered
+(`[c_mul] [distinct] 0 1 1`; brackets dropped), and hole groups (multi-valued `[a , b]` or `*` components, `--`
+counts) stay as they are and are ignored by the checker. One more urg form the checker cannot read: a table titled
+`Bins` (its title when every bin is covered) is retitled `Covered bins` in cross AND variable sections, so a fully
+hit coverpoint is HIT rather than MISSING-FROM-REPORT (the one edit made to variable sections; everything else and
+the original report stay byte for byte), and calls `ci/check_fcov_expectations.py --manifest <file> --report-dir <derived>`.
+In a regression `gen_regress.post_fcov_checks` runs it after every writer to the shared vdb has finished; a
+standalone `gen_run.py --fcov-check` runs it right away (single writer). Result: `result.yaml: fcov_check` with
+status (PASS, UNHIT, PROTOCOL_ERROR, NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts,
+`unmet_bins`, the notes, the checker log, `report_dir` and `derived_report_dir` (both retained in the run dir),
+`derived_grpinfo` (cross_sections, cross_tables, cross_rows rewritten) and `checker_mode`. A urg failure, a report
+without grpinfo.txt (no covergroup compiled) or a failed isolation check is a PROTOCOL_ERROR named in the reason
+before the checker runs. Proof: `gen_fcov.py --self-test` drives the REAL checker on a fabricated report in urg's
+forms (bare and bracketed tuple rows, hole groups, `Bins` tables in a cross and in a variable: MISSING-FROM-REPORT on
+the original, HIT / UNHIT on the derived one) and on the real excerpt `dv/auto_dv/flow/gen_fixtures/
+gen_grpinfo_cross_sample.txt` (two groups of the per-test report of the flow's own probe regress_probe_t215_cross,
+gen_test_mul_mul on the committed covergroups; its header names the source and its sha256), where
+gen_mul_ops_cg.cr_op_rd_x0.mul_no becomes HIT with count 94. On that probe's vdb the check moved from 249 of 289
+cross bins HIT (40 MISSING: all-covered `Bins` tables) to 287 of 289, the two left and the nine variable bins
+belonging to covergroups not yet landed. A PASS/XFAIL run becomes FAIL with the distinct reason `fcov expectation unmet: ...`
 (declared but unhit) or `fcov expectation unverifiable: <cause>` (protocol error: unverifiable is not
 a pass; the flow names the cause from what is on disk, for example `per-test urg report has no
 grpinfo.txt (no covergroup in this vdb)`). `declared` counts the validated manifest's bins even when
@@ -682,10 +708,15 @@ gen_round.py --round <n> --canary-build <canary build dir>   # required for a me
 
 Pre-dispatch gate (ruling LOG-046a): a measured round (tier full, purpose 4; not `--dry-run`, `--tests` or
 `--collect`) requires `--canary-build`, the build dir or build_manifest.yaml of the canary regression on the pinned
-commit, and dispatches only when that manifest records `covergroups_compiled: true`; otherwise `gen_round.py`
-prints `REFUSED: measured dispatch refused: canary build <build> (<manifest>) records covergroups_compiled=<false|absent>;
-LOG-046a: ...` and exits `ROUND_EXIT_REFUSED` (2) before any job (`check_canary_build`, self-tested with
-`gen_round.py --self-test`). The TB without a covergroup that produced 44 unverifiable FAILs in the refused round-0
+commit. gen_round pins HEAD first (`gen_mirror.head_sha()`), then dispatches only when that manifest is a head-mode
+build of exactly that commit (`source_mode: head`, `head_sha` equal to the pin) recording `covergroups_declared: true`;
+otherwise `gen_round.py` prints `REFUSED: measured dispatch refused: canary build <build> (<manifest>) <is a worktree-mode
+build | is the head-mode build of <sha>, not of the pinned <pin> | records covergroups_declared=<false|absent>>; LOG-046a: ...`
+and exits `ROUND_EXIT_REFUSED` (2) before any job (`check_canary_build`, self-tested with `gen_round.py --self-test`: false
+and absent fact, a worktree build, a head build of another sha refuse; the pinned head build with a covergroup dispatches).
+The regression then runs `--source head --head-sha <pin> --canary-build <dir>`, so its manifest and the round index entry
+carry `canary_build: {path, manifest, manifest_present, build, source_mode, head_sha, covergroups_declared,
+covergroup_files}` (the gate's inputs as evidence). The TB without a covergroup that produced 44 unverifiable FAILs in the refused round-0
 probe (evidence/gen_round_0_probe/) is caught here, not after a 700-second pass.
 
 - One round = `gen_regress.py --tier full --purpose 4 --dump-exclusions [--elfile ...]` (coverage with

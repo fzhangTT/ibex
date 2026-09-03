@@ -348,7 +348,7 @@ def main() -> int:
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
-        "covergroup_files": cg_files, "covergroups_compiled": bool(cg_files),
+        "covergroup_files": cg_files, C.COVERGROUPS_DECLARED_KEY: bool(cg_files),
         "source_root": str(C.SOURCE_ROOT), **source_facts(), **U.export_facts(),
         "staged_env_sh": {"path": str(outdir / C.STAGED_ENV_SH), "sha256": U.sha256_file(C.ENV_SH)},
         "git": U.git_head(), "tools": U.tool_versions(), "started_utc": U.now_utc(),

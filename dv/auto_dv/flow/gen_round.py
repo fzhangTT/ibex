@@ -28,6 +28,7 @@ from typing import Any
 import gen_flow_const as C
 import gen_flow_util as U
 import gen_cov_report as R
+import gen_mirror as M
 
 # Gated code metrics = every URG metric but functional coverage (group), which DV_prompt Section 4
 # gates by two conditions (bins >= 80 AND traceability) and which never enters the gain rule.
@@ -43,7 +44,8 @@ def run_regression(a: argparse.Namespace, tag: str) -> Path:
     elif a.dry_run:
         argv += ["--tier", C.CHECK_TIER]
     else:
-        argv += ["--tier", "full", "--purpose", "4", "--requester", a.requester]
+        argv += ["--tier", "full", "--purpose", "4", "--requester", a.requester, "--source", C.SOURCE_MODE_HEAD,
+                 "--head-sha", a.pinned_sha, "--canary-build", str(a.canary_build)]
     if a.seed_list:
         argv += ["--seed-list", a.seed_list]
     for e in a.elfile or []:
@@ -251,6 +253,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     git = man.get("git") or {}
     entry = {"round": round_no, "dry_run": dry_run, "label": label, "date_utc": U.now_utc(), "evidence_dir": str(ev),
              "regress_outdir": str(outdir), "regress_tag": man.get("tag"), "git_head": git.get("head"),
+             "canary_build": man.get("canary_build"),
              "git_dirty_tracked_files": git.get("dirty_tracked_files"), "flow_git_status_now": flow_git_status(),
              "regression_verdict": reg_verdict,
              "build_config": man.get("build_config"), "source": source, "tests_in_report": (cov.get("totals") or {}).get("tests_in_report"),
@@ -335,15 +338,16 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
     return "\n".join(L) + "\n"
 
 
-def check_canary_build(path: Path) -> tuple[int, str]:
-    """The pre-dispatch gate (LOG-046a): the canary regression's build manifest must record covergroups_compiled
-    true; otherwise the measured round is refused here, before any job, with ROUND_EXIT_REFUSED."""
+def check_canary_build(path: Path, pinned_sha: str | None) -> tuple[int, str]:
+    """The pre-dispatch gate (LOG-046a): the canary regression's build must be a head-mode build of the commit this
+    round pins and record covergroups_declared true; otherwise the measured round is refused here, before any job,
+    with ROUND_EXIT_REFUSED."""
     man, mp = U.load_build_manifest(path)
-    refusal = U.measured_dispatch_refusal(man, str(mp))
+    refusal = U.measured_dispatch_refusal(man, str(mp), pinned_sha)
     if refusal:
         return C.ROUND_EXIT_REFUSED, "REFUSED: " + refusal
-    return 0, (f"canary build {man.get('build')} ({mp}) records covergroups_compiled true "
-               f"({len(man.get('covergroup_files') or [])} covergroup source(s)); measured dispatch allowed")
+    return 0, (f"canary build {man.get('build')} ({mp}) is the head-mode build of the pinned {str(pinned_sha)[:12]} and records "
+               f"{C.COVERGROUPS_DECLARED_KEY} true ({len(man.get('covergroup_files') or [])} covergroup source(s)); measured dispatch allowed")
 
 
 def self_test() -> int:
@@ -351,17 +355,21 @@ def self_test() -> int:
     import tempfile
     ok = True
     d = Path(tempfile.mkdtemp(prefix="gen_round_selftest_", dir=C.selftest_tmp()))
-    cases = (("covergroups_compiled false refuses", {"build": "gen_tb", "covergroups_compiled": False}, C.ROUND_EXIT_REFUSED, "covergroups_compiled=False"),
-             ("fact absent (older manifest) refuses", {"build": "gen_tb"}, C.ROUND_EXIT_REFUSED, "covergroups_compiled=absent"),
-             ("covergroups_compiled true dispatches", {"build": "gen_tb", "covergroups_compiled": True, "covergroup_files": ["a.sv"]}, 0, "measured dispatch allowed"))
+    pin = "c" * 40
+    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["a.sv"]}
+    cases = ((f"{C.COVERGROUPS_DECLARED_KEY} false refuses", dict(head, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}), C.ROUND_EXIT_REFUSED, f"{C.COVERGROUPS_DECLARED_KEY}=False"),
+             ("fact absent (older manifest) refuses", {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin}, C.ROUND_EXIT_REFUSED, f"{C.COVERGROUPS_DECLARED_KEY}=absent"),
+             ("a worktree build refuses even with a covergroup", dict(head, source_mode=C.SOURCE_MODE_WORKTREE), C.ROUND_EXIT_REFUSED, "worktree-mode build"),
+             ("a head build of another commit refuses", dict(head, head_sha="d" * 40), C.ROUND_EXIT_REFUSED, "not of the pinned"),
+             ("a head build of the pinned commit with a covergroup dispatches", head, 0, "measured dispatch allowed"))
     for label, man, want_rc, want_text in cases:
         U.dump_yaml(man, d / C.BUILD_MANIFEST)
-        rc, msg = check_canary_build(d)
+        rc, msg = check_canary_build(d, pin)
         cond = rc == want_rc and want_text in msg and "gen_tb" in msg and (("LOG-046a" in msg) == (want_rc != 0))
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"{label}: rc {rc}: {msg[:110]}")
-    rc, msg = check_canary_build(d / "no_such_build")
-    cond = rc == C.ROUND_EXIT_REFUSED and "absent" in msg
+    rc, msg = check_canary_build(d / "no_such_build", pin)
+    cond = rc == C.ROUND_EXIT_REFUSED and "no build manifest" in msg
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"missing canary build dir refuses: rc {rc}")
     shutil.rmtree(d, ignore_errors=True)
@@ -383,8 +391,8 @@ def main() -> int:
     ap.add_argument("--timeout-s", type=int, default=6 * 3600)
     ap.add_argument("--force", action="store_true", help="replace an existing regression outdir (never an evidence dir)")
     ap.add_argument("--canary-build", type=Path,
-                    help="build dir (or build_manifest.yaml) of the canary regression on the pinned commit: a measured "
-                         "round dispatches only when it records covergroups_compiled true (LOG-046a); required for a dispatch")
+                    help="build dir (or build_manifest.yaml) of the canary regression: a measured round dispatches only when it "
+                         "is a head-mode build of the commit the round pins and records covergroups_declared true (LOG-046a)")
     ap.add_argument("--evidence-root", type=Path, default=C.EVIDENCE_DIR,
                     help="self-test only: write the evidence dir and index elsewhere than dv/auto_dv/evidence")
     ap.add_argument("--evidence-name", help="dry runs only: evidence directory name (gen_round_<n>_<suffix>)")
@@ -402,12 +410,15 @@ def main() -> int:
     if a.collect:
         outdir = a.collect.resolve()
     else:
+        a.pinned_sha = None
         if not (a.dry_run or a.tests):
-            # A measured round (tier full, purpose 4) never dispatches on a TB without a covergroup.
+            # A measured round (tier full, purpose 4) pins HEAD now and never dispatches unless the canary is a head-mode
+            # build of exactly that commit with a covergroup declared; the regression is then pinned to the same sha.
             if a.canary_build is None:
                 U.log(f"REFUSED: --canary-build is required for a measured round ({C.MEASURED_DISPATCH_RULE})")
                 return C.ROUND_EXIT_REFUSED
-            rc, msg = check_canary_build(a.canary_build)
+            a.pinned_sha = M.head_sha()
+            rc, msg = check_canary_build(a.canary_build, a.pinned_sha)
             U.log(msg)
             if rc:
                 return rc

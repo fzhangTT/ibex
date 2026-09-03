@@ -432,9 +432,11 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"two concurrent HEAD exports into distinct staging dirs: {results}")
     # Per-sha head trees are distinct paths, and a pinned status never consults the moving HEAD. The head family hangs
-    # off the site pointer, which a clean checkout lacks (gen_site.yaml is git-ignored): reported as skipped there.
+    # off the site pointer's mirror_root, which a clean checkout lacks (gen_site.yaml is git-ignored): reported as skipped there.
+    skipped = 0
     if site_mirror_root() is None:
-        print(f"SELF-TEST skip head trees are keyed by sha under one family dir: no site mirror root ({C.SITE_YAML} absent in this checkout)")
+        skipped += 1
+        print(f"SELF-TEST skip head trees are keyed by sha under one family dir: no mirror_root ({C.SITE_YAML} absent or without a mirror_root line)")
     else:
         ra, rb = head_mirror_root("a" * 40), head_mirror_root("b" * 40)
         cond = ra != rb and ra.parent == rb.parent and ra.parent.name.endswith(C.HEAD_MIRROR_SUFFIX)
@@ -492,7 +494,7 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"leases: another host's lease is live while younger than {C.LEASE_MAX_AGE_H} h and dropped after")
     shutil.rmtree(tree, ignore_errors=True)
-    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    print("SELF-TEST:", ("PASS" if ok else "FAIL") + (f" ({skipped} case(s) skipped: no mirror_root in this checkout)" if skipped else ""))
     return 0 if ok else 2
 
 
