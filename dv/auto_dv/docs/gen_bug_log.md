@@ -62,7 +62,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Status: candidate, reproducer pending
 - rtl-arch alias: -
 - Features: F-IRQ-037 (canonical)
-- Expected-fail TP items: TP-DBG-021, TP-IRQ-041
+- Expected-fail TP items: TP-DBG-021
 - RTL: rtl/ibex_cs_registers.sv:825
 - Specification / intent: tools/specs/riscv-debug-spec/xml/core_registers.xml:292-298 (nmip, access R: set when an NMI is pending; reliability implementation-dependent). The generated field table is absent from the clone but the XML source is on disk.
 - Notes: low; read-only status field never reports
@@ -161,7 +161,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Status: downgraded to an RVFI convention note pending the confirmation simulation (rtl-arch T-041, fact-check row 48): the WB error has priority in FLUSH, the killed ID instruction re-executes after the handler and then produces its own record, so suppressing its record is correct; the confirmation program must show two trap records in order; one record re-opens it
 - rtl-arch alias: BUG-04
 - Features: F-RVFI-018 (canonical); cross-refs F-EXC-065 item, F-DMEM-034 item, F-ISA-051 item
-- Expected-fail TP items: none as gate items after the downgrade; the carrying items (TP-ISA-051, TP-EXC-065, TP-DMEM-034, TP-RVFI-018) are split in the consolidation into the priority behaviour (pass) and the RVFI-record confirmation (informational until the sim)
+- Expected-fail TP items: none as gate items (downgraded); confirmation items marked informational: TP-EXC-065, TP-ISA-051, TP-DMEM-063, TP-RVFI-039
 - RTL: rtl/ibex_core.sv:1851-1853 (rvfi_id_done suppresses when wb_exception_o); rtl/ibex_controller.sv:336-337
 - Specification / intent: RVFI convention: every trapping instruction is reported (rtl/ibex_core.sv:1843-1849 comment; rvfi.rst rvfi_trap)
 - Notes: RVFI-only; affects the comparator, not architectural state; unverified in simulation
@@ -172,7 +172,7 @@ only the Ibex documentation disagrees, the checker follows the RTL and the item 
 - Status: candidate, reproducer pending
 - rtl-arch alias: BUG-03
 - Features: F-DBG-016 (canonical); alias F-CSR-076
-- Expected-fail TP items: TP-CSR-076, TP-DBG-018
+- Expected-fail TP items: TP-CSR-075, TP-CSR-076, TP-DBG-018
 - RTL: rtl/ibex_cs_registers.sv:810-836 (every other field forced; bit 13 not forced)
 - Specification / intent: riscv-debug-spec xml/core_registers.xml:163-172 (ebreaks hardwired to 0 if the hart does not support S-mode); misa = 0x40901104 has no S
 - Notes: functional impact nil: rtl/ibex_controller.sv:481-483 never reads it
@@ -214,5 +214,6 @@ Merged list: reading report Section 5.3 plus rtl-arch A.2 (Critic C-23). Checker
 | D19 | security.rst dummy_instr_mask table lists 4 of the 8 legal values | security.rst | rtl/ibex_dummy_instr.sv:33-148 | F-DIT-012 |
 
 ## 4. Change log
+- v1b (2026-09-03): expected-fail item lists refreshed from the plan parts after the Critic pre-review fold-in (B6/B12/B14 carry no expected-fail items; B15 items TP-CSR-075, TP-DBG-018).
 - v1a (2026-09-03): folded rtl-arch T-017 (BUG-06 = B1, BUG-07 = B8 confirmed reachable, B9 out-of-spec stimulus, B10/B11 confirmed) and T-041 (BUG-04/B14 downgraded pending sim); B12 reclassified as documented behaviour with a design note (Critic pre-review S-1).
 - v1 (2026-09-03): opened with B1..B15 (B6 reclassified per Critic C-20; B15 added per C-21; B5 re-cited per C-22), S1..S3, D1..D19 (D5 retired).

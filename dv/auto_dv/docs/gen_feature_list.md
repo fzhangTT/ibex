@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 06:56 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 07:56 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -174,7 +174,7 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | Folded ID | Parent | Bin |
 |---|---|---|
 | F-ISA-017 | F-ISA-015 | CG-ISA-006.cr_link.c_jal_pc2 |
-| F-ISA-033 | F-ISA-032 | CG-ISA-009.cr_op_priv_outcome.auto |
+| F-ISA-033 | F-ISA-032 | CG-ISA-009.cr_op_priv_outcome.ecall_m_exc |
 | F-MUL-010 | F-MUL-003 | CG-MUL-002.cr_seq.auto |
 | F-MUL-019 | F-MUL-012 | CG-MUL-003.cr_op_sign.auto |
 | F-CMP-042 | F-CMP-039 | CG-CMP-006.cr_insn_rlist_spimm.auto |
@@ -186,10 +186,10 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-CMP-066 | F-EXC-008 | CG-CMP-004.cp_mtval_ok.yes |
 | F-BIT-034 | F-BIT-001 | CG-BIT-011.cp_illegal_class.bcompress |
 | F-BIT-035 | F-BIT-001 | CG-BIT-011.cp_illegal_class.op32_any |
-| F-BTALU-004 | F-BTALU-002 | CG-BTALU-002.cp_link_ok.yes |
+| F-BTALU-004 | F-BTALU-002 | CG-ISA-006.cr_link.jal_pc4 |
 | F-BTALU-005 | F-BTALU-001 | CG-BTALU-001.cr_taken_dit_redirect.nt_dit0_noredir |
-| F-BTALU-007 | F-BTALU-003 | CG-BTALU-002.cp_target_align.half |
-| F-BTALU-009 | F-BTALU-001 | CG-BTALU-001.cp_wrap.yes |
+| F-BTALU-007 | F-BTALU-003 | CG-ISA-006.cp_target_align.half |
+| F-BTALU-009 | F-BTALU-001 | CG-ISA-007.cp_wrap.yes |
 | F-BTALU-012 | F-ISA-030 | CG-ISA-008.cp_refetch.yes |
 | F-CSR-010 | F-CSR-009 | CG-CSR-014.cp_range.r302_303 |
 | F-CSR-015 | F-CSR-014 | CG-CSR-001.cr_priv_aclass_trap.u_info_ro_trap |
@@ -313,9 +313,9 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-IC-033 | F-IC-030 | CG-IC-006.cr_ram_x_bits_x_way |
 | F-IC-034 | F-IC-030 | CG-IC-006.cp_major_nmi_quiet.yes |
 | F-IC-041 | F-IC-012 | CG-IC-005.cp_effect_latency.next_cycle |
-| F-DIT-004 | F-DIT-003 | CG-DIT-003.cr_latency.div_off_zero_fast; CG-DIT-003.cr_div_dit_zero.div_off_zero |
+| F-DIT-004 | F-DIT-003 | CG-DIT-003.cr_latency.div_off_zero_two; CG-DIT-003.cr_div_dit_zero.div_off_zero |
 | F-DIT-010 | F-DIT-002 | CG-DIT-002.cr_dit_priv.on_u; CG-DIT-002.cr_dit_priv.off_u; CG-DIT-001.cp_access.u_trap |
-| F-DIT-012 | F-DIT-011 | CG-DIT-004.cp_mask.m000; CG-DIT-004.cp_mask.m001; CG-DIT-004.cp_mask.m010; CG-DIT-004.cp_mask.m011; CG-DIT-004.cp_mask.m100; CG-DIT-004.cp_mask.m101; CG-DIT-004.cp_mask.m110; CG-DIT-004.cp_mask.m111; CG-DIT-001.cr_dummy_mask.on_m000; CG-DIT-001.cr_dummy_mask.on_m001; CG-DIT-001.cr_dummy_mask.on_m010; CG-DIT-001.cr_dummy_mask.on_m011; CG-DIT-001.cr_dummy_mask.on_m100; CG-DIT-001.cr_dummy_mask.on_m101; CG-DIT-001.cr_dummy_mask.on_m110; CG-DIT-001.cr_dummy_mask.on_m111 |
+| F-DIT-012 | F-DIT-011 | CG-DIT-001.cp_mask.m000; CG-DIT-001.cp_mask.m001; CG-DIT-001.cp_mask.m010; CG-DIT-001.cp_mask.m011; CG-DIT-001.cp_mask.m100; CG-DIT-001.cp_mask.m101; CG-DIT-001.cp_mask.m110; CG-DIT-001.cp_mask.m111; CG-DIT-001.cr_dummy_mask.on_m000; CG-DIT-001.cr_dummy_mask.on_m001; CG-DIT-001.cr_dummy_mask.on_m010; CG-DIT-001.cr_dummy_mask.on_m011; CG-DIT-001.cr_dummy_mask.on_m100; CG-DIT-001.cr_dummy_mask.on_m101; CG-DIT-001.cr_dummy_mask.on_m110; CG-DIT-001.cr_dummy_mask.on_m111 |
 | F-DIT-024 | F-DIT-013 | CG-DIT-004.cr_type_dit.div_off; CG-DIT-004.cr_type_dit.mul_off; CG-DIT-004.cr_type_dit.add_off; CG-DIT-004.cr_type_dit.and_off |
 | F-SEC-005 | F-SEC-004 | CG-RST-004.cr_fwd_bank.yes_x1_15; CG-RST-004.cr_fwd_bank.yes_x16; CG-RST-004.cr_fwd_bank.yes_x17_31 |
 | F-SEC-006 | F-SEC-004 | CG-SEC-001.cp_internal_total.zero |
@@ -324,9 +324,9 @@ rtl/ibex_core.sv:197). ResetAll=1: X-free outputs at time 0 (F-RST entries).
 | F-SEC-016 | F-SEC-003 | CG-SEC-002.cr_side_op.dbus_store; CG-SEC-001.cr_alert_inject.major_bus_dbus_store_intg |
 | F-SEC-032 | F-CSR-085 | CG-DIT-001.cp_wr_reserved.bits31_9; CG-DIT-001.cp_wr_reserved.bit8; CG-DIT-001.cp_wr_reserved.both; CG-SEC-005.cp_bits67_readback.b6_1_b7_1 |
 | F-RST-025 | F-RST-003 | CG-SEC-005.cp_event.boot_addr_change; CG-SEC-005.cp_boot_addr_change_ctx.running |
-| F-RST-026 | F-RVFI-003 | CG-RST-001.cp_first_order_one.yes; CG-RVFI-001.cp_order_step.first |
-| F-RVFI-024 | F-DIT-016 | CG-DIT-004.cp_event.insert; CG-RVFI-001.cp_order_step.one |
-| F-RVFI-033 | F-RST-009 | CG-RST-002.cp_outputs_at_reset_ok.yes |
+| F-RST-026 | F-RVFI-003 | CG-RVFI-001.cp_order_step.first |
+| F-RVFI-024 | F-DIT-016 | CG-DIT-004.cp_event.insert; CG-RVFI-001.cp_valid_gap.g2 |
+| F-RVFI-033 | F-RST-009 | CG-RST-001.cp_reset_kind.power_on; CG-RST-001.cp_reset_kind.mid_run |
 
 154 folds.
 
@@ -709,14 +709,14 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-ISA-033: ecall cause depends on privilege mode
-- What: Folded into F-ISA-032 (bin CG-ISA-009.cr_op_priv_outcome.auto): ecall cause 11 in M-mode, 8
+- What: Folded into F-ISA-032 (bin CG-ISA-009.cr_op_priv_outcome.ecall_m_exc): ecall cause 11 in M-mode, 8
   in U-mode, mtval 0 - the parent's Config (privilege) at its other value.
 - Observable at: see F-ISA-032
 - Config: see F-ISA-032
 - Source: spec: machine.adoc "Environment Call and Breakpoint" (norm:ecall_op2) |
   RTL-defined: rtl/ibex_controller.sv:870-873, rtl/ibex_pkg.sv:374-377
 - Edge: yes, of F-ISA-032
-- Status: FOLDED into F-ISA-032 (bin CG-ISA-009.cr_op_priv_outcome.auto)
+- Status: FOLDED into F-ISA-032 (bin CG-ISA-009.cr_op_priv_outcome.ecall_m_exc)
 
 ### F-ISA-034: ebreak (and c.ebreak)
 - What: SYSTEM funct12 0x001: breakpoint exception (mcause=3), mepc = PC of ebreak, mtval=0, not
@@ -2461,14 +2461,14 @@ Conventions used below:
 - Status: ACTIVE
 
 ### F-BTALU-004: Link value written by the main ALU concurrently
-- What: Folded into F-BTALU-002 (bin CG-BTALU-002.cp_link_ok.yes): the link value pc + (2|4) is
+- What: Folded into F-BTALU-002 (bin CG-ISA-006.cr_link.jal_pc4): the link value pc + (2|4) is
   written by the main ALU in the same (first) cycle as the BTALU target, already stated by the
   parent.
 - Observable at: see F-BTALU-002
 - Config: see F-BTALU-002
 - Source: RTL-defined: rtl/ibex_decoder.sv:327-330, rtl/ibex_decoder.sv:356-359, rtl/ibex_decoder.sv:965-971
 - Edge: yes, of F-BTALU-002
-- Status: FOLDED into F-BTALU-002 (bin CG-BTALU-002.cp_link_ok.yes)
+- Status: FOLDED into F-BTALU-002 (bin CG-ISA-006.cr_link.jal_pc4)
 
 ### F-BTALU-005: Not-taken branch does not redirect (data_ind_timing=0)
 - What: Folded into F-BTALU-001 (bin CG-BTALU-001.cr_taken_dit_redirect.nt_dit0_noredir): not-taken
@@ -2491,7 +2491,7 @@ Conventions used below:
 - Status: ALIAS of F-DIT-002
 
 ### F-BTALU-007: Targets with bit 1 set and odd targets: no exception
-- What: Folded into F-BTALU-003 (bin CG-BTALU-002.cp_target_align.half): half-aligned (addr[1] = 1)
+- What: Folded into F-BTALU-003 (bin CG-ISA-006.cp_target_align.half): half-aligned (addr[1] = 1)
   targets fetch normally and odd jalr sums drop bit 0 with no exception - restates F-BTALU-003,
   F-CMP-001 and F-EXC-067 (F-ISA-052).
 - Observable at: see F-BTALU-003
@@ -2500,7 +2500,7 @@ Conventions used below:
   (norm:Zca_no_misaligned) | RTL-defined: rtl/ibex_decoder.sv:163-165, rtl/ibex_if_stage.sv:288,
   rtl/ibex_controller.sv:561
 - Edge: yes, of F-BTALU-003
-- Status: FOLDED into F-BTALU-003 (bin CG-BTALU-002.cp_target_align.half)
+- Status: FOLDED into F-BTALU-003 (bin CG-ISA-006.cp_target_align.half)
 
 ### F-BTALU-008: rvfi_pc_wdata keeps bit 0 for jalr to an odd target (RVFI bug candidate)
 - What: rvfi_stage_pc_wdata is loaded from branch_target_ex (raw BTALU sum) when pc_set; for jalr with
@@ -2514,14 +2514,14 @@ Conventions used below:
 - Notes: not an architectural bug; the trace comparator must mask bit 0 or the RTL should clear it.
 
 ### F-BTALU-009: BTALU carry-out discarded (address wrap)
-- What: Folded into F-BTALU-001 (bin CG-BTALU-001.cp_wrap.yes): the BTALU carry-out is discarded so
+- What: Folded into F-BTALU-001 (bin CG-ISA-007.cp_wrap.yes): the BTALU carry-out is discarded so
   pc + imm / rs1 + imm wrap at 2^32 - the parent says "carry dropped"; the wrap stimuli are
   F-ISA-016/022/026.
 - Observable at: see F-BTALU-001
 - Config: see F-BTALU-001
 - Source: RTL-defined: rtl/ibex_ex_block.sv:95-101 (unused_bt_carry)
 - Edge: yes, of F-BTALU-001
-- Status: FOLDED into F-BTALU-001 (bin CG-BTALU-001.cp_wrap.yes)
+- Status: FOLDED into F-BTALU-001 (bin CG-ISA-007.cp_wrap.yes)
 
 ### F-BTALU-010: Fetch fault at a branch/jump target: the transfer retires, the target traps
 - What: CTI side of a fetch fault at the target: a taken branch, jal or jalr whose target is
@@ -3885,7 +3885,10 @@ double-fault flags
 - Edge: yes, of F-PRV-002
 - Status: ACTIVE
 - Notes: Canonical entry; alias: F-DBG-026 (F-PMP-099 stays ACTIVE only for the PMP-side
-  observable).
+  observable). An ebreak executed inside debug mode is not an exception: it re-enters the debug ROM
+  at DmHaltAddr with no CSR save (rtl/ibex_controller.sv:874-882), so the DmExceptionAddr /
+  rvfi_trap = 1 observable above does not apply to it; TP-PRV-004 carries it as a separate case (S-2).
+  The M privilege of the debug-mode exception is B6, RTL-defined (gen_bug_log.md; Sdext.adoc:51).
 
 ### F-PRV-006: mret: priv <= MPP, MIE <= MPIE, MPIE <= 1, MPP <= U, pc <= mepc,
 cpuctrlsts.sync_exc_seen <= 0
@@ -5772,15 +5775,20 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   WAIT_SLEEP cycle; the SLEEP cycle stays busy in this branch).
 - Observable at: core_busy_o shows at most a one-cycle IbexMuBiOff dip (WAIT_SLEEP) and instr_req_o
   resumes at wfi + 4 within the pass-through gap; no rvfi_intr; rvfi_valid of the instruction after
-  the wfi (or debug re-entry when stepping).
+  the wfi (or debug re-entry when stepping). Port rule: core_busy_o = ctrl_busy | if_busy | lsu_busy,
+  so the dip is visible in WAIT_SLEEP only when no instruction-bus beat is outstanding, no icache
+  invalidation is active and the LSU is idle; otherwise core_busy_o stays On and the dip is invisible
+  (a WFI within 256 cycles of reset sees no dip) (gen_tb_architecture.md 8.2 item 1).
 - Config: debug mode; dcsr.step.
 - Source: RTL-defined: rtl/ibex_controller.sv:598-604 (WAIT_SLEEP, ctrl_busy_o = 0), 606-621 (SLEEP:
-  busy cleared only in the else branch), 613-616 (comment 614)
+  busy cleared only in the else branch), 613-616 (comment 614); rtl/ibex_core.sv core_busy_o
+  composition (if_busy_o, lsu_busy_o, ctrl_busy)
 - Edge: yes, of F-IRQ-045
 - Status: ACTIVE
 - Notes: The debug-spec behaviour (WFI in debug mode acts as nop) is in the debug area. The
   one-cycle dip matches Critic C-06 (F-DBG-044/059); the earlier "no core_busy_o drop" wording was
-  wrong.
+  wrong. The dip is a ctrl_busy fact; whether core_busy_o shows it depends on if_busy/lsu_busy (the
+  port rule above), so CG-IRQ-009.cp_busy_off has both off_seen and off_not_seen as legal outcomes.
 
 ### F-IRQ-052: WFI inside a handler while the level line is still asserted
 - What: Folded into F-IRQ-046 (bin CG-IRQ-009.cp_wake.masked_line_held): a wake by a locally enabled
@@ -7478,9 +7486,13 @@ state) and "instr_addr_o = <vector>" (trap targets).
   entry (M or U), privilege inside debug mode is M. mepc/mcause/mtval are not written; the ebreak
   does not retire (minstret unchanged); no breakpoint exception. After dret the core resumes in the
   entry privilege.
-- Observable at: instr_addr_o == DmHaltAddr; rvfi_trap on the ebreak item with csrr read-back of
-  mcause unchanged on rvfi_rd_wdata; csrr read-back of dpc (== ebreak PC) and dcsr (cause 1, prv =
-  entry mode) on rvfi_rd_wdata; rvfi_mode of the first retirement after dret == entry mode.
+- Observable at: RVFI item for the ebreak with rvfi_trap = 0 (rtl/ibex_core.sv:1885-1886: the
+  into-debug ebreak is excluded from rvfi_trap; the debug path is is_ebreak(rvfi_insn) &&
+  !rvfi_trap && next fetch == DmHaltAddr, the exception path is rvfi_trap = 1) followed by
+  instr_addr_o == DmHaltAddr; csrr read-back of mcause unchanged on rvfi_rd_wdata; csrr read-back
+  of dpc (== ebreak PC) and dcsr (cause 1, prv = entry mode) on rvfi_rd_wdata; rvfi_mode of the
+  first retirement after dret == entry mode. Counter model: the ebreak-into-debug record is a
+  not-counted record (minstret unchanged, rtl/ibex_id_stage.sv:1218).
 - Config: dcsr.ebreakm (M-mode) / dcsr.ebreaku (U-mode); privilege at the ebreak.
 - Source: spec Sdext.adoc "Debug Mode" item 9 (ebreak), tools/specs/riscv-isa-manual/src/priv/
   machine.adoc "Environment Call and Breakpoint" ("Unless overridden by an external debug
@@ -7760,11 +7772,16 @@ state) and "instr_addr_o = <vector>" (trap targets).
   (rtl/ibex_controller.sv:598-604). In SLEEP the exit term `irq_nm || irq_pending_i || debug_req_i
   || debug_mode_q || debug_single_step_i` is true (step set), so the else-branch that clears
   ctrl_busy_o is not taken and the FSM moves to FIRST_FETCH at once (:606-621); FIRST_FETCH then
-  enters DBG_TAKEN_IF with do_single_step_q still set. core_busy_o is therefore low for exactly one
-  cycle. No interrupt is needed to leave SLEEP.
-- Observable at: core_busy_o low for exactly one cycle with instr_req_o low in that cycle;
-  instr_addr_o == DmHaltAddr; csrr read-back of dpc (== wfi_pc+4) and dcsr.cause (4) on
-  rvfi_rd_wdata; no dependence on irq_*_i / irq_nm_i.
+  enters DBG_TAKEN_IF with do_single_step_q still set. ctrl_busy is therefore low for exactly one
+  cycle. No interrupt is needed to leave SLEEP. Port rule (gen_tb_architecture.md 8.2 item 1):
+  core_busy_o = ctrl_busy | if_busy | lsu_busy (rtl/ibex_core.sv:498-521), so the dip reaches
+  core_busy_o only when no instruction-bus beat is outstanding, no icache invalidation is active
+  (the 256-write sweep after reset / key valid) and the LSU is idle in that cycle; otherwise the
+  dip is invisible.
+- Observable at: core_busy_o low for exactly one cycle with instr_req_o low in that cycle when the
+  port rule holds (no ibus beat outstanding, no invalidation sweep, dbus idle; the bus monitors
+  decide), otherwise no dip; instr_addr_o == DmHaltAddr; csrr read-back of dpc (== wfi_pc+4) and
+  dcsr.cause (4) on rvfi_rd_wdata; no dependence on irq_*_i / irq_nm_i.
 - Config: dcsr.step=1; mstatus.TW=0 (else WFI in U-mode is illegal and F-DBG-040 applies).
 - Source: spec Sdext.adoc "Single Step / Step Bit In Dcsr" ("If the instruction being stepped over
   would normally stall the hart, then instead the instruction is treated as a nop. This includes
@@ -7954,11 +7971,14 @@ state) and "instr_addr_o = <vector>" (trap targets).
 - What: WFI in debug mode goes FLUSH -> WAIT_SLEEP -> SLEEP. WAIT_SLEEP clears ctrl_busy_o for its
   single cycle (rtl/ibex_controller.sv:598-604); in SLEEP the exit term is true because
   debug_mode_q=1, so ctrl_busy_o stays high and the FSM leaves for FIRST_FETCH at once (:606-621,
-  else-branch not taken). core_busy_o is low for exactly one cycle; execution continues at WFI+4 in
-  debug mode.
-- Observable at: core_busy_o low for exactly one cycle (instr_req_o low in that cycle); the next
-  fetch on instr_addr_o is WFI+4 and its retirement carries rvfi_ext_debug_mode=1; no dependence on
-  irq_*_i / irq_nm_i.
+  else-branch not taken). ctrl_busy is low for exactly one cycle; execution continues at WFI+4 in
+  debug mode. Port rule (gen_tb_architecture.md 8.2 item 1): core_busy_o = ctrl_busy | if_busy |
+  lsu_busy, so the dip reaches core_busy_o only when no instruction-bus beat is outstanding, no
+  icache invalidation is active and the LSU is idle in that cycle; otherwise it is invisible.
+- Observable at: core_busy_o low for exactly one cycle (instr_req_o low in that cycle) when the
+  port rule holds (no ibus beat outstanding, no invalidation sweep, dbus idle), otherwise no dip;
+  the next fetch on instr_addr_o is WFI+4 and its retirement carries rvfi_ext_debug_mode=1; no
+  dependence on irq_*_i / irq_nm_i.
 - Config: debug mode.
 - Source: spec Sdext.adoc "Debug Mode" item 8 ("Instructions that place the hart into a stalled
   state act as a nop") | RTL-defined rtl/ibex_controller.sv:598-604, 606-621
@@ -9859,10 +9879,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - What: data_we_o mirrors lsu_we_i at all times and data_be_o/data_wdata_o are combinational from
   the ID operands; their values are meaningful only in cycles where data_req_o is high. For loads
   data_be_o still marks the bytes to read; data_wdata_o[31:0] carries the rotated operand-B value
-  whose payload the memory ignores, but data_wdata_o[38:32] is a valid inverted 39/32 SECDED
-  codeword over that payload in every request cycle, loads included (MEM-15, F-DMEM-050): the
-  integrity bits are never don't-care.
-- Observable at: data_we_o, data_be_o, data_wdata_o (incl. [38:32] on loads)
+  whose payload the memory ignores (architecturally don't-care on a load). The RTL also drives a
+  valid inverted 39/32 SECDED codeword in data_wdata_o[38:32] on loads; that is the RTL-defined
+  observation F-DMEM-050 (coverage only), not a requirement of this feature.
+- Observable at: data_we_o, data_be_o, data_wdata_o
 - Config: none
 - Source: doc: doc/03_reference/load_store_unit.rst "Data-Side Memory Interface" (we/be/wdata
   "sent together with data_req_o"; be "set for the bytes to write/read") | RTL:
@@ -9870,7 +9890,8 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Edge: no
 - Status: ACTIVE
 - Notes: passive assertion: data_req_o |-> be pattern legal for the size/offset (F-DMEM-011..013);
-  gen_chk_store_intg decodes data_wdata_o on every data_req_o, loads too.
+  gen_chk_store_intg checks data_wdata_o[38:32] on stores only (req & gnt & we); on loads the
+  encoding is recorded as coverage (F-DMEM-050), never an error.
 
 ### F-DMEM-036: Load bus error: register write suppressed, load access fault from WB
 - What: Alias of F-EXC-025: DMEM perspective (data_err_i on a load response: rdata discarded, no rd
@@ -9928,8 +9949,8 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Status: ACTIVE
 - Notes: conditional on the owner question in F-IMEM-027 (Q-002 default MemECC=1). Store
   responses need valid integrity on data_rdata_i even though the data is ignored (doc lsu
-  "recommended ... fixed value"). Write-data integrity coverage (all 32 bits, loads included) is
-  F-DMEM-050. Doc defect D17: doc/03_reference/load_store_unit.rst:34 and :52 list separate
+  "recommended ... fixed value"). Write-data integrity: checked on stores over all 32 bits
+  (disabled lanes included); the load-side codeword is the coverage-only observation F-DMEM-050. Doc defect D17: doc/03_reference/load_store_unit.rst:34 and :52 list separate
   data_wdata_intg_o[6:0] / data_rdata_intg_i[6:0] ports; at the ibex_core boundary they are bits
   [38:32] of data_wdata_o / data_rdata_i (rtl/ibex_core.sv:84, 86); the split exists only in
   ibex_top.
@@ -10047,14 +10068,20 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 - Notes: the I-side has the same decoder (rtl/ibex_if_stage.sv:259-282); the imem agent obeys the
   same rule under F-IMEM-006.
 
-### F-DMEM-050: Write-data integrity covers all 32 bits including disabled lanes and is valid on loads (MEM-08/MEM-15)
+### F-DMEM-050: RTL-defined observation: a valid SECDED codeword is driven on loads too; store integrity covers all 32 bits (MEM-08/MEM-15)
 - What: data_wdata_o[38:32] is the inverted 39/32 Hsiao code of the full rotated 32-bit word
-  data_wdata_o[31:0], computed every cycle regardless of data_be_o and data_we_o: disabled lanes
-  carry the rotated (non-zero) operand bytes and are covered by the check bits, and a load drives a
-  valid codeword of its (unspecified) operand-B payload. A checker that recomputes the code over
-  be-masked (zeroed) bytes, or that skips loads, is wrong.
+  data_wdata_o[31:0], computed every cycle regardless of data_be_o and data_we_o. Two consequences:
+  (1) on stores the disabled lanes carry the rotated (non-zero) operand bytes and are covered by the
+  check bits, so the store-integrity checker (gen_chk_store_intg, req & gnt & we) decodes the whole
+  word and never a be-masked (zeroed) copy; (2) on loads the RTL drives a valid codeword over its
+  (architecturally don't-care, F-DMEM-035) operand-B payload. Consequence (2) is an RTL-defined
+  observation, not an architectural requirement: it is covered as
+  gen_dbus_cg.cp_load_wdata_intg_valid (coverage only; plan bin
+  CG-DMEM-002.cp_load_wdata_intg_valid.valid) and the store-integrity checker checks stores only
+  (gen_tb_architecture.md 8.3 item 2, Critic C-10 item 4).
 - Observable at: data_wdata_o[38:32] on every data_req_o (zero syndrome when decoded over
-  data_wdata_o[31:0]), loads included; data_wdata_o disabled lanes non-zero
+  data_wdata_o[31:0]): checked on stores, observed on loads; data_wdata_o disabled lanes non-zero on
+  stores
 - Config: none (MemECC=1 per Q-002 default)
 - Source: RTL-defined: rtl/ibex_load_store_unit.sv:199-208 (rotation), 219-220 (encoder input is
   the whole rotated word), 731-735 (prim_secded_inv_39_32_enc every cycle), 737 | rtl-arch MEM-08,
@@ -10063,8 +10090,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   data_wdata_intg_o[6:0] port, the ibex_core boundary has one 39-bit data_wdata_o
 - Edge: no
 - Status: ACTIVE
-- Notes: checker gen_chk_store_intg decodes the whole 39-bit word on every request (loads too);
-  reconciles F-DMEM-035 (load wdata payload is don't-care, its integrity bits are not).
+- Notes: checker gen_chk_store_intg decodes the whole 39-bit word on every store request (req &
+  gnt & we) and never errors on a load; the load observation is coverage only. F-DMEM-035 stands
+  (load wdata payload architecturally don't-care). TP-DMEM-045 / TP-DMEM-060 pass criteria = the
+  store check plus the coverage observation on loads.
 
 ### F-DMEM-051: Writeback register-write timings (EX-09)
 - What: With WritebackStage=1 a non-load result is written to the register file in the WB-flop
@@ -11054,7 +11083,7 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Source: RTL-defined: rtl/ibex_multdiv_fast.sv:434,437,445 | doc:
   doc/03_reference/pipeline_details.rst "Multi- and Single-Cycle Instructions"
 - Edge: yes, of F-DIT-003
-- Status: FOLDED into F-DIT-003 (bin CG-DIT-003.cr_latency.div_off_zero_fast; CG-DIT-003.cr_div_dit_zero.div_off_zero)
+- Status: FOLDED into F-DIT-003 (bin CG-DIT-003.cr_latency.div_off_zero_two; CG-DIT-003.cr_div_dit_zero.div_off_zero)
 
 ### F-DIT-005: MUL/MULH timing is unaffected by DIT in this build
 - What: security.rst says "Early completion of multiplication by zero/one is removed", but the
@@ -11162,7 +11191,7 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Source: doc defect D19: doc/03_reference/security.rst "Dummy Instruction Insertion" (mask table
   lists 4 of 8 values) | RTL-defined: rtl/ibex_dummy_instr.sv:97
 - Edge: yes, of F-DIT-011
-- Status: FOLDED into F-DIT-011 (bin CG-DIT-004.cp_mask.m000; CG-DIT-004.cp_mask.m001; CG-DIT-004.cp_mask.m010; CG-DIT-004.cp_mask.m011; CG-DIT-004.cp_mask.m100; CG-DIT-004.cp_mask.m101; CG-DIT-004.cp_mask.m110; CG-DIT-004.cp_mask.m111; CG-DIT-001.cr_dummy_mask.on_m000; CG-DIT-001.cr_dummy_mask.on_m001; CG-DIT-001.cr_dummy_mask.on_m010; CG-DIT-001.cr_dummy_mask.on_m011; CG-DIT-001.cr_dummy_mask.on_m100; CG-DIT-001.cr_dummy_mask.on_m101; CG-DIT-001.cr_dummy_mask.on_m110; CG-DIT-001.cr_dummy_mask.on_m111)
+- Status: FOLDED into F-DIT-011 (bin CG-DIT-001.cp_mask.m000; CG-DIT-001.cp_mask.m001; CG-DIT-001.cp_mask.m010; CG-DIT-001.cp_mask.m011; CG-DIT-001.cp_mask.m100; CG-DIT-001.cp_mask.m101; CG-DIT-001.cp_mask.m110; CG-DIT-001.cp_mask.m111; CG-DIT-001.cr_dummy_mask.on_m000; CG-DIT-001.cr_dummy_mask.on_m001; CG-DIT-001.cr_dummy_mask.on_m010; CG-DIT-001.cr_dummy_mask.on_m011; CG-DIT-001.cr_dummy_mask.on_m100; CG-DIT-001.cr_dummy_mask.on_m101; CG-DIT-001.cr_dummy_mask.on_m110; CG-DIT-001.cr_dummy_mask.on_m111)
 
 ### F-DIT-013: Dummy instruction kinds and encoding
 - What: The LFSR selects one of ADD (funct7 0000000/funct3 000), MUL (0000001/000), DIV
@@ -12239,7 +12268,7 @@ the remaining citations were spot-checked with grep -n / cat -n.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_core.sv:1905,2012
 - Edge: yes, of F-RVFI-003
-- Status: FOLDED into F-RVFI-003 (bin CG-RST-001.cp_first_order_one.yes; CG-RVFI-001.cp_order_step.first)
+- Status: FOLDED into F-RVFI-003 (bin CG-RVFI-001.cp_order_step.first)
 
 ### F-RST-027: misa reflects the RV32I base after reset (CHERIoT off)
 - What: misa.I = 1, misa.E = 0, misa.X = (RV32BExtra != 0) with cheriot_enable_i != On; the
@@ -12532,7 +12561,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Config: cpuctrlsts.dummy_instr_en.
 - Source: RTL-defined: rtl/ibex_core.sv:1864-1865,1905
 - Edge: yes, of F-DIT-016
-- Status: FOLDED into F-DIT-016 (bin CG-DIT-004.cp_event.insert; CG-RVFI-001.cp_order_step.one)
+- Status: FOLDED into F-DIT-016 (bin CG-DIT-004.cp_event.insert; CG-RVFI-001.cp_valid_gap.g2)
 
 ### F-RVFI-025: ebreak that enters debug mode is not reported as a trap
 - What: rvfi_trap_id excludes ebrk_insn & ebreak_into_debug, so the ebreak record has
@@ -12630,7 +12659,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Config: none.
 - Source: RTL-defined: rtl/ibex_core.sv:2007-2067
 - Edge: yes, of F-RST-009
-- Status: FOLDED into F-RST-009 (bin CG-RST-002.cp_outputs_at_reset_ok.yes)
+- Status: FOLDED into F-RST-009 (bin CG-RST-001.cp_reset_kind.power_on; CG-RST-001.cp_reset_kind.mid_run)
 
 ### F-RVFI-034: Register-file write arbitration in WB is one-hot; exactly one rd write per retired instruction
 - What: The WB stage merges two write sources into the single RF write port: the WB flop
@@ -12734,7 +12763,7 @@ gen_reading_report.md Section 7 item 3 said 60 and must be corrected to 165).
 | 12 | rtl/ibex_core.sv:1350-1351 | alert_major_internal_o = rf_ecc_err_comb OR pc_mismatch_alert OR csr_shadow_err OR cheriot_fatal_err OR cheriot_enable_mubi_err | yes (live RV32I, never excluded: the first three terms) | Condition A.4 for the two constant OR terms cheriot_fatal_err / cheriot_enable_mubi_err only (A.8 item 5); no line exclusion | live coverage of the alert (F-SEC-002, TP-SEC-003/004) |
 | 13 | rtl/ibex_core.sv:1590-1593 | g_pmp_addr_gate ternaries pmp_req_addr[PMP_I / PMP_I2 / PMP_D] | yes (live RV32I: the Off arm is the PMP address path; bucket B4 / F14) | Branch A.3: `(On)` true-arms ('0) only | live PMP coverage (PMP area) |
 | 14 | rtl/ibex_core.sv:1627-1630 | g_pmp_cheriot_gate ternaries pmp_req_err[x] | yes (live RV32I: pass-through of pmp_req_err_raw; bucket B5 / F14) | Branch A.3: true-arms (1'b0) only | live PMP coverage |
-| 15 | rtl/ibex_core.sv:1851-1853 | rvfi_id_done = instr_id_done OR (rvfi_flush_next & id_exception_o & ~wb_exception_o) (RVFI builds) | yes (live RV32I, never excluded; bucket F10) | none (A.8 item 7) | bug candidate B14 (F-RVFI-015, TP-RVFI-018 expected-fail) |
+| 15 | rtl/ibex_core.sv:1851-1853 | rvfi_id_done = instr_id_done OR (rvfi_flush_next & id_exception_o & ~wb_exception_o) (RVFI builds) | yes (live RV32I, never excluded; bucket F10) | none (A.8 item 7) | B14 RVFI convention note (F-RVFI-015; TP-RVFI-018 pass, TP-RVFI-039 informational confirmation) |
 | 16 | rtl/ibex_core.sv:2211-2212,2216-2217 | rvfi_mem_wcap_d = lsu_wcap, rvfi_mem_is_cap_d = lsu_is_cap (RVFI) | yes (lines live; values constant NULL_CAP / 0) | none on the lines (Toggle A.5 covers the ports) | constant-value monitor rvfi_mem_wcap / rvfi_mem_is_cap |
 | 17 | rtl/ibex_core.sv:2223-2225 | `if (load_store_unit_i.resp_is_cap_q & lsu_resp_valid)` arm of the read-data capture (RVFI) | no (resp_is_cap_q constant 0, G4) | Block A.3 (RVFI only); the else-if :2226-2228 is live | none (the live arm carries rvfi_mem_rdata, F-RVFI-012) |
 | 18 | rtl/ibex_core.sv:2286-2295 | g_rvfi_cap: rvfi_rs1/rs2_cap_d ternaries on rf_ren_a/b (RVFI) | yes (both arms NULL_CAP; the select toggles; bucket B6) | none (lines live) | constant-value monitor rvfi_rs1_rcap / rvfi_rs2_rcap |
