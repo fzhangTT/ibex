@@ -59,6 +59,24 @@ green, and the trust triad — TDD, mutation-proof, fcov-expectation — for eve
 - Stale `metadata.pickle`: use `make clean` or a fresh `OUT=` after editing testlists/configs.
 - Full gotcha list with evidence: `docs/dv/BUILD_AND_SIM.md`.
 
+## mex — code graph & wiki
+
+A full-tree `mex-agent` scaffold lives at `.mex/` (code graph + curated wiki,
+built with `mex setup`; read `.mex/ROUTER.md` first each session for full
+context). Use `mex graph query <who-calls|what-calls|where-defined> <symbol>`
+for exact lookups and `mex graph scope "<task>"` for bounded, source-backed
+context; treat what it returns as already read. Gate: `mex check` stays green.
+
+Known limit: the code graph parses Python/TypeScript/JavaScript/Rust only — no
+SystemVerilog — so it covers the DV/python side; RTL/TB knowledge is curated
+wiki prose (`.mex/context/`), kept honest by `mex check`, not graph-derived.
+mex-agent 0.8.0 has no ignore-glob config for its graph/wiki scan, so fence
+enforcement for this scaffold is procedural: see `.mex/AGENTS.md`'s
+"Fence-aware scope" for the deny list (mirrored from `ci/make-cleanroom.sh`'s
+`DENY=(...)` array) and the wiki-authoring rule — no `.mex/` page may
+paraphrase fenced content. The clean-room clone (WS7) gets its own,
+independent `mex setup` once it exists, fence-safe by construction.
+
 ## Skills index
 
 Skills live in `.claude/skills/` (codex discovers them via `.agents/skills/shared`). Agents live in

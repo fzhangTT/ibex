@@ -1,0 +1,141 @@
+WS6 — mex on the full tree: gate evidence summary
+==================================================
+
+Task: .superpowers/sdd/2026-09-02-ws7-knowledge-fence/task-3-brief.md
+Spec: docs/superpowers/specs/2026-09-01-auto-dv-setup-design.md, §WS6 (Workstream 6 — mex)
+Branch: fzhang/auto-dv-setup
+Source SHA at evidence capture: 2bfea9315ae6adb2f89fd77cd7581205a5f43eef
+
+Versions
+--------
+- mex-agent: 0.8.0 (npm, global install; `npm view mex-agent` -> 01-npm-view-mex-agent.txt)
+- Site default Node/npm (loaded by ci/env.sh): v22.14.0 / 11.5.2
+- Node used to actually run mex (see "fts5 gap" below): v24.14.0 / npm 11.9.0
+  (/tools_soc/opensrc/node.js/v24.14.0/bin, prepended to PATH; also a site
+  install, still >=22.5 per spec)
+
+Invocations (raw output saved alongside this file)
+---------------------------------------------------
+01-npm-view-mex-agent.txt        `npm view mex-agent` — confirms the package name/registry
+02-npm-install-g.txt             `npm install -g mex-agent` (bounded timeout 600)
+03-node22.14-fts5-repro.txt      repro: node:sqlite CREATE VIRTUAL TABLE ... USING fts5(x)
+                                 fails on the site default Node 22.14 build
+04-node24.14-fts5-ok.txt         same command succeeds on the site's Node v24.14.0 build
+05-deny-list-consistency.txt     diff of the authoritative DENY=(...) array in
+                                 ci/make-cleanroom.sh against the mirror in
+                                 .mex/AGENTS.md "Fence-aware scope" -> PASS, empty diff
+06-mex-check.txt                 `mex check` (final gate run) -> see "Gate: mex check" below
+07-mex-graph-scope-ci-mcp.txt    `mex graph scope "ci/mcp fsdb probe waveform tooling"`
+                                 (final gate query) -> see "Gate: mex graph scope" below
+08-validator.txt                 `python3 .codex/compat/validator.py` -> VALIDATOR: PASS
+
+Two structural findings (both worked around within the task's own scope; neither
+required substituting a different tool — mex-agent 0.8.0 remained the tool used
+throughout, per the task's own escalation rule)
+----------------------------------------------------------------------------------
+
+1. `mex setup` / `mex graph rebuild` fail structurally on the site's default
+   Node 22.14 (the one ci/env.sh loads onto PATH): "Code graph setup failed: no
+   such module: fts5." Root cause: that Node build's embedded SQLite omits the
+   `fts5` extension, and BOTH mex's code graph (node search) and its wiki index
+   (`CREATE VIRTUAL TABLE wiki_fts USING fts5(...)` in mex-agent's own
+   dist/cli.js) require it as a hard dependency with no fallback path. The
+   site also has a v24.14.0 Node build with `fts5` present (still >=22.5 per
+   spec's "Node 22.14 >= 22.5" requirement); all `mex` commands in this task
+   were run with that build's bin/ prepended to PATH. This is documented as a
+   Common Issue in .mex/context/setup.md and as a debug pattern in
+   .mex/patterns/debug-env-and-mex-failures.md.
+
+2. mex-agent 0.8.0 ships no ignore-glob configuration surface for its code
+   graph or wiki corpus scan. Verified by inspecting the installed package's
+   bundled dist/cli.js directly: no config file (only .mex/config.json,
+   scaffold identity metadata, and .mex/.gitignore, which only protects
+   graph.db/wiki.db/local/ from being git-tracked), no CLI flag on `mex setup`,
+   `mex init`, or any `mex graph`/`mex wiki` subcommand, and no environment
+   variable (`process.env.*` in the bundle: only MEX_HOME, MEX_DEV,
+   DO_NOT_TRACK, MEX_TELEMETRY). The corpus ignore list is hardcoded to
+   node_modules/.git/dist/build/.mex/coverage/.next/out. This means the task
+   brief's Step 2 instruction ("configure its ignore list with the fenced
+   globs... before the first graph/wiki build") cannot be executed literally
+   as a tool-config action — there is no such config to set.
+   Compensating controls actually in place (documented in
+   .mex/context/decisions.md "mex-agent adopted..." and .mex/AGENTS.md
+   "Fence-aware scope"):
+     a. Structural: .mex/graph.db and .mex/wiki.db are never git-tracked
+        (mex's own .mex/.gitignore), so a locally-indexed fenced file cannot
+        leak via a commit; the graph's supported-language allowlist
+        (TypeScript/JavaScript/Python/Rust) already excludes SystemVerilog, so
+        RTL/TB source cannot enter the graph regardless of this gap.
+     b. Authorial: a wiki-authoring rule ("no page may paraphrase fenced
+        content") plus the full deny list (mirrored from, and diff-checked
+        against, ci/make-cleanroom.sh's DENY=(...) array -- see
+        05-deny-list-consistency.txt) is recorded in .mex/AGENTS.md, the one
+        file every session reads first per its own Navigation pointer, and a
+        dedicated pattern (.mex/patterns/mex-fence-aware-wiki-edit.md) walks
+        through how to apply it when editing this scaffold.
+     c. The clean-room clone (WS7) is unaffected by this gap: per spec §WS6,
+        it gets its own, independent `mex setup`, built only from files
+        physically present in that clone -- fence-safety there is by
+        construction, not by ignore-config.
+   Empirical confirmation that the gap is real, not just theoretical: the
+   gate query below (07-mex-graph-scope-ci-mcp.txt) returned two symbols from
+   a fenced path (dv/uvm/core_ibex/scripts/riscvdv_interface.py) as flow
+   context alongside the visible-target hits, exactly because nothing stops
+   the graph from indexing DV-adjacent Python. That raw output is kept in this
+   evidence file (docs/dv/evidence/ws6-mex/ is itself denied wholesale from
+   the clean-room export, so this is not a new leak path) and was NOT
+   paraphrased into any .mex/context or .mex/patterns file.
+
+Gate: mex check
+----------------
+Final run (06-mex-check.txt): "Drift score: 80/100 -- 2 errors, 0 warnings,
+0 info". One error is fixed by this evidence file's own existence closing a
+forward reference (.mex/ROUTER.md pointing at this path, written before this
+file existed -- resolved once this commit lands both together). The other
+remaining error is a pre-existing, out-of-scope false positive:
+  CLAUDE.md:59  DEAD_COMMAND: Make target "clean" not found in Makefile
+mex's DEAD_COMMAND checker only reads the repo-root Makefile
+(src/drift/checkers/command.ts: loadMakeTargets resolves exactly
+"<projectRoot>/Makefile", no nested search). CLAUDE.md:59's "use `make clean`"
+refers to dv/uvm/core_ibex's own Makefile (which does have a `clean:` target
+at line 109 -- confirmed by direct inspection), not the root one. This
+predates this task (CLAUDE.md's Site gotchas section is not part of this
+task's scope, which is limited to the mex-anchor merge) and is not something
+this task is authorized to reword. Documented rather than silently accepted:
+see .mex/ROUTER.md "Known issues" and this file.
+Net: this task's own additions are check-clean; the one residual error is a
+pre-existing tool/doc mismatch outside this task's ownership.
+
+Gate: mex graph scope
+-----------------------
+Query: `mex graph scope "ci/mcp fsdb probe waveform tooling" --detail standard`
+(07-mex-graph-scope-ci-mcp.txt). Deliberately NOT scoped at `ci/jenkins`
+(per coordinator fold-in): ci/jenkins is itself one of the deny-list entries,
+so a query scoped there would return nothing by construction (unhelpfully
+"passing" without exercising anything) -- not a meaningful gate. `ci/mcp/`
+was chosen instead: a visible, non-fenced DV-tooling path with real Python
+source (ci/mcp/probes/{fsdb_probe.py,mcp_probe.py}, util/check_tool_requirements.py).
+Result: status "ok", evidenceStrength "strong", 280 nodes matched / 22
+returned / 8 flow edges, covering terms ci/fsdb/mcp/probe/waveform, with
+real symbols (`wait_for_id`, `tool_payload`, `ToolReq`, `read_tool_requirements`,
+etc.) and file/line ranges -- sensible, source-backed context for a DV-tooling
+task. (See "Two structural findings" #2 above for the two fenced-path symbols
+this same query surfaced as incidental flow context, and why that is an
+accepted, documented residual risk rather than a fix-before-ship blocker.)
+
+Deny-list consistency
+-----------------------
+Per coordinator fold-in: the deny list mirrored into .mex/AGENTS.md was
+parsed, not hand-transcribed, from ci/make-cleanroom.sh's DENY=(...) array
+(no --print-deny flag existed on that script at the time this evidence was
+captured). 05-deny-list-consistency.txt shows an empty two-way diff (29
+entries each side) after normalizing the doc/03_reference/{...}.rst brace-set
+into its 6 literal paths and stripping trailing slashes.
+
+Scope discipline
+-----------------
+This task touched only .mex/** and the CLAUDE.md mex-anchor merge (see the
+companion commit's diff). ci/cleanroom-overlay/ci/mcp/probes/{fsdb_probe.py,
+mcp_probe.py} appeared mid-task (a concurrent agent's Task 2 work populating
+ci/cleanroom-overlay/) and were picked up by an ordinary `mex graph refresh`
+(4991 nodes / 6100 edges / 219 files) -- not edited or referenced by this task.

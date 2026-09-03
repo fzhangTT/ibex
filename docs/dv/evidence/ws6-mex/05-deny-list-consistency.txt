@@ -1,0 +1,8 @@
+Authoritative source: ci/make-cleanroom.sh DENY=(...) array
+Authoritative entries: 29
+Mirrored entries (.mex/AGENTS.md Fence-aware scope, expanded): 29
+
+Only in authoritative (missing from mirror): []
+Only in mirror (not in authoritative):        []
+
+RESULT: PASS -- deny list mirrored in .mex/AGENTS.md matches ci/make-cleanroom.sh DENY array exactly (set-equal after path-separator/brace-set normalization).
