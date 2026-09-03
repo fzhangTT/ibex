@@ -253,3 +253,15 @@ check accept tool-mandated fixed filenames inside a `gen_`-prefixed directory? D
 while pending: the committed sources are renamed with the `gen_` prefix and the program driver
 materializes the fixed-name target directory out-of-tree at flow time, so the tree passes the
 strict reading either way. Status: pending.
+
+## LOG-005 - 2026-09-03 - NOTE (evidence-integrity event caught by cross-model review)
+
+The post-execution review of commit 3c623e5 (`dv/auto_dv/reviews/2026-09-03-claude-diff-881a771a-3c623e54.md`,
+major finding 1) found that `dv/auto_dv/evidence/gen_t029_smoke_red_runs.md` Section 6 ("green
+re-run after the red runs") has no artifact: no `green2/` directory exists, the driver log holds
+one `GEN_SMOKE_PASS`, the only green log predates both red runs, and the section text duplicates
+Section 3. The Critic's re-review (`gen_critic_t005_dv_principles_v2.md`, APPROVE) had accepted
+the claim. Handling: TB Infra performs the green re-run for real and re-cites it; the Critic
+re-verifies from the on-disk artifacts (v3) and records how the claim passed its check. No
+human repair was needed; the second reviewer caught it. Counted for the closure report as a
+generated-evidence defect found by review.
