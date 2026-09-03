@@ -1303,3 +1303,119 @@ tests:
     component: gen_fcov_pkg
     measured: false
 
+  - name: gen_ut_lockstep_bitcnt
+    description: lock-step run of gen_bitcnt_directed.S (clz / ctz / cpop over the operand-class table and every single-bit operand); exercises gen_bit_count_cg (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_bitcnt_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zca
+    description: lock-step run of gen_zca_directed.S (every Zca compressed instruction, both PC alignments, 32-bit instructions straddling a word, the 16/32 next-length pairs, register reads by the rd field); exercises gen_cmp_zca_cg (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zca_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp
+    description: lock-step run of gen_zcmp_directed.S (cm.push / cm.pop / cm.popret / cm.popretz over every rlist 4..15 and spimm 0..3, word- and half-aligned return addresses); exercises gen_cmp_zcmp_pushpop_cg with the default dmem regime (TB Infra T-205 slice 2; the min1 / long / random dmem regimes are the same program with +gen_knob_dmem_rvalid_delay)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_misaligned
+    description: lock-step run of gen_zcmp_misaligned_directed.S (cm.push / cm.pop pairs with sp misaligned by 1, 2 and 3 bytes; every stack access splits into two bus transactions); exercises gen_cmp_zcmp_pushpop_cg cp_ret_align / cr_insn_delay under split accesses (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=10
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_misaligned_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_dummy
+    description: B8 reproducer for TP-CMP-065, cm.push / cm.pop pairs with cpuctrlsts.dummy_instr_en set; the lock-step comparator raises isa_mem / isa_rd rows because a dummy instruction inserted inside a Zcmp expansion discards the micro-op the decoder had on instr_o (evidence/gen_b8_rtl_facts.md). Expected to fail until the RTL is fixed or the owner rules otherwise; an unexpected PASS means the behaviour changed and the finding must be re-examined (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=10
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+    notes: RTL finding B8; the retained red is gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; the row mapping is evidence/gen_b8_row_mapping.md
+
