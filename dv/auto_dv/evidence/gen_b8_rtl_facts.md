@@ -112,14 +112,16 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
 - The dummy in ID carries the INSTR_NOT_EXPANDED tag (rtl/ibex_if_stage.sv:528). The controller's debug gates hold an
   expansion together while the ID instruction is tagged EXPANDED or COMMIT (rtl/ibex_controller.sv:474-477), but
   handle_irq is gated only on the COMMIT tag (:498-500): by design an interrupt may be taken between any two
-  micro-ops except after the COMMIT-tagged sp increment (CmPopIncrSp) or li a0, 0 (CmPopZeroA0); the entry
+  micro-ops except after a COMMIT-tagged one: the sp increment (CmPopIncrSp, :744), li a0, 0 (CmPopZeroA0, :760)
+  and the first move of cm.mvsa01 / cm.mva01s (rtl/ibex_compressed_decoder.sv:790, :818); the entry
   flushes the FSM (flush_expanded, section 2) with mepc at the cm.* PC and the expansion restarts from scratch
   after mret, which is idempotent because the sp update is the last micro-op (push) or COMMIT-protected (pop).
   The dummy changes two things. For interrupts the new exposure is only the COMMIT window: a dummy that displaces
-  the micro-op following a COMMIT-tagged one (the ret of cm.popret; li a0, 0 or the ret of cm.popretz) sits in ID
-  with NOT_EXPANDED, so an interrupt can be taken exactly where the tag was meant to forbid it, with sp already
-  incremented; after mret the expansion restarts and repeats the loads from above the frame, the same corruption
-  as the CmPopRetRa replay in section 3. For debug requests the exposure is at every micro-op position: the
+  the micro-op following a COMMIT-tagged one (the ret of cm.popret; li a0, 0 or the ret of cm.popretz; the second
+  move of cm.mvsa01 / cm.mva01s) sits in ID with NOT_EXPANDED, so an interrupt can be taken exactly where the tag
+  was meant to forbid it. For the pop family sp is already incremented, and after mret the expansion restarts and
+  repeats the loads from above the frame, the same corruption as the CmPopRetRa replay in section 3; for the move
+  pair the restart repeats the first move with unchanged operands and is benign, as in section 3. For debug requests the exposure is at every micro-op position: the
   dummy's NOT_EXPANDED tag opens the debug gates (:474-477) that otherwise block entry for the whole expansion,
   dpc points at the cm.* PC, and the expansion restarts after dret with whatever stores, loads and sp updates had
   already executed.
