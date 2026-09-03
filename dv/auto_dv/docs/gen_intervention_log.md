@@ -468,3 +468,18 @@ RTL owner (a corrupted value reaches architectural state before the NMI handler 
 behaviour because the NMI and alert still fire; and whether the affected items stay in the Phase 1 gate
 as expected-fail. Default applied while pending: bug candidate, spec/doc direction, expected-fail for the
 first-beat class, not excluded from the gate without a recorded ruling.
+
+## LOG-016 - 2026-09-03 - NOTE (Phase 1 opened on the plan set; gate rationale)
+
+Plan set v2b (bc9dba9) passed cross-model round 3 with APPROVE-WITH-CHANGES at 09:56 UTC
+(`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_feature_list-r3.md`; rounds 1 and 2 were
+REQUEST-CHANGES, every round-2 row judged ADDRESSED). The Orchestrator opened Phase 1 batch 1 at
+10:01 UTC for the Test Writer's eight directed self-checking groups on that verdict alone, with the
+Critic's T-007 re-review of the same commit still queued behind its exclusion-set check. Rationale:
+the cross-model review is the policy gate (CLAUDE.md); the Critic is the in-team check, and any item
+it flags is pulled from the batch before its request is filed. The two round-3 mediums (F-CHERI-001
+not yet a row-for-row mirror of the committed exclusion file; about 130 Phase-1 fire-checks assert
+bus or pin cycle facts with no Python-readable channel) do not touch the batch-1 groups and are
+assigned (T-092: DV Lead with tb-infra decide between extending the RVFI export with event lines
+and reformulating the items). Test template: cross-model REQUEST-CHANGES (746af6f) answered in
+98c2ade and 566a601, re-reviews APPROVE-WITH-CHANGES; the Critic's template v2 verdict is pending.
