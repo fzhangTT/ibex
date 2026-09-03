@@ -567,7 +567,10 @@ MODULE_PARAMS = load_module_params(MODULE_RTL)
 
 def load_config():
     """opentitan -pvalue+ integers and +define+ enum names from util/ibex_config.py (never re-typed)."""
-    cfg = subprocess.run([sys.executable, str(C.CONFIG_SCRIPT), "opentitan", "vcs_opts"], check=True,
+    # One root for the script and its working directory: the selector never runs on a head tree, so the
+    # configuration comes from the clone (REPO_ROOT), by the same relative path the flow uses.
+    script = C.REPO_ROOT / C.CONFIG_SCRIPT.relative_to(C.SOURCE_ROOT)
+    cfg = subprocess.run([sys.executable, str(script), "opentitan", "vcs_opts"], check=True,
                          capture_output=True, text=True, cwd=C.REPO_ROOT).stdout
     pvals = {m.group(1): int(m.group(2)) for m in re.finditer(r"-pvalue\+(\w+)=(\d+)", cfg)}
     defs = {m.group(1): m.group(2).split("::")[-1] for m in re.finditer(r"\+define\+(\w+)=(\S+)", cfg)}
