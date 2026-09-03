@@ -108,6 +108,7 @@ def image_plusargs(rec: dict[str, Any]) -> list[str]:
         if e.name and (C.IMAGE_HELPER_MODULE == e.name or C.IMAGE_HELPER_MODULE.startswith(e.name + ".")):
             U.die(f"{C.IMAGE_HELPER_MODULE} is not importable ({e}); TB Infra's image helper must be present")
         raise
+    U.require_under_source_root(mod, C.IMAGE_HELPER_MODULE)
     args = list(mod.GenImage(rec["vmem"]).plusargs())
     rec["image_plusargs_source"] = f"{C.IMAGE_HELPER_MODULE} GenImage.plusargs()"
     return args

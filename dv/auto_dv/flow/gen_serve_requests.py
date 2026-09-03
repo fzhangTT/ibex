@@ -367,18 +367,24 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
     rest = [p for p in pending if p not in p1]
     if len(p1) > 1 and not dry_run:
         # One sync for the whole batch: concurrent regressions must not race on the mirror tree.
-        rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
+        batch_sha = M.head_sha()
+        rc, wall, timed_out = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD,
+                                             "--head-sha", batch_sha],
                                             cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "serve_mirror_sync.log",
                                             timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
-        synced = (M.load_manifest(M.mirror_root()) or {}) if M.mirror_root() else {}
+        head_tree = M.head_mirror_root(batch_sha)
+        synced = M.load_manifest(head_tree) or {}
         sync = {"rc": rc, "timed_out": timed_out, "wall_s": round(wall, 1), "spike": True, "utc": U.now_utc(),
-                "source": synced.get("source"), "head_sha": synced.get("head_sha"), "batch": [p.stem for p in p1]}
-        if rc == 0 and not timed_out and sync.get("head_sha"):
-            U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s)")
+                "source": synced.get("source"), "head_sha": synced.get("head_sha"), "head_tree": str(head_tree),
+                "batch": [p.stem for p in p1]}
+        if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
+            U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(p1)} purpose-1 request(s), pinned to {batch_sha[:12]}")
+            # Scope decisions for the batch come from the committed testlist the batch will run.
+            head_testlist = U.load_testlist(head_tree / "dv" / "auto_dv" / "flow" / "gen_testlist.yaml")
             # Every regression of the batch is pinned to the commit the batch was synced from.
             batch_args = list(extra_args) + ["--no-sync-mirror", "--head-sha", str(sync["head_sha"])]
             with cf.ThreadPoolExecutor(max_workers=max(1, max_concurrent)) as pool:
-                list(pool.map(lambda p: serve_one(p, testlist, dry_run, batch_args, sync), p1))
+                list(pool.map(lambda p: serve_one(p, head_testlist, dry_run, batch_args, sync), p1))
         else:
             # Without one good shared sync the batch must not fan out: each regression syncs for itself, in turn.
             sync["batch_serialized"] = "batch mirror sync failed; requests served one at a time, each syncing itself"

@@ -18,6 +18,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import os
 import shutil
@@ -54,16 +56,17 @@ def head_sha() -> str:
     return r.stdout.strip()
 
 
-def export_head(stage: Path) -> str:
+def export_head(stage: Path, sha: str | None = None) -> str:
     """Materialize the committed HEAD subset (MIRROR_ITEMS, tracked files only) under stage with git archive:
     no checkout, no fetch, the working tree untouched. Returns the HEAD sha. tools/spike is a build product
     outside git and is mirrored from the clone separately."""
-    sha = head_sha()
+    sha = sha or head_sha()
     if stage.exists():
         shutil.rmtree(stage)
     stage.mkdir(parents=True)
     specs: list[str] = []
-    for item in MIRROR_ITEMS + MIRROR_GLOB_ITEMS:
+    # :(glob) keeps a top-level glob such as *.core from matching recursively.
+    for item in MIRROR_ITEMS + [f":(glob){g}" for g in MIRROR_GLOB_ITEMS]:
         r = subprocess.run(["git", "-C", str(C.REPO_ROOT), "ls-files", "--", item], capture_output=True, text=True)
         if r.returncode == 0 and r.stdout.strip():
             specs.append(item)
@@ -79,16 +82,67 @@ def export_head(stage: Path) -> str:
     return sha
 
 
-def mirror_root() -> Path | None:
-    """mirror_root: of the site pointer file (dv/auto_dv/work/runtime/gen_site.yaml)."""
-    v = os.environ.get("GEN_DV_MIRROR_ROOT")
-    if v:
-        return Path(v)
+def site_mirror_root() -> Path | None:
+    """The worktree mirror and tools home named by the site pointer (dv/auto_dv/work/runtime/gen_site.yaml)."""
     if C.SITE_YAML.is_file():
         for line in C.SITE_YAML.read_text(encoding="utf-8").splitlines():
             if line.startswith("mirror_root:"):
                 return Path(line.split(":", 1)[1].strip())
     return None
+
+
+def mirror_root() -> Path | None:
+    """The mirror this process binds to: GEN_DV_MIRROR_ROOT (a head-mode process names its per-sha head tree),
+    else the site's worktree mirror."""
+    v = os.environ.get(C.ENV_MIRROR_ROOT)
+    return Path(v) if v else site_mirror_root()
+
+
+def head_mirror_root(sha: str) -> Path:
+    """The per-sha head tree: sources of one commit, never rewritten by a worktree sync or by another sha."""
+    site = site_mirror_root()
+    if site is None:
+        U.die(f"no mirror root: set mirror_root in {C.SITE_YAML}")
+    return Path(str(site) + C.HEAD_MIRROR_SUFFIX) / sha[:12]
+
+
+@contextlib.contextmanager
+def sync_lock(site: Path):
+    """One sync at a time across every process that writes under the site mirror family."""
+    lock_path = site.parent / (site.name + ".sync.lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def link_tools(dst: Path, site: Path) -> None:
+    """A head tree shares the tools home (venv, tools/spike) of the worktree mirror through symlinks: env.sh in
+    the head tree activates <tree>/.venv, which resolves to the one venv built on shared storage."""
+    for name in (".venv", "tools"):
+        link, target = dst / name, site / name
+        if link.is_symlink() or link.exists():
+            continue
+        if target.exists():
+            link.symlink_to(target)
+
+
+def prune_head_mirrors(current: Path) -> list[str]:
+    """Keep the newest HEAD_MIRRORS_KEEP head trees (and the one just synced); remove older ones with their logs."""
+    family = current.parent
+    trees = sorted((p for p in family.iterdir() if p.is_dir() and not p.name.endswith("_logs") and (p / MANIFEST_NAME).is_file()),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    removed = []
+    for p in trees[C.HEAD_MIRRORS_KEEP:]:
+        if p.resolve() == current.resolve():
+            continue
+        shutil.rmtree(p, ignore_errors=True)
+        shutil.rmtree(family / (p.name + "_logs"), ignore_errors=True)
+        removed.append(p.name)
+    return removed
 
 
 def mirrored_files(root: Path) -> list[Path]:
@@ -189,7 +243,9 @@ def venv_info(dst: Path) -> dict[str, Any]:
     if cc.is_file():
         r = subprocess.run([str(cc), "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
         lib = r.stdout.strip()
-        info["cocotb_vpi_lib"] = lib if r.returncode == 0 and Path(lib).is_file() and str(dst) in lib else None
+        # The venv may be reached through a symlink (a head tree sharing the tools home): compare resolved paths.
+        venv_real = (dst / ".venv").resolve()
+        info["cocotb_vpi_lib"] = lib if r.returncode == 0 and Path(lib).is_file() and str(venv_real) in str(Path(lib).resolve()) else None
         r = subprocess.run([str(cc), "--libpython"], capture_output=True, text=True)
         info["libpython"] = r.stdout.strip() if r.returncode == 0 else None
         r = subprocess.run([str(dst / ".venv" / "bin" / "python3"), "--version"], capture_output=True, text=True)
@@ -227,10 +283,11 @@ def status(dst: Path, pinned_head: str | None = None) -> dict[str, Any]:
     mirror_hash, mirror_n = tree_hash(dst)
     state = "fresh" if (clone_hash == man["tree_sha256"] == mirror_hash) else "stale"
     venv_req = (man.get("venv") or {}).get("requirements_sha256")
-    if state == "fresh" and venv_req != requirements_hash(C.REPO_ROOT):
+    # The venv must match the requirements of the tree it serves (the worktree mirror's or the head tree's ci/).
+    if state == "fresh" and venv_req != requirements_hash(dst):
         state = "stale_venv"
     return {"state": state, "mirror_root": str(dst), "manifest_sha256": man["tree_sha256"],
-            "venv_requirements_sha256": venv_req, "clone_requirements_sha256": requirements_hash(C.REPO_ROOT),
+            "venv_requirements_sha256": venv_req, "source_requirements_sha256": requirements_hash(dst),
             "clone_sha256_now": clone_hash, "mirror_sha256_now": mirror_hash, "clone_runtime_files": clone_n,
             "mirror_runtime_files": mirror_n, "mirror_files": man.get("file_count"),
             "git_head": man.get("git", {}).get("head"), "synced_utc": man.get("synced_utc"),
@@ -261,6 +318,34 @@ def self_test() -> int:
     else:
         print("SELF-TEST ok  (no tracked file under dv/auto_dv or rtl differs from HEAD right now; the working-tree-invisibility check had nothing to bite on)")
     shutil.rmtree(stage, ignore_errors=True)
+    # Two concurrent exports never share a staging directory: both complete with the same file set.
+    import threading
+    results: dict[str, int] = {}
+    def worker(tag: str) -> None:
+        d = Path(tempfile.mkdtemp(prefix=f"head_stage_selftest_{tag}_", dir=C.WORK_DIR))
+        export_head(d, sha)
+        results[tag] = len([p for p in d.rglob("*") if p.is_file()])
+        shutil.rmtree(d, ignore_errors=True)
+    ts = [threading.Thread(target=worker, args=(t,)) for t in ("a", "b")]
+    [t.start() for t in ts]; [t.join() for t in ts]
+    cond = results.get("a", -1) == results.get("b", -2) and results.get("a", 0) > 100
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"two concurrent HEAD exports into distinct staging dirs: {results}")
+    # Per-sha head trees are distinct paths, and a pinned status never consults the moving HEAD.
+    ra, rb = head_mirror_root("a" * 40), head_mirror_root("b" * 40)
+    cond = ra != rb and ra.parent == rb.parent and ra.parent.name.endswith(C.HEAD_MIRROR_SUFFIX)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"head trees are keyed by sha under one family dir: {ra.parent.name}/{ra.name} vs {rb.name}")
+    tiny = Path(tempfile.mkdtemp(prefix="head_tree_selftest_", dir=C.WORK_DIR))
+    (tiny / "ci").mkdir(); (tiny / "ci" / "env.sh").write_text("# tiny\n", encoding="utf-8")
+    h, n = tree_hash(tiny)
+    U.dump_yaml({"source": C.SOURCE_MODE_HEAD, "head_sha": "a" * 40, "tree_sha256": h, "runtime_file_count": n,
+                 "venv": {"requirements_sha256": requirements_hash(tiny), "cocotb_vpi_lib": "x"}}, tiny / MANIFEST_NAME)
+    st_ok = status(tiny, pinned_head="a" * 40); st_other = status(tiny, pinned_head="b" * 40)
+    cond = st_ok["state"] == "fresh" and st_other["state"] == "stale" and "pinned HEAD" in str(st_other["clone_sha256_now"])
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"pinned status: the pinned sha decides (fresh for its sha, stale for another), HEAD now {head_sha()[:12]} irrelevant")
+    shutil.rmtree(tiny, ignore_errors=True)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -276,6 +361,7 @@ def main() -> int:
     ap.add_argument("--source", choices=C.SOURCE_MODES, default=C.SOURCE_MODE_WORKTREE,
                     help="sync from the working tree (worktree) or from committed HEAD via git archive (head)")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--head-sha", default=None, help="head mode: export exactly this commit (a batch pins it before syncing)")
     a = ap.parse_args()
     if a.self_test:
         return self_test()
@@ -284,34 +370,58 @@ def main() -> int:
     dst = a.mirror_root.resolve()
     if a.sync:
         U.require_env("rsync")
-        if not U.path_is_shared(dst):
+        site = site_mirror_root()
+        if site is None:
+            U.die(f"no site mirror root in {C.SITE_YAML}")
+        head_mode = a.source == C.SOURCE_MODE_HEAD
+        sha = (a.head_sha or head_sha()) if head_mode else U.git_head()["head"]
+        dst = head_mirror_root(sha) if head_mode else site
+        if not U.path_is_shared(dst.parent if head_mode else dst):
             U.log(f"WARNING: {dst} is on a local filesystem; LSF hosts will not see it")
         logs = dst.parent / (dst.name + "_logs")
         logs.mkdir(parents=True, exist_ok=True)
-        if a.source == C.SOURCE_MODE_HEAD:
-            stage = C.WORK_DIR / "head_stage"
-            sha = export_head(stage)
-            src_root = stage
-            U.log(f"HEAD {sha[:12]} exported to {stage}")
-        else:
-            src_root, sha = C.REPO_ROOT, U.git_head()["head"]
-        rsync(src_root, dst, logs / "rsync.log")
-        prev = load_manifest(dst) or {}
-        man: dict[str, Any] = {"mirror_root": str(dst), "clone": str(C.REPO_ROOT), "synced_utc": U.now_utc(),
-                               "git": U.git_head(), "source": a.source, "head_sha": sha,
-                               "items": MIRROR_ITEMS + MIRROR_GLOB_ITEMS, "excludes": MIRROR_EXCLUDES}
-        man["tree_sha256"], man["runtime_file_count"] = tree_hash(dst)
-        man["file_count"] = len(mirrored_files(dst))
-        man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
-        man["spike_present"] = rsync_spike(C.REPO_ROOT, dst, logs / "rsync_spike.log") if a.spike \
-            else (dst / SPIKE_ITEM / "bin" / "spike").is_file()
-        # Without --venv the venv facts (incl. the requirements hash it was BUILT from) carry over.
-        man["venv"] = build_venv(dst, logs / "venv.log") if a.venv else prev.get("venv")
-        U.dump_yaml(man, dst / MANIFEST_NAME)
+        with sync_lock(site):
+            if head_mode:
+                # Sources of exactly this commit into their own tree; the tools home is shared through symlinks.
+                stage = Path(tempfile.mkdtemp(prefix="head_stage_", dir=C.WORK_DIR))
+                export_head(stage, sha)
+                rsync(stage, dst, logs / "rsync.log")
+                shutil.rmtree(stage, ignore_errors=True)
+                link_tools(dst, site)
+                U.log(f"HEAD {sha[:12]} synced into {dst}")
+            else:
+                rsync(C.REPO_ROOT, dst, logs / "rsync.log")
+            prev = load_manifest(dst) or {}
+            man: dict[str, Any] = {"mirror_root": str(dst), "clone": str(C.REPO_ROOT), "synced_utc": U.now_utc(),
+                                   "git": U.git_head(), "source": a.source, "head_sha": sha, "tools_home": str(site),
+                                   "items": MIRROR_ITEMS + MIRROR_GLOB_ITEMS, "excludes": MIRROR_EXCLUDES}
+            man["tree_sha256"], man["runtime_file_count"] = tree_hash(dst)
+            man["file_count"] = len(mirrored_files(dst))
+            man["runtime_hash_globs"] = RUNTIME_HASH_GLOBS
+            # tools/spike lives in the tools home only; a head tree reaches it through its symlink.
+            man["spike_present"] = rsync_spike(C.REPO_ROOT, site, logs / "rsync_spike.log") if a.spike \
+                else (dst / SPIKE_ITEM / "bin" / "spike").is_file()
+            if a.venv:
+                man["venv"] = build_venv(site, logs / "venv.log")
+            elif head_mode:
+                # The shared venv seen from this tree (resolved through the symlink), built-from hash carried over.
+                info = venv_info(dst)
+                site_venv = (load_manifest(site) or {}).get("venv") or {}
+                info["requirements_sha256"] = site_venv.get("requirements_sha256", info["requirements_sha256"])
+                man["venv"] = info
+            else:
+                man["venv"] = prev.get("venv")
+            U.dump_yaml(man, dst / MANIFEST_NAME)
+            if head_mode:
+                removed = prune_head_mirrors(dst)
+                if removed:
+                    U.log(f"pruned old head trees: {removed}")
         U.log(f"mirror manifest {dst / MANIFEST_NAME}: source {a.source}, {man['file_count']} files, sha256 {man['tree_sha256'][:16]}..., "
               f"git {man['git']['head'][:12]}, venv {'ok' if (man.get('venv') or {}).get('cocotb_vpi_lib') else 'MISSING'}, "
               f"spike {man['spike_present']}")
     if a.check or a.status:
+        if not a.sync:
+            dst = head_mirror_root(a.head_sha or head_sha()) if a.source == C.SOURCE_MODE_HEAD else a.mirror_root.resolve()
         st = status(dst)
         for k, v in st.items():
             print(f"{k}: {v}")

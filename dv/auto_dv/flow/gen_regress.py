@@ -394,24 +394,23 @@ def source_bootstrap(a: argparse.Namespace) -> None:
     a.source = resolve_source_mode(a)
     if a.source != C.SOURCE_MODE_HEAD or os.environ.get(C.ENV_SOURCE_ROOT):
         return
-    root = M.mirror_root()
-    if root is None:
-        U.die("head mode needs a mirror root (gen_site.yaml mirror_root or GEN_DV_MIRROR_ROOT)")
-    synced_now = False
+    if M.site_mirror_root() is None:
+        U.die("head mode needs a site mirror root (gen_site.yaml mirror_root)")
+    # Pin the commit first (the batch's --head-sha, else HEAD now), then sync exactly that commit into its own
+    # per-sha head tree: a commit landing later, or a worktree sync, cannot reach this tree.
+    sha = a.head_sha or M.head_sha()
     if not a.no_sync_mirror:
-        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source", C.SOURCE_MODE_HEAD],
+        rc, wall, _ = U.run_bounded([sys.executable, str(C.FLOW_DIR / "gen_mirror.py"), "--sync", "--spike", "--source",
+                                     C.SOURCE_MODE_HEAD, "--head-sha", sha],
                                     cwd=C.REPO_ROOT, log_path=C.WORK_DIR / "regress_head_sync.log", timeout_s=C.MIRROR_SYNC_TIMEOUT_S)
         if rc != 0:
-            U.die(f"gen_mirror.py --sync --spike --source head failed (rc={rc}); see {C.WORK_DIR / 'regress_head_sync.log'}")
-        synced_now = True
+            U.die(f"gen_mirror.py --sync --spike --source head --head-sha {sha[:12]} failed (rc={rc}); see {C.WORK_DIR / 'regress_head_sync.log'}")
+    root = M.head_mirror_root(sha)
     man = M.load_manifest(root) or {}
-    # The pinned commit: the batch's (--head-sha), else the sha this process just synced, else HEAD now. A
-    # commit landing during a batch must not change which tree the batch runs from.
-    sha = a.head_sha or (man.get("head_sha") if synced_now else None) or M.head_sha()
     if man.get("source") != C.SOURCE_MODE_HEAD or man.get("head_sha") != sha:
-        U.die(f"mirror {root} is not a head-mode mirror of {sha[:12]} (manifest source {man.get('source')!r}, "
-              f"head {str(man.get('head_sha'))[:12]}); run gen_mirror.py --sync --spike --source head")
-    env = dict(os.environ, **{C.ENV_SOURCE_ROOT: str(root), C.ENV_HEAD_SHA: sha})
+        U.die(f"{root} is not the head tree of {sha[:12]} (manifest source {man.get('source')!r}, "
+              f"head {str(man.get('head_sha'))[:12]}); run gen_mirror.py --sync --spike --source head --head-sha {sha}")
+    env = dict(os.environ, **{C.ENV_SOURCE_ROOT: str(root), C.ENV_MIRROR_ROOT: str(root), C.ENV_HEAD_SHA: sha})
     argv = [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:]]
     if "--no-sync-mirror" not in argv:
         argv.append("--no-sync-mirror")

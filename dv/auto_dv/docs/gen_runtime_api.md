@@ -304,8 +304,9 @@ Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per requ
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
 single-test requests turns around in about one request's time. A batch is head-mode: before it the server syncs
-the mirror once from committed HEAD (`gen_mirror.py --sync --spike --source head`; its `head_sha` is passed to every
-regression of the batch as `--head-sha` and recorded in every batch manifest as
+the mirror once from the commit it pins first (`gen_mirror.py --sync --spike --source head --head-sha S` into the
+per-sha head tree; S is passed to every regression of the batch as `--head-sha`, the batch's scope decisions
+read that tree's committed testlist, and S and the tree are recorded in every batch manifest as
 `server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
 regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
@@ -404,6 +405,9 @@ owner (one owner per file).
 fixture that fails by design; a FAIL whose evidence line matches the regex is reported as RED-OK, any
 other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, exclusive with
 `expected_fail`; kept out of the pass rate and of coverage).
+Header policy `red_expect_policy: [fire_id]`: a `red_expect` that starts with `GEN_TEST_FAIL` (the test
+harness line, which prints the designed fire id) must name a `fire_` id; a generic signature would
+accept any fixture failure. The Test Writer supplies the ids; the policy and the values land together.
 
 ## 7a. Exclusion policy in the flow (Critic ruling R-5, dv/auto_dv/docs/gen_critic_exclusions_draft_v1.md)
 
@@ -439,11 +443,14 @@ gen_mirror.py --status
   mirrored but not hashed (they are compiled on the submit host and churn constantly).
   `gen_regress.py --source head|worktree` chooses the tree a regression builds and runs from. Head mode (the
   default for purpose 4, a tier, or more than one test; a request's `source` field otherwise) syncs a
-  head-mode mirror, requires its manifest to name the pinned commit (`--head-sha`: the batch's synced sha, else
-  the sha this run just synced, else HEAD now; a commit landing during a batch never changes the tree a batch
-  runs from), then re-executes gen_regress with
-  `GEN_DV_SOURCE_ROOT` set to the mirror so filelists, RTL, TB sources, the testlist, the knob table, the
-  program tool and every generator resolve from committed HEAD; the manifest records `source {mode,
+  pins the commit first (`--head-sha`: the batch's sha, else HEAD now), syncs exactly that commit into its
+  per-sha head tree, requires the tree's manifest to name it, then re-executes gen_regress with
+  `GEN_DV_SOURCE_ROOT` and `GEN_DV_MIRROR_ROOT` set to that tree so filelists, RTL, TB sources, the testlist,
+  the knob table, the program tool and every generator resolve from the committed tree (the flow scripts
+  themselves, the flow templates gen_cm_hier.cfg / gen_pli.tab / gen_dump.tcl and the staging area still
+  come from the clone: only the DUT and TB sources, programs and testlist are pinned); a commit landing
+  during a batch never changes the tree the batch runs from. Imported helper modules (the knob table, the
+  image helper) must live under the source root, else the run stops. The manifest records `source {mode,
   source_root, head_sha, worktree_dirty}` and every build manifest `source_root`, `source_mode`, `head_sha`.
   Worktree mode (single developer runs) keeps the shared working tree as the source.
   `gen_regress.py` re-syncs the mirror (`gen_mirror.py --sync --spike`) before a cocotb build (`--no-sync-mirror` to skip), so the
@@ -464,10 +471,17 @@ gen_mirror.py --status
   `dv.auto_dv.flow.gen_cocotb_probe`, `measured: false`) proves the path end to end; evidence
   `dv/auto_dv/evidence/gen_t027_cocotb_lsf.md`.
 
-Source modes (standing policy after intervention log LOG-014/LOG-017): `--source head` exports the committed
-HEAD subset with `git archive` (tracked files of the mirrored items; no checkout, no fetch, the working
-tree untouched) into a private staging directory under `dv/auto_dv/work/runtime/` and syncs the mirror
-from it; `--source worktree` syncs the shared working tree. The manifest records `source` and `head_sha`;
+Source modes (standing policy after intervention log LOG-014/LOG-017): `--source head [--head-sha S]`
+exports the committed subset of one commit (S, else HEAD now) with `git archive` (tracked files of the
+mirrored items; no checkout, no fetch, the working tree untouched) into a unique private staging directory
+under `dv/auto_dv/work/runtime/` and syncs it into that commit's own head tree, `<site mirror root>_head/<sha12>/`;
+`--source worktree` syncs the shared working tree into the site mirror root itself. The two never share a
+directory, so a worktree sync cannot reach a head-mode consumer by construction, and two head-mode
+batches on different commits do not share a tree either; every sync of the family runs under one lock
+(`<site root>.sync.lock`). A head tree carries no venv or Spike of its own: its `.venv` and `tools` are
+symlinks to the tools home (the site mirror root), so `ci/env.sh` in the head tree activates the one venv
+built on shared storage; the newest `HEAD_MIRRORS_KEEP` head trees are kept, older ones pruned after a
+sync. The manifest records `source`, `head_sha` and `tools_home`;
 `--status` computes the source hash from a fresh HEAD export (into a unique temporary staging directory) for
 a head-mode mirror, so a new commit makes it stale; a pinned consumer (a build or run carrying `GEN_DV_HEAD_SHA`)
 instead asks the manifest whether the mirror is the mirror of that sha, without re-exporting, so concurrent

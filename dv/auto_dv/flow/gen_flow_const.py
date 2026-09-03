@@ -25,6 +25,9 @@ SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"
 SOURCE_MODES = (SOURCE_MODE_HEAD, SOURCE_MODE_WORKTREE)
+ENV_MIRROR_ROOT = "GEN_DV_MIRROR_ROOT"   # the mirror a process binds to (a head-mode process: its per-sha head tree)
+HEAD_MIRROR_SUFFIX = "_head"            # per-sha head trees live beside the worktree mirror: <site root>_head/<sha12>
+HEAD_MIRRORS_KEEP = 6                   # newest head trees kept; older ones are pruned after a sync
 ENV_SH = REPO_ROOT / "ci" / "env.sh"
 CONFIG_SCRIPT = SOURCE_ROOT / "util" / "ibex_config.py"
 FCOV_CHECKER = SOURCE_ROOT / "ci" / "check_fcov_expectations.py"
@@ -273,7 +276,13 @@ ENV_BUILD_CONFIG = "GEN_BUILD_CONFIG"
 def ruling_scope_text(gated: list[str], info: list[str]) -> str:
     return RULING_SCOPE_TEMPLATE.format(gated=sorted(gated) or "[none]", info=sorted(info) or "[none]")
 # Testlist header policies: fcov_manifest_required_tiers (P-07), debug_only_plusargs (tb-arch P6).
-TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs")
+TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs", "red_expect_policy")
+# red_expect_policy tokens: fire_id = a red_expect starting with GEN_TEST_FAIL must name a fire_ id (the harness
+# prints the designed fire id on that line, so a generic signature would accept any fixture failure).
+RED_EXPECT_POLICY_FIRE_ID = "fire_id"
+RED_EXPECT_POLICIES = (RED_EXPECT_POLICY_FIRE_ID,)
+RED_EXPECT_FIRE_TOKEN = "fire_"
+RED_EXPECT_HARNESS_PREFIX = "GEN_TEST_FAIL"
 # Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).
 SIMULATOR_PLUSARGS = ("ntb_random_seed", "UVM_TESTNAME", "UVM_VERBOSITY", "UVM_NO_RELNOTES", "UVM_TIMEOUT",
                       "UVM_MAX_QUIT_COUNT")

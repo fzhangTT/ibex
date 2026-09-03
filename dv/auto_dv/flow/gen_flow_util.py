@@ -263,6 +263,9 @@ def self_test() -> int:
                 ("program.generator escaping the clone with ..", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/../../../ci/env.sh", "seed": "run"})),
                 ("an export file value escaping the run directory", lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + ["+gen_export_file=../outside.txt"])),
                 ("an absolute export file value", lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + ["+gen_export_file=/tmp/x.txt"])),
+                ("a generic GEN_TEST_FAIL red_expect under red_expect_policy [fire_id]", lambda d: (d.__setitem__("red_expect_policy", ["fire_id"]),
+                    d["tests"][0].update(red_fixture=True, measured=False, red_expect="GEN_TEST_FAIL gen_smoke: [0-9]+ fire-check failure"))),
+                ("an unknown red_expect_policy token", lambda d: d.__setitem__("red_expect_policy", ["bogus"])),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -275,6 +278,18 @@ def self_test() -> int:
                 cond = True
             ok &= cond
             print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}")
+        # The positive side of the policy: a fire_ id in the signature is accepted.
+        t3 = load_yaml(C.TESTLIST_YAML); t3["red_expect_policy"] = ["fire_id"]
+        for t in t3["tests"]:
+            if t.get("red_fixture") and str(t.get("red_expect", "")).startswith("GEN_TEST_FAIL") and "fire_" not in t["red_expect"]:
+                t["red_expect"] = t["red_expect"] + r"\(s\): fire_eot_pass_code"
+        f3 = Path(td) / "testlist_policy_ok.yaml"; f3.write_text(_y.safe_dump(t3, sort_keys=False), encoding="utf-8")
+        try:
+            load_testlist(f3); cond = True
+        except SystemExit:
+            cond = False
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", "red_expect_policy [fire_id] accepts signatures that name a fire_ id")
     for args, want_kept, want_dropped, label in (
             (["-cm_glitch", "0"], [], ["-cm_glitch", "0"], "value-taking flag takes its value"),
             (["-cm_seqnoconst", "-lca"], ["-lca"], ["-cm_seqnoconst"], "stand-alone -cm flag keeps the next argument (review 2a4916c #3)"),
@@ -311,6 +326,15 @@ def clone_relative_file(rel: Any) -> Path | None:
     return p if p.is_file() and (p == root or root in p.parents) else None
 
 
+def require_under_source_root(mod: Any, name: str) -> None:
+    """A module imported by dotted name from the source root must live there: a leaked PYTHONPATH must not supply
+    a dv/ package the source tree lacks."""
+    f = getattr(mod, "__file__", None)
+    root = C.SOURCE_ROOT.resolve()
+    if not f or root not in Path(f).resolve().parents:
+        die(f"{name} was imported from {f!r}, not from the source root {root}")
+
+
 def debug_only_from_knobs() -> set[str]:
     """Plusarg names marked debug_only in TB Infra's rendered knob table (gen_knobs.PLUSARGS): the one
     origin of the property and of the names themselves, so no naming rule is re-encoded here."""
@@ -321,6 +345,7 @@ def debug_only_from_knobs() -> set[str]:
         knobs = importlib.import_module(C.KNOBS_MODULE)
     except ModuleNotFoundError as e:
         die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered knob table is the debug_only origin")
+    require_under_source_root(knobs, C.KNOBS_MODULE)
     return {p["plusarg"] for p in knobs.PLUSARGS.values() if p.get("debug_only")}
 
 
@@ -336,6 +361,9 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
     for k in C.TESTLIST_OPTIONAL_TOP_KEYS:
         if k in data and not isinstance(data[k], list):
             die(f"{path}: {k} must be a list")
+    for pol in data.get("red_expect_policy") or []:
+        if pol not in C.RED_EXPECT_POLICIES:
+            die(f"{path}: red_expect_policy names unknown policy {pol!r} (known: {C.RED_EXPECT_POLICIES})")
     for t_ in data.get("fcov_manifest_required_tiers") or []:
         if t_ not in C.ALL_TIERS:
             die(f"{path}: fcov_manifest_required_tiers names unknown tier {t_!r}")
@@ -390,6 +418,11 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             err = red_expect_error(t.get("red_expect"))
             if err:
                 die(f"{path}: test {t['name']}: a red_fixture must declare the evidence line of its designed failure: {err}")
+            rx = t["red_expect"]
+            if C.RED_EXPECT_POLICY_FIRE_ID in (data.get("red_expect_policy") or []) and rx.startswith(C.RED_EXPECT_HARNESS_PREFIX) \
+                    and C.RED_EXPECT_FIRE_TOKEN not in rx:
+                die(f"{path}: test {t['name']}: red_expect {rx!r} starts with {C.RED_EXPECT_HARNESS_PREFIX} but names no "
+                    f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
         elif t.get("red_expect") is not None:
             die(f"{path}: test {t['name']}: red_expect is only meaningful with red_fixture: true")
         if t["build"] not in builds:

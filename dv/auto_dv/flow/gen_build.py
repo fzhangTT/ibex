@@ -173,6 +173,17 @@ def info_scopes(build: dict[str, Any]) -> list[str]:
     return [f"{build['tb_top']}.{t}" for t in info_trees(build)]
 
 
+def source_facts() -> dict[str, Any]:
+    """source_mode and head_sha of the tree this build reads, taken from that tree's mirror manifest when the
+    process is bound to a mirror (never inferred from the mere presence of an environment variable)."""
+    if not os.environ.get(C.ENV_SOURCE_ROOT):
+        return {"source_mode": C.SOURCE_MODE_WORKTREE, "head_sha": U.git_head()["head"]}
+    man = M.load_manifest(C.SOURCE_ROOT) or {}
+    if man.get("source") != C.SOURCE_MODE_HEAD or not man.get("head_sha"):
+        U.die(f"{C.SOURCE_ROOT} is bound as the source root but carries no head-mode mirror manifest")
+    return {"source_mode": C.SOURCE_MODE_HEAD, "head_sha": man["head_sha"]}
+
+
 def build_fields(a: argparse.Namespace, outdir: Path) -> dict[str, str]:
     """Placeholders a build entry may use: {outdir}, and {mirror} = the tree the runs execute from
     (the shared mirror; the clone for --local-cocotb builds, whose runs stay on the submit host)."""
@@ -329,8 +340,7 @@ def main() -> int:
         "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
-        "source_root": str(C.SOURCE_ROOT), "source_mode": C.SOURCE_MODE_HEAD if os.environ.get(C.ENV_SOURCE_ROOT) else C.SOURCE_MODE_WORKTREE,
-        "head_sha": os.environ.get(C.ENV_HEAD_SHA),
+        "source_root": str(C.SOURCE_ROOT), **source_facts(),
         "staged_env_sh": {"path": str(outdir / C.STAGED_ENV_SH), "sha256": U.sha256_file(C.ENV_SH)},
         "git": U.git_head(), "tools": U.tool_versions(), "started_utc": U.now_utc(),
     }
