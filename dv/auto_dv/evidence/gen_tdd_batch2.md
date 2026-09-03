@@ -239,7 +239,7 @@ sites, 248..264 carry-outs, all negative immediates). They are reachable without
 b507164315bed69d822193d92bf69c08): HEAD's generator with its positive case forced to 0x7FFFF, seed 1 on out_head15 (the build of the 812ed54 export,
 before landing 6), retires two wrapped auipc (pc 0x800013d8 -> 0x000003d8, pc 0x800114aa -> 0x000104aa) with UVM_ERROR 0 and
 every fire_tp_isa_006 value matching; only the no-carry floor failed, since the probe replaced that case.
-Change (gen_isa_alu_prog.py a2d92bda2b2b, gen_test_isa_alu.py 07042fce052c): build_u_ext_units emits one auipc imm20 0x7FFFF per pc alignment,
+Change (gen_isa_alu_prog.py 6eca3e2abb17, gen_test_isa_alu.py 7a56ceeb534d): build_u_ext_units emits one auipc imm20 0x7FFFF per pc alignment,
 tagged space, which plan() moves into the second half of the shuffled unit list and asserts after layout as the plan's own invariant,
 base + off + (0x7FFFF << 12) >= 2^32 (one authority, MEMORY_MAP, governs the window); the space units carry the carry-out tag too; the no-carry
 case is capped at 0x7FE00 so it never wraps inside the 1 MiB window; the negative-immediate cases stay as the carry-out. fire_tp_isa_006's
@@ -247,9 +247,9 @@ floor requires the address-space wrap (33-bit sum >= 2^32, computed from the lin
 no carry-out; the docstring's item summary and its (c) clause state the meaning and keep cp_pc_region.high / low under WP-9.
 TDD red first, on out_head16 (the build of an export of 053fa2c, after landing 6; the images rebuilt from that archive): the new floor on
 HEAD's seed-1 program fails "auipc address-space wrap at pc[1] missing [0, 2]"
-(gen_cm92_isa_alu_red_space_floor_s1_stdout_excerpt.log, md5 bb7c21efcaf4a51e7c94920ac304de22). Green, same build: seeds 1, 2, 3 with the new generator PASS, UVM_ERROR 0,
+(gen_cm92_isa_alu_red_space_floor_s1_stdout_excerpt.log, md5 4a5f2e2a91cc8a35d13d1c7f3d7823ad). Green, same build: seeds 1, 2, 3 with the new generator PASS, UVM_ERROR 0,
 each program with exactly two wrap sites, one per alignment, all above 0x80001000 (gen_cm92_isa_alu_s1_stdout.log and _sim.log in full,
-s2 / s3 excerpts, gen_cm92_isa_alu_wrap_sites.log md5 dd30b12a1909e5e85c15cf2253afa2ca). The placement assert fires for seeds 1..3 when the wrap units are forced to the
+s2 / s3 excerpts, gen_cm92_isa_alu_wrap_sites.log md5 4111c68c65a9ecbb5cf6bc47910c03de). The placement assert fires for seeds 1..3 when the wrap units are forced to the
 program start (gen_cm92_isa_alu_placement_invariant_probe.log); 63 seeds of the new generator abort nowhere and each carries the two sites
 (gen_cm92_isa_alu_generator_sweep63.log). The manifest rendered from the changed module equals the committed gen_test_isa_alu.fcov.yaml
 byte for byte: no bin moves, the three bins stay declared, cp_pc_region.high / low stay not_hit. Verified from a detached archive of HEAD with
@@ -260,3 +260,8 @@ regenerated from those runs (its first version reported the out_head15 draft run
 hand-encoded 0x80001000, the space units carry the carry-out tag (they do carry out of the 32-bit add; check_coverage's combos read them
 right), the fire check's comment points at WP-9 for the downward wrap the floor does not yet demand, and the placement-invariant probe and
 the 63-seed sweep were re-run on the committed-form generator.
+Corrections after the rows-touch review (CM114): the wrap-sites log's TDD-red line is cut at the line end (its earlier form leaked a truncated
+cocotb line from the multi-line excerpt) and its carry-out counts name the space units separately; the fire check's comment says the carry set
+holds the negative immediates plus the space units, and the generator's tag comment says the random extra case stays untagged even when it
+carries out (the tag feeds only the combos assert); the red and the three greens were re-run on out_head16 with the corrected comments so
+the retained headers carry the committed test_sha.

@@ -203,7 +203,7 @@ driven: knob_irq_regime (events) and knob_irq_line_mix (`with_nmi` drives irq_nm
 play with active values. `lib.check_regime_handlers(path)` is the structural form: it reads every test class's `schedulable`
 (a literal tuple with module-level constants resolved, `lib.TIMING_ONLY_KNOBS` or `GenTest.schedulable`), `program_handlers`
 (a literal tuple drawn from `lib.HANDLERS`) and `mie_stays_zero` (a literal); an annotated, tuple-target or augmented assignment
-of those names, a decorated test class, a class keyword on any GenTest-derived class (a metaclass could rewrite them, so a
+of those names, a decorated test class, a class keyword on every module-level class (a metaclass could rewrite them, so a
 nameless base carries none either) and any other value form are refused as unreadable; absent attributes take the GenTest defaults,
 not a base class's own value (a conservative refusal at worst). The library self-test runs it over every committed test module
 with sixteen red sources and seven green ones. `setup()` applies the values-aware form at run time before any REGIME_SET and

@@ -190,3 +190,9 @@ Implemented in this landing, no test issues a witness yet: `check(..., cycle_cla
 | CR-T226v2-L-7 | low | the API doc parenthetical claiming the alias is refused is false | FIXED (3a9ccaa) | CM89-M-1: the paragraph names the alias as passing and the self-test asserts it accepted. |
 | CR-T226v2-L-8 | low | gen_tdd_batch3.md's "unchanged since 3be5a34" sentence | FIXED (3a9ccaa) | CM88-M-1: the sentence reads unchanged since 9e912bb (before 2ea81ac), the retirement derivation dating from 3be5a34; the retained log's manifest row notes its header's error. |
 | CR-T226v2-L-9 | low | the raw per-mille error-rate plusargs outside the run-time check | FIXED (3a9ccaa) | CM88-L-3: setup() weighs +gen_ibus_err_rate, +gen_ibus_intg_err_rate, +gen_dbus_err_rate and +gen_dbus_intg_err_rate through lib.RAW_FAULT_PLUSARGS (nonzero = active fault on the mapped knob); gen_test_csr_reset with +gen_dbus_intg_err_rate=50 is refused before the first fetch and with =0 passes (gen_t2cm88_csr_reset_raw_dbus_intg50 / _intg0 excerpts). |
+
+## Cross-model review of bcaede6..4413874 (the rows touch, APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-bcaede64-44138741.md`; relay ids CM114-*; the row on the API doc)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM114-I-1 | info | the API doc said the class-keyword refusal covers "any GenTest-derived class"; check_regime_handlers_source refuses a keyword on every module-level class | FIXED (this touch) | The sentence reads "every module-level class". |

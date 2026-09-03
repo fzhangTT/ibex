@@ -34,3 +34,11 @@ Author: test-writer, 2026-09-03 14:4x UTC. Landing 3d (follow-up) carries the ro
 | CM106-L-4 | low | the space units were tagged wrap = False although they carry out of the 32-bit add, so check_coverage counted them toward the no-carry combos | FIXED (this touch) | The tag reads imm20 bit 19 or the space unit, with the comment corrected; the combos assert still holds (the no-carry combos come from the capped random case). |
 | CM106-L-5 | low | the space predicate detects only the upward wrap; the downward wrap becomes reachable with WP-9's low page | FIXED (this touch) | The fire check's comment names the downward wrap and WP-9 as the point where the floor widens; the predicate is unchanged until then. |
 | CM106-L-6 | low | the commit subject's "473 declared bins" (the manifest has 602) | NO CHANGE | The Orchestrator's, recorded in the log. |
+
+## Cross-model review of bcaede6..4413874 (the rows touch, APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-bcaede64-44138741.md`; relay ids CM114-*; the rows on gen_test_isa_alu, its generator and its logs)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM114-L-1 | low | gen_cm92_isa_alu_wrap_sites.log carried a truncated cocotb line leaked from the multi-line failure excerpt | FIXED (this touch) | The log is regenerated from the out_head16 runs with the TDD-red line cut at its line end (the excerpt pattern no longer crosses newlines) and asserted free of cocotb lines; the carry-out counts now name negative immediates and space units separately. |
+| CM114-L-2 | low | the fire check's comment still called the carry-out "the negative-immediate case" although the two space units also satisfy word < pc | FIXED (this touch) | The comment says the carry set holds the negative immediates, which stay in the space, plus the space units, whose carry-out is the wrap; the red and the three greens re-run on out_head16 with the corrected test so the headers carry the committed test_sha. |
+| CM114-I-2 | info | the random extra auipc case draws imm in 1..0x7FFFF tagged wrap False and could carry out untagged; harmless since the tag feeds only the combos set | NOTED | The tag comment says so ("the random extra case stays untagged even when it carries out"); the draw is unchanged so the committed programs stay byte-identical. |

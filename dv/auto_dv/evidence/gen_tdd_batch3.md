@@ -76,6 +76,11 @@ Every red fails through the collected mechanism (one GEN_TEST_FIRE ok=False line
 the TP-PMP-108 red, no GEN_TEST_PASS); the red runs' sim.log carries no UVM summary (the failing cocotb test ends the simulation before the
 report). The pinned
 red's retained log passes the flow's red_signature_check with the staged entry's red_expect (RED-OK; the self-test run above).
+- T-249 (2026-09-03, joint landing with the DV Lead under LOG-036b, committed 9596727): the CG-PMP-001 Sample line's anti-vacuity
+  clause now states the sampler's own observation and attributes the prediction comparison to the comparator's isa_rd row until
+  gen_chk_csr_readback is built, so gen_test_pmp_mseccfg's manifest was re-rendered by --test-module on an archive of 1bf0295 with the new plan:
+  77 declared bins unchanged, 19 anti_vacuity strings carry the new clause, header and every other line unchanged; nothing in
+  the test or its program changed.
 
 ## 3. Findings for other roles
 
@@ -149,6 +154,11 @@ GEN_TEST_PASS); the red runs' sim.log carries no UVM summary. Every red site is 
 
 Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml): gen_test_pmp_lock at tier check, measured false, seeds 3, the fcov
 file wired; gen_test_pmp_lock_red pinned to TP-PMP-013 (a lock-mix pmpcfg word write that changes an unlocked lane replaced by a read).
+- T-249 (2026-09-03, joint landing with the DV Lead under LOG-036b, committed 9596727): the CG-PMP-001 Sample line's anti-vacuity
+  clause now states the sampler's own observation and attributes the prediction comparison to the comparator's isa_rd row until
+  gen_chk_csr_readback is built, so gen_test_pmp_lock's manifest was re-rendered by --test-module on an archive of 1bf0295 with the new plan:
+  50 declared bins unchanged, 20 anti_vacuity strings carry the new clause, header and every other line unchanged; nothing in
+  the test or its program changed.
 
 ## 5. The batch-3 touch: red-site observability, three green generator defects, the retained sweeps (the CM32/CM38/CR-B3/CR-B3v2 rows are in gen_critic_response_batch3.md)
 
@@ -294,7 +304,7 @@ CM99-M-1: sweep_lock_800.sh built its 200 "random 31-bit seeds" as `random.Rando
 generator per draw, so every draw was 255808012; the retained seed list shows it, and both 800-seed sweeps (the before-fix one and the final
 one) covered 601 distinct seeds (400 sequential, 1 random, 200 flow-derived). The random part is re-swept here, generator-only as before:
 gen_cm99_pmp_lock_random200_seeds.txt (md5 e49d726a7760c3902bcf71eae8b84b8c) holds 200 distinct seeds from one random.Random(2026)
-instance (the old single value is not among them), and gen_cm99_pmp_lock_random200_sweep.log (md5 e8ae9adb30e8b15e950ee757459a2ca3)
+instance (Random(2026)'s first draw is the old single value 255808012, so it is the first of the 200), and gen_cm99_pmp_lock_random200_sweep.log (md5 e8ae9adb30e8b15e950ee757459a2ca3)
 runs plan() green and seed-drawn red for each on HEAD's gen_pmp_lock_prog.py (sha256 862ad214f482a2e6, the committed sweeps' 56ef5fe5f695106b
 with the docstring 674d026 edited) from a detached archive: 400 runs, 0 failures. The retained sweep logs and seed list are not edited; their
 manifest rows and the Section 5 sentences name the defect.

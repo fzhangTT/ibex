@@ -599,7 +599,7 @@ def build_u_ext_units(rng):
         ops.append(u_unit(rng, I006, "auipc", rng.choice((0, rng.randint(0x80000, 0xFFFFF), rng.randint(1, 0x7FFFF))), rd=pick(rng)))
     for o in ops:
         if o.op == "auipc":
-            o.tags["wrap"] = o.imm >= 0x80000 or bool(o.tags.get("space"))   # carry out of the 32-bit add: imm20 bit 19 anywhere in the window, or the space unit from pc >= 0x80001000
+            o.tags["wrap"] = o.imm >= 0x80000 or bool(o.tags.get("space"))   # the carry-out combos the layout check reads: imm20 bit 19 (carries out anywhere in the window) or the space unit; the random extra case stays untagged even when it carries out
     return ops
 
 

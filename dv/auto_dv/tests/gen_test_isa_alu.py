@@ -263,7 +263,8 @@ class IsaAlu(GenTest):
         eq_pc = {pc & 2 for o, pc, g in au if o.imm == 0 and g == pc}
         # the plan's cp_wrap: the 33-bit sum leaves the address space; from this window only the upward wrap (a positive immediate
         # past 2^32) is reachable, the downward one (a negative immediate from pc < |imm| << 12) joins this set when WP-9's low page
-        # lands; the carry-out of the 32-bit add (word < pc) is the negative-immediate case and stays in the space
+        # lands; the carry-out of the 32-bit add (word < pc) holds the negative-immediate cases, which stay in the space, plus the
+        # space units, whose carry-out is the wrap
         space = {pc & 2 for o, pc, g in au if 0 < o.imm < 0x80000 and pc + (o.imm << 12) >= 1 << 32}
         carry = {pc & 2 for o, pc, g in au if o.imm and g < pc}
         nocarry = {pc & 2 for o, pc, g in au if o.imm and g >= pc}
