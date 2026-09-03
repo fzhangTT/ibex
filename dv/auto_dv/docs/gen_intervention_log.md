@@ -1162,3 +1162,15 @@ stimulus-text rule (Stimulus or Preconditions name a mid-run regime change, a la
 during the run, in the plan's own vocabulary); not every Phase-2 item. The DV Lead emits the hold as Section 0 bullet
 T-181 and a generated Section 1.6 whose heading prints the group count, the text count and the union; the hold lifts
 by removing both in the revision that cites the reviewed 3h commit. Round-0 crediting is unaffected by this hold.
+
+## LOG-043 - 2026-09-03 - WATCHDOG (Test Writer instance stopped and respawned)
+
+The Test Writer's STATUS.md stayed at 16:03Z; its last file (batch3/gen_pmp_mseccfg/regen_check/red1.S) is from 16:38Z;
+four Orchestrator messages since 16:04Z (the 3g hand-off request, the T-181 triage lead, the bisect fact, the LOG-042a
+ownership) went unanswered; nudged at 16:46Z, still silent at 16:54Z with no new file for 16 minutes: stopped and
+respawned under the same name with the common briefing, the role section, the team rules (10-minute STATUS from date -u,
+answer within one tool round, LOG-029/034/036/036b/024d), the inherited state (3e/3f committed; 3g uncommitted in the
+tree with the working-tree manifest self-test passing; batch-3 gen_pmp_mseccfg files from a subagent; gen_pmp_lock brief)
+and the work order: 3g hand-over, then 3h (the schedule-runner fix, LOG-042a, the critical path for round 0), the CR6-L
+lows, the acceptance re-file, then batch 3. Fourth respawn of the day; the pattern is again a long foreground fan-out
+with the inbox unread.
