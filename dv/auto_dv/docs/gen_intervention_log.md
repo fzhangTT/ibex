@@ -1554,3 +1554,15 @@ review was killed within two minutes of launch, its run directory and failed raw
 with the verified statement; tb-infra received a retraction. Rule added to LOG-048 and LOG-060: a claimed gap is stated
 only after the missing items are listed by name from a direct lookup; a count from a parser or a filter is a prompt to
 look, never a finding, and it is not repeated to a teammate or a reviewer before the names exist.
+
+## LOG-062 - 2026-09-03 - A committed touch undid an earlier landing's text: hand-offs diff every file against HEAD
+
+The cross-model review of the Test Writer's LOG-050 touch (674d026) found that gen_test_template_api.md had reverted to
+its pre-T-226 wording: the touch was verified on a detached archive of HEAD with the handed files overlaid, but one of
+those files had been edited from a copy older than the T-226 landing (ae4b2e2), so the overlay carried the old paragraph
+back into the tree and the commit message did not mention it. The verification procedure checks that the overlaid tree
+passes its self-tests; it does not check that the overlay changes only what the touch intends. Rule for every teammate:
+before a hand-off, run git diff HEAD -- <file> for each file in the list and confirm that every hunk is an intended
+change of this touch; a file edited from a copy older than HEAD is re-based first. The Orchestrator adds the same check
+to the committer's pre-commit pass: for each modified file, the diff against HEAD must contain no hunk that reverses a
+hunk of a commit since the teammate's declared base. The Test Writer restores the T-226 text in its next touch.
