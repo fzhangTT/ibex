@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 10:40 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 10:58 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -51,21 +51,40 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   REQUEST rise and hold (address; req cycles with gnt withheld), gnt and rvalid per beat, pin value changes (irq lines,
   irq_nm, debug_req, fetch_enable, mcounteren_writable), irq_pending_o value changes, alert and double_fault value
   changes, core_busy changes, crash_dump field updates, icram ECC injection, scrkey req/valid, regime phase starts
-  (irq_pending_o and bus request events requested from TB Infra for v4a: 26 and 33 marked items assert them).
+  (irq_pending_o and bus request events requested from TB Infra for the next addendum version; marked items by clause source class,
+  generated from Section 1.3: 138 bus beat / alert / busy / crash_dump, 39 bus request, 26 irq_pending_o, 17 pin edge; the required event kinds exist in neither the addendum at HEAD nor
+  gen_tb_knobs.yaml yet, so every marked item runs on its fallback until they land).
   Marker: a marked item carries the exact token `[CYCLE-CLAUSE coverage-only until the event export lands]` in its
   Fire-check, followed by a parenthesis naming the source and its RVFI-only fallback (or stating that no fallback is
   claimed). gen_trace_check.py counts the items carrying the token; Section 1.3 lists them.
-  Sunset and enforcement: every marked item owns a witness bin CG-WIT-001.cp_clause.w_<id> (gen_fcov_plan.md, WIT
-  section) that only its cycle-level clause can hit (the test issues the bridge command COV_WITNESS <id> after the
-  clause passed against the export). While the token is present the witness bin is excluded from the test's manifest and
-  the item runs on its fallback. When the item's event source is in the build (Runtime's manifest reports the export
-  sources per build), the DV Lead removes the token in the plan revision of that round, the witness bin becomes a
-  declared must-hit bin, and a test that has not implemented the clause fails its fcov-expectation check and acceptance
-  item 5. Phase 1 sign-off requires that no item whose source is in the build still carries the token.
+  The witness group is a LEDGER of fire-check results, never DUT coverage (Critic gen_critic_plan_witness_v1.md;
+  cross-model round 5): it is outside the functional-coverage score, outside the bin total (the plan reports
+  spec-derived + adopted bins and, separately, "witnessed clauses: N of M marked items"), and outside traceability
+  condition 2 (its bins map to items, not to DUT features; gen_trace_check.py excludes CG-WIT-001 from bins->feature and
+  from ACTIVE->bin and prints the ledger line separately).
+  Witness protocol (awaitable; agreed form for the Test Writer's template): a fire_<tp_id> method is synchronous and
+  returns a result record whose field cycle_clause_true is set only on the clause's TRUE branch; the template's finish()
+  epilogue, BEFORE the finish handshake, issues one bridge command COV_WITNESS <id> for exactly the ids whose result
+  record has cycle_clause_true set, taking the ids from the rendered per-test id set (the testlist entry's witness_ids,
+  rendered from gen_trace_feature_tp.csv); the host structure check (check_test_source) refuses any direct call of the
+  command outside that epilogue (C-1); the SV dispatcher accepts an id only if it is in the running test's rendered set and
+  raises uvm_error GEN_WITNESS_FOREIGN otherwise (C-2). A test that never reaches the epilogue (fatal, timeout) witnesses
+  nothing.
+  Sunset and enforcement: every marked item owns a witness bin CG-WIT-001.cp_clause.w_<id> that only its cycle-level
+  clause can hit; while the token is present the bin is excluded from the test's manifest and the item runs on its fallback.
+  Mechanical trigger (C-3), decided from two concrete inputs the Orchestrator has requested: (1) Runtime adds
+  export_sources to build_manifest.yaml, the rendered EXACT event rows the build's writers emit; (2) TB Infra renders every
+  export event row exactly (no wildcard rows in gen_tb_knobs.yaml export_events). gen_trace_check.py maps each marked item's
+  clause source class (Section 1.3) to an event row name and FAILS when that row is present in the committed testlist
+  build's export_sources while the item still carries the token; until both inputs exist the tool reports "export sources
+  unknown" and does not fail. When the token is removed the witness bin becomes a declared must-hit bin of the owning test
+  and a test that has not implemented the clause fails its fcov-expectation check and acceptance item 5. Phase 1 sign-off
+  requires that no item whose source row is present still carries the token, and lists the export-blocked items (no
+  RVFI-only fallback) of Section 1.3 as blocked until the export or a reformulation lands.
   Items whose cycle clause anchors on an INTERNAL pipeline instant (ID entry, the FLUSH / IRQ_TAKEN / DBG_TAKEN
   windows, the interrupt decision cycle) cannot use the channel (TB Infra option B): they are reformulated to boundary
   facts (an RVFI record's cycle versus a pin or bus event's cycle) or stay coverage-only through P4-class sampling; the
-  40 such items are tagged `[class B]` in the next revision.
+  40 such items carry the `[class B]` tag in their Fire-check (Section 1.3 column Class).
 - `Expected: informational` means: the item is outside the Phase 1 pass gate; it is its own `_info` test with
   `measured: false`; its checkers stay ON and their verdicts are recorded, not gated; the test asserts only that the
   scenario fired and logs the observation as GEN_TEST_INFO <id>. Reason classes: a downgraded or record-only bug
@@ -128,7 +147,8 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
 | Items outside the Phase 1 pass gate (expected-fail + informational) of 1203 | 40 |
 | Test groups | 228 |
-| Covergroups / distinct bins referenced / adopted bins | 208 / 16045 / 49 |
+| Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15825 / 49 |
+| Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 220 marked items |
 
 ## 1.1 Expected-fail items per bug candidate
 
@@ -150,228 +170,232 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 
 ## 1.3 Items whose Fire-check carries the cycle-clause marker (generated; 220 items; witness bins excluded from manifests while marked)
 
-| Item | Group | Clause source class |
-|---|---|---|
-| TP-ISA-024 | gen_isa_cti | bus request |
-| TP-ISA-040 | gen_isa_system | bus request |
-| TP-ISA-051 | gen_isa_illegal_info | pin edge |
-| TP-MUL-011 | gen_mul_timing | pin edge |
-| TP-MUL-023 | gen_mul_timing | pin edge |
-| TP-MUL-024 | gen_mul_timing | pin edge |
-| TP-CMP-057 | gen_cmp_zcmp_events | pin edge |
-| TP-CMP-058 | gen_cmp_zcmp_events | pin edge |
-| TP-BIT-036 | gen_bit_multicycle | pin edge |
-| TP-BIT-042 | gen_bit_random | pin edge |
-| TP-BIT-043 | gen_bit_multicycle | pin edge |
-| TP-BTALU-001 | gen_btalu_basic | bus request |
-| TP-BTALU-012 | gen_btalu_basic | bus request |
-| TP-BTALU-018 | gen_btalu_perf_b17_xfail | pin edge |
-| TP-CSR-029 | gen_csr_trap_setup | irq_pending_o |
-| TP-CSR-031 | gen_csr_trap_setup | irq_pending_o |
-| TP-CSR-034 | gen_csr_trap_handling | pin edge |
-| TP-CSR-085 | gen_csr_cpuctrl | pin edge |
-| TP-CSR-090 | gen_csr_cpuctrl | pin edge |
-| TP-CSR-100 | gen_csr_storm | pin edge |
-| TP-PRV-018 | gen_prv_wfi | irq_pending_o |
-| TP-PRV-019 | gen_prv_wfi | irq_pending_o |
-| TP-EXC-015 | gen_exc_priority | pin edge |
-| TP-EXC-034 | gen_exc_lsu_fault | pin edge |
-| TP-EXC-035 | gen_exc_priority | pin edge |
-| TP-EXC-036 | gen_exc_lsu_fault | pin edge |
-| TP-EXC-037 | gen_exc_lsu_fault | bus request |
-| TP-EXC-038 | gen_exc_lsu_fault | pin edge |
-| TP-EXC-040 | gen_exc_priority | pin edge |
-| TP-EXC-050 | gen_exc_mret | pin edge |
-| TP-EXC-054 | gen_exc_double_fault | bus request |
-| TP-EXC-055 | gen_exc_double_fault | pin edge |
-| TP-EXC-057 | gen_exc_double_fault | pin edge |
-| TP-EXC-062 | gen_exc_trap_state | bus request |
-| TP-EXC-065 | gen_exc_priority_info | pin edge |
-| TP-EXC-070 | gen_exc_priority | irq_pending_o |
-| TP-EXC-072 | gen_exc_regime | irq_pending_o |
-| TP-IRQ-009 | gen_irq_csr | pin edge |
-| TP-IRQ-011 | gen_irq_csr | irq_pending_o |
-| TP-IRQ-015 | gen_irq_priority | pin edge |
-| TP-IRQ-021 | gen_irq_timing | pin edge |
-| TP-IRQ-022 | gen_irq_timing | bus request |
-| TP-IRQ-023 | gen_irq_timing | pin edge |
-| TP-IRQ-024 | gen_irq_timing | pin edge |
-| TP-IRQ-025 | gen_irq_timing | pin edge |
-| TP-IRQ-026 | gen_irq_timing | irq_pending_o |
-| TP-IRQ-027 | gen_irq_timing | irq_pending_o |
-| TP-IRQ-030 | gen_irq_timing | irq_pending_o |
-| TP-IRQ-031 | gen_irq_priority | pin edge |
-| TP-IRQ-038 | gen_irq_nmi | pin edge |
-| TP-IRQ-039 | gen_irq_nmi | pin edge |
-| TP-IRQ-041 | gen_irq_debug | pin edge |
-| TP-IRQ-044 | gen_irq_nmi_int | pin edge |
-| TP-IRQ-045 | gen_irq_nmi_int | pin edge |
-| TP-IRQ-049 | gen_irq_wfi | pin edge |
-| TP-IRQ-050 | gen_irq_wfi | irq_pending_o |
-| TP-IRQ-051 | gen_irq_wfi | irq_pending_o |
-| TP-IRQ-052 | gen_irq_wfi | pin edge |
-| TP-IRQ-053 | gen_irq_wfi | pin edge |
-| TP-IRQ-054 | gen_irq_wfi | irq_pending_o |
-| TP-IRQ-055 | gen_irq_wfi | pin edge |
-| TP-IRQ-057 | gen_irq_wfi | pin edge |
-| TP-IRQ-059 | gen_irq_reset | irq_pending_o |
-| TP-IRQ-061 | gen_irq_handler | pin edge |
-| TP-IRQ-064 | gen_irq_timing | irq_pending_o |
-| TP-IRQ-066 | gen_irq_timing | bus request |
-| TP-IRQ-068 | gen_irq_wfi | pin edge |
-| TP-IRQ-070 | gen_irq_csr | irq_pending_o |
-| TP-IRQ-072 | gen_irq_regime | irq_pending_o |
-| TP-IRQ-073 | gen_irq_regime | pin edge |
-| TP-IRQ-077 | gen_irq_regime | pin edge |
-| TP-IRQ-078 | gen_irq_debug | irq_pending_o |
-| TP-IRQ-079 | gen_irq_nmi | bus request |
-| TP-IRQ-080 | gen_irq_debug | pin edge |
-| TP-PMP-053 | gen_pmp_recfg | pin edge |
-| TP-PMP-077 | gen_pmp_fetch_fault | pin edge |
-| TP-PMP-082 | gen_pmp_data_fault | pin edge |
-| TP-PMP-091 | gen_pmp_recfg | pin edge |
-| TP-PMP-105 | gen_pmp_random_regime | pin edge |
-| TP-DBG-003 | gen_dbg_irq_mask | irq_pending_o |
-| TP-DBG-004 | gen_dbg_haltreq | pin edge |
-| TP-DBG-005 | gen_dbg_haltreq | pin edge |
-| TP-DBG-006 | gen_dbg_haltreq | bus request |
-| TP-DBG-007 | gen_dbg_haltreq | pin edge |
-| TP-DBG-008 | gen_dbg_haltreq | pin edge |
-| TP-DBG-009 | gen_dbg_haltreq | pin edge |
-| TP-DBG-011 | gen_dbg_req_shape_info | bus request |
-| TP-DBG-014 | gen_dbg_haltreq | pin edge |
-| TP-DBG-021 | gen_dbg_irq_mask_xfail | pin edge |
-| TP-DBG-030 | gen_dbg_ebreak | pin edge |
-| TP-DBG-046 | gen_dbg_step | pin edge |
-| TP-DBG-049 | gen_dbg_step | pin edge |
-| TP-DBG-051 | gen_dbg_step | pin edge |
-| TP-DBG-054 | gen_dbg_step | pin edge |
-| TP-DBG-061 | gen_dbg_irq_mask | irq_pending_o |
-| TP-DBG-063 | gen_dbg_mode_misc | pin edge |
-| TP-DBG-071 | gen_dbg_haltreq | bus request |
-| TP-TRG-019 | gen_trg_fire | pin edge |
-| TP-TRG-023 | gen_trg_fire | bus request |
-| TP-TRG-025 | gen_trg_fire | irq_pending_o |
-| TP-TRG-026 | gen_trg_fire | pin edge |
-| TP-TRG-027 | gen_trg_fire | bus request |
-| TP-PMC-001 | gen_pmc_mcycle | pin edge |
-| TP-PMC-002 | gen_pmc_mcycle | pin edge |
-| TP-PMC-011 | gen_pmc_minstret | pin edge |
-| TP-PMC-013 | gen_pmc_minstret_xfail | pin edge |
-| TP-PMC-016 | gen_pmc_minstret | pin edge |
-| TP-PMC-024 | gen_pmc_ctrl | pin edge |
-| TP-PMC-028 | gen_pmc_ctrl | pin edge |
-| TP-PMC-034 | gen_pmc_hpm_event | pin edge |
-| TP-PMC-047 | gen_pmc_hpm_csr | pin edge |
-| TP-PMC-058 | gen_pmc_hpm_b17_br_xfail | pin edge |
-| TP-PMC-059 | gen_pmc_hpm_b17_mul_xfail | pin edge |
-| TP-PMC-060 | gen_pmc_hpm_b17_div_xfail | pin edge |
-| TP-IMEM-001 | gen_imem_proto_basic | bus request |
-| TP-IMEM-003 | gen_imem_proto_basic | pin edge |
-| TP-IMEM-004 | gen_imem_proto_basic | pin edge |
-| TP-IMEM-005 | gen_imem_latency | bus request |
-| TP-IMEM-006 | gen_imem_proto_basic | pin edge |
-| TP-IMEM-007 | gen_imem_proto_basic | pin edge |
-| TP-IMEM-008 | gen_imem_latency | bus request |
-| TP-IMEM-010 | gen_imem_latency | pin edge |
-| TP-IMEM-014 | gen_imem_fetch_err | bus request |
-| TP-IMEM-016 | gen_imem_fetch_err | pin edge |
-| TP-IMEM-017 | gen_imem_redirect | pin edge |
-| TP-IMEM-018 | gen_imem_redirect | bus request |
-| TP-IMEM-022 | gen_imem_gating | bus request |
-| TP-IMEM-023 | gen_imem_gating | bus request |
-| TP-IMEM-025 | gen_imem_gating | pin edge |
-| TP-IMEM-027 | gen_imem_boot | bus request |
-| TP-IMEM-033 | gen_imem_latency | pin edge |
-| TP-IMEM-036 | gen_imem_regime | bus request |
-| TP-IMEM-037 | gen_imem_regime | pin edge |
-| TP-IMEM-039 | gen_imem_proto_basic | pin edge |
-| TP-IMEM-040 | gen_imem_proto_basic_info | pin edge |
-| TP-DMEM-002 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-004 | gen_dmem_proto_basic | bus request |
-| TP-DMEM-005 | gen_dmem_latency | pin edge |
-| TP-DMEM-006 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-007 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-008 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-019 | gen_dmem_misaligned | pin edge |
-| TP-DMEM-020 | gen_dmem_misaligned | pin edge |
-| TP-DMEM-021 | gen_dmem_misaligned | pin edge |
-| TP-DMEM-022 | gen_dmem_misaligned | pin edge |
-| TP-DMEM-027 | gen_dmem_err | bus request |
-| TP-DMEM-034 | gen_dmem_err | pin edge |
-| TP-DMEM-037 | gen_dmem_err | bus request |
-| TP-DMEM-039 | gen_dmem_intg | pin edge |
-| TP-DMEM-044 | gen_dmem_ctx | pin edge |
-| TP-DMEM-046 | gen_dmem_ctx | pin edge |
-| TP-DMEM-047 | gen_dmem_ctx | pin edge |
-| TP-DMEM-049 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-051 | gen_dmem_ctx | pin edge |
-| TP-DMEM-056 | gen_dmem_regime | pin edge |
-| TP-DMEM-057 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-058 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-059 | gen_dmem_proto_basic | pin edge |
-| TP-DMEM-061 | gen_dmem_ctx | pin edge |
-| TP-DMEM-062 | gen_dmem_proto_basic_info | pin edge |
-| TP-DMEM-063 | gen_dmem_err_info | pin edge |
-| TP-DMEM-064 | gen_dmem_intg_xfail | pin edge |
-| TP-FE-008 | gen_fe_align | pin edge |
-| TP-FE-012 | gen_fe_redirect | pin edge |
-| TP-FE-013 | gen_fe_redirect | bus request |
-| TP-FE-014 | gen_fe_redirect | bus request |
-| TP-FE-016 | gen_fe_backpressure | pin edge |
-| TP-FE-017 | gen_fe_backpressure | bus request |
-| TP-FE-022 | gen_fe_fault | pin edge |
-| TP-FE-026 | gen_fe_sleep | pin edge |
-| TP-IC-002 | gen_ic_ram | pin edge |
-| TP-IC-003 | gen_ic_ram | pin edge |
-| TP-IC-004 | gen_ic_ram | bus request |
-| TP-IC-005 | gen_ic_ram | pin edge |
-| TP-IC-007 | gen_ic_inval | bus request |
-| TP-IC-008 | gen_ic_inval | pin edge |
-| TP-IC-011 | gen_ic_inval | pin edge |
-| TP-IC-015 | gen_ic_inval | pin edge |
-| TP-IC-019 | gen_ic_enable | pin edge |
-| TP-IC-020 | gen_ic_enable | pin edge |
-| TP-IC-023 | gen_ic_fill | pin edge |
-| TP-IC-024 | gen_ic_fill | pin edge |
-| TP-IC-030 | gen_ic_enable | pin edge |
-| TP-IC-031 | gen_ic_enable | pin edge |
-| TP-IC-035 | gen_ic_ecc | pin edge |
-| TP-IC-036 | gen_ic_ecc | pin edge |
-| TP-IC-037 | gen_ic_ecc | pin edge |
-| TP-IC-045 | gen_ic_ram | pin edge |
-| TP-IC-046 | gen_ic_ram | bus request |
-| TP-IC-051 | gen_ic_busy | pin edge |
-| TP-IC-052 | gen_ic_busy | bus request |
-| TP-IC-053 | gen_ic_busy | pin edge |
-| TP-IC-057 | gen_ic_enable | pin edge |
-| TP-REG-001 | gen_reg_knob_sweep | bus request |
-| TP-REG-002 | gen_reg_knob_sweep | pin edge |
-| TP-REG-005 | gen_reg_knob_sweep | bus request |
-| TP-REG-006 | gen_reg_knob_sweep | pin edge |
-| TP-REG-008 | gen_reg_knob_sweep | pin edge |
-| TP-REG-010 | gen_reg_knob_sweep | pin edge |
-| TP-REG-011 | gen_reg_knob_sweep | pin edge |
-| TP-REG-012 | gen_reg_knob_sweep | bus request |
-| TP-REG-018 | gen_reg_schedule | pin edge |
-| TP-REG-020 | gen_reg_inflight | bus request |
-| TP-REG-021 | gen_reg_inflight | pin edge |
-| TP-REG-023 | gen_reg_inflight | pin edge |
-| TP-XIF-001 | gen_xif_random | irq_pending_o |
-| TP-XIF-002 | gen_xif_random | pin edge |
-| TP-XIF-003 | gen_xif_random | pin edge |
-| TP-XIF-004 | gen_xif_random | pin edge |
-| TP-XIF-008 | gen_xif_random | irq_pending_o |
-| TP-XIF-009 | gen_xif_random | pin edge |
-| TP-XIF-010 | gen_xif_random | pin edge |
-| TP-XIF-011 | gen_xif_random | irq_pending_o |
-| TP-XIF-012 | gen_xif_random | pin edge |
-| TP-XIF-014 | gen_xif_random | irq_pending_o |
-| TP-XIF-015 | gen_xif_random | irq_pending_o |
-| TP-XIF-016 | gen_xif_fetch_enable | bus request |
-| TP-XIF-017 | gen_xif_reset | pin edge |
-| TP-REG-026 | gen_xcut_regime_sweep | pin edge |
-| TP-REG-027 | gen_csr_mcounteren | pin edge |
+Clause source classes (generated, four classes): 138 bus beat / alert / busy / crash_dump, 39 bus request, 26 irq_pending_o, 17 pin edge. Export-blocked items (no RVFI-only fallback; their
+Fire-check is entirely coverage-only while marked, so Phase 1 sign-off needs the export or a reformulation): 8
+(TP-CSR-100, TP-PMP-077, TP-IMEM-006, TP-IMEM-039, TP-DMEM-007, TP-DMEM-051, TP-IC-003, TP-IC-045). Class-B items (internal-instant anchors): 40.
+
+| Item | Group | Clause source class | Fallback | Class |
+|---|---|---|---|---|
+| TP-ISA-024 | gen_isa_cti | bus request | RVFI-only fallback stated | class B |
+| TP-ISA-040 | gen_isa_system | bus request | RVFI-only fallback stated | - |
+| TP-ISA-051 | gen_isa_illegal_info | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-MUL-011 | gen_mul_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-MUL-023 | gen_mul_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-MUL-024 | gen_mul_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-CMP-057 | gen_cmp_zcmp_events | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-CMP-058 | gen_cmp_zcmp_events | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-BIT-036 | gen_bit_multicycle | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-BIT-042 | gen_bit_random | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-BIT-043 | gen_bit_multicycle | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-BTALU-001 | gen_btalu_basic | bus request | RVFI-only fallback stated | - |
+| TP-BTALU-012 | gen_btalu_basic | bus request | RVFI-only fallback stated | - |
+| TP-BTALU-018 | gen_btalu_perf_b17_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-CSR-029 | gen_csr_trap_setup | irq_pending_o | RVFI-only fallback stated | - |
+| TP-CSR-031 | gen_csr_trap_setup | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-CSR-034 | gen_csr_trap_handling | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-CSR-085 | gen_csr_cpuctrl | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-CSR-090 | gen_csr_cpuctrl | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-CSR-100 | gen_csr_storm | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-PRV-018 | gen_prv_wfi | irq_pending_o | RVFI-only fallback stated | - |
+| TP-PRV-019 | gen_prv_wfi | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-EXC-015 | gen_exc_priority | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-034 | gen_exc_lsu_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-035 | gen_exc_priority | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-036 | gen_exc_lsu_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-037 | gen_exc_lsu_fault | bus request | RVFI-only fallback stated | - |
+| TP-EXC-038 | gen_exc_lsu_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-040 | gen_exc_priority | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-050 | gen_exc_mret | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-054 | gen_exc_double_fault | bus request | RVFI-only fallback stated | - |
+| TP-EXC-055 | gen_exc_double_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-057 | gen_exc_double_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-062 | gen_exc_trap_state | bus request | RVFI-only fallback stated | - |
+| TP-EXC-065 | gen_exc_priority_info | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-EXC-070 | gen_exc_priority | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-EXC-072 | gen_exc_regime | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-009 | gen_irq_csr | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-011 | gen_irq_csr | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-015 | gen_irq_priority | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-021 | gen_irq_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-022 | gen_irq_timing | bus request | RVFI-only fallback stated | class B |
+| TP-IRQ-023 | gen_irq_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-024 | gen_irq_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-025 | gen_irq_timing | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-026 | gen_irq_timing | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-IRQ-027 | gen_irq_timing | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-030 | gen_irq_timing | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-IRQ-031 | gen_irq_priority | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-038 | gen_irq_nmi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-039 | gen_irq_nmi | pin edge | RVFI-only fallback stated | - |
+| TP-IRQ-041 | gen_irq_debug | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-044 | gen_irq_nmi_int | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-045 | gen_irq_nmi_int | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-049 | gen_irq_wfi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-050 | gen_irq_wfi | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-051 | gen_irq_wfi | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-052 | gen_irq_wfi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-053 | gen_irq_wfi | pin edge | RVFI-only fallback stated | - |
+| TP-IRQ-054 | gen_irq_wfi | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-055 | gen_irq_wfi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-057 | gen_irq_wfi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-059 | gen_irq_reset | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-061 | gen_irq_handler | pin edge | RVFI-only fallback stated | class B |
+| TP-IRQ-064 | gen_irq_timing | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-IRQ-066 | gen_irq_timing | bus request | RVFI-only fallback stated | class B |
+| TP-IRQ-068 | gen_irq_wfi | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-070 | gen_irq_csr | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-072 | gen_irq_regime | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-073 | gen_irq_regime | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IRQ-077 | gen_irq_regime | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IRQ-078 | gen_irq_debug | irq_pending_o | RVFI-only fallback stated | - |
+| TP-IRQ-079 | gen_irq_nmi | bus request | RVFI-only fallback stated | - |
+| TP-IRQ-080 | gen_irq_debug | pin edge | RVFI-only fallback stated | - |
+| TP-PMP-053 | gen_pmp_recfg | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMP-077 | gen_pmp_fetch_fault | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-PMP-082 | gen_pmp_data_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMP-091 | gen_pmp_recfg | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMP-105 | gen_pmp_random_regime | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DBG-003 | gen_dbg_irq_mask | irq_pending_o | RVFI-only fallback stated | - |
+| TP-DBG-004 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | class B |
+| TP-DBG-005 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | - |
+| TP-DBG-006 | gen_dbg_haltreq | bus request | RVFI-only fallback stated | class B |
+| TP-DBG-007 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | class B |
+| TP-DBG-008 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | class B |
+| TP-DBG-009 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | class B |
+| TP-DBG-011 | gen_dbg_req_shape_info | bus request | RVFI-only fallback stated | class B |
+| TP-DBG-014 | gen_dbg_haltreq | pin edge | RVFI-only fallback stated | - |
+| TP-DBG-021 | gen_dbg_irq_mask_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DBG-030 | gen_dbg_ebreak | pin edge | RVFI-only fallback stated | class B |
+| TP-DBG-046 | gen_dbg_step | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-DBG-049 | gen_dbg_step | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-DBG-051 | gen_dbg_step | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DBG-054 | gen_dbg_step | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DBG-061 | gen_dbg_irq_mask | irq_pending_o | RVFI-only fallback stated | - |
+| TP-DBG-063 | gen_dbg_mode_misc | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DBG-071 | gen_dbg_haltreq | bus request | RVFI-only fallback stated | class B |
+| TP-TRG-019 | gen_trg_fire | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-TRG-023 | gen_trg_fire | bus request | RVFI-only fallback stated | class B |
+| TP-TRG-025 | gen_trg_fire | irq_pending_o | RVFI-only fallback stated | - |
+| TP-TRG-026 | gen_trg_fire | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-TRG-027 | gen_trg_fire | bus request | RVFI-only fallback stated | - |
+| TP-PMC-001 | gen_pmc_mcycle | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-002 | gen_pmc_mcycle | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-011 | gen_pmc_minstret | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-013 | gen_pmc_minstret_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-016 | gen_pmc_minstret | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-024 | gen_pmc_ctrl | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-028 | gen_pmc_ctrl | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-034 | gen_pmc_hpm_event | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-047 | gen_pmc_hpm_csr | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-058 | gen_pmc_hpm_b17_br_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-PMC-059 | gen_pmc_hpm_b17_mul_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-PMC-060 | gen_pmc_hpm_b17_div_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-001 | gen_imem_proto_basic | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-003 | gen_imem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-004 | gen_imem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-005 | gen_imem_latency | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-006 | gen_imem_proto_basic | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-IMEM-007 | gen_imem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-008 | gen_imem_latency | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-010 | gen_imem_latency | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-014 | gen_imem_fetch_err | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-016 | gen_imem_fetch_err | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-017 | gen_imem_redirect | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-018 | gen_imem_redirect | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-022 | gen_imem_gating | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-023 | gen_imem_gating | bus request | RVFI-only fallback stated | class B |
+| TP-IMEM-025 | gen_imem_gating | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-027 | gen_imem_boot | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-033 | gen_imem_latency | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-036 | gen_imem_regime | bus request | RVFI-only fallback stated | - |
+| TP-IMEM-037 | gen_imem_regime | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IMEM-039 | gen_imem_proto_basic | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-IMEM-040 | gen_imem_proto_basic_info | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-002 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-004 | gen_dmem_proto_basic | bus request | RVFI-only fallback stated | - |
+| TP-DMEM-005 | gen_dmem_latency | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-006 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-007 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-DMEM-008 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-019 | gen_dmem_misaligned | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-020 | gen_dmem_misaligned | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-021 | gen_dmem_misaligned | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-022 | gen_dmem_misaligned | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-027 | gen_dmem_err | bus request | RVFI-only fallback stated | - |
+| TP-DMEM-034 | gen_dmem_err | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-037 | gen_dmem_err | bus request | RVFI-only fallback stated | - |
+| TP-DMEM-039 | gen_dmem_intg | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-DMEM-044 | gen_dmem_ctx | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-DMEM-046 | gen_dmem_ctx | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-047 | gen_dmem_ctx | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-DMEM-049 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-051 | gen_dmem_ctx | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-DMEM-056 | gen_dmem_regime | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-057 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-058 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-059 | gen_dmem_proto_basic | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-061 | gen_dmem_ctx | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-062 | gen_dmem_proto_basic_info | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-063 | gen_dmem_err_info | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-DMEM-064 | gen_dmem_intg_xfail | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-FE-008 | gen_fe_align | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-FE-012 | gen_fe_redirect | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-FE-013 | gen_fe_redirect | bus request | RVFI-only fallback stated | - |
+| TP-FE-014 | gen_fe_redirect | bus request | RVFI-only fallback stated | - |
+| TP-FE-016 | gen_fe_backpressure | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-FE-017 | gen_fe_backpressure | bus request | RVFI-only fallback stated | - |
+| TP-FE-022 | gen_fe_fault | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-FE-026 | gen_fe_sleep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-002 | gen_ic_ram | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-003 | gen_ic_ram | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-IC-004 | gen_ic_ram | bus request | RVFI-only fallback stated | - |
+| TP-IC-005 | gen_ic_ram | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-007 | gen_ic_inval | bus request | RVFI-only fallback stated | - |
+| TP-IC-008 | gen_ic_inval | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-011 | gen_ic_inval | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-015 | gen_ic_inval | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-019 | gen_ic_enable | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-020 | gen_ic_enable | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-023 | gen_ic_fill | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-024 | gen_ic_fill | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-030 | gen_ic_enable | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-031 | gen_ic_enable | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-035 | gen_ic_ecc | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-036 | gen_ic_ecc | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-037 | gen_ic_ecc | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-045 | gen_ic_ram | bus beat / alert / busy / crash_dump | none: export-blocked for Phase 1 sign-off | - |
+| TP-IC-046 | gen_ic_ram | bus request | RVFI-only fallback stated | - |
+| TP-IC-051 | gen_ic_busy | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-IC-052 | gen_ic_busy | bus request | RVFI-only fallback stated | - |
+| TP-IC-053 | gen_ic_busy | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-IC-057 | gen_ic_enable | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-001 | gen_reg_knob_sweep | bus request | RVFI-only fallback stated | - |
+| TP-REG-002 | gen_reg_knob_sweep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-005 | gen_reg_knob_sweep | bus request | RVFI-only fallback stated | - |
+| TP-REG-006 | gen_reg_knob_sweep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-008 | gen_reg_knob_sweep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-010 | gen_reg_knob_sweep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-011 | gen_reg_knob_sweep | pin edge | RVFI-only fallback stated | - |
+| TP-REG-012 | gen_reg_knob_sweep | bus request | RVFI-only fallback stated | - |
+| TP-REG-018 | gen_reg_schedule | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-020 | gen_reg_inflight | bus request | RVFI-only fallback stated | - |
+| TP-REG-021 | gen_reg_inflight | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-023 | gen_reg_inflight | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-XIF-001 | gen_xif_random | irq_pending_o | RVFI-only fallback stated | - |
+| TP-XIF-002 | gen_xif_random | pin edge | RVFI-only fallback stated | - |
+| TP-XIF-003 | gen_xif_random | pin edge | RVFI-only fallback stated | - |
+| TP-XIF-004 | gen_xif_random | pin edge | RVFI-only fallback stated | class B |
+| TP-XIF-008 | gen_xif_random | irq_pending_o | RVFI-only fallback stated | - |
+| TP-XIF-009 | gen_xif_random | pin edge | RVFI-only fallback stated | - |
+| TP-XIF-010 | gen_xif_random | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | class B |
+| TP-XIF-011 | gen_xif_random | irq_pending_o | RVFI-only fallback stated | - |
+| TP-XIF-012 | gen_xif_random | pin edge | RVFI-only fallback stated | - |
+| TP-XIF-014 | gen_xif_random | irq_pending_o | RVFI-only fallback stated | - |
+| TP-XIF-015 | gen_xif_random | irq_pending_o | RVFI-only fallback stated | - |
+| TP-XIF-016 | gen_xif_fetch_enable | bus request | RVFI-only fallback stated | - |
+| TP-XIF-017 | gen_xif_reset | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-026 | gen_xcut_regime_sweep | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
+| TP-REG-027 | gen_csr_mcounteren | bus beat / alert / busy / crash_dump | RVFI-only fallback stated | - |
 
 ## 1.2 Informational items (outside the Phase 1 pass gate)
 
@@ -1176,7 +1200,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: branch pairs (taken, not-taken) surrounded by single-cycle ALU ops; the test measures the redirect delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(branch) (header Timing terms); for the exact-2 sub-check the straight-line code before the branch is fully fetched (no fill request pending in the branch cycle) and the taken target is word-aligned or compressed (a 32-bit target at pc[1] = 1 straddles a bus word and takes the skid path, rtl/ibex_icache.sv:1099-1133).
 - Randomized: op, operands, target distance, alignment, surrounding ALU ops.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 50 not-taken branches with redirect delta = 1 and >= 50 taken branches with redirect delta = 2 observed under the measurement condition (icache_enable = 0, imem pinned min1/same_cycle, no pending fill request, non-straddling target: the speculative target request goes out in the branch cycle, rtl/ibex_icache.sv:249, :703, :1030-1031, and the target is in ID two cycles later); taken branches outside the condition are recorded with their delta (>= 2, bin d3plus); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: redirect deltas from rvfi_ext_mcycle (1 / 2) and the not-taken branch next record at pc + len)
+- Fire-check: >= 50 not-taken branches with redirect delta = 1 and >= 50 taken branches with redirect delta = 2 observed under the measurement condition (icache_enable = 0, imem pinned min1/same_cycle, no pending fill request, non-straddling target: the speculative target request goes out in the branch cycle, rtl/ibex_icache.sv:249, :703, :1030-1031, and the target is in ID two cycles later); taken branches outside the condition are recorded with their delta (>= 2, bin d3plus); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: redirect deltas from rvfi_ext_mcycle (1 / 2) and the not-taken branch next record at pc + len)
 - Pass criteria: gen_chk_timing_isa (not-taken redirect delta exactly 1 when unstalled; taken >= 2 always, exactly 2 under the measurement condition: exact 2 is a coverage bin, the pass rule is >= 2; rtl-arch T-053 TP-ISA-024 TIMING); gen_isa_compare.
 - Expected: pass
 - Test group: gen_isa_cti
@@ -1963,7 +1987,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: divides (zero and non-zero divisors) while the irq driver asserts an enabled line, irq_nm_i, or debug_req_i at a random cycle inside the divide's 37-cycle window (the driver is synchronized to the RVFI retirement of the instruction before the divide).
 - Randomized: event kind, cycle offset within the window, op, operands, DIT.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime
-- Fire-check: pin assertion timestamp lies inside the divide's window (between the previous retirement and the divide's retirement); the divide retires with rvfi_trap = 0 and the correct result; the next retirement is the handler (rvfi_intr) or the debug ROM; mepc/dpc read-back == the instruction after the divide (C-3: the divide already in ID completes first); measured irq latency <= 37 + entry cycles. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record (rvfi_trap = 0, correct result) immediately followed by the handler (rvfi_intr) / debug-ROM record; mepc / dpc read-back == the next pc)
+- Fire-check: pin assertion timestamp lies inside the divide's window (between the previous retirement and the divide's retirement); the divide retires with rvfi_trap = 0 and the correct result; the next retirement is the handler (rvfi_intr) or the debug ROM; mepc/dpc read-back == the instruction after the divide (C-3: the divide already in ID completes first); measured irq latency <= 37 + entry cycles. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record (rvfi_trap = 0, correct result) immediately followed by the handler (rvfi_intr) / debug-ROM record; mepc / dpc read-back == the next pc)
 - Pass criteria: gen_isa_compare; gen_chk_irq (entry after the pipeline drains, mepc); gen_chk_debug (dpc); gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_mul_timing
@@ -2862,7 +2886,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: cm.pop/cm.popret/cm.popretz with the interrupt synchronized to the RVFI record of the k-th load micro-op (k random in 0..N-1), also nmi variants.
 - Randomized: instruction, rlist, spimm, k, delays.
 - Knobs: knob:irq_regime, knob:dmem_rvalid_delay
-- Fire-check: for k <= N-3: k+2 or k+3 loads retire (the micro-op in ID at the pin edge completes, C-3) with rvfi_rd_wdata = frame values (registers keep them); no addi/li/ret micro-op before the handler; mepc = cm.* PC; after mret the whole sequence re-executes and the ret happens once. For k >= N-2 the addi sp (COMMIT) is in ID when the pin rises, completes and blocks handle_irq until the LAST micro-op retires (rtl/ibex_controller.sv:498-500): the sequence finishes, the ret executes once BEFORE the handler and mepc = the ra target (cm.pop: PC + 2) - the deferred outcome (bins irq_commit_deferred / nmi_commit_deferred, cp_reexec.na); the test classifies each iteration by k (rtl-arch T-053 TP-CMP-057). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the count of micro-op records before the rvfi_intr record (k + 2 / k + 3 or the full sequence) and the mepc read-back (cm.* pc or ra target))
+- Fire-check: for k <= N-3: k+2 or k+3 loads retire (the micro-op in ID at the pin edge completes, C-3) with rvfi_rd_wdata = frame values (registers keep them); no addi/li/ret micro-op before the handler; mepc = cm.* PC; after mret the whole sequence re-executes and the ret happens once. For k >= N-2 the addi sp (COMMIT) is in ID when the pin rises, completes and blocks handle_irq until the LAST micro-op retires (rtl/ibex_controller.sv:498-500): the sequence finishes, the ret executes once BEFORE the handler and mepc = the ra target (cm.pop: PC + 2) - the deferred outcome (bins irq_commit_deferred / nmi_commit_deferred, cp_reexec.na); the test classifies each iteration by k (rtl-arch T-053 TP-CMP-057). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the count of micro-op records before the rvfi_intr record (k + 2 / k + 3 or the full sequence) and the mepc read-back (cm.* pc or ra target))
 - Pass criteria: gen_chk_zcmp_seq; gen_chk_irq; gen_isa_compare.
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
@@ -2876,7 +2900,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: cm.popret/cm.popretz/cm.mvsa01/cm.mva01s with the interrupt (and nmi) asserted synchronized to the addi sp / li a0 / first-move micro-op (COMMIT), i.e. one cycle before the LAST micro-op, and also synchronized to the LAST micro-op itself (taken after it, no re-execution).
 - Randomized: instruction, rlist/spimm, line, delays.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:dmem_rvalid_delay
-- Fire-check: the pin assertion is timestamped while the COMMIT micro-op was in ID (between its predecessor's and its own retirement); the LAST micro-op (ret / second move) retires before the handler; mepc read-back = ret target (popret family) or the PC after the move. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the _last micro-op record precedes the handler record; mepc read-back == the ret target / the pc after the move)
+- Fire-check: the pin assertion is timestamped while the COMMIT micro-op was in ID (between its predecessor's and its own retirement); the LAST micro-op (ret / second move) retires before the handler; mepc read-back = ret target (popret family) or the PC after the move. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the _last micro-op record precedes the handler record; mepc read-back == the ret target / the pc after the move)
 - Pass criteria: gen_chk_zcmp_seq (COMMIT and LAST retire together); gen_chk_irq (mepc); gen_isa_compare.
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
@@ -4699,7 +4723,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: (a) csrrs mie, <bit of the high pin> ; csrr mie ; then an ALU marker: irq_pending_o must rise the cycle after the write commits; (b) wfi with the pin high but mie bit clear, then the TB observes sleep, then raises debug_req_i / another enabled pin to end it (wake by disabled pin must not happen); (c) csrrc mie, <bit> in the cycle window where the pin rises (TB raises the pin 0..3 cycles around the write retirement): no interrupt taken when the bit is cleared first, and every (c) write is followed by csrr mie (the read-back the fire-check compares); 40 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: pin, MIE, timing offset of the pin edge, op form.
 - Knobs: knob:irq_hold, knob:irq_line_mix
-- Fire-check: (a) irq_pending_o (= |(mip & mie_q), combinational on the flop, rtl/ibex_cs_registers.sv:1044-1045) rises in the cycle after the write's commit edge, i.e. ONE cycle BEFORE the write's RVFI record (record = commit + GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, gen_tb_architecture.md 8.2): the TB back-dates the record by the offset and asserts the edge at commit + 1; (b) core_busy_o == IbexMuBiOff for >= 8 cycles with the disabled pin high, then wake by the enabled source; (c) two legal orders (C-3 / X-7, rtl/ibex_controller.sv:296, :704): a pin already high in an empty-ID DECODE cycle before the csrrc enters ID is taken FIRST (rvfi_intr with handler mepc == the csrrc pc; the csrrc retires after mret and the read-back shows the bit cleared), while a pin rising once the csrrc is valid in ID never pre-empts it (no rvfi_intr, bit cleared); so: an rvfi_intr whose handler mepc != the csrrc pc occurs iff the read-back still has the bit set, and an rvfi_intr with mepc == the csrrc pc is the legal early-entry order. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the rvfi_intr handler record with mepc read-back == the csrrc pc or a later pc (the two legal orders) and the mie read-back showing the bit cleared)
+- Fire-check: (a) irq_pending_o (= |(mip & mie_q), combinational on the flop, rtl/ibex_cs_registers.sv:1044-1045) rises in the cycle after the write's commit edge, i.e. ONE cycle BEFORE the write's RVFI record (record = commit + GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, gen_tb_architecture.md 8.2): the TB back-dates the record by the offset and asserts the edge at commit + 1; (b) core_busy_o == IbexMuBiOff for >= 8 cycles with the disabled pin high, then wake by the enabled source; (c) two legal orders (C-3 / X-7, rtl/ibex_controller.sv:296, :704): a pin already high in an empty-ID DECODE cycle before the csrrc enters ID is taken FIRST (rvfi_intr with handler mepc == the csrrc pc; the csrrc retires after mret and the read-back shows the bit cleared), while a pin rising once the csrrc is valid in ID never pre-empts it (no rvfi_intr, bit cleared); so: an rvfi_intr whose handler mepc != the csrrc pc occurs iff the read-back still has the bit set, and an rvfi_intr with mepc == the csrrc pc is the legal early-entry order. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the rvfi_intr handler record with mepc read-back == the csrrc pc or a later pc (the two legal orders) and the mie read-back showing the bit cleared)
 - Pass criteria: gen_chk_irq (irq_pending_o == |(pins & mie) every cycle); gen_chk_sleep (no wake by a disabled pin); gen_isa_compare
 - Expected: pass
 - Test group: gen_csr_trap_setup
@@ -6213,7 +6237,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: wfi; the TB first toggles the disabled pin (must not wake), then after a random hold ends the sleep with one of: enabled pin, irq_nm_i, debug_req_i; separately wfi executed inside the debug ROM (one WAIT_SLEEP cycle, then SLEEP exits on debug_mode_q: no sleep period) and wfi with dcsr.step = 1 after dret (FLUSH -> DBG_TAKEN_IF, WAIT_SLEEP never entered, C-5); 60 rounds per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: mode, pins, wake source, hold length.
 - Knobs: knob:irq_line_mix, knob:debug_req_regime
-- Fire-check: core_busy_o stays IbexMuBiOff across the disabled-pin toggle and irq_pending_o stays 0; the sleep ends within 3 cycles of the chosen source; debug-mode wfi: core_busy_o == IbexMuBiOff for at most ONE cycle (WAIT_SLEEP is entered regardless of debug_mode_q, rtl/ibex_controller.sv:598-604, :614-616) with no bus idle period; stepped wfi: core_busy_o stays IbexMuBiOn (enter_debug_mode_prio_q overrides FLUSH to DBG_TAKEN_IF, :985-987) and the next fetch is DmHaltAddr (fact-check TP-PRV-019, C-5). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the record after the wfi (handler / wfi + len / first debug-ROM record) and its rvfi_ext_mcycle gap)
+- Fire-check: core_busy_o stays IbexMuBiOff across the disabled-pin toggle and irq_pending_o stays 0; the sleep ends within 3 cycles of the chosen source; debug-mode wfi: core_busy_o == IbexMuBiOff for at most ONE cycle (WAIT_SLEEP is entered regardless of debug_mode_q, rtl/ibex_controller.sv:598-604, :614-616) with no bus idle period; stepped wfi: core_busy_o stays IbexMuBiOn (enter_debug_mode_prio_q overrides FLUSH to DBG_TAKEN_IF, :985-987) and the next fetch is DmHaltAddr (fact-check TP-PRV-019, C-5). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the record after the wfi (handler / wfi + len / first debug-ROM record) and its rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_sleep (wake set exactly {irq_pending, nmi, debug_req, debug_mode, step}); gen_chk_debug; gen_chk_nmi
 - Expected: pass
 - Test group: gen_prv_wfi
@@ -7731,7 +7755,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a load or store is issued and the imem agent stalls the fetch of the following instruction (gnt delayed or rvalid delayed by 4..16 cycles) so ID empties while WB waits; during the wait the irq driver raises an enabled line (or irq_nm_i, or debug_req_i in the debug variant); the dmem agent then returns the response with data_err_i=1 (latency 1..12) while the line is still high and the fetch is still stalled.
 - Randomized: load vs store, which line (single/multi/NMI), imem stall kind and length, dmem latency, privilege, mtvec class.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:irq_regime, knob:irq_line_mix, knob:irq_hold
-- Fire-check: in the dbus error response cycle the TB asserts all three at once: (1) data_rvalid_i && data_err_i, (2) irq_pending_o == 1 with MIE or U-mode (or irq_nm_i), (3) the ibus monitor has an outstanding fetch without rvalid (or without gnt); then RVFI shows a trap record with mcause 5/7 before any interrupt entry; ordinary-line variant: irq_pending_o stays 1 through the handler and the interrupt entry follows the handler's mret (MIE was cleared by the trap, C-6 / X-9; a handler that re-enables MIE takes it at once instead); NMI variant: the NMI entry (rvfi_intr with rvfi_ext_nmi, mepc read-back == mtvec base) is the retirement right after the trap record, before any retirement at mtvec base, and the exception handler runs only after the NMI handler's mret with its mepc/mcause restored from mstack (rtl/ibex_controller.sv:498-500, 704-713, 736-745; rtl/ibex_cs_registers.sv:932, 967-975): order trap(5/7) -> NMI handler -> mret -> exception handler at mtvec base -> mret -> resume; debug variant: the debug entry lands at the handler with dpc == mtvec base (FLUSH -> DBG_TAKEN_IF, :985-986) (observable at both buses, irq_pending_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 5/7) before any rvfi_intr record, then the ordinary / NMI / debug record order as listed with mepc / dpc read-backs)
+- Fire-check: in the dbus error response cycle the TB asserts all three at once: (1) data_rvalid_i && data_err_i, (2) irq_pending_o == 1 with MIE or U-mode (or irq_nm_i), (3) the ibus monitor has an outstanding fetch without rvalid (or without gnt); then RVFI shows a trap record with mcause 5/7 before any interrupt entry; ordinary-line variant: irq_pending_o stays 1 through the handler and the interrupt entry follows the handler's mret (MIE was cleared by the trap, C-6 / X-9; a handler that re-enables MIE takes it at once instead); NMI variant: the NMI entry (rvfi_intr with rvfi_ext_nmi, mepc read-back == mtvec base) is the retirement right after the trap record, before any retirement at mtvec base, and the exception handler runs only after the NMI handler's mret with its mepc/mcause restored from mstack (rtl/ibex_controller.sv:498-500, 704-713, 736-745; rtl/ibex_cs_registers.sv:932, 967-975): order trap(5/7) -> NMI handler -> mret -> exception handler at mtvec base -> mret -> resume; debug variant: the debug entry lands at the handler with dpc == mtvec base (FLUSH -> DBG_TAKEN_IF, :985-986) (observable at both buses, irq_pending_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 5/7) before any rvfi_intr record, then the ordinary / NMI / debug record order as listed with mepc / dpc read-backs)
 - Pass criteria: gen_isa_compare (exception first, then interrupt / NMI in the stated order); gen_chk_irq (irq_pending_o model; ordinary entry only after the mret or an MIE write); gen_chk_nmi (NMI variant: entry at the vector before the handler's first instruction, mstack restore); gen_chk_csr_readback; gen_chk_debug (debug variant: dpc == mtvec base)
 - Expected: pass
 - Test group: gen_exc_priority
@@ -7999,7 +8023,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: 2..$bits(irqs_t.irq_fast) fast lines asserted in the same cycle: adjacent pairs, far pairs, the {0, $bits(irqs_t.irq_fast) - 1} pair, and random subsets.
 - Randomized: subset, timing, privilege.
 - Knobs: knob:irq_line_mix
-- Fire-check: the pin monitor shows >= 2 fast lines high at the decision cycle (rvfi_ext_pre_mip agrees) and the handler read-back mcause == {1'b1, 5'(CSR_MFIX_BIT_LOW + lowest set index)} (observable at RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record has >= 2 fast bits set and the mcause read-back == the lowest id)
+- Fire-check: the pin monitor shows >= 2 fast lines high at the decision cycle (rvfi_ext_pre_mip agrees) and the handler read-back mcause == {1'b1, 5'(CSR_MFIX_BIT_LOW + lowest set index)} (observable at RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record has >= 2 fast bits set and the mcause read-back == the lowest id)
 - Pass criteria: gen_chk_irq; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_priority
@@ -8083,7 +8107,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the line is asserted at random points so that arrival coincides with an ALU op, a taken branch, a jal/jalr or an empty ID (after a flush); the interrupted instruction writes a register or redirects.
 - Randomized: arrival point, instruction class, line, privilege, imem latency.
 - Knobs: knob:irq_regime, knob:imem_rvalid_delay
-- Fire-check: the instruction in ID at the pin rise (ibus delivery + the fixed IF->ID offset before the rise with the icache disabled, not yet retired) retires with its full effect (rvfi_rd_wdata / rvfi_pc_wdata) before the rvfi_intr retirement, and mepc read-back == its rvfi_pc_wdata (observable at the irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the last record before the rvfi_intr record retires with full effect and mepc read-back == its rvfi_pc_wdata (C-3))
+- Fire-check: the instruction in ID at the pin rise (ibus delivery + the fixed IF->ID offset before the rise with the icache disabled, not yet retired) retires with its full effect (rvfi_rd_wdata / rvfi_pc_wdata) before the rvfi_intr retirement, and mepc read-back == its rvfi_pc_wdata (observable at the irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the last record before the rvfi_intr record retires with full effect and mepc read-back == its rvfi_pc_wdata (C-3))
 - Pass criteria: gen_isa_compare (precise interrupt: no partial effect, mepc); gen_chk_irq
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8097,7 +8121,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: loads/stores with dmem gnt or rvalid delayed 2..24 cycles; the line rises during the wait (single line, several lines, or with the fetch also stalled by the imem agent).
 - Randomized: load vs store, delays on both buses, line set, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:imem_rvalid_delay, knob:irq_line_mix
-- Fire-check: the pin rise happens while the dbus monitor has an outstanding request without rvalid; data_rvalid_i precedes the entry; the load/store retires with its data effect before the rvfi_intr retirement; mepc read-back == the pc of the first NOT-yet-executed instruction = rvfi_pc_wdata of the last record before the entry (C-3 / X-7): ONE record (the load/store) when the pin rose during the GNT wait with the load/store still in ID (halt_if blocks the successor) or with the fetch stalled, TWO records when the pin rose in the RVALID wait with the successor already in ID (stall_wb; rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133; rtl/ibex_wb_stage.sv:115-116, 185); both classes are required (observable at both buses, the irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (and, in the RVALID-wait class, the successor record) precede the rvfi_intr record; mepc read-back == rvfi_pc_wdata of the last record)
+- Fire-check: the pin rise happens while the dbus monitor has an outstanding request without rvalid; data_rvalid_i precedes the entry; the load/store retires with its data effect before the rvfi_intr retirement; mepc read-back == the pc of the first NOT-yet-executed instruction = rvfi_pc_wdata of the last record before the entry (C-3 / X-7): ONE record (the load/store) when the pin rose during the GNT wait with the load/store still in ID (halt_if blocks the successor) or with the fetch stalled, TWO records when the pin rose in the RVALID wait with the successor already in ID (stall_wb; rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133; rtl/ibex_wb_stage.sv:115-116, 185); both classes are required (observable at both buses, the irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (and, in the RVALID-wait class, the successor record) precede the rvfi_intr record; mepc read-back == rvfi_pc_wdata of the last record)
 - Pass criteria: gen_isa_compare; gen_chk_irq (entry bound counts the WB drain; mepc predicted from the last retired record, both record counts accepted); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8111,7 +8135,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent exposes the scheduled rvalid cycle of a load/store; the irq driver asserts the line in exactly that cycle, and sweeps -1/+1 cycles for the before/after classes.
 - Randomized: load vs store, delay, line, privilege, offset in {-1, 0, +1}.
 - Knobs: knob:dmem_rvalid_delay, knob:irq_line_mix
-- Fire-check: the pin monitor rise cycle equals the dbus monitor rvalid cycle (same-cycle class; -1 / +1 for the neighbour classes), the load/store retires, and mepc read-back == the pc of the first not-yet-executed instruction predicted from the RVFI stream (C-3 / X-7): with the successor already in ID (stalled on ready_wb) it completes in the rvalid cycle and retires too, so the handler's first instruction is the SECOND retirement after the pin and mepc == the successor's successor (or its target); only with the fetch stalled (successor not yet in ID) is the handler the next retirement with mepc == load/store pc + length (rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133) (observable at the data bus, irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the record count between the load/store record and the handler first record (1 or 2) and the mepc read-back)
+- Fire-check: the pin monitor rise cycle equals the dbus monitor rvalid cycle (same-cycle class; -1 / +1 for the neighbour classes), the load/store retires, and mepc read-back == the pc of the first not-yet-executed instruction predicted from the RVFI stream (C-3 / X-7): with the successor already in ID (stalled on ready_wb) it completes in the rvalid cycle and retires too, so the handler's first instruction is the SECOND retirement after the pin and mepc == the successor's successor (or its target); only with the fetch stalled (successor not yet in ID) is the handler the next retirement with mepc == load/store pc + length (rtl/ibex_controller.sv:296, 700-713; rtl/ibex_id_stage.sv:1130-1133) (observable at the data bus, irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the record count between the load/store record and the handler first record (1 or 2) and the mepc read-back)
 - Pass criteria: gen_isa_compare; gen_chk_irq (fixed entry latency from the stall clearing; mepc from the RVFI stream, never from the load/store pc)
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8153,7 +8177,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the irq driver aligns the pin rise to the ID arrival (ibus delivery + the fixed IF->ID offset) of an ecall / ebreak / illegal / fetch-errored word (offset sweep 0..2 cycles).
 - Randomized: cause, offset, line, privilege, mtvec class.
 - Knobs: knob:imem_rvalid_delay, knob:irq_line_mix
-- Fire-check: the pin rise cycle is within the window in which the trapping word is in ID (delivered, not retired), the trap record carries the exception cause, irq_pending_o stays 1 through the handler, and the rvfi_intr entry follows the handler's mret (observable at the irq pins, irq_pending_o, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record, then the handler records, then the rvfi_intr entry after the handler mret; mip read-back shows the line pending)
+- Fire-check: the pin rise cycle is within the window in which the trapping word is in ID (delivered, not retired), the trap record carries the exception cause, irq_pending_o stays 1 through the handler, and the rvfi_intr entry follows the handler's mret (observable at the irq pins, irq_pending_o, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record, then the handler records, then the rvfi_intr entry after the handler mret; mip read-back shows the line pending)
 - Pass criteria: gen_isa_compare (exception first); gen_chk_irq (entry after the mret); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8209,7 +8233,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the irq driver produces 1- and 2-cycle pulses swept against the retirement of the last instruction (RVFI back-dated by one cycle, S-4) so that the pulse's LAST high cycle is the decision cycle N: a one-cycle pulse landing on N, or a two-cycle pulse whose first cycle passed with an instruction still in ID and whose second cycle is N; both are low in IRQ_TAKEN N + 1 and are withdrawn (CTRL-09). A two-cycle pulse whose FIRST cycle is N is high at N + 1 and IS taken: those iterations are the control (CG-IRQ-004.cr_pulse_change_outcome.two_stable_taken, TP-IRQ-021). Also pulses during a load wait and during a divide.
 - Randomized: pulse width, offset, line, pipeline context, privilege.
 - Knobs: knob:irq_hold, knob:dmem_rvalid_delay
-- Fire-check: the pin monitor shows a pulse of width 1 or 2 whose last high cycle is a decision cycle N inferred from the pipeline state (irq_pending_o == 1 with MIE or U-mode, ID empty and WB done per the RVFI / dbus monitors; C-13: rvfi_ext_irq_valid is a level rising at N + 4 where generated and is absent when ID emptied before WB drained, e.g. the load-wait context after a gnt wait, rtl/ibex_core.sv:1949-1968, so it is recorded and never used to locate N) and which is low at N + 1; no rvfi_intr within the next 8 cycles and the mepc/mcause read-backs are unchanged (the prefetch buffer keeps fetching under halt_if, so no ibus bubble is asserted) (observable at the irq pins, irq_pending_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_intr record within the next 8 records and unchanged mepc / mcause read-backs)
+- Fire-check: the pin monitor shows a pulse of width 1 or 2 whose last high cycle is a decision cycle N inferred from the pipeline state (irq_pending_o == 1 with MIE or U-mode, ID empty and WB done per the RVFI / dbus monitors; C-13: rvfi_ext_irq_valid is a level rising at N + 4 where generated and is absent when ID emptied before WB drained, e.g. the load-wait context after a gnt wait, rtl/ibex_core.sv:1949-1968, so it is recorded and never used to locate N) and which is low at N + 1; no rvfi_intr within the next 8 cycles and the mepc/mcause read-backs are unchanged (the prefetch buffer keeps fetching under halt_if, so no ibus bubble is asserted) (observable at the irq pins, irq_pending_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_intr record within the next 8 records and unchanged mepc / mcause read-backs)
 - Pass criteria: gen_chk_irq (entry iff a takeable line is present in the IRQ_TAKEN cycle N + 1; a two-cycle pulse starting at N is taken); gen_isa_compare (no unpredicted entry); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8223,7 +8247,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: line A pending; the driver raises line B exactly one cycle after the decision cycle (higher or lower priority than A), or drops A (held >= 3 cycles, then released by the driver) while a lower line B remains, or raises B after IRQ_TAKEN (must not change the handler being fetched).
 - Randomized: A/B classes, relative priority, offset (0, +1, +2 cycles), privilege.
 - Knobs: knob:irq_line_mix, knob:irq_hold
-- Fire-check: the pin monitor shows B rising (or A dropping) exactly one cycle after the decision cycle identified by the irq monitor (pipe empty with a takeable line) and rvfi_ext_pre_mip shows A only; the read-back mcause is B when B is higher or A dropped, else A; for the +2 offset the cause is A (observable at the irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record shows A only and the mcause read-back is B / A per class)
+- Fire-check: the pin monitor shows B rising (or A dropping) exactly one cycle after the decision cycle identified by the irq monitor (pipe empty with a takeable line) and rvfi_ext_pre_mip shows A only; the read-back mcause is B when B is higher or A dropped, else A; for the +2 offset the cause is A (observable at the irq pins and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_pre_mip of the entry record shows A only and the mcause read-back is B / A per class)
 - Pass criteria: gen_chk_irq (cause from the IRQ_TAKEN-cycle lines); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_priority
@@ -8405,7 +8429,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent corrupts the integrity bits (data_rdata_intg_i, 1..7 random bit flips) of the response of one selected load or store (aligned, and misaligned first/second half); the NMI handler at base + 0x7C reads mcause/mtval/mepc; for loads the program later stores rd to a mailbox.
 - Randomized: load vs store, size, alignment, flipped bits, response latency, privilege, position, MIE.
 - Knobs: knob:dmem_err_rate, knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most TWO further ordinary instructions (more records only when the second is a Zcmp sequence) retire before an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C (the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_load_store_unit.sv:756-757, rtl/ibex_controller.sv:404-430, 436, 498, 700-713; C-7 / X-10: the count classes zero / one / two are all required and the doc's 'at most one' is D21); the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for aligned loads and misaligned loads whose SECOND beat carries the error the load's RVFI record has rvfi_ext_rf_wr_suppress == 1; for a misaligned load whose FIRST beat carries the error the RTL writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16: the rd outcome is asserted by its owner TP-DMEM-041, here only alert + NMI are asserted for that class) (observable at the data bus, alert_major_bus_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress) and the rvfi_ext_nmi_int entry; mcause / mtval read-back)
+- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most TWO further ordinary instructions (more records only when the second is a Zcmp sequence) retire before an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C (the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_load_store_unit.sv:756-757, rtl/ibex_controller.sv:404-430, 436, 498, 700-713; C-7 / X-10: the count classes zero / one / two are all required and the doc's 'at most one' is D21); the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for aligned loads and misaligned loads whose SECOND beat carries the error the load's RVFI record has rvfi_ext_rf_wr_suppress == 1; for a misaligned load whose FIRST beat carries the error the RTL writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16: the rd outcome is asserted by its owner TP-DMEM-041, here only alert + NMI are asserted for that class) (observable at the data bus, alert_major_bus_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress) and the rvfi_ext_nmi_int entry; mcause / mtval read-back)
 - Pass criteria: gen_chk_bus_intg_rsp (alert, suppression for the aligned / second-beat classes, NMI with cause and mtval, latency bound of two ordinary instructions per C-7); gen_chk_nmi; gen_chk_alerts; gen_chk_csr_readback; gen_isa_compare (rd not written in the aligned / second-beat classes; the first-beat class follows TP-DMEM-041's B16 direction and is not compared here)
 - Expected: pass (doc mismatch D21)
 - Test group: gen_irq_nmi_int
@@ -8419,7 +8443,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: irq_nm_i asserted in the same cycle as (or within the pipe-drain window after) a corrupted data response; the external NMI handler acknowledges and returns; also the variant with the corrupted response arriving inside the external NMI handler.
 - Randomized: relative timing (-2..+2 cycles), load vs store, privilege, context (user code or inside an exception handler).
 - Knobs: knob:dmem_err_rate, knob:irq_line_mix, knob:irq_hold
-- Fire-check: irq_nm_i is high in the decision cycle in which the internal NMI pending flag is also set (corrupted response already seen, no entry yet); the first entry has rvfi_ext_nmi == 1 with mcause read-back 0x8000001F and mtval 0; the entry right after the handler's mret has rvfi_ext_nmi_int == 1 with mcause 0xFFFFFFE0 and mtval == the corrupted access address (observable at the irq pins, data bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first entry has rvfi_ext_nmi == 1 and the entry after its mret has rvfi_ext_nmi_int == 1 with the read-backs listed)
+- Fire-check: irq_nm_i is high in the decision cycle in which the internal NMI pending flag is also set (corrupted response already seen, no entry yet); the first entry has rvfi_ext_nmi == 1 with mcause read-back 0x8000001F and mtval 0; the entry right after the handler's mret has rvfi_ext_nmi_int == 1 with mcause 0xFFFFFFE0 and mtval == the corrupted access address (observable at the irq pins, data bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first entry has rvfi_ext_nmi == 1 and the entry after its mret has rvfi_ext_nmi_int == 1 with the read-backs listed)
 - Pass criteria: gen_chk_nmi (priority, internal flag not cleared by the external entry); gen_chk_bus_intg_rsp; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_nmi_int
@@ -8643,7 +8667,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: regular interrupts in three timing classes: (i) arriving with ID empty and WB done (rvfi_ext_irq_valid generated), (ii) arriving while a load/store drains in WB after ID emptied (no rvfi_ext_irq_valid at all: captured_valid is already set, rtl/ibex_core.sv:1949-1968), (iii) level-held lines (pre_mip stable); external and internal NMIs; lines changing between the capture cycle and the first handler retirement; exceptions for the negative case.
 - Randomized: line, timing, cause, privilege.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:dmem_err_rate
-- Fire-check: per interrupt entry rvfi_intr == 1 exactly on the first handler retirement and rvfi_ext_pre_mip equals the pin vector recorded by the pin monitor at the CAPTURE cycle (the first cycle with ID empty and new_irq, which precedes the decision cycle N whenever WB was still draining, rtl/ibex_core.sv:1949-1957; equality with the pins at N is asserted only for level-held lines); class (i): the rvfi_ext_irq_valid LEVEL rises at N + 4 (C-13 / X-16) with rvfi_valid == 0 in every high cycle and falls about two cycles after the handler's first instruction enters ID; class (ii): no rvfi_ext_irq_valid between the last pre-entry record and the handler's first record; rvfi_ext_nmi / rvfi_ext_nmi_int set on the NMI entries; per exception entry the first handler retirement has rvfi_intr == 0 (observable at RVFI and the irq pins). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_intr == 1 exactly on the first handler record, rvfi_ext_pre_mip consistent with the level-held lines, rvfi_ext_nmi / nmi_int on the NMI entries)
+- Fire-check: per interrupt entry rvfi_intr == 1 exactly on the first handler retirement and rvfi_ext_pre_mip equals the pin vector recorded by the pin monitor at the CAPTURE cycle (the first cycle with ID empty and new_irq, which precedes the decision cycle N whenever WB was still draining, rtl/ibex_core.sv:1949-1957; equality with the pins at N is asserted only for level-held lines); class (i): the rvfi_ext_irq_valid LEVEL rises at N + 4 (C-13 / X-16) with rvfi_valid == 0 in every high cycle and falls about two cycles after the handler's first instruction enters ID; class (ii): no rvfi_ext_irq_valid between the last pre-entry record and the handler's first record; rvfi_ext_nmi / rvfi_ext_nmi_int set on the NMI entries; per exception entry the first handler retirement has rvfi_intr == 0 (observable at RVFI and the irq pins). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_intr == 1 exactly on the first handler record, rvfi_ext_pre_mip consistent with the level-held lines, rvfi_ext_nmi / nmi_int on the NMI entries)
 - Pass criteria: gen_isa_compare (consumes these fields; mismatch flagged; the negative property rvfi_intr == 0 on an exception handler's first instruction is the checker's, not a bin, S-3b); gen_chk_irq
 - Expected: pass
 - Test group: gen_irq_handler
@@ -8685,7 +8709,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the driver raises the line in the cycle window in which csrc mstatus (MIE) or csrc mie is in ID (aligned to the ibus delivery + the fixed IF->ID offset, offset sweep 0..1); the program continues for >= N instructions.
 - Randomized: disabling form, line, offset, privilege.
 - Knobs: knob:irq_line_mix, knob:imem_rvalid_delay
-- Fire-check: the pin rise falls inside the window in which the csrc word is in ID (delivered, not retired); the csrc retires; >= N following retirements with no rvfi_intr; irq_pending_o drops at the csrc commit (mie form) or stays 1 (MIE form) (observable at the irq pins, irq_pending_o, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrc record followed by >= N records with no rvfi_intr; the mie / mstatus read-back)
+- Fire-check: the pin rise falls inside the window in which the csrc word is in ID (delivered, not retired); the csrc retires; >= N following retirements with no rvfi_intr; irq_pending_o drops at the csrc commit (mie form) or stays 1 (MIE form) (observable at the irq pins, irq_pending_o, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrc record followed by >= N records with no rvfi_intr; the mie / mstatus read-back)
 - Pass criteria: gen_chk_irq (no entry after the disable; irq_pending_o model); gen_isa_compare
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8713,7 +8737,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: wfi sleeps; an enabled line rises; latency from the rise to the vector fetch is measured over many iterations with different sleep lengths and lines.
 - Randomized: sleep length, line, privilege.
 - Knobs: knob:irq_line_mix
-- Fire-check: sleep observed (core_busy_o Off); per seed the minimum observed pin-rise-to-vector-request distance equals the bring-up-pinned constant GEN_WFI_WAKE_TO_VECTOR (predicted 2: SLEEP at the rise cycle W -> FIRST_FETCH W + 1 -> IRQ_TAKEN / pc_set W + 2, rtl/ibex_controller.sv:606-635, 725-733; the request is issued in the pc_set cycle only when no fill buffer holds an ungranted request), the distribution is recorded, and the entry has mepc read-back == wfi + 4; the rvfi_ext_irq_valid level of a sleep wake rises at W + 4 (C-13) (observable at core_busy_o, irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record followed by the rvfi_intr record (mepc read-back == wfi + 4); the distance distribution is coverage-only)
+- Fire-check: sleep observed (core_busy_o Off); per seed the minimum observed pin-rise-to-vector-request distance equals the bring-up-pinned constant GEN_WFI_WAKE_TO_VECTOR (predicted 2: SLEEP at the rise cycle W -> FIRST_FETCH W + 1 -> IRQ_TAKEN / pc_set W + 2, rtl/ibex_controller.sv:606-635, 725-733; the request is issued in the pc_set cycle only when no fill buffer holds an ungranted request), the distribution is recorded, and the entry has mepc read-back == wfi + 4; the rvfi_ext_irq_valid level of a sleep wake rises at W + 4 (C-13) (observable at core_busy_o, irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record followed by the rvfi_intr record (mepc read-back == wfi + 4); the distance distribution is coverage-only)
 - Pass criteria: gen_chk_sleep; gen_chk_irq (wake-to-vector bound: pc_set = W + 2 exact, vector request >= pc_set); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_irq_timing
@@ -8867,7 +8891,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: knob:instr_mix csr_heavy (frequent csrs/csrc mstatus.MIE, csrw/csrs/csrc mie, csrw mtvec among the legal bases, other CSR writes) with knob:irq_regime storm and knob:irq_line_mix multi; knob:irq_hold until_taken.
 - Randomized: per W-PRG-CSR (mie/MIE/mtvec writes), W-IRQ-LINE, W-IRQ-SET and W-IRQ-GAP.
 - Knobs: knob:instr_mix, knob:irq_regime, knob:irq_line_mix, knob:irq_hold
-- Fire-check: per seed >= 10 interrupt arrivals whose arrival cycle coincided with a CSR write in ID (ibus delivery vs pin rise), including >= 2 enabling writes followed directly by the entry, >= 2 disabling writes with no entry, and >= 2 entries vectoring from a base written in the preceding 3 instructions (observable at the irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record immediately followed by the rvfi_intr record (enabling) or by >= 1 sequential record (disabling); the mtvec read-back for the vectoring class)
+- Fire-check: per seed >= 10 interrupt arrivals whose arrival cycle coincided with a CSR write in ID (ibus delivery vs pin rise), including >= 2 enabling writes followed directly by the entry, >= 2 disabling writes with no entry, and >= 2 entries vectoring from a base written in the preceding 3 instructions (observable at the irq pins, instruction bus and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record immediately followed by the rvfi_intr record (enabling) or by >= 1 sequential record (disabling); the mtvec read-back for the vectoring class)
 - Pass criteria: gen_chk_irq; gen_chk_csr_readback; gen_isa_compare
 - Expected: pass
 - Test group: gen_irq_regime
@@ -10896,7 +10920,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   in ID at the rise, the successor's record (rvfi_ext_debug_req = 0 on both, C-3) precede the
   DmHaltAddr fetch with no other record in between; the first debug-ROM record carries
   rvfi_ext_debug_req = 1; both successor classes occur per seed (gen_test_dbg_haltreq).
-  [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (rvfi_ext_debug_req = 0) and, when present, the successor record immediately precede the first debug-ROM record)
+  [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (rvfi_ext_debug_req = 0) and, when present, the successor record immediately precede the first debug-ROM record)
 - Pass criteria: gen_chk_debug (entry only once ID is empty and WB ready, rtl/ibex_controller.sv:296,
   :700-708; dpc == next pc of the last RVFI record before the entry, which is "load pc + size" only
   when nothing had entered ID behind the load (X-7); cause 3); gen_chk_dbus_proto; gen_isa_compare
@@ -10945,7 +10969,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   rvfi_ext_debug_req = 0 (sampled at X's transfer, before the rise, C-3), the driver timestamp of
   the rise lies inside W-DEC(X), the ibus requests the mtvec target and then DmHaltAddr with no
   record in between, and the first debug-ROM record carries rvfi_ext_debug_req = 1; >= 1 pre-empted
-  iteration is classified (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the X record with rvfi_trap = 1 and rvfi_ext_debug_req = 0 immediately followed by the first debug-ROM record; dpc read-back == the vector)
+  iteration is classified (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the X record with rvfi_trap = 1 and rvfi_ext_debug_req = 0 immediately followed by the first debug-ROM record; dpc read-back == the vector)
 - Pass criteria: gen_chk_debug (dpc == mtvec target, cause 3, dcsr.prv == M; pre-empted class: dpc
   == X pc, cause 3, mepc/mcause unchanged and X traps after dret); gen_isa_compare
   (mepc/mcause/mtval/mstatus per exception).
@@ -10968,7 +10992,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   timestamp inside W-DEC(mret) and the DmHaltAddr fetch with no record in between (H-C1 arc,
   F-DBG-068); the first debug-ROM record carries rvfi_ext_debug_req = 1; the resume target is
   observed as the mailbox dpc, never as the mret record's rvfi_pc_wdata (which is mret pc + 4, C-1)
-  (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mret record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dpc == the mret target)
+  (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mret record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dpc == the mret target)
 - Pass criteria: gen_chk_debug (dpc == mepc, dcsr.prv == old MPP, cause 3; pre-empted class: dpc ==
   mret pc, dcsr.prv == M, mstatus unchanged); gen_isa_compare (mstatus.MIE := MPIE, MPP := U, MPRV
   cleared if MPP != M).
@@ -10992,7 +11016,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   C-3), the rise timestamp inside W-DEC(X) and the DmHaltAddr fetch with no other record in between;
   for WFI core_busy_o is sampled On in every cycle between the wfi record and the DmHaltAddr fetch
   (the W-FLUSH -> W-DBGTAKEN arc, no W-WAITSLEEP cycle, F-DBG-068); the first debug-ROM record
-  carries rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the X record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dpc == X pc + len)
+  carries rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the X record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dpc == X pc + len)
 - Pass criteria: gen_chk_debug (dpc == csrw pc + 4 / wfi pc + 4, cause 3; pre-empted class: dpc ==
   X pc, the CSR write not committed); gen_chk_sleep (no sleep window at all: core_busy_o never Off;
   a request arriving one or more cycles later is TP-DBG-071 / TP-DBG-014); gen_isa_compare (the
@@ -11017,7 +11041,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   remainder, rvfi_ext_debug_req = 0 because the rise came after its transfer, C-3) is followed by
   the DmHaltAddr fetch with no other record in between and the rise timestamp lies inside W-DEC(div)
   (back-dated from the record: DIV_STALL_FULL + 1 cycles); the first debug-ROM record carries
-  rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record (correct rvfi_rd_wdata, rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record)
+  rvfi_ext_debug_req = 1 (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record (correct rvfi_rd_wdata, rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record)
 - Pass criteria: gen_chk_debug (dpc == div pc + 4; pre-empted class: dpc == div pc); gen_isa_compare
   (result value).
 - Expected: pass
@@ -11066,7 +11090,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: an entry (DmHaltAddr fetch) occurs whose preceding record is the ecall's trap record
   (rvfi_ext_debug_req = 0 on it: the rise came after its transfer, C-3), the driver log shows the
   rise inside W-DEC(ecall) and the fall in W-FLUSH(ecall) (the request already low in the entry
-  cycle), and the mailbox dcsr.cause field is read (gen_test_dbg_req_shape). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the ecall trap record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; the mailbox dcsr.cause read)
+  cycle), and the mailbox dcsr.cause field is read (gen_test_dbg_req_shape). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the ecall trap record (rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; the mailbox dcsr.cause read)
 - Pass criteria: gen_chk_debug stays ON and its cause verdict is recorded, not gated (C-15; Sdext:
   every debug entry records a defined cause 1..4; the RTL records 0 here,
   rtl/ibex_controller.sv:519-533, :985-987); the observed cause is logged as GEN_TEST_INFO.
@@ -11419,7 +11443,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: per seed >= 1 "ebreak wins" iteration: ebreak record with rvfi_trap = 0 (S-2) and
   rvfi_ext_debug_req = 0 (C-3), the rise timestamp inside W-DEC(ebreak), then the DmHaltAddr fetch
   with no record in between and the mailbox dcsr.cause captured; and >= 1 pre-empted iteration (no
-  ebreak record before the DmHaltAddr fetch) (gen_test_dbg_ebreak). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the ebreak record (rvfi_trap = 0, rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dcsr.cause)
+  ebreak record before the DmHaltAddr fetch) (gen_test_dbg_ebreak). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the ebreak record (rvfi_trap = 0, rvfi_ext_debug_req = 0) immediately followed by the first debug-ROM record; mailbox dcsr.cause)
 - Pass criteria: gen_chk_debug ("ebreak wins": cause 1, dpc == ebreak pc, not ebreak pc + size;
   pre-empted: cause 3, dpc == ebreak pc, the ebreak executes after dret unless the debug program
   advances dpc).
@@ -11731,7 +11755,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: stepped ebreak RVFI item with rvfi_trap == 0 (debug path, S-2 rule; rvfi_ext_debug_req
   = 0 on it even in the haltreq variant, C-3) then DmHaltAddr with no record in between; mailbox
   cause==1 and dpc == ebreak pc; per seed >= 1 haltreq-variant iteration with the rise timestamp
-  inside W-DEC(ebreak) (gen_test_dbg_step). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped ebreak record (rvfi_trap = 0) immediately followed by the first debug-ROM record; mailbox cause == 1, dpc == ebreak pc)
+  inside W-DEC(ebreak) (gen_test_dbg_step). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped ebreak record (rvfi_trap = 0) immediately followed by the first debug-ROM record; mailbox cause == 1, dpc == ebreak pc)
 - Pass criteria: gen_chk_debug (cause 1, dpc == ebreak pc not +size; re-halt class: cause 3, dpc
   unchanged, zero retirements); gen_isa_compare.
 - Expected: pass
@@ -11795,7 +11819,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   record and the DmHaltAddr fetch, in >= 1 iteration with no ibus beat outstanding at the WFI's
   FLUSH cycle (so a WAIT_SLEEP dip could not have been hidden by if_busy) and >= 1 with a beat
   outstanding; dpc read-back == wfi pc + 4 and dcsr.cause == 4 (gen_test_dbg_step).
-  [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped WFI record immediately followed by the first debug-ROM record (rvfi_ext_debug_mode = 1); dpc read-back == wfi pc + 4, dcsr.cause == 4)
+  [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped WFI record immediately followed by the first debug-ROM record (rvfi_ext_debug_mode = 1); dpc read-back == wfi pc + 4, dcsr.cause == 4)
 - Pass criteria: gen_chk_debug (dpc == wfi pc + 4, cause 4); gen_chk_sleep in the "no Off cycle"
   profile (C-5 / X-8: do_single_step_d sets enter_debug_mode_prio_q and FLUSH overrides
   `ctrl_fsm_ns = WAIT_SLEEP` with DBG_TAKEN_IF, rtl/ibex_controller.sv:969-970, :985-987; WAIT_SLEEP
@@ -12271,7 +12295,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   retire between the two windows (W-DEC(dret) -> W-DBGTAKEN re-halt, F-DBG-007); with a later rise
   (k = +3 / +8 and low imem latency) the resumed program retires >= 1 instruction before the re-halt
   ("(c)-run", dpc == next unretired pc). Each of (a0), (a), (b) with a one-cycle dip, (b) with a dip
-  >= 2, (b)-hidden, (c) and (c)-run must occur at least once per seed. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: per class the record sequence: the X record (rvfi_ext_debug_req) or none, the first debug-ROM record, mailbox dpc, and the count of non-debug records between the two windows)
+  >= 2, (b)-hidden, (c) and (c)-run must occur at least once per seed. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: per class the record sequence: the X record (rvfi_ext_debug_req) or none, the first debug-ROM record, mailbox dpc, and the count of non-debug records between the two windows)
 - Pass criteria: gen_chk_debug (cause 3; dpc == wfi pc + 4 / mepc / csrw pc + 4 / dret target or
   the next unretired pc for (c)-run; X pc for (a0); dcsr.prv == old MPP for mret in (a));
   gen_chk_sleep (core_busy_o profile per class: none / exactly one / k cycles; no bus request while
@@ -12719,7 +12743,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   rvfi_ext_expanded_insn_* item; variant B: all N accesses on the dbus and the
   rvfi_ext_expanded_insn_last item at or before the DmHaltAddr fetch (the last micro-op's record
   appears at R+1 = the DBG_TAKEN_IF request cycle when it is a store, same-cycle rule), dpc ==
-  successor (or ra target for popret) (gen_test_trg_fire). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: variant A: no micro-op record before the first debug-ROM record; variant B: the rvfi_ext_expanded_insn_last record precedes it; dpc read-back)
+  successor (or ra target for popret) (gen_test_trg_fire). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: variant A: no micro-op record before the first debug-ROM record; variant B: the rvfi_ext_expanded_insn_last record precedes it; dpc read-back)
 - Pass criteria: gen_chk_debug (dpc, no partial sequence); gen_isa_compare (register/stack
   state); gen_chk_dbus_proto.
 - Expected: pass
@@ -13996,7 +14020,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: per seed >= 1 window in which the boundary model logs >= 1 branch entering ID with a
   WB access outstanding for >= 2 further cycles (dbus timestamps against the branch's back-dated ID
   entry), and the control window shows delta == branches (gen_test_pmc_hpm_event).
-  [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter8 read-back delta)
+  [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter8 read-back delta)
 - Pass criteria: gen_chk_counters follows performance_counters.rst:41 ("Number of branches
   (conditional)"): delta == branch count of the window; the RTL delta (branches + the cycles each
   branch waited in ID: perf_branch_o is asserted in the FIRST_CYCLE arm under instr_executing_spec,
@@ -14816,7 +14840,7 @@ draw weights of the agent / program generator per transaction.
   last On cycle, which reaches the bus one cycle later on a miss; rtl/ibex_core.sv:648 gates only
   req_i); the un-issued beats of open lines are still requested and answered (no request withdrawn,
   rtl/ibex_icache.sv:756, 764-775; C-4); the outstanding count drains to 0 and stays 0 until On;
-  instr_req_o == 0 in every cycle with core_busy_o == Off. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record between the drained in-flight records and the first post-On record (the rvfi_ext_mcycle gap spans the Off window))
+  instr_req_o == 0 in every cycle with core_busy_o == Off. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record between the drained in-flight records and the first post-On record (the rvfi_ext_mcycle gap spans the Off window))
 - Pass criteria: gen_chk_fetch_en (no new line allocation after the Off edge; no retirement beyond
   the in-flight instructions; instr_req_o == 0 whenever core_busy_o == Off), gen_chk_ibus_proto (no
   withdrawn request: no tolerance needed), gen_isa_compare; detects a new line lookup or a
@@ -15918,7 +15942,7 @@ draw weights of the agent / program generator per transaction.
   after the load's record (C-7: the pending flag registers one cycle after the corrupted rvalid,
   rtl/ibex_controller.sv:402-438; the instruction in ID completes and the one entering ID in the
   response cycle completes too; 1 when the instruction in ID has a load-use hazard; more only with a
-  Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
+  Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
 - Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi (entry within <= 2 ordinary records, checker
   follows the RTL; exception_interrupts.rst:87-88 "at most one" is D21), gen_chk_alerts,
   gen_isa_compare; detects a missing alert, an rd write, a synchronous trap, or an NMI outside the
@@ -16022,7 +16046,7 @@ draw weights of the agent / program generator per transaction.
   rtl/ibex_wb_stage.sv:212-215, C-9); >= 20 independent followers with rvfi_valid at R+2 (every
   instruction after a load waits in ID until the response cycle); >= 10 x0 pairs whose reader
   retires at R+2 like an independent follower (it waits for the response but has no hazard: one
-  cycle earlier than a dependent consumer). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of the consumer / follower / x0-reader records from the load record (2 / 1 / 1))
+  cycle earlier than a dependent consumer). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of the consumer / follower / x0-reader records from the load record (2 / 1 / 1))
 - Pass criteria: gen_isa_compare (consumer reads the loaded value), gen_chk_dbus_proto (record
   deltas per follower class)
 - Expected: pass
@@ -16086,7 +16110,7 @@ draw weights of the agent / program generator per transaction.
   stayed On from the access's grant to R (>= 5 cases with >= 16 cycles) and went Off at the earliest
   in R+2 (WAIT_SLEEP), only with no fetch beat outstanding, no invalidation and an idle LSU (C-5,
   gen_tb_architecture.md 8.2 item 1). Not asserted: "WFI retired while the access was outstanding"
-  (unreachable: the record follows the response). [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record rvfi_ext_mcycle gap from the preceding access record and the wake record that follows it)
+  (unreachable: the record follows the response). [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record rvfi_ext_mcycle gap from the preceding access record and the wake record that follows it)
 - Pass criteria: gen_chk_sleep (core_busy_o vs outstanding; WFI record at R+2), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_ctx
@@ -16793,7 +16817,7 @@ draw weights of the agent / program generator per transaction.
   DECODE(special_req) + one FLUSH cycle only, rtl/ibex_controller.sv:232, 287, 815-818;
   rtl/ibex_id_stage.sv:593-597; a longer csr_flush window is unreachable), during which the agent's
   outstanding count and granted-not-consumed count stopped growing while the agent had free
-  capacity. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stalled record rvfi_ext_mcycle gap per cause class (>= 4; exactly 2 for csr_flush))
+  capacity. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stalled record rvfi_ext_mcycle gap per cause class (>= 4; exactly 2 for csr_flush))
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_backpressure
@@ -18014,7 +18038,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:instr_mix (mixed), knob:imem_rvalid_delay (random)
 - Fire-check: >= 10000 retirements compared, >= 200 of them held at the icache output for >= 4
   cycles before ID accepted them (agent delivery cycle to ID acceptance, back-dated from RVFI) and
-  >= 200 for 1 cycle. [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records compared (rvfi_insn == memory image) with rvfi_ext_mcycle gap classes >= 4 and 1)
+  >= 200 for 1 cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records compared (rvfi_insn == memory image) with rvfi_ext_mcycle gap classes >= 4 and 1)
 - Pass criteria: gen_isa_compare (rvfi_insn always the word delivered for its pc; a bound internal
   assertion is probe candidate P3, rejected, see fcov Probe candidates)
 - Expected: pass
@@ -22834,7 +22858,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_regime in {sparse, storm}, irq_line_mix = with_nmi in some phases, debug_req_regime sparse, imem_rvalid_delay long (fetch outstanding at WFI), dmem_rvalid_delay long (data outstanding at WFI), scr_key_delay = withheld_then_valid with fence.i just before WFI (icache busy), fetch_enable_regime toggling in some phases
 - Randomized: wake source, pending state, mode, MIE/TW, seed
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:debug_req_regime, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:scr_key_delay, knob:fetch_enable_regime
-- Fire-check: >= 1 WFI retirement after which core_busy_o was IbexMuBiOff for >= 2 consecutive cycles (SLEEP held; the single WAIT_SLEEP Off cycle of an unstepped WFI is not sleep, C-5) and a wake edge followed for each source class {irq_maskable, nmi, debug_req}; >= 1 WFI retired with ibus_outst >= 1 in its WB-exit cycle (S18) and >= 1 WFI that entered ID while the preceding load/store's response was still outstanding (S21: the WFI record follows the load/store record by exactly one cycle; at the WFI's own WB exit the data bus is always idle because the wfi waits in DECODE for ready_wb_i, rtl/ibex_controller.sv:668-678, fact-check TP-XIF-004), in both cases core_busy_o stayed On until the beat / response drained; >= 1 WFI that never slept (Off <= 1 cycle) because the wake condition was already true; >= 1 stepped WFI (dcsr.step = 1) with core_busy_o never Off between its record and the DmHaltAddr fetch and whose next record is the debug-ROM entry with debug_req_i low (FLUSH -> DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987; CG-XIF-004.cr_src_x_result.none_needed_debug_entered) [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record, its rvfi_ext_mcycle gap to the wake record, and the wake record class (rvfi_intr / nmi / debug-ROM / sequential))
+- Fire-check: >= 1 WFI retirement after which core_busy_o was IbexMuBiOff for >= 2 consecutive cycles (SLEEP held; the single WAIT_SLEEP Off cycle of an unstepped WFI is not sleep, C-5) and a wake edge followed for each source class {irq_maskable, nmi, debug_req}; >= 1 WFI retired with ibus_outst >= 1 in its WB-exit cycle (S18) and >= 1 WFI that entered ID while the preceding load/store's response was still outstanding (S21: the WFI record follows the load/store record by exactly one cycle; at the WFI's own WB exit the data bus is always idle because the wfi waits in DECODE for ready_wb_i, rtl/ibex_controller.sv:668-678, fact-check TP-XIF-004), in both cases core_busy_o stayed On until the beat / response drained; >= 1 WFI that never slept (Off <= 1 cycle) because the wake condition was already true; >= 1 stepped WFI (dcsr.step = 1) with core_busy_o never Off between its record and the DmHaltAddr fetch and whose next record is the debug-ROM entry with debug_req_i low (FLUSH -> DBG_TAKEN_IF, rtl/ibex_controller.sv:985-987; CG-XIF-004.cr_src_x_result.none_needed_debug_entered) [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record, its rvfi_ext_mcycle gap to the wake record, and the wake record class (rvfi_intr / nmi / debug-ROM / sequential))
 - Pass criteria: gen_chk_sleep / core_busy rule (C-5: Off beyond the one WAIT_SLEEP cycle only with nothing outstanding and no wake term; the one-cycle dip only with no fetch beat outstanding, no invalidation and an idle LSU; no Off cycle at all for a stepped WFI; instr_req_o == 0 whenever core_busy_o == Off; wake only on irq/nmi/debug); gen_chk_irq; gen_chk_nmi; gen_chk_debug; gen_isa_compare (resume pc = WFI + 4, trap or no trap per MIE/mode)
 - Expected: pass
 - Test group: gen_xif_random
@@ -22918,7 +22942,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with dmem_rvalid_delay long so the pair is still outstanding when the CSR write sits in ID; dmem_err_rate rare (WB error cancels the CSR write, F-CSR-008)
 - Randomized: which CSR, new verdict, error half, seed
 - Knobs: knob:dmem_rvalid_delay, knob:pmp_regime, knob:dmem_err_rate
-- Fire-check: >= 1 retired PMP CSR write that entered ID while its predecessor misaligned load/store's second half was still outstanding (S21: the CSR write's record follows the pair's record by exactly one cycle; the pair's record is one cycle after its second-half data_rvalid_i, so a response "after the predecessor's retirement" is impossible and the class is anchored at ID entry, S-4 back-dating, fact-check TP-XIF-010); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back) [CYCLE-CLAUSE coverage-only until the event export lands] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record follows the pair record at the minimum rvfi_ext_mcycle gap; fault case: the fault record then the re-executed write with csr read-back)
+- Fire-check: >= 1 retired PMP CSR write that entered ID while its predecessor misaligned load/store's second half was still outstanding (S21: the CSR write's record follows the pair's record by exactly one cycle; the pair's record is one cycle after its second-half data_rvalid_i, so a response "after the predecessor's retirement" is impossible and the class is anchored at ID entry, S-4 back-dating, fact-check TP-XIF-010); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back) [CYCLE-CLAUSE coverage-only until the event export lands] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record follows the pair record at the minimum rvfi_ext_mcycle gap; fault case: the fault record then the re-executed write with csr read-back)
 - Pass criteria: gen_chk_csr_readback (value written once; cancelled write leaves the old value); gen_chk_pmp (next access checked against the new configuration); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_random

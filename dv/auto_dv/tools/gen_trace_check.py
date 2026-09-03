@@ -35,11 +35,14 @@ for r in csv.DictReader(open(D/'gen_trace_tp_bin.csv')):
     if r['adopted'] == '1': adopted.add(b)
 active = [f for f, s in status.items() if s == 'ACTIVE']
 no_tp = [f for f in active if not f2tp.get(f)]
-no_bin = [f for f in active if not any(t in tp2bin for t in f2tp.get(f, ()))]
+no_bin = [f for f in active if not any(any(b[0] != 'CG-WIT-001' for b in tp2bin.get(t, ())) for t in f2tp.get(f, ()))]
+no_bin_incl_wit = [f for f in active if not any(t in tp2bin for t in f2tp.get(f, ()))]
 tp_no_bin = [t for t in tps if t not in tp2bin]
 tp_no_feat = [t for t in tps if not any(t in s for s in f2tp.values())]
 cg_bad = []; cg_cps = {}; cg_adopted = {}
 for c, b in cgs.items():
+    if c == 'CG-WIT-001':
+        cg_cps[c] = set(re.findall(r'^\s*- (c[pr]_[a-z0-9_]+)\b', b, re.M)); cg_adopted[c] = False; continue  # ledger: outside traceability condition 2
     m = re.search(r'^- Features: (.*)$', b, re.M); ids = re.findall(r'F-[A-Z]+-\d{3}', m.group(1)) if m else []
     if not ids: cg_bad.append(f'{c}: no Features')
     for i in ids:
@@ -69,8 +72,11 @@ owned_cps = {(b[0], b[1]) for b in bins}
 unowned = sorted(f'{c}.{cp}' for c, cps in cg_cps.items() for cp in cps if (c, cp) not in owned_cps)
 for lst, msg in [(no_tp, 'ACTIVE feature without TP item'), (no_bin, 'ACTIVE feature without bin'), (tp_no_bin, 'TP item without bins'), (tp_no_feat, 'TP item without feature'), (cg_bad, 'covergroup mapping'), (bin_missing, 'CSV bin not declared in the plan'), (adopted_bad, 'adopted=1 bin in a covergroup without an Adopted source')]:
     errors += [f'{msg}: {x}' for x in lst]
-print(f'features {len(feats)} (ACTIVE {len(active)}, ALIAS {sum(1 for s in status.values() if s=="ALIAS")}, FOLDED {sum(1 for s in status.values() if s=="FOLDED")}); TP items {len(tps)}; covergroups {len(cgs)}; bins referenced {len(bins)} (adopted {len(adopted)}, spec-derived {len(bins)-len(adopted)})')
-print(f'completeness: ACTIVE->TP {len(active)-len(no_tp)}/{len(active)}, ACTIVE->bin {len(active)-len(no_bin)}/{len(active)}, bins->feature {len(cgs)-len(cg_bad)}/{len(cgs)} covergroups, CSV bins declared {len(bins)-len(bin_missing)}/{len(bins)}')
+wit_bins = [b for b in bins if b[0] == 'CG-WIT-001']
+ncg = len(cgs) - (1 if 'CG-WIT-001' in cgs else 0)
+print(f'features {len(feats)} (ACTIVE {len(active)}, ALIAS {sum(1 for s in status.values() if s=="ALIAS")}, FOLDED {sum(1 for s in status.values() if s=="FOLDED")}); TP items {len(tps)}; covergroups {ncg} (plus the ledger CG-WIT-001); bins referenced {len(bins)-len(wit_bins)} (adopted {len(adopted)}, spec-derived {len(bins)-len(adopted)-len(wit_bins)}; ledger bins {len(wit_bins)} counted separately)')
+print(f'completeness: ACTIVE->TP {len(active)-len(no_tp)}/{len(active)}, ACTIVE->bin (spec-derived and adopted bins only, CG-WIT-001 excluded) {len(active)-len(no_bin)}/{len(active)} (with witness bins counted: {len(active)-len(no_bin_incl_wit)}/{len(active)}), bins->feature {ncg-len(cg_bad)}/{ncg} covergroups (ledger excluded), CSV bins declared {len(bins)-len(bin_missing)}/{len(bins)}')
+print(f'witness ledger: {len(wit_bins)} CG-WIT-001 bins excluded from the functional gate and from ACTIVE->bin; spec-derived bins {len(bins)-len(adopted)-len(wit_bins)}, adopted {len(adopted)}; export sources unknown (sunset trigger inactive until the rendered export table exists)')
 marked = [tid for tid, b in tps.items() if '[CYCLE-CLAUSE coverage-only until the event export lands]' in b]
 print(f'cycle-clause marked items {len(marked)} (witness bins CG-WIT-001 excluded from manifests while marked; sunset per gen_test_plan.md Section 0)')
 print(f'coverpoints declared {sum(len(v) for v in cg_cps.values())}, owned by an item {len(owned_cps)}, regression-level (no item) {len(unowned)} (listed in gen_fcov_plan.md Section 1.1; reported, not failed)')

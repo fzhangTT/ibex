@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:40 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-03 10:58 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -43,7 +43,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   two inner instances are gated and combined per metric by the summing rule; the wrapper is informational;
   -cm_glitch 0 on every measured build (R-002). Functional coverage gate: the URG functional-group score
   with equal group weights after ignore_bins (cross bins counted per expanded bin), not a flat ratio over
-  declared bins; Section 1 states the conditions.
+  declared bins, over the spec-derived and adopted groups only: the witness group CG-WIT-001 is excluded from the
+  number and reported separately (Section 1).
 - Adoption policy (DV_prompt Section 3, riscv-dv ruling): a bin is "adopted" only when riscv-dv's coverage
   model was its source (CG-ADOPT-* groups, adopted=1 in the CSV, counted separately). A partition that was
   derived independently from the ISA text and coincides with a riscv-dv coverpoint is spec-derived and is
@@ -71,8 +72,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 
 # 1. Completeness measure (definition; DV_prompt.txt Section 4)
 
-The functional-coverage gate is: the URG functional-group score (equal group weights, computed after ignore_bins, cross bins
-counted per expanded bin) is at or above 80 percent AND the traceability conditions below hold; both totals must pass.
+The functional-coverage gate is: the URG functional-group score over the spec-derived and adopted covergroups (equal group
+weights, computed after ignore_bins, cross bins counted per expanded bin) is at or above 80 percent AND the traceability
+conditions below hold; both totals must pass. The cycle-clause witness group CG-WIT-001 (gen_cg_wit_cycle_clause) is
+EXCLUDED from that number without exception (Runtime gives it weight 0 in the gate computation) and is reported beside it
+as "witnessed clauses: N of M marked items", the way adopted bins are counted separately; its bins stay in the per-test
+manifests after the sunset (Critic gen_critic_plan_witness_v1.md conditions C-4 and W-1).
 
 1. Every ACTIVE feature maps to at least one TP item and at least one bin (directly or through an
    ALIAS/FOLDED ID that resolves to it). 2. Every bin maps back to a feature through its covergroup's
@@ -172,8 +177,9 @@ the count.
 
 | Metric | Value |
 |---|---|
-| Covergroups | 208 |
-| Distinct bins referenced by TP items | 16045 |
+| Covergroups (spec-derived and adopted; the ledger CG-WIT-001 is counted separately) | 207 |
+| Distinct bins referenced by TP items (spec-derived and adopted) | 15825 |
+| Witnessed-clause ledger bins (CG-WIT-001; outside the score, the bin total and traceability condition 2) | 220 |
 | Adopted bins (riscv-dv, counted separately) | 49 |
 | ACTIVE features with >= 1 bin | 705 |
 | Covergroups per area part | isa 40, csr 25, exc_irq 26, pmp 16, dbg_trg_pmc 22, mem_fetch_icache 30, sec_rst_rvfi_cheri 20, xcut 28, wit 1 |
@@ -2179,7 +2185,7 @@ Conventions
 ## Covergroups: IRQ
 
 ### CG-IRQ-001: gen_cg_irq_entry
-- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053,
+- Features: F-IRQ-001, F-IRQ-002, F-IRQ-007, F-IRQ-008, F-IRQ-016, F-IRQ-024, F-IRQ-029, F-IRQ-053,, F-IRQ-057
   F-IRQ-057, F-IRQ-058, F-IRQ-045 (parent of folded bins hosted here)
 - Sample: interrupt entry: rvfi_valid && rvfi_intr on the first handler instruction, with the cause from the handler csrr mcause read-back / gen_chk_irq model and the CSR model state before the entry (the rvfi_ext_irq_valid level, C-13, is recorded per entry as a marker, never used as the event); condition: rvfi_intr; anti-vacuity: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry.
 - Coverpoints:
@@ -3042,7 +3048,7 @@ Conventions
 ## DBG covergroups
 
 ### CG-DBG-001: gen_cg_dbg_entry
-- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010,
+- Features: F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010,, F-TRG-027
   F-DBG-011, F-DBG-025, F-DBG-037, F-DBG-038, F-DBG-039, F-DBG-040, F-DBG-041, F-DBG-044, F-DBG-045,
   F-DBG-046, F-DBG-047, F-DBG-048, F-DBG-049, F-DBG-058, F-DBG-061, F-DBG-064, F-DBG-066, F-DBG-068,
   F-TRG-010, F-TRG-016, F-TRG-017, F-TRG-018, F-TRG-019, F-DBG-017 (parent of folded bins hosted
@@ -3366,7 +3372,7 @@ Conventions
 - TP items: TP-TRG-001, TP-TRG-002, TP-TRG-003, TP-TRG-004, TP-TRG-005, TP-TRG-006, TP-TRG-007, TP-TRG-008, TP-TRG-009, TP-TRG-015, TP-TRG-028, TP-TRG-029, TP-TRG-030, TP-TRG-031
 
 ### CG-TRG-002: gen_cg_trg_fire
-- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017,
+- Features: F-TRG-010, F-TRG-011, F-TRG-012, F-TRG-013, F-TRG-014, F-TRG-015, F-TRG-016, F-TRG-017,, F-TRG-027
   F-TRG-018, F-TRG-019, F-TRG-020, F-TRG-021, F-TRG-022, F-TRG-023, F-TRG-024, F-TRG-025, F-TRG-026,
   F-TRG-027, F-TRG-030, F-DBG-066, F-DBG-001, F-DBG-031 (parent of folded bins hosted here)
 - Sample: one sample each time the TB trigger model (tdata1.execute, tdata2 from the CSR model)
@@ -3464,7 +3470,7 @@ Conventions
 - TP items: TP-DBG-066, TP-PMC-008, TP-PMC-009, TP-PMC-010, TP-PMC-011, TP-PMC-012, TP-PMC-013, TP-PMC-014, TP-PMC-015, TP-PMC-023, TP-PMC-024, TP-PMC-037, TP-PMC-048, TP-PMC-049, TP-PMC-050, TP-PMC-052, TP-PMC-053, TP-PMC-054, TP-PMC-055
 
 ### CG-PMC-003: gen_cg_pmc_hpm_event
-- Features: F-PMC-016, F-PMC-021, F-PMC-023, F-PMC-032, F-PMC-033, F-PMC-034, F-PMC-035, F-PMC-036, F-PMC-037, F-PMC-038, F-PMC-039, F-PMC-040, F-PMC-041, F-PMC-042, F-PMC-043, F-PMC-044, F-PMC-046, F-PMC-047, F-PMC-049, F-DBG-063
+- Features: F-PMC-016, F-PMC-021, F-PMC-023, F-PMC-032, F-PMC-033, F-PMC-034, F-PMC-035, F-PMC-036, F-PMC-037, F-PMC-038, F-PMC-039, F-PMC-040, F-PMC-041, F-PMC-042, F-PMC-043, F-PMC-044, F-PMC-046, F-PMC-047, F-PMC-049, F-DBG-063, F-PMC-053
 - Sample: end of each TB event window: a code window bounded by two CSR reads of the same
   mhpmcounterN (N in [MHPMCOUNTER_BASE : HPM_LAST]); one sample per counter per window; condition:
   `window_end && counter_implemented`; exactness class per index (gen_tb_architecture.md 8.2 item
@@ -4051,7 +4057,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 ## DMEM covergroups
 
 ### CG-DMEM-001: gen_cg_dmem_handshake
-- Features: F-DMEM-001, F-DMEM-002, F-DMEM-003, F-DMEM-004, F-DMEM-005, F-DMEM-006, F-DMEM-007,
+- Features: F-DMEM-001, F-DMEM-002, F-DMEM-003, F-DMEM-004, F-DMEM-005, F-DMEM-006, F-DMEM-007,, F-DMEM-009, F-DMEM-034
   F-DMEM-008, F-DMEM-009, F-DMEM-010, F-DMEM-034, F-DMEM-035
 - Sample: data_rvalid_i (one sample per completed transaction; the agent record carries the issue,
   grant and rvalid cycles and the grant-cycle payload); condition: agent record matched in order;
@@ -4160,7 +4166,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   TP-DMEM-016, TP-DMEM-045, TP-DMEM-060
 
 ### CG-DMEM-003: gen_cg_dmem_misaligned
-- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026,
+- Features: F-DMEM-015, F-DMEM-016, F-DMEM-017, F-DMEM-018, F-DMEM-024, F-DMEM-025, F-DMEM-026,, F-DMEM-009
   F-DMEM-008 (parent of folded bins hosted here)
 - Sample: final rvalid of a split access (the agent pairs the two records by the second address ==
   first + 4); condition: the pair closed; anti-vacuity: only split accesses sample; a hit proves
@@ -4353,7 +4359,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - TP items: TP-DMEM-039, TP-DMEM-040, TP-DMEM-041, TP-DMEM-042, TP-DMEM-043, TP-DMEM-064
 
 ### CG-DMEM-008: gen_cg_dmem_pipe_ctx
-- Features: F-DMEM-028, F-DMEM-029, F-DMEM-031, F-DMEM-033, F-DMEM-042, F-DMEM-043, F-DMEM-044,
+- Features: F-DMEM-028, F-DMEM-029, F-DMEM-031, F-DMEM-033, F-DMEM-042, F-DMEM-043, F-DMEM-044,, F-DMEM-045, F-DMEM-051
   F-DMEM-045, F-DMEM-046, F-DMEM-047, F-DMEM-051
 - Sample: (a) rvfi_valid of a load/store (Zcmp micro-op records included); (b) a WFI retirement
   whose predecessor is a load/store and whose record follows that access's final rvalid by exactly
@@ -4710,7 +4716,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 ## IC covergroups
 
 ### CG-IC-001: gen_cg_ic_ram_ports
-- Features: F-IC-001, F-IC-002, F-IC-003, F-IC-004, F-IC-005, F-IC-006, F-IC-007, F-IC-028,
+- Features: F-IC-001, F-IC-002, F-IC-003, F-IC-004, F-IC-005, F-IC-006, F-IC-007, F-IC-028,, F-IC-045, F-IC-046
   F-IC-045, F-IC-046
 - Sample: (a) any cycle with |ic_tag_req_o; (b) any cycle with |ic_data_req_o (gen_icache_ram_model
   port monitor); condition: request on that port; anti-vacuity: idle cycles never sample;
@@ -6985,7 +6991,7 @@ removed; the TP-XIF-004 data_outst class was re-anchored, not ignored).
 ## WIT: cycle-clause witness covergroup
 
 ### CG-WIT-001: gen_cg_wit_cycle_clause
-- Features: F-BIT-012, F-BIT-027, F-BIT-028, F-BIT-032, F-BIT-036, F-BIT-039, F-BIT-041, F-BTALU-001, F-BTALU-011, F-BTALU-012, F-BTALU-016, F-CMP-056, F-CMP-057, F-CMP-058, F-CMP-059, F-CSR-006, F-CSR-007, F-CSR-008, F-CSR-026, F-CSR-029, F-CSR-031, F-CSR-033, F-CSR-034, F-CSR-085, F-CSR-090, F-CSR-099, F-DBG-001, F-DBG-002, F-DBG-003, F-DBG-004, F-DBG-005, F-DBG-006, F-DBG-007, F-DBG-008, F-DBG-009, F-DBG-010, F-DBG-015, F-DBG-025, F-DBG-036, F-DBG-041, F-DBG-043, F-DBG-044, F-DBG-046, F-DBG-049, F-DBG-056, F-DBG-057, F-DBG-058, F-DBG-059, F-DBG-068, F-DIT-028, F-DMEM-001, F-DMEM-002, F-DMEM-004, F-DMEM-005, F-DMEM-006, F-DMEM-007, F-DMEM-008, F-DMEM-009, F-DMEM-010, F-DMEM-018, F-DMEM-021, F-DMEM-022, F-DMEM-023, F-DMEM-024, F-DMEM-025, F-DMEM-026, F-DMEM-027, F-DMEM-028, F-DMEM-029, F-DMEM-030, F-DMEM-031, F-DMEM-032, F-DMEM-034, F-DMEM-035, F-DMEM-036, F-DMEM-037, F-DMEM-038, F-DMEM-041, F-DMEM-042, F-DMEM-043, F-DMEM-045, F-DMEM-046, F-DMEM-048, F-DMEM-049, F-DMEM-051, F-EXC-006, F-EXC-007, F-EXC-013, F-EXC-016, F-EXC-025, F-EXC-027, F-EXC-035, F-EXC-036, F-EXC-037, F-EXC-038, F-EXC-040, F-EXC-041, F-EXC-050, F-EXC-054, F-EXC-055, F-EXC-057, F-EXC-059, F-EXC-061, F-EXC-062, F-EXC-064, F-EXC-069, F-FE-007, F-FE-008, F-FE-012, F-FE-013, F-FE-017, F-FE-018, F-FE-021, F-FE-022, F-FE-024, F-FE-025, F-IC-002, F-IC-003, F-IC-004, F-IC-005, F-IC-008, F-IC-009, F-IC-012, F-IC-015, F-IC-016, F-IC-019, F-IC-020, F-IC-022, F-IC-026, F-IC-027, F-IC-028, F-IC-029, F-IC-030, F-IC-031, F-IC-032, F-IC-038, F-IC-040, F-IC-043, F-IC-044, F-IC-045, F-IC-046, F-IC-048, F-IMEM-001, F-IMEM-003, F-IMEM-004, F-IMEM-005, F-IMEM-006, F-IMEM-007, F-IMEM-008, F-IMEM-009, F-IMEM-010, F-IMEM-014, F-IMEM-016, F-IMEM-017, F-IMEM-021, F-IMEM-022, F-IMEM-023, F-IMEM-024, F-IMEM-025, F-IMEM-026, F-IMEM-027, F-IMEM-029, F-IMEM-030, F-IMEM-031, F-IMEM-032, F-IRQ-001, F-IRQ-002, F-IRQ-004, F-IRQ-006, F-IRQ-007, F-IRQ-010, F-IRQ-011, F-IRQ-015, F-IRQ-016, F-IRQ-017, F-IRQ-018, F-IRQ-019, F-IRQ-020, F-IRQ-021, F-IRQ-022, F-IRQ-023, F-IRQ-024, F-IRQ-025, F-IRQ-026, F-IRQ-027, F-IRQ-029, F-IRQ-030, F-IRQ-032, F-IRQ-034, F-IRQ-035, F-IRQ-037, F-IRQ-038, F-IRQ-039, F-IRQ-040, F-IRQ-041, F-IRQ-043, F-IRQ-045, F-IRQ-046, F-IRQ-047, F-IRQ-048, F-IRQ-049, F-IRQ-050, F-IRQ-051, F-IRQ-052, F-IRQ-053, F-IRQ-054, F-IRQ-055, F-IRQ-056, F-IRQ-057, F-IRQ-059, F-IRQ-060, F-IRQ-064, F-IRQ-065, F-IRQ-066, F-ISA-001, F-ISA-024, F-ISA-040, F-ISA-050, F-MUL-011, F-MUL-023, F-MUL-024, F-PMC-001, F-PMC-002, F-PMC-009, F-PMC-011, F-PMC-014, F-PMC-022, F-PMC-025, F-PMC-026, F-PMC-032, F-PMC-039, F-PMC-043, F-PMC-044, F-PMC-045, F-PMC-053, F-PMP-006, F-PMP-055, F-PMP-066, F-PMP-079, F-PMP-084, F-PMP-086, F-PMP-087, F-PMP-088, F-PMP-092, F-PMP-093, F-PMP-094, F-PRV-001, F-PRV-008, F-PRV-012, F-PRV-016, F-PRV-017, F-PRV-018, F-PRV-019, F-PRV-020, F-RST-001, F-RST-008, F-RST-009, F-RST-010, F-RST-011, F-RST-012, F-RST-013, F-RST-014, F-RST-015, F-RST-017, F-RST-018, F-RST-019, F-RST-024, F-RST-026, F-RVFI-022, F-RVFI-033, F-SEC-012, F-SEC-015, F-SEC-016, F-SEC-017, F-SEC-019, F-SEC-020, F-SEC-035, F-TRG-019, F-TRG-023, F-TRG-025, F-TRG-026, F-TRG-027
+- Features: none (ledger of fire-check results: the bins map to the marked TP items below, not to DUT features; excluded from traceability condition 2 by gen_trace_check.py)
 - Sample: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level
   clause was asserted TRUE against the event export (gen_export.py E lines); condition: the command carries the id of a
   marked item; anti-vacuity: a bin is hit only by the test that owns the item and only after the cycle-level clause
@@ -6999,6 +7005,12 @@ removed; the TP-XIF-004 data_outst class was re-anchored, not ignored).
 - Crosses: none
 - Adopted (riscv-dv): none
 - TP items: TP-ISA-024, TP-ISA-040, TP-ISA-051, TP-MUL-011, TP-MUL-023, TP-MUL-024, TP-CMP-057, TP-CMP-058, TP-BIT-036, TP-BIT-042, TP-BIT-043, TP-BTALU-001, TP-BTALU-012, TP-BTALU-018, TP-CSR-029, TP-CSR-031, TP-CSR-034, TP-CSR-085, TP-CSR-090, TP-CSR-100, TP-PRV-018, TP-PRV-019, TP-EXC-015, TP-EXC-034, TP-EXC-035, TP-EXC-036, TP-EXC-037, TP-EXC-038, TP-EXC-040, TP-EXC-050, TP-EXC-054, TP-EXC-055, TP-EXC-057, TP-EXC-062, TP-EXC-065, TP-EXC-070, TP-EXC-072, TP-IRQ-009, TP-IRQ-011, TP-IRQ-015, TP-IRQ-021, TP-IRQ-022, TP-IRQ-023, TP-IRQ-024, TP-IRQ-025, TP-IRQ-026, TP-IRQ-027, TP-IRQ-030, TP-IRQ-031, TP-IRQ-038, TP-IRQ-039, TP-IRQ-041, TP-IRQ-044, TP-IRQ-045, TP-IRQ-049, TP-IRQ-050, TP-IRQ-051, TP-IRQ-052, TP-IRQ-053, TP-IRQ-054, TP-IRQ-055, TP-IRQ-057, TP-IRQ-059, TP-IRQ-061, TP-IRQ-064, TP-IRQ-066, TP-IRQ-068, TP-IRQ-070, TP-IRQ-072, TP-IRQ-073, TP-IRQ-077, TP-IRQ-078, TP-IRQ-079, TP-IRQ-080, TP-PMP-053, TP-PMP-077, TP-PMP-082, TP-PMP-091, TP-PMP-105, TP-DBG-003, TP-DBG-004, TP-DBG-005, TP-DBG-006, TP-DBG-007, TP-DBG-008, TP-DBG-009, TP-DBG-011, TP-DBG-014, TP-DBG-021, TP-DBG-030, TP-DBG-046, TP-DBG-049, TP-DBG-051, TP-DBG-054, TP-DBG-061, TP-DBG-063, TP-DBG-071, TP-TRG-019, TP-TRG-023, TP-TRG-025, TP-TRG-026, TP-TRG-027, TP-PMC-001, TP-PMC-002, TP-PMC-011, TP-PMC-013, TP-PMC-016, TP-PMC-024, TP-PMC-028, TP-PMC-034, TP-PMC-047, TP-PMC-058, TP-PMC-059, TP-PMC-060, TP-IMEM-001, TP-IMEM-003, TP-IMEM-004, TP-IMEM-005, TP-IMEM-006, TP-IMEM-007, TP-IMEM-008, TP-IMEM-010, TP-IMEM-014, TP-IMEM-016, TP-IMEM-017, TP-IMEM-018, TP-IMEM-022, TP-IMEM-023, TP-IMEM-025, TP-IMEM-027, TP-IMEM-033, TP-IMEM-036, TP-IMEM-037, TP-IMEM-039, TP-IMEM-040, TP-DMEM-002, TP-DMEM-004, TP-DMEM-005, TP-DMEM-006, TP-DMEM-007, TP-DMEM-008, TP-DMEM-019, TP-DMEM-020, TP-DMEM-021, TP-DMEM-022, TP-DMEM-027, TP-DMEM-034, TP-DMEM-037, TP-DMEM-039, TP-DMEM-044, TP-DMEM-046, TP-DMEM-047, TP-DMEM-049, TP-DMEM-051, TP-DMEM-056, TP-DMEM-057, TP-DMEM-058, TP-DMEM-059, TP-DMEM-061, TP-DMEM-062, TP-DMEM-063, TP-DMEM-064, TP-FE-008, TP-FE-012, TP-FE-013, TP-FE-014, TP-FE-016, TP-FE-017, TP-FE-022, TP-FE-026, TP-IC-002, TP-IC-003, TP-IC-004, TP-IC-005, TP-IC-007, TP-IC-008, TP-IC-011, TP-IC-015, TP-IC-019, TP-IC-020, TP-IC-023, TP-IC-024, TP-IC-030, TP-IC-031, TP-IC-035, TP-IC-036, TP-IC-037, TP-IC-045, TP-IC-046, TP-IC-051, TP-IC-052, TP-IC-053, TP-IC-057, TP-REG-001, TP-REG-002, TP-REG-005, TP-REG-006, TP-REG-008, TP-REG-010, TP-REG-011, TP-REG-012, TP-REG-018, TP-REG-020, TP-REG-021, TP-REG-023, TP-XIF-001, TP-XIF-002, TP-XIF-003, TP-XIF-004, TP-XIF-008, TP-XIF-009, TP-XIF-010, TP-XIF-011, TP-XIF-012, TP-XIF-014, TP-XIF-015, TP-XIF-016, TP-XIF-017, TP-REG-026, TP-REG-027
+
+Gate status: this group is a ledger of fire-check results, EXCLUDED from the 80 percent functional-coverage number without
+exception (weight 0 in the gate computation) and reported beside it as "witnessed clauses: N of M marked items"; its bins stay
+in the per-test manifests after the sunset. Enforcement of C-1 (owning fire_<tp_id> method, TRUE branch only) is the Test
+Writer's host structure check; C-2 (owner-only dispatch) is TB Infra's bridge; C-3 (mechanical sunset) and C-5 (trace-checker
+rule) are gen_trace_check.py's.
 
 ## Counts
 - covergroups 1; coverpoints 1; bins 220 (one per marked item); cross bins 0; adopted 0.
