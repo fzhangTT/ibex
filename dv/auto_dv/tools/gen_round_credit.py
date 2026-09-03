@@ -18,7 +18,7 @@ R = pathlib.Path(__file__).resolve()
 while not (R / 'dv/auto_dv/contract').is_dir():
     if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
     R = R.parent
-sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold_items  # one home for the hold-section discovery
+sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold_items, carveout_items  # one home for the hold-section and carve-out discovery
 WIT_CG_PLAN = 'CG-WIT-001'
 HEADINGS = {  # fixed heading texts by id, so the printed invocation carries the id instead of quoted free text (a semicolon inside quotes broke a naive copy)
     'round0-probe': 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)',
@@ -26,7 +26,7 @@ HEADINGS = {  # fixed heading texts by id, so the printed invocation carries the
 
 def plan_inputs_digest(plan_dir):
     """sha256 (first 12) over exactly what this tool reads from the plan set: the item headers with their Test group, Tier and Expected fields, the
-    hold sections, gen_trace_tp_bin.csv and gen_trace_witness_ids.csv. Independent of the plan's embedded Section 1.7, so a report reproduces
+    hold sections, the crediting carve-out sections, gen_trace_tp_bin.csv and gen_trace_witness_ids.csv. Independent of the plan's embedded Section 1.7, so a report reproduces
     from the commit that embeds it."""
     plan = (plan_dir / 'gen_test_plan.md').read_text(); h = hashlib.sha256()
     for m in re.finditer(r'^### (TP-[A-Z]+-\d{3}):(.*?)(?=^### |^## |^# |\Z)', plan, re.M | re.S):
@@ -35,6 +35,8 @@ def plan_inputs_digest(plan_dir):
             fm = re.search(r'^- ' + f + r': ([^\n]*)', b, re.M); h.update((m.group(1) + '|' + f + '|' + (fm.group(1).strip() if fm else '') + '\n').encode())
     for sec, tag in hold_items(plan)[1]: h.update((sec + ' ' + tag + '\n').encode())
     for tid, tags in sorted(hold_items(plan)[0].items()): h.update((tid + ':' + ','.join(tags) + '\n').encode())
+    for sec, tag in carveout_items(plan)[1]: h.update(('carve ' + sec + ' ' + tag + '\n').encode())
+    for tid, (tag, until, _) in sorted(carveout_items(plan)[0].items()): h.update(('carve ' + tid + ':' + tag + ':' + until + '\n').encode())
     h.update((plan_dir / 'gen_trace_tp_bin.csv').read_bytes()); h.update((plan_dir / 'gen_trace_witness_ids.csv').read_bytes())
     return h.hexdigest()[:12]
 
@@ -45,14 +47,14 @@ def load_plan(plan_dir):
         b = m.group(2)
         g = re.search(r'^- Test group: (\S+)', b, re.M); e = re.search(r'^- Expected: ([^\n]*)', b, re.M); t = re.search(r'^- Tier: (\w+)', b, re.M)
         items[m.group(1)] = {'group': g.group(1) if g else '-', 'expected': (e.group(1).strip() if e else ''), 'tier': t.group(1) if t else '?'}
-    holds, _sections = hold_items(plan)
+    holds, _sections = hold_items(plan); carveouts, _csections = carveout_items(plan)
     bins = collections.defaultdict(list)
     with open(plan_dir / 'gen_trace_tp_bin.csv', newline='') as f:
         for r in csv.DictReader(f): bins[r['tp_item']].append((r['covergroup'], r['coverpoint'], r['bin']))
     marked = {}
     with open(plan_dir / 'gen_trace_witness_ids.csv', newline='') as f:
         for r in csv.DictReader(f): marked[r['tp_item']] = r['marked'] == '1'
-    return items, holds, bins, marked
+    return items, holds, bins, marked, carveouts
 
 def manifest_not_hit(fcov_dir, test):
     p = fcov_dir / f'{test}.fcov.yaml'
@@ -83,8 +85,10 @@ def is_red_fixture(run):
     """A red fixture never hosts plan items: name ending in _red, a red_fixture / red_expect entry, or a RED-OK verdict."""
     return str(run.get('test', '')).endswith('_red') or bool(run.get('red_fixture')) or bool(run.get('red_expect')) or run.get('verdict') == 'RED-OK'
 
-def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
-    """runs: list of regression run dicts; fcov_of(test) -> (declared, not_hit); fires_of(run) -> {fire id: ok} or None."""
+def credit(items, holds, bins, marked, runs, fcov_of, fires_of, carveouts=None):
+    """runs: list of regression run dicts; fcov_of(test) -> (declared, not_hit); fires_of(run) -> {fire id: ok} or None; carveouts: TP id -> (tag, until,
+    reason) from the plan's carve-out record (Section 1.8): UNCREDITED never credits and COUNTED-ONLY counts without crediting until the named task lands."""
+    carveouts = carveouts or {}
     by_test = collections.defaultdict(list)
     for r in runs:
         if not is_red_fixture(r): by_test[r['test']].append(r)
@@ -130,7 +134,7 @@ def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
             if any(x.endswith(tail) for x in nh): unhit.append(tok + ' (bins_not_hit)'); continue
             if declared is not None and not any(x.endswith(tail) for x in declared): unhit.append(tok + ' (not declared)'); continue
             if not any(x.endswith(tail) for x in hit_all): unhit.append(tok)   # a bin is credited only when a seed's fcov check reports it HIT
-        held = holds.get(tid, [])
+        held = holds.get(tid, []); carve = carveouts.get(tid)
         reasons = sorted({(r.get('reason') or '')[:70] for r in rs if r.get('verdict') != ('XFAIL' if xfail else 'PASS')})
         if not run_ok: status = 'NOT-RUN-CLEAN (' + '; '.join(reasons)[:140] + ')'
         elif not checked: status = 'UNVERIFIED (no fcov check with per-bin results in the round)'
@@ -138,10 +142,12 @@ def credit(items, holds, bins, marked, runs, fcov_of, fires_of):
         elif not fired: status = 'FIRE-FAIL'
         elif held: status = 'HELD (' + ', '.join(held) + ')'
         elif unhit: status = f'UNHIT ({len(unhit)} of {len(item_bins)} bins)'
+        elif carve and carve[0] == 'UNCREDITED': status = f'UNCREDITED (carve-out until {carve[1]})'
+        elif carve and carve[0] == 'COUNTED-ONLY': status = f'COUNTED-ONLY (until {carve[1]})'
         else: status = 'CREDITED'
         rows.append({'item': tid, 'group': g, 'test': test, 'tier': it['tier'], 'seeds': len(seeds), 'verdicts': '/'.join(sorted(set(str(v) for v in verdicts))),
                      'fired': 'yes' if fired else ('no' if seen else 'none'), 'bins': len(item_bins), 'bins_unhit': len(unhit), 'unhit_list': '; '.join(unhit),
-                     'witness_bins': len(wit_bins), 'witness_marked': 'yes' if marked.get(tid) else 'no', 'hold': ','.join(held), 'status': status})
+                     'witness_bins': len(wit_bins), 'witness_marked': 'yes' if marked.get(tid) else 'no', 'hold': ','.join(held), 'carve': (carve[0] + ' until ' + carve[1]) if carve else '', 'status': status})
     return rows, groups_seen
 
 def round_header(man, runs, invocation=''):
@@ -156,16 +162,16 @@ def render_md(rows, round_no, header='', tests=None, heading=None):
     for r in rows: areas[r['item'].split('-')[1]][r['status'].split(' ')[0]] += 1
     title = heading or f'Round-{round_no} credit'
     L = [f'## 1.7 {title} (generated from the regression manifest and sim logs; {len(rows)} items in {len({r["group"] for r in rows})} hosted groups)', '', header, '',
-         '| Area | Items hosted | CREDITED | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |', '|---|---|---|---|---|---|---|---|---|']
+         '| Area | Items hosted | CREDITED | UNCREDITED | COUNTED-ONLY | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |', '|---|---|---|---|---|---|---|---|---|---|---|']
     for a, c in sorted(areas.items()):
-        L.append(f"| {a} | {sum(c.values())} | {c['CREDITED']} | {c['HELD']} | {c['UNHIT']} | {c['FIRE-FAIL']} | {c['NOT-FIRED']} | {c['NOT-RUN-CLEAN']} | {c['UNVERIFIED']} |")
+        L.append(f"| {a} | {sum(c.values())} | {c['CREDITED']} | {c['UNCREDITED']} | {c['COUNTED-ONLY']} | {c['HELD']} | {c['UNHIT']} | {c['FIRE-FAIL']} | {c['NOT-FIRED']} | {c['NOT-RUN-CLEAN']} | {c['UNVERIFIED']} |")
     tot = collections.Counter(r['status'].split(' ')[0] for r in rows)
-    L += ['', f"Total: {len(rows)} items hosted; credited {tot['CREDITED']}; held {tot['HELD']}; unhit {tot['UNHIT']}; fire-fail {tot['FIRE-FAIL']}; not fired {tot['NOT-FIRED']}; not run clean {tot['NOT-RUN-CLEAN']}; unverified {tot['UNVERIFIED']}.",
+    L += ['', f"Total: {len(rows)} items hosted; credited {tot['CREDITED']}; uncredited (carve-out) {tot['UNCREDITED']}; counted-only {tot['COUNTED-ONLY']}; held {tot['HELD']}; unhit {tot['UNHIT']}; fire-fail {tot['FIRE-FAIL']}; not fired {tot['NOT-FIRED']}; not run clean {tot['NOT-RUN-CLEAN']}; unverified {tot['UNVERIFIED']}.",
           f"Witness bins of hosted items: {sum(r['witness_bins'] for r in rows)} (unscored until T-179; listed, never credited).", '']
     if tests:
         L += ['Per test (every run of the regression, red fixtures included; the item table below excludes red fixtures, which host no items):', '', '| Test | Seeds | Verdicts | Distinct reasons |', '|---|---|---|---|'] + [f"| {t} | {n} | {v} | {rs} |" for t, n, v, rs in tests] + ['']
-    L += ['| Item | Group | Test | Seeds | Verdicts | Fired | Bins | Unhit | Hold | Status |', '|---|---|---|---|---|---|---|---|---|---|']
-    for r in rows: L.append(f"| {r['item']} | {r['group']} | {r['test']} | {r['seeds']} | {r['verdicts']} | {r['fired']} | {r['bins']} | {r['bins_unhit']} | {r['hold'] or '-'} | {r['status']} |")
+    L += ['| Item | Group | Test | Seeds | Verdicts | Fired | Bins | Unhit | Hold | Carve-out | Status |', '|---|---|---|---|---|---|---|---|---|---|---|']
+    for r in rows: L.append(f"| {r['item']} | {r['group']} | {r['test']} | {r['seeds']} | {r['verdicts']} | {r['fired']} | {r['bins']} | {r['bins_unhit']} | {r['hold'] or '-'} | {r.get('carve') or '-'} | {r['status']} |")
     return '\n'.join(L) + '\n'
 
 def self_test():
@@ -194,7 +200,17 @@ def self_test():
     rows3, _ = credit(items, holds, bins, marked, [{'test': 'gen_test_aa', 'seed': 1, 'verdict': 'PASS', 'fcov_check': None}], lambda t: (set(), set()), lambda r: fires[('gen_test_aa', 1)])
     ok3 = all(r['status'].startswith('UNVERIFIED') for r in rows3 if r['item'] in ('TP-AA-001', 'TP-AA-002'))
     print('SELF-TEST', 'ok ' if ok3 else 'BAD', 'no fcov check in the round: UNVERIFIED, never credited:', {r['item']: r['status'][:10] for r in rows3})
-    return 0 if ok and ok2 and ok3 else 1
+    # carve-out record: an item that would credit is UNCREDITED or COUNTED-ONLY per its tag; the discovery parses the plan section form
+    items4 = dict(items); items4.update({'TP-AA-005': {'group': 'gen_aa', 'expected': 'pass', 'tier': 'smoke'}, 'TP-AA-006': {'group': 'gen_aa', 'expected': 'pass', 'tier': 'smoke'}})
+    bins4 = dict(bins); bins4.update({'TP-AA-005': [('CG-AA-001', 'cp_x', 'b0')], 'TP-AA-006': [('CG-AA-001', 'cp_x', 'b0')]})
+    fires4 = {k: dict(v, fire_tp_aa_005=True, fire_tp_aa_006=True) for k, v in fires.items()}
+    sec = '## 1.8 Items carved out of crediting (LOG-051)\n\n| Item | Tag | Until | Reason |\n|---|---|---|---|\n| TP-AA-005 | UNCREDITED | T-183 (2c) | rf_wr_suppress undo on the DUT flag |\n| TP-AA-006 | COUNTED-ONLY | T-183 (2c) | corrupted-load records |\n\n## 2. Next\n'
+    carve, csec = carveout_items(sec)
+    rows4, _ = credit(items4, holds, bins4, marked, runs[:2], lambda t: ({'gen_aa_cg.cp_x.b0', 'gen_aa_cg.cp_x.b1', 'gen_aa_cg.cp_x.b2', 'gen_aa_cg.cp_x.b3'}, set()) if t == 'gen_test_aa' else (set(), set()), lambda r: fires4[(r['test'], r['seed'])], carve)
+    got4 = {r['item']: r['status'].split(' ')[0] for r in rows4}
+    ok4 = csec == [('1.8', 'LOG-051')] and carve == {'TP-AA-005': ('UNCREDITED', 'T-183 (2c)', 'rf_wr_suppress undo on the DUT flag'), 'TP-AA-006': ('COUNTED-ONLY', 'T-183 (2c)', 'corrupted-load records')} and got4['TP-AA-005'] == 'UNCREDITED' and got4['TP-AA-006'] == 'COUNTED-ONLY' and got4['TP-AA-001'] == 'CREDITED'
+    print('SELF-TEST', 'ok ' if ok4 else 'BAD', 'carve-out record applied (UNCREDITED / COUNTED-ONLY never credit; an untagged item still credits):', {k: got4[k] for k in ('TP-AA-001', 'TP-AA-005', 'TP-AA-006')}, csec)
+    return 0 if ok and ok2 and ok3 and ok4 else 1
 
 def main():
     ap = argparse.ArgumentParser()
@@ -203,10 +219,10 @@ def main():
     a = ap.parse_args()
     if a.self_test: sys.exit(self_test())
     if not a.regress_manifest: sys.exit('usage: --regress-manifest <manifest.yaml> or --self-test')
-    items, holds, bins, marked = load_plan(pathlib.Path(a.plan_dir))
+    items, holds, bins, marked, carveouts = load_plan(pathlib.Path(a.plan_dir))
     man = yaml.safe_load(open(a.regress_manifest)); runs = man.get('runs') or []
     fdir = pathlib.Path(a.fcov_dir)
-    rows, groups = credit(items, holds, bins, marked, runs, lambda t: manifest_not_hit(fdir, t), fire_results)
+    rows, groups = credit(items, holds, bins, marked, runs, lambda t: manifest_not_hit(fdir, t), fire_results, carveouts)
     by_test = collections.defaultdict(list)
     for r in runs: by_test[r['test']].append(r)
     tests = [(t, len(rs), '/'.join(sorted({str(r.get('verdict')) for r in rs})), '; '.join(sorted({(r.get('reason') or '-')[:60] for r in rs}))) for t, rs in sorted(by_test.items())]
