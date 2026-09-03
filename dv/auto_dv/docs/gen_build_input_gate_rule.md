@@ -1,54 +1,92 @@
-# Build-input gate for the head-mode canary hold (rule proposal, pre-execution review requested)
+# Build-input gate for the head-mode canary hold (proposal, revision 2 after the CM94 pre-execution review)
 
-Motivating case (2026-09-03, batch-3 acceptance): the hold refused the same four requests twice while nothing a
-build or run reads had changed: 20:54:00Z canary 0a07536 vs HEAD 1dbb8bf (delta dv/auto_dv/docs/gen_intervention_log.md);
-20:57Z canary 1dbb8bf vs HEAD 902da1f (delta dv/auto_dv/docs/gen_test_plan.md, dv/auto_dv/tools/gen_covergroup_set.py,
-review records). Records: dv/auto_dv/work/runtime/batches/20260903T205400Z_1dbb8bff28bf.yaml and the chained third
-attempt 20260903T205742Z_902da1f693d8.yaml. At today's commit rate (a review record or log entry every few minutes) a
-canary pinned to a HEAD sha loses the race more often than it wins.
+## Motivating case (2026-09-03, the batch-3 acceptance wave)
 
-## Rule
+The hold refused the same four purpose-1 requests twice before a chained canary-and-serve attempt got through:
 
-The hold keeps its shape (a batch needs the commit a gen_boot_zc canary passed on; the record keeps both shas and the
-full mirrored diff) but DECIDES on the build inputs only: the batch is refused when a file that a gen_tb build or a
-run reads differs between the canary commit and HEAD, and accepted when the delta consists only of record documents
-and analysis tools that nothing in a build or run consumes.
+1. 20:54:00Z, canary 0a07536 vs HEAD 1dbb8bf: delta `M dv/auto_dv/docs/gen_intervention_log.md` (nothing a build or run reads).
+   Record dv/auto_dv/work/runtime/batches/20260903T205400Z_1dbb8bff28bf.yaml. This refusal was spurious.
+2. 20:57Z, canary 1dbb8bf vs HEAD 902da1f: delta `M dv/auto_dv/docs/gen_bug_log.md`, `M dv/auto_dv/docs/gen_fcov_plan.md`,
+   `M dv/auto_dv/docs/gen_feature_list.md`, `M dv/auto_dv/docs/gen_test_plan.md`, `M dv/auto_dv/tools/gen_covergroup_set.py`.
+   gen_fcov_plan.md and gen_test_plan.md are build and run inputs (gen_fcov_codegen.py:23-24, gen_fcov_manifest.py:43-44), so
+   this refusal stands under the proposed rule too; it is listed here because the rule must reproduce it.
+3. 20:57:45Z, canary 3 pinned 902da1f, accepted (record 20260903T205742Z_902da1f693d8.yaml).
 
-Classifier `is_build_input(path)`, default INPUT (an unknown file refuses; fail-safe), with the non-input set named
-explicitly:
-- dv/auto_dv/tools/** (analysis and generation tools run by hand; no build or run imports them);
-- dv/auto_dv/docs/gen_intervention_log.md, gen_bug_log.md, gen_runtime_api.md, gen_dashboard.md,
-  gen_component_api_*.md, gen_critic_*.md, gen_hierarchy_map.md, gen_param_resolution.md (record and reference
-  documents; nothing under flow, tb, env, gen_tb, isa, tests or stim opens them).
-Everything else in the mirrored set stays an input, in particular: rtl/**, vendor/**, util/**, ci/**, *.core,
-ibex_configs.yaml, python-requirements.txt, dv/auto_dv/{tb,env,gen_tb,isa,tests,stim,flow,fcov_expectations,excl}/**,
-and the docs files the test library or the flow read at run time: dv/auto_dv/docs/gen_trace_witness_ids.csv
-(gen_flow_util.witness_index, gen_test_lib), gen_trace_tp_bin.csv, gen_test_plan.md and gen_fcov_plan.md
-(gen_fcov_manifest, imported by the test library). So the 902da1f refusal stays a refusal under this rule (the plan
-changed); the 1dbb8bf refusal (intervention log only) becomes an acceptance.
+At the day's commit rate (a review record or log entry every few minutes) a canary pinned to a HEAD sha loses the race whenever
+the intervening commit touches only record documents.
 
-## Red before green (self-test cases, all on fabricated name lists, no repository history needed)
+## Proposed rule
 
-1. delta = [dv/auto_dv/docs/gen_intervention_log.md]           -> no refusal (build_input_delta empty)   # today's case 1
-2. delta = [dv/auto_dv/tools/gen_covergroup_set.py]             -> no refusal
-3. delta = [dv/auto_dv/docs/gen_test_plan.md]                   -> refusal (the library reads the plan)  # today's case 2
-4. delta = [dv/auto_dv/flow/gen_testlist.yaml]                  -> refusal
-5. delta = [rtl/ibex_core.sv]                                   -> refusal
-6. delta = [dv/auto_dv/docs/gen_some_new_doc.md]                -> refusal (unknown docs file: default INPUT)
-7. delta = [dv/auto_dv/docs/gen_critic_flow_x.md, dv/auto_dv/tools/y.py] -> no refusal (all non-inputs)
-8. one real-history check when both shas exist in the clone: build_input_delta(0a07536, 1dbb8bf) == "" and
-   build_input_delta(1dbb8bf, 902da1f) != "" (guarded: skipped with a printed line when a sha is absent).
+The hold keeps its shape: a batch needs the commit a gen_boot_zc canary passed on, the record keeps both shas and the whole mirrored
+diff. It DECIDES on the build inputs: the batch is refused when a file that a gen_tb build or a run reads differs between the canary
+commit and HEAD, and accepted when every differing file is a record document or a hand-run tool that nothing at build or run time
+reads.
 
-## Implementation sketch (one flow touch, after this review)
+Classifier `is_build_input(path)`: default INPUT (an unknown or new file refuses; fail-safe). The non-input set is named file by
+file or by a glob that matches files directly under dv/auto_dv/docs only (never a subdirectory):
 
-- gen_flow_const.py: BUILD_INPUT_NONINPUT_DIRS = ("dv/auto_dv/tools",), BUILD_INPUT_NONINPUT_DOCS = (the list above,
-  glob-capable), with the rule text in the comment.
-- gen_flow_util.is_build_input(path) and gen_serve_requests.build_input_delta(sha_a, sha_b): `git diff --name-only`
-  over the mirrored pathspecs, filtered by the classifier; the returned delta text names only the build-input files
-  (stat form) and the batch record gains `delta_full` (the whole mirrored diff, kept for transparency) beside `delta`
-  (the deciding subset) and `noninputs_changed` (the list the rule let through).
-- The round-0 dispatch wrapper's mirrored-delta rule (gen_round pre-dispatch, LOG-042d) uses the same classifier.
-- gen_runtime_api.md Section 4 (the hold), a CM row citing this file and the two refusal records; STATUS.
-- Not changed: the canary itself stays mandatory; a missing canary sha still refuses; the digest facts in the build
-  manifest (inputs.sources_sha256 over the filelists) stay informational because they cover rtl and tb only, not
-  tests, stim or flow, so a git-level classifier over the mirrored set is the precise gate.
+- tools, file by file (hand-run generators and reviewers; nothing under flow, tb, env, gen_tb, isa, tests or stim imports them):
+  dv/auto_dv/tools/gen_covergroup_set.py, gen_promotion_table.py, gen_round_credit.py, gen_plan_holds.py, gen_token_sunset.py,
+  gen_cross_review.sh, gen_launch_check.sh. NOT non-inputs: dv/auto_dv/tools/gen_trace_check.py (gen_fcov_manifest.py:45 compiles
+  its `segmentable` rule from the source at :96-110, used at :251 / :264 when finish() reaches declare_bins() -> plan_bins) and
+  dv/auto_dv/tools/gen_plan_marker.py (imported at gen_fcov_manifest.py:50-51, TOKEN used at :191); a new tools file is INPUT.
+- record documents directly under dv/auto_dv/docs: gen_intervention_log.md, gen_bug_log.md, gen_runtime_api.md, gen_dashboard.md,
+  gen_build_input_gate_rule.md, gen_component_api_*.md, gen_critic_*.md. Every other docs file is INPUT by default, in particular
+  the run-time-read set: gen_trace_witness_ids.csv (gen_flow_util.witness_index, gen_test_lib.py:1123), gen_trace_tp_bin.csv,
+  gen_test_plan.md and gen_fcov_plan.md (gen_fcov_manifest.py:42-44, reached at run time through declare_bins; a drift fails the
+  run in check_manifest_matches, gen_test_lib.py:878-892), gen_test_template_api.md (gen_test_lib.py:86, :360), and the plan
+  companions gen_feature_list.md and gen_trace_feature_tp.csv (INPUT by default, no reader claim needed).
+
+Everything else in the mirrored set is INPUT: rtl/**, vendor/**, util/**, ci/**, *.core, ibex_configs.yaml, python-requirements.txt,
+dv/auto_dv/{tb,env,gen_tb,isa,tests,stim,flow,fcov_expectations,excl}/**. The classifier itself lives in dv/auto_dv/flow, which is
+INPUT, so editing the non-input list changes HEAD's build inputs and forces a fresh canary before any batch is served on it.
+
+Measured dispatch stays exact-sha and is not touched by this rule: `gen_flow_util.measured_dispatch_refusal` and
+`gen_round.check_canary_build` require the canary build to be a head-mode build of exactly the pinned commit (ruling LOG-046a), and
+`gen_serve_requests.measured_gate` applies that to purpose-4 requests. So a batch whose canary sha differs from HEAD by non-inputs
+only serves its purpose-1..3 requests and still has its purpose-4 requests refused by measured_gate (the record says which rule
+refused what). The round-0 dispatch of 2026-09-03 was driven by an ad-hoc shell command (dv/auto_dv/work/runtime/round_0.log),
+not by flow code; gen_round.py carries no mirrored-delta rule and none is proposed for it.
+
+## Record (fields the implementing touch will add to the batch record)
+
+- `delta`: the deciding subset, from `git diff --name-status <canary> <HEAD> -- <mirrored pathspecs>` filtered by is_build_input;
+- `delta_full`: the whole mirrored diff as `git diff --stat=200` (transparency only);
+- `noninputs_changed`: the differing files the rule let through;
+- `noninput_list_sha256`: sha256 over the classifier's rendered non-input list, so a record states which list decided;
+- `decision`: accepted / refused_build_inputs_changed / refused_no_canary_sha as today.
+
+## Red before green (self-test cases on fabricated name lists; no repository history needed except case 14)
+
+1.  [dv/auto_dv/docs/gen_intervention_log.md]                      -> accept (case 1 of the motivating set)
+2.  [dv/auto_dv/tools/gen_covergroup_set.py]                        -> accept
+3.  [dv/auto_dv/docs/gen_test_plan.md]                              -> refuse
+4.  [dv/auto_dv/flow/gen_testlist.yaml]                             -> refuse
+5.  [rtl/ibex_core.sv]                                              -> refuse
+6.  [dv/auto_dv/docs/gen_some_new_doc.md]                           -> refuse (unknown docs file: default INPUT)
+7.  [dv/auto_dv/docs/gen_critic_flow_x.md, dv/auto_dv/tools/gen_round_credit.py] -> accept
+8.  [dv/auto_dv/docs/gen_intervention_log.md, dv/auto_dv/docs/gen_test_plan.md]
+      -> refuse with delta == [gen_test_plan.md] and noninputs_changed == [gen_intervention_log.md]
+9.  [dv/auto_dv/tools/gen_trace_check.py]                           -> refuse (the segmentable rule source)
+10. [dv/auto_dv/tools/gen_plan_marker.py]                           -> refuse (the marker token)
+11. prefix boundaries: [dv/auto_dv/toolsx/y.py] -> refuse; [dv/auto_dv/docs/sub/gen_critic_x.md] -> refuse (globs match files
+    directly under docs only); [dv/auto_dv/docs/gen_component_api_fcov.md] -> accept
+12. record shape: the decision dict carries exactly delta, delta_full, noninputs_changed, noninput_list_sha256, decision
+13. existence: every listed non-input file resolves to a tracked file (`git ls-files`), and each glob class matches at least one
+    tracked file; a listed name that no longer exists fails the self-test (the list cannot rot silently)
+14. real history, guarded (skipped with a printed line when a sha is absent from the clone): 0a07536..1dbb8bf -> accept with
+    noninputs_changed == [dv/auto_dv/docs/gen_intervention_log.md]; 1dbb8bf..902da1f -> refuse with delta ==
+    [dv/auto_dv/docs/gen_fcov_plan.md, dv/auto_dv/docs/gen_feature_list.md, dv/auto_dv/docs/gen_test_plan.md] and
+    noninputs_changed == [dv/auto_dv/docs/gen_bug_log.md, dv/auto_dv/tools/gen_covergroup_set.py]
+
+## Implementation sketch (one flow touch, after this proposal passes review; the red retained in the self-test)
+
+- gen_flow_const.py: BUILD_INPUT_NONINPUT_TOOLS (file by file), BUILD_INPUT_NONINPUT_DOCS (names and the two globs), with the rule
+  text in the comment.
+- gen_flow_util.is_build_input(path) and classify_delta(names) -> (inputs, noninputs); gen_serve_requests.build_input_delta returns
+  the deciding subset and the record fields above; the hold's log line names both lists.
+- gen_runtime_api.md Section 4 (the hold) changes in the implementing landing only; a CM row cites this document and the three
+  records of the motivating case.
+- Not changed: the canary stays mandatory; a missing canary sha still refuses; measured dispatch stays exact-sha (above); the build
+  manifest's inputs.sources_sha256 stays informational (it covers the filelists' rtl and tb sources only, not tests, stim or flow,
+  which is why a git-level classifier over the mirrored set, exact on committed content, is the gate rather than a content digest).
