@@ -54,10 +54,14 @@ Program: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py at the run seed (te
 Knobs: the items' Knobs lines name imem_gnt_delay, imem_rvalid_delay, irq_line_mix, debug_req_regime and
 scr_key_delay; all but debug_req_regime are declared schedulable. The program has no debug handling (no code in the
 DM window), so a debug request regime drawn at start-up halts the core there and the first report store never
-comes (round-0 seed 1028791296, T-206); the debug regime stays at its command-line default (none) and the items'
-debug-mode clauses are the not-built clauses above. Nothing is pinned. declare_bins() is
-the template default (the plan's bins of the six fire_tp items, checked against the rendered manifest in
-finish(); the entry stays unwired until gen_fcov_pkg lands). Always-on checkers relied on: the ISA comparator
+comes; the debug regime stays at its command-line default (none) and the items' debug-mode clauses are the
+not-built clauses above. The thirteen debug-mode bins of TP-CSR-108 (gen_csr_reset_read_cg cp_dbg.dbg, the four
+cr_dbg_reset crosses and cp_csr dcsr/dpc/dscratch0/dscratch1; gen_csr_debug_csr_cg cp_csr.dcsr, cp_trap.ok,
+cp_dbg.dbg and cr_csr_dbg_trap.dcsr_dbg_ok) need a debug entry this program never makes, so they are bins_not_hit
+(rule (g); the set the item's Notes name) pending a debug-ROM program; the four gen_csr_debug_csr_cg bins are
+co-owned by the debug-capable group gen_csr_debug_csr. Nothing is pinned. declare_bins() is the template default
+(the plan's bins of the six fire_tp items minus bins_not_hit, checked against the rendered manifest in finish()).
+Always-on checkers relied on: the ISA comparator
 rows isa_pc/isa_insn/isa_trap/isa_rd/isa_mem/isa_prv/isa_pc_next, rvfi_proto, the bus protocol checkers
 (ibus/dbus). MODULE=dv.auto_dv.tests.gen_test_csr_reset, TOPLEVEL=gen_tb_top.
 
@@ -138,6 +142,22 @@ class CsrReset(GenTest):
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_line_mix", "knob_scr_key_delay")
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
+    # the debug-mode bins of TP-CSR-108: a built item whose precondition (a debug entry) this program never applies
+    bins_not_hit = {
+        "gen_csr_reset_read_cg.cp_dbg.dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dcsr_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dpc_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch0_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch1_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cp_csr.dcsr": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cp_csr.dpc": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cp_csr.dscratch0": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cp_csr.dscratch1": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_csr.dcsr": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_trap.ok": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_dbg.dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cr_csr_dbg_trap.dcsr_dbg_ok": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+    }
 
     def report_count(self):
         self._plan = prog.plan(self.seed)

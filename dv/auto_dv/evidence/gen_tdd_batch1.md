@@ -671,5 +671,43 @@ so the fixed test's red is on record too. Logs: gen_t206_* (two excerpts) and ge
 Lesson for every test (recorded for the Orchestrator and the DV Lead): a program without a debug ROM must not schedule knob_debug_req_regime,
 and a program without an interrupt handler must not schedule knob_irq_regime unless it keeps MIE=0 throughout; the template has no guard for
 this today (the lint's red-source list is frozen, LOG-024d (a)), so the rule lives in the briefs and the reviews until a ruling adds one. The
-declared debug-mode bins of this test (gen_csr_debug_csr_cg.cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok) cannot be hit without a debug entry and
-are a separate question for the manifest (bins_not_hit or a debug-ROM program) before the test is measured for functional coverage.
+declared debug-mode bins of this test at 56e37d7 are thirteen, not two: gen_csr_reset_read_cg cp_dbg.dbg, cr_dbg_reset.dcsr_dbg,
+cr_dbg_reset.dpc_dbg, cr_dbg_reset.dscratch0_dbg, cr_dbg_reset.dscratch1_dbg, cp_csr.dcsr, cp_csr.dpc, cp_csr.dscratch0, cp_csr.dscratch1 and
+gen_csr_debug_csr_cg cp_csr.dcsr, cp_trap.ok, cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok; none can be hit without a debug entry. Their disposition
+is the DV Lead's rule (g) decision in TP-CSR-108's Notes (plan v2r part 4c), landed as T-222 (Section 14).
+
+## 14. T-222: the thirteen debug-mode bins of TP-CSR-108 under bins_not_hit (rule (g))
+
+Why: the 3k review (dv/auto_dv/reviews/2026-09-03-claude-diff-e4cbdd8b-56e37d75.md, rows CM42-*) found the closing sentence of Section 13
+naming two of the thirteen debug-mode bins the committed manifest still declared as expected-hit, a docstring silent about them, and a history
+breadcrumb. The DV Lead decided (TP-CSR-108 Notes, plan v2r part 4c) that the thirteen go under bins_not_hit with the reason (no debug handling
+in the program, the debug regime not scheduled) pending a debug-ROM program, the four gen_csr_debug_csr_cg bins co-owned with TP-CSR-017
+(gen_csr_debug_csr, a debug-capable group); LOG-055 ordered the re-render as a small landing ahead of the consolidated batch-3 touch.
+
+Change: gen_test_csr_reset.py declares `bins_not_hit` with the thirteen tokens (gen_csr_reset_read_cg cp_dbg.dbg, cr_dbg_reset.dcsr_dbg,
+cr_dbg_reset.dpc_dbg, cr_dbg_reset.dscratch0_dbg, cr_dbg_reset.dscratch1_dbg, cp_csr.dcsr, cp_csr.dpc, cp_csr.dscratch0, cp_csr.dscratch1;
+gen_csr_debug_csr_cg cp_csr.dcsr, cp_trap.ok, cp_dbg.dbg, cr_csr_dbg_trap.dcsr_dbg_ok), each with the reason naming TP-CSR-108's Notes and
+rule (g); the docstring names the set, says why, and drops the breadcrumb and the stale clause about gen_fcov_pkg (the package exists at HEAD;
+this test's covergroups are not in it yet). The manifest was re-rendered with `python3 dv/auto_dv/tests/gen_fcov_manifest.py --test-module
+dv/auto_dv/tests/gen_test_csr_reset.py --test gen_test_csr_reset --write` ("68 bins, 0 dropped by the manifest rule, 13 not_hit"): 81 declared
+at 56e37d7, 68 now, thirteen `# not_hit` header lines; the 68 are exactly the 81 minus the thirteen (set compare in the retention script).
+Nothing else changed: fire checks, program generator, schedulable set and the pinned red (TP-CSR-106) are as at 56e37d7, so the committed red
+logs keep their verdicts.
+
+Green run on a fresh export of HEAD: head_export13 = `git archive` of f6b42ea (HEAD when the export was made; between f6b42ea and 705edb8, the
+HEAD at hand-off, no path under dv/auto_dv/env, tb, isa, gen_tb, tests, fcov_expectations, stim or rtl/ changed), tools/spike linked from the
+clone, compiled to out_head13 (sources sha 8452b39617094289), the two T-222 files overlaid (template sha abbe6fcb78e53a27, the committed template). Program: the
+generator at seed 1028791296 through dv/auto_dv/stim/gen_program.py with the testlist entry's --gcc-opts, from the export (266 words, crc32
+0x27ec99e6, md5 6edabe4a45450ad667929468e15799b6, byte-identical to the round-0 image of Section 13). Run: seed 1028791296, module
+dv.auto_dv.tests.gen_test_csr_reset, the export's fixture from the export root, no plusarg beyond the image set; the run header is the first
+line of the retained stdout.
+
+| Run | Result | GEN_TEST_BINS | equals the manifest | UVM_ERROR | reports | retired | EOT cycle | fire_schedule_applied | knobs | md5 (gen_<run>_stdout.log) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| t222_csr_reset_1028791296 | PASS | 68 | yes (set compare) | 0 | 88 | 243 | 4203 | ok=True reached 4 of 8, applied 4 | pinned=- drawn=imem_gnt_delay=random imem_rvalid_delay=short irq_line_mix=single scr_key_delay=withheld_then_valid | bdcd77cc3871997c2114ddba27f1759a |
+
+Retained in full (LOG-034: greens in full): gen_t222_csr_reset_1028791296_stdout.log (run header first) and gen_t222_csr_reset_1028791296_sim.log,
+rows in gen_manifest.md. Self-tests from the detached archive with the overlay, PYTHONPATH and GEN_TEST_STAGED_ENTRIES unset:
+dv/auto_dv/work/test-writer/head_export13_selftest_t222.log (18:57:00Z-18:57:09Z) reads "GEN_TEST_LIB self-test PASS" and "GEN_FCOV_MANIFEST
+self-test PASS (67 bins for gen_reg_schedule, 1 dropped; 86 excluded coverpoints)", both rc=0, and the committed manifest equals a fresh
+`--test-module` render (diff empty). The library self-test also PASSes in the shared tree at 18:57:20Z.
