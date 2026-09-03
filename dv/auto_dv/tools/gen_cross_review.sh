@@ -4,6 +4,8 @@
 # `claude -p --model fable` session (owner ruling A-001) with the identical rubric set, target
 # echo, and verdict contract, and records why codex was unavailable in the artifact header.
 # Usage: gen_cross_review.sh plan <file> [...] | diff <base> <head> | replan <plan> <findings> <base_rev>
+#        plan/replan files must be committed at HEAD: the reviewer reads a detached checkout of the
+#        reviewed commit (HEAD for plan/replan, <head> for diff), never the live working tree.
 # Env:   REVIEW_FOCUS (optional owner focus sentence), REVIEWER=auto|codex|claude (default auto),
 #        CLAUDE_REVIEW_MODEL (default fable), CLAUDE_REVIEW_EFFORT (default high).
 # Prints "VERDICT: <verdict> <artifact>". Exit 0 on APPROVE/APPROVE-WITH-CHANGES, 2 on
@@ -15,8 +17,10 @@ if [ -z "${GEN_XR_RELOCATED:-}" ]; then
   _xr_root=$(git rev-parse --show-toplevel)/dv/auto_dv/work/orchestrator/review_self; mkdir -p "$_xr_root"; _self_copy=$(mktemp "$_xr_root/self.XXXXXX.sh"); cp "$0" "$_self_copy"
   GEN_XR_RELOCATED="$_self_copy" exec bash "$_self_copy" "$@"
 fi
-trap 'rm -f "$GEN_XR_RELOCATED"' EXIT
-REPO=$(git rev-parse --show-toplevel); cd "$REPO"
+TREE=""
+cleanup_all() { [ -n "$TREE" ] && { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }; rm -f "$GEN_XR_RELOCATED"; }
+trap cleanup_all EXIT
+REPO=$(git rev-parse --show-toplevel); cd "$REPO"; git worktree prune >/dev/null 2>&1 || true
 MODE=${1:?plan|diff|replan}; shift
 DATE=$(date +%Y-%m-%d)
 WRAP=.claude/skills/cross-review/scripts/run_codex_review.sh
@@ -42,21 +46,15 @@ fi
 [ "$REVIEWER" != codex ] || { echo "PROTOCOL ERROR: REVIEWER=codex forced but codex unavailable: $CODEX_ERR" >&2; exit 1; }
 [ -n "$CODEX_ERR" ] || CODEX_ERR="REVIEWER=claude forced by caller"
 
-# Same positive-list rubric assertion as the codex wrapper (a missing or extra rubric fails loud).
-ZONE_A_RUBRICS="ai-slop-comments.md forces-and-hier-access.md magic-numbers.md rtl-purity.md assertion-integrity.md"
-EXPECTED=$(printf '%s\n' GUIDE.md $ZONE_A_RUBRICS | LC_ALL=C sort)
-ACTUAL=$(cd ci/reviews && ls -1 | LC_ALL=C sort)
-[ "$ACTUAL" = "$EXPECTED" ] || { echo "PROTOCOL ERROR: ci/reviews/ does not match the Zone A rubric set." >&2; echo "have: $(echo $ACTUAL)" >&2; echo "want: $(echo $EXPECTED)" >&2; exit 1; }
-RUBRICS=$(cd ci/reviews && cat GUIDE.md $ZONE_A_RUBRICS)
 
 MANIFEST=""
 case "$MODE" in
   plan)
     TARGET_DESC="plan/spec file(s): $*"
-    PLAN_FILES=("$@"); for f in "$@"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (plan reviews target committed files)"; exit 1; }; MANIFEST="${MANIFEST}TARGET: $f@$(git show "HEAD:$f" | sha256sum | cut -c1-8)${NL}"; done
+    for f in "$@"; do git cat-file -e "HEAD:$f" 2>/dev/null || { echo "PROTOCOL ERROR: $f is not committed at HEAD (plan reviews target committed files)"; exit 1; }; MANIFEST="${MANIFEST}TARGET: $f@$(git show "HEAD:$f" | sha256sum | cut -c1-8)${NL}"; done
     TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Review these documents against the spec and repo reality: $*. Echo, verbatim, as the FIRST lines of your output, one line per file exactly as given here:${NL}${MANIFEST}"
-    NAME="plan-$(basename "${1%.*}")" ;;
+    TARGET_DESC="${TARGET_DESC} at commit ${TGT_REV:0:8}"; NAME="plan-$(basename "${1%.*}")" ;;
   replan)
     PLAN_F=${1:?plan file}; FIND_F=${2:?findings artifact}; BASEREV=$(git rev-parse --verify "${3:?base rev}")
     TARGET_DESC="scoped re-review: ${PLAN_F} (delta since ${BASEREV:0:8}) against findings in ${FIND_F}"
@@ -64,7 +62,7 @@ case "$MODE" in
     MANIFEST="TARGET: ${PLAN_F}@$(git show "HEAD:$PLAN_F" | sha256sum | cut -c1-8)${NL}TARGET: ${FIND_F}@$(git show "HEAD:$FIND_F" | sha256sum | cut -c1-8)${NL}"
     TGT_REV=$(git rev-parse HEAD)
     SCOPE_LINE="Scoped re-review (a recorded re-review per CLAUDE.md's gate): ${PLAN_F} was previously reviewed at commit ${BASEREV} and received the findings in ${FIND_F}. Do exactly two things: (1) verdict EACH finding in that artifact ADDRESSED or NOT ADDRESSED against the current plan text, with line evidence; (2) review ONLY the plan's changes since that commit (run: git diff ${BASEREV} -- ${PLAN_F}) for new defects the remediation introduced. Do NOT re-review unchanged plan content. Echo, verbatim, as the FIRST lines of your output, exactly these lines:${NL}${MANIFEST}"
-    NAME="replan-$(basename "${PLAN_F%.*}")" ;;
+    TARGET_DESC="${TARGET_DESC}, reviewed text at commit ${TGT_REV:0:8}"; NAME="replan-$(basename "${PLAN_F%.*}")" ;;
   diff)
     BASE=$(git rev-parse --verify "${1:?base}"); HEAD_=$(git rev-parse --verify "${2:?head}")
     TARGET_DESC="committed diff ${BASE:0:8}..${HEAD_:0:8}"; TGT_REV=$HEAD_
@@ -83,9 +81,14 @@ mkdir -p "$REPO/dv/auto_dv/work/orchestrator/review_tmp"; XR_TMP=$(mktemp -d "$R
 # The reviewer reads a detached checkout of the target commit, never the live working tree, so a
 # teammate editing a reviewed file during the run cannot reach the artifact.
 TREE="$XR_TMP/tree"
-git worktree add --detach "$TREE" "$TGT_REV" >/dev/null 2>&1 || { echo "PROTOCOL ERROR: cannot create a worktree of $TGT_REV"; exit 1; }
-cleanup_tree() { git -C "$REPO" worktree remove --force "$TREE" >/dev/null 2>&1 || true; git -C "$REPO" worktree prune >/dev/null 2>&1 || true; }
-trap cleanup_tree EXIT
+git worktree add --detach "$TREE" "$TGT_REV" >/dev/null 2>"$XR_TMP/worktree.err" || { echo "PROTOCOL ERROR: cannot create a worktree of $TGT_REV: $(cat "$XR_TMP/worktree.err")"; exit 1; }
+WRAP_HASH=$(git hash-object "$GEN_XR_RELOCATED" | cut -c1-8)
+# Same positive-list rubric assertion as the codex wrapper (a missing or extra rubric fails loud), read from the reviewed commit, not the live tree.
+ZONE_A_RUBRICS="ai-slop-comments.md forces-and-hier-access.md magic-numbers.md rtl-purity.md assertion-integrity.md"
+EXPECTED=$(printf '%s\n' GUIDE.md $ZONE_A_RUBRICS | LC_ALL=C sort)
+ACTUAL=$(cd "$TREE/ci/reviews" && ls -1 | LC_ALL=C sort)
+[ "$ACTUAL" = "$EXPECTED" ] || { echo "PROTOCOL ERROR: ci/reviews/ does not match the Zone A rubric set." >&2; echo "have: $(echo $ACTUAL)" >&2; echo "want: $(echo $EXPECTED)" >&2; exit 1; }
+RUBRICS=$(cd "$TREE/ci/reviews" && cat GUIDE.md $ZONE_A_RUBRICS)
 cat >"$PROMPT_F" <<PEOF
 Cross-model review (Claude-side work executed in another session; you review from a fresh session; policy: CLAUDE.md 'Cross-model review policy'). You are the independent reviewer, not the author: never approve because the work looks plausible; verify against the repository.
 ${SCOPE_LINE}
@@ -152,8 +155,9 @@ fi
 {
   echo "# Cross-model review - ${TARGET_DESC}"
   echo
-  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap, filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)"
+  echo "**Reviewer:** claude CLI ${CLI_VER}; run-reported model: ${RUN_MODEL}; requested effort: ${EFFORT} (the CLI does not report the effective setting); fresh session ${SESSION}; sandbox: bubblewrap, working directory = detached read-only checkout of commit ${TGT_REV} (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)"
   echo "**Codex unavailable because:** ${CODEX_ERR}"
+  echo "**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob ${WRAP_HASH} (the copy executed); reviewed commit ${TGT_REV}"
   echo "**Date:** ${DATE}"
   echo "**Target:** ${TARGET_DESC} (echo at raw line ${ECHO_OFF})"
   echo
@@ -161,6 +165,6 @@ fi
   echo
   cat "$RAW"
 } >"$XR_TMP/artifact.md" && mv -f "$XR_TMP/artifact.md" "$ART"
-cleanup_tree; trap - EXIT; rm -rf "$XR_TMP"
+cleanup_all; trap - EXIT; rm -rf "$XR_TMP"
 echo "VERDICT: $VERDICT $ART"
 [ "$VERDICT" != "REQUEST-CHANGES" ] || exit 2
