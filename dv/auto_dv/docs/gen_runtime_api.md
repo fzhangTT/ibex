@@ -343,6 +343,16 @@ parser reads). `unreachable` counts URG "Unreachable" marks (constant analysis, 
 in one module's section of `modinfo.txt`, per line rows, condition vectors and toggle rows: the
 machine evidence rtl-arch's exclusion draft Part B.3 asks for.
 
+Witness ledger (ruling 2026-09-03): the covergroups named in `gen_flow_const.LEDGER_COVERGROUPS` (the fcov
+plan's CG-WIT-001, rendered as gen_cg_wit_cycle_clause) are a ledger of fire-check results, not DUT
+coverage. The combining rule excludes them by name from the functional-group score: `gen_cov_report.merge`
+recomputes URG's weight-averaged covergroup score from groups.txt without the ledger rows
+(`group_score` with `ledger_excluded`), the gate row's GROUP takes that value whenever a ledger row was
+present (else URG's total stands), and the ledger's own bins are reported beside it from grpinfo.txt as
+"witnessed clauses: N of M" (`ledger`, also `gate_row.ledger`). This is the mechanism of record; TB Infra's
+`option.weight = 0` on the covergroup is defence in depth. Pinned by `gen_cov_report.py self-test` on
+fabricated groups.txt and grpinfo.txt excerpts until a covergroup exists on this site.
+
 Exclusion markers: when an exclusion file is loaded URG appends `(x)` to an instance name that
 carries exclusions and `(X)` to one that carries them below; `parse_hierarchy_row` strips the marker
 (recorded as `excl_marker`) so the gated rows still parse. Pinned on real excerpts by

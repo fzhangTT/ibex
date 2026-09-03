@@ -116,11 +116,21 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
         res["dut_scope"] = {s: parse_hierarchy_row(report / "hierarchy.txt", s) for s in (dut_scopes or [])}
         res["info_scope"] = {s: parse_hierarchy_row(report / "hierarchy.txt", s) for s in (info_scopes or [])}
         good = [r for r in res["dut_scope"].values() if isinstance(r, dict) and "parse_error" not in r]
+        # Witness ledger: excluded by name from the functional score (the combining rule of record) and reported
+        # beside it; without groups.txt or without a ledger row the URG total stands.
+        groups_txt, grpinfo_txt = report / "groups.txt", report / "grpinfo.txt"
+        rows = parse_groups(groups_txt.read_text(encoding="utf-8", errors="replace")) if groups_txt.is_file() else []
+        res["group_score"] = group_score_excluding(rows, C.LEDGER_COVERGROUPS)
+        res["group_score"]["urg_total"] = res["totals"].get("group", C.NOT_APPLICABLE)
+        res["ledger"] = ledger_summary(grpinfo_txt.read_text(encoding="utf-8", errors="replace"), C.LEDGER_COVERGROUPS) \
+            if grpinfo_txt.is_file() else ledger_summary("", C.LEDGER_COVERGROUPS)
         if dut_scopes and len(good) == len(dut_scopes):
             res["gate_row"] = combine_rows(good)
-            res["gate_row"]["group"] = res["totals"].get("group", C.NOT_APPLICABLE)
+            gs = res["group_score"]
+            res["gate_row"]["group"] = gs["score"] if gs["ledger_excluded"] and gs["score"] is not None else res["totals"].get("group", C.NOT_APPLICABLE)
             if (res["totals"].get("ratios") or {}).get("group"):
                 res["gate_row"]["ratios"]["group"] = res["totals"]["ratios"]["group"]
+            res["gate_row"]["ledger"] = res["ledger"]["text"]
         else:
             res["gate_row"] = {"parse_error": f"{len(dut_scopes or [])} gated scope(s), {len(good)} parsed"}
         res["limited_design"] = "Limited design loaded" in log_text
@@ -183,6 +193,66 @@ def parse_dashboard(dash: Path) -> dict[str, Any]:
 
 # URG suffixes an instance name with (x) when exclusions apply to it and (X) when they apply below it.
 URG_EXCL_MARKERS = ("(x)", "(X)")
+
+
+def parse_groups(text: str) -> list[dict[str, Any]]:
+    """Per-covergroup rows of URG's groups.txt: the first table whose header carries SCORE, WEIGHT and NAME;
+    a row is <score> <weight> <name> (score may be --). Instance paths are reduced to the covergroup name."""
+    rows: list[dict[str, Any]] = []
+    cols: list[str] = []
+    for line in text.splitlines():
+        toks = line.split()
+        if not toks:
+            continue
+        if "SCORE" in toks and "WEIGHT" in toks and "NAME" in toks:
+            cols = toks
+            continue
+        if cols and len(toks) >= 3 and toks[-1] not in ("NAME",):
+            try:
+                score = None if toks[cols.index("SCORE")] == "--" else float(toks[cols.index("SCORE")])
+                weight = int(toks[cols.index("WEIGHT")])
+            except (ValueError, IndexError):
+                continue
+            rows.append({"name": toks[-1].split("::")[-1], "score": score, "weight": weight})
+    return rows
+
+
+def group_score_excluding(rows: list[dict[str, Any]], excluded: tuple[str, ...]) -> dict[str, Any]:
+    """URG's functional score is the weight-averaged covergroup score; recompute it without the excluded names
+    (the combining rule of record for the witness ledger)."""
+    kept = [g for g in rows if g["name"] not in excluded and g["score"] is not None and g["weight"] > 0]
+    dropped = sorted({g["name"] for g in rows if g["name"] in excluded})
+    wsum = sum(g["weight"] for g in kept)
+    score = round(sum(g["score"] * g["weight"] for g in kept) / wsum, 2) if wsum else None
+    return {"score": score, "covergroups_scored": len(kept), "ledger_excluded": dropped}
+
+
+def ledger_summary(grpinfo_text: str, ledger: tuple[str, ...]) -> dict[str, Any]:
+    """witnessed clauses: N of M, from the ledger covergroups' bins in grpinfo.txt (the structure the fcov checker
+    parses: `Group : <path>::<cg>`, `Summary for Variable <cp>`, Covered/Uncovered bins tables)."""
+    hit = total = 0
+    in_ledger = False
+    section = None
+    for line in grpinfo_text.splitlines():
+        g = re.match(r"^Group : \S*::(\S+)$", line)
+        if g:
+            in_ledger = g.group(1) in ledger
+            section = None
+            continue
+        if not in_ledger:
+            continue
+        if re.match(r"^(Uncovered bins|Covered bins)$", line):
+            section = line
+            continue
+        if re.match(r"^(Excluded/Illegal bins|Summary for|Variables for|-{10,}|={10,})", line):
+            section = None
+            continue
+        b = re.match(r"^([A-Za-z_][\w\[\]>=\-:.]*)\s+(\d+)\s+\d+", line)
+        if b and section:
+            total += 1
+            hit += 1 if int(b.group(2)) > 0 else 0
+    return {"covergroups": list(ledger), "witnessed": hit, "clauses": total,
+            "text": f"witnessed clauses: {hit} of {total}" if total else "witnessed clauses: none in report"}
 
 
 def parse_hierarchy_rows(text: str, scope: str) -> dict[str, Any]:
@@ -277,7 +347,22 @@ def self_test() -> int:
     cond = comb["ratios"]["line"] == "3192/8148"
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} combine_rows sums covered/total: {comb['ratios']['line']}")
-    print("SELF-TEST: rows named 'real ...' are verbatim hierarchy.txt excerpts of regress_req_runtime-004")
+    # Witness ledger exclusion (ruling 2026-09-03): fabricated groups.txt rows until a covergroup exists on this site.
+    plain_rows = parse_groups("Total groups coverage summary\nSCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n 60.00       1  gen_irq_cg\n")
+    ledger_rows = parse_groups("Total groups coverage summary\nSCORE   WEIGHT  NAME\n 40.00       1  gen_regime_cg\n 60.00       1  gen_irq_cg\n"
+                              "  5.00       1  gen_tb_top.u_env.u_cov::gen_cg_wit_cycle_clause\n")
+    a, b = group_score_excluding(plain_rows, C.LEDGER_COVERGROUPS), group_score_excluding(ledger_rows, C.LEDGER_COVERGROUPS)
+    cond = a["score"] == b["score"] == 50.0 and b["ledger_excluded"] == ["gen_cg_wit_cycle_clause"] and a["ledger_excluded"] == []
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated groups.txt: the score with the ledger group present equals the score without it ({a['score']} vs {b['score']}), ledger excluded by name")
+    grp = ("Group : gen_tb_top.u_env.u_cov::gen_cg_wit_cycle_clause\n\nSummary for Variable cp_clause\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\n"
+           "w_tp_bit_036 3 1 1\nw_tp_bit_042 1 1 1\n\nUncovered bins\n\nNAME COUNT AT_LEAST NUMBER\nw_tp_bit_043 0 1 1\n\n----------\n"
+           "Group : gen_tb_top.u_env.u_cov::gen_regime_cg\n\nSummary for Variable cp_regime\n\nCovered bins\n\nNAME COUNT AT_LEAST NUMBER\nbin_fast 9 1 1\n")
+    led = ledger_summary(grp, C.LEDGER_COVERGROUPS)
+    cond = led["witnessed"] == 2 and led["clauses"] == 3 and led["text"] == "witnessed clauses: 2 of 3"
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated grpinfo.txt: ledger bins counted only from the ledger covergroup: {led['text']}")
+    print("SELF-TEST: rows named 'real ...' are verbatim hierarchy.txt excerpts of regress_req_runtime-004; the ledger cases are fabricated until a covergroup exists")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

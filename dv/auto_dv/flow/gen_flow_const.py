@@ -348,6 +348,12 @@ FINISH_RE = re.compile(r"^\$finish (at simulation time|called)")
 
 # --- URG dashboard metrics (DV_prompt Section 4: six code metrics + functional) --------------
 URG_METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert", "group")
+# Witness ledger covergroups (fcov plan CG-WIT-001, rendered as gen_cg_wit_cycle_clause): a ledger of fire-check
+# results, not DUT coverage. Ruling 2026-09-03: excluded by name from the functional-group score in the flow's
+# combining rule (the mechanism of record; TB Infra's option.weight = 0 is defence in depth) and reported
+# beside the score as "witnessed clauses: N of M".
+LEDGER_COVERGROUPS = ("gen_cg_wit_cycle_clause",)
+LEDGER_PLAN_IDS = ("CG-WIT-001",)
 NOT_APPLICABLE = "n/a"
 # Gate and stopping rule (DV_prompt Section 4): 80 percent per gated metric; a round shows gain
 # when a gated metric improves by at least G points; stop after N consecutive rounds without gain.

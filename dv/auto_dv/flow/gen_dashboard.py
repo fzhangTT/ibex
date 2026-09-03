@@ -179,15 +179,15 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append("")
     covregs = [m for m in regs if (m.get("coverage") or {}).get("dashboard_txt")]
     if covregs:
-        L.append("| Regression | Purpose | Scope | Tests in report | Line | Cond | Toggle | FSM | Branch | Assert | Group | URG report |")
-        L.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
+        L.append("| Regression | Purpose | Scope | Tests in report | Line | Cond | Toggle | FSM | Branch | Assert | Group | Ledger (beside the score) | URG report |")
+        L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         for m in covregs:
             cov = dut_scope_row(m)
             tot = (m.get("coverage") or {}).get("totals") or {}
             sc = m.get("scope") or {}
             scope_txt = sc.get("tier") or sc.get("tests") or (" ".join(sc.get("repro") or []) or "-")
             L.append(f"| {m.get('tag') or Path(m.get('outdir', '')).name} | {m.get('purpose') or '-'} | {scope_txt} | "
-                     f"{tot.get('tests_in_report', '-')} | " + " | ".join(metric_cell(cov, k) for k in C.URG_METRICS)
+                     f"{tot.get('tests_in_report', '-')} | " + " | ".join(metric_cell(cov, k) for k in C.URG_METRICS) + f" | {cov.get('ledger') or '-'}"
                      + f" | `{(m.get('coverage') or {}).get('report_dir')}` |")
     else:
         L.append("No coverage report yet.")
