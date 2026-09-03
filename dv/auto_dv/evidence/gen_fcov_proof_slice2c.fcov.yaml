@@ -1,0 +1,46 @@
+# gen_fcov_proof_slice2c.fcov.yaml: fcov-expectation proof of T-205 slice 2 (gen_cmp_zcmp_pushpop_cg): the coverpoint bins one lock-step run
+# of gen_zcmp_directed.S hits under the default (short) dmem regime, checked by ci/check_fcov_expectations.py on the run's urg report.
+# Not declared: cp_sp_wrap.push_below_zero / pop_above_max (a stack wrapping the address space reads unmapped memory), cp_dmem_delay
+# min1 / long / mixed (one regime per run: hit by the min1 / long / random runs, retained), cp_sp_align mis1..mis3 (gen_zcmp_misaligned_directed.S),
+# cp_dummy_en.on (gen_zcmp_dummy_directed.S, the B8 reproduction, fails the comparator).
+test: gen_fcov_proof_slice2c
+owner: tb-infra
+bins:
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_push
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popret
+  - gen_cmp_zcmp_pushpop_cg.cp_insn.cm_popretz
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r4
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r5
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r6
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r7
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r8
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r9
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r10
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r11
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r12
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r13
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r14
+  - gen_cmp_zcmp_pushpop_cg.cp_rlist.r15
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s0
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s1
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s2
+  - gen_cmp_zcmp_pushpop_cg.cp_spimm.s3
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a16
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a32
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a48
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a64
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a80
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a96
+  - gen_cmp_zcmp_pushpop_cg.cp_stack_adj.a112
+  - gen_cmp_zcmp_pushpop_cg.cp_sp_align.aligned
+  - gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.none
+  - gen_cmp_zcmp_pushpop_cg.cp_uop_count_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_order_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_rvfi_tags_ok.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_minstret_once.yes
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.word
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.half
+  - gen_cmp_zcmp_pushpop_cg.cp_ret_align.odd
+  - gen_cmp_zcmp_pushpop_cg.cp_dmem_delay.short
+  - gen_cmp_zcmp_pushpop_cg.cp_dummy_en.off

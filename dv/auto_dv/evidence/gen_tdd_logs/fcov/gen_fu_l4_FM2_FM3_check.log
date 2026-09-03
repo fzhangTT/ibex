@@ -1,0 +1,14 @@
+start 19:03:48Z
+FM2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM2/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 86fa86e80dd8eb83
+FM2_catch_zca: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM2: build sources sha256: 0dc3381eb2ca0793; source tree untouched: 7927a36ea2e6e470
+== FM2 checker on gen_fcov_proof_slice2b:
+FCOV-EXPECTATION: gen_cmp_zca_cg.cp_next_len.n32 = UNHIT (count=0)
+FCOV-EXPECTATION: FAIL -- 1 declared bin(s) not hit: gen_cmp_zca_cg.cp_next_len.n32
+FM3 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM3/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 86fa86e80dd8eb83
+FM3_catch_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM3: build sources sha256: 13317a26ec420c27; source tree untouched: 7927a36ea2e6e470
+== FM3 checker on gen_fcov_proof_slice2c:
+FCOV-EXPECTATION: gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop = UNHIT (count=0)
+FCOV-EXPECTATION: FAIL -- 1 declared bin(s) not hit: gen_cmp_zcmp_pushpop_cg.cp_insn.cm_pop
+end 19:05:13Z

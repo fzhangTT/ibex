@@ -103,9 +103,27 @@ nothing and the report line says so (`GEN_FCOV isa samples: ... (covergroups off
 | gen_mul_ops_cg (CG-MUL-001) | OP funct7 0000001 funct3 000..011, or c.mul (16-bit `100111 rsd' 10 rs2' 01`) | 46 / 390 | gen_muldiv_directed.S |
 | gen_div_ops_cg (CG-MUL-003) | OP funct7 0000001 funct3 100..111 | 36 / 140 | gen_muldiv_directed.S |
 | gen_isa_alu_reg_cg (CG-ISA-002) | OP funct7 0000000 / 0100000 (sub), funct3 not a shift; Zb funct7 values excluded | 46 / 294 | gen_muldiv_directed.S |
-| gen_bit_zba_zbb_ops_cg (CG-BIT-001) | the decoder arms rtl/ibex_decoder.sv:609-624 (sh1add..packh) and OP-IMM sext.b / sext.h (:1106-1107); zext_h = pack with rs2 = x0 | 51 / 380 | gen_alu_directed.S |
+| gen_bit_zba_zbb_ops_cg (CG-BIT-001) | the decoder arms rtl/ibex_decoder.sv:609-624 (sh1add..packh) and OP-IMM sext.b / sext.h (:1106-1107); zext_h = pack with rs2 = x0 | 51 / 373 | gen_alu_directed.S |
 | gen_isa_alu_imm_cg (CG-ISA-001) | OP-IMM funct3 not 001 / 101 | 40 / 105 | gen_alu_directed.S |
 | gen_isa_shift_cg (CG-ISA-003) | OP-IMM / OP funct3 001 / 101 with funct7 0000000 / 0100000 (the Zb shift space excluded) | 31 / 101 | gen_alu_directed.S |
+| gen_bit_count_cg (CG-BIT-002) | OP-IMM funct3 001 with instr[31:20] 0x600 / 0x601 / 0x602 (clz / ctz / cpop) | 52 / 147 | gen_bitcnt_directed.S |
+| gen_cmp_zca_cg (CG-CMP-001) | a 16-bit retirement (rvfi_insn[1:0] != 11, no Zcmp micro-op) for every coverpoint but the straddle, which samples 32-bit retirements; the next instruction's length makes the sample one record late | 54 / 169 | gen_zca_directed.S |
+| gen_cmp_zcmp_pushpop_cg (CG-CMP-006) | the last micro-op record (rvfi_ext_expanded_insn_last) of a cm.push / cm.pop / cm.popret / cm.popretz whose sequence never trapped, collected from its first micro-op | 51 / 244 | gen_zcmp_directed.S (+ the min1 / long / random regime runs) |
+
+Slice 2 additions. CG-CMP-001 keeps one 16-bit record pending until the next record arrives (its `cp_next_len`); a Zcmp
+micro-op record counts as a 16-bit successor; c.nop is c.addi with rd = x0, c.addi16sp is the c.lui encoding with rd = x2, c.jr /
+c.jalr are the CR forms with rs2 = 0 (c.ebreak is a trap record and never samples); `cp_reg3` is the CIW rd' or the CL / CS / CA /
+CB rs1' field, `cp_rd_full` the CI / CR rd or the c.swsp rs2 field (x0 has no bin); the coverpoint is operand-only in the trace CSV
+(counted in the adopted group) and renders from the plan line because `cr_insn_reg3` needs it. CG-CMP-006 is a sequence
+collector: from the first micro-op record at a pc (rvfi_ext_expanded_insn_valid) to the record with _last, it decodes the 16-bit
+source word (kind, rlist, spimm; N = rlist - 3, 13 for rlist 15; stack_adj = 16 / 32 / 48 / 64 + 16 * spimm per zcmp.adoc), takes sp
+from the first sp-based store or load micro-op (rs1_rdata), checks every store / load against the predicted register order
+(descending) and address (sp - 4k, sp + adj - 4k), the tags (intermediate pc_wdata == pc_rdata, 32-bit synthesized words), the
+micro-op count (N + 1, + 2 for popret, + 3 for popretz), the return alignment from the jalr micro-op's rs1_rdata, minstret through
+rvfi_ext_mhpmcounters[7] (mhpmcounter10, NumInstrRetC: the record before the sequence against the last micro-op), the dmem delay
+class from the regime knob in force (`knob_dmem_rvalid_delay`: min1 / short / long, random = mixed) and dummy_instr_en from the model's
+cpuctrlsts bit 2 (`gen_isa_read_csr`); a trapping micro-op or a record of another pc abandons the sequence (counted). The wrap bins
+(`push_below_zero`, `pop_above_max`) need a stack around address 0 or 2^32 and are not exercised by the proof programs.
 
 Evidence (dv/auto_dv/evidence/gen_tdd_fcov.md): each proof run is a lock-step run of the named operand-walk program (every
 result also compared against the model), urg on its own vdb, and `ci/check_fcov_expectations.py --report-dir` on a manifest of

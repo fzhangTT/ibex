@@ -1,0 +1,44 @@
+start 19:07:06Z
+vcs exit: 0
+0
+sources sha256: 893384b8eec4e6d5
+lockstep_bitcnt: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  u
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=34 shift=9 bit_count=214 zca=95 zca32=311 zcmp=0 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zca: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=68 shift=0 bit_count=0 zca=344 zca32=95 zcmp=0 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=354 shift=0 bit_count=0 zca=99 zca32=130 zcmp=290 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp_min1: verdict: PASS reason: no collected failure mechanism; end marker and config banner present
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=354 shift=0 bit_count=0 zca=99 zca32=130 zcmp=290 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp_long: verdict: PASS reason: no collected failure mechanism; end marker and config banner present
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=354 shift=0 bit_count=0 zca=98 zca32=129 zcmp=290 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp_random: verdict: PASS reason: no collected failure mechanism; end marker and config banner prese
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=354 shift=0 bit_count=0 zca=98 zca32=129 zcmp=290 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp_mis: verdict: PASS reason: no collected failure mechanism; end marker and config banner present 
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=11 shift=0 bit_count=0 zca=5 zca32=11 zcmp=6 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_zcmp_dummy: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=27
+lockstep_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  u
+mul=2299 div=1210 alu_reg=3630 zba_zbb=0 alu_imm=2 shift=242 bit_count=0 zca=509 zca32=9455 zcmp=0 (abandoned 0)                  
+[GEN_FCOV]     1
+lockstep_alu: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_
+mul=0 div=0 alu_reg=0 zba_zbb=5096 alu_imm=10586 shift=4312 bit_count=0 zca=815 zca32=21972 zcmp=0 (abandoned 0)                  
+[GEN_FCOV]     1
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  u
+mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=641 shift=0 bit_count=0 zca=319 zca32=337 zcmp=632 (abandoned 4)                  
+[GEN_FCOV]     1
+slice1: FCOV-EXPECTATION: PASS -- all 128 declared bins hit
+slice1b: FCOV-EXPECTATION: PASS -- all 122 declared bins hit
+slice2a: FCOV-EXPECTATION: PASS -- all 52 declared bins hit
+slice2b: FCOV-EXPECTATION: PASS -- all 46 declared bins hit
+slice2c: FCOV-EXPECTATION: PASS -- all 38 declared bins hit
+gen_fcov_codegen --check: up to date
+gen_knobs_codegen --check: up to date
+GEN_UT_FCOV_CODEGEN PASS (0 failures)
+end 19:10:51Z

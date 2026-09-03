@@ -1,0 +1,12 @@
+lockstep_zcmp: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=26
+zcmp_irq_sparse: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=26
+lockstep_zcmp_min1: verdict: FAIL reason: uvm_error at sim.log:32  uvm_err=26
+lockstep_zcmp_long: verdict: FAIL reason: cocotb_summary at stdout.log:52  uvm_err=0
+lockstep_zcmp_random: verdict: FAIL reason: cocotb_summary at stdout.log:52  uvm_err=0
+lockstep_zcmp_mis: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_min1: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_long: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_random: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_dummy: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=27

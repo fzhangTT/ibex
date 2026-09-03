@@ -1,0 +1,21 @@
+start 19:14:02Z
+FM4 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM4/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 551aacf81c6165b7
+FM4_catch_alu: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM4: build sources sha256: d710be74d01d442a; source tree untouched: 7927a36ea2e6e470
+== FM4 checker on gen_fcov_proof_slice1b (expected PASS: a bin hit too often is not a miss):
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.eq = HIT (count=168)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.other = HIT (count=2506)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg = HIT (count=56)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0 = HIT (count=14)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1 = HIT (count=182)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1 = HIT (count=14)
+FCOV-EXPECTATION: gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz = HIT (count=588)
+FCOV-EXPECTATION: PASS -- all 122 declared bins hit
+== FM4 eq count:
+sltiu_ones_m1 14    1        
+sltiu_seqz    588   1        
+sltiu_imm_m1  182   1        
+slti_0_neg    56    1        
+slti_intmin_0 14    1        
+eq            168   1        
+end 19:14:54Z

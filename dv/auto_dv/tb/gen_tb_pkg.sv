@@ -258,7 +258,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)
   parameter int unsigned GEN_BUS_ERR_LOG_DEPTH = 256;  // TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property
-  parameter int unsigned GEN_BUS_ERR_DRAIN_CYCLES = 64;  // cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it (response to WB retirement plus the record lag)
+  parameter int unsigned GEN_BUS_ERR_DRAIN_CYCLES = 64;  // cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it: 2 x 32, the two in-order transactions of a split access each waiting the longest rvalid window (regime_windows.rvalid_delay long / random upper bound 32; a longer window must raise it) (response to WB retirement plus the record lag)
   parameter int unsigned GEN_NMI_INT_ENTRY_BOUND_RECORDS = 4;  // records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_INTG = 2;  // MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response
   parameter int unsigned GEN_ISA_FAULT_KIND_FETCH = 0;  // gen_isa_arm_fault kind: instruction fetch (shim fault_hits)
@@ -523,7 +523,7 @@ package gen_tb_pkg;
   // the irq checker accepts an NMI-vector entry without a pin NMI only after an announced corruption (internal NMI).
   class gen_bus_err_log;
     typedef struct { logic [31:0] word; int unsigned cycle; } ann_t;
-    static ann_t words [$];   // announced error words with the cycle of the response; bounded to GEN_BUS_ERR_LOG_DEPTH (TB-local queue bound, not a DUT property)
+    static ann_t words [$];   // announced error words with the cycle of the grant (note() runs there, conservative for the drain window); the integrity announcements (note_intg / take_intg) are a separate one-slot counter, not in this queue; bounded to GEN_BUS_ERR_LOG_DEPTH (TB-local queue bound, not a DUT property)
     static int unsigned announced = 0, taken = 0;
     static int unsigned intg_announced = 0;   // data-side integrity corruptions: each raises the DUT's internal NMI (irq checker)
     static logic [31:0] intg_first_addr = '0;  // address of the corruption that set the DUT's pending bit (its mtval), until consumed

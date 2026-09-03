@@ -1,0 +1,54 @@
+# excerpt of scratch wit_root dv/auto_dv/work/tb-infra/wit/c/ut_witness_foreign/stdout.log (landing 2b build wit/c: the bookkeeping path and the foreign red fixture; UVM_ERROR lines counted by grep: 1, first 1 kept)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem tohost=0x80000280
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(216) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(217) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(241) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(744) @ 5000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+  3105.00ns INFO     cocotb.gen_tb_top                  GEN_UT_WITNESS_FOREIGN: TP-BIT-036 belongs to gen_bit_multicycle; issuing it as gen_bit_random, the dispatcher must refuse it
+UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(60) @ 310500: uvm_test_top.env.wit [GEN_WITNESS_FOREIGN] COV_WITNESS TP-BIT-036 (index 0) belongs to gen_bit_multicycle, issued by gen_bit_random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(346) @ 311500: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 306, commands consumed 2, retired 100
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(696) @ 311500: uvm_test_top.env.dbg [GEN_DBG] requests=0 releases=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(288) @ 311500: uvm_test_top.env.dbg_chk [GEN_DBG_CHK] debug entries=0 bound failures=0 masked failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(628) @ 311500: uvm_test_top.env.irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(243) @ 311500: uvm_test_top.env.irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=304 mismatches=0; entries=0 nmi=0 (internal 0, accepted on announced corruptions) cause checked=0 mismatches=0 priority undecidable=0 bound failures=0 expectations released=0 open expectations=0 nmi_internal bound failures=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(429) @ 311500: uvm_test_top.env.misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0; alert_internal hits=0; data_tag hits=0; sync traps=0 double faults expected=0 pulses=0 mismatches=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(163) @ 311500: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=100 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(551) @ 311500: uvm_test_top.env.sb [GEN_SB] ISA compare: records=86 mismatches=0 folded=14 draft_b=0 traps=0 breakpoints=0 irq_entries=0 dbg_entries=0 zcmp_splits=0 faults_armed=0 faults_unannounced=0 bus_err_announced=0 b13_odd_jalr=0 rf_wr_suppressed=0 nmi_preempted=0 rvfi_rmask_on_nonload=71
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(71) @ 311500: uvm_test_top.env.wit [GEN_WIT] witnesses=0 distinct=0 covergroup=0 foreign=1 out_of_range=0
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(253) @ 311500: uvm_test_top.env [GEN_ENV] mem: 204 words, 0 mmio writes, 0 unmapped accesses; eot stores 0 (last code 0x00000000); sig writes 0; key requests 0; commands routed 2 ignored 0
+  3115.00ns INFO     cocotb.gen_tb_top                  GEN_UT_WITNESS_FOREIGN_PASS
+UVM_WARNING :    0
+UVM_ERROR :    1
+UVM_FATAL :    0
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_DBG]     1
+[GEN_DBG_CHK]     1
+[GEN_ENV]     3
+[GEN_IRQ]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[GEN_WIT]     1
+[GEN_WITNESS_FOREIGN]     1
+  3115.01ns INFO     cocotb.regression                  gen_ut_witness_foreign passed
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                                            3115.01           0.04      85621.88  **

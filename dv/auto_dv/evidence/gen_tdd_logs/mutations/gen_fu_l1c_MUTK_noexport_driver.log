@@ -1,0 +1,5 @@
+start 19:04:40Z
+MUTK applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTK/dv/auto_dv/env/gen_agents_pkg.sv; original sha256 8160e436ce3ecad7
+MUTK_catch_boot_zc_noexport: verdict: FAIL reason: uvm_fatal at sim.log:31  UVM_ERROR :    0 first: UVM_FATAL dv/auto_dv/env/gen_export_pkg.sv(100) @ 0: uvm_test_top.env.sink [GEN_EXPORT] emitted row scrkey/req has no re
+MUTK: build sources sha256: 1b2501fd1b7197e3; source tree untouched: c4e742249c7d0fc3
+end 19:05:12Z

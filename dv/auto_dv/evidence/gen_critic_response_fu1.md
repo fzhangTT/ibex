@@ -46,3 +46,13 @@ gen_tdd_logs/*/gen_fu_l1c_*. Build of record: the copy's build f, sources sha256
 |---|---|---|---|
 | CM33-L-1 | gen_tb_pkg.sv:531-532 comment says take() consumes EVERY announcement, contradicting take_word | FIXED (landing 2b) | the two stale lines are deleted; the one-announcement-one-event comment stands alone. |
 | CM33-L-2 | gen_ut_isa_shim.cc:417 keeps the literal cause 5 | FIXED (landing 2b) | `CAUSE_LOAD_ACCESS` from Spike's encoding header. |
+
+## Critic verdict on landing 1c (dv/auto_dv/docs/gen_critic_tb_l1c.md, APPROVE with five lows): CR-1C rows
+
+| id | finding | status | as built |
+|---|---|---|---|
+| CR-1C-L-1 | Section 9 cites build e's sha and driver log, which the commit does not carry; the c / d red counts read 8 and 7 where the logs count 9 and 8 | FIXED (T-205 slice 2) | the counts corrected to the logs' figures; build e's compile and driver logs retained as gen_fu_l1c_compile_e.log / gen_fu_l1c_e_driver.log with the statement that f reproduced e. |
+| CR-1C-L-2 | GEN_BUS_ERR_DRAIN_CYCLES = 64 asserted without a derivation | FIXED (slice 2) | derived in the yaml desc and the scoreboard doc: 2 x 32, the two in-order transactions of a split access each waiting the longest rvalid window the yaml allows (long / random upper bound 32); a longer window must raise it. |
+| CR-1C-L-3 | the queue comment says "cycle of the response" while note() stamps the grant; the intg slot is separate | FIXED (slice 2) | the comment names the grant stamp (conservative for the drain window) and the separate one-slot integrity counter. |
+| CR-1C-L-4 | MUT-K's without-export run not retained (the batch driver re-created the mutant root for the second run) | FIXED (slice 2) | the without-export run re-run from the landing-1c sources and retained as gen_fu_l1c_MUTK_catch_boot_zc_noexport_* (the fatal at time 0 with no export file). |
+| CR-1C-L-5 | the stale comment at gen_rvfi_pkg.sv:338-341 and the two count corrections | FIXED | the comment was rewritten in landing 2b (CM25-L-1); the counts above. |

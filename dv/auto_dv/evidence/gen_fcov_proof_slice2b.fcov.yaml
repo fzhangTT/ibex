@@ -1,0 +1,51 @@
+# gen_fcov_proof_slice2b.fcov.yaml: fcov-expectation proof of T-205 slice 2 (gen_cmp_zca_cg): every coverpoint bin, hit by one lock-step run of
+# gen_zca_directed.S and checked by ci/check_fcov_expectations.py on the run's urg report (gen_tdd_logs/fcov/gen_fu_l4_*).
+test: gen_fcov_proof_slice2b
+owner: tb-infra
+bins:
+  - gen_cmp_zca_cg.cp_insn.c_addi4spn
+  - gen_cmp_zca_cg.cp_insn.c_lw
+  - gen_cmp_zca_cg.cp_insn.c_sw
+  - gen_cmp_zca_cg.cp_insn.c_lwsp
+  - gen_cmp_zca_cg.cp_insn.c_swsp
+  - gen_cmp_zca_cg.cp_insn.c_addi
+  - gen_cmp_zca_cg.cp_insn.c_nop
+  - gen_cmp_zca_cg.cp_insn.c_jal
+  - gen_cmp_zca_cg.cp_insn.c_j
+  - gen_cmp_zca_cg.cp_insn.c_li
+  - gen_cmp_zca_cg.cp_insn.c_lui
+  - gen_cmp_zca_cg.cp_insn.c_addi16sp
+  - gen_cmp_zca_cg.cp_insn.c_srli
+  - gen_cmp_zca_cg.cp_insn.c_srai
+  - gen_cmp_zca_cg.cp_insn.c_andi
+  - gen_cmp_zca_cg.cp_insn.c_sub
+  - gen_cmp_zca_cg.cp_insn.c_xor
+  - gen_cmp_zca_cg.cp_insn.c_or
+  - gen_cmp_zca_cg.cp_insn.c_and
+  - gen_cmp_zca_cg.cp_insn.c_beqz
+  - gen_cmp_zca_cg.cp_insn.c_bnez
+  - gen_cmp_zca_cg.cp_insn.c_slli
+  - gen_cmp_zca_cg.cp_insn.c_mv
+  - gen_cmp_zca_cg.cp_insn.c_jr
+  - gen_cmp_zca_cg.cp_insn.c_add
+  - gen_cmp_zca_cg.cp_insn.c_jalr
+  - gen_cmp_zca_cg.cp_pc_align.word
+  - gen_cmp_zca_cg.cp_pc_align.half
+  - gen_cmp_zca_cg.cp_next_len.n16
+  - gen_cmp_zca_cg.cp_next_len.n32
+  - gen_cmp_zca_cg.cp_pc_inc.two
+  - gen_cmp_zca_cg.cp_insn32_straddle.no
+  - gen_cmp_zca_cg.cp_insn32_straddle.yes
+  - gen_cmp_zca_cg.cp_reg3.r8
+  - gen_cmp_zca_cg.cp_reg3.r9
+  - gen_cmp_zca_cg.cp_reg3.r10
+  - gen_cmp_zca_cg.cp_reg3.r11
+  - gen_cmp_zca_cg.cp_reg3.r12
+  - gen_cmp_zca_cg.cp_reg3.r13
+  - gen_cmp_zca_cg.cp_reg3.r14
+  - gen_cmp_zca_cg.cp_reg3.r15
+  - gen_cmp_zca_cg.cp_rd_full.x1
+  - gen_cmp_zca_cg.cp_rd_full.x2
+  - gen_cmp_zca_cg.cp_rd_full.x8_15
+  - gen_cmp_zca_cg.cp_rd_full.x16_31
+  - gen_cmp_zca_cg.cp_rd_full.x3_7

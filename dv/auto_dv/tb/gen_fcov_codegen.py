@@ -24,7 +24,7 @@ REL_CSV = "dv/auto_dv/docs/gen_trace_tp_bin.csv"
 REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
-IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003")
+IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006")
 
 
 def die(msg):
@@ -122,22 +122,23 @@ def render(root):
             die(f"{cg}: no bins in {REL_CSV}")
         g, cb = plan[cg], csv_bins[cg]
         sv = g["sv"]; up = sv[4:-3].upper()   # gen_mul_ops_cg -> MUL_OPS
-        cps = [cp for cp in g["cps"] if cp in cb]   # the plan's coverpoint order is the sample() argument order
-        if set(cps) != {cp for cp in cb if cp.startswith("cp_")}:
-            die(f"{cg}: plan coverpoints {sorted(g['cps'])} differ from CSV coverpoints {sorted(cp for cp in cb if cp.startswith('cp_'))}")
+        # every plan coverpoint renders, in the plan's order (the sample() argument order); an operand-only coverpoint (counted in an
+        # adopted group, no CSV rows of its own) takes its bins from the plan line, a cross may still reference it
+        cps = list(g["cps"])
+        extra = {cp for cp in cb if cp.startswith("cp_")} - set(cps)
+        if extra:
+            die(f"{cg}: CSV coverpoints without a plan bins line: {sorted(extra)}")
         crs = [cr for cr in cb if cr.startswith("cr_")]
         other = [x for x in cb if not (x.startswith("cp_") or x.startswith("cr_"))]
         if other:
             die(f"{cg}: coverpoint names outside cp_/cr_: {other}")
         order = {}
         for cp in cps:
-            if cp not in g["cps"]:
-                die(f"{cg}.{cp}: no plan bins line")
-            if set(g["cps"][cp]) != set(cb[cp]):
+            if cp in cb and set(g["cps"][cp]) != set(cb[cp]):
                 die(f"{cg}.{cp}: plan bins {sorted(set(g['cps'][cp]))} differ from CSV bins {sorted(set(cb[cp]))}")
             order[cp] = g["cps"][cp]
         L.append("")
-        L.append(f"  // {cg} ({sv}), {sum(len(cb[x]) for x in cps)} coverpoint bins, {sum(len(cb[x]) for x in crs)} cross bins")
+        L.append(f"  // {cg} ({sv}), {sum(len(order[x]) for x in cps)} coverpoint bins, {sum(len(cb[x]) for x in crs)} cross bins")
         for cp in cps:
             for i, b in enumerate(order[cp]):
                 L.append(f"  localparam int GEN_FC_{up}_{cp.upper()}_{sv_ident(b).upper()} = {i};")
@@ -182,8 +183,9 @@ def main():
         print("gen_fcov_codegen --check: up to date")
         return 0
     out.write_text(text)
-    n_bins = sum(1 for l in text.splitlines() if l.strip().startswith("bins "))
-    print(f"gen_fcov_codegen: rendered {REL_OUT} ({len(IMPLEMENTED)} covergroups, {n_bins} named bins)")
+    n_cp = sum(len(re.findall(r"bins \\?\w+ ?=", l)) for l in text.splitlines() if ": coverpoint " in l)
+    n_cr = sum(1 for l in text.splitlines() if l.strip().startswith("bins "))
+    print(f"gen_fcov_codegen: rendered {REL_OUT} ({len(IMPLEMENTED)} covergroups, {n_cp} coverpoint bins, {n_cr} cross bins)")
     return 0
 
 

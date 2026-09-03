@@ -12,8 +12,8 @@ one red per slice and one sampler mutant. Logs: dv/auto_dv/evidence/gen_tdd_logs
   plan id, the SV name comes from the plan header, the bin order from the plan line and the cross components from the plan's
   cross line; two forms the first version could not render were found on the real inputs and fixed before any build: a
   cross whose component name contains `x` (`cp_rd_x0`, split on whitespace-delimited `x` only) and a cross with explicitly
-  named tuples (`cr_overflow.div_intmin_m1{div, int_min, all_ones}`). Six groups render to 1403 named bins (250 coverpoint
-  bins, 1153 cross bins). VCS refused the first include on `bins xor` (a keyword): keyword bins render as escaped identifiers
+  named tuples (`cr_overflow.div_intmin_m1{div, int_min, all_ones}`). Six groups render to 1653 named bins (250 coverpoint
+  bins, 1403 cross bins; the renderer's first summary line counted cross bins only and called them named bins, corrected). VCS refused the first include on `bins xor` (a keyword): keyword bins render as escaped identifiers
   and urg reports them plainly. Unit test gen_ut_fcov_codegen.py: --check on the tree, refusals (plan / CSV bin mismatch,
   unsplittable cross bin, cross without a plan line), a stale include caught (gen_fu_l3_ut_fcov_codegen.log).
 - Sampler `gen_isa_cov` (gen_fcov_pkg.sv) subscribed to the RVFI monitor beside the scoreboard; the sample() arguments follow
@@ -50,3 +50,45 @@ one red per slice and one sampler mutant. Logs: dv/auto_dv/evidence/gen_tdd_logs
   the manifests declare is MISSING-FROM-REPORT although urg covers it (probe: `gen_mul_ops_cg.cr_op_rd_x0.mul_no =
   MISSING-FROM-REPORT` beside `cp_op.mul = HIT (count=185)`); urg's cross tables list component tuples, which the manifests'
   `_`-joined names are one to one. Reported with the fix; Runtime derives the variable form.
+
+## 2. Slice 2: gen_bit_count_cg, gen_cmp_zca_cg, gen_cmp_zcmp_pushpop_cg
+
+- Renderer: a coverpoint the trace CSV does not list (operand-only, counted in an adopted group) but a cross references
+  (`cp_reg3` of CG-CMP-001) now renders from the plan line; the unit test still passes. Nine groups render to 2510 named bins (466 coverpoint bins, 2044 cross bins;
+  gen_fu_l4_ut_fcov_codegen.log).
+- Builds (wit_root): i bf213aa0edb01c6a (bit_count, zca), j 33ee96f28834a162 (+ the push/pop collector; the landed sources).
+- gen_bit_count_cg: gen_bitcnt_directed.S (the operand classes, a walking one over all 32 positions, rd = x0 variants; 214
+  samples), gen_fcov_proof_slice2a.fcov.yaml `PASS -- all 52 declared bins hit` (gen_fu_l4_slice2a_check.log).
+- gen_cmp_zca_cg: the existing programs left c.lw, c.jal, c.jr, c.jalr, c.swsp and the x1 destination unhit (zc: 19 of 46,
+  seed-7: 39 of 46), so gen_zca_directed.S runs every form at a word- and a half-aligned pc, each followed by a 16-bit and a
+  32-bit instruction, the 3-bit field over x8..x15, the 5-bit field over x1 / x2 / x3..x7 / x8..x15 / x16..x31, branches taken and
+  not, and one 32-bit instruction at a half-aligned pc (439 records, 0 mismatches, 344 Zca samples); gen_fcov_proof_slice2b.fcov.yaml
+  `PASS -- all 46 declared bins hit` (gen_fu_l4_slice2b_check.log).
+- gen_cmp_zcmp_pushpop_cg: gen_zcmp_directed.S (push / pop pairs over every rlist 4..15 and spimm 0..3, popret and popretz as
+  function tails with word- and half-aligned return addresses and one odd one; 290 sequences, 517-519 records, 0 mismatches under
+  the short, min1, long and random dmem regimes: gen_fu_l4_lockstep_zcmp{,_min1,_long,_random}_*); every cross of cr_insn_rlist_spimm
+  (192 / 192) and cr_popret_r4 (2 / 2) covered, cr_insn_delay 4 / 16 per regime run (one delay class per run, all four classes
+  across the runs), cr_ret_align 3 / 6 (the pop-family word / half / odd), cr_insn_sp_align 10 / 16; gen_fcov_proof_slice2c.fcov.yaml
+  declares the 38 coverpoint bins the short-regime run hits: `PASS -- all 38 declared bins hit` (gen_fu_l4_slice2c_check.log). Not
+  declared and why: cp_sp_wrap push_below_zero / pop_above_max (a stack wrapping the address space reads unmapped memory), the
+  other three delay classes (one regime per run, hit in the retained min1 / long / random runs), cp_sp_align mis1..mis3 (hit by
+  gen_zcmp_misaligned_directed.S, 6 sequences, 0 mismatches: gen_fu_l4_lockstep_zcmp_mis_*), cp_dummy_en.on (below).
+- FINDING (plan B8, TP-CMP-065 "dummy mid-Zcmp skips a micro-op, needs repro"): gen_zcmp_dummy_directed.S (four push / pop pairs
+  after `csrs 0x7C0, 4`) fails the comparator on 27 rows: `isa_mem Zcmp stores: model 1, dut 2` on the first push, `Zcmp loads:
+  model 1, dut 2`, `stores: model 5, dut 6`, `loads: model 5, dut 7`, `isa_rd Zcmp union: x18 model=33333333 dut=00000000`; the
+  export shows the rlist-12 pop emitting load micro-op records for x27, x26, x24, x22, x21, x20, x18, x8 only (x25, x23, x19,
+  x9, x1 absent) with x18 loaded wrong, every micro-op still tagged expanded_insn_valid and the sp-adjust tagged _last. The same
+  pairs without the csrs are clean, so the trigger is dummy insertion inside a Zcmp expansion. Reported to the Orchestrator at
+  18:56Z; retained gen_fu_l4_lockstep_zcmp_dummy_* (verdict, header, excerpt, the export). A first reading of the first red run
+  blamed the misaligned-sp pairs that preceded the dummy stretch in the same program; splitting the program into three showed
+  the misaligned pairs clean and the dummy pairs red (recorded so the two programs' names make sense).
+- Sampler mutants (gen_mut_fcov.md): FM2 (every Zca successor reported 16-bit) and FM3 (cm.pop sampled as cm.push), each caught by the
+  checker on the slice's proof manifest with the run itself passing.
+- CM51-MAJ-1 (the landing-3 review's major): `rs1 == logic'(32'(imm))` cast the sign-extended immediate to one bit, so `cp_slt_case.eq`
+  fired on `rs1 == imm[0]`; fixed to `rs1 == 32'(imm)` and the sampler audited (no other `logic'(` cast). On the corrected sampler
+  (build k 893384b8eec4e6d5) the alu run counts eq 84, slti_intmin_0 14, slti_0_neg 56, sltiu_imm_m1 182, sltiu_seqz 588,
+  sltiu_ones_m1 14, other 2590 (gen_fu_l4_urg_slice1b_grpinfo.txt); mutant FM4 re-introduces the cast and counts eq 168 / other 2506
+  while the checker still passes (gen_mut_fcov.md: a bin hit too often is not a miss).
+- Landed sources: build k 893384b8eec4e6d5 (the slt fix, the opcode enums, the abandoned-sequence count, the yaml derivation of the drain
+  window): every proof run re-done on it (bitcnt, zca, zcmp under four regimes, zcmp_mis, zcmp_dummy red, muldiv, alu, zcmp_irq_sparse)
+  and the five proof manifests PASS (gen_fu_l4_k_driver.log).

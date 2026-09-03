@@ -246,7 +246,7 @@ word, the load/store double-fault offset), c deea1c7de46e9d69 (a first mtval rul
 c7156b73ce7463ab (the shim takes `tval`; the rule still "second word": wrong the other way), e 94bb3021a5c67974 (the
 failing-transaction rule: green), f a056526d879ea458 (e plus the shim unit test's section 13 moved before its summary
 line; sources of the simulator unchanged, every verdict identical to e: gen_fu_l1c_f_driver.log against
-gen_fu_l1c_e_driver.log). The retained set gen_fu_l1c_* is build f: 28 runs, 25 PASS; the three FAILs are the two
+gen_fu_l1c_e_driver.log; e's compile and driver logs were retained with T-205 slice 2, gen_fu_l1c_compile_e.log and gen_fu_l1c_e_driver.log). The retained set gen_fu_l1c_* is build f: 28 runs, 25 PASS; the three FAILs are the two
 starved zcirq storm runs below and regime_refuse_zc, which fails by design.
 
 - CM18-H-1 / CR7 (LOG-025), entry state before the Zcmp fold: red first on build a, gen_fu_l1c_a_zcmp_irq_sparse_*
@@ -293,8 +293,8 @@ starved zcirq storm runs below and regime_refuse_zc, which fails by design.
   (c) MTVAL: Ibex writes the address of the FAILING bus transaction, `lsu_addr_last` (rtl/ibex_load_store_unit.sv:258),
   which advances to the second word of a spanning access only when the first transaction had no error (:520, :540); Spike's
   tval is the effective address. Two wrong rules were red before the right one: build c (the model faults from the second
-  word on) gen_fu_l1c_c_red_dmem_err_dir_*: 8 `isa_rd rd model=x22/8000026e dut=x22/80000270` (the handler's `csrr mtval`,
-  compared as any rd); build d (always the second word) gen_fu_l1c_d_red_dmem_err_dir_*: 7 `isa_rd rd model=x22/80000270
+  word on) gen_fu_l1c_c_red_dmem_err_dir_*: 9 `isa_rd rd model=x22/8000026e dut=x22/80000270` (the handler's `csrr mtval`,
+  compared as any rd); build d (always the second word) gen_fu_l1c_d_red_dmem_err_dir_*: 8 `isa_rd rd model=x22/80000270
   dut=x22/8000026e` where the FIRST transaction had erred. Fix: `take()` says which words were announced, the scoreboard
   derives the tval (first word announced: the effective address; else the second word) and the shim writes it to mtval
   after the faulting step (`gen_isa_arm_fault(kind, addr, size, tval)`); shim unit test section 13 (spanning load, tval =
