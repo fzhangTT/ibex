@@ -1267,3 +1267,14 @@ HEAD-export runs cannot have seen the mutants; the presumed owner is tb-infra's 
 mutant edits belong in its out-of-tree copy. tb-infra is asked to name the script that wrote into the shared tree and any
 build that compiled it inside the window; results of such a build are discarded. Rule restated: every mutant edit and build
 happens in an out-of-tree copy; the shared tree carries committed RTL only.
+
+## LOG-045a - 2026-09-03 - RESOLVED (cause of the shared-tree RTL mutants)
+
+tb-infra's account: its mutation driver mut_oot_rtl.sh copied the rtl directory of a scratch copy whose rtl entry was a
+symlink to the clone, so cp -r reproduced the symlink and the RM1..RM3 mutant edits went through it into the shared tree
+(17:36:33Z to 17:39:28Z). tb-infra detected it from the driver's start/end sha lines and restored both files from HEAD
+(read-only git show redirected) at 17:39:28Z, concurrently with the Orchestrator's restore at 17:39:16Z; both files equal
+HEAD. Impact: no build compiled the shared tree in the window (out_l1c was built at 17:29Z; landing 1c's evidence stands);
+the RM1..RM3 results are re-run from a real rtl copy and the tainted ones are not cited; the agent-side mutants MUT-M/MUT-N
+ran before and stand. Standing fix: the copy step dereferences and refuses a non-private rtl directory, and the driver
+compares its own start/end shas. Runtime asked to confirm no worktree-source compile in the window.
