@@ -1408,3 +1408,20 @@ derivation is covered by a unit test on the sample grpinfo.txt tb-infra provides
 records the naming convention (cross bin = component tuple joined by "_"; SV-keyword bin names render as escaped identifiers
 that urg reports plainly) in the fcov plan. tb-infra keeps rendering crosses as designed; interim proof manifests may use
 variable bins only until T-215 lands, and the landing manifests are the real ones.
+
+## LOG-055 - 2026-09-03 - Plan v2r part 4b REQUEST-CHANGES: a decision recorded as a completed state
+
+The cross-model review of plan v2r part 4b (0ac8d36) is REQUEST-CHANGES (reviews/2026-09-03-claude-diff-ff4637c1-0ac8d36e.md).
+High: TP-CSR-108's Notes state that the gen_test_csr_reset manifest lists the thirteen debug-mode bins under bins_not_hit
+"one-to-one with the manifest's not_hit header lines", but at 0ac8d36 the committed manifest has no not_hit line and still
+declares all thirteen as expected-hit (the Test Writer's re-render is in its pending consolidated touch), and the landing's
+own regenerated covergroup set shows 81 declared and 0 not_hit for that test. Medium: the regenerated promotion table and
+credit files label their plan input "at a26ed0d", a commit whose plan still carried Sections 1.4 and 1.5; they were generated
+from the working tree. Lows: a work-tree helper script cited as the mechanism, the removed hold lists not where the row says,
+a wrong sha, an unused import. Ruling: the T-136/T-137 LIFTED records themselves are not questioned and stand; part 4c
+rewords the csr_reset decision as decided and pending the Test Writer's re-render (naming the task) until that landing
+exists, and every generated evidence header names the plan input it actually read (the landing's own plan, identified by the
+plan file's sha256 beside the parent commit) so a label can never point at a plan state the generator did not see; the Test
+Writer lands the csr_reset manifest re-render as a small landing ahead of its consolidated touch so the plan can cite it.
+Rule restated for the plan: text describes an artifact's state only when that artifact is committed; otherwise it records
+the decision and the task that lands it. No plan landing other than part 4c until the re-review passes (LOG-044 class).
