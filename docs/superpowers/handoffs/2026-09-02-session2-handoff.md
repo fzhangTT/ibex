@@ -50,3 +50,15 @@ is authoritative between updates).
   dispositions to sidecar logs.
 - Disk-cleanup lesson: `~/.codex/packages` IS the codex install, not a cache — deleting it removed
   the binary (restored from weka snapshots). Don't clean it or `codex-home/packages`.
+
+## Owner decisions (2026-09-02, later session)
+- **Fence-scope amendment** `docs/superpowers/specs/2026-09-02-zone-a-fence-scope-amendment.md`:
+  fence the collateral, not the tools — Zone A gets the same MCP servers and skills pointed at its
+  own out-tree; Zone A builds its own TB and runs its own sims; Zone A variants of tool-adjacent
+  files; fence-line triage tables; DUT = gen_dut_top wrapper, CHERIoT out of scope. Cross-model
+  review in flight (opus fallback). Feeds WS7 planning directly.
+- **codex spend cap hit** — codex unavailable until the owner raises the cap. Owner authorized the
+  CLAUDE.md fallback (opus fresh-session reviewer, identity recorded) "for now".
+- **ChipSmart** (`riscv/ChipSmart`, clone at /localdev/fzhang/ws/ChipSmart) is the siliconpilot
+  skill library; a curated selective import into .claude/skills/ is in flight — only skills that
+  serve the ibex stack (VCS/UVM/riscv-dv/cocotb; no bazel/bzsim/simscope/DFT/fault).
