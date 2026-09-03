@@ -273,3 +273,15 @@ generated-evidence defect found by review.
 flow uses `-debug_access+all` at compile time and `-ucli -do <tcl>` at run time; a waves run on
 LSF produced `waves.fsdb` (evidence `dv/auto_dv/evidence/gen_t010_compile_path.md` Section 8a).
 The team does not edit `docs/dv/`; the owner may update the recipe wording.
+
+## LOG-007 - 2026-09-03 - NOTE (coverage measurement finding)
+
+Instrumentation trial (run request rtl-arch-001, LSF jobs 10930598/10930599): compiling the same
+NOP smoke with `-cm_glitch 0` removes every URG coverage-status-mismatch warning (14 in the
+baseline) and lowers the DUT-scope totals from LINE 55.09 / COND 37.41 / BRANCH 41.03 to
+38.93 / 26.63 / 33.00 with identical denominators; about 700 line, 1000 condition and 200 branch
+objects had been counted as hit only through zero-time glitch events (toggle, FSM, assertion
+unchanged; VCS states the flag does not apply to FSM). The DV Lead rules on adopting the flag for
+measured builds; the Orchestrator's recommendation is to adopt it and re-measure the round-0
+baseline, because glitch-only hits are not exercised logic (DV_prompt.txt Section 10). Evidence:
+`dv/auto_dv/evidence/gen_t010_compile_path.md` Section 5.
