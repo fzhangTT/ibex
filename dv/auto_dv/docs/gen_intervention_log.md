@@ -514,3 +514,18 @@ be a committed change.
 landed regression set (lock-step zc/s7 with and without the export knob, bridge, boot) is green on the
 same build. Batch 1 is released on arrival of the Test Writer's file list. The root-cause paragraph
 for the 10:39 UTC window is still owed by tb-infra and will be appended here when it arrives.
+
+## LOG-017b - 2026-09-03 - NOTE (red window root cause: a live mutation on the shared tree)
+
+tb-infra's report (10:5x UTC): Runtime's 10:39:19 UTC compile fell inside a 24-second window
+(10:39:17 to 10:39:41, `gen_tdd_logs/mutations/gen_mut_export_driver.log`) in which tb-infra's
+mutation runner had MUT-E live in `gen_rvfi_pkg.sv` (first record pc + 4), the exact signature Runtime
+saw; the runner reverted it and the sources are byte-identical to the pre-mutation copies. Fresh canary
+at 10:49 UTC (`dv/auto_dv/work/tb-infra/out_t080_canary`): boot_zc PASS, lockstep_zc PASS 169/169,
+export_zc PASS; Runtime's own canary on HEAD is green (LOG-017a). Not a defect in committed code.
+Rule adopted (tb-infra, confirmed by the Orchestrator): a mutation batch on the shared tree is
+announced to Runtime before it starts and after its final revert, and every batch ends with the
+lock-step canary before the tree is reported green. tb-infra records this as its second process
+defect of the day (the in-place FORCE recompile that destroyed retained runs was the first; both are
+labelled in its transcript). Counted for the closure report as process friction, caught by the flow's
+canary rule.
