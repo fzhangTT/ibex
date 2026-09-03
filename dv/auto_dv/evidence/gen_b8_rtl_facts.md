@@ -79,7 +79,8 @@ cm.pop / cm.popret / cm.popretz (:686-774):
   at :693 while sp has ALREADY been incremented by the executed CmPopIncrSp: every load is repeated from
   sp + adj + offset, i.e. from above the frame, and the registers receive whatever lies there (the x18 = 800003ff seen in an earlier, unretained run of
   gen_zcmp_directed.S with dummy insertion enabled, whose cm.popret tail at pc 0x8000040a hit this case, is a
-  return-address-like value read from above the frame; the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
+  return-address-like value read from above the frame, not reproducible from retained artifacts until tb-infra's
+  popret / popretz reproducer lands; the x18 = 00000000 of the retained gen_zcmp_dummy_directed.S
   run is NOT this case, that program has no popret, see section 6), then sp is incremented a second time and the ret
   executes. This is the only path that corrupts registers that were loaded correctly the first time.
 
@@ -115,8 +116,8 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
 - The dummy in ID carries the INSTR_NOT_EXPANDED tag (rtl/ibex_if_stage.sv:528). The controller's debug gates hold an
   expansion together while the ID instruction is tagged EXPANDED or COMMIT (rtl/ibex_controller.sv:474-477), but
   handle_irq is gated only on the COMMIT tag (:498-500): by design an interrupt may be taken between any two
-  micro-ops except after a COMMIT-tagged one: the sp increment (CmPopIncrSp, :744), li a0, 0 (CmPopZeroA0, :760)
-  and the first move of cm.mvsa01 / cm.mva01s (rtl/ibex_compressed_decoder.sv:790, :818); the entry
+  micro-ops except after a COMMIT-tagged one: the sp increment (CmPopIncrSp, rtl/ibex_compressed_decoder.sv:744), li a0, 0 (CmPopZeroA0, :760)
+  and the first move of cm.mvsa01 / cm.mva01s (:790, :818); the entry
   flushes the FSM (flush_expanded, section 2) with mepc at the cm.* PC and the expansion restarts from scratch
   after mret, which is idempotent because the sp update is the last micro-op (push) or COMMIT-protected (pop).
   The dummy changes two things. For interrupts the new exposure is only the COMMIT window: a dummy that displaces
@@ -145,7 +146,8 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
 - Reproduction status (tb-infra's row mapping of the retained run of dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S,
   four cm.push / cm.pop pairs with rlist 4 / 8 / 12 / 15, plain cm.pop only, dummy_instr_mask 0, reported 2026-09-03;
   the mapping file gen_b8_row_mapping.md lands under dv/auto_dv/evidence/ with tb-infra's next landing): all 27
-  divergent rows map to a section-3 case. Tally: CmIdle first store lost 2, CmPushStoreReg store lost 11,
+  comparator rows map to a section-3 case; they summarise 33 lost micro-ops, one row covering several losses.
+  Tally of lost micro-ops: CmIdle first store lost 2, CmPushStoreReg store lost 11,
   CmPushDecrSp addi lost with full replay 2, CmIdle first load lost 2, CmPopLoadReg load lost 13, CmPopIncrSp addi
   lost on a plain cm.pop with full replay 3; no popret / popretz / move case in that program. Every wrong register
   value in that run is a lost store leaving a slot stale and a faithful later load of it, or a lost load leaving the
@@ -153,8 +155,8 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   stayed stale, pop rl8 loaded it faithfully); no load in that run reads above the frame. Consecutive losses occur
   (pop rl12 lost s0, ra and the addi back to back) because the threshold is lfsr.cnt masked by {dummy_instr_mask,
   ones} (rtl/ibex_dummy_instr.sv:97), so with mask 0 a threshold of 0 right after an insertion inserts again. The
-  CmPopRetRa replay (x18 = 800003ff) is retained only in the earlier run named in section 3; a popret / popretz
-  variant of the reproducer is owed by tb-infra.
+  CmPopRetRa replay (x18 = 800003ff, pc 0x8000040a) is not reproducible from retained artifacts, the run named in
+  section 3 was not kept; a popret / popretz variant of the reproducer is owed by tb-infra (landing 2c).
 
 ## 7. Anchors table
 
