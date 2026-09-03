@@ -140,9 +140,17 @@ minus the counter of the first micro-op's record is the cm.*'s own count (the ea
 sequence: yes 193 of 290 on the slice-2 report, 290 of 290 now); a sequence at the very end of a run samples na. `cp_dmem_delay` is the
 observed class of the data-bus responses whose rvalid fell after the record before the sequence and up to the last micro-op's record
 (the sampler subscribes to the dbus agent's completed transactions; min1 = every response 1 cycle after grant, short = all in 2..4,
-long = all >= 5, mixed otherwise, na when none fell in the window), not the regime knob. Every result-class coverpoint (mul, div,
+long = all >= 5, mixed otherwise, na when none fell in the window), not the regime knob. Its sources and bases (tb_l6 L-2): the
+class is the dbus driver's DRAWN rvalid delay carried on its completed transaction (not a latency measured at the pins), and the
+window compares the transaction's cycle stamp (the driver's negedge counter) with the RVFI interface's posedge record counter; the
+in-order rule can hold an actual response beyond the drawn delay when two transactions are outstanding. Neither moved a class in
+the retained runs (the fixed regimes score 290 each); a pin-measured latency is not built. Every result-class coverpoint (mul, div,
 alu_reg, zba_zbb, alu_imm, shift, bit_count) samples na on an rd = x0 record, where the RTL forces rvfi_rd_wdata to 0; `cp_addi_wrap`
-is recomputed from rs1 and the immediate; `cp_divisor`'s magnitude compare negates the sign-extended operand (|INT_MIN| = 2^32).
+is recomputed from rs1 and the immediate; `cp_divisor`'s magnitude compare negates the sign-extended operand (|INT_MIN| = 2^31, the value the 33-bit expression yields;
+unit-test cases 0x9ABCDEF0 against INT_MAX and 0x12345678 against -2 separate it from the zero-extended form). The binv-twice
+tracker (`sb_prev_binv`) is reset by every record that is not an sbit instruction, trap records included. A legal move pair whose
+micro-ops do not match the expansion (`cp_uop_count_ok` na) is counted (`n_mv_miss`, FCOV_QUERY 12, the `move pairs:` report line)
+and is a `GEN_FCOV_REF` error at report unless it is the self-test's own vector case (`ut_mv_miss_expected`).
 Micro-op records (rvfi_ext_expanded_insn_valid) belong to the Zcmp collector alone: the base groups never see the synthesized
 `addi sp` / `li a0, 0` words. `cp_rvfi_tags_ok` is a reduced check: pc_wdata == pc_rdata on the intermediate micro-ops and a 32-bit
 synthesized word on every micro-op (the plan's per-position word compare is not implemented). The GEN_FCOV summary line prints the

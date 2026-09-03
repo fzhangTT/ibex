@@ -1,0 +1,6 @@
+FM10 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM10/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 fa524e76105e9eee
+FM10: compile FAILED (see /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM10/compile.launch.log)
+FM11 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM11/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 fa524e76105e9eee
+FM11_catch_zcmp_mv: verdict: FAIL reason: uvm_error at sim.log:110  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(1036) @ 5159500: uvm_test_top.env.isa_cov [GEN_FCOV_REF] gen_cmp_zcmp_mv_cg: 68 legal move pairs whose micro-ops did not match the expansion
+FM11_ablate_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM11: build sources sha256: 1def4880d2bdaa6c; source tree untouched: cc8bc78d76a57505

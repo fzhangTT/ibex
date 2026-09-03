@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:110
+evidence: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(1036) @ 5159500: uvm_test_top.env.isa_cov [GEN_FCOV_REF] gen_cmp_zcmp_mv_cg: 68 legal move pairs whose micro-ops did not match the expansion
+uvm_counts: {'INFO': 92, 'WARNING': 0, 'ERROR': 1, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

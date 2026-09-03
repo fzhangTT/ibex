@@ -150,15 +150,17 @@ The covergroups gen_bit_sbit_cg (CG-BIT-006) and gen_cmp_zcb_cg (CG-CMP-005); an
 rs2 forms, 4 immediate ops x 4 x 5, three binv-twice pairs) and gen_zcb_directed.S (71 records: every Zcb form, both data signs,
 aligned / off-by-one / word-crossing half-word accesses, five ALU operand classes, c.mul with distinct and equal registers over the
 operand classes). Red first: the first Zcb program put the data in s2 / s3 / s4 where the compressed register fields 2..4 are a0 / a1 /
-a2, so every load read 0 (cp_data_sign.neg unhit, cr_load_sign 3 of 6); the registers were corrected. Proofs (build q, own vdb each):
+a2, so every load read 0 (cp_data_sign.neg unhit, cr_load_sign 3 of 6; that report was not retained and the pre-fix program was
+not kept, so this red is narrated only, tb_l6 L-7); the registers were corrected. Proofs (build s retained as gen_fu_l6_*, first run on build q, own vdb each):
 gen_fcov_proof_slice4a.fcov.yaml PASS 22 bins (every coverpoint bin), slice4b PASS 29 bins (every coverpoint bin but cp_alu_operand.rand,
 unreachable by construction). Cross coverage: gen_bit_sbit_cg 100 / 100; gen_cmp_zcb_cg 59 / 65 (the six c_mul x rand and ALU x rand
 tuples). Mutants FM8 / FM9 caught with ablation controls (gen_mut_fcov.md).
 
 ## 5. Landing-4 re-review fixes (gen_critic_tb_l4.md) and the sampler unit test (LOG-058)
 
-Build q e0ed7268dea314ef carries the fixes; every earlier proof manifest passes on it unchanged (128 / 122 / 52 / 46 / 38 / 27 / 29 /
-65 / 65 / 65 / 22 / 29, gen_fu_l6_*_check.log), so no bin the proofs declared depended on the wrong mechanisms.
+Build q e0ed7268dea314ef carried the fixes first; the retained gen_fu_l6_*_check.log are the build-s re-runs, on which every earlier
+proof manifest passes unchanged (128 / 122 / 52 / 46 / 38 / 26 / 29 / 65 / 65 / 65 / 22 / 29; the slice-3a count is 26 after the
+L5R-1 wrap ruling removed cp_wrap.yes, 27 was the pre-ruling count), so no bin the proofs declared depended on the wrong mechanisms.
 - H-1(a) cp_minstret_once: red = the landing-4 report (gen_fu_l4_urg_lockstep_zcmp_grpinfo.txt, yes 193 of 290: the sequences preceded
   by a 16-bit instruction); the sample now waits for the record after the sequence and takes that record's counter minus the first
   micro-op record's: yes 290 of 290 in the short, min1, long and random runs, `minstret_once no 0` on every summary line
@@ -171,7 +173,7 @@ Build q e0ed7268dea314ef carries the fixes; every earlier proof manifest passes 
   290); short 290 / min1 290 / long 290 in the fixed regimes (gen_fu_l6_urg_lockstep_zcmp_random_grpinfo.txt and siblings).
 - The landing-3 deferred defects: |divisor| from the sign-extended value, addi_wrap from the operands (vector table rows).
 - gen_ut_isa_cov (dv/auto_dv/gen_tb/gen_tests/gen_ut_isa_cov.py; FCOV_SELFTEST, FCOV_QUERY): five runs PASS (gen_fu_l6_ut_isa_cov_*):
-  the vector table 15 cases 0 failures in each; FCOV_QUERY slt eq = 84 on gen_alu_directed.S, Zcmp sequences = 290 and minstret misses = 0
+  the vector table 18 cases 0 failures in each (27 since the tb_l6 M-2 / M-3 cases, Section 6); FCOV_QUERY slt eq = 84 on gen_alu_directed.S, Zcmp sequences = 290 and minstret misses = 0
   on gen_zcmp_directed.S, rd = x0 bit-count records = 91 on gen_bitcnt_directed.S. Red first: the vector table was written against the
   corrected classifiers; its rows for the old expressions (eq on the 1-bit cast, |x| of a zero-extended negative, addi_wrap from
   rd_wdata, minstret from the predecessor) are the landing-3 / landing-4 reports quoted above.
@@ -189,7 +191,8 @@ Build q e0ed7268dea314ef carries the fixes; every earlier proof manifest passes 
   (checker FAIL: cp_offset.max_fwd), gen_fu_l6_urg_red_l_lockstep_zcmp_mv_grpinfo.txt (FAIL: cp_hazard_src.alu_prev),
   gen_fu_l6_urg_red_l_lockstep_csrwarl_grpinfo.txt (the coverpoint manifest passes on it; the red rows are the cross tuples
   cr_mtvec_mode_lo.v01_nz and cr_mtvec_base_op.high_csrrs, 0 in that report).
-- Landing 6 build: r de523e6e878f325b (the sreg fix, the ibex_pkg constants, the mtvec low threshold, GEN_BUS_ERR_DRAIN_CYCLES 96); every
+- Landing 6 build: r de523e6e878f325b (the sreg fix, the ibex_pkg constants, GEN_BUS_ERR_DRAIN_CYCLES 96; the mtvec low threshold was already the whole-value test at
+  f660470 and only its statement changed); every
   proof, unit-test run and mutant below was re-run on it.
 - The DV Lead's rulings on the review questions, applied in the landing-6 build: cp_wrap is the address-space wrap (L5R-1: the 33-bit
   signed target outside [0, 2^32)), so the branch proof declares 26 coverpoint bins (cp_wrap.yes is reachable only near the ends of the
@@ -204,3 +207,23 @@ Build q e0ed7268dea314ef carries the fixes; every earlier proof manifest passes 
   +gen_fcov_en=0 on its own fresh vdb; urg writes no grpinfo.txt for it (gen_fu_l6_urg_lockstep_muldiv_nofcov.cmd.txt names the vdb) and
   the checker on the slice-1 manifest fails with a protocol error, no report (gen_fu_l6_nofcov_check.log). Every mutant FM1-FM9 is built
   from this sampler (blob 68ba3dfd8d3c4205) with its ablation control (gen_mut_fcov.md).
+
+## 6. Landing 7: the Critic's landing-6 review (gen_critic_tb_l6.md) answered
+
+Build x a48917a3f74eeea3 (wit_root, out of tree; the per-file list gen_fu_l8_sources_sha256_x.txt). Code: the move-pair miss counter and
+its GEN_FCOV_REF line, the unit-test cases, the |INT_MIN| comment, the binv tracker's reset on trap records (gen_fcov_pkg.sv); the
+option-line case in gen_ut_fcov_codegen.py; the anti_vacuity notes of all 20 manifests derived from the plan's Sample lines.
+- Reds: FM10 (the branch group counted, never sampled: `gen_isa_branch_cg sampled without coverage`, ablation PASS) and FM11 (the
+  cm.mva01s expansion expected with swapped registers: 68 counted misses, the referee's error, ablation PASS), gen_mut_fcov.md; the
+  vector case "cm.mva01s with a wrong second micro-op" (uop_count_ok na, one counted miss) inside the self-test.
+- Greens on x: gen_fu_l8_ut_isa_cov_* (five runs, 27 cases, 0 failures; the unit-test run's report line `move pairs: 5 sampled, 1 with
+  mismatching micro-ops (1 of them the self-test's)`), boot_zc, lockstep_zc, ut_witness, lockstep_muldiv_nofcov; the codegen unit test 19
+  OK (gen_fu_l8_ut_fcov_codegen.log).
+- Proofs re-run on x, fresh vdb each, the manifests with the derived notes: 128 / 122 / 52 / 46 / 38 / 26 / 29 / 65 / 65 / 65 / 22 / 29,
+  every one PASS (gen_fu_l8_<slice>_check.log, urg reports gen_fu_l8_urg_<run>_grpinfo.txt with their commands); lockstep_zcmp_mv on x
+  reports `move pairs: 130 sampled, 0 with mismatching micro-ops`.
+- M-1 (source identity): build s and the committed 61c97c1 differ in dv/auto_dv/tb/gen_fcov_codegen.py and
+  dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py only (gen_fu_l6_sources_sha256_s.txt against gen_fu_l6_sources_sha256_committed.txt);
+  neither is compiled and the rendered include is identical, so the landing-6 proofs stand; the lists are retained from now on.
+- Record corrections (L-1) are in Sections 4 and 5 above and in gen_mut_fcov.md; the response rows are the CR-6 table in
+  gen_critic_response_fcov.md, with the CR-5 rows the tb_l5 lows lacked (L-5).

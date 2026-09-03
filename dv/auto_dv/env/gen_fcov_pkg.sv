@@ -111,6 +111,7 @@ package gen_fcov_pkg;
     bit csr_pend [8], csr_eff_ok [8], csr_shadow_ok [8]; int csr_op [8], csr_rd [8], csr_gate [8]; logic [31:0] csr_wval [8], csr_eff [8], csr_shadow [8];
     virtual gen_ctrl_if ctrl_vif;   // mcounteren_writable_i as driven when a CSR write record arrives (cp_mcen_gate)
     int unsigned n_br = 0, n_mv = 0, n_csr_pairs = 0, n_csr_wr = 0, n_csr_replaced = 0;
+    int unsigned n_mv_miss = 0, ut_mv_miss_expected = 0;   // legal move pairs whose micro-ops did not match the expansion (the self-test's own excluded)
     // counters and last-sample copies the unit test reads (FCOV_QUERY / FCOV_SELFTEST, LOG-058)
     int unsigned n_slt_eq = 0, n_cnt_res_na = 0; int ut_last_zcmp [13], ut_last_imm [8], ut_last_cnt [5], ut_last_mv [8];
     // CG-CMP-006 sequence collector: one cm.push / cm.pop / cm.popret / cm.popretz from its first micro-op record to its last
@@ -184,7 +185,7 @@ package gen_fcov_pkg;
     endfunction
     // the listed values first, then the relations to the dividend, then the sign classes (plan order)
     function int div_divisor_cls(logic [31:0] rs2, logic [31:0] rs1);
-      logic [32:0] abs1 = rs1[31] ? (33'd0 - {rs1[31], rs1}) : {1'b0, rs1};   // |x| of the sign-extended value (2^32 for INT_MIN)
+      logic [32:0] abs1 = rs1[31] ? (33'd0 - {rs1[31], rs1}) : {1'b0, rs1};   // |x| of the sign-extended value (2^31 for INT_MIN)
       logic [32:0] abs2 = rs2[31] ? (33'd0 - {rs2[31], rs2}) : {1'b0, rs2};
       case (rs2)
         32'h0000_0000: return GEN_FC_DIV_OPS_CP_DIVISOR_ZERO;
@@ -584,6 +585,10 @@ package gen_fcov_pkg;
           mv_v[5] = (mv_prev >= 0 && mv_prev != zp_mv) ? mv_b2b(mv_prev, zp_mv) : GEN_FC_CMP_ZCMP_MV_CP_B2B_NONE;   // the neighbour after is checked at the flush
           mv_v[6] = mv_hz;
           mv_v[7] = (zp_count == 2 && mv_ok && zp_tags_ok) ? GEN_FC_CMP_ZCMP_MV_CP_UOP_COUNT_OK_YES : -1;
+          if (mv_v[7] < 0) begin
+            n_mv_miss++;
+            `uvm_info("GEN_FCOV_MV", $sformatf("legal move pair (form %0d, r1s' %0d, r2s' %0d) at pc %08h: micro-ops do not match the expansion (count %0d, form ok %0d, tags ok %0d)", zp_mv, mv_r1, mv_r2, t.pc_rdata, zp_count, mv_ok, zp_tags_ok), UVM_LOW)
+          end
           mv_pend = 1; cur_mv = zp_mv; n_mv++;
         end
       end
@@ -867,7 +872,7 @@ package gen_fcov_pkg;
         if (!zp_in || t.pc_rdata != zp_pc) zp_start(t);
         if (t.trap) begin zp_in = 0; n_zcmp_abandoned++; end else zp_step(t);
       end else if (zp_in) begin zp_in = 0; n_zcmp_abandoned++; end   // an entry split the sequence (its restart begins again)
-      if (t.trap) return;
+      if (t.trap) begin sb_prev_binv = 0; return; end   // a trap record breaks a binv pair like any other record
       if (!t.ext_exp_valid && t.insn[1:0] != 2'b11) begin   // a Zca retirement: pending until the next record's length is known
         int op = zca_insn(t.insn[15:0]);
         if (op >= 0) begin
@@ -943,7 +948,7 @@ package gen_fcov_pkg;
     function int unsigned query(int k);
       case (k)
         0: return n_slt_eq; 1: return n_zcmp; 2: return n_zcmp_minstret_no; 3: return n_cnt; 4: return n_cnt_res_na; 5: return n_imm;
-        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs;
+        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss;
         default: return 32'hffff_ffff;
       endcase
     endfunction
@@ -960,7 +965,7 @@ package gen_fcov_pkg;
       return t;
     endfunction
     function int unsigned self_test();
-      int unsigned fails = 0, n = 0;
+      int unsigned fails = 0, n = 0, imm0, miss0;
       `define GEN_FCOV_UT(name, got, exp) begin n++; if ((got) !== (exp)) begin fails++; `uvm_error("GEN_FCOV_UT", $sformatf("%s: got %0d expected %0d", name, got, exp)) end else `uvm_info("GEN_FCOV_UT", $sformatf("%s OK (%0d)", name, got), UVM_LOW) end
       // slt_case (the landing-3 major): eq needs the whole 32-bit compare, the boundary cases come first
       `GEN_FCOV_UT("slti rs1 == imm is eq", slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'd5, 5), GEN_FC_ISA_ALU_IMM_CP_SLT_CASE_EQ)
@@ -982,8 +987,10 @@ package gen_fcov_pkg;
       write(ut_rec(32'h6001_1093, 5'd1, 32'd24, 5'd2, 32'h0000_00f0, 32'h9000_0004, 1002, 32'd7));   // clz ra, sp = 24
       `GEN_FCOV_UT("clz rd = ra: result class from rd_wdata", ut_last_cnt[3], cnt_result_cls(32'd24))
       // minstret_once (the landing-4 H-1(a)): a cm.push {ra} sequence followed by a record whose counter moved by one, then one that did not
+      imm0 = n_imm;
       write(ut_rec(32'hfe11_2e23, 5'd0, 32'h0, 5'd2, 32'h8000_0230, 32'h9000_0010, 1010, 32'd100, 1, 0, 16'hb84a));   // sw ra, -4(sp): the first micro-op
       write(ut_rec(32'hfd01_0113, 5'd2, 32'h8000_0200, 5'd2, 32'h8000_0230, 32'h9000_0010, 1012, 32'd100, 1, 1, 16'hb84a));   // addi sp, sp, -48: the last
+      `GEN_FCOV_UT("the synthesized addi sp micro-op does not feed the immediate group", n_imm, imm0)
       write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0012, 1014, 32'd101));   // the record after: counter moved by one
       `GEN_FCOV_UT("cm.push followed by a counter move of one: minstret_once yes", ut_last_zcmp[9], GEN_FC_CMP_ZCMP_PUSHPOP_CP_MINSTRET_ONCE_YES)
       write(ut_rec(32'hfe11_2e23, 5'd0, 32'h0, 5'd2, 32'h8000_0230, 32'h9000_0020, 1020, 32'd101, 1, 0, 16'hb84a));
@@ -997,6 +1004,25 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("cm.mva01s s7, s6: form", ut_last_mv[0], GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S)
       `GEN_FCOV_UT("cm.mva01s s7, s6: r1s' field", ut_last_mv[1], 7)
       `GEN_FCOV_UT("cm.mva01s s7, s6: the pair over x23 / x22 is well-formed", ut_last_mv[7], GEN_FC_CMP_ZCMP_MV_CP_UOP_COUNT_OK_YES)
+      // the divisor pairs that separate the sign-extended |x| from the zero-extended one: |0x9ABCDEF0| < |INT_MAX|, |0x12345678| > |-2|
+      `GEN_FCOV_UT("divisor 0x9ABCDEF0 against dividend INT_MAX is neg_rand", div_divisor_cls(32'h9abc_def0, 32'h7fff_ffff), GEN_FC_DIV_OPS_CP_DIVISOR_NEG_RAND)
+      `GEN_FCOV_UT("divisor 0x12345678 against dividend -2 is abs_gt_dividend", div_divisor_cls(32'h1234_5678, 32'hffff_fffe), GEN_FC_DIV_OPS_CP_DIVISOR_ABS_GT_DIVIDEND)
+      // cm.mvsa01 s2, s3 (r1s' 2, r2s' 3 -> x18, x19: the s2..s5 branch of zcmp_sreg) expands to addi x18, a0, 0 then addi x19, a1, 0
+      write(ut_rec(32'h0005_0913, 5'd18, 32'h55, 5'd10, 32'h55, 32'h9000_0040, 1040, 32'd101, 1, 0, 16'had2e));
+      write(ut_rec(32'h0005_8993, 5'd19, 32'h44, 5'd11, 32'h44, 32'h9000_0040, 1042, 32'd101, 1, 1, 16'had2e));
+      write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0042, 1044, 32'd101));
+      `GEN_FCOV_UT("cm.mvsa01 s2, s3: form", ut_last_mv[0], GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVSA01)
+      `GEN_FCOV_UT("cm.mvsa01 s2, s3: r1s' field", ut_last_mv[1], 2)
+      `GEN_FCOV_UT("cm.mvsa01 s2, s3: r2s' field", ut_last_mv[2], 3)
+      `GEN_FCOV_UT("cm.mvsa01 s2, s3: the pair over x18 / x19 is well-formed", ut_last_mv[7], GEN_FC_CMP_ZCMP_MV_CP_UOP_COUNT_OK_YES)
+      // a legal pair whose second micro-op names the wrong source (addi a1, x21, 0 under cm.mva01s s7, s6) is a counted miss
+      miss0 = n_mv_miss;
+      write(ut_rec(32'h000b_8513, 5'd10, 32'h77, 5'd23, 32'h77, 32'h9000_0050, 1050, 32'd101, 1, 0, 16'haffa));
+      write(ut_rec(32'h000a_8593, 5'd11, 32'h66, 5'd21, 32'h66, 32'h9000_0050, 1052, 32'd101, 1, 1, 16'haffa));
+      write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0052, 1054, 32'd101));
+      `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: uop_count_ok na", ut_last_mv[7], -1)
+      `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: one counted miss", n_mv_miss, miss0 + 1)
+      ut_mv_miss_expected = n_mv_miss;   // the self-test's own miss is not the run's
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;
@@ -1005,7 +1031,9 @@ package gen_fcov_pkg;
       zca_flush(null);   // the last 16-bit record has no successor: its next_len is not applicable
       mv_flush(null);    // a move pair at the very end has no neighbour after
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
+      `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
+        if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
         if (n_mul > 0 && mul_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_ops_cg sampled without coverage")
         if (n_br > 0 && br_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_branch_cg sampled without coverage")
         if (n_zcmp > 0 && zcmp_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_pushpop_cg sampled without coverage")

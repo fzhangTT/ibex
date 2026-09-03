@@ -11,7 +11,7 @@ copy of the wit_root sources plus the one edit; rtl untouched); `build` is the m
 
 Exact edit: `bit is_cmul = (t.insn[1:0] == 2'b01 && t.insn[15:10] == 6'b100111 && t.insn[6:5] == 2'b10);` -> `bit is_cmul = 1'b0;`.
 Red of the slice (not a mutant): the proof run with `+gen_fcov_en=0` on a fresh vdb has no covergroup, urg writes no grpinfo.txt
-and the checker fails on the missing report (gen_fu_l3_nofcov_check.log).
+and the checker fails on the missing report (gen_fu_l3_nofcov_check.log at landing 3; re-run at landing 6 on the slice-1 manifest, gen_fu_l6_nofcov_check.log).
 
 ## Slice 2 (T-205: gen_bit_count_cg, gen_cmp_zca_cg, gen_cmp_zcmp_pushpop_cg)
 
@@ -44,7 +44,7 @@ vdb, and the checker on the slice's proof manifest; the ablation is the manifest
 
 | id | mutation | catch run | mutant build (sources sha256) | result | ablation |
 |---|---|---|---|---|---|
-| FM5 | gen_fcov_pkg.sv (gen_isa_cov): c.bnez decoded as c.beqz (`op = GEN_FC_ISA_BRANCH_CP_OP_C_BEQZ` for both CB forms) | gen_ut_lockstep on gen_branch_directed.S, urg, checker on gen_fcov_proof_slice3a.fcov.yaml | 74bafee34ddf4fa7 (original blob 68ba3dfd8d3c4205) | simulation PASS; checker `FAIL -- 1 declared bin(s) not hit: gen_isa_branch_cg.cp_op.c_bnez` (gen_fu_l6_FM5_check.log) | gen_fcov_proof_slice3a_fm5_ablation.fcov.yaml: `PASS -- all 26 declared bins hit` (gen_fu_l6_FM5_ablation_check.log) |
+| FM5 | gen_fcov_pkg.sv (gen_isa_cov): c.bnez decoded as c.beqz (`op = GEN_FC_ISA_BRANCH_CP_OP_C_BEQZ` for both CB forms) | gen_ut_lockstep on gen_branch_directed.S, urg, checker on gen_fcov_proof_slice3a.fcov.yaml | 74bafee34ddf4fa7 (original blob 68ba3dfd8d3c4205) | simulation PASS; checker `FAIL -- 1 declared bin(s) not hit: gen_isa_branch_cg.cp_op.c_bnez` (gen_fu_l6_FM5_check.log) | gen_fcov_proof_slice3a_fm5_ablation.fcov.yaml: `PASS -- all 25 declared bins hit` (gen_fu_l6_FM5_ablation_check.log; the FM_all driver log's FM5 line reports two unhit bins because it ran the 27-bin pre-L5R-1 manifest with cp_wrap.yes, the retained check is the 26-bin manifest re-check) |
 | FM6 | gen_fcov_pkg.sv (gen_isa_cov): the hazard tracker never sees the writer before a move (`mv_hz = ..._NONE`) | gen_ut_lockstep on gen_zcmp_mv_directed.S, urg, checker on gen_fcov_proof_slice3b.fcov.yaml | a272e110e99e5882 (original blob 68ba3dfd8d3c4205) | simulation PASS; checker `FAIL -- 2 declared bin(s) not hit: gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev, ...load_prev` (gen_fu_l6_FM6_check.log) | gen_fcov_proof_slice3b_fm6_ablation.fcov.yaml: `PASS -- all 27 declared bins hit` (gen_fu_l6_FM6_ablation_check.log) |
 | FM7 | gen_fcov_pkg.sv (gen_isa_cov): the immediate CSR forms sampled as the register forms (`csr_op = f3[1:0] - 1`, the `+ 3` for f3[2] dropped) | gen_ut_lockstep on gen_csr_warl_directed.S, urg, checker on gen_fcov_proof_slice3c.fcov.yaml | f48ec640b218605b (original blob 68ba3dfd8d3c4205) | simulation PASS; checker `FAIL -- 3 declared bin(s) not hit: gen_csr_trap_setup_warl_cg.cp_op.csrrci, .csrrsi, .csrrwi` (gen_fu_l6_FM7_check.log) | gen_fcov_proof_slice3c_fm7_ablation.fcov.yaml: `PASS -- all 62 declared bins hit` (gen_fu_l6_FM7_ablation_check.log) |
 
@@ -64,3 +64,17 @@ Every sampler mutant (FM2, FM3, FM5-FM9) is applied to the landed sampler (gen_f
 
 FM4 (the 1-bit cast) stays informational: the checker cannot see an over-count; the classifier unit test gen_ut_isa_cov (FCOV_QUERY 0 on
 gen_alu_directed.S = 84, FCOV_SELFTEST "slti rs1[0] == imm[0] alone is not eq") is the mechanism that would catch it now.
+
+## Landing 7 (the Critic tb_l6 fixes): the report-phase referees have reds
+
+Built out of tree from the wit_root copy at build x (a48917a3f74eeea3), row `referee`: the catch runs with the default knobs, the
+ablation with `+gen_fcov_en=0` (no covergroup, so the referee has nothing to judge and the bookkeeping path alone runs).
+
+| mutant | what is broken | run | build | catch | ablation |
+|---|---|---|---|---|---|
+| FM10 | gen_fcov_pkg.sv (gen_isa_cov): `br_cg.sample(...)` removed while `n_br++` stays, so the branch group is counted and never sampled | gen_ut_lockstep on gen_branch_directed.S, 8000 retirements | 1094004eeaa5f94b | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_isa_branch_cg sampled without coverage` (tb_l6 M-4) | PASS (0) |
+| FM11 | gen_fcov_pkg.sv (gen_isa_cov): the cm.mva01s expansion expected with its registers swapped (`want_rd = sreg; want_rs1 = areg`), so every legal pair mismatches | gen_ut_lockstep on gen_zcmp_mv_directed.S, 1000 retirements | 1def4880d2bdaa6c | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_cmp_zcmp_mv_cg: 68 legal move pairs whose micro-ops did not match the expansion`; report line `move pairs: 130 sampled, 68 with mismatching micro-ops` (tb_l6 M-2) | PASS (0) |
+
+The unmutated build x reports `move pairs: 130 sampled, 0 with mismatching micro-ops` on the same program, and the unit-test run
+`5 sampled, 1 with mismatching micro-ops (1 of them the self-test's)`: the self-test's own miss vector is excluded from the referee
+by `ut_mv_miss_expected`, which the vector case sets after asserting the count.

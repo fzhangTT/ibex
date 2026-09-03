@@ -1,0 +1,4 @@
+FM10 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM10/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 fa524e76105e9eee
+FM10_catch_branch: verdict: FAIL reason: uvm_error at sim.log:42  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(1038) @ 67752500: uvm_test_top.env.isa_cov [GEN_FCOV_REF] gen_isa_branch_cg sampled without coverage
+FM10_ablate_branch: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM10: build sources sha256: 1094004eeaa5f94b; source tree untouched: cc8bc78d76a57505
