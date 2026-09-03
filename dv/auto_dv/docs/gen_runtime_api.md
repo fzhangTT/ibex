@@ -684,7 +684,9 @@ forms (bare and bracketed tuple rows, hole groups, `Bins` tables in a cross and 
 the original, HIT / UNHIT on the derived one) and on the real excerpt `dv/auto_dv/flow/gen_fixtures/
 gen_grpinfo_cross_sample.txt` (two groups of the per-test report of the flow's own probe regress_probe_t215_cross,
 gen_test_mul_mul on the committed covergroups; its header names the source and its sha256), where
-gen_mul_ops_cg.cr_op_rd_x0.mul_no becomes HIT with count 94. On that probe's vdb the check moved from 249 of 289
+gen_mul_ops_cg.cr_op_rd_x0.mul_no becomes HIT with count 94, and on TB Infra's own probe report
+`gen_fixtures/gen_grpinfo_cross_sample_tbinfra.txt` (whole, 21 cross sections, 12 all-covered tables, no collision),
+whose three-bin manifest is UNHIT on the raw report and PASS on the derived one. On the first probe's vdb the check moved from 249 of 289
 cross bins HIT (40 MISSING: all-covered `Bins` tables) to 287 of 289, the two left and the nine variable bins
 belonging to covergroups not yet landed. A PASS/XFAIL run becomes FAIL with the distinct reason `fcov expectation unmet: ...`
 (declared but unhit) or `fcov expectation unverifiable: <cause>` (protocol error: unverifiable is not

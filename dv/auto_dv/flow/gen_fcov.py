@@ -65,6 +65,7 @@ ISOLATION_TOTAL_RE = r"Total tests in report: (\d+)"
 ISOLATION_EXACT_RE_FMT = r"^\S*/{cm}\s*$"
 COLLISION_REFUSE = "derived cross-bin names collide in the variable-form report (the checker would sum their counts)"
 CROSS_SAMPLE = Path(__file__).resolve().parent / "gen_fixtures" / "gen_grpinfo_cross_sample.txt"   # real urg excerpt, header lines say from where
+CROSS_SAMPLE_TBINFRA = CROSS_SAMPLE.parent / "gen_grpinfo_cross_sample_tbinfra.txt"   # TB Infra's T-215 probe report, whole, same header form
 
 
 def manifest_path(test: dict[str, Any]) -> Path | None:
@@ -229,7 +230,7 @@ def tuple_row(line: str, name_cols: int) -> str | None:
     return "_".join(names) + " " + " ".join(toks[name_cols:])
 
 
-def derive_variable_form(text: str) -> tuple[str, dict[str, int]]:
+def derive_variable_form(text: str) -> tuple[str, dict[str, Any]]:
     """The variable-form grpinfo.txt the checker can read. Cross sections: `Summary for Cross <cr>` becomes
     `Summary for Variable <cr>`, and in each bins table the header's name columns (those before COUNT) collapse into
     one NAME column whose value is the row's components joined with `_` (a one-column NAME table keeps its names), the
@@ -523,6 +524,22 @@ def self_test() -> int:
         print("SELF-TEST", "ok " if cond else "BAD", f"real sample {CROSS_SAMPLE.name} through the REAL checker: every cross bin MISSING-FROM-REPORT on the raw report; on the derived form gen_mul_ops_cg.cr_op_rd_x0.mul_no is HIT (count 94), a 'Bins'-table bin HIT, bare and bracketed auto rows HIT/UNHIT, a 3-component row UNHIT, a plain variable bin HIT both times, an absent bin MISSING; stats {stats_s}")
         if not cond:
             print("   got:", got, "| cross before:", cross_before)
+        # TB Infra's own probe report (T-215 sample): its three-bin manifest passes only through the derived form.
+        rep_t = d / "report_tbinfra"; rep_t.mkdir()
+        shutil.copyfile(CROSS_SAMPLE_TBINFRA, rep_t / "grpinfo.txt")
+        derived_t, stats_t = derived_report(rep_t)
+        want_t = {"gen_mul_ops_cg.cp_op.mul": ("HIT", "185"), "gen_mul_ops_cg.cr_op_rd_x0.mul_no": ("HIT", "148"), "gen_isa_alu_reg_cg.cp_op.xor": ("HIT", "148")}
+        tm = d / "gen_selftest_tbinfra.fcov.yaml"
+        tm.write_text("test: gen_selftest_tbinfra\nowner: runtime\nbins:\n" + "".join(f"  - {b}\n" for b in want_t) + "anti_vacuity:\n" + "".join(f"  {b}: x\n" for b in want_t), encoding="utf-8")
+        before_t = run_checker(tm, None, None, d / "tbinfra_before.log", report_dir=rep_t)
+        after_t = run_checker(tm, None, None, d / "tbinfra_after.log", report_dir=derived_t)
+        got_t = {b: (after_t["bins"][b]["state"], after_t["bins"][b]["count"]) for b in want_t}
+        cond = (got_t == want_t and after_t["status"] == "PASS" and before_t["status"] == "UNHIT"
+                and before_t["bins"]["gen_mul_ops_cg.cr_op_rd_x0.mul_no"]["state"] == "MISSING-FROM-REPORT"
+                and before_t["bins"]["gen_mul_ops_cg.cp_op.mul"]["state"] == "HIT"
+                and stats_t["cross_sections"] == 21 and stats_t["bins_tables_retitled"] == 12 and stats_t["name_collisions"] == 0)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"TB Infra's sample {CROSS_SAMPLE_TBINFRA.name} through the REAL checker: raw report UNHIT with the cross bin MISSING-FROM-REPORT, derived report PASS 3 of 3 (mul_no HIT 148, mul 185, xor 148); stats {stats_t}")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
