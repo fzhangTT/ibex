@@ -246,6 +246,9 @@ def self_test() -> int:
                 ("red_fixture without red_expect", lambda d: d["tests"][0].update(red_fixture=True, measured=False)),
                 ("red_fixture with an invalid red_expect regex", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="(")),
                 ("red_expect without red_fixture", lambda d: d["tests"][0].update(red_expect="x")),
+                ("program with generator and directed", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/gen_stim.py", "directed": ["x.S"], "seed": "run"})),
+                ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
+                ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
@@ -376,8 +379,16 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             unknown = set(prog) - set(C.PROGRAM_KEYS)
             if unknown:
                 die(f"{path}: test {t['name']} program has unknown keys {sorted(unknown)}")
-            if bool(prog.get("riscv_dv_test")) == bool(prog.get("directed")):
-                die(f"{path}: test {t['name']} program needs exactly one of riscv_dv_test / directed")
+            forms = [k for k in C.PROGRAM_SOURCE_FORMS if prog.get(k)]
+            if len(forms) != 1:
+                die(f"{path}: test {t['name']} program needs exactly one of {'/'.join(C.PROGRAM_SOURCE_FORMS)}, got {forms}")
+            gen = prog.get("generator")
+            if gen is not None:
+                if not isinstance(gen, str) or Path(gen).is_absolute() or not (C.REPO_ROOT / gen).is_file():
+                    die(f"{path}: test {t['name']} program.generator must be a clone-relative path to an existing script, got {gen!r}")
+            gargs = prog.get("generator_args")
+            if gargs is not None and (gen is None or not isinstance(gargs, list) or not all(isinstance(x, str) for x in gargs)):
+                die(f"{path}: test {t['name']} program.generator_args must be a list of strings and needs program.generator")
             seed = prog.get("seed", C.PROGRAM_SEED_RUN)
             if not (seed == C.PROGRAM_SEED_RUN or isinstance(seed, int)):
                 die(f"{path}: test {t['name']} program.seed must be an integer or {C.PROGRAM_SEED_RUN!r}")

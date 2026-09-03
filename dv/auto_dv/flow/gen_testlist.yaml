@@ -19,6 +19,9 @@
 #   uvm_test               value of +UVM_TESTNAME (null = the TB top has no UVM test class)
 #   plusargs               list of "+name=value" strings from the testlist entry
 #   seeds                  count (seeds derived from --base-seed per test) or explicit list
+#   program                optional program step before the run (gen_runtime_api.md 7e): exactly one of
+#                          riscv_dv_test | directed: [<clone-relative .S>...] | generator: <clone-relative
+#                          per-seed script> (+ generator_args), with seed: run | <int>, extra_args, spike_check
 #   fcov_expectation_file  dv/auto_dv/fcov_expectations/<name>.fcov.yaml or null
 #   timeout_s              per-run wall-clock budget of the simulation process
 #   owner                  role slug

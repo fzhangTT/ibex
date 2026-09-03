@@ -214,7 +214,9 @@ TEST_OPTIONAL_KEYS = ("uvm_test", "pass_marker", "feature_groups", "cocotb_modul
                       "expected_fail", "component", "notes", "measured", "program", "red_fixture", "red_expect")
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = REPO_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
-PROGRAM_KEYS = ("riscv_dv_test", "directed", "seed", "extra_args", "spike_check")
+PROGRAM_KEYS = ("riscv_dv_test", "directed", "generator", "generator_args", "seed", "extra_args", "spike_check")
+PROGRAM_SOURCE_FORMS = ("riscv_dv_test", "directed", "generator")   # exactly one per program block
+PROGRAM_GENERATOR_SOURCE = "gen_source.S"   # the per-seed source a program generator writes into <run>/program/
 PROGRAM_SEED_RUN = "run"
 PROGRAM_DIRNAME = "program"
 PROGRAM_VMEM = "prog.vmem"

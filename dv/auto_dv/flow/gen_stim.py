@@ -35,9 +35,28 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     if not C.PROGRAM_TOOL.is_file():
         U.die(f"{C.PROGRAM_TOOL} missing")
     seed = run_seed if prog.get("seed", C.PROGRAM_SEED_RUN) == C.PROGRAM_SEED_RUN else int(prog["seed"])
+    out.mkdir(parents=True, exist_ok=True)
+    generated: dict[str, Any] = {}
+    if prog.get("generator"):
+        # A per-seed program generator (Test Writer): everything it emits derives from --seed, so the
+        # source it writes is the one directed input of the program tool; the seed binding is by construction.
+        src = out / C.PROGRAM_GENERATOR_SOURCE
+        gen_log = out / "generator.log"
+        gen_argv = [sys.executable, str(C.REPO_ROOT / prog["generator"]), "--seed", str(seed), "--out", str(src),
+                    *[str(x) for x in (prog.get("generator_args") or [])]]
+        grc, gwall, gto = U.run_bounded(gen_argv, cwd=C.REPO_ROOT, log_path=gen_log, timeout_s=timeout_s)
+        if grc != 0 or gto or not src.is_file():
+            U.die(f"program generator failed (rc={grc}, timed_out={gto}, source present={src.is_file()}); see {gen_log}")
+        generated = {"generator": prog["generator"], "generator_args": list(prog.get("generator_args") or []),
+                     "generator_command": " ".join(gen_argv), "generator_source": str(src),
+                     "generator_source_sha256": U.sha256_file(src), "generator_wall_s": round(gwall, 1),
+                     "generator_log": str(gen_log)}
+        sources = [str(src)]
     argv = [sys.executable, str(C.PROGRAM_TOOL), "--seed", str(seed), "--out", str(out)]
     if prog.get("riscv_dv_test"):
         argv += ["--test", str(prog["riscv_dv_test"])]
+    elif prog.get("generator"):
+        argv += ["--directed", *sources]
     else:
         argv += ["--directed", *[str(C.REPO_ROOT / d) for d in prog["directed"]]]
     gen_build = C.site_value("riscv_dv_gen_build")
@@ -46,7 +65,6 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     if prog.get("spike_check"):
         argv.append("--spike-check")
     argv += [str(x) for x in (prog.get("extra_args") or [])]
-    out.mkdir(parents=True, exist_ok=True)
     # The build-configuration name has one home (gen_flow_const.BUILD_CONFIG); it is exported so the
     # stimulus tool can read it instead of carrying its own constant (owner of gen_program.py decides).
     env = dict(os.environ, **{C.ENV_BUILD_CONFIG: C.BUILD_CONFIG})
@@ -62,6 +80,7 @@ def build_program(prog: dict[str, Any], run_seed: int, out: Path, log: Path, tim
     return {"tool": str(C.PROGRAM_TOOL), "command": " ".join(argv), "seed": seed, "seed_source":
             "run" if prog.get("seed", C.PROGRAM_SEED_RUN) == C.PROGRAM_SEED_RUN else "fixed",
             "riscv_dv_test": prog.get("riscv_dv_test"), "directed": prog.get("directed"), "gen_build": gen_build,
+            **generated,
             "vmem": str(vmem), "vmem_sha256": U.sha256_file(vmem), "sidecar": str(sidecar), "crc32": crc,
             "word_count": (side.get("checksum") or {}).get("count"), "entry": side.get("entry"),
             "wall_s": round(wall, 1), "log": str(log)}
@@ -91,14 +110,17 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--riscv-dv-test")
     ap.add_argument("--directed", nargs="*")
+    ap.add_argument("--generator", help="clone-relative per-seed program generator (writes --out <file.S>)")
+    ap.add_argument("--generator-arg", action="append", default=[], help="extra generator argument (repeatable)")
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--spike-check", action="store_true")
     ap.add_argument("--print-plusargs", action="store_true", help="also print the image plusargs (needs the SV names)")
     a = ap.parse_args()
-    if bool(a.riscv_dv_test) == bool(a.directed):
-        ap.error("exactly one of --riscv-dv-test / --directed is required")
-    prog = {"riscv_dv_test": a.riscv_dv_test, "directed": a.directed, "seed": a.seed, "spike_check": a.spike_check}
+    if sum(bool(x) for x in (a.riscv_dv_test, a.directed, a.generator)) != 1:
+        ap.error("exactly one of --riscv-dv-test / --directed / --generator is required")
+    prog = {"riscv_dv_test": a.riscv_dv_test, "directed": a.directed, "generator": a.generator,
+            "generator_args": a.generator_arg, "seed": a.seed, "spike_check": a.spike_check}
     rec = build_program(prog, a.seed, a.out.resolve(), a.out.resolve() / "gen_program_driver.log")
     for k, v in rec.items():
         print(f"{k}: {v}")

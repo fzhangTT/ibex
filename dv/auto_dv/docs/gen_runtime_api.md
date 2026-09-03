@@ -565,10 +565,23 @@ read the variable instead, or the duplicate stays documented here as a known sec
 program:
   riscv_dv_test: gen_rand_smoke          # entry of dv/auto_dv/stim/gen_riscv_dv_target/gen_testlist.yaml
   # directed: [dv/auto_dv/stim/gen_directed/<file>.S]   # instead of riscv_dv_test
+  # generator: dv/auto_dv/tests/gen_programs/gen_<group>_prog.py   # instead of both: a per-seed program
+  # generator_args: ["--red"]                                      #   generator (clone-relative script)
   seed: run                              # the run seed (default); an integer pins the program for bring-up
   extra_args: []                         # passed to gen_program.py verbatim
   spike_check: false                     # gen_program.py --spike-check
 ```
+
+Program forms, exactly one per block: `riscv_dv_test` (the riscv-dv generator build named by
+`riscv_dv_gen_build` in gen_site.yaml), `directed` (a list of clone-relative sources), or
+`generator` (a clone-relative script the flow runs first as `python3 <generator> --seed <seed> --out
+<run>/program/gen_source.S <generator_args>`, clone root as cwd, bounded by the run's timeout, log
+`<run>/program/generator.log`; the source it writes is then the one directed input of gen_program.py,
+so the seed binding is by construction). The program record in result.yaml gains `generator`,
+`generator_args`, `generator_command`, `generator_source`, `generator_source_sha256`,
+`generator_wall_s`, `generator_log`. A generator that exits non-zero, times out or writes no source
+stops the run before the simulator, like a failing gen_program.py (the regression records NOT_RUN
+with the driver log). `program.seed` is `run` (the run seed) or an integer (pinned program).
 
 Templates for TB Infra's first milestone ("boots and retires": gen_tb_top with the cocotb triple,
 one riscv-dv program at a fixed seed, purpose 1, tier check, no coverage). Fill in the names; the
