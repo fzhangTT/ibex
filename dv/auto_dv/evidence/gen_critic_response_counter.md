@@ -1,4 +1,4 @@
-# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, 1bccc58, the CM86 touch and 0485a2b)
+# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, 1bccc58, the CM86 touch, 0485a2b and the CM95 touch)
 
 Owner: rtl-arch. Created 2026-09-03T20:07Z. Rows answer the cross-model review of f2b9272 (113 lines, sha256 daf32811888d;
 verdict APPROVE-WITH-CHANGES, artifact committed d5ddbe2) and any later round on the same note. Rule: every finding gets
@@ -8,7 +8,7 @@ RTL evidence.
 
 ## 1. Findings
 
-Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES); CM86-n = on 1bccc58 (3d68bb055400; artifact committed eca309c, APPROVE-WITH-CHANGES); CM93-n = on the CM86 touch (3c9295ccbce7; artifact committed 8d441c2, REQUEST-CHANGES); CM95-n = re-review on 0485a2b (4139db68c97c; artifact committed 29a5c5e, APPROVE-WITH-CHANGES, RC lifted).
+Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES); CM86-n = on 1bccc58 (3d68bb055400; artifact committed eca309c, APPROVE-WITH-CHANGES); CM93-n = on the CM86 touch (3c9295ccbce7; artifact committed 8d441c2, REQUEST-CHANGES); CM95-n = re-review on 0485a2b (4139db68c97c; artifact committed 29a5c5e, APPROVE-WITH-CHANGES, RC lifted); CM97-n = on the CM95 touch (95b0c048ba97; artifact committed 29d01e7, APPROVE-WITH-CHANGES).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -36,7 +36,11 @@ Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n 
 | CM95-I-1 | cross-model 0485a2b [info] section 1 (line 17) | WritebackStage row stated the dropped increment unconditionally | ADDRESSED at 95b0c048ba97 | Row now names the section-2 conditions (not inhibited, WB not empty, no load hazard). |
 | CM95-I-2 | cross-model 0485a2b [info] this file, title | stray comma | ADDRESSED (this file) | Title reads "f2b9272, 0c189eb, the CM78/CM79 touch on 04cf523, 1bccc58, the CM86 touch and 0485a2b". |
 | CM95-I-3 | cross-model 0485a2b [info] section 2 | Spike excerpt unverifiable from the commit | NOTED (no action) | As before. |
+| CM97-L-1 | cross-model CM95-touch [low] section 2 (fixed copy line 33) and section 10 (line 121) | "No shim action for the low write" unqualified against the carry clause | ADDRESSED at b16678949f12 | Sentence now "no shim action for the low write except the carry corner below (...)"; the section-10 bullet states the action explicitly with the mcountinhibit[2] = 0 condition: subtract one from the high word after the explicit minstret write. |
+| CM97-L-2 | cross-model CM95-touch [low] section 2 (line 33) | carry clause cited :40 (the counterh branch a low write does not take) | ADDRESSED at b16678949f12 | Clause cites rtl/ibex_counter.sv:36-37 (high word kept, low word = counter_val_i) and :44-47; the Anchor column lists :36-37 (low write), :40 (high write), :44-47. |
+| CM97-I-1 | cross-model CM95-touch [info] section 10 (line 122) | minstreth bullet lacked the load-hazard exception | ADDRESSED at b16678949f12 | Exception added with rtl/ibex_id_stage.sv:1059-1062, :1120, matching sections 1 and 2. |
+| CM97-I-2 | cross-model CM95-touch [info] section 2 | Spike ordering unverifiable from the commit | NOTED (no action) | As before. |
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 95b0c048ba97: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10; CM86 touches sections 2 and 10; CM93 rewrites the minstret / minstreth write row (section 2), both section-10 write bullets and the section-1 WritebackStage row; CM95 adds the carry corner and the load-hazard clause (sections 1, 2, 10).
+- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at b16678949f12: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10; CM86 touches sections 2 and 10; CM93 rewrites the minstret / minstreth write row (section 2), both section-10 write bullets and the section-1 WritebackStage row; CM95 adds the carry corner and the load-hazard clause (sections 1, 2, 10); CM97 aligns sections 2 and 10 on both.
