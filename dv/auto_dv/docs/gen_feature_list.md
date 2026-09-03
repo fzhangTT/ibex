@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-03 14:09 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-03 14:49 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -9198,7 +9198,7 @@ state) and "instr_addr_o = <vector>" (trap targets).
   rtl/ibex_cs_registers.sv:1593
 - Edge: no
 - Status: ACTIVE
-- Notes: mret/dret and exception redirects are not jumps for this counter (pc_set via other paths). An illegal JALR encoding (funct3 != 0) does NOT count: the decoder's end-of-decode override clears jump_set_o for every illegal encoding (rtl/ibex_decoder.sv:905-918; rtl-arch withdrew its D-COUNT-ILLEGAL-ENC candidate).
+- Notes: mret/dret and exception redirects are not jumps for this counter (pc_set via other paths). An illegal JALR encoding (funct3 != 0) does NOT count: the decoder's end-of-decode override clears jump_set_o for every illegal encoding (rtl/ibex_decoder.sv:905-918; rtl-arch withdrew its D-COUNT-ILLEGAL-ENC candidate). Reading-only corner (rtl-arch event-7 (b), dv/auto_dv/evidence/gen_hpm_event_defs.md): a jump behind an outstanding WB load/store pulses perf_jump speculatively (instr_executing_spec has no outstanding-access term, rtl/ibex_id_stage.sv:1054-1057); if that access faults the jump is killed and re-fetched after the handler and pulses again, two pulses for one retired jump; not seen in a run; the exact items exclude it by precondition, the bound class (C-10-like) admits it.
 
 ### F-PMC-039: mhpmcounter8 (NumBranches) counts every conditional branch, taken or not
 - What: perf_branch asserts in the FIRST_CYCLE arm of the ID FSM while the branch is the valid
@@ -12991,7 +12991,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   value is pc_if (next sequential fetch address) and is compared as such (TP-RVFI-012); the
   comparator observes the target on the following record (TB Infra convention C-1). Related:
   B13 (jalr to an odd target keeps bit 0 in pc_wdata, rtl/ibex_core.sv:2084 with the raw
-  branch_target_ex) stands. Evidence (TB Infra first green export run, dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (b)): the seed-7 program's single trap record (order 466, ecall at 0x80002164) has pc_wdata 0x80002168 = pc + 4, not the handler 0x80001700, confirming the RTL-defined rule above and convention C-1; the export test's pc-continuity rule excludes trap, mret and dret records (gen_ut_export.py); rtl-arch T-102 fact R1 (dv/auto_dv/evidence/gen_t102_rtl_facts.md) confirms mret/dret pc_wdata = pc_if (+4 for a 32-bit instruction, +2 for c.ebreak) from rtl/ibex_core.sv:2084. Zcmp precision (rtl-arch R9, dv/auto_dv/evidence/gen_t102_rtl_facts.md, confirmed by tb-infra run red_zcmp_trap): a trapping non-last cm.* micro-op record, and an illegal cm.* encoding, report pc_wdata == pc_rdata == the cm.* pc (offset 0), because expansion holds the fetch (rtl/ibex_if_stage.sv:809-810) and pc_if stays at the cm.* pc for every micro-op except the last; the whole sequence restarts from micro-op 0 after mret (flush_expanded, rtl/ibex_if_stage.sv:482-483); the export continuity rule excludes trap and micro-op records; the comparator rule is TB Infra's T-102c (T-134).
+  branch_target_ex) stands. Evidence (TB Infra first green export run, dv/auto_dv/evidence/gen_tdd_export.md attempt 3 (b)): the seed-7 program's single trap record (order 466, ecall at 0x80002164) has pc_wdata 0x80002168 = pc + 4, not the handler 0x80001700, confirming the RTL-defined rule above and convention C-1; the export test's pc-continuity rule excludes trap, mret and dret records (gen_ut_export.py); rtl-arch T-102 fact R1 (dv/auto_dv/evidence/gen_t102_rtl_facts.md) confirms mret/dret pc_wdata = pc_if (+4 for a 32-bit instruction, +2 for c.ebreak) from rtl/ibex_core.sv:2084. Zcmp precision (rtl-arch R9, dv/auto_dv/evidence/gen_t102_rtl_facts.md, confirmed by tb-infra run red_zcmp_trap): a trapping non-last cm.* micro-op record, and an illegal cm.* encoding, report pc_wdata == pc_rdata == the cm.* pc (offset 0), because expansion holds the fetch (rtl/ibex_if_stage.sv:809-810) and pc_if stays at the cm.* pc for every micro-op except the last; the whole sequence restarts from micro-op 0 after mret (flush_expanded, rtl/ibex_if_stage.sv:482-483); the export continuity rule excludes trap and micro-op records; the comparator rule is TB Infra's T-102c (T-134, landed 18470dd: the trapping micro-op ends the sequence and is compared as its last record).
 ### F-RVFI-011: mem_addr / rmask / wmask for loads and stores (single record, unshifted mask)
 - What: rvfi_mem_addr = lsu_addr captured in the first ID cycle (the effective, possibly
   misaligned, byte address). rmask/wmask are derived from lsu_type only: word 4'b1111, half

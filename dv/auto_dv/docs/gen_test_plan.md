@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 14:09 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-03 14:49 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -56,8 +56,8 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   announcing a lookup read, a tag write and a fill write with way and index), needed by 17 TP-IC items whose clauses compare
   RAM-port cycles that no bus, alert or scrkey row carries; until TB Infra lands them those items stay marked and the E
   lines remain the ONLY path by which a boundary fact reaches a test. A yaml row whose event is `<name>` (a wildcard) is
-  NOT a rendered row for this plan (gen_trace_check.py treats it as absent); since TB Infra's commit d0c0d15 the yaml
-  renders all 32 rows exactly (no wildcards; the three icram rows of WP-8 added for round 7), so the sunset waits only on
+  NOT a rendered row for this plan (gen_trace_check.py treats it as absent); since 50256f0 the yaml renders all 32 rows
+  exactly (29 exact rows at d0c0d15 plus the three icram rows of WP-8; no wildcards), so the sunset waits only on
   Runtime's export_sources_emitted field (WP-6: the rows whose writers are instanced in the build; empty until the event
   part lands) and, for
   the 17 TP-IC items, on the icram rows (WP-8).
@@ -67,7 +67,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   RVFI-only fallback (or stating that no fallback is claimed). The rows were assigned per item from the Fire-check text and
   the item's stimulus (182 items name the signal or event, 38 are inferred from the group and stimulus; Section 1.3 column
   Export rows); `pin irq_fast` stands for any irq_fast<n> row. The clause source class (Section 1.3 column Class source)
-  is GENERATED from the first export row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 4 icram inject, 3 scrkey, 3 regime phase, 1 no export row (220 items). 1 items have no export row
+  is GENERATED from the first export row: 41 pin edge, 16 bus beat (gnt/rvalid), 16 bus request, 9 core_busy, 9 irq_pending_o, 4 icram inject, 3 scrkey, 3 alert, 3 regime phase, 1 no export row (105 items). 1 items have no export row
   (TP-PMC-001): their clause stays coverage-only until the item is reformulated to a boundary fact or the export gains a
   row; they can never sunset by the tool.
   The witness group is a LEDGER of fire-check results, never DUT coverage (Critic gen_critic_plan_witness_v1.md;
@@ -93,7 +93,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   from the fire-check outcome (cycle_clause_true set only on the TRUE branch), and the fact of record is the SV witness
   ledger (gen_wit_cycle_clause_cg) sampling the dispatched COV_WITNESS against the export events, which a Python test cannot
   produce; the Python structure check is defence in depth with a named residual: a test module can fake a witness and still
-  pass the lint (fifteen such modules passed in the review), so the lint is not the guarantee. d1d68fd is cited for the
+  pass the lint (the reviews of d1d68fd and 69be96b built such modules), so the lint is not the guarantee. d1d68fd is cited for the
   committed-testlist rule and the plan_bins guard (verified by the review); the truthful wording of the guarantee, the two-sided
   not_built guard and the bins_not_hit attribute are committed in the Test Writer's landing 3b, 3e3d930 (API document Section 9). SV rule
   (C-2): the dispatcher receives the running test's index set through the plusarg +gen_witness_ids=<comma-separated
@@ -109,8 +109,12 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   WP-6): export_sources, the rendered table (every row the build can write; the codegen cross-check), and
   export_sources_emitted, the rows whose writers are instanced in that build (Runtime, from TB Infra's codegen-rendered
   active-source list, cross-checked against the export header's sources= at the canary; empty today). It FAILS a
-  still-marked item whose export rows are ALL in export_sources_emitted, reports rendered-but-unemitted rows as renderable
-  only, treats a manifest without the emitted field as unknown, and it FAILS a marked item whose
+  still-marked item whose export rows are ALL OBSERVED in a retained run of the pinned build (LOG-028a, T-142: Runtime's
+  per-row first-seen list export_rows_observed beside export_sources_emitted, T-140; the emitted set is the M-1 fix and an
+  UPPER BOUND that never un-marks by itself, removal waits on the observed-row list and an unobserved row holds its item;
+  exclusion is by row, never by source), reports rendered-but-unemitted rows as renderable only and
+  gated items (every row emitted, a row never observed) separately, refuses the sunset with a note when the observed list is
+  absent, treats a manifest without the emitted field as unknown, and it FAILS a marked item whose
   witness CSV row says marked = 0 (or the reverse). Without a manifest it prints "export sources unknown" computed from
   the missing input, together with the number of marked items whose rows the yaml already renders exactly. When the token
   is removed the witness bin becomes a declared must-hit bin of the owning test and a test that has not implemented the
@@ -119,8 +123,13 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   of Section 1.3 as blocked until the export or a reformulation lands.
   Operational rule for the first export landing (Critic v3 note, Orchestrator 11:5x UTC; sized by Critic v4): the failure
   list will be long (with 29 exact rows rendered, the first emitted-set manifest un-marks about two hundred of the 220
-  items, all but the icram-dependent and no-export-row ones), so the DV Lead removes the tokens of every item whose rows the build
-  manifest's export_sources_emitted lists IN THE SAME CHANGE as Runtime's landing of that field, regenerating the plan and the
+  items, all but the icram-dependent and no-export-row ones), so the DV Lead removes the tokens of every item whose rows are ALL
+  in the build manifest's observed-row list (LOG-028a) IN THE SAME CHANGE as Runtime's landing of that list, with
+  gen_token_sunset.py whose per-item RELEASED / GATED output is retained beside the plan (dv/auto_dv/work/dv-lead/
+  gen_trace_check_v2j_sunset.log; first pass on Runtime's T-140 reference probe_export_t140 (head 11413df, gen_ut_export seed 1):
+  19 of the 28 declared rows observed; the nine never observed in that run (pin debug_req, pin irq_external, pin irq_fast,
+  pin irq_nm, pin irq_software, pin irq_timer, regime phase, scrkey req, scrkey valid) hold every item that names one; later
+  passes follow as retained runs of interrupt, debug, regime and key tests observe those rows), regenerating the plan and the
   witness CSV (marked = 0 for those rows) and the Test Writer regenerating the affected manifests; a failing run of
   gen_trace_check.py between the two landings is the expected signal that the removal is due, not a defect. Token removal
   is the DV Lead's, decided from the build manifest, never from the yaml alone.
@@ -136,7 +145,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   interrupt-enabled test result counts toward the plan and the irq-entry, irq-priority and NMI items stay unmeasured:
   their runs may execute, their fire-checks and bins are recorded, but none enters the Phase 1 numbers. Rule (generated,
   Section 1.4): an item is under the hold when its Pass criteria name gen_chk_irq, or when its stimulus enables an
-  interrupt line and it checks an interrupt or NMI entry; 165 items in 60 test groups today. The hold is
+  interrupt line and it checks an interrupt or NMI entry; 165 items in 61 test groups today. The hold is
   lifted by removing this bullet and Section 1.4 in the revision that cites the reviewed T-136 commit.
 - Measurement hold T-137 (Orchestrator LOG-026a): the lock-step comparator arms a model fault from the DUT's own load/store trap
   record, so a PMP denial or a bus error the DUT reports wrongly (or fails to report) is mirrored instead of caught until TB
@@ -169,31 +178,33 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 
 # 0a. Checker-id concordance (plan id -> architecture ids -> knob; DV Lead owns, TB Infra agrees)
 
-| Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) |
-|---|---|---|
-| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 |
-| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 |
-| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 |
-| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 |
-| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 |
-| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 |
-| gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 |
-| gen_chk_irq | irq_pending, irq_entry | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0 |
-| gen_chk_nmi | irq_entry (NMI vector / mstack rows), nmi_internal | +gen_chk_irq_entry=0, +gen_chk_nmi_internal=0 |
-| gen_chk_debug | dbg_entry, dbg_masked, dbg_trigger | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_trigger=0 |
-| gen_chk_alerts | alert_minor, alert_internal, alert_bus | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 |
-| gen_chk_icache | icache_ecc, scrkey_*, icram_inval_sweep, icram_ecc_response | +gen_chk_icache_ecc=0, +gen_chk_scrkey_*=0, +gen_chk_icram_*=0 |
-| gen_chk_crash_dump | crash_dump | +gen_chk_crash_dump=0 |
-| gen_chk_double_fault | double_fault_seen | +gen_chk_double_fault_seen=0 |
-| gen_chk_counters | ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound | +gen_chk_ctr_*=0 |
-| gen_chk_sleep | core_busy (sleep rows) | +gen_chk_core_busy=0 |
-| gen_chk_fetch_en | fetch_en | +gen_chk_fetch_en=0 |
-| gen_chk_cheriot_quiet | data_tag / cap-field quiet rows of gen_misc_monitor | +gen_chk_cheriot_quiet=0 |
-| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) |
-| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 (TB Infra to add the row) |
-| gen_chk_bitmanip_ref (requested) | C5.5 draft-B reference function compare in the shim | +gen_chk_isa_rd=0 (same row) |
-| gen_chk_zcmp_seq, gen_chk_timing_isa, gen_chk_trap_timing, gen_chk_csr_flush, gen_chk_exc_flush, gen_chk_regime, gen_chk_reset (requested) | test-level compares in the hosting cocotb test unless TB Infra adds a row (Section 6 of the architecture, "New checkers requested" mapping) | per test |
-| gen_sva_multdiv, gen_sva_csr_excl (requested) | bound assertions in gen_binds.sv (F-MUL-028; CSR exclusion probe) | +gen_chk_sva_multdiv=0, +gen_chk_sva_csr_excl=0 |
+Ids are the uvm_error ids of dv/auto_dv/env/gen_checkers_pkg.sv (TB Infra, 67b5971; the component API documents carry the same list); every id has a rendered +gen_chk_<id> knob row in gen_tb_knobs.yaml, consumed only once the checker is built. Column four states the build state at 67b5971 (TB Infra, 13:0x UTC).
+
+| Plan id (pass criteria) | Architecture checker id(s) (gen_tb_architecture.md Section 6) | Disable knob(s) | As built (67b5971) |
+|---|---|---|---|
+| gen_isa_compare | isa_pc, isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr (C4.7) | +gen_chk_isa_<row>=0 | built (lock-step comparator, T-102/T-102c); isa_pc_next compares rvfi_pc_wdata with bit 0 MASKED on jump-class records (bug candidate B13, RVFI cosmetic; batch-2 gen_test_isa_cti saw 64 rows per seed of dut == model or 1 on odd jalr targets) and the B13 expected-fail test gen_btalu_hazard_xfail runs the unmasked rule by knob (TB Infra names it) |
+| gen_chk_csr_readback | isa_csr plus the C6 read-back compare (csr_readback) | +gen_chk_csr_readback=0 | built (comparator) |
+| gen_chk_ibus_proto | ibus_proto, ibus_outstanding | +gen_chk_ibus_proto=0, +gen_chk_ibus_outstanding=0 | built (bus agents) |
+| gen_chk_dbus_proto | dbus_proto, dbus_outstanding, dbus_split | +gen_chk_dbus_proto=0, +gen_chk_dbus_outstanding=0, +gen_chk_dbus_split=0 | built (bus agents) |
+| gen_chk_store_intg | dbus_store_intg (stores only) | +gen_chk_dbus_store_intg=0 | built (bus agents) |
+| gen_chk_bus_intg_rsp | alert_bus (fetch and data sources), nmi_internal, rf_wr_suppress compare | +gen_chk_alert_bus=0, +gen_chk_nmi_internal=0 | alert_bus built (gen_misc_monitor); nmi_internal UNBUILT (the internal NMI from an injected LSU integrity error: entry, mcause 0x8000001f, mtval); rf_wr_suppress in the comparator |
+| gen_chk_pmp | pmp_data, pmp_fetch | +gen_chk_pmp_data=0, +gen_chk_pmp_fetch=0 | UNBUILT (pmp_*) |
+| gen_chk_irq | irq_pending, irq_entry, irq_masked, nmi_entry (gen_irq_checker) | +gen_chk_irq_pending=0, +gen_chk_irq_entry=0, +gen_chk_irq_masked=0, +gen_chk_nmi_entry=0 | built; irq_entry checks the entry bound only: the expected-cause rule (pending and enabled at the decision, priority NMI > fast lowest id > external > software > timer) is T-136, and interrupt-enabled results do not count until it is in (Section 0 hold, Section 1.4) |
+| gen_chk_nmi | nmi_entry (the external irq_nm pin: entry bound, NMI vector, mstack rows), nmi_internal | +gen_chk_nmi_entry=0, +gen_chk_nmi_internal=0 | nmi_entry built (gen_irq_checker); nmi_internal UNBUILT (separate rule, see gen_chk_bus_intg_rsp) |
+| gen_chk_debug | dbg_entry, dbg_masked, dbg_exc, dbg_dret, dbg_trigger (gen_dbg_checker) | +gen_chk_dbg_entry=0, +gen_chk_dbg_masked=0, +gen_chk_dbg_exc=0, +gen_chk_dbg_dret=0, +gen_chk_dbg_trigger=0 | dbg_entry, dbg_masked built; dbg_exc, dbg_dret, dbg_trigger UNBUILT |
+| gen_chk_alerts | alert_minor, alert_internal, alert_bus (gen_misc_monitor) | +gen_chk_alert_minor=0, +gen_chk_alert_internal=0, +gen_chk_alert_bus=0 | built (alert_minor against the RAM-model announcement queue) |
+| gen_chk_icache | icache_ecc, scrkey_proto, icram_inval_sweep, icram_ecc_response | +gen_chk_icache_ecc=0, +gen_chk_scrkey_proto=0, +gen_chk_icram_*=0 | UNBUILT (icram_*, scrkey_proto); note: inject, lookup, tag_write and fill_write are icram EVENT ROW names of the export table and the RAM model's announcement kinds, not checker ids |
+| gen_chk_crash_dump | crash_dump | +gen_chk_crash_dump=0 | UNBUILT |
+| gen_chk_double_fault | double_fault (the double_fault_seen_o pulse rule, gen_misc_monitor) | +gen_chk_double_fault=0 | built |
+| gen_chk_counters | ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound | +gen_chk_ctr_*=0 | UNBUILT (ctr_*) |
+| gen_chk_sleep | core_busy (sleep rows) | +gen_chk_core_busy=0 | UNBUILT |
+| gen_chk_fetch_en | fetch_en | +gen_chk_fetch_en=0 | UNBUILT |
+| gen_chk_cheriot_quiet | data_tag_quiet (data_tag_o never high, gen_misc_monitor); cap-field quiet rows | +gen_chk_data_tag_quiet=0 | data_tag_quiet built; cap-field rows UNBUILT |
+| gen_sva_ibus / gen_sva_dbus | bound protocol properties (C10, rtl-arch gen_protocol_props_draft.sv) | +gen_chk_sva_<prop>=0 (TB self-check sva_rvalid_legal: +gen_chk_sva_rvalid_legal) | bound (gen_binds.sv) |
+| gen_chk_rvfi_proto (requested) | gen_rvfi_monitor self-consistency rows (order, continuity, rd/rs zero rules) | +gen_chk_rvfi_proto=0 (TB Infra to add the row) | requested |
+| gen_chk_bitmanip_ref (requested) | C5.5 draft-B reference function compare in the shim | +gen_chk_isa_rd=0 (same row) | built (T-102: draft-B reference extended to the remaining C5.5 ops) |
+| gen_chk_zcmp_seq, gen_chk_timing_isa, gen_chk_trap_timing, gen_chk_csr_flush, gen_chk_exc_flush, gen_chk_regime, gen_chk_reset (requested) | test-level compares in the hosting cocotb test unless TB Infra adds a row (Section 6 of the architecture, "New checkers requested" mapping) | per test | requested |
+| gen_sva_multdiv, gen_sva_csr_excl (requested) | bound assertions in gen_binds.sv (F-MUL-028; CSR exclusion probe) | +gen_chk_sva_multdiv=0, +gen_chk_sva_csr_excl=0 | requested |
 Bug candidates whose spec-direction check is a test-level compare (no C5.3b row): B4 (cm.mvsa01 reserved encoding: rvfi_trap expected), B5 (dcsr.nmip read-back), B7 (minstret delta versus rvfi_order delta with dummies on), B9 (dcsr.cause read-back, informational), B10 (dcsr.cause on the ebreak entry), B11 (mhpmcounter9 delta under DIT), B13 (rvfi_pc_wdata bit 0). B1, B2, B3, B15 are C5.3b rows.
 
 # 1. Counts
@@ -207,9 +218,9 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | Expected-fail items (bug candidates) | 30 |
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
 | Items outside the Phase 1 pass gate (expected-fail + informational) of 1204 | 41 |
-| Test groups | 229 |
+| Test groups | 230 |
 | Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15825 / 49 |
-| Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 220 marked items |
+| Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 105 marked items |
 
 ## 1.1 Expected-fail items per bug candidate
 
@@ -230,54 +241,45 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | B17 | 4 | TP-BTALU-018, TP-PMC-058, TP-PMC-059, TP-PMC-060 |
 | B20 | 1 | TP-PMC-061 |
 
-## 1.3 Items whose Fire-check carries the cycle-clause marker (generated; 220 items; witness bins excluded from manifests while marked)
+## 1.2 Informational items (outside the Phase 1 pass gate)
+
+| Item | Group | Reason class |
+|---|---|---|
+| TP-ISA-051 | gen_isa_illegal_info | informational (B14 confirmation; excluded from the pass gate) |
+| TP-ISA-057 | gen_isa_illegal_ebreak_info | informational (RVFI-only quirk, candidate for the bug log; excluded from the pass gate) |
+| TP-EXC-065 | gen_exc_priority_info | informational (B14 confirmation; excluded from the pass gate) |
+| TP-DBG-011 | gen_dbg_req_shape_info | informational (B9: RTL-defined corner under out-of-spec debug_req_i stimulus; value recorded, not a gate item; Q-007 default and gen_bug_rep |
+| TP-IMEM-040 | gen_imem_proto_basic_info | informational (excluded from the pass gate) |
+| TP-DMEM-062 | gen_dmem_proto_basic_info | informational (excluded from the pass gate) |
+| TP-DMEM-063 | gen_dmem_err_info | informational (B14 confirmation; excluded from the pass gate) |
+| TP-IC-038 | gen_ic_replace_info | informational (excluded from the pass gate) |
+| TP-SEC-010 | gen_sec_alert_inject_dbus_info | informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate) |
+| TP-SEC-011 | gen_sec_alert_inject_dbus_clean_info | informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate) |
+| TP-RVFI-039 | gen_rvfi_trap_info | informational (B14 confirmation; excluded from the pass gate) |
+## 1.3 Items whose Fire-check carries the cycle-clause marker (generated; 105 items; witness bins excluded from manifests while marked)
 
 Export rows (generated from each item's `[export-rows: ...]` annotation; the sunset input of gen_trace_check.py) and the
-clause source class generated from the first row: 86 bus beat (gnt/rvalid), 45 pin edge, 41 bus request, 13 core_busy, 13 irq_pending_o, 11 alert, 4 icram inject, 3 scrkey, 3 regime phase, 1 no export row. No-export-row items (1; coverage-only until
+clause source class generated from the first row: 41 pin edge, 16 bus beat (gnt/rvalid), 16 bus request, 9 core_busy, 9 irq_pending_o, 4 icram inject, 3 scrkey, 3 alert, 3 regime phase, 1 no export row. No-export-row items (1; coverage-only until
 reformulated or until the export gains a row): TP-PMC-001. Row demand (items naming the row anywhere in their list, TB
-Infra's landing priority): ibus req 82, dbus rvalid 75, ibus rvalid 66, ibus gnt 46, pin irq_fast 42, pin irq_external 41, pin irq_software 41, pin irq_timer 41, dbus gnt 37, pin debug_req 35, pin irq_nm 34, misc irq_pending 27, misc core_busy 26, dbus req 25, regime phase 15, alert alert_major_bus 11, icram fill_write 9, icram tag_write 7, icram lookup 6, pin fetch_enable 6, alert double_fault_seen 4, icram inject 4, scrkey valid 4, alert alert_minor 3, pin mcounteren_writable 2, scrkey req 2, alert alert_major_internal 1, misc crash_dump_last_data_addr 1. Export-blocked items (no RVFI-only fallback; their Fire-check is
-entirely coverage-only while marked, so Phase 1 sign-off needs the export or a reformulation): 8
-(TP-CSR-100, TP-PMP-077, TP-IMEM-006, TP-IMEM-039, TP-DMEM-007, TP-DMEM-051, TP-IC-003, TP-IC-045). Class-B items (internal-instant anchors): 40.
+Infra's landing priority): ibus req 47, pin irq_fast 42, pin irq_external 41, pin irq_software 41, pin irq_timer 41, pin debug_req 35, pin irq_nm 34, dbus rvalid 23, ibus rvalid 23, misc irq_pending 23, misc core_busy 17, regime phase 15, ibus gnt 14, dbus gnt 10, icram fill_write 9, icram tag_write 7, dbus req 6, icram lookup 6, icram inject 4, scrkey valid 4, alert alert_major_bus 3, alert alert_minor 3, pin fetch_enable 2, scrkey req 2. Export-blocked items (no RVFI-only fallback; their Fire-check is
+entirely coverage-only while marked, so Phase 1 sign-off needs the export or a reformulation): 2
+(TP-IC-003, TP-IC-045). Class-B items (internal-instant anchors): 28.
 
 | Item | Group | Export rows | Class source | Fallback | Class |
 |---|---|---|---|---|---|
-| TP-ISA-024 | gen_isa_cti | ibus req; ibus gnt | bus request | RVFI-only fallback stated | class B |
 | TP-ISA-040 | gen_isa_system | misc core_busy; ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req | core_busy | RVFI-only fallback stated | - |
-| TP-ISA-051 | gen_isa_illegal_info | dbus rvalid; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-MUL-011 | gen_mul_timing | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-MUL-023 | gen_mul_timing | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req | pin edge | RVFI-only fallback stated | class B |
-| TP-MUL-024 | gen_mul_timing | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-CMP-057 | gen_cmp_zcmp_events | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm | pin edge | RVFI-only fallback stated | class B |
 | TP-CMP-058 | gen_cmp_zcmp_events | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm | pin edge | RVFI-only fallback stated | class B |
 | TP-BIT-036 | gen_bit_multicycle | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; dbus rvalid | pin edge | RVFI-only fallback stated | - |
 | TP-BIT-042 | gen_bit_random | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req; pin irq_nm; dbus rvalid | pin edge | RVFI-only fallback stated | - |
-| TP-BIT-043 | gen_bit_multicycle | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-BTALU-001 | gen_btalu_basic | ibus req; ibus gnt | bus request | RVFI-only fallback stated | - |
-| TP-BTALU-012 | gen_btalu_basic | ibus req | bus request | RVFI-only fallback stated | - |
-| TP-BTALU-018 | gen_btalu_perf_b17_xfail | dbus rvalid; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-CSR-029 | gen_csr_trap_setup | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | irq_pending_o | RVFI-only fallback stated | - |
-| TP-CSR-031 | gen_csr_trap_setup | misc irq_pending; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req | irq_pending_o | RVFI-only fallback stated | class B |
+| TP-CSR-029 | gen_csr_trap_setup_irq | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | irq_pending_o | RVFI-only fallback stated | - |
+| TP-CSR-031 | gen_csr_trap_setup_irq | misc irq_pending; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req | irq_pending_o | RVFI-only fallback stated | class B |
 | TP-CSR-034 | gen_csr_trap_handling | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | pin edge | RVFI-only fallback stated | - |
 | TP-CSR-085 | gen_csr_cpuctrl | scrkey valid | scrkey | RVFI-only fallback stated | - |
-| TP-CSR-090 | gen_csr_cpuctrl | alert double_fault_seen | alert | RVFI-only fallback stated | - |
-| TP-CSR-100 | gen_csr_storm | alert alert_major_internal | alert | none: export-blocked for Phase 1 sign-off | - |
 | TP-PRV-018 | gen_prv_wfi | misc core_busy; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | core_busy | RVFI-only fallback stated | - |
 | TP-PRV-019 | gen_prv_wfi | misc core_busy; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; ibus req | core_busy | RVFI-only fallback stated | class B |
-| TP-EXC-015 | gen_exc_priority | ibus rvalid; dbus rvalid; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-034 | gen_exc_lsu_fault | ibus rvalid; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-035 | gen_exc_priority | ibus rvalid; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-036 | gen_exc_lsu_fault | ibus rvalid; dbus rvalid; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-037 | gen_exc_lsu_fault | dbus req; dbus rvalid; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-EXC-038 | gen_exc_lsu_fault | dbus req; dbus rvalid; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-EXC-040 | gen_exc_priority | dbus rvalid; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-050 | gen_exc_mret | ibus req; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-EXC-054 | gen_exc_double_fault | alert double_fault_seen | alert | RVFI-only fallback stated | - |
-| TP-EXC-055 | gen_exc_double_fault | alert double_fault_seen | alert | RVFI-only fallback stated | - |
-| TP-EXC-057 | gen_exc_double_fault | alert double_fault_seen | alert | RVFI-only fallback stated | - |
-| TP-EXC-062 | gen_exc_trap_state | ibus rvalid; dbus rvalid; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-EXC-065 | gen_exc_priority_info | ibus rvalid; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-EXC-070 | gen_exc_priority | dbus rvalid; misc irq_pending; ibus req; ibus gnt; ibus rvalid; pin irq_nm; pin debug_req | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-EXC-072 | gen_exc_regime | misc irq_pending | irq_pending_o | RVFI-only fallback stated | - |
 | TP-IRQ-009 | gen_irq_csr | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | pin edge | RVFI-only fallback stated | - |
 | TP-IRQ-011 | gen_irq_csr | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm | irq_pending_o | RVFI-only fallback stated | - |
 | TP-IRQ-015 | gen_irq_priority | pin irq_fast | pin edge | RVFI-only fallback stated | class B |
@@ -293,7 +295,6 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IRQ-038 | gen_irq_nmi | pin irq_nm; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | pin edge | RVFI-only fallback stated | - |
 | TP-IRQ-039 | gen_irq_nmi | pin irq_nm | pin edge | RVFI-only fallback stated | - |
 | TP-IRQ-041 | gen_irq_debug | pin irq_nm; ibus req | pin edge | RVFI-only fallback stated | - |
-| TP-IRQ-044 | gen_irq_nmi_int | dbus rvalid; alert alert_major_bus | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
 | TP-IRQ-045 | gen_irq_nmi_int | pin irq_nm; dbus rvalid | pin edge | RVFI-only fallback stated | class B |
 | TP-IRQ-049 | gen_irq_wfi | ibus req; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | bus request | RVFI-only fallback stated | - |
 | TP-IRQ-050 | gen_irq_wfi | misc core_busy; misc irq_pending; ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | core_busy | RVFI-only fallback stated | - |
@@ -301,13 +302,11 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IRQ-052 | gen_irq_wfi | ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req | bus request | RVFI-only fallback stated | - |
 | TP-IRQ-053 | gen_irq_wfi | misc core_busy; pin irq_nm; dbus rvalid | core_busy | RVFI-only fallback stated | - |
 | TP-IRQ-054 | gen_irq_wfi | pin debug_req; misc core_busy; ibus req; misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | pin edge | RVFI-only fallback stated | - |
-| TP-IRQ-055 | gen_irq_wfi | misc core_busy; ibus gnt; ibus rvalid | core_busy | RVFI-only fallback stated | - |
 | TP-IRQ-057 | gen_irq_wfi | misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | core_busy | RVFI-only fallback stated | - |
 | TP-IRQ-059 | gen_irq_reset | ibus req; misc irq_pending; pin irq_nm; pin debug_req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | bus request | RVFI-only fallback stated | - |
 | TP-IRQ-061 | gen_irq_handler | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; dbus rvalid | pin edge | RVFI-only fallback stated | class B |
 | TP-IRQ-064 | gen_irq_timing | pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; ibus rvalid; misc irq_pending | pin edge | RVFI-only fallback stated | class B |
 | TP-IRQ-066 | gen_irq_timing | ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; misc core_busy | bus request | RVFI-only fallback stated | class B |
-| TP-IRQ-068 | gen_irq_wfi | misc core_busy; ibus rvalid | core_busy | RVFI-only fallback stated | - |
 | TP-IRQ-070 | gen_irq_csr | misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software | irq_pending_o | RVFI-only fallback stated | - |
 | TP-IRQ-072 | gen_irq_regime | dbus rvalid; misc irq_pending; ibus req; ibus rvalid; pin irq_nm | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IRQ-073 | gen_irq_regime | pin irq_nm; dbus rvalid; alert alert_major_bus | pin edge | RVFI-only fallback stated | - |
@@ -315,14 +314,8 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IRQ-078 | gen_irq_debug | misc irq_pending; pin irq_nm; ibus req | irq_pending_o | RVFI-only fallback stated | - |
 | TP-IRQ-079 | gen_irq_nmi | ibus req; pin irq_nm | bus request | RVFI-only fallback stated | - |
 | TP-IRQ-080 | gen_irq_debug | ibus req; pin debug_req | bus request | RVFI-only fallback stated | - |
-| TP-PMP-053 | gen_pmp_recfg | ibus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMP-077 | gen_pmp_fetch_fault | ibus gnt | bus beat (gnt/rvalid) | none: export-blocked for Phase 1 sign-off | - |
-| TP-PMP-082 | gen_pmp_data_fault | dbus req | bus request | RVFI-only fallback stated | - |
-| TP-PMP-091 | gen_pmp_recfg | ibus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMP-105 | gen_pmp_random_regime | ibus gnt; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-DBG-003 | gen_dbg_irq_mask | misc irq_pending; pin irq_nm; ibus req; pin debug_req | irq_pending_o | RVFI-only fallback stated | - |
 | TP-DBG-004 | gen_dbg_haltreq | dbus rvalid; pin debug_req; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-DBG-005 | gen_dbg_haltreq | ibus req | bus request | RVFI-only fallback stated | - |
 | TP-DBG-006 | gen_dbg_haltreq | pin debug_req; ibus req | pin edge | RVFI-only fallback stated | class B |
 | TP-DBG-007 | gen_dbg_haltreq | pin debug_req; ibus req | pin edge | RVFI-only fallback stated | class B |
 | TP-DBG-008 | gen_dbg_haltreq | pin debug_req; ibus req; misc core_busy | pin edge | RVFI-only fallback stated | class B |
@@ -332,84 +325,13 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-DBG-021 | gen_dbg_irq_mask_xfail | pin irq_nm | pin edge | RVFI-only fallback stated | - |
 | TP-DBG-030 | gen_dbg_ebreak | pin debug_req; ibus req | pin edge | RVFI-only fallback stated | class B |
 | TP-DBG-046 | gen_dbg_step | ibus req; pin debug_req | bus request | RVFI-only fallback stated | class B |
-| TP-DBG-049 | gen_dbg_step | ibus req; misc core_busy; ibus rvalid; ibus gnt | bus request | RVFI-only fallback stated | class B |
-| TP-DBG-051 | gen_dbg_step | dbus req; ibus req | bus request | RVFI-only fallback stated | - |
 | TP-DBG-054 | gen_dbg_step | pin debug_req; ibus req | pin edge | RVFI-only fallback stated | - |
-| TP-DBG-061 | gen_dbg_irq_mask | misc irq_pending | irq_pending_o | RVFI-only fallback stated | - |
-| TP-DBG-063 | gen_dbg_mode_misc | misc core_busy; ibus rvalid; ibus gnt | core_busy | RVFI-only fallback stated | - |
 | TP-DBG-071 | gen_dbg_haltreq | pin debug_req; ibus req; misc core_busy; ibus gnt; ibus rvalid | pin edge | RVFI-only fallback stated | class B |
 | TP-TRG-019 | gen_trg_fire | ibus req; pin debug_req | bus request | RVFI-only fallback stated | - |
-| TP-TRG-023 | gen_trg_fire | dbus req; ibus req | bus request | RVFI-only fallback stated | class B |
 | TP-TRG-025 | gen_trg_fire | misc irq_pending; ibus req; pin irq_nm | irq_pending_o | RVFI-only fallback stated | - |
-| TP-TRG-026 | gen_trg_fire | ibus req; dbus req; ibus rvalid; dbus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-TRG-027 | gen_trg_fire | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
 | TP-PMC-001 | gen_pmc_mcycle | none (TB cycle count between two csrr record cycles; no boundary event compared) | no export row | RVFI-only fallback stated | - |
-| TP-PMC-002 | gen_pmc_mcycle | misc core_busy | core_busy | RVFI-only fallback stated | - |
-| TP-PMC-011 | gen_pmc_minstret | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-013 | gen_pmc_minstret_xfail | ibus req; ibus rvalid; dbus req; dbus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-PMC-016 | gen_pmc_minstret | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-024 | gen_pmc_ctrl | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-028 | gen_pmc_ctrl | pin mcounteren_writable | pin edge | RVFI-only fallback stated | - |
-| TP-PMC-034 | gen_pmc_hpm_event | dbus rvalid; dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-047 | gen_pmc_hpm_csr | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-058 | gen_pmc_hpm_b17_br_xfail | dbus gnt; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-PMC-059 | gen_pmc_hpm_b17_mul_xfail | dbus gnt; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-PMC-060 | gen_pmc_hpm_b17_div_xfail | dbus gnt; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-001 | gen_imem_proto_basic | ibus gnt; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-003 | gen_imem_proto_basic | ibus gnt; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-004 | gen_imem_proto_basic | ibus gnt; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-005 | gen_imem_latency | ibus gnt; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-006 | gen_imem_proto_basic | ibus rvalid; alert alert_major_bus | bus beat (gnt/rvalid) | none: export-blocked for Phase 1 sign-off | - |
-| TP-IMEM-007 | gen_imem_proto_basic | ibus gnt; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-008 | gen_imem_latency | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-IMEM-010 | gen_imem_latency | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-014 | gen_imem_fetch_err | ibus rvalid; ibus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-016 | gen_imem_fetch_err | alert alert_major_bus; ibus rvalid | alert | RVFI-only fallback stated | - |
-| TP-IMEM-017 | gen_imem_redirect | ibus gnt; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-018 | gen_imem_redirect | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-IMEM-022 | gen_imem_gating | ibus req; misc core_busy; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-IMEM-023 | gen_imem_gating | pin fetch_enable; ibus req; misc core_busy; ibus gnt; ibus rvalid | pin edge | RVFI-only fallback stated | class B |
-| TP-IMEM-025 | gen_imem_gating | dbus rvalid; pin fetch_enable; ibus gnt; ibus rvalid; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-027 | gen_imem_boot | ibus req; pin fetch_enable | bus request | RVFI-only fallback stated | - |
-| TP-IMEM-033 | gen_imem_latency | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IMEM-036 | gen_imem_regime | ibus gnt; ibus req; regime phase; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-037 | gen_imem_regime | ibus gnt; ibus rvalid; ibus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IMEM-039 | gen_imem_proto_basic | ibus gnt; ibus req | bus beat (gnt/rvalid) | none: export-blocked for Phase 1 sign-off | - |
-| TP-IMEM-040 | gen_imem_proto_basic_info | ibus rvalid; alert alert_major_bus | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-002 | gen_dmem_proto_basic | dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-004 | gen_dmem_proto_basic | dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-005 | gen_dmem_latency | dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-006 | gen_dmem_proto_basic | dbus rvalid; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-007 | gen_dmem_proto_basic | dbus rvalid; alert alert_major_bus | bus beat (gnt/rvalid) | none: export-blocked for Phase 1 sign-off | - |
-| TP-DMEM-008 | gen_dmem_proto_basic | dbus rvalid; dbus req; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-019 | gen_dmem_misaligned | dbus rvalid; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-020 | gen_dmem_misaligned | dbus rvalid; dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-021 | gen_dmem_misaligned | dbus gnt; dbus rvalid; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-022 | gen_dmem_misaligned | dbus rvalid; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-027 | gen_dmem_err | dbus rvalid; dbus req; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-034 | gen_dmem_err | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-037 | gen_dmem_err | dbus rvalid; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-039 | gen_dmem_intg | alert alert_major_bus; dbus rvalid | alert | RVFI-only fallback stated | class B |
-| TP-DMEM-044 | gen_dmem_ctx | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-DMEM-046 | gen_dmem_ctx | dbus req; dbus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-DMEM-047 | gen_dmem_ctx | dbus rvalid; dbus gnt; misc core_busy | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-DMEM-049 | gen_dmem_proto_basic | dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-051 | gen_dmem_ctx | dbus gnt; misc crash_dump_last_data_addr; dbus rvalid | bus beat (gnt/rvalid) | none: export-blocked for Phase 1 sign-off | - |
 | TP-DMEM-056 | gen_dmem_regime | dbus req; dbus gnt; dbus rvalid; regime phase | bus request | RVFI-only fallback stated | - |
-| TP-DMEM-057 | gen_dmem_proto_basic | dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-058 | gen_dmem_proto_basic | dbus gnt; dbus req | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-059 | gen_dmem_proto_basic | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-061 | gen_dmem_ctx | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-062 | gen_dmem_proto_basic_info | dbus rvalid; alert alert_major_bus; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-063 | gen_dmem_err_info | dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-DMEM-064 | gen_dmem_intg_xfail | alert alert_major_bus; dbus rvalid | alert | RVFI-only fallback stated | - |
-| TP-FE-008 | gen_fe_align | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-FE-012 | gen_fe_redirect | ibus gnt; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-FE-013 | gen_fe_redirect | ibus gnt; ibus req; dbus gnt; dbus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-FE-014 | gen_fe_redirect | ibus req; ibus gnt | bus request | RVFI-only fallback stated | - |
-| TP-FE-016 | gen_fe_backpressure | ibus gnt; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
-| TP-FE-017 | gen_fe_backpressure | ibus req; ibus gnt; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-FE-022 | gen_fe_fault | ibus req | bus request | RVFI-only fallback stated | - |
 | TP-FE-026 | gen_fe_sleep | ibus req; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; misc core_busy | bus request | RVFI-only fallback stated | - |
 | TP-IC-002 | gen_ic_ram | ibus req; icram lookup | bus request | RVFI-only fallback stated | - |
 | TP-IC-003 | gen_ic_ram | icram lookup | icram inject | none: export-blocked for Phase 1 sign-off | - |
@@ -419,8 +341,6 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IC-008 | gen_ic_inval | scrkey req; scrkey valid; icram tag_write | scrkey | RVFI-only fallback stated | - |
 | TP-IC-011 | gen_ic_inval | ibus req; scrkey valid; icram tag_write | bus request | RVFI-only fallback stated | - |
 | TP-IC-015 | gen_ic_inval | ibus req; ibus gnt; ibus rvalid; icram fill_write | bus request | RVFI-only fallback stated | - |
-| TP-IC-019 | gen_ic_enable | ibus req | bus request | RVFI-only fallback stated | - |
-| TP-IC-020 | gen_ic_enable | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IC-023 | gen_ic_fill | ibus rvalid; ibus gnt; icram fill_write | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IC-024 | gen_ic_fill | ibus gnt; ibus rvalid; ibus req; icram fill_write | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-IC-030 | gen_ic_enable | ibus req; icram lookup; icram fill_write | bus request | RVFI-only fallback stated | - |
@@ -430,9 +350,6 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-IC-037 | gen_ic_ecc | alert alert_minor; icram inject; icram tag_write; icram lookup | alert | RVFI-only fallback stated | - |
 | TP-IC-045 | gen_ic_ram | icram lookup; icram fill_write | icram inject | none: export-blocked for Phase 1 sign-off | - |
 | TP-IC-046 | gen_ic_ram | icram fill_write | icram inject | RVFI-only fallback stated | - |
-| TP-IC-051 | gen_ic_busy | ibus gnt; dbus gnt; dbus rvalid; ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-IC-052 | gen_ic_busy | ibus req; ibus rvalid | bus request | RVFI-only fallback stated | - |
-| TP-IC-053 | gen_ic_busy | ibus rvalid | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
 | TP-IC-057 | gen_ic_enable | ibus req; icram fill_write; icram tag_write | bus request | RVFI-only fallback stated | - |
 | TP-REG-001 | gen_reg_knob_sweep | ibus gnt; ibus req; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
 | TP-REG-002 | gen_reg_knob_sweep | ibus rvalid; ibus gnt; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
@@ -450,21 +367,15 @@ entirely coverage-only while marked, so Phase 1 sign-off needs the export or a r
 | TP-XIF-002 | gen_xif_random | pin debug_req; dbus gnt; dbus rvalid; ibus req | pin edge | RVFI-only fallback stated | - |
 | TP-XIF-003 | gen_xif_random | pin irq_nm; dbus gnt; dbus rvalid; alert alert_major_bus | pin edge | RVFI-only fallback stated | - |
 | TP-XIF-004 | gen_xif_random | misc core_busy; ibus gnt; ibus rvalid; dbus gnt; dbus rvalid; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm; pin debug_req; ibus req | core_busy | RVFI-only fallback stated | class B |
-| TP-XIF-008 | gen_xif_random | misc irq_pending; dbus gnt; dbus rvalid; ibus req | irq_pending_o | RVFI-only fallback stated | - |
 | TP-XIF-009 | gen_xif_random | pin debug_req; dbus gnt; dbus rvalid; ibus req | pin edge | RVFI-only fallback stated | - |
-| TP-XIF-010 | gen_xif_random | dbus rvalid; dbus gnt | bus beat (gnt/rvalid) | RVFI-only fallback stated | class B |
 | TP-XIF-011 | gen_xif_random | misc irq_pending; pin irq_nm; dbus req | irq_pending_o | RVFI-only fallback stated | - |
 | TP-XIF-012 | gen_xif_random | pin debug_req | pin edge | RVFI-only fallback stated | - |
-| TP-XIF-014 | gen_xif_random | misc irq_pending | irq_pending_o | RVFI-only fallback stated | - |
 | TP-XIF-015 | gen_xif_random | misc irq_pending; pin irq_nm; pin debug_req | irq_pending_o | RVFI-only fallback stated | - |
-| TP-XIF-016 | gen_xif_fetch_enable | pin fetch_enable; ibus req; ibus gnt; ibus rvalid; dbus gnt; dbus rvalid; misc core_busy | pin edge | RVFI-only fallback stated | - |
-| TP-XIF-017 | gen_xif_reset | ibus req; ibus rvalid; dbus rvalid; ibus gnt; dbus gnt | bus request | RVFI-only fallback stated | - |
 | TP-REG-026 | gen_xcut_regime_sweep | dbus rvalid; ibus rvalid; alert alert_major_bus; regime phase | bus beat (gnt/rvalid) | RVFI-only fallback stated | - |
-| TP-REG-027 | gen_csr_mcounteren | pin mcounteren_writable | pin edge | RVFI-only fallback stated | - |
 
-## 1.4 Items under the T-136 measurement hold (generated; 165 items in 60 groups; no result counts until the irq_entry expected-cause check is committed and reviewed)
+## 1.4 Items under the T-136 measurement hold (generated; 165 items in 61 groups; no result counts until the irq_entry expected-cause check is committed and reviewed)
 
-Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_xif_random (8), gen_irq_lines (7), gen_irq_nmi (7), gen_irq_regime (7), gen_irq_handler (6), gen_dbg_irq_mask (5), gen_irq_debug (5), gen_irq_priority (5), gen_prv_irq (5), gen_rvfi_ext (5), gen_csr_trap_setup (4), gen_prv_wfi (4), gen_cmp_zcmp_events (3), gen_csr_trap_handling (3), gen_irq_reset (3), gen_prv_mret (3), gen_reg_inflight (3), gen_reg_knob_sweep (3), gen_csr_ordering (2), gen_dit_dummy_events (2), gen_dmem_ctx (2), gen_exc_double_fault (2), gen_isa_cti (2), gen_isa_random (2), gen_prv_storm (2), gen_rst_pending_at_boot (2), gen_rst_sleep (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_bit_multicycle (1), gen_bit_random (1), gen_cmp_random (1), gen_cmp_zca (1), gen_csr_storm (1), gen_dbg_irq_mask_xfail (1), gen_dbg_mode_misc (1), gen_dbg_random (1), gen_dit_random (1), gen_dmem_regime (1), gen_exc_priority (1), gen_exc_regime (1), gen_fe_redirect (1), gen_fe_sleep (1), gen_irq_nmi_int (1), gen_isa_system (1), gen_mul_random (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmc_random (1), gen_prv_mstatus (1), gen_reg_schedule (1), gen_rst_boot (1), gen_rst_fetch_enable (1), gen_rvfi_proto_basic (1), gen_sec_alert_inject_ibus (1), gen_xif_dummy (1), gen_xif_fetch_enable (1). Evidence: dv/auto_dv/evidence/gen_t090_rtl_facts.md (39f0eae); ruling: Section 0.
+Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_xif_random (8), gen_irq_lines (7), gen_irq_nmi (7), gen_irq_regime (7), gen_irq_handler (6), gen_dbg_irq_mask (5), gen_irq_debug (5), gen_irq_priority (5), gen_prv_irq (5), gen_rvfi_ext (5), gen_prv_wfi (4), gen_cmp_zcmp_events (3), gen_csr_trap_handling (3), gen_csr_trap_setup_irq (3), gen_irq_reset (3), gen_prv_mret (3), gen_reg_inflight (3), gen_reg_knob_sweep (3), gen_csr_ordering (2), gen_dit_dummy_events (2), gen_dmem_ctx (2), gen_exc_double_fault (2), gen_isa_cti (2), gen_isa_random (2), gen_prv_storm (2), gen_rst_pending_at_boot (2), gen_rst_sleep (2), gen_sec_double_fault (2), gen_trg_fire (2), gen_bit_multicycle (1), gen_bit_random (1), gen_cmp_random (1), gen_cmp_zca (1), gen_csr_storm (1), gen_csr_trap_setup (1), gen_dbg_irq_mask_xfail (1), gen_dbg_mode_misc (1), gen_dbg_random (1), gen_dit_random (1), gen_dmem_regime (1), gen_exc_priority (1), gen_exc_regime (1), gen_fe_redirect (1), gen_fe_sleep (1), gen_irq_nmi_int (1), gen_isa_system (1), gen_mul_random (1), gen_mul_timing (1), gen_pmc_minstret (1), gen_pmc_random (1), gen_prv_mstatus (1), gen_reg_schedule (1), gen_rst_boot (1), gen_rst_fetch_enable (1), gen_rvfi_proto_basic (1), gen_sec_alert_inject_ibus (1), gen_xif_dummy (1), gen_xif_fetch_enable (1). Evidence: dv/auto_dv/evidence/gen_t090_rtl_facts.md (39f0eae); ruling: Section 0.
 
 | Item | Group | Why held |
 |---|---|---|
@@ -483,9 +394,9 @@ Groups (items held): gen_irq_timing (11), gen_irq_csr (9), gen_irq_wfi (9), gen_
 | TP-BIT-036 | gen_bit_multicycle | Pass criteria name gen_chk_irq |
 | TP-BIT-042 | gen_bit_random | Pass criteria name gen_chk_irq |
 | TP-CSR-006 | gen_csr_ordering | Pass criteria name gen_chk_irq |
-| TP-CSR-026 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
-| TP-CSR-029 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
-| TP-CSR-031 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
+| TP-CSR-026 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
+| TP-CSR-029 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
+| TP-CSR-031 | gen_csr_trap_setup_irq | Pass criteria name gen_chk_irq |
 | TP-CSR-032 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
 | TP-CSR-034 | gen_csr_trap_handling | Pass criteria name gen_chk_irq |
 | TP-CSR-035 | gen_csr_trap_setup | Pass criteria name gen_chk_irq |
@@ -887,21 +798,6 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | TP-REG-026 | gen_xcut_regime_sweep | Pass criteria name a bus-integrity checker |
 | TP-REG-028 | gen_xif_reset | Pass criteria name gen_chk_pmp |
 
-## 1.2 Informational items (outside the Phase 1 pass gate)
-
-| Item | Group | Reason class |
-|---|---|---|
-| TP-ISA-051 | gen_isa_illegal_info | informational (B14 confirmation; excluded from the pass gate) |
-| TP-ISA-057 | gen_isa_illegal_ebreak_info | informational (RVFI-only quirk, candidate for the bug log; excluded from the pass gate) |
-| TP-EXC-065 | gen_exc_priority_info | informational (B14 confirmation; excluded from the pass gate) |
-| TP-DBG-011 | gen_dbg_req_shape_info | informational (B9: RTL-defined corner under out-of-spec debug_req_i stimulus; value recorded, not a gate item; Q-007 default and gen_bug_rep |
-| TP-IMEM-040 | gen_imem_proto_basic_info | informational (excluded from the pass gate) |
-| TP-DMEM-062 | gen_dmem_proto_basic_info | informational (excluded from the pass gate) |
-| TP-DMEM-063 | gen_dmem_err_info | informational (B14 confirmation; excluded from the pass gate) |
-| TP-IC-038 | gen_ic_replace_info | informational (excluded from the pass gate) |
-| TP-SEC-010 | gen_sec_alert_inject_dbus_info | informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate) |
-| TP-SEC-011 | gen_sec_alert_inject_dbus_clean_info | informational (Q-DL-9 / S3: out-of-spec stimulus, excluded from the pass gate) |
-| TP-RVFI-039 | gen_rvfi_trap_info | informational (B14 confirmation; excluded from the pass gate) |
 # 2. New checkers requested from TB Infra (beyond the inventory)
 
 | Checker | Requested by area part |
@@ -930,6 +826,7 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | WP-6 | Runtime (build_manifest.yaml; a090301 for the rendered table) and TB Infra (active-source list) | export_sources and export_sources_emitted | export_sources = the rendered table (maps with the keys source, event and fields, one exact row each, a wildcard row fails the build; a090301) for the codegen cross-check; export_sources_emitted = the rows whose writers are instanced in the build, from a TB Infra codegen-rendered active-source list cross-checked against the export header's sources= of every run that writes an export file, result.yaml recording both (Orchestrator ruling 12:0x UTC, LOG-022; Runtime b209299; empty with export_sources_emitted_origin until TB Infra renders EXPORT_ACTIVE_SOURCES); gen_trace_check.py --build-manifest fails a still-marked item only on the emitted set (C-3) and reports renderable items from the rendered table |
 | WP-7 | Runtime (mechanism of record) and TB Infra (secondary) | ledger weight 0 | gen_flow_const.py LEDGER_COVERGROUPS names the ledger covergroup by its SystemVerilog name (gen_wit_cycle_clause_cg (addendum v4c, 50256f0: declared in gen_fcov_pkg, one instance in gen_env with handle wit_cg, URG shows the type name); authoritative for the exclusion, ruled 11:5x UTC) and LEDGER_PLAN_IDS keeps CG-WIT-001 for the report line; gen_cov_report.py group_score_excluding recomputes the weight-averaged group score without it and ledger_summary reports witnessed clauses: N of M (CG-WIT-001) (c5b5bc0, SV-name keying 5506f23, ledger_missing fails the merge e30b693); TB Infra states the SV name in v4c Section 9 and renders option.weight = 0 |
 | WP-8 | TB Infra (icache RAM model, event part) and TB Infra + Runtime + Test Writer (digest) | icram lookup / tag_write / fill_write rows; witness-table digest guard | three exact export rows `icram lookup`, `icram tag_write`, `icram fill_write` (fields way, index; the lookup row also the port: tag/data) announced by gen_icache_ram like `icram inject`; until they land the 17 TP-IC items stay marked. Digest guard (round 7 L3; accepted by TB Infra in addendum v4c Section 9): the renderings of gen_trace_witness_ids.csv carry the CSV's sha256 prefix as GEN_WIT_DIGEST (SV) and WITNESS_DIGEST (gen_knobs.py); the flow passes +gen_witness_digest (Runtime records the csv sha256 in result.yaml, 82edddb) and the dispatcher refuses a mismatch with uvm_error GEN_WITNESS_DIGEST before any index is accepted, so a stale SV rendering used with a newer testlist fails instead of sampling the wrong bin; gen_trace_check.py compares WITNESS_IDS to the CSV whenever gen_knobs.py defines it. icram rows as rendered: lookup [index], tag_write [way, index, valid] (a fill writes 1, an invalidation 0), fill_write [way, index]; field sets final with the RAM model's announcement port in step 3 |
+| WP-9 | TB Infra (gen_link.ld, memory model, shim memory map) | code pages at the low page and the top page | the batch-2 tests report TP-ISA-016, TP-ISA-022, TP-ISA-026 (jal / jalr / branch offset extremes and address wrap, rs1 = x0 absolute targets, self-loop broken by a scheduled interrupt) and TP-ISA-006's cp_pc_region.high / low bins (auipc carry-out at pc >= 0xFFFFF000, lui / auipc at pc < 0x1000) as not_built because gen_link.ld places PROG at 0x80000080..0x80100000 with the DM at 0x1A110800: provide executable, shim-visible code windows at 0x00000000..0x00000FFF and 0xFFFFF000..0xFFFFFFFF (linker sections, memory-model backing, shim map) and an irq-agent command to break a self-loop after N cycles; the items stay Phase 1 and their tests carry not_built with this row until it lands |
 
 # 3. Test groups (proposed tests)
 
@@ -977,7 +874,8 @@ Groups (items held): gen_exc_lsu_fault (10), gen_pmp_random_regime (10), gen_pmp
 | gen_csr_umode | 7 | TP-CSR-015..TP-PRV-033 |
 | gen_csr_debug_csr | 6 | TP-CSR-017..TP-CSR-079 |
 | gen_csr_machine_ids | 4 | TP-CSR-019..TP-CSR-022 |
-| gen_csr_trap_setup | 11 | TP-CSR-023..TP-CSR-036 |
+| gen_csr_trap_setup | 8 | TP-CSR-023..TP-CSR-036 |
+| gen_csr_trap_setup_irq | 3 | TP-CSR-026..TP-CSR-031 |
 | gen_csr_trap_handling | 15 | TP-CSR-032..TP-CSR-114 |
 | gen_csr_reset | 6 | TP-CSR-037..TP-CSR-109 |
 | gen_csr_counters | 20 | TP-CSR-050..TP-CSR-113 |
@@ -1448,7 +1346,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-006
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; program text placed by the TB memory map in the last page (0xFFFFF000..) for the wrap iterations and in a low page otherwise.
+- Preconditions: M-mode; program text placed by the TB memory map in the last page (0xFFFFF000..) for the wrap iterations and in a low page otherwise (TB Infra request WP-9, Section 2a; the cp_pc_region.high / low bins are not_built in gen_test_isa_alu until it lands).
 - Stimulus: lui imm 0xFFFFF and 0; auipc with imm chosen so pc + (imm << 12) carries out (program in the high page, imm >= 1) and auipc imm = 0 at both PC alignments; random imm otherwise; lui/auipc also executed from the low page (pc < 0x1000, TB memory map as TP-ISA-016).
 - Randomized: exact imm, rd, PC alignment, which page the program runs from.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1588,7 +1486,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-016
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; TB memory map provides text at the extreme distances (+0xFFFFE, -0x100000) and a code page at address 0 for the wrap iteration.
+- Preconditions: M-mode; TB memory map provides text at the extreme distances (+0xFFFFE, -0x100000) and a code page at address 0 for the wrap iteration (TB Infra request WP-9, Section 2a; not_built in gen_test_isa_cti until it lands).
 - Stimulus: jal with offset +0xFFFFE, -0x100000, 0 (self-loop broken by a timer interrupt after N cycles, handler advances mepc), and a jal at pc < 0x100 with a negative offset wrapping to high memory; rd in {x0, x1, x5, other}.
 - Randomized: which extreme, rd, code contents at the target, interrupt delay for the self-loop.
 - Knobs: knob:irq_regime
@@ -1672,7 +1570,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-022
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; TB memory map provides text near 0 and near 0xFFFFFFF0.
+- Preconditions: M-mode; TB memory map provides text near 0 and near 0xFFFFFFF0 (TB Infra request WP-9, Section 2a; not_built in gen_test_isa_cti until it lands).
 - Stimulus: jalr with rs1 = 0xFFFFFFF0-class value and positive imm crossing 2^32; jalr with rs1 = x0 and every immediate class (zero, odd, positive/negative random, -2048/+2047: absolute targets in the low page or the top 2 KiB); imm extremes -2048/+2047 with matching rs1.
 - Randomized: exact rs1/imm pair inside each case, rd.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
@@ -1704,7 +1602,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: branch pairs (taken, not-taken) surrounded by single-cycle ALU ops; the test measures the redirect delta rvfi_ext_mcycle(successor) - rvfi_ext_mcycle(branch) (header Timing terms); for the exact-2 sub-check the straight-line code before the branch is fully fetched (no fill request pending in the branch cycle) and the taken target is word-aligned or compressed (a 32-bit target at pc[1] = 1 straddles a bus word and takes the skid path, rtl/ibex_icache.sv:1099-1133).
 - Randomized: op, operands, target distance, alignment, surrounding ALU ops.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 50 not-taken branches with redirect delta = 1 and >= 50 taken branches with redirect delta = 2 observed under the measurement condition (icache_enable = 0, imem pinned min1/same_cycle, no pending fill request, non-straddling target: the speculative target request goes out in the branch cycle, rtl/ibex_icache.sv:249, :703, :1030-1031, and the target is in ID two cycles later); taken branches outside the condition are recorded with their delta (>= 2, bin d3plus); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: redirect deltas from rvfi_ext_mcycle (1 / 2) and the not-taken branch next record at pc + len)
+- Fire-check: >= 50 not-taken branches with redirect delta = 1 and >= 50 taken branches with redirect delta = 2 observed under the measurement condition (icache_enable = 0, imem pinned min1/same_cycle, no pending fill request, non-straddling target: the speculative target request goes out in the branch cycle, rtl/ibex_icache.sv:249, :703, :1030-1031, and the target is in ID two cycles later); taken branches outside the condition are recorded with their delta (>= 2, bin d3plus); the ibus monitor shows no non-sequential request for not-taken branches (meaningful because the cache is disabled). [export-rows: ibus req; ibus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: redirect deltas from rvfi_ext_mcycle (1 / 2) and the not-taken branch next record at pc + len)
 - Pass criteria: gen_chk_timing_isa (not-taken redirect delta exactly 1 when unstalled; taken >= 2 always, exactly 2 under the measurement condition: exact 2 is a coverage bin, the pass rule is >= 2; rtl-arch T-053 TP-ISA-024 TIMING); gen_isa_compare.
 - Expected: pass
 - Test group: gen_isa_cti
@@ -1728,7 +1626,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Features: F-ISA-026
 - Phase: 1
 - Tier: targeted
-- Preconditions: M-mode; mie/mstatus.MIE enabled with a timer interrupt scheduled to break the self-loop; TB memory map with code at +4094/-4096 and around address 0 for the wrap.
+- Preconditions: M-mode; mie/mstatus.MIE enabled with a timer interrupt scheduled to break the self-loop; TB memory map with code at +4094/-4096 and around address 0 for the wrap (TB Infra request WP-9, Section 2a; not_built in gen_test_isa_cti until it lands).
 - Stimulus: beq x0,x0,0 (self); taken branches with offsets +4094 and -4096; taken branch at pc < 0x1000 with negative offset wrapping to high memory (and the mirror case at the top).
 - Randomized: op used for the always-taken condition (beq equal regs, bge equal, bgeu equal), interrupt delay, register values, alignment.
 - Knobs: knob:irq_regime
@@ -2082,7 +1980,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: store/load with a slow error response followed immediately by an illegal instruction; the RVFI monitor records every rvfi_trap entry.
 - Randomized: as TP-ISA-050.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate
-- Fire-check: per seed >= 1 coincidence in which the dbus response with data_err_i (or the PMP fault) arrives after the illegal instruction was fetched (dbus timestamp versus the RVFI order) and the WB access retires with rvfi_trap = 1; then the RVFI stream shows exactly two trap records for the pair, in order: the access (mcause 5/7) and, after the handler's mret, the re-executed illegal instruction (mcause 2). A single record for the pair re-opens B14 (rtl-arch T-041 fact-check row 48). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two trap records in order (record count per the B14 confirmation) with the access record first)
+- Fire-check: per seed >= 1 coincidence in which the dbus response with data_err_i (or the PMP fault) arrives after the illegal instruction was fetched (dbus timestamp versus the RVFI order) and the WB access retires with rvfi_trap = 1; then the RVFI stream shows exactly two trap records for the pair, in order: the access (mcause 5/7) and, after the handler's mret, the re-executed illegal instruction (mcause 2). A single record for the pair re-opens B14 (rtl-arch T-041 fact-check row 48). [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two trap records in order (record count per the B14 confirmation) with the access record first)
 - Pass criteria: gen_isa_compare (trap order; the killed ID attempt has no architectural effect, so the ISA model shows the same two traps); the record count is reported by the test, not gated.
 - Expected: informational (B14 confirmation; excluded from the pass gate)
 - Test group: gen_isa_illegal_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
@@ -2323,7 +2221,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: load or store (its result unused by the multiply) with the data response delayed W = 1..16 cycles beyond the min1 response, immediately followed by mul/mulh/mulhsu/mulhu with random operands and an ALU consumer of the result; controls with W = 0.
 - Randomized: access type, W, op, operands, whether the multiply depends on the load (which adds a load-use stall, stall_ld_hz, on top of the deferral).
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor timestamps data_rvalid_i of the access W >= 1 cycles after the multiply entered ID (the multiply's fetch data was delivered and the access had left ID before the response); RVFI shows the multiply result correct, exactly one retirement, and its record delta from the access record == 1 + W (mul) or 2 + W (mulh/mulhsu/mulhu): the multiplier does not START until the response cycle (C-9; rtl/ibex_id_stage.sv:733-734, :1014-1016, :1059-1062; multdiv_ready_id_i is 1 in that cycle so mult_hold never engages, rtl/ibex_multdiv_fast.sv:216, :235); a record earlier than the response cycle is a failure (there is no partial progress to hold). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the multiply record rvfi_ext_mcycle delta from the access record (1 + W / 2 + W) with W inferred from the access record own gap)
+- Fire-check: dbus monitor timestamps data_rvalid_i of the access W >= 1 cycles after the multiply entered ID (the multiply's fetch data was delivered and the access had left ID before the response); RVFI shows the multiply result correct, exactly one retirement, and its record delta from the access record == 1 + W (mul) or 2 + W (mulh/mulhsu/mulhu): the multiplier does not START until the response cycle (C-9; rtl/ibex_id_stage.sv:733-734, :1014-1016, :1059-1062; multdiv_ready_id_i is 1 in that cycle so mult_hold never engages, rtl/ibex_multdiv_fast.sv:216, :235); a record earlier than the response cycle is a failure (there is no partial progress to hold). [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the multiply record rvfi_ext_mcycle delta from the access record (1 + W / 2 + W) with W inferred from the access record own gap)
 - Pass criteria: gen_isa_compare (result); gen_chk_dbus_proto; gen_chk_timing_isa (deferred-start rule: delta = own occupancy + W, W from the dbus monitor).
 - Expected: pass
 - Test group: gen_mul_timing
@@ -2505,7 +2403,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Stimulus: store (or load into an unrelated register) with the response delayed W = 1..60 cycles beyond min1 (30..60 weighted up so that the deferral exceeds the 36-cycle divide bound) immediately followed by a divide (zero and non-zero divisors, DIT on/off) and a consumer; controls with W = 0.
 - Randomized: W, op, operands, DIT.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor timestamps data_rvalid_i W >= 1 cycles after the divide entered ID; the divide retires exactly once with correct rvfi_rd_wdata and its record delta from the access record == 37 + W (full path: MD_IDLE in the response cycle, MD_FINISH 36 cycles later, gen_multdiv_bound_props.md MD-1) or 2 + W (divide by zero with DIT = 0: 1-cycle fast path, MD-2); the divide never completes before the response (there is no FINISH hold: div_en_i is 0 until the response, C-9, rtl/ibex_id_stage.sv:733-734, :1059-1062; a divide record earlier than the response cycle + 36 / + 1 is a checker failure; rtl-arch T-053 TP-MUL-024). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record rvfi_ext_mcycle delta from the access record (37 + W / 2 + W) with W inferred from the access record own gap)
+- Fire-check: dbus monitor timestamps data_rvalid_i W >= 1 cycles after the divide entered ID; the divide retires exactly once with correct rvfi_rd_wdata and its record delta from the access record == 37 + W (full path: MD_IDLE in the response cycle, MD_FINISH 36 cycles later, gen_multdiv_bound_props.md MD-1) or 2 + W (divide by zero with DIT = 0: 1-cycle fast path, MD-2); the divide never completes before the response (there is no FINISH hold: div_en_i is 0 until the response, C-9, rtl/ibex_id_stage.sv:733-734, :1059-1062; a divide record earlier than the response cycle + 36 / + 1 is a checker failure; rtl-arch T-053 TP-MUL-024). [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record rvfi_ext_mcycle delta from the access record (37 + W / 2 + W) with W inferred from the access record own gap)
 - Pass criteria: gen_isa_compare; gen_chk_dbus_proto; gen_chk_timing_isa (37 + W / 2 + W).
 - Expected: pass
 - Test group: gen_mul_timing
@@ -2603,7 +2501,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Phase: 1
 - Tier: smoke
 - Preconditions: M-mode; U per C-2.
-- Stimulus: >= 5000 instructions with a 50/50 compressed/32-bit mix so 32-bit instructions frequently start at pc[1] = 1 and straddle a word boundary; all Zca instruction kinds present.
+- Stimulus: >= 3000 retired instructions per seed (the per-form floors below carry the intent; the template's single-program budget caps a seed near 3800 retirements, Test Writer batch 2, ruled 13:5x UTC) with a 50/50 compressed/32-bit mix so 32-bit instructions frequently start at pc[1] = 1 and straddle a word boundary; all Zca instruction kinds present.
 - Randomized: mix ratio per block, instruction kinds, operands, alignment, M/U.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay, knob:imem_outstanding_cap
 - Fire-check: RVFI shows compressed retirements with rvfi_insn[31:16] = 0 and rvfi_pc_wdata = pc + 2 (non-CTI), and >= 500 32-bit retirements with rvfi_pc_rdata[1] = 1 straddling a word boundary, all with rvfi_trap = 0.
@@ -3377,11 +3275,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: rlist, spimm, k, line, delays.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:dmem_rvalid_delay
 - Fire-check: for k <= N-3: RVFI shows k+2 or k+3 store micro-ops (the micro-op in ID at the pin edge completes, C-3 / X-7: halt_if stops only new entries; never k+1), then the handler's first instruction with rvfi_intr = 1 and mepc read-back = the cm.push PC; no addi sp micro-op before the handler; after mret the full micro-op sequence retires again from store 0; dbus monitor counts the repeated stores. For k >= N-2 the addi sp (the LAST micro-op) is already in ID, or enters before IF is halted, and completes: the whole cm.push retires before the handler (deferred outcome, bins irq_last_deferred / nmi_last_deferred), mepc = cm.push PC + 2, sp adjusted, no re-execution; the test classifies each iteration by k and asserts the matching outcome (rtl-arch T-053 TP-CMP-056).
-- Pass criteria: gen_chk_zcmp_seq (partial sequence, sp unchanged, restart from micro-op 0); gen_chk_irq (mepc, entry between micro-ops); gen_isa_compare (folded step after the handler); gen_chk_dbus_proto. Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Pass criteria: gen_chk_zcmp_seq (partial sequence, sp unchanged, restart from micro-op 0); gen_chk_irq (mepc, entry between micro-ops); gen_isa_compare (folded step after the handler); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
 - Bins: CG-CMP-008.cp_insn.cm_push, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.nmi_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_last_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_last_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes, CG-CMP-008.cr_insn_rlist_event.auto
-
+- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-CMP-057: Interrupt during the cm.pop / cm.popret load phase
 - Features: F-CMP-057
 - Phase: 1
@@ -3391,11 +3289,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: instruction, rlist, spimm, k, delays.
 - Knobs: knob:irq_regime, knob:dmem_rvalid_delay
 - Fire-check: for k <= N-3: k+2 or k+3 loads retire (the micro-op in ID at the pin edge completes, C-3) with rvfi_rd_wdata = frame values (registers keep them); no addi/li/ret micro-op before the handler; mepc = cm.* PC; after mret the whole sequence re-executes and the ret happens once. For k >= N-2 the addi sp (COMMIT) is in ID when the pin rises, completes and blocks handle_irq until the LAST micro-op retires (rtl/ibex_controller.sv:498-500): the sequence finishes, the ret executes once BEFORE the handler and mepc = the ra target (cm.pop: PC + 2) - the deferred outcome (bins irq_commit_deferred / nmi_commit_deferred, cp_reexec.na); the test classifies each iteration by k (rtl-arch T-053 TP-CMP-057). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin irq_nm] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the count of micro-op records before the rvfi_intr record (k + 2 / k + 3 or the full sequence) and the mepc read-back (cm.* pc or ra target))
-- Pass criteria: gen_chk_zcmp_seq; gen_chk_irq; gen_isa_compare. Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Pass criteria: gen_chk_zcmp_seq; gen_chk_irq; gen_isa_compare
 - Expected: pass
 - Test group: gen_cmp_zcmp_events
 - Bins: CG-CMP-008.cp_insn.cm_pop, CG-CMP-008.cp_insn.cm_popret, CG-CMP-008.cp_insn.cm_popretz, CG-CMP-008.cr_event_phase_outcome.irq_ls_taken, CG-CMP-008.cr_event_phase_outcome.irq_commit_deferred, CG-CMP-008.cr_event_phase_outcome.nmi_commit_deferred, CG-CMP-008.cr_irq_idx.auto, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_reexec.na, CG-WIT-001.cp_clause.w_tp_cmp_057
-
+- Notes: Interrupt split between non-COMMIT micro-ops confirmed by rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): entry between micro-ops (rtl/ibex_controller.sv:498-500), mepc = the cm.* pc, the already-retired micro-ops repeat after mret; the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-CMP-058: Interrupts are blocked during the COMMIT micro-ops
 - Features: F-CMP-058
 - Phase: 1
@@ -3433,11 +3331,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: rlist, spimm, k, region type, x2.
 - Knobs: knob:pmp_regime, knob:dmem_rvalid_delay
 - Fire-check: store micro-ops 0..k-1 retire with rvfi_trap = 0 and are visible in memory (read back); micro-op k retires with rvfi_trap = 1; mcause 7, mtval = the faulting address, mepc = cm.push PC; no addi sp before the handler; after mret all N stores repeat. The trapping micro-op's record reports rvfi_pc_wdata == rvfi_pc_rdata == the cm.push pc (offset 0, not pc + 2: expansion holds the fetch, rtl/ibex_if_stage.sv:809-810, rtl/ibex_core.sv:2083-2084) and the same store record appears again after mret (rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md), confirmed by tb-infra run red_zcmp_trap).
-- Pass criteria: gen_chk_pmp (predicted fault, no bus transaction for it); gen_chk_zcmp_seq; gen_chk_csr_readback; gen_isa_compare. the comparator side depends on TB Infra's T-102c rule (T-134): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
+- Pass criteria: gen_chk_pmp (predicted fault, no bus transaction for it); gen_chk_zcmp_seq; gen_chk_csr_readback; gen_isa_compare
 - Expected: pass
 - Test group: gen_cmp_zcmp_faults
 - Bins: CG-CMP-008.cr_event_phase_outcome.store_fault_pmp_trap, CG-CMP-008.cr_fault_idx.auto, CG-CMP-008.cp_event.store_fault_pmp, CG-CMP-008.cp_reexec.yes, CG-CMP-008.cp_mepc_ok.yes, CG-CMP-008.cp_sp_unchanged_ok.yes
-
+- Notes: the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
 ### TP-CMP-061: Bus error on the k-th pushed store
 - Features: F-CMP-060
 - Phase: 1
@@ -3447,11 +3345,11 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 - Randomized: rlist, spimm, k, delay.
 - Knobs: knob:dmem_err_rate, knob:dmem_rvalid_delay
 - Fire-check: as TP-CMP-060 with the fault detected in WB (the k+1-th store micro-op, if any, does not retire); mcause 7, mtval = faulting address; sp unchanged; restart from micro-op 0. The trapping micro-op's record reports rvfi_pc_wdata == rvfi_pc_rdata == the cm.push pc (offset 0, not pc + 2: expansion holds the fetch, rtl/ibex_if_stage.sv:809-810, rtl/ibex_core.sv:2083-2084) and the same store record appears again after mret (rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md), confirmed by tb-infra run red_zcmp_trap).
-- Pass criteria: gen_chk_zcmp_seq; gen_chk_dbus_proto; gen_chk_csr_readback; gen_isa_compare. the comparator side depends on TB Infra's T-102c rule (T-134): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
+- Pass criteria: gen_chk_zcmp_seq; gen_chk_dbus_proto; gen_chk_csr_readback; gen_isa_compare
 - Expected: pass
 - Test group: gen_cmp_zcmp_faults
 - Bins: CG-CMP-008.cr_event_phase_outcome.store_fault_bus_trap, CG-CMP-008.cr_fault_idx.auto, CG-CMP-008.cp_event.store_fault_bus, CG-CMP-008.cr_insn_rlist_event.auto
-
+- Notes: the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler; the export continuity rule excludes trap and micro-op records (C-1).
 ### TP-CMP-062: Load access fault (PMP or bus error) on the k-th popped load
 - Features: F-CMP-061
 - Phase: 1
@@ -4238,7 +4136,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: load or store with the response delayed W = 1..24 cycles beyond min1 immediately followed by rol/ror/rori/cmov/cmix/fsl/fsr/fsri/crc32* whose operands do not depend on the load (so the deferral is the outstanding WB access, not a load-use stall), then a consumer of the result; controls with W = 0.
 - Randomized: access type, W, op, operands, rs3 choice, whether a consumer follows.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: dbus monitor timestamps data_rvalid_i of the preceding access W >= 1 cycles after the op entered ID (previous retirement seen before the response); the op retires exactly once with record delta = 2 + W from the access record and correct rvfi_rd_wdata (rvfi_rs3_* populated for the ternary forms); the consumer's rvfi_rs*_rdata equals it. Mechanism (C-9 / X-12, rtl-arch T-053 TP-BIT-043): the op is held BEFORE its first cycle (instr_executing needs ~outstanding_memory_access, rtl/ibex_id_stage.sv:1054-1062; id_fsm_q advances only under instr_executing, :864-868), never in its second cycle - by the time it reaches MULTI_CYCLE the access has completed and ready_wb_i is 1 (:959-965); the ALU's intermediate value is written once, in the deferred first cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the op record delta (2 + W) from the access record with W inferred from the access record own gap; the consumer rvfi_rs*_rdata)
+- Fire-check: dbus monitor timestamps data_rvalid_i of the preceding access W >= 1 cycles after the op entered ID (previous retirement seen before the response); the op retires exactly once with record delta = 2 + W from the access record and correct rvfi_rd_wdata (rvfi_rs3_* populated for the ternary forms); the consumer's rvfi_rs*_rdata equals it. Mechanism (C-9 / X-12, rtl-arch T-053 TP-BIT-043): the op is held BEFORE its first cycle (instr_executing needs ~outstanding_memory_access, rtl/ibex_id_stage.sv:1054-1062; id_fsm_q advances only under instr_executing, :864-868), never in its second cycle - by the time it reaches MULTI_CYCLE the access has completed and ready_wb_i is 1 (:959-965); the ALU's intermediate value is written once, in the deferred first cycle. [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the op record delta (2 + W) from the access record with W inferred from the access record own gap; the consumer rvfi_rs*_rdata)
 - Pass criteria: gen_isa_compare / gen_chk_bitmanip_ref (result); gen_chk_dbus_proto; gen_chk_timing_isa (delta = 2 + W with W measured by the dbus monitor; a record before the response cycle + 1 is a failure).
 - Expected: pass
 - Test group: gen_bit_multicycle
@@ -4255,7 +4153,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: taken and not-taken branches of all six ops in straight-line code bracketed by single-cycle ALU ops, forward/backward, targets at both alignments, distances from short to maximum.
 - Randomized: op, operands, direction, distance, alignment, surrounding ALU ops.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: >= 100 taken branches with redirect delta 2 under the measurement condition (header Timing terms: icache off, imem pinned, no pending fill request, non-straddling target) and >= 100 not-taken with delta 1; taken branches outside the condition are recorded with their delta >= 2 (bin d3plus); with icache_enable = 0 pinned the ibus monitor shows exactly one non-sequential request per taken branch, at target & ~3 (instr_addr_o is word-aligned, C-14), issued in the branch cycle when no other fill request is pending (rtl/ibex_icache.sv:703, :1030-1031) and otherwise as soon as the pending beat is granted (rtl-arch T-053 TP-BTALU-001: a warm cache would hide the request, hence the pinned icache_enable = 0). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the taken-branch record (rvfi_pc_wdata == target) followed by the target record at redirect delta 2 (rvfi_ext_mcycle))
+- Fire-check: >= 100 taken branches with redirect delta 2 under the measurement condition (header Timing terms: icache off, imem pinned, no pending fill request, non-straddling target) and >= 100 not-taken with delta 1; taken branches outside the condition are recorded with their delta >= 2 (bin d3plus); with icache_enable = 0 pinned the ibus monitor shows exactly one non-sequential request per taken branch, at target & ~3 (instr_addr_o is word-aligned, C-14), issued in the branch cycle when no other fill request is pending (rtl/ibex_icache.sv:703, :1030-1031) and otherwise as soon as the pending beat is granted (rtl-arch T-053 TP-BTALU-001: a warm cache would hide the request, hence the pinned icache_enable = 0). [export-rows: ibus req; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the taken-branch record (rvfi_pc_wdata == target) followed by the target record at redirect delta 2 (rvfi_ext_mcycle))
 - Pass criteria: gen_chk_timing_isa (taken redirect delta >= 2 with exact 2 as the coverage bin; not-taken 1 unstalled); gen_isa_compare; gen_chk_ibus_proto.
 - Expected: pass
 - Test group: gen_btalu_basic
@@ -4354,7 +4252,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Randomized: form, odd construction, target.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: >= 50 odd-sum jumps retire; for each, the next rvfi_pc_rdata has bit 0 = 0 and the test records rvfi_pc_wdata[0].
-- Pass criteria: gen_isa_compare with the unmasked rule rvfi_pc_wdata == next pc (RVFI intent: pc_wdata is the next architectural PC); the RTL reports bit 0 = 1 => mismatch (cosmetic).
+- Pass criteria: gen_isa_compare with the unmasked rule rvfi_pc_wdata == next pc (RVFI intent: pc_wdata is the next architectural PC); the RTL reports bit 0 = 1 => mismatch (RVFI-only DUT defect, bug candidate B13, rtl-arch R11).
 - Expected: expected-fail (B13)
 - Test group: gen_btalu_hazard_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-BTALU-002.cr_odd_bit0.jalr_odd_b1, CG-BTALU-002.cr_odd_bit0.c_jr_odd_b1, CG-BTALU-002.cr_odd_bit0.c_jalr_odd_b1, CG-BTALU-002.cp_pc_wdata_bit0.b1
@@ -4409,7 +4307,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: fence.i at both PC alignments bracketed by single-cycle ALU ops.
 - Randomized: alignment, neighbours (icache_enable = 0 pinned for the timing sub-check; the refetch is bus-visible with either setting because fence.i blocks the cache during the invalidation).
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: ibus request at exactly (pc + 4) & ~3 after the fence.i, always bus-visible (also when pc[1] = 1): fence.i raises icache_inval_o in its first cycle and inval_block_cache stays 1 through the invalidation, so the pc + 4 lookup can never hit (rtl/ibex_decoder.sv:711-722; rtl/ibex_icache.sv:1218, :1259-1266); rvfi_pc_wdata = pc + 4 (fence.i is a jump: pc_set in its ID-exit cycle); redirect delta >= 3 always (2 + the bus fetch latency), exactly 3 under the pinned min1/same_cycle imem (bin fence_i_d3plus; a redirect delta of 2 is a checker failure; rtl-arch T-053 TP-BTALU-012 TIMING). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the fence.i record (rvfi_pc_wdata == pc + 4) followed by the pc + 4 record at redirect delta >= 3 (exactly 3 under min1))
+- Fire-check: ibus request at exactly (pc + 4) & ~3 after the fence.i, always bus-visible (also when pc[1] = 1): fence.i raises icache_inval_o in its first cycle and inval_block_cache stays 1 through the invalidation, so the pc + 4 lookup can never hit (rtl/ibex_decoder.sv:711-722; rtl/ibex_icache.sv:1218, :1259-1266); rvfi_pc_wdata = pc + 4 (fence.i is a jump: pc_set in its ID-exit cycle); redirect delta >= 3 always (2 + the bus fetch latency), exactly 3 under the pinned min1/same_cycle imem (bin fence_i_d3plus; a redirect delta of 2 is a checker failure; rtl-arch T-053 TP-BTALU-012 TIMING). [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the fence.i record (rvfi_pc_wdata == pc + 4) followed by the pc + 4 record at redirect delta >= 3 (exactly 3 under min1))
 - Pass criteria: gen_chk_ibus_proto; gen_chk_timing_isa (fence.i redirect delta >= 3); gen_isa_compare.
 - Expected: pass
 - Test group: gen_btalu_basic
@@ -4448,10 +4346,10 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Phase: 1
 - Tier: targeted
 - Preconditions: M-mode; the event counters are hardwired: mhpmcounter7 = NumJumps, mhpmcounter8 = NumBranches, mhpmcounter9 = NumBranchesTaken (rtl/ibex_cs_registers.sv:1585-1597; the mhpmevent selectors are read-only, :1600-1617, so no mhpmevent write selects them; one csrw mhpmevent7..9 with random data is issued as a control and its read-back must be unchanged at 0x10 / 0x20 / 0x40 = 1 << (N - 3), D20, C-11); mcountinhibit = 0; data_ind_timing = 0; no outstanding WB memory access while a counted branch is in ID (C-10, B17): the counted blocks contain no loads/stores, or every load/store is followed by at least two non-branch instructions before the next branch.
-- Stimulus: blocks of N random branches (taken/not-taken mix known to the test), M jumps (jal/jalr/fence.i), read the three counters before and after each block.
+- Stimulus: blocks of N random branches (taken/not-taken mix known to the test), M jumps (jal/jalr; no fence.i inside a jump block: fence.i's NumJumps count is bug candidate B20, owned by TP-PMC-061), read the three counters before and after each block.
 - Randomized: N, M, mix, block contents.
 - Knobs: knob:imem_rvalid_delay
-- Fire-check: counter deltas over each block (csrr mhpmcounter7/8/9 pairs): branch = N, taken = number of taken branches in the block (test-known), jump = M (fence.i counted); rvfi_ext_mhpmcounters[7 - 3], [8 - 3], [9 - 3] agree per instruction (rtl/ibex_core.sv:2108-2126); the exact counts hold under the no-WB-wait precondition (the waiting class is TP-BTALU-018).
+- Fire-check: counter deltas over each block (csrr mhpmcounter7/8/9 pairs): branch = N, taken = number of taken branches in the block (test-known), jump = M (fence.i kept out of the blocks, B20); rvfi_ext_mhpmcounters[7 - 3], [8 - 3], [9 - 3] agree per instruction (rtl/ibex_core.sv:2108-2126); the exact counts hold under the no-WB-wait precondition (the waiting class is TP-BTALU-018).
 - Pass criteria: gen_chk_counters; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_btalu_dit
@@ -4493,7 +4391,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Stimulus: csrr t0, mhpmcounter8; lw/sw (result unused by the branch) with the response delayed W = 1..16 cycles beyond min1; a conditional branch (taken and not-taken, all six ops) immediately after it; csrr t1, mhpmcounter8 (the gen_bug_log.md B17 reproducer); controls with W = 0 and with the branch separated from the access by >= 2 non-branch instructions; some iterations with jal/jalr in place of the branch (counter 7 control).
 - Randomized: W, access kind, op, operands (taken/not-taken), block contents, alignment.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: per seed >= 50 branches whose preceding access's data_rvalid_i is timestamped W >= 1 cycles after the branch entered ID (dbus monitor against the previous retirement and the branch's fetch delivery); each such branch retires exactly once with the correct outcome; the mhpmcounter8 delta over it is recorded from rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE] and the csrr pair; the test ASSERTS the documented count (doc/03_reference/performance_counters.rst:41, one per conditional branch: delta == 1) and logs the RTL count (1 + W: perf_branch_o is asserted in every waiting FIRST_CYCLE under instr_executing_spec, which lacks the ~outstanding_memory_access term, rtl/ibex_id_stage.sv:886-934, :1054-1057, while the state advances only under instr_executing, :866-869); the W = 0 controls give 1; the jal/jalr controls give mhpmcounter7 delta 1. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record and the mhpmcounter8 delta (rvfi_ext_mhpmcounters / csrr pair))
+- Fire-check: per seed >= 50 branches whose preceding access's data_rvalid_i is timestamped W >= 1 cycles after the branch entered ID (dbus monitor against the previous retirement and the branch's fetch delivery); each such branch retires exactly once with the correct outcome; the mhpmcounter8 delta over it is recorded from rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE] and the csrr pair; the test ASSERTS the documented count (doc/03_reference/performance_counters.rst:41, one per conditional branch: delta == 1) and logs the RTL count (1 + W: perf_branch_o is asserted in every waiting FIRST_CYCLE under instr_executing_spec, which lacks the ~outstanding_memory_access term, rtl/ibex_id_stage.sv:886-934, :1054-1057, while the state advances only under instr_executing, :866-869); the W = 0 controls give 1; the jal/jalr controls give mhpmcounter7 delta 1. [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record and the mhpmcounter8 delta (rvfi_ext_mhpmcounters / csrr pair))
 - Pass criteria: gen_chk_counters following the doc for counter 8 (one count per retired conditional branch); the RTL gives 1 + W for the waiting class => the assertion fails (B17). Counters 7 and 9 are exact (deduped by branch_jump_set_done_q) and their check under the same wait is the pass item TP-BTALU-011.
 - Expected: expected-fail (B17)
 - Test group: gen_btalu_perf_b17_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
@@ -5173,7 +5071,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: rvfi_intr on the handler's first retirement immediately after the mstatus write retirement (no marker retirement in between); mepc read in handler == write pc + 4; the marker retires after mret.
 - Pass criteria: gen_chk_irq (entry vector base + 4*id, mepc = next pc); gen_isa_compare; gen_chk_csr_flush
 - Expected: pass
-- Test group: gen_csr_trap_setup
+- Test group: gen_csr_trap_setup_irq
 - Bins: CG-CSR-012.cr_enable_next.enables_irq_taken, CG-CSR-012.cr_fam_next.other_irq_taken, CG-CSR-002.cp_mst_mie_w.b1, CG-PRV-006.cr_priv_mie_taken.m_1_yes, CG-PRV-006.cr_kind_priv.sw_m, CG-PRV-006.cr_kind_priv.timer_m, CG-PRV-006.cr_kind_priv.ext_m, CG-PRV-006.cr_kind_priv.fast_m
 
 ### TP-CSR-027: mstatush (0x310) reads 0 and ignores writes without trap
@@ -5215,7 +5113,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: read-back pairs for every op x class combination listed in Bins; irq_pending_o observed equal to |(pins & read-back) one cycle after each write. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mie/mip csrr read-back on rvfi_rd_wdata and, for an enabled pending line, the rvfi_intr record that follows)
 - Pass criteria: gen_chk_csr_readback (mask MIE_MASK (0x7FFF_0888)); gen_chk_irq (irq_pending_o == |(pins & mie))
 - Expected: pass
-- Test group: gen_csr_trap_setup
+- Test group: gen_csr_trap_setup_irq
 - Bins: CG-CSR-002.cr_csr_op.mie_csrrw, CG-CSR-002.cr_csr_op.mie_csrrs, CG-CSR-002.cr_csr_op.mie_csrrc, CG-CSR-002.cr_csr_op.mie_csrrwi, CG-CSR-002.cr_csr_op.mie_csrrsi, CG-CSR-002.cr_csr_op.mie_csrrci, CG-CSR-002.cr_csr_wpat.mie_rand, CG-CSR-002.cr_csr_wpat.mie_legal, CG-CSR-002.cr_csr_wpat.mie_illegal, CG-CSR-002.cr_csr_wpat.mie_msb, CG-CSR-002.cr_mie_w_op.std_csrrw, CG-CSR-002.cr_mie_w_op.fast_csrrw, CG-CSR-002.cr_mie_w_op.both_csrrw, CG-CSR-002.cr_mie_w_op.ro_csrrw, CG-CSR-002.cr_mie_w_op.allfast_csrrw, CG-CSR-002.cr_mie_w_op.std_csrrs, CG-CSR-002.cr_mie_w_op.fast_csrrs, CG-CSR-002.cr_mie_w_op.std_csrrc, CG-CSR-002.cr_mie_w_op.fast_csrrc, CG-CSR-002.cr_mie_w_op.std_csrrsi, CG-CSR-002.cr_mie_w_op.std_csrrci, CG-WIT-001.cp_clause.w_tp_csr_029
 
 ### TP-CSR-030: mie write of all-ones reads back MIE_MASK (0x7FFF_0888)
@@ -5243,7 +5141,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Fire-check: (a) irq_pending_o (= |(mip & mie_q), combinational on the flop, rtl/ibex_cs_registers.sv:1044-1045) rises in the cycle after the write's commit edge, i.e. ONE cycle BEFORE the write's RVFI record (record = commit + GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, gen_tb_architecture.md 8.2): the TB back-dates the record by the offset and asserts the edge at commit + 1; (b) core_busy_o == IbexMuBiOff for >= 8 cycles with the disabled pin high, then wake by the enabled source; (c) two legal orders (C-3 / X-7, rtl/ibex_controller.sv:296, :704): a pin already high in an empty-ID DECODE cycle before the csrrc enters ID is taken FIRST (rvfi_intr with handler mepc == the csrrc pc; the csrrc retires after mret and the read-back shows the bit cleared), while a pin rising once the csrrc is valid in ID never pre-empts it (no rvfi_intr, bit cleared); so: an rvfi_intr whose handler mepc != the csrrc pc occurs iff the read-back still has the bit set, and an rvfi_intr with mepc == the csrrc pc is the legal early-entry order. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending; misc core_busy; pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; pin debug_req] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the rvfi_intr handler record with mepc read-back == the csrrc pc or a later pc (the two legal orders) and the mie read-back showing the bit cleared)
 - Pass criteria: gen_chk_irq (irq_pending_o == |(pins & mie) every cycle); gen_chk_sleep (no wake by a disabled pin); gen_isa_compare
 - Expected: pass
-- Test group: gen_csr_trap_setup
+- Test group: gen_csr_trap_setup_irq
 - Bins: CG-CSR-012.cr_fam_next.other_wfi, CG-CSR-012.cr_enable_next.none_alu, CG-PRV-005.cr_dis_irq.dis_then_irq_en, CG-PRV-005.cr_dis_irq.dis_then_dbg, CG-PRV-005.cr_len_wake.long_irq_en, CG-PRV-005.cr_len_wake.short_irq_en, CG-CSR-002.cr_mie_w_op.std_csrrs, CG-CSR-002.cr_mie_w_op.std_csrrc, CG-WIT-001.cp_clause.w_tp_csr_031
 
 ### TP-CSR-032: mip is read-only and mirrors the raw irq inputs, not masked by mie
@@ -6066,7 +5964,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: (a) ecall inside the first-level handler; (b) irq while bit 6 = 1; (c) debug_req_i while bit 6 = 1, then an exception executed in debug mode (illegal instruction in the debug ROM); (d) NMI while bit 6 = 1; 20 rounds each per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: which exception, timing of the pin events, handler code.
 - Knobs: knob:irq_regime, knob:debug_req_regime
-- Fire-check: (a) double_fault_seen_o high for exactly one clock cycle in the cycle the nested trap is taken and bit 7 reads 1 in the nested handler; (b)(c)(d) no pulse, bits 7:6 unchanged by the interrupt/debug/debug-mode exception (read-back). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the nested handler cpuctrlsts read-back (bit 7 == 1) and the two trap records with no mret record between them)
+- Fire-check: (a) double_fault_seen_o high for exactly one clock cycle in the cycle the nested trap is taken and bit 7 reads 1 in the nested handler; (b)(c)(d) no pulse, bits 7:6 unchanged by the interrupt/debug/debug-mode exception (read-back). [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the nested handler cpuctrlsts read-back (bit 7 == 1) and the two trap records with no mret record between them)
 - Pass criteria: gen_chk_double_fault (single-cycle pulse; no pulse for irq/debug/NMI); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_csr_cpuctrl
@@ -6206,7 +6104,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Stimulus: CSR storm of >= 20k CSR instructions across every implemented address with random ops/operands, in M and U, incl. illegal accesses; alert_major_internal_o sampled every cycle. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: everything in the storm; regime schedule by the cross-cutting subagent.
 - Knobs: knob:instr_mix, knob:priv_regime
-- Fire-check: >= 64 complete 256-retirement windows with high CSR density recorded; alert_major_internal_o == 0 in every cycle of the test. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_major_internal] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+- Fire-check: >= 64 complete 256-retirement windows with high CSR density recorded; alert_major_internal_o == 0 in every cycle of the test. [export-rows: alert alert_major_internal] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_chk_alerts (alert_major_internal_o never asserts; the never-witness is the checker's, not a closure bin, S-3b); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_csr_storm
@@ -6783,11 +6681,11 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 - Randomized: mode, encoding (32/16-bit), position.
 - Knobs: knob:priv_regime
 - Fire-check: handler mcause == 3, mepc == ebreak pc, mtval == 0; rvfi_insn == 0x0010_0073 or 0x9002; in the ebreak-into-debug round the ebreak retires with rvfi_trap = 0 and next fetch == DmHaltAddr (S-2), rvfi_ext_debug_mode rises and the debug ROM's csrr dcsr returns cause = 1.
-- Pass criteria: gen_isa_compare; gen_chk_debug mtval = 0 is spec-legal (rtl-arch R10; shim convention).
+- Pass criteria: gen_isa_compare; gen_chk_debug.
 - Expected: pass
 - Test group: gen_prv_illegal
 - Bins: CG-PRV-004.cr_kind_priv_trap.ebreak_m_trap, CG-PRV-004.cr_kind_priv_trap.ebreak_u_trap, CG-PRV-004.cr_kind_priv_trap.c_ebreak_m_trap, CG-PRV-004.cr_kind_priv_trap.c_ebreak_u_trap, CG-PRV-004.cr_ebreak_cause.ebreak_dcsr0_3, CG-PRV-004.cr_ebreak_cause.c_ebreak_dcsr0_3, CG-PRV-004.cr_ebreak_cause.ebreak_dcsr1_dbg, CG-PRV-004.cr_ebreak_cause.c_ebreak_dcsr1_dbg, CG-PRV-001.cr_trans.m_dbg_ebreak, CG-PRV-001.cr_trans.u_dbg_ebreak, CG-PRV-008.cr_exc_mtval.exc_zero
-
+- Notes: mtval = 0 is spec-legal (rtl-arch R10; shim convention).
 ### TP-PRV-022: Interrupt-enable rule: M-mode needs MIE = 1; U-mode interrupts always enabled
 - Features: F-PRV-023
 - Phase: 1
@@ -7502,7 +7400,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a load or store immediately followed by an illegal encoding (decoder-reject, nonexistent CSR, or a SYSTEM encoding with rs1/rd != 0); the dmem agent delays the response by 2..12 cycles and, per iteration, returns it (a) without error or (b) with data_err_i=1.
 - Randomized: load vs store, response delay, error or not, illegal class, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate
-- Fire-check: the ibus monitor shows the illegal word delivered (icache disabled, so delivery + the fixed IF->ID offset is its ID arrival) >= 2 cycles before the dbus monitor sees data_rvalid_i for the load/store, and the vector fetch occurs after that rvalid cycle; outcome (a): trap record on the illegal instruction with mcause 2; outcome (b): trap record on the load/store with mcause 5/7 and no trap record for the illegal instruction until it re-executes (observable at both buses and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: outcome (a) the illegal instruction trap record (mcause 2) or (b) the load/store trap record (mcause 5/7) with no trap record for the illegal instruction until it re-executes)
+- Fire-check: the ibus monitor shows the illegal word delivered (icache disabled, so delivery + the fixed IF->ID offset is its ID arrival) >= 2 cycles before the dbus monitor sees data_rvalid_i for the load/store, and the vector fetch occurs after that rvalid cycle; outcome (a): trap record on the illegal instruction with mcause 2; outcome (b): trap record on the load/store with mcause 5/7 and no trap record for the illegal instruction until it re-executes (observable at both buses and RVFI). [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: outcome (a) the illegal instruction trap record (mcause 2) or (b) the load/store trap record (mcause 5/7) with no trap record for the illegal instruction until it re-executes)
 - Pass criteria: gen_isa_compare (which instruction traps); gen_chk_csr_readback; gen_chk_trap_timing (vector fetch not before the rvalid cycle)
 - Expected: pass
 - Test group: gen_exc_priority
@@ -7768,7 +7666,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a faulting load or store (dmem error, response delayed 1..8 cycles) immediately followed by a younger instruction from {ALU op writing a register, csrw mscratch, csrrs mstatus, mret (inside a handler)}; the handler returns to mepc without adjusting it so the pair re-executes with the fault removed.
 - Randomized: load vs store, younger class, response delay, register numbers, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:imem_rvalid_delay
-- Fire-check: the ibus monitor delivered the younger word at or before the dbus error response cycle, RVFI shows no retirement of the younger pc before the trap record and one retirement of it after the mret, and the handler read-back mepc == load/store pc (observable at both buses and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of the younger pc before the trap record and one after the mret; mepc read-back == the load/store pc)
+- Fire-check: the ibus monitor delivered the younger word at or before the dbus error response cycle, RVFI shows no retirement of the younger pc before the trap record and one retirement of it after the mret, and the handler read-back mepc == load/store pc (observable at both buses and RVFI). [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of the younger pc before the trap record and one after the mret; mepc read-back == the load/store pc)
 - Pass criteria: gen_isa_compare (younger not retired, single architectural effect); gen_chk_exc_flush (no data_req_o and no CSR side effect from the killed instruction); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_lsu_fault
@@ -7782,7 +7680,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a faulting load or store followed by ecall, ebreak, an illegal encoding or a fetch-errored word (imem agent); the dmem response is delayed so the younger word is in ID when the error returns.
 - Randomized: load vs store, younger cause, delays, privilege, mtvec class.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
-- Fire-check: the younger word was delivered (ibus monitor) before the dbus error response cycle; RVFI shows exactly one trap record (the load/store) with mcause 5/7 read back, and the younger instruction's own trap (if any) appears only after its re-execution (observable via the memory agents' error timing and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one trap record (the load/store, mcause 5/7 read-back); the younger instruction trap only after its re-execution)
+- Fire-check: the younger word was delivered (ibus monitor) before the dbus error response cycle; RVFI shows exactly one trap record (the load/store) with mcause 5/7 read back, and the younger instruction's own trap (if any) appears only after its re-execution (observable via the memory agents' error timing and RVFI). [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one trap record (the load/store, mcause 5/7 read-back); the younger instruction trap only after its re-execution)
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (cause 5/7, not 1/2/3/8/11)
 - Expected: pass
 - Test group: gen_exc_priority
@@ -7796,7 +7694,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a faulting load/store followed by a taken branch, a not-taken branch, jal or jalr; the dmem response is delayed so the branch is in ID at the error cycle.
 - Randomized: branch kind and target, taken/not-taken, delays, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_gnt_delay
-- Fire-check: the branch word was delivered before the dbus error cycle (cpuctrlsts.icache_enable = 0 as in TP-EXC-034); the ibus monitor records whether instr_addr_o hit the branch/jump target in the window from the branch's ID arrival (delivery + the fixed IF->ID offset) to the trap commit (branch_set / jump_set use instr_executing_spec, rtl/ibex_id_stage.sv:889-941, 1054-1057, so a taken branch / jal / jalr redirects IF in its FIRST ID cycle, before the WB error response; the 'no' outcomes are a not-taken branch, a load-dependent branch / jalr held by stall_ld_hz, and a branch arriving in the error cycle) (both outcomes covered); RVFI shows no retirement of the branch before the trap record (observable at both buses and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of the branch before the trap record and its record after the mret with rvfi_pc_wdata)
+- Fire-check: the branch word was delivered before the dbus error cycle (cpuctrlsts.icache_enable = 0 as in TP-EXC-034); the ibus monitor records whether instr_addr_o hit the branch/jump target in the window from the branch's ID arrival (delivery + the fixed IF->ID offset) to the trap commit (branch_set / jump_set use instr_executing_spec, rtl/ibex_id_stage.sv:889-941, 1054-1057, so a taken branch / jal / jalr redirects IF in its FIRST ID cycle, before the WB error response; the 'no' outcomes are a not-taken branch, a load-dependent branch / jalr held by stall_ld_hz, and a branch arriving in the error cycle) (both outcomes covered); RVFI shows no retirement of the branch before the trap record (observable at both buses and RVFI). [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of the branch before the trap record and its record after the mret with rvfi_pc_wdata)
 - Pass criteria: gen_isa_compare (branch not retired, re-executed after mret); gen_chk_ibus_proto (any speculative request is protocol-legal and completed)
 - Expected: pass
 - Test group: gen_exc_lsu_fault
@@ -7810,7 +7708,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: a faulting load/store immediately followed by another load/store (independent or address-dependent through rd), with response delays 1..8.
 - Randomized: kinds, dependency, delays, sizes, privilege.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor shows exactly one request before the error response and no new data_req_o from the error cycle until the handler's first data access; the younger load/store word was delivered before the error cycle (observable at both buses). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record precedes any record of the younger load/store, which retires only after the handler mret)
+- Fire-check: the dbus monitor shows exactly one request before the error response and no new data_req_o from the error cycle until the handler's first data access; the younger load/store word was delivered before the error cycle (observable at both buses). [export-rows: dbus req; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record precedes any record of the younger load/store, which retires only after the handler mret)
 - Pass criteria: gen_chk_exc_flush (no request from the killed access); gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_lsu_fault
@@ -7824,7 +7722,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: two consecutive loads; the first response is an error; the second load is ready in ID before the response arrives (dmem delay >= 1).
 - Randomized: response delay (1, 2..4, >= 5), addresses, rd registers, sizes, privilege.
 - Knobs: knob:dmem_rvalid_delay
-- Fire-check: exactly one data_req_o for the pair (dbus monitor) and a single trap record; the second load's word was delivered before the error cycle (observable at both buses and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: a single trap record for the pair and the second load record only after the mret)
+- Fire-check: exactly one data_req_o for the pair (dbus monitor) and a single trap record; the second load's word was delivered before the error cycle (observable at both buses and RVFI). [export-rows: dbus req; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: a single trap record for the pair and the second load record only after the mret)
 - Pass criteria: gen_chk_exc_flush; gen_isa_compare; gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_exc_lsu_fault
@@ -7852,7 +7750,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: for each pair of the RTL order the test builds the collision: WB store or load error response in the cycle the ID stage holds a fetch-errored word / an illegal encoding / ecall / ebreak (imem fast, dmem slow); a fetch-errored word whose bits are illegal, ecall or ebreak; SYSTEM encodings with rs1/rd != 0; and the triple (WB fault + fetch-errored word that is also illegal). Optionally an enabled interrupt line is pending in the same cycle.
 - Randomized: pair, error sources (bus vs PMP), delays, privilege, illegal sub-kind, interrupt presence.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:irq_regime
-- Fire-check: per collision the TB timestamps (a) the dbus error response cycle or the ID arrival of the ID-stage cause and (b) the ID arrival of the second cause's word = its ibus delivery cycle + the fixed IF->ID offset (valid only with the icache disabled; PMP denies from the gen_chk_pmp deny list), asserts both conditions were present in the same cycle, and RVFI shows exactly one trap record whose read-back cause is the RTL-order winner (observable via the memory agents' injected error timing and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one trap record whose mcause read-back is the RTL-order winner)
+- Fire-check: per collision the TB timestamps (a) the dbus error response cycle or the ID arrival of the ID-stage cause and (b) the ID arrival of the second cause's word = its ibus delivery cycle + the fixed IF->ID offset (valid only with the icache disabled; PMP denies from the gen_chk_pmp deny list), asserts both conditions were present in the same cycle, and RVFI shows exactly one trap record whose read-back cause is the RTL-order winner (observable via the memory agents' injected error timing and RVFI). [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one trap record whose mcause read-back is the RTL-order winner)
 - Pass criteria: gen_isa_compare; gen_chk_csr_readback (winner cause, mtval per winner)
 - Expected: pass
 - Test group: gen_exc_priority
@@ -7992,7 +7890,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: mret; the code after the mret in memory is a recognizable "must-not-execute" block (stores to a TB mailbox); the return target reads mstatus and stores it.
 - Randomized: context (exception handler, interrupt handler, plain), MPP, MPIE, mepc target alignment, prefetch depth (imem latency), privilege of the target.
 - Knobs: knob:imem_rvalid_delay, knob:imem_outstanding_cap
-- Fire-check: the mret retires (rvfi_insn == 32'h30200073; its rvfi_pc_wdata is the next sequential fetch address, never mepc: pc_wdata is captured at ID exit while PC_ERET is set one cycle later in FLUSH, rtl/ibex_core.sv:2084, rtl/ibex_id_stage.sv:991,1130, rtl/ibex_controller.sv:954-956; C-1 / X-1) and the next retirement has rvfi_pc_rdata == mepc (read back before) with rvfi_mode == old MPP; the ibus monitor shows >= 1 fall-through word fetched after the mret that never retires (one_plus iterations), and the mstatus read-back after the return shows MIE == old MPIE, MPIE == 1, MPP == U (observable at RVFI and the instruction bus). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mret record followed by the record at mepc (C-1) with rvfi_mode == old MPP and the mstatus read-back)
+- Fire-check: the mret retires (rvfi_insn == 32'h30200073; its rvfi_pc_wdata is the next sequential fetch address, never mepc: pc_wdata is captured at ID exit while PC_ERET is set one cycle later in FLUSH, rtl/ibex_core.sv:2084, rtl/ibex_id_stage.sv:991,1130, rtl/ibex_controller.sv:954-956; C-1 / X-1) and the next retirement has rvfi_pc_rdata == mepc (read back before) with rvfi_mode == old MPP; the ibus monitor shows >= 1 fall-through word fetched after the mret that never retires (one_plus iterations), and the mstatus read-back after the return shows MIE == old MPIE, MPIE == 1, MPP == U (observable at RVFI and the instruction bus). [export-rows: ibus req; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mret record followed by the record at mepc (C-1) with rvfi_mode == old MPP and the mstatus read-back)
 - Pass criteria: gen_isa_compare (pc, mode, no retirement of fall-through words); gen_chk_csr_readback; gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_exc_mret
@@ -8048,7 +7946,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: exception A (random cause) whose handler, after 0..20 instructions and a cpuctrlsts read, raises exception B (random cause); B's handler reads cpuctrlsts, clears double_fault_seen by csrw, and unwinds; the second-level handler is placed so it does not itself fault.
 - Randomized: causes A and B, gap length, privilege of A, mtvec class.
 - Knobs: knob:instr_mix
-- Fire-check: two trap records with no mret retirement between them, a double_fault_seen_o pulse exactly one cycle wide in B's commit cycle = B's trap record cycle - GEN_TRAP_TO_RVFI_OFFSET (the FLUSH / pc_set cycle with csr_save_cause_i, rtl/ibex_cs_registers.sv:941-943, rtl/ibex_controller.sv:827-845; not anchored to B's vector fetch, which is ICache-blind and deferred by a held prefetch request, C-14), and cpuctrlsts read-back in B's handler with bits 7:6 == 2'b11 (observable at double_fault_seen_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: two trap records with no mret record between and the cpuctrlsts read-back bits 7:6 == 2b11 in the B handler)
+- Fire-check: two trap records with no mret retirement between them, a double_fault_seen_o pulse exactly one cycle wide in B's commit cycle = B's trap record cycle - GEN_TRAP_TO_RVFI_OFFSET (the FLUSH / pc_set cycle with csr_save_cause_i, rtl/ibex_cs_registers.sv:941-943, rtl/ibex_controller.sv:827-845; not anchored to B's vector fetch, which is ICache-blind and deferred by a held prefetch request, C-14), and cpuctrlsts read-back in B's handler with bits 7:6 == 2'b11 (observable at double_fault_seen_o and RVFI). [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: two trap records with no mret record between and the cpuctrlsts read-back bits 7:6 == 2b11 in the B handler)
 - Pass criteria: gen_chk_double_fault (pulse-for-pulse vs model; read-back bits); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_double_fault
@@ -8062,7 +7960,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the handler sets mstatus.MIE = 1 with an enabled line pending (irq driver), or irq_nm_i is driven; the interrupt/NMI handler reads cpuctrlsts and returns.
 - Randomized: first cause, line, gap, privilege.
 - Knobs: knob:irq_regime, knob:irq_line_mix
-- Fire-check: an interrupt entry (rvfi_intr) or NMI entry follows the trap record without an intervening mret, double_fault_seen_o has no pulse in the entry cycle, and cpuctrlsts read-back in the interrupt handler shows bit 7 == 0 and bit 6 == 1 (observable at double_fault_seen_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the rvfi_intr / NMI entry record after the trap record with no mret between; the cpuctrlsts read-back bits)
+- Fire-check: an interrupt entry (rvfi_intr) or NMI entry follows the trap record without an intervening mret, double_fault_seen_o has no pulse in the entry cycle, and cpuctrlsts read-back in the interrupt handler shows bit 7 == 0 and bit 6 == 1 (observable at double_fault_seen_o and RVFI). [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the rvfi_intr / NMI entry record after the trap record with no mret between; the cpuctrlsts read-back bits)
 - Pass criteria: gen_chk_double_fault; gen_chk_irq; gen_chk_nmi
 - Expected: pass
 - Test group: gen_exc_double_fault
@@ -8090,7 +7988,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: csrw/csrs/csrc cpuctrlsts setting and clearing bits 6 and 7 in random order, each followed by csrr; after a software set of sync_exc_seen a synchronous exception is raised (must pulse), after a software clear a synchronous exception is raised (must not pulse); a software set of double_fault_seen is checked for the absence of a pulse.
 - Randomized: write forms, bit patterns, causes, gaps.
 - Knobs: knob:instr_mix
-- Fire-check: the cpuctrlsts write retirements and read-backs with the intended bits are seen on RVFI, and double_fault_seen_o has no pulse in the write cycles while it pulses exactly on the exception that follows a software-set sync_exc_seen (observable at RVFI and double_fault_seen_o). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write / read-back records and the following trap record with cpuctrlsts read-back bit 7)
+- Fire-check: the cpuctrlsts write retirements and read-backs with the intended bits are seen on RVFI, and double_fault_seen_o has no pulse in the write cycles while it pulses exactly on the exception that follows a software-set sync_exc_seen (observable at RVFI and double_fault_seen_o). [export-rows: alert double_fault_seen] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the cpuctrlsts write / read-back records and the following trap record with cpuctrlsts read-back bit 7)
 - Pass criteria: gen_chk_double_fault; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_double_fault
@@ -8160,7 +8058,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: ID-stage exceptions (illegal, ecall, ebreak, fetch fault) with WB empty, with a non-faulting load/store outstanding (dmem delay 1..12), and WB faults with random response latency; imem gnt/rvalid latencies swept.
 - Randomized: cause, WB state, delays, privilege, mtvec class.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_gnt_delay, knob:imem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the TB measures the cycle distance from the trigger (ibus delivery of the trapping word + the fixed IF->ID offset with the icache disabled, or the dbus error response) to the commit (pc_set cycle = trap record - GEN_TRAP_TO_RVFI_OFFSET) and records it per stage, plus the distance from the commit to the vector request on the ibus; exactly one vector fetch per trap record (observable at both buses and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one handler-first record (next rvfi_pc_rdata == the vector, C-1) per trap record; the distances are coverage-only)
+- Fire-check: the TB measures the cycle distance from the trigger (ibus delivery of the trapping word + the fixed IF->ID offset with the icache disabled, or the dbus error response) to the commit (pc_set cycle = trap record - GEN_TRAP_TO_RVFI_OFFSET) and records it per stage, plus the distance from the commit to the vector request on the ibus; exactly one vector fetch per trap record (observable at both buses and RVFI). [export-rows: ibus rvalid; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly one handler-first record (next rvfi_pc_rdata == the vector, C-1) per trap record; the distances are coverage-only)
 - Pass criteria: gen_chk_trap_timing (pc_set = trigger + 1 in all three arms, DECODE -> FLUSH, rtl/ibex_controller.sv:676-677, 827-830: ID cause with WB empty, ID cause after the last data_rvalid_i of the outstanding access, WB cause after the error response; the vector request is issued in the pc_set cycle only when no fill buffer holds an ungranted request, otherwise after that grant (rtl/ibex_icache.sv:703, 764-776, 1030-1031), so the commit-to-request distance is asserted as >= 0 with its minimum observed value equal to the bring-up-pinned constant GEN_VECTOR_REQ_AFTER_PC_SET (predicted 0 with knob:imem_gnt_delay same_cycle); never two vector fetches for one trap); gen_isa_compare
 - Expected: pass
 - Test group: gen_exc_trap_state
@@ -8202,7 +8100,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the TP-EXC-035 collision: a faulting load/store whose error response arrives while ID holds ecall, ebreak or an illegal encoding.
 - Randomized: as TP-EXC-035.
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
-- Fire-check: the collision is present (ID arrival of the ID cause, icache disabled as in TP-EXC-035, at or before the dbus error response cycle) and RVFI shows TWO trap records in order: the load/store's record (mcause 5/7 read back) now, and the killed ID instruction's own trap record after the handler's mret when it re-executes; rvfi_order is continuous across both (observable via the memory agents' error timing and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: TWO trap records in order with continuous rvfi_order (record count per the B14 confirmation))
+- Fire-check: the collision is present (ID arrival of the ID cause, icache disabled as in TP-EXC-035, at or before the dbus error response cycle) and RVFI shows TWO trap records in order: the load/store's record (mcause 5/7 read back) now, and the killed ID instruction's own trap record after the handler's mret when it re-executes; rvfi_order is continuous across both (observable via the memory agents' error timing and RVFI). [export-rows: ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: TWO trap records in order with continuous rvfi_order (record count per the B14 confirmation))
 - Pass criteria: gen_isa_compare (comparator policy per gen_tb_architecture.md 8.1 item 5: the WB error's record now, the killed instruction's record after re-execution; a single record for the pair re-opens B14). The priority behaviour itself (WB error outranks the ID exception, the ID instruction is killed and re-executes) is the pass-gate item TP-EXC-035.
 - Expected: informational (B14 confirmation; excluded from the pass gate)
 - Test group: gen_exc_priority_info   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
@@ -8300,7 +8198,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the irq driver runs knob:irq_regime storm with knob:irq_line_mix and knob:irq_hold while the agents inject bus errors and the stream contains illegal/ecall instructions.
 - Randomized: per W-IRQ-LINE, W-IRQ-SET, W-IRQ-HOLD, W-IRQ-GAP, W-MEM-ERR, W-PRG-EXC and W-PRG-CSR.
 - Knobs: knob:irq_regime, knob:irq_line_mix, knob:irq_hold, knob:dmem_err_rate, knob:imem_err_rate, knob:dmem_rvalid_delay, knob:imem_rvalid_delay, knob:instr_mix
-- Fire-check: per seed >= 5 exception commits in cycles where irq_pending_o == 1 with MIE or U-mode (irq monitor), and >= 1 interrupt entry taken inside an exception handler with sync_exc_seen == 1 (observable at irq_pending_o, RVFI and double_fault_seen_o). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: trap records whose handler contains a retired rvfi_intr entry (cpuctrlsts read-back sync_exc_seen == 1))
+- Fire-check: per seed >= 5 exception commits in cycles where irq_pending_o == 1 with MIE or U-mode (irq monitor), and >= 1 interrupt entry taken inside an exception handler with sync_exc_seen == 1 (observable at irq_pending_o, RVFI and double_fault_seen_o). [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: trap records whose handler contains a retired rvfi_intr entry (cpuctrlsts read-back sync_exc_seen == 1))
 - Pass criteria: gen_isa_compare; gen_chk_irq; gen_chk_double_fault; gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_exc_regime
@@ -8681,11 +8579,11 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Randomized: form, rlist, k, phase, line, dmem latency.
 - Knobs: knob:instr_mix, knob:dmem_rvalid_delay, knob:irq_regime
 - Fire-check: the pin rise happens while rvfi_ext_expanded_insn_valid micro-ops of a cm.* pc are being traced; expanded phase: mepc read-back == the cm.* pc and after the mret the dbus monitor shows the sequence restarting from micro-op 0; commit phase: rvfi_ext_expanded_insn_last is traced before the rvfi_intr retirement and mepc == the following instruction (or the return target for cm.popret*) (observable at RVFI, the data bus and irq pins). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin irq_fast; pin irq_external; pin irq_timer; pin irq_software; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: mepc read-back == the cm.* pc and the micro-op records repeat from micro-op 0 (rvfi_mem_* fields) after the mret, or the _last record precedes the rvfi_intr record)
-- Pass criteria: gen_isa_compare (restart semantics, sp/a0 correctness); gen_chk_irq; gen_chk_csr_readback rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): mepc = the cm.* pc and the retired micro-ops repeat after mret (flush_expanded resets the expander, rtl/ibex_if_stage.sv:482-483); the comparator side depends on TB Infra's T-102c rule (T-134): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
+- Pass criteria: gen_isa_compare (restart semantics, sp/a0 correctness); gen_chk_irq; gen_chk_csr_readback.
 - Expected: pass
 - Test group: gen_irq_timing
 - Bins: CG-IRQ-004.cr_ctx_outcome.zcmp_expanded_taken, CG-IRQ-004.cr_ctx_outcome.zcmp_commit_taken, CG-IRQ-004.cr_ctx_latency.zcmp_expanded_three_five, CG-IRQ-004.cr_ctx_latency.zcmp_commit_six_ten, CG-EXC-008.cp_event.irq_during_expanded, CG-EXC-008.cp_event.irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_push_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_push_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_pop_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_pop_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_popret_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_popret_irq_during_commit_deferred, CG-EXC-008.cr_seq_event.cm_popretz_irq_during_expanded, CG-EXC-008.cr_seq_event.cm_popretz_irq_during_commit_deferred, CG-EXC-008.cr_event_pos.irq_during_expanded_first, CG-EXC-008.cr_event_pos.irq_during_expanded_middle, CG-EXC-008.cr_event_pos.irq_during_expanded_last, CG-EXC-008.cr_event_rlist.irq_during_expanded_r5_7, CG-EXC-008.cr_event_rlist.irq_during_expanded_r8_11, CG-EXC-008.cr_event_rlist.irq_during_commit_deferred_r12_15, CG-EXC-008.cr_event_after.irq_during_expanded_reexecuted_from_first, CG-IRQ-001.cr_line_mepc.fast_0_cm_pc, CG-IRQ-001.cp_mepc_src.cm_pc, CG-WIT-001.cp_clause.w_tp_irq_025
-
+- Notes: rtl-arch R9 (dv/auto_dv/evidence/gen_t102_rtl_facts.md): mepc = the cm.* pc and the retired micro-ops repeat after mret (flush_expanded resets the expander, rtl/ibex_if_stage.sv:482-483); the comparator side depends on TB Infra's T-102c rule (T-134, landed 18470dd): the lock-step model executes a cm.* sequence atomically, so the DUT's retired micro-ops 0..k and their repeat after mret have no Spike counterpart and the comparator compares the folded step after the handler.
 ### TP-IRQ-026: Interrupt in the same cycle as an ID-stage exception: the exception wins, the interrupt stays pending
 - Features: F-IRQ-021
 - Phase: 1
@@ -8946,7 +8844,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: the dmem agent corrupts the integrity bits (data_rdata_intg_i, 1..7 random bit flips) of the response of one selected load or store (aligned, and misaligned first/second half); the NMI handler at base + 0x7C reads mcause/mtval/mepc; for loads the program later stores rd to a mailbox.
 - Randomized: load vs store, size, alignment, flipped bits, response latency, privilege, position, MIE.
 - Knobs: knob:dmem_err_rate, knob:dmem_rvalid_delay, knob:dmem_gnt_delay
-- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most TWO further ordinary instructions (more records only when the second is a Zcmp sequence) retire before an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C (the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_load_store_unit.sv:756-757, rtl/ibex_controller.sv:404-430, 436, 498, 700-713; C-7 / X-10: the count classes zero / one / two are all required and the doc's 'at most one' is D21); the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for aligned loads and misaligned loads whose SECOND beat carries the error the load's RVFI record has rvfi_ext_rf_wr_suppress == 1; for a misaligned load whose FIRST beat carries the error the RTL writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16: the rd outcome is asserted by its owner TP-DMEM-041, here only alert + NMI are asserted for that class) (observable at the data bus, alert_major_bus_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; alert alert_major_bus] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress) and the rvfi_ext_nmi_int entry; mcause / mtval read-back)
+- Fire-check: the dbus monitor records the corrupted response; alert_major_bus_o pulses in that cycle; at most TWO further ordinary instructions (more records only when the second is a Zcmp sequence) retire before an entry with rvfi_intr == 1 and rvfi_ext_nmi_int == 1 at mtvec base + 0x7C (the pending flag registers one cycle after rvalid, so the instruction in ID completes and the one accepted into ID in the response cycle completes too, rtl/ibex_load_store_unit.sv:756-757, rtl/ibex_controller.sv:404-430, 436, 498, 700-713; C-7 / X-10: the count classes zero / one / two are all required and the doc's 'at most one' is D21); the handler read-back is mcause 0xFFFFFFE0 and mtval == the access address; for aligned loads and misaligned loads whose SECOND beat carries the error the load's RVFI record has rvfi_ext_rf_wr_suppress == 1; for a misaligned load whose FIRST beat carries the error the RTL writes rd (rtl/ibex_load_store_unit.sv:514, 697-698; X-11, B16: the rd outcome is asserted by its owner TP-DMEM-041, here only alert + NMI are asserted for that class) (observable at the data bus, alert_major_bus_o and RVFI). [export-rows: dbus rvalid; alert alert_major_bus] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress) and the rvfi_ext_nmi_int entry; mcause / mtval read-back)
 - Pass criteria: gen_chk_bus_intg_rsp (alert, suppression for the aligned / second-beat classes, NMI with cause and mtval, latency bound of two ordinary instructions per C-7); gen_chk_nmi; gen_chk_alerts; gen_chk_csr_readback; gen_isa_compare (rd not written in the aligned / second-beat classes; the first-beat class follows TP-DMEM-041's B16 direction and is not compared here)
 - Expected: pass (doc mismatch D21)
 - Test group: gen_irq_nmi_int
@@ -9100,7 +8998,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: wfi inside the debug program followed by a marker instruction; mcycle read before and after.
 - Randomized: position, dcsr.prv, surrounding debug program.
 - Knobs: knob:debug_req_regime
-- Fire-check: the wfi retires with rvfi_ext_debug_mode == 1 and the marker retires within the nop-path bound (<= 6 cycles) with no wake source present; any core_busy_o Off pulse is <= 2 cycles and may be absent when a fetch beat is outstanding (port rule, 8.2 item 1; recorded, not a failure) (observable at RVFI, core_busy_o, pins). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc core_busy; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record (rvfi_ext_debug_mode == 1) followed by the marker record within a rvfi_ext_mcycle gap <= 6)
+- Fire-check: the wfi retires with rvfi_ext_debug_mode == 1 and the marker retires within the nop-path bound (<= 6 cycles) with no wake source present; any core_busy_o Off pulse is <= 2 cycles and may be absent when a fetch beat is outstanding (port rule, 8.2 item 1; recorded, not a failure) (observable at RVFI, core_busy_o, pins). [export-rows: misc core_busy; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record (rvfi_ext_debug_mode == 1) followed by the marker record within a rvfi_ext_mcycle gap <= 6)
 - Pass criteria: gen_chk_sleep (nop path accepted per CTRL-42; no prolonged sleep); gen_chk_debug; gen_isa_compare
 - Expected: pass
 - Test group: gen_irq_wfi
@@ -9282,7 +9180,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 - Stimulus: wfi with sleep lengths in the short/medium/long classes; wake by an enabled line.
 - Randomized: sleep length, line, privilege.
 - Knobs: knob:irq_regime
-- Fire-check: core_busy_o == IbexMuBiOff in every sleep cycle after the last outstanding instruction-bus beat has returned (8.2 item 1: if_busy keeps the port On until then) and only the two legal encodings are ever observed; the mcycle read-back delta equals the TB-measured cycle count between the two reads (sleep included) (observable at core_busy_o and RVFI). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc core_busy; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two mcycle read-backs delta equals the rvfi_ext_mcycle delta of the two csrr records (sleep included))
+- Fire-check: core_busy_o == IbexMuBiOff in every sleep cycle after the last outstanding instruction-bus beat has returned (8.2 item 1: if_busy keeps the port On until then) and only the two legal encodings are ever observed; the mcycle read-back delta equals the TB-measured cycle count between the two reads (sleep included) (observable at core_busy_o and RVFI). [export-rows: misc core_busy; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two mcycle read-backs delta equals the rvfi_ext_mcycle delta of the two csrr records (sleep included))
 - Pass criteria: gen_chk_sleep (Off encoding, only legal values); gen_chk_counters (mcycle counts sleep cycles: no clock gate in the DUT)
 - Expected: pass
 - Test group: gen_irq_wfi
@@ -10349,7 +10247,7 @@ Conventions used below:
 - Stimulus: csrw mseccfg MMWP=1 followed immediately by a plain instruction at pc+4 (also variants where the next instruction is a load/store to a covered address, and where the csrw is the last halfword before a region edge).
 - Randomized: filler before the csrw, what follows, imem timing.
 - Knobs: knob:imem_gnt_delay random, knob:imem_rvalid_delay random, knob:instr_mix csr_heavy
-- Fire-check: RVFI, per seed: the csrw retires trap = 0; the next retired instruction has rvfi_trap = 1, mcause 1, mtval = its pc; in at least one iteration per seed the ibus grant of that word precedes the csrw's retire (prefetched, C-14) and in at least one it follows it (fresh fetch). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record followed by the next record with rvfi_trap = 1, mcause 1, mtval == its pc (read-back); the prefetched / fresh class is coverage-only)
+- Fire-check: RVFI, per seed: the csrw retires trap = 0; the next retired instruction has rvfi_trap = 1, mcause 1, mtval = its pc; in at least one iteration per seed the ibus grant of that word precedes the csrw's retire (prefetched, C-14) and in at least one it follows it (fresh fetch). [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record followed by the next record with rvfi_trap = 1, mcause 1, mtval == its pc (read-back); the prefetched / fresh class is coverage-only)
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_csr_readback
 - Expected: pass
 - Test group: gen_pmp_recfg
@@ -10685,7 +10583,7 @@ Conventions used below:
 - Stimulus: Taken branches (both directions), jal/jalr, ecall, mret placed as the last instruction before the denied region; imem timing so the prefetcher has issued the denied word before the redirect.
 - Randomized: redirect kind, distance to the edge, imem timing, privilege.
 - Knobs: knob:imem_gnt_delay same_cycle, knob:imem_rvalid_delay min1, knob:instr_mix branch_heavy
-- Fire-check: ibus monitor: a granted fetch of a denied word with no later RVFI retire from that word; RVFI shows no trap between the redirect and the next retire. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+- Fire-check: ibus monitor: a granted fetch of a denied word with no later RVFI retire from that word; RVFI shows no trap between the redirect and the next retire. [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_pmp_fetch_fault
@@ -10755,7 +10653,7 @@ Conventions used below:
 - Stimulus: Denied loads/stores back-to-back with permitted ones; dbus gnt delay long.
 - Randomized: mix, window, dmem timing.
 - Knobs: knob:dmem_gnt_delay long, knob:dmem_rvalid_delay long, knob:instr_mix ls_heavy
-- Fire-check: RVFI, per seed: every denied access retires with trap while the dbus monitor shows zero data_req_o for it, and the retire happens before the agent's stalled grant window would have elapsed (test-level cycle check against the knob's minimum delay); the exact 2-cycle latency bin is probe-gated and not in this item's manifest (fcov Probe candidates). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the denied access trap record (mcause 5/7 read-back) with rvfi_ext_mcycle gap below the knob minimum grant delay)
+- Fire-check: RVFI, per seed: every denied access retires with trap while the dbus monitor shows zero data_req_o for it, and the retire happens before the agent's stalled grant window would have elapsed (test-level cycle check against the knob's minimum delay); the exact 2-cycle latency bin is probe-gated and not in this item's manifest (fcov Probe candidates). [export-rows: dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the denied access trap record (mcause 5/7 read-back) with rvfi_ext_mcycle gap below the knob minimum grant delay)
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_pmp_data_fault
@@ -10881,7 +10779,7 @@ Conventions used below:
 - Stimulus: csrw pmpcfg/pmpaddr/mseccfg that makes the next word denied (variant A) or allowed (variant B, the word was denied when fetched).
 - Randomized: CSR, direction, filler, outstanding cap, privilege.
 - Knobs: knob:imem_gnt_delay same_cycle, knob:imem_rvalid_delay min1, knob:imem_outstanding_cap 2, knob:instr_mix csr_heavy
-- Fire-check: RVFI/ibus, per seed: the next word's grant precedes the csrw retire and the word is not granted again before its instruction retires (it survived the flush); variant A -> that instruction retires with rvfi_trap = 1 (cause 1); variant B -> it retires with rvfi_trap = 0 although it was denied when fetched. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record followed by the word record (rvfi_trap per variant) with no intervening record)
+- Fire-check: RVFI/ibus, per seed: the next word's grant precedes the csrw retire and the word is not granted again before its instruction retires (it survived the flush); variant A -> that instruction retires with rvfi_trap = 1 (cause 1); variant B -> it retires with rvfi_trap = 0 although it was denied when fetched. [export-rows: ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record followed by the word record (rvfi_trap per variant) with no intervening record)
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_pmp_recfg
@@ -11077,7 +10975,7 @@ Conventions used below:
 - Stimulus: Random branch-heavy programs re-executing loops across PMP changes (W-PMP-2 for the data side; handler rewrites per W-PMP-4).
 - Randomized: table, dummy mask/seed, program, imem timing.
 - Knobs: knob:instr_mix branch_heavy, knob:pmp_regime sparse, knob:scr_key_delay immediate, knob:imem_gnt_delay random
-- Fire-check: RVFI/ibus, per seed: at least one loop word executes without an ibus grant (cache hit) under each verdict; at least one denied word is granted and discarded by a redirect; no retire has a dummy encoding with rvfi_trap = 1. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: loop records retire with rvfi_insn == memory image at gap 1 under each verdict; no dummy encoding retires with rvfi_trap = 1)
+- Fire-check: RVFI/ibus, per seed: at least one loop word executes without an ibus grant (cache hit) under each verdict; at least one denied word is granted and discarded by a redirect; no retire has a dummy encoding with rvfi_trap = 1. [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: loop records retire with rvfi_insn == memory image at gap 1 under each verdict; no dummy encoding retires with rvfi_trap = 1)
 - Pass criteria: gen_chk_pmp (model verdict == rvfi_trap with cause 1/5/7; denied data word => no data_req_o; denied fetch still on ibus, traps in ID); gen_isa_compare (trap/no-trap agreement); gen_chk_icache; gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_pmp_random_regime
@@ -11459,7 +11357,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: RVFI item with rvfi_trap for the load/store (rvfi_ext_debug_req = 0 on it, C-3), then
   the ibus fetches the mtvec target and then DmHaltAddr with no retirement between (record order,
   same-cycle rule); the first debug-ROM record carries rvfi_ext_debug_req = 1
-  (gen_test_dbg_haltreq). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (rvfi_ext_debug_req = 0) is immediately followed by the first debug-ROM record (rvfi_ext_debug_req = 1); dpc read-back == the mtvec target)
+  (gen_test_dbg_haltreq). [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (rvfi_ext_debug_req = 0) is immediately followed by the first debug-ROM record (rvfi_ext_debug_req = 1); dpc read-back == the mtvec target)
 - Pass criteria: gen_chk_debug (dpc == mtvec target, cause 3, prv M); gen_isa_compare (mepc,
   mcause 5/7, mtval == address as the ISA model predicts); gen_chk_pmp for the PMP variant.
 - Expected: pass
@@ -12336,7 +12234,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   record and the DmHaltAddr fetch, in >= 1 iteration with no ibus beat outstanding at the WFI's
   FLUSH cycle (so a WAIT_SLEEP dip could not have been hidden by if_busy) and >= 1 with a beat
   outstanding; dpc read-back == wfi pc + 4 and dcsr.cause == 4 (gen_test_dbg_step).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; misc core_busy; ibus rvalid; ibus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped WFI record immediately followed by the first debug-ROM record (rvfi_ext_debug_mode = 1); dpc read-back == wfi pc + 4, dcsr.cause == 4)
+  [export-rows: ibus req; misc core_busy; ibus rvalid; ibus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stepped WFI record immediately followed by the first debug-ROM record (rvfi_ext_debug_mode = 1); dpc read-back == wfi pc + 4, dcsr.cause == 4)
 - Pass criteria: gen_chk_debug (dpc == wfi pc + 4, cause 4); gen_chk_sleep in the "no Off cycle"
   profile (C-5 / X-8: do_single_step_d sets enter_debug_mode_prio_q and FLUSH overrides
   `ctrl_fsm_ns = WAIT_SLEEP` with DBG_TAKEN_IF, rtl/ibex_controller.sv:969-970, :985-987; WAIT_SLEEP
@@ -12380,7 +12278,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   rvfi_ext_expanded_insn_valid = 1 and rvfi_insn = the 32-bit expansion, the halfword on
   rvfi_ext_expanded_insn, only the last with rvfi_ext_expanded_insn_last = 1), and all N stack
   accesses are on the dbus at or before the DmHaltAddr fetch (same-cycle rule) (gen_test_dbg_step).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the micro-op records (rvfi_mem_* fields, _last on the final one) between the two first debug-ROM records)
+  [export-rows: dbus req; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the micro-op records (rvfi_mem_* fields, _last on the final one) between the two first debug-ROM records)
 - Pass criteria: gen_chk_debug (dpc == next pc or ra target for popret/popretz, cause 4; the
   "one instruction per step" rule counts the expanded sequence as one instruction, TP-DBG-042);
   gen_isa_compare (registers/stack); gen_chk_counters (NumLoads/NumStores +N on
@@ -12586,7 +12484,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:irq_line_mix, knob:irq_hold, knob:irq_regime
 - Fire-check: irq_pending_o==1 for >= 1 cycle while rvfi_ext_debug_mode==1 with no rvfi_intr item in
   the window; after dret the first RVFI item has rvfi_intr==1 (gen_test_dbg_irq_mask).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_intr record inside the debug window and rvfi_intr == 1 on the first record after dret; mip read-back in the window)
+  [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_intr record inside the debug window and rvfi_intr == 1 on the first record after dret; mip read-back in the window)
 - Pass criteria: gen_chk_irq (no handler entry in debug; mip readback shows the pins; after dret
   entry with mepc == dpc, correct priority among the held lines, correct vector); gen_chk_debug;
   gen_isa_compare.
@@ -12626,7 +12524,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   pc + 4 as the next record, no record in between, with a gap of at most 3 cycles plus the fetch
   latency of wfi + 4 (the WFI path adds 3 cycles and no record, gen_tb_architecture.md 8.2 item 5);
   per seed >= 1 wfi with core_busy_o Off for exactly 1 cycle and >= 1 with the dip hidden by an
-  outstanding ibus beat (gen_test_dbg_misc). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc core_busy; ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record followed by the wfi pc + 4 record with no record in between and its rvfi_ext_mcycle gap)
+  outstanding ibus beat (gen_test_dbg_misc). [export-rows: misc core_busy; ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the wfi record followed by the wfi pc + 4 record with no record in between and its rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_sleep applies the core_busy_o port rule: exactly one Off cycle when no
   masking source is active (WAIT_SLEEP; SLEEP stays busy because debug_mode_q is set,
   rtl/ibex_controller.sv:598-621; no wake dependency, no bus request during the dip), none
@@ -13260,7 +13158,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   rvfi_ext_expanded_insn_* item; variant B: all N accesses on the dbus and the
   rvfi_ext_expanded_insn_last item at or before the DmHaltAddr fetch (the last micro-op's record
   appears at R+1 = the DBG_TAKEN_IF request cycle when it is a store, same-cycle rule), dpc ==
-  successor (or ra target for popret) (gen_test_trg_fire). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req; ibus req] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: variant A: no micro-op record before the first debug-ROM record; variant B: the rvfi_ext_expanded_insn_last record precedes it; dpc read-back)
+  successor (or ra target for popret) (gen_test_trg_fire). [export-rows: dbus req; ibus req] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: variant A: no micro-op record before the first debug-ROM record; variant B: the rvfi_ext_expanded_insn_last record precedes it; dpc read-back)
 - Pass criteria: gen_chk_debug (dpc, no partial sequence); gen_isa_compare (register/stack
   state); gen_chk_dbus_proto.
 - Expected: pass
@@ -13321,7 +13219,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   positions) and >= 1 RVFI retirement gap > 1 cycle inside the block with no ibus or dbus activity
   in the gap (a dummy instruction was inserted: boundary evidence) (gen_test_trg_fire). The
   dummy_slot bin (a dummy in the matched pc slot) is probe-gated (P1, dummy_instr_id_o) and not in
-  the manifest. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; dbus req; ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly N first debug-ROM records with dpc == A and >= 1 rvfi_ext_mcycle gap > 1 inside the block)
+  the manifest. [export-rows: ibus req; dbus req; ibus rvalid; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly N first debug-ROM records with dpc == A and >= 1 rvfi_ext_mcycle gap > 1 inside the block)
 - Pass criteria: gen_chk_debug (dpc == A, no observable dummy effect); gen_isa_compare (RVFI
   excludes dummies); gen_chk_counters in bound mode.
 - Expected: pass
@@ -13338,7 +13236,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Randomized: delay, A, jump kind; weights: W5, W6, W13.
 - Knobs: knob:imem_rvalid_delay, knob:imem_gnt_delay
 - Fire-check: the ibus request for DmHaltAddr is issued while the request for A is granted but not
-  yet returned (ibus monitor timestamps); dpc == A (gen_test_trg_fire). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record with dpc == A and no record for A before it)
+  yet returned (ibus monitor timestamps); dpc == A (gen_test_trg_fire). [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record with dpc == A and no record for A before it)
 - Pass criteria: gen_chk_debug; gen_chk_ibus_proto (the late rvalid for A is accepted without a
   protocol violation; response count matches requests).
 - Expected: pass
@@ -13465,7 +13363,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Randomized: sleep length, line, whether mcycle is near the low-word wrap (preload 20%).
 - Knobs: knob:irq_regime, knob:irq_line_mix
 - Fire-check: core_busy_o == IbexMuBiOff for >= 10 cycles between the two reads
-  (gen_test_pmc_mcycle). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc core_busy] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two csrr records rvfi_rd_wdata delta and rvfi_ext_mcycle delta spanning the wfi record)
+  (gen_test_pmc_mcycle). [export-rows: misc core_busy] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the two csrr records rvfi_rd_wdata delta and rvfi_ext_mcycle delta spanning the wfi record)
 - Pass criteria: gen_chk_counters (delta == cycles incl. the sleep window); gen_chk_sleep.
 - Expected: pass
 - Test group: gen_pmc_mcycle
@@ -13634,7 +13532,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: the dbg_model WB tracker (RVFI order + dbus timing) reports >= 1 read issued while a
   countable instruction was in WB (the `lw ; csrr` form: the csrr's record follows the load's by one
   and the load's response cycle equals the csrr's commit cycle) and >= 1 with WB empty
-  (gen_test_pmc_minstret). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrr record follows the load record by one (rvfi_order) at the minimum rvfi_ext_mcycle gap)
+  (gen_test_pmc_minstret). [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrr record follows the load record by one (rvfi_order) at the minimum rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_counters (each read == number of prior retirements, i.e. consecutive
   reads differ by exactly 1 regardless of timing); gen_isa_compare (Spike sequential semantics
   match).
@@ -13674,7 +13572,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   ibus or dbus activity in the gap occurs (a dummy was inserted: boundary evidence, the >= bound of
   S-13), while the control window (dummy_instr_en=0) shows only 1-cycle gaps
   (gen_test_pmc_minstret). Dummy-type bins (dummy_mul / dummy_div) are probe-gated (P1) and not in
-  the manifest. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus rvalid; dbus req; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps > 1 in the ALU window with dummy_instr_en read-back == 1 versus gap-1 only in the control window)
+  the manifest. [export-rows: ibus req; ibus rvalid; dbus req; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps > 1 in the ALU window with dummy_instr_en read-back == 1 versus gap-1 only in the control window)
 - Pass criteria: gen_chk_counters follows the documented intent (Q-005 / Q-DL-4 default): minstret
   delta == RVFI retired count and mhpmcounter12 delta == div stall cycles of the program's own
   instructions (0 for an ALU window); the RTL count is recorded (minstret + number of dummies;
@@ -13734,7 +13632,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
 - Fire-check: the WB tracker (RVFI order + dbus response timing) reports a countable instruction
   retiring in the csrw commit cycle for >= 1 write of each half (gen_test_pmc_minstret).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record follows the countable record by one at the minimum gap and the minstret read-back shows the lost event)
+  [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record follows the countable record by one at the minimum gap and the minstret read-back shows the lost event)
 - Pass criteria: gen_chk_counters (readback == written exactly, then + later retirements).
 - Expected: pass
 - Test group: gen_pmc_minstret
@@ -13882,7 +13780,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:dmem_rvalid_delay, knob:imem_rvalid_delay
 - Fire-check: WB tracker reports >= 1 read with a countable instruction in WB while IR==1 (the `lw ;
   csrr` form: the csrr's commit cycle equals the load's response cycle) (gen_test_pmc_ctrl).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrr record follows the load record by one at the minimum gap; the minstret read-back)
+  [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrr record follows the load record by one at the minimum gap; the minstret read-back)
 - Pass criteria: gen_chk_counters (all reads return the same frozen value: the speculative +1 is
   gated by ~mcountinhibit, rtl/ibex_cs_registers.sv:1658, :1690-1692); gen_isa_compare.
 - Expected: pass
@@ -13950,7 +13848,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   cycle +-2); weights: W1, W2, W13.
 - Knobs: knob:imem_rvalid_delay, knob:dmem_rvalid_delay
 - Fire-check: the pin monitor logs != IbexMuBiOn in the cycle of >= 1 retired write and the readback
-  is captured (gen_test_pmc_ctrl). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin mcounteren_writable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mcounteren csrr read-back unchanged after the write (and the U-mode alias read trap / no-trap) under the phase pin value)
+  is captured (gen_test_pmc_ctrl). [export-rows: pin mcounteren_writable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mcounteren csrr read-back unchanged after the write (and the U-mode alias read trap / no-trap) under the phase pin value)
 - Pass criteria: gen_chk_csr_readback (unchanged for Off/invalid, applied for On; no trap);
   gen_isa_compare (shim models the lock via the TB-supplied pin state, tb-infra c.3 gap).
 - Expected: pass
@@ -14057,7 +13955,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Randomized: D, G in [0:20], dependency, window mix, misaligned accesses; weights: W5, W7, W10.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:instr_mix
 - Fire-check: >= 1 window with independently measured LSU-wait cycles == 0, == 1, in [2:15] and >=
-  16 across the seed (gen_test_pmc_hpm_event). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records rvfi_ext_mcycle gaps to their successors per class and the mhpmcounter read-back delta)
+  16 across the seed (gen_test_pmc_hpm_event). [export-rows: dbus rvalid; dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records rvfi_ext_mcycle gaps to their successors per class and the mhpmcounter read-back delta)
 - Pass criteria: gen_chk_counters in the bound class for lsu_wait (gen_tb_architecture.md C4.6
   ctr_hpm_bound: 0 <= delta <= cycles elapsed, monotonic) with the exact compare enabled only for
   the TB-constructed single-kind windows whose dbus timing the agent fixed (the `eq` bins are
@@ -14155,7 +14053,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Features: F-PMC-038
 - Phase: 1
 - Tier: targeted
-- Preconditions: mcountinhibit[7]=0; dummy_instr_en=0.
+- Preconditions: mcountinhibit[7]=0; dummy_instr_en=0; no WB load/store outstanding when a jump enters ID (rtl-arch event-7 corner (b), gen_hpm_event_defs.md: a jump behind an outstanding WB access pulses perf_jump speculatively and pulses again after the handler if that access faults; reading-only class, excluded from the exact windows).
 - Stimulus: windows with jal, jalr, c.j, c.jal, c.jr, c.jalr and cm.popret plus mret/dret/ecall
   distractors, bounded by mhpmcounter7 reads; no fence.i inside a window (the RTL counts it as a jump
   against the doc: bug candidate B20, its own item TP-PMC-061).
@@ -14318,7 +14216,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: the boundary model logs a compressed retirement in the write cycle for >= 1 lo write
   and >= 1 h write of mhpmcounter10 (the csrw's commit cycle equals the c.lw's response cycle), and
   >= 1 control write of another counter with no event in its write cycle (gen_test_pmc_hpm_csr).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record follows the c.lw record by one at the minimum gap; the mhpmcounter10 read-back)
+  [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the csrw record follows the c.lw record by one at the minimum gap; the mhpmcounter10 read-back)
 - Pass criteria: gen_chk_counters (readback == written + events after the write cycle only; for the
   h write: low word unchanged and the coincident event lost, X-17).
 - Expected: pass
@@ -14537,7 +14435,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: per seed >= 1 window in which the boundary model logs >= 1 branch entering ID with a
   WB access outstanding for >= 2 further cycles (dbus timestamps against the branch's back-dated ID
   entry), and the control window shows delta == branches (gen_test_pmc_hpm_event).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter8 read-back delta)
+  [export-rows: dbus gnt; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter8 read-back delta)
 - Pass criteria: gen_chk_counters follows performance_counters.rst:41 ("Number of branches
   (conditional)"): delta == branch count of the window; the RTL delta (branches + the cycles each
   branch waited in ID: perf_branch_o is asserted in the FIRST_CYCLE arm under instr_executing_spec,
@@ -14563,7 +14461,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Knobs: knob:dmem_rvalid_delay, knob:instr_mix
 - Fire-check: per seed >= 1 window in which the boundary model logs >= 1 multiply entering ID with a
   WB access outstanding for >= 2 further cycles, and the control window shows delta == mulh-class
-  count (gen_test_pmc_hpm_event). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the multiply record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter read-back delta)
+  count (gen_test_pmc_hpm_event). [export-rows: dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the multiply record rvfi_ext_mcycle gap from the preceding access record (>= 2 beyond the minimum) and the mhpmcounter read-back delta)
 - Pass criteria: gen_chk_counters follows the documented event (performance_counters.rst
   NumCyclesMulWait: cycles the multiplier is busy, i.e. mul 0 and mulh-class 1 with
   RV32MSingleCycle): delta == mulh-class count of the window; the RTL delta (+ the cycles each
@@ -14591,7 +14489,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: per seed >= 1 window in which the boundary model logs >= 1 divide entering ID with a
   WB access outstanding for W >= 2 further cycles (the divide's RVFI gap exceeds DIV_STALL_FULL + 1
   by W), and the control window shows delta == DIV_STALL_FULL / DIV_STALL_ZERO per divide
-  (gen_test_pmc_hpm_event). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record rvfi_ext_mcycle gap exceeding DIV_STALL_FULL + 1 by W and the counter read-back delta)
+  (gen_test_pmc_hpm_event). [export-rows: dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the divide record rvfi_ext_mcycle gap exceeding DIV_STALL_FULL + 1 by W and the counter read-back delta)
 - Pass criteria: gen_chk_counters follows the documented event (performance_counters.rst
   NumCyclesDivWait: cycles the divider is busy): delta == sum over the divides of DIV_STALL_FULL or
   DIV_STALL_ZERO; the RTL delta (+ W per waiting divide) is recorded. Control window must pass.
@@ -14906,7 +14804,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, boot_addr_i, per-request latency, icache_enable, seed of knob:instr_mix
 - Knobs: knob:imem_gnt_delay, knob:instr_mix
 - Fire-check: agent record shows >= 1 request per latency class d1, d2_3, d4_15, d16p (a wait of >=
-  16 cycles occurred at least once), observable at instr_req_o/instr_gnt_i. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: retirement rvfi_ext_mcycle gaps under the pinned knob:imem_gnt_delay class (>= 16-cycle gaps present under long))
+  16 cycles occurred at least once), observable at instr_req_o/instr_gnt_i. [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: retirement rvfi_ext_mcycle gaps under the pinned knob:imem_gnt_delay class (>= 16-cycle gaps present under long))
 - Pass criteria: gen_sva_ibus (instr_req_o & ~instr_gnt_i |=> instr_req_o), gen_chk_ibus_proto;
   detects a request dropped or re-issued before its grant
 - Expected: pass
@@ -14943,7 +14841,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: latency, program, redirect density
 - Knobs: knob:imem_gnt_delay (long, random), knob:instr_mix (branch_heavy)
 - Fire-check: agent record counts >= 20 waits of >= 4 cycles and >= 5 waits during which a redirect
-  (RVFI non-sequential pc) occurred. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: RVFI non-sequential pc records whose rvfi_ext_mcycle gap >= 4 under long grant delay)
+  (RVFI non-sequential pc) occurred. [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: RVFI non-sequential pc records whose rvfi_ext_mcycle gap >= 4 under long grant delay)
 - Pass criteria: gen_sva_ibus (instr_req_o & ~instr_gnt_i |=> $stable(instr_addr_o)),
   gen_chk_ibus_proto; detects an address change under a pending request
 - Expected: pass
@@ -14963,7 +14861,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: agent record shows >= 200 grants with latency 0 in the combinational mode and no
   zero-delay loop / X on instr_req_o (checked by the agent's own settle monitor); the
   combinational-versus-registered mode is a TB observation logged per seed, not a coverage bin.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records at the minimum rvfi_ext_mcycle gap under knob:imem_gnt_delay = same_cycle with rvfi_insn == memory image)
+  [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records at the minimum rvfi_ext_mcycle gap under knob:imem_gnt_delay = same_cycle with rvfi_insn == memory image)
 - Pass criteria: gen_sva_ibus, gen_chk_ibus_proto, gen_isa_compare; detects a request that needs a
   cycle after gnt or a combinational req<-gnt dependency
 - Expected: pass
@@ -14980,7 +14878,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: window, latencies, program
 - Knobs: knob:imem_gnt_delay (long, random)
 - Fire-check: agent record shows >= 10 waits >= 16 cycles and no other request issued during a wait
-  (instr_req_o high for one address only). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps >= 16 with rvfi_insn == memory image on the delayed word)
+  (instr_req_o high for one address only). [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps >= 16 with rvfi_insn == memory image on the delayed word)
 - Pass criteria: gen_sva_ibus, gen_chk_ibus_proto, gen_isa_compare; detects a second request
   overlapping an ungranted one
 - Expected: pass
@@ -15001,7 +14899,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_rvalid_delay (short)
 - Fire-check: agent counted >= 500 non-rvalid cycles with instr_err_i=1 or bad SECDED driven and
   RVFI shows no trap and alert_major_bus_o never pulsed outside an rvalid cycle.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  [export-rows: ibus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_chk_ibus_proto (grants == rvalids per record), gen_isa_compare,
   gen_chk_alerts; detects sampling of rdata/err outside rvalid
 - Expected: pass
@@ -15018,7 +14916,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: window, program
 - Knobs: knob:imem_gnt_delay (same_cycle), knob:imem_rvalid_delay (min1)
 - Fire-check: agent record shows >= 100 consecutive-cycle grant pairs with different addresses and
-  >= 100 responses with latency exactly 1. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the minimum rvfi_ext_mcycle gap between consecutive records under min1 / same_cycle)
+  >= 100 responses with latency exactly 1. [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the minimum rvfi_ext_mcycle gap between consecutive records under min1 / same_cycle)
 - Pass criteria: gen_sva_ibus (rvalid latency >= 1 measured from gnt), gen_chk_ibus_proto,
   gen_isa_compare; detects a beat mis-attributed when rvalid follows gnt by one cycle
 - Expected: pass
@@ -15047,7 +14945,7 @@ draw weights of the agent / program generator per transaction.
   for c == NUM_FB*IC_LINE_BEATS (the RTL bound) the count reaches NUM_FB*IC_LINE_BEATS at least
   once, always through the branch path ((NUM_FB-1)*IC_LINE_BEATS stale beats + IC_LINE_BEATS target
   beats), and instr_req_o is low in every cycle where the count equals NUM_FB*IC_LINE_BEATS; (iii)
-  linear prefetch alone never exceeds (NUM_FB-1)*IC_LINE_BEATS outstanding. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the image words retire in order (rvfi_insn == memory image, no trap) under each pinned cap value)
+  linear prefetch alone never exceeds (NUM_FB-1)*IC_LINE_BEATS outstanding. [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the image words retire in order (rvfi_insn == memory image, no trap) under each pinned cap value)
 - Pass criteria: gen_chk_ibus_proto (outstanding <= NUM_FB*IC_LINE_BEATS), gen_sva_ibus,
   gen_isa_compare; detects a request beyond the RTL bound or a deadlock at a withheld grant
 - Expected: pass
@@ -15087,7 +14985,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: hold length, queue depth at release, program
 - Knobs: knob:imem_rvalid_delay (long), knob:imem_gnt_delay (same_cycle)
 - Fire-check: agent record shows >= 10 bursts of >= 3 consecutive rvalid cycles and >= 3 bursts of
-  >= 5. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: runs of >= 3 consecutive records at the minimum rvfi_ext_mcycle gap)
+  >= 5. [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: runs of >= 3 consecutive records at the minimum rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_ibus_proto, gen_isa_compare; detects a beat lost when responses arrive
   every cycle into several fill buffers
 - Expected: pass
@@ -15172,7 +15070,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_err_rate (rare), knob:imem_rvalid_delay (long)
 - Fire-check: agent record: first-word error injected; RVFI trap on that pc appears before the agent
   delivered the second word's rvalid (trap cycle < second rvalid cycle) with mtval == pc; the second
-  word's request was still granted and answered. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record on the straddling pc with mcause 1 and mtval == pc via handler read-back)
+  word's request was still granted and answered. [export-rows: ibus rvalid; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record on the straddling pc with mcause 1 and mtval == pc via handler read-back)
 - Pass criteria: gen_isa_compare (mtval pc, single trap), gen_chk_ibus_proto (second beat
   completed); detects waiting for the second half or mtval pc+2 on a both-halves error
 - Expected: pass
@@ -15211,7 +15109,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_err_rate (rare; integrity sub-class), knob:imem_rvalid_delay
 - Fire-check: agent record: corrupted beat delivered; alert_major_bus_o sampled high in that rvalid
   cycle; for (a)/(c) RVFI trap with mcause 1; for (b) no trap; rvfi_ext_nmi_int never set within the
-  next 100 retirements. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_major_bus; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record with mcause 1 read-back for (a)/(c), no trap for (b), rvfi_ext_nmi_int clear over the next 100 records)
+  next 100 retirements. [export-rows: alert alert_major_bus; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record with mcause 1 read-back for (a)/(c), no trap for (b), rvfi_ext_nmi_int clear over the next 100 records)
 - Pass criteria: gen_chk_bus_intg_rsp (alert pulse == corrupted rvalid; I side: fetch fault, no
   NMI), gen_chk_alerts, gen_isa_compare; detects a missing alert, an NMI on the I side, or a
   trap for a speculative corrupted word
@@ -15236,7 +15134,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_rvalid_delay (long), knob:irq_regime (sparse), knob:instr_mix (branch_heavy)
 - Fire-check: agent record shows >= 30 redirects (RVFI non-sequential pc) with outstanding >= 2 at
   the redirect cycle, including >= 3 with outstanding >= 5, and every such beat later answered and
-  none of those words retired. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record (rvfi_pc_wdata != pc + len) and no retirement of a discarded pc before the target record)
+  none of those words retired. [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record (rvfi_pc_wdata != pc + len) and no retirement of a discarded pc before the target record)
 - Pass criteria: gen_chk_ibus_proto (grants == rvalids, in order), gen_isa_compare (no stale
   instruction retires, target executes); detects a dropped or double-counted stale beat
 - Expected: pass
@@ -15257,7 +15155,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_gnt_delay (long), knob:instr_mix (branch_heavy)
 - Fire-check: agent record shows >= 20 redirects during an ungranted request; in each, instr_req_o
   stayed high and instr_addr_o unchanged until the grant, and the response was consumed (outstanding
-  returned to 0 later) while the target word was requested afterwards. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record followed by the target record (next rvfi_pc_rdata) with rvfi_insn == memory image)
+  returned to 0 later) while the target word was requested afterwards. [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting record followed by the target record (next rvfi_pc_rdata) with rvfi_insn == memory image)
 - Pass criteria: gen_sva_ibus (req/addr stable), gen_chk_ibus_proto, gen_isa_compare; detects a
   cancelled or re-addressed request on redirect
 - Expected: pass
@@ -15344,7 +15242,7 @@ draw weights of the agent / program generator per transaction.
   cycle with core_busy_o == Off; the first retirement after the wake is the handler's first
   instruction (RVFI, C-1). Not asserted: "the first request after the wake is the handler vector"
   (FIRST_FETCH drives req_i for one cycle before IRQ_TAKEN's pc_set, so a sequential lookup may
-  precede the vector fetch, rtl/ibex_controller.sv:622-649). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; misc core_busy; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record followed by the handler first record (C-1) with no record in between)
+  precede the vector fetch, rtl/ibex_controller.sv:622-649). [export-rows: ibus req; misc core_busy; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record followed by the handler first record (C-1) with no record in between)
 - Pass criteria: gen_chk_sleep (instr_req_o == 0 whenever core_busy_o == Off; no new line lookup
   after the WFI record), gen_chk_ibus_proto (no withdrawn request), gen_isa_compare; detects a
   fetch issued during sleep or a lost in-flight beat
@@ -15371,7 +15269,7 @@ draw weights of the agent / program generator per transaction.
   last On cycle, which reaches the bus one cycle later on a miss; rtl/ibex_core.sv:648 gates only
   req_i); the un-issued beats of open lines are still requested and answered (no request withdrawn,
   rtl/ibex_icache.sv:756, 764-775; C-4); the outstanding count drains to 0 and stays 0 until On;
-  instr_req_o == 0 in every cycle with core_busy_o == Off. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin fetch_enable; ibus req; misc core_busy; ibus gnt; ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record between the drained in-flight records and the first post-On record (the rvfi_ext_mcycle gap spans the Off window))
+  instr_req_o == 0 in every cycle with core_busy_o == Off. [export-rows: pin fetch_enable; ibus req; misc core_busy; ibus gnt; ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record between the drained in-flight records and the first post-On record (the rvfi_ext_mcycle gap spans the Off window))
 - Pass criteria: gen_chk_fetch_en (no new line allocation after the Off edge; no retirement beyond
   the in-flight instructions; instr_req_o == 0 whenever core_busy_o == Off), gen_chk_ibus_proto (no
   withdrawn request: no tolerance needed), gen_isa_compare; detects a new line lookup or a
@@ -15422,7 +15320,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:fetch_enable_regime (toggling), knob:dmem_rvalid_delay (long), knob:imem_rvalid_delay
 - Fire-check: dmem agent record: the load/store's rvalid arrived while Off and RVFI retired it (and
   any WB/EX instruction) while Off; imem agent: outstanding drained to 0; then no rvfi_valid.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; pin fetch_enable; ibus gnt; ibus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (and its WB/EX successor) is the last record before the Off gap)
+  [export-rows: dbus rvalid; pin fetch_enable; ibus gnt; ibus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load/store record (and its WB/EX successor) is the last record before the Off gap)
 - Pass criteria: gen_chk_fetch_en, gen_isa_compare, gen_chk_dbus_proto; detects a lost data
   response or an extra retirement while Off
 - Expected: pass
@@ -15462,7 +15360,7 @@ draw weights of the agent / program generator per transaction.
   {boot_addr_i[31:8],8'h80} and the first rvfi_pc_rdata equals it (the equality is
   gen_chk_ibus_proto's / gen_isa_compare's check; the bins are the first-request cycle and the boot
   class); with fetch_enable_i Off at reset release the first request appears only after it turns On.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; pin fetch_enable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_pc_rdata == {boot_addr_i[31:8), 8h80}
+  [export-rows: ibus req; pin fetch_enable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first record rvfi_pc_rdata == {boot_addr_i[31:8), 8h80}
   and its rvfi_ext_mcycle after the fetch_enable On edge]
 - Pass criteria: gen_chk_ibus_proto (first address), gen_isa_compare; detects a wrong reset vector
   or a request during reset
@@ -15572,7 +15470,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, delays, cache enable
 - Knobs: knob:instr_mix (compressed_heavy), knob:imem_rvalid_delay (random)
 - Fire-check: >= 100 retirements whose rvfi_insn maps to two distinct agent records with second
-  arrival - first arrival >= 4 cycles. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the straddling instruction record with rvfi_ext_mcycle gap >= 4 and rvfi_insn == memory image)
+  arrival - first arrival >= 4 cycles. [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the straddling instruction record with rvfi_ext_mcycle gap >= 4 and rvfi_insn == memory image)
 - Pass criteria: gen_isa_compare; detects a mis-assembled instruction word
 - Expected: pass
 - Test group: gen_imem_latency
@@ -15649,7 +15547,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_rvalid_delay, knob:imem_outstanding_cap, knob:imem_err_rate
 - Fire-check: agent records depth 1..NUM_FB*IC_LINE_BEATS with an error injected at depth >= 5 at
   least 5 times and an integrity error at depth >= 3 at least 5 times; under each cap value the DUT
-  held instr_req_o with the grant withheld at that depth (>= 5 waits per cap). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 1 read-back) for the errored word and rvfi_insn == memory image for the others under each cap)
+  held instr_req_o with the grant withheld at that depth (>= 5 waits per cap). [export-rows: ibus gnt; ibus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 1 read-back) for the errored word and rvfi_insn == memory image for the others under each cap)
 - Pass criteria: gen_chk_ibus_proto, gen_isa_compare, gen_chk_bus_intg_rsp
 - Expected: pass
 - Test group: gen_imem_regime
@@ -15689,7 +15587,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, latencies, regime schedule
 - Knobs: knob:imem_gnt_delay (all values), knob:instr_mix
 - Fire-check: >= 1000 grant cycles observed under >= 3 gnt-delay regimes (agent record), each with
-  instr_req_o sampled high in the same cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  instr_req_o sampled high in the same cycle. [export-rows: ibus gnt; ibus req] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_sva_ibus (instr_gnt_i |-> instr_req_o; a driver-rule property that fails the
   run as a TB error, not a DUT error), gen_chk_ibus_proto; detects an agent granting a request it
   has not seen on the boundary
@@ -15711,7 +15609,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:imem_rvalid_delay (short), knob:instr_mix (mixed)
 - Fire-check: agent record marks the injected beat; for (a) RVFI keeps matching the memory image for
   >= 100 retirements; for (b) the first mismatching rvfi_insn appears within the outstanding depth;
-  for (c) alert_major_bus_o pulses in the injected cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_trap for (a); the first mismatching rvfi_insn within the outstanding depth for (b))
+  for (c) alert_major_bus_o pulses in the injected cycle. [export-rows: ibus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no rvfi_trap for (a); the first mismatching rvfi_insn within the outstanding depth for (b))
 - Pass criteria: gen_chk_ibus_proto stays ON and its verdicts on the injected beats are recorded, not
   gated (C-15; design note MEM-19); the test is excluded from the pass gate (measured: false)
 - Expected: informational (excluded from the pass gate)
@@ -15752,7 +15650,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: latencies, program, irq timing
 - Knobs: knob:dmem_gnt_delay (long, random), knob:irq_regime (sparse)
 - Fire-check: agent record counts >= 50 waits >= 4 cycles across single/first/second beats.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records with rvfi_ext_mcycle gap >= 4 to their successor under long grant delay)
+  [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records with rvfi_ext_mcycle gap >= 4 to their successor under long grant delay)
 - Pass criteria: gen_sva_dbus (req & ~gnt |=> $stable of addr/we/be/wdata[38:0]),
   gen_chk_dbus_proto; detects a payload change under a pending request
 - Expected: pass
@@ -15788,7 +15686,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: window, program
 - Knobs: knob:dmem_gnt_delay (same_cycle)
 - Fire-check: agent record: >= 200 grants with latency 0, including >= 10 second beats granted in
-  their request cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records at the minimum rvfi_ext_mcycle gap under same_cycle, misaligned (rvfi_mem_addr) accesses included)
+  their request cycle. [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records at the minimum rvfi_ext_mcycle gap under same_cycle, misaligned (rvfi_mem_addr) accesses included)
 - Pass criteria: gen_sva_dbus, gen_chk_dbus_proto, gen_isa_compare; detects an FSM that needs a
   cycle after request
 - Expected: pass
@@ -15807,7 +15705,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: window, latencies
 - Knobs: knob:dmem_gnt_delay (long, random)
 - Fire-check: >= 10 waits >= 16 cycles including >= 3 on the first beat of a split access and >= 3
-  on the second. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: misaligned (rvfi_mem_addr) load/store records with rvfi_ext_mcycle gap >= 16)
+  on the second. [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: misaligned (rvfi_mem_addr) load/store records with rvfi_ext_mcycle gap >= 16)
 - Pass criteria: gen_sva_dbus, gen_chk_dbus_proto, gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_latency
@@ -15825,7 +15723,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: window, latencies
 - Knobs: knob:dmem_rvalid_delay (min1, random)
 - Fire-check: agent record: >= 200 responses with latency 1 (loads and stores) and grants == rvalids
-  at test end. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load records whose successor rvfi_ext_mcycle gap is the C-9 minimum under min1)
+  at test end. [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load records whose successor rvfi_ext_mcycle gap is the C-9 minimum under min1)
 - Pass criteria: gen_sva_dbus (rvalid latency >= 1), gen_chk_dbus_proto; detects a response
   mis-attributed at minimum latency
 - Expected: pass
@@ -15843,7 +15741,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: junk, latencies, program
 - Knobs: knob:dmem_rvalid_delay (short)
 - Fire-check: >= 500 non-rvalid cycles with data_err_i=1 or bad SECDED driven; no trap, no NMI, no
-  alert_major_bus_o outside rvalid cycles. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  alert_major_bus_o outside rvalid cycles. [export-rows: dbus rvalid; alert alert_major_bus] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_isa_compare, gen_chk_alerts, gen_chk_nmi; detects sampling outside rvalid
 - Expected: pass
 - Test group: gen_dmem_proto_basic
@@ -15859,7 +15757,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: sequence, latencies
 - Knobs: knob:dmem_gnt_delay (same_cycle), knob:dmem_rvalid_delay (min1)
 - Fire-check: >= 100 cycles with data_rvalid_i and a new data_req_o (agent record) for loads and for
-  stores; outstanding never exceeded 1 for aligned traffic. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus req; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: back-to-back load/store records at the minimum rvfi_ext_mcycle gap)
+  stores; outstanding never exceeded 1 for aligned traffic. [export-rows: dbus rvalid; dbus req; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: back-to-back load/store records at the minimum rvfi_ext_mcycle gap)
 - Pass criteria: gen_chk_dbus_proto (outstanding <= 1 without a split), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_proto_basic
@@ -16069,7 +15967,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: delays, data, offsets
 - Knobs: knob:dmem_gnt_delay (random), knob:dmem_rvalid_delay (random)
 - Fire-check: >= 10 split loads per (beat1 rvalid, beat2 gnt, beat2 rvalid) delay-class triple {all
-  slow, fast-slow-fast, slow-fast-slow}. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: misaligned load records (rvfi_mem_addr, rmask) with rvfi_rd_wdata == the ISS value under each knob value)
+  slow, fast-slow-fast, slow-fast-slow}. [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: misaligned load records (rvfi_mem_addr, rmask) with rvfi_rd_wdata == the ISS value under each knob value)
 - Pass criteria: gen_isa_compare (rvfi_rd_wdata == assembled memory bytes), gen_chk_dbus_proto
 - Expected: pass
 - Test group: gen_dmem_misaligned
@@ -16088,7 +15986,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: type, delays, data
 - Knobs: knob:dmem_gnt_delay (long), knob:dmem_rvalid_delay (min1)
 - Fire-check: agent record: >= 50 split pairs with rvalid(first) < gnt(second); during the wait
-  data_addr_o == first + 4 and data_be_o unchanged every cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value (gen_isa_compare) under long grant delay)
+  data_addr_o == first + 4 and data_be_o unchanged every cycle. [export-rows: dbus rvalid; dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value (gen_isa_compare) under long grant delay)
 - Pass criteria: gen_sva_dbus (payload stable), gen_chk_dbus_proto, gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_misaligned
@@ -16105,7 +16003,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: type, delays
 - Knobs: knob:dmem_gnt_delay (same_cycle), knob:dmem_rvalid_delay (long)
 - Fire-check: agent record: >= 50 split pairs with gnt(second) < rvalid(first) and data_req_o low in
-  every cycle between gnt(second) and rvalid(second). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus rvalid; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value under short grant / long rvalid delay)
+  every cycle between gnt(second) and rvalid(second). [export-rows: dbus gnt; dbus rvalid; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value under short grant / long rvalid delay)
 - Pass criteria: gen_chk_dbus_proto (outstanding 2, no third request), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_misaligned
@@ -16122,7 +16020,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: type, which pairs get the coincident timing, second rvalid delay
 - Knobs: knob:dmem_gnt_delay (random), knob:dmem_rvalid_delay (random)
 - Fire-check: agent record: >= 30 split pairs with rvalid(first) == gnt(second) cycle.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value under the matched delay class)
+  [export-rows: dbus rvalid; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned record rvfi_rd_wdata / rvfi_mem_wdata equals the ISS value under the matched delay class)
 - Pass criteria: gen_chk_dbus_proto, gen_isa_compare; detects the FSM missing one of the two
   coincident events
 - Expected: pass
@@ -16219,7 +16117,7 @@ draw weights of the agent / program generator per transaction.
   unaligned EA) is at the earliest one cycle after the second rvalid (back-dated), and, when the
   handler's first instruction is a load/store, its request is granted after the second rvalid. Not
   asserted: "the handler's pc was fetched before the second rvalid" (the exception itself follows
-  the final response, so the handler fetch cannot precede it). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus req; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 5/7, mtval == unaligned EA read-back) with rvfi_ext_mcycle gap >= 10 from its predecessor)
+  the final response, so the handler fetch cannot precede it). [export-rows: dbus rvalid; dbus req; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record (mcause 5/7, mtval == unaligned EA read-back) with rvfi_ext_mcycle gap >= 10 from its predecessor)
 - Pass criteria: gen_chk_dbus_proto (no third request while the LSU FSM is not IDLE; the error is
   reported at the final response only), gen_isa_compare (trap record timing and mtval)
 - Expected: pass
@@ -16361,7 +16259,7 @@ draw weights of the agent / program generator per transaction.
   is the load/store's (mcause 5/7, handler-read mepc == the load/store pc), no record of the ID
   instruction precedes it, and the ID instruction retires (or traps with its own record) only after
   the handler's mret. The two-record RVFI confirmation for the killed instruction is the
-  informational item TP-DMEM-063, not part of this item's gate. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first trap record is the load/store one (mcause 5/7, mepc read-back == its pc) with no record of the ID instruction before it)
+  informational item TP-DMEM-063, not part of this item's gate. [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first trap record is the load/store one (mcause 5/7, mepc read-back == its pc) with no record of the ID instruction before it)
 - Pass criteria: gen_isa_compare (trap order: the WB error outranks the ID exception; the ID
   instruction is killed and re-executes, producing its own record later; mepc/mtval/mcause of the
   WB trap), gen_chk_dbus_proto
@@ -16433,7 +16331,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:dmem_gnt_delay (same_cycle), knob:dmem_rvalid_delay (min1), knob:dmem_err_rate (rare)
 - Fire-check: >= 20 error responses in cycles where, per the non-error control run of the same seed,
   the next request would have issued; data_req_o low in that cycle and the second access never
-  appears until after the handler. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record precedes any record of the second access, which retires only after the handler mret record)
+  appears until after the handler. [export-rows: dbus rvalid; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the trap record precedes any record of the second access, which retires only after the handler mret record)
 - Pass criteria: gen_chk_dbus_proto (no request in an error-rvalid cycle), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_err
@@ -16473,7 +16371,7 @@ draw weights of the agent / program generator per transaction.
   after the load's record (C-7: the pending flag registers one cycle after the corrupted rvalid,
   rtl/ibex_controller.sv:402-438; the instruction in ID completes and the one entering ID in the
   response cycle completes too; 1 when the instruction in ID has a load-use hazard; more only with a
-  Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_major_bus; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
+  Zcmp sequence in ID); >= 5 cases each with 0, 1 and 2 intervening records. [export-rows: alert alert_major_bus; dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: record count per C-7 between the load record (rvfi_ext_rf_wr_suppress == 1) and the rvfi_ext_nmi_int entry with mcause 0xFFFFFFE0 read-back)
 - Pass criteria: gen_chk_bus_intg_rsp, gen_chk_nmi (entry within <= 2 ordinary records, checker
   follows the RTL; exception_interrupts.rst:87-88 "at most one" is D21), gen_chk_alerts,
   gen_isa_compare; detects a missing alert, an rd write, a synchronous trap, or an NMI outside the
@@ -16577,7 +16475,7 @@ draw weights of the agent / program generator per transaction.
   rtl/ibex_wb_stage.sv:212-215, C-9); >= 20 independent followers with rvfi_valid at R+2 (every
   instruction after a load waits in ID until the response cycle); >= 10 x0 pairs whose reader
   retires at R+2 like an independent follower (it waits for the response but has no hazard: one
-  cycle earlier than a dependent consumer). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of the consumer / follower / x0-reader records from the load record (2 / 1 / 1))
+  cycle earlier than a dependent consumer). [export-rows: dbus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of the consumer / follower / x0-reader records from the load record (2 / 1 / 1))
 - Pass criteria: gen_isa_compare (consumer reads the loaded value), gen_chk_dbus_proto (record
   deltas per follower class)
 - Expected: pass
@@ -16616,7 +16514,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: distance, overlap, sizes, latencies
 - Knobs: knob:dmem_gnt_delay (same_cycle), knob:dmem_rvalid_delay (short)
 - Fire-check: >= 20 pairs per distance class, >= 10 per overlap class, >= 10 with the load's
-  data_req_o in the store's rvalid cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus req; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: store-then-load record pairs at the minimum rvfi_ext_mcycle gap with the load rvfi_rd_wdata == the ISS value)
+  data_req_o in the store's rvalid cycle. [export-rows: dbus req; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: store-then-load record pairs at the minimum rvfi_ext_mcycle gap with the load rvfi_rd_wdata == the ISS value)
 - Pass criteria: gen_isa_compare (load value == stored bytes merged into the agent memory),
   gen_chk_dbus_proto (order); detects a forwarding or ordering error
 - Expected: pass
@@ -16641,7 +16539,7 @@ draw weights of the agent / program generator per transaction.
   stayed On from the access's grant to R (>= 5 cases with >= 16 cycles) and went Off at the earliest
   in R+2 (WAIT_SLEEP), only with no fetch beat outstanding, no invalidation and an idle LSU (C-5,
   gen_tb_architecture.md 8.2 item 1). Not asserted: "WFI retired while the access was outstanding"
-  (unreachable: the record follows the response). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt; misc core_busy] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record rvfi_ext_mcycle gap from the preceding access record and the wake record that follows it)
+  (unreachable: the record follows the response). [export-rows: dbus rvalid; dbus gnt; misc core_busy] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the WFI record rvfi_ext_mcycle gap from the preceding access record and the wake record that follows it)
 - Pass criteria: gen_chk_sleep (core_busy_o vs outstanding; WFI record at R+2), gen_isa_compare
 - Expected: pass
 - Test group: gen_dmem_ctx
@@ -16684,7 +16582,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, data_tag_i
 - Knobs: knob:instr_mix (ls_heavy)
 - Fire-check: >= 1000 data grants observed with data_tag_o sampled every cycle, >= 200 of them with
-  data_tag_i driven 1 in the grant cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records retire with the ISS value (gen_isa_compare) under each tag-pin phase with no attributable rvfi_trap)
+  data_tag_i driven 1 in the grant cycle. [export-rows: dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load/store records retire with the ISS value (gen_isa_compare) under each tag-pin phase with no attributable rvfi_trap)
 - Pass criteria: gen_chk_cheriot_quiet (data_tag_o == 0 always; LSU FSM never in a CTX state -
   via the bound assertion IbexLsuIsCapDisabled or exclusion); detects a CHERIoT path activating
 - Expected: pass
@@ -16726,7 +16624,7 @@ draw weights of the agent / program generator per transaction.
   accesses included (the LSU's fake grant updates it, >= 5); >= 10 error responses after which the
   value held the erroring access's address until the handler's first data grant (any grant, error or
   not) overwrote it; >= 5 first-half errors where the following second-half grant did NOT update it
-  (the only skipped update, :520/:540). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; misc crash_dump_last_data_addr; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
+  (the only skipped update, :520/:540). [export-rows: dbus gnt; misc crash_dump_last_data_addr; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; no RVFI-only fallback is claimed: this clause is coverage-only outright until the export lands, because the RVFI-visible facts are negative-only or not attributable to the clause)
 - Pass criteria: gen_chk_crash_dump (model per the rule above); detects a stale or wrong
   last_data_addr
 - Expected: pass
@@ -16848,7 +16746,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:dmem_gnt_delay (same_cycle, short)
 - Fire-check: >= 100 grants followed by a payload change in the next cycle (agent record), and >=
   100 cycles with data_req_o low where the agent observed be/wdata values it ignored.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: store records with rvfi_mem_wdata == the ISS value and a later load read-back of the committed bytes)
+  [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: store records with rvfi_mem_wdata == the ISS value and a later load read-back of the committed bytes)
 - Pass criteria: gen_isa_compare (memory image built from grant-cycle samples is correct),
   gen_chk_dbus_proto (be legal whenever data_req_o), gen_chk_store_intg (data_wdata_o[38:32] valid
   on every store request; on loads the payload is architecturally don't-care, F-DMEM-035, and the
@@ -16869,7 +16767,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: program, latencies, PMP region placement, regime schedule
 - Knobs: knob:dmem_gnt_delay (all values), knob:pmp_regime, knob:instr_mix (ls_heavy)
 - Fire-check: >= 1000 grant cycles each with data_req_o sampled high; >= 20 PMP-denied accesses (PMP
-  model) during which no data_gnt_i was driven and the access trapped normally. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the gen_sva_dbus zero-violation count and the PMP-denied trap records (mcause 5/7 read-back))
+  model) during which no data_gnt_i was driven and the access trapped normally. [export-rows: dbus gnt; dbus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the gen_sva_dbus zero-violation count and the PMP-denied trap records (mcause 5/7 read-back))
 - Pass criteria: gen_sva_dbus (data_gnt_i |-> data_req_o; TB-error class), gen_chk_dbus_proto,
   gen_chk_pmp; detects an agent granting a PMP-suppressed request
 - Expected: pass
@@ -16890,7 +16788,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_err_rate (rare), knob:instr_mix (ls_heavy)
 - Fire-check: >= 1000 rvalid cycles sampled with $isunknown(data_rdata_i) == 0; >= 100 cycles
   without rvalid in which the agent drove X or random values; >= 100 store responses with random
-  payload. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load records with rvfi_rd_wdata == the ISS value throughout (no X propagation into rd))
+  payload. [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: load records with rvfi_rd_wdata == the ISS value throughout (no X propagation into rd))
 - Pass criteria: gen_sva_dbus (data_rvalid_i |-> !$isunknown(data_rdata_i); TB-error class),
   gen_chk_bus_intg_rsp (no alert on clean responses), gen_chk_alerts; detects a driver X that the
   decoder would report as an integrity error
@@ -16935,7 +16833,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: >= 200 loads whose rvfi_valid is exactly 1 cycle after the final data_rvalid_i with
   rvfi_rd_wdata equal to the assembled agent data; >= 200 stores retired with rvfi_rd_addr == 0; >=
   100 cases of a load retirement followed the very next cycle by a non-load retirement with
-  rvfi_rd_addr != 0. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_rd_wdata == the assembled data and the following non-load record at the minimum rvfi_ext_mcycle gap)
+  rvfi_rd_addr != 0. [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_rd_wdata == the assembled data and the following non-load record at the minimum rvfi_ext_mcycle gap)
 - Pass criteria: gen_isa_compare (rd value and order), gen_chk_dbus_proto (rvalid-to-rvfi_valid
   latency); detects a load write reported early or late, or a store reporting an rd write. The
   WB-flop write cycle itself is probe candidate P5 (register-file seam); without it the RVFI
@@ -16962,7 +16860,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: agent record marks the injected beat; for (a) RVFI keeps matching the ISS for >= 100
   retirements (no trap, NMI, alert or rd write); for (b) the load's rvfi_rd_wdata equals the
   injected payload, not the genuine response (the LSU took the grant-cycle beat), recorded as the
-  observation; for (c) alert_major_bus_o pulses in the injected cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; alert alert_major_bus; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no trap / NMI / rd-write record for (a); the load rvfi_rd_wdata equals the injected payload for (b))
+  observation; for (c) alert_major_bus_o pulses in the injected cycle. [export-rows: dbus rvalid; alert alert_major_bus; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no trap / NMI / rd-write record for (a); the load rvfi_rd_wdata equals the injected payload for (b))
 - Pass criteria: gen_chk_dbus_proto and gen_chk_bus_intg_rsp stay ON and their verdicts on the
   injected beats are recorded, not gated (C-15; design note MEM-05/19); the test is excluded from the
   pass gate (measured: false)
@@ -16987,7 +16885,7 @@ draw weights of the agent / program generator per transaction.
   records in order: the load/store's (mcause 5/7) and then, after the handler's mret, the
   re-executed ID instruction's own record with rvfi_trap = 1. One record for the pair re-opens B14
   (gen_bug_log.md B14: downgraded to an RVFI convention note pending this confirmation).
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly two trap records in order for the pair (record count per the B14 confirmation))
+  [export-rows: dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: exactly two trap records in order for the pair (record count per the B14 confirmation))
 - Pass criteria: gen_isa_compare stays ON and its verdict on the number and order of trap records
   for the pair is recorded, not gated (C-15: the RVFI record count only; the priority behaviour is
   gated by TP-DMEM-034)
@@ -17009,7 +16907,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: >= 10 first-beat-only corrupted split loads; for each: alert_major_bus_o pulses in the
   first beat's rvalid cycle, the load's record has rvfi_trap == 0, and an NMI entry with
   handler-read mcause 0xFFFFFFE0 and mtval == the unaligned EA follows within <= 2 ordinary records
-  (C-7). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: alert alert_major_bus; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_trap == 0 and the rvfi_ext_nmi_int entry within the record count per C-7 with mcause 0xFFFFFFE0 / mtval read-back)
+  (C-7). [export-rows: alert alert_major_bus; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the load record with rvfi_trap == 0 and the rvfi_ext_nmi_int entry within the record count per C-7 with mcause 0xFFFFFFE0 / mtval read-back)
 - Pass criteria: gen_chk_bus_intg_rsp and gen_isa_compare follow the documented intent
   (doc/03_reference/security.rst:88: the rd write is suppressed): they expect rvfi_rd_addr == 0 /
   rvfi_ext_rf_wr_suppress == 1 and rd unchanged on the load's record. The RTL writes the merged
@@ -17177,7 +17075,7 @@ draw weights of the agent / program generator per transaction.
 - Fire-check: >= 50 straddles where no rvfi_valid with rvfi_pc_rdata >= the straddling pc occurred
   between the first word's arrival and the second word's rvalid (wait >= 4 cycles; older
   instructions already in ID/WB may retire during the wait), then the instruction retired.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the straddling instruction record with rvfi_ext_mcycle gap >= 4 from its predecessor and no intermediate record with pc >= its pc)
+  [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the straddling instruction record with rvfi_ext_mcycle gap >= 4 from its predecessor and no intermediate record with pc >= its pc)
 - Pass criteria: gen_isa_compare (no phantom retirement), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_align
@@ -17255,7 +17153,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:instr_mix (mixed), knob:irq_regime (sparse), knob:debug_req_regime (sparse)
 - Fire-check: >= 10 redirects per kind with discarded words >= 1 (agent record) and no discarded
   word's pc retired before the target (gen_isa_compare); >= 20 not-taken branches whose fall-through
-  word was already buffered when the branch retired. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of a discarded pc before the target record (gen_isa_compare) and the not-taken branch record followed by pc + len)
+  word was already buffered when the branch retired. [export-rows: ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record of a discarded pc before the target record (gen_isa_compare) and the not-taken branch record followed by pc + len)
 - Pass criteria: gen_isa_compare (no stale retirement), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_redirect
@@ -17282,7 +17180,7 @@ draw weights of the agent / program generator per transaction.
   last retired rvfi_pc_rdata with the data bus idle at the grant, none with NUM_FB while the data
   bus is idle, and never NUM_FB+1 (TIMING convention: the lead is bounded against the word consumed
   into ID; against the retiring pc it is transiently NUM_FB while a load/store is stalled in WB,
-  because the record lags the ID consumption by that wait). [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus req; dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting records (rvfi_pc_wdata != pc + len) followed by target records with rvfi_insn == memory image)
+  because the record lags the ID consumption by that wait). [export-rows: ibus gnt; ibus req; dbus gnt; dbus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirecting records (rvfi_pc_wdata != pc + len) followed by target records with rvfi_insn == memory image)
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto (outstanding <= NUM_FB*IC_LINE_BEATS; sequential
   lead <= NUM_FB-1 lines against the retiring pc with no data access outstanding, <= NUM_FB with one
   outstanding)
@@ -17303,7 +17201,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: latencies, program
 - Knobs: knob:imem_gnt_delay (same_cycle, long), knob:instr_mix (branch_heavy)
 - Fire-check: >= 50 taken branches whose target word request (agent record) is in the same cycle as
-  the redirect and >= 20 where it was deferred by a pending request. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the taken-branch record followed by the target record at redirect delta 2 (rvfi_ext_mcycle))
+  the redirect and >= 20 where it was deferred by a pending request. [export-rows: ibus req; ibus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the taken-branch record followed by the target record at redirect delta 2 (rvfi_ext_mcycle))
 - Pass criteria: gen_chk_ibus_proto, gen_isa_compare
 - Expected: pass
 - Test group: gen_fe_redirect
@@ -17348,7 +17246,7 @@ draw weights of the agent / program generator per transaction.
   DECODE(special_req) + one FLUSH cycle only, rtl/ibex_controller.sv:232, 287, 815-818;
   rtl/ibex_id_stage.sv:593-597; a longer csr_flush window is unreachable), during which the agent's
   outstanding count and granted-not-consumed count stopped growing while the agent had free
-  capacity. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stalled record rvfi_ext_mcycle gap per cause class (>= 4; exactly 2 for csr_flush))
+  capacity. [export-rows: ibus gnt; ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the stalled record rvfi_ext_mcycle gap per cause class (>= 4; exactly 2 for csr_flush))
 - Pass criteria: gen_isa_compare, gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_backpressure
@@ -17371,7 +17269,7 @@ draw weights of the agent / program generator per transaction.
   by exclusion from RVFI and the agent record); instr_req_o stream unaffected (no extra words
   requested). CG-FE-004.cp_dummy_seen (P1 dummy_instr_id_o) is probe-gated and not in this item's
   manifest until the probe register carries P1 (Open question 8); with the probe each gap is
-  confirmed individually. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of 2 between sequential records with no load/store or redirect cause in the records)
+  confirmed individually. [export-rows: ibus req; ibus gnt; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: rvfi_ext_mcycle gaps of 2 between sequential records with no load/store or redirect cause in the records)
 - Pass criteria: gen_isa_compare (dummies not reported), gen_chk_ibus_proto
 - Expected: pass
 - Test group: gen_fe_backpressure
@@ -17466,7 +17364,7 @@ draw weights of the agent / program generator per transaction.
   line is looked up pass-through, fetched from the bus from the target word to the line end and not
   allocated (rtl/ibex_cs_registers.sv:1970-1971; rtl/ibex_controller.sv:960-964;
   rtl/ibex_icache.sv:266, 683, 703, 771-773); its words are exempt from the no-bus-record check.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record (rvfi_pc_rdata == DmHaltAddr) and the post-dret records with rvfi_insn == memory image; the bypass fact stays coverage-only)
+  [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first debug-ROM record (rvfi_pc_rdata == DmHaltAddr) and the post-dret records with rvfi_insn == memory image; the bypass fact stays coverage-only)
 - Pass criteria: gen_chk_icache, gen_chk_debug, gen_isa_compare
 - Expected: pass
 - Test group: gen_fe_fault
@@ -17942,7 +17840,7 @@ draw weights of the agent / program generator per transaction.
 - Randomized: run length, mix of c16/u32
 - Knobs: knob:instr_mix (isa_only)
 - Fire-check: >= 20 runs of >= 4 consecutive rvfi_valid cycles with no bus record for the run.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: runs of >= 4 records at rvfi_ext_mcycle gap 1 in the warm loop)
+  [export-rows: ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: runs of >= 4 records at rvfi_ext_mcycle gap 1 in the warm loop)
 - Pass criteria: gen_isa_compare, gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_enable
@@ -17960,7 +17858,7 @@ draw weights of the agent / program generator per transaction.
   the demanded beat R by exactly 3 cycles (forwarded, not waiting for the RAM write: IF output in R,
   ID in R+1, WB in R+2, record in R+3; rtl/ibex_icache.sv:796-798, 1062, 1068;
   rtl/ibex_core.sv:1864-1870) with the pipeline empty, and >= 10 u32 targets whose second half is
-  the next beat with 4 or more cycles. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the miss target record rvfi_ext_mcycle gap from its predecessor under min1 and its rvfi_insn == memory image)
+  the next beat with 4 or more cycles. [export-rows: ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the miss target record rvfi_ext_mcycle gap from its predecessor under min1 and its rvfi_insn == memory image)
 - Pass criteria: gen_isa_compare, gen_chk_icache
 - Expected: pass
 - Test group: gen_ic_enable
@@ -18528,7 +18426,7 @@ draw weights of the agent / program generator per transaction.
   WB-stalled load/store delays the retirement so the RVFI pc lags the ID-consumed word, TIMING
   convention) and never with the data bus idle; never NUM_FB+1 (FB_THRESHOLD = NUM_FB-2 counting the
   line being output, F-FE-017/F-IC-038); >= 10 cases of a branch lookup issued with NUM_FB-1 lines
-  open, each producing NUM_FB busy buffers. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus gnt; dbus gnt; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirect records and the retiring pc sequence (rvfi_pc_rdata) with rvfi_insn == memory image; the lead is coverage-only)
+  open, each producing NUM_FB busy buffers. [export-rows: ibus gnt; dbus gnt; dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the redirect records and the retiring pc sequence (rvfi_pc_rdata) with rvfi_insn == memory image; the lead is coverage-only)
 - Pass criteria: gen_chk_ibus_proto (sequential lead <= NUM_FB-1 lines with no data access
   outstanding, <= NUM_FB with one outstanding; busy buffers <= NUM_FB), gen_isa_compare
 - Expected: pass
@@ -18551,7 +18449,7 @@ draw weights of the agent / program generator per transaction.
   when icache_enable = 0 and within 4 cycles when caching (the stale line is first written to the
   RAM: fill_ram_req granted c+1, ram_done c+2, buffer released c+3, lookup c+3, IC1 miss and request
   c+4; rtl/ibex_icache.sv:249, 729-734, 815-822, 843-844); >= 3 intervals per class.
-  [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record and the loop records rvfi_ext_mcycle gaps across the interval)
+  [export-rows: ibus req; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record and the loop records rvfi_ext_mcycle gaps across the interval)
 - Pass criteria: gen_chk_ibus_proto (release-to-next-request bound 2 / 4 per cache state),
   gen_isa_compare
 - Expected: pass
@@ -18569,7 +18467,7 @@ draw weights of the agent / program generator per transaction.
 - Knobs: knob:instr_mix (mixed), knob:imem_rvalid_delay (random)
 - Fire-check: >= 10000 retirements compared, >= 200 of them held at the icache output for >= 4
   cycles before ID accepted them (agent delivery cycle to ID acceptance, back-dated from RVFI) and
-  >= 200 for 1 cycle. [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records compared (rvfi_insn == memory image) with rvfi_ext_mcycle gap classes >= 4 and 1)
+  >= 200 for 1 cycle. [export-rows: ibus rvalid] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: records compared (rvfi_insn == memory image) with rvfi_ext_mcycle gap classes >= 4 and 1)
 - Pass criteria: gen_isa_compare (rvfi_insn always the word delivered for its pc; a bound internal
   assertion is probe candidate P3, rejected, see fcov Probe candidates)
 - Expected: pass
@@ -23445,7 +23343,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with dmem_rvalid_delay in {long, random}, dmem_gnt_delay long in some phases (second half waiting for grant), irq_regime in {sparse, storm}; ls_heavy regions with misaligned accesses; dmem_err_rate rare
 - Randomized: arrival instant relative to the two halves, load/store, error half, seed
 - Knobs: knob:dmem_rvalid_delay, knob:dmem_gnt_delay, knob:irq_regime, knob:dmem_err_rate
-- Fire-check: >= 1 irq_pending_o rising edge while dbus_outst >= 1, including >= 1 while a misaligned pair is in flight in each of the three split sub-states (S5); both halves complete on the bus before the handler's vector fetch and the RVFI record of the access precedes the rvfi_intr record [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending; dbus gnt; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned access record precedes the rvfi_intr record)
+- Fire-check: >= 1 irq_pending_o rising edge while dbus_outst >= 1, including >= 1 while a misaligned pair is in flight in each of the three split sub-states (S5); both halves complete on the bus before the handler's vector fetch and the RVFI record of the access precedes the rvfi_intr record [export-rows: misc irq_pending; dbus gnt; dbus rvalid; ibus req] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the misaligned access record precedes the rvfi_intr record)
 - Pass criteria: gen_isa_compare (mepc = pc of the first not-yet-executed instruction derived from the last retired record, C-3: an instruction that had already entered ID behind the load/store completes first; data assembled correctly; exception wins if a half errors); gen_chk_irq; gen_chk_dbus_proto (both halves issued and answered)
 - Expected: pass
 - Test group: gen_xif_random
@@ -23473,7 +23371,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with dmem_rvalid_delay long so the pair is still outstanding when the CSR write sits in ID; dmem_err_rate rare (WB error cancels the CSR write, F-CSR-008)
 - Randomized: which CSR, new verdict, error half, seed
 - Knobs: knob:dmem_rvalid_delay, knob:pmp_regime, knob:dmem_err_rate
-- Fire-check: >= 1 retired PMP CSR write that entered ID while its predecessor misaligned load/store's second half was still outstanding (S21: the CSR write's record follows the pair's record by exactly one cycle; the pair's record is one cycle after its second-half data_rvalid_i, so a response "after the predecessor's retirement" is impossible and the class is anchored at ID entry, S-4 back-dating, fact-check TP-XIF-010); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back) [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: dbus rvalid; dbus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record follows the pair record at the minimum rvfi_ext_mcycle gap; fault case: the fault record then the re-executed write with csr read-back)
+- Fire-check: >= 1 retired PMP CSR write that entered ID while its predecessor misaligned load/store's second half was still outstanding (S21: the CSR write's record follows the pair's record by exactly one cycle; the pair's record is one cycle after its second-half data_rvalid_i, so a response "after the predecessor's retirement" is impossible and the class is anchored at ID entry, S-4 back-dating, fact-check TP-XIF-010); when the pair errored, RVFI shows the fault record and the CSR write re-executed after the handler with the CSR value written exactly once (csr read-back) [export-rows: dbus rvalid; dbus gnt] [class B: the clause anchors on an internal pipeline instant (ID entry / FLUSH / IRQ_TAKEN / DBG_TAKEN window / decision cycle) that no export shows; reformulated to boundary facts (RVFI record cycle versus a pin or bus event cycle) or coverage-only through P4-class sampling] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record follows the pair record at the minimum rvfi_ext_mcycle gap; fault case: the fault record then the re-executed write with csr read-back)
 - Pass criteria: gen_chk_csr_readback (value written once; cancelled write leaves the old value); gen_chk_pmp (next access checked against the new configuration); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_random
@@ -23529,7 +23427,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with irq_regime storm, irq_hold through_handler, irq_line_mix multi
 - Randomized: CSR, value, arrival instant, seed
 - Knobs: knob:irq_regime, knob:irq_hold, knob:irq_line_mix, knob:instr_mix
-- Fire-check: >= 1 flushing CSR write whose commit cycle (its RVFI record cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, S18) has irq_pending_o = 1, >= 1 non-flushing (mscratch/mepc) write likewise, >= 1 mie write after which irq_pending_o rose in the cycle BEFORE the write's RVFI record (record - 1: the mie update is visible on the pin one cycle after the commit, so the edge precedes the record; a window "after the record" never samples) and the next record is the handler, and >= 1 mie write after which it fell in that cycle and the next record is sequential [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record followed by the handler record (rvfi_intr) or a sequential record; mie / mip read-back)
+- Fire-check: >= 1 flushing CSR write whose commit cycle (its RVFI record cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET = 2, S18) has irq_pending_o = 1, >= 1 non-flushing (mscratch/mepc) write likewise, >= 1 mie write after which irq_pending_o rose in the cycle BEFORE the write's RVFI record (record - 1: the mie update is visible on the pin one cycle after the commit, so the edge precedes the record; a window "after the record" never samples) and the next record is the handler, and >= 1 mie write after which it fell in that cycle and the next record is sequential [export-rows: misc irq_pending] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the CSR write record followed by the handler record (rvfi_intr) or a sequential record; mie / mip read-back)
 - Pass criteria: gen_chk_csr_readback (written value visible to the next read); gen_chk_irq (irq_pending_o follows mie the cycle after the commit, i.e. one cycle before the record; handler entry after an enabling write with no instruction in between); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_random
@@ -23557,7 +23455,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: random regime with fetch_enable_regime = toggling in most phases, imem/dmem rvalid delays long, irq_regime sparse, debug_req_regime sparse, WFI in the program, compressed_heavy regions
 - Randomized: Off instant, Off length and encoding, in-flight state, seed
 - Knobs: knob:fetch_enable_regime, knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:debug_req_regime
-- Fire-check: >= 1 Off edge for each in-flight class of CG-XIF-008.cp_inflight (except none) observed by the monitors in the edge cycle; the in-flight transactions complete on the bus during the Off window; every instr_req_o inside the Off window addresses a remaining beat of a line open at the edge (C-4 / X-5: fill_ext_req has no req_i term, so allocated lines keep requesting and a held request is never withdrawn), no new line is allocated, instr_req_o == 0 whenever core_busy_o == Off, no retirement occurs after the drained instructions, and the first record after re-enable is the held PC (C-1: the first not-yet-executed instruction derived from the last pre-Off record), the handler or the debug ROM; per seed >= 1 Off window with >= 1 continuing beat of an open line (CG-XIF-008.cp_during_off.fetch_req_open_line) [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin fetch_enable; ibus req; ibus gnt; ibus rvalid; dbus gnt; dbus rvalid; misc core_busy] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record after the drained instructions until re-enable; the first post-On record is the held pc / handler / debug ROM)
+- Fire-check: >= 1 Off edge for each in-flight class of CG-XIF-008.cp_inflight (except none) observed by the monitors in the edge cycle; the in-flight transactions complete on the bus during the Off window; every instr_req_o inside the Off window addresses a remaining beat of a line open at the edge (C-4 / X-5: fill_ext_req has no req_i term, so allocated lines keep requesting and a held request is never withdrawn), no new line is allocated, instr_req_o == 0 whenever core_busy_o == Off, no retirement occurs after the drained instructions, and the first record after re-enable is the held PC (C-1: the first not-yet-executed instruction derived from the last pre-Off record), the handler or the debug ROM; per seed >= 1 Off window with >= 1 continuing beat of an open line (CG-XIF-008.cp_during_off.fetch_req_open_line) [export-rows: pin fetch_enable; ibus req; ibus gnt; ibus rvalid; dbus gnt; dbus rvalid; misc core_busy] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: no record after the drained instructions until re-enable; the first post-On record is the held pc / handler / debug ROM)
 - Pass criteria: gen_chk_fetch_en (C-4 rule: no new line allocation after the Off edge, remaining beats of open lines legal, no withdrawn request, instr_req_o == 0 whenever core_busy_o == Off, no retirement after the drain; resume from the held PC; invalid encoding = Off); gen_chk_ibus_proto (req held until gnt across the edge); gen_chk_alerts (no alert on invalid encoding); gen_chk_irq / gen_chk_debug (trap state may advance while Off; handler fetched after re-enable); gen_isa_compare
 - Expected: pass
 - Test group: gen_xif_fetch_enable
@@ -23571,7 +23469,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Stimulus: rst_ni asserted at randomized instants (1..64 cycles low) chosen to land in each in-flight class (the reset test samples the monitors and fires when a target class is observed); the memory model DROPS every response still owed for a pre-reset request at release (S3 / Q-010: the LSU and the icache have no outstanding-request qualifier, rtl/ibex_load_store_unit.sv:694-697, so an unsolicited rvalid after release would be consumed as a response: rf_we pulse, a spurious access fault on data_err_i, alert_major_bus_o on bad integrity; responses delivered while rst_ni is still low are harmless and may be drained); debug_req_i / irq_nm_i randomly held across release
 - Randomized: reset instant, length, in-flight class, hold across release, seed
 - Knobs: knob:imem_rvalid_delay, knob:dmem_rvalid_delay, knob:irq_regime, knob:debug_req_regime, knob:scr_key_delay, knob:fetch_enable_regime
-- Fire-check: >= 1 mid-run reset per in-flight class of CG-XIF-010.cp_inflight observed in the falling-edge cycle; after release the first instr_addr_o is the boot vector within 2 cycles (fetch on), all outputs sit at reset values in the first cycle, and the dbus/ibus monitors see zero rvalid pulses between release and the first post-reset grant on that bus; per seed the model logged >= 1 dropped pre-reset response (CG-XIF-010.cp_after.stale_rsp_after_release samples that DROP event, never a delivery: the RTL would consume a stale response, fact-check TP-XIF-017) [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: ibus req; ibus rvalid; dbus rvalid; ibus gnt; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first post-reset record rvfi_pc_rdata == the boot vector with rvfi_order restarted; no record of a pre-reset in-flight instruction after release)
+- Fire-check: >= 1 mid-run reset per in-flight class of CG-XIF-010.cp_inflight observed in the falling-edge cycle; after release the first instr_addr_o is the boot vector within 2 cycles (fetch on), all outputs sit at reset values in the first cycle, and the dbus/ibus monitors see zero rvalid pulses between release and the first post-reset grant on that bus; per seed the model logged >= 1 dropped pre-reset response (CG-XIF-010.cp_after.stale_rsp_after_release samples that DROP event, never a delivery: the RTL would consume a stale response, fact-check TP-XIF-017) [export-rows: ibus req; ibus rvalid; dbus rvalid; ibus gnt; dbus gnt] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the first post-reset record rvfi_pc_rdata == the boot vector with rvfi_order restarted; no record of a pre-reset in-flight instruction after release)
 - Pass criteria: gen_chk_reset (new: reset values of every output, boot fetch, stale-response DROP policy: no rvalid on either bus without a post-reset grant); gen_chk_alerts (no alert_major_bus_o after release: nothing stale reaches the DUT); gen_chk_crash_dump (reset values); gen_isa_compare (restart from the reset state)
 - Expected: pass
 - Test group: gen_xif_reset
@@ -23771,7 +23669,7 @@ where the generated program stores the region tuple to the TB phase-marker regis
 - Fire-check: >= 1 mcounteren write retired and its csrr read-back observed; the pin value sampled
   in that write's commit cycle (S18) belongs to the logged class; MEASURED: the read-back equals
   the legalised written value iff the pin was exactly IbexMuBiOn and equals the old value
-  otherwise (the class is proven by the DUT's response, not by the driver echo) [CYCLE-CLAUSE coverage-only until the event export lands] [export-rows: pin mcounteren_writable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mcounteren csrr read-back equals the legalised value iff the phase pin class is On)
+  otherwise (the class is proven by the DUT's response, not by the driver echo) [export-rows: pin mcounteren_writable] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the mcounteren csrr read-back equals the legalised value iff the phase pin class is On)
 - Pass criteria: gen_chk_csr_readback (write lands only when the pin is exactly IbexMuBiOn,
   rtl/ibex_cs_registers.sv:845)
 - Expected: pass

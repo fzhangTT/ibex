@@ -9,6 +9,8 @@ Exits 1 on any violation. Deterministic.
 Options (export_sources entries may be "<source> <event>" strings or {source, event} maps):
   --knobs <path>           export event table (default dv/auto_dv/tb/gen_tb_knobs.yaml); a row whose event is
                            "<name>" is a wildcard and counts as ABSENT (gen_test_plan.md Section 0)
+  --observed-field <key>   manifest key of Runtime's per-row first-seen list (T-140; default export_rows_observed): the sunset
+                           un-marks an item only when EVERY export row is observed (LOG-028a); absent list = sunset refused
   --build-manifest <path>  a build's build_manifest.yaml; its export_sources_emitted list (the rows the build's registered writers
                            emit; "<source> <event>" strings or {source, event} maps) decides the cycle-clause sunset (C-3): a
                            still-marked item whose export rows are all EMITTED fails; export_sources (the rendered table) only
@@ -20,6 +22,10 @@ R = pathlib.Path(__file__).resolve().parents[1]; D = R / 'docs'
 ap = argparse.ArgumentParser()
 ap.add_argument('--knobs', default=str(R / 'tb' / 'gen_tb_knobs.yaml'))
 ap.add_argument('--build-manifest', default=None)
+# LOG-028a (gen_test_plan.md Section 0, T-142): an item sunsets only when every one of its export rows was OBSERVED in a retained
+# run of the pinned build (Runtime's per-row first-seen list, T-140); exclusion is by row, never by source; no list = refused.
+ap.add_argument('--observed-field', default='export_rows_observed', help='manifest key of the observed-row list (T-140)')
+ap.add_argument('--exclude-rows', default=None, help='rehearsal only: treat the emitted rows minus these (semicolon-separated) as the observed list')
 args = ap.parse_args()
 TOKEN = '[CYCLE-CLAUSE coverage-only until the event export lands]'
 def blocks(text, prefix):
@@ -153,15 +159,19 @@ if args.build_manifest and not pathlib.Path(args.build_manifest).exists():
     wit_errors.append(f'build manifest given but not found: {args.build_manifest} (an explicit path must exist; omit the option for the unknown note)')
 elif args.build_manifest:
     man = yaml.safe_load(open(args.build_manifest)) or {}
-    rowset = lambda v: {f"{x['source']} {x['event']}" if isinstance(x, dict) else str(x) for x in (v or [])}
+    rowset = lambda v: {(x['row'] if 'row' in x else f"{x['source']} {x['event']}") if isinstance(x, dict) else str(x) for x in (v or [])}  # {row}, {source, event} or string entries (T-140 shape: row, first_run, first_line)
     rendered = rowset(man.get('export_sources')) if 'export_sources' in man else None
     if 'export_sources_emitted' in man:  # the rows the build's registered writers emit (Runtime, from the canary export header sources=)
         export_sources = rowset(man['export_sources_emitted'])
-        sunset_fail = [tid for tid, rows in marked.items() if rows and all(present(t, export_sources) for t in rows)]
+        if args.exclude_rows is not None: observed = export_sources - {r.strip() for r in args.exclude_rows.split(';') if r.strip()}; obs_origin = 'rehearsal: emitted minus --exclude-rows'
+        elif args.observed_field in man: observed = rowset(man[args.observed_field]); obs_origin = f'manifest key {args.observed_field}'
+        else: observed = None; obs_origin = f'no observed-row list ({args.observed_field}, T-140): sunset refused, no item un-marks on a declaration'
+        obs_ok = (lambda t: any(re.fullmatch(r'pin irq_fast\d*', r) for r in observed) if t == 'pin irq_fast' else t in observed) if observed is not None else (lambda t: False)
+        sunset_fail = [tid for tid, rows in marked.items() if rows and all(obs_ok(t) for t in rows)]
+        sunset_gated = [tid for tid, rows in marked.items() if rows and all(present(t, export_sources) for t in rows) and not all(obs_ok(t) for t in rows)]
         renderable = len([tid for tid, rows in marked.items() if rows and rendered is not None and all(present(t, rendered) for t in rows)])
-        sunset_note = f'export sources from {args.build_manifest}: emitted {len(export_sources)} rows (export_sources_emitted), rendered {len(rendered) if rendered is not None else "n/a"}; {len(sunset_fail)} still-marked items have every export row EMITTED (they must lose the token); {renderable} have every row rendered'
-        would_rendered = len([tid for tid, rows in marked.items() if rows and rendered is not None and all(present(t, rendered) for t in rows)])
-        sunset_note += f'. Sunset count: would un-mark {len(sunset_fail)} items on the EMITTED set (a rendered-table trigger would have un-marked {would_rendered}; the difference is items whose rows include a rendered-but-unemitted source)'
+        sunset_note = f'export sources from {args.build_manifest}: emitted {len(export_sources)} rows (export_sources_emitted), rendered {len(rendered) if rendered is not None else "n/a"}; observed {len(observed) if observed is not None else 0} rows ({obs_origin}); never observed among the emitted: {sorted(export_sources - observed) if observed is not None else "all"}; {len(sunset_fail)} still-marked items have every export row OBSERVED (they must lose the token); {len(sunset_gated)} still-marked items have every row emitted but a row never observed (LOG-028a, they keep the token); {renderable} have every row rendered'
+        sunset_note += f'. Sunset count: would un-mark {len(sunset_fail)} items on the OBSERVED rows ({renderable} have every row rendered, {len(sunset_gated)} gated by an unobserved row)'
     elif rendered is not None:
         renderable = [tid for tid, rows in marked.items() if rows and all(present(t, rendered) for t in rows)]
         sunset_note = f'export sources unknown: {args.build_manifest} carries export_sources (the rendered table, {len(rendered)} rows; {len(renderable)} marked items renderable) but no export_sources_emitted field, the rows the build\'s writers emit (Runtime request, gen_test_plan.md Section 2a WP-6); no item sunsets on rendered rows alone'
