@@ -640,3 +640,17 @@ and the redirect had already emptied the files. All five were restored byte-for-
 copy taken minutes earlier (whole parts tree compared identical), a fresh snapshot taken, and the
 DV Lead's memory updated. Nothing under docs/ or tools/ was touched; nothing to commit. Disclosed
 unprompted.
+
+## LOG-023 - 2026-09-03 - NOTE (milestone: all eight batch-1 tests through the flow on LSF after the comparator fix; one generator import defect exposed by head mode)
+
+12:26-12:29 UTC: waves 3 and 4 (requests test-writer-031..046) served in head mode pinned to d22ac19
+on LSF against the remediated tests (2d72b4a) and the comparator fix (d0c0d15, 50256f0):
+gen_test_csr_access, cmp_zcb, bit_draft PASS x3 with their pinned reds RED-OK; the four tests that
+LOG-018 had blocked on the comparator (rst_boot, csr_reset, csr_trap_setup, pmp_csr_warl) PASS x3 each
+with all four reds RED-OK; gen_test_cmp_zcmp_basic and its red NOT_RUN on all three seeds because
+gen_cmp_zcmp_basic_prog.py imports gen_prog_const through the package path
+(`from dv.auto_dv.tests.gen_programs...`) and the pinned tree has no clone root on sys.path
+(ModuleNotFoundError: No module named 'dv'); the local runs had passed through the login shell's leaked
+PYTHONPATH. Totals: 21 of 24 green runs PASS, 7 of 8 reds RED-OK, 6 NOT_RUN (one generator). Counted
+as a Test Writer defect caught by head-mode serving; fix and wave 5 assigned. All runs are check-tier,
+measured: false.
