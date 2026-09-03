@@ -276,6 +276,7 @@ seq = integer. Fields:
 | group (optional) | string | tier targeted: feature-group filter |
 | build_vcs_args (optional) | list of strings | purpose 2 only: extra vcs arguments for an instrumentation trial (for example `["-cm_glitch 0"]`); refused under any other purpose because a measurement never changes the flag set |
 | dump_exclusions (optional) | yes/no | add `urg -dump full_exclusions` to the merge (purpose 4 does it anyway) |
+| source (optional) | `head` (default) / `worktree` | the tree the regression builds and runs from; purpose 4 always `head`; a `worktree` purpose-1 request (a developer run against the shared working tree) is served alone, never in a batch |
 | elcheck (optional) | mapping `{vdb, elfile[, build]}` | purpose 2 only, with `tests: []` and `seeds: []`: report-only strict load of an exclusion file against an existing vdb (no simulation); scopes come from the build manifest of the regression the vdb belongs to (`build` names it when that regression has several) |
 
 Purpose and the scope it allows (a larger scope is refused in writing, in the manifest):
@@ -302,8 +303,8 @@ next sequence number. `--only <name>` (repeatable) serves only the named pending
 Concurrency (Orchestrator ruling, 2026-09-03): purpose 1 stays one test per request, but independent
 purpose-1 requests pending in the same pass are served concurrently (`--max-concurrent`, default 4;
 each regression keeps its own 8-wide run pool, outdir, manifest and LSF accounting), so a batch of N
-single-test requests turns around in about one request's time. Before such a batch the server syncs
-the mirror once (`gen_mirror.py --sync --spike`, recorded in every batch manifest as
+single-test requests turns around in about one request's time. A batch is head-mode: before it the server syncs
+the mirror once from committed HEAD (`gen_mirror.py --sync --spike --source head`, recorded in every batch manifest as
 `server_mirror_sync`) and passes `--no-sync-mirror` to the batch so concurrent regressions never race
 on the mirror tree; if that sync fails or times out the batch is served one request at a time, each
 regression syncing for itself (`server_mirror_sync.batch_serialized` says so). A lone purpose-1
@@ -417,7 +418,7 @@ other FAIL stays FAIL, an unexpected PASS is FAIL; requires `measured: false`, e
 ## 7b. gen_mirror.py (shared-storage mirror for cocotb on LSF; intervention log Q-012 default)
 
 ```
-gen_mirror.py --sync [--venv] [--spike]     # rsync the clone subset; build the venv ON shared storage; copy tools/spike
+gen_mirror.py --sync [--venv] [--spike] [--source head|worktree]   # rsync the source subset; build the venv ON shared storage; copy tools/spike
 gen_mirror.py --check                       # fresh (exit 0) or stale (exit 1): clone hash == manifest == mirror tree
 gen_mirror.py --status
 ```
@@ -435,6 +436,13 @@ gen_mirror.py --status
 - The freshness hash covers the files a compute host consumes at run time (`dv/auto_dv/**/*.py`,
   `ci/env.sh`, `ci/setup-venv.sh`, the two requirements files); RTL, TB sources and documents are
   mirrored but not hashed (they are compiled on the submit host and churn constantly).
+  `gen_regress.py --source head|worktree` chooses the tree a regression builds and runs from. Head mode (the
+  default for purpose 4, a tier, or more than one test; a request's `source` field otherwise) syncs a
+  head-mode mirror, requires its manifest to name the current HEAD, then re-executes gen_regress with
+  `GEN_DV_SOURCE_ROOT` set to the mirror so filelists, RTL, TB sources, the testlist, the knob table, the
+  program tool and every generator resolve from committed HEAD; the manifest records `source {mode,
+  source_root, head_sha, worktree_dirty}` and every build manifest `source_root`, `source_mode`, `head_sha`.
+  Worktree mode (single developer runs) keeps the shared working tree as the source.
   `gen_regress.py` re-syncs the mirror (`gen_mirror.py --sync --spike`) before a cocotb build (`--no-sync-mirror` to skip), so the
   build records the revision its runs import.
 - Staleness fails loud: `gen_build.py` refuses a cocotb build unless the mirror is `fresh`
@@ -452,6 +460,15 @@ gen_mirror.py --status
 - Probe: test `gen_cocotb_probe` (build `gen_smoke_cocotb`, module
   `dv.auto_dv.flow.gen_cocotb_probe`, `measured: false`) proves the path end to end; evidence
   `dv/auto_dv/evidence/gen_t027_cocotb_lsf.md`.
+
+Source modes (standing policy after intervention log LOG-014/LOG-017): `--source head` exports the committed
+HEAD subset with `git archive` (tracked files of the mirrored items; no checkout, no fetch, the working
+tree untouched) into a private staging directory under `dv/auto_dv/work/runtime/` and syncs the mirror
+from it; `--source worktree` syncs the shared working tree. The manifest records `source` and `head_sha`;
+`--status` computes the source hash from a fresh HEAD export for a head-mode mirror, so a new commit makes
+it stale. tools/spike is a build product outside git and is mirrored from the clone in both modes.
+`gen_mirror.py --self-test` proves the export: a tracked file that differs in the working tree is exported
+at its committed bytes.
 
 ## 7c. fcov-expectation wiring (trust triad rule 3; gen_fcov.py, ci/check_fcov_expectations.py)
 
