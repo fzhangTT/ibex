@@ -1,4 +1,4 @@
-# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commit f2b9272)
+# Response file: reviews of the counter CSR anchors note (dv/auto_dv/evidence/gen_counter_csr_anchors.md; commits f2b9272, 0c189eb, and the CM78/CM79 touch on 04cf523)
 
 Owner: rtl-arch. Created 2026-09-03T20:07Z. Rows answer the cross-model review of f2b9272 (113 lines, sha256 daf32811888d;
 verdict APPROVE-WITH-CHANGES, artifact committed d5ddbe2) and any later round on the same note. Rule: every finding gets
@@ -8,7 +8,7 @@ RTL evidence.
 
 ## 1. Findings
 
-Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad).
+Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n = on 0c189eb (fb652266e3de; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-979ba796-0c189eb1.md, APPROVE-WITH-CHANGES, committed 50971ad); CM83-n = on the CM78/CM79 touch (a4e9aa9faae3; artifact committed 5e05ad7, APPROVE-WITH-CHANGES).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -20,7 +20,10 @@ Row ids: CM76-n = cross-model review findings on f2b9272 (daf32811888d); CM79-n 
 | CM79-L-2 | cross-model 0c189eb [low] section 2 (reviewed copy line 31; fixed copy line 33) and section 1 (line 17) | "+1" unqualified: mcountinhibit[2] = 1 masks the writer's increment (cs_registers:1643); Spike passes 0 when IR is inhibited (execute.cc:353); WritebackStage dependence not listed | ADDRESSED at a4e9aa9faae3 | Row and section-10 bullet qualified "when mcountinhibit[2] = 0", inhibited case stated (both read V), minstreth included; new section-1 row WritebackStage = 1 (ibex_configs.yaml:49) named as the basis of the one-cycle relation. |
 | CM79-I-1 | cross-model 0c189eb [info] section 2 (fixed copy line 33) | quoted csr_op_en expression drops the CHERIoT-mode arm | ADDRESSED at a4e9aa9faae3 | Row notes the instr_first_cycle arm (id_stage:748) applies only with cheriot_enable_i On, tied Off at dv/auto_dv/tb/gen_dut_top.sv:206. |
 | CM79-I-2 | cross-model 0c189eb [info] header (fixed copy line 5) | source list missing id_stage, wb_stage, decoder and the pinned Spike | ADDRESSED at a4e9aa9faae3 | Header lists rtl/ibex_id_stage.sv, rtl/ibex_wb_stage.sv, rtl/ibex_decoder.sv and the untracked Spike checkout at commit 4ffd6ba8 (2026-09-02); the commit is repeated beside the csrs.cc / execute.cc anchors in the row. |
+| CM83-L-1 | cross-model touch-on-04cf523 [low] section 2 (reviewed copy line 33; fixed copy line 33) and section 10 (reviewed copy line 121; fixed copy lines 121, 122) | minstreth write described as reading back V + 1 | ADDRESSED at 3d68bb055400 | Both places now: csrw minstreth, V loads {V, old low word} (rtl/ibex_counter.sv:38-41), the writer's increment lands in the low word, so minstreth reads V and minstret moves by one; the carry case (old low word 0xFFFFFFFF, minstreth reads V + 1) stated in one clause; the minstret case unchanged (V + 1 when mcountinhibit[2] = 0). |
+| CM83-I-1 | cross-model touch-on-04cf523 [info] section 2 (fixed copy line 33) | Spike anchors cite an untracked tree | ADDRESSED at 3d68bb055400 | The bump body (csrs.cc:1321-1330) and the step call (execute.cc:353) are quoted verbatim in the row, so the convention is reproducible from the commit alone; the untracked-tree note stays. |
+| CM83-I-2 | cross-model touch-on-04cf523 [info] this file, title | title named only f2b9272 | ADDRESSED (this file) | Title lists f2b9272, 0c189eb and the CM78/CM79 touch; legend extended with the CM83 prefix. |
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at a4e9aa9faae3: 126 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header.
+- Work file dv/auto_dv/work/rtl-arch/gen_counter_csr_anchors.md at 3d68bb055400: 127 lines, ASCII-only; CM76 touched sections 2, 3, 7, 9 and the header; CM79 touches sections 1, 2, 10 and the header; CM83 touches sections 2 and 10.
