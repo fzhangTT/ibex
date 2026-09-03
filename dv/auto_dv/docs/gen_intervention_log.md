@@ -1543,3 +1543,14 @@ DV Lead received a correction of the same sentence and a row (O-1) to make the p
 arguments. Rule restated from LOG-048 with the missing half: every clause of a focus statement, including asides in
 parentheses, is a claim the artifact will carry, so each one comes from a check that printed the expected result, and a
 check that printed a difference is read before the launch command in the same shell is allowed to run.
+
+## LOG-061 - 2026-09-03 - Third unverified focus claim: a parser count reported as a retention gap
+
+The Orchestrator's committer check for tb-infra's landing 5 (a9b63ae) parsed the retained-log manifest with a regular
+expression that skipped every row naming two files, then reported "20 files under evidence/gen_tdd_logs/fcov/ have no
+manifest row" in the landing's REVIEW_FOCUS and to tb-infra as an owed fix. A direct check (each file name looked up in
+the manifest text, its md5 matched on the same row) run minutes later found all 200 files listed with matching md5. The
+review was killed within two minutes of launch, its run directory and failed raw copy removed, and the review relaunched
+with the verified statement; tb-infra received a retraction. Rule added to LOG-048 and LOG-060: a claimed gap is stated
+only after the missing items are listed by name from a direct lookup; a count from a parser or a filter is a prompt to
+look, never a finding, and it is not repeated to a teammate or a reviewer before the names exist.
