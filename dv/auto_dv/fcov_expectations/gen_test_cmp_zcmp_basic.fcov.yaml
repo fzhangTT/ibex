@@ -415,12 +415,6 @@ bins:
   - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target
   - gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target
   - gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b
-  - gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.pop_above_max
-  - gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.push_below_zero
-  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.pop_above_max
-  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popret_above_max
-  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popretz_above_max
-  - gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.push_below_zero
   - gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev
   - gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev
   - gen_cmp_zcmp_mv_cg.cp_hazard_src.none
@@ -895,12 +889,6 @@ anti_vacuity:
   gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
   gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
   gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b: "CG-CMP-009: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed"
-  gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.pop_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
-  gen_cmp_zcmp_pushpop_cg.cp_sp_wrap.push_below_zero: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
-  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.pop_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
-  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popret_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
-  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.popretz_above_max: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
-  gen_cmp_zcmp_pushpop_cg.cr_insn_wrap.push_below_zero: "CG-CMP-006: only completed sequences sample here (interrupted/faulting ones go to CG-CMP-008); the ok-coverpoints are set only when the collected sequence matched the prediction"
   gen_cmp_zcmp_mv_cg.cp_hazard_src.alu_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
   gen_cmp_zcmp_mv_cg.cp_hazard_src.load_prev: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"
   gen_cmp_zcmp_mv_cg.cp_hazard_src.none: "CG-CMP-007: the two-move sequence is identified from the RVFI tags; a hit proves both moves retired with the sampled register pair"

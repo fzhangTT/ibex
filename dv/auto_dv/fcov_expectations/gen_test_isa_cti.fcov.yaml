@@ -1,0 +1,610 @@
+test: gen_test_isa_cti
+owner: test-writer
+bins:
+  - gen_isa_jump_cg.cp_jal_off.neg_rand
+  - gen_isa_jump_cg.cp_jal_off.pos_rand
+  - gen_isa_jump_cg.cp_link_len.pc4
+  - gen_isa_jump_cg.cp_op.jal
+  - gen_isa_jump_cg.cp_pc_region.mid
+  - gen_isa_jump_cg.cp_rd_class.other
+  - gen_isa_jump_cg.cp_rd_class.x0
+  - gen_isa_jump_cg.cp_rd_class.x1
+  - gen_isa_jump_cg.cp_rd_class.x5
+  - gen_isa_jump_cg.cp_target_align.half
+  - gen_isa_jump_cg.cp_target_align.word
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_other
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x0
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x1
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x5
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_other
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x0
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x1
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x5
+  - gen_isa_jump_cg.cr_link.jal_pc4
+  - gen_isa_jump_cg.cr_op_align.jal_half
+  - gen_isa_jump_cg.cr_op_align.jal_word
+  - gen_isa_jump_cg.cp_jal_off.max_bwd
+  - gen_isa_jump_cg.cp_jal_off.max_fwd
+  - gen_isa_jump_cg.cp_jal_off.self
+  - gen_isa_jump_cg.cp_op.c_j
+  - gen_isa_jump_cg.cp_op.c_jal
+  - gen_isa_jump_cg.cp_op.c_jalr
+  - gen_isa_jump_cg.cp_op.c_jr
+  - gen_isa_jump_cg.cp_op.jalr
+  - gen_isa_jump_cg.cp_pc_region.zero_page
+  - gen_isa_jump_cg.cp_wrap.no
+  - gen_isa_jump_cg.cp_wrap.yes
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_other
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x0
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x1
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x5
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_other
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x0
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x1
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x5
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_self_other
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_self_x0
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_self_x1
+  - gen_isa_jump_cg.cr_jal_off_rd.jal_self_x5
+  - gen_isa_jump_cg.cr_op_wrap.c_j_no
+  - gen_isa_jump_cg.cr_op_wrap.c_j_yes
+  - gen_isa_jump_cg.cr_op_wrap.c_jal_no
+  - gen_isa_jump_cg.cr_op_wrap.c_jal_yes
+  - gen_isa_jump_cg.cr_op_wrap.c_jalr_no
+  - gen_isa_jump_cg.cr_op_wrap.c_jr_no
+  - gen_isa_jump_cg.cr_op_wrap.jal_no
+  - gen_isa_jump_cg.cr_op_wrap.jal_yes
+  - gen_isa_jump_cg.cr_op_wrap.jalr_no
+  - gen_isa_jump_cg.cr_op_wrap.jalr_yes
+  - gen_isa_jump_cg.cr_zero_page_bwd.jal_zero_page_neg
+  - gen_cmp_imm_edges_cg.cp_link.pc2
+  - gen_isa_jump_cg.cp_jalr_imm.neg_rand
+  - gen_isa_jump_cg.cp_jalr_imm.pos_rand
+  - gen_isa_jump_cg.cp_jalr_rs1.other
+  - gen_isa_jump_cg.cp_link_len.pc2
+  - gen_isa_jump_cg.cp_target_odd.no
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_neg_rand
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_pos_rand
+  - gen_isa_jump_cg.cr_link.c_jal_pc2
+  - gen_isa_jump_cg.cr_link.c_jalr_pc2
+  - gen_isa_jump_cg.cr_link.jalr_pc4
+  - gen_isa_jump_cg.cp_jalr_imm.max_pos
+  - gen_isa_jump_cg.cp_jalr_imm.min_neg
+  - gen_isa_jump_cg.cp_jalr_imm.zero
+  - gen_isa_jump_cg.cp_jalr_rs1.eq_rd
+  - gen_isa_jump_cg.cp_jalr_rs1.x0
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_max_pos
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_min_neg
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_zero
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_max_pos
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_min_neg
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_zero
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero
+  - gen_isa_jump_cg.cp_jalr_imm.odd
+  - gen_isa_jump_cg.cp_target_odd.yes
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.other_odd
+  - gen_isa_jump_cg.cr_odd.c_jalr_odd
+  - gen_isa_jump_cg.cr_odd.c_jr_odd
+  - gen_isa_jump_cg.cr_odd.jalr_odd
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_neg_rand
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_odd
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_pos_rand
+  - gen_isa_jump_cg.cp_pc_region.high
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_neg_rand
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_odd
+  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_pos_rand
+  - gen_isa_branch_cg.cp_cmp_class.both_msb_eq
+  - gen_isa_branch_cg.cp_cmp_class.equal
+  - gen_isa_branch_cg.cp_cmp_class.intmin_zero
+  - gen_isa_branch_cg.cp_cmp_class.ones_zero
+  - gen_isa_branch_cg.cp_cmp_class.rand
+  - gen_isa_branch_cg.cp_cmp_class.sgt_ult
+  - gen_isa_branch_cg.cp_cmp_class.slt_ugt
+  - gen_isa_branch_cg.cp_cmp_class.zero_intmin
+  - gen_isa_branch_cg.cp_cmp_class.zero_ones
+  - gen_isa_branch_cg.cp_offset.neg_rand
+  - gen_isa_branch_cg.cp_offset.pos_rand
+  - gen_isa_branch_cg.cp_op.beq
+  - gen_isa_branch_cg.cp_op.bge
+  - gen_isa_branch_cg.cp_op.bgeu
+  - gen_isa_branch_cg.cp_op.blt
+  - gen_isa_branch_cg.cp_op.bltu
+  - gen_isa_branch_cg.cp_op.bne
+  - gen_isa_branch_cg.cp_taken.no
+  - gen_isa_branch_cg.cp_taken.yes
+  - gen_isa_branch_cg.cp_target_align.half
+  - gen_isa_branch_cg.cp_target_align.word
+  - gen_isa_branch_cg.cp_wrap.no
+  - gen_isa_branch_cg.cr_op_align.beq_half
+  - gen_isa_branch_cg.cr_op_align.beq_word
+  - gen_isa_branch_cg.cr_op_align.bge_half
+  - gen_isa_branch_cg.cr_op_align.bge_word
+  - gen_isa_branch_cg.cr_op_align.bgeu_half
+  - gen_isa_branch_cg.cr_op_align.bgeu_word
+  - gen_isa_branch_cg.cr_op_align.blt_half
+  - gen_isa_branch_cg.cr_op_align.blt_word
+  - gen_isa_branch_cg.cr_op_align.bltu_half
+  - gen_isa_branch_cg.cr_op_align.bltu_word
+  - gen_isa_branch_cg.cr_op_align.bne_half
+  - gen_isa_branch_cg.cr_op_align.bne_word
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_neg_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_neg_rand_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_pos_rand_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_pos_rand_yes
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_no_zero_ones
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_yes_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.beq_yes_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_no_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_no_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_no_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_no_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_zero_ones
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_zero_ones
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_no_zero_ones
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_zero_ones
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_no_both_msb_eq
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_no_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_rand
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_sgt_ult
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_zero_intmin
+  - gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_zero_ones
+  - gen_isa_branch_cg.cr_wrap.beq_no
+  - gen_isa_branch_cg.cr_wrap.bge_no
+  - gen_isa_branch_cg.cr_wrap.bgeu_no
+  - gen_isa_branch_cg.cr_wrap.blt_no
+  - gen_isa_branch_cg.cr_wrap.bltu_no
+  - gen_isa_branch_cg.cr_wrap.bne_no
+  - gen_btalu_branch_cg.cp_delta.d1
+  - gen_btalu_branch_cg.cp_delta.d2
+  - gen_btalu_branch_cg.cp_delta.d3plus
+  - gen_btalu_branch_cg.cp_dit.off
+  - gen_btalu_branch_cg.cp_fetch_stall.no
+  - gen_btalu_branch_cg.cp_redirect.no
+  - gen_btalu_branch_cg.cr_taken_dit_delta.nt_dit0_d1
+  - gen_btalu_branch_cg.cr_taken_dit_delta.t_dit0_d2
+  - gen_btalu_branch_cg.cr_taken_dit_redirect.nt_dit0_noredir
+  - gen_wit_cycle_clause_cg.cp_clause.w_tp_isa_024
+  - gen_isa_branch_cg.cp_offset.max_bwd
+  - gen_isa_branch_cg.cp_offset.max_fwd
+  - gen_isa_branch_cg.cp_offset.self
+  - gen_isa_branch_cg.cp_op.c_beqz
+  - gen_isa_branch_cg.cp_op.c_bnez
+  - gen_isa_branch_cg.cp_wrap.yes
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.beq_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bge_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bgeu_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.blt_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bltu_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.bne_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_beqz_self_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_bwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_bwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_fwd_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_fwd_yes
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_self_no
+  - gen_isa_branch_cg.cr_op_offset_taken.c_bnez_self_yes
+  - gen_isa_branch_cg.cr_wrap.beq_yes
+  - gen_isa_branch_cg.cr_wrap.bge_yes
+  - gen_isa_branch_cg.cr_wrap.bgeu_yes
+  - gen_isa_branch_cg.cr_wrap.blt_yes
+  - gen_isa_branch_cg.cr_wrap.bltu_yes
+  - gen_isa_branch_cg.cr_wrap.bne_yes
+  - gen_isa_branch_cg.cr_wrap.c_beqz_yes
+  - gen_isa_branch_cg.cr_wrap.c_bnez_yes
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero
+  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt
+  - gen_isa_jump_cg.cr_op_align.c_j_half
+  - gen_isa_jump_cg.cr_op_align.c_jal_half
+  - gen_isa_jump_cg.cr_op_align.c_jalr_half
+  - gen_isa_jump_cg.cr_op_align.c_jr_half
+  - gen_isa_jump_cg.cr_op_align.jalr_half
+  - gen_isa_branch_cg.cr_op_align.c_beqz_half
+  - gen_isa_branch_cg.cr_op_align.c_bnez_half
+anti_vacuity:
+  gen_isa_jump_cg.cp_jal_off.neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jal_off.pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_link_len.pc4: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.jal: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_pc_region.mid: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_rd_class.other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_rd_class.x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_rd_class.x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_rd_class.x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_target_align.half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_target_align.word: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_neg_rand_x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_pos_rand_x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_link.jal_pc4: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.jal_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.jal_word: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jal_off.max_bwd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jal_off.max_fwd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jal_off.self: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.c_j: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.c_jal: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.c_jalr: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.c_jr: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_op.jalr: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_pc_region.zero_page: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_wrap.no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_wrap.yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_bwd_x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_max_fwd_x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_self_other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_self_x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_self_x1: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jal_off_rd.jal_self_x5: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_j_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_j_yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_jal_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_jal_yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_jalr_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.c_jr_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.jal_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.jal_yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.jalr_no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_wrap.jalr_yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_zero_page_bwd.jal_zero_page_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_cmp_imm_edges_cg.cp_link.pc2: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
+  gen_isa_jump_cg.cp_jalr_imm.neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_imm.pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_rs1.other: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_link_len.pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_target_odd.no: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_link.c_jal_pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_link.c_jalr_pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_link.jalr_pc4: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_imm.max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_imm.min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_imm.zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_rs1.eq_rd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_rs1.x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_jalr_imm.odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_target_odd.yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.other_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_odd.c_jalr_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_odd.c_jr_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_odd.jalr_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cp_pc_region.high: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_branch_cg.cp_cmp_class.both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_cmp_class.zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_offset.neg_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_offset.pos_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.beq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.bge: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.bgeu: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.blt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.bltu: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.bne: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_taken.no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_taken.yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_target_align.half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_target_align.word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_wrap.no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.beq_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.beq_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bge_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bge_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bgeu_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bgeu_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.blt_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.blt_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bltu_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bltu_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bne_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.bne_word: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_neg_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_neg_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_pos_rand_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_pos_rand_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_no_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_yes_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.beq_yes_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_no_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_no_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_no_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_no_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bge_yes_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_no_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bgeu_yes_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_no_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.blt_yes_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_no_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bltu_yes_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_no_both_msb_eq: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_no_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_rand: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_sgt_ult: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_zero_intmin: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.bne_yes_zero_ones: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.beq_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bge_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bgeu_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.blt_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bltu_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bne_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_btalu_branch_cg.cp_delta.d1: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cp_delta.d2: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cp_delta.d3plus: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cp_dit.off: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cp_fetch_stall.no: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cp_redirect.no: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cr_taken_dit_delta.nt_dit0_d1: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cr_taken_dit_delta.t_dit0_d2: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_btalu_branch_cg.cr_taken_dit_redirect.nt_dit0_noredir: "CG-BTALU-001: taken is derived from rvfi_pc_wdata, the redirect from an ibus request for the branch target (or pc + len) issued while the branch was in ID (sampled only with icache_enable == 0), the counter deltas from the hardwired rvfi_ext_mhpmcounters[8 - 3] / [9 - 3], the WB wait from the dbus monitor (a data access outstanding when the branch entered ID whose response arrived later: the branch waits in FIRST_CYCLE, C-10); a hit proves the sampled timing/redirect/count tuple was observed"
+  gen_wit_cycle_clause_cg.cp_clause.w_tp_isa_024: "CG-WIT-001: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level"
+  gen_isa_branch_cg.cp_offset.max_bwd: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_offset.max_fwd: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_offset.self: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.c_beqz: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_op.c_bnez: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cp_wrap.yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.beq_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bge_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bgeu_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.blt_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bltu_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.bne_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_beqz_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_bwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_bwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_fwd_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_max_fwd_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_self_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_offset_taken.c_bnez_self_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.beq_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bge_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bgeu_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.blt_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bltu_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.bne_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.c_beqz_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_wrap.c_bnez_yes: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_jump_cg.cr_op_align.c_j_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.c_jal_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.c_jalr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.c_jr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_jump_cg.cr_op_align.jalr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
+  gen_isa_branch_cg.cr_op_align.c_beqz_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
+  gen_isa_branch_cg.cr_op_align.c_bnez_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"

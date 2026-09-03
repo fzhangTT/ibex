@@ -2,24 +2,35 @@
 """gen_cmp_zcb_prog: per-seed program generator of gen_test_cmp_zcb (plan group gen_cmp_zcb:
 TP-CMP-034 Zcb loads/stores, TP-CMP-036 Zcb ALU forms, TP-CMP-038 c.mul; dv/auto_dv/docs/gen_test_plan.md).
 
-plan(seed, red=False) draws the scenario from random.Random(f"{seed}:program:cmp_zcb"): a shuffled
-sequence of Zcb operations over x8..x15 (store-then-load pairs of the same location at every base
-alignment and uimm, the five ALU forms over the TP-CMP-036 operand mix, c.mul over every rsd'/rs2'
-with W7 operands), unrelated filler instructions between them, and the expected value of every
-report word the program stores to GEN_MM_EOT_ADDR (the RAW observation: rd' after an ALU form or a
-load, the memory word(s) after a store), computed here from the Zc specification semantics
-(tools/specs/riscv-isa-manual/src/unpriv/zcb.adoc). red=True makes the PROGRAM deviate on one intent
-(one ALU form is emitted as a different form whose result differs) while the expectation stays true.
+plan(seed, red=False, red_item=None) draws the scenario from random.Random(f"{seed}:program:cmp_zcb"): a
+shuffled sequence of Zcb operations over x8..x15 (store-then-load pairs of the same location at every base
+alignment and uimm, the five ALU forms over the TP-CMP-036 operand mix, c.mul over every rsd'/rs2' with W7
+operands), unrelated filler instructions between them, and the expected value of every report word the
+program stores to GEN_MM_EOT_ADDR (the RAW observation: rd' after an ALU form or a load, the memory word(s)
+after a store), computed here from the Zc specification semantics
+(tools/specs/riscv-isa-manual/src/unpriv/zcb.adoc). red=True makes the PROGRAM deviate on one intent of
+one item while the expectation stays true: TP-CMP-034 a load or store emitted as another form of its size
+class or extension, TP-CMP-036 an ALU form emitted as another form, TP-CMP-038 a c.mul whose rsd' operand
+differs in its low bit; the deviation is chosen so that its emitted result differs from the expectation on
+that item's report words only (self-checked against the same memory model), so exactly that item's
+fire-check fails. red_item names the item; None lets random.Random(f"{seed}:red") draw it.
 emit(plan) renders the RV32IMC assembly (Zcb through the gen_zc_insn.h macros; gcc knows no Zcb).
 
-CLI: python3 gen_cmp_zcb_prog.py --seed N --out <file.S> [--red]
+CLI: python3 gen_cmp_zcb_prog.py --seed N --out <file.S> [--red [--red-item TP-CMP-034|TP-CMP-036|TP-CMP-038]]
 """
 import argparse
 import random
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[4]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from dv.auto_dv.tests.gen_programs.gen_prog_const import TOHOST_PASS  # noqa: E402
+
 RNG_TAG = "program:cmp_zcb"
+RED_TAG = "red"
 MASK32 = 0xFFFFFFFF
 CREGS = tuple(range(8, 16))       # the 3-bit compressed register fields (x8..x15)
 EOT_REG = 28                      # holds GEN_MM_EOT_ADDR for every report store
@@ -30,6 +41,7 @@ SCRATCH_BYTES = 64
 REGION_STRIDE, REGIONS = 8, 6     # a store/load pair works in one region: base = 8*k + align (max ea 8*5+3+3 = 46)
 
 ITEM_LS, ITEM_ALU, ITEM_MUL = "TP-CMP-034", "TP-CMP-036", "TP-CMP-038"
+RED_ITEMS = (ITEM_LS, ITEM_ALU, ITEM_MUL)
 STORES = ("c_sb", "c_sh")
 LOADS = ("c_lbu", "c_lhu", "c_lh")
 ALU_FORMS = ("c_zext_b", "c_sext_b", "c_zext_h", "c_sext_h", "c_not")
@@ -127,10 +139,10 @@ class Op:
     base_off: int = 0         # rs1' = gen_scratch + base_off
     value: int = 0            # store data / ALU operand / c.mul rsd' operand
     value2: int = 0           # c.mul rs2' operand
-    emit_form: str = ""       # what the program emits; differs from form only in the red fixture
+    emit_form: str = ""       # what the program emits; differs from form only in a red fixture
+    emit_value: int = 0       # what the program loads into the data/rsd' register; differs from value only in a red fixture
     text: str = ""            # filler instruction
     words: list = field(default_factory=list)      # scratch word offsets read back after a store
-    reports: list = field(default_factory=list)
 
 
 @dataclass
@@ -145,6 +157,7 @@ class Plan:
     scratch_init: bytes
     filler_init: tuple        # initial values of FILLER_REGS
     summary: dict
+    red_item: str             # the item the red fixture deviates on ("" when green)
     red_note: str
 
 
@@ -179,6 +192,8 @@ def ls_group(rng, store_form, align, uimm_s):
 
 def build_ls_units(rng):
     units = [ls_group(rng, f, a, u) for f in STORES for a in range(4) for u in legal_uimm(f)]
+    # every load form x uimm as its own unit, so the must-cover set never depends on the paired loads' free uimm draw
+    units += [[load_op(rng, f, rng.randrange(0, SCRATCH_BYTES - u - access_size(f) + 1), u)] for f in LOADS for u in legal_uimm(f)]
     for _ in range(rng.randint(2, 8)):
         f = rng.choice(STORES)
         units.append(ls_group(rng, f, rng.randrange(4), draw_uimm(rng, f)))
@@ -220,16 +235,53 @@ def filler(rng):
     return Op("filler", text=t.format(imm12=rng.randint(-2048, 2047), sh=rng.randint(0, 31), imm20=rng.randint(0, 0xFFFFF)))
 
 
-def apply_red(rng, ops):
-    """The red fixture: the first ALU op is emitted as another form whose result differs for its operand."""
-    op = next(o for o in ops if o.kind == "alu")
-    alts = [f for f in ALU_FORMS if f != op.form and alu(f, op.value) != alu(op.form, op.value)]
-    op.emit_form = rng.choice(alts)
-    return f"{op.form} x{op.rd} (operand 0x{op.value:08x}) emitted as {op.emit_form}"
+def readback_words(op):
+    """Scratch word offsets the program reads back after a store: the intended access extent, so the
+    read-back lines stay the same under a red fixture."""
+    ea = op.base_off + op.uimm
+    w0 = ea & ~3
+    return [w0] + ([w0 + 4] if ea + access_size(op.form) - 1 >= w0 + 4 else [])
 
 
-def simulate(ops, scratch_init):
-    """Walk the program order once: memory model of the scratch buffer, one Report per stored word."""
+def red_candidates(rng, ops, item):
+    """(op, attribute, deviated value) of every encodable deviation of the item, in a seed-drawn order."""
+    cands = []
+    if item == ITEM_LS:
+        for op in ops:
+            if op.kind in ("store", "load"):
+                for alt in (STORES if op.kind == "store" else LOADS):
+                    if alt != op.form and op.uimm in legal_uimm(alt) and op.base_off + op.uimm + access_size(alt) <= SCRATCH_BYTES:
+                        cands.append((op, "emit_form", alt))
+    elif item == ITEM_ALU:
+        cands = [(op, "emit_form", alt) for op in ops if op.kind == "alu" for alt in ALU_FORMS if alt != op.form]
+    elif item == ITEM_MUL:
+        cands = [(op, "emit_value", op.value ^ 1) for op in ops if op.kind == "mul"]
+    else:
+        raise ValueError(f"unknown red item {item}; one of {RED_ITEMS}")
+    rng.shuffle(cands)
+    return cands
+
+
+def apply_red(rng, ops, scratch_init, item, expected):
+    """The red fixture: the first candidate deviation whose emitted program changes report words of the
+    item and of no other item (proved on the memory model); the expectation keeps the true program."""
+    exp = [r.expect for r in expected]
+    for op, attr, dev in red_candidates(rng, ops, item):
+        keep = getattr(op, attr)
+        setattr(op, attr, dev)
+        actual = [r.expect for r in simulate(ops, scratch_init, emitted=True)[0]]
+        diff = [i for i, (a, e) in enumerate(zip(actual, exp)) if a != e]
+        if diff and all(expected[i].item == item for i in diff):
+            was = f"0x{keep:08x} -> 0x{dev:08x}" if attr == "emit_value" else f"{keep} -> {dev}"
+            return f"{item}: {op.form} x{op.rd} {attr} {was}; report idx {diff} deviate"
+        setattr(op, attr, keep)
+    raise AssertionError(f"no deviation of {item} changes one of its report words for this seed")
+
+
+def simulate(ops, scratch_init, emitted=False):
+    """Walk the program order once over a byte model of the scratch buffer: one Report per stored word,
+    from the intended forms and operands (the expectation) or, with emitted=True, from what the program
+    emits (the red fixture's self-check)."""
     mem = bytearray(scratch_init)
     reports = []
     items = {ITEM_LS: [], ITEM_ALU: [], ITEM_MUL: []}
@@ -238,31 +290,25 @@ def simulate(ops, scratch_init):
         r = Report(len(reports), item, expect & MASK32, label)
         reports.append(r)
         items[item].append(r.idx)
-        return r
 
     for op in ops:
-        op.reports = []
+        form = op.emit_form if emitted else op.form
+        value = op.emit_value if emitted else op.value
         if op.kind == "store":
-            size = access_size(op.form)
             ea = op.base_off + op.uimm
-            for i in range(size):
-                mem[ea + i] = (op.value >> (8 * i)) & 0xFF
-            w0 = ea & ~3
-            op.words = [w0] + ([w0 + 4] if ea + size - 1 >= w0 + 4 else [])
+            for i in range(access_size(form)):
+                mem[ea + i] = (value >> (8 * i)) & 0xFF
             for w in op.words:
-                op.reports.append(report(ITEM_LS, int.from_bytes(mem[w:w + 4], "little"),
-                                         f"{op.form} x{op.rd},{op.uimm}(x{op.rs1}) ea={ea} word={w}"))
+                report(ITEM_LS, int.from_bytes(mem[w:w + 4], "little"), f"{op.form} x{op.rd},{op.uimm}(x{op.rs1}) ea={ea} word={w}")
         elif op.kind == "load":
-            size = access_size(op.form)
             ea = op.base_off + op.uimm
-            raw = int.from_bytes(mem[ea:ea + size], "little")
-            v = sext(raw, 16) if op.form == "c_lh" else raw
-            op.reports.append(report(ITEM_LS, v, f"{op.form} x{op.rd},{op.uimm}(x{op.rs1}) ea={ea}"))
+            raw = int.from_bytes(mem[ea:ea + access_size(form)], "little")
+            report(ITEM_LS, sext(raw, 16) if form == "c_lh" else raw, f"{op.form} x{op.rd},{op.uimm}(x{op.rs1}) ea={ea}")
         elif op.kind == "alu":
-            op.reports.append(report(ITEM_ALU, alu(op.form, op.value), f"{op.form} x{op.rd} operand=0x{op.value:08x}"))
+            report(ITEM_ALU, alu(form, value), f"{op.form} x{op.rd} operand=0x{op.value:08x}")
         elif op.kind == "mul":
-            op.reports.append(report(ITEM_MUL, (op.value * op.value2) & MASK32,
-                                     f"c_mul x{op.rd},x{op.rs1} 0x{op.value:08x}*0x{op.value2:08x}"))
+            b = value if op.rs1 == op.rd else op.value2
+            report(ITEM_MUL, (value * b) & MASK32, f"c_mul x{op.rd},x{op.rs1} 0x{op.value:08x}*0x{op.value2:08x}")
     return reports, items
 
 
@@ -279,7 +325,7 @@ def body_lines(ops, filler_init):
             if op.base_off:
                 L.append(f"  addi x{op.rs1}, x{op.rs1}, {op.base_off}")
         if op.kind == "store":
-            L.append(f"  li   x{op.rd}, 0x{op.value:08x}")
+            L.append(f"  li   x{op.rd}, 0x{op.emit_value:08x}")
             L.append(f"  {op.emit_form} {op.rd}, {op.uimm}, {op.rs1}")
             L.append(f"  la   x{ADDR_REG}, {SCRATCH}")
             for w in op.words:
@@ -289,11 +335,11 @@ def body_lines(ops, filler_init):
             L.append(f"  {op.emit_form} {op.rd}, {op.uimm}, {op.rs1}")
             L.append(f"  sw   x{op.rd}, 0(x{EOT_REG})")
         elif op.kind == "alu":
-            L.append(f"  li   x{op.rd}, 0x{op.value:08x}")
+            L.append(f"  li   x{op.rd}, 0x{op.emit_value:08x}")
             L.append(f"  {op.emit_form} {op.rd}")
             L.append(f"  sw   x{op.rd}, 0(x{EOT_REG})")
         elif op.kind == "mul":
-            L.append(f"  li   x{op.rd}, 0x{op.value:08x}")
+            L.append(f"  li   x{op.rd}, 0x{op.emit_value:08x}")
             if op.rs1 != op.rd:
                 L.append(f"  li   x{op.rs1}, 0x{op.value2:08x}")
             L.append(f"  {op.emit_form} {op.rd}, {op.rs1}")
@@ -326,11 +372,21 @@ def check_coverage(p):
     assert sum(1 for o in muls if o.rd == o.rs1) >= 2, "c.mul same-register class"
     for o in stores + loads:
         assert 0 <= o.base_off + o.uimm + access_size(o.form) <= SCRATCH_BYTES, f"access outside the scratch buffer: {o}"
+        assert 0 <= o.base_off + o.uimm + access_size(o.emit_form) <= SCRATCH_BYTES, f"emitted access outside the scratch buffer: {o}"
     assert p.k == len(p.reports) and sum(len(v) for v in p.items.values()) == p.k
     assert all(0 <= ord(c) < 128 for c in emit(p)), "non-ASCII in the emitted program"
 
 
-def plan(seed, red=False):
+def red_item_of(seed, red_item):
+    """The item a red fixture deviates on: the named one, else the seed's own draw."""
+    if red_item is None:
+        return random.Random(f"{int(seed)}:{RED_TAG}").choice(RED_ITEMS)
+    if red_item not in RED_ITEMS:
+        raise ValueError(f"unknown red item {red_item}; one of {RED_ITEMS}")
+    return red_item
+
+
+def plan(seed, red=False, red_item=None):
     rng = random.Random(f"{int(seed)}:{RNG_TAG}")
     scratch_init = bytes(rng.getrandbits(8) for _ in range(SCRATCH_BYTES))
     filler_init = tuple(rng.getrandbits(32) for _ in FILLER_REGS)
@@ -342,9 +398,12 @@ def plan(seed, red=False):
             ops.extend(filler(rng) for _ in range(rng.choice((0, 0, 1, 1, 2))))
             ops.append(op)
     for op in ops:
-        op.emit_form = op.form
-    red_note = apply_red(rng, ops) if red else ""
+        op.emit_form, op.emit_value = op.form, op.value
+        if op.kind == "store":
+            op.words = readback_words(op)
     reports, items = simulate(ops, scratch_init)
+    red_item = red_item_of(seed, red_item) if red else ""
+    red_note = apply_red(rng, ops, scratch_init, red_item, reports) if red else ""
     kinds = [o.kind for o in ops]
     summary = {"ls_groups": len([u for u in units if u[0].kind == "store"]), "stores": kinds.count("store"),
                "loads": kinds.count("load"), "alu": kinds.count("alu"), "mul": kinds.count("mul"),
@@ -354,20 +413,20 @@ def plan(seed, red=False):
     summary["c_mul_same"] = sum(1 for o in ops if o.kind == "mul" and o.rd == o.rs1)
     summary["sh_split"] = sum(1 for o in ops if o.form == "c_sh" and len(o.words) == 2)
     p = Plan(int(seed), bool(red), ops, reports, len(reports), retire_floor(body_lines(ops, filler_init)), items,
-             scratch_init, filler_init, summary, red_note)
+             scratch_init, filler_init, summary, red_item, red_note)
     check_coverage(p)
     return p
 
 
 def emit(p):
-    L = [f"# gen_cmp_zcb_prog.py --seed {p.seed}{' --red' if p.red else ''}: Zcb program of gen_test_cmp_zcb",
+    L = [f"# gen_cmp_zcb_prog.py --seed {p.seed}{' --red --red-item ' + p.red_item if p.red else ''}: Zcb program of gen_test_cmp_zcb",
          f"# k={p.k} report words (TP-CMP-034 {len(p.items[ITEM_LS])}, TP-CMP-036 {len(p.items[ITEM_ALU])}, "
          f"TP-CMP-038 {len(p.items[ITEM_MUL])}), gen_min_retired={p.min_retired}"]
     if p.red:
-        L.append(f"# RED FIXTURE: {p.red_note}; the expectation keeps the true form, so the fire-check must fail")
+        L.append(f"# RED FIXTURE {p.red_note}; the expectation keeps the true program, so the {p.red_item} fire-check must fail")
     L += ['.include "gen_zc_insn.h"', '.include "gen_mmio_map.h"', "", ".section .text", ".globl _start", "_start:"]
     L += body_lines(p.ops, p.filler_init)
-    L += ["  li   gp, 1", "  la   t5, tohost", "  sw   gp, 0(t5)", "1:", "  j    1b", "",
+    L += [f"  li   gp, {TOHOST_PASS}", "  la   t5, tohost", "  sw   gp, 0(t5)", "1:", "  j    1b", "",
           ".section .data", ".align 6", ".globl tohost", "tohost:   .dword 0", ".globl fromhost", "fromhost: .dword 0",
           ".align 4", f"{SCRATCH}:"]
     for i in range(0, SCRATCH_BYTES, 16):
@@ -380,13 +439,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--red", action="store_true", help="emit the TDD red fixture (one ALU form deviates)")
+    ap.add_argument("--red", action="store_true", help="emit the TDD red fixture (one item's program deviates)")
+    ap.add_argument("--red-item", choices=RED_ITEMS, help="the item the red fixture deviates on (default: the seed draws it); implies --red")
     a = ap.parse_args()
-    p = plan(a.seed, a.red)
+    red = a.red or a.red_item is not None
+    p = plan(a.seed, red, a.red_item)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(emit(p))
-    print(f"OK seed={a.seed} red={a.red} out={a.out} k={p.k} min_retired={p.min_retired} {p.summary}"
-          + (f" red_note={p.red_note!r}" if a.red else ""))
+    print(f"OK seed={a.seed} red={red} out={a.out} k={p.k} min_retired={p.min_retired} {p.summary}"
+          + (f" red_item={p.red_item} red_note={p.red_note!r}" if red else ""))
     return 0
 
 

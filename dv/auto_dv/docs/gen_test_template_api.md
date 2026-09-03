@@ -27,8 +27,8 @@ class MyTest(GenTest):
     schedulable = GenTest.schedulable      # regime knobs layers 2/3 may vary (a subset per test)
     async def stimulus(self): ...          # bridge commands, waits (runs while the program runs)
     def fire_check(self): ...              # self.check("fire_tp_<area>_<nnn>", ok, "detail") per item
-    plan_group = None                      # test-plan group; None: gen_<x> for gen_test_<x>
-    def declare_bins(self): ...            # override only to declare a subset; default lib.plan_bins(name, plan_group)
+    def declare_bins(self): ...            # override only to declare a subset; default: the plan's bins of the
+                                           #   items named by the class's fire_tp_<area>_<nnn> methods
 
 @cocotb.test()
 async def gen_test_<area>_<topic>(dut):
@@ -58,7 +58,7 @@ Every logged string is ASCII (`lib.check_ascii` runs over the test tree in the l
 | Attribute | Default | Meaning |
 |---|---|---|
 | `name` | `gen_test_template` | test name; equals the testlist entry and the manifest stem |
-| `plan_group` | `None` (gen_<x> for gen_test_<x>) | test-plan group whose bins `declare_bins()` declares by default, derived by the manifest generator's own code (`gen_fcov_manifest.plan_bins`), so the rendered manifest is proven current at every run |
+| (items) | the class's `fire_tp_<area>_<nnn>` methods | `declare_bins()` defaults to the plan's bins of exactly those items (`lib.fire_items`, `lib.plan_bins`, the manifest generator's own code); `gen_fcov_manifest.py --test-module <file> --test <name> --write` renders the same set, so a manifest covers the items the test checks and finish() proves it current at every run |
 | `schedulable` | `lib.REGIME_KNOBS` (all 20 regime knobs) | the knobs the test DECLARES layers 2 and 3 must vary; `lib.TIMING_ONLY_KNOBS` (bus latencies, outstanding cap, scramble-key delay) for a program with no handler for injected errors or events. Only the declared knobs the build consumes (`lib.CONSUMED_KNOBS`, Section 8) are drawn and scheduled |
 | `layers_required` | `True` | a declared knob without a REGIME_SET consumer in the build fails `setup()` (`GEN_TEST_FAIL <name>: declared regime knobs ... have no REGIME_SET consumer in this build`), so a test never runs with its layers silently off; `False` is for bring-up tests only (`measured: false`, reason in the docstring) and logs `GEN_TEST_LAYERS not_applied` instead |
 | `k_range` | `(1, 5)` | inclusive range of the schedule phase count K (CG-REG-007 `cp_phase_count`) |
@@ -99,7 +99,7 @@ MEM_ERR_ARM are NOT in the library: their authority is the step-2b dispatcher, n
 the codegen is asked to render them into `gen_knobs.py`; tests that need them wait), `lib.program_min_retired(image)`
 (riscv-dv `+instr_cnt` of the entry, or the directed program's `gen_min_retired` word),
 `lib.program_symbol_word(image, symbol)`, `lib.riscv_dv_instr_cnt(test)`,
-`lib.plan_bins(test, group)`, `lib.load_manifest_bins(test)`, `lib.check_manifest_matches(test, declared)`.
+`lib.fire_items(cls)`, `lib.plan_bins(test, items)`, `lib.load_manifest_bins(test)`, `lib.check_manifest_matches(test, declared)`.
 
 ## 5. The regime schedule text (+gen_regime_sched)
 
@@ -142,8 +142,10 @@ root on `PYTHONPATH`): schedule determinism and seed dependence,
 text round trip, REGIME_SET argument mapping, knob draw domain, mixed-trigger-kind refusal, riscv-dv
 `+instr_cnt` lookup, the consumed-knob derivation from the dispatcher source (fixture with the `automatic` form and commented-out tests, and the negative case), ASCII scan of every test source and program, and the test-module structure check `lib.check_test_module` over every `gen_test_*.py`: a GenTest subclass overrides only `stimulus`, `fire_check`, `declare_bins` and `fire_*` methods (never `run`, `finish`, `check`, `setup` or any other template method), calls `self.check` at least once, and never passes a literal as the `ok` argument (three red sources are refused in the self-test). `python3 -m py_compile` on each
 test module. Both run before a test is offered to Runtime. `python3 dv/auto_dv/tests/gen_fcov_manifest.py
---group <group> --test <test> [--write]` renders the test's manifest from the plan's traceability CSV
-(`--self-test` checks it on gen_reg_schedule); `lib.check_manifest_matches` compares it with
+--group <group> --test <test> [--write]` renders the test's manifest from the plan's traceability CSV (`--test-module <file>` for the
+items the test's fire_tp_* methods name, the acceptance form; `--group` for a whole group before a test exists; the
+`[CYCLE-CLAUSE ...]` marker token keeps a marked item's CG-WIT-001 witness bin out, rule f; `--self-test` checks it on
+gen_reg_schedule, TP-CSR-029 and gen_test_cmp_zcb.py); `lib.check_manifest_matches` compares it with
 `declare_bins()`.
 
 ## 8. Known limits (this version)

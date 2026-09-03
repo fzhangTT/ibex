@@ -1,11 +1,13 @@
-# Retained logs for the Test Writer transcripts (template Sections 6, 7 and 8; batch 1 Sections 1, 2 and 6)
+# Retained logs for the Test Writer transcripts (template Sections 6, 7 and 8; batch 1 Sections 1, 2, 6, 7 and 8)
 
 Each file is a byte copy of the run artifact named in the source column (work-tree paths under dv/auto_dv/work/test-writer/
 are gitignored; the two flow files live in Runtime's shared out-tree /proj_soc/user_dev/fzhang/ibex_dv_out). stdout.log is the
 cocotb side (every GEN_TEST_* line), sim.log the VCS/UVM side (UVM_ERROR counts, comparator rows), verdict.txt the local
 harness verdict. Columns: evidence path, source, bytes, md5 (md5sum of the copy, verified equal to the source at copy time).
 Run directory names: prefix_* / postfix_* / postfix2_* are the template's Sections 6 and 7 runs, <group>_{s1,s2,red1} and
-declbins_* the batch-1 runs, ret_* / ret2_* the retention-landing runs (Section 8 of the template transcript).
+declbins_* the batch-1 runs, ret_* / ret2_* the retention-landing runs (template Section 8), rem_* / rem2_* the batch-1
+remediation runs (batch-1 Section 8: greens on the committed tree with the per-item manifests, one red per fire_tp item;
+for those reds only stdout.log is kept: a red's sim.log ends before the UVM report and repeats the greens' comparator rows).
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -132,6 +134,113 @@ declbins_* the batch-1 runs, ret_* / ret2_* the retention-landing runs (Section 
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_prefix_zero_check_stdout.log | dv/auto_dv/work/test-writer/out_head/prefix_zero_check/stdout.log | 9135 | 4c975151f1034fc67a243b73b8af3239 |
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_red_s1_sim.log | dv/auto_dv/work/test-writer/out_head/red_s1/sim.log | 3799 | c35c9089f9778e2c19f49e9580a5cb84 |
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_red_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/red_s1/stdout.log | 8685 | 5f3fc508994297e938bb5df451c1e0a0 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_cmp_zcb_red1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem2_cmp_zcb_red1/stdout.log | 27580 | c241781f5d06bfdb968c75ffb41b9dda |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_cmp_zcb_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem2_cmp_zcb_s1/sim.log | 5719 | ffffef7171afd013e3455d6348d9139f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_cmp_zcb_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem2_cmp_zcb_s1/stdout.log | 28449 | 700ffb39de103ea89104547698634a0b |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_cmp_zcb_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem2_cmp_zcb_s2/sim.log | 5719 | 8847680f08c9b0f2a34d702c8075202d |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_cmp_zcb_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem2_cmp_zcb_s2/stdout.log | 29315 | b84bef3c20325c8e669a27e244afe897 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_manifest_missing_stdout.log | dv/auto_dv/work/test-writer/out_head/rem2_manifest_missing/stdout.log | 27784 | a632cffbefa6adce2851c5b6fd3c52db |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem2_manifest_stale_stdout.log | dv/auto_dv/work/test-writer/out_head/rem2_manifest_stale/stdout.log | 27761 | c6854ceeebe3005ae9b306241a4019ae |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_red1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_red1/stdout.log | 29198 | 98222c538a687ae79018094f0d5493f3 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_red2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_red2/stdout.log | 29385 | 0aeebc27f9ecb4c5dc7223c353b2ce08 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_s1/sim.log | 5741 | 14a106b2a7516b241d6f754f33820df9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_s1/stdout.log | 30149 | 111db61e89316720766da6450d9152ec |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_s2/sim.log | 5741 | 97d1a694738ddc780eec1c0d0f350d12 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_bit_draft_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_bit_draft_s2/stdout.log | 30582 | 86b7abbb31e8228959427d512995bba8 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_red_034_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_red_034/stdout.log | 27759 | a503671df7a8f7b5319f7aeee93f1f79 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_red_036_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_red_036/stdout.log | 27771 | d833ead8adfed9fa531abc75971eae58 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_red_038_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_red_038/stdout.log | 27755 | f1317cb75882bd6006463cb37d9d4970 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_s1/stdout.log | 20848 | 90183f8c08f9964135f4b2ad298fa9d8 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_s866812001_sim.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_s866812001/sim.log | 5757 | 6c6d777949c1da1d5743d50921ff75bc |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_s866812001_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_s866812001/stdout.log | 28702 | 34b41a4899b536945e07e9875d8a25c1 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_v3_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_v3_s1/sim.log | 5721 | a5209876c0696c1441c4de7c53b39bc6 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_v3_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_v3_s1/stdout.log | 28633 | 8feaefbbbf5f23e34667646678eab3a2 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_v3_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_v3_s2/sim.log | 5721 | 17e4afc8e96b8a75766558a18dd8c559 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcb_v3_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcb_v3_s2/stdout.log | 29499 | a3873381fc3ee8a39296ee8e1d9476bf |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_039_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_039/stdout.log | 497631 | a4eaa7a5af46588bbc183dd0b5318cc1 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_040_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_040/stdout.log | 497201 | 84d89d5610f23e72b749826f36a57e6f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_041_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_041/stdout.log | 497190 | 2831577938994c2b4e58364f1840114f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_042_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_042/stdout.log | 497279 | ea592c1fb86b3441bd315efae5ef01b8 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_043_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_043/stdout.log | 497172 | d7d35617a9b40acf401fe23492e60282 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_045_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_045/stdout.log | 496770 | bc57f9a1d079a720096ab1612fe07d8e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_046_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_046/stdout.log | 497171 | bec79187391f8ad390ed6803d1b28a1b |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_047_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_047/stdout.log | 496762 | f46b47e6a44e1f9d8f985fe35b063a3a |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_048_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_048/stdout.log | 496743 | 628e797fc65c19f23fa568c0a033fff0 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_049_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_049/stdout.log | 497038 | a5e2ef34c075e187670a56065283ca75 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_050_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_050/stdout.log | 496691 | 328ad1e0079ee1acc89837cac9f1cdc4 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_052_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_052/stdout.log | 496682 | 15879a4b6ea1f1ab1a586937f7530b46 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_053_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_053/stdout.log | 496713 | 6b7bbf63bab282d7dd55e89276349d50 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_055_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_055/stdout.log | 496685 | a297f98f3866e2e11a1591459b98c446 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_066_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_066/stdout.log | 496861 | e6f4faae011f1880c4b3a866b37efbd8 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_069_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_069/stdout.log | 497139 | fcc1a231422e4a75b471dea05c45a016 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_red_073_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_red_073/stdout.log | 497205 | 511458f249e44a1bbfb96a6fbd6b10f2 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_s1/sim.log | 5794 | 6ec7b7956c4a975b89aea2329fb450b1 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_s1/stdout.log | 497517 | 7705757b3efb389d50574445d1cd44aa |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_s2/sim.log | 5794 | f0cb57befc46ba72ca3dcc4a712180be |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_cmp_zcmp_basic_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_cmp_zcmp_basic_s2/stdout.log | 498422 | b1e49d6c2b7e748f9a7d605785df7f10 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_red1_001_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_red1_001/stdout.log | 113781 | 7f8bd85433717df5ed6ef71053bec03e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_red1_002_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_red1_002/stdout.log | 113721 | d5af68495db27fa1105aaca463539012 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_red1_003_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_red1_003/stdout.log | 113706 | 48c74d1bfc4fe107f94601d19bc5dd57 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_red1_004_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_red1_004/stdout.log | 113683 | 2cf4c79dd33c2a056c4c973e2983b419 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_red1_012_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_red1_012/stdout.log | 113692 | 11bccbfacf15d82b316883bf5f30545d |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_s1/sim.log | 5755 | 87d9c7ca306d5da6b05fc3e7ad2f9a3c |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_s1/stdout.log | 114525 | d38ae6579dc14997d579c3102bf5e453 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_s2/sim.log | 5755 | 00083d4c6b8672b7444fa7b952a8294f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_s2/stdout.log | 114532 | 5638843ad8aeb434a81155492dcbd8a1 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_red1_001_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_red1_001/stdout.log | 113781 | 2a089ee29ca7f728db793b44df96dfb0 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_red1_002_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_red1_002/stdout.log | 113721 | d7ea3c65798c3aa280db4ba6d90a4181 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_red1_003_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_red1_003/stdout.log | 113706 | 9a10b18095a078d5c76c0a497af61648 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_red1_004_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_red1_004/stdout.log | 113683 | ebc798929a07536bb8ed10b3224962ca |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_red1_012_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_red1_012/stdout.log | 113692 | 41001e5623014303dd3cbc24622d0f85 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_s1/sim.log | 5758 | 4b7a190c24987aa7ab04a7a9112127b2 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_s1/stdout.log | 114525 | c6121064c76e45c7bfec91aa525c5db7 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_s2/sim.log | 5758 | a51f6dd879c85d15e4b0c2f9d75be573 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_access_v2_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_access_v2_s2/stdout.log | 114532 | 08a9f10d9b449991fa19b72375e65f1c |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_037_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_037/stdout.log | 32639 | 25b5b1ebd8c2c69709d96cc5c41969b3 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_105_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_105/stdout.log | 32461 | d8b907ae715cba759f15738de4115cbb |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_106_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_106/stdout.log | 32463 | 9edf8f3505c096dabf74096c9aa90c59 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_107_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_107/stdout.log | 32479 | 40968a44d39c95cc47741afb6bf43fcc |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_108_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_108/stdout.log | 32463 | 1a5f4768d7d88bfe537fd24abeb19702 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_red_109_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_red_109/stdout.log | 32473 | e69f82feb7418fa53107a0536b8f0524 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_s1/sim.log | 15462 | 13c92409a87a5c725f077cbaed65f69e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_s1/stdout.log | 33466 | 0a8723edf2c698a97a5a5165fd1a22ea |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_s2/sim.log | 15453 | 4f190de8ceca2dcb7c4f5ef4d06a04b9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_reset_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_reset_s2/stdout.log | 33301 | 5699923cf3458294d98714bba1391f12 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red023_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red023/stdout.log | 199092 | 0f976ddf9f5f7110ec6b5a1ece9ca343 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red024_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red024/stdout.log | 198686 | 9c809f36845a5ac4c365db271c0938e5 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red025_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red025/stdout.log | 198998 | bab81d9a214c91932afb9913b8df3d2d |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red027_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red027/stdout.log | 199050 | 84561fc66bcce671726c623280f7d10e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red028_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red028/stdout.log | 199058 | 685e198c4e605bc68b63b451d0b234f9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red029_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red029/stdout.log | 199059 | 1e54f148ec9e094a47e6ca9dcc56cdb6 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red030_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red030/stdout.log | 199004 | 3291035daa8a29c9ea05c1461f26c602 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red035_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red035/stdout.log | 199237 | 7fe46b312adbb7513ffcc5479f75230f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_red036_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_red036/stdout.log | 199049 | 743335dd679a122df8465294f8194429 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_s1/sim.log | 101307 | 28a994cc673da5c6f6b4f8a6743f89f4 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_s1/stdout.log | 199937 | af7ca6deed50e0ec6dfd12f28173ff59 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_s2/sim.log | 117533 | 4f52593bef2831580cd6564441cefe9e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_csr_trap_setup_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_csr_trap_setup_s2/stdout.log | 216021 | 681fd69b32be12c31be402b43d9640b9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_manifest_stale_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_manifest_stale/stdout.log | 20837 | a8ff05b7017616e121e0b6f02c3e8b35 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red1/stdout.log | 228029 | f10dbc11d29384bfe41254973fb81efa |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red2/stdout.log | 228054 | c13698f7b4f49d1a2047acdcca959e78 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red3_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red3/stdout.log | 228029 | b381e546be80bbe3c86f41c708306614 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red4_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red4/stdout.log | 228011 | 4aaae61ec7dcf931c19e020bfff921c6 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red5_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red5/stdout.log | 228045 | e71a2879312154cc1a5584b2b26b557a |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red6_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red6/stdout.log | 228105 | 7651f6a5cdc1f5d6fb7d79f57fc1f166 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red7_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red7/stdout.log | 228048 | 4d0bacb59a23a16f59a18cad82fc65f7 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_red8_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_red8/stdout.log | 228046 | cd6b0267924ef1fc2a8f67fd56589de9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s1/sim.log | 128109 | 7fb9b53ae39a9e5594246b5c9dcfa95f |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s1/stdout.log | 228912 | d334150d4a3b5cfc957b3dfd7451565e |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s25_sim.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s25/sim.log | 134109 | beb6da64619d2424ae2425facbe3ca61 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s25_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s25/stdout.log | 235585 | 90aca50cbdee9ae6a8f6cf74d4867c2d |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s2/sim.log | 133385 | 7466b429646951486bdae4142babf5f9 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_pmp_csr_warl_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_pmp_csr_warl_s2/stdout.log | 234198 | 6ea366ea5e0f7751bb920e82e4755bf2 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_red003_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_red003/stdout.log | 15546 | 478240b7ec6443f060e669611dd7cf19 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_red006_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_red006/stdout.log | 15579 | a57fd66fdf73111e26b20dc6c6c3ece0 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_red007_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_red007/stdout.log | 15599 | 09d9e146965e9771d5c24cdef793870d |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_s1_sim.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_s1/sim.log | 7675 | 70fe949d8ec1de18c7b808b58aee79ee |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_s1/stdout.log | 16615 | eddc1049d88f3f5af7f1e97e8e196c72 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_s2_sim.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_s2/sim.log | 7672 | 9b3d6b2dae68752a8c7d10fbaeb56056 |
+| dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_rem_rst_boot_s2_stdout.log | dv/auto_dv/work/test-writer/out_head/rem_rst_boot_s2/stdout.log | 16611 | 345b6f29096c74195d18aaa0f0df5459 |
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_report_red_s1_sim.log | dv/auto_dv/work/test-writer/out_head/report_red_s1/sim.log | 3816 | b65e0334293c07634512d3c40cfb7b26 |
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_report_red_s1_stdout.log | dv/auto_dv/work/test-writer/out_head/report_red_s1/stdout.log | 9447 | bf01d4055e167bb22c17cf8da9fe308b |
 | dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_report_s1_sim.log | dv/auto_dv/work/test-writer/out_head/report_s1/sim.log | 5626 | ca4ef0511a039624f31ae6e58a3dc073 |

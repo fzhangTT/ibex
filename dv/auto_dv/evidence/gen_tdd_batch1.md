@@ -257,3 +257,151 @@ reds and the two greens followed (11:10-11:12 UTC, all in one harness invocation
 
 Wave 2: the same eight requests are re-filed against the commit that carries this fix (Section 7 when the manifests
 arrive).
+
+## 7. Acceptance wave 2 (Runtime, head mode at 38d1262 or later, 11:2x-11:3x UTC)
+
+Requests test-writer-023/024/025/026 (greens, 3 seeds) and 027/028/029/030 (red fixtures), filed 11:21 UTC against the
+declare_bins fix. Manifests dv/auto_dv/work/runtime/results/test-writer-<seq>/manifest.yaml.
+
+| Request | Test | Seed | Verdict | Reason | head_sha |
+|---|---|---|---|---|---|
+| test-writer-023 | gen_test_csr_access | 115015914 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-023 | gen_test_csr_access | 134006003 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-023 | gen_test_csr_access | 1905524115 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-024 | gen_test_cmp_zcb | 866812001 | NOT_RUN | gen_run.py wrote no result.yaml (see driver.log) | 7fa426282957 |
+| test-writer-024 | gen_test_cmp_zcb | 1589399401 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-024 | gen_test_cmp_zcb | 1803095304 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-025 | gen_test_cmp_zcmp_basic | 180641635 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-025 | gen_test_cmp_zcmp_basic | 1413406531 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-025 | gen_test_cmp_zcmp_basic | 1484830938 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-026 | gen_test_bit_draft | 81770765 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-026 | gen_test_bit_draft | 1268056028 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-026 | gen_test_bit_draft | 1418596552 | PASS | no collected failure mechanism; end marker and config banner present | 7fa426282957 |
+| test-writer-027 | gen_test_csr_access_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:992 | 7fa426282957 |
+| test-writer-028 | gen_test_cmp_zcb_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:184 | 7fa426282957 |
+| test-writer-029 | gen_test_cmp_zcmp_basic_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:2643 | 7fa426282957 |
+| test-writer-030 | gen_test_bit_draft_red | 1 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:109 | 7fa426282957 |
+
+Totals: {'PASS': 11, 'RED-OK': 4, 'NOT_RUN': 1, 'FAIL': 0}. Eleven of twelve green runs PASS with UVM_ERROR 0 and GEN_TEST_BINS equal to the committed manifest; all four red
+fixtures RED-OK (red_expect matched on the first collected evidence line). The one NOT_RUN (gen_test_cmp_zcb, seed 866812001) is a
+generator defect of the Test Writer's batch, not the flow's: gen_cmp_zcb_prog.py's own must-cover self-check
+(`AssertionError: load form x uimm not covered`, program/generator.log) trips for about 5 percent of seeds (a 41-seed host
+sweep of all eight generators, 11:40 UTC, found it on 2 of 41 seeds for cmp_zcb and no crash in the other seven). The flow
+stopped the run before the simulator as designed (NOT_RUN with the generator log retained). Fix and re-run follow in the
+batch-1 remediation round (Critic verdict dv/auto_dv/docs/gen_critic_batch1_v1.md).
+
+## 8. Batch-1 remediation (Critic verdict dv/auto_dv/docs/gen_critic_batch1_v1.md; cross-model review of the batch)
+
+Shared changes by the Test Writer (11:40-12:05 UTC): a test's declared bins are the plan bins of the items its fire_tp_<area>_<nnn>
+methods name (lib.fire_items / lib.plan_bins) and gen_fcov_manifest.py --test-module renders the same set, so every manifest now covers
+the built items only (M-1: rst_boot 42 -> 9 bins, csr_access 83 -> 80, csr_trap_setup 206 -> 172, cmp_zcmp_basic 479 -> 473, bit_draft
+480 -> 15); the `[CYCLE-CLAUSE ...]` marker token keeps a marked item's CG-WIT-001 witness bin out (M-2, rule f; the csr_trap_setup
+manifest has no gen_wit bin); one dv/auto_dv/tests/gen_programs/gen_prog_const.py holds CSR addresses, reset values, tohost codes and
+the configuration name (L-2); the cmp_zcb generator emits every load form x uimm as its own unit (the wave-2 NOT_RUN crash; 404
+generator runs clean); the eight red entries pin one item (`--red --red-item <TP>`) and their red_expect names the fire id (cross-model
+Major). Eight per-test remediation subagents (one per test, editing only their two files) implemented M-3 (per-item red:
+`--red-item <TP>`, the seed draws the item otherwise, expectations unchanged), M-4 (no observation avoided: the csr_access rd = x0 reads
+are gone and the clause is declared blocked on T-102; the pmp LRWX = 1111 refusal is gone and the pattern is programmed, no shim gap
+seen), the Section 3 items and L-3; dispositions per finding in dv/auto_dv/evidence/gen_critic_response_batch1.md. The Test Writer
+re-verified: py_compile, the lib self-test (structure check over nine tests), ASCII, no hierarchical access, the seed-1 source of every
+generator byte-identical to the one its proven runs used, every manifest unchanged by a --test-module re-render, every --red-item id
+accepted by its generator, and every run directory below re-read (12:10 UTC).
+
+### 8.1 Greens on the committed template with the per-item manifests present (H-1), seed 1 and 2
+
+| Run (out_head/<dir>) | Result | GEN_TEST_BINS | UVM_ERROR | md5 (stdout.log) |
+|---|---|---|---|---|
+| rem_rst_boot_s1 | PASS | 9 | 8 | eddc1049d88f3f5af7f1e97e8e196c72 |
+| rem_rst_boot_s2 | PASS | 9 | 8 | 345b6f29096c74195d18aaa0f0df5459 |
+| rem_csr_reset_s1 | PASS | 81 | 42 | 0a8723edf2c698a97a5a5165fd1a22ea |
+| rem_csr_reset_s2 | PASS | 81 | 42 | 5699923cf3458294d98714bba1391f12 |
+| rem_csr_access_v2_s1 | PASS | 80 | 0 | c6121064c76e45c7bfec91aa525c5db7 |
+| rem_csr_access_v2_s2 | PASS | 80 | 0 | 08a9f10d9b449991fa19b72375e65f1c |
+| rem_csr_trap_setup_s1 | PASS | 172 | 408 | af7ca6deed50e0ec6dfd12f28173ff59 |
+| rem_csr_trap_setup_s2 | PASS | 172 | 479 | 681fd69b32be12c31be402b43d9640b9 |
+| rem_cmp_zcb_v3_s1 | PASS | 110 | 0 | 8feaefbbbf5f23e34667646678eab3a2 |
+| rem_cmp_zcb_v3_s2 | PASS | 110 | 0 | a3873381fc3ee8a39296ee8e1d9476bf |
+| rem_cmp_zcb_s866812001 | PASS | 110 | 0 | 34b41a4899b536945e07e9875d8a25c1 |
+| rem_cmp_zcmp_basic_s1 | PASS | 473 | 0 | 7705757b3efb389d50574445d1cd44aa |
+| rem_cmp_zcmp_basic_s2 | PASS | 473 | 0 | b1e49d6c2b7e748f9a7d605785df7f10 |
+| rem_bit_draft_s1 | PASS | 15 | 0 | 111db61e89316720766da6450d9152ec |
+| rem_bit_draft_s2 | PASS | 15 | 0 | 86b7abbb31e8228959427d512995bba8 |
+| rem_pmp_csr_warl_s1 | PASS | 266 | 532 | d334150d4a3b5cfc957b3dfd7451565e |
+| rem_pmp_csr_warl_s2 | PASS | 266 | 556 | 6ea366ea5e0f7751bb920e82e4755bf2 |
+| rem_pmp_csr_warl_s25 | PASS | 266 | 556 | 90aca50cbdee9ae6a8f6cf74d4867c2d |
+
+UVM_ERROR counts above 0 are the T-102 comparator rows (rst_boot 8, csr_reset 42, csr_trap_setup 408/479, pmp_csr_warl 532/556; first
+lines in the retained sim.log copies); the DUT matched every program-level expectation. rem_cmp_zcb_s866812001 is the wave-2 crash seed,
+green after the generator fix; rem_pmp_csr_warl_s25 is the seed that draws LRWX = 1111 (0 isa_csr rows: no shim gap on that pattern).
+
+### 8.2 One red per fire_tp item (M-3), seed 1, program deviation only
+
+| Run (out_head/<dir>) | Result (first failing fire-check) | md5 (stdout.log) |
+|---|---|---|
+| rem_bit_draft_red1 | FAIL 1: fire_tp_bit_016_gorci first | 98222c538a687ae79018094f0d5493f3 |
+| rem_bit_draft_red2 | FAIL 2: fire_tp_bit_016_gorci first | 0aeebc27f9ecb4c5dc7223c353b2ce08 |
+| rem_cmp_zcb_red_034 | FAIL 1: fire_tp_cmp_034 first | a503671df7a8f7b5319f7aeee93f1f79 |
+| rem_cmp_zcb_red_036 | FAIL 1: fire_tp_cmp_036 first | d833ead8adfed9fa531abc75971eae58 |
+| rem_cmp_zcb_red_038 | FAIL 1: fire_tp_cmp_038 first | f1317cb75882bd6006463cb37d9d4970 |
+| rem_cmp_zcmp_basic_red_039 | FAIL 3: fire_tp_cmp_039 first | a4eaa7a5af46588bbc183dd0b5318cc1 |
+| rem_cmp_zcmp_basic_red_040 | FAIL 2: fire_tp_cmp_039 first | 84d89d5610f23e72b749826f36a57e6f |
+| rem_cmp_zcmp_basic_red_041 | FAIL 2: fire_tp_cmp_039 first | 2831577938994c2b4e58364f1840114f |
+| rem_cmp_zcmp_basic_red_042 | FAIL 2: fire_tp_cmp_039 first | ea592c1fb86b3441bd315efae5ef01b8 |
+| rem_cmp_zcmp_basic_red_043 | FAIL 2: fire_tp_cmp_043 first | d7d35617a9b40acf401fe23492e60282 |
+| rem_cmp_zcmp_basic_red_045 | FAIL 1: fire_tp_cmp_045 first | bc57f9a1d079a720096ab1612fe07d8e |
+| rem_cmp_zcmp_basic_red_046 | FAIL 2: fire_tp_cmp_045 first | bec79187391f8ad390ed6803d1b28a1b |
+| rem_cmp_zcmp_basic_red_047 | FAIL 1: fire_tp_cmp_047 first | f46b47e6a44e1f9d8f985fe35b063a3a |
+| rem_cmp_zcmp_basic_red_048 | FAIL 1: fire_tp_cmp_048 first | 628e797fc65c19f23fa568c0a033fff0 |
+| rem_cmp_zcmp_basic_red_049 | FAIL 2: fire_tp_cmp_047 first | a5e2ef34c075e187670a56065283ca75 |
+| rem_cmp_zcmp_basic_red_050 | FAIL 1: fire_tp_cmp_050 first | 328ad1e0079ee1acc89837cac9f1cdc4 |
+| rem_cmp_zcmp_basic_red_052 | FAIL 1: fire_tp_cmp_052 first | 15879a4b6ea1f1ab1a586937f7530b46 |
+| rem_cmp_zcmp_basic_red_053 | FAIL 1: fire_tp_cmp_053 first | 6b7bbf63bab282d7dd55e89276349d50 |
+| rem_cmp_zcmp_basic_red_055 | FAIL 1: fire_tp_cmp_055 first | a297f98f3866e2e11a1591459b98c446 |
+| rem_cmp_zcmp_basic_red_066 | FAIL 1: fire_tp_cmp_066 first | e6f4faae011f1880c4b3a866b37efbd8 |
+| rem_cmp_zcmp_basic_red_069 | FAIL 2: fire_tp_cmp_052 first | fcc1a231422e4a75b471dea05c45a016 |
+| rem_cmp_zcmp_basic_red_073 | FAIL 2: fire_tp_cmp_047 first | 511458f249e44a1bbfb96a6fbd6b10f2 |
+| rem_csr_access_v2_red1_001 | FAIL 1: fire_tp_csr_001 first | 2a089ee29ca7f728db793b44df96dfb0 |
+| rem_csr_access_v2_red1_002 | FAIL 1: fire_tp_csr_002 first | d7ea3c65798c3aa280db4ba6d90a4181 |
+| rem_csr_access_v2_red1_003 | FAIL 1: fire_tp_csr_003 first | 9a10b18095a078d5c76c0a497af61648 |
+| rem_csr_access_v2_red1_004 | FAIL 1: fire_tp_csr_004 first | ebc798929a07536bb8ed10b3224962ca |
+| rem_csr_access_v2_red1_012 | FAIL 1: fire_tp_csr_012 first | 41001e5623014303dd3cbc24622d0f85 |
+| rem_csr_reset_red_037 | FAIL 1: fire_tp_csr_037 first | 25b5b1ebd8c2c69709d96cc5c41969b3 |
+| rem_csr_reset_red_105 | FAIL 1: fire_tp_csr_105 first | d8b907ae715cba759f15738de4115cbb |
+| rem_csr_reset_red_106 | FAIL 1: fire_tp_csr_106 first | 9edf8f3505c096dabf74096c9aa90c59 |
+| rem_csr_reset_red_107 | FAIL 1: fire_tp_csr_107 first | 40968a44d39c95cc47741afb6bf43fcc |
+| rem_csr_reset_red_108 | FAIL 1: fire_tp_csr_108 first | 1a5f4768d7d88bfe537fd24abeb19702 |
+| rem_csr_reset_red_109 | FAIL 1: fire_tp_csr_109 first | e69f82feb7418fa53107a0536b8f0524 |
+| rem_csr_trap_setup_red023 | FAIL 1: fire_tp_csr_023 first | 0f976ddf9f5f7110ec6b5a1ece9ca343 |
+| rem_csr_trap_setup_red024 | FAIL 1: fire_tp_csr_024 first | 9c809f36845a5ac4c365db271c0938e5 |
+| rem_csr_trap_setup_red025 | FAIL 1: fire_tp_csr_025 first | bab81d9a214c91932afb9913b8df3d2d |
+| rem_csr_trap_setup_red027 | FAIL 1: fire_tp_csr_027 first | 84561fc66bcce671726c623280f7d10e |
+| rem_csr_trap_setup_red028 | FAIL 1: fire_tp_csr_028 first | 685e198c4e605bc68b63b451d0b234f9 |
+| rem_csr_trap_setup_red029 | FAIL 1: fire_tp_csr_029 first | 1e54f148ec9e094a47e6ca9dcc56cdb6 |
+| rem_csr_trap_setup_red030 | FAIL 1: fire_tp_csr_030 first | 3291035daa8a29c9ea05c1461f26c602 |
+| rem_csr_trap_setup_red035 | FAIL 1: fire_tp_csr_035 first | 7fe46b312adbb7513ffcc5479f75230f |
+| rem_csr_trap_setup_red036 | FAIL 1: fire_tp_csr_036 first | 743335dd679a122df8465294f8194429 |
+| rem_pmp_csr_warl_red1 | FAIL 1: fire_tp_pmp_001 first | f10dbc11d29384bfe41254973fb81efa |
+| rem_pmp_csr_warl_red2 | FAIL 1: fire_tp_pmp_002 first | c13698f7b4f49d1a2047acdcca959e78 |
+| rem_pmp_csr_warl_red3 | FAIL 1: fire_tp_pmp_003 first | b381e546be80bbe3c86f41c708306614 |
+| rem_pmp_csr_warl_red4 | FAIL 1: fire_tp_pmp_004 first | 4aaae61ec7dcf931c19e020bfff921c6 |
+| rem_pmp_csr_warl_red5 | FAIL 1: fire_tp_pmp_005 first | e71a2879312154cc1a5584b2b26b557a |
+| rem_pmp_csr_warl_red6 | FAIL 1: fire_tp_pmp_006 first | 7651f6a5cdc1f5d6fb7d79f57fc1f166 |
+| rem_pmp_csr_warl_red7 | FAIL 1: fire_tp_pmp_007 first | 4d0bacb59a23a16f59a18cad82fc65f7 |
+| rem_pmp_csr_warl_red8 | FAIL 1: fire_tp_pmp_008 first | cd6b0267924ef1fc2a8f67fd56589de9 |
+| rem_rst_boot_red003 | FAIL 1: fire_tp_rst_003 first | 478240b7ec6443f060e669611dd7cf19 |
+| rem_rst_boot_red006 | FAIL 1: fire_tp_rst_006 first | a57fd66fdf73111e26b20dc6c6c3ece0 |
+| rem_rst_boot_red007 | FAIL 1: fire_tp_rst_007 first | 09d9e146965e9771d5c24cdef793870d |
+
+Every red trips the intended item; where a superset check audits the same records it precedes the intended one in fire_check order
+(cmp_zcmp_basic 039 for any push, 045 for any pop, 047 for the popret's words, 052 for the hazard mva01s; bit_draft red2 trips the gorci
+compare and the new control-coverage check). The first csr_access remediation runs (rem_csr_access_s1/s2/red1_*) were overwritten by a
+shared-scratchpad collision between two subagents and are superseded by the rem_csr_access_v2_* runs; the rem_cmp_zcb_s1 and
+rem_manifest_stale runs of 11:37 UTC failed on a stale image (old generator) and are superseded by rem2_*: all retained, none cited as proof.
+
+### 8.3 Reproduction
+
+    python3 dv/auto_dv/tests/gen_programs/gen_<g>_prog.py --seed 1 --out <w>/gen_source.S --red --red-item <TP-ID>
+    python3 dv/auto_dv/stim/gen_program.py --directed <w>/gen_source.S --seed 1 --out <w>/prog --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    SEED=1 dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh <OUT> <name> dv.auto_dv.tests.gen_test_<g> <w>/prog/prog.vmem
+
+Flow: the red entries in gen_testlist_entries.yaml pin one item each; acceptance wave 3 re-runs the four comparator-clean tests.

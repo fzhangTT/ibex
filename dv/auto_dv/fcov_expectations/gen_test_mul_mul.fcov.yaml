@@ -1,0 +1,684 @@
+test: gen_test_mul_mul
+owner: test-writer
+bins:
+  - gen_mul_ops_cg.cp_op.mul
+  - gen_mul_ops_cg.cp_result_class.all_ones
+  - gen_mul_ops_cg.cp_result_class.fffffffe
+  - gen_mul_ops_cg.cp_result_class.int_max
+  - gen_mul_ops_cg.cp_result_class.int_min
+  - gen_mul_ops_cg.cp_result_class.one
+  - gen_mul_ops_cg.cp_result_class.other
+  - gen_mul_ops_cg.cp_result_class.r3fffffff
+  - gen_mul_ops_cg.cp_result_class.r40000000
+  - gen_mul_ops_cg.cp_result_class.zero
+  - gen_mul_ops_cg.cp_rs1_class.all_ones
+  - gen_mul_ops_cg.cp_rs1_class.int_max
+  - gen_mul_ops_cg.cp_rs1_class.int_min
+  - gen_mul_ops_cg.cp_rs1_class.neg_rand
+  - gen_mul_ops_cg.cp_rs1_class.one
+  - gen_mul_ops_cg.cp_rs1_class.p16
+  - gen_mul_ops_cg.cp_rs1_class.pos_rand
+  - gen_mul_ops_cg.cp_rs1_class.two
+  - gen_mul_ops_cg.cp_rs1_class.zero
+  - gen_mul_ops_cg.cp_rs2_class.all_ones
+  - gen_mul_ops_cg.cp_rs2_class.int_max
+  - gen_mul_ops_cg.cp_rs2_class.int_min
+  - gen_mul_ops_cg.cp_rs2_class.neg_rand
+  - gen_mul_ops_cg.cp_rs2_class.one
+  - gen_mul_ops_cg.cp_rs2_class.p16
+  - gen_mul_ops_cg.cp_rs2_class.pos_rand
+  - gen_mul_ops_cg.cp_rs2_class.two
+  - gen_mul_ops_cg.cp_rs2_class.zero
+  - gen_mul_ops_cg.cp_same_regs.all_same
+  - gen_mul_ops_cg.cp_same_regs.distinct
+  - gen_mul_ops_cg.cp_same_regs.rs1_eq_rs2
+  - gen_mul_ops_cg.cp_same_regs.rs_eq_rd
+  - gen_mul_ops_cg.cp_sign_pair.nn
+  - gen_mul_ops_cg.cp_sign_pair.np
+  - gen_mul_ops_cg.cp_sign_pair.pn
+  - gen_mul_ops_cg.cp_sign_pair.pp
+  - gen_mul_ops_cg.cr_op_rs1.mul_all_ones
+  - gen_mul_ops_cg.cr_op_rs1.mul_int_max
+  - gen_mul_ops_cg.cr_op_rs1.mul_int_min
+  - gen_mul_ops_cg.cr_op_rs1.mul_neg_rand
+  - gen_mul_ops_cg.cr_op_rs1.mul_one
+  - gen_mul_ops_cg.cr_op_rs1.mul_p16
+  - gen_mul_ops_cg.cr_op_rs1.mul_pos_rand
+  - gen_mul_ops_cg.cr_op_rs1.mul_two
+  - gen_mul_ops_cg.cr_op_rs1.mul_zero
+  - gen_mul_ops_cg.cr_op_rs2.mul_all_ones
+  - gen_mul_ops_cg.cr_op_rs2.mul_int_max
+  - gen_mul_ops_cg.cr_op_rs2.mul_int_min
+  - gen_mul_ops_cg.cr_op_rs2.mul_neg_rand
+  - gen_mul_ops_cg.cr_op_rs2.mul_one
+  - gen_mul_ops_cg.cr_op_rs2.mul_p16
+  - gen_mul_ops_cg.cr_op_rs2.mul_pos_rand
+  - gen_mul_ops_cg.cr_op_rs2.mul_two
+  - gen_mul_ops_cg.cr_op_rs2.mul_zero
+  - gen_mul_ops_cg.cr_op_same.mul_all_same
+  - gen_mul_ops_cg.cr_op_same.mul_distinct
+  - gen_mul_ops_cg.cr_op_same.mul_rs1_eq_rs2
+  - gen_mul_ops_cg.cr_op_same.mul_rs_eq_rd
+  - gen_mul_ops_cg.cr_op_sign.mul_nn
+  - gen_mul_ops_cg.cr_op_sign.mul_np
+  - gen_mul_ops_cg.cr_op_sign.mul_pn
+  - gen_mul_ops_cg.cr_op_sign.mul_pp
+  - gen_mul_timing_cg.cp_op.mul
+  - gen_mul_ops_cg.cp_op.c_mul
+  - gen_mul_ops_cg.cp_op.mulh
+  - gen_mul_ops_cg.cp_op.mulhsu
+  - gen_mul_ops_cg.cp_op.mulhu
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_all_ones_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_max_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_int_min_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_one_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_p16_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_two_zero
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_all_ones
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_int_max
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_int_min
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_one
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_p16
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_two
+  - gen_mul_ops_cg.cr_extremes.c_mul_zero_zero
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_one
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_p16
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_two
+  - gen_mul_ops_cg.cr_extremes.mul_all_ones_zero
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_one
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_p16
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_two
+  - gen_mul_ops_cg.cr_extremes.mul_int_max_zero
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_one
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_p16
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_two
+  - gen_mul_ops_cg.cr_extremes.mul_int_min_zero
+  - gen_mul_ops_cg.cr_extremes.mul_one_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_one_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_one_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_one_one
+  - gen_mul_ops_cg.cr_extremes.mul_one_p16
+  - gen_mul_ops_cg.cr_extremes.mul_one_two
+  - gen_mul_ops_cg.cr_extremes.mul_one_zero
+  - gen_mul_ops_cg.cr_extremes.mul_p16_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_p16_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_p16_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_p16_one
+  - gen_mul_ops_cg.cr_extremes.mul_p16_p16
+  - gen_mul_ops_cg.cr_extremes.mul_p16_two
+  - gen_mul_ops_cg.cr_extremes.mul_p16_zero
+  - gen_mul_ops_cg.cr_extremes.mul_two_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_two_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_two_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_two_one
+  - gen_mul_ops_cg.cr_extremes.mul_two_p16
+  - gen_mul_ops_cg.cr_extremes.mul_two_two
+  - gen_mul_ops_cg.cr_extremes.mul_two_zero
+  - gen_mul_ops_cg.cr_extremes.mul_zero_all_ones
+  - gen_mul_ops_cg.cr_extremes.mul_zero_int_max
+  - gen_mul_ops_cg.cr_extremes.mul_zero_int_min
+  - gen_mul_ops_cg.cr_extremes.mul_zero_one
+  - gen_mul_ops_cg.cr_extremes.mul_zero_p16
+  - gen_mul_ops_cg.cr_extremes.mul_zero_two
+  - gen_mul_ops_cg.cr_extremes.mul_zero_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_one
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_two
+  - gen_mul_ops_cg.cr_extremes.mulh_all_ones_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_one
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_two
+  - gen_mul_ops_cg.cr_extremes.mulh_int_max_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_one
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_two
+  - gen_mul_ops_cg.cr_extremes.mulh_int_min_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_one_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_one_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_one_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_one_one
+  - gen_mul_ops_cg.cr_extremes.mulh_one_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_one_two
+  - gen_mul_ops_cg.cr_extremes.mulh_one_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_one
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_two
+  - gen_mul_ops_cg.cr_extremes.mulh_p16_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_two_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_two_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_two_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_two_one
+  - gen_mul_ops_cg.cr_extremes.mulh_two_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_two_two
+  - gen_mul_ops_cg.cr_extremes.mulh_two_zero
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_int_max
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_int_min
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_one
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_p16
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_two
+  - gen_mul_ops_cg.cr_extremes.mulh_zero_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_max_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_int_min_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_one_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_p16_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_two_zero
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_one
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_p16
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_two
+  - gen_mul_ops_cg.cr_extremes.mulhsu_zero_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_all_ones_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_max_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_int_min_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_one_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_p16_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_two_zero
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_all_ones
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_int_max
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_int_min
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_one
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_p16
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_two
+  - gen_mul_ops_cg.cr_extremes.mulhu_zero_zero
+  - gen_mul_timing_cg.cp_delta.d2
+  - gen_mul_timing_cg.cp_fetch_stall.no
+  - gen_mul_timing_cg.cp_op.mulh
+  - gen_mul_timing_cg.cp_wb_busy.no
+  - gen_mul_timing_cg.cr_op_delta_clean.mulh_d2
+  - gen_mul_ops_cg.cr_op_sign.c_mul_nn
+  - gen_mul_ops_cg.cr_op_sign.c_mul_np
+  - gen_mul_ops_cg.cr_op_sign.c_mul_pn
+  - gen_mul_ops_cg.cr_op_sign.c_mul_pp
+  - gen_mul_ops_cg.cr_op_sign.mulh_nn
+  - gen_mul_ops_cg.cr_op_sign.mulh_np
+  - gen_mul_ops_cg.cr_op_sign.mulh_pn
+  - gen_mul_ops_cg.cr_op_sign.mulh_pp
+  - gen_mul_ops_cg.cr_op_sign.mulhsu_nn
+  - gen_mul_ops_cg.cr_op_sign.mulhsu_np
+  - gen_mul_ops_cg.cr_op_sign.mulhsu_pn
+  - gen_mul_ops_cg.cr_op_sign.mulhsu_pp
+  - gen_mul_ops_cg.cr_op_sign.mulhu_nn
+  - gen_mul_ops_cg.cr_op_sign.mulhu_np
+  - gen_mul_ops_cg.cr_op_sign.mulhu_pn
+  - gen_mul_ops_cg.cr_op_sign.mulhu_pp
+  - gen_mul_timing_cg.cp_op.mulhu
+  - gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2
+  - gen_mul_timing_cg.cp_op.mulhsu
+  - gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2
+  - gen_cmp_zcb_cg.cp_insn.c_mul
+  - gen_cmp_zcb_cg.cp_regs.distinct
+  - gen_cmp_zcb_cg.cp_regs.same
+anti_vacuity:
+  gen_mul_ops_cg.cp_op.mul: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.fffffffe: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.other: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.r3fffffff: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.r40000000: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_result_class.zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs1_class.zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rs2_class.zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_same_regs.all_same: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_same_regs.distinct: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_same_regs.rs1_eq_rs2: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_same_regs.rs_eq_rd: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_sign_pair.nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_sign_pair.np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_sign_pair.pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_sign_pair.pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs1.mul_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rs2.mul_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_same.mul_all_same: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_same.mul_distinct: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_same.mul_rs1_eq_rs2: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_same.mul_rs_eq_rd: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mul_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mul_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mul_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mul_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_timing_cg.cp_op.mul: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_ops_cg.cp_op.c_mul: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulh: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulhsu: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulhu: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_all_ones_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_max_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_int_min_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_one_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_p16_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_two_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.c_mul_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_all_ones_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_max_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_int_min_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_one_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_p16_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_two_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mul_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_all_ones_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_max_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_int_min_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_one_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_p16_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_two_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulh_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_all_ones_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_max_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_int_min_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_one_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_p16_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_two_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhsu_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_all_ones_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_max_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_int_min_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_one_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_p16_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_two_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_extremes.mulhu_zero_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_timing_cg.cp_delta.d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_fetch_stall.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_op.mulh: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_wb_busy.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cr_op_delta_clean.mulh_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_ops_cg.cr_op_sign.c_mul_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.c_mul_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.c_mul_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.c_mul_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulh_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulh_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulh_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulh_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhsu_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhsu_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhsu_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhsu_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhu_nn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhu_np: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhu_pn: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_sign.mulhu_pp: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_timing_cg.cp_op.mulhu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cp_op.mulhsu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
+  gen_cmp_zcb_cg.cp_insn.c_mul: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
+  gen_cmp_zcb_cg.cp_regs.distinct: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
+  gen_cmp_zcb_cg.cp_regs.same: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"

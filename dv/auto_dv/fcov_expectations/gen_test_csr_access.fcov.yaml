@@ -67,9 +67,6 @@ bins:
   - gen_csr_access_class_cg.cr_priv_aclass_trap.m_wi_m_ok
   - gen_csr_access_class_cg.cr_rd_x0_write.csrrw_rdx0_wi_m
   - gen_csr_trap_setup_warl_cg.cp_rd.x0
-  - gen_csr_access_class_cg.cp_op.f3_100
-  - gen_csr_access_class_cg.cp_trap.trap
-  - gen_csr_access_class_cg.cr_f3_100.f3_100_trap
   - gen_csr_access_class_cg.cp_aclass.alias_impl
   - gen_csr_access_class_cg.cp_aclass.alias_unimpl
   - gen_csr_access_class_cg.cp_aclass.info_ro
@@ -151,9 +148,6 @@ anti_vacuity:
   gen_csr_access_class_cg.cr_priv_aclass_trap.m_wi_m_ok: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
   gen_csr_access_class_cg.cr_rd_x0_write.csrrw_rdx0_wi_m: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
   gen_csr_trap_setup_warl_cg.cp_rd.x0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
-  gen_csr_access_class_cg.cp_op.f3_100: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
-  gen_csr_access_class_cg.cp_trap.trap: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
-  gen_csr_access_class_cg.cr_f3_100.f3_100_trap: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
   gen_csr_access_class_cg.cp_aclass.alias_impl: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
   gen_csr_access_class_cg.cp_aclass.alias_unimpl: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"
   gen_csr_access_class_cg.cp_aclass.info_ro: "CG-CSR-001: non-CSR retirements never sample, so a hit proves a CSR instruction of that op / operand / address class retired or trapped in the sampled privilege and debug state; the outcome is rvfi_trap of the same retirement"

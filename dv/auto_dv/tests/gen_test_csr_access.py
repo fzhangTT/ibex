@@ -6,22 +6,37 @@ Items built and their canonical features (ALIAS/FOLDED resolved through gen_feat
   TP-CSR-003 csrrw x0 / csrrwi 0 is a real write of zero           -> F-CSR-003
   TP-CSR-004 csrrw/csrrwi rd = x0 still writes; reads no side effect -> F-CSR-004 FOLDED into F-CSR-001
   TP-CSR-012 demoted forms on a read-only CSR are legal reads      -> F-CSR-012 ALIAS of F-CSR-002
-Item of the group NOT built: TP-CSR-005 (SYSTEM funct3 = 100 traps; F-CSR-005, alias F-ISA-046).
-Its program block and report words (handler mcause 2, mtval = word, mscratch untouched, trap count)
-are implemented in the generator behind F3_100_WORDS / --traps and passed 82/82 in bring-up, but
-every deliberate trap ends in an mret whose rvfi_pc_wdata is the next sequential address (plan
-C-1) and the ISA comparator's isa_pc_next row does not exempt mret records yet (40 UVM_ERROR per
-seed); it joins the test when that comparator row follows C-1.
+Item of the group NOT built: TP-CSR-005 (SYSTEM funct3 = 100 traps; F-CSR-005, alias F-ISA-046): every
+deliberate trap ends in an mret whose rvfi_pc_wdata is the next sequential address (plan C-1) and the
+ISA comparator's isa_pc_next row does not exempt mret records (T-102). Its program block and report
+words (handler mcause 2, mtval = word, mscratch untouched, trap count) exist in the generator behind
+F3_100_WORDS / --traps; the item joins the test when that comparator row follows C-1.
+
+Clauses of the built items BLOCKED on T-102 (shim legalisation gaps; the program neither exercises
+them nor reads them with a discarded result, so a wrong value is never hidden from the comparator):
+  TP-CSR-002/003/004: cpuctrlsts (the shim masks bit 8 ic_scr_key_valid, the DUT reads 1);
+  TP-CSR-004 sweep: mcycle, minstret(h), mhpmcounter3..(2+MHPMCounterNum) (the shim's mcycle does not
+    follow the DUT, a minstret write breaks its retirement detection, its hpm counters are constant 0);
+  TP-CSR-012 address set: marchid (Spike 5, Ibex 22), cycle and the hpmcounter3..(2+MHPMCounterNum)
+    low halves (as above); cycleh, instret(h), the high halves and the unimplemented addresses are read
+    and checked.
+Further operand limits (mcountinhibit.IR, mstatus.MIE/XS, mcause fixed points) are in the generator
+docstring. Not built on purpose: dscratch0/1 (debug mode is not enterable from a program); the
+RVFI-level parts of the items' fire-checks (funct3 on rvfi_insn, rvfi_trap, retirement gaps for
+gen_chk_csr_flush) need the RVFI export (ASK 5).
 
 Program: dv/auto_dv/tests/gen_programs/gen_csr_access_prog.py, a per-seed generator (testlist
 `program: {generator: ..., seed: run}`); its plan(seed) draws the operands from the area's W-tables
 and computes every report word from the Zicsr semantics and the Implemented CSR map, and the
 program stores the RAW rd values and read-backs to GEN_MM_EOT_ADDR (report channel). The test never
 re-derives the intent: report_count() returns plan.k and each fire_tp_csr_<nnn> compares the item's
-report words with the plan through gen_csr_access_prog.evaluate. The mhartid expectation follows the
-TB's +gen_hart_id plusarg. The program installs its own trap handler (reports mcause/mtval, counts)
-and the final report word is the trap count, so any unplanned trap or skipped store desynchronises
-the stream and fails the checks (TP-CSR-001: every op retires without trap).
+report words with the plan through gen_csr_access_prog.evaluate; fire_tp_csr_001 also asserts the
+item's directed floor (every op class and every listed CSR at least once per seed). The mhartid
+expectation follows the TB's +gen_hart_id plusarg. The program installs its own trap handler
+(reports mcause/mtval, counts) and the final report word is the trap count, so any unplanned trap or
+skipped store desynchronises the stream and fails the checks (TP-CSR-001: every op retires without
+trap). Red fixtures: `--red --red-item TP-CSR-<nnn>` (or `--red` alone, the seed draws the item) makes
+the program deviate on one intent of that item so exactly its fire_tp method fails.
 
 Knobs: the built items name knob:instr_mix, knob:imem_gnt_delay and knob:imem_rvalid_delay; they
 are declared in `schedulable` (instr_mix is a program-side region marker this program does not
@@ -29,17 +44,12 @@ consume). layers_required = False: the TB has no REGIME_SET consumer at HEAD (st
 the layers are logged not_applied; the flag returns to the default when step 2b lands and the entry
 takes its plan tier.
 
-Not covered here (details in the generator docstring, each a TB finding reported with the test):
-cpuctrlsts in TP-CSR-002/003/004 (the shim masks bit 8 ic_scr_key_valid, the DUT reads 1),
-mcountinhibit bits 13..31 (Spike keeps them), mcycle in TP-CSR-004 and the cycle value in
-TP-CSR-012 (the shim's mcycle does not follow the DUT), the marchid value 0x16 (Spike reads 5),
-minstret(h) and mhpmcounter3..12 writes and the hpmcounter3..12 low-half values (Spike's retirement
-detection and constant-0 hpm counters); dscratch0/1 (debug mode); the RVFI-level parts of the
-items' fire-checks (funct3 on rvfi_insn, rvfi_trap, retirement gaps for gen_chk_csr_flush) need the
-RVFI export (ASK 5). Bins: none declared, no covergroup exists yet (CG-CSR-001/003/010/012 land
-with gen_fcov_pkg). Always-on checkers relied on: the ISA comparator rows isa_pc/insn/trap/rd/mem/
-prv/pc_next/csr (gen_isa_compare), rvfi_proto, the ibus/dbus protocol checkers and the bridge
-accounting. MODULE=dv.auto_dv.tests.gen_test_csr_access, TOPLEVEL=gen_tb_top.
+Bins: declare_bins() is the template default, the plan bins of the five fire_tp items (manifest
+dv/auto_dv/fcov_expectations/gen_test_csr_access.fcov.yaml rendered from this module); no covergroup
+exists yet (CG-CSR-001/003/010/012 land with gen_fcov_pkg), so the flow entry carries
+fcov_expectation_file: null. Always-on checkers relied on: the ISA comparator rows
+isa_pc/insn/trap/rd/mem/prv/pc_next/csr (gen_isa_compare), rvfi_proto, the ibus/dbus protocol
+checkers and the bridge accounting. MODULE=dv.auto_dv.tests.gen_test_csr_access, TOPLEVEL=gen_tb_top.
 """
 import cocotb
 
@@ -73,11 +83,15 @@ class CsrAccess(GenTest):
         self.fire_tp_csr_012()
 
     def fire_tp_csr_001(self):
-        n, bad = prog.evaluate(plan_for(self), self.reports, "TP-CSR-001")
-        self.check("fire_tp_csr_001", n > 0 and not bad,
-                   f"{n - len(bad)}/{n} report words as planned over {plan_for(self).counts['TP-CSR-001']} RMW sequences "
-                   f"(rd = pre-op value, read-back = legalised op result, trap count {plan_for(self).traps})"
-                   + (f"; first mismatch {bad[0]}" if bad else ""))
+        p = plan_for(self)
+        n, bad = prog.evaluate(p, self.reports, "TP-CSR-001")
+        # the directed floor of the item: a class never emitted cannot have retired
+        missing = [op for op in prog.OPS if not p.op_counts.get(op)] + [c for c in prog.CSRS_001 if not p.csr_counts.get(c)]
+        self.check("fire_tp_csr_001", n > 0 and not bad and not missing,
+                   f"{n - len(bad)}/{n} report words as planned over {p.counts['TP-CSR-001']} RMW sequences "
+                   f"(rd = pre-op value, read-back = legalised op result, trap count {p.traps}); op classes "
+                   + " ".join(f"{op}={p.op_counts[op]}" for op in prog.OPS)
+                   + (f"; classes never emitted {missing}" if missing else "") + (f"; first mismatch {bad[0]}" if bad else ""))
 
     def fire_tp_csr_002(self):
         n, bad = prog.evaluate(plan_for(self), self.reports, "TP-CSR-002")
@@ -101,7 +115,7 @@ class CsrAccess(GenTest):
         n, bad = prog.evaluate(plan_for(self), self.reports, "TP-CSR-012")
         self.check("fire_tp_csr_012", n > 0 and not bad,
                    f"{n - len(bad)}/{n} report words as planned over {plan_for(self).counts['TP-CSR-012']} demoted read-only reads "
-                   f"(id constants, counter pairs, RO-zero addresses)" + (f"; first mismatch {bad[0]}" if bad else ""))
+                   f"(id constants, cycleh, instret pairs, RO-zero addresses)" + (f"; first mismatch {bad[0]}" if bad else ""))
 
 
 @cocotb.test()

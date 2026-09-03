@@ -10,30 +10,48 @@ and ra at sp - 4N then sp -= stack_adj; cm.pop loads register k from sp + stack_
 sp += stack_adj; cm.popret returns to the loaded ra; cm.popretz also writes a0 = 0; cm.mvsa01 moves
 a0/a1 into two sreg' registers and cm.mva01s moves two sreg' registers into a0/a1, sreg' 0..7 = x8,
 x9, x18..x23) beside the emitted assembly, so every report word has an expectation derived from
-intent. The stack layout was cross-checked on Spike (dv/auto_dv/evidence/gen_t025_stim_tooling.md
-Section 2: list top at sp_old - 4, ra at sp_old - stack_adj_base).
+intent.
+
+Scenario list per seed: the 48 (rlist, spimm) cm.push combinations PUSH_REPEATS times (TP-CMP-039
+Stimulus: each combination >= 3 times) and the 48 cm.pop combinations once, the hazard producers, the
+ret kinds at both target alignments (rlist RET_PINNED_RLIST pinned, one multi-register draw so every
+seed restores registers through a popret and a popretz), all sreg' pairs of both moves, one
+minstret-wrapped cm.* per kind, the four back-to-back patterns and one fall-through cm.* per kind,
+shuffled. The back-to-back push;pop pops a LONGER list at the same stack_adj (longer_same_adj), so the
+pop loads a register the push never stored and a pop that loads nothing is visible in the register
+records; a same-rlist pop would restore every register to its own value.
 
 emit(plan) renders RV32IMC assembly for the lowRISC gcc 10.2 toolchain: the Zcmp halfwords come from
 gen_zc_insn.h (the assembler knows no Zc), the program keeps its observations in a result buffer
 (tp = write pointer, never touched by Zcmp) and stores them as RAW words to GEN_MM_EOT_ADDR in plan
-order at the end, then tohost 1. Report words: sp before and after every frame instruction, the whole
-frame read back after a cm.push (list slots and the poison the program wrote to the other slots), all
-13 rlist-capable registers after a pop, the marker the return target stores (a decoy block is reached
-only through the stale ra), a0 after cm.popretz, the eight sreg' after cm.mvsa01, a0/a1 after
-cm.mva01s, minstret before and after one cm.* of each kind.
+order at the end, then tohost TOHOST_PASS. Report words: sp before and after every frame instruction,
+the whole frame read back after a cm.push (list slots and the poison the program wrote to the other
+slots), all 13 rlist-capable registers after a pop, the marker the return target stores (a decoy block
+is reached only through the stale ra), a0 after cm.popretz, the eight sreg' after cm.mvsa01, a0/a1
+after cm.mva01s, minstret before and after one cm.* of each kind. CSR addresses, the tohost code and
+the configuration name come from gen_prog_const.
 
-red=True deviates the PROGRAM on one intent (one plain cm.push is emitted with the other spimm bit) while
-the plan keeps the true expectation, so the test's fire-check must fail (TDD red fixture).
+Red fixtures (TDD): red=True deviates the PROGRAM on one intent while the plan keeps the true
+expectation, so the named fire-check must fail. RED_ITEMS maps every built item to its deviation and
+names the related checks that read the same words and trip with it; red_item selects the item, and
+without one random.Random(f"{seed}:red") draws it. The red draws (item, target scenario, slot) come
+from that separate stream, so the green plan and every red program share the main program stream.
+After the deviated scenario the red program re-loads every tracked register with the model's value
+(resync), so the deviation is visible in that scenario's records alone.
 
-CLI: python3 gen_cmp_zcmp_basic_prog.py --seed N --out <file.S> [--red]
+CLI: python3 gen_cmp_zcmp_basic_prog.py --seed N --out <file.S> [--red [--red-item TP-CMP-nnn]]
 """
 import argparse
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from dv.auto_dv.tests.gen_programs.gen_prog_const import CONFIG_NAME, TOHOST_PASS, csr_hex
+from dv.auto_dv.tests.gen_test_lib import Weighted
+
 MASK = 0xFFFFFFFF
 TAG = "program:gen_cmp_zcmp_basic"
+RED_TAG = "red"
 
 # ---- Zcmp semantics (zcmp.adoc, RV32I column) --------------------------------------------------
 RLIST_ORDER = (1, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27)   # ra, s0-s11 in list order
@@ -50,6 +68,13 @@ HAZ_VARIANTS = ("haz_store_slot", "haz_alu_reg", "haz_load_reg", "haz_load_mv")
 STACK_BYTES = 2048      # gen_stack area; a frame (<= 112 bytes) keeps >= 128 bytes to both ends
 FRAME_MAX = 112
 
+# Plan pins (gen_test_plan.md AREA CMP): TP-CMP-039 Stimulus "each combination >= 3 times"; TP-CMP-046 Stimulus
+# "cm.pop {ra, s0-s3}, 48 (rlist 8, spimm 1) and cm.pop {ra, s0-s11}, 112 (rlist 15, spimm 3) pinned";
+# TP-CMP-049 Stimulus / TP-CMP-047 "rlist 4" for the ret kinds.
+PUSH_REPEATS = 3
+POP_PINNED_COMBOS = ((8, 1), (15, 3))
+RET_PINNED_RLIST = 4
+
 # Layer-1 tables of gen_test_plan.md "Layer-1 weight tables" this group uses (transcribed once):
 # W4 register indices: Zcmp rlist uniform over 4..15, spimm uniform over 0..3 (the push/pop enumerations
 #     are a shuffled full set, the other draws uniform); sreg' fields uniform.
@@ -63,9 +88,8 @@ FILLER = ("addi a2, a3, {imm}", "xori a3, a2, {imm}", "slli a4, a5, {sh}", "srli
 
 
 def weighted(rng, table):
-    """Layer-1 weighted class draw (gen_test_lib.Weighted semantics, local so the CLI needs no TB import)."""
-    names = list(table)
-    return rng.choices(names, weights=[table[n] for n in names], k=1)[0]
+    """Layer-1 weighted class draw from the program stream."""
+    return Weighted(table).draw(rng)
 
 
 def rlist_regs(rlist):
@@ -82,6 +106,72 @@ def stack_adj(rlist, spimm):
 
 
 STACK_ADJ_VALUES = frozenset(stack_adj(r, s) for r, s in ALL_COMBOS)   # 16, 32, ..., 112
+
+
+def same_group_rlist(rlist):
+    """The neighbouring rlist with the same stack_adj_base (None for 15, alone in the base-64 group)."""
+    if rlist == 15:
+        return None
+    return rlist + 1 if stack_adj_base(rlist + 1) == stack_adj_base(rlist) else rlist - 1
+
+
+def longer_same_adj(rlist, spimm):
+    """(rlist, spimm) pairs with the same stack_adj and a longer register list: a pop of one of them after a
+    push of (rlist, spimm) loads a register the push never stored, so a pop that loads nothing is visible."""
+    adj = stack_adj(rlist, spimm)
+    return [(r, s) for r, s in sorted(ALL_COMBOS) if r > rlist and stack_adj(r, s) == adj]
+
+
+B2B_PUSH_COMBOS = tuple(c for c in sorted(ALL_COMBOS) if longer_same_adj(*c))   # 41 of 48 have a longer partner
+
+# Red fixtures: item -> (scenario filter, one-line deviation note naming the related checks that also trip).
+RED_ITEMS = {
+    "TP-CMP-039": (lambda sc: sc.kind == "push" and sc.variant == "plain",
+                   "a plain cm.push emitted with the other spimm bit: sp_new off by 16 (also trips TP-CMP-043 and the "
+                   "rlist's item 040/041/042)"),
+    "TP-CMP-040": (lambda sc: sc.kind == "push" and sc.variant == "plain" and sc.rlist == 4,
+                   "the rlist 4 cm.push emitted as rlist 5: x8 lands in the poison slot sp-8 (also trips TP-CMP-039)"),
+    "TP-CMP-041": (lambda sc: sc.kind == "push" and sc.variant == "plain" and sc.rlist == 15 and sc.spimm < 3,
+                   "a rlist 15 cm.push emitted as rlist 14 with spimm+1: same stack_adj, frame shifted by one register "
+                   "(also trips TP-CMP-039)"),
+    "TP-CMP-042": (lambda sc: sc.kind == "push" and sc.variant == "plain" and 5 <= sc.rlist <= 14,
+                   "a rlist 5..14 cm.push emitted with the neighbouring rlist of its stack_adj group: frame shifted "
+                   "(also trips TP-CMP-039)"),
+    "TP-CMP-043": (lambda sc: sc.kind == "pop" and sc.variant == "plain" and (sc.rlist, sc.spimm) not in POP_PINNED_COMBOS,
+                   "a plain cm.pop emitted with the other spimm bit: sp delta off by 16 (also trips TP-CMP-045)"),
+    "TP-CMP-045": (lambda sc: sc.kind == "pop" and sc.variant == "plain" and (sc.rlist, sc.spimm) not in POP_PINNED_COMBOS
+                   and sc.rlist != 15,
+                   "a plain cm.pop emitted with the neighbouring rlist of its stack_adj group: registers loaded from "
+                   "shifted slots"),
+    "TP-CMP-046": (lambda sc: sc.kind == "pop" and sc.variant == "plain" and (sc.rlist, sc.spimm) in POP_PINNED_COMBOS
+                   and same_group_rlist(sc.rlist) is not None,
+                   "the pinned (8, 1) cm.pop emitted as (9, 1): s4 loaded, the list shifted (also trips TP-CMP-045)"),
+    "TP-CMP-047": (lambda sc: sc.kind == "popret" and sc.variant == "plain" and sc.rlist > 4,
+                   "one non-ra frame slot of a multi-register cm.popret overwritten after the fill: that register "
+                   "restores the wrong word"),
+    "TP-CMP-048": (lambda sc: sc.kind == "popretz" and sc.variant == "plain",
+                   "a cm.popretz emitted as cm.popret: a0 keeps its nonzero value"),
+    "TP-CMP-049": (lambda sc: sc.kind == "popret" and sc.variant == "plain",
+                   "a cm.popret emitted as cm.pop then jr through the stale x1: control reaches the decoy block "
+                   "(also trips TP-CMP-047)"),
+    "TP-CMP-050": (lambda sc: sc.kind == "mvsa01" and sc.variant == "plain",
+                   "a cm.mvsa01 emitted with r1s' and r2s' swapped"),
+    "TP-CMP-052": (lambda sc: sc.kind == "mva01s" and sc.variant == "plain" and sc.r1s != sc.r2s,
+                   "a cm.mva01s emitted with r1s' and r2s' swapped"),
+    "TP-CMP-053": (lambda sc: sc.kind == "mva01s" and sc.variant == "plain" and sc.r1s == sc.r2s,
+                   "an equal-pair cm.mva01s emitted with another r2s': a1 != a0"),
+    "TP-CMP-055": (lambda sc: sc.variant == "minstret" and sc.kind in MOVE_KINDS,
+                   "the minstret-wrapped cm.mvsa01 or cm.mva01s emitted twice: same registers, minstret delta 3"),
+    "TP-CMP-066": (lambda sc: sc.kind == "b2b_push_pop",
+                   "the back-to-back pop emitted with the push's own (rlist, spimm): the longer list's extra register is "
+                   "never loaded"),
+    "TP-CMP-069": (lambda sc: sc.variant == "haz_load_mv",
+                   "the load producer emitted after the cm.mva01s: the move reads the old register value (also trips "
+                   "TP-CMP-052)"),
+    "TP-CMP-073": (lambda sc: sc.variant == "ft",
+                   "the later jump lands 2 bytes past the fall-through cm.*: its effect never happens (also trips the "
+                   "outer ret kind's item 047/048, whose audit reads the same scenario's words)"),
+}
 
 
 def push_slots(rlist):
@@ -137,6 +227,7 @@ class Plan:
     k: int
     min_retired: int
     lines: list
+    red_item: str
     red_note: str
 
 
@@ -148,9 +239,11 @@ def describe(sc):
 
 # ---- emitter: assembly text and the intent model advance together in execution order ---------
 class _Emitter:
-    def __init__(self, rng, red):
+    def __init__(self, rng, red, red_item, red_rng):
         self.rng = rng
         self.red = red
+        self.red_item = red_item if red else None
+        self.red_rng = red_rng
         self.lines = []
         self.reports = []
         self.scenarios = []
@@ -167,6 +260,7 @@ class _Emitter:
         self.pfx = ""
         self.red_target = None
         self.red_note = ""
+        self.deferred = []        # producer lines the TP-CMP-069 red emits after the consumer
 
     # -- text
     def ins(self, text, retired=True):
@@ -277,11 +371,16 @@ class _Emitter:
             self.rec(6, self.mem.get(self.base + off, 0), f"frame[sp_old{off:+d}]")
 
     # -- the cm.* instruction: text and model kept apart (the ft layout emits before it executes)
-    def cm_text(self, sc, kind=None, deviate=False):
+    def cm_text(self, sc, kind=None, rlist=None, spimm=None, r1s=None, r2s=None):
+        """Assembly of the scenario's cm.*; an explicit operand replaces the planned one (red fixtures)."""
         kind = kind or sc.kind
         if kind in FRAME_KINDS:
-            return f"cm_{kind} {sc.rlist}, {sc.spimm ^ 1 if deviate else sc.spimm}"
-        return f"cm_{kind} {sc.r1s}, {sc.r2s}"
+            return f"cm_{kind} {sc.rlist if rlist is None else rlist}, {sc.spimm if spimm is None else spimm}"
+        return f"cm_{kind} {sc.r1s if r1s is None else r1s}, {sc.r2s if r2s is None else r2s}"
+
+    def dev(self, sc):
+        """The red item this scenario carries the deviation of (None on the green path)."""
+        return self.red_item if self.red and sc.idx == self.red_target else None
 
     def model_push(self, rlist, spimm):
         for off, r in push_slots(rlist):
@@ -337,6 +436,11 @@ class _Emitter:
                 self.ins(f"li t1, 0x{sc.good:08x}")
                 if kind == "popretz":
                     self.set_reg(10, self.value())                       # a0 nonzero before cm.popretz
+            if self.dev(sc) == "TP-CMP-047":
+                off, r = self.red_rng.choice([(o, r) for o, r in pop_slots(sc.rlist, sc.spimm) if r != 1])
+                self.ins(f"li t3, 0x{~self.mem[self.base + off] & MASK:08x}")   # the model keeps the fill word
+                self.ins(f"sw t3, {off}(t0)")
+                self.red_note = f"scenario {sc.idx} {describe(sc)}: frame slot sp_old{off:+d} (x{r}) overwritten after the fill"
         self.filler()
         self.rec_sp("sp_old")
 
@@ -413,9 +517,13 @@ class _Emitter:
         elif v == "haz_load_mv":
             r = sc.aux["load_reg"]
             w = self.value()
-            self.ins(f"li t3, 0x{w:08x}")
-            self.ins("sw t3, 0(t4)")
-            self.ins(f"lw x{r}, 0(t4)")
+            producer = [f"li t3, 0x{w:08x}", "sw t3, 0(t4)", f"lw x{r}, 0(t4)"]
+            if self.dev(sc) == "TP-CMP-069":
+                self.deferred = producer                                 # emitted after the consumer instead
+                self.red_note = f"scenario {sc.idx} {describe(sc)}: lw x{r} producer emitted after the cm.mva01s"
+            else:
+                for t in producer:
+                    self.ins(t)
             self.regs[r] = w
             sc.aux["haz"] = f"lw x{r} then cm.mva01s"
 
@@ -431,22 +539,54 @@ class _Emitter:
             self.parity()
         self.hazard(sc)
         if sc.variant == "minstret":
-            self.ins("csrr t5, minstret")
-        deviate = self.red and sc.idx == self.red_target
-        if deviate:
-            self.red_note = (f"scenario {sc.idx} cm.push rlist {sc.rlist}: planned spimm {sc.spimm}, emitted spimm "
-                             f"{sc.spimm ^ 1} (sp_new off by 16; the plan keeps the true expectation)")
-        self.ins(self.cm_text(sc, deviate=deviate))
+            self.ins(f"csrr t5, {csr_hex('minstret')}")
+        self.cm_emit(sc)
         self.cm_model(kind, sc)
+        for t in self.deferred:
+            self.ins(t)
+        self.deferred = []
         if kind in RET_KINDS:
             self.ret_tail(sc)
         if sc.variant == "minstret":
-            self.ins("csrr t6, minstret")
+            self.ins(f"csrr t6, {csr_hex('minstret')}")
         (self.post_frame if frame else self.post_move)(sc, kind)
         if sc.variant == "minstret":
             self._rec(30, "ctr0", 0, "minstret_before")
             self._rec(31, "ctr1", 2, "minstret_after")
         self.flush()
+
+    def cm_emit(self, sc):
+        """The scenario's cm.* on the executed path; the red target of an item emits that item's deviation."""
+        d = self.dev(sc)
+        text = self.cm_text(sc)
+        note = ""
+        if d in ("TP-CMP-039", "TP-CMP-043"):
+            text, note = self.cm_text(sc, spimm=sc.spimm ^ 1), f"emitted spimm {sc.spimm ^ 1} (sp off by 16)"
+        elif d == "TP-CMP-040":
+            text, note = self.cm_text(sc, rlist=5), "emitted rlist 5 (x8 stored into the poison slot sp-8)"
+        elif d == "TP-CMP-041":
+            text, note = self.cm_text(sc, rlist=14, spimm=sc.spimm + 1), f"emitted rlist 14 spimm {sc.spimm + 1} (same stack_adj)"
+        elif d in ("TP-CMP-042", "TP-CMP-045", "TP-CMP-046"):
+            r = same_group_rlist(sc.rlist)
+            text, note = self.cm_text(sc, rlist=r), f"emitted rlist {r} (same stack_adj)"
+        elif d == "TP-CMP-048":
+            text, note = self.cm_text(sc, kind="popret"), "emitted cm.popret (a0 not zeroed)"
+        elif d == "TP-CMP-049":
+            self.ins("mv t3, x1")                                        # the stale ra, as a wrong ret would use it
+            text, note = self.cm_text(sc, kind="pop"), "emitted cm.pop then jr through the stale x1 (decoy reached)"
+        elif d in ("TP-CMP-050", "TP-CMP-052"):
+            text, note = self.cm_text(sc, r1s=sc.r2s, r2s=sc.r1s), "emitted with r1s' and r2s' swapped"
+        elif d == "TP-CMP-053":
+            r2 = self.red_rng.choice([r for r in SREGS if r != sc.r1s])
+            text, note = self.cm_text(sc, r2s=r2), f"emitted r2s' x{r2} (a1 != a0)"
+        self.ins(text)
+        if d == "TP-CMP-049":
+            self.ins("jr t3")
+        elif d == "TP-CMP-055":
+            self.ins(text)
+            note = "emitted twice inside the minstret window (delta 3)"
+        if note:
+            self.red_note = f"scenario {sc.idx} {describe(sc)}: {note}"
 
     def emit_ft(self, sc):
         """TP-CMP-073: the halfword at the ret's PC + 2 is another cm.*, executed later through a jump."""
@@ -470,7 +610,12 @@ class _Emitter:
         self.flush()
         self.pfx = "ft_inner:"
         (self.pre_frame if inner.kind in FRAME_KINDS else self.pre_move)(inner, inner.kind)
-        self.ins(f"j {ft}")
+        if self.dev(sc) == "TP-CMP-073":
+            self.ins(f"j {ft} + 2")                       # lands past the fall-through halfword: its effect never happens
+            self.retired -= 1                             # the skipped cm.* was counted when its text was placed
+            self.red_note = f"scenario {sc.idx} {describe(sc)}: the later jump skips the fall-through cm.{inner.kind}"
+        else:
+            self.ins(f"j {ft}")
         self.cm_model(inner.kind, inner)
         self.align_target(inner.align)
         self.place(resume)
@@ -485,8 +630,13 @@ class _Emitter:
             self.pre_frame(sc, "push")
             self.ins(self.cm_text(sc, "push"))
             self.cm_model("push", sc)
-            self.ins(self.cm_text(sc, "pop"))
-            self.cm_model("pop", sc)
+            r2, s2 = sc.aux["rlist2"], sc.aux["spimm2"]      # longer list, same stack_adj: the pop's loads are visible
+            if self.dev(sc) == "TP-CMP-066":
+                self.ins(self.cm_text(sc, "pop"))
+                self.red_note = f"scenario {sc.idx} {describe(sc)}: pop emitted with the push's own rlist instead of {r2}"
+            else:
+                self.ins(f"cm_pop {r2}, {s2}")
+            self.model_pop(r2, s2)
             self.rec_sp("sp_new")
             for r in RLIST_ORDER:
                 self.rec(r, self.regs[r], f"x{r}")
@@ -533,8 +683,8 @@ class _Emitter:
             scs.append(sc)
             return sc
 
-        def combo():
-            return {"rlist": rng.choice(RLISTS), "spimm": rng.choice(SPIMMS)}
+        def combo(min_rlist=RLISTS[0]):
+            return {"rlist": rng.choice([r for r in RLISTS if r >= min_rlist]), "spimm": rng.choice(SPIMMS)}
 
         def spair(distinct):
             while True:
@@ -542,15 +692,17 @@ class _Emitter:
                 if a != b or not distinct:
                     return {"r1s": a, "r2s": b}
 
-        for r, s in sorted(ALL_COMBOS):                         # TP-CMP-039/043/045: every (rlist, spimm)
-            add("push", rlist=r, spimm=s)
+        for _ in range(PUSH_REPEATS):                           # TP-CMP-039: every (rlist, spimm) >= 3 times
+            for r, s in sorted(ALL_COMBOS):
+                add("push", rlist=r, spimm=s)
+        for r, s in sorted(ALL_COMBOS):                         # TP-CMP-043/045/046: every (rlist, spimm) once
             add("pop", rlist=r, spimm=s)
         add("push", "haz_alu_reg", **combo())                   # TP-CMP-069 patterns
         add("push", "haz_load_reg", **combo())
         add("pop", "haz_store_slot", **combo())
         for kind, aligns in (("popret", (0, 2)), ("popretz", (2, 0))):
-            add(kind, rlist=4, spimm=rng.choice(SPIMMS), align=aligns[0])   # rlist 4 pinned (TP-CMP-049)
-            add(kind, align=aligns[1], **combo())
+            add(kind, rlist=RET_PINNED_RLIST, spimm=rng.choice(SPIMMS), align=aligns[0])   # TP-CMP-049 pin
+            add(kind, align=aligns[1], **combo(min_rlist=5))    # one multi-register ret per kind and seed
             add(kind, align=weighted(rng, W6_RET_ALIGN), **combo())
         for a in SREGS:
             for b in SREGS:
@@ -562,7 +714,9 @@ class _Emitter:
         for kind in CM_KINDS:                                     # TP-CMP-055: minstret around one cm.* per kind
             kw = combo() if kind in FRAME_KINDS else spair(kind == "mvsa01")
             add(kind, "minstret", align=weighted(rng, W6_RET_ALIGN), **kw)
-        add("b2b_push_pop", **combo())                            # TP-CMP-066 patterns
+        r1, s1 = rng.choice(B2B_PUSH_COMBOS)                      # TP-CMP-066 patterns
+        r2, s2 = rng.choice(longer_same_adj(r1, s1))
+        add("b2b_push_pop", rlist=r1, spimm=s1, aux={"rlist2": r2, "spimm2": s2})
         c2 = combo()
         add("b2b_pop_push", aux={"rlist2": c2["rlist"], "spimm2": c2["spimm"]}, **combo())
         p, q = spair(True), spair(False)
@@ -576,12 +730,23 @@ class _Emitter:
         rng.shuffle(scs)
         for i, sc in enumerate(scs):
             sc.idx = i
-        self.red_target = rng.choice([sc.idx for sc in scs if sc.kind == "push" and sc.variant == "plain"])
+        self.pick_red(scs)
         return scs
+
+    def pick_red(self, scs):
+        """Red fixture: the item (drawn when not given) and its target scenario, from the red stream only."""
+        if not self.red:
+            return
+        if self.red_item is None:
+            self.red_item = self.red_rng.choice(sorted(RED_ITEMS))
+        pick = RED_ITEMS[self.red_item][0]
+        cands = [sc.idx for sc in scs if pick(sc)]
+        assert cands, f"no scenario carries the red fixture of {self.red_item}"
+        self.red_target = self.red_rng.choice(cands)
 
     def prologue(self):
         self.cur = Scenario(idx=-1, kind="init", variant="init")
-        self.ins("csrwi 0x320, 0")              # mcountinhibit = 0: counters run (TP-CMP-055 precondition, set explicitly)
+        self.ins(f"csrwi {csr_hex('mcountinhibit')}, 0")   # counters run (TP-CMP-055 precondition, set explicitly)
         self.ins("la tp, gen_results")          # tp: result-buffer write pointer (no Zcmp instruction touches x4)
         self.ins("la t4, gen_scratch")          # t4: scratch word of the load producers (TP-CMP-069)
         for r in RLIST_ORDER + (10, 11):        # every tracked register starts at a known distinct value
@@ -597,12 +762,19 @@ class _Emitter:
         for t in ("lw t0, 0(tp)", "sw t0, 0(t6)", "addi tp, tp, 4", "addi t5, t5, -1", "bnez t5, gen_report_loop"):
             self.raw("  " + t)
         self.retired += 5 * k
-        self.ins("li gp, 1")
+        self.ins(f"li gp, {TOHOST_PASS}")
         self.ins("la t5, tohost")
         self.ins("sw gp, 0(t5)")
         self.raw("1:")
         self.raw("  j 1b")
         self.retired += 1                       # gen_boot_stub.S: j _start
+
+    def resync(self):
+        """Red fixture: re-load every tracked register with the model's value after the deviated scenario, so the
+        deviation shows in that scenario's records alone (later records of untouched registers stay green)."""
+        for r in RLIST_ORDER + (10, 11):
+            v = self.regs[r]
+            self.ins(f"la x{r}, {v}" if isinstance(v, str) else f"li x{r}, 0x{v:08x}")
 
     def build(self):
         self.prologue()
@@ -614,22 +786,27 @@ class _Emitter:
                 self.emit_b2b(sc)
             else:
                 self.emit_simple(sc)
+            if self.dev(sc):
+                self.resync()
         assert self.pending == 0, "records left unflushed"
         self.epilogue()
 
 
-def plan(seed, red=False):
-    em = _Emitter(random.Random(f"{int(seed)}:{TAG}"), bool(red))
+def plan(seed, red=False, red_item=None):
+    assert red_item is None or red_item in RED_ITEMS, f"unknown red item {red_item}"
+    em = _Emitter(random.Random(f"{int(seed)}:{TAG}"), bool(red), red_item, random.Random(f"{int(seed)}:{RED_TAG}"))
     em.build()
+    assert not red or em.red_note, "red fixture selected but no deviation was emitted"
     return Plan(seed=int(seed), red=bool(red), scenarios=em.scenarios, reports=em.reports, k=len(em.reports),
-                min_retired=em.retired, lines=em.lines, red_note=em.red_note)
+                min_retired=em.retired, lines=em.lines, red_item=em.red_item or "", red_note=em.red_note)
 
 
 def emit(p):
-    head = [f"# gen_cmp_zcmp_basic program, seed {p.seed}{' RED FIXTURE' if p.red else ''}: {len(p.scenarios)} scenarios, "
-            f"{p.k} report words, retirement floor {p.min_retired}.",
+    head = [f"# gen_cmp_zcmp_basic program, seed {p.seed}, configuration {CONFIG_NAME}{' RED FIXTURE' if p.red else ''}: "
+            f"{len(p.scenarios)} scenarios, {p.k} report words, retirement floor {p.min_retired}.",
             "# Generated by dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py; do not edit.",
-            f"# red deviation: {p.red_note}" if p.red else "# green program: no deviation from the plan",
+            f"# red fixture {p.red_item}: {RED_ITEMS[p.red_item][1]}; {p.red_note}" if p.red
+            else "# green program: no deviation from the plan",
             '.include "gen_zc_insn.h"', '.include "gen_mmio_map.h"', ".section .text", ".globl _start", "_start:"]
     data = [".section .data", ".align 6", ".globl tohost", "tohost:   .dword 0", ".globl fromhost", "fromhost: .dword 0",
             ".align 2", ".globl gen_scratch", "gen_scratch: .word 0",
@@ -652,15 +829,16 @@ def resolve(rep, syms):
     return rep.expect
 
 
-def audit(p, got, syms, pick):
+def audit(p, got, syms, pick, tags=None):
     """Compare the collected report words of the scenarios pick() selects with the plan (minstret pairs
-    excluded, see minstret_deltas). Returns (scenarios, words, mismatch strings)."""
+    excluded, see minstret_deltas; `tags` restricts the words to those report tags). Returns (scenarios,
+    words, mismatch strings)."""
     scs = [sc for sc in p.scenarios if pick(sc)]
     words, bad = 0, []
     for sc in scs:
         for i in sc.reports:
             rep = p.reports[i]
-            if rep.kind.startswith("ctr"):
+            if rep.kind.startswith("ctr") or (tags is not None and rep.tag not in tags):
                 continue
             words += 1
             exp = resolve(rep, syms)
@@ -698,15 +876,19 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="per-seed program generator of gen_test_cmp_zcmp_basic")
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--red", action="store_true", help="TDD red fixture: one cm.push deviates from the plan")
+    ap.add_argument("--red", action="store_true", help="TDD red fixture: the program deviates on one item's intent")
+    ap.add_argument("--red-item", choices=sorted(RED_ITEMS), default=None,
+                    help="the item whose fire-check the red fixture trips (default: drawn from the seed)")
     a = ap.parse_args(argv)
-    p = plan(a.seed, a.red)
+    if a.red_item and not a.red:
+        ap.error("--red-item needs --red")
+    p = plan(a.seed, a.red, a.red_item)
     text = emit(p)
     assert text.isascii(), "generated program is not ASCII"
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(text)
     print(f"gen_cmp_zcmp_basic_prog: seed {p.seed} red {p.red} scenarios {len(p.scenarios)} reports {p.k} "
-          f"min_retired {p.min_retired} -> {a.out}")
+          f"min_retired {p.min_retired} -> {a.out}" + (f" red_item {p.red_item}: {p.red_note}" if p.red else ""))
     return 0
 
 

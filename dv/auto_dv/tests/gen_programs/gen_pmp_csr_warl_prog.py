@@ -2,29 +2,47 @@
 """gen_pmp_csr_warl_prog: per-seed program generator of gen_test_pmp_csr_warl (plan group
 gen_pmp_csr_warl, items TP-PMP-001..008 of dv/auto_dv/docs/gen_test_plan.md Section 4.4).
 
-plan(seed, red=False) draws the scenario from random.Random(f"{seed}:program:pmp_csr_warl"), runs a
-Python model of the PMP CSR WARL rules as the specification and Ibex define them (priv spec
-machine.adoc "Physical Memory Protection CSRs" and "mseccfg"; doc/03_reference/cs_registers.rst;
-rtl/ibex_cs_registers.sv g_pmp_registers), and returns a Plan: the assembly lines, the ordered
-expected report words (the raw csrr read-back after every write, the rd value of every RMW op, the
-trap records of the M-mode handler, the probe results), k, min_retired and per-item metadata for the
-fire-checks. red=True makes the PROGRAM deviate on exactly one intent (one TP-PMP-001 write carries a
-different A field than the plan) while the expectations stay true, so the test must fail.
+plan(seed, red=False, red_item=None) draws the scenario from random.Random(f"{seed}:program:pmp_csr_warl"),
+runs PmpModel (the PMP CSR WARL rules as the specification states them; sources in the class docstring)
+and returns a Plan: the assembly lines, the ordered expected report words (the raw csrr read-back after
+every write, the rd value of every RMW op, the trap records of the M-mode handler, the probe results), k,
+min_retired and per-item metadata for the fire-checks. Layout-relative expectations (pmpaddr values built
+from the probe pool, the U code area and the end of .text) resolve from the image's symbol table:
+Plan.expected(idx, bases) with bases = bases_from_symbols(<prog.sym.json>["symbols"]); the program also
+reports the three addresses so the test checks them against the same table.
 
-Program phases (all M-mode unless stated; PMP reset state: every entry OFF, mseccfg 0):
-  P0 mtvec, report the three layout bases (probe pool, U code area, end of .text)
+Program phases (M-mode unless stated; PMP reset state: every entry OFF, mseccfg 0):
+  P0 mtvec, report the three layout addresses, clear entry 0
   P1 MML=0, no lock: TP-PMP-001 (pmpcfg packing), TP-PMP-002 (32-bit pmpaddr), TP-PMP-003 (reserved
      bits), TP-PMP-004 (RW=01 legalised), TP-PMP-007 (RMW forms) in a shuffled order
   P2 U-mode episodes: TP-PMP-008 (PMP CSR access from U traps, no write), TP-PMP-006 (A modes
      written, read back and probed from U at a pool word and its neighbour)
   P3 lock step: mseccfg.RLB drawn, TP-PMP-004 L=1 rows, TP-PMP-007 ops on locked entries
   P4 MML=1: code rule (entry 0, L=1 R/X TOR over [0, end of .text)), then TP-PMP-005 (RW=01 stored),
-     TP-PMP-003 and TP-PMP-007 under MML=1
+     TP-PMP-003 and TP-PMP-007 under MML=1. Every LRWX row the draw produces is programmed, LRWX=1111
+     under RLB=0 included: smepmp.adoc defines it as a locked shared read-only data region without
+     execute privilege, so the write is stored (and locks the entry); a shim that legalises it
+     differently shows up as a comparator row, never as a program change.
 Safety rule: an entry that can deny M-mode (L=1 under MML=0, any entry under MML=1) only ever holds a
 pmpaddr <= SAFE_MAX_WORD, so its region lies below the program window; MMWP is never set.
+U-mode regions (plan C-2): only the U-executable code region is programmed. No U-RW data/stack region:
+the U stubs use no stack and touch no data except the probe words whose per-mode verdict is the
+subject of TP-PMP-006 (an R/W region over the pool would decide every load/store probe), and the
+handler's report store runs in M-mode.
 
-CLI: python3 gen_pmp_csr_warl_prog.py --seed N --out <file.S> [--red]
-     python3 gen_pmp_csr_warl_prog.py --seed N --check-spike <spike_commits.log>   (host model check)
+Red fixtures (red=True): the PROGRAM deviates on exactly one intent of one item while the plan stays
+the green plan, so exactly that item's fire-check fails. Item and site come from
+random.Random(f"{seed}:red") unless red_item names the item. TP-PMP-001..007: one CSR write of the
+item carries a deviated operand (A[0] of the entry flipped for 001 and 006, one pmpaddr bit for 002,
+the X bit for 003/004/005, the first stored bit that changes the outcome for 007); the read-back is
+reported, then the planned value is restored without a report so no later expectation moves.
+TP-PMP-008: one of the U-mode attempted writes is let through (an M-mode write of the same CSR class
+right after the return to M), caught by the after-U read-back, then restored. The record words carry
+cause, MPP and index only, so the identity of the CSR a U attempt named is not observable through the
+report channel (RVFI export needed); the red targets the item's no-write clause.
+
+CLI: python3 gen_pmp_csr_warl_prog.py --seed N --out <file.S> [--red [--red-item TP-PMP-00X]]
+     python3 gen_pmp_csr_warl_prog.py --seed N --check-spike <spike_commits.log> --sym <prog.sym.json>
 """
 import argparse
 import random
@@ -37,9 +55,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dv.auto_dv.gen_tb.gen_knobs import MEMORY_MAP  # noqa: E402
+from dv.auto_dv.tests.gen_programs.gen_prog_const import (  # noqa: E402
+    CONFIG_NAME, CSR, PMPADDR_BASE, PMPCFG_BASE, TOHOST_FAIL, TOHOST_PASS, pmpaddr, pmpcfg)
 
 RNG_TAG = "program:pmp_csr_warl"
-CONFIG_NAME = "opentitan"   # the build configuration (gen_program.CONFIG_NAME)
+RED_RNG_TAG = "red"
+RED_ITEMS = tuple(f"TP-PMP-00{i}" for i in range(1, 9))
 
 
 def _config():
@@ -51,15 +72,16 @@ def _config():
 
 
 NUM_REGIONS, GRANULARITY = _config()
-assert GRANULARITY == 0, "gen_pmp_csr_warl_prog: the plan's WARL expectations assume G = 0 (NA4 legal, full pmpaddr)"
+assert GRANULARITY == 0, "gen_pmp_csr_warl_prog: the plan's WARL expectations assume G = 0 (NA4 selectable, full pmpaddr)"
 NUM_CFG_CSRS = NUM_REGIONS // 4
-# CSR addresses (rtl/ibex_pkg.sv csr_num_e; gcc 10.2 knows no mseccfg name, so the program uses numbers).
-CSR_PMPCFG0, CSR_PMPADDR0, CSR_MSECCFG, CSR_MSECCFGH = 0x3A0, 0x3B0, 0x747, 0x757
+# gcc 10.2 knows no mseccfg name, so the program names these two CSRs by number.
+CSR_MSECCFG, CSR_MSECCFGH = CSR["mseccfg"], CSR["mseccfgh"]
 MSECCFG_MML, MSECCFG_MMWP, MSECCFG_RLB = 1, 2, 4
 A_OFF, A_TOR, A_NA4, A_NAPOT = 0, 1, 2, 3
 A_NAMES = {A_OFF: "OFF", A_TOR: "TOR", A_NA4: "NA4", A_NAPOT: "NAPOT"}
 # Exception causes (priv spec mcause table) and the M-mode handler's record word layout.
 CAUSE_IFETCH, CAUSE_ILLEGAL, CAUSE_LOAD, CAUSE_STORE, CAUSE_ECALL_U = 1, 2, 5, 7, 8
+UIMM_FORMS = ("csrrwi", "csrrsi", "csrrci")
 
 
 def record(cause, idx, mpp=0):
@@ -76,8 +98,9 @@ assert MEMORY_MAP["boot_page"] == 0x80000000 and MEMORY_MAP["mmio_base"] >= MEMO
     "gen_pmp_csr_warl_prog: the safety window assumes the program and MMIO pages sit at or above 0x80000000"
 assert MEMORY_MAP["dm_base"] + MEMORY_MAP["dm_size"] <= WINDOW_LO_WORD * 4, "gen_pmp_csr_warl_prog: DM window overlaps the safety window"
 
-# Layout placeholders for the model (the real addresses are reported by the program and resolved by
-# the test): the U code area (in .text) lies below the probe pool (in .data), both inside the window.
+# Layout symbols (global labels of the program) whose addresses resolve the relative expectations; the
+# placeholders keep the model's addresses distinct while generating, the symbol table gives the real ones.
+BASE_SYMBOLS = {"pool": "gen_probe_pool", "ucode": "gen_u_code", "text_end": "gen_text_end"}
 PH_UCODE = MEMORY_MAP["boot_page"] + 0x400
 PH_POOL = MEMORY_MAP["boot_page"] + 0x3000
 PH_TEXT_END = MEMORY_MAP["boot_page"] + 0x1000
@@ -95,7 +118,6 @@ W_PROBE_TYPE = {"load": 40, "store": 40, "fetch": 20}                           
 W_NAPOT_ONES = {0: 50, 1: 30, 2: 20}                                             # TP-PMP-006 NAPOT size 8/16/32 bytes
 W_OP_FORM_RMW = {"csrrs": 30, "csrrc": 25, "csrrsi": 15, "csrrci": 15, "csrrwi": 15}   # TP-PMP-007
 W_LOCK_A = {A_OFF: 40, A_NA4: 30, A_NAPOT: 30}                                   # TP-PMP-004 L=1 rows (TOR excluded: base ambiguity)
-GP_PASS, GP_FAIL = 1, 3         # tohost codes (gen_test_lib.TOHOST_PASS / TOHOST_FAIL)
 
 FILLER_REGS = ["a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "t4", "t5", "t6"]
 ATTEMPT_REGS = ["a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7"]
@@ -122,27 +144,69 @@ def trailing_ones(v):
     return n
 
 
+def is_cfg(csr):
+    return PMPCFG_BASE <= csr < PMPCFG_BASE + NUM_CFG_CSRS
+
+
+def is_addr(csr):
+    return PMPADDR_BASE <= csr < PMPADDR_BASE + NUM_REGIONS
+
+
+def cfg_bits(lane, first):
+    """Red candidate bits of a pmpcfg operand: the preferred (lane, field bit) first, then every stored
+    non-lock field bit (R W X A0 A1 = bits 0..4 of each lane; 6:5 read zero and L = 7 are never flipped)."""
+    pref = 8 * lane + first
+    return [pref] + [8 * ln + b for ln in range(4) for b in (2, 3, 4, 0, 1) if 8 * ln + b != pref]
+
+
+def addr_bits(first):
+    return [first] + [b for b in range(32) if b != first]
+
+
 class PmpModel:
-    """The PMP CSR state and the WARL write rules (spec + Ibex choices, cs_registers.rst): pmpcfg bits 6:5
-    read zero; RW=01 stores W=0 under MML=0 and W verbatim under MML=1; a locked entry (L=1 and RLB=0)
-    ignores cfg and addr writes; a TOR entry i+1 that is locked also freezes pmpaddr(i); under MML=1 with
-    RLB=0 a write producing an M-mode-executable or locked shared-code row is ignored; MML/MMWP are
-    sticky; RLB cannot be set while an entry is locked; mseccfgh reads zero and ignores writes."""
+    """PMP CSR state and the WARL write rules, each taken from the specification; the RTL
+    (rtl/ibex_cs_registers.sv g_pmp_registers, rtl/ibex_pmp.sv) is a cross-check only:
+      - pmpcfg bits 6:5 are reserved and read zero (machine.adoc pmpcfg format; cs_registers.rst pmpcfgx
+        table "Reserved (Read as zero)");
+      - RW=01 is reserved while MML=0 (machine.adoc norm pmp_rwx_warl and the mseccfg rule list); the
+        documented Ibex WARL outcome is W=0 with R/X/A/L kept (cs_registers.rst pmpcfgx note); under MML=1
+        every LRWX value is a defined encoding (smepmp.adoc norm mml_truth_table), so W is stored verbatim;
+      - a locked entry (L=1, RLB=0) ignores pmpcfg and pmpaddr writes, and a locked TOR entry i also freezes
+        pmpaddr(i-1) (machine.adoc norm pmp_l_bit_write_protection; norm mseccfg_rlb_op_warl for the bypass);
+      - under MML=1 with RLB=0 a write producing an M-mode-only or locked shared-region rule with execute
+        privilege (truth-table rows LRWX 1001, 1010, 1011, 1101) is ignored for that entry (machine.adoc norm
+        mseccfg_mml_X_restrict); LRWX=1111 is the locked shared read-only data region and is stored (norm
+        mseccfg_mml_shared_LRWX_1111_op);
+      - MML and MMWP are sticky once set (smepmp.adoc norm mseccfg_locking); RLB stays 0 while any entry has
+        L=1 with RLB=0 (machine.adoc norm mseccfg_rlb_op_warl);
+      - pmpaddr stores all 32 bits at G=0 (machine.adoc norms pmp_tor_off_addr_read_mask and
+        pmp_napot_addr_read_mask mask low bits only for G >= 1; PMPGranularity 0 in ibex_configs.yaml);
+      - mseccfgh reads zero and ignores writes (cs_registers.rst mseccfg section);
+      - csrrsi/csrrci with uimm = 0 read without writing (unprivileged spec, Zicsr CSR instruction table);
+        the register forms always use rs1 = t0 here, so they always write;
+      - U-mode access verdict at MML=0: lowest-numbered matching entry decides by its R/W/X, L does not
+        matter below M, no match denies (machine.adoc norms pmp_entry_priority, pmp_no_entry_match)."""
 
     def __init__(self):
         self.cfg = [0] * NUM_REGIONS
         self.addr = [0] * NUM_REGIONS
         self.mml = self.mmwp = self.rlb = 0
 
+    def copy(self):
+        c = PmpModel.__new__(PmpModel)
+        c.cfg, c.addr = list(self.cfg), list(self.addr)
+        c.mml, c.mmwp, c.rlb = self.mml, self.mmwp, self.rlb
+        return c
+
     # --- reads -----------------------------------------------------------------------------------
     def read_cfg(self, n):
         return sum(self.cfg[4 * n + i] << (8 * i) for i in range(4))
 
     def read(self, csr):
-        if CSR_PMPCFG0 <= csr < CSR_PMPCFG0 + NUM_CFG_CSRS:
-            return self.read_cfg(csr - CSR_PMPCFG0)
-        if CSR_PMPADDR0 <= csr < CSR_PMPADDR0 + NUM_REGIONS:
-            return self.addr[csr - CSR_PMPADDR0]
+        if is_cfg(csr):
+            return self.read_cfg(csr - PMPCFG_BASE)
+        if is_addr(csr):
+            return self.addr[csr - PMPADDR_BASE]
         if csr == CSR_MSECCFG:
             return (self.rlb << 2) | (self.mmwp << 1) | self.mml
         if csr == CSR_MSECCFGH:
@@ -155,7 +219,7 @@ class PmpModel:
 
     @staticmethod
     def is_mml_m_exec(b):
-        """A locked row that grants M-mode execution under MML (LRWX 1001, 1010, 1011, 1101)."""
+        """A locked row that grants M-mode execution under MML (truth-table rows LRWX 1001, 1010, 1011, 1101)."""
         l, _a, x, w, r = byte_fields(b)
         return l == 1 and (r, w, x) in ((0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 1))
 
@@ -188,10 +252,10 @@ class PmpModel:
         self.rlb = rlb_d
 
     def write(self, csr, value):
-        if CSR_PMPCFG0 <= csr < CSR_PMPCFG0 + NUM_CFG_CSRS:
-            self.write_cfg(csr - CSR_PMPCFG0, value)
-        elif CSR_PMPADDR0 <= csr < CSR_PMPADDR0 + NUM_REGIONS:
-            self.write_addr(csr - CSR_PMPADDR0, value)
+        if is_cfg(csr):
+            self.write_cfg(csr - PMPCFG_BASE, value)
+        elif is_addr(csr):
+            self.write_addr(csr - PMPADDR_BASE, value)
         elif csr == CSR_MSECCFG:
             self.write_mseccfg(value)
         elif csr == CSR_MSECCFGH:
@@ -200,7 +264,7 @@ class PmpModel:
             raise AssertionError(f"model: unknown CSR 0x{csr:03x}")
 
     def combined(self, form, csr, operand):
-        """The value the CSR write path sees for one op form (csr_wdata_int); None when no write happens."""
+        """The value the CSR write path sees for one op form; None when no write happens."""
         old = self.read(csr)
         if form in ("csrrw", "csrrwi"):
             return operand
@@ -218,7 +282,7 @@ class PmpModel:
             self.write(csr, wdata)
         return old
 
-    # --- U-mode access verdict under MML=0 (rtl/ibex_pmp.sv, spec "Address Matching" / "Locking") ----
+    # --- U-mode access verdict under MML=0 ------------------------------------------------------------
     def match(self, e, word):
         a = (self.cfg[e] >> 3) & 3
         if a == A_OFF:
@@ -226,7 +290,7 @@ class PmpModel:
         if a == A_NA4:
             return word == self.addr[e]
         if a == A_NAPOT:
-            mask = (1 << (trailing_ones(self.addr[e]) + 1)) - 1   # bit 0 always masked for NAPOT (8-byte minimum)
+            mask = (1 << (trailing_ones(self.addr[e]) + 1)) - 1   # NAPOT regions are 8 bytes at least (spec NAPOT table)
             return (word & ~mask) == (self.addr[e] & ~mask)
         base = 0 if e == 0 else self.addr[e - 1]
         return base <= word < self.addr[e]
@@ -246,7 +310,7 @@ class PmpModel:
 class Report:
     item: str
     label: str
-    kind: str                   # 'abs' (value), 'rel' (base name, byte offset, or-mask), 'base' (reported layout address)
+    kind: str                   # 'abs' (value), 'rel' (base name, byte offset, or-mask), 'base' (base name)
     value: object = None
     idx: int = -1
 
@@ -260,46 +324,52 @@ class Plan:
     items: dict = field(default_factory=dict)
     lines: list = field(default_factory=list)
     min_retired: int = 0
+    red_item: str = ""
     red_note: str = ""
+    red_sites: dict = field(default_factory=dict)
 
     @property
     def k(self):
         return len(self.reports)
 
-    def expected(self, idx, observed):
-        """Expected value of report idx given the observed report list (bases resolve 'rel' entries); None
-        for a base word (checked by range) or when its base is missing."""
+    def expected(self, idx, bases):
+        """Expected value of report idx; bases = {'pool'|'ucode'|'text_end': byte address} from the symbol table."""
         r = self.reports[idx]
         if r.kind == "abs":
             return r.value
-        if r.kind == "rel":
-            base_name, off, mask = r.value
-            base_idx = self.items["bases"][base_name]
-            if base_idx >= len(observed):
-                return None
-            return (((observed[base_idx] + off) >> 2) | mask) & 0xFFFFFFFF
-        return None
+        if r.kind == "base":
+            return bases[r.value]
+        base_name, off, mask = r.value
+        return (((bases[base_name] + off) >> 2) | mask) & 0xFFFFFFFF
 
     def item_indices(self, item):
         return [r.idx for r in self.reports if r.item == item]
 
+    def signature(self):
+        return [(r.item, r.kind, r.value) for r in self.reports]
+
+
+def bases_from_symbols(symbols):
+    """The layout bases from a prog.sym.json symbol table ({name: '0x...'})."""
+    missing = [s for s in BASE_SYMBOLS.values() if s not in symbols]
+    assert not missing, f"gen_pmp_csr_warl_prog: the image defines no symbol {missing}"
+    return {k: int(symbols[s], 16) for k, s in BASE_SYMBOLS.items()}
+
 
 def csr_name(csr):
-    if CSR_PMPCFG0 <= csr < CSR_PMPCFG0 + NUM_CFG_CSRS:
-        return f"pmpcfg{csr - CSR_PMPCFG0}"
-    if CSR_PMPADDR0 <= csr < CSR_PMPADDR0 + NUM_REGIONS:
-        return f"pmpaddr{csr - CSR_PMPADDR0}"
+    if is_cfg(csr):
+        return f"pmpcfg{csr - PMPCFG_BASE}"
+    if is_addr(csr):
+        return f"pmpaddr{csr - PMPADDR_BASE}"
     return f"0x{csr:03x}"
 
 
 class Gen:
-    def __init__(self, seed, red):
+    def __init__(self, seed, red_target=None):
         self.rng = random.Random(f"{int(seed)}:{RNG_TAG}")
-        self.red = red
         self.m = PmpModel()
-        self.plan = Plan(seed=seed, red=red, rlb=self.rng.choice([0, 1]))
-        self.plan.items = {tp: {} for tp in ("TP-PMP-001", "TP-PMP-002", "TP-PMP-003", "TP-PMP-004", "TP-PMP-005",
-                                             "TP-PMP-006", "TP-PMP-007", "TP-PMP-008")}
+        self.plan = Plan(seed=seed, red=red_target is not None, rlb=self.rng.choice([0, 1]))
+        self.plan.items = {tp: {} for tp in RED_ITEMS}
         self.plan.items["bases"] = {}
         self.main = []          # main-flow lines (executed once, in order)
         self.aux = []           # handler and U stubs
@@ -307,11 +377,14 @@ class Gen:
         self.u_attempts = []    # (asm, form, cls, is_write)
         self.res_n = 0
         self.in_main = True
-        self.red_armed = red
         self.probe_count = 0
         # pmpaddr entries holding a layout-relative value: ('pool'|'ucode'|'text_end', byte offset, or-mask);
-        # their read-back expectation is resolved from the reported bases, and they are never RMW targets
+        # their read-back expectation is resolved from the symbol table, and they are never RMW targets
         self.addr_rel = [None] * NUM_REGIONS
+        # red fixture: (item, site serial) to deviate at; every eligible site is recorded per item
+        self.red_target = red_target
+        self.red_sites = {tp: [] for tp in RED_ITEMS}
+        self.site_serial = 0
 
     # --- emission ---------------------------------------------------------------------------------
     def emit(self, line):
@@ -346,18 +419,62 @@ class Gen:
     def li(self, reg, value):
         self.emit(f"  li   {reg}, 0x{value & 0xFFFFFFFF:08x}")
 
-    def csr_op(self, form, csr, operand, item, label, report_old=False, expect=None, program_operand=None):
+    # --- red fixture mechanics ----------------------------------------------------------------------
+    def state_safe(self, m):
+        """No enforced active entry above the code rule reaches the program window (M-mode stays runnable)."""
+        for e in range(1, NUM_REGIONS):
+            l, a, _x, _w, _r = byte_fields(m.cfg[e])
+            if a != A_OFF and (m.mml or l) and m.addr[e] > SAFE_MAX_WORD:
+                return False
+        return True
+
+    def red_deviation(self, form, csr, operand, before, bits):
+        """A program operand differing from the plan by one candidate bit whose spec-modelled outcome differs
+        from the planned read-back and keeps M-mode safe; None when no candidate qualifies."""
+        planned = self.m.read(csr)
+        for bit in bits:
+            if form in UIMM_FORMS and bit > 4:
+                continue
+            cand = operand ^ (1 << bit)
+            clone = before.copy()
+            clone.op(form, csr, cand)
+            if clone.read(csr) != planned and self.state_safe(clone):
+                return cand
+        return None
+
+    def red_site(self, item, form, csr, operand, before, bits):
+        """Record a deviation-eligible site; returns the deviated operand when this site is the red target."""
+        if bits is None or (is_addr(csr) and self.addr_rel[csr - PMPADDR_BASE] is not None):
+            return None
+        dev = self.red_deviation(form, csr, operand, before, bits)
+        serial, self.site_serial = self.site_serial, self.site_serial + 1
+        if dev is None:
+            return None
+        self.red_sites[item].append(serial)
+        if self.red_target == (item, serial):
+            self.plan.red_item = item
+            return dev
+        return None
+
+    def restore(self, csr):
+        """Write the planned value back after a red deviation (no report): later expectations stay green."""
+        self.li("t0", self.m.read(csr))
+        self.emit(f"  csrw {csr_name(csr)}, t0")
+
+    def csr_op(self, form, csr, operand, item, label, report_old=False, expect=None, red_bits=None):
         """One CSR op with the model update, optional rd report (old value) and the read-back report.
-        program_operand: the value the PROGRAM writes when it deviates from the plan (red fixture)."""
-        e_addr = csr - CSR_PMPADDR0 if CSR_PMPADDR0 <= csr < CSR_PMPADDR0 + NUM_REGIONS else None
+        red_bits: candidate bits of a red deviation at this site (None: the site is never deviated)."""
+        e_addr = csr - PMPADDR_BASE if is_addr(csr) else None
         if e_addr is not None:
             assert form in ("csrrw", "csrrwi") or self.addr_rel[e_addr] is None, f"RMW on layout-relative pmpaddr{e_addr}"
             if self.m.addr_writable(e_addr) and form in ("csrrw", "csrrwi"):
                 self.addr_rel[e_addr] = None
+        before = self.m.copy()
         old = self.m.op(form, csr, operand)
         if e_addr is not None and expect is None and self.addr_rel[e_addr] is not None:
             expect = ("rel", self.addr_rel[e_addr])
-        prog_val = operand if program_operand is None else program_operand
+        dev = self.red_site(item, form, csr, operand, before, red_bits)
+        prog_val = operand if dev is None else dev
         name = csr_name(csr)
         if form in ("csrrw", "csrrs", "csrrc"):
             self.li("t0", prog_val)
@@ -372,6 +489,9 @@ class Gen:
             idx = self.report_reg("t1", item, f"{label} readback {name}", "abs", rb)
         else:
             idx = self.report_reg("t1", item, f"{label} readback {name}", expect[0], expect[1])
+        if dev is not None:
+            self.plan.red_note = f"{item} {label}: program {form} {name} with 0x{dev:08x} for planned 0x{operand:08x}, read-back idx {idx}"
+            self.restore(csr)
         return old_idx, idx
 
     def cfg_word_with(self, n, lane, b):
@@ -396,11 +516,11 @@ class Gen:
         self.emit("  csrw mtvec, t0")
         self.emit("  li   s0, GEN_MM_EOT_ADDR")
         self.emit("  la   s1, gen_probe_pool")
-        self.plan.items["bases"]["pool"] = self.report_reg("s1", "bases", "probe pool base", "base", None)
+        self.plan.items["bases"]["pool"] = self.report_reg("s1", "bases", "probe pool base", "base", "pool")
         self.emit("  la   t4, gen_u_code")
-        self.plan.items["bases"]["ucode"] = self.report_reg("t4", "bases", "U code area base", "base", None)
+        self.plan.items["bases"]["ucode"] = self.report_reg("t4", "bases", "U code area base", "base", "ucode")
         self.emit("  la   t4, gen_text_end")
-        self.plan.items["bases"]["text_end"] = self.report_reg("t4", "bases", "end of .text", "base", None)
+        self.plan.items["bases"]["text_end"] = self.report_reg("t4", "bases", "end of .text", "base", "text_end")
         # Entry 0 explicitly cleared (csrw: no rd) so a PMP-unaware reference reset (Spike: pmpcfg0 NAPOT RWX,
         # pmpaddr0 all ones) cannot leak into the first read-modify-write; Ibex already resets both to 0.
         for name in ("pmpcfg0", "pmpaddr0"):
@@ -412,32 +532,19 @@ class Gen:
     def p1_tp001(self):
         rng, meta = self.rng, self.plan.items["TP-PMP-001"]
         meta["cfg_readbacks"] = []          # (report idx, N)
-        meta["red_idx"] = None
-        red_slot = None
         order = list(range(NUM_CFG_CSRS))
         rng.shuffle(order)
         counts = {n: rng.randint(8, 32) for n in order}
-        if self.red_armed:
-            red_rng = random.Random(f"{self.plan.seed}:{RNG_TAG}:red")   # separate stream: the plan itself is unchanged
-            n_red = red_rng.choice(order)
-            red_slot = (n_red, red_rng.randrange(0, counts[n_red]))
         for n in order:
             for w in range(counts[n]):
                 bytes_ = [cfg_byte(0, rng.randrange(4), rng.randrange(2), rng.randrange(2), rng.randrange(2), rng.randrange(4))
                           for _ in range(4)]
                 value = sum(b << (8 * i) for i, b in enumerate(bytes_))
-                prog = None
-                if red_slot == (n, w):
-                    prog = value ^ 0x08          # program flips A[0] of entry 4N: read-back must differ
-                    self.plan.red_note = f"TP-PMP-001 write {w} of pmpcfg{n}: program writes 0x{prog:08x} for planned 0x{value:08x}"
-                    self.red_armed = False
-                _o, idx = self.csr_op("csrrw", CSR_PMPCFG0 + n, value, "TP-PMP-001", f"w{w}", program_operand=prog)
+                _o, idx = self.csr_op("csrrw", pmpcfg(n), value, "TP-PMP-001", f"w{w}", red_bits=cfg_bits(0, 3))
                 meta["cfg_readbacks"].append((idx, n))
-                if prog is not None:
-                    meta["red_idx"] = idx
                 if rng.random() < 0.4:      # interleaved random pmpaddr writes (harmless with L=0 under MML=0)
                     e = rng.randrange(NUM_REGIONS)
-                    self.csr_op("csrrw", CSR_PMPADDR0 + e, rng.getrandbits(32), "TP-PMP-001", f"w{w} addr{e}")
+                    self.csr_op("csrrw", pmpaddr(e), rng.getrandbits(32), "TP-PMP-001", f"w{w} addr{e}")
                 self.filler()
 
     # --- TP-PMP-002 ---------------------------------------------------------------------------------
@@ -457,18 +564,18 @@ class Gen:
         for rnd in range(rng.randint(2, 3)):
             for n in rng.sample(range(NUM_CFG_CSRS), NUM_CFG_CSRS):
                 value = sum(cfg_byte(0, rng.randrange(4), rng.randrange(2), rng.randrange(2), rng.randrange(2)) << (8 * i) for i in range(4))
-                _o, idx = self.csr_op("csrrw", CSR_PMPCFG0 + n, value, "TP-PMP-002", f"r{rnd} modes")
+                _o, idx = self.csr_op("csrrw", pmpcfg(n), value, "TP-PMP-002", f"r{rnd} modes")
                 meta["mode_readbacks"].append((idx, n))
             for e in rng.sample(range(NUM_REGIONS), NUM_REGIONS):
                 v, cls = self.addr_value()
-                _o, idx = self.csr_op("csrrw", CSR_PMPADDR0 + e, v, "TP-PMP-002", f"r{rnd} e{e} {cls}")
+                _o, idx = self.csr_op("csrrw", pmpaddr(e), v, "TP-PMP-002", f"r{rnd} e{e} {cls}", red_bits=addr_bits(0))
                 meta["addr_readbacks"].append((idx, e, cls))
                 self.filler(2)
         # the item's fire-check wants bit 31 or 30 written at least once per N: top up the entries the draw missed
         hi = {e for idx, e, _c in meta["addr_readbacks"] if self.plan.reports[idx].value & (3 << 30)}
         for e in rng.sample([e for e in range(NUM_REGIONS) if e not in hi], NUM_REGIONS - len(hi)):
             v = rng.getrandbits(32) | rng.choice([1 << 31, 1 << 30, 3 << 30])
-            _o, idx = self.csr_op("csrrw", CSR_PMPADDR0 + e, v, "TP-PMP-002", f"top-up e{e} hi_bits")
+            _o, idx = self.csr_op("csrrw", pmpaddr(e), v, "TP-PMP-002", f"top-up e{e} hi_bits", red_bits=addr_bits(0))
             meta["addr_readbacks"].append((idx, e, "hi_bits"))
 
     # --- TP-PMP-003 ---------------------------------------------------------------------------------
@@ -498,9 +605,9 @@ class Gen:
                 value &= 0x7F7F7F7F                                                                # never set L, never clear the code rule
                 if phase == "mml1" and n == 0:
                     value &= 0xFFFFFF00
-            comb = self.m.combined(form, CSR_PMPCFG0 + n, value)
+            comb = self.m.combined(form, pmpcfg(n), value)
             res_lanes = [ln for ln in range(4) if comb is not None and (comb >> (8 * ln)) & 0x60]
-            _o, idx = self.csr_op(form, CSR_PMPCFG0 + n, value, "TP-PMP-003", f"{phase} {form}")
+            _o, idx = self.csr_op(form, pmpcfg(n), value, "TP-PMP-003", f"{phase} {form}", red_bits=cfg_bits(lanes[0], 2))
             meta["ops"].append((idx, n, form, phase))
             if res_lanes:
                 meta["res_writes"].append((idx, n, res_lanes, self.m.mml))
@@ -514,7 +621,7 @@ class Gen:
         for e in rng.sample(range(NUM_REGIONS), NUM_REGIONS):
             n, ln = divmod(e, 4)
             b = cfg_byte(0, rng.randrange(4), rng.randrange(2), 1, 0)
-            _o, idx = self.csr_op("csrrw", CSR_PMPCFG0 + n, self.cfg_word_with(n, ln, b), "TP-PMP-004", f"e{e} rw01")
+            _o, idx = self.csr_op("csrrw", pmpcfg(n), self.cfg_word_with(n, ln, b), "TP-PMP-004", f"e{e} rw01", red_bits=cfg_bits(ln, 2))
             meta["rw01_bytes"].append((idx, n, ln, b))
             self.filler(2)
         # csrrs masks that would turn RW=00 into RW=01
@@ -522,7 +629,7 @@ class Gen:
         for e in rng.sample(cands, min(len(cands), rng.randint(2, 4))):
             n, ln = divmod(e, 4)
             b = self.m.cfg[e] | 0x02
-            _o, idx = self.csr_op("csrrs", CSR_PMPCFG0 + n, 0x02 << (8 * ln), "TP-PMP-004", f"e{e} csrrs W")
+            _o, idx = self.csr_op("csrrs", pmpcfg(n), 0x02 << (8 * ln), "TP-PMP-004", f"e{e} csrrs W", red_bits=cfg_bits(ln, 2))
             meta["rw01_bytes"].append((idx, n, ln, b))
 
     def p3_tp004_locked(self, lock_entries):
@@ -533,9 +640,9 @@ class Gen:
             a = wchoice(rng, W_LOCK_A)
             if a != A_OFF:
                 v = self.window_napot() if a == A_NAPOT else self.window_word()
-                self.csr_op("csrrw", CSR_PMPADDR0 + e, v, "TP-PMP-004", f"lock e{e} addr")
+                self.csr_op("csrrw", pmpaddr(e), v, "TP-PMP-004", f"lock e{e} addr")
             b = cfg_byte(1, a, rng.randrange(2), 1, 0)
-            _o, idx = self.csr_op("csrrw", CSR_PMPCFG0 + n, self.cfg_word_with(n, ln, b), "TP-PMP-004", f"lock e{e} rw01 L=1")
+            _o, idx = self.csr_op("csrrw", pmpcfg(n), self.cfg_word_with(n, ln, b), "TP-PMP-004", f"lock e{e} rw01 L=1")
             meta["lock_bytes"].append((idx, n, ln, b))
 
     # --- TP-PMP-007 ---------------------------------------------------------------------------------
@@ -543,8 +650,8 @@ class Gen:
         """A mask/value for one RMW op that keeps the safety invariants of the phase; None to skip."""
         rng, m = self.rng, self.m
         for _ in range(64):
-            if CSR_PMPCFG0 <= csr < CSR_PMPCFG0 + NUM_CFG_CSRS:
-                n = csr - CSR_PMPCFG0
+            if is_cfg(csr):
+                n = csr - PMPCFG_BASE
                 if form == "csrrwi":
                     if 4 * n == 0 and phase != "mml0":
                         return None
@@ -573,15 +680,13 @@ class Gen:
                         bad = True
                     if phase == "mml1" and a != A_OFF and m.addr[e] > SAFE_MAX_WORD:
                         bad = True
-                    if phase == "mml1" and not m.rlb and b == 0xFF:
-                        bad = True                                     # LRWX=1111 under MML: shim legalisation not pinned
                 if bad:
                     continue
                 return operand
-            if CSR_PMPADDR0 <= csr < CSR_PMPADDR0 + NUM_REGIONS:
+            if is_addr(csr):
                 if form == "csrrwi" and phase != "mml0":
                     return None
-                operand = rng.randrange(0, 32) if form in ("csrrwi", "csrrsi", "csrrci") else rng.getrandbits(32)
+                operand = rng.randrange(0, 32) if form in UIMM_FORMS else rng.getrandbits(32)
                 comb = m.combined(form, csr, operand)
                 if comb is None:
                     continue
@@ -615,22 +720,22 @@ class Gen:
         for form, cls in picks:
             if cls == "pmpcfg":
                 ns = sorted({e // 4 for e in range(NUM_REGIONS) if entry_ok(e)})
-                csr = CSR_PMPCFG0 + rng.choice(ns)
+                csr, bits = pmpcfg(rng.choice(ns)), cfg_bits(0, 2)
             elif cls == "pmpaddr":
-                csr = CSR_PMPADDR0 + rng.choice([e for e in range(NUM_REGIONS) if entry_ok(e)])
+                csr, bits = pmpaddr(rng.choice([e for e in range(NUM_REGIONS) if entry_ok(e)])), addr_bits(0)
             else:
-                csr = CSR_MSECCFG
+                csr, bits = CSR_MSECCFG, None      # sticky fields cannot be restored: never a red site
             operand = self.rmw_operand(form, csr, phase, entry_ok)
             if operand is None:
                 continue
-            old_idx, idx = self.csr_op(form, csr, operand, "TP-PMP-007", f"{phase} {form} {cls}", report_old=True)
+            old_idx, idx = self.csr_op(form, csr, operand, "TP-PMP-007", f"{phase} {form} {cls}", report_old=True, red_bits=bits)
             meta["ops"].append((old_idx, idx, form, cls, phase))
             self.filler(2)
 
     # --- table reset ---------------------------------------------------------------------------------
     def reset_cfgs(self, item, label):
         for n in self.rng.sample(range(NUM_CFG_CSRS), NUM_CFG_CSRS):
-            self.csr_op("csrrw", CSR_PMPCFG0 + n, 0, item, f"{label} clear pmpcfg{n}")
+            self.csr_op("csrrw", pmpcfg(n), 0, item, f"{label} clear pmpcfg{n}")
 
     # --- P2: U-mode machinery -----------------------------------------------------------------------
     def set_u_code_region(self, item):
@@ -646,7 +751,7 @@ class Gen:
         self.report_reg("t1", item, f"U code region pmpaddr{e}", "rel", self.addr_rel[e])
         n, ln = divmod(e, 4)
         b = cfg_byte(0, A_NAPOT, 1, 1, 1)
-        self.csr_op("csrrw", CSR_PMPCFG0 + n, self.cfg_word_with(n, ln, b), item, f"U code region pmpcfg{n}")
+        self.csr_op("csrrw", pmpcfg(n), self.cfg_word_with(n, ln, b), item, f"U code region pmpcfg{n}")
 
     def enter_u(self, stub_label, item, label):
         """M -> U through mret at the stub; the handler returns to gen_res_<n> on the stub's ecall."""
@@ -662,8 +767,8 @@ class Gen:
 
     def p2_tp008(self):
         rng, meta = self.rng, self.plan.items["TP-PMP-008"]
-        classes = {"pmpcfg": lambda: CSR_PMPCFG0 + rng.randrange(NUM_CFG_CSRS),
-                   "pmpaddr": lambda: CSR_PMPADDR0 + rng.randrange(NUM_REGIONS),
+        classes = {"pmpcfg": lambda: pmpcfg(rng.randrange(NUM_CFG_CSRS)),
+                   "pmpaddr": lambda: pmpaddr(rng.randrange(NUM_REGIONS)),
                    "mseccfg": lambda: CSR_MSECCFG, "mseccfgh": lambda: CSR_MSECCFGH}
         write_forms = ["csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci", "csrw"]
         read_forms = ["csrr", "csrrsi0", "csrrci0"]
@@ -695,16 +800,24 @@ class Gen:
         rng.shuffle(order)
         for csr, val in order:
             assert self.m.read(csr) == val
+            # red site (no-write clause): one attempted pmpcfg write lands after the return to M, then is restored
+            leak = self.red_site("TP-PMP-008", "csrrw", csr, val, self.m, cfg_bits(0, 2) if is_cfg(csr) else None)
+            if leak is not None:
+                self.li("t0", leak)
+                self.emit(f"  csrw {csr_name(csr)}, t0")
             self.emit(f"  csrr t1, {csr_name(csr)}")
-            e = csr - CSR_PMPADDR0
+            e = csr - PMPADDR_BASE
             if 0 <= e < NUM_REGIONS and self.addr_rel[e] is not None:
                 idx = self.report_reg("t1", "TP-PMP-008", f"after U: {csr_name(csr)}", "rel", self.addr_rel[e])
             else:
                 idx = self.report_reg("t1", "TP-PMP-008", f"after U: {csr_name(csr)}", "abs", val)
             meta["readbacks"].append((idx, csr))
+            if leak is not None:
+                self.plan.red_note = f"TP-PMP-008 after U: program writes {csr_name(csr)} 0x{leak:08x} (planned unchanged 0x{val:08x}), read-back idx {idx}"
+                self.restore(csr)
 
     def all_csrs(self):
-        return [CSR_PMPCFG0 + n for n in range(NUM_CFG_CSRS)] + [CSR_PMPADDR0 + e for e in range(NUM_REGIONS)] + [CSR_MSECCFG]
+        return [pmpcfg(n) for n in range(NUM_CFG_CSRS)] + [pmpaddr(e) for e in range(NUM_REGIONS)] + [CSR_MSECCFG]
 
     def alloc_pair(self, code):
         """Two consecutive pool words (8-byte aligned); returns the byte offset of the first."""
@@ -769,7 +882,7 @@ class Gen:
                 self.emit(f"  csrr t1, pmpaddr{e}")
                 self.report_reg("t1", "TP-PMP-006", f"e{e} {A_NAMES[a]} pmpaddr{e}", "rel", rel)
                 b = cfg_byte(0, a, x, w, r)
-                _o, idx = self.csr_op("csrrw", CSR_PMPCFG0 + n, self.cfg_word_with(n, ln, b), "TP-PMP-006", f"e{e} {A_NAMES[a]} cfg")
+                _o, idx = self.csr_op("csrrw", pmpcfg(n), self.cfg_word_with(n, ln, b), "TP-PMP-006", f"e{e} {A_NAMES[a]} cfg", red_bits=cfg_bits(ln, 3))
                 meta["a_readbacks"].append((idx, e, a))
                 # the U episode: probe the word and its neighbour
                 ep = {"entry": e, "a": a, "ptype": ptype, "off": off, "rwx": (r, w, x), "records": [], "results": []}
@@ -804,7 +917,7 @@ class Gen:
                 meta["episodes"].append(ep)
                 self.probe_count += 1
             # leave the entry OFF so it never decides a later entry's probe
-            self.csr_op("csrrw", CSR_PMPCFG0 + n, self.cfg_word_with(n, ln, 0), "TP-PMP-006", f"e{e} cleanup")
+            self.csr_op("csrrw", pmpcfg(n), self.cfg_word_with(n, ln, 0), "TP-PMP-006", f"e{e} cleanup")
 
     # --- P3 -----------------------------------------------------------------------------------------
     def p3_lock_step(self):
@@ -812,7 +925,7 @@ class Gen:
         # every pmpaddr concrete again before anything can lock (a locked entry keeps its value for good)
         for e in rng.sample(range(NUM_REGIONS), NUM_REGIONS):
             v, cls = self.addr_value()
-            _o, idx = self.csr_op("csrrw", CSR_PMPADDR0 + e, v, "TP-PMP-002", f"pre-lock e{e} {cls}")
+            _o, idx = self.csr_op("csrrw", pmpaddr(e), v, "TP-PMP-002", f"pre-lock e{e} {cls}", red_bits=addr_bits(0))
             self.plan.items["TP-PMP-002"]["addr_readbacks"].append((idx, e, cls))
         assert all(r is None for r in self.addr_rel)
         self.csr_op("csrrw", CSR_MSECCFG, self.plan.rlb << 2, "TP-PMP-007", "lock step mseccfg RLB")
@@ -830,7 +943,7 @@ class Gen:
         rng = self.rng
         self.reset_cfgs("TP-PMP-005", "pre-MML")
         for e in rng.sample(range(1, NUM_REGIONS), NUM_REGIONS - 1):
-            self.csr_op("csrrw", CSR_PMPADDR0 + e, self.window_word(), "TP-PMP-005", f"pre-MML window pmpaddr{e}")
+            self.csr_op("csrrw", pmpaddr(e), self.window_word(), "TP-PMP-005", f"pre-MML window pmpaddr{e}")
         # code rule: entry 0 TOR [0, end of .text), L=1 R/X (M-mode-only read/execute under MML)
         self.emit("  la   t0, gen_text_end")
         self.emit("  srli t0, t0, 2")
@@ -840,7 +953,7 @@ class Gen:
         self.emit("  csrr t1, pmpaddr0")
         self.report_reg("t1", "TP-PMP-005", "code rule pmpaddr0", "rel", self.addr_rel[0])
         code_byte = cfg_byte(1, A_TOR, 1, 0, 1)
-        self.csr_op("csrrw", CSR_PMPCFG0, self.cfg_word_with(0, 0, code_byte), "TP-PMP-005", "code rule pmpcfg0")
+        self.csr_op("csrrw", pmpcfg(0), self.cfg_word_with(0, 0, code_byte), "TP-PMP-005", "code rule pmpcfg0")
         assert self.m.cfg[0] == code_byte
         self.check_mml_safety()
         form = rng.choice(["csrrw", "csrrs", "csrrsi"])
@@ -870,16 +983,16 @@ class Gen:
             n, ln = divmod(e, 4)
             a = rng.choice([A_OFF, A_NA4, A_NAPOT] + ([A_TOR] if e >= 1 else []))
             if a == A_NAPOT:
-                self.csr_op("csrrw", CSR_PMPADDR0 + e, self.window_napot(), "TP-PMP-005", f"e{e} napot addr")
+                self.csr_op("csrrw", pmpaddr(e), self.window_napot(), "TP-PMP-005", f"e{e} napot addr")
             l = rng.randrange(2) if self.m.rlb else 0
             b = cfg_byte(l, a, rng.randrange(2), 1, 0)
             # csrrs only over a clear byte so the combined entry byte is exactly the RW=01 row under test
             form = rng.choice(["csrrw", "csrrs"]) if self.m.cfg[e] == 0 else "csrrw"
             operand = self.cfg_word_with(n, ln, b) if form == "csrrw" else (b << (8 * ln))
-            comb = self.m.combined(form, CSR_PMPCFG0 + n, operand)
+            comb = self.m.combined(form, pmpcfg(n), operand)
             written = (comb >> (8 * ln)) & 0xFF
             assert written == b
-            _o, idx = self.csr_op(form, CSR_PMPCFG0 + n, operand, "TP-PMP-005", f"e{e} rw01 mml1 {form}")
+            _o, idx = self.csr_op(form, pmpcfg(n), operand, "TP-PMP-005", f"e{e} rw01 mml1 {form}", red_bits=cfg_bits(ln, 2))
             meta["rw01_bytes"].append((idx, n, ln, written))
             self.filler(2)
 
@@ -889,7 +1002,7 @@ class Gen:
 
     # --- end, handler, stubs, data ------------------------------------------------------------------
     def p5_end(self):
-        self.emit(f"  li   gp, {GP_PASS}")
+        self.emit(f"  li   gp, {TOHOST_PASS}")
         self.emit("  la   t5, tohost")
         self.emit("  sw   gp, 0(t5)")
         self.emit("1:")
@@ -900,7 +1013,7 @@ class Gen:
         a = self.aux
         a += ["", "# M-mode trap handler (mtvec base, 256-byte aligned): one record word per trap to the report",
               "# channel, then skip the U instruction (illegal / load / store fault), resume at ra (fetch fault at a",
-              "# probe word) or return to M at s8 (ecall). A trap taken in M-mode is a program failure (tohost 3).",
+              f"# probe word) or return to M at s8 (ecall). A trap taken in M-mode is a program failure (tohost {TOHOST_FAIL}).",
               ".align 8", "gen_trap_vec:",
               "  csrr t0, mcause", "  csrr t1, mepc", "  csrr t2, mstatus",
               "  srli t2, t2, 11", "  andi t2, t2, 3",
@@ -921,24 +1034,25 @@ class Gen:
               "gen_trap_m_fail:",
               "  slli t0, t0, 16", "  slli t2, t2, 8", "  or   t0, t0, t2",
               "  li   t2, GEN_MM_EOT_ADDR", "  sw   t0, 0(t2)",
-              f"  li   gp, {GP_FAIL}", "  la   t5, tohost", "  sw   gp, 0(t5)",
+              f"  li   gp, {TOHOST_FAIL}", "  la   t5, tohost", "  sw   gp, 0(t5)",
               "5:", "  j    5b",
               "", "# U-mode code area: one NAPOT region (L=0, RWX=111) covers it; fixed-size instructions so the",
-              "# handler's record carries the index of the trapping instruction.",
-              f".align {UCODE_ALIGN_BITS}", "gen_u_code:", ".option push", ".option norvc",
+              "# handler's record carries the index of the trapping instruction. The labels are global so the",
+              "# image's symbol table (prog.sym.json) carries the layout the expectations resolve from.",
+              f".align {UCODE_ALIGN_BITS}", ".globl gen_u_code", "gen_u_code:", ".option push", ".option norvc",
               "gen_ustub_load:", "  lw   s5, 0(s2)", "  lw   s7, 0(s3)", "  ecall",
               "gen_ustub_store:", "  sw   s6, 0(s2)", "  sw   s6, 0(s3)", "  ecall",
               "gen_ustub_fetch:", "  jalr ra, 0(s2)", "  jalr ra, 0(s3)", "  ecall",
               "gen_ustub_csr:"]
         a += [f"  {asm}" for asm, _f, _c, _w in self.u_attempts]
         # pad the U code block to its NAPOT size so .data (the probe pool) starts outside the region
-        a += ["  ecall", ".option pop", f".align {UCODE_ALIGN_BITS}", "gen_text_end:"]
+        a += ["  ecall", ".option pop", f".align {UCODE_ALIGN_BITS}", ".globl gen_text_end", "gen_text_end:"]
         assert 12 * 3 + 4 * (len(self.u_attempts) + 1) <= (1 << UCODE_ALIGN_BITS), "U code area overflow"
 
     def data_section(self):
         d = ["", ".section .data", ".align 6", ".globl tohost", "tohost:   .dword 0", ".globl fromhost", "fromhost: .dword 0",
              f".align {POOL_ALIGN_BITS}", "# probe pool: data pairs hold distinct patterns, code pairs hold c.addi s5,1 ; c.jr ra",
-             "gen_probe_pool:"]
+             ".globl gen_probe_pool", "gen_probe_pool:"]
         d += [f"  .word 0x{w:08x}" for w, _k in self.pool]
         d += [".align 2", ".globl gen_min_retired", f"gen_min_retired: .word {self.plan.min_retired}"]
         return d
@@ -961,16 +1075,29 @@ class Gen:
         self.p4_mml_phase()
         self.p5_end()
         self.handler_and_stubs()
-        assert not self.red_armed, "red fixture: the deviation slot was not emitted"
-        header = ['# gen_pmp_csr_warl: generated per-seed program of gen_test_pmp_csr_warl (seed %d%s).' % (self.plan.seed, ", RED fixture" if self.red else ""),
+        assert self.red_target is None or self.plan.red_note, "red fixture: the deviation site was not emitted"
+        self.plan.red_sites = self.red_sites
+        header = ['# gen_pmp_csr_warl: generated per-seed program of gen_test_pmp_csr_warl (seed %d%s).' % (self.plan.seed, ", RED fixture " + self.plan.red_item if self.plan.red else ""),
                   "# Generator: dv/auto_dv/tests/gen_programs/gen_pmp_csr_warl_prog.py (do not edit; regenerate).",
                   '.include "gen_mmio_map.h"', ".section .text", ".globl _start", "_start:"]
         self.plan.lines = header + self.main + self.aux + self.data_section()
         return self.plan
 
 
-def plan(seed, red=False):
-    return Gen(seed, red).build()
+def plan(seed, red=False, red_item=None):
+    """The green plan of a seed, or the red fixture: the same expectations with one program deviation of
+    one item (red_item, else drawn with the item's site from random.Random(f"{seed}:red"))."""
+    green = Gen(seed).build()
+    if not red:
+        return green
+    rng = random.Random(f"{int(seed)}:{RED_RNG_TAG}")
+    item = red_item or rng.choice(RED_ITEMS)
+    assert item in RED_ITEMS, f"red: unknown item {item}"
+    sites = green.red_sites[item]
+    assert sites, f"red: no deviation site for {item} at seed {seed}"
+    p = Gen(seed, red_target=(item, rng.choice(sites))).build()
+    assert p.signature() == green.signature() and p.rlb == green.rlb, "red: the expectations moved"
+    return p
 
 
 def emit(p):
@@ -979,21 +1106,20 @@ def emit(p):
     return text
 
 
-def check_spike_log(p, log_path):
+def check_spike_log(p, log_path, bases):
     """Host check of the model against a standalone Spike run (--log-commits): the sequence of words
-    stored to the EOT MMIO register must equal the plan's expected reports (relative ones resolved from
-    the reported bases). Returns the list of (idx, expected, got) mismatches."""
+    stored to the EOT MMIO register must equal the plan's expected reports (bases from the symbol table).
+    Returns (stored words, [(idx, expected, got)] mismatches)."""
     import re
     eot = MEMORY_MAP["eot_addr"]
     pat = re.compile(r"mem 0x%08x 0x([0-9a-f]{8})" % eot)
     got = [int(m.group(1), 16) for m in pat.finditer(Path(log_path).read_text())]
     bad = []
-    for i, r in enumerate(p.reports):
+    for i in range(p.k):
+        exp = p.expected(i, bases)
         if i >= len(got):
-            bad.append((i, p.expected(i, got), None))
-            continue
-        exp = p.expected(i, got)
-        if exp is not None and exp != got[i]:
+            bad.append((i, exp, None))
+        elif exp != got[i]:
             bad.append((i, exp, got[i]))
     return got, bad
 
@@ -1002,11 +1128,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--out", type=Path, help="assembly output file")
-    ap.add_argument("--red", action="store_true", help="red fixture: the program deviates on one TP-PMP-001 write")
+    ap.add_argument("--red", action="store_true", help="red fixture: the program deviates on one intent of one item")
+    ap.add_argument("--red-item", choices=RED_ITEMS, help="the item the red fixture targets (default: drawn from the seed)")
     ap.add_argument("--check-spike", type=Path, help="compare the plan with a Spike commit log's EOT stores")
+    ap.add_argument("--sym", type=Path, help="prog.sym.json of the built program (layout bases for --check-spike)")
     ap.add_argument("--summary", action="store_true", help="print k, min_retired and the per-item report counts")
     args = ap.parse_args(argv)
-    p = plan(args.seed, args.red)
+    p = plan(args.seed, args.red, args.red_item)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(emit(p))
@@ -1015,13 +1143,17 @@ def main(argv=None):
         for r in p.reports:
             per_item[r.item] = per_item.get(r.item, 0) + 1
         print(f"seed={p.seed} red={p.red} rlb={p.rlb} k={p.k} min_retired={p.min_retired} lines={len(p.lines)} per_item={per_item}"
-              + (f" red_note={p.red_note}" if p.red else ""))
+              + f" red_sites={ {k: len(v) for k, v in p.red_sites.items()} }"
+              + (f" red_item={p.red_item} red_note={p.red_note}" if p.red else ""))
     if args.check_spike:
-        got, bad = check_spike_log(p, args.check_spike)
+        import json
+        assert args.sym, "--check-spike needs --sym <prog.sym.json>"
+        bases = bases_from_symbols(json.loads(args.sym.read_text())["symbols"])
+        got, bad = check_spike_log(p, args.check_spike, bases)
         print(f"spike EOT stores: {len(got)} (plan k={p.k}); mismatches: {len(bad)}")
         for i, exp, g in bad[:20]:
             r = p.reports[i]
-            print(f"  idx {i} [{r.item} {r.label}] expected {exp if exp is None else '0x%08x' % exp} got {g if g is None else '0x%08x' % g}")
+            print(f"  idx {i} [{r.item} {r.label}] expected 0x{exp:08x} got {g if g is None else '0x%08x' % g}")
         return 1 if bad or len(got) != p.k else 0
     return 0
 

@@ -76,7 +76,6 @@ class GenTest:
     # leaves its value in evt_eot_code, so Python collects them edge by edge into self.reports and
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
-    plan_group = None   # test-plan group whose bins declare_bins() defaults to (None: gen_<x> of gen_test_<x>)
 
     def __init__(self, dut):
         self.dut = dut
@@ -287,10 +286,11 @@ class GenTest:
         raise NotImplementedError("GEN_TEST: fire_check() is the test's own duty")
 
     def declare_bins(self):
-        """Hook: the bins the test intends to hit. Default: the plan's bins for `plan_group` (gen_<x> for
-        gen_test_<x>) through the manifest generator's derivation, so finish() proves the rendered manifest is
-        current against the plan; a test hitting a subset declares that subset."""
-        return lib.plan_bins(self.name, self.plan_group)
+        """Hook: the bins the test intends to hit. Default: the plan's bins of the items named by the class's
+        fire_tp_<area>_<nnn> methods, through the manifest generator's derivation (gen_fcov_manifest.py
+        --test-module renders the same set), so finish() proves the rendered manifest current and the manifest
+        covers exactly the items the test checks; a test hitting a subset of those bins declares that subset."""
+        return lib.plan_bins(self.name, lib.fire_items(type(self)))
 
     def report_count(self):
         """Hook: number of report words the program stores before its end-of-test store; the default is the

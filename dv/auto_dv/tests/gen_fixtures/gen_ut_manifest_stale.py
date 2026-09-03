@@ -13,7 +13,6 @@ lib.FCOV_HOME = Path(__file__).resolve().parent   # fixture manifests live besid
 
 class ManifestStale(CmpZcb):
     name = "gen_ut_manifest_stale"
-    plan_group = "gen_cmp_zcb"
 
 
 @cocotb.test()

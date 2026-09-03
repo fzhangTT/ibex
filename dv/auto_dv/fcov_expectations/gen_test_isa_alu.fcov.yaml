@@ -1,0 +1,1212 @@
+test: gen_test_isa_alu
+owner: test-writer
+bins:
+  - gen_isa_alu_imm_cg.cp_addi_wrap.none
+  - gen_isa_alu_imm_cg.cp_imm_class.max_pos
+  - gen_isa_alu_imm_cg.cp_imm_class.min_neg
+  - gen_isa_alu_imm_cg.cp_imm_class.minus1
+  - gen_isa_alu_imm_cg.cp_imm_class.neg_rand
+  - gen_isa_alu_imm_cg.cp_imm_class.plus1
+  - gen_isa_alu_imm_cg.cp_imm_class.pos_rand
+  - gen_isa_alu_imm_cg.cp_imm_class.zero
+  - gen_isa_alu_imm_cg.cp_op.addi
+  - gen_isa_alu_imm_cg.cp_op.andi
+  - gen_isa_alu_imm_cg.cp_op.ori
+  - gen_isa_alu_imm_cg.cp_op.slti
+  - gen_isa_alu_imm_cg.cp_op.sltiu
+  - gen_isa_alu_imm_cg.cp_op.xori
+  - gen_isa_alu_imm_cg.cp_rd_x0.no
+  - gen_isa_alu_imm_cg.cp_rd_x0.yes
+  - gen_isa_alu_imm_cg.cp_result_class.all_ones
+  - gen_isa_alu_imm_cg.cp_result_class.int_max
+  - gen_isa_alu_imm_cg.cp_result_class.int_min
+  - gen_isa_alu_imm_cg.cp_result_class.one
+  - gen_isa_alu_imm_cg.cp_result_class.other
+  - gen_isa_alu_imm_cg.cp_result_class.zero
+  - gen_isa_alu_imm_cg.cp_rs1_class.all_ones
+  - gen_isa_alu_imm_cg.cp_rs1_class.int_max
+  - gen_isa_alu_imm_cg.cp_rs1_class.int_min
+  - gen_isa_alu_imm_cg.cp_rs1_class.neg_rand
+  - gen_isa_alu_imm_cg.cp_rs1_class.one
+  - gen_isa_alu_imm_cg.cp_rs1_class.pos_rand
+  - gen_isa_alu_imm_cg.cp_rs1_class.zero
+  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.no
+  - gen_isa_alu_imm_cg.cp_rs1_eq_rd.yes
+  - gen_isa_alu_imm_cg.cp_slt_case.other
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.addi_zero
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.andi_zero
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.ori_zero
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.slti_zero
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.sltiu_zero
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_max_pos
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_min_neg
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_minus1
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_plus1
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_imm.xori_zero
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.addi_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.addi_yes
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.andi_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.andi_yes
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.ori_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.ori_yes
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.slti_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.slti_yes
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.sltiu_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.sltiu_yes
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.xori_no
+  - gen_isa_alu_imm_cg.cr_op_rd_x0.xori_yes
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.addi_zero
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.andi_zero
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.ori_zero
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.slti_zero
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.sltiu_zero
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_all_ones
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_int_max
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_int_min
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_neg_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_one
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_pos_rand
+  - gen_isa_alu_imm_cg.cr_op_rs1.xori_zero
+  - gen_isa_alu_imm_cg.cr_slt.slti_other
+  - gen_isa_alu_imm_cg.cr_slt.sltiu_other
+  - gen_isa_alu_imm_cg.cp_addi_wrap.neg_wrap
+  - gen_isa_alu_imm_cg.cp_addi_wrap.pos_wrap
+  - gen_isa_alu_imm_cg.cp_slt_case.eq
+  - gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg
+  - gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1
+  - gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz
+  - gen_isa_alu_imm_cg.cr_slt.slti_eq
+  - gen_isa_alu_imm_cg.cr_slt.slti_slti_0_neg
+  - gen_isa_alu_imm_cg.cr_slt.slti_slti_intmin_0
+  - gen_isa_alu_imm_cg.cr_slt.sltiu_eq
+  - gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_imm_m1
+  - gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_ones_m1
+  - gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_seqz
+  - gen_isa_alu_reg_cg.cp_rd_x0.yes
+  - gen_isa_shift_cg.cp_rd_x0.yes
+  - gen_isa_lui_auipc_cg.cp_rd_x0.yes
+  - gen_isa_hint_x0_cg.cp_hint_class.add_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.addi_x0_nzimm
+  - gen_isa_hint_x0_cg.cp_hint_class.and_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.andi_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.auipc_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.canonical_nop
+  - gen_isa_hint_x0_cg.cp_hint_class.lui_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.or_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.ori_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sll_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.slli_x0_other
+  - gen_isa_hint_x0_cg.cp_hint_class.slli_x0_semihost
+  - gen_isa_hint_x0_cg.cp_hint_class.slt_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.slti_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sltiu_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sltu_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sra_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.srai_x0_other
+  - gen_isa_hint_x0_cg.cp_hint_class.srai_x0_semihost
+  - gen_isa_hint_x0_cg.cp_hint_class.srl_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.srli_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sub_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.xor_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.xori_x0
+  - gen_isa_hint_x0_cg.cp_x0_read.rs1_zero
+  - gen_isa_hint_x0_cg.cp_x0_read.rs2_zero
+  - gen_isa_lui_auipc_cg.cp_imm20.all_ones
+  - gen_isa_lui_auipc_cg.cp_imm20.msb
+  - gen_isa_lui_auipc_cg.cp_imm20.one
+  - gen_isa_lui_auipc_cg.cp_imm20.rand
+  - gen_isa_lui_auipc_cg.cp_imm20.zero
+  - gen_isa_lui_auipc_cg.cp_op.auipc
+  - gen_isa_lui_auipc_cg.cp_op.lui
+  - gen_isa_lui_auipc_cg.cp_pc_align.half
+  - gen_isa_lui_auipc_cg.cp_pc_align.word
+  - gen_isa_lui_auipc_cg.cp_pc_region.mid
+  - gen_isa_lui_auipc_cg.cp_rd_x0.no
+  - gen_isa_lui_auipc_cg.cr_op_imm.auipc_all_ones
+  - gen_isa_lui_auipc_cg.cr_op_imm.auipc_msb
+  - gen_isa_lui_auipc_cg.cr_op_imm.auipc_one
+  - gen_isa_lui_auipc_cg.cr_op_imm.auipc_rand
+  - gen_isa_lui_auipc_cg.cr_op_imm.auipc_zero
+  - gen_isa_lui_auipc_cg.cr_op_imm.lui_all_ones
+  - gen_isa_lui_auipc_cg.cr_op_imm.lui_msb
+  - gen_isa_lui_auipc_cg.cr_op_imm.lui_one
+  - gen_isa_lui_auipc_cg.cr_op_imm.lui_rand
+  - gen_isa_lui_auipc_cg.cr_op_imm.lui_zero
+  - gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_no
+  - gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_yes
+  - gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_no
+  - gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_yes
+  - gen_isa_lui_auipc_cg.cp_pc_region.high
+  - gen_isa_lui_auipc_cg.cp_pc_region.low
+  - gen_isa_lui_auipc_cg.cp_wrap.no
+  - gen_isa_lui_auipc_cg.cp_wrap.yes
+  - gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_nowrap
+  - gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_wrap
+  - gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_word_nowrap
+  - gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_word_wrap
+  - gen_isa_alu_reg_cg.cp_eq_operands.no
+  - gen_isa_alu_reg_cg.cp_op.add
+  - gen_isa_alu_reg_cg.cp_op.and
+  - gen_isa_alu_reg_cg.cp_op.or
+  - gen_isa_alu_reg_cg.cp_op.slt
+  - gen_isa_alu_reg_cg.cp_op.sltu
+  - gen_isa_alu_reg_cg.cp_op.sub
+  - gen_isa_alu_reg_cg.cp_op.xor
+  - gen_isa_alu_reg_cg.cp_rd_x0.no
+  - gen_isa_alu_reg_cg.cp_result_class.all_ones
+  - gen_isa_alu_reg_cg.cp_result_class.int_max
+  - gen_isa_alu_reg_cg.cp_result_class.int_min
+  - gen_isa_alu_reg_cg.cp_result_class.one
+  - gen_isa_alu_reg_cg.cp_result_class.other
+  - gen_isa_alu_reg_cg.cp_result_class.zero
+  - gen_isa_alu_reg_cg.cp_rs1_class.all_ones
+  - gen_isa_alu_reg_cg.cp_rs1_class.int_max
+  - gen_isa_alu_reg_cg.cp_rs1_class.int_min
+  - gen_isa_alu_reg_cg.cp_rs1_class.neg_rand
+  - gen_isa_alu_reg_cg.cp_rs1_class.one
+  - gen_isa_alu_reg_cg.cp_rs1_class.pos_rand
+  - gen_isa_alu_reg_cg.cp_rs1_class.zero
+  - gen_isa_alu_reg_cg.cp_rs2_class.all_ones
+  - gen_isa_alu_reg_cg.cp_rs2_class.int_max
+  - gen_isa_alu_reg_cg.cp_rs2_class.int_min
+  - gen_isa_alu_reg_cg.cp_rs2_class.neg_rand
+  - gen_isa_alu_reg_cg.cp_rs2_class.one
+  - gen_isa_alu_reg_cg.cp_rs2_class.pos_rand
+  - gen_isa_alu_reg_cg.cp_rs2_class.zero
+  - gen_isa_alu_reg_cg.cp_same_regs.all_same
+  - gen_isa_alu_reg_cg.cp_same_regs.distinct
+  - gen_isa_alu_reg_cg.cp_same_regs.rs1_eq_rd
+  - gen_isa_alu_reg_cg.cp_same_regs.rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cp_same_regs.rs2_eq_rd
+  - gen_isa_alu_reg_cg.cp_sign_pair.nn
+  - gen_isa_alu_reg_cg.cp_sign_pair.np
+  - gen_isa_alu_reg_cg.cp_sign_pair.pn
+  - gen_isa_alu_reg_cg.cp_sign_pair.pp
+  - gen_isa_alu_reg_cg.cp_wrap.none
+  - gen_isa_alu_reg_cg.cr_op_eq.add_no
+  - gen_isa_alu_reg_cg.cr_op_eq.and_no
+  - gen_isa_alu_reg_cg.cr_op_eq.or_no
+  - gen_isa_alu_reg_cg.cr_op_eq.slt_no
+  - gen_isa_alu_reg_cg.cr_op_eq.sltu_no
+  - gen_isa_alu_reg_cg.cr_op_eq.sub_no
+  - gen_isa_alu_reg_cg.cr_op_eq.xor_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.add_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.add_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.and_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.and_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.or_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.or_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.slt_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.slt_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.sltu_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.sltu_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.sub_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.sub_yes
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.xor_no
+  - gen_isa_alu_reg_cg.cr_op_rd_x0.xor_yes
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.add_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.and_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.or_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.slt_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.sltu_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.sub_zero
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_one
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs1.xor_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.add_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.and_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.or_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.slt_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.sltu_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.sub_zero
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_all_ones
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_int_max
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_int_min
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_neg_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_one
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_pos_rand
+  - gen_isa_alu_reg_cg.cr_op_rs2.xor_zero
+  - gen_isa_alu_reg_cg.cr_op_same.add_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.add_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.add_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.add_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.add_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.and_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.and_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.and_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.and_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.and_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.or_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.or_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.or_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.or_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.or_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.slt_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.slt_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.slt_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.slt_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.slt_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.sltu_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.sltu_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.sltu_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.sltu_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.sltu_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.sub_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.sub_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.sub_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.sub_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.sub_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.xor_all_same
+  - gen_isa_alu_reg_cg.cr_op_same.xor_distinct
+  - gen_isa_alu_reg_cg.cr_op_same.xor_rs1_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_same.xor_rs1_eq_rs2
+  - gen_isa_alu_reg_cg.cr_op_same.xor_rs2_eq_rd
+  - gen_isa_alu_reg_cg.cr_op_sign.add_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.add_np
+  - gen_isa_alu_reg_cg.cr_op_sign.add_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.add_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.and_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.and_np
+  - gen_isa_alu_reg_cg.cr_op_sign.and_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.and_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.or_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.or_np
+  - gen_isa_alu_reg_cg.cr_op_sign.or_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.or_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.slt_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.slt_np
+  - gen_isa_alu_reg_cg.cr_op_sign.slt_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.slt_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.sltu_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.sltu_np
+  - gen_isa_alu_reg_cg.cr_op_sign.sltu_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.sltu_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.sub_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.sub_np
+  - gen_isa_alu_reg_cg.cr_op_sign.sub_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.sub_pp
+  - gen_isa_alu_reg_cg.cr_op_sign.xor_nn
+  - gen_isa_alu_reg_cg.cr_op_sign.xor_np
+  - gen_isa_alu_reg_cg.cr_op_sign.xor_pn
+  - gen_isa_alu_reg_cg.cr_op_sign.xor_pp
+  - gen_isa_alu_reg_cg.cr_wrap.add_none
+  - gen_isa_alu_reg_cg.cr_wrap.sub_none
+  - gen_isa_alu_reg_cg.cp_wrap.add_carry
+  - gen_isa_alu_reg_cg.cp_wrap.add_neg_ovf
+  - gen_isa_alu_reg_cg.cp_wrap.add_pos_ovf
+  - gen_isa_alu_reg_cg.cp_wrap.sub_borrow
+  - gen_isa_alu_reg_cg.cp_wrap.sub_ovf
+  - gen_isa_alu_reg_cg.cr_wrap.add_add_carry
+  - gen_isa_alu_reg_cg.cr_wrap.add_add_neg_ovf
+  - gen_isa_alu_reg_cg.cr_wrap.add_add_pos_ovf
+  - gen_isa_alu_reg_cg.cr_wrap.sub_sub_borrow
+  - gen_isa_alu_reg_cg.cr_wrap.sub_sub_ovf
+  - gen_isa_alu_reg_cg.cp_eq_operands.yes
+  - gen_isa_alu_reg_cg.cr_op_eq.add_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.and_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.or_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.slt_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.sltu_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.sub_yes
+  - gen_isa_alu_reg_cg.cr_op_eq.xor_yes
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_zero
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_all_ones
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_neg_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_one
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_pos_rand
+  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_zero
+  - gen_isa_hint_x0_cg.cp_hint_class.other
+  - gen_isa_hint_x0_cg.cp_writer_class.alu_imm
+  - gen_isa_hint_x0_cg.cp_writer_class.alu_reg
+  - gen_isa_hint_x0_cg.cp_writer_class.bit_1cyc
+  - gen_isa_hint_x0_cg.cp_writer_class.bit_2cyc
+  - gen_isa_hint_x0_cg.cp_writer_class.cmp_hint
+  - gen_isa_hint_x0_cg.cp_writer_class.csrr
+  - gen_isa_hint_x0_cg.cp_writer_class.div_rem
+  - gen_isa_hint_x0_cg.cp_writer_class.jal
+  - gen_isa_hint_x0_cg.cp_writer_class.jalr
+  - gen_isa_hint_x0_cg.cp_writer_class.load
+  - gen_isa_hint_x0_cg.cp_writer_class.lui_auipc
+  - gen_isa_hint_x0_cg.cp_writer_class.mul
+  - gen_isa_hint_x0_cg.cp_writer_class.mulh
+  - gen_isa_hint_x0_cg.cp_writer_class.shift
+  - gen_isa_hint_x0_cg.cp_x0_read.none
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_imm_none
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_imm_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_imm_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_reg_none
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_none
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none
+  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.csrr_none
+  - gen_isa_hint_x0_cg.cr_writer_read.csrr_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_none
+  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.jal_none
+  - gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.jalr_none
+  - gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.load_none
+  - gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_none
+  - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.mul_none
+  - gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.mulh_none
+  - gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.shift_none
+  - gen_isa_hint_x0_cg.cr_writer_read.shift_rs1_zero
+  - gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero
+anti_vacuity:
+  gen_isa_alu_imm_cg.cp_addi_wrap.none: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_imm_class.zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.addi: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.andi: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.ori: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.slti: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.sltiu: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_op.xori: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rd_x0.no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rd_x0.yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.other: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_result_class.zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_class.zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_eq_rd.no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_rs1_eq_rd.yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.other: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.addi_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.andi_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.ori_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.slti_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.sltiu_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_min_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_minus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_plus1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_imm.xori_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.addi_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.addi_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.andi_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.andi_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.ori_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.ori_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.slti_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.slti_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.sltiu_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.sltiu_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.xori_no: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rd_x0.xori_yes: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.addi_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.andi_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.ori_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.slti_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.sltiu_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_all_ones: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_int_max: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_int_min: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_neg_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_one: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_pos_rand: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_op_rs1.xori_zero: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.slti_other: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.sltiu_other: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_addi_wrap.neg_wrap: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_addi_wrap.pos_wrap: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.eq: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.slti_0_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.slti_intmin_0: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_imm_m1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_ones_m1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cp_slt_case.sltiu_seqz: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.slti_eq: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.slti_slti_0_neg: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.slti_slti_intmin_0: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.sltiu_eq: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_imm_m1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_ones_m1: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_imm_cg.cr_slt.sltiu_sltiu_seqz: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
+  gen_isa_alu_reg_cg.cp_rd_x0.yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_shift_cg.cp_rd_x0.yes: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
+  gen_isa_lui_auipc_cg.cp_rd_x0.yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_hint_x0_cg.cp_hint_class.add_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.addi_x0_nzimm: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.and_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.andi_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.auipc_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.canonical_nop: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.lui_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.or_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.ori_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.sll_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.slli_x0_other: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.slli_x0_semihost: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.slt_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.slti_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.sltiu_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.sltu_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.sra_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.srai_x0_other: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.srai_x0_semihost: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.srl_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.srli_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.sub_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.xor_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_hint_class.xori_x0: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_x0_read.rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_x0_read.rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_lui_auipc_cg.cp_imm20.all_ones: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_imm20.msb: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_imm20.one: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_imm20.rand: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_imm20.zero: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_op.auipc: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_op.lui: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_pc_align.half: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_pc_align.word: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_pc_region.mid: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_rd_x0.no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.auipc_all_ones: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.auipc_msb: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.auipc_one: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.auipc_rand: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.auipc_zero: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.lui_all_ones: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.lui_msb: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.lui_one: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.lui_rand: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_imm.lui_zero: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_rd_x0.auipc_yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_op_rd_x0.lui_yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_pc_region.high: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_pc_region.low: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_wrap.no: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cp_wrap.yes: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_nowrap: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_half_wrap: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_word_nowrap: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_lui_auipc_cg.cr_auipc_pc.auipc_word_wrap: "CG-ISA-004: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate"
+  gen_isa_alu_reg_cg.cp_eq_operands.no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.add: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.and: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.or: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.slt: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.sltu: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.sub: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_op.xor: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rd_x0.no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.other: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_result_class.zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs1_class.zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_rs2_class.zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_same_regs.all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_same_regs.distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_same_regs.rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_same_regs.rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_same_regs.rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_sign_pair.nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_sign_pair.np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_sign_pair.pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_sign_pair.pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.none: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.add_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.and_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.or_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.slt_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.sltu_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.sub_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.xor_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.add_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.add_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.and_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.and_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.or_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.or_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.slt_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.slt_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.sltu_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.sltu_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.sub_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.sub_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.xor_no: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rd_x0.xor_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.add_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.and_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.or_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.slt_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sltu_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.sub_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs1.xor_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.add_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.and_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.or_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.slt_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sltu_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.sub_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_rs2.xor_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.add_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.add_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.add_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.add_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.add_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.and_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.and_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.and_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.and_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.and_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.or_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.or_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.or_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.or_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.or_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.slt_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.slt_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.slt_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.slt_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.slt_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sltu_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sltu_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sltu_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sltu_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sltu_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sub_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sub_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sub_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sub_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.sub_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.xor_all_same: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.xor_distinct: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.xor_rs1_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.xor_rs1_eq_rs2: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_same.xor_rs2_eq_rd: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.add_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.add_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.add_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.add_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.and_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.and_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.and_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.and_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.or_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.or_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.or_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.or_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.slt_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.slt_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.slt_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.slt_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sltu_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sltu_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sltu_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sltu_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sub_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sub_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sub_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.sub_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.xor_nn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.xor_np: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.xor_pn: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_sign.xor_pp: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.add_none: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.sub_none: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.add_carry: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.add_neg_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.add_pos_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.sub_borrow: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_wrap.sub_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.add_add_carry: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.add_add_neg_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.add_add_pos_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.sub_sub_borrow: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_wrap.sub_sub_ovf: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cp_eq_operands.yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.add_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.and_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.or_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.slt_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.sltu_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.sub_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_op_eq.xor_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_one_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_pos_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
+  gen_isa_hint_x0_cg.cp_hint_class.other: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.alu_imm: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.alu_reg: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.bit_1cyc: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.bit_2cyc: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.cmp_hint: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.csrr: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.div_rem: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.jal: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.jalr: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.load: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.lui_auipc: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.mul: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.mulh: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.shift: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_x0_read.none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_imm_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_imm_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_imm_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_reg_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.csrr_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.csrr_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.div_rem_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jal_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jalr_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.load_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mul_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mulh_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.shift_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.shift_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"

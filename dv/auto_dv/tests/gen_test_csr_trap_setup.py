@@ -8,11 +8,17 @@ all-ones reads back 0x0022_1888, clear reads 0, fire_tp_csr_025), TP-CSR-027 (ms
 ignored, no trap, fire_tp_csr_027), TP-CSR-028 (menvcfg/menvcfgh idem, fire_tp_csr_028), TP-CSR-029 (mie
 random write/read-back under MIE_MASK, fire_tp_csr_029; its irq_pending_o clause needs the pin channel and
 is not asserted), TP-CSR-030 (mie all-ones reads back MIE_MASK, fire_tp_csr_030), TP-CSR-035 (mtvec
-read-back == BASE | 1 and the following ecall lands in the handler copy at BASE, observed as that copy's
-marker word; the interrupt half needs an irq agent, fire_tp_csr_035), TP-CSR-036 (mtvec MODE / bits 7:2
-legalised on write, fire_tp_csr_036). Not built (channels not observable or drivable from Python today, no
-irq agent in the build): TP-CSR-026 (interrupt taken on MIE set; needs an irq agent and rvfi_intr) and
-TP-CSR-031 (irq_pending_o / WFI wake timing; needs the irq agent, core_busy_o and per-cycle pin facts).
+read-back == BASE | 1 for every base class the plan names, low / high / boot, and the following ecall lands in
+the installed handler copy, observed as that copy's marker word; fire_tp_csr_035), TP-CSR-036 (mtvec MODE /
+bits 7:2 legalised on write, fire_tp_csr_036).
+Clauses dropped inside the built items, each with the missing component: TP-CSR-035 interrupt vectoring
+(BASE + 4 * id) and the low_irq_sw / high_irq_fast bins need an irq agent; TP-CSR-035 ecall landing on the
+boot base needs memory at the boot page's first 0x80 bytes, which gen_link.ld does not map (the boot class is
+exercised as write and read-back, then a handler copy is installed before the ecall); the low base is the
+program's .debug_rom copy in the DM window, the only memory below bit 31 in the TB map; TP-CSR-035's
+rvfi_pc_rdata clause is observed through the handler copy's marker word (the program report channel), not
+RVFI. Not built: TP-CSR-026 (interrupt taken on MIE set; needs an irq agent and rvfi_intr) and TP-CSR-031
+(irq_pending_o / WFI wake timing; needs the irq agent, core_busy_o and per-cycle pin facts).
 Canonical features covered (gen_feature_list.md Section 3): F-CSR-023 (carries the folded F-CSR-025 and
 F-PRV-035), F-CSR-024, F-CSR-027, F-CSR-028, F-CSR-029 (carries the folded F-CSR-030), F-CSR-035 (carries
 the folded F-CSR-036); not covered here: F-CSR-026, F-CSR-031.
@@ -20,14 +26,18 @@ the folded F-CSR-036); not covered here: F-CSR-026, F-CSR-031.
 Program: dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py, a per-seed generator (testlist
 `program: {generator: ..., seed: run}`); plan(seed) is the single source of the expected report words,
 report_count() returns its k, and the fire-checks compare self.reports with it (link-address expectations
-are resolved from the image sidecar). Knobs: knob_imem_gnt_delay and knob_imem_rvalid_delay (the fetch-
-latency regimes the built items name); the irq knobs the items also name (irq_regime, irq_line_mix,
-irq_hold) are excluded because the program has no interrupt handler and the build has no irq agent (they
-belong to the blocked items). layers_required = False: the TB has no REGIME_SET consumer at HEAD (step 2b
-parked), so the layers are logged not_applied; flips to the default when step 2b lands. declare_bins() takes the template default (the plan's bins for the group, checked against the
-rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands).
+are resolved from the image sidecar). Red fixtures: `--red --red-item TP-CSR-0nn` deviates the program on that
+item's intent (the seed draws the item without --red-item); exactly that fire_tp method fails. Knobs:
+knob_imem_gnt_delay and knob_imem_rvalid_delay (the fetch-latency regimes the built items name); the irq knobs
+the items also name (irq_regime, irq_line_mix, irq_hold) are excluded because the program has no interrupt
+handler and the build has no irq agent (they belong to the blocked clauses). layers_required = False: the TB
+has no REGIME_SET consumer, so the layers are logged not_applied (testlist entry measured: false).
+declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked
+against the rendered manifest in finish()).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
-isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol checkers.
+isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol checkers. T-102 (comparator
+mret target and privilege rows, the shim's mstatus XS mask) is TB Infra's: the flow verdict FAILs through
+uvm_error on this program until it lands, and no program clause is bent around it.
 MODULE=dv.auto_dv.tests.gen_test_csr_trap_setup, TOPLEVEL=gen_tb_top.
 """
 import cocotb
@@ -58,7 +68,7 @@ def _detail(n, bad, what):
 class CsrTrapSetup(GenTest):
     name = "gen_test_csr_trap_setup"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
-    # Bring-up flag: no REGIME_SET consumer exists at HEAD (step 2b parked); back to the default when it lands.
+    # No REGIME_SET consumer exists in the build (testlist entry measured: false).
     layers_required = False
 
     def report_count(self):
@@ -122,9 +132,11 @@ class CsrTrapSetup(GenTest):
     def fire_tp_csr_035(self):
         bad, n = _compare(self, "TP-CSR-035")
         f = _plan(self.seed).facts["TP-CSR-035"]
-        self.check("fire_tp_csr_035", n > 0 and not bad and len(f["copies"]) > 1,
+        bases = f["bases"] == set(prog.BASE_CLASSES) and prog.LOW_COPY in f["copies"] and len(f["copies"] & set(prog.HIGH_COPIES)) > 1
+        self.check("fire_tp_csr_035", n > 0 and not bad and bases,
                    _detail(n, bad, "mtvec read-backs (BASE | 1) and ecall landings (handler copy marker at BASE, mcause 11)")
-                   + f"; handler copies used {sorted(f['copies'])} of {prog.NUM_HANDLER_COPIES}, ops {sorted(f['ops'])}")
+                   + f"; base classes {sorted(f['bases'])} of {list(prog.BASE_CLASSES)}, handler copies used {sorted(f['copies'])}"
+                   + f" of {prog.NUM_HANDLER_COPIES}, ops {sorted(f['ops'])}")
 
     def fire_tp_csr_036(self):
         bad, n = _compare(self, "TP-CSR-036")

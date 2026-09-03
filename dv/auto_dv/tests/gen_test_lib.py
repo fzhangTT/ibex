@@ -268,9 +268,10 @@ def witness_ids_of(test_name):
 
 def tp_id_of(fire_name):
     """fire_tp_<area>_<nnn>[_suffix] -> TP-<AREA>-<nnn>; a fire-check outside that form has no item id."""
-    m = re.match(r"fire_tp_([a-z]+)_(\d+)", fire_name)
-    assert m, f"GEN_TEST_LIB: {fire_name} is not a fire_tp_<area>_<nnn> item check"
-    return f"TP-{m.group(1).upper()}-{m.group(2)}"
+    from dv.auto_dv.tests import gen_fcov_manifest as gm
+    tp = gm.tp_id_of_fire(fire_name)
+    assert tp, f"GEN_TEST_LIB: {fire_name} is not a fire_tp_<area>_<nnn> item check"
+    return tp
 
 
 TEMPLATE_PY = Path(__file__).resolve().parent / "gen_test_template.py"
@@ -403,11 +404,17 @@ def load_manifest_bins(test_name):
     return list(data.get("bins") or [])
 
 
-def plan_bins(test_name, group=None):
-    """Bins the plan assigns to the test (default group: gen_test_<x> hosts gen_<x>), derived by the manifest
-    generator's own code so the test's declaration and the rendered file share one implementation."""
+def fire_items(cls):
+    """TP ids named by the class's fire_tp_<area>_<nnn> methods (inherited ones included): the items the test checks."""
     from dv.auto_dv.tests import gen_fcov_manifest as gm
-    return gm.plan_bins(test_name, group or re.sub(r"^gen_test_", "gen_", test_name))
+    return sorted({i for i in (gm.tp_id_of_fire(n) for n in dir(cls) if n.startswith("fire_tp_")) if i})
+
+
+def plan_bins(test_name, items):
+    """Bins the plan assigns to these items, derived by the manifest generator's own code so the test's declaration
+    and the rendered file (gen_fcov_manifest.py --test-module) share one implementation."""
+    from dv.auto_dv.tests import gen_fcov_manifest as gm
+    return gm.plan_bins(test_name, items)
 
 
 def check_manifest_matches(test_name, declared):
@@ -428,6 +435,7 @@ def check_manifest_matches(test_name, declared):
 
 
 def _self_test():
+    from dv.auto_dv.tests import gen_fcov_manifest as _gm
     seed = 12345
     names = list(TIMING_ONLY_KNOBS)   # the mechanics are tested independent of the consumer gate
     empty = Schedule.derive(seed, [])
@@ -515,10 +523,12 @@ def _self_test():
                              "    def fire_tp_x_001(self):\n        self.check('fire_tp_x_001', self.retired() > 0, 'x', cycle_clause_true=self.retired() > 1)\n", "<green>") == ["T"]
     assert tp_id_of("fire_tp_csr_001") == "TP-CSR-001" and tp_id_of("fire_tp_bit_016_gorci") == "TP-BIT-016"
     # manifest cross-check: declared == rendered for every committed manifest; stale and missing fail loud
-    for mf in sorted(FCOV_HOME.glob("gen_test_*.fcov.yaml")):
-        tn = mf.stem.replace(".fcov", "")
-        assert check_manifest_matches(tn, plan_bins(tn)), tn
-    for declared, why in ((plan_bins("gen_test_boot_retire") + ["x.y.z"], "no manifest"),):
+    for f in tests:   # every committed test's fire_tp_* items render exactly its committed manifest (or it has none)
+        tn = f.stem
+        items = _gm.fire_items_of_module(f)
+        declared = plan_bins(tn, items)
+        assert check_manifest_matches(tn, declared) or not declared, f"{tn}: {len(declared)} declared, manifest {load_manifest_bins(tn)}"
+    for declared, why in ((["x.y.z"], "no manifest"),):
         try:
             check_manifest_matches("gen_test_boot_retire", declared); raise AssertionError("missing-manifest case accepted")
         except AssertionError as exc:

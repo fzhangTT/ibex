@@ -2,21 +2,26 @@
 architectural effects (plan group gen_cmp_zcmp_basic, gen_test_plan.md AREA CMP).
 
 Program: dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py at the run seed (testlist
-`program: {generator: ..., seed: run}`; red fixture `generator_args: ["--red"]`). plan(seed) draws the
-scenario list (all 48 (rlist, spimm) for push and for pop in random order, all 56 cm.mvsa01 pairs, all 64
-cm.mva01s pairs, popret/popretz with rlist 4 pinned and random combinations at word and half aligned
-targets, one hazard producer per pattern, one minstret-wrapped cm.* per kind, four back-to-back
-patterns, one fall-through cm.* per kind after a ret) and computes every expectation from the Zcmp
-specification; the program stores RAW observations to the EOT register (report channel), this test
-compares them. Nothing here re-derives the program's intent a second way: report_count() is plan.k.
+`program: {generator: ..., seed: run}`; red fixtures `generator_args: ["--red", "--red-item", "TP-CMP-nnn"]`,
+one deviation per built item, prog.RED_ITEMS). plan(seed) draws the scenario list (all 48 (rlist, spimm)
+prog.PUSH_REPEATS times for push and once for pop in random order, all 56 cm.mvsa01 pairs, all 64
+cm.mva01s pairs, popret/popretz with rlist prog.RET_PINNED_RLIST pinned plus random combinations at word
+and half aligned targets, one hazard producer per pattern, one minstret-wrapped cm.* per kind, four
+back-to-back patterns, one fall-through cm.* per kind after a ret) and computes every expectation from
+the Zcmp specification; the program stores RAW observations to the EOT register (report channel), this
+test compares them. Nothing here re-derives the program's intent a second way: report_count() is plan.k;
+the plan pins (pinned pop combinations, the ret rlist, the push repeat count) are the generator's named
+tables, cited there to the plan section. program_budget_cycles is raised for the three push sweeps.
 
 Items built (fire_tp_cmp_<nnn>), each on its per-seed architectural observable:
-  TP-CMP-039 cm.push over all 48 (rlist, spimm): frame words == predicted registers (list top at sp-4,
-             ra at sp-4N), poison slots untouched, sp_new == sp_old - stack_adj.
+  TP-CMP-039 cm.push over all 48 (rlist, spimm), each >= PUSH_REPEATS times per seed: frame words ==
+             predicted registers (list top at sp-4, ra at sp-4N), poison slots untouched,
+             sp_new == sp_old - stack_adj.
   TP-CMP-040 rlist 4, all spimm: one word (ra) at sp-4, rest of the frame untouched, sp -= 16+16*spimm.
   TP-CMP-041 rlist 15, all spimm: x27..x18, x9, x8, x1 at sp-4..sp-52, sp -= 64+16*spimm.
   TP-CMP-042 rlist 5..14: rlist-3 words in the predicted register order, slot N+1 untouched.
-  TP-CMP-043 push and pop: sp delta == base(rlist) + 16*spimm, all seven stack_adj values observed.
+  TP-CMP-043 push and pop: sp_old/sp_new words, sp delta == base(rlist) + 16*spimm, all seven stack_adj
+             values observed (the frame words of the same scenarios are 039's and 045's).
   TP-CMP-045 cm.pop over all 48: list registers == frame words at sp + stack_adj - 4k, non-list
              registers unchanged, sp += stack_adj.
   TP-CMP-046 pinned (8,1): s3 == 44(sp), ra == 28(sp), sp += 48; (15,3): x27 == 108(sp) .. x1 == 60(sp),
@@ -29,7 +34,10 @@ Items built (fire_tp_cmp_<nnn>), each on its per-seed architectural observable:
   TP-CMP-052 cm.mva01s all 56 distinct pairs: a0, a1 == the mapped sources.
   TP-CMP-053 cm.mva01s r1s' == r2s' (8): a0 == a1 == the source, program continues (no trap).
   TP-CMP-055 minstret once per cm.*: csrr before / csrr after one cm.* of each kind, delta == 2.
-  TP-CMP-066 back-to-back push;pop, pop;push, mvsa01;mva01s, mva01s;mvsa01: architectural results.
+  TP-CMP-066 back-to-back push;pop, pop;push, mvsa01;mva01s, mva01s;mvsa01: architectural results; the
+             push;pop pops a longer rlist at the same stack_adj so a register the push never stored is
+             loaded (a same-rlist pop would restore every register to its own value and a pop that loads
+             nothing would be invisible).
   TP-CMP-069 hazards: sw slot then cm.pop, ALU write then cm.push, load then cm.push, load then
              cm.mva01s: the micro-op consumed the producer's value.
   TP-CMP-073 a cm.* halfword at the ret's PC+2, every kind once: the ret reached its target (marker), the
@@ -37,7 +45,10 @@ Items built (fire_tp_cmp_<nnn>), each on its per-seed architectural observable:
 Deferred halves (not buildable at HEAD, need TB Infra ASK 5 RVFI export / ASK 4 bus records): the
 rvfi_ext_expanded_insn_valid/_last tags and micro-op counts (039-048, 055, 066), rvfi_insn 0x00008067 and
 rvfi_pc_wdata of the ret (047, 048), the addi deferral delta 1+W and dbus timing (049, 066), the single
-ibus redirect and ret-once (073), the per-delay-class repetition (069; layers are off at HEAD).
+ibus redirect and ret-once (073), the per-delay-class repetition (069; layers are off at HEAD). The
+cpuctrlsts.icache_enable = 0 precondition of TP-CMP-066/073 serves those bus-derived halves; it is not
+programmed: the CSR resets to 0 (doc/03_reference/cs_registers.rst, cpuctrlsts) and the program never
+writes cpuctrlsts, so the icache stays disabled for the whole run without a CSR access.
 Item NOT built: TP-CMP-068 (cm.push with sp near 0 / cm.pop near 0xFFFFFFFF): the TB memory map has no
 writable words at 0x0..0x40 or 0xFFFFFF00..0xFFFFFFFF and the store-address observation is a dbus
 monitor record (ASK 4).
@@ -93,6 +104,8 @@ class CmpZcmpBasic(GenTest):
     # Bring-up state (tier check, measured false): no REGIME_SET consumer in the build yet; returns to the
     # default (required) when TB Infra's step 2b lands.
     layers_required = False
+    # Three push sweeps plus the pop sweep retire about 2.5x the default budget's worth of instructions.
+    program_budget_cycles = 3 * lib.CONSTANTS["GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT"]
 
     def report_count(self):
         return _plan(self.seed).k
@@ -131,10 +144,14 @@ class CmpZcmpBasic(GenTest):
 
     def fire_tp_cmp_039(self):
         scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.kind == "push")
-        combos = {(sc.rlist, sc.spimm) for sc in scs}
-        self.check("fire_tp_cmp_039", words > 0 and not bad and combos == prog.ALL_COMBOS,
-                   _detail(scs, words, bad, f"cm.push over {len(combos)}/48 (rlist, spimm); expected frame words == the "
-                                            "predicted registers, poison slots untouched, sp_new == sp_old - stack_adj"))
+        count = {c: 0 for c in prog.ALL_COMBOS}
+        for sc in scs:
+            count[(sc.rlist, sc.spimm)] += 1
+        covered = {c for c, n in count.items() if n >= prog.PUSH_REPEATS}
+        self.check("fire_tp_cmp_039", words > 0 and not bad and covered == prog.ALL_COMBOS,
+                   _detail(scs, words, bad, f"cm.push over {len(covered)}/48 (rlist, spimm) each >= {prog.PUSH_REPEATS} "
+                                            f"times (min {min(count.values())}); expected frame words == the predicted "
+                                            "registers, poison slots untouched, sp_new == sp_old - stack_adj"))
 
     def fire_tp_cmp_040(self):
         scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.kind == "push" and sc.rlist == 4)
@@ -158,7 +175,9 @@ class CmpZcmpBasic(GenTest):
                                             "(3+rlist for 5..6, 11+rlist for 7..14) down to x1, slot N+1 untouched"))
 
     def fire_tp_cmp_043(self):
-        scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.kind in ("push", "pop"))
+        # The sp words only: the frame words of the same scenarios are TP-CMP-039's and TP-CMP-045's observables.
+        scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.kind in ("push", "pop"),
+                                     tags=("sp_old", "sp_new"))
         seen = {}
         for sc in scs:
             adj = prog.sp_adjust(self.plan, self.reports, sc)
@@ -167,7 +186,7 @@ class CmpZcmpBasic(GenTest):
                 bad.append(f"{prog.describe(sc)}: sp delta {adj} expected {prog.stack_adj(sc.rlist, sc.spimm)}")
         values = set(seen) & prog.STACK_ADJ_VALUES
         self.check("fire_tp_cmp_043", words > 0 and not bad and values == prog.STACK_ADJ_VALUES,
-                   _detail(scs, words, bad, f"stack_adj values observed {sorted(values)} (expected all of "
+                   _detail(scs, words, bad, f"sp words; stack_adj values observed {sorted(values)} (expected all of "
                                             f"{sorted(prog.STACK_ADJ_VALUES)}); each sp delta == base(rlist) + 16*spimm"))
 
     def fire_tp_cmp_045(self):
@@ -178,7 +197,7 @@ class CmpZcmpBasic(GenTest):
                                             "frame words at sp + stack_adj - 4k, other registers unchanged, sp += stack_adj"))
 
     def fire_tp_cmp_046(self):
-        pins = {(8, 1), (15, 3)}
+        pins = set(prog.POP_PINNED_COMBOS)
         scs, words, bad = prog.audit(self.plan, self.reports, self.syms,
                                      lambda sc: sc.kind == "pop" and (sc.rlist, sc.spimm) in pins)
         combos = {(sc.rlist, sc.spimm) for sc in scs}
@@ -207,10 +226,11 @@ class CmpZcmpBasic(GenTest):
         stale = [prog.describe(sc) for sc, i in markers if got[i] == sc.decoy_mark]
         fell = [prog.describe(sc) for sc, i in markers if got[i] == sc.bad]
         other = [prog.describe(sc) for sc, i in markers if got[i] != sc.good and got[i] not in (sc.decoy_mark, sc.bad)]
-        r4 = {sc.kind for sc in scs if sc.rlist == 4}
+        r4 = {sc.kind for sc in scs if sc.rlist == prog.RET_PINNED_RLIST}
         self.check("fire_tp_cmp_049", bool(markers) and not stale and not fell and not other and r4 == set(prog.RET_KINDS),
                    f"{len(markers)} ret markers: stale-ra (decoy) {len(stale)}, fall-through {len(fell)}, other {len(other)}; "
-                   f"rlist 4 present for {sorted(r4)} (expected popret and popretz); expected every marker == the target's"
+                   f"rlist {prog.RET_PINNED_RLIST} present for {sorted(r4)} (expected popret and popretz); expected every "
+                   "marker == the target's"
                    + (f"; first: {(stale + fell + other)[0]}" if stale or fell or other else ""))
 
     def fire_tp_cmp_050(self):
@@ -246,9 +266,13 @@ class CmpZcmpBasic(GenTest):
     def fire_tp_cmp_066(self):
         scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.kind in prog.B2B_KINDS)
         kinds = {sc.kind for sc in scs}
-        self.check("fire_tp_cmp_066", words > 0 and not bad and kinds == set(prog.B2B_KINDS),
-                   _detail(scs, words, bad, f"back-to-back patterns {sorted(kinds)} (expected all four); expected sp, "
-                                            "registers and frame words of both instructions"))
+        # push;pop is only a check of the pop when its list is longer than the push's at the same stack_adj.
+        visible = all(sc.aux["rlist2"] > sc.rlist and prog.stack_adj(sc.aux["rlist2"], sc.aux["spimm2"])
+                      == prog.stack_adj(sc.rlist, sc.spimm) for sc in scs if sc.kind == "b2b_push_pop")
+        self.check("fire_tp_cmp_066", words > 0 and not bad and kinds == set(prog.B2B_KINDS) and visible,
+                   _detail(scs, words, bad, f"back-to-back patterns {sorted(kinds)} (expected all four), push;pop loads a "
+                                            f"register the push never stored: {visible}; expected sp, registers and "
+                                            "frame words of both instructions"))
 
     def fire_tp_cmp_069(self):
         scs, words, bad = prog.audit(self.plan, self.reports, self.syms, lambda sc: sc.variant in prog.HAZ_VARIANTS)

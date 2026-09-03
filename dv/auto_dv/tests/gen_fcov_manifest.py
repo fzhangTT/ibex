@@ -45,6 +45,9 @@ TRACE_CHECK = REPO_ROOT / "dv/auto_dv/tools/gen_trace_check.py"
 FCOV_HOME = REPO_ROOT / "dv/auto_dv/fcov_expectations"
 OWNER = "test-writer"
 NOT_IN_MANIFEST = "not in manifest"
+# gen_test_plan.md Section 0 (Marker): while an item carries this exact token its witness bin stays out of the manifest.
+CYCLE_CLAUSE_TOKEN = "[CYCLE-CLAUSE coverage-only until the event export lands]"
+WITNESS_CG = "CG-WIT-001"
 
 
 def cg_blocks():
@@ -173,12 +176,15 @@ def bins_of_items(items, tps, blocks, make_segmentable):
     """[(cg_id, coverpoint, bin, adopted)] after the manifest rule; drift stops the generator."""
     want = {}
     dropped = []
+    marked = set()
     for t in items:
         why = item_excluded(tps[t])
         if why:
             dropped.append((t, "*", "*", why))
         else:
             want[t] = True
+            if CYCLE_CLAUSE_TOKEN in tps[t]:
+                marked.add(t)
     ex_cps, ex_bins = excluded_coverpoints(blocks)
     rows = []
     seen = set()
@@ -194,6 +200,9 @@ def bins_of_items(items, tps, blocks, make_segmentable):
             seen.add(key)
             if (cg, cp) in ex_cps:
                 dropped.append((r["tp_item"], f"{cg}.{cp}", b, "probe-gated or regression-level coverpoint"))
+                continue
+            if cg == WITNESS_CG and r["tp_item"] in marked:
+                dropped.append((r["tp_item"], f"{cg}.{cp}", b, "witness bin of a marked item (rule f)"))
                 continue
             if bin_excluded(cg, b, ex_bins):
                 dropped.append((r["tp_item"], f"{cg}.{cp}", b, "witness or probe-gated bin"))
@@ -231,21 +240,39 @@ def build(test, items):
     return render(test, rows, cg_sample_notes(blocks), plan_cg_names()), rows, dropped
 
 
-def plan_bins(test, group):
-    """The tokens the plan assigns to the test's group, by the same derivation as the manifest; [] when no
-    test-plan item names the group (bring-up tests and fixtures declare nothing)."""
-    tps = tp_blocks()
-    items = items_of_group(group, tps, required=False)
+def plan_bins(test, items):
+    """The tokens the plan assigns to these items, by the same derivation as the manifest; [] for no items (bring-up
+    tests and fixtures declare nothing)."""
+    items = sorted(set(items))
     if not items:
         return []
+    tps = tp_blocks()
+    unknown = [t for t in items if t not in tps]
+    assert not unknown, f"fire_tp methods name items absent from the test plan: {unknown}"
     rows, _dropped = bins_of_items(items, tps, cg_blocks(), load_segmentable())
     return bin_tokens(rows, plan_cg_names())
 
 
+def tp_id_of_fire(name):
+    """fire_tp_<area>_<nnn>[_suffix] -> TP-<AREA>-<nnn>; None for a fire-check outside that form."""
+    m = re.match(r"fire_tp_([a-z]+)_(\d+)", name)
+    return f"TP-{m.group(1).upper()}-{m.group(2)}" if m else None
+
+
+def fire_items_of_module(path):
+    """TP ids named by the fire_tp_* methods of the classes in a test module (host side, by AST; the running test
+    derives the same set from its class), so a manifest covers exactly the items the test checks."""
+    tree = ast.parse(Path(path).read_text(), filename=str(path))
+    ids = {tp_id_of_fire(n.name) for c in ast.walk(tree) if isinstance(c, ast.ClassDef)
+           for n in c.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    return sorted(i for i in ids if i)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--group")
-    ap.add_argument("--items")
+    ap.add_argument("--group", help="every item of the test-plan group (before a test exists)")
+    ap.add_argument("--items", help="comma-separated TP ids")
+    ap.add_argument("--test-module", help="a test module: the items its fire_tp_<area>_<nnn> methods name (the acceptance form)")
     ap.add_argument("--test")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--self-test", action="store_true")
@@ -278,16 +305,25 @@ def main():
         # rule (e): a Section 1.1 coverpoint is dropped (CG-MUL-002.cp_dmem_delay is regression-level)
         ex_cps, _ = excluded_coverpoints(cg_blocks())
         assert ("CG-MUL-002", "cp_dmem_delay") in ex_cps
+        # rule (f): a marked item's witness bin stays out; the item's other bins stay in
+        _t, wrows, wdropped = build("gen_test_x", ["TP-CSR-029"])
+        assert CYCLE_CLAUSE_TOKEN in tps["TP-CSR-029"] and not any(cg == WITNESS_CG for cg, _, _, _ in wrows), wrows[:3]
+        assert any(d[3].startswith("witness bin of a marked item") for d in wdropped), wdropped
+        assert any(cg == "CG-CSR-002" for cg, _, _, _ in wrows)
+        mod = REPO_ROOT / "dv/auto_dv/tests/gen_test_cmp_zcb.py"
+        assert fire_items_of_module(mod) == ["TP-CMP-034", "TP-CMP-036", "TP-CMP-038"], fire_items_of_module(mod)
+        assert tp_id_of_fire("fire_tp_bit_016_gorci") == "TP-BIT-016" and tp_id_of_fire("fire_eot_pass_code") is None
         # the segmentation rule is the trace checker's own
         seg = load_segmentable()({"same_cycle", "min1", "short"})
         assert seg("same_cycle_min1") and seg("short_short") and not seg("same_cycle_max")
         print(f"GEN_FCOV_MANIFEST self-test PASS ({len(rows)} bins for gen_reg_schedule, {len(dropped)} dropped; "
               f"{len(ex_cps)} excluded coverpoints)")
         return 0
-    if not a.test or not (a.group or a.items):
-        ap.error("--test and one of --group / --items are required")
+    if not a.test or sum(bool(x) for x in (a.group, a.items, a.test_module)) != 1:
+        ap.error("--test and exactly one of --group / --items / --test-module are required")
     tps = tp_blocks()
-    items = items_of_group(a.group, tps) if a.group else a.items.split(",")
+    items = items_of_group(a.group, tps) if a.group else a.items.split(",") if a.items else fire_items_of_module(a.test_module)
+    assert items, f"no items: {a.test_module} has no fire_tp_<area>_<nnn> method"
     text, rows, dropped = build(a.test, items)
     for d in dropped:
         print(f"# dropped {d[0]} {d[1]} {d[2]}: {d[3]}", file=sys.stderr)

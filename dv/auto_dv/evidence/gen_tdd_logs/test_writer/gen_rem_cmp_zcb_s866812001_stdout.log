@@ -1,0 +1,232 @@
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 07:37 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 866812001
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.tests.gen_test_cmp_zcb.gen_test_cmp_zcb
+     0.00ns INFO     cocotb.regression                  running gen_test_cmp_zcb (1/1)
+     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_test_cmp_zcb seed=866812001 image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/cmp_zcb/s866812001/prog/prog.vmem
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=866812001 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/cmp_zcb/s866812001/prog/prog.vmem tohost=0x80000c40
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(127) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/batch1/cmp_zcb/s866812001/prog/prog.vmem: 777 words, crc32 0x070b82ce verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(151) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=1..3(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(152) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=1..3(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(167) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_READBACK ok words=64
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no REGIME_SET consumer for declared knobs dmem_rvalid_delay,dmem_gnt_delay,imem_rvalid_delay (layers_required=False, bring-up only)
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=-
+   645.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=0 sched=-
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(406) @ 64500: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+   655.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=60
+  1140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=0 value=0xffffffff cycle=109
+UVM_INFO @ 114000: reporter [GEN_EOT] end-of-test store 0xffffffff at 0x8ffff104 (store 1)
+  1270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=1 value=0x00000042 cycle=122
+  1370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=2 value=0x0000ffff cycle=132
+  1500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=3 value=0xb2579bef cycle=145
+  1740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=4 value=0x0de48740 cycle=169
+  1870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=5 value=0xffff8740 cycle=182
+  2030.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=6 value=0x00000087 cycle=198
+  2090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=7 value=0x000000a0 cycle=204
+  2270.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=8 value=0xffffd0de cycle=222
+  2650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=9 value=0xf0ae7963 cycle=260
+  2790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=10 value=0x00000063 cycle=274
+  2890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=11 value=0x1ef7a4e4 cycle=284
+  3040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=12 value=0x11500000 cycle=299
+  3350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=13 value=0x28dd767e cycle=330
+  3500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=14 value=0x00000028 cycle=345
+  3660.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=15 value=0x0000197f cycle=361
+  3940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=16 value=0xacd1f511 cycle=389
+  4050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=17 value=0x000000d1 cycle=400
+  4130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=18 value=0x0000ffff cycle=408
+  4200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=19 value=0xffffb76a cycle=415
+  4370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=20 value=0x000000e4 cycle=432
+  4650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=21 value=0xf0ae790d cycle=460
+  4800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=22 value=0x0000000d cycle=475
+  5080.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=23 value=0x0dd28740 cycle=503
+  5210.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=24 value=0x000000d2 cycle=516
+  5350.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=25 value=0x00007564 cycle=530
+  5400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=26 value=0xfffffff5 cycle=535
+  5670.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=27 value=0x44c14d8b cycle=562
+  5830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=28 value=0x000000c1 cycle=578
+  5960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=29 value=0x69320000 cycle=591
+  6040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=30 value=0x0000006e cycle=599
+  6320.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=31 value=0x28ddbd7e cycle=627
+  6460.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=32 value=0x000000bd cycle=641
+  6550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=33 value=0x00000000 cycle=650
+  6730.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=34 value=0x00005d2a cycle=668
+  6780.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=35 value=0xffffffff cycle=673
+  6890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=36 value=0x80000000 cycle=684
+  7230.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=37 value=0x197f0626 cycle=718
+  7370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=38 value=0x00000006 cycle=732
+  7440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=39 value=0x0000963d cycle=739
+  7600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=40 value=0x9eaac144 cycle=755
+  7720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=41 value=0x7e681f20 cycle=767
+  8070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=42 value=0xc5bb90f5 cycle=802
+  8200.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=43 value=0x000000bb cycle=815
+  8370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=44 value=0x00006eea cycle=832
+  8530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=45 value=0x0b7e0000 cycle=848
+  8610.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=46 value=0x000000ff cycle=856
+  8690.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=47 value=0x00000000 cycle=864
+  8810.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=48 value=0x000000d3 cycle=876
+  8940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=49 value=0x00000000 cycle=889
+  9120.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=50 value=0x000044c1 cycle=907
+  9440.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=51 value=0x0dd28754 cycle=939
+  9550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=52 value=0x00000054 cycle=950
+  9640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=53 value=0xa3e552f1 cycle=959
+  9920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=54 value=0x94d28754 cycle=987
+ 10050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=55 value=0x00000094 cycle=1000
+ 10130.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=56 value=0x00001103 cycle=1008
+ 10240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=57 value=0xffffffff cycle=1019
+ 10570.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=58 value=0x94b75288 cycle=1052
+ 10760.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=59 value=0x00005288 cycle=1071
+ 10860.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=60 value=0xaa62ed92 cycle=1081
+ 11020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=61 value=0x80000000 cycle=1097
+ 11100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=62 value=0x00000000 cycle=1105
+ 11190.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=63 value=0x00000000 cycle=1114
+ 11530.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=64 value=0xacd1f5d2 cycle=1148
+ 11720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=65 value=0x000000d2 cycle=1167
+ 11970.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=66 value=0xff0090f5 cycle=1192
+ 12120.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=67 value=0xffffff00 cycle=1207
+ 12220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=68 value=0xffffffff cycle=1217
+ 12370.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=69 value=0x0000006b cycle=1232
+ 12450.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=70 value=0xda51b387 cycle=1240
+ 12550.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=71 value=0xb72d7738 cycle=1250
+ 12840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=72 value=0xff009086 cycle=1279
+ 13000.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=73 value=0x00000086 cycle=1295
+ 13140.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=74 value=0xffffff00 cycle=1309
+ 13240.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=75 value=0x00000084 cycle=1319
+ 13490.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=76 value=0xe83b7164 cycle=1344
+ 13640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=77 value=0x00000071 cycle=1359
+ 13740.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=78 value=0xd3e6fcf0 cycle=1369
+ 13900.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=79 value=0x000000bd cycle=1385
+ 14020.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=80 value=0x9b46ba45 cycle=1397
+ 14280.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=81 value=0x7cc14d8b cycle=1423
+ 14470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=82 value=0x0000007c cycle=1442
+ 14800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=83 value=0x68b78631 cycle=1475
+ 14920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=84 value=0x0000b786 cycle=1487
+ 15060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=85 value=0x00000064 cycle=1501
+ 15170.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=86 value=0x00000093 cycle=1512
+ 15380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=87 value=0x00007eac cycle=1533
+ 15640.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=88 value=0xf0ae170d cycle=1559
+ 15800.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=89 value=0x00000017 cycle=1575
+ 15960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=90 value=0x000002b0 cycle=1591
+ 16050.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=91 value=0x0000d1f5 cycle=1600
+ 16110.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=92 value=0x00000004 cycle=1606
+ 16220.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=93 value=0x6a1a0000 cycle=1617
+ 16380.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=94 value=0x088e6b35 cycle=1633
+ 16500.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=95 value=0xa9ce3867 cycle=1645
+ 16600.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=96 value=0x00000000 cycle=1655
+ 16790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=97 value=0x01075e1e cycle=1674
+ 16870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=98 value=0x00000004 cycle=1682
+ 17040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=99 value=0x56e37ef4 cycle=1699
+ 17150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=100 value=0xffffc258 cycle=1710
+ 17480.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=101 value=0x907d0f94 cycle=1743
+ 17620.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=102 value=0x0000907d cycle=1757
+ 17830.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=103 value=0x000000e8 cycle=1778
+ 17920.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=104 value=0x00000385 cycle=1787
+ 18060.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=105 value=0x00006e27 cycle=1801
+ 18250.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=106 value=0xffffff83 cycle=1820
+ 18340.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=107 value=0x00000000 cycle=1829
+ 18580.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=108 value=0x00000039 cycle=1853
+ 18840.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=109 value=0x900f0f94 cycle=1879
+ 18980.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=110 value=0x0000000f cycle=1893
+ 19090.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=111 value=0x00000087 cycle=1904
+ 19160.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=112 value=0x000068e3 cycle=1911
+ 19310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=113 value=0x80000000 cycle=1926
+ 19700.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=114 value=0xe9009086 cycle=1965
+ 19790.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=115 value=0x237bb676 cycle=1974
+ 19940.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=116 value=0x000076e9 cycle=1989
+ 20070.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=117 value=0x00000087 cycle=2002
+ 20310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=118 value=0x68b786eb cycle=2026
+ 20470.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=119 value=0x000000eb cycle=2042
+ 20720.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=120 value=0x84d28754 cycle=2067
+ 20870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=121 value=0x00000084 cycle=2082
+ 21100.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=122 value=0xffffea09 cycle=2105
+ 21400.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=123 value=0x8fd28754 cycle=2135
+ 21510.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=124 value=0xf0ae1732 cycle=2146
+ 21650.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=125 value=0x0000328f cycle=2160
+ 21770.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=126 value=0x000009fa cycle=2172
+ 21890.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=127 value=0x000009fa cycle=2184
+ 22040.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=128 value=0x00000000 cycle=2199
+ 22150.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=129 value=0xffffffff cycle=2210
+ 22310.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=130 value=0x0000ed4e cycle=2226
+ 22680.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=131 value=0xe9304986 cycle=2263
+ 22870.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=132 value=0x00003049 cycle=2282
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_EOT code=0x00000001 stores=134 reports=133 retired=859 cycle=2291
+/localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
+  ret = outcomes.Value(await trigger)
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no consumable knob varied (declared=dmem_rvalid_delay,dmem_gnt_delay,imem_rvalid_delay, consumed=-)
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_cmp_034 ok=True 76 report words (c_sb 19 c_sh 8 (split 2) c_lbu 28 c_lhu 7 c_lh 12, every alignment and uimm) all match
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_cmp_036 ok=True 36 report words (c_zext_b 7 c_sext_b 7 c_zext_h 7 c_sext_h 8 c_not 7, operand mix) all match
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_tp_cmp_038 ok=True 21 report words (c_mul 21 (rsd' == rs2' 2), rsd'/rs2' sweep) all match
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_BINS n=110 gen_cmp_zcb_cg.cp_addr_align.aligned gen_cmp_zcb_cg.cp_addr_align.mis1 gen_cmp_zcb_cg.cp_addr_align.mis3 gen_cmp_zcb_cg.cp_data_sign.neg gen_cmp_zcb_cg.cp_data_sign.pos gen_cmp_zcb_cg.cp_insn.c_lbu gen_cmp_zcb_cg.cp_insn.c_lh gen_cmp_zcb_cg.cp_insn.c_lhu gen_cmp_zcb_cg.cp_insn.c_sb gen_cmp_zcb_cg.cp_insn.c_sh gen_cmp_zcb_cg.cp_uimm_b.u0 gen_cmp_zcb_cg.cp_uimm_b.u1 gen_cmp_zcb_cg.cp_uimm_b.u2 gen_cmp_zcb_cg.cp_uimm_b.u3 gen_cmp_zcb_cg.cp_uimm_h.u0 gen_cmp_zcb_cg.cp_uimm_h.u2 gen_cmp_zcb_cg.cr_half_misaligned.c_lh_aligned gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis1 gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis3 gen_cmp_zcb_cg.cr_half_misaligned.c_lhu_aligned gen_cmp_zcb_cg.cr_half_misaligned.c_lhu_mis1 gen_cmp_zcb_cg.cr_half_misaligned.c_lhu_mis3 gen_cmp_zcb_cg.cr_half_misaligned.c_sh_aligned gen_cmp_zcb_cg.cr_half_misaligned.c_sh_mis1 gen_cmp_zcb_cg.cr_half_misaligned.c_sh_mis3 gen_cmp_zcb_cg.cr_load_sign.c_lbu_neg gen_cmp_zcb_cg.cr_load_sign.c_lbu_pos gen_cmp_zcb_cg.cr_load_sign.c_lh_neg gen_cmp_zcb_cg.cr_load_sign.c_lh_pos gen_cmp_zcb_cg.cr_load_sign.c_lhu_neg gen_cmp_zcb_cg.cr_load_sign.c_lhu_pos gen_cmp_zcb_cg.cr_ls_b.c_lbu_u0 gen_cmp_zcb_cg.cr_ls_b.c_lbu_u1 gen_cmp_zcb_cg.cr_ls_b.c_lbu_u2 gen_cmp_zcb_cg.cr_ls_b.c_lbu_u3 gen_cmp_zcb_cg.cr_ls_b.c_sb_u0 gen_cmp_zcb_cg.cr_ls_b.c_sb_u1 gen_cmp_zcb_cg.cr_ls_b.c_sb_u2 gen_cmp_zcb_cg.cr_ls_b.c_sb_u3 gen_cmp_zcb_cg.cr_ls_h.c_lh_u0 gen_cmp_zcb_cg.cr_ls_h.c_lh_u2 gen_cmp_zcb_cg.cr_ls_h.c_lhu_u0 gen_cmp_zcb_cg.cr_ls_h.c_lhu_u2 gen_cmp_zcb_cg.cr_ls_h.c_sh_u0 gen_cmp_zcb_cg.cr_ls_h.c_sh_u2 gen_cmp_zcb_cg.cp_alu_operand.all_ones gen_cmp_zcb_cg.cp_alu_operand.bit15_set gen_cmp_zcb_cg.cp_alu_operand.bit7_clear gen_cmp_zcb_cg.cp_alu_operand.bit7_set gen_cmp_zcb_cg.cp_alu_operand.rand gen_cmp_zcb_cg.cp_alu_operand.zero gen_cmp_zcb_cg.cp_insn.c_not gen_cmp_zcb_cg.cp_insn.c_sext_b gen_cmp_zcb_cg.cp_insn.c_sext_h gen_cmp_zcb_cg.cp_insn.c_zext_b gen_cmp_zcb_cg.cp_insn.c_zext_h gen_cmp_zcb_cg.cr_alu_operand.c_not_all_ones gen_cmp_zcb_cg.cr_alu_operand.c_not_bit15_set gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_clear gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_set gen_cmp_zcb_cg.cr_alu_operand.c_not_rand gen_cmp_zcb_cg.cr_alu_operand.c_not_zero gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_all_ones gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit15_set gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_clear gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_set gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_rand gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_zero gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_all_ones gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit15_set gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_clear gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_set gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_rand gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_zero gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_all_ones gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit15_set gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_clear gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_set gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_rand gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_zero gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_all_ones gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit15_set gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_clear gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_set gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_zero gen_cmp_zcb_cg.cp_insn.c_mul gen_mul_ops_cg.cp_op.c_mul gen_mul_ops_cg.cp_rs1_class.all_ones gen_mul_ops_cg.cp_rs1_class.int_max gen_mul_ops_cg.cp_rs1_class.int_min gen_mul_ops_cg.cp_rs1_class.neg_rand gen_mul_ops_cg.cp_rs1_class.one gen_mul_ops_cg.cp_rs1_class.p16 gen_mul_ops_cg.cp_rs1_class.pos_rand gen_mul_ops_cg.cp_rs1_class.two gen_mul_ops_cg.cp_rs1_class.zero gen_mul_ops_cg.cp_same_regs.all_same gen_mul_ops_cg.cp_same_regs.rs_eq_rd gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones gen_mul_ops_cg.cr_op_rs1.c_mul_int_max gen_mul_ops_cg.cr_op_rs1.c_mul_int_min gen_mul_ops_cg.cr_op_rs1.c_mul_neg_rand gen_mul_ops_cg.cr_op_rs1.c_mul_one gen_mul_ops_cg.cr_op_rs1.c_mul_p16 gen_mul_ops_cg.cr_op_rs1.c_mul_pos_rand gen_mul_ops_cg.cr_op_rs1.c_mul_two gen_mul_ops_cg.cr_op_rs1.c_mul_zero gen_mul_ops_cg.cr_op_same.c_mul_all_same gen_mul_ops_cg.cr_op_same.c_mul_rs_eq_rd
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finish budget 20000 cycles (+gen_finish_timeout or its default)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(251) @ 2296000: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 2291, commands consumed 65, retired 859
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 2296000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(321) @ 2296000: uvm_test_top.env.dbus_agent [gen_bus_agent] dbus gnt=1..3(short) rvalid=1..3(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1: grants=243 responses=242 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(321) @ 2296000: uvm_test_top.env.ibus_agent [gen_bus_agent] ibus gnt=1..3(short) rvalid=1..3(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1: grants=749 responses=749 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(121) @ 2296000: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=859 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(292) @ 2296000: uvm_test_top.env.sb [GEN_SB] ISA compare: records=859 mismatches=0 folded=0 draft_b=0 traps=0 irq_entries=0 dbg_entries=0 rvfi_rmask_on_nonload=623
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(166) @ 2296000: uvm_test_top.env [GEN_ENV] mem: 777 words, 133 mmio writes, 0 unmapped accesses; eot stores 134 (last code 0x00000001); sig writes 0; key requests 0; commands routed 65 ignored 0
+ 22960.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finished: 65 commands sent and consumed, 859 retirements counted
+ 22960.00ns INFO     cocotb.gen_tb_top                  gen_test_cmp_zcb GEN_TEST_PASS
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 2296000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   14
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[GEN_BASE_TEST]     1
+[GEN_CTRL]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[MEM_LOAD]     1
+[RNTST]     1
+[TEST_DONE]     1
+[gen_bus_agent]     2
+
+ 22960.01ns INFO     cocotb.regression                  gen_test_cmp_zcb passed
+ 22960.01ns INFO     cocotb.regression                  ************************************************************************************************************
+                                                        ** TEST                                                STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ************************************************************************************************************
+                                                        ** dv.auto_dv.tests.gen_test_cmp_zcb.gen_test_cmp_zcb   PASS       22960.01           0.33      69711.89  **
+                                                        ************************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                    22960.01           0.37      62053.74  **
+                                                        ************************************************************************************************************
+                                                        
+$finish at simulation time              2296001
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_dbus_if.cov_rvalid_legal, 2296 attempts, 242 match
+"dv/auto_dv/tb/gen_bus_if.sv", 49: gen_tb_top.u_ibus_if.cov_rvalid_legal, 2296 attempts, 748 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 22960010 ps
+CPU Time:      0.600 seconds;       Data structure size:   8.8Mb
+Thu Sep  3 07:37:13 2026

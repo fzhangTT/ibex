@@ -61,24 +61,6 @@ bins:
   - gen_csr_trap_setup_warl_cg.cp_wpat.all1
   - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all1
   - gen_csr_trap_setup_warl_cg.cr_mst_fields.all1
-  - gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b1
-  - gen_csr_write_effect_cg.cp_enable.enables_pending
-  - gen_csr_write_effect_cg.cp_fam.other_flush
-  - gen_csr_write_effect_cg.cp_next.irq_taken
-  - gen_csr_write_effect_cg.cr_enable_next.enables_irq_taken
-  - gen_csr_write_effect_cg.cr_fam_next.other_irq_taken
-  - gen_prv_irq_enable_cg.cp_kind.ext
-  - gen_prv_irq_enable_cg.cp_kind.fast
-  - gen_prv_irq_enable_cg.cp_kind.sw
-  - gen_prv_irq_enable_cg.cp_kind.timer
-  - gen_prv_irq_enable_cg.cp_mie.b1
-  - gen_prv_irq_enable_cg.cp_priv.m
-  - gen_prv_irq_enable_cg.cp_taken.yes
-  - gen_prv_irq_enable_cg.cr_kind_priv.ext_m
-  - gen_prv_irq_enable_cg.cr_kind_priv.fast_m
-  - gen_prv_irq_enable_cg.cr_kind_priv.sw_m
-  - gen_prv_irq_enable_cg.cr_kind_priv.timer_m
-  - gen_prv_irq_enable_cg.cr_priv_mie_taken.m_1_yes
   - gen_csr_trap_setup_warl_cg.cp_csr.mstatush
   - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrc
   - gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrci
@@ -142,24 +124,8 @@ bins:
   - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrs
   - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrsi
   - gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrw
-  - gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029
   - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all0
   - gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all1
-  - gen_csr_write_effect_cg.cp_enable.none
-  - gen_csr_write_effect_cg.cp_next.alu
-  - gen_csr_write_effect_cg.cp_next.wfi
-  - gen_csr_write_effect_cg.cr_enable_next.none_alu
-  - gen_csr_write_effect_cg.cr_fam_next.other_wfi
-  - gen_prv_wfi_cg.cp_irq_dis_seen.yes
-  - gen_prv_wfi_cg.cp_len.long
-  - gen_prv_wfi_cg.cp_len.short
-  - gen_prv_wfi_cg.cp_wake.dbg_req
-  - gen_prv_wfi_cg.cp_wake.irq_en
-  - gen_prv_wfi_cg.cr_dis_irq.dis_then_dbg
-  - gen_prv_wfi_cg.cr_dis_irq.dis_then_irq_en
-  - gen_prv_wfi_cg.cr_len_wake.long_irq_en
-  - gen_prv_wfi_cg.cr_len_wake.short_irq_en
-  - gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_031
   - gen_csr_trap_setup_warl_cg.cp_csr.mtvec
   - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.boot_page
   - gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.high
@@ -268,24 +234,6 @@ anti_vacuity:
   gen_csr_trap_setup_warl_cg.cp_wpat.all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_csr_wpat.mstatus_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_mst_fields.all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
-  gen_csr_trap_setup_warl_cg.cp_mst_mie_w.b1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
-  gen_csr_write_effect_cg.cp_enable.enables_pending: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cp_fam.other_flush: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cp_next.irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cr_enable_next.enables_irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cr_fam_next.other_irq_taken: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_prv_irq_enable_cg.cp_kind.ext: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_kind.fast: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_kind.sw: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_kind.timer: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_mie.b1: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_priv.m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cp_taken.yes: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cr_kind_priv.ext_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cr_kind_priv.fast_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cr_kind_priv.sw_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cr_kind_priv.timer_m: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
-  gen_prv_irq_enable_cg.cr_priv_mie_taken.m_1_yes: "CG-PRV-006: retirements without a pending interrupt never sample; a hit proves an interrupt was pending in the recorded mode/MIE/debug state and was or was not taken before the next retirement, which gen_chk_irq checks against the enable rule"
   gen_csr_trap_setup_warl_cg.cp_csr.mstatush: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrc: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrci: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
@@ -349,24 +297,8 @@ anti_vacuity:
   gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrs: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrsi: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_mie_w_op.std_csrrw: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
-  gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029: "CG-WIT-001: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level"
   gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all0: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_all1: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
-  gen_csr_write_effect_cg.cp_enable.none: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cp_next.alu: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cp_next.wfi: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cr_enable_next.none_alu: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_csr_write_effect_cg.cr_fam_next.other_wfi: "CG-CSR-012: demoted reads and trapped writes never sample; a hit proves a real write of that family was followed by the recorded next instruction with the recorded bubble, which gen_chk_csr_flush checks against the mscratch/mepc no-flush rule"
-  gen_prv_wfi_cg.cp_irq_dis_seen.yes: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cp_len.long: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cp_len.short: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cp_wake.dbg_req: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cp_wake.irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cr_dis_irq.dis_then_dbg: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cr_dis_irq.dis_then_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cr_len_wake.long_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_prv_wfi_cg.cr_len_wake.short_irq_en: "CG-PRV-005: only wfi retirements sample; a hit proves a wfi in that mode/TW/MIE configuration slept for the recorded length and was ended by the recorded source, which gen_chk_sleep checks (no bus activity, correct wake set)"
-  gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_031: "CG-WIT-001: the bridge command COV_WITNESS <tp_id> issued by a test's Python fire-check immediately after its cycle-level"
   gen_csr_trap_setup_warl_cg.cp_csr.mtvec: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.boot_page: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"
   gen_csr_trap_setup_warl_cg.cp_mtvec_base_w.high: "CG-CSR-002: pairs exist only when the program writes then reads the same CSR, so a hit proves the legalised prediction for that write pattern was compared against the read-back"

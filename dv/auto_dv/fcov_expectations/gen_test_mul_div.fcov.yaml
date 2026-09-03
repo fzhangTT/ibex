@@ -1,0 +1,478 @@
+test: gen_test_mul_div
+owner: test-writer
+bins:
+  - gen_div_ops_cg.cp_dividend.all_ones
+  - gen_div_ops_cg.cp_dividend.int_max
+  - gen_div_ops_cg.cp_dividend.int_min
+  - gen_div_ops_cg.cp_dividend.neg_rand
+  - gen_div_ops_cg.cp_dividend.one
+  - gen_div_ops_cg.cp_dividend.pos_rand
+  - gen_div_ops_cg.cp_dividend.seven
+  - gen_div_ops_cg.cp_dividend.two
+  - gen_div_ops_cg.cp_dividend.zero
+  - gen_div_ops_cg.cp_op.div
+  - gen_div_ops_cg.cp_sign_pair.nn
+  - gen_div_ops_cg.cp_sign_pair.np
+  - gen_div_ops_cg.cp_sign_pair.pn
+  - gen_div_ops_cg.cp_sign_pair.pp
+  - gen_div_ops_cg.cr_op_dividend.div_all_ones
+  - gen_div_ops_cg.cr_op_dividend.div_int_max
+  - gen_div_ops_cg.cr_op_dividend.div_int_min
+  - gen_div_ops_cg.cr_op_dividend.div_neg_rand
+  - gen_div_ops_cg.cr_op_dividend.div_one
+  - gen_div_ops_cg.cr_op_dividend.div_pos_rand
+  - gen_div_ops_cg.cr_op_dividend.div_seven
+  - gen_div_ops_cg.cr_op_dividend.div_two
+  - gen_div_ops_cg.cr_op_dividend.div_zero
+  - gen_div_ops_cg.cr_op_sign.div_nn
+  - gen_div_ops_cg.cr_op_sign.div_np
+  - gen_div_ops_cg.cr_op_sign.div_pn
+  - gen_div_ops_cg.cr_op_sign.div_pp
+  - gen_div_timing_cg.cp_delta.d37
+  - gen_div_timing_cg.cp_dit.off
+  - gen_div_timing_cg.cp_div0.no
+  - gen_div_timing_cg.cp_fetch_stall.no
+  - gen_div_timing_cg.cp_wb_defer.no
+  - gen_div_timing_cg.cr_dit_div0_delta.dit0_nodiv0_d37
+  - gen_div_ops_cg.cp_divisor.abs_gt_dividend
+  - gen_div_ops_cg.cp_divisor.all_ones
+  - gen_div_ops_cg.cp_divisor.eq_dividend
+  - gen_div_ops_cg.cp_divisor.int_min
+  - gen_div_ops_cg.cp_divisor.minus_two
+  - gen_div_ops_cg.cp_divisor.neg_rand
+  - gen_div_ops_cg.cp_divisor.one
+  - gen_div_ops_cg.cp_divisor.pos_rand
+  - gen_div_ops_cg.cp_divisor.two
+  - gen_div_ops_cg.cp_divisor.zero
+  - gen_div_ops_cg.cp_op.divu
+  - gen_div_ops_cg.cr_op_dividend.divu_all_ones
+  - gen_div_ops_cg.cr_op_dividend.divu_int_max
+  - gen_div_ops_cg.cr_op_dividend.divu_int_min
+  - gen_div_ops_cg.cr_op_dividend.divu_neg_rand
+  - gen_div_ops_cg.cr_op_dividend.divu_one
+  - gen_div_ops_cg.cr_op_dividend.divu_pos_rand
+  - gen_div_ops_cg.cr_op_dividend.divu_seven
+  - gen_div_ops_cg.cr_op_dividend.divu_two
+  - gen_div_ops_cg.cr_op_dividend.divu_zero
+  - gen_div_ops_cg.cr_op_divisor.divu_abs_gt_dividend
+  - gen_div_ops_cg.cr_op_divisor.divu_all_ones
+  - gen_div_ops_cg.cr_op_divisor.divu_eq_dividend
+  - gen_div_ops_cg.cr_op_divisor.divu_int_min
+  - gen_div_ops_cg.cr_op_divisor.divu_minus_two
+  - gen_div_ops_cg.cr_op_divisor.divu_neg_rand
+  - gen_div_ops_cg.cr_op_divisor.divu_one
+  - gen_div_ops_cg.cr_op_divisor.divu_pos_rand
+  - gen_div_ops_cg.cr_op_divisor.divu_two
+  - gen_div_ops_cg.cr_op_divisor.divu_zero
+  - gen_div_ops_cg.cp_op.rem
+  - gen_div_ops_cg.cr_op_dividend.rem_all_ones
+  - gen_div_ops_cg.cr_op_dividend.rem_int_max
+  - gen_div_ops_cg.cr_op_dividend.rem_int_min
+  - gen_div_ops_cg.cr_op_dividend.rem_neg_rand
+  - gen_div_ops_cg.cr_op_dividend.rem_one
+  - gen_div_ops_cg.cr_op_dividend.rem_pos_rand
+  - gen_div_ops_cg.cr_op_dividend.rem_seven
+  - gen_div_ops_cg.cr_op_dividend.rem_two
+  - gen_div_ops_cg.cr_op_dividend.rem_zero
+  - gen_div_ops_cg.cr_op_sign.rem_nn
+  - gen_div_ops_cg.cr_op_sign.rem_np
+  - gen_div_ops_cg.cr_op_sign.rem_pn
+  - gen_div_ops_cg.cr_op_sign.rem_pp
+  - gen_div_ops_cg.cp_op.remu
+  - gen_div_ops_cg.cr_op_dividend.remu_all_ones
+  - gen_div_ops_cg.cr_op_dividend.remu_int_max
+  - gen_div_ops_cg.cr_op_dividend.remu_int_min
+  - gen_div_ops_cg.cr_op_dividend.remu_neg_rand
+  - gen_div_ops_cg.cr_op_dividend.remu_one
+  - gen_div_ops_cg.cr_op_dividend.remu_pos_rand
+  - gen_div_ops_cg.cr_op_dividend.remu_seven
+  - gen_div_ops_cg.cr_op_dividend.remu_two
+  - gen_div_ops_cg.cr_op_dividend.remu_zero
+  - gen_div_ops_cg.cr_op_divisor.remu_abs_gt_dividend
+  - gen_div_ops_cg.cr_op_divisor.remu_all_ones
+  - gen_div_ops_cg.cr_op_divisor.remu_eq_dividend
+  - gen_div_ops_cg.cr_op_divisor.remu_int_min
+  - gen_div_ops_cg.cr_op_divisor.remu_minus_two
+  - gen_div_ops_cg.cr_op_divisor.remu_neg_rand
+  - gen_div_ops_cg.cr_op_divisor.remu_one
+  - gen_div_ops_cg.cr_op_divisor.remu_pos_rand
+  - gen_div_ops_cg.cr_op_divisor.remu_two
+  - gen_div_ops_cg.cr_op_divisor.remu_zero
+  - gen_div_ops_cg.cp_result_class.all_ones
+  - gen_div_ops_cg.cr_div0.div_zero_all_ones
+  - gen_div_ops_cg.cr_div0.div_zero_int_max
+  - gen_div_ops_cg.cr_div0.div_zero_int_min
+  - gen_div_ops_cg.cr_div0.div_zero_neg_rand
+  - gen_div_ops_cg.cr_div0.div_zero_one
+  - gen_div_ops_cg.cr_div0.div_zero_pos_rand
+  - gen_div_ops_cg.cr_div0.div_zero_seven
+  - gen_div_ops_cg.cr_div0.div_zero_two
+  - gen_div_ops_cg.cr_div0.div_zero_zero
+  - gen_div_ops_cg.cr_div0.divu_zero_all_ones
+  - gen_div_ops_cg.cr_div0.divu_zero_int_max
+  - gen_div_ops_cg.cr_div0.divu_zero_int_min
+  - gen_div_ops_cg.cr_div0.divu_zero_neg_rand
+  - gen_div_ops_cg.cr_div0.divu_zero_one
+  - gen_div_ops_cg.cr_div0.divu_zero_pos_rand
+  - gen_div_ops_cg.cr_div0.divu_zero_seven
+  - gen_div_ops_cg.cr_div0.divu_zero_two
+  - gen_div_ops_cg.cr_div0.divu_zero_zero
+  - gen_div_ops_cg.cr_div0.rem_zero_all_ones
+  - gen_div_ops_cg.cr_div0.rem_zero_int_max
+  - gen_div_ops_cg.cr_div0.rem_zero_int_min
+  - gen_div_ops_cg.cr_div0.rem_zero_neg_rand
+  - gen_div_ops_cg.cr_div0.rem_zero_one
+  - gen_div_ops_cg.cr_div0.rem_zero_pos_rand
+  - gen_div_ops_cg.cr_div0.rem_zero_seven
+  - gen_div_ops_cg.cr_div0.rem_zero_two
+  - gen_div_ops_cg.cr_div0.rem_zero_zero
+  - gen_div_ops_cg.cr_div0.remu_zero_all_ones
+  - gen_div_ops_cg.cr_div0.remu_zero_int_max
+  - gen_div_ops_cg.cr_div0.remu_zero_int_min
+  - gen_div_ops_cg.cr_div0.remu_zero_neg_rand
+  - gen_div_ops_cg.cr_div0.remu_zero_one
+  - gen_div_ops_cg.cr_div0.remu_zero_pos_rand
+  - gen_div_ops_cg.cr_div0.remu_zero_seven
+  - gen_div_ops_cg.cr_div0.remu_zero_two
+  - gen_div_ops_cg.cr_div0.remu_zero_zero
+  - gen_div_timing_cg.cp_delta.d2
+  - gen_div_timing_cg.cp_dit.on
+  - gen_div_timing_cg.cp_div0.yes
+  - gen_div_timing_cg.cp_op.div
+  - gen_div_timing_cg.cp_op.divu
+  - gen_div_timing_cg.cp_op.rem
+  - gen_div_timing_cg.cp_op.remu
+  - gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2
+  - gen_div_timing_cg.cr_op_div0.div_no_off
+  - gen_div_timing_cg.cr_op_div0.div_no_on
+  - gen_div_timing_cg.cr_op_div0.div_yes_off
+  - gen_div_timing_cg.cr_op_div0.div_yes_on
+  - gen_div_timing_cg.cr_op_div0.divu_no_off
+  - gen_div_timing_cg.cr_op_div0.divu_no_on
+  - gen_div_timing_cg.cr_op_div0.divu_yes_off
+  - gen_div_timing_cg.cr_op_div0.divu_yes_on
+  - gen_div_timing_cg.cr_op_div0.rem_no_off
+  - gen_div_timing_cg.cr_op_div0.rem_no_on
+  - gen_div_timing_cg.cr_op_div0.rem_yes_off
+  - gen_div_timing_cg.cr_op_div0.rem_yes_on
+  - gen_div_timing_cg.cr_op_div0.remu_no_off
+  - gen_div_timing_cg.cr_op_div0.remu_no_on
+  - gen_div_timing_cg.cr_op_div0.remu_yes_off
+  - gen_div_timing_cg.cr_op_div0.remu_yes_on
+  - gen_div_ops_cg.cp_result_class.eq_dividend
+  - gen_div_ops_cg.cp_result_class.int_min
+  - gen_div_ops_cg.cr_overflow.div_intmin_m1
+  - gen_div_ops_cg.cr_overflow.divu_intmin_m1
+  - gen_div_ops_cg.cr_overflow.rem_intmin_m1
+  - gen_div_ops_cg.cr_overflow.remu_intmin_m1
+  - gen_div_ops_cg.cr_op_sign.divu_nn
+  - gen_div_ops_cg.cr_op_sign.divu_np
+  - gen_div_ops_cg.cr_op_sign.divu_pn
+  - gen_div_ops_cg.cr_op_sign.divu_pp
+  - gen_div_ops_cg.cr_op_sign.remu_nn
+  - gen_div_ops_cg.cr_op_sign.remu_np
+  - gen_div_ops_cg.cr_op_sign.remu_pn
+  - gen_div_ops_cg.cr_op_sign.remu_pp
+  - gen_div_ops_cg.cp_result_class.int_max
+  - gen_div_ops_cg.cp_result_class.one
+  - gen_div_ops_cg.cp_result_class.zero
+  - gen_div_ops_cg.cr_op_divisor.div_abs_gt_dividend
+  - gen_div_ops_cg.cr_op_divisor.div_all_ones
+  - gen_div_ops_cg.cr_op_divisor.div_eq_dividend
+  - gen_div_ops_cg.cr_op_divisor.div_int_min
+  - gen_div_ops_cg.cr_op_divisor.div_minus_two
+  - gen_div_ops_cg.cr_op_divisor.div_neg_rand
+  - gen_div_ops_cg.cr_op_divisor.div_one
+  - gen_div_ops_cg.cr_op_divisor.div_pos_rand
+  - gen_div_ops_cg.cr_op_divisor.div_two
+  - gen_div_ops_cg.cr_op_divisor.div_zero
+  - gen_div_ops_cg.cr_op_divisor.rem_abs_gt_dividend
+  - gen_div_ops_cg.cr_op_divisor.rem_all_ones
+  - gen_div_ops_cg.cr_op_divisor.rem_eq_dividend
+  - gen_div_ops_cg.cr_op_divisor.rem_int_min
+  - gen_div_ops_cg.cr_op_divisor.rem_minus_two
+  - gen_div_ops_cg.cr_op_divisor.rem_neg_rand
+  - gen_div_ops_cg.cr_op_divisor.rem_one
+  - gen_div_ops_cg.cr_op_divisor.rem_pos_rand
+  - gen_div_ops_cg.cr_op_divisor.rem_two
+  - gen_div_ops_cg.cr_op_divisor.rem_zero
+  - gen_div_ops_cg.cp_rd_x0.no
+  - gen_div_ops_cg.cp_rd_x0.yes
+  - gen_div_ops_cg.cr_op_rd_x0.div_no
+  - gen_div_ops_cg.cr_op_rd_x0.div_yes
+  - gen_div_ops_cg.cr_op_rd_x0.divu_no
+  - gen_div_ops_cg.cr_op_rd_x0.divu_yes
+  - gen_div_ops_cg.cr_op_rd_x0.rem_no
+  - gen_div_ops_cg.cr_op_rd_x0.rem_yes
+  - gen_div_ops_cg.cr_op_rd_x0.remu_no
+  - gen_div_ops_cg.cr_op_rd_x0.remu_yes
+  - gen_div_timing_cg.cr_dit_div0_delta.dit1_div0_d37
+  - gen_div_timing_cg.cr_dit_div0_delta.dit1_nodiv0_d37
+  - gen_isa_hint_x0_cg.cp_writer_class.div_rem
+  - gen_isa_hint_x0_cg.cp_writer_class.mul
+  - gen_mul_ops_cg.cp_funct3.f0
+  - gen_mul_ops_cg.cp_funct3.f1
+  - gen_mul_ops_cg.cp_funct3.f2
+  - gen_mul_ops_cg.cp_funct3.f3
+  - gen_mul_ops_cg.cp_op.c_mul
+  - gen_mul_ops_cg.cp_op.mul
+  - gen_mul_ops_cg.cp_op.mulh
+  - gen_mul_ops_cg.cp_op.mulhsu
+  - gen_mul_ops_cg.cp_op.mulhu
+  - gen_mul_ops_cg.cp_rd_x0.no
+  - gen_mul_ops_cg.cp_rd_x0.yes
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f0_no
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f0_yes
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f1_no
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f1_yes
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f2_no
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f2_yes
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f3_no
+  - gen_mul_ops_cg.cr_funct3_rd_x0.f3_yes
+  - gen_mul_ops_cg.cr_op_rd_x0.c_mul_no
+  - gen_mul_ops_cg.cr_op_rd_x0.mul_no
+  - gen_mul_ops_cg.cr_op_rd_x0.mul_yes
+  - gen_mul_ops_cg.cr_op_rd_x0.mulh_no
+  - gen_mul_ops_cg.cr_op_rd_x0.mulh_yes
+  - gen_mul_ops_cg.cr_op_rd_x0.mulhsu_no
+  - gen_mul_ops_cg.cr_op_rd_x0.mulhsu_yes
+  - gen_mul_ops_cg.cr_op_rd_x0.mulhu_no
+  - gen_mul_ops_cg.cr_op_rd_x0.mulhu_yes
+anti_vacuity:
+  gen_div_ops_cg.cp_dividend.all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_dividend.zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_op.div: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_sign_pair.nn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_sign_pair.np: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_sign_pair.pn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_sign_pair.pp: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.div_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.div_nn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.div_np: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.div_pn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.div_pp: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_timing_cg.cp_delta.d37: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_dit.off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_div0.no: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_fetch_stall.no: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_wb_defer.no: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_dit_div0_delta.dit0_nodiv0_d37: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_ops_cg.cp_divisor.abs_gt_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.minus_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_divisor.zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_op.divu: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.divu_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_abs_gt_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_minus_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.divu_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_op.rem: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.rem_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.rem_nn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.rem_np: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.rem_pn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.rem_pp: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_op.remu: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_dividend.remu_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_abs_gt_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_minus_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.remu_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_result_class.all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.div_zero_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.divu_zero_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.rem_zero_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_seven: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_div0.remu_zero_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_timing_cg.cp_delta.d2: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_dit.on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_div0.yes: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_op.div: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_op.divu: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_op.rem: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cp_op.remu: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.div_no_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.div_no_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.div_yes_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.div_yes_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.divu_no_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.divu_no_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.divu_yes_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.divu_yes_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.rem_no_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.rem_no_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.rem_yes_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.rem_yes_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.remu_no_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.remu_no_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.remu_yes_off: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_op_div0.remu_yes_on: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_ops_cg.cp_result_class.eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_result_class.int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_overflow.div_intmin_m1: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_overflow.divu_intmin_m1: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_overflow.rem_intmin_m1: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_overflow.remu_intmin_m1: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.divu_nn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.divu_np: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.divu_pn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.divu_pp: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.remu_nn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.remu_np: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.remu_pn: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_sign.remu_pp: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_result_class.int_max: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_result_class.one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_result_class.zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_abs_gt_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_minus_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.div_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_abs_gt_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_all_ones: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_eq_dividend: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_int_min: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_minus_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_neg_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_one: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_pos_rand: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_two: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_divisor.rem_zero: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_rd_x0.no: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cp_rd_x0.yes: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.div_no: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.div_yes: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.divu_no: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.divu_yes: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.rem_no: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.rem_yes: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.remu_no: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_ops_cg.cr_op_rd_x0.remu_yes: "CG-MUL-003: divides are a subset of the mix; a hit proves a divide retired with the sampled dividend/divisor classes"
+  gen_div_timing_cg.cr_dit_div0_delta.dit1_div0_d37: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_div_timing_cg.cr_dit_div0_delta.dit1_nodiv0_d37: "CG-MUL-004: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op"
+  gen_isa_hint_x0_cg.cp_writer_class.div_rem: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_isa_hint_x0_cg.cp_writer_class.mul: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
+  gen_mul_ops_cg.cp_funct3.f0: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_funct3.f1: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_funct3.f2: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_funct3.f3: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.c_mul: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mul: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulh: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulhsu: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_op.mulhu: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rd_x0.no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cp_rd_x0.yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f0_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f0_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f1_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f1_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f2_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f2_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f3_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_funct3_rd_x0.f3_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.c_mul_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mul_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mul_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulh_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulh_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulhsu_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulhsu_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulhu_no: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
+  gen_mul_ops_cg.cr_op_rd_x0.mulhu_yes: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"

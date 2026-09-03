@@ -2,20 +2,26 @@
 
 Items built (dv/auto_dv/docs/gen_test_plan.md, area RST; canonical feature IDs through
 gen_feature_list.md Section 3):
-  TP-RST-003 (F-RST-004)  fire_tp_rst_003: csrr mtvec before any write reads {boot_addr_i[31:8], 8'h01};
-                           the ecall through the reset vector is not built (the boot page carries no
-                           vector table the program may write; needs the RVFI trap record).
-  TP-RST-006 (F-RST-006; alias F-IRQ-065)  fire_tp_rst_006: csrr mstatus = 0x80 and csrr mie = 0 as the
-                           first instructions (M-mode-only reads that do not trap); an mret with a
+  TP-RST-003 (F-RST-004)  fire_tp_rst_003: csrr mtvec before any write reads {boot_addr_i[31:8], 8'h01}.
+                           Clause not asserted: the ecall through the reset vector (the boot page carries
+                           no vector table the program may write; needs the RVFI trap record).
+  TP-RST-006 (F-RST-006; alias F-IRQ-065)  fire_tp_rst_006: csrr mstatus = MSTATUS_RESET and csrr mie = 0
+                           as the first instructions (M-mode-only reads that do not trap); an mret with a
                            seed-drawn mepc lands in U-mode, where the pad's mstatus read traps with
                            mcause 2, mstatus in the handler 0x80 (MPP = U), mepc = the pad's trapping
                            instruction (image symbol), the pad's ALU result computed in U-mode, and the
                            program's unexpected-trap counter 0 (no interrupt taken with mie = 0).
+                           Clauses BLOCKED, not asserted: "an interrupt line held high from reset" (the
+                           program drives no pin; knob_irq_regime has no REGIME_SET consumer at HEAD and no
+                           pin export reaches the Python side, so whether a line was high is unobserved);
+                           "first record has rvfi_mode = 3" and "the record after mret has rvfi_mode = 0"
+                           (RVFI record export; the U-mode landing is checked by its trap proxy only).
   TP-RST-007 (F-RST-007)  fire_tp_rst_007: reset read-back of mcause, mepc, mie, mtval, mscratch,
                            cpuctrlsts (bit 8 = scramble-key valid), mcountinhibit, mcounteren, mseccfg,
-                           pmpcfg0..3, pmpaddr0..15, tselect, tdata1 (0x28001048, doc mismatch D4) in a
-                           seed-shuffled order through W-CSROP read-only forms; dcsr/dpc/dscratch0/1 are
-                           debug-mode CSRs and need the DBG_REQ bridge command (not built).
+                           pmpcfg*, pmpaddr* (PMPNumRegions of ibex_configs.yaml), tselect, tdata1
+                           (0x28001048, doc mismatch D4) in a seed-shuffled order through W-CSROP read-only
+                           forms. Clause not asserted: dcsr/dpc/dscratch0/1 (debug-mode CSRs; need the
+                           DBG_REQ bridge command).
 Items of the group NOT built here (their fire-checks need pin or RVFI facts the Python side cannot
 observe today: bridge counts, end-of-test code and report words are the only channels): TP-SEC-031
 (F-SEC-029), TP-RST-001 (F-RST-001, F-RST-009), TP-RST-002 (F-RST-002), TP-RST-004 (F-RST-003, folded
@@ -24,17 +30,21 @@ via fold F-RST-026), TP-RVFI-036 (F-RST-009 via fold F-RVFI-033).
 
 Program: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py at the run seed (testlist `program:
 {generator: ..., seed: run}`); the program stores every observation RAW to the EOT MMIO register and
-the checks below compare self.reports[i] with plan(seed).reports[i]. TB-side facts the expectations
-need: +gen_boot_addr (mtvec), +gen_key_reset_valid with the scramble-key regime (cpuctrlsts bit 8), the
-image sidecar symbols (mepc of the pad). W-BOOT (boot_addr_i class, hart_id_i) is a TB input the
-program cannot draw; the entry runs the image's boot page.
+the checks below compare self.reports[i] with plan(seed).reports[i]. Every read lands in rd != x0, so
+the ISA comparator sees every value; its cpuctrlsts bit 8 and tdata1 misses are T-102 shim rows and
+FAIL the flow verdict until TB Infra lands them. TB-side facts the expectations need: +gen_boot_addr
+(mtvec), +gen_key_reset_valid with the scramble-key regime (cpuctrlsts bit 8), the image sidecar
+symbols (mepc of the pad). W-BOOT (boot_addr_i class, hart_id_i) is a TB input the program cannot draw;
+the entry runs the image's boot page.
+Red fixtures: `--red --red-item <id>` (or `--red` alone, item drawn from the seed) deviates the program on
+one item's intent so exactly fire_tp_rst_003 / 006 / 007 fails (generator docstring).
 
 Knobs (the built items' Knobs lines): knob_imem_gnt_delay, knob_imem_rvalid_delay (TP-RST-003),
 knob_irq_regime (TP-RST-006: lines may be driven, mie stays 0, nothing may be taken),
 knob_scr_key_delay (TP-RST-007). layers_required = False: the TB has no REGIME_SET consumer at HEAD
-(step 2b parked), so the layers are logged not_applied; flips to the default when step 2b lands.
-declare_bins() takes the template default (the plan's bins for the group, checked against the
-rendered manifest in finish(); the entry stays unwired until gen_fcov_pkg lands). Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
+(testlist entry measured: false), so the layers are logged not_applied. declare_bins() is the template
+default (the plan's bins of the three fire_tp items, checked against the rendered manifest in finish()).
+Checkers relied on: gen_isa_compare (isa_rd / isa_csr on every CSR read and write),
 gen_chk_csr_readback, gen_chk_ibus_proto / gen_chk_dbus_proto, gen_chk_irq (irq_pending_o = 0 with
 mie = 0), gen_chk_rvfi_proto.
 MODULE=dv.auto_dv.tests.gen_test_rst_boot, TOPLEVEL=gen_tb_top.
@@ -48,6 +58,14 @@ from dv.auto_dv.tests.gen_test_template import GenTest
 
 KEY_KNOB = "knob_scr_key_delay"
 CPUCTRLSTS_KEY_VALID_BIT = 8
+MASK32 = 0xFFFFFFFF
+MAX_MISMATCH_DETAIL = 3
+# The key regimes from the rendered knob table; the expectation below is tied to their order (the key is
+# answered within key_delay_max cycles in the first two), so any rename or new value fails here, loud.
+KEY_REGIMES = lib.knob_values(KEY_KNOB)
+assert KEY_REGIMES == ["immediate", "delayed", "withheld_then_valid"], \
+    f"GEN_TEST_RST_BOOT: {KEY_KNOB} values changed ({KEY_REGIMES}); re-derive the cpuctrlsts bit-8 expectation"
+KEY_EARLY_REGIMES = set(KEY_REGIMES[:2])
 
 
 def _plus_hex(name):
@@ -70,13 +88,14 @@ def _knob_regimes(test, knob):
 def _cpuctrlsts_reset(test):
     """cpuctrlsts at the read: bits 7:0 and 31:9 are 0; bit 8 is the registered ic_scr_key_valid_i.
     The key is valid at the read when the TB drives it valid through reset (the icache raises no
-    request then) or when its out-of-reset request is answered by the immediate/delayed regimes
-    (at most key_delay_max cycles, while the core is still held for the image read-back). The
-    withheld_then_valid regime (key_never_cycles) is not predictable without the read's cycle: the
-    value then carries None and bit 8 is reported, not gated."""
+    request then) or when its out-of-reset request is answered by the early regimes (at most
+    key_delay_max cycles, while the core is still held for the image read-back). The withheld regime
+    (key_never_cycles) is not predictable without the read's cycle: None, and bit 8 is reported, not gated."""
     key_valid = lib.plus_int("key_reset_valid", lib.knob_default("key_reset_valid"))
     regimes = _knob_regimes(test, KEY_KNOB)
-    if key_valid == 1 or regimes <= {"immediate", "delayed"}:
+    unknown = regimes - set(KEY_REGIMES)
+    assert not unknown, f"GEN_TEST_RST_BOOT: {KEY_KNOB} takes value(s) {sorted(unknown)} outside the knob table"
+    if key_valid == 1 or regimes <= KEY_EARLY_REGIMES:
         return 1 << CPUCTRLSTS_KEY_VALID_BIT
     return None
 
@@ -97,38 +116,34 @@ def _expected(test, rep):
 
 
 def _compare(test, p, item):
-    """(ok, detail) over every report word of one item: expected vs actual per word, mismatches named."""
+    """(ok, detail) over every report word of one item; the detail names the first mismatches only."""
     idxs = [i for i, r in enumerate(p.reports) if r.item == item]
-    lines, bad, info = [], [], []
+    bad = []
     for i in idxs:
         rep = p.reports[i]
         got = test.reports[i] if i < len(test.reports) else None
         exp = _expected(test, rep)
         if got is None:
-            bad.append(f"{rep.name}: report {i} missing")
-            continue
-        if exp is None:   # cpuctrlsts under the withheld key regime: gate every bit but 8
-            mask = ~(1 << CPUCTRLSTS_KEY_VALID_BIT) & 0xFFFFFFFF
-            ok = (got & mask) == 0
-            info.append(f"{rep.name} bit8={(got >> CPUCTRLSTS_KEY_VALID_BIT) & 1} (key regime withheld, not gated)")
-        else:
-            ok = got == exp
-        lines.append(f"{rep.name}=0x{got:08x}" + ("" if ok else f" (expected 0x{exp:08x})" if exp is not None else " (expected other bits 0)"))
-        if not ok:
-            bad.append(lines[-1])
-    for m in info:
-        test.info(item, m)
+            bad.append(f"{rep.name} (report {i}) missing")
+        elif exp is None:   # cpuctrlsts under the withheld key regime: every bit but 8 is gated
+            if got & ~(1 << CPUCTRLSTS_KEY_VALID_BIT) & MASK32:
+                bad.append(f"{rep.name}=0x{got:08x} (expected every bit but 8 clear)")
+            test.info(item, f"{rep.name} bit8={(got >> CPUCTRLSTS_KEY_VALID_BIT) & 1} (key regime withheld, not gated)")
+        elif got != exp:
+            bad.append(f"{rep.name}=0x{got:08x} (expected 0x{exp:08x})")
     n = len(idxs)
-    detail = (f"{n - len(bad)}/{n} report words match" + (": " + ", ".join(bad) if bad else "")
-              + f" [reports {idxs[0]}..{idxs[-1]}: " + " ".join(lines) + "]")
+    detail = f"{n - len(bad)}/{n} report words of {item} match (reports {idxs[0]}..{idxs[-1]})"
+    if bad:
+        detail += ": " + ", ".join(bad[:MAX_MISMATCH_DETAIL])
+        if len(bad) > MAX_MISMATCH_DETAIL:
+            detail += f", +{len(bad) - MAX_MISMATCH_DETAIL} more"
     return not bad and len(test.reports) >= p.k, detail
 
 
 class RstBoot(GenTest):
     name = "gen_test_rst_boot"
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_irq_regime", KEY_KNOB)
-    # Bring-up (tier check, measured false): no REGIME_SET consumer at HEAD; flips to the default when
-    # TB Infra's step 2b lands.
+    # No REGIME_SET consumer at HEAD (testlist entry measured: false); the layers are logged not_applied.
     layers_required = False
 
     def report_count(self):
