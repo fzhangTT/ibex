@@ -1070,3 +1070,12 @@ of gen_trace_witness_ids.csv selected at run time) as landing 3g. Also recorded 
 icram-gated item (row icram inject), not a no-export-row item, so the "19 marked" reads 18 icram-dependent plus
 TP-PMC-001; and gen_wit_cycle_clause_cg (CG-WIT-001) has no SystemVerilog implementation yet, so the released witness
 bins are must-hit in the plan but not scored by any covergroup until tb-infra implements it (T-179).
+
+## LOG-041 - 2026-09-03 - EVENT (workstation login expired at about 16:20Z; restored by the owner)
+
+At about 16:20Z every teammate reported "Login expired" and the sandboxed cross-model reviewer of tb-infra's
+landing 2a (99ddf39..4d48d84) ended with "claude -p failed (rc=1)" after a complete run (no artifact written; raw
+output kept under work/orchestrator/review_failed/run.ifkgjD.raw.json for the record only). The owner re-ran
+/login at 16:2xZ ("Login successful"). The Orchestrator relaunched the 2a review with the same focus and re-pointed
+each teammate at its pending task. Nothing in the tree changed as a result; no landing was lost. The acceptance wave
+Runtime had restarted under a 6 h wrapper at 16:15Z may have been interrupted and is re-checked by Runtime.
