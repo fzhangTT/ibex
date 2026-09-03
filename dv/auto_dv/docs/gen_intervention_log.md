@@ -1350,3 +1350,24 @@ adopted lows already closed in parts 2 and 3, so the LOG-044 crediting gate is l
 a clean measured round exists (LOG-046). The Critic's six 1c lows (unretained figures, the asserted drain window, the
 grant-cycle comment, the intg slot outside the leftover referee, the shim's tval-0 gap, MUT-K's without-export run, the
 stale gen_rvfi_pkg.sv:338 comment) go to tb-infra's 2c with the CM33 lows.
+
+## LOG-050 - 2026-09-03 - Schedulable regime knobs must match the program's handlers (T-206 lesson)
+
+The round-0 probe's one test-side failure (gen_test_csr_reset seed 1028791296) was a debug-request storm drawn at start-up
+for a program with no debug handling: the core halted into the DM window before the first report store and never came back
+(UVM_ERROR 0, no DUT mismatch). Ruling: a test whose program has no debug ROM does not schedule knob_debug_req_regime, and one
+whose program has no interrupt handler does not schedule knob_irq_regime unless MIE stays 0; the rule is enforced by a
+structural check in the library self-test (each test declares the handlers its program carries; the self-test refuses a
+schedulable regime knob without its handler), not by a 16th lint form (the lint list stays frozen, LOG-024d). Until the
+check lands with the Test Writer's next template touch, the rule lives in the batch briefs and the reviews. The fix for
+csr_reset is landing 3k (56e37d7).
+
+## LOG-052 - 2026-09-03 - Shared-tree overwrite of committed evidence during a copy-in window (restored)
+
+At 18:02:24Z, inside tb-infra's announced landing-2b copy-in window, the working-tree copies of the Test Writer's committed
+evidence files under dv/auto_dv/evidence/gen_tdd_logs/test_writer/ (gen_manifest.md and the 20 gen_b3_pmp_mseccfg_* /
+gen_pmp_mseccfg_red1_* files) were replaced by their e7a0941-era versions; 183 files under evidence/ carry that mtime, more
+than the 261 files in tb-infra's list. HEAD was never affected; the Test Writer restored every tracked file from HEAD at
+18:07Z and kept the stale copy under its work dir. tb-infra is asked how its copy step wrote outside its list. Rule: a copy-in
+copies exactly the paths in the landing's file list, and the window is closed only after git status shows no modified
+tracked file outside that list.
