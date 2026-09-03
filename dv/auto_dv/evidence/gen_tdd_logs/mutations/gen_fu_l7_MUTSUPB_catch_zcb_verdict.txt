@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:32
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(258) @ 113500: uvm_test_top.env.sb [isa_rd] rf_wr_suppress asserted without an announced integrity corruption for 80000200 (order=11 pc=8000009e insn=00008014 trap=0 intr=0 rd=x13/0000007f mem=80000200 w0000 r0001 mode=3 cyc=108)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

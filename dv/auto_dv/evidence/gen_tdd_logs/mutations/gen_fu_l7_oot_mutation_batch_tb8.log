@@ -1,0 +1,8 @@
+MUTNIB applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTNIB/dv/auto_dv/tb/gen_tb_pkg.sv; original sha256 8f916541eca76066
+MUTNIB_catch_s7_intg: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   54 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(154) @ 1961500: uvm_test_top.env.irq_chk [nmi_internal] no internal NMI entry within 0 records outside NMI mode of the integrity corruption announced at order 497 (now order 4
+MUTNIB_ablate_s7_intg: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTNIB: build sources sha256: 61d496172f9baf12; source tree untouched: cc8bc78d76a57505
+MUTNT2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTNT2/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MUTNT2_catch_irqp_storm: verdict: FAIL reason: uvm_fatal at sim.log:19  UVM_ERROR :    0 first: UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(293) @ 0: uvm_test_top [GEN_UNKNOWN_PLUSARG] unknown plusarg +gen_irq_entry_bound=100 (names live in gen_tb_knobs.yaml)
+MUTNT2_ablate_irqp_storm: verdict: FAIL reason: uvm_fatal at sim.log:19  UVM_ERROR :    0 first: UVM_FATAL dv/auto_dv/env/gen_env_pkg.sv(293) @ 0: uvm_test_top [GEN_UNKNOWN_PLUSARG] unknown plusarg +gen_irq_entry_bound=100 (names live in gen_tb_knobs.yaml)
+MUTNT2: build sources sha256: 2643308399b05e33; source tree untouched: cc8bc78d76a57505

@@ -195,7 +195,7 @@ constants:
   - {name: GEN_LSU_TRAP_TO_RVFI_OFFSET, value: 0, sv_type: int unsigned, desc: "cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle"}
   - {name: GEN_IRQ_MARKER_TO_RVFI_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)"}
   - {name: GEN_RVFI_ID_EXIT_OFFSET, value: 2, sv_type: int unsigned, desc: "cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)"}
-  - {name: GEN_ICACHE_ECC_WINDOW, value: 1, sv_type: int unsigned, desc: "alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)"}
+  - {name: GEN_ICACHE_ECC_WINDOW, value: 2, sv_type: int unsigned, desc: "alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check; landing 2b measured 1 or 2); the misc checker and the protocol SVA use the same value"}
   - {name: GEN_IRQ_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)"}
   - {name: GEN_DBG_ENTRY_BOUND_RECORDS, value: 17, sv_type: int unsigned, desc: "records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)"}
   - {name: GEN_CLK_PERIOD_NS, value: 10, sv_type: int unsigned, desc: "TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it"}
@@ -214,10 +214,14 @@ constants:
   - {name: GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT, value: 6, sv_type: int unsigned, desc: "cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps"}
   - {name: GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT, value: 7, sv_type: int unsigned, desc: "cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)"}
   - {name: GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT, value: 2, sv_type: int unsigned, desc: "cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model"}
+  - {name: GEN_DCSR_PRV_BIT_LOW, value: 0, sv_type: int unsigned, desc: "dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it"}
+  - {name: GEN_DCSR_PRV_BIT_HIGH, value: 1, sv_type: int unsigned, desc: "dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])"}
+  - {name: GEN_CAUSE_NMI_EXTERNAL, value: 0x8000001F, sv_type: int unsigned, desc: "mcause of an external NMI entry (irq_ext, rtl/ibex_cs_registers.sv:905-945); the shim writes it when it emulates the entry"}
+  - {name: GEN_CAUSE_NMI_INTERNAL, value: 0xFFFFFFE0, sv_type: int unsigned, desc: "mcause of an internal NMI entry (irq_int, an integrity error; rtl/ibex_cs_registers.sv:905-945)"}
   - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}
   - {name: GEN_BUS_ERR_LOG_DEPTH, value: 256, sv_type: int unsigned, desc: "TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property"}
   - {name: GEN_BUS_ERR_DRAIN_CYCLES, value: 96, sv_type: int unsigned, desc: "cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it: the announcement is stamped at the first transaction's grant, the second half of a split access then waits its own grant window (at most 32, regime_windows.gnt_delay), its response the rvalid window (at most 32), and 32 more cover the response-to-record lag with margin; a longer window must raise it"}
-  - {name: GEN_NMI_INT_ENTRY_BOUND_RECORDS, value: 4, sv_type: int unsigned, desc: "records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)"}
+  - {name: GEN_NMI_INT_ENTRY_BOUND_RECORDS, value: 4, sv_type: int unsigned, desc: "TB-side bound: records outside NMI mode and outside debug mode within which an announced data-side integrity corruption must produce the internal NMI entry; the RTL path is the pending bit set at the response and taken at the next handle_irq window (rtl/ibex_controller.sv:391-430, :498), the value is tuned from the observed 2-3 records (landing 2a / 2c)"}
   - {name: GEN_MEM_ERR_ARM_KIND_INTG, value: 2, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response"}
   - {name: GEN_ISA_FAULT_KIND_FETCH, value: 0, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: instruction fetch (shim fault_hits)"}
   - {name: GEN_ISA_FAULT_KIND_LOAD, value: 1, sv_type: int unsigned, desc: "gen_isa_arm_fault kind: load"}
@@ -272,6 +276,7 @@ export_events:
   - {source: alert, event: alert_major_internal, fields: [value]}
   - {source: alert, event: double_fault_seen, fields: [value]}
   - {source: misc, event: irq_pending, fields: [value]}
+  - {source: misc, event: irq_entry, fields: [order, cause, decidable]}
   - {source: misc, event: core_busy, fields: [value]}
   - {source: misc, event: crash_dump_current_pc, fields: [value]}
   - {source: misc, event: crash_dump_next_pc, fields: [value]}

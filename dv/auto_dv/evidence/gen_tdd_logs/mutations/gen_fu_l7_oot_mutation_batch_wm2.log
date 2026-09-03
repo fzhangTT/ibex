@@ -1,0 +1,4 @@
+WM2 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/WM2/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 2c65c1fe75fd934b
+WM2_catch_ut_witness: verdict: FAIL reason: uvm_error at sim.log:45  UVM_ERROR :    1 first: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(79) @ 313500: uvm_test_top.env.wit [wit_referee] the covergroup counts 2 distinct bins, the dispatcher accepted 1 distinct witnesses
+WM2_ablate_ut_witness: verdict: FAIL reason: cocotb_summary at stdout.log:53   first: 
+WM2: build sources sha256: bcbb55baf972c3ba; source tree untouched: cc8bc78d76a57505

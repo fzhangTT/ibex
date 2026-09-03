@@ -403,6 +403,31 @@ int main(int argc, char** argv) {
     gen_isa_step(&st);                                     // handler's mret
     check("handler mret returns to the ecall pc", st.pc_after, scratch); }
 
+  std::puts("-- 12b. NMI emulation: a trap nested inside the NMI handler pushes the stack again, so its mret (the first one) leaves NMI mode with the NMI's own context restored (rtl/ibex_cs_registers.sv:921-935, :967-974)");
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t nmi_vec = GEN_MM_BOOT_PAGE + 0x7Cu;
+    gen_isa_write_word(scratch, 0x00000013u);            // the interrupted instruction
+    gen_isa_write_word(nmi_vec, 0x00000073u);            // the NMI handler traps at once (ecall)
+    gen_isa_write_word(GEN_MM_BOOT_PAGE, GEN_INSN_MRET);  // the trap handler: mret
+    gen_isa_write_csr(CSR_MSTATUS, 0x88u);
+    gen_isa_write_csr(CSR_MEPC, 0x1234u); gen_isa_write_csr(CSR_MCAUSE, 0x2u);
+    gen_isa_arm_async(0, 0, 1, 0, 0, 1);
+    gen_isa_step(&st);                                     // NMI entry
+    gen_isa_step(&st);                                     // the ecall inside the NMI handler
+    check("nested trap inside the NMI handler", st.trap_cause, 11);
+    check("nested trap mepc = the NMI handler pc", gen_isa_read_csr(CSR_MEPC), nmi_vec);
+    gen_isa_step(&st);                                     // the trap handler's mret: the first mret, leaves NMI mode
+    check("first mret returns to the nested trap's mepc (the NMI handler)", st.pc_after, nmi_vec);
+    check("first mret restores mepc from the second push (the interrupted pc)", gen_isa_read_csr(CSR_MEPC), scratch);
+    check("first mret restores mcause from the second push (the NMI's)", gen_isa_read_csr(CSR_MCAUSE), 0x8000001Fu);
+    check("first mret: MIE = the nested trap's MPIE (0), MPIE / MPP from the push (1, M)", gen_isa_read_csr(CSR_MSTATUS) & 0x1888u, 0x1880u);
+    gen_isa_write_word(nmi_vec, GEN_INSN_MRET);          // the NMI handler now returns
+    gen_isa_step(&st);                                     // a plain mret: NMI mode is over
+    check("second mret returns to the interrupted pc", st.pc_after, scratch);
+    check("second mret keeps mepc (no stack restore outside NMI mode)", gen_isa_read_csr(CSR_MEPC), scratch);
+    check("second mret keeps mcause", gen_isa_read_csr(CSR_MCAUSE), 0x8000001Fu);
+    check("second mret: MIE 1, MPIE 1, MPP U", gen_isa_read_csr(CSR_MSTATUS) & 0x1888u, 0x88u); }
+
   std::puts("-- 13. an armed data fault takes the DUT's mtval: the last bus transaction's address, the second word of a spanning access (rtl/ibex_load_store_unit.sv:258)");
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   {

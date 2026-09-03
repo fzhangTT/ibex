@@ -238,7 +238,7 @@ package gen_env_pkg;
       // event writers get the sink handle; each registers the rows it emits in its end_of_elaboration_phase and the sink
       // checks the emitted set (yaml export_active_sources) against the registrations in every run (T-141)
       ibus_agent.driver.sink = sink; dbus_agent.driver.sink = sink; ctrl.sink = sink; scrkey.sink = sink;
-      irq.sink = sink; dbg.sink = sink; misc_mon.sink = sink;
+      irq.sink = sink; dbg.sink = sink; misc_mon.sink = sink; irq_chk.sink = sink;
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
       rvfi_mon.ap.connect(isa_cov.analysis_export);
@@ -247,6 +247,7 @@ package gen_env_pkg;
       sb.ap_state.connect(dbg_chk.imp_state);
       sb.ap_state.connect(misc_mon.imp_state);
       irq.ap.connect(irq_chk.imp_evt);
+      irq.ap.connect(sb.imp_irq);   // the NMI raises of the two-record window (external NMI classification, CM25-L-6)
       dbg.ap.connect(dbg_chk.imp_evt);
     endfunction
 

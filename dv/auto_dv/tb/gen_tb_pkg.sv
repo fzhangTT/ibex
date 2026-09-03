@@ -235,7 +235,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_LSU_TRAP_TO_RVFI_OFFSET = 0;  // cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle
   parameter int unsigned GEN_IRQ_MARKER_TO_RVFI_OFFSET = 2;  // cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
-  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 1;  // alert_minor_o alone within 1 cycle counted from the lookup request that returns corrupted rdata (v3 T-051 2.4; the invalidation write is not part of the window)
+  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check; landing 2b measured 1 or 2); the misc checker and the protocol SVA use the same value
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
   parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
@@ -259,10 +259,14 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   parameter int unsigned GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT = 2;  // cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model
+  parameter int unsigned GEN_DCSR_PRV_BIT_LOW = 0;  // dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it
+  parameter int unsigned GEN_DCSR_PRV_BIT_HIGH = 1;  // dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])
+  parameter int unsigned GEN_CAUSE_NMI_EXTERNAL = 2147483679;  // mcause of an external NMI entry (irq_ext, rtl/ibex_cs_registers.sv:905-945); the shim writes it when it emulates the entry
+  parameter int unsigned GEN_CAUSE_NMI_INTERNAL = 4294967264;  // mcause of an internal NMI entry (irq_int, an integrity error; rtl/ibex_cs_registers.sv:905-945)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)
   parameter int unsigned GEN_BUS_ERR_LOG_DEPTH = 256;  // TB-local bound of the announced data-bus error queue (gen_bus_err_log), not a DUT property
   parameter int unsigned GEN_BUS_ERR_DRAIN_CYCLES = 96;  // cycles an announced data-bus error may still await its trap record at the end of the run before the leftover referee counts it: the announcement is stamped at the first transaction's grant, the second half of a split access then waits its own grant window (at most 32, regime_windows.gnt_delay), its response the rvalid window (at most 32), and 32 more cover the response-to-record lag with margin; a longer window must raise it
-  parameter int unsigned GEN_NMI_INT_ENTRY_BOUND_RECORDS = 4;  // records outside NMI mode within which an injected data-side integrity corruption must produce the internal NMI entry (rtl/ibex_controller.sv:391-430; observed 2-3 on the seed-7 program)
+  parameter int unsigned GEN_NMI_INT_ENTRY_BOUND_RECORDS = 4;  // TB-side bound: records outside NMI mode and outside debug mode within which an announced data-side integrity corruption must produce the internal NMI entry; the RTL path is the pending bit set at the response and taken at the next handle_irq window (rtl/ibex_controller.sv:391-430, :498), the value is tuned from the observed 2-3 records (landing 2a / 2c)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_INTG = 2;  // MEM_ERR_ARM arg3[7:0] kind: integrity corruption of the response
   parameter int unsigned GEN_ISA_FAULT_KIND_FETCH = 0;  // gen_isa_arm_fault kind: instruction fetch (shim fault_hits)
   parameter int unsigned GEN_ISA_FAULT_KIND_LOAD = 1;  // gen_isa_arm_fault kind: load
@@ -452,14 +456,14 @@ package gen_tb_pkg;
       "dbus": return "# events dbus req addr,we,be\n# events dbus gnt addr,we,be,req_cycle,outstanding_after\n# events dbus rvalid addr,we,err,intg_injected,outstanding_after\n";
       "pin": return "# events pin irq_software value\n# events pin irq_timer value\n# events pin irq_external value\n# events pin irq_fast idx,value\n# events pin irq_nm value\n# events pin debug_req value\n# events pin fetch_enable value\n# events pin mcounteren_writable value\n";
       "alert": return "# events alert alert_minor value\n# events alert alert_major_bus value\n# events alert alert_major_internal value\n# events alert double_fault_seen value\n";
-      "misc": return "# events misc irq_pending value\n# events misc core_busy value\n# events misc crash_dump_current_pc value\n# events misc crash_dump_next_pc value\n# events misc crash_dump_last_data_addr value\n# events misc crash_dump_exception_pc value\n# events misc crash_dump_exception_addr value\n";
+      "misc": return "# events misc irq_pending value\n# events misc irq_entry order,cause,decidable\n# events misc core_busy value\n# events misc crash_dump_current_pc value\n# events misc crash_dump_next_pc value\n# events misc crash_dump_last_data_addr value\n# events misc crash_dump_exception_pc value\n# events misc crash_dump_exception_addr value\n";
       "icram": return "# events icram inject way,index\n# events icram lookup index\n# events icram tag_write way,index,valid\n# events icram fill_write way,index\n";
       "scrkey": return "# events scrkey req value\n# events scrkey valid value\n";
       "regime": return "# events regime phase knob_id,value_idx,phase_idx\n";
       default: return "";
     endcase
   endfunction
-  parameter string GEN_EXPORT_ROWS = "ibus/req,ibus/gnt,ibus/rvalid,dbus/req,dbus/gnt,dbus/rvalid,pin/irq_software,pin/irq_timer,pin/irq_external,pin/irq_fast,pin/irq_nm,pin/debug_req,pin/fetch_enable,pin/mcounteren_writable,alert/alert_minor,alert/alert_major_bus,alert/alert_major_internal,alert/double_fault_seen,misc/irq_pending,misc/core_busy,misc/crash_dump_current_pc,misc/crash_dump_next_pc,misc/crash_dump_last_data_addr,misc/crash_dump_exception_pc,misc/crash_dump_exception_addr,icram/inject,icram/lookup,icram/tag_write,icram/fill_write,scrkey/req,scrkey/valid,regime/phase";  // every (source, event) row, yaml order
+  parameter string GEN_EXPORT_ROWS = "ibus/req,ibus/gnt,ibus/rvalid,dbus/req,dbus/gnt,dbus/rvalid,pin/irq_software,pin/irq_timer,pin/irq_external,pin/irq_fast,pin/irq_nm,pin/debug_req,pin/fetch_enable,pin/mcounteren_writable,alert/alert_minor,alert/alert_major_bus,alert/alert_major_internal,alert/double_fault_seen,misc/irq_pending,misc/irq_entry,misc/core_busy,misc/crash_dump_current_pc,misc/crash_dump_next_pc,misc/crash_dump_last_data_addr,misc/crash_dump_exception_pc,misc/crash_dump_exception_addr,icram/inject,icram/lookup,icram/tag_write,icram/fill_write,scrkey/req,scrkey/valid,regime/phase";  // every (source, event) row, yaml order
   // The `# events <source> <event> <fields>` header row of ONE (source, event), newline-terminated; empty when unknown.
   function automatic string gen_export_row_header(string source, string ev);
     case ({source, "/", ev})
@@ -482,6 +486,7 @@ package gen_tb_pkg;
       "alert/alert_major_internal": return "# events alert alert_major_internal value\n";
       "alert/double_fault_seen": return "# events alert double_fault_seen value\n";
       "misc/irq_pending": return "# events misc irq_pending value\n";
+      "misc/irq_entry": return "# events misc irq_entry order,cause,decidable\n";
       "misc/core_busy": return "# events misc core_busy value\n";
       "misc/crash_dump_current_pc": return "# events misc crash_dump_current_pc value\n";
       "misc/crash_dump_next_pc": return "# events misc crash_dump_next_pc value\n";
@@ -535,9 +540,17 @@ package gen_tb_pkg;
     static int unsigned intg_announced = 0;   // data-side integrity corruptions: each raises the DUT's internal NMI (irq checker)
     static logic [31:0] intg_first_addr = '0;  // address of the corruption that set the DUT's pending bit (its mtval), until consumed
     static bit          intg_pending = 0;
+    static logic [31:0] intg_words [$];   // announced corruptions by word: the suppressed-write record they explain consumes one (T-183)
     static function void note_intg(logic [31:0] addr);
       intg_announced++;
       if (!intg_pending) begin intg_pending = 1; intg_first_addr = addr; end
+      intg_words.push_back({addr[31:2], 2'b00});
+      while (intg_words.size() > GEN_BUS_ERR_LOG_DEPTH) void'(intg_words.pop_front());
+    endfunction
+    static function bit take_intg_word(logic [31:0] addr);   // an announced corruption of that word, consumed
+      logic [31:0] w = {addr[31:2], 2'b00};
+      foreach (intg_words[i]) if (intg_words[i] == w) begin intg_words.delete(i); return 1'b1; end
+      return 1'b0;
     endfunction
     static function logic [31:0] take_intg();   // the internal-NMI entry consumes the pending bit (rtl/ibex_controller.sv:407-411)
       intg_pending = 0; return intg_first_addr;

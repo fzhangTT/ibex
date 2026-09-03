@@ -41,3 +41,70 @@ Not covered by a mutation: the draft-B references other than cmix (unit-tested w
 gen_ut_isa_shim.cc section 5, no DUT-level exercise until the Test Writer's TP-BIT-022..033 tests), the counter sync's
 exact sample point beyond the reads the four programs make, and the RTL-level halves of every isa_* id (Critic D-3,
 still owed).
+
+## Appendix: original and mutated text per P row (CR8 fu2a L-4)
+
+P1..P9 were applied by an earlier form of the driver that kept descriptions only; their text blocks were not retained and
+cannot be reconstructed from a log. P10..P13 are reproduced from the driver table as applied. Each per-mutant `shared tree
+untouched` line hashes the SHARED tree's dv/auto_dv/env/gen_rvfi_pkg.sv (MB12 / P13) or gen_agents_pkg.sv, gen_export.py and
+gen_ut_export.py (MUT-L), not the mutated file; the mutated file's identity is the `applied to ... original sha256` line, and
+the batch's start / end tree lines cover the rest. The first MUT-L attempt (batch log 16:01-16:02Z) FAILed its ablation because
+the mutant then also inverted the writer's row registration, which no knob ablates; the retained 16:05Z pair is the
+re-run with the mutation confined to the driven value.
+
+### P10 (dv/auto_dv/env/gen_rvfi_pkg.sv)
+
+original:
+```
+      pc_expect = t.pc_rdata; insn_expect = t.insn;
+```
+mutated:
+```
+      pc_expect = t.pc_rdata + (mut_after_mret ? 32'h4 : 32'h0); insn_expect = t.insn; mut_after_mret = (t.insn == GEN_INSN_MRET);
+```
+
+original:
+```
+    bit          dbg_q = 0;
+```
+mutated:
+```
+    bit          dbg_q = 0;
+    bit          mut_after_mret = 0;
+```
+
+### P11 (dv/auto_dv/env/gen_rvfi_pkg.sv)
+
+original:
+```
+          if (t.pc_wdata != t.pc_rdata + insn_len(t.insn))
+            miss("isa_pc_next", $sformatf("mret/dret record
+```
+mutated:
+```
+          if (t.pc_wdata + 32'h4 != t.pc_rdata + insn_len(t.insn))
+            miss("isa_pc_next", $sformatf("mret/dret record
+```
+
+### P12 (dv/auto_dv/env/gen_rvfi_pkg.sv)
+
+original:
+```
+        if (trap && cause != 1 && t.pc_wdata != t.pc_rdata + (t.ext_exp_valid ? 0 : insn_len(t.insn)))
+```
+mutated:
+```
+        if (trap && cause != 1 && t.pc_wdata + 32'h2 != t.pc_rdata + (t.ext_exp_valid ? 0 : insn_len(t.insn)))   // P12: the trap record's pc_wdata reported off by 2
+```
+
+### P13 (dv/auto_dv/isa/gen_isa_shim.cc)
+
+original:
+```
+  g_fault.armed = false;   // an armed bus fault applies to one step
+```
+mutated:
+```
+  g_fault.armed = false;   // an armed bus fault applies to one step
+  g_proc->put_csr(CSR_PMPADDR0, 0);   // P13: the model loses its pmpaddr0 after every step (the PMP entry never covers the buffer)
+```

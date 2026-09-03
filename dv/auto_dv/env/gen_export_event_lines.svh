@@ -57,6 +57,9 @@ endfunction
 function automatic string gen_export_line_misc_irq_pending(int unsigned cycle, int unsigned value);
   return $sformatf("E %0h misc irq_pending %0h", cycle, value);
 endfunction
+function automatic string gen_export_line_misc_irq_entry(int unsigned cycle, int unsigned order, int unsigned cause, int unsigned decidable);
+  return $sformatf("E %0h misc irq_entry %0h %0h %0h", cycle, order, cause, decidable);
+endfunction
 function automatic string gen_export_line_misc_core_busy(int unsigned cycle, int unsigned value);
   return $sformatf("E %0h misc core_busy %0h", cycle, value);
 endfunction

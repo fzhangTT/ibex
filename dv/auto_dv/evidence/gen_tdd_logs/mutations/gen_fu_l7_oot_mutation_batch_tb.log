@@ -1,0 +1,16 @@
+MUTSUP applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTSUP/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MUTSUP_catch_zc: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(258) @ 205500: uvm_test_top.env.sb [isa_rd] Zcmp union: model wrote 5 registers, dut 1 (order=37 pc=800000da insn=01010113 trap=0 intr=0 rd=x2/800003a0 mem=800003a0 w0000 r1111 mo
+MUTSUP_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTSUP: build sources sha256: 61d7153c6a890011; source tree untouched: cc8bc78d76a57505
+MUTNT applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTNT/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MUTNT_catch_irqp_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTNT_ablate_irqp_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTNT: build sources sha256: 88c4cfa250b44e1e; source tree untouched: cc8bc78d76a57505
+MSIRQ applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MSIRQ/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MSIRQ_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:34  UVM_ERROR :    2 first: UVM_ERROR @ 108500: reporter [sva_irq_pins_known] GEN_PROTO sva_irq_pins_known: protocol property violated at cycle 104
+MSIRQ_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MSIRQ: build sources sha256: 397d3500efacb72e; source tree untouched: cc8bc78d76a57505
+MSDBG applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MSDBG/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MSDBG_catch_boot_zc: verdict: FAIL reason: assertion_failure at sim.log:34  UVM_ERROR :    2 first: UVM_ERROR @ 108500: reporter [sva_dbg_req_known] GEN_PROTO sva_dbg_req_known: protocol property violated at cycle 104
+MSDBG_ablate_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MSDBG: build sources sha256: 95b303312b8e183c; source tree untouched: cc8bc78d76a57505

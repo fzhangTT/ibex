@@ -39,7 +39,10 @@ Subscribes to the agents' `ap` (injected flags) and the scoreboard's model event
 ## 4. Wave-level behaviour
 
 Alerts are combinational, one cycle per offending cycle, may repeat. `core_busy_o` is exactly On
-or Off. `crash_dump_o` fields are combinational mirrors (rtl-arch CTRL-35): `exception_pc` = live
+or Off. `crash_dump_o` fields are combinational mirrors (rtl-arch CTRL-35; the design documents list the port only,
+doc/02_user/integration.rst:319 "a set of signals that can be captured on reset to aid crash debugging", and do not define
+the fields, so the mirror's meaning is the RTL's, rtl/ibex_core.sv:1329-1330, and the rule is an RTL-anchored mirror with
+named tolerances, CR-2B-L-9): `exception_pc` = live
 mepc, `exception_addr` = live mtval, `last_data_addr` = last LSU address, `current_pc`/`next_pc`
 pipeline state.
 
@@ -54,7 +57,7 @@ pipeline state.
 | `double_fault` | `double_fault_seen_o` pulses exactly when a synchronous trap record follows a previous one with no executed `mret` between (sync_exc_seen model; records in debug mode and trapping mrets are excluded, rtl/ibex_cs_registers.sv:918, :965); the pulse is GEN_TRAP_TO_RVFI_OFFSET cycles before the record for an ID-stage exception and GEN_LSU_TRAP_TO_RVFI_OFFSET (0) for a load/store fault, whose error is seen in WB and saved from FLUSH one cycle later while its record leaves WB (rtl/ibex_controller.sv:827-845, rtl/ibex_core.sv:1888-1890; landing 1c, mutant RC3); `cpuctrlsts` bits 6/7 read back per model; mutation MB11 (observed pin inverted) | set/clear/pulse logic (`rtl/ibex_cs_registers.sv:890-965`) | `+gen_chk_double_fault=0` |
 | `core_busy` | always exactly On or Off; after every retired WFI it is Off for exactly one cycle (WAIT_SLEEP, `ctrl_busy_o = 0` unconditionally, rtl/ibex_controller.sv:598-604) even with a wake condition already true; Off beyond that only with no wake term and no outstanding beat (SLEEP :606-621); On the same cycle a wake input asserts; no bus requests while Off (exact) | busy generation (`rtl/ibex_core.sv:496-522`), controller WAIT_SLEEP/SLEEP (`rtl/ibex_controller.sv:598-621`) | `+gen_chk_core_busy=0` |
 | `data_tag_quiet` | `data_tag_o == 0` | carve-out sanity | `+gen_chk_data_tag_quiet=0` |
-| `fetch_en` | BUILT (landing 2b): after `fetch_enable_i` leaves On (sampled at the posedge), only the in-flight instructions retire: a record later than GEN_FETCH_EN_DRAIN_CYCLES (64) after that edge is a failure; back On clears the window. Unit test gen_ut_fetch_en (Off after 60 records, drain, 256 idle cycles, On, tohost; also under long rvalid delays); mutation MB14 (the DUT's fetch_enable_i tied On while the TB drives Off): caught at order 90, 68 cycles after the edge, ablation PASS. NOT built: the bus-side clause (no new `instr_req_o` beyond the fill buffers) | fetch gate (`rtl/ibex_core.sv:644-656`), controller halt_if (`rtl/ibex_controller.sv:996-999`) | `+gen_chk_fetch_en=0` |
+| `fetch_en` | BUILT (landing 2b): after `fetch_enable_i` leaves On (sampled at the posedge), only the in-flight instructions retire: a record later than GEN_FETCH_EN_DRAIN_CYCLES (64) after that edge is a failure (intent: doc/02_user/integration.rst:323-328, fetch_enable_i allows the core to fetch, Off stops fetching and the pipeline drains; the bound is TB-derived, not read from the RTL: the longest instruction, a 37-cycle divide, plus the longest response the bus agent holds outstanding under its `long` rvalid regime, rounded up to 64; rtl/ibex_core.sv:644-656 is the mechanism, CR-2B-L-9); back On clears the window. Unit test gen_ut_fetch_en (Off after 60 records, drain, 256 idle cycles, On, tohost; also under long rvalid delays); mutation MB14 (the DUT's fetch_enable_i tied On while the TB drives Off): caught at order 90, 68 cycles after the edge, ablation PASS. NOT built: the bus-side clause (no new `instr_req_o` beyond the fill buffers) | fetch gate (`rtl/ibex_core.sv:644-656`), controller halt_if (`rtl/ibex_controller.sv:996-999`) | `+gen_chk_fetch_en=0` |
 
 ## 6. Failure path and diagnostics
 

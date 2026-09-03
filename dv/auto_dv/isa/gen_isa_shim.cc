@@ -44,6 +44,7 @@ constexpr uint32_t kMcounterenMask = 0x1FFDu;                               // 1
 constexpr uint32_t kCpuctrlWmask   = 0x0FFu;                                // cpuctrlsts writable fields (icache_enable .. double_fault_seen)
 constexpr uint32_t kMstatusReset   = 0x80u;                                 // MPIE 1, MPP U
 constexpr uint32_t kResetMtvecMode = 1u;
+constexpr unsigned kShiftMie = __builtin_ctz(MSTATUS_MIE), kShiftMpie = __builtin_ctz(MSTATUS_MPIE), kShiftMpp = __builtin_ctz(MSTATUS_MPP);   // field positions from Spike's masks
 
 // ---- memory ------------------------------------------------------------------------------------
 std::unordered_map<uint32_t, uint32_t> g_mem;   // word index -> word
@@ -439,10 +440,10 @@ int gen_isa_step(gen_isa_step_t* out) {
   if (g_nmi.armed) {
     // NMI entry (rtl/ibex_cs_registers.sv:905-945 with csr_mcause irq_ext / irq_int): no instruction executes
     uint32_t mst = csr(CSR_MSTATUS);
-    g_mstack = {(mst >> 7) & 1u, (mst >> 11) & 3u, csr(CSR_MEPC), csr(CSR_MCAUSE)};
-    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MIE | MSTATUS_MPIE | MSTATUS_MPP)) | (((mst >> 3) & 1u) << 7) | ((uint32_t)s->prv << 11));
+    g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MIE | MSTATUS_MPIE | MSTATUS_MPP)) | (((mst & MSTATUS_MIE) >> kShiftMie) << kShiftMpie) | ((uint32_t)s->prv << kShiftMpp));
     g_proc->put_csr(CSR_MEPC, out->pc_before);
-    g_proc->put_csr(CSR_MCAUSE, g_nmi.internal ? 0xFFFFFFE0u : 0x8000001Fu);
+    g_proc->put_csr(CSR_MCAUSE, g_nmi.internal ? GEN_CAUSE_NMI_INTERNAL : GEN_CAUSE_NMI_EXTERNAL);
     g_proc->put_csr(CSR_MTVAL, g_nmi.internal ? g_nmi.mtval : 0u);
     g_proc->set_privilege(PRV_M, false);
     s->pc = (sreg_t)(int32_t)((csr(CSR_MTVEC) & ~0xFFu) | 0x7Cu);
@@ -452,6 +453,10 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->pc_after = (uint32_t)s->pc; out->prv = (uint32_t)s->prv;
     return 0;
   }
+  // every exception entry outside debug mode pushes the recoverable-NMI stack (rtl/ibex_cs_registers.sv:921-935), so a trap
+  // nested inside the NMI handler is what the closing mret restores
+  uint32_t mst_pre = csr(CSR_MSTATUS);
+  mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
   try {
     g_proc->step(1);
   } catch (std::exception& e) {
@@ -475,6 +480,7 @@ int gen_isa_step(gen_isa_step_t* out) {
     out->trap = 1;
     out->trap_cause = csr(CSR_MCAUSE);
     out->trap_tval = csr(CSR_MTVAL);
+    if (!was_debug && !s->debug_mode) g_mstack = stack_pre;
     // Ibex writes mtval 0 on a [c.]ebreak breakpoint exception (rtl/ibex_controller.sv:550; the pc arm is CHERIoT-only),
     // one of the two spec-legal values; Spike writes the pc (rtl-arch R10)
     if (!was_debug && !s->debug_mode && out->trap_cause == CAUSE_BREAKPOINT) {
@@ -491,7 +497,7 @@ int gen_isa_step(gen_isa_step_t* out) {
   if (out->retired == 1 && out->insn == GEN_INSN_MRET && g_nmi_mode) {
     // leaving NMI mode: MPIE / MPP / mepc / mcause come back from the mstack (rtl/ibex_cs_registers.sv:967-974)
     uint32_t mst = csr(CSR_MSTATUS);
-    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MPIE | MSTATUS_MPP)) | (g_mstack.mpie << 7) | (g_mstack.mpp << 11));
+    g_proc->put_csr(CSR_MSTATUS, (mst & ~(uint32_t)(MSTATUS_MPIE | MSTATUS_MPP)) | (g_mstack.mpie << kShiftMpie) | (g_mstack.mpp << kShiftMpp));
     g_proc->put_csr(CSR_MEPC, g_mstack.mepc);
     g_proc->put_csr(CSR_MCAUSE, g_mstack.mcause);
     g_nmi_mode = false;

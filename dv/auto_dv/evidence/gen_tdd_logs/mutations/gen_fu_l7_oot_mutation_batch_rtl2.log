@@ -1,0 +1,4 @@
+MSALERT applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MSALERT/rtl/ibex_core.sv; original sha256 88b8bf3907472f1d
+MSALERT_catch_zc: verdict: FAIL reason: assertion_failure at sim.log:33  UVM_ERROR : 2851 first: 
+MSALERT_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MSALERT: source tree untouched: 88b8bf3907472f1d 86e156efaf7ac46a 8160e436ce3ecad7 

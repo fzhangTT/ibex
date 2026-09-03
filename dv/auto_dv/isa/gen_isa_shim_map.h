@@ -35,7 +35,7 @@
 #define GEN_LSU_TRAP_TO_RVFI_OFFSET        0u
 #define GEN_IRQ_MARKER_TO_RVFI_OFFSET      2u
 #define GEN_RVFI_ID_EXIT_OFFSET            2u
-#define GEN_ICACHE_ECC_WINDOW              1u
+#define GEN_ICACHE_ECC_WINDOW              2u
 #define GEN_IRQ_ENTRY_BOUND_RECORDS        17u
 #define GEN_DBG_ENTRY_BOUND_RECORDS        17u
 #define GEN_CLK_PERIOD_NS                  10u
@@ -54,6 +54,10 @@
 #define GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT   6u
 #define GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT 7u
 #define GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT  2u
+#define GEN_DCSR_PRV_BIT_LOW               0u
+#define GEN_DCSR_PRV_BIT_HIGH              1u
+#define GEN_CAUSE_NMI_EXTERNAL             2147483679u
+#define GEN_CAUSE_NMI_INTERNAL             4294967264u
 #define GEN_MEM_ERR_ARM_KIND_ERR           1u
 #define GEN_BUS_ERR_LOG_DEPTH              256u
 #define GEN_BUS_ERR_DRAIN_CYCLES           96u

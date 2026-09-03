@@ -11,6 +11,7 @@ package gen_rvfi_pkg;
   import gen_cfg_pkg::*;
   import gen_export_pkg::*;
   import gen_isa_dpi_pkg::*;
+  import gen_agents_pkg::*;
   `include "uvm_macros.svh"
 
   class gen_rvfi_txn extends uvm_sequence_item;
@@ -167,7 +168,13 @@ package gen_rvfi_pkg;
   endclass
 
   // ------------------------------------------------------------------------------------------
+  `uvm_analysis_imp_decl(_irq)
   class gen_scoreboard extends uvm_subscriber #(gen_rvfi_txn);
+    // the irq driver's NMI raises since the previous record and during the one before it: the external-NMI classification of an
+    // NMI-vector entry uses the same two-record window as the irq checker, not the record's single pin sample (CM25-L-6)
+    uvm_analysis_imp_irq #(gen_irq_evt, gen_scoreboard) imp_irq;
+    bit nm_raised_since = 0, nm_raised_prev = 0;
+    function void write_irq(gen_irq_evt e); if (e.level && e.changed[18]) nm_raised_since = 1; endfunction
     `uvm_component_utils(gen_scoreboard)
     gen_env_cfg cfg;
     virtual gen_bridge_if bvif;
@@ -183,11 +190,11 @@ package gen_rvfi_pkg;
     bit          dbg_q = 0, dret_q = 0;
     uvm_analysis_port #(gen_model_state) ap_state;
     function new(string name, uvm_component parent);
-      super.new(name, parent);
+      super.new(name, parent); imp_irq = new("imp_irq", this);
       ap_state = new("ap_state", this);
     endfunction
     // the model of record after this record, for the boundary checkers (mie/mstatus/mcause/prv/debug and the CSR writes)
-    function void publish_state(gen_rvfi_txn t, int unsigned pc_a, int unsigned prv, int csr_n);
+    function void publish_state(gen_rvfi_txn t, int unsigned pc_a, int unsigned prv, int csr_n, bit intr);
       gen_model_state st = gen_model_state::type_id::create("st");
       int unsigned a, v;
       st.order = t.order; st.cycle = t.cycle; st.pc_after = pc_a; st.insn = t.insn; st.prv = prv[1:0];
@@ -195,7 +202,7 @@ package gen_rvfi_pkg;
       st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
       st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR); st.dpc = gen_isa_read_csr(ibex_pkg::CSR_DPC);
       st.pc_rdata = t.pc_rdata; st.mode = t.mode[1:0];
-      st.is_trap = t.trap; st.is_intr = t.intr; st.debug_mode = t.ext_debug_mode;
+      st.is_trap = t.trap; st.is_intr = intr; st.debug_mode = t.ext_debug_mode;
       st.pre_mip = t.ext_pre_mip; st.post_mip = t.ext_post_mip; st.nmi_pend = t.ext_nmi; st.nmi_int_pend = t.ext_nmi_int;
       st.entry_cause = entry_cause; entry_cause = -1;
       st.is_mret = (t.insn == GEN_INSN_MRET); st.is_dret = (t.insn == GEN_INSN_DRET);
@@ -313,7 +320,7 @@ package gen_rvfi_pkg;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect, bytes;
       logic [31:0] gpr_before [32];   // snapshot for a suppressed register write (any encoding of the load)
-      bit is_seq = 0, dbg_entry = 0, is_store;
+      bit is_seq = 0, dbg_entry = 0, is_store, intr_now = 0, sup_ok = 0;
       if (!model_ready) return;
       // ---- asynchronous entries before this record (C5.2) come before the Zcmp fold: the handler's first record can
       //      itself be a micro-op, and an entry inside a sequence drops its partial micro-ops (the sequence restarts, R9)
@@ -322,20 +329,21 @@ package gen_rvfi_pkg;
       // an interrupt entry the NMI pre-empted before the handler retired anything has no record of its own: the NMI's mepc
       // points into the handler, and the record after the NMI entry sits at a vector address without rvfi_intr (the flag
       // went to the NMI record). The model, back from the NMI's mret in the pre-entry state, takes that interrupt now.
+      intr_now = t.intr;   // the entry flag the model acts on; the monitor's transaction stays the DUT's (CM25-M-1)
       if (after_nmi_entry && !t.intr && !t.trap) begin
         logic [31:0] base_v = gen_isa_read_csr(ibex_pkg::CSR_MTVEC) & ~32'hFF;
         if (t.pc_rdata >= base_v && t.pc_rdata < base_v + 32'd4 * ibex_pkg::ExcCauseIrqNm.lower_cause && gen_isa_get_pc() != t.pc_rdata) begin
-          t.intr = 1'b1; nmi_preempted++;
+          intr_now = 1'b1; nmi_preempted++;
           `uvm_info("GEN_SB", $sformatf("interrupt entry to %08h pre-empted by the NMI (no rvfi_intr of its own): entering it at order %0d", t.pc_rdata, t.order), UVM_LOW)
         end
       end
       after_nmi_entry = 0;
-      if (in_seq && (t.intr || dbg_entry)) begin
+      if (in_seq && (intr_now || dbg_entry)) begin
         seq_splits++; in_seq = 0;
         `uvm_info("GEN_SB", $sformatf("Zcmp sequence at pc %08h split by %s entry (order %0d): %0d folded micro-ops dropped",
-                                      seq_first.pc_rdata, t.intr ? "interrupt" : "debug", t.order, seq_len), UVM_LOW)
+                                      seq_first.pc_rdata, intr_now ? "interrupt" : "debug", t.order, seq_len), UVM_LOW)
       end
-      if (t.intr) begin
+      if (intr_now) begin
         // The DUT's vector names the interrupt it took (vectored mtvec: handler pc = base + 4 * cause) and the model is
         // offered exactly that bit: the record's pre_mip is sampled when the handler's first instruction is in ID,
         // after the decision, and a line released or raised in between (UNTIL_TAKEN releases the taken line at its
@@ -348,7 +356,8 @@ package gen_rvfi_pkg;
         bit nmi_vec = (t.pc_rdata >= base && cause == ibex_pkg::ExcCauseIrqNm.lower_cause);
         // an NMI-vector entry: the external pin (the record's nmi sample) outranks the internal cause, whose mtval is the
         // address of the corruption that set the DUT's pending bit (announced by the driver); the model emulates the entry
-        bit nmi_ext = nmi_vec && t.ext_nmi, nmi_int = nmi_vec && !t.ext_nmi;
+        bit nmi_pin = t.ext_nmi || nm_raised_since || nm_raised_prev;   // the pin in the record or raised inside the two-record window
+        bit nmi_ext = nmi_vec && nmi_pin, nmi_int = nmi_vec && !nmi_pin;
         logic [31:0] nmi_mtval = nmi_int ? gen_bus_err_log::take_intg() : 32'h0;
         if (t.pc_rdata >= base && cause < ibex_pkg::ExcCauseIrqNm.lower_cause) inj = 32'h1 << cause;
         entry_cause = (t.pc_rdata >= base && cause <= ibex_pkg::ExcCauseIrqNm.lower_cause) ? int'(cause) : -1;
@@ -374,7 +383,7 @@ package gen_rvfi_pkg;
         seq_note(t);
         folded++;
         bvif.evt_isa_records = compared + folded;
-        if (t.intr || dbg_entry) publish_state(t, pc_a, prv, csr_n);   // the entry stepped above must reach the checkers
+        if (intr_now || dbg_entry) publish_state(t, pc_a, prv, csr_n, intr_now);   // the entry stepped above must reach the checkers
         return;
       end
       pc_expect = t.pc_rdata; insn_expect = t.insn;
@@ -426,7 +435,7 @@ package gen_rvfi_pkg;
         gen_isa_set_pc(model_pc + 4);
         return;
       end
-      if (!t.intr && !dbg_entry) begin
+      if (!intr_now && !dbg_entry) begin
         // an ordinary record: pending bits the DUT saw and still retired past are withheld from the model when they are
         // enabled (M-mode with MIE, or U-mode), since Spike would take them before this instruction; the entry itself
         // comes with the next record's intr and its own pre_mip
@@ -464,9 +473,18 @@ package gen_rvfi_pkg;
       // a suppressed register write (a load whose response carried an integrity error, rtl/ibex_core.sv rvfi_ext_rf_wr_suppress):
       // the DUT keeps the destination's old value and raises the internal NMI; the model saw the clean word, so its write is
       // undone after the step and the rd compare is skipped for this record
-      if (t.ext_rf_wr_suppress && !is_seq) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
+      // (T-183 gate) accepted only when the data-bus driver announced a corruption for that load's word and the record's rd fields report
+      // no write (rtl/ibex_core.sv:2379-2385 clears them with rf_we); a flag without either is an isa_rd miss, never an undo
+      sup_ok = 0;
+      if (t.ext_rf_wr_suppress && !is_seq) begin
+        bit announced = gen_bus_err_log::take_intg_word(t.mem_addr);
+        sup_ok = announced && (t.rd_addr == 0);
+        if (!announced) miss("isa_rd", $sformatf("rf_wr_suppress asserted without an announced integrity corruption for %08h", t.mem_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        else if (t.rd_addr != 0) miss("isa_rd", $sformatf("rf_wr_suppress asserted but the record reports a write to x%0d", t.rd_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
+        if (sup_ok) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
+      end
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
-      if (t.ext_rf_wr_suppress && !is_seq && rd_we && rd_addr != 0) begin
+      if (sup_ok && rd_we && rd_addr != 0) begin
         gen_isa_write_gpr(rd_addr, gpr_before[rd_addr]); rf_wr_suppressed++; rd_we = 0;
       end
       compared++;
@@ -503,7 +521,7 @@ package gen_rvfi_pkg;
           if (rd_we) begin
             if (rd_addr != t.rd_addr || rd_wdata != t.rd_wdata)
               miss("isa_rd", $sformatf("rd model=x%0d/%08h dut=x%0d/%08h", rd_addr, rd_wdata, t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
-          end else if (t.rd_addr != 0 && !t.ext_rf_wr_suppress) begin
+          end else if (t.rd_addr != 0 && !sup_ok) begin
             miss("isa_rd", $sformatf("dut wrote x%0d/%08h, model wrote nothing", t.rd_addr, t.rd_wdata), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
           end
           begin
@@ -540,7 +558,8 @@ package gen_rvfi_pkg;
       // rvfi_mode is the privilege the instruction executed in, so the model's pre-step privilege is compared (both RISC-V encoded)
       if (prv_b[1:0] != t.mode)
         miss("isa_prv", $sformatf("priv model=%0d (before the step) dut mode=%0d", prv_b, t.mode), t, fld(cfg.chk_isa_prv, cfg.chk_isa_prv_set));
-      publish_state(t, pc_a, prv, csr_n);
+      publish_state(t, pc_a, prv, csr_n, intr_now);
+      nm_raised_prev = nm_raised_since; nm_raised_since = 0;
       if (cfg.sb_trace) `uvm_info("GEN_SB", $sformatf("%s | model pc=%08h->%08h retired=%0d trap=%0d", t.brief(), pc_b, pc_a, retired, trap), UVM_LOW)
     endfunction
 

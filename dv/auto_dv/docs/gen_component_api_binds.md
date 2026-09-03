@@ -12,7 +12,7 @@ id (or `uvm_fatal` where stated); `+gen_chk_<id>=0` disables exactly that checke
 ## 1. Purpose
 
 AS BUILT (landing 2b, T-162): `dv/auto_dv/tb/gen_binds.sv` binds `gen_protocol_props` into `gen_dut_top` (`bind gen_dut_top
-gen_protocol_props #(...) u_gen_protocol_props (.*, .ibus_intg_corrupt_i(gen_tb_top.u_ibus_if.intg_corrupt),
+gen_protocol_props #(...) gen_protocol_props_i (.*, .ibus_intg_corrupt_i(gen_tb_top.u_ibus_if.intg_corrupt),
 .dbus_intg_corrupt_i(gen_tb_top.u_dbus_if.intg_corrupt))`): every port of the wrapper by name plus the two bus interfaces'
 corruption flags, no DUT internal. `dv/auto_dv/tb/gen_protocol_props.sv` is rtl-arch's gen_protocol_props_draft.sv
 (T-044, companion table gen_protocol_props_table.md) kept id-for-id: 50 `P_ASSERT` properties and 20 `P_COVER` properties in
@@ -27,12 +27,28 @@ keeps ic_scr_key_valid_i high through a re-key; row sva_scrkey, 5) and MUT-N (in
 out-of-tree RTL mutants RM1 (core_busy_o On bits never rise; sva_st, 545), RM2 (rvfi_halt on every record; sva_rvfi, 169)
 and RM3 (data_tag_o high; sva_dbus, 545), each with its group knob's ablation PASS. The plan's ids `gen_sva_ibus` /
 `gen_sva_dbus` map to the groups `sva_ibus` / `sva_dbus`. The checker knobs `chk_ibus_proto`, `chk_ibus_outstanding`,
-`chk_dbus_proto`, `chk_dbus_outstanding`, `chk_dbus_split`, `chk_dbus_store_intg` and `chk_isa_csr` stay rendered without
-a consumer (their rules are the agents' and the comparator's, not this home's).
+`chk_dbus_proto`, `chk_dbus_outstanding`, `chk_dbus_split`, `chk_dbus_store_intg` and `chk_isa_csr` stay rendered without a consumer (their rules are the agents' and the comparator's, not this home's; the split rule in
+particular has no checker, see the landing-2c paragraph below).
 
 The one file that contains every `bind`: protocol SVAs on the wrapper's ports (assertion
 coverage), coverage modules, and the approved probe monitors. No bind forces or drives a DUT net;
 error injection is entirely at the boundary.
+
+AS BUILT (landing 2c): the instance is `gen_protocol_props_i` (paths `gen_tb_top.u_dut.gen_protocol_props_i.sva_*`,
+CR-2B-L-7); the group knobs are read from `gen_tb_pkg::PLUSARG_CHK_SVA_*` and `PLUSARG_CHK_ALL` (`chk_en(name)`, CR-2B-L-6);
+the icram widths are the parameters `TagSizeECC` / `LineSizeECC` the bind passes from gen_dut_top (CM43-L-1);
+`sva_alert_minor_window` uses `ICACHE_ECC_WINDOW`, bound to `GEN_ICACHE_ECC_WINDOW`, raised from 1 to 2 in gen_tb_knobs.yaml
+with the reason (the RAM read lands one cycle after the request and the alert one cycle after the check; landing 2b measured
+1 or 2), so the misc checker and the SVA share one window (CR-2B-L-5, CM43-M-1; no icram ECC injection exists, so no run
+shows the tighter window biting: stated in gen_mut_step2b.md); the header cites rtl-arch's tracked anchor file instead of
+the untracked draft path and the landing tag (CM43-L-6); dcsr's prv field is read through `GEN_DCSR_PRV_BIT_LOW` /
+`GEN_DCSR_PRV_BIT_HIGH` (CM43-L-3). The split rule (the second half's address and byte enables) has no checker of its own:
+the two draft asserts are covers in gen_protocol_props.sv, listed in its header's exception list, and the rule is covered
+only by the lock-step compare of the loaded or stored value (CR-2B-L-4). Mutation evidence for the four groups without one
+in 2b (CR-2B-M-2), gen_mut_step2b.md: MS-ICRAM (out-of-tree RTL mutant of rtl/ibex_icache.sv, the tag request dropped on
+the allocation write; sva_icram, 397), MS-IRQ (an X on irq_timer_i for one record; sva_irq, 2), MS-DBG (an X on debug_req_i
+for one record; sva_dbg, 2), MS-ALERT (out-of-tree RTL mutant of rtl/ibex_core.sv, alert_major_internal_o tied high;
+sva_alert, 2851), each with its group knob's ablation PASS.
 
 ## 2. Files and how to call it
 

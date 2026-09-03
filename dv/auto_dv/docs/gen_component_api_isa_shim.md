@@ -143,3 +143,14 @@ tdata1 from debug mode + dret + execute trigger, cm.push with one `log_mem_write
 misaligned `mmio_store` (byte split, mtval override; the shim itself does not yet implement the rule,
 Section 4a). Still before coding: verify grevi/gorci non-alias
 decode; write the C5.3a/C5.3b tables into this document as rows with an RTL cite and a test each (R-2).
+
+## Recoverable-NMI stack convention (landing 2c, CR8 fu2a L-3)
+
+The shim keeps one `mstack` (MPIE, MPP, mepc, mcause) as the RTL does (rtl/ibex_cs_registers.sv:921-935): it is pushed on EVERY
+exception entry outside debug mode, the emulated NMI entry included, from the CSR values before that entry. An mret executed while
+in NMI mode restores MPIE / MPP / mepc / mcause from the stack and leaves NMI mode (rtl :967-974, rtl/ibex_controller.sv:954-960);
+an mret outside NMI mode is Spike's. So a trap nested inside the NMI handler pushes the NMI's own context, and the nested trap's
+mret (the first mret) restores that context and ends NMI mode while jumping to the nested trap's mepc (back into the handler); the
+handler's own mret is then a plain one. Unit test section 12b holds the case (red on the entry-only push: 6 failures,
+gen_fu_l7_ut_isa_shim_red_nested.log; green gen_fu_l7_ut_isa_shim.log). The irq checker exits NMI mode by depth, which is lenient
+toward the bound and does not enter the compare.

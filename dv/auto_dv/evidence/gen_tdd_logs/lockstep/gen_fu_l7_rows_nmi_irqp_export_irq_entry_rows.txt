@@ -1,0 +1,3 @@
+# the misc irq_entry rows of scratch wit_root dv/auto_dv/work/tb-infra/wit/w/rows_nmi_irqp/gen_export.txt (2 rows)
+# events misc irq_entry order,cause,decidable
+E 3e1 misc irq_entry ca 1f 1

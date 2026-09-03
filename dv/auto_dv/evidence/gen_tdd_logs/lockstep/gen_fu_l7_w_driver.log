@@ -1,0 +1,32 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+start 21:58:46Z sources sha256: e287c87e3fdf8a97
+ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_witness_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_fetch_en: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_muldiv_nofcov: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_dummy_popret: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=9408
+ut_isa_cov_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_irq_dir: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm_nmi: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+intg_s7_allchk: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+rows_nmi_irqp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 21:59:21Z
+storm_nmi_s2: verdict: PASS  nmi_preempted=0 irq_entries=178
+storm_nmi_s3: verdict: PASS  nmi_preempted=0 irq_entries=192
+storm_nmi_s4: verdict: PASS  nmi_preempted=0 irq_entries=178
+storm_nmi_s5: verdict: PASS  nmi_preempted=0 irq_entries=167
+storm_nmi_s6: verdict: PASS  nmi_preempted=0 irq_entries=189

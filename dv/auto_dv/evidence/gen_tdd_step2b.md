@@ -207,21 +207,24 @@ reds included) and gen_fu_l_* (the landed tree's set).
   to gen_agents_pkg. Red first on build out_fu2/j (gen_fu_j_red_ut_irq_two_entries_*): gen_ut_irq's two-line mask fast14 +
   fast0 requires two entries, the second was never taken (`entry 2 of fast14+fast0 not taken within 4000 cycles`); green
   in the copy (entry 1 at cycle 2738, entry 2 at 2749, 6 entries, 0 mismatches). Consequences measured on the storm run:
-  `expectations released` 415 -> 0; and at the old storm mean of 20 cycles the program livelocked (4196 of 4550
-  retirements were entries, 353 loop records in 45k cycles; build l2/c export), so `regime_windows.irq_event_mean.storm`
+  `expectations released` 415 -> 0 in the multi-line storm (the with-NMI storm and rows_nmi still release, 47 and 1 on the
+  landed build: an NMI pulse is a one-cycle hold released before its entry record exists; CR8 fu2a L-1); and at the old storm
+  mean of 20 cycles the program livelocked (the retained l2/c red shows the timeout only; the entry and loop-record counts
+  once quoted here had no retained log and are withdrawn, CR8 fu2a L-2), so `regime_windows.irq_event_mean.storm`
   is 100 (an entry every ~30 cycles; 573 entries in 3588 records, 0 mismatches). The irq checker's bound restarts at every
   entry: a lower-priority line legitimately waits while higher ones keep being taken (43 false bound failures on l2/b).
 - Shim NMI emulation: unit test sections 10-12 (external entry with MIE / MPIE / MPP / mepc / mtval and the mstack restore
   on mret, internal entry with mtval, an NMI nested in a trap handler) red 16 failures (gen_fu_l2_ut_isa_shim_red_nmi.log)
   then green 204 OK (gen_fu_l2_ut_isa_shim_green_nmi.log). The scoreboard arms the entry from the record's vector and
   `ext_nmi` sample; the DPI argument `taken_cause` (unused) became `nmi_mtval`. Green: rows_nmi with the isa rows ON (1
-  entry, 0 mismatches), the with-NMI storm (175 entries, 1 NMI, 0 mismatches; on l2/c with the old mean 1850 entries, 35
-  NMIs, 0 mismatches), the integrity run with EVERY checker and isa row on (gen_fu_l2_intg_s7_allchk_*: 54 internal NMIs
+  entry, 0 mismatches), the with-NMI storm (175 entries, 1 NMI, 0 mismatches; the l2/c figures once quoted here for the old mean had no retained log and are
+  withdrawn, CR8 fu2a L-2), the integrity run with EVERY checker and isa row on (gen_fu_l2_intg_s7_allchk_*: 54 internal NMIs
   accepted, 0 cause mismatches, 0 nmi_internal bound failures, 83 suppressed loads mirrored, 0 mismatches). Two comparator
   rules the runs demanded: (1) an interrupt entry the NMI pre-empts before its handler retires anything has no record of
   its own (the NMI's mepc points into the handler), so the record after the NMI entry that sits at a vector address without
-  `rvfi_intr` is that entry and the model takes it there (`nmi_preempted`, 2 in the l2/c storm; 6053 misses without the
-  rule); (2) a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress` and the DUT keeps the
+  `rvfi_intr` is that entry and the model takes it there (`nmi_preempted`; no retained run shows it above 0, landing 2c's six-seed with-NMI storm sweep included, so the rule
+  stands on its derivation, CR8 fu2a L-2 / CM25-M-1; the miss count once quoted for the rule-less build is withdrawn with the
+  other unretained figures); (2) a load whose response carried an integrity error retires with `rvfi_ext_rf_wr_suppress` and the DUT keeps the
   destination's old value, so the model's write is undone from a GPR snapshot taken before the step (decoding rd from the
   compressed form is what a first attempt got wrong: 3309 misses; 1560 before the rule).
 - nmi_internal: an announced corruption (the announcement now carries the address, `note_intg(addr)` / `take_intg()`) must
@@ -341,8 +344,9 @@ ea8cfe1aa2865c30 (T-179 red), wit/b 8d5824cba05661e5 (a second red), wit/c 242f0
   with identical counts and an unchanged source tree (mut_l2b_rm_rerun.log). Only the re-run is cited.
 - T-179, COV_WITNESS (CG-WIT-001): red on wit/a, the command in the yaml and the covergroup package present but no
   dispatcher route: gen_ut_witness FAIL `command COV_WITNESS has no consumer yet` (gen_fu_l2b_a_ut_witness_*). Second red on
-  wit/b after the route: `the first witness (TP-BIT-036) counts 2 distinct bins, expected 1` and a `wit_referee` error in
-  every run: an `int` cast of a real rounds to nearest, so the `+ 0.5` in the distinct-bin formula double-rounded (0 read as
+  wit/b after the route: `the first witness (TP-BIT-036) counts 2 distinct bins, expected 1` and a `wit_referee` error in the retained gen_fu_l2b_b_boot_zc_* run (in gen_fu_l2b_b_ut_witness_* the cocotb assertion
+  failed first, so that log has no UVM_ERROR line; lockstep_zc and the foreign fixture showed the referee only in the driver
+  log, CR-2B-L-3): an `int` cast of a real rounds to nearest, so the `+ 0.5` in the distinct-bin formula double-rounded (0 read as
   1, 1 as 2; gen_fu_l2b_b_ut_witness_*, gen_fu_l2b_b_boot_zc_*). Green on wit/c and e: gen_ut_witness counts 1, 1, 2
   (`GEN_WIT witnesses=3 distinct=2 covergroup=2`), gen_ut_witness with `+gen_fcov_en=0` PASS on the bookkeeping path,
   gen_ut_witness_foreign FAILS by design (`GEN_WITNESS_FOREIGN COV_WITNESS TP-BIT-036 (index 0) belongs to
@@ -368,6 +372,62 @@ ea8cfe1aa2865c30 (T-179 red), wit/b 8d5824cba05661e5 (a second red), wit/c 242f0
   stale take() comment removed; CM33-L-2: CAUSE_LOAD_ACCESS in shim unit test section 13; CM25-L-1: the two false comments
   at the interrupt-entry arming rewritten), out_l2b_final (sources sha256 f7289c6b83086cd2; gen_fu_l2b_final_*: boot_zc,
   lockstep_zc, ut_witness, ut_fetch_en, dmem_err_dir, lockstep_s7_dbg_storm PASS, codegen --check up to date, shim unit test
-  PASS). The mutants above were built from wit/e's sources; the three edits do not enter any rule.
+  PASS). MUT-M, MUT-N and RM1..RM3 were built from the l2b/a sources (68a36e6ac32db967, 17:35-17:42Z) and WM1 from the wit_root copy at
+  17:48Z, all before wit/e's compile (17:53Z); the three edits between those sources and wit/e do not enter any rule (CR-2B-L-2).
+  The `source tree untouched` line of an out-of-tree batch is the sha256 (first 16 hex) of the SHARED tree's
+  dv/auto_dv/env/gen_rvfi_pkg.sv (TB-side batches) or of rtl/ibex_core.sv, rtl/ibex_load_store_unit.sv and
+  dv/auto_dv/env/gen_agents_pkg.sv (RTL batches), read after the runs: it shows the tree was not written, and the mutated
+  file's identity is the `applied to ... original sha256` line of the same batch.
 - Scope note (LOG-046, T-205): the misc rules and dbg_dret were re-scoped to landing 2c while this landing was already built
   and proven; they land here as built rather than being held back, so that the next windows can go to the covergroups.
+
+## 11. Landing 2c: the suppressed-write gate (T-183), the irq checker's per-line and end-of-run rules, the NMI window, the SVA fixes, the shim's stack
+
+Builds (wit_root, out of tree): u b7b1b3fe53bc65ec (first green with the gate, the local `intr_now` flag, the two-record NMI window,
+the debug suspension, the decidability row, the SVA fixes), v cf73fd8a625e89a8 (the per-line expectation release), w e287c87e3fdf8a97
+(final: the shim's stack push and unit test section 12b). Retained as gen_fu_l7_* (gen_manifest.md rows; the per-file source list of
+build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every rule below names its red and its green.
+
+- T-183 gate (gen_rvfi_pkg.sv): `rvfi_ext_rf_wr_suppress` is accepted only when `gen_bus_err_log::take_intg_word(mem_addr)` finds an
+  announced corruption of the load's word and the record reports no destination write; otherwise an `isa_rd` miss. Reds MUT-SUP,
+  MUT-SUPB (the flag on one clean load of the Zc / Zcb images) and MUT-SUP2 (the announced address off by 0x100), ablations PASS
+  (gen_mut_step2b.md). Green gen_fu_l7_intg_s7_allchk_*: 83 suppressed loads accepted, 54 internal NMIs, 0 mismatches, every checker
+  and isa row on. The s7 image cannot carry the clean-load red: its first 6000 records retire no load
+  (gen_fu_l7_s7_trace_opcode_summary.txt).
+- irq checker (gen_checkers_pkg.sv): an entry clears only the taken line of each expectation and restarts the others' bound; a line
+  raised, enabled and still held at report that was never taken is an error at report. Reds MUT-NT (31 per-line bound errors; the same
+  mutant PASSED both runs before the per-line rule) and MUT-NT2 (the end-of-run rule, simulator seed 3: `still held and enabled at the
+  end of the run, never taken`), ablations PASS. Greens gen_fu_l7_lockstep_irq_storm_* (573 entries, 0 mismatches), _irq_storm_nmi_*,
+  _ut_irq_dir_*, _rows_nmi_irqp_*. The `misc irq_entry order,cause,decidable` row: 573 rows in the storm, 1 in rows_nmi
+  (gen_fu_l7_*_export_irq_entry_rows.txt). The first build with the row FATALed at time 0 in every run (`row misc irq_entry emitted by
+  an unregistered writer`) until the checker registered it in end_of_elaboration_phase: the sink's T-141 rule catching a missing
+  registration, recorded as an incidental red of that rule.
+- nmi_internal: records in debug mode are not counted; the bound is TB-side (4). Red MUT-NIB (the bound at 0: 54 errors, one per
+  announcement; at 1 none, so the observed latency is exactly 1 record), ablation PASS. Greens gen_fu_l7_lockstep_s7_dbg_storm_*,
+  _intg_s7_allchk_*.
+- NMI classification and the pre-empt rule (gen_rvfi_pkg.sv): the scoreboard subscribes to the irq driver's events (`imp_irq`) and
+  classifies external from the pin sample or a raise of the NM line in the current or previous record's window; the pre-empt rule
+  works on a local `intr_now`, the monitor's transaction untouched. Greens gen_fu_l7_lockstep_irq_storm_nmi_* and
+  gen_fu_l7_storm_nmi_s2..s6_* (six simulator seeds); every one reports `nmi_preempted=0`, so the pre-empt rule has NO red and no
+  observed case: it stands on its derivation until a directed raise-then-NMI timing sequence exists (not built).
+- Protocol SVAs (gen_protocol_props.sv): widths from `TagSizeECC` / `LineSizeECC`, `sva_alert_minor_window` on `ICACHE_ECC_WINDOW`
+  (GEN_ICACHE_ECC_WINDOW 1 -> 2 with the reason), knob names from `PLUSARG_CHK_SVA_*` / `PLUSARG_CHK_ALL`, dcsr's prv through
+  `GEN_DCSR_PRV_BIT_LOW/HIGH`, the header on the tracked anchors, the two split rows covers. Greens boot_zc and lockstep_zc with all
+  nine groups on (gen_fu_l7_boot_zc_*, _lockstep_zc_*); reds MS-ICRAM (397), MS-IRQ (2), MS-DBG (2), MS-ALERT (2851), each with its
+  group knob's ablation PASS (gen_mut_step2b.md; the ibex_top.sv form of MS-ALERT was inert and is recorded, not counted).
+- Shim (gen_isa_shim.cc): the mstatus shifts derived from the MSTATUS_* masks and the NMI causes named once in gen_isa_shim_map.h;
+  the recoverable-NMI stack pushed on every exception entry outside debug mode. Unit test section 12b (a trap nested inside the NMI
+  handler) red on the pre-2c shim, 6 failures (gen_fu_l7_ut_isa_shim_red_nested.log), green on the landing shim
+  (gen_fu_l7_ut_isa_shim.log, stamped with date, shim and test sha256, image). DUT-level greens: the with-NMI storm and the integrity
+  run above.
+- Witness covergroup `option.weight = 0` (CR-2B-L-1): greens gen_fu_l7_ut_witness_*, _ut_witness_nofcov_*; the referee's red WM2
+  (the bookkeeping mutant; the referee the only catcher, the unit test's own asserts PASS).
+- cm.popret under dummy instructions (B8): gen_zcmp_dummy_popret_directed.S red by design, 9408 errors, first `Zcmp union: x2
+  model=800003b0 dut=800003d0` at order 38 (gen_fu_l7_lockstep_zcmp_dummy_popret_*): the DUT's popret sequence under
+  `dummy_instr_en` diverges from the fold; the dummy-in-expansion assertion waits for the C10 ruling (probe bind with a knob, or text
+  only) and is NOT built; the program is retained as its vehicle.
+- Provenance: the mutants were built from the wit_root copy between builds v and w; the edits between them (the shim's stack push,
+  unit test 12b, documents) enter none of the mutated rules. Regressions on w: gen_fu_l7_lockstep_muldiv_nofcov_*,
+  _ut_isa_cov_zc_*, _ut_fetch_en_*, all PASS; codegen `--check` up to date for the knobs and the fcov renderer.
+- Not built: the NMI-pre-empt red (above), the B8 assertion (ruling), an icram ECC injection (CM43-M-1's red impossible without it),
+  the in-run mcounteren_writable command (WP-10, dv-lead).

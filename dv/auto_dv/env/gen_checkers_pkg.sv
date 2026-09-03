@@ -29,6 +29,8 @@ package gen_checkers_pkg;
     gen_env_cfg cfg;
     uvm_analysis_imp_state #(gen_model_state, gen_irq_checker) imp_state;
     uvm_analysis_imp_evt   #(gen_irq_evt, gen_irq_checker)     imp_evt;
+    gen_export_sink sink;   // E misc irq_entry lines: per-entry priority decidability for the fire checks (CM25-L-3)
+    int unsigned never_taken = 0;
     // model mie history: (effective DUT cycle, value); the compare of cycle c uses the last entry <= c
     typedef struct { int unsigned eff_cycle; logic [31:0] mie; } mie_upd_t;
     mie_upd_t mie_hist [$];
@@ -72,6 +74,10 @@ package gen_checkers_pkg;
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_IRQ_CHK", "cfg not in uvm_config_db")
       mie_hist.push_back('{0, 32'h0});   // reset value
     endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);   // the sink requires every emitted row to be announced (T-141)
+      super.end_of_elaboration_phase(phase);
+      if (sink != null) sink.register_row("misc", "irq_entry");
+    endfunction
 
     function logic [31:0] mie_at(int unsigned c);
       logic [31:0] v = 32'h0;
@@ -103,8 +109,12 @@ package gen_checkers_pkg;
         // the entry clears the expectations that named the taken line (or the NMI); the others stay, and their bound
         // restarts here: a lower-priority line legitimately waits while higher ones keep being taken (the priority rule
         // above judges each entry), so the bound measures the quiet time after the last entry
-        foreach (expects[i]) if (!((is_nmi && expects[i].nmi) || (line >= 0 && expects[i].lines[line]))) begin
-          expects[i].order_at = st.order; keep.push_back(expects[i]);
+        // per line: the entry satisfies the taken line (or the NMI) of an expectation and leaves its other lines pending with a
+        // restarted bound, so a line raised together with a taken one is still owed its own entry (CR8-M-5)
+        foreach (expects[i]) begin
+          if (is_nmi) expects[i].nmi = 0;
+          if (line >= 0) expects[i].lines[line] = 1'b0;
+          if (expects[i].lines[17:0] != 0 || expects[i].nmi) begin expects[i].order_at = st.order; keep.push_back(expects[i]); end
         end
         expects = keep;
         // irq_masked: an entry while M-mode with MIE clear and not an NMI (the state BEFORE the entry)
@@ -136,7 +146,7 @@ package gen_checkers_pkg;
       else if (nmi_mode && (st.is_trap || st.is_intr)) nmi_depth++;
       else if (nmi_mode && st.is_mret && !st.is_trap) begin if (nmi_depth > 0) nmi_depth--; else nmi_mode = 0; end
       if (!intg_wait && gen_bus_err_log::intg_announced > intg_at_last) begin intg_wait = 1; intg_wait_order = st.order; intg_wait_records = 0; end
-      else if (intg_wait && !nmi_mode) begin
+      else if (intg_wait && !nmi_mode && !st.debug_mode) begin   // handle_irq is closed in debug mode (rtl/ibex_controller.sv:498): not counted
         intg_wait_records++;
         if (intg_wait_records > GEN_NMI_INT_ENTRY_BOUND_RECORDS) begin
           nmi_internal_fail++; intg_wait = 0;
@@ -170,6 +180,8 @@ package gen_checkers_pkg;
       // no known level at the decision: it makes no priority claim and is counted instead
       both = last_st.post_mip & st.pre_mip & last_st.mie & ~changed;
       if ((last_st.post_mip & st.pre_mip & last_st.mie & changed) != 0) priority_undecidable++;
+      if (sink != null && sink.source_on("misc") && st.is_intr && st.entry_cause >= 0)   // per-entry decidability, for a priority item's fire check
+        sink.write_event(gen_export_line_misc_irq_entry(sink.cycle(), st.order[31:0], st.entry_cause[4:0], ((last_st.post_mip & st.pre_mip & last_st.mie & changed) == 0)));
       // the NMI pin in either record sample or a driver raise (the record's own internal-NMI level is the DUT's
       // self-report and counts for nothing; the injected corruption is the evidence for an internal NMI)
       nmi_either = last_st.nmi_pend || st.nmi_pend || nmi_r_win;
@@ -239,7 +251,19 @@ package gen_checkers_pkg;
         end
       end
     endtask
+    // end of run (CR8-M-5): a line raised, still held and enabled at the end, never taken, is an error; the per-entry bound above restarts at
+    // every entry, so under a storm a starved line would otherwise never be flagged
     function void report_phase(uvm_phase phase);
+      if (have_st) foreach (expects[i]) begin
+        bit still = 0; logic [17:0] pins = vif.lines();
+        for (int l = 0; l < 18; l++) if (expects[i].lines[l] && pins[l] && last_st.mie[gen_irq_mie_bit(l)]) still = 1;
+        if (expects[i].nmi) still = vif.nm;
+        if (still && (expects[i].nmi || last_st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || last_st.prv != ibex_pkg::PRIV_LVL_M) && !last_st.debug_mode) begin
+          never_taken++;
+          if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, expects[i].nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
+            `uvm_error(expects[i].nmi ? "nmi_entry" : "irq_entry", $sformatf("lines %05h raised at cycle %0d (order %0d) still held and enabled at the end of the run, never taken (last order %0d)", expects[i].lines, expects[i].cycle, expects[i].order_at, last_st.order))
+        end
+      end
       `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d",
                 checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail), UVM_LOW)
     endfunction
@@ -273,7 +297,7 @@ package gen_checkers_pkg;
       // a request held through the dret re-enters debug first and that record is the debug ROM's, judged by the entry rule)
       if (have_st && dret_q && !st.debug_mode) begin
         dret_checked++;
-        if (st.pc_rdata != dpc_q || st.mode != dcsr_q[1:0]) begin
+        if (st.pc_rdata != dpc_q || st.mode != dcsr_q[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW]) begin
           dret_fail++;
           if (gen_chk_en(cfg, cfg.chk_dbg_dret, cfg.chk_dbg_dret_set))
             `uvm_error("dbg_dret", $sformatf("record after dret (order %0d): pc %08h mode %0d, dpc %08h dcsr.prv %0d", st.order, st.pc_rdata, st.mode, dpc_q, dcsr_q[1:0]))

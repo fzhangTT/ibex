@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: assertion_failure at sim.log:34
+evidence: 	Offending '(!$isunknown({irq_software_i, irq_timer_i, irq_external_i, irq_fast_i, irq_nm_i}))'
+uvm_counts: {'INFO': 24, 'WARNING': 0, 'ERROR': 2, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

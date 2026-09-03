@@ -1,0 +1,14 @@
+# opcode mix of the s7 image's first 6001 records (+gen_rvfi_trace=1 on build v): no load opcode (op03, c.lw, c.lwsp) appears
+c1 1889
+op23 1873
+op17 1844
+op13 126
+op33 114
+op73 50
+op37 43
+c2 27
+op63 14
+c0 10
+op0f 5
+op6f 3
+op67 3

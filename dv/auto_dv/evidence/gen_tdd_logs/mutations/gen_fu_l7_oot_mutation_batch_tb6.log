@@ -1,0 +1,8 @@
+MUTSUP applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTSUP/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MUTSUP_catch_zc: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(258) @ 152500: uvm_test_top.env.sb [isa_rd] rf_wr_suppress asserted without an announced integrity corruption for 8000039c (order=21 pc=800000ba insn=00004e32 trap=0 intr=0 rd=x28
+MUTSUP_ablate_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTSUP: build sources sha256: 10863e69cb52366a; source tree untouched: cc8bc78d76a57505
+MUTSUPB applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTSUPB/dv/auto_dv/tb/gen_tb_top.sv; original sha256 ef7c9a9e1193794b
+MUTSUPB_catch_zcb: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(258) @ 113500: uvm_test_top.env.sb [isa_rd] rf_wr_suppress asserted without an announced integrity corruption for 80000200 (order=11 pc=8000009e insn=00008014 trap=0 intr=0 rd=x13
+MUTSUPB_ablate_zcb: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+MUTSUPB: build sources sha256: dc49aa2390fce38a; source tree untouched: cc8bc78d76a57505

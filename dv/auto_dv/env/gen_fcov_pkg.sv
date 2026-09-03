@@ -17,6 +17,7 @@ package gen_fcov_pkg;
   // type-based: urg reports gen_wit_cycle_clause_cg.cp_clause.<bin>, the names the fcov manifests carry
   covergroup gen_wit_cycle_clause_cg with function sample(int unsigned idx);
     option.per_instance = 0;
+    option.weight = 0;   // ledger bins, excluded from the score (Runtime excludes the group by name as the mechanism of record)
     cp_clause: coverpoint idx { `GEN_WIT_BINS }
   endgroup
 

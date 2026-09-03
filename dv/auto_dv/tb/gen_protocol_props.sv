@@ -1,10 +1,11 @@
-// gen_protocol_props.sv: the DUT-boundary protocol SVA layer bound into gen_dut_top by dv/auto_dv/tb/gen_binds.sv (C10, T-162).
-// Source: rtl-arch's gen_protocol_props_draft.sv (dv/auto_dv/work/rtl-arch, T-044) with its companion table
-// gen_protocol_props_table.md, kept id-for-id except: the four properties that read DUT internals (sva_irq_pending_comb,
+// gen_protocol_props.sv: the DUT-boundary protocol SVA layer bound into gen_dut_top by dv/auto_dv/tb/gen_binds.sv (C10).
+// Source: rtl-arch's property table (the anchors in dv/auto_dv/evidence/gen_cg_sampling_anchors.md and the protocol rows it
+// cites), kept id-for-id except: the four properties that read DUT internals (sva_irq_pending_comb,
 // sva_dbg_entry_bound, sva_dbg_entry_seen, sva_dbg_req_withdrawn) are not bound (probe register; the irq and debug checkers
 // hold those rules at the boundary), the integrity rows take the bus interfaces' intg_corrupt flags instead of a static
 // parameter, every property reports through uvm_report_error under its own id, and the knobs are per group
-// (+gen_chk_sva_<group>, +gen_chk_all precedence) rather than per property. Nothing here drives or forces a DUT net.
+// (+gen_chk_sva_<group>, +gen_chk_all precedence) rather than per property; the two split-address rows are covers (below). Nothing here
+// drives or forces a DUT net.
 module gen_protocol_props
   import ibex_pkg::*;
   import prim_secded_pkg::*;
@@ -85,16 +86,17 @@ module gen_protocol_props
   // Knobs per property group: +gen_chk_sva_<group>=0|1 wins over +gen_chk_all=0|1; default enabled (both names are
   // declared plusargs of gen_tb_knobs.yaml, so gen_base_test's unknown-plusarg fatal does not see them).
   // ------------------------------------------------------------------------------------------------
-  function automatic bit chk_en(string grp);
+  function automatic bit chk_en(string name);   // name = the declared plusarg (gen_tb_pkg PLUSARG_CHK_SVA_*, the constants home)
     int unsigned v;
-    if ($value$plusargs({"gen_chk_sva_", grp, "=%d"}, v)) return (v != 0);
-    if ($value$plusargs("gen_chk_all=%d", v))              return (v != 0);
+    if ($value$plusargs({name, "=%d"}, v)) return (v != 0);
+    if ($value$plusargs({gen_tb_pkg::PLUSARG_CHK_ALL, "=%d"}, v)) return (v != 0);
     return 1'b1;
   endfunction
   bit en_st = 1'b1, en_ibus = 1'b1, en_dbus = 1'b1, en_icram = 1'b1, en_scrkey = 1'b1, en_irq = 1'b1, en_dbg = 1'b1, en_alert = 1'b1, en_rvfi = 1'b1;
   initial begin
-    en_st = chk_en("st"); en_ibus = chk_en("ibus"); en_dbus = chk_en("dbus"); en_icram = chk_en("icram"); en_scrkey = chk_en("scrkey");
-    en_irq = chk_en("irq"); en_dbg = chk_en("dbg"); en_alert = chk_en("alert"); en_rvfi = chk_en("rvfi");
+    en_st = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_ST); en_ibus = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_IBUS); en_dbus = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_DBUS);
+    en_icram = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_ICRAM); en_scrkey = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_SCRKEY); en_irq = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_IRQ);
+    en_dbg = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_DBG); en_alert = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_ALERT); en_rvfi = chk_en(gen_tb_pkg::PLUSARG_CHK_SVA_RVFI);
   end
   int unsigned cycle;
   always_ff @(posedge clk_i or negedge rst_ni) if (!rst_ni) cycle <= 0; else cycle <= cycle + 1;
@@ -203,7 +205,8 @@ module gen_protocol_props
   // (dbus_outstanding == 1 excludes a single byte access at offset 3, whose be 1000 equals a split first half)
   // The split rows are covers, not asserts: at the boundary a byte or half-word access at offset 2 or 3 (be 1100 / 1000)
   // is indistinguishable from a split's first half, and a pipelined unrelated request may follow it with one
-  // outstanding, so the assert form fired on legal traffic (landing 2b); the split rule belongs to the dbus_split checker.
+  // outstanding, so the assert form fired on legal traffic (landing 2b). No TB checker owns the second-half address / byte-enable rule:
+  // it is covered by the lock-step compare of every split access's data and by these covers (the chk_dbus_split knob has no consumer).
   `P_COVER(sva_dbus_split_second_addr, data_req_o && dbus_first_half_pending && (dbus_outstanding == 1) && data_addr_o == dbus_first_addr + 32'd4)
   `P_COVER(sva_dbus_split_second_be,   data_req_o && dbus_first_half_pending && (dbus_outstanding == 1) &&
                                           ((dbus_first_be == 4'b1110 && data_be_o == 4'b0001) ||
@@ -233,7 +236,7 @@ module gen_protocol_props
   `P_ASSERT(icram, sva_icram_data_rdata_after_read, ((|ic_data_req_o) && !ic_data_write_o) |=>
                                              !$isunknown(ic_data_rdata_i[0]) && !$isunknown(ic_data_rdata_i[1])) // TB
   initial begin : sva_icram_widths                                                                    // DUT (static)
-    assert ($bits(ic_tag_wdata_o) == 28 && $bits(ic_data_wdata_o) == 78)
+    assert ($bits(ic_tag_wdata_o) == TagSizeECC && $bits(ic_data_wdata_o) == LineSizeECC)   // gen_dut_top's TagSizeECC / LineSizeECC
       else `GEN_PROTO_ERROR("sva_icram_widths");
   end
   `P_COVER(sva_icram_alloc_write,       ic_tag_write_o && (ic_tag_req_o inside {2'b01, 2'b10}))       // one-way allocation write
@@ -267,7 +270,7 @@ module gen_protocol_props
   `P_ASSERT(alert, sva_alert_internal_never,   !alert_major_internal_o)                                      // DUT (legal stimulus, RegFileECC=0)
   `P_ASSERT(alert, sva_alert_bus_iff_intg,     alert_major_bus_o == ((instr_rvalid_i && instr_rdata_bad) ||
                                                               (data_rvalid_i  && data_rdata_bad)))    // DUT (exact, same cycle)
-  `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> $past(icram_lookup_read, 1) || $past(icram_lookup_read, 2)) // DUT (windowed)
+  `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> $past(icram_lookup_read, 1) || $past(icram_lookup_read, ICACHE_ECC_WINDOW)) // DUT (windowed: 1..ICACHE_ECC_WINDOW = 2 cycles from the lookup, GEN_ICACHE_ECC_WINDOW)
   `P_ASSERT(alert, sva_alerts_known,           !$isunknown({alert_minor_o, alert_major_internal_o, alert_major_bus_o})) // DUT
   `P_COVER(sva_alert_bus_seen,          alert_major_bus_o)
   `P_COVER(sva_alert_minor_seen,        alert_minor_o)

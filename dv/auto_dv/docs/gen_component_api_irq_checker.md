@@ -17,7 +17,7 @@ the RVFI stream; checks the internal NMI from injected LSU integrity errors. AS 
 rules): `gen_checkers_pkg::gen_irq_checker` consumes the scoreboard's `gen_model_state` (mie / mstatus / mcause / prv /
 debug per record, published after every compared record) and the driver's `gen_irq_evt`: `irq_pending` (every cycle,
 evaluated GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 cycles later against the driven pins and the model's mie history),
-`irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records), `irq_masked`
+`irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records; an entry satisfies only the taken line of a raise group and restarts the bound of the lines raised with it, and a line still held and enabled at the end of the run that was never taken is an error at report, CR8-M-5, landing 2c), `irq_masked`
 (an interrupt entry while M-mode with MIE clear); `nmi_internal` (an internal NMI entry not backed by an announced data-side corruption, or later than its bound).
 
 Cause rule (T-136, ids `irq_entry` / `nmi_entry`, built after the first storm program showed the model following the
@@ -52,11 +52,9 @@ measures the quiet time after the last entry), and a driver release voids the ex
 (`expectations released`): a pulse the DUT never sampled owes no entry.
 
 `nmi_internal` (landing 2a): an announced data-side integrity corruption (gen_bus_driver, `gen_bus_err_log::note_intg(addr)`)
-must produce the internal NMI entry within `GEN_NMI_INT_ENTRY_BOUND_RECORDS` (yaml constant, 4; observed 2-3) records spent
-outside NMI mode; NMI mode runs from an NMI-vector entry to the executed mret that closes it (nested traps inside it counted
+must produce the internal NMI entry within `GEN_NMI_INT_ENTRY_BOUND_RECORDS` (a TB-side bound: yaml constant 4, tuned on the DUT; the landing-2c integrity run shows exactly 1 record between the announcement and the entry: mutant MUT-NIB with the bound at 0 fires on all 54 announcements and at 1 fires on none; the RTL path is the pending bit set at the response and taken at the next handle_irq window) records spent outside NMI mode and outside debug mode (handle_irq excludes debug mode, rtl/ibex_controller.sv:498, so debug-mode records are not counted, CM25-L-2); NMI mode runs from an NMI-vector entry to the executed mret that closes it (nested traps inside it counted
 by depth, rtl/ibex_controller.sv:391-430, :958-960). The entry's legitimacy is the acceptance rule above; its mcause
-(0xFFFFFFE0) and mtval (the address of the corruption that set the DUT's pending bit, `take_intg()`) are compared by the
-model, which emulates the NMI entry (gen_component_api_isa_shim.md). Mutant MB12 (a corruption announced but not injected)
+(0xFFFFFFE0) and mtval (the address of the corruption that set the DUT's pending bit, `take_intg()`) are not this checker's rule: they reach the compare only through the shim's NMI emulation and the program's later CSR reads (the shim rows of gen_component_api_isa_shim.md; CR8 fu2a L-5). This checker holds the legitimacy and the bound. Mutant MB12 (a corruption announced but not injected)
 fires the bound; the integrity run with every checker on (gen_fu_l2_intg_s7_allchk_*) shows 54 internal NMIs accepted, 0
 cause mismatches, 0 bound failures. Mutation MB5 (the entry
 record's vector shifted by one cause) is caught by this rule with the referees inert (gen_mut_step2b.md).
@@ -74,7 +72,7 @@ Called by the scoreboard per RVFI event and per cycle for `irq_pending_o`.
 | Plusarg | gen_tb_pkg name | Meaning | Default |
 |---|---|---|---|
 | `+gen_chk_irq_pending / _irq_entry / _irq_masked / _nmi_entry / _nmi_internal` | `PLUSARG_CHK_*` | checker enables | 1 |
-| `+gen_irq_entry_bound=<records>` | `PLUSARG_IRQ_ENTRY_BOUND` | override of `GEN_IRQ_ENTRY_BOUND_RECORDS` | gen_tb_pkg constant |
+| (no plusarg override of the bounds) | - | `GEN_IRQ_ENTRY_BOUND_RECORDS` and `GEN_NMI_INT_ENTRY_BOUND_RECORDS` are gen_tb_pkg constants from gen_tb_knobs.yaml; this table once listed `+gen_irq_entry_bound`, which was never built (landing 2c correction) | - |
 
 ## 4. Wave-level behaviour
 
@@ -92,7 +90,7 @@ records (class bound).
 | Checker id | Rule | Mutation classes it catches (example locus) | Disable knob |
 |---|---|---|---|
 | `irq_pending` | `irq_pending_o == |({sw, timer, ext, fast[14:0]} & mie_q)` every cycle, not gated by MIE/debug/nmi; class windowed(`GEN_CSR_WRITE_TO_RVFI_OFFSET`): the RTL commits `mie_q` at the CSR-write commit edge while the RVFI record follows WB, so the compare uses the value committed by the record `GEN_CSR_WRITE_TO_RVFI_OFFSET` cycles later (measured in bring-up, pinned by a directed `csrw mie` test) | `irqs_o`/`irq_pending_o` (`rtl/ibex_cs_registers.sv:1044-1045`), mip wiring (`:408-412`) | `+gen_chk_irq_pending=0` |
-| `irq_entry` | (bound) a raised, enabled line is taken within `GEN_IRQ_ENTRY_BOUND_RECORDS` records unless the driver released it first; (cause, T-136) every intr record's cause is a line pending-and-enabled at the decision and the highest-priority line pending throughout (Section 1); an entry clears only the expectations naming its line | controller handle_irq / IRQ_TAKEN (`rtl/ibex_controller.sv:498-511, 725-758`), priority select | `+gen_chk_irq_entry=0` |
+| `irq_entry` | (bound) a raised, enabled line is taken within `GEN_IRQ_ENTRY_BOUND_RECORDS` records unless the driver released it first; (cause, T-136) every intr record's cause is a line pending-and-enabled at the decision and the highest-priority line pending throughout (Section 1); an entry clears its line from every expectation naming it and restarts the others' bound (CR8-M-5); a line raised, enabled and still held at report that was never taken is an error (end-of-run rule, landing 2c); every entry writes one `misc irq_entry` export row (order, cause, decidable) | controller handle_irq / IRQ_TAKEN (`rtl/ibex_controller.sv:498-511, 725-758`), priority select | `+gen_chk_irq_entry=0` |
 | `irq_masked` | no interrupt entry while `mstatus.MIE == 0` in M-mode, in debug mode, or during NMI handling; an unsampled one-cycle pulse produces no entry | same | `+gen_chk_irq_masked=0` |
 | `nmi_entry` | `irq_nm_i` => entry within bound regardless of MIE/mie, `mcause == 0x8000001F`, `pc_rdata == mtvec_base + 0x7C`, nested NMI ignored; `mret` restores mstatus.MPP/MPIE, mepc, mcause from the mstack model | NMI path (`rtl/ibex_controller.sv:736-745`), mstack (`rtl/ibex_cs_registers.sv`) | `+gen_chk_nmi_entry=0` |
 | `nmi_internal` | injected LSU response integrity error => `alert_major_bus_o`, `rvfi_ext_rf_wr_suppress` on the load, internal NMI with `mcause 0xFFFFFFE0` and `mtval` = faulting address, at most one instruction later; fetch-side integrity errors raise no NMI | mem_resp_intg_err path (`rtl/ibex_controller.sv:436-438`) | `+gen_chk_nmi_internal=0` |
@@ -111,11 +109,16 @@ records (class bound).
 | never-high rules `alert_internal`, `data_tag_quiet`, `alert_minor`, `double_fault` | MUTATION-PROOF (MB8..MB11, this landing) | gen_mut_step2b.md |
 | `irq_pending`, `irq_entry` (bound and cause), `dbg_entry`, `alert_bus` | MUTATION-PROOF (MB4, MB1 + MB5, MB2, MB3) | gen_mut_step2b.md |
 | `irq_masked`, `dbg_masked`, `nmi_entry` | declared, not trusted (no red) | programs owed |
+| `irq_entry` per-line release and end-of-run rule | MUTATION-PROOF (MUT-NT, landing 2c: the held external line never offered to the DUT; 31 errors, the first at order 62, ablation `+gen_chk_irq_entry=0` clean) | gen_mut_step2b.md |
+| `nmi_internal` debug-mode suspension; the bound declared TB-side | BUILT (landing 2c, CM25-L-2); MUTATION-PROOF (MUT-NIB: bound 0, 54 errors, ablation `+gen_chk_nmi_internal=0` clean) | write_state; gen_mut_step2b.md |
+| priority-undecidable entries published per entry | BUILT (landing 2c, CM25-L-3: `misc irq_entry` row, field decidable) | check_entry_cause, export sink |
 
 ## 6. Failure path and diagnostics
 
 `uvm_error` per id; the bound constant is measured in bring-up (longest instruction: 37-cycle
 divide plus split access plus bus latency).
+
+Landing 2c: the never-taken rule is a `uvm_error` (`irq_entry` / `nmi_entry`) at report, `... still held and enabled at the end of the run, never taken`; every entry also writes one `misc irq_entry` row (fields order, cause, decidable) to the export sink, announced in `end_of_elaboration_phase` as the sink requires (T-141). Why most storm entries are undecidable (CM25-L-3): since landing 2a the driver releases only the taken line, so every other raised line stays held across entries and is moved in every window, which makes the highest-priority test undecidable for it (448 of 573 entries in the 2b storm); the per-entry row shows which entries the rule could judge.
 
 ## 7. Coverage hooks
 
