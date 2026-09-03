@@ -1633,3 +1633,17 @@ a measured entry that sets it (Runtime adds the refusal with its red in the same
 probe bind adds no checker verdict to a run, only the assertion's own failure; the exception is reviewed like any landing.
 The lock-step red (27 comparator rows) remains the primary B8 evidence; the assertion run is the mechanism-level witness
 the owner asked to see.
+
+## LOG-068 - 2026-09-03 - A plan touch's generated evidence raced a testlist commit; the commit was undone before review
+
+The DV Lead's v2x list was verified on a detached archive of 67a3f5d; Runtime's testlist touch (053fa2c: 71 entries, the two
+PMP tests promoted to smoke) was committed between that verification and the Orchestrator's commit of v2x. The promotion
+table and the covergroup set read the testlist, so at the v2x commit they no longer reproduced from their printed header
+commands (the regenerated set showed the two PMP rows at smoke where the handed one said check, and the inputs digest
+differed). The Orchestrator's post-commit worktree check caught it and the commit was undone within a minute (git reset,
+nothing pushed, no review launched); the DV Lead regenerates against 053fa2c and hands a superseding list. The same race
+was caught before commit for v2v earlier today. Rules: (1) a plan touch states the HEAD it was verified against, and the
+author checks for testlist or manifest commits after that HEAD before handing; (2) the committer compares the generated
+headers' input digests (the promotion table's testlist digest, the covergroup set's input list) against HEAD before the
+commit, so a stale generation is refused rather than undone; (3) an unpushed, unreviewed commit that fails the post-commit
+check is undone rather than patched forward, and the undo is recorded here with the reason.
