@@ -86,8 +86,10 @@ a quiet flag over the same window, and route the interrupt-extension signal to w
 ## 6. What is announced, and to whom
 
 Every coverpoint, cross and Sample line this work touches goes to the Orchestrator and the Test Writer before it lands, per the
-assignment. Part 1 changes no coverpoint LINE in the plan: the DV Lead is recording the six-and-six split and the
-Sample-line qualifier in its own next touch, so the plan and the build say the same thing with no cross-role edit.
+assignment. Part 1 changes no coverpoint LINE in the plan: the plan owner records the split and the Sample-line
+qualifier in its own next touch, so the plan and the build say the same thing with no cross-role edit. The split it
+records is EIGHT sampled and FOUR passing not-applicable, which is the state after part 1 builds two of the six
+observations that were unbuilt when the split was first sized six-and-six by observability alone.
 
 ## 7. ETA
 
